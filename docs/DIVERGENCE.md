@@ -6014,7 +6014,9 @@ designed in rather than bolted on.
   nobody handles ends with our crash report and `Fatal`'s box and exit
   code 3, not a silent `_exit`; the launcher no longer suspends, reserves
   or injects; Capcom's icon is not loaded (ours, a placeholder until the
-  owner's artwork - since DIV-0095 generated from the game's own data); `.rsrc` and the import descriptors are not mapped. What
+  owner's artwork - since DIV-0095 generated from the game's own data, since
+  its amendment of 2026-10-15 our "III" for the file and the whelp for the
+  window); `.rsrc` and the import descriptors are not mapped. What
   is **new to the process**: the code page is UTF-8 (the manifest's
   `activeCodePage`, so a cache folder of any name works - section 9 of the
   brief), `longPathAware` and themed message boxes (common controls 6) are
@@ -6102,6 +6104,24 @@ designed in rather than bolted on.
 - **Reversible?** No switch. The hosted build (`--host bof3`) keeps
   Capcom's icon from his `.rsrc`; deleting `bof3x.icon` and putting the
   built `bof3x.exe` back restores the placeholder until the next load screen.
+- **Amended 2026-10-15 (the owner): the file icon is ours, the whelp the
+  window's only.** Windows Defender quarantined the launcher
+  (`Behavior:Win32/DefenseEvasion.A!ml`) when started from Explorer, and a
+  game that writes a modified copy of its own executable for the launcher to
+  swap in and run is the pattern such models flag; a rewritten executable can
+  never carry a signature either. Now `bof3x.exe` and both launchers carry our
+  own icon from the build - bold white "III" in Palatino on black,
+  `data/icon/bof3x.ico` (`tools/make_brand_icon.py`; `tools/make_exe.py`
+  puts it in `bof3x.exe` as the group `BOF3_ICON`, `launcher.rc` in the
+  launchers) - and nothing writes an executable: the engine still renders the
+  whelp at the load screen and sets it as the window's and the class's icons,
+  but writes no `bof3x.exe.new` and no stamp, and the launcher deletes those
+  an older build left (`RemoveOldIconFiles`). Before that frame the window
+  shows "III". The icon self-test keeps its pixel comparison and the window
+  icons; its rewritten-executable step is gone. Checked: the three
+  executables' icons as Explorer extracts them, "III"; a headless self-test
+  in a disc-built install, exit 0, an old `bof3x.exe.new` and `bof3x.icon`
+  deleted, nothing written ([`exe-icon.md`](exe-icon.md) section 6).
 
 ### A disc-only cache's party animation scripts are the disc's own
 

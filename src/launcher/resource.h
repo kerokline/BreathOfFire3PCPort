@@ -2,6 +2,7 @@
 #pragma once
 
 #define IDD_CONFIG       100
+#define IDI_BOF3X          1   // the launcher's icon (data/icon/bof3x.ico)
 
 // The launcher's window (docs/launcher-settings.md section 2a): a title page
 // and Configure, whose tabs are these sub-pages, each a child dialog.

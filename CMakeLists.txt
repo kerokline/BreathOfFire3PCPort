@@ -90,7 +90,6 @@ add_library(bof3x SHARED
   src/hook/exe_icon.cpp
   src/hook/code_bytes.cpp
   src/common/sha256.cpp
-  src/common/icon_stamp.cpp
   src/common/cache_manifest.cpp
   src/hook/detour.cpp
   src/hook/exe_image.cpp
@@ -736,6 +735,7 @@ add_custom_command(
           "${CMAKE_SOURCE_DIR}/tools/make_exe.py"
           "${CMAKE_SOURCE_DIR}/tools/pe_read.py"
           "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
+          "${CMAKE_SOURCE_DIR}/data/icon/bof3x.ico"
   COMMENT "Writing and verifying bof3x.exe (tools/make_exe.py)"
   VERBATIM)
 add_custom_target(bof3x_exe ALL DEPENDS "${_exe_stamp}")
@@ -761,7 +761,6 @@ add_library(bof3x_launcher_parts OBJECT
   src/audio/seq.cpp
   src/audio/song.cpp
   src/common/sha256.cpp
-  src/common/icon_stamp.cpp
   src/common/cache_manifest.cpp
   src/common/home.cpp
   src/input/bindings.cpp

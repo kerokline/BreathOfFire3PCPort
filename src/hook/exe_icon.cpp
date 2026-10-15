@@ -1,5 +1,7 @@
-// DIV-0095: bof3x.exe's icon, generated from the game's own data on the
+// DIV-0095: the game window's icon, generated from the game's own data on the
 // player's machine (docs/exe-icon.md; exe_icon.h says when and from what).
+// The file's icon is ours, from the build (data/icon/bof3x.ico); since
+// 2026-10-15 nothing here writes an executable.
 //
 // The reads are tools/make_icon.py's, which is the specification of the
 // picture: the record at Menu_DrawBigIcon's table + icon * 4 is (u, v,
@@ -29,8 +31,6 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
-#include "common/icon_stamp.h"
-#include "common/sha256.h"
 #include "game/menu_windows_callees.h"
 #include "hook/host.h"
 #include "hook/log.h"
@@ -450,12 +450,6 @@ bool MakeImages(Com& com, const Rgba& base, IconImages& images, std::string& why
 
 // --- files -----------------------------------------------------------------------
 
-std::wstring ExePath() {
-    wchar_t buf[MAX_PATH];
-    const DWORD n = GetModuleFileNameW(nullptr, buf, MAX_PATH);
-    return n == 0 || n >= MAX_PATH ? std::wstring() : std::wstring(buf, n);
-}
-
 std::wstring DirOf(const std::wstring& path) { return path.substr(0, path.find_last_of(L"\\/")); }
 
 // Beside the log: bof3x.dll's directory.
@@ -499,8 +493,6 @@ bool WriteWhole(const std::wstring& path, const Bytes& data, std::string& why) {
     return ok;
 }
 
-bool FileExists(const std::wstring& path) { return GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES; }
-
 Bytes IcoFile(const IconImages& images) {
     Bytes b;
     Put16(b, 0);
@@ -521,320 +513,6 @@ Bytes IcoFile(const IconImages& images) {
     }
     for (int i = 0; i < kFileCount; ++i) b.insert(b.end(), images.data[i].begin(), images.data[i].end());
     return b;
-}
-
-// The kRtGroupIcon resource: the same directory with a resource id in place
-// of each offset.
-Bytes GroupResource(const IconImages& images) {
-    Bytes b;
-    Put16(b, 0);
-    Put16(b, 1);
-    Put16(b, kFileCount);
-    for (int i = 0; i < kFileCount; ++i) {
-        const int s = images.size[i];
-        b.push_back(static_cast<std::uint8_t>(s >= 256 ? 0 : s));
-        b.push_back(static_cast<std::uint8_t>(s >= 256 ? 0 : s));
-        b.push_back(0);
-        b.push_back(0);
-        Put16(b, 1);
-        Put16(b, 32);
-        Put32(b, static_cast<std::uint32_t>(images.data[i].size()));
-        Put16(b, static_cast<unsigned>(i + 1));
-    }
-    return b;
-}
-
-// --- the executable's resources ------------------------------------------------------
-
-constexpr wchar_t kGroupName[] = L"BOF3_ICON";
-// The resource types, wide (windows.h's RT_* follow the build's ANSI default).
-const LPCWSTR kRtIcon = MAKEINTRESOURCEW(3), kRtGroupIcon = MAKEINTRESOURCEW(14), kRtManifest = MAKEINTRESOURCEW(24);   // Game_WinMain's LoadIconA (tools/make_exe.py)
-
-BOOL CALLBACK CollectLanguage(HMODULE, LPCWSTR, LPCWSTR, WORD lang, LONG_PTR to) {
-    reinterpret_cast<std::vector<WORD>*>(to)->push_back(lang);
-    return TRUE;
-}
-
-std::vector<WORD> Languages(HMODULE m, LPCWSTR type, LPCWSTR name) {
-    std::vector<WORD> langs;
-    EnumResourceLanguagesW(m, type, name, &CollectLanguage, reinterpret_cast<LONG_PTR>(&langs));
-    return langs;
-}
-
-bool ResourceBytes(HMODULE m, LPCWSTR type, LPCWSTR name, Bytes& out) {
-    HRSRC r = FindResourceW(m, name, type);
-    if (!r) return false;
-    HGLOBAL g = LoadResource(m, r);
-    const DWORD n = SizeofResource(m, r);
-    const auto* p = static_cast<const std::uint8_t*>(g ? LockResource(g) : nullptr);
-    if (!p) return false;
-    out.assign(p, p + n);
-    return true;
-}
-
-struct DataFile {
-    HMODULE m = nullptr;
-    explicit DataFile(const std::wstring& path)
-        : m(LoadLibraryExW(path.c_str(), nullptr, LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE)) {}
-    ~DataFile() {
-        if (m) FreeLibrary(m);
-    }
-};
-
-// The headers and sections of a PE file in memory.
-struct Pe {
-    const IMAGE_NT_HEADERS32* nt = nullptr;
-    const IMAGE_SECTION_HEADER* sec = nullptr;
-    unsigned n = 0;
-};
-
-bool ParsePe(const Bytes& f, Pe& pe) {
-    if (f.size() < sizeof(IMAGE_DOS_HEADER)) return false;
-    const auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(f.data());
-    if (dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew < 0 ||
-        static_cast<std::size_t>(dos->e_lfanew) + sizeof(IMAGE_NT_HEADERS32) > f.size())
-        return false;
-    pe.nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(f.data() + dos->e_lfanew);
-    if (pe.nt->Signature != IMAGE_NT_SIGNATURE || pe.nt->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) return false;
-    const std::size_t first = static_cast<std::size_t>(dos->e_lfanew) + offsetof(IMAGE_NT_HEADERS32, OptionalHeader) +
-                              pe.nt->FileHeader.SizeOfOptionalHeader;
-    pe.n = pe.nt->FileHeader.NumberOfSections;
-    if (first + pe.n * sizeof(IMAGE_SECTION_HEADER) > f.size()) return false;
-    pe.sec = reinterpret_cast<const IMAGE_SECTION_HEADER*>(f.data() + first);
-    for (unsigned i = 0; i < pe.n; ++i)
-        if (static_cast<std::size_t>(pe.sec[i].PointerToRawData) + pe.sec[i].SizeOfRawData > f.size()) return false;
-    return true;
-}
-
-std::string SectionName(const IMAGE_SECTION_HEADER& s) { return std::string(reinterpret_cast<const char*>(s.Name), strnlen(reinterpret_cast<const char*>(s.Name), 8)); }
-
-// What UpdateResource may change is the last section, .rsrc, and the header
-// words that describe it; everything else - the identity DetectHost reads
-// (the timestamp, .stub at 0x401000), the layout exe_layout.h checks, the
-// entry, the imports - must be byte for byte the source's.
-bool SameImage(const Bytes& a, const Bytes& b, std::string& why) {
-    Pe pa, pb;
-    if (!ParsePe(a, pa) || !ParsePe(b, pb)) {
-        why = "not a PE file";
-        return false;
-    }
-    if (std::memcmp(&pa.nt->FileHeader, &pb.nt->FileHeader, sizeof pa.nt->FileHeader) != 0) {
-        why = "the file header changed";
-        return false;
-    }
-    IMAGE_OPTIONAL_HEADER32 oa = pa.nt->OptionalHeader, ob = pb.nt->OptionalHeader;
-    for (IMAGE_OPTIONAL_HEADER32* o : {&oa, &ob}) {
-        o->CheckSum = 0;
-        o->SizeOfImage = 0;
-        o->SizeOfInitializedData = 0;
-        o->DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].Size = 0;
-    }
-    if (std::memcmp(&oa, &ob, sizeof oa) != 0) {
-        why = "the optional header changed beyond .rsrc's size";
-        return false;
-    }
-    const unsigned n = pa.n;
-    if (n == 0 || SectionName(pa.sec[n - 1]) != ".rsrc" || SectionName(pb.sec[n - 1]) != ".rsrc") {
-        why = ".rsrc is not the last section";
-        return false;
-    }
-    for (unsigned i = 0; i + 1 < n; ++i) {
-        if (std::memcmp(&pa.sec[i], &pb.sec[i], sizeof pa.sec[i]) != 0 ||
-            std::memcmp(a.data() + pa.sec[i].PointerToRawData, b.data() + pb.sec[i].PointerToRawData, pa.sec[i].SizeOfRawData) != 0) {
-            why = "section " + SectionName(pa.sec[i]) + " changed";
-            return false;
-        }
-    }
-    const IMAGE_SECTION_HEADER &ra = pa.sec[n - 1], &rb = pb.sec[n - 1];
-    const DWORD align = pb.nt->OptionalHeader.SectionAlignment;
-    if (ra.VirtualAddress != rb.VirtualAddress || ra.Characteristics != rb.Characteristics ||
-        pb.nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress != rb.VirtualAddress ||
-        pb.nt->OptionalHeader.SizeOfImage != ((rb.VirtualAddress + rb.Misc.VirtualSize + align - 1) / align) * align) {
-        why = ".rsrc moved or the image size does not match it";
-        return false;
-    }
-    if (b.size() != static_cast<std::size_t>(rb.PointerToRawData) + rb.SizeOfRawData &&
-        a.size() == static_cast<std::size_t>(ra.PointerToRawData) + ra.SizeOfRawData) {
-        why = "bytes after .rsrc";
-        return false;
-    }
-    return true;
-}
-
-// The new file's group and images are what we wrote, and its manifest the
-// source's.
-bool ResourcesAsWritten(const std::wstring& source, const std::wstring& written, const IconImages& images, std::string& why) {
-    DataFile src(source), dst(written);
-    if (!src.m || !dst.m) {
-        why = "cannot load " + std::string(src.m ? "the written file" : "the source") + " as a data file (error " +
-              std::to_string(GetLastError()) + ")";
-        return false;
-    }
-    Bytes group;
-    if (!ResourceBytes(dst.m, kRtGroupIcon, kGroupName, group) || group != GroupResource(images)) {
-        why = "the written group icon is not the one written";
-        return false;
-    }
-    for (int i = 0; i < kFileCount; ++i) {
-        Bytes img;
-        if (!ResourceBytes(dst.m, kRtIcon, MAKEINTRESOURCEW(i + 1), img) || img != images.data[i]) {
-            why = "icon image " + std::to_string(i + 1) + " is not the one written";
-            return false;
-        }
-    }
-    Bytes ma, mb;
-    if (!ResourceBytes(src.m, kRtManifest, MAKEINTRESOURCEW(1), ma) || !ResourceBytes(dst.m, kRtManifest, MAKEINTRESOURCEW(1), mb) ||
-        ma != mb) {
-        why = "the manifest did not survive";
-        return false;
-    }
-    return true;
-}
-
-// `source` copied to `target` with its group icon BOF3_ICON and that group's
-// images replaced by `images` (ids 1..5, language neutral); then checked.
-bool WriteExe(const std::wstring& source, const std::wstring& target, const IconImages& images, std::string& why) {
-    if (!CopyFileW(source.c_str(), target.c_str(), FALSE)) {
-        why = "cannot copy bof3x.exe (error " + std::to_string(GetLastError()) + ")";
-        return false;
-    }
-    // What the source holds now: the group's languages and the image ids it names.
-    std::vector<WORD> group_langs;
-    std::vector<std::pair<WORD, WORD>> old_images;   // (id, language)
-    {
-        DataFile src(source);
-        if (!src.m) {
-            why = "cannot load bof3x.exe as a data file (error " + std::to_string(GetLastError()) + ")";
-            DeleteFileW(target.c_str());
-            return false;
-        }
-        group_langs = Languages(src.m, kRtGroupIcon, kGroupName);
-        Bytes group;
-        if (group_langs.empty() || !ResourceBytes(src.m, kRtGroupIcon, kGroupName, group) || group.size() < 6) {
-            why = "bof3x.exe has no group icon BOF3_ICON";
-            DeleteFileW(target.c_str());
-            return false;
-        }
-        const unsigned count = group[4] | (group[5] << 8);
-        for (unsigned i = 0; i < count && 6 + i * 14 + 14 <= group.size(); ++i) {
-            const WORD id = static_cast<WORD>(group[6 + i * 14 + 12] | (group[6 + i * 14 + 13] << 8));
-            for (WORD lang : Languages(src.m, kRtIcon, MAKEINTRESOURCEW(id))) old_images.push_back({id, lang});
-        }
-    }
-    const char* step = nullptr;   // the step that failed
-    DWORD error = 0;
-    const auto check = [&](BOOL done, const char* what) {
-        if (!done && !step) {
-            step = what;
-            error = GetLastError();
-        }
-        return done != FALSE;
-    };
-    HANDLE h = BeginUpdateResourceW(target.c_str(), FALSE);
-    bool ok = check(h != nullptr, "BeginUpdateResource");
-    for (const auto& [id, lang] : old_images)
-        ok = ok && check(UpdateResourceW(h, kRtIcon, MAKEINTRESOURCEW(id), lang, nullptr, 0), "removing an old image");
-    for (WORD lang : group_langs)
-        ok = ok && check(UpdateResourceW(h, kRtGroupIcon, kGroupName, lang, nullptr, 0), "removing the old group");
-    const WORD neutral = MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL);
-    for (int i = 0; i < kFileCount; ++i)
-        ok = ok && check(UpdateResourceW(h, kRtIcon, MAKEINTRESOURCEW(i + 1), neutral,
-                                         const_cast<std::uint8_t*>(images.data[i].data()),
-                                         static_cast<DWORD>(images.data[i].size())),
-                         "adding an image");
-    Bytes group = GroupResource(images);
-    ok = ok && check(UpdateResourceW(h, kRtGroupIcon, kGroupName, neutral, group.data(), static_cast<DWORD>(group.size())),
-                     "adding the group");
-    if (h) ok = check(EndUpdateResourceW(h, ok ? FALSE : TRUE), "EndUpdateResource") && ok;
-    if (!ok) {
-        why = std::string(step) + " failed (error " + std::to_string(error) + ")";
-        DeleteFileW(target.c_str());
-        return false;
-    }
-    Bytes a, b;
-    if (!ReadWhole(source, a, why) || !ReadWhole(target, b, why) || !SameImage(a, b, why) ||
-        !ResourcesAsWritten(source, target, images, why)) {
-        why = "the written file failed its check: " + why;
-        DeleteFileW(target.c_str());
-        return false;
-    }
-    return true;
-}
-
-// --- the worker: bof3x.exe.new and the stamp, once an install ---------------------------
-
-struct Job {
-    Rgba base;
-    std::string sheet_sha;
-};
-
-std::string Sha(const std::wstring& path) {
-    std::string hex, why;
-    return bof3x::Sha256Hex(path.c_str(), hex, why) ? hex : std::string();
-}
-
-void WriteFileIcon(const Job& job) {
-    const std::wstring exe = ExePath();
-    if (exe.empty()) {
-        Log("DIV-0095    icon: the file icon was not written: cannot read the executable's path");
-        return;
-    }
-    const std::wstring dir = DirOf(exe), pending = exe + L".new", work = dir + L"\\bof3x.icon-work.exe",
-                       stamp_path = dir + L"\\bof3x.icon";
-    const std::string current = Sha(exe);
-    if (current.empty()) {
-        Log("DIV-0095    icon: the file icon was not written: cannot hash %s", Utf8Path(exe.c_str()).text);
-        return;
-    }
-    bof3x::IconStamp stamp;
-    if (bof3x::IconStampRead(stamp_path, stamp) && stamp.sheet == job.sheet_sha) {
-        if (current == stamp.to) {
-            Log("DIV-0095    icon: bof3x.exe already carries this icon (bof3x.icon, sheet sha256 %.16s...)", job.sheet_sha.c_str());
-            return;
-        }
-        if (current == stamp.from && FileExists(pending) && Sha(pending) == stamp.to) {
-            Log("DIV-0095    icon: bof3x.exe.new already holds this icon; the launcher installs it at its next start");
-            return;
-        }
-    }
-    DeleteFileW(work.c_str());
-    Com com;
-    IconImages images;
-    std::string why;
-    if (!com.ok) why = com.why;
-    const bool ok = com.ok && MakeImages(com, job.base, images, why) && WriteExe(exe, work, images, why);
-    if (!ok) {
-        Log("DIV-0095    icon: the file icon was not written: %s", why.c_str());
-        return;
-    }
-    const bof3x::IconStamp fresh{job.sheet_sha, current, Sha(work)};
-    if (fresh.to.empty()) {
-        DeleteFileW(work.c_str());
-        Log("DIV-0095    icon: the file icon was not written: cannot hash the written file");
-        return;
-    }
-    // The stamp first: a launcher that finds the new file finds its stamp.
-    if (!bof3x::IconStampWrite(stamp_path, fresh, why)) {
-        DeleteFileW(work.c_str());
-        Log("DIV-0095    icon: the file icon was not written: %s", why.c_str());
-        return;
-    }
-    if (!MoveFileExW(work.c_str(), pending.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-        const DWORD error = GetLastError();
-        DeleteFileW(work.c_str());
-        Log("DIV-0095    icon: the file icon was not written: cannot move it to bof3x.exe.new (error %lu)", error);
-        return;
-    }
-    Log("DIV-0095    icon: %s written - bof3x.exe with the icon at 16, 24, 32, 48 and 256 px (sheet sha256 %.16s..., "
-        "to %.16s...); the launcher moves it into place at its next start",
-        Utf8Path(pending.c_str()).text, job.sheet_sha.c_str(), fresh.to.c_str());
-}
-
-DWORD WINAPI Worker(void* p) {
-    Job* job = static_cast<Job*>(p);
-    WriteFileIcon(*job);
-    delete job;
-    return 0;
 }
 
 // --- the run-time state ---------------------------------------------------------------
@@ -949,20 +627,10 @@ void ExeIcon_Frame(void* hwnd) {
     const Rgba base = Render(vram, g_record);
     Log("DIV-0095    icon: icon %u's sheet and CLUT in the VRAM shadow at Frame_Counter %u (u %d, v %d, CLUT %d,%d)", kIcon,
         static_cast<unsigned>(Frame_Counter), g_record.u, g_record.v, g_record.clut_x, g_record.clut_y);
+    // The window's icon only: bof3x.exe's file carries its own from the build
+    // (data/icon/bof3x.ico, tools/make_exe.py) and is never rewritten
+    // (2026-10-15: Defender quarantined the launcher over the rewrite chain).
     SetWindowIcons(static_cast<HWND>(hwnd), base);
-    auto* job = new Job{base, std::string()};
-    if (!bof3x::Sha256HexBytes(sheet.data(), sheet.size(), job->sheet_sha)) {
-        Log("DIV-0095    icon: the file icon was not written: cannot hash the sheet");
-        delete job;
-        return;
-    }
-    HANDLE t = CreateThread(nullptr, 0, &Worker, job, 0, nullptr);
-    if (!t) {
-        Log("DIV-0095    icon: the file icon was not written: CreateThread failed (error %lu)", GetLastError());
-        delete job;
-        return;
-    }
-    CloseHandle(t);
 }
 
 void ExeIcon_SelfTest() {
@@ -991,7 +659,7 @@ void ExeIcon_SelfTest() {
     IconImages images;
     if (!MakeImages(com, base, images, why)) Fatal("icon self-test: %s", why.c_str());
     const std::wstring dir = DllDir();
-    const std::wstring ico = dir + L"\\bof3x.icon-test.ico", exe_out = dir + L"\\bof3x.icon-test.exe";
+    const std::wstring ico = dir + L"\\bof3x.icon-test.ico";
     if (!WriteWhole(ico, IcoFile(images), why)) Fatal("icon self-test: %s", why.c_str());
 
     // Every pixel of the five images against the reference, both files
@@ -1021,19 +689,6 @@ void ExeIcon_SelfTest() {
     }
     Log("DIV-0095    icon self-test: %s rendered from %s - 16, 24, 32, 48 and 256 px, all %u pixels identical to %s",
         Utf8Path(ico.c_str()).text, Utf8Path(vram_path.c_str()).text, total, Utf8Path(ref_path.c_str()).text);
-
-    // The resources: the same write as the run time's, into a test copy.
-    const std::wstring exe = ExePath();
-    if (exe.empty() || !WriteExe(exe, exe_out, images, why)) Fatal("icon self-test: the executable's resources: %s", why.c_str());
-    {
-        DataFile out(exe_out);
-        HICON loaded = out.m ? static_cast<HICON>(LoadImageW(out.m, kGroupName, IMAGE_ICON, 32, 32, 0)) : nullptr;
-        if (!loaded) Fatal("icon self-test: LoadImage of BOF3_ICON from %s failed (error %lu)", Utf8Path(exe_out.c_str()).text, GetLastError());
-        DestroyIcon(loaded);
-    }
-    Log("DIV-0095    icon self-test: %s written from %s - .rsrc's group BOF3_ICON and its 5 images read back as "
-        "written, the manifest kept, every other section and header word unchanged; LoadImage reads the group",
-        Utf8Path(exe_out.c_str()).text, Utf8Path(exe.c_str()).text);
 
     // The window icons' path, without a window.
     for (int s : {GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CXSMICON)}) {

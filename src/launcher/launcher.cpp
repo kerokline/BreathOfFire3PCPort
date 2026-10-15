@@ -34,7 +34,6 @@
 
 #include "common/cache_manifest.h"
 #include "common/home.h"
-#include "common/icon_stamp.h"
 #include "common/sha256.h"
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
@@ -116,33 +115,19 @@ std::string Sha256Hex(const std::wstring& path) {
     return hex;
 }
 
-// DIV-0095: the icon the engine generated from the game's data
-// (docs/exe-icon.md). bof3x.exe cannot rewrite its own file while it runs, so
-// it writes bof3x.exe.new and the bof3x.icon stamp beside itself, and the
-// move is made here, before bof3x.exe starts. Only when bof3x.exe is still
-// the file the engine copied and the new file is the one it verified: a
-// stale copy (bof3x.exe rebuilt or replaced since) is deleted instead, and
-// the engine makes a fresh one at its next run. Never stops the launcher.
-void InstallGeneratedIcon(const std::wstring& ours) {
-    const std::wstring pending = ours + L".new";
-    if (!FileExists(pending)) return;
-    bof3x::IconStamp stamp;
-    std::string current, written, why;
-    const bool have_stamp = bof3x::IconStampRead(OwnDirectory() + L"\\bof3x.icon", stamp);
-    if (!have_stamp || !bof3x::Sha256Hex(ours.c_str(), current, why) || !bof3x::Sha256Hex(pending.c_str(), written, why) ||
-        current != stamp.from || written != stamp.to) {
-        DeleteFileW(pending.c_str());
-        std::fwprintf(stderr, L"bof3x-launcher: %ls is not the icon written for this bof3x.exe (%hs); deleted - the "
-                              L"game writes a fresh one\n",
-                      pending.c_str(), !have_stamp ? "no bof3x.icon stamp" : !why.empty() ? why.c_str() : "the stamp does not match");
-        return;
+// Until 2026-10-15 the game wrote bof3x.exe.new with an icon generated from
+// the game's data and the bof3x.icon stamp, and the launcher moved the new
+// file over bof3x.exe here (DIV-0095). Rewriting an executable and running it
+// is what Windows Defender took for defence evasion, so bof3x.exe now carries
+// our own icon from the build and is never rewritten. What an older build left
+// behind beside it is deleted; nothing of it is used.
+void RemoveOldIconFiles() {
+    for (const wchar_t* name : {L"\\bof3x.exe.new", L"\\bof3x.icon", L"\\bof3x.icon-work.exe"}) {
+        const std::wstring path = OwnDirectory() + name;
+        if (FileExists(path) && DeleteFileW(path.c_str()))
+            std::fwprintf(stderr, L"bof3x-launcher: %ls, an older build's icon file, deleted (bof3x.exe keeps its own icon)\n",
+                          path.c_str());
     }
-    if (!MoveFileExW(pending.c_str(), ours.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-        std::fwprintf(stderr, L"bof3x-launcher: cannot move %ls into place (error %lu); kept for the next start\n",
-                      pending.c_str(), GetLastError());
-        return;
-    }
-    std::wprintf(L"bof3x-launcher: bof3x.exe now carries the icon generated from the game's data (DIV-0095)\n");
 }
 
 #if BOF3X_HOSTED
@@ -338,7 +323,7 @@ int wmain(int argc, wchar_t** argv) {
     if (!hosted && !FileExists(ours))
         Die(L"%ls is missing; it belongs next to this launcher (or start the hosted build with --host bof3).",
             ours.c_str());
-    if (FileExists(ours)) InstallGeneratedIcon(ours);
+    RemoveOldIconFiles();
 
     // Settings. The file lives next to the launcher, not in the game directory,
     // which stays the player's own (CLAUDE.md rule 1) apart from BOF3.CFG -
