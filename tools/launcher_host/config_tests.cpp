@@ -834,6 +834,10 @@ void TestPspValid() {
 void TestHomeDefaults() {
     const std::wstring home = Temp(L"bof3x_home_test");
     SetEnvironmentVariableW(L"BOF3X_HOME", home.c_str());
+    // a previous run's folders, removed so the home starts empty
+    DeleteFileW((home + L"\\cache\\manifest.toml").c_str());
+    DeleteFileW((home + L"\\bof3x.ini").c_str());
+    for (const wchar_t* dir : {L"\\cache", L"\\game\\DAT", L"\\game"}) RemoveDirectoryW((home + dir).c_str());
     CreateDirectoryW(home.c_str(), nullptr);
     ClearEnv();
     bof3x::Config cfg;
@@ -867,6 +871,10 @@ void TestHomeDefaults() {
     std::string why;
     bof3x::ConfigLoad(ini, back, why);
     Check(back.ffmpeg == cfg.ffmpeg, "ffmpeg= round-trips", back.ffmpeg);
+    // The first run's save (the Sources page, before any language is chosen)
+    // must not name "original": the disc-only install it builds would refuse it.
+    Check(text.find("\r\nlanguage=") == std::string::npos && !back.language_named,
+          "an unchosen language is not written");
     SetEnvironmentVariableW(L"BOF3X_HOME", nullptr);
 }
 

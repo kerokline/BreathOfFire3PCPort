@@ -270,7 +270,13 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# Run bof3x-launcher --config to reopen the dialog after hiding it.\r\n";
     out += "\r\n[bof3x]\r\n";
     out += "# original | en-US | en-150 | fr-FR | de-DE | ja-JP   (a tag needs tools/loc_build.py to have built it)\r\n";
-    out += std::string("language=") + cfg.language + "\r\n";
+    // Only a language someone chose (the ini or the dialog, DIV-0102): the
+    // Sources page saves before any is chosen, and a written default
+    // "original" would then be refused on the disc-only install it builds.
+    if (cfg.language_named || cfg.language != kLanguageOriginal)
+        out += std::string("language=") + cfg.language + "\r\n";
+    else
+        out += "# language= not chosen yet: the default (the port's text, else the first language the install holds)\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
     out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
