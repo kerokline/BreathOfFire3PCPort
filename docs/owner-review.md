@@ -32,6 +32,26 @@ Gathered at the round's fold-in ([`ultrawide-round.md`](ultrawide-round.md)
 - **The bulb's filament** at the lighthouse's pedestal (DIV-0071's 2026-10-13
   amendment): the owner likes its look.
 
+### Decided by the owner, to build (2026-10-15)
+
+- **The faerie through the table** (D300): the PlayStation cuts it the same
+  way (a let's-play frame), so Capcom's. Fix **this scene narrowly** as an
+  Intent DIV, with a note to broaden it to FY's rule
+  ([`faerie-over-table.md`](faerie-over-table.md) 4) if more examples turn up.
+- **The narrow areas** 31, 90 and 53: a **per-scene pillarbox** - framed as a
+  narrow picture on purpose rather than left as black bands.
+- **RG, the ring for far cameras** (D292): **build IDEAS I37 now**.
+- **The breath mote and the column's sound** (D293, D294): **leave both** at
+  Capcom's bounds (struck; recorded in the defects).
+- **The two sweeps** (IDEAS I38): **map them onto the wide picture** - the
+  logic's x kept, the draw mapped (a DIV-0041 amendment).
+- **The 14 unmovable 16:9 band sites** ([`wide-staging.md`](wide-staging.md)
+  3): **a policy per kind, not site by site** - leave visible the stationary
+  speakers (areas 26, 39, 94, 188), the walks that end in the band (areas 60,
+  143, 172) and area 7's mid-route point. What is left is a look: census 3's
+  parked and still sheets, flag only what looks wrong (item under "To look
+  at").
+
 ### To look at
 
 - **The faster slide** (DIV-0041, SL; not yet seen): in the wide modes a menu
@@ -46,52 +66,83 @@ Gathered at the round's fold-in ([`ultrawide-round.md`](ultrawide-round.md)
 - **The terrain margin at 21:9** ([`ultrawide-frame.md`](ultrawide-frame.md)):
   the cull margin is `c + 47`, 167 at 120 columns, a rule from the value tuned
   by eye at 53 - any corner popping at the edges as the camera turns?
+- **Census 3's band sheets** (the policy above leaves them visible): the
+  parked and still rows in scenes ([`ultrawide-census-3.md`](ultrawide-census-3.md)
+  4.2; `parked-scene_w1_*.png`, `still-scene_w1_*.png` in
+  `analysis/shots/uw_census3/sheets/`) - flag any that look wrong.
 - **Two `dolphinBoss` plant frames** (f03060, f00720;
   [`campfire-and-crystal.md`](campfire-and-crystal.md) 5): plants in front of a
   character are drawn in front again after the campfire's amendment - right?
 
 ### To decide
 
-- **The remaining 16:9 band rows**: census 3's list of parked and still rows in
-  scenes ([`ultrawide-census-3.md`](ultrawide-census-3.md) 4.2; sheets
-  `parked-scene_w1_*.png`, `still-scene_w1_*.png` in
-  `analysis/shots/uw_census3/sheets/`) and the 14 sites the re-staging's shape
-  cannot move ([`wide-staging.md`](wide-staging.md) 3: a point a scene ends on,
-  a stationary actor, a walk ending in the band) - per site: move out, hide, or
-  leave?
-- **The faerie through the table** (D300, Capcom's;
-  [`faerie-over-table.md`](faerie-over-table.md) 4): FY's rule (an object
-  standing inside a raised cell drawn after its layer's second list) - build
-  it, after a look at the scene on the PlayStation, or leave Capcom's?
 - **The gene crystal** (D242, Capcom's order; accepted for now): CF's
   candidate rule ([`campfire-and-crystal.md`](campfire-and-crystal.md) 6) is
   there if the cut ever bothers you.
-- **The narrow areas** 31, 90 and 53 (narrower than 560 on every row; black
-  bands at every wide width): leave, a per-scene pillarbox, or something else?
 - **The patch cells** (D295, measured in
   [`ultrawide-patch-cells.md`](ultrawide-patch-cells.md); your word: leave for
   now) - only if one is ever seen changing early in the band (section 4 there
   lists the scenes).
-- **RG, the ring for far cameras** (D292, IDEAS I37): needed only for scenes
-  at `Camera_Distance` above about 2,200 and effect kind 0x8D - build I37, or
-  wait for a picture of one?
 - **The six other effects the GTE fix changes** (DIV-0126; kinds 0x1E, 0x1F,
   0x21, 0x64, 0x72, 0x97, 0xA0): their shards and debris now turn by a true
   rotation; no route reaches them - look when one does.
 - **Effect kind 0x51's grab** (DIV-0125; areas 34 and 108 at given chapter
   counters): its column should now show the scene behind it warped, a heat
   shimmer - unseen, no recipe.
-- **The breath mote and the column's sound** (D293, D294): left at Capcom's
-  bounds because they touch `Rand` and the sound channels - leave, or a DIV
-  each?
-- **The two sweeps** (IDEAS I38): leave, or draw them mapped onto the wide
-  picture?
 
 ## 2026-10-13, the away day
 
 Gathered from the day's fifteen merges on `platform/more-hardening`; each item
 wants one line back. The pictures and sounds are game-derived, in the main
 checkout's `analysis/` (never in the tree).
+
+### Decided by the owner, to build (2026-10-15)
+
+- **Ryu's byte, D288**: **take the disc's**; on a PC-only install clear the
+  bit by rule (`lzss_flag`, verified by structure) -
+  [`arena-render-1013.md`](arena-render-1013.md) 6's draft DIV.
+- **Inventory Q7, the 27A row's discs**: **yes** - the 27A loop from any PSX
+  disc (all five decode identical).
+- **Member 1's battle bank** (`BPLD012` / `015` / `016`): **take the disc's**
+  (the added part draws nothing; seen on the render sheet).
+- **Member 2's field bank** (the eight `PL` arenas and `START`): **the split** -
+  keep the PC's nudges (a repair of Capcom's art, a DIV) and drop script 42's
+  added part by the structural rule of [`arena-render-1013.md`](arena-render-1013.md)
+  6; a disc-only install keeps the disc's art. Decided off the render sheets.
+- **D255's fix**: **both** - the disc's XA stream (`S_XA00.STR`) as the
+  jingle on a PSX-only install, and a failed jingle open ending the wait at
+  once (a DIV), so no missing file can hang it again.
+- **The Western weakness row**: **keep the row and the element glyphs on every
+  language** (as now). The owner's `radiationRoom.txt` recipe (2026-10-15)
+  reaches an enemy panel with the row, for the A/B.
+- **The US title layout, D277**: **draw the US release's three-piece notice
+  on a US-built image** (a DIV).
+- **The Western title mark, D266**: **yes** - a `twin` row from the disc's
+  `GAME.EMI#1` for the width.
+- **A ja-JP layer, D280**: **yes, all of kinds 7..16** from the Japan disc
+  (DIV-0015 / 0018 / 0019 / 0020 / 0064 / 0069 extended).
+- **The fishing crash, D279**: **both** - kind 16 through the ja-JP layer, and
+  the scroller declining an empty line (a code DIV).
+- **Inventory Q6, the wrap clicks**: **clamp now** in the decoder when the
+  banks are derived (a DIV; the 76 banks no longer equal the PC's).
+- **Set 8's verb**: **confirmed** - keep `Quit` (DIV-0101 amended).
+- **The key icons** ([`key-icons-by-mapping.md`](key-icons-by-mapping.md) 10):
+  (1) **icons that tell the truth first**, the US release's icons as a layout
+  preset after; (2) the Western text's icons **translated** to the PC's
+  buttons; (3) the world map's labels as the disc's words with live glyphs -
+  **a launcher option**, not the default; (4) keyboard glyphs as **key names**
+  in the game's own lettering; (5) **the reached sites first** (world map,
+  fishing, Config), the dialogue after.
+- **`combatGroup` and `sortScreens`'s saves**: `combatGroup` takes `combat`
+  (the owner's assumption). `sortScreens`' own save is not among the recipe
+  saves: replayed on `vaccinationAndFireScene`, `bridgeWalk` and
+  `ninaWalkBehindBlock` (all three hold its 11,957 zenny), its sort menus match
+  the 2026-10-07 frames, but its first run's play time (08:20) and its Camp
+  step (a camp room at about frame 1770) match none. The owner: attach
+  `vaccinationAndFireScene` - the sort menus are what the route is for. Its
+  frames from about 1770 on are a town, not the first run's camp.
+- **`radiationRoom`'s save**: `tools/recipe_saves/radiationRoom.DAT`; the
+  recipe carries `# save radiationRoom`.
 
 ### To look at
 
@@ -154,60 +205,10 @@ checkout's `analysis/` (never in the tree).
 
 ### To decide
 
-- **Inventory Q6, the wrap clicks** ([`disc-data-inventory.md`](disc-data-inventory.md)
-  4.6, 6): clamp as the stance says, or listen first? (Answered "wait" in the
-  morning; still open.)
-- **Inventory Q7, the 27A row's discs** (that doc 9.2): take the 27A loop from
-  any PSX disc (all five decode identical), so a PC + US cache and a Western
-  disc-only install get the disc's speed too - yes or no?
-- **Member 2's field bank** ([`arena-render-1013.md`](arena-render-1013.md) 6):
-  keep the PC's nudges (a repair of Capcom's art: a DIV), take the disc's, or
-  the split (the nudges kept, script 42's part dropped)?
-- **Ryu's byte, D288**: take the disc's (and clear the bit on a PC-only
-  install)?
-- **Member 1's battle bank**: take the disc's?
-- **The Western weakness row** ([`labels-1013.md`](labels-1013.md) 1.2): the
-  Western discs' enemy panel has no weakness row; drop it under a Western
-  layer, or keep it (as now)?
-- **The hi-lo count** (that doc 3): the US / EU draw passes count 3 in the
-  highlighted modes, which by the PC's reading would draw `HIG`; ours draws
-  every word whole. Keep, or does the owner's memory of the PlayStation say
-  otherwise? (And: where does fight 26 / Beyd's duel start, and the hi-lo game -
-  a route for each would let them be seen.)
-- **The US title layout, D277**: draw the US release's three-piece notice on
-  a US-built image (a DIV), or leave it?
-- **A ja-JP layer for kinds 7..16, D280** ([`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md)
-  3.2): build the exe's strings from the Japan disc (the PC's Chinese under
-  ja-JP becomes Japanese; the disc-only install gains Config and a named
-  hero) - yes, and in what scope? **And the fishing crash, D279**: through
-  that layer, or the scroller declining an empty line (a code DIV), or both?
-- **D255's fix**, now required (it hangs): the disc's XA stream as the
-  jingle on a PSX-only install, or the failed stream ending the wait at once
-  (a DIV) - which?
-- **Set 8's verb: done.** Built as "keep `Quit`" (DIV-0101 amended,
-  [`disc-data-inventory.md`](disc-data-inventory.md) 9.3) - confirm.
-- **The key icons, [`key-icons-by-mapping.md`](key-icons-by-mapping.md) 10's
-  five:** (1) icons that always tell the truth, or the US release's icons as a
-  layout preset? (2) the Western text's icons translated to the PC's buttons,
-  or kept with the US preset? (3) the world map's labels as the disc's words
-  with live glyphs? (4) keyboard glyphs as key names, or the PlayStation
-  shapes? (5) the reached sites first, the dialogue after?
-- **`combatGroup` and `sortScreens`'s saves**: which save were they recorded
-  from (neither has a `# save` header; `fairyVillageNews` and `dragonMenu`
-  were from `fairyVillage`, answered)?
-- **The Western title mark, D266**: the gap the inventory found is still
-  open - fill it by a `twin` row from the disc's `GAME.EMI#1`, so a Western
-  disc-only install draws its ™?
-
-### To know (no answer needed)
-
-- The 26 game-value twin rows (`e84ef241`, [`exe-image-twins-1013.md`](exe-image-twins-1013.md)
-  4) were kept.
-- `dragonMenu`'s frame 720 pop-up differs from its reference and is back
-  together at 780 - probably timing.
-
-## To listen to, on the PlayStation (2026-10-11 night)
-
+- **The hi-lo count** ([`labels-1013.md`](labels-1013.md) 3): **a route
+  first** (the owner, 2026-10-15) - a recorded route to the hi-lo game, and one
+  to fight 26 / Beyd's duel, so both can be seen against the PlayStation before
+  deciding. Where each starts is the owner's to say or record.
 - **Resume or restart after a random encounter.** From the `cutsceneAndNue`
   save in mednafen (the US disc's port 1 card, slot 1, placed beside the
   sibling's saves), after the Nue fight: walk into a random encounter and
