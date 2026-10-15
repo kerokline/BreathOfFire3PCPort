@@ -20,3 +20,6 @@ bool Lang_FullWidth();
 // patch (DIV-0015..0018, -0026, -0027, -0051, -0058..0061), so a new rule
 // for it changes one place.
 bool Lang_Latin();
+
+// True when BOF3X_LANG's primary subtag is `ja` (`ja-JP`).
+bool Lang_Japanese();

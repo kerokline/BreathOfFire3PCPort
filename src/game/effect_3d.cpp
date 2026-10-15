@@ -38,6 +38,7 @@
 // the rounding and a signalling NaN's quieting are the original's.
 #include "game/effect_3d.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -47,6 +48,7 @@
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -161,13 +163,18 @@ void FullScreen(unsigned abr, const unsigned char* cell) {
     SH_CALL(Gfx_CommitPrim)(6, 0xC);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG4)(p);
-    SetBits(p + 8, 0);
+    // DIV-0041: the left corners at Widescreen_FillX(), the right at 320 + the
+    // columns (EffectKind96_Pulse's rule); (0, 320) narrow or unarmed. The y
+    // corners stay Capcom's 0 and 320.
+    const U left = std::bit_cast<U>(Widescreen_FillX());
+    const U right = std::bit_cast<U>(Widescreen_FillRight(320.0f));   // kFloat320 narrow
+    SetBits(p + 8, left);
     SetBits(p + 0xC, 0);
-    SetBits(p + 0x18, kFloat320);
+    SetBits(p + 0x18, right);
     SetBits(p + 0x1C, 0);
-    SetBits(p + 0x28, 0);
+    SetBits(p + 0x28, left);
     SetBits(p + 0x2C, kFloat320);
-    SetBits(p + 0x38, kFloat320);
+    SetBits(p + 0x38, right);
     SetBits(p + 0x3C, kFloat320);
     p[0x14] = cell ? *cell : 0;
     p[4] = cell ? *cell : 0;
