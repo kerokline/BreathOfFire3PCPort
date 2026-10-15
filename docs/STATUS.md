@@ -1,12 +1,22 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-14)
+**Status:** IN PROGRESS (2026-10-15)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**The player install, 2026-10-15** (`install/sources-gui`, [`install-sources.md`](install-sources.md),
+[`install_process.md`](install_process.md)): the launcher's **Sources** page - a first run with no install opens
+it; the player adds the PC folder, a PlayStation `.cue`/`.bin`, a PSP `.iso` or a `.zip` of one; the importer
+checks it against `fixtures/*.files.tsv` and builds the home's `game\` and `cache\` - and a release zip
+(`tools/make_release.py`, 58.9 MB) carrying python.org's embeddable Python, so a player installs nothing else. The
+home is the launcher's folder (or `BOF3X_HOME`); every older path and flag still wins. Measured end to end from the
+release zip with no system Python: the US disc's zip added on the page, built in 205 s, the settings opened on
+en-US. **Not played**; the release workflow (`.github/workflows/release.yml`, a draft pre-release on a `v*` tag) has
+not run on GitHub.
 
 **Phase 0 is done: our code runs inside the game.** A launcher starts the
 player's own `BOF3.exe` suspended and loads `bof3x.dll` into it; a five-byte

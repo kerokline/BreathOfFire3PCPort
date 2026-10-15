@@ -29,6 +29,7 @@ import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threadin
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
+import bof3x_home  # noqa: E402  (a release's home; a checkout keeps the repo defaults)
 
 u =ctypes.WinDLL('user32')
 
@@ -171,7 +172,7 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--minutes', type=float, default=5.0,
                     help='default 5: launch, ~1 min to the first scene, one 5,522-frame cycle')
-    ap.add_argument('--game', default=os.path.join(ROOT, 'bof3'))
+    ap.add_argument('--game', default=bof3x_home.default_game(os.path.join(ROOT, 'bof3')))
     ap.add_argument('--original', default=None, metavar='LIST',
                     help='value for BOF3X_ORIGINAL, e.g. "*" or "File_Read"')
     ap.add_argument('--lang', default='original',
@@ -188,7 +189,7 @@ def main():
     ap.add_argument('--no-front', action='store_true',
                     help='do not keep the game window in front: DIV-0033 runs it unfocused, '
                          'and the oracle reads memory, not pixels')
-    ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
+    ap.add_argument('--launcher', default=os.path.join(bof3x_home.launcher_dir(), 'bof3x-launcher.exe'),
                     help='another copy of the launcher, with its own bof3x.ini and bof3x.dll beside it')
     ap.add_argument('--host', choices=('exe', 'bof3'), default=None,
                     help='bof3x.exe (exe) or the hosted BOF3.exe (bof3); default bof3 with --original, else exe')

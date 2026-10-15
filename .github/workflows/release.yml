@@ -1,0 +1,108 @@
+# Cut a release when a tag v* is pushed: build the engine as build.yml does,
+# lay out the player's zip with tools/make_release.py (the launcher, the DLL,
+# bof3x.exe and a bundled Python importer; no game data, which the script
+# checks), and attach it to a DRAFT pre-release. Publishing stays the owner's
+# click on GitHub (docs/releases/README.md).
+#
+# The release notes are docs/releases/<tag>.md, written before the tag is
+# pushed; the job stops if that file is missing.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "An existing tag to build a draft release for (e.g. v0.1.0-alpha.1)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Keep in step with build.yml (docs/SCAFFOLDING.md section 4).
+  LLVM_MINGW_TAG: "20260616"
+  LLVM_MINGW_CRT: ucrt
+
+jobs:
+  release:
+    name: Draft release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: The tag
+        run: |
+          set -euo pipefail
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          case "$tag" in v*) ;; *) echo "::error::not a release tag: $tag"; exit 1;; esac
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Release notes exist
+        run: |
+          test -f "docs/releases/$TAG.md" || {
+            echo "::error file=docs/releases/README.md::docs/releases/$TAG.md is missing - write the notes, then tag"
+            exit 1; }
+
+      - name: Install ninja
+        run: sudo apt-get update -q && sudo apt-get install -y -q ninja-build
+
+      - name: Cache llvm-mingw
+        id: toolchain-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/llvm-mingw
+          key: llvm-mingw-${{ env.LLVM_MINGW_TAG }}-${{ env.LLVM_MINGW_CRT }}-ubuntu-x86_64
+
+      - name: Fetch llvm-mingw ${{ env.LLVM_MINGW_TAG }}
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          gh release download "$LLVM_MINGW_TAG" -R mstorsjo/llvm-mingw \
+            -p "llvm-mingw-${LLVM_MINGW_TAG}-${LLVM_MINGW_CRT}-ubuntu-*-x86_64.tar.xz"
+          sha256sum llvm-mingw-*.tar.xz
+          mkdir llvm-mingw
+          tar -xf llvm-mingw-*.tar.xz -C llvm-mingw --strip-components=1
+          rm llvm-mingw-*.tar.xz
+
+      - name: Toolchain on PATH
+        run: |
+          echo "LLVM_MINGW_ROOT=$RUNNER_TEMP/llvm-mingw" >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/llvm-mingw/bin/i686-w64-mingw32-clang++" --version
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Configure
+        run: cmake --preset i686
+
+      - name: Build
+        run: cmake --build build
+
+      # The importer's checks, as checks.yml runs them: the release bundles it.
+      - name: The importer's recipes against fixtures/ (no game data)
+        run: python tools/importer.py check
+
+      - name: Lay out the release zip
+        run: python tools/make_release.py --version "$TAG" --build build --out "build/release/bof3x-$TAG-win.zip"
+
+      - name: Draft pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" "build/release/bof3x-$TAG-win.zip" \
+            --draft --prerelease --verify-tag \
+            --title "Breath of Fire III - bof3x $TAG" \
+            --notes-file "docs/releases/$TAG.md"

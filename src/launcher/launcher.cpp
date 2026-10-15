@@ -5,7 +5,10 @@
 //                  [--host exe|bof3] [-- <args for the game>]
 //
 // The game directory is, in order: --game, the BOF3_GAME_DIR environment
-// variable, the current directory, then ./bof3.
+// variable, the current directory, the home's game\ (common/home.h), then
+// ./bof3. With none of them an install and no cache, the Sources page offers
+// to make one from the player's own copy of the game
+// (docs/install-sources.md).
 //
 // --host exe (the default, docs/state3-design.md section 8): bof3x.exe, beside
 // this launcher, started with the game directory as its current directory -
@@ -30,11 +33,13 @@
 #include <windows.h>
 
 #include "common/cache_manifest.h"
+#include "common/home.h"
 #include "common/icon_stamp.h"
 #include "common/sha256.h"
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
 #include "launcher/exe_image.h"
+#include "launcher/sources_dialog.h"
 #include "game/draw_pool_room.h"
 #include "input/pad_sdl.h"
 
@@ -240,19 +245,17 @@ int wmain(int argc, wchar_t** argv) {
         }
     }
 
+    // The game directory: --game, BOF3_GAME_DIR, the current directory when it
+    // holds BOF3.exe, the home's game\ when the Sources page laid one out
+    // (common/home.h, docs/install-sources.md), else ./bof3.
     if (game_dir.empty()) {
         wchar_t env[MAX_PATH];
         DWORD n = GetEnvironmentVariableW(L"BOF3_GAME_DIR", env, MAX_PATH);
         if (n > 0 && n < MAX_PATH) game_dir = env;
     }
-    if (game_dir.empty()) game_dir = FileExists(L"BOF3.exe") ? L"." : L"bof3";
-    game_dir = FullPath(game_dir);
-
-    std::wstring exe = game_dir + L"\\BOF3.exe";
-    // Optional for our own executable when a cache is the .data source (a
-    // disc-built install, docs/disc-only-round.md): decided once the settings
-    // are read, below. The hosted build runs inside the file.
-    const bool exe_present = FileExists(exe);
+    // Named by the player, the folder is theirs to change: the Sources page,
+    // which lays out the home's game\, is not offered for it.
+    const std::wstring named_game = game_dir;
 
     std::wstring dll = OwnDirectory() + L"\\bof3x.dll";
     if (!FileExists(dll)) Die(L"%ls is missing; it belongs next to this launcher.", dll.c_str());
@@ -264,90 +267,140 @@ int wmain(int argc, wchar_t** argv) {
     if (host_asked < 0 && hosted)
         std::fwprintf(stderr, L"bof3x-launcher: a hosted-only switch is set (BOF3X_ORIGINAL, BOF3X_SHADOW, "
                               L"BOF3X_CALLTRACE or BOF3X_MP3=original): starting the hosted build, as --host bof3\n");
-    if (hosted && !exe_present)
-        Die(L"no BOF3.exe in %ls.\nThe hosted build (--host bof3, or a hosted-only switch: BOF3X_ORIGINAL, "
-            L"BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3=original) runs inside the player's own BOF3.exe; a "
-            L"disc-built install has none. Point --game or BOF3_GAME_DIR at an install that has it.",
-            game_dir.c_str());
     const std::wstring ours = OwnDirectory() + L"\\bof3x.exe";
     if (!hosted && !FileExists(ours))
         Die(L"%ls is missing; it belongs next to this launcher (or start the hosted build with --host bof3).",
             ours.c_str());
     if (FileExists(ours)) InstallGeneratedIcon(ours);
 
-    if (exe_present) {
-        std::string sha = Sha256Hex(exe);
-        if (sha != bof3x::kExpectedSha256)
-            Die(L"%ls is not the build this project targets.\n\nsha256   %hs\nexpected %hs\n\n"
-                L"Every address bof3x patches is specific to that one file; refusing to start. "
-                L"If this is an uncatalogued release, see fixtures.toml.",
-                exe.c_str(), sha.c_str(), bof3x::kExpectedSha256);
-
-        // The default key table is the engine's rule (input::DefaultKeys, the
-        // owner's call of 2026-10-11); where the file is there, it must be
-        // Key_TableDefault's 24 entries exactly.
-        std::vector<bof3x::input::KeyBinding> keys;
-        std::string why;
-        if (!bof3x::ExeDefaultKeys(exe, keys, why))
-            Die(L"cannot read the default key table from %ls: %hs", exe.c_str(), why.c_str());
-        const std::vector<bof3x::input::KeyBinding>& rule = bof3x::input::DefaultKeys();
-        bool same = keys.size() == rule.size();
-        for (size_t i = 0; same && i < keys.size(); ++i) same = keys[i].dik == rule[i].dik && keys[i].bits == rule[i].bits;
-        if (!same)
-            Die(L"the default key table in %ls (%u keys) is not the engine's rule (%u keys):\n%hs\nbut\n%hs", exe.c_str(),
-                static_cast<unsigned>(keys.size()), static_cast<unsigned>(rule.size()),
-                bof3x::input::FormatKeys(keys, "", " ").c_str(), bof3x::input::FormatKeys(rule, "", " ").c_str());
-        if (SelfTestOnly())
-            std::fwprintf(stderr, L"bof3x-launcher: the default key table, %u keys by the engine's rule, equal to "
-                                  L"BOF3.exe's: %hs\n",
-                          static_cast<unsigned>(rule.size()), bof3x::input::FormatKeys(rule, "", " ").c_str());
-    }
-
     // Settings. The file lives next to the launcher, not in the game directory,
     // which stays the player's own (CLAUDE.md rule 1) apart from BOF3.CFG -
     // and that one is the original program's own documented input, not a patch.
     const std::wstring ini = OwnDirectory() + L"\\bof3x.ini";
+    // From here to the settings dialog it may all run again: the Sources page
+    // (docs/install-sources.md) can lay out a new game folder and cache, so
+    // both are found again, and the settings read again, after it builds.
+    std::wstring exe;
+    bool exe_present = false;
     bof3x::Config cfg;
-    {
-        // DIV-0005: a retired bare language code (en, fr, de, ja) in the ini
-        // or the environment stops here, before the dialog, naming its tag.
-        std::string why;
-        const bool had_ini = bof3x::ConfigLoad(ini, cfg, why);
-        if (!why.empty()) Die(L"%hs\n\n%ls", why.c_str(), ini.c_str());
-        if (!had_ini) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
-        if (!bof3x::ConfigCheckEnvironmentLanguage(why)) Die(L"%hs", why.c_str());
-        // DIV-0102: "original" on an install without the Chinese text is
-        // refused here, before the dialog; the default becomes a language held.
-        if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
-        // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
-        // would read as empty and play the default layers the player may have
-        // meant to turn off.
-        if (!bof3x::ConfigOptValid(cfg.opt, why))
-            Die(L"%ls says opt=%hs: %hs.\n\nopt= is empty (the default layers installed), none, or a "
-                L"comma-separated list of layer names (docs/launcher-settings.md).",
-                ini.c_str(), cfg.opt.c_str(), why.c_str());
-        // The PSP's battle rules (psp=), refused here by the DLL's own rule
-        // rather than by a game that has started (psp_code.cpp keeps its check
-        // for a hand-set BOF3X_PSP).
-        if (!bof3x::ConfigPspValid(cfg.psp, why))
-            Die(L"%ls says psp=%hs: %hs.\n\npsp= is empty (the default: on when the cache's base is the PSP's), "
-                L"none, or a comma-separated list of the PSP's battle changes, duel-loss and myria-item "
-                L"(docs/psp-battle-changes.md).",
-                ini.c_str(), cfg.psp.c_str(), why.c_str());
-    }
+    for (bool again = true; again;) {
+        again = false;
+        game_dir = named_game;
+        if (game_dir.empty()) {
+            if (FileExists(L"BOF3.exe")) game_dir = L".";
+            else if (const std::wstring home_game = bof3x::HomeGameDefault(); !home_game.empty()) game_dir = home_game;
+            else game_dir = L"bof3";
+        }
+        game_dir = FullPath(game_dir);
 
-    if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
-        // The pad, for the dialogs' navigation and the Controls capture; stopped
-        // before the game starts, which opens it for itself (DIV-0050).
-        bof3x::input::PadSdl_Start(cfg.bindings.layout, nullptr);
-        const bool play = bof3x::ConfigDialogRun(game_dir, cfg);
-        bof3x::input::PadSdl_Stop();
-        if (!play) return 0;   // closed: start nothing
-        std::string why;   // DIV-0102: the dialog's choice, under the cache it may have changed
-        if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
-        if (!bof3x::ConfigSave(ini, cfg))
-            std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
-                          ini.c_str());
+        exe = game_dir + L"\\BOF3.exe";
+        // Optional for our own executable when a cache is the .data source (a
+        // disc-built install, docs/disc-only-round.md): decided once the settings
+        // are read, below. The hosted build runs inside the file.
+        exe_present = FileExists(exe);
+        bool no_install = false;
+        if (hosted && !exe_present)
+            Die(L"no BOF3.exe in %ls.\nThe hosted build (--host bof3, or a hosted-only switch: BOF3X_ORIGINAL, "
+                L"BOF3X_SHADOW, BOF3X_CALLTRACE, BOF3X_MP3=original) runs inside the player's own BOF3.exe; a "
+                L"disc-built install has none. Point --game or BOF3_GAME_DIR at an install that has it.",
+                game_dir.c_str());
+        if (exe_present) {
+            std::string sha = Sha256Hex(exe);
+            if (sha != bof3x::kExpectedSha256)
+                Die(L"%ls is not the build this project targets.\n\nsha256   %hs\nexpected %hs\n\n"
+                    L"Every address bof3x patches is specific to that one file; refusing to start. "
+                    L"If this is an uncatalogued release, see fixtures.toml.",
+                    exe.c_str(), sha.c_str(), bof3x::kExpectedSha256);
+
+            // The default key table is the engine's rule (input::DefaultKeys, the
+            // owner's call of 2026-10-11); where the file is there, it must be
+            // Key_TableDefault's 24 entries exactly.
+            std::vector<bof3x::input::KeyBinding> keys;
+            std::string why;
+            if (!bof3x::ExeDefaultKeys(exe, keys, why))
+                Die(L"cannot read the default key table from %ls: %hs", exe.c_str(), why.c_str());
+            const std::vector<bof3x::input::KeyBinding>& rule = bof3x::input::DefaultKeys();
+            bool same = keys.size() == rule.size();
+            for (size_t i = 0; same && i < keys.size(); ++i) same = keys[i].dik == rule[i].dik && keys[i].bits == rule[i].bits;
+            if (!same)
+                Die(L"the default key table in %ls (%u keys) is not the engine's rule (%u keys):\n%hs\nbut\n%hs", exe.c_str(),
+                    static_cast<unsigned>(keys.size()), static_cast<unsigned>(rule.size()),
+                    bof3x::input::FormatKeys(keys, "", " ").c_str(), bof3x::input::FormatKeys(rule, "", " ").c_str());
+            if (SelfTestOnly())
+                std::fwprintf(stderr, L"bof3x-launcher: the default key table, %u keys by the engine's rule, equal to "
+                                      L"BOF3.exe's: %hs\n",
+                              static_cast<unsigned>(rule.size()), bof3x::input::FormatKeys(rule, "", " ").c_str());
+        }
+
+        {
+            // DIV-0005: a retired bare language code (en, fr, de, ja) in the ini
+            // or the environment stops here, before the dialog, naming its tag.
+            std::string why;
+            const bool had_ini = bof3x::ConfigLoad(ini, cfg, why);
+            if (!why.empty()) Die(L"%hs\n\n%ls", why.c_str(), ini.c_str());
+            if (!had_ini) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
+            if (!bof3x::ConfigCheckEnvironmentLanguage(why)) Die(L"%hs", why.c_str());
+            // No install at all - no BOF3.exe, no cache, no BOF3X_EXEIMAGE, and a
+            // game folder the player did not name: the Sources page below makes
+            // one (its first run). Never under a self-test or --no-config, which
+            // keep the refusals.
+            no_install = !hosted && !exe_present && named_game.empty() && bof3x::ConfigCacheDataRoot(cfg).empty() &&
+                         GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", nullptr, 0) == 0 && !SelfTestOnly() &&
+                         want_dialog != 0;
+            // DIV-0102: "original" on an install without the Chinese text is
+            // refused here, before the dialog; the default becomes a language
+            // held. Not asked of no install: there is no language to hold yet.
+            if (!no_install && !bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
+            // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
+            // would read as empty and play the default layers the player may have
+            // meant to turn off.
+            if (!bof3x::ConfigOptValid(cfg.opt, why))
+                Die(L"%ls says opt=%hs: %hs.\n\nopt= is empty (the default layers installed), none, or a "
+                    L"comma-separated list of layer names (docs/launcher-settings.md).",
+                    ini.c_str(), cfg.opt.c_str(), why.c_str());
+            // The PSP's battle rules (psp=), refused here by the DLL's own rule
+            // rather than by a game that has started (psp_code.cpp keeps its check
+            // for a hand-set BOF3X_PSP).
+            if (!bof3x::ConfigPspValid(cfg.psp, why))
+                Die(L"%ls says psp=%hs: %hs.\n\npsp= is empty (the default: on when the cache's base is the PSP's), "
+                    L"none, or a comma-separated list of the PSP's battle changes, duel-loss and myria-item "
+                    L"(docs/psp-battle-changes.md).",
+                    ini.c_str(), cfg.psp.c_str(), why.c_str());
+        }
+
+        if (no_install) {   // the Sources page's first run (above)
+            const bool built = bof3x::SourcesDialogRun(nullptr, cfg, true);
+            if (!bof3x::ConfigSave(ini, cfg))   // Locate ffmpeg's choice, kept whatever happened
+                std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n", ini.c_str());
+            if (!built) return 0;   // closed without an install: start nothing
+            cfg = bof3x::Config{};
+            again = true;
+            continue;
+        }
+
+        if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
+            // The pad, for the dialogs' navigation and the Controls capture; stopped
+            // before the game starts, which opens it for itself (DIV-0050).
+            bof3x::input::PadSdl_Start(cfg.bindings.layout, nullptr);
+            const bof3x::ConfigDialogResult result = bof3x::ConfigDialogRun(game_dir, cfg);
+            bof3x::input::PadSdl_Stop();
+            if (result == bof3x::kDialogClosed) return 0;   // closed: start nothing
+            if (result == bof3x::kDialogSourcesChanged) {
+                // the install was rebuilt: save what the page said, then find the
+                // game folder and the cache again and show the page anew
+                if (!bof3x::ConfigSave(ini, cfg))
+                    std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n", ini.c_str());
+                cfg = bof3x::Config{};
+                want_dialog = 1;
+                again = true;
+                continue;
+            }
+            std::string why;   // DIV-0102: the dialog's choice, under the cache it may have changed
+            if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
+            if (!bof3x::ConfigSave(ini, cfg))
+                std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
+                              ini.c_str());
+        }
     }
 
     {

@@ -64,6 +64,20 @@ are the manifest's 742, that every container's chunks add up to the manifest's
 size, that every source names a build `fixtures.toml` holds, and that every
 layer is `base` or the target's own language layer.
 
+### The commands
+
+| Command | What |
+|---|---|
+| `recipes` | generate `recipes/pc-zh.toml` from the owner's PC `DAT\` and discs (section 1) |
+| `opt-recipes` | generate `recipes/opt.toml` ([`opt-layers.md`](opt-layers.md)) |
+| `identify PATH...` | name each source's build by `fixtures.toml`; `--json` is the launcher's form: one object a line, also for a PC game folder, a `.zip`, and with a sentence for the player when a source is not usable ([`install-sources.md`](install-sources.md) 4) |
+| `build` | the cache from the player's ordered sources (section 2) |
+| `install` | a cache's layers into a game's `DAT\`; `--base` lays a disc-only game folder ([`disc-only-install.md`](disc-only-install.md)) |
+| `verify` | a cache against its manifest and the recipes |
+| `check` | the recipes against `fixtures/`, no game data (CI) |
+| `sources --home H list / add / remove` | the player's source list, `H\sources.toml`, ordered by role ([`install-sources.md`](install-sources.md) 3) |
+| `setup --home H` | `build` + `install` from that list into `H\cache` and `H\game`, swapped in only when whole; `--json-progress` for the launcher ([`install-sources.md`](install-sources.md) 5) |
+
 ## 2. The pipeline
 
 ```

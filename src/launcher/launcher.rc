@@ -86,6 +86,7 @@ BEGIN
     PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 289, 52, 14
     PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 289, 52, 14
     PUSHBUTTON      "&Jukebox...", IDC_MUSICPLAYER, 119, 289, 48, 14
+    PUSHBUTTON      "So&urces...", IDC_SOURCES, 171, 289, 52, 14
     DEFPUSHBUTTON   "&Play", IDOK, 443, 289, 52, 14
     PUSHBUTTON      "E&xit", IDCANCEL, 501, 289, 52, 14
 END
@@ -285,4 +286,35 @@ BEGIN
     PUSHBUTTON      "&Play", IDC_MP_PLAY, 7, 165, 52, 14
     PUSHBUTTON      "S&top", IDC_MP_STOP, 63, 165, 52, 14
     DEFPUSHBUTTON   "Close", IDCANCEL, 261, 165, 52, 14
+END
+
+// The Sources page (docs/install-sources.md): the player's copies of the game,
+// checked and built by tools/importer.py (src/launcher/sources_dialog.cpp).
+IDD_SOURCES DIALOGEX 0, 0, 400, 276
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sources - bof3x"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    LTEXT           "", IDC_SO_INTRO, 7, 7, 386, 26
+    LTEXT           "Your sources:", -1, 7, 36, 200, 9
+    LISTBOX         IDC_SO_LIST, 7, 46, 330, 62, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_BORDER | WS_TABSTOP
+    PUSHBUTTON      "&Remove", IDC_SO_REMOVE, 343, 46, 50, 14
+
+    LTEXT           "&Add a source:", -1, 7, 114, 200, 9
+    EDITTEXT        IDC_SO_PATH, 7, 124, 224, 13, ES_AUTOHSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&File...", IDC_SO_FILE, 235, 123, 50, 14
+    PUSHBUTTON      "F&older...", IDC_SO_FOLDER, 289, 123, 50, 14
+    DEFPUSHBUTTON   "A&dd", IDC_SO_ADD, 343, 123, 50, 14
+
+    LTEXT           "", IDC_SO_FFNOTE, 7, 145, 386, 9, SS_PATHELLIPSIS
+    PUSHBUTTON      "&Locate ffmpeg.exe...", IDC_SO_FFLOCATE, 231, 157, 76, 14
+    PUSHBUTTON      "&Get ffmpeg (website)...", IDC_SO_FFGET, 311, 157, 82, 14
+
+    CONTROL         "", IDC_SO_PROGRESS, "msctls_progress32", WS_BORDER, 7, 180, 386, 9
+    LTEXT           "", IDC_SO_STATUS, 7, 192, 386, 9, SS_ENDELLIPSIS
+    EDITTEXT        IDC_SO_LOG, 7, 204, 386, 46, ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "", IDC_SO_HOME, 7, 258, 270, 9, SS_PATHELLIPSIS
+    PUSHBUTTON      "&Build the install", IDC_SO_BUILD, 281, 255, 64, 14
+    PUSHBUTTON      "&Close", IDCANCEL, 349, 255, 44, 14
 END

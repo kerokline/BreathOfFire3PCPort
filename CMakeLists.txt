@@ -751,6 +751,7 @@ add_executable(bof3x_launcher
   src/launcher/config_dialog.cpp
   src/launcher/exe_image.cpp
   src/launcher/music_player.cpp
+  src/launcher/sources_dialog.cpp
   src/launcher/suites.cpp
   src/audio/spu.cpp
   src/audio/seq.cpp
@@ -758,6 +759,7 @@ add_executable(bof3x_launcher
   src/common/sha256.cpp
   src/common/icon_stamp.cpp
   src/common/cache_manifest.cpp
+  src/common/home.cpp
   src/input/bindings.cpp
   src/input/pad_sdl.cpp
   src/launcher/launcher.rc)
@@ -768,8 +770,9 @@ add_dependencies(bof3x_launcher bof3x_symbols bof3x_suites)
 # SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
 # dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
 # and circle as navigation.
-# shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW).
-target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 shell32 ole32 winmm SDL3::SDL3-static)
+# shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
+# comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW).
+target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 winmm SDL3::SDL3-static)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
 # The Jukebox's names (docs/music-player.md section 4), beside the launcher.
