@@ -7,7 +7,9 @@ the Look box's CRT entries, snap, widescreen, cheats, controls and the pad;
 not re-run since. **2026-10-12: the PSP extras boxes are replaced by three
 suites** - graphics, audio, data, each the PlayStation's or the PSP's -
 [`launcher-suites.md`](launcher-suites.md), DIV-0107; §3.1's PSP extras item
-is the record of what they replaced)
+is the record of what they replaced. **2026-10-15: the dialog is a window
+with a title page and Configure's tabs** - section 2a, from the owner's
+mock-ups)
 
 `bof3x-launcher` now opens a settings dialog before it starts the game. This
 document says what the shipped `START.EXE` / `SETUP.EXE` are (neither is a
@@ -73,6 +75,70 @@ more, SatPixie's Options, Cheats, Controls and its Bind capture, all
 **WPF / WinUI** (a .NET runtime dependency); **WebView2** (an Edge runtime
 dependency). A dialog resource is what a 2001-era game launcher would have
 used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
+
+## 2a. The window: a title page and Configure (2026-10-15)
+
+From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
+
+- **The title page**: the party on the dune
+  ([`images/launcherBackground.png`](images/launcherBackground.png), built
+  into the exe as `IDR_BACKGROUND`, a screenshot on the terms of
+  [`LICENSING.md`](LICENSING.md) section 3) with the banner in its top black
+  band and **Play / Configure / Jukebox / Exit** in its bottom one. The banner
+  is our own lettering after the North American logo's arrangement - BREATH,
+  a small OF, FIRE, a taller III - in Palatino Linotype, which every Windows
+  install has (the owner's choice over Georgia and the other stock serifs; a
+  bundled font was offered and not taken). Not the logo's art.
+- **Configure**: the same banner over six push-like tabs - Settings,
+  Controls, Music, Game Options, Mods, Data - and Back. Each tab is one or
+  two child dialogs (`IDD_PAGE_*`, `kSubPages` in `config_dialog.cpp`); a tab
+  with two shows a sub-tab button for each. Settings holds what the old
+  dialog's Settings group did, plus "Show this window every time"; Controls
+  is the old Controls dialog's grid, inline, as "Directions and buttons" and
+  "Shoulders, Start and Select"; Music the song source; Game Options the
+  three suites ([`launcher-suites.md`](launcher-suites.md)) as "Graphics and
+  audio" and "Data", and the old Cheats dialog as "Cheats"; Data the cache
+  folder and Sources.... **Mods is kept for side-loaded files** - a
+  player's own DAT and EMI files over the game's, pixel art, script,
+  scenario (the owner, 2026-10-15; [`IDEAS.md`](IDEAS.md) I33, "mods as
+  cache layers") - and says so; nothing loads them yet. (The suites sat
+  under Mods for an hour first; the owner moved them, since they choose
+  between releases rather than load a player's files.) The SatPixie options, the capture,
+  the Jukebox and the Sources page are still their own dialogs. Control ids
+  are unique across the pages, so the code finds any of them through the
+  window (`Item`, `config_dialog.cpp`), and the pages forward what their
+  controls say to it.
+
+**Size.** The picture's 640 x 480 times the display's scale (the owner,
+2026-10-15): 640 x 480 at 100 %, 1280 x 960 at 200 %. Drawn without
+smoothing at a whole scale and smoothed at a fractional one (125 %, 150 %),
+where unsmoothed pixels would come out uneven. The pages are dialog units,
+which Windows scales by the same factor, so they are laid out to fit 640 x
+480 at any scale - the reason Controls and Game Options have sub-pages; a
+page that did not fit would make the window larger (the picture centred)
+and say so on stderr. The first build sized the window to the largest whole
+multiple the monitor holds (1280 x 960 on a 1080p monitor at 100 %); the
+owner asked for it to start at 640 x 480 instead.
+
+**What is saved.** Play applies every page and saves, as before. **Back**
+(or Escape, or the pad's circle) applies the pages and returns to the title
+page; an Exit from there saves what they said and starts nothing
+(`kDialogSave`). Exit or the close box without a Back saves nothing. The
+Controls and Game Options pages are read back only once touched, so an
+untouched window still writes the bindings and cheats as they were read (an
+ini holding a multiplier over the cap of 10 is shown as 10 and kept as
+written). Start, and Enter, still mean Play from either face.
+
+Checked 2026-10-15, no game run, at 100 % only (this machine's scale; 200 %
+is the arithmetic, not yet seen): every tab and sub-tab captured by a scratch
+script (PrintWindow, as `tools/launcher_host/capture_page.py` does), each
+page inside the 640 x 480 window, the Data suite's reason no longer cut off.
+`dialog_test.py` finds controls through the pages now, and reads a member
+line as shown from its own `WS_VISIBLE` (its page may be hidden); 27 checks
+pass, the same 27 as the launcher from before this change, and both stop at
+its PSX-only cache step on the disc-only refusal (DIV-0102) before the
+window opens - not the window's doing. Back then Exit wrote `wide=2`; the
+close box after the same change left the ini byte for byte.
 
 ## 3. Three destinations, because there are three mechanisms
 
@@ -271,7 +337,8 @@ show_launcher=1            # 0 starts the game straight away
 
 The dialog's **"Show this window every time"** box clears `show_launcher`;
 `--config` is the way back, and the dialog says so on its face. Closing the
-dialog, or pressing Exit, starts nothing and saves nothing.
+window, or pressing Exit, starts nothing and saves nothing - unless Back has
+applied Configure's pages first (section 2a).
 
 **Scripted runs inherit the settings file.** The launcher fills in
 `BOF3X_LANG` and `BOF3X_FILTER` from `bof3x.ini` only when the variable is

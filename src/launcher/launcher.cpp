@@ -385,6 +385,13 @@ int wmain(int argc, wchar_t** argv) {
             const bof3x::ConfigDialogResult result = bof3x::ConfigDialogRun(game_dir, cfg);
             bof3x::input::PadSdl_Stop();
             if (result == bof3x::kDialogClosed) return 0;   // closed: start nothing
+            if (result == bof3x::kDialogSave) {
+                // left after Back to the title page: what the pages said, saved;
+                // nothing started
+                if (!bof3x::ConfigSave(ini, cfg))
+                    std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n", ini.c_str());
+                return 0;
+            }
             if (result == bof3x::kDialogSourcesChanged) {
                 // the install was rebuilt: save what the page said, then find the
                 // game folder and the cache again and show the page anew

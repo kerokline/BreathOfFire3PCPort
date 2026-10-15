@@ -1392,7 +1392,9 @@ button prompts (I29), the video decoder (I7) and the music question (I23).
 - **Mods as cache layers.** [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 3
   lays the cache out as a base and language layers. A mod is one more layer
   over the base, with a load order: art, retranslation, rebalance. Nothing is
-  built for it; the cache format must only not rule it out.
+  built for it; the cache format must only not rule it out. The launcher's
+  Mods tab is kept for it (the owner, 2026-10-15: side-loaded DAT and EMI
+  files - custom pixel art, scenario; [`launcher-settings.md`](launcher-settings.md) 2a).
 - **Hardened loaders.** The original loaders trusted their own files. Ours
   read what a player or a mod supplies, so the asset and save parsers want
   bounds checks and a fuzzing pass.

@@ -3,6 +3,23 @@
 
 #define IDD_CONFIG       100
 
+// The launcher's window (docs/launcher-settings.md section 2a): a title page
+// and Configure, whose tabs are these sub-pages, each a child dialog.
+#define IDD_PAGE_SETTINGS 110
+#define IDD_PAGE_CONTROLS 111
+#define IDD_PAGE_MUSIC    112
+#define IDD_PAGE_GAME     113
+#define IDD_PAGE_VERSIONS 114   // Game Options: graphics and audio
+#define IDD_PAGE_DATA     115
+#define IDD_PAGE_CONTROLS2 116  // the Controls tab's second sub-page
+#define IDD_PAGE_VERSIONS2 117  // Game Options: data
+#define IDD_PAGE_MODS     118   // the Mods tab, kept for side-loaded files (IDEAS I33)
+#define IDR_BACKGROUND    120   // docs/images/launcherBackground.png, the title page's picture
+#define IDC_CONFIGURE   1020
+#define IDC_BACK        1021
+#define IDC_TAB0        1022    // the six tabs, IDC_TAB0 + page
+#define IDC_SUB0        1032    // a tab's sub-tabs, IDC_SUB0 + place (three)
+
 #define IDC_LANGUAGE    1001
 #define IDC_LANGNOTE    1002
 #define IDC_FILTER      1003
@@ -14,8 +31,6 @@
 #define IDC_WIDE        1009
 #define IDC_SNAP        1010
 #define IDC_LOOKOPTIONS 1011
-#define IDC_CHEATS      1012
-#define IDC_CONTROLS    1013
 // The music (DIV-0087).
 #define IDC_MUSIC       1014
 #define IDC_CACHE       1015
@@ -61,8 +76,7 @@
 #define IDC_SP_MASK     1128
 #define IDC_SP_DEFAULTS 1129
 
-// The cheats dialog (DIV-0045, DIV-0046).
-#define IDD_CHEATS       102
+// The Game Options page's cheats (DIV-0045, DIV-0046).
 #define IDC_CH_EXP      1200
 #define IDC_CH_ZENNY    1201
 #define IDC_CH_EXP_V    1210
@@ -70,10 +84,9 @@
 #define IDC_CH_STEAL    1220
 #define IDC_CH_DEFAULTS 1221
 
-// The Controls dialog (DIV-0050, docs/controls.md section 4.2): fourteen rows,
+// The Controls page (DIV-0050, docs/controls.md section 4.2): fourteen rows,
 // one an action, each with two key boxes and two pad boxes - the ids are
 // base + row.
-#define IDD_CONTROLS     103
 #define IDC_CT_KEY1     1300
 #define IDC_CT_KEY2     1320
 #define IDC_CT_PAD1     1340

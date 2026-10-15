@@ -23,6 +23,9 @@ u.FindWindowW.restype = W.HWND
 u.FindWindowW.argtypes = [W.LPCWSTR, W.LPCWSTR]
 u.GetDlgItem.restype = W.HWND
 u.GetDlgItem.argtypes = [W.HWND, ctypes.c_int]
+u.FindWindowExW.restype = W.HWND
+u.FindWindowExW.argtypes = [W.HWND, W.HWND, W.LPCWSTR, W.LPCWSTR]
+u.GetWindowLongW.argtypes = [W.HWND, ctypes.c_int]
 u.SendMessageW.restype = ctypes.c_ssize_t
 u.SendMessageW.argtypes = [W.HWND, W.UINT, W.WPARAM, W.LPARAM]
 u.IsWindowVisible.argtypes = [W.HWND]
@@ -176,6 +179,17 @@ def setup(launcher, exe, dat, caches=()):
             open(os.path.join(d, "opt", layer, "dat", "AREA067.DAT"), "wb").close()
 
 
+def find_item(dlg, i):
+    """A control on the window or on one of Configure's sub-pages (child dialogs,
+    docs/launcher-settings.md section 2a), as the launcher's own Item finds it."""
+    h = u.GetDlgItem(dlg, i)
+    page = u.FindWindowExW(dlg, None, "#32770", None)
+    while not h and page:
+        h = u.GetDlgItem(page, i)
+        page = u.FindWindowExW(dlg, page, "#32770", None)
+    return h
+
+
 def text(h):
     # WM_GETTEXT, which the system marshals across processes (GetWindowText reads
     # another process's edit control as empty)
@@ -189,6 +203,12 @@ def settext(h, s):
     u.SendMessageW(h, 0x000C, 0, ctypes.cast(b, ctypes.c_void_p).value)  # WM_SETTEXT, sends EN_CHANGE
 
 
+def shown(h):
+    """The launcher left the line shown (WS_VISIBLE on the line itself): its sub-page may be
+    hidden behind the title page, which IsWindowVisible would count."""
+    return bool(u.GetWindowLongW(h, -16) & 0x10000000)   # GWL_STYLE, WS_VISIBLE
+
+
 def suites(item):
     """Each suite's radios (enabled, checked, label), its member lines (text, enabled; the
     shown ones), and its reason line."""
@@ -198,7 +218,7 @@ def suites(item):
         radio = lambda k: (bool(u.IsWindowEnabled(item(b + k))), u.SendMessageW(item(b + k), BM_GETCHECK, 0, 0),
                            text(item(b + k)))
         members = [(text(item(b + MEMBER0 + k)), bool(u.IsWindowEnabled(item(b + MEMBER0 + k))))
-                   for k in range(4) if u.IsWindowVisible(item(b + MEMBER0 + k))]
+                   for k in range(4) if shown(item(b + MEMBER0 + k))]
         out[s] = dict(psx=radio(PSX), psp=radio(PSP), members=members, why=text(item(b + WHY)))
     return out
 
@@ -238,7 +258,7 @@ def drive(proc, p, act):
         proc.kill()   # our own process, by its handle
         raise AssertionError("no dialog: %s" % proc.stderr.read().decode(errors="replace").strip())
     time.sleep(0.3)
-    item = lambda i: u.GetDlgItem(dlg, i)
+    item = lambda i: find_item(dlg, i)
     state = dict(music=u.SendMessageW(item(IDC_MUSIC), CB_GETCURSEL, 0, 0), cache=text(item(IDC_CACHE)),
                  cachenote=text(item(IDC_CACHENOTE)), note=text(item(IDC_SUITENOTE)), suites=suites(item))
     if act:

@@ -5,116 +5,299 @@
 // dialog is neither Windows 95 grey nor bitmap-blurred on a high-DPI desktop.
 1 RT_MANIFEST "launcher/launcher.manifest"
 
-IDD_CONFIG DIALOGEX 0, 0, 560, 309
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+// The launcher's window (docs/launcher-settings.md section 2a). Two faces: the
+// title page - the picture (IDR_BACKGROUND), the banner and these four buttons -
+// and Configure, the six tabs and Back over the sub-page the tab shows. The
+// window is sized in pixels, a whole multiple of the picture's 640 x 480, and
+// config_dialog.cpp's Layout places every control here; the coordinates below
+// are placeholders. The caption is what tools/launcher_host finds it by.
+IDD_CONFIG DIALOGEX 0, 0, 366, 274
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_CLIPCHILDREN
+EXSTYLE WS_EX_CONTROLPARENT
 CAPTION "Breath of Fire III - bof3x"
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Settings", -1, 7, 7, 276, 148
+    DEFPUSHBUTTON   "&Play", IDOK, 0, 0, 50, 14, WS_GROUP
+    PUSHBUTTON      "&Configure", IDC_CONFIGURE, 0, 0, 50, 14
+    PUSHBUTTON      "&Jukebox", IDC_MUSICPLAYER, 0, 0, 50, 14
+    PUSHBUTTON      "E&xit", IDCANCEL, 0, 0, 50, 14
 
-    LTEXT           "&Language:", -1, 16, 24, 62, 9
-    COMBOBOX        IDC_LANGUAGE, 84, 22, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "", IDC_LANGNOTE, 84, 37, 186, 9
+    // The tabs, IDC_TAB0 + page (resource.h): push-like radio buttons, so the
+    // page shown stays pressed.
+    AUTORADIOBUTTON "Settings", 1022, 0, 0, 50, 14, BS_PUSHLIKE | WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Controls", 1023, 0, 0, 50, 14, BS_PUSHLIKE
+    AUTORADIOBUTTON "Music", 1024, 0, 0, 50, 14, BS_PUSHLIKE
+    AUTORADIOBUTTON "Game Options", 1025, 0, 0, 50, 14, BS_PUSHLIKE
+    AUTORADIOBUTTON "Mods", 1026, 0, 0, 50, 14, BS_PUSHLIKE
+    AUTORADIOBUTTON "Data", 1027, 0, 0, 50, 14, BS_PUSHLIKE
+    PUSHBUTTON      "Back", IDC_BACK, 0, 0, 50, 14, WS_GROUP | WS_TABSTOP
 
-    LTEXT           "&Look:", -1, 16, 52, 62, 9
-    COMBOBOX        IDC_FILTER, 84, 50, 132, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Options...", IDC_LOOKOPTIONS, 220, 49, 50, 14
-
-    LTEXT           "&Display:", -1, 16, 70, 62, 9
-    COMBOBOX        IDC_DISPLAY, 84, 68, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-
-    LTEXT           "Re&nderer:", -1, 16, 88, 62, 9
-    COMBOBOX        IDC_RENDERER, 84, 86, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Only Capcom's set-up reads it; bof3x always draws with Direct3D 11.",
-                    -1, 84, 101, 196, 9
-
-    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 14, 116, 250, 10
-    // DIV-0041: off, 16:9 or 21:9 (wide= 0, 1, 2; docs/ultrawide-frame.md)
-    LTEXT           "&Widescreen:", -1, 16, 131, 62, 9
-    COMBOBOX        IDC_WIDE, 84, 128, 186, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX    "S&nap the picture to whole multiples of its size", IDC_SNAP, 14, 144, 268, 10
-    LTEXT           "Ticked, the window resizes in whole steps; unticked, the picture stretches to the window's height.",
-                    -1, 26, 156, 256, 9
-
-    // DIV-0087: the music source and the importer's cache (docs/music-seq-engine.md)
-    GROUPBOX        "Music", -1, 7, 172, 276, 56
-    LTEXT           "&Music:", -1, 16, 186, 62, 9
-    COMBOBOX        IDC_MUSIC, 84, 184, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "C&ache folder:", -1, 16, 203, 62, 9
-    EDITTEXT        IDC_CACHE, 84, 201, 132, 13, ES_AUTOHSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Browse...", IDC_CACHEBROWSE, 220, 200, 50, 14
-    LTEXT           "", IDC_CACHENOTE, 84, 216, 196, 9
-
-    // The three suites (docs/launcher-suites.md, recipes/suites.toml): each the PlayStation's
-    // version of a set of differences or the PSP's. Suite i's ids are 1040 + 10 i plus: 0 the
-    // label, 1 the PlayStation radio, 2 the PSP radio, 3..6 the member lines, 7 the reason
-    // (resource.h). They replaced the PSP extras boxes on 2026-10-12. The data suite has two
-    // more member lines, 8 and 9 (its code members, DIV-0108), its reason three lines high.
-    GROUPBOX        "Versions: the PlayStation's or the PSP's", IDC_SUITEGROUP, 290, 7, 263, 246
-    LTEXT           "", IDC_SUITENOTE, 298, 19, 248, 18
-    LTEXT           "", 1040, 298, 41, 40, 9
-    AUTORADIOBUTTON "PlayStation", 1041, 340, 40, 104, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "PSP", 1042, 446, 40, 104, 10, WS_TABSTOP
-    LTEXT           "", 1043, 306, 52, 118, 9, WS_GROUP
-    LTEXT           "", 1044, 428, 52, 118, 9
-    LTEXT           "", 1045, 306, 61, 118, 9
-    LTEXT           "", 1046, 428, 61, 118, 9
-    LTEXT           "", 1047, 306, 71, 244, 36
-    LTEXT           "", 1050, 298, 112, 40, 9
-    AUTORADIOBUTTON "PlayStation", 1051, 340, 111, 104, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "PSP", 1052, 446, 111, 104, 10, WS_TABSTOP
-    LTEXT           "", 1053, 306, 123, 118, 9, WS_GROUP
-    LTEXT           "", 1054, 428, 123, 118, 9
-    LTEXT           "", 1055, 306, 132, 118, 9
-    LTEXT           "", 1056, 428, 132, 118, 9
-    LTEXT           "", 1057, 306, 142, 244, 36
-    LTEXT           "", 1060, 298, 183, 40, 9
-    AUTORADIOBUTTON "PlayStation", 1061, 340, 182, 104, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "PSP", 1062, 446, 182, 104, 10, WS_TABSTOP
-    LTEXT           "", 1063, 306, 194, 118, 9, WS_GROUP
-    LTEXT           "", 1064, 428, 194, 118, 9
-    LTEXT           "", 1065, 306, 203, 118, 9
-    LTEXT           "", 1066, 428, 203, 118, 9
-    LTEXT           "", 1068, 306, 212, 118, 9
-    LTEXT           "", 1069, 428, 212, 118, 9
-    LTEXT           "", 1067, 306, 222, 244, 27
-
-    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 261, 200, 10, WS_GROUP | WS_TABSTOP
-    LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
-                    -1, 14, 273, 262, 9
-
-    PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 289, 52, 14
-    PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 289, 52, 14
-    PUSHBUTTON      "&Jukebox...", IDC_MUSICPLAYER, 119, 289, 48, 14
-    PUSHBUTTON      "So&urces...", IDC_SOURCES, 171, 289, 52, 14
-    DEFPUSHBUTTON   "&Play", IDOK, 443, 289, 52, 14
-    PUSHBUTTON      "E&xit", IDCANCEL, 501, 289, 52, 14
+    // A tab's sub-tabs, IDC_SUB0 + place, labelled by the tab (config_dialog.cpp
+    // kSubPages): shown only over a tab with more than one sub-page.
+    AUTORADIOBUTTON "", 1032, 0, 0, 50, 14, BS_PUSHLIKE | WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "", 1033, 0, 0, 50, 14, BS_PUSHLIKE
+    AUTORADIOBUTTON "", 1034, 0, 0, 50, 14, BS_PUSHLIKE
 END
 
-// DIV-0045 / DIV-0046: the cheats (docs/cheats.md).
-IDD_CHEATS DIALOGEX 0, 0, 300, 150
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Cheats"
+// The title page's picture: a screenshot on the terms of docs/LICENSING.md
+// section 3 (docs/images/ only, an asset of the launcher's own pages).
+IDR_BACKGROUND RCDATA "../../docs/images/launcherBackground.png"
+
+IDD_PAGE_SETTINGS DIALOGEX 0, 0, 300, 190
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
 FONT 9, "Segoe UI", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Battle rewards", -1, 7, 7, 286, 64
-    LTEXT           "EXP won, times", -1, 14, 21, 90, 9
-    CONTROL         "", IDC_CH_EXP, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 18, 150, 14
-    LTEXT           "1", IDC_CH_EXP_V, 260, 21, 30, 9
-    LTEXT           "Zenny won, times", -1, 14, 37, 90, 9
-    CONTROL         "", IDC_CH_ZENNY, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 106, 34, 150, 14
-    LTEXT           "1", IDC_CH_ZENNY_V, 260, 37, 30, 9
+    GROUPBOX        "Settings", -1, 0, 0, 296, 188
+
+    LTEXT           "&Language:", -1, 9, 17, 62, 9
+    COMBOBOX        IDC_LANGUAGE, 77, 15, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "", IDC_LANGNOTE, 77, 30, 186, 9
+
+    LTEXT           "&Look:", -1, 9, 45, 62, 9
+    COMBOBOX        IDC_FILTER, 77, 43, 132, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Options...", IDC_LOOKOPTIONS, 213, 42, 50, 14
+
+    LTEXT           "&Display:", -1, 9, 63, 62, 9
+    COMBOBOX        IDC_DISPLAY, 77, 61, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "Re&nderer:", -1, 9, 81, 62, 9
+    COMBOBOX        IDC_RENDERER, 77, 79, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Only Capcom's set-up reads it; bof3x always draws with Direct3D 11.",
+                    -1, 77, 94, 216, 9
+
+    AUTOCHECKBOX    "&Keep running when the window is not in front", IDC_BACKGROUND, 7, 107, 250, 10
+    // DIV-0041: off, 16:9 or 21:9 (wide= 0, 1, 2; docs/ultrawide-frame.md)
+    LTEXT           "&Widescreen:", -1, 9, 121, 62, 9
+    COMBOBOX        IDC_WIDE, 77, 119, 186, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX    "S&nap the picture to whole multiples of its size", IDC_SNAP, 7, 134, 268, 10
+    LTEXT           "Ticked, the window resizes in whole steps; unticked, the picture stretches to the window's height.",
+                    -1, 19, 145, 252, 18
+
+    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 7, 165, 200, 10
+    LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
+                    -1, 19, 176, 272, 9
+END
+
+// DIV-0050 (docs/controls.md section 4.2): the physical bindings, on two
+// sub-pages. Each row is one PlayStation input; a cell is a button showing its
+// binding - click it (or press cross on it) and the capture dialog takes the
+// next key or pad input. The cells' ids are base + row (resource.h).
+IDD_PAGE_CONTROLS DIALOGEX 0, 0, 350, 168
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Bindings", -1, 0, 0, 346, 166
+    LTEXT           "Keyboard", -1, 49, 13, 56, 9
+    LTEXT           "also", -1, 108, 13, 56, 9
+    LTEXT           "Pad", -1, 170, 13, 84, 9
+    LTEXT           "also", -1, 257, 13, 84, 9
+    LTEXT           "Up", -1, 7, 29, 40, 9
+    PUSHBUTTON      "", 1300, 49, 27, 56, 14
+    PUSHBUTTON      "", 1320, 108, 27, 56, 14
+    PUSHBUTTON      "", 1340, 170, 27, 84, 14
+    PUSHBUTTON      "", 1360, 257, 27, 84, 14
+    LTEXT           "Down", -1, 7, 46, 40, 9
+    PUSHBUTTON      "", 1301, 49, 44, 56, 14
+    PUSHBUTTON      "", 1321, 108, 44, 56, 14
+    PUSHBUTTON      "", 1341, 170, 44, 84, 14
+    PUSHBUTTON      "", 1361, 257, 44, 84, 14
+    LTEXT           "Left", -1, 7, 63, 40, 9
+    PUSHBUTTON      "", 1302, 49, 61, 56, 14
+    PUSHBUTTON      "", 1322, 108, 61, 56, 14
+    PUSHBUTTON      "", 1342, 170, 61, 84, 14
+    PUSHBUTTON      "", 1362, 257, 61, 84, 14
+    LTEXT           "Right", -1, 7, 80, 40, 9
+    PUSHBUTTON      "", 1303, 49, 78, 56, 14
+    PUSHBUTTON      "", 1323, 108, 78, 56, 14
+    PUSHBUTTON      "", 1343, 170, 78, 84, 14
+    PUSHBUTTON      "", 1363, 257, 78, 84, 14
+    LTEXT           "Cross", -1, 7, 97, 40, 9
+    PUSHBUTTON      "", 1304, 49, 95, 56, 14
+    PUSHBUTTON      "", 1324, 108, 95, 56, 14
+    PUSHBUTTON      "", 1344, 170, 95, 84, 14
+    PUSHBUTTON      "", 1364, 257, 95, 84, 14
+    LTEXT           "Circle", -1, 7, 114, 40, 9
+    PUSHBUTTON      "", 1305, 49, 112, 56, 14
+    PUSHBUTTON      "", 1325, 108, 112, 56, 14
+    PUSHBUTTON      "", 1345, 170, 112, 84, 14
+    PUSHBUTTON      "", 1365, 257, 112, 84, 14
+    LTEXT           "Square", -1, 7, 131, 40, 9
+    PUSHBUTTON      "", 1306, 49, 129, 56, 14
+    PUSHBUTTON      "", 1326, 108, 129, 56, 14
+    PUSHBUTTON      "", 1346, 170, 129, 84, 14
+    PUSHBUTTON      "", 1366, 257, 129, 84, 14
+    LTEXT           "Triangle", -1, 7, 148, 40, 9
+    PUSHBUTTON      "", 1307, 49, 146, 56, 14
+    PUSHBUTTON      "", 1327, 108, 146, 56, 14
+    PUSHBUTTON      "", 1347, 170, 146, 84, 14
+    PUSHBUTTON      "", 1367, 257, 146, 84, 14
+END
+
+IDD_PAGE_CONTROLS2 DIALOGEX 0, 0, 350, 176
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Bindings", -1, 0, 0, 346, 132
+    LTEXT           "Keyboard", -1, 49, 13, 56, 9
+    LTEXT           "also", -1, 108, 13, 56, 9
+    LTEXT           "Pad", -1, 170, 13, 84, 9
+    LTEXT           "also", -1, 257, 13, 84, 9
+    LTEXT           "L1", -1, 7, 29, 40, 9
+    PUSHBUTTON      "", 1308, 49, 27, 56, 14
+    PUSHBUTTON      "", 1328, 108, 27, 56, 14
+    PUSHBUTTON      "", 1348, 170, 27, 84, 14
+    PUSHBUTTON      "", 1368, 257, 27, 84, 14
+    LTEXT           "L2", -1, 7, 46, 40, 9
+    PUSHBUTTON      "", 1309, 49, 44, 56, 14
+    PUSHBUTTON      "", 1329, 108, 44, 56, 14
+    PUSHBUTTON      "", 1349, 170, 44, 84, 14
+    PUSHBUTTON      "", 1369, 257, 44, 84, 14
+    LTEXT           "R1", -1, 7, 63, 40, 9
+    PUSHBUTTON      "", 1310, 49, 61, 56, 14
+    PUSHBUTTON      "", 1330, 108, 61, 56, 14
+    PUSHBUTTON      "", 1350, 170, 61, 84, 14
+    PUSHBUTTON      "", 1370, 257, 61, 84, 14
+    LTEXT           "R2", -1, 7, 80, 40, 9
+    PUSHBUTTON      "", 1311, 49, 78, 56, 14
+    PUSHBUTTON      "", 1331, 108, 78, 56, 14
+    PUSHBUTTON      "", 1351, 170, 78, 84, 14
+    PUSHBUTTON      "", 1371, 257, 78, 84, 14
+    LTEXT           "Start", -1, 7, 97, 40, 9
+    PUSHBUTTON      "", 1312, 49, 95, 56, 14
+    PUSHBUTTON      "", 1332, 108, 95, 56, 14
+    PUSHBUTTON      "", 1352, 170, 95, 84, 14
+    PUSHBUTTON      "", 1372, 257, 95, 84, 14
+    LTEXT           "Select", -1, 7, 114, 40, 9
+    PUSHBUTTON      "", 1313, 49, 112, 56, 14
+    PUSHBUTTON      "", 1333, 108, 112, 56, 14
+    PUSHBUTTON      "", 1353, 170, 112, 84, 14
+    PUSHBUTTON      "", 1373, 257, 112, 84, 14
+
+    LTEXT           "Face &buttons:", -1, 7, 140, 60, 9
+    COMBOBOX        IDC_CT_LAYOUT, 69, 138, 200, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Defaults", IDC_CT_DEFAULTS, 289, 137, 52, 14
+    LTEXT           "Click a cell and press a key or a pad input; Escape cancels. The keypad's diagonals (7 9 1 3) stay bound unless a cell takes them.",
+                    -1, 7, 155, 340, 18
+END
+
+// DIV-0087: the music source (docs/music-seq-engine.md).
+IDD_PAGE_MUSIC DIALOGEX 0, 0, 280, 60
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Music", -1, 0, 0, 276, 56
+    LTEXT           "&Music:", -1, 9, 17, 62, 9
+    COMBOBOX        IDC_MUSIC, 77, 15, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "The songs the game plays. The Jukebox, on the title page, plays them on their own.",
+                    -1, 9, 34, 260, 18
+END
+
+// DIV-0045 / DIV-0046: the cheats (docs/cheats.md), Game Options' third sub-page.
+IDD_PAGE_GAME DIALOGEX 0, 0, 290, 140
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Battle rewards", -1, 0, 0, 286, 64
+    LTEXT           "EXP won, times", -1, 7, 14, 90, 9
+    CONTROL         "", IDC_CH_EXP, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 99, 11, 150, 14
+    LTEXT           "1", IDC_CH_EXP_V, 253, 14, 30, 9
+    LTEXT           "Zenny won, times", -1, 7, 30, 90, 9
+    CONTROL         "", IDC_CH_ZENNY, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 99, 27, 150, 14
+    LTEXT           "1", IDC_CH_ZENNY_V, 253, 30, 30, 9
     LTEXT           "1 is the game's own; 0 grants none at all, so no level-ups. Applied as each enemy falls.",
-                    -1, 14, 54, 276, 9
+                    -1, 7, 47, 276, 9
 
-    GROUPBOX        "Stealing", -1, 7, 76, 286, 46
-    AUTOCHECKBOX    "&Steal always succeeds", IDC_CH_STEAL, 14, 90, 270, 10
+    GROUPBOX        "Stealing", -1, 0, 69, 286, 46
+    AUTOCHECKBOX    "&Steal always succeeds", IDC_CH_STEAL, 7, 83, 270, 10
     LTEXT           "Pilfer and Steal take the enemy's item on the first try whenever it carries one. Enemies with nothing still have nothing.",
-                    -1, 26, 102, 260, 18
+                    -1, 19, 95, 260, 18
 
-    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 7, 129, 52, 14
-    DEFPUSHBUTTON   "OK", IDOK, 182, 129, 52, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 240, 129, 52, 14
+    PUSHBUTTON      "&Defaults", IDC_CH_DEFAULTS, 0, 122, 52, 14
+END
+
+// The three suites (docs/launcher-suites.md, recipes/suites.toml): each the
+// PlayStation's version of a set of differences or the PSP's, on Game
+// Options' first two sub-pages. Suite i's ids are 1040 + 10 i plus: 0 the label, 1 the
+// PlayStation radio, 2 the PSP radio, 3..6 the member lines, 7 the reason
+// (resource.h). They replaced the PSP extras boxes on 2026-10-12. The data
+// suite has two more member lines, 8 and 9 (its code members, DIV-0108), its
+// reason five lines high.
+IDD_PAGE_VERSIONS DIALOGEX 0, 0, 266, 178
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Versions: the PlayStation's or the PSP's", IDC_SUITEGROUP, 0, 0, 263, 176
+    LTEXT           "", IDC_SUITENOTE, 8, 12, 248, 18
+    LTEXT           "", 1040, 8, 34, 40, 9
+    AUTORADIOBUTTON "PlayStation", 1041, 50, 33, 104, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "PSP", 1042, 156, 33, 104, 10, WS_TABSTOP
+    LTEXT           "", 1043, 16, 45, 118, 9, WS_GROUP
+    LTEXT           "", 1044, 138, 45, 118, 9
+    LTEXT           "", 1045, 16, 54, 118, 9
+    LTEXT           "", 1046, 138, 54, 118, 9
+    LTEXT           "", 1047, 16, 64, 244, 36
+    LTEXT           "", 1050, 8, 104, 40, 9
+    AUTORADIOBUTTON "PlayStation", 1051, 50, 103, 104, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "PSP", 1052, 156, 103, 104, 10, WS_TABSTOP
+    LTEXT           "", 1053, 16, 115, 118, 9, WS_GROUP
+    LTEXT           "", 1054, 138, 115, 118, 9
+    LTEXT           "", 1055, 16, 124, 118, 9
+    LTEXT           "", 1056, 138, 124, 118, 9
+    LTEXT           "", 1057, 16, 134, 244, 36
+END
+
+IDD_PAGE_VERSIONS2 DIALOGEX 0, 0, 266, 106
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Versions: the PlayStation's or the PSP's", -1, 0, 0, 263, 104
+    LTEXT           "", 1060, 8, 14, 40, 9
+    AUTORADIOBUTTON "PlayStation", 1061, 50, 13, 104, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "PSP", 1062, 156, 13, 104, 10, WS_TABSTOP
+    LTEXT           "", 1063, 16, 25, 118, 9, WS_GROUP
+    LTEXT           "", 1064, 138, 25, 118, 9
+    LTEXT           "", 1065, 16, 34, 118, 9
+    LTEXT           "", 1066, 138, 34, 118, 9
+    LTEXT           "", 1068, 16, 43, 118, 9
+    LTEXT           "", 1069, 138, 43, 118, 9
+    LTEXT           "", 1067, 16, 53, 244, 45
+END
+
+// The Mods tab, kept for side-loaded files - a player's own DAT and EMI files
+// over the game's (IDEAS I33, "mods as cache layers"). Nothing loads them yet.
+IDD_PAGE_MODS DIALOGEX 0, 0, 280, 52
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Mods", -1, 0, 0, 276, 50
+    LTEXT           "Your own DAT and EMI files laid over the game's - pixel art, script, scenario - will be chosen here. Nothing loads them yet.",
+                    -1, 9, 14, 260, 27
+END
+
+// DIV-0087: the importer's cache; the Sources page (docs/install-sources.md).
+IDD_PAGE_DATA DIALOGEX 0, 0, 280, 112
+STYLE DS_SETFONT | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Cache folder", -1, 0, 0, 276, 52
+    LTEXT           "C&ache folder:", -1, 9, 17, 62, 9
+    EDITTEXT        IDC_CACHE, 77, 15, 132, 13, ES_AUTOHSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Browse...", IDC_CACHEBROWSE, 213, 14, 50, 14
+    LTEXT           "", IDC_CACHENOTE, 77, 32, 196, 18
+
+    GROUPBOX        "Sources", -1, 0, 58, 276, 52
+    LTEXT           "Your copies of the game, checked and built into this install by the importer.",
+                    -1, 9, 71, 260, 18
+    PUSHBUTTON      "So&urces...", IDC_SOURCES, 9, 90, 60, 14
 END
 
 // DIV-0043: the SatPixie look's parameters, the preset's names and ranges.
@@ -156,99 +339,6 @@ BEGIN
     PUSHBUTTON      "&Defaults", IDC_SP_DEFAULTS, 7, 231, 52, 14
     DEFPUSHBUTTON   "OK", IDOK, 182, 231, 52, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 240, 231, 52, 14
-END
-
-// DIV-0050 (docs/controls.md section 4.2): the physical bindings. Each row is
-// one PlayStation input; a cell is a button showing its binding - click it (or
-// press cross on it) and the capture dialog takes the next key or pad input.
-IDD_CONTROLS DIALOGEX 0, 0, 410, 334
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Controls"
-FONT 9, "Segoe UI", 400, 0, 0x1
-BEGIN
-    GROUPBOX        "Bindings", -1, 7, 7, 396, 272
-    LTEXT           "Keyboard", -1, 60, 20, 66, 9
-    LTEXT           "also", -1, 130, 20, 66, 9
-    LTEXT           "Pad", -1, 206, 20, 96, 9
-    LTEXT           "also", -1, 306, 20, 96, 9
-    LTEXT           "Up", -1, 14, 36, 44, 9
-    PUSHBUTTON      "", 1300, 60, 34, 66, 14
-    PUSHBUTTON      "", 1320, 130, 34, 66, 14
-    PUSHBUTTON      "", 1340, 206, 34, 96, 14
-    PUSHBUTTON      "", 1360, 306, 34, 96, 14
-    LTEXT           "Down", -1, 14, 53, 44, 9
-    PUSHBUTTON      "", 1301, 60, 51, 66, 14
-    PUSHBUTTON      "", 1321, 130, 51, 66, 14
-    PUSHBUTTON      "", 1341, 206, 51, 96, 14
-    PUSHBUTTON      "", 1361, 306, 51, 96, 14
-    LTEXT           "Left", -1, 14, 70, 44, 9
-    PUSHBUTTON      "", 1302, 60, 68, 66, 14
-    PUSHBUTTON      "", 1322, 130, 68, 66, 14
-    PUSHBUTTON      "", 1342, 206, 68, 96, 14
-    PUSHBUTTON      "", 1362, 306, 68, 96, 14
-    LTEXT           "Right", -1, 14, 87, 44, 9
-    PUSHBUTTON      "", 1303, 60, 85, 66, 14
-    PUSHBUTTON      "", 1323, 130, 85, 66, 14
-    PUSHBUTTON      "", 1343, 206, 85, 96, 14
-    PUSHBUTTON      "", 1363, 306, 85, 96, 14
-    LTEXT           "Cross", -1, 14, 104, 44, 9
-    PUSHBUTTON      "", 1304, 60, 102, 66, 14
-    PUSHBUTTON      "", 1324, 130, 102, 66, 14
-    PUSHBUTTON      "", 1344, 206, 102, 96, 14
-    PUSHBUTTON      "", 1364, 306, 102, 96, 14
-    LTEXT           "Circle", -1, 14, 121, 44, 9
-    PUSHBUTTON      "", 1305, 60, 119, 66, 14
-    PUSHBUTTON      "", 1325, 130, 119, 66, 14
-    PUSHBUTTON      "", 1345, 206, 119, 96, 14
-    PUSHBUTTON      "", 1365, 306, 119, 96, 14
-    LTEXT           "Square", -1, 14, 138, 44, 9
-    PUSHBUTTON      "", 1306, 60, 136, 66, 14
-    PUSHBUTTON      "", 1326, 130, 136, 66, 14
-    PUSHBUTTON      "", 1346, 206, 136, 96, 14
-    PUSHBUTTON      "", 1366, 306, 136, 96, 14
-    LTEXT           "Triangle", -1, 14, 155, 44, 9
-    PUSHBUTTON      "", 1307, 60, 153, 66, 14
-    PUSHBUTTON      "", 1327, 130, 153, 66, 14
-    PUSHBUTTON      "", 1347, 206, 153, 96, 14
-    PUSHBUTTON      "", 1367, 306, 153, 96, 14
-    LTEXT           "L1", -1, 14, 172, 44, 9
-    PUSHBUTTON      "", 1308, 60, 170, 66, 14
-    PUSHBUTTON      "", 1328, 130, 170, 66, 14
-    PUSHBUTTON      "", 1348, 206, 170, 96, 14
-    PUSHBUTTON      "", 1368, 306, 170, 96, 14
-    LTEXT           "L2", -1, 14, 189, 44, 9
-    PUSHBUTTON      "", 1309, 60, 187, 66, 14
-    PUSHBUTTON      "", 1329, 130, 187, 66, 14
-    PUSHBUTTON      "", 1349, 206, 187, 96, 14
-    PUSHBUTTON      "", 1369, 306, 187, 96, 14
-    LTEXT           "R1", -1, 14, 206, 44, 9
-    PUSHBUTTON      "", 1310, 60, 204, 66, 14
-    PUSHBUTTON      "", 1330, 130, 204, 66, 14
-    PUSHBUTTON      "", 1350, 206, 204, 96, 14
-    PUSHBUTTON      "", 1370, 306, 204, 96, 14
-    LTEXT           "R2", -1, 14, 223, 44, 9
-    PUSHBUTTON      "", 1311, 60, 221, 66, 14
-    PUSHBUTTON      "", 1331, 130, 221, 66, 14
-    PUSHBUTTON      "", 1351, 206, 221, 96, 14
-    PUSHBUTTON      "", 1371, 306, 221, 96, 14
-    LTEXT           "Start", -1, 14, 240, 44, 9
-    PUSHBUTTON      "", 1312, 60, 238, 66, 14
-    PUSHBUTTON      "", 1332, 130, 238, 66, 14
-    PUSHBUTTON      "", 1352, 206, 238, 96, 14
-    PUSHBUTTON      "", 1372, 306, 238, 96, 14
-    LTEXT           "Select", -1, 14, 257, 44, 9
-    PUSHBUTTON      "", 1313, 60, 255, 66, 14
-    PUSHBUTTON      "", 1333, 130, 255, 66, 14
-    PUSHBUTTON      "", 1353, 206, 255, 96, 14
-    PUSHBUTTON      "", 1373, 306, 255, 96, 14
-
-    LTEXT           "Face &buttons:", -1, 14, 284, 60, 9
-    COMBOBOX        IDC_CT_LAYOUT, 76, 282, 200, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Click a cell and press a key or a pad input; Escape cancels. The keypad's diagonals (7 9 1 3) stay bound unless a cell takes them.", -1, 14, 300, 390, 9
-
-    PUSHBUTTON      "&Defaults", IDC_CT_DEFAULTS, 7, 316, 52, 14
-    DEFPUSHBUTTON   "OK", IDOK, 292, 316, 52, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 350, 316, 52, 14
 END
 
 // The capture over a Controls cell (DIV-0050): the next key or pad input.
