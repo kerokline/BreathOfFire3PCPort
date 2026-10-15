@@ -1,6 +1,6 @@
 # Licensing: keeping the commercial path open
 
-**Status:** STABLE (decided 2026-09-18)
+**Status:** STABLE (decided 2026-09-18; section 3's screenshots 2026-10-15)
 
 **This is not legal advice.** It is a record of the project's stated goal, the
 mechanics as understood, and the constraints that follow — so that a decision
@@ -89,6 +89,20 @@ extracted table" should read this paragraph first.
 
 The rule extends past files, as rule 1 already says: a paste into a doc, an
 issue, or a commit message is the same problem with a worse audit trail.
+
+**Screenshots are the one kind of image committed (the owner, 2026-10-15),**
+and only on these terms:
+
+- They live in [`images/`](images/) and nowhere else, so they can be audited
+  or removed as one folder.
+- They are assets of the **launcher and the top-level `README.md` only**: the
+  launcher's own pages (our UI, any number) and the few frames of the game the
+  README shows a player. Investigation docs, issues and PRs do not take
+  committed images; a capture made for analysis stays in a scratch folder.
+- A frame of the game is a picture of Capcom's art, so it is kept to a
+  handful, each one illustrating a point. Never an extract presented as a
+  picture: no textures, sprite sheets, fonts, full maps or sets of frames that
+  together rebuild the art.
 
 ## 4. Never vendor copyleft — now a business constraint
 

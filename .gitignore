@@ -110,3 +110,15 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+
+# Images: screenshots for the launcher and the top-level README only, in
+# docs/images/ (docs/LICENSING.md section 3). Captures made for analysis stay
+# in scratch folders; this keeps one from being committed by accident.
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.webp
+!docs/images/
+!docs/images/**

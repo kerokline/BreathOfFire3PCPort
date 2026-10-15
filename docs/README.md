@@ -532,5 +532,8 @@ until something confirms it.
 
 - Game data, or anything extracted from it. Including inline in a document —
   `.gitignore` cannot catch a paste. (`CLAUDE.md` rule 1.)
+- Images, except screenshots in [`images/`](images/) for the launcher and the
+  top-level `README.md`, on the terms in [`LICENSING.md`](LICENSING.md) §3. A
+  capture made for an investigation stays in a scratch folder.
 - Player-facing changelogs. `DIVERGENCE.md` is an engineering record, not release
   notes; they serve different readers and should not be merged.

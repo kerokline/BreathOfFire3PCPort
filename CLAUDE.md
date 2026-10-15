@@ -41,7 +41,10 @@ may be exactly right here — **provided it is in the ledger.**
    message. This rule is also load-bearing for the licensing path — the
    engine/data split is what keeps a commercial handoff possible
    ([`docs/LICENSING.md`](docs/LICENSING.md) §3), so it is not relaxable for
-   convenience.
+   convenience. The one exception is screenshots for the launcher and the
+   top-level README, in `docs/images/` only, on the terms in
+   [`docs/LICENSING.md`](docs/LICENSING.md) §3 - never an asset extract
+   presented as a picture.
 2. **Unledgered divergence is a bug.** Every intentional behavioural change gets
    a [`docs/DIVERGENCE.md`](docs/DIVERGENCE.md) entry: what the original did,
    what this does, why. This is cheap now and very expensive to retrofit — it is
