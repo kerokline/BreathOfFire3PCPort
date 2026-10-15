@@ -11,7 +11,9 @@ ordinary DAT containers, plus a manifest recording where every chunk came
 from.
 
     python tools/importer.py recipes  --dat DAT --disc JP --disc US ... [--out recipes/pc-zh.toml]
-    python tools/importer.py identify PATH ...
+    python tools/importer.py identify [--json] PATH ...
+    python tools/importer.py sources  --home HOME list [--json] | add PATH [--json] | remove PATH
+    python tools/importer.py setup    --home HOME [--json-progress] [--ffmpeg FFMPEG]
     python tools/importer.py build    --source PATH [--source PATH ...] [--preset NAME] [--lang TAG ...]
                                       [--opt LAYER ...] [--no-opt LAYER ...] --out CACHE
     python tools/importer.py verify   --cache CACHE
@@ -2173,6 +2175,9 @@ def fmv_install(cache, game):
 # ---------------------------------------------------------------- identify, check
 
 def cmd_identify(a):
+    if a.json:      # the launcher's form (docs/install-sources.md section 4)
+        import player_sources
+        return player_sources.cmd_identify_json(a.path, a.home)
     rc = 0
     for p in a.path:
         r = identify(p)
@@ -2253,6 +2258,24 @@ def main():
     p.add_argument("--out")
     p = s.add_parser("identify")
     p.add_argument("path", nargs="+")
+    p.add_argument("--json", action="store_true", help="one JSON object a line: path, ok, build, kind, label, "
+                   "problem (docs/install-sources.md); also folders, .zip, BOF3.exe")
+    p.add_argument("--home", help="unpack a .zip under HOME/cache/tmp (default BOF3X_HOME's, else the system's temp)")
+    p = s.add_parser("sources", help="the player's source list, HOME/sources.toml (docs/install-sources.md)")
+    p.add_argument("--home", required=True)
+    sa = p.add_subparsers(dest="action", required=True)
+    q = sa.add_parser("list")
+    q.add_argument("--json", action="store_true")
+    q = sa.add_parser("add")
+    q.add_argument("path")
+    q.add_argument("--json", action="store_true")
+    q = sa.add_parser("remove")
+    q.add_argument("path")
+    p = s.add_parser("setup", help="build HOME/cache and lay out HOME/game from HOME/sources.toml")
+    p.add_argument("--home", required=True)
+    p.add_argument("--json-progress", action="store_true",
+                   help="stdout carries only progress / done / error lines; the build's own lines go to HOME/setup.log")
+    p.add_argument("--ffmpeg", help="the player's ffmpeg.exe (else BOF3X_FFMPEG, else the PATH's)")
     p = s.add_parser("build")
     p.add_argument("--source", action="append", required=True, help="a PC DAT/, BOF3.exe or a disc; order is preference")
     p.add_argument("--out", required=True)
@@ -2300,6 +2323,11 @@ def main():
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer")
     a = ap.parse_args()
+    if a.cmd in ("sources", "setup") or (a.cmd == "identify" and a.json):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")     # the launcher's forms: player paths in any script
+    if a.cmd in ("sources", "setup"):
+        import player_sources
+        sys.exit((player_sources.cmd_sources if a.cmd == "sources" else player_sources.cmd_setup)(a) or 0)
     fn = {"recipes": cmd_recipes, "identify": cmd_identify, "build": cmd_build, "verify": cmd_verify,
           "check": cmd_check, "opt-recipes": cmd_opt_recipes, "install": cmd_install}[a.cmd]
     sys.exit(fn(a) or 0)
