@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 127 entries, DIV-0001..0127, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 128 entries, DIV-0001..0128, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2255,7 +2255,24 @@ designed in rather than bolted on.
   still 320 wide - to widen the same way (done at the round's end,
   below). `EffectKind96_Pulse`'s quad
   `(0, 0)..(320, 320)`, its 320s from a register, is not widened (no
-  spawner found).
+  spawner found). **Widened 2026-10-15**: the owner's `radiationRoom.txt`
+  reaches it - area 118's purple pulse, which stopped at the 4:3 edges
+  (found by `BOF3X_DRAWORDER=500-501:20,20,22,22`: a code-`0x3A` POLY_G4
+  `(0, 0)-(320, 320)` committed from `EffectKind96_Pulse`). Its left
+  corners now at `Widescreen_FillX()`, its right at
+  `Widescreen_FillRight(320.0f)`, as `EffectKind18Sub36_Pulse`; the y
+  corners Capcom's. `effect_4d`'s self-test 0 mismatches narrow and at 21:9
+  (the fill unarmed during it); seen whole at 16:9 and 21:9 in the recipe's
+  frame 540. **The same day, a scan of ours for the rest** (every `320.0f` /
+  `0x43A00000` and integer `0x140` in `src/game` not routed through a
+  `Widescreen_*` helper): one more full-frame quad, `effect_3d.cpp`'s
+  `FullScreen` - the red POLY_G4 `(0, 0)..(320, 320)` of effect kinds 0x76,
+  0x79, 0x7A, 0x7B and 0x7C (`EffectKind76_Shade`, `EffectKind79_Shade`,
+  `EffectKind7A_Shade`, the pulses of 0x7B / 0x7C) - widened by the same
+  rule; `effect_3d`'s self-test 0 mismatches narrow and at 21:9. No recorded
+  route reaches those kinds (not seen). The scan's other hits are widened
+  already, narrow-only paths (sub-kind 0x15's `!wide` strips), window and list
+  positions, or culls.
   **Wave five, the same day**: the next three are ours and widened the
   same way - E5E's `EffectKind18Sub3F_WhiteOut` (`0x507BDC`) and
   `EffectKind18Sub3F_DrawSky` (`0x507CE3`), E5G's
@@ -7671,3 +7688,40 @@ designed in rather than bolted on.
   draw: the seam and the 320-wide pictures), `BOF3X_ORIGINAL=Scena17_DrawLetterbox`
   (the 320-wide bands). Narrow play without the wide picture loses only the
   seam.
+
+### The Identify panel's element row as the game's own element icons
+
+- **ID:** DIV-0128
+- **Date:** 2026-10-15
+- **Subsystem:** the Identify panel's element row, `Identify_DrawElements`
+  `0x4B1520` (ours, `src/game/magic_s12.cpp`); `Lang_Japanese`
+  (`src/game/lang_layout.cpp`)
+- **Tier:** Intent - the owner's choice (2026-10-15)
+- **Original behaviour:** for an identified enemy the panel draws six 12 x 12
+  glyph quads (code `0x6C`) 0x14 apart, the glyphs the pointers at `0x66A398`
+  name - the port's Chinese characters 炎 冰 雷 风 地 圣 (`0x66A380..`), in
+  every language: no label layer repaints them (`exe-chinese-remaining.md` 3).
+  An element the enemy is weak to (its resistance byte 1 or less; holy 3 or
+  less) is drawn at shade 0x80, the rest at 0x30.
+- **New behaviour:** under every language overlay but the Chinese original
+  (`Lang_Latin()` or `ja-JP`), once the self-tests are over
+  (`Widescreen_FillsArmed`), each glyph is the game's own 8 x 8 element icon
+  instead - texture page 0xF, row 248, icon i at u `(i + 7) * 8`, the sheet
+  `Menu_DrawIcon8` draws item kinds from (icons 0..5: fire, ice, thunder,
+  wind, earth, holy, the glyphs' order; CLUT `0x780E` for 1 and 3, `0x780C`
+  for the rest, as `Menu_DrawIcon8` picks) - a POLY_FT4 stretched over the
+  same 12 x 12 cell, the same shade (bright a weakness, dim the rest), slot
+  2. Positions, spacing and the weakness test are unchanged.
+- **Rationale:** the owner, 2026-10-15: the Chinese characters on an English
+  panel are unreadable to its players; the icons are the game's own art and
+  already mean these elements in the item and skill lists. Kept under the
+  Chinese original, whose text the characters were made for. The weakness
+  row itself stays on every language (the owner's earlier call; the Western
+  discs drop it, `labels-1013.md` 1.2).
+- **Also in the PSX version?** No: the Japanese disc draws its own element
+  glyphs there (`0x801EFC84`); the Western discs draw no weakness row.
+- **Verification:** the owner's `radiationRoom.txt` (an Identify on a
+  GntRoach), en-US, 16:9, frame 1,920: the six icons in the row, fire bright
+  (the weakness), the rest dim. `magic_s12`'s self-test 88,000 rounds, 0
+  mismatches under `en-US` and `original`.
+- **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=Identify_DrawElements`.

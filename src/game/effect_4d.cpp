@@ -421,7 +421,9 @@ extern "C" void __cdecl EffectKind96_Start(void) {
 // POLY_G4 at the cursor (read after the commit) of (0, 0), (320, 0), (0, 320),
 // (320, 320) (floats), every corner coloured (level, 0, level); semi-
 // transparent through the cursor read again; committed at slot 2 (0x44). An
-// index past the table's eight aborts (docs/effect_4d.md section 6).
+// index past the table's eight aborts (docs/effect_4d.md section 6). Area
+// 118's purple pulse (the owner's radiationRoom.txt); widened under the wide
+// picture (DIV-0041, 2026-10-15).
 extern "C" void __cdecl EffectKind96_Pulse(void) {
     unsigned char* const s = S();
     const unsigned char count = s[9];
@@ -445,13 +447,18 @@ extern "C" void __cdecl EffectKind96_Pulse(void) {
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG4)(prim);
     constexpr U k320 = 0x43A00000u;   // 320.0f
-    SetUL(prim + 8, 0);
+    // DIV-0041: the left corners at Widescreen_FillX(), the right at 320 + the
+    // columns, as EffectKind18Sub36_Pulse; (0, 320) narrow or unarmed. The y
+    // corners stay Capcom's 0 and 320.
+    const U left = std::bit_cast<U>(Widescreen_FillX());
+    const U right = std::bit_cast<U>(Widescreen_FillRight(320.0f));   // 0x43A00000, 320.0f narrow
+    SetUL(prim + 8, left);
     SetUL(prim + 0xC, 0);
-    SetUL(prim + 0x18, k320);
+    SetUL(prim + 0x18, right);
     SetUL(prim + 0x1C, 0);
-    SetUL(prim + 0x28, 0);
+    SetUL(prim + 0x28, left);
     SetUL(prim + 0x2C, k320);
-    SetUL(prim + 0x38, k320);
+    SetUL(prim + 0x38, right);
     SetUL(prim + 0x3C, k320);
     for (const U corner : {0x4u, 0x14u, 0x24u, 0x34u}) {
         const unsigned char level = At(at::kKind96Shade)[0];

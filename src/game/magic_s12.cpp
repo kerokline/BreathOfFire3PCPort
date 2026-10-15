@@ -26,6 +26,7 @@
 // depth outside its four-entry stack array (group S18's BuffSpike_Draw, the
 // same code).
 #include "game/labels.h"
+#include "game/lang_layout.h"
 #include "game/text_advance.h"
 #include "game/magic_s12.h"
 
@@ -460,6 +461,48 @@ MS12_EXPORT const unsigned char* __cdecl Identify_DrawItem(unsigned item, unsign
     return DrawAt(0xA0 - 6 * static_cast<int>(n), y, static_cast<int>((item & 0xFFFFFF00u) | n), name);
 }
 
+namespace {
+
+// DIV-0128: the element row as the game's own 8 x 8 element icons (VRAM page
+// 0xF, row 248, cell (icon + 7) * 8 - Menu_DrawIcon8's sheet; icons 0..5 are
+// fire, ice, thunder, wind, earth and holy, the glyphs' order) under every
+// language overlay but the Chinese original's, once the self-tests are over
+// (so the fuzz still compares Capcom's glyph quads).
+bool ElementIcons() { return Widescreen_FillsArmed() && (Lang_Latin() || Lang_Japanese()); }
+
+// A POLY_FT4 of icon `i` stretched over the glyph's 12 x 12 cell, (x, y) to
+// (right, y + 12), shade `shade` in all three channels (0x80 a weakness, 0x30
+// the rest, as the glyphs); CLUT 0x780E for icons 1 and 3, 0x780C for the rest
+// (Menu_DrawIcon8's choice); page 0xF; committed to slot 2 as the glyph is.
+void DrawElementIcon(int x, int y, int right, unsigned i, unsigned char shade) {
+    unsigned char* const p = Gfx_PacketNext;
+    MH_CALL(Gpu_SetPolyFT4)(p);
+    p[4] = p[5] = p[6] = shade;
+    const auto f = [](int v) { return static_cast<std::int32_t>(std::bit_cast<std::uint32_t>(static_cast<float>(v))); };
+    SetLong(p + 0x08, f(x));
+    SetLong(p + 0x0C, f(y));
+    SetLong(p + 0x18, f(right));
+    SetLong(p + 0x1C, f(y));
+    SetLong(p + 0x28, f(x));
+    SetLong(p + 0x2C, f(y + 0xC));
+    SetLong(p + 0x38, f(right));
+    SetLong(p + 0x3C, f(y + 0xC));
+    // The corners name the first and last texels: the renderer's coordinates
+    // are texel centres (D3d_TexCoords, (i + 0.512) / 256), so u0 + 8 would
+    // reach into the next icon and v 256 does not fit the byte.
+    const auto u0 = static_cast<unsigned char>((i + 7) * 8), u1 = static_cast<unsigned char>(u0 + 7);
+    constexpr unsigned char v0 = 0xF8, v1 = 0xFF;
+    p[0x14] = u0; p[0x15] = v0;
+    p[0x24] = u1; p[0x25] = v0;
+    p[0x34] = u0; p[0x35] = v1;
+    p[0x44] = u1; p[0x45] = v1;
+    SetWord(p + 0x16, (i == 1 || i == 3) ? 0x780Eu : 0x780Cu);
+    SetWord(p + 0x26, 0xF);
+    MH_CALL(Gfx_CommitPrim)(2, 0x48);
+}
+
+}  // namespace
+
 // original 0x4B1520: six glyph quads 0x14 apart from (x, y), each 12 x 12:
 // the glyph the pointer 0x66A398[i] holds, clut Gpu_GetClut(0, 0x1E0), shade
 // 0x80 when the target enemy's (target - 3, once) resistance byte is 1 or
@@ -485,6 +528,12 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
         if (EnemyRec(index)[kResist[i]] <= (i == 5 ? 3 : 1)) {
             shade = 0x80;
             SetDd(4, 0x80);
+        }
+        if (ElementIcons()) {
+            DrawElementIcon(x, y, right, i, static_cast<unsigned char>(shade));
+            x += 0x14;
+            right += 0x14;
+            continue;
         }
         p[4] = static_cast<unsigned char>(shade);
         p[5] = DsByte(4);
