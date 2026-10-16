@@ -178,7 +178,6 @@ psx-jp	0x653BE4	0x653BE8	gap	game-value	EffectKind0D_States+0x6C
 psx-jp	0x653BEC	0x653BF0	gap	game-value	EffectKind0D_States+0x74
 psx-jp	0x653BF4	0x653BF8	gap	game-value	EffectKind0D_States+0x7C
 psx-jp	0x653BFC	0x653C03	gap	game-value	EffectKind0D_States+0x84
-psx-jp	0x653EA0	0x653EC0	gap	disc-unplaced	EffectKind0F_Child5Steps+0xFC
 psx-jp	0x6542EC	0x6542F0	gap	game-value	EffectKind27_States+0xC
 psx-jp	0x654328	0x65432C	gap	game-value	EffectKind29_States+0x18
 psx-jp	0x654344	0x65434C	gap	game-value	EffectKind2A_States+0x10
@@ -556,8 +555,6 @@ psx-us	0x653BE4	0x653BE8	gap	game-value	EffectKind0D_States+0x6C
 psx-us	0x653BEC	0x653BF0	gap	game-value	EffectKind0D_States+0x74
 psx-us	0x653BF4	0x653BF8	gap	game-value	EffectKind0D_States+0x7C
 psx-us	0x653BFC	0x653C03	gap	game-value	EffectKind0D_States+0x84
-psx-us	0x653DF4	0x653E3C	gap	disc-unplaced	EffectKind0F_Child5Steps+0x50
-psx-us	0x653EA0	0x653EC0	gap	disc-unplaced	EffectKind0F_Child5Steps+0xFC
 psx-us	0x653FA8	0x653FBC	gap	disc-unplaced	EffectKind3C_Op
 psx-us	0x6542EC	0x6542F0	gap	game-value	EffectKind27_States+0xC
 psx-us	0x654328	0x65432C	gap	game-value	EffectKind29_States+0x18
@@ -952,8 +949,6 @@ psx-eu-en	0x653BE4	0x653BE8	gap	game-value	EffectKind0D_States+0x6C
 psx-eu-en	0x653BEC	0x653BF0	gap	game-value	EffectKind0D_States+0x74
 psx-eu-en	0x653BF4	0x653BF8	gap	game-value	EffectKind0D_States+0x7C
 psx-eu-en	0x653BFC	0x653C03	gap	game-value	EffectKind0D_States+0x84
-psx-eu-en	0x653DF4	0x653E3C	gap	disc-unplaced	EffectKind0F_Child5Steps+0x50
-psx-eu-en	0x653EA0	0x653EC0	gap	disc-unplaced	EffectKind0F_Child5Steps+0xFC
 psx-eu-en	0x653FA8	0x653FBC	gap	disc-unplaced	EffectKind3C_Op
 psx-eu-en	0x6542EC	0x6542F0	gap	game-value	EffectKind27_States+0xC
 psx-eu-en	0x654328	0x65432C	gap	game-value	EffectKind29_States+0x18
@@ -1344,8 +1339,7 @@ psx-fr	0x653BE4	0x653BE8	gap	game-value	EffectKind0D_States+0x6C
 psx-fr	0x653BEC	0x653BF0	gap	game-value	EffectKind0D_States+0x74
 psx-fr	0x653BF4	0x653BF8	gap	game-value	EffectKind0D_States+0x7C
 psx-fr	0x653BFC	0x653C03	gap	game-value	EffectKind0D_States+0x84
-psx-fr	0x653DF4	0x653E3C	gap	disc-unplaced	EffectKind0F_Child5Steps+0x50
-psx-fr	0x653EA0	0x653EC0	gap	game-value	EffectKind0F_Child5Steps+0xFC
+psx-fr	0x653EA0	0x653EB4	gap	game-value	EffectKind0F_PanelTitles
 psx-fr	0x653FA8	0x653FBC	gap	disc-unplaced	EffectKind3C_Op
 psx-fr	0x6542EC	0x6542F0	gap	game-value	EffectKind27_States+0xC
 psx-fr	0x654328	0x65432C	gap	game-value	EffectKind29_States+0x18
@@ -1741,8 +1735,7 @@ psx-de	0x653BE4	0x653BE8	gap	game-value	EffectKind0D_States+0x6C
 psx-de	0x653BEC	0x653BF0	gap	game-value	EffectKind0D_States+0x74
 psx-de	0x653BF4	0x653BF8	gap	game-value	EffectKind0D_States+0x7C
 psx-de	0x653BFC	0x653C03	gap	game-value	EffectKind0D_States+0x84
-psx-de	0x653DF4	0x653E3C	gap	disc-unplaced	EffectKind0F_Child5Steps+0x50
-psx-de	0x653EA0	0x653EC0	gap	game-value	EffectKind0F_Child5Steps+0xFC
+psx-de	0x653EA0	0x653EB4	gap	game-value	EffectKind0F_PanelTitles
 psx-de	0x6542EC	0x6542F0	gap	game-value	EffectKind27_States+0xC
 psx-de	0x654328	0x65432C	gap	game-value	EffectKind29_States+0x18
 psx-de	0x654344	0x65434C	gap	game-value	EffectKind2A_States+0x10
@@ -2122,7 +2115,6 @@ psp-jp	0x653BE4	0x653BE8	gap	game-value	EffectKind0D_States+0x6C
 psp-jp	0x653BEC	0x653BF0	gap	game-value	EffectKind0D_States+0x74
 psp-jp	0x653BF4	0x653BF8	gap	game-value	EffectKind0D_States+0x7C
 psp-jp	0x653BFC	0x653C03	gap	game-value	EffectKind0D_States+0x84
-psp-jp	0x653EA0	0x653EC0	gap	disc-unplaced	EffectKind0F_Child5Steps+0xFC
 psp-jp	0x6542EC	0x6542F0	gap	game-value	EffectKind27_States+0xC
 psp-jp	0x654328	0x65432C	gap	game-value	EffectKind29_States+0x18
 psp-jp	0x6543F0	0x654400	gap	disc-unplaced	EffectKind33_SignX
@@ -2484,7 +2476,6 @@ psp-eu	0x653BE4	0x653BE8	gap	game-value	EffectKind0D_States+0x6C
 psp-eu	0x653BEC	0x653BF0	gap	game-value	EffectKind0D_States+0x74
 psp-eu	0x653BF4	0x653BF8	gap	game-value	EffectKind0D_States+0x7C
 psp-eu	0x653BFC	0x653C03	gap	game-value	EffectKind0D_States+0x84
-psp-eu	0x653EA0	0x653EC0	gap	disc-unplaced	EffectKind0F_Child5Steps+0xFC
 psp-eu	0x6542EC	0x6542F0	gap	game-value	EffectKind27_States+0xC
 psp-eu	0x654328	0x65432C	gap	game-value	EffectKind29_States+0x18
 psp-eu	0x6543F0	0x654400	gap	disc-unplaced	EffectKind33_SignX

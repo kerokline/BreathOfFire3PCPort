@@ -198,6 +198,14 @@ TWINS = [
     (0x65BC7C, 0x65BC84, "BMAGIC/MAGIC130.EMI", "VenomRing_ScreenY"),
     (0x65C309, 0x65C318, "BMAGIC/MAGIC223.EMI", "TempestGust_Angles+0x1"),
     (0x65E010, 0x65E018, "WORLD03/AREA117.EMI", "EffectKind18Sub0E_States+0x18"),
+    # The fishing spot's strings (D303, D286; docs/fishing-rule-pages.md): the panels' ROD /
+    # LURE / EQUIP / GUIDE fields after the disc's tabs, and the Rule pages' counter format
+    # with the data page's total at the head of the module's rodata (0x801D0C08 on every
+    # disc), each read there by the module's own code. FR and DE re-lay the panel titles at
+    # other widths, so the PC's four fields have no copy on those discs.
+    (0x653EA0, 0x653EB4, "WORLD00/AREA030.EMI", "EffectKind0F_PanelTitles",
+     ("psx-jp", "psx-us", "psx-eu-en", "psp-jp", "psp-eu")),
+    (0x653EB4, 0x653EC0, "WORLD00/AREA030.EMI", "EffectKind0F_PageFormat and EffectKind0F_CountLabel"),
     (0x65E02C, 0x65E034, "WORLD03/AREA117.EMI", "EffectKind18Sub13_States+0x14"),
     (0x65E8A4, 0x65E8B0, "WORLD03/AREA139.EMI", "EffectKind18Sub27_States+0x14", PSX),
     (0x65E940, 0x65E948, "WORLD03/AREA140.EMI", "EffectKind18Sub42_States+0x78", PSX),

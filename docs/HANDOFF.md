@@ -110,8 +110,8 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
      beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
    - D270 fixed by DIV-0121 - the owner's look owed, and whether such a field has another way out; D284 (area 23's
-     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) not looked
-     into; D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
+     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed but on FR / DE
+     ([`fishing-rule-pages.md`](fishing-rule-pages.md)); D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
 
 5. **The follow-up round: disc-only and PSP polish** (not staged). Still open: the load screen's `"%X"` (D254, the
    engine's own string recommended); the inn and camp hang (D255, the owner's choice of fix now required); the PSP
