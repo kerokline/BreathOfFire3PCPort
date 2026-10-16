@@ -7830,7 +7830,7 @@ would show rows 16..63 for the same table; not measured on the disc.
 once the fills are armed; the fuzz and `BOF3X_ORIGINAL` keep Capcom's
 packets.
 
-## D303 — The fishing spot's Rule pages stack their text on a PSX-only install (ours; not looked into)
+## D303 — The fishing spot's Rule pages stack their text on a PSX-only install (ours; fixed by DIV-0101's amendment)
 
 **Found:** `campingFishing` on the PSX-US disc-only install, 2026-10-16 (the
 first PSX-only run to reach the fishing spot, D255 having hung the camp
@@ -7845,6 +7845,17 @@ jingles (`runs/d255b_campingFishing`). **Where to start:** whether the
 pages' text comes from the en-US layer or the disc's own fishing overlay,
 and what the counter's `0` reads (a gap of the disc-built image would read
 0); D286 (the equip screen's blank headings) is the same screen family.
+
+**Fixed** (2026-10-16, `bb38afbf`, [`fishing-rule-pages.md`](fishing-rule-pages.md)):
+three runs of the disc-built exe image were zero on every disc-only install -
+the Rule pages' title and row message ids (`0x653DF4`), the equip headings
+(`0x653EA0`, D286) and the counter's `"%d/6"` with the data page's total
+(`0x653EB4`). Zero ids drew pool message 0 (the fish list's first entry) down
+the panel; the empty format left a stale `0`. Each disc's fishing module
+(`WORLD00/AREA030.EMI#4`) holds all three where its own code reads them: two
+catalogued tables (`fishing_rule_titles` / `fishing_rule_lines`, each build's
+own layout) and two `twin` rows. PSX-US `campingFishing` now shows
+`Fundamentals`, its three lines and `1/6`; the other builds not played.
 
 ## D304 — Multi-second single-frame freezes on PSX-only runs, at a different place each run (unknown; not yet tied to the game)
 
