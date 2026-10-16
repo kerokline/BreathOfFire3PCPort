@@ -318,6 +318,58 @@ def build(disc_path, out, recipe=None):
     return len(done)
 
 
+def mp3(ffmpeg, pcm, rate):
+    """Interleaved 16-bit stereo PCM at `rate` to an MP3 in the PC's jingle form
+    (docs/psp-install.md 3) by the player's ffmpeg: 44.1 kHz, 128 kbit/s, plain
+    stereo, a bare stream of MPEG-1 layer III frames from the first byte - no
+    ID3v2 tag (ffmpeg's muxer writes one by default; the engine's frame walk and
+    the DIV-0091 comparison start at byte 0), no Xing frame, no joint stereo
+    (the PC's 11 are mode 0). Returns (bytes, None) or (None, why not)."""
+    import subprocess
+    enc = subprocess.run([ffmpeg, "-v", "error", "-f", "s16le", "-ar", str(rate), "-ac", "2",
+                          "-i", "pipe:0", "-ar", "44100", "-c:a", "libmp3lame", "-b:a", "128k", "-joint_stereo", "0",
+                          "-id3v2_version", "0", "-write_xing", "0", "-f", "mp3", "pipe:1"],
+                         input=pcm, capture_output=True)
+    if enc.returncode or not enc.stdout:
+        return None, "this ffmpeg has no MP3 encoder (libmp3lame)"
+    body = enc.stdout
+    if body[0] != 0xFF or body[1] & 0xFE != 0xFA:
+        return None, "this ffmpeg's MP3 does not open with an MPEG-1 layer III frame"
+    return body, None
+
+
+def jingles(disc_path, out, ffmpeg, recipe=None):
+    """D255 / DIV-0129's other half: the 11 kind-0 jingles (`OYASUMI` ..
+    `KARA`), which the PC holds as MP3s of `S_XA00.STR`'s stereo clips
+    (docs/sound-import.md 4), made from a PSX disc the same way - each recipe
+    row's clip decoded from a fresh history at 37.8 kHz, then resampled and
+    encoded by the player's ffmpeg in the PC's form (`mp3`). Not the PC's
+    bytes (another encoder), so each file's own hash. Returns
+    ({name: sha256 of what was written}, [why a jingle was not written])."""
+    with open(recipe or RECIPE, "rb") as fh:
+        rec = tomllib.load(fh)
+    cl = disc_clips(disc_path)
+    os.makedirs(out, exist_ok=True)
+    written, skipped = {}, []
+    for r in rec["file"]:
+        if r["kind"] != 0:
+            continue
+        _, _, chans, _ = cl[r["stream"]]
+        left, right = decode(chans[r["channel"]][r["start"]:r["start"] + r["sectors"]])
+        pcm = array.array("h", (0,)) * (2 * len(left))
+        pcm[0::2], pcm[1::2] = array.array("h", left), array.array("h", right)
+        if sys.byteorder != "little":
+            pcm.byteswap()
+        body, why = mp3(ffmpeg, pcm.tobytes(), RATE)
+        if body is None:
+            skipped.append("%s: %s" % (r["name"], why))
+            continue
+        with open(os.path.join(out, r["name"] + ".DAT"), "wb") as fh:
+            fh.write(body)
+        written[r["name"]] = sha(body)
+    return written, skipped
+
+
 def importer_snd(sources, out):
     """tools/importer.py build's wave-from-xa: `base/snd/` from the first PSX
     disc among the player's sources, or nothing without one. Returns

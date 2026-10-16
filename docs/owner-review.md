@@ -111,7 +111,8 @@ checkout's `analysis/` (never in the tree).
   6; a disc-only install keeps the disc's art. Decided off the render sheets.
 - **D255's fix**: **both** - the disc's XA stream (`S_XA00.STR`) as the
   jingle on a PSX-only install, and a failed jingle open ending the wait at
-  once (a DIV), so no missing file can hang it again.
+  once (a DIV), so no missing file can hang it again. **Built** 2026-10-16:
+  DIV-0129, `fix/psx-only-1016`.
 - **The Western weakness row**: **keep the row and the element glyphs on every
   language** (as now). The owner's `radiationRoom.txt` recipe (2026-10-15)
   reaches an enemy panel with the row, for the A/B.

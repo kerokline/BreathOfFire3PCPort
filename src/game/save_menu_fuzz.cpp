@@ -990,6 +990,7 @@ Args Generate(unsigned k) {
     }
     case kStreamDone:
         PutLong(at::kStreamKind, Next() % 2 ? 0 : Next());
+        StreamMissingClear();  // DIV-0129: the original has no such flag
         break;
     case kMusicPlaying:
         PutLong(at::kMusicBuffer, Next() % 4 == 0 ? 0 : Addr(&g_buffer));

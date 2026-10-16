@@ -227,4 +227,9 @@ extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx);
 // original before SaveMenu_Inject patches it.
 void SelfTest();
 
+// DIV-0129's flag (a failed stream open, which ends Sound_StreamDone's wait)
+// cleared: the fuzz compares Sound_StreamDone with the original, which has no
+// such flag, so each of those rounds starts as after an open that succeeded.
+void StreamMissingClear();
+
 }  // namespace save_menu

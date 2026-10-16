@@ -114,7 +114,8 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
      into; D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
 
 5. **The follow-up round: disc-only and PSP polish** (not staged). Still open: the load screen's `"%X"` (D254, the
-   engine's own string recommended); the inn and camp hang (D255, the owner's choice of fix now required); the PSP
+   engine's own string recommended); the inn and camp hang (D255) fixed by DIV-0129 on
+   `fix/psx-only-1016` (2026-10-16; D303..D305 found on its runs); the PSP
    title's framing (D256); what is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6:
    39 ranges, the `BOOT.BIN`-reader class); the disc-only round's own leftovers
    ([`disc-only-round.md`](disc-only-round.md) 5); the PSP-EU Config screen (D246) and the PAL banks (D257), the

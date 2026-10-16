@@ -6999,7 +6999,7 @@ Capcom's table).
 each empty slot as `) 16`, the same as PSX-EU; the US disc carries no `"%X"`
 to twin either. Still the owner's call.
 
-## D255 — On a PSX-only install the inn's and the camp's screen stay black for good: the jingle `OYASUMI` is not there, and the wait hangs (ours, the install's missing jingles; the owner's open call)
+## D255 — On a PSX-only install the inn's and the camp's screen stay black for good: the jingle `OYASUMI` is not there, and the wait hangs (ours, the install's missing jingles; fixed by DIV-0129)
 
 **Found:** AB's harness, 2026-10-12, the shop route on the PSX-EU disc-only
 install, ticks 2880..3150 ([`visual-findings-1012.md`](visual-findings-1012.md)
@@ -7032,6 +7032,16 @@ more source files call `Sound_StreamDone`; any wait on a jingle a PSX-only
 install lacks would hang the same way. So one of the owner's two answers is
 now **required** for the inn and the camp to be leavable on a PSX-only
 install. The listen pair is [`wav-dump.md`](wav-dump.md) 4c.
+
+**Fixed** by DIV-0129 (2026-10-16, the owner's "both" of 2026-10-15): a
+failed stream open ends `Sound_StreamDone`'s wait at once, and a PSX-only
+build makes the 11 jingles from the disc's `S_XA00.STR` by the player's
+ffmpeg. `shop` on PSX-US (`C:\Users\kerok\abd255`, rebuilt from the US disc
+by this branch's importer): `OYASUMI` opens from the cache, black 2670..2850,
+back in the inn at 2880 (the PC's frame in `abc-sweep-1013-us.md` 6.2); on
+an install without the jingles the open fails, the log says DIV-0129 once,
+and the inn is back at 2820. `campingFishing` on both reaches the fishing
+spot for the first time on a PSX-only install, which shows D303 and D304.
 
 ## D256 — A PSP-only install's title is the PSP's fishing-version logo, its tiles misaligned in our 4:3 frame (ours; the owner's look owed)
 
@@ -7809,3 +7819,48 @@ would show rows 16..63 for the same table; not measured on the disc.
 **Fixed** by DIV-0127: the two pieces' `du` and `dv` are w - 1 and h - 1
 once the fills are armed; the fuzz and `BOF3X_ORIGINAL` keep Capcom's
 packets.
+
+## D303 — The fishing spot's Rule pages stack their text on a PSX-only install (ours; not looked into)
+
+**Found:** `campingFishing` on the PSX-US disc-only install, 2026-10-16 (the
+first PSX-only run to reach the fishing spot, D255 having hung the camp
+before it; the owner saw it live). Recipe frames 3690..3750, the `Rule` tab
+(`How to Fish`): the PC (`pc-en150`) and PSP-EU draw page `Fundamentals`
+with three lines of controls; PSX-US draws the title `Type of animal` and
+the page's entries one over another down the panel and past its bottom
+edge (`Type of animal`, `That floats and is easily caught`, `Av. Length:
+20CM` repeated). The page counter reads `1/6` on the PC and `0` on PSP-EU
+and PSX-US. Not caused by a sound stream: the same with and without the
+jingles (`runs/d255b_campingFishing`). **Where to start:** whether the
+pages' text comes from the en-US layer or the disc's own fishing overlay,
+and what the counter's `0` reads (a gap of the disc-built image would read
+0); D286 (the equip screen's blank headings) is the same screen family.
+
+## D304 — Multi-second single-frame freezes on PSX-only runs, at a different place each run (unknown; not yet tied to the game)
+
+**Found:** 2026-10-16, the D255 runs; the owner heard it as doubled sound
+effects and music dropping out (DirectSound replays its buffer while the
+frame is held). `DIV-0034 frame deadline N ms behind` in `bof3x.log`, one
+frame held for seconds, on the same recipe each time: `campingFishing`
+PSX-US with jingles, none (first run) and 10,456 ms at frame 940 (second);
+without jingles, 3.7 / 4.2 / 3.9 s at frames 4873..4875 and 2.0 / 2.2 s at
+5005..5006; `shop` on a copied install, 13,277 ms at frame 64. The EU PC
+run of `campingFishing` earlier that day (`abv`): none. The track requests
+are the PC's, in the same order. A deterministic route that freezes in a
+different place each run points outside the game's logic (the machine:
+other sessions' work, a scan of freshly copied caches); not shown. **Where
+to start:** the same recipe on the PC and a PSX-only install back to back,
+with the owner's eye on Task Manager, and whether a freeze lines up with a
+file open or the sequencer.
+
+## D305 — A PSX-US install built on 2026-10-12 crashes loading area 16 under the 2026-10-16 engine (unknown; not looked into)
+
+**Found:** 2026-10-16, `campingFishing` on a copy of `~/ab`'s `g_psxus` /
+`c_psxus` (built by the importer of 2026-10-12): `0xC0000005` reading
+`0x00000000` at `bof3x.dll+0x78EAE` at frame 368, area 0x10, just after
+`AREA016.DAT` and its `loc\en-US` layer open (dump
+`C:\Users\kerok\abd255\L\bof3x.crash-28636-0.dmp`). The same route passed
+area 16 on an install rebuilt that day, so an old cache meeting a newer
+engine is the first guess, not established. **Where to start:**
+symbolise `+0x78EAE`; then whether the engine should refuse a cache older
+than it reads, rather than crash.

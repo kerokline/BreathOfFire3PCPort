@@ -737,7 +737,7 @@ an unrecognised disc can be named rather than guessed at.
 - **The away day's calls (2026-10-13)** - [`owner-review.md`](owner-review.md), "2026-10-13, the away day": the
   disc-data inventory's Q6 and Q7, the arenas and Ryu's byte (D288), the Western weakness row, the hi-lo count, the
   US title layout (D277), a `ja-JP` layer for the exe's strings and the Japanese fishing crash (D279, D280), wide
-  and `Rand` (D283), D255's fix (now required: the inn and camp hang on a PSX-only install), the key icons' five
+  and `Rand` (D283), D255's fix (built 2026-10-16 as DIV-0129, `fix/psx-only-1016`), the key icons' five
   questions, the two headerless recipes' saves, the Western title mark (D266).
 - ~~**Phase 3 subsystem order.**~~ Moot since 2026-10-06: the game's own code is all ours (PR #43), and the
   platform layer followed through state 3 (#53).

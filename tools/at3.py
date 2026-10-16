@@ -275,21 +275,9 @@ def build(psp_path, out, ffmpeg, recipe=None):
         if not any(pcm):
             raise SystemExit("%s: the decode is silent" % r["name"])
         if r["kind"] == JINGLE_KIND:
-            # The PC's form exactly (docs/psp-install.md 3): a bare stream of
-            # MPEG-1 layer III frames from the first byte, plain stereo - no
-            # ID3v2 tag (ffmpeg's muxer writes one by default; the engine's
-            # frame walk and the DIV-0091 comparison start at byte 0), no
-            # Xing frame, no joint stereo (the PC's 11 are mode 0).
-            enc = subprocess.run([ffmpeg, "-v", "error", "-f", "s16le", "-ar", str(r["rate"]), "-ac", "2",
-                                  "-i", "pipe:0", "-c:a", "libmp3lame", "-b:a", "128k", "-joint_stereo", "0",
-                                  "-id3v2_version", "0", "-write_xing", "0", "-f", "mp3", "pipe:1"],
-                                 input=pcm.tobytes(), capture_output=True)
-            if enc.returncode or not enc.stdout:
-                skipped.append("%s: this ffmpeg has no MP3 encoder (libmp3lame)" % r["name"])
-                continue
-            body = enc.stdout
-            if body[0] != 0xFF or body[1] & 0xFE != 0xFA:
-                skipped.append("%s: this ffmpeg's MP3 does not open with an MPEG-1 layer III frame" % r["name"])
+            body, why = xa.mp3(ffmpeg, pcm.tobytes(), r["rate"])   # the PC's form exactly
+            if body is None:
+                skipped.append("%s: %s" % (r["name"], why))
                 continue
         else:
             body = xa.wave(list(pcm))

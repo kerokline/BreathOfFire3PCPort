@@ -70,7 +70,7 @@ import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
 import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
-from build_reuse import reusable, reuse_key, tree_digest, write_key   # noqa: E402  (IDEAS I42)
+from build_reuse import read_rows, reusable, reuse_key, tree_digest, write_key, write_rows   # noqa: E402  (IDEAS I42)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
 import ppms         # noqa: E402  (base/bgm/ from a PSP disc, docs/psp-music.md)
 import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
@@ -776,22 +776,45 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
 
 def snd_from_psx(sources, out, reuse=None):
     """xa.importer_snd, or the previous cache's base/snd/ when it was made
-    from the same first PSX disc by the same code."""
+    from the same first PSX disc by the same code. Returns (snd, jingles):
+    snd is xa.importer_snd's (or None without a PSX disc); jingles is
+    (build id, ffmpeg version, {name: sha256}, [why not]) or None.
+
+    The 11 jingles (D255, DIV-0129): with no PC install among the sources,
+    xa.jingles makes them from the same disc by the player's ffmpeg, so the
+    inn's and the camp's `OYASUMI` is there on a PSX-only install. With a PC
+    install they stay the install's own MP3s (SND/, docs/sound-import.md 7)."""
     import shutil
     disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
     if disc is None:
-        return None
-    key = reuse_key("snd-xa", disc.id)
+        return None, None
+    pc = any(isinstance(s, PcSource) for s in sources)
+    ffmpeg = None if pc else at3.find_ffmpeg()
+    version = at3.ffmpeg_version(ffmpeg) if ffmpeg else None
+    key = reuse_key("snd-xa", disc.id, "pc" if pc else version or "no ffmpeg")
     dst = os.path.join(out, "base", "snd")
     src = reusable(reuse, "snd", key, os.path.join("base", "snd"))
+    jingles = None
     if src:
         shutil.copytree(src, dst, dirs_exist_ok=True)
         print("  base/snd  the previous cache's, made from %s the same way (not decoded again)" % disc.id)
         snd = (disc.id, len(os.listdir(dst)))
+        if not pc:
+            rows = read_rows(reuse, "snd") or []
+            jingles = (disc.id, version, {r[0]: r[1] for r in rows if len(r) == 2},
+                       [r[0] for r in rows if len(r) == 1])
     else:
         snd = xa.importer_snd(sources, out)
+        if not pc and ffmpeg:
+            written, skipped = xa.jingles(disc.path, dst, ffmpeg)
+            jingles = (disc.id, version, written, skipped)
+        elif not pc:
+            jingles = (disc.id, None, {}, ["the 11 jingles: no ffmpeg on the PATH or in BOF3X_FFMPEG to encode "
+                                           "them; the inn's and the camp's wait ends without its jingle (DIV-0129)"])
     write_key(out, "snd", key)
-    return snd
+    if jingles:
+        write_rows(out, "snd", [(n, h) for n, h in sorted(jingles[2].items())] + [(w,) for w in jingles[3]])
+    return snd, jingles
 
 
 @contextlib.contextmanager
@@ -869,7 +892,7 @@ def cmd_build(a):
     time_line("base and layer chunks", t_chunks)
     reuse = getattr(a, "reuse", None)
     with timed("base/snd"):
-        snd = snd_from_psx(sources, a.out, reuse)
+        snd, psx_jingles = snd_from_psx(sources, a.out, reuse)
         psp_snd = None if snd else at3.importer_snd(sources, a.out)     # no PSX disc: the PSP's, by the player's ffmpeg
     with timed("base/bgm"):
         bgm = seq.importer_bgm(sources, a.out) or ppms.importer_bgm(sources, a.out)   # no PSX disc: the PSP's (psp-music.md)
@@ -886,7 +909,7 @@ def cmd_build(a):
     with timed("opt"):
         opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
-                   psp_snd, getattr(a, "prefer", None))
+                   psp_snd, getattr(a, "prefer", None), psx_jingles)
     with timed("base/fmv"):
         fmv_build(sources, a.out, reuse)   # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
     with timed("psp layers"):
@@ -902,6 +925,10 @@ def cmd_build(a):
     if psp_snd and psp_snd[1]:
         print("  base/snd  from %s: %d files (psp-at3, %s)" % (psp_snd[0], len(psp_snd[2]), psp_snd[1]))
     for why in (psp_snd[3] if psp_snd else []):
+        print("  base/snd  not written: %s" % why)
+    if psx_jingles and psx_jingles[1]:
+        print("  base/snd  from %s: %d jingles (psx-xa-mp3, %s)" % (psx_jingles[0], len(psx_jingles[2]), psx_jingles[1]))
+    for why in (psx_jingles[3] if psx_jingles else []):
         print("  base/snd  not written: %s" % why)
     if bgm:
         print("  base/bgm  from %s: %d files (%s)" % (bgm[0], len(bgm[1]), "ppms.py" if bgm[0].startswith("psp-") else "seq.py"))
@@ -1065,7 +1092,7 @@ def build_languages_disc_only(asked, sources, out, reuse=None):
 
 
 def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None, exe=None,
-                   bgm=None, psp_snd=None, prefer_path=None):
+                   bgm=None, psp_snd=None, prefer_path=None, psx_jingles=None):
     with open(recipe_path, "rb") as f:
         rsha = sha(f.read())
     psha = prefer_sha(prefer_path)
@@ -1114,6 +1141,15 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
                   "build = %s" % toml_str(psp_snd[0]), 'how = "psp-at3"', "ffmpeg = %s" % toml_str(psp_snd[1]),
                   "files = ["]
         for name, h in sorted(psp_snd[2].items()):
+            lines.append("  [%s, %s]," % (toml_str(name), toml_str(h)))
+        lines.append("]")
+    if psx_jingles and psx_jingles[2]:
+        lines += ["", "# base/snd/'s 11 jingles on a PSX-only install: the disc's S_XA00.STR clips encoded by the",
+                  "# player's ffmpeg (tools/xa.py jingles, D255 / DIV-0129); not the PC's bytes, so each file's",
+                  "# own hash. The other 880 files are the PC's bytes (recipes/pc-zh.snd.toml).", "[snd_jingles]",
+                  "build = %s" % toml_str(psx_jingles[0]), 'how = "psx-xa-mp3"', "ffmpeg = %s" % toml_str(psx_jingles[1]),
+                  "files = ["]
+        for name, h in sorted(psx_jingles[2].items()):
             lines.append("  [%s, %s]," % (toml_str(name), toml_str(h)))
         lines.append("]")
     if exe:
