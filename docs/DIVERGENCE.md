@@ -6518,6 +6518,37 @@ designed in rather than bolted on.
   the PC draws `1/2`. Verification: that doc 4.2 (the seven rows "5 bytes, 0
   not BOF3.exe's"; the checks clean; the exe host on the US disc-only install
   exit 0; `fairyVillage` reads `1/2` on both sides at 810).
+- Amended 2026-10-16 (D303, D286; [`fishing-rule-pages.md`](fishing-rule-pages.md)):
+  the fishing spot's Rule pages and panel headings are no longer zero on a
+  disc-built image. The pages' title and row ids (`0x653DF4`, 6 + 54 u16) are
+  two catalogued tables (`tables.toml` `fishing_rule_titles` /
+  `fishing_rule_lines`), read in every build from the fishing module whose
+  `EffectKind0F_DrawMessageList` twin reads them (`WORLD00/AREA030.EMI#4`; on
+  the PSPs `BOOT.BIN`'s one copy); the panel headings `ROD` .. `GUIDE`
+  (`0x653EA0`, US, EU, JP and the PSPs) and the counter format `"%d/6"` with
+  the data page's total (`0x653EB4`, all seven) are `twin` rows of the same
+  module, equal to `BOF3.exe`'s. Zero, the rows each drew the pool's message
+  0 (the fish list's first entry) nine times down the panel, the title that
+  message's first line, the counter a stale `0`, the headings nothing. **The
+  one deliberate difference from `BOF3.exe`**: the Western discs (US, EU, FR,
+  DE, and PSP-EU's `BOOT.BIN`) lay the rows out for their own text - a blank
+  row on page 1, line `0x93` added to page 3 and the page's last line moved
+  to page 4, DE also `0x6D` on page 4 - and the image takes the disc's
+  layout, since the message pool it indexes is that disc's (the owner
+  prefers the disc's data where both exist, `visual-findings-1012.md`, "For the other files";
+  DIV-0104 is the precedent of a
+  disc-built image holding a disc's own table). JP and PSP-JP equal the
+  PC's. On PSP-EU this replaces the JP layout its map took from the EMI copy.
+  Still zero: FR's and DE's headings (their discs re-lay the words at other
+  widths; D286 stays open for those two). Verification: `psp_exe.py recipe`
+  over the seven discs (12 new rows, each "0 not BOF3.exe's", no other row
+  moved); `exe_tables.py recipe` and `gaps` (13 gap rows out, FR's and DE's
+  headings in under their new name, nothing else); `tables.py`,
+  `exe_tables.py`, `psp_exe.py`, `importer.py`, `exe_own.py check` clean;
+  `campingFishing` on a fresh PSX-US disc-only install (`fishing-rule-pages.md`
+  6): `Fundamentals`, the three lines with the US blank row, `1/6`, the
+  equip headings drawn, the route to its last frame. The other builds not
+  played.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

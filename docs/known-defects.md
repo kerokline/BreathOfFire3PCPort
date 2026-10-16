@@ -7522,12 +7522,22 @@ other.
 **Status:** open; a `gameover` hash at 1 and 2 against narrow, with its flash
 frames compared, would settle it.
 
-## D286 — The fishing equip screen's headings are blank on the disc-only installs (ours; not looked into)
+## D286 — The fishing equip screen's headings are blank on the disc-only installs (ours; fixed by DIV-0101's amendment except FR and DE)
 
 **Found:** the eye batch, 2026-10-13
 ([`eye-batch-1013.md`](eye-batch-1013.md) 3 item 6): `EQUIP`, `ROD` and
 `GUIDE` drawn on the PC, blank on PSX-EU and PSP-EU (718 pixels). Whether a
 gap of the image or of the language build is not known.
+
+**Established 2026-10-16** ([`fishing-rule-pages.md`](fishing-rule-pages.md),
+with D303): a gap of the disc-built image. `ROD` .. `GUIDE` are four
+fixed-width fields at `0x653EA0` (`EffectKind0F_PanelTitles`), zero on every
+disc-built image: each disc's fishing module holds them after its tabs, which
+the PC lacks there, so the map's segment stopped short. Now a `twin` row of
+`WORLD00/AREA030.EMI#4` on PSX-JP, US, EU and both PSPs; seen drawn on PSX-US
+(`campingFishing` 3360). **Still open on FR and DE**: those discs re-lay the
+words at other widths, so the PC's fields have no copy there; drawing them
+needs the module's widths in ours (DIV-0069's way with the tabs).
 
 ## D287 — The launcher page clips two lines (ours, the launcher)
 
