@@ -712,6 +712,7 @@ psp-jp	0x5DDF10	2	data
 psp-jp	0x5DDF28	1	data
 psp-jp	0x5DF6A8	1	data
 psp-jp	0x5DF778	1	data
+psp-jp	0x5E23B0	1	data
 psp-jp	0x5E2740	1	data
 psp-jp	0x5E2AB0	1	data
 psp-jp	0x5E5DE0	1	data
@@ -834,6 +835,7 @@ psp-eu	0x5DDF28	1	data
 psp-eu	0x5DF6A8	1	data
 psp-eu	0x5DF6B4	1	data
 psp-eu	0x5DF778	1	data
+psp-eu	0x5E23B0	1	data
 psp-eu	0x5E2740	1	data
 psp-eu	0x5E2AB0	1	data
 psp-eu	0x5E5DE0	1	data

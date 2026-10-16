@@ -6567,6 +6567,20 @@ designed in rather than bolted on.
   `BOF3X_SHADOW=exe_own` (exit 0, `19 regions ... each equal to BOF3.exe's
   .data`, the zero-image fill `16906 non-zero bytes ... nothing outside`);
   PSX-US `load_list` and `cutsceneAndNue` before and after ([`known-defects.md`](known-defects.md) D254).
+- Amended 2026-10-16 (the owner, a PSX-only install; [`IDEAS.md`](IDEAS.md)
+  I43, [`exe-import-engine.md`](exe-import-engine.md) 7.7): the importer
+  places a region by the placed pointers that point into it, read from the
+  disc's own words. On a disc-only install the child's field sprite in the
+  forest after the mine was drawn in pieces: the record lists of party members
+  7 and 9 (`0x669868..0x669883`, a `game-value` gap on all seven builds) were
+  zero, every pose bank 0. They are now the disc's own (US `BOOT@0x80181C58`
+  and `@0x80181C68`), with 18 to 54 more places per build. Every placed byte
+  equals `BOF3.exe`'s (`placed_differ` unchanged on every build); `gap` bytes
+  PSX-US 2,502 to 2,277, PSX-EU 2,453 to 2,308, PSX-JP 1,817 to 1,672, PSP-EU
+  1,406 to 1,261. Verification: the recipe checks clean; `whelpBoss` frame
+  4710 on a rebuilt PSX-EU disc-only install, the sprite's region against the
+  PC install's: 5,190 differing pixels before, 44 after (the rest is the
+  frame's 3x scale sampled down); not played by the owner yet.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

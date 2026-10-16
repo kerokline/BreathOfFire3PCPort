@@ -823,6 +823,70 @@ sound-name table's tail 5; `own` - the file layer 8,622, the rest of
 - No ledger entry: no game behaviour changes (a disc-built image is not
   mapped yet; a PC-built cache is byte-identical as before).
 
+### 7.7 Places by the pointers into a region (2026-10-16, [`IDEAS.md`](IDEAS.md) I43)
+
+**Why.** 3.1 and 7.4 key a region only by what is *in* it: its pointer
+words, or a 16-byte window of at least six distinct byte values. A run of
+plain records holds neither, though the pointers that locate it point *in*
+from a table that is placed. The case that showed it (the owner, a PSX-only
+install, 2026-10-16): the child's field sprite in the forest after the mine
+drawn in pieces. A bisection over the disc-built image's `gap` ranges found
+one, `0x669868..0x669883` - the record lists of party members 7 and 9 that
+the member-animation table `0x669884` points at
+([`sprite-pose.md`](sprite-pose.md) 3). The PlayStation gives each of the five
+members with no records its own one-word empty list between the others; the
+PC moved those to `.bss` and packed the rest, so the byte-run map breaks at
+`0x669868` and nothing placed the 27 bytes. The disc's own words at
+`0x6698A0` / `0x6698A8`'s places name the lists (US `0x80181C58`,
+`0x80181C68`), byte for byte the PC's.
+
+**The rule** (`find_places`, each round): a data-pointer word of
+`exe-pointers.tsv` whose four bytes one `map`, `table` or `place` range
+placed, and whose PC target lies in an unplaced region, gives in the disc's
+word at its place the target's address in the build. If exactly one section
+of the pointer's own file holds that address (else exactly one section of the
+whole disc), that is a place for the region, checked by `stretches` as every
+other place is: a stretch that disagrees nowhere, holds the target's word and
+agrees on 8 bytes or more is placed. Its `keys` count the pointers into it
+that name that place, as well as any in it. A target already inside a place
+this round found is skipped, and a stretch that overlaps one is dropped.
+
+**Before and after** (`exe-places.tsv` rows; the bytes of the new rows;
+`exe-gaps.tsv`'s `gap` ranges and bytes, then its `game-value` and
+`disc-unplaced` bytes; `exe.toml`'s `identical` and `placed_differ`), on `fix/psx-only-1016` at `da58415f`:
+
+| Build | places | new bytes | gap ranges | gap bytes | game-value | disc-unplaced | identical | placed_differ |
+|---|---|---:|---|---|---|---|---|---|
+| `psx-jp` | 189 to 207 | 368 | 170 to 162 | 1,817 to 1,672 | 998 to 947 | 669 to 575 | 614,596 to 614,667 | 3,143 to 3,143 |
+| `psx-us` | 198 to 221 | 447 | 187 to 181 | 2,502 to 2,277 | 1,584 to 1,490 | 768 to 637 | 613,952 to 614,089 | 3,182 to 3,182 |
+| `psx-eu-en` | 202 to 220 | 368 | 185 to 177 | 2,453 to 2,308 | 1,577 to 1,526 | 726 to 632 | 613,993 to 614,064 | 3,179 to 3,179 |
+| `psx-fr` | 201 to 219 | 368 | 189 to 181 | 2,601 to 2,456 | 1,607 to 1,556 | 844 to 750 | 613,879 to 613,950 | 3,181 to 3,181 |
+| `psx-de` | 201 to 219 | 368 | 192 to 184 | 2,630 to 2,485 | 1,624 to 1,573 | 856 to 762 | 613,866 to 613,937 | 3,180 to 3,180 |
+| `psp-jp` | 207 to 261 | 1,063 | 158 to 150 | 1,396 to 1,251 | 875 to 824 | 401 to 307 | 612,531 to 612,606 | 3,391 to 3,391 |
+| `psp-eu` | 212 to 265 | 1,020 | 159 to 151 | 1,406 to 1,261 | 882 to 831 | 401 to 307 | 612,525 to 612,600 | 3,368 to 3,368 |
+
+`placed_differ` is unchanged on every build: no new place puts a byte other
+than the PC's. The new rows hold more bytes than the gaps lose and than
+`identical` gains; where the rest stood before (other classes of `data.toml`)
+is not broken down here. On the two PSP builds five earlier places
+of area-overlay data (`AREA028`, `AREA053`, `AREA094`, `AREA095`, each `#13`)
+are split: their first bytes now come from `BOOT.BIN`'s copy of the same
+data, which a pointer from `BOOT.BIN` reached in an earlier round, and the
+rest from the area as before (and `0x5FEAB8`'s `BOOT.BIN` place starts 4
+bytes earlier). The bytes are equal either way. The known case is placed on
+all seven builds (US `0x80181C58` and `0x80181C68`, 12 and 15 bytes agreeing,
+one key each).
+
+**Checks.** The seven discs through `exe_tables.py recipe`, `psp_exe.py
+recipe`, `exe_tables.py recipe`, `exe_own.py measure`, `exe_tables.py gaps`;
+then `exe_tables.py check`, `psp_exe.py check`, `importer.py check`,
+`tables.py check`, `ledger_check.py`: 0 errors each (the place check's
+"keyless" rule is why the incoming pointers count as keys). The forest on a
+rebuilt PSX-EU disc-only install (root `abg`): `whelpBoss` frame 4710's
+sprite region against the PC's, 5,190 differing pixels to 44; the attract
+with this image and with the gaps it closes zeroed again, 366 frame pairs,
+0 differing ([`IDEAS.md`](IDEAS.md) I43's outcome).
+
 ## For the other files
 
 Not edited here (the coordinator folds them in):

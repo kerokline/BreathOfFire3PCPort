@@ -388,7 +388,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
   the same limit): keep a disc-only install's path short.
 - **A disc-built image maps 2,183 bytes of Capcom's game values as zero** (DIV-0101, `BOF3X_EXEIMAGE_STRICT=1`
   refuses): a disc-only route that behaves oddly may be one of them (`recipes/exe-gaps.tsv`, the gap lines in the
-  log); the two the attract reached are fixed (the button map, the story-flag seed).
+  log); the two the attract reached are fixed (the button map, the story-flag seed). A third, found 2026-10-16: the
+  forest sprite after the mine drawn in pieces (members 7 and 9's animation records, `0x669868`), fixed the same day
+  by placing a region from the pointers into it (I43 step 1; EU gap ranges 185 to 177); settling the rest is
+  [`IDEAS.md`](IDEAS.md) I43.
 - **`'*'` under a Latin overlay stops at `field_c1`** (2026-10-10, the morning's trap read right): `BOF3X_LANG=en-US`
   (en-150, fr-FR, de-DE) re-aims `Config_DrawRowLabel + 0x9F` through the `ConfigText` patch and the clone check
   refuses it after 979 lines. `ja-JP` passes whole. The language self-test is `BOF3X_SHADOW='*,-field_c1'` (the list
