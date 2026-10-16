@@ -142,6 +142,44 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    the recipe's"; `dragonMenu`'s frame 720 pop-up differs from its reference (together again at 780, probably
    timing).
 
+9. **Revisit: the PSP's Peco level table is a repair, not a rebalance** (read 2026-10-16, chat only; owner's call).
+   DIV-0104 / DIV-0111, [`exe-tables-by-build.md`](exe-tables-by-build.md) 4.4, [`psp-only-build.md`](psp-only-build.md)
+   4 and [`opt-layers.md`](opt-layers.md) call roster index 6's 249 differing `Char_ExpTable` bytes a PSP balance
+   change at Extension tier. Decoded row by row (PC `bof3/BOF3.exe` against `game/cache/opt/psp-tables/exe/place.bin`
+   laid at its `place.toml` ranges), they are **one row inserted**: the PSP adds a level-36 row, and every PC / PSX
+   row from 36 on is the PSP's row one level higher; the PSX's last row (level 99) is all zero, the only zero final
+   row of the seven characters. Abilities (`+6` / `+7`) stay put. Roster index 6 is Peco (New Game's record order,
+   DIVERGENCE.md DIV-0020's original behaviour). The inserted step is the ~1.1x ratio the curve keeps on both sides of it, where
+   the PSX's 35 -> 36 step is about twice that. Consequences on the PSX / PC, by `Char_LevelUpGain`'s (`0x432170`)
+   reading: Peco cannot sit at level 98 (the 98 and 99 sums are equal, so 97 goes to 99), he ends with one level's
+   bundle of stat gains less than the PSP's, and from 36 to 97 each bundle comes a level early and cheaper. Every
+   PSX build holds the same table, so by the PSX-twin rule it is Capcom's defect, which the PSP fixed. **To do:**
+   (a) the owner decides whether it becomes a Sensible-tier repair on every install, not only an option
+   (`psp-tables`) and a PSP-only base; (b) reword those entries from "rebalance" to "a missing row restored";
+   (c) name the six gain stats (labels system messages `0xC, 0xD, 8, 9, 0xA, 0xB`, `battle_e7.cpp`'s
+   `BattleResultWin_DrawLevelUp`; not checked); (d) see Peco level 97 -> 99 in play to confirm the skip.
+   **A second gap the PSP left** (the same day): every character's EXP steps grow in fixed ratio phases (x2, x1.5,
+   x1.25, then x1.125; Peco alone also has a x1.1 phase from 26 to 40), and nowhere is a step the square of its
+   phase's ratio except Peco's two: 35 -> 36 on the PSX (x1.1 squared, the row the PSP restored) and 41 -> 42 on the
+   PSP (x1.125 squared, also 40 -> 41 on the PSX), which no build fills. The EXP alone says a row is missing there;
+   Peco's stat gains come in irregular spurts, so they cannot say whether the stats are missing too. Also: Peco's
+   level-1 row is empty where the six others carry an ability at `+6`, the same on every build (design or slip,
+   the owner's to say). The other six tables are equal on every build and show neither pattern. Scripts: session
+   9c821506's scratchpad (`scan.py`, `phase.py`, `cad.py`).
+
+10. **Sign the release binaries** (2026-10-16; the owner was setting up Azure Trusted Signing). The build side is
+    done: every binary carries a version block (`src/version.rc`, `make_exe.py`'s `build_version`), `kTimestamp` reads
+    as a past date, and `make_exe.py --verify-only` accepts and reports an Authenticode signature
+    ([`state3-build.md`](state3-build.md) 2.1), and `release.yml` signs with jsign from the Ubuntu job and re-verifies
+    ([`releases/README.md`](releases/README.md) "Signing"). Left, the owner's: the App Registration and its role on the
+    signing account, the three secrets and three variables in the repository; then the first signed `latest` build is
+    the test (the step warns and ships unsigned until the secrets exist). Unverified until then: jsign 7.6's
+    `TRUSTEDSIGNING` store against this account (its documentation's example, not run here), and that `wget` of the jar
+    is pinned by version only, not by hash. Why: VirusTotal scored the unsigned launcher 11/70, all machine-learning
+    labels keyed on its packer-like shape (two sections with no file bytes, a 61-byte `.text`), which the layout needs;
+    a publisher identity is what moves those models. After the first signed release, submit the hashes as false
+    positives to Microsoft and Avira.
+
 **Older open items** (one line each; the pointer holds the detail):
 
 - **The owner's older checks** (move to `owner-review.md`): DIV-0063 in game (the gene with a partner down); the

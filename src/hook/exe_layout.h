@@ -48,8 +48,13 @@ inline constexpr std::uint32_t kOwnVa = 0x987000;
 inline constexpr std::uint32_t kStackReserve = 0x100000;
 inline constexpr std::uint32_t kStackCommit = 0x10000;
 // TimeDateStamp: our identity. Host detection (host.cpp) tells our image from
-// Capcom's (0x3ADD0C06) by it and by .stub at kStubVa.
-inline constexpr std::uint32_t kTimestamp = 0xB0F30003;
+// Capcom's (0x3ADD0C06) by it and by .stub at kStubVa. A fixed constant, not
+// the build's clock, so every build of the layout carries the same stamp; it
+// decodes to 2026-10-12 07:36:32 UTC, the day state 3 merged (PR #53), rather
+// than the 0xB0F30003 of the first builds, which read as the year 2064 and fed
+// antivirus heuristics ("timestamp in the future", 2026-10-16's VirusTotal
+// run of the launcher).
+inline constexpr std::uint32_t kTimestamp = 0x6ACC8E00;
 
 static_assert(kStubVa + kStubSize == kGameVa, ".stub ends where .rdata begins");
 static_assert(kGameVa + kGameSize == kPoolVa, ".game ends where .pool begins");

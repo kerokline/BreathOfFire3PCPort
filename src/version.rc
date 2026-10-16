@@ -1,0 +1,42 @@
+// The VS_VERSIONINFO block every binary of ours carries, so Explorer's
+// Properties, the installer and antivirus heuristics see a named publisher
+// and product rather than an anonymous file (the 2026-10-16 VirusTotal run
+// scored "unknown, unsigned, no version" against the launcher). Included by
+// a target's own .rc after it defines:
+//   BOF3X_RC_DESCRIPTION  "..."   what the file is
+//   BOF3X_RC_FILENAME     "..."   its OriginalFilename
+//   BOF3X_RC_FILETYPE     VFT_APP or VFT_DLL
+// The numbers come from version.gen.h (CMake's project(VERSION)); the strings
+// here and in tools/make_exe.py's VERSION_STRINGS say the same things - keep
+// them together.
+#include <windows.h>
+#include "version.gen.h"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    BOF3X_VERSION_MAJOR, BOF3X_VERSION_MINOR, BOF3X_VERSION_PATCH, 0
+ PRODUCTVERSION BOF3X_VERSION_MAJOR, BOF3X_VERSION_MINOR, BOF3X_VERSION_PATCH, 0
+ FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+ FILEFLAGS      0
+ FILEOS         VOS_NT_WINDOWS32
+ FILETYPE       BOF3X_RC_FILETYPE
+ FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName",      "bof3x project (kerokline)"
+            VALUE "FileDescription",  BOF3X_RC_DESCRIPTION
+            VALUE "FileVersion",      BOF3X_VERSION_STR
+            VALUE "InternalName",     "bof3x"
+            VALUE "LegalCopyright",   "Copyright (c) 2026 Kevin (kerokline). Breath of Fire III is Capcom's; this is an engine, not the game."
+            VALUE "OriginalFilename", BOF3X_RC_FILENAME
+            VALUE "ProductName",      "bof3x - Breath of Fire III PC"
+            VALUE "ProductVersion",   BOF3X_VERSION_TAG
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

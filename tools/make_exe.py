@@ -13,12 +13,17 @@ reserves that range before any heap or thread block can be placed there
     .pool   0x93F000  DIV-0062's draw items; the file carries the stamp
     .text   0x987000  the entry: Engine_Main(hinstance, command line, show)
     .idata            KERNEL32.dll (four names) and bof3x.dll!Engine_Main
-    .rsrc             the BOF3_ICON group (a placeholder of ours) and the manifest
+    .rsrc             the BOF3_ICON group, the manifest, and the version block
 
 No relocations, no dynamic base, stack reserve / commit from the layout
 header. The file holds no game data: the section table is layout, as
 symbols.toml's addresses are, and every constant comes from
 src/hook/exe_layout.h, the table the engine reads too.
+
+An Authenticode signature (signtool, after the build) appends a certificate
+table to the file and names it in data directory 4; --verify-only accepts a
+signed file whose table is exactly that trailing blob and reports it signed,
+so a signed release can be re-verified against the layout.
 
 After writing, the file is read back with tools/pe_read.py and every
 property above is checked, and bof3x.dll's export table is checked for
@@ -77,6 +82,54 @@ MANIFEST = b'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
 ICON_NAME = 'BOF3_ICON'   # what Game_WinMain's LoadIconA asks for (win_main.cpp kStrIcon)
 
+# The version block's strings: the same as src/version.rc's, which the DLL and
+# the launcher carry - keep the two together. Explorer's Properties shows
+# them; antivirus heuristics score an anonymous file against a named one.
+RT_VERSION = 16
+VERSION_STRINGS = [
+    ('CompanyName', 'bof3x project (kerokline)'),
+    ('FileDescription', 'bof3x - Breath of Fire III PC'),
+    ('InternalName', 'bof3x'),
+    ('LegalCopyright', "Copyright (c) 2026 Kevin (kerokline). Breath of Fire III is Capcom's; this is an engine, not the game."),
+    ('OriginalFilename', 'bof3x.exe'),
+    ('ProductName', 'bof3x - Breath of Fire III PC'),
+]
+
+
+def build_version(numbers, tag):
+    """A VS_VERSIONINFO resource: VS_FIXEDFILEINFO with the four numbers, one
+    StringFileInfo table (language 0x0409, Unicode) of VERSION_STRINGS plus
+    FileVersion and ProductVersion, and the matching VarFileInfo Translation.
+    Each node: wLength, wValueLength, wType, szKey (UTF-16, NUL), padding to
+    4, the value, padding to 4, the children."""
+    def node(key, value, kind, children=b''):
+        head = struct.pack('<HHH', 0, len(value) // 2 if kind else len(value), kind) + key.encode('utf-16-le') + b'\0\0'
+        head += b'\0' * (align(len(head), 4) - len(head))
+        body = value + b'\0' * (align(len(value), 4) - len(value)) if value else b''
+        out = bytearray(head + body + children)
+        struct.pack_into('<H', out, 0, len(out))
+        return bytes(out)
+
+    def wstr(key, text):
+        return node(key, text.encode('utf-16-le') + b'\0\0', 1)
+
+    major, minor, patch, build = numbers
+    fixed = struct.pack('<IIIIIIIIIIIII', 0xFEEF04BD, 0x10000,
+                        (major << 16) | minor, (patch << 16) | build,   # file version
+                        (major << 16) | minor, (patch << 16) | build,   # product version
+                        0x3F, 0,                                        # flags mask, flags
+                        0x40004, 1, 0,                                  # VOS_NT_WINDOWS32, VFT_APP, subtype
+                        0, 0)                                           # file date
+    strings = [wstr(k, v) for k, v in VERSION_STRINGS]
+    strings.append(wstr('FileVersion', '.'.join(str(n) for n in numbers[:3])))
+    strings.append(wstr('ProductVersion', tag))
+    table = node('040904B0', b'', 1, b''.join(strings))
+    sfi = node('StringFileInfo', b'', 1, table)
+    var = node('Translation', struct.pack('<HH', 0x409, 1200), 0)
+    vfi = node('VarFileInfo', b'', 1, var)
+    return node('VS_VERSION_INFO', fixed, 0, sfi + vfi)
+
+
 
 def align(v, a):
     return (v + a - 1) // a * a
@@ -118,11 +171,13 @@ def brand_icon(path=ICON_FILE):
     return images, group
 
 
-def build_rsrc(rva, icons, group, manifest):
-    """A resource tree: RT_ICON 1..n, RT_GROUP_ICON "BOF3_ICON", RT_MANIFEST 1, language neutral."""
+def build_rsrc(rva, icons, group, version, manifest):
+    """A resource tree: RT_ICON 1..n, RT_GROUP_ICON "BOF3_ICON", RT_VERSION 1,
+    RT_MANIFEST 1, language neutral; types in ascending order, as the loader
+    expects (FindResource binary-searches the directory)."""
     RT_ICON, RT_GROUP_ICON, RT_MANIFEST = 3, 14, 24
     types = [(RT_ICON, [(i + 1, icon) for i, icon in enumerate(icons)]), (RT_GROUP_ICON, [(ICON_NAME, group)]),
-             (RT_MANIFEST, [(1, manifest)])]
+             (RT_VERSION, [(1, version)]), (RT_MANIFEST, [(1, manifest)])]
 
     def dir_header(named, ids):
         return struct.pack('<IIHHHH', 0, 0, 0, 0, named, ids)
@@ -235,7 +290,7 @@ def build_entry(base, slots):
     return code
 
 
-def write(layout, out_path):
+def write(layout, out_path, version, tag):
     base = layout['ImageBase']
     stub_rva = layout['StubVa'] - base
     game_rva = layout['GameVa'] - base
@@ -250,7 +305,7 @@ def write(layout, out_path):
     assert len(entry) < SECTION_ALIGN
     rsrc_rva = idata_rva + align(len(idata), SECTION_ALIGN)
     icons, group = brand_icon()
-    rsrc = build_rsrc(rsrc_rva, icons, group, MANIFEST)
+    rsrc = build_rsrc(rsrc_rva, icons, group, build_version(version, tag), MANIFEST)
     size_of_image = rsrc_rva + align(len(rsrc), SECTION_ALIGN)
 
     pool_init = POOL_STAMP
@@ -311,7 +366,7 @@ def write(layout, out_path):
     return slots
 
 
-def verify(layout, out_path, dll_path):
+def verify(layout, out_path, dll_path, version, tag):
     """Read the file back with pe_read and check every property the design
     names. Returns a list of failures."""
     pe = Pe(open(out_path, 'rb').read())
@@ -365,7 +420,22 @@ def verify(layout, out_path, dll_path):
     res = pe.resources()
     keys = sorted(((t, str(n), l) for t, n, l in res))
     check('resources', keys, sorted([(3, str(i + 1), 0) for i in range(len(brand_icon()[0]))] +
-                                    [(14, ICON_NAME, 0), (24, '1', 0)]))
+                                    [(14, ICON_NAME, 0), (RT_VERSION, '1', 0), (24, '1', 0)]))
+    check('version block', res.get((RT_VERSION, 1, 0), b''), build_version(version, tag))
+    # Data directory 4, the certificate table (an Authenticode signature,
+    # applied after the build): absent, or exactly a trailing WIN_CERTIFICATE
+    # (file offset, not RVA; 8-aligned; dwLength the size; revision 2.0; type
+    # 2, PKCS#7 signed data). Anything else is a file nobody of ours wrote.
+    sec_at, sec_size = pe.dirs[4]
+    pe.signed = bool(sec_at or sec_size)
+    if pe.signed:
+        if sec_at % 8 or sec_at + sec_size != len(pe.data) or sec_size < 8:
+            bad.append(f"certificate table at {sec_at:#x}+{sec_size:#x} is not the file's trailing blob (file is {len(pe.data):#x} bytes)")
+        else:
+            length, revision, kind = struct.unpack_from('<IHH', pe.data, sec_at)
+            check('certificate dwLength', length, sec_size)
+            check('certificate wRevision', hex(revision), hex(0x200))
+            check('certificate wCertificateType', kind, 2)
     manifest = res.get((24, 1, 0), b'')
     for needle in (b'<activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>',
                    b'<longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>',
@@ -385,12 +455,19 @@ def main():
     ap.add_argument('--layout', required=True, help='src/hook/exe_layout.h')
     ap.add_argument('--out', required=True, help='the executable to write')
     ap.add_argument('--dll', help='bof3x.dll, whose exports are checked for Engine_Main')
+    ap.add_argument('--version', default='0.0.0', help="the version block's numbers, major.minor.patch (CMake project(VERSION))")
+    ap.add_argument('--version-tag', default=None, help='its ProductVersion string, the release tag (default v<version>)')
     ap.add_argument('--verify-only', action='store_true', help='check an existing file, write nothing')
     a = ap.parse_args()
     layout = read_layout(a.layout)
+    m = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)', a.version)
+    if not m:
+        sys.exit(f'make_exe: --version {a.version!r} is not major.minor.patch')
+    version = tuple(int(x) for x in m.groups()) + (0,)
+    tag = a.version_tag or 'v' + a.version
     if not a.verify_only:
-        write(layout, a.out)
-    bad, pe = verify(layout, a.out, a.dll)
+        write(layout, a.out, version, tag)
+    bad, pe = verify(layout, a.out, a.dll, version, tag)
     if bad:
         if not a.verify_only:
             os.remove(a.out)
@@ -398,7 +475,9 @@ def main():
     print(f'make_exe: {a.out} verified: base {pe.image_base:#x}, {len(pe.sections)} sections '
           f'({", ".join(s["name"] for s in pe.sections)}), entry {pe.image_base + pe.entry_rva:#x}, '
           f'stack {pe.stack_reserve:#x}/{pe.stack_commit:#x}, no relocations, imports '
-          + '; '.join(f'{d}!{",".join(f)}' for d, f in pe.imports()))
+          + '; '.join(f'{d}!{",".join(f)}' for d, f in pe.imports())
+          + f', version {".".join(str(n) for n in version[:3])} ({tag}), '
+          + ('signed (certificate table present)' if pe.signed else 'unsigned'))
 
 
 if __name__ == '__main__':

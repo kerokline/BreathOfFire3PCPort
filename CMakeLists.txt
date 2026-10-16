@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
-project(bof3x LANGUAGES CXX)
+project(bof3x VERSION 0.1.0 LANGUAGES CXX RC)
+
+# The version every binary carries (src/version.rc, tools/make_exe.py):
+# project(VERSION) above is the number; the tag is the release's name, which
+# the release workflow passes (-DBOF3X_VERSION_TAG=v0.1.0-alpha.2, or
+# latest-<sha> for a push to main) and a local build leaves at v<number>.
+set(BOF3X_VERSION_TAG "v${PROJECT_VERSION}" CACHE STRING "The release tag stamped into the binaries' ProductVersion")
 
 # Phase 0 scaffolding (docs/SCAFFOLDING.md): a launcher that starts the player's
 # own BOF3.exe suspended and loads our DLL into it, and the DLL, which redirects
@@ -34,6 +40,7 @@ add_link_options(-static)
 # Anaconda's `python` on this machine; any 3.11+ works (tomllib).
 find_program(BOF3X_PYTHON NAMES python python3 REQUIRED)
 set(_gen_dir "${CMAKE_BINARY_DIR}/gen")
+configure_file(src/version.h.in "${_gen_dir}/version.gen.h" @ONLY)
 set(_gen_hdr "${_gen_dir}/bof3/symbols.gen.h")
 add_custom_command(
   OUTPUT "${_gen_hdr}"
@@ -698,7 +705,8 @@ add_library(bof3x SHARED
   src/game/mode_rest.cpp
   src/game/mode_rest_fuzz.cpp
   src/game/crt_rest.cpp
-  src/game/crt_rest_fuzz.cpp)
+  src/game/crt_rest_fuzz.cpp
+  src/hook/bof3x.rc)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src third_party "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
@@ -729,6 +737,7 @@ add_custom_command(
   COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/make_exe.py"
           --layout "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
           --dll "$<TARGET_FILE:bof3x>"
+          --version "${PROJECT_VERSION}" --version-tag "${BOF3X_VERSION_TAG}"
           --out "${_exe_out}"
   COMMAND "${CMAKE_COMMAND}" -E touch "${_exe_stamp}"
   DEPENDS bof3x
@@ -736,6 +745,7 @@ add_custom_command(
           "${CMAKE_SOURCE_DIR}/tools/pe_read.py"
           "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
           "${CMAKE_SOURCE_DIR}/data/icon/bof3x.ico"
+          "${_gen_dir}/version.gen.h"
   COMMENT "Writing and verifying bof3x.exe (tools/make_exe.py)"
   VERBATIM)
 add_custom_target(bof3x_exe ALL DEPENDS "${_exe_stamp}")
@@ -743,8 +753,8 @@ add_custom_target(bof3x_exe ALL DEPENDS "${_exe_stamp}")
 # --- the launcher ------------------------------------------------------------
 # The settings dialog is a Win32 DIALOGEX resource driven by DialogBoxParam:
 # no toolkit, nothing vendored, so the launcher stays one dependency-free exe
-# (docs/launcher-settings.md section 2).
-enable_language(RC)
+# (docs/launcher-settings.md section 2). RC is enabled in project() above:
+# the DLL carries a version resource too (src/hook/bof3x.rc).
 # Two launchers from one set of sources (docs/launcher-settings.md section 2):
 # bof3x-launcher.exe, the player's, holds no code that writes into another
 # process; bof3x-launcher-dev.exe (BOF3X_HOSTED=1) also starts the hosted build

@@ -35,6 +35,37 @@ game-data kind or any file whose hash `fixtures.toml` catalogues.
    click. (`workflow_dispatch` with a tag re-runs step 3 for an existing tag,
    e.g. after deleting a bad draft.)
 
+## Signing (2026-10-16)
+
+The three binaries in the zip (`bof3x.exe`, `bof3x.dll`, `bof3x-launcher.exe`)
+are Authenticode-signed by the workflow with the owner's **Azure Trusted
+Signing** identity (public trust, individual validation). Why: an unsigned
+build scored 11/70 on VirusTotal, every hit a machine-learning label keyed on
+the executable's packer-like shape (`docs/state3-build.md` 2.1), and Windows
+Defender had quarantined the launcher twice; a publisher identity is what
+those models score.
+
+How: jsign (`ebourg/jsign`, pinned by version in `release.yml`) signs the
+files from the Ubuntu job - Microsoft's action needs a Windows runner - with
+SHA-256 and the service's own RFC 3161 timestamp, so the signature outlives
+the three-day certificate. Then `make_exe.py --verify-only` checks the signed
+executable's layout again and that its certificate table is the file's
+trailing blob. The workflow takes:
+
+| Where | Name | What |
+|---|---|---|
+| repository **secrets** | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | an App Registration in the owner's tenant, with a client secret, given the *Trusted Signing Certificate Profile Signer* role on the signing account |
+| repository **variables** | `SIGNING_ENDPOINT` | the account's regional endpoint, host only, e.g. `eus.codesigning.azure.net` |
+| | `SIGNING_ACCOUNT` | the Trusted Signing account name |
+| | `SIGNING_PROFILE` | the certificate profile name (public trust) |
+
+Without the secrets (a fork) the job warns and ships unsigned. There is no
+thumbprint or serial to configure: the service issues a fresh certificate
+every few days under the same validated identity, and reputation
+(SmartScreen, Defender) accrues to the identity. A client secret expires
+(two years at most): when signing starts failing with an authentication
+error, make a new one and replace the secret.
+
 ## The latest build (2026-10-15)
 
 Every push to `main` builds the same zip as a release does and publishes it as
