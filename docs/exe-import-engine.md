@@ -514,6 +514,19 @@ instead:
    (the PC's bytes are zero there too, by the table). A `pointer` range, or an
    image written before the table (no `gaps =` line), is a Fatal: its `none`
    could hide a PC value (the no-stub rule).
+   **An outdated image (D305, 2026-10-16).** `FilledSince` in
+   `exe_image.cpp` lists bytes that every disc build has carried since an
+   importer fix. An image whose `data.toml` still calls one of them a `gap`
+   was written before that fix, and is refused with a message box telling the
+   player to rebuild the install. Today it lists one fix: `WorldMap_Records`'
+   eleven area words (`0x653910 + 0x1C*k + 0x18`, the `wmrec` rule of
+   2026-10-12 evening, [`visual-findings-1012.md`](visual-findings-1012.md)
+   section 8). A cache built before that rule crashed entering area 16 or 45:
+   `WorldMap_RecordIndex` answered the "none" record, and its effect kind 1
+   called `MoveCmd_AttachOffset` with the area descriptor's null `+0x0C`.
+   That was D305, a PSX-US cache of 2026-10-12 17:35. Add a row when an
+   importer fix changes what a disc build must hold. Only the stale shape
+   (`gap`) is refused, so caches built after the fix keep working.
 6. The copy, then `ExeOwn_Fill` (NB's regions); each `gap` range logged once
    with its symbol and size, the counts by class logged;
    `BOF3X_EXEIMAGE_STRICT=1` makes the first gap a Fatal.
