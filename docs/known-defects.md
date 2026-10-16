@@ -7853,7 +7853,7 @@ to start:** the same recipe on the PC and a PSX-only install back to back,
 with the owner's eye on Task Manager, and whether a freeze lines up with a
 file open or the sequencer.
 
-## D305 — A PSX-US install built on 2026-10-12 crashes loading area 16 under the 2026-10-16 engine (unknown; not looked into)
+## D305 — A PSX-US install built on 2026-10-12 crashes loading area 16 under the 2026-10-16 engine (an old cache; refused since 2026-10-16)
 
 **Found:** 2026-10-16, `campingFishing` on a copy of `~/ab`'s `g_psxus` /
 `c_psxus` (built by the importer of 2026-10-12): `0xC0000005` reading
@@ -7864,3 +7864,14 @@ area 16 on an install rebuilt that day, so an old cache meeting a newer
 engine is the first guess, not established. **Where to start:**
 symbolise `+0x78EAE`; then whether the engine should refuse a cache older
 than it reads, rather than crash.
+
+**Cause** (2026-10-16, `8b5caf5b`): the cache was built at 17:34 on
+2026-10-12, before the importer's `wmrec` rule (`cfc307a6`) that evening, so
+`WorldMap_Records`' eleven area words (`0x653910 + 0x1C k + 0x18`) are gaps
+(zero); `WorldMap_RecordIndex` answers the "none" record, whose effect kind 1
+calls `MoveCmd_AttachOffset` with area 16's null vector table (the dump:
+`MoveCmd_AttachOffset+0x8e` from `EffectKind01_Draw`). The area 16/45 crash
+of `visual-findings-1012.md` 8, met again through an old cache. **Refused**:
+`ExeImage_Source` stops on an image whose `data.toml` still classes any of
+those words a gap, with a message to rebuild the install
+([`exe-import-engine.md`](exe-import-engine.md)); no game behaviour changes.
