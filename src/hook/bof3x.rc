@@ -1,0 +1,5 @@
+// bof3x.dll's resources: the version block alone (src/version.rc).
+#define BOF3X_RC_DESCRIPTION "bof3x engine - Breath of Fire III PC"
+#define BOF3X_RC_FILENAME    "bof3x.dll"
+#define BOF3X_RC_FILETYPE    VFT_DLL
+#include "version.rc"

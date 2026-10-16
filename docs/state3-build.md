@@ -64,7 +64,7 @@ layout is one table, [`src/hook/exe_layout.h`](../src/hook/exe_layout.h),
 which the engine reads too and the script parses (`kName = 0x...;` lines).
 
     python tools/pe_read.py build/bof3x.exe
-    base 0x400000 entry 0x987000 timestamp 0xb0f30003 characteristics 0x10f dll characteristics 0x0
+    base 0x400000 entry 0x987000 timestamp 0x6acc8e00 characteristics 0x10f dll characteristics 0x0
       subsystem 2 4.0 stack 0x100000/0x10000 size 0x58b000
       .stub    0x00401000 +0x1c3000  raw 0x00000  0xe00000a0
       .game    0x005c4000 +0x37b000  raw 0x00000  0xc0000080
@@ -76,6 +76,7 @@ which the engine reads too and the script parses (`kName = 0x...;` lines).
       import bof3x.dll: Engine_Main
       resource (3, 1, 0): 4264 bytes            the placeholder icon, 32 x 32, 32 bpp (until DIV-0095's)
       resource (14, 'BOF3_ICON', 0): 20 bytes   the name Game_WinMain's LoadIconA asks for
+      resource (16, 1, 0): ...                  the version block (2026-10-16, below)
       resource (24, 1, 0): 867 bytes            the manifest
 
 The verification (`make_exe.py`'s `verify`, through `tools/pe_read.py`, the
@@ -109,6 +110,25 @@ Three choices the brief did not spell out, made to keep behaviour:
 - **The program name is skipped in `Engine_Main`** (`PastProgramName`, C++),
   not in the hand-assembled entry: the same `_wincmdln` rule, reviewable.
 
+**The version block and the signature check (2026-10-16).** A VirusTotal run
+of the launcher that day scored 11/70, every hit a machine-learning label
+(Wacatac.B!ml, "Suspicious PE", Crypt.XPACK.Gen) keyed on the shape above:
+two sections with no file bytes, a 61-byte `.text`, four imports, a
+timestamp that read as 2064, no version block, no signature. The layout
+stays; `kTimestamp` became `0x6ACC8E00` (2026-10-12, a past date); every
+binary now carries a `VS_VERSIONINFO` - the DLL's and the launcher's from
+`src/version.rc`, the executable's written by `make_exe.py`'s
+`build_version` from `--version` (CMake's `project(VERSION)`) and
+`--version-tag` (the release tag, `-DBOF3X_VERSION_TAG`, which the release
+workflow passes; `v<version>` locally). The verify checks the block byte for
+byte against what it would write. It also accepts an Authenticode signature:
+data directory 4 absent, or naming exactly the file's trailing blob with a
+`WIN_CERTIFICATE` header of revision 2.0 and type 2 - so a signed release
+re-verifies with `--verify-only` and is reported signed (tested with a
+synthetic blob; a wrong type or an offset inside the image fails). Signing
+itself is the release workflow's step, once the owner's signing identity
+exists (Azure Trusted Signing was being set up that day).
+
 The custom target depends on a stamp, not on `bof3x.exe`: CMake reads a
 `DEPENDS` path named `<target>.exe` as the target `bof3x` (the DLL) and
 dropped the file rule - the first configure built no executable at all.
@@ -120,7 +140,7 @@ dropped the file rule - the first configure built no executable at all.
 in the exe host it returns. `Engine_Main` then runs section 4 in order. The
 exe-host log of a self-test (`build/st_exe/bof3x.log`, 2026-10-11):
 
-    host: bof3x.exe, our own executable (main module at 0x400000, timestamp 0xB0F30003)
+    host: bof3x.exe, our own executable (main module at 0x400000, timestamp 0x6ACC8E00)
     Engine_Main: hinstance 00400000, show 10, on thread 27632
     code page: GetACP() = 65001 (UTF-8, as the manifest asks)
     layout: .stub 0x00401000 +0x1C3000 RWX, .game 0x005C4000 +0x37B000 RW, .pool 0x0093F000 +0x48000 RW, as exe_layout.h

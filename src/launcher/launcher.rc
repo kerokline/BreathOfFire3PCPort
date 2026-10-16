@@ -1,6 +1,13 @@
 #include <windows.h>
 #include "launcher/resource.h"
 
+// The version block (src/version.rc), shared with the DLL and, through
+// tools/make_exe.py, the game executable.
+#define BOF3X_RC_DESCRIPTION "bof3x launcher - Breath of Fire III PC"
+#define BOF3X_RC_FILENAME    "bof3x-launcher.exe"
+#define BOF3X_RC_FILETYPE    VFT_APP
+#include "version.rc"
+
 // Common Controls 6 (themed dialog) and per-monitor-unaware DPI scaling, so the
 // dialog is neither Windows 95 grey nor bitmap-blurred on a high-DPI desktop.
 1 RT_MANIFEST "launcher/launcher.manifest"

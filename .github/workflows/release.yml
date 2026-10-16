@@ -103,7 +103,8 @@ jobs:
           python-version: "3.13"
 
       - name: Configure
-        run: cmake --preset i686
+        # The tag goes into every binary's ProductVersion (src/version.rc).
+        run: cmake --preset i686 -DBOF3X_VERSION_TAG="$VERSION"
 
       - name: Build
         run: cmake --build build
@@ -111,6 +112,62 @@ jobs:
       # The importer's checks, as checks.yml runs them: the release bundles it.
       - name: The importer's recipes against fixtures/ (no game data)
         run: python tools/importer.py check
+
+      # Authenticode (2026-10-16, docs/releases/README.md "Signing"): the three
+      # binaries are signed with the owner's Azure Trusted Signing identity by
+      # jsign, which signs that service's files from Linux - Microsoft's own
+      # action needs a Windows runner, and this job builds on Ubuntu. jsign
+      # reads AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET from the
+      # environment and timestamps automatically (the certificates live three
+      # days). Account, profile and endpoint are repository variables; the
+      # secrets are the App Registration's. Without the secrets (a fork) the
+      # build ships unsigned, and the log says so.
+      - name: Signing identity present?
+        env:
+          CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          if [ -n "$CLIENT_ID" ]; then echo "SIGN=1" >> "$GITHUB_ENV"
+          else echo "::warning::AZURE_CLIENT_ID is not set: this build ships unsigned"; fi
+
+      - name: Sign the binaries
+        if: env.SIGN == '1'
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          SIGNING_ENDPOINT: ${{ vars.SIGNING_ENDPOINT }}
+          SIGNING_ACCOUNT: ${{ vars.SIGNING_ACCOUNT }}
+          SIGNING_PROFILE: ${{ vars.SIGNING_PROFILE }}
+          JSIGN_VERSION: "7.6"
+        run: |
+          set -euo pipefail
+          for v in SIGNING_ENDPOINT SIGNING_ACCOUNT SIGNING_PROFILE; do
+            [ -n "${!v}" ] || { echo "::error::repository variable $v is not set"; exit 1; }
+          done
+          cd "$RUNNER_TEMP"
+          wget -q "https://github.com/ebourg/jsign/releases/download/$JSIGN_VERSION/jsign-$JSIGN_VERSION.jar"
+          sha256sum "jsign-$JSIGN_VERSION.jar"
+          cd "$GITHUB_WORKSPACE"
+          java -jar "$RUNNER_TEMP/jsign-$JSIGN_VERSION.jar" \
+            --storetype TRUSTEDSIGNING \
+            --keystore "$SIGNING_ENDPOINT" \
+            --alias "$SIGNING_ACCOUNT/$SIGNING_PROFILE" \
+            --alg SHA-256 \
+            --name "bof3x - Breath of Fire III PC" \
+            --url "https://github.com/kerokline/BreathOfFire3PCPort" \
+            build/bof3x.exe build/bof3x.dll build/bof3x-launcher.exe
+
+      # The signed executable against the layout again: make_exe.py accepts
+      # a certificate table that is exactly the file's trailing blob and
+      # reports it signed (docs/state3-build.md 2.1).
+      - name: Verify the signed executable's layout
+        if: env.SIGN == '1'
+        run: |
+          set -euo pipefail
+          ver="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' build/CMakeCache.txt)"
+          python tools/make_exe.py --layout src/hook/exe_layout.h --out build/bof3x.exe --dll build/bof3x.dll \
+            --version "$ver" --version-tag "$VERSION" --verify-only | tee verify.txt
+          grep -q 'signed (certificate table present)' verify.txt
 
       - name: Lay out the release zip
         run: python tools/make_release.py --version "$VERSION" --build build --out "build/release/bof3x-$TAG-win.zip"
