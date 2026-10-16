@@ -7003,7 +7003,7 @@ to twin either. Still the owner's call.
 slots show odd characters, and the same characters show behind slots with
 a save's name drawn over them.
 
-**Established 2026-10-16** (PSX-US, the harness root `C:/Users/kerok/abd255`;
+**Established 2026-10-16** (PSX-US, this fix's own harness root `C:/Users/kerok/d254`;
 the routes `load_list` with the `nue` save, and `cutsceneAndNue`'s save
 menu): one cause for both. `Menu_DrawSaveSlot` (`field_o.cpp`) formats the
 slot number through `"%X"` and draws it at `(x + 9, y + 5)` **for every
@@ -7022,7 +7022,8 @@ format string filled (below) every stray glyph is gone.
 image and checked against `BOF3.exe` at every start where the file is there
 (DIV-0101 amended). After it, on PSX-US: the slots numbered `0`, `1`, `2` as
 the PC draws them, the empty slots blank, the named slot `Ryu` alone.
-Captures (the harness root, outside the repo):
+Captures (the harness root, outside the repo; before = a build without the
+region, its log `exe_own: 18 regions`, after `19 regions`):
 `runs/d254_before_load_list` and `runs/d254_after_load_list` (`load_list.png`),
 `runs/d254_before_cutsceneAndNue` and `runs/d254_after_cutsceneAndNue` (the
 save menu, frames 7020..7380). The PC install with a Western layer still
