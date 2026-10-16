@@ -39,9 +39,17 @@ not where the twin survey could place them.
 - **The id table** is at the place the map's segments either side imply
   (US `0x801E2114`, `0x48` past the segment that places `0x653DAC`; the
   segment after it resumes at `0x653E3C`), but the Western discs re-laid
-  the rows for their own text: a blank row before page 1's third line, one
-  more line (`0x93`) on page 3 and the page's last line moved to page 4; DE
-  also fills page 4's blank row (`0x6D`). The bytes differ from the PC's, so
+  the rows for their own text. Nine rows a page, `--` a blank row:
+
+  | Page | PC and JP | US, EU, FR, PSP-EU's `BOOT.BIN` | DE |
+  |---|---|---|---|
+  | 1 | `72 73 74 -- -- -- -- -- --` | `72 73 -- 74 -- -- -- -- --` | as US |
+  | 3 | `7b 7c -- 7d 7e 7f 80 -- --` | `7b 7c 93 -- 7d 7e 7f 80 --` | `7b 7c 93 -- 7d 7e 7f 80 6d` |
+
+  Pages 2, 4, 5 and 6 and the six titles are the same in every build. So
+  the West moves page 1's third line down a row, adds line `0x93` on page 3
+  (pushing the blank row after it down one), and DE fills page 3's last
+  row with `0x6D`. Nothing moves to another page. The bytes differ from the PC's, so
   no byte-equal segment covers them. JP's equals the PC's and its map placed
   it.
 - **The headings** follow the tabs (`Gear` `Data` `Rule` on the US disc, 12
@@ -86,7 +94,7 @@ English text, which is why its page looked right but dropped line `0x93`.
 
 **What it changes**: on a disc-only install the Rule pages draw the disc's
 own rows, the counter `1/6`, the headings. On the Western builds the rows
-are the Western layout - a blank row on page 1, page 3's extra line - where
+are the Western layout - page 1's third line a row lower, page 3's extra line - where
 the PC (and the PC with an English layer) draws the JP layout. That is the
 one place the image now differs from `BOF3.exe` on purpose; the ledger
 amendment records it. The PC install is unchanged.

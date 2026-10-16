@@ -6531,9 +6531,10 @@ designed in rather than bolted on.
   0 (the fish list's first entry) nine times down the panel, the title that
   message's first line, the counter a stale `0`, the headings nothing. **The
   one deliberate difference from `BOF3.exe`**: the Western discs (US, EU, FR,
-  DE, and PSP-EU's `BOOT.BIN`) lay the rows out for their own text - a blank
-  row on page 1, line `0x93` added to page 3 and the page's last line moved
-  to page 4, DE also `0x6D` on page 4 - and the image takes the disc's
+  DE, and PSP-EU's `BOOT.BIN`) lay the rows out for their own text - page
+  1's third line one row lower (a blank row before it), page 3 a line `0x93`
+  after its second (the blank after it one row later), DE also `0x6D` in page
+  3's last, blank row; titles and pages 2, 4, 5, 6 as the PC's - and the image takes the disc's
   layout, since the message pool it indexes is that disc's (the owner
   prefers the disc's data where both exist, `visual-findings-1012.md`, "For the other files";
   DIV-0104 is the precedent of a
