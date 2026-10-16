@@ -32,11 +32,16 @@ LARGE_INTEGER g_qpf;
 void Line(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 void Line(const char* fmt, ...) {
     char buf[2048];
+    SYSTEMTIME t;
+    GetLocalTime(&t);
+    const int head = std::snprintf(buf, sizeof buf, "%02u:%02u:%02u.%03u ", t.wHour, t.wMinute, t.wSecond,
+                                   t.wMilliseconds);
     va_list ap;
     va_start(ap, fmt);
-    int n = std::vsnprintf(buf, sizeof buf - 2, fmt, ap);
+    int n = std::vsnprintf(buf + head, sizeof buf - 2 - head, fmt, ap);
     va_end(ap);
     if (n < 0) return;
+    n += head;
     if (n > static_cast<int>(sizeof buf) - 3) n = sizeof buf - 3;
     buf[n++] = '\r';
     buf[n++] = '\n';
@@ -85,8 +90,17 @@ void Take(Sample* s) {
         s->eip = c.Eip;
         s->esp = c.Esp;
         MEMORY_BASIC_INFORMATION last = {};
+        // The scan ends with the region esp is in: the thread's stack, or the
+        // block the game's own code runs on there (esp outside the TEB's range).
         std::uint32_t top = c.Esp + kScanBytes;
-        if (g_stack_base && top > g_stack_base) top = g_stack_base;
+        MEMORY_BASIC_INFORMATION at = {};
+        if (VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(c.Esp)), &at, sizeof at)) {
+            const std::uint32_t end = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(at.BaseAddress)) +
+                                      static_cast<std::uint32_t>(at.RegionSize);
+            if (end < top) top = end;
+        } else if (g_stack_base && top > g_stack_base) {
+            top = g_stack_base;
+        }
         for (std::uint32_t p = c.Esp & ~3u; p + 4 <= top && s->n < kMaxFrames; p += 4) {
             const std::uint32_t v = *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(p));
             if (v > 0x10000 && Executable(v, &last)) s->at[s->n++] = v;

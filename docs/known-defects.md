@@ -7857,7 +7857,7 @@ catalogued tables (`fishing_rule_titles` / `fishing_rule_lines`, each build's
 own layout) and two `twin` rows. PSX-US `campingFishing` now shows
 `Fundamentals`, its three lines and `1/6`; the other builds not played.
 
-## D304 — Multi-second single-frame freezes on PSX-only runs, at a different place each run (unknown; not yet tied to the game)
+## D304 — Multi-second single-frame freezes on PSX-only runs, at a different place each run (the machine's saturated SSD, met by a log write on the game's thread; ours fixed 2026-10-16)
 
 **Found:** 2026-10-16, the D255 runs; the owner heard it as doubled sound
 effects and music dropping out (DirectSound replays its buffer while the
@@ -7873,6 +7873,61 @@ other sessions' work, a scan of freshly copied caches); not shown. **Where
 to start:** the same recipe on the PC and a PSX-only install back to back,
 with the owner's eye on Task Manager, and whether a freeze lines up with a
 file open or the sequencer.
+
+**Established (2026-10-16 evening, the D304 session):**
+
+- **Not PSX-only, not new.** Of 392 harness runs under `~/ab*/runs` since
+  2026-10-12, 113 holds of 1 s or more, on PC, PSX and PSP installs alike.
+  Games running at the same moment in different roots held *together*, for
+  the same length to within 0.4%: `d255_shop` 13,277 ms and `abv` `wbh1`
+  13,294 ms (both launched 16:24:17-19); on 2026-10-13 about 07:5x three
+  roots each held 11.4 s, then 2.97 s, then 1.47 s. A machine-wide cause.
+- **Alone, none.** PC (en-150) and PSX-US `campingFishing` back to back with
+  nothing else running: no hold in either (`abd255/runs/d304a_*`).
+- **Disk saturation reproduces it.** PSX-US `campingFishing` with a second
+  process writing as fast as the SSD takes it (9 GB in 164 s, 16 MB
+  buffered writes, nothing flushed): nine holds, 1.6 to 33.6 s, each the
+  length of a stall in the writer's own writes to within 0.3 s (26,009 /
+  26,258 ms, 13,672 / 13,794, 33,569 / 33,879, 30,445 / 30,582)
+  (`d304/runs/d304b_*`). The owner saw the SSD at 100% in Task Manager at
+  the time and earlier that day. Saturation is what the harness itself
+  makes: importer builds (ffmpeg), installs copied, 8 MB BMPs a second of
+  game time per run and their PNG conversion, several sessions at once.
+- **Where the game waits.** `BOF3X_STALLWATCH=1000` (below) sampled the
+  main thread in each hold inside `WriteFile`, called from `bof3::Log`
+  (`log.cpp`) - a line to `bof3x.log`. A scripted run logs a line every
+  frame (`randlog`); once the cache manager's dirty pages pass its limit,
+  Windows throttles every buffered writer until the disk catches up, and
+  the frame loop was one. DirectSound then loops its buffer: the doubled
+  effects and the music dropping out the owner heard.
+
+**Fixed (ours):** `bof3x.log` is written by a thread of its own
+(`src/hook/log.cpp`): `Log` appends to a 4 MB queue (no heap - the crash
+reporter logs through it) and the writer writes it outside the lock.
+Before the writer runs (DllMain, the loader lock) and with the queue full,
+the caller writes itself, in order. `LogFlush`, `Fatal` and `LogClose`
+drain on the calling thread, and a chunk whose writer `ExitProcess` killed
+is written again (a repeated part over a lost one). Same load, fixed DLL:
+**no hold** (`d304c`, 11 GB with writer stalls up to 20.8 s; `d304d`). All
+5,274 `randlog` lines are there and equal to the unfixed run's. Both self-tests
+pass (exe host; hosted with `BOF3X_SHADOW='*'`). No ledger entry: the log is ours, not the game's
+behaviour.
+
+**What still waits on the disk:** the harness's own timed shots
+(`BOF3X_SHOT_EVERY`). `render::SaveOnFiber` writes each 8 MB BMP on the
+game's frame, so under saturation the picture and sound stop for seconds
+at every 30th recipe frame. The game clock is paused for the write, so
+nothing is logged and the frames taken are unchanged. Harness-only; off
+for a player. A player's game still reads the cache synchronously on an
+area load, as Capcom's did.
+
+**`BOF3X_STALLWATCH=<ms>`** (`src/hook/stallwatch.h`): when no logic frame
+has run for that long, a watcher thread writes the main thread's eip and
+stack return-address candidates as module+offset (llvm-symbolizer with
+`bof3x.dll`'s ImageBase `0x10000000` added) to `bof3x.stall.log` beside the
+DLL, with the local time, again every second while the hold lasts.
+Instrumentation; off unless set. Recipe `shot` freezes show as about 1 s
+holds in `Freeze`; ignore them.
 
 ## D305 — A PSX-US install built on 2026-10-12 crashes loading area 16 under the 2026-10-16 engine (an old cache; refused since 2026-10-16)
 

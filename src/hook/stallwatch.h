@@ -4,7 +4,7 @@
 // loop turning - a logic frame has run for <ms> (at least 100), it suspends
 // the main thread, copies its eip and the dwords of its stack that point into
 // executable memory (return-address candidates, nearest first), resumes it,
-// and writes one `stall` line with each as module+offset - again every second
+// and writes one `stall` line (local time first) with each as module+offset - again every second
 // while the stall lasts, and an `stall ... over` line with its length when it
 // ends. A module offset is what llvm-symbolizer wants with the module's
 // ImageBase added (bof3x.dll 0x10000000).
