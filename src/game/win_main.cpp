@@ -73,6 +73,7 @@
 #include "hook/exe_image.h"
 #include "hook/input_script.h"
 #include "hook/run_speed.h"
+#include "hook/stallwatch.h"
 #include "hook/log.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
@@ -579,6 +580,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         Cursor_Sync();
         bof3::orig::Game_Init();   // ends in Task_SetStackBase: the task stacks hang from this frame
         bof3::Log("WinMain: display up, Game_Init done, entering the loop");
+        bof3::StallWatch_Start(&Frame_Counter);   // BOF3X_STALLWATCH (stallwatch.h)
 
         // The loop. Small locals on purpose (see the header comment).
         char fps[0x50] = {};
@@ -610,6 +612,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             deadline_base = Now() + kFirstFrameMs;
             deadline_frames = 0;
             for (;;) {
+                bof3::StallWatch_Beat();
                 if (Game_QuitFlag) {
                     quit = true;
                     break;
