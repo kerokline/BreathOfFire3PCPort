@@ -351,8 +351,8 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
     fight no longer starts with a combatant off the left or top edge. Look at `analysis/shots/d56_before` and
     `d56_after` frame 500 (a crafted camera shift: the Gooey off screen, then refused); in play, nothing to see
     unless an encounter would have placed an enemy off the left - none of nine battle routes does.
-  - **The save slot number's `"%X"`** (D254): no disc carries it, so the load screen draws `) 16` and stale glyphs.
-    Leave it, or give the engine its own two-byte format (recommended).
+  - **The save slot number's `"%X"`** (D254): done 2026-10-16 after your report of odd characters on the empty
+    slots and behind the named ones - the engine's own two-byte format; the slots are numbered, the empty ones blank.
   - **The jingles on a PSX-only install** (D255: the inn's screen stays black longer without `OYASUMI`): the
     disc's XA as the jingle, or the failed stream ending the wait.
   - **The PSP title's framing** (D256): look at a PSP-EU title capture.

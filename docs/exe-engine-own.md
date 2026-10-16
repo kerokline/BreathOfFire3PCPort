@@ -94,6 +94,7 @@ The classes:
 | `0x65DA54..0x65DA76` | WinMain's messages and the logo AVI's name | 34 | 25 | 2 | 25 |
 | `0x65DA84..0x65DA96` | the window class and the icon's name | 18 | 13 | 0 | 13 |
 | `0x65DAB8..0x65DAE7` | the Capcom AVI, the exe's name, `BOF3.CFG`, its format and mode | 47 | 33 | 0 | 33 |
+| `0x6639D4..0x6639D8` | `Menu_DrawSaveSlot`'s slot number format `"%X"` (D254; added 2026-10-16) | 4 | 2 | 0 | 2 |
 | `0x664068..0x664077` | the save file's name format | 15 | 14 | 0 | 14 |
 | `0x6653BC..0x6653C0` | `Music_LoadedTrack`: none (-1) | 4 | 4 | 0 | 4 |
 | `0x6653C0..0x666F9C` | `Sound_LoadStream`'s 891 SND names (`recipes/pc-zh.snd.toml`) | 7,132 | 5,341 | 3 | 5,341 |
@@ -105,7 +106,7 @@ The classes:
 | `0x66BC40..0x66BC58` | `Gpu_OtTerminator` and `Gte_IdentityRotation` | 24 | 7 | 0 | 7 |
 | `0x66BC58..0x66C45A` | `Math_SinTable` (a rule) | 2,050 | 1,996 | 0 | 0 |
 | `0x66C7B0..0x66C7CE` | the pad `DInput_EnumJoystick` looks for by product name | 30 | 29 | 0 | 29 |
-| total | 18 regions | 20,886 | 15,947 | 319 | 13,944 |
+| total | 19 regions | 20,890 | 15,949 | 319 | 13,946 |
 
 "Text words": words inside the region that `exe-pointers.tsv` calls pointers -
 four characters of a string that happen to read as an address in the image

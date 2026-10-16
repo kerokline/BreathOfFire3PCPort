@@ -118,6 +118,13 @@ void WinMainFiles(std::uint8_t* at, std::uint32_t size) {
     Strings(at, size, {"CAPCOM.AVI", "BOF3.EXE", "%d %d", "BOF3.CFG", "rt"});   // ... Cfg_Load's format, file, mode
 }
 
+void SlotNumber(std::uint8_t* at, std::uint32_t size) {
+    // Menu_DrawSaveSlot's slot number, drawn on every slot of the save and load
+    // lists (the port's sixteen files, BISLPS00..0F, numbered in hex). No disc
+    // carries it: without it the draw shows the buffer's stale text (D254).
+    Strings(at, size, {"%X"});
+}
+
 void SaveName(std::uint8_t* at, std::uint32_t size) {
     Strings(at, size, {"BISLPS%02X.DAT"});   // FieldSave_Write's and Save_QuickWrite's file name
 }
@@ -208,6 +215,7 @@ constexpr Row kRows[] = {
     {{0x65DA54, 0x65DA76, "WinMain's messages and the logo AVI's name"}, WinMainMessages},
     {{0x65DA84, 0x65DA96, "the window class and the icon's name"}, WindowNames},
     {{0x65DAB8, 0x65DAE7, "the Capcom AVI, the exe's name, BOF3.CFG and its format and mode"}, WinMainFiles},
+    {{0x6639D4, 0x6639D8, "the save slot's number format (D254)"}, SlotNumber},
     {{0x664068, 0x664077, "the save file's name format"}, SaveName},
     {{0x6653BC, 0x6653C0, "Music_LoadedTrack: none (-1)"}, NoTrack},
     {{0x6653C0, 0x666F9C, "Sound_LoadStream's 891 SND/ names (recipes/pc-zh.snd.toml)"}, SndNames},
