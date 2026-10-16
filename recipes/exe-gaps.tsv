@@ -244,7 +244,6 @@ psx-jp	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-jp	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-jp	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-jp	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
-psx-jp	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-jp	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
 psx-jp	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
 psx-jp	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -637,7 +636,6 @@ psx-us	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-us	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-us	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-us	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-us	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-us	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-us	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
 psx-us	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -1028,7 +1026,6 @@ psx-eu-en	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-eu-en	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-eu-en	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-eu-en	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-eu-en	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-eu-en	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-eu-en	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
 psx-eu-en	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -1421,7 +1418,6 @@ psx-fr	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-fr	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-fr	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-fr	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-fr	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-fr	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-fr	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-fr	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
@@ -1819,7 +1815,6 @@ psx-de	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-de	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-de	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-de	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-de	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-de	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-de	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-de	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
@@ -2173,7 +2168,6 @@ psp-jp	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psp-jp	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psp-jp	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psp-jp	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
-psp-jp	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psp-jp	0x663B1C	0x663B28	gap	game-value	EventScript_OpLengths+0x10
 psp-jp	0x663B28	0x663B30	gap	game-value	Sprite_ScreenMargins
 psp-jp	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
@@ -2534,7 +2528,6 @@ psp-eu	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psp-eu	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psp-eu	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psp-eu	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
-psp-eu	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psp-eu	0x663B1C	0x663B28	gap	game-value	EventScript_OpLengths+0x10
 psp-eu	0x663B28	0x663B30	gap	game-value	Sprite_ScreenMargins
 psp-eu	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
