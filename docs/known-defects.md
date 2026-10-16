@@ -6978,7 +6978,7 @@ copies of the owner's play setup; masterAndManillo no longer parts at tick
 ~322. The owner's scratch installs `C:\b3g` / `C:\b3p` were built before
 `wmrec` and want rebuilding.
 
-## D254 — The load screen's slot numbers on a disc-only install: `"%X"` is missing, so the slot draws nothing or the previous slot's tail (ours, a gap no disc fills; the owner's call)
+## D254 — The save and load screens' slot numbers on a disc-only install: `"%X"` is missing, so each slot draws nothing or the previous slot's tail (ours, a gap no disc fills; fixed 2026-10-16, the engine's own string)
 
 **Found:** AB's harness, 2026-10-12 ([`visual-findings-1012.md`](visual-findings-1012.md)
 9; [`abc-harness.md`](abc-harness.md)): on the PSX-EU disc-only install the
@@ -6998,6 +6998,36 @@ Capcom's table).
 6.1): on every route's load screen PSX-US draws each slot's number blank and
 each empty slot as `) 16`, the same as PSX-EU; the US disc carries no `"%X"`
 to twin either. Still the owner's call.
+
+**The owner's report, 2026-10-16:** on a PSX-only install the empty save
+slots show odd characters, and the same characters show behind slots with
+a save's name drawn over them.
+
+**Established 2026-10-16** (PSX-US, the harness root `C:/Users/kerok/abd255`;
+the routes `load_list` with the `nue` save, and `cutsceneAndNue`'s save
+menu): one cause for both. `Menu_DrawSaveSlot` (`field_o.cpp`) formats the
+slot number through `"%X"` and draws it at `(x + 9, y + 5)` **for every
+slot, before it looks at the summary**; on a disc-built image `0x6639D4` is
+zero, so that draw is the buffer's stale text - `) 57` on each empty slot
+(the tail of slot 0's time `00:57`) and a stray glyph after `Ryu` on the
+named one, the number's square blank on all of them. Not the empty slot's
+own text: `0x669CCC` stays zero on a PSX-only install
+([`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4), so it draws
+nothing - the US release's blank slot. Not the en-US layer: with only the
+format string filled (below) every stray glyph is gone.
+
+**Fixed 2026-10-16:** `"%X"` is the engine's own (`exe_own.cpp`'s
+`SlotNumber`, region `0x6639D4..0x6639D8`,
+[`exe-engine-own.md`](exe-engine-own.md) 2), filled over every disc-built
+image and checked against `BOF3.exe` at every start where the file is there
+(DIV-0101 amended). After it, on PSX-US: the slots numbered `0`, `1`, `2` as
+the PC draws them, the empty slots blank, the named slot `Ryu` alone.
+Captures (the harness root, outside the repo):
+`runs/d254_before_load_list` and `runs/d254_after_load_list` (`load_list.png`),
+`runs/d254_before_cutsceneAndNue` and `runs/d254_after_cutsceneAndNue` (the
+save menu, frames 7020..7380). The PC install with a Western layer still
+draws the port's Chinese empty-record word there (HANDOFF's staged
+localisation PR).
 
 ## D255 — On a PSX-only install the inn's and the camp's screen stay black for good: the jingle `OYASUMI` is not there, and the wait hangs (ours, the install's missing jingles; fixed by DIV-0129)
 

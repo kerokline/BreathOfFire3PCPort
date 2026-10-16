@@ -6518,6 +6518,23 @@ designed in rather than bolted on.
   the PC draws `1/2`. Verification: that doc 4.2 (the seven rows "5 bytes, 0
   not BOF3.exe's"; the checks clean; the exe host on the US disc-only install
   exit 0; `fairyVillage` reads `1/2` on both sides at 810).
+- Amended 2026-10-16 (D254, the owner's report of odd characters on the
+  empty save slots and behind the named ones on a PSX-only install): the
+  save slot number's format `0x6639D4` (`"%X"`, `Menu_DrawSaveSlot`'s) is
+  no longer zero on a disc-built image. No disc carries it - the port's
+  sixteen save files are its own - so it is the engine's own string
+  (`exe_own.cpp`'s `SlotNumber`, [`exe-engine-own.md`](exe-engine-own.md)
+  2), not a `twin`; it equals `BOF3.exe`'s bytes, checked at every start
+  where the file is there. Before it every slot of the save and load lists
+  drew the format buffer's stale text in the number's place (`) 57` on the
+  empty slots, a stray glyph after the name on a saved one); now each slot
+  draws its number as the PC does and an empty slot is otherwise blank, as
+  the US release leaves it (`0x669CCC` is still zero, untouched). With the
+  PC's `.data` the fill changes no byte. Verification: `exe_own.py check`
+  (19 regions, 20,890 bytes); the hosted self-test on the PC install with
+  `BOF3X_SHADOW=exe_own` (exit 0, `19 regions ... each equal to BOF3.exe's
+  .data`, the zero-image fill `16906 non-zero bytes ... nothing outside`);
+  PSX-US `load_list` and `cutsceneAndNue` before and after ([`known-defects.md`](known-defects.md) D254).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
