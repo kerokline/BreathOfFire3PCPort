@@ -46,6 +46,26 @@ ini-less launcher, `logs\` the importer's output, `runs\<set>_<route>\<install>\
 and `report_<set>_<route>.md`. All of it is game-derived and stays out of
 the tree (rule 1).
 
+### 1a. One root per session (the owner, 2026-10-16)
+
+Concurrent sessions sharing one root collided three times on 2026-10-16: a
+`prepare` run with main's tools rebuilt `c_psxus` and reinstalled `g_psxus`
+under a branch whose importer made more (the D255 jingles); another
+session's runs read that cache half-built; and the shared `L\` was
+overwritten with another build's DLL. Hence the rules:
+
+- **Each session makes its own root** - `--root C:/Users/kerok/<short-name>`,
+  named for the session or branch - and runs `prepare` into it with **its
+  own checkout's** `tools/` and `build/`. About 6 minutes and 0.8 GB a
+  disc-only install (348 s for PSX-US on 2026-10-16: 423 MB cache, 400 MB
+  game); short names, for MCI's path limit.
+- **Never `prepare` into a root another session made**, and never replace
+  its `L\` or its caches. Reading another root's frames and logs (`runs\`)
+  is fine; running a game on its install is not.
+- **One game at a time on the machine**, whatever the root: wait for
+  `bof3x.exe` and `BOF3.exe` to exit (other sessions' harness runs count).
+- A root is scratch: delete it when the branch has merged.
+
 ## 2. The installs: `recipes/abc-installs.toml`
 
 Each `[[install]]` names a game folder, a cache, a language, traits and any
