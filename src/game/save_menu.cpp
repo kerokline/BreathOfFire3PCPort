@@ -34,6 +34,7 @@
 #include "game/save_menu_callees.h"
 #include "game/title_menu.h"
 #include "game/widescreen.h"
+#include "input/sigma.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1093,7 +1094,8 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         PutWord(at::kButtons + 0x10, map_10);
         PutLong(at::kButtons + 8, map_8);
         PutLong(at::kButtons + 0xC, map_c);
-        if (Byte(at::kDefaultPad) != 0) {
+        const bool reset = Byte(at::kDefaultPad) != 0;
+        if (reset) {
             PutWord(at::kButtons, 0x20);
             PutWord(at::kButtons + 2, 0x80);
             PutWord(at::kButtons + 0xC, 0x40);
@@ -1104,6 +1106,11 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
             PutWord(at::kButtons + 0x10, 0x40);
             PutWord(at::kButtons + 0xA, 0x100);
         }
+        // Ledger drafts A and B (docs/button-sigma.md): the Start-held reset
+        // by source, then words 7 / 8 as Speak's and Action's and the table
+        // (a save whose six lines are not one button each refused) - nothing
+        // until sigma::Arm, after every module's self-test.
+        bof3x::input::sigma::LoadApplied(reset);
         PutByte(at::kMemberCount, static_cast<U>(g.party_count(0)));
         g.party_select(Byte(at::kPartySet) & 0x7F, 3);
         WaitLoad();

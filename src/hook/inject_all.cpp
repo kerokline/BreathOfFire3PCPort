@@ -19,6 +19,7 @@
 #include "game/gfx_filter.h"
 #include "game/cheats.h"
 #include "game/psp_code.h"
+#include "input/sigma.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
 #include "game/gfx_vram_ops.h"
@@ -1426,6 +1427,9 @@ void InjectAll() {
                                 // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
                                 // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins
                                 // for them; it resets Rand's seed to the CRT's 1 after them all
+    bof3x::input::sigma::Arm(); // ledger drafts A and B (docs/button-sigma.md): the Config as one permutation, words 7 / 8
+                                // as Speak's and Action's, the starting Config by source - after every module's self-test,
+                                // which all compared Capcom's stores at Boot_Task, LoadMenu_Apply and the rebind
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
