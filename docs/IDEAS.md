@@ -1867,4 +1867,6 @@ step with the PC's to its end (frames 6,870 to 13,170: 192 to 1,034 pixels of
 the whole frame, where the unfixed image falls out of step from about 6,500).
 Regression: the attract on that install with this image and with a control
 (the same image, the gaps this closes zeroed again): 366 frame pairs, 0
-differing. Steps 2 to 4 open.
+differing. An install built before this is refused at start with a message
+to rebuild it (`FilledSince()`, the row `0x669868..0x669883`; the general
+form is HANDOFF "Pick up here" 11). Steps 2 to 4 open.

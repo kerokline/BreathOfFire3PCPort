@@ -887,6 +887,18 @@ sprite region against the PC's, 5,190 differing pixels to 44; the attract
 with this image and with the gaps it closes zeroed again, 366 frame pairs,
 0 differing ([`IDEAS.md`](IDEAS.md) I43's outcome).
 
+**An install built before this.** The image is the importer's, made at
+setup, so a new release's binaries do not bring the fix; `exe_image.cpp`'s
+`FilledSince()` (D305's list) now holds `0x669868..0x669883` too, and an
+image that still has it as a gap is refused at start with a message to
+rebuild the install. Each row now carries what the player would see without
+it (the refusal's text named only D305's crash before). Self-tested headless
+(`BOF3X_SELFTEST_ONLY=1`, an ini-less copy of the build, `abg\g_psxeu`): the
+2026-10-13 EU cache `abv\c_psxeu`, exit 3, the message naming the members'
+records; the rebuilt `abg\c_psxeu`, exit 0, `inject: 10088 ours`. The
+general form, an image stamped with its recipes' version: HANDOFF, "Pick up
+here" 11.
+
 ## For the other files
 
 Not edited here (the coordinator folds them in):

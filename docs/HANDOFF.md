@@ -181,6 +181,18 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
     a publisher identity is what moves those models. After the first signed release, submit the hashes as false
     positives to Microsoft and Avira.
 
+11. **Tell a stale disc-built install by its recipe version, not by a list** (the owner, 2026-10-16; follow-up to
+    I43 step 1). A disc-only install's exe image (`base/exe/data.bin`) is the importer's, built at setup from the
+    player's disc; a new release's exe, launcher and DLL do not rebuild it, so an importer fix reaches a player
+    only when the install is rebuilt (the Sources page's "add the disc again", or `importer.py build`). Today the
+    only guard is `exe_image.cpp`'s `FilledSince()`: a hand-kept list of ranges an older image left as gaps, each
+    refused at start with a message to rebuild (D305's world-map words; I43's member records `0x669868..0x669883`,
+    added 2026-10-16). A fix nobody lists there stays silent. The durable form: the importer writes a hash of the
+    `recipes/exe-*` files (and what else decides the image) into `data.toml`; the engine or the launcher compares it
+    with the release's own and, on a mismatch, offers the rebuild - or does it unasked (the owner's call: prompt or
+    automatic). Then `FilledSince()` is kept only for fixes whose absence crashes, or retired. I43's later steps keep
+    changing these recipes, so it pays back soon.
+
 **Older open items** (one line each; the pointer holds the detail):
 
 - **The owner's older checks** (move to `owner-review.md`): DIV-0063 in game (the gene with a partner down); the
