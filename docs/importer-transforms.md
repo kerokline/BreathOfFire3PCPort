@@ -242,7 +242,9 @@ draws the PlayStation's legend in the port's place. A disc-only player sees
 ○ / × / START where the PC shows SPACE / X / ENTER. Not seen live.
 Whether to accept that or draw a replacement layer is the owner's call. It is a
 note, not a divergence: no rule changes the game. The port's art is simply
-absent with the port.
+absent with the port. **Since 2026-10-17 (DIV-0130)** the stand-in's baked
+button icons are repainted with the panel's background, so the code's live
+glyph (the Config's button) is the only icon in the legend.
 
 ## 6. Measured
 

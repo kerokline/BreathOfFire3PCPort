@@ -221,6 +221,12 @@ TWINS = [
     # (CommuRank_Show's kPageFormat, rest_4e.cpp); COMMU05.EMI's code section opens with it and
     # its reader passes it to sprintf with the page + 1 and the count.
     (0x6531F4, 0x6531F9, "ETC/COMMU05.EMI", "the faerie ranked lists' page counter format (CommuRank_Show)"),
+    # D282 (issue #77): the Config screen's row -> first record and row -> option count
+    # tables (rest_4f_callees.h kOptionFirst / kOptionCount). A language layer writes the
+    # records before them, never these; zero, every row drew no option value. START.EMI and
+    # STATUS.EMI each hold the 13 bytes on all seven discs, after the build's own records;
+    # the padding past them differs by disc, so the run stops at the count table's last row.
+    (0x653808, 0x653815, "ETC/START.EMI", "the Config screen's row tables (first record, option count)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges

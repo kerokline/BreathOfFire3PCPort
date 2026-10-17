@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 129 entries, DIV-0001..0129, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 130 entries, DIV-0001..0130, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4531,6 +4531,22 @@ designed in rather than bolted on.
   the self-tests, as DIV-0071 does). The owner has seen it in a replay and
   approved (2026-10-14). `BOF3X_LAYERING_RECORDS=0` drops this amendment
   alone (the control).
+- **Amended 2026-10-17 (GitHub issue #79, a player; known-defects D306): a
+  run's quads are read when the run ends, not when each is committed.**
+  `MapCell_DrawUprights` (Capcom's `0x570210`) commits each pair of leaf
+  quads and then writes their outer vertices 0 and 1, so the 10-14 amendment
+  read those two points from whatever the packet pool held there before.
+  On the Yraall road's bushes the stale points put all six quads on the
+  trunk's axis one pass in three (`BOF3X_LAYERING_LOG` and a temporary dump
+  of the kept quads, frames 3433..3439): the run "drew nothing over" Rei,
+  she was moved in front of the bush, and the next pass put her back - the
+  flicker the player and the owner saw. The run now notes its committed
+  primitives (up to 64; past that the oldest are read at once, as before) and
+  reads them in `RunEnd`, after its last handler. No other change to the
+  rule. Verification: `yraallRoad.txt` frames 3300..3720 shot every frame,
+  the box round Rei and the bush: 100 of 421 frames flipping before, 0 after,
+  and all 421 equal to `BOF3X_LAYERING=0` in that box (the bush in front of
+  her, as Capcom draws it).
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
@@ -6581,6 +6597,20 @@ designed in rather than bolted on.
   4710 on a rebuilt PSX-EU disc-only install, the sprite's region against the
   PC install's: 5,190 differing pixels before, 44 after (the rest is the
   frame's 3x scale sampled down); not played by the owner yet.
+- Amended 2026-10-17 (D282, issue #77 - a player on a PSX-only install): the
+  Config screen's row tables (`0x653808` row to first record, `0x653810` row
+  to option count, 13 bytes) are no longer zero on a disc-built image. Zero,
+  every row drew no option value (the labels only), on every disc build. A
+  `twin` row from `ETC/START.EMI` (`psp_exe.TWINS`): the 13 bytes are there on
+  all seven discs, after each disc's own records (US `#8@0x801ECDAC`), and
+  `STATUS.EMI#0` holds the same copy; the padding after them differs by disc,
+  so the run stops at the count table's last row. Equal to `BOF3.exe`'s
+  (`exe-psp.tsv` "13"; `placed_equal` +13). `exe-gaps.tsv`: the `language`
+  row now ends at `0x653808` and the 24 / 27 bytes after the tables are a
+  `game-value` gap, as they were in substance. Verification: the recipe checks
+  clean; a PSX-US disc-only install rebuilt from the recipes draws `Fast Med.
+  Slow`, `1 2 3 4` twice, `Stereo Mono`, `Off On` on the title's Config
+  (the 10-12 cache's image had the 13 bytes zero); not played by the owner yet.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -7865,3 +7895,51 @@ designed in rather than bolted on.
 - **Reversible?** (1) `BOF3X_ORIGINAL=Sound_StreamDone` (the original's
   answer; the flag is then read by nothing). (2) a build with a PC install
   among the sources, or the 11 deleted from `base/snd/` and `SND\`.
+
+### A disc's world-map legend shows only the live button icon
+
+- **ID:** DIV-0130
+- **Date:** 2026-10-17
+- **Subsystem:** the importer's dial-page stand-in - `importer.py`
+  `dial_icons_blank` / `dial_icons_of`, applied in `get_chunk` to a disc's own
+  section standing in for the port's dial page (kind 1, tag `0x0A081000`,
+  class `art`, the 16 world-map areas; PSX `port-art` stand-ins and PSP
+  ones alike). The draw is unchanged: `WorldMap_DrawFrame` `0x404390` and its
+  area copies.
+- **Tier:** Intent - the owner's decision, 2026-10-17
+  ([`button-roles-by-release.md`](button-roles-by-release.md) 8: every button
+  icon follows the Config).
+- **Original behaviour:** each disc's dial page bakes its release's default
+  buttons into the legend twice - dim in the frame (sprite 0) and lit in
+  labels 1 and 2 - and the code draws the glyph of the save's word over the
+  same place (rows 1 and 2: words 0 and 6). On the PlayStation the two agree
+  until a Config swap. On the PC the code's words are Japan's, so a Western
+  disc-only install showed two icons at once: a circle over the baked cross
+  (Enter), a cross over the baked triangle (Guide) (GitHub issue #78, a
+  player; [`key-icons-by-mapping.md`](key-icons-by-mapping.md) 9;
+  known-defects D307).
+- **New behaviour:** the importer repaints the baked icons of a disc's dial
+  page with the panel's background (texture u 56..63, v 8..24 in the frame;
+  u 16..23, v 88..104 in the labels; each from the plain column beside it, u
+  64 and u 24), so the live glyph - the button the save's Config gives Speak
+  and Action - is the one icon drawn. The PC install's own page (the port's
+  keyboard legend) is not touched. On a JP disc nothing visible changes until
+  a Config swap, after which the legend follows it, as on the PlayStation.
+- **Rationale:** the owner's answers on the key icons: unify every button
+  flow; an icon shows what the Config holds now; PlayStation icons only. The
+  baked icon is the release default, the live one is the truth.
+- **Also in the PSX version?** Partly: the same code over the same page, so a
+  Config swap on the PlayStation showed the baked default under the live
+  glyph too. The Western overlap at defaults is the PC's (Japan's words over a
+  Western page).
+- **Verification:** `worldMapAndAreaTransition` on a PSX-US disc-only install
+  built with and without the change (root `C:\Users\kerok\ab79`, frames every
+  30): 17 frames differ, each only in the legend's icon column (`143,47` to
+  `158,80` of 640 x 480), showing a lone circle (Enter) and cross (Guide)
+  where the old install drew the circle over a cross and the cross over a
+  triangle. The cells were read on the US, EU, FR, DE, JP, PSP-JP and PSP-EU
+  pages (the same places, the background column plain on each).
+  `importer.py check`, `psp_standins.py check`: 0 errors.
+- **Reversible?** A cache built without it (the stand-in's recipe hash is the
+  disc's, checked before the repaint; the manifest records the repainted
+  body's).

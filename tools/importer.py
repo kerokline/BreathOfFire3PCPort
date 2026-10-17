@@ -376,6 +376,49 @@ TYPE1_EDITS = ("BPLD012", "BPLD015", "BPLD016", "BPLD27A", "BPLU27A", "START",
 # docs/importer.md section 3). Port art every language on the PC wants: base.
 DIAL_PAGE = 0x0A081000
 
+# DIVERGENCE DIV-0130 (GitHub issue #78): a disc's dial page bakes its release's
+# default button into the legend's first two labels, where the code draws the
+# live glyph of the save's words (WorldMap_DrawFrame: the frame, sprite 0, at
+# (x, y); label 1 at x + 0x30, its glyph at x + 0x38, y + 8; label 2's at
+# x + 0x38, y + 0x10). Over Japan's words a Western page shows two icons at
+# once. The icon is baked twice: dim in the frame (u 56..63, v 8..24 - drawn
+# always) and lit in labels 1 and 2 (u 16..23, v 88..104), each with the second
+# icon's one-row shadow; the same place on every PSX and PSP page. Each block is
+# repainted with the panel's background, the plain column beside it (u 64 and
+# u 24 on every page), so the glyph is the one icon left, as the save's Config
+# has it. The page is 32 x 32-halfword tiles, 16 across, from VRAM x 320; the
+# sprites read it through texture page 0x9C (8-bit at x 768), so u 0 is byte
+# 896 of a 1,024-byte row.
+DIAL_ICON_CELLS = (((56, 64), (8, 25), 64), ((16, 24), (88, 105), 24))   # (u range, v range, background u)
+
+
+def dial_icons_blank(body):
+    """The disc's dial page with the legend's baked button icons painted over."""
+    if len(body) != 128 * 2048:
+        raise SystemExit("the dial page is %d bytes, not the 128 tiles every disc's is" % len(body))
+    out = bytearray(body)
+
+    def at(u, v):
+        x = 896 + u
+        return ((v // 32) * 16 + x // 64) * 2048 + (v % 32) * 64 + x % 64
+
+    for us, vs, back_u in DIAL_ICON_CELLS:
+        for v in range(*vs):
+            back = out[at(back_u, v)]
+            for u in range(*us):
+                out[at(u, v)] = back
+    return bytes(out)
+
+
+def dial_icons_of(ch, body):
+    """A stand-in's body as the cache keeps it: a disc's (PSX or PSP) dial page
+    standing in for the port's with its baked icons painted over, anything else
+    as it is. Only stand-ins reach here: the PC's own page has no baked icon.
+    The class matters: four `language` stand-ins (other areas' pages) share the
+    tag; `art` at that tag is the 16 world-map dial pages alone."""
+    is_dial = ch["kind"] == 1 and ch["tag"] == DIAL_PAGE and ch["class"] == "art"
+    return dial_icons_blank(body) if is_dial else body
+
 
 def why_pc_only(stem, c, cls):
     """The reason a chunk has no disc source, in a few words."""
@@ -759,9 +802,10 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
             body = s.get(f["name"], slot, ("type1" if ch.get("own_why") in OWN_TYPE1 else "copy", key, sec))
             if sha(body) != h:
                 raise SystemExit("%s chunk %d from %s's own section: hash differs from the recipe" % (f["name"], slot, b))
-            return s.id, ("own", key, sec), body, None
+            return s.id, ("own", key, sec), dial_icons_of(ch, body), None
     # PSP discs alone (base_policy psp): the PSP's own section (docs/psp-stand-ins.md)
-    return psp_standins.stand_in(f, slot, ch, chunked)
+    got = psp_standins.stand_in(f, slot, ch, chunked)
+    return got and got[:2] + (dial_icons_of(ch, got[2]),) + got[3:]
 
 
 # ---------------------------------------------------------------- reuse (IDEAS I42)
