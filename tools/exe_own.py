@@ -70,6 +70,7 @@ REGIONS = [
     (0x656AEC, 0x656B00, "rule", "the field button map's defaults Boot_Task copies: the default button of each action, "
                                  "by name (docs/controls.md 2.1)"),
     (0x65DA44, 0x65DAE8, "port-platform", "Game_WinMain's and Cfg_Load's initial values and strings"),
+    (0x6639D4, 0x6639D8, "port-platform", "the save slot's number format (Menu_DrawSaveSlot; D254)"),
     (0x664068, 0x664078, "port-platform", "the save file's name format (FieldSave_Write, Save_QuickWrite)"),
     (0x6653BC, 0x666FC6, "port-platform", "Sound_LoadStream's 891 SND/ names, Music_LoadedTrack, the SND and BGM formats"),
     (0x669CCC, 0x66A450, "language", "the battle command labels, the community's member names, Menu_Verbs, pause lines"),

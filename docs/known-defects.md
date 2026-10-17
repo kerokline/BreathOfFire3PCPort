@@ -6978,7 +6978,7 @@ copies of the owner's play setup; masterAndManillo no longer parts at tick
 ~322. The owner's scratch installs `C:\b3g` / `C:\b3p` were built before
 `wmrec` and want rebuilding.
 
-## D254 — The load screen's slot numbers on a disc-only install: `"%X"` is missing, so the slot draws nothing or the previous slot's tail (ours, a gap no disc fills; the owner's call)
+## D254 — The save and load screens' slot numbers on a disc-only install: `"%X"` is missing, so each slot draws nothing or the previous slot's tail (ours, a gap no disc fills; fixed 2026-10-16, the engine's own string)
 
 **Found:** AB's harness, 2026-10-12 ([`visual-findings-1012.md`](visual-findings-1012.md)
 9; [`abc-harness.md`](abc-harness.md)): on the PSX-EU disc-only install the
@@ -6999,7 +6999,38 @@ Capcom's table).
 each empty slot as `) 16`, the same as PSX-EU; the US disc carries no `"%X"`
 to twin either. Still the owner's call.
 
-## D255 — On a PSX-only install the inn's and the camp's screen stay black for good: the jingle `OYASUMI` is not there, and the wait hangs (ours, the install's missing jingles; the owner's open call)
+**The owner's report, 2026-10-16:** on a PSX-only install the empty save
+slots show odd characters, and the same characters show behind slots with
+a save's name drawn over them.
+
+**Established 2026-10-16** (PSX-US, this fix's own harness root `C:/Users/kerok/d254`;
+the routes `load_list` with the `nue` save, and `cutsceneAndNue`'s save
+menu): one cause for both. `Menu_DrawSaveSlot` (`field_o.cpp`) formats the
+slot number through `"%X"` and draws it at `(x + 9, y + 5)` **for every
+slot, before it looks at the summary**; on a disc-built image `0x6639D4` is
+zero, so that draw is the buffer's stale text - `) 57` on each empty slot
+(the tail of slot 0's time `00:57`) and a stray glyph after `Ryu` on the
+named one, the number's square blank on all of them. Not the empty slot's
+own text: `0x669CCC` stays zero on a PSX-only install
+([`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4), so it draws
+nothing - the US release's blank slot. Not the en-US layer: with only the
+format string filled (below) every stray glyph is gone.
+
+**Fixed 2026-10-16:** `"%X"` is the engine's own (`exe_own.cpp`'s
+`SlotNumber`, region `0x6639D4..0x6639D8`,
+[`exe-engine-own.md`](exe-engine-own.md) 2), filled over every disc-built
+image and checked against `BOF3.exe` at every start where the file is there
+(DIV-0101 amended). After it, on PSX-US: the slots numbered `0`, `1`, `2` as
+the PC draws them, the empty slots blank, the named slot `Ryu` alone.
+Captures (the harness root, outside the repo; before = a build without the
+region, its log `exe_own: 18 regions`, after `19 regions`):
+`runs/d254_before_load_list` and `runs/d254_after_load_list` (`load_list.png`),
+`runs/d254_before_cutsceneAndNue` and `runs/d254_after_cutsceneAndNue` (the
+save menu, frames 7020..7380). The PC install with a Western layer still
+draws the port's Chinese empty-record word there (HANDOFF's staged
+localisation PR).
+
+## D255 — On a PSX-only install the inn's and the camp's screen stay black for good: the jingle `OYASUMI` is not there, and the wait hangs (ours, the install's missing jingles; fixed by DIV-0129)
 
 **Found:** AB's harness, 2026-10-12, the shop route on the PSX-EU disc-only
 install, ticks 2880..3150 ([`visual-findings-1012.md`](visual-findings-1012.md)
@@ -7032,6 +7063,16 @@ more source files call `Sound_StreamDone`; any wait on a jingle a PSX-only
 install lacks would hang the same way. So one of the owner's two answers is
 now **required** for the inn and the camp to be leavable on a PSX-only
 install. The listen pair is [`wav-dump.md`](wav-dump.md) 4c.
+
+**Fixed** by DIV-0129 (2026-10-16, the owner's "both" of 2026-10-15): a
+failed stream open ends `Sound_StreamDone`'s wait at once, and a PSX-only
+build makes the 11 jingles from the disc's `S_XA00.STR` by the player's
+ffmpeg. `shop` on PSX-US (`C:\Users\kerok\abd255`, rebuilt from the US disc
+by this branch's importer): `OYASUMI` opens from the cache, black 2670..2850,
+back in the inn at 2880 (the PC's frame in `abc-sweep-1013-us.md` 6.2); on
+an install without the jingles the open fails, the log says DIV-0129 once,
+and the inn is back at 2820. `campingFishing` on both reaches the fishing
+spot for the first time on a PSX-only install, which shows D303 and D304.
 
 ## D256 — A PSP-only install's title is the PSP's fishing-version logo, its tiles misaligned in our 4:3 frame (ours; the owner's look owed)
 
@@ -7512,12 +7553,22 @@ other.
 **Status:** open; a `gameover` hash at 1 and 2 against narrow, with its flash
 frames compared, would settle it.
 
-## D286 — The fishing equip screen's headings are blank on the disc-only installs (ours; not looked into)
+## D286 — The fishing equip screen's headings are blank on the disc-only installs (ours; fixed by DIV-0101's amendment except FR and DE)
 
 **Found:** the eye batch, 2026-10-13
 ([`eye-batch-1013.md`](eye-batch-1013.md) 3 item 6): `EQUIP`, `ROD` and
 `GUIDE` drawn on the PC, blank on PSX-EU and PSP-EU (718 pixels). Whether a
 gap of the image or of the language build is not known.
+
+**Established 2026-10-16** ([`fishing-rule-pages.md`](fishing-rule-pages.md),
+with D303): a gap of the disc-built image. `ROD` .. `GUIDE` are four
+fixed-width fields at `0x653EA0` (`EffectKind0F_PanelTitles`), zero on every
+disc-built image: each disc's fishing module holds them after its tabs, which
+the PC lacks there, so the map's segment stopped short. Now a `twin` row of
+`WORLD00/AREA030.EMI#4` on PSX-JP, US, EU and both PSPs; seen drawn on PSX-US
+(`campingFishing` 3360). **Still open on FR and DE**: those discs re-lay the
+words at other widths, so the PC's fields have no copy there; drawing them
+needs the module's widths in ours (DIV-0069's way with the tabs).
 
 ## D287 — The launcher page clips two lines (ours, the launcher)
 
@@ -7809,3 +7860,125 @@ would show rows 16..63 for the same table; not measured on the disc.
 **Fixed** by DIV-0127: the two pieces' `du` and `dv` are w - 1 and h - 1
 once the fills are armed; the fuzz and `BOF3X_ORIGINAL` keep Capcom's
 packets.
+
+## D303 — The fishing spot's Rule pages stack their text on a PSX-only install (ours; fixed by DIV-0101's amendment)
+
+**Found:** `campingFishing` on the PSX-US disc-only install, 2026-10-16 (the
+first PSX-only run to reach the fishing spot, D255 having hung the camp
+before it; the owner saw it live). Recipe frames 3690..3750, the `Rule` tab
+(`How to Fish`): the PC (`pc-en150`) and PSP-EU draw page `Fundamentals`
+with three lines of controls; PSX-US draws the title `Type of animal` and
+the page's entries one over another down the panel and past its bottom
+edge (`Type of animal`, `That floats and is easily caught`, `Av. Length:
+20CM` repeated). The page counter reads `1/6` on the PC and `0` on PSP-EU
+and PSX-US. Not caused by a sound stream: the same with and without the
+jingles (`runs/d255b_campingFishing`). **Where to start:** whether the
+pages' text comes from the en-US layer or the disc's own fishing overlay,
+and what the counter's `0` reads (a gap of the disc-built image would read
+0); D286 (the equip screen's blank headings) is the same screen family.
+
+**Fixed** (2026-10-16, `bb38afbf`, [`fishing-rule-pages.md`](fishing-rule-pages.md)):
+three runs of the disc-built exe image were zero on every disc-only install -
+the Rule pages' title and row message ids (`0x653DF4`), the equip headings
+(`0x653EA0`, D286) and the counter's `"%d/6"` with the data page's total
+(`0x653EB4`). Zero ids drew pool message 0 (the fish list's first entry) down
+the panel; the empty format left a stale `0`. Each disc's fishing module
+(`WORLD00/AREA030.EMI#4`) holds all three where its own code reads them: two
+catalogued tables (`fishing_rule_titles` / `fishing_rule_lines`, each build's
+own layout) and two `twin` rows. PSX-US `campingFishing` now shows
+`Fundamentals`, its three lines and `1/6`; the other builds not played.
+
+## D304 — Multi-second single-frame freezes on PSX-only runs, at a different place each run (the machine's saturated SSD, met by a log write on the game's thread; ours fixed 2026-10-16)
+
+**Found:** 2026-10-16, the D255 runs; the owner heard it as doubled sound
+effects and music dropping out (DirectSound replays its buffer while the
+frame is held). `DIV-0034 frame deadline N ms behind` in `bof3x.log`, one
+frame held for seconds, on the same recipe each time: `campingFishing`
+PSX-US with jingles, none (first run) and 10,456 ms at frame 940 (second);
+without jingles, 3.7 / 4.2 / 3.9 s at frames 4873..4875 and 2.0 / 2.2 s at
+5005..5006; `shop` on a copied install, 13,277 ms at frame 64. The EU PC
+run of `campingFishing` earlier that day (`abv`): none. The track requests
+are the PC's, in the same order. A deterministic route that freezes in a
+different place each run points outside the game's logic (the machine:
+other sessions' work, a scan of freshly copied caches); not shown. **Where
+to start:** the same recipe on the PC and a PSX-only install back to back,
+with the owner's eye on Task Manager, and whether a freeze lines up with a
+file open or the sequencer.
+
+**Established (2026-10-16 evening, the D304 session):**
+
+- **Not PSX-only, not new.** Of 392 harness runs under `~/ab*/runs` since
+  2026-10-12, 113 holds of 1 s or more, on PC, PSX and PSP installs alike.
+  Games running at the same moment in different roots held *together*, for
+  the same length to within 0.4%: `d255_shop` 13,277 ms and `abv` `wbh1`
+  13,294 ms (both launched 16:24:17-19); on 2026-10-13 about 07:5x three
+  roots each held 11.4 s, then 2.97 s, then 1.47 s. A machine-wide cause.
+- **Alone, none.** PC (en-150) and PSX-US `campingFishing` back to back with
+  nothing else running: no hold in either (`abd255/runs/d304a_*`).
+- **Disk saturation reproduces it.** PSX-US `campingFishing` with a second
+  process writing as fast as the SSD takes it (9 GB in 164 s, 16 MB
+  buffered writes, nothing flushed): nine holds, 1.6 to 33.6 s, each the
+  length of a stall in the writer's own writes to within 0.3 s (26,009 /
+  26,258 ms, 13,672 / 13,794, 33,569 / 33,879, 30,445 / 30,582)
+  (`d304/runs/d304b_*`). The owner saw the SSD at 100% in Task Manager at
+  the time and earlier that day. Saturation is what the harness itself
+  makes: importer builds (ffmpeg), installs copied, 8 MB BMPs a second of
+  game time per run and their PNG conversion, several sessions at once.
+- **Where the game waits.** `BOF3X_STALLWATCH=1000` (below) sampled the
+  main thread in each hold inside `WriteFile`, called from `bof3::Log`
+  (`log.cpp`) - a line to `bof3x.log`. A scripted run logs a line every
+  frame (`randlog`); once the cache manager's dirty pages pass its limit,
+  Windows throttles every buffered writer until the disk catches up, and
+  the frame loop was one. DirectSound then loops its buffer: the doubled
+  effects and the music dropping out the owner heard.
+
+**Fixed (ours):** `bof3x.log` is written by a thread of its own
+(`src/hook/log.cpp`): `Log` appends to a 4 MB queue (no heap - the crash
+reporter logs through it) and the writer writes it outside the lock.
+Before the writer runs (DllMain, the loader lock) and with the queue full,
+the caller writes itself, in order. `LogFlush`, `Fatal` and `LogClose`
+drain on the calling thread, and a chunk whose writer `ExitProcess` killed
+is written again (a repeated part over a lost one). Same load, fixed DLL:
+**no hold** (`d304c`, 11 GB with writer stalls up to 20.8 s; `d304d`). All
+5,274 `randlog` lines are there and equal to the unfixed run's. Both self-tests
+pass (exe host; hosted with `BOF3X_SHADOW='*'`). No ledger entry: the log is ours, not the game's
+behaviour.
+
+**What still waits on the disk:** the harness's own timed shots
+(`BOF3X_SHOT_EVERY`). `render::SaveOnFiber` writes each 8 MB BMP on the
+game's frame, so under saturation the picture and sound stop for seconds
+at every 30th recipe frame. The game clock is paused for the write, so
+nothing is logged and the frames taken are unchanged. Harness-only; off
+for a player. A player's game still reads the cache synchronously on an
+area load, as Capcom's did.
+
+**`BOF3X_STALLWATCH=<ms>`** (`src/hook/stallwatch.h`): when no logic frame
+has run for that long, a watcher thread writes the main thread's eip and
+stack return-address candidates as module+offset (llvm-symbolizer with
+`bof3x.dll`'s ImageBase `0x10000000` added) to `bof3x.stall.log` beside the
+DLL, with the local time, again every second while the hold lasts.
+Instrumentation; off unless set. Recipe `shot` freezes show as about 1 s
+holds in `Freeze`; ignore them.
+
+## D305 — A PSX-US install built on 2026-10-12 crashes loading area 16 under the 2026-10-16 engine (an old cache; refused since 2026-10-16)
+
+**Found:** 2026-10-16, `campingFishing` on a copy of `~/ab`'s `g_psxus` /
+`c_psxus` (built by the importer of 2026-10-12): `0xC0000005` reading
+`0x00000000` at `bof3x.dll+0x78EAE` at frame 368, area 0x10, just after
+`AREA016.DAT` and its `loc\en-US` layer open (dump
+`C:\Users\kerok\abd255\L\bof3x.crash-28636-0.dmp`). The same route passed
+area 16 on an install rebuilt that day, so an old cache meeting a newer
+engine is the first guess, not established. **Where to start:**
+symbolise `+0x78EAE`; then whether the engine should refuse a cache older
+than it reads, rather than crash.
+
+**Cause** (2026-10-16, `8b5caf5b`): the cache was built at 17:34 on
+2026-10-12, before the importer's `wmrec` rule (`cfc307a6`) that evening, so
+`WorldMap_Records`' eleven area words (`0x653910 + 0x1C k + 0x18`) are gaps
+(zero); `WorldMap_RecordIndex` answers the "none" record, whose effect kind 1
+calls `MoveCmd_AttachOffset` with area 16's null vector table (the dump:
+`MoveCmd_AttachOffset+0x8e` from `EffectKind01_Draw`). The area 16/45 crash
+of `visual-findings-1012.md` 8, met again through an old cache. **Refused**:
+`ExeImage_Source` stops on an image whose `data.toml` still classes any of
+those words a gap, with a message to rebuild the install
+([`exe-import-engine.md`](exe-import-engine.md)); no game behaviour changes.

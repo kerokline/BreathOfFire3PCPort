@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 128 entries, DIV-0001..0128, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 129 entries, DIV-0001..0129, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -6518,6 +6518,69 @@ designed in rather than bolted on.
   the PC draws `1/2`. Verification: that doc 4.2 (the seven rows "5 bytes, 0
   not BOF3.exe's"; the checks clean; the exe host on the US disc-only install
   exit 0; `fairyVillage` reads `1/2` on both sides at 810).
+- Amended 2026-10-16 (D303, D286; [`fishing-rule-pages.md`](fishing-rule-pages.md)):
+  the fishing spot's Rule pages and panel headings are no longer zero on a
+  disc-built image. The pages' title and row ids (`0x653DF4`, 6 + 54 u16) are
+  two catalogued tables (`tables.toml` `fishing_rule_titles` /
+  `fishing_rule_lines`), read in every build from the fishing module whose
+  `EffectKind0F_DrawMessageList` twin reads them (`WORLD00/AREA030.EMI#4`; on
+  the PSPs `BOOT.BIN`'s one copy); the panel headings `ROD` .. `GUIDE`
+  (`0x653EA0`, US, EU, JP and the PSPs) and the counter format `"%d/6"` with
+  the data page's total (`0x653EB4`, all seven) are `twin` rows of the same
+  module, equal to `BOF3.exe`'s. Zero, the rows each drew the pool's message
+  0 (the fish list's first entry) nine times down the panel, the title that
+  message's first line, the counter a stale `0`, the headings nothing. **The
+  one deliberate difference from `BOF3.exe`**: the Western discs (US, EU, FR,
+  DE, and PSP-EU's `BOOT.BIN`) lay the rows out for their own text - page
+  1's third line one row lower (a blank row before it), page 3 a line `0x93`
+  after its second (the blank after it one row later), DE also `0x6D` in page
+  3's last, blank row; titles and pages 2, 4, 5, 6 as the PC's - and the image takes the disc's
+  layout, since the message pool it indexes is that disc's (the owner
+  prefers the disc's data where both exist, `visual-findings-1012.md`, "For the other files";
+  DIV-0104 is the precedent of a
+  disc-built image holding a disc's own table). JP and PSP-JP equal the
+  PC's. On PSP-EU this replaces the JP layout its map took from the EMI copy.
+  Still zero: FR's and DE's headings (their discs re-lay the words at other
+  widths; D286 stays open for those two). Verification: `psp_exe.py recipe`
+  over the seven discs (12 new rows, each "0 not BOF3.exe's", no other row
+  moved); `exe_tables.py recipe` and `gaps` (13 gap rows out, FR's and DE's
+  headings in under their new name, nothing else); `tables.py`,
+  `exe_tables.py`, `psp_exe.py`, `importer.py`, `exe_own.py check` clean;
+  `campingFishing` on a fresh PSX-US disc-only install (`fishing-rule-pages.md`
+  6): `Fundamentals`, the three lines with the US blank row, `1/6`, the
+  equip headings drawn, the route to its last frame. The other builds not
+  played.
+- Amended 2026-10-16 (D254, the owner's report of odd characters on the
+  empty save slots and behind the named ones on a PSX-only install): the
+  save slot number's format `0x6639D4` (`"%X"`, `Menu_DrawSaveSlot`'s) is
+  no longer zero on a disc-built image. No disc carries it - the port's
+  sixteen save files are its own - so it is the engine's own string
+  (`exe_own.cpp`'s `SlotNumber`, [`exe-engine-own.md`](exe-engine-own.md)
+  2), not a `twin`; it equals `BOF3.exe`'s bytes, checked at every start
+  where the file is there. Before it every slot of the save and load lists
+  drew the format buffer's stale text in the number's place (`) 57` on the
+  empty slots, a stray glyph after the name on a saved one); now each slot
+  draws its number as the PC does and an empty slot is otherwise blank, as
+  the US release leaves it (`0x669CCC` is still zero, untouched). With the
+  PC's `.data` the fill changes no byte. Verification: `exe_own.py check`
+  (19 regions, 20,890 bytes); the hosted self-test on the PC install with
+  `BOF3X_SHADOW=exe_own` (exit 0, `19 regions ... each equal to BOF3.exe's
+  .data`, the zero-image fill `16906 non-zero bytes ... nothing outside`);
+  PSX-US `load_list` and `cutsceneAndNue` before and after ([`known-defects.md`](known-defects.md) D254).
+- Amended 2026-10-16 (the owner, a PSX-only install; [`IDEAS.md`](IDEAS.md)
+  I43, [`exe-import-engine.md`](exe-import-engine.md) 7.7): the importer
+  places a region by the placed pointers that point into it, read from the
+  disc's own words. On a disc-only install the child's field sprite in the
+  forest after the mine was drawn in pieces: the record lists of party members
+  7 and 9 (`0x669868..0x669883`, a `game-value` gap on all seven builds) were
+  zero, every pose bank 0. They are now the disc's own (US `BOOT@0x80181C58`
+  and `@0x80181C68`), with 18 to 54 more places per build. Every placed byte
+  equals `BOF3.exe`'s (`placed_differ` unchanged on every build); `gap` bytes
+  PSX-US 2,502 to 2,277, PSX-EU 2,453 to 2,308, PSX-JP 1,817 to 1,672, PSP-EU
+  1,406 to 1,261. Verification: the recipe checks clean; `whelpBoss` frame
+  4710 on a rebuilt PSX-EU disc-only install, the sprite's region against the
+  PC install's: 5,190 differing pixels before, 44 after (the rest is the
+  frame's 3x scale sampled down); not played by the owner yet.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -7745,3 +7808,60 @@ designed in rather than bolted on.
   (the weakness), the rest dim. `magic_s12`'s self-test 88,000 rounds, 0
   mismatches under `en-US` and `original`.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=Identify_DrawElements`.
+
+### A missing sound stream ends its wait; a PSX-only install has the 11 jingles
+
+- **ID:** DIV-0129
+- **Date:** 2026-10-16
+- **Subsystem:** audio - `Sound_LoadStream` `0x587910` and `Sound_StreamDone`
+  `0x587A00` (ours, `src/game/save_menu.cpp`); `tools/xa.py` `jingles` / `mp3`,
+  `importer.py build` (`snd_from_psx`, the manifest's `[snd_jingles]`)
+- **Tier:** Intent - the original hangs (the engine half); the jingles are the
+  release the player owns, by the player's own ffmpeg (the data half, as
+  DIV-0106).
+- **Original behaviour:** `Sound_LoadStream` stores the stream kind, then
+  returns at a failed `SND\NAME.DAT` open without stopping anything; a wait
+  that follows (the inn's and the camp's rest; twenty more source files call
+  `Sound_StreamDone`) asks `Music_IsPlaying() ^ 1` for kind 0, which is the
+  area's song, still playing - so it never ends. The PC install always has
+  the file; a PSX disc-only install had none of the 11 kind-0 jingles (the
+  PC's are MP3s of the disc's `S_XA00.STR` clips, `sound-import.md` 4), and
+  the inn and the camp hung on a black screen for good (D255: 106 of 106
+  frames black over 4,050 frames on PSX-EU, `eye-batch-1013.md` Q7; PSX-US
+  the same, `abc-sweep-1013-us.md` 6.2).
+- **New behaviour:** (1) a failed open is remembered (our flag, no game
+  state; logged once) until the next open succeeds, and `Sound_StreamDone`
+  answers 1 meanwhile, so a wait on a stream that is not there ends at once
+  on any install, for any of the three kinds. (2) `importer.py build` with a
+  PSX disc and no PC install among its sources writes the 11 jingles to
+  `base/snd/`: each recipe row's `S_XA00.STR` clip (`recipes/pc-zh.snd.toml`,
+  kind 0) decoded from a fresh history by `xa.decode`, then resampled to
+  44.1 kHz and encoded by the player's ffmpeg in the PC's form (128 kbit/s,
+  plain stereo, no ID3v2 tag or Xing frame - the encoder call now shared with
+  `at3.py`, whose output is unchanged). `install --base` lays them in `SND\`.
+  Without ffmpeg they are not written (the build says why) and (1) keeps the
+  inn and the camp leavable without the jingle. With a PC install among the
+  sources nothing changes: its own MP3s play.
+- **Rationale:** the owner, 2026-10-15 (`owner-review.md`): "both" - the
+  disc's XA stream as the jingle on a PSX-only install, and a failed jingle
+  open ending the wait at once, so no missing file can hang it again. A wait
+  for a sound that never started is plainly not what the code meant.
+- **Also in the PSX version?** No: the PlayStation streams its XA from the
+  disc (op 89, `0x80164090`), which always has the clip; the hang is the
+  port's file-based stream meeting an install it never shipped for.
+- **Verification:** `shop` on PSX-US (an install rebuilt from the US disc by
+  this branch, root `C:\Users\kerok\abd255`): `OYASUMI` from the cache, the
+  inn black 2670..2850 and back at 2880 (the PC's frame); the same install
+  with the 11 removed: the open fails, logged once, back at 2820 (before: black
+  to the route's end). `campingFishing` on both reaches the fishing spot (it
+  hung at the camp before; D303..D305 are what that showed). The jingles
+  against the PC's MP3s: `sound-import.md` 6 item 3. The headless self-test
+  `BOF3X_SHADOW='*'` hosted on the PC install: exit 0, every self-test 0
+  MISMATCHES, `save_menu`'s 66,000 rounds among them (the fuzz clears the flag
+  before each `Sound_StreamDone` round - the original has none - and the
+  engine clears it once the self-tests are done), and DIV-0129's own: a
+  missing kind-0 stream answers 1 where the original answers 0, a present
+  one 0.
+- **Reversible?** (1) `BOF3X_ORIGINAL=Sound_StreamDone` (the original's
+  answer; the flag is then read by nothing). (2) a build with a PC install
+  among the sources, or the 11 deleted from `base/snd/` and `SND\`.

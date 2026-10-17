@@ -519,9 +519,11 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     if o % 4 == 0:
                         hits[k, w].append(base + o)
                     o = blob.find(pat, o + 1)
-        def stretches(lo, hi, place, win):
+        def stretches(lo, hi, place, win, target=None):
             """The stretches of [lo, hi) at `place` (section, displacement) that
-            disagree nowhere and are keyed enough to place (step 3)."""
+            disagree nowhere and are keyed enough to place (step 3). `target`: a
+            PC address a pointer from outside the region names the place of
+            (section 7.7); a stretch holding its word and 8 equal bytes places."""
             (k, delta), out = place, []
             base, blob = srcs[k]
             res = []
@@ -551,11 +553,37 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     a0, a1 = lo + s0, lo + i2
                     eq = sum(1 for v2 in res[s0:i2] if v2)
                     nk = sum(1 for a in range(a0 + (-a0 % 4), a1 - 3, 4) if a in keys)
-                    if nk >= 2 or (nk >= 1 and eq >= 16) or (win is not None and a0 <= win and win + 16 <= a1 and eq >= 24):
+                    if nk >= 2 or (nk >= 1 and eq >= 16) or (win is not None and a0 <= win and win + 16 <= a1 and eq >= 24) \
+                            or (target is not None and a0 <= target and target + 4 <= a1 and eq >= 8):
                         out.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
                                     "addr": a0 + delta, "agree": eq, "keys": nk})
                 s0 = i2 + 1
             return out
+        # the pointers into a region (section 7.7): a placed data-pointer word whose
+        # PC target lies in an unplaced region holds, in the disc's own word, the
+        # target's address in the build - its place, when one section of the
+        # pointer's file (or else of the whole disc) holds that address
+        rlos = [r[0] for r in regions]
+        incoming = collections.defaultdict(lambda: collections.defaultdict(set))
+        for a, c in cls.items():
+            if c != "data":
+                continue
+            ks = {owner[a - DATA_LO + j] for j in range(4)}
+            if None in ks or len(ks) != 1:
+                continue
+            k = ks.pop()
+            if ranges[k][2] not in ("map", "table", "place"):
+                continue
+            t = struct.unpack_from("<I", pc, a - DATA_LO)[0]
+            i = bisect.bisect_right(rlos, t) - 1
+            if i < 0 or not regions[i][0] <= t < regions[i][1]:
+                continue
+            w = struct.unpack_from("<I", img, a - DATA_LO)[0]
+            hold = [s for s in byfile[ranges[k][3].split("#")[0]] if srcs[s][0] <= w < srcs[s][0] + len(srcs[s][1])]
+            if not hold:
+                hold = [s for s in srcs if srcs[s][0] <= w < srcs[s][0] + len(srcs[s][1])]
+            if len(hold) == 1:
+                incoming[regions[i]][t].add((hold[0], w - t))
         new = []
         for lo, hi in regions:
             votes = {"data": collections.Counter(), "text": collections.Counter()}
@@ -587,6 +615,15 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     if len(found) == 1:
                         got = stretches(lo, hi, found[0], w)
                         break
+            into = incoming.get((lo, hi), {})
+            for t, at in sorted(into.items()):
+                if len(at) != 1 or any(r["pc"] <= t < r["pc_end"] for r in got):
+                    continue
+                for r in stretches(lo, hi, next(iter(at)), None, target=t):
+                    if not any(r["pc"] < g["pc_end"] and g["pc"] < r["pc_end"] for g in got):
+                        # the pointers into the stretch that name this place are its keys too
+                        r["keys"] += sum(1 for t2, at2 in into.items() if r["pc"] <= t2 < r["pc_end"] and at2 == at)
+                        got.append(r)
             new += got
         if not new:
             break
@@ -634,9 +671,10 @@ def write_places(places):
                 "# What exe_maps/ left unplaced, placed by the PC's own data pointers (docs/exe-import-engine.md\n"
                 "# section 3): [pc, pc_end) is the build's `file` / `section` from `addr` on, as in\n"
                 "# exe_maps/; `agree` bytes compared equal (numbers equal, data pointers the target's\n"
-                "# address in the build), `keys` data pointers voted for the place; `keys` 0 is a place\n"
-                "# a 16-byte window of numbers found once in a neighbour's file (section 7.4), at least\n"
-                "# 24 bytes agreeing. Addresses and counts only (CLAUDE.md rule 1).\n")
+                "# address in the build), `keys` data pointers voted for the place (in it, or placed\n"
+                "# pointers into it, section 7.7); `keys` 0 is a place a 16-byte window of numbers found\n"
+                "# once in a neighbour's file (section 7.4), at least 24 bytes agreeing. Addresses and\n"
+                "# counts only (CLAUDE.md rule 1).\n")
         f.write("\t".join(PLACE_COLS) + "\n")
         for bid in ORDER:
             for r in places.get(bid, ()):

@@ -111,7 +111,8 @@ checkout's `analysis/` (never in the tree).
   6; a disc-only install keeps the disc's art. Decided off the render sheets.
 - **D255's fix**: **both** - the disc's XA stream (`S_XA00.STR`) as the
   jingle on a PSX-only install, and a failed jingle open ending the wait at
-  once (a DIV), so no missing file can hang it again.
+  once (a DIV), so no missing file can hang it again. **Built** 2026-10-16:
+  DIV-0129, `fix/psx-only-1016`.
 - **The Western weakness row**: **keep the row and the element glyphs on every
   language** (as now). The owner's `radiationRoom.txt` recipe (2026-10-15)
   reaches an enemy panel with the row, for the A/B.
@@ -350,8 +351,8 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
     fight no longer starts with a combatant off the left or top edge. Look at `analysis/shots/d56_before` and
     `d56_after` frame 500 (a crafted camera shift: the Gooey off screen, then refused); in play, nothing to see
     unless an encounter would have placed an enemy off the left - none of nine battle routes does.
-  - **The save slot number's `"%X"`** (D254): no disc carries it, so the load screen draws `) 16` and stale glyphs.
-    Leave it, or give the engine its own two-byte format (recommended).
+  - **The save slot number's `"%X"`** (D254): done 2026-10-16 after your report of odd characters on the empty
+    slots and behind the named ones - the engine's own two-byte format; the slots are numbered, the empty ones blank.
   - **The jingles on a PSX-only install** (D255: the inn's screen stays black longer without `OYASUMI`): the
     disc's XA as the jingle, or the failed stream ending the wait.
   - **The PSP title's framing** (D256): look at a PSP-EU title capture.

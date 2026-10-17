@@ -314,6 +314,16 @@ extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx) {
 // file is the one opened (docs/sound-import.md section 7); SND\name.DAT
 // otherwise, formatted as before. The path buffer is MAX_PATH for the
 // cache's absolute path (the original's 0x28 holds every SND\ name).
+//
+// DIVERGENCE DIV-0129: a failed open is remembered (g_stream_missing, ours,
+// no game state) until the next open succeeds, and Sound_StreamDone answers
+// 1 meanwhile - the original's wait went on asking about the area's song,
+// which the failed load never stopped, so the inn and the camp hung on an
+// install without the jingle (D255).
+namespace {
+bool g_stream_missing = false;
+}
+void save_menu::StreamMissingClear() { g_stream_missing = false; }
 extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     const U kind = id >> 12;
     PutLong(at::kStreamKind, kind);
@@ -323,7 +333,13 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     if (!dat_cache::SoundPath(reinterpret_cast<const char*>(At(name)), path, sizeof path))  // DIV-0089
         g.sprintf(path, reinterpret_cast<const char*>(At(at::kStreamFormat)), reinterpret_cast<const char*>(At(name)));
     const int handle = g.file_open(path, 0, 0);
-    if (handle == -1) return;
+    if (handle == -1) {
+        if (!g_stream_missing)
+            bof3::Log("sound       DIV-0129: %s is not there; a wait on it ends at once", path);
+        g_stream_missing = true;  // DIV-0129
+        return;
+    }
+    g_stream_missing = false;
     if (Long(at::kStreamData) != 0) g.free(At(Long(at::kStreamData)));
     const int size = g.file_size(handle);
     void* const data = g.malloc(static_cast<unsigned>(size));
@@ -349,7 +365,10 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
 // has stopped: kind non-zero asks 0x5A7200, kind 0 Music_IsPlaying, and the
 // answer's bit 0 is flipped (`xor eax, 1` on the whole register). Op 8B and
 // the inn wait on it.
+//
+// DIVERGENCE DIV-0129: 1 while the last stream's file could not be opened.
 extern "C" int __cdecl Sound_StreamDone(void) {
+    if (g_stream_missing) return 1;  // DIV-0129
     if (Long(at::kStreamKind) != 0) return g.voice_playing() ^ 1;
     return g.music_playing() ^ 1;
 }
@@ -1232,6 +1251,7 @@ void CacheSoundSelfTest() {
 
     const Callees saved = g;
     const U kind = Long(at::kStreamKind);
+    const bool missing = g_stream_missing;  // DIV-0129's flag: the opens below fail
     std::vector<std::string> opens;
     std::vector<U> banks;
     g_sound_opens = &opens;
@@ -1280,6 +1300,7 @@ void CacheSoundSelfTest() {
 
     g = saved;
     PutLong(at::kStreamKind, kind);
+    g_stream_missing = missing;
     g_sound_opens = nullptr;
     g_sound_banks = nullptr;
     dat_cache::TestEnd();
@@ -1292,12 +1313,46 @@ void CacheSoundSelfTest() {
               "unarmed; Snd_LoadBankFile(%u) %s's banks from the cache, DAT\\ unarmed; 4 controls refused",
               stream.c_str(), index, bank.c_str());
 }
+
+// --- BOF3X_SHADOW=save_menu: DIV-0129, a missing stream ends its wait --------
+//
+// Sound_LoadStream(0) - kind 0, the inn's jingle - with File_Open failing and
+// the area's song still playing: Sound_StreamDone must answer 1, where the
+// original rule (Music_IsPlaying ^ 1) answers 0 and the inn waits for good;
+// and with the stream there (the flag clear) the song's answer, 0, as before.
+int __cdecl FailOpen(const char*, int, int) { return -1; }
+int __cdecl StillPlaying() { return 1; }
+
+void StreamMissingSelfTest() {
+    const Callees saved = g;
+    const U kind = Long(at::kStreamKind);
+    const bool missing = g_stream_missing;
+    g.file_open = FailOpen;
+    g.music_playing = StillPlaying;
+    g.voice_playing = StillPlaying;
+    g_stream_missing = false;
+    Sound_LoadStream(0);
+    const int failed = Sound_StreamDone();
+    const int original = g.music_playing() ^ 1;  // the control: the original's answer to the same state
+    g_stream_missing = false;                    // as after an open that succeeded
+    const int present = Sound_StreamDone();
+    g = saved;
+    PutLong(at::kStreamKind, kind);
+    g_stream_missing = missing;
+    if (failed != 1 || original != 0 || present != 0)
+        bof3::Fatal("DIV-0129 self-test: a missing stream's wait answers %d (want 1), the original's %d (want 0), a "
+                    "present stream's %d (want 0)", failed, original, present);
+    bof3::Log("shadow      DIV-0129 self-test: a missing kind-0 stream ends its wait (1; the original 0, the hang); "
+              "a present one waits on its song (0)");
+}
 }  // namespace
 
 void SaveMenu_Inject() {
     TitleMenu_Operands();   // DIV-0014's widths, which our TitleMenu_DrawRow reads, against their immediates
     if (bof3::WantsShadow("dat_cache")) CacheSoundSelfTest();
+    if (bof3::WantsShadow("save_menu")) StreamMissingSelfTest();
     if (bof3::WantsShadow("save_menu")) save_menu::SelfTest();
+    save_menu::StreamMissingClear();  // DIV-0129: the game starts as no failed open (the fuzz's opens fail)
     BOF3_INJECT(Snd_LoadBankFile);
     BOF3_INJECT(Save_ReadFile);
     BOF3_INJECT(Save_ListFiles);

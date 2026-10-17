@@ -54,7 +54,7 @@ the path alone.
 |---|---|
 | The game's data (`DAT\`) | the disc's: 741 containers from `base/`, the 14 port-edited arenas the disc's own or by rule ([`arena-edits.md`](arena-edits.md)); 252 containers lack the port's Chinese text slots and take the text from the language layer; `AFLDKWA.DAT`, wholly Chinese on the PC, is written empty for the layer to fill |
 | The language | the disc's, as a layer built from the disc alone (DIV-0090, [`loc-build-disc-only.md`](loc-build-disc-only.md)); the launcher's default here (`en-US` from a US disc). `original` (the port's Chinese) is refused: the shipped text slots are absent (DIV-0102, below) |
-| The music | the disc's sequences through the engine's sequencer (DIV-0087, `base/bgm`); no MP3s - `BGM\` is empty. The 11 jingles the PC plays as MP3s are not there (an owner's call, `owner-review.md`) |
+| The music | the disc's sequences through the engine's sequencer (DIV-0087, `base/bgm`); no MP3s - `BGM\` is empty. The 11 jingles the PC plays as MP3s are made from the disc's `S_XA00.STR` by the player's ffmpeg when it has one (DIV-0129); without ffmpeg they are not there, and a wait on one ends at once |
 | The sound effects | the disc's, as `SND\` (880 files, byte-identical to the PC's) |
 | The exe's tables (`.data`) | from the disc (`base/exe/data.bin`), the pointer words by layout, the port's own bytes filled by the engine; what no disc carries is zero (section 3) |
 | The opening movies | `CAPCOM.AVI` only when the importer could convert the disc's movie with the player's ffmpeg (FM, `base/fmv/`); `LOGOS.AVI`, the porting house's logos, has no disc counterpart. A movie that is not there is skipped and the game goes on (section 4) |

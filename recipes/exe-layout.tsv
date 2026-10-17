@@ -12122,7 +12122,9 @@ pc	kind	target
 0x653D58	code	EffectKind0F_Child4Move
 0x653DA4	code	EffectKind0F_Child5Start
 0x653DA8	code	EffectKind0F_Child5Move
-0x653EA0	number	-
+0x653E28	number	-
+0x653E2C	number	-
+0x653E34	number	-
 0x653EC8	code	EffectKind06_Start
 0x653ECC	code	EffectKind06_Tick
 0x653ED0	code	EffectKind06_End

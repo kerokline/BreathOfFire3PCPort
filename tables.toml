@@ -2933,3 +2933,152 @@ name = "sub"
 meaning = "the sub-song of the file's SEP that Music_Play 0x80162610 starts"
 status = "evidence"
 cite = "docs/bgm-comparison.md 6.2"
+
+# ---------------------------------------------------------------------------
+# The fishing spot's Rule pages (D303, docs/fishing-rule-pages.md): the message ids
+# EffectKind0F_DrawMessageList 0x468560 draws. The Western discs lay the lines out
+# for their own text (a blank row on page 1, one more line on page 3, DE another on
+# page 4), so a disc-built image takes each build's own table, not the PC's.
+# ---------------------------------------------------------------------------
+
+[[table]]
+key = "fishing_rule_titles"
+symbol = "EffectKind0F_RuleTitleIds"
+group = "field"
+what = "a Rule page's title"
+index = "the page (Sprite_Current word +0x3C)"
+count = 6
+stride = 2
+
+[[table.psx]]
+build = "psx-jp"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E2140
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/lhu 0x801D7710); equal to BOF3.exe's"
+
+[[table.psx]]
+build = "psx-us"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E2114
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/lhu 0x801D76C8); the Western layout"
+
+[[table.psx]]
+build = "psx-eu-en"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E2134
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/lhu 0x801D76C8); the Western layout"
+
+[[table.psx]]
+build = "psx-fr"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E23C8
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/lhu 0x801D7858); the Western layout"
+
+[[table.psx]]
+build = "psx-de"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E2110
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/lhu 0x801D7694); the Western layout"
+
+[[table.psx]]
+build = "psp-jp"
+file = "BOOT.BIN"
+addr = 0x002E02CA
+status = "evidence"
+cite = "D303 2026-10-16: the one copy of the table in BOOT.BIN (the PSP's own code); equal to BOF3.exe's; its EMI copy at 0x801E2140 holds PSX-JP's layout"
+
+[[table.psx]]
+build = "psp-eu"
+file = "BOOT.BIN"
+addr = 0x002DFAEE
+status = "evidence"
+cite = "D303 2026-10-16: the one copy of the table in BOOT.BIN (the PSP's own code); the Western layout, as PSX-US/EU's; its EMI copy at 0x801E2140 holds PSX-JP's layout"
+
+[[table.field]]
+at = 0x0
+type = "u16"
+name = "message"
+meaning = "an id in the fishing area's message pool (MessagePools); 0xFFFF: a blank row"
+status = "evidence"
+cite = "EffectKind0F_DrawMessageList 0x468560, docs/effect_1b.md"
+
+[[table]]
+key = "fishing_rule_lines"
+symbol = "EffectKind0F_RuleLineIds"
+group = "field"
+what = "a row of the Rule pages, nine a page"
+index = "the row (Sprite_Current dword +0x14)"
+count = 54
+stride = 2
+
+[[table.psx]]
+build = "psx-jp"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E214C
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/addiu 0x801D7608); equal to BOF3.exe's"
+
+[[table.psx]]
+build = "psx-us"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E2120
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/addiu 0x801D75C0); the Western layout"
+
+[[table.psx]]
+build = "psx-eu-en"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E2140
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/addiu 0x801D75C0); the Western layout"
+
+[[table.psx]]
+build = "psx-fr"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E23D4
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/addiu 0x801D7750); the Western layout"
+
+[[table.psx]]
+build = "psx-de"
+file = "WORLD00/AREA030.EMI"
+section = 4
+addr = 0x801E211C
+status = "evidence"
+cite = "D303 2026-10-16: read by the disc's EffectKind0F_DrawMessageList twin (lui/addiu 0x801D758C); the Western layout"
+
+[[table.psx]]
+build = "psp-jp"
+file = "BOOT.BIN"
+addr = 0x002E02D6
+status = "evidence"
+cite = "D303 2026-10-16: the one copy of the table in BOOT.BIN (the PSP's own code); equal to BOF3.exe's; its EMI copy at 0x801E214C holds PSX-JP's layout"
+
+[[table.psx]]
+build = "psp-eu"
+file = "BOOT.BIN"
+addr = 0x002DFAFA
+status = "evidence"
+cite = "D303 2026-10-16: the one copy of the table in BOOT.BIN (the PSP's own code); the Western layout, as PSX-US/EU's; its EMI copy at 0x801E214C holds PSX-JP's layout"
+
+[[table.field]]
+at = 0x0
+type = "u16"
+name = "message"
+meaning = "an id in the fishing area's message pool (MessagePools); 0xFFFF: a blank row"
+status = "evidence"
+cite = "EffectKind0F_DrawMessageList 0x468560, docs/effect_1b.md"

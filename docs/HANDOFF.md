@@ -110,11 +110,12 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
      beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
    - D270 fixed by DIV-0121 - the owner's look owed, and whether such a field has another way out; D284 (area 23's
-     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) not looked
-     into; D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
+     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed but on FR / DE
+     ([`fishing-rule-pages.md`](fishing-rule-pages.md)); D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
 
-5. **The follow-up round: disc-only and PSP polish** (not staged). Still open: the load screen's `"%X"` (D254, the
-   engine's own string recommended); the inn and camp hang (D255, the owner's choice of fix now required); the PSP
+5. **The follow-up round: disc-only and PSP polish** (not staged). Still open: the load screen's `"%X"` (D254) fixed 2026-10-16 as the
+   engine's own string (DIV-0101 amended); the inn and camp hang (D255) fixed by DIV-0129 on
+   `fix/psx-only-1016` (2026-10-16; D303..D305 found on its runs); the PSP
    title's framing (D256); what is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6:
    39 ranges, the `BOOT.BIN`-reader class); the disc-only round's own leftovers
    ([`disc-only-round.md`](disc-only-round.md) 5); the PSP-EU Config screen (D246) and the PAL banks (D257), the
@@ -179,6 +180,18 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
     labels keyed on its packer-like shape (two sections with no file bytes, a 61-byte `.text`), which the layout needs;
     a publisher identity is what moves those models. After the first signed release, submit the hashes as false
     positives to Microsoft and Avira.
+
+11. **Tell a stale disc-built install by its recipe version, not by a list** (the owner, 2026-10-16; follow-up to
+    I43 step 1). A disc-only install's exe image (`base/exe/data.bin`) is the importer's, built at setup from the
+    player's disc; a new release's exe, launcher and DLL do not rebuild it, so an importer fix reaches a player
+    only when the install is rebuilt (the Sources page's "add the disc again", or `importer.py build`). Today the
+    only guard is `exe_image.cpp`'s `FilledSince()`: a hand-kept list of ranges an older image left as gaps, each
+    refused at start with a message to rebuild (D305's world-map words; I43's member records `0x669868..0x669883`,
+    added 2026-10-16). A fix nobody lists there stays silent. The durable form: the importer writes a hash of the
+    `recipes/exe-*` files (and what else decides the image) into `data.toml`; the engine or the launcher compares it
+    with the release's own and, on a mismatch, offers the rebuild - or does it unasked (the owner's call: prompt or
+    automatic). Then `FilledSince()` is kept only for fixes whose absence crashes, or retired. I43's later steps keep
+    changing these recipes, so it pays back soon.
 
 **Older open items** (one line each; the pointer holds the detail):
 
@@ -387,7 +400,10 @@ _One line each, with a pointer. Add when something costs more than an hour._
   the same limit): keep a disc-only install's path short.
 - **A disc-built image maps 2,183 bytes of Capcom's game values as zero** (DIV-0101, `BOF3X_EXEIMAGE_STRICT=1`
   refuses): a disc-only route that behaves oddly may be one of them (`recipes/exe-gaps.tsv`, the gap lines in the
-  log); the two the attract reached are fixed (the button map, the story-flag seed).
+  log); the two the attract reached are fixed (the button map, the story-flag seed). A third, found 2026-10-16: the
+  forest sprite after the mine drawn in pieces (members 7 and 9's animation records, `0x669868`), fixed the same day
+  by placing a region from the pointers into it (I43 step 1; EU gap ranges 185 to 177); settling the rest is
+  [`IDEAS.md`](IDEAS.md) I43.
 - **`'*'` under a Latin overlay stops at `field_c1`** (2026-10-10, the morning's trap read right): `BOF3X_LANG=en-US`
   (en-150, fr-FR, de-DE) re-aims `Config_DrawRowLabel + 0x9F` through the `ConfigText` patch and the clone check
   refuses it after 979 lines. `ja-JP` passes whole. The language self-test is `BOF3X_SHADOW='*,-field_c1'` (the list

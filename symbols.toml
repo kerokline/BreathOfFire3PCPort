@@ -82409,6 +82409,46 @@ count = 2
 status = "evidence"
 evidence = "read 2026-09-29 (round thirteen group E1B): jumped through by EffectKind0F_Child5 0x468320 by +3: _Child5Start, _Child5Move; the move script 0x653DAC follows. docs/effect_1b.md."
 
+[[data]]
+pc = 0x653DF4
+name = "EffectKind0F_RuleTitleIds"
+ctype = "unsigned short"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-16 (D303): EffectKind0F_DrawMessageList 0x468560 draws MessagePools by entry [Sprite_Current word +0x3C] as the fishing Rule page's title; each PSX disc's twin reads its own copy (tables.toml fishing_rule_titles). docs/fishing-rule-pages.md."
+
+[[data]]
+pc = 0x653E00
+name = "EffectKind0F_RuleLineIds"
+ctype = "unsigned short"
+count = 54
+status = "evidence"
+evidence = "read 2026-10-16 (D303): EffectKind0F_DrawMessageList 0x468560 draws nine or ten rows of MessagePools by these ids from Sprite_Current dword +0x14 (0xFFFF a blank row): the fishing Rule pages, six of nine rows; the Western discs lay them out otherwise (tables.toml fishing_rule_lines). docs/fishing-rule-pages.md."
+
+[[data]]
+pc = 0x653EA0
+name = "EffectKind0F_PanelTitles"
+ctype = "char"
+count = 20
+status = "evidence"
+evidence = "read 2026-10-16 (D286): four fixed-width ASCII fields, ROD (+0, 3), LURE (+4, 4), EQUIP (+8, 5), GUIDE (+0xD, 5), drawn by EffectKind0F_DrawItemsB 0x468C50, _DrawItemsA 0x468F00 and _DrawEquipped 0x469210 with those counts; the US, EU and JP discs' AREA030.EMI#4 hold the same 20 bytes after the tabs (psp_exe.TWINS). docs/fishing-rule-pages.md."
+
+[[data]]
+pc = 0x653EB4
+name = "EffectKind0F_PageFormat"
+ctype = "char"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-16 (D303): the Rule pages' counter format, Crt_sprintf'd with the page + 1 by EffectKind0F_DrawMessageList 0x468560; every disc's AREA030.EMI#4 holds it at 0x801D0C08 (psp_exe.TWINS). docs/fishing-rule-pages.md."
+
+[[data]]
+pc = 0x653EBC
+name = "EffectKind0F_CountLabel"
+ctype = "char"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-16 (D303): the fish data page's total, drawn by EffectKind0F_DrawCountHeader 0x468A40 in 12-dot text; every disc's AREA030.EMI#4 holds it at 0x801D0C10. docs/fishing-rule-pages.md."
+
 # --- round thirteen group E1G (effect_1g, 2026-09-29): the item-trade screen's rest and the item icon, 0x594060..0x594D8A. docs/effect_1g.md ---
 
 [[func]]

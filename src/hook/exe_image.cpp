@@ -58,6 +58,40 @@ const Class* ClassOf(const Range& r) {
     Fatal("BOF3X_EXEIMAGE: data.toml range 0x%X has an unknown how \"%s\"", (unsigned)r.lo, r.how.c_str());
 }
 
+// Bytes every disc build carries since an importer fix, which an image written
+// before that fix left as a `gap` - zero where the engine now reads a value it
+// cannot do without. Such an image is refused by name rather than mapped: a
+// player's cache from an older release would otherwise run into the defect the
+// fix removed (D305: a 2026-10-12 afternoon PSX-US cache crashing on entering
+// area 16). A row per fix, when one changes what a disc build must hold;
+// `effect` is what the player would see without it, for the refusal's message.
+struct Since {
+    std::uint32_t lo, hi;
+    const char* what;
+    const char* effect;
+};
+std::vector<Since> FilledSince() {
+    std::vector<Since> out;
+    // tools/psp_exe.py wmrec (2026-10-12, docs/visual-findings-1012.md section 8):
+    // WorldMap_Records 0x653910, eleven 0x1C-byte records, the world map's area
+    // word at +0x18. Zero, WorldMap_RecordIndex finds no world map and answers
+    // the "none" record, whose effect kind 1 calls MoveCmd_AttachOffset with
+    // area 16's or 45's null vector table.
+    for (std::uint32_t k = 0; k < 11; ++k) {
+        const std::uint32_t at = 0x653910 + 0x1C * k + 0x18;
+        out.push_back({at, at + 4, "WorldMap_Records' area words (the importer's wmrec rule of 2026-10-12)",
+                       "it would crash on entering a world map area"});
+    }
+    // tools/exe_tables.py's places by the pointers into a region (2026-10-16,
+    // docs/exe-import-engine.md 7.7, IDEAS.md I43): party members 7 and 9's
+    // animation records, which the member table 0x669884 points at. Zero, every
+    // pose of theirs reads bank 0 and animation 0 (sprite_pose.cpp
+    // Sprite_SetAnimationAt): the forest sprite after the mine drawn in pieces.
+    out.push_back({0x669868, 0x669883, "two party members' animation records (the importer's places of 2026-10-16)",
+                   "a character's field sprite would be drawn in pieces"});
+    return out;
+}
+
 // The disc-built image ExeImage_Source mapped, kept for ExeImage_CompareWithFile.
 Image g_mapped;
 bool g_disc_mapped = false;
@@ -226,6 +260,15 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
             Fatal("BOF3X_EXEIMAGE: %s (%s) leaves the pointer words 0x%X..0x%X unfilled; every pointer word of a disc "
                   "build is rebuilt or the layout's (recipes/exe-layout.tsv). Rebuild the cache.",
                   exe_dir.c_str(), im.build.c_str(), (unsigned)r.lo, (unsigned)r.hi);
+    for (const Since& s : FilledSince())
+        for (const Range& r : im.ranges)
+            if (r.how == "gap" && r.lo < s.hi && s.lo < r.hi)
+                Fatal("This install's game data was built by an older release and is missing %s, which this "
+                      "release needs (%s). Rebuild the install: in the "
+                      "launcher's Sources page add the disc again, or run tools/importer.py build.\n\n"
+                      "BOF3X_EXEIMAGE: %s (%s) leaves 0x%06X..0x%06X a gap (%s)",
+                      s.what, s.effect, exe_dir.c_str(), im.build.c_str(), (unsigned)r.lo, (unsigned)r.hi,
+                      r.from.c_str());
     const bool strict = [] {
         char v[8] = {};
         return GetEnvironmentVariableA("BOF3X_EXEIMAGE_STRICT", v, sizeof v) > 0 && std::strcmp(v, "0") != 0;
