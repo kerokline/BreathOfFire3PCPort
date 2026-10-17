@@ -98,7 +98,7 @@ D306, D307 / DIV-0130). **`install/recipe-version`** (2026-10-17, `main` merged 
 4. **The install-gap census's remainder** - staged as parallel groups in
    [`install-gap-round.md`](install-gap-round.md) (2026-10-17, not launched);
    the button unification the owner asked for on 2026-10-17 is staged in
-   [`button-unification-round.md`](button-unification-round.md). Both can run with no owner present.
+   [`button-unification-round.md`](button-unification-round.md). The quicksave round (save states behind F5 / F6 / F7, the owner's design of 2026-10-17) is staged in [`quicksave-round.md`](quicksave-round.md). All three can run with no owner present.
    The census's own remainder ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
    P1 still open - the event battles' track words (all seven builds; the owner's "track half", DIV-0101
    provisional), the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement

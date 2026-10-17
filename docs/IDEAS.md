@@ -613,6 +613,8 @@ frames recording the frame hash, copy everything back, run 300 again. Equal
 hashes says the state is complete for logic; the first difference says what
 was missed.
 
+_(2026-10-17) staged as [`quicksave-round.md`](quicksave-round.md): the owner's F5 / F6 / F7 design, full snapshots with a save block in front; the all-original half left out._
+
 ## I14 — Compare what is drawn: display-list hash, texture hash, back-buffer hash
 
 **Ask (2026-09-19):** owner, when the image path's takeovers reached functions
@@ -839,6 +841,8 @@ Overwrites slot 0 silently (and the input recorder's F12 shot writes one).
 In between, cheaper steps if the owner wants them: refuse it in battle
 and events, give it a slot of its own, draw "Save OK" on screen (it only
 reaches the log since DIV-0032).
+
+**Outcome** _(2026-10-17)_: superseded by the quicksave round ([`quicksave-round.md`](quicksave-round.md)); F12's fate is its question 1.
 
 ## I19 — Screen curvature for the SatPixie look
 
