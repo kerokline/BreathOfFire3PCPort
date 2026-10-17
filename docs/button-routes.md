@@ -177,8 +177,9 @@ the list.
 | `f00695` | the second page again | **L1 at 659** (the twin: R1) |
 | `f00790` | the next page, the cursor three rows down | R1 at 751 |
 
-On today's code the twin's L1 at 571 pages *back* (it wraps), so its pages
-differ from the identity run's from 571 on: the hard-coded test HT changes.
+On today's code the twin's L1 at 571 and 615 leave the first page as it is
+(no page before it), and its R1 at 659 goes to the second: its pages differ
+from the identity run's from 571 on - the hard-coded test HT changes.
 
 ### 3.5 What `sigma_swap.txt` shows
 
@@ -201,12 +202,22 @@ change), the root's launcher copy `C:\Users\kerok\b_rc\L`. Frames under
 | `sigma_config` | `id`, `id2` | **crash** at the panel | done | done (D246 blank) | done |
 | `sigma_items` | `id`, `id2` | done | done | done | done |
 | `sigma_swap` | `id` | **crash** at the panel | done, slot 7 | done, slot 7 | done, slot 7 |
-| the four `_sw` twins | `sw` | see 4.1 | | | |
+| the four `_sw` twins | `sw` | done (config: crash) | done | done | done |
+
+**Two identity runs agree picture for picture**: `id` against `id2`, every
+frame (timed and shot) of every route on every install byte-equal - 51 / 51
+worldmap, 49 / 49 fishing, 32 / 32 config (22 / 22 up to PC's crash), 32 / 32
+items. So the identity check a later group makes is "every frame equal".
 
 **The hash routes** are the four site routes: `id` and `id2` are two runs
 each, so `python tools/statehash.py check <root>/runs/id_<r>/<i>/run.sh
 <root>/runs/id2_<r>/<i>/run.sh NEW.sh` is the regression question for any
-later build (`state-hash.md`). REPLACE-4.1
+later build ([`state-hash.md`](state-hash.md)). They were recorded **without**
+`--statehash-skip`, so 30..40 pages differ between `id` and `id2` from tick 0
+(the window, DirectDraw / Direct3D, the sound and music staging pages, the
+texture cache: the platform pages `state-hash.md` calls noise); `check` reads
+those as noise where the two references disagree. A later group's NEW run
+should be made the same way (no skip list) for the comparison to hold.
 
 ## 5. The sites with no route today
 
@@ -219,14 +230,22 @@ loaded straight into its area on `pc-enus` (`x_look_look_*`), the party
 standing at the link's spot. **None of the seven minigames was started**:
 each begins from a person or object of its area under the story's flags, and
 finding which, where, in which chapter, is a walk per site that this round
-did not finish. REPLACE-5
+did not finish.
+
+The saves and the exploration drafts stay in the root (`saves\`, `drafts\`;
+frames in `runs\x_look_*`, `runs\x_ex_*`). The next step is the same for
+every site: from its placed save, find the person or object that starts it
+(`tools/event_scan.py --area N` lists the area's placements; their positions
+and the story flags gating them are not decoded here), then record the start
+as a route. The owner, who knows where each minigame is, could record each
+with `BOF3X_RECORD` from these saves in a minute or two.
 
 | Site | Area | Save placed (`saves\`) | Entry used | Reached |
 |---|---|---|---|---|
-| the chop | 8 | `chop8` (town, chapter 1) | area 9's link 0 | the area, at the woods' edge by a signpost; REPLACE-CHOP |
-| the well | 68 | `well68` (stallion, chapter 6) | area 68's own link 0 | the area: a shop interior with a counter; REPLACE-WELL |
+| the chop | 8 | `chop8` (town, chapter 1) | area 9's link 0 | the area, at the woods' edge by a signpost; a walk up the path with talk presses (`ex_chop`, 2,733 frames) met no one, and a walk in from the world map met a random battle; the woodcutting not found |
+| the well | 68 | `well68` (stallion, chapter 6) | area 68's own link 0 | the area: a shop interior with a counter; a walk round it with talk presses (`ex_well`) opened a customer's rumour, no well |
 | the rope pull | 75 | `rope75` (preBeyd, chapter 6) | area 86's link 0, which lands inside `Area75_StepHook`'s zone | the area; the step hook's event did not start (its flag, Cond row 10 flag 2, is presumably set by this point of the story) |
-| the antenna | 111 | `tower112` (preBeyd) into area 112 | area 86's link 3 | REPLACE-TOWER |
+| the antenna | 111 | `tower112` (preBeyd) into area 112 | area 86's link 3 | area 112: a metal room with a ladder; not climbed to 111 |
 | the ram | 121 | `ram121` (preBeyd, chapter 6) | area 94's link 2 | the Middle Sea map with the ship (its ENGINE gauge); no Black Ship to ram |
 | the dock | 128 | `dock128` (identify, chapter 9) | area 128's own link 1 | the area: a room with a ladder; the parts menu not opened |
 | the crane | 135 | `crane135` (identify, chapter 9) | area 126's link 1 | the area: a deck with stairs; the crane not found |
@@ -255,7 +274,23 @@ items     sigma_items     f00695  0,50,175,225   after L1
 ```
 <!-- sites -->
 
-REPLACE-6
+What the four sheets show on today's code (`C:\Users\kerok\b_rc\sheets\`):
+
+- **worldmap**: on PSX US and PSP-EU the legend already follows the words:
+  the twin's Enter row shows a cross and its Guide row a circle, and the
+  twin's circle at 1290 opens the same Guide message as the identity's cross
+  (the map reads words 0 and 6). On PC and PC + en-US the port's keyboard
+  art is the same on both sides (IC-W's site).
+- **fishing**: the area 16 legend follows the words on the disc installs, as
+  above. The stage-1 press does not: the identity's circle at 850 opens the
+  gear menu, the twin's cross at 850 opens the quit prompt (stage 1's
+  hard-coded test, HT's site), so the twin's later frames are another scene.
+- **config**: the panel shows the swapped buttons on every install that draws
+  it (Speak cross, Action circle, View L1, Change R1); PC: no frame (the
+  crash, section 7); PSP-EU: icons with no names (D246).
+- **items**: the corner tiles are the same on both sides (baked art, IC-L's
+  site); the identity's R1 pages forward, the twin's L1 on the first page does
+  not move, so the twin is behind until its R1 at 659 (HT's site).
 
 ## 7. Found on the way
 
