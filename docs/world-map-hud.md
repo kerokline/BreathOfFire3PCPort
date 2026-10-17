@@ -523,8 +523,9 @@ No DIV entry; no behaviour change.
 **Status:** BUILT (2026-10-17, group IC-W of
 [`button-unification-round.md`](button-unification-round.md) 3, branch
 `buttons/icw`). Headless self-tests pass. The world-map route was run on
-three installs, identity and swapped (9.5). Not played. Ledger draft C (9.6)
-is lettered; the coordinator numbers it at the merge.
+three installs, identity and swapped (9.5). Withheld rows on the port's page
+dimmed as a disc dims them (9.8, the owner's answer 4). Not played. Ledger
+draft C (9.6) is lettered; the coordinator numbers it at the merge.
 
 ### 9.1 What the legend was
 
@@ -576,11 +577,13 @@ search is the helper's.
   the row is lit: the Config screen's, `0x66A2FC`'s circled numerals 1..6
   and `X`, through `Text_DrawSmall`. The colours are circle red 2, cross
   purple 1, triangle green 6, square pink 5, L1 / R1 white 0. A withheld
-  row gets nothing, since the port's font has no dim glyph.
+  row draws the same glyph dimmed by a disc's rule (9.8).
 - **`Start`** runs for row 3 after its label. On a page with the
   PlayStation's art it draws nothing, since the label carries START. On the
   port's page it draws START in the port's small font, white: five 5-wide
   quads on an advance of 4 from label u 12, where a disc's START starts.
+  When row 3 is withheld (no label 3), START is drawn dimmed (9.8), where a
+  disc's frame shows its own dim START.
 - **The repaint rule** is one rule, in Python and C++. The panel behind the
   names is index `0x0C`, with a diagonal band of `0x52`, `0x54`, `0x59` at
   its top left that runs down to the left one texel a row. Row by row from
@@ -616,11 +619,16 @@ Evidence for the importer's half:
 ### 9.4 Self-tests
 
 - `BOF3X_SHADOW=world_map_legend` logs `720 Configs (sigma against the
-  words), 6 stand-ins, 64 synthetic repaints; 0 MISMATCHES`.
+  words), 6 stand-ins, the dim rule (CLUT entries +7 of 31 over every
+  0x107th entry, the five dim CLUT words), 64 synthetic repaints; 0
+  MISMATCHES`.
   - For every assignment of the six lines to the six buttons, row 1's entry
     is `Sigma(circle)` and row 2's is `Sigma(cross)`.
   - At the identity the lit sprites are 11 and 13 (circle, cross).
   - Speak <-> Action trades them; View <-> Change moves neither.
+  - The dim rule: every tested CLUT entry is its own +7 of 31 a channel,
+    clamped, with 0 kept 0 and the STP bit kept; each stand-in colour's dim
+    CLUT word names its own row of the sheet at halfword 800.
 - The `world_map` fuzz and the nine area groups' fuzzes run the eleven frame
   draws against Capcom's with the helper in place, before the switch is
   armed: 0 mismatches.
@@ -690,8 +698,10 @@ shapes or the port's stand-ins, no key names**
     the names over in VRAM by the same rule. For the lit rows it draws the
     port's own stand-ins: the Config screen's circled numeral or `X`, in the
     button's colour. Row 3 gets START in the port's small font. A withheld
-    row shows its dim pictogram and no key, since the port's font has no
-    dim glyph.
+    row's stand-in (rows 1 and 2, and START when row 3 is withheld) is
+    dimmed by a disc's rule: its colours lighter by 56 a channel, drawn
+    through a dim CLUT the engine keeps in the port's blank key sheet
+    (9.8).
   - A disc-only install is unchanged (DIV-0130).
 - **Rationale:** the owner's answers. The legend is the one site whose code
   already followed the Config; the port's art was what lied.
@@ -705,21 +715,102 @@ shapes or the port's stand-ins, no key names**
     importer from before this change. The engine then repaints that page
     itself, unless it is switched off.
 
-### 9.7 Not reached, and open points
+### 9.7 The owner's answers (2026-10-17, through the coordinator)
 
-- **The layout is by measure, not by eye.**
-  - On the PC's page the dots sit at u 35, where the port put them after its
-    wider key names. So the glyph (u 16..23) has 11 texels of panel before
-    the dots, where a disc's has 6.
-  - START on the port's page is font glyphs narrowed to 5 of 8. The owner
-    may want it moved, narrowed or dropped.
+1. **The pictograms stay.**
+2. **The narrowed START on a PC-only install stays.**
+3. **The spacing stays** as the renders show it, no change.
+4. **A withheld row on a PC-only install is dimmed** the way the PSX / PSP
+   discs dim theirs, not left blank. Built in 9.8.
 
-  Each of these is one constant.
-- **The pictograms stay.** "The glyphs alone, no label text" is read as no
-  key names and no words, with the port's arrow, question mark and tent
-  kept. Dropping them too is a question for the owner.
-- **A withheld row on the PC's page shows no key.** The port's stand-ins
-  have no dim form; a grey colour index would be new.
+### 9.8 The withheld row: how a disc dims it, and the stand-in's dim form
+
+**How a disc draws a withheld row.** The code draws a separate cell. Row 1
+and 2's key is the button entry's sprite index + 1 when the label is shown,
+and the index itself when it is withheld (1.2; `world_map_legend::Key`, the
+original's draw). The two cells of each pair sit side by side in the key
+sheet (u 64 / 72 and 80 / 88). Row 3 has no key of its own; when label 3 is
+withheld the frame (sprite 0) shows its own dim START.
+
+**What the dim cell is.** The same shape in a second palette ramp:
+
+- Across the eight cell pairs of the JP disc's page, the lit cell's ink
+  indices `0xE2`..`0xEF` and `0x84`..`0x87` are `0x42`..`0x4F` and
+  `0x4B`..`0x83` in the dim cell. The panel and shadow indices are the same
+  (scratch pairing over the page, 2026-10-17).
+- Through the page's CLUT `0x7B80`, read from VRAM during the route on
+  `pc-en150` (a scratch process reader, read only), the dim inks are
+  lighter, not darker. White `0xE2` (104, 96, 96) is (160, 160, 160); red
+  `0xE9` (120, 40, 40) is (184, 96, 96); blue `0xEE` (48, 48, 152) is (104,
+  104, 208).
+- Over all 189 ink texel pairs (567 channels) the step is +56 174 times,
+  +64 154 times and +48 74 times; the mode is **+56 a channel**, 7 of 31.
+- The frame's dim START uses the same ramp (`0x42`..`0x47` against label
+  3's `0xE3`..`0xE5`).
+- On screen, a disc's withheld key reads paler than its lit one. Measured
+  on the captures (the brightest six texels of the cell): circle (71, 43,
+  58) lit against (101, 71, 87) withheld on `pc-en150`, and (65, 42, 60)
+  against (100, 67, 87) on `psx-eu`.
+
+**The stand-in's dim form, by the same rule.** The stand-in is a font glyph
+in a text CLUT (`0x7800 | colour`, VRAM row 480, x colour * 16). It has no
+second cell, so it gets a second CLUT instead:
+
+- **The rule:** every entry but the transparent 0 is lighter by 7 of 31 a
+  channel (+56), clamped at 31, with its STP bit kept (`DimEntry`).
+- **Where the CLUTs live:** five dim CLUTs, for colours 0, 1, 2, 5 and 6
+  (L1 / R1 and START, cross, circle, square, triangle), sit in the port's
+  own blank key sheet at rows v 104..108, u 64..95. That is halfwords
+  800..815, a CLUT's sixteen at a multiple of 16. On that page nothing
+  draws from the sheet.
+- **Keeping them current:** `Begin` writes them with `Gfx_LoadImage` when
+  they differ from what the text CLUTs make. It then converts those sixteen
+  cells of each row (`Gfx_ConvertRow`), because the renderer reads a CLUT
+  from its row's converted copy. A row gets that copy once, cells 0..255
+  only, at its first use (`Gfx_ClutPixels`, `gfx_clut.cpp`). So if a row
+  has no copy yet, its first-use conversion is made first, exactly as
+  `Gfx_ClutPixels` would make it.
+- **Drawing:** a withheld row's stand-in is `Text_DrawSmall`'s one glyph,
+  emitted with that CLUT (`EmitDim`). A withheld START is the five glyphs
+  with colour 0's dim CLUT.
+- **What it does not touch:** the lit rows' draw, and every page with a
+  key sheet. No disc pixel is copied: the rule is a constant.
+- **Why not a shade.** A glyph's shade cannot do this. `D3d_PrimColor`
+  doubles a shade and sends the excess over `0xFF` to the specular, but
+  this renderer leaves specular off (`docs/d3d-draw.md`). A shade of
+  `0x9C` was tried and drew the lit colour unchanged (the first live run,
+  below). So a glyph can only be darkened by its shade, never lightened.
+
+**Checks.**
+
+- The self-test cases in 9.4.
+- The route on `pc` (`runs\dimpc_sigma_worldmap\pc`):
+  - rows 1 and 2 withheld at `f01260`: circle (206, 115, 115) lit becomes
+    (255, 173, 173), cross (148, 148, 239) becomes (206, 206, 255), which
+    is +49..+58;
+  - row 3 withheld at `t001200`: START drawn dim.
+- Against the earlier `pc` run (`runs\id_sigma_worldmap\pc`), 13 frames
+  differ, each only at a withheld key or a withheld START: x 139..177, y
+  50..94. All the other frames are equal, so the lit rows are unchanged.
+- `pc-en150` and `psx-eu` against their earlier runs: 0 frames differ.
+- The first build patched the glyph's shade instead. It stopped on its own
+  check (the glyph's code is `0x6E`, semi-transparent, not `0x6C`); with
+  that check widened, the shade drew nothing different. So the dim CLUT
+  above replaced it.
+
+The sheet: `C:\Users\kerok\b_icw\sheet_dim.png`. It shows `t001200` and
+`f01260` side by side, one row per install (`pc`, `pc-en150`, `psx-eu`). In
+every install `t001200` has rows 1 and 2 lit and row 3 withheld, and
+`f01260` has rows 1 and 2 withheld and row 3 lit. On the PC alone the
+withheld keys are the pale circled 1 and 2, and the withheld START is white
+at the clamp. Colour 0's lit ramp is already near white, as a disc's dim
+START is the paler one there.
+
+### 9.9 Not reached, and open points
+
+- **Rows 104..108 of the port's key sheet now hold the dim CLUTs.** The
+  page's FNV check covers the two name boxes only, and the sheet check
+  skips those five rows.
 - **Not reached:**
   - the US disc beyond area 16's sheet;
   - the PSP-JP page;

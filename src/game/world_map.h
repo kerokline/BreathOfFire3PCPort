@@ -25,7 +25,8 @@ void WorldMap_Inject();
 // over in VRAM with the panel, and the key is the port's own stand-in, the
 // circled numeral or X of the Config screen in the button's colour, through
 // the port's small font; row 3 is START in that font, five glyphs narrowed
-// to fit where ENTER was. Nothing before WorldMapLegend_Arm, and nothing under
+// to fit where ENTER was. A withheld row's stand-in is dimmed by a disc's
+// rule: its colours +56 a channel, through a dim CLUT. Nothing before WorldMapLegend_Arm, and nothing under
 // BOF3X_ORIGINAL=WorldMapLegend.
 namespace world_map_legend {
 
@@ -38,12 +39,14 @@ void Begin();
 // original searches) entries of the copy's button table `buttons` whose mask
 // has a bit of `word`; the copy's sprite draw `sprite` at (x, y) with the
 // entry's sprite index + 1 (lit) or the index (`withheld`), as the original
-// does - or, on the port's own page, the stand-in when lit and nothing when
-// withheld (the port's font has no dim glyph).
+// does - or, on the port's own page, the stand-in, lit, or `withheld` dimmed
+// as a disc's withheld cell is: +56 per channel (a dim CLUT, world_map.cpp DimEntry).
 void Key(SpriteFn sprite, std::uint32_t buttons, std::uint32_t count, std::uint32_t word, int x, int y, bool withheld);
-// Row 3, right after its label is drawn at (x, y): nothing on a page with the
-// PlayStation's art (the label carries START); START on the port's own page.
-void Start(int x, int y);
+// Row 3, after its label would be drawn at (x, y), whether it was or not
+// (`withheld`: the label is not shown, the frame's dim row is): nothing on a
+// page with the PlayStation's art (the label, or the frame's dim copy,
+// carries START); START on the port's own page, dimmed when withheld.
+void Start(int x, int y, bool withheld);
 // After every module's self-test (inject_all.cpp): the self-test
 // (BOF3X_SHADOW=world_map_legend) and the switch.
 void Arm();

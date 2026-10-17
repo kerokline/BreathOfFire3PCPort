@@ -399,10 +399,8 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (At(at::kPartySet)[0] & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
-    if (third) {
-        sprite(x + 0x30, y + 0x18, 3);
-        world_map_legend::Start(x + 0x30, y + 0x18);
-    }
+    if (third) sprite(x + 0x30, y + 0x18, 3);
+    world_map_legend::Start(x + 0x30, y + 0x18, !third);
     AH_CALL(WorldMap_DrawNeedle)(x + 0x18, y + 0x18);
 }
 
