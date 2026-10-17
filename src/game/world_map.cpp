@@ -29,6 +29,7 @@
 #include <string>
 
 #include "bof3/symbols.gen.h"
+#include "game/labels.h"
 #include "game/world_map_callees.h"
 #include "hook/detour.h"
 #include "input/sigma.h"
@@ -218,10 +219,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
     if (!third) third = (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!third) third = (At(kPartySet)[0] & 0x7F) == 0xC;
     if (!third) third = (Word(At(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
-    if (third) {
-        g.draw_sprite(x + 0x30, y + 0x18, 3);
-        world_map_legend::Start(x + 0x30, y + 0x18);
-    }
+    if (third) g.draw_sprite(x + 0x30, y + 0x18, 3);
+    world_map_legend::Start(x + 0x30, y + 0x18, !third);
     g.draw_needle(x + 0x18, y + 0x18);
 }
 
@@ -466,10 +465,14 @@ U BoxesFnv(const unsigned char* buf, int stride, int u0, int v0) {
     return h;
 }
 
+// The sheet as the port left it: every texel 0, but for the rows of the dim
+// CLUTs (below), which this module writes there itself.
 bool SheetBlank() {
-    for (int v = kSheetV0; v < kSheetV1; ++v)
+    for (int v = kSheetV0; v < kSheetV1; ++v) {
+        if (v >= 104 && v < 109) continue;
         for (int u = kSheetU0; u < kSheetU1; ++u)
             if (Texel(u, v) != 0) return false;
+    }
     return true;
 }
 
@@ -482,6 +485,69 @@ const StandIn* StandInFor(U bit) {
 
 const unsigned char* StandInText(const StandIn& s) {
     return At(Long(At(kStandInStrings + s.string * 4)));
+}
+
+// The withheld (dim) form of a stand-in. A disc draws a withheld row's key
+// from a second cell of its key sheet (the sprite index, not index + 1;
+// 1.2): the same shape drawn in a second palette ramp - the lit cell's ink
+// indices 0xE2..0xEF / 0x84..0x87 are 0x42..0x4F / 0x4B..0x83 there (u 64
+// and 80 against u 72 and 88, every pair, the JP disc's page) - which the
+// page's CLUT 0x7B80 draws lighter, +56 a channel in the mode (the 189 ink
+// texel pairs of the eight cell pairs through the CLUT read from VRAM during
+// the route, 2026-10-17: +56 174 times, +64 154, +48 74 of 567 channels;
+// the main inks, white 0xE2, red 0xE9, blue 0xEE, +56..+64). The frame's dim
+// START is in the same ramp. So the stand-in's dim form is the same glyph
+// through a second CLUT: its text CLUT (0x7800 | colour, VRAM row 480, x
+// colour * 16) with every entry but the transparent 0 lighter by 7 of 31 a
+// channel (+56), clamped, its STP bit kept. A shade cannot do it: the
+// renderer's glyphs only darken by their shade, the excess going to a
+// specular this renderer leaves off (docs/d3d-draw.md).
+//
+// The five dim CLUTs (colours 0, 1, 2, 5, 6: L1 / R1 / START, cross, circle,
+// square, triangle) are kept in the port's own blank key sheet, which no
+// draw reads on that page (the sheet's cells are drawn by the original's path
+// only, which the port's page leaves for the stand-ins): rows v 104..108 at
+// u 64..95 - halfwords 800..815, a CLUT's sixteen at a multiple of 16 - as
+// CLUT words (y << 6) | (800 >> 4). Begin writes them (Gfx_LoadImage) and
+// keeps them current with the text CLUTs.
+constexpr unsigned kDimColours[5] = {0, 1, 2, 5, 6};
+constexpr int kDimClutV0 = 104;
+constexpr int kDimClutX = kPageX + kSheetU0 / 2;   // 800
+static_assert(kDimClutX % 16 == 0, "a CLUT starts at a multiple of 16 halfwords");
+constexpr int kDimStep = 7;                         // of 31: +56 of 255
+
+std::uint16_t DimEntry(std::uint16_t e) {
+    if (e == 0) return 0;
+    auto up = [](unsigned c) { return c + kDimStep > 31 ? 31u : c + kDimStep; };
+    return static_cast<std::uint16_t>((e & 0x8000) | up(e & 31) | up((e >> 5) & 31) << 5 | up((e >> 10) & 31) << 10);
+}
+
+int DimRow(unsigned colour) {
+    for (int k = 0; k < 5; ++k)
+        if (kDimColours[k] == colour) return k;
+    bof3::Fatal("WorldMapLegend: no dim CLUT for text colour %u", colour);
+}
+
+unsigned DimClut(unsigned colour) {
+    return static_cast<unsigned>(((kPageY + kDimClutV0 + DimRow(colour)) << 6) | (kDimClutX >> 4));
+}
+
+// The five dim CLUTs as they should be now, from the text CLUTs in VRAM.
+void DimCluts(std::uint16_t out[5][16]) {
+    for (int k = 0; k < 5; ++k)
+        for (int i = 0; i < 16; ++i) out[k][i] = DimEntry(Gfx_VramShadow[480 * 1024 + kDimColours[k] * 16 + i]);
+}
+
+// One stand-in glyph through a dim CLUT: Text_DrawSmall's draw of one
+// character (the small font's (u, v) pair for colours under 16, the glyph
+// b - 0x26 or an overlay's 8 x 8 one) with that CLUT for 0x7800 | colour.
+void EmitDim(int x, int y, int w, const unsigned char* text, unsigned colour) {
+    const unsigned char* const uv = At(kSmallUV + (colour >> 4) * 2);
+    unsigned glyph = (text[0] - 0x26u) & 0xFFFF;
+    if (const unsigned small = Labels_SmallGlyph(text)) glyph = small;
+    PutWord(PacketNext() + 0x16, glyph);
+    Text_EmitGlyph(x, y, w, static_cast<int>(8 - uv[1]), static_cast<int>(uv[0]), static_cast<int>(uv[1]),
+                   static_cast<int>(DimClut(colour)));
 }
 
 // The original's search: the first of `count` entries whose mask word has a
@@ -498,6 +564,46 @@ void LegendSelfTest();
 
 }  // namespace
 
+namespace {
+
+// The dim CLUTs written into the sheet when they differ from what the text
+// CLUTs make now (the first frame on the page, and after a palette change);
+// a sheet row holding anything else there is a Fatal: not the port's blank.
+void KeepDimCluts() {
+    std::uint16_t want[5][16];
+    DimCluts(want);
+    const std::uint16_t* const have = Gfx_VramShadow + (kPageY + kDimClutV0) * 1024 + kDimClutX;
+    bool same = true, blank = true;
+    for (int k = 0; k < 5; ++k)
+        for (int i = 0; i < 16; ++i) {
+            same = same && have[k * 1024 + i] == want[k][i];
+            blank = blank && have[k * 1024 + i] == 0;
+        }
+    if (same) return;
+    static bool written = false;
+    if (!blank && !written)
+        bof3::Fatal("WorldMapLegend: the port's key sheet rows v 104..108 hold texels this module did not write "
+                    "(BOF3X_ORIGINAL=WorldMapLegend draws the original's)");
+    const short rect[4] = {static_cast<short>(kDimClutX), static_cast<short>(kPageY + kDimClutV0), 16, 5};
+    Gfx_LoadImage(rect, want);
+    // The renderer reads a CLUT from its row's converted copy (Gfx_ClutPixels),
+    // which a row gets once, cells 0..255 only, at its first use, and which
+    // Gfx_LoadImage does not refresh (gfx_clut.cpp). So each row's first-use
+    // conversion is made as Gfx_ClutPixels would make it, if not yet made,
+    // and then our sixteen cells are converted (bumping the row's generation,
+    // which the glyph cache checks).
+    struct ClutRow { std::uint32_t generation; void* pixels; };
+    auto* const rows = reinterpret_cast<ClutRow*>(Gfx_ClutRows);
+    for (int k = 0; k < 5; ++k) {
+        const int y = kPageY + kDimClutV0 + k;
+        if (rows[y].pixels == nullptr) Gfx_ClutPixels(static_cast<unsigned>(y << 6));
+        Gfx_ConvertRow(kDimClutX, y, 16);
+    }
+    written = true;
+}
+
+}  // namespace
+
 namespace world_map_legend {
 
 void Begin() {
@@ -506,6 +612,7 @@ void Begin() {
     const unsigned char* const page = Vram() + kPageY * 0x800 + kPageX * 2;
     const U fnv = BoxesFnv(page, 0x800, 0, 0);
     if (fnv == kRepaintedFnv) {
+        KeepDimCluts();
         g_standin = true;
         return;
     }
@@ -532,6 +639,7 @@ void Begin() {
                     "(BOF3X_ORIGINAL=WorldMapLegend draws the original's)", after, kRepaintedFnv);
     bof3::Log("WorldMapLegend: the port's dial page has no glyph sheet - its key names painted over, the port's "
               "stand-ins drawn");
+    KeepDimCluts();
     g_standin = true;
 }
 
@@ -548,11 +656,13 @@ void Key(SpriteFn sprite, std::uint32_t buttons, std::uint32_t count, std::uint3
         bof3::Fatal("WorldMapLegend: the legend's button word %08X picks the table entry %08X past the six buttons "
                     "(mask %04X): no stand-in for it (BOF3X_ORIGINAL=WorldMapLegend draws the original's)",
                     word, static_cast<U>(reinterpret_cast<std::uintptr_t>(entry)), Word(entry));
-    if (withheld) return;
-    Text_DrawSmall(x, y, s->colour, 1, StandInText(*s));
+    if (withheld)
+        EmitDim(x, y, 8, StandInText(*s), s->colour);
+    else
+        Text_DrawSmall(x, y, s->colour, 1, StandInText(*s));
 }
 
-void Start(int x, int y) {
+void Start(int x, int y, bool withheld) {
     if (!g_standin) return;
     const unsigned char* const uv = At(kSmallUV);
     const unsigned u = uv[0], v = uv[1];
@@ -561,7 +671,8 @@ void Start(int x, int y) {
         const auto glyph = static_cast<std::uint16_t>(static_cast<unsigned char>(kStart[i]) - 0x26u);
         PutWord(PacketNext() + 0x16, glyph);
         Text_EmitGlyph(x + kStartDx + i * kStartAdvance, y, kStartWidth, static_cast<int>(8 - v),
-                       static_cast<int>(u), static_cast<int>(v), 0x7800);
+                       static_cast<int>(u), static_cast<int>(v),
+                       static_cast<int>(withheld ? DimClut(0) : 0x7800));
     }
 }
 
@@ -641,6 +752,25 @@ void LegendSelfTest() {
         const unsigned char* const text = StandInText(*s);
         if (text[0] <= 0x26 || text[0] >= 0x80 || text[1] != 0) fail("a stand-in is not one one-byte glyph", k, text[0]);
     }
+    // 2b. The dim rule: a dim CLUT entry is its text entry lighter by 7 of 31
+    // a channel (+56), clamped, the transparent 0 kept 0 and the STP bit kept;
+    // every stand-in colour has a dim CLUT, each at its own row of the sheet's
+    // halfwords 800..815, a CLUT word the renderer reads back as that place.
+    for (unsigned e = 0; e < 0x10000; e += 0x0107) {
+        const auto d = DimEntry(static_cast<std::uint16_t>(e));
+        bool ok = e == 0 ? d == 0 : (d & 0x8000) == (e & 0x8000);
+        for (unsigned sh = 0; e != 0 && sh < 15; sh += 5) {
+            const unsigned c = (e >> sh) & 31, dc = (d >> sh) & 31;
+            ok = ok && dc == (c + 7 > 31 ? 31 : c + 7);
+        }
+        if (!ok) fail("a dim CLUT entry", e, d);
+    }
+    if (DimEntry(0x8000) != 0x8000 + 7 + (7 << 5) + (7 << 10)) fail("STP black's dim entry", 0x8000, DimEntry(0x8000));
+    for (const StandIn& st : kStandIns) {
+        const unsigned clut = DimClut(st.colour);
+        if ((clut & 0x3F) * 16 != 800 || (clut >> 6) != static_cast<unsigned>(kPageY + kDimClutV0 + DimRow(st.colour)))
+            fail("a dim CLUT word", st.colour, clut);
+    }
     // 3. The repaint on a synthetic page.
     if (Fnv(0x811C9DC5u, 'a') != 0xE40C292Cu) fail("FNV-1a of \"a\"", 0, 0);
     unsigned char page[kRectH][kRectW * 2], before[kRectH][kRectW * 2];
@@ -676,8 +806,8 @@ void LegendSelfTest() {
         Repaint(&page[0][0], kRectW * 2, kRectU0, kRectV0);
         if (std::memcmp(before, page, sizeof page) != 0) fail("the repaint is not idempotent", static_cast<unsigned>(round), 0);
     }
-    bof3::Log("world_map_legend self-test: %u Configs (sigma against the words), 6 stand-ins, 64 synthetic repaints; "
-              "%u MISMATCHES", tables, mismatches);
+    bof3::Log("world_map_legend self-test: %u Configs (sigma against the words), 6 stand-ins, the dim rule (CLUT "
+              "entries +7 of 31 over every 0x107th entry, the five dim CLUT words), 64 synthetic repaints; %u MISMATCHES", tables, mismatches);
     if (mismatches != 0 || tables != 720)
         bof3::Fatal("world_map_legend self-test: %u mismatches over %u Configs", mismatches, tables);
 }
