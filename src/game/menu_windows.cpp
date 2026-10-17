@@ -31,14 +31,17 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/menu_verbs.h"
 #include "game/menu_windows_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/shoulder_glyphs.h"
 #include "game/text_pairs.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
 
 namespace menu_windows {
 
@@ -485,8 +488,65 @@ extern "C" const unsigned char* __cdecl Menu_PieceRect(unsigned id, unsigned fla
 // 16-bit, of piece id's rectangle (Menu_PieceRect with flag bit 0), opaque,
 // CLUT (0xB0, 0x1E1), or (0x80, 0x1E2) with flag bit 1, shade 0x80. Sets no
 // draw mode (its callers do).
+namespace {
+
+// A SPRT as Menu_DrawPiece writes its one, of the page rectangle (u, v, w,
+// h) given here rather than a piece's (draft F's steps).
+void PieceSprite(int x, int y, unsigned u, unsigned v, unsigned w, unsigned h, unsigned char f) {
+    unsigned char* const p = Next();
+    g.set_sprt(p);
+    g.set_semi(p, 0);
+    Put(p + 8, F(S16(static_cast<std::uint32_t>(x))));
+    Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
+    p[0x14] = static_cast<unsigned char>(u);
+    p[0x15] = static_cast<unsigned char>(v);
+    SetWord(p + 0x18, w);
+    SetWord(p + 0x1A, h);
+    const unsigned clut = (f & 2) ? g.get_clut(0x80, 0x1E2) : g.get_clut(0xB0, 0x1E1);
+    SetWord(p + 0x16, clut);
+    p[4] = p[5] = p[6] = 0x80;
+    g.commit(1, 0x1C);
+}
+
+// DIVERGENCE (ledger draft F, docs/button-shoulder-corner.md): a piece of the
+// UI page that carries the L1 or R1 label, drawn with the label as σ has it
+// (shoulder_glyphs.h). False: draw it as the original does (the identity on
+// a page with the L1 / R1 art).
+bool ShoulderPiece(int x, int y, unsigned id, unsigned char f, std::uint16_t slot) {
+    auto rect = [](unsigned piece) {
+        const unsigned char* const r = g.piece_rect(piece, 1);
+        return shoulder_glyphs::Rect{r[0], r[1], r[2], r[3]};
+    };
+    const std::uint16_t shown = bof3x::input::sigma::Sigma(slot);
+    const shoulder_glyphs::Plan plan = shoulder_glyphs::Make(id, x, y, rect(id), rect(0x15), rect(0x16), rect(0x18),
+                                                             shown, shoulder_glyphs::PageArt(), false);
+    if (plan.original) return false;
+    for (int i = 0; i < plan.n; ++i) {
+        const shoulder_glyphs::Step& s = plan.s[i];
+        if (s.kind == shoulder_glyphs::Step::kSprite) {
+            PieceSprite(s.x, s.y, s.u, s.v, s.w, s.h, f);
+        } else if (s.kind == shoulder_glyphs::Step::kGlyph) {
+            const shoulder_glyphs::Code c = shoulder_glyphs::GlyphCode(s.button, Lang_Latin());
+            Text_DrawSmall(s.x, s.y, static_cast<unsigned>(c.colour), 1, c.text);
+        } else {
+            // The text's primitives name a glyph where a SPRT's page would
+            // be; the pieces after this one go on with the page every caller
+            // of a flag-1 piece opened with (Menu_DrawPieces' (0x340, 0x100)).
+            PiecePage(0x340);
+        }
+    }
+    return true;
+}
+
+}  // namespace
+
 extern "C" void __cdecl Menu_DrawPiece(int x, int y, unsigned id, unsigned flags) {
     const auto f = static_cast<unsigned char>(flags);
+    if ((f & 1) && shoulder_glyphs::On()) {
+        if (const std::uint16_t slot = shoulder_glyphs::SlotOf(id)) {
+            if (ShoulderPiece(x, y, id, f, slot)) return;
+        }
+    }
     const unsigned char* const rect = g.piece_rect(id, f & 1u);
     unsigned char* const p = Next();
     g.set_sprt(p);
