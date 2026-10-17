@@ -3,8 +3,11 @@
 **Status:** MEASURED, the build half (2026-10-17, the button unification
 round's group DT-1, branch `buttons/dt1` off `839a3e1c`). Built for every held
 disc and diffed against the build before it; nothing drawn differently, by
-reading and by a model of both text readers (section 2.3). Not played. The
-draw half (DT-2) is not built: until it is, the codes are inert.
+reading and by a model of both text readers (section 2.3). Not played.
+BUILT, the draw half (2026-10-17, group DT-2, branch `buttons/dt2` off
+`fb06bac7`; section 4): both readers draw a mention as the button the Config
+has put its role on. Headless self-tests and a check of the resolver over
+every held text pass; no capture yet (no route opens these messages).
 
 The round is [`button-unification-round.md`](button-unification-round.md); this
 is its section 2 "DT-1". The census is
@@ -58,9 +61,11 @@ The code is a colour control with a colour no text uses, closed at once by
   1), 1 (`X`) and 5 (circled 3 in area 121) (`census.py`, section 3.3), so
   those numbers are not the control's argument; what they count was not
   traced.
-- The areas (`BUTTON_AREAS`): 8, 30, 68, 75, 89, 111, 121, 129, 135, and the
-  PC's area 1. Area 78's crosses and the faerie village's times sign are
-  outside them and get no code; the selftest checks both shapes are left.
+- The areas (`BUTTON_AREAS`): 8, 30, 68, 75, 89, 111, 121, 129, 135. DT-1
+  had the PC's area 1 among them; DT-2 found it is not a button (section
+  4.3) and took it out. Area 78's crosses, the faerie village's times sign and
+  area 1's place name are outside them and get no code; the selftest checks
+  all three are left.
 
 ### 1.3 What the code does not reach
 
@@ -164,7 +169,7 @@ report; "Japan's" is the bit each code names.
 
 | Area | Scene | PC's own text (colour cue, no code) | US / EU / FR / DE codes | PSP-EU codes | JP codes |
 |---|---|---|---|---|---|
-| 1 | (PC only) | circle x1 | - | - | - |
+| 1 | (PC only; not a button, section 4.3) | (circle x1) | - | - | - |
 | 8 | Bunyan's wood chop | cross x2 | cross x2 | cross x2 | cross x2 |
 | 30, 89, 129 | the fishing help | circle x5 each | circle x5 each | circle x5 each | circle x5 each |
 | 68 | the well | cross x2, circle x2 | cross x2, circle x2 | cross x2, circle x2 | cross x2, circle x2 |
@@ -187,6 +192,8 @@ The two counts that differ are the releases' own text:
 - **Area 1:** the PC's one mention (circled 3 in the circle colour) stands
   where the JP disc has a kanji in that colour, not its icon code. No Western
   disc names a button there. The brief's reading (circle) is kept.
+  **Superseded by DT-2 (section 4.3): not a button; the PC's own text has 30
+  mentions in 9 areas.**
 
 Every coded layer has **0 icons left without a code** in the nine areas.
 
@@ -246,12 +253,43 @@ committed census.
 > - **Rationale:** the owner's "unify every button flow" (2026-10-17); fixes
 >   key-icons 9's first defect.
 > - **Known and accepted:** the PC's own Chinese text with no layer carries no
->   code (section 1.3). Text_DrawString's count budget loses two passes per
->   code.
+>   code (section 1.3); DT-2 reads its colour instead (below).
+>   Text_DrawString's count budget loses two passes per code.
 > - **Verification:** section 2.3; DT-2's captures through RC's routes.
 > - **Also in the PSX version?** No: each release's text names its own
 >   buttons; the code is ours.
 > - **Reversible?** DT-1 alone changes nothing drawn. [DT-2's switch.]
+>
+> **DT-2's amendment** (section 4; replaces the bracketed halves above):
+> - **New behaviour, the draw:** `MsgBox_Step` and `Text_DrawString` resolve
+>   each mention at draw time to `σ(bit)`, the button the Config has put the
+>   role on. When that is the button the text's icon shows, the text's bytes
+>   are drawn as they are. Otherwise the icon is drawn as that button, from
+>   the same glyph family as the icon (a Latin layer's four icons and
+>   DIV-0051's L1 / R1; ja-JP's four icons; the port's stand-ins), in that
+>   button's colour (circle 2, cross 1, triangle 6, square 5, L1 / R1 0, the
+>   Config cell's `0x461C00`); the line re-flows by the drawn glyph's width.
+> - **New behaviour, the PC's own text (the owner's "the colour swap",
+>   2026-10-17):** with no language layer, in the nine button areas, the
+>   colour before one of the port's stand-ins names the button (2 circle, 1
+>   cross, 6 triangle, 5 square); a mention whose button `σ` moves is drawn as
+>   the Config cell's stand-in for `σ(bit)` (`0x66A2FC`'s strings) in its
+>   colour. Area 1 is not a button area (section 4.3).
+> - **Rationale, as above;** also: the PC-only player sees the same stand-in
+>   for a role in the dialogue as in the Config panel.
+> - **Known and accepted:** with the Config at the text's own release's
+>   defaults every mention draws as the text has it, except PSP-EU's areas 68
+>   and 121 (three mentions), whose text names the West's buttons (answer 3):
+>   there the draw names the button the unified code tests, `S` of Japan's
+>   (section 4.5). Under a PC install with a Western layer, at Japan's
+>   defaults, all 32 Western mentions now name Japan's button - the defect
+>   the code fixes. On a ja-JP disc-only install an L1 / R1 draw would be a
+>   blank cell (the port's stand-ins are not in that table).
+> - **Verification:** section 4.6: `BOF3X_SHADOW=button_text` (180 cases
+>   through both readers, 0 mismatches) and the resolver over every held
+>   text (`check.cpp`, scratch).
+> - **Reversible?** `BOF3X_ORIGINAL=ButtonText`: both readers draw every
+>   mention as its text has it.
 
 ### 3.5 What DT-2 must do
 
@@ -281,11 +319,185 @@ committed census.
 
 ### 3.6 Open questions
 
-- The bare PC's 31 mentions (3.5 item 5): which of the three.
+- The bare PC's 31 mentions (3.5 item 5): which of the three. **Answered**
+  by the owner (the colour swap) and built by DT-2, section 4.2.
 - Area 1's PC-only mention stands where JP has a kanji, not an icon: is the
   port's icon a button there at all? Coded as circle (the brief's reading)
-  only in a layer that keeps that message - none does today.
+  only in a layer that keeps that message - none does today. **Answered by
+  DT-2: no** (section 4.3).
 - Whether any reader of the script pool outside `src/` (a function not yet
   ours) walks these messages; the build is safe for the two that do.
 - PSP-JP was not built (no PSP-JP cache was at hand); its map is the identity
   and its text the JP disc's, so it should give the JP column.
+
+## 4. The draw half (DT-2)
+
+### 4.1 What is built
+
+- **`src/game/button_text.h`**, the decision, with no game memory in it (so a
+  host-side check can run it over the real text, 4.6):
+  - `ResolveCode(ctx, p, icon, why)`: at a `0x05`, a complete code `05 Bn 06
+    05 cc G`. The button the text shows is read from `G`: a Latin layer's
+    icon `0x9E3..0x9E6` (circle, cross, triangle, square: `loc_build`
+    `encode_char` of the West's `0x80..0x83`), ja-JP's `0x9F6..0x9F9`
+    (`ja_cell_of(0x08..0x0B, 0x15)`), or, for a PC message a layer kept, one
+    of the port's stand-ins, whose button is its colour. The drawn button is
+    `Sigma(1 << n)`. Equal: false, and the text's bytes are drawn. Different:
+    `icon` holds the drawn button's colour and its glyph from the same
+    family. A code naming no face button, or one before a glyph that is not
+    this layer's icon, sets `why`, and the caller stops the game (rule 4).
+  - `ResolveCue(ctx, p, icon, why)`: the PC's colour cue `05 cc G`, with `cc`
+    one of 2, 1, 6, 5 and `G` one of `b`..`g`, `X`.
+  - The families: a Latin layer's four icons, plus DIV-0051's L1 / R1
+    (`0xA69`, `0xA6A`, `loc_build` `ICONS_AT + 4, + 5`) when a role is on a
+    shoulder; ja-JP's four, plus the port's stand-in for a shoulder (the JP
+    font has no L1 / R1, and a ja-JP layer over the PC install keeps the
+    port's single-byte slots, `build_table_ja`); the port's six stand-ins.
+    The colours are `0x461C00`'s: circle 2, cross 1, triangle 6, square 5,
+    L1 and R1 0.
+- **`Text_DrawString`** (`src/game/text_draw.cpp`) and **`MsgBox_Step`**
+  (`src/game/msgbox.cpp`) ask `ButtonText_Code` / `ButtonText_Cue` at every
+  `0x05` they walk. After a code that resolves, the next `05 cc` takes the
+  drawn colour; after a cue that resolves, its own `cc` does. The next glyph
+  is drawn from `icon` instead of the text, and the walk steps over the
+  text's own bytes. So every pass, the drawn count, the return and every
+  later byte are as before. Only the colour and the glyph at the icon
+  change, and the pen after it moves by the drawn glyph's advance (DIV-0006's
+  table in a layer; 12 with none): that is the line's re-flow.
+  `MsgBox_StatePrint` needs nothing (2.1).
+- **The live context** (`text_draw.cpp`): only strings inside the area text
+  block (`MessagePools` `0x803580`, `0x8000` bytes, `loc_build` `TEXT_ROOM`);
+  the layer from `BOF3X_LANG` (`Lang_Latin`, `Lang_Japanese`; unset,
+  `original` or a `zh` tag is no layer); the port's stand-ins read from
+  `0x66A2FC`'s six strings and checked to be one byte each; `Sigma` from
+  `src/input/sigma.h`, and nothing else of SG.
+- **`ButtonText_Arm`** is called in `inject_all.cpp` after `sigma::Arm`, so
+  after every module's self-test (the shadows of `text_draw` and `msgbox`
+  compare Capcom's draws with the switch off). It runs the self-test
+  (`BOF3X_SHADOW=button_text`), then sets the switch `ButtonText`
+  (`BOF3X_ORIGINAL=ButtonText` draws every mention as its text has it).
+  `BOF3X_ORIGINAL=MsgBox_Step` / `Text_DrawString` run Capcom's bodies, which
+  know nothing of it.
+
+### 4.2 The PC's own text: the colour swap
+
+The owner's decision (2026-10-17, round doc 5.1): with no language layer the
+dialogue's mentions carry no code, and the colour before the port's stand-in
+is the button: 2 circle, 1 cross, 6 triangle, 5 square (1.2). At draw time,
+in the nine button areas (`Game_AreaNumber` in `kButtonAreas`, the same list
+as `loc_build` `BUTTON_AREAS`), with no layer, the colour is read as Japan's
+bit, and the mention is drawn as the Config cell's stand-in and colour for
+`σ(bit)`. The stand-in set is the one the Config panel draws with no layer
+(`0x461C00`, which stays Capcom's off a Latin layer, `config_text.cpp`), so
+the dialogue and the panel name a role by the same stand-in. Area 78 and the
+faerie village 175..185 are outside the list and never read. Where the Config
+leaves a button alone, the text's own stand-in is kept even where the cell's
+differs (the text's cross is `X`, the cell's is `c`): nothing moves until the
+Config does.
+
+### 4.3 Area 1 is not a button
+
+Measured 2026-10-17 (`area1.py`, scratch; it prints to the terminal only):
+
+- The PC's `AREA001.DAT`, slot 42: the one colour-2 run of the message is
+  two glyphs, the circled 3 (glyph `0x3E`, rendered from the shipped
+  `FIRST.DAT` with `tools/font_pc.py sheet`) and glyph `0x619`.
+- The JP disc's `AREA001.EMI`, the same slot (decoded with the sibling's
+  `tools/jptext.py`): the colour-2 run is two kanji, a name that the
+  sentence goes on to call a town. Its second kanji is the same character as
+  the PC's glyph `0x619`. The message holds no icon code.
+- So the PC's circled 3 there is the first character of a place name - the
+  port's font had no glyph for it - and not a button. Area 1 is out of
+  `BUTTON_AREAS` and `kButtonAreas`; `loc_build.py selftest` checks that a PC
+  message there gets no code. The PC's own text has **30 mentions in 9
+  areas**.
+- For contrast, the same check on area 121 (the PC's circled 3 in colour 5):
+  the JP slot holds `05 05 15 0B 06`, the square icon in colour 5. A button.
+
+### 4.4 The fallback stays in `loc_build.py`
+
+The brief's step 3 removes DT-1's fallback icon only if the draw no longer
+needs it to measure the line. No reader measures these lines (the message box
+and the fishing list both draw from the pen, line by line). But the draw
+still needs the icon:
+
+- it is how the draw knows the glyph family to draw from (a Latin layer's,
+  ja-JP's, or a kept PC message's stand-in) and which button the text shows;
+- where the Config leaves the text's button alone, it is what is drawn, byte
+  for byte, so that guarantee needs no model of the readers;
+- `BOF3X_ORIGINAL=ButtonText`, `=MsgBox_Step` and `=Text_DrawString`, and
+  any reader of the pool not ours (3.6), draw it.
+
+So it stays, and `loc_build.py`'s comment says why. The one `loc_build.py`
+change is area 1 (4.3).
+
+### 4.5 What changes, by install and Config
+
+The resolver over every held text (4.6). The Config is at the defaults of the
+release the text came from, unless the row says otherwise:
+
+| Text | At its release's defaults | Swap Speak <-> Action, View <-> Change |
+|---|---|---|
+| the PC's own (no layer), 30 | 30 as the text has them | 29 swapped (the square in 121 stays) |
+| en-US, en-150, fr-FR, de-DE, 32 each | 32 as the text has them | 31 swapped |
+| the same layers over the PC install (Japan's defaults) | **32 swapped: each names Japan's button**, the one the PC's code tests (the defect DT-1 set out to fix) | 5 swapped, 27 as the text has them |
+| ja-JP, 30 | 30 as the text has them | 29 swapped |
+| PSP-EU, 32 | 29 as the text has them, **3 swapped** (areas 68 x2, 121 x1) | 32 swapped |
+
+- **PSP-EU's 68 and 121** (answer 3): the text there names the West's
+  buttons (`P`), the PSP-EU install's Config is `S`, and the unified code
+  tests `σ(b)`, which is `S(b)` there. Circle is the same under both maps;
+  the well's two crosses and the ram's square are not, so the draw names
+  `S`'s button. That is what the code will test once HT lands. If the
+  owner's answer to the round's question 4 is that the code should follow
+  the text, this row changes with it.
+- A role put on a shoulder (Speak <-> View): 27 of the 32 Western mentions
+  are drawn as DIV-0051's R1, and 25 of the PC's 30 as the port's `g`.
+
+### 4.6 Checked
+
+- **The build** (`cmake --build build`): clean, no warning in the changed
+  files.
+- **`BOF3X_SHADOW=button_text`**, headless, from an ini-less launcher copy in
+  the group's harness root: exit 0,
+
+      shadow      ButtonText self-test: 180 mentions (5 families x 3 Configs x 3 stand-in swaps x 4 buttons) through Text_DrawString and MsgBox_Step: 65 drawn as the text has them, 115 as the drawn button, 3 refused codes, the cue left in areas 78 / 175 / 1; 0 MISMATCHES
+
+  Each case is a message written into the tail of the area text block and
+  drawn by both readers, with the switch off and on. Where the drawn button
+  is the text's, the two draw lists are equal. Where it is not, they are
+  equal but for the icon, which is the expected glyph, in the expected
+  colour, at the same pen. The families: the West's icons, PSP-EU's (by
+  `S`), JP's in ja-JP, a kept PC message in a Latin layer, and the PC's cue
+  with no layer. The Configs: each release's defaults, then the round's
+  swap, then Speak on R1. The expected button is read off the stand-in
+  words, not off `Sigma`.
+- **`BOF3X_SHADOW='*'`**, headless: exit 0 (the hand-back has the lines).
+- **The resolver over every held text** (`dump.py`, `check.cpp`, scratch;
+  counts only): every message of every area of the PC's `DAT/`, of DT-1's
+  five built layers and of the PSP-EU layer, and every `0x05` at a token
+  boundary in them. Each source's mentions equal `loc_build`'s census (30,
+  32 x 4, 30, 32); no `0x05` that is not a mention resolves; none is
+  refused; every swapped mention is drawn with the expected glyph and
+  colour. The counts are 4.5's.
+- **`loc_build.py selftest`**: ok, with `areas 78, 175 and 1 left`.
+
+### 4.7 The route
+
+None opens these messages yet (2.3). For RC, area 30's fishing help is the
+nearest. RC's `caughFish` route already reaches area 30; the help list
+(`EffectKind0F_DrawMessageList`) draws five circle mentions there through
+`Text_DrawString`; and one route shows both the PC's colour swap and a
+layer's codes. The message box's own case wants a second route: area 75's
+rope pull (three circle mentions, RC's planned minigame route) is the one
+whose test HT also changes.
+
+### 4.8 Not reached
+
+- A capture (4.7).
+- A ja-JP disc-only install with a role on a shoulder: the port's stand-in
+  cell is blank in that table (`build_table_ja` keeps the port's single-byte
+  slots only over the PC install), so the drawn icon would be blank. Not
+  measured; JP has no L1 / R1 glyph of its own.
+- A reader of the script pool not ours (3.6) would draw the text's own icon,
+  as today.
