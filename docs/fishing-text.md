@@ -5,6 +5,9 @@ strings and draws read from the disc, the exe and our source; the fix built
 and fuzzed; **not yet seen in game** (section 6 is the coordinator's live
 check). The fishing code itself (`0x52AF80..0x52CD47`) is Capcom's and
 round fourteen's; everything changed here is in draws that were already ours.
+Section 8 (2026-10-17, the button round's IC-F, built and headless only)
+draws the banner's labels through the Config's `σ`: ledger draft D, amending
+DIV-0069.
 
 ## 1. What the owner saw (HANDOFF item `0000`)
 
@@ -161,3 +164,141 @@ letters over a 40-unit box) and the German build.
   screen say. Which do you want?
 - The tabs read `Gear` / `Data` / `Rule` on the US disc (you read the
   Chinese as Equip / Data / Guide). The disc's words are used.
+
+## 8. The labels through σ (button round group IC-F, ledger draft D)
+
+**Status:** BUILT (2026-10-17, branch `buttons/icf`), headless only. The
+round is [`button-unification-round.md`](button-unification-round.md) 3,
+row IC-F. `σ` is SG's ([`button-sigma.md`](button-sigma.md)).
+
+### 8.1 Which test each label names
+
+Read from the image on 2026-10-17 (a scratch PE reader over `0x653B98`,
+`0x653C00`, `0x653C04`). Seven of the thirteen texts carry a label. Which
+stage shows which row is in our source: the rows are record 3's mode `+6`
+(`LeaderPanel_Effect3Mode` `0x52B2A0`, `src/game/rest_1g.cpp`), and the
+callers name the stage.
+
+| Row (mode) | Set by | Texts (line byte) | The test the label names |
+|---|---|---|---|
+| 0 | stage 1, both items set (`LeaderPanel_Stage1Steps[0]` `0x5289C0`, mode 0) | 0 (0), 2 (1), 1 (2) | stage 1's `0x20` / `0x40` / `0x10` (`LeaderPanel_S1Buttons` `0x528A90`); text 0's `0x20` leads to stage 2, which casts on **word 7** (`LeaderPanel_S2Wait` `0x528FA0`) |
+| 6 | stage 1, an item missing (`0x5289C0`, mode 6) | 12 (2), 11 (0), 2 (1) | stage 1's `0x10` / `0x20` / `0x40`; here `0x20` goes to the gear menu (stage 9), not the cast |
+| 1 | stage 3 (`LeaderPanel_S3Run` `0x5291D0`, mode 1) | 3 (0), 4 (none), 5 (1) | the reel's `0x20` and the leave's `0x40`, hard-coded |
+| 2 | stage 4 (`LeaderPanel_S4Music` `0x5295A0`, mode 2) | 3 (0), 4 (none) | the reel's `0x20`, hard-coded |
+| 3, 4, 5 | stages 5, 6, 7 | 8, 9, 10 (none) | no label |
+
+So **text 0 is the cast's line**: the only label whose press is also a
+Config word's. Every other label names a hard-coded constant, which group
+HT turns into `Sigma(constant)` after this merges.
+
+### 8.2 What is drawn
+
+`FishingText_LabelOf(text, line)` (`src/game/fishing_text.cpp`) answers an
+entry of `0x66A2FC` and a pen. The kind-0xF line states (`LineNext`
+`0x466460`, `LineScroll` `0x4665E0`, `LineFade` `0x466750`, in
+`src/game/effect_1a.cpp`) draw through one helper, `Label`, at their five
+label draws.
+
+- **The button.** The line byte names Japan's button: 0 circle `0x20`,
+  1 cross `0x40`, 2 triangle `0x10`. The label shows `Sigma` of it. Text 0
+  shows the first of the six buttons in word 7 (`0x90358E`), in the Config
+  cell's order. Under draft A word 7 is Speak's word, so this equals
+  `Sigma(circle)`. The self-test checks that over all 720 assignments.
+- **The entry.** `0x66A2FC`'s order, as the Config cell `0x461C00` reads it
+  under its tests: circle, cross, triangle, square, L1, R1 (its loads of
+  `0x66A2FC..0x66A310`, read 2026-10-17 with capstone).
+- **The pen, by the shape.** Circle 2, cross 1, triangle 6 (`0x653C00`),
+  square 5, L1 and R1 0: the pens `0x461C00` pushes for the same six.
+- **Under a Latin layer**, the disc's shape: DIV-0051's icon for the entry
+  (`FishingText_Label`, now six entries).
+- **On the PC's own text**, the port's stand-in: the `0x66A2FC` string for
+  the entry, a circled numeral or the port's `X`, in that pen. No new art,
+  as the owner chose for DT-2 (section 5.1 of the round doc).
+
+With `σ` the identity, every label is the original's: entry = the line
+byte, pen = `0x653C00[line]`.
+
+**Off** (`BOF3X_ORIGINAL=FishingLabelSigma`, and before `FishingText_Arm`):
+entry = the line byte and pen = `0x653C00[line]`, which are the original's
+reads. So effect_1a's fuzz compares Capcom's draws.
+
+**A word 7 with none of the six buttons** is refused with a Fatal that names
+the remedy (hold Start while the save loads, or the switch). Under draft A it
+cannot happen, because SG refuses such words at the writers. It can happen
+only with `ButtonSigma` off and a hand-edited save.
+
+### 8.3 Verification
+
+- **Build:** no errors, no new warnings.
+- **Headless, narrow** (`BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW=fishing_text,sigma,effect_1a`, an ini-less copy of the dev
+  launcher under `C:\Users\kerok\b_icf`, the PC install): exit 0.
+  - `fishing_text self-test: the label through sigma over 7 labelled lines,
+    each release's defaults, the stand-in swap and 720 assignments (10920
+    checks); 0 MISMATCHES`.
+  - `effect_1a self-test: 210000 rounds over 70 functions ... 0
+    MISMATCHES`, with `0x466460`, `0x4665E0` and `0x466750` covered.
+  - `patch ON FishingLabelSigma`.
+- **What the self-test checks:**
+  - the image's `0x653C00` pens equal the table's;
+  - text 0's line byte is circle;
+  - at Japan's defaults every label is the original's (entry, pen and
+    icon);
+  - at the West's defaults: circle, cross and triangle show cross,
+    triangle and square, and the cast shows cross;
+  - at PSP-EU's: cross, circle, square, and the cast cross;
+  - **the stand-in swap** (Speak <-> Action, View <-> Change, words 7 / 8
+    by draft A): circle lines show cross in pen 1, cross lines show circle
+    in pen 2, triangle stays, and the cast shows cross;
+  - all 720 assignments: each label is `Sigma(its button)` in its shape's
+    pen, and the cast's equals `Sigma(circle)`.
+- **Headless, everything** (`BOF3X_SHADOW='*'`): see the round's hand-back.
+- **Not seen in game.** RC's fishing route (`caughFish`, area 30) in its
+  identity and swapped runs is the evidence. The identity run's banner must
+  equal the reference. The swapped run's must show, for example, the cast's
+  line with a cross icon (blue under a Latin layer, the circled 2 on the PC's
+  text) and the quit line with a circle.
+
+### 8.4 Between this merge and HT's
+
+Until HT lands, stage 1 and the reel still test Japan's constants. After a
+swap, the labels then name the swapped buttons while the old ones still
+work. The cast is split: stage 1 still wants circle, and stage 2's confirm
+already wants the swapped button, because word 7 moves with draft A. The same
+holds on a Western disc-only install at its own defaults (SG's section 7).
+The labels state what the round intends. HT makes the tests agree.
+
+### 8.5 Ledger draft D (amends DIV-0069)
+
+- **Date:** 2026-10-17
+- **Subsystem:** field text, the fishing spot's banner labels
+  (`src/game/fishing_text.cpp` `FishingText_LabelOf`; the label draws of
+  effect kind 0xF's states 10..12 in `src/game/effect_1a.cpp`). **Amends
+  DIV-0069**: its label "for the button the port's numeral names" becomes
+  the label for that button through `σ`.
+- **Tier:** Intent. The owner, 2026-10-17: unify every button flow (the
+  round's answer 1). DIV-0069's owner's word waited on exactly this ("until
+  the banner can draw the icons of the bindings in force", IDEAS I29).
+- **Original behaviour:** each labelled line of the banner (seven of the
+  thirteen records at `0x653B98`) draws a fixed label by its line byte. That
+  is `0x66A2FC[line]`, the port's circled 1, 2 or 3, in pen
+  `0x653C00[line]` (2, 1, 6). It names circle, cross or triangle whatever
+  the Config says. DIV-0069 draws DIV-0051's icon for the same fixed button
+  under a Latin layer.
+- **New behaviour:** the label names the button the line's test is on now.
+  - For the cast's line (text 0), that is word 7's button. For every other
+    labelled line, it is `Sigma` of the line byte's button.
+  - It is drawn as that button's own label, in that button's own pen
+    (circle 2, cross 1, triangle 6, square 5, L1 / R1 0, as the Config cell
+    `0x461C00`).
+  - Under a Latin layer it is DIV-0051's shape. On the PC's own text it is
+    the port's stand-in, `0x66A2FC[entry]`.
+  - At the identity Config, nothing changes.
+- **Rationale:** the round's answer 1. An icon that follows the Config is
+  true in the fishing too, once HT moves the tests.
+- **Also in the PSX version?** The PlayStation's labels are fixed too: the
+  US module's are its own release's buttons (section 3). Following the
+  Config is ours.
+- **Verification:** section 8.3. RC's `caughFish` area-30 route, identity
+  and swapped, is owed.
+- **Reversible?** `BOF3X_ORIGINAL=FishingLabelSigma`.
