@@ -218,6 +218,30 @@ quoted in any doc, the scene described instead (rule 1).
 5. **The swapped-Config contact sheets**, one per site and install kind: the
    round's acceptance is the owner's "yes" on each, from the app.
 
+### 5.1 The owner's answers (2026-10-17, by chat)
+
+- **1: confirmed.** A PC install with a Western disc or layer starts with
+  Japan's buttons and mappings: the PC's own data counts as a JP source
+  (SG's `kPcIsJapanSource`, draft B).
+- **2: the glyphs alone.** The port's `SPACE` / `X` / `ENTER` art is
+  replaced by the button glyphs with no label text (IC-W).
+- **3: one code path.** On a PSP-only install the PSP's `L` / `R` tiles are
+  blanked and the same `L1` / `R1` glyphs drawn as on every other install
+  (IC-L).
+- **L2 / R2 stay outside `σ`.** They can never be bound in the Config (the
+  rebind masks them out) and stay ORed into Speak and confirm, as the
+  original rebind does; no L2 / R2 glyph is drawn anywhere.
+- **The PC's own text (DT-1's open question): the colour swap.** With no
+  language layer the PC's dialogue names a button by the port's stand-in
+  (a circled numeral or an `X` in the button's colour); DT-2 reads the
+  colour as the button at draw time and draws the stand-in, glyph and
+  colour, of `σ(bit)`. No new art: the port never drew the PlayStation's
+  shapes, and a PC-only install keeps the port's stand-ins wherever it has
+  no disc's shapes (the owner declined a drawn shape set, 2026-10-17).
+- **Confirm on a shoulder button** (SG's question): answer 1 taken
+  literally, so a Speak line put on R1 makes every menu confirm on R1. The
+  owner judges it on the swapped captures.
+
 ## 6. Not in this round
 
 - Keyboard key names, Xbox and Nintendo letters, the last-device flag and
