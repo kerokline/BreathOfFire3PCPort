@@ -8080,3 +8080,20 @@ seen in play yet.
 **Fixed 2026-10-17:** a `twin` row from `ETC/COMMU02.EMI` section 8, which
 holds the 16 bytes verbatim on all seven discs (`COMMU02B.EMI` section 7 a
 copy); DIV-0101 amended. Not played yet.
+
+## D308 — The fishing song goes silent while the fishing panel is open (the port's; fixed by DIV-0132, 2026-10-17)
+
+**Found:** the owner, 2026-10-17, listening to `caughFish.txt` on a PSX-only
+install: the music "pausing during the menu", playing on in Manillo's shop.
+
+**Established:** `LeaderPanel_S9Begin` `0x52A440` fades the music to volume 0
+(`Music_FadeOut(0x10)`) and `LeaderPanel_S9Menu` `0x52A4A0` back to 127 on
+cancel; the PlayStation's twins duck it by 20 sequence-volume units over 16
+VSyncs (`SsSepSetDecrescendo` / `SsSepSetCrescendo`). Measured with the WAV
+dump: silent over frames 866..966 on the PC install's MP3s and on PSX-US
+alike, so the port's, not the disc path's. **Fixed** by DIVERGENCE DIV-0132.
+The same rewrite (a duck turned into a fade to nothing) may sit at other call
+sites - `GameMode3_Enter` / `GameMode3_Leave` (PSX `0x80198620` /
+`0x801986EC` decrescendo 0x14 too, behind a condition not yet read) and the
+movement script's `BA` / `BB` ops, whose PSX operands the PC drops - not
+surveyed.

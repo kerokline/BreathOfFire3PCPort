@@ -53,6 +53,7 @@
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/sound.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1092,12 +1093,21 @@ extern "C" void __cdecl LeaderPanel_S9(void) {
     Run("LeaderPanel_S9", LeaderPanel_Stage9Steps, LeaderPanel_Stage9Steps_count);
 }
 
+// DIVERGENCE DIV-0132: 1 (PatchBytes "FishPanelDuck", after the self-test,
+// which compares Capcom's fades) - the panel ducks the music as the
+// PlayStation's twins do (SsSepSetDecrescendo / SsSepSetCrescendo(0, 0, 0x14,
+// 0x10)) instead of fading it to nothing and back to 127.
+unsigned char g_fish_panel_duck = 0;
+
 // original 0x52A440 (PSX twin 0x801DC908): LeaderPanel_Stage9Steps[0] - with
 // effect record 3 idle: Music_FadeOut(0x10), sound 0x102, record 6's +1 up,
-// +6 = 0, +3 up.
+// +6 = 0, +3 up. DIV-0132: the duck in place of the fade out.
 extern "C" void __cdecl LeaderPanel_S9Begin(void) {
     if (B(at::kEff3State) != 0) return;
-    SH_CALL(Music_FadeOut)(0x10);
+    if (g_fish_panel_duck)
+        sound::DuckMusic(0x10);
+    else
+        SH_CALL(Music_FadeOut)(0x10);
     Sound(0x102);
     const auto state = static_cast<unsigned char>(B(at::kEff6State) + 1);
     unsigned char* const s = S();
@@ -1121,7 +1131,7 @@ extern "C" void __cdecl LeaderPanel_S9Wait(void) {
 // or 4), 0xB (from 8) or 0xF (from 0xE), its +0xB = 0, +3 = 4; confirm: sound
 // 0x103 and by the choice record 6's +1 to 0xB (from 8), 0xF (from 0xE) or 5
 // (from 3 or 4) with sound 0x102, +3 up. At +3 2, the choice's message and
-// the hand.
+// the hand. DIV-0132: cancel undoes S9Begin's duck in place of the fade in.
 extern "C" void __cdecl LeaderPanel_S9Menu(void) {
     const unsigned repeat = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xA000u);
     if (repeat & 0x8000) {
@@ -1137,7 +1147,10 @@ extern "C" void __cdecl LeaderPanel_S9Menu(void) {
     } else {
         const unsigned pressed = Input_Pressed;
         if (Field_CancelButtons & pressed) {
-            SH_CALL(Music_FadeIn)(0x10);
+            if (g_fish_panel_duck)  // DIV-0132: the duck undone
+                sound::UnduckMusic(0x10);
+            else
+                SH_CALL(Music_FadeIn)(0x10);
             Sound(0x106);
             const unsigned char state = B(at::kEff6State);
             if (state == 3 || state == 4)
@@ -1188,6 +1201,13 @@ void Effect1E_Inject() {
         bof3::PatchBytes("ShopAskRow", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_shop_ask_row)), &was,
                          &is, 1);
         bof3::Log("DIV-0027    the field panel's message 0x44: the hand on the row of its first answer");
+    }
+    // DIVERGENCE DIV-0132: after the self-test, which compares Capcom's fades.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FishPanelDuck", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_fish_panel_duck)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0132    the fishing panel ducks the music as the PlayStation does (on unless the line above says OFF)");
     }
     BOF3_INJECT(LeaderPanel_S1Choose);
     BOF3_INJECT(LeaderPanel_S1Out);

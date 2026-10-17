@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 131 entries, DIV-0001..0131, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 132 entries, DIV-0001..0132, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -8017,3 +8017,56 @@ designed in rather than bolted on.
   layout.
 - **Reversible?** A PSX-based install; the switch is the cache's policy.
 
+### The fishing panel ducks the music as the PlayStation does
+
+- **ID:** DIV-0132
+- **Date:** 2026-10-17
+- **Subsystem:** the fishing spot's panel - `LeaderPanel_S9Begin` `0x52A440`
+  and `LeaderPanel_S9Menu` `0x52A4A0` (ours, `src/game/effect_1e.cpp`); the
+  duck itself `sound::DuckMusic` / `UnduckMusic` (`src/game/sound.cpp`), on
+  the fade state `Sound_Tick` `0x587C70` steps.
+- **Tier:** Intent - a port bug (the owner, 2026-10-17: "I would class this
+  as a pc bug"); the PlayStation shows what was meant.
+- **Original behaviour:** opening the Gear / Data / Rule panel at the fishing
+  spot (area 30, mode 8) calls `Music_FadeOut(0x10)`, a fade to volume 0
+  that keeps the track playing, and cancelling it `Music_FadeIn(0x10)`, a
+  fade to 127: the fishing song is silent the whole time the panel is open
+  (known-defects D308). The PlayStation's twins call
+  `SsSepSetDecrescendo(0, 0, 0x14, 0x10)` (`0x8015DEE8`, from `0x801DC908`)
+  and `SsSepSetCrescendo(0, 0, 0x14, 0x10)` (`0x8015DE8C`, from
+  `0x801DC9BC`), read in the sibling's `generated/overlays_static_0247.c`: a
+  duck. Under libsnd's ramp (`MusicSynth::SetVolData` / `SndDecrescendo`: a
+  ramp of 20 over 16 VSyncs is one unit a VSync) the song, at sequence
+  volume 97 after `Music_Play`'s crescendo
+  ([`libsnd-reading.md`](libsnd-reading.md) 5.1), goes to 81 and back:
+  amplitude (81 / 97)^2, about -3.1 dB. The port's rewrite of the music
+  calls kept the frames and dropped the amount.
+- **New behaviour:** the panel's open fades the music over the same 16
+  logic frames (DIV-0028's clock) to 313 hundredths of a decibel below where
+  it was, in the law the music plays under: under the sequencer (DIV-0087,
+  `music_seq::Level`, libsnd's square law) the volume times 81 / 97, 127 to
+  106.05; under an MP3 (`Music_SetVolume`, linear in decibels, 10000 / 127
+  hundredths a unit) the volume less 3.98, 127 to 123.02. Cancel fades back
+  over 16 frames to the volume the duck found (127 when no duck is
+  outstanding, as `Music_FadeIn`). No stop at either end; a later fade or
+  `Music_Play` takes over as from Capcom's.
+- **Rationale:** the owner heard the song stop behind the panel on a
+  PSX-only install, while it plays on behind Manillo's screen, and asked for
+  the PlayStation's behaviour back.
+- **Also in the PSX version?** No - the PlayStation ducks. The silence is the
+  PC port's, on every install: measured the same on the PC install with its
+  own MP3s and on a PSX-US disc-only install.
+- **Verification:** `caughFish.txt` with the WAV dump (`input_run.py --wav`,
+  harness root `abfish`, `BOF3X_MUSIC_LOG=1`). Before: frames 866..966 at
+  digital silence between the menu's sound effects, on the PC install
+  (`BOF3X_MUSIC=mp3`) and on the PSX-US install alike. After:
+  `DuckMusic(16)` at frame 856 and `UnduckMusic(16)` at 952 (again at 1838 /
+  1957, the second panel), 127 to 123.02 and back on the PC, 127 to 106.05
+  and back on PSX-US; no frame of 840..1000 below RMS 400 on either; both
+  routes reach `recipe done` at 3,889.
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_1e,sound,sound_rest` on the PC
+  install: 0 mismatches (effect_1e 144,000 rounds with the two original fades
+  among the stand-ins' calls - the flag is 0 until after the self-test;
+  sound 46,000; sound_rest 27,000). **Not yet heard by the owner.**
+- **Reversible?** `BOF3X_ORIGINAL=FishPanelDuck` (the patch's name): the
+  fade to nothing and back.
