@@ -410,3 +410,63 @@ identity run, and every differing frame differs only where a glyph is:
 Sheets: `C:\Users\kerok\b_rc\sheets_round\<site>.png` (identity beside
 swapped on the round) and `C:\Users\kerok\b_rc\sheets_ref_vs_round\<site>.png`
 (section 4's reference beside the round's identity run).
+
+### 9.1 The disc-only installs, on `1a87a000`
+
+`1a87a000` makes the missing port stand-ins fatal only with no layer; a
+disc-built image logs that it holds none and goes on. Rebuilt and re-run on
+`psx-us` and `psp-eu` (`prepare` rebuilt the caches again, since the stamp
+hashes `tools/*.py`). Spot check on `pc-enus`: `sigma_items` 32 / 32 equal to
+its `baff5e45` run.
+
+**Identity, `r_id` against `id`:**
+
+| Route | psx-us | psp-eu |
+|---|---|---|
+| `sigma_worldmap` | 51 / 51 | 51 / 51 |
+| `sigma_fishing` | 42 / 49 | 42 / 49 |
+| `sigma_config` | 32 / 32 | 32 / 32 |
+| `sigma_items` | 32 / 32 | 15 / 32 |
+| `sigma_swap` | 135 / 135 | 122 / 135 |
+
+- The disc legends are unchanged at the identity (D307's repaint, as
+  expected).
+- `sigma_items` on PSP-EU: the scroll bar's tiles, `L` / `R` before, `L1` /
+  `R1` now (`161,72-174,220`), in every list frame: **IC-L, intended**.
+  `sigma_swap` on PSP-EU: twelve of its thirteen are the same tiles in the
+  town shop's list (`219,72-232,220`): intended.
+- `sigma_fishing` on both: the reel banner's label (seven frames as it
+  scrolls) is a **red circle where the disc's own line drew a white one** -
+  the same button, in the PC's coloured icon, not the disc text's glyph: the
+  label now resolved through `σ` (IC-F / DT-2). Not on the expected list:
+  **the owner's or IC-F's call** whether the disc install should keep the
+  disc's white glyph at the identity.
+- `sigma_swap` on PSP-EU `t000330` (and on pc-enus `t003450`, section 9):
+  a fade frame one step brighter (at most 16 of 255), the next frame equal.
+  A second round run (`r_id2`) equals the first in all 135 frames, so it is
+  the round's, reproducible, not noise. On a fade only, on this route only (the
+  other routes load the same saves with equal frames); **unexplained** -
+  a candidate for whoever owns the load path (SG's `LoadMenu_Apply` writer?).
+- Slot 7 on both: confirm `0x43`, cancel `0x20`, as on the PC.
+
+**State hash** (`check id id2 r_id`, the platform pages left aside): on every
+route `0x903000` (the nine pad words' page) differs from tick 1 until the
+save's load (ticks 291..343) - **the starting Config by source** (SG's draft
+B: a disc install now boots with its release's words), intended, and the R2
+confirms kept every route in step through it. After the load: fishing's
+`0x803000` / `0x804000` from 768 (the banner's labels, as on pc-enus); items
+on PSP-EU the packet pools from 470 and `0x903000` to the end (the corner's
+draw, IC-L; the word page's later difference not decoded). Nothing else.
+
+**Swapped, `r_sw` against `r_id`** - every difference a glyph, every twin in
+step:
+
+| Route | psx-us | psp-eu | Where |
+|---|---|---|---|
+| `sigma_worldmap` | 36 / 51 | 36 / 51 | the legend's rows 1 and 2 trade |
+| `sigma_fishing` | 29 / 49 | 29 / 49 | the area 16 legend; the reel label (circle to cross) |
+| `sigma_config` | 24 / 32 | 24 / 32 | the panel's icon column |
+| `sigma_items` | 12 / 32 | 12 / 32 | the list corner's tiles; the legend before the menu |
+
+The fishing's swapped cross at 850 opens the gear menu on both, L1 pages the
+item list after the swap on both, and the glyphs trade on all four installs.
