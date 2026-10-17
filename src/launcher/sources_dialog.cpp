@@ -191,6 +191,119 @@ private:
     std::vector<Saved> saved_;
 };
 
+// RunCapture's watch: ends a child still running after `timeout` ms.
+struct WatchCtx {
+    HANDLE process;
+    DWORD timeout;
+    bool killed;
+};
+DWORD WINAPI Watch(void* p) {
+    auto* c = static_cast<WatchCtx*>(p);
+    if (WaitForSingleObject(c->process, c->timeout) == WAIT_TIMEOUT) {
+        c->killed = true;
+        TerminateProcess(c->process, 1);
+    }
+    return 0;
+}
+
+// Runs the importer with `args` to the end, with no window, and returns its
+// merged output and exit code; false when it could not start or ran past
+// `timeout_ms` (then ended). For the one short command the launcher waits on
+// before the game (`stale`); the page's own commands run on ReadChild.
+bool RunCapture(const Runtime& rt, const std::wstring& args, const std::wstring& cwd, DWORD timeout_ms,
+                std::string& out, DWORD& code) {
+    std::wstring line = Quote(rt.python) + L" " + Quote(rt.script) + L" " + args;
+    SECURITY_ATTRIBUTES sa{sizeof sa, nullptr, TRUE};
+    HANDLE rd = nullptr, wr = nullptr;
+    if (!CreatePipe(&rd, &wr, &sa, 0)) return false;
+    SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
+    HANDLE nul = CreateFileW(L"NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, OPEN_EXISTING, 0, nullptr);
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdInput = nul;
+    si.hStdOutput = wr;
+    si.hStdError = wr;
+    PROCESS_INFORMATION pi{};
+    BOOL ok;
+    {
+        ScopedEnv env;
+        env.Set(L"PYTHONUTF8", L"1");
+        env.Set(L"PYTHONIOENCODING", L"utf-8");
+        ok = CreateProcessW(rt.python.c_str(), line.data(), nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr,
+                            cwd.c_str(), &si, &pi);
+    }
+    CloseHandle(wr);
+    if (nul != INVALID_HANDLE_VALUE) CloseHandle(nul);
+    if (!ok) {
+        CloseHandle(rd);
+        return false;
+    }
+    CloseHandle(pi.hThread);
+    // Read on this thread until the child closes its end: the pipe never fills.
+    // The timeout ends a child that hangs; its end of the pipe closes with it.
+    WatchCtx ctx{pi.hProcess, timeout_ms, false};
+    HANDLE watch = CreateThread(nullptr, 0, Watch, &ctx, 0, nullptr);
+    char buf[4096];
+    DWORD got = 0;
+    while (ReadFile(rd, buf, sizeof buf, &got, nullptr) && got > 0) out.append(buf, got);
+    CloseHandle(rd);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    if (watch) {
+        WaitForSingleObject(watch, INFINITE);
+        CloseHandle(watch);
+    }
+    code = 1;
+    GetExitCodeProcess(pi.hProcess, &code);
+    CloseHandle(pi.hProcess);
+    return !ctx.killed;
+}
+
+// The stamp a fresh answer is remembered by: the launcher's and the
+// importer's file sizes and write times. A new release, or a rebuilt source
+// checkout, changes one of them, and the install is judged again.
+std::wstring StaleStamp(const Runtime& rt) {
+    std::wstring stamp;
+    wchar_t self[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(nullptr, self, MAX_PATH);
+    for (const std::wstring& path : {std::wstring(self, n < MAX_PATH ? n : 0), rt.script}) {
+        WIN32_FILE_ATTRIBUTE_DATA a{};
+        if (path.empty() || !GetFileAttributesExW(path.c_str(), GetFileExInfoStandard, &a)) return std::wstring();
+        wchar_t part[96];
+        std::swprintf(part, 96, L"%08lx%08lx %08lx%08lx\n", a.nFileSizeHigh, a.nFileSizeLow,
+                      a.ftLastWriteTime.dwHighDateTime, a.ftLastWriteTime.dwLowDateTime);
+        stamp += part;
+    }
+    return stamp;
+}
+
+std::wstring ReadSmall(const std::wstring& path) {
+    FILE* f = _wfopen(path.c_str(), L"rb");
+    if (!f) return std::wstring();
+    char buf[512];
+    const size_t n = std::fread(buf, 1, sizeof buf, f);
+    std::fclose(f);
+    return ConfigFromUtf8(std::string(buf, n));
+}
+
+// A step of the cache (tools/build_reuse.py's names) as the player reads it.
+std::wstring PieceName(const std::string& step) {
+    struct Row { const char* step; const wchar_t* name; };
+    static const Row kRows[] = {
+        {"cache", L"the whole install"},   {"base", L"the game data"},
+        {"exe", L"the game's program data"}, {"bgm", L"the music"},
+        {"snd", L"the sound effects"},     {"snd-psp", L"the sound effects"},
+        {"manifest", L"the install's index"}, {"fmv", L"the logo movie"},
+        {"opt", L"the optional layers"},   {"game-pc", L"the game folder"},
+        {"game-install", L"the game folder"},
+    };
+    for (const Row& r : kRows)
+        if (step == r.step) return r.name;
+    if (step.compare(0, 4, "loc-") == 0) return L"the " + ConfigFromUtf8(step.substr(4)) + L" text";
+    if (step.compare(0, 4, "opt-") == 0) return L"the optional layer " + ConfigFromUtf8(step.substr(4));
+    return ConfigFromUtf8(step);
+}
+
 // ---- A flat JSON object, as the importer prints one -------------------------
 
 void AppendUtf8(std::string& out, unsigned cp) {
@@ -270,6 +383,7 @@ bool JsonTrue(const std::string& line, const char* key) {
 struct State {
     Config* cfg = nullptr;
     bool first_run = false;
+    bool rebuild = false;   // a stale install the player agreed to rebuild: build at once, end when done
     Runtime rt;
     std::wstring home;
     Job job = kNone;
@@ -460,7 +574,7 @@ void OnDone(HWND dlg, State& s, Job job, DWORD code) {
             if (!s.cfg->cache.empty())
                 Log(dlg, L"Note: your settings name another cache folder (cache=); empty the Cache folder box in "
                          L"Settings to use this install's own.");
-            if (s.first_run) {   // nothing else to do here: on to the settings
+            if (s.first_run || s.rebuild) {   // nothing else to do here: on to the settings, or the game
                 EndDialog(dlg, 1);
                 return;
             }
@@ -549,7 +663,10 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         auto* s = reinterpret_cast<State*>(lp);
         SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(s));
         SetDlgItemTextW(dlg, IDC_SO_INTRO,
-                        s->first_run
+                        s->rebuild
+                            ? L"This install was built by an older release. It is rebuilt from the copies of the game "
+                              L"below; the pieces this release would make the same way are kept, not made again."
+                        : s->first_run
                             ? L"No install was found. Add your own copy of the game to make one: the PC game's folder, "
                               L"a PlayStation disc image (.cue/.bin, or a .zip of it) or a PSP .iso. Each is checked "
                               L"against the known releases before anything is built."
@@ -560,6 +677,8 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         if (!s->rt.error.empty()) {
             Status(dlg, L"The importer cannot run.");
             Log(dlg, s->rt.error);
+        } else if (s->rebuild) {
+            StartSetup(dlg, *s);
         } else {
             StartList(dlg, *s);
         }
@@ -627,12 +746,13 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 
 }  // namespace
 
-bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run) {
+bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS};
     InitCommonControlsEx(&icc);
     State s;
     s.cfg = &cfg;
     s.first_run = first_run;
+    s.rebuild = rebuild;
     s.rt = FindRuntime();
     s.home = HomeDir();
     const INT_PTR r = DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_SOURCES), owner, Proc,
@@ -642,6 +762,66 @@ bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run) {
         return false;
     }
     return s.built;
+}
+
+StaleCheck SourcesCheckStale() {
+    StaleCheck check;
+    const Runtime rt = FindRuntime();
+    const std::wstring home = HomeDir(), cache = HomeCacheDefault();
+    if (!rt.error.empty() || home.empty() || cache.empty()) return check;   // nothing to judge, or nothing to judge it by
+    const std::wstring stamp = StaleStamp(rt), remembered = cache + L"\\build-keys\\checked.txt";
+    if (!stamp.empty() && ReadSmall(remembered) == stamp) return check;    // judged fresh by this launcher and importer
+    std::string out;
+    DWORD code = 1;
+    if (!RunCapture(rt, L"stale --home " + Quote(home), home, 120000, out, code)) {
+        check.error = L"The importer could not check this install against the release (it did not finish).";
+        return check;
+    }
+    // `stale <step>\t<reason>` a piece, then `stale N` (exit 1); `fresh` (0); `none` (2).
+    size_t at = 0;
+    while (at < out.size()) {
+        size_t end = out.find('\n', at);
+        if (end == std::string::npos) end = out.size();
+        std::string line = out.substr(at, end - at);
+        at = end + 1;
+        while (!line.empty() && (line.back() == '\r' || line.back() == ' ')) line.pop_back();
+        const size_t tab = line.find('\t');
+        if (line.compare(0, 6, "stale ") == 0 && tab != std::string::npos)
+            check.pieces.push_back(PieceName(line.substr(6, tab - 6)) + L" (" + ConfigFromUtf8(line.substr(tab + 1)) +
+                                   L")");
+    }
+    if (code == 0) {
+        if (!stamp.empty()) {
+            if (FILE* f = _wfopen(remembered.c_str(), L"wb")) {
+                const std::string bytes = ConfigToUtf8(stamp);
+                std::fwrite(bytes.data(), 1, bytes.size(), f);
+                std::fclose(f);
+            }
+        }
+    } else if (code == 1 && !check.pieces.empty()) {
+        check.stale = true;
+    } else if (code != 2) {
+        check.error = L"The importer could not check this install against the release (exit " + std::to_wstring(code) +
+                      L"):\n" + ConfigFromUtf8(out.substr(0, 600));
+    }
+    return check;
+}
+
+bool SourcesAskRebuild(const StaleCheck& check) {
+    std::wstring text =
+        L"This install was built by an older release, and this release would make some of it differently:\n\n";
+    size_t shown = 0;
+    for (const std::wstring& piece : check.pieces) {
+        if (++shown > 12) {
+            text += L"  ... and " + std::to_wstring(check.pieces.size() - 12) + L" more\n";
+            break;
+        }
+        text += L"  - " + piece + L"\n";
+    }
+    text += L"\nRebuild it now from your copies of the game? The pieces that have not changed are kept, so this "
+            L"is usually quicker than the first build.\n\nNo starts nothing; the install is left as it is.";
+    return MessageBoxW(nullptr, text.c_str(), L"Breath of Fire III - the install is out of date",
+                       MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND) == IDYES;
 }
 
 }  // namespace bof3x

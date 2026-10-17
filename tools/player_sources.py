@@ -668,6 +668,7 @@ class _Times:
 def run_setup(a, h, log, progress, total):
     import argparse
     import at3
+    from build_reuse import Step
     imp = _imp()
     times = _Times(log)
     rows = load_sources(h)
@@ -752,11 +753,13 @@ def run_setup(a, h, log, progress, total):
         os.makedirs(new_game)
         if pc:
             progress("Copying the PC game's files (the original folder is not changed)")
-            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("copy the PC game"):
+            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("copy the PC game"), \
+                    Step(new_cache, None, "game-pc", pc["build"]):     # measured: `stale` (HANDOFF item 11)
                 copy_pc(paths.get(pc["path"], pc["path"]), new_game, ffmpeg, log, progress)
         progress("Laying out the game folder" + (" with %s" % ", ".join(langs) if langs else ""))
         ns = argparse.Namespace(cache=new_cache, game=new_game, base=not pc, lang=list(langs), opt=[], no_opt=[])
-        with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("install (lay out game)"):
+        with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("install (lay out game)"), \
+                Step(new_cache, None, "game-install", *langs):
             imp.cmd_install(ns)
     except BaseException:
         for p in unpacked:

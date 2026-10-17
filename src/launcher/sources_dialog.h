@@ -10,14 +10,37 @@
 
 #include <windows.h>
 
+#include <string>
+#include <vector>
+
 #include "launcher/config.h"
 
 namespace bof3x {
 
 // Shows the page, modally, over `owner` (may be null). `first_run`: no install
-// was found, so the page says so and offers to make one. Returns true when a
-// build finished, so the game folder and the cache may have changed and the
-// caller re-reads them. cfg.ffmpeg is updated by Locate...; the caller saves.
-bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run);
+// was found, so the page says so and offers to make one. `rebuild`: the
+// player agreed to rebuild a stale install (SourcesAskRebuild), so the build
+// starts at once. Returns true when a build finished, so the game folder and
+// the cache may have changed and the caller re-reads them. cfg.ffmpeg is
+// updated by Locate...; the caller saves.
+bool SourcesDialogRun(HWND owner, Config& cfg, bool first_run, bool rebuild = false);
+
+// The home's install against this release (HANDOFF item 11,
+// docs/install-staleness.md): `importer.py stale --home H`, which judges each
+// piece of the cache by what it was measured to read when it was built. Run
+// once for each launcher and importer the install meets - a fresh answer is
+// remembered in <home>\cache\build-keys\checked.txt by their file sizes and
+// times, so an unchanged release asks nothing at the next start.
+struct StaleCheck {
+    bool stale = false;                  // a piece would be made differently: offer the rebuild
+    std::vector<std::wstring> pieces;    // each, as the player reads it (the step and why)
+    std::wstring error;                  // the check could not run: said, and the game starts
+};
+StaleCheck SourcesCheckStale();
+
+// Asks the player (a message box naming the pieces) whether to rebuild them
+// now: true for yes, and the caller opens the Sources page with `rebuild`; no
+// starts nothing (the owner's call, 2026-10-17: prompt, then rebuild).
+bool SourcesAskRebuild(const StaleCheck& check);
 
 }  // namespace bof3x

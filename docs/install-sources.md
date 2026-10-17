@@ -197,14 +197,15 @@ A setup builds from every source again, but takes from the install's
 current cache whatever it would make the same way (`--reuse`, which setup
 passes when the home has a cache): the movie when the previous `[fmv]` names
 the same stream, ffmpeg and arguments (`args`, bit-exact, so the same file);
-`base/snd/` when made from the same first PSX disc; each `loc/<tag>/` when
-its key matches. A key (`importer.py` `reuse_key`) is a hash of everything
-the step reads - the tools, recipes and fixtures and the Python running
-them (so a new release builds everything once), the sources it draws on, and
-for a language layer this cache's `base/dat/` and `base/exe/` and the layers
-built before it in the run (the French and German title menus borrow the
-English one's row). Keys are kept in `<cache>\build-keys\`, which nothing
-installs or walks. Anything that does not match is built as before.
+`base/snd/`, each `loc/<tag>/` and each PSP layer when its **measured record**
+holds - the functions of `tools/` that ran, the module values they name, the
+recipes and fixtures opened, the sources drawn on and, for a language layer,
+this cache's `base/dat/` and `base/exe/` and the layers built before it in the
+run (the French and German title menus borrow the English one's row). Since
+2026-10-17 a new release rebuilds only the pieces whose own code or data
+changed ([`install-staleness.md`](install-staleness.md), which also has the
+launcher's check). Records are kept in `<cache>\build-keys\`, which nothing
+installs or walks. Anything that does not hold is built as before.
 
 | Setup (the `.zip`s) | Time | Reused |
 |---|---|---|

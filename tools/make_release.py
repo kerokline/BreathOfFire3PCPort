@@ -77,7 +77,9 @@ ENTRY = ("importer.py", "player_sources.py")
 # exe_maps/<build>.tsv and src/hook/exe_own.cpp (psp_exe.py reads its
 # Dat_FileNames pool; the first bundled setup without it stopped there).
 # Directories are copied whole; src/ only that one file, our own code.
-DATA = ["fixtures.toml", "fixtures", "recipes", "symbols.toml", "tables.toml", "exe_maps", "src/hook/exe_own.cpp"]
+# One list with what the measured setup steps record as data (build_reuse.SHIPPED_DATA, HANDOFF 11).
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from build_reuse import SHIPPED_DATA as DATA   # noqa: E402
 # Copied beside the launcher.
 TOP = [("LICENSE", "LICENSE"), ("docs/THIRD_PARTY.md", "THIRD_PARTY.md")]
 BUILD_FILES = ("bof3x-launcher.exe", "bof3x.dll", "bof3x.exe", "music-names.tsv")
