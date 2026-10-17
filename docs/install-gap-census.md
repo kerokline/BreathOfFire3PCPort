@@ -334,7 +334,46 @@ list it:
   image holds 0 of the PC's 3 non-zero bytes there. Not fixed.
 - The class check: run E1's list of bytes every disc places differently from
   the PC ([`disc-data-inventory.md`](disc-data-inventory.md) 5). Its
-  remaining members are regional (4.5 there). Not re-run here.
+  remaining members are regional (4.5 there). Re-run as a byte scan in 6.1.
+
+### 6.1 The measured scan (2026-10-17, `tools/exe_scan.py`)
+
+Each disc's image built as a one-source setup builds it
+(`exe_tables.build_from`, from the `.zip`), laid out as `ExeImage_Source` lays
+it at start (`own` and `keys` filled with the PC's bytes, the engine's rule;
+`language`, `unread`, `gap`, `none` zero), and compared with the PC's `.data`
+byte by byte (638,976 bytes). Every build's placed-and-different total equals
+`recipes/exe.toml`'s `placed_differ` (psx-us 3,182), so the recipe is current
+at `cf809700`. Missing = zero where the PC has a value:
+
+| Build | equal | missing gap | missing language | missing unread | missing widen | missing map / table | differ + extra |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| psx-jp | 629,618 | 905 | 1,377 | 3,933 | 3,065 | 33 / 0 | 45 |
+| psx-us | 629,047 | 1,430 | 1,384 | 3,933 | 3,065 | 33 / 3 | 81 |
+| psx-eu-en | 629,022 | 1,458 | 1,384 | 3,933 | 3,065 | 33 / 3 | 78 |
+| psx-fr | 628,908 | 1,570 | 1,384 | 3,933 | 3,065 | 33 / 3 | 80 |
+| psx-de | 628,895 | 1,584 | 1,384 | 3,933 | 3,065 | 33 / 4 | 78 |
+| psp-jp | 629,553 | 736 | 1,366 | 3,930 | 3,065 | 29 / 63 | 234 |
+| psp-eu | 629,554 | 742 | 1,366 | 3,946 | 3,065 | 9 / 66 | 236 |
+
+- **No `none` byte is missing** on any build: nothing the recipe calls zero on
+  the PC holds a PC value.
+- **Placed bytes that come out zero or different are all already catalogued**:
+  `Char_DefaultRecords` (28 a build; the default names at the disc's width, the
+  language layer's names, DIV-0020, `exe-import.md` 3), `MeteorStrikeChip_Lifts`
+  (D267), `Area111_GridStart` (D268, PSX), `Scena17_EndSteps` (Western, the
+  owner's call in 4), `EffectKind0F_RuleLineIds` (the fishing rule pages, D286),
+  `Char_ExpTable` on the PSP (Peco's row, HANDOFF item 9), and the regional
+  values of `disc-data-inventory.md` 5 (`Area25_Handlers` JP, `Title_Sprites`,
+  `Area174_StepDeltas`, `Area175_ScriptMessages`, `EffectKind5B_States`,
+  `SimoonDust_Offsets` PSP, `FieldEquip_SlotCategories`).
+- **`widen`'s 3,065 bytes** are the six name tables' tails past the disc's
+  names (the 16-byte name blank, `exe-import.md`): by design, the same on every
+  build.
+
+So the scan adds nothing to fix beyond section 4's gaps and section 5's
+language rows. The per-symbol counts are in `analysis/exe_scan/<build>.tsv`
+(gitignored).
 
 ## 7. Outside `.data`: the rest of an install, by source
 
