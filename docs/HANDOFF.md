@@ -1,6 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-14: `main` is `11e2cfe9` (PRs #58 and #59 merged); `wide/ultrawide-round` holds the ultrawide round and its fold-in, pushed for review - PR #60, item 1 below)
+**Status:** IN PROGRESS (2026-10-17: `main` is `85b46618` (PR #80 merged); `install/recipe-version` holds item 11,
+the install-gap census and its fixes, and the PSP-only title - its PR is item 0 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,50 +15,36 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged: the rounds since have taken
-nothing over); the game's own code is all ours since the platform round's step 3 (PR #43). `main` is `11e2cfe9`:
-PR #58 (`platform/more-hardening`, the away day of 2026-10-13: fifteen agent branches, DIV-0115..0120,
-D266..D289) and PR #59 (DIV-0121, D270's crash held). **The ultrawide round** (`wide/ultrawide-round`, 2026-10-13..14,
-pushed for review, PR #60; [`ultrawide-round.md`](ultrawide-round.md) 5a, 5b) adds a fixed **21:9 mode**
-(`BOF3X_WIDE=2`, 560 x 240) beside 16:9, and found that the wide picture had been changing *logic* at 16:9 since
-2026-09-30 - the off-screen flag, the band cells' `Rand` (D283) and the windows' slide-off bounds - each now split so
-the picture widens and the logic stays Capcom's: the eleven hash routes and `dolphinBoss` keep narrow's `Rand` and
-game pages at 16:9 and 21:9 ([`ultrawide-census-3.md`](ultrawide-census-3.md),
-[`ultrawide-census-4.md`](ultrawide-census-4.md)). It re-stages the scenes' edge actors at 16:9 (DIV-0122), stages
-case zero as the PSP does (DIV-0123), hides what a scene leaves in the 21:9-only columns (DIV-0124), and restored on
-the way Depress's swirl and the fishing pedestal (the frame grab, DIV-0125), the lighthouse's rays (DIV-0126) and the
-camp's fire (DIV-0071 amended). Its drafts are numbered and folded in: DIV-0041 amended five times, DIV-0071 twice,
-DIV-0122..0126 new, defects D290..D301. The regression check is the state hash ([`state-hash.md`](state-hash.md);
-the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, across installs, the A/B/C harness
-([`abc-harness.md`](abc-harness.md)).
-
-**The round's merges on `wide/ultrawide-round`**, in order (each merge commit names its branch; `git log
---first-parent --oneline 11e2cfe9..wide/ultrawide-round`):
-
-1. stage A - SS the static staging scan, UC the culls at 120, BA the band census, PD the PSP's staging, UW the
-   21:9 frame;
-2. stage B - UC2 the flag split and four culls, ST the staging (16:9 re-staging, case zero, the 21:9 hide), EB-1
-   the "before" census, ST2 the hide keyed on a field scene, EB-2 the hash's two remaining causes;
-3. `main` (PRs #58, #59) merged in, then SL the faster slide, RN the random split, RN2 the patch cells;
-4. the owner's reports met on the way - DP Depress's swirl and its grab, FY the faerie and the bulb's filament,
-   LR the lighthouse's rays, EB-2b census 3, ST3 case zero in the original's frames and the hide in mode 4, EB-3
-   census 4, CF the campfire and the gene crystal;
-5. the fold-in (group LD): the ledger, D290..D301, the README rows, this file, STATUS, owner-review, IDEAS.
+**10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged since PR #43: the game's own code is
+all ours). `main` is `85b46618`: since `11e2cfe9` it took the ultrawide round (PR #60), the player install and the
+alpha releases (`v0.1.0-alpha.3`, signed binaries: PRs #72, #74), the PSX-only fixes of 2026-10-16 (PR #73: D254,
+D255 / DIV-0129), the PSP donor's names (PR #76, issue #75) and the PSX-only player reports #77..#79 (PR #80: D282,
+D306, D307 / DIV-0130). **`install/recipe-version`** (2026-10-17, `main` merged in) adds:
+- **stale installs judged piece by piece** (HANDOFF item 11 of before; [`install-staleness.md`](install-staleness.md)):
+  each cache piece records what it was *measured* to read - the functions of `tools/` that ran, the module values
+  they name, the recipes and fixtures opened (`tools/build_reuse.py` `Step`); `importer.py stale` judges them
+  against the release; the launcher asks once per release and setup rebuilds only the stale pieces (a no-change
+  setup 270 s -> 62 s);
+- **the install-gap census** ([`install-gap-census.md`](install-gap-census.md)): every `recipes/exe-gaps.tsv` row
+  given a status, the non-exe gaps by install kind, and a byte scan of each one-source image against the PC's
+  `.data` (`tools/exe_scan.py`, 6.1);
+- **its P1 fixes that need no owner**: six draw formats and marks the engine now holds (D310, D278), the hi-lo
+  payouts (D311), the Meteor Strike lifts and area 112's link list (D267, D268: a `twin` takes back another file's
+  differing byte) - DIV-0101 amended;
+- **the PSP-only title's logo** cut where the PSP's art lies (D256, DIV-0131, [`psp-title-framing.md`](psp-title-framing.md)).
 
 ## Pick up here
 
-0. **The player install and the alpha release** (`install/sources-gui`, 2026-10-15;
-   [`install-sources.md`](install-sources.md), [`releases/README.md`](releases/README.md)). Built and run end to
-   end from the release zip (STATUS); owed: the owner's eye on the Sources page and a play of an install it made
-   (a test install sits at `C:\Users\kerok\bx`, outside the repo), numpy kept for now (the owner, 2026-10-15; it goes with the Python at I40); the PR and the tag `v0.1.0-alpha.1` made at the owner's word (2026-10-15) -
-   its notes are [`releases/v0.1.0-alpha.1.md`](releases/v0.1.0-alpha.1.md), and the workflow makes a draft.
+0. **Review and merge `install/recipe-version`'s PR.** Every non-merge commit signed off; `ledger_check` 131
+   entries, 0 errors; the recipes regenerated over the seven discs after `main` was merged in; the checks and the
+   headless self-tests in the PR's description. **Owed, the owner's eye:** the launcher's stale-install prompt in a
+   real start (make a piece stale - a row of `recipes/exe-psp.tsv` in a source checkout - and start the launcher on
+   that home); the PSP-only title in play (captured at 4:3, 16:9, 21:9); D310's screens and the hi-lo payouts in
+   play. Every install built before this branch is judged stale once (no measured records), which rebuilds it
+   whole the first time. Scratch homes of this session: `C:\Users\kerok\rv` (PSX-US + PSP-EU), `rvp` (PSP-EU only),
+   the launcher folder `rvL`, the unpacked discs `D:\bof3x-discs` - all game-derived, outside the repo, removable.
 
-1. **Review and merge the ultrawide round's PR** (PR #60). Every non-merge commit since `main` is signed off
-   (`git log --format=%B main..wide/ultrawide-round`; CLAUDE.md rule 7). `ledger_check` 126 entries, 0 errors; the
-   build and the headless `'*'` self-tests at `BOF3X_WIDE` unset, 1 and 2 pass on the fold-in's tip. The round's
-   worktrees and `wide/*` branches under `.claude/worktrees/` are removable once it merges.
-
-2. **The owner's answers** ([`owner-review.md`](owner-review.md)): first "2026-10-14, the ultrawide round" - look at
+1. **The owner's answers** ([`owner-review.md`](owner-review.md)): first "2026-10-14, the ultrawide round" - look at
    the faster slide (not yet seen), the 21:9 left message box, the terrain margin 167 at 21:9, two `dolphinBoss` plant
    frames; decide the remaining 16:9 band rows (census 3's list and ST's 14 sites the shape cannot move: move out,
    hide or leave), the faerie through the table (D300, Capcom's; FY's rule), the gene crystal (D242, Capcom's,
@@ -71,7 +58,7 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    defect list; then the rows to the policy mechanism (`recipes/prefer.toml`).
    Also: **the ending's backdrop** (`wide/ending-backdrop`, DIV-0127, D302, [`ending-backdrop.md`](ending-backdrop.md); unpushed, 2026-10-14): the owner saw the captures and approved; their eye on the mirrored bands in play, then the PR. The launcher page that uses the scene: built 2026-10-15 from the owner's mock-ups (`launcher/title-page`, [`launcher-settings.md`](launcher-settings.md) 2a; unpushed) - their eye on it, then the PR.
 
-3. **The stale state-hash pairs** ([`nue-regression-1013.md`](nue-regression-1013.md)): the Nue signal of 2026-10-13
+2. **The stale state-hash pairs** ([`nue-regression-1013.md`](nue-regression-1013.md)): the Nue signal of 2026-10-13
    was a stale pair (re-recorded as `cn_cutsceneAndNue_orig2` / `_orig2b`) and DIV-0092 by design. **Left:** the
    other nine `cn_<route>_orig2` pairs are stale the same way (save-slot records in page `0x905000`) - about 45
    minutes on a quiet machine to re-record, per [`state-hash.md`](state-hash.md) 6; any recipe that writes a slot
@@ -79,7 +66,7 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    durable fix (a design change, the owner's call). The ultrawide round compared wide against ours narrow from the same
    hour, which sidesteps this. `bossAndFlash` meets DIV-0092 too (event battle 8, track 33) and has no pair.
 
-4. **Open technical items, no owner needed:**
+3. **Open technical items, no owner needed:**
    - **The ultrawide round's own** ([`ultrawide-round.md`](ultrawide-round.md) 5b and the group docs): the six
      `# save` headers D298 names (`bridgeWalk`, `fairyVillage`, `identify`, `ninaWalkBehindBlock`, `tarmanLogic`,
      `vaccinationAndFireScene` take the save of their own name, as census 3's scratch copies did); the band census's
@@ -92,13 +79,8 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    - **The all-calls tracer stalls** a hosted run before any recipe frame (D276,
      [`hidden-start-scan.md`](hidden-start-scan.md) 8): `pc_hidden_reached.json` is still the 2026-09-21 reach, the
      199 new hidden starts untraced. Bisect the DLL.
-   - **The Identify panel's `?` marks** (D278, [`labels-1013.md`](labels-1013.md) 6.2): two `twin` rows,
-     `0x65AAC4` <- US `0x801F0B88` (4 bytes) and `0x65AAC8` <- `0x801F0B8C` (8) - found, not built.
-   - **The Config values** (D282, issue #77): fixed 2026-10-17 by a `twin` row from `START.EMI` (DIV-0101
-     amended); the owner's play owed.
-   - **The image's map faults** D266 (the Western title mark's width, a `twin` from `GAME.EMI#1` - after the owner's
-     yes), D267 (the Meteor Strike chip's lifts) and D268 (`AREA111`'s segment over a twin row)
-     ([`disc-data-inventory.md`](disc-data-inventory.md) 5).
+   - **The image's map fault left:** D266 (the Western title mark's width, a `twin` from `GAME.EMI#1` - after the
+     owner's yes; D267 and D268 fixed 2026-10-17).
    - **The US title layout** (D277, [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md) 3.1): waits on the owner's call.
    - **The JP world map's camera** (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3): the PSX twin read, JP
      against US `GAME.EMI`'s world-map camera set-up, and a raw dump of `0x905000`'s page at tick 1095. The owner's
@@ -113,13 +95,18 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
      sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed but on FR / DE
      ([`fishing-rule-pages.md`](fishing-rule-pages.md)); D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
 
-5. **The follow-up round: disc-only and PSP polish** (not staged). Still open: the load screen's `"%X"` (D254) fixed 2026-10-16 as the
-   engine's own string (DIV-0101 amended); the inn and camp hang (D255) fixed by DIV-0129 on
-   `fix/psx-only-1016` (2026-10-16; D303..D305 found on its runs); the PSP
-   title's framing (D256); what is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6:
-   39 ranges, the `BOOT.BIN`-reader class); the disc-only round's own leftovers
-   ([`disc-only-round.md`](disc-only-round.md) 5); the PSP-EU Config screen (D246) and the PAL banks (D257), the
-   owner's.
+4. **The install-gap census's remainder** ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
+   P1 still open - the event battles' track words (all seven builds; the owner's "track half", DIV-0101
+   provisional), the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
+   list on the Western images; then P2's twins the disc search already locates (world map 115's legend frame, the
+   effect tables, the PSP's light pair and screen margins) and P3's long tail by the owning-function method.
+   Regenerate the recipes after each (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
+   `exe_tables.py gaps`, `exe_tables.py recipe`, the seven discs) and check with `tools/exe_scan.py`.
+
+5. **The follow-up round: disc-only and PSP polish** (not staged). Done: D254, D255, D256, D282. Still open: what
+   is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6: 39 ranges, the
+   `BOOT.BIN`-reader class); the disc-only round's own leftovers ([`disc-only-round.md`](disc-only-round.md) 5); the
+   PSP-EU Config screen (D246) and the PAL banks (D257), the owner's.
 
 6. **The staged localisation PR**: the empty save slot blank as the US disc draws it (`0x669CCC`) and IDEAS I34, the
    name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's to answer
@@ -168,26 +155,9 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    the owner's to say). The other six tables are equal on every build and show neither pattern. Scripts: session
    9c821506's scratchpad (`scan.py`, `phase.py`, `cad.py`).
 
-10. **Sign the release binaries** (2026-10-16; the owner was setting up Azure Trusted Signing). The build side is
-    done: every binary carries a version block (`src/version.rc`, `make_exe.py`'s `build_version`), `kTimestamp` reads
-    as a past date, and `make_exe.py --verify-only` accepts and reports an Authenticode signature
-    ([`state3-build.md`](state3-build.md) 2.1), and `release.yml` signs with jsign from the Ubuntu job and re-verifies
-    ([`releases/README.md`](releases/README.md) "Signing"). Left, the owner's: the App Registration and its role on the
-    signing account, the three secrets and three variables in the repository; then the first signed `latest` build is
-    the test (the step warns and ships unsigned until the secrets exist). Unverified until then: jsign 7.6's
-    `TRUSTEDSIGNING` store against this account (its documentation's example, not run here), and that `wget` of the jar
-    is pinned by version only, not by hash. Why: VirusTotal scored the unsigned launcher 11/70, all machine-learning
-    labels keyed on its packer-like shape (two sections with no file bytes, a 61-byte `.text`), which the layout needs;
-    a publisher identity is what moves those models. After the first signed release, submit the hashes as false
-    positives to Microsoft and Avira.
-
-11. **Stale installs, piece by piece: built** (`install/recipe-version`, 2026-10-17,
-    [`install-staleness.md`](install-staleness.md)). Each cache piece records what it was measured to read
-    (functions run, module values named, recipes opened); `importer.py stale` judges them against the release; the
-    launcher asks once per release and rebuilds only the stale pieces (a no-change setup 270 s -> 62 s). Owed: the
-    owner's eye on the prompt in a real start (make a piece stale - edit a row of `recipes/exe-psp.tsv` in a source
-    checkout - and start the launcher on that home), then the PR. `FilledSince()` kept as the DLL's backstop for a
-    cache the launcher does not judge.
+10. **After the first signed release** (`v0.1.0-alpha.3`, signed by `release.yml` through Trusted Signing since PR #72):
+   submit the binaries' hashes as false positives to Microsoft and Avira; jsign's jar is still pinned by version
+   only, not by hash ([`releases/README.md`](releases/README.md) "Signing").
 
 **Older open items** (one line each; the pointer holds the detail):
 
@@ -319,10 +289,10 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **`wide/ultrawide-round`** (a worktree in session `6d500aac`'s scratchpad `uw/`), pushed for review: item 1. Its
+- **`wide/ultrawide-round`** (a worktree in session `6d500aac`'s scratchpad `uw/`): merged as PR #60. Its
   group branches `wide/ba`, `cf`, `dp`, `eb1`, `eb2`, `eb2b`, `eb3`, `fy`, `grab`, `ld`, `lr`, `pd`, `rn`, `rn2`, `sl`,
-  `ss`, `st`, `st2`, `st3`, `uc`, `uc2`, `uw` (most with a worktree under `.claude/worktrees/`): all merged into it;
-  removable once the PR merges.
+  `ss`, `st`, `st2`, `st3`, `uc`, `uc2`, `uw` (most with a worktree under `.claude/worktrees/`): all merged;
+  removable.
 - **The fifteen away-day worktrees** under `.claude/worktrees/` and their branches `away/1013-*`: merged in PR #58;
   removable at the owner's word.
   Also there from 2026-10-12: `worktree-agent-ae288769dd06909be` (the D260..D263 fix agent's, merged in PR #57).
@@ -603,6 +573,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## Waiting on someone else
 
-- **The owner:** [`owner-review.md`](owner-review.md) - the away day's section (item 2), then the older eye, ear and
-  play checks and open calls. Nobody has played a disc-only or PSP-only install.
+- **The owner:** [`owner-review.md`](owner-review.md) - its sections from the newest (item 1), then the older eye, ear and
+  play checks and open calls. The owner has played a PSX-only install (the reports of 2026-10-16); nobody has
+  played a PSP-only one.
 - **TheRealBiggs** - not yet contacted ([`STATUS.md`](STATUS.md) obligations).
