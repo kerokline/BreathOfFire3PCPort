@@ -43,7 +43,8 @@ void Restore();
 // What each map cell's record run drew (docs/campfire-and-crystal.md section
 // 4). DrawLayer_Open's, mode kFloor: RunBegin before a run's first record is
 // handed to its handler, RunEnd after its last. Gfx_CommitPrim's, while
-// g_in_run: RunPrim for each primitive committed. The union of the run's
+// g_in_run: RunPrim for each primitive committed, whose points are read at
+// RunEnd (a handler may write them after the commit). The union of the run's
 // primitives' screen boxes is kept for the next pass's Defer, which stops a
 // sprite at a layer whose runs drew anything over its body last pass.
 extern bool g_in_run;
