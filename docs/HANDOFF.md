@@ -94,8 +94,8 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
      199 new hidden starts untraced. Bisect the DLL.
    - **The Identify panel's `?` marks** (D278, [`labels-1013.md`](labels-1013.md) 6.2): two `twin` rows,
      `0x65AAC4` <- US `0x801F0B88` (4 bytes) and `0x65AAC8` <- `0x801F0B8C` (8) - found, not built.
-   - **The Config values** (D282, [`eye-batch-1013.md`](eye-batch-1013.md) 3 item 2): the row tables `0x653808` /
-     `0x653810`, likely a `twin`.
+   - **The Config values** (D282, issue #77): fixed 2026-10-17 by a `twin` row from `START.EMI` (DIV-0101
+     amended); the owner's play owed.
    - **The image's map faults** D266 (the Western title mark's width, a `twin` from `GAME.EMI#1` - after the owner's
      yes), D267 (the Meteor Strike chip's lifts) and D268 (`AREA111`'s segment over a twin row)
      ([`disc-data-inventory.md`](disc-data-inventory.md) 5).

@@ -4531,6 +4531,22 @@ designed in rather than bolted on.
   the self-tests, as DIV-0071 does). The owner has seen it in a replay and
   approved (2026-10-14). `BOF3X_LAYERING_RECORDS=0` drops this amendment
   alone (the control).
+- **Amended 2026-10-17 (GitHub issue #79, a player; known-defects D306): a
+  run's quads are read when the run ends, not when each is committed.**
+  `MapCell_DrawUprights` (Capcom's `0x570210`) commits each pair of leaf
+  quads and then writes their outer vertices 0 and 1, so the 10-14 amendment
+  read those two points from whatever the packet pool held there before.
+  On the Yraall road's bushes the stale points put all six quads on the
+  trunk's axis one pass in three (`BOF3X_LAYERING_LOG` and a temporary dump
+  of the kept quads, frames 3433..3439): the run "drew nothing over" Rei,
+  she was moved in front of the bush, and the next pass put her back - the
+  flicker the player and the owner saw. The run now notes its committed
+  primitives (up to 64; past that the oldest are read at once, as before) and
+  reads them in `RunEnd`, after its last handler. No other change to the
+  rule. Verification: `yraallRoad.txt` frames 3300..3720 shot every frame,
+  the box round Rei and the bush: 100 of 421 frames flipping before, 0 after,
+  and all 421 equal to `BOF3X_LAYERING=0` in that box (the bush in front of
+  her, as Capcom draws it).
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
@@ -6581,6 +6597,20 @@ designed in rather than bolted on.
   4710 on a rebuilt PSX-EU disc-only install, the sprite's region against the
   PC install's: 5,190 differing pixels before, 44 after (the rest is the
   frame's 3x scale sampled down); not played by the owner yet.
+- Amended 2026-10-17 (D282, issue #77 - a player on a PSX-only install): the
+  Config screen's row tables (`0x653808` row to first record, `0x653810` row
+  to option count, 13 bytes) are no longer zero on a disc-built image. Zero,
+  every row drew no option value (the labels only), on every disc build. A
+  `twin` row from `ETC/START.EMI` (`psp_exe.TWINS`): the 13 bytes are there on
+  all seven discs, after each disc's own records (US `#8@0x801ECDAC`), and
+  `STATUS.EMI#0` holds the same copy; the padding after them differs by disc,
+  so the run stops at the count table's last row. Equal to `BOF3.exe`'s
+  (`exe-psp.tsv` "13"; `placed_equal` +13). `exe-gaps.tsv`: the `language`
+  row now ends at `0x653808` and the 24 / 27 bytes after the tables are a
+  `game-value` gap, as they were in substance. Verification: the recipe checks
+  clean; a PSX-US disc-only install rebuilt from the recipes draws `Fast Med.
+  Slow`, `1 2 3 4` twice, `Stereo Mono`, `Off On` on the title's Config
+  (the 10-12 cache's image had the 13 bytes zero); not played by the owner yet.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
