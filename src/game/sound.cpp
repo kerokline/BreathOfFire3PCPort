@@ -14,6 +14,7 @@
 // result.
 #include "game/sound.h"
 
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -306,6 +307,57 @@ int Music_FadeOutEax(int frames) {
     Music_FadeCount = frames;
     return frames;
 }
+
+// DIVERGENCE DIV-0132: the PlayStation's duck and its undo for the PC's fade
+// to nothing and back to 127. The PlayStation's song plays at sequence volume
+// 97 (Music_Play's crescendo to 100 ends there, libsnd-reading.md 5.1);
+// _SsSndDecrescendo of 0x14 over 0x10 VSyncs takes one unit a VSync, 16 in
+// all, to 81 - amplitude (81 / 97)^2, -313 hundredths of a decibel. The duck
+// asks the same of the buffer: under the sequencer (music_seq::Level, the
+// same square law) the volume times 81 / 97; under an MP3 (Music_SetVolume,
+// 10000 / 127 hundredths a unit) the volume less 313 * 127 / 10000. Carried
+// by the fade state Sound_Tick steps (no stop at its end), so a later fade or
+// Music_Play takes over as it would from Capcom's.
+namespace sound {
+namespace {
+constexpr float kPsxSongVolume = 97.0f;
+constexpr float kPsxDuck = 16.0f;
+float g_unducked = -1.0f;  // the volume DuckMusic found; below 0, none outstanding
+
+void FadeTo(float target, int frames) {
+    sound::FinishStoppingFade();  // DIV-0028
+    Music_FadeStep = frames > 0 ? (target - Music_Volume) / static_cast<float>(frames) : 0.0f;
+    if (frames <= 0) {
+        Music_Volume = target;
+        SetVolumeBits(Dword(Address(&Music_Volume)));
+    }
+    Music_FadeStops = 0;
+    Music_FadeCount = frames > 0 ? frames : 0;
+}
+}  // namespace
+
+void DuckMusic(int frames) {
+    MUSIC_LOG("DuckMusic(%d) track %u volume %.2f", Frame_Counter, frames, (unsigned)Music_Track, Music_Volume);
+    const float from = Music_Volume;
+    float target;
+    if (music_seq::Active()) {
+        target = from * (kPsxSongVolume - kPsxDuck) / kPsxSongVolume;
+    } else {
+        const float hundredths = 4000.0f * std::log10((kPsxSongVolume - kPsxDuck) / kPsxSongVolume);
+        target = from + hundredths * 127.0f / 10000.0f;
+    }
+    if (target < 0.0f) target = 0.0f;
+    g_unducked = from;
+    FadeTo(target, frames);
+}
+
+void UnduckMusic(int frames) {
+    MUSIC_LOG("UnduckMusic(%d) track %u volume %.2f to %.2f", Frame_Counter, frames, (unsigned)Music_Track, Music_Volume, g_unducked);
+    const float target = g_unducked >= 0.0f ? g_unducked : 127.0f;
+    g_unducked = -1.0f;
+    FadeTo(target, frames);
+}
+}  // namespace sound
 
 // original 0x587C70: WinMain calls it on every spin while it waits out the
 // frame (6.7 million calls in an attract run) - so no logging here. The music
