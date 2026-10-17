@@ -653,6 +653,11 @@ install (`b_rc\runs\id_sigma_worldmap\pc`, 51 frames). 36 frames are equal.
 15 differ, each only inside x 133..180, y 49..98 of 640 x 480, which is the
 legend's key column.
 
+The same route on `pc` with `--original WorldMapLegend` (`input_run.py`,
+`runs\orig2`; the log says `patch OFF WorldMapLegend`): its three shots,
+`f01230`, `f01260` and `f01320`, all show the legend and are equal to the
+reference's.
+
 ### 9.6 Ledger draft C
 
 **The world map's legend: the buttons the Config holds, in PlayStation
