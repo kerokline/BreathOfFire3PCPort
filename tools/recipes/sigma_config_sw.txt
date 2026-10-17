@@ -1,0 +1,68 @@
+# Button route: the Config screen's Controller panel (Config_DrawControllerCell),
+# docs/button-routes.md 3.3. The town save, the field menu (triangle), right
+# x5 to Config, R2, down x6 to Controller, R2: the panel with the cursor on
+# Speak, then down to each line, then Start to Quit. No face button is
+# pressed inside the panel, so the identity and swapped runs press the same.
+# Played under BOF3X_LANG=en-US on the PC first; the twin is sigma_config_sw.txt
+# (tools/sigma_routes.py).
+# save town_sw
+# sigma-from 300
+# Shots at frames 700, 790, 845 added by tools/recipe_shots.py (--every 1 --from F --to F).
+# The swapped twin of sigma_config.txt, written by tools/sigma_routes.py: from frame 300 circle <-> cross, L1 <-> R1.
+wait 61
+hold start 4
+wait 79
+hold start 5
+wait 42
+hold r2 4
+wait 65
+hold r2 5
+wait 19
+hold r2 2
+wait 106
+hold triangle 4
+wait 40
+hold right 4
+wait 10
+hold right 4
+wait 10
+hold right 4
+wait 10
+hold right 4
+wait 10
+hold right 4
+wait 20
+hold r2 4
+wait 60
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 20
+hold r2 4
+wait 22
+shot f00700 1
+wait 17
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold down 4
+wait 8
+shot f00790 1
+wait 7
+hold down 4
+wait 36
+hold start 4
+wait 3
+shot f00845 1
+wait 36

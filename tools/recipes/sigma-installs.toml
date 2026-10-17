@@ -1,0 +1,69 @@
+# The four install kinds the button routes run on (docs/button-routes.md,
+# docs/button-unification-round.md 2 "RC"): an installs file for
+# tools/abc_run.py --installs (format: recipes/abc-installs.toml's header).
+# Paths and switches only, no game data.
+#
+#   python tools/abc_run.py prepare --installs tools/recipes/sigma-installs.toml --set sigma --root C:/Users/kerok/b_rc
+#   python tools/abc_run.py run --installs tools/recipes/sigma-installs.toml --set sigma --root C:/Users/kerok/b_rc \
+#       --route tools/recipes/sigma_worldmap.txt --tag id --wide 0
+#
+# The saves the routes load come from {root}/saves, not the main checkout's
+# tools/recipe_saves: the crafted chapter-jump and swapped-Config saves are
+# made on this machine by tools/sigma_saves.py and stay outside the tree
+# (rule 1); the stock ones are copied there by the same tool.
+
+[paths]
+pc_game = "{main}/bof3"
+discs = "{root}/discs"          # the owner's CDImage zips, unpacked here (the importer builds from a .cue / .iso)
+
+[defaults]
+cfg = "{pc}/BOF3.CFG"
+recipe_saves = "{root}/saves"
+
+[set.sigma]
+what = "the four install kinds of the button round: the PC as shipped, the US PSX disc alone, the PSP-EU disc alone, the PC with the en-US layer"
+installs = ["pc", "psx-us", "psp-eu", "pc-enus"]
+
+[[install]]
+name = "pc"
+what = "the PC install, no language layer (cache from the PC's DAT\\ and BOF3.exe alone)"
+kind = "pc"
+game = "{root}/g_pc"
+cache = "{root}/c_pc"
+build = ["{pc}/DAT", "{pc}/BOF3.exe"]
+traits = ["pc"]
+
+[[install]]
+name = "psx-us"
+what = "the US PSX disc alone (install --base)"
+kind = "base"
+game = "{root}/g_psxus"
+cache = "{root}/c_psxus"
+build = ["{discs}/Breath of Fire III (USA).cue"]
+build_lang = ["en-US"]
+lang = "en-US"
+exeimage = true
+traits = ["psx", "en-US"]
+
+[[install]]
+name = "psp-eu"
+what = "the PSP-EU disc alone (install --base)"
+kind = "base"
+game = "{root}/g_pspeu"
+cache = "{root}/c_pspeu"
+build = ["{discs}/Breath of Fire III (PSP) (Europe).iso"]
+build_lang = ["en-150"]
+lang = "en-150"
+exeimage = true
+traits = ["psp", "en-150"]
+
+[[install]]
+name = "pc-enus"
+what = "the PC install with the cache's en-US layer (PC DAT\\ + BOF3.exe + the US disc)"
+kind = "pc"
+game = "{root}/g_pc"
+cache = "{root}/c_pc_us"
+build = ["{pc}/DAT", "{pc}/BOF3.exe", "{discs}/Breath of Fire III (USA).cue"]
+build_lang = ["en-US"]
+lang = "en-US"
+traits = ["pc", "en-US"]

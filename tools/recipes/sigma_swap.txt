@@ -1,0 +1,331 @@
+# The button round's instrument (docs/button-routes.md 2): the town save loaded,
+# the shop route's walk to the inn (tools/recipes/shop.txt's frames 0..2201),
+# then the field menu's Config: the Controller panel, cross on the Speak line
+# (Speak <-> Action) and L1 on the View line (View <-> Change), Start to Quit,
+# R2 to close the Config, cross to close the menu; then shop.txt's inn (from its
+# frame 2201: Rest, "Save?" Yes) and the save written to SLOT 7 - not 6
+# (balioAndSunder_2 writes there), not 4 (bossAndFlash loads it), not 0 (every
+# recipe's save goes there) - with Yes on the overwrite prompt. The game's own
+# BISLPS07.DAT then holds the nine pad words tools/sigma_saves.py swap writes
+# (checked 2026-10-17 on pc-enus: equal word for word).
+# Confirm is R2 throughout (Speak and the confirm word keep L2 / R2 whatever
+# the swap). The cross that closes the menu is the cancel word's button on
+# today's code; once confirm and cancel follow the Config
+# (docs/button-unification-round.md 0, item 3) that close is circle.
+# Not on a PC install with no language layer: its Controller panel crashes
+# (docs/button-routes.md 6). Played under BOF3X_LANG=en-US (pc-enus).
+# 3,972 frames.
+# save town
+# Shots at frames 2515, 2620, 3810 added by tools/recipe_shots.py (--every 1 --from F --to F).
+wait 61
+hold start 4
+wait 79
+hold start 5
+wait 42
+hold r2 4
+wait 65
+hold r2 5
+wait 19
+hold r2 2
+wait 46
+hold square 10
+hold square+down 1
+hold square+right+down 23
+hold square+right 3
+hold square 18
+wait 3
+hold right 4
+hold up+right 27
+hold square+up+right 22
+hold square+up+left 1
+hold up+left 3
+hold up 3
+hold up+right 8
+hold right 10
+hold up+right 12
+wait 37
+hold right 22
+hold up+right 24
+hold r2+up+right 4
+hold right 1
+wait 27
+hold r2 5
+wait 43
+hold r2 5
+wait 6
+hold left 1
+hold up+left 14
+hold up+right 8
+hold r2+up+right 6
+hold up+right 4
+wait 37
+hold r2 6
+wait 10
+hold r2 4
+wait 8
+hold r2 3
+wait 32
+hold r2 4
+wait 17
+hold down 4
+wait 6
+hold down 3
+wait 7
+hold down 4
+wait 5
+hold down 4
+wait 6
+hold up 4
+wait 5
+hold up 4
+wait 7
+hold up 3
+wait 6
+hold square 4
+wait 23
+hold cross 3
+wait 14
+hold right 4
+wait 8
+hold r2 4
+wait 12
+hold down 5
+wait 5
+hold down 3
+wait 21
+hold r2 4
+wait 12
+hold r2 4
+wait 9
+hold r2 3
+wait 9
+hold up 4
+wait 3
+hold r2 5
+wait 6
+hold r2 4
+wait 10
+hold r2 4
+wait 5
+hold up 4
+wait 3
+hold r2 4
+wait 10
+hold r2 4
+wait 7
+hold r2 4
+wait 30
+hold square 4
+wait 21
+hold r2 4
+wait 18
+hold cross 4
+wait 19
+hold cross 5
+wait 15
+hold down+left 43
+hold square+down+left 18
+hold square+left 7
+hold square+up+left 20
+hold square+up+right+left 1
+hold square+up+right 13
+hold square+right 1
+hold square 4
+wait 22
+hold square 17
+hold square+up+right 17
+hold square 1
+wait 3
+hold r2 4
+wait 32
+hold r2 5
+wait 32
+hold r2 4
+wait 81
+hold r2 4
+wait 22
+hold r2 4
+wait 15
+hold down 5
+wait 9
+hold down 4
+wait 11
+hold down 4
+wait 26
+hold r2 5
+wait 12
+hold r2 5
+wait 11
+hold r2 5
+wait 16
+hold r2 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 13
+hold r2 5
+wait 14
+hold r2 5
+wait 13
+hold r2 4
+wait 13
+hold square 5
+wait 14
+hold right 4
+wait 9
+hold square 6
+wait 17
+hold cross 4
+wait 12
+hold right 4
+wait 10
+hold r2 4
+wait 11
+hold down 5
+wait 9
+hold down 4
+wait 5
+hold r2 5
+wait 5
+hold down 6
+wait 6
+hold r2 3
+wait 9
+hold r2 5
+wait 16
+hold r2 5
+wait 9
+hold square 5
+wait 16
+hold cross 5
+wait 16
+hold cross 5
+wait 18
+hold square 2
+hold square+left 15
+hold square+down+left 6
+hold square+down 1
+hold square+right+down 9
+hold square+down 7
+hold square+down+left 3
+hold square+down 45
+hold square+down+left 16
+hold square+left 4
+hold square+up+left 10
+hold square+left 1
+hold square 2
+wait 21
+hold triangle 4
+wait 40
+hold right 4
+wait 10
+hold right 4
+wait 10
+hold right 4
+wait 10
+hold right 4
+wait 10
+hold right 4
+wait 20
+hold r2 4
+wait 60
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 20
+hold r2 4
+wait 28
+shot f02515 1
+wait 1
+hold cross 4
+wait 12
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold down 4
+wait 10
+hold l1 4
+wait 27
+shot f02620 1
+wait 2
+hold start 4
+wait 30
+hold r2 4
+wait 60
+hold cross 4
+wait 60
+hold square+up 1
+hold square+up+left 13
+hold square+left 1
+hold square 1
+wait 2
+hold r2 4
+wait 11
+hold left 1
+hold up+left 9
+hold r2+up+left 5
+hold up+left 5
+wait 7
+hold r2 3
+wait 12
+hold right 3
+hold up+right 4
+hold up 1
+wait 10
+hold left 3
+hold up+left 5
+wait 8
+hold r2 4
+wait 28
+hold r2 4
+wait 32
+hold r2 4
+wait 62
+hold r2 4
+wait 46
+hold down 4
+wait 22
+hold down 5
+wait 16
+hold up 4
+wait 19
+hold up 4
+wait 11
+hold r2 3
+wait 375
+hold r2 4
+wait 39
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold down 4
+wait 16
+hold r2 4
+wait 40
+hold left 4
+wait 16
+hold r2 4
+wait 18
+shot f03810 1
+wait 161
