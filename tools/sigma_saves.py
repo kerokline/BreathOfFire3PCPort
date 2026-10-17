@@ -7,7 +7,8 @@ never into the checkout (CLAUDE.md rule 1).
     python tools/sigma_saves.py words SAVE...                 # the nine pad words of each
     python tools/sigma_saves.py swap SRC DST                  # Speak <-> Action, View <-> Change
     python tools/sigma_saves.py jump SRC DST --chapter N [--state S] [--area A] [--pos X,Z] [--facing F]
-    python tools/sigma_saves.py stock DIR                     # copy the main checkout's recipe saves into DIR
+    python tools/sigma_saves.py place SRC DST [--area A] [--pos X,Z] [--facing F]   # the scenario bytes kept
+    python tools/sigma_saves.py stock DIR                    # copy the main checkout's recipe saves into DIR
     python tools/sigma_saves.py check SAVE...                 # the +0x70 checksum
 
 The save file is the 0x10B0-byte game block from offset 0 and the summary
@@ -130,6 +131,10 @@ def main():
     p.add_argument('--area', type=int)
     p.add_argument('--pos', help='X,Z as s32 16.16 (hex or decimal)')
     p.add_argument('--facing', type=int)
+    p = sub.add_parser('place'); p.add_argument('src'); p.add_argument('dst')
+    p.add_argument('--area', type=int)
+    p.add_argument('--pos', help='X,Z as s32 16.16 (hex or decimal)')
+    p.add_argument('--facing', type=int)
     p = sub.add_parser('stock'); p.add_argument('dir')
     a = ap.parse_args()
 
@@ -150,12 +155,13 @@ def main():
         struct.pack_into('<9H', b, WORDS, *w1)
         write(a.dst, b)
         print(f'{os.path.basename(a.src)}: {show(w0)}\n{os.path.basename(a.dst)}: {show(w1)}')
-    elif a.cmd == 'jump':
+    elif a.cmd in ('jump', 'place'):
         guard(a.dst)
         b = read(a.src)
-        b[0:16] = bytes(16)
-        b[0] = a.chapter & 0xFF
-        b[2] = a.state & 0xFF
+        if a.cmd == 'jump':
+            b[0:16] = bytes(16)
+            b[0] = a.chapter & 0xFF
+            b[2] = a.state & 0xFF
         if a.area is not None:
             struct.pack_into('<H', b, AREA, a.area)
         if a.facing is not None:
@@ -164,7 +170,8 @@ def main():
             x, z = (int(v, 0) for v in a.pos.split(','))
             struct.pack_into('<ii', b, POS_X, x, z)
         write(a.dst, b)
-        print(f'{a.dst}: chapter {a.chapter} state {a.state} area {struct.unpack_from("<H", b, AREA)[0]}')
+        print(f'{a.dst}: chapter {b[0]} state {b[2]} area {struct.unpack_from("<H", b, AREA)[0]} '
+              f'at ({struct.unpack_from("<i", b, POS_X)[0]:#x}, {struct.unpack_from("<i", b, POS_Z)[0]:#x}) facing {b[FACING]}')
     elif a.cmd == 'stock':
         guard(a.dir)
         src = os.path.join(main_checkout(), 'tools', 'recipe_saves')
