@@ -107,15 +107,25 @@ self-tests, a hand-back report; harness roots per group
   `Frame_Counter`, the span's base and length, the participant count); the
   span; the participants' records (tag, length, bytes). Raw, about 4 MB a
   file; a zero-page skip if it matters (measured, not assumed). The save
-  half makes a quicksave readable by the title's load menu as a plain save
-  when the build no longer matches (section 5, question 2).
-- **The keys.** F6: take to quicksave slot 0 (`0x10`), the overlay's
+  half is what the quick menu's summary draw reads; it also keeps a later
+  "load as a plain save" possible without a format change, though the title's
+  load menu never lists these files (section 5, answer 2).
+- **The keys.** F6: **the quicksaves rotate, then a take into slot `0x10`**
+  (the owner, 2026-10-17): `BISLPS1F.DAT` is deleted, `1E` renamed to `1F`,
+  down to `10` renamed to `11`, and the new quicksave written as `10`, so
+  the sixteen slots hold the sixteen most recent and F7 always loads the
+  newest. Renames, not rewrites; the rotation runs top down, so a rename
+  that fails stops the take with a refusal line and leaves every file
+  present under some name, nothing half-rotated. The overlay's
   "Quicksave OK" line through the same `Overlay_Text` path as F12's; F7:
-  restore from it, "Quickload" or a refusal line naming why (no file, another
-  build). F5 is QM's (stage B). F7 is free since DIV-0040 made it nothing.
+  restore from `0x10`, "Quickload" or a refusal line naming why (no file,
+  another build). F5 is QM's (stage B). F7 is free since DIV-0040 made it
+  nothing.
 - **Self-test:** a span copy, a scribble over game pages, a restore, the
   pages equal; a participant missing on either side refused; a build-id
-  mismatch refused with the save half still parsed.
+  mismatch refused with the save half still parsed; the rotation on a
+  directory of sixteen named files (each moves up one, `1F` gone, `10` new)
+  and on one with gaps in the sequence.
 - **Ledger draft A:** the quicksave keys and files. (F12 is unchanged, section 5.)
 - Output: `docs/quicksave.md` (the format, the point, the registry).
 
@@ -264,12 +274,15 @@ Answered:
 6. **4 MB a file is fine for now**; shrinking it is logged as IDEAS I45, not
    this round's.
 
-Still open, built on the simpler reading unless the owner says otherwise:
+3. **Load only in the F5 menu**; F6 is the one way to save (the owner,
+   2026-10-17).
+5. **Sixteen quicksave slots** `0x10`..`0x1F`, kept as a history: **F6 pushes
+   every quicksave down a slot** (`10` -> `11`, ..., `1E` -> `1F`, the old
+   `1F` deleted) before it writes the new one to `10` (the owner,
+   2026-10-17; F is the last hex digit, so sixteen). Three shown at a time
+   as the save menu shows them, newest first.
 
-3. **Load only in the F5 menu** (F6 is the one way to save). QM builds Load
-   and Back; Save per slot waits for a word.
-5. **Sixteen quicksave slots** (`0x10`..`0x1F`), three shown at a time as the
-   save menu shows them.
+Nothing of section 5 is open.
 
 ## 6. Not in this round
 
