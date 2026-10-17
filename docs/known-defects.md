@@ -8008,3 +8008,17 @@ recorder read the points at the commit, so it saw what the packet pool held
 there before. **Fixed** by reading the run's primitives when the run ends
 (DIVERGENCE DIV-0071, amended 2026-10-17). Not Capcom's and not the PSX-only
 install's: the same on every install with the rule on.
+
+## D307 — A Western disc install's world-map legend shows two button icons in each row (ours; fixed by DIV-0130, 2026-10-17)
+
+**Found:** [`key-icons-by-mapping.md`](key-icons-by-mapping.md) 9 (2026-10-13,
+`vf2_caughFish` t000630 on PSX-EU); reported by a player on a PSX-only
+install as GitHub issue #78 ("Button legend shows everything all at once").
+
+**Established:** the disc's dial page bakes the release's default buttons
+into the legend - dim in the frame, lit in labels 1 and 2 - and the PC's code
+draws the glyph of the save's words (Japan's) over the same place: a circle
+over the baked cross, a cross over the baked triangle. A first repaint of the
+labels alone changed nothing on screen: the frame (sprite 0) carries its own
+copy, drawn under everything. **Fixed** by repainting both copies in the
+importer (DIVERGENCE DIV-0130); verified on a rebuilt PSX-US install.

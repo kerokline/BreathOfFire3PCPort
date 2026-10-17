@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 129 entries, DIV-0001..0129, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 130 entries, DIV-0001..0130, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -7895,3 +7895,51 @@ designed in rather than bolted on.
 - **Reversible?** (1) `BOF3X_ORIGINAL=Sound_StreamDone` (the original's
   answer; the flag is then read by nothing). (2) a build with a PC install
   among the sources, or the 11 deleted from `base/snd/` and `SND\`.
+
+### A disc's world-map legend shows only the live button icon
+
+- **ID:** DIV-0130
+- **Date:** 2026-10-17
+- **Subsystem:** the importer's dial-page stand-in - `importer.py`
+  `dial_icons_blank` / `dial_icons_of`, applied in `get_chunk` to a disc's own
+  section standing in for the port's dial page (kind 1, tag `0x0A081000`,
+  class `art`, the 16 world-map areas; PSX `port-art` stand-ins and PSP
+  ones alike). The draw is unchanged: `WorldMap_DrawFrame` `0x404390` and its
+  area copies.
+- **Tier:** Intent - the owner's decision, 2026-10-17
+  ([`button-roles-by-release.md`](button-roles-by-release.md) 8: every button
+  icon follows the Config).
+- **Original behaviour:** each disc's dial page bakes its release's default
+  buttons into the legend twice - dim in the frame (sprite 0) and lit in
+  labels 1 and 2 - and the code draws the glyph of the save's word over the
+  same place (rows 1 and 2: words 0 and 6). On the PlayStation the two agree
+  until a Config swap. On the PC the code's words are Japan's, so a Western
+  disc-only install showed two icons at once: a circle over the baked cross
+  (Enter), a cross over the baked triangle (Guide) (GitHub issue #78, a
+  player; [`key-icons-by-mapping.md`](key-icons-by-mapping.md) 9;
+  known-defects D307).
+- **New behaviour:** the importer repaints the baked icons of a disc's dial
+  page with the panel's background (texture u 56..63, v 8..24 in the frame;
+  u 16..23, v 88..104 in the labels; each from the plain column beside it, u
+  64 and u 24), so the live glyph - the button the save's Config gives Speak
+  and Action - is the one icon drawn. The PC install's own page (the port's
+  keyboard legend) is not touched. On a JP disc nothing visible changes until
+  a Config swap, after which the legend follows it, as on the PlayStation.
+- **Rationale:** the owner's answers on the key icons: unify every button
+  flow; an icon shows what the Config holds now; PlayStation icons only. The
+  baked icon is the release default, the live one is the truth.
+- **Also in the PSX version?** Partly: the same code over the same page, so a
+  Config swap on the PlayStation showed the baked default under the live
+  glyph too. The Western overlap at defaults is the PC's (Japan's words over a
+  Western page).
+- **Verification:** `worldMapAndAreaTransition` on a PSX-US disc-only install
+  built with and without the change (root `C:\Users\kerok\ab79`, frames every
+  30): 17 frames differ, each only in the legend's icon column (`143,47` to
+  `158,80` of 640 x 480), showing a lone circle (Enter) and cross (Guide)
+  where the old install drew the circle over a cross and the cross over a
+  triangle. The cells were read on the US, EU, FR, DE, JP, PSP-JP and PSP-EU
+  pages (the same places, the background column plain on each).
+  `importer.py check`, `psp_standins.py check`: 0 errors.
+- **Reversible?** A cache built without it (the stand-in's recipe hash is the
+  disc's, checked before the repaint; the manifest records the repainted
+  body's).
