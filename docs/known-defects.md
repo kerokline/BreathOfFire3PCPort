@@ -8081,6 +8081,55 @@ seen in play yet.
 holds the 16 bytes verbatim on all seven discs (`COMMU02B.EMI` section 7 a
 copy); DIV-0101 amended. Not played yet.
 
+## D312 — The Config's Controller panel crashes the game on a PC install with no language layer (ours, round 14's R4F; fixed 2026-10-17)
+
+**Found:** the button round's RC group, 2026-10-17, opening the Controller
+panel on the `pc` install kind (the PC's `DAT\` and `BOF3.exe`, no
+`BOF3X_LANG`). `0xC0000096` in `Text_DrawString` (bof3x.dll+0x3514A) called
+from `Config_DrawControllerCell`, `ecx 0xA65`. It happens from the title's
+Config with a harness cache, without one, and with no `BOF3X_*` variable.
+
+**Established** (2026-10-17, reading the code and the capstone read of
+`0x461C00..0x461E07`): `ecx 0xA65` is `kIconCircle`, the first of DIV-0051's
+six icon glyphs, which `loc_build.py` builds into a Latin layer's font. The
+Chinese font ends before it, and `Text_DrawString`'s privileged instruction
+is Capcom's own trap for a glyph past the table. Our
+`Config_DrawControllerCell` (`config_text.cpp`) drew only the icons, which was
+safe while the only way in was the jmp `ConfigText_Inject` puts at `0x461C00`
+under a Latin overlay (`Lang_Latin`). Without one, Capcom's cell ran. Round
+14's R4F (commit `1750a40d`, 2026-10-05) took `Config_DrawControllerPanel`
+`0x461A50`, and ours calls `Config_DrawControllerCell` by name
+(`rest_4f.cpp`), so it reaches our icon draw whether or not the jmp went in.
+**A regression of ours, from `1750a40d`.** The rest of the panel's no-layer
+path was already the original's: the box width, the second cell, the frame
+and the names' width and edge are values of ours (`ConfigText_Operands`) that
+keep the original's numbers unless `ConfigText_Inject`'s patches go in, which
+is under a Latin overlay only. `ConfigText_Apply` writes the label, option and
+controller-name text only when a layer's chunk arrives.
+
+**Fixed 2026-10-17:** the cell draws DIV-0051's icons only while its Inject is
+on (`bof3::IsEnabled(0x461C00)`: a Latin overlay, not under `BOF3X_ORIGINAL`).
+Otherwise it draws the original's path in full, as the 2001 port did. That is
+the port's glyph from `0x66A2FC[i]` at (x + 4, y) in colours 2, 1, 6, 5, 0, 0,
+and the default table's letter at (x - 0x10, y) in colour 0 (D58's column).
+With none of the six bits set, select `0x100` draws the original's three-cell
+SELECT label. Our earlier function never drew that label, under a layer or
+without one. The rebinding cannot give a line the select bit
+(`and ecx, 0xFC`), so only a save could set it. It is still not drawn under
+DIV-0051, as before. R4F's fuzz now copies `0x461C00` and compares ours with it
+whenever the address is still Capcom's (no Latin overlay). Under a layer the
+row is left out and the log says so. The no-layer path restores the
+original's behaviour, so it needs no DIVERGENCE entry. DIV-0051 is unchanged.
+
+**Other draws of layer-only glyphs, checked:** `fishing_text.cpp`'s
+`kLabelCodes` (DIV-0069, the same icon cells) are reached only through
+`FishingText_Label`, and every caller in `effect_1a.cpp` / `effect_1b.cpp`
+tests `FishingText_On()`, which is `Lang_Latin()`. `ConfigText_DrawSelected`
+(the UI-to-dialogue glyph swap) is reached only through call sites
+`ConfigText_Inject` re-aims under a Latin overlay, and through
+`ConfigText_Operands().big_draw` / `name_draw`, which stay `Text_DrawAt`
+without one. No other code names glyph `0xA65..0xA6A`.
+
 ## D308 — The fishing song goes silent while the fishing panel is open (the port's; fixed by DIV-0132, 2026-10-17)
 
 **Found:** the owner, 2026-10-17, listening to `caughFish.txt` on a PSX-only
