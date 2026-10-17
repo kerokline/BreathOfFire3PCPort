@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 129 entries, DIV-0001..0129, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 130 entries, DIV-0001..0130, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -7915,7 +7915,7 @@ designed in rather than bolted on.
   at the "F", its right wing was cut flat, a caption showed and a second, cut
   TM (the mark sprite 1) sat beside the art's (D256; captured 2026-10-17 at
   4:3, 16:9 and 21:9, the same at every width).
-- **This port:** on a PSP base (`base_policy = "psp"`, read whatever
+- **New behaviour:** on a PSP base (`base_policy = "psp"`, read whatever
   `BOF3X_PSP` says) the sets draw the same sprites and pages with three
   rectangles measured from the PSP's pages - the upper text (0, 0, 224 x 116),
   the lower text (0, 117, 106 x 102), the emblem (0, 0, 202 x 122) - the upper
