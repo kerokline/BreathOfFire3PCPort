@@ -246,9 +246,8 @@ output.
 
 Numbering: groups draft lettered ledger entries (A, B, ...) and describe
 defects without numbers. The coordinator numbers at the merges from the
-first free entry. **`DIV-0131` is taken** (the PSP-only title, PR #81); the
-fishing-panel duck in flight on 2026-10-17 also labels itself `DIV-0131` and
-must be renumbered before it lands. Defects number from the first free
+first free entry, **`DIV-0133`** today (PR #81 took DIV-0131; the
+fishing-panel duck, PR #82, landed as DIV-0132 / D308). Defects number from the first free
 after D311. Every commit `git commit -s`; no game data in any doc: ranges,
 symbol names, counts and file names only (rule 1).
 

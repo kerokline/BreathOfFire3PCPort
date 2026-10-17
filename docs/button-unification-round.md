@@ -191,9 +191,8 @@ most files. After every merge: the build, `BOF3X_SHADOW='*'` headless, and
 RC's identity routes against the references.
 
 Numbering: drafts lettered by group; the coordinator numbers at the merges
-from the first free entry (**`DIV-0131` is taken** by PR #81; the
-fishing-panel duck in flight on 2026-10-17 must be renumbered before it
-lands). The drafts expected: A (SG: `σ`, amends DIV-0051; words 7 / 8),
+from the first free entry (**`DIV-0133`**: PR #81 took DIV-0131 and the
+fishing-panel duck, PR #82, landed as DIV-0132 / D308). The drafts expected: A (SG: `σ`, amends DIV-0051; words 7 / 8),
 B (SG: the starting Config by source), C (IC-W: the legend from `σ`, the
 port's keyboard art replaced; amends DIV-0130), D (IC-F: amends DIV-0069),
 E (IC-D), F (IC-L), G (HT: the hard-coded tests through `σ`), H (DT: the
