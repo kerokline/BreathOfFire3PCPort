@@ -384,7 +384,7 @@ def disc_image(disc, bid, places=()):
         else:
             put(lo, tables.psx_bytes(disc, p, hi - lo), "table", where, p["addr"])
     import psp_exe   # a PSP build: the game values its disc carries in another shape (docs/psp-image.md)
-    for lo, raw, where, addr in psp_exe.fill(disc, bid, owner, srcs=src):
+    for lo, raw, where, addr in psp_exe.fill(disc, bid, owner, srcs=src, ranges=ranges, img=img):
         put(lo, raw, "place", where, addr)
     for lo, raw, where, addr in psp_exe.unwide(bid, img, owner):   # the PSP's 16:9 side placements undone
         put(lo, raw, "place", where, addr)
@@ -887,7 +887,8 @@ def spans(owner, ranges):
 GAPS = os.path.join(ROOT, "recipes", "exe-gaps.tsv")
 GAP_COLS = ["build", "lo", "hi", "how", "kind", "symbol"]
 GAP_HOWS = ("gap", "language", "unread", "keys")
-GAP_KINDS = {"gap": ("game-value", "disc-unplaced", "port-relaid", "language-zero", "port-platform", "rule"),
+GAP_KINDS = {"gap": ("game-value", "disc-unplaced", "port-relaid", "language-zero", "port-platform", "rule",
+                     "game-format"),
              "language": ("language",), "unread": ("unread",), "keys": ("rule",)}
 # The eight language addresses that stay zero on a disc-only image (LG,
 # docs/loc-build-disc-only.md 5.4): (address, bytes or None for the PC's
@@ -952,7 +953,7 @@ def gap_rows(pc, bid, segs):
             return ("keys", "rule")
         if cls == "unread":
             return ("unread", "unread")
-        if cls in ("game-value", "disc-unplaced", "port-relaid", "port-platform", "rule"):
+        if cls in ("game-value", "disc-unplaced", "port-relaid", "port-platform", "rule", "game-format"):
             return ("gap", cls)     # "rule", "port-platform": in such a region of exe_own.py's, but not held
         fail("%s 0x%06X: class %s has no data.toml class" % (bid, x, cls))
 

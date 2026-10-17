@@ -430,6 +430,30 @@ int wmain(int argc, wchar_t** argv) {
             continue;
         }
 
+        // HANDOFF item 11 (docs/install-staleness.md): the home's install against
+        // this release's importer, piece by piece. Only the install the Sources
+        // page made and can make again - its game\ and its cache\, no other cache
+        // named - and never under a self-test or --no-config. Stale: the player
+        // is asked; yes rebuilds the stale pieces (the rest kept), no starts nothing.
+        if (!hosted && !SelfTestOnly() && want_dialog != 0 && named_game.empty() && cfg.cache.empty() &&
+            GetEnvironmentVariableW(L"BOF3X_CACHE", nullptr, 0) == 0 &&
+            GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", nullptr, 0) == 0 &&
+            !bof3x::HomeGameDefault().empty() && game_dir == FullPath(bof3x::HomeGameDefault())) {
+            const bof3x::StaleCheck check = bof3x::SourcesCheckStale();
+            if (!check.error.empty())
+                std::fwprintf(stderr, L"bof3x-launcher: %ls\n", check.error.c_str());
+            if (check.stale) {
+                if (!bof3x::SourcesAskRebuild(check)) return 0;
+                const bool built = bof3x::SourcesDialogRun(nullptr, cfg, false, true);
+                if (!bof3x::ConfigSave(ini, cfg))
+                    std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n", ini.c_str());
+                if (!built) return 0;   // stopped or failed: the install as it was, and nothing started
+                cfg = bof3x::Config{};
+                again = true;
+                continue;
+            }
+        }
+
         if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
             // The pad, for the dialogs' navigation and the Controls capture; stopped
             // before the game starts, which opens it for itself (DIV-0050).

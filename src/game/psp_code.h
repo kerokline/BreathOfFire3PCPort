@@ -38,6 +38,11 @@ constexpr unsigned kAll = kDuelLoss | kMyriaItem;
 // The changes on (a mask of Change).
 unsigned On();
 
+// Whether the cache's [build] base_policy is "psp" (a PSP-only install),
+// whatever BOF3X_PSP says: the base's own art is the PSP's, which the title's
+// logo framing follows (title_states.cpp, DIV-0131). Read in PspCode_Inject.
+bool PspBase();
+
 // The self-tests' seam: the mask set for a test, the previous one answered.
 unsigned Force(unsigned mask);
 

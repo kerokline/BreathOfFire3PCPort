@@ -7074,7 +7074,7 @@ an install without the jingles the open fails, the log says DIV-0129 once,
 and the inn is back at 2820. `campingFishing` on both reaches the fishing
 spot for the first time on a PSX-only install, which shows D303 and D304.
 
-## D256 — A PSP-only install's title is the PSP's fishing-version logo, its tiles misaligned in our 4:3 frame (ours; the owner's look owed)
+## D256 — A PSP-only install's title is the PSP's fishing-version logo, its tiles misaligned in our 4:3 frame (ours; fixed 2026-10-17, DIV-0131)
 
 **Found:** EB, 2026-10-12 ([`psp-end-batch.md`](psp-end-batch.md) defect 6),
 on the PSP-EU-only install's title.
@@ -7087,6 +7087,13 @@ was not rendered. Whether the logo is "the fishing version's" is EB's
 reading of the capture, not checked. **Next:** the owner's look at a PSP-EU
 title capture; then take the PSP's title framing apart (which rectangles
 the PSP's 384-wide view needs) or keep a PlayStation title on a PSP base.
+
+**Fixed 2026-10-17** (DIV-0131, [`psp-title-framing.md`](psp-title-framing.md)):
+rendered at last, the logo tore at the "F", its right wing was cut flat, a
+"FISHING ver." caption and a second TM showed, the same at every width: the
+PlayStation rectangles cutting the PSP's pages, whose pieces lie elsewhere.
+A PSP base now cuts them where they lie. A PlayStation title on a PSP base is
+not possible on a PSP-only install (no disc there carries one).
 
 ## D257 — A European PSX disc alone builds 733 of 741 containers: eight area banks are the PAL swap (the owner's open call)
 
@@ -7253,7 +7260,7 @@ harness's `pc-title-mark` difference measures against PSX-EU, and DIV-0114's
 reading the width from the disc's own `GAME.EMI#1`, as D260..D263's rows
 were made.
 
-## D267 — The Meteor Strike chip's four lifts are zero on every disc-built image (ours, the exe image's map; not fixed)
+## D267 — The Meteor Strike chip's four lifts are zero on every disc-built image (ours, the exe image's map; fixed 2026-10-17)
 
 **Found:** the disc-data inventory, 2026-10-13
 ([`disc-data-inventory.md`](disc-data-inventory.md) 5 item 2).
@@ -7268,7 +7275,14 @@ rows already take the PSPs' neighbours. Not seen in play. **Where to
 start:** a `twin` row from there for every build, with the segment's start
 trimmed (a `twin` fills only unowned bytes).
 
-## D268 — A `twin` row at `0x61FBD0` loses three bytes to `AREA111`'s map segment (ours, the exe image's map; not fixed)
+**Fixed 2026-10-17** (`install/recipe-version`): a `twin` row from
+`MAGIC226.EMI#3` on all seven builds, and `psp_exe.fill` lets a `twin` take
+back a byte a map segment of *another* file placed with a different value
+(the segment is generated, `exe_maps/`, so not trimmed by hand). The lifts
+equal `BOF3.exe`'s on every image (`tools/exe_scan.py`); DIV-0101 amended.
+Not seen in play.
+
+## D268 — A `twin` row at `0x61FBD0` loses three bytes to `AREA111`'s map segment (ours, the exe image's map; fixed 2026-10-17)
 
 **Found:** the disc-data inventory, 2026-10-13
 ([`disc-data-inventory.md`](disc-data-inventory.md) 5 item 3).
@@ -7283,6 +7297,12 @@ a segment whose end or start lands in a neighbour's data; E1's list of bytes
 every disc places differently from the PC is the check for it. **Where to
 start:** trim the segment, or let a `twin` row override a segment's
 overreach.
+
+**Fixed 2026-10-17** by the second: `psp_exe.fill`'s other-file rule (D267).
+The three bytes are `AREA112`'s on the five PSX builds; `exe-layout.tsv`'s
+stand-in number at `0x61FBD0` is gone. Taking *every* byte of another file's
+segment instead moved 13 of the PSP's places and left more PC bytes zero, so
+only a byte that differs is taken (measured).
 
 ## D269 — The French and German layers drew the English `ITEM` on the Identify panel, and the German the English `EXP` (ours, the language build; fixed by DIV-0117)
 
@@ -7414,7 +7434,7 @@ ours never draws. Not a gap and not a twin: data and code together. **The
 owner's call** (a DIV either way): draw the US layout on a US-built image, or
 leave it.
 
-## D278 — The Identify panel's question marks are blank on the Western disc-only installs (ours, the exe image's gaps; rows found, not built)
+## D278 — The Identify panel's question marks are blank on the Western disc-only installs (ours, the exe image's gaps; fixed 2026-10-17, the engine's own marks)
 
 **Found:** the labels round's disc-only runs, 2026-10-13
 ([`labels-1013.md`](labels-1013.md) 6.2): US and French disc-only installs,
@@ -7425,6 +7445,13 @@ frame 900 of `identify.txt`.
 another layout, so the byte map places none of it. The marks would take two
 `twin` rows, `0x65AAC4` <- US `0x801F0B88` (4 bytes) and `0x65AAC8` <-
 `0x801F0B8C` (8). Not built.
+
+**Fixed 2026-10-17** (`install/recipe-version`): those rows would not have
+matched - the Western `MAGIC060` holds other bytes there, and the census
+(`install-gap-census.md` 4) found the marks blank on all seven builds. The
+twelve bytes `0x65AAC4..0x65AAD0` (one `?`, then a row of eight drawn by
+count) are the engine's own (`exe_own.cpp` `IdentifyMarks`, DIV-0101 amended),
+equal to `BOF3.exe`'s. Not seen in play yet.
 
 ## D279 — On a disc-only Japanese install the fishing banner draws a NUL as glyph `0xFFDA`; on PSP-JP it crashed one run in five (ours, the language build, reaching Capcom's scroller)
 
@@ -8022,3 +8049,34 @@ over the baked cross, a cross over the baked triangle. A first repaint of the
 labels alone changed nothing on screen: the frame (sprite 0) carries its own
 copy, drawn under everything. **Fixed** by repainting both copies in the
 importer (DIVERGENCE DIV-0130); verified on a rebuilt PSX-US install.
+
+## D310 — Six draw formats and marks are empty on a disc-only install: area 75's counters, area 104's countdown, the faerie board's rows, a level-up's ability names, the play-time colon (ours, the exe image's gaps; fixed 2026-10-17, the engine's own strings)
+
+**Found:** the install-gap census, 2026-10-17
+([`install-gap-census.md`](install-gap-census.md) 4.1), by reading each
+reader against the gap list; not seen in play.
+
+**Established:** each is a format string or a one-glyph string Capcom's code
+reads in place, zero on a disc-built image, so the draw is empty:
+`Area75_DrawCounters`' `0x60ABF0` (the five PSX builds; the PSPs place it),
+`Area104_Kind6ACountdown`'s `0x61BC74`, `CommuBoard_DrawRows`' dash and three
+formats `0x653084..0x653098`, `BattleResultWin_DrawLevelUp`'s and
+`EffectKind5E_DrawMenu`'s `%s` `0x654900` (the four Western PSX builds; Japan's
+and the PSPs' `BATL_END.EMI` twin has it), and `Menu_DrawPlayTime`'s separator
+`0x6637E0` (all seven). The same class as D254. No disc holds any of them
+where the byte map or a search can place it.
+
+**Fixed 2026-10-17:** the engine's own strings (`exe_own.cpp`, the
+`game-format` class; DIV-0101 amended), each equal to `BOF3.exe`'s bytes. Not
+seen in play yet.
+
+## D311 — The faerie village's hi-lo game pays nothing on a disc-only install (ours, the exe image's gaps; fixed 2026-10-17, a twin)
+
+**Found:** the install-gap census, 2026-10-17
+([`install-gap-census.md`](install-gap-census.md) 4): `CommuHiLo_DealSteps+0x14`
+`0x652CF4..0x652D04`, the u16 payout by turn that `CommuHiLo_Payout` reads, a
+`disc-unplaced` gap on all seven builds; not seen in play.
+
+**Fixed 2026-10-17:** a `twin` row from `ETC/COMMU02.EMI` section 8, which
+holds the 16 bytes verbatim on all seven discs (`COMMU02B.EMI` section 7 a
+copy); DIV-0101 amended. Not played yet.

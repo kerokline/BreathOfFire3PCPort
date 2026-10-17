@@ -13,7 +13,6 @@ psx-jp	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-jp	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
 psx-jp	0x604210	0x60421C	unread	unread	Area62_Handlers+0x38
 psx-jp	0x604958	0x604965	gap	port-relaid	Area65_DriftUV
-psx-jp	0x60ABF0	0x60ABFE	language	language	Area75_CounterFormat
 psx-jp	0x6126F4	0x612700	gap	port-relaid	Area87_DriftUV
 psx-jp	0x613070	0x61307D	gap	port-relaid	Area88_DriftUV
 psx-jp	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
@@ -22,7 +21,6 @@ psx-jp	0x616DE4	0x616DF0	gap	game-value	Area94_EffectArgsE
 psx-jp	0x617E7C	0x617EA0	unread	unread	Area96_Handlers+0x154
 psx-jp	0x617EAC	0x617EB8	gap	game-value	Area96_Handlers+0x184
 psx-jp	0x61B4F0	0x61B4F7	gap	port-relaid	Area104_PlateAnims
-psx-jp	0x61BC74	0x61BC80	gap	game-value	Area104_PanelTris+0x30
 psx-jp	0x62034C	0x6203A4	gap	disc-unplaced	Area115_Sprites
 psx-jp	0x6203A4	0x6203BC	gap	disc-unplaced	Area115_Buttons
 psx-jp	0x6203C8	0x6203D8	gap	game-value	Area115_Directions
@@ -93,8 +91,6 @@ psx-jp	0x64DF62	0x64DF64	gap	game-value	EventBattle_Records+0x176
 psx-jp	0x64DF66	0x64DF68	gap	game-value	EventBattle_Records+0x17A
 psx-jp	0x64DF6A	0x64DF6C	gap	game-value	EventBattle_Records+0x17E
 psx-jp	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
-psx-jp	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
-psx-jp	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-jp	0x653144	0x653150	gap	game-value	CommuMusic_CloseSteps+0x68
 psx-jp	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psx-jp	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
@@ -190,7 +186,7 @@ psx-jp	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-jp	0x65A6DC	0x65A6E8	gap	game-value	Magic020Slash_Animations
 psx-jp	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
 psx-jp	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
-psx-jp	0x65AAA8	0x65AAD0	gap	game-value	TornadoMote_Phases+0x10
+psx-jp	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-jp	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-jp	0x65B528	0x65B52C	gap	game-value	Magic087_RisePhases+0x8
 psx-jp	0x65B8F4	0x65B918	gap	disc-unplaced	Fx106_ShardTables
@@ -200,7 +196,6 @@ psx-jp	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-jp	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-jp	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-jp	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-jp	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-jp	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-jp	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-jp	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -236,7 +231,6 @@ psx-jp	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psx-jp	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-jp	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-jp	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psx-jp	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
 psx-jp	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
 psx-jp	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
 psx-jp	0x669CD4	0x669CE8	language	language	Encounter_SlotChance+0x24
@@ -373,7 +367,6 @@ psx-us	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-us	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
 psx-us	0x604210	0x60421C	unread	unread	Area62_Handlers+0x38
 psx-us	0x604958	0x604965	gap	port-relaid	Area65_DriftUV
-psx-us	0x60ABF0	0x60ABFE	language	language	Area75_CounterFormat
 psx-us	0x6126F4	0x612700	gap	port-relaid	Area87_DriftUV
 psx-us	0x613070	0x61307D	gap	port-relaid	Area88_DriftUV
 psx-us	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
@@ -382,7 +375,6 @@ psx-us	0x616DE4	0x616DF0	gap	game-value	Area94_EffectArgsE
 psx-us	0x617E7C	0x617EA0	unread	unread	Area96_Handlers+0x154
 psx-us	0x617EAC	0x617EB8	gap	game-value	Area96_Handlers+0x184
 psx-us	0x61B4F0	0x61B4F7	gap	port-relaid	Area104_PlateAnims
-psx-us	0x61BC74	0x61BC80	gap	game-value	Area104_PanelTris+0x30
 psx-us	0x62034C	0x6203A4	gap	disc-unplaced	Area115_Sprites
 psx-us	0x6203A4	0x6203BC	gap	disc-unplaced	Area115_Buttons
 psx-us	0x6203C8	0x6203D8	gap	game-value	Area115_Directions
@@ -460,8 +452,6 @@ psx-us	0x64DF62	0x64DF64	gap	game-value	EventBattle_Records+0x176
 psx-us	0x64DF66	0x64DF68	gap	game-value	EventBattle_Records+0x17A
 psx-us	0x64DF6A	0x64DF6C	gap	game-value	EventBattle_Records+0x17E
 psx-us	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
-psx-us	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
-psx-us	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-us	0x653144	0x653150	gap	game-value	CommuMusic_CloseSteps+0x68
 psx-us	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psx-us	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
@@ -547,7 +537,6 @@ psx-us	0x6543F0	0x654400	gap	disc-unplaced	EffectKind33_SignX
 psx-us	0x654400	0x654410	gap	disc-unplaced	EffectKind33_SignZ
 psx-us	0x654770	0x654798	gap	disc-unplaced	EffectKind66_States+0x18
 psx-us	0x654858	0x654876	gap	disc-unplaced	EffectKind5B_States+0xC
-psx-us	0x654900	0x654904	gap	game-value	EffectKind5E_States+0x54
 psx-us	0x6549E8	0x6549EC	gap	game-value	EffectKind65_ShakeSteps
 psx-us	0x654A9C	0x654AA0	gap	game-value	EffectKind6D_States+0x48
 psx-us	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
@@ -562,7 +551,7 @@ psx-us	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-us	0x65A6DC	0x65A6E8	gap	game-value	Magic020Slash_Animations
 psx-us	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
 psx-us	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
-psx-us	0x65AAA8	0x65AAD0	gap	game-value	TornadoMote_Phases+0x10
+psx-us	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-us	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-us	0x65B528	0x65B52C	gap	game-value	Magic087_RisePhases+0x8
 psx-us	0x65B8F4	0x65B918	gap	disc-unplaced	Fx106_ShardTables
@@ -573,7 +562,6 @@ psx-us	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-us	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-us	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-us	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-us	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-us	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-us	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-us	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -622,7 +610,6 @@ psx-us	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psx-us	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-us	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-us	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psx-us	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-us	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-us	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
 psx-us	0x669CD4	0x669CE8	language	language	Encounter_SlotChance+0x24
@@ -759,7 +746,6 @@ psx-eu-en	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-eu-en	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
 psx-eu-en	0x604210	0x60421C	unread	unread	Area62_Handlers+0x38
 psx-eu-en	0x604958	0x604965	gap	port-relaid	Area65_DriftUV
-psx-eu-en	0x60ABF0	0x60ABFE	language	language	Area75_CounterFormat
 psx-eu-en	0x6126F4	0x612700	gap	port-relaid	Area87_DriftUV
 psx-eu-en	0x613070	0x61307D	gap	port-relaid	Area88_DriftUV
 psx-eu-en	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
@@ -768,7 +754,6 @@ psx-eu-en	0x616DE4	0x616DEF	gap	game-value	Area94_EffectArgsE
 psx-eu-en	0x617E7C	0x617EA0	unread	unread	Area96_Handlers+0x154
 psx-eu-en	0x617EAC	0x617EB8	gap	game-value	Area96_Handlers+0x184
 psx-eu-en	0x61B4F0	0x61B4F7	gap	port-relaid	Area104_PlateAnims
-psx-eu-en	0x61BC74	0x61BC80	gap	game-value	Area104_PanelTris+0x30
 psx-eu-en	0x62034C	0x6203A4	gap	disc-unplaced	Area115_Sprites
 psx-eu-en	0x6203A4	0x6203BC	gap	disc-unplaced	Area115_Buttons
 psx-eu-en	0x6203C8	0x6203D8	gap	game-value	Area115_Directions
@@ -847,8 +832,6 @@ psx-eu-en	0x64DF62	0x64DF64	gap	game-value	EventBattle_Records+0x176
 psx-eu-en	0x64DF66	0x64DF68	gap	game-value	EventBattle_Records+0x17A
 psx-eu-en	0x64DF6A	0x64DF6C	gap	game-value	EventBattle_Records+0x17E
 psx-eu-en	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
-psx-eu-en	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
-psx-eu-en	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-eu-en	0x653142	0x653150	gap	game-value	CommuMusic_CloseSteps+0x66
 psx-eu-en	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psx-eu-en	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
@@ -934,7 +917,6 @@ psx-eu-en	0x6543F0	0x654400	gap	disc-unplaced	EffectKind33_SignX
 psx-eu-en	0x654400	0x654410	gap	disc-unplaced	EffectKind33_SignZ
 psx-eu-en	0x654770	0x654798	gap	disc-unplaced	EffectKind66_States+0x18
 psx-eu-en	0x654858	0x654876	gap	disc-unplaced	EffectKind5B_States+0xC
-psx-eu-en	0x654900	0x654904	gap	game-value	EffectKind5E_States+0x54
 psx-eu-en	0x6549E8	0x6549EC	gap	game-value	EffectKind65_ShakeSteps
 psx-eu-en	0x654A9C	0x654AA0	gap	game-value	EffectKind6D_States+0x48
 psx-eu-en	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
@@ -949,7 +931,7 @@ psx-eu-en	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-eu-en	0x65A6DC	0x65A6E8	gap	game-value	Magic020Slash_Animations
 psx-eu-en	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
 psx-eu-en	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
-psx-eu-en	0x65AAA8	0x65AAD0	gap	game-value	TornadoMote_Phases+0x10
+psx-eu-en	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-eu-en	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-eu-en	0x65B528	0x65B52C	gap	game-value	Magic087_RisePhases+0x8
 psx-eu-en	0x65B8F4	0x65B918	gap	disc-unplaced	Fx106_ShardTables
@@ -960,7 +942,6 @@ psx-eu-en	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-eu-en	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-eu-en	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-eu-en	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-eu-en	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-eu-en	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-eu-en	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-eu-en	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -1004,7 +985,6 @@ psx-eu-en	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psx-eu-en	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-eu-en	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-eu-en	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psx-eu-en	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-eu-en	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-eu-en	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
 psx-eu-en	0x669CD4	0x669CE8	language	language	Encounter_SlotChance+0x24
@@ -1141,7 +1121,6 @@ psx-fr	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-fr	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
 psx-fr	0x604210	0x60421C	unread	unread	Area62_Handlers+0x38
 psx-fr	0x604958	0x604965	gap	port-relaid	Area65_DriftUV
-psx-fr	0x60ABF0	0x60ABFE	language	language	Area75_CounterFormat
 psx-fr	0x6126F4	0x612700	gap	port-relaid	Area87_DriftUV
 psx-fr	0x613070	0x61307D	gap	port-relaid	Area88_DriftUV
 psx-fr	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
@@ -1150,7 +1129,6 @@ psx-fr	0x616DE4	0x616DF0	gap	game-value	Area94_EffectArgsE
 psx-fr	0x617E7C	0x617EA0	unread	unread	Area96_Handlers+0x154
 psx-fr	0x617EAC	0x617EB8	gap	game-value	Area96_Handlers+0x184
 psx-fr	0x61B4F0	0x61B4F7	gap	port-relaid	Area104_PlateAnims
-psx-fr	0x61BC74	0x61BC80	gap	game-value	Area104_PanelTris+0x30
 psx-fr	0x62034C	0x6203A4	gap	disc-unplaced	Area115_Sprites
 psx-fr	0x6203A4	0x6203BC	gap	disc-unplaced	Area115_Buttons
 psx-fr	0x6203C8	0x6203D8	gap	game-value	Area115_Directions
@@ -1228,8 +1206,6 @@ psx-fr	0x64DF62	0x64DF64	gap	game-value	EventBattle_Records+0x176
 psx-fr	0x64DF66	0x64DF68	gap	game-value	EventBattle_Records+0x17A
 psx-fr	0x64DF6A	0x64DF6C	gap	game-value	EventBattle_Records+0x17E
 psx-fr	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
-psx-fr	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
-psx-fr	0x653084	0x653097	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-fr	0x653104	0x653150	gap	disc-unplaced	CommuMusic_CloseSteps+0x28
 psx-fr	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psx-fr	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
@@ -1316,7 +1292,6 @@ psx-fr	0x6543F0	0x654400	gap	disc-unplaced	EffectKind33_SignX
 psx-fr	0x654400	0x654410	gap	disc-unplaced	EffectKind33_SignZ
 psx-fr	0x654770	0x654798	gap	disc-unplaced	EffectKind66_States+0x18
 psx-fr	0x654858	0x654876	gap	disc-unplaced	EffectKind5B_States+0xC
-psx-fr	0x654900	0x654904	gap	game-value	EffectKind5E_States+0x54
 psx-fr	0x6549E8	0x6549EC	gap	game-value	EffectKind65_ShakeSteps
 psx-fr	0x654A9C	0x654AA0	gap	game-value	EffectKind6D_States+0x48
 psx-fr	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
@@ -1331,7 +1306,7 @@ psx-fr	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-fr	0x65A6DC	0x65A6E8	gap	game-value	Magic020Slash_Animations
 psx-fr	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
 psx-fr	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
-psx-fr	0x65AAA8	0x65AAD0	gap	game-value	TornadoMote_Phases+0x10
+psx-fr	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-fr	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-fr	0x65B528	0x65B52C	gap	game-value	Magic087_RisePhases+0x8
 psx-fr	0x65B8F4	0x65B918	gap	disc-unplaced	Fx106_ShardTables
@@ -1341,7 +1316,6 @@ psx-fr	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-fr	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-fr	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-fr	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-fr	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-fr	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-fr	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-fr	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -1388,7 +1362,6 @@ psx-fr	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psx-fr	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-fr	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-fr	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psx-fr	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-fr	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-fr	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-fr	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -1527,7 +1500,6 @@ psx-de	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-de	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
 psx-de	0x604210	0x60421C	unread	unread	Area62_Handlers+0x38
 psx-de	0x604958	0x604965	gap	port-relaid	Area65_DriftUV
-psx-de	0x60ABF0	0x60ABFE	language	language	Area75_CounterFormat
 psx-de	0x6126F4	0x612700	gap	port-relaid	Area87_DriftUV
 psx-de	0x613070	0x61307D	gap	port-relaid	Area88_DriftUV
 psx-de	0x6130E8	0x6130FC	gap	port-relaid	Area88_DriftUV+0x78
@@ -1536,7 +1508,6 @@ psx-de	0x616DE4	0x616DF0	gap	game-value	Area94_EffectArgsE
 psx-de	0x617E7C	0x617EA0	unread	unread	Area96_Handlers+0x154
 psx-de	0x617EAC	0x617EB8	gap	game-value	Area96_Handlers+0x184
 psx-de	0x61B4F0	0x61B4F7	gap	port-relaid	Area104_PlateAnims
-psx-de	0x61BC74	0x61BC80	gap	game-value	Area104_PanelTris+0x30
 psx-de	0x62034C	0x6203A4	gap	disc-unplaced	Area115_Sprites
 psx-de	0x6203A4	0x6203BC	gap	disc-unplaced	Area115_Buttons
 psx-de	0x6203C8	0x6203D8	gap	game-value	Area115_Directions
@@ -1615,8 +1586,6 @@ psx-de	0x64DF62	0x64DF64	gap	game-value	EventBattle_Records+0x176
 psx-de	0x64DF66	0x64DF68	gap	game-value	EventBattle_Records+0x17A
 psx-de	0x64DF6A	0x64DF6C	gap	game-value	EventBattle_Records+0x17E
 psx-de	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
-psx-de	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
-psx-de	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-de	0x653104	0x653150	gap	disc-unplaced	CommuMusic_CloseSteps+0x28
 psx-de	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psx-de	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
@@ -1702,7 +1671,6 @@ psx-de	0x6543F0	0x654400	gap	disc-unplaced	EffectKind33_SignX
 psx-de	0x654400	0x654410	gap	disc-unplaced	EffectKind33_SignZ
 psx-de	0x654770	0x654798	gap	disc-unplaced	EffectKind66_States+0x18
 psx-de	0x654858	0x654876	gap	disc-unplaced	EffectKind5B_States+0xC
-psx-de	0x654900	0x654904	gap	game-value	EffectKind5E_States+0x54
 psx-de	0x6549E8	0x6549EC	gap	game-value	EffectKind65_ShakeSteps
 psx-de	0x654A9C	0x654AA0	gap	game-value	EffectKind6D_States+0x48
 psx-de	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
@@ -1717,7 +1685,7 @@ psx-de	0x65A698	0x65A69C	gap	game-value	AirRaidImage_ShadeSteps
 psx-de	0x65A6DC	0x65A6E8	gap	game-value	Magic020Slash_Animations
 psx-de	0x65A918	0x65A924	gap	game-value	WardMote_Tilts
 psx-de	0x65AA64	0x65AA68	gap	game-value	BoneDanceShake_Counts
-psx-de	0x65AAA8	0x65AAD0	gap	game-value	TornadoMote_Phases+0x10
+psx-de	0x65AAA8	0x65AAC4	gap	game-value	TornadoMote_Phases+0x10
 psx-de	0x65B1D4	0x65B1D8	gap	game-value	ReviveHalo_MoteCounts
 psx-de	0x65B528	0x65B52C	gap	game-value	Magic087_RisePhases+0x8
 psx-de	0x65B8F4	0x65B918	gap	disc-unplaced	Fx106_ShardTables
@@ -1728,7 +1696,6 @@ psx-de	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-de	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-de	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-de	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-de	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-de	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-de	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-de	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -1777,7 +1744,6 @@ psx-de	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psx-de	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-de	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-de	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psx-de	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-de	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-de	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-de	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -1921,7 +1887,6 @@ psp-jp	0x61478C	0x61478F	gap	game-value	Area91_RingTurns
 psp-jp	0x616DE4	0x616DEE	gap	game-value	Area94_EffectArgsE
 psp-jp	0x617EAC	0x617EB8	gap	game-value	Area96_Handlers+0x184
 psp-jp	0x61B4F0	0x61B4F7	gap	port-relaid	Area104_PlateAnims
-psp-jp	0x61BC74	0x61BC7D	gap	game-value	Area104_PanelTris+0x30
 psp-jp	0x62034C	0x6203A4	gap	disc-unplaced	Area115_Sprites
 psp-jp	0x6203A4	0x6203BC	gap	disc-unplaced	Area115_Buttons
 psp-jp	0x6203C8	0x6203D8	gap	game-value	Area115_Directions
@@ -1984,8 +1949,6 @@ psp-jp	0x64DF62	0x64DF64	gap	game-value	EventBattle_Records+0x176
 psp-jp	0x64DF66	0x64DF68	gap	game-value	EventBattle_Records+0x17A
 psp-jp	0x64DF6A	0x64DF6C	gap	game-value	EventBattle_Records+0x17E
 psp-jp	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
-psp-jp	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
-psp-jp	0x653084	0x653097	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psp-jp	0x653144	0x65314F	gap	game-value	CommuMusic_CloseSteps+0x68
 psp-jp	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psp-jp	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
@@ -2077,7 +2040,7 @@ psp-jp	0x65A678	0x65A67C	gap	game-value	SnapWave_FacingPhase
 psp-jp	0x65A6DC	0x65A6E8	gap	game-value	Magic020Slash_Animations
 psp-jp	0x65A919	0x65A924	gap	game-value	WardMote_Tilts+0x1
 psp-jp	0x65AA64	0x65AA67	gap	game-value	BoneDanceShake_Counts
-psp-jp	0x65AAAD	0x65AAD0	gap	game-value	TornadoMote_Phases+0x15
+psp-jp	0x65AAAD	0x65AAC4	gap	game-value	TornadoMote_Phases+0x15
 psp-jp	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-jp	0x65B528	0x65B52C	gap	game-value	Magic087_RisePhases+0x8
 psp-jp	0x65BB24	0x65BB28	gap	game-value	WhelpBreath_GlowAngles
@@ -2086,7 +2049,6 @@ psp-jp	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psp-jp	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psp-jp	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psp-jp	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psp-jp	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psp-jp	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psp-jp	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-jp	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -2119,7 +2081,6 @@ psp-jp	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psp-jp	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psp-jp	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psp-jp	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psp-jp	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
 psp-jp	0x663B1C	0x663B28	gap	game-value	EventScript_OpLengths+0x10
 psp-jp	0x663B28	0x663B30	gap	game-value	Sprite_ScreenMargins
 psp-jp	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
@@ -2265,7 +2226,6 @@ psp-eu	0x61478C	0x61478F	gap	game-value	Area91_RingTurns
 psp-eu	0x616DE4	0x616DEE	gap	game-value	Area94_EffectArgsE
 psp-eu	0x617EAC	0x617EB8	gap	game-value	Area96_Handlers+0x184
 psp-eu	0x61B4F0	0x61B4F7	gap	port-relaid	Area104_PlateAnims
-psp-eu	0x61BC74	0x61BC7D	gap	game-value	Area104_PanelTris+0x30
 psp-eu	0x62034C	0x6203A4	gap	disc-unplaced	Area115_Sprites
 psp-eu	0x6203A4	0x6203BC	gap	disc-unplaced	Area115_Buttons
 psp-eu	0x6203C8	0x6203D8	gap	game-value	Area115_Directions
@@ -2333,8 +2293,6 @@ psp-eu	0x64DF62	0x64DF64	gap	game-value	EventBattle_Records+0x176
 psp-eu	0x64DF66	0x64DF68	gap	game-value	EventBattle_Records+0x17A
 psp-eu	0x64DF6A	0x64DF6C	gap	game-value	EventBattle_Records+0x17E
 psp-eu	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
-psp-eu	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
-psp-eu	0x653084	0x653097	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psp-eu	0x653144	0x65314F	gap	game-value	CommuMusic_CloseSteps+0x68
 psp-eu	0x653200	0x653210	gap	language-zero	CommuRank_Modes+0x8C
 psp-eu	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
@@ -2426,7 +2384,7 @@ psp-eu	0x65A678	0x65A67C	gap	game-value	SnapWave_FacingPhase
 psp-eu	0x65A6DC	0x65A6E8	gap	game-value	Magic020Slash_Animations
 psp-eu	0x65A919	0x65A924	gap	game-value	WardMote_Tilts+0x1
 psp-eu	0x65AA64	0x65AA67	gap	game-value	BoneDanceShake_Counts
-psp-eu	0x65AAAD	0x65AAD0	gap	game-value	TornadoMote_Phases+0x15
+psp-eu	0x65AAAD	0x65AAC4	gap	game-value	TornadoMote_Phases+0x15
 psp-eu	0x65B1D4	0x65B1D7	gap	game-value	ReviveHalo_MoteCounts
 psp-eu	0x65B528	0x65B52C	gap	game-value	Magic087_RisePhases+0x8
 psp-eu	0x65BB24	0x65BB28	gap	game-value	WhelpBreath_GlowAngles
@@ -2435,7 +2393,6 @@ psp-eu	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psp-eu	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psp-eu	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psp-eu	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psp-eu	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psp-eu	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psp-eu	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-eu	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -2468,7 +2425,6 @@ psp-eu	0x663758	0x663768	gap	game-value	Equip_SlotIcons+0xF8
 psp-eu	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psp-eu	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psp-eu	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
-psp-eu	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
 psp-eu	0x663B1C	0x663B28	gap	game-value	EventScript_OpLengths+0x10
 psp-eu	0x663B28	0x663B30	gap	game-value	Sprite_ScreenMargins
 psp-eu	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30

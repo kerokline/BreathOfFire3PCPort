@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/psp_code.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -37,6 +38,27 @@ constexpr std::uint32_t kDemoEntry = bof3::addr::Field_Task;      // task 0's en
 constexpr std::uint32_t kMenuEntry = bof3::addr::TitleTask_Run;      // task 0's entry for the title menu
 constexpr std::uint32_t kModeDispatch = bof3::addr::Field_ModeDispatch;   // Field_ModeDispatch, another file's: called by address
 const std::uint32_t kCondFlags = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Cond_Flags));
+
+// DIVERGENCE DIV-0131 (D256): on a PSP base (a PSP-only install, the cache's
+// base_policy "psp") the title's logo pages are the PSP's own art, laid out
+// for the PSP's own code, which Capcom's PlayStation rectangles cut wrongly:
+// the text's lower piece starts 11 rows earlier and is 10 wider, the emblem
+// carries a caption under it, and the art holds its own TM. These are where
+// the PSP's pieces lie in its pages (measured from the pages' pixels,
+// 2026-10-17; docs/psp-title-framing.md), and where each goes against
+// Capcom's set origins: the upper text piece 3 left of set C's x, the lower
+// piece at the upper's x + 224 and y + 5 (the F's strokes join there), the
+// emblem 30 right of set B's x. Our measurement, not a copied table. Set while
+// the start-up fuzz has finished; the fuzz compares Capcom's layout.
+struct PspRect {
+    unsigned char u, v;
+    std::uint16_t w, h;
+};
+constexpr PspRect kPspTextUpper = {0, 0, 224, 116};    // "BREATH OF F", the left wing
+constexpr PspRect kPspTextLower = {0, 117, 106, 102};  // "IRE", the right wing, the art's TM
+constexpr PspRect kPspEmblem = {0, 0, 202, 122};       // the "III" emblem, without the caption below it
+constexpr int kPspTextDx = -3, kPspLowerDx = 224, kPspLowerDy = 5, kPspEmblemDx = 30;
+bool g_psp_title = false;
 
 // Every callee, through pointers so that the start-up fuzz can stand
 // recording functions in for them. Five are ours (Title_FadeMusic,
@@ -82,6 +104,17 @@ std::uint16_t TaskZeroState() { return Word(At(bof3::addr::Task_Records)); }
 
 // The 16-bit words the handlers count with, as the original's `inc word` /
 // `dec word` in memory: wrapping at 0x10000.
+// Capcom's sprite `index` (its palette and the rest of its record), its
+// rectangle replaced by `r` (DIV-0131).
+unsigned char* PspSprite(int x, int y, unsigned index, const PspRect& r, unsigned slot, unsigned semi) {
+    unsigned char* const prim = g.sprite(x, y, index, slot, semi);
+    prim[0x14] = r.u;
+    prim[0x15] = r.v;
+    SetWord(prim + 0x18, r.w);
+    SetWord(prim + 0x1A, r.h);
+    return prim;
+}
+
 void BumpState() { Title_State = static_cast<std::uint16_t>(Title_State + 1); }
 
 }  // namespace
@@ -274,9 +307,11 @@ extern "C" void __cdecl Title_DrawBadge(void) {
 extern "C" void __cdecl Title_DrawSetA(unsigned flag, unsigned shade) {
     const unsigned semi = flag & 0xFF;
     const auto level = static_cast<unsigned char>(shade);
-    g.draw_mode(Gfx_PacketNext, 0, 0, 0x2F, 0);
-    g.commit(1, 0xC);
-    g.shade(g.sprite(0x106, 0x82, 1, 1, semi), level);
+    if (!g_psp_title) {   // DIV-0131: the PSP's art carries its own TM; the mark sprite is not drawn
+        g.draw_mode(Gfx_PacketNext, 0, 0, 0x2F, 0);
+        g.commit(1, 0xC);
+        g.shade(g.sprite(0x106, 0x82, 1, 1, semi), level);
+    }
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xBD, 0);
     g.commit(2, 0xC);
     g.shade(g.sprite(0x14, 0xD0, 8, 2, semi), level);
@@ -306,6 +341,20 @@ extern "C" void __cdecl Title_DrawSetA(unsigned flag, unsigned shade) {
 extern "C" void __cdecl Title_DrawSetC(int x, int y, unsigned flag, unsigned shade) {
     const unsigned semi = flag & 0xFF;
     const auto level = static_cast<unsigned char>(shade);
+    if (g_psp_title) {   // DIV-0131: the PSP's pieces, same sprites and pages
+        const int ux = x + kPspTextDx, lx = ux + kPspLowerDx, ly = y + kPspLowerDy;
+        if (semi != 0) {
+            g.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
+            g.commit(2, 0xC);
+            g.shade(PspSprite(ux, y, 0xF, kPspTextUpper, 2, 1), level);
+            g.shade(PspSprite(lx, ly, 0x10, kPspTextLower, 2, 1), level);
+        }
+        g.draw_mode(Gfx_PacketNext, 0, 0, 0xB9, 0);
+        g.commit(2, 0xC);
+        g.shade(PspSprite(ux, y, 4, kPspTextUpper, 2, semi), level);
+        g.shade(PspSprite(lx, ly, 5, kPspTextLower, 2, semi), level);
+        return;
+    }
     const int right = static_cast<int>(static_cast<unsigned>(x) + 0xE0u);
     if (semi != 0) {
         g.draw_mode(Gfx_PacketNext, 0, 0, 0xD9, 0);
@@ -327,6 +376,10 @@ extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned sha
     const auto level = static_cast<unsigned char>(shade);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xBB, 0);
     g.commit(2, 0xC);
+    if (g_psp_title) {   // DIV-0131: the emblem alone; the PSP's page has nothing under sprite 3's rectangle
+        g.shade(PspSprite(x + kPspEmblemDx, y, 2, kPspEmblem, 2, semi), level);
+        return;
+    }
     g.shade(g.sprite(x, y, 2, 2, semi), level);
     g.shade(g.sprite(static_cast<int>(static_cast<unsigned>(x) + 0xF0u), static_cast<int>(static_cast<unsigned>(y) + 0x70u),
                      3, 2, semi),
@@ -859,6 +912,8 @@ void TitleStates_Inject() {
         }
         SelfTest(clones);
     }
+    g_psp_title = psp_code::PspBase();
+    if (g_psp_title) bof3::Log("DIV-0131    the title's logo: the PSP base's own pieces (D256)");
     BOF3_INJECT(Title_StateLoad);
     BOF3_INJECT(Title_StateFadeIn);
     BOF3_INJECT(Title_StateBackdrop);

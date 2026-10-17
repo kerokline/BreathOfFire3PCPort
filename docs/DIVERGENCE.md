@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 130 entries, DIV-0001..0130, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 131 entries, DIV-0001..0131, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -6611,6 +6611,37 @@ designed in rather than bolted on.
   clean; a PSX-US disc-only install rebuilt from the recipes draws `Fast Med.
   Slow`, `1 2 3 4` twice, `Stereo Mono`, `Off On` on the title's Config
   (the 10-12 cache's image had the 13 bytes zero); not played by the owner yet.
+- Amended 2026-10-17 (the install-gap census, [`install-gap-census.md`](install-gap-census.md)
+  4.1 and 8; D310, D311, D278): seven more bytes runs a disc-built image left
+  zero are filled. **Six draw formats and marks of Capcom's code** - area 75's
+  counter format `0x60ABF0`, area 104's countdown `0x61BC74`, the faerie
+  village board's dash and formats `0x653084..0x653098`, the level-up's
+  ability-name `%s` `0x654900` (the Western discs' gap), the Identify panel's
+  unknown marks `0x65AAC4..0x65AAD0` and the field menu's play-time
+  separator `0x6637E0` - are the engine's own, as D254's is (`exe_own.cpp`,
+  a new `game-format` class in `exe_own.py`): each disc keeps its copy inside
+  its reading overlay where no search can place it (too short to be unique;
+  the Western `MAGIC060` lays the marks out otherwise), and each equals
+  `BOF3.exe`'s bytes. **The hi-lo game's payouts** `0x652CF4..0x652D04` are a
+  `twin` from `ETC/COMMU02.EMI` section 8, the disc's own 16 bytes, on all
+  seven builds. Before: area 75's counters, area 104's countdown digits, the
+  board's rows, a level-up's learned-ability names (Western PSX), the
+  Identify marks and the play-time colon drew nothing, and the hi-lo game
+  paid 0 (not measured in play). With the PC's `.data` nothing changes.
+  Verification: `psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py
+  measure`, `exe_tables.py gaps` over the seven discs (`exe-psp.tsv` +7 twin
+  rows; `exe-gaps.tsv` loses exactly those runs on each build, the
+  `TornadoMote_Phases` row ending at `0x65AAC4`; every image hash moves by the
+  twin); the six fills equal `BOF3.exe`'s bytes (an offline comparison);
+  `importer.py`, `exe_tables.py`, `exe_own.py`, `psp_exe.py`, `tables.py`
+  checks clean. The hosted `BOF3X_SHADOW=exe_own` self-test and play: not run
+  yet.
+  The same day, D267 and D268: a `twin` row now takes back a byte that a map
+  segment of another file placed with a different value (`psp_exe.fill`), and
+  a new `twin` from `MAGIC226.EMI#3` holds the Meteor Strike chip's lifts. On
+  every build the lifts and area 112's link list equal `BOF3.exe`'s; nothing
+  else moved (`placed_differ` -4 on each PSX build, -1 on each PSP; no place
+  changed).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -7943,3 +7974,46 @@ designed in rather than bolted on.
 - **Reversible?** A cache built without it (the stand-in's recipe hash is the
   disc's, checked before the repaint; the manifest records the repainted
   body's).
+
+### A PSP-only install's title logo is cut from the PSP's pages where the PSP's art lies
+
+- **ID:** DIV-0131
+- **Date:** 2026-10-17
+- **Subsystem:** the title - `Title_DrawSetA` `0x462820`, `Title_DrawSetC`
+  `0x462930`, `Title_DrawSetB` `0x462A00` (ours, `src/game/title_states.cpp`);
+  `psp_code::PspBase` (`src/game/psp_code.cpp`)
+- **Tier:** Sensible - a repair of how our engine draws a PSP base's own art,
+  which no original ever drew.
+- **Original behaviour:** the three sets cut the logo from the title pages
+  through `Title_Sprites`' rectangles and place it at Capcom's PlayStation
+  offsets. On a PSP base (DIV-0103) the pages are the PSP's art, laid out for
+  the PSP's own code: the text's lower piece starts 11 rows earlier and is 10
+  wider, the emblem's page carries a "FISHING ver." caption under it, and the
+  art holds its own TM. Drawn through the PlayStation rectangles the logo tore
+  at the "F", its right wing was cut flat, a caption showed and a second, cut
+  TM (the mark sprite 1) sat beside the art's (D256; captured 2026-10-17 at
+  4:3, 16:9 and 21:9, the same at every width).
+- **New behaviour:** on a PSP base (`base_policy = "psp"`, read whatever
+  `BOF3X_PSP` says) the sets draw the same sprites and pages with three
+  rectangles measured from the PSP's pages - the upper text (0, 0, 224 x 116),
+  the lower text (0, 117, 106 x 102), the emblem (0, 0, 202 x 122) - the upper
+  piece 3 left of set C's origin, the lower at its x + 224 and y + 5 (where the
+  F's strokes join: the best of a column match, `docs/psp-title-framing.md`),
+  the emblem 30 right of set B's; sprite 3 (empty on the PSP's page) and the
+  mark sprite 1 are not drawn. The logo is centred on the 4:3 frame and drawn
+  the same in the wide modes, so 4:3 cuts its wingtips by a pixel or two (the
+  owner's call: one layout at every width, the narrow frame cropping it).
+  Every other base draws as before.
+- **Rationale:** the owner, 2026-10-17, on the mock-up: "much better". The
+  emblem's place against the text is the PlayStation's relation (centred over
+  the text, the same row as Capcom's); the PSP's own is in its code, not read.
+- **Also in the PSX version?** No: the PlayStation and the PC draw their own
+  pages through their own rectangles.
+- **Verification:** the PSP-EU-only install (`C:\Users\kerok\rvp`), frames
+  0..720 every 10 at `BOF3X_WIDE` 0, 1 and 2: the logo whole and joined, one
+  TM, no caption, the fade clean; the PSX-US-based install's title at 4:3,
+  all 73 frames pixel-identical to the build before. The start-up fuzz of
+  `title_states` runs before the switch is read, so it compares Capcom's
+  layout.
+- **Reversible?** A PSX-based install; the switch is the cache's policy.
+

@@ -118,6 +118,42 @@ void WinMainFiles(std::uint8_t* at, std::uint32_t size) {
     Strings(at, size, {"CAPCOM.AVI", "BOF3.EXE", "%d %d", "BOF3.CFG", "rt"});   // ... Cfg_Load's format, file, mode
 }
 
+// The game's own draw formats and marks, read in place by Capcom's code. Each
+// PSX disc keeps its copy inside the reading overlay, at no place the byte map
+// can find (each too short to place by search), so a disc-built image left them
+// zero: an empty format, nothing drawn (docs/install-gap-census.md 4.1; D310).
+void Area75Format(std::uint8_t* at, std::uint32_t size) {
+    Strings(at, size, {"%02d.%02dM"});   // Area75_DrawCounters' two counters
+}
+
+void Area104Format(std::uint8_t* at, std::uint32_t size) {
+    Strings(at, size, {"%02d.%d%d"});    // Area104_Kind6ACountdown's digits
+}
+
+void BoardFormats(std::uint8_t* at, std::uint32_t size) {
+    // CommuBoard_DrawRows: the dash, a row's three numbers, and the two formats
+    // of no number a row without one draws.
+    Strings(at, size, {"-", "%d%d%d", "?", "???"});
+}
+
+void AbilityFormat(std::uint8_t* at, std::uint32_t size) {
+    // BattleResultWin_DrawLevelUp's learned-ability names, EffectKind5E_DrawMenu's
+    // title and item name (the Western discs carry none; Japan's and the PSP's do).
+    Strings(at, size, {"%s"});
+}
+
+void IdentifyMarks(std::uint8_t* at, std::uint32_t size) {
+    // Identify_Draw*'s unknown marks: one `?`, then a row of eight drawn by count
+    // (no terminator; D278).
+    static const char kMarks[] = {'?', 0, 0, 0, '?', '?', '?', '?', '?', '?', '?', '?'};
+    if (size != sizeof kMarks) Fatal("exe_own: the Identify marks' region is %u bytes", (unsigned)size);
+    std::memcpy(at, kMarks, sizeof kMarks);
+}
+
+void PlayTimeSeparator(std::uint8_t* at, std::uint32_t size) {
+    Strings(at, size, {"."});   // Menu_DrawPlayTime's, drawn twice in the tiny font as the colon
+}
+
 void SlotNumber(std::uint8_t* at, std::uint32_t size) {
     // Menu_DrawSaveSlot's slot number, drawn on every slot of the save and load
     // lists (the port's sixteen files, BISLPS00..0F, numbered in hex). No disc
@@ -208,13 +244,19 @@ struct Row {
 // clang-format off
 // regions:
 constexpr Row kRows[] = {
+    {{0x60ABF0, 0x60ABFC, "Area75_DrawCounters' counter format (D310)"}, Area75Format},
+    {{0x61BC74, 0x61BC80, "Area104_Kind6ACountdown's format (D310)"}, Area104Format},
     {{0x64FFE4, 0x652894, "Dat_FileNames' 742 names (recipes/pc-zh.toml)"}, DatNames},
     {{0x652894, 0x6528A9, "the DAT directory format and the save files' pattern"}, DatFormats},
+    {{0x653084, 0x653098, "CommuBoard_DrawRows' dash and formats (D310)"}, BoardFormats},
+    {{0x654900, 0x654904, "the level-up's ability name format (D310)"}, AbilityFormat},
     {{0x656AEC, 0x656B00, "the field button map's defaults Boot_Task copies (a rule)"}, FieldButtonDefaults},
+    {{0x65AAC4, 0x65AAD0, "the Identify panel's unknown marks (D278)"}, IdentifyMarks},
     {{0x65DA44, 0x65DA50, "Cfg_Fullscreen, Cfg_RenderMode, Cursor_Hidden: 1"}, CfgInitial},
     {{0x65DA54, 0x65DA76, "WinMain's messages and the logo AVI's name"}, WinMainMessages},
     {{0x65DA84, 0x65DA96, "the window class and the icon's name"}, WindowNames},
     {{0x65DAB8, 0x65DAE7, "the Capcom AVI, the exe's name, BOF3.CFG and its format and mode"}, WinMainFiles},
+    {{0x6637E0, 0x6637E4, "Menu_DrawPlayTime's separator (D310)"}, PlayTimeSeparator},
     {{0x6639D4, 0x6639D8, "the save slot's number format (D254)"}, SlotNumber},
     {{0x664068, 0x664077, "the save file's name format"}, SaveName},
     {{0x6653BC, 0x6653C0, "Music_LoadedTrack: none (-1)"}, NoTrack},

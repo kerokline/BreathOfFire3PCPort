@@ -308,18 +308,18 @@ def build_banks(name, layer, disc, out):
     return got
 
 
-def _layer_key(name, layer, disc, sources):
-    """What a layer reads (build_reuse): its PSP disc; the player's ffmpeg for
-    the sound; every source for a dat layer, which takes chunks from any."""
+def _layer_inputs(name, layer, disc, sources):
+    """What a layer draws on beside the code and data build_reuse measures:
+    its PSP disc; the player's ffmpeg for the sound; every source for a dat
+    layer, which takes chunks from any."""
     import at3
-    from build_reuse import reuse_key
     extra = ()
     if layer["part"] == "snd":
         ffmpeg = at3.find_ffmpeg()
         extra = (at3.ffmpeg_version(ffmpeg) if ffmpeg else "no ffmpeg",)
     elif layer["part"] == "dat" and "banks" not in layer:
         extra = tuple(s.id for s in sources)
-    return reuse_key("psp-layer", name, disc.id, *extra)
+    return ("psp-layer", name, disc.id) + extra
 
 
 def build(asked, sources, out, reuse=None):
@@ -338,8 +338,8 @@ def build(asked, sources, out, reuse=None):
     first in the cache with no row, offered and played unverified.)
 
     `reuse`: a previous cache whose layer, and its rows, are taken when built
-    under the same key (_layer_key; IDEAS I42)."""
-    from build_reuse import read_rows, reusable, write_key, write_rows
+    the same way (build_reuse.Step, _layer_inputs; IDEAS I42)."""
+    from build_reuse import Step, read_rows, write_rows
     layers = load()
     asked = list(asked) + [n for n, l in layers.items() if l.get("auto") and n not in asked and _psp(l, sources)]
     if not asked:
@@ -355,16 +355,17 @@ def build(asked, sources, out, reuse=None):
                 raise SystemExit("--opt %s: needs a PSP disc (%s) among the sources" % (name, " or ".join(layer["from"])))
             final = os.path.join(out, "opt", name)
             stage = tempfile.mkdtemp(dir=out, prefix=".psp_layer_%s_" % name)
-            key = _layer_key(name, layer, disc, sources)
-            kept = reusable(reuse, "opt-" + name, key, os.path.join("opt", name))
-            kept_rows = read_rows(reuse, "opt-" + name) if kept else None
             try:
-                if kept_rows is not None:
-                    shutil.copytree(kept, os.path.join(stage, "opt", name))
-                    got = kept_rows
-                    print("  opt/%-16s the previous cache's, built from %s the same way" % (name, disc.id))
-                else:
-                    got = _build_one(name, layer, disc, sources, stage)
+                with Step(out, reuse, "opt-" + name, *_layer_inputs(name, layer, disc, sources)) as st:
+                    kept = st.previous(os.path.join("opt", name))
+                    kept_rows = read_rows(reuse, "opt-" + name) if kept else None
+                    if kept_rows is not None:
+                        shutil.copytree(kept, os.path.join(stage, "opt", name))
+                        got = kept_rows
+                        print("  opt/%-16s the previous cache's, built from %s the same way" % (name, disc.id))
+                    else:
+                        st.adopted = None       # a record without its rows: built again, and measured
+                        got = _build_one(name, layer, disc, sources, stage)
                 if os.path.isdir(final):
                     shutil.rmtree(final)
                 os.makedirs(os.path.join(out, "opt"), exist_ok=True)
@@ -376,7 +377,6 @@ def build(asked, sources, out, reuse=None):
                 raise
             finally:
                 shutil.rmtree(stage, ignore_errors=True)
-            write_key(out, "opt-" + name, key)
             write_rows(out, "opt-" + name, got)
             rows += got
             placed.append(name)

@@ -1,12 +1,24 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-15)
+**Status:** IN PROGRESS (2026-10-17)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
 true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
+
+**Installs against the release, and what a one-source install lacks, 2026-10-17** (`install/recipe-version`,
+[`install-staleness.md`](install-staleness.md), [`install-gap-census.md`](install-gap-census.md)): every piece of an
+install's cache records what it was measured to read (the functions of `tools/` that ran, the module values they
+name, the recipes and fixtures opened); `importer.py stale` says which pieces a release would make differently, the
+launcher asks once per release, and setup rebuilds only those (a no-change setup 270 s -> 62 s, measured). The census
+gives every byte a disc-built `.data` image lacks a status, and a byte scan of each of the seven one-source images
+against the PC's (`tools/exe_scan.py`) finds nothing beyond the gap and language rows: the recipes are current, no
+`none` byte hides a PC value. Its P1 fixes that need no owner are in (D310, D311, D278, D267, D268; DIV-0101
+amended), and the PSP-only title's logo is cut where the PSP's art lies (D256, DIV-0131). Captured, not played by the
+owner. `main` (`85b46618`) has the PSX-only player reports #77..#79 (PR #80: D282, D306, D307 / DIV-0130) and
+`v0.1.0-alpha.3`, the first release with signed binaries (PRs #72, #74).
 
 **The player install, 2026-10-15** (`install/sources-gui`, [`install-sources.md`](install-sources.md),
 [`install_process.md`](install_process.md)): the launcher's **Sources** page - a first run with no install opens
@@ -15,8 +27,9 @@ checks it against `fixtures/*.files.tsv` and builds the home's `game\` and `cach
 (`tools/make_release.py`, 58.9 MB) carrying python.org's embeddable Python, so a player installs nothing else. The
 home is the launcher's folder (or `BOF3X_HOME`); every older path and flag still wins. Measured end to end from the
 release zip with no system Python: the US disc's zip added on the page, built in 205 s, the settings opened on
-en-US. **Not played**; the release workflow (`.github/workflows/release.yml`, a draft pre-release on a `v*` tag) has
-not run on GitHub.
+en-US. The release workflow (`.github/workflows/release.yml`, a pre-release on a `v*` tag) has made
+`v0.1.0-alpha.2` and `v0.1.0-alpha.3` (signed through Trusted Signing); the owner has played a PSX-only install
+(the reports of 2026-10-16, fixed in PRs #73 and #80).
 
 **Phase 0 is done: our code runs inside the game.** A launcher starts the
 player's own `BOF3.exe` suspended and loads `bof3x.dll` into it; a five-byte

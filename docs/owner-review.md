@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-14, the ultrawide round's section added at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-17, the install round's section added at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,39 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-17, stale installs, the gap census's fixes, the PSP-only title
+
+`install/recipe-version`. Captures are in session `6467ad33`'s scratchpad
+(game-derived, never in the tree); the scratch homes are `C:\Users\kerok\rv`
+(PSX-US + PSP-EU) and `rvp` (PSP-EU only), the launcher folder `rvL`.
+
+### Approved by the owner (struck, 2026-10-17)
+
+- **The PSP-only title's layout** (DIV-0131, D256): the mock-up, "much
+  better"; one layout at every width, 4:3 cropping the wingtips.
+- **Staleness covers the exe image and the cache recipe, piece by piece**, and
+  a stale install is **prompted, then rebuilt** ([`install-staleness.md`](install-staleness.md)).
+
+### To look at
+
+- **The stale-install prompt** in a real start: make a piece stale (a row of
+  `recipes/exe-psp.tsv` in a source checkout), start that checkout's launcher on
+  a home it built; the box names the pieces; yes rebuilds (the unchanged pieces
+  taken from the cache), no starts nothing. Every install built before this
+  branch is judged stale once.
+- **The PSP-only title in play** at 4:3, 16:9 and 21:9 (captured, DIV-0131).
+- **On a disc-only install** (D310, D311): area 75's counters and area 104's
+  countdown draw digits; the faerie village board's rows draw; a level-up that
+  teaches an ability names it (Western discs); the Identify panel's `?` marks
+  (D278); the field menu's play-time colon; the hi-lo game pays out.
+
+### To decide
+
+- **The PSP's copyright line** on a PSP-only title: its sprite cuts the PSP's
+  `,2005` (as it always has); widen it to the PSP's row, or leave it.
+- **The census's owner items** ([`install-gap-census.md`](install-gap-census.md) 8):
+  the event battles' track words first (all seven builds ask for track 0).
 
 ## 2026-10-14, the ultrawide round
 

@@ -113,6 +113,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import build_reuse  # noqa: E402,F401  (first: run by importer.py's setup, records this run into its step)
 import dat        # noqa: E402
 import font_pc    # noqa: E402
 import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)

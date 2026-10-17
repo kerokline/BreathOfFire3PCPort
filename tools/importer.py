@@ -20,6 +20,7 @@ from.
     python tools/importer.py check    (CI: the recipes against fixtures/, no game data)
     python tools/importer.py opt-recipes --dat DAT --disc JP --disc US --disc PSPJP --disc PSPEU
     python tools/importer.py install  --cache CACHE --game DIR [--lang TAG ...] [--opt LAYER ...] [--no-opt LAYER ...]
+    python tools/importer.py stale    --home HOME | --cache CACHE   (the pieces this release would make differently)
 
 `recipes` is the generator: it hashes every section of every disc given
 (type-1 sections also decoded, tools/type1.py), and every PC chunk is looked up
@@ -70,7 +71,7 @@ import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
 import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
-from build_reuse import read_rows, reusable, reuse_key, tree_digest, write_key, write_rows   # noqa: E402  (IDEAS I42)
+from build_reuse import Step, read_rows, tree_digest, write_rows   # noqa: E402  (IDEAS I42, HANDOFF 11)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
 import ppms         # noqa: E402  (base/bgm/ from a PSP disc, docs/psp-music.md)
 import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
@@ -810,13 +811,15 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
 
 # ---------------------------------------------------------------- reuse (IDEAS I42)
 #
-# A setup that adds a source rebuilds the whole cache. The steps whose inputs
-# did not change - the language layers, the PlayStation's sound effects, the
-# movie (fmv_reusable) - are taken from the previous cache instead. A step's
-# key is a hash of everything it reads: the tools, recipes and fixtures as
-# they are now (so a new release rebuilds everything once), the sources it
-# draws on, and the cache files it builds against. The keys are kept in
-# <cache>/build-keys/, a folder nothing installs or walks (tools/build_reuse.py).
+# A setup that adds a source, or follows a new release, rebuilds the whole
+# cache. The steps whose record still holds - the language layers, the
+# PlayStation's sound effects, the PSP layers, the movie (fmv_reusable) - are
+# taken from the previous cache instead. A step's record (tools/build_reuse.py
+# Step) is what it was measured to read: the functions of tools/ that ran, the
+# recipes and fixtures it opened, the sources it draws on and the cache files
+# it builds against - so a release that changes none of those keeps it. The
+# records are kept in <cache>/build-keys/, a folder nothing installs or walks;
+# `importer.py stale` reads them for the launcher (HANDOFF item 11).
 
 def snd_from_psx(sources, out, reuse=None):
     """xa.importer_snd, or the previous cache's base/snd/ when it was made
@@ -835,27 +838,26 @@ def snd_from_psx(sources, out, reuse=None):
     pc = any(isinstance(s, PcSource) for s in sources)
     ffmpeg = None if pc else at3.find_ffmpeg()
     version = at3.ffmpeg_version(ffmpeg) if ffmpeg else None
-    key = reuse_key("snd-xa", disc.id, "pc" if pc else version or "no ffmpeg")
     dst = os.path.join(out, "base", "snd")
-    src = reusable(reuse, "snd", key, os.path.join("base", "snd"))
     jingles = None
-    if src:
-        shutil.copytree(src, dst, dirs_exist_ok=True)
-        print("  base/snd  the previous cache's, made from %s the same way (not decoded again)" % disc.id)
-        snd = (disc.id, len(os.listdir(dst)))
-        if not pc:
-            rows = read_rows(reuse, "snd") or []
-            jingles = (disc.id, version, {r[0]: r[1] for r in rows if len(r) == 2},
-                       [r[0] for r in rows if len(r) == 1])
-    else:
-        snd = xa.importer_snd(sources, out)
-        if not pc and ffmpeg:
-            written, skipped = xa.jingles(disc.path, dst, ffmpeg)
-            jingles = (disc.id, version, written, skipped)
-        elif not pc:
-            jingles = (disc.id, None, {}, ["the 11 jingles: no ffmpeg on the PATH or in BOF3X_FFMPEG to encode "
-                                           "them; the inn's and the camp's wait ends without its jingle (DIV-0129)"])
-    write_key(out, "snd", key)
+    with Step(out, reuse, "snd", "snd-xa", disc.id, "pc" if pc else version or "no ffmpeg") as st:
+        src = st.previous(os.path.join("base", "snd"))
+        if src:
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+            print("  base/snd  the previous cache's, made from %s the same way (not decoded again)" % disc.id)
+            snd = (disc.id, len(os.listdir(dst)))
+            if not pc:
+                rows = read_rows(reuse, "snd") or []
+                jingles = (disc.id, version, {r[0]: r[1] for r in rows if len(r) == 2},
+                           [r[0] for r in rows if len(r) == 1])
+        else:
+            snd = xa.importer_snd(sources, out)
+            if not pc and ffmpeg:
+                written, skipped = xa.jingles(disc.path, dst, ffmpeg)
+                jingles = (disc.id, version, written, skipped)
+            elif not pc:
+                jingles = (disc.id, None, {}, ["the 11 jingles: no ffmpeg on the PATH or in BOF3X_FFMPEG to encode "
+                                               "them; the inn's and the camp's wait ends without its jingle (DIV-0129)"])
     if jingles:
         write_rows(out, "snd", [(n, h) for n, h in sorted(jingles[2].items())] + [(w,) for w in jingles[3]])
     return snd, jingles
@@ -876,7 +878,9 @@ def time_line(what, since):
     print("  time      %-28s %7.1f s" % (what, time.perf_counter() - since), flush=True)
 
 
-def cmd_build(a):
+def _build_base(a):
+    """build's first part, measured as the step `base`: the sources identified,
+    the recipe and the base policy read, every base and layer chunk written."""
     rec = load_recipe(a.recipe)
     sources = [open_source(p) for p in a.source]
     if len({(s.id, type(s)) for s in sources}) != len(sources):
@@ -934,28 +938,44 @@ def cmd_build(a):
                 fh.write(b"".join(parts))
             written[layer] += 1
     time_line("base and layer chunks", t_chunks)
+    return rec, sources, tg_opt, assets, missing, used, written, blocked
+
+
+def cmd_build(a):
+    # Each part a measured step (tools/build_reuse.py): what it ran and read is kept in
+    # build-keys/, for `stale` and the next setup's reuse (HANDOFF item 11).
+    with Step(a.out, None, "base", *a.source):
+        rec, sources, tg_opt, assets, missing, used, written, blocked = _build_base(a)
     reuse = getattr(a, "reuse", None)
     with timed("base/snd"):
         snd, psx_jingles = snd_from_psx(sources, a.out, reuse)
-        psp_snd = None if snd else at3.importer_snd(sources, a.out)     # no PSX disc: the PSP's, by the player's ffmpeg
+        psp_snd = None
+        if not snd:     # no PSX disc: the PSP's, by the player's ffmpeg
+            with Step(a.out, None, "snd-psp", *(s.id for s in sources)):
+                psp_snd = at3.importer_snd(sources, a.out)
     with timed("base/bgm"):
-        bgm = seq.importer_bgm(sources, a.out) or ppms.importer_bgm(sources, a.out)   # no PSX disc: the PSP's (psp-music.md)
+        with Step(a.out, None, "bgm", *(s.id for s in sources)):
+            bgm = seq.importer_bgm(sources, a.out) or ppms.importer_bgm(sources, a.out)   # no PSX: the PSP's
     # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc.
     # Before the languages: a disc-only language layer is built against it.
     exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
         next((s for s in sources if isinstance(s, DiscSource)), None)
     with timed("base/exe"):
-        exe = exe_tables.build_from(exe_src.path, exe_src.id, a.out) if exe_src else None
+        with Step(a.out, None, "exe", exe_src.id if exe_src else "none"):
+            exe = exe_tables.build_from(exe_src.path, exe_src.id, a.out) if exe_src else None
     if exe:
         print("  base/exe  from %-9s data.bin %s" % exe)
     with timed("loc (every language)"):
         loc_assets = build_languages(a.lang, sources, a.out, reuse)
     with timed("opt"):
-        opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
-    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
-                   psp_snd, getattr(a, "prefer", None), psx_jingles)
+        with Step(a.out, None, "opt", *a.opt):
+            opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
+    with Step(a.out, None, "manifest"):
+        write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe,
+                       bgm, psp_snd, getattr(a, "prefer", None), psx_jingles)
     with timed("base/fmv"):
-        fmv_build(sources, a.out, reuse)   # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
+        with Step(a.out, None, "fmv", *(s.id for s in sources)):   # measured even when kept: its own rule decides
+            fmv_build(sources, a.out, reuse)   # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
     with timed("psp layers"):
         psp_layers.build(tg_opt, sources, a.out, reuse)   # opt/psp-music etc.; its [psp_layers] after that
     for (bid, layer, own), n in sorted(used.items()):
@@ -1067,30 +1087,30 @@ def build_languages(asked, sources, out, reuse=None):
             _place(os.path.join(pc.path, name), os.path.join(game, "DAT", name))
         for tag, donor in resolve_languages(asked, sources):
             t = time.perf_counter()
-            key = reuse_key("loc-pc", tag, donor.id, pc.id, exe.id, tree_digest(os.path.join(out, "loc")))
             d = os.path.join(out, "loc", tag, "dat")
-            src = reusable(reuse, "loc-" + tag, key, os.path.join("loc", tag, "dat"))
-            if src:
-                # the previous cache's layer, and in the game folder as loc_build would have left it,
-                # for a later layer that reads it (the French and German title menus)
-                shutil.copytree(src, d, dirs_exist_ok=True)
-                for name in os.listdir(d):
-                    shutil.copyfile(os.path.join(d, name), os.path.join(game, "DAT", tag + "." + name))
-            else:
-                r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
-                                    "--game", game, "--lang", tag], capture_output=True, text=True)
-                if r.returncode:
-                    raise SystemExit("loc_build.py --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
-                os.makedirs(d, exist_ok=True)
-                for f in sorted(os.listdir(os.path.join(game, "DAT"))):
-                    if f.startswith(tag + "."):
-                        shutil.copyfile(os.path.join(game, "DAT", f), os.path.join(d, f[len(tag) + 1:]))
+            with Step(out, reuse, "loc-" + tag, "loc-pc", tag, donor.id, pc.id, exe.id,
+                      tree_digest(os.path.join(out, "loc"))) as st:
+                src = st.previous(os.path.join("loc", tag, "dat"))
+                if src:
+                    # the previous cache's layer, and in the game folder as loc_build would have left it,
+                    # for a later layer that reads it (the French and German title menus)
+                    shutil.copytree(src, d, dirs_exist_ok=True)
+                    for name in os.listdir(d):
+                        shutil.copyfile(os.path.join(d, name), os.path.join(game, "DAT", tag + "." + name))
+                else:
+                    r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc",
+                                        donor.path, "--game", game, "--lang", tag], capture_output=True, text=True)
+                    if r.returncode:
+                        raise SystemExit("loc_build.py --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
+                    os.makedirs(d, exist_ok=True)
+                    for f in sorted(os.listdir(os.path.join(game, "DAT"))):
+                        if f.startswith(tag + "."):
+                            shutil.copyfile(os.path.join(game, "DAT", f), os.path.join(d, f[len(tag) + 1:]))
             n = 0
             for name in sorted(os.listdir(d)):
                 with open(os.path.join(d, name), "rb") as fh:
                     assets.append((name, "loc/" + tag, "%s:loc_build" % donor.id, sha(fh.read())))
                 n += 1
-            write_key(out, "loc-" + tag, key)
             print("  loc/%-7s from %-9s %d containers (tools/loc_build.py%s)"
                   % (tag, donor.id, n, "; the previous cache's, built the same way" if src else ""))
             time_line("loc/" + tag, t)
@@ -1115,16 +1135,15 @@ def build_languages_disc_only(asked, sources, out, reuse=None):
         if base is None:                # what loc_build reads of this cache (DiscCache)
             base = (tree_digest(os.path.join(out, "base", "dat")), tree_digest(os.path.join(out, "base", "exe")))
         others = tree_digest(os.path.join(out, "loc"))
-        key = reuse_key("loc-disc-only", tag, donor.id, *base, others)
-        src = reusable(reuse, "loc-" + tag, key, os.path.join("loc", tag, "dat"))
-        if src:
-            shutil.copytree(src, d, dirs_exist_ok=True)
-        else:
-            r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
-                                "--cache", out, "--lang", tag], capture_output=True, text=True)
-            if r.returncode:
-                raise SystemExit("loc_build.py --cache --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
-        write_key(out, "loc-" + tag, key)
+        with Step(out, reuse, "loc-" + tag, "loc-disc-only", tag, donor.id, *base, others) as st:
+            src = st.previous(os.path.join("loc", tag, "dat"))
+            if src:
+                shutil.copytree(src, d, dirs_exist_ok=True)
+            else:
+                r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
+                                    "--cache", out, "--lang", tag], capture_output=True, text=True)
+                if r.returncode:
+                    raise SystemExit("loc_build.py --cache --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
         names = sorted(os.listdir(d))
         for name in names:
             with open(os.path.join(d, name), "rb") as fh:
@@ -2459,6 +2478,9 @@ def cmd_check(a):
     werrs = cache_walk.check()
     import suites                                      # the launcher's suites against opt.toml and fixtures.toml
     werrs += ["suites.py: " + e for e in suites.check()]
+    import build_reuse                                 # a memo a measured step would read unmeasured (HANDOFF 11)
+    werrs += ["build_reuse.py: tools/%s.py %s is written at run time and is not in MEMOS" % x
+              for x in build_reuse.lint()]
     for e in (errs + oerrs + serrs + werrs)[:30]:
         print("ERROR", e)
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
@@ -2467,9 +2489,33 @@ def cmd_check(a):
     print("seq / ppms / at3 / psp_fmv check: synthetic SEP, pPMS and VAB round trips, fixtures/bgm.tsv and "
           "bgm-psp.tsv, recipes/psp.snd.toml, "
           "recipes/psp-standins.toml, a synthetic PSMF, %d error(s)" % len(serrs))
-    print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
+    print("cache_walk / suites / build_reuse check: the engine's cache walk against install on a synthetic cache, "
+          "the suites, the memos every measured step empties, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)
+
+
+def cmd_stale(a):
+    """Which pieces of an install's cache this release's tools would make
+    differently (HANDOFF item 11, docs/install-staleness.md): each step's
+    measured record (tools/build_reuse.py) against the code, the module
+    values and the data files as they are now. For the launcher: one line
+    `stale <step>\t<reason>` a piece, then `stale N` and exit 1; or `fresh`
+    and exit 0; or `none` and exit 2 when there is no cache to judge. A
+    setup then rebuilds the stale pieces and takes the rest from the cache."""
+    import build_reuse
+    cache = a.cache or os.path.join(a.home, "cache")
+    if not os.path.isfile(os.path.join(cache, "manifest.toml")):
+        print("none")
+        return 2
+    try:
+        rows = build_reuse.stale(cache)
+    except Exception as e:      # judged stale, never fresh, when the check itself fails
+        rows = [("cache", "the check failed: %s: %s" % (type(e).__name__, e))]
+    for step, why in rows:
+        print("stale %s\t%s" % (step, why))
+    print("stale %d" % len(rows) if rows else "fresh", flush=True)
+    return 1 if rows else 0
 
 
 def main():
@@ -2554,14 +2600,18 @@ def main():
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer")
+    p = s.add_parser("stale", help="which pieces of an install's cache this release would make differently")
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--home", help="the install's home folder; its cache folder is judged")
+    g.add_argument("--cache")
     a = ap.parse_args()
-    if a.cmd in ("sources", "setup") or (a.cmd == "identify" and a.json):
+    if a.cmd in ("sources", "setup", "stale") or (a.cmd == "identify" and a.json):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")     # the launcher's forms: player paths in any script
     if a.cmd in ("sources", "setup"):
         import player_sources
         sys.exit((player_sources.cmd_sources if a.cmd == "sources" else player_sources.cmd_setup)(a) or 0)
     fn = {"recipes": cmd_recipes, "identify": cmd_identify, "build": cmd_build, "verify": cmd_verify,
-          "check": cmd_check, "opt-recipes": cmd_opt_recipes, "install": cmd_install}[a.cmd]
+          "check": cmd_check, "opt-recipes": cmd_opt_recipes, "install": cmd_install, "stale": cmd_stale}[a.cmd]
     sys.exit(fn(a) or 0)
 
 
