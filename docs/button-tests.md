@@ -2,9 +2,10 @@
 
 **Status:** BUILT (2026-10-17, group HT of
 [`button-unification-round.md`](button-unification-round.md) 3, branch
-`buttons/ht`). Headless self-tests pass, and so does the stand-in check
-(section 4). Not played. RC's site routes are owed (section 7). Ledger draft
-G is in section 6; the coordinator numbers it at the merge.
+`buttons/ht`; group HT-2 added the owner's three of section 3 on
+`buttons/ht2`, section 2.4). Headless self-tests pass, and so does the
+stand-in check (section 4). Not played. RC's site routes are owed (section
+7). Ledger draft G is in section 6; the coordinator numbers it at the merge.
 
 The design is [`button-roles-by-release.md`](button-roles-by-release.md) 7.4:
 a hard-coded test of Japan's bit `b` tests `σ(b)`. The API is SG's
@@ -147,6 +148,96 @@ same kind of test (`0xA000`, `0x5000`). None of them changes.
 | Field minigames and fishing | 32 | 8 |
 | Everything else | 51 | 12 |
 
+### 2.4 Group HT-2: the owner's three (2026-10-17)
+
+The owner's decisions on section 3's table. The file:line is on
+`buttons/ht2`.
+
+| Original | Function | Bits | File:line |
+|---|---|---|---|
+| `0x497B30` | `MsgBox_StatePrint`: the held speed-up (`0x497DC6`) | `0x20` | `msgbox.cpp:563` |
+| `0x45F830` | `CommuMusic_Browse`: play / stop, close | `0x20`, `0x40` | `rest_4e.cpp:707`, `:718` |
+| `0x42EAD0` | `BattleMenu_CommandSelect`: anything held, then each of the six masks | `0xF00C`, `Sigma(mask)` | `battle_phases.cpp:508`, `:513` |
+
+That is 5 changed lines in 3 files, with one include and one
+using-declaration each where they were missing (`msgbox.cpp` and
+`battle_phases.cpp`; `rest_4e.cpp` had HT's).
+
+**The text's speed-up asks `Sigma(0x20)`, not word 0.** The original reads
+`Input_Held`'s low byte into `cl` and does `test cl, 0x20` at `0x497DC6`
+(capstone, 2026-10-17). Held, the delay comes from `0x658E94 + row`, and
+otherwise from `0x658E95 + row`. Word 0 (`0x903580`) is the Speak line's
+button with L2 and R2 ORed in (`0x23` at Japan's defaults,
+[`button-sigma.md`](button-sigma.md) 3). A test of word 0 would let L2 or R2
+speed the text, which the original never did. `Sigma(0x20)` is word 0's
+button with L2 / R2 set aside ([`button-sigma.md`](button-sigma.md) 2), so it
+is the Speak line's button and nothing else. The check tests this for every
+release's defaults (section 4).
+
+**The music room.** `0x45F8CA` reads `Input_Pressed`'s low byte and tests
+`0x20` (play, or stop the track playing). It then tests `0x40` (close). Both
+now ask `σ`, in the same order. The d-pad's `0xA000` (the row) is
+unchanged.
+
+**The battle command cross.** `Battle_CommandPadMasks` (`0x64AE3C`, six
+halfwords, read in place 2026-10-17) holds the d-pad's up `0x1000`, down
+`0x4000`, left `0x8000` and right `0x2000`, then L1 `0x04` and R1 `0x08`.
+Entry `k` points the cross at command `k + 1`. Pressing it twice within 8
+frames, or the confirm button, takes that command into `0x904AA2`.
+`BattleMenu_ConfirmDispatch` (`0x42EED0`) then jumps through
+`Battle_MenuSteps` (`0x64AE54`) by that byte:
+
+| Entry | Button (Japan's) | Command | `Battle_MenuSteps` entry |
+|---|---|---|---|
+| 0 | up `0x1000` | 1 | `0x447430` `BattleItem_Dispatch` |
+| 1 | down `0x4000` | 2 (greyed by the record's `+0x10` bit 1) | `0x448180` `BattleItemCmd_Dispatch` |
+| 2 | left `0x8000` | 3 (greyed the same way) | `0x447FD0` `BattleAttackCmd_Dispatch` |
+| 3 | right `0x2000` | 4 | `0x42EEF0` `Cmd_ConfirmDefend` |
+| 4 | **L1 `0x04`** | 5 | `0x42EF50` `Cmd_AutoBattle`: round flags `0x904AA8 |= 0x10`, every member to state 2 (`symbols.toml`, round twelve BE1) |
+| 5 | **R1 `0x08`** | 6 | `0x44A000`, the escape: a jump through `0x64E4FC` to `Escape_Roll`, `Escape_FailDispatch`, `Escape_WinDispatch` (round twelve BE4, [`battle_e4.md`](battle_e4.md)) |
+
+So **R1 is the escape**, the Run the owner names, and **L1 is the auto
+battle**. The two dispatcher names in rows 1 and 2 are the catalog's; their
+in-game command names were not checked here.
+
+Ours asks `held & Sigma(0xF00C)` and `Sigma(mask)` for each entry. The table
+is read as it is and never written, so its bytes stay Capcom's. That is the
+same as mapping the pressed and held words through `SigmaInverse` before the
+lookup: `Sigma(mask) & held` is non-zero exactly when
+`mask & SigmaInverse(held)` is. The d-pad passes through `σ`, so it stays
+physical. Select (`0x100`) is a test of its own before the loop, and it is
+unchanged. Cancel and confirm read words 8 and 7, which already follow the
+Config.
+
+With View and Change swapped, L1 escapes and R1 auto-battles. The escape
+follows the View line's button (Japan's R1), and the auto battle follows the
+Change line's (Japan's L1).
+
+**`SuperCombo_ReadButton` is left** (the owner, 2026-10-17: it does its own
+thing with every button).
+
+**`Scena19_Run0` (`0x56D580`), for the owner's decision.** From the code
+(capstone, 2026-10-17, `0x56D580..0x56D5B0`):
+
+- It is scenario chapter 19's only run. `Scena19_Frame` (`0x56D550`) reaches
+  it in state 2 through `Scena19_Run` (`0x56D570`, one entry). It runs every
+  frame while chapter 19 is in that state.
+- On `test byte [Input_Pressed], 8` (R1 pressed this frame) it takes a free
+  `Effect_Objects` record (`Effect_FindFree` `0x589810`; none, nothing) and
+  makes it kind `0x2F` (`+0 = 1`, `+5 = 0x2F`).
+- Kind `0x2F` ([`effect_2b.md`](effect_2b.md)) plays sound effect `0x206` and
+  draws three red, semi-transparent trails. They turn as they fall and
+  narrow, for `0x40` frames, and then the record is released. The only other
+  spawner is area 27's `Area27_SpawnEffect2F` (`0x4034F0`), one of that
+  area's choice handlers (`Area27_Choices[5]`).
+- Each R1 press spawns one more effect, while records are free. Nothing else
+  in chapter 19's code reads the pad. Chapter 18's run is a bare `ret`.
+
+What chapter 19 is in play, and what reaches it, was not traced. R1 is View
+in Japan's terms. The PlayStation West's `P` does not move R1. If the owner
+wants it unified, the change is `Input_Pressed & Sigma(8)`, one line in
+`scena_sc15.cpp`.
+
 ## 3. The census
 
 **`input_census.py`** (key-icons 1; the tool in the main checkout's
@@ -192,20 +283,18 @@ first test after each read. So two read-only scripts in the harness root
     dock's second and third tests. The source read in section 2 is the
     authority; the script is its cross-check.
 
-**Face or shoulder constants not changed** (outside the brief's list; for the
-coordinator):
+**Face or shoulder constants HT left** (outside its brief's list). The
+owner decided each of them on 2026-10-17; group HT-2 (branch `buttons/ht2`)
+built the three to change (section 2.4):
 
-| Original | Function | Test | Why left |
+| Original | Function | Test | The owner's decision (2026-10-17) |
 |---|---|---|---|
-| `0x4613B0` | `ConfigScreen_Controller` (the rebind, `0x461459`) | `and 0xFC` | It reads the physical button being bound. It must stay physical. |
-| `0x497B30` | `MsgBox_StatePrint` (`0x497DC6`) | `Input_Held & 0x20` | Holding circle speeds the text. It is in `msgbox.cpp`, DT-2's file. Whether the PlayStation US moved it was not read (`MsgBox` is resident, outside `relscan.py`'s sections). |
-| `0x45F830` | `CommuMusic_Browse` | `0x20` play, `0x40` stop | The faerie village's music room. Not in the list. |
-| `0x49A960` | `SuperCombo_ReadButton` (`magic_s02.cpp`) | any of `0xF0`, then the whole word against the table byte `0x65A518` | A battle ability's button prompt, driven by a table. Not in the list. |
-| `0x56D580` | `Scena19_Run0` | R1 `0x08` | Chapter 19's one run. Not identified. |
-| `0x42EAD0` | the battle command cross (`battle_phases.cpp:501`) | `held & 0xF00C`, then `Battle_CommandPadMasks` `0x64AE3C` | The battle's L1 / R1 shortcuts, through a `.data` table. Not a site (round doc 6). |
-
-If the owner wants every flow unified, these six are the remainder. All but
-the rebind are one-line changes of the same kind.
+| `0x4613B0` | `ConfigScreen_Controller` (the rebind, `0x461459`) | `and 0xFC` | Left. It reads the physical button being bound, so it must stay physical. |
+| `0x497B30` | `MsgBox_StatePrint` (`0x497DC6`) | `Input_Held & 0x20` | **Changed.** Holding the text's speed-up button tracks the Speak line: `Sigma(0x20)`. |
+| `0x45F830` | `CommuMusic_Browse` | `0x20` play, `0x40` close | **Changed.** The faerie village's music room goes through `σ`, like the other tests. |
+| `0x42EAD0` | `BattleMenu_CommandSelect`, the battle command cross | `held & 0xF00C`, then `Battle_CommandPadMasks` `0x64AE3C` | **Changed.** L1 / R1 track the Config through `σ`. The d-pad stays physical, and the table stays Capcom's bytes. |
+| `0x49A960` | `SuperCombo_ReadButton` (`magic_s02.cpp`) | any of `0xF0`, then the whole word against the table byte `0x65A518` | **Left.** The owner: it does its own thing with every button. |
+| `0x56D580` | `Scena19_Run0` | R1 `0x08` | **Left; no decision yet.** What it is, from the code, is in section 2.4. |
 
 ## 4. The stand-in check (`BOF3X_SHADOW=button_tests`)
 
@@ -241,6 +330,31 @@ the four with a path that calls nothing. For each of them:
 
 With `BOF3X_ORIGINAL=ButtonSigma` there is no live table, so the second half
 is skipped and a line says so.
+
+**Group HT-2's additions** (section 2.4):
+
+- **The masks:** four more rows: the speed-up `0x20`, the music room's `0x20`
+  and `0x40`, and the cross's `0xF00C`. Also `Battle_CommandPadMasks`' six
+  masks, read in place from `0x64AE3C` (not copied into the check). Each is
+  tested under the three releases' defaults and under the swap, as above.
+- **Word 0:** under each release's defaults, `Sigma(0x20)` must equal word
+  0's button with L2 / R2 set aside, and must hold neither L2 nor R2.
+- **The cross, run for real:** `BattleMenu_CommandSelect` is the fifth live
+  function. It is run with the press held and nothing pressed this frame,
+  which is its path that calls nothing; select is taken off the held word.
+  The result is the command the cross points at (`0x904AB4`), the tap bytes
+  and the step bytes. Under Japan's words:
+  - for each of the 26 presses, the command must be the original loop's
+    answer over the table as it is (the lowest entry held, plus one; `0`
+    with nothing of `0xF00C` held);
+  - L1 and R1 must differ, and L1, R1 and up must each point at a command.
+
+  Under the swap, the swapped press must do what Japan's press did, as for the
+  other four. The cross's bytes (`0x904AA1..A2`, `0x904AA5..A6`, `0x904AB4`,
+  `0x904AC3`) and `Input_Held` are put back with the rest.
+
+The speed-up and the music room are checked by their masks only. Each calls
+the text or draw code on every path, so neither runs headless here.
 
 **Result** (the clean launcher copy `C:\Users\kerok\b_ht\L`, the PC install,
 `--no-config`, `BOF3X_SELFTEST_ONLY=1`). The run's `BOF3X_SHADOW` was
@@ -329,22 +443,35 @@ the one PSP-EU test that broke its release's map.
 
 - **Date:** 2026-10-17
 - **Subsystem:** input: the fishing, the rope pull, the crane, the well, the
-  chop, the antenna's dial, the ending's skip, the dock's parts menu, and the
-  item lists' L1 / R1. Every function and line is in section 2 (83 lines in
-  20 files of `src/game/`).
+  chop, the antenna's dial, the ending's skip, the dock's parts menu, the
+  item lists' L1 / R1, and (group HT-2) the text's held speed-up, the faerie
+  village's music room and the battle command cross's L1 / R1. Every
+  function and line is in section 2 (83 lines in 20 files of `src/game/`,
+  and HT-2's 5 lines in 3 files, section 2.4).
 - **Tier:** Intent. The owner, 2026-10-17: unify every button flow (answer 1,
-  `button-roles-by-release.md` 8). Builds on draft A's `σ`.
+  `button-roles-by-release.md` 8). Builds on draft A's `σ`. The same day the
+  owner decided section 3's remainder: the speed-up, the music room and the
+  cross through `σ`; `SuperCombo_ReadButton` and the rebind left;
+  `Scena19_Run0` open.
 - **Original behaviour:** these tests compare the pad with Japan's buttons
   as constants: circle to cast, cross to quit, L1 / R1 to page, and so on.
   They ignore the Config. A player who swaps Speak with Action in the Config
   still casts the rod on circle, still pulls the rope and works the crane on
   circle, and still pages the item lists on L1 / R1 after moving View and
-  Change. The same holds on the PlayStation, where the Western releases
-  instead hard-code `P` of each constant.
+  Change. Holding circle speeds the text, circle plays a track in the music
+  room and cross closes it, and in battle L1 points the cross at the auto
+  battle and R1 at the escape (`Battle_CommandPadMasks` `0x64AE3C`). The
+  same holds on the PlayStation, where the Western releases instead
+  hard-code `P` of each face constant.
 - **New behaviour:** each test asks `Sigma(b)` for Japan's bit `b`. That is the
   button the line whose Japan default is `b` is on now.
   - Exact compares stay exact.
   - The fishing's stage 1 takes `0x74`'s four bits one by one.
+  - The speed-up is `Sigma(0x20)`: the Speak line's button, never L2 / R2,
+    which word 0 also holds.
+  - The battle command cross asks `Sigma` of each of its table's masks.
+    The table stays Capcom's bytes, and the d-pad stays physical. The escape
+    follows the View line's button and the auto battle the Change line's.
   - At Japan's defaults (every PC install) nothing changes.
   - A Western disc-only install starts at the West's Config (draft B), so
     `σ` is `P` there and the tests are the PlayStation US's own.
@@ -355,10 +482,13 @@ the one PSP-EU test that broke its release's map.
   every install and after any rebind.
 - **Also in the PSX version?** No. Every PlayStation release hard-codes these
   tests in its own terms: Japan's, `P` for the West, `S` for PSP-EU with the
-  well left in `P`. This changes Capcom's design, not a port defect.
+  well left in `P`. This changes Capcom's design, not a port defect. HT-2's
+  three were not read on the PlayStation discs. `P` and `S` do not move L1
+  or R1, so the cross's shoulders are the same on every release.
 - **Verification:**
   - `BOF3X_SHADOW=button_tests` (section 4): 512 masks and 188 live runs,
-    0 mismatches.
+    0 mismatches; with HT-2's sites, 555 masks and 261 live runs of five
+    functions, 0 mismatches.
   - The 20 edited modules' fuzzes, which run before `Arm` with `σ` the
     identity, report 0 mismatches.
   - RC's swapped site routes are owed (section 7).
@@ -383,13 +513,26 @@ the one PSP-EU test that broke its release's map.
   - the ram (121), which needs no change and proves the Config-word path.
 
   The ending's skip has no route in RC's list.
+- **HT-2's routes are owed too:** a battle with View and Change swapped
+  (L1 must point the cross at the escape); any dialogue held on the Speak
+  line's button, and on L2 (which must not speed it); and the faerie
+  village's music room (`fairyVillage`), with play on the Speak line's
+  button.
+- **`Scena19_Run0`** waits for the owner (section 2.4).
+- **An open question on the cross's boxes.** The cross draws its command
+  boxes by position, with no button glyph
+  ([`key-icons-by-mapping.md`](key-icons-by-mapping.md) 2.7). So with View
+  and Change swapped, the box drawn for command 5 (L1's arm) is still the
+  auto battle, but L1 now picks command 6, the escape. Whether
+  the boxes should swap sides with the Config is the owner's call. Nothing
+  here changes the drawing.
 - **The PlayStation US's chop and well were not read.** They are exact
   compares (`lhu`, `li`, `bne`), which `relscan.py`'s pattern (an `andi`
   near a `lhu`) does not see. So they are not among its 44. Their text moved
   by `P` (`button-roles-by-release.md` 5). On PSP-EU the chop's code moved
   by `S` and the well's by `P` (section 5).
-- **The six constants in section 3's table** are left for the coordinator and
-  the owner.
+- **Section 3's six constants** were decided by the owner on 2026-10-17.
+  Three are built (section 2.4), and the rest are left as the owner said.
 - **Defects found** (for the coordinator to number; first free after D311):
   - **PSP-EU's ram text names the wrong button on its own disc.** It says
     circle; the code reads the Move word, which is triangle at PSP-EU's
@@ -410,3 +553,14 @@ the one PSP-EU test that broke its release's map.
   `inject: 10087 ours, 0 left original`. All 1,081 self-test lines that report a count report
   `0 MISMATCHES`, `button_tests`' line among them as in section 4. No Defender event (1116 / 1117) names
   this group's files.
+- **HT-2** (`buttons/ht2`, the clean copy `C:\Users\kerok\b_ht2\L`, the PC
+  install, `--no-config`, `BOF3X_SELFTEST_ONLY=1`):
+  - The build: no errors, and no new warning.
+  - Narrow, with `BOF3X_SHADOW=sigma,button_tests,msgbox,rest_4e,battle_phases`:
+    `button_tests: 555 masks under stand-in words (3 releases' defaults and the swap), 261 runs of 5 of ours under the live table (Japan's words and the swap); 0 MISMATCHES`.
+    `msgbox` reported 44,000 rounds, `rest_4e` 288,000 rounds and
+    `battle_phases` 18,000 rounds, each with 0 mismatches.
+  - With `BOF3X_SHADOW='*'`: exit 0 through `self-test only: done`, and
+    `inject: 10087 ours, 0 left original`. All 1,084 count lines report
+    `0 MISMATCHES`, and none reports another count. No Defender event
+    (1116 / 1117) names `b_ht2` or this worktree.

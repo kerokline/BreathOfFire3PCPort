@@ -21,6 +21,7 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
 
 namespace battle_phases {
 
@@ -29,6 +30,9 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
+// Group HT-2 of the button round (docs/button-tests.md 3): the command
+// cross's L1 / R1 are Japan's bits, asked through sigma.
+using bof3x::input::sigma::Sigma;
 
 namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
@@ -498,12 +502,15 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
         return;
     }
-    if ((held & 0xF00C) == 0) {
+    // The d-pad passes through sigma; L1 / R1 (0x0C) become the Change and
+    // View lines' buttons now. Battle_CommandPadMasks stays Capcom's bytes:
+    // each mask is read as it is and asked through sigma.
+    if ((held & Sigma(0xF00C)) == 0) {
         if (B(at::kCommand) != 0) B(at::kCommand) = 0;
         return;
     }
     for (int k = 5; k >= 0; --k) {
-        const unsigned mask = Word(At(at::kPadMasks + 2 * static_cast<unsigned>(k)));
+        const unsigned mask = Sigma(static_cast<std::uint16_t>(Word(At(at::kPadMasks + 2 * static_cast<unsigned>(k)))));
         if ((mask & held) == 0) continue;
         if ((pressed & mask) != 0) {
             g.play_effect(0x101);

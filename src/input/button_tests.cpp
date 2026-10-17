@@ -97,7 +97,20 @@ constexpr Site kSites[] = {
     {"FieldAbility_ViewBrowse", 0x58EB00, 0x500C},
     {"(the lists' L1 test)", 0, 0x0004},
     {"(the lists' R1 test)", 0, 0x0008},
+    // group HT-2 (the owner's decisions of 2026-10-17, docs/button-tests.md 3)
+    {"MsgBox_StatePrint", 0x497B30, 0x0020},          // the held speed-up (0x497DC6)
+    {"CommuMusic_Browse", 0x45F830, 0x0020},          // the music room: play / stop
+    {"CommuMusic_Browse", 0x45F830, 0x0040},          // close
+    {"BattleMenu_CommandSelect", 0x42EAD0, 0xF00C},   // the command cross: anything held
 };
+
+// The command cross's six masks, read from Battle_CommandPadMasks in place
+// (the table is Capcom's and stays as it is; ours asks each through sigma).
+constexpr U kPadMasks = 0x64AE3C;
+constexpr unsigned kNPadMasks = 6;
+U16 PadMask(unsigned k) {
+    return *reinterpret_cast<const U16*>(static_cast<std::uintptr_t>(kPadMasks + 2 * k));
+}
 
 unsigned g_bad = 0;
 void Bad(const char* what, const char* site, unsigned a, unsigned b) {
@@ -150,6 +163,19 @@ unsigned PureMasks() {
             if (got != MapMask(r, s.mask)) Bad("a release's defaults do not give its own map", s.name, s.mask, got);
             ++n;
         }
+        for (unsigned k = 0; k < kNPadMasks; ++k) {
+            const U16 m = PadMask(k);
+            const U16 got = sg::Apply(t, m);
+            if (r == sg::Release::kJapan && got != m) Bad("Japan's defaults moved a pad mask", "Battle_CommandPadMasks", m, got);
+            if (got != MapMask(r, m)) Bad("a pad mask not the release's map", "Battle_CommandPadMasks", m, got);
+            ++n;
+        }
+        // The text's speed-up is word 0's button with L2 / R2 set aside: the
+        // Speak line's button, never L2 or R2 (word 0 also holds those).
+        const U16 speak = sg::Apply(t, 0x20);
+        if (speak != (w[0] & sg::kSixBits)) Bad("the speed-up is not word 0's button", "MsgBox_StatePrint", w[0], speak);
+        if (speak & sg::kL2R2) Bad("the speed-up takes L2 / R2", "MsgBox_StatePrint", w[0], speak);
+        ++n;
     }
     U16 w[9];
     SwappedWords(w);
@@ -159,6 +185,12 @@ unsigned PureMasks() {
     for (const Site& s : kSites) {
         const U16 got = sg::Apply(t, s.mask);
         if (got != Swap(s.mask)) Bad("the swap's mask", s.name, s.mask, got);
+        ++n;
+    }
+    for (unsigned k = 0; k < kNPadMasks; ++k) {
+        const U16 m = PadMask(k);
+        const U16 got = sg::Apply(t, m);
+        if (got != Swap(m)) Bad("the swap's pad mask", "Battle_CommandPadMasks", m, got);
         ++n;
     }
     // LeaderPanel_S1Buttons's exact match, its four bits one by one: a press
@@ -190,6 +222,11 @@ constexpr Cell kCells[] = {
     {0x6BC717, 1},
     {0x676284, 1},    // kind 0x8C's frame count
     {0x67628C, 2},    // its count
+    {0x7E1BE8, 2},    // Input_Held
+    {0x904AA1, 2},    // the battle's step and sub-step
+    {0x904AA5, 2},    // the command cross's tap timer and tap command
+    {0x904AB4, 1},    // the command the cross points at
+    {0x904AC3, 1},    // the menu index
 };
 struct Saved { unsigned char bytes[64]; };
 
@@ -254,6 +291,24 @@ U RunCountPress(U16 press) {
     return static_cast<U>(g_scratch[1]) | static_cast<U>(W(0x67628C)) << 8 | static_cast<U>(B(0x676284)) << 24;
 }
 
+// BattleMenu_CommandSelect with the press held and nothing pressed this frame:
+// the path that calls nothing (no cancel, no confirm, no tap), which leaves the
+// cross on the command of the lowest of the six masks held (1..6, 0 none).
+// Select (0x100) is taken off the held word: it opens the status and draws.
+U RunCross(U16 press) {
+    B(0x904AA5) = 0;      // the tap timer
+    B(0x904AA6) = 0;
+    B(0x904AB4) = 0x77;   // the cross's command, a stand-in
+    B(0x904AA1) = 0x31;
+    B(0x904AA2) = 0x42;
+    B(0x904AC3) = 1;
+    W(0x7E1BE8) = static_cast<U16>(press & ~0x100u);
+    Input_Pressed = 0;
+    ::BattleMenu_CommandSelect();
+    return static_cast<U>(B(0x904AB4)) | static_cast<U>(B(0x904AA5)) << 8 | static_cast<U>(B(0x904AA6)) << 16 |
+           static_cast<U>(B(0x904AA1) ^ B(0x904AA2) ^ B(0x904AC3)) << 24;
+}
+
 struct Live {
     const char* name;
     U (*run)(U16);
@@ -263,6 +318,7 @@ constexpr Live kLive[] = {
     {"LeaderPanel_PressLatch", &RunLatch},
     {"EffectKind8C_Ready", &RunReady},
     {"EffectKind8C_CountPress", &RunCountPress},
+    {"BattleMenu_CommandSelect", &RunCross},
 };
 // The presses: none, each single bit, and pairs of face / shoulder buttons.
 constexpr U16 kPresses[] = {0,      0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100,
@@ -297,11 +353,29 @@ unsigned LiveRuns(bool& ran) {
     if (sg::Sigma(0x74) != 0x74) Bad("Japan's words: sigma not the identity", "the live table", 0x74, sg::Sigma(0x74));
     for (unsigned f = 0; f < kNLive; ++f)
         for (unsigned p = 0; p < kNPresses; ++p) identity[f][p] = kLive[f].run(kPresses[p]);
+    unsigned n = 0;
     // The checks have teeth: under Japan's words circle and cross differ at
     // S1Buttons and kind 0x8C.
     if (identity[0][6] == identity[0][7]) Bad("S1Buttons: circle and cross alike", "LeaderPanel_S1Buttons", 0x20, 0x40);
     if (identity[2][6] == identity[2][7]) Bad("8C_Ready: circle and cross alike", "EffectKind8C_Ready", 0x20, 0x40);
-    unsigned n = 0;
+    // ... and L1 and R1 differ at the command cross (kPresses[3] L1, [4] R1),
+    // each on a command, as the d-pad's up (kPresses[13]) is.
+    if (identity[4][3] == identity[4][4]) Bad("the cross: L1 and R1 alike", "BattleMenu_CommandSelect", 4, 8);
+    if ((identity[4][3] & 0xFF) == 0 || (identity[4][4] & 0xFF) == 0 || (identity[4][13] & 0xFF) == 0)
+        Bad("the cross: a direction on no command", "BattleMenu_CommandSelect", identity[4][3], identity[4][4]);
+    // Under Japan's words the cross does what the original's loop does with
+    // Capcom's table as it is: the lowest k whose mask is held gives k + 1,
+    // nothing held of 0xF00C gives 0.
+    for (unsigned p = 0; p < kNPresses; ++p) {
+        const U16 held = static_cast<U16>(kPresses[p] & ~0x100u);
+        unsigned want = 0;
+        if (held & 0xF00C)
+            for (int k = static_cast<int>(kNPadMasks) - 1; k >= 0; --k)
+                if (PadMask(static_cast<unsigned>(k)) & held) want = static_cast<unsigned>(k) + 1;
+        if ((held & 0xF00C) != 0 && want == 0) want = 0x77;   // held but no mask: the stand-in left
+        if ((identity[4][p] & 0xFF) != want) Bad("the cross under Japan's words", "BattleMenu_CommandSelect", held, identity[4][p]);
+        ++n;
+    }
     UseWords(sw);
     for (unsigned f = 0; f < kNLive; ++f)
         for (unsigned p = 0; p < kNPresses; ++p) {
@@ -336,7 +410,7 @@ void Check() {
     const unsigned live = LiveRuns(ran);
     if (ran)
         bof3::Log("shadow      button_tests: %u masks under stand-in words (3 releases' defaults and the swap), %u runs of "
-                  "4 of ours under the live table (Japan's words and the swap); %u MISMATCHES",
+                  "5 of ours under the live table (Japan's words and the swap); %u MISMATCHES",
                   pure, live, g_bad);
     else
         bof3::Log("shadow      button_tests: %u masks under stand-in words; the live half skipped (ButtonSigma off: sigma "

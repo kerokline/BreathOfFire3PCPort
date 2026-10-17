@@ -29,6 +29,7 @@
 #include "game/text_draw.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
 
 namespace msgbox {
 
@@ -555,7 +556,11 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
         if (glyph) {
             if (c & 0x80) ++at;
             if ((B(kFlags) & 0x10) == 0) {
-                const unsigned speed = (static_cast<unsigned char>(Input_Held) & 0x20) ? 0 : 1;
+                // Holding the Speak line's button speeds the text: Japan's
+                // circle asked through sigma, not word 0, which also holds
+                // L2 / R2 (docs/button-tests.md 3, ledger draft G).
+                const unsigned speed =
+                    (static_cast<unsigned char>(Input_Held) & bof3x::input::sigma::Sigma(0x20)) ? 0 : 1;
                 const auto row = static_cast<signed char>(B(kTextSpeed));
                 SetB(kDelay, B(static_cast<std::uint32_t>(kSpeedTable + speed + row)));
                 if (L(kFlags) & 0x100u) {
