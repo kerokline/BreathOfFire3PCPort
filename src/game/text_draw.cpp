@@ -673,18 +673,30 @@ void ButtonTextSelfTest() {
 }  // namespace
 
 void ButtonText_Arm() {
-    // The Config cell's stand-ins, 0x461C00's six strings through 0x66A2FC:
-    // one byte each, one the census knows.
-    for (int i = 0; i < 6; ++i) {
-        const auto* s = reinterpret_cast<const std::uint8_t* const*>(static_cast<std::uintptr_t>(kStandIns))[i];
-        if (!button_text::IsPortStandIn(s[0]) || s[1] != 0)
-            bof3::Fatal("ButtonText: 0x461C00's stand-in %d (0x%08X) is not a one-byte stand-in", i,
-                        (unsigned)reinterpret_cast<std::uintptr_t>(s));
-        g_bt.port[i] = s[0];
-    }
     g_bt.layer = Lang_Latin()      ? button_text::Layer::kLatin
                  : Lang_Japanese() ? button_text::Layer::kJapanese
                                    : button_text::Layer::kNone;
+    // The Config cell's stand-ins, 0x461C00's six strings through 0x66A2FC:
+    // one byte each, one the census knows. The PC's own image has them; a
+    // disc-built image does not (the RC validation, 2026-10-17: psx-us and
+    // psp-eu). They are needed with no layer (the colour cue), so there their
+    // absence is fatal; under a layer only ja-JP's L1 / R1 would draw one,
+    // and that draws the blank cell docs/button-dialogue.md 4 accepts.
+    bool port = true;
+    for (int i = 0; i < 6 && port; ++i) {
+        const auto p = reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(kStandIns))[i];
+        const auto* s = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(p));
+        port = p >= 0x400000u && p < 0x700000u && button_text::IsPortStandIn(s[0]) && s[1] == 0;
+        if (!port && g_bt.layer == button_text::Layer::kNone)
+            bof3::Fatal("ButtonText: 0x461C00's stand-in %d (0x%08X) is not a one-byte stand-in, and with no "
+                        "language layer the PC's colour cue needs it",
+                        i, (unsigned)p);
+    }
+    for (int i = 0; i < 6; ++i)
+        g_bt.port[i] = port ? reinterpret_cast<const std::uint8_t* const*>(static_cast<std::uintptr_t>(kStandIns))[i][0]
+                            : 0;
+    if (!port) bof3::Log("ButtonText  this image holds no port stand-ins at 0x66A2FC (a disc-built image): a layer's "
+                         "codes only; a ja-JP shoulder draw is a blank cell");
     g_bt.sigma = &LiveSigma;
     if (bof3::WantsShadow("button_text")) ButtonTextSelfTest();
     static const std::uint8_t was = 0, is = 1;
