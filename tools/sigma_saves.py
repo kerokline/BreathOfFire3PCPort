@@ -30,7 +30,9 @@ after it (docs/save-files.md). Inside the block:
 original 0x4613B0, src/game/rest_4f.cpp) twice: cross pressed on the Speak
 line, then L1 on the View line - the two presses tools/recipes/sigma_swap.txt
 makes in the game. So the file it writes is the one the game would write;
-sigma_swap.txt's own save is the check (docs/button-routes.md 2).
+sigma_swap.txt's own save is the check (docs/button-routes.md 2). Since the
+button round the rebind also writes confirm (word 7) as Speak's word and
+cancel (word 8) as Action's; `--before-round` leaves them as they were.
 """
 import argparse, os, shutil, struct, subprocess, sys
 
@@ -89,9 +91,12 @@ def rebind(w, line, bit):
     return w
 
 
-def swapped(w):
+def swapped(w, follow=True):
     w = rebind(w, 0, BITS['cross'])    # the Speak line, cross: Speak <-> Action
-    return rebind(w, 4, BITS['l1'])    # the View line, L1: View <-> Change
+    w = rebind(w, 4, BITS['l1'])       # the View line, L1: View <-> Change
+    if follow:                         # since the button round (ledger draft A, docs/button-sigma.md):
+        w[7], w[8] = w[0], w[6]        # the rebind writes confirm as Speak's word, cancel as Action's
+    return w
 
 
 def show(w):
@@ -125,6 +130,8 @@ def main():
     p = sub.add_parser('words'); p.add_argument('saves', nargs='+')
     p = sub.add_parser('check'); p.add_argument('saves', nargs='+')
     p = sub.add_parser('swap'); p.add_argument('src'); p.add_argument('dst')
+    p.add_argument('--before-round', action='store_true',
+                   help='words 7 / 8 left as they were (the rebind before the button round)')
     p = sub.add_parser('jump'); p.add_argument('src'); p.add_argument('dst')
     p.add_argument('--chapter', type=int, required=True)
     p.add_argument('--state', type=int, default=0)
@@ -151,7 +158,7 @@ def main():
         guard(a.dst)
         b = read(a.src)
         w0 = words(b)
-        w1 = swapped(w0)
+        w1 = swapped(w0, not a.before_round)
         struct.pack_into('<9H', b, WORDS, *w1)
         write(a.dst, b)
         print(f'{os.path.basename(a.src)}: {show(w0)}\n{os.path.basename(a.dst)}: {show(w1)}')

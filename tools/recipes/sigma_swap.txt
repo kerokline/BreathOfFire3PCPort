@@ -2,18 +2,18 @@
 # the shop route's walk to the inn (tools/recipes/shop.txt's frames 0..2201),
 # then the field menu's Config: the Controller panel, cross on the Speak line
 # (Speak <-> Action) and L1 on the View line (View <-> Change), Start to Quit,
-# R2 to close the Config, cross to close the menu; then shop.txt's inn (from its
+# R2 to close the Config, circle to close the menu; then shop.txt's inn (from its
 # frame 2201: Rest, "Save?" Yes) and the save written to SLOT 7 - not 6
 # (balioAndSunder_2 writes there), not 4 (bossAndFlash loads it), not 0 (every
 # recipe's save goes there) - with Yes on the overwrite prompt. The game's own
 # BISLPS07.DAT then holds the nine pad words tools/sigma_saves.py swap writes
 # (checked 2026-10-17 on pc-enus: equal word for word).
 # Confirm is R2 throughout (Speak and the confirm word keep L2 / R2 whatever
-# the swap). The cross that closes the menu is the cancel word's button on
-# today's code; once confirm and cancel follow the Config
-# (docs/button-unification-round.md 0, item 3) that close is circle.
-# Not on a PC install with no language layer: its Controller panel crashes
-# (docs/button-routes.md 6). Played under BOF3X_LANG=en-US (pc-enus).
+# the swap). The menu's close at frame 2721 is circle: cancel follows Action
+# since the round (docs/button-unification-round.md 0, item 3), and Action is
+# on circle after the swap. Before the round that press was cross (the cancel
+# word then ignored the Config); cross there now confirms and reopens Config.
+# Played under BOF3X_LANG=en-US (pc-enus); on the PC with no layer since D312.
 # 3,972 frames.
 # save town
 # Shots at frames 2515, 2620, 3810 added by tools/recipe_shots.py (--every 1 --from F --to F).
@@ -264,7 +264,7 @@ hold start 4
 wait 30
 hold r2 4
 wait 60
-hold cross 4
+hold circle 4
 wait 60
 hold square+up 1
 hold square+up+left 13

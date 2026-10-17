@@ -325,3 +325,88 @@ What the four sheets show on today's code (`C:\Users\kerok\b_rc\sheets\`):
 ## 8. For the other files
 
 `docs/README.md`: one row, added with this doc.
+
+## 9. The round's validation (2026-10-17 evening, `buttons/round` `baff5e45`)
+
+Every group merged (SG, DT-1, IC-F, IC-D, DT-2, HT, HT-2, IC-L, IC-W with
+dimming, RC, D312). Built in this worktree; `prepare` rebuilt all four caches
+(the importer and `loc_build.py` changed) and reinstalled both disc-only
+installs. Runs tagged `r_id` (identity) and `r_sw` (twins), `--statehash`,
+against section 4's `id` / `id2`.
+
+**The two disc-only installs do not start.** Every run on `psx-us` and
+`psp-eu` ends in its first second: `FATAL: ButtonText: 0x461C00's stand-in 0
+(0x0066A2DC) is not a one-byte stand-in` - `ButtonText_Arm`
+(`src/game/text_draw.cpp`, DT-2) checks that the six strings `0x66A2FC`
+points at are the PC's one-byte stand-ins, and a disc-built image's bytes
+there are not (they are no gap the image logs, so the image holds something
+else at `0x66A2DC`). A regression of the round on every disc-only install;
+no disc row below could be measured.
+
+**Identity, `r_id` against `id`** (frames byte-equal / compared):
+
+| Route | pc | pc-enus | psx-us, psp-eu |
+|---|---|---|---|
+| `sigma_worldmap` | 36 / 51 | 36 / 51 | FATAL at start |
+| `sigma_fishing` | 36 / 49 | 36 / 49 | FATAL |
+| `sigma_config` | 22 / 22 (the reference crashed there; the round runs on, 32 frames) | 32 / 32 | FATAL |
+| `sigma_items` | 29 / 32 | 29 / 32 | FATAL |
+| `sigma_swap` | 82 / 82 (as above; runs to its end) | 131 / 135 | FATAL |
+
+Every differing frame of the four site routes differs only in the world
+map legend's key column (game pixels `66,24-90,49`, on the three maps the
+routes cross): **IC-W, intended** - the port's `SPACE` / `X` / `ENTER` gone;
+on PC the stand-ins are the Chinese font's circled numerals in their colours
+with `START`, under en-US the PlayStation shapes with `START`. The pictograms
+right of the column are unchanged. `sigma_swap`'s four on `pc-enus`: three
+are the save list's slot 7, which held the reference run's save and was
+empty this time (the harness's own folder, not the game); one, `t003450`, is
+the inn's morning fade one step brighter (mean difference 3 of 255, at most
+16) with the next frame equal again - a fade phase, unexplained, not a
+glyph. No other difference.
+
+**`sigma_swap`'s close press desynced, as section 2 warned**: since words 7
+/ 8 follow the Config, cross after the swap is confirm and reopened the
+Config, and the route then wandered in it and wrote nothing. The press at
+frame 2721 is now circle (no frame moved). After it, on `pc` and `pc-enus`,
+slot 7 holds Speak `0x43`, Action `0x20`, View `0x4`, Change `0x8`, **confirm
+`0x43`, cancel `0x20`** - draft A. `sigma_saves.py swap` now writes words 7 /
+8 the same way (`--before-round` for the old rebind); the three `_sw` saves
+were rewritten. The R2 confirms of every route were fine.
+
+**The state hash** (`statehash.py check id id2 r_id`, pc and pc-enus; the
+platform pages the two references never agree on are skipped by `check`):
+`config` on pc identical on every compared tick. Elsewhere the differing
+pages are the VRAM shadow, the texture cache, the packet pools and the music
+staging, plus, only while a PC-only world map is up (worldmap 1098..1408,
+fishing's area 16 395..766, items' area 65 298..415), `0x7E0000`,
+`0x7E1000`, `0x903000` and `0x929000` (pages that also hold draw state) -
+IC-W's new legend draw; and on pc-enus's fishing from tick 768, `0x803000` /
+`0x804000` (the window records and message pools: the banner's labels
+resolved through `σ`, IC-F / DT-2). No page outside draws and text moved on
+a route whose frames are equal.
+
+**Swapped, `r_sw` against `r_id`**: every twin now stays in step with its
+identity run, and every differing frame differs only where a glyph is:
+
+| Route | pc | pc-enus | Where they differ |
+|---|---|---|---|
+| `sigma_worldmap` | 36 / 51 | 36 / 51 | the legend's key column (rows 1 and 2 trade) |
+| `sigma_fishing` | 27 / 49 | 29 / 49 | the area 16 legend; the reel banner's label (circle becomes cross; on PC circled 1 becomes circled 2) as it scrolls |
+| `sigma_config` | 24 / 32 | 24 / 32 | the panel's icon column (on PC also the keyboard letter column D312 draws) |
+| `sigma_items` | 12 / 32 | 12 / 32 | the L1 / R1 tiles at the scroll bar (`161,72-174,220`); the world map legend before the menu |
+
+- **The fishing's stage-1 press**: the twin's cross at 850 now opens the gear
+  menu, as the identity's circle does (before the round it opened the quit
+  prompt). The frames after it are equal but for the banner label.
+- **L1 pages the item list after the swap**: the twin's L1 at 571 goes to the
+  second page as the identity's R1 does, and its pages equal the identity's at
+  every shot.
+- **The glyphs trade**: the legend's rows 1 and 2, the reel label, the
+  Config panel's icons, the list corner's tiles.
+- PSP-EU's corner (IC-L: `L` / `R` becoming `L1` / `R1`) and the PSX US
+  rows could not be seen (the FATAL above).
+
+Sheets: `C:\Users\kerok\b_rc\sheets_round\<site>.png` (identity beside
+swapped on the round) and `C:\Users\kerok\b_rc\sheets_ref_vs_round\<site>.png`
+(section 4's reference beside the round's identity run).
