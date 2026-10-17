@@ -57,6 +57,11 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -1276,7 +1281,7 @@ void Kind8CWait(unsigned short sound, unsigned char pressed, unsigned char idle)
         s[1] = 0xA;
         return;
     }
-    if (Pad() == 0x40) {
+    if (Pad() == Sigma(0x40)) {
         unsigned char* const s = S();
         CountUp();
         Byte(at::kPresses) = 0;
@@ -1288,7 +1293,7 @@ void Kind8CWait(unsigned short sound, unsigned char pressed, unsigned char idle)
 // States 3 and 0x11: the pad's `button` counted; the frame count up - at 0x1C
 // or more +1 = 0x16, else +1 = `next`.
 void Kind8CHold(unsigned short button, unsigned char next) {
-    if (Pad() == button) CountUp();
+    if (Pad() == Sigma(button)) CountUp();
     const unsigned char n = static_cast<unsigned char>(Byte(at::kPresses) + 1);
     Byte(at::kPresses) = n;
     S()[1] = n >= 0x1C ? 0x16 : next;
@@ -1381,7 +1386,7 @@ extern "C" void __cdecl EffectKind8C_SteerBack(void) {
 
 // original 0x48B070 (state 0xF): the pad's 0x20 - counted, +1 = 0x10.
 extern "C" void __cdecl EffectKind8C_Ready(void) {
-    if (Pad() != 0x20) return;
+    if (Pad() != Sigma(0x20)) return;
     unsigned char* const s = S();
     CountUp();
     s[1] = 0x10;
@@ -1397,7 +1402,7 @@ extern "C" void __cdecl EffectKind8C_CountA(void) {
         S()[1] = 0x14;
         return;
     }
-    if (Pad() == 0x20) {
+    if (Pad() == Sigma(0x20)) {
         unsigned char* const s = S();
         CountUp();
         Byte(at::kPresses) = 0;
@@ -1425,7 +1430,7 @@ extern "C" void __cdecl EffectKind8C_CountB(void) {
         s[1] = 0x14;
         return;
     }
-    if (Pad() == 0x20) {
+    if (Pad() == Sigma(0x20)) {
         unsigned char* const s = S();
         CountUp();
         Byte(at::kPresses) = 0;

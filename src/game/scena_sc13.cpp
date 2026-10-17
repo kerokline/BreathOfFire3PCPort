@@ -30,6 +30,11 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -750,7 +755,7 @@ SC13_EXPORT void __cdecl Scena13_Run5(void) {
             D(at::kExtra1Angle) = a;
             SH_CALL(Scena13_ToneLevels)(a & 0xFFF);
         }
-        if (B(at::kInputPressed) & 0x20) SetStep(3);
+        if (B(at::kInputPressed) & Sigma(0x20)) SetStep(3);
         return;
     }
     case 3: {
