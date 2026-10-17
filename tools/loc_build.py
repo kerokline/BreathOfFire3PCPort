@@ -1279,6 +1279,11 @@ NAME_TABLES = [
     ("abilities", 0x65C4D8, 24, 227, 8),
 ]
 KIND_NAMES = 5      # ours (DIV-0008): tag = PC VA of record 0's name field, payload = count x 16 bytes
+# The records whose numbers BOOT.BIN changed (DIV-0104: consumable 87's one
+# byte). Over an image not built from a PSP disc - a PSX disc or the PC's exe
+# first - the table is confirmed with these records' numbers taken as the
+# image's, every other record's still the donor's.
+PSP_NUMBERS_DIFFER = {"consumables": (87,)}
 
 
 def convert_pool(donor, base):
@@ -1301,8 +1306,9 @@ def exe_bytes(game, va, size):
     return game.exe(va, size)
 
 
-def convert_names(game, donor):
-    """[(tag, payload)] for the six tables, names from `donor` (GAME.EMI section 0)."""
+def convert_names(game, donor, psp=False):
+    """[(tag, payload)] for the six tables, names from `donor` (GAME.EMI section 0,
+    or a PSP disc's BOOT.BIN with `psp`)."""
     chunks, report = [], []
     for what, va, stride, count, name_at in NAME_TABLES:
         pc = exe_bytes(game, va, stride * count)
@@ -1313,11 +1319,14 @@ def convert_names(game, donor):
             rec = buf[origin + i * st:origin + (i + 1) * st]
             return rec[:name_at] + rec[name_at + n_len:]
         # Record 1's numbers locate the table, every record's confirm it (the anchors).
+        differ = [i for i in PSP_NUMBERS_DIFFER.get(what, ()) if psp and game.carried(va + i * stride, stride)]
         at, found = find_anchor(game, donor, "names %s 1" % what), None
         while at >= 0 and found is None:
             start = at - d_stride - (0 if name_at else donor_len)
-            if start >= 0 and same_anchor(game, "names %s" % what, b"".join(
-                    numbers(donor, i, donor_len, d_stride, start) for i in range(count))):
+            got = [numbers(donor, i, donor_len, d_stride, start) for i in range(count)]
+            for i in differ:
+                got[i] = numbers(pc, i, NAME_LEN, stride)
+            if start >= 0 and same_anchor(game, "names %s" % what, b"".join(got)):
                 found = start
             at = find_anchor(game, donor, "names %s 1" % what, at + 1)
         if found is None:
@@ -3731,7 +3740,7 @@ def build_all(args, disc_path):
     if is_psp(disc) and not args.only:
         # The PSP reads its names out of BOOT.BIN; its GAME.EMI is the PSX's,
         # kept beside it and the same on both PSP discs (region-diff.md 5.4 P7).
-        names, report = convert_names(src, disc.boot())
+        names, report = convert_names(src, disc.boot(), psp=True)
         overlays["FIRST.DAT"] += names
         print("names (BOOT.BIN): " + ", ".join(report))
     elif game_emi and not args.only:
