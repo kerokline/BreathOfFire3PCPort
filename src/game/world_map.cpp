@@ -21,12 +21,15 @@
 // ten; this module takes the copy the owner's route runs, the Yraall region's.
 #include "game/world_map.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <string>
 
 #include "bof3/symbols.gen.h"
 #include "game/world_map_callees.h"
 #include "hook/detour.h"
+#include "input/sigma.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
 
@@ -109,17 +112,6 @@ float Float(const unsigned char* p) {
     float v;
     std::memcpy(&v, p, sizeof v);
     return v;
-}
-
-// The button table search the frame runs for each legend: the first entry
-// (of `count`) whose mask word has a bit of the button word's low 16 bits;
-// its sprite index byte, or -1 for none.
-int KeyIndex(U button_word, U count) {
-    for (U k = 0; k < count; ++k) {
-        const unsigned char* entry = At(kButtonTable + k * 4);
-        if ((Word(entry) & button_word & 0xFFFF) != 0) return entry[2];
-    }
-    return -1;
 }
 
 }  // namespace
@@ -205,6 +197,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
 // button word's upper bytes, which the sprite draw masks off.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(int x, int y) {
     if (!(At(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
+    world_map_legend::Begin();   // ledger draft C: which page; the port's key names painted over
     g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
     g.commit_prim(1, 0xC);
     g.draw_sprite(x, y, 0);
@@ -213,23 +206,20 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
     const bool withheld1 =
         cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!withheld1) g.draw_sprite(x + 0x30, y, 1);
-    {
-        const int key = KeyIndex(Long(At(kButtonMap0)), 6);
-        if (key >= 0) g.draw_sprite(x + 0x38, y + 8, static_cast<unsigned>(withheld1 ? key : ((key + 1) & 0xFF)));
-    }
+    world_map_legend::Key(g.draw_sprite, kButtonTable, 6, Long(At(kButtonMap0)), x + 0x38, y + 8, withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) g.draw_sprite(x + 0x30, y + 0x10, 2);
-    {
-        const int key = KeyIndex(Long(At(kButtonMap6)), 8);
-        if (key >= 0) g.draw_sprite(x + 0x38, y + 0x10, static_cast<unsigned>(withheld2 ? key : ((key + 1) & 0xFF)));
-    }
+    world_map_legend::Key(g.draw_sprite, kButtonTable, 8, Long(At(kButtonMap6)), x + 0x38, y + 0x10, withheld2);
     const unsigned char event =
         g.cell_event(static_cast<short>(Word(At(kLeaderCellX))), static_cast<short>(Word(At(kLeaderCellZ))));
     bool third = event != 0;
     if (!third) third = (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!third) third = (At(kPartySet)[0] & 0x7F) == 0xC;
     if (!third) third = (Word(At(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
-    if (third) g.draw_sprite(x + 0x30, y + 0x18, 3);
+    if (third) {
+        g.draw_sprite(x + 0x30, y + 0x18, 3);
+        world_map_legend::Start(x + 0x30, y + 0x18);
+    }
     g.draw_needle(x + 0x18, y + 0x18);
 }
 
@@ -385,6 +375,312 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     PutLong(At(kRowTails + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
     PutLong(At(at::Gfx_PacketNextAt()), next + bytes);
 }
+
+// --- the legend's keys: ledger draft C (world_map.h) -------------------------------
+
+namespace {
+
+// Ledger draft C: 1 after every module's self-test (PatchBytes "WorldMapLegend").
+unsigned char g_legend_on = 0;
+// This frame's page is the port's own (the glyph sheet blank, the key names
+// painted over): the stand-ins. Set by Begin, read by Key and Start.
+bool g_standin = false;
+// The FNVs Begin has met on a page with no glyph sheet that is not the port's
+// legend, logged once each.
+U g_unknown_logged[8];
+unsigned g_unknown_count = 0;
+
+// The dial page through tpage 0x9C: 8-bit texels from VRAM (768, 256), two to
+// a halfword of Gfx_VramShadow (1024 x 512 halfwords, rows 0x800 bytes).
+constexpr int kPageX = 768, kPageY = 256;
+// The 8 x 8 key-glyph sheet: sprites 6..21 of the sprite table, u 64..95, v
+// 80..111 (blank on the port's page, docs/world-map-hud.md 1.2).
+constexpr int kSheetU0 = 64, kSheetU1 = 96, kSheetV0 = 80, kSheetV1 = 112;
+// The port's key names (SPACE, X, ENTER): dim in the frame (sprite 0) and lit
+// in labels 1..3 (sprites 1..3, u 8..63 from v 80), the frame's box the
+// labels' moved by (+40, -80) - where the frame's x + 0x30 puts them over it.
+// u0, u1, v0, v1, ends exclusive; tools/importer.py DIAL_PORT_BOXES.
+struct Box { int u0, u1, v0, v1; };
+constexpr Box kPortBoxes[2] = {{51, 75, 8, 33}, {11, 35, 88, 113}};
+// The panel behind them: one index with a diagonal band of three at its top
+// left (importer.py DIAL_PORT_PANEL).
+bool IsPanel(unsigned char t) { return t == 0x0C || t == 0x52 || t == 0x54 || t == 0x59; }
+// FNV-1a 32 of the two boxes, the frame's first, row by row: the port's page
+// (all 16 world-map areas' pages, measured 2026-10-17) and the same after the
+// repaint - the numbers importer.py DIAL_PORT_FNV / DIAL_REPAINTED_FNV checks,
+// so the engine's repaint and the importer's are one rule.
+constexpr U kPortFnv = 0x498B8D15, kRepaintedFnv = 0x0D297D59;
+// The rectangle the repaint reads and writes: u 10..75 (halfwords 773..805),
+// v 8..112 - both boxes and the texel right of each.
+constexpr int kRectU0 = 10, kRectU1 = 76, kRectV0 = 8, kRectV1 = 113;
+constexpr int kRectW = (kRectU1 - kRectU0) / 2, kRectH = kRectV1 - kRectV0;
+static_assert(kRectU0 % 2 == 0 && kRectU1 % 2 == 0, "the rectangle is whole halfwords");
+
+// The port's stand-ins (Config_DrawControllerCell's original 0x461C00, the
+// Config screen's glyph column): 0x66A2FC's eight one-byte strings b c d X f g
+// o p, the first six circle, cross, triangle, square, L1, R1 - the port's
+// circled numerals 1..6 and an X - in colours 2, 1, 6, 5, 0, 0
+// (docs/controls.md 2; DIV-0051's Original behaviour).
+constexpr U kStandInStrings = 0x66A2FC;
+struct StandIn { std::uint16_t bit; unsigned string; unsigned colour; };
+constexpr StandIn kStandIns[6] = {
+    {0x20, 0, 2}, {0x40, 1, 1}, {0x10, 2, 6}, {0x80, 3, 5}, {0x04, 4, 0}, {0x08, 5, 0},
+};
+// START on the port's page: the small font's S T A R T (one-byte codes, glyph
+// b - 0x26), in colour 0, each a 5-wide quad on an advance of 4 - five 8-wide
+// cells would run over the label's dots at u 35 - from label u 12 (the
+// label's x + 4; the label starts at u 8), where a disc's START starts, to u
+// 32, on the label's own y (v 104, the row ENTER was on). Measured off the
+// first capture (2026-10-17, an advance of 5 from u 10 touched the dots).
+// The small font's (u, v) pair for colour 0: Text_DrawSmall's 0x65F5A8[0].
+constexpr U kSmallUV = 0x65F5A8;
+constexpr int kStartWidth = 5, kStartAdvance = 4, kStartDx = 4;
+
+const unsigned char* Vram() { return reinterpret_cast<const unsigned char*>(Gfx_VramShadow); }
+unsigned char Texel(int u, int v) { return Vram()[(kPageY + v) * 0x800 + kPageX * 2 + u]; }
+
+U Fnv(U h, unsigned char b) { return (h ^ b) * 0x01000193u; }
+
+// The repaint, on texels at buf[(v - v0) * stride + (u - u0)]: row by row
+// from each box's second, an ink texel takes the one up and to the right when
+// that is panel, else the one above. The box's top row holds no ink (checked
+// by the hashes), so the one above is panel by the time it is read.
+void Repaint(unsigned char* buf, int stride, int u0, int v0) {
+    auto at = [&](int u, int v) -> unsigned char& { return buf[(v - v0) * stride + (u - u0)]; };
+    for (const Box& b : kPortBoxes)
+        for (int v = b.v0 + 1; v < b.v1; ++v)
+            for (int u = b.u0; u < b.u1; ++u) {
+                if (IsPanel(at(u, v))) continue;
+                const unsigned char up_right = at(u + 1, v - 1);
+                at(u, v) = IsPanel(up_right) ? up_right : at(u, v - 1);
+            }
+}
+
+U BoxesFnv(const unsigned char* buf, int stride, int u0, int v0) {
+    U h = 0x811C9DC5u;
+    for (const Box& b : kPortBoxes)
+        for (int v = b.v0; v < b.v1; ++v)
+            for (int u = b.u0; u < b.u1; ++u) h = Fnv(h, buf[(v - v0) * stride + (u - u0)]);
+    return h;
+}
+
+bool SheetBlank() {
+    for (int v = kSheetV0; v < kSheetV1; ++v)
+        for (int u = kSheetU0; u < kSheetU1; ++u)
+            if (Texel(u, v) != 0) return false;
+    return true;
+}
+
+// The stand-in for one of the six buttons, or nullptr.
+const StandIn* StandInFor(U bit) {
+    for (const StandIn& s : kStandIns)
+        if (s.bit == bit) return &s;
+    return nullptr;
+}
+
+const unsigned char* StandInText(const StandIn& s) {
+    return At(Long(At(kStandInStrings + s.string * 4)));
+}
+
+// The original's search: the first of `count` entries whose mask word has a
+// bit of the button word's low 16 bits; the entry, or nullptr.
+const unsigned char* KeyEntry(U buttons, U count, U word) {
+    for (U k = 0; k < count; ++k) {
+        const unsigned char* const entry = At(buttons + k * 4);
+        if ((Word(entry) & word & 0xFFFF) != 0) return entry;
+    }
+    return nullptr;
+}
+
+void LegendSelfTest();
+
+}  // namespace
+
+namespace world_map_legend {
+
+void Begin() {
+    g_standin = false;
+    if (g_legend_on == 0 || !SheetBlank()) return;
+    const unsigned char* const page = Vram() + kPageY * 0x800 + kPageX * 2;
+    const U fnv = BoxesFnv(page, 0x800, 0, 0);
+    if (fnv == kRepaintedFnv) {
+        g_standin = true;
+        return;
+    }
+    if (fnv != kPortFnv) {
+        for (unsigned i = 0; i < g_unknown_count; ++i)
+            if (g_unknown_logged[i] == fnv) return;
+        if (g_unknown_count < sizeof g_unknown_logged / sizeof g_unknown_logged[0]) {
+            g_unknown_logged[g_unknown_count++] = fnv;
+            bof3::Log("WorldMapLegend: the dial page in VRAM has no glyph sheet and is not the port's legend (FNV %08X): "
+                      "drawn as the original", fnv);
+        }
+        return;
+    }
+    unsigned char rect_texels[kRectH][kRectW * 2];
+    for (int v = kRectV0; v < kRectV1; ++v)
+        for (int u = kRectU0; u < kRectU1; ++u) rect_texels[v - kRectV0][u - kRectU0] = Texel(u, v);
+    Repaint(&rect_texels[0][0], kRectW * 2, kRectU0, kRectV0);
+    const short rect[4] = {static_cast<short>(kPageX + kRectU0 / 2), static_cast<short>(kPageY + kRectV0),
+                           static_cast<short>(kRectW), static_cast<short>(kRectH)};
+    Gfx_LoadImage(rect, rect_texels);
+    const U after = BoxesFnv(page, 0x800, 0, 0);
+    if (after != kRepaintedFnv)
+        bof3::Fatal("WorldMapLegend: the port's legend repainted in VRAM is FNV %08X, not the importer's %08X "
+                    "(BOF3X_ORIGINAL=WorldMapLegend draws the original's)", after, kRepaintedFnv);
+    bof3::Log("WorldMapLegend: the port's dial page has no glyph sheet - its key names painted over, the port's "
+              "stand-ins drawn");
+    g_standin = true;
+}
+
+void Key(SpriteFn sprite, std::uint32_t buttons, std::uint32_t count, std::uint32_t word, int x, int y, bool withheld) {
+    const unsigned char* const entry = KeyEntry(buttons, count, word);
+    if (entry == nullptr) return;
+    if (!g_standin) {
+        const unsigned key = entry[2];
+        sprite(x, y, withheld ? key : ((key + 1) & 0xFF));
+        return;
+    }
+    const StandIn* const s = StandInFor(Word(entry));
+    if (s == nullptr)
+        bof3::Fatal("WorldMapLegend: the legend's button word %08X picks the table entry %08X past the six buttons "
+                    "(mask %04X): no stand-in for it (BOF3X_ORIGINAL=WorldMapLegend draws the original's)",
+                    word, static_cast<U>(reinterpret_cast<std::uintptr_t>(entry)), Word(entry));
+    if (withheld) return;
+    Text_DrawSmall(x, y, s->colour, 1, StandInText(*s));
+}
+
+void Start(int x, int y) {
+    if (!g_standin) return;
+    const unsigned char* const uv = At(kSmallUV);
+    const unsigned u = uv[0], v = uv[1];
+    static const char kStart[] = "START";
+    for (int i = 0; kStart[i] != 0; ++i) {
+        const auto glyph = static_cast<std::uint16_t>(static_cast<unsigned char>(kStart[i]) - 0x26u);
+        PutWord(PacketNext() + 0x16, glyph);
+        Text_EmitGlyph(x + kStartDx + i * kStartAdvance, y, kStartWidth, static_cast<int>(8 - v),
+                       static_cast<int>(u), static_cast<int>(v), 0x7800);
+    }
+}
+
+void Arm() {
+    if (bof3::WantsShadow("world_map_legend")) LegendSelfTest();
+    static const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("WorldMapLegend", static_cast<U>(reinterpret_cast<std::uintptr_t>(&g_legend_on)), &was, &is, 1);
+    bof3::Log("WorldMapLegend the world map's legend: the port's key names painted over and its stand-ins drawn on "
+              "the port's own page: %s",
+              g_legend_on ? "on" : "OFF (BOF3X_ORIGINAL=WorldMapLegend)");
+}
+
+}  // namespace world_map_legend
+
+namespace {
+
+// BOF3X_SHADOW=world_map_legend. Pure: the button table (area 33's,
+// 0x5EF670), the stand-in strings and a synthetic page; no VRAM, no draw.
+//  1. sigma agrees with the words: for every Config the rebind can make (720
+//     assignments of the six lines to the six buttons, Japan's words) the
+//     entry row 1's search finds over six is Sigma(circle)'s button and row
+//     2's over eight Sigma(cross)'s - the keys the legend draws are the
+//     buttons the Speak and Action lines are on; at the identity rows 1 and 2
+//     draw sprites 11 and 13 (circle and cross, lit), as the original; a
+//     swap of Speak and Action trades them; a swap of View and Change moves
+//     neither.
+//  2. Every one of the six entries has a stand-in, a one-byte string.
+//  3. The repaint, on a synthetic page: the panel's band and random ink in
+//     both boxes - after it no ink is left in either box, nothing outside them
+//     changed, and every panel texel inside them kept; run twice it changes
+//     nothing more. FNV-1a's own vectors.
+void LegendSelfTest() {
+    namespace sg = bof3x::input::sigma;
+    unsigned mismatches = 0, tables = 0;
+    auto fail = [&](const char* what, unsigned a, unsigned b) {
+        if (mismatches++ < 16) bof3::Log("world_map_legend self-test: %s (%04X, %04X)", what, a, b);
+    };
+    // 1. Every assignment of the six lines (sg::kLineWord order) to the six bits.
+    const std::uint16_t bits[6] = {0x20, 0x80, 0x40, 0x10, 0x08, 0x04};   // Japan's: Speak, Move, Action, Menu, View, Change
+    int perm[6] = {0, 1, 2, 3, 4, 5};
+    do {
+        std::uint16_t words[9] = {0, 0, 0, 0, 0, 0x100, 0, 0, 0};
+        for (int line = 0; line < 6; ++line) words[sg::kLineWord[line]] = bits[perm[line]];
+        words[0] = static_cast<std::uint16_t>(words[0] | sg::kL2R2);
+        words[7] = words[0];
+        words[8] = words[6];
+        std::string why;
+        const sg::Table t = sg::Build(words, why);
+        if (!t.valid) {
+            fail("a permutation refused", words[0], words[6]);
+            continue;
+        }
+        ++tables;
+        const unsigned char* const row1 = KeyEntry(kButtonTable, 6, words[0]);
+        const unsigned char* const row2 = KeyEntry(kButtonTable, 8, words[6]);
+        if (row1 == nullptr || Word(row1) != sg::Apply(t, 0x20)) fail("row 1 is not Sigma(circle)", words[0], sg::Apply(t, 0x20));
+        if (row2 == nullptr || Word(row2) != sg::Apply(t, 0x40)) fail("row 2 is not Sigma(cross)", words[6], sg::Apply(t, 0x40));
+        bool identity = true;
+        for (int i = 0; i < 6; ++i) identity = identity && perm[i] == i;
+        if (identity && row1 && row2 && (row1[2] + 1 != 11 || row2[2] + 1 != 13))
+            fail("the identity's lit sprites are not 11 and 13", row1[2] + 1u, row2[2] + 1u);
+        const bool speak_action = perm[0] == 2 && perm[2] == 0 && perm[1] == 1 && perm[3] == 3 && perm[4] == 4 && perm[5] == 5;
+        if (speak_action && row1 && row2 && (row1[2] + 1 != 13 || row2[2] + 1 != 11))
+            fail("Speak <-> Action does not trade the keys", row1[2] + 1u, row2[2] + 1u);
+        const bool view_change = perm[0] == 0 && perm[1] == 1 && perm[2] == 2 && perm[3] == 3 && perm[4] == 5 && perm[5] == 4;
+        if (view_change && row1 && row2 && (row1[2] + 1 != 11 || row2[2] + 1 != 13))
+            fail("View <-> Change moves a key", row1[2] + 1u, row2[2] + 1u);
+    } while (std::next_permutation(perm, perm + 6));
+    // 2. The stand-ins.
+    for (U k = 0; k < 6; ++k) {
+        const unsigned char* const entry = At(kButtonTable + k * 4);
+        const StandIn* const s = StandInFor(Word(entry));
+        if (s == nullptr) {
+            fail("a button entry has no stand-in", k, Word(entry));
+            continue;
+        }
+        const unsigned char* const text = StandInText(*s);
+        if (text[0] <= 0x26 || text[0] >= 0x80 || text[1] != 0) fail("a stand-in is not one one-byte glyph", k, text[0]);
+    }
+    // 3. The repaint on a synthetic page.
+    if (Fnv(0x811C9DC5u, 'a') != 0xE40C292Cu) fail("FNV-1a of \"a\"", 0, 0);
+    unsigned char page[kRectH][kRectW * 2], before[kRectH][kRectW * 2];
+    U seed = 0x2468ACE1u;
+    auto next = [&] { seed = seed * 1103515245u + 12345u; return (seed >> 16) & 0x7FFF; };
+    for (int round = 0; round < 64; ++round) {
+        for (int v = kRectV0; v < kRectV1; ++v)
+            for (int u = kRectU0; u < kRectU1; ++u) {
+                const int band = u + v;                       // the band runs down to the left
+                unsigned char t = 0x0C;
+                if (band < 70) t = 0x52;
+                else if (band < 76) t = 0x59;
+                else if (band < 80) t = 0x54;
+                if (u == kRectU0) t = 0x0F;                   // a border column outside both boxes
+                page[v - kRectV0][u - kRectU0] = t;
+            }
+        for (const Box& b : kPortBoxes)
+            for (int v = b.v0 + 1; v < b.v1; ++v)
+                for (int u = b.u0; u < b.u1; ++u)
+                    if (next() % 3 == 0) page[v - kRectV0][u - kRectU0] = static_cast<unsigned char>(0xD0 + next() % 32);
+        std::memcpy(before, page, sizeof page);
+        Repaint(&page[0][0], kRectW * 2, kRectU0, kRectV0);
+        for (int v = kRectV0; v < kRectV1; ++v)
+            for (int u = kRectU0; u < kRectU1; ++u) {
+                bool in = false;
+                for (const Box& b : kPortBoxes) in = in || (u >= b.u0 && u < b.u1 && v >= b.v0 && v < b.v1);
+                const unsigned char was = before[v - kRectV0][u - kRectU0], now = page[v - kRectV0][u - kRectU0];
+                if (!in && was != now) fail("the repaint changed a texel outside the boxes", static_cast<unsigned>(u), static_cast<unsigned>(v));
+                if (in && !IsPanel(now)) fail("ink left in a box", static_cast<unsigned>(u), static_cast<unsigned>(v));
+                if (in && IsPanel(was) && was != now) fail("a panel texel in a box changed", static_cast<unsigned>(u), static_cast<unsigned>(v));
+            }
+        std::memcpy(before, page, sizeof page);
+        Repaint(&page[0][0], kRectW * 2, kRectU0, kRectV0);
+        if (std::memcmp(before, page, sizeof page) != 0) fail("the repaint is not idempotent", static_cast<unsigned>(round), 0);
+    }
+    bof3::Log("world_map_legend self-test: %u Configs (sigma against the words), 6 stand-ins, 64 synthetic repaints; "
+              "%u MISMATCHES", tables, mismatches);
+    if (mismatches != 0 || tables != 720)
+        bof3::Fatal("world_map_legend self-test: %u mismatches over %u Configs", mismatches, tables);
+}
+
+}  // namespace
 
 void WorldMap_Inject() {
     if (bof3::WantsShadow("world_map")) world_map::SelfTest();
