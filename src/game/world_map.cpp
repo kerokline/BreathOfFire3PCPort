@@ -3,8 +3,10 @@
 // for the map's five, against the PlayStation's world-map overlay - the JP
 // disc's WORLD00/AREA016.EMI section at 0x801F2C00, read with capstone MIPS
 // through the sibling's tools - and for the two helpers against the boot exe.
-// Faithful: no divergence (the dial's opacity is a port change, kept: D42).
-// The start-up fuzz is world_map_fuzz.cpp.
+// Faithful (the dial's opacity is a port change, kept: D42), but for the
+// legend's keys: the button round's ledger draft C, world_map_legend below
+// and world_map.h (docs/world-map-hud.md section 9). The start-up fuzz is
+// world_map_fuzz.cpp.
 //
 //   WorldMap_FrameStep    0x404160..0x404220 (0xC1: the dispatcher and states 1..3)  PSX 0x801F4178's family
 //   WorldMap_DrawFrame    0x404390..0x404554 (0x1C5)                                PSX 0x801F3B00

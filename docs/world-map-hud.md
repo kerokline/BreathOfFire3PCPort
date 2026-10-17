@@ -517,3 +517,208 @@ No DIV entry; no behaviour change.
   map's overlay family (it holds no decompilation of `0x801F2C00`); the
   twins came from disassembling the section straight off the JP disc, which
   its `tools/emi.py` and `text_tables.Disc` make a ten-line script.
+
+## 9. The legend's keys under the button round (ledger draft C)
+
+**Status:** BUILT (2026-10-17, group IC-W of
+[`button-unification-round.md`](button-unification-round.md) 3, branch
+`buttons/icw`). Headless self-tests pass. The world-map route was run on
+three installs, identity and swapped (9.5). Not played. Ledger draft C (9.6)
+is lettered; the coordinator numbers it at the merge.
+
+### 9.1 What the legend was
+
+- The draw already asks the save's Config. Row 1's key is the first of six
+  button-table entries (`0x5EF670`) with a bit of word 0 (Speak). Row 2's is
+  the first of eight with a bit of word 6 (Action). Both are drawn from the
+  dial page's 8 x 8 key sheet (u 64..95, v 80..111), lit when the label is
+  shown and dim when it is withheld (1.2).
+- A PSX or PSP disc's page carries that sheet. Since DIV-0130 its baked
+  default icons are painted over, so the live key is the one icon.
+- **The port's page names keys.** It shows `SPACE`, `X` and `ENTER`, lit in
+  labels 1..3 (u 11..34, v 88..112) and dim in the frame (u 51..74, v
+  8..32). It also blanks the key sheet: every texel of u 64..95, v 80..111
+  is 0 on all 16 pages. So the PC's code draws an empty cell where the key
+  goes. On all 16 pages the two boxes are byte-identical (FNV-1a
+  `498B8D15`). Evidence: a scratch reader over `bof3/DAT`, 2026-10-17.
+
+### 9.2 Sigma and the two words
+
+SG's `σ` is kept in Japan's terms ([`button-sigma.md`](button-sigma.md) 2).
+`Sigma(circle)` is the button the Speak line is on now, which is word 0's
+button. `Sigma(cross)` is word 6's. So the legend's search over the words
+already draws `σ(word 0)` / `σ(word 6)` in the round doc's sense.
+
+The helper therefore keeps the original's search. At the identity it is the
+original's draw to the byte. That includes the eight-entry quirk of row 2
+(1.2, section 6), which only a word `σ` refuses can reach. The self-test
+checks the two agree on every Config the rebind can make (9.4).
+
+### 9.3 What is built
+
+One helper, `world_map_legend` (declared in `world_map.h`, in
+`world_map.cpp`). The eleven frame draws call it: `WorldMap_DrawFrame` and
+the ten area copies (`area_w0b`, `w1b`, `w1e`, `w2b` (87, 88), `w2e`,
+`w3a`, `w3b`, `w3g`, `w4a`). Their ten `KeyIndex` copies are gone; the
+search is the helper's.
+
+- **`Begin`**, after the pass test, decides which page is in VRAM.
+  - A page with a key sheet (a disc's, or the PC's with a disc's shapes)
+    draws as the original.
+  - A page with the sheet blank and the two boxes at the port's FNV has its
+    key names painted over in VRAM (`Gfx_LoadImage` of u 10..75, v
+    8..112). The result must hash to `0D297D59`, the importer's own repaint
+    of the same page, or the game stops.
+  - A blank-sheet page at any other hash is logged once and drawn as the
+    original.
+- **`Key`** draws rows 1 and 2 with the original's search and sprite draw.
+  On the port's page it draws the port's own stand-in for the button when
+  the row is lit: the Config screen's, `0x66A2FC`'s circled numerals 1..6
+  and `X`, through `Text_DrawSmall`. The colours are circle red 2, cross
+  purple 1, triangle green 6, square pink 5, L1 / R1 white 0. A withheld
+  row gets nothing, since the port's font has no dim glyph.
+- **`Start`** runs for row 3 after its label. On a page with the
+  PlayStation's art it draws nothing, since the label carries START. On the
+  port's page it draws START in the port's small font, white: five 5-wide
+  quads on an advance of 4 from label u 12, where a disc's START starts.
+- **The repaint rule** is one rule, in Python and C++. The panel behind the
+  names is index `0x0C`, with a diagonal band of `0x52`, `0x54`, `0x59` at
+  its top left that runs down to the left one texel a row. Row by row from
+  each box's second row, an ink texel takes the texel up and to the right if
+  that is panel, else the one above. So the band runs on under the words.
+- **The importer** (`importer.py`, the dial page) works when a PSX disc is
+  among the sources. For the 11 areas with a frame, the PC's page becomes:
+  - the port's page, repainted;
+  - plus the disc's key sheet (u 64..95, v 80..111);
+  - plus the disc's START: the frame's dim one at u 52..67, v 26..32 and
+    label 3's at u 12..28, v 106..112, the texels that are not the disc's
+    panel `0x5B`.
+
+  The manifest names the chunk `<disc>:dial:<EMI>#7`, with the composed
+  body's hash, and `verify` counts it as a stand-in.
+  - The other five pages (areas 19, 34, 66, 120, 123) have no sheet on any
+    disc, and no frame draws there. They stay the port's.
+  - A PSP page's sheet differs from the PSX ones (404 of 1,024 bytes on
+    area 16), so PC + PSP alone takes the engine's stand-ins.
+- **The switch** is `BOF3X_ORIGINAL=WorldMapLegend` (the engine's half). It
+  is armed after every module's self-test, in `inject_all.cpp`.
+
+Evidence for the importer's half:
+
+- The key sheet, the START regions and the column right of each are
+  byte-identical on the JP, EU, FR and DE pages of all 16 areas, and on the
+  US page of area 16 (a scratch reader over the discs, 2026-10-17).
+- `importer.py build` of PC + EU logs "base from psx-eu-en 11 chunks (the
+  port's dial page with this disc's button shapes, ledger draft C)".
+- `importer.py verify` on that cache: 0 problems; 731 of 742 containers
+  byte-identical, 11 holding a disc's own sections.
+
+### 9.4 Self-tests
+
+- `BOF3X_SHADOW=world_map_legend` logs `720 Configs (sigma against the
+  words), 6 stand-ins, 64 synthetic repaints; 0 MISMATCHES`.
+  - For every assignment of the six lines to the six buttons, row 1's entry
+    is `Sigma(circle)` and row 2's is `Sigma(cross)`.
+  - At the identity the lit sprites are 11 and 13 (circle, cross).
+  - Speak <-> Action trades them; View <-> Change moves neither.
+- The `world_map` fuzz and the nine area groups' fuzzes run the eleven frame
+  draws against Capcom's with the helper in place, before the switch is
+  armed: 0 mismatches.
+- `importer.py check` runs the repaint on 16 synthetic pages: no ink left,
+  the panel and everything outside the boxes kept, and a second pass
+  changes nothing. 0 errors.
+
+### 9.5 The route
+
+The route is RC's world-map route: `sigma_worldmap.txt` and its swapped twin
+`sigma_worldmap_sw.txt`, with the `town` / `town_sw` saves, in area 33. It
+was run through `abc_run.py` on three installs in `C:\Users\kerok\b_icw`:
+
+- `pc`: a cache from the PC alone;
+- `pc-en150`: PC + the EU disc, en-150;
+- `psx-eu`: the EU disc alone.
+
+The frames are outside the tree, in `runs\id_sigma_worldmap\` and
+`runs\sw_sigma_worldmap_sw\`. The legend crops are side by side in
+`sheet_id_sw.png`.
+
+| Install | Identity | Swapped (Speak <-> Action) |
+|---|---|---|
+| `pc` | circled 1 (red) on row 1, circled 2 (purple) on row 2, START on row 3 when shown; no key names | the two trade |
+| `pc-en150` | the PlayStation circle, cross and START beside the port's pictograms | cross on row 1, circle on row 2 |
+| `psx-eu` | as before: circle, cross, START, the disc's words | cross on row 1, circle on row 2 |
+
+`pc` was compared against RC's pre-round reference of the same route and
+install (`b_rc\runs\id_sigma_worldmap\pc`, 51 frames). 36 frames are equal.
+15 differ, each only inside x 133..180, y 49..98 of 640 x 480, which is the
+legend's key column.
+
+### 9.6 Ledger draft C
+
+**The world map's legend: the buttons the Config holds, in PlayStation
+shapes or the port's stand-ins, no key names**
+
+- **Date:** 2026-10-17
+- **Subsystem:** the world map's legend: `WorldMap_DrawFrame` `0x404390` and
+  its ten area copies (`world_map_legend`, `world_map.cpp`), and the
+  importer's dial page (`importer.py` `dial_with_disc_shapes`,
+  `dial_disc_shapes`). **Amends DIV-0130**: its sentence "The PC install's
+  own page (the port's keyboard legend) is not touched" no longer holds.
+  Its repaint of a disc's baked icons is unchanged.
+- **Tier:** Intent. The owner, 2026-10-17: every icon follows the Config,
+  PlayStation icons only. Answer 2: the port's `SPACE` / `X` / `ENTER` art
+  is replaced by the glyphs alone, with no label text
+  ([`button-unification-round.md`](button-unification-round.md) 5.1).
+- **Original behaviour:** the port's dial page names keyboard keys
+  (`SPACE`, `X`, `ENTER`), lit in the labels and dim in the frame, beside
+  its pictograms. It blanks the PlayStation's key sheet, so the code's live
+  key (word 0, word 6) draws an empty cell. The names are the default key
+  table's and lie when a key or a Config line is moved (D58's kind). The
+  PlayStation draws the glyph of the button the save's word holds.
+- **New behaviour:**
+  - With a PSX disc among the sources, the importer paints the key names
+    over with the panel and lays in the disc's key sheet and START. The
+    legend shows the PlayStation's circle / cross / START shapes for the
+    buttons the Config holds, beside the port's pictograms, lit and dim as
+    on the PlayStation.
+  - With no PSX disc (a PC install alone, or PC + PSP), the engine paints
+    the names over in VRAM by the same rule. For the lit rows it draws the
+    port's own stand-ins: the Config screen's circled numeral or `X`, in the
+    button's colour. Row 3 gets START in the port's small font. A withheld
+    row shows its dim pictogram and no key, since the port's font has no
+    dim glyph.
+  - A disc-only install is unchanged (DIV-0130).
+- **Rationale:** the owner's answers. The legend is the one site whose code
+  already followed the Config; the port's art was what lied.
+- **Also in the PSX version?** No: the PlayStation draws the shapes. This
+  undoes a port change (the keyboard legend). The port's stand-ins are used
+  where the install has no PlayStation shapes.
+- **Verification:** 9.4 and 9.5.
+- **Reversible?**
+  - The engine's half: `BOF3X_ORIGINAL=WorldMapLegend`.
+  - The importer's half: a cache built without a PSX disc, or by an
+    importer from before this change. The engine then repaints that page
+    itself, unless it is switched off.
+
+### 9.7 Not reached, and open points
+
+- **The layout is by measure, not by eye.**
+  - On the PC's page the dots sit at u 35, where the port put them after its
+    wider key names. So the glyph (u 16..23) has 11 texels of panel before
+    the dots, where a disc's has 6.
+  - START on the port's page is font glyphs narrowed to 5 of 8. The owner
+    may want it moved, narrowed or dropped.
+
+  Each of these is one constant.
+- **The pictograms stay.** "The glyphs alone, no label text" is read as no
+  key names and no words, with the port's arrow, question mark and tent
+  kept. Dropping them too is a question for the owner.
+- **A withheld row on the PC's page shows no key.** The port's stand-ins
+  have no dim form; a grey colour index would be new.
+- **Not reached:**
+  - the US disc beyond area 16's sheet;
+  - the PSP-JP page;
+  - a PC + PSP install, live;
+  - the 16:9 and 21:9 modes (the legend is drawn at the frame's own x, so
+    they move it as before);
+  - the ten other map areas, live (the fuzz runs their copies).
