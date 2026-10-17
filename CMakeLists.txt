@@ -173,6 +173,7 @@ add_library(bof3x SHARED
   src/input/bindings.cpp
   src/input/pad_sdl.cpp
   src/input/sigma.cpp
+  src/input/button_tests.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp
   src/game/psx_gpu.cpp

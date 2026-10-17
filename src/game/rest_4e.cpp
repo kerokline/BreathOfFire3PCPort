@@ -31,6 +31,11 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -953,7 +958,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     B(kWin1) = 1;
     SetW(kWin1 + 4, window_x + 7);
     SetW(kWin1 + 6, 13u * (static_cast<U>(B(kRow)) - B(kTop) + 2u) + W(kWin0 + 6));
-    const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF00Cu);
+    const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     if (moved & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
         const auto tab = static_cast<unsigned char>(B(kTab) - 1);
@@ -975,7 +980,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     } else if (moved & 0x4000) {
         if (row < 0x7F) B(kRow) = ++row;
         if (static_cast<int>(B(kRow)) >= static_cast<int>(B(kTop)) + 9) SetW(kScroll, 0x10);
-    } else if (moved & 4) {
+    } else if (moved & Sigma(4)) {
         const unsigned char top = B(kTop);
         if (top == 0) {
             row = 0;
@@ -989,7 +994,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
             B(kRow) = row;
             B(kTop) = static_cast<unsigned char>(top - 9);
         }
-    } else if (moved & 8) {
+    } else if (moved & Sigma(8)) {
         const unsigned char top = B(kTop);
         if (top == 0x77) {
             row = 0x7F;

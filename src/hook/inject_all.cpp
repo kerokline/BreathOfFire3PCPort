@@ -19,6 +19,7 @@
 #include "game/gfx_filter.h"
 #include "game/cheats.h"
 #include "game/psp_code.h"
+#include "input/button_tests.h"
 #include "input/sigma.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
@@ -1430,6 +1431,8 @@ void InjectAll() {
     bof3x::input::sigma::Arm(); // ledger drafts A and B (docs/button-sigma.md): the Config as one permutation, words 7 / 8
                                 // as Speak's and Action's, the starting Config by source - after every module's self-test,
                                 // which all compared Capcom's stores at Boot_Task, LoadMenu_Apply and the rebind
+    if (bof3::WantsShadow("button_tests"))   // group HT (docs/button-tests.md 4): the hard-coded tests' masks and four
+        bof3x::input::button_tests::Check(); // of ours under stand-in Config words - after Arm, for the live table
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

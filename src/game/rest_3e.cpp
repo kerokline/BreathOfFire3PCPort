@@ -25,6 +25,11 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -996,18 +1001,18 @@ extern "C" void __cdecl EffectKind5E_Pick(void) {
         SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(S()[6] - 0x4E));
         pressed = UL(At(AddressOf(&Input_Pressed)));
     }
-    if (pressed & 0x10u) {
+    if (pressed & Sigma(0x10)) {
         SH_CALL(Sound_PlayEffect)(0x209);
         S()[0xA] = 0x14;
         S()[1] = 2;
         return;
     }
-    if (pressed & 0x40u) {
+    if (pressed & Sigma(0x40)) {
         SH_CALL(Sound_PlayEffect)(0x20C);
         S()[1] = 3;
         return;
     }
-    if ((pressed & 0x20u) == 0) return;
+    if ((pressed & Sigma(0x20)) == 0) return;
     if ((SH_CALL(Inventory_Count)(0, S()[6], 0) & 0xFFFFu) == 0) {
         SH_CALL(Sound_PlayEffect)(0x20D);
         return;
