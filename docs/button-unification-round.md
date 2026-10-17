@@ -242,6 +242,17 @@ quoted in any doc, the scene described instead (rule 1).
   literally, so a Speak line put on R1 makes every menu confirm on R1. The
   owner judges it on the swapped captures.
 
+- **The held tests (HT-2):** `SuperCombo_ReadButton` stays on its own
+  buttons; the faerie village's music room, the battle cross's L1 / R1
+  (auto battle and the escape) and the message box's hold-to-speed (Speak's
+  button, without L2 / R2) go through `σ`. The battle's command boxes stay
+  where they are: only the button that picks them changes.
+  `Scena19_Run0`'s R1 is left as it is for now (the owner does not place
+  that section; [`button-tests.md`](button-tests.md) 2.4).
+- **IC-W's legend:** the pictograms stay, the PC-only `START` stays, the
+  spacing stays; a withheld row on a PC-only install is dimmed as the
+  PlayStation and PSP discs dim theirs.
+
 ## 6. Not in this round
 
 - Keyboard key names, Xbox and Nintendo letters, the last-device flag and
