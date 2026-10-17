@@ -7074,7 +7074,7 @@ an install without the jingles the open fails, the log says DIV-0129 once,
 and the inn is back at 2820. `campingFishing` on both reaches the fishing
 spot for the first time on a PSX-only install, which shows D303 and D304.
 
-## D256 — A PSP-only install's title is the PSP's fishing-version logo, its tiles misaligned in our 4:3 frame (ours; the owner's look owed)
+## D256 — A PSP-only install's title is the PSP's fishing-version logo, its tiles misaligned in our 4:3 frame (ours; fixed 2026-10-17, DIV-0130)
 
 **Found:** EB, 2026-10-12 ([`psp-end-batch.md`](psp-end-batch.md) defect 6),
 on the PSP-EU-only install's title.
@@ -7087,6 +7087,13 @@ was not rendered. Whether the logo is "the fishing version's" is EB's
 reading of the capture, not checked. **Next:** the owner's look at a PSP-EU
 title capture; then take the PSP's title framing apart (which rectangles
 the PSP's 384-wide view needs) or keep a PlayStation title on a PSP base.
+
+**Fixed 2026-10-17** (DIV-0130, [`psp-title-framing.md`](psp-title-framing.md)):
+rendered at last, the logo tore at the "F", its right wing was cut flat, a
+"FISHING ver." caption and a second TM showed, the same at every width: the
+PlayStation rectangles cutting the PSP's pages, whose pieces lie elsewhere.
+A PSP base now cuts them where they lie. A PlayStation title on a PSP base is
+not possible on a PSP-only install (no disc there carries one).
 
 ## D257 — A European PSX disc alone builds 733 of 741 containers: eight area banks are the PAL swap (the owner's open call)
 

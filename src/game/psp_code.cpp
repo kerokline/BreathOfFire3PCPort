@@ -19,6 +19,7 @@ namespace psp_code {
 namespace {
 
 unsigned g_on = 0;
+bool g_psp_base = false;
 
 struct Item {
     const char* name;
@@ -119,6 +120,8 @@ unsigned Force(unsigned mask) {
     return was;
 }
 
+bool PspBase() { return g_psp_base; }
+
 bool DuelLossGoesOn(unsigned event_battle, unsigned battle_end) {
     if ((g_on & kDuelLoss) == 0) return false;
     return (event_battle & 0xFF) == kDuelEvent && (battle_end & 4) == 0 && (battle_end & 1) != 0;
@@ -139,10 +142,11 @@ void PspCode_Inject() {
     unsigned mask = 0;
     const char* why;
     std::string where;
+    const std::string policy = psp_code::BasePolicy(where);
+    psp_code::g_psp_base = policy == "psp";
     if (psp_code::FromEnvironment(mask)) {
         why = "BOF3X_PSP";
     } else {
-        const std::string policy = psp_code::BasePolicy(where);
         mask = policy == "psp" ? psp_code::kAll : 0;
         why = policy == "psp"   ? "the default: the cache's base_policy is psp"
               : policy == "psx" ? "the default: the cache's base_policy is psx"

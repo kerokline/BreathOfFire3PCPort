@@ -7896,3 +7896,46 @@ designed in rather than bolted on.
 - **Reversible?** (1) `BOF3X_ORIGINAL=Sound_StreamDone` (the original's
   answer; the flag is then read by nothing). (2) a build with a PC install
   among the sources, or the 11 deleted from `base/snd/` and `SND\`.
+
+### A PSP-only install's title logo is cut from the PSP's pages where the PSP's art lies
+
+- **ID:** DIV-0130
+- **Date:** 2026-10-17
+- **Subsystem:** the title - `Title_DrawSetA` `0x462820`, `Title_DrawSetC`
+  `0x462930`, `Title_DrawSetB` `0x462A00` (ours, `src/game/title_states.cpp`);
+  `psp_code::PspBase` (`src/game/psp_code.cpp`)
+- **Tier:** Sensible - a repair of how our engine draws a PSP base's own art,
+  which no original ever drew.
+- **Original behaviour:** the three sets cut the logo from the title pages
+  through `Title_Sprites`' rectangles and place it at Capcom's PlayStation
+  offsets. On a PSP base (DIV-0103) the pages are the PSP's art, laid out for
+  the PSP's own code: the text's lower piece starts 11 rows earlier and is 10
+  wider, the emblem's page carries a "FISHING ver." caption under it, and the
+  art holds its own TM. Drawn through the PlayStation rectangles the logo tore
+  at the "F", its right wing was cut flat, a caption showed and a second, cut
+  TM (the mark sprite 1) sat beside the art's (D256; captured 2026-10-17 at
+  4:3, 16:9 and 21:9, the same at every width).
+- **This port:** on a PSP base (`base_policy = "psp"`, read whatever
+  `BOF3X_PSP` says) the sets draw the same sprites and pages with three
+  rectangles measured from the PSP's pages - the upper text (0, 0, 224 x 116),
+  the lower text (0, 117, 106 x 102), the emblem (0, 0, 202 x 122) - the upper
+  piece 3 left of set C's origin, the lower at its x + 224 and y + 5 (where the
+  F's strokes join: the best of a column match, `docs/psp-title-framing.md`),
+  the emblem 30 right of set B's; sprite 3 (empty on the PSP's page) and the
+  mark sprite 1 are not drawn. The logo is centred on the 4:3 frame and drawn
+  the same in the wide modes, so 4:3 cuts its wingtips by a pixel or two (the
+  owner's call: one layout at every width, the narrow frame cropping it).
+  Every other base draws as before.
+- **Rationale:** the owner, 2026-10-17, on the mock-up: "much better". The
+  emblem's place against the text is the PlayStation's relation (centred over
+  the text, the same row as Capcom's); the PSP's own is in its code, not read.
+- **Also in the PSX version?** No: the PlayStation and the PC draw their own
+  pages through their own rectangles.
+- **Verification:** the PSP-EU-only install (`C:\Users\kerok\rvp`), frames
+  0..720 every 10 at `BOF3X_WIDE` 0, 1 and 2: the logo whole and joined, one
+  TM, no caption, the fade clean; the PSX-US-based install's title at 4:3,
+  all 73 frames pixel-identical to the build before. The start-up fuzz of
+  `title_states` runs before the switch is read, so it compares Capcom's
+  layout.
+- **Reversible?** A PSX-based install; the switch is the cache's policy.
+
