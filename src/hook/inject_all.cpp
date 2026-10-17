@@ -1440,6 +1440,8 @@ void InjectAll() {
     shoulder_glyphs::Arm();     // ledger draft F (docs/button-shoulder-corner.md): the item lists' L1 / R1 corner as sigma has
                                 // it - after sigma::Arm and after every module's self-test (menu_windows' compared the original's
                                 // Menu_DrawPiece)
+    world_map_legend::Arm();    // button round ledger draft C (world_map.h): the world map's legend on the port's own
+                                // page - after every module's self-test, whose frame-draw fuzzes all ran the original's
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

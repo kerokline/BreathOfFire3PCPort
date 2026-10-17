@@ -417,8 +417,162 @@ def dial_icons_of(ch, body):
     as it is. Only stand-ins reach here: the PC's own page has no baked icon.
     The class matters: four `language` stand-ins (other areas' pages) share the
     tag; `art` at that tag is the 16 world-map dial pages alone."""
-    is_dial = ch["kind"] == 1 and ch["tag"] == DIAL_PAGE and ch["class"] == "art"
-    return dial_icons_blank(body) if is_dial else body
+    return dial_icons_blank(body) if is_dial_page(ch) else body
+
+
+def is_dial_page(ch):
+    return ch["kind"] == 1 and ch["tag"] == DIAL_PAGE and ch["class"] == "art"
+
+
+# DIVERGENCE (button round ledger draft C, docs/button-unification-round.md 3
+# IC-W): the port's own dial page with a PSX disc's button shapes. The port's
+# legend names keys - SPACE, X and ENTER, lit in the labels (u 11..34, v
+# 88..112) and dim in the frame (u 51..74, v 8..32: the labels' place in sprite
+# 0, u + 40, v - 80) - and blanked the 8 x 8 key-glyph sheet (u 64..95, v
+# 80..111) the code still draws from. With a PSX disc among the sources, the
+# key names are painted over with the panel and the disc's glyph sheet and its
+# START (lit in label 3, u 12..27, v 106..112; dim in the frame, u 52..67, v
+# 26..32) are laid in: the legend then shows the PlayStation's shapes for the
+# buttons the save's Config holds (the owner's answer 2, 2026-10-17: the
+# glyphs alone, no label text; the port's pictograms stay). The sheet and the
+# START are byte-identical on the JP, EU, FR and DE pages of all 16 areas, and
+# the US page's on area 16's (measured 2026-10-17), so any PSX disc gives the
+# same page; a PSP page's sheet differs (404 of 1,024 bytes on area 16's) and
+# is not taken. Five of the 16 pages (areas 19, 34, 66, 120, 123) have no
+# sheet on any disc and no frame draws there: they keep the port's page. With
+# no PSX disc the engine repaints the key names itself and draws the port's
+# stand-ins (world_map.cpp, world_map_legend), by the same rule, checked
+# against the same two hashes below.
+#
+# The repaint: the panel behind the key names is one index (0x0C) with a
+# diagonal band of three (0x52, 0x54, 0x59) at its top left, running down to
+# the left one texel a row; every other index in the two boxes is the key
+# names' ink. Row by row from the top (the top rows hold no ink), an ink
+# texel takes the texel up and to the right when that is panel, else the one
+# above (panel by then) - so the band runs on under the words.
+DIAL_PORT_BOXES = (((51, 75), (8, 33)), ((11, 35), (88, 113)))      # (u range, v range): the frame's, the labels'
+DIAL_PORT_PANEL = (0x0C, 0x52, 0x54, 0x59)
+DIAL_SHEET = ((64, 96), (80, 112))
+DIAL_DISC_START = (((52, 68), (26, 33)), ((12, 29), (106, 113)))    # the frame's dim START, label 3's lit one
+DIAL_DISC_PANEL = 0x5B
+# FNV-1a 32 of the two boxes' texels, row by row, the frame's box first: the
+# port's page (all 16 areas, measured 2026-10-17) and the same after the
+# repaint. world_map.cpp checks the same two numbers against VRAM.
+DIAL_PORT_FNV, DIAL_REPAINTED_FNV = 0x498B8D15, 0x0D297D59
+
+
+def _dial_at(u, v):
+    x = 896 + u
+    return ((v // 32) * 16 + x // 64) * 2048 + (v % 32) * 64 + x % 64
+
+
+def dial_boxes_fnv(body):
+    h = 0x811C9DC5
+    for us, vs in DIAL_PORT_BOXES:
+        for v in range(*vs):
+            for u in range(*us):
+                h = ((h ^ body[_dial_at(u, v)]) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def dial_port_repaint(out):
+    """The port's key names painted over with the panel, in place (a bytearray page)."""
+    for us, vs in DIAL_PORT_BOXES:
+        for v in range(vs[0] + 1, vs[1]):
+            for u in range(*us):
+                if out[_dial_at(u, v)] in DIAL_PORT_PANEL:
+                    continue
+                up_right = out[_dial_at(u + 1, v - 1)]
+                out[_dial_at(u, v)] = up_right if up_right in DIAL_PORT_PANEL else out[_dial_at(u, v - 1)]
+
+
+def dial_with_disc_shapes(pc, disc):
+    """The port's dial page (`pc`) with its key names painted over and a PSX
+    disc's (`disc`, that area's own section) glyph sheet and START laid in."""
+    if len(pc) != 128 * 2048 or len(disc) != 128 * 2048:
+        raise SystemExit("the dial page is not the 128 tiles every one is")
+    if dial_boxes_fnv(pc) != DIAL_PORT_FNV:
+        raise SystemExit("the PC's dial page is not the port's legend this rule was measured on (FNV %08X)"
+                         % dial_boxes_fnv(pc))
+    out = bytearray(pc)
+    (u0, u1), (v0, v1) = DIAL_SHEET
+    if any(out[_dial_at(u, v)] for v in range(v0, v1) for u in range(u0, u1)):
+        raise SystemExit("the PC's dial page has a glyph sheet: not the port's blank one")
+    if not any(disc[_dial_at(u, v)] for v in range(v0, v1) for u in range(u0, u1)):
+        raise SystemExit("the disc's dial page has no glyph sheet")
+    dial_port_repaint(out)
+    if dial_boxes_fnv(out) != DIAL_REPAINTED_FNV:
+        raise SystemExit("the repainted dial page is not the one the engine checks (FNV %08X)" % dial_boxes_fnv(out))
+    for v in range(v0, v1):
+        for u in range(u0, u1):
+            out[_dial_at(u, v)] = disc[_dial_at(u, v)]
+    for (a0, a1), (b0, b1) in DIAL_DISC_START:
+        for v in range(b0, b1):
+            if disc[_dial_at(a1, v)] != DIAL_DISC_PANEL:
+                raise SystemExit("the disc's dial page has no plain panel right of START at v %d" % v)
+            for u in range(a0, a1):
+                t = disc[_dial_at(u, v)]
+                if t != DIAL_DISC_PANEL:
+                    out[_dial_at(u, v)] = t
+    return bytes(out)
+
+
+def dial_check():
+    """The repaint on synthetic pages (no game data): the panel's band and
+    random ink in both boxes below their top rows; after it no ink is left in
+    either box, nothing outside them changed, every panel texel in them kept,
+    and a second pass changes nothing. world_map.cpp's self-test runs the same
+    cases."""
+    import random
+    rng, errs = random.Random(0x2468ACE1), []
+    inside = {(u, v) for us, vs in DIAL_PORT_BOXES for v in range(*vs) for u in range(*us)}
+    tops = {(u, vs[0]) for us, vs in DIAL_PORT_BOXES for u in range(*us)}
+    area = [(u, v) for v in range(0, 120) for u in range(8, 80)]
+    for _ in range(16):
+        page = bytearray(128 * 2048)
+        for u, v in area:
+            band = u + v
+            page[_dial_at(u, v)] = 0x52 if band < 70 else 0x59 if band < 76 else 0x54 if band < 80 else 0x0C
+        for u, v in sorted(inside - tops):
+            if rng.randrange(3) == 0:
+                page[_dial_at(u, v)] = 0xD0 + rng.randrange(32)
+        before = bytes(page)
+        dial_port_repaint(page)
+        for u, v in area:
+            b, a = before[_dial_at(u, v)], page[_dial_at(u, v)]
+            if (u, v) not in inside and b != a:
+                errs.append("the dial repaint changed u %d v %d outside the boxes" % (u, v))
+            elif (u, v) in inside and a not in DIAL_PORT_PANEL:
+                errs.append("the dial repaint left ink at u %d v %d" % (u, v))
+            elif (u, v) in inside and b in DIAL_PORT_PANEL and a != b:
+                errs.append("the dial repaint changed the panel at u %d v %d" % (u, v))
+        again = bytearray(page)
+        dial_port_repaint(again)
+        if again != page:
+            errs.append("the dial repaint is not idempotent")
+    return errs[:10]
+
+
+def dial_disc_shapes(f, slot, ch, chunked, body):
+    """The PC's own dial page as the cache keeps it: with the first PSX disc's
+    shapes (dial_with_disc_shapes) when one is among the sources - (build,
+    ("dial", EMI, section), page) - else None (the engine's stand-ins)."""
+    if not is_dial_page(ch):
+        return None
+    for s in chunked:
+        if not s.id.startswith("psx-"):
+            continue
+        for b, key, sec, h in owns_of(ch):
+            if b != s.id:
+                continue
+            disc = s.get(f["name"], slot, ("copy", key, sec))
+            if sha(disc) != h:
+                raise SystemExit("%s chunk %d from %s's own section: hash differs from the recipe" % (f["name"], slot, b))
+            (u0, u1), (v0, v1) = DIAL_SHEET
+            if not any(disc[_dial_at(u, v)] for v in range(v0, v1) for u in range(u0, u1)):
+                return None     # areas 19, 34, 66, 120, 123: no sheet on any disc, no frame draws there
+            return s.id, ("dial", key, sec), dial_with_disc_shapes(body, disc)
+    return None
 
 
 def why_pc_only(stem, c, cls):
@@ -785,6 +939,10 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
             if sha(body) != want:
                 raise SystemExit("%s chunk %d from %s (%s): hash differs from the recipe"
                                  % (f["name"], slot, s.id, src[1]))
+            if s.id == TARGET and is_dial_page(ch):     # ledger draft C: a PSX disc's shapes on the port's page
+                dial = dial_disc_shapes(f, slot, ch, chunked, body)
+                if dial:
+                    return dial + (None,)
             if "base" in ch and names is None:      # the names have one source: the PC's chunk
                 pc = next((p for p in chunked if p.id == TARGET), None)
                 if pc:
@@ -914,9 +1072,9 @@ def _build_base(a):
                 assets.append((f["name"], slot, ch["layer"], None, ch["sha256"]))
                 continue
             bid, how, body, names = got
-            used[(bid, ch["layer"], how[0] if how[0] in ("own", "prefer") else "")] += 1
+            used[(bid, ch["layer"], how[0] if how[0] in ("own", "prefer", "dial") else "")] += 1
             layers[ch["layer"]].append(chunk_bytes(ch["kind"], ch["tag"], body))
-            h = ch.get("base", ch["sha256"]) if how[0] not in ("own", "prefer") else sha(body)
+            h = ch.get("base", ch["sha256"]) if how[0] not in ("own", "prefer", "dial") else sha(body)
             assets.append((f["name"], slot, ch["layer"], (bid,) + how, h))
             if "names" in ch:
                 if names is None:          # from a disc: the stats only
@@ -981,7 +1139,8 @@ def cmd_build(a):
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, {
             "own": " (its own sections standing in)",
-            "prefer": " (the base policy's disc form, recipes/prefer.toml)"}.get(own, "")))
+            "prefer": " (the base policy's disc form, recipes/prefer.toml)",
+            "dial": " (the port's dial page with this disc's button shapes, ledger draft C)"}.get(own, "")))
     for layer, n in sorted(written.items()):
         print("  %-9s %d containers written" % (layer, n))
     if snd:
@@ -2007,7 +2166,7 @@ def cmd_verify(a):
     with open(os.path.join(a.cache, "manifest.toml"), "rb") as fh:
         assets = tomllib.load(fh)["cache"]["assets"]
     man = {(n, slot, layer): h for n, slot, layer, where, h in assets}
-    own = {n for n, slot, layer, where, h in assets if where.split(":")[1:2] == ["own"]}
+    own = {n for n, slot, layer, where, h in assets if where.split(":")[1:2] in (["own"], ["dial"])}
     prefer, pbad = load_prefer(getattr(a, "prefer", None)), []
     took = {}
     for n, slot, layer, where, h in assets:
@@ -2472,6 +2631,7 @@ def cmd_check(a):
     serrs += ["ppms.py: " + e for e in ppms.check() + ppms.check_fixture(builds)]   # pPMS round trip, bgm-psp.tsv
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
     serrs += ["psp_standins.py: " + e for e in psp_standins.check(recipe=a.recipe)]   # recipes/psp-standins.toml
+    serrs += ["dial page: " + e for e in dial_check()]   # ledger draft C's repaint, on synthetic pages
     import psp_fmv                                     # the PSP's logo movie: the PSMF demux on a synthetic file
     serrs += ["psp_fmv.py: " + e for e in psp_fmv.check()]
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
@@ -2488,7 +2648,7 @@ def cmd_check(a):
              len(oerrs)))
     print("seq / ppms / at3 / psp_fmv check: synthetic SEP, pPMS and VAB round trips, fixtures/bgm.tsv and "
           "bgm-psp.tsv, recipes/psp.snd.toml, "
-          "recipes/psp-standins.toml, a synthetic PSMF, %d error(s)" % len(serrs))
+          "recipes/psp-standins.toml, a synthetic PSMF, the dial page's repaint, %d error(s)" % len(serrs))
     print("cache_walk / suites / build_reuse check: the engine's cache walk against install on a synthetic cache, "
           "the suites, the memos every measured step empties, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
