@@ -95,7 +95,11 @@ D306, D307 / DIV-0130). **`install/recipe-version`** (2026-10-17, `main` merged 
      sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed but on FR / DE
      ([`fishing-rule-pages.md`](fishing-rule-pages.md)); D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
 
-4. **The install-gap census's remainder** ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
+4. **The install-gap census's remainder** - staged as parallel groups in
+   [`install-gap-round.md`](install-gap-round.md) (2026-10-17, not launched);
+   the button unification the owner asked for on 2026-10-17 is staged in
+   [`button-unification-round.md`](button-unification-round.md). Both can run with no owner present.
+   The census's own remainder ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
    P1 still open - the event battles' track words (all seven builds; the owner's "track half", DIV-0101
    provisional), the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
    list on the Western images; then P2's twins the disc search already locates (world map 115's legend frame, the
