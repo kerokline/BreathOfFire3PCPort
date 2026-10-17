@@ -4,12 +4,17 @@
 
 #include <cstdint>
 #include <cstring>
+#include <string>
 
 #include "bof3/symbols.gen.h"
+#include "game/button_text.h"
+#include "game/lang_layout.h"
+#include "game/msgbox.h"
 #include "game/text_advance.h"
 #include "game/text_pairs.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
 
 namespace {
 
@@ -38,6 +43,48 @@ const std::uint8_t* Records() { return reinterpret_cast<const std::uint8_t*>(bof
 void GlyphTrap() { __asm__ volatile("mov $0x1000, %%dx\n\tin %%dx, %%al" : : : "eax", "edx"); }
 
 unsigned ClutOf(unsigned color) { return 0x7800u | (color & 0xFu); }
+
+// --- DT-2 (ledger draft H): the dialogue's button mentions, live -----------------
+// The decision is button_text.h's; this is what it reads from the running game.
+// Armed by ButtonText_Arm after every module's self-test (so every fuzz of a
+// text reader compares Capcom's draws), as its own switch: under
+// BOF3X_ORIGINAL=ButtonText both readers draw every mention as its text has it.
+std::uint8_t g_button_text = 0;
+button_text::Context g_bt;
+// The area text block: MessagePools, the pool every dialogue line and the
+// fishing list are drawn from (Msg_OpenScript, EffectKind0F_DrawMessageList's
+// Pool), at most 0x8000 bytes (tools/loc_build.py TEXT_ROOM: the CLUT strip
+// as loaded starts there). A string outside it is never a mention.
+constexpr std::uint32_t kPool = 0x803580, kPoolRoom = 0x8000;
+// The areas whose dialogue names a button (docs/button-dialogue.md 3.1): the
+// wood chop, the fishing help (three), the well, the rope pull, the antenna,
+// the ram, the crane. Not area 1 (a place name, section 4.3), not area 78
+// (a word of crosses), not the faerie village (a times sign).
+constexpr unsigned short kButtonAreas[] = {8, 30, 68, 75, 89, 111, 121, 129, 135};
+// 0x461C00's six strings, circle, cross, triangle, square, L1, R1: the
+// Config cell's stand-ins, the set the colour cue's swap draws from.
+constexpr std::uint32_t kStandIns = 0x66A2FC;
+
+bool InPool(const std::uint8_t* p) {
+    const auto a = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    return a >= kPool && a < kPool + kPoolRoom;
+}
+
+bool InButtonArea() {
+    const unsigned short area = Game_AreaNumber;
+    for (unsigned short a : kButtonAreas)
+        if (a == area) return true;
+    return false;
+}
+
+std::uint16_t LiveSigma(std::uint16_t bit) { return bof3x::input::sigma::Sigma(bit); }
+
+[[noreturn]] void Refuse(const char* why, const std::uint8_t* p) {
+    bof3::Fatal("ButtonText (docs/button-dialogue.md 4): %s, at 0x%08X in area %u (bytes %02X %02X %02X %02X %02X %02X "
+                "%02X); BOF3X_ORIGINAL=ButtonText draws the text as it is",
+                why, (unsigned)reinterpret_cast<std::uintptr_t>(p), (unsigned)Game_AreaNumber, p[0], p[1], p[2], p[3],
+                p[4], p[5], p[6]);
+}
 
 // --- BOF3X_TEXTLOG: which string is drawn from where ----------------------------
 // Diagnostic only, off unless the variable is set: each distinct (caller,
@@ -212,6 +259,22 @@ void SelfTest(void* clone) {
 
 }  // namespace
 
+bool ButtonText_Code(const std::uint8_t* p, button_text::Icon& out) {
+    if (!g_button_text || !InPool(p)) return false;
+    const char* why = nullptr;
+    if (button_text::ResolveCode(g_bt, p, out, why)) return true;
+    if (why) Refuse(why, p);
+    return false;
+}
+
+bool ButtonText_Cue(const std::uint8_t* p, button_text::Icon& out) {
+    if (!g_button_text || g_bt.layer != button_text::Layer::kNone || !InPool(p) || !InButtonArea()) return false;
+    const char* why = nullptr;
+    if (button_text::ResolveCue(g_bt, p, out, why)) return true;
+    if (why) Refuse(why, p);
+    return false;
+}
+
 // original 0x516B70. Draws `text` at the pen (Text_PenX, Text_PenY) until a
 // NUL or until `count` characters - a byte - have gone by.
 //
@@ -242,6 +305,17 @@ void SelfTest(void* clone) {
 // DIVERGENCE DIV-0006: the pen advances by the glyph's entry in the overlay
 // font's advance table where the original adds 12. With no table loaded -
 // every shipped file - TextAdvance_Of is 12 and this is the original.
+//
+// DIVERGENCE (ledger draft H, the button unification round's DT-2;
+// docs/button-dialogue.md 4): a button mention in the area text block - a
+// layer's button code, or the PC's colour cue with no layer - is drawn as the
+// button the Config has put its role on (ButtonText_Code / _Cue, button_text.h):
+// the `05 cc` takes that button's colour and the icon its glyph, the pen
+// advancing by the drawn glyph's width, so the rest of the line re-flows as
+// the layer's widths do. Nothing else changes: the same bytes are walked,
+// every pass costs what it cost, the return is the same. When the drawn
+// button is the one the text shows, and under BOF3X_ORIGINAL=ButtonText, the
+// draw is the one above.
 extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsigned count_arg,
                                                         const unsigned char* text) {
     if (g_textlog) {
@@ -253,6 +327,10 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
     const std::uint8_t* pair = ClipPairs() + ((color & 0xFF) >> 4) * 2;
     const int u = pair[0], v = pair[1];
     std::uint8_t remembered = 0;
+    // Draft H: 1 after a button code that resolved (its `05 cc` next), 2 once
+    // the drawn colour is taken (the glyph next); `icon` is what to draw.
+    int button = 0;
+    button_text::Icon icon;
 
     if (text[0] == 0) return text + 1;
     do {
@@ -267,12 +345,24 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
                 Text_PenY = static_cast<short>(Text_PenY + kCell);
                 Text_PenX = Text_LineX;
                 break;
-            case 0x05:
+            case 0x05: {
+                const std::uint8_t* const control = text;
                 ++text;
                 remembered = static_cast<std::uint8_t>(color);
                 color = (color & ~0xFFu) | text[0];
                 clut = ClutOf(color);
+                // Draft H: a button code's own colour stands as the text has
+                // it (06 takes it back at once); the `05 cc` after it, or a
+                // colour cue, takes the drawn button's colour instead.
+                if (button == 1 || (button == 0 && ButtonText_Cue(control, icon))) {
+                    color = (color & ~0xFFu) | icon.colour;
+                    clut = ClutOf(color);
+                    button = 2;
+                } else if (button == 0 && ButtonText_Code(control, icon)) {
+                    button = 1;
+                }
                 break;
+            }
             case 0x06:
                 color = (color & ~0xFFu) | remembered;
                 clut = ClutOf(color);
@@ -290,14 +380,17 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
             }
         }
         if (glyph) {
-            const std::uint8_t* const first = text;
+            // Draft H: the drawn button's glyph in the fallback's place; the
+            // walk still steps over the fallback's own bytes.
+            const std::uint8_t* const first = button == 2 ? icon.glyph : text;
+            button = 0;
             std::uint16_t index;
-            if (c & 0x80) {
-                index = static_cast<std::uint16_t>(((c & 0x7F) << 8) + text[1]);
-                ++text;
+            if (first[0] & 0x80) {
+                index = static_cast<std::uint16_t>(((first[0] & 0x7F) << 8) + first[1]);
             } else {
-                index = static_cast<std::uint16_t>(c - 0x26);
+                index = static_cast<std::uint16_t>(first[0] - 0x26);
             }
+            if (c & 0x80) ++text;
             if (index > g_glyph_limit) GlyphTrap();
             std::uint32_t pa, pb;
             if (TextPair_Of(index, &pa, &pb)) {
@@ -339,4 +432,265 @@ void TextDraw_Inject() {
     char flag[8];
     g_textlog = GetEnvironmentVariableA("BOF3X_TEXTLOG", flag, sizeof flag) != 0;
     if (g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
+}
+
+// --- DT-2 (draft H): the self-test and the switch ---------------------------------
+
+namespace {
+
+namespace sg = bof3x::input::sigma;
+
+sg::Table g_test_table;
+std::uint16_t TestSigma(std::uint16_t bit) { return sg::Apply(g_test_table, bit); }
+
+// The stand-in Configs: a release's defaults, then swap 1 (Speak <-> Action,
+// View <-> Change: the round's swapped run) or swap 2 (Speak <-> View: a face
+// role put on a shoulder).
+void TestWords(sg::Release r, int swap, std::uint16_t w[9]) {
+    sg::DefaultWords(r, false, w);
+    const auto keep = static_cast<std::uint16_t>(w[0] & sg::kL2R2);
+    const auto speak = static_cast<std::uint16_t>(w[0] & ~sg::kL2R2);
+    if (swap == 1) {
+        w[0] = static_cast<std::uint16_t>(keep | w[6]);
+        w[6] = speak;
+        const std::uint16_t view = w[3];
+        w[3] = w[4];
+        w[4] = view;
+    } else if (swap == 2) {
+        w[0] = static_cast<std::uint16_t>(keep | w[3]);
+        w[3] = speak;
+    }
+}
+
+// The expected drawn button for Japan's bit, from the words themselves: the
+// line whose Japan default the bit is, and that line's word now.
+std::uint16_t Expected(const std::uint16_t w[9], std::uint16_t bit) {
+    static const struct { std::uint16_t bit; int word; } kLine[] = {
+        {0x20, 0}, {0x80, 1}, {0x40, 6}, {0x10, 2}, {0x08, 3}, {0x04, 4}};
+    for (const auto& l : kLine)
+        if (l.bit == bit) return static_cast<std::uint16_t>(w[l.word] & ~sg::kL2R2);
+    bof3::Fatal("ButtonText self-test: no line for bit 0x%X", bit);
+}
+
+struct Draw {
+    unsigned x, clut, glyph;
+    bool operator==(const Draw& o) const { return x == o.x && clut == o.clut && glyph == o.glyph; }
+};
+
+unsigned GlyphIndex(const std::uint8_t* g) {
+    return g[0] & 0x80 ? ((g[0] & 0x7Fu) << 8) | g[1] : static_cast<unsigned>(g[0] - 0x26) & 0xFFFFu;
+}
+
+// One message through Text_DrawString (count 0xFF, colour 0) and through
+// MsgBox_Step (every glyph), from the tail of the area text block, the
+// switch as given. Returns the glyphs drawn.
+unsigned DrawBoth(const std::uint8_t* msg, std::size_t len, bool on, Draw* ds, Draw* mb) {
+    std::uint8_t* const at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(kPool + kPoolRoom - 0x40));
+    std::memcpy(at, msg, len);
+    g_button_text = on ? 1 : 0;
+    Text_PenX = 0x10;
+    Text_PenY = 0x20;
+    Text_LineX = 0x10;
+    g_log_n = 0;
+    Text_DrawString(0, 0xFF, at);
+    const unsigned n = g_log_n;
+    for (unsigned i = 0; i < n && i < 8; ++i) ds[i] = {g_log[i].x, g_log[i].clut, g_log[i].glyph};
+    MsgBoxDraw rec[8];
+    const unsigned m = MsgBox_StepRecord(at, n, rec, 8);
+    if (m != n) bof3::Fatal("ButtonText self-test: the message box drew %u glyphs, the string draw %u", m, n);
+    for (unsigned i = 0; i < m && i < 8; ++i)
+        mb[i] = {static_cast<unsigned>(rec[i].x), static_cast<unsigned>(rec[i].color), GlyphIndex(rec[i].glyph)};
+    g_button_text = 0;
+    return n;
+}
+
+bool SameDraws(const Draw* a, const Draw* b, unsigned n) {
+    for (unsigned i = 0; i < n; ++i)
+        if (!(a[i] == b[i])) return false;
+    return true;
+}
+
+void ButtonTextSelfTest() {
+    // Saved: the switch, the context, the pens, the packet pointer, the area,
+    // and the tail of the area text block the messages are written into.
+    const std::uint8_t saved_on = g_button_text;
+    const button_text::Context saved_ctx = g_bt;
+    const short saved_pen[3] = {Text_PenX, Text_PenY, Text_LineX};
+    unsigned char* const saved_packet = Gfx_PacketNext;
+    const unsigned short saved_area = Game_AreaNumber;
+    static std::uint8_t saved_pool[0x40], prim[0x40];
+    std::uint8_t* const tail = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(kPool + kPoolRoom - 0x40));
+    std::memcpy(saved_pool, tail, sizeof saved_pool);
+    Gfx_PacketNext = prim;
+    g_emit = &RecordEmit;
+    // A layer's table holds DIV-0051's L1 / R1 at 0xA69 / 0xA6A; the shipped
+    // one, loaded at a self-test, stops at 0x992 and the guard would trap.
+    const unsigned saved_limit = g_glyph_limit;
+    g_glyph_limit = 0xFFF;
+    Game_AreaNumber = 30;
+    g_bt.sigma = &TestSigma;
+
+    using button_text::Layer;
+    struct Family { const char* name; Layer layer; sg::Release text; bool cue; bool port; };
+    static const Family kFamilies[] = {
+        {"the West's icons in a Latin layer", Layer::kLatin, sg::Release::kWest, false, false},
+        {"PSP-EU's icons in a Latin layer", Layer::kLatin, sg::Release::kPspEu, false, false},
+        {"JP's icons in ja-JP", Layer::kJapanese, sg::Release::kJapan, false, false},
+        {"a kept PC message in a Latin layer", Layer::kLatin, sg::Release::kJapan, false, true},
+        {"the PC's colour cue, no layer", Layer::kNone, sg::Release::kJapan, true, true},
+    };
+    static const sg::Release kConfigs[] = {sg::Release::kJapan, sg::Release::kWest, sg::Release::kPspEu};
+    static const std::uint16_t kFaces[] = {0x20, 0x40, 0x10, 0x80};
+    unsigned cases = 0, same = 0, swapped = 0, bad = 0;
+    for (const Family& f : kFamilies) {
+        g_bt.layer = f.layer;
+        for (const sg::Release config : kConfigs) {
+            for (int swap = 0; swap < 3; ++swap) {
+                std::uint16_t w[9];
+                TestWords(config, swap, w);
+                std::string why;
+                g_test_table = sg::Build(w, why);
+                if (!g_test_table.valid) bof3::Fatal("ButtonText self-test: stand-in Config refused: %s", why.c_str());
+                for (const std::uint16_t bit : kFaces) {
+                    // What the text shows: its release's button for Japan's
+                    // bit, in that button's colour, by its family's glyph.
+                    const int shown = button_text::ShapeOf(sg::ReleaseMap(f.text, bit));
+                    std::uint8_t msg[16];
+                    std::size_t n = 0;
+                    msg[n++] = 'A';
+                    if (!f.cue) {
+                        msg[n++] = 0x05;
+                        msg[n++] = static_cast<std::uint8_t>(0xB0 + __builtin_ctz(bit));
+                        msg[n++] = 0x06;
+                    }
+                    msg[n++] = 0x05;
+                    msg[n++] = button_text::kShapeColour[shown];
+                    if (f.port) {
+                        msg[n++] = g_bt.port[shown];
+                    } else {
+                        const unsigned g = (f.layer == Layer::kLatin ? button_text::kLatinIcons
+                                                                     : button_text::kJapaneseIcons) +
+                                           static_cast<unsigned>(shown);
+                        msg[n++] = static_cast<std::uint8_t>(0x80 | (g >> 8));
+                        msg[n++] = static_cast<std::uint8_t>(g);
+                    }
+                    msg[n++] = 0x06;
+                    msg[n++] = 'A';
+                    msg[n++] = 0;
+                    Draw off_ds[8], off_mb[8], on_ds[8], on_mb[8];
+                    const unsigned k = DrawBoth(msg, n, false, off_ds, off_mb);
+                    const unsigned k2 = DrawBoth(msg, n, true, on_ds, on_mb);
+                    ++cases;
+                    const int drawn = button_text::ShapeOf(Expected(w, bit));
+                    bool ok = k == 3 && k2 == 3 && drawn >= 0;
+                    if (ok && drawn == shown) {
+                        ok = SameDraws(on_ds, off_ds, 3) && SameDraws(on_mb, off_mb, 3);
+                        same += ok;
+                    } else if (ok) {
+                        // The icon (the second glyph) is the drawn button's, in
+                        // its colour, at the same pen; the rest as before.
+                        button_text::Icon want;
+                        button_text::GlyphOf(g_bt, f.cue ? Layer::kNone : f.layer, drawn, want);
+                        const unsigned glyph = GlyphIndex(want.glyph);
+                        const unsigned colour = button_text::kShapeColour[drawn];
+                        ok = on_ds[0] == off_ds[0] && on_mb[0] == off_mb[0] && on_ds[2] == off_ds[2] &&
+                             on_mb[2] == off_mb[2] && on_ds[1].glyph == glyph && on_ds[1].clut == ClutOf(colour) &&
+                             on_ds[1].x == off_ds[1].x && on_mb[1].glyph == glyph && on_mb[1].clut == colour &&
+                             on_mb[1].x == off_mb[1].x && off_ds[1].glyph != glyph;
+                        swapped += ok;
+                    }
+                    if (!ok && ++bad <= 8)
+                        bof3::Log("shadow      ButtonText self-test MISMATCH: %s, Config %s swap %d, Japan's 0x%02X shown %d "
+                                  "drawn %d",
+                                  f.name, sg::ReleaseName(config), swap, bit, shown, drawn);
+                }
+            }
+        }
+    }
+    // Refused, not guessed (rule 4): a code naming a shoulder, a code before
+    // a glyph that is no icon, a code before another layer's icon.
+    unsigned refused = 0;
+    {
+        g_bt.layer = Layer::kLatin;
+        button_text::Icon icon;
+        const char* why = nullptr;
+        static const std::uint8_t shoulder[] = {0x05, 0xB2, 0x06, 0x05, 0x01, 0x89, 0xE4, 0};
+        static const std::uint8_t letter[] = {0x05, 0xB5, 0x06, 0x05, 0x01, 'A', 0};
+        static const std::uint8_t japanese[] = {0x05, 0xB5, 0x06, 0x05, 0x01, 0x89, 0xF7, 0};
+        for (const std::uint8_t* m : {shoulder, letter, japanese}) {
+            why = nullptr;
+            if (button_text::ResolveCode(g_bt, m, icon, why) || !why) {
+                ++bad;
+                bof3::Log("shadow      ButtonText self-test: a code that cannot be drawn was not refused");
+            } else {
+                ++refused;
+            }
+        }
+        // And not a mention at all: a colour outside the codes' range, a code
+        // cut short.
+        static const std::uint8_t colour[] = {0x05, 0x02, 0x89, 0xE3, 0};
+        static const std::uint8_t cut[] = {0x05, 0xB5, 0x06, 0};
+        for (const std::uint8_t* m : {colour, cut}) {
+            why = nullptr;
+            if (button_text::ResolveCode(g_bt, m, icon, why) || why) ++bad;
+        }
+        // The cue outside the button areas: drawn as it is, swapped Config or not.
+        g_bt.layer = Layer::kNone;
+        std::uint16_t w[9];
+        TestWords(sg::Release::kJapan, 1, w);
+        std::string why2;
+        g_test_table = sg::Build(w, why2);
+        static const std::uint8_t cue[] = {'A', 0x05, 0x02, 'b', 0x06, 'A', 0};
+        Draw off_ds[8], off_mb[8], on_ds[8], on_mb[8];
+        for (const unsigned short area : {78, 175, 1}) {
+            Game_AreaNumber = area;
+            DrawBoth(cue, sizeof cue, false, off_ds, off_mb);
+            DrawBoth(cue, sizeof cue, true, on_ds, on_mb);
+            if (!SameDraws(on_ds, off_ds, 3) || !SameDraws(on_mb, off_mb, 3)) {
+                ++bad;
+                bof3::Log("shadow      ButtonText self-test: the cue was swapped in area %u", (unsigned)area);
+            }
+        }
+    }
+
+    g_bt = saved_ctx;
+    g_button_text = saved_on;
+    Game_AreaNumber = saved_area;
+    std::memcpy(tail, saved_pool, sizeof saved_pool);
+    g_emit = Text_EmitGlyph;
+    g_glyph_limit = saved_limit;
+    Gfx_PacketNext = saved_packet;
+    Text_PenX = saved_pen[0];
+    Text_PenY = saved_pen[1];
+    Text_LineX = saved_pen[2];
+    bof3::Log("shadow      ButtonText self-test: %u mentions (5 families x 3 Configs x 3 stand-in swaps x 4 buttons) "
+              "through Text_DrawString and MsgBox_Step: %u drawn as the text has them, %u as the drawn button, "
+              "%u refused codes, the cue left in areas 78 / 175 / 1; %u MISMATCHES",
+              cases, same, swapped, refused, bad);
+    if (bad) bof3::Fatal("ButtonText self-test: %u mismatches", bad);
+}
+
+}  // namespace
+
+void ButtonText_Arm() {
+    // The Config cell's stand-ins, 0x461C00's six strings through 0x66A2FC:
+    // one byte each, one the census knows.
+    for (int i = 0; i < 6; ++i) {
+        const auto* s = reinterpret_cast<const std::uint8_t* const*>(static_cast<std::uintptr_t>(kStandIns))[i];
+        if (!button_text::IsPortStandIn(s[0]) || s[1] != 0)
+            bof3::Fatal("ButtonText: 0x461C00's stand-in %d (0x%08X) is not a one-byte stand-in", i,
+                        (unsigned)reinterpret_cast<std::uintptr_t>(s));
+        g_bt.port[i] = s[0];
+    }
+    g_bt.layer = Lang_Latin()      ? button_text::Layer::kLatin
+                 : Lang_Japanese() ? button_text::Layer::kJapanese
+                                   : button_text::Layer::kNone;
+    g_bt.sigma = &LiveSigma;
+    if (bof3::WantsShadow("button_text")) ButtonTextSelfTest();
+    static const std::uint8_t was = 0, is = 1;
+    const bool on = bof3::PatchBytes(
+        "ButtonText", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_button_text)), &was, &is, 1);
+    static const char* const kLayer[] = {"no layer: the PC's colour cue", "a Latin layer's codes", "ja-JP's codes"};
+    bof3::Log("ButtonText  the dialogue's button mentions drawn as Sigma's button (draft H): %s, %s",
+              on ? "on" : "OFF (BOF3X_ORIGINAL=ButtonText)", kLayer[static_cast<int>(g_bt.layer)]);
 }

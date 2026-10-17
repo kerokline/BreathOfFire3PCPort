@@ -1430,6 +1430,9 @@ void InjectAll() {
     bof3x::input::sigma::Arm(); // ledger drafts A and B (docs/button-sigma.md): the Config as one permutation, words 7 / 8
                                 // as Speak's and Action's, the starting Config by source - after every module's self-test,
                                 // which all compared Capcom's stores at Boot_Task, LoadMenu_Apply and the rebind
+    ButtonText_Arm();           // ledger draft H (docs/button-dialogue.md 4): the dialogue's button mentions drawn as
+                                // Sigma's button - after sigma::Arm, and after every module's self-test, which all
+                                // compared Capcom's text draws (text_draw's, msgbox's)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

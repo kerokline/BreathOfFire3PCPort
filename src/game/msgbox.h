@@ -8,3 +8,14 @@
 #pragma once
 
 void MsgBox_Inject();
+
+// Draft H's self-test (text_draw.cpp, ButtonText_Arm): MsgBox_Step run over
+// `msg` until `glyphs` characters are drawn, from a box at (0x10, 0x20), every
+// draw recorded instead of committed - its pen, its colour byte and the glyph
+// bytes it was handed. The stepper's state is put back after. Returns the
+// draws made (at most `max` recorded).
+struct MsgBoxDraw {
+    int x, y, color;
+    unsigned char glyph[2];
+};
+unsigned MsgBox_StepRecord(const unsigned char* msg, unsigned glyphs, MsgBoxDraw* out, unsigned max);

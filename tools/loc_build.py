@@ -944,17 +944,25 @@ def convert_block(donor, base, room):
 #     were before it; it costs two of the draw's `count` passes.
 # A box-selector code (0x0C nn) was the first design and was dropped:
 # Text_DrawString draws a 0x0C as the glyph 0x0C - 0x26, past the table, and
-# traps. Until the draw resolves the code (DT-2) the icon after it draws as
-# today; DT-2 draws the glyph of sigma(bit) in its place and drops the
-# fallback here.
+# traps. The draw (DT-2: src/game/button_text.h, both readers) shows the
+# glyph of sigma(bit) in the icon's place when that is not the button the icon
+# shows, and the icon itself when it is. The icon stays in the output: it is
+# what the draw resolves the glyph family from (a Latin layer's, ja-JP's or the
+# port's), what it draws byte for byte when the Config leaves the button where
+# the text has it, and what BOF3X_ORIGINAL=ButtonText draws
+# (docs/button-dialogue.md 4.4).
 BUTTON_CTRL, BUTTON_ARG0, BUTTON_CLOSE = 0x05, 0xB0, 0x06
 TRIANGLE, CIRCLE, CROSS, SQUARE = 0x10, 0x20, 0x40, 0x80
 BUTTON_NAME = {TRIANGLE: "triangle", CIRCLE: "circle", CROSS: "cross", SQUARE: "square"}
 # The areas whose dialogue names a button (key-icons 2.6): the wood chop 8,
 # the fishing help 30 / 89 / 129, the well 68, the rope pull 75, the antenna
-# 111, the ram 121, the crane 135, and the PC's area 1. Not buttons: area 78's
-# crosses and the faerie village's times sign, which no area here holds.
-BUTTON_AREAS = (1, 8, 30, 68, 75, 89, 111, 121, 129, 135)
+# 111, the ram 121, the crane 135. Not buttons: area 78's crosses, the faerie
+# village's times sign, and the PC's area 1 - its circled 3 in colour 2 is the
+# first character of a place name, where the JP disc's same slot has two kanji
+# in that colour and the PC the same second character (DT-2, 2026-10-17;
+# docs/button-dialogue.md 4.3). The draw's list is the same (text_draw.cpp
+# kButtonAreas).
+BUTTON_AREAS = (8, 30, 68, 75, 89, 111, 121, 129, 135)
 # The release's icon -> the button it shows, in that release's terms.
 LATIN_ICON = {0x80: CIRCLE, 0x81: CROSS, 0x82: TRIANGLE, 0x83: SQUARE}   # the PlayStation West's and PSP-EU's font
 JA_ICON_LEAD = 0x15
@@ -4335,9 +4343,11 @@ def selftest_buttons():
     got = one(b"\x05\x02\x15\x08\0", b"\0", 75, MAP_ID, ja=True)
     if got[:5] != button_code(CIRCLE) + b"\x05\x02":
         raise SystemExit("selftest: a Japanese icon gave %s" % got.hex())
-    for area in (78, 175):
+    for area in (78, 175, 1):
         if one(b"\x05\x01\x81\0", b"\0", area, MAP_P) != b"\x05\x01" + icon(0x81) + b"\0":
             raise SystemExit("selftest: area %d's icon-shaped text got a code" % area)
+    if one(b"\x13\x01\0", b"\x05\x02d\x86\x19\x06\0", 1, MAP_P) != b"\x05\x02d\x86\x19\x06\0":
+        raise SystemExit("selftest: area 1's place name got a code")
     if one(b"\x05\x01A\x81\0", b"\0", 30, MAP_P) != b"\x05\x01" + icon(0x41) + icon(0x81) + b"\0":
         raise SystemExit("selftest: an icon not right after the colour got a code")
     # A donor message that does not convert keeps the PC's, coded by its colour.
@@ -4366,7 +4376,7 @@ def selftest_buttons():
     if [bit for _, bit, _, _ in text_buttons(block)] != [CIRCLE, CROSS]:
         raise SystemExit("selftest: text_buttons read a layer's letter as an icon")
     reset_donor()
-    print("  button codes: P, S (and PSP-EU's 68 / 121 by P), JP, the PC's colours; areas 78 and 175 left; "
+    print("  button codes: P, S (and PSP-EU's 68 / 121 by P), JP, the PC's colours; areas 78, 175 and 1 left; "
           "the argument range refused")
 
 
