@@ -7414,7 +7414,7 @@ ours never draws. Not a gap and not a twin: data and code together. **The
 owner's call** (a DIV either way): draw the US layout on a US-built image, or
 leave it.
 
-## D278 — The Identify panel's question marks are blank on the Western disc-only installs (ours, the exe image's gaps; rows found, not built)
+## D278 — The Identify panel's question marks are blank on the Western disc-only installs (ours, the exe image's gaps; fixed 2026-10-17, the engine's own marks)
 
 **Found:** the labels round's disc-only runs, 2026-10-13
 ([`labels-1013.md`](labels-1013.md) 6.2): US and French disc-only installs,
@@ -7425,6 +7425,13 @@ frame 900 of `identify.txt`.
 another layout, so the byte map places none of it. The marks would take two
 `twin` rows, `0x65AAC4` <- US `0x801F0B88` (4 bytes) and `0x65AAC8` <-
 `0x801F0B8C` (8). Not built.
+
+**Fixed 2026-10-17** (`install/recipe-version`): those rows would not have
+matched - the Western `MAGIC060` holds other bytes there, and the census
+(`install-gap-census.md` 4) found the marks blank on all seven builds. The
+twelve bytes `0x65AAC4..0x65AAD0` (one `?`, then a row of eight drawn by
+count) are the engine's own (`exe_own.cpp` `IdentifyMarks`, DIV-0101 amended),
+equal to `BOF3.exe`'s. Not seen in play yet.
 
 ## D279 — On a disc-only Japanese install the fishing banner draws a NUL as glyph `0xFFDA`; on PSP-JP it crashed one run in five (ours, the language build, reaching Capcom's scroller)
 
@@ -7982,3 +7989,34 @@ of `visual-findings-1012.md` 8, met again through an old cache. **Refused**:
 `ExeImage_Source` stops on an image whose `data.toml` still classes any of
 those words a gap, with a message to rebuild the install
 ([`exe-import-engine.md`](exe-import-engine.md)); no game behaviour changes.
+
+## D310 — Six draw formats and marks are empty on a disc-only install: area 75's counters, area 104's countdown, the faerie board's rows, a level-up's ability names, the play-time colon (ours, the exe image's gaps; fixed 2026-10-17, the engine's own strings)
+
+**Found:** the install-gap census, 2026-10-17
+([`install-gap-census.md`](install-gap-census.md) 4.1), by reading each
+reader against the gap list; not seen in play.
+
+**Established:** each is a format string or a one-glyph string Capcom's code
+reads in place, zero on a disc-built image, so the draw is empty:
+`Area75_DrawCounters`' `0x60ABF0` (the five PSX builds; the PSPs place it),
+`Area104_Kind6ACountdown`'s `0x61BC74`, `CommuBoard_DrawRows`' dash and three
+formats `0x653084..0x653098`, `BattleResultWin_DrawLevelUp`'s and
+`EffectKind5E_DrawMenu`'s `%s` `0x654900` (the four Western PSX builds; Japan's
+and the PSPs' `BATL_END.EMI` twin has it), and `Menu_DrawPlayTime`'s separator
+`0x6637E0` (all seven). The same class as D254. No disc holds any of them
+where the byte map or a search can place it.
+
+**Fixed 2026-10-17:** the engine's own strings (`exe_own.cpp`, the
+`game-format` class; DIV-0101 amended), each equal to `BOF3.exe`'s bytes. Not
+seen in play yet.
+
+## D311 — The faerie village's hi-lo game pays nothing on a disc-only install (ours, the exe image's gaps; fixed 2026-10-17, a twin)
+
+**Found:** the install-gap census, 2026-10-17
+([`install-gap-census.md`](install-gap-census.md) 4): `CommuHiLo_DealSteps+0x14`
+`0x652CF4..0x652D04`, the u16 payout by turn that `CommuHiLo_Payout` reads, a
+`disc-unplaced` gap on all seven builds; not seen in play.
+
+**Fixed 2026-10-17:** a `twin` row from `ETC/COMMU02.EMI` section 8, which
+holds the 16 bytes verbatim on all seven discs (`COMMU02B.EMI` section 7 a
+copy); DIV-0101 amended. Not played yet.

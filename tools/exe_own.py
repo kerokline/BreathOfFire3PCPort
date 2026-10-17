@@ -18,6 +18,9 @@ class -
                    found verbatim): the places' miss (exe_tables.find_places), not ours
     unread         nothing of ours reads it in the exe host
     rule           the engine's by a different rule (RD's key table)
+    game-format    a draw format or mark of Capcom's code, read in place, that each disc keeps
+                   inside its reading overlay where no search can place it (too short to be
+                   unique): held by src/hook/exe_own.cpp as D254's is (D310, D278)
 
     python tools/exe_own.py measure --game DIR --disc DISC [--disc DISC ...] --out analysis/exe_own
     python tools/exe_own.py gen        # src/hook/exe_own_names.inc from recipes/pc-zh.toml, pc-zh.snd.toml
@@ -64,12 +67,18 @@ def fail(msg):
 # disc-unplaced by the disc search. Addresses and words only.
 
 REGIONS = [
+    (0x60ABF0, 0x60ABFC, "game-format", "Area75_DrawCounters' counter format (D310)"),
+    (0x61BC74, 0x61BC80, "game-format", "Area104_Kind6ACountdown's format (D310)"),
     (0x64F368, 0x6528AC, "port-platform", "Dat_FileNames: the DAT/ file table's names, the DAT directory format, the save files' pattern"),
+    (0x653084, 0x653098, "game-format", "CommuBoard_DrawRows' dash and formats (D310)"),
     (0x6531F4, 0x6536E0, "language", "the page-format and glyph tables rest_4e.cpp names (exe-import-engine.md 3.2)"),
     (0x6536F8, 0x653808, "language", "the config screen's labels (ConfigScreen_OpenStates+): text in the port's code page"),
+    (0x654900, 0x654904, "game-format", "the level-up's ability name format, EffectKind5E_DrawMenu's (D310)"),
     (0x656AEC, 0x656B00, "rule", "the field button map's defaults Boot_Task copies: the default button of each action, "
                                  "by name (docs/controls.md 2.1)"),
+    (0x65AAC4, 0x65AAD0, "game-format", "the Identify panel's unknown marks (Identify_Draw*; D278)"),
     (0x65DA44, 0x65DAE8, "port-platform", "Game_WinMain's and Cfg_Load's initial values and strings"),
+    (0x6637E0, 0x6637E4, "game-format", "Menu_DrawPlayTime's separator (D310)"),
     (0x6639D4, 0x6639D8, "port-platform", "the save slot's number format (Menu_DrawSaveSlot; D254)"),
     (0x664068, 0x664078, "port-platform", "the save file's name format (FieldSave_Write, Save_QuickWrite)"),
     (0x6653BC, 0x666FC6, "port-platform", "Sound_LoadStream's 891 SND/ names, Music_LoadedTrack, the SND and BGM formats"),
@@ -386,8 +395,9 @@ def check():
         end = max(end, hi)
         if lo < KEY_TABLE[1] and hi > KEY_TABLE[0]:
             errs.append("exe_own.cpp: %s overlaps Key_TableDefault (RD's)" % name)
-        if region_class(lo)[0] not in ("port-platform", "rule"):
-            errs.append("exe_own.cpp: %s 0x%06X is not in a port-platform or rule region of exe_own.py's REGIONS" %
+        if region_class(lo)[0] not in ("port-platform", "rule", "game-format"):
+            errs.append("exe_own.cpp: %s 0x%06X is not in a port-platform, rule or game-format region of exe_own.py's "
+                        "REGIONS" %
                         (name, lo))
     return errs
 

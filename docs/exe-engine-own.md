@@ -87,13 +87,19 @@ The classes:
 
 | Region | What | bytes | non-zero | text words | JP's unfilled non-zero |
 |---|---|---:|---:|---:|---:|
+| `0x60ABF0..0x60ABFC` | `Area75_DrawCounters`' counter format (D310, the `game-format` class; added 2026-10-17) | 12 | 10 | 0 | 10 |
+| `0x61BC74..0x61BC80` | `Area104_Kind6ACountdown`'s format (D310; 2026-10-17) | 12 | 9 | 0 | 9 |
 | `0x64FFE4..0x652894` | `Dat_FileNames`' 742 names (`recipes/pc-zh.toml`) | 10,416 | 7,520 | 312 | 7,520 |
 | `0x652894..0x6528A9` | the DAT directory format and the save files' pattern | 21 | 18 | 0 | 18 |
+| `0x653084..0x653098` | `CommuBoard_DrawRows`' dash and formats (D310; 2026-10-17) | 20 | 11 | 0 | 11 |
+| `0x654900..0x654904` | the level-up's ability-name format `%s` (D310; 2026-10-17) | 4 | 2 | 0 | 0 |
 | `0x656AEC..0x656B00` | the field button map's defaults `Boot_Task` copies (a rule: [`controls.md`](controls.md) 2.1; added 2026-10-12) | 20 | 9 | 0 | 2 |
+| `0x65AAC4..0x65AAD0` | the Identify panel's unknown marks (D278; 2026-10-17) | 12 | 9 | 0 | 9 |
 | `0x65DA44..0x65DA50` | `Cfg_Fullscreen`, `Cfg_RenderMode`, `Cursor_Hidden`: 1 | 12 | 3 | 0 | 3 |
 | `0x65DA54..0x65DA76` | WinMain's messages and the logo AVI's name | 34 | 25 | 2 | 25 |
 | `0x65DA84..0x65DA96` | the window class and the icon's name | 18 | 13 | 0 | 13 |
 | `0x65DAB8..0x65DAE7` | the Capcom AVI, the exe's name, `BOF3.CFG`, its format and mode | 47 | 33 | 0 | 33 |
+| `0x6637E0..0x6637E4` | `Menu_DrawPlayTime`'s separator (D310; 2026-10-17) | 4 | 1 | 0 | 1 |
 | `0x6639D4..0x6639D8` | `Menu_DrawSaveSlot`'s slot number format `"%X"` (D254; added 2026-10-16) | 4 | 2 | 0 | 2 |
 | `0x664068..0x664077` | the save file's name format | 15 | 14 | 0 | 14 |
 | `0x6653BC..0x6653C0` | `Music_LoadedTrack`: none (-1) | 4 | 4 | 0 | 4 |

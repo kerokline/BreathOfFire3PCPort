@@ -6581,6 +6581,31 @@ designed in rather than bolted on.
   4710 on a rebuilt PSX-EU disc-only install, the sprite's region against the
   PC install's: 5,190 differing pixels before, 44 after (the rest is the
   frame's 3x scale sampled down); not played by the owner yet.
+- Amended 2026-10-17 (the install-gap census, [`install-gap-census.md`](install-gap-census.md)
+  4.1 and 8; D310, D311, D278): seven more bytes runs a disc-built image left
+  zero are filled. **Six draw formats and marks of Capcom's code** - area 75's
+  counter format `0x60ABF0`, area 104's countdown `0x61BC74`, the faerie
+  village board's dash and formats `0x653084..0x653098`, the level-up's
+  ability-name `%s` `0x654900` (the Western discs' gap), the Identify panel's
+  unknown marks `0x65AAC4..0x65AAD0` and the field menu's play-time
+  separator `0x6637E0` - are the engine's own, as D254's is (`exe_own.cpp`,
+  a new `game-format` class in `exe_own.py`): each disc keeps its copy inside
+  its reading overlay where no search can place it (too short to be unique;
+  the Western `MAGIC060` lays the marks out otherwise), and each equals
+  `BOF3.exe`'s bytes. **The hi-lo game's payouts** `0x652CF4..0x652D04` are a
+  `twin` from `ETC/COMMU02.EMI` section 8, the disc's own 16 bytes, on all
+  seven builds. Before: area 75's counters, area 104's countdown digits, the
+  board's rows, a level-up's learned-ability names (Western PSX), the
+  Identify marks and the play-time colon drew nothing, and the hi-lo game
+  paid 0 (not measured in play). With the PC's `.data` nothing changes.
+  Verification: `psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py
+  measure`, `exe_tables.py gaps` over the seven discs (`exe-psp.tsv` +7 twin
+  rows; `exe-gaps.tsv` loses exactly those runs on each build, the
+  `TornadoMote_Phases` row ending at `0x65AAC4`; every image hash moves by the
+  twin); the six fills equal `BOF3.exe`'s bytes (an offline comparison);
+  `importer.py`, `exe_tables.py`, `exe_own.py`, `psp_exe.py`, `tables.py`
+  checks clean. The hosted `BOF3X_SHADOW=exe_own` self-test and play: not run
+  yet.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

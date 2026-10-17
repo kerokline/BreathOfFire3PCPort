@@ -413,24 +413,25 @@ The launcher lists each one, greyed with its reason.
 
 **P1 - a screen or gameplay effect on a common path:**
 
-1. **Level-up ability names** `0x654900` (Western PSX): an engine-own `%s`
+1. **DONE 2026-10-17 (D310).** **Level-up ability names** `0x654900` (Western PSX): an engine-own `%s`
    (4.1). Every level-up that teaches an ability.
 2. **Event battle music** `EventBattle_Records` track half (all 7): every
    boss and event fight asks for track 0. Formally the owner's "track half"
    (DIV-0101 provisional); listed first among the owner's items to decide.
    Candidate: a rule from the PSX `GameMode5` twin's own track through the
    song numbering.
-3. **Hi-lo payouts** `CommuHiLo_DealSteps+0x14` (all 7): the game pays 0. A
+3. **DONE 2026-10-17 (D311, a `twin` from `COMMU02.EMI#8`).** **Hi-lo payouts** `CommuHiLo_DealSteps+0x14` (all 7): the game pays 0. A
    `twin` (1 of 1 windows on the disc).
-4. **Play-time colon** `0x6637E0` (all 7): an engine-own glyph (4.1).
-5. **Identify `?` marks** (D278; all 7 by the row): the two `twin` rows already
+4. **DONE 2026-10-17 (D310).** **Play-time colon** `0x6637E0` (all 7): an engine-own glyph (4.1).
+5. **DONE 2026-10-17 (D278, engine-own: the found rows did not match the Western discs).** **Identify `?` marks** (D278; all 7 by the row): the two `twin` rows already
    found.
-6. **Village board rows** `0x653084..0x653098` (all 7): engine-own strings (4.1).
+6. **DONE 2026-10-17 (D310).** **Village board rows** `0x653084..0x653098` (all 7): engine-own strings (4.1).
 7. **Area-169 dial panel** `Area169_Rects+0xA` (PSX 5): a `twin` (20 of 21
-   windows).
+   windows). Not a verbatim run on any PSX disc (2026-10-17: 0 copies of the
+   whole 189 bytes), so a twin row will not place it; a pieced rule is needed.
 8. **A master's requirement list** `MasterWin_Requirements+0x44` (Western
    PSX): the Western disc's own list, ledgered.
-9. **Countdown and counter formats** `0x61BC74` (all 7), `0x60ABF0` (PSX):
+9. **DONE 2026-10-17 (D310).** **Countdown and counter formats** `0x61BC74` (all 7), `0x60ABF0` (PSX):
    engine-own strings (4.1).
 10. **Meteor Strike lifts** (D267, all 7) and **`AREA111`'s overreach** (D268,
     PSX): the `twin` from `MAGIC226.EMI#3` with the segment trimmed, and a

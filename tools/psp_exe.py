@@ -221,6 +221,10 @@ TWINS = [
     # (CommuRank_Show's kPageFormat, rest_4e.cpp); COMMU05.EMI's code section opens with it and
     # its reader passes it to sprintf with the page + 1 and the count.
     (0x6531F4, 0x6531F9, "ETC/COMMU05.EMI", "the faerie ranked lists' page counter format (CommuRank_Show)"),
+    # D311: the village hi-lo game's payouts by turn (CommuHiLo_DealSteps+0x14, u16 x 8;
+    # CommuHiLo_Payout, rest_4c_callees.h). Zero, the game paid nothing. COMMU02.EMI's
+    # section 8 holds the 16 bytes verbatim on every PSX disc (COMMU02B.EMI#7 a copy).
+    (0x652CF4, 0x652D04, "ETC/COMMU02.EMI", "the hi-lo game's payouts by turn (CommuHiLo_Payout)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
