@@ -6606,6 +6606,12 @@ designed in rather than bolted on.
   `importer.py`, `exe_tables.py`, `exe_own.py`, `psp_exe.py`, `tables.py`
   checks clean. The hosted `BOF3X_SHADOW=exe_own` self-test and play: not run
   yet.
+  The same day, D267 and D268: a `twin` row now takes back a byte that a map
+  segment of another file placed with a different value (`psp_exe.fill`), and
+  a new `twin` from `MAGIC226.EMI#3` holds the Meteor Strike chip's lifts. On
+  every build the lifts and area 112's link list equal `BOF3.exe`'s; nothing
+  else moved (`placed_differ` -4 on each PSX build, -1 on each PSP; no place
+  changed).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

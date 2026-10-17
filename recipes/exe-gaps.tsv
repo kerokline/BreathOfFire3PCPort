@@ -195,7 +195,6 @@ psx-jp	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-jp	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-jp	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-jp	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-jp	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-jp	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-jp	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-jp	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -561,7 +560,6 @@ psx-us	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-us	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-us	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-us	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-us	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-us	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-us	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-us	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -941,7 +939,6 @@ psx-eu-en	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-eu-en	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-eu-en	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-eu-en	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-eu-en	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-eu-en	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-eu-en	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-eu-en	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -1315,7 +1312,6 @@ psx-fr	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-fr	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-fr	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-fr	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-fr	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-fr	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-fr	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-fr	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -1695,7 +1691,6 @@ psx-de	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psx-de	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psx-de	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psx-de	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psx-de	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psx-de	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psx-de	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psx-de	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -2048,7 +2043,6 @@ psp-jp	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psp-jp	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psp-jp	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psp-jp	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psp-jp	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psp-jp	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psp-jp	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-jp	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C
@@ -2392,7 +2386,6 @@ psp-eu	0x65BE50	0x65BE74	gap	game-value	InkInkPuff_Offsets
 psp-eu	0x65C1A8	0x65C1BC	gap	disc-unplaced	MagicBallOrb_Shades
 psp-eu	0x65C21C	0x65C224	gap	disc-unplaced	AuraBreathDome_V
 psp-eu	0x65C224	0x65C22C	gap	game-value	AuraBreathDome_Height
-psp-eu	0x65C374	0x65C37F	gap	game-value	MeteorStrikeChip_Lifts
 psp-eu	0x65DA10	0x65DA28	language	language	NameTable_Abilities+0x1538
 psp-eu	0x65DA50	0x65DA54	unread	unread	Cursor_Hidden+0x4
 psp-eu	0x65DA78	0x65DA84	language	language	Cursor_Hidden+0x2C

@@ -5296,7 +5296,6 @@ pc	kind	target
 0x61FB6C	data	0x61FB08
 0x61FB74	data	0x61FB10
 0x61FB78	code	Area111_Init
-0x61FBD0	number	-
 0x61FD44	data	0x61FD38
 0x61FD48	data	0x61FD3C
 0x61FED0	data	0x61FD4C
@@ -14386,7 +14385,6 @@ pc	kind	target
 0x65C360	code	MeteorStrikeRock_End
 0x65C36C	code	MeteorStrikeChip_Run
 0x65C370	code	MeteorStrikeTrail_Run
-0x65C380	number	-
 0x65C384	code	MeteorStrikeChip_Launch
 0x65C388	code	MeteorStrikeChip_Rise
 0x65C38C	code	MeteorStrikeChip_Fall

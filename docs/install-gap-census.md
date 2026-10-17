@@ -433,7 +433,7 @@ The launcher lists each one, greyed with its reason.
    PSX): the Western disc's own list, ledgered.
 9. **DONE 2026-10-17 (D310).** **Countdown and counter formats** `0x61BC74` (all 7), `0x60ABF0` (PSX):
    engine-own strings (4.1).
-10. **Meteor Strike lifts** (D267, all 7) and **`AREA111`'s overreach** (D268,
+10. **DONE 2026-10-17 (a twin, and a twin takes back another file's differing byte).** **Meteor Strike lifts** (D267, all 7) and **`AREA111`'s overreach** (D268,
     PSX): the `twin` from `MAGIC226.EMI#3` with the segment trimmed, and a
     trimmed segment.
 

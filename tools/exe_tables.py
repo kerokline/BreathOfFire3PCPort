@@ -384,7 +384,7 @@ def disc_image(disc, bid, places=()):
         else:
             put(lo, tables.psx_bytes(disc, p, hi - lo), "table", where, p["addr"])
     import psp_exe   # a PSP build: the game values its disc carries in another shape (docs/psp-image.md)
-    for lo, raw, where, addr in psp_exe.fill(disc, bid, owner, srcs=src):
+    for lo, raw, where, addr in psp_exe.fill(disc, bid, owner, srcs=src, ranges=ranges, img=img):
         put(lo, raw, "place", where, addr)
     for lo, raw, where, addr in psp_exe.unwide(bid, img, owner):   # the PSP's 16:9 side placements undone
         put(lo, raw, "place", where, addr)

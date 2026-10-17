@@ -7253,7 +7253,7 @@ harness's `pc-title-mark` difference measures against PSX-EU, and DIV-0114's
 reading the width from the disc's own `GAME.EMI#1`, as D260..D263's rows
 were made.
 
-## D267 — The Meteor Strike chip's four lifts are zero on every disc-built image (ours, the exe image's map; not fixed)
+## D267 — The Meteor Strike chip's four lifts are zero on every disc-built image (ours, the exe image's map; fixed 2026-10-17)
 
 **Found:** the disc-data inventory, 2026-10-13
 ([`disc-data-inventory.md`](disc-data-inventory.md) 5 item 2).
@@ -7268,7 +7268,14 @@ rows already take the PSPs' neighbours. Not seen in play. **Where to
 start:** a `twin` row from there for every build, with the segment's start
 trimmed (a `twin` fills only unowned bytes).
 
-## D268 — A `twin` row at `0x61FBD0` loses three bytes to `AREA111`'s map segment (ours, the exe image's map; not fixed)
+**Fixed 2026-10-17** (`install/recipe-version`): a `twin` row from
+`MAGIC226.EMI#3` on all seven builds, and `psp_exe.fill` lets a `twin` take
+back a byte a map segment of *another* file placed with a different value
+(the segment is generated, `exe_maps/`, so not trimmed by hand). The lifts
+equal `BOF3.exe`'s on every image (`tools/exe_scan.py`); DIV-0101 amended.
+Not seen in play.
+
+## D268 — A `twin` row at `0x61FBD0` loses three bytes to `AREA111`'s map segment (ours, the exe image's map; fixed 2026-10-17)
 
 **Found:** the disc-data inventory, 2026-10-13
 ([`disc-data-inventory.md`](disc-data-inventory.md) 5 item 3).
@@ -7283,6 +7290,12 @@ a segment whose end or start lands in a neighbour's data; E1's list of bytes
 every disc places differently from the PC is the check for it. **Where to
 start:** trim the segment, or let a `twin` row override a segment's
 overreach.
+
+**Fixed 2026-10-17** by the second: `psp_exe.fill`'s other-file rule (D267).
+The three bytes are `AREA112`'s on the five PSX builds; `exe-layout.tsv`'s
+stand-in number at `0x61FBD0` is gone. Taking *every* byte of another file's
+segment instead moved 13 of the PSP's places and left more PC bytes zero, so
+only a byte that differs is taken (measured).
 
 ## D269 — The French and German layers drew the English `ITEM` on the Identify panel, and the German the English `EXP` (ours, the language build; fixed by DIV-0117)
 

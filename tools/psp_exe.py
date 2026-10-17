@@ -225,6 +225,11 @@ TWINS = [
     # CommuHiLo_Payout, rest_4c_callees.h). Zero, the game paid nothing. COMMU02.EMI's
     # section 8 holds the 16 bytes verbatim on every PSX disc (COMMU02B.EMI#7 a copy).
     (0x652CF4, 0x652D04, "ETC/COMMU02.EMI", "the hi-lo game's payouts by turn (CommuHiLo_Payout)"),
+    # D267: MeteorStrikeChip_Lifts, four dwords (MeteorStrikeChip_Launch / _Rise). Its
+    # first 11 bytes were a gap and the BATTLE.EMI#15 segment, starting inside it, put 0
+    # at +0xE: every lift 0. MAGIC226.EMI#3 holds the table whole on all seven discs;
+    # the twin takes back the segment's differing byte (fill's other-file rule).
+    (0x65C374, 0x65C384, "BMAGIC/MAGIC226.EMI", "the Meteor Strike chip's four lifts (MeteorStrikeChip_Launch)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -671,11 +676,21 @@ def load_recipe(path=RECIPE):
     return out
 
 
-def fill(disc, bid, owner, rows=None, srcs=None):
+def fill(disc, bid, owner, rows=None, srcs=None, ranges=None, img=None):
     """The PSP fills for a PSP build's image (exe_tables.disc_image's call): [(pc,
     bytes, where, disc address)] for the runs of each recipe row's bytes that nothing
     has filled yet. No row for another build. `srcs`: exe_twins.sources as
-    {(file, section): (base, bytes)}, if the caller has it."""
+    {(file, section): (base, bytes)}, if the caller has it.
+
+    `ranges` and `img` (disc_image's [pc, end, how, where, addr] and image so far):
+    given, a `twin` row also takes back a byte a `map` segment of ANOTHER file
+    placed with another value - a segment that ran past its own data into the
+    structure the twin's own overlay holds (D267: BATTLE.EMI#15 over MAGIC226's
+    lifts; D268: AREA111's over AREA112's link list). A twin's bytes are BOF3.exe's
+    by construction (the recipe keeps no other); a byte that already equals the
+    twin's, and every byte of a segment from the twin's own file, keep their
+    owner, so no disc value is lost and nothing placed by those bytes moves
+    (taking the equal bytes too moved 13 of the PSP's places, measured 2026-10-17)."""
     rows = load_recipe()[bid] if rows is None else rows
     if not rows or _RECIPE_BASE:
         return []
@@ -688,13 +703,23 @@ def fill(disc, bid, owner, rows=None, srcs=None):
             continue                                  # applied after the fills (unwide)
         lo, raw, mask = build_fill(row, disc, elf, rule, srcs)
         where = "%s%s:%s" % (row["file"], "" if row["section"] is None else "#%d" % row["section"], row["rule"])
+
+        def free(x):
+            k = owner[x - DATA_LO]
+            if k is None:
+                return True
+            if ranges is None or img is None or row["rule"] != "twin":
+                return False
+            r = ranges[k]
+            return (r[2] == "map" and r[3].split("#")[0] != row["file"]
+                    and img[x - DATA_LO] != raw[x - lo])
         i = 0
         while i < len(raw):
-            if not mask[i] or owner[lo + i - DATA_LO] is not None:
+            if not mask[i] or not free(lo + i):
                 i += 1
                 continue
             j = i
-            while j < len(raw) and mask[j] and owner[lo + j - DATA_LO] is None:
+            while j < len(raw) and mask[j] and free(lo + j):
                 j += 1
             out.append((lo + i, raw[i:j], where, row["addr"]))
             i = j
