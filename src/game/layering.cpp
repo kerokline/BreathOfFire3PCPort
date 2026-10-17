@@ -210,6 +210,16 @@ struct Run {
     float x[kQuads][4], y[kQuads][4];
 };
 Run g_runs[2][kRuns];
+// The primitives the run being drawn has committed, read at RunEnd. A handler
+// may write a primitive's points after committing it: MapCell_DrawUprights
+// commits each pair of leaf quads, then writes their outer vertices 0 and 1
+// (as Capcom's 0x570210 does). Read at the commit, those were whatever the
+// packet pool held there from an earlier pass - on some passes a bush's six
+// quads all collapsed onto its trunk, and a sprite behind it was moved in front
+// of it one pass in three (known-defects D306, GitHub issue #79).
+constexpr unsigned kPending = 64;
+const unsigned char* g_pending[kPending];
+unsigned g_pending_n;
 std::uint32_t g_pass = 1;
 unsigned g_runs_now, g_runs_before;   // runs drawn in this pass, and in the last
 Run* g_run;                           // the run being drawn, or null
@@ -402,16 +412,12 @@ void Restore() {
 
 bool g_in_run = false;
 
-void RunBegin(const unsigned char* run) {
-    g_run = FindRun(Address(run), g_pass, true);
-    g_in_run = g_run != nullptr;
-}
+namespace {
 
 // A POLY_FT4 or POLY_G4 (code 0x2C / 0x38, semi-transparency and shading bits
 // aside: four float points at +8, +0x18, +0x28, +0x38, as the handlers'
 // projection writes them) kept as a quad. Anything else is not kept (see Run).
-void RunPrim(const unsigned char* prim, unsigned size) {
-    if (g_run == nullptr || size < 0x44) return;   // a POLY_G4 is committed as 0x44 bytes, a POLY_FT4 as 0x48
+void Keep(const unsigned char* prim) {
     const unsigned code = prim[7] & 0xFC;
     if (code != 0x2C && code != 0x38) return;
     float x[4], y[4];
@@ -436,7 +442,32 @@ void RunPrim(const unsigned char* prim, unsigned size) {
     }
 }
 
+}  // namespace
+
+void RunBegin(const unsigned char* run) {
+    g_run = FindRun(Address(run), g_pass, true);
+    g_in_run = g_run != nullptr;
+    g_pending_n = 0;
+}
+
+// Noted at the commit and kept at RunEnd, when the run's handlers have written
+// every point (g_pending). The packet pool is not reused within a pass, so the
+// memory still holds the primitive then. A run that commits more than
+// kPending keeps the oldest at once, as before.
+void RunPrim(const unsigned char* prim, unsigned size) {
+    if (g_run == nullptr || size < 0x44) return;   // a POLY_G4 is committed as 0x44 bytes, a POLY_FT4 as 0x48
+    if (g_pending_n == kPending) {
+        Keep(g_pending[0]);
+        std::memmove(g_pending, g_pending + 1, (kPending - 1) * sizeof g_pending[0]);
+        --g_pending_n;
+    }
+    g_pending[g_pending_n++] = prim;
+}
+
 void RunEnd() {
+    if (g_run != nullptr)
+        for (unsigned i = 0; i < g_pending_n; ++i) Keep(g_pending[i]);
+    g_pending_n = 0;
     g_run = nullptr;
     g_in_run = false;
 }

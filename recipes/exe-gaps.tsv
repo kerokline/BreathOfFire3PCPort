@@ -152,7 +152,8 @@ psx-jp	0x653660	0x653670	language	language	CommuRank_Modes+0x4EC
 psx-jp	0x653674	0x653684	language	language	CommuRank_Modes+0x500
 psx-jp	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psx-jp	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
-psx-jp	0x6536F8	0x65382D	language	language	ConfigScreen_OpenStates+0x24
+psx-jp	0x6536F8	0x653808	language	language	ConfigScreen_OpenStates+0x24
+psx-jp	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
 psx-jp	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-jp	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psx-jp	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -512,7 +513,8 @@ psx-us	0x653660	0x653670	language	language	CommuRank_Modes+0x4EC
 psx-us	0x653674	0x653684	language	language	CommuRank_Modes+0x500
 psx-us	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psx-us	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
-psx-us	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
+psx-us	0x6536F8	0x653808	language	language	ConfigScreen_OpenStates+0x24
+psx-us	0x653815	0x653830	gap	game-value	ConfigScreen_OpenStates+0x141
 psx-us	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
 psx-us	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-us	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
@@ -891,7 +893,8 @@ psx-eu-en	0x653660	0x653670	language	language	CommuRank_Modes+0x4EC
 psx-eu-en	0x653674	0x653684	language	language	CommuRank_Modes+0x500
 psx-eu-en	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psx-eu-en	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
-psx-eu-en	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
+psx-eu-en	0x6536F8	0x653808	language	language	ConfigScreen_OpenStates+0x24
+psx-eu-en	0x653815	0x653830	gap	game-value	ConfigScreen_OpenStates+0x141
 psx-eu-en	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
 psx-eu-en	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-eu-en	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
@@ -1264,7 +1267,8 @@ psx-fr	0x653660	0x653670	language	language	CommuRank_Modes+0x4EC
 psx-fr	0x653674	0x653684	language	language	CommuRank_Modes+0x500
 psx-fr	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psx-fr	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
-psx-fr	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
+psx-fr	0x6536F8	0x653808	language	language	ConfigScreen_OpenStates+0x24
+psx-fr	0x653815	0x653830	gap	game-value	ConfigScreen_OpenStates+0x141
 psx-fr	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
 psx-fr	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-fr	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
@@ -1643,7 +1647,8 @@ psx-de	0x653660	0x653670	language	language	CommuRank_Modes+0x4EC
 psx-de	0x653674	0x653684	language	language	CommuRank_Modes+0x500
 psx-de	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psx-de	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
-psx-de	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
+psx-de	0x6536F8	0x653808	language	language	ConfigScreen_OpenStates+0x24
+psx-de	0x653815	0x653830	gap	game-value	ConfigScreen_OpenStates+0x141
 psx-de	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
 psx-de	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-de	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
@@ -2005,7 +2010,8 @@ psp-jp	0x653660	0x653670	language	language	CommuRank_Modes+0x4EC
 psp-jp	0x653674	0x653684	language	language	CommuRank_Modes+0x500
 psp-jp	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psp-jp	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
-psp-jp	0x6536F8	0x65382D	language	language	ConfigScreen_OpenStates+0x24
+psp-jp	0x6536F8	0x653808	language	language	ConfigScreen_OpenStates+0x24
+psp-jp	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
 psp-jp	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psp-jp	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psp-jp	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -2348,7 +2354,8 @@ psp-eu	0x653660	0x653670	language	language	CommuRank_Modes+0x4EC
 psp-eu	0x653674	0x653684	language	language	CommuRank_Modes+0x500
 psp-eu	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psp-eu	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
-psp-eu	0x6536F8	0x65382D	language	language	ConfigScreen_OpenStates+0x24
+psp-eu	0x6536F8	0x653808	language	language	ConfigScreen_OpenStates+0x24
+psp-eu	0x653815	0x65382D	gap	game-value	ConfigScreen_OpenStates+0x141
 psp-eu	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psp-eu	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psp-eu	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34

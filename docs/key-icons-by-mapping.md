@@ -349,7 +349,8 @@ Drafts for the coordinator to number; none is written to `DIVERGENCE.md`, since 
   tests P-changed in the US module. Read, not played.
 - **A Western disc-only install's world-map legend overlaps two icons**: the disc's baked
   default (US) and the live glyph from Japan's words (`02_worldmap_legend_psx-eu.png`,
-  `vf2_caughFish` t000630).
+  `vf2_caughFish` t000630). **Fixed 2026-10-17** (D307, DIV-0130, issue #78): the importer
+  repaints both baked copies (the frame's dim one and the labels' lit one) on a disc's page.
 - **A Western disc-only install's dock legend names the US buttons over Japan's code**
   (cross OK where `EffectKind5E_Pick` places on circle). Not seen: no route.
 - **The PC's world-map legend names keys statically** (SPACE / X / ENTER, the port's art) -
@@ -358,6 +359,8 @@ Drafts for the coordinator to number; none is written to `DIVERGENCE.md`, since 
   cross / triangle, not square / cross / triangle.
 
 ## 10. For the owner
+
+Answered 2026-10-17: see [`button-roles-by-release.md`](button-roles-by-release.md) 8.
 
 1. **Is the target "icons always tell the truth"** (section 5 as written: the glyph of what the
    player must press, keyboard included), or "the US release's icons" (Option B: a layout

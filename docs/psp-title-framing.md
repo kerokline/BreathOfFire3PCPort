@@ -1,4 +1,4 @@
-# The PSP-only title's logo framing (D256, DIV-0130)
+# The PSP-only title's logo framing (D256, DIV-0131)
 
 **Status:** DONE (2026-10-17, `install/recipe-version`; the owner saw the mock-up)
 
@@ -35,7 +35,7 @@ PlayStation's relation to the text, which centres it over the PSP's text.
 
 ## 3. In the engine
 
-`title_states.cpp` (DIV-0130): on a PSP base the sets draw Capcom's sprites 4 /
+`title_states.cpp` (DIV-0131): on a PSP base the sets draw Capcom's sprites 4 /
 5 (and the fade's 0xF / 0x10) and 2 with these rectangles, their palettes from
 the sprites' own records; sprite 3 and the mark sprite 1 are not drawn. The
 press-start and copyright lines are unchanged (the PSP's copyright row is wider
