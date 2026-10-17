@@ -137,6 +137,19 @@ unsigned Line(const char* who, unsigned line) {
                     who, line);
     return line;
 }
+// A text's label as drawn: its pen and its one-character text. DIV-0069: under
+// a Latin overlay DIV-0051's icon, else the port's 0x66A2FC string. Ledger
+// draft D: the entry and the pen through sigma (FishingText_LabelOf; with it
+// off, entry = the line byte and the pen 0x653C00's, the original's reads).
+struct LabelDraw {
+    U pen;
+    U text;
+};
+LabelDraw Label(const char* who, unsigned index) {
+    const unsigned line = Line(who, B(Text(who, index) + 4));
+    const FishingLabel l = FishingText_LabelOf(index, line);
+    return {l.pen, FishingText_On() ? Key(FishingText_Label(l.entry)) : L(at::kLabelTexts + 4 * l.entry)};
+}
 // Kind 0xF's row table 0x653C04: nine rows of four bytes, by +6 and a column.
 U RowByte(const char* who, unsigned row, unsigned column) {
     const U offset = row * 4u + column;
@@ -1497,11 +1510,9 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
         c[0xA] = static_cast<unsigned char>(c[0xA] - 1);
         c = S();
         const unsigned char wait = c[0xA];
-        const unsigned line = Line(kWho, B(Text(kWho, c[0x4B]) + 4));
-        // DIV-0069: under a Latin overlay the label is DIV-0051's icon for its button.
-        const U label = FishingText_On() ? Key(FishingText_Label(line)) : L(at::kLabelTexts + 4 * line);
-        MessageLine(B(at::kKind0FLabels + line), label, static_cast<unsigned char>(0xC - (wait << 1)),
-                    (2u * wait + 0x119) & 0xFFFF);
+        // DIV-0069 / draft D: the label's icon and pen for its button now.
+        const LabelDraw label = Label(kWho, c[0x4B]);
+        MessageLine(label.pen, label.text, static_cast<unsigned char>(0xC - (wait << 1)), (2u * wait + 0x119) & 0xFFFF);
     } else {
         c[9] = static_cast<unsigned char>(c[9] - 1);
         unsigned char* a = S();
@@ -1529,18 +1540,16 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
             c[1] = static_cast<unsigned char>(c[1] + 1);
             a = S();
         }
-        const unsigned char label = B(Text(kWho, a[0x4B]) + 4);
-        if (label != 0xFF) {
-            const unsigned line = Line(kWho, label);
+        if (B(Text(kWho, a[0x4B]) + 4) != 0xFF) {
+            const LabelDraw label = Label(kWho, a[0x4B]);   // DIV-0069 / draft D
             if (FishingText_On()) {
-                // DIV-0069: after the line's real pen width, not 12 a character;
-                // the icon for the button.
+                // DIV-0069: after the line's real pen width, not 12 a character.
                 const U width = FishingText_Width(TextAt(L(Text(kWho, a[0x4B]))), a[0x49]);
-                DrawText(static_cast<std::uint16_t>(width + W(a + 0x2E)), L(at::kRecord3 + 0x30) + 2,
-                         B(at::kKind0FLabels + line), 1, Key(FishingText_Label(line)));
+                DrawText(static_cast<std::uint16_t>(width + W(a + 0x2E)), L(at::kRecord3 + 0x30) + 2, label.pen, 1,
+                         label.text);
             } else {
                 DrawText(static_cast<std::uint16_t>(a[0x49] * 12u + W(a + 0x2E)), L(at::kRecord3 + 0x30) + 2,
-                         B(at::kKind0FLabels + line), 1, L(at::kLabelTexts + 4 * line));
+                         label.pen, 1, label.text);
             }
         }
     }
@@ -1595,28 +1604,25 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
     if (typed != 0) {
         DrawText(W(a + 0x2E), L(at::kRecord3 + 0x30) + 2, 0, typed, L(a + 0x50));
         unsigned char* const c = S();
-        const unsigned char label = B(Text(kWho, c[0x4B]) + 4);
-        if (label == 0xFF) return;
-        const unsigned line = Line(kWho, label);
+        if (B(Text(kWho, c[0x4B]) + 4) == 0xFF) return;
+        const LabelDraw label = Label(kWho, c[0x4B]);   // DIV-0069 / draft D
         if (FishingText_On()) {
-            // DIV-0069: after the typed characters' real width; the icon.
+            // DIV-0069: after the typed characters' real width.
             const U width = FishingText_Width(TextAt(L(c + 0x50)), c[0x49]);
-            DrawText(static_cast<std::uint16_t>(width + W(c + 0x2E)), L(at::kRecord3 + 0x30) + 2,
-                     B(at::kKind0FLabels + line), 1, Key(FishingText_Label(line)));
+            DrawText(static_cast<std::uint16_t>(width + W(c + 0x2E)), L(at::kRecord3 + 0x30) + 2, label.pen, 1,
+                     label.text);
         } else {
-            DrawText(static_cast<std::uint16_t>(c[0x49] * 12u + W(c + 0x2E)), L(at::kRecord3 + 0x30) + 2,
-                     B(at::kKind0FLabels + line), 1, L(at::kLabelTexts + 4 * line));
+            DrawText(static_cast<std::uint16_t>(c[0x49] * 12u + W(c + 0x2E)), L(at::kRecord3 + 0x30) + 2, label.pen,
+                     1, label.text);
         }
         return;
     }
-    const unsigned char label = B(Text(kWho, a[0x4B]) + 4);
-    if (label == 0xFF) {
+    if (B(Text(kWho, a[0x4B]) + 4) == 0xFF) {
         SH_CALL(Effect_Release)();
         return;
     }
-    const unsigned line = Line(kWho, label);
-    DrawText(W(a + 0x2E), L(at::kRecord3 + 0x30) + 2, B(at::kKind0FLabels + line), 1,
-             FishingText_On() ? Key(FishingText_Label(line)) : L(at::kLabelTexts + 4 * line));   // DIV-0069: the icon
+    const LabelDraw label = Label(kWho, a[0x4B]);   // DIV-0069 / draft D
+    DrawText(W(a + 0x2E), L(at::kRecord3 + 0x30) + 2, label.pen, 1, label.text);
     a = S();
     if (W(a + 0x2E) != 0x1D) return;
     a[9] = 6;
@@ -1635,9 +1641,8 @@ extern "C" void __cdecl EffectKind0F_LineFade(void) {
         SH_CALL(Effect_Release)();
         return;
     }
-    const unsigned line = Line(kWho, B(Text(kWho, c[0x4B]) + 4));
-    const U text = FishingText_On() ? Key(FishingText_Label(line)) : L(at::kLabelTexts + 4 * line);   // DIV-0069
-    MessageLine(B(at::kKind0FLabels + line), text, static_cast<unsigned char>((left << 1) | 0x80), 0x1D);
+    const LabelDraw label = Label(kWho, c[0x4B]);   // DIV-0069 / draft D
+    MessageLine(label.pen, label.text, static_cast<unsigned char>((left << 1) | 0x80), 0x1D);
 }
 
 // ===========================================================================
