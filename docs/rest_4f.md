@@ -117,7 +117,12 @@ frame, then six rows of `Config_DrawRowLabel` (FC1's) and
 setting's large on the row under the cursor). **`Config_DrawControllerPanel`**
 (x, y): its frame, then six rows of **`Config_DrawControllerRow`** (the row box,
 the name right-aligned, two grey cells) and `Config_DrawControllerCell`
-(DIV-0051's, config_text.cpp).
+(config_text.cpp). Ours calls the cell by name, so it runs whether or not
+DIV-0051's jmp went in at `0x461C00`. Until 2026-10-17 it drew only DIV-0051's
+icons, which a PC install with no language layer has no glyphs for, and the
+game stopped on Capcom's glyph trap (known-defects D312). Without the layer it
+now draws the original's path, and the fuzz copies `0x461C00` and compares
+the two (53 functions with no Latin overlay, 52 under one).
 
 **`WorldMap_ExitRecords`** `0x462AC0` answers `WorldMap_Records`' `+0x14` of
 the record `WorldMap_RecordIndex` names: the list `Field_ExitFromCell` walks.
