@@ -842,7 +842,7 @@ In between, cheaper steps if the owner wants them: refuse it in battle
 and events, give it a slot of its own, draw "Save OK" on screen (it only
 reaches the log since DIV-0032).
 
-**Outcome** _(2026-10-17)_: superseded by the quicksave round ([`quicksave-round.md`](quicksave-round.md)); F12's fate is its question 1.
+**Outcome** _(2026-10-17)_: closed by the owner - F12 stays as it is; the true quicksave is the quicksave round ([`quicksave-round.md`](quicksave-round.md)).
 
 ## I19 — Screen curvature for the SatPixie look
 
@@ -1957,3 +1957,35 @@ and sizes the round.
 
 ### Outcome
 _(2026-10-17) open; proposed, nothing built._
+
+## I45 — Shrink the quicksave files
+
+**Ask (2026-10-17, the owner):** a quicksave ([`quicksave-round.md`](quicksave-round.md))
+is about 4 MB raw, the image span plus the participants' records; "ok for
+now, but probably worth considering if we can shrink that at some point".
+**Kind:** engine   **Feasibility:** HIGH   **Gated on:** the quicksave round
+built and its format measured; the owner's word to pick it up.
+
+### What to measure first
+- How much of the span is zero pages, and how much is unchanged from the
+  image's load-time bytes (`base/exe/data.bin`): both are free to drop - a
+  page list and a diff against the install's own image, no third-party code.
+- How much of the rest repeats (the VRAM shadow and the DAT arena are the
+  likely bulk): a plain run-length or LZ pass in our own code, measured
+  against the time a restore may take (one frame's budget is the target).
+
+### The shapes, cheapest first
+1. **Zero-page and unchanged-page skip** against the install's image: a page
+   bitmap in the header; probably the largest win for the least code.
+2. **A diff against the previous quicksave in the same slot**: smaller files,
+   but a chain a lost file breaks - only with the base kept whole.
+3. **A compressor**: zlib-class code is BSD / zlib-licensed and would not
+   touch [`LICENSING.md`](LICENSING.md) 4, but the project has vendored no
+   third-party compression so far; our own LZ is a few hundred lines.
+
+### First concrete step
+The measurement, on the six routes' quicksaves once the round's stage C has
+made them: zero pages, unchanged pages, and an LZ ratio, in a table.
+
+### Outcome
+_(2026-10-17) open; logged at the owner's word, nothing measured._

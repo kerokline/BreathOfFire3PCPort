@@ -116,8 +116,7 @@ self-tests, a hand-back report; harness roots per group
 - **Self-test:** a span copy, a scribble over game pages, a restore, the
   pages equal; a participant missing on either side refused; a build-id
   mismatch refused with the save half still parsed.
-- **Ledger draft A:** the quicksave keys and files. Draft C: F12's fate,
-  whichever answer section 5 gives.
+- **Ledger draft A:** the quicksave keys and files. (F12 is unchanged, section 5.)
 - Output: `docs/quicksave.md` (the format, the point, the registry).
 
 ### SC: the census of state outside the span (reads; no `src/`)
@@ -218,12 +217,10 @@ finding, not a shrug.
   the menu's own, not `0x9036D4` / `0x8034D0` which are the game's),
   `SaveMenu_DrawChoices` for the row of choices; input through our
   `Pad_Read` seam each paused frame, since no task runs. Choices per slot:
-  **Load** (a restore asked of SN, the pause ended), **Save** (a take into
-  that slot), **Back**; an empty slot offers Save only. F5 opens it from the
-  game; a second F5 or cancel closes it. Section 5 asks whether Save
-  belongs in it at all.
-- **F12.** Removed, or kept as the save-anywhere it is: draft C, the owner's
-  answer (section 5, question 1).
+  **Load** (a restore asked of SN, the pause ended) and **Back**; an empty
+  slot offers Back only (section 5: load only, F6 the one way to save). F5
+  opens it from the game; a second F5 or cancel closes it.
+- **F12.** Unchanged, the owner's answer (section 5).
 - Self-test: the two lists on a directory with saves, quicksaves and a
   seventeenth file; the menu's cursor over 0..15 with gaps.
 - **Ledger drafts:** B (the lists split and bounded), D (the F5 menu).
@@ -247,28 +244,32 @@ menu's draw wants the texture participant); RC's recipes any time. After
 each merge the build, `BOF3X_SHADOW='*'` headless, RC's in-process check on
 one route.
 
-Numbering: drafts A..D lettered; the coordinator numbers from the first
+Numbering: drafts A, B and D lettered (C dropped with F12 unchanged); the coordinator numbers from the first
 free entry (DIV-0133 at staging; check `main`). The bound on
 `Save_ListFiles`' table is a port defect fixed, a D-number from the first
 free after D311. Every commit `git commit -s`; no save file's bytes in any
 doc (rule 1: sizes, offsets and field names only).
 
-## 5. What the owner decides by chat
+## 5. The owner's answers (2026-10-17, by chat), and what is still open
 
-1. **F12.** Remove it, keep it as the save-anywhere it is, or make it an
-   alias of F6. I18's question, answered here.
-2. **The title's load menu and a quicksave's save half.** With the lists
-   split, the title never shows `BISLPS1?.DAT`. Should it, as a second
-   page, so a quicksave from an older build is still loadable as a plain
-   save? (The file carries the block either way.)
-3. **Save in the F5 menu, or load only.** The owner's words say "select a
-   quicksave to load"; F6 already saves to slot 0. Load-only is simpler and
-   has no overwrite prompt to design.
-4. **F6 overwrites slot 0 silently** (as F12 does) or asks. Silent is the
-   quicksave convention elsewhere; a prompt needs the menu's yes / no
-   machinery while paused.
-5. **Sixteen quicksave slots** (`0x10`..`0x1F`), or fewer shown.
-6. **A quicksave's 4 MB** on disk, sixteen of them: fine, or compress.
+Answered:
+
+1. **F12 stays as it is** - the save-anywhere, unchanged. Draft C is dropped;
+   I18 closes on this answer.
+2. **The quicksave menu is reached from F5 only.** The title's load menu does
+   not list `BISLPS1?.DAT`; a quicksave's save half is read by nothing but
+   the quick menu's own summary draw (it still makes the file self-describing,
+   and keeps a later "load as a plain save" possible without a format change).
+4. **F6 overwrites slot `0x10` silently**, for now. No prompt.
+6. **4 MB a file is fine for now**; shrinking it is logged as IDEAS I45, not
+   this round's.
+
+Still open, built on the simpler reading unless the owner says otherwise:
+
+3. **Load only in the F5 menu** (F6 is the one way to save). QM builds Load
+   and Back; Save per slot waits for a word.
+5. **Sixteen quicksave slots** (`0x10`..`0x1F`), three shown at a time as the
+   save menu shows them.
 
 ## 6. Not in this round
 
