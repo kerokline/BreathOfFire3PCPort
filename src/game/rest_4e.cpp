@@ -677,7 +677,9 @@ U TrackIndex() { return static_cast<U>(static_cast<int>(static_cast<short>(W(kTr
 // kind the entry's +1); nothing moved, Input_Pressed is read again: 0x20 stops
 // a playing track (Music_FadeOutStop(10)) and, the row's track the one playing,
 // leaves Music_Track 0xFF, else the step + 1 (play it); 0x40 the step 0 and the
-// mode + 1 (close). The list drawn at (0x32, 0x28) on every path.
+// mode + 1 (close). The list drawn at (0x32, 0x28) on every path. 0x20 and
+// 0x40 are Japan's circle and cross, asked through sigma (group HT-2,
+// docs/button-tests.md 3).
 extern "C" void __cdecl CommuMusic_Browse(void) {
     const unsigned pressed = Input_Pressed & 0xA000u;
     const unsigned char count = B(kTrackCounts + 8u * B(kEntries + 1 + 8u * B(kEntry)));
@@ -702,7 +704,7 @@ extern "C" void __cdecl CommuMusic_Browse(void) {
         }
     } else {
         const unsigned now = Input_Pressed & 0xFF;
-        if (now & 0x20) {
+        if (now & Sigma(0x20)) {
             if (Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(10);
             const unsigned track = B(kTracks + TrackIndex());
             if (Music_Track == track) {
@@ -713,7 +715,7 @@ extern "C" void __cdecl CommuMusic_Browse(void) {
             SH_CALL(CommuMusic_DrawList)(0x32, 0x28);
             return;
         }
-        if (now & 0x40) {
+        if (now & Sigma(0x40)) {
             const unsigned char mode = B(kMode);
             B(kStep) = 0;
             B(kMode) = static_cast<unsigned char>(mode + 1);
