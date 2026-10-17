@@ -104,6 +104,7 @@
 #include "game/save_menu.h"
 #include "game/event_ops.h"
 #include "game/menu_windows.h"
+#include "game/shoulder_glyphs.h"
 #include "game/display_setup.h"
 #include "game/win_main.h"
 #include "game/fmv_play.h"
@@ -1430,6 +1431,9 @@ void InjectAll() {
     bof3x::input::sigma::Arm(); // ledger drafts A and B (docs/button-sigma.md): the Config as one permutation, words 7 / 8
                                 // as Speak's and Action's, the starting Config by source - after every module's self-test,
                                 // which all compared Capcom's stores at Boot_Task, LoadMenu_Apply and the rebind
+    shoulder_glyphs::Arm();     // ledger draft F (docs/button-shoulder-corner.md): the item lists' L1 / R1 corner as sigma has
+                                // it - after sigma::Arm and after every module's self-test (menu_windows' compared the original's
+                                // Menu_DrawPiece)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

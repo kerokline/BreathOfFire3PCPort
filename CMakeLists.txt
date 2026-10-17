@@ -248,6 +248,7 @@ add_library(bof3x SHARED
   src/game/event_ops_fuzz.cpp
   src/game/menu_windows.cpp
   src/game/menu_windows_fuzz.cpp
+  src/game/shoulder_glyphs.cpp
   src/game/display_setup.cpp
   src/game/win_main.cpp
   src/game/fmv_play.cpp
