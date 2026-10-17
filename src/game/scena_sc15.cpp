@@ -48,6 +48,11 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 #define SC15_EXPORT extern "C" __attribute__((disable_tail_calls))
 
@@ -2200,7 +2205,7 @@ SC15_EXPORT void __cdecl Scena17_Outro07(void) {
 // yet 0, 0x8034E5 = 0x1E again, else the next step. The rays, then the
 // panel.
 SC15_EXPORT void __cdecl Scena17_Outro08(void) {
-    if (B(kInputPressed) & 0x20) B(kRollSkip) = 1;
+    if (B(kInputPressed) & Sigma(0x20)) B(kRollSkip) = 1;
     if (LoadDone() && StepDone()) {
         B(kCounter3) = static_cast<unsigned char>(B(kCounter3) - 1);
         if (B(kCounter3) != 0) Step(0x1E);
@@ -2214,7 +2219,7 @@ SC15_EXPORT void __cdecl Scena17_Outro08(void) {
 // music faded over 0x10, the transition 0xD and the next step. The rays and
 // the panel.
 SC15_EXPORT void __cdecl Scena17_Outro09(void) {
-    if ((B(kInputPressed) & 0x20) || B(kRollSkip) != 0) {
+    if ((B(kInputPressed) & Sigma(0x20)) || B(kRollSkip) != 0) {
         SH_CALL(Music_FadeOut)(0x10);
         Transition(0xD);
         RunUp();

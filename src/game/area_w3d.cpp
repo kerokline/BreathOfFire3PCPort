@@ -23,6 +23,11 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -97,7 +102,7 @@ void Rise(bool zone4) {
 void HeldMove(unsigned word, short least, unsigned char direction) {
     unsigned char* const cur = Sprite_Current;
     if (static_cast<short>(Word(cur + word)) < least) return;
-    if (!(B(at::kInputHeld) & 0x20)) return;
+    if (!(B(at::kInputHeld) & Sigma(0x20))) return;
     cur[8] = direction;
     MoveScript_Object[7] = 2;
     unsigned char* const object = MoveScript_Object;
@@ -632,7 +637,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
         return;
     }
     case 0x16:   // the button held: message 0x8C, the effect's state 3, sound 0x209, counter 3 = 0xA
-        if (!(B(at::kInputHeld) & 0x20)) return;
+        if (!(B(at::kInputHeld) & Sigma(0x20))) return;
         AH_CALL(Area135_OpenMessage)(0x8C);
         EffectAt(kWho, B(at::kEffectSlot))[1] = 3;
         AH_CALL(Sound_PlayEffect)(0x209);
@@ -650,10 +655,10 @@ extern "C" void __cdecl Area135_Tail18(void) {
         }
         return;
     case 0x18:   // a press
-        if (B(at::kInputPressed) & 0x20) B(at::kTailState) = 0x19;
+        if (B(at::kInputPressed) & Sigma(0x20)) B(at::kTailState) = 0x19;
         return;
     case 0x19:   // the button held: message 0x8E, the effect's state 3, sound 0x209, counter 3 = 0xC
-        if (!(B(at::kInputHeld) & 0x20)) return;
+        if (!(B(at::kInputHeld) & Sigma(0x20))) return;
         AH_CALL(Area135_OpenMessage)(0x8E);
         EffectAt(kWho, B(at::kEffectSlot))[1] = 3;
         AH_CALL(Sound_PlayEffect)(0x209);

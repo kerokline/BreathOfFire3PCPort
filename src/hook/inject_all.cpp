@@ -19,6 +19,7 @@
 #include "game/gfx_filter.h"
 #include "game/cheats.h"
 #include "game/psp_code.h"
+#include "input/button_tests.h"
 #include "input/sigma.h"
 #include "game/gfx_flush.h"
 #include "game/gfx_unpack.h"
@@ -1433,6 +1434,8 @@ void InjectAll() {
     ButtonText_Arm();           // ledger draft H (docs/button-dialogue.md 4): the dialogue's button mentions drawn as
                                 // Sigma's button - after sigma::Arm, and after every module's self-test, which all
                                 // compared Capcom's text draws (text_draw's, msgbox's)
+    if (bof3::WantsShadow("button_tests"))   // group HT (docs/button-tests.md 4): the hard-coded tests' masks and four
+        bof3x::input::button_tests::Check(); // of ours under stand-in Config words - after Arm, for the live table
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

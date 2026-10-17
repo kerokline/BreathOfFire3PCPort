@@ -20,6 +20,11 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace battle_menu_states {
 
@@ -256,7 +261,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     unsigned char* const member = At(at::kMembers + actor * at::kMemberSize);
     SetLong(member + 0x130, Long(member + 0x130) & 0xBFFF);
     const unsigned cursor_row = list[0xC];
-    const unsigned pressed = Input_Pressed & 0xF00Cu;
+    const unsigned pressed = Input_Pressed & Sigma(0xF00C);
     SetWord(hand + 6, (cursor_row - top_row + 2) * 13 + Word(list + 6));
     const unsigned repeat = g.auto_repeat(pressed);
 
@@ -289,7 +294,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
             list[0xC] = cursor;
         }
         if (static_cast<int>(list[0xC]) >= static_cast<int>(list[0xB]) + 7) SetWord(list + 0x12, 0x10);
-    } else if (repeat & 4) {
+    } else if (repeat & Sigma(4)) {
         auto top = list[0xB];
         if (top == 0) {
             cursor = 0;
@@ -304,7 +309,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
             list[0xC] = cursor;
             list[0xB] = top;
         }
-    } else if (repeat & 8) {
+    } else if (repeat & Sigma(8)) {
         auto top = list[0xB];
         if (top == 0x79) {
             cursor = 0x7F;

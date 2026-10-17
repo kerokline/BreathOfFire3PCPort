@@ -37,6 +37,11 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace battle_actor_copies {
 
@@ -283,7 +288,7 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     const unsigned y = rows * 13 + Word(At(at::kItemBaseY));
     const unsigned pressed = Word(At(at::kPressed));
     SetWord(At(at::kItemCursorY), y);
-    const U held = g.auto_repeat(pressed & 0xF00C);
+    const U held = g.auto_repeat(pressed & Sigma(0xF00C));
 
     const U flags = static_cast<U>(Long(Command() + 0x10));
     if (!(flags & 2) || (flags & 0x20000)) {
@@ -311,7 +316,7 @@ extern "C" void __cdecl BattleItem_Browse(void) {
         if (cursor < 9) B(at::kItemCursor) = ++cursor;
         const int last = static_cast<short>(Word(At(at::kItemScroll))) + 7;
         if (!(static_cast<int>(B(at::kItemCursor)) < last)) SetWord(At(at::kItemScrollMotion), 0x10);
-    } else if (held & 4) {
+    } else if (held & Sigma(4)) {
         const short scroll = static_cast<short>(Word(At(at::kItemScroll)));
         if (scroll == 0) {
             cursor = 0;
@@ -326,7 +331,7 @@ extern "C" void __cdecl BattleItem_Browse(void) {
             B(at::kItemCursor) = cursor;
             SetWord(At(at::kItemScroll), static_cast<unsigned>(scroll - 7));
         }
-    } else if (held & 8) {
+    } else if (held & Sigma(8)) {
         const short scroll = static_cast<short>(Word(At(at::kItemScroll)));
         if (scroll == 3) {
             cursor = 9;

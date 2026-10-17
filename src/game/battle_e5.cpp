@@ -36,6 +36,11 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -484,7 +489,7 @@ void MoveCursor(U window, U keys, S32 sum_max, S32 a_max) {
             if (b == 0) SetW(wa, a = static_cast<std::uint16_t>(a - 1));
             else if (S16(b) > 0) SetW(wb, b = static_cast<std::uint16_t>(b - 1));
         }
-    } else if (keys & 4) {
+    } else if (keys & Sigma(4)) {
         if (S16(a) >= 3) SetW(wa, a = static_cast<std::uint16_t>(a - 3));
         else if (a == 0) SetW(wb, b = 0);
         else SetW(wa, a = 0);
@@ -493,7 +498,7 @@ void MoveCursor(U window, U keys, S32 sum_max, S32 a_max) {
             if (b == 2) SetW(wa, a = static_cast<std::uint16_t>(a + 1));
             else if (S16(b) < 2) SetW(wb, b = static_cast<std::uint16_t>(b + 1));
         }
-    } else if (keys & 8) {
+    } else if (keys & Sigma(8)) {
         if (S16(a) == a_max) {
             SetW(wb, b = 2);
         } else {
@@ -744,7 +749,7 @@ extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, at::kWin18, 2
 // a + b below 5, a at most 3).
 extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
     if (W(at::kWin18 + 4) != 0x5B) return;
-    const U keys = Repeat(0x500C);
+    const U keys = Repeat(Sigma(0x500C));
     U pressed = Pressed();
     if (Cancel(pressed)) {
         Sound(0x106);
@@ -760,7 +765,7 @@ extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
         Sound(0x107);
         pressed = Pressed();
     }
-    if (pressed & 0x10) {
+    if (pressed & Sigma(0x10)) {
         if (B(SlotOf(at::kSlots, at::kWin18) + 3) != 0xFF) {
             Sound(0x104);
             B(at::kStep3) = 6;
@@ -1015,7 +1020,7 @@ extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, at::kWin19, 
 // 0xB, a at most 9).
 extern "C" void __cdecl DragonCmd_Slots2Cursor(void) {
     if (W(at::kWin19 + 4) != 0x5B) return;
-    const U keys = Repeat(0x500C);
+    const U keys = Repeat(Sigma(0x500C));
     const U pressed = Pressed();
     if (Cancel(pressed)) {
         Sound(0x106);
@@ -1111,7 +1116,7 @@ extern "C" void __cdecl DragonCmd_StoreWait(void) {
 // sound 0x104 - and the cursor still moves; the cursor in twelve slots.
 extern "C" void __cdecl DragonCmd_StoreCursor(void) {
     ShowLine(Line(0x61));
-    const U keys = Repeat(0x500C);
+    const U keys = Repeat(Sigma(0x500C));
     const U pressed = Pressed();
     if (Cancel(pressed)) {
         Sound(0x106);
@@ -1171,7 +1176,7 @@ extern "C" void __cdecl DragonCmd_StoreCopy(void) {
 // cursor in six slots.
 extern "C" void __cdecl DragonCmd_StoreSource(void) {
     ShowLine(Line(0x60));
-    const U keys = Repeat(0x500C);
+    const U keys = Repeat(Sigma(0x500C));
     U pressed = Pressed();
     if (Cancel(pressed)) {
         Sound(0x106);
@@ -1187,7 +1192,7 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
         Sound(0x107);
         pressed = Pressed();
     }
-    if (pressed & 0x10) {
+    if (pressed & Sigma(0x10)) {
         if (B(SlotOf(at::kSlots, at::kWin18) + 3) != 0xFF) {
             Sound(0x104);
             B(at::kStep4) = 2;
