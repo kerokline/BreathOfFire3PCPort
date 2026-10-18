@@ -308,6 +308,12 @@ void TestManifest() {
     Check(a.exe_tables_from == std::vector<std::string>{"pc-zh"}, "exe_tables_from as a list");
     Check(a.bgm_build == "psx-us", "base/bgm's build from bgm's first row", a.bgm_build);
     Check(a.snd_build.empty(), "no [snd]");
+    Check(a.snd_jingles_build.empty(), "no [snd_jingles]");
+    // DIV-0129's jingles, read by the Jukebox's PlayStation streams
+    const bof3x::CacheManifest j = bof3x::ManifestParse(
+        "[[source]]\nbuild = \"psx-us\"\n[snd_jingles]\nbuild = \"psx-us\"\nhow = \"psx-xa-mp3\"\n");
+    Check(j.snd_jingles_build == "psx-us" && j.snd_build.empty() && j.sources == std::vector<std::string>{"psx-us"},
+          "[snd_jingles] build: the jingles' build, not [snd]'s, not a source", j.snd_jingles_build);
     const bof3x::CacheManifest p = bof3x::ManifestParse(kManifestPspOnly);
     Check(p.base_policy == "psp" && p.exe_tables_from == std::vector<std::string>{"psp-jp"} && p.snd_build == "psp-jp" &&
               p.bgm_build == "psp-jp",

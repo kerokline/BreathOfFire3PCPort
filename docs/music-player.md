@@ -10,6 +10,10 @@ cache's `base\bgm` (DIV-0105), or beside a PlayStation disc's songs from the
 `psp-music` layer, each song on its own directory's banks (DIV-0109) - and the
 screen has a box for the battle chord as the PSP plays it (DIV-0113);
 [`launcher-suites.md`](launcher-suites.md) 9.3 and 9.6.
+**2026-10-18 (`jukebox/streams`):** the game's 11 recorded streams (the
+`SND\NAME.DAT` MP3s that `Sound_LoadStream` plays: the inn's jingle, the staff
+roll and the rest) are listed after the songs, from each source (section 6).
+Checked headless, **not heard**; their titles are the owner's to give.
 
 The owner asked for a music player reachable from the launcher, playing the
 songs from whichever of the PSX disc, the PSP disc and the PC port the install
@@ -25,6 +29,8 @@ cataloguing job). Songs only, no effects.
   under it (the Config screen's rule: everything listed, greyed by source).
 - **Song**: a drop-down of every song by its number. Each entry shows the disc's own name for
   it (`BGM019.EMI sub 1` for the PSX, `BGM\019.DAT` for the PC), and a name when the catalogue has one.
+  After the songs come the 11 recorded streams, `stream 0` .. `stream 10` (section 6); a stream the
+  source lacks is drawn greyed, and Play on it says why.
 - **Play / Stop / Close**. Changing the song or the source while playing switches at once.
 
 The owner's calls of 2026-10-11:
@@ -74,7 +80,10 @@ launcher, and the player reads that copy. Edit the repo's file: every build refr
 - **Columns:** `song name box_disc box_track box_title source note`.
   - The Jukebox shows `box_title` where it is set, else `name`, with the spaces at either end trimmed.
   - A row whose `source` is `same-notes` is **not listed** (section 4.3).
-  - A line whose first field is not a three-digit song number is skipped.
+  - A line whose first field is not a three-digit song number, or one of the 11 stream names
+    (section 6), is skipped.
+  - A stream's row shows its `box_title` where set, else the stream's name: its `name` is its
+    file's (`PURE.DAT`), which the entry shows anyway. `same-notes` does not apply to a stream.
 - **Committing it is the owner's call of 2026-10-11.** The box's track titles are public, and the
   file holds only our mapping of titles to song numbers, no audio.
 - **Filled in by the owner on 2026-10-12.** The titles come from the collector's box, the *Breath of
@@ -88,6 +97,7 @@ launcher, and the player reads that copy. Edit the repo's file: every build refr
   | `kk` | the owner's name from listening, mostly sound effects | 30 |
   | `psf` | the zophar rip, unsourced (section 4.2) | 4 |
   | `same-notes` | hidden | 35 |
+  | `file` | a stream's row: the name is its file's, no title yet (section 6.3) | 11 |
 
 - **`note`** holds the measurements and the clashes. The ripper's own comments are not carried over.
 
@@ -195,7 +205,93 @@ the dialogs, looking windows up by the launcher's own process ID.
 - **Names:** loaded from the catalogue, and a `box_title` shown over its row's `name` (song 51, a test row).
 - **Hidden rows (2026-10-12):** with the owner's catalogue, 131 PSX and 132 PC songs listed; the first, last and three middle entries carry box titles; play, stop and close as before.
 
+- **Streams (2026-10-18, section 6.4).**
+
 **Owed:**
 
 - **The owner's listen:** each source, a loop seam (PC 001, PSX 001), and a song that plays once.
+- **The streams:** a listen (the PC's, the PSP layer's), and their titles (section 6.3).
 - Pad navigation in the Jukebox dialog. The settings dialogs' `padnav` is not attached here.
+
+## 6. The recorded streams
+
+The game plays 11 recorded pieces that are not numbered songs: `Sound_LoadStream`'s kind 0
+(`0x587910`, ours in `src/game/save_menu.cpp`), names from kind 0's list in the tables at
+`0x6653B0`, opened as `SND\%s.DAT`. Each is an MP3 of an `S_XA00.STR` clip
+([`sound-import.md`](sound-import.md) 4; `recipes/pc-zh.snd.toml`'s kind-0 rows) and plays once
+(`Music_Start(..., 0)`). The song list held only `BGM\NNN.DAT`, so none of them could be reached
+from the Jukebox before.
+
+### 6.1 Where each source's stream is
+
+The game's lookup (DIV-0089, DIV-0110; `dat_cache.cpp` `SoundPath`): with the cache armed, the
+`opt=` layers' `snd\` (the last first), then `base\snd\`, then the game folder's `SND\`. Each
+source lists the file that lookup lands on with that source's version in play:
+
+| Source | File | When it is there |
+|---|---|---|
+| PC port | the game folder's `SND\NAME.DAT` | a PC install |
+| PlayStation disc | the cache's `base\snd\NAME.DAT` | the manifest's `[snd_jingles]` names a PSX build: a cache built with no PC install among its sources (DIV-0129) |
+| PSP disc | the cache's `opt\psp-snd\snd\NAME.DAT` (DIV-0110), or `base\snd\NAME.DAT` when `[snd] build` is a PSP build (a PSP-only cache, DIV-0106) | the manifest lists the layer (`ManifestOffersLayer`); the layer's name is the audio suite's `snd` member |
+
+All three are MP3s in the PC's form, so all play through the PC's decoder (`Mp3Stream`, no loop).
+A stream a source lacks is listed **greyed with its reason** (the Config screen's rule), and the
+source's radio button is greyed only when it has neither a song nor a stream it can play. The PSP
+layer is offered whether or not `opt=` names it, as the PSP's songs are (DIV-0109).
+
+`common/cache_manifest` now reads `[snd_jingles] build` (`snd_jingles_build`); nothing in the
+DLL reads it.
+
+### 6.2 Where the game plays each
+
+Measured by the call sites of `Sound_LoadStream` in `src/game/` (a constant argument, or one
+computed from game state), 2026-10-18:
+
+| Id | Name | Callers |
+|--:|---|---|
+| 0 | OYASUMI | the inn (`Rest_LoadJingle` `0x580560`, `InnNight_Jingle` `0x57FC40`), `FieldTail_HealAndMenu` `0x56DB80`, four area tails (150, 191, 192, 193) and 19 scenario calls |
+| 1 | AKURYOU | `Scena02_Scene11` `0x540100` |
+| 2 | ITEM01 | `Area113_TailReward` `0x418960`, `Area135_Tail18` `0x41E630`, eight scenario calls |
+| 3 | NAKAMA02 | six scenario calls (`Scena03`, `Scena04`, `Scena08`, `Scena09`) |
+| 4 | MIMI01 | `Scena04_Scene1` |
+| 5 | WIN | `Scena11_Scene5`, `Scena13_Run5` |
+| 6 | SIPPAI01 | `Area75_TailPresses`, `Scena11_Scene5`, `Scena11_Scene6` |
+| 7 | GAAN01 | `Scena11_Scene6` |
+| 8 | PURE | the staff roll, `Scena17_Roll0` `0x56C6D0` (`Scena17_Roll1` waits on `Sound_StreamDone`); and `CommuTail60_Stream` `0x457590` when the byte `0x939A3C` is 0 |
+| 9 | DRAGON | `FieldTail_FlagMessage` `0x56DE50` (`field_e2.cpp:1321`) |
+| 10 | KARA | no constant caller: `CommuTail60_Stream` `0x457590` (`rest_4b.cpp:468`) loads it when the byte `0x939A3C` is non-zero |
+
+The rows' `note` column has the files and lines. Event op `0x89` (`move_groups.cpp`, the PSX's
+op 89) takes its id from the script's bytes, and kind 1's `Battle_LoadSoundByKey` adds `0x1000`;
+which scripts name which kind-0 id through op `0x89` was **not traced**.
+
+### 6.3 Names
+
+The catalogue's stream rows are keyed by the stream's name (`PURE`), with `name` the file's
+(`PURE.DAT`), `source` `file`, and the box columns empty: **the titles are the owner's to fill
+in.** None is guessed.
+
+### 6.4 Checks, 2026-10-18
+
+Scripted as section 5, on a scratch launcher folder with no ini, messages posted to the dialogs by
+the launcher's process ID:
+
+- **The main checkout's `bof3\` PC install, no cache:** PSX and PSP greyed; PC 130 songs and the 11
+  streams, all playable. PC PURE: "once, as in the game"; PC GAAN01 ended by itself after 3.3 s
+  ("Ended"); PC 001 and 004 as before. A `box_title` set on KARA's row (a test copy of the
+  catalogue) shown in its entry.
+- **The same install with `BOF3X_CACHE` on `game\cache`** (PC, five PSX and both PSP sources, the
+  PSP layers; read only): PSX 129 songs and its 11 streams greyed, Play saying the cache holds no
+  disc streams with a PC install among its sources; PSP 129 songs and the 11 from
+  `opt\psp-snd\snd\`, PURE, KARA and GAAN01 played (GAAN01 ended at 3.3 s); PC 130 and 11.
+- **Two made-up caches in scratch** (a manifest of a few lines and one MP3): `[snd_jingles] build =
+  "psx-us"` lists the PSX's `base\snd\` streams (GAAN01 played, PURE greyed: not in the folder);
+  `[snd] build = "psp-eu"` lists the PSP's from `base\snd\`. A source with streams and no songs
+  says why it has no songs.
+- The launcher exited 0 after every run; the host tests (`tools/launcher_host`), with a new
+  `[snd_jingles]` check: 249 checks, 0 failures.
+
+Not run: a real PSX-only cache's jingles.
+
+This is a launcher feature like the rest of the Jukebox: it changes nothing the game does, so it
+has no DIVERGENCE entry.

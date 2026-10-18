@@ -20,6 +20,17 @@
 //
 // Songs loop until stopped (the owner's call, 2026-10-11); a song that plays
 // once in the game plays once here.
+//
+// After the songs, each source lists the game's 11 recorded streams - the
+// kind-0 files Sound_LoadStream opens, SND\<name>.DAT: the inn's jingle, the
+// staff roll's, and the rest (docs/music-player.md section 6). Each is the
+// file the game's lookup (DIV-0089, DIV-0110) lands on when that source's
+// version is the one in play: the PC's SND\, the cache's base\snd\ disc
+// jingles (DIV-0129: only a cache built with no PC install among its sources
+// has them), the psp-snd layer's opt\psp-snd\snd\ (DIV-0110) or a PSP-only
+// cache's base\snd\ (DIV-0106). All are MP3s in the PC's form, played once
+// through the same decoder. A stream a source lacks is listed greyed, with its
+// reason (the Config screen's rule).
 #include "launcher/music_player.h"
 
 #include <windows.h>
@@ -326,7 +337,9 @@ const SourceInfo kSourceInfo[kSources] = {
 };
 
 struct Entry {
-    unsigned number;
+    unsigned number;     // the song number, or the stream's id (Sound_LoadStream kind 0)
+    bool stream = false;
+    std::wstring why;    // a stream the source lacks: why (it is listed greyed); empty when it plays
     std::wstring path;   // the song file
     std::wstring bank_dir;  // its bank\ (the cache's songs): the directory's own, base\bgm or a layer's
     std::wstring where;  // the disc's own name for it
@@ -345,6 +358,7 @@ struct State {
     std::wstring why[kSources];  // why a source is greyed
     std::vector<std::wstring> names;  // music-names.tsv: index = song number
     std::vector<bool> hidden;         // music-names.tsv rows marked same-notes
+    std::vector<std::wstring> stream_names;  // music-names.tsv rows keyed by a stream's name: index = its id
     int source = -1;
     Output out;
     bool open = false;
@@ -487,6 +501,86 @@ void ListPc(State& s) {
     if (s.songs[kPc].empty()) s.why[kPc] = L"The game folder has no BGM\\ songs.";
 }
 
+// ---- the recorded streams ------------------------------------------------------
+
+// Sound_LoadStream's kind-0 names, by id: kind 0's list in the name tables at
+// 0x6653B0, each opened as "SND\%s.DAT" (src/game/save_menu.cpp; the same 11
+// as src/hook/exe_own_names.inc's kSndKind0 and recipes/pc-zh.snd.toml's kind-0
+// rows). Names only (CLAUDE.md rule 1). Each is an MP3 of an S_XA00.STR clip
+// (docs/sound-import.md section 4) and plays once (Music_Start's 0).
+constexpr const wchar_t* kStreams[] = {
+    L"OYASUMI", L"AKURYOU", L"ITEM01", L"NAKAMA02", L"MIMI01", L"WIN",
+    L"SIPPAI01", L"GAAN01", L"PURE", L"DRAGON", L"KARA",
+};
+constexpr unsigned kStreamCount = sizeof kStreams / sizeof kStreams[0];
+
+bool Exists(const std::wstring& path) {
+    const DWORD a = GetFileAttributesW(path.c_str());
+    return a != INVALID_FILE_ATTRIBUTES && !(a & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+// The psp-snd layer's name: the audio suite's snd member (recipes/suites.toml).
+std::wstring PspSndLayer() {
+    for (const suites_gen::MemberInfo& m : suites_gen::kMembers)
+        if (m.kind == suites_gen::Kind::kSnd && m.layer) return std::wstring(m.layer, m.layer + std::strlen(m.layer));
+    return std::wstring();
+}
+
+// The 11 streams into each source's list, after its songs. Where the game
+// would open each (save_menu.cpp Sound_LoadStream, dat_cache.cpp SoundPath):
+// with the cache armed, the opt= layers' snd\ (the last first), then
+// base\snd\, then the game folder's SND\. A source here is one of those
+// places, as the game reaches it with that source's version in play.
+void ListStreams(State& s) {
+    const std::wstring root = CacheMusicRoot(s.cache);
+    const CacheManifest m = ManifestRead(root);
+    const std::wstring layer = PspSndLayer();
+    const bool psp_base = IsPspBuild(m.snd_build);
+    const bool psx_jingles = !m.snd_jingles_build.empty() && !IsPspBuild(m.snd_jingles_build);
+    const bool layer_offered =
+        !root.empty() && !layer.empty() && ManifestOffersLayer(m, std::string(layer.begin(), layer.end()));
+    for (unsigned id = 0; id < kStreamCount; ++id) {
+        const std::wstring file = std::wstring(kStreams[id]) + L".DAT";
+        for (int source = 0; source < kSources; ++source) {
+            Entry e;
+            e.number = id;
+            e.stream = true;
+            e.loops = false;
+            if (source == kPc) {
+                e.path = s.game_dir + L"\\SND\\" + file;
+                e.where = L"SND\\" + file;
+                if (!Exists(e.path)) e.why = L"The game folder has no SND\\" + file + L".";
+            } else if (root.empty()) {
+                e.where = file;
+                e.why = L"No cache folder is set: the importer writes a disc's streams into one.";
+            } else if (source == kPsx) {
+                // DIV-0129: base\snd's jingles are the disc's S_XA00.STR clips only
+                // on a cache built with no PC install among its sources
+                e.path = root + L"\\base\\snd\\" + file;
+                e.where = L"base\\snd\\" + file + L", from S_XA00.STR";
+                if (!psx_jingles)
+                    e.why = L"The cache holds no disc streams: the importer writes them only when no PC install is "
+                            L"among its sources (DIV-0129); with one, the PC's own play.";
+                else if (!Exists(e.path))
+                    e.why = L"The cache's base\\snd\\ has no " + file + L".";
+            } else if (psp_base) {
+                // DIV-0106: a PSP-only cache's base\snd is the PSP's
+                e.path = root + L"\\base\\snd\\" + file;
+                e.where = L"base\\snd\\" + file + L", the PSP's";
+                if (!Exists(e.path)) e.why = L"The cache's base\\snd\\ (the PSP's) has no " + file + L".";
+            } else {
+                // DIV-0110: beside another base, the psp-snd layer's
+                e.path = root + L"\\opt\\" + layer + L"\\snd\\" + file;
+                e.where = L"opt\\" + layer + L"\\snd\\" + file;
+                if (!layer_offered || !Exists(e.path))
+                    e.why = L"The cache has no " + layer + L" layer holding " + file +
+                            L": a cache built from a PSP disc alone, or with --opt " + layer + L", has it.";
+            }
+            s.songs[source].push_back(e);
+        }
+    }
+}
+
 // <launcher folder>\music-names.tsv, copied there from data/music-names.tsv
 // by the build: the catalogue of names (docs/music-player.md section 4).
 // UTF-8, tab-separated, # comments; the columns are
@@ -494,7 +588,8 @@ void ListPc(State& s) {
 // and a song shows its box title where it has one, else its name; a song
 // whose source is same-notes is not listed (the owner's mark, 2026-10-12, for
 // one too like another). A line whose first field is not a three-digit song
-// number is skipped.
+// number or a stream's name (kStreams) is skipped. A stream's `name` is its
+// file's, so it shows its box title where it has one, else the stream's name.
 std::wstring Wide(const std::string& u8) {
     const int w = MultiByteToWideChar(CP_UTF8, 0, u8.c_str(), static_cast<int>(u8.size()), nullptr, 0);
     std::wstring wide(static_cast<std::size_t>(w), L'\0');
@@ -529,19 +624,27 @@ void LoadNames(State& s) {
             from = tab + 1;
         }
         const std::string& song = field[0];
-        if (song.size() != 3 || song.find_first_not_of("0123456789") != std::string::npos) continue;
-        const unsigned number = static_cast<unsigned>(std::strtoul(song.c_str(), nullptr, 10));
+        int stream = -1;
+        for (unsigned id = 0; id < kStreamCount; ++id)
+            if (Wide(song) == kStreams[id]) stream = static_cast<int>(id);
+        if (stream < 0 && (song.size() != 3 || song.find_first_not_of("0123456789") != std::string::npos)) continue;
+        const unsigned number = stream >= 0 ? 0u : static_cast<unsigned>(std::strtoul(song.c_str(), nullptr, 10));
         // the owner's mark for a song too like another to list (2026-10-12)
-        if (field.size() > 5 && field[5] == "same-notes") {
+        if (stream < 0 && field.size() > 5 && field[5] == "same-notes") {
             if (number >= s.hidden.size()) s.hidden.resize(number + 1);
             s.hidden[number] = true;
         }
         std::string name;
         if (field.size() > 4 && !field[4].empty()) name = field[4];  // the box's title
-        else if (field.size() > 1) name = field[1];
+        else if (field.size() > 1 && stream < 0) name = field[1];  // a stream's name is its file's
         const std::size_t b = name.find_first_not_of(' '), e = name.find_last_not_of(' ');
         if (b == std::string::npos) continue;
         name = name.substr(b, e - b + 1);
+        if (stream >= 0) {
+            s.stream_names.resize(kStreamCount);
+            s.stream_names[static_cast<unsigned>(stream)] = Wide(name);
+            continue;
+        }
         if (number >= s.names.size()) s.names.resize(number + 1);
         s.names[number] = Wide(name);
     }
@@ -551,6 +654,12 @@ void LoadNames(State& s) {
 
 void Status(HWND dlg, const wchar_t* text) { SetDlgItemTextW(dlg, IDC_MP_STATUS, text); }
 
+// An entry's key across the sources' lists: the song number, or 0x1000 + a
+// stream's id, so a choice survives a change of source.
+unsigned KeyOf(const Entry& e) { return e.stream ? 0x1000u + e.number : e.number; }
+
+// The drop-down is owner-drawn (launcher.rc) so that a stream the source lacks
+// is drawn greyed; its item data is 1 for an entry that plays, 0 for one greyed.
 void FillSongs(HWND dlg, State& s, unsigned keep) {
     const HWND box = GetDlgItem(dlg, IDC_MP_SONG);
     SendMessageW(box, CB_RESETCONTENT, 0, 0);
@@ -558,14 +667,43 @@ void FillSongs(HWND dlg, State& s, unsigned keep) {
     const std::vector<Entry>& list = s.songs[s.source];
     for (std::size_t i = 0; i < list.size(); ++i) {
         const Entry& e = list[i];
-        const bool named = e.number < s.names.size() && !s.names[e.number].empty();
-        wchar_t label[256];
-        std::swprintf(label, 256, L"%03u%ls%ls   (%ls%ls)", e.number, named ? L"   " : L"",
-                      named ? s.names[e.number].c_str() : L"", e.where.c_str(), e.loops ? L"" : L", plays once");
-        SendMessageW(box, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label));
-        if (e.number == keep) select = static_cast<int>(i);
+        wchar_t label[512];
+        if (e.stream) {
+            const bool named = e.number < s.stream_names.size() && !s.stream_names[e.number].empty();
+            std::swprintf(label, 512, L"stream %u   %ls   (%ls%ls)", e.number,
+                          named ? s.stream_names[e.number].c_str() : kStreams[e.number], e.where.c_str(),
+                          e.why.empty() ? L", plays once" : L", not here");
+        } else {
+            const bool named = e.number < s.names.size() && !s.names[e.number].empty();
+            std::swprintf(label, 512, L"%03u%ls%ls   (%ls%ls)", e.number, named ? L"   " : L"",
+                          named ? s.names[e.number].c_str() : L"", e.where.c_str(), e.loops ? L"" : L", plays once");
+        }
+        const LRESULT at = SendMessageW(box, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label));
+        SendMessageW(box, CB_SETITEMDATA, static_cast<WPARAM>(at), e.why.empty() ? 1 : 0);
+        if (KeyOf(e) == keep) select = static_cast<int>(i);
     }
     SendMessageW(box, CB_SETCURSEL, static_cast<WPARAM>(select), 0);
+}
+
+// WM_DRAWITEM for the drop-down: as the system draws a list, a greyed entry
+// in the grey text colour.
+void DrawSong(const DRAWITEMSTRUCT& d) {
+    const bool selected = (d.itemState & ODS_SELECTED) != 0;
+    FillRect(d.hDC, &d.rcItem, GetSysColorBrush(selected ? COLOR_HIGHLIGHT : COLOR_WINDOW));
+    if (d.itemID == static_cast<UINT>(-1)) return;
+    const LRESULT n = SendMessageW(d.hwndItem, CB_GETLBTEXTLEN, d.itemID, 0);
+    if (n < 0) return;
+    std::wstring text(static_cast<std::size_t>(n) + 1, L'\0');
+    SendMessageW(d.hwndItem, CB_GETLBTEXT, d.itemID, reinterpret_cast<LPARAM>(text.data()));
+    text.resize(static_cast<std::size_t>(n));
+    const bool plays = d.itemData != 0;
+    SetBkMode(d.hDC, TRANSPARENT);
+    SetTextColor(d.hDC, GetSysColor(!plays ? COLOR_GRAYTEXT : selected ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
+    RECT r = d.rcItem;
+    r.left += 2;
+    DrawTextW(d.hDC, text.c_str(), static_cast<int>(text.size()), &r,
+              DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+    if ((d.itemState & ODS_FOCUS) && !(d.itemState & ODS_NOFOCUSRECT)) DrawFocusRect(d.hDC, &d.rcItem);
 }
 
 const Entry* Chosen(HWND dlg, const State& s) {
@@ -577,10 +715,25 @@ const Entry* Chosen(HWND dlg, const State& s) {
 void Play(HWND dlg, State& s) {
     const Entry* e = Chosen(dlg, s);
     if (!e || !s.open) return;
+    wchar_t text[1024];
+    if (!e->why.empty()) {
+        // greyed: nothing to play; a song that was playing stops
+        s.out.Set(nullptr);
+        s.playing = false;
+        std::swprintf(text, 1024, L"%ls is not on the %ls here: %ls", kStreams[e->number], kSourceInfo[s.source].label,
+                      e->why.c_str());
+        Status(dlg, text);
+        return;
+    }
     HCURSOR was = SetCursor(LoadCursorA(nullptr, IDC_WAIT));
     std::unique_ptr<Stream> stream;
     std::wstring how;
-    if (s.source == kPsx || s.source == kPsp) {
+    if (e->stream) {
+        // every source's stream is an MP3 in the PC's form (DIV-0106, DIV-0129);
+        // kind 0 plays once (Sound_LoadStream's Music_Start(..., 0))
+        stream.reset(new Mp3Stream(e->path, 0, false));
+        how = L"once, as in the game";
+    } else if (s.source == kPsx || s.source == kPsp) {
         // both are the cache's base\bgm in the PlayStation's form (docs/psp-music.md)
         stream.reset(new SeqStream(e->path, e->bank_dir));   // the song's own directory's bank (DIV-0109)
         how = e->loops ? L"looping as the disc's song does" : L"once, as in the game";
@@ -594,8 +747,12 @@ void Play(HWND dlg, State& s) {
     s.out.Set(std::move(stream));
     SetCursor(was);
     s.playing = true;
-    wchar_t text[256];
-    std::swprintf(text, 256, L"Playing %03u from the %ls: %ls.", e->number, kSourceInfo[s.source].label, how.c_str());
+    if (e->stream)
+        std::swprintf(text, 1024, L"Playing stream %u (%ls) from the %ls: %ls.", e->number, kStreams[e->number],
+                      kSourceInfo[s.source].label, how.c_str());
+    else
+        std::swprintf(text, 1024, L"Playing %03u from the %ls: %ls.", e->number, kSourceInfo[s.source].label,
+                      how.c_str());
     Status(dlg, text);
 }
 
@@ -607,7 +764,7 @@ void Stop(HWND dlg, State& s) {
 
 void ChooseSource(HWND dlg, State& s, int source) {
     const Entry* was = Chosen(dlg, s);
-    const unsigned keep = was ? was->number : 0;
+    const unsigned keep = was ? KeyOf(*was) : 0;
     s.source = source;
     CheckRadioButton(dlg, IDC_MP_PSX, IDC_MP_PC, kSourceInfo[source].radio);
     FillSongs(dlg, s, keep);
@@ -624,10 +781,17 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         std::wstring notes;
         int first = -1;
         for (int i = 0; i < kSources; ++i) {
-            const bool have = !s->songs[i].empty();
+            // a source with a song or a stream it plays
+            bool have = false, songs = false;
+            for (const Entry& e : s->songs[i]) {
+                have = have || e.why.empty();
+                songs = songs || !e.stream;
+            }
             EnableWindow(GetDlgItem(dlg, kSourceInfo[i].radio), have);
             if (have && first < 0) first = i;
+            // a source listed for its streams alone says why it has no songs
             if (!have) notes += std::wstring(kSourceInfo[i].label) + L": " + s->why[i] + L"\r\n";
+            else if (!songs) notes += std::wstring(kSourceInfo[i].label) + L", songs: " + s->why[i] + L"\r\n";
         }
         SetDlgItemTextW(dlg, IDC_MP_NOTE, notes.c_str());
         s->open = s->out.Open();
@@ -647,6 +811,26 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
                                            L"Written to opt= on Play."
                                          : s->chord.why.c_str());
         SetTimer(dlg, kEndTimer, 250, nullptr);
+        return TRUE;
+    }
+    case WM_MEASUREITEM: {
+        // sent before WM_INITDIALOG: the dialog's font gives the row height
+        auto* m = reinterpret_cast<MEASUREITEMSTRUCT*>(lp);
+        if (m->CtlID != IDC_MP_SONG) break;
+        const HDC dc = GetDC(dlg);
+        const HFONT font = reinterpret_cast<HFONT>(SendMessageW(dlg, WM_GETFONT, 0, 0));
+        const HGDIOBJ old = font ? SelectObject(dc, font) : nullptr;
+        TEXTMETRICW tm;
+        GetTextMetricsW(dc, &tm);
+        if (old) SelectObject(dc, old);
+        ReleaseDC(dlg, dc);
+        m->itemHeight = static_cast<UINT>(tm.tmHeight + 2);
+        return TRUE;
+    }
+    case WM_DRAWITEM: {
+        auto* d = reinterpret_cast<DRAWITEMSTRUCT*>(lp);
+        if (d->CtlID != IDC_MP_SONG) break;
+        DrawSong(*d);
         return TRUE;
     }
     case WM_TIMER:
@@ -730,6 +914,7 @@ void MusicPlayerRun(HWND owner, const std::wstring& game_dir, const std::wstring
             if (!(e.number < s.hidden.size() && s.hidden[e.number])) v[kept++] = e;
         v.resize(kept);
     }
+    ListStreams(s);  // after the songs, and never hidden
     SetCursor(was);
     DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_MUSIC), owner, Proc, reinterpret_cast<LPARAM>(&s));
 }
