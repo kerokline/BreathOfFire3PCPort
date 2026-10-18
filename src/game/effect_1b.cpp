@@ -947,6 +947,22 @@ extern "C" void __cdecl EffectKind0F_DrawToggle(int x, int y, unsigned lit) {
     DrawSprite(static_cast<unsigned char>((lit + 8) << 2), 1, x + 0x28, y + 0x10);
 }
 
+// D286 (DIV-0069's tag 3, docs/install-gap-labels.md): heading `i` drawn
+// where the original draws `count` characters of `label` at `x`, y. Once an
+// overlay has given the heading (FishingText_Heading), the disc's word whole,
+// centred on the original's centre, x + 6 * count (its 12-unit glyphs), by
+// its real width - the US module's x + 0x3A / 0x37 / 0x33 for its 8-unit
+// ROD / LURE / EQUIP put the same centre within a unit. For a 12-unit word
+// of `count` glyphs it is the original's x.
+static void DrawHeading(unsigned i, int x, int y, int count, U label) {
+    if (const unsigned char* const word = FishingText_Heading(i)) {
+        const int width = static_cast<int>(TextAdvance_Width(word));
+        DrawAt(x + 6 * count - width / 2, y, 0, 0xFF, word);
+        return;
+    }
+    DrawAt(x, y, 0, count, Text(label));
+}
+
 // original 0x468C50 (x, y): the window (x, y + 1, 0x8B, 0x9E); every accessory of
 // the inventory's 0x80 ids whose category is 0xB, a row of 13 each: the one at
 // dword +0xC gives its index to word +0x36 and, with the leader's +4 2 and +7
@@ -989,7 +1005,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
     if (Long(s + 0xC) >= Long(s + 0x18)) SetLong(s + 0xC, Long(s + 0x18) == 0 ? 0 : Long(s + 0x18) - 1);
     SH_CALL(EffectKind0F_DrawItemFrame)(x, y);
     SH_CALL(EffectKind0F_DrawScrollMark)(x + 0x80, y + 0x1C, 0x72);
-    DrawAt(x + 0x35, y + 7, 0, 3, Text(at::kItemsBLabel));
+    DrawHeading(0, x + 0x35, y + 7, 3, at::kItemsBLabel);
 }
 
 // original 0x468E50 (x, y, height): a POLY_FT4 (the cursor read once, before
@@ -1097,7 +1113,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
         if (a != 0) mark = static_cast<unsigned char>(mark + (s[8] != 0 ? a * 2 : a * 0xFE));
     }
     SH_CALL(EffectKind0F_DrawScrollMark)(x + 0x80, y + mark, height);
-    DrawAt(x + 0x2F, y + 7, 0, 4, Text(at::kItemsALabel));
+    DrawHeading(1, x + 0x2F, y + 7, 4, at::kItemsALabel);
 }
 
 // original 0x469210 (x, y): the twin frame; the label 0x653EA8 at (x + 0x2A, y
@@ -1109,7 +1125,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
 // unless word +0x2C is 0xFFFF, that script-pool message at (0x19, 0x9A).
 extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
     SH_CALL(EffectKind0F_DrawTwinFrame)(x, y);
-    DrawAt(x + 0x2A, y + 7, 0, 5, Text(at::kEquipLabel));
+    DrawHeading(2, x + 0x2A, y + 7, 5, at::kEquipLabel);
     const unsigned char bits = Sc()[7];
     const U ix = static_cast<U>(x) + 0x10u;
     auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon, ix, static_cast<U>(iy), item, 3, flag); };
@@ -1133,7 +1149,7 @@ extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
         icon(y + 0x2A, B(at::kEquipB), 0);
         DrawAt(x + 0x1C, y + 0x28, Sc()[7] & 2, NameCount(), AccessoryName(B(at::kEquipB)));
     }
-    DrawAt(x + 0x2A, y + 0x47, 0, 5, Text(at::kEquipLabel2));
+    DrawHeading(3, x + 0x2A, y + 0x47, 5, at::kEquipLabel2);
     const std::uint16_t message = Word(Sc() + 0x2C);
     if (message != 0xFFFF) DrawAt(0x19, 0x9A, 0, 0xFF, Pool(message));
 }

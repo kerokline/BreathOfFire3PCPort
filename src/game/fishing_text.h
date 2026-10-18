@@ -10,12 +10,21 @@
 // and docs/fishing-text.md.
 
 // Applies a kind-16 chunk: tag 1 the thirteen lines (0x653B98's records), tag 2
-// the three tab labels (0x66A088's table). The payload is a count and that
+// the three tab labels (0x66A088's table), tag 3 the four panel headings
+// (copied into buffers of ours alone: the draws are ours, the .data fields
+// stay as shipped). The payload is a count and that
 // many NUL-terminated strings, copied into the DLL's buffers, and each table
 // entry re-aimed at its buffer after checking it names the shipped string (or
 // our buffer, from an earlier load). An empty string keeps its entry as
 // shipped. Aborts loudly on anything else.
 void FishingText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size);
+
+// D286 (2026-10-18, docs/install-gap-labels.md): heading `i` of the equip
+// panels (0 ROD, 1 LURE, 2 EQUIP, 3 GUIDE: 0x653EA0, +4, +8, +0xD) as a
+// kind-16 tag-3 chunk gave it - the disc's own word, which the French and
+// German modules lay out at their own widths - once armed under a Latin
+// overlay; nullptr otherwise (the draw then reads the shipped field).
+const unsigned char* FishingText_Heading(unsigned i);
 
 // Arms the layout under a Latin overlay (Lang_Latin). Called from InjectAll
 // after every module's self-test, so effect_1a's and effect_1b's fuzz compare
