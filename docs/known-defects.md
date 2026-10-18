@@ -8280,3 +8280,44 @@ a text defect.
 install, so on a PSP-EU-only install, at PSP-EU's defaults, the well takes
 circle and cross where the disc's own code takes triangle and cross - the
 unified flow, with the icons the text draws (DIV-0140, answer 3).
+
+## D316 — Every boss and event battle plays track 0 on a disc-only install (ours, the exe image's gaps; fixed 2026-10-17, by rule)
+
+**Reported:** issue #83 (2026-10-17, a PSP-EU-only install: the miners' fight
+at the start plays song 000 where the PC keeps the scene's escape music), and
+a comment there from a second player: wrong music "anytime the boss music is
+played". Listed first among the census's P1 items
+([`install-gap-census.md`](install-gap-census.md) 8 item 2), as the owner's
+"track half" call.
+
+**Established:** `GameMode5_Load` (`0x495FD0`, `src/game/mode_rest.cpp`)
+plays `Music_Play(track)` with the track word of the event battle's
+(file, track) pair, `EventBattle_Records+0xE2` (`0x64DECE`, stride 4, 41
+words). A disc-built image filled only the file half (`pairs`, DIV-0101's
+first amendment); the track half was a `game-value` gap on all seven builds,
+so every event battle asked for song 0, and one whose file has no music of
+its own (the PC's 0xFF: the scene's music is kept) started song 0 over it.
+
+**Where the disc has it:** nowhere as a number. The PSX's `GameMode5_Load`
+(`0x80198C94`) loads the battle file and names no song: the boss file's own
+music plays. Measured over the 41 event-battle files of all seven discs
+(2026-10-17): each file either carries a whole copy of one `BIN/BGM` file's
+bank header, SEP and bank body (35 of 41, the `BGMBAT00`..`06` set) or no SEP
+at all (5 boss files and none other), and the PC's track word is that BGM
+file's sub-song 0 in the disc's own song table - 151..157 - or 0xFF for the
+five, 41 of 41 on both PSP discs. On the five PSX discs `BGMBAT02` is a byte
+copy of `BGMBAT00`, so one boss file (the PC's 153) is equally 151 by its
+bytes: the two songs render identically from a PSX disc's music.
+
+**Fixed 2026-10-17:** `pairs` (`tools/psp_exe.py` `event_track`) fills the
+track half by that rule: the music sections of the battle file matched to the
+song table's BGM files, the lowest song of a byte-identical set, 0xFF with no
+SEP; a file matching more than one distinct BGM file refuses the build.
+`recipes/exe-psp.tsv`'s seven `pairs` rows fill 164 bytes, every byte
+`BOF3.exe`'s but that one tie on the PSX builds (151 for 153); DIV-0101
+amended. Measured: the `whelpBoss` route on a scratch PSP-EU-only install under
+`BOF3X_MUSIC_LOG=1` (en-150; the route, recorded in en-US, drifts after the
+fight): before, frame 718 loads `BOSS007` and plays `Music_Play(0, 10)`,
+`bgm `; after `importer.py setup` rebuilt the image, the same frame plays
+`Music_Play(151, 10)`, `bgmi` (bank `BGMBAT00`), and the start-up log's
+41 `EventBattle_Records` gap lines are gone. Not heard.

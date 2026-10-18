@@ -137,6 +137,10 @@ the PSX's `GameMode5_Load` (`0x80198C94`) loads only the file, and plays no
 song there; the track numbers are the PC port's own MP3 track ids. The
 **names** of the formation wheel stay a gap too (language: the PC's
 Chinese). Neither is filled, and both are logged as now.
+**The track half is filled since 2026-10-17** (D316, issue #83): the boss
+file's own music is a whole copy of one `BGM` file, and the track is that
+file's sub-song 0 in the disc's song table (0xFF with no music) -
+`psp_exe.event_track`, in the `pairs` rule.
 
 Every row was kept only when every byte it writes equals `BOF3.exe`'s
 (`psp_exe.py recipe`: "0 not BOF3.exe's" on all eight). The wheel's place

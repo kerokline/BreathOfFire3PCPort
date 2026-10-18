@@ -279,8 +279,8 @@ symbol names, counts and file names only (rule 1).
 
 ## 6. What stays the owner's (not in this round)
 
-The 13 OWNER CALL items, unchanged: the event battles' track words
-(DIV-0101 provisional; the census's first owner item), DIV-0055's plates
+The 13 OWNER CALL items (12 since 2026-10-17: the event battles' track
+words were filled by rule after issue #83, D316): DIV-0055's plates
 (the nine `port-relaid` rows), D266's Western title mark, `Scena17_EndSteps`
 (the Western ending), the empty save slot `0x669CCC` (the staged
 localisation PR), D257, D246, D277, D256, D280, and the US button

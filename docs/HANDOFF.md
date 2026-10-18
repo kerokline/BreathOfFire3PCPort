@@ -115,8 +115,7 @@ written down; validated identity and swapped on four install kinds ([`button-rou
    [`install-gap-round.md`](install-gap-round.md) (2026-10-17, not launched; it can run with no owner present,
    rebased on the button round, whose ledger numbers it follows).
    The census's own remainder ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
-   P1 still open - the event battles' track words (all seven builds; the owner's "track half", DIV-0101
-   provisional), the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
+   P1 still open (the event battles' track words done 2026-10-17, D316, `fix/event-battle-tracks`) - the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
    list on the Western images; then P2's twins the disc search already locates (world map 115's legend frame, the
    effect tables, the PSP's light pair and screen margins) and P3's long tail by the owning-function method.
    Regenerate the recipes after each (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
