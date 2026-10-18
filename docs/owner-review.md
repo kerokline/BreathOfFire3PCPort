@@ -676,9 +676,10 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   with it carries them). Your call after the play above. **Answered in part
   (2026-10-12, the PSP-only round): "fill them"** - the four largest are
   filled by rule from every disc (DIV-0101 amended,
-  [`disc-gap-fills.md`](disc-gap-fills.md)); what is left (the event
-  battles' track half, the formation names, the long tail of section 3
-  there) is still this call.
+  [`disc-gap-fills.md`](disc-gap-fills.md)); what is left (the formation names, the long tail of section 3
+  there) is still this call. The event battles' track half was filled by
+  rule on 2026-10-17 after players reported it (issue #83, D316): each
+  boss file's own music through the disc's song table.
 - **The faerie village's label group writes names one record late** (LG,
   2026-10-12; [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4; DIV-0064's
   group 16): the PC record is name first at `0x653200`, `labels.cpp` writes

@@ -97,7 +97,7 @@ zero there does:
 | `Effect_HpDamageVariance`+0xE0, 525 bytes (halfword tables behind the eight records at `0x64E9BC`) | `Kaiser_LoadSetFile`, `Accession_LoadFormA` / `B`, `BattleFxRestore_LoadDat` (through the records' pointers) | the dragon forms' set-file numbers zero: a transformation loads the wrong set. **Filled since 2026-10-12** |
 | `Scena17_EndSteps`+0x364 318 bytes and eleven smaller pieces | `Scena17_EndTask`'s step table and the ending roll that follows it | the ending's roll data zero |
 | `Equip_SlotIcons`+0x50, 279 bytes | the equipment and experience panels (`Menu_DrawEquipPanel`, `Menu_DrawExpPanel`, `Menu_DrawBigIcon`) by symbol | numbers those panels draw with, zero. **The formation wheel's spots (120 of the 279) filled since 2026-10-12**; the names stay zero |
-| `EventBattle_Records`+0xE0, 163 bytes | `GameMode5_Load` (`mov ax, word [edx*4 + 0x64DECC]`) | that mode's per-record words zero. **The battle-file half (82 of the 163) filled since 2026-10-12**; the track half (the port's MP3 numbering) stays zero |
+| `EventBattle_Records`+0xE0, 163 bytes | `GameMode5_Load` (`mov ax, word [edx*4 + 0x64DECC]`) | that mode's per-record words zero. **The battle-file half (82 of the 163) filled since 2026-10-12**; the track half filled since 2026-10-17 (D316: the battle file's own music through the disc's song table) |
 
 The field button map's defaults (`0x656AEC..0x656B00`, which `Boot_Task`
 copies to `0x903580`: zero there meant a New Game with every action

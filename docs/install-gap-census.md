@@ -185,7 +185,7 @@ Columns:
 | `BossGaist_Anims` | `0x64D78E..0x64D798` | game-value | all 7 | 1 / 6 | `BossGaist_Enter`, `BossSample9_Enter` | animation 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `BossGaist_Sounds` | `0x64D798..0x64D7A0` | disc-unplaced | all 7 | 1 / 6 | `BossGaist_Enter`, `BossSample9_Enter` | sound 0 | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 1 of 1 |
 | `BossTorch_Sounds` | `0x64D7A0..0x64D7A8` | game-value | all 7 | 1 / 8 | `BossTorch_Enter` (`boss_sh`: 0xFFFF words = no sound) | sound 0 played where none is meant | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
-| `EventBattle_Records` | `0x64DECE..0x64DF6F` | game-value | all 7 | 41 / 41 | `GameMode5_Load` (`Music_Play(track)`, `mode_rest.cpp` 305) | **every event battle asks for track 0** (41 two-byte track words, all builds; not heard) | **OWNER CALL** - the "track half" in owner-review.md (DIV-0101 provisional); candidate: a rule from the disc's own event-battle music (the PSX `GameMode5` twin 0x80198C94) through the song numbering (`bgm-comparison.md`: file N is song N) |
+| `EventBattle_Records` | `0x64DECE..0x64DF6F` | game-value | all 7 | 41 / 41 | `GameMode5_Load` (`Music_Play(track)`, `mode_rest.cpp` 305) | **every event battle asks for track 0** (41 two-byte track words, all builds; heard by players, issue #83) | **DONE 2026-10-17 (D316)**: `pairs` fills the track half by rule - the battle file's own music copy matched to the disc's song table, 0xFF with none; every word `BOF3.exe`'s on the PSP builds, one tie on the PSX (151 for 153, byte-identical files) |
 | `CommuHiLo_DealSteps` | `0x652CF4..0x652D04` | disc-unplaced | all 7 | 1 / 14 | `CommuHiLo_Payout`, `CommuHiLo_DealDispatch` | **the village hi-lo game pays 0** (u16 payout by turn 1..8, `rest_4c_callees.h`) | **NEEDS FIX** - **P1**, P2, `twin` by byte search (windows on the disc): 1 of 1 |
 | `CommuName_MemberEntrySteps` | `0x653084..0x653098` | game-value | all 7 | 1 / 11 | `CommuBoard_DrawRows` (formats 0x653088, 0x653090, 0x653094, dash 0x653084), `Commu_DrawStakeBox`, `EffectKind77_DrawCount` | **the village board's rows draw no numbers or dashes** (empty formats) | **NEEDS FIX** - **P1: engine-own strings** (format and dash, crt-rest.md lists them) |
 | `CommuMusic_CloseSteps` | `0x653142..0x653150` | game-value | JP, US, EU, pJP, pEU | 1 / 5 | `CommuMusic_DrawList` (glyphs 0x653144..0x65314C) | the music list's three glyphs blank | **NEEDS FIX** - game-value part P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3); FR/DE disc-unplaced part P2, `twin` by byte search (windows on the disc) (1 of 8) |
@@ -415,11 +415,9 @@ The launcher lists each one, greyed with its reason.
 
 1. **DONE 2026-10-17 (D310).** **Level-up ability names** `0x654900` (Western PSX): an engine-own `%s`
    (4.1). Every level-up that teaches an ability.
-2. **Event battle music** `EventBattle_Records` track half (all 7): every
-   boss and event fight asks for track 0. Formally the owner's "track half"
-   (DIV-0101 provisional); listed first among the owner's items to decide.
-   Candidate: a rule from the PSX `GameMode5` twin's own track through the
-   song numbering.
+2. **DONE 2026-10-17 (D316, issue #83).** **Event battle music** `EventBattle_Records` track half (all 7): every
+   boss and event fight asked for track 0. The `pairs` rule now fills it from the battle file's own
+   music copy through the disc's song table (known-defects D316).
 3. **DONE 2026-10-17 (D311, a `twin` from `COMMU02.EMI#8`).** **Hi-lo payouts** `CommuHiLo_DealSteps+0x14` (all 7): the game pays 0. A
    `twin` (1 of 1 windows on the disc).
 4. **DONE 2026-10-17 (D310).** **Play-time colon** `0x6637E0` (all 7): an engine-own glyph (4.1).
