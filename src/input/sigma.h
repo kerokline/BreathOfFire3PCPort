@@ -128,4 +128,20 @@ void Rebound();
 // release read, the two switches.
 void Arm();
 
+// --- the input script's buttons (docs/input-script.md 2a) ---
+//
+// A recipe is recorded on the PC, a Japan release, so its literal buttons are
+// pressed against the Config the PC would hold at that frame. On another
+// release the Config differs only while it holds the release's own starting
+// words - written by Boot_Task's defaults or the Start-held reset under
+// StartConfigBySource - and is the same again once a save's words are loaded
+// (the same save on every install). So while the release's words stand, a
+// recipe's button is M_R of it, and the recorder writes M_R^-1 of the pad;
+// otherwise both pass through. A rebind keeps the state: it swaps two lines'
+// buttons, the same lines on both sides. Identity on every Japan install.
+std::uint16_t RecipeToPad(std::uint16_t mask);
+std::uint16_t PadToRecipe(std::uint16_t mask);
+// True while the release's starting words stand (the translation is live).
+bool RecipeTranslating();
+
 }  // namespace bof3x::input::sigma
