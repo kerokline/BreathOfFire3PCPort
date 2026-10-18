@@ -51,7 +51,7 @@ pspmap (2026-10-13, docs/exe-image-twins-1013.md
 PSX-JP's own bytes either side of it put it in this disc's file (own_place; the recipe
 needs the PSX-JP disc beside the PSP discs).
 
-BOOT.BIN as a twin's file (2026-10-18, docs/install-gap-twins-pb.md): the PSP links the
+BOOT.BIN as a twin's file (2026-10-18, docs/install-gap-twins.md 5): the PSP links the
 PSX's overlays into its one ELF, so a run one overlay holds on a PSX disc is often in
 BOOT.BIN too, and the PSP's native code reads BOOT.BIN's copy. A `twin` that names
 BOOT.BIN is placed by the ELF's relocations, not by the first equal bytes (boot_place): the
@@ -295,6 +295,15 @@ TWINS = [
      ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654858, 0x65486C), (0x65486E, 0x654870), (0x654872, 0x654874))),
     (0x653104, 0x653150, "ETC/COMMU03.EMI", "the music player's labels FR / DE keep in the PC's words (at the US map's place)",
      ("psx-fr", "psx-de"), 0, ((0x65310C, 0x65311C), (0x65313C, 0x653142))),
+    # PB's BOOT.BIN twins (docs/install-gap-twins.md 5): each copy the one the PSP's relocated
+    # lui / lo16 pairs read (boot_place); the PSX builds keep these as gaps.
+    (0x663B20, 0x663B28, "BOOT.BIN", "the default light pair (Area_Enter's kDefaultLight, Light_Angles)", PSP),
+    (0x66978C, 0x6697A2, "BOOT.BIN", "MoveScript_EffectArg+0x48: a leader climbing move script", PSP),
+    (0x6697A4, 0x6697B0, "BOOT.BIN", "MoveScript_EffectArg+0x60: the next move script's head", PSP),
+    (0x65E2DC, 0x65E2E0, "BOOT.BIN", "EffectKind18Sub1C_States+0x14", PSP),
+    (0x65E2F4, 0x65E2F8, "BOOT.BIN", "EffectKind18Sub1D_States+0x14", PSP),
+    (0x65EBD4, 0x65EBD8, "BOOT.BIN", "EffectKind18Sub33_States+0x14", PSP),
+    (0x65F578, 0x65F57C, "BOOT.BIN", "EffectKind18Sub64_States+0x1C", PSP),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
