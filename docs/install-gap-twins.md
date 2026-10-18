@@ -14,7 +14,7 @@ Every byte the rows fill is `BOF3.exe`'s; the scratch scripts (`search.py`,
 The census's P2 item 11 and P1 item 7 ([`install-gap-census.md`](install-gap-census.md)
 8): the `disc-unplaced` rows whose 16-byte windows the disc search found. Section
 1 is the rows, 2 the pieced rule, 3 what was not placed, 4 the measurements.
-Group PB adds its `BOOT.BIN` rows as section 5.
+Group PB adds its `BOOT.BIN` rows as section 5. Stage B's group PT adds section 6.
 
 ## 1. The rows
 
@@ -363,3 +363,257 @@ runs of [`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6
 rows by the round's split; with `boot_place` in, any of them can be a
 `BOOT.BIN` twin on the PSP builds by one `TWINS` line.
 
+## 6. PT: stage B's tools rows
+
+Group PT of the round's stage B ([`install-gap-round.md`](install-gap-round.md)
+3a; branch `install-gap/pt` off `beba2d60`). Headless only: the regeneration
+chain over the seven held discs in the group's worktree (not committed),
+`exe_scan.py` over the seven, one PSP-EU cache built and the exe host's
+self-test from it. Nothing played, nothing rendered, not seen by the owner.
+Scratch scripts (`trait.py`, `bootrow.py`, `search.py`, `infile.py`,
+`refsat.py`, `k33.py`, `pairs170.py`, `gapcount.py`) and their outputs stay in
+the harness root `C:\Users\kerok\g_pt` (rule 1). Every byte the rows below fill
+is `BOF3.exe`'s ("0 not BOF3.exe's" for each `twin` row, `agree` equal to the
+length for each place).
+
+### 6.1 `boot_place` through a relocated pointer table: `Char_TraitLists`' list 1
+
+The census's `ConfigMenu_Steps+0xC`, `0x667518..0x66751D` on both PSPs: list 1
+of `Char_TraitLists` `0x667548` (RD, [`install-gap-readers.md`](install-gap-readers.md)
+2), read by `Char_ApplyTraits` `0x590800` at every save load (RW). PB's
+`boot_place` found `BOOT.BIN`'s one copy and refused it, since no relocated
+pair reads into the list: the PSP's code reaches it through the table.
+
+**Built** (`tools/psp_exe.py`):
+
+- `pc_tables_to(lo)`: the PC's tables with an entry naming `lo`. These are the
+  layout's `data` words whose target is `lo`. A table is the `symbols.toml`
+  symbol that holds the word, up to the next symbol, together with the offsets
+  of its pointer words. For `0x667518` that is `Char_TraitLists` +4, with
+  pointer words at +4, +8, +0xC, +0x10, +0x1C, +0x28, +0x3C and +0x40.
+- `table_hits(elf, copy, k, offs)`: the `BOOT.BIN` tables that pass three
+  tests. The word at offset `k` must be a relocated (`R_MIPS_32`) word naming
+  the copy. The relocated words must sit at exactly the PC table's pointer
+  offsets over its span, so a null stays a null and a pointer stays a pointer.
+  And a `.text` relocated pair must read into the table.
+- `boot_place` tries this route only when no copy is read directly, and it
+  still requires exactly one hit. The entry names `lo` itself, so the PC's
+  words before `lo` in its symbol are not asked for: those are
+  `ConfigMenu_Steps`' jump table, another table. The result now carries the
+  table, which `recipe` prints.
+- `psp_exe.py check` runs `table_selftest` on a synthetic ELF. It holds no
+  game data. The lined-up table is accepted. It checks that these near misses
+  are refused:
+  - a table no pair reads;
+  - a table with a null where the PC has a pointer;
+  - a table with a pointer where the PC has a null;
+  - the copy named at another entry;
+  - two lined-up tables naming one copy.
+
+| Build | Copy | Table, entry | Reader (the `addiu` of RD's `lui` / `addiu`) |
+|---|---|---|---|
+| psp-jp | `0x2EC080` | `0x2EC0AC` + 4 | `0xB7E60` |
+| psp-eu | `0x2EBD90` | `0x2EBDBC` + 4 | `0xB7C68` |
+
+The PSP table's 17 words line up with the PC's offset for offset (`trait.py`).
+The row is the five bytes `Char_ApplyTraits` reads. The PC's two alignment
+bytes after them are zero, and the PSP's lists are 2-aligned. `TWINS` gains
+`(0x667518, 0x66751D, "BOOT.BIN", ..., PSP)`. The other `BOOT.BIN` twins are
+still placed at the same addresses by the direct route, and so is CW's
+`0x669738` (6.6).
+
+### 6.2 DE's slot icons `0x663660..0x663668`
+
+From LA ([`install-gap-labels.md`](install-gap-labels.md) 2.2). The German disc
+holds the eight bytes twice in `START.EMI` section 8, which is also
+`STATUS.EMI` section 0 at the same addresses, and three times in `BATE.EMI`.
+The reader decides between them (`infile.py`, `refsat.py`, psx-de):
+
+- `START.EMI`'s first copy `0x801EC808` is read once at `0x801DC0F4`. Its +8
+  (the label) is read at `0x801DBF94`, just before, and its +0x10 by the next
+  panel. That is the PC's `Menu_DrawEquipPanel` order: `push 0x663668`, then
+  `mov ebp, 0x663660`. The second copy is read five times by another routine.
+- `BATE.EMI`'s second copy `0x801D8B80` has the same three readers
+  (`0x801D313C`; +8 at `0x801D2FDC`; +0x10 at `0x801D3288`). It is also where
+  the PSX-US and PSX-EU maps take `0x663660..0x6636AC` from (`0x801D8B38` on
+  those discs, the second of three copies there too). DE's own map takes
+  `0x663677` from `0x801D8B97`, the same displacement.
+
+The row takes `BATE.EMI`'s second copy (`TWINS`' sixth field 1, psx-de only). It
+is the panel's twin, and it keeps the image one file at one displacement with
+the map's neighbours. `exe-gaps.tsv`'s DE row `0x663660..0x663677` becomes
+`0x663668..0x663677` `language` (label group 21, 6.5).
+
+### 6.3 `MagicBallOrb_Shades+0x10`: no source, and none needed
+
+Pairs 8 and 9 (`0x65C1B8..0x65C1BC`) are unread. `MagicBall_Start` makes eight
+orbs, `+0xB` = 0..7, and no orb step writes an orb's `+0xB`: `MagicBallOrb_Start`
+and `_Fly` do not, and `ShadowSeeker_Fade` decrements the owner's
+(`magic_s36.cpp`, `magic_s29.cpp`). `MagicBallOrb_DrawDisc` is the table's
+only reader, so it reads pairs 0..7, which TW's MAGIC172 row places on all
+seven. MAGIC172's section ending after pair 7 fits a PSX table of eight.
+`exe_own.py` classes the four bytes `unread`. **HARMLESS**: `exe-gaps.tsv`
+lists them as `unread` on all seven, no longer as a `gap`.
+
+### 6.4 `0x6543E8..0x6543F0` from AREA170: the wrong file, and the fix
+
+The bytes are words 2 and 3 of `EffectKind33_States`, which on the PC are both
+`Effect_StateRelease`. They are code-pointer words, so the layout writes them
+and no disc byte is copied. The place row only claimed their file.
+
+The PSX reads kind 0x33's states from **AREA026**: the handler reads the table
+at the SignX copy - 0x10 (`0x801F2C20` on psx-us, `k33.py`). AREA026's four
+words there are code addresses, and words 2 and 3 differ, so the PSX has two
+functions where the PC has one. AREA170 holds no code address at
+`0x801F57E8..`.
+
+`find_places` chose AREA170 because of a false pair. `exe_maps`' AREA170
+segment covers the PC's code pointer `0x654B48` (`Effect_StateRelease` too)
+with a disc word that is no code address, on all five PSX builds
+(`pairs170.py`). `code_pairs` paired the function with it, and `stretches`
+then counted the two equal non-code words at `0x801F57E8` as agreement.
+
+**Fixed** (`tools/exe_tables.py`, `stretches`): on a PSX build a paired code
+word agrees only where the disc's word is a code address (`code_word`).
+
+- The PSPs are left as they were. Their EMIs keep the PSX's words for code
+  `BOOT.BIN` replaced, and `BOOT.BIN`'s own words are unrelocated.
+- A first try put the test in `code_pairs` for every build. It moved 28 PSP
+  places per build (BOSS034, BOSS018, AREA023, SCENA09), 5 MAGIC088 rows onto
+  one address and four `immref` rows, so it was dropped.
+
+With the fix, `exe-places.tsv` loses the five AREA170 rows and nothing else.
+The image bytes are unchanged (pointer words), and the region is left to the
+layout.
+
+### 6.5 The gap classes per build
+
+- **`LANGUAGE_ZERO`** (`tools/exe_tables.py`) gains a fourth field: the builds
+  a row stays zero on. Three rows are now `JA_ONLY` (`psx-jp`, `psp-jp`):
+  - `0x653200` (group 16's record 0 name);
+  - `0x669CE8` (group 17's guest name);
+  - `0x66A098` (group 20's menu title).
+
+  On the five Latin builds they class `language`, the layer every disc-only
+  install builds from its disc. `language_zero(pc, bid)` is per build.
+- **`exe_own.py` `REGIONS`**, LA's extents:
+
+  | Range | Class | Group |
+  |---|---|---|
+  | `0x653EA0..0x653EB4` | `language` | kind 16 tag 3 |
+  | `0x663668..0x66367C` | `language` | 21 |
+  | `0x664288..0x664290` | `language` | 22 |
+  | `0x664290..0x664298` | `unread` | LA 2.3: no reader |
+  | `0x66B1F0..0x66B1F8` | `language` | 23 |
+  | `0x65C1B8..0x65C1BC` | `unread` | 6.3 |
+
+  These are not per build. The JP builds place the four label slots from the
+  map or the fishing twin, so the class matters only where FR and DE leave
+  them unfilled, and a layer writes them there.
+
+`exe-gaps.tsv` now lists a range as `gap` only where it stays zero. Under ja-JP
+the three rows remain `language-zero` gaps.
+
+### 6.6 CW's two live rows (the coordinator's hand-off)
+
+From [`install-gap-live-rows.md`](install-gap-live-rows.md), appended to
+`TWINS` as given:
+
+- `ChlorineCloud_Offsets` `0x65A608..0x65A62C` from `BMAGIC/MAGIC009.EMI#3`
+  `0x801EF8B0` on all seven builds. `BOOT.BIN`'s three copies are not used: the
+  row names the overlay.
+- `Char_WhelpSlot+0x2` `0x669738..0x669743` from `BOOT.BIN`, psp-jp `0x2E5497`
+  and psp-eu `0x2E4CAF`. Both are read by direct pairs (`0xCD1AC` / `0xD7B74`
+  and `0xCCEC0` / `0xD788C`), so 6.1's table route is not involved.
+
+Both are "0 not BOF3.exe's". CW predicted 9 gap rows lost, 9 twin rows gained
+and the `number` word `0x65A61C` gone from the layout, and the regeneration
+shows exactly that.
+
+### 6.7 `stretches`' section tail (OT's cheap fix)
+
+From [`exe-immediate-places.md`](exe-immediate-places.md) 4. A number byte now
+compares on its own. Before, a byte whose 4-aligned word ran past the
+section's end counted as a disagreement. A pointer word past the end still
+disagrees.
+
+The recipe diff is the same on each PSX build and empty on both PSPs. Five
+place rows grow to their section's last byte, `agree` rising by the same
+count:
+
+| Place row | Was | Now | New bytes |
+|---|---|---|---|
+| AREA021 `0x5E7280` | `..0x5E72CC` | `..0x5E72CD` | 1, already `immref`'s |
+| AREA026 `0x5EC5A0` | `..0x5EC5EC` | `..0x5EC5ED` | 1, already `immref`'s |
+| AREA091 `0x614748` | `..0x61478C` | `..0x61478F` | 3, `Area91_RingTurns` |
+| AREA150 `0x636A18` | `..0x636A64` | `..0x636A65` | 1, already `immref`'s |
+| AREA152 `0x6371A4` | `..0x637284` | `..0x637286` | 2, `Area151_DriftUV+0x8` |
+
+`exe-imm.tsv` loses the three one-byte `immref` rows those places now cover:
+`Area21_Messages+0x8`, `Area26_EffectKinds+0x4` and `Area150_MessagesB+0x4`.
+They are the same bytes from the same file and section. `exe-gaps.tsv` loses
+`Area91_RingTurns` (3) and `Area151_DriftUV+0x8` (2) per PSX build. Nothing
+else moved: `exe-pointers.tsv`, `exe-layout.tsv` (apart from 6.6's word) and
+`exe-rebuild.tsv` are unchanged. OT's plain-tail count was 5 regions and 14 non-zero bytes per build. The
+5 regions match, but this fix fills 8 bytes, 3 of them already OT's `immref`
+rows. The two counts were not reconciled byte by byte.
+
+### 6.8 Checks
+
+- **The regeneration** (`g_pt/regen.sh`, the round's order, then the checks).
+  All pass with 0 errors:
+  - `exe_tables.py check`, also `--game` with all seven `--disc`s;
+  - `psp_exe.py check`, which includes `table_selftest`;
+  - `importer.py check`.
+- **The recipe diff**, not committed:
+  - `exe-psp.tsv`: +12 `twin` rows. 7 are `ChlorineCloud_Offsets`, 2 are
+    `Char_WhelpSlot+0x2`, 2 are `Char_TraitLists`' list 1, and 1 is DE's
+    `0x663660`.
+  - `exe-places.tsv`: the five AREA170 rows removed, five rows extended.
+  - `exe-imm.tsv`: three rows removed per PSX build (15 lines).
+  - `exe-layout.tsv`: the `number` word `0x65A61C` removed.
+  - `exe-gaps.tsv` and `exe.toml`: their rows and hashes follow.
+- **Gaps** (`gapcount.py`: `gap` rows / bytes / the PC's non-zero bytes):
+
+  | Build | `beba2d60` | this branch |
+  |---|---|---|
+  | PSX-JP | 82 / 878 / 410 | 78 / 833 / 397 |
+  | PSX-US | 104 / 1,428 / 897 | 97 / 1,342 / 856 |
+  | PSX-EU | 102 / 1,510 / 959 | 95 / 1,424 / 918 |
+  | PSX-FR | 106 / 1,586 / 1,018 | 95 / 1,449 / 941 |
+  | PSX-DE | 110 / 1,634 / 1,045 | 99 / 1,484 / 960 |
+  | PSP-JP | 71 / 710 / 359 | 67 / 660 / 345 |
+  | PSP-EU | 72 / 720 / 365 | 65 / 629 / 323 |
+
+- **`tools/exe_scan.py`** over the seven (`g_pt/scan`). `missing/gap` is 397,
+  856, 918, 941, 960, 345 and 323, the table's non-zero column byte for byte.
+  - `ChlorineCloud_Offsets`, the trait list, `Char_WhelpSlot` and DE's slot
+    icons have no `missing` or `differ` count: they are equal.
+  - `MagicBallOrb_Shades+0x10` is `missing/unread` 2.
+  - DE's `Equip_SlotIcons+0x8` is `missing/language` 11, the labels the layer
+    writes.
+- **The exe host, headless**, from a PSP-EU cache built on this branch:
+  - built with `importer.py build --source <psp-eu> --lang en-150`, then
+    `install --base --lang en-150` into `g_pt/game_pspeu`;
+  - run as `bof3x.exe` copied with `bof3x.dll` to `g_pt/host`, with
+    `BOF3X_SELFTEST_ONLY=1 BOF3X_EXEIMAGE=<cache> BOF3X_CACHE=<cache>`;
+  - the log says `self-test only: done` and `inject: 10088 ours`, with
+    `BOF3X_EXEIMAGE gap` 65 ranges, 629 bytes (the regenerated file's PSP-EU
+    rows);
+  - no launcher was used (stage B's Defender note).
+
+No `src/` change. The build in the worktree succeeded and stands for the other
+self-tests.
+
+### 6.9 For the ledger (drafts; the coordinator numbers)
+
+- **DIV-0101 (amended in place, as PB's rows):** the `BOOT.BIN` table route of
+  6.1, with its row, and CW's `BOOT.BIN` row. Each restores `BOF3.exe`'s bytes
+  on a PSP-built image, so there is no new number.
+- No other entry. Each row places `BOF3.exe`'s own bytes. The reclassings
+  (6.3, 6.5) change what `exe-gaps.tsv` calls a range, not a byte. The
+  `find_places` fixes (6.4, 6.7) change provenance and five equal bytes per
+  PSX build.
+- **A defect for the coordinator, if wanted:** on a DE disc-only install, the
+  equipment panel's six slot icons were zero. LA described it in its section 5
+  and did not measure it. 6.2 fixes it.

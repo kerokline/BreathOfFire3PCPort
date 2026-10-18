@@ -202,7 +202,8 @@ TWINS = [
     # disc-unplaced, each read in its file by a lui/imm pair into its table. Left out: runs
     # the file holds more than once with no reader to choose by (Area154_ChoicePairs+0x18C8),
     # a run that is only the start of another table's copy (EffectKind18Sub38_States+0x10,
-    # inside AREA166's Sub35 run) and BOOT.BIN's ConfigMenu_Steps+0xC (no reader found).
+    # inside AREA166's Sub35 run) and BOOT.BIN's ConfigMenu_Steps+0xC (no reader found then;
+    # since 2026-10-18 Char_TraitLists' list 1, placed through its table, below).
     (0x617EBC, 0x617EC8, "WORLD02/AREA098.EMI", "Area96_Handlers+0x194 (area 98's)"),
     (0x63FF40, 0x63FF48, "WORLD04/AREA173.EMI", "Area172_EffectStates+0x100C (area 173's)"),
     (0x654308, 0x654310, "WORLD01/AREA042.EMI", "EffectKind28_States+0x10"),
@@ -304,6 +305,22 @@ TWINS = [
     (0x65E2F4, 0x65E2F8, "BOOT.BIN", "EffectKind18Sub1D_States+0x14", PSP),
     (0x65EBD4, 0x65EBD8, "BOOT.BIN", "EffectKind18Sub33_States+0x14", PSP),
     (0x65F578, 0x65F57C, "BOOT.BIN", "EffectKind18Sub64_States+0x1C", PSP),
+    # Char_TraitLists' list 1 (the census's ConfigMenu_Steps+0xC; docs/install-gap-readers.md 2,
+    # install-gap-twins.md 6.1): BOOT.BIN's one copy is no pair's, but entry 1 of the PSP's
+    # trait-list table (read by Char_ApplyTraits' twin), lined up with the PC's 0x667548
+    # (boot_place's table route). The five bytes Char_ApplyTraits reads; the PC's two
+    # alignment bytes after them are zero and the PSP's list is 2-aligned.
+    (0x667518, 0x66751D, "BOOT.BIN", "Char_TraitLists' list 1 (ConfigMenu_Steps+0xC)", PSP),
+    # Equip_SlotIcons' six slot icons on DE (docs/install-gap-labels.md 2.2, install-gap-twins.md
+    # 6.2): the map's segment stops at the German labels after them, 8 bytes under its window.
+    # BATE.EMI's second of three copies: the one its Menu_DrawEquipPanel twin reads (the label
+    # + 8 read just before it, + 0x10 by the EXP panel's), where every other PSX map takes
+    # 0x663660.. from and DE's own map its 0x663677 at the same displacement.
+    (0x663660, 0x663668, "ETC/BATE.EMI", "Equip_SlotIcons: the equipment panel's slot icons (Menu_DrawEquipPanel)",
+     ("psx-de",), 1),
+    # CW (docs/install-gap-live-rows.md): the two live rows RW found read while zero.
+    (0x65A608, 0x65A62C, "BMAGIC/MAGIC009.EMI", "ChlorineCloud_Offsets (ChlorineCloud_Start's twin 0x801EF198 reads it at 0x801EF8B0)"),
+    (0x669738, 0x669743, "BOOT.BIN", "Char_WhelpSlot+0x2: the member flag bytes (Field_MemberSprite's kMemberFlags, to sprite +0x2B)", PSP),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -978,12 +995,13 @@ def find_rows(disc, bid, pc, ref_srcs=None):
         if tfile == "BOOT.BIN":
             if not psp or nth or len(segs) > 1:
                 fail("TWINS 0x%06X: a BOOT.BIN twin is a PSP build's, its copy the one its reader reads (no n-th, no segments)" % tlo)
-            a, rd = boot_place(elf, pc[tlo - DATA_LO:thi - DATA_LO], tlo)
+            a, rd, via = boot_place(elf, pc[tlo - DATA_LO:thi - DATA_LO], tlo)
             if a is None:
                 print("  %s twin 0x%06X..0x%06X: BOOT.BIN, %s" % (bid, tlo, thi, rd))
                 continue
-            print("  %s twin 0x%06X..0x%06X: BOOT.BIN 0x%X, read at %s" % (
-                bid, tlo, thi, a, " ".join("0x%X" % r for r in rd[:4]) + (" ..." if len(rd) > 4 else "")))
+            print("  %s twin 0x%06X..0x%06X: BOOT.BIN 0x%X, %sread at %s" % (
+                bid, tlo, thi, a, "" if via is None else "entry +0x%X of the table 0x%X, " % (via[1], via[0]),
+                " ".join("0x%X" % r for r in rd[:4]) + (" ..." if len(rd) > 4 else "")))
             rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": None,
                          "addr": a})
             continue
@@ -1441,29 +1459,137 @@ def _layout_pointers():
     return frozenset(a for a, k, _ in exe_tables.load_layout() if k in ("code", "data", "rdata", "bss"))
 
 
-def boot_place(elf, want, lo):
+@functools.lru_cache(None)
+def _layout_data_targets():
+    """{PC pointer word: its target} for the layout's `data` words (recipes/exe-layout.tsv)."""
+    import exe_tables
+    return {a: int(t, 16) for a, k, t in exe_tables.load_layout() if k == "data"}
+
+
+def pc_tables_to(lo):
+    """The PC's pointer tables with an entry naming `lo`: [(table, the entry's offset, the
+    offsets of the table's pointer words)], a table being the symbols.toml symbol that
+    holds the entry, to the next symbol's start, and its pointer words the layout's."""
+    starts, tg = _data_starts(), _layout_data_targets()
+    out = []
+    for w in sorted(x for x, t in tg.items() if t == lo):
+        i = bisect.bisect_right(starts, w) - 1
+        if i < 0:
+            continue
+        t0, t1 = starts[i], starts[i + 1] if i + 1 < len(starts) else DATA_HI
+        out.append((t0, w - t0, frozenset(x - t0 for x in tg if t0 <= x < t1)))
+    return out
+
+
+def table_hits(elf, a, k, offs):
+    """BOOT.BIN's tables whose entry at offset `k` is a relocated word naming `a`, whose
+    relocated words sit at exactly the PC table's pointer-word offsets `offs` (over the PC
+    table's span to its last pointer word: a null where the PC has a null), and which a
+    .text relocated pair reads into: [(table, readers)]."""
+    span = max(offs) + 4
+    out = []
+    for w in sorted(x for x in elf.pointer_words if elf.word(x) == a):
+        t = w - k
+        if {o for o in range(0, span, 4) if t + o in elf.pointer_words} != set(offs):
+            continue
+        rd = elf.readers(t, t + span)
+        if rd:
+            out.append((t, rd))
+    return out
+
+
+def boot_place(elf, want, lo, tables=None):
     """BOOT.BIN's copy of `want` (BOF3.exe's bytes from `lo`) that the PSP's code reads:
     among the copies in .rodata and .data, those a .text relocation pair reads into
     (Elf.readers) and whose place agrees with the PC's pointer words before `lo` in its
-    symbols.toml symbol (each a relocated word in the copy's place too). (address,
-    readers) for exactly one such copy, else (None, why)."""
+    symbols.toml symbol (each a relocated word in the copy's place too).
+
+    When no copy is read so, a copy reached through a relocated pointer table
+    (docs/install-gap-twins.md 6.1, Char_TraitLists' list 1): the PC has a table of the
+    layout's data words with an entry naming `lo` (pc_tables_to, or `tables` given), and
+    BOOT.BIN a table a relocated pair reads into whose same entry is a relocated word naming
+    the copy and whose relocated words line up with the PC table's pointer words
+    (table_hits). The entry names `lo` itself, so the words before `lo` in its symbol are
+    not asked for (they are another table's, ConfigMenu_Steps' there).
+
+    (address, readers, (table, entry offset) or None) for exactly one such copy, else
+    (None, why, None)."""
     starts = _data_starts()
     i = bisect.bisect_right(starts, lo) - 1
     sym = starts[i] if i >= 0 else lo
     ptrs = [x for x in range(sym, lo) if x in _layout_pointers()]
-    hits, seen = [], 0
+    copies, hits = [], []
     for sec in (".rodata", ".data"):
         s0, s1 = elf.span(sec)
         a = elf.img.find(want, s0, s1)
         while a >= 0:
-            seen += 1
+            copies.append(a)
             rd = elf.readers(a, a + len(want))
             if rd and all(a - (lo - x) in elf.pointer_words for x in ptrs):
-                hits.append((a, rd))
+                hits.append((a, rd, None))
             a = elf.img.find(want, a + 1, s1)
+    why = "%d copies, %d read by a relocated pair with the symbol's pointer words in place" % (len(copies), len(hits))
+    if not hits:
+        tabs = pc_tables_to(lo) if tables is None else tables
+        for a in copies:
+            for _, k, offs in tabs:
+                hits += [(a, rd, (t, k)) for t, rd in table_hits(elf, a, k, offs)]
+        why += "; %d through a relocated table lined up with the PC's %s" % (
+            len(hits), ", ".join("0x%06X+0x%X" % (t0, k) for t0, k, _ in tabs) or "(no PC table names it)")
     if len(hits) == 1:
         return hits[0]
-    return None, "%d copies, %d read by a relocated pair with the symbol's pointer words in place" % (seen, len(hits))
+    return None, why, None
+
+
+class _FakeElf(Elf):
+    """check()'s synthetic BOOT.BIN: an image, its sections, relocated words and pairs."""
+
+    def __init__(self, img, sections, pointer_words, refs):
+        self.img, self.sections = bytes(img), sections
+        self.__dict__["pointer_words"] = frozenset(pointer_words)
+        self.__dict__["text_refs"] = refs
+
+
+def table_selftest():
+    """boot_place's table route on a synthetic BOOT.BIN: the lined-up table is accepted;
+    near misses (the table unread, one entry a null where the PC's is a pointer, an extra
+    relocated word where the PC's is a null, the entry naming another copy) refused.
+    Returns the problems."""
+    want, lo = b"\x01\x02\x03\x04\x0e", 0x667518          # five bytes; the place is synthetic
+    offs = frozenset((4, 8, 0x10))                       # the PC table's pointer words
+    tables = [(0x667548, 4, offs)]
+    img = bytearray(0x400)
+    data = (0x100, 0x300)
+    copy, other, t = 0x140, 0x180, 0x200
+    img[copy:copy + 5] = img[other:other + 5] = want
+    for o, v in ((4, copy), (8, 0x150), (0x10, 0x160)):
+        struct.pack_into("<I", img, t + o, v)
+
+    def case(pw, refs, image=img):
+        e = _FakeElf(image, {".rodata": (0, 0), ".data": (data[0], data[1] - data[0])}, pw, refs)
+        return boot_place(e, want, lo, tables)[0]
+
+    good = {t + 4, t + 8, t + 0x10}
+    errs = []
+    if case(good, {t: [0x40]}) != copy:
+        errs.append("table_selftest: the lined-up table is not accepted")
+    if case(good, {}) is not None:
+        errs.append("table_selftest: an unread table is accepted")
+    if case(good - {t + 0x10}, {t: [0x40]}) is not None:
+        errs.append("table_selftest: a table with a null where the PC has a pointer is accepted")
+    if case(good | {t + 0xC}, {t: [0x40]}) is not None:
+        errs.append("table_selftest: a table with a pointer where the PC has a null is accepted")
+    moved = bytearray(img)                           # the entry names no copy; a later one does
+    struct.pack_into("<I", moved, t + 4, 0x170)
+    struct.pack_into("<I", moved, t + 0x14, copy)
+    if case(good | {t + 0x14}, {t: [0x40]}, moved) is not None:
+        errs.append("table_selftest: a copy named at another entry is accepted")
+    twice = bytearray(img)                           # two lined-up tables name the copy
+    for o, v in ((4, copy), (8, 0x150), (0x10, 0x160)):
+        struct.pack_into("<I", twice, t + 0x80 + o, v)
+    if case(good | {t + 0x84, t + 0x88, t + 0x90}, {t: [0x40], t + 0x80: [0x48]}, twice) is not None:
+        errs.append("table_selftest: a copy two tables name is accepted")
+    return errs
 
 
 def margins_place(elf, pc):
@@ -1473,7 +1599,7 @@ def margins_place(elf, pc):
     for e in range(MARGIN_ENTRIES):
         for k in MARGIN_X:
             want[4 * e + k] += MARGIN_UNWIDE
-    return boot_place(elf, bytes(want), MARGINS)
+    return boot_place(elf, bytes(want), MARGINS)[:2]
 
 
 def write_recipe(rows):
@@ -1626,6 +1752,7 @@ def check():
                 not (tlo <= s0 < s1 <= thi) for s0, s1 in segs) or any(
                 a[1] > b[0] for a, b in zip(segs, segs[1:])):
             errs.append("TWINS 0x%06X..0x%06X %s: a segment outside the run, empty or out of order" % (tlo, thi, tfile))
+    errs += table_selftest()
     rows = load_recipe()
     ptr = set()
     for p, n, _ in exe_tables.load_pointers():
