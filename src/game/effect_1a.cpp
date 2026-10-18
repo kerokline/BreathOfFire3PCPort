@@ -139,7 +139,7 @@ unsigned Line(const char* who, unsigned line) {
 }
 // A text's label as drawn: its pen and its one-character text. DIV-0069: under
 // a Latin overlay DIV-0051's icon, else the port's 0x66A2FC string. Ledger
-// draft D: the entry and the pen through sigma (FishingText_LabelOf; with it
+// DIV-0136: the entry and the pen through sigma (FishingText_LabelOf; with it
 // off, entry = the line byte and the pen 0x653C00's, the original's reads).
 struct LabelDraw {
     U pen;
@@ -1510,7 +1510,7 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
         c[0xA] = static_cast<unsigned char>(c[0xA] - 1);
         c = S();
         const unsigned char wait = c[0xA];
-        // DIV-0069 / draft D: the label's icon and pen for its button now.
+        // DIV-0069 / DIV-0136: the label's icon and pen for its button now.
         const LabelDraw label = Label(kWho, c[0x4B]);
         MessageLine(label.pen, label.text, static_cast<unsigned char>(0xC - (wait << 1)), (2u * wait + 0x119) & 0xFFFF);
     } else {
@@ -1541,7 +1541,7 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
             a = S();
         }
         if (B(Text(kWho, a[0x4B]) + 4) != 0xFF) {
-            const LabelDraw label = Label(kWho, a[0x4B]);   // DIV-0069 / draft D
+            const LabelDraw label = Label(kWho, a[0x4B]);   // DIV-0069 / DIV-0136
             if (FishingText_On()) {
                 // DIV-0069: after the line's real pen width, not 12 a character.
                 const U width = FishingText_Width(TextAt(L(Text(kWho, a[0x4B]))), a[0x49]);
@@ -1605,7 +1605,7 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
         DrawText(W(a + 0x2E), L(at::kRecord3 + 0x30) + 2, 0, typed, L(a + 0x50));
         unsigned char* const c = S();
         if (B(Text(kWho, c[0x4B]) + 4) == 0xFF) return;
-        const LabelDraw label = Label(kWho, c[0x4B]);   // DIV-0069 / draft D
+        const LabelDraw label = Label(kWho, c[0x4B]);   // DIV-0069 / DIV-0136
         if (FishingText_On()) {
             // DIV-0069: after the typed characters' real width.
             const U width = FishingText_Width(TextAt(L(c + 0x50)), c[0x49]);
@@ -1621,7 +1621,7 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
         SH_CALL(Effect_Release)();
         return;
     }
-    const LabelDraw label = Label(kWho, a[0x4B]);   // DIV-0069 / draft D
+    const LabelDraw label = Label(kWho, a[0x4B]);   // DIV-0069 / DIV-0136
     DrawText(W(a + 0x2E), L(at::kRecord3 + 0x30) + 2, label.pen, 1, label.text);
     a = S();
     if (W(a + 0x2E) != 0x1D) return;
@@ -1641,7 +1641,7 @@ extern "C" void __cdecl EffectKind0F_LineFade(void) {
         SH_CALL(Effect_Release)();
         return;
     }
-    const LabelDraw label = Label(kWho, c[0x4B]);   // DIV-0069 / draft D
+    const LabelDraw label = Label(kWho, c[0x4B]);   // DIV-0069 / DIV-0136
     MessageLine(label.pen, label.text, static_cast<unsigned char>((left << 1) | 0x80), 0x1D);
 }
 

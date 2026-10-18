@@ -16,7 +16,7 @@
 // aborts with a message (docs/rest_3e.md section 7).
 //
 // One divergence rides on EffectKind5E_DrawPanel, its own switch
-// (DockLegend, ledger draft E of docs/button-unification-round.md): the dock's
+// (DockLegend, DIV-0137 of docs/button-unification-round.md): the dock's
 // legend shows the buttons the Config has on its three tests now (section
 // "the dock's legend" below).
 #include "game/rest_3e.h"
@@ -1175,7 +1175,7 @@ extern "C" void __cdecl EffectKind5E_DrawList(void) {
 }
 
 // ===========================================================================
-// The dock's legend (DIVERGENCE: ledger draft E, docs/button-unification-
+// The dock's legend (DIVERGENCE: DIV-0137, docs/button-unification-
 // round.md section 3 "IC-D"; docs/rest_3e.md section 11)
 //
 // The panel EffectKind5E_DrawPanel draws is baked art of the area page (tag
@@ -1335,7 +1335,7 @@ bool Plan(const Shape baked[kRows], const std::uint16_t wanted[kRows], Row out[k
     return true;
 }
 
-// DIVERGENCE: ledger draft E - 1 after this module's self-test (PatchBytes
+// DIVERGENCE: DIV-0137 - 1 after this module's self-test (PatchBytes
 // "DockLegend", BOF3X_ORIGINAL=DockLegend for the page as it is).
 unsigned char g_on = 0;
 
@@ -1802,7 +1802,7 @@ void Rest3E_Inject() {
     BOF3_INJECT(EffectKind5F_Slide);
     BOF3_INJECT(EffectKind5F_PlaceLow);
     BOF3_INJECT(EffectKind5F_SlideOut);
-    // DIVERGENCE: ledger draft E, the dock's legend from the Config (after the
+    // DIVERGENCE: DIV-0137, the dock's legend from the Config (after the
     // fuzz above, which compares Capcom's one quad).
     static const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("DockLegend", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&dock::g_on)), &was, &is, 1);

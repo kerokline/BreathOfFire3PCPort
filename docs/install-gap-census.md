@@ -391,8 +391,8 @@ and the defects cited.
 | `SND\` effects | 880, byte-identical; never `019_02.DAT` and `DIR1` (unreferenced, [`sound-import.md`](sound-import.md)) | 891 by ffmpeg (ATRAC3plus, ~25 dB SNR); **none without ffmpeg** | HARMLESS / by design |
 | Movies | `CAPCOM.AVI` only with ffmpeg; `LOGOS.AVI` (the porting house's) never, skipped (DIV-0100) | the PSP's `CAPCOM.AVI` with ffmpeg | HARMLESS by design |
 | Language | the disc's layer (DIV-0090); Chinese refused (DIV-0102) | the PSP's layer | ja-JP gaps D280 / D279, PSP-EU Config D246: **OWNER CALL** |
-| Buttons | the Japanese assignment on a US disc | - | **OWNER CALL** (owner-review "the US release's button assignment") |
-| Disc-only art | D273 (world-map legend, two icons overlaid), D274 (dock legend's US buttons), D277 (US title layout) | D256 (the PSP title's framing) | D273 / D274: NEEDS FIX by the key-icon design ([`key-icons-by-mapping.md`](key-icons-by-mapping.md)); D277, D256: **OWNER CALL** |
+| Buttons | the release's own assignment since DIV-0134 (the Japanese one before) | PSP-EU's own (DIV-0134) | **FIXED** 2026-10-17 by the button round (DIV-0133..0140: every icon and test through the Config) |
+| Disc-only art | D273 (world-map legend, two icons overlaid), D274 (dock legend's US buttons), D277 (US title layout) | D256 (the PSP title's framing) | D273: FIXED by DIV-0130 (as D307); D274: FIXED by DIV-0137 (not seen); D277, D256: **OWNER CALL** |
 | `BOF3.CFG` | the config's defaults on first start | same | HARMLESS |
 | JP world-map camera | D281, closer on PSX-JP alone | - | unclassed: the PSX twin read decides |
 | A cache built by an older release | refused by `FilledSince()` only for the two listed fixes; any other importer fix stays silent | same | HANDOFF item 11 (`install/recipe-version`): a recipe hash in `data.toml` |

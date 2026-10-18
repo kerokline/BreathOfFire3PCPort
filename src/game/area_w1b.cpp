@@ -1179,7 +1179,7 @@ extern "C" void __cdecl Area45_BoxSlideOut(void) {
 // Field_ScriptFlags bit 14; the needle at (x + 0x18, y + 0x18).
 extern "C" void __cdecl Area45_DrawFrame(int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    world_map_legend::Begin();   // ledger draft C: which page; the port's key names painted over
+    world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     AH_AT(DrawSpriteAt, kDrawSprite45)(x, y, 0);

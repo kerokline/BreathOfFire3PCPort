@@ -13,7 +13,7 @@
 // IS Text_DrawAt, so this is the original. The RetargetCall stays where it
 // is: it is what keeps DIV-0006 alive under BOF3X_ORIGINAL=MsgBox_Step.
 //
-// DIVERGENCE (ledger draft H, docs/button-dialogue.md 4): MsgBox_Step draws a
+// DIVERGENCE (DIV-0140, docs/button-dialogue.md 4): MsgBox_Step draws a
 // button mention as the button the Config has put its role on - the same
 // decision as Text_DrawString's (text_draw.h ButtonText_Code / _Cue). Under
 // BOF3X_ORIGINAL=MsgBox_Step Capcom's body runs and draws the text as it is.
@@ -209,7 +209,7 @@ extern "C" unsigned char __cdecl MsgBox_FrameTask(void) {
 //     DIV-0006 hangs on exactly that: g.draw_char is MsgBox_DrawChar, which
 //     moves MsgBox_PenX by (advance - 12) so this `+ 12` lands it right.
 //
-// Draft H: at a button mention the `05 cc` takes the drawn button's colour
+// DIV-0140: at a button mention the `05 cc` takes the drawn button's colour
 // and the icon is handed to the draw as the drawn button's glyph (its advance
 // then moves the pen, DIV-0006's way); the walk steps over the text's own
 // bytes, so the drawn count and every later byte are as before.
@@ -220,7 +220,7 @@ extern "C" void __cdecl MsgBox_Step(void) {
     unsigned char sub_count = 0;
     unsigned char drawn = 0;
     unsigned char color = 0;
-    // Draft H (src/game/button_text.h): 1 after a button code that resolved
+    // DIV-0140 (src/game/button_text.h): 1 after a button code that resolved
     // (its `05 cc` next), 2 once the drawn colour is taken (the glyph next).
     int button = 0;
     button_text::Icon icon;
@@ -275,7 +275,7 @@ extern "C" void __cdecl MsgBox_Step(void) {
                 const unsigned char* const control = at;
                 ++at;
                 color = at[0];
-                // Draft H: the code's own colour stands (06 clears it at
+                // DIV-0140: the code's own colour stands (06 clears it at
                 // once); the `05 cc` after it, or a colour cue, takes the
                 // drawn button's colour instead.
                 if (button == 1 || (button == 0 && ButtonText_Cue(control, icon))) {
@@ -332,7 +332,7 @@ extern "C" void __cdecl MsgBox_Step(void) {
             }
         }
         if (glyph) {
-            // Draft H: the drawn button's glyph in the fallback's place; the
+            // DIV-0140: the drawn button's glyph in the fallback's place; the
             // walk still steps over the fallback's own bytes below.
             const unsigned char* const shown = button == 2 ? icon.glyph : at;
             button = 0;
@@ -558,7 +558,7 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
             if ((B(kFlags) & 0x10) == 0) {
                 // Holding the Speak line's button speeds the text: Japan's
                 // circle asked through sigma, not word 0, which also holds
-                // L2 / R2 (docs/button-tests.md 3, ledger draft G).
+                // L2 / R2 (docs/button-tests.md 3, DIV-0139).
                 const unsigned speed =
                     (static_cast<unsigned char>(Input_Held) & bof3x::input::sigma::Sigma(0x20)) ? 0 : 1;
                 const auto row = static_cast<signed char>(B(kTextSpeed));

@@ -1,4 +1,4 @@
-// DIVERGENCE (ledger draft F, docs/button-shoulder-corner.md): the item
+// DIVERGENCE (DIV-0138, docs/button-shoulder-corner.md): the item
 // lists' L1 / R1 corner drawn as σ has it. See shoulder_glyphs.h.
 //
 // Ours entirely: the label geometry below was measured on the UI page of the
@@ -62,7 +62,7 @@ void Push(Plan& p, Step::Kind k, int x, int y, int u, int v, int w, int h, std::
     s.button = button;
 }
 
-// DIVERGENCE draft F: 1 after every module's self-test (PatchBytes "ShoulderGlyphs").
+// DIVERGENCE DIV-0138: 1 after every module's self-test (PatchBytes "ShoulderGlyphs").
 unsigned char g_on = 0;
 bool g_page_art = true;
 

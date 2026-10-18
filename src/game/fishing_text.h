@@ -39,7 +39,7 @@ unsigned FishingText_HalfAdvance(const unsigned char* text);
 // line bytes, which the port's numerals 1, 2, 3 name) are asked. Aborts past 5.
 const unsigned char* FishingText_Label(unsigned entry);
 
-// Ledger draft D (amends DIV-0069; docs/fishing-text.md 8): which button a
+// DIV-0136 (amends DIV-0069; docs/fishing-text.md 8): which button a
 // line's label names, and in which pen.
 //   entry  0..5 of 0x66A2FC (the port's stand-in, a circled numeral or its X)
 //          and of FishingText_Label (the disc's shape);

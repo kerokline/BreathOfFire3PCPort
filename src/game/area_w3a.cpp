@@ -404,7 +404,7 @@ void BoxSlideOut(const WorldMapTables& t) {
 // 0x18).
 void DrawFrame(const WorldMapTables& t, int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
-    world_map_legend::Begin();   // ledger draft C: which page; the port's key names painted over
+    world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     const auto sprite = AH_AT(DrawSpriteAt, t.fn_draw_sprite);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);

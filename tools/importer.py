@@ -424,7 +424,7 @@ def is_dial_page(ch):
     return ch["kind"] == 1 and ch["tag"] == DIAL_PAGE and ch["class"] == "art"
 
 
-# DIVERGENCE (button round ledger draft C, docs/button-unification-round.md 3
+# DIVERGENCE (button round's DIV-0135, docs/button-unification-round.md 3
 # IC-W): the port's own dial page with a PSX disc's button shapes. The port's
 # legend names keys - SPACE, X and ENTER, lit in the labels (u 11..34, v
 # 88..112) and dim in the frame (u 51..74, v 8..32: the labels' place in sprite
@@ -939,7 +939,7 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
             if sha(body) != want:
                 raise SystemExit("%s chunk %d from %s (%s): hash differs from the recipe"
                                  % (f["name"], slot, s.id, src[1]))
-            if s.id == TARGET and is_dial_page(ch):     # ledger draft C: a PSX disc's shapes on the port's page
+            if s.id == TARGET and is_dial_page(ch):     # DIV-0135: a PSX disc's shapes on the port's page
                 dial = dial_disc_shapes(f, slot, ch, chunked, body)
                 if dial:
                     return dial + (None,)
@@ -1140,7 +1140,7 @@ def cmd_build(a):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, {
             "own": " (its own sections standing in)",
             "prefer": " (the base policy's disc form, recipes/prefer.toml)",
-            "dial": " (the port's dial page with this disc's button shapes, ledger draft C)"}.get(own, "")))
+            "dial": " (the port's dial page with this disc's button shapes, DIV-0135)"}.get(own, "")))
     for layer, n in sorted(written.items()):
         print("  %-9s %d containers written" % (layer, n))
     if snd:
@@ -2631,7 +2631,7 @@ def cmd_check(a):
     serrs += ["ppms.py: " + e for e in ppms.check() + ppms.check_fixture(builds)]   # pPMS round trip, bgm-psp.tsv
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
     serrs += ["psp_standins.py: " + e for e in psp_standins.check(recipe=a.recipe)]   # recipes/psp-standins.toml
-    serrs += ["dial page: " + e for e in dial_check()]   # ledger draft C's repaint, on synthetic pages
+    serrs += ["dial page: " + e for e in dial_check()]   # DIV-0135's repaint, on synthetic pages
     import psp_fmv                                     # the PSP's logo movie: the PSMF demux on a synthetic file
     serrs += ["psp_fmv.py: " + e for e in psp_fmv.check()]
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install

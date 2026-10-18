@@ -246,9 +246,9 @@ output.
 
 Numbering: groups draft lettered ledger entries (A, B, ...) and describe
 defects without numbers. The coordinator numbers at the merges from the
-first free entry, **`DIV-0133`** today (PR #81 took DIV-0131; the
-fishing-panel duck, PR #82, landed as DIV-0132 / D308). Defects number from the first free
-after D311. Every commit `git commit -s`; no game data in any doc: ranges,
+first free entry, **the one after `DIV-0141`** today (the button unification round took
+DIV-0133..0141 and D312..D315, 2026-10-17). Defects number from the first
+free after D315. Every commit `git commit -s`; no game data in any doc: ranges,
 symbol names, counts and file names only (rule 1).
 
 ## 5. The end batch (the coordinator; live, unattended)

@@ -49,8 +49,7 @@ the game shows kinds 0x5D..0x5F (their spawners: chapter 7, areas 104 / 121,
 chapter 9b - [`effect_2g.md`](effect_2g.md) section 1) was not traced here.
 
 **Since 2026-10-17** `EffectKind5E_DrawPanel` carries one divergence, the
-dock's legend drawn from the Config (`DockLegend`, the button round's ledger
-draft E): section 11.
+dock's legend drawn from the Config (`DockLegend`, the button round's DIV-0137): section 11.
 
 ## 1. What each function does
 
@@ -246,7 +245,7 @@ move a read before a call (C73) are refused through the disturbance of
   offsets have room for (the image's rows hold 0..9 and 0xA).
 
 **Needs a ledger entry:** none for the fifty as taken over (the dock's legend, added
-2026-10-17, is ledger draft E: section 11). No read of memory the original never wrote
+2026-10-17, is DIV-0137: section 11). No read of memory the original never wrote
 reaches a draw or a decision (L1 and L3 are unread or dropped).
 
 ## 6. Controls
@@ -398,13 +397,15 @@ this group's live check for the number; the other 49 are **fuzz only**.
 - Nothing in `DIVERGENCE.md`, `cheats.cpp` or `widescreen.cpp` names an
   address of the band, and no full-frame fill is drawn in it.
 
-## 11. The dock's legend follows the Config (DockLegend, ledger draft E)
+## 11. The dock's legend follows the Config (DockLegend, DIV-0137)
 
 **Status:** BUILT (2026-10-17, group IC-D of
 [`button-unification-round.md`](button-unification-round.md) 3, branch
 `buttons/icd`). Headless self-tests pass. **Not seen**: no route reaches the
 dock (area 128) yet, RC's included, so nothing here has been drawn on a
-screen. Ledger draft E is section 11.6; the coordinator numbers it.
+screen.
+**Numbered at the round's end (2026-10-17):** ledger draft E (section 11.6) is DIV-0137;
+the defect it fixes is known-defects D274.
 
 ### 11.1 What the panel is
 
@@ -550,13 +551,13 @@ So `tools/importer.py` is unchanged and no cache needs rebuilding.
   copies then could not be run or read). The `'*'` run used the worktree's
   `build/` launcher, which has no ini. No setting changed.
 
-### 11.6 Ledger draft E (the coordinator numbers it)
+### 11.6 The ledger entry, DIV-0137 (drafted as E)
 
 > ### The dock's parts-menu legend shows the buttons the Config has its tests on
 >
 > - **Subsystem:** the dock's parts menu (area 128) -
 >   `EffectKind5E_DrawPanel` `0x47FBE0` (ours, `src/game/rest_3e.cpp`).
->   Its tests are `EffectKind5E_Pick` `0x47F610` (HT's draft G).
+>   Its tests are `EffectKind5E_Pick` `0x47F610` (HT's DIV-0139).
 > - **Tier:** Intent - the owner's decision, 2026-10-17
 >   ([`button-roles-by-release.md`](button-roles-by-release.md) 8: every
 >   button icon follows the Config; PlayStation icons only).
@@ -581,7 +582,7 @@ So `tools/importer.py` is unchanged and no cache needs rebuilding.
 > - **Also in the PSX version?** No: the PlayStation's legend is the same
 >   baked art and never follows a Config swap. The Western overlap at
 >   defaults is the PC's (Japan's words over a Western page), gone with
->   draft B's starting Config by source.
+>   DIV-0134's starting Config by source.
 > - **Verification:** `BOF3X_SHADOW=rest_3e`: the fuzz 0 mismatches before
 >   the switch; the dock self-test 84 cells, 2167 plans, 0 mismatches
 >   (identity on the three page orders, the stand-in swap, 720 assignments

@@ -9,7 +9,7 @@
 
 void WorldMap_Inject();
 
-// DIVERGENCE (button round ledger draft C; docs/world-map-hud.md 1.2, section
+// DIVERGENCE (button round's DIV-0135; docs/world-map-hud.md 1.2, section
 // 9): the legend's keys, one helper for the eleven frame draws -
 // WorldMap_DrawFrame (area 33's, world_map.cpp) and Area16_, 45_, 65_, 87_,
 // 88_, 104_, 115_, 121_, 151_ and 152_DrawFrame (the area_w*.cpp copies).

@@ -9,7 +9,7 @@
 
 void MsgBox_Inject();
 
-// Draft H's self-test (text_draw.cpp, ButtonText_Arm): MsgBox_Step run over
+// DIV-0140's self-test (text_draw.cpp, ButtonText_Arm): MsgBox_Step run over
 // `msg` until `glyphs` characters are drawn, from a box at (0x10, 0x20), every
 // draw recorded instead of committed - its pen, its colour byte and the glyph
 // bytes it was handed. The stepper's state is put back after. Returns the

@@ -94,7 +94,7 @@ def rebind(w, line, bit):
 def swapped(w, follow=True):
     w = rebind(w, 0, BITS['cross'])    # the Speak line, cross: Speak <-> Action
     w = rebind(w, 4, BITS['l1'])       # the View line, L1: View <-> Change
-    if follow:                         # since the button round (ledger draft A, docs/button-sigma.md):
+    if follow:                         # since the button round (DIV-0133, docs/button-sigma.md):
         w[7], w[8] = w[0], w[6]        # the rebind writes confirm as Speak's word, cancel as Action's
     return w
 

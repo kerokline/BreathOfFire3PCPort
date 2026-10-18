@@ -44,7 +44,7 @@ void GlyphTrap() { __asm__ volatile("mov $0x1000, %%dx\n\tin %%dx, %%al" : : : "
 
 unsigned ClutOf(unsigned color) { return 0x7800u | (color & 0xFu); }
 
-// --- DT-2 (ledger draft H): the dialogue's button mentions, live -----------------
+// --- DT-2 (DIV-0140): the dialogue's button mentions, live -----------------
 // The decision is button_text.h's; this is what it reads from the running game.
 // Armed by ButtonText_Arm after every module's self-test (so every fuzz of a
 // text reader compares Capcom's draws), as its own switch: under
@@ -306,7 +306,7 @@ bool ButtonText_Cue(const std::uint8_t* p, button_text::Icon& out) {
 // font's advance table where the original adds 12. With no table loaded -
 // every shipped file - TextAdvance_Of is 12 and this is the original.
 //
-// DIVERGENCE (ledger draft H, the button unification round's DT-2;
+// DIVERGENCE (DIV-0140, the button unification round's DT-2;
 // docs/button-dialogue.md 4): a button mention in the area text block - a
 // layer's button code, or the PC's colour cue with no layer - is drawn as the
 // button the Config has put its role on (ButtonText_Code / _Cue, button_text.h):
@@ -327,7 +327,7 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
     const std::uint8_t* pair = ClipPairs() + ((color & 0xFF) >> 4) * 2;
     const int u = pair[0], v = pair[1];
     std::uint8_t remembered = 0;
-    // Draft H: 1 after a button code that resolved (its `05 cc` next), 2 once
+    // DIV-0140: 1 after a button code that resolved (its `05 cc` next), 2 once
     // the drawn colour is taken (the glyph next); `icon` is what to draw.
     int button = 0;
     button_text::Icon icon;
@@ -351,7 +351,7 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
                 remembered = static_cast<std::uint8_t>(color);
                 color = (color & ~0xFFu) | text[0];
                 clut = ClutOf(color);
-                // Draft H: a button code's own colour stands as the text has
+                // DIV-0140: a button code's own colour stands as the text has
                 // it (06 takes it back at once); the `05 cc` after it, or a
                 // colour cue, takes the drawn button's colour instead.
                 if (button == 1 || (button == 0 && ButtonText_Cue(control, icon))) {
@@ -380,7 +380,7 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
             }
         }
         if (glyph) {
-            // Draft H: the drawn button's glyph in the fallback's place; the
+            // DIV-0140: the drawn button's glyph in the fallback's place; the
             // walk still steps over the fallback's own bytes.
             const std::uint8_t* const first = button == 2 ? icon.glyph : text;
             button = 0;
@@ -434,7 +434,7 @@ void TextDraw_Inject() {
     if (g_textlog) bof3::Log("textlog     on: each (caller, string) pair drawn is logged once");
 }
 
-// --- DT-2 (draft H): the self-test and the switch ---------------------------------
+// --- DT-2 (DIV-0140): the self-test and the switch ---------------------------------
 
 namespace {
 
@@ -703,6 +703,6 @@ void ButtonText_Arm() {
     const bool on = bof3::PatchBytes(
         "ButtonText", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_button_text)), &was, &is, 1);
     static const char* const kLayer[] = {"no layer: the PC's colour cue", "a Latin layer's codes", "ja-JP's codes"};
-    bof3::Log("ButtonText  the dialogue's button mentions drawn as Sigma's button (draft H): %s, %s",
+    bof3::Log("ButtonText  the dialogue's button mentions drawn as Sigma's button (DIV-0140): %s, %s",
               on ? "on" : "OFF (BOF3X_ORIGINAL=ButtonText)", kLayer[static_cast<int>(g_bt.layer)]);
 }

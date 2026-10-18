@@ -433,7 +433,7 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
         SetW(at::kButtons + 2u * B(by_cursor), bits);
         SetW(at::kButtons, W(at::kButtons) | 3);
         Field_ConfirmButtons = static_cast<unsigned short>(Field_ConfirmButtons | 3);
-        // Ledger draft A (docs/button-sigma.md): words 7 / 8 as Speak's and
+        // DIV-0133 (docs/button-sigma.md): words 7 / 8 as Speak's and
         // Action's and the table - nothing until sigma::Arm, after every
         // module's self-test.
         bof3x::input::sigma::Rebound();

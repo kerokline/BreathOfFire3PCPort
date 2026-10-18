@@ -1106,7 +1106,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
             PutWord(at::kButtons + 0x10, 0x40);
             PutWord(at::kButtons + 0xA, 0x100);
         }
-        // Ledger drafts A and B (docs/button-sigma.md): the Start-held reset
+        // DIV-0133 and DIV-0134 (docs/button-sigma.md): the Start-held reset
         // by source, then words 7 / 8 as Speak's and Action's and the table
         // (a save whose six lines are not one button each refused) - nothing
         // until sigma::Arm, after every module's self-test.

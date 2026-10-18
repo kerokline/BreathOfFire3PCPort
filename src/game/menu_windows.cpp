@@ -491,7 +491,7 @@ extern "C" const unsigned char* __cdecl Menu_PieceRect(unsigned id, unsigned fla
 namespace {
 
 // A SPRT as Menu_DrawPiece writes its one, of the page rectangle (u, v, w,
-// h) given here rather than a piece's (draft F's steps).
+// h) given here rather than a piece's (DIV-0138's steps).
 void PieceSprite(int x, int y, unsigned u, unsigned v, unsigned w, unsigned h, unsigned char f) {
     unsigned char* const p = Next();
     g.set_sprt(p);
@@ -508,7 +508,7 @@ void PieceSprite(int x, int y, unsigned u, unsigned v, unsigned w, unsigned h, u
     g.commit(1, 0x1C);
 }
 
-// DIVERGENCE (ledger draft F, docs/button-shoulder-corner.md): a piece of the
+// DIVERGENCE (DIV-0138, docs/button-shoulder-corner.md): a piece of the
 // UI page that carries the L1 or R1 label, drawn with the label as σ has it
 // (shoulder_glyphs.h). False: draw it as the original does (the identity on
 // a page with the L1 / R1 art).

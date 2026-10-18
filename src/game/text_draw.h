@@ -18,7 +18,7 @@ void TextDraw_Inject();
 // for ours. Called by Font_SetGlyphData with the table it has just taken.
 void TextDraw_SetGlyphCount(unsigned glyphs);
 
-// The button unification round's DT-2, ledger draft H (docs/button-dialogue.md
+// The button unification round's DT-2, DIV-0140 (docs/button-dialogue.md
 // section 4; the decision is game/button_text.h's). Each reader of the area
 // text - Text_DrawString here, MsgBox_Step in msgbox.cpp - asks these at every
 // 0x05 it walks, with `p` on the 0x05:

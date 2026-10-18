@@ -73,10 +73,10 @@ constexpr bool kPcIsJapanSource = true;
 
 // --- the live state ---
 
-// DIVERGENCE: ledger draft A (docs/button-sigma.md 5) - 1 after every
+// DIVERGENCE: DIV-0133 (docs/button-sigma.md 5) - 1 after every
 // module's self-test (PatchBytes "ButtonSigma").
 unsigned char g_sigma_on = 0;
-// DIVERGENCE: ledger draft B - 1 after every module's self-test
+// DIVERGENCE: DIV-0134 - 1 after every module's self-test
 // (PatchBytes "StartConfigBySource").
 unsigned char g_by_source = 0;
 bool g_armed = false;

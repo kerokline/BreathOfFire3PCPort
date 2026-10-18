@@ -1,4 +1,4 @@
-// The item lists' L1 / R1 corner as σ has it (ledger draft F, group IC-L of
+// The item lists' L1 / R1 corner as σ has it (DIV-0138, group IC-L of
 // docs/button-unification-round.md 3; docs/button-shoulder-corner.md).
 //
 // Ten list draws frame their scroll bar with pieces of the UI page

@@ -76,7 +76,7 @@ field menu (triangle), right x5 to Config, R2, down x6 to Controller, R2;
 close the Config, cross to close the menu; then `shop.txt`'s inn from its
 frame 2201 (Rest, "Save?" Yes), down x7 to **slot 7**, R2, left to Yes on
 the overwrite prompt, R2. 3,972 frames; shots at 2515 (the panel before the
-swap), 2620 (after it) and 3810 ("save complete" over slot 7).
+swap), 2620 (after it) and 3810 (the save's confirmation over slot 7).
 
 **Slot 7**: not 6 (`balioAndSunder_2` writes there, the owner's), not 4
 (`bossAndFlash` loads it), not 0 (every recipe's save goes there). The slot
@@ -140,7 +140,7 @@ the lake (area 30, mode 8).
 | `f00845` | stage 1: the banner line starting to scroll, the panel | circle at 808 (READY away) |
 | `f00870` | the gear menu (Gear / Data / Rule, the rod list) | **circle at 850**: stage 1's hard-coded test (`LeaderPanel_S1Buttons`) |
 | `f00990` | the cast: CASTING POWER | circles 872..980 (the menus' confirm, word 7), cross 941 / 952 (cancel) |
-| `f01140` | the reel's banner: "Wind reel..." with its circle label | the reel's circles from 1220 on follow |
+| `f01140` | the reel's banner: the reel line with its circle label | the reel's circles from 1220 on follow |
 
 The twin presses cross for every one of those circles. On today's code that is
 the wrong button for stage 1 (hard-coded circle) and for the menus (word 7,
@@ -295,7 +295,7 @@ What the four sheets show on today's code (`C:\Users\kerok\b_rc\sheets\`):
 ## 7. Found on the way
 
 - **The PC install with no language layer crashes opening the Controller
-  panel** (a new defect for the coordinator to number; not fixed here, no
+  panel** (numbered D312, fixed in the round; not fixed here, no
   `src/` in this group). `CRASH 0: exception 0xC0000096` in `Text_DrawString`
   (bof3x.dll `+0x3514A`) <- `Text_DrawAt` <- `Config_DrawControllerCell` <-
   `Config_DrawControllerPanel` <- `ConfigScreen_Controller`, `ecx 0xA65`:
@@ -308,7 +308,8 @@ What the four sheets show on today's code (`C:\Users\kerok\b_rc\sheets\`):
   So `sigma_config` and `sigma_swap` have no PC row until it is fixed.
 - On the `pc` install the item list's party names (a save made under a Latin
   layer) draw as stray glyphs: the save's names in a font that has no Latin
-  letters. Not a site; noted.
+  letters. Not a site, and not a defect: DIV-0005's known and accepted
+  case (names stored under one language drawn under another).
 - **The harness gaps**: (1) `CDImage\` holds zips only, and `abc_run.py
   prepare` passes the installs file's `build` sources straight to
   `importer.py build`, which identifies a `.cue` / `.iso` / folder and refuses
@@ -370,7 +371,7 @@ reference run's, not the round's: section 9.2). No other difference.
 Config, and the route then wandered in it and wrote nothing. The press at
 frame 2721 is now circle (no frame moved). After it, on `pc` and `pc-enus`,
 slot 7 holds Speak `0x43`, Action `0x20`, View `0x4`, Change `0x8`, **confirm
-`0x43`, cancel `0x20`** - draft A. `sigma_saves.py swap` now writes words 7 /
+`0x43`, cancel `0x20`** - DIV-0133. `sigma_saves.py swap` now writes words 7 /
 8 the same way (`--before-round` for the old rebind); the three `_sw` saves
 were rewritten. The R2 confirms of every route were fine.
 
@@ -454,8 +455,8 @@ its `baff5e45` run.
 
 **State hash** (`check id id2 r_id`, the platform pages left aside): on every
 route `0x903000` (the nine pad words' page) differs from tick 1 until the
-save's load (ticks 291..343) - **the starting Config by source** (SG's draft
-B: a disc install now boots with its release's words), intended, and the R2
+save's load (ticks 291..343) - **the starting Config by source** (SG's DIV-0134: a disc install now boots with its release's
+words), intended, and the R2
 confirms kept every route in step through it. After the load: fishing's
 `0x803000` / `0x804000` from 768 (the banner's labels, as on pc-enus); items
 on PSP-EU the packet pools from 470 and `0x903000` to the end (the corner's

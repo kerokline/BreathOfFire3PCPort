@@ -40,7 +40,7 @@
 //   - an accessory's name is drawn to 12 characters where the original
 //     stopped at 8 (the item lists, the equipped panel, the cast's panel).
 //
-// Ledger draft D (the button round's IC-F, amends DIV-0069; docs/fishing-text.md
+// DIV-0136 (the button round's IC-F, amends DIV-0069; docs/fishing-text.md
 // 8), armed after sigma::Arm with or without an overlay: a label names the
 // button its line's test is on now - Sigma of the line byte's button, word 7's
 // for the cast's line (text 0) - drawn as that button's DIV-0051 icon under a
@@ -94,7 +94,7 @@ constexpr unsigned char kLabelCodes[kEntries][3] = {FISH_ICON(0), FISH_ICON(1), 
                                                     FISH_ICON(3), FISH_ICON(4), FISH_ICON(5)};
 #undef FISH_ICON
 
-// Ledger draft D: the label through sigma. The six entries of 0x66A2FC in the
+// DIV-0136: the label through sigma. The six entries of 0x66A2FC in the
 // order the Config cell 0x461C00 reads them (its loads 0x66A2FC..0x66A310 under
 // its tests of 0x20, 0x40, 0x10, 0x80, 0x04, 0x08), and each button's pen as
 // that cell pushes it (2, 1, 6, 5, 0, 0; read 2026-10-17). The first three are
@@ -117,7 +117,7 @@ namespace sg = bof3x::input::sigma;
 char g_lines[kLineCount][kLineRoom];
 char g_tabs[kTabCount][kTabRoom];
 bool g_on = false;
-// PatchBytes "FishingLabelSigma" (draft D), set by FishingText_Arm.
+// PatchBytes "FishingLabelSigma" (DIV-0136), set by FishingText_Arm.
 unsigned char g_label_sigma = 0;
 // The release whose terms the running image's line pens are in
 // (FishingText_Arm): the build of the disc-built image the exe host mapped;
@@ -328,7 +328,7 @@ void SelfTest() {
         // release's, in their shapes' pens.
         sg::DefaultWords(sg::Release::kJapan, false, words);
         config(im, words, kJapan, "Japan's words");
-        // A disc install's own New Game words (draft B): at its release's
+        // A disc install's own New Game words (DIV-0134): at its release's
         // defaults every label is that release's own draw - its button, the
         // image's pen - which is the disc's (the US module's LineNext reads
         // its entry 0x801E1F14 + 3 * line and the pen at + 2).
@@ -346,7 +346,7 @@ void SelfTest() {
         sg::DefaultWords(sg::Release::kPspEu, false, words);
         config(im, words, kPspEu, "PSP-EU's defaults");
         // The round's stand-in swap from Japan's: Speak <-> Action, View <->
-        // Change, words 7 / 8 as Speak's / Action's (draft A). On Japan's
+        // Change, words 7 / 8 as Speak's / Action's (DIV-0133). On Japan's
         // image circle and cross move (their shapes' pens 1 and 2) and
         // triangle stays, as drawn.
         sg::DefaultWords(sg::Release::kJapan, false, words);
@@ -396,7 +396,7 @@ void FishingText_Arm() {
     if (g_on) bof3::Log("DIV-0069: the fishing text's Latin layout armed");
     // D313: the terms of the image's line pens, before the self-test reads them.
     g_image_release = ImageRelease(g_image_how);
-    // Draft D: after sigma::Arm, which InjectAll calls first.
+    // DIV-0136: after sigma::Arm, which InjectAll calls first.
     if (bof3::WantsShadow("fishing_text")) SelfTest();
     static const std::uint8_t was = 0, is = 1;
     bof3::PatchBytes("FishingLabelSigma", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_label_sigma)),

@@ -26,14 +26,14 @@
 // on it, each its own switch (PatchBytes on a flag of ours, after every
 // module's self-test):
 //
-//   ButtonSigma          (ledger draft A) the table kept; words 7 and 8
+//   ButtonSigma          (DIV-0133) the table kept; words 7 and 8
 //                        (Field_ConfirmButtons, Field_CancelButtons) written
 //                        as the Speak line's word and the Action line's word,
 //                        so menus confirm on Speak's button and cancel on
 //                        Action's; six words that are not a permutation of
 //                        the six bits refused with a Fatal (rule 4: nothing
 //                        guessed).
-//   StartConfigBySource  (ledger draft B) the starting Config - Boot_Task's
+//   StartConfigBySource  (DIV-0134) the starting Config - Boot_Task's
 //                        nine words and LoadMenu_Apply's Start-held reset -
 //                        the install's release's, by the cache manifest's
 //                        sources: JP first (the PC's own data counts as JP,

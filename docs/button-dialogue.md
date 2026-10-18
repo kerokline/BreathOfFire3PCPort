@@ -8,6 +8,9 @@ BUILT, the draw half (2026-10-17, group DT-2, branch `buttons/dt2` off
 `fb06bac7`; section 4): both readers draw a mention as the button the Config
 has put its role on. Headless self-tests and a check of the resolver over
 every held text pass; no capture yet (no route opens these messages).
+**Numbered at the round's end (2026-10-17):** ledger draft H (section 3.4, with DT-2's amendment) is
+DIV-0140; the defect it fixes is known-defects D272, and PSP-EU's ram text
+(section 4.5) is D314.
 
 The round is [`button-unification-round.md`](button-unification-round.md); this
 is its section 2 "DT-1". The census is
@@ -232,7 +235,7 @@ The scratch scripts (`census.py`, `cmpdirs.py`, `drawmodel.py`, `listids.py`) re
 and print counts; they are not committed. `loc_build.py buttons` is the
 committed census.
 
-### 3.4 Ledger draft H (for the coordinator to number)
+### 3.4 The ledger entry, DIV-0140 (drafted as H; numbered at the round's end)
 
 > **The dialogue names buttons by code** (amends DIV-0005's family: the
 > language layer's text).

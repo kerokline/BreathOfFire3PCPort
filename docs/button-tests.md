@@ -5,7 +5,10 @@
 `buttons/ht`; group HT-2 added the owner's three of section 3 on
 `buttons/ht2`, section 2.4). Headless self-tests pass, and so does the
 stand-in check (section 4). Not played. RC's site routes are owed (section
-7). Ledger draft G is in section 6; the coordinator numbers it at the merge.
+7).
+**Numbered at the round's end (2026-10-17):** ledger draft G (section 6) is DIV-0139; the
+two defects of section 7 are known-defects D314 (the ram's text) and D315
+(the well's tests).
 
 The design is [`button-roles-by-release.md`](button-roles-by-release.md) 7.4:
 a hard-coded test of Japan's bit `b` tests `σ(b)`. The API is SG's
@@ -436,10 +439,10 @@ build draws it correctly.
 So PSP-EU's own code is `S` except at the well. On a PSP-EU-only install, our
 well now tests `σ(cross)` / `σ(circle)`: circle and cross at PSP-EU's
 defaults. The disc's own code tests triangle and cross. That is a deliberate
-change (draft G): the unified flow, with the icons the text draws, in place of
+change (DIV-0139): the unified flow, with the icons the text draws, in place of
 the one PSP-EU test that broke its release's map.
 
-## 6. Ledger draft G: the hard-coded button tests through σ
+## 6. The ledger entry, DIV-0139: the hard-coded button tests through σ
 
 - **Date:** 2026-10-17
 - **Subsystem:** input: the fishing, the rope pull, the crane, the well, the
@@ -449,7 +452,7 @@ the one PSP-EU test that broke its release's map.
   function and line is in section 2 (83 lines in 20 files of `src/game/`,
   and HT-2's 5 lines in 3 files, section 2.4).
 - **Tier:** Intent. The owner, 2026-10-17: unify every button flow (answer 1,
-  `button-roles-by-release.md` 8). Builds on draft A's `σ`. The same day the
+  `button-roles-by-release.md` 8). Builds on DIV-0133's `σ`. The same day the
   owner decided section 3's remainder: the speed-up, the music room and the
   cross through `σ`; `SuperCombo_ReadButton` and the rebind left;
   `Scena19_Run0` open.
@@ -473,11 +476,11 @@ the one PSP-EU test that broke its release's map.
     The table stays Capcom's bytes, and the d-pad stays physical. The escape
     follows the View line's button and the auto battle the Change line's.
   - At Japan's defaults (every PC install) nothing changes.
-  - A Western disc-only install starts at the West's Config (draft B), so
+  - A Western disc-only install starts at the West's Config (DIV-0134), so
     `σ` is `P` there and the tests are the PlayStation US's own.
   - On a PSP-EU-only install `σ` is `S`. That is PSP-EU's own except at the
     well, whose disc tests `P` (section 5); ours follows the Config there too.
-- **Rationale:** with the icons (drafts C to H) and the menus (draft A), one
+- **Rationale:** with the icons (DIV-0135..0140) and the menus (DIV-0133), one
   table decides every button. The text names the button the code tests, on
   every install and after any rebind.
 - **Also in the PSX version?** No. Every PlayStation release hard-codes these
@@ -492,9 +495,9 @@ the one PSP-EU test that broke its release's map.
   - The 20 edited modules' fuzzes, which run before `Arm` with `σ` the
     identity, report 0 mismatches.
   - RC's swapped site routes are owed (section 7).
-- **Reversible?** `BOF3X_ORIGINAL=ButtonSigma`, draft A's switch: with it,
+- **Reversible?** `BOF3X_ORIGINAL=ButtonSigma`, DIV-0133's switch: with it,
   `Sigma` is the identity and every test is the original's. There is no
-  separate switch. A swapped Config with draft A off but G on would split the
+  separate switch. A swapped Config with DIV-0133 off but DIV-0139 on would split the
   flow, so the two are kept together.
 
 ## 7. What is not reached
@@ -533,14 +536,14 @@ the one PSP-EU test that broke its release's map.
   by `S` and the well's by `P` (section 5).
 - **Section 3's six constants** were decided by the owner on 2026-10-17.
   Three are built (section 2.4), and the rest are left as the owner said.
-- **Defects found** (for the coordinator to number; first free after D311):
-  - **PSP-EU's ram text names the wrong button on its own disc.** It says
+- **Defects found** (numbered at the round's end: D314 and D315):
+  - **D314, PSP-EU's ram text names the wrong button on its own disc.** It says
     circle; the code reads the Move word, which is triangle at PSP-EU's
     defaults (section 5). Our build draws it correctly through answer 3.
-  - **PSP-EU's well keeps the West's tests.** It tests triangle and cross
+  - **D315, PSP-EU's well keeps the West's tests.** It tests triangle and cross
     where its own map `S` gives circle and cross. It is consistent with its
-    own text (section 5), so it is a release quirk, not a text defect. Draft
-    G changes it on a PSP-EU install.
+    own text (section 5), so it is a release quirk, not a text defect.
+    DIV-0139 changes it on a PSP-EU install.
 
 ## 8. Verification
 

@@ -2,8 +2,9 @@
 
 **Status:** BUILT (2026-10-17, group SG of
 [`button-unification-round.md`](button-unification-round.md) 2, branch
-`buttons/sg`). Headless self-tests pass. Not played. Ledger drafts A and B
-(section 6) are lettered; the coordinator numbers them at the merge.
+`buttons/sg`). Headless self-tests pass. Not played.
+**Numbered at the round's end (2026-10-17):** ledger drafts A and B (section 6) are
+DIV-0133 and DIV-0134.
 
 The design is [`button-roles-by-release.md`](button-roles-by-release.md) 7,
 with the owner's three answers of 2026-10-17 (that doc, 8). The owner
@@ -62,7 +63,7 @@ tests `σ(b)`, and that an icon from R's text is `σ(M_R^-1(b))`. On a JP-based
 install the three statements agree. On a Western disc-only install they do
 not.
 
-That install now starts with the West's Config (draft B), with Speak on
+That install now starts with the West's Config (DIV-0134), with Speak on
 cross. The PlayStation US release tests `P(b)` wherever Japan's tests `b`:
 the 44 changed tests of `button-roles-by-release.md` 3. So the unified flow
 needs `Sigma` to equal `P` there, which means a table relative to Japan's
@@ -198,9 +199,9 @@ It checks the following:
 The run ends in a Fatal on any mismatch, or unless the counts are 2,211
 tables and 11 refusals.
 
-## 6. Ledger drafts
+## 6. The ledger entries (drafted as A and B)
 
-### Draft A: the Config's six lines as one permutation; confirm on Speak's button, cancel on Action's
+### DIV-0133 (draft A): the Config's six lines as one permutation; confirm on Speak's button, cancel on Action's
 
 - **Date:** 2026-10-17
 - **Subsystem:** input, the Config words (`src/input/sigma.{h,cpp}`; the
@@ -238,7 +239,7 @@ tables and 11 refusals.
   keeps its words 7 / 8 as saved. Holding Start while it loads writes the
   defaults.
 
-### Draft B: the starting Config by source
+### DIV-0134 (draft B): the starting Config by source
 
 - **Date:** 2026-10-17
 - **Subsystem:** the boot defaults (`Boot_Task` `0x496B60`, after its copy
@@ -278,7 +279,7 @@ tables and 11 refusals.
 ## 7. What is not reached, and open points
 
 - **A Western or PSP-EU disc-only install between this merge and HT's.**
-  Draft B moves Speak and Action, and draft A moves confirm and cancel with
+  DIV-0134 moves Speak and Action, and DIV-0133 moves confirm and cancel with
   them. But the hard-coded tests (fishing stage 1, the minigames, the dock)
   still test Japan's bits until HT asks `Sigma`. In that interval such an
   install has a split flow: Speak on cross, but the fishing casts on circle.

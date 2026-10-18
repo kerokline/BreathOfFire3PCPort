@@ -3,8 +3,8 @@
 **Status:** BUILT (2026-10-17, group IC-L of
 [`button-unification-round.md`](button-unification-round.md) 3, branch
 `buttons/icl`). Headless self-tests pass. Not played; RC's item-list routes
-are its live evidence. Ledger draft F (section 6) is lettered; the
-coordinator numbers it at the merge.
+are its live evidence.
+**Numbered at the round's end (2026-10-17):** ledger draft F (section 6) is DIV-0138.
 
 The site is [`key-icons-by-mapping.md`](key-icons-by-mapping.md) 2.5 and
 rank 6 of its section 6. The owner's answer 3 (round doc 5.1) is binding:
@@ -164,7 +164,7 @@ through the rectangles `0x663C8C` (`Menu_PieceRect` with flag 1).
   asks `σ` there, a swapped corner names the button the Config says while
   the list still pages on L1 / R1.
 
-## 6. Ledger draft F: the item lists' shoulder labels from σ
+## 6. The ledger entry, DIV-0138: the item lists' shoulder labels from σ
 
 - **Date:** 2026-10-17
 - **Subsystem:** the menu pieces: `Menu_DrawPiece` `0x57D860` (ours,

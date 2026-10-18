@@ -661,7 +661,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     while (g.load_done() == 0) g.sleep(1);
     std::memset(At(at::kBootClear), 0, at::kBootClearBytes);
     std::memcpy(At(at::kButtons), At(at::kButtonDefaults), 0x12);
-    // Ledger drafts A and B (docs/button-sigma.md): the release's starting
+    // DIV-0133 and DIV-0134 (docs/button-sigma.md): the release's starting
     // words by source, then words 7 / 8 as Speak's and Action's and the
     // table - nothing until sigma::Arm, after every module's self-test.
     bof3x::input::sigma::BootDefaultsWritten();

@@ -500,11 +500,11 @@ the Japanese exe strings.
 
 **`docs/owner-review.md`**: section 9 item 1.
 
-**Added 2026-10-17 (D246, branch `fix/psp-config-text`; for the coordinator
-to number or fold into DIV-0090's PSP amendment):**
+**Added 2026-10-17 (D246, branch `fix/psp-config-text`); numbered at the
+button round's end as its own entry, DIVERGENCE DIV-0141:**
 
-**DIV draft A: a PSP-EU layer's Config screen, the PSP's words and four of
-ours.**
+**DIV-0141 (lettered draft A here): a PSP-EU layer's Config screen, the
+PSP's words and four of ours.**
 
 - **Subsystem:** text / menu (`tools/loc_build.py` `convert_config_psp`; the
   kind-7 chunk DIV-0015 applies).

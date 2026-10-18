@@ -1,6 +1,6 @@
 // The dialogue's button mentions, drawn as the button the Config has put the
 // role on: the button unification round's group DT-2 (docs/button-dialogue.md
-// section 4; ledger draft H). The pure half - no game memory, no DLL - so the
+// section 4; DIV-0140). The pure half - no game memory, no DLL - so the
 // two readers (Text_DrawString in text_draw.cpp, MsgBox_Step in msgbox.cpp)
 // and a host-side check over the real text can share one decision.
 //

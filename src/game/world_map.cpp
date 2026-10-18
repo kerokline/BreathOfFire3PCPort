@@ -4,7 +4,7 @@
 // disc's WORLD00/AREA016.EMI section at 0x801F2C00, read with capstone MIPS
 // through the sibling's tools - and for the two helpers against the boot exe.
 // Faithful (the dial's opacity is a port change, kept: D42), but for the
-// legend's keys: the button round's ledger draft C, world_map_legend below
+// legend's keys: the button round's DIV-0135, world_map_legend below
 // and world_map.h (docs/world-map-hud.md section 9). The start-up fuzz is
 // world_map_fuzz.cpp.
 //
@@ -200,7 +200,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
 // button word's upper bytes, which the sprite draw masks off.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(int x, int y) {
     if (!(At(at::Draw_PassFlagsAt())[0] & 0x1B)) return;
-    world_map_legend::Begin();   // ledger draft C: which page; the port's key names painted over
+    world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     g.set_draw_mode(PacketNext(), 0, 0, 0x9C, 0);
     g.commit_prim(1, 0xC);
     g.draw_sprite(x, y, 0);
@@ -377,11 +377,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     PutLong(At(at::Gfx_PacketNextAt()), next + bytes);
 }
 
-// --- the legend's keys: ledger draft C (world_map.h) -------------------------------
+// --- the legend's keys: DIV-0135 (world_map.h) -------------------------------
 
 namespace {
 
-// Ledger draft C: 1 after every module's self-test (PatchBytes "WorldMapLegend").
+// DIV-0135: 1 after every module's self-test (PatchBytes "WorldMapLegend").
 unsigned char g_legend_on = 0;
 // This frame's page is the port's own (the glyph sheet blank, the key names
 // painted over): the stand-ins. Set by Begin, read by Key and Start.

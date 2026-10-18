@@ -1429,18 +1429,18 @@ void InjectAll() {
                                 // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
                                 // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins
                                 // for them; it resets Rand's seed to the CRT's 1 after them all
-    bof3x::input::sigma::Arm(); // ledger drafts A and B (docs/button-sigma.md): the Config as one permutation, words 7 / 8
+    bof3x::input::sigma::Arm(); // DIV-0133 and DIV-0134 (docs/button-sigma.md): the Config as one permutation, words 7 / 8
                                 // as Speak's and Action's, the starting Config by source - after every module's self-test,
                                 // which all compared Capcom's stores at Boot_Task, LoadMenu_Apply and the rebind
-    ButtonText_Arm();           // ledger draft H (docs/button-dialogue.md 4): the dialogue's button mentions drawn as
+    ButtonText_Arm();           // DIV-0140 (docs/button-dialogue.md 4): the dialogue's button mentions drawn as
                                 // Sigma's button - after sigma::Arm, and after every module's self-test, which all
                                 // compared Capcom's text draws (text_draw's, msgbox's)
     if (bof3::WantsShadow("button_tests"))   // group HT (docs/button-tests.md 4): the hard-coded tests' masks and four
         bof3x::input::button_tests::Check(); // of ours under stand-in Config words - after Arm, for the live table
-    shoulder_glyphs::Arm();     // ledger draft F (docs/button-shoulder-corner.md): the item lists' L1 / R1 corner as sigma has
+    shoulder_glyphs::Arm();     // DIV-0138 (docs/button-shoulder-corner.md): the item lists' L1 / R1 corner as sigma has
                                 // it - after sigma::Arm and after every module's self-test (menu_windows' compared the original's
                                 // Menu_DrawPiece)
-    world_map_legend::Arm();    // button round ledger draft C (world_map.h): the world map's legend on the port's own
+    world_map_legend::Arm();    // button round's DIV-0135 (world_map.h): the world map's legend on the port's own
                                 // page - after every module's self-test, whose frame-draw fuzzes all ran the original's
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)

@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-10-14, the ultrawide round's fold-in — two hundred and ninety-eight entries, D1..D301 with D19, D20 and D29 unused; D290..D301 numbered 2026-10-14 from the round's docs: D290 the 16:9 off-screen flag and D291 the windows' late free, ours, fixed by DIV-0041's amendments; D292 the far cameras past the cell ring (I37), D293 the breath mote and D294 the column's sound left at Capcom's bounds, D295 the band's patch cells (the owner: leave for now) and D296 the slide-ins seen in the 21:9 band, ours, open; D297 the grab's four CPU readers, the port's, open; D298 the eight recipes without a save and D299 the band census's blind spots, ours, tooling; D300 the faerie through the table, Capcom's, the owner's call; D301 the camp's fire under Garr, ours, fixed by DIV-0071's amendment; in the same fold-in D215 and D243 restored by DIV-0126, D242 rewritten (the gene crystal is Capcom's order, the owner accepts it; FY's fix was the bulb's filament), D283 fixed by DIV-0041's random split and D285 measured in part; D266..D289 numbered 2026-10-13 from the away day's docs: D266 the Western title mark's width, D267 the Meteor Strike chip's lifts, D268 `AREA111`'s segment over a twin row, D278 the Identify panel's question marks and D282 the Config values (fixed 2026-10-17), the exe image's gaps or map (D278's rows found, not built); D269 the French and German `ITEM` / `EXP`, the language build's, fixed by DIV-0117; D272 the Western dialogue's button names, D279 the Japanese fishing banner's NUL glyph (a crash on PSP-JP, one run in five), D280 the exe's strings under `ja-JP` and D289 group 16's one-record name shift, the language build's (D280 the owner's call); D273 and D274 the Western disc-only world-map and dock legends, ours; D275 the PC's static world-map key art, the port's, D58's class; D276 the all-calls tracer's stall, the tracer's; D277 the US title's copyright line on the Japanese layout, the owner's call; D283 the wide picture's `Rand` (fixed 2026-10-13), D284 area 23's sky and D285 the battle flash phases in wide, ours; D286 the fishing equip headings on the disc-only installs and D287 the launcher's clipped lines, ours; D288 Ryu's corrupted LZSS flag byte, the port's data, the owner's call; D270 the `stallion.txt` crash, the port's (an F12 save in an encounter field), fixed by DIV-0121; D271 the all-Capcom `Rand` parting and D281 the Japan disc's closer world-map camera unclassed (D281 the owner's hypothesis: Capcom's own later change); D254 and D255 seen on PSX-US too, D255 now a hang (the owner's answer required), D264 seen on PSX-US before its fix; D258..D264 fixed by DIV-0101's amendments and D265 with D247 on 2026-10-13; D251..D257 from the PSP-only round's end batch and visual findings: D251 the battle framing, D252 the equip icons and number formats and D253 the areas 16 / 45 crash fixed by DIV-0101's amendment; D254 the load screen's `"%X"` and D255 the inn's missing jingle on a PSX-only install the owner's calls; D256 the PSP title's framing, the owner's look; D257 the PAL banks, the owner's call since 2026-10-08; D56 fixed by DIV-0116 (2026-10-13); D244..D250 from the PSP-only round, numbered 2026-10-12 from its group docs: our importer's, map's, language build's and launcher's, none Capcom's (D246 fixed 2026-10-17 on the owner's decision; D247 fixed 2026-10-13; D249 narrowed by `main`'s DIV-0102 - the launcher refuses an unheld tag on a disc-only install - and kept for the engine alone and PC installs; D250's Language-box note checked: DIV-0102 fixes it); D242 the dragon gene clipped (Capcom's order, accepted 2026-10-14) and D243 the lighthouse's light rays before the flash not drawn (fixed by DIV-0126), the owner's route `eldritchGene.txt`; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, fixed by DIV-0093 on 2026-10-11); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
+**Status:** IN PROGRESS (2026-10-17, the button unification round's fold-in — three hundred and eleven entries, D1..D315 with D19, D20, D29 and D309 unused; D314 and D315 numbered 2026-10-17 from the round's docs: PSP-EU's ram text naming the wrong button on its own disc and PSP-EU's well testing the West's buttons, Capcom's, the second changed by DIV-0139; in the same fold-in D272 fixed by DIV-0140, D274 by DIV-0137 (not seen), D275 by DIV-0135, D273 found to be D307 (fixed by DIV-0130) and D246 by DIV-0141; D312 the Controller panel's crash on a PC install with no layer, ours, and D313 the disc-only fishing records, ours, both fixed 2026-10-17; D302..D311 numbered 2026-10-14..17 as found (D302 fixed by DIV-0127, D303 by DIV-0101's amendment, D304 and D306 fixed, D305 refused since 2026-10-16, D307 fixed by DIV-0130, D308 by DIV-0132, D310 and D311 fixed 2026-10-17); 2026-10-14, the ultrawide round's fold-in — two hundred and ninety-eight entries, D1..D301 with D19, D20 and D29 unused; D290..D301 numbered 2026-10-14 from the round's docs: D290 the 16:9 off-screen flag and D291 the windows' late free, ours, fixed by DIV-0041's amendments; D292 the far cameras past the cell ring (I37), D293 the breath mote and D294 the column's sound left at Capcom's bounds, D295 the band's patch cells (the owner: leave for now) and D296 the slide-ins seen in the 21:9 band, ours, open; D297 the grab's four CPU readers, the port's, open; D298 the eight recipes without a save and D299 the band census's blind spots, ours, tooling; D300 the faerie through the table, Capcom's, the owner's call; D301 the camp's fire under Garr, ours, fixed by DIV-0071's amendment; in the same fold-in D215 and D243 restored by DIV-0126, D242 rewritten (the gene crystal is Capcom's order, the owner accepts it; FY's fix was the bulb's filament), D283 fixed by DIV-0041's random split and D285 measured in part; D266..D289 numbered 2026-10-13 from the away day's docs: D266 the Western title mark's width, D267 the Meteor Strike chip's lifts, D268 `AREA111`'s segment over a twin row, D278 the Identify panel's question marks and D282 the Config values (fixed 2026-10-17), the exe image's gaps or map (D278's rows found, not built); D269 the French and German `ITEM` / `EXP`, the language build's, fixed by DIV-0117; D272 the Western dialogue's button names, D279 the Japanese fishing banner's NUL glyph (a crash on PSP-JP, one run in five), D280 the exe's strings under `ja-JP` and D289 group 16's one-record name shift, the language build's (D280 the owner's call); D273 and D274 the Western disc-only world-map and dock legends, ours; D275 the PC's static world-map key art, the port's, D58's class; D276 the all-calls tracer's stall, the tracer's; D277 the US title's copyright line on the Japanese layout, the owner's call; D283 the wide picture's `Rand` (fixed 2026-10-13), D284 area 23's sky and D285 the battle flash phases in wide, ours; D286 the fishing equip headings on the disc-only installs and D287 the launcher's clipped lines, ours; D288 Ryu's corrupted LZSS flag byte, the port's data, the owner's call; D270 the `stallion.txt` crash, the port's (an F12 save in an encounter field), fixed by DIV-0121; D271 the all-Capcom `Rand` parting and D281 the Japan disc's closer world-map camera unclassed (D281 the owner's hypothesis: Capcom's own later change); D254 and D255 seen on PSX-US too, D255 now a hang (the owner's answer required), D264 seen on PSX-US before its fix; D258..D264 fixed by DIV-0101's amendments and D265 with D247 on 2026-10-13; D251..D257 from the PSP-only round's end batch and visual findings: D251 the battle framing, D252 the equip icons and number formats and D253 the areas 16 / 45 crash fixed by DIV-0101's amendment; D254 the load screen's `"%X"` and D255 the inn's missing jingle on a PSX-only install the owner's calls; D256 the PSP title's framing, the owner's look; D257 the PAL banks, the owner's call since 2026-10-08; D56 fixed by DIV-0116 (2026-10-13); D244..D250 from the PSP-only round, numbered 2026-10-12 from its group docs: our importer's, map's, language build's and launcher's, none Capcom's (D246 fixed 2026-10-17 on the owner's decision; D247 fixed 2026-10-13; D249 narrowed by `main`'s DIV-0102 - the launcher refuses an unheld tag on a disc-only install - and kept for the engine alone and PC installs; D250's Language-box note checked: DIV-0102 fixes it); D242 the dragon gene clipped (Capcom's order, accepted 2026-10-14) and D243 the lighthouse's light rays before the flash not drawn (fixed by DIV-0126), the owner's route `eldritchGene.txt`; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, fixed by DIV-0093 on 2026-10-11); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -6779,7 +6779,7 @@ PSP-only install (the effect named in it) was not run. **Where to start:**
 make `exe_twins.py` stop a PSP run at a word the ELF's relocations mark,
 and keep the bytes that a second, unrelocated window still places.
 
-## D246 — A PSP-EU `en-150` layer has no Config screen text: its labels and controller names draw blank (ours, the language build; fixed 2026-10-17)
+## D246 — A PSP-EU `en-150` layer has no Config screen text: its labels and controller names draw blank (ours, the language build; fixed by DIV-0141, 2026-10-17)
 
 **Found:** the PSP-only round's group LG, 2026-10-12
 ([`loc-build-psp.md`](loc-build-psp.md) 3.3, 6, 8 item 1). The PC draws the
@@ -6796,7 +6796,7 @@ the PSP originally drew. The choices LG offered: leave it blank; take the
 words that match from the PSP's screen and leave the rest blank; or draw the
 PC's Config rows from a built-in English set of ours.
 
-**Fixed 2026-10-17** (the owner's decision, the same day: fill it with the
+**Fixed 2026-10-17 by DIVERGENCE DIV-0141** (the owner's decision, the same day: fill it with the
 words, none more than a one-word name of a function;
 [`loc-build-psp.md`](loc-build-psp.md) 3.3). `convert_config_psp` reads the
 PSP's own screen out of `BOOT.BIN`: its row tables (the PlayStation's with
@@ -7390,7 +7390,7 @@ signal on `cutsceneAndNue` ([`d56-encounter-bounds.md`](d56-encounter-bounds.md)
 6) - not checked. **Where to start:** repeat the pair; then `randlog` and a
 `BOF3X_STATEHASH_DUMP` at the parting frame.
 
-## D272 — The Western layers' dialogue names the US release's buttons over the PC's code (ours, the language build; not fixed)
+## D272 — The Western layers' dialogue names the US release's buttons over the PC's code (ours, the language build; fixed by DIV-0140, 2026-10-17)
 
 **Found:** the key-icon census, 2026-10-13
 ([`key-icons-by-mapping.md`](key-icons-by-mapping.md) 2.6, 9).
@@ -7404,7 +7404,15 @@ same. Wrong whatever the save's mapping where the code is hard-coded. Read,
 not played. **The owner's call:** that doc's section 10 (translate the
 text's icons, or pair them with a US layout preset).
 
-## D273 — A Western disc-only install's world-map legend draws two icons on top of each other (ours, the disc-only art; not fixed)
+**Fixed 2026-10-17** by DIVERGENCE DIV-0140 (the owner: translate; the button
+round's DT-1 and DT-2, [`button-dialogue.md`](button-dialogue.md)): the layer
+carries a button code before each mention and the draw shows the button the
+Config has put that role on. Under a PC install with a Western layer at
+Japan's defaults all 32 Western mentions now name Japan's button, the one
+the code tests (the resolver over every held text, that doc 4.5, 4.6). No
+capture: no recorded route opens these messages.
+
+## D273 — A Western disc-only install's world-map legend draws two icons on top of each other (ours, the disc-only art; fixed by DIV-0130 as D307, 2026-10-17)
 
 **Found:** the key-icon census, 2026-10-13
 ([`key-icons-by-mapping.md`](key-icons-by-mapping.md) 2.2, 9): the disc's
@@ -7412,7 +7420,13 @@ baked default (US) icon and the live glyph from Japan's words in one place
 (`02_worldmap_legend_psx-eu.png`, `vf2_caughFish` t000630). **Where to
 start:** that doc's design (section 5) decides which of the two stays.
 
-## D274 — A Western disc-only install's dock legend names the US buttons over Japan's code (ours, the disc-only art; not seen)
+**Fixed 2026-10-17:** the same defect as D307, reported again by a player
+(GitHub issue #78) and fixed by DIVERGENCE DIV-0130 (the importer repaints
+the disc's baked icons). The button round's DIV-0135 leaves that repaint as
+it is; at the identity Config the disc legends are frame-equal to the
+round's references ([`button-routes.md`](button-routes.md) 9.1).
+
+## D274 — A Western disc-only install's dock legend names the US buttons over Japan's code (ours, the disc-only art; fixed by DIV-0137, 2026-10-17, not seen)
 
 **Found:** the key-icon census, 2026-10-13
 ([`key-icons-by-mapping.md`](key-icons-by-mapping.md) 2.4, 9): the disc's
@@ -7420,13 +7434,28 @@ legend says cross for OK where `EffectKind5E_Pick` places on circle. No
 route reaches the dock. Related: [`disc-data-inventory.md`](disc-data-inventory.md)
 4.2 (Q5; its first icon corrected to circle).
 
-## D275 — The PC's world-map legend names keys statically: wrong once a key is rebound (the port's, D58's class; PC only)
+**Fixed 2026-10-17** by DIVERGENCE DIV-0137 (the button round's IC-D,
+[`rest_3e.md`](rest_3e.md) 11): each row of the legend shows `Sigma` of its
+test's bit, and a Western disc-only install now starts at the West's Config
+(DIV-0134), so its page's own icons are the buttons the code tests
+(DIV-0139). Headless only (the dock self-test, 2,167 plans, 0 mismatches);
+**not seen**: RC's placed save `dock128` waits for the owner's recording.
+
+## D275 — The PC's world-map legend names keys statically: wrong once a key is rebound (the port's, D58's class; PC only; fixed by DIV-0135, 2026-10-17)
 
 **Found:** the key-icon census, 2026-10-13
 ([`key-icons-by-mapping.md`](key-icons-by-mapping.md) 2.2, 9): the port's own
 legend art reads `SPACE` / `X` / `ENTER` whatever the keyboard mapping
 (the harness's `pc-map-legend` row, [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md)
 5). **The owner's call:** that doc's section 10 items 3 and 4.
+
+**Fixed 2026-10-17** by DIVERGENCE DIV-0135 (the owner: the glyphs alone,
+[`button-unification-round.md`](button-unification-round.md) 5.1): the
+key names are painted over and the buttons the Config holds drawn as
+glyphs - the PlayStation's shapes where a PSX disc is among the sources,
+the port's stand-ins otherwise. Keyboard key names are a later round's.
+Captured on `pc` and `pc-enus`, identity and swapped
+([`button-routes.md`](button-routes.md) 9).
 
 ## D276 — The all-calls tracer stalls a hosted run before any recipe frame (ours, the tracer; not fixed)
 
@@ -8190,8 +8219,8 @@ after the records), every disc build. Recipes regenerated:
 so `src/game/fishing_text.cpp` now reads a label in the terms of the
 release the running image was built from (`ExeImage_MappedBuild`):
 the line byte's button is `M_R` of Japan's and the label is
-`SigmaFrom(R, it)`. An unmoved label draws as that release's disc does.
-This amends IC-F's draft D ([`fishing-text.md`](fishing-text.md) 8.5).
+`SigmaFrom(R, it)` (DIV-0136's amendment). An unmoved label draws as that release's disc does.
+This amends DIV-0136, IC-F's entry ([`fishing-text.md`](fishing-text.md) 8.5).
 Live on `psx-us`: the lines follow each other as on the PC, no-label lines
 have none, the reel label is a red circle at Japan's words, a blue cross
 under the swap, and a blue cross under the West's own defaults, as the US
@@ -8213,3 +8242,41 @@ sites - `GameMode3_Enter` / `GameMode3_Leave` (PSX `0x80198620` /
 `0x801986EC` decrescendo 0x14 too, behind a condition not yet read) and the
 movement script's `BA` / `BB` ops, whose PSX operands the PC drops - not
 surveyed.
+
+## D314 — PSP-EU's ram text names the wrong button on its own disc (Capcom's, PSP-EU only; drawn right by DIV-0140)
+
+**Found:** the button round's HT group, 2026-10-17, answering the round's
+open question 4 ([`button-tests.md`](button-tests.md) 5).
+
+**Established** (a capstone read of both PSP `BOOT.BIN`s, addresses and
+immediates only): the ram's push (area 121) reads Held against word 1, the
+Move line's word, on both PSP builds - PSP-JP `0x24ECAC` reads `0x0FF9D2`,
+PSP-EU `0x24EAE8` reads `0x1004E2` - as the PC's `Area121_PushObject` does.
+So the ram takes whatever button Move is on: triangle at PSP-EU's defaults
+(`S` of square). PSP-EU's text there names circle, `P` of square - the
+West's terms. The text is wrong on the PSP-EU disc itself, against its own
+code at its own defaults. Read, not played.
+
+**In ours:** DIV-0140 translates PSP-EU's areas 68 and 121 by `P` (the
+owner's answer 3), so the mention draws as `σ(square)`, the Move line's
+button now - the word the code reads. The PSP-EU disc's own text is left
+as it is; whether to record more than this is the owner's call (that doc 5).
+
+## D315 — PSP-EU's well tests the West's buttons (Capcom's, PSP-EU only; changed by DIV-0139)
+
+**Found:** the button round's HT group, 2026-10-17
+([`button-tests.md`](button-tests.md) 5).
+
+**Established** (the same read): the well's seven exact compares (area 68;
+PSP-JP `0x052788..`, PSP-EU `0x05257C..`) are `== 0x40` x3 then `== 0x20`
+x4 on PSP-JP (cross, then circle) and `== 0x10` x3 then `== 0x40` x4 on
+PSP-EU (triangle, then cross). That is `P` of Japan's, the PlayStation
+West's map, where PSP-EU's own map `S` would give circle and cross. The
+rest of PSP-EU's code read follows `S` (the chop, the dock). The well's
+text is consistent with its code, so this is a release quirk of PSP-EU, not
+a text defect.
+
+**In ours:** DIV-0139 tests `σ(cross)` / `σ(circle)` at the well on every
+install, so on a PSP-EU-only install, at PSP-EU's defaults, the well takes
+circle and cross where the disc's own code takes triangle and cross - the
+unified flow, with the icons the text draws (DIV-0140, answer 3).

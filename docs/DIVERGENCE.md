@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 132 entries, DIV-0001..0132, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 141 entries, DIV-0001..0141, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -402,6 +402,9 @@ designed in rather than bolted on.
   variable unset after this change - the path is unchanged by reading, but
   that is reading.
 - **Also in the PSX version?** No. Each PlayStation language is its own build.
+- **Amended 2026-10-17 (the button unification round, DIV-0140):** in the
+  nine button areas a layer's text carries a button code before each button
+  mention, and the dialogue draws the button the Config has put that role on.
 - **Reversible?** Yes: unset `BOF3X_LANG`, or `BOF3X_ORIGINAL=LoadDatFile`.
 
 ### Advance the dialogue pen by the glyph's width
@@ -3172,6 +3175,9 @@ designed in rather than bolted on.
   red, square pink, cross blue, triangle green, R1 and L1 white, the box
   ending four past the icon and the frame three past the box; the patches
   and the inject logged ON.
+- **Amended 2026-10-17 (the button unification round, DIV-0133):** the icon
+  column is the first reader of `σ`, the one table every icon and every
+  hard-coded test now asks; words 7 / 8 follow the Speak and Action lines.
 - **Reversible?** `BOF3X_LANG=original`, or `BOF3X_ORIGINAL=ConfigController`
   (the patches) and `Config_DrawControllerCell`.
 
@@ -4344,6 +4350,9 @@ designed in rather than bolted on.
   that as the US release's different default bindings - until the banner can draw
   the icons of the bindings in force ([`IDEAS.md`](IDEAS.md) I29). The French
   tab that overflows its box waits on a picture of the French game.
+- **Amended 2026-10-17 (the button unification round, DIV-0136):** the
+  banner's label names the button the line's test is on now, through `σ`;
+  the owner's word above (IDEAS I29) is met.
 - **Reversible?** play without `BOF3X_LANG` (or `BOF3X_LANG=original`): no
   chunk, and the layout is never armed. `BOF3X_ORIGINAL` on any of the
   draws named above leaves Capcom's, which reads the re-aimed pointers
@@ -7971,6 +7980,10 @@ designed in rather than bolted on.
   triangle. The cells were read on the US, EU, FR, DE, JP, PSP-JP and PSP-EU
   pages (the same places, the background column plain on each).
   `importer.py check`, `psp_standins.py check`: 0 errors.
+- **Amended 2026-10-17 (the button unification round, DIV-0135):** the
+  PC install's own page is no longer left alone: its key names are painted
+  over and the live buttons drawn as glyphs. The disc repaint here is
+  unchanged.
 - **Reversible?** A cache built without it (the stand-in's recipe hash is the
   disc's, checked before the repaint; the manifest records the repainted
   body's).
@@ -8070,3 +8083,458 @@ designed in rather than bolted on.
   sound 46,000; sound_rest 27,000). **Not yet heard by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=FishPanelDuck` (the patch's name): the
   fade to nothing and back.
+
+### The Config's six lines as one permutation; menus confirm on Speak's button and cancel on Action's
+
+- **ID:** DIV-0133
+- **Date:** 2026-10-17
+- **Subsystem:** input, the Config words - `src/input/sigma.{h,cpp}`; the
+  three writers `Boot_Task` `0x496B60`, `LoadMenu_Apply` `0x5885D0` and
+  `ConfigScreen_Controller` `0x4613B0` (all ours). **Amends DIV-0051:** the
+  controller panel's icon column was the first site keyed on the mapping;
+  from here every icon and every hard-coded test asks one table, `σ`, and
+  DIV-0051's column is that table's first reader. Words 7 and 8 are named
+  here as Speak's and Action's. The button unification round, group SG
+  ([`button-sigma.md`](button-sigma.md) 6, ledger draft A).
+- **Tier:** Intent - the owner, 2026-10-17: unify every button flow (answer
+  1, [`button-roles-by-release.md`](button-roles-by-release.md) 8).
+- **Original behaviour:** the Config screen swaps buttons between its six
+  lines' words only. `Field_ConfirmButtons` (word 7) and
+  `Field_CancelButtons` (word 8), which every menu tests, are written only by
+  the boot defaults and the load, so a player who moves Speak off circle
+  still confirms every menu with circle. The same holds on the PlayStation.
+- **New behaviour:** after each of the three writers, word 7 is Speak's word
+  (with its L2 / R2) and word 8 is Action's: menus confirm on whatever Speak
+  is on and cancel on whatever Action is on.
+  - The six words are read as a permutation `σ` of the six face and shoulder
+    bits, in Japan's terms; every other site of the round asks it through
+    `Sigma` / `SigmaFrom`. L2 / R2 stay outside it (the rebind masks them
+    out; they stay ORed into Speak and confirm, as the original's).
+  - Six words that are not one button each (a hand-edited save) are refused
+    with a Fatal that names the remedy, not guessed at (rule 4).
+  - At every release's defaults nothing changes: words 7 / 8 equal the
+    originals and `σ` is the release's own map.
+  - A Speak line put on a shoulder makes every menu confirm on that shoulder
+    (answer 1 taken literally; the owner judges it on the swapped captures).
+- **Rationale:** the owner's answer 1. One flow, so that an icon that
+  follows the Config tells the truth in the menus too.
+- **Also in the PSX version?** Yes - the PlayStation has the same third flow
+  on every release, so this changes Capcom's design, not a port defect.
+- **Verification:** `BOF3X_SHADOW=sigma` (2,211 tables, 11 non-permutations
+  refused, 13 source lists; 0 mismatches) and the shadows of `mode_flow`,
+  `save_menu` and `rest_4f`, which compare Capcom's stores before `Arm`
+  ([`button-sigma.md`](button-sigma.md) 5, 8). Live, the round's validation
+  ([`button-routes.md`](button-routes.md) 9, 9.1): after `sigma_swap.txt`
+  slot 7 holds confirm `0x43` and cancel `0x20` on all four install kinds,
+  and the swapped routes stay in step with their identity runs.
+- **Reversible?** `BOF3X_ORIGINAL=ButtonSigma` (`σ` the identity; it also
+  turns off DIV-0139). A save written under it keeps its words 7 / 8 as saved;
+  holding Start while it loads writes the defaults.
+
+### An install starts with the Config of the release it was built from
+
+- **ID:** DIV-0134
+- **Date:** 2026-10-17
+- **Subsystem:** the boot defaults (`Boot_Task` `0x496B60`, after its copy
+  of `0x656AEC`) and `LoadMenu_Apply`'s Start-held reset
+  (`0x588629..0x588670`); the release from the cache manifest's sources
+  (`src/input/sigma.cpp`). The button unification round, group SG
+  ([`button-sigma.md`](button-sigma.md) 6, ledger draft B).
+- **Tier:** Intent - the owner's answer 2, 2026-10-17: an install starts
+  with the defaults of the release it was built from.
+- **Original behaviour:** the PC starts every New Game with Japan's buttons
+  (Speak and confirm on circle, Action and cancel on cross, Move square,
+  Menu triangle). Since the disc-only round ([`controls.md`](controls.md)
+  2.1) a disc-only install starts the same way, so a US disc-only install
+  started with buttons its own text and art never name.
+- **New behaviour:** the nine words are the release's, sources taken in the
+  order JP, the PlayStation West, the PSP.
+  - **The PC's own data counts as a JP source** (the owner, 2026-10-17;
+    `kPcIsJapanSource`): a PC install with a Western layer or a Western disc
+    starts with Japan's buttons, so every PC install is unchanged.
+  - A Western disc-only install starts with the West's: Speak and confirm
+    on cross, Move circle, Menu square, Action and cancel on triangle.
+  - A PSP-EU-only install starts with PSP-EU's: Speak and confirm on cross,
+    Move triangle, Menu square, Action and cancel on circle.
+  - The Start-held reset writes the same buttons without L2 / R2 in words 0
+    and 7, as the PC's reset does for Japan's.
+- **Rationale:** the owner's answer 2: a disc-only install's text and art
+  are its release's, so its buttons should be too.
+- **Also in the PSX version?** No - each PlayStation release starts with its
+  own defaults; this brings that back for disc-only installs, which the PC
+  never had.
+- **Verification:** the self-test's release-by-source cases
+  ([`button-sigma.md`](button-sigma.md) 5). Live
+  ([`button-routes.md`](button-routes.md) 9.1): on `psx-us` and `psp-eu`
+  the state hash's `0x903000` (the nine pad words' page) differs from the
+  reference from tick 1 until the save's load and nowhere after; the PC
+  installs' equal. A New Game's Config panel on a disc-only install is not
+  yet seen.
+- **Reversible?** `BOF3X_ORIGINAL=StartConfigBySource`. For the other
+  reading of answer 2 (a layer's release counts as a source),
+  `kPcIsJapanSource` in `sigma.cpp` is a one-line change.
+
+### The world map's legend shows the buttons the Config holds, as glyphs, no key names
+
+- **ID:** DIV-0135
+- **Date:** 2026-10-17
+- **Subsystem:** the world map's legend - `WorldMap_DrawFrame` `0x404390`
+  and its ten area copies (`world_map_legend`, `src/game/world_map.cpp`),
+  and the importer's dial page (`importer.py` `dial_with_disc_shapes`,
+  `dial_disc_shapes`). **Amends DIV-0130:** its sentence "The PC install's
+  own page (the port's keyboard legend) is not touched" no longer holds;
+  its repaint of a disc's baked icons is unchanged. The button unification
+  round, group IC-W ([`world-map-hud.md`](world-map-hud.md) 9, ledger draft
+  C).
+- **Tier:** Intent - the owner, 2026-10-17: every icon follows the Config,
+  PlayStation icons only; answer 2, the port's `SPACE` / `X` / `ENTER` art
+  replaced by the glyphs alone, no label text
+  ([`button-unification-round.md`](button-unification-round.md) 5.1).
+- **Original behaviour:** the port's dial page names keyboard keys
+  (`SPACE`, `X`, `ENTER`), lit in the labels and dim in the frame, beside
+  its pictograms. It blanks the PlayStation's key sheet, so the code's live
+  key (word 0, word 6) draws an empty cell. The names are the default key
+  table's and lie once a key or a Config line moves (known-defects D275,
+  D58's class). The PlayStation draws the glyph of the button the save's
+  word holds.
+- **New behaviour:**
+  - With a PSX disc among the sources, the importer paints the key names
+    over with the panel and lays in the disc's key sheet and START: the
+    legend shows the PlayStation's circle / cross / START shapes for the
+    buttons the Config holds, beside the port's pictograms, lit and dim as
+    on the PlayStation.
+  - With no PSX disc (a PC install alone, or PC + PSP), the engine paints
+    the names over in VRAM by the same rule and draws, for the lit rows, the
+    port's own stand-ins (the Config screen's circled numeral or `X`, in the
+    button's colour); row 3 gets START in the port's small font. A withheld
+    row's stand-in (rows 1 and 2, and START when row 3 is withheld) is
+    dimmed by a disc's rule - its colours lighter by 56 a channel, drawn
+    through five dim CLUTs the engine keeps in rows v 104..108 of the port's
+    blank key sheet ([`world-map-hud.md`](world-map-hud.md) 9.8).
+  - The pictograms, the PC-only `START` and the spacing stay (the owner,
+    9.7). A disc-only install is unchanged (DIV-0130).
+- **Rationale:** the owner's answers. The legend is the one site whose code
+  already followed the Config; the port's art was what lied.
+- **Also in the PSX version?** No - the PlayStation draws the shapes; this
+  undoes a port change (the keyboard legend), with the port's stand-ins
+  where the install has no PlayStation shapes.
+- **Verification:** [`world-map-hud.md`](world-map-hud.md) 9.4, 9.5 and 9.8
+  (the self-tests; `sigma_worldmap` identity and swapped on `pc`, `pc-en150`
+  and `psx-eu`; the dim rows +49..+58 a channel on `pc`, the lit rows and
+  the disc installs unchanged). The round's validation
+  ([`button-routes.md`](button-routes.md) 9, 9.1): on `pc` and `pc-enus`
+  every differing identity frame differs only in the legend's key column
+  (game pixels `66,24-90,49`), the disc installs 51 / 51 equal; swapped,
+  rows 1 and 2 trade on all four.
+- **Reversible?** The engine's half: `BOF3X_ORIGINAL=WorldMapLegend`. The
+  importer's half: a cache built without a PSX disc, or by an importer from
+  before this change (the engine then repaints the page itself, unless
+  switched off).
+
+### The fishing banner's labels name the button the line's test is on now
+
+- **ID:** DIV-0136
+- **Date:** 2026-10-17
+- **Subsystem:** field text, the fishing spot's banner labels -
+  `src/game/fishing_text.cpp` `FishingText_LabelOf`; the label draws of
+  effect kind 0xF's states 10..12 in `src/game/effect_1a.cpp`. **Amends
+  DIV-0069:** its label "for the button the port's numeral names" becomes
+  the label for that button through `σ`. The button unification round,
+  group IC-F and its two follow-ups ([`fishing-text.md`](fishing-text.md)
+  8, ledger draft D).
+- **Tier:** Intent - the owner, 2026-10-17: unify every button flow (answer
+  1). DIV-0069's owner's word waited on exactly this ("until the banner can
+  draw the icons of the bindings in force", IDEAS I29).
+- **Original behaviour:** each labelled line of the banner (seven of the
+  thirteen records at `0x653B98`) draws a fixed label by its line byte:
+  `0x66A2FC[line]`, the port's circled 1, 2 or 3, in pen `0x653C00[line]`
+  (2, 1, 6). It names circle, cross or triangle whatever the Config says;
+  DIV-0069 draws DIV-0051's icon for the same fixed button under a Latin
+  layer.
+- **New behaviour:** the label names the button the line's test is on now.
+  - The cast's line (text 0) takes word 7's button; every other labelled
+    line `Sigma` of the line byte's button.
+  - **Read in the terms of the release the running `.data` was built
+    from** (D313; `ExeImage_MappedBuild`, `BOF3.exe`'s own and a `pc-zh`
+    image being Japan's): the line byte names the line's label entry on
+    every release, and the entry is that release's button, `M_R` of Japan's
+    (`P` on the PlayStation West: cross, triangle, square; `S` on PSP-EU:
+    cross, circle, square). The label is `SigmaFrom(R, that button)`.
+  - **A button `σ` leaves where it was draws exactly as the original reads
+    it** (the owner's rule, 2026-10-17: recolour only when the button
+    moves): the line byte's label in the image's pen, which on a disc image
+    is since D313 the disc module's own (West 1, 6, 5; PSP-EU 1, 2, 5). A
+    moved button is drawn as its own label in its own pen (circle 2, cross
+    1, triangle 6, square 5, L1 / R1 0, as the Config cell `0x461C00`).
+  - Under a Latin layer the label is DIV-0051's shape; on the PC's own text
+    the port's stand-in, `0x66A2FC[entry]`. At the identity Config nothing
+    changes; a Western install at its own defaults draws the US banner's
+    labels, and at Japan's words Japan's buttons in their own pens.
+- **Rationale:** the round's answer 1. With DIV-0139 moving the tests, an
+  icon that follows the Config is true in the fishing too.
+- **Also in the PSX version?** Yes - the PlayStation's labels are fixed too
+  (the US module's are its own release's buttons); following the Config is
+  ours.
+- **Verification:** [`fishing-text.md`](fishing-text.md) 8.3, 8.7 and 8.8
+  (`BOF3X_SHADOW=fishing_text,sigma,effect_1a`; `sigma_fishing` on
+  `psx-us` 49 / 49 equal to RC's pre-round reference at the identity and
+  to RC's swapped run under the swap; after D313 the reel label a red
+  circle at Japan's words, a blue cross under the swap and under the West's
+  own defaults). The round's validation ([`button-routes.md`](button-routes.md)
+  9, 9.1): swapped, the reel label trades on all four installs.
+- **Reversible?** `BOF3X_ORIGINAL=FishingLabelSigma`.
+
+### The dock's parts-menu legend shows the buttons the Config has its tests on
+
+- **ID:** DIV-0137
+- **Date:** 2026-10-17
+- **Subsystem:** the dock's parts menu (area 128) -
+  `EffectKind5E_DrawPanel` `0x47FBE0` (ours, `src/game/rest_3e.cpp`); its
+  tests are `EffectKind5E_Pick` `0x47F610` (DIV-0139). The button
+  unification round, group IC-D ([`rest_3e.md`](rest_3e.md) 11, ledger
+  draft E).
+- **Tier:** Intent - the owner's decision, 2026-10-17
+  ([`button-roles-by-release.md`](button-roles-by-release.md) 8: every
+  button icon follows the Config; PlayStation icons only).
+- **Original behaviour:** the legend is baked art of the area page: each
+  release's default buttons for the three tests (Japan's page, the PC's:
+  circle place, cross quit, triangle memo; the West's cross / triangle /
+  square; PSP-EU's cross / circle / square). It never changes with the
+  Config, and on a Western disc-only install it named the US buttons over
+  Japan's code (known-defects D274).
+- **New behaviour:** each row shows `Sigma` of its test's bit. Where that is
+  the page's own icon in that row, the original's one quad is drawn
+  unchanged (every row at every release's defaults). Otherwise the row's
+  icon cell is left out of the panel and the button drawn there: the page's
+  own icon of it from another row; else DIV-0051's icon under a Latin
+  overlay; else the port's stand-in glyph (`0x66A2FC`'s, as the Config
+  panel's `0x461C00`), in the button's colour. The page's icons are read
+  from the VRAM shadow by a shape rule; a page whose cells are not three of
+  the four shapes is drawn as it is.
+- **Rationale:** the owner's answers on the key icons: an icon shows what
+  the Config holds now. Japan's terms (`Sigma`), so the legend and
+  DIV-0139's tests agree on every install.
+- **Also in the PSX version?** Yes - the PlayStation's legend is the same
+  baked art and never follows a Config swap. The Western overlap at
+  defaults was the PC's (Japan's words over a Western page), gone with
+  DIV-0134's starting Config by source.
+- **Verification:** `BOF3X_SHADOW=rest_3e`: the fuzz 0 mismatches before
+  the switch; the dock self-test 84 cells, 2,167 plans, 0 mismatches
+  (identity on the three page orders, the stand-in swap, 720 assignments
+  each); the rule read the seven builds' pages as [`rest_3e.md`](rest_3e.md)
+  11's table. **Not seen:** no recorded route reaches the dock yet (RC's
+  placed save `dock128` is the owner's to record).
+- **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
+  `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.
+
+### The item lists' L1 / R1 corner shows the buttons the Config pages on
+
+- **ID:** DIV-0138
+- **Date:** 2026-10-17
+- **Subsystem:** the menu pieces - `Menu_DrawPiece` `0x57D860` (ours,
+  `src/game/menu_windows.cpp`); the plan in `src/game/shoulder_glyphs.cpp`.
+  The button unification round, group IC-L
+  ([`button-shoulder-corner.md`](button-shoulder-corner.md) 6, ledger draft
+  F).
+- **Tier:** Intent - the owner, 2026-10-17: every icon tied to the mapping
+  (answer 1); answer 3 for the PSP page, one code path.
+- **Original behaviour:** the ten item and skill lists draw `L1` above their
+  scroll bar and `R1` below it, baked into five pieces of the UI page, so
+  they name L1 / R1 whatever the Config says. On the PSP, Capcom redrew them
+  as `L` / `R`.
+- **New behaviour:** each labelled piece is drawn with its label box
+  refilled from its own plain background and the glyph of `σ(L1)` /
+  `σ(R1)` drawn at the slot.
+  - The glyph is the page's own L1 or R1 art where the page has it (the
+    PC's and the PSX discs'); otherwise the Config panel's glyph for that
+    button: DIV-0051's icon under a Latin layer, else the port's stand-in.
+  - On a PSP base, whose UI page and dial sheet carry only `L` / `R`, the
+    PSP's tiles are blanked and the Config panel's L1 / R1 drawn, as on
+    every other install (the owner's answer 3).
+  - With `σ(slot)` the slot's own button on a page with the art, the piece
+    is drawn by the original's code: nothing changes on a PC or PSX install
+    at the identity.
+- **Rationale:** an icon that follows the Config tells the truth once
+  DIV-0139 routes the lists' L1 / R1 tests through `σ`.
+- **Also in the PSX version?** Yes - the PlayStation's labels are baked the
+  same way on every release; this changes Capcom's design, not a port
+  defect.
+- **Verification:** `BOF3X_SHADOW=shoulder_glyphs`
+  ([`button-shoulder-corner.md`](button-shoulder-corner.md) 4). The round's
+  validation ([`button-routes.md`](button-routes.md) 9, 9.1):
+  `sigma_items` 32 / 32 equal at the identity on `psx-us`, its corner
+  unchanged on `pc` and `pc-enus`; on `psp-eu` the tiles `L` / `R` become
+  `L1` / `R1` in every list frame, as intended; swapped, the tiles trade on
+  all four (`161,72-174,220`).
+- **Reversible?** `BOF3X_ORIGINAL=ShoulderGlyphs`.
+
+### The hard-coded button tests ask the Config
+
+- **ID:** DIV-0139
+- **Date:** 2026-10-17
+- **Subsystem:** input - the fishing, the rope pull, the crane, the well,
+  the chop, the antenna's dial, the ending's skip, the dock's parts menu,
+  the item lists' L1 / R1, and (group HT-2) the text's held speed-up, the
+  faerie village's music room and the battle command cross's L1 / R1.
+  Every function and line is in [`button-tests.md`](button-tests.md) 2 (83
+  lines in 20 files of `src/game/`, and HT-2's 5 lines in 3 files, 2.4);
+  the self-test in `src/input/button_tests.cpp`. The button unification
+  round, groups HT and HT-2 (that doc 6, ledger draft G). Builds on
+  DIV-0133's `σ`.
+- **Tier:** Intent - the owner, 2026-10-17: unify every button flow (answer
+  1). The same day the owner decided [`button-tests.md`](button-tests.md)
+  3's remainder: the speed-up, the music room and the cross through `σ`;
+  `SuperCombo_ReadButton` and the rebind left on their own buttons;
+  `Scena19_Run0`'s R1 left as it is (the owner does not place that
+  section).
+- **Original behaviour:** these tests compare the pad with Japan's buttons
+  as constants (circle to cast, cross to quit, L1 / R1 to page, and so on)
+  and ignore the Config. A player who swaps Speak with Action still casts
+  the rod on circle, pulls the rope and works the crane on circle, and pages
+  the item lists on L1 / R1 after moving View and Change; holding circle
+  speeds the text, circle plays a track in the music room and cross closes
+  it, and in battle L1 points the cross at the auto battle and R1 at the
+  escape (`Battle_CommandPadMasks` `0x64AE3C`). The same holds on the
+  PlayStation, where the Western releases instead hard-code `P` of each face
+  constant.
+- **New behaviour:** each test asks `Sigma(b)` for Japan's bit `b`: the
+  button the line whose Japan default is `b` is on now.
+  - Exact compares stay exact; the fishing's stage 1 takes `0x74`'s four
+    bits one by one.
+  - The speed-up is `Sigma(0x20)`: the Speak line's button, never L2 / R2,
+    which word 0 also holds.
+  - The battle command cross asks `Sigma` of each of its table's masks; the
+    table stays Capcom's bytes and the d-pad stays physical. The escape
+    follows the View line's button and the auto battle the Change line's;
+    the command boxes stay where they are.
+  - At Japan's defaults (every PC install) nothing changes. A Western
+    disc-only install starts at the West's Config (DIV-0134), so `σ` is `P`
+    there and the tests are the PlayStation US's own. On a PSP-EU-only
+    install `σ` is `S`: PSP-EU's own except at the well, whose disc tests
+    `P` (known-defects D315); ours follows the Config there too.
+- **Rationale:** with the icons (DIV-0135..0138, DIV-0140) and the menus
+  (DIV-0133), one table decides every button: the text names the button the
+  code tests, on every install and after any rebind.
+- **Also in the PSX version?** Yes - every PlayStation release hard-codes
+  these tests in its own terms (Japan's, `P` for the West, `S` for PSP-EU
+  with the well left in `P`); this changes Capcom's design, not a port
+  defect. HT-2's three were not read on the PlayStation discs; `P` and `S`
+  do not move L1 or R1.
+- **Verification:** `BOF3X_SHADOW=button_tests`: 555 masks under stand-in
+  words (three releases' defaults and the swap) and 261 live runs of five
+  functions, 0 mismatches; the 20 edited modules' fuzzes, run before `Arm`
+  with `σ` the identity, 0 mismatches ([`button-tests.md`](button-tests.md)
+  4, 8). The round's validation ([`button-routes.md`](button-routes.md) 9,
+  9.1): after the swap the fishing's cross at 850 opens the gear menu as the
+  identity's circle does, and L1 pages the item list as the identity's R1
+  does, on all four installs. **Owed:** the minigames (the rope pull, the
+  crane, the well, the chop, the antenna, the ram, the dock), from RC's
+  placed saves; HT-2's battle, held text and music room.
+- **Reversible?** `BOF3X_ORIGINAL=ButtonSigma`, DIV-0133's switch: with it
+  `Sigma` is the identity and every test is the original's. There is no
+  separate switch: a swapped Config with DIV-0133 off but this on would
+  split the flow, so the two are kept together.
+
+### The dialogue names buttons by code, drawn as the button the Config has put the role on
+
+- **ID:** DIV-0140
+- **Date:** 2026-10-17
+- **Subsystem:** text - `tools/loc_build.py` (the build half: `convert_run`,
+  `set_button_area`, `loc_build.py buttons`); `MsgBox_Step` `0x497840`
+  (`src/game/msgbox.cpp`) and `Text_DrawString` `0x516B70`
+  (`src/game/text_draw.cpp`, `src/game/button_text.h`), the draw half.
+  **Amends the DIV-0005 family** (the language layer's text). The button
+  unification round, groups DT-1 and DT-2
+  ([`button-dialogue.md`](button-dialogue.md) 3.4 and 4, ledger draft H).
+- **Tier:** Intent - the owner's "unify every button flow" (2026-10-17);
+  fixes known-defects D272.
+- **Original behaviour:** a button in running text is an icon glyph after a
+  colour control, baked per release: the PC's text draws Japan's buttons
+  (the port's circled numerals and `X`, read by their colour), the
+  PlayStation West's and PSP-EU's draw their own (`P`, `S` of Japan's), and
+  a Western layer copied those over the PC's code. So under every Western
+  layer the rope pull, the fishing help and the crane name a button the code
+  does not test (D272), and no text follows the Config.
+- **New behaviour:**
+  - **The build:** `loc_build.py` writes a button code, `05 (0xB0 + n) 06`,
+    before each mention in the nine button areas (8, 30, 89, 129, 68, 75,
+    111, 121, 135), naming Japan's bit `1 << n`: the release's icon read by
+    `P^-1` or `S^-1` (by `P^-1` in PSP-EU's areas 68 and 121, the owner's
+    answer 3), the identity for JP. The release's own icon stays after the
+    code, so any reader that does not resolve it draws as before. Area 1's
+    PC-only mark is not a button ([`button-dialogue.md`](button-dialogue.md)
+    4.3); areas 78 and 175 are left.
+  - **The draw:** `MsgBox_Step` and `Text_DrawString` resolve each mention
+    at draw time to `σ(bit)`. When that is the button the text's icon
+    shows, the text's bytes are drawn as they are. Otherwise the icon is
+    drawn as that button from the same glyph family as the icon (a Latin
+    layer's four icons and DIV-0051's L1 / R1; ja-JP's four; the port's
+    stand-ins), in that button's colour (circle 2, cross 1, triangle 6,
+    square 5, L1 / R1 0, the Config cell's `0x461C00`), the line re-flowing
+    by the drawn glyph's width.
+  - **The PC's own text** (the owner's "the colour swap", 2026-10-17): with
+    no language layer, in the nine button areas, the colour before one of
+    the port's stand-ins names the button (2 circle, 1 cross, 6 triangle, 5
+    square); a mention whose button `σ` moves is drawn as the Config cell's
+    stand-in for `σ(bit)` (`0x66A2FC`'s strings) in its colour. No new art.
+- **Rationale:** the owner's answers; the PC-only player sees the same
+  stand-in for a role in the dialogue as in the Config panel.
+- **Known and accepted:** at the text's own release's defaults every mention
+  draws as the text has it, except PSP-EU's areas 68 and 121 (three
+  mentions), whose text names the West's buttons: there the draw names the
+  button the unified code tests, `S` of Japan's (D314). Under a PC install
+  with a Western layer, at Japan's defaults, all 32 Western mentions now
+  name Japan's button - D272's fix. On a ja-JP disc-only install an L1 / R1
+  draw would be a blank cell (the port's stand-ins are not in that table;
+  not measured). `Text_DrawString`'s count budget loses two passes per code.
+- **Also in the PSX version?** Partly - each PlayStation release's text names
+  its own buttons and none follows a Config swap; the Western text over
+  Japan's code (D272) is the PC's layers'. The code is ours.
+- **Verification:** the build: every held disc built and diffed against the
+  build before it, nothing drawn differently, the codes counted against the
+  census (31 PSX mentions, 32 under each Western layer, the PSP-EU set;
+  [`button-dialogue.md`](button-dialogue.md) 2.3, 3.1, 3.2); `loc_build.py
+  selftest` (`selftest_buttons`). The draw: `BOF3X_SHADOW=button_text`, 180
+  mentions through both readers, 0 mismatches, and the resolver over every
+  held text (4.6). **No capture:** no recorded route opens these messages;
+  the minigame starts are the owner's to record.
+- **Reversible?** `BOF3X_ORIGINAL=ButtonText`: both readers draw every
+  mention as its text has it (`=MsgBox_Step` and `=Text_DrawString` too).
+  The codes alone change nothing drawn.
+
+### A PSP-EU layer's Config screen: the PSP's words, and four of ours
+
+- **ID:** DIV-0141
+- **Date:** 2026-10-17
+- **Subsystem:** text / menu - `tools/loc_build.py` `convert_config_psp`;
+  the kind-7 chunk DIV-0015 applies. Rides on DIV-0090's PSP language layer
+  ([`loc-build-psp.md`](loc-build-psp.md) 3.3 and its D246 addition, branch
+  `fix/psp-config-text`).
+- **Tier:** Sensible - the screen's words; nothing in play moves.
+- **Original behaviour:** a layer built from PSP-EU alone had no Config
+  chunk (the PSP's own screen has other rows), so on a PSP-only English
+  install the Config screen's six labels and six controller names drew blank
+  and its seventeen records kept the image's zeros (known-defects D246).
+- **New behaviour:** the chunk is built from `BOOT.BIN`'s screen: 25 of the
+  29 slots take the PSP's word; the four its screen has no word for take
+  ours, a table of four one-word names in `loc_build.py`
+  (`CONFIG_BUILTIN_LABELS`: Sound, Controller; `CONFIG_BUILTIN_OPTIONS`:
+  Stereo, Mono), the Sound row's two records at the Autorun row's count and
+  x. The chunk is byte-identical to the PSX-EU layer's.
+- **Rationale:** the owner's decision, 2026-10-17: fill the slots with the
+  words, none more than a one-word name of a function; quoted labels naming
+  a game function are fine in code (the owner's stance, 2026-10-10). The
+  PSP's word first, the PSX-EU layer's where a PSX-EU disc is held (never on
+  this path: that disc builds the layer itself), then ours.
+- **Also in the PSX version?** No - the words are the PlayStation's (the
+  PSX-EU and PSX-US screens read the same); the PSP itself has no Sound row
+  and names the Controller row Button Config.
+- **Verification:** `loc_build.py selftest` (`selftest_config_psp`,
+  synthetic); every other layer byte-identical before and after; the Config
+  screen and its Controller panel on a PSP-only install, headless on
+  `sigma_config.txt` (harness root `C:\Users\kerok\b_d246`): blank before,
+  filled after and pixel-equal to the PSX-US install's; PSX-US and PC +
+  `en-US` 32 of 32 frames equal before and after (D246). Not seen by the
+  owner.
+- **Reversible?** No toggle; a layer built from a PSX disc, or from the PC
+  install, is unchanged.

@@ -518,14 +518,15 @@ No DIV entry; no behaviour change.
   twins came from disassembling the section straight off the JP disc, which
   its `tools/emi.py` and `text_tables.Disc` make a ten-line script.
 
-## 9. The legend's keys under the button round (ledger draft C)
+## 9. The legend's keys under the button round (DIV-0135)
 
 **Status:** BUILT (2026-10-17, group IC-W of
 [`button-unification-round.md`](button-unification-round.md) 3, branch
 `buttons/icw`). Headless self-tests pass. The world-map route was run on
 three installs, identity and swapped (9.5). Withheld rows on the port's page
-dimmed as a disc dims them (9.8, the owner's answer 4). Not played. Ledger
-draft C (9.6) is lettered; the coordinator numbers it at the merge.
+dimmed as a disc dims them (9.8, the owner's answer 4). Not played.
+**Numbered at the round's end (2026-10-17):** ledger draft C (9.6) is DIV-0135; the defect
+it fixes is known-defects D275 (the port's static key names).
 
 ### 9.1 What the legend was
 
@@ -612,7 +613,7 @@ Evidence for the importer's half:
   byte-identical on the JP, EU, FR and DE pages of all 16 areas, and on the
   US page of area 16 (a scratch reader over the discs, 2026-10-17).
 - `importer.py build` of PC + EU logs "base from psx-eu-en 11 chunks (the
-  port's dial page with this disc's button shapes, ledger draft C)".
+  port's dial page with this disc's button shapes, DIV-0135)".
 - `importer.py verify` on that cache: 0 problems; 731 of 742 containers
   byte-identical, 11 holding a disc's own sections.
 
@@ -666,7 +667,7 @@ The same route on `pc` with `--original WorldMapLegend` (`input_run.py`,
 `f01230`, `f01260` and `f01320`, all show the legend and are equal to the
 reference's.
 
-### 9.6 Ledger draft C
+### 9.6 The ledger entry, DIV-0135
 
 **The world map's legend: the buttons the Config holds, in PlayStation
 shapes or the port's stand-ins, no key names**

@@ -6,7 +6,7 @@ and fuzzed; **not yet seen in game** (section 6 is the coordinator's live
 check). The fishing code itself (`0x52AF80..0x52CD47`) is Capcom's and
 round fourteen's; everything changed here is in draws that were already ours.
 Section 8 (2026-10-17, the button round's IC-F, built and headless only)
-draws the banner's labels through the Config's `σ`: ledger draft D, amending
+draws the banner's labels through the Config's `σ`: DIV-0136, amending
 DIV-0069.
 
 ## 1. What the owner saw (HANDOFF item `0000`)
@@ -165,7 +165,7 @@ letters over a 40-unit box) and the German build.
 - The tabs read `Gear` / `Data` / `Rule` on the US disc (you read the
   Chinese as Equip / Data / Guide). The disc's words are used.
 
-## 8. The labels through σ (button round group IC-F, ledger draft D)
+## 8. The labels through σ (button round group IC-F, DIV-0136)
 
 **Status:** BUILT (2026-10-17, branch `buttons/icf`), headless only. The
 round is [`button-unification-round.md`](button-unification-round.md) 3,
@@ -202,7 +202,7 @@ label draws.
 - **The button.** The line byte names Japan's button: 0 circle `0x20`,
   1 cross `0x40`, 2 triangle `0x10`. The label shows `Sigma` of it. Text 0
   shows the first of the six buttons in word 7 (`0x90358E`), in the Config
-  cell's order. Under draft A word 7 is Speak's word, so this equals
+  cell's order. Under DIV-0133 word 7 is Speak's word, so this equals
   `Sigma(circle)`. The self-test checks that over all 720 assignments.
 - **The entry.** `0x66A2FC`'s order, as the Config cell `0x461C00` reads it
   under its tests: circle, cross, triangle, square, L1, R1 (its loads of
@@ -229,7 +229,7 @@ entry = the line byte and pen = `0x653C00[line]`, which are the original's
 reads. So effect_1a's fuzz compares Capcom's draws.
 
 **A word 7 with none of the six buttons** is refused with a Fatal that names
-the remedy (hold Start while the save loads, or the switch). Under draft A it
+the remedy (hold Start while the save loads, or the switch). Under DIV-0133 it
 cannot happen, because SG refuses such words at the writers. It can happen
 only with `ButtonSigma` off and a hand-edited save.
 
@@ -261,7 +261,7 @@ only with `ButtonSigma` off and a hand-edited save.
     triangle and square, and the cast shows cross;
   - at PSP-EU's: cross, circle, square, and the cast cross;
   - **the stand-in swap** (Speak <-> Action, View <-> Change, words 7 / 8
-    by draft A): circle lines show cross in pen 1, cross lines show circle
+    by DIV-0133): circle lines show cross in pen 1, cross lines show circle
     in pen 2, triangle stays, and the cast shows cross;
   - all 720 assignments: each label is `Sigma(its button)` in its shape's
     pen, and the cast's equals `Sigma(circle)`.
@@ -274,7 +274,7 @@ This held until HT merged into `buttons/round`. Before that, stage 1 and the
 reel still tested Japan's constants, so after a swap the labels named the
 swapped buttons while the old ones still worked. HT closed it.
 
-### 8.5 Ledger draft D (amends DIV-0069)
+### 8.5 DIV-0136 (amends DIV-0069)
 
 - **Date:** 2026-10-17
 - **Subsystem:** field text, the fishing spot's banner labels
@@ -489,7 +489,7 @@ the same image with the 55 bytes zeroed again (`make_before.py`):
 | psx-us, now | 1050..1110, 1120..1210, 1225..1280, 1290..1415, 1420..1475, 1485..1610, 1615..1670: each line follows 5..10 frames after the last |
 | pc | 1050..1085, 1095..1210, 1225..1255, 1265..1365, 1375..1475, ...: the same 5..10-frame follow (its Chinese lines type at 12 units) |
 
-In the before run the "Move Rod...Directional button" line (label `0xFF` on
+In the before run the rod-steering line (label `0xFF` on
 the PC) ends in a red circle. Now it has none.
 
 **Checks:**
