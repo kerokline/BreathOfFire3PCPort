@@ -8657,6 +8657,28 @@ designed in rather than bolted on.
     recomp (D318).
   - The PC's fade-out-stop is the one difference.
 - **Also in the PSX version?** Yes: this is what the PlayStation does.
-- **Verification:** (filled in below)
+- **One knock-on:** the bedroom's song now fades over 27 frames into the
+  black rather than 10. The area's track is 0xFF and differs from the song
+  still fading, so `GameMode_Field` (`0x4959F0`) does what it does at any
+  change to a different track: `Music_FadeOut(16)`, then
+  `Music_FadeOutStop(10)`. The song is fully stopped at f10848 instead of
+  f10831. The PlayStation stops it at once. Left as the game's own
+  transition fade.
+- **Verification:**
+  - The `whelpBoss` route under `BOF3X_MUSIC_LOG=1` on the PC install
+    (`pc-en150`) and on PSP-EU alone, root `C:\Users\kerok\ab88`. On both,
+    no `Music_Play` runs from the bedroom's stop (f10821) to the wake's
+    track 7 (f12708, the same frame as before), and the dream is silent.
+  - Against the PC's run before the change, the whole music log differs
+    only there: the replay of 14 at f10839 is gone, and so are its two
+    later no-ops; the fade pair above is new; and the wake's fade of 14
+    (f12690 / f12707) is gone with nothing left to fade.
+  - Both runs reach area 10 at frame 13,170, as before.
+  - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=window_task,sound,mode_flow` from
+    the ini-less launcher copy exits 0: `window_task` 33,600 rounds,
+    `mode_flow` 41,000 and `sound` 46,000, each with 0 mismatches. They run
+    before the switch is armed, and the window_task coverage line shows the
+    keep branch ("music kept 352").
+  - Not heard yet.
 - **Reversible?** `BOF3X_ORIGINAL=AreaKeepStoppingNone` (Capcom's keep),
   or `BOF3X_ORIGINAL=Area_PickMusic`.
