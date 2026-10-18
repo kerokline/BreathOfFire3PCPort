@@ -7,7 +7,8 @@
 # at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),
 # msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from
 # COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit), fishrec and
-# fishpen (the fishing banner's line records and the release's own label pens, D313) - and how
+# fishpen (the fishing banner's line records and the release's own label pens, D313), margins
+# (Sprite_ScreenMargins from BOOT.BIN, the PSP's x margins less its 32 columns) - and how
 # many bytes it fills.
 # A row is written only when every
 # byte equals BOF3.exe's, but a fishpen row (each release's own pens) and a pairs track
@@ -1699,6 +1700,7 @@ psp-jp	twin	0x6639B8	0x6639C1	ETC/START.EMI	8	0x801D0C64	9
 psp-jp	twin	0x6639C4	0x6639C8	ETC/START.EMI	8	0x801D0C60	4
 psp-jp	twin	0x6639C8	0x6639D0	ETC/START.EMI	8	0x801D0D88	8
 psp-jp	twin	0x6639D0	0x6639D4	ETC/START.EMI	8	0x801D0DBC	4
+psp-jp	margins	0x663B28	0x663B30	BOOT.BIN	-	0x002E5B80	8
 psp-jp	psxmap	0x663E6E	0x663F4C	ETC/BATE.EMI	0	0x801D89DE	222
 psp-jp	twin	0x6641DC	0x6641E1	ETC/SHOP.EMI	0	0x801D0CD4	5
 psp-jp	psxmap	0x6672AC	0x6672B4	ETC/START.EMI	8	0x801EC2E4	8
@@ -2033,6 +2035,7 @@ psp-eu	twin	0x6639B8	0x6639C1	ETC/START.EMI	8	0x801D0C64	9
 psp-eu	twin	0x6639C4	0x6639C8	ETC/START.EMI	8	0x801D0C60	4
 psp-eu	twin	0x6639C8	0x6639D0	ETC/START.EMI	8	0x801D0D88	8
 psp-eu	twin	0x6639D0	0x6639D4	ETC/START.EMI	8	0x801D0DBC	4
+psp-eu	margins	0x663B28	0x663B30	BOOT.BIN	-	0x002E5398	8
 psp-eu	psxmap	0x663E6E	0x663F4C	ETC/BATE.EMI	0	0x801D89DE	222
 psp-eu	twin	0x6641DC	0x6641E1	ETC/SHOP.EMI	0	0x801D0CD4	5
 psp-eu	psxmap	0x6672AC	0x6672B4	ETC/START.EMI	8	0x801EC2E4	8
