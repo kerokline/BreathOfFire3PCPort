@@ -1694,6 +1694,166 @@ def config_encode(raw, what, room):
     return out
 
 
+def config_payload(labels, records, ctrls):
+    """The kind-7 payload from six labels, seventeen (count, x, string) records
+    and six controller names, each string in donor script codes."""
+    payload = bytearray([CONFIG_LABELS])
+    for i, raw in enumerate(labels):
+        # Repointed, not written in place, so the only limit is ours.
+        payload += config_encode(raw, "label %d" % i, 32) + b"\0"
+    payload.append(CONFIG_RECORDS)
+    for i, (count, x, raw) in enumerate(records):
+        # count and x are the donor's own, verbatim: they are what puts the
+        # options where the disc puts them. The PC record holds 14 bytes of
+        # string after them.
+        payload += bytes([count, x]) + config_encode(raw, "option %d" % i, 14) + b"\0"
+    payload.append(CONFIG_CTRL)
+    for i, raw in enumerate(ctrls):
+        payload += config_encode(raw, "controller %d" % i, 64) + b"\0"
+    return bytes(payload)
+
+
+# The PSP's own Config screen, in BOOT.BIN (docs/loc-build-psp.md 3.3, read
+# 2026-10-17 off PSP-EU): six rows, Msg Speed / Window Clr / Background /
+# Autorun / Button Config. / Delete Data - the PlayStation's Sound row gone,
+# two rows added that have no options - over fifteen 8-byte option records
+# (the PlayStation's seventeen without Stereo and Mono) and the same six
+# controller records. Its row tables are the PlayStation's with the Sound
+# row taken out, and they locate the block as CONFIG_TABLES does there: the
+# records end at them, the controller records start after them.
+PSP_CONFIG_TABLES = bytes([0, 3, 7, 11, 13, 15, 3, 4, 4, 2, 0, 0])
+PSP_CONFIG_RECORDS = 15
+# The PC's record -> the PSP's (None: the Sound row's two, which the PSP has
+# not). 15 and 16 are unused on both screens (docs/config-screen.md 1).
+PSP_CONFIG_RECORD_OF = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, None, None, 11, 12, 13, 14)
+# The PC's label -> the PSP's row: Msg Speed, Window Clr, Background and
+# Autorun are the same rows; Sound has none, and Controller none by its word
+# (the PSP's row for the same panel says "Button Config.", fourteen letters
+# where the PC's column was set for ten, DIV-0015).
+PSP_CONFIG_LABEL_OF = (0, 1, 2, None, 3, None)
+# Ours (the owner's decision, 2026-10-17, D246): the words of the slots the
+# PSP's screen has no word for, in the disc's script codes (ASCII letters).
+# One-word names of the screen's functions, nothing else of the game.
+CONFIG_BUILTIN_LABELS = {3: b"Sound", 5: b"Controller"}
+CONFIG_BUILTIN_OPTIONS = {11: b"Stereo", 12: b"Mono"}
+
+
+def psp_config_code_labels(boot, text_end, first_va, last_va):
+    """The two row labels the PSP's label routine builds on its stack - one
+    `ori` / `sb` pair a byte - rather than copying from .data, in stack order.
+
+    The routine is the one whose calls pass the first and the last .data label
+    as their source ($a1); its stack bytes are read from its prologue (`addiu
+    $sp, $sp, -N`) to the last of those calls. [] if it is not found as that."""
+    calls = mips_calls([(0, boot[:text_end])])
+    first = [a for a, _, regs in calls if regs.get(5) == first_va]
+    last = [a for a, _, regs in calls if regs.get(5) == last_va]
+    if len(first) != 1 or len(last) != 1 or not first[0] < last[0] < first[0] + 0x200:
+        return []
+    start = first[0]
+    while start > first[0] - 0x400:
+        w, = struct.unpack_from("<I", boot, start)
+        if w >> 16 == 0x27BD and w & 0x8000:            # addiu $sp, $sp, -N
+            break
+        start -= 4
+    else:
+        return []
+    regs, stack = {0: 0}, {}
+    for at in range(start, last[0] + 8, 4):
+        w, = struct.unpack_from("<I", boot, at)
+        op, rs, rt, imm = w >> 26, (w >> 21) & 31, (w >> 16) & 31, w & 0xFFFF
+        if op == 0x0D and rs == 0:                      # ori rt, $zero, imm
+            regs[rt] = imm
+        elif op == 0x28 and rs == 29:                   # sb rt, off($sp)
+            if rt not in regs or regs[rt] > 0xFF:
+                return []
+            stack[imm] = regs[rt]
+        elif op in (0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0E, 0x0F) or 0x20 <= op <= 0x26:
+            regs.pop(rt, None)
+        elif op == 0:
+            regs.pop((w >> 11) & 31, None)
+        regs[0] = 0
+    runs, cur = [], bytearray()
+    for off in sorted(stack):
+        if cur and off != prev + 1:
+            runs.append(bytes(cur))
+            cur = bytearray()
+        cur.append(stack[off])
+        prev = off
+    if cur:
+        runs.append(bytes(cur))
+    if any(not r.endswith(b"\0") or b"\0" in r[:-1] or len(r) < 2 for r in runs):
+        return []
+    return [r[:-1] for r in runs]
+
+
+def convert_config_psp(boot, text_end):
+    """([(kind, tag, payload)], {slot: source}) for the PC's Config screen from
+    a PSP BOOT.BIN, or ([], {}) if its block is not found.
+
+    The PSP's own word in every slot its screen has one for; the rest from
+    CONFIG_BUILTIN_*, the Sound row's two records at the count and x of the
+    Autorun row's, which are the same pair on every disc held (06 26, 04 66)."""
+    at = boot.find(PSP_CONFIG_TABLES)
+    if at < 0 or boot.find(PSP_CONFIG_TABLES, at + 1) >= 0:
+        return [], {}
+    records = at - PSP_CONFIG_RECORDS * 8
+    recs = []
+    for i in range(PSP_CONFIG_RECORDS):
+        rec = boot[records + i * 8:records + i * 8 + 8]
+        recs.append((rec[0], rec[1], rec[2:].split(b"\0")[0]))
+    # The four .data labels end at the records, NUL-terminated.
+    head = boot[records - 64:records]
+    if not head.endswith(b"\0"):
+        return [], {}
+    tokens, pos = [], records - 64
+    for t in head.split(b"\0"):
+        trimmed = config_trim(t)
+        if trimmed:
+            tokens.append((pos + len(t) - len(trimmed), trimmed))
+        pos += len(t) + 1
+    if len(tokens) < 4:
+        return [], {}
+    data_labels = tokens[-4:]
+    code_labels = psp_config_code_labels(boot, text_end, data_labels[0][0], data_labels[3][0])
+    if len(code_labels) != 2:
+        raise SystemExit("config: BOOT.BIN's label routine builds %d labels on its stack, wanted 2" % len(code_labels))
+    # The PSP's rows: a stack label, two copied, a stack label, two copied.
+    psp_labels = [code_labels[0], data_labels[0][1], data_labels[1][1], code_labels[1],
+                  data_labels[2][1], data_labels[3][1]]
+    ctrl = at + len(PSP_CONFIG_TABLES)
+    ctrls = []
+    for i in range(CONFIG_CTRL):
+        rec = boot[ctrl + i * CTRL_STRIDE:ctrl + (i + 1) * CTRL_STRIDE]
+        raw = rec[1:].split(b"\0")[0]
+        if rec[0] != len(raw):
+            return [], {}
+        ctrls.append(raw)
+
+    source = {}
+    labels = []
+    for i, p in enumerate(PSP_CONFIG_LABEL_OF):
+        if p is None:
+            labels.append(CONFIG_BUILTIN_LABELS[i])
+            source["label %d" % i] = "ours"
+        else:
+            labels.append(psp_labels[p])
+            source["label %d" % i] = "BOOT.BIN"
+    options = []
+    for i, p in enumerate(PSP_CONFIG_RECORD_OF):
+        if p is None:
+            # The Sound row's count and x: the Autorun row's (PC 13, 14).
+            count, x, _ = recs[PSP_CONFIG_RECORD_OF[i + 2]]
+            options.append((count, x, CONFIG_BUILTIN_OPTIONS[i]))
+            source["option %d" % i] = "ours"
+        else:
+            options.append(recs[p])
+            source["option %d" % i] = "BOOT.BIN"
+    for i in range(CONFIG_CTRL):
+        source["controller %d" % i] = "BOOT.BIN"
+    return [(KIND_CONFIG, 0, config_payload(labels, options, ctrls))], source
+
+
 def convert_config(donor):
     """[(kind, tag, payload)] for the Config screen, or [] if the donor has none.
 
@@ -1726,27 +1886,12 @@ def convert_config(donor):
                          % (len(labels), CONFIG_LABELS))
     labels = labels[-CONFIG_LABELS:]
 
-    payload = bytearray([CONFIG_LABELS])
-    for i, raw in enumerate(labels):
-        # Repointed, not written in place, so the only limit is ours.
-        payload += config_encode(raw, "label %d" % i, 32) + b"\0"
-
-    payload.append(CONFIG_RECORDS)
-    for i in range(CONFIG_RECORDS):
-        rec = donor[records + i * 8:records + i * 8 + 8]
-        raw = rec[2:].split(b"\0")[0]
-        # count and x are the donor's own, verbatim: they are what puts the
-        # options where the disc puts them. The PC record holds 14 bytes of
-        # string after them.
-        payload += bytes([rec[0], rec[1]]) + config_encode(raw, "option %d" % i, 14) + b"\0"
-
-    payload.append(CONFIG_CTRL)
+    records = [(r[0], r[1], r[2:].split(b"\0")[0])
+               for r in (donor[records + i * 8:records + i * 8 + 8] for i in range(CONFIG_RECORDS))]
     ctrl = gap + len(CONFIG_GAP)
-    for i in range(CONFIG_CTRL):
-        raw = donor[ctrl + i * CTRL_STRIDE + 1:ctrl + (i + 1) * CTRL_STRIDE].split(b"\0")[0]
-        payload += config_encode(raw, "controller %d" % i, 64) + b"\0"
-
-    return [(KIND_CONFIG, 0, bytes(payload))]
+    ctrls = [donor[ctrl + i * CTRL_STRIDE + 1:ctrl + (i + 1) * CTRL_STRIDE].split(b"\0")[0]
+             for i in range(CONFIG_CTRL)]
+    return [(KIND_CONFIG, 0, config_payload(labels, records, ctrls))]
 
 
 # The menu's short verbs - the buttons above a menu panel (DIV-0018,
@@ -3962,11 +4107,16 @@ def build_all(args, disc_path):
     if start_emi and not args.only:
         if is_psp(disc):
             # BOOT.BIN's Config screen is the PSP's own, not the PlayStation's
-            # the PC draws: four labels (no Msg Speed, Sound or Autorun; Button
-            # Config and Delete Data added) over fifteen options, without the
-            # 0..15 row tables convert_config locates it by (docs/loc-build-psp.md 3.2).
-            cfg = []
-            print("config screen: not built from a PSP disc (the PSP's screen has other rows)")
+            # the PC draws: no Sound row, Button Config. and Delete Data added
+            # (docs/loc-build-psp.md 3.3). Its words where it has the slot, ours
+            # where it has not (D246, the owner's decision 2026-10-17).
+            cfg, source = convert_config_psp(boot, disc.text_end)
+            if cfg:
+                ours = [k for k, v in source.items() if v == "ours"]
+                print("config screen: 6 labels, 17 options, 6 controller names; from BOOT.BIN %d, ours %d (%s)"
+                      % (len(source) - len(ours), len(ours), ", ".join(ours)))
+            else:
+                print("config screen: not found in BOOT.BIN")
         else:
             cfg = convert_config(read_module(start_emi))
             print("config screen: " + ("6 labels, 17 options, 6 controller names" if cfg else "not found on this disc"))
@@ -4259,6 +4409,54 @@ def selftest_psp():
     print("  PSP: section table, packed words and slots, a pointer-named run, the village run")
 
 
+def selftest_config_psp():
+    """The PSP Config screen (D246) on synthetic bytes (no game data): two
+    labels built on the routine's stack and four in .data, fifteen records
+    before the PSP's row tables and six controller records after them; the
+    PC's six labels and seventeen records take the PSP's where it has them and
+    ours (CONFIG_BUILTIN_*) where it has not, the Sound row at the count and x
+    of the Autorun row."""
+    a0, a1, zero, sp, ra = 4, 5, 0, 29, 31
+    ori = lambda rt, imm: (0x0D << 26) | (rt << 16) | imm
+    sb = lambda rt, off: (0x28 << 26) | (sp << 21) | (rt << 16) | off
+    lui = lambda rt, imm: (0x0F << 26) | (rt << 16) | imm
+    addiu = lambda rt, rs, imm: (0x09 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+    jal = lambda target: (0x03 << 26) | ((target >> 2) & 0x3FFFFFF)
+    text_end = 0x1000
+    data = bytearray(b"\0\0\x01\0\x02\0\x03\0\x04\0\x05\0")
+    starts = []
+    for word in (b"Ww", b"Bb", b"Kk\xffk", b"Dd"):
+        starts.append(text_end + len(data))
+        data += word + b"\0"
+    recs = [(i + 1, 0x10 + i, b"O%d" % i) for i in range(PSP_CONFIG_RECORDS)]
+    for count, x, word in recs:
+        data += bytes([count, x]) + word.ljust(6, b"\0")
+    data += PSP_CONFIG_TABLES
+    ctrls = [b"C" * (i + 2) for i in range(CONFIG_CTRL)]
+    for word in ctrls:
+        data += bytes([len(word)]) + word.ljust(CTRL_STRIDE - 1, b"\0")
+
+    def load(va):
+        return [lui(a1, (va + 0x8000) >> 16), jal(0x800), addiu(a1, a1, va & 0xFFFF)]
+
+    code = [0x27BDFF80]                                 # addiu $sp, $sp, -0x80
+    code += [ori(a0, 0x41), sb(a0, 0x20), ori(a0, 0x61), sb(a0, 0x21), sb(zero, 0x22)]
+    code += load(starts[0]) + load(starts[1])
+    code += [ori(a1, 0x45), sb(a1, 0x30), ori(a1, 0x65), sb(a1, 0x31), sb(zero, 0x32)]
+    code += load(starts[2]) + load(starts[3]) + [(ra << 21) | 0x08, 0]
+    boot = bytearray(0x100) + struct.pack("<%dI" % len(code), *code)
+    boot += bytearray(text_end - len(boot)) + data
+    got, source = convert_config_psp(bytes(boot), text_end)
+    options = [recs[i] for i in range(11)] + [(recs[11][0], recs[11][1], CONFIG_BUILTIN_OPTIONS[11]),
+                                               (recs[12][0], recs[12][1], CONFIG_BUILTIN_OPTIONS[12])] + recs[11:]
+    want = config_payload([b"Aa", b"Ww", b"Bb", CONFIG_BUILTIN_LABELS[3], b"Ee", CONFIG_BUILTIN_LABELS[5]],
+                          options, ctrls)
+    ours = sorted(k for k, v in source.items() if v == "ours")
+    if got != [(KIND_CONFIG, 0, want)] or ours != ["label 3", "label 5", "option 11", "option 12"]:
+        raise SystemExit("selftest: convert_config_psp gave %s, ours %s" % (got, ours))
+    print("  PSP Config: the stack labels, the .data labels, records and controller names; ours in the four slots it lacks")
+
+
 def selftest_code_labels():
     """The MIPS readers of groups 15, 17 and 18 on synthetic code (no game
     data): each finds its words by the calls' constants, and the guest
@@ -4384,6 +4582,7 @@ def cmd_selftest(args):
     selftest_empty_records()
     selftest_rules()
     selftest_psp()
+    selftest_config_psp()
     selftest_code_labels()
     selftest_buttons()
     print("loc_build selftest: ok")

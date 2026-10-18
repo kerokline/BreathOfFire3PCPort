@@ -4,6 +4,8 @@
 `psp/lg`; a local session without the game running). Built and diffed for
 both PSP discs; not played (the engine reads a disc-only cache since state 3,
 PSP-only installs started headless in the end batch's V2 / V3, [`psp-end-batch.md`](psp-end-batch.md); not played).
+**Updated 2026-10-17** (D246, branch `fix/psp-config-text`): the Config
+screen's text is built from PSP-EU now (section 3.3).
 
 The disc-only round made `loc_build.py all --cache` build a language layer
 from a PlayStation disc alone ([`loc-build-disc-only.md`](loc-build-disc-only.md)).
@@ -25,6 +27,9 @@ Two of its chunks are **not built**, each with the reason: the Config
 screen's text (the PSP's screen has other rows) and label group 14 (one of
 its five words is not where any rule finds it). So on a PSP-EU image **24**
 of the 182 language addresses stay zero, against 8 from a PSX disc.
+Both are built since: group 14 on 2026-10-13 (D247), the Config screen on
+2026-10-17 (D246, section 3.3), so a PSP-EU image leaves the same 8 as a
+PSX disc.
 
 ## 1. What was built
 
@@ -108,7 +113,7 @@ rows) match nowhere in it.
 | battle commands | 7 | the slots end one NUL before the box table (`slots_fit`) | identical |
 | battle messages | 12 | as is | identical |
 | labels | 15 of 16 groups | `convert_labels_psp` (3.2) | identical but group 14, absent |
-| Config screen | **not built** | 3.3 | absent |
+| Config screen | **not built**; since 2026-10-17 25 of 29 slots, 4 ours | `convert_config_psp` (3.3) | identical (since 2026-10-17) |
 
 `ja-JP` builds none of the exe's strings but the names, from either disc
 ("not built for a Japanese disc", unchanged): from PSP-JP all six name
@@ -158,6 +163,71 @@ PSP's are shorter). So nothing maps it onto the PC's rows by rule, and the
 layer has no Config chunk: `loc_build` prints "not built from a PSP disc".
 The screen then draws the image's own slots, which no disc carries (section
 6). Which way to go is the owner's (section 9).
+
+**Read row by row, 2026-10-17** (D246; scratch `probe_cfg.py`, `probe2.py`
+over `PspDisc.boot()`, offsets in that image, capstone over the label
+routine; the PSX side from the US disc's `START.EMI` through
+`convert_config`, and PSX-EU's chunk is byte-identical to the US's). The
+paragraph above miscounted the labels: **the PSP has six**, not four. Four
+are in `.data` before the records (`0x2EC650`..`0x2EC680`); the other two,
+Msg Speed and Autorun, are not strings in the image at all - the label
+routine (prologue `0xC056C`) builds them on its stack, one `ori` / `sb` pair
+a byte, beside the four it copies (`jal 0x2C5620` at `0xC05FC`..`0xC067C`,
+`$a1` each `.data` label). Its six-entry pointer array on the stack orders
+them Msg Speed, Window Clr, Background, Autorun, Button Config., Delete
+Data. The option records are 8 bytes as on the PSX (`0x2EC681`..`0x2EC6F8`),
+then the row tables at `0x2EC6F9` (`00 03 07 0B 0D 0F` / `03 04 04 02 00
+00`, unique in the image), then the six 21-byte controller records
+(`0x2EC705`).
+
+| PSX row | PSX label | PSX options | PSP | PSP label | PSP options |
+|---|---|---|---|---|---|
+| 0 | Msg Speed | Fast / Med. / Slow | present, row 0 | Msg Speed (stack) | Fast / Med. / Slow |
+| 1 | Window Clr | 1 / 2 / 3 / 4 | present, row 1 | Window Clr | 1 / 2 / 3 / 4 |
+| 2 | Background | 1 / 2 / 3 / 4 | present, row 2 | Background | 1 / 2 / 3 / 4 |
+| 3 | Sound | Stereo / Mono | **absent** | - | - (no record) |
+| 4 | Autorun | Off / On | present, row 3 | Autorun (stack) | Off / On |
+| 5 | Controller | none; the panel: Speak / Move / Action / Menu / View / Change | the same panel, row 4 | **Button Config.** | none; the panel's six names the same |
+| - | - | - | **added**, row 5 | **Delete Data** | none |
+| unused | records 15, 16 | Manual / Auto | unused (row 4's first, count 0) | - | Manual / Auto |
+
+So: the PSP keeps every PSX option but Stereo / Mono (15 records = the
+PSX's 17 less those two, the counts and x bytes equal record for record),
+renames the Controller row Button Config., and adds one row, Delete Data,
+with no options. **No vibration row or word**: none of `Vibra`, `vibra`,
+`Rumble`, `Analog` occurs in `BOOT.BIN`. The trailing `.` of Button Config.
+is code `0x3E`, the code of Med.'s full stop.
+
+**Built since 2026-10-17** (`convert_config_psp`; the owner's decision: fill
+the slots with the words, each a one-word name of a function). The PSP's
+row tables locate the block as `CONFIG_TABLES` does on the PSX; the four
+`.data` labels end at the records; the two stack labels are read off the
+routine whose calls pass the first and the last `.data` label
+(`psp_config_code_labels`). Each of the PC's 29 slots, and its source:
+
+| PC slots | Source |
+|---|---|
+| labels 0, 1, 2, 4 (Msg Speed, Window Clr, Background, Autorun) | `BOOT.BIN` (0 and 4 off the stack) |
+| label 3 (Sound) | ours, `CONFIG_BUILTIN_LABELS` - the PSP has no Sound row |
+| label 5 (Controller) | ours, `CONFIG_BUILTIN_LABELS` - the PSP's word for the row is Button Config., fourteen letters where DIV-0015's column was set for ten; not taken |
+| options 0..10, 13..16 | `BOOT.BIN`, records 0..14, count and x verbatim |
+| options 11, 12 (Stereo, Mono) | ours, `CONFIG_BUILTIN_OPTIONS`, at the count and x of options 13, 14 (`06 26`, `04 66`, the same pair on the PSX) |
+| controller names 0..5 | `BOOT.BIN` |
+
+The owner's second source, the PSX-EU layer's words, is never reachable on
+this path: a PSX-EU disc among the sources builds the whole `en-150` layer
+itself (`importer.resolve_languages`: a PSX disc of the tag wins), so a
+PSP-EU layer is built only where none is held. It would give the same bytes:
+the chunk built from PSP-EU is **byte-identical** to the PSX-EU layer's
+(316 bytes; and to the PSX-US layer's), the four ours included.
+
+**The layers before and after** (scratch `layerdiff.py`, every file, chunks
+keyed by kind, tag and occurrence): `loc_build.py all --discs` over a copy
+of the PC install (the five PSX tags, 1,233 overlay files; both PSP images
+skipped as before) **1,233 of 1,233** identical; the disc-only PSX-US cache
+254 of 254 and the PSP-JP cache 254 of 254 identical; the PSP-EU cache 253
+of 254 identical, its `FIRST.DAT` gaining the one kind-7 chunk (sixth of 37,
+the rest unchanged and in order).
 
 ### 3.4 The font's three cells
 
@@ -251,7 +321,7 @@ release's own edit, which the PSP does not carry.
 | 1 | `FIRST` names | 4 tables: the 8 PSP renames (weapon 14, armour 9, accessories 29 and 45, ability records 45, 46, 115, 217); 11 more ability records where PSX-EU corrected a spelling that the US and the PSP keep | region-diff 5.4 P7 and 5.3; `psp-names-en-150` 8 of 8; against the PSX-US layer only the 8 differ |
 | 1 | `FIRST` fishing line 4 | one word | region-diff 5.3's button plural |
 | 1 | `FIRST` font and advances | three cells added (2,671 to 2,723 glyphs) | section 3.4 |
-| 1 | `FIRST` Config, label group 14 | absent | sections 3.2, 3.3 |
+| 1 | `FIRST` Config, label group 14 | absent (both built since: group 14 2026-10-13, D247; Config 2026-10-17, byte-identical to PSX-EU's, D246) | sections 3.2, 3.3 |
 | 12 | the glyph atlas, the two village sheets | 242 pixels | section 4 |
 
 Against region_diff's own pair (`region_diff.py pair psx-us=US
@@ -291,7 +361,7 @@ addresses zero; scratch `zero_count.py`):
 | Layer | Stay zero | Which |
 |---|---:|---|
 | PSX-US `en-US`, PSX-EU `en-150` | **8** | the eight of 5.4 there (the check of the method) |
-| PSP-EU `en-150` | **24** | those 8; the Config screen's 6 row labels (`0x669F0C`..`0x669F3C`) and 6 controller names (`0x66A338`..`0x66A360`); group 14's 4 (`0x669E10`, `0x669F08`, `0x669F60`, `0x669F68`) |
+| PSP-EU `en-150` | **24** | those 8; the Config screen's 6 row labels (`0x669F0C`..`0x669F3C`) and 6 controller names (`0x66A338`..`0x66A360`); group 14's 4 (`0x669E10`, `0x669F08`, `0x669F60`, `0x669F68`). Since D247's and D246's fixes (2026-10-13, 2026-10-17): the same 8 as a PSX disc, by the same table (not re-run through `exe_tables.py xref`) |
 | PSP-JP `ja-JP` | **177** | the same as PSX-JP `ja-JP`: a Japanese layer builds none of the exe's strings but the names, and over a disc-only image their slots are zero |
 
 The 177 is not the PSP's: PSX-JP's disc-only layer has the same (measured
@@ -317,7 +387,7 @@ after SI merges; not done here.
    6 stay zero, so the in-game Config screen's labels and controller names
    draw blank on a PSP-only English install (and its 17 option records, not
    counted). Not a crash (the disc-only round's class B: read through ours,
-   the bytes zero).
+   the bytes zero). **D246, fixed 2026-10-17** (section 3.3).
 2. **PSP-EU `en-150`: no village words (label group 14).** The board panel's
    culture label, the ranked lists' heading word, and the hi-lo game's money
    and stake titles draw blank.
@@ -335,6 +405,12 @@ after SI merges; not done here.
    (Window, Background, the options and the controller names) and leave the
    other rows blank; or draw the PC's Config rows from a built-in English
    set (ours, not the disc's). No layer change until the owner picks.
+   **Decided 2026-10-17:** fill every slot with the words - the PSP's where
+   its screen has one, ours for the other four (section 3.3). Open for the
+   owner: label 5 is ours ("Controller") where the PSP names that row
+   Button Config.; taking the PSP's word is one entry of
+   `PSP_CONFIG_LABEL_OF`, and wants a look at its fourteen letters against
+   the label column.
 2. **Label group 16's one-late names** stay as the disc-only round left
    them: an open owner's call (`loc-build-disc-only.md` 5.4); the PSP build
    inherits it unchanged.
@@ -423,3 +499,39 @@ the `ja-JP` disc-only zero slots (defect 3) as a follow-up for whoever takes
 the Japanese exe strings.
 
 **`docs/owner-review.md`**: section 9 item 1.
+
+**Added 2026-10-17 (D246, branch `fix/psp-config-text`; for the coordinator
+to number or fold into DIV-0090's PSP amendment):**
+
+**DIV draft A: a PSP-EU layer's Config screen, the PSP's words and four of
+ours.**
+
+- **Subsystem:** text / menu (`tools/loc_build.py` `convert_config_psp`; the
+  kind-7 chunk DIV-0015 applies).
+- **Tier:** Sensible - the screen's words; nothing in play moves.
+- **Original behaviour:** a layer built from PSP-EU alone had no Config
+  chunk (the PSP's own screen has other rows), so on a PSP-only English
+  install the Config screen's six labels and six controller names drew blank
+  and its seventeen records kept the image's zeros (D246).
+- **New behaviour:** the chunk is built from `BOOT.BIN`'s screen (section
+  3.3): 25 of the 29 slots take the PSP's word; the four its screen has no
+  word for take ours, a table of four one-word names in `loc_build.py`
+  (`CONFIG_BUILTIN_LABELS`: Sound, Controller; `CONFIG_BUILTIN_OPTIONS`:
+  Stereo, Mono), the Sound row's two records at the Autorun row's count and
+  x. The chunk is byte-identical to the PSX-EU layer's.
+- **Rationale:** the owner's decision, 2026-10-17: fill the slots with the
+  words, none more than a one-word name of a function; quoted labels naming
+  a game function are fine in code (the owner's stance, 2026-10-10). The
+  PSP's word first, the PSX-EU layer's where a PSX-EU disc is held (never on
+  this path: that disc builds the layer itself), then ours.
+- **Also in the PSX version?** The words are the PlayStation's (the PSX-EU
+  and PSX-US screens read the same). The PSP itself has no Sound row and
+  names the Controller row Button Config.
+- **Reversible?** No toggle; a layer built from a PSX disc, or from the PC
+  install, is unchanged.
+- **Checked:** `loc_build.py selftest` (`selftest_config_psp`, synthetic);
+  every other layer byte-identical before and after (section 3.3); the
+  Config screen and its Controller panel on a PSP-only install, headless on
+  `sigma_config.txt`: blank before, filled after and pixel-equal to the
+  PSX-US install's; PSX-US and PC + `en-US` frame-equal before and after
+  (D246). Not seen by the owner.
