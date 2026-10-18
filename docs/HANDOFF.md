@@ -111,8 +111,9 @@ play while zero are fixed. The live end batch waits on a Defender exclusion.
    - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
      beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
    - D270 fixed by DIV-0121 - the owner's look owed, and whether such a field has another way out; D284 (area 23's
-     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed but on FR / DE
-     ([`fishing-rule-pages.md`](fishing-rule-pages.md)); D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
+     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed, FR / DE too since the install-gap round
+     ([`install-gap-labels.md`](install-gap-labels.md)); D287 (the launcher's clipped lines); D289 fixed by the same round (the owner's
+     confirmation of DIV-0064's amendment pending).
 
 4. **The install-gap round: merged on `install-gap/round` (`0baf26f7`), its end docs on `install-gap/end-docs`;
    neither pushed, PR next** ([`install-gap-round.md`](install-gap-round.md), its status line). Stage A (RD, PB, OT,
