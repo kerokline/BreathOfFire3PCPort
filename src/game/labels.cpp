@@ -83,13 +83,21 @@
 //      the amendment, whose chunk has the two headings alone - draws those;
 //      the witness is Identify_DrawMember's push of EXP at 0x4B1150;
 //  16  the faerie village's sixty faeries' names: the 16-byte name field of
-//      each 20-byte trait record at 0x653210 (four stat bytes, then the
-//      name), which CommuSim_AddRecord copies five bytes of into the save's
-//      name table at a birth - COMMU00.EMI's table of sixty 9-byte records
-//      (a 5-byte name, the same four stat bytes), found by the stats; the
-//      witness is CommuEntry_DrawPanel's read of the bars at 0x45E945. The
-//      sixtieth record's name field holds no glyph string on the PC and is
-//      kept as shipped.
+//      each 20-byte trait record at 0x653200 (the name, then the four stat
+//      bytes at 0x653210 + 20 r), which CommuSim_AddRecord copies five bytes
+//      of into the save's name table at a birth (rest_4a.cpp's kRecordTraits,
+//      the name entry's default rest_4d.cpp's kSlotDefaults) - COMMU00.EMI's
+//      table of sixty 9-byte records (a 5-byte name, the same four stat
+//      bytes), found by the stats, so the disc's record r is ours; the witness
+//      is CommuEntry_DrawPanel's read of the bars at 0x45E945. Amended
+//      2026-10-18 (the install-gap round, docs/install-gap-labels.md; D289):
+//      the slots were 0x653214 + 20 r, record r + 1's name field, so faerie 0
+//      kept the shipped name (zero on a disc-built image) and every other
+//      showed its neighbour's; the sixtieth slot was the area-limit table
+//      0x6536B0, which only the builder's empty string kept unwritten. An
+//      overlay built before the amendment sends record 59 empty: its name
+//      stays as shipped and the other fifty-nine are now in their own
+//      records.
 //  17  the name BattleExtra_EquipOpen 0x42DC20 copies over character record
 //      7's as the equipment screen opens (DIVERGENCE DIV-0118, 2026-10-13):
 //      the five bytes at 0x669CE8 (`push` operand at 0x42DC52), Capcom's
@@ -114,8 +122,27 @@
 //      slots right before the 72 bytes of sprite rectangles the PC has at
 //      0x652D04; kept in buffers of ours, read by our draw through
 //      Labels_Slot, which centres each in its box as the discs do.
+//  20  kind 0x5E's menu title (2026-10-18, the install-gap round,
+//      docs/install-gap-labels.md): the 20 bytes at 0x66A098 that
+//      EffectKind5E_DrawMenu 0x47F9E0 prints through "%s" (`push` operand at
+//      0x47FA0D, its one reader) - SCENA10.EMI's twin's title (US 0x801F7E40,
+//      `Choose parts`; the French 17 letters, which the draw then takes whole,
+//      rest_3e.cpp); written in place;
+//  21  the field panels' labels (the same): EQUIP 0x663668 (8, `push` at
+//      0x573A9F, Menu_DrawEquipPanel), EXP 0x663670 (4) and NEXT 0x663674 (8)
+//      (`mov eax` at 0x573C2E / 0x573C3C, Menu_DrawExpPanel) - START.EMI's
+//      three slots after the label tail (the French SUIV., the German AUSR);
+//      in place;
+//  22  the shared list's title, 8 bytes at 0x664288 (NOTE; `push` at 0x5852A4
+//      and 0x5852AE, SharedList_DrawList, which centres it by its length) -
+//      SHOP.EMI's slot before group 9's SKILL slot (the French and German
+//      LISTE); in place;
+//  23  the gene list's title, 8 bytes at 0x66B1F0 (GENE; `push` at 0x59B046
+//      and 0x59B050, MenuList_GeneWinDraw, centred likewise) - STATUS.EMI's
+//      word after the bytes the PC has at 0x66B1E0 (the French Gene with its
+//      accent, the German GEN); in place.
 //
-// Groups 1, 2, 5, 6, 8..12 and 16 are written in place, one byte a letter in the
+// Groups 1, 2, 5, 6, 8..12, 16 and 20..23 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
 // Groups 3, 4, 7 and 13 are reached by nothing but their pointer tables (and
@@ -228,6 +255,7 @@ constexpr Table kTables[] = {
                                {0x65AAB4, 8, 0x4B1150, 0x65AAB0}, {0x65AAB0, 4, 0x4B1150}},
      {}, g_identify_words, false, 2},
     {16, "faerie names", 60, {
+                              {0x653200, 16, 0x45E945, kFaeries},
                               {0x653214, 16, 0x45E945, kFaeries},
                               {0x653228, 16, 0x45E945, kFaeries},
                               {0x65323C, 16, 0x45E945, kFaeries},
@@ -286,8 +314,7 @@ constexpr Table kTables[] = {
                               {0x653660, 16, 0x45E945, kFaeries},
                               {0x653674, 16, 0x45E945, kFaeries},
                               {0x653688, 16, 0x45E945, kFaeries},
-                              {0x65369C, 16, 0x45E945, kFaeries},
-                              {0x6536B0, 16, 0x45E945, kFaeries}}, {}, nullptr, false},
+                              {0x65369C, 16, 0x45E945, kFaeries}}, {}, nullptr, false},
     {17, "guest name", 1, {{0x669CE8, 5, 0x42DC52}}, {}, g_guest_name, false},
     // The third slot is the layout, four bytes (none zero): the count's x,
     // the words' x, the singular's test and its value; witnessed by the
@@ -296,6 +323,12 @@ constexpr Table kTables[] = {
      g_turn_words, false},
     {19, "hi-lo choices", 3, {{0x669F44, 4, 0x669F54}, {0x669F48, 4, 0x669F58}, {0x669F4C, 8, 0x669F5C}}, {},
      g_hilo_words, false},
+    // 20..23: in place, each witnessed by the operand that names its slot.
+    {20, "parts title", 1, {{0x66A098, 20, 0x47FA0D}}, {}, nullptr, false},
+    {21, "panel labels", 3, {{0x663668, 8, 0x573A9F}, {0x663670, 4, 0x573C2E}, {0x663674, 8, 0x573C3C}}, {}, nullptr,
+     false},
+    {22, "list title", 1, {{0x664288, 8, 0x5852A4}}, {}, nullptr, false},
+    {23, "gene title", 1, {{0x66B1F0, 8, 0x59B046}}, {}, nullptr, false},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter

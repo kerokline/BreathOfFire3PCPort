@@ -29,6 +29,7 @@
 #include <utility>
 
 #include "bof3/symbols.gen.h"
+#include "game/labels.h"
 #include "game/lang_layout.h"
 #include "game/rest_3e_callees.h"
 #include "game/move_script_bytes.h"
@@ -1137,10 +1138,16 @@ extern "C" void __cdecl EffectKind5D_DrawMark(int x, int y) {
 // the panel (EffectKind5E_DrawPanel); the sprite placed at the panel's corner
 // (+0x2E, +0x30, as kind 0x5D's), the panel's frame (Window_DrawFrame);
 // Sprite_ScriptTick, then a tail jump to Sprite_QueueOverlay.
+//
+// DIVERGENCE DIV-0064 (group 20, docs/install-gap-labels.md): once a language
+// overlay has written the title (the disc's own, SCENA10.EMI's: the French
+// seventeen letters past the original's count of 15), it is drawn whole, to
+// its NUL (Labels_Written's rule).
 extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
     SH_CALL(Menu_DrawBox)(W(at::kMenuBox), W(at::kMenuBox + 2), W(at::kMenuBox + 4), W(at::kMenuBox + 6), 2, B(at::kStyle));
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kStringFormat)), At(at::kTitle));
-    SH_CALL(Text_DrawAt)(static_cast<int>(UL(at::kMenuBox) + 4), static_cast<int>((W(at::kMenuBox + 2) + 2) & 0xFFFFu), 0, 0xF, At(at::kText));
+    const int count = Labels_Written(20) ? 0xFF : 0xF;
+    SH_CALL(Text_DrawAt)(static_cast<int>(UL(at::kMenuBox) + 4), static_cast<int>((W(at::kMenuBox + 2) + 2) & 0xFFFFu), 0, count, At(at::kText));
     SH_CALL(EffectKind5E_DrawList)();
     const unsigned pick = S()[2] & 7u;
     const unsigned hand = W(at::kHand);

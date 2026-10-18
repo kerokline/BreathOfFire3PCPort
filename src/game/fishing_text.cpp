@@ -13,7 +13,15 @@
 //   2  the three tab labels over the equip menu, three 8-byte slots at
 //      0x66A070 behind the pointer table 0x66A088, which only
 //      EffectKind0F_DrawToggles (0x468AC0, ours in effect_1b.cpp) reads: the
-//      same, three pointers re-aimed.
+//      same, three pointers re-aimed;
+//   3  (D286, 2026-10-18, docs/install-gap-labels.md) the four panel headings
+//      ROD, LURE, EQUIP, GUIDE - fixed fields at 0x653EA0 / A4 / A8 / AD that
+//      EffectKind0F_DrawItemsB / _DrawItemsA / _DrawEquipped (ours) draw with
+//      the counts 3, 4, 5, 5. The French and German modules lay their words
+//      out at other widths (Canne, the German RUTE ...), so a disc-built
+//      image has no bytes there; the builder reads each word off the
+//      module's draws and our draws, once armed, centre it where the PC's
+//      centre is. Kept in buffers of ours; nothing in .data is re-aimed.
 //
 // The strings are the disc's own (tools/loc_build.py, chunk kind 16): the
 // fishing module every fishing area carries has the same records - 12 bytes,
@@ -82,6 +90,8 @@ constexpr std::uint32_t kTabTable = 0x66A088;      // 3 pointers, read by 0x468A
 constexpr std::uint32_t kTabCount = 3;
 constexpr std::uint32_t kTabRoom = 16;             // tools/loc_build.py FISH_TAB_ROOM
 constexpr std::uint32_t kTabShipped[kTabCount] = {0x66A070, 0x66A078, 0x66A080};
+constexpr std::uint32_t kHeadCount = 4;            // tools/loc_build.py FISH_HEAD_COUNT
+constexpr std::uint32_t kHeadRoom = 16;            // tools/loc_build.py FISH_HEAD_ROOM
 
 // DIV-0051's icons: loc_build.py's ICONS_AT, after the 8 x 8 set (0xA00, 100
 // cells) and its blank - circle, cross, triangle, square, L1, R1, as
@@ -116,6 +126,7 @@ namespace sg = bof3x::input::sigma;
 
 char g_lines[kLineCount][kLineRoom];
 char g_tabs[kTabCount][kTabRoom];
+char g_heads[kHeadCount][kHeadRoom];
 bool g_on = false;
 // PatchBytes "FishingLabelSigma" (DIV-0136), set by FishingText_Arm.
 unsigned char g_label_sigma = 0;
@@ -382,13 +393,45 @@ void SelfTest() {
 
 }  // namespace
 
+// Tag 3: four NUL-ended strings into g_heads (an empty one keeps the shipped
+// field). No pointer in the image names the buffers, so nothing is re-aimed.
+void ApplyHeadings(const std::uint8_t* payload, std::uint32_t size) {
+    const std::uint8_t* p = payload;
+    const std::uint8_t* const end = payload + size;
+    if (p >= end || *p++ != kHeadCount) bof3::Fatal("fishing headings chunk: count is not %u", (unsigned)kHeadCount);
+    std::uint32_t written = 0;
+    for (std::uint32_t i = 0; i < kHeadCount; ++i) {
+        const auto* s = reinterpret_cast<const char*>(p);
+        while (p < end && *p) ++p;
+        if (p >= end) bof3::Fatal("fishing headings chunk: ran out inside string %u", (unsigned)i);
+        ++p;
+        const std::size_t len = std::strlen(s);
+        if (len + 1 > kHeadRoom)
+            bof3::Fatal("fishing headings chunk: string %u is %u bytes, the buffer holds %u", (unsigned)i,
+                        (unsigned)len + 1, (unsigned)kHeadRoom);
+        std::memset(g_heads[i], 0, kHeadRoom);
+        std::memcpy(g_heads[i], s, len);
+        if (len != 0) ++written;
+    }
+    if (p != end) bof3::Fatal("fishing headings chunk: %u bytes left over", (unsigned)(end - p));
+    bof3::Log("DIV-0069: %u of %u fishing headings (D286)", (unsigned)written, (unsigned)kHeadCount);
+}
+
 void FishingText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag == 1)
         Repoint("lines", payload, size, kLineCount, &g_lines[0][0], kLineRoom, kLineRecords, 8, kLineShipped);
     else if (tag == 2)
         Repoint("tabs", payload, size, kTabCount, &g_tabs[0][0], kTabRoom, kTabTable, 4, kTabShipped);
+    else if (tag == 3)
+        ApplyHeadings(payload, size);
     else
-        bof3::Fatal("fishing chunk tag is 0x%X: 1 the lines, 2 the tabs", (unsigned)tag);
+        bof3::Fatal("fishing chunk tag is 0x%X: 1 the lines, 2 the tabs, 3 the headings", (unsigned)tag);
+}
+
+const unsigned char* FishingText_Heading(unsigned i) {
+    if (i >= kHeadCount) bof3::Fatal("FishingText_Heading: heading %u, past the four", i);
+    if (!g_on || g_heads[i][0] == 0) return nullptr;
+    return reinterpret_cast<const unsigned char*>(g_heads[i]);
 }
 
 void FishingText_Arm() {

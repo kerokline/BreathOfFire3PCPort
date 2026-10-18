@@ -1373,6 +1373,7 @@ def anchor_pieces(name):
         "wheel triangle": [(LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN)],
         "gene head": [(LABEL_GENE_HEAD, LABEL_GENE_HEAD_LEN)],
         "gene tail": [(LABEL_GENE_TAIL, LABEL_GENE_TAIL_LEN)],
+        "gene list head": [(LABEL_GENE_LIST_HEAD, 16)],
         "village rows": [(LABEL_VILLAGE_ROWS, LABEL_VILLAGE_ROWS_LEN)],
         "village rects": [(LABEL_VILLAGE_RECTS, LABEL_VILLAGE_RECTS_LEN)],
         "village kinds": [(LABEL_VILLAGE_KINDS, LABEL_VILLAGE_KINDS_LEN)],
@@ -1410,6 +1411,7 @@ PC_SHA = {   # measured 2026-10-10 from the catalogued BOF3.exe (pc-zh); `loc_bu
     "wheel triangle": "9edcafb2b4be187893d796687492a3c6b2e2e9f24313e88282bbab2b034ea462",
     "gene head": "d88f9d085672f99d2e4a3f0c857923b955f12558e54082090d0310f31eabbccb",
     "gene tail": "f7e59947f1ac782643c0f49b41afdc2bf5507f670c31959b0df5f63a22cd0902",
+    "gene list head": "2304b97170680e3e156bad1c5ce3952eeea46704fd3c824fac99fb710ccc3a22",   # 2026-10-18
     "village rows": "2f7dbbfd3c47aca0262b45b79b984c1f4c09e8b8a08d3bb30b72b07d9d2001ea",
     "village rects": "2a876d9960a822d13d0ff20bc03f51ab82a5c9e99dafdfa27176be74c8cba4f5",
     "village kinds": "86edc365dbd7e4f155187a6a953e3d4a3c53209e5caf65dd9699b5cf2ae14bd6",
@@ -1432,9 +1434,12 @@ PC_SHA = {   # measured 2026-10-10 from the catalogued BOF3.exe (pc-zh); `loc_bu
     "names abilities 1": "6b1fdb7eb1c2b10b2782cd384058fe52407161babd406bc0afec9573c2924791",
     "names abilities": "ef65c5f3e9060baa836fa9d69a58831e588e479e00efba2daf796d72e80aaf7e",
 }
-# The trait records whose PC name field holds no glyph string, kept empty
-# (convert_labels group 16): the sixtieth, record 59. Checked like PC_SHA.
-FAERIE_UNNAMED = (59,)
+# The trait records whose PC name field (FAERIE_NAMES + 20 r) holds no glyph
+# string, kept empty (convert_labels group 16): none - every one of the sixty
+# is named (D289: the name field is the record's first 16 bytes, the stats
+# after it; the sixtieth "unnamed" record of before was record 59's stats
+# read as a name). Checked like PC_SHA.
+FAERIE_UNNAMED = ()
 
 
 def sha_hex(b):
@@ -1473,8 +1478,8 @@ def anchor_table(game):
 def check_anchors(game):
     """Against the PC install: PC_SHA and FAERIE_UNNAMED are what its BOF3.exe holds."""
     bad = sorted(n for n, h in anchor_table(game).items() if PC_SHA.get(n) != h)
-    traits = game.exe(FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT)
-    if tuple(r for r in range(FAERIE_COUNT) if traits[FAERIE_STRIDE * r + 4] < 0x80) != FAERIE_UNNAMED:
+    names = game.exe(FAERIE_NAMES, FAERIE_STRIDE * FAERIE_COUNT)
+    if tuple(r for r in range(FAERIE_COUNT) if names[FAERIE_STRIDE * r] < 0x80) != FAERIE_UNNAMED:
         bad.append("FAERIE_UNNAMED")
     if bad:
         raise SystemExit("loc_build: the anchors %s are not this BOF3.exe's (PC_SHA; `loc_build.py anchors`)"
@@ -2137,12 +2142,15 @@ def convert_battle_commands(game, donor):
 #      the Japanese one too (its words are the PC's own English); one byte a
 #      letter, raw: the 8 px draw maps a letter's byte itself.
 #  16  the faerie village's sixty faeries' names (2026-10-10): the name field
-#      of each 20-byte trait record at FAERIE_TRAITS (four stat bytes, a
-#      name of 16), copied five bytes at a time into the save at a birth.
-#      COMMU00.EMI has the sixty as 9-byte records - a 5-byte name padded
-#      with the space code, the same four stat bytes - found by the stats
-#      (every one of the sixty equal to the PC's). A record whose PC name
-#      field holds no glyph string (the sixtieth) is sent empty and kept.
+#      of each 20-byte trait record at FAERIE_NAMES (a name of 16, then the
+#      four stat bytes at FAERIE_TRAITS + 20 r), copied five bytes at a time
+#      into the save at a birth. COMMU00.EMI has the sixty as 9-byte records
+#      - a 5-byte name padded with the space code, the same four stat bytes -
+#      found by the stats (every one of the sixty equal to the PC's), so the
+#      disc's record r is the PC's record r. Amended 2026-10-18 (D289): the
+#      name went into record r + 1's field (the record read as stats first),
+#      faerie 0 nameless and the sixtieth name dropped; a record whose PC name
+#      field holds no glyph string would be sent empty and kept (none does).
 #  17  the name the battle extra copies over character 7's as its equipment
 #      screen opens (2026-10-13, DIV-0118), 5 bytes at 0x669CE8: BATE.EMI's
 #      Beyd, the string its memcpy of 5 reads two calls after the sound 0x102
@@ -2156,6 +2164,18 @@ def convert_battle_commands(game, donor):
 #      three 4-byte slots (a four-letter word fills its slot, no NUL) right
 #      before the 72 bytes of sprite rectangles the PC has at
 #      LABEL_VILLAGE_RECTS, in whichever COMMU*.EMI holds them.
+#  20  kind 0x5E's menu title (2026-10-18, the install-gap round, group LA;
+#      docs/install-gap-labels.md): the 20 bytes at 0x66A098, which
+#      EffectKind5E_DrawMenu prints through "%s" - SCENA10.EMI's twin's title
+#      (parts_title), cut at the count its draw is handed (US 12, French 17);
+#      on PSP-EU, BOOT.BIN's own twin. Also 17 on PSP-EU from BOOT.BIN.
+#  21  the field panel's labels (the same): EQUIP 0x663668 (8), EXP 0x663670
+#      (4), NEXT 0x663674 (8) - START.EMI's three slots right after the label
+#      tail (the French SUIV., the German AUSR and WEIT).
+#  22  the shared list's title, 8 bytes at 0x664288 (NOTE; the French and
+#      German LISTE): SHOP.EMI's slot right before group 9's SKILL slot.
+#  23  the gene list's title, 8 bytes at 0x66B1F0 (GENE): STATUS.EMI's word
+#      after the 16 bytes the PC has at LABEL_GENE_LIST_HEAD.
 #  11  the zenny unit, 4 bytes at 0x66A31C: the one byte `s`, whose
 #      single-byte slot of the shipped font is the port's coin, repainted
 #      by the overlay into a letter. START.EMI has the US code 0x60 (the
@@ -2190,14 +2210,20 @@ IDENTIFY_WORD_NAMES = ("WEAK", "POINT", "the item word", "the EXP label")
 GUEST_COPY, GUEST_SOUND = 5, 0x102      # BATE's memcpy of the guest's name, and the sound two calls before it
 TURN_BOX, TURN_ROW = (0x6B, 0x10), 0x12  # BOSS025's box and the counter's row (the PC's Boss26Fx_DrawCount's)
 FAERIE_TRAITS, FAERIE_COUNT, FAERIE_STRIDE, FAERIE_DISC_STRIDE = 0x653210, 60, 20, 9
+FAERIE_NAMES = 0x653200     # record r's name field, 16 bytes at + 20 r; its stats follow (FAERIE_TRAITS)
+# Group 20: kind 0x5E's menu title, its PlayStation twin in SCENA10.EMI.
+PARTS_TITLE_ROOM = 20       # the PC's field 0x66A098..0x66A0AC (its NUL at 0x66A0AC)
+# Group 23: the gene list's title follows the 16 bytes the PC has at LABEL_GENE_LIST_HEAD.
+LABEL_GENE_LIST_HEAD = 0x66B1E0
 LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4),
                7: (16,) * 11, 8: (8, 12), 9: (8,), 10: (16,) * 10, 11: (4,), 12: (8, 8, 8), 13: (16,) * 20,
-               14: (16,) * 5, 15: (16,) * 6, 16: (16,) * 60, 17: (5,), 18: (16,) * 3, 19: (16,) * 3}
+               14: (16,) * 5, 15: (16,) * 6, 16: (16,) * 60, 17: (5,), 18: (16,) * 3, 19: (16,) * 3,
+               20: (PARTS_TITLE_ROOM,), 21: (8, 4, 8), 22: (8,), 23: (8,)}
 LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats",
                6: "master list", 7: "sort menus", 8: "note sort", 9: "ink label", 10: "formations",
                11: "zenny unit", 12: "gene tabs", 13: "village lists", 14: "village words",
                15: "identify words", 16: "faerie names", 17: "guest name", 18: "turn counter",
-               19: "hi-lo choices"}
+               19: "hi-lo choices", 20: "parts title", 21: "panel labels", 22: "list title", 23: "gene title"}
 
 
 def label_pointers(donor, at, count):
@@ -2352,14 +2378,17 @@ def identify_words(sections):
     return words if all(words) else None
 
 
-def guest_name(sections):
+def guest_name(sections, data=None):
     """BATE's guest name: the string its memcpy of GUEST_COPY bytes reads two
-    calls after the sound GUEST_SOUND (US 0x801D0F18 / 0x801D0F54), or None."""
+    calls after the sound GUEST_SOUND (US 0x801D0F18 / 0x801D0F54), or None.
+    `data`, if given, is where the string is read (PSP-EU's BOOT.BIN whole,
+    `sections` then its code alone: the same copy at 0x200DA8, the string
+    right after the whelp's name, 2026-10-18)."""
     calls = mips_calls(sections)
     for k in range(2, len(calls)):
         regs = calls[k][2]
         if regs.get(6) == GUEST_COPY and 5 in regs and calls[k - 2][2].get(4) == GUEST_SOUND:
-            s = mips_cstr(sections, regs[5])
+            s = mips_cstr(sections if data is None else data, regs[5])
             if s and is_label_word(s, GUEST_COPY):
                 return s
     return None
@@ -2417,6 +2446,30 @@ def turn_counter(sections):
     return None
 
 
+def parts_title(code, data):
+    """Kind 0x5E's menu title (group 20), or None: the PC's EffectKind5E_DrawMenu
+    0x47F9E0 prints the title through "%s" into the text scratch and draws it
+    with Text_DrawAt's count 0xF; its twin (PSX SCENA10.EMI, US 0x801F7E40;
+    PSP-EU BOOT.BIN 0x41938) does the same with its own count - the call
+    whose second argument is a "%s" and third a string, the next call's
+    fourth argument the characters drawn (US, German 12, French 17, Japanese
+    15). The US and German titles fill their 12 bytes with no NUL (a pointer
+    table follows), so the string is cut at the count. Exactly one such call,
+    else None."""
+    calls = mips_calls(code)
+    found = []
+    for k in range(len(calls) - 1):
+        regs, count = calls[k][2], calls[k + 1][2].get(7)
+        if 5 not in regs or 6 not in regs or mips_cstr(data, regs[5], 4) != b"%s":
+            continue
+        if count is None or not 0 < count < PARTS_TITLE_ROOM:
+            continue
+        for d, b in data:
+            if d <= regs[6] < d + len(b):
+                found.append(b[regs[6] - d:regs[6] - d + count].split(b"\0")[0])
+    return found[0] if len(found) == 1 and found[0] else None
+
+
 def module_sections(disc, name):
     """[(dest, bytes)] of the disc's first `name` (an EMI), or None if it has none."""
     found = disc.find(name)
@@ -2448,11 +2501,14 @@ def code_label_chunks(magic, bate, boss, report):
     return out
 
 
-def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=None, boss=None):
+def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=None, boss=None, scena10=None,
+                   status=None):
     """[(kind, tag, payload)] and a report, from the whole START.EMI, BATTLE.EMI and SHOP.EMI (each may
-    be None), every COMMU*.EMI (the faerie village's overlays), and the sections of MAGIC060.EMI,
-    BATE.EMI and BOSS025.EMI (code_label_chunks)."""
+    be None), every COMMU*.EMI (the faerie village's overlays), the sections of MAGIC060.EMI,
+    BATE.EMI and BOSS025.EMI (code_label_chunks) and SCENA10.EMI (group 20), and the whole
+    STATUS.EMI (group 23)."""
     chunks, report = [], []
+    panel_labels = list_title = None
     cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
     if start:
         at = find_anchor(game, start, "label head")
@@ -2463,6 +2519,15 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
             first = at + LABEL_HEAD_LEN
             chunks.append(label_chunk(1, [cut(start, first + 8 * i, 8) for i in range(2)], report))
             chunks.append(label_chunk(2, [cut(start, first + 16 + 4 * i, 4) for i in range(4)], report))
+            # 21: the three panel labels the PC has right after the tail
+            # (EQUIP 0x663668, EXP 0x663670, NEXT 0x663674): the disc's own
+            # words in the same three slots (the French SUIV., the German AUSR).
+            tail = first + 32 + LABEL_TAIL_LEN
+            panel = [cut(start, tail, 8), cut(start, tail + 8, 4), cut(start, tail + 12, 8)]
+            if all(w and all(is_word_byte(c) for c in w) for w in panel):
+                panel_labels = label_chunk(21, panel, report)
+            else:
+                report.append("panel labels: not three words after the label tail")
         at = find_anchor(game, start, "item types head")
         if at >= 0:
             first = at + 16
@@ -2624,10 +2689,10 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
     # whichever community overlay holds them.
     disc_stats = lambda blob, base: [blob[base + FAERIE_DISC_STRIDE * r + 5:base + FAERIE_DISC_STRIDE * (r + 1)]
                                      for r in range(FAERIE_COUNT)]
-    if game.carried(FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT):
-        traits = exe_bytes(game, FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT)
-        unnamed = {r for r in range(FAERIE_COUNT) if traits[FAERIE_STRIDE * r + 4] < 0x80}
-    else:           # disc-only: the name fields are not in the image; the PC's nameless record as measured
+    if game.carried(FAERIE_NAMES, FAERIE_STRIDE * FAERIE_COUNT):
+        names_pc = exe_bytes(game, FAERIE_NAMES, FAERIE_STRIDE * FAERIE_COUNT)
+        unnamed = {r for r in range(FAERIE_COUNT) if names_pc[FAERIE_STRIDE * r] < 0x80}
+    else:           # disc-only: the name fields are not in the image; the PC's nameless records as measured
         unnamed = set(FAERIE_UNNAMED)
     first = lambda blob, at: find_anchor(game, blob, "faerie stat 0", at)
     same = lambda got: same_anchor(game, "faerie stats", b"".join(got))
@@ -2668,11 +2733,39 @@ def convert_labels(game, start, battle, shop=None, commu=(), magic=None, bate=No
         if at < 0:
             raise SystemExit("labels: SHOP.EMI has no SKILL slot with three pointers and a word after it")
         chunks.append(label_chunk(9, [word], report))
+        # 22: the shared list's title, the 8-byte slot right before that SKILL
+        # (0x664288 on the PC, NOTE; the French and German LISTE).
+        title = cut(shop, at - 8, 8)
+        if title and all(is_word_byte(c) for c in title):
+            list_title = label_chunk(22, [title], report)
+        else:
+            report.append("list title: no word before the SKILL slot")
     chunks += [coded[t] for t in (17, 18) if t in coded]
     if hilo:
         chunks.append(label_chunk(19, hilo, report))
     else:
         report.append("hi-lo choices: not found")
+    # 20: kind 0x5E's menu title, read off SCENA10's twin of EffectKind5E_DrawMenu.
+    title = parts_title(kseg0(scena10), kseg0(scena10)) if scena10 else None
+    if title:
+        chunks.append(label_chunk(20, [title], report))
+    elif scena10:
+        report.append("parts title: not found in SCENA10.EMI")
+    chunks += [c for c in (panel_labels, list_title) if c]
+    # 23: the gene list's title: the word after the 16 bytes the PC has at
+    # LABEL_GENE_LIST_HEAD, in STATUS.EMI (whose twin of MenuList_GeneWinDraw
+    # reads it, US 0x801EB250); the other copy of those bytes has no word after it.
+    if status:
+        at, found = find_anchor(game, status, "gene list head"), []
+        while at >= 0:
+            word = cut(status, at + 16, 8)
+            if word and all(is_word_byte(c) for c in word):
+                found.append(word)
+            at = find_anchor(game, status, "gene list head", at + 1)
+        if len(found) == 1:
+            chunks.append(label_chunk(23, found, report))
+        else:
+            report.append("gene title: %d words after the PC's bytes in STATUS.EMI, wanted one" % len(found))
     return chunks, report
 
 
@@ -2771,13 +2864,15 @@ def village_run(blob):
     return runs
 
 
-def convert_labels_psp(game, boot, verbs, magic=None):
+def convert_labels_psp(game, boot, verbs, magic=None, text_end=None):
     """[(kind, tag, payload)] and a report from BOOT.BIN, the PSP's labels;
     `verbs` is where convert_verbs found the menu verbs (verb_starts);
     `magic` MAGIC060.EMI's sections, for group 15's words (the PSP's EMIs are
-    the Japanese build's: its words are the PC's own English). Groups 17 and
-    18 come from BATE and BOSS025, whose PSP copies are the Japanese build's
-    too, and are not built here; nor is 19."""
+    the Japanese build's: its words are the PC's own English); `text_end`
+    BOOT.BIN's code size, for the groups read off its code (17, 20). Group
+    18 comes from BOSS025, whose PSP copy is the Japanese build's too, and is
+    not built here. Groups 21..23 are not built either: PSP-EU's words there
+    are the PC's own English (its image holds them)."""
     chunks, report = [], []
     missing = lambda what, why: report.append("%s: not found in BOOT.BIN (%s)" % (what, why))
     # 1: the status words, the first two words after the verb sets.
@@ -2947,8 +3042,24 @@ def convert_labels_psp(game, boot, verbs, magic=None):
         chunks.append(label_chunk(19, hilo, report))
     else:
         missing("hi-lo choices", "no three 4-byte words before the rectangles")
+    # 17 and 20, read off the PSP's own code as convert_labels reads the PSX
+    # overlays' (2026-10-18): BOOT.BIN's copy of 5 bytes two calls after the
+    # sound 0x102 (PSP-EU 0x200DA8, the name right after Whelp), and its twin
+    # of EffectKind5E_DrawMenu (0x41938, its count 12).
+    if text_end:
+        code, data = [(0, boot[:text_end])], [(0, boot)]
+        name = guest_name(code, data)
+        if name:
+            chunks.append(label_chunk(17, [name], report))
+        else:
+            missing("guest name", "no copy of 5 bytes two calls after the sound 0x102")
+        title = parts_title(code, data)
+        if title:
+            chunks.append(label_chunk(20, [title], report))
+        else:
+            missing("parts title", "no one \"%s\" print of a title before a counted draw")
     # In convert_labels' order, so that FIRST.DAT is byte for byte the PSX's where the words are.
-    order = (1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 8, 9, 17, 18, 19)
+    order = (1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 8, 9, 17, 18, 19, 20, 21, 22, 23)
     return sorted(chunks, key=lambda c: order.index(c[1])), report
 
 
@@ -2960,7 +3071,12 @@ def convert_labels_psp(game, boot, verbs, magic=None):
 #      records at FISH_LINES (a pointer, a label byte, a pause byte), read
 #      through the pointers only, so repointed into the DLL's buffers;
 #   2  the three tab labels above the equip menu, behind the pointer table
-#      FISH_TABS, repointed likewise.
+#      FISH_TABS, repointed likewise;
+#   3  the four panel headings ROD, LURE, EQUIP, GUIDE (0x653EA0, D286,
+#      2026-10-18): the disc's own words, which the French and German modules
+#      lay out at their own widths after the tabs (fishing_headings, from the
+#      code's draws), kept in the DLL's buffers and drawn by our draws centred
+#      where the PC's are.
 #
 # On a disc the fishing module every fishing area carries (WORLDnn/AREAnnn.EMI)
 # has both: the lines as 12-byte records (a count, a pointer, the same label
@@ -2996,6 +3112,48 @@ def fishing_tab_width(sec, dest, base):
                              for v in words[k + 2:k + 32])
                 return n if second and 0 < n < FISH_TAB_ROOM else None
     return None
+
+
+FISH_HEAD_COUNT, FISH_HEAD_ROOM = 4, 16     # src/game/fishing_text.cpp's heading buffers
+FISH_HEAD_ROWS = (7, 7, 7, 0x47)            # the y each heading is drawn at: the PC's ROD, LURE, EQUIP, GUIDE
+
+
+def fishing_headings(sec, dest, after):
+    """The four panel headings (tag 3; D286), or None: the module's code draws
+    each from an address past its tabs (`after`, up to 0x40 on) built by `lui`
+    / `addiu`, with `addiu $a3, $zero, n` (or `ori`) the characters drawn and
+    `addiu $a1, r, y` the row nearest it - y 7 for the first three and 0x47 for
+    the fourth, as the PC's EffectKind0F_DrawItemsB / _DrawItemsA /
+    _DrawEquipped draw ROD, LURE, EQUIP and GUIDE (US 0x801D81E4, 0x801D8878,
+    0x801D8948, 0x801D8CEC; the French counts 5, 5, 7, 7; the German 4, 5, 7,
+    6). In address order, which is the PC's. Each heading is the disc's bytes
+    to its count or its NUL."""
+    words = struct.unpack_from("<%dI" % (len(sec) // 4), sec)
+    luis, found = {}, {}
+    nearest = lambda k, test: min(((abs(j - k), words[j] & 0xFFFF) for j in range(max(0, k - 10), min(len(words), k + 11))
+                                   if test(words[j])), default=(None, None))[1]
+    is_a3 = lambda w: w >> 26 in (0x09, 0x0D) and (w >> 21) & 31 == 0 and (w >> 16) & 31 == 7
+    is_a1 = lambda w: w >> 26 == 0x09 and (w >> 21) & 31 != 0 and (w >> 16) & 31 == 5
+    for k, w in enumerate(words):
+        op = w >> 26
+        if op == 0x0F:
+            luis[(w >> 16) & 31] = (k, (w & 0xFFFF) << 16)
+            continue
+        rs = (w >> 21) & 31
+        if op != 0x09 or rs not in luis or k - luis[rs][0] > 4:
+            continue
+        imm = w & 0xFFFF
+        v = (luis[rs][1] + (imm - 0x10000 if imm & 0x8000 else imm)) & 0xFFFFFFFF
+        if not after <= v < after + 0x40:
+            continue
+        n, y = nearest(k, is_a3), nearest(k, is_a1)
+        if n is None or y is None or not 0 < n < FISH_HEAD_ROOM:
+            continue
+        if found.setdefault(v, (n, y)) != (n, y):
+            return None
+    if len(found) != FISH_HEAD_COUNT or tuple(found[v][1] for v in sorted(found)) != FISH_HEAD_ROWS:
+        return None
+    return [sec[v - dest:v - dest + found[v][0]].split(b"\0")[0] for v in sorted(found)]
 
 
 def convert_fishing(game, disc):
@@ -3059,6 +3217,18 @@ def convert_fishing(game, disc):
                 report.append("3 tabs")
             else:
                 report.append("no tabs found")
+            heads = fishing_headings(sec, dest, dest + base + 3 * width) if width and name != PSP_BOOT else None
+            if heads:
+                payload = bytearray([FISH_HEAD_COUNT])
+                for i, raw in enumerate(heads):
+                    out = encode_text(raw) if raw else None
+                    if out is None or len(out) + 1 > FISH_HEAD_ROOM:
+                        raise SystemExit("fishing: %s heading %d does not convert: %s" % (name, i, raw.hex(" ")))
+                    payload += out + b"\0"
+                chunks.append((KIND_FISHING, 3, bytes(payload)))
+                report.append("4 headings")
+            else:
+                report.append("no headings found")
             return chunks, report
     return [], []
 
@@ -4146,13 +4316,16 @@ def build_all(args, disc_path):
         commu = [] if is_psp(disc) else \
             [disc.read(p) for p in sorted(disc.files) if re.match(r"(.*/)?COMMU[0-9A-Z]*\.EMI$", p)]
         if is_psp(disc):
-            labels, report = convert_labels_psp(src, boot, verb_starts(src, boot), module_sections(disc, "MAGIC060.EMI"))
+            labels, report = convert_labels_psp(src, boot, verb_starts(src, boot), module_sections(disc, "MAGIC060.EMI"),
+                                                disc.text_end)
         else:
+            status_emi = disc.find("STATUS.EMI")
             labels, report = convert_labels(src, read_module(start_emi) if start_emi else None,
                                             read_module(battle_emi) if battle_emi else None,
                                             read_module(shop_emi) if shop_emi else None, commu,
                                             module_sections(disc, "MAGIC060.EMI"), module_sections(disc, "BATE.EMI"),
-                                            module_sections(disc, "BOSS025.EMI"))
+                                            module_sections(disc, "BOSS025.EMI"), module_sections(disc, "SCENA10.EMI"),
+                                            read_module(status_emi) if status_emi else None)
         overlays["FIRST.DAT"] += labels
         print("labels: " + (", ".join(report) if report else "not found on this disc"))
     elif donor_ja and not is_psp(disc) and not args.only:
@@ -4503,7 +4676,36 @@ def selftest_code_labels():
     want = (b"Ff\xffgg", b"Ff\xffg", bytes([0x94, 0x70]) + b">" + bytes([0x14]))
     if turn_counter(section(code)) != want:
         raise SystemExit("selftest: turn_counter gave %s" % (turn_counter(section(code)),))
-    print("  labels from code: the identify words, the guest name (and a copy with no sound refused), the turn counter")
+    # Group 20: a "%s" print of a 12-byte title with no NUL (a pointer after
+    # it), then a draw of 12; a second print, so two, is refused.
+    a3 = 7
+    fmt = string(b"%s")
+    title_at = base + 0x1000 + len(pool)
+    pool.extend(b"Hhhhhh\xffiiiii" + struct.pack("<I", base))
+    printed = [lui(a1, (fmt + 0x8000) >> 16), addiu(a1, a1, fmt & 0xFFFF),
+               lui(a2, (title_at + 0x8000) >> 16), jal(base + 0x800), addiu(a2, a2, title_at & 0xFFFF),
+               addiu(a3, zero, 12), jal(base + 0x880), 0]
+    if parts_title(section(printed), section(printed)) != b"Hhhhhh\xffiiiii" \
+            or parts_title(section(printed * 2), section(printed * 2)) is not None:
+        raise SystemExit("selftest: parts_title")
+    # D286's headings: four lui / addiu of an address past the tabs, each
+    # beside a count in $a3 and its row in $a1 (7, 7, 7, 0x47); a fourth row
+    # of 7 is refused.
+    t0, s6 = 8, 22
+    after = base + 0x1000 + len(pool)
+    pool.extend(b"Jjjjj\0\0\0Kkkk\0\0\0\0Lllllll" + b"Mmmmmm\0\0")
+    def draw(at, n, y):
+        return [lui(v0, (at + 0x8000) >> 16), addiu(v0, v0, at & 0xFFFF), addiu(a1, s6, y), 0,
+                addiu(a3, zero, n), addiu(a0, t0, 0x30), jal(base + 0x800), 0] + [0] * 12
+    rows = [(0, 5, 7), (8, 4, 7), (16, 7, 7), (23, 6, 0x47)]
+    blob = section(sum((draw(after + o, n, y) for o, n, y in rows), []))[0][1]
+    if fishing_headings(blob, base, after) != [b"Jjjjj", b"Kkkk", b"Lllllll", b"Mmmmmm"]:
+        raise SystemExit("selftest: fishing_headings gave %s" % (fishing_headings(blob, base, after),))
+    blob = section(sum((draw(after + o, n, 7) for o, n, y in rows), []))[0][1]
+    if fishing_headings(blob, base, after) is not None:
+        raise SystemExit("selftest: fishing_headings took four rows of 7")
+    print("  labels from code: the identify words, the guest name (and a copy with no sound refused), the turn counter,"
+          " the parts title (two prints refused), the fishing headings (the wrong rows refused)")
 
 
 def selftest_buttons():
