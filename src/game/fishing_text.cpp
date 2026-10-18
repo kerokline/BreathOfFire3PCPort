@@ -126,11 +126,18 @@ std::uint16_t FirstButton(std::uint16_t word) {
 }
 
 // The label of text `text` with line byte `line` (0..2) through a sigma
-// (`sigma`: Japan's bit -> the bit now) and word 7.
+// (`sigma`: Japan's bit -> the bit now) and word 7. `pens` is what the image
+// holds at 0x653C00 by line byte. The owner's rule of 2026-10-17: a button
+// that sigma leaves where it was draws exactly as the original reads it, the
+// line byte's label in 0x653C00's pen - on the PC 2, 1, 6; on a disc-built
+// image a `gap` (zero) range of recipes/exe-gaps.tsv, so pen 0, white, which
+// is what every disc install drew before the round. Only a button that moved
+// takes the drawn shape's own pen.
 template <typename SigmaFn>
-FishingLabel Resolve(unsigned text, unsigned line, SigmaFn sigma, std::uint16_t word7) {
+FishingLabel Resolve(unsigned text, unsigned line, SigmaFn sigma, std::uint16_t word7, const std::uint8_t pens[3]) {
     if (line >= 3) bof3::Fatal("fishing label: line byte %u, past the three buttons", line);
     const std::uint16_t bit = text == kCastText ? FirstButton(word7) : sigma(kEntryBit[line]);
+    if (bit == kEntryBit[line]) return {line, pens[line]};
     const unsigned e = EntryOf(bit);
     return {e, kEntryPen[e]};
 }
@@ -188,86 +195,110 @@ void SelfTest() {
         ++bad;
         bof3::Log("shadow      fishing_text MISMATCH %s (%u, %u)", what, a, b);
     };
-    // The image: 0x653C00's pens are the Config cell's for circle, cross,
-    // triangle, and text 0 (the cast's) is labelled circle.
-    for (unsigned line = 0; line < 3; ++line)
-        check(Byte(kLinePens + line) == kEntryPen[line], "0x653C00's pen", line, Byte(kLinePens + line));
-    unsigned char label[kLineCount];
-    unsigned labelled = 0;
+    // Two images: this one (the PC's 0x653C00 2, 1, 6 and its line bytes,
+    // or a disc-built image's), and a disc-built image as exe_tables.py
+    // writes it for every disc (recipes/exe-gaps.tsv: the thirteen records'
+    // label / pause words and 0x653BFC..0x653C03 are `gap`, zero): every line
+    // byte 0, every pen 0.
+    struct Image {
+        const char* name;
+        unsigned char label[kLineCount];
+        std::uint8_t pens[3];
+    };
+    Image images[2] = {{"this image", {}, {}}, {"a disc-built image (the gap zeros)", {}, {0, 0, 0}}};
     for (unsigned i = 0; i < kLineCount; ++i) {
-        label[i] = Byte(kLineRecords + 8 * i + 4);
-        check(label[i] < 3 || label[i] == 0xFF, "a line byte", i, label[i]);
-        if (label[i] != 0xFF) ++labelled;
+        images[0].label[i] = Byte(kLineRecords + 8 * i + 4);
+        images[1].label[i] = 0;
+        check(images[0].label[i] < 3 || images[0].label[i] == 0xFF, "a line byte", i, images[0].label[i]);
     }
-    check(label[kCastText] == 0, "the cast's line byte", kCastText, label[kCastText]);
-    // One Config: every labelled text against `want` (entry by line byte 0, 1,
-    // 2 and the cast's), when given, and always against the rule: the
-    // non-cast lines Sigma(Japan's bit), the cast's word 7's button, which is
-    // also Sigma(circle) once word 7 is Speak's word; the pen by the shape.
-    auto config = [&](const std::uint16_t words[9], const unsigned* want, const char* what) {
+    for (unsigned line = 0; line < 3; ++line) images[0].pens[line] = Byte(kLinePens + line);
+    // Text 0 (the cast's) is labelled circle on both.
+    check(images[0].label[kCastText] == 0, "the cast's line byte", kCastText, images[0].label[kCastText]);
+    unsigned labelled = 0;
+    for (unsigned i = 0; i < kLineCount; ++i)
+        if (images[0].label[i] != 0xFF) ++labelled;
+    // One Config on one image: every labelled text against `want` (the entry
+    // by line byte 0, 1, 2 and the cast's), when given, and always against
+    // the rule: the button is Sigma(Japan's bit), or word 7's for the cast,
+    // which is also Sigma(circle) once word 7 is Speak's word; a button left
+    // where it was keeps the original's entry and the image's pen, a moved
+    // one takes its shape's pen.
+    auto config = [&](const Image& im, const std::uint16_t words[9], const unsigned* want, const char* what) {
         std::string why;
         const sg::Table t = sg::Build(words, why);
         check(t.valid, what, 0, 0);
         if (!t.valid) return;
         auto sigma = [&](std::uint16_t b) { return sg::Apply(t, b); };
         for (unsigned i = 0; i < kLineCount; ++i) {
-            if (label[i] == 0xFF) continue;
-            const FishingLabel l = Resolve(i, label[i], sigma, words[7]);
-            const std::uint16_t rule = sg::Apply(t, kEntryBit[label[i]]);
+            const unsigned line = im.label[i];
+            if (line == 0xFF) continue;
+            const FishingLabel l = Resolve(i, line, sigma, words[7], im.pens);
+            const std::uint16_t rule = sg::Apply(t, kEntryBit[line]);
             check(kEntryBit[l.entry] == rule, what, i, l.entry);
-            check(l.pen == kEntryPen[l.entry], what, i, l.pen);
-            if (want) check(l.entry == want[i == kCastText ? 3 : label[i]], what, i, l.entry);
+            if (rule == kEntryBit[line])
+                check(l.entry == line && l.pen == im.pens[line] &&
+                          std::memcmp(kLabelCodes[l.entry], kLabelCodes[line], 3) == 0,
+                      what, i, l.pen);
+            else
+                check(l.pen == kEntryPen[l.entry], what, i, l.pen);
+            if (want) check(l.entry == want[i == kCastText ? 3 : line], what, i, l.entry);
         }
     };
-    // Each release's defaults. Japan's: the original's draw, entry = the line
-    // byte, pen = 0x653C00's. The West's (P) and PSP-EU's (S) by name.
+    // By name: entries for line bytes 0, 1, 2 and the cast's.
     static const unsigned kJapan[4] = {0, 1, 2, 0};   // circle, cross, triangle; the cast circle
     static const unsigned kWest[4] = {1, 2, 3, 1};    // cross, triangle, square; the cast cross
     static const unsigned kPspEu[4] = {1, 0, 3, 1};   // cross, circle, square; the cast cross
-    std::uint16_t words[9];
-    sg::DefaultWords(sg::Release::kJapan, false, words);
-    config(words, kJapan, "Japan's defaults");
-    for (unsigned i = 0; i < kLineCount; ++i)
-        if (label[i] != 0xFF) {
-            const FishingLabel l = Resolve(i, label[i], [](std::uint16_t b) { return b; }, words[7]);
-            check(l.entry == label[i] && l.pen == Byte(kLinePens + label[i]), "the identity is the original's", i,
-                  l.entry);
-            check(std::memcmp(kLabelCodes[l.entry], kLabelCodes[label[i]], 3) == 0, "the identity's icon", i, l.entry);
-        }
-    sg::DefaultWords(sg::Release::kWest, false, words);
-    config(words, kWest, "the West's defaults");
-    sg::DefaultWords(sg::Release::kPspEu, false, words);
-    config(words, kPspEu, "PSP-EU's defaults");
-    // The round's stand-in swap from Japan's: Speak <-> Action, View <->
-    // Change, then words 7 / 8 as Speak's / Action's (draft A).
     static const unsigned kSwap[4] = {1, 0, 2, 1};    // cross, circle, triangle; the cast cross
-    sg::DefaultWords(sg::Release::kJapan, false, words);
-    words[0] = static_cast<std::uint16_t>(0x40 | sg::kL2R2);
-    words[6] = 0x20;
-    words[3] = 0x04;
-    words[4] = 0x08;
-    words[7] = words[0];
-    words[8] = words[6];
-    config(words, kSwap, "Speak <-> Action, View <-> Change");
-    // Every Config the rebind can make: the six lines over the six bits.
-    std::uint16_t perm[sg::kLines] = {0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
     unsigned configs = 0;
-    do {
+    for (const Image& im : images) {
+        std::uint16_t words[9];
+        // Japan's words (the PC's start; and every route's save, the camping
+        // save, on every install kind): sigma the identity, so every label,
+        // pen and icon is the original's on this image.
         sg::DefaultWords(sg::Release::kJapan, false, words);
-        for (int k = 0; k < sg::kLines; ++k) {
-            const unsigned w = sg::kLineWord[k];
-            words[w] = static_cast<std::uint16_t>(perm[k] | (w == 0 ? sg::kL2R2 : 0));
-        }
+        config(im, words, kJapan, "Japan's words: the original's draw");
+        for (unsigned i = 0; i < kLineCount; ++i)
+            if (im.label[i] != 0xFF) {
+                const FishingLabel l = Resolve(i, im.label[i], [](std::uint16_t b) { return b; }, words[7], im.pens);
+                check(l.entry == im.label[i] && l.pen == im.pens[im.label[i]], "the identity is the original's", i,
+                      l.pen);
+            }
+        // A disc install's own New Game words (draft B): its buttons moved
+        // against Japan's, so the labels name them, each in its shape's pen.
+        sg::DefaultWords(sg::Release::kWest, false, words);
+        config(im, words, kWest, "the West's defaults");
+        sg::DefaultWords(sg::Release::kPspEu, false, words);
+        config(im, words, kPspEu, "PSP-EU's defaults");
+        // The round's stand-in swap from Japan's: Speak <-> Action, View <->
+        // Change, words 7 / 8 as Speak's / Action's (draft A). Circle and
+        // cross move (their shapes' pens 1 and 2); triangle stays, as drawn.
+        sg::DefaultWords(sg::Release::kJapan, false, words);
+        words[0] = static_cast<std::uint16_t>(0x40 | sg::kL2R2);
+        words[6] = 0x20;
+        words[3] = 0x04;
+        words[4] = 0x08;
         words[7] = words[0];
         words[8] = words[6];
-        config(words, nullptr, "an assignment");
-        ++configs;
-    } while (std::next_permutation(perm, perm + sg::kLines));
-    check(configs == 720, "the assignments", configs, 720);
-    bof3::Log("shadow      fishing_text self-test: the label through sigma over %u labelled lines, each release's "
-              "defaults, the stand-in swap and %u assignments (%u checks); %u MISMATCHES",
-              labelled, configs, cases, bad);
-    if (bad) bof3::Fatal("fishing_text: %u mismatches in the label through sigma (docs/fishing-text.md 8)", bad);
+        config(im, words, kSwap, "Speak <-> Action, View <-> Change");
+        // Every Config the rebind can make: the six lines over the six bits.
+        std::uint16_t perm[sg::kLines] = {0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+        do {
+            sg::DefaultWords(sg::Release::kJapan, false, words);
+            for (int k = 0; k < sg::kLines; ++k) {
+                const unsigned w = sg::kLineWord[k];
+                words[w] = static_cast<std::uint16_t>(perm[k] | (w == 0 ? sg::kL2R2 : 0));
+            }
+            words[7] = words[0];
+            words[8] = words[6];
+            config(im, words, nullptr, "an assignment");
+            ++configs;
+        } while (std::next_permutation(perm, perm + sg::kLines));
+    }
+    check(configs == 1440, "the assignments", configs, 1440);
+    bof3::Log("shadow      fishing_text self-test: the label through sigma over %u labelled lines on two images "
+              "(this one, pens %u %u %u; a disc-built image's gap zeros), Japan's words as the original's draw, "
+              "each release's defaults, the stand-in swap and %u assignments (%u checks); %u MISMATCHES",
+              labelled, images[0].pens[0], images[0].pens[1], images[0].pens[2], configs, cases, bad);
 }
 
 }  // namespace
@@ -316,7 +347,8 @@ const unsigned char* FishingText_Label(unsigned entry) {
 
 FishingLabel FishingText_LabelOf(unsigned text, unsigned line) {
     if (g_label_sigma == 0) return {line, Byte(kLinePens + line)};   // the original's reads
-    return Resolve(text, line, [](std::uint16_t b) { return bof3x::input::sigma::Sigma(b); }, Half(kConfirmWord));
+    const std::uint8_t pens[3] = {Byte(kLinePens), Byte(kLinePens + 1), Byte(kLinePens + 2)};
+    return Resolve(text, line, [](std::uint16_t b) { return bof3x::input::sigma::Sigma(b); }, Half(kConfirmWord), pens);
 }
 
 unsigned FishingText_NameCount() { return g_on ? kNameCountLatin : kNameCount; }

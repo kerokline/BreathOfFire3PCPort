@@ -50,7 +50,11 @@ const unsigned char* FishingText_Label(unsigned entry);
 // 0x653C00[line], the original's reads. On: the line byte names Japan's
 // button (0 circle, 1 cross, 2 triangle) and the label draws Sigma(it); text
 // 0, the cast's line, draws the button of word 7 (Field_ConfirmButtons
-// 0x90358E), which LeaderPanel_S2Wait 0x528FA0 tests for the cast.
+// 0x90358E), which LeaderPanel_S2Wait 0x528FA0 tests for the cast. A button
+// sigma leaves where it was draws as the original reads it - the line byte's
+// entry in 0x653C00's pen (zero, white, on a disc-built image, whose range
+// there is an exe-gaps `gap`) - and only a moved one takes its shape's pen
+// (the owner, 2026-10-17; docs/fishing-text.md 8.6).
 struct FishingLabel {
     unsigned entry;
     unsigned pen;

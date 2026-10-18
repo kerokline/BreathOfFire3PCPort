@@ -207,8 +207,11 @@ label draws.
 - **The entry.** `0x66A2FC`'s order, as the Config cell `0x461C00` reads it
   under its tests: circle, cross, triangle, square, L1, R1 (its loads of
   `0x66A2FC..0x66A310`, read 2026-10-17 with capstone).
-- **The pen, by the shape.** Circle 2, cross 1, triangle 6 (`0x653C00`),
-  square 5, L1 and R1 0: the pens `0x461C00` pushes for the same six.
+- **The pen.** A button that `σ` leaves where it was keeps the original's
+  draw: the line byte's label in the pen the image holds at `0x653C00`
+  (section 8.6). Only a button that moved takes its shape's pen: circle 2,
+  cross 1, triangle 6, square 5, L1 and R1 0, the pens `0x461C00` pushes for
+  the same six. This is the owner's rule of 2026-10-17, the one DT-2 uses.
 - **Under a Latin layer**, the disc's shape: DIV-0051's icon for the entry
   (`FishingText_Label`, now six entries).
 - **On the PC's own text**, the port's stand-in: the `0x66A2FC` string for
@@ -216,7 +219,7 @@ label draws.
   as the owner chose for DT-2 (section 5.1 of the round doc).
 
 With `σ` the identity, every label is the original's: entry = the line
-byte, pen = `0x653C00[line]`.
+byte, pen = `0x653C00[line]`, on every install kind.
 
 **Off** (`BOF3X_ORIGINAL=FishingLabelSigma`, and before `FishingText_Arm`):
 entry = the line byte and pen = `0x653C00[line]`, which are the original's
@@ -233,17 +236,24 @@ only with `ButtonSigma` off and a hand-edited save.
 - **Headless, narrow** (`BOF3X_SELFTEST_ONLY=1
   BOF3X_SHADOW=fishing_text,sigma,effect_1a`, an ini-less copy of the dev
   launcher under `C:\Users\kerok\b_icf`, the PC install): exit 0.
-  - `fishing_text self-test: the label through sigma over 7 labelled lines,
-    each release's defaults, the stand-in swap and 720 assignments (10920
-    checks); 0 MISMATCHES`.
+  - `fishing_text self-test: the label through sigma over 7 labelled lines
+    on two images (this one, pens 2 1 6; a disc-built image's gap zeros),
+    Japan's words as the original's draw, each release's defaults, the
+    stand-in swap and 1440 assignments (30523 checks); 0 MISMATCHES`
+    (`buttons/icf2`; the first build's line read 720 assignments and 10920
+    checks).
   - `effect_1a self-test: 210000 rounds over 70 functions ... 0
     MISMATCHES`, with `0x466460`, `0x4665E0` and `0x466750` covered.
   - `patch ON FishingLabelSigma`.
-- **What the self-test checks:**
-  - the image's `0x653C00` pens equal the table's;
+- **What the self-test checks**, on two images: the running one, and a
+  disc-built one as `exe_tables.py` writes it (every line byte 0, every pen
+  0; section 8.6):
   - text 0's line byte is circle;
-  - at Japan's defaults every label is the original's (entry, pen and
-    icon);
+  - at Japan's words (the PC's start, and the camping save every route
+    loads, on every install kind) every label is the original's: entry, the
+    image's pen, and icon;
+  - a button that stays keeps the image's pen; a moved one takes its
+    shape's pen;
   - at the West's defaults: circle, cross and triangle show cross,
     triangle and square, and the cast shows cross;
   - at PSP-EU's: cross, circle, square, and the cast cross;
@@ -252,21 +262,14 @@ only with `ButtonSigma` off and a hand-edited save.
     in pen 2, triangle stays, and the cast shows cross;
   - all 720 assignments: each label is `Sigma(its button)` in its shape's
     pen, and the cast's equals `Sigma(circle)`.
-- **Headless, everything** (`BOF3X_SHADOW='*'`): see the round's hand-back.
-- **Not seen in game.** RC's fishing route (`caughFish`, area 30) in its
-  identity and swapped runs is the evidence. The identity run's banner must
-  equal the reference. The swapped run's must show, for example, the cast's
-  line with a cross icon (blue under a Latin layer, the circled 2 on the PC's
-  text) and the quit line with a circle.
+- **Headless, everything** (`BOF3X_SHADOW='*'`): exit 0; see 8.7.
+- **RC's fishing route on `psx-us`, identity:** see 8.7.
 
 ### 8.4 Between this merge and HT's
 
-Until HT lands, stage 1 and the reel still test Japan's constants. After a
-swap, the labels then name the swapped buttons while the old ones still
-work. The cast is split: stage 1 still wants circle, and stage 2's confirm
-already wants the swapped button, because word 7 moves with draft A. The same
-holds on a Western disc-only install at its own defaults (SG's section 7).
-The labels state what the round intends. HT makes the tests agree.
+This held until HT merged into `buttons/round`. Before that, stage 1 and the
+reel still tested Japan's constants, so after a swap the labels named the
+swapped buttons while the old ones still worked. HT closed it.
 
 ### 8.5 Ledger draft D (amends DIV-0069)
 
@@ -288,9 +291,11 @@ The labels state what the round intends. HT makes the tests agree.
 - **New behaviour:** the label names the button the line's test is on now.
   - For the cast's line (text 0), that is word 7's button. For every other
     labelled line, it is `Sigma` of the line byte's button.
-  - It is drawn as that button's own label, in that button's own pen
-    (circle 2, cross 1, triangle 6, square 5, L1 / R1 0, as the Config cell
-    `0x461C00`).
+  - A button that `σ` leaves where it was draws exactly as the original
+    reads it: the line byte's label in `0x653C00`'s pen. A moved button is
+    drawn as its own label in its own pen (circle 2, cross 1, triangle 6,
+    square 5, L1 / R1 0, as the Config cell `0x461C00`). This is the owner's
+    rule of 2026-10-17: recolour only when the button moves.
   - Under a Latin layer it is DIV-0051's shape. On the PC's own text it is
     the port's stand-in, `0x66A2FC[entry]`.
   - At the identity Config, nothing changes.
@@ -299,6 +304,67 @@ The labels state what the round intends. HT makes the tests agree.
 - **Also in the PSX version?** The PlayStation's labels are fixed too: the
   US module's are its own release's buttons (section 3). Following the
   Config is ours.
-- **Verification:** section 8.3. RC's `caughFish` area-30 route, identity
-  and swapped, is owed.
+- **Verification:** sections 8.3 and 8.7.
 - **Reversible?** `BOF3X_ORIGINAL=FishingLabelSigma`.
+
+### 8.6 Where a disc install's white label comes from (2026-10-17, `buttons/icf2`)
+
+RC's validation (`button-routes.md` 9.1) found that on `psx-us` and `psp-eu`
+the reel line's label drew white before the round and red after it, with the
+Config untouched. The white is not the disc module's colour. It is a gap in
+the disc-built image:
+
+- **The pen.** `0x653C00..0x653C02` sit in the range `0x653BFC..0x653C03`,
+  which `recipes/exe-gaps.tsv` classes `gap` / `game-value` for every disc
+  build. In `RC`'s `c_psxus` and `c_pspeu` `base/exe/data.toml` it is
+  `[0x653BFC, 0x653C03, "gap", ...]`, and `data.bin` holds zero there. So
+  the original's read `0x653C00[line]` gives pen 0, which is white. The map
+  resumes at `0x653C03` (the row table, from `AREA030.EMI`).
+- **The line bytes.** The label and pause bytes of all thirteen records
+  (`0x653B9C`, `0x653BA4`, ... `+4..+7` of each) are `gap` too. On a
+  disc-built image every line's label byte is 0 (circle) and every pause
+  byte is 0. Read from both `data.bin`s on 2026-10-17.
+- **The disc module's own labels** are not read by anything: three entries
+  at US `0x801E1F14`, its own buttons in colours 1, 6, 5 (section 3).
+
+The owner's rule (2026-10-17): a label whose button `σ` leaves where it was
+draws exactly as the original reads it, glyph and colour. Only a moved
+button takes its shape's colour. `Resolve` now does this. An unmoved button
+gives entry = the line byte and pen = the image's `0x653C00[line]`. On the
+PC that is 2, 1 or 6. On a disc install it is 0, which reproduces the white.
+
+**Not fixed here, a defect for the coordinator to number:** on a disc-built
+image the banner's line bytes are all 0. So every line of the thirteen is
+labelled circle, including the quit, gear and no-label lines, and every
+line's pause is 0 where the PC's is 12 or 1. A pause of 0 is decremented to
+255 by `LineNext` `0x466460` before it is tested. The fix belongs to
+`exe_tables.py`: map the disc module's 12-byte records' label and pause
+bytes (section 3, the PC's bytes) and the pens. It is not a draw change. Until
+then, `σ` resolves every disc-install label from circle. The identity bar
+holds, but after a swap a disc install's quit line would show `σ(circle)`.
+RC's route shows only the reel line, which is circle on both.
+
+### 8.7 Verification of the follow-up
+
+- **Build:** clean.
+- **Headless, narrow** (`fishing_text,sigma,effect_1a`): exit 0, and the
+  self-test line of 8.3.
+- **Headless, everything** (`BOF3X_SHADOW='*'`, an ini-less copy in
+  `C:\Users\kerok\b_icf\launcher`):
+  - 1,084 lines report `0 MISMATCHES` and none any other count;
+  - `inject: 10087 ours, 0 left original by BOF3X_ORIGINAL`, then
+    `self-test only: done`.
+  - Defender quarantined that copy's `bof3x-launcher-dev.exe` at 19:47
+    (events 1116 / 1117, `Trojan:Win32/Bearfoos.A!ml`) while it waited. The
+    game ran to the end and wrote the log.
+- **RC's fishing route on `psx-us`** (own root `C:\Users\kerok\b_icf`,
+  `abc_run.py prepare --only psx-us`, then `run --route
+  tools/recipes/sigma_fishing.txt --wide 0`, exe host):
+  - **identity** (`icf2`) against RC's pre-round reference
+    `b_rc\runs\id_sigma_fishing\psx-us`: **49 / 49 frames pixel-equal**.
+    Against the round's `r_id`: 42 / 49. The seven are the reel label, as
+    RC found.
+  - **swapped** (`icf2sw`, `sigma_fishing_sw.txt`, save `camping_sw`)
+    against RC's `r_sw_sigma_fishing_sw\psx-us`: **49 / 49 equal**. The reel
+    label is a blue cross (pen 1), which moved, so it takes its shape's
+    colour. The area 16 legend trades as before.
