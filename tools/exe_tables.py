@@ -619,6 +619,10 @@ def build_twins(srcs, pairs, jp=None, need=()):
     return out
 
 
+# Regions the immediate places leave alone: the owner's calls (install-gap-census.md 6).
+IMM_SKIP = [(0x61B4F0, 0x61B4F7, "Area104_PlateAnims: DIV-0055's re-laid plates, the owner's call")]
+
+
 def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=None):
     """The owning-function rows for one build (docs/exe-immediate-places.md): for
     each region imm_regions gives, each PC function whose operands name it (from
@@ -641,6 +645,9 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
     rows = []
     for lo, hi in imm_regions(pc, owner, ptr, own):
         stats["regions"] += 1
+        if any(slo <= lo < shi for slo, shi, _ in IMM_SKIP):
+            stats["owner's call"] += 1
+            continue
         j = bisect.bisect_right(data_starts, lo) - 1
         base = data_starts[j] if j >= 0 and data_starts[j] > lo - IMM_REACH else lo
         ops = collections.defaultdict(set)
@@ -698,6 +705,11 @@ def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=
                             if x in ptr:
                                 continue
                             if blob2[o] != pc[x - DATA_LO]:
+                                # the PC's zero tail (alignment) where the PSX packs its next data: the row
+                                # ends there (FP, docs/install-gap-pairs.md); any other difference refuses it
+                                if x >= lo and not any(pc[x - DATA_LO:hi - DATA_LO]):
+                                    end = x
+                                    break
                                 ok = False
                                 break
                             agree += 1

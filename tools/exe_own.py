@@ -95,6 +95,8 @@ REGIONS = [
                                    "the exe's file names them (docs/install-gap-readers.md 1.4)"),
     (0x669CCC, 0x66A450, "language", "the battle command labels, the community's member names, Menu_Verbs, pause lines"),
     (0x66B1F0, 0x66B1F8, "language", "the gene list's title (MenuList_GeneWinDraw; label group 23)"),
+    (0x66B468, 0x66B46E, "unread", "MasterWin_Requirements+0x44: a six-character string after the 17-pointer table; no "
+                                   "operand or word names it, unread on the master route (docs/install-gap-pairs.md)"),
     (0x66B5D8, 0x66B6A8, "port-platform", "the AVI player's MCI command strings (Fmv_Play, Fmv_WndProc)"),
     (0x66B708, 0x66BC58, "port-platform", "the display / sound / file layer's rect, caches, error strings and formats; the OT end; the GTE identity"),
     (0x66BC58, 0x66C45C, "rule", "Math_SinTable: PSX libgte's quarter-wave sine, computed"),
