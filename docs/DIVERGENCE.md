@@ -6674,8 +6674,8 @@ designed in rather than bolted on.
   loses the 41 track rows per build); `psp_exe.py check` clean; the `whelpBoss` route on a scratch PSP-EU-only install under
   `BOF3X_MUSIC_LOG=1` (en-150; the route, recorded in en-US, drifts after the
   fight): before, frame 718 loads `BOSS007` and plays `Music_Play(0, 10)`,
-  `bgm `; after `importer.py setup` rebuilt the image, the same frame plays
-  `Music_Play(151, 10)`, `bgmi` (bank `BGMBAT00`), and the start-up log's
+  `bgm\000`; after `importer.py setup` rebuilt the image, the same frame plays
+  `Music_Play(151, 10)`, `bgm\151` (bank `BGMBAT00`), and the start-up log's
   41 `EventBattle_Records` gap lines are gone. Not heard.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text

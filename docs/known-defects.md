@@ -8321,8 +8321,8 @@ SEP; a file matching more than one distinct BGM file refuses the build.
 amended. Measured: the `whelpBoss` route on a scratch PSP-EU-only install under
 `BOF3X_MUSIC_LOG=1` (en-150; the route, recorded in en-US, drifts after the
 fight): before, frame 718 loads `BOSS007` and plays `Music_Play(0, 10)`,
-`bgm `; after `importer.py setup` rebuilt the image, the same frame plays
-`Music_Play(151, 10)`, `bgmi` (bank `BGMBAT00`), and the start-up log's
+`bgm\000`; after `importer.py setup` rebuilt the image, the same frame plays
+`Music_Play(151, 10)`, `bgm\151` (bank `BGMBAT00`), and the start-up log's
 41 `EventBattle_Records` gap lines are gone. Not heard.
 
 ## D317 — A sprite meant to be drawn into VRAM stays on the screen, and the page it was for stays empty: Amalgam's death has no melt (the port's; fixed 2026-10-17 by DIV-0142)
