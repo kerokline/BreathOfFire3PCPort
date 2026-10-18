@@ -9,10 +9,11 @@ the census's section 8 rewritten with every status, the drafts written into
 DIVERGENCE as amendments of DIV-0101, DIV-0103, DIV-0069 and DIV-0064, D319
 and D320 numbered, HANDOFF item 4 replaced, the owner's calls in
 `owner-review.md`). Items 1 and 2 ran at the merges (the checks; `exe_scan.py`
-at the tip, the census's 8.1). **Items 3 and 4 are not run**: the A/B/C caches,
-the attract gate, the hash routes and the captures need a local launcher
-build, and Windows Defender quarantines every one (the owner's exclusion is
-asked). **Item 6, `BOF3X_EXEIMAGE_STRICT=1` as the default, is not ready**:
+at the tip, the census's 8.1). **Items 3 and 4 ran on 2026-10-18 evening**
+(section 6, branch `install-gap/live`). The self-tests pass. The gate and
+the eleven routes show no game-state difference the round made: every page
+left is a ledgered divergence or a stale pair. The captures are in
+`g_abc\shots`. One finding: D279 crashes `psx-jp`'s fishing spot every run. **Item 6, `BOF3X_EXEIMAGE_STRICT=1` as the default, is not ready**:
 RW's watch must be re-run on the merged branch, and the two rows still read in
 play are the owner's calls (D266's title mark, the empty save slot). The
 census it closes is [`install-gap-census.md`](install-gap-census.md). This is
@@ -24,7 +25,7 @@ section 8, the NEEDS FIX items across the seven disc builds: two P1 items not
 done, the P2 twins the disc search already locates, the P3 long tail and the
 P4 "find a reader" rows. This document stages that remainder as parallel
 groups that can run with no owner present. The 13 OWNER CALL items are not in
-it (section 6).
+it (section 7).
 
 ## 0. The shape in one paragraph
 
@@ -350,7 +351,224 @@ symbol names, counts and file names only (rule 1).
    (DIV-0101 amended); the launcher's message names the range and says to
    rebuild. Not before that condition is measured.
 
-## 6. What stays the owner's (not in this round)
+## 6. The live end batch as run (2026-10-18 evening)
+
+Items 3 and 4 of section 5, run unattended at the owner's request on
+`install-gap/live`, cut from `e5c5cad7` (the tip of `install-gap/round`:
+both stages, the end docs, `origin/main` merged in, so DIV-0134, DIV-0135
+and DIV-0143 are in the build). Built in the worktree's own `build/` (llvm-mingw,
+886 steps, no error). Roots, new and this batch's only:
+`C:\Users\kerok\g_abc` (caches, installs, the harness's `L\`, captures) and
+`C:\Users\kerok\g_hash` (a copy of the owner's PC install without
+`CDImage\`, the launcher copies `L1\` and `L2\`, the hash files `sh\`). The
+main checkout's `bof3\`, `analysis/statehash/` and `tools/recipe_saves/`
+were read only. Another live agent (RW2, root `g_rw2`) and the session on
+`ab88` ran games beside these all evening: the machine was not quiet.
+
+**Defender** stopped nothing of this batch. Every launcher copy here was a
+plain `cp` of `build/` (`g_hash\L1`, `L2`, and `abc_run.py prepare`'s
+`g_abc\L`) and none was quarantined: `Get-WinEvent` "Microsoft-Windows-Windows
+Defender/Operational" ids 1116 / 1117 at 17:05 and 18:25 hold no path under
+`g_abc`, `g_hash` or the worktree. The same log has 13 detections that
+evening (17:37..17:41, `Behavior:Win32/DefenseEvasion.A!ml`), all of them
+RW2's copies under `g_rw2`. Every result below is read from its own log
+(`self-test only: done`, `recipe done`, the runner's `done:` line, the
+`inject:` line), not from an exit code.
+
+### 6.1 Self-tests (headless)
+
+- **Hosted, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' BOF3X_LANG=original`**,
+  from the ini-less `g_hash\L1` against the main checkout's `bof3\`: launcher
+  exit 0, `inject: 10087 ours`, `self-test only: done`, **1,085
+  `MISMATCHES` lines, every one ` 0 MISMATCHES`**, no `FATAL`. This is the
+  `'*'` the round's merged branch had not had because of Defender.
+- **The exe host from each install kind** (`BOF3X_SELFTEST_ONLY=1`,
+  `BOF3X_CACHE` = the install's cache, `BOF3X_EXEIMAGE` too for the disc-only
+  ones, the install's language, `BOF3X_OPT=none`, from `g_abc\L`): all eight
+  `self-test only: done`, 0 `FATAL`.
+
+  | Install | Language | `inject:` | Gap ranges logged |
+  |---|---|--:|--:|
+  | `pc-enus` (PC + the US disc) | en-US | 10,088 | - |
+  | `psx-us` | en-US | 10,088 | 76 |
+  | `psx-jp` | ja-JP | 10,087 | 58 |
+  | `psx-eu` | en-150 | 10,088 | 75 |
+  | `psx-fr` | fr-FR | 10,088 | 76 |
+  | `psx-de` | de-DE | 10,088 | 78 |
+  | `psp-jp` | ja-JP | 10,087 | 54 |
+  | `psp-eu` | en-150 | 10,088 | 52 |
+
+  **The 10,087 under `ja-JP`** (the coordinator's open note on PSP-JP)
+  is by design: the one inject missing from both Japanese lists is
+  `Config_DrawControllerCell`, which `config_text.cpp` injects only under a
+  Latin overlay (D312's note there). The hosted run under `original` counts
+  10,087 for the same reason.
+
+### 6.2 The A/B/C caches and the attract gate
+
+```
+python tools/abc_run.py prepare --set all --only pc-enus,psx-us,psx-jp,psx-eu --root C:/Users/kerok/g_abc --installs C:/Users/kerok/g_abc/installs.toml --build build
+python tools/abc_run.py prepare --set all --only psx-fr,psx-de,psp-jp,psp-eu  (the same otherwise, beside it)
+python tools/exe_tables.py gate-skip --cache C:/Users/kerok/g_abc/c_psxus --game C:/Users/kerok/g_hash/bof3
+python tools/abc_run.py run --set us --tag gate --route attract --statehash --statehash-skip C:/Users/kerok/g_abc/c_psxus/base/exe/gate-skip.txt  (--root, --installs as above)
+```
+
+`g_abc\installs.toml` is the shipped `recipes/abc-installs.toml` with the
+discs read from `D:\bof3x-discs` (the main checkout's `CDImage\` holds zips)
+and all seven one-source discs plus `pc-enus`, as RW's file had them. Every
+cache was new, so every one was built: 192..286 s a cache, 4..9 s an install,
+987 s and 1,109 s for the two halves. The gate list: the committed list plus
+841 ranges, 44,559 bytes.
+
+**The gate** (`pc-enus` against `psx-us`, `en-US` from the installs file,
+`BOF3X_OPT=none BOF3X_LAYERING=0` from the harness, 11,000 recipe frames):
+both sides `done at frame 11000`, 366 timed frames each, the scenes never
+parted. **Pictures:** 305 of 366 frames equal; 61 differ, in two spans,
+both the title screen: 420..1290 (matched by `pc-title-mark`, DIV-0114) and
+6120..7020, the attract's second title, logged as mode 2 area 2, so the rule
+(modes 0..1) did not match. Its regions are the copyright line
+`20,208-300,224` and the `®` mark `260,128-272,140`, the same as the first
+span (DIV-0114; D266 / D277 are the owner's calls). **State hash** (`diff
+--align recipe`, 10,945 ticks): 96 pages. Outside the VRAM shadow and the
+CLUT strip there are three:
+- `0x903000` from tick 1 to the end: the nine pad words, **DIV-0134**. A
+  US disc-only install starts with the West's buttons; its verification
+  records this page from tick 1 on `psx-us`, and the attract loads no save.
+- `0x802000` from tick 1310 (`DrawTable`, `Gfx_FrameNodes`): words
+  pointing into area 4's loaded data, which differs between the PC's and
+  the US disc's chunks. Read to the byte on 2026-10-13
+  ([`abc-sweep-1013-us.md`](abc-sweep-1013-us.md) 7).
+- `0x813000` (`Gfx_ClutStrip+0x3A80`) from tick 1310: the CLUT strip of
+  the same data.
+
+No difference here is the round's, and none is unexplained.
+
+### 6.3 The state-hash routes
+
+`BOF3X_OPT=none BOF3X_LAYERING=0`, `BOF3X_STATEHASH_SKIP` = the worktree's
+173-range `tools/statehash_skip.txt`, `BOF3X_RECIPE_SAVES` = the main
+checkout's, the game `g_hash\bof3` (a copy of the owner's install taken
+at 17:06 with the owner's saves as they are now), `input_run.py
+tools/recipes/R.txt --no-front` (shop `--slot0-hold`), the attract by
+`attract_run.py --minutes 6 --no-front`. The script, `hash_route.sh`, is
+in the session scratchpad (`.../scratchpad/live/`). Files are
+`g_hash\sh\cn_<route>_<tag>.sh`, with the `.check` and `diff_*.txt`
+beside them. Three passes:
+- `live1`: ours, the exe host, from `L2`.
+- `orig1`: Capcom's side once a route, `--original "*,-Game_Clock"`,
+  hosted, foreground held, from `L1`.
+- `off2`: ours hosted from `L2`, with the three divergences below switched
+  off (`--original WorldMapLegend,AreaTrackFallback,AreaKeepStoppingNone`).
+  It doubles as the repeat of `live1`.
+
+| Route | `live1` against its pair | Capcom's side (`orig1`) against the pair | `off2` against `orig1` |
+|---|---|---|---|
+| attract (`attract_r14_*`) | **passes**: 8 pages, every one a platform page at tick 4 (the fresh-copy start-up trap), the sound page `0x7DE000` on 11 ticks and one VRAM page at 1311 | not run: the pair still holds | - |
+| combat | stale pages, as Capcom's | stale: `0x929000` / `0x92A000` from 179, `0x905000` from 226, `0x803000` / `0x903000` / `0x904000` / `0x7E0000` 227..470, D3D pages | **identical on all 2,561 ticks** |
+| shop | the same | the same, from 164 | `0x7CA000` only |
+| worldMapAndAreaTransition | the same, plus 24 VRAM pages and `0x6C3000` from 1098 | the same, from 164 | `0x7CA000`; start-up noise at tick 3 |
+| menu_screens | the same, plus the music pages from 753 | the same, from 500 | `0x7CA000` only |
+| field_menu | the same, plus the music pages from 753 | the same, from 500 | `0x7CA000`; tick-3 noise |
+| dragonTransform | the same, plus the music pages from 333 | the same, from 119 | `0x7CA000`; tick-3 noise |
+| caughFish | the same, plus VRAM / draw pages 395..767 | the same, from 190 | `0x7CA000`; tick-3 noise |
+| masterAndManillo | the same, plus VRAM / draw pages 324..3683 | the same, from 131 | `0x7CA000`; tick-3 noise |
+| cutsceneAndNue | the same, plus the music pages from 205 | the same, from 95 | `0x7CA000`; tick-3 noise (7,361 ticks) |
+| whelpBoss | the same, plus `0x6BD000` 10,347..12,070 | the same, from 119 | `0x7CA000` only (13,185 ticks) |
+
+**The pairs are stale, as HANDOFF item 2 says, and on more than the save
+pages.** Capcom's own side, run once a route this evening, differs from
+every `cn_<route>_orig2` pair the same way ours does. It differs from each
+route's first save-list read: `0x929000`, `0x92A000` and `0x905000` to the
+end, and `0x803000` / `0x903000` / `0x904000` / `0x7E0000` over the load. The
+owner's `bof3\` now holds one save slot (`BISLPS00.DAT`, 2026-10-17; the
+others are in its `savesBackup\`), where the pairs staged the list of
+2026-10-10. So the reading below is ours against Capcom's side of the same
+hour, not against the pairs.
+
+**Ours against Capcom's side, the same evening** (`diff orig1 live1`): the
+game-state pages that remain are three ledgered divergences, all from
+before this round. Switched off (`off2`), each is gone:
+- **DIV-0092** (`AreaTrackFallback`): `Music_Track`, `Music_LoadedTrack`,
+  `Music_File*`, the sound page, from the load. Seen on menu_screens,
+  field_menu, dragonTransform and cutsceneAndNue.
+- **DIV-0135** (`WorldMapLegend`): on a PC install with no PSX disc the
+  engine paints the legend's key names over in VRAM and draws its
+  stand-ins, so the VRAM shadow, `0x903000`, `0x929000`, `0x7E0000`
+  (draw records) and `0x6C3000` (the texture cache) differ while a world
+  map is up. Seen on worldMapAndAreaTransition (1098..1780), caughFish
+  (395..767) and masterAndManillo (324..3683).
+- **DIV-0143** (`AreaKeepStoppingNone`): whelpBoss's `0x6BD000`
+  (`Music_File*`, `Music_FadeCount`) over 10,347..12,070, Ryu's dream.
+
+**One page is Capcom's side's, not ours.** `0x7CA000` (`D3d_Vertices`,
+`D3d_TexCoords`; Direct3D state the D3D11 renderer replaces) differs on
+every tick of eight of the nine `orig1` runs, against the pairs as much
+as against ours. On `combat_orig1`, the first, it never differs. Ours,
+exe host and hosted, agrees with the pairs there. It is a platform page of
+the all-original side's renderer, not game state; why it changed between
+two Capcom runs of one evening was not read to the byte.
+
+**The PC path, under the original language, shows no game-state
+difference the round made, and none unexplained.** The round changes no
+PC-install behaviour but LA's label groups under a Latin layer, and these
+runs use none. The pairs are not re-recorded. If they are wanted, record
+`orig1`'s like into `g_hash` twice (`orig1` alone is one side).
+
+### 6.4 Captures (item 4), for the owner's eye
+
+Under `C:\Users\kerok\g_abc\shots` (game-derived, outside the tree):
+
+| Row | File | What is drawn |
+|---|---|---|
+| World map 115's legend frame (`Area115_Sprites`, `_Buttons`, TW) | `area115_legend_psx-us_t000480.png`, `area115_legend_pc-enus_t000480.png` | The frame at the top left, whole, with the compass, on the US disc-only install: circle `Enter`, cross `Guide`, `START` `Camp`. The PC install shows its pictograms beside the same shapes (DIV-0130 / DIV-0135, by source). The two differ in that box only (`68,20-124,52`) |
+| The German equipment panel's slot icons (D319) | `de_equip_slot_icons_psx-de_t001770.png` | The shop's `AUSR` panel on `psx-de` (`shop`, recipe frame 1,770), each slot row with its icon (weapon, shield, helmet, armour, two accessories) |
+| The PSP default light (PB) | `psp_light_psp-eu_shop_t000540.png` (the item shop), `psp_light_psp-eu_shop_t001290.png` (the street) | Area 7 on `psp-eu`, lit, the shading as on the other installs |
+| The fishing kinds (JP) | `jp_fishing_psx-jp_t001080.png`, `jp_fishing_psx-jp_t001800_before_crash.png` | `caughFish` on `psx-jp`: the cast, the lure's name, the fight. The route does not reach the catch: it crashes first (below) |
+| Area 169's dial panel (P1 item 7) | not captured | A crafted save puts the party in area 169 on both `us` installs (122 frames there, `pc-enus` and `psx-us` equal frame for frame), but the panel needs the dial's use, which no route or save here reaches. Skipped |
+
+**How area 115 and area 169 were reached:** `ending17`'s method with only
+the area word changed. `craft_area.py` (scratchpad) took the main
+checkout's `dolphinBoss.DAT`, set the game block's `+0x24` to 115 (169),
+and recomputed the `+0x70` checksum, after first checking the donor's own
+checksum against the rule. The route was `ending17.txt` with its header
+renamed (`g_abc\area115.txt`). The saves are in `g_abc\saves`, through a
+second installs file whose `recipe_saves` names that folder. The load put
+the party in area 115 on both installs, mode 2, from recipe frame 450.
+
+**Not asked for here:** the FR / DE pages and the master's list on a Western
+install (section 5 item 4's other rows) are not in this batch's brief.
+
+### 6.5 Finding: D279 crashes `psx-jp` at the fishing spot, 2 runs of 2
+
+`caughFish` on `psx-jp` (the A/B/C install, exe host, `ja-JP`) ended in
+`FATAL` twice. Both times it was `CRASH 0: exception 0xC0000005 at
+bof3x.dll+0x145328`, `area 0x001E ... mode 8`, reading about 0x1DC7xxxx.
+The first run crashed after recipe frame 1,800 and the repeat after 960.
+`llvm-symbolizer` on the run's `bof3x.dll` names the stack:
+`Font_UnpackGlyph` (`tex_cells.cpp:240`) <- `Font_BuildGlyphTexture` <-
+`Font_GlyphTexture` <- `D3d_DrawGlyph` <- `Gfx_DrawOTag` <- `Gfx_Present`.
+The frame before the first crash shows the banner box empty. That is
+**D279**: the Japanese fishing banner's NUL drawn as glyph `0xFFDA`, its
+cell far past the glyph table. D279 recorded garbage on every PSX-JP visit
+and a crash on PSP-JP one run in five; on this build PSX-JP crashes every
+time. **No round change explains it.** No `ja-JP` layer writes the banner's
+lines or its button label (CW's second path). The crash only needs the read
+to land on unmapped memory, which depends on where the DLL and the heap sit.
+Not measured: whether the round's base build crashes as often. D279's fix
+is still the owner's call ([`owner-review.md`](owner-review.md)). Until
+then a Japanese disc-only install cannot fish.
+
+### 6.6 What this leaves
+
+- **Item 6 (STRICT as the default)** is RW2's measurement, not this batch's.
+- **The nine stale pairs plus Nue's** (HANDOFF item 2): re-recording wants
+  a quiet machine and a fixed save list. Tonight's comparison went around
+  them by running Capcom's side the same hour.
+- **D279 on `psx-jp`** (6.5): every time on this build.
+- **The roots** `g_abc` (about 7 GB of caches and installs) and `g_hash`
+  are scratch. Delete them once this branch has merged.
+
+## 7. What stays the owner's (not in this round)
 
 The 13 OWNER CALL items (12 since 2026-10-17: the event battles' track
 words were filled by rule after issue #83, D316): DIV-0055's plates
@@ -361,7 +579,7 @@ assignment (now the button round, [`button-unification-round.md`](button-unifica
 What the round can do for them while the owner is away: one capture or one
 table per item, so each question in chat is answerable from a phone.
 
-## 7. The brief, per group
+## 8. The brief, per group
 
 Each brief is written from this document and says, in its own words: the
 goal; the rows (by symbol and range, copied from the census, never the
@@ -376,7 +594,7 @@ did *not* commit). Rules 1, 4 and 7 are restated in every brief. A usage cut
 resumes with a message naming the next step; only the hand-back report means
 merge.
 
-## 8. Not decided here
+## 9. Not decided here
 
 - Whether the `imm` place kind should also replace any existing engine rule
   that holds a disc's values (none known today; OT reports if it meets one).
