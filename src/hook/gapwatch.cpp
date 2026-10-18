@@ -28,9 +28,13 @@ constexpr int kMaxRanges = 2048;   // 388 rows a build in recipes/exe-gaps.tsv a
 constexpr int kMaxPages = 256;     // 43 gap pages on psx-de, 71 with unread and language
 constexpr int kMaxThreads = 16;
 constexpr int kPendingPerThread = 4;   // pages one instruction can touch: a movs between two, each split
-constexpr int kTop = 8;                // a page's busiest readers kept by address
+constexpr int kTop = 12;               // a page's busiest readers kept by address (the least counted replaced)
 constexpr int kCallers = 4;            // return addresses kept for a first read
 constexpr int kFlushEvery = 60;        // latches between rewrites of the file
+// The debug registers (below): a code of ours raised to load them.
+constexpr DWORD kSetDr = 0xE0474157;
+constexpr int kMaxDr = 2048;
+constexpr int kSlots = 4;
 
 // Everything the handler touches is static: it runs on whatever stack took
 // the fault, and game logic runs on 16 KB task stacks (calltrace.cpp).
@@ -45,6 +49,8 @@ struct WRange {
     volatile LONG reads, writes;
     volatile LONG edge;      // accesses starting up to 7 bytes below lo (a wider read may reach it)
     std::uint32_t edge_eip;
+    volatile LONG dr_hits;   // accesses a debug register on one of its words caught
+    LONG dr_latches;         // latches it had a debug register on a word of it
 };
 struct WPage {
     std::uint32_t base;
@@ -67,6 +73,27 @@ WPage g_page[kMaxPages];      // sorted by base
 int g_pages = 0;
 Pending g_pending[kMaxThreads];
 LONG g_budget = 16;
+
+// The fallback for a hot page, exact where the page budget only samples: a
+// page parked at least once has its `gap` ranges' aligned words put, four at
+// a time and in turn one latch each, in the main thread's debug registers
+// (read-or-write, four bytes). A hit is a trap after the access, nothing to
+// re-arm and no guard fault: free while it waits. The word may hold a byte
+// either side of the range; the hit is counted for the range all the same.
+// Loaded by raising kSetDr on the main thread at the latch, so the handler
+// writes them into that thread's context. BOF3X_GAPWATCH_DR=0 turns it off.
+struct DrTarget {
+    std::uint32_t va;   // aligned word
+    int range;
+    int page;
+};
+DrTarget g_dr[kMaxDr];
+int g_drs = 0, g_dr_next = 0;
+std::uint32_t g_slot_va[kSlots];
+int g_slot_range[kSlots];
+int g_slots = 0;
+DWORD g_dr_thread = 0;
+bool g_dr_on = true;
 volatile LONG g_faults = 0, g_steps = 0, g_unpending = 0;
 std::uint32_t g_dll_lo = 0, g_dll_hi = 0;
 bool g_on = false;            // the real watch
@@ -138,7 +165,12 @@ void Callers(const CONTEXT* ctx, std::uint32_t* out) {
     }
 }
 
+// A page's busiest readers, by address: the space-saving count - a reader
+// not kept replaces the least counted, which it inherits plus one, so a busy
+// reader that comes late still rises (the counts of a replaced slot are then
+// an upper bound). Racy across threads, and only a measure.
 void Top(WPage& pg, std::uint32_t eip) {
+    int least = 0;
     for (int k = 0; k < kTop; ++k) {
         if (pg.top_eip[k] == eip) {
             InterlockedIncrement(&pg.top_n[k]);
@@ -149,8 +181,43 @@ void Top(WPage& pg, std::uint32_t eip) {
             InterlockedIncrement(&pg.top_n[k]);
             return;
         }
+        if (pg.top_n[k] < pg.top_n[least]) least = k;
     }
     InterlockedIncrement(&pg.top_other);
+    pg.top_eip[least] = eip;
+    InterlockedIncrement(&pg.top_n[least]);
+}
+
+// The first access of a range: who, when, where.
+void First(WRange& r, std::uint32_t eip, std::uint32_t kind, const CONTEXT* ctx, LONG me) {
+    if (InterlockedCompareExchange(&r.claimed, 1, 0) != 0) return;
+    r.eip = eip;
+    r.kind = kind;
+    r.thread = static_cast<std::uint32_t>(me);
+    r.frame = *static_cast<const volatile std::uint32_t*>(Ptr(Va(&Frame_Counter)));
+    r.area = *static_cast<const volatile std::uint16_t*>(Ptr(Va(&Game_AreaNumber)));
+    r.rframe = InputScript_Frame();
+    Callers(ctx, r.callers);
+    InterlockedExchange(&r.ready, 1);
+}
+
+// The four slots into a context: read-or-write (RW 11), four bytes (LEN 11),
+// locally enabled.
+void LoadSlots(CONTEXT* ctx) {
+    DWORD dr7 = 0;
+    DWORD* const dr[kSlots] = {&ctx->Dr0, &ctx->Dr1, &ctx->Dr2, &ctx->Dr3};
+    for (int k = 0; k < kSlots; ++k) {
+        *dr[k] = k < g_slots ? g_slot_va[k] : 0;
+        if (k < g_slots) dr7 |= (1u << (2 * k)) | (3u << (16 + 4 * k)) | (3u << (18 + 4 * k));
+    }
+    ctx->Dr6 = 0;
+    ctx->Dr7 = dr7;
+    ctx->ContextFlags |= CONTEXT_DEBUG_REGISTERS;
+}
+
+void ApplySlots() {
+    g_dr_thread = GetCurrentThreadId();
+    RaiseException(kSetDr, 0, 0, nullptr);
 }
 
 Pending* PendingOf(LONG me) {
@@ -164,9 +231,26 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
     CONTEXT* ctx = info->ContextRecord;
     const LONG me = static_cast<LONG>(GetCurrentThreadId());
 
+    if (rec->ExceptionCode == kSetDr) {
+        LoadSlots(ctx);
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
     if (rec->ExceptionCode == EXCEPTION_SINGLE_STEP) {
+        bool ours = false;
+        // A debug register's trap: B0..B3 of DR6, after the access.
+        if (static_cast<DWORD>(me) == g_dr_thread && (ctx->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS &&
+            (ctx->Dr6 & 0xF)) {
+            for (int k = 0; k < g_slots; ++k) {
+                if (!(ctx->Dr6 & (1u << k))) continue;
+                WRange& r = g_range[g_slot_range[k]];
+                InterlockedIncrement(&r.dr_hits);
+                First(r, ctx->Eip, 2, ctx, me);
+            }
+            ctx->Dr6 = 0;
+            ours = true;
+        }
         Pending* p = PendingOf(me);
-        if (!p) return EXCEPTION_CONTINUE_SEARCH;
+        if (!p) return ours ? EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH;
         for (int k = 0; k < p->n; ++k)
             if (!g_page[p->page[k]].parked) Guard(p->page[k]);
         // The instruction stepped was a pushfd: it saved the trap flag we set,
@@ -195,16 +279,7 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         WRange& r = g_range[ri];
         InterlockedIncrement(&pg.range_faults);
         InterlockedIncrement(kind == 1 ? &r.writes : &r.reads);
-        if (InterlockedCompareExchange(&r.claimed, 1, 0) == 0) {
-            r.eip = eip;
-            r.kind = kind;
-            r.thread = static_cast<std::uint32_t>(me);
-            r.frame = *static_cast<const volatile std::uint32_t*>(Ptr(Va(&Frame_Counter)));
-            r.area = *static_cast<const volatile std::uint16_t*>(Ptr(Va(&Game_AreaNumber)));
-            r.rframe = InputScript_Frame();
-            Callers(ctx, r.callers);
-            InterlockedExchange(&r.ready, 1);
-        }
+        First(r, eip, kind, ctx, me);
     } else if (ri < g_ranges && g_range[ri].lo - addr <= 7) {
         WRange& r = g_range[ri];
         if (InterlockedIncrement(&r.edge) == 1) r.edge_eip = eip;
@@ -251,6 +326,38 @@ void BuildPages() {
             pg.base = b;
             pg.protect = m.Protect;
         }
+}
+
+// The `gap` ranges' aligned words, for the debug registers.
+void BuildDrTargets() {
+    g_drs = 0;
+    g_dr_next = 0;
+    for (int i = 0; i < g_ranges; ++i) {
+        if (std::strcmp(g_range[i].how, "gap") != 0) continue;
+        for (std::uint32_t w = g_range[i].lo & ~3u; w < g_range[i].hi; w += 4) {
+            if (g_drs && g_dr[g_drs - 1].va == w) continue;   // a word two ranges share: the first's
+            if (g_drs == kMaxDr) Fatal("gapwatch: more than %d words for the debug registers", kMaxDr);
+            g_dr[g_drs++] = {w, i, FindPage(w & ~(kPage - 1))};
+        }
+    }
+}
+
+// The next four words on a page parked at least once, one latch each; the
+// slots cleared when there is none.
+void RotateSlots() {
+    if (!g_dr_on) return;
+    const int before = g_slots;
+    g_slots = 0;
+    for (int scanned = 0; g_slots < kSlots && scanned < g_drs; ++scanned) {
+        const DrTarget& t = g_dr[g_dr_next];
+        g_dr_next = (g_dr_next + 1) % g_drs;
+        if (t.page < 0 || !g_page[t.page].parks) continue;
+        g_slot_va[g_slots] = t.va;
+        g_slot_range[g_slots] = t.range;
+        if (g_slots == 0 || g_slot_range[g_slots - 1] != t.range) ++g_range[t.range].dr_latches;
+        ++g_slots;
+    }
+    if (g_slots || before) ApplySlots();
 }
 
 void Install() {
@@ -325,26 +432,28 @@ void Write() {
     put("# gapwatch (src/hook/gapwatch.cpp; docs/install-gap-reads.md): build %s, route %s, classes %s, budget %ld "
         "faults a page a latch\r\n", g_build, g_route, g_classes, (long)g_budget);
     put("# latches %u, Frame_Counter %u, recipe frame %u, %.1f s since armed (%.2f ms a latch); %d ranges on %d pages, "
-        "%d touched; %ld guard faults, %ld steps, %ld steps that never came\r\n",
+        "%d touched; %ld guard faults, %ld steps, %ld steps that never came; debug registers %s, %d words\r\n",
         g_ticks, (unsigned)*static_cast<const volatile std::uint32_t*>(Ptr(Va(&Frame_Counter))), InputScript_Frame(), secs,
-        g_ticks ? secs * 1000.0 / g_ticks : 0.0, g_ranges, g_pages, read, (long)g_faults, (long)g_steps, (long)g_unpending);
+        g_ticks ? secs * 1000.0 / g_ticks : 0.0, g_ranges, g_pages, read, (long)g_faults, (long)g_steps, (long)g_unpending,
+        g_dr_on ? "on" : "off", g_drs);
     put("%s", "range\tlo\thi\thow\tsymbol\tread\tfirst_frame\tfirst_recipe_frame\tfirst_area\tkind\tthread\treader\tcallers"
-        "\treads\twrites\tedge\tedge_reader\r\n");
+        "\treads\twrites\tedge\tedge_reader\tdr_hits\tdr_latches\r\n");
     char a[64], c[4][64], e[64];
     for (int i = 0; i < g_ranges; ++i) {
         const WRange& r = g_range[i];
         Name(r.edge_eip, e, sizeof e);
         if (!r.ready) {
-            put("range\t0x%06X\t0x%06X\t%s\t%s\tno\t-\t-\t-\t-\t-\t-\t-\t%ld\t%ld\t%ld\t%s\r\n", (unsigned)r.lo,
-                (unsigned)r.hi, r.how, r.from, (long)r.reads, (long)r.writes, (long)r.edge, e);
+            put("range\t0x%06X\t0x%06X\t%s\t%s\tno\t-\t-\t-\t-\t-\t-\t-\t%ld\t%ld\t%ld\t%s\t%ld\t%ld\r\n",
+                (unsigned)r.lo, (unsigned)r.hi, r.how, r.from, (long)r.reads, (long)r.writes, (long)r.edge, e,
+                (long)r.dr_hits, (long)r.dr_latches);
             continue;
         }
         Name(r.eip, a, sizeof a);
         for (int k = 0; k < kCallers; ++k) Name(r.callers[k], c[k], sizeof c[k]);
-        put("range\t0x%06X\t0x%06X\t%s\t%s\tyes\t%u\t%u\t0x%04X\t%s\t%u\t%s\t%s,%s,%s,%s\t%ld\t%ld\t%ld\t%s\r\n",
+        put("range\t0x%06X\t0x%06X\t%s\t%s\tyes\t%u\t%u\t0x%04X\t%s\t%u\t%s\t%s,%s,%s,%s\t%ld\t%ld\t%ld\t%s\t%ld\t%ld\r\n",
             (unsigned)r.lo, (unsigned)r.hi, r.how, r.from, (unsigned)r.frame, (unsigned)r.rframe, (unsigned)r.area,
-            r.kind == 0 ? "read" : r.kind == 1 ? "write" : "execute", (unsigned)r.thread, a, c[0], c[1], c[2], c[3],
-            (long)r.reads, (long)r.writes, (long)r.edge, e);
+            r.kind == 0 ? "read" : r.kind == 1 ? "write" : r.kind == 2 ? "access" : "execute", (unsigned)r.thread, a, c[0],
+            c[1], c[2], c[3], (long)r.reads, (long)r.writes, (long)r.edge, e, (long)r.dr_hits, (long)r.dr_latches);
     }
     put("%s", "page\tbase\tranges\tfaults\trange_faults\tlatches_parked\tbusiest_readers\r\n");
     for (int i = 0; i < g_pages; ++i) {
@@ -354,9 +463,12 @@ void Write() {
             if (g_range[k].lo < pg.base + kPage && g_range[k].hi > pg.base) ++nr;
         put("page\t0x%06X\t%d\t%ld\t%ld\t%ld\t", (unsigned)pg.base, nr, (long)pg.faults, (long)pg.range_faults,
             (long)pg.parks);
-        for (int k = 0; k < kTop && pg.top_eip[k]; ++k) {
-            Name(pg.top_eip[k], a, sizeof a);
-            put("%s%s:%ld", k ? "," : "", a, (long)pg.top_n[k]);
+        int order[kTop], n_top = 0;
+        for (int k = 0; k < kTop && pg.top_eip[k]; ++k) order[n_top++] = k;
+        std::sort(order, order + n_top, [&](int x, int y) { return pg.top_n[x] > pg.top_n[y]; });
+        for (int k = 0; k < n_top; ++k) {
+            Name(pg.top_eip[order[k]], a, sizeof a);
+            put("%s%s:%ld", k ? "," : "", a, (long)pg.top_n[order[k]]);
         }
         if (pg.top_other) put(",other:%ld", (long)pg.top_other);
         put("%s", "\r\n");
@@ -516,8 +628,34 @@ void GapWatch_SelfTest() {
     Check(PlantedRead(s + 2 * kPage + 0x40) == 0x99, "the unguarded page read the wrong value");
     Check(g_faults == all, "a read of an unguarded page faulted");
 
-    // Down, and the bytes untouched.
+    // 8. The debug registers: a word of the unguarded page in slot 0 - its
+    // read caught as the range's first access, no guard fault; a read of the
+    // word's other byte caught too; cleared, the next read not caught.
     for (int i = 0; i < g_pages; ++i) Unguard(i);
+    g_range[2] = {};
+    g_range[2].lo = b + 2 * kPage + 0x41;
+    g_range[2].hi = b + 2 * kPage + 0x42;
+    g_range[2].how = "gap";
+    g_range[2].from = "selftest_c";
+    g_ranges = 3;
+    g_slot_va[0] = b + 2 * kPage + 0x40;
+    g_slot_range[0] = 2;
+    g_slots = 1;
+    ApplySlots();
+    const LONG all2 = g_faults;
+    Check(PlantedRead(s + 2 * kPage + 0x41) == 0x00, "the read under a debug register read the wrong value");
+    Check(g_range[2].dr_hits == 1 && g_range[2].ready && g_range[2].kind == 2, "the debug register did not catch the read");
+    Check(g_range[2].eip >= Va(reinterpret_cast<void*>(&PlantedRead)) &&
+              g_range[2].eip < Va(reinterpret_cast<void*>(&PlantedRead)) + 64,
+          "the debug register's reader is not PlantedRead");
+    Check(PlantedRead(s + 2 * kPage + 0x40) == 0x99, "the second read under a debug register read the wrong value");
+    Check(g_range[2].dr_hits == 2, "the debug register did not catch a read of the word beside the range");
+    g_slots = 0;
+    ApplySlots();
+    Check(PlantedRead(s + 2 * kPage + 0x41) == 0x00 && g_range[2].dr_hits == 2, "a cleared debug register still caught a read");
+    Check(g_faults == all2, "a read under a debug register raised a guard fault");
+
+    // Down, and the bytes untouched.
     RemoveVectoredExceptionHandler(g_handler);
     g_handler = nullptr;
     Check(std::memcmp(s, before, sizeof before) == 0, "the watched bytes changed");
@@ -528,12 +666,12 @@ void GapWatch_SelfTest() {
     if (off)
         Log("gapwatch self-test: passed - a planted read logged once at its reader, the value untouched, the guard back "
             "after each access; a write, a copy across two pages, a park past the budget and its re-arm, an unguarded page "
-            "that never faulted (%ld faults, %ld steps); BOF3X_GAPWATCH unset and none of .data's %u pages guarded",
+            "that never faulted, a debug register's catch and its clearing (%ld faults, %ld steps); BOF3X_GAPWATCH unset and none of .data's %u pages guarded",
             faults, steps, data_pages);
     else
         Log("gapwatch self-test: passed - a planted read logged once at its reader, the value untouched, the guard back "
             "after each access; a write, a copy across two pages, a park past the budget and its re-arm, an unguarded page "
-            "that never faulted (%ld faults, %ld steps); BOF3X_GAPWATCH set, so the off check is skipped",
+            "that never faulted, a debug register's catch and its clearing (%ld faults, %ld steps); BOF3X_GAPWATCH set, so the off check is skipped",
             faults, steps);
 }
 
@@ -596,6 +734,11 @@ void GapWatch_Start(void* dll_module) {
     }
     if (g_ranges == 0) Fatal("gapwatch: the image (%s) has no range of the classes %s", g_build, g_classes);
     BuildPages();
+    {
+        char v[8];
+        if (GetEnvironmentVariableA("BOF3X_GAPWATCH_DR", v, sizeof v)) g_dr_on = std::strcmp(v, "0") != 0;
+    }
+    BuildDrTargets();
     // What the handler reads must never be on a guarded page.
     for (std::uint32_t at : {Va(&Frame_Counter), Va(&Game_AreaNumber)})
         if (FindPage(at & ~(kPage - 1)) >= 0) Fatal("gapwatch: 0x%08X, which the handler reads, is on a watched page", (unsigned)at);
@@ -626,11 +769,16 @@ void GapWatch_Start(void* dll_module) {
 void GapWatch_Pause() {
     if (!g_on || !g_pause_for_hash) return;
     for (int i = 0; i < g_pages; ++i) Unguard(i);
+    if (g_slots) {
+        g_slots = 0;
+        ApplySlots();
+    }
 }
 
 void GapWatch_Tick() {
     if (!g_on) return;
     Rearm();
+    RotateSlots();
     if (++g_ticks % kFlushEvery == 0) Write();
 }
 
