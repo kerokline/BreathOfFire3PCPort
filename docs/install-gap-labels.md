@@ -1,6 +1,6 @@
 # The install-gap round, group LA: the language and layout rows
 
-**Status:** MEASURED (2026-10-18, branch `install-gap/la` off `06a209bd`): the
+**Status:** MEASURED (2026-10-18, branch `install-gap/la` off `06a209bd`, `d41273d9` merged in): the
 rows read off all seven discs' code, the builder and the DLL changed, the
 checks in section 6; captures in section 7. Two ledger drafts and the
 defects' new statuses are in section 5, lettered, for the coordinator to
@@ -209,6 +209,32 @@ narrower box and the count's x, read off the routine as group 18's layout
 is. Not built: it changes what the PC draws under every Latin layer, which
 is the owner's call (section 8).
 
+### 4.4 The village music player's labels (`CommuMusic_CloseSteps+0x28`, FR / DE): read, not built
+
+Handed over from TW (its report): TW placed the two segments FR and DE keep
+in the PC's words (`0x65310C..0x65311C`, `0x65313C..0x653142`, from
+`COMMU03.EMI#6`); the rest of `0x653104..0x653150` is the discs' own words
+or nothing.
+
+- **The words.** Six slots behind the pointer table `0x6530EC` (8, 16, 16,
+  8, 8, 8 bytes from `0x653104`; read by `CommuMusic_DrawList` `0x45FA80`
+  through `0x6530F0` / `F4` / `F8`). `COMMU03.EMI` holds the same six slots
+  at the same sizes on US, FR and DE (US: the PC's words; FR and DE re-word
+  four of them in mixed case). They would fit the PC's slots in place.
+- **Why not built:** `CommuMusic_DrawLabel` `0x45FCE0` (ours, `rest_4e.cpp`)
+  draws each byte as a quad of a texture page, `u, v` from `c - 0x20` - not
+  a font glyph. So a disc's word is right only with that install's page
+  holding the letters it uses: lowercase letters on the PC's page (a PC
+  install under `fr-FR`) are not measured, and the French disc's own
+  "stereo" slot has `0x20` where its accented letter would be, which this
+  draw skips (a gap in the word on the French disc itself, by the bytes; not
+  seen). A raw-byte group (group 15's shape) is the way, after a capture of
+  the page on each install kind. Left for the coordinator / owner.
+- **The glyphs at `+0x68`** (`0x653144`, `0x653148`, `0x65314C`: three
+  `Text_DrawFont8` strings of the PC's 8 px font, pushed by the same draw):
+  no disc copy (TW); the US routine draws its own controls there. Left as
+  a gap, not attempted.
+
 ## 5. Ledger and defect drafts (lettered; the coordinator numbers)
 
 ### DIV-A - DIV-0069 amended: the fishing equip headings from the disc
@@ -278,12 +304,32 @@ is the owner's call (section 8).
 | PSP-EU through `convert_labels_psp` (scratch `t_psp.py`) | `guest name 1`, `parts title 1`, `faerie names 60`; fishing `no headings found` |
 | `importer.py check` | 742 files, 3582 chunks, 0 errors; `exe_tables` check 0 errors |
 | FR and DE disc-only caches built with this branch (`importer.py build`, `install --base`) | exit 0 each; `loc/fr-FR` and `loc/de-DE` carry fishing tag 3 and groups 17, 20..23 |
-| self-test `BOF3X_SHADOW='*,-field_c1'` under `fr-FR`, `de-DE`; `'*'` under `BOF3X_LANG=original` | (filled in below) |
+| self-test `BOF3X_SHADOW='*,-field_c1'` under `fr-FR`, `de-DE` (hosted, the PC copy with this branch's overlays) | `self-test only: done` each, `inject: 10088 ours`, no non-zero MISMATCHES line, no Fatal |
+| self-test `'*'` under `BOF3X_LANG=original` (after the `d41273d9` merge) | done, `inject: 10087 ours`, no non-zero MISMATCHES, no Fatal |
+| exe-host self-test on the FR and DE disc-only installs (`BOF3X_EXEIMAGE` = the cache) | done each, `inject: 10088 ours`; in the route runs every new chunk logged applied (section 7) |
+| Defender | took the local launchers three times during the runs (the known trap); each run was re-checked by its log's `self-test only: done` and `inject:` lines, not its exit code |
 
 ## 7. Captures
 
 From root `C:\Users\kerok\g_la` only (launcher copy `L2`, `input_run.py
---no-front --speed 4`). The changed draws are the same code on both install
+--no-front --speed 4`).
+
+**After merging `harness/recipe-buttons-by-release` (`d41273d9`, the
+coordinator's: a recipe's buttons pressed as the install's release) the
+camping route holds on both disc-only installs**, and the D286 screen is
+captured there directly:
+
+| Screen | FR disc-only | DE disc-only |
+|---|---|---|
+| `campingFishing` `fishing_equip` (D286's headings) | `g_la\shots2\fr\campingFishing\fishing_equip.png` | `g_la\shots2\de\campingFishing\fishing_equip.png` |
+| `campingFishing` `skill_note` (group 22) | `g_la\shots2\fr\campingFishing\skill_note.png` | `g_la\shots2\de\campingFishing\skill_note.png` |
+
+`fairyVillage` still starts a new game on the DE disc-only install (its
+title, inputs recorded under `en-US`; `g_la\shots2\de\fairyVillage\`), so
+the faerie names are not seen. The paragraphs below are the run before the
+merge, kept for the record.
+
+The changed draws are the same code on both install
 kinds. The FR / DE disc-only installs (built here with `importer.py build
 --source <FR / DE cue> --lang fr-FR / de-DE`, `install --base`) logged every
 chunk applied in the exe host (`4 of 4 fishing headings (D286)`, `60 of 60
