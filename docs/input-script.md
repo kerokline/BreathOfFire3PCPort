@@ -185,6 +185,68 @@ and then nothing of Capcom's is replaced - the latch runs, and only its output
 is overwritten. It is instrumentation, like the call tracer: no ledger entry,
 and it cannot move the frame hash of a run that does not set it.
 
+## 2a. A recipe's buttons are the PC's, on every install (2026-10-18)
+
+The owner, 2026-10-18: the routes are recorded "in PC/JPN defaults", and the
+harness converts them "to the loaded disc defaults". Since the button round
+(DIV-0134, [`button-sigma.md`](button-sigma.md)), a Western PSX or PSP-EU
+disc-only install boots with its own release's Config, so confirm is cross
+there. Before this, every owner route sat on the title on those installs.
+On 2026-10-18 `whelpBoss` ran all 13,181 frames at mode 1 area 0 on
+`psx-eu` and `psp-eu`, and the harness reported each as `done`.
+
+**The rule** (`sigma::RecipeToPad` / `PadToRecipe`, `src/input/sigma.cpp`):
+
+- **The release's words stand.** A literal button in a `press`, `hold`,
+  `seek` or `shot` is pressed as `M_R` of it (the release's button for the
+  same Config line). This holds from the moment StartConfigBySource writes
+  the release's starting words: `Boot_Task`'s defaults, or the Start-held
+  reset of `LoadMenu_Apply`.
+- **A save's words are loaded.** Every button is pressed as recorded. The
+  same save carries the same words on every install, so after the load the
+  PC and the disc install hold one Config.
+- **A rebind** (the Config's Controller panel) keeps whichever state is in
+  force. It swaps two lines' buttons, and both sides do so on the same
+  lines.
+
+The translation is computed when each step starts. Steps that change it
+are logged: `input line N: buttons 0x0020 pressed as 0x0040 ...`, plus a
+`sigma ...` line at each change of state. `@ADDR` buttons are not
+translated, because they read the live Config already. The d-pad, start,
+select, L2 and R2 are the same on every release and pass through. The
+recorder (`BOF3X_RECORD`) applies the inverse, so a route recorded on a
+disc install is written in the PC's terms too.
+
+**Why not a test on the live words.** The recipe save `adult_ryu`'s nine
+words are exactly the PlayStation West's defaults (Speak cross, Move
+circle, Menu square, Action triangle), and its routes were recorded on the
+PC under them. "The words equal the release's defaults" would therefore
+translate those routes on a Western install and break them. The rule
+follows the writers instead.
+
+**Identity on a Japan install** (the PC, PSX-JP, PSP-JP, the owner's play
+install): no PC run, no reference and no state hash can move. With
+`BOF3X_ORIGINAL=StartConfigBySource` the boot words are Japan's and nothing
+is translated either.
+
+**Measured** (2026-10-18, the unmodified `whelpBoss.txt`, the eu set, root
+`C:\Users\kerok\ab88`):
+
+- **`psx-eu`:** the three circles before the load (lines 10, 12 and 14)
+  were pressed as cross. The load logged "pressed as recorded from here",
+  and the run reached area 10 (the bedroom) by frame 13,170, as the PC run
+  does.
+- **`pc-en150`:** no translation line, and it reached the same place.
+- **`psp-eu`:** not yet checked at the time of this commit.
+- **The `sigma` self-test:** not re-run (the change touches no table it
+  checks).
+
+**Limit.** A route that saves under the release's starting words and later
+loads that save in the same run gets the release's words back from the
+load, yet presses as recorded. No route does this today.
+`balioAndSunder_2` saves to slot 6, but every run loads its save from
+`tools/recipe_saves`.
+
 ## 3. The recipe language
 
 One step per line; `#` starts a comment; buttons join with `+`
