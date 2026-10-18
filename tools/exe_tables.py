@@ -873,18 +873,30 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                 o = a + delta - base
                 w0 = a - (a - DATA_LO) % 4
                 c = cls.get(w0)
-                if not 0 <= o < len(blob) or not 0 <= w0 + delta - base <= len(blob) - 4:
+                if not 0 <= o < len(blob):
                     res.append(False)
                 elif c is None:
+                    # a number byte compares alone, so the section's last bytes can place
+                    # when their 4-aligned word runs past its end (docs/exe-immediate-places.md 4)
                     res.append(blob[o] == pc[a - DATA_LO])
+                elif not 0 <= w0 + delta - base <= len(blob) - 4:
+                    res.append(False)
                 else:
                     w = struct.unpack_from("<I", blob, w0 + delta - base)[0]
                     if c == "data":
                         f = fwd(struct.unpack_from("<I", pc, w0 - DATA_LO)[0])
                         res.append(None if f is None else w == f[1])
                     elif c == "text":
+                        # a paired word agrees only where the disc's word is a code address
+                        # too: a map segment can cover a PC code pointer with the disc's own
+                        # number, which code_pairs then pairs (AREA170's 0x654B48 on the PSX
+                        # builds; it once placed kind 0x33's states from AREA170,
+                        # docs/install-gap-twins.md 6.4). PSX builds only: a PSP disc's EMIs
+                        # keep the PSX's words for code its native BOOT.BIN replaced, and
+                        # BOOT.BIN's own words are unrelocated, so code_word does not hold there.
+                        code = psp or code_word(w, False)
                         tw = pairs.get((k[0], struct.unpack_from("<I", pc, w0 - DATA_LO)[0]))
-                        res.append((w == tw) if tw is not None else None if code_word(w, psp) else False)
+                        res.append((w == tw and code) if tw is not None else None if code_word(w, psp) else False)
                     else:
                         res.append(None)
             s0 = 0
@@ -1232,23 +1244,32 @@ GAP_HOWS = ("gap", "language", "unread", "keys")
 GAP_KINDS = {"gap": ("game-value", "disc-unplaced", "port-relaid", "language-zero", "port-platform", "rule",
                      "game-format"),
              "language": ("language",), "unread": ("unread",), "keys": ("rule",)}
-# The eight language addresses that stay zero on a disc-only image (LG,
+# The language addresses that stay zero on a disc-only image (LG,
 # docs/loc-build-disc-only.md 5.4): (address, bytes or None for the PC's
-# string to its NUL, what). The faerie records' stats are 60 records of 20.
-LANGUAGE_ZERO = ([(0x6531F4, None, "the ranked lists' page counter format"),
-                  (0x653200, 16, "faerie record 0's name field")]
-                 + [(0x653210 + 20 * r, 4, "a faerie record's four stats") for r in range(60)]
-                 + [(0x6536B0, 11, "the faerie village areas' limits (areas 175..185)"),
-                    (0x669CCC, None, "the empty save slot's text"),
-                    (0x669CE8, 5, "the name EquipOpen copies over character record 7's"),
-                    (0x66A094, None, "a one-glyph word after a count"),
-                    (0x66A098, None, "a menu's title")])
+# string to its NUL, what, the builds it stays zero on or None for every one).
+# The faerie records' stats are 60 records of 20. Since the install-gap round
+# (docs/install-gap-labels.md 3, 4; install-gap-twins.md 6.5) three are written
+# by the layer every Latin disc builds - group 16's record 0 name, group 17's
+# guest name, group 20's menu title - and stay zero only under ja-JP, whose
+# groups wait on D280.
+JA_ONLY = ("psx-jp", "psp-jp")
+LANGUAGE_ZERO = ([(0x6531F4, None, "the ranked lists' page counter format", None),
+                  (0x653200, 16, "faerie record 0's name field (group 16 on a Latin layer)", JA_ONLY)]
+                 + [(0x653210 + 20 * r, 4, "a faerie record's four stats", None) for r in range(60)]
+                 + [(0x6536B0, 11, "the faerie village areas' limits (areas 175..185)", None),
+                    (0x669CCC, None, "the empty save slot's text", None),
+                    (0x669CE8, 5, "the name EquipOpen copies over character record 7's (group 17)", JA_ONLY),
+                    (0x66A094, None, "a one-glyph word after a count", None),
+                    (0x66A098, None, "a menu's title (group 20, kind 0x5E's)", JA_ONLY)])
 
 
-def language_zero(pc):
-    """The bytes of LANGUAGE_ZERO, from the PC's image for the string lengths."""
+def language_zero(pc, bid=None):
+    """The bytes of LANGUAGE_ZERO that stay zero on build `bid` (None: every row), from
+    the PC's image for the string lengths."""
     out = set()
-    for a, n, _ in LANGUAGE_ZERO:
+    for a, n, _, builds in LANGUAGE_ZERO:
+        if bid is not None and builds is not None and bid not in builds:
+            continue
         if n is None:
             n = pc.index(b"\0", a - DATA_LO) - (a - DATA_LO)
         out.update(range(a, a + max(n, 1)))
@@ -1281,7 +1302,7 @@ def gap_rows(pc, bid, segs):
     the runs of one class holding a non-zero PC byte kept."""
     import exe_own
     held = own_bytes()
-    lz = language_zero(pc)
+    lz = language_zero(pc, bid)
     data = sorted((e["pc"], e["name"]) for e in exe_own.data_symbols()[0])
     dpcs = [p for p, _ in data]
 
