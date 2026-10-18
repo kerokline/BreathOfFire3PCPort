@@ -45,6 +45,10 @@ row's first byte. Decoding checks every instruction's opcode and registers;
 any other word is refused, loudly.
 
     python tools/exe_imm.py selftest        # the decoder on synthetic code (no game data)
+    python tools/exe_imm.py pair --game <dir> --disc <psx-jp cue> [--out TSV] [--held-out | --write]
+                                            # functions no placed word pairs, paired from the
+                                            # known ones (docs/install-gap-pairs.md); --write
+                                            # feeds them to symbols.toml at the hypothesis tier
 """
 import collections
 import sys
@@ -690,6 +694,735 @@ def selftest():
     return errs
 
 
+# ------------------------------------------------------------------ pairing the functions no placed word pairs
+
+# docs/install-gap-pairs.md. The code-pointer pairs (exe_tables.feed) reach no
+# effect, magic or boss function: their tables are unplaced. These methods pair
+# them from the pairs already known (symbols.toml's `psx`), on the psx-jp disc,
+# each pair accepted only through pair_agrees (the gate) or, for a table slot,
+# an equal call list that contradicts no known pair:
+#
+#   magic        Magic_Rows (PC) against its copy in the battle overlay, found by
+#                the PC's file ids less 0x105 at the same stride; row N's entry
+#                to row N's entry, in the file the row's id names (the disc's BIN/
+#                files in LBA order)
+#   kinds        Effect_KindHandlers (PC) against its psx copy, kind N's handler to
+#                kind N's; a handler in an overlay address that many files share
+#                takes the file whose state table agrees best (score_dispatch)
+#   tables       a paired dispatcher's state table (a .data jump table, or a
+#                stack table of imm32 stores on the PC) against the table the twin's
+#                lui pair addresses: state N's function to state N's
+#   calls        two paired functions' call lists of equal length: the n-th call
+#                to the n-th call, each callee through the gate
+#   tablesearch  an unpaired PC dispatcher's table among every run of PSX code
+#                words, by the entries already paired; the twin the function whose
+#                lui pair addresses that table
+#   order        between two pairs adjacent in PC order whose twins are in one
+#                section in the same order: as many functions on both sides,
+#                position by position through the gate; or, where the counts
+#                differ (or the next pair is another file's), in an overlay only,
+#                the order-keeping alignment, each pair the one gate pass of its
+#                row and its column
+
+PAIR_RES_HI = 0x80196800                       # exe_tables.FEED_RESIDENT's end: below it, the boot executable
+PAIR_BOOT = ("BOOT", None)
+PAIR_GAME = ("ETC/GAME.EMI", 0)
+PAIR_OVERLAYS = ("BMAGIC", "BOSS", "SCENARIO", "WORLD00", "WORLD01", "WORLD02", "WORLD03", "WORLD04")
+# the sections a family's code calls into before the boot executable's (the battle overlay is loaded over its low
+# part), and after the GAME.EMI field code
+PAIR_BEFORE = {"BMAGIC": (("BATTLE/BATTLE.EMI", 15), ("BATTLE/BATTLE.EMI", 3)),
+               "BOSS": (("BATTLE/BATTLE.EMI", 15), ("BATTLE/BATTLE.EMI", 3)),
+               "BATTLE": (("BATTLE/BATTLE.EMI", 15), ("BATTLE/BATTLE.EMI", 3))}
+PAIR_AFTER = {f: (("ETC/GAME.EMI", 1),) for f in ("WORLD00", "WORLD01", "WORLD02", "WORLD03", "WORLD04", "SCENARIO")}
+PAIR_GATE_ONLY = ("magic", "kinds", "tables", "calls", "tablesearch", "order", "order-align")
+
+
+class Pairing:
+    """The pairing state over one disc (psx-jp) and BOF3.exe. `pc` {PC function: ((file, section), PSX address,
+    method, why)}; seeds are symbols.toml's `psx` fields, method "seed"."""
+
+    def __init__(self, exe, srcs, funcs, data, held_out=False):
+        import bisect as _b
+        import capstone
+        self._b = _b
+        self.cs = capstone
+        self.x86 = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+        self.x86.detail = True
+        import exe_tables as ET
+        self.ET = ET
+        self.va, _, raw, rsz = ET.pe_sections(exe)[".text"]
+        self.text = exe[raw:raw + rsz]
+        dva, _, draw, drsz = ET.pe_sections(exe)[".data"]
+        self.dlo, self.data_bytes = dva, exe[draw:draw + drsz]
+        self.srcs = srcs
+        self.byfile = collections.defaultdict(list)
+        for k in srcs:
+            self.byfile[k[0]].append(k)
+        self.fileof = {f.rsplit("/", 1)[-1]: f for f in self.byfile}
+        self.funcs, self.data = funcs, data
+        self.fstarts = sorted(funcs)
+        self.dstarts = sorted(data)
+        self.p2p = {e["psx"]: p for p, e in funcs.items() if "psx" in e and "psx_overlay" not in e
+                    and 0x80010000 <= e["psx"] < PAIR_RES_HI and e.get("status") in ("evidence", "verified")}
+        self.read, self.fpx_, self.fpc_, self.sig_, self.jt_ = {}, {}, {}, {}, {}
+        self.pc, self.psx, self.ref, self.located = {}, {}, {}, {}
+        self.hits = collections.defaultdict(collections.Counter)
+        self.cross = collections.defaultdict(collections.Counter)
+        self.differ, self.seen = [], set()
+        self.runs = None
+        self.seed(held_out)
+
+    # -------------------------------------------------- reading both sides
+    def rd(self, k):
+        if k not in self.read:
+            b, bl = self.srcs[k]
+            self.read[k] = blob_reader(bl, b)
+        return self.read[k]
+
+    def inside(self, k, a):
+        b, bl = self.srcs[k]
+        return b <= a < b + len(bl)
+
+    def is_text(self, v):
+        return self.va <= v < self.va + len(self.text)
+
+    def pcw(self, a):
+        o = a - self.dlo
+        return int.from_bytes(self.data_bytes[o:o + 4], "little") if 0 <= o <= len(self.data_bytes) - 4 else None
+
+    def fend(self, t):
+        i = self._b.bisect_right(self.fstarts, t)
+        return min(self.fstarts[i] if i < len(self.fstarts) else t + 0x400, t + 0x2000)
+
+    def pcdis(self, t):
+        e = self.fend(t)
+        return list(self.x86.disasm(self.text[t - self.va:e - self.va], t))
+
+    def resolve(self, a, ctx):
+        """The section a code address means seen from section ctx: ctx's own file, the family's battle overlay,
+        the boot executable, GAME.EMI#0, the family's field overlay; None when none holds it."""
+        fam = ctx[0].split("/")[0] if ctx else None
+        if ctx is not None:
+            for k in self.byfile[ctx[0]]:
+                if self.inside(k, a):
+                    return k
+        for k in PAIR_BEFORE.get(fam, ()):
+            if k in self.srcs and self.inside(k, a):
+                return k
+        if 0x80010000 <= a < PAIR_RES_HI:
+            return PAIR_BOOT
+        if self.inside(PAIR_GAME, a):
+            return PAIR_GAME
+        for k in PAIR_AFTER.get(fam, ()):
+            if k in self.srcs and self.inside(k, a):
+                return k
+        return None
+
+    def fpx(self, k, x):
+        if (k, x) not in self.fpx_:
+            self.fpx_[k, x] = psx_fingerprint(self.rd(k), x)
+        return self.fpx_[k, x]
+
+    def fpc(self, p):
+        if p not in self.fpc_:
+            self.fpc_[p] = pc_fingerprint(self.text, self.va, p, self.fend(p))
+        return self.fpc_[p]
+
+    def gate(self, p, k, x):
+        fp = self.fpx(k, x)
+        if fp is None:
+            return False, "no extent"
+        return pair_agrees(self.fpc(p), fp, self.p2p)
+
+    def sig(self, k, x):
+        if (k, x) not in self.sig_:
+            r = self.rd(k)
+            e = extent(r, x)
+            s = body_signature(r, x, e) if e else None
+            self.sig_[k, x] = tuple(s) if s else None
+        return self.sig_[k, x]
+
+    def shape(self, p, k, x):
+        """(agree, contradictions, [(PC callee, section, PSX callee)] not yet paired) of the two call lists
+        aligned position by position; None when their lengths differ."""
+        fp = self.fpx(k, x)
+        if fp is None:
+            return None
+        C, X = self.fpc(p)[0], [(self.resolve(t, k), t) for t in fp[0]]
+        if len(C) != len(X):
+            return None
+        m, minv, agree, bad, new = {}, {}, 0, 0, []
+        for c, (xk, xt) in zip(C, X):
+            kp = self.pc.get(c)
+            kx = self.psx.get((xk, xt)) if xk else None
+            if (kp is not None and kp[1] != xt) or (kx is not None and kx != c) \
+                    or m.setdefault(c, xt) != xt or minv.setdefault(xt, c) != c:
+                bad += 1
+            elif kp is not None or kx is not None:
+                agree += 1
+            elif xk is not None:
+                new.append((c, xk, xt))
+        return agree, bad, new
+
+    def pc_table(self, T):
+        """The code pointers of the PC table at T: its [[data]] count, else up to the next symbol (nulls kept,
+        trailing nulls dropped)."""
+        e = self.data.get(T)
+        n = e["count"] if e and e.get("count") else 64
+        j = self._b.bisect_right(self.dstarts, T)
+        nxt = self.dstarts[j] if j < len(self.dstarts) else T + 4 * n
+        out = []
+        for i in range(n):
+            w = self.pcw(T + 4 * i)
+            if (T + 4 * i >= nxt and i) or w is None or not (self.is_text(w) or w == 0):
+                break
+            out.append(w)
+        while out and not out[-1]:
+            out.pop()
+        return out
+
+    def dispatch(self, p):
+        """(table, [PC states]) of a dispatcher: the first `jmp` / `call [reg * 4 + T]` whose table starts with
+        code, or the stack table of imm32 code addresses it calls through; None for neither."""
+        if p in self.jt_:
+            return self.jt_[p]
+        X = self.cs.x86
+        tabs, st, through = [], {}, False
+        for ins in self.pcdis(p):
+            ops = ins.operands
+            if ins.mnemonic in ("jmp", "call") and ops and ops[0].type == X.X86_OP_MEM:
+                m = ops[0].mem
+                if m.base == X.X86_REG_ESP and m.scale == 4:
+                    through = True
+                elif m.scale == 4 and m.disp:
+                    tabs.append(m.disp & 0xFFFFFFFF)
+            if ins.mnemonic == "mov" and len(ops) == 2 and ops[0].type == X.X86_OP_MEM and ops[1].type == X.X86_OP_IMM:
+                m, v = ops[0].mem, ops[1].imm & 0xFFFFFFFF
+                if m.base == X.X86_REG_ESP and m.index == 0 and self.is_text(v) and m.disp >= 0 and m.disp % 4 == 0:
+                    st[m.disp // 4] = v
+        out = None
+        for T in tabs:
+            w = self.pcw(T)
+            if w is not None and self.is_text(w):
+                out = (T, self.pc_table(T))
+                break
+        if out is None and through and st and sorted(st) == list(range(len(st))):
+            out = ("stack", [st[i] for i in range(len(st))])
+        self.jt_[p] = out
+        return out
+
+    def psx_table(self, k, x, n):
+        """(T', [n words]) the first table of code words (nulls allowed, the first not) a lui pair of the PSX
+        function at x addresses, or None."""
+        r = self.rd(k)
+        e = extent(r, x)
+        if e is None:
+            return None
+        seen = set()
+        import exe_tables as ET
+        for addr, offs in scan(r, x, e)[1]:
+            if addr in seen:
+                continue
+            seen.add(addr)
+            kk = self.resolve(addr, k)
+            if kk is None:
+                continue
+            ws = [self.rd(kk)(addr + 4 * i) for i in range(n)]
+            if ws and None not in ws and ws[0] and all(ET.code_word(w, False) or w == 0 for w in ws):
+                return addr, ws
+        return None
+
+    # -------------------------------------------------- the pairs
+    def seed_key(self, e):
+        a = e["psx"]
+        if "psx_overlay" in e:
+            n, _, s = e["psx_overlay"].partition("#")
+            f = self.fileof.get(n)
+            k = (f, int(s)) if f and s else None
+            return k if k in self.srcs and self.inside(k, a) else None
+        if 0x80010000 <= a < PAIR_RES_HI:
+            return PAIR_BOOT
+        if self.inside(PAIR_GAME, a):
+            return PAIR_GAME
+        return None
+
+    def locate(self, p, a):
+        """The section of a `psx` with no psx_overlay above the boot executable: the one section holding a
+        whose function passes the gate (GAME.EMI#1 and BATTLE.EMI#3 tried first; several only when their
+        bodies are one body)."""
+        pref = [k for k in (("ETC/GAME.EMI", 1), ("BATTLE/BATTLE.EMI", 3)) if k in self.srcs and self.inside(k, a)]
+        cs = pref + sorted(k for k in self.srcs if k != PAIR_BOOT and k not in pref and self.inside(k, a))
+        ok = [k for k in cs if self.gate(p, k, a)[0]]
+        if not ok or any(self.sig(k, a) != self.sig(ok[0], a) for k in ok[1:]):
+            return None
+        return ok[0]
+
+    def seed(self, held_out):
+        """symbols.toml's `psx` pairs. held_out: seed only the boot executable's evidence tier and score every
+        derivation against the rest (the precision measurement)."""
+        for p, e in self.funcs.items():
+            if "psx" not in e:
+                continue
+            k = self.seed_key(e)
+            if k is None and "psx_overlay" not in e:
+                k = self.locate(p, e["psx"])
+                if k is not None:
+                    self.located[p] = k
+            elif k == PAIR_GAME and "psx_overlay" not in e and self.gate(p, k, e["psx"])[0]:
+                self.located[p] = k        # GAME.EMI's: sym_twins reads a psx with no psx_overlay in the boot image
+            if k is None:
+                continue
+            t = "feed" if e.get("psx_status") == "hypothesis" else "evidence"
+            self.ref[p] = (k, e["psx"], t)
+            if held_out and not (k == PAIR_BOOT and t == "evidence"):
+                continue
+            self.pc[p] = (k, e["psx"], "seed", "")
+            self.psx.setdefault((k, e["psx"]), p)
+
+    def score(self, p, k, x, method, why):
+        k0, x0, t = self.ref[p]
+        if x0 == x and (k0 == k or PAIR_BOOT in (k0, k)):
+            v = "agree"
+        elif x0 == x:
+            v = "same address, other file"
+        elif k0 != k and self.sig(k0, x0) is not None and self.sig(k0, x0) == self.sig(k, x):
+            v = "a copy"
+        else:
+            v = "differ"
+            self.differ.append((method, t, p, k0, x0, k, x, why))
+        self.hits[method][t + " " + v] += 1
+
+    def add(self, p, k, x, method, why):
+        """True when the pair is new. A derivation of a function already paired is scored: against its seed
+        (precision), or against the earlier derivation (consistency)."""
+        if p in self.pc:
+            k0, x0, m0, _ = self.pc[p]
+            key = (p, k, x, method)
+            if key not in self.seen:
+                self.seen.add(key)
+                if m0 == "seed":
+                    self.score(p, k, x, method, why)
+                else:
+                    v = "agree" if (k0, x0) == (k, x) else (
+                        "a copy" if self.sig(k0, x0) is not None and self.sig(k0, x0) == self.sig(k, x) else "differ")
+                    self.cross["%s by %s" % (m0, method)][v] += 1
+            return False
+        if (k, x) in self.psx or p not in self.funcs:
+            return False
+        if p in self.ref:
+            self.score(p, k, x, method, why)
+        self.pc[p] = (k, x, method, why)
+        self.psx[(k, x)] = p
+        return True
+
+    def slot_ok(self, s, k, w):
+        g, why = self.gate(s, k, w)
+        if g:
+            return True
+        sh = self.shape(s, k, w)
+        return bool(sh and sh[0] + len(sh[2]) >= 2 and not sh[1])
+
+    def score_dispatch(self, p, k, x):
+        """(score, contradictions, [(pc, section, psx)]) of PC function p at PSX x in k: the gate on p, and for
+        a dispatcher each state of its table that is already paired the same way or passes slot_ok."""
+        g, _ = self.gate(p, k, x)
+        sc, bad, out = int(g), 0, [(p, k, x)] if g else []
+        dp = self.dispatch(p)
+        if not dp:
+            sh = self.shape(p, k, x)
+            if sh and sh[0] + len(sh[2]) >= 1 and not sh[1]:
+                sc += 1
+                if not g:
+                    out.append((p, k, x))
+            return sc, bad, out
+        tab = self.psx_table(k, x, len(dp[1]))
+        if not tab:
+            return sc, bad + 1, out
+        if not g:
+            out.append((p, k, x))
+        for s, w in zip(dp[1], tab[1]):
+            if not s or not w:
+                continue
+            kk = self.resolve(w, k)
+            if kk is None:                         # another overlay's: chosen when the table is walked
+                continue
+            kx = self.psx.get((kk, w))
+            if kx is not None or s in self.pc:
+                if kx == s or (s in self.pc and self.pc[s][1] == w and kx is None):
+                    sc += 1
+                else:
+                    bad += 1
+                continue
+            if self.slot_ok(s, kk, w):
+                sc += 1
+                out.append((s, kk, w))
+            sh = self.shape(s, kk, w)
+            if sh and sh[1]:
+                bad += 1
+        return sc, bad, out
+
+    def choose(self, p, x, ctx):
+        """The section for PC function p at PSX x seen from ctx (None: any file holding x), by score_dispatch:
+        the best scores 2 or more with at most a third as many contradictions; a tie only between files whose
+        bodies at x are one body. Returns the accepted [(pc, section, psx)]."""
+        k = self.resolve(x, ctx) if ctx else None
+        cs = [k] if k else [kk for kk in self.srcs if kk != PAIR_BOOT and self.inside(kk, x)]
+        res = []
+        for kk in cs:
+            sc, bad, out = self.score_dispatch(p, kk, x)
+            res.append((sc - 2 * bad, sc, bad, kk, out))
+        if not res:
+            return []
+        res.sort(key=lambda r: (r[0], r[1]), reverse=True)
+        best = res[0]
+        if best[1] < 2 or best[2] > best[1] // 3:
+            return []
+        tied = [r for r in res if r[:2] == best[:2]]
+        if len(tied) > 1 and (self.sig(best[3], x) is None or any(self.sig(r[3], x) != self.sig(best[3], x) for r in tied[1:])):
+            return []
+        return best[4]
+
+    # -------------------------------------------------- the methods
+    def m_magic(self, ids):
+        import struct as S
+        rows_at = [(p, e) for p, e in self.data.items() if e["name"] == "Magic_Rows"]
+        if not rows_at:
+            return 0
+        T, e = rows_at[0]
+        nrow = e["count"] // 2
+        pc_rows = [(self.pcw(T + 8 * i) & 0xFFFF, self.pcw(T + 8 * i + 4)) for i in range(nrow)]
+        want = [(f - 0x105) if f != 0xFFFF else None for f, _ in pc_rows]
+        first = next(i for i, v in enumerate(want) if v is not None)
+        copies = set()
+        for k, (b, bl) in self.srcs.items():
+            o = bl.find(S.pack("<H", want[first]))
+            while o >= 0:
+                base = o - 8 * first
+                if base >= 0 and base + 8 * nrow <= len(bl) and all(
+                        v is None or S.unpack_from("<H", bl, base + 8 * j)[0] == v for j, v in enumerate(want)):
+                    copies.add(bytes(bl[base:base + 8 * nrow]))
+                o = bl.find(S.pack("<H", want[first]), o + 1)
+        if len(copies) != 1:
+            return 0
+        raw = copies.pop()
+        n = 0
+        for i, (pf, p) in enumerate(pc_rows):
+            fid, w = S.unpack_from("<H", raw, 8 * i)[0], S.unpack_from("<I", raw, 8 * i + 4)[0]
+            if pf == 0xFFFF or fid != pf - 0x105 or fid not in ids:
+                continue
+            ks = [k for k in self.byfile.get(ids[fid], ()) if self.inside(k, w)]
+            if len(ks) == 1:
+                n += self.add(p, ks[0], w, "magic", "Magic_Rows row %d: %s" % (i, ids[fid]))
+        return n
+
+    def m_kinds(self):
+        import struct as S
+        at = [(p, e) for p, e in self.data.items() if e["name"] == "Effect_KindHandlers" and "psx" in e]
+        if not at:
+            return 0
+        T, e = at[0]
+        ks = [k for k in self.byfile["ETC/GAME.EMI"] if self.inside(k, e["psx"])]
+        if not ks:
+            return 0
+        b, bl = self.srcs[ks[0]]
+        n = 0
+        for kind in range(e["count"]):
+            h = self.pcw(T + 4 * kind)
+            w = S.unpack_from("<I", bl, e["psx"] + 4 * kind - b)[0]
+            for p, k, x in self.choose(h, w, None):
+                n += self.add(p, k, x, "kinds", "Effect_KindHandlers[0x%X]" % kind)
+        return n
+
+    def m_tables(self):
+        n = 0
+        for p, (k, x, m, _) in list(self.pc.items()):
+            dp = self.dispatch(p)
+            if not dp:
+                continue
+            tab = self.psx_table(k, x, len(dp[1]))
+            if not tab:
+                continue
+            tn = dp[0] if dp[0] == "stack" else "0x%06X" % dp[0]
+            for i, (s, w) in enumerate(zip(dp[1], tab[1])):
+                if not s or not w:
+                    continue
+                why = "state %d of 0x%06X's table %s" % (i, p, tn)
+                kk = self.resolve(w, k)
+                if kk is not None:
+                    if self.slot_ok(s, kk, w):
+                        n += self.add(s, kk, w, "tables", why)
+                else:
+                    for s2, k2, x2 in self.choose(s, w, k):
+                        n += self.add(s2, k2, x2, "tables", why)
+        return n
+
+    def m_calls(self):
+        n = 0
+        for p, (k, x, m, _) in list(self.pc.items()):
+            sh = self.shape(p, k, x)
+            if not sh or sh[1]:
+                continue
+            for c, xk, xt in sh[2]:
+                g, why = self.gate(c, xk, xt)
+                if g:
+                    n += self.add(c, xk, xt, "calls", "a call of 0x%06X (%s)" % (p, why))
+        return n
+
+    def code_runs(self):
+        """[(section, address, words)]: every run of four or more aligned PSX code words."""
+        if self.runs is None:
+            import struct as S
+            self.runs = []
+            for k, (b, bl) in self.srcs.items():
+                if k == PAIR_BOOT or len(bl) < 4:
+                    continue
+                ws = S.unpack_from("<%dI" % (len(bl) // 4), bl, 0)
+                i = 0
+                while i < len(ws):
+                    j = i
+                    while j < len(ws) and 0x80010000 <= ws[j] < 0x80200000 and not ws[j] & 3:
+                        j += 1
+                    if j - i >= 4:
+                        self.runs.append((k, b + 4 * i, ws[i:j]))
+                    i = j + 1
+        return self.runs
+
+    def owner_of(self, k, T):
+        """The PSX functions of k's file whose lui pair addresses T (a function start: after a jr $ra and its
+        delay slot)."""
+        import struct as S
+        hi, lo = (T + 0x8000) >> 16 & 0xFFFF, T & 0xFFFF
+        out = set()
+        for kk in self.byfile[k[0]]:
+            b, bl = self.srcs[kk]
+            if len(bl) < 4:
+                continue
+            ws = S.unpack_from("<%dI" % (len(bl) // 4), bl, 0)
+            for i, w in enumerate(ws):
+                if w >> 26 != OP_LUI or w & 0xFFFF != hi:
+                    continue
+                r = (w >> 16) & 31
+                if not any(v & 0xFFFF == lo and (v >> 21) & 31 == r and v >> 26 in (OP_ADDIU, 0x23, OP_ORI)
+                           for v in ws[i + 1:i + 12]):
+                    continue
+                rd = self.rd(kk)
+                for back in range(0, 0x400, 4):
+                    st = b + 4 * i - back
+                    e = extent(rd, st)
+                    if e and st <= b + 4 * i < e and rd(st - 8) == 0x03E00008:
+                        out.add((kk, st))
+                        break
+        return out
+
+    def m_tablesearch(self):
+        n = 0
+        for p in self.fstarts:
+            if p in self.pc:
+                continue
+            dp = self.dispatch(p)
+            if not dp or len(dp[1]) < 4:
+                continue
+            states = dp[1]
+            known = [(i, self.pc[s][1]) for i, s in enumerate(states) if s and s in self.pc]
+            if len(known) < 3:
+                continue
+            best = []
+            for k, a, ws in self.code_runs():
+                for off in range(len(ws) - len(states) + 1):
+                    ag = sum(1 for i, x in known if ws[off + i] == x)
+                    if ag < max(3, 0.75 * len(known)):
+                        continue
+                    if any(ws[off + i] != x and (self.pc[states[i]][0], ws[off + i]) in self.psx for i, x in known):
+                        continue
+                    best.append((ag, k, a + 4 * off, tuple(ws[off:off + len(states)])))
+            if not best:
+                continue
+            top = max(b[0] for b in best)
+            best = [b for b in best if b[0] == top]
+            if len({b[3] for b in best}) != 1:
+                continue
+            best.sort(key=lambda b: (b[1][0] not in ("BATTLE/BATTLE.EMI", "ETC/GAME.EMI"), b[1]))
+            _, k, t, _ = best[0]
+            own = self.owner_of(k, t)
+            if len(own) == 1:
+                kk, st = own.pop()
+                n += self.add(p, kk, st, "tablesearch", "its table %s at 0x%08X in %s (%d of %d paired entries agree)" % (
+                    dp[0] if dp[0] == "stack" else "0x%06X" % dp[0], t, k[0], top, len(known)))
+        return n
+
+    def walk(self, k, a, b=None, most=40):
+        """The PSX function starts after the one at a, walking extents over zero words: up to b (None when the
+        walk does not land on b), or up to `most` until the walk leaves the code."""
+        r = self.rd(k)
+        e = extent(r, a)
+        out = []
+        while e is not None and (b is None or e < b) and len(out) < most:
+            while (b is None or e < b) and r(e) == 0:
+                e += 4
+            if b is not None and e >= b:
+                break
+            nx = extent(r, e)
+            if nx is None:
+                break
+            out.append(e)
+            e = nx
+        if b is not None:
+            return out if e is not None and e <= b else None
+        return out
+
+    def m_order(self):
+        n = 0
+        items = sorted(self.pc.items())
+        for (p1, v1), (p2, v2) in zip(items, items[1:]):
+            k = v1[0]
+            tail = k != v2[0]
+            if k == PAIR_BOOT or (not tail and not 0 < v2[1] - v1[1] <= 0x4000):
+                continue
+            mids = self.fstarts[self._b.bisect_right(self.fstarts, p1):self._b.bisect_left(self.fstarts, p2)]
+            if not mids or len(mids) > 30:
+                continue
+            xs = self.walk(k, v1[1]) if tail else self.walk(k, v1[1], v2[1])
+            if not xs:
+                continue
+            between = "between 0x%06X and 0x%06X" % (p1, p2)
+            if not tail and len(xs) == len(mids) and len(mids) <= 12:
+                for p, x in zip(mids, xs):
+                    g, why = self.gate(p, k, x)
+                    if g:
+                        n += self.add(p, k, x, "order", "%s (%s)" % (between, why))
+                continue
+            if len(xs) > 40 or k[0].split("/")[0] not in PAIR_OVERLAYS:
+                continue
+            ok = [[self.gate(p, k, x)[0] for x in xs] for p in mids]
+            L = [[0] * (len(xs) + 1) for _ in range(len(mids) + 1)]
+            for i in range(len(mids) - 1, -1, -1):
+                for j in range(len(xs) - 1, -1, -1):
+                    L[i][j] = max(L[i + 1][j], L[i][j + 1], L[i + 1][j + 1] + 1 if ok[i][j] else 0)
+            i = j = 0
+            while i < len(mids) and j < len(xs):
+                if ok[i][j] and L[i][j] == L[i + 1][j + 1] + 1:
+                    if sum(ok[i]) == 1 and sum(row[j] for row in ok) == 1:
+                        n += self.add(mids[i], k, xs[j], "order-align", "%s, the one gate pass by order" % between)
+                    i, j = i + 1, j + 1
+                elif L[i + 1][j] >= L[i][j + 1]:
+                    i += 1
+                else:
+                    j += 1
+        return n
+
+    def run(self, ids, report=print):
+        for rnd in range(12):
+            got = collections.Counter()
+            got["magic"] += self.m_magic(ids)
+            got["kinds"] += self.m_kinds()
+            got["tables"] += self.m_tables()
+            got["calls"] += self.m_calls()
+            got["tablesearch"] += self.m_tablesearch()
+            got["order"] += self.m_order()
+            report("pair: round %d: %s" % (rnd, ", ".join("%s +%d" % kv for kv in sorted(got.items()) if kv[1])))
+            if not sum(got.values()):
+                break
+
+
+def bin_ids(disc):
+    """{PSX file id: the sources' file name}: the disc's BIN/ files in LBA order (the order the sibling's
+    analysis/file_ids.json lists; 883 of 883 equal on psx-jp, measured 2026-10-18)."""
+    fs = sorted((lba, p) for p, (lba, size) in disc.files.items() if p.startswith("BIN/"))
+    return {i: p[4:] for i, (lba, p) in enumerate(fs)}
+
+
+def pair_load(game, disc_path, held_out=False):
+    import os, tomllib
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import psx_disc, exe_twins, exe_tables, tables
+    disc = psx_disc.Disc(disc_path)
+    _, _, builds = tables.load()
+    if tables.disc_build(disc, builds)["id"] != exe_tables.FEED_BUILD:
+        raise SystemExit("pair needs the %s disc (symbols.toml's psx addresses are its)" % exe_tables.FEED_BUILD)
+    with open(os.path.join(exe_tables.ROOT, "symbols.toml"), "rb") as f:
+        t = tomllib.load(f)
+    funcs = {e["pc"]: e for e in t["func"]}
+    data = {e["pc"]: e for e in t.get("data", [])}
+    with open(os.path.join(game, "BOF3.exe"), "rb") as f:
+        exe = f.read()
+    srcs = {(f, s): (b, blob) for f, s, b, blob in exe_twins.sources(disc)}
+    P = Pairing(exe, srcs, funcs, data, held_out)
+    P.run(bin_ids(disc))
+    return P
+
+
+def pair_write(P, today):
+    """symbols.toml: each new pair of a gate-accepted method on a [[func]] with no `psx` gets psx, psx_overlay
+    (not for the boot executable), psx_status = "hypothesis" and psx_evidence; each seed `locate` found a file
+    for gets its psx_overlay. Inserted after the entry's name (or psx) line, keyed by its pc. Returns
+    (pairs written, overlays written)."""
+    import os
+    import exe_tables
+    path = os.path.join(exe_tables.ROOT, "symbols.toml")
+    with open(path, "rb") as f:
+        raw = f.read()
+    nl = b"\r\n" if b"\r\n" in raw else b"\n"
+    lines = raw.split(nl)
+    starts, cur, block = {}, False, None
+    for j, l in enumerate(lines):
+        if l.startswith(b"[["):
+            cur, block = l.strip() == b"[[func]]", j
+        elif cur and l.startswith(b"pc = 0x"):
+            starts[int(l[5:].strip(), 16)] = block
+    ov = lambda k: "" if k == PAIR_BOOT else "%s#%d" % (k[0].rsplit("/", 1)[-1], k[1])
+    todo = {}
+    for p, (k, x, m, why) in P.pc.items():
+        if m in PAIR_GATE_ONLY and "psx" not in P.funcs[p]:
+            new = ["psx = 0x%08X" % x]
+            if ov(k):
+                new.append('psx_overlay = "%s"' % ov(k))
+            new += ['psx_status = "hypothesis"',
+                    'psx_evidence = "exe_imm.py pair %s, %s: %s (docs/install-gap-pairs.md)"' % (today, m, why.replace('"', "'"))]
+            todo[p] = new
+    nov = 0
+    for p, k in P.located.items():
+        if p not in todo and ov(k):
+            todo[p] = ['psx_overlay = "%s"' % ov(k)]
+            nov += 1
+    ins = {}
+    for p, new in todo.items():
+        j = starts[p] + 1
+        after = None
+        while j < len(lines) and not lines[j].startswith(b"[[") and lines[j].strip():
+            if lines[j].startswith(b"name = ") or lines[j].startswith(b"psx = "):
+                after = j
+            j += 1
+        if after is None:
+            raise SystemExit("symbols.toml: the [[func]] at 0x%06X has no name line" % p)
+        ins[after] = [x.encode("utf-8") for x in new]
+    out = []
+    for j, l in enumerate(lines):
+        out.append(l)
+        out += ins.get(j, [])
+    with open(path, "wb") as f:
+        f.write(nl.join(out))
+    return len(todo) - nov, nov
+
+
+def pair_report(P, out=None):
+    by = collections.Counter(v[2] for v in P.pc.values())
+    print("pair: %s" % ", ".join("%s %d" % kv for kv in sorted(by.items())))
+    print("pair: %d psx without a psx_overlay located by the gate" % len(P.located))
+    for m in sorted(P.hits):
+        print("pair: precision %-12s %s" % (m, ", ".join("%s %d" % kv for kv in sorted(P.hits[m].items()))))
+    for m in sorted(P.cross):
+        print("pair: consistency %-28s %s" % (m, ", ".join("%s %d" % kv for kv in sorted(P.cross[m].items()))))
+    for m, t, p, k0, x0, k, x, why in P.differ:
+        print("pair: differs (%s, %s): 0x%06X has psx 0x%08X (%s), the derivation 0x%08X (%s): %s" % (
+            m, t, p, x0, k0[0], x, k[0], why))
+    if out:
+        with open(out, "w", newline="\n") as f:
+            f.write("pc\tfile\tsection\tpsx\tmethod\twhy\n")
+            for p, (k, x, m, why) in sorted(P.pc.items()):
+                if m != "seed":
+                    f.write("0x%06X\t%s\t%s\t0x%08X\t%s\t%s\n" % (p, k[0], "-" if k[1] is None else k[1], x, m, why))
+
+
 FIXTURES = __file__.rsplit(".", 1)[0] + "_fixtures.tsv"
 
 
@@ -745,6 +1478,23 @@ def main():
             print("error: " + e)
         print("exe_imm fixtures: %d rows run, %d problem(s)" % (ran, len(errs)))
         return 1 if errs else 0
+    if sys.argv[1:2] == ["pair"]:
+        import argparse, datetime
+        ap = argparse.ArgumentParser(prog="exe_imm.py pair")
+        ap.add_argument("--game", required=True)
+        ap.add_argument("--disc", required=True, help="the psx-jp disc (symbols.toml's psx addresses are its)")
+        ap.add_argument("--out", help="a TSV of every derived pair")
+        ap.add_argument("--held-out", action="store_true",
+                        help="seed only the boot executable's evidence-tier pairs; score the rest (precision)")
+        ap.add_argument("--write", action="store_true", help="write the pairs into symbols.toml")
+        a = ap.parse_args(sys.argv[2:])
+        if a.held_out and a.write:
+            raise SystemExit("--held-out pairs are a measurement; they are not written")
+        P = pair_load(a.game, a.disc, a.held_out)
+        pair_report(P, a.out)
+        if a.write:
+            print("symbols.toml: %d pairs, %d psx_overlay fields written" % pair_write(P, datetime.date.today().isoformat()))
+        return 0
     if sys.argv[1:] == ["selftest"]:
         errs = selftest()
         for e in errs:
