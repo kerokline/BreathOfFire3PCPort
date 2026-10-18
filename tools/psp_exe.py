@@ -18,7 +18,9 @@ image:
     pairs    EventBattle_Records+0xE0, the file half of each (file, track) pair: the u16
              file array that follows the record table in BOOT.BIN (the catalogued
              event_battles place, tables.toml, + its count x stride), one entry per index
-             the records' byte +3 names; the track half is the port's (no disc has it)
+             the records' byte +3 names. The track half (2026-10-17, issue #83): the song
+             the battle file's own music is in the disc's song table, or 0xFF when it has
+             none (event_track)
     holes    Effect_HpDamageVariance's halfword tables (the dragon forms' set files): the
              bytes between two segments of exe_maps/<build>.tsv of one file at one
              displacement (BATTLE.EMI#15), in the disc's file numbering
@@ -76,6 +78,7 @@ import argparse
 import bisect
 import collections
 import functools
+import hashlib
 import json
 import os
 import re
@@ -90,6 +93,7 @@ sys.path.insert(0, TOOLS)
 PSP = ("psp-jp", "psp-eu")
 PSX = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
+TRACK_NONE = 0xFF            # an event battle's track when its file has no music: Music_Play(0xFF) plays nothing
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
          "faerie", "pspmap", "verb", "fishrec", "fishpen")   # widen<k>: the disc's name is k bytes
@@ -584,6 +588,49 @@ def event_place(bid):
     return syms[t["symbol"]], rows[0]["file"], rows[0].get("section"), rows[0]["addr"], t["count"], t["stride"]
 
 
+def emi_music(disc, path):
+    """An EMI's music sections - its bank headers, SEPs and bank bodies (types 6, 10, 7) -
+    as a frozenset of (type, sha256); `path` as disc_ids names it (no BIN/, no USRDIR/<lang>/)."""
+    import region_diff
+    full = [p for p in disc.files if p == "BIN/" + path or re.fullmatch(r"PSP_GAME/USRDIR/[^/]+/" + re.escape(path), p)]
+    if len(full) != 1:
+        fail("%s: %d copies on the disc (want one)" % (path, len(full)))
+    return frozenset((ty, hashlib.sha256(body).digest())
+                     for _, ty, _, body in region_diff.emi_sections_blob(disc.read(full[0])) if ty in (6, 10, 7))
+
+
+@functools.lru_cache(None)
+def song_bundles(disc, bid):
+    """{the music sections of a BIN/BGM file: [its sub-song 0's song numbers]} over the disc's
+    own song table (seq.songs on a PSX disc, ppms.songs on a PSP one). Byte-identical files
+    (BGMBAT00 and BGMBAT02 on the PSX discs) share a key, so their songs are one entry."""
+    import ppms
+    import seq
+    out = collections.defaultdict(list)
+    for s in (ppms.songs(disc, bid) if bid in PSP else seq.songs(disc, bid)):
+        if s["sub"] == 0:
+            out[emi_music(disc, s["emi"])].append(s["song"])
+    return {k: sorted(v) for k, v in out.items()}
+
+
+def event_track(disc, bid, path):
+    """The track half of one (file, track) pair: (track, every song the disc makes the same).
+    The PSX's GameMode5_Load (0x80198C94) loads the battle file and names no song: the boss
+    file's own music plays. A file that carries music carries a whole copy of one BIN/BGM
+    file's bank header, SEP and bank body (docs/seq-import.md), and the PC's track is that
+    file's sub-song 0 in the disc's song table - the PC's numbering is the PSX's songs
+    (docs/bgm-comparison.md 6.3). A file with no SEP plays nothing of its own: TRACK_NONE,
+    the field's music kept. Several songs only when their files are byte-identical; the
+    lowest is written."""
+    have = emi_music(disc, path)
+    if not any(ty == 10 for ty, _ in have):
+        return TRACK_NONE, (TRACK_NONE,)
+    hits = [songs for k, songs in song_bundles(disc, bid).items() if k <= have]
+    if len(hits) != 1:
+        fail("%s: %s carries %d BGM files' music (want one)" % (bid, path, len(hits)))
+    return hits[0][0], tuple(hits[0])
+
+
 def hole_segments(bid, lo):
     """The exe_maps/<build>.tsv segments either side of the unplaced run holding `lo`
     when they are one file at one displacement: (file, section, disc address of lo)."""
@@ -617,10 +664,11 @@ def build_fill(row, disc, elf, rule, srcs):
             struct.pack_into("<HH", out, 8 * r, map_ids(rule, f), x)
             mask[8 * r:8 * r + 4] = [True] * 4
     elif rl == "pairs":
+        paths = disc_ids(disc, row["build"], srcs, elf)
         for i in range((hi - lo) // 4):
             f, = struct.unpack_from("<H", blob, at + 2 * i)
-            struct.pack_into("<H", out, 4 * i, map_ids(rule, f))
-            mask[4 * i:4 * i + 2] = [True] * 2
+            struct.pack_into("<HH", out, 4 * i, map_ids(rule, f), event_track(disc, row["build"], paths[f])[0])
+            mask[4 * i:4 * i + 4] = [True] * 4
     elif rl == "holes":
         for i in range((hi - lo) // 2):
             v, = struct.unpack_from("<H", blob, at + 2 * i)
@@ -873,6 +921,8 @@ def find_rows(disc, bid, pc, ref_srcs=None):
     for r in rows:
         lo_, raw, mask = build_fill(r, disc, elf, rule, srcs)
         bad = [i for i in range(len(raw)) if mask[i] and raw[i] != pc[lo_ + i - DATA_LO]]
+        if r["rule"] == "pairs":
+            bad = [i for i in bad if not same_song(disc, bid, r, i, pc, srcs, elf)]
         r["filled"] = sum(mask)
         print("  %s %-6s 0x%06X..0x%06X from %s%s 0x%X: %d bytes, %d not BOF3.exe's" % (
             bid, r["rule"], r["pc"], r["pc_end"], r["file"], "" if r["section"] is None else "#%d" % r["section"],
@@ -897,6 +947,18 @@ def find_rows(disc, bid, pc, ref_srcs=None):
     if u:
         rows.append(u)
     return sorted(rows, key=lambda r: r["pc"])
+
+
+def same_song(disc, bid, row, i, pc, srcs, elf):
+    """Byte i of a pairs row differs from BOF3.exe's in a track word naming a song the disc
+    makes the same as the PC's (event_track: byte-identical BGM files - on the PSX discs one
+    boss the PC gives 153, the disc's BGMBAT02, a copy of BGMBAT00, song 151)."""
+    if i % 4 < 2:
+        return False
+    base, blob = (0, elf.img) if row["file"] == "BOOT.BIN" else srcs[(row["file"], row["section"])]
+    f, = struct.unpack_from("<H", blob, row["addr"] - base + 2 * (i // 4))
+    want, = struct.unpack_from("<H", pc, row["pc"] + 4 * (i // 4) + 2 - DATA_LO)
+    return want in event_track(disc, bid, disc_ids(disc, bid, srcs, elf)[f])[1]
 
 
 def unwide_bytes(img, owner):
@@ -1231,7 +1293,7 @@ def write_recipe(rows):
              "# The game values a disc carries in another shape than BOF3.exe's (docs/psp-image.md,",
              "# docs/disc-gap-fills.md): per disc build (PSX and PSP), the PC range [pc, pc_end) a rule fills",
              "# from `file` (BOOT.BIN or an EMI and its section) at `addr` - rows8 (Magic_Rows' file ids),",
-             "# pairs (EventBattle_Records' file array), holes (Effect_HpDamageVariance's set-file tables),",
+             "# pairs (EventBattle_Records' (file, track) pairs), holes (Effect_HpDamageVariance's set-file tables),",
              "# widen<k> (the formation wheel's spots, the disc's name k bytes), psxmap (a PSP disc's own EMI",
              "# at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),",
              "# msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from",
@@ -1239,7 +1301,8 @@ def write_recipe(rows):
              "# fishpen (the fishing banner's line records and the release's own label pens, D313) - and how",
              "# many bytes it fills.",
              "# A row is written only when every",
-             "# byte equals BOF3.exe's, but a fishpen row (each release's own pens).",
+             "# byte equals BOF3.exe's, but a fishpen row (each release's own pens) and a pairs track",
+             "# naming a song the disc makes the same (byte-identical BGM files).",
              "# Addresses and counts only (CLAUDE.md rule 1).",
              "\t".join(COLS)]
     for r in rows:
@@ -1383,7 +1446,7 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n,
+            want = {"rows8": n // 2, "pairs": n, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n,
                     "fishrec": 4 * FI_COUNT, "fishpen": 3}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))

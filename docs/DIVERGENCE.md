@@ -6651,6 +6651,32 @@ designed in rather than bolted on.
   every build the lifts and area 112's link list equal `BOF3.exe`'s; nothing
   else moved (`placed_differ` -4 on each PSX build, -1 on each PSP; no place
   changed).
+- Amended 2026-10-17 (D316, issue #83 - players on disc-only installs: the
+  wrong music in every boss fight, and in the miners' fight at the start):
+  **the event battles' track half** (`EventBattle_Records+0xE2`, 41 words)
+  is no longer zero on a disc-built image. Zero, `GameMode5_Load` played song
+  0 for every event battle, over the scene's own music where the PC's word is
+  0xFF. No disc holds the number - the PSX's `GameMode5_Load` (`0x80198C94`)
+  loads the battle file and its own music plays - so the `pairs` rule now
+  derives it: the battle file's music sections are a whole copy of one
+  `BIN/BGM` file, and the word is that file's sub-song 0 in the disc's own
+  song table; a file with no SEP gives 0xFF (`psp_exe.event_track`). Equal to
+  `BOF3.exe`'s on all 41 words of both PSP builds; on the five PSX builds 40
+  of 41, the other one boss the PC gives 153 where the rule gives 151:
+  `BGMBAT02.EMI` is a byte copy of `BGMBAT00.EMI` on those discs, so the two
+  songs are one music from a PSX disc's data (on the PSP they are two files
+  whose SEPs differ by 20 bytes; a PSX base with the PSP's music layer plays
+  that boss `BGMBAT00`'s PSP render). The recipe's equality gate accepts
+  exactly that: a track naming a song of the same byte-identical set. With the
+  PC's `.data` nothing changes. Verification: `psp_exe.py recipe`,
+  `exe_tables.py recipe`, `exe_own.py measure`, `exe_tables.py gaps` over the
+  seven discs (`exe-psp.tsv`'s `pairs` rows 82 to 164 bytes; `exe-gaps.tsv`
+  loses the 41 track rows per build); `psp_exe.py check` clean; the `whelpBoss` route on a scratch PSP-EU-only install under
+  `BOF3X_MUSIC_LOG=1` (en-150; the route, recorded in en-US, drifts after the
+  fight): before, frame 718 loads `BOSS007` and plays `Music_Play(0, 10)`,
+  `bgm `; after `importer.py setup` rebuilt the image, the same frame plays
+  `Music_Play(151, 10)`, `bgmi` (bank `BGMBAT00`), and the start-up log's
+  41 `EventBattle_Records` gap lines are gone. Not heard.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

@@ -57,7 +57,7 @@ now holds every disc build's fills). `exe-pointers.tsv`, `exe-places.tsv`,
 
 What is left of the game-value gaps on a PSX build (US, 1,336 bytes) is the
 long tail: the `EventBattle_Records` track half (the port's MP3 track
-numbers), the formation names (language), the area and effect tables of
+numbers; **filled since 2026-10-17 by rule**, known-defects D316), the formation names (language), the area and effect tables of
 `exe-engine-own.md` 4.3, and on the Western discs `Scena17_EndSteps`. The
 PSP-JP `BOOT.BIN` carries the last of these verbatim (`psp-image.md` 5.1);
 it is not taken into a PSX build here.
