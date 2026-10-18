@@ -2,7 +2,9 @@
 
 **Status:** DRAFT (staged 2026-10-17 against `origin/main` `8382691d`; nothing
 launched, nothing built. The census it closes is
-[`install-gap-census.md`](install-gap-census.md), verified the same day.)
+[`install-gap-census.md`](install-gap-census.md), verified the same day. This is also
+the staging of [`IDEAS.md`](IDEAS.md) I43's steps 2 to 4: RW is step 2, the
+fix groups step 3, the end batch's last item step 4.)
 
 The census gave every row of `recipes/exe-gaps.tsv` a status and left, in its
 section 8, the NEEDS FIX items across the seven disc builds: two P1 items not
@@ -43,7 +45,7 @@ That is still the player's disc, read at build time, with the function and
 the instruction offsets as the recipe's row. A value typed into `src/` is a
 stub by another name, and rule 4 applies.
 
-## 2. Stage A (five groups, in parallel)
+## 2. Stage A (six groups, in parallel)
 
 Each group works in its own worktree off `main`, commits with `git commit -s`,
 self-tests headless only, and ends with a hand-back report naming what it
@@ -184,6 +186,27 @@ The P4 rows and the two reader questions the census left:
 Each answer is a status in the census's table and, where a reader exists, a
 row handed to TW, PB or stage B. Output: `docs/install-gap-readers.md`.
 
+### RW: the read watch - which gaps play reads (`src/hook`, an instrument; the exe host)
+
+I43's step 2, and the ranking every other group wants: of the gap ranges
+still zero in a disc-built image, which does play actually read? The exe
+host owns the image's pages, so it can **page-guard the gap ranges**
+(`PAGE_GUARD`, the vectored handler `calltrace.cpp` and `crash.cpp` already
+install) and log the first read of each range with the reader's address,
+the frame and the route - `BOF3X_GAPWATCH=<file>`, an `instrument = true`
+module, off by default, no behaviour change (a guard page faults once and
+is re-armed after the log line). Ranges that share a page with hot data
+fall back to a page-granular count the way the state hash reads pages.
+Run over the reference routes and the attract on each one-source install
+(the seven A/B/C caches), from its own harness root. Output:
+`docs/install-gap-reads.md`: per range, read or not, by which function, on
+which route and install; the census's section 8 re-ranked by it (a range
+read in play is a live defect; one never read can wait). RW's list is the
+first thing TW, OF-A and OF-E take up.
+
+Self-test: the watch on a scratch page with a planted read logs it once
+and leaves the value untouched; off, nothing is guarded.
+
 ## 3. Stage B (after OT merges; OF-A and OF-E in parallel)
 
 The P3 game-value rows by the owning-function method, split by family so
@@ -235,6 +258,7 @@ Also in stage B: **PB's `TWINS` rows** (after TW), and **RD's hand-offs**.
 | `tools/exe_tables.py` (the `imm` kind), `tools/exe_own.py` | OT |
 | `symbols.toml` `psx` fields | OT in stage A; OF-A / OF-E by family in stage B, resolved by entry keyed on `pc`, then a `tomllib` check |
 | `tools/loc_build.py`, `src/game/labels.cpp`, the fishing-rule module | LA |
+| `src/hook`'s gap watch (`BOF3X_GAPWATCH`) | RW |
 | `recipes/exe*.tsv`, `recipes/exe.toml`, `recipes/exe-psp.tsv` | the coordinator only, regenerated after each merge |
 | `docs/install-gap-census.md` section 8's statuses | the coordinator, from each hand-back report |
 | `docs/README.md` rows | each group adds its own; keep both sides at a merge |
@@ -276,6 +300,11 @@ symbol names, counts and file names only (rule 1).
    sent to the owner by chat with the question each asks.
 5. The census's section 8 rewritten with the statuses; HANDOFF item 4
    replaced; the drafts numbered.
+6. **`BOF3X_EXEIMAGE_STRICT=1` as the default for a disc-only install** once
+   RW's list shows no range read in play still zero (I43's step 4): a new
+   gap then fails loudly at start instead of drawing wrong. A ledger entry
+   (DIV-0101 amended); the launcher's message names the range and says to
+   rebuild. Not before that condition is measured.
 
 ## 6. What stays the owner's (not in this round)
 

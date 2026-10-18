@@ -1874,6 +1874,7 @@ Regression: the attract on that install with this image and with a control
 differing. An install built before this is refused at start with a message
 to rebuild it (`FilledSince()`, the row `0x669868..0x669883`; the general
 form is HANDOFF "Pick up here" 11). Steps 2 to 4 open.
+_(2026-10-17) steps 2 to 4 staged_ in [`install-gap-round.md`](install-gap-round.md): RW the read watch (step 2), the fix groups by method (step 3), the strict default as the end batch's last item (step 4).
 
 ## I44 — The data image as typed source: the next step toward reconstructed source
 
@@ -1956,7 +1957,7 @@ with what `ctype`), committed with its counts in a doc. It needs no decision
 and sizes the round.
 
 ### Outcome
-_(2026-10-17) open; proposed, nothing built._
+_(2026-10-17) open; proposed, nothing built._ _Stages 1 and 2 staged the same day in [`typed-data-round.md`](typed-data-round.md); the measurement there splits stage 1 into globals (about 900 sites) and record fields by offset (about 6,700 sites), so the record types come first._
 
 ## I45 — Shrink the quicksave files
 
