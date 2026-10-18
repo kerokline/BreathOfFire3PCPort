@@ -1442,6 +1442,8 @@ void InjectAll() {
                                 // Menu_DrawPiece)
     world_map_legend::Arm();    // button round's DIV-0135 (world_map.h): the world map's legend on the port's own
                                 // page - after every module's self-test, whose frame-draw fuzzes all ran the original's
+    AreaKeepStoppingNone_Arm(); // DIV-0143 (issue #88): an area change keeping a track that is fading to a stop
+                                // keeps none - after every module's self-test, which all ran Capcom's keep
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

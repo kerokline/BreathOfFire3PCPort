@@ -8364,3 +8364,41 @@ D297's four CPU readers are the read-back states that follow those effect
 captures. They find a picture in the shadow now, by reading; not seen.
 
 **Fixed 2026-10-17:** DIV-0142.
+
+## D318 — The bedroom's song plays through Ryu's dream in Teepo's bed, where the PlayStation is silent (the port's; fixed 2026-10-18 by DIV-0143)
+
+**Reported:** issue #88 (2026-10-18), on a PSP-EU-only install: the music
+from the bedroom scene ("014 Healing") keeps playing through Ryu's dream
+after Rei rescues him, where the original is quiet. The cause is in the
+code, so it shows on every install, with Capcom's own data too.
+
+**Measured** (2026-10-18, the `whelpBoss` route under `BOF3X_MUSIC_LOG=1`,
+the same on the PC install, PSX-EU-only and PSP-EU-only):
+
+- `Scena01_Scene02` (`0x53A380`, step 1, the bedroom, f9127) stops the
+  song, plays track 14 and sets `Field_ScriptFlags` bit 0x80, which tells
+  area changes to keep the current track.
+- Step 2 (f10821) runs `Music_FadeOutStop(10)` and in the same frame
+  `Field_ChangeArea(0xA, ...)`. `Area_PickMusic` (`0x5953B0`) copies the
+  current track, still 14 while the fade runs, into `0x904CD0`.
+- The fade ends at f10831 and marks `0x904131` 0xFF. At f10839
+  `Area_Enter` (`0x594E60`) plays the kept 14, and Healing restarts for
+  the whole dream, until Ryu wakes (f12708, track 7).
+
+**The PlayStation** (the Japanese disc; disassembly, then the sibling
+recomp's headless runtime from this route's save put on a card with
+`save_convert.py pc2psx`):
+
+- Step 2's stop is `0x8015DDF4`, straight to `SsSepStop`: immediate, and
+  it leaves the current-track byte `0x80145025` at 14.
+- The bit-0x80 copy (`0x801A1388`) keeps 14, and the area's play
+  `0x80162514` skips a track equal to the current one (`0x80162580`).
+- Live: at VSync 64,359 the area's play ran (its count 8 to 9) and the
+  music play `0x80162610` did not (its count stayed 4). The SPU had 0
+  active voices from then to 65,766, and only sound effects after, until
+  the wake's track 7 (VSync 67,863).
+
+So the dream is silent there, and the difference is the PC's fade-out-stop
+clearing the current track before the replay.
+
+**Fixed 2026-10-18:** DIV-0143.

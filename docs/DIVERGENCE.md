@@ -8625,3 +8625,38 @@ designed in rather than bolted on.
     owner's eye is the measure.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
+
+### An area change that keeps the track while it fades to a stop keeps none: Ryu's dream is silent, as on the PlayStation
+
+- **ID:** DIV-0143 (the next free number on 2026-10-18; renumber at the
+  merge if another branch has taken it)
+- **Date:** 2026-10-18
+- **Subsystem:** the area's music (`Area_PickMusic` `0x5953B0`, ours,
+  `src/game/window_task.cpp`; [`known-defects.md`](known-defects.md) D318,
+  issue #88)
+- **Tier:** Sensible - a port repair. The PlayStation is silent here, and
+  the scene stops the song on purpose just before the change.
+- **Original behaviour:** with `Field_ScriptFlags` bit 0x80 set, the area
+  change keeps the current track (`0x904131` into `0x904CD0`) even while a
+  `Music_FadeOutStop` is still running. The fade then marks the track
+  stopped (0xFF), and `Area_Enter` plays the kept track from the top. In
+  `Scena01_Scene02` step 2 the bedroom's song (track 14) therefore comes back
+  eight frames after its stop and plays through Ryu's dream.
+- **New behaviour:** in that branch, with a stopping fade still running
+  (`Music_FadeStops` set, `Music_FadeCount` not 0), the kept track is 0xFF.
+  `Area_Enter` plays nothing and marks the track 0xFF, and the fade finishes
+  its stop. The wake's area change (step 0xA, the bit cleared) plays the
+  zone's track 7 as before. A kept track with no stopping fade is copied as
+  before.
+- **Rationale:** a player's report (issue #88) and the PSX twin rule.
+  - The PlayStation's stop there (`0x8015DDF4`, `SsSepStop`) is immediate
+    and leaves its current-track byte alone.
+  - The kept track then equals the current one, and the area's play
+    (`0x80162514`) skips it.
+  - Silence is what the scene gets there, measured live in the sibling
+    recomp (D318).
+  - The PC's fade-out-stop is the one difference.
+- **Also in the PSX version?** Yes: this is what the PlayStation does.
+- **Verification:** (filled in below)
+- **Reversible?** `BOF3X_ORIGINAL=AreaKeepStoppingNone` (Capcom's keep),
+  or `BOF3X_ORIGINAL=Area_PickMusic`.

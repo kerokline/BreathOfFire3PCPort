@@ -7,6 +7,9 @@
 #pragma once
 
 void WindowTask_Inject();
+// DIV-0143: Area_PickMusic keeps no track while the kept one fades to a stop -
+// after every module's self-test, which all ran Capcom's keep.
+void AreaKeepStoppingNone_Arm();
 
 // The track an area's zone record names: byte +6 itself when +7 is zero, else
 // the first flagged entry of the music set +6 names (the table part of
