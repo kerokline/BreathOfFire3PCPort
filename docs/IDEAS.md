@@ -613,6 +613,8 @@ frames recording the frame hash, copy everything back, run 300 again. Equal
 hashes says the state is complete for logic; the first difference says what
 was missed.
 
+_(2026-10-17) staged as [`quicksave-round.md`](quicksave-round.md): the owner's F5 / F6 / F7 design, full snapshots with a save block in front; the all-original half left out._
+
 ## I14 — Compare what is drawn: display-list hash, texture hash, back-buffer hash
 
 **Ask (2026-09-19):** owner, when the image path's takeovers reached functions
@@ -839,6 +841,8 @@ Overwrites slot 0 silently (and the input recorder's F12 shot writes one).
 In between, cheaper steps if the owner wants them: refuse it in battle
 and events, give it a slot of its own, draw "Save OK" on screen (it only
 reaches the log since DIV-0032).
+
+**Outcome** _(2026-10-17)_: closed by the owner - F12 stays as it is; the true quicksave is the quicksave round ([`quicksave-round.md`](quicksave-round.md)).
 
 ## I19 — Screen curvature for the SatPixie look
 
@@ -1878,3 +1882,119 @@ Regression: the attract on that install with this image and with a control
 differing. An install built before this is refused at start with a message
 to rebuild it (`FilledSince()`, the row `0x669868..0x669883`; the general
 form is HANDOFF "Pick up here" 11). Steps 2 to 4 open.
+_(2026-10-17) steps 2 to 4 staged_ in [`install-gap-round.md`](install-gap-round.md): RW the read watch (step 2), the fix groups by method (step 3), the strict default as the end batch's last item (step 4).
+
+## I44 — The data image as typed source: the next step toward reconstructed source
+
+**Ask (2026-10-17, the owner):** if we want to move closer to a fully
+reconstructed source, what is the next code step?
+**Kind:** engine / tooling
+**Feasibility:** HIGH for stages 1 and 2 (mechanical, no behaviour change,
+parallel by file group); MEDIUM for stage 3 (a loader change, proved by the
+state hash). **Gated on:** nothing for stage 1; stage 3 on the state hash
+made address-independent ([`platform-layers-plan.md`](platform-layers-plan.md) 3).
+
+### Where the line is today
+Since state 3 ([`state3-design.md`](state3-design.md), PR #53) no byte of
+Capcom's code runs: `bof3x.exe` is ours and the 10,088 functions are ours.
+What is still Capcom's is the **data image**: `.data` and `.rdata` from the
+player's file, laid at their linked addresses by a fixed-base executable
+(`/FIXED`, base `0x400000`) and read by our code through addresses. Measured
+2026-10-17 in `src/game` (a `grep` over the sources, counts only):
+
+| What | Count |
+|---|---|
+| raw accessor lines (`Word(`, `Byte(`, `Address(`, `Dword(`, `Float(`) | 7,600 (4,616 / 1,837 / 882 / 180 / 85) |
+| `[[data]]` entries in `symbols.toml`, with a `ctype` | 2,696, 2,613 |
+| code pointers in `.data` bound through the entry-stub page | 9,142 words, 6,346 targets ([`exe-import.md`](exe-import.md) 5) |
+| run-time raw calls through an address | 61 ([`round-13-cleanup.md`](round-13-cleanup.md) 1.3) |
+
+"Reconstructed source" here means: a program whose source builds the game,
+reads the player's data through named, typed structures, and holds no fixed
+address. The remaining distance is all on the data side. The engine / data
+split ([`ASSET_SOURCES.md`](ASSET_SOURCES.md) 5, [`LICENSING.md`](LICENSING.md) 3)
+holds throughout: no table is copied into source; the image stays the
+player's file, only *how it is addressed* changes.
+
+### Stage 1 - type the remainder (no behaviour change)
+Every raw accessor site becomes a named, typed access generated from
+`symbols.toml` (`tools/gen_symbols.py` already emits a typed lvalue, or a
+typed pointer to element 0 with `count`, for every entry with a `ctype`).
+Each site needs a `[[data]]` entry with evidence (the reader, the width the
+instruction used) and a `ctype`. Target: 7,600 lines to 0, and a check in
+`checks.yml` refusing a new raw accessor in `src/game`. Proof: the state
+hash identical on the eleven routes and the attract, the headless
+self-tests. The shape of a takeover round: file groups in worktrees,
+`symbols.toml` merged by entry keyed on `pc`.
+
+### Stage 2 - the layout as one generated struct (no behaviour change)
+From the same entries, generate a `GameData` struct whose member offsets
+are `static_assert`ed against the original addresses (offset = `pc` minus
+the image base); the inline-asm sites that name a global by `"m"` keep
+working because the bytes do not move. The engine still maps the image at
+its base, so the struct is a view over the same bytes and the compile-time
+check is the equivalence proof. The gaps between members become named
+padding: the first complete census of what in `.data` is still unknown, by
+address and size.
+
+### Stage 3 - make the image relocatable
+The recipe tools already classify every pointer word in `.data`
+(`recipes/exe-pointers.tsv`: code pointers, data pointers, and the
+`number` class for words that only look like pointers,
+[`exe-import-engine.md`](exe-import-engine.md) 7.2). With that table the
+loader can place the image anywhere: data-to-data pointers rebased, code
+pointers bound straight to our functions. That retires the entry-stub page,
+the 61 run-time raw calls (they become calls through named members) and
+`/FIXED`. Proof: the game running with the image at another base, the state
+hash address-independent (rebased pointer pages normalised, as
+[`state-hash.md`](state-hash.md) 6 already does for the overlay's cells).
+The hosted build's clone fuzz, which needs Capcom's layout, is replaced here
+by a fuzz over the struct (state3-design 11's "later state").
+
+### What follows, not this entry
+After stage 3 the only pin to x86-32 is pointer width inside the records;
+widening them at load is the same table applied once more (a native-pointer
+`GameData` filled from the 32-bit image). That is the portable 64-bit build,
+[`PLAN.md`](PLAN.md) phase 4 and I33's platform library. The language
+overlay's cells and the cache's layers are unchanged by all three stages.
+
+### First concrete step
+Stage 1's measurement as a script (`tools/raw_access_census.py`: each raw
+accessor site, the address it names, whether a `[[data]]` entry covers it,
+with what `ctype`), committed with its counts in a doc. It needs no decision
+and sizes the round.
+
+### Outcome
+_(2026-10-17) open; proposed, nothing built._ _Stages 1 and 2 staged the same day in [`typed-data-round.md`](typed-data-round.md); the measurement there splits stage 1 into globals (about 900 sites) and record fields by offset (about 6,700 sites), so the record types come first._
+
+## I45 — Shrink the quicksave files
+
+**Ask (2026-10-17, the owner):** a quicksave ([`quicksave-round.md`](quicksave-round.md))
+is about 4 MB raw, the image span plus the participants' records; "ok for
+now, but probably worth considering if we can shrink that at some point".
+**Kind:** engine   **Feasibility:** HIGH   **Gated on:** the quicksave round
+built and its format measured; the owner's word to pick it up.
+
+### What to measure first
+- How much of the span is zero pages, and how much is unchanged from the
+  image's load-time bytes (`base/exe/data.bin`): both are free to drop - a
+  page list and a diff against the install's own image, no third-party code.
+- How much of the rest repeats (the VRAM shadow and the DAT arena are the
+  likely bulk): a plain run-length or LZ pass in our own code, measured
+  against the time a restore may take (one frame's budget is the target).
+
+### The shapes, cheapest first
+1. **Zero-page and unchanged-page skip** against the install's image: a page
+   bitmap in the header; probably the largest win for the least code.
+2. **A diff against the previous quicksave in the same slot**: smaller files,
+   but a chain a lost file breaks - only with the base kept whole.
+3. **A compressor**: zlib-class code is BSD / zlib-licensed and would not
+   touch [`LICENSING.md`](LICENSING.md) 4, but the project has vendored no
+   third-party compression so far; our own LZ is a few hundred lines.
+
+### First concrete step
+The measurement, on the six routes' quicksaves once the round's stage C has
+made them: zero pages, unchanged pages, and an LZ ratio, in a table.
+
+### Outcome
+_(2026-10-17) open; logged at the owner's word, nothing measured._

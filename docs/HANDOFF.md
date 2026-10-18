@@ -114,6 +114,9 @@ written down; validated identity and swapped on four install kinds ([`button-rou
 4. **The install-gap census's remainder** - staged as parallel groups in
    [`install-gap-round.md`](install-gap-round.md) (2026-10-17, not launched; it can run with no owner present,
    rebased on the button round, whose ledger numbers it follows).
+   Also staged 2026-10-17, none launched: the quicksave round (save states behind F5 / F6 / F7, the owner's design)
+   in [`quicksave-round.md`](quicksave-round.md), and the typed-data round (I44's stages 1 and 2, no behaviour
+   change) in [`typed-data-round.md`](typed-data-round.md). The button round itself is done (PR #85).
    The census's own remainder ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
    P1 still open (the event battles' track words done 2026-10-17, D316, `fix/event-battle-tracks`) - the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
    list on the Western images; then P2's twins the disc search already locates (world map 115's legend frame, the
