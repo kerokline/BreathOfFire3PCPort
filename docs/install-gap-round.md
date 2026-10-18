@@ -1,10 +1,23 @@
 # The install-gap round: staging
 
-**Status:** DRAFT (staged 2026-10-17 against `origin/main` `8382691d`; nothing
-launched, nothing built. The census it closes is
-[`install-gap-census.md`](install-gap-census.md), verified the same day. This is also
-the staging of [`IDEAS.md`](IDEAS.md) I43's steps 2 to 4: RW is step 2, the
-fix groups step 3, the end batch's last item step 4.)
+**Status:** IN PROGRESS (staged 2026-10-17 against `origin/main` `8382691d`;
+run 2026-10-18. **Stage A** (RD, PB, OT, TW, LA, RW) and **stage B as run**
+(PT, CW, FP; section 3a) are merged on `install-gap/round`, with the recipes
+regenerated over the seven discs after each tool change; the tip is `0baf26f7`.
+**The end batch's docs are done** on `install-gap/end-docs` (section 5 item 5:
+the census's section 8 rewritten with every status, the drafts written into
+DIVERGENCE as amendments of DIV-0101, DIV-0103, DIV-0069 and DIV-0064, D319
+and D320 numbered, HANDOFF item 4 replaced, the owner's calls in
+`owner-review.md`). Items 1 and 2 ran at the merges (the checks; `exe_scan.py`
+at the tip, the census's 8.1). **Items 3 and 4 are not run**: the A/B/C caches,
+the attract gate, the hash routes and the captures need a local launcher
+build, and Windows Defender quarantines every one (the owner's exclusion is
+asked). **Item 6, `BOF3X_EXEIMAGE_STRICT=1` as the default, is not ready**:
+RW's watch must be re-run on the merged branch, and the two rows still read in
+play are the owner's calls (D266's title mark, the empty save slot). The
+census it closes is [`install-gap-census.md`](install-gap-census.md). This is
+also the staging of [`IDEAS.md`](IDEAS.md) I43's steps 2 to 4: RW is step 2,
+the fix groups step 3, the end batch's last item step 4.)
 
 The census gave every row of `recipes/exe-gaps.tsv` a status and left, in its
 section 8, the NEEDS FIX items across the seven disc builds: two P1 items not
