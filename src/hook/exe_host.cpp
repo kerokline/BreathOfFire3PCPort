@@ -40,6 +40,7 @@
 #include "hook/exe_icon.h"
 #include "hook/exe_image.h"
 #include "hook/exe_layout.h"
+#include "hook/gapwatch.h"
 #include "hook/host.h"
 #include "hook/inject_all.h"
 #include "hook/input_script.h"
@@ -461,11 +462,13 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     CallTrace_Start(module);   // refused above when asked for; a no-op here otherwise
     WavDump_Start();   // BOF3X_WAV_DIR: after BindSlots filled 0x5C4014, before the latch (wav_dump.h)
     InputScript_Start();
+    GapWatch_Start(module);   // BOF3X_GAPWATCH: after the recipe has read its addresses (gapwatch.h)
     draw_order::Start();
     SetUnhandledExceptionFilter(Unhandled);
     char* const line = PastProgramName(command_line);
     Log("Engine_Main: Game_WinMain(0x%p, null, \"%s\", %d) on the main thread", hinstance, line, show);
     const int code = Game_WinMain(hinstance, nullptr, line, show);
+    GapWatch_Flush();
     Log("Engine_Main: Game_WinMain returned %d, the exit code", code);
     return code;
 }

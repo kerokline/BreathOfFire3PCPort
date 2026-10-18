@@ -23,6 +23,7 @@
 #include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/exe_image.h"
+#include "hook/gapwatch.h"
 #include "hook/draw_order.h"
 #include "hook/host.h"
 #include "hook/inject_all.h"
@@ -64,6 +65,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::CallTrace_Start(module);
         bof3::WavDump_Start();   // BOF3X_WAV_DIR: before the latch is placed (wav_dump.h)
         bof3::InputScript_Start();
+        bof3::GapWatch_Start(module);   // BOF3X_GAPWATCH: refused here, the exe host's alone (gapwatch.h)
         draw_order::Start();
     } else if (reason == DLL_PROCESS_DETACH) {
         bof3::Log("bof3x detaching");

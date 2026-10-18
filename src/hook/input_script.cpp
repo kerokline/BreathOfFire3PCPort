@@ -15,6 +15,7 @@
 #include "game/game_clock.h"
 #include "game/win_main.h"
 #include "hook/detour.h"
+#include "hook/gapwatch.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
 #include "hook/wav_dump.h"
@@ -662,7 +663,9 @@ void __cdecl ScriptedLatch() {
 // (src/game/win_main.cpp). The recipe's words are put in after this, so an
 // unattended recipe run is not affected.
 void DeviceLatch() {
+    GapWatch_Pause();   // BOF3X_GAPWATCH: the hash reads every page and is no reader of the game's (gapwatch.h)
     StateHash_Tick();
+    GapWatch_Tick();
     WavDump_Tick();
     bof3::orig::Input_Latch();
     if (WinMain_InputAllowed()) return;
