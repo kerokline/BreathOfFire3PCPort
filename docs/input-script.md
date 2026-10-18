@@ -236,8 +236,12 @@ is translated either.
   were pressed as cross. The load logged "pressed as recorded from here",
   and the run reached area 10 (the bedroom) by frame 13,170, as the PC run
   does.
-- **`pc-en150`:** no translation line, and it reached the same place.
-- **`psp-eu`:** not yet checked at the time of this commit.
+- **`psp-eu`:** the same three presses as cross under PSP-EU's (S) words,
+  then as recorded from the load, and area 10 by frame 13,170.
+- **`pc-en150`:** no translation line, and it reached the same place. Its
+  music log is identical, line for line, to the run before the change.
+- **The disc runs' music:** both disc runs' music logs from frame 9,127 on
+  equal the PC's, call for call (issue #88's dream included).
 - **The `sigma` self-test:** not re-run (the change touches no table it
   checks).
 
