@@ -41,6 +41,11 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -424,7 +429,7 @@ extern "C" void __cdecl BattleExtra_EquipListInput(void) {
     const unsigned count = B(at::kWin0 + 0xD), category = B(at::kWin0 + 8);
     SetWord(At(at::kWin4 + 6), 13 * (cursor - scroll + 2) + Word(At(at::kWin0 + 6)));
     SetWord(At(at::kWin2 + 0x10), BH_CALL(Item_HelpMessage)(category, count));
-    const unsigned pressed = Pressed() & 0xF00C;
+    const unsigned pressed = Pressed() & Sigma(0xF00C);
     SetWord(At(at::kWin3 + 0x10), 0xDD);
     const unsigned repeat = BH_CALL(Input_AutoRepeat)(pressed);
     BH_AT(unsigned char (__cdecl*)(), at::kEquipFrameHelper)();
@@ -436,7 +441,7 @@ extern "C" void __cdecl BattleExtra_EquipListInput(void) {
     } else if (repeat & 0x4000) {
         if (now < 0x7F) B(at::kWin0 + 0xB) = ++now;
         if (!(static_cast<int>(now) < static_cast<int>(B(at::kWin0 + 0xA)) + 9)) SetWord(At(at::kWin0 + 0x10), 0x10);
-    } else if (repeat & 4) {
+    } else if (repeat & Sigma(4)) {
         auto top = B(at::kWin0 + 0xA);
         if (top == 0) {
             now = 0;
@@ -451,7 +456,7 @@ extern "C" void __cdecl BattleExtra_EquipListInput(void) {
             B(at::kWin0 + 0xB) = now;
             B(at::kWin0 + 0xA) = top;
         }
-    } else if (repeat & 8) {
+    } else if (repeat & Sigma(8)) {
         auto top = B(at::kWin0 + 0xA);
         if (top == 0x77) {
             now = 0x7F;

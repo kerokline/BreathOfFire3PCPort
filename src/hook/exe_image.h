@@ -37,6 +37,12 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
 // then not the PC's, and a check against the PC's reads the file instead.
 bool ExeImage_DiscMapped();
 
+// The build id (data.toml's `build`, e.g. "psx-us") of the disc-built image
+// ExeImage_Source mapped, or nullptr when none was: the running .data is then
+// BOF3.exe's own (or a pc-zh image, byte-identical to it). The terms a
+// release's own table is in (D313: the fishing labels, fishing_text.cpp).
+const char* ExeImage_MappedBuild();
+
 // DIVERGENCE DIV-0111 (docs/launcher-suites.md section 9): the exe host, after
 // .data is in place (the file's or BOF3X_EXEIMAGE's, filled) and before the
 // compare below: each layer BOF3X_OPT names whose cache (BOF3X_CACHE, not

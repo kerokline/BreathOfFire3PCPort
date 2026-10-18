@@ -40,10 +40,12 @@ void InputScript_Latch();
 // is playing. Read by the draw-order log (BOF3X_DRAWORDER).
 unsigned InputScript_Frame();
 
-// True from the latch that enters a recipe's `shot` step until the shot is
+// True from two latches before a recipe's `shot` step until the shot is
 // taken: WinMain's loop draws those frames even when it is running late
 // (BOF3X_SPEED, a stall), so the frame a shot saves is the one it names.
-// Also true on the pass before each frame BOF3X_SHOT_EVERY writes.
+// Also true on the three passes before each frame BOF3X_SHOT_EVERY writes:
+// one forced pass let a late pass before it change the picture (a fade step,
+// docs/button-routes.md 9.2).
 bool InputScript_ShotPending();
 
 }  // namespace bof3

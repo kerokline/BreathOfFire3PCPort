@@ -40,6 +40,11 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -791,8 +796,8 @@ extern "C" void __cdecl BattleItemCmd_EquipItemPick(void) {
     } else {
         B(at::kHand) = 0;
     }
-    BH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF00Cu);
-    const unsigned repeat = BH_CALL(Input_AutoRepeat)(Input_Pressed & 0x500Cu);
+    BH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
+    const unsigned repeat = BH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0x500C));
     unsigned char cursor = B(at::kCands + 0xB);
     const unsigned char was = cursor;
     if (repeat & 0x1000) {
@@ -807,7 +812,7 @@ extern "C" void __cdecl BattleItemCmd_EquipItemPick(void) {
             B(at::kCands + 0xB) = cursor;
         }
         if (static_cast<int>(cursor) >= static_cast<int>(B(at::kCands + 0xA)) + 7) SetWord(At(at::kCands + 0x10), 0x10);
-    } else if (repeat & 4) {
+    } else if (repeat & Sigma(4)) {
         const unsigned char top = B(at::kCands + 0xA);
         if (top == 0) {
             cursor = 0;
@@ -821,7 +826,7 @@ extern "C" void __cdecl BattleItemCmd_EquipItemPick(void) {
             B(at::kCands + 0xB) = cursor;
             B(at::kCands + 0xA) = static_cast<unsigned char>(top - 7);
         }
-    } else if (repeat & 8) {
+    } else if (repeat & Sigma(8)) {
         const unsigned char top = B(at::kCands + 0xA);
         if (top == 0x79) {
             cursor = 0x7F;

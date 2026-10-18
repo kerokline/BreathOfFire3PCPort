@@ -42,6 +42,11 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -189,7 +194,7 @@ void Scroll(U repeat, const ListScroll& s, UC& cl, UC& al) {
         }
         al = B(s.top);
         if (static_cast<int>(cl) >= static_cast<int>(al) + 9) SetScroll(s, 0x10);
-    } else if (repeat & 4) {
+    } else if (repeat & Sigma(4)) {
         al = B(s.top);
         if (al == 0) {
             cl = 0;
@@ -207,7 +212,7 @@ void Scroll(U repeat, const ListScroll& s, UC& cl, UC& al) {
         }
     } else {
         al = B(s.top);
-        if (repeat & 8) {
+        if (repeat & Sigma(8)) {
             if (al == s.last) {
                 cl = s.max;
                 B(s.cursor) = cl;
@@ -327,7 +332,7 @@ void MoveAbilityMember(U repeat, UC count) {
 // original 0x58B1D0: FieldMenuItems_State5Steps[0] - the category.
 extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
     Backdrop();
-    const U pressed = W(kPressed) & 0xF00C;
+    const U pressed = W(kPressed) & Sigma(0xF00C);
     const U x = L(0x803338) + 0x2A;
     const U y = W(0x80333A) + 7;
     SetW(0x8032FC, 0x17);
@@ -441,7 +446,7 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
     B(0x803364) = 0;
     SetW(0x803458, x);
     B(0x803454) = 1;
-    const U pressed = W(kPressed) & 0x500C;
+    const U pressed = W(kPressed) & Sigma(0x500C);
     SetW(0x80345A, 13u * (B(0x803340) - top + 2) + W(0x80333A));
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
@@ -584,7 +589,7 @@ extern "C" void __cdecl FieldItems_ViewList32(void) {
     const U x = L(0x803338) + 7;
     B(0x803454) = 1;
     SetW(0x803458, x);
-    const U pressed = W(kPressed) & 0x500C;
+    const U pressed = W(kPressed) & Sigma(0x500C);
     SetW(0x80345A, 13u * (B(0x803340) - top + 2) + W(0x80333A));
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
@@ -1620,7 +1625,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
     const U x = L(0x8033A4) + 0x2A;
     B(0x803417) = 1;
     SetW(0x803412, 54u * member + W(0x8031F6));
-    const U pressed = W(kPressed) & 0xF00C;
+    const U pressed = W(kPressed) & Sigma(0xF00C);
     B(0x803454) = 1;
     SetW(0x803458, x);
     SetW(0x80345A, hand_y + 7);
@@ -1720,7 +1725,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
     SetW(0x80345A, 13u * (cur + 2) + W(0x8033A6));
     const unsigned char* const list = AbilityList(member, type);
     const UC ability = list[B(0x8033AC)];
-    const U pressed = W(kPressed) & 0x500C;
+    const U pressed = W(kPressed) & Sigma(0x500C);
     SetW(0x8032FC, W(kAbilityHelp + 24u * ability));
     const U repeat = AutoRepeat(pressed);
     UC cl = B(0x8033AC);
@@ -1842,7 +1847,7 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     const U cur = B(0x8033CF);
     const U x = L(0x8033C8) + 7;
     SetW(0x803458, x);
-    const U pressed = W(kPressed) & 0x500C;
+    const U pressed = W(kPressed) & Sigma(0x500C);
     B(0x803454) = 1;
     SetW(0x80345A, 13u * (cur - top + 2) + W(0x8033CA));
     const U repeat = AutoRepeat(pressed);

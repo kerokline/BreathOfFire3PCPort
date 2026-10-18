@@ -24,6 +24,11 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -563,7 +568,7 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
     PutW(Win(0, 0x10), 0x32);
     B(Win(21, 0)) = 1;
     PutW(Win(21, 6), (rows * 13 + Word(At(Win(1, 6)))) & 0xFFFF);
-    const unsigned keys = SH_CALL(Input_AutoRepeat)(Word(At(at::kPressed)) & 0xF00Cu);
+    const unsigned keys = SH_CALL(Input_AutoRepeat)(Word(At(at::kPressed)) & Sigma(0xF00C));
     unsigned char cursor = B(Win(1, 0xB));
     const unsigned char kept = cursor;
     if (keys & 0x1000) {
@@ -578,7 +583,7 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
             B(Win(1, 0xB)) = cursor;
         }
         if (static_cast<int>(cursor) >= static_cast<int>(B(Win(1, 0xA))) + 9) B(Win(1, 8)) = 0x10;
-    } else if (keys & 0x0004) {
+    } else if (keys & Sigma(0x0004)) {
         const unsigned char first = B(Win(1, 0xA));
         if (first == 0) {
             cursor = 0;
@@ -592,7 +597,7 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
             B(Win(1, 0xB)) = cursor;
             B(Win(1, 0xA)) = static_cast<unsigned char>(first - 9);
         }
-    } else if (keys & 0x0008) {
+    } else if (keys & Sigma(0x0008)) {
         const unsigned char first = B(Win(1, 0xA));
         if (first == 8) {
             cursor = 0x10;

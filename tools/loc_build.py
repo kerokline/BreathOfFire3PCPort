@@ -771,6 +771,11 @@ def convert_run(buf, i, stop_at_nul_only=False):
                     out += sub
             return (bytes(out) if ok else None), i
         if b in ARG1:
+            if b == 0x05 and i + 1 < len(buf) and is_button_arg(buf[i + 1]):
+                raise SystemExit("the donor's text already holds 05 %02X, a colour in the button code's range "
+                                 "(docs/button-dialogue.md 2): refusing to read it as a colour" % buf[i + 1])
+            if b == 0x05 and button_map is not None:
+                out += donor_button_code(buf, i + 2)      # before the colour it marks
             out += buf[i:i + 2]
             i += 2
         elif b in LEAD:
@@ -858,7 +863,7 @@ def convert_block(donor, base, room):
                 if 2 * n <= d_offs[slot] <= len(donor):
                     break
                 d_offs[slot] = 2 * n
-        body, placed, table, kept = bytearray(), {}, [], 0
+        body, placed, table, kept, empty = bytearray(), {}, [], 0, set()
         for slot in range(n):
             off = d_offs[slot]
             if off not in placed:
@@ -867,9 +872,10 @@ def convert_block(donor, base, room):
                 msg = convert_run(donor, off)[0] if 2 * n <= off <= len(donor) else None
                 if msg is None:
                     msg = b"\0"
+                    empty.add(off)
                 placed[off] = 2 * n + len(body)
                 body += msg
-            if not (2 * n <= off <= len(donor)) or convert_run(donor, off)[0] is None:
+            if off in empty:     # once per slot, as before; convert_run once per message (it counts button codes)
                 kept += 1
             table.append(placed[off])
         block = struct.pack("<%dH" % n, *table) + bytes(body)
@@ -896,7 +902,7 @@ def convert_block(donor, base, room):
                 msg, _ = convert_run(donor, d_offs[slot])
             if msg is None:
                 key = ("b", b_offs[slot])
-                msg = base[b_offs[slot]:message_end(base, b_offs[slot])]
+                msg = pc_button_codes(base[b_offs[slot]:message_end(base, b_offs[slot])])
             if key not in placed:
                 placed[key] = 2 * n + len(body)
                 body += msg
@@ -908,6 +914,267 @@ def convert_block(donor, base, room):
     if len(block) > room:
         raise ValueError("block is 0x%X bytes, room is 0x%X" % (len(block), room))
     return block, kept
+
+
+# ---------------------------------------------------------------- the dialogue's button codes
+
+# The button unification round, DT-1 (docs/button-dialogue.md; the census is
+# docs/key-icons-by-mapping.md 2.6 and docs/button-roles-by-release.md 5). A
+# button named in an area's dialogue is a colour control and an icon glyph,
+# `05 cc` then the icon, in every release. In the layer's output each such
+# mention is preceded by a BUTTON CODE that names Japan's bit - the bit the
+# PC's code tests - so the draw can show whatever button the Config has put
+# that role on:
+#
+#     05 (0xB0 + n) 06   05 cc  <the release's own icon glyph>
+#
+# n is the bit's index: triangle 0x10 is 0xB4, circle 0x20 0xB5, cross 0x40
+# 0xB6, square 0x80 0xB7. The code is a colour control with a colour no text
+# uses (0x05's arguments in every area text block of the PC and of all seven
+# held discs are 0x01..0x07; measured 2026-10-17, and convert_run refuses a
+# donor holding one in the range), closed at once by 0x06. Both of today's
+# readers of the area text draw exactly what they drew before:
+#   - MsgBox_Step / MsgBox_StatePrint: 0x05 takes the colour, 0x06 takes
+#     colour 0, neither is a character nor costs a frame, and the `05 cc`
+#     right after sets the colour the icon is drawn in, as before;
+#   - Text_DrawString (the fishing's guide list draws pool messages - the
+#     fishing help lines among them - through Text_DrawAt): 0x05 remembers
+#     the colour and takes the new one, 0x06 takes the remembered one back,
+#     so the colour and the remembered colour after the code are what they
+#     were before it; it costs two of the draw's `count` passes.
+# A box-selector code (0x0C nn) was the first design and was dropped:
+# Text_DrawString draws a 0x0C as the glyph 0x0C - 0x26, past the table, and
+# traps. The draw (DT-2: src/game/button_text.h, both readers) shows the
+# glyph of sigma(bit) in the icon's place when that is not the button the icon
+# shows, and the icon itself when it is. The icon stays in the output: it is
+# what the draw resolves the glyph family from (a Latin layer's, ja-JP's or the
+# port's), what it draws byte for byte when the Config leaves the button where
+# the text has it, and what BOF3X_ORIGINAL=ButtonText draws
+# (docs/button-dialogue.md 4.4).
+BUTTON_CTRL, BUTTON_ARG0, BUTTON_CLOSE = 0x05, 0xB0, 0x06
+TRIANGLE, CIRCLE, CROSS, SQUARE = 0x10, 0x20, 0x40, 0x80
+BUTTON_NAME = {TRIANGLE: "triangle", CIRCLE: "circle", CROSS: "cross", SQUARE: "square"}
+# The areas whose dialogue names a button (key-icons 2.6): the wood chop 8,
+# the fishing help 30 / 89 / 129, the well 68, the rope pull 75, the antenna
+# 111, the ram 121, the crane 135. Not buttons: area 78's crosses, the faerie
+# village's times sign, and the PC's area 1 - its circled 3 in colour 2 is the
+# first character of a place name, where the JP disc's same slot has two kanji
+# in that colour and the PC the same second character (DT-2, 2026-10-17;
+# docs/button-dialogue.md 4.3). The draw's list is the same (text_draw.cpp
+# kButtonAreas).
+BUTTON_AREAS = (8, 30, 68, 75, 89, 111, 121, 129, 135)
+# The release's icon -> the button it shows, in that release's terms.
+LATIN_ICON = {0x80: CIRCLE, 0x81: CROSS, 0x82: TRIANGLE, 0x83: SQUARE}   # the PlayStation West's and PSP-EU's font
+JA_ICON_LEAD = 0x15
+JA_ICON = {0x08: CIRCLE, 0x09: CROSS, 0x0A: TRIANGLE, 0x0B: SQUARE}       # 0x15 nn on JP; 0x0A by order, no text uses it
+# The PC's own text: one of the port's circled numerals (b .. g) or its X,
+# whose shape is NOT the button (circled 3 is circle in area 1 and square in
+# area 121); the colour before it is. The colours, measured off the PC's and
+# the US disc's text, are per drawn shape on both: circle 2, cross 1,
+# triangle 6, square 5.
+PC_ICON_GLYPHS = frozenset(b"bcdefgX")
+PC_COLOUR = {2: CIRCLE, 1: CROSS, 6: TRIANGLE, 5: SQUARE}
+# The maps from Japan's button to a release's (button-roles-by-release.md 2).
+MAP_P = {CIRCLE: CROSS, CROSS: TRIANGLE, TRIANGLE: SQUARE, SQUARE: CIRCLE}   # US, EU, FR, DE
+MAP_S = {CIRCLE: CROSS, CROSS: CIRCLE, TRIANGLE: SQUARE, SQUARE: TRIANGLE}   # PSP-EU
+MAP_ID = {b: b for b in BUTTON_NAME}                                           # JP, PSP-JP, the PC
+# PSP-EU's two honest texts (the owner's answer 3, 2026-10-17): the well and
+# the ram keep the PlayStation West's icons, so they translate by P.
+PSP_EU_BY_P = (68, 121)
+button_map = None        # set per area by build_all: the release's button -> Japan's, or None
+button_area = None
+button_counts = {}       # (area, "donor" | "pc", Japan's bit) -> count, for the build's report
+
+
+def is_button_arg(a):
+    return BUTTON_ARG0 <= a <= BUTTON_ARG0 + 7
+
+
+def button_code(bit):
+    return bytes([BUTTON_CTRL, BUTTON_ARG0 + bit.bit_length() - 1, BUTTON_CLOSE])
+
+
+def code_bit(arg):
+    """The bit a button code's argument names, or None."""
+    return 1 << (arg - BUTTON_ARG0) if is_button_arg(arg) else None
+
+
+def release_map(disc):
+    """The release's map from Japan's buttons, by what the disc is: JP's and
+    PSP-JP's are the identity, PSP-EU's is S, every other (Latin) PlayStation
+    disc's is P. Not by tag: PSX-EU and PSP-EU are both en-150."""
+    if donor_ja:
+        return MAP_ID, "identity (JP)"
+    if is_psp(disc):
+        return MAP_S, "S (PSP-EU; areas %s by P)" % ", ".join(map(str, PSP_EU_BY_P))
+    return MAP_P, "P (the PlayStation West)"
+
+
+def area_number(name):
+    m = re.match(r"AREA(\d{3})\.DAT$", name.upper())
+    return int(m.group(1)) if m else None
+
+
+def set_button_area(name, rmap, psp_eu):
+    """The module state convert_run reads for one area's text block; None outside the button areas."""
+    global button_map, button_area
+    n = area_number(name)
+    button_area = n
+    if n not in BUTTON_AREAS or rmap is None:
+        button_map = None
+        return
+    m = MAP_P if psp_eu and n in PSP_EU_BY_P else rmap
+    button_map = {v: k for k, v in m.items()}        # the release's button -> Japan's
+
+
+def count_button(source, bit):
+    key = (button_area, source, bit)
+    button_counts[key] = button_counts.get(key, 0) + 1
+
+
+def donor_button_code(buf, i):
+    """For a donor's `05 cc` whose icon is at i: the button code to write
+    before the `05 cc`, or b"" when no icon follows. The colour and the icon
+    are left for the caller to encode, as before - the icon is the fallback
+    the draw shows until DT-2."""
+    if donor_ja:
+        if i + 1 < len(buf) and buf[i] == JA_ICON_LEAD and buf[i + 1] in JA_ICON:
+            bit = button_map[JA_ICON[buf[i + 1]]]
+        else:
+            return b""
+    elif i < len(buf) and buf[i] in LATIN_ICON:
+        bit = button_map[LATIN_ICON[buf[i]]]
+    else:
+        return b""
+    count_button("donor", bit)
+    return button_code(bit)
+
+
+def pc_button_codes(msg):
+    """A PC message a layer keeps: the button code inserted before each
+    `05 cc` that colours one of the port's icon glyphs, by the colour (the
+    PC is Japan's buttons: no map). Outside the button areas, unchanged."""
+    if button_area not in BUTTON_AREAS or button_map is None:
+        return msg
+    out, i = bytearray(), 0
+    while i < len(msg):
+        b = msg[i]
+        if b == CHOICE:
+            out += msg[i:i + 4]
+            i += 4
+            continue
+        if b in ARG1:
+            if b == BUTTON_CTRL and i + 1 < len(msg) and is_button_arg(msg[i + 1]):
+                raise SystemExit("the PC's message already holds 05 %02X, a colour in the button code's range" % msg[i + 1])
+            if b == 0x05 and i + 2 < len(msg) and msg[i + 2] in PC_ICON_GLYPHS and msg[i + 1] in PC_COLOUR:
+                bit = PC_COLOUR[msg[i + 1]]
+                count_button("pc", bit)
+                out += button_code(bit)
+            out += msg[i:i + 2]
+            i += 2
+            continue
+        n = 2 if b & 0x80 else 1
+        out += msg[i:i + n]
+        i += n
+    return bytes(out)
+
+
+def pc_text_tokens(block, off):
+    """[(offset, bytes)] of one PC-encoded message from `off` to its NUL, by
+    the PC stepper's rules (a first byte with bit 7 set takes a second; the
+    two-byte controls; a choice's four bytes and its options' NULs)."""
+    out, end = [], min(message_end(block, off), len(block))   # a block may end without its NUL
+    i = off
+    while i < end:
+        b = block[i]
+        n = 4 if b == CHOICE else 2 if (b & 0x80 or b in ARG1) else 1
+        out.append((i, block[i:i + n]))
+        i += n
+    return out
+
+
+def text_buttons(block, pc_text=False):
+    """A PC-encoded area text block's button mentions: [(slot offset, Japan's
+    bit or None, fallback glyph bytes, colour)] - a code `05 Bn 06` with the
+    `05 cc` and the glyph after it, or None for an icon-shaped `05 cc` + glyph
+    with no code before it: one of a layer's Latin icon glyphs 0x9E3..0x9E6,
+    or with `pc_text` (the PC's own Chinese, where a single-byte letter is
+    not English) the PC's colour cue. A code not followed by `05 cc` and a
+    glyph is reported with the glyph b"" (DT-2 would have nothing to replace)."""
+    n = struct.unpack_from("<H", block, 0)[0] // 2
+    offs = sorted(set(struct.unpack_from("<%dH" % n, block, 0)))
+    latin = {bytes([0x80 | (g >> 8), g & 0xFF]) for g in range(APPEND_AT + 0x80 - FIRST_CODE, APPEND_AT + 0x84 - FIRST_CODE)}
+    found = []
+    for off in offs:
+        if not 2 * n <= off < len(block):
+            continue
+        toks = pc_text_tokens(block, off)
+        tok = lambda k: toks[k][1] if k < len(toks) else b"\0"
+        k = 0
+        while k < len(toks):
+            t = tok(k)
+            if t[0] == BUTTON_CTRL and len(t) == 2 and is_button_arg(t[1]):
+                ok = (tok(k + 1) == bytes([BUTTON_CLOSE]) and tok(k + 2)[0] == 0x05 and len(tok(k + 2)) == 2
+                      and tok(k + 3)[0] > 0x16)
+                found.append((off, code_bit(t[1]), tok(k + 3) if ok else b"", tok(k + 2)[1] if ok else 0))
+                k += 4 if ok else 1
+                continue
+            if t[0] == 0x05 and len(t) == 2 and k + 1 < len(toks):
+                nxt = tok(k + 1)
+                if (pc_text and len(nxt) == 1 and nxt[0] in PC_ICON_GLYPHS and t[1] in PC_COLOUR) or nxt in latin:
+                    found.append((off, None, nxt, t[1]))
+            k += 1
+    return found
+
+
+def cmd_buttons(args):
+    """The census of a layer's (or the PC's own) area text: every button code
+    and every icon left without one, per area, counted - no text printed."""
+    d = args.dat
+    if not os.path.isdir(d):
+        raise SystemExit("%s: not a directory" % d)
+    prefix = (args.lang + ".") if args.lang else ""
+    total, bare, rows = {}, 0, []
+    for f in sorted(os.listdir(d)):
+        if not f.upper().startswith(prefix.upper()):
+            continue
+        rest = f[len(prefix):]
+        if not prefix and "." in os.path.splitext(rest)[0]:
+            continue                                  # an overlay beside the originals
+        n = area_number(rest)
+        if n is None:
+            continue
+        blob, chunks = dat.load(os.path.join(d, f))
+        for c in chunks:
+            if c.kind != 0 or c.tag != 0:
+                continue
+            got = text_buttons(blob[c.offset:c.offset + c.size], args.pc_text)
+            if not got:
+                continue
+            per = {}
+            for _, bit, glyph, colour in got:
+                key = ("code " + BUTTON_NAME[bit]) if bit else "NO CODE"
+                key += " (glyph %s, colour %d)" % (glyph.hex() or "none", colour)
+                per[key] = per.get(key, 0) + 1
+                if bit:
+                    total[bit] = total.get(bit, 0) + 1
+                else:
+                    bare += 1
+            outside = "" if n in BUTTON_AREAS else "   <- not a button area"
+            rows.append("area %3d: %s%s" % (n, "; ".join("%s x%d" % kv for kv in sorted(per.items())), outside))
+    print("\n".join(rows))
+    print("%s: %d button codes (%s), %d icons without a code, in %d areas"
+          % (d if not prefix else d + " " + args.lang, sum(total.values()),
+             ", ".join("%s %d" % (BUTTON_NAME[b], total[b]) for b in sorted(total)), bare, len(rows)))
+    return 0
+
+
+def button_report(counts):
+    """One line per area: the codes written, by Japan's button, and where from."""
+    rows = {}
+    for (area, source, bit), n in sorted(counts.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
+        rows.setdefault(area, []).append("%s %s x%d" % (source, BUTTON_NAME[bit], n))
+    return ["  area %d: %s" % (a, ", ".join(r)) for a, r in sorted(rows.items())]
 
 
 def write_overlay(path, chunks):
@@ -1427,6 +1694,166 @@ def config_encode(raw, what, room):
     return out
 
 
+def config_payload(labels, records, ctrls):
+    """The kind-7 payload from six labels, seventeen (count, x, string) records
+    and six controller names, each string in donor script codes."""
+    payload = bytearray([CONFIG_LABELS])
+    for i, raw in enumerate(labels):
+        # Repointed, not written in place, so the only limit is ours.
+        payload += config_encode(raw, "label %d" % i, 32) + b"\0"
+    payload.append(CONFIG_RECORDS)
+    for i, (count, x, raw) in enumerate(records):
+        # count and x are the donor's own, verbatim: they are what puts the
+        # options where the disc puts them. The PC record holds 14 bytes of
+        # string after them.
+        payload += bytes([count, x]) + config_encode(raw, "option %d" % i, 14) + b"\0"
+    payload.append(CONFIG_CTRL)
+    for i, raw in enumerate(ctrls):
+        payload += config_encode(raw, "controller %d" % i, 64) + b"\0"
+    return bytes(payload)
+
+
+# The PSP's own Config screen, in BOOT.BIN (docs/loc-build-psp.md 3.3, read
+# 2026-10-17 off PSP-EU): six rows, Msg Speed / Window Clr / Background /
+# Autorun / Button Config. / Delete Data - the PlayStation's Sound row gone,
+# two rows added that have no options - over fifteen 8-byte option records
+# (the PlayStation's seventeen without Stereo and Mono) and the same six
+# controller records. Its row tables are the PlayStation's with the Sound
+# row taken out, and they locate the block as CONFIG_TABLES does there: the
+# records end at them, the controller records start after them.
+PSP_CONFIG_TABLES = bytes([0, 3, 7, 11, 13, 15, 3, 4, 4, 2, 0, 0])
+PSP_CONFIG_RECORDS = 15
+# The PC's record -> the PSP's (None: the Sound row's two, which the PSP has
+# not). 15 and 16 are unused on both screens (docs/config-screen.md 1).
+PSP_CONFIG_RECORD_OF = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, None, None, 11, 12, 13, 14)
+# The PC's label -> the PSP's row: Msg Speed, Window Clr, Background and
+# Autorun are the same rows; Sound has none, and Controller none by its word
+# (the PSP's row for the same panel says "Button Config.", fourteen letters
+# where the PC's column was set for ten, DIV-0015).
+PSP_CONFIG_LABEL_OF = (0, 1, 2, None, 3, None)
+# Ours (the owner's decision, 2026-10-17, D246): the words of the slots the
+# PSP's screen has no word for, in the disc's script codes (ASCII letters).
+# One-word names of the screen's functions, nothing else of the game.
+CONFIG_BUILTIN_LABELS = {3: b"Sound", 5: b"Controller"}
+CONFIG_BUILTIN_OPTIONS = {11: b"Stereo", 12: b"Mono"}
+
+
+def psp_config_code_labels(boot, text_end, first_va, last_va):
+    """The two row labels the PSP's label routine builds on its stack - one
+    `ori` / `sb` pair a byte - rather than copying from .data, in stack order.
+
+    The routine is the one whose calls pass the first and the last .data label
+    as their source ($a1); its stack bytes are read from its prologue (`addiu
+    $sp, $sp, -N`) to the last of those calls. [] if it is not found as that."""
+    calls = mips_calls([(0, boot[:text_end])])
+    first = [a for a, _, regs in calls if regs.get(5) == first_va]
+    last = [a for a, _, regs in calls if regs.get(5) == last_va]
+    if len(first) != 1 or len(last) != 1 or not first[0] < last[0] < first[0] + 0x200:
+        return []
+    start = first[0]
+    while start > first[0] - 0x400:
+        w, = struct.unpack_from("<I", boot, start)
+        if w >> 16 == 0x27BD and w & 0x8000:            # addiu $sp, $sp, -N
+            break
+        start -= 4
+    else:
+        return []
+    regs, stack = {0: 0}, {}
+    for at in range(start, last[0] + 8, 4):
+        w, = struct.unpack_from("<I", boot, at)
+        op, rs, rt, imm = w >> 26, (w >> 21) & 31, (w >> 16) & 31, w & 0xFFFF
+        if op == 0x0D and rs == 0:                      # ori rt, $zero, imm
+            regs[rt] = imm
+        elif op == 0x28 and rs == 29:                   # sb rt, off($sp)
+            if rt not in regs or regs[rt] > 0xFF:
+                return []
+            stack[imm] = regs[rt]
+        elif op in (0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0E, 0x0F) or 0x20 <= op <= 0x26:
+            regs.pop(rt, None)
+        elif op == 0:
+            regs.pop((w >> 11) & 31, None)
+        regs[0] = 0
+    runs, cur = [], bytearray()
+    for off in sorted(stack):
+        if cur and off != prev + 1:
+            runs.append(bytes(cur))
+            cur = bytearray()
+        cur.append(stack[off])
+        prev = off
+    if cur:
+        runs.append(bytes(cur))
+    if any(not r.endswith(b"\0") or b"\0" in r[:-1] or len(r) < 2 for r in runs):
+        return []
+    return [r[:-1] for r in runs]
+
+
+def convert_config_psp(boot, text_end):
+    """([(kind, tag, payload)], {slot: source}) for the PC's Config screen from
+    a PSP BOOT.BIN, or ([], {}) if its block is not found.
+
+    The PSP's own word in every slot its screen has one for; the rest from
+    CONFIG_BUILTIN_*, the Sound row's two records at the count and x of the
+    Autorun row's, which are the same pair on every disc held (06 26, 04 66)."""
+    at = boot.find(PSP_CONFIG_TABLES)
+    if at < 0 or boot.find(PSP_CONFIG_TABLES, at + 1) >= 0:
+        return [], {}
+    records = at - PSP_CONFIG_RECORDS * 8
+    recs = []
+    for i in range(PSP_CONFIG_RECORDS):
+        rec = boot[records + i * 8:records + i * 8 + 8]
+        recs.append((rec[0], rec[1], rec[2:].split(b"\0")[0]))
+    # The four .data labels end at the records, NUL-terminated.
+    head = boot[records - 64:records]
+    if not head.endswith(b"\0"):
+        return [], {}
+    tokens, pos = [], records - 64
+    for t in head.split(b"\0"):
+        trimmed = config_trim(t)
+        if trimmed:
+            tokens.append((pos + len(t) - len(trimmed), trimmed))
+        pos += len(t) + 1
+    if len(tokens) < 4:
+        return [], {}
+    data_labels = tokens[-4:]
+    code_labels = psp_config_code_labels(boot, text_end, data_labels[0][0], data_labels[3][0])
+    if len(code_labels) != 2:
+        raise SystemExit("config: BOOT.BIN's label routine builds %d labels on its stack, wanted 2" % len(code_labels))
+    # The PSP's rows: a stack label, two copied, a stack label, two copied.
+    psp_labels = [code_labels[0], data_labels[0][1], data_labels[1][1], code_labels[1],
+                  data_labels[2][1], data_labels[3][1]]
+    ctrl = at + len(PSP_CONFIG_TABLES)
+    ctrls = []
+    for i in range(CONFIG_CTRL):
+        rec = boot[ctrl + i * CTRL_STRIDE:ctrl + (i + 1) * CTRL_STRIDE]
+        raw = rec[1:].split(b"\0")[0]
+        if rec[0] != len(raw):
+            return [], {}
+        ctrls.append(raw)
+
+    source = {}
+    labels = []
+    for i, p in enumerate(PSP_CONFIG_LABEL_OF):
+        if p is None:
+            labels.append(CONFIG_BUILTIN_LABELS[i])
+            source["label %d" % i] = "ours"
+        else:
+            labels.append(psp_labels[p])
+            source["label %d" % i] = "BOOT.BIN"
+    options = []
+    for i, p in enumerate(PSP_CONFIG_RECORD_OF):
+        if p is None:
+            # The Sound row's count and x: the Autorun row's (PC 13, 14).
+            count, x, _ = recs[PSP_CONFIG_RECORD_OF[i + 2]]
+            options.append((count, x, CONFIG_BUILTIN_OPTIONS[i]))
+            source["option %d" % i] = "ours"
+        else:
+            options.append(recs[p])
+            source["option %d" % i] = "BOOT.BIN"
+    for i in range(CONFIG_CTRL):
+        source["controller %d" % i] = "BOOT.BIN"
+    return [(KIND_CONFIG, 0, config_payload(labels, options, ctrls))], source
+
+
 def convert_config(donor):
     """[(kind, tag, payload)] for the Config screen, or [] if the donor has none.
 
@@ -1459,27 +1886,12 @@ def convert_config(donor):
                          % (len(labels), CONFIG_LABELS))
     labels = labels[-CONFIG_LABELS:]
 
-    payload = bytearray([CONFIG_LABELS])
-    for i, raw in enumerate(labels):
-        # Repointed, not written in place, so the only limit is ours.
-        payload += config_encode(raw, "label %d" % i, 32) + b"\0"
-
-    payload.append(CONFIG_RECORDS)
-    for i in range(CONFIG_RECORDS):
-        rec = donor[records + i * 8:records + i * 8 + 8]
-        raw = rec[2:].split(b"\0")[0]
-        # count and x are the donor's own, verbatim: they are what puts the
-        # options where the disc puts them. The PC record holds 14 bytes of
-        # string after them.
-        payload += bytes([rec[0], rec[1]]) + config_encode(raw, "option %d" % i, 14) + b"\0"
-
-    payload.append(CONFIG_CTRL)
+    records = [(r[0], r[1], r[2:].split(b"\0")[0])
+               for r in (donor[records + i * 8:records + i * 8 + 8] for i in range(CONFIG_RECORDS))]
     ctrl = gap + len(CONFIG_GAP)
-    for i in range(CONFIG_CTRL):
-        raw = donor[ctrl + i * CTRL_STRIDE + 1:ctrl + (i + 1) * CTRL_STRIDE].split(b"\0")[0]
-        payload += config_encode(raw, "controller %d" % i, 64) + b"\0"
-
-    return [(KIND_CONFIG, 0, bytes(payload))]
+    ctrls = [donor[ctrl + i * CTRL_STRIDE + 1:ctrl + (i + 1) * CTRL_STRIDE].split(b"\0")[0]
+             for i in range(CONFIG_CTRL)]
+    return [(KIND_CONFIG, 0, config_payload(labels, records, ctrls))]
 
 
 # The menu's short verbs - the buttons above a menu panel (DIV-0018,
@@ -3459,10 +3871,12 @@ def build_standins(game, disc, overlays):
 def reset_donor():
     """The module state one donor leaves for the next (`--discs` builds several
     in one process): the Latin atlas's extension, the Japanese flag, the pair
-    table and the Japanese sheets."""
+    table, the Japanese sheets and the button codes' area and counts."""
     global ext_last, donor_ja, ja_sheets
     ext_last, donor_ja, ja_sheets = EXT_FIRST - 1, False, None
     ja_pairs.clear()
+    button_counts.clear()
+    set_button_area("", None, False)
 
 
 DISC_EXT = (".cue", ".iso", ".bin")
@@ -3617,6 +4031,8 @@ def build_all(args, disc_path):
     if title:
         overlays["START.DAT"] = title
     texts = pools = kept_text = kept_pool = enemies = kept_enemy = 0
+    rmap, how = release_map(disc)
+    psp_eu = is_psp(disc) and not donor_ja
     for name in src.names():
         stem = os.path.splitext(name)[0]
         if args.only and stem.upper() not in (args.only.upper(), "FIRST"):
@@ -3655,7 +4071,11 @@ def build_all(args, disc_path):
                     donor = [s for dest, s in sections if dest & 0x7FFFFFFF == 0x10000]
                     if not donor:
                         continue
-                    block, kept = convert_block(donor[0], base, TEXT_ROOM)
+                    set_button_area(name, rmap, psp_eu)
+                    try:
+                        block, kept = convert_block(donor[0], base, TEXT_ROOM)
+                    finally:
+                        set_button_area("", None, False)
                     texts, kept_text = texts + 1, kept_text + kept
                 else:
                     donor = [s for want in POOL_DESTS for dest, s in sections if dest & 0x7FFFFFFF == want]
@@ -3687,11 +4107,16 @@ def build_all(args, disc_path):
     if start_emi and not args.only:
         if is_psp(disc):
             # BOOT.BIN's Config screen is the PSP's own, not the PlayStation's
-            # the PC draws: four labels (no Msg Speed, Sound or Autorun; Button
-            # Config and Delete Data added) over fifteen options, without the
-            # 0..15 row tables convert_config locates it by (docs/loc-build-psp.md 3.2).
-            cfg = []
-            print("config screen: not built from a PSP disc (the PSP's screen has other rows)")
+            # the PC draws: no Sound row, Button Config. and Delete Data added
+            # (docs/loc-build-psp.md 3.3). Its words where it has the slot, ours
+            # where it has not (D246, the owner's decision 2026-10-17).
+            cfg, source = convert_config_psp(boot, disc.text_end)
+            if cfg:
+                ours = [k for k, v in source.items() if v == "ours"]
+                print("config screen: 6 labels, 17 options, 6 controller names; from BOOT.BIN %d, ours %d (%s)"
+                      % (len(source) - len(ours), len(ours), ", ".join(ours)))
+            else:
+                print("config screen: not found in BOOT.BIN")
         else:
             cfg = convert_config(read_module(start_emi))
             print("config screen: " + ("6 labels, 17 options, 6 controller names" if cfg else "not found on this disc"))
@@ -3749,6 +4174,9 @@ def build_all(args, disc_path):
         overlays["FIRST.DAT"] += names
         print("names: " + ", ".join(report))
     print("enemy names: %d (%d kept)" % (enemies, kept_enemy))
+    print("button codes: %d in the dialogue, by %s (docs/button-dialogue.md)" % (sum(button_counts.values()), how))
+    for line in button_report(button_counts):
+        print(line)
     if not args.only:
         sheets, left = build_village_sheet(src, disc)
         for name, chunks in sheets.items():
@@ -3981,6 +4409,54 @@ def selftest_psp():
     print("  PSP: section table, packed words and slots, a pointer-named run, the village run")
 
 
+def selftest_config_psp():
+    """The PSP Config screen (D246) on synthetic bytes (no game data): two
+    labels built on the routine's stack and four in .data, fifteen records
+    before the PSP's row tables and six controller records after them; the
+    PC's six labels and seventeen records take the PSP's where it has them and
+    ours (CONFIG_BUILTIN_*) where it has not, the Sound row at the count and x
+    of the Autorun row."""
+    a0, a1, zero, sp, ra = 4, 5, 0, 29, 31
+    ori = lambda rt, imm: (0x0D << 26) | (rt << 16) | imm
+    sb = lambda rt, off: (0x28 << 26) | (sp << 21) | (rt << 16) | off
+    lui = lambda rt, imm: (0x0F << 26) | (rt << 16) | imm
+    addiu = lambda rt, rs, imm: (0x09 << 26) | (rs << 21) | (rt << 16) | (imm & 0xFFFF)
+    jal = lambda target: (0x03 << 26) | ((target >> 2) & 0x3FFFFFF)
+    text_end = 0x1000
+    data = bytearray(b"\0\0\x01\0\x02\0\x03\0\x04\0\x05\0")
+    starts = []
+    for word in (b"Ww", b"Bb", b"Kk\xffk", b"Dd"):
+        starts.append(text_end + len(data))
+        data += word + b"\0"
+    recs = [(i + 1, 0x10 + i, b"O%d" % i) for i in range(PSP_CONFIG_RECORDS)]
+    for count, x, word in recs:
+        data += bytes([count, x]) + word.ljust(6, b"\0")
+    data += PSP_CONFIG_TABLES
+    ctrls = [b"C" * (i + 2) for i in range(CONFIG_CTRL)]
+    for word in ctrls:
+        data += bytes([len(word)]) + word.ljust(CTRL_STRIDE - 1, b"\0")
+
+    def load(va):
+        return [lui(a1, (va + 0x8000) >> 16), jal(0x800), addiu(a1, a1, va & 0xFFFF)]
+
+    code = [0x27BDFF80]                                 # addiu $sp, $sp, -0x80
+    code += [ori(a0, 0x41), sb(a0, 0x20), ori(a0, 0x61), sb(a0, 0x21), sb(zero, 0x22)]
+    code += load(starts[0]) + load(starts[1])
+    code += [ori(a1, 0x45), sb(a1, 0x30), ori(a1, 0x65), sb(a1, 0x31), sb(zero, 0x32)]
+    code += load(starts[2]) + load(starts[3]) + [(ra << 21) | 0x08, 0]
+    boot = bytearray(0x100) + struct.pack("<%dI" % len(code), *code)
+    boot += bytearray(text_end - len(boot)) + data
+    got, source = convert_config_psp(bytes(boot), text_end)
+    options = [recs[i] for i in range(11)] + [(recs[11][0], recs[11][1], CONFIG_BUILTIN_OPTIONS[11]),
+                                               (recs[12][0], recs[12][1], CONFIG_BUILTIN_OPTIONS[12])] + recs[11:]
+    want = config_payload([b"Aa", b"Ww", b"Bb", CONFIG_BUILTIN_LABELS[3], b"Ee", CONFIG_BUILTIN_LABELS[5]],
+                          options, ctrls)
+    ours = sorted(k for k, v in source.items() if v == "ours")
+    if got != [(KIND_CONFIG, 0, want)] or ours != ["label 3", "label 5", "option 11", "option 12"]:
+        raise SystemExit("selftest: convert_config_psp gave %s, ours %s" % (got, ours))
+    print("  PSP Config: the stack labels, the .data labels, records and controller names; ours in the four slots it lacks")
+
+
 def selftest_code_labels():
     """The MIPS readers of groups 15, 17 and 18 on synthetic code (no game
     data): each finds its words by the calls' constants, and the guest
@@ -4030,11 +4506,85 @@ def selftest_code_labels():
     print("  labels from code: the identify words, the guest name (and a copy with no sound refused), the turn counter")
 
 
+def selftest_buttons():
+    """The dialogue's button codes on synthetic bytes (no game data): each
+    release's icon becomes the code of Japan's bit by its map, the glyph kept
+    after it; PSP-EU's areas 68 and 121 go by P; a kept PC message by its
+    colour; nothing outside the button areas or without the icon shape; a
+    donor that already uses the codes' argument range is refused."""
+    def one(donor_msg, base_msg, area, rmap, psp_eu=False, ja=False):
+        global donor_ja
+        reset_donor()
+        donor_ja = ja
+        donor = struct.pack("<H", 2) + donor_msg
+        base = struct.pack("<H", 2) + base_msg
+        set_button_area("AREA%03d.DAT" % area, rmap, psp_eu)
+        try:
+            out, _ = convert_block(donor, base, TEXT_ROOM)
+        finally:
+            set_button_area("", None, False)
+            donor_ja = False
+        return out[2:]
+    icon = lambda c: encode_char(c)
+    for code, want in ((0x81, CIRCLE), (0x82, CROSS), (0x83, TRIANGLE), (0x80, SQUARE)):   # P^-1
+        got = one(b"\x05\x01" + bytes([code]) + b"\x06\0", b"\0", 30, MAP_P)
+        if got != button_code(want) + b"\x05\x01" + icon(code) + b"\x06\0":
+            raise SystemExit("selftest: P icon 0x%X gave %s" % (code, got.hex()))
+    for code, want in ((0x81, CIRCLE), (0x80, CROSS), (0x83, TRIANGLE), (0x82, SQUARE)):   # S^-1
+        got = one(b"\x05\x01" + bytes([code]) + b"\0", b"\0", 8, MAP_S, psp_eu=True)
+        if got != button_code(want) + b"\x05\x01" + icon(code) + b"\0":
+            raise SystemExit("selftest: S icon 0x%X gave %s" % (code, got.hex()))
+    for area in PSP_EU_BY_P:
+        got = one(b"\x05\x02\x80\0", b"\0", area, MAP_S, psp_eu=True)
+        if got != button_code(SQUARE) + b"\x05\x02" + icon(0x80) + b"\0":
+            raise SystemExit("selftest: PSP-EU area %d is not by P" % area)
+    got = one(b"\x05\x02\x15\x08\0", b"\0", 75, MAP_ID, ja=True)
+    if got[:5] != button_code(CIRCLE) + b"\x05\x02":
+        raise SystemExit("selftest: a Japanese icon gave %s" % got.hex())
+    for area in (78, 175, 1):
+        if one(b"\x05\x01\x81\0", b"\0", area, MAP_P) != b"\x05\x01" + icon(0x81) + b"\0":
+            raise SystemExit("selftest: area %d's icon-shaped text got a code" % area)
+    if one(b"\x13\x01\0", b"\x05\x02d\x86\x19\x06\0", 1, MAP_P) != b"\x05\x02d\x86\x19\x06\0":
+        raise SystemExit("selftest: area 1's place name got a code")
+    if one(b"\x05\x01A\x81\0", b"\0", 30, MAP_P) != b"\x05\x01" + icon(0x41) + icon(0x81) + b"\0":
+        raise SystemExit("selftest: an icon not right after the colour got a code")
+    # A donor message that does not convert keeps the PC's, coded by its colour.
+    for colour, glyph, want in ((2, b"b", CIRCLE), (1, b"X", CROSS), (2, b"d", CIRCLE), (5, b"d", SQUARE)):
+        pc = b"\x05" + bytes([colour]) + glyph + b"\x06\x81@\0"
+        got = one(b"\x05\x01\x13\x01\0", pc, 121, MAP_P)
+        if got != button_code(want) + b"\x05" + bytes([colour]) + glyph + b"\x06\x81@\0":
+            raise SystemExit("selftest: the PC's colour %d gave %s" % (colour, got.hex()))
+    if one(b"\x13\x01\0", b"\x05\x03b\0", 30, MAP_P) != b"\x05\x03b\0":
+        raise SystemExit("selftest: a PC glyph in a colour that is no button's got a code")
+    try:
+        one(b"\x05\xB5\x06\0", b"\0", 30, MAP_P)
+    except SystemExit as e:
+        if "05 B5" not in str(e):
+            raise
+    else:
+        raise SystemExit("selftest: a donor holding the colour 0xB5 was not refused")
+    if code_bit(button_code(SQUARE)[1]) != SQUARE or code_bit(0x07) is not None:
+        raise SystemExit("selftest: code_bit")
+    # The census reader finds what the converter wrote, and nothing in a plain block.
+    block = struct.pack("<H", 2) + button_code(CIRCLE) + b"\x05\x01" + icon(0x81) + b"\x05\x02bA" + \
+        button_code(CROSS) + b"A\0"
+    got = [(bit, colour, glyph) for _, bit, glyph, colour in text_buttons(block, pc_text=True)]
+    if got != [(CIRCLE, 1, icon(0x81)), (None, 2, b"b"), (CROSS, 0, b"")]:
+        raise SystemExit("selftest: text_buttons gave %s" % got)
+    if [bit for _, bit, _, _ in text_buttons(block)] != [CIRCLE, CROSS]:
+        raise SystemExit("selftest: text_buttons read a layer's letter as an icon")
+    reset_donor()
+    print("  button codes: P, S (and PSP-EU's 68 / 121 by P), JP, the PC's colours; areas 78, 175 and 1 left; "
+          "the argument range refused")
+
+
 def cmd_selftest(args):
     selftest_empty_records()
     selftest_rules()
     selftest_psp()
+    selftest_config_psp()
     selftest_code_labels()
+    selftest_buttons()
     print("loc_build selftest: ok")
     return 0
 
@@ -4072,13 +4622,20 @@ def main():
     s.add_argument("--lang", required=True)
     s.add_argument("--layer", help="the layer's dat/ directory, if not the cache's loc/<lang>/dat")
     s.set_defaults(fn=cmd_cover)
+    s = sub.add_parser("buttons", help="count the button codes (and icons left without one) in a DAT directory's area text")
+    s.add_argument("--dat", required=True, help="a DAT directory: an install's DAT/ or a cache's loc/<tag>/dat/")
+    s.add_argument("--lang", help="read the <tag>.AREAnnn.DAT overlays beside the originals; without it the "
+                                  "directory's own AREAnnn.DAT (the PC's text, or a cache's layer)")
+    s.add_argument("--pc-text", action="store_true", help="the text is the PC's own Chinese: also count the "
+                                                          "port's colour-cued icons that carry no code")
+    s.set_defaults(fn=cmd_buttons)
     s = sub.add_parser("selftest", help="the converters' synthetic checks (no game data)")
     s.set_defaults(fn=cmd_selftest)
     s = sub.add_parser("anchors", help="print PC_SHA's entries anew from a PC install's BOF3.exe")
     s.add_argument("--game", required=True)
     s.set_defaults(fn=cmd_anchors)
     args = ap.parse_args()
-    if args.cmd in ("anchors", "selftest", "cover"):
+    if args.cmd in ("anchors", "selftest", "cover", "buttons"):
         return args.fn(args)
     args.lang_given = args.lang is not None
     if args.cmd == "all" and not args.disc and not args.discs:

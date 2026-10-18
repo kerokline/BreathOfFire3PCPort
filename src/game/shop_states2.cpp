@@ -38,6 +38,11 @@
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace shop_states2 {
 
@@ -829,7 +834,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         PutByte(0x8032C8, 0);
         PutWord(at::kHandY, (r - top) * 13 + Word(0x803262) + 0x1B);
     }
-    const U repeat = g.auto_repeat(Word(at::kPressed) & 0xF00C);
+    const U repeat = g.auto_repeat(Word(at::kPressed) & Sigma(0xF00C));
     if ((repeat & 0x8000) != 0) {
         g.sound(0x101);
         const U t = (Byte(0x803266) - 1) & 0xFF;
@@ -860,7 +865,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         }
         top = Byte(0x803267);
         if (Byte(0x803268) >= top + 9) PutWord(0x80326E, 0x10);
-    } else if ((repeat & 4) != 0) {
+    } else if ((repeat & Sigma(4)) != 0) {
         top = Byte(0x803267);
         if (top == 0) {
             r = 0;
@@ -878,7 +883,7 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         }
     } else {
         top = Byte(0x803267);
-        if ((repeat & 8) != 0) {
+        if ((repeat & Sigma(8)) != 0) {
             if (top == 0x77) {
                 r = 0x7F;
                 PutByte(0x803268, r);

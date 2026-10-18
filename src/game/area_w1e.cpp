@@ -34,6 +34,7 @@
 #include "game/area_harness.h"
 #include "game/area_w1e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/world_map.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -77,16 +78,6 @@ bool BoxLeaves(const unsigned char* o) {
     if (At(at::kMapMode)[0] != 0 && o[0xB] != 0) return true;
     if (Field_Request == 2) return true;
     return (Field_ScriptFlags & 0x100) != 0;
-}
-
-// The first of `count` button-table entries whose mask word has a bit of the
-// button word's low 16 bits: its sprite byte, or -1.
-int KeyIndex(U button_word, U count) {
-    for (U k = 0; k < count; ++k) {
-        const unsigned char* const entry = At(at::kA65Buttons + k * 4);
-        if ((Word(entry) & button_word & 0xFFFF) != 0) return entry[2];
-    }
-    return -1;
 }
 
 }  // namespace
@@ -434,6 +425,7 @@ extern "C" void __cdecl Area65_BoxSlideOut(void) {
 // Field_ScriptFlags bit 14; the needle at (x + 0x18, y + 0x18).
 extern "C" void __cdecl Area65_DrawFrame(int x, int y) {
     if ((Draw_PassFlags & 0x1B) == 0) return;
+    world_map_legend::Begin();   // DIV-0135: which page; the port's key names painted over
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(1, 0xC);
     AH_AT(DrawSpriteAt, kDrawSprite65)(x, y, 0);
@@ -441,22 +433,19 @@ extern "C" void __cdecl Area65_DrawFrame(int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y, 1);
-    {
-        const int key = KeyIndex(static_cast<U>(Long(At(at::kButtonMap0))), 6);
-        if (key >= 0) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x38, y + 8, static_cast<unsigned>(withheld1 ? key : ((key + 1) & 0xFF)));
-    }
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), at::kA65Buttons, 6, static_cast<U>(Long(At(at::kButtonMap0))), x + 0x38, y + 8,
+                          withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y + 0x10, 2);
-    {
-        const int key = KeyIndex(static_cast<U>(Long(At(at::kButtonMap6))), 8);
-        if (key >= 0) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x38, y + 0x10, static_cast<unsigned>(withheld2 ? key : ((key + 1) & 0xFF)));
-    }
+    world_map_legend::Key(AH_AT(DrawSpriteAt, kDrawSprite65), at::kA65Buttons, 8, static_cast<U>(Long(At(at::kButtonMap6))), x + 0x38, y + 0x10,
+                          withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
     if (!third) third = (At(at::kPartySet)[0] & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
     if (third) AH_AT(DrawSpriteAt, kDrawSprite65)(x + 0x30, y + 0x18, 3);
+    world_map_legend::Start(x + 0x30, y + 0x18, !third);
     AH_CALL(WorldMap_DrawNeedle)(x + 0x18, y + 0x18);
 }
 

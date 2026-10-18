@@ -56,6 +56,11 @@
 #include "game/sound.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -159,8 +164,8 @@ extern "C" void __cdecl LeaderPanel_S1Choose(void) {
         s[6] = static_cast<unsigned char>(s[6] ^ 1);
         pressed = Input_Pressed;
     }
-    if (pressed & 0x60) {
-        if (pressed & 0x40) {
+    if (pressed & Sigma(0x60)) {
+        if (pressed & Sigma(0x40)) {
             Sound(0x106);
             S()[6] = 1;
         } else {
@@ -310,7 +315,7 @@ extern "C" void __cdecl LeaderPanel_S2Steer(void) {
         Tick();
         return;
     }
-    if (L(at::kEff0StepZ) == 0 && (Input_Pressed & 0x20)) {
+    if (L(at::kEff0StepZ) == 0 && (Input_Pressed & Sigma(0x20))) {
         const std::int32_t y = L(at::kEff0StepY);
         if (y > 0x110000) SetL(at::kEff0StepY, static_cast<U>(y) - 0x4000u);
     }
@@ -378,7 +383,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
         s[6] = 0;
         Effect3Mode(1);
     }
-    if ((Input_Pressed & 0x40) && B(at::kEff4State) == 0) {
+    if ((Input_Pressed & Sigma(0x40)) && B(at::kEff4State) == 0) {
         Sound(0x203);
         unsigned char* const t = S();
         t[3] = static_cast<unsigned char>(t[3] + 1);
@@ -437,7 +442,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             SetL(at::kEff0StepY, 0x1000);
             SetL(at::kEff0StepZ, static_cast<U>(Long(RecordB() + 8)));
             animation = 5;
-        } else if (held & 0x20) {
+        } else if (held & Sigma(0x20)) {
             const unsigned char sloped = B(0x903850);
             SetL(at::kEff0StepX, 0);
             if (sloped != 0) {
@@ -624,7 +629,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
                 Animate(7);
             }
         }
-        if (Input_Pressed & 0x20) {
+        if (Input_Pressed & Sigma(0x20)) {
             Pull("LeaderPanel_S4Run");
             Animate(7);
             SH_CALL(LeaderPanel_S4Pose)();
@@ -632,7 +637,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             PoseSound();
             return;
         }
-        if (Input_Held & 0x20) {
+        if (Input_Held & Sigma(0x20)) {
             SH_CALL(LeaderPanel_S4Blink)();
             SH_CALL(LeaderPanel_S4Pose)();
             Tick();
@@ -651,8 +656,8 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
         PoseSound();
         return;
     }
-    if (held & 0x20) {
-        if (Input_Pressed & 0x20)
+    if (held & Sigma(0x20)) {
+        if (Input_Pressed & Sigma(0x20))
             Pull("LeaderPanel_S4Run");
         else
             SH_CALL(LeaderPanel_S4Blink)();
@@ -750,7 +755,7 @@ extern "C" void __cdecl LeaderPanel_S4RowIn(void) {
 // count +9); at the count, the blink's sound 0x20D, sound 0x102, +9 = 4, +3
 // up; Sprite_ScriptTick, the shade.
 extern "C" void __cdecl LeaderPanel_S4Count(void) {
-    if (Input_Pressed & 0x20) {
+    if (Input_Pressed & Sigma(0x20)) {
         unsigned char* const p = Picked("LeaderPanel_S4Count");
         S()[9] = p[0x9C];
     } else {
@@ -797,7 +802,7 @@ extern "C" void __cdecl LeaderPanel_S4Take(void) {
     PanelHead("LeaderPanel_S4Take");
     Total(0x9C);
     SH_CALL(FieldPanel_DrawBlink)();
-    if (Input_Pressed & 0x60) {
+    if (Input_Pressed & Sigma(0x60)) {
         unsigned char* const s = S();
         B(at::kBlink) = 0;
         s[0xB] = 0;
@@ -853,7 +858,7 @@ extern "C" void __cdecl LeaderPanel_S4ResultWait(void) {
     PanelHead("LeaderPanel_S4ResultWait");
     Total(0x9C);
     Message(0x94, 0x42);
-    if (Input_Pressed & 0x60) S()[3] = 0xE;
+    if (Input_Pressed & Sigma(0x60)) S()[3] = 0xE;
     Tick();
     Shade();
 }
@@ -918,8 +923,8 @@ extern "C" void __cdecl LeaderPanel_S4Again(void) {
         Sound(0x100);
         unsigned char* const s = S();
         s[6] = static_cast<unsigned char>(s[6] ^ 1);
-    } else if (pressed & 0x60) {
-        if (pressed & 0x20) {
+    } else if (pressed & Sigma(0x60)) {
+        if (pressed & Sigma(0x20)) {
             Sound(0x103);
         } else {
             S()[6] = 1;
@@ -1015,7 +1020,7 @@ extern "C" void __cdecl LeaderPanel_S5Wait(void) {
 // Stage6Steps[2], Stage7Steps[2] - 0x52B330(0x60) (a press of 0x60 leaves for
 // stage 8), Sprite_ScriptTick.
 extern "C" void __cdecl LeaderPanel_Leave(void) {
-    SH_AT(unsigned char (__cdecl*)(unsigned), at::kLeaveOnPress)(0x60);
+    SH_AT(unsigned char (__cdecl*)(unsigned), at::kLeaveOnPress)(Sigma(0x60));
     Tick();
 }
 

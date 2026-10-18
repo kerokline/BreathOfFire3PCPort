@@ -57,6 +57,11 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "game/menu_frame.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -155,7 +160,7 @@ unsigned char ScrollList(U repeat, U cur, U top, U moving) {
             B(cur) = cl;
         }
         if (static_cast<int>(cl) >= static_cast<int>(B(top)) + 9) B(moving) = 0x10;
-    } else if (repeat & 4) {
+    } else if (repeat & Sigma(4)) {
         unsigned char al = B(top);
         if (al == 0) {
             cl = 0;
@@ -170,7 +175,7 @@ unsigned char ScrollList(U repeat, U cur, U top, U moving) {
             B(cur) = cl;
             B(top) = al;
         }
-    } else if (repeat & 8) {
+    } else if (repeat & Sigma(8)) {
         unsigned char al = B(top);
         if (al == 0x77) {
             cl = 0x7F;
@@ -1486,7 +1491,7 @@ extern "C" void __cdecl SharedList_PickShared(void) {
     SetW(0x803170, W(at::kAbilityRecords + 0x16 + 24u * B(at::kSharedList + cur)));
     SetW(0x803458, L(0x8031F4) + 7);
     SetW(0x80345A, 13 * (static_cast<U>(cur) - B(0x8031FA) + 2) + W(0x8031F6));
-    const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0x500C);
+    const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0x500C));
     const unsigned char before = B(0x8031FB);
     unsigned char cl = ScrollList(repeat, 0x8031FB, 0x8031FA, 0x8031FD);
     if (before != cl) {
@@ -1595,7 +1600,7 @@ extern "C" void __cdecl SharedList_Arrange(void) {
     SetW(0x803170, W(at::kAbilityRecords + 0x16 + 24u * B(at::kSharedList + cur)));
     SetW(0x803458, W(0x8031F4));
     SetW(0x80345A, 13 * (static_cast<U>(cur) - B(0x8031FA) + 2) + W(0x8031F6));
-    const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0x500C);
+    const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0x500C));
     const unsigned char before = B(0x8031FB);
     unsigned char cl = ScrollList(repeat, 0x8031FB, 0x8031FA, 0x8031FD);
     if (before != cl) {
@@ -1990,7 +1995,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     B(0x803454) = 1;
     SetW(0x80345A, hand_y);
     SetW(0x8032FC, SH_CALL(Item_HelpMessage)(B(0x803360), B(0x803365)));
-    const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xF00C);
+    const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0xF00C));
     SH_AT(void (__cdecl*)(), at::kEquipPreview)();
     unsigned char al = B(0x803363);
     const unsigned char before = al;
@@ -2009,7 +2014,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
         }
         cl = B(0x803362);
         if (static_cast<int>(al) >= static_cast<int>(cl) + 9) SetW(0x803368, 0x10);
-    } else if (repeat & 4) {
+    } else if (repeat & Sigma(4)) {
         cl = B(0x803362);
         if (cl == 0) {
             al = 0;
@@ -2027,7 +2032,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
         }
     } else {
         cl = B(0x803362);
-        if (repeat & 8) {
+        if (repeat & Sigma(8)) {
             if (cl == 0x77) {
                 al = 0x7F;
                 B(0x803363) = 0x7F;

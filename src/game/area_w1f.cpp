@@ -24,6 +24,11 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -173,7 +178,7 @@ int CounterGap() {
     return d < 0 ? -d : d;
 }
 // A byte of Input_Pressed's low byte (the originals test the byte 0x7E1BEC).
-bool Pressed20() { return (B(at::kInputPressed) & 0x20) != 0; }
+bool Pressed20() { return (B(at::kInputPressed) & Sigma(0x20)) != 0; }
 
 }  // namespace
 

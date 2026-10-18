@@ -14,17 +14,32 @@
 // divergence: each is a faithful replacement. Where the original jumps through
 // a state table past its end, or indexes the marks past their room, ours
 // aborts with a message (docs/rest_3e.md section 7).
+//
+// One divergence rides on EffectKind5E_DrawPanel, its own switch
+// (DockLegend, DIV-0137 of docs/button-unification-round.md): the dock's
+// legend shows the buttons the Config has on its three tests now (section
+// "the dock's legend" below).
 #include "game/rest_3e.h"
 
+#include <algorithm>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
+#include <string>
+#include <utility>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
 #include "game/rest_3e_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -996,18 +1011,18 @@ extern "C" void __cdecl EffectKind5E_Pick(void) {
         SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(S()[6] - 0x4E));
         pressed = UL(At(AddressOf(&Input_Pressed)));
     }
-    if (pressed & 0x10u) {
+    if (pressed & Sigma(0x10)) {
         SH_CALL(Sound_PlayEffect)(0x209);
         S()[0xA] = 0x14;
         S()[1] = 2;
         return;
     }
-    if (pressed & 0x40u) {
+    if (pressed & Sigma(0x40)) {
         SH_CALL(Sound_PlayEffect)(0x20C);
         S()[1] = 3;
         return;
     }
-    if ((pressed & 0x20u) == 0) return;
+    if ((pressed & Sigma(0x20)) == 0) return;
     if ((SH_CALL(Inventory_Count)(0, S()[6], 0) & 0xFFFFu) == 0) {
         SH_CALL(Sound_PlayEffect)(0x20D);
         return;
@@ -1159,12 +1174,426 @@ extern "C" void __cdecl EffectKind5E_DrawList(void) {
     }
 }
 
+// ===========================================================================
+// The dock's legend (DIVERGENCE: DIV-0137, docs/button-unification-
+// round.md section 3 "IC-D"; docs/rest_3e.md section 11)
+//
+// The panel EffectKind5E_DrawPanel draws is baked art of the area page (tag
+// 0x0A081000, AREA128.DAT): three rows, each a button icon and its word -
+// place the part (EffectKind5E_Pick 0x47F610 tests circle 0x20), quit (cross
+// 0x40), the memo board (triangle 0x10). Each release bakes its own default
+// buttons there: Japan's page (the PC's, the JP disc's, PSP-JP's, the same
+// bytes) circle / cross / triangle; the PlayStation West's (US, EU, FR, DE)
+// cross / triangle / square, P of Japan's; PSP-EU's cross / circle / square,
+// S of Japan's (read on all seven builds' pages, 2026-10-17, section 11).
+//
+// With DockLegend on, each row shows the button the Config has its test on now:
+// Sigma of the row's bit (input/sigma.h; Japan's terms, so the identity on a
+// JP-based install at its defaults, P on a West install at the West's, S on
+// PSP-EU's). Where that is the page's own icon nothing changes: one quad, the
+// original's. Where it is not, that row's icon cell is left out of the panel
+// (the panel drawn in pieces, the cell's 11 x 10 texels not drawn) and the
+// right icon drawn there instead:
+//
+//   1. the page's own icon of that button, when another row of the page has
+//      it (the disc's shapes, or Capcom's on the PC's own page) - an 11 x 10
+//      FT4 of that row's cell;
+//   2. else, under a Latin overlay, DIV-0051's icon of the button (the disc's
+//      12 x 12 set, loc_build.py's ICONS_AT), as the Config panel draws it;
+//   3. else the port's own stand-in, the glyph the Config panel's original
+//      0x461C00 draws for the button (0x66A2FC's strings, circled numerals
+//      and an X), in the same colour.
+//
+// The page's icons are read from the VRAM shadow, not assumed from the
+// install: a cell is told by a rule on its bright texels (index 8 and up -
+// the icons' ink; the words and the shadows are below 8), so a page from any
+// source, or a later mod's, says itself what it shows. A page whose cells do
+// not read as three of the four shapes is drawn as it is (logged once).
+// ===========================================================================
+
+namespace {
+
+namespace dock {
+
+// The panel's texels: the 4-bit page at VRAM (0x2C0, 0x100), CLUT (0x20,
+// 0x1E3); the panel box is 0x40 x 0x28 (0x654888's words 2, 3) and its quad
+// is u 0xC0..0xFF, v 0x50..0x78. The icon column is u 0xC4..0xCE, the three
+// rows' cells v 0x55 + 10 r, 10 high - the same places on every page read
+// (the icons themselves sit one texel apart between pages, inside the cell).
+constexpr unsigned kPageX = 0x2C0, kPageY = 0x100;
+constexpr unsigned kU0 = 0xC0, kV0 = 0x50;
+constexpr unsigned kBoxW = 0x40, kBoxH = 0x28;
+constexpr unsigned kColU = 4, kColW = 11;          // u offsets 4..14 of the panel
+constexpr unsigned kBandV = 5, kBandH = 10;        // row r's cell: v offsets 5 + 10 r ..
+constexpr unsigned kRows = 3;
+
+// The rows' buttons in Japan's terms: EffectKind5E_Pick's three tests.
+constexpr std::uint16_t kRowBit[kRows] = {0x20, 0x40, 0x10};
+
+// The six buttons in DIV-0051's order (config_text.cpp's kIcons), each with
+// the colour 0x461C00 draws its stand-in in and the Config panel its icon.
+enum Shape : unsigned char { kCircle, kCross, kTriangle, kSquare, kL1, kR1, kUnknown };
+constexpr std::uint16_t kShapeBit[6] = {0x20, 0x40, 0x10, 0x80, 0x04, 0x08};
+constexpr int kShapeColour[6] = {2, 1, 6, 5, 0, 0};
+const char* const kShapeName[7] = {"circle", "cross", "triangle", "square", "L1", "R1", "?"};
+
+// DIV-0051's icons: loc_build.py's ICONS_AT, after the UI 8 x 8 set (0xA00,
+// 100 cells) and its blank, in kShapeBit's order (config_text.cpp's
+// kIconCircle .. kIconR1; fishing_text.cpp names the same).
+constexpr std::uint32_t kIconCircle = 0xA00 + 100 + 1;
+// The port's stand-ins: 0x66A2FC's first six dwords, the one-byte strings
+// 0x461C00 draws for circle, cross, triangle, square, L1, R1 (read with
+// capstone, 2026-10-17: [0x66A2FC] for 0x20 .. [0x66A310] for 8).
+constexpr U kStandIns = 0x66A2FC;
+
+Shape ShapeOfBit(std::uint16_t bit) {
+    for (unsigned k = 0; k < 6; ++k)
+        if (kShapeBit[k] == bit) return static_cast<Shape>(k);
+    return kUnknown;
+}
+
+// One cell's ink, row-major: true where the texel's index is 8 or more.
+struct Cell {
+    bool ink[kBandH][kColW];
+};
+
+// The rule (section 11 of docs/rest_3e.md gives it with the pages it was read
+// on). The bright texels' bounding box, 5..11 wide and 5..10 high, then its top
+// and bottom rows: both full and the centre empty - a square; both with ink at
+// the two ends, the centre inked and the top not full - a cross; neither at the ends, each more than half the width -
+// a circle; the top a third of the width at most and the bottom full - a
+// triangle. Anything else is not one of the four.
+Shape Classify(const Cell& c) {
+    int x0 = kColW, x1 = -1, y0 = kBandH, y1 = -1;
+    for (int r = 0; r < static_cast<int>(kBandH); ++r)
+        for (int u = 0; u < static_cast<int>(kColW); ++u)
+            if (c.ink[r][u]) {
+                if (u < x0) x0 = u;
+                if (u > x1) x1 = u;
+                if (r < y0) y0 = r;
+                if (r > y1) y1 = r;
+            }
+    if (x1 < 0) return kUnknown;
+    const int w = x1 - x0 + 1, h = y1 - y0 + 1;
+    if (w < 5 || h < 5) return kUnknown;
+    int top = 0, bottom = 0;
+    for (int u = x0; u <= x1; ++u) {
+        top += c.ink[y0][u];
+        bottom += c.ink[y1][u];
+    }
+    const bool top_ends = c.ink[y0][x0] && c.ink[y0][x1], bottom_ends = c.ink[y1][x0] && c.ink[y1][x1];
+    const bool centre = c.ink[(y0 + y1) / 2][(x0 + x1) / 2] || c.ink[(y0 + y1 + 1) / 2][(x0 + x1 + 1) / 2];
+    if (top == w && bottom == w && !centre) return kSquare;
+    if (top_ends && bottom_ends && centre && top < w) return kCross;
+    if (!top_ends && !bottom_ends && 2 * top > w && 2 * bottom > w) return kCircle;
+    if (3 * top <= w && bottom == w) return kTriangle;
+    return kUnknown;
+}
+
+// A 4-bit texel of the panel's page in the VRAM shadow: the cell (0x2C0 + u /
+// 4, 0x100 + v), its nibble u & 3 counted from the low one (D3d_PageTexel4's
+// note: the converter reads the low nibble first).
+unsigned PanelTexel(unsigned u, unsigned v) {
+    const unsigned short cell = Gfx_VramShadow[((kPageY + v) << 10) + kPageX + (u >> 2)];
+    return (cell >> ((u & 3) * 4)) & 0xFu;
+}
+
+Cell ReadCell(unsigned row) {
+    Cell c;
+    for (unsigned r = 0; r < kBandH; ++r)
+        for (unsigned u = 0; u < kColW; ++u) c.ink[r][u] = PanelTexel(kU0 + kColU + u, kV0 + kBandV + kBandH * row + r) >= 8;
+    return c;
+}
+
+// What a row shows: the page's cell as it is, another row's cell, or a glyph.
+enum How : unsigned char { kKeep, kCellOf, kGlyph };
+struct Row {
+    How how;
+    unsigned char from;   // kCellOf: the row whose cell; kGlyph: the Shape
+};
+
+// The plan for the three rows: `baked` the page's icons, `wanted` the buttons
+// the rows' tests are on now. False when the page's icons are not three of
+// the four shapes: then nothing is changed.
+bool Plan(const Shape baked[kRows], const std::uint16_t wanted[kRows], Row out[kRows]) {
+    for (unsigned r = 0; r < kRows; ++r)
+        if (baked[r] == kUnknown) return false;
+    for (unsigned r = 0; r < kRows; ++r) {
+        const Shape want = ShapeOfBit(wanted[r]);
+        if (want == kUnknown)
+            bof3::Fatal("DockLegend: row %u's button is 0x%04X, not one of the six Sigma maps (docs/button-sigma.md 2)", r,
+                        static_cast<unsigned>(wanted[r]));
+        out[r] = {kKeep, 0};
+        if (baked[r] == want) continue;
+        out[r] = {kGlyph, static_cast<unsigned char>(want)};
+        for (unsigned k = 0; k < kRows; ++k)
+            if (baked[k] == want) {
+                out[r] = {kCellOf, static_cast<unsigned char>(k)};
+                break;
+            }
+    }
+    return true;
+}
+
+// DIVERGENCE: DIV-0137 - 1 after this module's self-test (PatchBytes
+// "DockLegend", BOF3X_ORIGINAL=DockLegend for the page as it is).
+unsigned char g_on = 0;
+
+// The panel's quad, or a piece of it: (x, y) w x h on screen, u0..u1 x v0..v1
+// of the page, as the original's (CLUT x 0x20, colour 0x80, slot 1).
+void PanelQuad(std::int32_t x, std::int32_t y, std::int32_t w, std::int32_t h, unsigned u0, unsigned v0, unsigned u1,
+               unsigned v1) {
+    unsigned char* const p = Quad(0x20);
+    p[4] = p[5] = p[6] = 0x80;
+    Corners(p, x, y, x + w, y + h);
+    p[0x14] = static_cast<unsigned char>(u0);
+    p[0x15] = static_cast<unsigned char>(v0);
+    p[0x24] = static_cast<unsigned char>(u1);
+    p[0x25] = static_cast<unsigned char>(v0);
+    p[0x34] = static_cast<unsigned char>(u0);
+    p[0x35] = static_cast<unsigned char>(v1);
+    p[0x44] = static_cast<unsigned char>(u1);
+    p[0x45] = static_cast<unsigned char>(v1);
+    SH_CALL(Gfx_CommitPrim)(1, 0x48);
+}
+
+// The glyph of `s` with its top-left at (x, y), as the Config panel draws its
+// cell: DIV-0051's icon under a Latin overlay, else the port's stand-in.
+void Glyph(int x, int y, Shape s) {
+    if (Lang_Latin()) {
+        const std::uint32_t g = kIconCircle + s;
+        const unsigned char code[3] = {static_cast<unsigned char>(0x80 | (g >> 8)), static_cast<unsigned char>(g), 0};
+        SH_CALL(Text_DrawAt)(x, y, kShapeColour[s], 3, code);
+        return;
+    }
+    const auto* text = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(UL(kStandIns + 4 * s)));
+    SH_CALL(Text_DrawAt)(x, y, kShapeColour[s], 3, text);
+}
+
+// The plan logged when it changes (a row's source, or the page read).
+void LogPlan(bool readable, const Shape baked[kRows], const std::uint16_t wanted[kRows], const Row rows[kRows]) {
+    static U last = 0xFFFFFFFFu;
+    U key = readable ? 1u : 0u;
+    for (unsigned r = 0; r < kRows; ++r)
+        key = key * 512 + baked[r] * 64 + (readable ? rows[r].how * 8 + rows[r].from : 0);
+    if (key == last) return;
+    last = key;
+    if (!readable) {
+        bof3::Log("DockLegend the page's icons read %s / %s / %s, not three of the four shapes: drawn as the page has them",
+                  kShapeName[baked[0]], kShapeName[baked[1]], kShapeName[baked[2]]);
+        return;
+    }
+    char what[kRows][24];
+    for (unsigned r = 0; r < kRows; ++r) {
+        const Shape want = ShapeOfBit(wanted[r]);
+        if (rows[r].how == kKeep) std::snprintf(what[r], sizeof what[r], "%s", kShapeName[want]);
+        else if (rows[r].how == kCellOf) std::snprintf(what[r], sizeof what[r], "%s (row %u's)", kShapeName[want], rows[r].from);
+        else std::snprintf(what[r], sizeof what[r], "%s (%s)", kShapeName[want], Lang_Latin() ? "icon" : "stand-in");
+    }
+    bof3::Log("DockLegend page %s / %s / %s, shown %s / %s / %s", kShapeName[baked[0]], kShapeName[baked[1]],
+              kShapeName[baked[2]], what[0], what[1], what[2]);
+}
+
+
+// The self-test (BOF3X_SHADOW=rest_3e, after the fuzz): the rule on shapes
+// drawn here by rule - no page's texels are copied - at every place in the
+// cell; then the plan on each release's page order (docs/rest_3e.md section
+// 11) with stand-in Configs built by sigma::Build from sigma::DefaultWords: at
+// each release's defaults every row kept (the original's one quad), under the
+// stand-in swap (Speak <-> Action, View <-> Change) rows 0 and 1 trading cells,
+// and over all 720 assignments of the six lines every row showing its test's
+// button.
+unsigned g_bad = 0;
+void Check(bool ok, const char* what, unsigned a = 0, unsigned b = 0) {
+    if (ok) return;
+    if (g_bad < 20) bof3::Log("shadow    rest_3e DockLegend MISMATCH: %s (%u, %u)", what, a, b);
+    ++g_bad;
+}
+
+// A 7 x 7 shape by rule: the square's ring, the circle's ring with its four
+// corners cut, the cross's two diagonals, the triangle's rows widening by one
+// texel each side every second row.
+bool Drawn(Shape s, int x, int y) {
+    const bool edge = x == 0 || x == 6 || y == 0 || y == 6;
+    switch (s) {
+    case kSquare: return edge;
+    case kCircle: return edge && !((x == 0 || x == 6) && (y == 0 || y == 6));
+    case kCross: return x == y || x == 6 - y;
+    case kTriangle: return y == 6 || x == 3 - y / 2 || x == 3 + y / 2;
+    default: return false;
+    }
+}
+
+void SelfTest() {
+    namespace sg = bof3x::input::sigma;
+    g_bad = 0;
+    unsigned cells = 0, plans = 0;
+    // 1. The rule.
+    for (unsigned s = kCircle; s <= kSquare; ++s)
+        for (unsigned ox = 0; ox + 7 <= kColW; ++ox)
+            for (unsigned oy = 0; oy + 7 <= kBandH; ++oy) {
+                Cell c = {};
+                for (int y = 0; y < 7; ++y)
+                    for (int x = 0; x < 7; ++x) c.ink[oy + y][ox + x] = Drawn(static_cast<Shape>(s), x, y);
+                Check(Classify(c) == s, "a drawn shape read as another", s, Classify(c));
+                ++cells;
+            }
+    {
+        Cell empty = {}, block = {}, line = {}, small = {};
+        for (unsigned y = 0; y < 7; ++y)
+            for (unsigned x = 0; x < 7; ++x) block.ink[y][x] = true;
+        for (unsigned x = 0; x < kColW; ++x) line.ink[4][x] = true;
+        for (unsigned y = 0; y < 3; ++y)
+            for (unsigned x = 0; x < 3; ++x) small.ink[y][x] = x != 1 || y != 1;
+        Check(Classify(empty) == kUnknown, "an empty cell read as a shape");
+        Check(Classify(block) == kUnknown, "a filled block read as a shape", Classify(block));
+        Check(Classify(line) == kUnknown, "a line read as a shape", Classify(line));
+        Check(Classify(small) == kUnknown, "a 3 x 3 ring read as a shape", Classify(small));
+        cells += 4;
+    }
+    // 2. The plan. Each release's page order: its defaults' buttons on the
+    // three rows (M_R of circle, cross, triangle).
+    const sg::Release releases[3] = {sg::Release::kJapan, sg::Release::kWest, sg::Release::kPspEu};
+    for (const sg::Release rel : releases) {
+        const unsigned rn = static_cast<unsigned>(rel);
+        Shape page[kRows];
+        for (unsigned r = 0; r < kRows; ++r) page[r] = ShapeOfBit(sg::ReleaseMap(rel, kRowBit[r]));
+        std::uint16_t words[9];
+        sg::DefaultWords(rel, false, words);
+        std::string why;
+        const sg::Table t = sg::Build(words, why);
+        Check(t.valid, "a release's defaults refused", rn);
+        std::uint16_t wanted[kRows];
+        Row rows[kRows];
+        for (unsigned r = 0; r < kRows; ++r) wanted[r] = sg::Apply(t, kRowBit[r]);
+        Check(Plan(page, wanted, rows), "a release's page unreadable", rn);
+        for (unsigned r = 0; r < kRows; ++r) Check(rows[r].how == kKeep, "a row changed at the release's defaults", rn, r);
+        ++plans;
+        // The stand-in swap: rows 0 and 1 trade cells, row 2 kept, on all three.
+        std::uint16_t swapped[9];
+        std::memcpy(swapped, words, sizeof swapped);
+        const std::uint16_t l2r2 = static_cast<std::uint16_t>(words[0] & sg::kL2R2);
+        swapped[0] = static_cast<std::uint16_t>(words[6] | l2r2);
+        swapped[6] = static_cast<std::uint16_t>(words[0] & ~sg::kL2R2);
+        std::swap(swapped[3], swapped[4]);
+        const sg::Table ts = sg::Build(swapped, why);
+        Check(ts.valid, "the stand-in swap refused", rn);
+        for (unsigned r = 0; r < kRows; ++r) wanted[r] = sg::Apply(ts, kRowBit[r]);
+        Check(Plan(page, wanted, rows), "a release's page unreadable", rn);
+        Check(rows[0].how == kCellOf && rows[0].from == 1, "swap: row 0 not row 1's cell", rn, rows[0].how);
+        Check(rows[1].how == kCellOf && rows[1].from == 0, "swap: row 1 not row 0's cell", rn, rows[1].how);
+        Check(rows[2].how == kKeep, "swap: row 2 changed", rn, rows[2].how);
+        ++plans;
+        // Every assignment of the six lines to the six buttons: each row shows
+        // its test's button - kept only where the page has it there, a cell
+        // only where the page has it in another row, a glyph only where the
+        // page has it nowhere.
+        unsigned perm[6] = {0, 1, 2, 3, 4, 5};
+        const unsigned char line_word[6] = {0, 1, 6, 2, 3, 4};
+        do {
+            std::uint16_t w[9];
+            std::memcpy(w, words, sizeof w);
+            for (unsigned l = 0; l < 6; ++l) w[line_word[l]] = kShapeBit[perm[l]];
+            const sg::Table tp = sg::Build(w, why);
+            Check(tp.valid, "a permutation refused", perm[0], perm[1]);
+            for (unsigned r = 0; r < kRows; ++r) wanted[r] = sg::Apply(tp, kRowBit[r]);
+            Check(Plan(page, wanted, rows), "a release's page unreadable", rn);
+            for (unsigned r = 0; r < kRows; ++r) {
+                const Shape want = ShapeOfBit(wanted[r]);
+                bool on_page = false;
+                for (unsigned k = 0; k < kRows; ++k) on_page = on_page || page[k] == want;
+                const bool ok = rows[r].how == kKeep     ? page[r] == want
+                                : rows[r].how == kCellOf ? page[r] != want && page[rows[r].from] == want
+                                                         : !on_page && rows[r].from == want;
+                Check(ok, "a row not showing its button", r, want);
+            }
+            ++plans;
+        } while (std::next_permutation(perm, perm + 6));
+    }
+    {
+        const Shape page[kRows] = {kCircle, kUnknown, kTriangle};
+        const std::uint16_t wanted[kRows] = {0x40, 0x20, 0x10};
+        Row rows[kRows];
+        Check(!Plan(page, wanted, rows), "an unreadable page planned");
+        ++plans;
+    }
+    bof3::Log("shadow    rest_3e DockLegend self-test: %u cells read by the rule, %u plans (3 page orders at their "
+              "defaults, the stand-in swap and 720 assignments each, an unreadable page); %u MISMATCHES",
+              cells, plans, g_bad);
+    if (g_bad) bof3::Fatal("rest_3e DockLegend: %u mismatches against docs/rest_3e.md section 11", g_bad);
+    if (cells != 4 * 5 * 4 + 4 || plans != 3 * (2 + 720) + 1)
+        bof3::Fatal("rest_3e DockLegend self-test: %u cells, %u plans (84, 2167 wanted)", cells, plans);
+}
+
+}  // namespace dock
+
+}  // namespace
+
 // original 0x47FBE0: the panel - its box (Menu_DrawBox, flags 0, the style),
 // then an FT4 over it (CLUT x 0x20; the corners the box's, the low words) with
 // u 0xC0 / (w byte - 0x41), v 0x50 / (h byte + 0x50), colour 0x80, committed
-// to slot 1 (0x48).
+// to slot 1 (0x48). With DockLegend on and a row whose button is not the
+// page's icon, the quad in pieces and that row's icon drawn (the section
+// above); else exactly the original's.
 extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
     SH_CALL(Menu_DrawBox)(W(at::kPanelBox), W(at::kPanelBox + 2), W(at::kPanelBox + 4), W(at::kPanelBox + 6), 0, B(at::kStyle));
+    if (dock::g_on) {
+        if (W(at::kPanelBox + 4) != dock::kBoxW || W(at::kPanelBox + 6) != dock::kBoxH)
+            bof3::Fatal("DockLegend: the panel box 0x654888 is 0x%X x 0x%X, not the 0x40 x 0x28 its rows were read for", W(at::kPanelBox + 4),
+                        W(at::kPanelBox + 6));
+        dock::Shape baked[dock::kRows];
+        std::uint16_t wanted[dock::kRows];
+        for (unsigned r = 0; r < dock::kRows; ++r) {
+            baked[r] = dock::Classify(dock::ReadCell(r));
+            wanted[r] = bof3x::input::sigma::Sigma(dock::kRowBit[r]);
+        }
+        dock::Row rows[dock::kRows];
+        const bool readable = dock::Plan(baked, wanted, rows);
+        dock::LogPlan(readable, baked, wanted, rows);
+        bool changed = false;
+        for (unsigned r = 0; readable && r < dock::kRows; ++r) changed = changed || rows[r].how != dock::kKeep;
+        if (changed) {
+            const std::int32_t x0 = static_cast<std::int32_t>(W(at::kPanelBox));
+            const std::int32_t y0 = static_cast<std::int32_t>(W(at::kPanelBox + 2));
+            const unsigned u1 = dock::kU0 + dock::kBoxW - 1;   // 0xFF, as w - 0x41
+            // Whole-width runs of texel rows, 1:1 in v as the original's quad;
+            // a changed row's cell left out of its band (u 4..14 not drawn).
+            unsigned run = 0;
+            auto Whole = [&](unsigned to) {
+                if (to > run)
+                    dock::PanelQuad(x0, y0 + static_cast<std::int32_t>(run), static_cast<std::int32_t>(dock::kBoxW),
+                                    static_cast<std::int32_t>(to - run), dock::kU0, dock::kV0 + run, u1, dock::kV0 + to);
+            };
+            for (unsigned r = 0; r < dock::kRows; ++r) {
+                if (rows[r].how == dock::kKeep) continue;
+                const unsigned top = dock::kBandV + dock::kBandH * r;
+                Whole(top);
+                const std::int32_t y = y0 + static_cast<std::int32_t>(top), h = static_cast<std::int32_t>(dock::kBandH);
+                const unsigned right = dock::kColU + dock::kColW;
+                dock::PanelQuad(x0, y, static_cast<std::int32_t>(dock::kColU), h, dock::kU0, dock::kV0 + top,
+                                dock::kU0 + dock::kColU, dock::kV0 + top + dock::kBandH);
+                dock::PanelQuad(x0 + static_cast<std::int32_t>(right), y, static_cast<std::int32_t>(dock::kBoxW - right), h,
+                                dock::kU0 + right, dock::kV0 + top, u1, dock::kV0 + top + dock::kBandH);
+                run = top + dock::kBandH;
+            }
+            Whole(dock::kBoxH);
+            for (unsigned r = 0; r < dock::kRows; ++r) {
+                const unsigned top = dock::kBandV + dock::kBandH * r;
+                if (rows[r].how == dock::kCellOf) {
+                    const unsigned from = dock::kBandV + dock::kBandH * rows[r].from;
+                    dock::PanelQuad(x0 + static_cast<std::int32_t>(dock::kColU), y0 + static_cast<std::int32_t>(top),
+                                    static_cast<std::int32_t>(dock::kColW), static_cast<std::int32_t>(dock::kBandH),
+                                    dock::kU0 + dock::kColU, dock::kV0 + from, dock::kU0 + dock::kColU + dock::kColW,
+                                    dock::kV0 + from + dock::kBandH);
+                } else if (rows[r].how == dock::kGlyph) {
+                    // The 12-unit glyph centred on the cell (Text_DrawAt's
+                    // y + 1 is the glyph's top).
+                    dock::Glyph(x0 + 4, y0 + static_cast<int>(top) + 3, static_cast<dock::Shape>(rows[r].from));
+                }
+            }
+            return;
+        }
+    }
     unsigned char* const p = Quad(0x20);
     p[4] = p[5] = p[6] = 0x80;
     const std::int32_t x0 = static_cast<std::int32_t>(W(at::kPanelBox));
@@ -1319,7 +1748,10 @@ extern "C" void __cdecl EffectKind5F_SlideOut(void) {
 }
 
 void Rest3E_Inject() {
-    if (bof3::WantsShadow("rest_3e")) rest_3e::SelfTest();
+    if (bof3::WantsShadow("rest_3e")) {
+        rest_3e::SelfTest();
+        dock::SelfTest();
+    }
     BOF3_INJECT(EffectKind37_Run);
     BOF3_INJECT(EffectKind17_Run);
     BOF3_INJECT(EffectKind1B_Run);
@@ -1370,4 +1802,10 @@ void Rest3E_Inject() {
     BOF3_INJECT(EffectKind5F_Slide);
     BOF3_INJECT(EffectKind5F_PlaceLow);
     BOF3_INJECT(EffectKind5F_SlideOut);
+    // DIVERGENCE: DIV-0137, the dock's legend from the Config (after the
+    // fuzz above, which compares Capcom's one quad).
+    static const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("DockLegend", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&dock::g_on)), &was, &is, 1);
+    bof3::Log("DockLegend the dock's legend shows the buttons the Config has its three tests on: %s",
+              dock::g_on ? "on" : "OFF (BOF3X_ORIGINAL=DockLegend)");
 }
