@@ -307,6 +307,8 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
 
 bool ExeImage_DiscMapped() { return g_disc_mapped; }
 
+const char* ExeImage_MappedBuild() { return g_disc_mapped ? g_mapped.build.c_str() : nullptr; }
+
 // --- DIV-0111: the exe tables layer ----------------------------------------------
 namespace {
 

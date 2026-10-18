@@ -52,9 +52,14 @@ const unsigned char* FishingText_Label(unsigned entry);
 // 0, the cast's line, draws the button of word 7 (Field_ConfirmButtons
 // 0x90358E), which LeaderPanel_S2Wait 0x528FA0 tests for the cast. A button
 // sigma leaves where it was draws as the original reads it - the line byte's
-// entry in 0x653C00's pen (zero, white, on a disc-built image, whose range
-// there is an exe-gaps `gap`) - and only a moved one takes its shape's pen
-// (the owner, 2026-10-17; docs/fishing-text.md 8.6).
+// entry in 0x653C00's pen - and only a moved one takes its shape's pen (the
+// owner, 2026-10-17; docs/fishing-text.md 8.6). D313 (8.8): the line byte is
+// read in the terms of the release the running .data was built from (the
+// exe host's mapped image, ExeImage_MappedBuild; else BOF3.exe's, Japan's):
+// its button is that release's, M_R of
+// Japan's, the label SigmaFrom(R, it), and "where it was" the release's
+// button, drawn in the image's pen, which a disc-built image takes from its
+// disc's fishing module.
 struct FishingLabel {
     unsigned entry;
     unsigned pen;

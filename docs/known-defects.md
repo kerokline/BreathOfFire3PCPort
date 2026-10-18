@@ -8130,6 +8130,49 @@ tests `FishingText_On()`, which is `Lang_Latin()`. `ConfigText_DrawSelected`
 `ConfigText_Operands().big_draw` / `name_draw`, which stay `Text_DrawAt`
 without one. No other code names glyph `0xA65..0xA6A`.
 
+## D313 — A disc-only install's fishing banner labels every line circle and waits about eight seconds between lines (ours, the disc-built exe image's gaps; fixed 2026-10-17)
+
+**Found:** the button round's IC-F group, 2026-10-17
+([`fishing-text.md`](fishing-text.md) 8.6), from RC's white reel label on
+`psx-us` and `psp-eu`.
+
+**Established** (2026-10-17, [`fishing-text.md`](fishing-text.md) 8.8): the
+fishing banner's 13 line records `0x653B98` (`EffectKind0D_States+0x20`;
+label byte, pause byte and two zero bytes at `+4..+7`) and the label pens
+`0x653C00..0x653C02` were `gap` / `game-value` rows of `recipes/exe-gaps.tsv`
+on all seven disc builds, zero in `data.bin`. So on every disc-only install:
+
+- every line's label byte was 0. The six no-label lines (`0xFF` on the PC)
+  flipped in and faded out a circle, and the quit and gear lines named
+  circle;
+- every pause was 0, where the PC's is 12 (text 12: 1). `LineNext`
+  `0x466460` decrements the pause before it tests it, so each line waited
+  256 frames, not 12, before the next one spawned. Measured on the dense
+  fishing route: two reel lines, then about 255 frames of empty banner;
+- every pen was 0, so labels were white.
+
+The disc carries all of it. Each fishing module (`AREA030.EMI` section 4;
+`BOOT.BIN` on a PSP disc) holds the records as 12 bytes whose `+8..+11` equal
+the PC's `+4..+7` on all 13 records of all seven builds. Three label entries
+follow, each with a pen at `+2`, in the release's own buttons: Japan's 2, 1,
+6; the PlayStation West's cross 1, triangle 6, square 5; PSP-EU's cross 1,
+circle 2, square 5. A defect of ours, the disc-only image's. The 2001 port
+and the PlayStation both had the values.
+
+**Fixed 2026-10-17** (`fix/fishing-records-disc`): `tools/psp_exe.py` rules
+`fishrec` (the four bytes, record for record) and `fishpen` (the three pens
+after the records), every disc build. Recipes regenerated:
+`exe-gaps.tsv` loses exactly those 91 rows. The pens are each release's own,
+so `src/game/fishing_text.cpp` now reads a label in the terms of the
+release the running image was built from (`ExeImage_MappedBuild`):
+the line byte's button is `M_R` of Japan's and the label is
+`SigmaFrom(R, it)`. An unmoved label draws as that release's disc does.
+This amends IC-F's draft D ([`fishing-text.md`](fishing-text.md) 8.5).
+Live on `psx-us`: the lines follow each other as on the PC, no-label lines
+have none, the reel label is a red circle at Japan's words, a blue cross
+under the swap, and a blue cross under the West's own defaults, as the US
+disc draws it.
+
 ## D308 — The fishing song goes silent while the fishing panel is open (the port's; fixed by DIV-0132, 2026-10-17)
 
 **Found:** the owner, 2026-10-17, listening to `caughFish.txt` on a PSX-only
