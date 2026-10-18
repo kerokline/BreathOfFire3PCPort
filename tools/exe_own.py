@@ -82,6 +82,8 @@ REGIONS = [
     (0x6639D4, 0x6639D8, "port-platform", "the save slot's number format (Menu_DrawSaveSlot; D254)"),
     (0x664068, 0x664078, "port-platform", "the save file's name format (FieldSave_Write, Save_QuickWrite)"),
     (0x6653BC, 0x666FC6, "port-platform", "Sound_LoadStream's 891 SND/ names, Music_LoadedTrack, the SND and BGM formats"),
+    (0x666FC6, 0x6671F4, "unread", "three lists of the PSX title overlay and their tail: no instruction and no word of "
+                                   "the exe's file names them (docs/install-gap-readers.md 1.4)"),
     (0x669CCC, 0x66A450, "language", "the battle command labels, the community's member names, Menu_Verbs, pause lines"),
     (0x66B5D8, 0x66B6A8, "port-platform", "the AVI player's MCI command strings (Fmv_Play, Fmv_WndProc)"),
     (0x66B708, 0x66BC58, "port-platform", "the display / sound / file layer's rect, caches, error strings and formats; the OT end; the GTE identity"),

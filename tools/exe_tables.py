@@ -24,8 +24,10 @@ the segment that places it to the PC address), which are written back; the
 words the rule would get wrong on a build are listed in recipes/exe-rebuild.tsv
 and stay unfilled (docs/exe-import-engine.md section 1). Every pointer word
 still unfilled then gets its target from recipes/exe-layout.tsv, the PC's
-pointer layout held as addresses (section 7). What no disc carries stays zero
-and is listed.
+pointer layout held as addresses (section 7). Before that, what nothing else
+filled can come from the code of a reader's PSX twin: recipes/exe-imm.tsv's
+owning-function rows (tools/exe_imm.py, docs/exe-immediate-places.md). What
+no disc carries stays zero and is listed.
 
     python tools/exe_tables.py build   --source PATH --out CACHE        # BOF3.exe or a disc
     python tools/exe_tables.py recipe  --game DIR --disc DISC [...]     # recipes/exe.toml + exe-*.tsv
@@ -35,6 +37,8 @@ and is listed.
     python tools/exe_tables.py gaps    --game DIR --measure DIR         # recipes/exe-gaps.tsv
     python tools/exe_tables.py gate-skip --cache CACHE --game DIR [--out FILE]   # the gate's BOF3X_STATEHASH_SKIP
     python tools/exe_tables.py check                                    # the recipe alone (CI)
+    python tools/exe_tables.py check --game DIR --disc DISC [...]       # + exe-imm.tsv's rows decoded on the discs
+    python tools/exe_tables.py feed  --game DIR --disc PSX-JP [--out TSV] [--write]   # code-pointer pairs -> symbols.toml psx
 
 `recipe` needs the PC's executable and the discs: it decides which of the
 PC's pointer-shaped words are pointers (those some disc holds differently)
@@ -70,6 +74,9 @@ PLACES = os.path.join(ROOT, "recipes", "exe-places.tsv")
 PLACE_COLS = ["build", "pc", "pc_end", "file", "section", "addr", "agree", "keys"]
 LAYOUT = os.path.join(ROOT, "recipes", "exe-layout.tsv")
 PSP_FILLS = os.path.join(ROOT, "recipes", "exe-psp.tsv")    # tools/psp_exe.py's (docs/psp-image.md)
+IMM = os.path.join(ROOT, "recipes", "exe-imm.tsv")           # the owning-function rows (docs/exe-immediate-places.md)
+IMM_COLS = ["build", "kind", "pc", "pc_end", "file", "section", "func", "at", "insns"]
+IMM_KINDS = ("imm", "immref")
 LAYOUT_COLS = ["pc", "kind", "target"]
 KIND = {"text": "code", "data": "data", "bss": "bss", "rdata": "rdata"}    # exe-pointers.tsv's `to` -> the layout's kind
 TEXT_LO = 0x401000
@@ -345,12 +352,15 @@ def table_span(t, syms):
     return syms[t["symbol"]], syms[t["symbol"]] + t["stride"] * t["count"]
 
 
-def disc_image(disc, bid, places=()):
+def disc_image(disc, bid, places=(), imm=None):
     """(image, owner, ranges) from a disc alone, before the pointer mask: the
     0x9C000-byte image, a per-byte list of which range wrote it (None:
     nothing), and the ranges [pc, end, how, file, address of pc]. `places`:
     recipes/exe-places.tsv's rows for the build (`place` ranges, after the
-    map's segments and before the catalogued tables)."""
+    map's segments and before the catalogued tables). `imm`: the owning-function
+    rows (recipes/exe-imm.tsv's for the build when None; none while psp_exe's
+    recipe builds its base image), applied last to the bytes nothing else
+    filled, as `place` ranges whose `from` ends `:imm` / `:immref`."""
     cat, syms, builds = tables.load()
     src = {(f, s): (base, blob) for f, s, base, blob in exe_twins.sources(disc)}
     img, owner, ranges = bytearray(DATA_HI - DATA_LO), [None] * (DATA_HI - DATA_LO), []
@@ -388,7 +398,328 @@ def disc_image(disc, bid, places=()):
         put(lo, raw, "place", where, addr)
     for lo, raw, where, addr in psp_exe.unwide(bid, img, owner):   # the PSP's 16:9 side placements undone
         put(lo, raw, "place", where, addr)
+    if imm is None:
+        imm = () if psp_exe._RECIPE_BASE else load_imm().get(bid, ())
+    for row in imm:
+        for lo, raw, addr in imm_pieces(row, src):
+            i = 0
+            while i < len(raw):                      # only what nothing else filled
+                if owner[lo + i - DATA_LO] is not None:
+                    i += 1
+                    continue
+                j = i
+                while j < len(raw) and owner[lo + j - DATA_LO] is None:
+                    j += 1
+                put(lo + i, raw[i:j], "place", "%s#%d:%s" % (row["file"], row["section"], row["kind"]),
+                    addr + i if row["kind"] == "immref" else addr)
+                i = j
     return img, owner, ranges
+
+
+# ------------------------------------------------------------------ the owning-function rows (docs/exe-immediate-places.md)
+
+def load_imm(path=IMM):
+    """{build: [row]} from recipes/exe-imm.tsv; none when the file is absent."""
+    out = collections.defaultdict(list)
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8") as f:
+        lines = [l.rstrip("\n") for l in f if not l.startswith("#")]
+    if not lines or lines[0].split("\t") != IMM_COLS:
+        fail("exe-imm.tsv: the column line is not %s" % "\t".join(IMM_COLS))
+    for l in lines[1:]:
+        c = l.split("\t")
+        if len(c) != len(IMM_COLS):
+            fail("exe-imm.tsv: a row of %d columns" % len(c))
+        out[c[0]].append({"build": c[0], "kind": c[1], "pc": int(c[2], 16), "pc_end": int(c[3], 16), "file": c[4],
+                          "section": int(c[5]), "func": int(c[6], 16), "at": int(c[7]), "insns": c[8]})
+    return out
+
+
+def write_imm(rows):
+    with open(IMM, "w", newline="\n") as f:
+        f.write("# recipes/exe-imm.tsv - GENERATED by `tools/exe_tables.py recipe`; do not edit.\n"
+                "# The owning-function places (docs/exe-immediate-places.md): [pc, pc_end) of .data no other\n"
+                "# range fills, rebuilt from the code of the PSX twin of a PC function that reads it - the\n"
+                "# function at `func` in `file` / `section`. immref: `insns` H+L are a lui and the instruction\n"
+                "# that adds its low half; the address they form plus `at` bytes is where the row's bytes are in\n"
+                "# the file. imm: `insns` are the stores S of the values instructions V make (or a pair H+L, or\n"
+                "# z for $zero), `at` the stores' displacement of pc (tools/exe_imm.py). Offsets are hex from\n"
+                "# `func`. A row is written only where it rebuilds BOF3.exe's bytes exactly.\n"
+                "# Addresses and counts only (CLAUDE.md rule 1).\n")
+        f.write("\t".join(IMM_COLS) + "\n")
+        for bid in ORDER:
+            for r in rows.get(bid, ()):
+                f.write("%s\t%s\t0x%06X\t0x%06X\t%s\t%d\t0x%08X\t%d\t%s\n" % (
+                    bid, r["kind"], r["pc"], r["pc_end"], r["file"], r["section"], r["func"], r["at"], r["insns"]))
+
+
+def imm_pieces(row, srcs):
+    """[(pc, bytes, disc address)] an owning-function row rebuilds from the disc
+    (`srcs`: {(file, section): (base, bytes)}). Stops (rule 4) on a row its disc
+    does not decode: the file or section absent, an instruction not of the
+    row's kind, the data off the file, or a piece outside [pc, pc_end)."""
+    import exe_imm
+    key = (row["file"], row["section"])
+    if key not in srcs:
+        fail("exe-imm.tsv: %s 0x%06X: %s#%d is not on this disc" % (row["build"], row["pc"], key[0], key[1]))
+    read = exe_imm.blob_reader(srcs[key][1], srcs[key][0])
+    n = row["pc_end"] - row["pc"]
+    try:
+        if row["kind"] == "immref":
+            addr = exe_imm.decode_ref(read, row["func"], *exe_imm.parse_ref(row["insns"])) + row["at"]
+            hold = [k for k in srcs if k[0] == row["file"] and srcs[k][0] <= addr
+                    and addr + n <= srcs[k][0] + len(srcs[k][1])]
+            if not hold:
+                raise ValueError("0x%08X + %d is in no section of %s" % (addr, n, row["file"]))
+            base, blob = srcs[hold[0]]
+            return [(row["pc"], blob[addr - base:addr - base + n], addr)]
+        if row["kind"] == "imm":
+            out = []
+            for off, raw in exe_imm.decode_row(read, row["func"], row["at"], exe_imm.parse_elements(row["insns"])):
+                if off + len(raw) > n:
+                    raise ValueError("an element past pc_end")
+                out.append((row["pc"] + off, raw, row["func"]))
+            return out
+        raise ValueError("kind %s" % row["kind"])
+    except ValueError as e:
+        fail("exe-imm.tsv: %s 0x%06X: %s" % (row["build"], row["pc"], e))
+
+
+def recipe_imm(pc, exe, held, places, pointers, report=print):
+    """{build: [row]} - find_imm over every held disc (`held`: discs()), the
+    image as the maps, the places and the fills leave it. psx-jp's symbols.toml
+    twins reach the other builds through build_twins when psx-jp is held."""
+    readers = text_readers(exe)
+    cls = {}
+    ptr = set()
+    for p, n, c in pointers:
+        ptr.update(range(p, p + 4 * n))
+        for x in range(p, p + 4 * n, 4):
+            cls[x] = c
+    own = own_bytes()
+    starts = data_symbols()[0]
+    jp, out = None, {}
+    for bid, disc in held:
+        srcs = {(f, s): (base, blob) for f, s, base, blob in exe_twins.sources(disc)}
+        img, owner, ranges = disc_image(disc, bid, places.get(bid, ()), imm=())
+        pairs = code_pairs(pc, img, owner, ranges, cls)
+        if bid == "psx-jp":
+            jt = sym_twins(srcs, pairs)
+            twins = build_twins(srcs, pairs)
+            for t, v in jt.items():
+                twins[t] |= v
+            jp = (srcs, jt)
+        else:
+            twins = build_twins(srcs, pairs, jp, need=set(jp[1]) if jp else ())
+        stats = collections.Counter()
+        out[bid] = find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, starts, stats)
+        report("%s: %d owning-function rows (%s)" % (bid, len(out[bid]), ", ".join(
+            "%s %d" % kv for kv in sorted(stats.items()))))
+    return out
+
+
+IMM_REACH = 0x400      # a reader's operand counts for a region from its data symbol's start, this far below
+
+
+def text_readers(exe):
+    """{a .data address: {PC function}} from BOF3.exe's .text: every 4-byte value at
+    any byte offset that is a .data address, credited to the symbols.toml [[func]]
+    holding it. The instructions' absolute operands are among them; a value that is
+    no operand only adds a candidate, which a row's exact rebuild then refuses."""
+    va, _, raw, rsz = pe_sections(exe)[".text"]
+    text = exe[raw:raw + rsz]
+    starts = sorted(func_starts())
+    out = collections.defaultdict(set)
+    for k in range(4):
+        n = (len(text) - k) // 4
+        for i, (v,) in enumerate(struct.iter_unpack("<I", text[k:k + 4 * n])):
+            if DATA_LO <= v < DATA_HI:
+                j = bisect.bisect_right(starts, va + k + 4 * i) - 1
+                if j >= 0:
+                    out[v].add(starts[j])
+    return out
+
+
+def imm_regions(pc, owner, ptr, own):
+    """The runs of the image no range fills, outside the pointer words and the
+    engine's own bytes, that hold a byte the PC has non-zero: [(lo, hi)]."""
+    out, i, n = [], 0, len(owner)
+    free = lambda i: owner[i] is None and DATA_LO + i not in ptr and DATA_LO + i not in own
+    while i < n:
+        if not free(i):
+            i += 1
+            continue
+        j = i
+        while j < n and free(j):
+            j += 1
+        if any(pc[i:j]):
+            out.append((DATA_LO + i, DATA_LO + j))
+        i = j
+    return out
+
+
+def sym_twins(srcs, pairs):
+    """{PC function: {((file, section), PSX address)}} from symbols.toml's `psx`
+    fields, which are psx-jp's addresses: the section `psx_overlay` names, else
+    the boot executable's and each section of a file the build's own placed
+    code-pointer words pair the function from, where one holds the address."""
+    with open(os.path.join(ROOT, "symbols.toml"), "rb") as f:
+        funcs = tomllib.load(f).get("func", [])
+    by_name = {os.path.basename(f): f for f, _ in srcs}
+    files = collections.defaultdict(set)
+    for f, t in pairs:
+        files[t].add(f)
+    inside = lambda k, a: srcs[k][0] <= a < srcs[k][0] + len(srcs[k][1])
+    out = collections.defaultdict(set)
+    for e in funcs:
+        if "psx" not in e:
+            continue
+        a = e["psx"]
+        if "psx_overlay" in e:
+            name, _, sec = e["psx_overlay"].partition("#")
+            ks = [(by_name.get(name), int(sec))] if sec else []
+        else:
+            ks = [k for k in srcs if (k[0] in ("BOOT", "BOOT.BIN") or k[0] in files[e["pc"]])]
+        for k in ks:
+            if k in srcs and inside(k, a):
+                out[e["pc"]].add((k, a))
+    return out
+
+
+def build_twins(srcs, pairs, jp=None, need=()):
+    """{PC function: {((file, section), the build's PSX address)}}: every placed
+    code-pointer word's pair (code_pairs) whose address a section of its own file
+    holds; and, from `jp` - (psx-jp's sources, its sym_twins) for another build -
+    each psx-jp twin of a function in `need` found again, by its body
+    (exe_imm.body_signature), exactly once in this build's same file section."""
+    import exe_imm
+    byfile = collections.defaultdict(list)
+    for k in srcs:
+        byfile[k[0]].append(k)
+    out = collections.defaultdict(set)
+    for (f, t), w in pairs.items():
+        for k in byfile[f]:
+            if srcs[k][0] <= w < srcs[k][0] + len(srcs[k][1]):
+                out[t].add((k, w))
+    if jp is not None:
+        jp_srcs, jp_twins = jp
+        for t in need:
+            for k, g in jp_twins.get(t, ()):
+                if k not in srcs:
+                    continue
+                read = exe_imm.blob_reader(jp_srcs[k][1], jp_srcs[k][0])
+                end = exe_imm.extent(read, g)
+                sig = exe_imm.body_signature(read, g, end) if end else None
+                if not sig or len(sig) < 4:
+                    continue
+                hits = exe_imm.find_body(sig, srcs[k][1], srcs[k][0])
+                if len(hits) == 1:
+                    out[t].add((k, hits[0]))
+    return out
+
+
+def find_imm(pc, bid, srcs, owner, ptr, own, readers, twins, data_starts, stats=None):
+    """The owning-function rows for one build (docs/exe-immediate-places.md): for
+    each region imm_regions gives, each PC function whose operands name it (from
+    its data symbol's start, `readers` from text_readers), each of that
+    function's twins (build_twins, sym_twins): an `immref` row where an address
+    the twin's lui pair forms, displaced as the PC's operand is from the region,
+    holds the region's bytes in a section of the twin's file - every number byte
+    from the operand to the region's end (or the section's end) equal to the
+    PC's, four bytes or more of which two non-zero; or an `imm` row where the
+    twin's stores of constants rebuild every non-zero byte of the region, two
+    elements or more. A region two different places fit is left (ambiguous),
+    as is every region nothing fits. `stats`, a Counter, counts why."""
+    import exe_imm
+    stats = collections.Counter() if stats is None else stats
+    byfile = collections.defaultdict(list)
+    for k in srcs:
+        byfile[k[0]].append(k)
+    rkeys = sorted(readers)
+    scans = {}
+    rows = []
+    for lo, hi in imm_regions(pc, owner, ptr, own):
+        stats["regions"] += 1
+        j = bisect.bisect_right(data_starts, lo) - 1
+        base = data_starts[j] if j >= 0 and data_starts[j] > lo - IMM_REACH else lo
+        ops = collections.defaultdict(set)
+        for v in rkeys[bisect.bisect_left(rkeys, base):bisect.bisect_left(rkeys, hi)]:
+            for f in readers[v]:
+                ops[f].add(v)
+        if not ops:
+            stats["no reader"] += 1
+            continue
+        if not any(f in twins for f in ops):
+            stats["no twin"] += 1
+            continue
+        stats["a twinned reader"] += 1
+        want = pc[lo - DATA_LO:hi - DATA_LO]
+        nz = [i for i, b in enumerate(want) if b]
+        found = {}
+        for f in sorted(ops):
+            for k, g in sorted(twins.get(f, ())):
+                if (k, g) not in scans:
+                    read = exe_imm.blob_reader(srcs[k][1], srcs[k][0])
+                    end = exe_imm.extent(read, g)
+                    scans[k, g] = (read, exe_imm.scan(read, g, end) if end else ([], []))
+                read, (stores, refs) = scans[k, g]
+                for _, at, elems in exe_imm.match_run(want, nz, exe_imm.store_bytes(stores)):
+                    pieces = exe_imm.decode_row(read, g, at, elems)
+                    if len(elems) < 2 or sum(1 for b in b"".join(r for _, r in pieces) if b) < 2:
+                        continue
+                    r0 = pieces[0][0]
+                    rhi = max(o + len(r) for o, r in pieces)
+                    row = {"build": bid, "kind": "imm", "pc": lo + r0, "pc_end": lo + rhi, "file": k[0],
+                           "section": k[1], "func": g, "at": at + r0, "insns": exe_imm.format_elements(elems)}
+                    found.setdefault(("imm", k, g, at), row)
+                for addr, offs in refs:
+                    if len(offs) != 2:
+                        continue
+                    try:
+                        if exe_imm.decode_ref(read, g, offs[0], offs[1]) != addr:
+                            continue
+                    except ValueError:
+                        continue
+                    for a_op in sorted(ops[f]):
+                        hold = [kk for kk in byfile[k[0]] if srcs[kk][0] <= addr + (lo - a_op) < srcs[kk][0] + len(srcs[kk][1])]
+                        if len(hold) != 1:
+                            continue
+                        b2, blob2 = srcs[hold[0]]
+                        end, ok, agree, agree_nz = hi, True, 0, 0
+                        for x in range(min(a_op, lo), hi):
+                            o = addr + (x - a_op) - b2
+                            if not 0 <= o < len(blob2):
+                                if x < lo:
+                                    ok = False
+                                else:
+                                    end = x
+                                break
+                            if x in ptr:
+                                continue
+                            if blob2[o] != pc[x - DATA_LO]:
+                                ok = False
+                                break
+                            agree += 1
+                            agree_nz += pc[x - DATA_LO] != 0
+                        if not ok or end <= lo or not any(want[:end - lo]) or agree < 4 or agree_nz < 2:
+                            continue
+                        place = (hold[0][0], addr + (lo - a_op))
+                        row = {"build": bid, "kind": "immref", "pc": lo, "pc_end": end, "file": k[0], "section": k[1],
+                               "func": g, "at": lo - a_op, "insns": "%X+%X" % (offs[0], offs[1])}
+                        found.setdefault(("immref",) + place, row)
+        if not found:
+            stats["nothing fits"] += 1
+            continue
+        places = {key for key in found if key[0] == "immref"}
+        if len(places) > 1 or (not places and len(found) > 1):
+            stats["ambiguous"] += 1
+            continue
+        key = min(places) if places else min(found)
+        rows.append(found[key])
+        stats["placed " + found[key]["kind"]] += 1
+        stats["bytes " + found[key]["kind"]] += sum(1 for x in range(found[key]["pc"], found[key]["pc_end"]) if pc[x - DATA_LO])
+    return rows
 
 
 def mask(img, owner, pointers):
@@ -429,6 +760,29 @@ def code_word(w, psp):
     return (0x08800000 <= w < 0x0A000000) if psp else (0x80010000 <= w < 0x80200000)
 
 
+def code_pairs(pc, img, owner, ranges, cls):
+    """{(file, PC function): the build's function} from the image's placed
+    code-pointer words: every word of exe-pointers.tsv's `text` class that one
+    range placed whole pairs the PC's function (the PC's word) with the build's
+    (the disc's word), keyed by the file that range came from; a key whose
+    words disagree is dropped (docs/exe-import-engine.md 3.1). `cls`: {word
+    address: exe-pointers.tsv's class}."""
+    pairs, bad = {}, set()
+    for a, c in cls.items():
+        if c != "text":
+            continue
+        ks = {owner[a - DATA_LO + j] for j in range(4)}
+        if None in ks or len(ks) != 1:
+            continue
+        key = (ranges[ks.pop()][3].split("#")[0], struct.unpack_from("<I", pc, a - DATA_LO)[0])
+        w = struct.unpack_from("<I", img, a - DATA_LO)[0]
+        if pairs.setdefault(key, w) != w:
+            bad.add(key)
+    for key in bad:
+        del pairs[key]
+    return pairs
+
+
 def find_places(pc, disc, bid, pointers, rounds=8):
     """Place what the map left unplaced by the PC's own data pointers - the
     twin method keyed by pointers instead of bytes (docs/exe-import-engine.md
@@ -461,7 +815,7 @@ def find_places(pc, disc, bid, pointers, rounds=8):
             cls[a] = c
     rows = []
     for _ in range(rounds):
-        img, owner, ranges = disc_image(disc, bid, rows)
+        img, owner, ranges = disc_image(disc, bid, rows, imm=())
         pieces = sorted((q[2], q[2] + q[1] - q[0], q[3], q[0]) for q in linear_pieces(owner, ranges))
         plo = [q[0] for q in pieces]
 
@@ -470,19 +824,7 @@ def find_places(pc, disc, bid, pointers, rounds=8):
             if i >= 0 and pieces[i][0] <= t < pieces[i][1]:
                 return pieces[i][2].split("#")[0], pieces[i][3] + t - pieces[i][0]
             return None
-        pairs, bad = {}, set()                 # (file, PC function) -> the build's, from placed words
-        for a, c in cls.items():
-            if c != "text":
-                continue
-            ks = {owner[a - DATA_LO + j] for j in range(4)}
-            if None in ks or len(ks) != 1:
-                continue
-            key = (ranges[ks.pop()][3].split("#")[0], struct.unpack_from("<I", pc, a - DATA_LO)[0])
-            w = struct.unpack_from("<I", img, a - DATA_LO)[0]
-            if pairs.setdefault(key, w) != w:
-                bad.add(key)
-        for key in bad:
-            del pairs[key]
+        pairs = code_pairs(pc, img, owner, ranges, cls)
         twins = collections.defaultdict(list)
         for (f, t), w in pairs.items():
             twins[t].append((f, w))
@@ -1293,7 +1635,7 @@ def cmd_recipe(a):
                                                                          dict(collections.Counter(numbers.values()))))
     images = []
     for bid, disc in discs(a.disc):
-        img, owner, ranges = disc_image(disc, bid)
+        img, owner, ranges = disc_image(disc, bid, imm=())
         images.append((img, owner, ranges))
         print("%s: %d ranges, %d bytes placed before the pointer mask" % (bid, len(ranges), sum(o is not None for o in owner)))
     pointers = decide_pointers(pc, images, numbers)
@@ -1312,7 +1654,10 @@ def cmd_recipe(a):
         print("%s: %d places by data pointer, %d bytes" % (bid, len(places[bid]),
                                                             sum(r["pc_end"] - r["pc"] for r in places[bid])))
     write_places(places)
-    images = [disc_image(disc, bid, places[bid]) for bid, disc in discs(a.disc)]
+    with open(os.path.join(a.game, "BOF3.exe"), "rb") as f:
+        imm = recipe_imm(pc, f.read(), discs(a.disc), places, pointers)
+    write_imm(imm)
+    images = [disc_image(disc, bid, places[bid], imm.get(bid, [])) for bid, disc in discs(a.disc)]
     refused, outcomes = {}, {}
     for (bid, _), (img, owner, ranges) in zip(discs(a.disc), images):
         rebuilt, outcomes[bid], _ = rebuild_candidates(img, owner, ranges, pointers)
@@ -1363,6 +1708,8 @@ def cmd_recipe(a):
              'places_sha256 = "%s"' % sha(open(PLACES, "rb").read()),
              'psp = "exe-psp.tsv"',
              'psp_sha256 = "%s"' % sha(open(PSP_FILLS, "rb").read()),
+             'imm = "exe-imm.tsv"',
+             'imm_sha256 = "%s"' % sha(open(IMM, "rb").read()),
              'layout = "exe-layout.tsv"',
              'layout_sha256 = "%s"' % sha(open(LAYOUT, "rb").read()),
              "layout_numbers = %d" % len(numbers),
@@ -1379,7 +1726,7 @@ def cmd_recipe(a):
         o = outcomes[bid]
         lines += ["[build.%s]" % bid, 'sha256 = "%s"' % sha(img),
                   "ranges = %d" % len(ranges),
-                  "places = %d" % len(places[bid]), "placed_by_pointer = %d" % sum(r["pc_end"] - r["pc"] for r in places[bid]),
+                  "places = %d" % len(places[bid]), "imm_rows = %d" % len(imm.get(bid, ())), "placed_by_pointer = %d" % sum(r["pc_end"] - r["pc"] for r in places[bid]),
                   "placed_equal = %d" % c["placed", "equal"], "placed_differ = %d" % c["placed", "differ"],
                   "pointer_pc_zero = %d" % c["pointer", "pc-zero"], "pointer_pc_nonzero = %d" % c["pointer", "pc-nonzero"],
                   "none_pc_zero = %d" % c["none", "pc-zero"], "none_pc_nonzero = %d" % c["none", "pc-nonzero"],
@@ -1771,6 +2118,211 @@ def check_layout(rec):
     return errs
 
 
+FEED_BUILD = "psx-jp"        # symbols.toml's `psx` addresses are this build's (SLPS-00990)
+FEED_RESIDENT = (0x80010000, 0x80196800)   # a `psx` with no psx_overlay below the first ETC overlay: resident
+
+
+def feed_pairs(pc, exe, disc):
+    """The placed code-pointer words' (PC function, PSX function) pairs of the
+    psx-jp image, checked (docs/exe-immediate-places.md 3): [(PC function, file,
+    section, PSX address, verdict, why)], verdict one of `new` (no `psx` yet; the
+    pair agrees), `overlay` (the `psx` it already has, now with its file),
+    `same` (nothing to add), `differs` (another `psx` than the entry's; left),
+    `copies` (the PC function pairs with several PSX copies, one per file; left),
+    `refused` (the fingerprints disagree), `no func` (no [[func]] starts there)."""
+    import exe_imm
+    srcs = {(f, s): (base, blob) for f, s, base, blob in exe_twins.sources(disc)}
+    cls = {}
+    for p, n, c in load_pointers():
+        for x in range(p, p + 4 * n, 4):
+            cls[x] = c
+    img, owner, ranges = disc_image(disc, FEED_BUILD, load_places().get(FEED_BUILD, ()), imm=())
+    pairs = code_pairs(pc, img, owner, ranges, cls)
+    with open(os.path.join(ROOT, "symbols.toml"), "rb") as f:
+        funcs = {e["pc"]: e for e in tomllib.load(f)["func"]}
+    starts = sorted(funcs)
+    psx_to_pc = {e["psx"]: p for p, e in funcs.items() if "psx" in e and "psx_overlay" not in e
+                 and FEED_RESIDENT[0] <= e["psx"] < FEED_RESIDENT[1] and e.get("status") in ("evidence", "verified")}
+    va, _, raw, rsz = pe_sections(exe)[".text"]
+    text = exe[raw:raw + rsz]
+    byfile = collections.defaultdict(list)
+    for k in srcs:
+        byfile[k[0]].append(k)
+    where = collections.defaultdict(set)
+    for (f, t), w in pairs.items():
+        for k in byfile[f]:
+            if srcs[k][0] <= w < srcs[k][0] + len(srcs[k][1]):
+                where[t].add((k, w))
+    out = []
+    for t in sorted(where):
+        if t not in funcs:
+            out.append((t, None, None, None, "no func", ""))
+            continue
+        e = funcs[t]
+        if len({w for _, w in where[t]}) > 1:
+            out.append((t, None, None, None, "copies", "%d PSX addresses" % len({w for _, w in where[t]})))
+            continue
+        k, w = sorted(where[t])[0]
+        fp = exe_imm.psx_fingerprint(exe_imm.blob_reader(srcs[k][1], srcs[k][0]), w)
+        i = bisect.bisect_right(starts, t)
+        end = min(starts[i] if i < len(starts) else t + 0x400, t + 0x2000)
+        ok, why = (False, "no extent") if fp is None else exe_imm.pair_agrees(exe_imm.pc_fingerprint(text, va, t, end), fp, psx_to_pc)
+        if not ok:
+            verdict = "refused"
+        elif "psx" not in e:
+            verdict = "new"
+        elif e["psx"] != w:
+            verdict = "differs"
+        elif "psx_overlay" not in e and k[0] not in ("BOOT", "BOOT.BIN"):
+            verdict = "overlay"
+        else:
+            verdict = "same"
+        out.append((t, k[0], k[1], w, verdict, why))
+    return out
+
+
+def write_feed(rows, today):
+    """symbols.toml: the `new` pairs' psx / psx_overlay / psx_status = "hypothesis"
+    / psx_evidence lines, and the `overlay` pairs' psx_overlay, each after its
+    entry's `name` (or `psx`) line, keyed by the entry's `pc`. Returns the count."""
+    path = os.path.join(ROOT, "symbols.toml")
+    with open(path, "rb") as f:
+        raw = f.read()
+    nl = b"\r\n" if b"\r\n" in raw else b"\n"
+    lines = raw.split(nl)
+    todo = {t: (f, s, w, v, why) for t, f, s, w, v, why in rows if v in ("new", "overlay")}
+    out, cur, n, i = [], None, 0, 0
+    block_start = None
+    idx = {}
+    for j, l in enumerate(lines):          # [[func]] block -> its pc, and the line to insert after
+        if l.startswith(b"[["):
+            cur = l.strip() == b"[[func]]"
+            block_start = j
+            continue
+        if cur and l.startswith(b"pc = 0x"):
+            idx[int(l[5:].strip(), 16)] = block_start
+    ins = {}
+    for t, (f, s, w, v, why) in todo.items():
+        if t not in idx:
+            fail("symbols.toml: no [[func]] at 0x%06X" % t)
+        j = idx[t] + 1
+        after = None
+        while j < len(lines) and not lines[j].startswith(b"[[") and lines[j].strip():
+            if lines[j].startswith(b"name = ") or lines[j].startswith(b"psx = "):
+                after = j
+            j += 1
+        if after is None:
+            fail("symbols.toml: the [[func]] at 0x%06X has no name line" % t)
+        ov = "" if f in ("BOOT", "BOOT.BIN") else "%s#%d" % (os.path.basename(f), s)
+        new = []
+        if v == "new":
+            new.append("psx = 0x%08X" % w)
+            if ov:
+                new.append('psx_overlay = "%s"' % ov)
+            new.append('psx_status = "hypothesis"')
+            new.append('psx_evidence = "exe_tables.py feed %s: a placed code-pointer word of %s pairs it (psx-jp '
+                       'image); the fingerprints agree: %s (docs/exe-immediate-places.md 3)"' % (today, f, why))
+        else:
+            new.append('psx_overlay = "%s"' % ov)
+        ins[after] = [x.encode("utf-8") for x in new]
+        n += 1
+    for j, l in enumerate(lines):
+        out.append(l)
+        out += ins.get(j, [])
+    with open(path, "wb") as f:
+        f.write(nl.join(out))
+    return n
+
+
+def cmd_feed(a):
+    pc, _ = pc_data(os.path.join(a.game, "BOF3.exe"))
+    held = [(b, d) for b, d in discs(a.disc) if b == FEED_BUILD]
+    if not held:
+        fail("feed needs the %s disc (symbols.toml's psx addresses are its)" % FEED_BUILD)
+    with open(os.path.join(a.game, "BOF3.exe"), "rb") as f:
+        rows = feed_pairs(pc, f.read(), held[0][1])
+    c = collections.Counter(r[4] for r in rows)
+    print("%d PC functions a placed code-pointer word pairs: %s" % (len(rows), dict(sorted(c.items()))))
+    for t, f, s, w, v, why in rows:
+        if v == "differs":
+            print("  differs: 0x%06X pairs with 0x%08X in %s#%s (%s)" % (t, w, f, s, why))
+    if a.out:
+        with open(a.out, "w", newline="\n") as f:
+            f.write("pc\tfile\tsection\tpsx\tverdict\twhy\n")
+            for t, fl, s, w, v, why in rows:
+                f.write("0x%06X\t%s\t%s\t%s\t%s\t%s\n" % (t, fl or "-", "-" if s is None else s,
+                                                         "-" if w is None else "0x%08X" % w, v, why))
+    if a.write:
+        print("symbols.toml: %d entries written" % write_feed(rows, datetime.date.today().isoformat()))
+
+
+def check_imm(rec, game=None, held=()):
+    """recipes/exe-imm.tsv: it hashes as recipes/exe.toml records (or is absent
+    where the recipe names none), its rows per build in order, inside .data, of a
+    known kind, over no pointer word, no engine-own byte, no map segment and no
+    place of the build, their instructions well formed, as many as the recipe
+    counts; and tools/exe_imm.py's decoder on its synthetic code. With the PC
+    (`game`) and discs (`held`, discs()): each held build's rows decoded on its
+    disc, every byte equal to BOF3.exe's - a row that does not rebuild the PC's
+    bytes on the build it names is an error."""
+    import exe_imm
+    errs = ["exe_imm's synthetic decoder test: " + e for e in exe_imm.selftest()]
+    named = rec["meta"].get("imm_sha256")
+    if not os.path.exists(IMM):
+        if named:
+            errs.append("exe-imm.tsv: absent, recipes/exe.toml names one")
+        return errs
+    with open(IMM, "rb") as f:
+        if sha(f.read()) != named:
+            errs.append("exe-imm.tsv: not the file recipes/exe.toml was generated with")
+    ptr = set()
+    for p, w, _ in load_pointers():
+        ptr.update(range(p, p + 4 * w))
+    own = own_bytes()
+    places = load_places()
+    rows = load_imm()
+    for bid, rs in rows.items():
+        if bid not in ORDER:
+            errs.append("exe-imm.tsv: rows for %s, not a disc build" % bid)
+            continue
+        if len(rs) != rec["build"].get(bid, {}).get("imm_rows"):
+            errs.append("exe-imm.tsv: %s has %d rows, the recipe says %s" % (bid, len(rs), rec["build"].get(bid, {}).get("imm_rows")))
+        taken = [(r["pc"], r["pc_end"]) for r in tables.read_map(os.path.join(tables.MAPS, bid + ".tsv"))]
+        taken += [(r["pc"], r["pc_end"]) for r in places.get(bid, ())]
+        last = DATA_LO
+        for r in rs:
+            where = "exe-imm.tsv: %s 0x%06X" % (bid, r["pc"])
+            if r["kind"] not in IMM_KINDS or not DATA_LO <= r["pc"] < r["pc_end"] <= DATA_HI or r["pc"] < last:
+                errs.append(where + ": unknown kind, empty, outside .data or out of order")
+            last = r["pc_end"]
+            if any(x in ptr or x in own for x in range(r["pc"], r["pc_end"])):
+                errs.append(where + ": over a pointer word or an engine-own byte")
+            if any(lo < r["pc_end"] and r["pc"] < hi for lo, hi in taken):
+                errs.append(where + ": over a map segment or a place")
+            try:
+                if r["kind"] == "immref":
+                    exe_imm.parse_ref(r["insns"])
+                elif r["kind"] == "imm":
+                    exe_imm.parse_elements(r["insns"])
+            except ValueError as e:
+                errs.append("%s: %s" % (where, e))
+    if game and held:
+        pc, _ = pc_data(os.path.join(game, "BOF3.exe"))
+        for bid, disc in held:
+            srcs = {(f, s): (base, blob) for f, s, base, blob in exe_twins.sources(disc)}
+            for r in rows.get(bid, ()):
+                try:
+                    pieces = imm_pieces(r, srcs)
+                except SystemExit as e:
+                    errs.append(str(e))
+                    continue
+                for lo, raw, _ in pieces:
+                    if not r["pc"] <= lo <= lo + len(raw) <= r["pc_end"] or raw != pc[lo - DATA_LO:lo - DATA_LO + len(raw)]:
+                        errs.append("exe-imm.tsv: %s 0x%06X: does not rebuild BOF3.exe's bytes on its disc" % (bid, r["pc"]))
+                        break
+    return errs
+
+
 def cmd_check(a):
     """recipes/exe.toml and exe-pointers.tsv alone: the pointer list hashes as
     the recipe says, its runs are in order inside .data, every build is
@@ -1829,6 +2381,8 @@ def cmd_check(a):
         if sha(f.read()) != rec["meta"].get("psp_sha256"):
             errs.append("exe-psp.tsv: not the file recipes/exe.toml was generated with")
     errs += psp_exe.check()
+    game, held = getattr(a, "game", None), getattr(a, "disc", None)
+    errs += check_imm(rec, game, discs(held) if game and held else ())
     _, _, builds = tables.load()
     keys = ("placed_equal", "placed_differ", "pointer_pc_zero", "pointer_pc_nonzero", "none_pc_zero", "none_pc_nonzero",
             "rebuilt_equal", "layout_equal", "own_pc_zero", "own_pc_nonzero")
@@ -1910,7 +2464,16 @@ def main():
     p.add_argument("--with-filled", action="store_true",
                    help="also skip the ranges the engine fills with the PC's bytes (layout, own, keys)")
     p.set_defaults(fn=cmd_gate_skip)
-    sub.add_parser("check").set_defaults(fn=cmd_check)
+    p = sub.add_parser("feed")
+    p.add_argument("--game", required=True, help="the directory holding BOF3.exe")
+    p.add_argument("--disc", action="append", required=True, help="the psx-jp disc (others are ignored)")
+    p.add_argument("--out", help="a TSV of every pair and its verdict (analysis/, not the tree)")
+    p.add_argument("--write", action="store_true", help="write the checked pairs into symbols.toml")
+    p.set_defaults(fn=cmd_feed)
+    p = sub.add_parser("check")
+    p.add_argument("--game", help="with --disc: decode each held build's owning-function rows against BOF3.exe here")
+    p.add_argument("--disc", action="append", help="a disc whose build's exe-imm.tsv rows to decode (with --game)")
+    p.set_defaults(fn=cmd_check)
     a = ap.parse_args()
     return a.fn(a)
 
