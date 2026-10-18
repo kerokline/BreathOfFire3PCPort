@@ -92,7 +92,7 @@ PSX = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
-         "faerie", "pspmap", "verb")   # widen<k>: the disc's name is k bytes
+         "faerie", "pspmap", "verb", "fishrec", "fishpen")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
@@ -264,6 +264,25 @@ CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA = 0x662F28, 28, 8, 0
 FA_RECORDS, FA_COUNT, FA_STRIDE, FA_FIELD = 0x653200, 60, 0x14, 0x10
 FA_FILE, FA_DISC_STRIDE, FA_DISC_FIELD = "ETC/COMMU00.EMI", 9, 5
 FA_END = FA_RECORDS + FA_STRIDE * (FA_COUNT - 1) + FA_FIELD      # 0x6536AC: the area-limit run's start
+# fishrec, fishpen (D313, 2026-10-17; docs/fishing-text.md 8.8): the fishing banner's thirteen
+# line records (EffectKind0D_States+0x20, 0x653B98: 8 bytes each, the string pointer at +0 and
+# at +4 the label byte, the pause byte and two zero bytes - effect_1a.cpp's LineType /
+# LineNext) and the label pens by label byte (0x653C00, three bytes) behind them. The fishing
+# module (WORLD00/AREA030.EMI#4 on a PSX disc; BOOT.BIN on a PSP disc, whose fishing code is
+# there) holds the records as 12 bytes - a count, the pointer, then the PC's four bytes at +8
+# (all thirteen, all seven discs) - and right after them three 3-byte label entries, the
+# label's text (its button's code and a NUL) and its pen at +2, before the row table the PC
+# has at 0x653C04 (9 or 12 bytes later). fishrec copies the four bytes record for record,
+# found by them as faerie's stats are. fishpen copies the three pens from the entries after
+# the records fishrec found: each release's own buttons' pens (the US module's LineNext
+# 0x801D3CF4..0x801D3D04 reads the entry at 0x801E1F14 + 3 * label and its pen at + 2), so
+# they are BOF3.exe's on the Japanese builds and the West's or PSP-EU's elsewhere -
+# src/game/fishing_text.cpp reads them in the image's release's terms.
+FI_RECORDS, FI_COUNT, FI_STRIDE, FI_FIELD = 0x653B98, 13, 8, 4
+FI_DISC_STRIDE, FI_DISC_FIELD = 12, 8
+FI_PENS, FI_ENTRY = 0x653C00, 3                      # three pens; the disc's entries are 3 bytes, the pen at +2
+FI_ROWS, FI_ROWS_LEN = 0x653C04, 36                  # the row table after them (verbatim on every disc)
+FI_FILE_PSX = "WORLD00/AREA030.EMI"
 # verb: Menu_ButtonSets (0x66383C, nine 5-byte records: a count, up to four indices into the
 # verb table Menu_DrawButtons labels them from). Set 8 is (2, 0x14, 0x0B) on the PC and the
 # JP-shaped discs; the US, European, French and German releases gave its second button a verb
@@ -640,6 +659,19 @@ def build_fill(row, disc, elf, rule, srcs):
             o, d = FA_STRIDE * i + FA_FIELD, FA_DISC_STRIDE * i + FA_DISC_FIELD
             out[o:o + 4] = blob[at + d:at + d + 4]
             mask[o:o + 4] = [True] * 4
+    elif rl == "fishrec":
+        if (lo, hi) != (FI_RECORDS, FI_RECORDS + FI_COUNT * FI_STRIDE):
+            fail("%s: a fishrec row is not the thirteen line records" % row["build"])
+        for i in range(FI_COUNT):
+            o, d = FI_STRIDE * i + FI_FIELD, FI_DISC_STRIDE * i + FI_DISC_FIELD
+            out[o:o + 4] = blob[at + d:at + d + 4]
+            mask[o:o + 4] = [True] * 4
+    elif rl == "fishpen":
+        if (lo, hi) != (FI_PENS, FI_PENS + 3):
+            fail("%s: a fishpen row is not the three label pens" % row["build"])
+        for i in range(3):
+            out[i] = blob[at + FI_ENTRY * i + 2]
+            mask[i] = True
     elif rl == "verb":
         if hi - lo != 1 or lo != VERB_AT or blob[at] != VERB_WEST:
             fail("%s: %s 0x%X is not set 8's Western 23rd verb (0x%02X)" % (row["build"], row["file"], row["addr"], VERB_WEST))
@@ -801,6 +833,15 @@ def find_rows(disc, bid, pc, ref_srcs=None):
                      "file": fa[0], "section": fa[1], "addr": fa[2]})
     else:
         print("  %s faerie: the faeries' trait records not found in %s" % (bid, FA_FILE))
+    fi = fish_place(srcs, pc, psp)
+    if fi:
+        (ff, fs, fa_), fe = fi
+        rows.append({"build": bid, "rule": "fishrec", "pc": FI_RECORDS, "pc_end": FI_RECORDS + FI_COUNT * FI_STRIDE,
+                     "file": ff, "section": fs, "addr": fa_})
+        rows.append({"build": bid, "rule": "fishpen", "pc": FI_PENS, "pc_end": FI_PENS + 3,
+                     "file": ff, "section": fs, "addr": fe})
+    else:
+        print("  %s fishrec: the fishing banner's line records not found" % bid)
     v = verb_place(srcs, pc) if bid in VERB_BUILDS else None
     if v:
         rows.append({"build": bid, "rule": "verb", "pc": VERB_AT, "pc_end": VERB_AT + 1, "file": VERB_FILE,
@@ -836,7 +877,9 @@ def find_rows(disc, bid, pc, ref_srcs=None):
         print("  %s %-6s 0x%06X..0x%06X from %s%s 0x%X: %d bytes, %d not BOF3.exe's" % (
             bid, r["rule"], r["pc"], r["pc_end"], r["file"], "" if r["section"] is None else "#%d" % r["section"],
             r["addr"], r["filled"], len(bad)))
-        if not bad:
+        # fishpen: the release's own pens, BOF3.exe's only on a Japanese build; kept by its
+        # place (fish_place) beside the fishrec row, whose bytes are BOF3.exe's
+        if not bad or (r["rule"] == "fishpen" and any(k["rule"] == "fishrec" for k in kept)):
             kept.append(r)
     if not psp:
         return kept
@@ -1145,6 +1188,24 @@ def verb_place(srcs, pc):
     return None
 
 
+def fish_place(srcs, pc, psp):
+    """The fishing module's line records and label entries: ((file, section, address of
+    record 0), the address of entry 0) or None. The records are found by BOF3.exe's four
+    bytes at +4 of each (records_place, the disc's at +8 of 12); the entries are the nine
+    bytes right after record 12, and the place is kept only when BOF3.exe's row table
+    follows them within the 12 bytes the disc leaves (12 on a PSX disc, 9 in BOOT.BIN)."""
+    file = "BOOT.BIN" if psp else FI_FILE_PSX
+    got = records_place(srcs, pc, file, FI_RECORDS, FI_COUNT, FI_STRIDE, FI_FIELD, FI_DISC_STRIDE, FI_DISC_FIELD)
+    if got is None:
+        return None
+    base, blob = srcs[(got[0], got[1])]
+    entries = got[2] + FI_COUNT * FI_DISC_STRIDE
+    rows = pc[FI_ROWS - DATA_LO:FI_ROWS + FI_ROWS_LEN - DATA_LO]
+    if not any(blob[entries - base + g:entries - base + g + FI_ROWS_LEN] == rows for g in range(3 * FI_ENTRY, 13)):
+        return None
+    return got, entries
+
+
 def faerie_records(n):
     """How many trait records' stats a faerie row of n bytes from FA_RECORDS covers."""
     return (n - FA_FIELD - 4) // FA_STRIDE + 1 if n >= FA_FIELD + 4 else 0
@@ -1174,10 +1235,11 @@ def write_recipe(rows):
              "# widen<k> (the formation wheel's spots, the disc's name k bytes), psxmap (a PSP disc's own EMI",
              "# at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),",
              "# msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from",
-             "# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit) - and how",
+             "# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit), fishrec and",
+             "# fishpen (the fishing banner's line records and the release's own label pens, D313) - and how",
              "# many bytes it fills.",
              "# A row is written only when every",
-             "# byte equals BOF3.exe's.",
+             "# byte equals BOF3.exe's, but a fishpen row (each release's own pens).",
              "# Addresses and counts only (CLAUDE.md rule 1).",
              "\t".join(COLS)]
     for r in rows:
@@ -1321,7 +1383,8 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n,
+                    "fishrec": 4 * FI_COUNT, "fishpen": 3}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
@@ -1333,7 +1396,12 @@ def check():
                 errs.append("exe-psp.tsv: %s 0x%06X: a verb row off the rule" % (bid, r["pc"]))
             if r["rule"] == "faerie" and (r["pc"], r["pc_end"], r["file"]) != (FA_RECORDS, FA_END, FA_FILE):
                 errs.append("exe-psp.tsv: %s 0x%06X: a faerie row off the rule" % (bid, r["pc"]))
-            if r["rule"] not in ("rows8", "msets", "wmrec", "cellhk") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
+            if r["rule"] == "fishrec" and (r["pc"], r["pc_end"]) != (FI_RECORDS, FI_RECORDS + FI_COUNT * FI_STRIDE):
+                errs.append("exe-psp.tsv: %s 0x%06X: a fishrec row off the rule" % (bid, r["pc"]))
+            if r["rule"] == "fishpen" and ((r["pc"], r["pc_end"]) != (FI_PENS, FI_PENS + 3)
+                                           or not any(q["rule"] == "fishrec" and q["file"] == r["file"] for q in rs)):
+                errs.append("exe-psp.tsv: %s 0x%06X: a fishpen row off the rule, or without its fishrec row" % (bid, r["pc"]))
+            if r["rule"] not in ("rows8", "msets", "wmrec", "cellhk", "fishrec") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
                 errs.append("exe-psp.tsv: %s 0x%06X: over a pointer word" % (bid, r["pc"]))
     try:
         ids, null = pc_file_ids()

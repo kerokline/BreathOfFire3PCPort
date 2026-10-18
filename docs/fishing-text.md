@@ -212,6 +212,9 @@ label draws.
   (section 8.6). Only a button that moved takes its shape's pen: circle 2,
   cross 1, triangle 6, square 5, L1 and R1 0, the pens `0x461C00` pushes for
   the same six. This is the owner's rule of 2026-10-17, the one DT-2 uses.
+  Since D313 (section 8.8) "where it was" is where the image's release had
+  it: on a Western or PSP-EU image the line byte's button is that release's
+  (`M_R` of Japan's), and the label is `SigmaFrom(R, it)`.
 - **Under a Latin layer**, the disc's shape: DIV-0051's icon for the entry
   (`FishingText_Label`, now six entries).
 - **On the PC's own text**, the port's stand-in: the `0x66A2FC` string for
@@ -299,6 +302,21 @@ swapped buttons while the old ones still worked. HT closed it.
   - Under a Latin layer it is DIV-0051's shape. On the PC's own text it is
     the port's stand-in, `0x66A2FC[entry]`.
   - At the identity Config, nothing changes.
+  - **Amended 2026-10-17 (D313, section 8.8):** the label is read in the
+    terms of the release the running `.data` was built from (the build of
+    the disc-built image the exe host mapped, `ExeImage_MappedBuild`;
+    `BOF3.exe`'s own, hosted or a `pc-zh` image, is Japan's). The line byte names
+    the line's label entry on every release; the entry is that release's
+    button, `M_R` of Japan's (`P` on the PlayStation West: cross, triangle,
+    square; `S` on PSP-EU: cross, circle, square). The label is
+    `SigmaFrom(R, that button)`, which is `Sigma` of Japan's, or word 7's
+    for the cast. "Unmoved" means the release's own button: then the label
+    draws as that release's disc draws it, its button in the image's pen,
+    which since D313 is the disc module's own (West 1, 6, 5; PSP-EU 1, 2,
+    5). So a Western install at its own defaults draws the US banner's
+    labels, and at Japan's words (the camping save) draws Japan's buttons
+    in their own pens. Without the amendment it drew an unmoved circle in
+    the West's pen for cross.
 - **Rationale:** the round's answer 1. An icon that follows the Config is
   true in the fishing too, once HT moves the tests.
 - **Also in the PSX version?** The PlayStation's labels are fixed too: the
@@ -333,7 +351,9 @@ button takes its shape's colour. `Resolve` now does this. An unmoved button
 gives entry = the line byte and pen = the image's `0x653C00[line]`. On the
 PC that is 2, 1 or 6. On a disc install it is 0, which reproduces the white.
 
-**Not fixed here, a defect for the coordinator to number:** on a disc-built
+**Fixed since as D313 (section 8.8):** the records and pens come from the
+disc's fishing module, and the label resolves in the image's release's
+terms. What this paragraph found, as it stood: on a disc-built
 image the banner's line bytes are all 0. So every line of the thirteen is
 labelled circle, including the quit, gear and no-label lines, and every
 line's pause is 0 where the PC's is 12 or 1. A pause of 0 is decremented to
@@ -368,3 +388,146 @@ RC's route shows only the reel line, which is circle on both.
     against RC's `r_sw_sigma_fishing_sw\psx-us`: **49 / 49 equal**. The reel
     label is a blue cross (pen 1), which moved, so it takes its shape's
     colour. The area 16 legend trades as before.
+
+### 8.8 D313: the line records and pens from the disc (2026-10-17, `fix/fishing-records-disc`)
+
+[`known-defects.md`](known-defects.md) D313 is the record. Section 8.6
+found the defect; this is the fix and its measurements.
+
+**The correspondence, measured** (a scratch reader over the seven discs in
+`C:\Users\kerok\b_d246\discs` and `BOF3.exe`, 2026-10-17). Each fishing
+module (`WORLD00/AREA030.EMI` section 4 on a PSX disc; `AREA089` and
+`AREA129` carry the same bytes; `BOOT.BIN` on a PSP disc, where its fishing
+code lives) holds the thirteen records as 12 bytes: a count, the string
+pointer, then at `+8..+11` the PC record's `+4..+7` (label byte, pause byte,
+two zero bytes). These four bytes equal `BOF3.exe`'s for **all 13 records on
+all seven builds**. So the PC's 8-byte record is the disc's with the count
+dropped. Nothing else in the PC record is a gap: its `+0` is the string
+pointer, which `exe-layout.tsv` fills. Right after record 12 come three
+3-byte label entries, then the PC's row table `0x653C04`, 12 bytes after the
+entries' start on a PSX disc and 9 in `BOOT.BIN`. Each entry is the label's
+text (its button's code and a NUL) with its pen at `+2`:
+
+| Build | Records | Entries (code, pen) |
+|---|---|---|
+| psx-jp | `0x801E1EA0` | `0x1508` 2, `0x1509` 1, `0x150A` 6: circle, cross, triangle |
+| psx-us | `0x801E1E78` | `0x81` 1, `0x82` 6, `0x83` 5: cross, triangle, square |
+| psx-eu-en | `0x801E1E98` | as US |
+| psx-fr | `0x801E212C` | as US |
+| psx-de | `0x801E1E74` | as US |
+| psp-jp | `BOOT.BIN` `0x2DFF00` | as psx-jp |
+| psp-eu | `BOOT.BIN` `0x2DF728` | `0x81` 1, `0x80` 2, `0x83` 5: cross, circle, square |
+
+(PSP-EU's own `AREA030.EMI` still holds Japan's entries. Its code is in
+`BOOT.BIN`, so the rule reads that.) The US module's `LineNext` twin reads the
+entry this way: `lbu` of the record's label byte at `0x801E1E80 + 12 *
+line`, then the text `0x801E1F14 + 3 * label` and the pen `lbu 0x1F16(3 *
+label)` (`0x801D3CE4..0x801D3D0C`, capstone). Its `LineScroll` and `LineFade`
+twins do the same (`0x801D3EAC..`, `0x801D40CC..`, `0x801D4150..`).
+
+**Which release's terms the label is in.** The line byte is the same on every
+release. It names the line's *action's* entry, and the entry is the release's
+own button for that action: Japan's on the Japanese builds, `P` of Japan's
+on the PlayStation West, `S` on PSP-EU. These are `sigma.h`'s `M_R`. The
+pens follow the button's shape on every disc (circle 2, cross 1, triangle 6,
+square 5), so a pen is the release's button's. The PC's `0x66A2FC` and the
+Config cell are in Japan's order. So on a Western image the byte is read
+as `M_R(Japan's button)`, and its label through the Config is
+`SigmaFrom(R, M_R(Japan's))` = `Sigma(Japan's)`. **`FishingText_LabelOf` did
+need the translation** for the pen, not the button. The button it named was
+already `Sigma(Japan's)`. But "unmoved" compared against Japan's button, so
+with the disc's pens a Western install at Japan's words would draw an
+unmoved red-pen slot as a circle in the West's cross pen (blue). `Resolve`
+now takes the image's release:
+
+- `own = M_R(Japan's button)`;
+- the label's button is `SigmaFrom(R, own)`, or word 7's first for the cast;
+- when that is `own`, the label is `own`'s entry in the image's pen, the
+  release's disc draw. Otherwise it is the button's entry in its shape's pen.
+
+The release is the running `.data`'s: the build of the disc-built image the
+exe host mapped (`ExeImage_MappedBuild`, new in `src/hook/exe_image.cpp`), else
+Japan's (`BOF3.exe`'s own, hosted, or a `pc-zh` image, byte-identical). On
+the PC and every Japanese build nothing changes.
+
+| Install, Config | Before D313 | Now |
+|---|---|---|
+| PC, any | unchanged | unchanged |
+| psx-us, Japan's words (the camping save) | circle, pen 0 (white); every line labelled; 256-frame pauses | circle, red (a moved button: the West's slot is cross) |
+| psx-us, the swap | blue cross (moved) | blue cross: the West's own button, the disc's pen 1 |
+| psx-us, the West's defaults | cross / triangle / square, shapes' pens | the same pixels, now as the disc's own draw |
+
+**Off** (`BOF3X_ORIGINAL=FishingLabelSigma`): the original's reads,
+`0x66A2FC[line]` in `0x653C00[line]`. On a Western image that is the PC's
+glyph for Japan's button in the West's pen, a circle in blue. That is
+Capcom's PC code over the West's data, and it is left as such.
+
+**The rule** (`tools/psp_exe.py`, rules `fishrec` and `fishpen`; called by
+`exe_tables.disc_image` for every disc build). `fishrec` finds the records
+by `BOF3.exe`'s four bytes at `+4` (the disc's at `+8` of 12) in the module,
+as `faerie` does. It copies them record for record into
+`0x653B98..0x653C00` (52 bytes; the pointer words are left to the layout).
+`fishpen` copies the three pens from the entries after the records it found,
+into `0x653C00..0x653C03`. It is kept only when the PC's row table follows
+within 12 bytes, and only beside its `fishrec` row. Its bytes are
+`BOF3.exe`'s on psx-jp and psp-jp, and the release's own elsewhere (the
+recipe prints "3 not BOF3.exe's", which is the point). `psp_exe.py check`
+holds both rows to their ranges.
+
+**The pacing.** `LineType` puts the pause byte in `+9` when a line is typed.
+`LineNext` decrements it before it tests it, so a 0 runs 256 frames before the
+column moves on and the next line spawns. The PC's pause is 12, or 1 for
+text 12. A zero label byte also made every no-label line flip a label in
+(6 frames) and fade one out. Measured on `fish_dense` (the fishing route
+with 400 frames added and a shot every 5 from 800; `C:\Users\kerok\b_fish\
+pacing.py`, the typing edge lit or dark). The before run is the new code over
+the same image with the 55 bytes zeroed again (`make_before.py`):
+
+| Run | Typing-edge spans from the reel (frame 1050) on |
+|---|---|
+| psx-us, before | 1050..1110, 1225..1280, 1535..1660: two lines, then about 255 frames of nothing |
+| psx-us, now | 1050..1110, 1120..1210, 1225..1280, 1290..1415, 1420..1475, 1485..1610, 1615..1670: each line follows 5..10 frames after the last |
+| pc | 1050..1085, 1095..1210, 1225..1255, 1265..1365, 1375..1475, ...: the same 5..10-frame follow (its Chinese lines type at 12 units) |
+
+In the before run the "Move Rod...Directional button" line (label `0xFF` on
+the PC) ends in a red circle. Now it has none.
+
+**Checks:**
+
+- `psp_exe.py recipe` over the seven discs: `fishrec` "52 bytes, 0 not
+  BOF3.exe's" on all seven; `fishpen` 0 on psx-jp / psp-jp and 3 on the
+  other five. Then `exe_tables.py recipe`, `exe_own.py measure`,
+  `exe_tables.py gaps`: `exe-gaps.tsv` loses exactly the 13
+  `EffectKind0D_States` rows on each build (91), nothing else.
+  `exe-psp.tsv` +14. `exe.toml` moves the seven hashes and counts. Layout,
+  pointers and places are unchanged.
+- `importer.py check`, `exe_tables.py check`, `psp_exe.py check`,
+  `exe_own.py check`: 0 errors. `importer.py stale` on a cache built before:
+  `stale exe  tools/psp_exe.py changed (build_fill)`.
+- Headless, everything (`BOF3X_SHADOW='*'`, an ini-less launcher copy in
+  `C:\Users\kerok\b_fish\st`, the PC install): 1,084 lines `0 MISMATCHES`
+  and none any other count; `fishing_text self-test: ... 7 labelled lines on
+  four images (this one, in Japan's terms, pens 2 1 6; ...) ... 2880
+  assignments (81259 checks); 0 MISMATCHES`; `inject: 10087 ours, 0 left
+  original`; `self-test only: done`. A hosted run cannot map a disc image,
+  so the West's terms are tested by the synthetic images and the live run.
+  (A narrow hosted run with `BOF3X_EXEIMAGE` naming the psx-us cache only
+  compares that image: `.data` stays the PC's.) The fishing_text self-test now runs four images: this one,
+  in its release's terms, plus Japan's, the West's and PSP-EU's, each with
+  its own pens by rule. It checks that this image's pens are its release's
+  and every pause is non-zero (the defect's two signatures), that each
+  release's defaults draw that release's own labels, and the other Configs
+  and 4 x 720 assignments.
+- Live, `psx-us` (`C:\Users\kerok\b_fish`, `abc_run.py prepare --only
+  psx-us,pc`, `--wide 0`): `sigma_fishing.txt` and its `_sw`, the dense
+  route on psx-us and pc, its swap twin, a West-defaults twin
+  (`fish_dense_west.txt`, save `camping_west`: the camping save's words
+  mapped by `P`, the route's presses renamed by `P` from frame 340), and the
+  before run. The log reads `labels in the PlayStation West's (P) terms (the
+  running .data is the psx-us-built image)`. Against RC's round references
+  (`b_rc\runs\r_id_sigma_fishing`, `r_sw_sigma_fishing_sw`, psx-us), both
+  routes are 43 / 49 frames pixel-equal. The six are `f01140` and `t001140`
+  .. `t001320`, the reel banner. On the identity route that is the red circle
+  where it was white, plus the next line following. On the swap the blue
+  cross is unchanged and the next line follows. Sheets are in
+  `C:\Users\kerok\b_fish\banner_sheet.png` and `banner_sheet2.png`.
