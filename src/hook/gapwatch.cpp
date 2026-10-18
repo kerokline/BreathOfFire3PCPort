@@ -362,9 +362,26 @@ void BuildDrTargets() {
 
 // The next two words on a page parked at least once, one latch each. True
 // when the registers need loading: slots set, or cleared.
+// BOF3X_GAPWATCH_PIN=<address>: the words of the watched range holding it
+// (at most two) keep the debug registers for the whole run instead of the
+// turn - a targeted run that is exact for that one range on a hot page.
+int g_pin_range = -1;
+
 bool ChooseSlots() {
     if (!g_dr_on) return false;
     const int before = g_slots;
+    if (g_pin_range >= 0) {
+        if (before) {
+            ++g_range[g_pin_range].dr_latches;
+            return false;   // loaded at the first latch, and kept
+        }
+        for (std::uint32_t w = g_range[g_pin_range].lo & ~3u; w < g_range[g_pin_range].hi; w += 4) {
+            g_slot_va[g_slots] = w;
+            g_slot_range[g_slots++] = g_pin_range;
+        }
+        ++g_range[g_pin_range].dr_latches;
+        return true;
+    }
     g_slots = 0;
     for (int scanned = 0; g_slots < kSlots && scanned < g_drs; ++scanned) {
         const DrTarget& t = g_dr[g_dr_next];
@@ -769,6 +786,20 @@ void GapWatch_Start(void* dll_module) {
         if (GetEnvironmentVariableA("BOF3X_GAPWATCH_DR", v, sizeof v)) g_dr_on = std::strcmp(v, "0") != 0;
     }
     BuildDrTargets();
+    {
+        char v[16];
+        if (GetEnvironmentVariableA("BOF3X_GAPWATCH_PIN", v, sizeof v)) {
+            const auto at = static_cast<std::uint32_t>(std::strtoul(v, nullptr, 16));
+            const int ri = FirstAbove(at);
+            if (ri >= g_ranges || g_range[ri].lo > at)
+                Fatal("BOF3X_GAPWATCH_PIN=%s: no watched range holds that address", v);
+            if (((g_range[ri].hi + 3) & ~3u) - (g_range[ri].lo & ~3u) > 4u * kSlots)
+                Fatal("BOF3X_GAPWATCH_PIN=%s: 0x%06X..0x%06X is more than %d words", v, (unsigned)g_range[ri].lo,
+                      (unsigned)g_range[ri].hi, kSlots);
+            if (!g_dr_on) Fatal("BOF3X_GAPWATCH_PIN wants the debug registers, which BOF3X_GAPWATCH_DR=0 turns off");
+            g_pin_range = ri;
+        }
+    }
     // What the handler reads must never be on a guarded page.
     for (std::uint32_t at : {Va(&Frame_Counter), Va(&Game_AreaNumber)})
         if (FindPage(at & ~(kPage - 1)) >= 0) Fatal("gapwatch: 0x%08X, which the handler reads, is on a watched page", (unsigned)at);

@@ -23,6 +23,9 @@
 // page parked at least once, the `gap` ranges' words also take the main
 // thread's debug registers in turn, two words a latch (BOF3X_GAPWATCH_DR=0
 // turns that off): exact for the latches a word holds one, at no cost.
+// BOF3X_GAPWATCH_PIN=<hex address> keeps the words of the one range holding
+// it (two at most) in the registers for the whole run: a targeted run, exact
+// for that range on the main thread however hot its page.
 //
 // Instrumentation, not a replacement: it changes no byte the game keeps and
 // needs no DIVERGENCE.md entry. It does change page protections for the life
