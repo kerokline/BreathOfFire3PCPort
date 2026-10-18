@@ -171,8 +171,11 @@ with `Game_Mode` (`0x66C7E8`) and `Game_AreaNumber` (`0x904EFC`): the scene
 key the comparison and the known differences use. Nothing waits for a
 driver; the clock is paused for the write (`GameClock_Pause`), so the frame
 deadline has no debt to replay, and `InputScript_ShotPending` is true on the
-pass before, so that frame is drawn even when late - the same frame on every
-run. No input, step or frame of the recipe moves, and nothing happens unless
+three passes before (and on the two before a recipe's `shot` step and during
+it), so those are drawn even when late - the same frame on every run. One
+forced pass was not enough until 2026-10-17: a late pass just before it still
+changed the picture, a fade step in a fade
+([`button-routes.md`](button-routes.md) 9.2). No input, step or frame of the recipe moves, and nothing happens unless
 the variable is set: instrumentation like the `shot` step, no ledger entry.
 Under Capcom's `WinMain` (`BOF3X_ORIGINAL=Game_WinMain`) the forced draw is
 not there, so a late frame could be the one before; the harness never runs

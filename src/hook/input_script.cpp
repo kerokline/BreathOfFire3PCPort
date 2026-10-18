@@ -428,8 +428,8 @@ void Freeze(const Step& s) {
 // the game's mode and area logged beside it. Nothing waits for a driver: the
 // game writes the file itself, with the clock paused for the write so the
 // frame deadline has no debt to replay, and InputScript_ShotPending has the
-// frame before drawn even when late - so the picture is the same frame on
-// every run, and the recipe's inputs and frames are untouched. Instrumentation
+// passes before it drawn even when late (kShotLeadPasses) - so the picture
+// is the same frame on every run, and the recipe's inputs and frames are untouched. Instrumentation
 // like the `shot` step: off unless set, no ledger entry.
 unsigned g_every = 0;
 
@@ -910,11 +910,56 @@ void InputScript_Start() {
     g_active = true;
 }
 
+// How many passes before a capture are drawn even when late. One was not
+// enough (docs/button-routes.md 9.2): the picture a capture saves also
+// depends on whether the passes before the forced one were drawn. Measured
+// on a fade, one pass left undrawn: just before the forced pass, the capture
+// is the picture of two frames earlier; two before it, 163 pixels move by up
+// to 2; three or more before it, nothing.
+constexpr unsigned kShotLeadPasses = 3;
+
+// True when a recipe `shot` step starts within the next kShotLeadPasses - 1
+// latches. Only steps of known length are walked; an until, a seek or a key
+// step ends the walk (its length is the game's to decide).
+bool ShotSoon() {
+    unsigned frames = 0;   // latches still to run before the shot step is entered
+    for (std::size_t i = g_index; i < g_steps.size(); ++i) {
+        const Step& s = g_steps[i];
+        const unsigned done = i == g_index ? g_t : 0;
+        switch (s.kind) {
+        case Kind::Shot:
+            return frames + 1 < kShotLeadPasses;
+        case Kind::Wait:
+        case Kind::Hold:
+            frames += s.n > done ? s.n - done : 0;
+            break;
+        case Kind::Press: {
+            const unsigned total = (s.hold + s.gap) * s.n;
+            frames += total > done ? total - done : 0;
+            break;
+        }
+        case Kind::Peek:
+        case Kind::Poke:
+        case Kind::Music:
+        case Kind::Mark:
+            break;   // no frame of their own
+        default:
+            return false;
+        }
+        if (frames + 1 >= kShotLeadPasses) return false;
+    }
+    return false;
+}
+
 bool InputScript_ShotPending() {
     if (!g_active || !g_scripted) return false;
     if (g_index < g_steps.size() && g_steps[g_index].kind == Kind::Shot) return true;
-    // BOF3X_SHOT_EVERY: the next latch writes the frame this pass draws
-    return g_every != 0 && (g_frame + 1) % g_every == 0;
+    if (ShotSoon()) return true;
+    // BOF3X_SHOT_EVERY: a latch within the next kShotLeadPasses writes a frame
+    if (g_every == 0) return false;
+    for (unsigned k = 1; k <= kShotLeadPasses; ++k)
+        if ((g_frame + k) % g_every == 0) return true;
+    return false;
 }
 
 void InputScript_Latch() {

@@ -362,8 +362,8 @@ right of the column are unchanged. `sigma_swap`'s four on `pc-enus`: three
 are the save list's slot 7, which held the reference run's save and was
 empty this time (the harness's own folder, not the game); one, `t003450`, is
 the inn's morning fade one step brighter (mean difference 3 of 255, at most
-16) with the next frame equal again - a fade phase, unexplained, not a
-glyph. No other difference.
+16) with the next frame equal again - a fade phase, not a glyph (the
+reference run's, not the round's: section 9.2). No other difference.
 
 **`sigma_swap`'s close press desynced, as section 2 warned**: since words 7
 / 8 follow the Config, cross after the swap is confirm and reopened the
@@ -447,6 +447,9 @@ its `baff5e45` run.
   the round's, reproducible, not noise. On a fade only, on this route only (the
   other routes load the same saves with equal frames); **unexplained** -
   a candidate for whoever owns the load path (SG's `LoadMenu_Apply` writer?).
+  **Explained in 9.2: the reference run's, not the round's** - a late pass
+  the capture did not cover (PSP-EU) and the inn's real-time jingle wait
+  (pc-enus).
 - Slot 7 on both: confirm `0x43`, cancel `0x20`, as on the PC.
 
 **State hash** (`check id id2 r_id`, the platform pages left aside): on every
@@ -470,3 +473,88 @@ step:
 
 The fishing's swapped cross at 850 opens the gear menu on both, L1 pages the
 item list after the swap on both, and the glyphs trade on all four installs.
+
+### 9.2 The fade step on `sigma_swap` (2026-10-17 night, `buttons/fade-step` off `43a72a16`)
+
+The one-frame fade differences of 9 and 9.1 are **the reference run's, not
+the round's**, and they have two different causes. Root `C:\Users\kerok\b_fade`
+(its own `prepare`, psp-eu and pc-enus); its runs under
+`runs\<tag>_sigma_swap\`, RC's under `b_rc\runs\`. Mean brightness of the
+frame, 0..255:
+
+| Frame | RC `id` (the reference, `0538b7dc`) | pre-round reruns | round runs |
+|---|---|---|---|
+| psp-eu `t000330` | 12.43 | 18.61, 18.61 (`f_base`, `f_base2`: the reference's own commit, rebuilt here) | 18.61 x 4 (`r_id`, `r_id2`, `f_id`, `f_sp4`) |
+| pc-enus `t003450` | 45.44 | 42.39 (RC's `x_sigswap`, `839a3e1c`, the old recipe) | 42.39 x 2 (`r_id`, `f_id`) |
+
+So no switch can explain either: the pre-round build itself draws the
+round's picture, and a bisect by `BOF3X_ORIGINAL` switches had nothing to
+find. Nor does the recipe change at frame 2721: `x_sigswap` pressed cross
+there, as the reference did. The two frames:
+
+**psp-eu `t000330`, the load's fade-in: a late pass the capture did not
+cover.** Game logic is the same in both runs: `statehash.py` between `id`
+and `r_id` finds, from tick 318 (the end of the boot-time `0x903000`
+difference, 9.1) to 345, only tick 323 (the VRAM shadow's CLUT-strip rows,
+pages `0x7BF000..0x7C2000`, and `0x7E1000`) and tick 328 (the packet pool
+page `0x7F1000`), one tick each. The reference's log alone has `DIV-0004: 1
+uploads left by an unrendered frame` at 323, and the window icon found at
+`Frame_Counter` 165 rather than 164: its loop left passes undrawn, late
+against the wall-clock deadline (`WinMain` draws a frame only when it is
+early, as Capcom's did), around the area's file loads. The capture
+(`BOF3X_SHOT_EVERY`) forced only the one pass before the frame it writes.
+An experiment build (not committed: one chosen pass left undrawn) on a
+420-frame cut of the route:
+
+| Pass left undrawn (`Frame_Counter`) | `t000330` against the round's |
+|---|---|
+| 320 .. 325 | equal |
+| 326 | 163 pixels, by at most 2 |
+| 327 (the pass before the forced one) | **the reference's frame, pixel for pixel** (mean 6.18 darker, at most 32) |
+| 328 (the forced pass itself, overridden) | one fade frame darker (mean 3.09, at most 16) |
+
+With every frame captured (`--every 1`) and 327 undrawn, `t000329` and
+`t000330` are both `t000328`'s picture, and `t000331` is right again. The
+fade-in brightens by one level a frame (mean +3.1), so the reference's
+capture, two frames old, was two levels darker and the next capture equal.
+Only this route: a capture has to land inside the 16-frame fade with an
+undrawn pass just before it; loads are where passes go late, and of RC's
+runs only this one logged one there.
+
+**pc-enus `t003450`, the inn's morning fade: Capcom's real-time wait.** Here
+game logic does differ. `InnNight_Wait` (`0x57FC70`) counts `0x929F04` down
+from `0x96`, then waits for `Sound_StreamDone` - the inn jingle's DirectSound
+buffer stopping, which is wall-clock time - before `Transition_Start(1)`,
+the morning fade. The task page `0x66C000` (`Task_Records`) changes at ticks
+3432 / 3447 in the reference, 3433 / 3448 in ten hashed runs of both
+installs, and 3434 / 3449 in three (`f_sp4`, and `f_fix` on psp-eu and
+pc-enus; `f_fix2` and `f_fix3`, the same build, are back at 3433): the fade
+starts a frame earlier or later, `t003450` is a level brighter or darker,
+and `t003480` (the fade done) is equal. The capture's clock pause
+(`GameClock_Pause` while a frame is written) stops the game and not the
+stream, one way the jingle's end can move by a frame. Not a capture defect
+and not ours to change; any route with a capture on the inn's morning fade
+can show it. The reference's log also holds a 3-second shot freeze
+(`f02515`: no release from the driver); that is not the cause: a run with
+every shot timing out (`f_frz`) keeps 3433.
+
+**The fix, for the psp-eu half.** `InputScript_ShotPending`
+(`src/hook/input_script.cpp`) now forces the three passes before each
+`BOF3X_SHOT_EVERY` frame (`kShotLeadPasses`), and the two before a recipe
+`shot` step besides the step itself, so a late pass there no longer changes
+the capture. Instrumentation only: game logic, inputs and frames are
+untouched (the state hash of `f_fix` against `f_id`, the same tree before
+the fix, differs only in the platform pages, the slot 7 directory and the
+inn's jingle tick above). Checked:
+
+- the experiment build with the fix: a pass left late at any of 320 .. 328
+  gives `t000330` equal to the round's, all nine (`efix`, `efix3`);
+- the whole route with the fix (`f_fix`): psp-eu and pc-enus 131 / 135
+  equal to `r_id` and to `f_id`, `t000330` among them; of the four, three
+  are the save list's slot 7 (this root's slot 7 held an earlier run's
+  save) and one is `t003450` at tick 3434 (above);
+- the self-tests: `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, an ini-less
+  launcher copy, `--game bof3 --no-config`: no FATAL, every MISMATCH count
+  0, "self-test only: done".
+
+[`abc-harness.md`](abc-harness.md) section 3 says the same.
