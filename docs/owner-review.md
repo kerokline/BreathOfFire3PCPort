@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-17, the button round's section added at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-18, the install-gap round's section added at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,50 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-18, the install-gap round
+
+`install-gap/round` (`0baf26f7`), its end docs on `install-gap/end-docs`
+([`install-gap-round.md`](install-gap-round.md); the census's statuses,
+[`install-gap-census.md`](install-gap-census.md) 8; DIV-0101, DIV-0103,
+DIV-0069 and DIV-0064 amended, D319 and D320). Each call below is one line, with
+the doc that has the reading.
+
+- **Keep DIV-0064's amendment?** (LA's DIV-B) It changes the PC install under
+  every Latin layer. Each faerie shows its own name (D289's fix), and the French
+  and German layers show their discs' words for the equip and experience panel
+  labels, the shared list's title, the gene list's title and kind 0x5E's menu
+  title. Built and in place, the confirmation pending: [`install-gap-labels.md`](install-gap-labels.md) 8.
+- **`Title_Sprites+0xE`** (D266, the Western title mark): read in play on every
+  Western PSX title; a `twin` from `GAME.EMI#1` after your yes:
+  [`install-gap-reads.md`](install-gap-reads.md) 0, census 8.2.
+- **`Encounter_SlotChance+0x1C`** (the empty save slot `0x669CCC`): read on
+  every load screen of all seven installs; the staged localisation PR, its
+  section 8 first: [`name-entry-restoration.md`](name-entry-restoration.md), census 8.2.
+- **`Area124_Weights+0x50`** (EU, DE): the European discs give area 125 other
+  weights. Take the disc's own, or the PC's (which no disc has a reader for)?
+  [`install-gap-twins.md`](install-gap-twins.md) 3.
+- **The Western u16 fields of `EffectKind66_States` and `EffectKind5B_States`**
+  (three each, Western PSX): the Western discs' own numbers or the PC's (JP
+  equals the PC)? [`install-gap-twins.md`](install-gap-twins.md) 2 and 3.
+- **`0x66A094`'s layout** under a Western layer: draw nothing (as now on a
+  disc-only install), or take the West's narrower box and the count's x?
+  [`install-gap-labels.md`](install-gap-labels.md) 4.3 and 8.
+- **The FR / DE music-player labels** (`CommuMusic_CloseSteps+0x28` / `+0x40` /
+  `+0x66`): a raw-byte label group, after a capture of the texture page on each
+  install kind? [`install-gap-labels.md`](install-gap-labels.md) 4.4.
+- **D310's format `0x654900..0x654904`:** keep the engine's own string, or take
+  the disc's copy that `immref` finds in `SCENARIO/SCENA10.EMI` on PSX-US (a
+  DIV-0101 amendment)? [`exe-immediate-places.md`](exe-immediate-places.md) 4.
+- **The two `LeaderPanel` `psx` entries** `0x528CD0` (`LeaderPanel_S1Choose`)
+  and `0x5295F0` (`LeaderPanel_S4Run`): FP's and OT's methods share nothing and
+  both derive another twin than the entry's. Correct them?
+  [`install-gap-pairs.md`](install-gap-pairs.md) 2.3, [`exe-immediate-places.md`](exe-immediate-places.md) 3.
+- **A Defender exclusion** for the build and harness folders: Windows Defender
+  quarantines every local launcher build, so the round's live end batch (the
+  A/B/C caches, the attract gate, the hash routes, the captures) has not run.
+  This is a machine setting only you can make:
+  [`install-gap-round.md`](install-gap-round.md) 5, [`install-gap-reads.md`](install-gap-reads.md) 8.
 
 ## 2026-10-17, the button unification round
 
