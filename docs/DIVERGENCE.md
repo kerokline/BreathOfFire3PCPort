@@ -4093,6 +4093,58 @@ designed in rather than bolted on.
   `Handyman` in a box sized to them; `news_loc4`: `Coo`, `Pan`, `Candy` on
   the board from the renamed save; `identify_loc4`: no headings, `ITEM`
   small above the items, `Fly Man`).
+  **Amended 2026-10-18 - group 16's slots, four more groups, group 17 on
+  PSP-EU** (the install-gap round, group LA,
+  [`install-gap-labels.md`](install-gap-labels.md) 2..5; D289). **The
+  owner's confirmation is pending** (labels doc 8, and
+  [`owner-review.md`](owner-review.md) "2026-10-18, the install-gap round"):
+  this changes the PC install's output under every Latin layer, so it is
+  written here as built and stays the owner's to keep or undo.
+  *Original:* group 16 above wrote faerie r's name into record r + 1's field
+  (`0x653214 + 20 r`): the PC's trait record is the name first, at `0x653200
+  + 20 r`, and the stats follow at `+0x10`, so the "sixtieth record with no
+  glyph string" was record 59's stats read as a name, and the sixtieth write
+  would have landed on the area-limit table `0x6536B0`. Faerie 0 kept the
+  shipped name and every other showed its neighbour's, under every Latin
+  layer, the PC included (D289). Five more slots held the PC's own words
+  under every layer and were zero on a disc-built image where the disc
+  re-words them: kind 0x5E's menu title `0x66A098` (Chinese), the equip and
+  experience panels' three labels `0x663668` / `70` / `74`, the shared
+  list's title `0x664288` and the gene list's title `0x66B1F0` (English).
+  PSP-EU had no group 17 (DIV-0118's guest name), its battle code being in
+  `BOOT.BIN`. *New:* group 16's sixty slots are `0x653200 + 20 r`, and
+  `loc_build.py` sends all sixty disc names (`FAERIE_UNNAMED` is empty,
+  checked against the PC by `loc_build.py anchors`; the disc's record r is
+  the PC's record r by the stats anchor, all sixty in order). Four new
+  groups write in place, each witnessed by the one operand that names its
+  slot. Group 20 is kind 0x5E's title, found in `EffectKind5E`'s PSX twin in
+  `SCENARIO/SCENA10.EMI` (`parts_title`: the call whose second argument is a
+  `"%s"`, cut at the next call's count); `rest_3e.cpp`'s
+  `EffectKind5E_DrawMenu` draws it to its NUL once written, at the PC's
+  x + 4, where the discs draw it to their own count at x + 8. Group 21 is
+  the panels' labels (`START.EMI`), group 22 the shared list's title
+  (`SHOP.EMI`) and group 23 the gene list's (`STATUS.EMI`, after the 16
+  bytes the PC has at `0x66B1E0`). Group 17 on PSP-EU reads the guest's name
+  from `BOOT.BIN`'s own code (the copy of 5, the sound `0x102` two calls
+  before it). The Japanese builds build none of these (D280's). *Why:* the
+  stage-2 text swap (DIV-0005) for the slots no group reached, and D289's
+  fix as [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4 described
+  it. Under a French or German layer the PC now shows that disc's words
+  where it showed the PC's English, and every faerie its own name.
+  *Verification:* `loc_build.py selftest` (the two new readers on synthetic
+  code, a refusal each); `loc_build.py all` over the seven discs (US, EU, FR,
+  DE: `panel labels 3`, `list title 1`, `parts title 1`, `gene title 1`,
+  `guest name 1`, `faerie names 60`); PSP-EU through `convert_labels_psp`
+  (`guest name 1`, `parts title 1`, `faerie names 60`); `importer.py check`
+  0 errors; `BOF3X_SHADOW='*,-field_c1'` under `fr-FR` and `de-DE` and `'*'`
+  under `original`, no mismatch; the exe host on FR and DE disc-only
+  installs logs every new chunk applied. Captured: the shared list's title
+  on `campingFishing`'s Skill Notes, FR and DE. Not seen: the panels'
+  labels, the gene list's title, kind 0x5E's title (area 128), the guest's
+  name and the faerie names (the village route starts a new game on a
+  German install). An overlay built before this sends record 59 empty: its
+  fifty-nine names then land in their own records and record 59 keeps the
+  shipped name.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
@@ -4353,6 +4405,39 @@ designed in rather than bolted on.
 - **Amended 2026-10-17 (the button unification round, DIV-0136):** the
   banner's label names the button the line's test is on now, through `σ`;
   the owner's word above (IDEAS I29) is met.
+- **Amended 2026-10-18 (D286's French and German remainder; the install-gap
+  round, group LA, [`install-gap-labels.md`](install-gap-labels.md) 1 and 5):
+  the equip panels' four headings from the disc.** *Original:*
+  `EffectKind0F_DrawItemsB` / `_DrawItemsA` / `_DrawEquipped` draw the four
+  fixed fields at `0x653EA0` / `A4` / `A8` / `AD` with the counts 3, 4, 5, 5
+  at `x + 0x35`, `0x2F`, `0x2A`, `0x2A`. That is the PC's English under every
+  layer, and nothing on a French or German disc-built image, where the
+  fields are zero (D286; DIV-0101's amendment of 2026-10-16 placed them on
+  the other builds). *New:* `loc_build.py` `fishing_headings` finds the
+  module's four heading references past the tabs, each with the count and
+  the row its own draw passes (`addiu $a3` and `$a1` beside the `lui` /
+  `addiu` of the address; exactly four, rows 7, 7, 7, `0x47`, in the PC's
+  order), and writes each disc's word to its count as chunk kind 16 tag 3:
+  US, EU, FR and DE. Not PSP-EU (its code is the PSP's own and its image has
+  the PC's words by the `twin` row) nor JP (no fishing chunk for a Japanese
+  disc). `fishing_text.cpp` copies the four into buffers of ours; nothing in
+  `.data` is re-aimed. Under a Latin overlay `effect_1b.cpp`'s `DrawHeading`
+  draws the disc's word whole, centred on the original's centre `x + 6 *
+  count` by its real width (`TextAdvance_Width`); for a 12-unit word of
+  `count` glyphs that is the original's x. Without the chunk, or not armed,
+  the original draw. *Why:* the French and German words exist only at their
+  discs' widths, so no byte-equal run can place them; the US module's own x
+  puts its words within a unit of the same centre. The words and counts are
+  each disc's, the x the PC's centre, not the disc's. *Verification:*
+  `loc_build.py selftest` (the reader on synthetic code, with a refusal);
+  `loc_build.py all` over the seven discs (`4 headings` on US, EU, FR, DE);
+  `BOF3X_SHADOW='*,-field_c1'` hosted under `fr-FR` and `de-DE`, `inject:
+  10088 ours`, no mismatch; the exe host on FR and DE disc-only installs logs
+  `4 of 4 fishing headings (D286)`; `campingFishing`'s equip screen captured
+  on both disc-only installs and on the PC under both layers (harness root
+  `C:\Users\kerok\g_la`, labels doc 7). **Owed the owner's eye:** those
+  captures; the French tabs still overrun their boxes (unchanged here).
+  *Reversible:* play without `BOF3X_LANG`, or with an overlay built before.
 - **Reversible?** play without `BOF3X_LANG` (or `BOF3X_LANG=original`): no
   chunk, and the layout is never armed. `BOF3X_ORIGINAL` on any of the
   draws named above leaves Capcom's, which reads the re-aimed pointers
@@ -6677,6 +6762,117 @@ designed in rather than bolted on.
   `bgm\000`; after `importer.py setup` rebuilt the image, the same frame plays
   `Music_Play(151, 10)`, `bgm\151` (bank `BGMBAT00`), and the start-up log's
   41 `EventBattle_Records` gap lines are gone. Not heard.
+- Amended 2026-10-18 (the install-gap round, [`install-gap-round.md`](install-gap-round.md);
+  its stages A and B merged on `install-gap/round`, the recipes regenerated at
+  `0baf26f7`): the census's NEEDS FIX rows
+  ([`install-gap-census.md`](install-gap-census.md) 8) are filled by five new
+  kinds of placement: 61 of the 145 symbols with a `gap` row at `06a209bd`
+  have none left (90 remain, six of them the remainders of pieced rows).
+  Zero, those bytes were read as zero: of the ten gap rows the read watch
+  saw read in play ([`install-gap-reads.md`](install-gap-reads.md) 0), eight
+  were live defects. Six of them, and half of a seventh, are filled here:
+  the Nue fight's cloud offsets, the PSPs' default light pair, screen
+  margins, member-flag byte and trait list 1 (every save load), PSX-JP's
+  fish kinds (every area change), and the German equipment panel's slot
+  icons (D319). The same German row's labels and the French and German
+  fishing headings (the eighth) are a language layer's (DIV-0069's and
+  DIV-0064's amendments of the same day). The other two rows are the owner's
+  (D266's title mark, the empty save slot). Every byte the round fills
+  equals `BOF3.exe`'s, and the kinds are:
+  - **Pieced segments** (TW, [`install-gap-twins.md`](install-gap-twins.md)
+    2): a `TWINS` entry may carry a seventh field, segments inside its run.
+    The place is the one disc address where every segment equals
+    `BOF3.exe`'s bytes at one displacement; `find_rows` writes one `twin`
+    row per segment, and D268's rule applies to each. The bytes between are
+    the disc's own values and stay unfilled, whole fields only. Used for
+    `EffectKind66_States+0x18` and `EffectKind5B_States+0xC` (Western PSX)
+    and `CommuMusic_CloseSteps+0x28` (FR, DE). The three u16 fields each of
+    the first two rows, which the Western discs hold otherwise, are an owner's
+    call. TW's plain twins with them: 146 `twin` rows over the seven builds,
+    among them area 169's dial grids (P1 item 7: one verbatim run in
+    `WORLD04/AREA170.EMI#13` after all), world map 115's legend frame and
+    area 148's and 170's attach vectors (group RD's readers,
+    [`install-gap-readers.md`](install-gap-readers.md) 4).
+  - **`BOOT.BIN` twins by its relocations** (PB, twins doc 5.1): `boot_place`
+    settles the ELF's hi16 / lo16 pairs by register and takes, among a
+    run's copies in `.rodata` / `.data`, the one a relocated pair reads into
+    whose place agrees with the PC's pointer words before it; exactly one, or
+    no row. PSP builds only, refused loudly on a PSX build. Seven rows per
+    PSP build: the default light pair, two leader move scripts packed without
+    the PC's padding, four `EffectKind18Sub*` state tails. The rule
+    `margins` is DIV-0103's amendment of the same day. **Through a relocated
+    pointer table** (PT, twins doc 6.1): where no pair reads a copy
+    directly, `boot_place` takes the one `BOOT.BIN` table whose entry names
+    the copy, whose relocated words sit at exactly the PC table's pointer
+    offsets and which a relocated pair reads: `Char_TraitLists`' list 1 on
+    both PSPs (`Char_ApplyTraits`, every save load). `psp_exe.py check`'s
+    `table_selftest` refuses five near misses on a synthetic ELF. PT also
+    appended group CW's two rows ([`install-gap-live-rows.md`](install-gap-live-rows.md)):
+    `ChlorineCloud_Offsets` from `BMAGIC/MAGIC009.EMI#3` on all seven, and
+    the PSPs' whole member-flag table `0x669738..0x669743` from `BOOT.BIN`
+    (the three gap bytes alone match 503 places; the 11-byte table one), and
+    the German slot icons `0x663660..0x663668` from `BATE.EMI`'s second copy,
+    the panel's twin (D319).
+  - **`immref`** (OT, [`exe-immediate-places.md`](exe-immediate-places.md)):
+    a row of `recipes/exe-imm.tsv` names the disc file and section, the PSX
+    twin of a PC function that reads the gap, and the `lui` and `%lo`
+    instructions in it whose address holds the bytes in the twin's own
+    overlay. `exe_tables.py recipe` writes one only where every number byte
+    from the reader's operand equals the PC's (four or more, two non-zero)
+    at one place; `build` applies it last, to bytes nothing else filled;
+    `check` refuses a row its disc does not decode or that does not rebuild
+    `BOF3.exe`'s bytes. The value shape (`imm`, a twin's stored constants)
+    is built too and matched nothing. Engine-own regions are excluded:
+    D310's ability-name format stays the engine's string though `immref`
+    would place a copy from `SCENARIO/SCENA10.EMI` on PSX-US (the owner's
+    call). The twins come from OT's code-pointer pairs and group FP's
+    pairing of the effect, magic and boss state functions
+    ([`install-gap-pairs.md`](install-gap-pairs.md)), written to
+    `symbols.toml`'s `psx` fields at the `hypothesis` tier.
+  - **The zero-tail end** (FP's proposal, built by the coordinator): an
+    `immref` row ends where the PC's remaining bytes are all zero and the
+    disc's next data begins, so the PC's alignment zeros stay unfilled (the
+    PC's own value there); any other difference still refuses the row. It
+    placed `EffectKind2A_States+0x10` (the rows that move the party),
+    `Area118_SpawnKinds`, `BreathMote_Angles` and two `EffectKind18Sub*`
+    tails.
+  - **`IMM_SKIP`** (`tools/exe_tables.py`): regions the immediate places
+    leave alone because they are the owner's - today `Area104_PlateAnims`,
+    DIV-0055's re-laid plates, which the zero-tail end would otherwise have
+    placed.
+
+  Two `find_places` fixes change only provenance: a paired code word agrees
+  on a PSX build only where the disc's word is a code address (five
+  `AREA170` place rows dropped, the image unchanged), and a section's last
+  bytes compare on their own (five place rows grow, placing
+  `Area91_RingTurns` and `Area151_DriftUV+0x8`). Reclassed without a byte
+  changing: `MagicBallOrb_Shades+0x10`, `MasterWin_Requirements+0x44` (a
+  string no operand names: no Western list, so P1 item 8 is not one) and
+  `Music_LoadedTrack+0x1E30` are `unread`; `LANGUAGE_ZERO` is per build, so
+  three rows a Latin layer writes are `language` on the Latin builds and
+  stay gaps under `ja-JP`. `exe-gaps.tsv`'s `gap` rows / bytes / the PC's
+  non-zero bytes, `06a209bd` to `0baf26f7`: PSX-JP 104 / 1,486 / 797 to 58 /
+  673 / 311; PSX-US 122 / 2,089 / 1,320 to 76 / 1,172 / 761; PSX-EU 118 /
+  2,120 / 1,348 to 75 / 1,262 / 827; PSX-FR 122 / 2,269 / 1,460 to 76 /
+  1,295 / 857; PSX-DE 125 / 2,297 / 1,474 to 78 / 1,314 / 865; PSP-JP 92 /
+  1,069 / 628 to 54 / 548 / 296; PSP-EU 93 / 1,079 / 634 to 52 / 517 / 274
+  (the census's section 8 has the table). The recipes: `exe-psp.tsv` + 172
+  `twin` rows, 2 `margins`, one more `psxmap` per PSP build; `exe-imm.tsv`
+  141 `immref` rows (PSX-JP, US, DE 24, EU 23, FR 22, each PSP 12).
+  Verification: every new `twin` / `margins` row "0 not BOF3.exe's";
+  `exe_tables.py check --game` with the seven discs decodes every `immref`
+  row against `BOF3.exe` (0 errors; three hand-corrupted rows refused);
+  `psp_exe.py`, `importer.py`, `exe_tables.py check` clean after each merge;
+  `tools/exe_scan.py` over the seven discs at `0baf26f7` (harness root
+  `C:\Users\kerok\g_end\scan`): `missing/gap` 311, 761, 827, 857, 865, 296,
+  274, the table's last column byte for byte; the exe host's self-test from
+  PSX-US, PSP-EU, PSP-JP, FR and DE disc-only caches in the groups' roots
+  (exit 0). Not played: the round's live end batch (the A/B/C caches, the
+  attract gate, the hash routes, the captures) is not run, every local
+  launcher build being quarantined by Windows Defender. The entry stays
+  provisional, and `BOF3X_EXEIMAGE_STRICT=1` is not the default (I43 step 4,
+  not ready: the read watch is to be re-run on the merged branch, and the
+  two rows read in play are the owner's).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -6800,6 +6996,33 @@ designed in rather than bolted on.
   `0x66AE1C..0x66AE2A`; the exe host self-test with the PSP-EU image. Not
   rendered: the PSP-EU message boxes are not yet re-run (they sat at the top
   left before `boxxy`).
+
+  **Amended 2026-10-18 (the install-gap round, group PB,
+  [`install-gap-twins.md`](install-gap-twins.md) 5.3 and 5.6):
+  `Sprite_ScreenMargins` on a PSP-built image.** *Original:* a PSP-only image
+  held the eight bytes `0x663B28..0x663B30` as a `gap` - no file of either PSP
+  disc holds them verbatim - so `Sprite_ProjectA`'s cull tested every sprite
+  against zero margins, flagged any sprite outside the bare 320 x 240 frame
+  off-screen and kept it off `Sprite_DrawList`. The gap watch saw the row read
+  about 95,000 times over PSP-EU's five routes ([`install-gap-reads.md`](install-gap-reads.md)
+  5 item 3). The PSP's own copy is in `BOOT.BIN` (PSP-EU `0x2E5398`, PSP-JP
+  `0x2E5B80`, read through one relocated pair by the twin of
+  `Sprite_ProjectA`). It is the PC's table with both x margins of each entry
+  32 larger: the PSP's 32 columns either side of its 384-wide view. *New:*
+  the rule `margins` (`tools/psp_exe.py`, PSP builds only) finds that copy as
+  `boot_place` finds a twin's and writes x - 32 and y as read. It refuses
+  loudly if a margin would go under zero, and writes a row only when the
+  result equals `BOF3.exe`'s, which it does on both PSP discs (one row each,
+  8 bytes, "0 not BOF3.exe's"). *Why:* the rule of `unwide` and `boxxy`
+  above, the PSP's base without its re-framing; DIV-0041's wide modes read
+  the PC's margins, so the PC's table is what our engine expects.
+  (`psp-widescreen.md` 3b says the PSP left its sprite culls alone: it left
+  their code, and moved this one table.) Verification: PB's regeneration over
+  the seven discs and the round's again at `0baf26f7`; `exe-gaps.tsv` loses
+  the row on both PSP builds; `tools/exe_scan.py` lists no byte of the symbol
+  off the PC's; the exe host's self-test from a PSP-EU and a PSP-JP cache
+  exits 0 (10,088 and 10,087 ours). Not rendered. *Reversible:* drop the two
+  `margins` rows from `recipes/exe-psp.tsv`.
 
 ### A PSP-built image of `.data` carries the PSP's level table and consumable 87
 
