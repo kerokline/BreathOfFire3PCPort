@@ -43,6 +43,19 @@ bool ExeImage_DiscMapped();
 // release's own table is in (D313: the fishing labels, fishing_text.cpp).
 const char* ExeImage_MappedBuild();
 
+// The ranges of the disc-built image ExeImage_Source mapped, in data.toml's
+// order: [0, ExeImage_MappedRanges()), each with its class (`how`, e.g.
+// "gap") and its `from` (the symbol recipes/exe-gaps.tsv names). 0 when no
+// disc-built image was mapped. For the gap watch (gapwatch.h), which guards
+// the classes that are zero where the PC has a value.
+struct ExeImageRange {
+    std::uint32_t lo, hi;
+    const char* how;
+    const char* from;
+};
+int ExeImage_MappedRanges();
+ExeImageRange ExeImage_MappedRange(int i);
+
 // DIVERGENCE DIV-0111 (docs/launcher-suites.md section 9): the exe host, after
 // .data is in place (the file's or BOF3X_EXEIMAGE's, filled) and before the
 // compare below: each layer BOF3X_OPT names whose cache (BOF3X_CACHE, not

@@ -102,6 +102,7 @@ add_library(bof3x SHARED
   src/hook/exe_image.cpp
   src/hook/exe_own.cpp
   src/hook/calltrace.cpp
+  src/hook/gapwatch.cpp
   src/hook/input_script.cpp
   src/hook/statehash.cpp
   src/hook/wav_dump.cpp
