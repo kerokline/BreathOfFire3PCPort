@@ -111,6 +111,142 @@ bool Cull(unsigned char* object, short x, short y, int draw, int flag) {
 
 int g_draw_columns = -1, g_flag_columns = -1;   // the self-test's: -1 is Sprite_Draw's own
 
+}  // namespace
+
+std::uint32_t g_sprite_capture = 0;   // DIV-0142; 1 through PatchBytes("SpriteCapture") in SpriteDraw_Inject
+
+namespace {
+
+// DIVERGENCE DIV-0142 (the sprite's capture into VRAM, issue #84, known-defects
+// D317): the PlayStation's twin of this function (0x8014C3C8) tests bit 3 of
+// +0x24 after the cull (0x8014C538). Set, it puts a DR_AREA of (0x340, 0x100,
+// 0xC0, 0x100) into the object's ordering-table slot, adds 0x340 to +0x2E and
+// 0x10 + 240 x (the buffer index 0x80143D44 ^ 1) to +0x30, and draws the frame
+// as ever - against its draw offset (0, 240 x buffer) that lands the picture
+// at VRAM (0x340 + x, 0x100 + y), not on the screen, and the moved point culls
+// the object on the next frame: a one-frame capture. Amalgam's death (boss_sc
+// 0x439790), Mikba's (0x43DD30) and three effect kinds then draw from that page.
+// Capcom's PC has no such test: the sprite stays on the screen and the page
+// holds only what Gfx_ClearRect left there. Ours: the PSX's point shift, and
+// the frame composed as D3d_BuildCellTexture composes it (DrawCells' decode,
+// texel 0 clear, later cells over earlier) then laid into Gfx_VramShadow at
+// the object's point - scaled and mirrored as the Direct3D end draws the
+// primitive, the shade applied as the GPU modulates (texel x shade / 0x80,
+// each channel to 31), and with bit 5 of byte 0 the tpage's blend over what
+// the page holds for texels with their top bit. Clipped to the PSX's draw area;
+// then Gfx_InvalidateTextures over it, which also drops a DIV-0125 grab there.
+constexpr int kCapX = 0x340, kCapY = 0x100, kCapW = 0xC0, kCapH = 0x100;
+constexpr int kCanvas = 0x140, kCanvasOrigin = 0x80;   // cell offsets are s8, sizes up to 32
+std::uint16_t g_canvas[kCanvas][kCanvas];
+
+unsigned BlendChannel(unsigned back, unsigned front, unsigned abr) {
+    int v;
+    switch (abr) {
+    case 0: v = static_cast<int>((back + front) >> 1); break;
+    case 1: v = static_cast<int>(back + front); break;
+    case 2: v = static_cast<int>(back) - static_cast<int>(front); break;
+    default: v = static_cast<int>(back + (front >> 2)); break;
+    }
+    return v < 0 ? 0u : v > 31 ? 31u : static_cast<unsigned>(v);
+}
+
+int Clamp(int v, int n) { return v < 0 ? 0 : v > n ? n : v; }   // a screen row or column to the draw area's
+
+void Capture(unsigned char* object) {
+    const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
+    Put<short>(object, 0x2E, static_cast<short>(x + kCapX));
+    Put<short>(object, 0x30, static_cast<short>(y + 0x10 + 240 * (Gfx_BufferIndex ^ 1)));
+    const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
+    const unsigned count = frame[0];
+    if (count == 0) return;
+
+    unsigned short clut;
+    Sprite_ClutWord(&clut);
+    const std::uint16_t* vram = Gfx_VramShadow;
+    const std::uint16_t* palette = vram + (((clut >> 6) & 0x1FF) << 10) + ((clut & 0x3F) << 4);
+    const auto* vram_bytes = reinterpret_cast<const unsigned char*>(vram);
+    const unsigned wide = object[0x28] != 0 ? 1u : 0u;
+
+    // The composition, from the origin as the cell texture's extent is.
+    int left = 0, right = 0, top = 0, bottom = 0;
+    const unsigned char* piece = frame + 1;
+    for (unsigned i = 0; i < count; ++i, piece += kPartBytes) {
+        const unsigned size = (piece[0] & 0xFu) * 2;
+        const unsigned tpage = (((piece[0] & 0x80u) | (wide << 5)) << 2) | object[0x25];
+        const int cx = static_cast<signed char>(piece[1]), cy = static_cast<signed char>(piece[2]);
+        const unsigned packed = ((SpriteCell_Sizes[size + 1] & 0xF8u) << 1) | ((SpriteCell_Sizes[size] & 0xFFu) >> 3);
+        const int w = static_cast<int>((packed & 0xFu) << 3), h = static_cast<int>(((packed & 0xFFu) >> 1) & 0x78u);
+        const bool eight = (tpage & 0x180) != 0, flip = (tpage & 0x200) != 0;
+        const unsigned v = static_cast<unsigned char>(object[0x26] + piece[4]);
+        const unsigned row0 = ((tpage & 0x10) << 4) + v;
+        const unsigned byte0 = (eight ? piece[3] : piece[3] >> 1) + ((tpage & 0xF) << 7);
+        for (int r = 0; r < h; ++r) {
+            const unsigned char* src = vram_bytes + (((row0 + static_cast<unsigned>(r)) & 0x1FF) << 11);
+            for (int k = 0; k < w; ++k) {
+                const unsigned t = static_cast<unsigned>(flip ? w - 1 - k : k);
+                const unsigned b = src[(byte0 + (eight ? t : t >> 1)) & 0x7FF];
+                const unsigned index = eight ? b : (t & 1 ? b >> 4 : b & 0xF);
+                const std::uint16_t c = palette[index];
+                if (c != 0) g_canvas[cy + r + kCanvasOrigin][cx + k + kCanvasOrigin] = c;
+            }
+        }
+        if (cx < left) left = cx;
+        if (cx + w > right) right = cx + w;
+        if (cy < top) top = cy;
+        if (cy + h > bottom) bottom = cy + h;
+    }
+
+    float sx = 1.0f, sy = 1.0f;
+    if (object[0x48] != 0) {
+        sx = static_cast<float>(static_cast<double>(Get<long>(object, 0x40)) * (1.0 / 65536));
+        sy = static_cast<float>(static_cast<double>(Get<long>(object, 0x44)) * (1.0 / 65536));
+    }
+    const bool mirror = object[0x2A] != 0, semi = (object[0] & 0x20) != 0;
+    const unsigned abr = (object[0x25] >> 5) & 3u;
+    const unsigned shade[3] = {static_cast<unsigned char>(object[0x5D] + 0x80),
+                               static_cast<unsigned char>(object[0x5E] + 0x80),
+                               static_cast<unsigned char>(object[0x5F] + 0x80)};
+    std::uint16_t* out = Gfx_VramShadow;
+    if (sx > 0.0f && sy > 0.0f) {
+        const float x0 = mirror ? x - right * sx : x + left * sx, x1 = mirror ? x - left * sx : x + right * sx;
+        const float y0 = y + top * sy, y1 = y + bottom * sy;
+        const int q_lo = Clamp(static_cast<int>(y0) - 1, kCapH), q_hi = Clamp(static_cast<int>(y1) + 1, kCapH);
+        const int p_lo = Clamp(static_cast<int>(x0) - 1, kCapW), p_hi = Clamp(static_cast<int>(x1) + 1, kCapW);
+        for (int q = q_lo; q < q_hi; ++q) {
+            const int vy = kCapY + q;
+            const float fy = (q + 0.5f - y0) / sy;
+            if (fy < 0.0f || fy >= static_cast<float>(bottom - top)) continue;
+            const int py = top + static_cast<int>(fy);
+            for (int p = p_lo; p < p_hi; ++p) {
+                const int vx = kCapX + p;
+                const float fx = (p + 0.5f - x0) / sx;
+                if (fx < 0.0f || fx >= static_cast<float>(right - left)) continue;
+                const int px = mirror ? right - 1 - static_cast<int>(fx) : left + static_cast<int>(fx);
+                const unsigned c = g_canvas[py + kCanvasOrigin][px + kCanvasOrigin];
+                if (c == 0) continue;
+                unsigned ch[3] = {c & 0x1Fu, (c >> 5) & 0x1Fu, (c >> 10) & 0x1Fu};
+                for (int n = 0; n < 3; ++n) {
+                    const unsigned m = (ch[n] * shade[n]) >> 7;
+                    ch[n] = m > 31 ? 31 : m;
+                }
+                std::uint16_t& d = out[(vy << 10) + vx];
+                if (semi && (c & 0x8000)) {
+                    for (int n = 0; n < 3; ++n) ch[n] = BlendChannel((d >> (5 * n)) & 0x1Fu, ch[n], abr);
+                }
+                d = static_cast<std::uint16_t>((c & 0x8000) | ch[0] | (ch[1] << 5) | (ch[2] << 10));
+            }
+        }
+    }
+    for (int r = top; r < bottom; ++r)
+        std::memset(&g_canvas[r + kCanvasOrigin][left + kCanvasOrigin], 0, static_cast<size_t>(right - left) * 2);
+    const short rect[4] = {kCapX, kCapY, kCapW, kCapH};
+    Gfx_InvalidateTextures(rect, 0);
+    static unsigned logged = 0;
+    if (logged < 64 && ++logged)
+        bof3::Log("DIV-0142    capture %u: object at (%d, %d), %u pieces, scale %.3f x %.3f%s%s, into VRAM (0x%X, 0x%X)",
+                  logged, x, y, count, sx, sy, mirror ? ", mirrored" : "", semi ? ", blended" : "", kCapX + x, kCapY + y);
+}
+
 void Draw() {
     unsigned char* object = Sprite_Current;
     if (object[0] & 0x40) return;
@@ -128,6 +264,10 @@ void Draw() {
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
     const int draw = g_draw_columns >= 0 ? g_draw_columns : static_cast<int>(Widescreen_Fill());
     if (!Cull(object, x, y, draw, g_flag_columns >= 0 ? g_flag_columns : 0)) return;
+    if (g_sprite_capture != 0 && (object[0x24] & 8)) {   // DIV-0142: the PSX's draw into VRAM, before any screen test
+        Capture(object);
+        return;
+    }
     if (wide_staging::Hide(object)) return;   // DIV-0124: 21:9, past the 16:9 view in a scene - draw-only, after bit 7
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
@@ -219,6 +359,10 @@ void LiveApply(const LiveState& s, const LivePlace& at) {
 void LiveDraw() {
     static LiveState input, theirs, ours;
     unsigned char* object = Sprite_Current;
+    if (g_sprite_capture != 0 && (object[0x24] & 8)) {   // DIV-0142's capture is not Capcom's: not compared
+        Draw();
+        return;
+    }
     LivePlace at;
     at.object = object;
     at.prim = Gfx_PacketNext;
@@ -541,6 +685,129 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
                     "fuzz cannot see the split");
 }
 
+// DIV-0142's check: one overlay object of three pieces (one flipped) over a
+// 4-bit page and a palette of the test's own, captured plain, mirrored, scaled
+// x2, and shaded half; each against a picture worked out here texel by texel,
+// with nothing outside it written, the point moved by the PSX's shift, and no
+// primitive or cell taken. A control - the expectation with the piece flip
+// ignored - must be refused. The shadow is restored after.
+void CaptureSelfTest() {
+    static std::uint16_t saved_vram[Gfx_VramShadow_count];
+    std::memcpy(saved_vram, Gfx_VramShadow, sizeof saved_vram);
+    unsigned char* const saved_current = Sprite_Current;
+    unsigned char* const saved_packet = Gfx_PacketNext;
+    const unsigned long saved_count = SpriteCell_Count;
+    const unsigned saved_buffer = Gfx_BufferIndex;
+    std::uint16_t* vram = Gfx_VramShadow;
+
+    constexpr unsigned kPage = 5, kSize = 0;   // the page at VRAM x 320, y 0; SpriteCell_Sizes' first pair
+    const int w = SpriteCell_Sizes[kSize], h = SpriteCell_Sizes[kSize + 1];
+    if (w <= 0 || h <= 0 || w > 32 || h > 32)
+        bof3::Fatal("sprite_draw DIV-0142 self-test: SpriteCell_Sizes[0] is %d x %d", w, h);
+    std::uint32_t seed = 0x84;
+    auto next = [&seed] { return seed = seed * 1103515245u + 12345u, seed >> 16; };
+    for (int r = 0; r < 256; ++r)
+        for (int c = 0; c < 64; ++c) vram[(r << 10) + kPage * 64 + c] = static_cast<std::uint16_t>(next());
+    std::uint16_t clut[16];
+    for (int i = 0; i < 16; ++i) clut[i] = i == 0 ? 0 : static_cast<std::uint16_t>(next() | (i == 3 ? 0x8000 : 0));
+    clut[5] = 0x7FFF;
+    for (int i = 0; i < 16; ++i) vram[(0x1E0 << 10) + i] = clut[i];   // +0x24 bit 2 clear, +0x27 / +0x28 0: row 0x1E0, column 0
+
+    struct Piece { int x, y, u, v; bool flip; };
+    const Piece pieces[3] = {{-12, -20, 0x10, 0x08, false}, {4, -6, 0x24, 0x30, true}, {-4, 2, 0x00, 0x60, false}};
+    unsigned char frame[1 + 3 * kPartBytes] = {3};
+    for (int i = 0; i < 3; ++i) {
+        unsigned char* p = frame + 1 + i * kPartBytes;
+        p[0] = static_cast<unsigned char>(kSize / 2 | (pieces[i].flip ? 0x80 : 0));
+        p[1] = static_cast<unsigned char>(pieces[i].x);
+        p[2] = static_cast<unsigned char>(pieces[i].y);
+        p[3] = static_cast<unsigned char>(pieces[i].u);
+        p[4] = static_cast<unsigned char>(pieces[i].v);
+    }
+    auto texel = [&](const Piece& pc, int k, int r, bool flip_seen) {
+        const int t = pc.flip && flip_seen ? w - 1 - k : k;
+        const std::uint16_t word = vram[((pc.v + r) << 10) + kPage * 64 + ((pc.u + t) >> 2)];
+        return clut[(word >> (4 * ((pc.u + t) & 3))) & 0xF];
+    };
+
+    static std::uint16_t expect[kCapH][kCapW], control[kCapH][kCapW];
+    struct Case { bool mirror; int scale; unsigned shade; } cases[] = {{false, 1, 0x80}, {true, 1, 0x80}, {false, 2, 0x80}, {false, 1, 0x40}};
+    unsigned bad = 0, refused = 0, written = 0, buffer = 0;
+    const int x = 0x32, y = 0x41;
+    for (const Case& cs : cases) {
+        std::memset(expect, 0, sizeof expect);
+        std::memset(control, 0, sizeof control);
+        for (int pass = 0; pass < 2; ++pass) {
+            auto& pic = pass ? control : expect;
+            for (const Piece& pc : pieces)
+                for (int r = 0; r < h; ++r)
+                    for (int k = 0; k < w; ++k) {
+                        std::uint16_t c = texel(pc, k, r, pass == 0);
+                        if (c == 0) continue;
+                        if (cs.shade != 0x80) {
+                            unsigned out = c & 0x8000;
+                            for (int n = 0; n < 3; ++n) out |= (((c >> (5 * n)) & 0x1Fu) * cs.shade >> 7) << (5 * n);
+                            c = static_cast<std::uint16_t>(out);
+                        }
+                        for (int dy = 0; dy < cs.scale; ++dy)
+                            for (int dx = 0; dx < cs.scale; ++dx) {
+                                const int px = (pc.x + k) * cs.scale + dx, py = (pc.y + r) * cs.scale + dy;
+                                const int col = cs.mirror ? x - 1 - px : x + px;
+                                pic[y + py][col] = c;
+                            }
+                    }
+        }
+        for (int r = 0; r < kCapH; ++r) std::memset(&vram[((kCapY + r) << 10) + kCapX], 0, kCapW * 2);
+        unsigned char object[0x80] = {};
+        Put<short>(object, 0x2E, static_cast<short>(x));
+        Put<short>(object, 0x30, static_cast<short>(y));
+        object[0x24] = 0x88;
+        object[0x25] = kPage;
+        object[0x2A] = cs.mirror ? 1 : 0;
+        object[0x48] = cs.scale != 1 ? 2 : 0;
+        Put<long>(object, 0x40, cs.scale << 16);
+        Put<long>(object, 0x44, cs.scale << 16);
+        object[0x5D] = object[0x5E] = object[0x5F] = static_cast<unsigned char>(cs.shade - 0x80);
+        Put<const unsigned char*>(object, 0x54, frame);
+        Gfx_BufferIndex = static_cast<unsigned char>(buffer);
+        Sprite_Current = object;
+        const std::uint32_t was = g_sprite_capture;
+        g_sprite_capture = 1;
+        Draw();
+        g_sprite_capture = was;
+        bool same = true, same_control = true;
+        for (int r = 0; r < kCapH; ++r)
+            for (int c = 0; c < kCapW; ++c) {
+                const std::uint16_t got = vram[((kCapY + r) << 10) + kCapX + c];
+                same &= got == expect[r][c];
+                same_control &= got == control[r][c];
+                written += got != 0;
+            }
+        const short want_y = static_cast<short>(y + 0x10 + 240 * (buffer ^ 1));
+        buffer ^= 1;
+        const bool moved = Get<short>(object, 0x2E) == x + kCapX && Get<short>(object, 0x30) == want_y;
+        if (!same || !moved || Gfx_PacketNext != saved_packet || SpriteCell_Count != saved_count) {
+            if (++bad <= 4)
+                bof3::Log("shadow      sprite_draw DIV-0142 capture MISMATCH: mirror %d scale %d shade %02X: picture %s, point "
+                          "%s, packet %s, cells %s", cs.mirror, cs.scale, cs.shade, same ? "ok" : "differs",
+                          moved ? "ok" : "not the PSX's shift", Gfx_PacketNext == saved_packet ? "untouched" : "TAKEN",
+                          SpriteCell_Count == saved_count ? "untouched" : "TAKEN");
+        }
+        if (!same_control) ++refused;
+    }
+    std::memcpy(Gfx_VramShadow, saved_vram, sizeof saved_vram);
+    const short whole[4] = {0, 0, 0x400, 0x200};
+    Gfx_InvalidateTextures(whole, 0);
+    Sprite_Current = saved_current;
+    Gfx_BufferIndex = static_cast<unsigned char>(saved_buffer);
+    bof3::Log("shadow      sprite_draw DIV-0142 capture self-test: %zu cases (plain, mirrored, scaled x2, shaded half), "
+              "%u texels written, %u MISMATCHES; control (the piece flip ignored) refused in %u",
+              sizeof cases / sizeof cases[0], written, bad, refused);
+    if (bad) bof3::Fatal("sprite_draw DIV-0142 capture differs from the expected picture in %u cases", bad);
+    if (refused != sizeof cases / sizeof cases[0])
+        bof3::Fatal("sprite_draw DIV-0142 self-test: the control was refused in %u cases only", refused);
+}
+
 }  // namespace
 
 void SpriteDraw_Inject() {
@@ -560,8 +827,17 @@ void SpriteDraw_Inject() {
         g_draw_clone = nullptr;
         SelfTest(reinterpret_cast<DrawFn>(draw), reinterpret_cast<ClutFn>(clut), reinterpret_cast<DrawFn>(reset),
                  reinterpret_cast<AddFn>(add));
+        CaptureSelfTest();
         // From here on Sprite_Draw compares every live call against the clone.
         g_draw_clone = reinterpret_cast<DrawFn>(draw);
+    }
+    {
+        // DIV-0142: armed after the fuzz, which compares Capcom's rule.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("SpriteCapture",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_sprite_capture)), was, is, 4);
+        bof3::Log("DIV-0142    a sprite with +0x24 bit 3 is drawn into VRAM (0x340, 0x100) as on the PlayStation (on "
+                  "unless the line above says OFF)");
     }
     BOF3_INJECT(SpriteCell_Reset);
     BOF3_INJECT(SpriteCell_Add);
