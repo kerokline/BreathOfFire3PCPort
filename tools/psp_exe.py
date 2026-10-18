@@ -115,7 +115,10 @@ RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "mset
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
 # (the PSX builds place it already, exe-places.tsv, and a twin there would split that place;
 # None: every build), and a sixth takes the file's n-th copy (0-based) instead of the first,
-# for a file that holds the run more than once and whose reader reads a later one.
+# for a file that holds the run more than once and whose reader reads a later one; a seventh
+# (the pieced rule, docs/install-gap-twins.md 2) lists sub-ranges of the run: the place is
+# where every one holds BOF3.exe's bytes at one displacement, and each becomes a recipe row
+# of its own (so fill's other-file rule, D268's, applies per segment).
 # Addresses and names only.
 TWINS = [
     (0x64AE18, 0x64AE28, "BATTLE/BATTLE.EMI", "the BATE equipment screen's slot icons and categories"),
@@ -253,6 +256,45 @@ TWINS = [
     # STATUS.EMI each hold the 13 bytes on all seven discs, after the build's own records;
     # the padding past them differs by disc, so the run stops at the count table's last row.
     (0x653808, 0x653815, "ETC/START.EMI", "the Config screen's row tables (first record, option count)"),
+    # The install-gap round's P2 twins (docs/install-gap-twins.md 1): each run BOF3.exe's
+    # verbatim in its reader's overlay, the file chosen by the overlay's code (a lui/imm pair
+    # into the table, or the effect kind's handler reading the state table before it) or by
+    # the PSX-US map's neighbouring segments where several overlays hold the bytes. A range
+    # that stops short of the census row stops where the disc's own bytes begin; every byte
+    # the PC has non-zero past it is said in the doc.
+    (0x62034C, 0x6203A4, "WORLD03/AREA115.EMI", "Area115_Sprites (world map 115's legend frame)"),
+    (0x6203A4, 0x6203BC, "WORLD03/AREA115.EMI", "Area115_Buttons"),
+    (0x62390C, 0x623910, "WORLD03/AREA121.EMI", "Area121_Cells+0x26C (the next map segment's displacement)", PSX),
+    # Area146_EffectStates+0x1230..+0x1250 and Area169_Rects+0xB9C are areas 148 and 170's
+    # attach vectors (Area_Descriptors[148] / [170] +0x0C tables, MoveCmd_AttachOffset;
+    # docs/install-gap-readers.md 4.2): the tables + 4 and + 0x10. AREA170 holds the four
+    # bytes three times; the third is its table's (0x801F6448 + 0x10 on all seven discs).
+    (0x635344, 0x635364, "WORLD03/AREA148.EMI", "area 148's attach vectors (Area146_EffectStates+0x1230)"),
+    (0x63CA48, 0x63CB03, "WORLD04/AREA170.EMI", "Area169_Rects+0xC, area 170's three dial grids (EffectKind7D_SetMap, _DrawDial)", PSX),
+    (0x63D5D8, 0x63D5DC, "WORLD04/AREA170.EMI", "area 170's attach vectors + 0x10 (Area169_Rects+0xB9C)", None, 2),
+    (0x64D478, 0x64D484, "BOSS/BOSS029.EMI", "BossDolphin_Anims"),
+    (0x64D798, 0x64D7A0, "BOSS/BOSS035.EMI", "BossGaist_Sounds"),
+    (0x653FA8, 0x653FB9, "SCENARIO/SCENA03.EMI", "EffectKind3C_Op", ("psx-us", "psx-eu-en", "psx-fr")),
+    (0x6543F0, 0x654400, "WORLD00/AREA026.EMI", "EffectKind33_SignX (kind 0x33's handler is AREA026's)"),
+    (0x654400, 0x654410, "WORLD00/AREA026.EMI", "EffectKind33_SignZ"),
+    (0x654D88, 0x654D99, "SCENARIO/SCENA13.EMI", "EffectKind86_States+0x14, EffectKind86_Spawn's 17-byte EventOp operand"),
+    (0x6550E0, 0x655100, "WORLD03/AREA134.EMI", "EffectKind99_States+0x10 (kind 0x99's handler is AREA134's)"),
+    (0x655208, 0x655210, "SCENARIO/SCE15EF1.EMI", "EffectKindA0_States+0x24"),
+    (0x65B8F4, 0x65B918, "BMAGIC/MAGIC106.EMI", "Fx106_ShardTables", PSX),
+    (0x65C1A8, 0x65C1B8, "BMAGIC/MAGIC172.EMI", "MagicBallOrb_Shades' first eight pairs (the section ends there)"),
+    (0x65C21C, 0x65C224, "BMAGIC/MAGIC218.EMI", "AuraBreathDome_V"),
+    (0x65DE5E, 0x65DE76, "WORLD02/AREA109.EMI", "EffectKind18_08_States+0x8A", ("psx-jp", "psx-us", "psx-fr", "psx-de")),
+    (0x65F438, 0x65F44E, "WORLD04/AREA174.EMI", "EffectKind18Sub5D_States+0x14", ("psx-jp", "psx-us", "psx-fr", "psx-de")),
+    (0x66ADBC, 0x66ADD6, "ETC/GAME.EMI", "Fish_Kinds+0x72C on PSX-JP (its last two bytes are the disc's own)", ("psx-jp",)),
+    # Pieced (a seventh field, the segments): one table at one place, the segments BOF3.exe's
+    # bytes there and the bytes between them the disc's own (the Western discs' re-laid
+    # numbers, FR / DE's own label words), which stay unfilled (docs/install-gap-twins.md 2).
+    (0x654770, 0x654798, "WORLD03/AREA135.EMI", "EffectKind66_States+0x18 (u16 fields; three are the West's own)",
+     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654772, 0x654778), (0x65477A, 0x654780), (0x654782, 0x654798))),
+    (0x654858, 0x654876, "SCENARIO/SCENA10.EMI", "EffectKind5B_States+0xC (u16 fields; three are the West's own)",
+     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654858, 0x65486C), (0x65486E, 0x654870), (0x654872, 0x654874))),
+    (0x653104, 0x653150, "ETC/COMMU03.EMI", "the music player's labels FR / DE keep in the PC's words (at the US map's place)",
+     ("psx-fr", "psx-de"), 0, ((0x65310C, 0x65311C), (0x65313C, 0x653142))),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -921,11 +963,12 @@ def find_rows(disc, bid, pc, ref_srcs=None):
     for tlo, thi, tfile, _, *extra in TWINS:
         only = extra[0] if extra else None
         nth = extra[1] if len(extra) > 1 else 0
+        segs = extra[2] if len(extra) > 2 else ((tlo, thi),)
         if only and bid not in only:
             continue
         if tfile == "BOOT.BIN":
-            if not psp or nth:
-                fail("TWINS 0x%06X: a BOOT.BIN twin is a PSP build's, its copy the one its reader reads (no n-th)" % tlo)
+            if not psp or nth or len(segs) > 1:
+                fail("TWINS 0x%06X: a BOOT.BIN twin is a PSP build's, its copy the one its reader reads (no n-th, no segments)" % tlo)
             a, rd = boot_place(elf, pc[tlo - DATA_LO:thi - DATA_LO], tlo)
             if a is None:
                 print("  %s twin 0x%06X..0x%06X: BOOT.BIN, %s" % (bid, tlo, thi, rd))
@@ -935,10 +978,11 @@ def find_rows(disc, bid, pc, ref_srcs=None):
             rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": None,
                          "addr": a})
             continue
-        t = twin_place(srcs, pc, tlo, thi, tfile, nth)
+        t = twin_place(srcs, pc, tlo, thi, tfile, nth, segs)
         if t:
-            rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": t[0],
-                         "addr": t[1]})
+            for slo, shi in segs:                     # the pieced rule: a recipe row per segment
+                rows.append({"build": bid, "rule": "twin", "pc": slo, "pc_end": shi, "file": tfile, "section": t[0],
+                             "addr": t[1] + slo - tlo})
         else:
             print("  %s twin 0x%06X..0x%06X: not in %s" % (bid, tlo, thi, tfile))
     rows += link_rows(bid, srcs, pc)
@@ -1352,17 +1396,26 @@ def faerie_records(n):
     return (n - FA_FIELD - 4) // FA_STRIDE + 1 if n >= FA_FIELD + 4 else 0
 
 
-def twin_place(srcs, pc, lo, hi, file, nth=0):
+def twin_place(srcs, pc, lo, hi, file, nth=0, segs=None):
     """The nth (0: the first) copy of BOF3.exe's [lo, hi) in `file`'s sections, in
-    section and address order: (section, disc address) or None."""
-    nd = pc[lo - DATA_LO:hi - DATA_LO]
+    section and address order: (section, disc address of lo) or None.
+
+    `segs` (the pieced rule, docs/install-gap-twins.md 2): sub-ranges of [lo, hi); a copy
+    is then a place where every segment holds BOF3.exe's bytes at one displacement from
+    lo - the bytes between them are the disc's own and are not compared. Found by the
+    longest segment's copies, each checked for the rest in the same section."""
+    segs = segs or ((lo, hi),)
+    key_lo, key_hi = max(segs, key=lambda s: s[1] - s[0])
+    nd = pc[key_lo - DATA_LO:key_hi - DATA_LO]
     for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
         if f == file:
             at = blob.find(nd)
             while at >= 0:
-                if nth == 0:
-                    return s, base + at
-                nth -= 1
+                a = at - (key_lo - lo)               # lo's offset in the section
+                if a >= 0 and all(blob[a + s0 - lo:a + s1 - lo] == pc[s0 - DATA_LO:s1 - DATA_LO] for s0, s1 in segs):
+                    if nth == 0:
+                        return s, base + a
+                    nth -= 1
                 at = blob.find(nd, at + 1)
     return None
 
@@ -1558,6 +1611,12 @@ def check():
     build, of a PSP build, sized as its rule wants, and clear of every pointer word."""
     import exe_tables
     errs = []
+    for tlo, thi, tfile, _, *extra in TWINS:            # a pieced row's segments: inside, in order, apart
+        segs = extra[2] if len(extra) > 2 else ((tlo, thi),)
+        if not (DATA_LO <= tlo < thi <= DATA_HI) or not segs or any(
+                not (tlo <= s0 < s1 <= thi) for s0, s1 in segs) or any(
+                a[1] > b[0] for a, b in zip(segs, segs[1:])):
+            errs.append("TWINS 0x%06X..0x%06X %s: a segment outside the run, empty or out of order" % (tlo, thi, tfile))
     rows = load_recipe()
     ptr = set()
     for p, n, _ in exe_tables.load_pointers():
