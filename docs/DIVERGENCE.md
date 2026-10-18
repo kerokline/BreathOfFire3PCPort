@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 142 entries, DIV-0001..0142, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 143 entries, DIV-0001..0143, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -8625,3 +8625,60 @@ designed in rather than bolted on.
     owner's eye is the measure.
 - **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
   `BOF3X_ORIGINAL=Sprite_Draw`.
+
+### An area change that keeps the track while it fades to a stop keeps none: Ryu's dream is silent, as on the PlayStation
+
+- **ID:** DIV-0143 (the next free number on 2026-10-18; renumber at the
+  merge if another branch has taken it)
+- **Date:** 2026-10-18
+- **Subsystem:** the area's music (`Area_PickMusic` `0x5953B0`, ours,
+  `src/game/window_task.cpp`; [`known-defects.md`](known-defects.md) D318,
+  issue #88)
+- **Tier:** Sensible - a port repair. The PlayStation is silent here, and
+  the scene stops the song on purpose just before the change.
+- **Original behaviour:** with `Field_ScriptFlags` bit 0x80 set, the area
+  change keeps the current track (`0x904131` into `0x904CD0`) even while a
+  `Music_FadeOutStop` is still running. The fade then marks the track
+  stopped (0xFF), and `Area_Enter` plays the kept track from the top. In
+  `Scena01_Scene02` step 2 the bedroom's song (track 14) therefore comes back
+  eight frames after its stop and plays through Ryu's dream.
+- **New behaviour:** in that branch, with a stopping fade still running
+  (`Music_FadeStops` set, `Music_FadeCount` not 0), the kept track is 0xFF.
+  `Area_Enter` plays nothing and marks the track 0xFF, and the fade finishes
+  its stop. The wake's area change (step 0xA, the bit cleared) plays the
+  zone's track 7 as before. A kept track with no stopping fade is copied as
+  before.
+- **Rationale:** a player's report (issue #88) and the PSX twin rule.
+  - The PlayStation's stop there (`0x8015DDF4`, `SsSepStop`) is immediate
+    and leaves its current-track byte alone.
+  - The kept track then equals the current one, and the area's play
+    (`0x80162514`) skips it.
+  - Silence is what the scene gets there, measured live in the sibling
+    recomp (D318).
+  - The PC's fade-out-stop is the one difference.
+- **Also in the PSX version?** Yes: this is what the PlayStation does.
+- **One knock-on:** the bedroom's song now fades over 27 frames into the
+  black rather than 10. The area's track is 0xFF and differs from the song
+  still fading, so `GameMode_Field` (`0x4959F0`) does what it does at any
+  change to a different track: `Music_FadeOut(16)`, then
+  `Music_FadeOutStop(10)`. The song is fully stopped at f10848 instead of
+  f10831. The PlayStation stops it at once. Left as the game's own
+  transition fade.
+- **Verification:**
+  - The `whelpBoss` route under `BOF3X_MUSIC_LOG=1` on the PC install
+    (`pc-en150`) and on PSP-EU alone, root `C:\Users\kerok\ab88`. On both,
+    no `Music_Play` runs from the bedroom's stop (f10821) to the wake's
+    track 7 (f12708, the same frame as before), and the dream is silent.
+  - Against the PC's run before the change, the whole music log differs
+    only there: the replay of 14 at f10839 is gone, and so are its two
+    later no-ops; the fade pair above is new; and the wake's fade of 14
+    (f12690 / f12707) is gone with nothing left to fade.
+  - Both runs reach area 10 at frame 13,170, as before.
+  - `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=window_task,sound,mode_flow` from
+    the ini-less launcher copy exits 0: `window_task` 33,600 rounds,
+    `mode_flow` 41,000 and `sound` 46,000, each with 0 mismatches. They run
+    before the switch is armed, and the window_task coverage line shows the
+    keep branch ("music kept 352").
+  - Not heard yet.
+- **Reversible?** `BOF3X_ORIGINAL=AreaKeepStoppingNone` (Capcom's keep),
+  or `BOF3X_ORIGINAL=Area_PickMusic`.

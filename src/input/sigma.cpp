@@ -82,6 +82,9 @@ unsigned char g_by_source = 0;
 bool g_armed = false;
 Release g_release = Release::kJapan;
 Table g_table;
+// The release's starting words stand: set where WriteStart puts them in,
+// cleared when a save's words are loaded (RecipeToPad, sigma.h).
+bool g_release_words = false;
 
 std::uint16_t* Words() { return reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(kWords)); }
 
@@ -102,6 +105,19 @@ void WriteStart(bool reset) {
     std::uint16_t words[9];
     DefaultWords(g_release, reset, words);
     std::memcpy(Words(), words, sizeof words);
+    if (!g_release_words)
+        bof3::Log("sigma       %s starting words stand: a recipe's buttons pressed as %s from here (input-script.md 2a)",
+                  ReleaseName(g_release), ReleaseName(g_release));
+    g_release_words = true;
+}
+
+std::uint16_t MapMask(std::uint16_t mask, bool inverse) {
+    std::uint16_t out = static_cast<std::uint16_t>(mask & ~kSixBits);
+    for (unsigned i = 2; i < 8; ++i) {
+        const auto b = static_cast<std::uint16_t>(1u << i);
+        if (mask & b) out = static_cast<std::uint16_t>(out | (inverse ? ReleaseMapInverse(g_release, b) : ReleaseMap(g_release, b)));
+    }
+    return out;
 }
 
 // The cache named by BOF3X_CACHE, read through the one manifest reader the
@@ -434,6 +450,10 @@ std::uint16_t SigmaFrom(Release r, std::uint16_t bits) {
 
 Release InstallRelease() { return g_release; }
 
+std::uint16_t RecipeToPad(std::uint16_t mask) { return g_release_words ? MapMask(mask, false) : mask; }
+std::uint16_t PadToRecipe(std::uint16_t mask) { return g_release_words ? MapMask(mask, true) : mask; }
+bool RecipeTranslating() { return g_release_words; }
+
 void BootDefaultsWritten() {
     if (!g_armed) return;
     if (g_by_source != 0 && g_release != Release::kJapan) WriteStart(false);
@@ -443,6 +463,10 @@ void BootDefaultsWritten() {
 void LoadApplied(bool reset) {
     if (!g_armed) return;
     if (reset && g_by_source != 0 && g_release != Release::kJapan) WriteStart(true);
+    else if (g_release_words) {
+        g_release_words = false;   // the save's words: the same save, the same words, on every install
+        bof3::Log("sigma       the save's words loaded: a recipe's buttons pressed as recorded from here");
+    }
     if (g_sigma_on != 0) Follow("loading the save", "hold Start while the save loads to reset the buttons");
 }
 

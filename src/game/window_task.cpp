@@ -186,9 +186,21 @@ extern "C" unsigned char __cdecl Area_ZoneIdAt(unsigned x, unsigned z) {
 // argument slot as a byte and read back as a dword, then masked to 8 bits, so
 // the stale bytes above it never reach the loop; there is no bound on the set
 // index or on the flag row.
+//
+// DIVERGENCE: DIV-0143 (issue #88) - under g_keep_stopping_none, a track kept
+// while a stopping fade is still running (Music_FadeOutStop's Music_FadeStops
+// with Music_FadeCount not yet 0) is kept as 0xFF, no track. The PlayStation's
+// stop at this place is immediate and leaves its current-track byte alone, so
+// the kept track equals the current one and its play does nothing: silence.
+// The PC's fade marks 0x904131 0xFF when it ends, frames before Area_Enter
+// plays the kept byte, and the stopped song starts again - the bedroom's song
+// through Ryu's dream in Teepo's bed (Scena01_Scene02 step 2).
+std::uint8_t g_keep_stopping_none = 0;   // 1 through PatchBytes("AreaKeepStoppingNone")
+
 extern "C" void __cdecl Area_PickMusic(unsigned x, unsigned z, unsigned area) {
     if ((Field_ScriptFlags & 0x80u) != 0) {
-        At(at::kAreaTrack)[0] = At(at::kMusicTrack)[0];
+        const bool stopping = Music_FadeStops != 0 && Music_FadeCount != 0;
+        At(at::kAreaTrack)[0] = g_keep_stopping_none && stopping ? 0xFF : At(at::kMusicTrack)[0];
         return;
     }
     At(at::kAreaTrack)[0] = Area_ZoneTrack(g.zone_at(x, z, area));
@@ -784,6 +796,14 @@ extern "C" void __cdecl Window_DrawLine(int x0, int y0, int x1, int y1, unsigned
     PutFloat(line + 0x14, Flt(static_cast<std::int16_t>(x1)));
     PutFloat(line + 0x18, Flt(static_cast<std::int16_t>(y1)));
     g.commit(1, 0x20);
+}
+
+void AreaKeepStoppingNone_Arm() {
+    static const std::uint8_t was = 0, is = 1;
+    bof3::PatchBytes("AreaKeepStoppingNone",
+                     static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_keep_stopping_none)), &was, &is, 1);
+    bof3::Log("DIV-0143    an area change that keeps the track while it is fading to a stop keeps none "
+              "(on unless the line above says OFF)");
 }
 
 void WindowTask_Inject() {
