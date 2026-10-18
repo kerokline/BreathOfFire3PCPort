@@ -1,0 +1,12 @@
+# tools/exe_imm_fixtures.tsv - tools/exe_imm.py's decoder measured on held discs (`exe_imm.py fixtures`).
+# scan: the function at `func` in `file` / `section`: its extent in bytes, the stores of constants and the
+# lui-based addresses exe_imm.scan finds, and one address pair (H+L) with the address it decodes to.
+# body: psx-jp's function at `func` found again by its body in this build's same file section: `extent`
+# holds the number of places it fits (4 here: one shape of area handler, its table address masked).
+# Measured 2026-10-18 (docs/exe-immediate-places.md 5). Addresses and counts only (CLAUDE.md rule 1).
+kind	build	file	section	func	extent	stores	refs	pair	addr
+scan	psx-jp	WORLD00/AREA026.EMI	13	0x801F32C8	128	1	7	34+3C	0x801F4CF0
+scan	psx-jp	WORLD02/AREA094.EMI	13	0x801F33E0	128	1	7	34+3C	0x801F536C
+scan	psx-jp	WORLD04/AREA196.EMI	13	0x801F4054	196	1	6	50+58	0x801F4300
+scan	psx-us	WORLD02/AREA094.EMI	13	0x801F3050	128	1	7	34+3C	0x801F350C
+body	psx-us	WORLD02/AREA094.EMI	13	0x801F33E0	4	-	-	-	-
