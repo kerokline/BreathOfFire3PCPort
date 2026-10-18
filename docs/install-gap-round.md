@@ -249,6 +249,37 @@ what was; the ledger decides what should be).
 
 Also in stage B: **PB's `TWINS` rows** (after TW), and **RD's hand-offs**.
 
+### 3a. Stage B as run (re-planned 2026-10-18 after stage A)
+
+Stage A merged on `install-gap/round` (RD, PB, OT, TW, LA, RW; the recipes
+regenerated after each tool change). Three of its measurements changed this
+stage's shape:
+
+- **OT** ([`exe-immediate-places.md`](exe-immediate-places.md)): the P3 rows
+  are not folded into instructions; a twin's `lui` / `%lo` pair addresses the
+  bytes in its own overlay (`immref`). Only 11 of 66 P3 rows have a reader with
+  a known PSX twin, and **no effect, magic, boss or scenario row** does: their
+  readers are effect-state functions no code-pointer word pairs. OF-A and OF-E
+  as staged would place almost nothing.
+- **RW** ([`install-gap-reads.md`](install-gap-reads.md)): ten gap rows are read
+  in play while zero; after the merges two stay open and need a source
+  (`ChlorineCloud_Offsets`, the PSPs' `Char_WhelpSlot+0x3`), one needs a reader
+  extension (below), two are the owner's.
+- **PB's `boot_place`** refuses `Char_TraitLists`' list 1 (RD's
+  `ConfigMenu_Steps+0xC`): the one `BOOT.BIN` copy is reached through a
+  relocated pointer table, not a direct pair.
+
+So stage B runs as three groups by file set:
+
+| Group | Work | Owns |
+|---|---|---|
+| PT | `boot_place` through a relocated pointer table (the trait list); DE `0x663660..0x663668` as a twin (LA); `LANGUAGE_ZERO` and `exe_own.py`'s language regions per build (LA's rows reached on Latin builds, still zero under ja-JP); TW's `0x6543E8` place row checked; `MagicBallOrb_Shades+0x10` | `tools/psp_exe.py`, `tools/exe_tables.py`, `tools/exe_own.py` |
+| CW | the two open live rows' sources, by the PSX-twin method ([`psx-twin-check.md`](psx-twin-check.md)); rows handed to PT or the coordinator, never written into PT's files | `docs/` only |
+| FP | effect / magic / boss state functions paired with PSX twins by another method (call graph from paired callers, handler tables, constants), fed to `symbols.toml` `psx` fields; then the P3 rows those pairs reach placed as `immref` through `exe-imm.tsv`'s generator | `symbols.toml` `psx` fields, `tools/exe_imm.py` |
+
+`ChlorineCloud_Offsets` (read in the Nue fight on four installs) is CW's first
+row and FP's first family. The end batch (section 5) follows stage B.
+
 ## 4. Ownership, merge order, numbering
 
 | File or area | Owner |
