@@ -5272,8 +5272,9 @@ evidence = "disasm 2026-09-22: Field_ObjectBlockedAhead, Field_ObjectBlocked, Fi
 [[func]]
 pc = 0x469E30
 name = "Effect_CameraTurn"
-psx = 0x8019BC3C
+psx = 0x8019B8BC
 psx_overlay = "GAME.EMI#0"
+psx_evidence = "2026-10-18, FP (docs/install-gap-pairs.md): was 0x8019BC3C, which is kind 0x31's handler (EffectKind31_Run 0x46A020); kind 0x13's slot of the PSX Effect_KindHandlers is 0x8019B8BC, and CameraTurn_Start / _Step / _End are the slots of its table"
 ret = "void"
 params = "void"
 impl = "src/game/frame_callees.cpp"
