@@ -34,7 +34,7 @@ constexpr int kFlushEvery = 60;        // latches between rewrites of the file
 // The debug registers (below): a code of ours raised to load them.
 constexpr DWORD kSetDr = 0xE0474157;
 constexpr int kMaxDr = 2048;
-constexpr int kSlots = 4;
+constexpr int kSlots = 2;   // words: each takes two of the four registers
 
 // Everything the handler touches is static: it runs on whatever stack took
 // the fault, and game logic runs on 16 KB task stacks (calltrace.cpp).
@@ -42,11 +42,14 @@ struct WRange {
     std::uint32_t lo, hi;
     const char* how;
     const char* from;
-    volatile LONG claimed;   // the first access is being recorded
+    volatile LONG claimed;   // the first read is being recorded
     volatile LONG ready;     // and has been
-    std::uint32_t eip, frame, rframe, area, thread, kind;
+    std::uint32_t eip, frame, rframe, area, thread, kind;   // kind: 0 a guard fault, 2 a debug register
     std::uint32_t callers[kCallers];
+    volatile LONG w_claimed; // the first write: who and when
+    std::uint32_t w_eip, w_frame;
     volatile LONG reads, writes;
+    volatile LONG rbw;       // reads before the range's first write: the zero the image left
     volatile LONG edge;      // accesses starting up to 7 bytes below lo (a wider read may reach it)
     std::uint32_t edge_eip;
     volatile LONG dr_hits;   // accesses a debug register on one of its words caught
@@ -75,11 +78,14 @@ Pending g_pending[kMaxThreads];
 LONG g_budget = 16;
 
 // The fallback for a hot page, exact where the page budget only samples: a
-// page parked at least once has its `gap` ranges' aligned words put, four at
-// a time and in turn one latch each, in the main thread's debug registers
-// (read-or-write, four bytes). A hit is a trap after the access, nothing to
-// re-arm and no guard fault: free while it waits. The word may hold a byte
+// page parked at least once has its `gap` ranges' aligned words put, two at a
+// time and in turn one latch each, in the main thread's debug registers -
+// each word in two, one read-or-write and one write-only (four bytes), so a
+// hit of the first alone is a read. A hit is a trap after the access, nothing
+// to re-arm and no guard fault: free while it waits. The word may hold a byte
 // either side of the range; the hit is counted for the range all the same.
+// The handler never reads a watched word itself: under its own register that
+// read would trap inside the handler.
 // Loaded by raising kSetDr on the main thread at the latch, so the handler
 // writes them into that thread's context. BOF3X_GAPWATCH_DR=0 turns it off.
 struct DrTarget {
@@ -188,8 +194,10 @@ void Top(WPage& pg, std::uint32_t eip) {
     InterlockedIncrement(&pg.top_n[least]);
 }
 
-// The first access of a range: who, when, where.
-void First(WRange& r, std::uint32_t eip, std::uint32_t kind, const CONTEXT* ctx, LONG me) {
+// A read of a range: counted, and the first one recorded - who, when, where.
+void Read(WRange& r, std::uint32_t eip, std::uint32_t kind, const CONTEXT* ctx, LONG me) {
+    InterlockedIncrement(&r.reads);
+    if (r.writes == 0) InterlockedIncrement(&r.rbw);
     if (InterlockedCompareExchange(&r.claimed, 1, 0) != 0) return;
     r.eip = eip;
     r.kind = kind;
@@ -201,14 +209,23 @@ void First(WRange& r, std::uint32_t eip, std::uint32_t kind, const CONTEXT* ctx,
     InterlockedExchange(&r.ready, 1);
 }
 
-// The four slots into a context: read-or-write (RW 11), four bytes (LEN 11),
-// locally enabled.
+// A write: counted, the first one's writer and frame kept.
+void Written(WRange& r, std::uint32_t eip) {
+    InterlockedIncrement(&r.writes);
+    if (InterlockedCompareExchange(&r.w_claimed, 1, 0) != 0) return;
+    r.w_eip = eip;
+    r.w_frame = *static_cast<const volatile std::uint32_t*>(Ptr(Va(&Frame_Counter)));
+}
+
+// The slots into a context: word k in registers 2k (read-or-write, RW 11)
+// and 2k + 1 (write, RW 01), four bytes (LEN 11), locally enabled.
 void LoadSlots(CONTEXT* ctx) {
     DWORD dr7 = 0;
-    DWORD* const dr[kSlots] = {&ctx->Dr0, &ctx->Dr1, &ctx->Dr2, &ctx->Dr3};
-    for (int k = 0; k < kSlots; ++k) {
-        *dr[k] = k < g_slots ? g_slot_va[k] : 0;
-        if (k < g_slots) dr7 |= (1u << (2 * k)) | (3u << (16 + 4 * k)) | (3u << (18 + 4 * k));
+    DWORD* const dr[2 * kSlots] = {&ctx->Dr0, &ctx->Dr1, &ctx->Dr2, &ctx->Dr3};
+    for (int i = 0; i < 2 * kSlots; ++i) {
+        const int k = i / 2;
+        *dr[i] = k < g_slots ? g_slot_va[k] : 0;
+        if (k < g_slots) dr7 |= (1u << (2 * i)) | ((i & 1 ? 1u : 3u) << (16 + 4 * i)) | (3u << (18 + 4 * i));
     }
     ctx->Dr6 = 0;
     ctx->Dr7 = dr7;
@@ -241,10 +258,11 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
         if (static_cast<DWORD>(me) == g_dr_thread && (ctx->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS &&
             (ctx->Dr6 & 0xF)) {
             for (int k = 0; k < g_slots; ++k) {
-                if (!(ctx->Dr6 & (1u << k))) continue;
+                if (!(ctx->Dr6 & (3u << (2 * k)))) continue;
                 WRange& r = g_range[g_slot_range[k]];
                 InterlockedIncrement(&r.dr_hits);
-                First(r, ctx->Eip, 2, ctx, me);
+                if (ctx->Dr6 & (2u << (2 * k))) Written(r, ctx->Eip);
+                else Read(r, ctx->Eip, 2, ctx, me);
             }
             ctx->Dr6 = 0;
             ours = true;
@@ -278,8 +296,8 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
     if (ri < g_ranges && g_range[ri].lo <= addr) {
         WRange& r = g_range[ri];
         InterlockedIncrement(&pg.range_faults);
-        InterlockedIncrement(kind == 1 ? &r.writes : &r.reads);
-        First(r, eip, kind, ctx, me);
+        if (kind == 1) Written(r, eip);
+        else Read(r, eip, kind, ctx, me);
     } else if (ri < g_ranges && g_range[ri].lo - addr <= 7) {
         WRange& r = g_range[ri];
         if (InterlockedIncrement(&r.edge) == 1) r.edge_eip = eip;
@@ -342,10 +360,10 @@ void BuildDrTargets() {
     }
 }
 
-// The next four words on a page parked at least once, one latch each; the
-// slots cleared when there is none.
-void RotateSlots() {
-    if (!g_dr_on) return;
+// The next two words on a page parked at least once, one latch each. True
+// when the registers need loading: slots set, or cleared.
+bool ChooseSlots() {
+    if (!g_dr_on) return false;
     const int before = g_slots;
     g_slots = 0;
     for (int scanned = 0; g_slots < kSlots && scanned < g_drs; ++scanned) {
@@ -357,7 +375,7 @@ void RotateSlots() {
         if (g_slots == 0 || g_slot_range[g_slots - 1] != t.range) ++g_range[t.range].dr_latches;
         ++g_slots;
     }
-    if (g_slots || before) ApplySlots();
+    return g_slots || before;
 }
 
 void Install() {
@@ -436,24 +454,27 @@ void Write() {
         g_ticks, (unsigned)*static_cast<const volatile std::uint32_t*>(Ptr(Va(&Frame_Counter))), InputScript_Frame(), secs,
         g_ticks ? secs * 1000.0 / g_ticks : 0.0, g_ranges, g_pages, read, (long)g_faults, (long)g_steps, (long)g_unpending,
         g_dr_on ? "on" : "off", g_drs);
-    put("%s", "range\tlo\thi\thow\tsymbol\tread\tfirst_frame\tfirst_recipe_frame\tfirst_area\tkind\tthread\treader\tcallers"
-        "\treads\twrites\tedge\tedge_reader\tdr_hits\tdr_latches\r\n");
-    char a[64], c[4][64], e[64];
+    put("%s", "range\tlo\thi\thow\tsymbol\tread\tfirst_frame\tfirst_recipe_frame\tfirst_area\tvia\tthread\treader\tcallers"
+        "\treads\treads_before_write\twrites\tfirst_write_frame\twriter\tedge\tedge_reader\tdr_hits\tdr_latches\r\n");
+    char a[64], c[4][64], e[64], w[64], wf[16];
     for (int i = 0; i < g_ranges; ++i) {
         const WRange& r = g_range[i];
         Name(r.edge_eip, e, sizeof e);
+        Name(r.w_claimed ? r.w_eip : 0, w, sizeof w);
+        if (r.w_claimed) std::snprintf(wf, sizeof wf, "%u", (unsigned)r.w_frame);
+        else std::snprintf(wf, sizeof wf, "-");
         if (!r.ready) {
-            put("range\t0x%06X\t0x%06X\t%s\t%s\tno\t-\t-\t-\t-\t-\t-\t-\t%ld\t%ld\t%ld\t%s\t%ld\t%ld\r\n",
-                (unsigned)r.lo, (unsigned)r.hi, r.how, r.from, (long)r.reads, (long)r.writes, (long)r.edge, e,
-                (long)r.dr_hits, (long)r.dr_latches);
+            put("range\t0x%06X\t0x%06X\t%s\t%s\tno\t-\t-\t-\t-\t-\t-\t-\t%ld\t%ld\t%ld\t%s\t%s\t%ld\t%s\t%ld\t%ld\r\n",
+                (unsigned)r.lo, (unsigned)r.hi, r.how, r.from, (long)r.reads, (long)r.rbw, (long)r.writes, wf, w,
+                (long)r.edge, e, (long)r.dr_hits, (long)r.dr_latches);
             continue;
         }
         Name(r.eip, a, sizeof a);
         for (int k = 0; k < kCallers; ++k) Name(r.callers[k], c[k], sizeof c[k]);
-        put("range\t0x%06X\t0x%06X\t%s\t%s\tyes\t%u\t%u\t0x%04X\t%s\t%u\t%s\t%s,%s,%s,%s\t%ld\t%ld\t%ld\t%s\t%ld\t%ld\r\n",
+        put("range\t0x%06X\t0x%06X\t%s\t%s\tyes\t%u\t%u\t0x%04X\t%s\t%u\t%s\t%s,%s,%s,%s\t%ld\t%ld\t%ld\t%s\t%s\t%ld\t%s\t%ld\t%ld\r\n",
             (unsigned)r.lo, (unsigned)r.hi, r.how, r.from, (unsigned)r.frame, (unsigned)r.rframe, (unsigned)r.area,
-            r.kind == 0 ? "read" : r.kind == 1 ? "write" : r.kind == 2 ? "access" : "execute", (unsigned)r.thread, a, c[0],
-            c[1], c[2], c[3], (long)r.reads, (long)r.writes, (long)r.edge, e, (long)r.dr_hits, (long)r.dr_latches);
+            r.kind == 2 ? "dr" : "page", (unsigned)r.thread, a, c[0], c[1], c[2], c[3], (long)r.reads, (long)r.rbw,
+            (long)r.writes, wf, w, (long)r.edge, e, (long)r.dr_hits, (long)r.dr_latches);
     }
     put("%s", "page\tbase\tranges\tfaults\trange_faults\tlatches_parked\tbusiest_readers\r\n");
     for (int i = 0; i < g_pages; ++i) {
@@ -593,9 +614,15 @@ void GapWatch_SelfTest() {
     Check(PlantedRead(s + 0x102) == 0x3C, "the second read read the wrong value");
     Check(g_range[0].reads == 2 && g_range[0].eip == first_eip, "the second read replaced the first");
 
-    // 4. A write of the same value: counted as a write.
+    // 4. A write of the same value: counted as a write, its writer kept, the
+    // reads before it still two and none after it counted as before a write.
     PlantedWrite(s + 0x103, 0xC3);
-    Check(g_range[0].writes == 1, "a write was not counted as one");
+    Check(g_range[0].writes == 1 && g_range[0].w_claimed && g_range[0].rbw == 2, "a write was not counted as one");
+    Check(g_range[0].w_eip >= Va(reinterpret_cast<void*>(&PlantedWrite)) &&
+              g_range[0].w_eip < Va(reinterpret_cast<void*>(&PlantedWrite)) + 64,
+          "the write's writer is not PlantedWrite");
+    Check(PlantedRead(s + 0x100) == 0x5A && g_range[0].reads == 3 && g_range[0].rbw == 2,
+          "a read after the write was counted as a read of the image's bytes");
 
     // 5. One instruction across both pages (an unaligned word on the
     // boundary: two faults, one step, both guards back), then a copy across
@@ -650,9 +677,12 @@ void GapWatch_SelfTest() {
           "the debug register's reader is not PlantedRead");
     Check(PlantedRead(s + 2 * kPage + 0x40) == 0x99, "the second read under a debug register read the wrong value");
     Check(g_range[2].dr_hits == 2, "the debug register did not catch a read of the word beside the range");
+    PlantedWrite(s + 2 * kPage + 0x41, 0x55);
+    Check(g_range[2].dr_hits == 3 && g_range[2].writes == 1 && g_range[2].reads == 2 && g_range[2].w_claimed,
+          "a write under a debug register was not told from a read by its write-only register");
     g_slots = 0;
     ApplySlots();
-    Check(PlantedRead(s + 2 * kPage + 0x41) == 0x00 && g_range[2].dr_hits == 2, "a cleared debug register still caught a read");
+    Check(PlantedRead(s + 2 * kPage + 0x41) == 0x55 && g_range[2].dr_hits == 3, "a cleared debug register still caught a read");
     Check(g_faults == all2, "a read under a debug register raised a guard fault");
 
     // Down, and the bytes untouched.
@@ -777,8 +807,9 @@ void GapWatch_Pause() {
 
 void GapWatch_Tick() {
     if (!g_on) return;
+    const bool load = ChooseSlots();
     Rearm();
-    RotateSlots();
+    if (load) ApplySlots();
     if (++g_ticks % kFlushEvery == 0) Write();
 }
 

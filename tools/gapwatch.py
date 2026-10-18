@@ -48,8 +48,9 @@ def read_run(path):
                 continue
             f = line.split('\t')
             if f[0] == 'range' and f[1] != 'lo':
-                r = dict(zip(['lo', 'hi', 'how', 'symbol', 'read', 'frame', 'rframe', 'area', 'kind', 'thread', 'reader',
-                              'callers', 'reads', 'writes', 'edge', 'edge_reader'], f[1:]))
+                r = dict(zip(['lo', 'hi', 'how', 'symbol', 'read', 'frame', 'rframe', 'area', 'via', 'thread', 'reader',
+                              'callers', 'reads', 'rbw', 'writes', 'wframe', 'writer', 'edge', 'edge_reader', 'dr_hits',
+                              'dr_latches'], f[1:]))
                 run['ranges'][(r['lo'], r['hi'])] = r
             elif f[0] == 'page' and f[1] != 'base':
                 run['pages'].append(dict(zip(['base', 'ranges', 'faults', 'range_faults', 'parks', 'readers'], f[1:])))
@@ -125,6 +126,7 @@ def cmd_report(a):
             refs.add(r['reader'])
             refs.update(r['callers'].split(','))
             refs.add(r['edge_reader'])
+            refs.add(r['writer'])
     names = sym.names(refs) if sym else {}
 
     def nm(ref):
@@ -138,7 +140,7 @@ def cmd_report(a):
     for run in runs:
         print(f"#   {run['build']:10} {run['route']:28} classes {run['classes']}, {run.get('latches', 0)} latches, "
               f"{run.get('ms', 0):.2f} ms a latch, {run.get('faults', 0)} faults, "
-              f"{sum(1 for r in run['ranges'].values() if r['read'] == 'yes')} of {len(run['ranges'])} ranges touched")
+              f"{sum(1 for r in run['ranges'].values() if r['read'] == 'yes')} of {len(run['ranges'])} ranges read")
     rows = []
     for k in keys:
         seen = [(run, run['ranges'][k]) for run in runs if k in run['ranges']]
@@ -149,32 +151,44 @@ def cmd_report(a):
         routes = sorted({run['route'] for run, _ in hits})
         readers = sorted({nm(r['reader']) for _, r in hits})
         callers = sorted({nm(c) for _, r in hits for c in r['callers'].split(',')[:2] if c != '-'})
-        kinds = sorted({r['kind'] for _, r in hits})
+        vias = sorted({r['via'] for _, r in hits})
         reads = sum(int(r['reads']) for _, r in seen)
+        rbw = sum(int(r['rbw']) for _, r in seen)
+        rbw_builds = sorted({run['build'] for run, r in seen if int(r['rbw'])})
         writes = sum(int(r['writes']) for _, r in seen)
+        writers = sorted({nm(r['writer']) for _, r in seen if r['writer'] != '-'})
+        wframes = [int(r['wframe']) for _, r in seen if r['wframe'] != '-']
+        dr_hits = sum(int(r['dr_hits']) for _, r in seen)
+        dr_latches = sum(int(r['dr_latches']) for _, r in seen)
         edge = sum(int(r['edge']) for _, r in seen)
         edge_readers = sorted({nm(r['edge_reader']) for _, r in seen if r['edge_reader'] != '-'})
         first = min(hits, key=lambda h: int(h[1]['frame'])) if hits else None
         rows.append({
             'lo': k[0], 'hi': k[1], 'how': r0['how'], 'symbol': r0['symbol'],
             'read': 'yes' if hits else 'no', 'builds': ','.join(builds), 'hit_builds': ','.join(hit_builds),
-            'routes': ','.join(routes), 'kinds': ','.join(kinds), 'readers': '; '.join(readers),
-            'callers': '; '.join(callers), 'reads': reads, 'writes': writes, 'edge': edge,
+            'routes': ','.join(routes), 'via': ','.join(vias), 'readers': '; '.join(readers),
+            'callers': '; '.join(callers), 'reads': reads, 'rbw': rbw, 'rbw_builds': ','.join(rbw_builds),
+            'writes': writes, 'writers': '; '.join(writers), 'first_write': min(wframes) if wframes else '-',
+            'dr_hits': dr_hits, 'dr_latches': dr_latches, 'edge': edge,
             'edge_readers': '; '.join(edge_readers),
             'first': f"{first[0]['route']}@{first[1]['frame']} area {first[1]['area']}" if first else '-'})
-    cols = ['lo', 'hi', 'how', 'symbol', 'read', 'hit_builds', 'routes', 'kinds', 'readers', 'callers', 'reads',
-            'writes', 'edge', 'edge_readers', 'first', 'builds']
+    cols = ['lo', 'hi', 'how', 'symbol', 'read', 'hit_builds', 'routes', 'via', 'readers', 'callers', 'reads', 'rbw',
+            'rbw_builds', 'writes', 'writers', 'first_write', 'dr_hits', 'dr_latches', 'edge', 'edge_readers', 'first',
+            'builds']
     text = '\t'.join(cols) + '\n' + ''.join('\t'.join(str(r[c]) for c in cols) + '\n' for r in rows)
     if a.tsv:
         with open(a.tsv, 'w', encoding='utf-8', newline='\n') as fh:
             fh.write(text)
     if not a.quiet:
         for r in rows:
-            if r['read'] == 'yes' or a.all:
-                print(f"{r['lo']}..{r['hi']} {r['how']:8} {r['symbol']:34} {r['read']:3} {r['hit_builds']:40} "
-                      f"{r['routes']:40} {r['kinds']:10} {r['readers']} <- {r['callers']} (reads {r['reads']}, writes "
-                      f"{r['writes']}, edge {r['edge']} {r['edge_readers']})")
-    print(f"# {sum(1 for r in rows if r['read'] == 'yes')} of {len(rows)} ranges touched in some run")
+            if r['read'] == 'yes' or r['writes'] or a.all:
+                print(f"{r['lo']}..{r['hi']} {r['how']:8} {r['symbol']:34} read {r['read']:3} {r['hit_builds']:30} "
+                      f"{r['routes']:40} {r['via']:8} {r['readers']} <- {r['callers']} (reads {r['reads']}, before a "
+                      f"write {r['rbw']} {r['rbw_builds']}; writes {r['writes']} from frame {r['first_write']} by "
+                      f"{r['writers']}; dr {r['dr_hits']} hits over {r['dr_latches']} latches; edge {r['edge']} "
+                      f"{r['edge_readers']})")
+    print(f"# {sum(1 for r in rows if r['read'] == 'yes')} of {len(rows)} ranges read in some run, "
+          f"{sum(1 for r in rows if r['rbw'])} of them before any write")
 
 
 def cmd_pages(a):
