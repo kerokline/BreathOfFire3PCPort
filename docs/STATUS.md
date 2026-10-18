@@ -8,7 +8,20 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**Installs against the release, and what a one-source install lacks, 2026-10-17** (`install/recipe-version`,
+**The button unification round, 2026-10-17** (`buttons/round`, its end on `buttons/round-end`; not yet a PR;
+[`button-unification-round.md`](button-unification-round.md)): one table, `σ`, read from the save's Config, decides
+every button the game names or tests. Menus confirm on Speak's button and cancel on Action's (DIV-0133); an install
+starts with the Config of the release it was built from, the PC's own data counting as Japan's (DIV-0134); the world
+map's legend draws the buttons as glyphs with no key names (DIV-0135), the fishing banner's labels (DIV-0136), the
+dock's legend (DIV-0137), the item lists' L1 / R1 corner (DIV-0138), the hard-coded tests (DIV-0139) and the dialogue's
+button mentions (DIV-0140) all follow it; PSP-EU's Config screen has its words (DIV-0141, D246). With the Config
+untouched nothing changes on a PC install; RC's routes measured it identity and swapped on four install kinds
+([`button-routes.md`](button-routes.md) 9..9.2). Riding along: D312 (the Controller panel's crash with no layer),
+D313 (the disc-only fishing records), the capture's late-pass fix. **Owed:** the minigame starts (RC's placed saves,
+the owner to record) and the owner's eye on the contact sheets. `main` (`b5ee8bdd`) has PR #81
+(`install/recipe-version`, `v0.1.0-alpha.4`'s notes) and PR #82 (the fishing panel's duck, DIV-0132 / D308).
+
+**Installs against the release, and what a one-source install lacks, 2026-10-17** (`install/recipe-version`, merged as PR #81,
 [`install-staleness.md`](install-staleness.md), [`install-gap-census.md`](install-gap-census.md)): every piece of an
 install's cache records what it was measured to read (the functions of `tools/` that ran, the module values they
 name, the recipes and fixtures opened); `importer.py stale` says which pieces a release would make differently, the
@@ -17,7 +30,7 @@ gives every byte a disc-built `.data` image lacks a status, and a byte scan of e
 against the PC's (`tools/exe_scan.py`) finds nothing beyond the gap and language rows: the recipes are current, no
 `none` byte hides a PC value. Its P1 fixes that need no owner are in (D310, D311, D278, D267, D268; DIV-0101
 amended), and the PSP-only title's logo is cut where the PSP's art lies (D256, DIV-0131). Captured, not played by the
-owner. `main` (`85b46618`) has the PSX-only player reports #77..#79 (PR #80: D282, D306, D307 / DIV-0130) and
+owner. Before it, `main` (`85b46618`) took the PSX-only player reports #77..#79 (PR #80: D282, D306, D307 / DIV-0130) and
 `v0.1.0-alpha.3`, the first release with signed binaries (PRs #72, #74).
 
 **The player install, 2026-10-15** (`install/sources-gui`, [`install-sources.md`](install-sources.md),
