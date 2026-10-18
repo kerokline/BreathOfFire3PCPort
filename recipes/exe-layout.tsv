@@ -13537,7 +13537,6 @@ pc	kind	target
 0x65A5FC	code	ChlorineCloud_Start
 0x65A600	code	ChlorineCloud_Grow
 0x65A604	code	EnlightenRays_Fade
-0x65A61C	number	-
 0x65A62C	code	BlitzBolt_Run
 0x65A630	code	BlitzBolt_Start
 0x65A634	code	BlitzBolt_Seek
