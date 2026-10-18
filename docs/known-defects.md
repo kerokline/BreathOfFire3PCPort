@@ -7511,7 +7511,7 @@ twelve bytes `0x65AAC4..0x65AAD0` (one `?`, then a row of eight drawn by
 count) are the engine's own (`exe_own.cpp` `IdentifyMarks`, DIV-0101 amended),
 equal to `BOF3.exe`'s. Not seen in play yet.
 
-## D279 — On a disc-only Japanese install the fishing banner draws a NUL as glyph `0xFFDA`; on PSP-JP it crashed one run in five (ours, the language build, reaching Capcom's scroller)
+## D279 — On a disc-only Japanese install the fishing banner draws a NUL as glyph `0xFFDA`; on PSP-JP it crashed one run in five, on PSX-JP every run (2026-10-18) (ours, the language build, reaching Capcom's scroller)
 
 **Found:** the jp sweep, 2026-10-13
 ([`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.1): `caughFish`, PSP-JP,
@@ -7539,6 +7539,17 @@ the range read on psx-jp and psp-jp (`Menu_Verbs`,
 [`install-gap-reads.md`](install-gap-reads.md) 3). A fix of D279 should cover
 both: a Japanese layer that writes the label as well as the lines, or the
 one-byte draw declining a NUL.
+
+**2026-10-18 evening, psx-jp crashes too, every run** (the install-gap round's
+live end batch, [`install-gap-round.md`](install-gap-round.md) 6): `caughFish`
+on a PSX-JP disc-only install built from `install-gap/round` ended in a FATAL
+both times it ran (after recipe frames 1,800 and 960): an access violation at
+`bof3x.dll+0x145328`, the stack `Font_UnpackGlyph` <- `Font_BuildGlyphTexture`
+<- `Font_GlyphTexture` <- `D3d_DrawGlyph` <- `Gfx_DrawOTag` <- `Gfx_Present`,
+the banner box empty in the frame before. No change of the round touches
+these rows; whether the round's base build crashes as often was not run. Until
+D279 is fixed (the owner's call, owner-review 2026-10-13), a Japanese
+disc-only install cannot fish.
 
 ## D280 — Under `ja-JP` the exe's own strings are the port's Chinese on the PC and blank on the Japanese disc-only installs (ours, the language build; the owner's call)
 
