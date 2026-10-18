@@ -1,0 +1,116 @@
+# Button route: the fishing spot (area 30, mode 8), docs/button-routes.md 3.2,
+# and on the way the world map legend's area 16 copy (Area16_DrawFrame).
+# The owner's caughFish.txt (the camping save) to its frame 1320, its three
+# load-menu circles (frames 0..340) made R2 (the same confirm on both the
+# title's defaults and any save's words; no frame moved): the map to the
+# lake, READY, stage 1's banner and presses (circle at 808, 850, ...: the
+# hard-coded LeaderPanel_S1Buttons tests), the gear menus, the cast, the
+# reel's banner line labels.
+# Played under BOF3X_LANG=en-US on the PC first; the twin is sigma_fishing_sw.txt
+# (tools/sigma_routes.py).
+# save camping_sw
+# sigma-from 340
+# Shots at frames 600, 845, 870, 990, 1140 added by tools/recipe_shots.py (--every 1 --from F --to F).
+# The swapped twin of sigma_fishing.txt, written by tools/sigma_routes.py: from frame 340 circle <-> cross, L1 <-> R1.
+wait 58
+hold start 3
+wait 109
+hold start 4
+wait 51
+hold r2 4
+wait 54
+hold r2 4
+wait 23
+hold r2 5
+wait 55
+hold square 2
+hold square+right+down 22
+hold square 1
+wait 45
+hold right+down 15
+hold right 20
+hold right+down 8
+hold right 51
+hold up+right 22
+hold up 2
+hold up+right 16
+hold right 26
+shot f00600 1 right
+hold right 27
+hold right+down 1
+hold right+down+left 2
+hold down+left 38
+hold left 3
+hold up+left 32
+hold left 16
+hold cross+left 2
+hold cross 3
+wait 8
+hold cross 3
+wait 72
+hold cross 3
+wait 34
+shot f00845 1
+wait 4
+hold cross 4
+wait 16
+shot f00870 1
+wait 1
+hold cross 4
+wait 4
+hold down 4
+wait 6
+hold up 3
+wait 2
+hold cross 4
+wait 5
+hold cross 3
+wait 5
+hold down 3
+wait 5
+hold cross 4
+wait 5
+hold cross 4
+wait 8
+hold circle 4
+wait 7
+hold circle 4
+wait 12
+hold cross 5
+wait 7
+hold cross 4
+wait 6
+shot f00990 1
+wait 52
+hold left 5
+wait 6
+hold left 5
+wait 18
+hold left 5
+wait 19
+hold left 4
+wait 7
+hold left 5
+wait 16
+hold left 5
+wait 2
+shot f01140 1
+wait 17
+hold left 4
+wait 6
+hold left 6
+wait 14
+hold left 7
+wait 20
+hold left 5
+hold cross+left 6
+hold cross 1
+hold cross+right 1
+hold right 17
+hold cross+right 5
+hold cross 13
+hold cross+right 13
+hold cross 26
+hold cross+left 5
+hold cross 8
+hold cross+right 5

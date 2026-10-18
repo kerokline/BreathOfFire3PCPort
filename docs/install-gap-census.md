@@ -185,12 +185,12 @@ Columns:
 | `BossGaist_Anims` | `0x64D78E..0x64D798` | game-value | all 7 | 1 / 6 | `BossGaist_Enter`, `BossSample9_Enter` | animation 0 | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `BossGaist_Sounds` | `0x64D798..0x64D7A0` | disc-unplaced | all 7 | 1 / 6 | `BossGaist_Enter`, `BossSample9_Enter` | sound 0 | **NEEDS FIX** - P2, `twin` by byte search (windows on the disc): 1 of 1 |
 | `BossTorch_Sounds` | `0x64D7A0..0x64D7A8` | game-value | all 7 | 1 / 8 | `BossTorch_Enter` (`boss_sh`: 0xFFFF words = no sound) | sound 0 played where none is meant | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
-| `EventBattle_Records` | `0x64DECE..0x64DF6F` | game-value | all 7 | 41 / 41 | `GameMode5_Load` (`Music_Play(track)`, `mode_rest.cpp` 305) | **every event battle asks for track 0** (41 two-byte track words, all builds; not heard) | **OWNER CALL** - the "track half" in owner-review.md (DIV-0101 provisional); candidate: a rule from the disc's own event-battle music (the PSX `GameMode5` twin 0x80198C94) through the song numbering (`bgm-comparison.md`: file N is song N) |
+| `EventBattle_Records` | `0x64DECE..0x64DF6F` | game-value | all 7 | 41 / 41 | `GameMode5_Load` (`Music_Play(track)`, `mode_rest.cpp` 305) | **every event battle asks for track 0** (41 two-byte track words, all builds; heard by players, issue #83) | **DONE 2026-10-17 (D316)**: `pairs` fills the track half by rule - the battle file's own music copy matched to the disc's song table, 0xFF with none; every word `BOF3.exe`'s on the PSP builds, one tie on the PSX (151 for 153, byte-identical files) |
 | `CommuHiLo_DealSteps` | `0x652CF4..0x652D04` | disc-unplaced | all 7 | 1 / 14 | `CommuHiLo_Payout`, `CommuHiLo_DealDispatch` | **the village hi-lo game pays 0** (u16 payout by turn 1..8, `rest_4c_callees.h`) | **NEEDS FIX** - **P1**, P2, `twin` by byte search (windows on the disc): 1 of 1 |
 | `CommuName_MemberEntrySteps` | `0x653084..0x653098` | game-value | all 7 | 1 / 11 | `CommuBoard_DrawRows` (formats 0x653088, 0x653090, 0x653094, dash 0x653084), `Commu_DrawStakeBox`, `EffectKind77_DrawCount` | **the village board's rows draw no numbers or dashes** (empty formats) | **NEEDS FIX** - **P1: engine-own strings** (format and dash, crt-rest.md lists them) |
 | `CommuMusic_CloseSteps` | `0x653142..0x653150` | game-value | JP, US, EU, pJP, pEU | 1 / 5 | `CommuMusic_DrawList` (glyphs 0x653144..0x65314C) | the music list's three glyphs blank | **NEEDS FIX** - game-value part P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3); FR/DE disc-unplaced part P2, `twin` by byte search (windows on the disc) (1 of 8) |
 | `CommuRank_Modes+0x8C` | `0x653200..0x653210` | language-zero | all 7 | 1 / 4 | `CommuSim_AddRecord`, `CommuRank_*` (faerie record 0's name field) | faerie 0 nameless (D289, group 16's one-record shift) | **NEEDS FIX** - fix D289 (`labels.cpp` / `loc_build`) |
-| `EffectKind0D_States` | `0x653B9C..0x653C03` | game-value | all 7 | 13 / 26 | `EffectKind0F_LineType` / `_LineNext` / `_LineScroll` (the 13 kind-0xF text records' line and pause bytes beside their pointers) | the fishing text's label pens and pauses 0 (not measured) | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3); or a rule from the fishing module (DIV-0069's way) |
+| `EffectKind0D_States` | `0x653B9C..0x653C03` | game-value | all 7 | 13 / 26 | `EffectKind0F_LineType` / `_LineNext` / `_LineScroll` (the 13 kind-0xF text records' line and pause bytes beside their pointers) | the fishing text's label bytes, pens and pauses 0: every line labelled circle, white, 256-frame pauses | **FIXED** (D313, 2026-10-17): `psp_exe.py` rules `fishrec` / `fishpen` from the fishing module, every build ([`fishing-text.md`](fishing-text.md) 8.8) |
 | `EffectKind27_States` | `0x6542EC..0x6542F0` | game-value | all 7 | 1 / 2 | `EffectKind27_Run` (kind 0x28 beam colours 0x6542EC) | a beam drawn black (not measured) | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `EffectKind29_States` | `0x654328..0x65432C` | game-value | all 7 | 1 / 2 | `EffectKind29_Run` (kind 0x2A colours) | as above | **NEEDS FIX** - P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
 | `EffectKind2A_States` | `0x654344..0x65434C` | game-value | PSX (5) | 1 / 6 | `EffectKind2A_PushParty` | the rows it pushes the party from: z cell and state 0 (not measured) | **NEEDS FIX** - **P2** (moves the party); P3, owning-function (the PSX twin's immediates, exe-import-engine.md 3.3) |
@@ -391,8 +391,8 @@ and the defects cited.
 | `SND\` effects | 880, byte-identical; never `019_02.DAT` and `DIR1` (unreferenced, [`sound-import.md`](sound-import.md)) | 891 by ffmpeg (ATRAC3plus, ~25 dB SNR); **none without ffmpeg** | HARMLESS / by design |
 | Movies | `CAPCOM.AVI` only with ffmpeg; `LOGOS.AVI` (the porting house's) never, skipped (DIV-0100) | the PSP's `CAPCOM.AVI` with ffmpeg | HARMLESS by design |
 | Language | the disc's layer (DIV-0090); Chinese refused (DIV-0102) | the PSP's layer | ja-JP gaps D280 / D279, PSP-EU Config D246: **OWNER CALL** |
-| Buttons | the Japanese assignment on a US disc | - | **OWNER CALL** (owner-review "the US release's button assignment") |
-| Disc-only art | D273 (world-map legend, two icons overlaid), D274 (dock legend's US buttons), D277 (US title layout) | D256 (the PSP title's framing) | D273 / D274: NEEDS FIX by the key-icon design ([`key-icons-by-mapping.md`](key-icons-by-mapping.md)); D277, D256: **OWNER CALL** |
+| Buttons | the release's own assignment since DIV-0134 (the Japanese one before) | PSP-EU's own (DIV-0134) | **FIXED** 2026-10-17 by the button round (DIV-0133..0140: every icon and test through the Config) |
+| Disc-only art | D273 (world-map legend, two icons overlaid), D274 (dock legend's US buttons), D277 (US title layout) | D256 (the PSP title's framing) | D273: FIXED by DIV-0130 (as D307); D274: FIXED by DIV-0137 (not seen); D277, D256: **OWNER CALL** |
 | `BOF3.CFG` | the config's defaults on first start | same | HARMLESS |
 | JP world-map camera | D281, closer on PSX-JP alone | - | unclassed: the PSX twin read decides |
 | A cache built by an older release | refused by `FilledSince()` only for the two listed fixes; any other importer fix stays silent | same | HANDOFF item 11 (`install/recipe-version`): a recipe hash in `data.toml` |
@@ -415,11 +415,9 @@ The launcher lists each one, greyed with its reason.
 
 1. **DONE 2026-10-17 (D310).** **Level-up ability names** `0x654900` (Western PSX): an engine-own `%s`
    (4.1). Every level-up that teaches an ability.
-2. **Event battle music** `EventBattle_Records` track half (all 7): every
-   boss and event fight asks for track 0. Formally the owner's "track half"
-   (DIV-0101 provisional); listed first among the owner's items to decide.
-   Candidate: a rule from the PSX `GameMode5` twin's own track through the
-   song numbering.
+2. **DONE 2026-10-17 (D316, issue #83).** **Event battle music** `EventBattle_Records` track half (all 7): every
+   boss and event fight asked for track 0. The `pairs` rule now fills it from the battle file's own
+   music copy through the disc's song table (known-defects D316).
 3. **DONE 2026-10-17 (D311, a `twin` from `COMMU02.EMI#8`).** **Hi-lo payouts** `CommuHiLo_DealSteps+0x14` (all 7): the game pays 0. A
    `twin` (1 of 1 windows on the disc).
 4. **DONE 2026-10-17 (D310).** **Play-time colon** `0x6637E0` (all 7): an engine-own glyph (4.1).

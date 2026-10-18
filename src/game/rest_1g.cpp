@@ -34,6 +34,12 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
+using bof3x::input::sigma::SigmaInverse;
 
 namespace {
 
@@ -224,7 +230,7 @@ extern "C" void __cdecl LeaderPanel_S1Wait(void) {
 // stage 2; with Inventory_Holds38To4DAt99 0, 0x6BC709 = 0 and stage 2; with an
 // item byte 0, record 1 = 4 and stage 9. Any other value: nothing.
 extern "C" void __cdecl LeaderPanel_S1Buttons(void) {
-    switch (static_cast<unsigned char>(Input_Pressed) & 0x74) {
+    switch (SigmaInverse(static_cast<unsigned char>(Input_Pressed) & Sigma(0x74))) {
     case 0x04: {
         unsigned char* const s = S();
         B(kEff3State) = 7;
@@ -408,7 +414,7 @@ extern "C" void __cdecl LeaderPanel_S10(void) {
 extern "C" void __cdecl LeaderPanel_S10Look(void) {
     if (Field_Kind2Hold == 0) {
         bool done = false;
-        if ((static_cast<unsigned char>(Input_Held) & 0x40) != 0 || Field_Kind2Z == 0x150000) {
+        if ((static_cast<unsigned char>(Input_Held) & Sigma(0x40)) != 0 || Field_Kind2Z == 0x150000) {
             if (B(kEff3State) == 0) {
                 MoveScript_F3Divisor = 0x40;
                 Field_Kind2Z = 0x3C0000;
@@ -646,7 +652,7 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
 // any of 0xE020, else 0.
 extern "C" void __cdecl LeaderPanel_PressLatch(void) {
     B(kPressWas) = B(kPressNow);
-    B(kPressNow) = (Input_Pressed & 0xE020) != 0 ? 1 : 0;
+    B(kPressNow) = (Input_Pressed & Sigma(0xE020)) != 0 ? 1 : 0;
 }
 
 // ===========================================================================

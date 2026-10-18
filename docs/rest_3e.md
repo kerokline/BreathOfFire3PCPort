@@ -48,6 +48,9 @@ The names say what the code draws and steps, not what the player sees: where
 the game shows kinds 0x5D..0x5F (their spawners: chapter 7, areas 104 / 121,
 chapter 9b - [`effect_2g.md`](effect_2g.md) section 1) was not traced here.
 
+**Since 2026-10-17** `EffectKind5E_DrawPanel` carries one divergence, the
+dock's legend drawn from the Config (`DockLegend`, the button round's DIV-0137): section 11.
+
 ## 1. What each function does
 
 | Address | Name | What |
@@ -241,7 +244,8 @@ move a read before a call (C73) are refused through the disturbance of
   `+1` past `EffectGlowSparks_States`' three; a mark index past the 11 the
   offsets have room for (the image's rows hold 0..9 and 0xA).
 
-**Needs a ledger entry:** none. No read of memory the original never wrote
+**Needs a ledger entry:** none for the fifty as taken over (the dock's legend, added
+2026-10-17, is DIV-0137: section 11). No read of memory the original never wrote
 reaches a draw or a decision (L1 and L3 are unread or dropped).
 
 ## 6. Controls
@@ -392,3 +396,197 @@ this group's live check for the number; the other 49 are **fuzz only**.
   `0046F6F0 A0`, `0046D770 10` run into padding past the extents read.
 - Nothing in `DIVERGENCE.md`, `cheats.cpp` or `widescreen.cpp` names an
   address of the band, and no full-frame fill is drawn in it.
+
+## 11. The dock's legend follows the Config (DockLegend, DIV-0137)
+
+**Status:** BUILT (2026-10-17, group IC-D of
+[`button-unification-round.md`](button-unification-round.md) 3, branch
+`buttons/icd`). Headless self-tests pass. **Not seen**: no route reaches the
+dock (area 128) yet, RC's included, so nothing here has been drawn on a
+screen.
+**Numbered at the round's end (2026-10-17):** ledger draft E (section 11.6) is DIV-0137;
+the defect it fixes is known-defects D274.
+
+### 11.1 What the panel is
+
+`EffectKind5E_DrawPanel` (`0x47FBE0`) draws the parts menu's legend as one
+FT4 of the area page (tag `0x0A081000`, texture page `(0x2C0, 0x100)`
+4-bit, CLUT `(0x20, 0x1E3)`): u `0xC0..0xFF`, v `0x50..0x78` over the
+`0x40 x 0x28` box at `0x654888` (its four words read from the image,
+2026-10-17: 0xE8, 0x3C, 0x40, 0x28). Three rows, each a baked button icon and its word:
+place the part, quit, the memo board. `EffectKind5E_Pick` (`0x47F610`) tests
+circle `0x20`, cross `0x40` and triangle `0x10` for them (section 1).
+
+The icons' places, read as 4-bit indices on every build's page (the importer's
+caches and the discs through `region_diff.Build`, a scratch script, nothing
+kept): the icon column is u offsets 4..14 of the panel; the three cells are
+v offsets 5..14, 15..24 and 25..34. The icons sit inside those cells on every
+page (one texel further right on the West's and PSP-EU's than on Japan's);
+the words start at u offset 15 or 16 and nothing else is in the column. The
+icons' ink is indices 8 and up; the words and the icons' shadows are below 8.
+
+| Build's page | Row 0 (place) | Row 1 (quit) | Row 2 (memo) |
+|---|---|---|---|
+| PC (`bof3/DAT`), `psx-jp`, `psp-jp` (the same bytes: `pc-zh.toml` lists the PC's chunk `on` both as `copy`) | circle | cross | triangle |
+| `psx-us`, `psx-eu-en`, `psx-fr`, `psx-de` | cross | triangle | square |
+| `psp-eu` (the PSP stand-in in `c_pspeu`) | cross | circle | square |
+
+So each page bakes `M_R` of Japan's three buttons (`P` for the West, `S` for
+PSP-EU; [`button-sigma.md`](button-sigma.md) 2). No language layer carries
+the page (`loc/*/dat/AREA128.DAT` and `g_pc/DAT/*.AREA128.DAT` hold no chunk
+at that tag).
+
+### 11.2 What is built
+
+With the switch `DockLegend` on (`PatchBytes` on a byte of ours, after this
+module's fuzz; `BOF3X_ORIGINAL=DockLegend` for the page as it is), every
+frame the panel is drawn:
+
+1. **The page's icons are read**, not assumed. The three cells are read from
+   the VRAM shadow (`Gfx_VramShadow`, the low nibble first for an even u, as
+   `D3d_PageTexel4`'s note has it) and each is told by a rule on its ink
+   (`dock::Classify`): the bounding box 5..11 wide and 5..10 high; top and
+   bottom rows full and the centre empty is a **square**; ink at both ends of
+   the top and bottom rows, the centre inked and the top not full is a
+   **cross**; neither row at its ends and each more than half the width is a
+   **circle**; a top a third of the width at most over a full bottom is a
+   **triangle**; anything else is not one of the four. A scratch mirror of
+   the rule read the table above on all seven builds' pages.
+2. **Each row's button now** is `Sigma(bit)` of its test's bit
+   ([`button-sigma.md`](button-sigma.md) 2): Japan's terms, so the identity on
+   a JP-based install at its defaults, `P` on a West install at the West's
+   defaults, `S` on PSP-EU's. HT makes `EffectKind5E_Pick` test the same
+   `Sigma(bit)`; until then the code tests Japan's bit and `Sigma` is what
+   the Config says.
+3. **Where the row's button is the page's own icon there, nothing changes**:
+   the original's one quad. That is every row at every release's defaults.
+4. **Where it is not**, the panel is drawn in pieces that leave that row's
+   cell out (whole-width runs of texel rows, 1:1 in v as the original's quad;
+   in a changed row's band the four texels left of the column and the panel
+   from u offset 15 right), and the row's button is drawn in the cell:
+   - **the page's own icon of that button** when another row has it - an
+     `11 x 10` FT4 of that row's cell. The PlayStation shapes of the disc the
+     page came from, or Capcom's on the PC's own page;
+   - else, under a Latin overlay, **DIV-0051's icon** (the disc's 12 x 12
+     set, glyph `0xA65 + k`, as `Config_DrawControllerCell` draws it, its
+     colour: circle 2, cross 1, triangle 6, square 5, L1 / R1 0);
+   - else **the port's stand-in**: the string `0x461C00` draws for that
+     button (`[0x66A2FC + 4k]`, k in the order circle, cross, triangle,
+     square, L1, R1, read with capstone 2026-10-17), in the same colour.
+   The glyph's top-left is the cell's `(x + 4, y + 3)` (a 12-unit glyph,
+   `Text_DrawAt`'s `y + 1` its top, centred on the cell).
+5. **A page whose cells are not three of the four shapes** (a mod, or a page
+   not loaded) is drawn as it is, and the log says so once.
+
+The plan is logged when it changes (`DockLegend page circle / cross /
+triangle, shown cross (row 1's) / circle (row 0's) / triangle`).
+
+**What each install shows under the stand-in swap** (Speak <-> Action, View
+<-> Change; the self-test's case): rows 0 and 1 trade cells, row 2 kept, on
+all three page orders - every glyph from the page itself. A glyph is needed
+only when a row's button is one the page does not bake: square or L1 / R1 on
+Japan's page, circle or L1 / R1 on the West's, triangle or L1 / R1 on
+PSP-EU's (Speak moved to Move's button, say, or to R1).
+
+**On a PC-only install** (no disc, no overlay) that glyph is the port's
+stand-in, a circled numeral or an `X` in the button's colour, beside the page's
+grey PlayStation icons in the other rows. It is the one mixed case; the owner
+judges it on a capture once a route reaches the dock.
+
+### 11.3 Why not the importer (the brief's other half)
+
+The brief had the importer blank the three icons on the area page, as D307
+did for the world map's dial page, and the draw put `σ`'s icon on every row
+always. Not done, for three measured reasons:
+
+- **The identity bar.** Blanked icons redrawn as glyphs change what every
+  player sees at the defaults (a 12-unit coloured glyph for an 8 x 8 grey icon),
+  where the round's bar is that nothing changes. Drawing the page's own cell
+  instead is pixel-exact only if the cell is still on the page.
+- **Not every install goes through the importer.** A PC install with no cache
+  loads `DAT/AREA128.DAT` as shipped; there the icons stay baked whatever the
+  importer does, and an always-drawn glyph would overlap them.
+- **D307's case does not apply.** The world map's glyph is drawn by Capcom's
+  code over the baked icon, so the page had to lose it. The dock's draw is
+  ours (round fourteen), so the panel can leave a cell out instead of the
+  page losing it.
+
+So `tools/importer.py` is unchanged and no cache needs rebuilding.
+
+### 11.4 Checks
+
+- **The build** (llvm-mingw, `cmake --build build`): clean.
+- **`BOF3X_SHADOW=rest_3e`** (headless, PC install `bof3`, launcher copy
+  under `C:\Users\kerok\b_icd`): exit 0; the fuzz unchanged, `200000 rounds
+  over 50 functions (4000 each), 9265089 calls to the stand-ins, 0
+  MISMATCHES` (it runs before the switch, so it compares Capcom's one quad);
+  then `DockLegend self-test: 84 cells read by the rule, 2167 plans (3 page
+  orders at their defaults, the stand-in swap and 720 assignments each, an
+  unreadable page); 0 MISMATCHES`, and `patch ON DockLegend`.
+  - The rule on shapes drawn by rule in the test (no page's texels copied):
+    the four at every place in the cell, and four non-shapes (empty, a
+    filled block, a line, a 3 x 3 ring) refused.
+  - **Identity**: on each page order with its release's defaults
+    (`sigma::DefaultWords`, `sigma::Build`, `sigma::Apply`), every row kept -
+    the original's quad.
+  - **The stand-in swap**: rows 0 and 1 each the other's cell, row 2 kept.
+  - **All 720 assignments** of the six lines on each page order: every row
+    shows its test's button - kept only where the page has it in that row,
+    another row's cell only where the page has it there, a glyph only where
+    the page has it nowhere.
+- **`BOF3X_SHADOW='*'`**: exit 0 (run from `build/`, which holds no `bof3x.ini`, after Defender blocked the harness copies, section 11.5); 787 self-test lines, no non-zero MISMATCHES line, `inject: 10087 ours, 0 left original`, the DockLegend line as above and `patch ON DockLegend`.
+- **Not reached**: a capture. No route reaches area 128 (RC's routes stop
+  at the world map, the fishing, the Config and the item lists).
+
+### 11.5 Open
+
+- The glyph fallback's size and place (12 units centred on an 8 x 8 icon's
+  cell) are measured off the code, not seen; the owner tunes them by eye off
+  the first capture.
+- Under a Japanese overlay (`Lang_FullWidth`) the fallback is the port's
+  stand-in, as the Config panel's original cell draws there; not checked
+  whether that overlay keeps the one-byte stand-in glyphs.
+- Defender, 2026-10-17 15:57: `Behavior:Win32/DefenseEvasion.A!ml` on the
+  launcher copies under `C:\Users\kerok\b_icd\launcher` (events 1116; the
+  copies then could not be run or read). The `'*'` run used the worktree's
+  `build/` launcher, which has no ini. No setting changed.
+
+### 11.6 The ledger entry, DIV-0137 (drafted as E)
+
+> ### The dock's parts-menu legend shows the buttons the Config has its tests on
+>
+> - **Subsystem:** the dock's parts menu (area 128) -
+>   `EffectKind5E_DrawPanel` `0x47FBE0` (ours, `src/game/rest_3e.cpp`).
+>   Its tests are `EffectKind5E_Pick` `0x47F610` (HT's DIV-0139).
+> - **Tier:** Intent - the owner's decision, 2026-10-17
+>   ([`button-roles-by-release.md`](button-roles-by-release.md) 8: every
+>   button icon follows the Config; PlayStation icons only).
+> - **Original behaviour:** the legend is baked art of the area page: each
+>   release's default buttons for the three tests (Japan's page, the PC's:
+>   circle place, cross quit, triangle memo; the West's cross / triangle /
+>   square; PSP-EU's cross / circle / square). It never changed with the
+>   Config, and on a Western disc-only install it named the US buttons over
+>   Japan's code (known-defects D274).
+> - **New behaviour:** each row shows `Sigma` of its test's bit. Where that
+>   is the page's own icon in that row, the original's one quad is drawn
+>   unchanged (every row at every release's defaults). Otherwise the row's
+>   icon cell is left out of the panel and the button drawn there: the
+>   page's own icon of it from another row; else DIV-0051's icon under a
+>   Latin overlay; else the port's stand-in glyph (`0x66A2FC`'s, as the
+>   Config panel's `0x461C00`), in the button's colour. The page's icons are
+>   read from the VRAM shadow by a shape rule; a page whose cells are not
+>   three of the four shapes is drawn as it is.
+> - **Rationale:** the owner's answers on the key icons: an icon shows what
+>   the Config holds now. Japan's terms (`Sigma`), so the legend and HT's
+>   tests agree on every install.
+> - **Also in the PSX version?** No: the PlayStation's legend is the same
+>   baked art and never follows a Config swap. The Western overlap at
+>   defaults is the PC's (Japan's words over a Western page), gone with
+>   DIV-0134's starting Config by source.
+> - **Verification:** `BOF3X_SHADOW=rest_3e`: the fuzz 0 mismatches before
+>   the switch; the dock self-test 84 cells, 2167 plans, 0 mismatches
+>   (identity on the three page orders, the stand-in swap, 720 assignments
+>   each). The rule read the seven builds' pages as the doc's table. No
+>   capture: no route reaches the dock.
+> - **Reversible?** `BOF3X_ORIGINAL=DockLegend` (the page as it is), or
+>   `BOF3X_ORIGINAL=EffectKind5E_DrawPanel`.

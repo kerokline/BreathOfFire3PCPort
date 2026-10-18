@@ -27,6 +27,11 @@
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -1054,7 +1059,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
     SetWord(At(0x803458), window_x + 7);
     B(0x803454) = 1;
     SetWord(At(0x80345A), static_cast<unsigned>(row * 13) + Word(At(0x80333A)));
-    const U held = SH_CALL(Input_AutoRepeat)(pressed & 0xF00C);
+    const U held = SH_CALL(Input_AutoRepeat)(pressed & Sigma(0xF00C));
     if (held & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
         const unsigned char old = B(0x80333E);
@@ -1106,7 +1111,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
         }
         first = B(0x80333F);
         if (static_cast<int>(B(0x803340)) >= static_cast<int>(first) + 9) SetWord(At(0x803346), 0x10);
-    } else if (held & 4) {
+    } else if (held & Sigma(4)) {
         first = B(0x80333F);
         if (first == 0) {
             pick = 0;
@@ -1124,7 +1129,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
         }
     } else {
         first = B(0x80333F);
-        if (held & 8) {
+        if (held & Sigma(8)) {
             if (first == 0x77) {
                 pick = 0x7F;
                 B(0x803340) = 0x7F;

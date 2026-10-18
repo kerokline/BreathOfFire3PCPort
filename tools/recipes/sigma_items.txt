@@ -1,0 +1,51 @@
+# Button route: the item lists' L1 / R1 corner (Menu_DrawPiece's pieces
+# 0x15 / 0x18), docs/button-routes.md 3.4. The fairyVillage save (53 items,
+# so the list has pages) loaded on the world map as fairyVillage.txt does
+# (its load-menu circles made R2), the field menu, Items, Use: the list, then
+# R1, R1, L1 (a page each, the hard-coded 0x500C test), three downs, R1.
+# Played under BOF3X_LANG=en-US on the PC first; the twin is sigma_items_sw.txt
+# (tools/sigma_routes.py).
+# save fairyVillage
+# sigma-from 369
+# Shots at frames 565, 605, 650, 695, 790 added by tools/recipe_shots.py (--every 1 --from F --to F).
+wait 36
+hold start 6
+wait 82
+hold start 4
+wait 54
+hold r2 5
+wait 38
+hold r2 5
+wait 28
+hold r2 4
+wait 147
+hold triangle 4
+wait 50
+hold r2 4
+wait 60
+hold r2 4
+wait 34
+shot f00565 1
+wait 5
+hold r1 4
+wait 30
+shot f00605 1
+wait 9
+hold r1 4
+wait 31
+shot f00650 1
+wait 8
+hold l1 4
+wait 32
+shot f00695 1
+wait 7
+hold down 4
+wait 12
+hold down 4
+wait 12
+hold down 4
+wait 12
+hold r1 4
+wait 35
+shot f00790 1
+wait 34

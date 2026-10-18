@@ -43,6 +43,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
+#include "game/scenario_harness.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -168,27 +169,72 @@ constexpr std::uint32_t kTextDrawAt = 0x516B30;   // Text_DrawAt: the sites' tar
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
 constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow's one draw (DIV-0026)
 
-// The controller panel's cell, original 0x461C00 (docs/controls.md section 2).
-// The original tests the word's bits in the order circle, cross, triangle,
-// square, L1, R1 and draws, for the first it finds, the key letter of the
-// default table at (x - 0x10, y) in colour 0 and the button's glyph at
-// (x + 4, y) in the button's colour: circle 2, cross 1, triangle 6, square
-// 5, L1 and R1 0 - the port's glyphs there being circled numerals and an X.
-// Ours draws one thing, the PlayStation's icon, in that colour, where the
-// letter was: the PlayStation screen has one column (DIV-0051). Count 3 as
-// the original passes it. L2 and R2 have no icon on either side, as before.
+// DIV-0051's icon path is on: set once the cell's Inject went in, which is
+// under a Latin overlay only (ConfigText_Inject), the overlay whose font
+// loc_build.py built the icon glyphs into. Without it the glyphs are past the
+// end of the Chinese font, and Text_DrawString stops on Capcom's glyph trap
+// (0xC0000096, ecx 0xA65: known-defects D312) - so the cell draws what the
+// original draws.
+bool g_icons = false;
+
+// The controller panel's cell, original 0x461C00 (docs/controls.md section 2;
+// disasm 2026-10-17, 0x461C00..0x461E07). cdecl (x, y, word). The original
+// tests the word's bits in the order circle 0x20, cross 0x40, triangle 0x10,
+// square 0x80, L1 0x04, R1 0x08 and, for the first it finds, draws
+// Text_DrawAt(x + 4, y, colour, 3, 0x66A2FC[i]) - the port's glyph, the
+// pointer read in place: colours 2, 1, 6, 5, 0, 0 - then Text_DrawAt(x - 0x10,
+// y, 0, count, letter): the default key table's letter, hard-coded at
+// 0x65382C, 0x653828, 0x653824, 0x653820, 0x65381C (count 4) and 0x653818
+// (known-defects D58). With none of those, select 0x100 (`test ah, 1`) draws
+// the three cells of a SELECT label: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0,
+// 0xF, 0), Gfx_CommitPrim(1, 0xC), then for u = 6, 7, 8 at x + 1, x + 9,
+// x + 0x11: Menu_DrawCell8(x', y + 3, u, 2, Gpu_GetClut(0, 0x1E0), 0x80) - the
+// shade the 0x80 the clut call's caller left on the stack. Nothing else.
+//
+// Under DIV-0051 ours draws one thing, the PlayStation's icon, in that colour,
+// where the letter was: the PlayStation screen has one column. Count 3 as
+// the original passes it. L2 and R2 have no icon on either side, as before,
+// and select none under DIV-0051 (the rebinding's `and ecx, 0xFC` never gives
+// a line the bit; a save could).
 extern "C" void __cdecl Config_DrawControllerCell(int x, int y, unsigned int word) {
-    struct Icon { unsigned bit; std::uint32_t glyph; int color; };
-    static const Icon kIcons[] = {
-        {0x20, kIconCircle, 2}, {0x40, kIconCross, 1},  {0x10, kIconTriangle, 6},
-        {0x80, kIconSquare, 5}, {0x04, kIconL1, 0},     {0x08, kIconR1, 0},
-    };
-    for (const Icon& i : kIcons) {
-        if (!(word & i.bit)) continue;
-        const unsigned char code[3] = {static_cast<unsigned char>(0x80 | (i.glyph >> 8)),
-                                       static_cast<unsigned char>(i.glyph), 0};
-        Text_DrawAt(x + kIconX, y, i.color, 3, code);
+    if (g_icons) {
+        struct Icon { unsigned bit; std::uint32_t glyph; int color; };
+        static const Icon kIcons[] = {
+            {0x20, kIconCircle, 2}, {0x40, kIconCross, 1},  {0x10, kIconTriangle, 6},
+            {0x80, kIconSquare, 5}, {0x04, kIconL1, 0},     {0x08, kIconR1, 0},
+        };
+        for (const Icon& i : kIcons) {
+            if (!(word & i.bit)) continue;
+            const unsigned char code[3] = {static_cast<unsigned char>(0x80 | (i.glyph >> 8)),
+                                           static_cast<unsigned char>(i.glyph), 0};
+            SH_CALL(Text_DrawAt)(x + kIconX, y, i.color, 3, code);
+            return;
+        }
         return;
+    }
+    struct Cell { unsigned bit; int color; std::uint32_t letter; int letter_count; };
+    static const Cell kCells[] = {
+        {0x20, 2, 0x65382C, 3}, {0x40, 1, 0x653828, 3}, {0x10, 6, 0x653824, 3},
+        {0x80, 5, 0x653820, 3}, {0x04, 0, 0x65381C, 4}, {0x08, 0, 0x653818, 3},
+    };
+    constexpr std::uint32_t kGlyphPointers = 0x66A2FC;   // the six one-byte glyph strings 0x66A2E0..
+    for (unsigned i = 0; i < sizeof kCells / sizeof kCells[0]; ++i) {
+        const Cell& c = kCells[i];
+        if (!(word & c.bit)) continue;
+        const auto* const glyph = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
+            *reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(kGlyphPointers + 4 * i))));
+        SH_CALL(Text_DrawAt)(x + 4, y, c.color, 3, glyph);
+        SH_CALL(Text_DrawAt)(x - 0x10, y, 0, c.letter_count,
+                             reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(c.letter)));
+        return;
+    }
+    if (!(word & 0x100)) return;
+    SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xF, 0);
+    SH_CALL(Gfx_CommitPrim)(1, 0xC);
+    for (unsigned u = 6; u <= 8; ++u) {
+        const unsigned clut = SH_CALL(Gpu_GetClut)(0, 0x1E0);
+        SH_CALL(Menu_DrawCell8)(static_cast<unsigned>(x) + 1 + 8 * (u - 6), static_cast<unsigned>(y) + 3, u, 2, clut,
+                                0x80);
     }
 }
 
@@ -443,6 +489,12 @@ void ConfigText_Inject() {
         }
         bof3::Inject("Config_DrawControllerCell", bof3::addr::Config_DrawControllerCell,
                      reinterpret_cast<void*>(&Config_DrawControllerCell));
+        // Ours is called directly by our Config_DrawControllerPanel
+        // (rest_4f.cpp, since round 14's R4F) whether or not this Inject went
+        // in, so the icons follow the Inject, not the call: OFF under
+        // BOF3X_ORIGINAL (the jmp on ours reaches Capcom's), and never without
+        // a Latin overlay, whose return above leaves the original path (D312).
+        g_icons = bof3::IsEnabled(bof3::addr::Config_DrawControllerCell);
     }
 
     // The rows' y is the original's. An earlier build lowered every string on

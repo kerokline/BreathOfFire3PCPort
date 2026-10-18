@@ -339,7 +339,11 @@ Drafts for the coordinator to number; none is written to `DIVERGENCE.md`, since 
 7. Option B: **a US button layout preset** - a launcher binding preset, no game change (a
    ledger line only if it becomes a default).
 
-## 9. Defects found (for the coordinator to number)
+## 9. Defects found (numbered D272..D275 on 2026-10-13; fixed 2026-10-17)
+
+In order: D272 (fixed by DIV-0140), D273 (the same as D307, fixed by
+DIV-0130), D274 (fixed by DIV-0137, not seen), D275 (fixed by DIV-0135).
+
 
 - **The Western layers name the US buttons over the PC's code** (ours: `loc_build.py` copies
   the disc's icon glyphs). Nine areas' dialogue (section 2.6). Where the code is hard-coded the

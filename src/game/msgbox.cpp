@@ -12,16 +12,24 @@
 // body. With no advance table loaded - every shipped file - MsgBox_DrawChar
 // IS Text_DrawAt, so this is the original. The RetargetCall stays where it
 // is: it is what keeps DIV-0006 alive under BOF3X_ORIGINAL=MsgBox_Step.
+//
+// DIVERGENCE (DIV-0140, docs/button-dialogue.md 4): MsgBox_Step draws a
+// button mention as the button the Config has put its role on - the same
+// decision as Text_DrawString's (text_draw.h ButtonText_Code / _Cue). Under
+// BOF3X_ORIGINAL=MsgBox_Step Capcom's body runs and draws the text as it is.
 #include "game/msgbox.h"
 
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/button_text.h"
 #include "game/msgbox_callees.h"
 #include "game/text_advance.h"
+#include "game/text_draw.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
 
 namespace msgbox {
 
@@ -200,6 +208,11 @@ extern "C" unsigned char __cdecl MsgBox_FrameTask(void) {
 //   - the pen is reloaded from memory after every draw and then advanced.
 //     DIV-0006 hangs on exactly that: g.draw_char is MsgBox_DrawChar, which
 //     moves MsgBox_PenX by (advance - 12) so this `+ 12` lands it right.
+//
+// DIV-0140: at a button mention the `05 cc` takes the drawn button's colour
+// and the icon is handed to the draw as the drawn button's glyph (its advance
+// then moves the pen, DIV-0006's way); the walk steps over the text's own
+// bytes, so the drawn count and every later byte are as before.
 extern "C" void __cdecl MsgBox_Step(void) {
     unsigned char flags = 0;                 // bl: bit 0 in a substitution, bit 5 the offset pen
     const unsigned char* at = Ptr(kBase);
@@ -207,6 +220,10 @@ extern "C" void __cdecl MsgBox_Step(void) {
     unsigned char sub_count = 0;
     unsigned char drawn = 0;
     unsigned char color = 0;
+    // DIV-0140 (src/game/button_text.h): 1 after a button code that resolved
+    // (its `05 cc` next), 2 once the drawn colour is taken (the glyph next).
+    int button = 0;
+    button_text::Icon icon;
     short pen_x = MsgBox_LineX;
     auto pen_y = static_cast<std::uint16_t>(W(kOriginY));
     MsgBox_PenX = pen_x;
@@ -254,10 +271,21 @@ extern "C" void __cdecl MsgBox_Step(void) {
                 at = At(kCharRecords + 164u * member);
                 break;
             }
-            case 0x05:
+            case 0x05: {
+                const unsigned char* const control = at;
                 ++at;
                 color = at[0];
+                // DIV-0140: the code's own colour stands (06 clears it at
+                // once); the `05 cc` after it, or a colour cue, takes the
+                // drawn button's colour instead.
+                if (button == 1 || (button == 0 && ButtonText_Cue(control, icon))) {
+                    color = icon.colour;
+                    button = 2;
+                } else if (button == 0 && ButtonText_Code(control, icon)) {
+                    button = 1;
+                }
                 break;
+            }
             case 0x06:
                 color = 0;
                 break;
@@ -304,6 +332,10 @@ extern "C" void __cdecl MsgBox_Step(void) {
             }
         }
         if (glyph) {
+            // DIV-0140: the drawn button's glyph in the fallback's place; the
+            // walk still steps over the fallback's own bytes below.
+            const unsigned char* const shown = button == 2 ? icon.glyph : at;
+            button = 0;
             if ((c == 0x2A || c == 0x3C) &&
                 static_cast<std::uint16_t>(pen_x) == static_cast<std::uint16_t>(MsgBox_LineX)) {
                 pen_x = static_cast<short>(pen_x - 12);
@@ -315,16 +347,16 @@ extern "C" void __cdecl MsgBox_Step(void) {
                     // upper three bytes are stack it never wrote; 0x4987E0
                     // reads `mov al, [esp+4]` and masks to 0xF, so only this
                     // byte can reach it.
-                    g.effect_draw(color, at);
+                    g.effect_draw(color, shown);
                 } else {
                     const auto clut = static_cast<unsigned char>((B(kColorHigh) << 4) + color);
                     const int x = static_cast<short>(MsgBox_PenX + static_cast<signed char>(B(kOffsetX)));
                     const int y = static_cast<short>(pen_y + static_cast<signed char>(B(kOffsetY)));
-                    g.draw_char(x, y, clut, 1, at);
+                    g.draw_char(x, y, clut, 1, shown);
                 }
             } else {
                 const auto clut = static_cast<unsigned char>((B(kColorHigh) << 4) + color);
-                g.draw_char(pen_x, pen_y, clut, 1, at);
+                g.draw_char(pen_x, pen_y, clut, 1, shown);
             }
             if (at[0] & 0x80) ++at;
             drawn = static_cast<unsigned char>(drawn + 1);
@@ -524,7 +556,11 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
         if (glyph) {
             if (c & 0x80) ++at;
             if ((B(kFlags) & 0x10) == 0) {
-                const unsigned speed = (static_cast<unsigned char>(Input_Held) & 0x20) ? 0 : 1;
+                // Holding the Speak line's button speeds the text: Japan's
+                // circle asked through sigma, not word 0, which also holds
+                // L2 / R2 (docs/button-tests.md 3, DIV-0139).
+                const unsigned speed =
+                    (static_cast<unsigned char>(Input_Held) & bof3x::input::sigma::Sigma(0x20)) ? 0 : 1;
                 const auto row = static_cast<signed char>(B(kTextSpeed));
                 SetB(kDelay, B(static_cast<std::uint32_t>(kSpeedTable + speed + row)));
                 if (L(kFlags) & 0x100u) {
@@ -1133,6 +1169,47 @@ extern "C" void __cdecl Text_EmitGlyph(int x, int y, int w, int h, int u, int v,
     g.set_code6c(p);
     g.set_semitrans(p, 1);
     g.commit(1, 0x28);
+}
+
+namespace {
+MsgBoxDraw* g_record;
+unsigned g_record_max, g_record_n;
+
+const unsigned char* __cdecl RecordDrawChar(int x, int y, int color, int, const unsigned char* text) {
+    if (g_record_n < g_record_max)
+        g_record[g_record_n] = {x, y, color, {text[0], static_cast<unsigned char>(text[0] & 0x80 ? text[1] : 0)}};
+    ++g_record_n;
+    return text + 1;
+}
+}  // namespace
+
+unsigned MsgBox_StepRecord(const unsigned char* msg, unsigned glyphs, MsgBoxDraw* out, unsigned max) {
+    const auto saved_draw = g.draw_char;
+    const unsigned char* const saved_base = Ptr(kBase);
+    const unsigned saved_count = B(kStepCount), saved_flags = W(kFlags), saved_high = B(kColorHigh);
+    const unsigned saved_origin = W(kOriginY), saved_pen_y = W(kPenY);
+    const short saved_line = MsgBox_LineX, saved_pen_x = MsgBox_PenX;
+    g_record = out;
+    g_record_max = max;
+    g_record_n = 0;
+    g.draw_char = &RecordDrawChar;
+    SetPtr(kBase, msg);
+    SetB(kStepCount, glyphs);
+    SetW(kFlags, 0);
+    SetB(kColorHigh, 0);
+    SetW(kOriginY, 0x20);
+    MsgBox_LineX = 0x10;
+    MsgBox_Step();
+    g.draw_char = saved_draw;
+    SetPtr(kBase, saved_base);
+    SetB(kStepCount, saved_count);
+    SetW(kFlags, saved_flags);
+    SetB(kColorHigh, saved_high);
+    SetW(kOriginY, saved_origin);
+    SetW(kPenY, saved_pen_y);
+    MsgBox_LineX = saved_line;
+    MsgBox_PenX = saved_pen_x;
+    return g_record_n;
 }
 
 void MsgBox_Inject() {

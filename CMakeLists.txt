@@ -172,6 +172,8 @@ add_library(bof3x SHARED
   src/game/pad_read.cpp
   src/input/bindings.cpp
   src/input/pad_sdl.cpp
+  src/input/sigma.cpp
+  src/input/button_tests.cpp
   src/game/sprite_clut.cpp
   src/game/draw_layers.cpp
   src/game/psx_gpu.cpp
@@ -247,6 +249,7 @@ add_library(bof3x SHARED
   src/game/event_ops_fuzz.cpp
   src/game/menu_windows.cpp
   src/game/menu_windows_fuzz.cpp
+  src/game/shoulder_glyphs.cpp
   src/game/display_setup.cpp
   src/game/win_main.cpp
   src/game/fmv_play.cpp

@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-17: `main` is `85b46618` (PR #80 merged); `install/recipe-version` holds item 11,
-the install-gap census and its fixes, and the PSP-only title - its PR is item 0 below)
+**Status:** IN PROGRESS (2026-10-17: `main` is `b5ee8bdd` (PRs #81 and #82 merged); the button unification round is
+done on `buttons/round`, its end on `buttons/round-end` - its PR is item 0 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,10 +16,19 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged since PR #43: the game's own code is
-all ours). `main` is `85b46618`: since `11e2cfe9` it took the ultrawide round (PR #60), the player install and the
+all ours). `main` is `b5ee8bdd`: since `11e2cfe9` it took the ultrawide round (PR #60), the player install and the
 alpha releases (`v0.1.0-alpha.3`, signed binaries: PRs #72, #74), the PSX-only fixes of 2026-10-16 (PR #73: D254,
-D255 / DIV-0129), the PSP donor's names (PR #76, issue #75) and the PSX-only player reports #77..#79 (PR #80: D282,
-D306, D307 / DIV-0130). **`install/recipe-version`** (2026-10-17, `main` merged in) adds:
+D255 / DIV-0129), the PSP donor's names (PR #76, issue #75), the PSX-only player reports #77..#79 (PR #80: D282,
+D306, D307 / DIV-0130), `install/recipe-version` (PR #81, below, with `v0.1.0-alpha.4`'s notes) and the fishing
+panel's duck (PR #82: DIV-0132 / D308, not yet heard by the owner).
+**The button unification round** (`buttons/round`, every group merged 2026-10-17; the end on `buttons/round-end`,
+[`button-unification-round.md`](button-unification-round.md)): one table, `σ`, from the save's Config decides every
+button the game names or tests - menus confirm and cancel on the Speak and Action lines (DIV-0133), the starting
+Config by source (DIV-0134), the world map's legend as glyphs (DIV-0135), the fishing labels (DIV-0136), the dock's
+legend (DIV-0137), the item lists' corner (DIV-0138), the hard-coded tests (DIV-0139), the dialogue's button codes
+(DIV-0140) and PSP-EU's Config words (DIV-0141, D246); D312 and D313 fixed on the way, D314 / D315 (Capcom's, PSP-EU)
+written down; validated identity and swapped on four install kinds ([`button-routes.md`](button-routes.md) 9..9.2).
+**`install/recipe-version`** (PR #81) added:
 - **stale installs judged piece by piece** (HANDOFF item 11 of before; [`install-staleness.md`](install-staleness.md)):
   each cache piece records what it was *measured* to read - the functions of `tools/` that ran, the module values
   they name, the recipes and fixtures opened (`tools/build_reuse.py` `Step`); `importer.py stale` judges them
@@ -35,9 +44,16 @@ D306, D307 / DIV-0130). **`install/recipe-version`** (2026-10-17, `main` merged 
 
 ## Pick up here
 
-0. **Review and merge `install/recipe-version`'s PR.** Every non-merge commit signed off; `ledger_check` 131
-   entries, 0 errors; the recipes regenerated over the seven discs after `main` was merged in; the checks and the
-   headless self-tests in the PR's description. **Owed, the owner's eye:** the launcher's stale-install prompt in a
+0. **Open, review and merge the button round's PR** from `buttons/round-end` (its description drafted outside the
+   tree, `C:\Users\kerok\b_end\pr_body.md`). Every check and the headless self-tests are in it. **Owed, the
+   owner:** (a) record the minigame starts from RC's placed saves, `C:\Users\kerok\b_rc\saves\` (`chop8`,
+   `well68`, `rope75`, `tower112`, `ram121`, `dock128`, `crane135`: the six minigames and the dock's parts menu;
+   [`button-routes.md`](button-routes.md) 5), with `BOF3X_RECORD`, then the identity and swapped runs of each - the
+   only live evidence DIV-0137, DIV-0139's minigame tests and DIV-0140 lack; (b) look at the contact sheets,
+   `C:\Users\kerok\b_rc\sheets_round\` (world map, fishing, Config, items; identity beside swapped, a row per
+   install kind); (c) `Scena19_Run0`'s R1, left as it is, undecided ([`button-tests.md`](button-tests.md) 2.4).
+   [`owner-review.md`](owner-review.md) "2026-10-17, the button unification round" has the list.
+   **Still owed from PR #81, the owner's eye:** the launcher's stale-install prompt in a
    real start (make a piece stale - a row of `recipes/exe-psp.tsv` in a source checkout - and start the launcher on
    that home); the PSP-only title in play (captured at 4:3, 16:9, 21:9); D310's screens and the hi-lo payouts in
    play. Every install built before this branch is judged stale once (no measured records), which rebuilds it
@@ -96,12 +112,13 @@ D306, D307 / DIV-0130). **`install/recipe-version`** (2026-10-17, `main` merged 
      ([`fishing-rule-pages.md`](fishing-rule-pages.md)); D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
 
 4. **The install-gap census's remainder** - staged as parallel groups in
-   [`install-gap-round.md`](install-gap-round.md) (2026-10-17, not launched);
-   the button unification the owner asked for on 2026-10-17 is staged in
-   [`button-unification-round.md`](button-unification-round.md). The quicksave round (save states behind F5 / F6 / F7, the owner's design of 2026-10-17) is staged in [`quicksave-round.md`](quicksave-round.md). The typed-data round (I44's stages 1 and 2, no behaviour change) is staged in [`typed-data-round.md`](typed-data-round.md). All four can run with no owner present.
+   [`install-gap-round.md`](install-gap-round.md) (2026-10-17, not launched; it can run with no owner present,
+   rebased on the button round, whose ledger numbers it follows).
+   Also staged 2026-10-17, none launched: the quicksave round (save states behind F5 / F6 / F7, the owner's design)
+   in [`quicksave-round.md`](quicksave-round.md), and the typed-data round (I44's stages 1 and 2, no behaviour
+   change) in [`typed-data-round.md`](typed-data-round.md). The button round itself is done (PR #85).
    The census's own remainder ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
-   P1 still open - the event battles' track words (all seven builds; the owner's "track half", DIV-0101
-   provisional), the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
+   P1 still open (the event battles' track words done 2026-10-17, D316, `fix/event-battle-tracks`) - the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
    list on the Western images; then P2's twins the disc search already locates (world map 115's legend frame, the
    effect tables, the PSP's light pair and screen margins) and P3's long tail by the owning-function method.
    Regenerate the recipes after each (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,

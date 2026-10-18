@@ -1,7 +1,12 @@
 # The button unification round: staging
 
-**Status:** DRAFT (staged 2026-10-17 against `origin/main` `8382691d`; nothing
-launched, nothing built beyond issue #78's D307.)
+**Status:** DONE (staged 2026-10-17 against `origin/main` `8382691d`; every
+group built and merged into `buttons/round` the same day and validated by
+RC's routes on the four install kinds, [`button-routes.md`](button-routes.md)
+9..9.2; the round's end on `buttons/round-end`, not yet a PR. Ledgered as
+DIV-0133..0141, defects D312..D315; owed: the six minigame starts recorded
+from RC's placed saves and the owner's eye on the contact sheets, section
+5.2.)
 
 The design is [`key-icons-by-mapping.md`](key-icons-by-mapping.md) 5 as
 re-read in [`button-roles-by-release.md`](button-roles-by-release.md) 7,
@@ -89,8 +94,8 @@ kill each other's games, Traps).
   identity and words 7 / 8 equal the originals'; a swap gives a permutation
   (closure, inverse); a hand-edited save with a non-permutation (two lines on
   one button) is refused loudly, not guessed at (rule 4).
-- **Ledger draft A** (amends DIV-0051's icon column and names words 7 / 8
-  as Speak's and Action's) and **draft B** (the starting Config by source).
+- **DIV-0133** (amends DIV-0051's icon column and names words 7 / 8
+  as Speak's and Action's) and **DIV-0134** (the starting Config by source).
 - Output: `docs/button-sigma.md` (the table, the three writers, the
   defaults by source, the self-test).
 
@@ -190,14 +195,20 @@ then IC-W, IC-F, IC-D, IC-L, DT-2, HT, with HT last since it touches the
 most files. After every merge: the build, `BOF3X_SHADOW='*'` headless, and
 RC's identity routes against the references.
 
-Numbering: drafts lettered by group; the coordinator numbers at the merges
-from the first free entry (**`DIV-0133`**: PR #81 took DIV-0131 and the
-fishing-panel duck, PR #82, landed as DIV-0132 / D308). The drafts expected: A (SG: `σ`, amends DIV-0051; words 7 / 8),
-B (SG: the starting Config by source), C (IC-W: the legend from `σ`, the
-port's keyboard art replaced; amends DIV-0130), D (IC-F: amends DIV-0069),
-E (IC-D), F (IC-L), G (HT: the hard-coded tests through `σ`), H (DT: the
-dialogue's button codes; amends the DIV-0005 family). Defects from the
-first free after D311. Every commit `git commit -s`; no dialogue line
+Numbering: drafts lettered by group, numbered at the round's end from the
+first free entry after PR #82's DIV-0132 / D308. As numbered (2026-10-17):
+A, `σ` and words 7 / 8 (SG; amends DIV-0051), **DIV-0133**; B, the
+starting Config by source (SG), **DIV-0134**; C, the world map's legend
+(IC-W; amends DIV-0130), **DIV-0135**; D, the fishing labels (IC-F;
+amends DIV-0069), **DIV-0136**; E, the dock's legend (IC-D),
+**DIV-0137**; F, the item lists' corner (IC-L), **DIV-0138**; G, the
+hard-coded tests (HT, HT-2), **DIV-0139**; H, the dialogue's button codes
+(DT-1, DT-2; amends the DIV-0005 family), **DIV-0140**; and D246's fix,
+the PSP-EU Config text, **DIV-0141**. Defects: D312 (the Controller
+panel's crash) and D313 (the disc-only fishing records), numbered as
+found; D314 (PSP-EU's ram text) and D315 (PSP-EU's well), Capcom's;
+D309 is unused. Fixed by the round: D272 (DIV-0140), D274 (DIV-0137),
+D275 (DIV-0135); D273 was D307's, fixed by DIV-0130 before the round. Every commit `git commit -s`; no dialogue line
 quoted in any doc, the scene described instead (rule 1).
 
 ## 5. What the owner answers by chat, with a capture beside each
@@ -217,6 +228,62 @@ quoted in any doc, the scene described instead (rule 1).
    the owner says whether DT keeps answer 3 or follows the code.
 5. **The swapped-Config contact sheets**, one per site and install kind: the
    round's acceptance is the owner's "yes" on each, from the app.
+
+### 5.1 The owner's answers (2026-10-17, by chat)
+
+- **1: confirmed.** A PC install with a Western disc or layer starts with
+  Japan's buttons and mappings: the PC's own data counts as a JP source
+  (SG's `kPcIsJapanSource`, DIV-0134).
+- **2: the glyphs alone.** The port's `SPACE` / `X` / `ENTER` art is
+  replaced by the button glyphs with no label text (IC-W).
+- **3: one code path.** On a PSP-only install the PSP's `L` / `R` tiles are
+  blanked and the same `L1` / `R1` glyphs drawn as on every other install
+  (IC-L).
+- **L2 / R2 stay outside `σ`.** They can never be bound in the Config (the
+  rebind masks them out) and stay ORed into Speak and confirm, as the
+  original rebind does; no L2 / R2 glyph is drawn anywhere.
+- **The PC's own text (DT-1's open question): the colour swap.** With no
+  language layer the PC's dialogue names a button by the port's stand-in
+  (a circled numeral or an `X` in the button's colour); DT-2 reads the
+  colour as the button at draw time and draws the stand-in, glyph and
+  colour, of `σ(bit)`. No new art: the port never drew the PlayStation's
+  shapes, and a PC-only install keeps the port's stand-ins wherever it has
+  no disc's shapes (the owner declined a drawn shape set, 2026-10-17).
+- **Confirm on a shoulder button** (SG's question): answer 1 taken
+  literally, so a Speak line put on R1 makes every menu confirm on R1. The
+  owner judges it on the swapped captures.
+
+- **The held tests (HT-2):** `SuperCombo_ReadButton` stays on its own
+  buttons; the faerie village's music room, the battle cross's L1 / R1
+  (auto battle and the escape) and the message box's hold-to-speed (Speak's
+  button, without L2 / R2) go through `σ`. The battle's command boxes stay
+  where they are: only the button that picks them changes.
+  `Scena19_Run0`'s R1 is left as it is for now (the owner does not place
+  that section; [`button-tests.md`](button-tests.md) 2.4).
+- **IC-W's legend:** the pictograms stay, the PC-only `START` stays, the
+  spacing stays; a withheld row on a PC-only install is dimmed as the
+  PlayStation and PSP discs dim theirs.
+
+### 5.2 What is owed at the round's end (2026-10-17)
+
+- **The minigame starts, recorded by the owner.** None of the six
+  minigames (the chop, the well, the rope pull, the antenna, the ram, the
+  crane) nor the dock's parts menu was started by a recipe. RC placed a save
+  in or beside each area (`C:\Users\kerok\b_rc\saves\`: `chop8`, `well68`,
+  `rope75`, `tower112`, `ram121`, `dock128`, `crane135`;
+  [`button-routes.md`](button-routes.md) 5); a `BOF3X_RECORD` run from each
+  to the start gives the route, then its swapped twin. Until then DIV-0137
+  (the dock's legend), DIV-0139's minigame tests and DIV-0140's dialogue
+  are headless-checked only.
+- **The owner's eye on the contact sheets**,
+  `C:\Users\kerok\b_rc\sheets_round\` (`worldmap`, `fishing`, `config`,
+  `items`: identity beside swapped, a row per install kind); question 5
+  above. Among them: confirm on a shoulder, the 8 px face glyph in the list
+  corner, the PC-only legend's stand-ins and dim rows.
+- **`Scena19_Run0`'s R1**: left as it is, undecided
+  ([`button-tests.md`](button-tests.md) 2.4).
+- **The battle cross's boxes** with View and Change swapped: the boxes stay
+  where they are (the owner, 5.1); seen on no capture yet.
 
 ## 6. Not in this round
 

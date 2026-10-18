@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-17, the install round's section added at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-17, the button round's section added at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,72 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-17, the button unification round
+
+`buttons/round`, its end on `buttons/round-end`
+([`button-unification-round.md`](button-unification-round.md); DIV-0133..0141,
+D312..D315). The captures and saves are game-derived, outside the tree, under
+the harness root `C:\Users\kerok\b_rc`.
+
+### Decided by the owner (2026-10-17, built)
+
+- **Unify every button flow** (answer 1): menus confirm on Speak's button and
+  cancel on Action's (DIV-0133); every icon and hard-coded test asks the one
+  table (DIV-0135..0140). Confirm follows Speak even onto a shoulder.
+- **An install starts with its source's Config** (answer 2), and **a PC
+  install with a Western layer or disc starts with Japan's** - the PC's own
+  data counts as a JP source (DIV-0134). This answers the earlier question
+  of the US release's button assignment (BD, 2026-10-12): a US disc-only
+  install now starts with the US one.
+- **PSP-EU's well and ram text translated by `P`** (answer 3; DIV-0140). HT
+  read the PSP-EU code: the well tests `P` (D315, a release quirk; ours
+  follows the Config), and the ram reads the Move word, so PSP-EU's own ram
+  text is wrong on its disc (D314, Capcom's).
+- **The world map's legend:** the port's `SPACE` / `X` / `ENTER` art replaced
+  by the glyphs alone, no label text; the pictograms, the PC-only `START`
+  and the spacing stay; a withheld row on a PC-only install dimmed as the
+  discs dim theirs (DIV-0135).
+- **The item lists' corner on a PSP install:** one code path, the PSP's `L`
+  / `R` blanked, the same `L1` / `R1` drawn (DIV-0138).
+- **L2 / R2 stay outside `σ`**, ORed into Speak and confirm as the original
+  rebind does; no L2 / R2 glyph anywhere.
+- **The PC's own text:** the colour swap - the port's stand-in, glyph and
+  colour, of the button now; no new art (DIV-0140).
+- **The held tests (HT-2):** `SuperCombo_ReadButton` keeps its own buttons;
+  the music room, the battle cross's L1 / R1 and the text's hold-to-speed go
+  through `σ`; the command boxes stay where they are (DIV-0139).
+- **The fishing labels:** recolour only when the button moves (DIV-0136).
+- **The PSP-EU Config screen** (D246): the PSP's words, four one-word names
+  of ours where it has none (DIV-0141).
+
+### To do at the machine
+
+- **Record the minigame starts** from RC's placed saves,
+  `C:\Users\kerok\b_rc\saves\`: `chop8` (the chop, area 8), `well68`
+  (the well), `rope75` (the rope pull), `tower112` (into area 112, for the
+  antenna in 111), `ram121` (the ram), `dock128` (the dock's parts menu),
+  `crane135` (the crane) - each with `BOF3X_RECORD`, from the load to the
+  start ([`button-routes.md`](button-routes.md) 5 says where each save
+  stands). These are the only live evidence the dock's legend, the
+  minigames' tests and the dialogue's button mentions lack.
+
+### To look at
+
+- **The contact sheets**, `C:\Users\kerok\b_rc\sheets_round\`
+  (`worldmap`, `fishing`, `config`, `items`): identity beside swapped, a row
+  per install kind (PC, PSX-US, PSP-EU, PC + en-US). Look for: the legend's
+  rows trading, the PC-only stand-ins and START, the reel label, the Config
+  panel's column, the list corner's tiles (the 8 px face glyph if a face
+  button lands there), PSP-EU's `L1` / `R1`.
+- **Confirm on a shoulder** (answer 1 literally): with Speak on R1, every
+  menu confirms on R1 - fine, or not.
+
+### To decide
+
+- **`Scena19_Run0`'s R1** ([`button-tests.md`](button-tests.md) 2.4): left as
+  it is; you do not place that section yet.
+- **D314:** record more than the defect (PSP-EU's own ram text), or leave it.
 
 ## 2026-10-17, stale installs, the gap census's fixes, the PSP-only title
 
@@ -166,7 +232,9 @@ checkout's `analysis/` (never in the tree).
   buttons; (3) the world map's labels as the disc's words with live glyphs -
   **a launcher option**, not the default; (4) keyboard glyphs as **key names**
   in the game's own lettering; (5) **the reached sites first** (world map,
-  fishing, Config), the dialogue after.
+  fishing, Config), the dialogue after. **Built 2026-10-17** for the
+  PlayStation shapes by the button unification round (DIV-0133..0140; the
+  section at the top); key names and a US preset are a later round's.
 - **`combatGroup` and `sortScreens`'s saves**: `combatGroup` takes `combat`
   (the owner's assumption). `sortScreens`' own save is not among the recipe
   saves: replayed on `vaccinationAndFireScene`, `bridgeWalk` and
@@ -190,7 +258,8 @@ checkout's `analysis/` (never in the tree).
     D287 - fine to fix?)
   - q3: the wide picture - anything wrong besides D284 and D285? (D283 is
     fixed by the random split, 2026-10-13.)
-  - q4: PSP-EU's Config screen blank (D246) - still deferred?
+  - q4: PSP-EU's Config screen blank (D246) - decided and built 2026-10-17
+    (DIV-0141).
   - q5: the fishing ticker - the disc's one message at a time against the
     PC's packed band; the disc's circle glyph against the PC's red ring; PSP's
     "buttons" - which style?
@@ -338,7 +407,7 @@ installs so far, never looked at for themselves.
 - **The PSP's music:** the restored stereo width is fine; no narrow-pan bank form (DIV-0105).
 - **The dropped tone:** the rule kept, the PSP's one tone a box on the Jukebox, the restored chord the default
   (DIV-0103, DIV-0113).
-- **The PSP-EU Config screen:** deferred - you will look on an emulator at what the PSP drew (D246, below).
+- **The PSP-EU Config screen:** decided 2026-10-17, built as DIV-0141 (D246).
 - **The PSP-only mode** (CD2 / CD3: a new menu choice and 22 hooks run in AREA030, probably fishing): left until
   you are back (below).
 
@@ -390,8 +459,6 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
     disc's XA as the jingle, or the failed stream ending the wait.
   - **The PSP title's framing** (D256): look at a PSP-EU title capture.
   - **The field menu's time and money boxes** in wide mode: you check on the PSP; unchanged until then.
-  - **The PSP-EU Config screen** (D246: blank, take the PSP's matching words, or our own English rows - after your
-    emulator look).
   - **The PAL banks** (D257): take a PAL disc's eight area banks for a PAL disc-only install, or not.
   - **The PSP-only mode** (probably fishing): adopt it as a layer of ours, or leave it.
 
@@ -609,9 +676,10 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   with it carries them). Your call after the play above. **Answered in part
   (2026-10-12, the PSP-only round): "fill them"** - the four largest are
   filled by rule from every disc (DIV-0101 amended,
-  [`disc-gap-fills.md`](disc-gap-fills.md)); what is left (the event
-  battles' track half, the formation names, the long tail of section 3
-  there) is still this call.
+  [`disc-gap-fills.md`](disc-gap-fills.md)); what is left (the formation names, the long tail of section 3
+  there) is still this call. The event battles' track half was filled by
+  rule on 2026-10-17 after players reported it (issue #83, D316): each
+  boss file's own music through the disc's song table.
 - **The faerie village's label group writes names one record late** (LG,
   2026-10-12; [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4; DIV-0064's
   group 16): the PC record is name first at `0x653200`, `labels.cpp` writes
@@ -625,14 +693,6 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   branding, not Capcom's game; the sibling's fidelity invariant is not ours).
   Drop it from our build by default with a ledger entry, or keep it on the
   PC-install path?
-- **The US PlayStation's default button assignment** (BD, 2026-10-12,
-  [`controls.md`](controls.md) 2.1): the PC port took the Japanese release's
-  defaults (circle speaks and confirms, cross acts and cancels, square moves,
-  triangle opens the menu); the US release (`SLUS_004.22`) ships a different
-  one (cross speaks and confirms, triangle acts and cancels, circle moves,
-  square opens the menu). A US disc-only install starts with the Japanese
-  buttons today. Offer the US assignment on a Western install (a ledger
-  entry, a launcher option or by the cache's language), or keep the port's?
 - **Six doubtful `.bss` words CP holds as pointers** (24 bytes,
   `exe-import-engine.md` 7.2) and **DIV-0055's 94 plate bytes** with no
   transform (the PSX source unmeasured): small, listed so they are not lost.

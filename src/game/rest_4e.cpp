@@ -31,6 +31,11 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/sigma.h"
+
+// Group HT of the button round: a face or shoulder bit the original tests by
+// a constant is Japan's, asked through σ (docs/button-tests.md).
+using bof3x::input::sigma::Sigma;
 
 namespace {
 
@@ -672,7 +677,9 @@ U TrackIndex() { return static_cast<U>(static_cast<int>(static_cast<short>(W(kTr
 // kind the entry's +1); nothing moved, Input_Pressed is read again: 0x20 stops
 // a playing track (Music_FadeOutStop(10)) and, the row's track the one playing,
 // leaves Music_Track 0xFF, else the step + 1 (play it); 0x40 the step 0 and the
-// mode + 1 (close). The list drawn at (0x32, 0x28) on every path.
+// mode + 1 (close). The list drawn at (0x32, 0x28) on every path. 0x20 and
+// 0x40 are Japan's circle and cross, asked through sigma (group HT-2,
+// docs/button-tests.md 3).
 extern "C" void __cdecl CommuMusic_Browse(void) {
     const unsigned pressed = Input_Pressed & 0xA000u;
     const unsigned char count = B(kTrackCounts + 8u * B(kEntries + 1 + 8u * B(kEntry)));
@@ -697,7 +704,7 @@ extern "C" void __cdecl CommuMusic_Browse(void) {
         }
     } else {
         const unsigned now = Input_Pressed & 0xFF;
-        if (now & 0x20) {
+        if (now & Sigma(0x20)) {
             if (Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(10);
             const unsigned track = B(kTracks + TrackIndex());
             if (Music_Track == track) {
@@ -708,7 +715,7 @@ extern "C" void __cdecl CommuMusic_Browse(void) {
             SH_CALL(CommuMusic_DrawList)(0x32, 0x28);
             return;
         }
-        if (now & 0x40) {
+        if (now & Sigma(0x40)) {
             const unsigned char mode = B(kMode);
             B(kStep) = 0;
             B(kMode) = static_cast<unsigned char>(mode + 1);
@@ -953,7 +960,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     B(kWin1) = 1;
     SetW(kWin1 + 4, window_x + 7);
     SetW(kWin1 + 6, 13u * (static_cast<U>(B(kRow)) - B(kTop) + 2u) + W(kWin0 + 6));
-    const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF00Cu);
+    const unsigned moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     if (moved & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
         const auto tab = static_cast<unsigned char>(B(kTab) - 1);
@@ -975,7 +982,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
     } else if (moved & 0x4000) {
         if (row < 0x7F) B(kRow) = ++row;
         if (static_cast<int>(B(kRow)) >= static_cast<int>(B(kTop)) + 9) SetW(kScroll, 0x10);
-    } else if (moved & 4) {
+    } else if (moved & Sigma(4)) {
         const unsigned char top = B(kTop);
         if (top == 0) {
             row = 0;
@@ -989,7 +996,7 @@ extern "C" void __cdecl CommuItem_Choose(void) {
             B(kRow) = row;
             B(kTop) = static_cast<unsigned char>(top - 9);
         }
-    } else if (moved & 8) {
+    } else if (moved & Sigma(8)) {
         const unsigned char top = B(kTop);
         if (top == 0x77) {
             row = 0x7F;

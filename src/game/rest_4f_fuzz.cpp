@@ -18,7 +18,9 @@
 // 0x461AF0, whose call sites DIV-0011 (always) and DIV-0017 / DIV-0026 (under a
 // Latin overlay) re-aim before this module's inject - the harness's
 // CloneOriginal refuses a re-aimed site; here each site is aimed at the recorder
-// for where it reaches now.
+// for where it reaches now. A fifth since 2026-10-17 (known-defects D312): the
+// controller cell 0x461C00, ours since DIV-0051 but called by ours directly
+// since R4F, copied only while it is still Capcom's (no Latin overlay).
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -37,10 +39,12 @@ void* g_r4f_panel_copy = nullptr;
 void* g_r4f_options_copy = nullptr;
 void* g_r4f_pad_copy = nullptr;
 void* g_r4f_padrow_copy = nullptr;
+void* g_r4f_cell_copy = nullptr;
 __attribute__((naked)) void R4fPanelTheirs() { asm("jmp *_g_r4f_panel_copy"); }
 __attribute__((naked)) void R4fOptionsTheirs() { asm("jmp *_g_r4f_options_copy"); }
 __attribute__((naked)) void R4fPadTheirs() { asm("jmp *_g_r4f_pad_copy"); }
 __attribute__((naked)) void R4fPadRowTheirs() { asm("jmp *_g_r4f_padrow_copy"); }
+__attribute__((naked)) void R4fCellTheirs() { asm("jmp *_g_r4f_cell_copy"); }
 }
 
 namespace rest_4f {
@@ -89,6 +93,16 @@ constexpr sh::CallSite kCalls461710[] = {{0x68, 0x4DF820}, {0xA2, 0x461800}, {0x
 constexpr sh::CallSite kCalls461970[] = {{0x89, 0x516B30}, {0xB9, 0x516E70}};
 constexpr sh::CallSite kCalls461A50[] = {{0x34, 0x4DF820}, {0x69, 0x461AF0}, {0x81, 0x461C00}};
 constexpr sh::CallSite kCalls461AF0[] = {{0x1A, 0x57CF60}, {0x53, 0x516B30}, {0x5F, 0x5A7650}, {0xB7, 0x461E50}, {0xC3, 0x5A7650}, {0xF4, 0x461E50}};
+// Config_DrawControllerCell 0x461C00..0x461E07 (capstone 2026-10-17, D312): the
+// six cells' two Text_DrawAt each, then the select label's draws. Copied only
+// while 0x461C00 is Capcom's - with no Latin overlay, where ours draws the
+// original's path; under one ConfigText_Inject has put DIV-0051's jmp there and
+// ours draws the icons, which have no Capcom twin, so the row is left out.
+constexpr sh::CallSite kCalls461C00[] = {{0x21, 0x516B30},  {0x34, 0x516B30},  {0x5B, 0x516B30},  {0x6E, 0x516B30},
+                                         {0x95, 0x516B30},  {0xA8, 0x516B30},  {0xCE, 0x516B30},  {0xE1, 0x516B30},
+                                         {0x108, 0x516B30}, {0x11B, 0x516B30}, {0x142, 0x516B30}, {0x155, 0x516B30},
+                                         {0x177, 0x5A77C0}, {0x180, 0x461E50}, {0x19B, 0x5A79E0}, {0x1B1, 0x5744B0},
+                                         {0x1C5, 0x5A79E0}, {0x1D7, 0x5744B0}, {0x1EB, 0x5A79E0}, {0x1FD, 0x5744B0}};
 constexpr sh::CallSite kCalls462AC0[] = {{0x0, 0x462A90}};
 constexpr sh::CallSite kCalls462F10[] = {{0x12, 0x5A77C0}, {0x23, 0x461E50}, {0x2F, 0x5A7710}, {0x7F, 0x5A77A0}, {0x8F, 0x5A7780}, {0xA0, 0x461E50}};
 constexpr sh::CallSite kCalls462FC0[] = {{0x2, 0x462F10}};
@@ -157,6 +171,7 @@ sh::Clone g_clones[] = {
     {R4F_COPY(Config_DrawRowOptions, kCa)},          // this file's copy
     {R4F_COPY(Config_DrawControllerPanel, kCa)},     // this file's copy
     {R4F_COPY(Config_DrawControllerRow, kCa)},       // this file's copy
+    {R4F_COPY(Config_DrawControllerCell, kCa)},      // this file's copy, with no Latin overlay only (D312)
     {R4F_CLONE(WorldMap_ExitRecords, 0x462AC0, 0x1B, kCalls462AC0, kCa, kW)},
     {R4F_CLONE(EffectKind07_DrawSprite, 0x462F10, 0xAA, kCalls462F10, kCa, 0), 0, 0, 0, 7},
     {R4F_CLONE(EffectKind07_Hold, 0x462FC0, 0x2F, kCalls462FC0, kEf, 0), 0, 5, 0, 7},
@@ -202,7 +217,7 @@ sh::Clone g_clones[] = {
 
 enum : unsigned {
     kRun, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
-    kPanel, kOptions, kPad, kPadRow, kExits,
+    kPanel, kOptions, kPad, kPadRow, kCell, kExits,
     k07Draw, k07Hold, k07Fade, k08Start, k08Trace, k08Two, k08Line,
     k09Start, k09Open1, k09Open2, k09Open3, k09Open4, k09Open5, k09Open6, k09Open7, k09Open8, k09Spin, k09Blades, k09Fan,
     k0BStart, k0BRise, k0BDrop, k0BAttach, k0BFollow, k0BQuad,
@@ -235,8 +250,8 @@ const void* TrampFor(U key) {
     return kTrampFns.f[g_tramp_n++];
 }
 void* Copy(const char* name, U base, U size, const sh::CallSite* calls, int n) {
-    static bof3::CloneCall made[8];
-    if (n > 8) bof3::Fatal("rest_4f: %s has %d calls", name, n);
+    static bof3::CloneCall made[24];
+    if (n > 24) bof3::Fatal("rest_4f: %s has %d calls", name, n);
     for (int i = 0; i < n; ++i) {
         const U reaches = SiteTarget(base + calls[i].offset);
         made[i] = {calls[i].offset, TrampFor(reaches), reaches};
@@ -322,7 +337,7 @@ sh::Callee g_callees[] = {
     // ours, other groups', the standard set lacks
     {R4F_OURS(Menu_DrawButtonRow), 5, {kU16, kU16, kU8, kU8, 0}, kG, 0, 0},       // menu_windows.cpp: the fifth unused
     {R4F_OURS(Config_DrawRowLabel), 4, {kU16, kU16, kU8, kU8}, kG, 0, 0},           // field_c1.cpp: row & 0xFF, state & 0xFF
-    {R4F_OURS(Config_DrawControllerCell), 3, {kU16, kU16, kU8}, kG, 0, 0},          // config_text.cpp: bits 0x04..0x80 tested
+    {R4F_OURS(Config_DrawControllerCell), 3, {kU16, kU16, 0x1FCu}, kG, 0, 0},       // config_text.cpp: bits 0x04..0x80 and select 0x100 tested
     {R4F_OURS(EffectHud_Draw), 2, {kU16, kU16}, kG, 0, 0},                          // effect_1a.cpp: movsx words
     // standard rows re-listed: the cursor's spare for the commits; the vertex
     // and the depth cue on the callers' stacks (the vertex's x, y, z hashed, not
@@ -505,6 +520,12 @@ void Args(unsigned k, U* a) {
         a[3] = (sh::Next() & 0xFFFFFF00u) | PickOf(0, 1, 2, 3, 4, sh::Next() & 0xFF);
         a[4] = PickOf(3, 3, 0, 1, 2, 0x103, sh::Next());
         break;
+    case kCell:   // the panel's x + 0x58 and y + 6 + 18 * row; one button, none, select, a leftover word
+        a[0] = (sh::Next() & 0xFFFF0000u) | PickOf(0x74, 0xB4, 0x10, sh::Next() & 0x1FF);
+        a[1] = (sh::Next() & 0xFFFF0000u) | PickOf(0x46, 0x6A, 0xA0, 0, sh::Next() & 0xFF);
+        a[2] = (sh::Next() & 0xFFFF0000u) | PickOf(0x20, 0x40, 0x10, 0x80, 0x04, 0x08, 0x23, 0x03, 0, 0x100, 0x103,
+                                                   0x300, 0x1FF, sh::Next() & 0xFFFF);
+        break;
     case kPadRow:
         a[0] = (sh::Next() & 0xFFFF0000u) | PickOf(0xAD, sh::Next() & 0x1FF);
         a[1] = (sh::Next() & 0xFFFF0000u) | PickOf(0x68, sh::Next() & 0xFF);
@@ -569,6 +590,19 @@ void SelfTest() {
     g_clones[kOptions].base = Wrapper(&R4fOptionsTheirs);
     g_clones[kPad].base = Wrapper(&R4fPadTheirs);
     g_clones[kPadRow].base = Wrapper(&R4fPadRowTheirs);
+    // the cell: Capcom's while no Latin overlay put DIV-0051's jmp at 0x461C00
+    // (ConfigText_Inject), and then every site must reach its own callee
+    const bool cell = !bof3::IsOwned(bof3::addr::Config_DrawControllerCell);
+    if (cell) {
+        for (const sh::CallSite& c : kCalls461C00)
+            if (SiteTarget(0x461C00 + c.offset) != c.target)
+                bof3::Fatal("rest_4f: 0x%X reaches 0x%X, expected 0x%X", (unsigned)(0x461C00 + c.offset),
+                            (unsigned)SiteTarget(0x461C00 + c.offset), (unsigned)c.target);
+        g_r4f_cell_copy = Copy("Config_DrawControllerCell", 0x461C00, 0x208, kCalls461C00, R4F_N(kCalls461C00));
+        g_clones[kCell].base = Wrapper(&R4fCellTheirs);
+    } else {
+        bof3::Log("rest_4f: Config_DrawControllerCell left out - DIV-0051's icons (a Latin overlay) have no Capcom twin");
+    }
     // the divergences' sites: rows of their own when they reach ours
     const U frame = SiteTarget(at::kPanelFrameSite);
     if (SiteTarget(at::kPadFrameSite) != frame)
@@ -595,7 +629,7 @@ void SelfTest() {
     const char* const only = std::getenv("BOF3X_R4F_ONLY");
     unsigned n = 0;
     for (unsigned k = 0; k < kCount; ++k)
-        if (!only || !*only || std::strstr(g_clones[k].name, only)) {
+        if ((k != kCell || cell) && (!only || !*only || std::strstr(g_clones[k].name, only))) {
             index[n] = k;
             chosen[n++] = g_clones[k];
         }

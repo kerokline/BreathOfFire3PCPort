@@ -1,0 +1,90 @@
+# Button route: the world map's legend (WorldMap_DrawFrame, the Yraall
+# Region's map, area 33), docs/button-routes.md 3.1. The owner's
+# worldMapAndAreaTransition.txt (the town save) to its frame 1440, with the
+# field menu it opened at 631..680 left out (a wait of the same frames, so
+# the swapped twin does not need the menu's cancel): out of the town onto the
+# map, a walk to the Cedar Woods plate, the Action button at 1290 (word 6:
+# the Guide row's message), and R1 / R2 into the woods.
+# Played under BOF3X_LANG=en-US on the PC first; the twin is sigma_worldmap_sw.txt
+# (tools/sigma_routes.py).
+# save town_sw
+# sigma-from 300
+# Shots at frames 1230, 1260, 1320 added by tools/recipe_shots.py (--every 1 --from F --to F).
+# The swapped twin of sigma_worldmap.txt, written by tools/sigma_routes.py: from frame 300 circle <-> cross, L1 <-> R1.
+wait 60
+hold start 3
+wait 81
+hold start 3
+wait 45
+hold r2 4
+wait 78
+hold r2 4
+wait 15
+hold r2 5
+wait 32
+hold square 6
+hold square+down 1
+hold square+right+down 31
+hold square+right 1
+hold square 29
+hold square+up+right 27
+hold square+up+right+left 2
+hold square+up+left 40
+hold square+up+right 14
+hold square+up+right+left 1
+hold square+up+left 44
+hold square+up+right 4
+hold square+up+right+left 1
+hold square+up+left 29
+hold square+left 1
+hold square 2
+wait 15
+hold circle 15
+wait 121
+hold l1 14
+hold l1+right 28
+hold l1+left 46
+hold l1+up+left 1
+hold l1+up 24
+hold l1 3
+hold l1+down 25
+hold l1 10
+hold l1+left 17
+wait 33
+hold r1 5
+wait 48
+hold down 1
+hold right+down 37
+wait 8
+hold r1 6
+wait 7
+hold left 1
+hold up+left 35
+hold square+up+left 23
+hold square 1
+wait 74
+hold square+left 1
+hold square+up+left 15
+hold square+up 1
+hold square+up+right 11
+hold square+up+left 19
+hold square+up+right 10
+hold square+up+left 12
+shot f01230 1 square+up+left
+hold square+up 1
+hold square 1
+wait 27
+shot f01260 1
+wait 4
+hold l1 4
+wait 21
+hold circle 3
+wait 27
+shot f01320 1
+wait 51
+hold circle 4
+wait 20
+hold l1 4
+wait 11
+hold r2 4
+wait 25

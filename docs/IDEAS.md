@@ -73,7 +73,7 @@ rule ([`README.md`](README.md)) here too.
 | I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | **done** 2026-09-28: round eleven, 531 functions, [`takeover-queue-round11.md`](takeover-queue-round11.md); the live check per fight and the debts remain |
 | I27 | Round twelve: the field modes and the battle engine, by address band | engine | HIGH | done 2026-09-29: 654 functions in fourteen groups, 6,891 ours, live-checked, [`takeover-queue-round12.md`](takeover-queue-round12.md); planned and cut in [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) (owner, 2026-09-28): 631 functions, 14 groups, two harness groups |
 | I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | **done** 2026-10-03/04 (round thirteen, PR #40); [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
-| I29 | Button prompts drawn from the bindings in force, not from each release's defaults | game behaviour | LOW | open 2026-10-03 (the owner, on the fishing banner; DIV-0069) |
+| I29 | Button prompts drawn from the bindings in force, not from each release's defaults | game behaviour | LOW | **built 2026-10-17** (the button unification round, DIV-0133..0140) - [`button-unification-round.md`](button-unification-round.md); keyboard and other pads' glyphs a later round |
 | I30 | Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki | docs / tooling | HIGH | open; parked until the spec hardens or is validated outside Google (owner, 2026-10-04) |
 | I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **built through state 3** (2026-10-12, PRs #49..#53: the C runtime, minimp3, state 2 proved, `bof3x.exe`); the renderer's remainder open - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
 | I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | **measured, built in part** (the PSP-only round: the code diff `psp-code-diff*.md`, DIV-0108's two switches, PR #56); opened 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
@@ -1135,6 +1135,14 @@ tables), whatever the language.
 
 ### Outcome
 _(2026-10-03) open. Until then DIV-0069 keeps the port's icons, by the owner's word._
+
+_(2026-10-17) built for the PlayStation shapes by the button unification round
+([`button-unification-round.md`](button-unification-round.md)): one table, `σ`,
+from the save's Config (DIV-0133); the starting Config by source (DIV-0134);
+the world map's legend (DIV-0135), the fishing banner (DIV-0136), the dock
+(DIV-0137), the item lists' corner (DIV-0138), the hard-coded tests (DIV-0139)
+and the dialogue (DIV-0140). Keyboard key names and other pads' letters are
+left for a later round (that doc 6)._
 ## I30 — Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki
 
 **Ask (2026-10-04):** the owner: Google is validating a spec for curated
