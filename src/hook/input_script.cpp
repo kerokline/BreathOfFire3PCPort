@@ -18,6 +18,7 @@
 #include "hook/log.h"
 #include "hook/statehash.h"
 #include "hook/wav_dump.h"
+#include "input/sigma.h"
 #include "render/render_d3d11.h"
 
 // The recipe language (docs/input-script.md has it with examples). One step a
@@ -78,7 +79,11 @@
 // l1 l2 r1 r2 start select. Or @ADDR: whatever u16 is at ADDR when the step
 // starts - for the field's button assignments, which a save carries
 // (symbols.toml Field_MenuButton): `press @0x903584` opens the menu whichever
-// shape the loaded save gave it.
+// shape the loaded save gave it. A literal button is the PC's - Japan's
+// Config, where the recipes are recorded - and on a Western or PSP-EU install
+// it is pressed as that release's button while the release's starting words
+// stand, until a save's words are loaded (sigma::RecipeToPad; the recorder
+// writes the inverse). docs/input-script.md section 2a.
 //
 // When the recipe ends - end, last line, or a failed until - the pad is handed
 // back: Input_Latch's own words stand from the next frame on.
@@ -456,9 +461,15 @@ void Advance() {
 
 unsigned short StepButtons(const Step& s) {
     if (g_t == 0) {
-        g_step_buttons = s.buttons_at ? static_cast<unsigned short>(Read(s.buttons_at, 2)) : s.buttons;
+        // A literal button is the PC's (Japan's Config); @ADDR is already the
+        // live Config's. Section 2a of docs/input-script.md.
+        g_step_buttons = s.buttons_at ? static_cast<unsigned short>(Read(s.buttons_at, 2))
+                                      : bof3x::input::sigma::RecipeToPad(s.buttons);
         if (s.buttons_at)
             Log("input       line %d: @0x%08X holds buttons 0x%04X", s.line, (unsigned)s.buttons_at, g_step_buttons);
+        else if (g_step_buttons != s.buttons)
+            Log("input       line %d: buttons 0x%04X pressed as 0x%04X (the release's starting words stand)", s.line,
+                (unsigned)s.buttons, (unsigned)g_step_buttons);
     }
     return g_step_buttons;
 }
@@ -722,7 +733,7 @@ void __cdecl RecordingLatch() {
         g_last_frame = frame;
         g_prev = g_cur;
         g_cur = Input_Held;   // the player's word, as Capcom's latch just read it
-        Record(g_cur);
+        Record(bof3x::input::sigma::PadToRecipe(g_cur));   // written in the PC's terms (input-script.md 2a)
         ++g_frame;
         RandCountFrame();
     }
