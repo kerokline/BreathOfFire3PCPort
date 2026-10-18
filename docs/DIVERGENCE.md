@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 141 entries, DIV-0001..0141, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 142 entries, DIV-0001..0142, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -8538,3 +8538,64 @@ designed in rather than bolted on.
   owner.
 - **Reversible?** No toggle; a layer built from a PSX disc, or from the PC
   install, is unchanged.
+
+### A sprite with `+0x24` bit 3 is drawn into VRAM, as on the PlayStation: Amalgam's melt comes back
+
+- **ID:** DIV-0142
+- **Date:** 2026-10-17
+- **Subsystem:** the sprite draw (`Sprite_Draw` `0x5935B0`, ours,
+  `src/game/sprite_draw.cpp`; [`known-defects.md`](known-defects.md) D317,
+  issue #84)
+- **Tier:** Intent - a restoration. The code plainly asks for the draw (it
+  clears the page, sets the bit, and draws from the page), and the
+  PlayStation does it.
+- **Original behaviour:** Capcom's `Sprite_Draw` never tests bit 3 of
+  `+0x24`. A sprite meant to be drawn into VRAM (0x340, 0x100) is drawn on
+  the screen instead, every frame, at the point its code moved it to, and
+  the page stays as `Gfx_ClearRect` left it. Amalgam's death leaves the boss
+  frozen at (50, 65) in its last pose for 43 frames: the melt draws from an
+  empty page, so nothing shows, and then the boss is gone. Mikba's death,
+  magic_s14's four images and effect kinds 0x6B, 0x61, 0xA1 / 0xA3 and 0x9D
+  meet the same lack (D317).
+- **New behaviour:** the PlayStation's branch (twin `0x8014C3C8`, test at
+  `0x8014C538`). After the cull, with bit 3 set:
+  - the point moves as the PSX moves it (`+0x2E` += 0x340, `+0x30` += 0x10 +
+    240 x (`Gfx_BufferIndex` ^ 1)), so the object is culled on the next frame
+    and the capture lasts one frame;
+  - no primitive and no cell record are taken;
+  - the frame is composed as `D3d_BuildCellTexture` composes it (`DrawCells`'
+    decode, texel colour 0 clear, later cells over earlier) and laid into
+    `Gfx_VramShadow` at (0x340 + x, 0x100 + y);
+  - it is scaled and mirrored as the Direct3D end draws the primitive
+    (nearest texel), shaded as the GPU modulates (texel x shade / 0x80, each
+    channel to 31), and, with bit 5 of byte 0, blended by the tpage's mode
+    over the page for texels with their top bit set;
+  - it is clipped to the PSX's draw area (0x340, 0x100, 0xC0, 0x100), and
+    then `Gfx_InvalidateTextures` runs over that area, which also releases a
+    DIV-0125 grab there.
+
+  The melt's SPRT and FT4 then draw the captured boss, and the CPU readers
+  of D297 read it back. Not modelled: the `DR_AREA`'s clip of the
+  primitives that follow in the ordering table (the PC draws none into
+  VRAM), the GPU's dither, and the blend between overlapping cells (the PC
+  composes them first, as it does for every sprite). The picture is at 1x,
+  the shadow's resolution.
+- **Rationale:** a player's report (issue #84), and the PSX twin rule: the
+  PlayStation draws the capture, so its absence is a port defect.
+  Amalgam's own code is the same on both machines (D317).
+- **Also in the PSX version?** Yes: this is what the PlayStation does.
+- **Verification:**
+  - `BOF3X_SHADOW=sprite_draw`: the start-up fuzz against Capcom's clone
+    runs before the switch is armed: 24,000 rounds, 0 mismatches, unchanged.
+  - The capture's own check: one three-piece object (one cell flipped) over
+    a 4-bit page and a palette of the test's own, captured plain, mirrored,
+    scaled x2 and shaded half. Each picture equals one worked out texel by
+    texel (1,225 texels, 0 mismatches). Nothing else is written, the point
+    takes the PSX's shift, and no primitive or cell is taken. The control
+    (the piece flip ignored) is refused in all 4 cases.
+  - The live check skips calls with the bit set.
+  - `'*'` headless, narrow and at `BOF3X_WIDE` 1 and 2.
+  - Not seen in play: no recipe reaches Amalgam (area 28) or Mikba, and the
+    owner's eye is the measure.
+- **Reversible?** `BOF3X_ORIGINAL=SpriteCapture` (Capcom's draw), or
+  `BOF3X_ORIGINAL=Sprite_Draw`.

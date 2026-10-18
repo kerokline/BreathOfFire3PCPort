@@ -169,6 +169,11 @@ What the bits and lines are in play is not measured.
 So the sprite is drawn from the cleared VRAM rect for 43 frames of the
 melt (rows 0..0x54), its top row advancing by two each frame while the row at that height is stretched up
 to the top of the screen; how it looks is not measured.
+**2026-10-17 (issue #84, known-defects D317, DIV-0142):** the rect is filled
+by the `+0x24 |= 0x88` above: on the PlayStation the sprite draw puts a sprite
+with bit 3 into VRAM (0x340 + x, 0x100 + y) for one frame. Capcom's PC never
+did, so the melt drew an empty page while the boss stayed frozen on the
+screen. `Sprite_Draw` does it since DIV-0142.
 
 ## 2. Divergence
 
