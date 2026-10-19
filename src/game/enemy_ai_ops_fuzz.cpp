@@ -93,10 +93,10 @@ void Disturb() {
     case 4: Sprite_Current[7] = static_cast<unsigned char>(v % 0x40); break;
     case 5: Current()[0x92 + w % 2] = static_cast<unsigned char>(v); break;
     case 6: rv::As<records::BattleEnemy>(Current())->shown = static_cast<unsigned char>(v); break;
-    case 7: SetWord(Current() + 0x108, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
-    case 8: SetWord(Current() + 0x10A, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
-    case 9: SetWord(Current() + 0xA4, v % 3 == 0 ? 0 : w); break;
-    case 10: SetLong(Current() + 0x110, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
+    case 7: rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->hp_change, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
+    case 8: rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->ap_change, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
+    case 9: rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->hp, v % 3 == 0 ? 0 : w); break;
+    case 10: rv::Store<std::int32_t>(rv::As<records::BattleEnemy>(Current())->flags_110, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 11: {
         static const unsigned kBits[] = {0x40, 0x80, 0x1000, 0x2000};
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) ^ kBits[v % 4]);
@@ -213,7 +213,7 @@ unsigned long __cdecl StubTurnCheck() {
     Record(16, Sc(), En());
     const std::uint32_t h = Hash();
     if (h % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 8));
-    if ((h >> 1) % 3 == 0) SetWord(Current() + 0xA4, (h >> 3) % 2 ? 0 : h >> 16);
+    if ((h >> 1) % 3 == 0) rv::Store<unsigned>(rv::As<records::BattleEnemy>(Current())->hp, (h >> 3) % 2 ? 0 : h >> 16);
     Disturb();
     return Hash();
 }

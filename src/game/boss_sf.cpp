@@ -436,9 +436,9 @@ extern "C" void __cdecl BossGazerFx_BounceStart(void) {
     Sprite_Current[0x29] = 2;
     BH_CALL(Sprite_SetAnimationBank)(0x15C);
     BH_CALL(Sprite_SetAnimation)(4);
-    SetWord(Sprite_Current + 0x36, Word(Owner() + 0x36) + 7);
-    SetLong(Sprite_Current + 0x38, Long(Owner() + 0x38));
-    SetWord(Sprite_Current + 0x3E, Word(Owner() + 0x3E) + 0x1000);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->x_whole, Word(Owner() + 0x36) + 7);
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E) + 0x1000);
     SetCell(Sprite_Current + 0x14, 0);
     SetCell(Sprite_Current + 0x20, 0xFFFFFFE0u);
     Sprite_Current[9] = 6;
@@ -461,8 +461,8 @@ extern "C" void __cdecl BossGazerFx_Bounce(void) {
     unsigned char* s = Sprite_Current;
     records::BattleTask* cur_task = rv::As<records::BattleTask>(s);
     if (Height() >= limit) return;
-    const U ground = static_cast<U>(BH_CALL(AreaMap_Elevation)(cur_task->x, Long(s + 0x38)));
-    SetWord(Sprite_Current + 0x3E, ground + 0x200);
+    const U ground = static_cast<U>(BH_CALL(AreaMap_Elevation)(cur_task->x, cur_task->z));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, ground + 0x200);
     SetCell(Sprite_Current + 0x14, 0);
     SetCell(Sprite_Current + 0x20, 0x40);
     BH_CALL(Sound_PlayById)(0x600);
@@ -484,8 +484,8 @@ extern "C" void __cdecl BossGazerFx_BounceBack(void) {
     unsigned char* const s = Sprite_Current;
     auto* const cur_task = rv::As<records::BattleTask>(s);
     if (Height() <= limit) return;
-    const U ground = static_cast<U>(BH_CALL(AreaMap_Elevation)(cur_task->x, Long(s + 0x38)));
-    SetWord(Sprite_Current + 0x3E, ground + 0x400);
+    const U ground = static_cast<U>(BH_CALL(AreaMap_Elevation)(cur_task->x, cur_task->z));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, ground + 0x400);
     SetCell(Sprite_Current + 0x14, 0);
     SetCell(Sprite_Current + 0x20, 0xFFFFFFC0u);
     Sprite_Current[2] -= 1;
@@ -521,12 +521,12 @@ extern "C" void __cdecl BossGazerFx_MarkStart(void) {
     Sprite_Current[0x29] = 5;
     BH_CALL(Sprite_SetAnimationBank)(0x15C);
     BH_CALL(Sprite_SetAnimation)(6);
-    SetLong(Sprite_Current + 0x34, Long(Owner() + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Owner() + 0x38));
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     unsigned char* const s = Sprite_Current;
     auto* const cur_task = rv::As<records::BattleTask>(s);
-    const U ground = static_cast<U>(BH_CALL(AreaMap_Elevation)(cur_task->x, Long(s + 0x38)));
-    SetWord(Sprite_Current + 0x3E, ground);
+    const U ground = static_cast<U>(BH_CALL(AreaMap_Elevation)(cur_task->x, cur_task->z));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, ground);
     Sprite_Current[2] += 1;
 }
 

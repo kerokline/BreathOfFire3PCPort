@@ -515,7 +515,7 @@ void SeedRound(unsigned regions) {
         p[0xB7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
         p[0x124] = TargetValue();
         p[0x125] = static_cast<unsigned char>(Often() ? Next() % 7 : Next());
-        SetWord(p + 0x126, ActionId());
+        rv::Store<unsigned>(rv::As<records::PartyMember>(p)->queued_id, ActionId());
         std::uint32_t status = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~0x14001u;
         if (Rarely()) status |= 1;
         if (Rarely()) status |= Half() ? 0x4000 : 0x10000;

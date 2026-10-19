@@ -589,7 +589,7 @@ void Fix(const void* const* types) {
     for (unsigned j = 0; j < 8; ++j)
         SetPointer(at::kEnemyRecords + j * at::kEnemyStride + 0xF8, g_cues + Next() % 0x20);
     for (unsigned t = 0; t < 4; ++t) SetPointer(at::kSparkleTypes + 4 * t, types[t]);
-    SetPointer(0x7DE3BC, Next() % 4 == 0 ? nullptr : &g_fake);
+    SetPointer(Snd_Device_addr, Next() % 4 == 0 ? nullptr : &g_fake);
     SetPointer(SndStream_Buffer_addr, Next() % 4 == 0 ? nullptr : &g_fake);
 }
 

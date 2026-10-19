@@ -406,8 +406,8 @@ extern "C" void __cdecl BossAngler_AdvanceStart(void) {
     BH_CALL(BattleEnemy_ScriptTick)();
     unsigned char* const s = Sprite_Current;
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
-    SetLong(s + 0x18, S(static_cast<U>(cur_enemy->x) + 0x30000u));
-    SetLong(Sprite_Current + 0xC, 0x4000);
+    rv::Store<std::int32_t>(cur_enemy->work_18, S(static_cast<U>(cur_enemy->x) + 0x30000u));
+    rv::Store<std::int32_t>(rv::Current<records::BattleEnemy>()->step_x, 0x4000);
     rv::Current<records::BattleEnemy>()->step = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->step + 1);
 }
 
@@ -428,14 +428,14 @@ extern "C" unsigned char __cdecl BossAngler_Advance(void) {
         s = Sprite_Current;
         cur_enemy = rv::As<records::BattleEnemy>(s);
     }
-    cur_enemy->x = S(static_cast<U>(cur_enemy->x) + static_cast<U>(Long(s + 0xC)));
+    cur_enemy->x = S(static_cast<U>(cur_enemy->x) + static_cast<U>(cur_enemy->step_x));
     s = Sprite_Current;
     cur_enemy = rv::As<records::BattleEnemy>(s);
-    if (cur_enemy->x == Long(s + 0x18)) {
+    if (cur_enemy->x == cur_enemy->work_18) {
         BH_CALL(Battle_SetTargetFlag40)(B(at::kTarget));
         BH_AT(Handler, at::kEnemyActChance)();
         unsigned char* const t = Sprite_Current;
-        SetLong(t + 0x18, S(static_cast<U>(Long(t + 0x18)) + 0xFFFD0000u));
+        rv::Store<std::int32_t>(rv::As<records::BattleEnemy>(t)->work_18, S(static_cast<U>(rv::As<records::BattleEnemy>(t)->work_18) + 0xFFFD0000u));
         rv::Current<records::BattleEnemy>()->state = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state + 1);
         rv::Current<records::BattleEnemy>()->step = 0;
     }
@@ -454,10 +454,10 @@ extern "C" unsigned long __cdecl BossAngler_RetreatDispatch(unsigned long throug
 extern "C" unsigned char __cdecl BossAngler_Retreat(void) {
     unsigned char* s = Sprite_Current;
     records::BattleEnemy* cur_enemy = rv::As<records::BattleEnemy>(s);
-    cur_enemy->x = S(static_cast<U>(cur_enemy->x) - static_cast<U>(Long(s + 0xC)));
+    cur_enemy->x = S(static_cast<U>(cur_enemy->x) - static_cast<U>(cur_enemy->step_x));
     s = Sprite_Current;
     cur_enemy = rv::As<records::BattleEnemy>(s);
-    if (cur_enemy->x == Long(s + 0x18)) cur_enemy->step = static_cast<unsigned char>(cur_enemy->step + 1);
+    if (cur_enemy->x == cur_enemy->work_18) cur_enemy->step = static_cast<unsigned char>(cur_enemy->step + 1);
     return BH_CALL(BattleEnemy_ScriptTick)();
 }
 

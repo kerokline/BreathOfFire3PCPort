@@ -402,7 +402,7 @@ void Seed(unsigned k) {
         break;
     }
     case kPopupBounce: {
-        const int y = static_cast<short>(Word(t + 0x3A)), x = static_cast<short>(Word(t + 0x36));
+        const int y = static_cast<short>(task_rec->z_whole), x = static_cast<short>(task_rec->x_whole);
         if (Often()) task_rec->work_1c = y + static_cast<int>(Next() % 3) - 1;
         if (Often()) task_rec->work_18 = x + static_cast<int>(Next() % 2);
         break;

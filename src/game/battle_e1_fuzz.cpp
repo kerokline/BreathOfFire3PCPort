@@ -23,6 +23,8 @@
 #include "game/battle_e1_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace battle_e1 {
@@ -263,7 +265,7 @@ void SeedLevels() {
         unsigned char* const rec = Mem(at::kCharRecords + r * at::kCharSize);
         rec[0xA] = Byte({0, 1, 2, 10, 40, 97, 98, 99, 100});
         const U exp = bh::Often() ? bh::Next() % (bh::Half() ? 0x400u : 0x100000u) : bh::Next();
-        SetLong(rec + 0xC, static_cast<std::int32_t>(exp));
+        rv::Store<std::int32_t>(rv::As<records::CharRecord>(rec)->exp, static_cast<std::int32_t>(exp));
     }
 }
 

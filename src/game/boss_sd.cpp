@@ -111,8 +111,8 @@ void StoreHooks(U end, U exit, U event) {
 // without, the flag set. Then the three stores.
 void RestoreOrMark(unsigned flag, U fc, U hook, U f8) {
     if (BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), flag) & 0xFF) {
-        SetWord(Enemy() + 0xA4, BossSd_KeptA4);
-        SetWord(Enemy() + 0xA6, BossSd_KeptA6);
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->hp, BossSd_KeptA4);
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->ap, BossSd_KeptA6);
     } else {
         BH_CALL(Flags_Set)(At(AreaW0c_FlagRow), flag);
     }

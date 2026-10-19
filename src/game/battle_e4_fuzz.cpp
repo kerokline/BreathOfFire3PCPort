@@ -462,7 +462,7 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 7) {
     case 0: bh::PartyOf(static_cast<unsigned char>(b % 3))[5] = static_cast<unsigned char>((h >> 24) % 3); break;
-    case 1: SetWord(bh::PartyOf(static_cast<unsigned char>(b % 3)) + 0x126, h >> 12); break;
+    case 1: rv::Store<unsigned>(rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(b % 3)))->queued_id, h >> 12); break;
     case 2: SetWord(M(BattleE4_Slots_addr + 0x10), b & 1 ? 0 : h >> 12); break;
     case 3: M(BattleE4_Cands_addr + 0xD)[0] = b; break;
     case 4: M(BattleE4_Above_addr + 0xA)[0] = b & 1; break;

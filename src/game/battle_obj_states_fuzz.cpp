@@ -120,7 +120,7 @@ void Disturb() {
     case 18: Slot(S()[5] % kTaskSlots)[9] = static_cast<unsigned char>(static_cast<int>(v % 5) - 2 + (w % 2 ? 11 : -11)); break;
     default:
         if (w % 2) F()[0xBA] = static_cast<unsigned char>(v % 101);
-        else SetWord(F() + 0x9A, h >> 16);
+        else rv::Store<unsigned>(rv::As<records::PartyMember>(F())->ap, h >> 16);
         break;
     }
 }

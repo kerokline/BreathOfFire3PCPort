@@ -189,7 +189,7 @@ U DragonTaskEffect(const U*, U) {
 // its maximum) and clear it after the pop-up: the pop-ups' stand-ins note the
 // byte as they are called, so the mark is compared, not wiped.
 U PopupEffect(const U*, U answer) {
-    bh::Note(bh::Pointer(0x904B40)[8]);
+    bh::Note(bh::Pointer(BattleSprites_Action_addr)[8]);
     return answer;
 }
 
@@ -313,11 +313,11 @@ void DragonFrame() {
         rv::As<records::WindowRecord>(Win(w))->in_use = static_cast<unsigned char>(bh::Half() ? rv::As<records::WindowRecord>(Win(w))->in_use & 0xFE : rv::As<records::WindowRecord>(Win(w))->in_use | 1);
         rv::As<records::WindowRecord>(Win(w))->state = Byte({0, 0, 1, 2});
     }
-    SetWord(Win(BattleE4_Slots_addr) + 4, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
-    SetWord(Win(BattleE4_Hand_addr) + 4, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(BattleE4_Slots_addr))->x, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
+    rv::Store<unsigned>(rv::As<records::WindowRecord>(Win(BattleE4_Hand_addr))->x, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
     unsigned char* const actor = bh::Pointer(BattleE4_MenuActor_addr);
     actor[5] = Byte({0, 1, 2});
-    SetWord(Member(actor[5]) + 0x9A, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
+    rv::Store<unsigned>(rv::As<records::PartyMember>(Member(actor[5]))->ap, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
     SetWord(actor + 0x9A, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
 }
 
@@ -333,7 +333,7 @@ void Seed(unsigned k) {
         break;
     }
     case 0x44B320: {   // EnemyAI_CondElement: +0x108, the acting kind, the actor, the ability, the weapons
-        SetWord(bh::Pointer(BattleE3_CurrentEnemy_addr) + 0x108, Word16({0, 0, 1, 0x100}));
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr))->hp_change, Word16({0, 0, 1, 0x100}));
         Mem(at::kActingKind)[0] = Byte({4, 4, 1, 1, 0, 2, 5, 0x81});
         Mem(at::kActor)[0] = Byte({0, 1, 2, 3, 0x80});
         SetWord(Mem(at::kAbility), Word16({0, 1, 0x10, 0x4E, 0xA3, 0xC0}));
@@ -360,8 +360,8 @@ void Seed(unsigned k) {
             unsigned char* const e = Enemy(n);
             for (U at_ : {0xA4u, 0xA6u, 0xD4u, 0xD6u, 0xD8u, 0xDAu, 0x98u})
                 SetWord(e + at_, Word16({0, 1, 99, 100, 999, 1000, 9999, 0xFFFF}));
-            SetWord(e + 0xD0, Word16({0, 99, 100, 999, 0xFFFF}));
-            SetWord(e + 0xD2, Word16({0, 99, 100, 999, 0xFFFF}));
+            rv::Store<unsigned>(rv::As<records::BattleEnemy>(e)->base_max_hp, Word16({0, 99, 100, 999, 0xFFFF}));
+            rv::Store<unsigned>(rv::As<records::BattleEnemy>(e)->base_max_ap, Word16({0, 99, 100, 999, 0xFFFF}));
         }
         break;
     }

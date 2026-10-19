@@ -156,7 +156,7 @@ void Disturb(U h) {
     case 1: B(BossSe_Script_addr) = static_cast<unsigned char>(v); break;
     case 2: bh::PartyOf(static_cast<unsigned char>(v % 3))[0] ^= 1; break;
     case 3: bh::PartyOf(static_cast<unsigned char>(v % 3))[0x91] ^= 0x40; break;
-    default: SetWord(Mem(0x66C810), v & 1 ? 0 : v); break;
+    default: SetWord(Mem(MoveScript_WaitWordDA_addr), v & 1 ? 0 : v); break;
     }
 }
 
@@ -284,7 +284,7 @@ void SeedK41(unsigned k) {
     if (k == 3) {
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next() & ~2u);
         B(at::kFlags + 1) = static_cast<unsigned char>(bh::Next());
-        SetWord(Mem(0x66C810), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
+        SetWord(Mem(MoveScript_WaitWordDA_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
     }
 }
 

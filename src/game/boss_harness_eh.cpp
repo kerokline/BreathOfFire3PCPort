@@ -153,7 +153,7 @@ void Seed(unsigned k) {
     case kKindStep1:
     case kKindVia:
         // the word 0x904B82 at zero half the time: the branch that writes
-        if (bh::Half()) move_script::SetWord(bh::Mem(0x904B82), 0);
+        if (bh::Half()) move_script::SetWord(bh::Mem(BattleActions_Pending_addr), 0);
         break;
     case kObjDispatch:
         bh::OtherStates(2, 13, 0, 0);   // +1 inside BattleObj_StateTable's 13 (not read here; kept sane)
