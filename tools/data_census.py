@@ -12,20 +12,33 @@ symbols.toml only - no game data - and writes addresses and names only.
 
 A **site** is one raw access in our C++, in one of three shapes:
 
-  global    a reference to a constant of an `at` namespace (`at::kX`,
-            `mh::at::kX`, or `kX` inside the namespace) whose value is an
-            address inside the image - `B(at::kX)`, `At(at::kX + 4)`,
-            `Pointer(at::kTable)`. One site per reference, whatever wraps it.
+  global    a reference to a data address by constant: every reference to a
+            constant of an `at` namespace (`at::kX`, `mh::at::kX`) whose
+            value is an address inside the image and outside .text -
+            `B(at::kX)`, `At(at::kX + 4)`, `Pointer(at::kTable)`, one site per
+            reference, whatever wraps it; and every module constant (a `k`
+            name outside `at::`, resolved through the file's include
+            closure) leading or inside a memory accessor's address argument
+            - `W(kScriptPool + 2 * i)`, `B(kShakeShift)`.
   record    a memory accessor (ACCESSORS below, bare or namespace-qualified)
             whose address argument is a local pointer or address plus or
-            minus an offset - `Word(p + 0x1C)`, `Byte(s + n)`, `SetW(r - 2, v)`
-            - or a symbols.toml data name plus an offset (`Sprite_Current +
-            0x38`). The family is looked up from the local's last assignment
-            in the same function: the helper that made it (`via=Sc`), the
-            `at::` table or symbols.toml name it came from (`table=`, `base=`),
-            the stride (`* 0xA4`, `* kXStride`, `p += 0x84`), or `param`.
+            minus an offset - `Word(p + 0x1C)`, `Byte(s + n)`, `SetW(r - 2, v)`,
+            `Word(r + at::kStatus)` - a helper's result plus one (`S() + 0x3C`,
+            `via=S`), a symbols.toml data name plus one (`Sprite_Current +
+            0x38`, `bof3::addr::Name + 4`), or an offset into a fixed record
+            through a module's offset accessor (`SB(4)` where `SB(unsigned k)`
+            reads `Mem(kS + k)`: `base=kS`, address kS + 4). The family is
+            looked up from the local's last assignment in the same function:
+            the helper that made it (`via=Sc`), the `at::` table or
+            symbols.toml name it came from (`table=`, `base=`), the stride
+            (`* 0xA4`, `* kXStride`, `p += 0x84`), or `param`; several are
+            joined with `;`.
   raw       a memory accessor whose address argument starts with a literal
             inside the image - `B(0x904002)`.
+
+A data constant inside a nested accessor is that accessor's site; the outer
+call is classified by what is left (`Word(Mem(kS) + 4)`: a global and a
+`via=Mem` record).
 
 A bare local with no offset (`Word(p)`) is not counted: in many files the
 same names are value casts (`Byte(v)`, `S16(x)`), so the bare form cannot be
@@ -33,10 +46,11 @@ told apart by syntax. Per file, an accessor name the file itself (or a local
 header it includes) defines as a cast - a body with no memory access - is not
 an accessor there at all.
 
-The **constant map** is every constant defined in a namespace named `at`:
-its value, every module (file and namespace) defining that name with that
-value, whether the value lies in the image, and the symbols.toml entry at
-that address (data or func) or `-`.
+The **constant map** is every constant defined in a namespace named `at`
+(scope `at`), and every other k-constant whose value is a data address
+(scope `module`): its value, every module (file and namespace) defining that
+name with that value, whether the value lies in the image, and the
+symbols.toml entry at that address (data or func) or `-`.
 
 Coverage of a global site: `exact` when a [[data]] entry has that pc,
 `inside` when it lies within an entry's extent (sizeof ctype * count),
@@ -62,6 +76,7 @@ ACCESSORS = frozenset('''
     SetB SetW SetD SetL SetByte SetWord SetDword SetLong SetUL
     Mem At Ptr PtrAt SetPtr Pointer SetPointer
     PutByte PutWord PutLong GetByte GetWord GetLong
+    SB SW SD Short SetSB SetSW SetSD
 '''.split())
 # Names that are value casts unless the file says otherwise.
 CAST_BY_DEFAULT = frozenset('S8 S16 S32 U8 U16 U32'.split())
@@ -255,7 +270,8 @@ class SourceFile:
         self.ns_spans = self._namespaces()
         self.aliases = {m.group(1): m.group(2).strip() for m in re.finditer(
             r'\bnamespace\s+(\w+)\s*=\s*([\w:]+)\s*;', self.code)}
-        self.consts = []          # (name, value_or_None, ns_path, line, start, end)
+        self.consts = []          # (name, value_or_None, ns_path, line): a `namespace at`'s
+        self.mconsts = []         # the same for every other k-constant (module constants)
         self.locals = {}          # every k-constant by name -> value (any namespace)
 
     def _namespaces(self):
@@ -315,6 +331,8 @@ def collect_constants(files, sym_env):
     passes so a header's constants serve the files that include it. sym_env
     holds symbols.toml's names, for `bof3::addr::Name` on the right."""
     by_rel = {f.rel: f for f in files}
+    _by_rel.clear()
+    _by_rel.update(by_rel)
     decls = []
     for f in files:
         for m in CONST_DECL.finditer(f.code):
@@ -342,13 +360,26 @@ def collect_constants(files, sym_env):
                 new.setdefault(name, set()).add(v)
         globals_env = {k: next(iter(v)) for k, v in new.items() if len(v) == 1}
     for f, name, rhs, pos in decls:
-        if f.in_at_namespace(pos):
-            ns = f.ns_at(pos)
-            f.consts.append((name, f.locals.get(name), ns, line_of(f.starts, pos)))
+        ns = f.ns_at(pos)
+        row = (name, f.locals.get(name), ns, line_of(f.starts, pos))
+        (f.consts if f.in_at_namespace(pos) else f.mconsts).append(row)
     return globals_env
 
 
 _closure_cache = {}
+_by_rel = {}
+
+
+def local_value(f, key, env):
+    """The value of the k-constant `key` as seen from f: its own definition,
+    else the first in its include closure, else the one value src/ gives the
+    name (env) - so a module's `kObjectStride` is its own, not a vote."""
+    if f.locals.get(key) is not None:
+        return f.locals[key]
+    for g in include_closure(f, _by_rel):
+        if g.locals.get(key) is not None:
+            return g.locals[key]
+    return env.get(key)
 
 
 def include_closure(f, by_rel):
@@ -464,15 +495,57 @@ def accessor_defs(f):
     return out
 
 
+def offset_accessor_defs(f, env, syms):
+    """name -> (constant, value) for the accessors f defines on an offset
+    into a fixed record rather than on an address: the magic modules'
+    `unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }`, where `SB(4)`
+    reads `kS + 4`."""
+    out = {}
+    pat = re.compile(r'(?:^|[;}\n])\s*(?:static\s+|inline\s+|constexpr\s+)*'
+                     r'[A-Za-z_][\w:<>]*(?:\s+[A-Za-z_][\w:<>]*)?[\s\*&]+(' +
+                     '|'.join(sorted(ACCESSORS)) + r')\s*\(\s*(?:unsigned|int|U|std::u?int32_t|std::size_t)'
+                     r'(?:\s+int)?\s+(\w+)\s*[,)]')
+    for m in pat.finditer(f.code):
+        name, param = m.group(1), m.group(2)
+        brace = f.code.find('{', m.end())
+        if brace < 0 or ';' in f.code[m.end():brace]:
+            continue
+        depth, end = 0, brace
+        while end < len(f.code):
+            depth += {'{': 1, '}': -1}.get(f.code[end], 0)
+            end += 1
+            if depth == 0:
+                break
+        body = f.code[brace:end]
+        km =re.search(r'\(\s*(k[A-Z0-9_]\w*)\s*\+\s*' + re.escape(param) + r'\b', body)
+        if not km:
+            continue
+        v = local_value(f, km.group(1), env)
+        if syms.in_data(v):
+            out[name] = (km.group(1), v)
+    return out
+
+
 # --------------------------------------------------------------------------
 # The scan
 # --------------------------------------------------------------------------
 
 AT_REF = re.compile(r'(?<![\w:])((?:\w+::)*)at::(k\w+)\b')
 LOCAL_OFF = re.compile(r'^\s*(?:\(\s*)?([a-z_]\w*(?:(?:\.|->)\w+)*)\s*([+-])\s*(.+?)\s*$', re.S)
-GLOBAL_OFF = re.compile(r'^\s*(?:\(\s*)?(?:::)?(?:bof3::)?([A-Z]\w*)\s*[+-]\s*(.+?)\s*$', re.S)
+GLOBAL_OFF = re.compile(r'^\s*(?:\(\s*)?(?:::)?(?:bof3::)?(?:addr::)?([A-Z]\w*)\s*[+-]\s*(.+?)\s*$', re.S)
+# a helper's result plus an offset: `S() + 0x3C`, `Owner() + 0x3C`, `sh::Cur(1) - 4`
+HELPER_CALL = re.compile(r'^\s*(?:\(\s*)?((?:\w+::)*[A-Za-z_]\w*)\s*\(')
+# a module constant (any `k` name not reached through `at::`)
+MODULE_REF = re.compile(r'(?<![\w.>])((?:\w+::)*)(k[A-Z0-9_]\w*)\b(?!\s*[\[(.])')
 LIT = re.compile(r'^\s*\(?\s*(0[xX][0-9A-Fa-f]{6,8})[uUlL]*\b')
 STRIDE_NAME = re.compile(r'Stride')
+# calls that are not a helper returning a pointer: casts and operators
+NOT_HELPERS = frozenset('sizeof alignof decltype static_cast reinterpret_cast const_cast'.split())
+
+
+def is_at_prefix(prefix):
+    """`at::` / `mh::at::` - a reference the globals loop owns."""
+    return prefix.rstrip(':').split('::')[-1] == 'at'
 
 
 def resolve_at(f, prefix, name, pos, by_rel, defs_by_name):
@@ -521,6 +594,11 @@ def function_start(f, line):
     return lo
 
 
+def strip_suffix(tok):
+    """`12u` -> `12`, `0xA4UL` -> `0xA4`; a name is left alone."""
+    return re.sub(r'^(0[xX][0-9A-Fa-f]+|\d+)[uUlL]+$', r'\1', tok)
+
+
 def stride_family(f, ident, line, env, at_value, syms):
     """What the local was made from, from its last assignment in the function:
     'table=0x...' (an at:: table) or 'base=Name' (a symbols.toml name), and
@@ -548,12 +626,11 @@ def stride_family(f, ident, line, env, at_value, syms):
         sm = re.search(r'\*\s*\(?\s*((?:\w+::)*\w+|0[xX][0-9A-Fa-f]+|\d+)', rhs) or \
             re.search(r'((?:\w+::)*k\w*Stride\w*|0[xX][0-9A-Fa-f]+|\d+)\s*\*', rhs)
         if sm:
-            tok = sm.group(1)
+            tok = strip_suffix(sm.group(1))
             if re.fullmatch(r'0[xX][0-9A-Fa-f]+|\d+', tok):
                 stride = int(tok, 0)
             else:
-                key = tok.split('::')[-1]
-                stride = f.locals.get(key) if f.locals.get(key) is not None else env.get(key)
+                stride = local_value(f, tok.split('::')[-1], env)
         tm = AT_REF.search(rhs)
         table = at_value(tm, k) if tm else None
         parts = []
@@ -568,16 +645,15 @@ def stride_family(f, ident, line, env, at_value, syms):
                     break
         if not stride:
             # a walk: `p += 0xA4` / `p += kObjectStride` in the same function
-            step = re.compile(r'(?<![\w.])' + re.escape(base) + r'\s*\+=\s*((?:\w+::)*k\w+|0[xX][0-9A-Fa-f]+|\d+)\s*[;)]')
+            step = re.compile(r'(?<![\w.])' + re.escape(base) + r'\s*\+=\s*((?:\w+::)*k\w+|0[xX][0-9A-Fa-f]+|\d+)[uUlL]*\s*[;)]')
             for t in lines[start:min(len(lines), line + 200)]:
                 if t.startswith('}'):
                     break
                 wm = step.search(t)
                 if wm:
-                    tok = wm.group(1)
-                    key = tok.split('::')[-1]
-                    stride = int(tok, 0) if tok[0].isdigit() else (
-                        f.locals.get(key) if f.locals.get(key) is not None else env.get(key))
+                    tok = strip_suffix(wm.group(1))
+                    stride = int(tok, 0) if re.fullmatch(r'0[xX][0-9A-Fa-f]+|\d+', tok) else \
+                        local_value(f, tok.split('::')[-1], env)
                     break
         if stride and 2 <= stride <= 0x10000:
             parts.append(f'stride={stride:#x}')
@@ -616,6 +692,20 @@ def scan(files, syms):
                 return acc_defs[g.rel][name]
         return name not in CAST_BY_DEFAULT
 
+    off_defs = {f.rel: offset_accessor_defs(f, env, syms) for f in files}
+
+    def top_level(f, arg):
+        """arg with every nested accessor call blanked out."""
+        out = list(arg)
+        for cm in call_re.finditer(arg):
+            if not is_accessor(f, cm.group(1)):
+                continue
+            cr = balanced_args(arg, cm.end() - 1)
+            end = cr[1] if cr else len(arg)
+            for i in range(cm.start(), end):
+                out[i] = ' '
+        return ''.join(out)
+
     sites, unresolved_refs = [], []
     # bare or namespace-qualified (`move_script::SetLong(`, `sh::Mem(`), never a member call
     call_re = re.compile(r'(?<![\w.>:])(?:\w+::)*(' + '|'.join(sorted(ACCESSORS, key=len, reverse=True)) +
@@ -627,6 +717,14 @@ def scan(files, syms):
         def at_value(m, k=None, f=f):
             v, _ = resolve_at(f, m.group(1), m.group(2), m.start(), by_rel, defs_by_name)
             return v
+
+        def at_is_data(f, m, base):
+            """Whether the globals loop counts this at:: reference (a data
+            value, or ambiguous between modules with a data candidate)."""
+            v, cands = resolve_at(f, m.group(1), m.group(2), base + m.start(), by_rel, defs_by_name)
+            if not cands:
+                return False
+            return syms.in_data(v) if v is not None else any(syms.in_data(c[1]) for c in cands)
         # globals by constant
         for m in AT_REF.finditer(code):
             if f.in_at_namespace(m.start()):
@@ -665,48 +763,91 @@ def scan(files, syms):
             if re.search(r'\b(const|unsigned|std::|int|char|void|U)\b[\s\*&]+\w+\s*$', arg.strip()) and \
                     re.match(r'\s*(const\s+)?[\w:]+[\s\*&]+\w+\s*$', arg):
                 continue
-            if AT_REF.search(arg):
+            # a data constant inside a nested accessor is that accessor's own
+            # site; this one is classified by what is left
+            top = top_level(f, arg)
+            # an at:: data constant in the argument is the globals loop's site;
+            # an at:: field offset (`Word(r + at::kStatus)`) leaves a record
+            if any(at_is_data(f, am, m.end()) for am in AT_REF.finditer(top)):
                 continue
             ln = line_of(f.starts, m.start())
+            expr = ' '.join(arg.split())[:60]
             lm = LIT.match(arg)
             if lm:
                 v = int(lm.group(1), 16)
                 if syms.in_data(v):
                     cov, dname, ctype = syms.cover(v)
-                    sites.append((f.rel, ln, 'raw', name, ' '.join(arg.split())[:60], f'{v:#x}', '-',
+                    sites.append((f.rel, ln, 'raw', name, expr, f'{v:#x}', '-',
                                   cov, dname, ctype, fuzz))
+                continue
+            if name in off_defs[f.rel]:
+                # an offset into a fixed record: `SB(4)` reads `kS + 4`
+                kname, kv = off_defs[f.rel][name]
+                ov = eval_expr(arg, {})
+                addr = f'{(kv + ov) & 0xFFFFFFFF:#x}' if ov is not None else '-'
+                sites.append((f.rel, ln, 'record', name, expr, addr, f'base={kname}',
+                              '-', '-', '-', fuzz))
+                continue
+            # a module constant outside `namespace at`: `W(kScriptPool + 2 * i)`,
+            # `B(kShakeShift)`
+            mods = [(mm, local_value(f, mm.group(2), env)) for mm in MODULE_REF.finditer(top)
+                    if not is_at_prefix(mm.group(1))]
+            mdata = [(mm, v) for mm, v in mods if syms.in_data(v)]
+            if mdata:
+                mm, v = mdata[0]
+                cov, dname, ctype = syms.cover(v)
+                sites.append((f.rel, ln, 'global', name, mm.group(1) + mm.group(2), f'{v:#x}', '-',
+                              cov, dname, ctype, fuzz))
                 continue
             om = LOCAL_OFF.match(arg)
             if not om:
                 # a symbols.toml pointer plus an offset: `Sprite_Current + 0x38`
                 gm = GLOBAL_OFF.match(arg)
                 if gm and syms.in_data(syms.names.get(gm.group(1))):
-                    sites.append((f.rel, ln, 'record', name, ' '.join(arg.split())[:60], '-',
+                    sites.append((f.rel, ln, 'record', name, expr, '-',
                                   f'base={gm.group(1)}', '-', '-', '-', fuzz))
+                    continue
+                # a helper's result plus an offset: `S() + 0x3C`, `Owner() + 0x3C`
+                hm = HELPER_CALL.match(arg)
+                if hm and hm.group(1).split('::')[-1] not in NOT_HELPERS:
+                    hr = balanced_args(arg, hm.end() - 1)
+                    if hr is not None and re.match(r'\s*[+-]', arg[hr[1]:]):
+                        sites.append((f.rel, ln, 'record', name, expr, '-',
+                                      f'via={hm.group(1).split("::")[-1]}', '-', '-', '-', fuzz))
                 continue
             ident = om.group(1)
-            if re.match(r'k[A-Z0-9_]', ident) or ident in ('this', 'sizeof'):
+            if ident in ('this', 'sizeof'):
+                continue
+            if re.match(r'k[A-Z0-9_]', ident) and local_value(f, ident, env) is not None:
+                # a module constant that is not a data address: a field
+                # offset or an index on a pointer (`Word(kOff + p)`)
+                sites.append((f.rel, ln, 'record', name, expr, '-', '-', '-', '-', '-', fuzz))
                 continue
             fam = stride_family(f, ident, ln, env, lambda tm, k: at_value(tm), syms)
-            sites.append((f.rel, ln, 'record', name, ' '.join(arg.split())[:60], '-', fam,
+            sites.append((f.rel, ln, 'record', name, expr, '-', fam,
                           '-', '-', '-', fuzz))
     sites.sort(key=lambda s: (s[0], s[1], s[2], s[4]))
 
-    # constant map
+    # constant map: every `namespace at` constant (scope `at`), and every other
+    # k-constant whose value is a data address (scope `module`: file scope,
+    # a module namespace or a function body - the namespace in `modules`)
     groups = collections.OrderedDict()
     for f in files:
         for name, value, ns, line in f.consts:
-            key = (name, value)
-            groups.setdefault(key, []).append(f'{f.rel}:{line}({ns})')
+            groups.setdefault((name, value, 'at'), []).append(f'{f.rel}:{line}({ns})')
+        for name, value, ns, line in f.mconsts:
+            if syms.in_data(value):
+                groups.setdefault((name, value, 'module'), []).append(f'{f.rel}:{line}({ns or "-"})')
     consts = []
-    for (name, value), mods in sorted(groups.items(), key=lambda kv: (kv[0][1] if kv[0][1] is not None else -1, kv[0][0])):
+    for (name, value, scope), mods in sorted(groups.items(), key=lambda kv: (
+            kv[0][1] if kv[0][1] is not None else -1, kv[0][0], kv[0][2])):
         if value is None:
-            consts.append((name, 'unresolved', 'unknown', len(mods), ';'.join(mods), '-', '-', '-', '-'))
+            consts.append((name, 'unresolved', 'unknown', len(mods), ';'.join(mods), '-', '-', '-', '-', scope))
             continue
         kind = syms.kind(value)
         sname, skind = syms.name_at(value) if kind != 'value' else ('-', '-')
         cov, dname, ctype = syms.cover(value) if kind == 'data' else ('-', '-', '-')
-        consts.append((name, f'{value:#x}', kind, len(mods), ';'.join(mods), sname, skind, cov, ctype))
+        consts.append((name, f'{value:#x}', kind, len(mods), ';'.join(mods), sname, skind, cov, ctype, scope))
     return sites, consts, files, unresolved_refs
 
 
@@ -715,6 +856,8 @@ def counts_of(sites, consts, files, syms, unresolved_refs):
     shapes = collections.Counter(s[2] for s in sites)
     c['sites'] = len(sites)
     c['sites_global'] = shapes['global']
+    c['sites_global_at'] = sum(1 for s in sites if s[2] == 'global' and 'at::' in s[4])
+    c['sites_global_module'] = sum(1 for s in sites if s[2] == 'global' and 'at::' not in s[4])
     c['sites_record'] = shapes['record']
     c['sites_raw'] = shapes['raw']
     c['sites_in_fuzz'] = sum(1 for s in sites if s[10] == '1')
@@ -723,7 +866,11 @@ def counts_of(sites, consts, files, syms, unresolved_refs):
     rec = [s for s in sites if s[2] == 'record']
     c['record_sites_with_stride'] = sum(1 for s in rec if 'stride=' in s[6])
     c['record_sites_with_table_or_base'] = sum(1 for s in rec if 'table=' in s[6] or 'base=' in s[6])
-    c['record_sites_on_named_pointer'] = sum(1 for s in rec if not re.match(r'\(?\s*[a-z_]', s[4]))
+    c['record_sites_on_named_pointer'] = sum(1 for s in rec if s[6].startswith('base=') and
+                                             re.match(r'\(?\s*(?:::)?(?:bof3::)?(?:addr::)?[A-Z]\w*\s*[+-]', s[4]))
+    c['record_sites_on_helper_call'] = sum(1 for s in rec if s[6].startswith('via=') and
+                                           re.match(r'\(?\s*(?:\w+::)*\w+\s*\(', s[4]))
+    c['record_sites_offset_into_constant'] = sum(1 for s in rec if re.match(r'base=k[A-Z0-9_]', s[6]))
     c['record_sites_via_helper'] = sum(1 for s in rec if 'via=' in s[6])
     c['record_sites_param'] = sum(1 for s in rec if s[6] == 'param')
     c['record_sites_family_unknown'] = sum(1 for s in rec if s[6] == '-')
@@ -738,6 +885,8 @@ def counts_of(sites, consts, files, syms, unresolved_refs):
     ndefs = sum(len(f.consts) for f in files)
     c['at_constant_definitions'] = ndefs
     c['at_constant_definitions_in_callees_h'] = sum(len(f.consts) for f in files if f.rel.endswith('_callees.h'))
+    mconsts = [k for k in consts if k[9] == 'module']
+    consts = [k for k in consts if k[9] == 'at']
     c['at_constants_name_value'] = len(consts)
     data_consts = [k for k in consts if k[2] == 'data']
     c['at_constants_data'] = len(data_consts)
@@ -759,6 +908,20 @@ def counts_of(sites, consts, files, syms, unresolved_refs):
     c['distinct_addresses_name_missing'] = len({k[1] for k in data_consts if k[5] == '-'})
     c['distinct_addresses_name_missing_inside_entry'] = len(
         {k[1] for k in data_consts if k[5] == '-' and k[7] == 'inside'})
+    # module constants outside `namespace at` (data-valued only)
+    c['module_constant_definitions_data'] = sum(int(k[3]) for k in mconsts)
+    c['module_constant_files'] = len({m.split(':')[0] for k in mconsts for m in k[4].split(';')})
+    c['module_constants_name_value'] = len(mconsts)
+    mdistinct = {k[1] for k in mconsts}
+    c['module_distinct_addresses'] = len(mdistinct)
+    c['module_distinct_addresses_not_in_at'] = len(mdistinct - distinct)
+    c['module_distinct_addresses_not_in_at_no_data_entry'] = len(
+        {k[1] for k in mconsts if k[1] not in distinct and k[6] != 'data'})
+    c['module_distinct_addresses_not_in_at_name_missing'] = len(
+        {k[1] for k in mconsts if k[1] not in distinct and k[5] == '-'})
+    c['all_distinct_data_addresses'] = len(distinct | mdistinct)
+    c['all_distinct_data_addresses_name_missing'] = len(
+        {k[1] for k in data_consts + mconsts if k[5] == '-'})
     # the round doc's other rows
     stride_defs = []
     for f in files:
@@ -776,7 +939,7 @@ def counts_of(sites, consts, files, syms, unresolved_refs):
 
 
 SITE_HDR = ['rec', 'file', 'line', 'shape', 'accessor', 'expr', 'address', 'family', 'cover', 'data_name', 'ctype', 'fuzz']
-CONST_HDR = ['rec', 'name', 'value', 'kind', 'n_modules', 'modules', 'symbol', 'symbol_kind', 'cover', 'ctype']
+CONST_HDR = ['rec', 'name', 'value', 'kind', 'n_modules', 'modules', 'symbol', 'symbol_kind', 'cover', 'ctype', 'scope']
 
 
 def write_tsv(path, sites, consts, counts):
