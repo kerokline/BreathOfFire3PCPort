@@ -51,7 +51,7 @@ constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8
 constexpr std::uint32_t kActor = 0x904B34, kTarget = 0x904B44;
 constexpr unsigned kBKind = 1, kBX = 2, kBY = 4, kBZ = 6, kBObject = 8, kBAction = 0xC;
 constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int)
-constexpr std::uint32_t kApCost = 0x904B78;        // u8: the AP cost when the action is 0x97
+// kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost when the action is 0x97
 constexpr std::uint32_t kAbility = 0x904B80;       // u16: the action id of the action in hand
 // kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show
 constexpr std::uint32_t kCostShown = 0x904B88;     // u8: the AP cost Skill_ApCost answered

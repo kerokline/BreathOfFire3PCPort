@@ -53,7 +53,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(at::kCurrentEnemy)))); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
 void SetCell(unsigned char* p, U value) { SetLong(p, static_cast<std::int32_t>(value)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -97,20 +97,20 @@ void PointEnemy(U fc, U hook, U f8) {
 
 // The three set-ups' stores.
 void StoreHooks(U end, U exit, U event) {
-    SetCell(At(at::kHookEnd), end);
-    SetCell(At(at::kHookExit), exit);
-    SetCell(At(at::kHookEvent), event);
+    BattleHook_End = end;
+    BattleHook_Exit = exit;
+    BattleHook_Event = event;
 }
 
 // Kinds 21..23's entrance: with chapter flag `flag` set, 0x939AD8's +0xA4 and
 // +0xA6 (the object read again for each) from the words set-ups 18..20 kept;
 // without, the flag set. Then the three stores.
 void RestoreOrMark(unsigned flag, U fc, U hook, U f8) {
-    if (BH_CALL(Flags_Test)(At(static_cast<U>(Long(At(at::kFlagBits)))), flag) & 0xFF) {
-        SetWord(Enemy() + 0xA4, Word(At(at::kKeptA4)));
-        SetWord(Enemy() + 0xA6, Word(At(at::kKeptA6)));
+    if (BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), flag) & 0xFF) {
+        SetWord(Enemy() + 0xA4, BossSd_KeptA4);
+        SetWord(Enemy() + 0xA6, BossSd_KeptA6);
     } else {
-        BH_CALL(Flags_Set)(At(static_cast<U>(Long(At(at::kFlagBits)))), flag);
+        BH_CALL(Flags_Set)(At(AreaW0c_FlagRow), flag);
     }
     PointEnemy(fc, hook, f8);
 }
@@ -126,36 +126,36 @@ void EndStep(U step) { BH_AT(Handler, step)(); }
 // or after it for set-up 20: `pick_first`) and step 3. Then the four words
 // kept: enemy 1's HP, enemy 2's, enemy 0's +0xA4 and +0xA6.
 void EndAreaFight(unsigned char step_if_1, unsigned char step_if_not, bool pick_first) {
-    const unsigned char fell = B(at::kWhoFell);   // read once, before any call
-    if (B(at::kBattleEnd) & 2) {
-        B(at::kChapterStep) = fell & 2 ? step_if_1 : step_if_not;
+    const unsigned char fell = BossSe_Script;     // read once, before any call
+    if (BattleActions_BattleEnd & 2) {
+        MoveScript_PartyRecords[0x65] = fell & 2 ? step_if_1 : step_if_not;
         EndStep(at::kEndWin);
     } else if (fell & 1) {
         EndStep(at::kEndOther);
     } else {
-        const bool f23 = BH_CALL(Flags_Test)(At(static_cast<U>(Long(At(at::kFlagBits)))), 0x23) & 0xFF;
-        if (f23 && (BH_CALL(Flags_Test)(At(static_cast<U>(Long(At(at::kFlagBits)))), 0x24) & 0xFF)) {
+        const bool f23 = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x23) & 0xFF;
+        if (f23 && (BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x24) & 0xFF)) {
             EndStep(at::kEndOther);
         } else {
             const unsigned char step = f23 ? 0x3A : 0x1C;
             if (pick_first) {
                 BH_CALL(Boss_SetByLeaderId)();
-                B(at::kChapterStep) = step;
+                MoveScript_PartyRecords[0x65] = step;
             } else {
-                B(at::kChapterStep) = step;
+                MoveScript_PartyRecords[0x65] = step;
                 BH_CALL(Boss_SetByLeaderId)();
             }
             EndStep(at::kEndThird);
         }
     }
-    const unsigned hp1 = Word(At(at::kEnemy1Hp));
-    const unsigned hp2 = Word(At(at::kEnemy2Hp));
+    const unsigned hp1 = BossSb_Enemy1Hp;
+    const unsigned hp2 = BossSd_Enemy2Hp;
     const unsigned a4 = Word(At(at::kEnemy0Hp));
-    SetWord(At(at::kKeptHp1), hp1);
+    BossSd_KeptHp1 = hp1;
     const unsigned a6 = Word(At(at::kEnemy0A6));
-    SetWord(At(at::kKeptHp2), hp2);
-    SetWord(At(at::kKeptA4), a4);
-    SetWord(At(at::kKeptA6), a6);
+    BossSd_KeptHp2 = hp2;
+    BossSd_KeptA4 = a4;
+    BossSd_KeptA6 = a6;
 }
 
 // Set-ups 18..20's event hooks (the three are one body): phase 0 - enemy 0's
@@ -169,16 +169,16 @@ unsigned char EventAreaFight(unsigned code) {
         return 0;
     }
     if (phase != 0) return 0;
-    if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) B(at::kBattleEnd) |= 2;
-    if (static_cast<U>(Long(At(at::kEnemy1Status))) & 0x4000) {
-        B(at::kWhoFell) |= 2;
-        B(at::kBattleEnd) |= 2;
+    if (static_cast<U>(Long(At(at::kEnemy0Status))) & 0x4000) BattleActions_BattleEnd |= 2;
+    if (BossH_Enemy1Status & 0x4000) {
+        BossSe_Script |= 2;
+        BattleActions_BattleEnd |= 2;
     }
-    if (static_cast<U>(Long(At(at::kEnemy2Status))) & 0x4000) {
-        B(at::kWhoFell) |= 1;
-        B(at::kBattleEnd) |= 1;
+    if (BossH_Enemy2Status & 0x4000) {
+        BossSe_Script |= 1;
+        BattleActions_BattleEnd |= 1;
     }
-    if (B(at::kBattleEnd) != 0) BH_CALL(BossMap_UpdateFromEnemies)();
+    if (BattleActions_BattleEnd != 0) BH_CALL(BossMap_UpdateFromEnemies)();
     return 0;
 }
 
@@ -200,7 +200,7 @@ void ExitAreaFight(unsigned tag) {
 // Set-ups 17 and 21's end hooks: the win sets the field's move-script counter
 // 0 (`counter`) and takes the end phase's step 1, else step 2.
 void EndCounter(unsigned char counter) {
-    if (B(at::kBattleEnd) & 2) {
+    if (BattleActions_BattleEnd & 2) {
         B(at::kCounter0) = counter;
         EndStep(at::kEndWin);
         return;
@@ -221,9 +221,9 @@ void DeathStates() {
 // of their (+0x34, +0x38).
 void GroundWords() {
     const long e = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
-    SetWord(At(at::kEnemy0Ground), static_cast<unsigned>(e) & 0xFFFF);
-    const long l = BH_CALL(AreaMap_Elevation)(Long(At(at::kLeaderX)), Long(At(at::kLeaderZ)));
-    SetWord(At(at::kLeaderGround), static_cast<unsigned>(l) & 0xFFFF);
+    BossH_Enemy0Ground = static_cast<unsigned>(e) & 0xFFFF;
+    const long l = BH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
+    SetWord(At(ObjTrio_addr + 0x3e), static_cast<unsigned>(l) & 0xFFFF);
 }
 
 }  // namespace
@@ -325,10 +325,10 @@ extern "C" void __cdecl BossPatrio_Hook(unsigned code) { HookTable("BossPatrio_H
 // jmp [BossDodai_Steps + 4 * +1].
 extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
     if (Sprite_Current[5] == 4) {
-        const bool f = BH_CALL(Flags_Test)(At(static_cast<U>(Long(At(at::kFlagBits)))), 0x34) & 0xFF;
+        const bool f = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x34) & 0xFF;
         SetCell(Enemy() + 0xFC, f ? 0x64CF34 : 0x64CF28);
     } else {
-        const bool f = BH_CALL(Flags_Test)(At(static_cast<U>(Long(At(at::kFlagBits)))), 0x33) & 0xFF;
+        const bool f = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x33) & 0xFF;
         SetCell(Enemy() + 0xFC, f ? 0x64CF4C : 0x64CF40);
     }
     Dispatch("BossDodai_Dispatch", AddressOf(BossDodai_Steps), 12, 1, passed);
@@ -340,10 +340,10 @@ extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
 // its +8 |= 2 and +0xFC = 0x64CF40, else +0xFC = 0x64CF28; +0xF4 =
 // BossDodai_Hook, +0xF8 = 0x64CF70; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossDodai_Enter(void) {
-    bool back = BH_CALL(Flags_Test)(At(static_cast<U>(Long(At(at::kFlagBits)))), 0x1E) & 0xFF;
-    if (!back) back = BH_CALL(Flags_Test)(At(static_cast<U>(Long(At(at::kFlagBits)))), 0x23) & 0xFF;
+    bool back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x1E) & 0xFF;
+    if (!back) back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x23) & 0xFF;
     if (back) {
-        const unsigned hp = Sprite_Current[5] == 4 ? Word(At(at::kKeptHp1)) : Word(At(at::kKeptHp2));
+        const unsigned hp = Sprite_Current[5] == 4 ? BossSd_KeptHp1 : BossSd_KeptHp2;
         SetWord(Enemy() + 0xA4, hp);
     }
     unsigned char* const s = Sprite_Current;
@@ -517,7 +517,7 @@ extern "C" unsigned char __cdecl Boss21_Event(unsigned code) {
     if ((code & 0xFF) != 3) return 0;
     for (unsigned i = 0; i <= 2; ++i)
         if ((BH_CALL(Battle_ActorIsOut)((code & 0xFFFFFF00u) | i) & 0xFF) == 0)
-            At(at::kPartyFlags + i * at::kPartyStride)[0] |= 0x10;
+            At(ObjTrio_addr + 0x90 + i * at::kPartyStride)[0] |= 0x10;
     for (unsigned i = 3; i <= 10; ++i)
         if ((BH_CALL(Battle_ActorIsOut)((code & 0xFFFFFF00u) | i) & 0xFF) == 0)
             At(at::kEnemy0Status + (i - 3) * at::kEnemyStride)[0] |= 0x10;

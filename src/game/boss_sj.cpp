@@ -53,8 +53,8 @@ using Forward = U (__cdecl*)(U);
 using RoundHighFn = U (__cdecl*)(U, U);
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(at::kCurrentEnemy)))); }
-unsigned char* Owner() { return At(static_cast<U>(Long(At(at::kOwner)))); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -111,9 +111,9 @@ void Steps(const char* who, const U* handlers, unsigned n) {
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
 void StoreHooks(U end, U exit, U event) {
-    SetLong(At(at::kHookEnd), S(end));
-    SetLong(At(at::kHookExit), S(exit));
-    SetLong(At(at::kHookEvent), S(event));
+    BattleHook_End = S(end);
+    BattleHook_Exit = S(exit);
+    BattleHook_Event = S(event);
 }
 
 // A kind's entry state (kinds 59 and 61 alike): 0x939AD8's +0xFC (its
@@ -136,7 +136,7 @@ unsigned char Enter(U fc, U f4, U f8) {
 // +0x90 bit 14, else + 4 - a byte, 0x8C5D80, 0x1800).
 void PoseParty() {
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(at::kParty + m * at::kPartyStride);
+        unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
         if ((p[0] & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(p[5]);
         const U flags = static_cast<U>(Long(p + 0x90));
@@ -150,7 +150,7 @@ void PoseParty() {
 // word 0x904B7E: 10 and above read the frame's two unset bytes and then its
 // caller's stack.
 unsigned char Pose(const char* who, const unsigned char (&poses)[10]) {
-    const unsigned i = Word(At(at::kPoseIndex));
+    const unsigned i = BossSa_EndCount;
     if (i >= 10)
         bof3::Fatal("%s: the pose index 0x904B7E is %u, past its ten-byte stack table - the original reads its own frame "
                     "and its caller's (docs/boss_sj.md section 6)",
@@ -313,12 +313,12 @@ extern "C" void __cdecl Boss52_Setup(void) {
 // to 0x446E00 (the end phase, step 2). Won: the party posed (PoseParty), the
 // chapter step 0x8034E5 = 0x1A, a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss52_End(void) {
-    if ((B(at::kBattleEnd) & 2) == 0) {
+    if ((BattleActions_BattleEnd & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     PoseParty();
-    B(at::kChapterStep) = 0x1A;
+    MoveScript_PartyRecords[0x65] = 0x1A;
     BH_AT(Handler, at::kEndWin)();
 }
 
@@ -409,7 +409,7 @@ extern "C" void __cdecl Boss54_Setup(void) {
 // original 0x43FC60: the end hook. Won: movement-script variable 3 (0x903848)
 // = 0x32, a tail jump to 0x446DE0; else to 0x446E00.
 extern "C" void __cdecl Boss54_End(void) {
-    if (B(at::kBattleEnd) & 2) {
+    if (BattleActions_BattleEnd & 2) {
         B(at::kScriptVar3) = 0x32;
         BH_AT(Handler, at::kEndWin)();
     } else {
@@ -431,12 +431,12 @@ extern "C" void __cdecl Boss55_Setup(void) {
 // party posed (PoseParty), the chapter step 0x8034E5 = 0xF, 0x446E20 called
 // (the end phase's step 3), then Music_Track = 0xFF.
 extern "C" void __cdecl Boss55_End(void) {
-    if ((B(at::kBattleEnd) & 2) == 0) {
+    if ((BattleActions_BattleEnd & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     PoseParty();
-    B(at::kChapterStep) = 0xF;
+    MoveScript_PartyRecords[0x65] = 0xF;
     BH_AT(Handler, at::kEndThird)();
     Music_Track = 0xFF;
 }
@@ -448,7 +448,7 @@ extern "C" void __cdecl Boss55_End(void) {
 // original 0x440830: slot 5: 0x939AD8 = enemy 0's object, then jmp
 // [BossMyriaFx_States + 4 * Sprite_Current +1] (7: states 0..6).
 extern "C" void __cdecl BossMyriaFx_Dispatch(void) {
-    SetLong(At(at::kCurrentEnemy), S(at::kEnemies));
+    BattleE3_CurrentEnemy = S(at::kEnemies);
     DispatchTask("BossMyriaFx_Dispatch", AddressOf(BossMyriaFx_States), 7);
 }
 

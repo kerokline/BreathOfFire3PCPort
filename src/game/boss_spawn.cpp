@@ -38,13 +38,13 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-constexpr U kObjects = 0x7DEE80;      // Sprite_Objects
+// kObjects: now Sprite_Objects (symbols.toml). Sprite_Objects
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 30;
 constexpr U kEnemyData = 0x8C55C8;    // the area's eight enemy data records
 constexpr U kEnemyDataStride = 0x8C;
 
-unsigned char* ObjectAt(unsigned i) { return At(kObjects + i * kObjectStride); }
+unsigned char* ObjectAt(unsigned i) { return At(Sprite_Objects_addr + i * kObjectStride); }
 bool Tagged(const unsigned char* o, unsigned tag) { return o[6] == 7 && o[0x9E] == (tag & 0xFF); }
 
 // The actor BossActor_Find answers, or a Fatal where the original would write

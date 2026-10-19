@@ -31,10 +31,10 @@ namespace at {
 // The battle's state bytes (PSX 0x801462DC..): the phase's low byte, then the
 // sub-states the stubs dispatch on.
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8 here (Battle_PhaseDispatch reads the dword's low byte)
-constexpr std::uint32_t kState1 = 0x904AA1;       // u8: the phase's step
-constexpr std::uint32_t kState2 = 0x904AA2;       // u8: the step's sub-step
-constexpr std::uint32_t kState3 = 0x904AA3;       // u8: the result's step
-constexpr std::uint32_t kState4 = 0x904AA4;       // u8 (read as a dword and masked): the result's page
+// kState1: now BattleActions_Step (symbols.toml). u8: the phase's step
+// kState2: now BattleE4_Step2 (symbols.toml). u8: the step's sub-step
+// kState3: now BattleE4_Step3 (symbols.toml). u8: the result's step
+// kState4: now BattleE4_Step4 (symbols.toml). u8 (read as a dword and masked): the result's page
 // kCursor: now BossSb_Countdown (symbols.toml). u8: the member BattleEnd_StartMemberTask is at
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // u16; bits 2, 3 and 4 cleared here, bit 4 tested
 // kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow.md: "event battle" is a guess)

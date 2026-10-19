@@ -46,7 +46,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(at::kCurrentEnemy)))); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
@@ -99,9 +99,9 @@ void TaskSteps(const char* who, U table, unsigned entries) {
 
 // The three set-up stores (BattleHook_End / _Exit / _Event).
 void StoreHooks(U end, U exit, U event) {
-    SetLong(At(at::kHookEnd), S(end));
-    SetLong(At(at::kHookExit), S(exit));
-    SetLong(At(at::kHookEvent), S(event));
+    BattleHook_End = S(end);
+    BattleHook_Exit = S(exit);
+    BattleHook_Event = S(event);
 }
 
 // A kind's entry: 0x939AD8's +0xFC (its animation bytes), +0xF4 (its hook)
@@ -179,11 +179,11 @@ extern "C" void __cdecl Boss29_Setup(void) {
 // 0x8034E5 = 0x1C, 0x446DE0 (the end phase, step 1) called, then Music_Track =
 // 0x62. Otherwise a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss29_End(void) {
-    if ((B(at::kBattleEnd) & 2) == 0) {
+    if ((BattleActions_BattleEnd & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
-    B(at::kChapterStep) = 0x1C;
+    MoveScript_PartyRecords[0x65] = 0x1C;
     BH_AT(Handler, at::kEndWin)();
     Music_Track = 0x62;
 }
@@ -269,12 +269,12 @@ extern "C" void __cdecl Boss31_Setup(void) {
 // 0x14 and a tail jump to 0x446DE0 (step 1). Otherwise 0x904AE5 &= 0xBF (the
 // battle's music not kept) and a tail jump to 0x446E00 (step 2).
 extern "C" void __cdecl Boss31_End(void) {
-    if (B(at::kBattleEnd) & 2) {
-        B(at::kChapterStep) = 0x14;
+    if (BattleActions_BattleEnd & 2) {
+        MoveScript_PartyRecords[0x65] = 0x14;
         BH_AT(Handler, at::kEndWin)();
         return;
     }
-    B(at::kMusicFlags) &= 0xBF;
+    BattleTurnSteps_MusicFlags &= 0xBF;
     BH_AT(Handler, at::kEndOther)();
 }
 
@@ -335,12 +335,12 @@ extern "C" void __cdecl Boss32_Setup(void) {
 // value read | 8, a tail jump to 0x446DE0 (step 1). Otherwise a tail jump to
 // 0x446E00 (step 2).
 extern "C" void __cdecl Boss32_End(void) {
-    if ((B(at::kBattleEnd) & 2) == 0) {
+    if ((BattleActions_BattleEnd & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(at::kParty + m * at::kPartyStride);
+        unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
         if ((p[0] & 1) == 0) continue;
         BH_CALL(Battle_RemoveFromTurnOrder)(p[5]);
         const U flags = L(p + 0x90);
@@ -348,10 +348,10 @@ extern "C" void __cdecl Boss32_End(void) {
         const unsigned pose = static_cast<unsigned char>(p[8] + ((flags & 0x4000) != 0 ? 0x1C : 4));
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
-    const unsigned char end = B(at::kBattleEnd);
+    const unsigned char end = BattleActions_BattleEnd;
     Music_Track = 0x6B;
-    B(at::kChapterStep) = 0xE;
-    B(at::kBattleEnd) = static_cast<unsigned char>(end | 8);
+    MoveScript_PartyRecords[0x65] = 0xE;
+    BattleActions_BattleEnd = static_cast<unsigned char>(end | 8);
     BH_AT(Handler, at::kEndWin)();
 }
 
@@ -371,16 +371,16 @@ extern "C" void __cdecl Boss33_Setup(void) { StoreHooks(bof3::addr::Boss33_End, 
 // Field_Kind2X = party member 0's +0x34 and Field_Kind2Z = its +0x38 (the
 // dwords); the chapter's step = 8; a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss33_End(void) {
-    if ((B(at::kBattleEnd) & 6) == 0) {
+    if ((BattleActions_BattleEnd & 6) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     BH_CALL(BossActor_Clear)(0);
-    const std::int32_t x = Long(At(at::kMember0X));
-    const std::int32_t z = Long(At(at::kMember0Z));
+    const std::int32_t x = Long(At(ObjTrio_addr + 0x34));
+    const std::int32_t z = Long(At(ObjTrio_addr + 0x38));
     Field_Kind2X = x;
     Field_Kind2Z = z;
-    B(at::kChapterStep) = 8;
+    MoveScript_PartyRecords[0x65] = 8;
     BH_AT(Handler, at::kEndWin)();
 }
 
@@ -483,8 +483,8 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
     const unsigned target = B(at::kTarget);
     bool near;
     if (target <= 2) {
-        BH_CALL(MagicFx_StepToward)(At(at::kParty + target * at::kPartyStride), 0x50);
-        near = BH_CALL(MagicFx_NearSprite3D)(At(at::kParty + B(at::kTarget) * at::kPartyStride), 0x10000) != 0;
+        BH_CALL(MagicFx_StepToward)(At(ObjTrio_addr + target * at::kPartyStride), 0x50);
+        near = BH_CALL(MagicFx_NearSprite3D)(At(ObjTrio_addr + B(at::kTarget) * at::kPartyStride), 0x10000) != 0;
     } else {
         BH_CALL(MagicFx_StepToward)(EnemyByIndex(target), 0x50);
         near = BH_CALL(MagicFx_NearSprite3D)(EnemyByIndex(B(at::kTarget)), 0x10000) != 0;
@@ -541,7 +541,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Fly(void) {
 extern "C" void __cdecl BossWeretigrFx_Finish(void) {
     unsigned char* const task = Sprite_Current;
     EnemyByIndex(B(at::kActor))[0] &= 0xBF;
-    Sprite_Current = At(L(At(at::kOwner)));
+    Sprite_Current = At(BattleE2_Owner);
     BH_CALL(Sprite_SetAnimation)(0);
     Sprite_Current = task;
     BH_CALL(BattleTask_FreeCurrent)();
@@ -628,9 +628,9 @@ extern "C" void __cdecl BossMikba_DeathFlash(void) {
     unsigned char* const s = Sprite_Current;
     const unsigned char count = s[9];
     if (count == s[0xA]) {
-        if ((B(at::kScript) & 4) == 0) {
+        if ((BossSe_Script & 4) == 0) {
             BH_CALL(Sound_PlayEffect)(0x601);
-            B(at::kScript) |= 4;
+            BossSe_Script |= 4;
         }
         BH_CALL(BattleWin_DrawTileRgb)(0, 0, 0xB, 0xFFFF, 1);
         Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] >> 1);

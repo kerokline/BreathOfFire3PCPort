@@ -56,8 +56,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(at::kCurrentEnemy)))); }
-unsigned char* Owner() { return At(static_cast<U>(Long(At(at::kOwner)))); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -111,9 +111,9 @@ unsigned char Enter(U fc, U hook, U f8) {
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
 void Setup(U end, U exit, U event) {
-    SetLong(At(at::kHookEnd), S(end));
-    SetLong(At(at::kHookExit), S(exit));
-    SetLong(At(at::kHookEvent), S(event));
+    BattleHook_End = S(end);
+    BattleHook_Exit = S(exit);
+    BattleHook_Event = S(event);
 }
 // The set-ups whose end is BH's BossHook_EndPickWay (fights 40, 42, 44, 45 -
 // four copies of one body): exit BareRet, event BareRetZero.
@@ -125,8 +125,8 @@ void SetupOwnEnd(U end) { Setup(end, bof3::addr::BareRet, bof3::addr::BareRetZer
 // win) the chapter's step 0x8034E5 = step and a tail jump to 0x446DE0 (the end
 // phase, step 1); otherwise a tail jump to 0x446E00 (step 2).
 void EndStep(unsigned step) {
-    if (B(at::kBattleEnd) & 2) {
-        B(at::kChapterStep) = static_cast<unsigned char>(step);
+    if (BattleActions_BattleEnd & 2) {
+        MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(step);
         BH_AT(Handler, at::kEndWin)();
         return;
     }
@@ -212,20 +212,20 @@ extern "C" void __cdecl Boss38_Setup(void) {
     Sprite_Current = At(at::kEnemy7);
     BH_CALL(MagicFx_CenterOnSide)();
     const unsigned char* const s = Sprite_Current;
-    const U cx = static_cast<U>(Long(At(at::kCentreX)));
-    SetWord(At(at::kF3Divisor), 0x20);
-    SetLong(At(at::kKind2X), S(cx + static_cast<U>(S(static_cast<U>(Long(s + 0x34)) - cx) / 2)));
-    const U cz = static_cast<U>(Long(At(at::kCentreZ)));
-    SetLong(At(at::kKind2Z), S(cz + static_cast<U>(S(static_cast<U>(Long(s + 0x38)) - cz) / 2)));
+    const U cx = BossSi_CentreX;
+    MoveScript_F3Divisor = 0x20;
+    Field_Kind2X = S(cx + static_cast<U>(S(static_cast<U>(Long(s + 0x34)) - cx) / 2));
+    const U cz = BossSi_CentreZ;
+    Field_Kind2Z = S(cz + static_cast<U>(S(static_cast<U>(Long(s + 0x38)) - cz) / 2));
 }
 
 // original 0x43EED0: the end hook: won, the movement script's variable 3 =
 // 5, the chapter's step 0x20, Music_Track = 0x77, step 1; otherwise step 2.
 extern "C" void __cdecl Boss38_End(void) {
-    if (B(at::kBattleEnd) & 2) {
+    if (BattleActions_BattleEnd & 2) {
         B(at::kScriptVar3) = 5;
-        B(at::kChapterStep) = 0x20;
-        B(at::kMusicTrack) = 0x77;
+        MoveScript_PartyRecords[0x65] = 0x20;
+        Music_Track = 0x77;
         BH_AT(Handler, at::kEndWin)();
         return;
     }
@@ -385,10 +385,10 @@ extern "C" void __cdecl Boss50_Setup(void) { SetupOwnEnd(bof3::addr::Boss50_End)
 // original 0x43F380: the end hook: won, the chapter's step 0x10, step 1 (a
 // call, not a tail jump) and after it Music_Track = 0x8C; otherwise step 2.
 extern "C" void __cdecl Boss50_End(void) {
-    if (B(at::kBattleEnd) & 2) {
-        B(at::kChapterStep) = 0x10;
+    if (BattleActions_BattleEnd & 2) {
+        MoveScript_PartyRecords[0x65] = 0x10;
         BH_AT(Handler, at::kEndWin)();
-        B(at::kMusicTrack) = 0x8C;
+        Music_Track = 0x8C;
         return;
     }
     BH_AT(Handler, at::kEndOther)();

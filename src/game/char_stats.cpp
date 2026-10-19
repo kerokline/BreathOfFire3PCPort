@@ -556,7 +556,7 @@ extern "C" unsigned short __cdecl Inventory_Count(unsigned category, unsigned it
     }
     if (cat == 3) {
         if (At(at::kExtraAccessory)[0] == id) ++n;
-        if (At(at::kExtraItem)[0] == id) n = static_cast<unsigned char>(n + At(at::kExtraCount)[0]);
+        if (CharStats_ExtraItem == id) n = static_cast<unsigned char>(n + CharStats_ExtraCount);
     }
     return n;
 }

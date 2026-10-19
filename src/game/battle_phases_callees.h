@@ -31,8 +31,8 @@ namespace at {
 
 // The battle's globals (PSX 0x801462DC..): the phase and its two sub-steps.
 constexpr std::uint32_t kPhase = 0x904AA0;         // u8 (read as a dword by Battle_PhaseDispatch)
-constexpr std::uint32_t kStep = 0x904AA1;          // u8: the phase's step
-constexpr std::uint32_t kSubStep = 0x904AA2;       // u8: the step's own step; the chosen command in the menu
+// kStep: now BattleActions_Step (symbols.toml). u8: the phase's step
+// kSubStep: now BattleE4_Step2 (symbols.toml). u8: the step's own step; the chosen command in the menu
 // kSubStep2: now BattleE4_Step3 (symbols.toml). u8: zeroed by Cmd_ConfirmDefend
 // kTapTimer: now BossSb_Countdown (symbols.toml). u8: frames left for a second tap (8)
 // kTapCommand: now BattleE5_GeneRow (symbols.toml). u8: the command + 1 the first tap chose
