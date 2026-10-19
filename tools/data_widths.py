@@ -22,6 +22,10 @@ restarts one byte later.
 
 The rule, in order, for each target address A:
 
+0. inside the records of a [[block]] with `record_stride` / `record_count`
+   (pc .. pc + stride * count, the first `record_size` bytes of each record
+   when the block gives one): unsettled, a field of that record family
+   (stage C1's struct in src/game/records.h, not a global of its own).
 1. inside the extent (pc .. pc + size * count) of an earlier typed [[data]]
    entry, unless A has its own entry: unsettled, an element of that entry.
 2. a hand-read exclusion in HAND below: unsettled with the reason given there.
@@ -49,6 +53,16 @@ The rule, in order, for each target address A:
 
 Last, the settled extents are checked against each other and the earlier
 typed entries, and any overlap is printed.
+
+With `--census analysis/data_census.tsv` (stage C3, docs/typed-data-stage-c.md
+5) the targets are instead the module-only addresses of the census: every
+`const` row of scope `module` whose value no `at` constant names and no
+[[data]] entry has (the module constants of .cpp files and of non-`at`
+namespaces that the scan above never read), the constants column taken from
+the census (repeat the option to measure the union of several censuses, an
+older tree's included: a constant B0 or B1 removed still names an address no
+entry has). Every typed entry, SG's included, is then a prior entry for rule
+1, since none of them is re-measured.
 
 Output: two TSVs of addresses, instruction text and names - our measurement,
 nothing copied out of the game. The exe is only read, from the path given.
@@ -258,7 +272,17 @@ def scan(exe, funcs, jumptables, func_starts):
     return acc, imm, (dlo, dhi), restarts, len(segs), len(cells)
 
 
-def classify(acc, imm, targets, prior, blocks, own):
+def block_field(A, records):
+    """(name, record, offset) when A lies in a [[block]]'s records, else None.
+    records: [(pc, stride, count, size, name)] of the blocks with
+    record_stride; size (record_size, else the stride) bounds each record."""
+    for pc, stride, count, size, name in records:
+        if pc <= A < pc + stride * count and (A - pc) % stride < size:
+            return name, (A - pc) // stride, (A - pc) % stride
+    return None
+
+
+def classify(acc, imm, targets, prior, blocks, own, records=()):
     by = defaultdict(list)
     for a in acc:
         by[a[0]].append(a)
@@ -279,6 +303,11 @@ def classify(acc, imm, targets, prior, blocks, own):
     out = {}
     for A in sorted(targets):
         if A in blocks:
+            continue
+        bf = block_field(A, records)
+        if bf is not None:
+            out[A] = ('u', f'a field of {bf[0]}: record {bf[1]} +0x{bf[2]:X} (a record family, '
+                           f'stage C1\'s struct, not a global of its own)')
             continue
         # the earliest typed entry whose extent holds A; an address that has
         # its own [[data]] entry is that entry, not an element of another
@@ -408,14 +437,20 @@ def main():
     ap.add_argument('--toml', required=True, help='symbols.toml')
     ap.add_argument('--settled', required=True, help='out TSV: address, ctype, operands, width, examples, notes')
     ap.add_argument('--unsettled', required=True, help='out TSV: address, constants, reason')
+    ap.add_argument('--census', action='append',
+                    help='data_census.tsv: measure its module-only addresses instead (stage C3); '
+                         'repeatable, the union of the files given')
     a = ap.parse_args()
     root = os.path.dirname(os.path.abspath(a.toml))
     t = tomllib.load(open(a.toml, 'rb'))
     blocks = {x['pc'] for x in t.get('block', [])}
+    records = [(x['pc'], x['record_stride'], x['record_count'],
+                x.get('record_size', x['record_stride']), x['name'])
+               for x in t.get('block', []) if 'record_stride' in x]
     prior = {}
     typed = set()
     for e in t['data']:
-        if e.get('ctype') and SG_TAG not in e.get('evidence', ''):
+        if e.get('ctype') and (a.census or SG_TAG not in e.get('evidence', '')):
             prior[e['pc']] = (e['name'], csize(e['ctype']) * e.get('count', 1))
             typed.add(e['pc'])
     consts = defaultdict(list)
@@ -424,10 +459,28 @@ def main():
         if dlo <= v < dhi:
             consts[v].append(f'{h}:{line} {k}')
     targets = {v for v in consts if v not in typed}
+    if a.census:
+        consts = defaultdict(list)
+        entries = {e['pc'] for e in t['data']}
+        for path in a.census:
+            rows = []
+            with open(path, encoding='utf-8') as f:
+                for line in f:
+                    r = line.rstrip('\n').split('\t')
+                    if r[0] == 'const' and r[3] == 'data':
+                        rows.append(r)
+            at_named = {int(r[2], 16) for r in rows if r[10] == 'at'}
+            for r in rows:
+                v = int(r[2], 16)
+                if r[10] == 'module' and v not in at_named and v not in entries and dlo <= v < dhi:
+                    for m in r[5].split(';'):
+                        if f'{m} {r[1]}' not in consts[v]:
+                            consts[v].append(f'{m} {r[1]}')
+        targets = set(consts)
     # an entry SG itself created is re-measured; any other entry is its own
     own = {e['pc'] for e in t['data']
-           if not (e.get('evidence', '').startswith('measured') and SG_TAG in e.get('evidence', ''))}
-    res = classify(acc, imm, targets, prior, blocks, own)
+           if a.census or not (e.get('evidence', '').startswith('measured') and SG_TAG in e.get('evidence', ''))}
+    res = classify(acc, imm, targets, prior, blocks, own, records)
     with open(a.settled, 'w', encoding='utf-8', newline='\n') as f:
         f.write('address\tctype\toperands\twidth\texamples\tnotes\tconstants\n')
         for A, r in sorted(res.items()):

@@ -18,6 +18,20 @@ emits, for every named function and data item:
   * for data with a `ctype`: a macro giving a typed lvalue (scalar) or a typed
     pointer to element 0 (`count` present).
 
+Record fields (typed-data round stage C3, docs/typed-data-stage-c.md 5). A
+[[block]] may give its records: `record_stride`, `record_count` and, when a
+record is shorter than the stride, `record_size` (the block's records are
+pc + stride * i, i < count, each record_size bytes). A [[data]] entry inside
+those records carries `field_of = "<the block's name>"` and `field_offset`
+(its offset in the record): it is a field of that record family (stage C1's
+struct in src/game/records.h), not a global of its own. Its macro is still
+emitted, with a comment naming the record and offset, while sites use it; a
+field entry is removed once its sites read the struct. Checked here: the
+block exists and gives its records, the entry lies inside them, and
+`field_offset` is the entry's offset in its record. tools/data_widths.py
+reads the same keys (its rule 0: an address inside a block's records is a
+field, never measured as a scalar).
+
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot
 drift from symbols.toml.
@@ -122,6 +136,36 @@ def main():
     for e in datas: check('data', e)
     for e in blocks: check('block', e)
 
+    by_block = {b['name']: b for b in blocks}
+    for b in blocks:
+        keys = [k for k in ('record_stride', 'record_count', 'record_size') if k in b]
+        if keys and not {'record_stride', 'record_count'} <= set(keys):
+            fail(f'{b["name"]}: record_stride and record_count go together')
+        if b.get('record_size', 0) > b.get('record_stride', 0):
+            fail(f'{b["name"]}: record_size is larger than record_stride')
+
+    def field_of(e):
+        """(record, offset) of a field entry, checked against its block."""
+        b = by_block.get(e['field_of'])
+        if b is None or 'record_stride' not in b:
+            fail(f'{e["name"]}: field_of {e["field_of"]!r} is not a [[block]] with record_stride')
+        if 'field_offset' not in e:
+            fail(f'{e["name"]}: field_of without field_offset')
+        rel = e['pc'] - b['pc']
+        rec, off = divmod(rel, b['record_stride'])
+        if rel < 0 or rec >= b['record_count'] or off >= b.get('record_size', b['record_stride']):
+            fail(f'{e["name"]}: {e["pc"]:#x} is outside {b["name"]}\'s records')
+        if off != e['field_offset']:
+            fail(f'{e["name"]}: field_offset {e["field_offset"]:#x}, but {e["pc"]:#x} is '
+                 f'{b["name"]} record {rec} +{off:#x}')
+        return rec, off
+
+    for e in datas:
+        if 'field_offset' in e and 'field_of' not in e:
+            fail(f'{e["name"]}: field_offset without field_of')
+        if 'field_of' in e:
+            e['_field'] = field_of(e)
+
     w('namespace bof3::addr {')
     for e in blocks + datas + funcs:
         w(f'inline constexpr std::uint32_t {e["name"]} = {e["pc"]:#x};')
@@ -168,6 +212,8 @@ def main():
         if 'ctype' not in e:
             continue
         ty = e['ctype']
+        if '_field' in e:
+            w(f'// a field of {e["field_of"]}: record {e["_field"][0]} +{e["_field"][1]:#x} (stage C1\'s struct)')
         if 'count' in e:
             w(f'#define {e["name"]} (reinterpret_cast<{ty} *>({e["pc"]:#x}))')
             w(f'inline constexpr unsigned {e["name"]}_count = {e["count"]};')
