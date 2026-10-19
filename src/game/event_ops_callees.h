@@ -27,35 +27,35 @@ namespace event_ops {
 namespace at {
 
 // The leader and the field.
-constexpr std::uint32_t kLeader = 0x802D40;          // ObjTrio: member 0, which Field_State points at
+// kLeader: now ObjTrio (symbols.toml). ObjTrio: member 0, which Field_State points at
 constexpr std::uint32_t kMemberStride = 0x14C;
-constexpr std::uint32_t kZoneCounter = 0x802E74;     // u16, ObjTrio +0x134 (field-event.md section 4)
-constexpr std::uint32_t kLeaderPace = 0x802E68;      // u8, ObjTrio +0x128 - Field_State +0x128 read by address
-constexpr std::uint32_t kLeaderFlags = 0x802E78;     // u8, ObjTrio +0x138
-constexpr std::uint32_t kLeaderZone = 0x802D76;      // u16 pair: ObjTrio +0x36 / +0x3A (whole x, z)
+// kZoneCounter: now ObjTrio[0x134] (symbols.toml). u16, ObjTrio +0x134 (field-event.md section 4)
+// kLeaderPace: now ObjTrio[0x128] (symbols.toml). u8, ObjTrio +0x128 - Field_State +0x128 read by address
+// kLeaderFlags: now ObjTrio[0x138] (symbols.toml). u8, ObjTrio +0x138
+// kLeaderZone: now ObjTrio[0x36] (symbols.toml). u16 pair: ObjTrio +0x36 / +0x3A (whole x, z)
 constexpr std::uint32_t kActorRecords = 0x903A70;    // stride 0xA4 (item_use_callees.h)
 constexpr std::uint32_t kActorStride = 0xA4;
-constexpr std::uint32_t kPartyLists = 0x904062;      // two 3-byte lists of member ids (field-event.md section 2)
-constexpr std::uint32_t kMemberRecord = 0x66972C;    // u8 per member id: its actor record (MoveScript_EffectState)
-constexpr std::uint32_t kMemberSlot = 0x669738;      // u8 per member id (field-event.md section 2)
+// kPartyLists: now Cond_Flags[0xd2] (symbols.toml). two 3-byte lists of member ids (field-event.md section 2)
+// kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per member id: its actor record (MoveScript_EffectState)
+// kMemberSlot: now MoveScript_EffectState[0xc] (symbols.toml). u8 per member id (field-event.md section 2)
 constexpr std::uint32_t kMemberPositions = 0x7E06E0; // x, z dwords per member, 8 bytes apart
-constexpr std::uint32_t kRunOption = 0x903A5E;       // u8 compared with "the run button is held"
-constexpr std::uint32_t kBlockByte = 0x905B82;       // u8, Field_LeaderFrame counts it down (field-event.md)
-constexpr std::uint32_t kExitKind = 0x905B88;        // u8, the fourth argument of Field_ChangeArea
-constexpr std::uint32_t kExitArea = 0x937F82;        // u16, the first
+// kRunOption: now FieldE2_RunDefault (symbols.toml). u8 compared with "the run button is held"
+// kBlockByte: now EventOps_BlockByte (symbols.toml). u8, Field_LeaderFrame counts it down (field-event.md)
+// kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8, the fourth argument of Field_ChangeArea
+// kExitArea: now AreaW0b_Place (symbols.toml). u16, the first
 constexpr std::uint32_t kExitX = 0x903860;           // dword, the second
-constexpr std::uint32_t kExitZ = 0x90384C;           // dword, the third
-constexpr std::uint32_t kTalkMode = 0x9039F3;        // u8, set to 0x37 / 0x1B by Field_LeaderCellEvent
-constexpr std::uint32_t kCellCycle = 0x9045FA;       // u8, 0..2
+// kExitZ: now AreaEntry_PendingZ (symbols.toml). dword, the third
+// kTalkMode: now AreaW0a_TailKind (symbols.toml). u8, set to 0x37 / 0x1B by Field_LeaderCellEvent
+// kCellCycle: now AreaW0b_MapMode (symbols.toml). u8, 0..2
 constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area word at +8, a counter byte at +0xA
-constexpr std::uint32_t kStoryFlags = 0x904030;      // Cond_Flags + 0xA0 (item_use_callees.h)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0 (item_use_callees.h)
 constexpr std::uint32_t kPlacedFlags = 0x9040CC;     // the bits EventOp_9x tests by sprite +5 (PSX 0x80144FC0)
-constexpr std::uint32_t kScreenCounter = 0x929EE0;   // s32 tested against 0xF0 by Field_EncounterDue
-constexpr std::uint32_t kButtonConfirm = 0x903580;   // u16 each: the field's buttons (input-script.md section 4)
-constexpr std::uint32_t kButtonRun = 0x903582;
-constexpr std::uint32_t kButtonHeld = 0x903586;
-constexpr std::uint32_t kButtonSwap = 0x903588;
-constexpr std::uint32_t kButtonCheck = 0x90358C;
+// kScreenCounter: now EventOps_ScreenCounter (symbols.toml). s32 tested against 0xF0 by Field_EncounterDue
+// kButtonConfirm: now Gfx_UnpackScratch[0x1f000] (symbols.toml). u16 each: the field's buttons (input-script.md section 4)
+// kButtonRun: now Gfx_UnpackScratch[0x1f002] (symbols.toml).
+// kButtonHeld: now Gfx_UnpackScratch[0x1f006] (symbols.toml).
+// kButtonSwap: now Gfx_UnpackScratch[0x1f008] (symbols.toml).
+// kButtonCheck: now Gfx_UnpackScratch[0x1f00c] (symbols.toml).
 constexpr std::uint32_t kWalkDelta = 0x6696DC;       // s32 x, z per direction, 8 bytes apart (the step's unit)
 constexpr std::uint32_t kCellDelta = 0x66971C;       // s8 x, z per direction, 2 bytes apart
 constexpr std::uint32_t kStepSounds = 0x660960;      // u16 per byte 0x903851
@@ -68,7 +68,7 @@ constexpr std::uint32_t kScratch2 = 0x903852;        // u16: a found cell's z, t
 constexpr std::uint32_t kCellX = 0x903854;           // u16 each: the step's target cell
 constexpr std::uint32_t kCellZ = 0x903856;
 constexpr std::uint32_t kTargetX = 0x903858;         // s32 each: the step's target position
-constexpr std::uint32_t kTargetZ = 0x90385C;         // Scratch_Swap
+// kTargetZ: now Scratch_Swap (symbols.toml). Scratch_Swap
 
 }  // namespace at
 

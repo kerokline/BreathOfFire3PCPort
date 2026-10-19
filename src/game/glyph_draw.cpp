@@ -87,8 +87,9 @@ using Com1 = long(__stdcall*)(void*);
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
 
-constexpr U kVertices = 0x7CA958;     // D3d_Vertices: 4 x D3DTLVERTEX
-constexpr U kScaleX = 0x7C9F4C, kScaleY = 0x7C9F48;
+// kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices: 4 x D3DTLVERTEX
+// kScaleX: now D3d_ScaleX (symbols.toml).
+// kScaleY: now D3d_ScaleY (symbols.toml).
 constexpr U kSz = 0x3F7D70A4;         // 0.99f, as the original stores it: an immediate
 constexpr U kRhw = 0x3DCCCCCD;        // 0.1f
 
@@ -110,12 +111,12 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     // half-pixel offset; sz 0.99 and rhw 0.1 as immediates; the colour pair.
     // Each product is exact before it is rounded to float (a 16-bit integer
     // times a float), so x87 and SSE agree whatever the precision control.
-    unsigned char* v = At(kVertices);
+    unsigned char* v = At(D3d_Vertices_addr);
     for (U i = 0; i < 4; ++i) {
         unsigned char* out = v + i * 0x20;
         const unsigned char* in = prim + i * 8;
-        PutFloat(out + 0x00, static_cast<float>(Short(in + 8)) * GetFloat(kScaleX));
-        PutFloat(out + 0x04, static_cast<float>(Short(in + 0xA)) * GetFloat(kScaleY));
+        PutFloat(out + 0x00, static_cast<float>(Short(in + 8)) * D3d_ScaleX);
+        PutFloat(out + 0x04, static_cast<float>(Short(in + 0xA)) * D3d_ScaleY);
         PutLong(out + 0x08, kSz);
         PutLong(out + 0x0C, kRhw);
         PutLong(out + 0x10, static_cast<U>(diffuse));
@@ -130,8 +131,8 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     // is kept; g_texel_inset is the switch (GlyphTexelCentres), 0 for
     // Capcom's arithmetic.
     const double inv32 = *reinterpret_cast<const double*>(At(kInv32));
-    const double inset_u = g_texel_inset != 0.0f ? TexelInset(GetFloat(kScaleX)) : 0.0;
-    const double inset_v = g_texel_inset != 0.0f ? TexelInset(GetFloat(kScaleY)) : 0.0;
+    const double inset_u = g_texel_inset != 0.0f ? TexelInset(D3d_ScaleX) : 0.0;
+    const double inset_v = g_texel_inset != 0.0f ? TexelInset(D3d_ScaleY) : 0.0;
     for (U i = 0; i < 4; ++i) {
         unsigned char* out = v + i * 0x20;
         const unsigned char* in = prim + i * 8;
@@ -153,7 +154,7 @@ long D3d_DrawGlyph(const unsigned char* prim) {
     device = Device();
     // DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, vertices, 4, 0); its
     // result is the handler's (the caller 0x59F1B4 does not read it).
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, kVertices, 4, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, D3d_Vertices_addr, 4, 0);
     // Not kept: the original computes every fild's operand in its own
     // argument slot, so the caller's pushed `prim` comes back as 2 * the last
     // v. The caller pops it unread (`add esp, 4` at 0x59F1B9).
@@ -171,13 +172,13 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     int free_slot = -1;
     U i;
     for (i = 0; i < kEntries; ++i) {
-        const unsigned char* e = At(kCache + i * kEntry);
-        if (Word(e) == glyph && Word(e + 2) == clut && Long(e + 4) == Long(At(kClutRows + (clut >> 6) * 8))) break;
+        const unsigned char* e = At(Font_TexCache_addr + i * kEntry);
+        if (Word(e) == glyph && Word(e + 2) == clut && Long(e + 4) == Long(At(Gfx_ClutRows_addr + (clut >> 6) * 8))) break;
         if (free_slot == -1 && Word(e + 0x10) == 0) free_slot = static_cast<int>(i);
     }
     if (i == kEntries && free_slot != -1) {
         i = static_cast<U>(free_slot);
-        if (At(kRenderFlags)[0] & 1) {
+        if (Gfx_RenderFlags & 1) {
             g.build_texture(free_slot, glyph, clut);
         } else {
             // A texture is built outside the scene.
@@ -193,12 +194,12 @@ int Font_GlyphTexture(unsigned glyph, unsigned clut) {
     // the vertex block. SetTexture is handed the bits of vertex 0's sy
     // (0x7CA95C) as a texture, and the in-use word lands on the low half of
     // vertex 0's sz (0x7CA960). The addresses below reach exactly those bytes.
-    if (!(At(kRenderFlags)[0] & 1)) {
+    if (!(Gfx_RenderFlags & 1)) {
         void** device = Device();
-        reinterpret_cast<Com3>(Method(device, 0x98))(device, 0, Long(At(kCache + i * kEntry + 0xC)));   // SetTexture(0, tex)
+        reinterpret_cast<Com3>(Method(device, 0x98))(device, 0, Long(At(Font_TexCache_addr + i * kEntry + 0xC))); // SetTexture(0, tex)
     }
-    At(kCache + i * kEntry + 0x10)[0] = 1;
-    At(kCache + i * kEntry + 0x11)[0] = 0;
+    At(Font_TexCache_addr + i * kEntry + 0x10)[0] = 1;
+    At(Font_TexCache_addr + i * kEntry + 0x11)[0] = 0;
     return static_cast<int>(i);
 }
 

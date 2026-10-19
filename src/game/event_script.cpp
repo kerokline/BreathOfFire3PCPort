@@ -69,7 +69,7 @@ unsigned short Bank() {
 void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 
 // Data these read that symbols.toml does not name.
-constexpr std::uint32_t kBlockFlags = 0x8034E1;   // bit 6: ScriptFlags_Set40 / Clear40 (object_kinds.cpp)
+// kBlockFlags: now Field_StatusBits (symbols.toml). bit 6: ScriptFlags_Set40 / Clear40 (object_kinds.cpp)
 
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
 unsigned char* Extra(unsigned n) { return Sprite_ObjectsExtra + n * 0xA4u; }
@@ -551,9 +551,9 @@ extern "C" unsigned char __cdecl EventCond_ByteFD(const unsigned char** at) { re
 // original 0x57C7C0 (PSX 0x8015CA78): bit 6 of byte 0x8034E1 - read before,
 // stored after - and bit 8 of Field_ScriptFlags, by its high byte.
 extern "C" void __cdecl ScriptFlags_Set40(void) {
-    const unsigned char b = *At(kBlockFlags);
+    const unsigned char b = Field_StatusBits;
     reinterpret_cast<unsigned char*>(&Field_ScriptFlags)[1] |= 1;
-    *At(kBlockFlags) = b | 0x40;
+    Field_StatusBits = b | 0x40;
 }
 
 // original 0x57C810 (PSX 0x8015CAF0): bit 6 of three objects' first byte.

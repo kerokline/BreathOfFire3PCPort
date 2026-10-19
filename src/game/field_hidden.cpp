@@ -95,8 +95,8 @@ Handler Entry(std::uint32_t table, unsigned index) {
 }
 // Field_DirectionSteps' row for a direction (two longs, x then z), the
 // direction unchecked: the table has 8 rows.
-long StepX(unsigned d) { return Long(At(at::kDirSteps + d * 8)); }
-long StepZ(unsigned d) { return Long(At(at::kDirSteps + d * 8 + 4)); }
+long StepX(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8)); }
+long StepZ(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8 + 4)); }
 long Add(long a, long b) { return static_cast<long>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b)); }
 // An effect object by its index: Effect_Objects + index * 0x80, unchecked.
 unsigned char* Effect(unsigned index) { return Effect_Objects + (index << 7); }
@@ -137,7 +137,7 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
     unsigned char* const s = Sprite_Current;
     switch (s[2]) {
     case 0:
-        if (Byte(at::kLeader137) != 8) {
+        if (ObjTrio[0x137] != 8) {
             s[1] = 1;
             Sprite_Current[2] = 0;
         }
@@ -202,12 +202,12 @@ FH_EXPORT void __cdecl PartyAction_Finish(void) {
 // original 0x51F1B0: party set 5's action - the entry of PartyAction5_Forms
 // 0x65FC18 that the u16 +0x2C picks (0x51E910, PartyAction5_Form1, PartyAction_NoAction), jumped
 // to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(at::kForms, Word(Sprite_Current + 0x2C))(); }
+FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(PartyAction5_Forms_addr, Word(Sprite_Current + 0x2C))(); }
 
 // original 0x51E910: party set 5's form 0 - the entry of
 // PartyAction5_Form0States 0x65FBC0 that +2 picks (0x51E930, 0x51EAF0,
 // 0x51DA30), jumped to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(at::kForm0States, Sprite_Current[2])(); }
+FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(PartyAction5_Form0States_addr, Sprite_Current[2])(); }
 
 namespace {
 // PartyAction5_Form0Begin's side probe: the point one step in direction `d`
@@ -290,9 +290,9 @@ FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
         if (found != 0xFF) {
             const int i = static_cast<signed char>(found);
             if (i < 0x1E)
-                At(at::kObjectFlag + static_cast<std::uint32_t>(i * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(Sprite_Objects_addr + 0x80 + static_cast<std::uint32_t>(i * static_cast<int>(at::kObjectStride)))[0] |= 1;
             else
-                At(at::kExtraFlag + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(Sprite_ObjectsExtra_addr + 0x80 + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(at::kObjectStride)))[0] |= 1;
         }
         const unsigned cx = x >> 16, cz = z >> 16;
         if (Al(g.cell_pickup(cx, cz)) == 0) {
@@ -492,22 +492,22 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
     unsigned char answer = 1;
     Sprite_Current = At(at::kScratchSprite);
     unsigned char f = static_cast<unsigned char>(facing);
-    if (f >= 4) f = static_cast<unsigned char>((Byte(at::kFacing) + 1) & 3);
-    At(at::kFacing)[0] = f;
+    if (f >= 4) f = static_cast<unsigned char>((FieldHidden_Facing + 1) & 3);
+    FieldHidden_Facing = f;
     if (static_cast<unsigned char>(keep_centre) == 0) {
-        SetLong(At(at::kCentreX), static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) & 0xFFFF8000u));
-        SetLong(At(at::kCentreZ), static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) & 0xFFFF8000u));
+        BossSi_CentreX = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) & 0xFFFF8000u);
+        BossSi_CentreZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) & 0xFFFF8000u);
     }
     const unsigned row = Al(g.pick_row());
-    const unsigned char* const picked = At(at::kRows + row * 9);
-    SetLong(At(at::kRowUsed), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(picked)));
+    const unsigned char* const picked = At(Encounter_Rows_addr + row * 9);
+    FieldHidden_RowUsed = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(picked));
     const unsigned char count = Al(g.fill_slots(picked));
-    At(at::kEnemyCount)[0] = count;
+    FieldHidden_EnemyCount = count;
     if (count == 0) return 0;
-    At(at::kBattleFacing)[0] = Byte(at::kFacing);
+    At(at::kBattleFacing)[0] = FieldHidden_Facing;
     if (Al(g.place_party()) == 0 || Al(g.place_enemies()) == 0 || Al(g.reachable()) == 0) answer = 0;
     g.push_matrix();
-    g.aim_camera(Byte(at::kFacing));
+    g.aim_camera(FieldHidden_Facing);
     for (unsigned char m = 0; m < Al(g.party_count(1)); ++m) {
         const long x = Long(At(at::kMemberPos + m * 8u));
         const long z = Long(At(at::kMemberPos + m * 8u + 4));
@@ -524,10 +524,10 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         if (slot[0] == 0) continue;
         if (Al(g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {
             slot[0] = 0;
-            At(at::kPlaced)[0] = static_cast<unsigned char>(Byte(at::kPlaced) - 1);
+            FieldHidden_Placed = static_cast<unsigned char>(FieldHidden_Placed - 1);
         }
     }
-    const unsigned char placed = Byte(at::kPlaced);
+    const unsigned char placed = FieldHidden_Placed;
     g.pop_matrix();
     return placed != 0 ? answer : 0;
 }

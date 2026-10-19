@@ -94,7 +94,7 @@ std::uint32_t Hash(unsigned salt = 0) {
 constexpr int kFirstObject = -4, kObjects = 38;   // Sprite_Objects -4..33 (EventOp_5x / 9x may leave counts there)
 constexpr int kExtras = 8;                         // Sprite_ObjectsExtra 0..7 (Field_LeaderTalkTo reaches past 4)
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
-unsigned char* Member(int n) { return At(at::kLeader) + n * at::kMemberStride; }
+unsigned char* Member(int n) { return At(ObjTrio_addr) + n * at::kMemberStride; }
 
 alignas(4) unsigned char g_script[0x40];     // an op's bytes
 alignas(4) unsigned char g_zone[8];          // Area_ZoneAt's record
@@ -238,7 +238,7 @@ int HookBody(unsigned id, long x, long z) {
     const std::uint32_t h = Hash(id);
     if (h % 5 == 0) {
         move_script::SetLong(At(at::kTargetX), static_cast<std::int32_t>(Hash(id + 1)));
-        move_script::SetLong(At(at::kTargetZ), static_cast<std::int32_t>(Hash(id + 2)));
+        move_script::SetLong(At(Scratch_Swap_addr), static_cast<std::int32_t>(Hash(id + 2)));
     }
     Disturb(id + 3);
     const std::uint32_t r = Hash(id + 4);
@@ -399,10 +399,10 @@ void __cdecl StubEncounterArea() { Record(0x80); }
 void Exit(unsigned salt) {
     const std::uint32_t h = Hash(salt);
     if (h % 4 == 0) return;
-    SetWord(At(at::kExitArea), h);
+    SetWord(At(AreaW0b_Place_addr), h);
     move_script::SetLong(At(at::kExitX), static_cast<std::int32_t>(Hash(salt + 1)));
-    move_script::SetLong(At(at::kExitZ), static_cast<std::int32_t>(Hash(salt + 2)));
-    *At(at::kExitKind) = static_cast<unsigned char>(h >> 16);
+    move_script::SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(Hash(salt + 2)));
+    *At(AreaEntry_PendingFlags_addr) = static_cast<unsigned char>(h >> 16);
 }
 unsigned char __cdecl StubExitGateway() {
     Record(0x81);
@@ -762,7 +762,7 @@ void MakeClones() {
         void* const copy = bof3::CloneOriginal(c.name, c.base, c.size, calls, n);
         auto* code = static_cast<unsigned char*>(copy);
         if (c.entries) move_script::Relocate(copy, c.base, c.size, {c.disp, c.table, c.entries});
-        if (c.chapter) PatchDword(code, c.chapter, at::kChapterHooks, Address(g_stubs.chapter_hooks), "chapter table operand", c);
+        if (c.chapter) PatchDword(code, c.chapter, Scenario_Hooks_addr, Address(g_stubs.chapter_hooks), "chapter table operand", c);
         FlushInstructionCache(GetCurrentProcess(), copy, c.size);
         g_theirs[k] = copy;
     }
@@ -784,7 +784,7 @@ unsigned g_n;
 void UseRegions(unsigned mask) {
     g_n = 0;
     const auto add = [](Region r) { g_r[g_n++] = r; };
-    add(R(at::kLeader, 3 * at::kMemberStride));               // ObjTrio: the leader, Field_State
+    add(R(ObjTrio_addr, 3 * at::kMemberStride));              // ObjTrio: the leader, Field_State
     add(R(0x903840, 0x30));                                   // the scratch words
     add(R(0x9039A0, 0x58));                                   // Field_ScriptFlags .. 0x9039F7
     add(R(0x905B80, 0x30));                                   // Field_EdgeBits .. Field_InputHeld (a dword)
@@ -792,11 +792,11 @@ void UseRegions(unsigned mask) {
     add(R(0x903580, 0x28));                                   // the buttons .. Field_ActiveMember
     add(R(&Input_Pressed, 4));
     add(R(&Field_MemberCount, 1));
-    add(R(at::kScreenCounter, 4));
+    add(R(EventOps_ScreenCounter_addr, 4));
     add(R(&Game_AreaNumber, 4));                   // and MoveScript_FAWord
     add(R(&Field_Request, 1));
     add(R(0x904030, 0x130));                                  // story flags, party lists, the 9x bits, the return point
-    add(R(at::kCellCycle, 1));
+    add(R(AreaW0b_MapMode_addr, 1));
     add(R(at::kMemberPositions, 0x18));
     add(R(0x8034E0, 0x14));                                   // Cond_ByteFA .. Cond_ByteFD
     add(R(&Field_State, 4));
@@ -949,7 +949,7 @@ void Seed(bool objects) {
     Field_ActiveMember = objects ? Object(static_cast<int>(Next() % 30)) : Member(static_cast<int>(Next() % 3));
     static const unsigned char kCount[] = {0, 1, 2, 3, 3, 3};
     Field_MemberCount = OneIn(8) ? static_cast<unsigned char>(Next()) : Pick(kCount);
-    for (unsigned i = 0; i < 6; ++i) At(at::kPartyLists)[i] = static_cast<unsigned char>(Next() % 24);
+    for (unsigned i = 0; i < 6; ++i) At(Cond_Flags_addr + 0xd2)[i] = static_cast<unsigned char>(Next() % 24);
     // the input: the buttons the tests read overlapping what is pressed / held
     const std::uint32_t bits = Next();
     Input_Pressed = static_cast<unsigned short>(OneIn(3) ? 0 : bits);
@@ -958,15 +958,15 @@ void Seed(bool objects) {
     if (OneIn(2)) Field_InputHeld = static_cast<unsigned short>(Pick(kHeld) | (Next() & 0xFFF));
     static const unsigned char kInput[] = {0, 1, 0x20, 0x21, 0x40, 0x41, 0x61, 0x69};
     Field_InputFlags = OneIn(4) ? static_cast<unsigned char>(Next()) : Pick(kInput);
-    for (std::uint32_t b = at::kButtonConfirm; b <= at::kButtonCheck; b += 2)
+    for (std::uint32_t b = Gfx_UnpackScratch_addr + 0x1f000; b <= (Gfx_UnpackScratch_addr + 0x1f00c); b += 2)
         if (OneIn(3)) SetWord(At(b), 1u << (Next() % 16));
     static const unsigned char kFlagBytes[] = {0, 0, 0x10, 0x20, 0x40, 1, 2, 4, 0x30};
     for (const std::uint32_t f : {0x9039A2u, 0x9039A3u, 0x905BA4u, 0x905BA5u})
         if (OneIn(2)) *At(f) = Pick(kFlagBytes);
     static const unsigned char kRequest[] = {9, 5, 0, 4, 2};
     Field_Request = OneIn(2) ? Pick(kRequest) : static_cast<unsigned char>(Next());
-    if (OneIn(2)) *At(at::kBlockByte) = 0;
-    if (OneIn(3)) *At(at::kRunOption) = static_cast<unsigned char>(Next() % 3);
+    if (OneIn(2)) *At(EventOps_BlockByte_addr) = 0;
+    if (OneIn(3)) *At(FieldE2_RunDefault_addr) = static_cast<unsigned char>(Next() % 3);
 }
 
 // --- the tests ----------------------------------------------------------------------
@@ -1099,12 +1099,12 @@ void RunTests(unsigned rounds, unsigned only) {
                     *At(0x905BA4) &= 0xBF;
                 }
                 if (t.fn == kEncounter) {   // each of the chain's tests passed more often than not
-                    if (!OneIn(3)) SetWord(At(at::kZoneCounter), 1 + Next() % 0x40);
+                    if (!OneIn(3)) SetWord(At(ObjTrio_addr + 0x134), 1 + Next() % 0x40);
                     if (!OneIn(3)) Field_EdgeBits = static_cast<unsigned short>(OneIn(2) ? 0x40 + Next() % 0x40 : Next());
-                    if (!OneIn(3)) *At(at::kLeaderFlags) &= 0xFE;
+                    if (!OneIn(3)) *At(ObjTrio_addr + 0x138) &= 0xFE;
                     if (!OneIn(3)) for (int i = 0; i < 3; ++i) Member(i)[0] &= 0xBF;
-                    if (OneIn(2)) move_script::SetLong(At(at::kScreenCounter), static_cast<std::int32_t>(0xEF + Next() % 3));
-                    if (OneIn(2)) *At(at::kLeaderPace) = static_cast<unsigned char>(3 + Next() % 2);
+                    if (OneIn(2)) move_script::SetLong(At(EventOps_ScreenCounter_addr), static_cast<std::int32_t>(0xEF + Next() % 3));
+                    if (OneIn(2)) *At(ObjTrio_addr + 0x128) = static_cast<unsigned char>(3 + Next() % 2);
                 }
                 break;
             case kIdle:
@@ -1151,7 +1151,7 @@ void RunTests(unsigned rounds, unsigned only) {
                 if (OneIn(2)) { *At(0x905BA4) &= 0xE8; *At(0x9039A2) &= 0xE8; }
                 break;
             case kCellEvent:
-                if (OneIn(2)) *At(at::kCellCycle) = static_cast<unsigned char>(Next() % 4);
+                if (OneIn(2)) *At(AreaW0b_MapMode_addr) = static_cast<unsigned char>(Next() % 4);
                 if (OneIn(3)) Input_Pressed = static_cast<unsigned short>(OneIn(2) ? 0x100 : 0x800);
                 break;
             case kReq9:

@@ -94,8 +94,8 @@ unsigned char* Kind(u32 kind) { return At(at::kKinds + at::kKindStride * kind); 
 unsigned char* Obj(u32 i) { return ObjTrio + at::kObjStride * i; }
 unsigned char& Byte(u32 address) { return *At(address); }
 
-i32 CentreX() { return Long(At(at::kCentreX)); }
-i32 CentreZ() { return Long(At(at::kCentreZ)); }
+i32 CentreX() { return static_cast<std::int32_t>(BossSi_CentreX); }
+i32 CentreZ() { return static_cast<std::int32_t>(BossSi_CentreZ); }
 // A 16.16 coordinate's cell: `sar reg, 16`.
 u32 Cell(i32 v) { return static_cast<u32>(v >> 16); }
 // A shift of a value the original holds as a 32-bit register.
@@ -416,13 +416,13 @@ extern "C" unsigned char __cdecl Encounter_PlaceMember(unsigned formation, unsig
 // does. Then each member of the order by Encounter_PlaceMember, the facing
 // byte read afresh each time; 0 as soon as one fails.
 extern "C" unsigned char __cdecl Encounter_PlaceParty(void) {
-    const unsigned char formation = Byte(at::kFormation);
+    const unsigned char formation = Cond_Flags[0xd0];
     const auto n = static_cast<unsigned char>(g.party_count(1));
     unsigned char* const order = At(at::kOrder);
     for (unsigned char i = 0; i < 3; ++i) {
         order[i] = i;
         Member(i)[0] = 0;
-        const unsigned char record = At(at::kMemberRecord)[At(at::kPartyList2)[i]];
+        const unsigned char record = MoveScript_EffectState[Cond_Flags[0xd5 + i]];
         Member(i)[1] = (record == 2 || record == 6) ? 1 : 0;
     }
     bool swapped = false;
@@ -445,12 +445,12 @@ extern "C" unsigned char __cdecl Encounter_PlaceParty(void) {
                 z = Add(Long(At(at::kRecentre + 8 * k + 4)), CentreZ());
                 if (g.cell_fits(x, z, 1) && g.path_clear(Cell(CentreZ()), Cell(CentreZ()), Cell(x), Cell(z))) break;
             }
-            SetLong(At(at::kCentreX), x);
-            SetLong(At(at::kCentreZ), z);
+            BossSi_CentreX = x;
+            BossSi_CentreZ = z;
         }
     }
     for (unsigned char i = 0; i < n; ++i)
-        if (!g.place_member(formation, order[i], static_cast<unsigned char>(n - 1), Byte(at::kFacing))) return 0;
+        if (!g.place_member(formation, order[i], static_cast<unsigned char>(n - 1), FieldHidden_Facing)) return 0;
     return 1;
 }
 
@@ -480,17 +480,17 @@ extern "C" unsigned char __cdecl Encounter_EnemyClear(unsigned count, long x, lo
 // (Encounter_EnemyClear, given the spot read back from the slot); placed + 1
 // in memory. A slot that never fits is made inactive. Answers placed != 0.
 extern "C" unsigned char __cdecl Encounter_PlaceEnemies(void) {
-    Byte(at::kPlaced) = 0;
+    FieldHidden_Placed = 0;
     for (std::uint16_t i = 0; static_cast<std::int16_t>(i) < 8; ++i) {
         unsigned char* const e = Enemy(i);
         if (e[0] == 0) continue;
         unsigned char* const kind = Kind(e[1]);
-        const u32 c = Byte(at::kEnemyCount);
+        const u32 c = FieldHidden_EnemyCount;
         const i32 triangle = static_cast<i32>((c - 1) * c) >> 1;   // lea eax, [ecx - 1]; imul eax, ecx; sar eax, 1
-        const auto index = static_cast<std::int16_t>(Add(triangle, Byte(at::kPlaced)));
+        const auto index = static_cast<std::int16_t>(Add(triangle, FieldHidden_Placed));
         i32 ox = Add(Long(At(at::kEnemyOffsets + 8 * index)), 0x50000);
         i32 oz = Long(At(at::kEnemyOffsets + 8 * index + 4));
-        for (auto f = static_cast<unsigned char>(Byte(at::kFacing)); f != 0; f = static_cast<unsigned char>((f + 1) & 3)) {
+        for (auto f = FieldHidden_Facing; f != 0; f = static_cast<unsigned char>((f + 1) & 3)) {
             const i32 t = ox;
             ox = oz;
             oz = Neg(t);
@@ -503,7 +503,7 @@ extern "C" unsigned char __cdecl Encounter_PlaceEnemies(void) {
             const i32 z = Add(Add(Shl(j[1], 15), CentreZ()), oz);
             SetLong(e + 8, z);
             if (g.cell_fits(x, z, kind[0x86]) && g.enemy_clear(i, Long(e + 4), Long(e + 8), kind[0x86])) {
-                ++Byte(at::kPlaced);
+                ++FieldHidden_Placed;
                 break;
             }
             ++t;
@@ -511,7 +511,7 @@ extern "C" unsigned char __cdecl Encounter_PlaceEnemies(void) {
         }
         if (t == 0x31) e[0] = 0;
     }
-    return Byte(at::kPlaced) != 0;
+    return FieldHidden_Placed != 0;
 }
 
 // original 0x592760 (PSX 0x801C7DC4): each active enemy slot stays active if
@@ -519,7 +519,7 @@ extern "C" unsigned char __cdecl Encounter_PlaceEnemies(void) {
 // (Encounter_PathClear from the member's cell to the enemy's, its words +6
 // and +0xA), counting them in 0x6BE071; answers that count != 0.
 extern "C" unsigned char __cdecl Encounter_EnemiesReachable(void) {
-    Byte(at::kPlaced) = 0;
+    FieldHidden_Placed = 0;
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const e = Enemy(k);
         if (e[0] == 0) continue;
@@ -529,7 +529,7 @@ extern "C" unsigned char __cdecl Encounter_EnemiesReachable(void) {
             for (;;) {
                 if (g.path_clear(Cell(Long(PosX(static_cast<std::int16_t>(m)))), Cell(Long(PosZ(static_cast<std::int16_t>(m)))),
                                  Word(e + 6), Word(e + 0xA))) {
-                    ++Byte(at::kPlaced);
+                    ++FieldHidden_Placed;
                     reached = 1;
                     break;
                 }
@@ -539,7 +539,7 @@ extern "C" unsigned char __cdecl Encounter_EnemiesReachable(void) {
         }
         e[0] = reached;
     }
-    return Byte(at::kPlaced) != 0;
+    return FieldHidden_Placed != 0;
 }
 
 // original 0x592A30 (PSX 0x801C823C): the camera for the fight. The mean
@@ -553,21 +553,21 @@ extern "C" unsigned char __cdecl Encounter_EnemiesReachable(void) {
 // (Gte_SetRotMatrix, Gte_SetTransMatrix). The centre and the mean are read
 // after the first Gte_RotMatrix, the camera words after Gte_ApplyMatrix.
 extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
-    SetLong(At(at::kHeightAvg), 0);
+    ModeRest_ElevationBase = 0;
     i32 n = 0;
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const e = Enemy(k);
         if (e[0] == 0) continue;
         const long h = g.elevation(Long(e + 4), Long(e + 8));
-        SetLong(At(at::kHeightAvg), Add(Long(At(at::kHeightAvg)), static_cast<std::int16_t>(h)));
+        ModeRest_ElevationBase = Add(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
         ++n;
     }
     for (unsigned char m = 0; m < static_cast<unsigned char>(g.party_count(1)); ++m) {
         const long h = g.elevation(Long(PosX(m)), Long(PosZ(m)));
-        SetLong(At(at::kHeightAvg), Add(Long(At(at::kHeightAvg)), static_cast<std::int16_t>(h)));
+        ModeRest_ElevationBase = Add(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
         ++n;
     }
-    SetLong(At(at::kHeightAvg), static_cast<i32>(static_cast<u32>(Long(At(at::kHeightAvg)) / n) & 0xFFFFFFE0u));
+    ModeRest_ElevationBase = static_cast<i32>(static_cast<u32>(static_cast<std::int32_t>(ModeRest_ElevationBase) / n) & 0xFFFFFFE0u);
     struct {
         short m[9];
         short pad;
@@ -577,7 +577,7 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
     const u32 f = facing & 0xFF;
     const auto* const offset = reinterpret_cast<const std::int16_t*>(At(at::kCameraOffsets + 4 * f));
     short v[3];
-    v[2] = static_cast<short>(Long(At(at::kHeightAvg)) >> 1);
+    v[2] = static_cast<short>(static_cast<std::int32_t>(ModeRest_ElevationBase) >> 1);
     v[0] = static_cast<short>(Sub(0x4000, Add(Shl(offset[0], 16), CentreX()) >> 9));
     v[1] = static_cast<short>(Sub(0x4000, Add(Shl(offset[1], 16), CentreZ()) >> 9));
     long out[3];
@@ -644,7 +644,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
             if (r <= 0x32) ++count;
             continue;
         }
-        const u32 record = At(at::kMemberRecord)[At(at::kPartyList)[i]];
+        const u32 record = MoveScript_EffectState[Cond_Flags[0xd2 + i]];
         if (At(at::kRecords + record * at::kRecordSize)[0x38] < r) continue;
         const unsigned char e = g.effect_free();
         if (e != 0xFF) {
@@ -661,7 +661,7 @@ extern "C" void __cdecl Encounter_RollInitiative(void) {
         }
         ++count;
     }
-    Byte(at::kInitiative) = count == 5 ? 1 : count != 0 ? 0 : 2;
+    BattlePhases_Initiative = count == 5 ? 1 : count != 0 ? 0 : 2;
 }
 
 // original 0x532660 (PSX 0x801BFDC8): each member's +0xB the way it turns
@@ -716,14 +716,14 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
         }
         return 0;
     }
-    if (Byte(at::kBattleFlags) & 4) return 1;
+    if (BattleTurnSteps_MusicFlags & 4) return 1;
     for (u32 j = 0; static_cast<i32>(j) < static_cast<i32>(n); ++j, n = Field_MemberCount) {
         unsigned char* const obj = Obj(j);
         Field_State = obj;
         Sprite_Current = obj;
         for (u32 w = 0; w < 32; ++w) {
             const u32 o = (static_cast<u32>(obj[5]) << 5) + w;
-            SetWord(At(at::kShadeSaved + 2 * o), Word(At(at::kShadeSource + 2 * o)));
+            SetWord(At(Gfx_ClutStripSource_addr + 0x1ec0 + 2 * o), Word(At(Gfx_ClutStripSource_addr + 0x1e00 + 2 * o)));
         }
         g.shade_begin();
         Sprite_Current[0xB] = 0;
@@ -748,11 +748,11 @@ extern "C" unsigned char __cdecl Encounter_PartyTurn(void) {
 // whether every member's +0xB is 2 (1 for no members), the count the last
 // one read.
 extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
-    if (Byte(at::kBattleFlags) & 4) return 1;
+    if (BattleTurnSteps_MusicFlags & 4) return 1;
     const u32 f = Byte(at::kBattleFacing);
     const auto* const step = reinterpret_cast<const signed char*>(At(at::kSideSteps + 2 * f));
-    SetLong(At(at::kCentreX), Add(Shl(step[0], 16), Field_Kind2X));
-    SetLong(At(at::kCentreZ), Add(Shl(step[1], 16), Field_Kind2Z));
+    BossSi_CentreX = Add(Shl(step[0], 16), Field_Kind2X);
+    BossSi_CentreZ = Add(Shl(step[1], 16), Field_Kind2Z);
     u32 n = Field_MemberCount;
     if (n != 0) {
         for (u32 i = 0; i < n; ++i, n = Field_MemberCount) {
@@ -765,7 +765,7 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     unsigned char* const fs = Field_State;
                     const unsigned char id = fs[0x89];
                     u32 k = 0;
-                    while (k < 3 && At(at::kPartyList2)[k] != id) ++k;
+                    while (k < 3 && Cond_Flags[0xd5 + k] != id) ++k;
                     fs[0x138] = static_cast<unsigned char>(fs[0x138] & 0xFE);
                     Sprite_Current[0x29] = Draw_OtSlot;
                     SetLong(Sprite_Current + 0x34, Long(PosX(k)));
@@ -780,7 +780,7 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     unsigned char* const sc = Sprite_Current;
                     for (u32 w = 0; w < 32; ++w) {
                         const u32 o = (static_cast<u32>(sc[5]) << 5) + w;
-                        SetWord(At(at::kShadeClut + 2 * o), Word(At(at::kShadeSaved + 2 * o)));
+                        SetWord(At(Gfx_ClutStrip_addr + 0x1e00 + 2 * o), Word(At(Gfx_ClutStripSource_addr + 0x1ec0 + 2 * o)));
                     }
                     Gfx_ClutStripDirty = 1;
                     sc[0] = static_cast<unsigned char>(sc[0] & 0xDF);
@@ -832,7 +832,7 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
 // every member's +0xB is 1 (1 for no members), the count the last one read.
 // Like 0x532A70 it first searches the first party list for nothing.
 extern "C" unsigned char __cdecl Encounter_PartyScriptOnce(void) {
-    if (Byte(at::kBattleFlags) & 0x10) return 1;
+    if (BattleTurnSteps_MusicFlags & 0x10) return 1;
     u32 n = Field_MemberCount;
     if (n != 0) {
         for (u32 i = 0; i < n; ++i, n = Field_MemberCount) {

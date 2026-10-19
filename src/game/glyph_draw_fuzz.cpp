@@ -48,8 +48,8 @@ U GetLong(const unsigned char* p) {
 // Everything either function reads or writes: the cache, the 8 bytes after it
 // and the vertex block (one region, 0x7C9F50..0x7CA9D8), the scales, the CLUT
 // rows' generations (rows 0..511), the render flag.
-constexpr U kRegion = kCache;
-constexpr U kRegionBytes = d3d_fuzz::kVertices + d3d_fuzz::kVertexBytes - kCache;   // 0xA88
+// kRegion: now Font_TexCache (symbols.toml).
+constexpr U kRegionBytes = D3d_Vertices_addr + d3d_fuzz::kVertexBytes - Font_TexCache_addr; // 0xA88
 constexpr U kClutBytes = 512 * 8;
 
 struct State {
@@ -61,16 +61,16 @@ struct State {
 State g_saved, g_start, g_theirs_state;
 
 void Capture(State& s) {
-    std::memcpy(s.region, At(kRegion), kRegionBytes);
-    std::memcpy(s.clut, At(kClutRows), kClutBytes);
-    std::memcpy(s.scales, At(d3d_fuzz::kScaleY), 8);
-    s.flags = At(kRenderFlags)[0];
+    std::memcpy(s.region, At(Font_TexCache_addr), kRegionBytes);
+    std::memcpy(s.clut, At(Gfx_ClutRows_addr), kClutBytes);
+    std::memcpy(s.scales, At(D3d_ScaleY_addr), 8);
+    s.flags = At(Gfx_RenderFlags_addr)[0];
 }
 void Restore(const State& s) {
-    std::memcpy(At(kRegion), s.region, kRegionBytes);
-    std::memcpy(At(kClutRows), s.clut, kClutBytes);
-    std::memcpy(At(d3d_fuzz::kScaleY), s.scales, 8);
-    At(kRenderFlags)[0] = s.flags;
+    std::memcpy(At(Font_TexCache_addr), s.region, kRegionBytes);
+    std::memcpy(At(Gfx_ClutRows_addr), s.clut, kClutBytes);
+    std::memcpy(At(D3d_ScaleY_addr), s.scales, 8);
+    At(Gfx_RenderFlags_addr)[0] = s.flags;
 }
 
 // --- the stand-ins ---------------------------------------------------------
@@ -113,10 +113,10 @@ void __cdecl StubBuild(int slot, unsigned glyph, unsigned clut) {
     if (h % 4 != 0 && slot >= 0 && slot < static_cast<int>(kEntries)) {
         // The real one's success path: the glyph and CLUT words, the row's
         // generation, a surface and a texture.
-        unsigned char* e = At(kCache + static_cast<U>(slot) * kEntry);
+        unsigned char* e = At(Font_TexCache_addr + static_cast<U>(slot) * kEntry);
         PutWord(e, glyph);
         PutWord(e + 2, clut);
-        PutLong(e + 4, GetLong(At(kClutRows + ((clut & 0xFFFFu) >> 6) * 8)));
+        PutLong(e + 4, GetLong(At(Gfx_ClutRows_addr + ((clut & 0xFFFFu) >> 6) * 8)));
         PutLong(e + 8, Mix(5));
         PutLong(e + 0xC, Mix(6));
     }
@@ -179,7 +179,7 @@ void RandomPrim(unsigned char* p) {
 }
 
 void RandomScales() {
-    for (U a : {d3d_fuzz::kScaleX, d3d_fuzz::kScaleY}) {
+    for (U a : {D3d_ScaleX_addr, D3d_ScaleY_addr}) {
         float f;
         if (Next() % 4) {
             f = kScales[Next() % (sizeof kScales / sizeof kScales[0])];
@@ -191,7 +191,7 @@ void RandomScales() {
 }
 
 void RandomVertices() {
-    for (U i = 0; i < d3d_fuzz::kVertexBytes; ++i) At(d3d_fuzz::kVertices)[i] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < d3d_fuzz::kVertexBytes; ++i) At(D3d_Vertices_addr)[i] = static_cast<unsigned char>(Next());
 }
 
 // DIV-0025's rule for one block of four vertices: every byte the original's,
@@ -203,8 +203,8 @@ void RandomVertices() {
 bool SameWithInset(const unsigned char* ours, const unsigned char* theirs) {
     const double inv32 = *reinterpret_cast<const double*>(At(0x5C4618));
     float sx, sy;
-    std::memcpy(&sx, At(d3d_fuzz::kScaleX), 4);
-    std::memcpy(&sy, At(d3d_fuzz::kScaleY), 4);
+    std::memcpy(&sx, At(D3d_ScaleX_addr), 4);
+    std::memcpy(&sy, At(D3d_ScaleY_addr), 4);
     const double inset[2] = {TexelInset(sx), TexelInset(sy)};
     for (U i = 0; i < 4; ++i) {
         const unsigned char* a = ours + i * 0x20;
@@ -242,7 +242,7 @@ unsigned FuzzDraw(DrawFn theirs, unsigned rounds, bool inset) {
         d3d_fuzz::g_log = &g_theirs;
         const long ret_theirs = theirs(prim);
         unsigned char v_theirs[d3d_fuzz::kVertexBytes];
-        std::memcpy(v_theirs, At(d3d_fuzz::kVertices), sizeof v_theirs);
+        std::memcpy(v_theirs, At(D3d_Vertices_addr), sizeof v_theirs);
         Capture(g_theirs_state);
 
         Restore(g_start);
@@ -262,12 +262,12 @@ unsigned FuzzDraw(DrawFn theirs, unsigned rounds, bool inset) {
             same = false;
             std::strcpy(why, "the return value");
         }
-        if (same && !rule(At(d3d_fuzz::kVertices), v_theirs)) {
+        if (same && !rule(At(D3d_Vertices_addr), v_theirs)) {
             same = false;
             std::strcpy(why, "the vertex block");
         }
         // Everything outside the vertex block, byte for byte.
-        if (same && std::memcmp(At(kRegion), g_theirs_state.region, d3d_fuzz::kVertices - kRegion) != 0) {
+        if (same && std::memcmp(At(Font_TexCache_addr), g_theirs_state.region, D3d_Vertices_addr - Font_TexCache_addr) != 0) {
             same = false;
             std::strcpy(why, "the cache");
         }
@@ -300,10 +300,10 @@ unsigned FuzzLookup(LookupFn theirs, unsigned rounds, LookupCover& cover) {
 
         // The cache: random bytes, then the in-use words by one of four
         // patterns, then some entries made hits or near-misses of this call.
-        for (U i = 0; i < kRegionBytes; ++i) At(kRegion)[i] = static_cast<unsigned char>(Next());
+        for (U i = 0; i < kRegionBytes; ++i) At(Font_TexCache_addr)[i] = static_cast<unsigned char>(Next());
         const U pattern = Next() % 4;
         for (U i = 0; i < kEntries; ++i) {
-            unsigned char* e = At(kCache + i * kEntry);
+            unsigned char* e = At(Font_TexCache_addr + i * kEntry);
             U used;
             switch (pattern) {
             case 0: used = 1; break;                                           // all used: the overrun
@@ -316,17 +316,17 @@ unsigned FuzzLookup(LookupFn theirs, unsigned rounds, LookupCover& cover) {
         }
         const U row = (clut >> 6);
         const bool row_ok = row < 1024;
-        if ((clut >> 6) < 512) PutLong(At(kClutRows + row * 8), Next() % 2 ? Next() : Next() % 4);
-        const U generation = row_ok ? GetLong(At(kClutRows + row * 8)) : 0;
+        if ((clut >> 6) < 512) PutLong(At(Gfx_ClutRows_addr + row * 8), Next() % 2 ? Next() : Next() % 4);
+        const U generation = row_ok ? GetLong(At(Gfx_ClutRows_addr + row * 8)) : 0;
         const U seeds = Next() % 4;
         for (U k = 0; k < seeds; ++k) {
-            unsigned char* e = At(kCache + (Next() % kEntries) * kEntry);
+            unsigned char* e = At(Font_TexCache_addr + (Next() % kEntries) * kEntry);
             PutWord(e, Next() % 8 ? glyph : glyph + 1);
             PutWord(e + 2, Next() % 8 ? clut : clut ^ 0x40);
             PutLong(e + 4, Next() % 4 ? generation : generation + 1);
         }
         const U flags = Next() & 0xFF;
-        At(kRenderFlags)[0] = static_cast<unsigned char>(Next() % 2 ? (flags | 1) : (flags & ~1u));
+        At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next() % 2 ? (flags | 1) : (flags & ~1u));
         Capture(g_start);
 
         g_theirs.Clear();
@@ -359,11 +359,11 @@ unsigned FuzzLookup(LookupFn theirs, unsigned rounds, LookupCover& cover) {
             same = false;
             std::strcpy(why, "the return value");
         }
-        if (same && std::memcmp(At(kRegion), g_theirs_state.region, kRegionBytes) != 0) {
+        if (same && std::memcmp(At(Font_TexCache_addr), g_theirs_state.region, kRegionBytes) != 0) {
             same = false;
             std::strcpy(why, "the cache or the vertex block");
         }
-        if (same && At(kRenderFlags)[0] != g_theirs_state.flags) {
+        if (same && At(Gfx_RenderFlags_addr)[0] != g_theirs_state.flags) {
             same = false;
             std::strcpy(why, "the render flag");
         }

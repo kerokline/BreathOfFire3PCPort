@@ -16,9 +16,9 @@ using U = std::uint32_t;
 
 // --- the character records the menu panels draw (CharacterRecords, 0xA4 each) ---
 constexpr U kRecordStride = 0xA4;
-constexpr U kStyle = 0x903A5A;           // u8: the window style Menu_DrawBox takes last (the Config byte)
-constexpr U kShownMember = 0x929F06;     // s8: the menu block's +6, the character a panel shows (a party slot)
-constexpr U kPartyList = 0x904062;       // u8 x 3: the party's member ids by slot (Cond_Flags' party list)
+// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox takes last (the Config byte)
+// kShownMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the menu block's +6, the character a panel shows (a party slot)
+// kPartyList: now Cond_Flags[0xd2] (symbols.toml). u8 x 3: the party's member ids by slot (Cond_Flags' party list)
 
 // --- the item panel's lists (scratch in .data, shared with chapters 15 / 17's
 //     bytes at 0x6BC740: Scena15_Bytes names the first 8) ---
@@ -41,7 +41,7 @@ constexpr U kAbilityTitles = 0x663984;   // const char * by the panel's +0xB
 constexpr U kItemTitles = 0x663994;      // const char * by the category
 constexpr U kFmtCount = 0x6639C8;        // the item panel's "n / 128" format
 constexpr U kFmtSlot = 0x6639D4;         // the save slot's number format
-constexpr U kFmtLevel = 0x64D3EC;        // the save slot's level format (Boss26Fx_CountFormat's bytes)
+// kFmtLevel: now Boss26Fx_CountFormat (symbols.toml). the save slot's level format (Boss26Fx_CountFormat's bytes)
 constexpr U kFmtTime = 0x654830;         // the save slot's play time format (hours, minutes)
 constexpr U kColon = 0x6639D0;           // the save slot's colon text
 constexpr U kEmptySlot = 0x669CCC;       // the empty slot's text
@@ -49,19 +49,24 @@ constexpr U kNameInsetSite = 0x576A48;   // the disp8 of `lea eax, [ebp + 0x13]`
 constexpr U kTextScratch = 0x904BA0;     // the text scratch Crt_sprintf and the slot's name copy write
 
 // --- Menu_DrawPieces / Menu_DrawPiece lists the panels draw (image) ---
-constexpr U kStatsPiecesA = 0x663358, kStatsPiecesB = 0x663384, kStatsPiecesC = 0x663390;
+// kStatsPiecesA: now AreaMap_EntryHandlers[0x2f] (symbols.toml).
+// kStatsPiecesB: now AreaMap_EntryHandlers[0x3a] (symbols.toml).
+// kStatsPiecesC: now AreaMap_EntryHandlers[0x3d] (symbols.toml).
 constexpr U kExpPieces = 0x6634CC;
-constexpr U kWheelPiecesA = 0x6633E0, kWheelPiecesB = 0x663404, kWheelPiecesC = 0x663410;
-constexpr U kEquipPieces = 0x663458;
-constexpr U kListPiecesA = 0x663484, kListPiecesLit = 0x66349C, kListPiecesB = 0x6634B4, kListPiecesBLit = 0x6634C0;
-constexpr U kItemPiecesB = 0x663490;
+// kWheelPiecesA: now Menu_PlayTimePieces[0x2c] (symbols.toml).
+// kWheelPiecesB: now AreaMap_EntryHandlers[0x5a] (symbols.toml).
+// kWheelPiecesC: now AreaMap_EntryHandlers[0x5d] (symbols.toml).
+// kEquipPieces: now AreaMap_EntryHandlers[0x6f] (symbols.toml).
+// kListPiecesA: now AreaMap_EntryHandlers[0x7a] (symbols.toml).
+constexpr U kListPiecesLit = 0x66349C, kListPiecesB = 0x6634B4, kListPiecesBLit = 0x6634C0;
+// kItemPiecesB: now AreaMap_EntryHandlers[0x7d] (symbols.toml).
 constexpr U kSlotPieces = 0x663584;
 
 // --- the movement script's tables read in place ---
-constexpr U kOp88States = 0x663AFC;      // 2 handlers (MoveCmd_Op88), then kOp87States' 2
+// kOp88States: now MoveCmd_Op88States (symbols.toml). 2 handlers (MoveCmd_Op88), then kOp87States' 2
 constexpr U kOp87States = 0x663B04;      // 2 handlers (MoveCmd_Op87), then EventScript_OpLengths
-constexpr U kOpE9States = 0x663B84;      // 4 handlers of seven words (MoveCmd_OpE9)
-constexpr U kDirectionVelocity = 0x6696DC;   // 8 x (x, z) s32 by direction: MoveCmd_OpF9's step per unit of speed
+// kOpE9States: now MoveCmd_OpE9States (symbols.toml). 4 handlers of seven words (MoveCmd_OpE9)
+// kDirectionVelocity: now MoveCmd_F9Steps (symbols.toml). 8 x (x, z) s32 by direction: MoveCmd_OpF9's step per unit of speed
 
 // .text, for the table reads: an entry outside it is not code.
 constexpr U kTextLo = 0x401000, kTextHi = 0x5C3000;

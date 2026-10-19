@@ -112,7 +112,7 @@ void Tick() {
 // the signed cell coordinates, unchecked; read in place.
 U CellWord(short cx, short cz) {
     const int width = static_cast<int>(AreaMap_Header[0]);
-    const int index = width * cz + static_cast<int>(Word(At(at::kAreaCells))) * 2 + cx;
+    const int index = width * cz + static_cast<int>(Word(At(AreaMap_Header_addr + 0x2))) * 2 + cx;
     return Word(At(AddressOf(AreaMap_Header) + static_cast<U>(index) * 2u));
 }
 
@@ -258,7 +258,7 @@ extern "C" void __cdecl EffectKind04_HoldTick(void) {
     unsigned char* const o = Cur();
     const unsigned char left = o[9];
     if (left == 0) {
-        SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x1C);
+        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x1C);
         SH_CALL(Effect_Release)();
         return;
     }
@@ -600,11 +600,11 @@ extern "C" void __cdecl EffectKind17_Push(void) {
     o = Cur();
     o[0xA] = static_cast<unsigned char>((static_cast<int>(o[0xA]) + 1) >> 1);
     const U push = static_cast<U>(o[0xA]) * 3u * 0x400u - 0xC00u;
-    SetL(o + 0xC, L(At(at::kWalkDelta + 8u * o[8])) << 2);
+    SetL(o + 0xC, L(At(MoveCmd_F9Steps_addr + 8u * o[8])) << 2);
     U v = L(o + 0xC);
     if (S32(v) > 0) SetL(o + 0xC, v + push);
     else if (S32(v) < 0) SetL(o + 0xC, v - push);
-    SetL(o + 0x10, L(At(at::kWalkDelta + 4 + 8u * o[8])) << 2);
+    SetL(o + 0x10, L(At(MoveCmd_F9Steps_addr + 4 + 8u * o[8])) << 2);
     v = L(o + 0x10);
     if (S32(v) > 0) SetL(o + 0x10, v + push);
     else if (S32(v) < 0) SetL(o + 0x10, v - push);
@@ -1006,14 +1006,14 @@ extern "C" void __cdecl EffectKind1B_Start(void) {
     SH_AT(void (__cdecl*)(), at::kFc2Aim)();
     Cur()[0x27] = 0x7B;
     SH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>((Cur()[8] >> 1) + 0x4A));
-    SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(at::kKind1BPalette)), 1);
+    SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1ec0)), 1);
     SetL(Cur() + 0x34, L(ObjTrio + 0x34));
     SetL(Cur() + 0x38, L(ObjTrio + 0x38));
     SetWord(Cur() + 0x3E, Word(ObjTrio + 0x3E) + 0xC0u);
     unsigned char* o = Cur();
-    SetL(o + 0xC, L(At(at::kWalkDelta + 8u * o[8])) << 4);
+    SetL(o + 0xC, L(At(MoveCmd_F9Steps_addr + 8u * o[8])) << 4);
     o = Cur();
-    SetL(o + 0x10, L(At(at::kWalkDelta + 4 + 8u * o[8])) << 4);
+    SetL(o + 0x10, L(At(MoveCmd_F9Steps_addr + 4 + 8u * o[8])) << 4);
     Cur()[0xA] = ObjTrio[0x89] == 1 ? 0xA : 0x12;
     Cur()[0] = static_cast<unsigned char>(Cur()[0] | 2);
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);

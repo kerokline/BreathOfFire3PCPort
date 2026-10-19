@@ -56,8 +56,8 @@ const std::uint32_t kAngles = Addr(Camera_Angles), kEffectRecords = Addr(Effect_
 // it).
 void Disturb() {
     const std::uint32_t h = Hash();
-    if (h % 5 == 0) At(kStep)[0] = static_cast<unsigned char>(h % 3 ? (h >> 8) % 14 : h >> 8);
-    if (h % 7 == 0) SetWord(At(kTimer), h % 2 ? (h >> 9) % 4 : h >> 12);
+    if (h % 5 == 0) At(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(h % 3 ? (h >> 8) % 14 : h >> 8);
+    if (h % 7 == 0) SetWord(At(MoveScript_PartyRecords_addr + 0x66), h % 2 ? (h >> 9) % 4 : h >> 12);
     if (h % 6 == 0) MoveScript_WaitWordDA = static_cast<unsigned short>(h % 4 ? 0 : h >> 16);
     if (h % 9 == 0) Field_Request = static_cast<unsigned char>(h % 2 ? 2 : h >> 20);
     if (h % 11 == 0) At(kCounters + (h >> 5) % 4)[0] = static_cast<unsigned char>(h >> 13);
@@ -65,9 +65,9 @@ void Disturb() {
     if (h % 10 == 0) Draw_PassFlags = static_cast<unsigned char>(h >> 18);
     if (h % 13 == 0) MoveScript_Var7 = static_cast<signed char>(h >> 11);
     if (h % 4 == 0) SetWord(At(kAngles + 2 * ((h >> 3) % 3)), h >> 17);
-    if (h % 12 == 0) At(kMusicTrack)[0] = static_cast<unsigned char>(h % 3 ? 0xFF : h >> 9);
+    if (h % 12 == 0) At(Music_Track_addr)[0] = static_cast<unsigned char>(h % 3 ? 0xFF : h >> 9);
     if (h % 14 == 0) Cond_ByteFD = static_cast<unsigned char>(h % 2 ? 2 : h >> 22);
-    if (h % 15 == 0) SetLong(At(kFlagsPtr), static_cast<std::int32_t>(h));
+    if (h % 15 == 0) SetLong(At(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(h));
     if (h % 16 == 0) Game_AreaNumber = static_cast<unsigned short>(h >> 10);
 }
 
@@ -242,8 +242,8 @@ constexpr unsigned kChapters = 20, kTailSlots = 2, kTailRunSlots = 8, kStateSlot
 std::uint32_t g_vtables[kChapters][5];     // each chapter's vtable: slot 0 recorded as Slot<chapter % 16>
 std::uint32_t g_call_tables[kChapters][256];
 struct Swap { std::uint32_t at, words; std::uint32_t saved[kChapters]; };
-Swap g_swaps[] = {{kScenarioTables, kChapters, {}}, {kCallATables, kChapters, {}}, {kTailTable, kTailSlots, {}},
-                  {kTailRunTable, kTailRunSlots, {}}, {kStateTable, kStateSlots, {}}};
+Swap g_swaps[] = {{Scenario_Hooks_addr, kChapters, {}}, {Scenario_CallATables_addr, kChapters, {}}, {kTailTable, kTailSlots, {}},
+                  {Field_ModeTailKinds_addr, kTailRunSlots, {}}, {kStateTable, kStateSlots, {}}};
 void SwapTables() {
     for (Swap& s : g_swaps) std::memcpy(s.saved, At(s.at), 4 * s.words);
     for (unsigned c = 0; c < kChapters; ++c) {
@@ -252,12 +252,12 @@ void SwapTables() {
         // Scattered, so that an index off by any power of two lands elsewhere.
         for (unsigned j = 0; j < 256; ++j)
             g_call_tables[c][j] = Addr(reinterpret_cast<const void*>(kSlots[((c * 31 + j) * 2654435761u) >> 28]));
-        SetLong(At(kScenarioTables + 4 * c), static_cast<std::int32_t>(Addr(g_vtables[c])));
-        SetLong(At(kCallATables + 4 * c), static_cast<std::int32_t>(Addr(g_call_tables[c])));
+        SetLong(At(Scenario_Hooks_addr + 4 * c), static_cast<std::int32_t>(Addr(g_vtables[c])));
+        SetLong(At(Scenario_CallATables_addr + 4 * c), static_cast<std::int32_t>(Addr(g_call_tables[c])));
     }
     for (unsigned j = 0; j < kTailSlots; ++j) SetLong(At(kTailTable + 4 * j), static_cast<std::int32_t>(Addr(reinterpret_cast<const void*>(kSlots[j]))));
     for (unsigned j = 0; j < kTailRunSlots; ++j)
-        SetLong(At(kTailRunTable + 4 * j), static_cast<std::int32_t>(Addr(reinterpret_cast<const void*>(kSlots[2 + j]))));
+        SetLong(At(Field_ModeTailKinds_addr + 4 * j), static_cast<std::int32_t>(Addr(reinterpret_cast<const void*>(kSlots[2 + j]))));
     for (unsigned j = 0; j < kStateSlots; ++j)
         SetLong(At(kStateTable + 4 * j), static_cast<std::int32_t>(Addr(reinterpret_cast<const void*>(kSlots[5 + j]))));
 }
@@ -271,12 +271,12 @@ const Region kRegions[] = {
     {0x7E0918, 1},                            // Draw_PassFlags
     {0x9039A2, 2},                            // Field_ScriptFlags
     {0x9039F0, 8},                            // the tail dispatchers' bytes
-    {kPending, 0xC},
+    {FieldModes_Pending_addr, 0xC},
     {0x903840, 0x14},                         // Camera_Distance, the counters, the slot word
     {0x66C7D8, 1},                            // Field_Request
-    {kBadge, 1},
+    {Title_BadgeOn_addr, 1},
     {0x66C810, 2},                            // MoveScript_WaitWordDA
-    {kMusicTrack, 1},
+    {Music_Track_addr, 1},
     {kAngles, 0xC},                           // the angles and the flag pointer
     {kEffectRecords, 0x400},                  // the first eight effect records
     {0x802D74, 8},
@@ -326,9 +326,9 @@ void Seed(unsigned k) {
     if (Often()) MoveScript_WaitWordDA = 0;
     Cond_ByteFA = static_cast<signed char>(Next() % kChapters);
     switch (k) {
-    case kModeTail: At(kTailPhase)[0] = static_cast<unsigned char>(Next() % kTailSlots); break;
-    case kModeTailRun: At(kTailKind)[0] = static_cast<unsigned char>(Next() % kTailRunSlots); break;
-    case kFrame: At(kState)[0] = static_cast<unsigned char>(Next() % kStateSlots); break;
+    case kModeTail: At(SaveMenu_NewGameByte_addr)[0] = static_cast<unsigned char>(Next() % kTailSlots); break;
+    case kModeTailRun: At(AreaW0a_TailKind_addr)[0] = static_cast<unsigned char>(Next() % kTailRunSlots); break;
+    case kFrame: At(MoveScript_PartyRecords_addr + 0x62)[0] = static_cast<unsigned char>(Next() % kStateSlots); break;
     case kRun: MoveScript_Var7 = static_cast<signed char>(Next() % (kStateSlots - 3)); break;
     case kEnterArea: {
         static const std::uint16_t kAreas[] = {2, 4, 0x1F, 0, 1, 3, 5, 0x1E, 0x20, 0x21, 0x102, 0xFF1F};
@@ -336,22 +336,22 @@ void Seed(unsigned k) {
         break;
     }
     case kArea04: if (Often()) Cond_ByteFD = 2; break;
-    case kEnd: if (Often()) At(kMusicTrack)[0] = 0xFF; break;
+    case kEnd: if (Often()) At(Music_Track_addr)[0] = 0xFF; break;
     case kScene2:
     case kScene3:
     case kScene4: {
         const unsigned steps = k == kScene2 ? 12 : k == kScene3 ? 10 : 13;
-        At(kStep)[0] = static_cast<unsigned char>(Next() % 8 ? Next() % (steps + 1) : Next());
+        At(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(Next() % 8 ? Next() % (steps + 1) : Next());
         static const std::uint16_t kTimers[] = {0, 1, 2, 0x1E, 0x1F, 0x20, 0x21, 0x7E, 0x7F, 0x80, 0x90, 0x91, 0x92, 0x70,
                                                 0x71, 0x72, 0x10F, 0x110, 0x111, 0x12F, 0x130, 0x131, 0x200, 0xFFFF};
-        if (Often()) SetWord(At(kTimer), kTimers[Next() % 24]);
+        if (Often()) SetWord(At(MoveScript_PartyRecords_addr + 0x66), kTimers[Next() % 24]);
         // Scene 3's fade ends at 0x20 (step 5) and 0 (step 7); scene 4's
         // step 4 turns on 0x130 - timer at 0x20, 0x9F and 0xBF.
         static const std::uint16_t kScene3Timers[] = {0, 1, 2, 0x1E, 0x1F, 0x20};
         static const std::uint16_t kScene4Timers[] = {0x130 - 0xBF + 1, 0x130 - 0xBF, 0x130 - 0xBF - 1, 0x130 - 0x9F + 1, 0x130 - 0x9F,
                                                 0x130 - 0x9F - 1, 0x130 - 0x20 + 1, 0x130 - 0x20, 0x130 - 0x20 - 1, 0x130, 0, 1};
-        if (k == kScene3 && Next() % 2) SetWord(At(kTimer), kScene3Timers[Next() % 6]);
-        if (k == kScene4 && Next() % 2) SetWord(At(kTimer), kScene4Timers[Next() % 12]);
+        if (k == kScene3 && Next() % 2) SetWord(At(MoveScript_PartyRecords_addr + 0x66), kScene3Timers[Next() % 6]);
+        if (k == kScene4 && Next() % 2) SetWord(At(MoveScript_PartyRecords_addr + 0x66), kScene4Timers[Next() % 12]);
         static const unsigned char kCounts[] = {3, 4, 5, 8, 0xB};
         if (Often()) At(kCounters)[0] = kCounts[Next() % 5];
         if (Often()) At(kCounters + 2)[0] = static_cast<unsigned char>(Next() % 2 ? 0x23 : 0x22);

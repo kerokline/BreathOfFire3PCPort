@@ -35,9 +35,9 @@ template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(s
 // typed from their call sites and, where read, their first instructions
 // (docs/field-event.md, section 3).
 const Callees kOriginals = {
-    Sprite_RestoreClut, Field_CopyInput, reinterpret_cast<const std::uint32_t*>(at::kLeaderStates),
+    Sprite_RestoreClut, Field_CopyInput, reinterpret_cast<const std::uint32_t*>(Field_LeaderStates_addr),
     Sprite_ClearSteps, MapView_GroundAt, Field_LeaderAnimation,
-    reinterpret_cast<const std::uint32_t*>(at::kControlStates), Sprite_ScriptTick,
+    reinterpret_cast<const std::uint32_t*>(Field_LeaderControlSteps_addr), Sprite_ScriptTick,
     Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile89), Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile8A),
     Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_LeaderIdleTest),
     {Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_LeaderCellEvent), Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_LeaderTalkTest),
@@ -50,7 +50,7 @@ const Callees kOriginals = {
     Flags_Test, Sprite_SetAnimationBank, Field_MemberSprite, Field_PartyLoad, Sprite_ReleaseTint, Sprite_LoadPalette,
     Field_PartyPosition, Fn<void (__cdecl*)(long, long, unsigned)>(bof3::addr::Field_LeaderPlaceOffset),
     Party_ClearActive, Field_LeaderFrame, Field_MemberFrame,
-    reinterpret_cast<const std::uint32_t*>(at::kPendingJumps),
+    reinterpret_cast<const std::uint32_t*>(Field_PendingJumps_addr),
     Party_ClearAll, Sprite_SetTint, Field_MemberTimers,
     Party_JoinReset, Member_ClearState,
     PartySet_LoadFirst, PartySet_LoadSecond, File_LoadDone, Task_Sleep, PartySet_Find, PartySet_Select,
@@ -94,7 +94,7 @@ void CopyActor(unsigned char* to, const unsigned char* from) { std::memcpy(to, f
 // reads (docs/field-event.md, section 1).
 extern "C" void __cdecl Field_LeaderFrame(void) {
     g.restore_clut();
-    unsigned char* const timer = At(at::kLeaderTimer);
+    unsigned char* const timer = At(EventOps_BlockByte_addr);
     if (*timer != 0) *timer = static_cast<unsigned char>(*timer - 1);
     g.copy_input();
     Dispatch(g.leader_states, Sprite_Current[1]);
@@ -216,7 +216,7 @@ extern "C" unsigned char __cdecl Field_LeaderAnimation(unsigned animation) {
 extern "C" const unsigned char* __cdecl Area_ZoneAt(unsigned x_arg, unsigned z_arg) {
     const unsigned x = x_arg & 0xFF, z = z_arg & 0xFF;
     const unsigned char* record;
-    std::memcpy(&record, At(at::kZoneLists) + Game_AreaNumber * 4u, sizeof record);
+    std::memcpy(&record, At(Area_StateRecords_addr) + Game_AreaNumber * 4u, sizeof record);
     for (;; record += 8) {
         if (x < record[0] || z < record[1] || x > record[2] || z > record[3]) continue;
         return record;
@@ -231,12 +231,12 @@ extern "C" const unsigned char* __cdecl Area_ZoneAt(unsigned x_arg, unsigned z_a
 // doubling and the halving are 8-bit and wrap. Rand is called only on the
 // roll path; the zone record's byte +4 is read again after it.
 extern "C" void __cdecl Field_ZoneCounterRoll(unsigned keep) {
-    unsigned char* const counter = At(at::kZoneCounter);
+    unsigned char* const counter = At(ObjTrio_addr + 0x134);
     if (static_cast<unsigned char>(Field_ScriptFlags) & 0x20) {
         SetWord(counter, 0);
         return;
     }
-    const unsigned char* const zone = g.zone_at(*At(at::kLeaderXHigh), *At(at::kLeaderZHigh));
+    const unsigned char* const zone = g.zone_at(ObjTrio[0x36], ObjTrio[0x3a]);
     const unsigned char* const bases = At(at::kZoneBases);
     unsigned char value = bases[zone[4] * 2u];
     if (value == 0) {
@@ -272,7 +272,7 @@ extern "C" void __cdecl Field_ZoneCounterRoll(unsigned keep) {
 // party list `slot` (0x904062 + slot * 3), at most 3. As the original has it:
 // slot is unchecked.
 extern "C" int __cdecl Party_Count(unsigned slot) {
-    const unsigned char* const list = At(at::kPartyLists) + (slot & 0xFF) * 3u;
+    const unsigned char* const list = At(Cond_Flags_addr + 0xd2) + (slot & 0xFF) * 3u;
     int n = 0;
     while (list[n] != 0xFF)
         if (++n >= 3) break;
@@ -313,8 +313,8 @@ extern "C" void __cdecl Sprite_LoadPalette(unsigned short* dst, unsigned index) 
     std::memcpy(&bank, Sprite_Current + 0x4C, sizeof bank);
     const unsigned char* const offsets = bank + Long(bank + 4);
     const std::uint32_t d = Address(dst);
-    const auto half = static_cast<std::int32_t>(d - at::kClutSource) >> 1;
-    unsigned char* twin = At(at::kClutMirror + static_cast<std::uint32_t>(half) * 2u);
+    const auto half = static_cast<std::int32_t>(d - Gfx_ClutStripSource_addr) >> 1;
+    unsigned char* twin = At(Gfx_ClutStrip_addr + static_cast<std::uint32_t>(half) * 2u);
     const unsigned char* from = offsets + Long(offsets + (index & 0xFF) * 4u);
     auto* to = reinterpret_cast<unsigned char*>(dst);
     for (int k = 0; k < 32; ++k) {
@@ -377,7 +377,7 @@ extern "C" void __cdecl Field_MemberTimers(void) {
 // Field_State +0x138 bit 0 is set; otherwise left as it is.
 extern "C" void __cdecl MapView_CheckHeightScale(void) {
     unsigned char* const c = Sprite_Current;
-    if (c == At(at::kObject905DA0)) {
+    if (c == At(FieldEvent_Object905DA0_addr)) {
         if (c[0xB] & 1) MapView_HeightScale = 1;
         return;
     }
@@ -397,7 +397,7 @@ extern "C" long __cdecl MapView_GroundAt(long x, long z) {
 // the 32 records of MoveScript_TintRecords in order, compared as whole dwords.
 extern "C" void __cdecl Sprite_ReleaseTint(unsigned char* sprite) {
     for (unsigned i = 0; i < 32; ++i)
-        if (static_cast<std::uint32_t>(Long(At(at::kTintSprites + i * 12))) == Address(sprite))
+        if (static_cast<std::uint32_t>(Long(At(MoveScript_TintRecords_addr + 0x8 + i * 12))) == Address(sprite))
             g.tint_release(static_cast<unsigned char>(i));
 }
 
@@ -414,7 +414,7 @@ extern "C" void __cdecl Sprite_ReleaseTint(unsigned char* sprite) {
 // (+0x2B != 0) as its low byte, both read back from the object.
 extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_arg) {
     const unsigned member = member_arg & 0xFF, slot = slot_arg & 0xFF;
-    const unsigned char* const row = At(at::kPartySets) + (*At(at::kPartySetCurrent) & 0x7Fu) * 3u;
+    const unsigned char* const row = At(MoveScript_EffectArg_addr + 0xc) + (AreaW0b_PartySet & 0x7Fu) * 3u;
     unsigned char column = 0;
     while (row[column] != member)
         if (++column >= 3) break;
@@ -430,7 +430,7 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     Sprite_Current[0x28] = 2;
     Sprite_Current[0x25] = 5;
     Sprite_Current[0x26] = static_cast<unsigned char>(slot * 0x50);
-    Sprite_Current[0x2B] = At(at::kMemberFlags)[member];
+    Sprite_Current[0x2B] = At(MoveScript_EffectState_addr + 0xc)[member];
     {
         unsigned char* const c = Sprite_Current;
         SetLong(c + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(c + 0x70)) & 0xFFFFFF00u));
@@ -444,7 +444,7 @@ extern "C" void __cdecl Field_MemberSprite(unsigned member_arg, unsigned slot_ar
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5F] = 0;
     Sprite_Current[0x5C] = 0;
-    g.load_palette(reinterpret_cast<unsigned short*>(At(at::kPaletteBase + slot * 64u)), 0);
+    g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + slot * 64u)), 0);
 }
 
 // original 0x533CE0 (PSX 0x801C23F8): Field_MemberCount members from the
@@ -459,7 +459,7 @@ extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
     const unsigned slot = slot_arg & 0xFF;
     if (Field_Request != 6) g.clear_all();
     if (Field_MemberCount == 0) return;
-    const unsigned char* const list = At(at::kPartyLists) + slot * 3u;
+    const unsigned char* const list = At(Cond_Flags_addr + 0xd2) + slot * 3u;
     for (unsigned i = 0;;) {
         unsigned char* const m = Member(i);
         Field_State = m;
@@ -501,7 +501,7 @@ extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) 
             SetLong(m + 0x34, x);
             SetLong(m + 0x38, z);
         } else {
-            const unsigned char* const offset = At(at::kMemberOffsets) + (d >> 1) * 8u;
+            const unsigned char* const offset = At(Field_PlaceOffsets_addr) + (d >> 1) * 8u;
             const auto ux = static_cast<std::uint32_t>(x), uz = static_cast<std::uint32_t>(z);
             if (Field_ScriptFlags2 & 0x4000) {
                 SetLong(m + 0x34, static_cast<std::int32_t>(ux - static_cast<std::uint32_t>(Long(offset))));
@@ -542,14 +542,14 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
         if (!(input & 9) && area != 0xBD && area != 0xBB) {
             if (!(input & 0x40))
                 whole_party = true;
-            else if (g.flags_test(At(at::kFlagBits), 0x77))
+            else if (g.flags_test(At(Cond_Flags_addr + 0xa0), 0x77))
                 whole_party = true;
         }
     }
     if (!whole_party) {
         // The leader alone.
         const unsigned count = static_cast<unsigned char>(g.party_count(0));
-        const unsigned char* const list = At(at::kPartyLists);
+        const unsigned char* const list = At(Cond_Flags_addr + 0xd2);
         for (unsigned i = 0; i < count; ++i) {
             unsigned char* const word = Field_ActorStates + MoveScript_EffectState[list[i]] * kActorBytes;
             SetWord(word, Word(word) & 0xFFDF);
@@ -604,7 +604,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
                 SetLong(Sprite_Current + 0x34, 0);
                 SetLong(Sprite_Current + 0x38, 0);
                 SetLong(Sprite_Current + 0x3C, 0);
-                const unsigned char id = At(at::kPartyLists)[i];
+                const unsigned char id = Cond_Flags[0xd2 + i];
                 const unsigned char actor = MoveScript_EffectState[id];
                 m[0x148] = actor;
                 CopyActor(m + 0x80, Actor(actor));
@@ -614,7 +614,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
                     g.member_sprite(id, i);
                     g.release_tint(Sprite_Current);
                     Sprite_Current[0x27] = static_cast<unsigned char>(Sprite_Current[5] + 0x78);
-                    g.load_palette(reinterpret_cast<unsigned short*>(At(at::kPaletteBase + Sprite_Current[5] * 64u)), 0);
+                    g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + Sprite_Current[5] * 64u)), 0);
                 }
                 ++i;
                 if (i >= Field_MemberCount) break;
@@ -690,8 +690,8 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
 // jump whose eax no caller keeps (Field_MembersFrame reads al only after
 // loading it).
 extern "C" void __cdecl Field_PendingJump(void) {
-    if (*At(at::kPending) == 0) return;
-    Dispatch(g.pending_jumps, *At(at::kPending + 1));
+    if (EventLeader_PendingFlag == 0) return;
+    Dispatch(g.pending_jumps, *At(EventLeader_PendingFlag_addr + 1));
 }
 
 // original 0x533EF0 (PSX 0x801C2874): member `member` joins the party as
@@ -714,8 +714,8 @@ extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
         Field_Request = 6;
         return 1;
     }
-    At(at::kPartyLists)[n] = member;
-    At(at::kPartyLists)[n + 3] = member;
+    Cond_Flags[0xd2 + n] = member;
+    Cond_Flags[0xd2 + n + 3] = member;
     Member(n)[0] = 1;
     g.clear_state(n);
     unsigned char* const slot = Member(Field_MemberCount);
@@ -748,7 +748,7 @@ extern "C" unsigned char __cdecl Party_Join(unsigned member_arg) {
 // of 0xFF would go on to the next column (unreachable: rows stop at 0x13).
 extern "C" unsigned char __cdecl PartySet_Find(unsigned a, unsigned b, unsigned c) {
     unsigned char* const ids = At(at::kFindIds);
-    const unsigned char current = *At(at::kPartySetCurrent);
+    const unsigned char current = AreaW0b_PartySet;
     ids[0] = static_cast<unsigned char>(a);
     ids[1] = static_cast<unsigned char>(b);
     ids[2] = static_cast<unsigned char>(c);
@@ -757,7 +757,7 @@ extern "C" unsigned char __cdecl PartySet_Find(unsigned a, unsigned b, unsigned 
         for (; i < 3; ++i) {
             const unsigned char id = ids[i];
             if (id == 0xFF) continue;
-            const unsigned char* const row = At(at::kPartySets) + (current & 0x7Fu) * 3u;
+            const unsigned char* const row = At(MoveScript_EffectArg_addr + 0xc) + (current & 0x7Fu) * 3u;
             unsigned j = 0;
             while (id != row[j])
                 if (++j >= 3) break;
@@ -780,7 +780,7 @@ extern "C" unsigned char __cdecl PartySet_Find(unsigned a, unsigned b, unsigned 
         }
     unsigned char limit = 0x13, start = 0, result = 0xFF;
     unsigned matched = 0;
-    const unsigned char* const table = At(at::kPartySets);
+    const unsigned char* const table = At(MoveScript_EffectArg_addr + 0xc);
     for (unsigned column = 0; column < 3; ++column) {
         unsigned row = start;
         if (row >= limit) continue;
@@ -815,7 +815,7 @@ extern "C" unsigned char __cdecl PartySet_Find(unsigned a, unsigned b, unsigned 
 // above 3, nothing is loaded.
 extern "C" void __cdecl PartySet_Select(unsigned set_arg, unsigned mode_arg) {
     const unsigned set = set_arg & 0xFF, mode = mode_arg & 0xFF;
-    if (mode != 3) *At(at::kPartySetCurrent) = static_cast<unsigned char>(mode == 0 ? set | 0x80 : set);
+    if (mode != 3) *At(AreaW0b_PartySet_addr) = static_cast<unsigned char>(mode == 0 ? set | 0x80 : set);
     switch (mode) {
     case 0: g.load_dat(set + 0x2C2); break;
     case 1: g.load_dat(set + 0xFC); break;
@@ -829,7 +829,7 @@ extern "C" void __cdecl PartySet_Select(unsigned set_arg, unsigned mode_arg) {
 // without recording it) unless it is the current one.
 extern "C" void __cdecl PartySet_LoadFirst(unsigned a, unsigned b, unsigned c) {
     const unsigned char set = g.find(a, b, c);
-    if ((*At(at::kPartySetCurrent) & 0x7F) != set) g.select(set, 3);
+    if ((AreaW0b_PartySet & 0x7F) != set) g.select(set, 3);
 }
 
 // original 0x536890: the set for a, b, c selected with `mode` unless
@@ -837,7 +837,7 @@ extern "C" void __cdecl PartySet_LoadFirst(unsigned a, unsigned b, unsigned c) {
 extern "C" void __cdecl PartySet_LoadSecond(unsigned a, unsigned b, unsigned c, unsigned mode) {
     const unsigned char set = g.find(a, b, c);
     const unsigned want = (mode & 0xFF) != 0 ? set : (set | 0x80u);
-    if (*At(at::kPartySetCurrent) != want) g.select(set, mode);
+    if (AreaW0b_PartySet != want) g.select(set, mode);
 }
 
 // original 0x5367E0: the party set for a, b, c loaded - first with mode 3

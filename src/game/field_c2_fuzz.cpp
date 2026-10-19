@@ -273,7 +273,7 @@ const sh::DataTable kTables[] = {
 // frame buffer the model is copied into, and the fuzz's model and counts.
 const sh::Region kRegions[] = {
     {0, 4},                                 // Game_Mode (its word)
-    {at::kShards, 0x644},
+    {EffectKind30_Shards_addr, 0x644},
     {at::kModelCopy, 0x400},
     {0, sizeof g_model},
     {0, sizeof g_count},
@@ -321,8 +321,8 @@ void Seed(unsigned k) {
     SetWord(s + 0x3E, g_ground + PickOf(0, 1, 0xFFFF, 0x100, 0x101, 0xFF, 0x80, sh::Next()));
     SetLong(s + 0x14, static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, 0x40, sh::Next())));
     // the leader's height against the ground (EffectKind3A_Hit): 0x80 / 0x100 either side
-    SetWord(Mem(at::kLeader + 0x3E), g_ground + PickOf(0, 0x80, 0x81, 0x7F, 0xFF00, 0xFEFF, 0xFF01, sh::Next()));
-    if (sh::Half()) Mem(at::kLeader)[8] = static_cast<unsigned char>(sh::Next() % 8);
+    SetWord(Mem(ObjTrio_addr + 0x3E), g_ground + PickOf(0, 0x80, 0x81, 0x7F, 0xFF00, 0xFEFF, 0xFF01, sh::Next()));
+    if (sh::Half()) Mem(ObjTrio_addr)[8] = static_cast<unsigned char>(sh::Next() % 8);
     sh::SetRandHint(PickOf(0xC, 0xD, 0xF, 0x1C, sh::Next()));
     switch (k) {
     case kSlide:
@@ -368,7 +368,7 @@ void Seed(unsigned k) {
         const U width = AreaMap_Header[0];
         const U cell = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(z >> 16))) * width +
                        static_cast<U>(static_cast<std::int32_t>(static_cast<short>(x >> 16))) +
-                       Word(Mem(at::kAreaTileBase)) * 2u;
+                       Word(Mem(AreaMap_Header_addr + 0x2)) * 2u;
         if (cell * 2 < 0x2000 - 2) SetWord(AreaMap_Header + cell * 2, sh::Half() ? 0 : sh::Next() | 1);
         break;
     }
@@ -385,10 +385,10 @@ void Seed(unsigned k) {
 void Args(unsigned k, U* a) {
     switch (k) {
     case kTumble:
-        a[0] = at::kShards + (sh::Next() % at::kShardCount) * at::kShardStride;
+        a[0] = EffectKind30_Shards_addr + (sh::Next() % at::kShardCount) * at::kShardStride;
         a[1] = Key(g_model) + (sh::Next() % at::kShardCount) * at::kFaceStride;
         break;
-    case kSparkQuad: a[0] = at::kSparkRecords + (sh::Next() % at::kSparkCount) * at::kSparkStride; break;
+    case kSparkQuad: a[0] = EffectKind30_Sparks_addr + 0x4 + (sh::Next() % at::kSparkCount) * at::kSparkStride; break;
     default: break;
     }
 }
@@ -407,10 +407,10 @@ void Disturb(U h) {
     case 3: SetLong(s + 0x14, static_cast<std::int32_t>(v)); break;
     case 4: SetWord(s + 0x3E, g_ground + (v & 0x1FF)); break;
     case 5:
-        Mem(at::kSparkShade)[0] = static_cast<unsigned char>(v);
-        SetWord(Mem(at::kSparkSize), v >> 8);
+        Mem(EffectKind30_Sparks_addr)[0] = static_cast<unsigned char>(v);
+        SetWord(Mem(EffectKind30_Sparks_addr + 0x2), v >> 8);
         break;
-    case 6: Mem(at::kLeader)[0x27] = static_cast<unsigned char>(v); break;
+    case 6: Mem(ObjTrio_addr)[0x27] = static_cast<unsigned char>(v); break;
     case 7: Camera_Distance = static_cast<short>(v); break;
     default: break;
     }

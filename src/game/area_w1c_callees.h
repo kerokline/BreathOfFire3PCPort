@@ -66,7 +66,7 @@ constexpr std::uint32_t kPartyStride = 0x14C;
 // (0x92BEE7; MapView_ElevationOffset is 0x92BEE2, five bytes before), and a
 // byte whose bit 0 its handler 5 sets (0x803490). Unnamed: no other reader
 // read this round.
-constexpr std::uint32_t kCount48 = 0x92BEE7;
+// kCount48: now AreaW1c_Count48 (symbols.toml).
 constexpr std::uint32_t kByte803490 = 0x803490;
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;

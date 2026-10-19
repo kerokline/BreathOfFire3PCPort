@@ -281,7 +281,7 @@ const sh::Callee kCallees[] = {
 
 // Op 88 / 87's four states, read in place by MoveCmd_Op88 / Op87 (one table:
 // op 88's bytes 2 and 3 reach op 87's pair).
-const sh::DataTable kTables[] = {{at::kOp88States, 4}};
+const sh::DataTable kTables[] = {{MoveCmd_Op88States_addr, 4}};
 
 // Beyond field mode's standard regions (which hold ObjTrio, Sprite_Objects and
 // Extra, Cond_Flags with the party list, the save block to 0x904160, the
@@ -293,7 +293,7 @@ const sh::Region kRegions[] = {
     {0x6BC740, 0x188},                 // the item panel's kept lists 0x6BC760 / 0x6BC7E0, the icon wheel's spots
     {Key(MoveScript_PartyRecords), 0x80},
     {Key(&Field_ActiveMember), 4},
-    {at::kOpE9States, 0x10},           // MoveCmd_OpE9States: the typed recorders, seeded
+    {MoveCmd_OpE9States_addr, 0x10},   // MoveCmd_OpE9States: the typed recorders, seeded
     {0x904160, 0x400},                 // the inventory's id and count lists 0x904154..0x904554 past the standard save block
 };
 
@@ -440,7 +440,7 @@ void Seed(unsigned run_k) {
     case kE9:
         sc[4] = static_cast<unsigned char>(sh::Next() % 4);
         for (unsigned i = 0; i < 4; ++i)
-            SetLong(Mem(at::kOpE9States + 4 * i), static_cast<std::int32_t>(Key(reinterpret_cast<const void*>(
+            SetLong(Mem(MoveCmd_OpE9States_addr + 4 * i), static_cast<std::int32_t>(Key(reinterpret_cast<const void*>(
                                                       i == 0 ? &E9State<0x57C920> : i == 1 ? &E9State<0x57CA80> : i == 2 ? &E9State<0x57CBB0> : &E9State<0x57CCE0>))));
         break;
     case kE9Start:

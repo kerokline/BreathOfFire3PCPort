@@ -134,7 +134,7 @@ Region g_all[] = {
     {kOrigin, 4},            {kViewHeads, 6},             {kScratch, 1},
     {kRedraw, 1},            {kBytesPointer, 4},          {kBufferIndex, 1},
     {kPacketNext, 4},        {kOtSlot, 1},                {kDirty, 1},
-    {kVertices, 0x80},       {kScaleY, 8},                {kDrawTpage, 4},
+    {D3d_Vertices_addr, 0x80},       {D3d_ScaleY_addr, 8},                {Gfx_DrawTpage_addr, 4},
 };
 
 // --- the stand-ins -----------------------------------------------------------------
@@ -193,8 +193,8 @@ unsigned char* __cdecl StubSetPolyF4(unsigned char* p) {
     switch ((h >> 4) % 8) {
     case 0: PutLong(At(kPacketNext), GetLong(At(kPacketNext)) + 0x38); break;
     case 1: At(kBufferIndex)[0] ^= 1; break;
-    case 2: PutWord(At(kItemFaceA + g_item_hint * 0x90), (h >> 8) % kFuzzItems); break;
-    case 3: PutWord(At(kItemFaceB + g_item_hint * 0x90), (h >> 8) % kFuzzItems); break;
+    case 2: PutWord(At(DrawItems_addr + 0x8e + g_item_hint * 0x90), (h >> 8) % kFuzzItems); break;
+    case 3: PutWord(At(DrawItems_addr + 0x7e + g_item_hint * 0x90), (h >> 8) % kFuzzItems); break;
     case 4: PutWord(At(kOverlayColours), h >> 12); break;
     default: break;
     }
@@ -262,9 +262,9 @@ void Disturb(U salt) {
     case 1:
         if (g_prim_now) g_prim_now[(h >> 8) % g_prim_bytes] = value;
         break;
-    case 2: At(kVertices)[(h >> 8) % 0x80] = value; break;
-    case 3: At(kScaleY)[(h >> 8) % 8] = value; break;
-    default: At(kDrawTpage)[(h >> 8) % 2] = value; break;
+    case 2: At(D3d_Vertices_addr)[(h >> 8) % 0x80] = value; break;
+    case 3: At(D3d_ScaleY_addr)[(h >> 8) % 8] = value; break;
+    default: At(Gfx_DrawTpage_addr)[(h >> 8) % 2] = value; break;
     }
 }
 void __cdecl StubPrimColor(U r, U gg, U b, U code, U mode, unsigned long* diffuse, unsigned long* specular) {
@@ -615,8 +615,8 @@ constexpr U kBytesAt = 0x4800;   // where AreaMap_Bytes points, inside it too
 void RandomDrawItems() {
     for (U i = 0; i < kDrawItemsBytes; i += 4) PutLong(At(kDrawItems + i), Next());
     for (U item = 0; item < kFuzzItems; ++item) {
-        PutWord(At(kItemFaceA + item * 0x90), Next() % kFuzzItems);
-        PutWord(At(kItemFaceB + item * 0x90), Next() % kFuzzItems);
+        PutWord(At(DrawItems_addr + 0x8e + item * 0x90), Next() % kFuzzItems);
+        PutWord(At(DrawItems_addr + 0x7e + item * 0x90), Next() % kFuzzItems);
     }
 }
 
@@ -744,15 +744,15 @@ struct Handler {
 
 void FuzzHandler(Tally& t, const Handler& h, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(unsigned char*);
-    const Region regions[] = {{kVertices, 0x80}, {kScaleY, 8}, {kDrawTpage, 4}, {Addr(g_prim), sizeof g_prim}};
+    const Region regions[] = {{D3d_Vertices_addr, 0x80}, {D3d_ScaleY_addr, 8}, {Gfx_DrawTpage_addr, 4}, {Addr(g_prim), sizeof g_prim}};
     const unsigned short saved = GetControlWord();
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = (h.base << 4) + r;
-        for (U a : {kScaleX, kScaleY})
+        for (U a : {D3d_ScaleX_addr, D3d_ScaleY_addr})
             PutLong(At(a), Next() % 5 == 0 ? Next() : Next() % 5 == 1 ? 0x3F800000u + Next() % 0x2000000u
                                                                          : kScales[Next() % 10]);
-        FillRandom(kVertices, 0x80);
-        PutLong(At(kDrawTpage), Next() % 2 ? Next() : (Next() & 0xFFFF0000u) | Pick({0, 0x20, 0x40, 0x60, 0xFFFF}));
+        FillRandom(D3d_Vertices_addr, 0x80);
+        PutLong(At(Gfx_DrawTpage_addr), Next() % 2 ? Next() : (Next() & 0xFFFF0000u) | Pick({0, 0x20, 0x40, 0x60, 0xFFFF}));
         for (U i = 0; i < sizeof g_prim; ++i) g_prim[i] = static_cast<unsigned char>(Next());
         for (U c = 0; c < h.corners; ++c)
             for (U f = 0; f < 3; ++f)

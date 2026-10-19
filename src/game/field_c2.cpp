@@ -119,7 +119,7 @@ static_assert(sizeof(Matrix) == 0x20, "a MATRIX is 0x20 bytes");
 // member +0xB's screen words +0x2E / +0x30 (the member byte unchecked, as the
 // original: a data read, not a table index).
 void DrawNumber(const unsigned char* s) {
-    const unsigned char* const o = At(at::kLeader + s[0xB] * at::kMemberStride);
+    const unsigned char* const o = At(ObjTrio_addr + s[0xB] * at::kMemberStride);
     SH_AT(void (__cdecl*)(unsigned, unsigned, unsigned, unsigned), at::kDrawNumber)(
         Word(o + 0x2E), static_cast<std::uint16_t>(Word(o + 0x30) + Word(s + 0x3A)), s[6], s[0x27]);
 }
@@ -148,11 +148,11 @@ extern "C" void __cdecl EffectKind30_Push(void) {
             SH_CALL(EffectKind30_FreeCells)();
         } else if (S()[0xB] != 0) {
             unsigned char* s = S();
-            s[8] = At(at::kLeader)[8];
+            s[8] = ObjTrio[8];
             s = S();
-            SetUL(s + 0xC, UL(At(at::kUnitSteps + 8u * s[8])) << 1);
+            SetUL(s + 0xC, UL(At(MoveCmd_F9Steps_addr + 8u * s[8])) << 1);
             s = S();
-            SetUL(s + 0x10, UL(At(at::kUnitSteps + 4 + 8u * s[8])) << 1);
+            SetUL(s + 0x10, UL(At(MoveCmd_F9Steps_addr + 4 + 8u * s[8])) << 1);
             S()[9] = 0x10;
             s = S();
             const U n = s[9];
@@ -199,9 +199,9 @@ extern "C" void __cdecl EffectKind30_Slide(void) {
     if (s[9] == 0) {
         if (Game_AreaNumber == 0x54) {
             if (UL(s + 0x34) == 0x118000 && UL(s + 0x38) == 0x4A8000)
-                SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x36);
+                SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x36);
             else
-                SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x36);
+                SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x36);
         }
         SH_CALL(EffectKind30_ClaimCells)();
         S()[0xB] = 0;
@@ -223,7 +223,7 @@ extern "C" void __cdecl EffectKind30_Shatter(void) {
         SH_CALL(Sprite_UpdateScreenA)();
         return;
     }
-    if (Game_AreaNumber == 0x92) SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x44);
+    if (Game_AreaNumber == 0x92) SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x44);
     SH_CALL(Effect_Release)();
 }
 
@@ -355,7 +355,7 @@ extern "C" void __cdecl EffectKind30_FreeCells(void) {
 extern "C" void __cdecl EffectKind30_ShardsInit(void) {
     const unsigned char* face = PtrAt(S() + 0x50);
     for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
-        unsigned char* const r = At(at::kShards + i * at::kShardStride);
+        unsigned char* const r = At(EffectKind30_Shards_addr + i * at::kShardStride);
         SetWord(r + 0, static_cast<U>((SW(face + 8) + SW(face + 0x14) + SW(face + 0xE) + SW(face + 2)) >> 2));
         SetWord(r + 2, static_cast<U>((SW(face + 4) + SW(face + 0x16) + SW(face + 0xA) + SW(face + 0x10)) >> 2));
         SetWord(r + 4, static_cast<U>((SW(face + 0x18) + SW(face + 6) + SW(face + 0x12) + SW(face + 0xC)) >> 2));
@@ -385,7 +385,7 @@ extern "C" void __cdecl EffectKind30_ShardsInit(void) {
 extern "C" void __cdecl EffectKind30_ShardsStep(void) {
     unsigned char* face = PtrAt(S() + 0x50);
     for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
-        unsigned char* const r = At(at::kShards + i * at::kShardStride);
+        unsigned char* const r = At(EffectKind30_Shards_addr + i * at::kShardStride);
         const unsigned vx = Word(r + 8);
         SetWord(r + 0xC, Word(r + 0xC) + 2u);
         SetWord(r + 0, Word(r + 0) + vx);
@@ -430,10 +430,10 @@ extern "C" void __cdecl EffectKind30_ShardTumble(unsigned char* shard, unsigned 
 // .. +0x18 normalised in place by Gte_VectorNormal, then +0x18 << 9.
 // EffectKind30_Push's and the engine's 0x46D710. No PSX twin paired.
 extern "C" void __cdecl EffectKind30_SparksInit(void) {
-    At(at::kSparkShade)[0] = 0x40;
-    SetWord(At(at::kSparkSize), 0);
+    EffectKind30_Sparks[0] = 0x40;
+    SetWord(At(EffectKind30_Sparks_addr + 0x2), 0);
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
-        unsigned char* const p = At(at::kSparkRecords + i * at::kSparkStride);
+        unsigned char* const p = At(EffectKind30_Sparks_addr + 0x4 + i * at::kSparkStride);
         const unsigned char* const s = S();
         SetUL(p + 0, UL(s + 0x34));
         SetUL(p + 4, UL(s + 0x38));
@@ -456,8 +456,8 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
     SH_AT(void (__cdecl*)(void), at::kCameraMatrices)();
     const unsigned char* s = nullptr;
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
-        unsigned char* const p = At(at::kSparkRecords + i * at::kSparkStride);
-        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(at::kSparkSize)), At(at::kSparkShade)[0]);
+        unsigned char* const p = At(EffectKind30_Sparks_addr + 0x4 + i * at::kSparkStride);
+        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(EffectKind30_Sparks_addr + 0x2)), EffectKind30_Sparks[0]);
         s = S();
         const unsigned shift = s[9] >= 0xC ? 1 : 0;
         SetUL(p + 0, UL(p + 0) + (UL(p + 0x10) << shift));
@@ -465,9 +465,9 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
         SetUL(p + 8, UL(p + 8) + (UL(p + 0x18) << shift));
     }
     if (s[9] >= 0xC)
-        SetWord(At(at::kSparkSize), Word(At(at::kSparkSize)) + 0x80u);
+        SetWord(At(EffectKind30_Sparks_addr + 0x2), Word(At(EffectKind30_Sparks_addr + 0x2)) + 0x80u);
     else
-        At(at::kSparkShade)[0] = static_cast<unsigned char>(At(at::kSparkShade)[0] + 0xFB);
+        EffectKind30_Sparks[0] = static_cast<unsigned char>(EffectKind30_Sparks[0] + 0xFB);
 }
 
 // original 0x46C550: one spark's POLY_FT4 at Gfx_PacketNext (read once),
@@ -893,16 +893,16 @@ extern "C" void __cdecl EffectKind3A_Run(void) { Run("EffectKind3A_Run", Address
 // original (a data read). No PSX twin paired.
 extern "C" void __cdecl EffectKind3A_Start(void) {
     unsigned char* s = S();
-    s[8] = At(at::kLeader)[8];
+    s[8] = ObjTrio[8];
     s = S();
-    SetUL(s + 0x34, UL(At(AddressOf(Field_DirectionSteps) + 8u * s[8])) + UL(At(at::kLeader + 0x34)));
+    SetUL(s + 0x34, UL(At(AddressOf(Field_DirectionSteps) + 8u * s[8])) + UL(At(ObjTrio_addr + 0x34)));
     s = S();
-    SetUL(s + 0x38, UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * s[8])) + UL(At(at::kLeader + 0x38)));
-    SetWord(S() + 0x3E, Word(At(at::kLeader + 0x3E)) + 0xC0u);
+    SetUL(s + 0x38, UL(At(AddressOf(Field_DirectionSteps) + 4 + 8u * s[8])) + UL(At(ObjTrio_addr + 0x38)));
+    SetWord(S() + 0x3E, Word(At(ObjTrio_addr + 0x3E)) + 0xC0u);
     s = S();
-    SetUL(s + 0xC, UL(At(at::kUnitSteps + 8u * s[8])) << 4);
+    SetUL(s + 0xC, UL(At(MoveCmd_F9Steps_addr + 8u * s[8])) << 4);
     s = S();
-    SetUL(s + 0x10, UL(At(at::kUnitSteps + 4 + 8u * s[8])) << 4);
+    SetUL(s + 0x10, UL(At(MoveCmd_F9Steps_addr + 4 + 8u * s[8])) << 4);
     s = S();
     s[0xA] = 0xE;
     s[0xB] = 0;
@@ -924,14 +924,14 @@ extern "C" void __cdecl EffectKind3A_Fly(void) {
     s = S();
     const U width = UL(AreaMap_Header) & 0xFFu;
     const U cell = static_cast<U>(static_cast<std::int32_t>(SW(s + 0x3A))) * width +
-                   static_cast<U>(static_cast<std::int32_t>(SW(s + 0x36))) + Word(At(at::kAreaTileBase)) * 2u;
+                   static_cast<U>(static_cast<std::int32_t>(SW(s + 0x36))) + Word(At(AreaMap_Header_addr + 0x2)) * 2u;
     if (Word(At(AddressOf(AreaMap_Header) + cell * 2u)) == 0) {
         SH_CALL(Effect_Release)();
         return;
     }
     if (SH_CALL(EffectKind3A_Hit)() != 0) {
         SH_CALL(EffectKind3A_LeaderPose)();
-        S()[0x27] = At(at::kLeader)[0x27];
+        S()[0x27] = ObjTrio[0x27];
         SH_CALL(Sprite_SetAnimation)(0x4A);
         SH_CALL(Sound_PlayEffect)(0x10E);
         S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -968,7 +968,7 @@ extern "C" void __cdecl EffectKind3A_Wait(void) {
 // EffectKind3A_Fly's and FC1's 0x46B7C0. PSX 0x8019FE18 (gap44).
 extern "C" void __cdecl EffectKind3A_LeaderPose(void) {
     unsigned char* const s = S();
-    const unsigned char* const l = At(at::kLeader);
+    const unsigned char* const l = At(ObjTrio_addr);
     s[0x24] = 1;
     SetWord(s + 0x2C, Word(l + 0x2C));
     s[0x28] = 2;
@@ -1006,7 +1006,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         Touch("EffectKind3A_Hit", static_cast<signed char>(o));
         return 1;
     }
-    const int leader = SW(At(at::kLeader + 0x3E));
+    const int leader = SW(At(ObjTrio_addr + 0x3E));
     if (leader - ground > 0x80) return 0;
     if (ground - leader > 0x100) return 1;
     s = S();
@@ -1069,7 +1069,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         SetWord(e + 0x3E, static_cast<U>(at_ground) + 0x100u);
         e[0xB] = 0;
     }
-    At(at::kLeader)[7] = 1;
+    ObjTrio[7] = 1;
     return 1;
 }
 

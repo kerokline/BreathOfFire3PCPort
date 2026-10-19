@@ -28,27 +28,27 @@ constexpr std::uint32_t kZennyFind = bof3::addr::Field_GiveZenny;        // FE1'
                                                       // Text_Records, Msg_OpenSystem(5), Field_Request 2, Zenny_Add(amount, 0)
 
 // Data.
-constexpr std::uint32_t kStoryFlags = 0x904030;       // the story flags (Cond_Flags' row 0x14)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags' row 0x14)
 constexpr std::uint32_t kModelCopy = 0x8C5D80;        // the shared frame buffer the shattering object's model is copied into
                                                       // (also 0x46D710's; the battle and spell code's frame table 0x9039D8)
-constexpr std::uint32_t kLeader = 0x802D40;           // ObjTrio record 0, the leader: +7 0x802D47, +8 the facing 0x802D48,
+// kLeader: now ObjTrio (symbols.toml). ObjTrio record 0, the leader: +7 0x802D47, +8 the facing 0x802D48,
                                                       // +0x27, +0x29, +0x2C, +0x2E / +0x30 its screen words, +0x34 / +0x38
                                                       // x / z, +0x3E the height, +0x4C
 constexpr std::uint32_t kMemberStride = 0x14C;        // ObjTrio's records
-constexpr std::uint32_t kUnitSteps = 0x6696DC;        // (dx, dz) dwords per facing, 8 bytes a row: one pixel's step
-constexpr std::uint32_t kAreaTileBase = 0x8CB582;     // AreaMap_Header's u16 offset word: the tile layer starts at 2 x it
+// kUnitSteps: now MoveCmd_F9Steps (symbols.toml). (dx, dz) dwords per facing, 8 bytes a row: one pixel's step
+// kAreaTileBase: now AreaMap_Header[2] (symbols.toml). AreaMap_Header's u16 offset word: the tile layer starts at 2 x it
 constexpr std::uint32_t kObjectStride = 0xA4;         // Sprite_Objects' and Sprite_ObjectsExtra's records
 constexpr unsigned kObjects = 0x1E;                   // Sprite_Objects' 30; an index from 0x1E names an extra
 constexpr unsigned kExtras = 4;                       // Sprite_ObjectsExtra's four
 constexpr std::uint32_t kEffectStride = 0x80;         // Effect_Objects' records
 constexpr unsigned kEffects = 20;                     // Effect_Objects' twenty
-constexpr std::uint32_t kShards = 0x92BF80;           // EffectKind30_Shards: 24 records of 0x38
+// kShards: now EffectKind30_Shards (symbols.toml). EffectKind30_Shards: 24 records of 0x38
 constexpr std::uint32_t kShardStride = 0x38;
 constexpr unsigned kShardCount = 24;
 constexpr std::uint32_t kFaceStride = 0x28;           // the model's faces (+0x50's records)
-constexpr std::uint32_t kSparkShade = 0x92C4C0;       // EffectKind30_Sparks: the shade byte, the size word +2, then
+// kSparkShade: now EffectKind30_Sparks (symbols.toml). EffectKind30_Sparks: the shade byte, the size word +2, then
 constexpr std::uint32_t kSparkSize = 0x92C4C2;        // eight records of 0x20 from +4
-constexpr std::uint32_t kSparkRecords = 0x92C4C4;
+// kSparkRecords: now EffectKind30_Sparks[4] (symbols.toml).
 constexpr std::uint32_t kSparkStride = 0x20;
 constexpr unsigned kSparkCount = 8;
 

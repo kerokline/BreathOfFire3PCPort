@@ -40,29 +40,29 @@ constexpr unsigned kMaxAp = 0x22;       // u16, effective
 constexpr unsigned kRecordBytes = 0xA4;
 
 constexpr std::uint32_t kPartyLists = 0x904062;    // Party_Count's 3-byte lists (move_cmds_callees.h)
-constexpr std::uint32_t kMemberRecord = 0x66972C;  // u8 per party entry: its record index (MoveScript_EffectState)
+// kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per party entry: its record index (MoveScript_EffectState)
 constexpr std::uint32_t kItemFlags = 0x656B38;     // NameTable_Consumables + 0x10: each record's flags byte
 constexpr std::uint32_t kItemStride = 22;
 constexpr std::uint32_t kStoryFlags = 0x904030;    // Cond_Flags + 0xA0 (title-states.md section 3)
 // ItemUse_FaerieTiara's cells.
-constexpr std::uint32_t kMenuState = 0x929F01;     // u8, set to 0xA
+// kMenuState: now FieldS_State (symbols.toml). u8, set to 0xA
 constexpr std::uint32_t kTiaraCount = 0x905B61;    // u8, 0xB9 less the clear flags counted
-constexpr std::uint32_t kLeaderXZ = 0x802D74;      // two dwords (ObjTrio +0x34 / +0x38)
-constexpr std::uint32_t kReturnPoint = 0x904148;   // two dwords, then the area word at 0x904150
+// kLeaderXZ: now ObjTrio[0x34] (symbols.toml). two dwords (ObjTrio +0x34 / +0x38)
+// kReturnPoint: now AreaW2d_ReturnPoint (symbols.toml). two dwords, then the area word at 0x904150
 constexpr std::uint32_t kWaterJug = 0x90405F;      // u8, set to 0xF0
 // The message box (msgbox_callees.h names the same cells).
-constexpr std::uint32_t kSubState = 0x7DEE41;      // u8
+// kSubState: now ItemUse_SubState (symbols.toml). u8
 constexpr std::uint32_t kMessage = 0x7DEE48;       // u16
-constexpr std::uint32_t kColorHigh = 0x7DEE58;     // u8
-constexpr std::uint32_t kChoiceId = 0x7DEE64;      // u8
+// kColorHigh: now ItemUse_ColorHigh (symbols.toml). u8
+// kChoiceId: now ItemUse_ChoiceId (symbols.toml). u8
 constexpr std::uint32_t kCursor = 0x7DEE67;        // s8 as the system choices read it
 constexpr std::uint32_t kWindow0State = 0x803163;  // u8
-constexpr std::uint32_t kWindow1State = 0x803187;  // u8
+// kWindow1State: now ItemUse_Window1State (symbols.toml). u8
 constexpr std::uint32_t kSysMessages = 0x658F08;   // u16 pairs, 4 bytes per system choice id
-constexpr std::uint32_t kSysFlag = 0x929F0B;       // u8, choice 0x80's answer
+// kSysFlag: now FieldS_Answer (symbols.toml). u8, choice 0x80's answer
 constexpr std::uint32_t kSysCounter = 0x903848;    // u8, MoveScript variable 3 (move_cmds' kCounters)
 // Input_AutoRepeat's two words.
-constexpr std::uint32_t kRepeatTimer = 0x7E1BE0;   // u16
+// kRepeatTimer: now ItemUse_RepeatTimer (symbols.toml). u16
 constexpr std::uint32_t kRepeatLatch = 0x7E01B8;   // u16
 
 }  // namespace at

@@ -28,7 +28,7 @@ constexpr std::uint32_t kMessage = 0x7DEE48;
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub-kind.
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
-constexpr std::uint32_t kTailState = 0x9039F4;
+// kTailState: now AreaW0c_TailState (symbols.toml).
 // kTailSub: now AreaW0c_TailSub (symbols.toml).
 // Field_ScriptFlags' high byte (the original ors 0x10 into it as a byte).
 constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;

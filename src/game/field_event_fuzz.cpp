@@ -109,7 +109,7 @@ unsigned char* SpriteChoice(unsigned v) {
     case 0: return Member(0);
     case 1: return Member(1);
     case 2: return Member(2);
-    case 3: return At(at::kObject905DA0);
+    case 3: return At(FieldEvent_Object905DA0_addr);
     default: return g_scratch;
     }
 }
@@ -131,11 +131,11 @@ void Fix() {
         o[1] = static_cast<unsigned char>(o[1] % 15);
         o[2] = static_cast<unsigned char>(o[2] % 3);
     }
-    At(at::kPending)[1] = static_cast<unsigned char>(At(at::kPending)[1] % 4);
+    At(EventLeader_PendingFlag_addr)[1] = static_cast<unsigned char>(At(EventLeader_PendingFlag_addr)[1] % 4);
     Field_MemberCount = static_cast<unsigned char>(Field_MemberCount % 4);
     for (unsigned i = 0; i < MoveScript_EffectState_count; ++i) MoveScript_EffectState[i] = static_cast<unsigned char>(MoveScript_EffectState[i] % kActors);
     for (unsigned i = 0; i < 6; ++i) {
-        unsigned char& id = At(at::kPartyLists)[i];
+        unsigned char& id = At(Cond_Flags_addr + 0xd2)[i];
         if (id != 0xFF) id = MemberId(id);
     }
 }
@@ -153,15 +153,15 @@ void Disturb(std::uint32_t salt) {
     case 6: Field_InputFlags = static_cast<unsigned char>(h >> 8); break;
     case 7: Field_InputHeld = static_cast<unsigned short>((h >> 8) & 1 ? 0 : h >> 16); break;
     case 8: Field_Request = static_cast<unsigned char>((h >> 8) % 3 == 0 ? 6 : h >> 16); break;
-    case 9: At(at::kPartyLists)[(h >> 8) % 6] = MemberId(h >> 16); break;
-    case 10: *At(at::kPartySetCurrent) = static_cast<unsigned char>(h >> 8); break;
+    case 9: At(Cond_Flags_addr + 0xd2)[(h >> 8) % 6] = MemberId(h >> 16); break;
+    case 10: *At(AreaW0b_PartySet_addr) = static_cast<unsigned char>(h >> 8); break;
     case 11: MoveScript_EffectState[(h >> 8) % MoveScript_EffectState_count] = static_cast<unsigned char>(h >> 16); break;
     case 12: At(at::kActorRecords)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
     case 13: Game_AreaNumber = AreaChoice(h >> 8); break;
     case 14: g_scratch[(h >> 8) % sizeof g_scratch] = static_cast<unsigned char>(h >> 24); break;
-    case 15: At(at::kObject905DA0)[(h >> 8) % kActorBytes] = static_cast<unsigned char>(h >> 24); break;
+    case 15: At(FieldEvent_Object905DA0_addr)[(h >> 8) % kActorBytes] = static_cast<unsigned char>(h >> 24); break;
     case 16: MapView_HeightScale = static_cast<unsigned char>(h >> 8); break;
-    case 17: SetLong(At(at::kTintSprites) + (h >> 8) % 32 * 12, static_cast<std::int32_t>(Address(SpriteChoice(h >> 16)))); break;
+    case 17: SetLong(At(MoveScript_TintRecords_addr + 0x8) + (h >> 8) % 32 * 12, static_cast<std::int32_t>(Address(SpriteChoice(h >> 16)))); break;
     default: break;
     }
     Fix();
@@ -215,7 +215,7 @@ int __cdecl StubPartyCount(unsigned slot) {
     // there reads the byte past the table (0x66982B, image data) and writes
     // the actor record it names - inside the eight compared records only while
     // that byte is 0. Keep the count within the ids that are real.
-    const unsigned char* const list = At(at::kPartyLists);
+    const unsigned char* const list = At(Cond_Flags_addr + 0xd2);
     unsigned count = Hash(200) % 4;
     while (count > 0 && list[count - 1] == 0xFF) --count;
     return static_cast<int>(count);
@@ -279,7 +279,7 @@ void __cdecl StubSleep(int frames) { Record(42, static_cast<std::uint32_t>(frame
 // The current set, the current byte, or anything.
 unsigned char __cdecl StubFind(unsigned a, unsigned b, unsigned c) {
     Record(43, a & 0xFF, b & 0xFF, c & 0xFF);
-    const unsigned char current = *At(at::kPartySetCurrent);
+    const unsigned char current = *At(AreaW0b_PartySet_addr);
     Disturb(43);
     const std::uint32_t h = Hash(430);
     switch (h % 4) {
@@ -510,11 +510,11 @@ const Region kRegions[] = {
     {at::kFindIds, 0x40},
     {Address(&Field_ScriptFlags), 2},
     {at::kActorRecords, kActors * kActorBytes},
-    {at::kPartyLists, 6},
-    {at::kPartySetCurrent, 1},
+    {Cond_Flags_addr + 0xd2, 6},
+    {AreaW0b_PartySet_addr, 1},
     {at::kJoinState, 9},
-    {at::kPending, 0xE},   // the pending jump's two bytes .. Game_AreaNumber
-    {at::kLeaderTimer, 1},
+    {EventLeader_PendingFlag_addr, 0xE}, // the pending jump's two bytes .. Game_AreaNumber
+    {EventOps_BlockByte_addr, 1},
     {Address(&Field_InputFlags), 6},   // Field_InputFlags, a byte, Field_ScriptFlags2, Field_InputHeld
     {Address(&Field_State), 0xD0},     // Field_State, the object at 0x905DA0, Field_Kind2Z / X
     {Address(&Field_Request), 1},
@@ -524,9 +524,9 @@ const Region kRegions[] = {
     {Address(&Draw_OtSlot), 1},
     {Address(&Sprite_Current), 4},
     {Address(&Gfx_ClutStripDirty), 1},
-    {at::kPaletteBase, 0x100},
-    {at::kPaletteBase + 0x4000, 0x100},
-    {at::kTintSprites - 8, 32 * 12},
+    {Gfx_ClutStripSource_addr + 0x1e00, 0x100},
+    {Gfx_ClutStripSource_addr + 0x1e00 + 0x4000, 0x100},
+    {MoveScript_TintRecords_addr + 0x8 - 8, 32 * 12},
     {Address(g_scratch), sizeof g_scratch},
     {Address(g_zone_record), sizeof g_zone_record},
 };
@@ -600,7 +600,7 @@ unsigned char EdgeNear(unsigned axis) {
 // Field_MemberSprite find it), or anything.
 unsigned char TableId() {
     if (OneIn(5)) return OneIn(2) ? 0xFF : static_cast<unsigned char>(Next());
-    return At(at::kPartySets)[Next() % (19 * 3)];
+    return At(MoveScript_EffectArg_addr + 0xc)[Next() % (19 * 3)];
 }
 
 std::uint32_t g_zone_with_base, g_zone_without_base;   // zone indices, found at start
@@ -612,7 +612,7 @@ Args Seed(unsigned k) {
     unsigned char* const cur = Sprite_Current;
     switch (k) {
     case kLeaderFrame:
-        *At(at::kLeaderTimer) = static_cast<unsigned char>(Half() ? 0 : Next() % 3);
+        *At(EventOps_BlockByte_addr) = static_cast<unsigned char>(Half() ? 0 : Next() % 3);
         break;
     case kLeaderStart:
         if (Half()) Field_InputFlags &= 0xDF;
@@ -638,7 +638,7 @@ Args Seed(unsigned k) {
         case 3: counter = static_cast<std::uint16_t>(base + 1); break;
         default: counter = static_cast<std::uint16_t>(Next()); break;
         }
-        SetWord(At(at::kZoneCounter), counter);
+        SetWord(At(ObjTrio_addr + 0x134), counter);
         x.a = Stale(Half() ? 0 : Next() % 3);
         break;
     }
@@ -654,7 +654,7 @@ Args Seed(unsigned k) {
     case kPartyCount: {
         const unsigned slot = Half() ? 0 : 1;
         const unsigned end = Next() % 4;
-        for (unsigned i = 0; i < 3; ++i) At(at::kPartyLists)[slot * 3 + i] = i == end ? 0xFF : MemberId(Next() % 24);
+        for (unsigned i = 0; i < 3; ++i) At(Cond_Flags_addr + 0xd2)[slot * 3 + i] = i == end ? 0xFF : MemberId(Next() % 24);
         x.a = Stale(OneIn(8) ? Next() : slot);
         break;
     }
@@ -685,11 +685,11 @@ Args Seed(unsigned k) {
         x.c = OneIn(4) ? x.c : (x.c & ~0xFFu) | Next() % 8;
         break;
     case kPendingJump:
-        if (Half()) At(at::kPending)[0] = 0;
+        if (Half()) At(EventLeader_PendingFlag_addr)[0] = 0;
         break;
     case kMemberSprite: {
-        *At(at::kPartySetCurrent) = static_cast<unsigned char>(Half() ? Next() % 19 | (Half() ? 0x80 : 0) : Next());
-        const unsigned char* const row = At(at::kPartySets) + (*At(at::kPartySetCurrent) & 0x7Fu) * 3u;
+        *At(AreaW0b_PartySet_addr) = static_cast<unsigned char>(Half() ? Next() % 19 | (Half() ? 0x80 : 0) : Next());
+        const unsigned char* const row = At(MoveScript_EffectArg_addr + 0xc) + (*At(AreaW0b_PartySet_addr) & 0x7Fu) * 3u;
         x.a = Stale(Half() ? row[Next() % 3] : Next());
         x.b = Stale(OneIn(4) ? Next() : Next() % 3);
         break;
@@ -706,7 +706,7 @@ Args Seed(unsigned k) {
         break;
     case kLoadPalette: {
         SetLong(cur + 0x4C, static_cast<std::int32_t>(Address(g_bank)));
-        x.a = at::kPaletteBase + Next() % 0xC1;   // odd ones too: the twin's lost bit
+        x.a = Gfx_ClutStripSource_addr + 0x1e00 + Next() % 0xC1; // odd ones too: the twin's lost bit
         x.b = Stale(Next());
         break;
     }
@@ -722,13 +722,13 @@ Args Seed(unsigned k) {
         x.c = Stale(TableId());
         if (k == kSetFind && Half()) {   // the current row, holding them or not
             const unsigned row = Next() % 19;
-            const unsigned char* const r = At(at::kPartySets) + row * 3;
-            *At(at::kPartySetCurrent) = static_cast<unsigned char>(row | (Half() ? 0x80 : 0));
+            const unsigned char* const r = At(MoveScript_EffectArg_addr + 0xc) + row * 3;
+            *At(AreaW0b_PartySet_addr) = static_cast<unsigned char>(row | (Half() ? 0x80 : 0));
             x.a = Stale(r[0]);
             x.b = Stale(Half() ? r[1] : 0xFF);
             x.c = Stale(Half() ? r[2] : OneIn(3) ? TableId() : 0xFF);
         } else {
-            *At(at::kPartySetCurrent) = static_cast<unsigned char>(OneIn(4) ? 0xFF : Next());
+            *At(AreaW0b_PartySet_addr) = static_cast<unsigned char>(OneIn(4) ? 0xFF : Next());
         }
         x.d = Stale(Half() ? 0 : Next() % 5);
         break;
@@ -738,12 +738,12 @@ Args Seed(unsigned k) {
         x.b = Stale(OneIn(8) ? Next() : Next() % 5);
         break;
     case kHeightCheck:
-        if (Half()) Sprite_Current = At(at::kObject905DA0);
+        if (Half()) Sprite_Current = At(FieldEvent_Object905DA0_addr);
         break;
     case kReleaseTint: {
         x.a = Address(SpriteChoice(Next()));
         for (unsigned i = 0; i < 32; ++i)
-            if (OneIn(4)) SetLong(At(at::kTintSprites) + i * 12, static_cast<std::int32_t>(x.a));
+            if (OneIn(4)) SetLong(At(MoveScript_TintRecords_addr + 0x8) + i * 12, static_cast<std::int32_t>(x.a));
         break;
     }
     default:
@@ -781,9 +781,9 @@ void SelfTest() {
         }
         theirs[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, n);
     }
-    AimTable(theirs[kLeaderFrame], kClones[kLeaderFrame], 0x25, 0x24, at::kLeaderStates, g_leader_states);
-    AimTable(theirs[kLeaderControl], kClones[kLeaderControl], 0xB, 0x14, at::kControlStates, g_control_states);
-    AimTable(theirs[kPendingJump], kClones[kPendingJump], 0x10, 0x24, at::kPendingJumps, g_pending_jumps);
+    AimTable(theirs[kLeaderFrame], kClones[kLeaderFrame], 0x25, 0x24, Field_LeaderStates_addr, g_leader_states);
+    AimTable(theirs[kLeaderControl], kClones[kLeaderControl], 0xB, 0x14, Field_LeaderControlSteps_addr, g_control_states);
+    AimTable(theirs[kPendingJump], kClones[kPendingJump], 0x10, 0x24, Field_PendingJumps_addr, g_pending_jumps);
     move_script::Relocate(theirs[kSetSelect], 0x536AC0, 0x94, {0x31, 0x84, 4});
     FlushInstructionCache(GetCurrentProcess(), theirs[kSetSelect], 0x94);
 
@@ -802,7 +802,7 @@ void SelfTest() {
 
     static State saved, input, their_out, our_out;
     Capture(saved);
-    const std::uint32_t saved_zone_list = static_cast<std::uint32_t>(Long(At(at::kZoneLists)));
+    const std::uint32_t saved_zone_list = static_cast<std::uint32_t>(Long(At(Area_StateRecords_addr)));
     g = Stubs();
 
     unsigned per[kFunctions] = {}, bad = 0, calls = 0;
@@ -822,12 +822,12 @@ void SelfTest() {
         Game_AreaNumber = AreaChoice(Next());
         if (Half()) Field_ScriptFlags2 &= 0x3FFF;
         for (unsigned i = 0; i < 32; ++i)
-            if (OneIn(6)) SetLong(At(at::kTintSprites) + i * 12, static_cast<std::int32_t>(Address(SpriteChoice(Next()))));
+            if (OneIn(6)) SetLong(At(MoveScript_TintRecords_addr + 0x8) + i * 12, static_cast<std::int32_t>(Address(SpriteChoice(Next()))));
         Fix();
         g_seed = Next();
         const Args args = Seed(k);
         // Area_ZoneAt's list for this round's area, put back after.
-        const std::uint32_t list_at = at::kZoneLists + Game_AreaNumber * 4u;
+        const std::uint32_t list_at = Area_StateRecords_addr + Game_AreaNumber * 4u;
         const std::uint32_t list_saved = static_cast<std::uint32_t>(Long(At(list_at)));
         SetLong(At(list_at), static_cast<std::int32_t>(Address(g_zones)));
         Capture(input);
@@ -869,7 +869,7 @@ void SelfTest() {
     }
     g = kOriginals;
     Apply(saved);
-    if (static_cast<std::uint32_t>(Long(At(at::kZoneLists))) != saved_zone_list) bof3::Fatal("field_event: the zone lists were not put back");
+    if (static_cast<std::uint32_t>(Long(At(Area_StateRecords_addr))) != saved_zone_list) bof3::Fatal("field_event: the zone lists were not put back");
     bof3::Log("shadow      field_event self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, %u MISMATCHES; "
               "the objects, flags, party lists, actor records, palettes, tint records, the stand-ins' log and the result compared",
               kRounds, (unsigned)kFunctions, per[0], calls, bad);

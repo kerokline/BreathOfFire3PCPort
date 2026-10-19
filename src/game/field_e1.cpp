@@ -166,7 +166,7 @@ extern "C" void __cdecl FieldPanel_DrawKindRow(unsigned kind, unsigned count, un
     DrawSprite(5, 1, 0xE0 + r * 25, 0x70);
     unsigned char* const name = At(scenario_harness::at::kTextBuffer);
     if (k == 0x16) {
-        std::memcpy(name, At(at::kKindName16), 16);
+        std::memcpy(name, At(AreaW0b_ItemNameKey_addr), 16);
     } else if (k == 0xFF) {
         std::memset(name, '?', 8);
         name[8] = 0;
@@ -210,7 +210,7 @@ extern "C" void __cdecl FieldPanel_DrawTotal(int x, int y) {
             bof3::Fatal("FieldPanel_DrawTotal: a total of 0x%X is at or above every threshold (the original walks its stack past them)",
                         (unsigned)total);
     }
-    B(at::kRank) = static_cast<unsigned char>(rank);
+    FieldE1_Rank = static_cast<unsigned char>(rank);
     const unsigned char* const r = kRanks[rank];
     DrawSprite(r[0], 1, x + 0x1D, y + 0x1D);
     if (r[2] != 0) {
@@ -275,7 +275,7 @@ void Frame(int x, int y, unsigned across, int top_end, int right, unsigned side,
 // the script pool's messages by the words 0x8035FA at (x + 0x28, y + 6),
 // 0x8035FC at (x + 6, y + 0x19) and 0x8035FE at (x + 6, y + 0x29).
 extern "C" void __cdecl FieldPanel_DrawBox3(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x, y + 1, 0x64, 0x38, 0x80, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(x, y + 1, 0x64, 0x38, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
     Frame(x, y, 8, 0x48, 0x60, 0x20, 0x38, 0xB);
     Text(x + 0x28, y + 6, 0, 0xFF, PoolText(at::kPools + 0x7A));
     Text(x + 6, y + 0x19, 0, 0xFF, PoolText(at::kPools + 0x7C));
@@ -286,7 +286,7 @@ extern "C" void __cdecl FieldPanel_DrawBox3(int x, int y) {
 // frame (15 across, the sides 0x28 high, the bottom at + 0x40); the messages
 // by 0x8035F8 at (x + 0x32, y + 6) and 0x803602 at (x + 6, y + 0x19).
 extern "C" void __cdecl FieldPanel_DrawBox2(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x, y + 1, 0xB3, 0x42, 0x80, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(x, y + 1, 0xB3, 0x42, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
     Frame(x, y, 0xF, 0x98, 0xB0, 0x28, 0x40, 0x15);
     Text(x + 0x32, y + 6, 0, 0xFF, PoolText(at::kPools + 0x78));
     Text(x + 6, y + 0x19, 0, 0xFF, PoolText(at::kPools + 0x82));
@@ -306,7 +306,7 @@ extern "C" unsigned char __cdecl Inventory_Holds38To4DAt99(void) {
 // original 0x52D8C0: while 0x939A28 and Frame_Counter bit 3, the draw mode
 // (3, 1) and sprite 0x47 at (0x1A, 0x5C).
 extern "C" void __cdecl FieldPanel_DrawBlink(void) {
-    if (B(at::kBlink) == 0 || (Frame_Counter & 8) == 0) return;
+    if (Effect1e_Blink == 0 || (Frame_Counter & 8) == 0) return;
     DrawMode(3, 1);
     DrawSprite(0x47, 1, 0x1A, 0x5C);
 }
@@ -354,8 +354,8 @@ extern "C" void __cdecl Field_FormActionState(void) {
     if (Field_InputHeld != 0) {
         Fs()[0x137] = 0;
     } else {
-        const unsigned set = B(at::kPartySet) & 0x7Fu;
-        CodeAt(at::kFormActions, set, "Field_FormActionState")();
+        const unsigned set = AreaW0b_PartySet & 0x7Fu;
+        CodeAt(Field_FormActions_addr, set, "Field_FormActionState")();
     }
     if (Fs()[0x137] != 0) return;
     SH_CALL(Sprite_EnsureAnimation)(Sc()[8]);
@@ -391,7 +391,7 @@ extern "C" void __cdecl Field_PassageTrigger(void) {
 }
 
 // original 0x52F950: leader state 8, the jump - jmp Field_JumpSteps[+2].
-extern "C" void __cdecl Field_JumpState(void) { CodeAt(at::kJumpSteps, Sc()[2], "Field_JumpState")(); }
+extern "C" void __cdecl Field_JumpState(void) { CodeAt(Field_JumpSteps_addr, Sc()[2], "Field_JumpState")(); }
 
 // original 0x52F970: jump step 0 - 0x535FC0 (the first pose), step 2.
 extern "C" void __cdecl Field_JumpBegin(void) {
@@ -400,7 +400,7 @@ extern "C" void __cdecl Field_JumpBegin(void) {
 }
 
 // original 0x52F980: jump step 1 - jmp Field_JumpOutSteps[+3].
-extern "C" void __cdecl Field_JumpOut(void) { CodeAt(at::kJumpOutSteps, Sc()[3], "Field_JumpOut")(); }
+extern "C" void __cdecl Field_JumpOut(void) { CodeAt(Field_JumpOutSteps_addr, Sc()[3], "Field_JumpOut")(); }
 
 // original 0x52F9A0: jump-out 0 - 0x535FE0 (Field_JumpSetUp's caller); with
 // +5 0 and neither script flag's bit 3, Field_JumpCamera; +3 = 1.
@@ -444,7 +444,7 @@ extern "C" void __cdecl Field_JumpAir(void) {
 }
 
 // original 0x52FAC0: jump step 3 - jmp Field_JumpInSteps[+3].
-extern "C" void __cdecl Field_JumpIn(void) { CodeAt(at::kJumpInSteps, Sc()[3], "Field_JumpIn")(); }
+extern "C" void __cdecl Field_JumpIn(void) { CodeAt(Field_JumpInSteps_addr, Sc()[3], "Field_JumpIn")(); }
 
 // original 0x52FAE0: jump-in 0 - 0x536290, +3 = 1.
 extern "C" void __cdecl Field_JumpIn0(void) {
@@ -471,7 +471,7 @@ extern "C" void __cdecl Field_JumpIn3(void) { Fe2(at::kJumpIn3); }
 // original 0x52FBB0: leader state 11 - the step of Field_ContentSteps[+2],
 // then Sprite_ScriptTick (a tail jump).
 extern "C" void __cdecl Field_ContentState(void) {
-    CodeAt(at::kContentSteps, Sc()[2], "Field_ContentState")();
+    CodeAt(Field_ContentSteps_addr, Sc()[2], "Field_ContentState")();
     SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -503,7 +503,7 @@ extern "C" void __cdecl Field_ContentTake(void) {
             SH_CALL(Field_GiveZenny)(item * 40u);
             const unsigned char flag = ContentObject()[5];
             if (flag != 0xFF) SH_CALL(Flags_Set)(At(at::kObjectFlags), flag);
-            SetLong(At(at::kContentCount), L(at::kContentCount) + 1);
+            FieldE1_ContentCount = static_cast<std::int32_t>(FieldE1_ContentCount) + 1;
         } else {
             const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
             std::memcpy(At(bof3::addr::Text_Records), name, 16);
@@ -512,7 +512,7 @@ extern "C" void __cdecl Field_ContentTake(void) {
                 if (flag != 0xFF) SH_CALL(Flags_Set)(At(at::kObjectFlags), flag);
                 SH_CALL(Sound_PlayEffect)(0x106);
                 SH_CALL(Msg_OpenSystem)(2);
-                SetLong(At(at::kContentCount), L(at::kContentCount) + 1);
+                FieldE1_ContentCount = static_cast<std::int32_t>(FieldE1_ContentCount) + 1;
             } else {
                 SH_CALL(Msg_OpenSystem)(3);
             }
@@ -762,13 +762,13 @@ extern "C" unsigned char __cdecl Field_CellAroundSide(unsigned direction, unsign
 // Called by Field_LeaderCellEvent and FieldMenu_TopBarInput.
 extern "C" unsigned char __cdecl Field_GatewayExit(void) {
     if (Field_ScriptFlags & 0x4000) return 0;
-    if ((B(at::kPartySet) & 0x7F) == 0xC) return 0;
+    if ((AreaW0b_PartySet & 0x7F) == 0xC) return 0;
     if (Game_AreaNumber == 0xBD) {
         const std::uint32_t r = at::kGateway189 + (Cond_ByteFF == 0 ? 3u : 0u);
-        B(at::kExitKind) = 4;
-        SetW(at::kExitArea, B(r));
+        AreaEntry_PendingFlags = 4;
+        AreaW0b_Place = B(r);
         SetLong(At(at::kExitX), static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 1)) << 16));
-        SetLong(At(at::kExitZ), static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 2)) << 16));
+        SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 2)) << 16));
         return 1;
     }
     if (SH_CALL(Field_CellHasEvent)(W(at::kLeaderX + 2), W(at::kLeaderZ + 2))) return 0;
@@ -776,9 +776,9 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
     const std::uint16_t area = Game_AreaNumber;
     for (std::uint32_t r = at::kGatewayExits; r < at::kGatewayExitsEnd; r += 8) {
         if (W(r) != area) continue;
-        SetW(at::kExitArea, W(r + 2));
-        B(at::kExitKind) = 4;
-        SetLong(At(at::kExitZ), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 6)) << 16));
+        AreaW0b_Place = W(r + 2);
+        AreaEntry_PendingFlags = 4;
+        AreaEntry_PendingZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 6)) << 16);
         SetLong(At(at::kExitX), static_cast<std::int32_t>(static_cast<std::uint32_t>(W(r + 4)) << 16));
         return 1;
     }
@@ -803,8 +803,8 @@ extern "C" void __cdecl Party_PlaceAtSlots(void) {
         SetLong(Member(i) + 0x38, L(at::kSlotPositions + 8 * i + 4));
     }
     unsigned k = 0;
-    while (k < n && Member(k)[0x89] != B(at::kLeaderList)) ++k;
-    if (B(at::kBattleBits) & 2) return;
+    while (k < n && Member(k)[0x89] != Cond_Flags[0xd2]) ++k;
+    if (BattleTurnSteps_MusicFlags & 2) return;
     MoveScript_F3Divisor = 0x20;
     const std::int32_t x = Long(Member(k) + 0x34), z = Long(Member(k) + 0x38);
     const std::int32_t dx = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) - static_cast<std::uint32_t>(x)));
@@ -871,8 +871,8 @@ extern "C" void __cdecl Party_PlacesByList(void) {
             members = count;
         }
     }
-    if (B(at::kBattleBits) & 0x80) {
-        SH_CALL(Party_DropIn)(B(at::kDropEntry));
+    if (BattleTurnSteps_MusicFlags & 0x80) {
+        SH_CALL(Party_DropIn)(BossH_LeaderPick);
         SH_CALL(Field_MembersFrame)();
         return;
     }
@@ -930,7 +930,7 @@ extern "C" void __cdecl Field_LeaderPlaceOffset(long x, long z, unsigned directi
 // original 0x5338B0: pending jump 1 - the member at 0x904EF2 released with
 // kind 2 when its facing +8 is 5 or 3, else kind 3.
 extern "C" void __cdecl Field_PendingJumpTurn(void) {
-    const unsigned char f = Member(B(at::kPendingCount))[8];
+    const unsigned char f = Member(EventLeader_PendingCount)[8];
     SH_CALL(Field_PendingRelease)(f == 5 || f == 3 ? 2 : 3);
 }
 
@@ -963,7 +963,7 @@ extern "C" void __cdecl Field_PendingDrop(void) {
 // the count (more than one member) bits 3, 4, 9 cleared and the jump over;
 // al 1.
 extern "C" unsigned char __cdecl Field_PendingNext(void) {
-    const unsigned char n = B(at::kPendingCount);
+    const unsigned char n = EventLeader_PendingCount;
     const unsigned char count = Field_MemberCount;
     if (n != 0) {
         if (Member(n - 1u)[1] != 1) return 0;
@@ -971,19 +971,19 @@ extern "C" unsigned char __cdecl Field_PendingNext(void) {
             Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF7);
             if (count == n) {
                 Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFDFF);
-                B(at::kPendingFlag) = 0;
+                EventLeader_PendingFlag = 0;
                 return 0;
             }
         }
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~(1u << (n & 31)));
     }
     const auto next = static_cast<unsigned char>(n + 1);
-    B(at::kPendingCount) = next;
+    EventLeader_PendingCount = next;
     Sprite_Current = Member(n);
     Field_State = Member(n);
     if (count != 1 && next == count) {
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFDE7);
-        B(at::kPendingFlag) = 0;
+        EventLeader_PendingFlag = 0;
     }
     return 1;
 }
@@ -998,7 +998,7 @@ extern "C" unsigned char __cdecl Field_PendingNext(void) {
 // As the original has it: the shifts are by n (and n - 1) mod 32, so at n 0 the
 // "bit n - 1" is bit 31 of a 16-bit word, never set.
 extern "C" unsigned char __cdecl Field_PendingRelease(unsigned kind) {
-    const unsigned char n = B(at::kPendingCount);
+    const unsigned char n = EventLeader_PendingCount;
     const std::uint32_t flags = Field_ScriptFlags;
     const auto bit = [](unsigned s) { return 1u << (s & 31); };
     if (n != 0 && !(flags & bit(n)) && !(flags & bit(n - 1u)) && Member(n - 1u)[1] != 1) return 0;
@@ -1019,10 +1019,10 @@ extern "C" unsigned char __cdecl Field_PendingRelease(unsigned kind) {
         m[0x138] = static_cast<unsigned char>(m[0x138] & 0xFD);
     }
     const auto next = static_cast<unsigned char>(n + 1);
-    B(at::kPendingCount) = next;
+    EventLeader_PendingCount = next;
     if (next == Field_MemberCount) {
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFEF);
-        B(at::kPendingFlag) = 0;
+        EventLeader_PendingFlag = 0;
         return 2;
     }
     return 1;

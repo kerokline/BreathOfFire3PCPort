@@ -116,8 +116,8 @@ void ShadeBegin(unsigned at, unsigned char state) {
 
 // The jump table's step pair (8 bytes a direction) for direction d, unchecked
 // (a byte: the image's table read past its eight, as the original's).
-U JumpStepX(unsigned d) { return ULong(At(at::kJumpSteps + d * 8)); }
-U JumpStepZ(unsigned d) { return ULong(At(at::kJumpSteps + 4 + d * 8)); }
+U JumpStepX(unsigned d) { return ULong(At(MoveCmd_F9Steps_addr + d * 8)); }
+U JumpStepZ(unsigned d) { return ULong(At(MoveCmd_F9Steps_addr + 4 + d * 8)); }
 U DirStepX(unsigned d) { return ULong(At(AddressOf(Field_DirectionSteps) + d * 8)); }
 U DirStepZ(unsigned d) { return ULong(At(AddressOf(Field_DirectionSteps) + 4 + d * 8)); }
 
@@ -173,10 +173,10 @@ namespace {
 // order of each subtraction (the absolute values agree) and in `toward`.
 unsigned char ChaseDirection(unsigned char* object, unsigned char toward) {
     unsigned char* const s = Sprite_Current;   // held for both tests and +8
-    const std::int32_t dx = Abs32(ULong(At(at::kLeaderX)) - ULong(s + 0x34)) >> 16;
+    const std::int32_t dx = Abs32(ULong(At(ObjTrio_addr + 0x34)) - ULong(s + 0x34)) >> 16;
     const unsigned char direction = s[8];
     if (static_cast<int>(SWord(object + 0x98)) > dx) {
-        const std::int32_t dz = Abs32(ULong(At(at::kLeaderZ)) - ULong(s + 0x38)) >> 16;
+        const std::int32_t dz = Abs32(ULong(At(ObjTrio_addr + 0x38)) - ULong(s + 0x38)) >> 16;
         if (static_cast<int>(SWord(object + 0x9A)) > dz) {
             const unsigned char best = SH_CALL(Field_ObjectBestDirection)(object, toward);
             if (best == 0xFF) {
@@ -206,9 +206,9 @@ extern "C" unsigned char __cdecl Field_ObjectAvoidDirection(unsigned char* objec
 // unblocked one whose step lands farthest (toward not 0) or nearest (0) to the
 // leader's next point, by the sum of the two distances; 0xFF for none.
 extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object, unsigned char toward) {
-    const U pace = B(at::kLeaderPace);
-    const U point_z = pace * ULong(At(at::kLeaderStepZ)) + ULong(At(at::kLeaderZ));
-    const U point_x = pace * ULong(At(at::kLeaderStepX)) + ULong(At(at::kLeaderX));
+    const U pace = ObjTrio[9];
+    const U point_z = pace * ULong(At(ObjTrio_addr + 0x10)) + ULong(At(ObjTrio_addr + 0x38));
+    const U point_x = pace * ULong(At(ObjTrio_addr + 0xc)) + ULong(At(ObjTrio_addr + 0x34));
     unsigned char* s = Sprite_Current;
     if ((s[8] & 1) == 0) s[8] = static_cast<unsigned char>(s[8] + 1);
     unsigned char best = 0xFF;
@@ -460,7 +460,7 @@ extern "C" void __cdecl FieldCore_Attached(void) {
         static const unsigned kFields[] = {0x34, 0x38, 0x3C, 0x64, 0x68, 0x6C};
         for (const unsigned field : kFields) {
             unsigned char* const s = S();
-            SetULong(s + field, ULong(At(at::kExtraPositions + (field - 0x34) + ULong(s + 0x18) * 0xA4u)));
+            SetULong(s + field, ULong(At(Sprite_ObjectsExtra_addr + 0x34 + (field - 0x34) + ULong(s + 0x18) * 0xA4u)));
         }
         long offset[3];
         SH_CALL(MoveCmd_AttachOffset)(offset, S()[0x1C]);
@@ -624,7 +624,7 @@ extern "C" void __cdecl FieldCore_UpArrive(void) {
 // original 0x525E30: FieldCore_UpSteps[4].
 extern "C" void __cdecl FieldCore_UpIn(void) {
     SetWord(S() + 0x3E, Word(S() + 0x3E) + 0x10u);
-    const long ground = GroundAt(ULong(At(at::kTargetX)), ULong(At(at::kTargetZ)));
+    const long ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
     const int stop = static_cast<int>(static_cast<short>(ground)) -
                      static_cast<int>(SWord(At(at::kTargetOffsets + F()[0x89] * 2u)));
     if (static_cast<int>(SWord(S() + 0x3E)) >= stop) {
@@ -675,7 +675,7 @@ extern "C" void __cdecl FieldCore_DownWait4(void) { DownWait(at::kDownWait4, 5);
 // original 0x525FB0: FieldCore_DownSteps[5].
 extern "C" void __cdecl FieldCore_DownOut(void) {
     SetWord(S() + 0x3E, Word(S() + 0x3E) - 0x10u);
-    const long ground = GroundAt(ULong(At(at::kTargetX)), ULong(At(at::kTargetZ)));
+    const long ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
     if (static_cast<int>(SWord(S() + 0x3E)) < static_cast<int>(static_cast<short>(ground)) - 0x200) Field_Request = 5;
     ScriptTick();
 }
@@ -1044,7 +1044,7 @@ extern "C" void __cdecl FieldCore_Recoil(void) { Run("FieldCore_Recoil", FieldCo
 extern "C" void __cdecl FieldCore_RecoilBegin(void) {
     unsigned char* s = S();
     if (s[0x5C] != 0) {
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(at::kPalettes + s[5] * 64u)), 0);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + s[5] * 64u)), 0);
         S()[0] = static_cast<unsigned char>(S()[0] & 0xDF);
         S()[0x5C] = 0;
         S()[0x5D] = 0;

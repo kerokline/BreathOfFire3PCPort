@@ -328,10 +328,10 @@ U FxRtp4(const U* a, U answer) {
 }
 U FxCommit(const U* a, U answer) {
     // Gfx_PacketNext += size (a byte) while the packet stays well inside the buffer
-    unsigned char* const next = sh::Pointer(scenario_harness::at::kPacketNext);
+    unsigned char* const next = sh::Pointer(Gfx_PacketNext_addr);
     unsigned char* const base = sh::Packets();
     const unsigned size = a[1] & 0xFF;
-    if (next >= base && next + size + 0x80 <= base + 0x800) sh::SetPointer(scenario_harness::at::kPacketNext, next + size);
+    if (next >= base && next + size + 0x80 <= base + 0x800) sh::SetPointer(Gfx_PacketNext_addr, next + size);
     return answer;
 }
 U FxText(const U*, U answer) { return Key(sh::Text() + (answer & 0xF0)); }
@@ -364,8 +364,8 @@ U FxGround(const U*, U answer) {
 // call, which the group's case 3 alone reached once in 6,000 rounds (DS8)
 U FxLacks(const U*, U answer) {
     const U n = sh::Noise();
-    unsigned char* const pick = Mem(field_e2::at::kTradePick);
-    const unsigned rows = Mem(field_e2::at::kTradeRowCount)[0];
+    unsigned char* const pick = Mem(Effect1g_TradePick_addr);
+    const unsigned rows = Mem(Effect1g_TradeRowCount_addr)[0];
     if (n % 4 == 0) pick[0] = static_cast<unsigned char>((n >> 8) % (rows != 0 ? rows : 1u));
     return answer;
 }
@@ -378,8 +378,8 @@ U FxCount(const U* a, U answer) {
     static U s_bag;
     const U n = sh::Noise();
     if (n % 4 == 0) {
-        const unsigned rows = Mem(field_e2::at::kTradeRowCount)[0];
-        Mem(field_e2::at::kTradePick)[0] = static_cast<unsigned char>((n >> 8) % (rows != 0 ? rows : 1u));
+        const unsigned rows = Mem(Effect1g_TradeRowCount_addr)[0];
+        Mem(Effect1g_TradePick_addr)[0] = static_cast<unsigned char>((n >> 8) % (rows != 0 ? rows : 1u));
     }
     if ((a[2] & 0xFF) != 0) {
         s_bag = answer & 0xFF;
@@ -470,10 +470,10 @@ const sh::DataTable kTables[] = {
     {0x65F704, 8},  {0x65F78C, 10},                                   // Scena06_CallB, Scena09_CallB
     {0x660D6C, 1},  {0x660E54, 1},  {0x6610E4, 1},  {0x6613EC, 1},    // slot 1 of chapters 1, 2, 6, 9
     {0x660D78, 1},  {0x6610F0, 1},  {0x6613F8, 1},                    // slot 4 of chapters 1, 6, 9
-    {field_e2::at::kWorldMapHooks, 12},                            // 0x662DF0..: index 11 is also 0x56E020's entry 0
+    {WorldMap_FieldHooks_addr, 12},                                // 0x662DF0..: index 11 is also 0x56E020's entry 0
     {0x662E20, 32}, {0x662EA0, 32}, {0x662F20, 1},                    // Field_ObjectTriggers' 65
-    {field_e2::at::kObjectStates, 4},                                 // Mode11_ObjectStates
-    {field_e2::at::kTradeOpenSteps, 2}, {field_e2::at::kTradeRunSteps, 4},
+    {Mode11_ObjectStates_addr, 4},                                    // Mode11_ObjectStates
+    {ItemTrade_OpenSteps_addr, 2}, {ItemTrade_RunSteps_addr, 4},
 };
 constexpr unsigned kCallBRows = 2, kSlot1Rows = 4, kSlot4Rows = 3, kWorldRows = 1, kTriggerRows = 3;
 
@@ -510,11 +510,11 @@ const sh::Region kRegions[] = {
     {0x9039A8, 0x50},                        // the field tail 0x9039F3..0x9039F7 and its neighbours
     {0x904700, 0x1F0},                       // the pairs' end and the eight records 0x9048B0..0x9048F0
     {0x903A94, 0x903F90 - 0x903A94},         // CharacterRecords past the standard 0x903A14 region
-    {field_e2::at::kObject, 0xA4},           // the mode-11 object
-    {field_e2::at::kClutWords, 0x100},       // the CLUT words of member slots 0..3
-    {field_e2::at::kVertexScratch, 0x18},    // Prim_VertexScratch's three SVECTORs
-    {field_e2::at::kMapCells, 0x38 * 0x1C * 2},
-    {field_e2::at::kMapOrigin, 4},
+    {FieldEvent_Object905DA0_addr, 0xA4},    // the mode-11 object
+    {Gfx_ClutStrip_addr + 0x1e3e, 0x100},    // the CLUT words of member slots 0..3
+    {Prim_VertexScratch_addr, 0x18},         // Prim_VertexScratch's three SVECTORs
+    {MapView_Cells_addr, 0x38 * 0x1C * 2},
+    {MapView_Origin_addr, 4},
     {field_e2::at::kTextRecords, 0x40},
     {0x6BE080, 0x20},                        // the trade screen's bytes 0x6BE08C..0x6BE08F
     {0x939850, 0x20},                        // its states 0x93985C / 0x93985E
@@ -539,13 +539,13 @@ void Move(U h) {
     switch (sh::DisturbCase(h, 9)) {
     case 0: Field_State = sh::ObjectOf(v); break;
     case 1: B(field_e2::at::kEffectSlot) = static_cast<unsigned char>(v & 1 ? 0 : w); break;
-    case 2: B(field_e2::at::kTailState) = static_cast<unsigned char>(v % 24); break;
-    case 3: B(field_e2::at::kTradePick) = static_cast<unsigned char>(w); break;
-    case 4: B(field_e2::at::kTradeQuantity) = static_cast<unsigned char>(v % 100); break;
-    case 5: B(field_e2::at::kTradeStep) = static_cast<unsigned char>(v % 3); break;
-    case 6: B(field_e2::at::kObject + 1) = static_cast<unsigned char>(v % 4); break;
+    case 2: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 24); break;
+    case 3: B(Effect1g_TradePick_addr) = static_cast<unsigned char>(w); break;
+    case 4: B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(v % 100); break;
+    case 5: B(Effect1g_TradeStep_addr) = static_cast<unsigned char>(v % 3); break;
+    case 6: B(FieldEvent_Object905DA0_addr + 1) = static_cast<unsigned char>(v % 4); break;
     case 7: Sprite_Current[9] = static_cast<unsigned char>(v % 6); break;
-    case 8: B(field_e2::at::kTailArg) = static_cast<unsigned char>(v % 7); break;
+    case 8: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v % 7); break;
     default: break;
     }
 }
@@ -586,7 +586,7 @@ void SeedParty() {
         o[0x89] = static_cast<unsigned char>(sh::Next() % 12);
         o[0x148] = static_cast<unsigned char>(sh::Next() % 8);
     }
-    B(field_e2::at::kObject + 5) = static_cast<unsigned char>(B(field_e2::at::kObject + 5) & 3);
+    B(FieldEvent_Object905DA0_addr + 5) = static_cast<unsigned char>(B(FieldEvent_Object905DA0_addr + 5) & 3);
 }
 
 // A map-cell record in g_record for the draw k. Each is well formed: its
@@ -626,12 +626,12 @@ void BuildRecord(unsigned k) {
 // sum to count - 1.
 void BuildRun(int row, int column) {
     const U item = 1 + sh::Next() % 0x40, base = sh::Next() % 0x100;
-    SetW(at::kMapCells + 2u * static_cast<U>(column + row * 0x1C), item);
-    SetW(at::kCellBase, base);
+    SetW(MapView_Cells_addr + 2u * static_cast<U>(column + row * 0x1C), item);
+    SetW(AreaMap_CellBase_addr, base);
     const U n = item + base;
     const U count = 1 + sh::Next() % 6;
-    SetL(at::kCellRecords - 4 + n * 4, (L(at::kCellRecords - 4 + n * 4) & 0xFFFFu) | (count << 16));
-    U left = count - 1, p = at::kCellRecords + n * 4;
+    SetL(AreaMap_Header_addr - 4 + n * 4, (L(AreaMap_Header_addr - 4 + n * 4) & 0xFFFFu) | (count << 16));
+    U left = count - 1, p = AreaMap_Header_addr + n * 4;
     while (left != 0) {
         const U step = left >= 2 && sh::Half() ? 2 : 1;
         U v = L(p) & 0x0000FFFFu;
@@ -645,7 +645,7 @@ void BuildRun(int row, int column) {
 
 void Seed(unsigned k) {
     SeedParty();
-    sh::SetPointer(field_e2::at::kStreamFlag, g_flagcell + (sh::Next() & 7));
+    sh::SetPointer(AreaW1a_FocusObject_addr, g_flagcell + (sh::Next() & 7));
     {
         // the ground the heights are compared with: about the sprite's height
         // plus its actor's offset (the step and hop helpers), or anywhere
@@ -661,20 +661,20 @@ void Seed(unsigned k) {
         break;
     case kTally: {
         Cond_ByteFA = static_cast<signed char>(PickOf(7, 8, 9, 12, sh::Next() % 20));
-        B(at::kLevelA) = static_cast<unsigned char>(PickOf(0, 1, 9, 0xA, 0xB, sh::Next() % 0x20));
-        B(at::kLevelB) = static_cast<unsigned char>(PickOf(3, 4, 6, 7, 8, sh::Next() % 0x10));
-        B(at::kBiasA) = static_cast<unsigned char>(sh::Next() % 0x40);
-        B(at::kBiasB) = static_cast<unsigned char>(sh::Next() % 0x40);
-        B(at::kTallyByte) = static_cast<unsigned char>(PickOf(0x1D, 0x1E, 0x1F, 0, sh::Next() % 0x20));
-        SetL(at::kTallyDword, PickOf(0, 4, 5, 0x13, 0x14, 0x27, 0x3B, sh::Next() % 0x40, sh::Next()));
+        B(FieldE2_LevelA_addr) = static_cast<unsigned char>(PickOf(0, 1, 9, 0xA, 0xB, sh::Next() % 0x20));
+        B(Rest4a_LevelLit_addr) = static_cast<unsigned char>(PickOf(3, 4, 6, 7, 8, sh::Next() % 0x10));
+        B(FieldE2_BiasA_addr) = static_cast<unsigned char>(sh::Next() % 0x40);
+        B(FieldE2_BiasB_addr) = static_cast<unsigned char>(sh::Next() % 0x40);
+        B(AreaW1c_Byte9045FB_addr) = static_cast<unsigned char>(PickOf(0x1D, 0x1E, 0x1F, 0, sh::Next() % 0x20));
+        SetL(Rest4a_ClockA_addr, PickOf(0, 4, 5, 0x13, 0x14, 0x27, 0x3B, sh::Next() % 0x40, sh::Next()));
         // story flags 0xF5..0xFF: set below a first clear one (or all set)
         const U first = 0xF6 + sh::Next() % 11;
         for (U f = 0xF5; f <= 0xFF; ++f) {
-            unsigned char& byte = B(at::kStoryFlags + (f >> 3));
+            unsigned char& byte = B(Cond_Flags_addr + 0xa0 + (f >> 3));
             const auto bit = static_cast<unsigned char>(1u << (f & 7));
             byte = f < first || (f > first && sh::Half()) ? static_cast<unsigned char>(byte | bit) : static_cast<unsigned char>(byte & ~bit);
         }
-        if (sh::Half()) B(at::kStoryFlags + (0xF5 >> 3)) = static_cast<unsigned char>(B(at::kStoryFlags + (0xF5 >> 3)) & ~0x20);
+        if (sh::Half()) B(Cond_Flags_addr + 0xa0 + (0xF5 >> 3)) = static_cast<unsigned char>(B(Cond_Flags_addr + 0xa0 + (0xF5 >> 3)) & ~0x20);
         SeedRecords();
         break;
     }
@@ -683,8 +683,8 @@ void Seed(unsigned k) {
     case kFace: {
         Field_Request = static_cast<unsigned char>(sh::Often() ? 9 : sh::Next() % 10);
         const unsigned char* const s = Sprite_Current;
-        SetL(at::kObject + 0x34, static_cast<U>(move_script::Long(s + 0x34)) + PickOf(0, 0, 1, 0xFFFFFFFFu, sh::Next()));
-        SetL(at::kObject + 0x38, static_cast<U>(move_script::Long(s + 0x38)) + PickOf(0, 0, 1, 0xFFFFFFFFu, sh::Next()));
+        SetL(FieldEvent_Object905DA0_addr + 0x34, static_cast<U>(move_script::Long(s + 0x34)) + PickOf(0, 0, 1, 0xFFFFFFFFu, sh::Next()));
+        SetL(FieldEvent_Object905DA0_addr + 0x38, static_cast<U>(move_script::Long(s + 0x38)) + PickOf(0, 0, 1, 0xFFFFFFFFu, sh::Next()));
         break;
     }
     case kFloor:
@@ -720,31 +720,31 @@ void Seed(unsigned k) {
     case kRise:
     case kSink:
         Frame_Counter = PickOf(0, 4, sh::Next());
-        B(at::kScriptFlagsLow) = static_cast<unsigned char>(sh::Half() ? B(at::kScriptFlagsLow) & ~8 : B(at::kScriptFlagsLow));
-        B(at::kScriptFlags2) = static_cast<unsigned char>(sh::Half() ? B(at::kScriptFlags2) & ~8 : B(at::kScriptFlags2));
+        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(sh::Half() ? B(Field_ScriptFlags_addr) & ~8 : B(Field_ScriptFlags_addr));
+        B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(sh::Half() ? B(Field_ScriptFlags2_addr) & ~8 : B(Field_ScriptFlags2_addr));
         if (sh::Half()) Sprite_Current[5] = 0;
         break;
-    case kObjFrame: B(at::kObject + 1) = static_cast<unsigned char>(sh::Next() % 4); break;
+    case kObjFrame: B(FieldEvent_Object905DA0_addr + 1) = static_cast<unsigned char>(sh::Next() % 4); break;
     case kObjControl: {
         const U pressed = sh::Next();
         SetW(0x7E1BEC, sh::Next() % 4 == 0 ? pressed | 0x800u : pressed & ~0x800u);
-        SetW(at::kButtonsLeave, sh::Often() ? 0 : sh::Next());
-        SetW(at::kButtonsRun, sh::Next());
-        B(at::kRunDefault) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+        SetW(Gfx_UnpackScratch_addr + 0x1f006, sh::Often() ? 0 : sh::Next());
+        SetW(Gfx_UnpackScratch_addr + 0x1f002, sh::Next());
+        B(FieldE2_RunDefault_addr) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
         Field_Request = static_cast<unsigned char>(PickOf(5, 9, sh::Next() % 10));
         const unsigned char* const s = Sprite_Current;
         const U dir = s[8];
-        SetL(at::kLeaderX, L(at::kDirectionSteps + dir * 8) + static_cast<U>(move_script::Long(s + 0x34)) +
+        SetL(ObjTrio_addr + 0x34, L(Field_DirectionSteps_addr + dir * 8) + static_cast<U>(move_script::Long(s + 0x34)) +
                                PickOf(0, 0x60000, 0x60001, 0xFFFA0000u, 0xFFF9FFFFu, sh::Next() % 0x80000, sh::Next()));
-        SetL(at::kLeaderZ, L(at::kDirectionSteps + 4 + dir * 8) + static_cast<U>(move_script::Long(s + 0x38)) +
+        SetL(ObjTrio_addr + 0x38, L(Field_DirectionSteps_addr + 4 + dir * 8) + static_cast<U>(move_script::Long(s + 0x38)) +
                                PickOf(0, 0x60000, 0x60001, 0xFFFA0000u, sh::Next() % 0x80000, sh::Next()));
         break;
     }
-    case kObjHalt: SetW(at::kInputHeld, sh::Half() ? W(at::kInputHeld) & 0x0FFFu : W(at::kInputHeld)); break;
+    case kObjHalt: SetW(Field_InputHeld_addr, sh::Half() ? W(Field_InputHeld_addr) & 0x0FFFu : W(Field_InputHeld_addr)); break;
     case kObjMove: Sprite_Current[9] = static_cast<unsigned char>(sh::Half() ? 0 : Sprite_Current[9]); break;
-    case kObjEnd: B(at::kKind2Hold) = static_cast<unsigned char>(sh::Half() ? 0 : B(at::kKind2Hold)); break;
+    case kObjEnd: B(Field_Kind2Hold_addr) = static_cast<unsigned char>(sh::Half() ? 0 : B(Field_Kind2Hold_addr)); break;
     case kObjDraw:
-        B(at::kObject) = static_cast<unsigned char>(sh::Next() % 4 == 0 ? B(at::kObject) | 0x40 : B(at::kObject) & ~0x40);
+        B(FieldEvent_Object905DA0_addr) = static_cast<unsigned char>(sh::Next() % 4 == 0 ? B(FieldEvent_Object905DA0_addr) | 0x40 : B(FieldEvent_Object905DA0_addr) & ~0x40);
         break;
     case kTrigger:
     case kCellHook:
@@ -761,14 +761,14 @@ void Seed(unsigned k) {
     case kTailWarp: {
         static const unsigned kStates[] = {6, 5, 24, 2, 1, 2, 3};
         const unsigned states = kStates[k - kTailLoad];
-        B(at::kTailState) = static_cast<unsigned char>(sh::Next() % 8 == 0 ? sh::Next() : sh::Next() % states);
-        B(at::kTailArg) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
+        B(AreaW0c_TailState_addr) = static_cast<unsigned char>(sh::Next() % 8 == 0 ? sh::Next() : sh::Next() % states);
+        B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
         Field_Request = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next() % 8);
-        SetW(field_e2::at::kWaitWord, sh::Half() ? 0 : sh::Next());
+        SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
         B(at::kCounterB) = static_cast<unsigned char>(PickOf(0x20, 0x31, sh::Next()));
         SetW(at::kTailTimer, PickOf(1, 2, sh::Next()));
-        SetW(at::kGameMode, sh::Half() ? 2 : sh::Next());
-        B(at::kCondByteFE) = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next());
+        SetW(Game_Mode_addr, sh::Half() ? 2 : sh::Next());
+        B(Cond_ByteFE_addr) = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next());
         break;
     }
     case kDrawFrames:
@@ -778,18 +778,18 @@ void Seed(unsigned k) {
         BuildRecord(k);
         break;
     case kClearCell: {
-        for (U i = 0; i < 0x38 * 0x1C * 2; ++i) Mem(at::kMapCells)[i] = 0;
+        for (U i = 0; i < 0x38 * 0x1C * 2; ++i) Mem(MapView_Cells_addr)[i] = 0;
         // the cell's view position (c, r) in range half the time: origin words from the arguments Args will draw
         const U x = sh::Next() & 0x1F, z = sh::Next() & 0x1F;
         SetL(Key(g_flagcell), x | z << 8);   // for Args (the state is taken before the arguments)
         if (sh::Often()) {
             const int c = static_cast<int>(sh::Next() % 0x38), r = static_cast<int>(sh::Next() % 0x38);
-            SetW(at::kMapOrigin, static_cast<U>(static_cast<int>(x) + 1 - c));
-            SetW(at::kMapOrigin + 2, static_cast<U>(static_cast<int>(z) - r));
+            SetW(MapView_Origin_addr, static_cast<U>(static_cast<int>(x) + 1 - c));
+            SetW(MapView_Origin_addr + 2, static_cast<U>(static_cast<int>(z) - r));
             if (c + r < 0x38 && c - r >= 0 && c - r < 0x38) {
-                int row = c + r + static_cast<short>(W(field_e2::at::kMapRow)) + 1;
+                int row = c + r + static_cast<short>(W(MapView_Row_addr)) + 1;
                 if (row >= 0x38) row -= 0x38;
-                int column = (c - r) / 2 + static_cast<short>(W(field_e2::at::kMapColumn)) + 1;
+                int column = (c - r) / 2 + static_cast<short>(W(MapView_Column_addr)) + 1;
                 if (column >= 0x1C) column -= 0x1C;
                 if (sh::Often()) BuildRun(row, column);
             }
@@ -803,18 +803,18 @@ void Seed(unsigned k) {
     case kTradePick:
     case kTradeCount:
     case kTradeConfirm: {
-        B(at::kTradeStep) = static_cast<unsigned char>(k == kTradeOpen ? sh::Next() % 2 : k == kTradeRun ? sh::Next() % 4 : sh::Next() % 4);
+        B(Effect1g_TradeStep_addr) = static_cast<unsigned char>(k == kTradeOpen ? sh::Next() % 2 : k == kTradeRun ? sh::Next() % 4 : sh::Next() % 4);
         const unsigned rows = 1 + sh::Next() % 10;
-        B(at::kTradeRowCount) = static_cast<unsigned char>(rows);
-        B(at::kTradeRow) = static_cast<unsigned char>(sh::Next() % 4);
-        B(at::kTradePick) = static_cast<unsigned char>((sh::Often() ? 0 : PickOf(0x40, 0x80, 0xC0)) | (sh::Next() % rows));
-        B(at::kTradeQuantity) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x62, 0x63, 0x64, sh::Next() % 100));
-        B(at::kTradeAnswer) = static_cast<unsigned char>(sh::Next() % 2);
+        B(Effect1g_TradeRowCount_addr) = static_cast<unsigned char>(rows);
+        B(AreaEntry_PendingFlags_addr) = static_cast<unsigned char>(sh::Next() % 4);
+        B(Effect1g_TradePick_addr) = static_cast<unsigned char>((sh::Often() ? 0 : PickOf(0x40, 0x80, 0xC0)) | (sh::Next() % rows));
+        B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x62, 0x63, 0x64, sh::Next() % 100));
+        B(Effect1g_TradeAnswer_addr) = static_cast<unsigned char>(sh::Next() % 2);
         const U pressed = sh::Next() & 0xFFFF;
         SetW(0x7E1BEC, pressed);
-        SetW(at::kConfirm, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
-        SetW(at::kCancel, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
-        SetW(field_e2::at::kWaitWord, sh::Half() ? 0 : sh::Next());
+        SetW(Field_ConfirmButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
+        SetW(Field_CancelButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
+        SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
         break;
     }
     default: break;

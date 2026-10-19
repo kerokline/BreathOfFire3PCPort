@@ -37,7 +37,7 @@ constexpr std::uint32_t kEffectSlot = 0x903850;
 // A byte area 3's choice handlers set to 6 with the message 0x44.
 // kByte9398CF: now AreaW0c_AnswerMark (symbols.toml).
 // The scene's timer (u16, docs/field-modes.md).
-constexpr std::uint32_t kTimer = 0x8034E6;
+// kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml).
 // Field object 6's x (Sprite_Objects + 6 * 0xA4 + 0x34), a dword.
 // kObject6X: now Sprite_Objects[0x40c] (symbols.toml).
 // Text_Records, where Crt_sprintf writes the message's parameter, and the

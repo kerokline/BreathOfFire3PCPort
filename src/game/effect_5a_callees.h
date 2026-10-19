@@ -18,7 +18,7 @@ constexpr std::uint32_t kPattern = bof3::addr::Area109_SwitchPattern;      // (v
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0x14 * 8: the story flags (a dword for sub-kind 5)
 
 // --- the map ------------------------------------------------------------------
-constexpr std::uint32_t kAreaHeader = 0x8CB580;   // AreaMap_Header: its low byte the map's width
+// kAreaHeader: now AreaMap_Header (symbols.toml). AreaMap_Header: its low byte the map's width
 // kHeightBase: now AreaMap_HeightBase (symbols.toml). AreaMap_HeightBase (u16): the height bytes at kAreaHeader + 4 * it
 constexpr std::uint32_t kAreaBytes = 0x905D94;    // AreaMap_Bytes (a pointer)
 

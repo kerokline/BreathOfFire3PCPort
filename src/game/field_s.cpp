@@ -83,11 +83,11 @@ U RecAddr(U n) { return at::kRecords + n * at::kRecordStride; }
 // A member id's record index: MoveScript_EffectState[id], unchecked.
 U RecordOf(U id) { return MoveScript_EffectState[id & 0xFF]; }
 // Field_Members of ObjTrio record k (s8, unchecked): the byte +0x148.
-U MemberAt(int k) { return B(static_cast<U>(at::kFieldMembers + static_cast<std::int32_t>(k) * static_cast<std::int32_t>(at::kObjStride))); }
+U MemberAt(int k) { return B(static_cast<U>(Field_Members_addr + static_cast<std::int32_t>(k) * static_cast<std::int32_t>(at::kObjStride))); }
 
-U Pressed() { return W(at::kPressed); }
-bool Confirmed(U pressed) { return (W(at::kConfirm) & pressed & 0xFFFF) != 0; }
-bool Cancelled(U pressed) { return (W(at::kCancel) & pressed & 0xFFFF) != 0; }
+U Pressed() { return Input_Pressed; }
+bool Confirmed(U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed & 0xFFFF) != 0; }
+bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButtons) & pressed & 0xFFFF) != 0; }
 
 void Sound(U id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
 U PartyCount() { return static_cast<U>(SH_CALL(Party_Count)(0)) & 0xFF; }
@@ -211,17 +211,17 @@ std::uint32_t field_s::FrameCallTarget() { return MenuFrame_Draw(); }
 // and the step down one (back to the slots). The style goes out in eax over
 // the entry's upper bytes; Menu_DrawTitleBox reads its byte.
 extern "C" void __cdecl FieldSave_Confirm(void) {
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, B(at::kStyle));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(Text_DrawAt)(0x1C, 0x16, 0, 0xFF, Message(0x9F));
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
     if ((SH_CALL(Menu_YesNo)() & 0xFF) == 0) return;
-    if (B(at::kAnswer) != 0) {
+    if (static_cast<unsigned char>(FieldS_Answer) != 0) {
         Sound(0x104);
-        B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+        FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
     }
     Sound(0x106);
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) - 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step - 1);
 }
 
 // original 0x580310: Rest_States[0]. With story flag 0x77 set: state 6 and
@@ -229,16 +229,16 @@ extern "C" void __cdecl FieldSave_Confirm(void) {
 // unless the chapter byte is 0xE and the chapter row's flag 5 is set - then
 // Transition_Start(0) and the state up one.
 extern "C" void __cdecl Rest_Begin(void) {
-    if ((SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x77) & 0xFF) != 0) {
-        B(at::kState) = 6;
+    if ((SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x77) & 0xFF) != 0) {
+        FieldS_State = 6;
         SH_CALL(Msg_OpenScript)(0xEF);
         return;
     }
-    if (B(at::kChapter) != 0xE ||
-        (SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(at::kFlagRow))), 5) & 0xFF) == 0)
-        SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x77);
+    if (static_cast<unsigned char>(Cond_ByteFA) != 0xE ||
+        (SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(AreaW0c_FlagRow), 5) & 0xFF) == 0)
+        SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x77);
     SH_CALL(Transition_Start)(0);
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 // original 0x580380: Rest_States[1]. Nothing while the transition runs (the
@@ -259,25 +259,25 @@ extern "C" void __cdecl Rest_Begin(void) {
 // unbounded by the member count; the area indexes Area_Descriptors (200) as a
 // word, unchecked.
 extern "C" void __cdecl Rest_PlaceParty(void) {
-    if (W(at::kWait) != 0) return;
+    if (MoveScript_WaitWordDA != 0) return;
     SH_CALL(Menu_DrawBlackScreen)();
-    U area = W(at::kArea);
+    U area = Game_AreaNumber;
     if (area == 0xBB || area == 0xC1) {
-        B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+        FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
         return;
     }
-    if (area == 0xBF && B(at::kChapter) == 0xE) {
-        if ((SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(at::kFlagRow))), 5) & 0xFF) != 0) {
-            B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+    if (area == 0xBF && static_cast<unsigned char>(Cond_ByteFA) == 0xE) {
+        if ((SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(AreaW0c_FlagRow), 5) & 0xFF) != 0) {
+            FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
             return;
         }
-        area = W(at::kArea);
+        area = Game_AreaNumber;
     }
     Music_Track = 0xFF;
     U kind = 0;
     if (area == 0x85) {
-        SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x77);
-        area = W(at::kArea);
+        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x77);
+        area = Game_AreaNumber;
         kind = 1;
     }
     if (area == 0xBF) kind = 2;
@@ -305,9 +305,9 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
     Field_Kind2X = static_cast<long>(L(0x802D74));
     Field_Kind2Z = static_cast<long>(L(0x802D78));
     SH_CALL(Field_ViewReset)();
-    const U descriptor = L(at::kAreaDescriptors + 4 * W(at::kArea));
+    const U descriptor = L(at::kAreaDescriptors + 4 * static_cast<std::uint32_t>(Game_AreaNumber));
     SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 // ===========================================================================
@@ -317,7 +317,7 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
 // original 0x580A50: PartyForm_States[0], a tail jump through
 // PartyForm_OpenSteps 0x6640AC by the step byte, unchecked.
 extern "C" void __cdecl PartyForm_OpenStep(void) {
-    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(at::kPartyFormOpenSteps, B(at::kStep), "PartyForm_OpenStep"))();
+    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(PartyForm_OpenSteps_addr, FieldS_Step, "PartyForm_OpenStep"))();
 }
 
 // original 0x580A60: PartyForm_OpenSteps[0]. The reserve 0x6BC894: every
@@ -336,7 +336,7 @@ extern "C" void __cdecl PartyForm_OpenStep(void) {
 extern "C" void __cdecl PartyForm_Setup(void) {
     const U n = PartyCount();
     unsigned char count = 0;
-    B(at::kReserveCount) = 0;
+    FieldS_ReserveCount = 0;
     for (U r = 0; r < 8; ++r) {
         const unsigned char* const rec = Rec(r);
         if ((rec[0xB] & 1) == 0) continue;
@@ -345,7 +345,7 @@ extern "C" void __cdecl PartyForm_Setup(void) {
         while (k < n && id != B(at::kPartyList + k)) ++k;
         if (k == n) B(at::kReserve + count++) = rec[9];
     }
-    B(at::kReserveCount) = count;
+    FieldS_ReserveCount = count;
     U edx = 0;
     if (n > 0) {
         for (U k = 0; k < n; ++k) B(at::kReserveFlags + 2 * k) = 1;
@@ -359,33 +359,33 @@ extern "C" void __cdecl PartyForm_Setup(void) {
         } while (p < at::kReserveFlags + 6);
     }
     for (U k = 0; k < count; ++k) B(at::kReserveFlags + 1 + 2 * k) = 1;
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-    B(at::kColumn) = 0;
-    B(at::kRow) = 0;
-    B(at::kPickColumn) = 0x7F;
-    B(at::kPickRow) = 0x7F;
-    B(at::kPartyFormResult) = 0xFF;
+    const auto step = static_cast<unsigned char>(FieldS_Step + 1);
+    FieldS_Column = 0;
+    BattleE1_ModeByte9 = 0;
+    ShopStates_Clear0A = 0x7F;
+    FieldS_PickRow = 0x7F;
+    FieldS_PartyFormResult = 0xFF;
     B(at::kTimer) = 3;
-    B(at::kStep) = step;
+    FieldS_Step = step;
     SH_CALL(Transition_Start)(2);
 }
 
 // original 0x580B80: PartyForm_OpenSteps[1]. The transition over:
 // Transition_Start(3) and the step up one.
 extern "C" void __cdecl PartyForm_FadeWait(void) {
-    if (W(at::kWait) != 0) return;
+    if (MoveScript_WaitWordDA != 0) return;
     SH_CALL(Transition_Start)(3);
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x580BB0: PartyForm_OpenSteps[2]. The screen drawn; the transition
 // over: step 0 and the state up two (to the choosing).
 extern "C" void __cdecl PartyForm_OpenWait(void) {
     SH_CALL(PartyForm_Draw)();
-    if (W(at::kWait) != 0) return;
-    const auto state = B(at::kState);
-    B(at::kStep) = 0;
-    B(at::kState) = static_cast<unsigned char>(state + 2);
+    if (MoveScript_WaitWordDA != 0) return;
+    const auto state = FieldS_State;
+    FieldS_Step = 0;
+    FieldS_State = static_cast<unsigned char>(state + 2);
 }
 
 // original 0x580BE0: PartyForm_States[1]. The backdrop (kind 0x903A5B, in eax
@@ -393,14 +393,14 @@ extern "C" void __cdecl PartyForm_OpenWait(void) {
 // at the slide's offset, the counter down one; at 0 the counter 3 and the
 // state up one.
 extern "C" void __cdecl PartyForm_SlideIn(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     SH_CALL(PartyForm_DrawSliding)();
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
     if (t != 0) return;
-    const auto state = B(at::kState);
+    const auto state = FieldS_State;
     B(at::kTimer) = 3;
-    B(at::kState) = static_cast<unsigned char>(state + 1);
+    FieldS_State = static_cast<unsigned char>(state + 1);
 }
 
 // original 0x580C20: PartyForm_States[2], the choosing. The screen; the help
@@ -417,96 +417,96 @@ extern "C" void __cdecl PartyForm_SlideIn(void) {
 // the state up one, step 0, Transition_Start(2).
 extern "C" void __cdecl PartyForm_Choose(void) {
     SH_CALL(PartyForm_Draw)();
-    if (B(at::kPartyFormResult) == 0xFF) {
+    if (FieldS_PartyFormResult == 0xFF) {
         SH_CALL(Text_DrawAt)(0x1A, 0x14, 0, 0xFF, Message(0x60));
     } else {
-        SH_CALL(TextRecord_Set)(0, 8, Rec(RecordOf(B(at::kPartyFormResult))));
+        SH_CALL(TextRecord_Set)(0, 8, Rec(RecordOf(FieldS_PartyFormResult)));
         SH_CALL(Text_DrawAt)(0x1A, 0x14, 0, 0xFF, Message(0x61));
     }
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     const U count = PartyCount();
-    unsigned char column = B(at::kColumn);
-    const unsigned char reserve = B(at::kReserveCount);
+    unsigned char column = static_cast<unsigned char>(FieldS_Column);
+    const unsigned char reserve = FieldS_ReserveCount;
     const unsigned char old_column = column;
     if ((repeat & 0xA000) != 0 && reserve != 0) {
         column = static_cast<unsigned char>(column ^ 1);
-        B(at::kColumn) = column;
+        FieldS_Column = column;
     }
-    unsigned char row = B(at::kRow);
+    unsigned char row = static_cast<unsigned char>(BattleE1_ModeByte9);
     const int row0 = S8(row);
     if (column == 0) {
         if (row0 > static_cast<int>(count) - 1) {
             row = static_cast<unsigned char>(count - 1);
-            B(at::kRow) = row;
+            BattleE1_ModeByte9 = row;
         }
     } else if (row0 > static_cast<int>(reserve) - 1) {
         row = static_cast<unsigned char>(reserve - 1);
-        B(at::kRow) = row;
+        BattleE1_ModeByte9 = row;
     }
     if (repeat & 0x1000) {
         row = static_cast<unsigned char>(row - 1);
-        B(at::kRow) = row;
+        BattleE1_ModeByte9 = row;
         if (S8(row) < 0) {
-            row = static_cast<unsigned char>(B(at::kColumn) == 0 ? count - 1 : reserve - 1);
-            B(at::kRow) = row;
+            row = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_Column) == 0 ? count - 1 : reserve - 1);
+            BattleE1_ModeByte9 = row;
         }
     } else if (repeat & 0x4000) {
-        const unsigned char c = B(at::kColumn);
+        const unsigned char c = static_cast<unsigned char>(FieldS_Column);
         row = static_cast<unsigned char>(row + 1);
-        B(at::kRow) = row;
+        BattleE1_ModeByte9 = row;
         const int last = c == 0 ? static_cast<int>(count) - 1 : static_cast<int>(reserve) - 1;
         if (S8(row) > last) {
             row = 0;
-            B(at::kRow) = 0;
+            BattleE1_ModeByte9 = 0;
         }
     }
     if (static_cast<int>(old_column) != S8(B(at::kColumn)) || row0 != S8(row)) Sound(0x100);
     const U pressed = Pressed();
     if (Confirmed(pressed)) {
-        if (B(at::kPickColumn) == 0x7F) {
+        if (static_cast<unsigned char>(ShopStates_Clear0A) == 0x7F) {
             Sound(0x103);
-            const unsigned char c = B(at::kColumn), r = B(at::kRow);
-            B(at::kPickColumn) = c;
-            B(at::kPickRow) = r;
+            const unsigned char c = static_cast<unsigned char>(FieldS_Column), r = static_cast<unsigned char>(BattleE1_ModeByte9);
+            ShopStates_Clear0A = c;
+            FieldS_PickRow = r;
             return;
         }
         const unsigned char result = SH_CALL(PartyForm_Swap)();
-        B(at::kPartyFormResult) = result;
+        FieldS_PartyFormResult = result;
         Sound(result == 0xFF ? 0x103 : 0x107);
-        B(at::kPickColumn) = 0x7F;
-        B(at::kPickRow) = 0x7F;
+        ShopStates_Clear0A = 0x7F;
+        FieldS_PickRow = 0x7F;
         return;
     }
     if (!Cancelled(pressed)) return;
     Sound(0x106);
-    if (B(at::kPickColumn) != 0x7F) {
-        B(at::kPickColumn) = 0x7F;
-        B(at::kPickRow) = 0x7F;
+    if (static_cast<unsigned char>(ShopStates_Clear0A) != 0x7F) {
+        ShopStates_Clear0A = 0x7F;
+        FieldS_PickRow = 0x7F;
         return;
     }
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-    B(at::kStep) = 0;
-    B(at::kState) = state;
+    const auto state = static_cast<unsigned char>(FieldS_State + 1);
+    FieldS_Step = 0;
+    FieldS_State = state;
     SH_CALL(Transition_Start)(2);
 }
 
 // original 0x580E80: PartyForm_States[3], a tail jump through
 // PartyForm_LeaveSteps 0x6640B8 by the step byte, unchecked.
 extern "C" void __cdecl PartyForm_LeaveStep(void) {
-    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(at::kPartyFormLeaveSteps, B(at::kStep), "PartyForm_LeaveStep"))();
+    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(PartyForm_LeaveSteps_addr, FieldS_Step, "PartyForm_LeaveStep"))();
 }
 
 // original 0x580E90: PartyForm_LeaveSteps[0]. While the transition runs, a
 // tail jump to PartyForm_Draw; then the black screen, the counter 2 and the
 // step up one.
 extern "C" void __cdecl PartyForm_LeaveFade(void) {
-    if (W(at::kWait) != 0) {
+    if (MoveScript_WaitWordDA != 0) {
         [[clang::musttail]] return SH_CALL(PartyForm_Draw)();
     }
     SH_CALL(Menu_DrawBlackScreen)();
-    const auto step = B(at::kStep);
+    const auto step = FieldS_Step;
     B(at::kTimer) = 2;
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x580EC0: PartyForm_LeaveSteps[1]. The black screen, the counter
@@ -515,7 +515,7 @@ extern "C" void __cdecl PartyForm_LeaveBlack(void) {
     SH_CALL(Menu_DrawBlackScreen)();
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
-    if (t == 0) B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    if (t == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x580EE0: PartyForm_LeaveSteps[2], the party back on the field.
@@ -536,10 +536,10 @@ extern "C" void __cdecl PartyForm_LeaveBlack(void) {
 extern "C" void __cdecl PartyForm_Reload(void) {
     SH_CALL(Menu_DrawBlackScreen)();
     const unsigned char kept = B(0x802DC9);
-    SH_CALL(PartySet_Load)(B(at::kPartyList), B(at::kPartyList + 1), B(at::kPartyList + 2), 0);
+    SH_CALL(PartySet_Load)(Cond_Flags[0xd2], Cond_Flags[0xd3], Cond_Flags[0xd4], 0);
     bool lone = false;
-    if (B(at::kLoneParty) != 0) {
-        const unsigned char flag = SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x77);
+    if (AreaW3c_CampFlag != 0) {
+        const unsigned char flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x77);
         const U area = W(at::kArea);
         if (((flag & 0xFF) == 0 || area == 0xBB) && area != 0x85) lone = true;
     }
@@ -567,7 +567,7 @@ extern "C" void __cdecl PartyForm_Reload(void) {
                 Sprite_Current = obj;
                 SH_CALL(Field_MemberSprite)(member, i);
                 SH_CALL(Sprite_SetAnimation)(Sprite_Current[8]);
-                if (B(at::kLoneParty) != 0) {
+                if (AreaW3c_CampFlag != 0) {
                     Sprite_Current[1] = 0;
                     Sprite_Current[2] = 0;
                     Sprite_Current[3] = 0;
@@ -587,7 +587,7 @@ extern "C" void __cdecl PartyForm_Reload(void) {
             SH_CALL(Field_ViewReset)();
         }
     }
-    if (W(at::kArea) == 0x85) {
+    if (Game_AreaNumber == 0x85) {
         const U n = Field_MemberCount;
         for (U i = 0; i < n; ++i) {
             const U obj = 0x802D40 + i * at::kObjStride;
@@ -597,14 +597,14 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         }
         if ((Field_StatusBits & 0x40) != 0) {
             SH_CALL(Transition_Start)(3);
-            B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+            FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
             return;
         }
         Field_Kind2X = static_cast<long>(L(0x802D74));
         Field_Kind2Z = static_cast<long>(L(0x802D78));
         SH_CALL(Field_ViewReset)();
     }
-    if (W(at::kArea) == 0x5C) {
+    if (Game_AreaNumber == 0x5C) {
         if (Field_MemberCount != 0) {
             U i = 0;
             do {
@@ -621,18 +621,18 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         SH_CALL(Field_ViewReset)();
     }
     SH_CALL(Transition_Start)(3);
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x5811B0: PartyForm_LeaveSteps[3]. The transition over: the
 // counter 0, the mode 1 (the field), state and step 0, 0x929F0F 1.
 extern "C" void __cdecl PartyForm_End(void) {
-    if (W(at::kWait) != 0) return;
+    if (MoveScript_WaitWordDA != 0) return;
     B(at::kTimer) = 0;
-    B(at::kMode) = 1;
-    B(at::kState) = 0;
-    B(at::kStep) = 0;
-    B(at::kMessageEnd) = 1;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
+    FieldS_Step = 0;
+    AreaW3c_Load0F = 1;
 }
 
 // original 0x5811E0: the formation screen at the slide's offset (the counter
@@ -655,7 +655,7 @@ extern "C" void __cdecl PartyForm_DrawSliding(void) {
         DrawFont8(0x1A - 40 * static_cast<int>(B(at::kTimer)), y + 5, 0);
     }
     SH_CALL(PartyForm_DrawReserve)(45 * static_cast<int>(B(at::kTimer)) + 0x96, 0x3B);
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12 - 8 * static_cast<int>(B(at::kTimer)), 0x118, 0x13, B(at::kStyle));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12 - 8 * static_cast<int>(B(at::kTimer)), 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
 }
 
 // original 0x581300: the reserve's panels from (x, y): the port's dropped call
@@ -685,7 +685,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
     SH_AT(void (__cdecl*)(int, int, int, int), field_s::FrameCallTarget())(x, y, 0x12, 0x15);
     const int X = x + 7;
     int Y = y + 6;
-    if (B(at::kReserveCount) == 0) return;
+    if (FieldS_ReserveCount == 0) return;
     const int pen = X + 0x18;
     int base = y + 0x1B;
     unsigned char row = 0;
@@ -693,7 +693,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
         const U index = RecordOf(B(at::kReserve + row));
         const unsigned char* const rec = Rec(index);
         unsigned char colour = 0;
-        SH_CALL(Menu_DrawBox)(X, Y, 0x7D, 0x30, 0x80, B(at::kStyle));
+        SH_CALL(Menu_DrawBox)(X, Y, 0x7D, 0x30, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
         SH_CALL(Menu_DrawItemIcon)(X + 0x56, Y, rec[9], (rec[0x10] >> 6) & 2);
         SH_CALL(Text_DrawAt)(X + 0x14, base - 0x14, 0, 5, rec);
         SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag)(X + 2, base, 3, 0);
@@ -732,7 +732,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
         Y += 0x34;
         base += 0x34;
         ++row;
-    } while (row < B(at::kReserveCount));
+    } while (row < FieldS_ReserveCount);
 }
 
 // original 0x581590: the two picks exchanged; answers 0xFF when they were,
@@ -744,19 +744,19 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
 // id gets the reserve's, and every reserve byte below the count 0x6BC897
 // holding the reserve's gets the party's.
 extern "C" unsigned char __cdecl PartyForm_Swap(void) {
-    const unsigned char column = B(at::kColumn);
-    if (column == B(at::kPickColumn)) {
-        const U list = column == 0 ? at::kPartyList : at::kReserve;
-        SwapBytes(list + static_cast<U>(S8(B(at::kRow))), list + static_cast<U>(S8(B(at::kPickRow))));
+    const unsigned char column = static_cast<unsigned char>(FieldS_Column);
+    if (column == static_cast<unsigned char>(ShopStates_Clear0A)) {
+        const U list = column == 0 ? (Cond_Flags_addr + 0xd2) : at::kReserve;
+        SwapBytes(list + static_cast<std::uint32_t>(BattleE1_ModeByte9), list + static_cast<std::uint32_t>(FieldS_PickRow));
         return 0xFF;
     }
     unsigned char party, other;
     if (column == 0) {
-        party = B(at::kPartyList + static_cast<U>(S8(B(at::kRow))));
-        other = B(at::kReserve + static_cast<U>(S8(B(at::kPickRow))));
+        party = B(at::kPartyList + static_cast<std::uint32_t>(BattleE1_ModeByte9));
+        other = B(at::kReserve + static_cast<std::uint32_t>(FieldS_PickRow));
     } else {
-        party = B(at::kPartyList + static_cast<U>(S8(B(at::kPickRow))));
-        other = B(at::kReserve + static_cast<U>(S8(B(at::kRow))));
+        party = B(at::kPartyList + static_cast<std::uint32_t>(FieldS_PickRow));
+        other = B(at::kReserve + static_cast<std::uint32_t>(BattleE1_ModeByte9));
     }
     if (Rec(RecordOf(party))[0xB] & 2) return party;
     if (Rec(RecordOf(other))[0xB] & 2) return other;
@@ -769,7 +769,7 @@ extern "C" unsigned char __cdecl PartyForm_Swap(void) {
             ++k;
         } while (k < PartyCount());
     }
-    const U n = B(at::kReserveCount);
+    const U n = FieldS_ReserveCount;
     for (U i = 0; i < n; ++i)
         if (B(at::kReserve + i) == other) B(at::kReserve + i) = party;
     return 0xFF;
@@ -783,9 +783,9 @@ extern "C" unsigned char __cdecl PartyForm_Swap(void) {
 // 6 (column + 2 row), s8 each: (x, y) words and a flag (0x7E x 0x30 when set,
 // else 0x80 x 0x34), not blinking - and the cursor's, blinking.
 extern "C" void __cdecl PartyForm_Draw(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const U n = PartyCount();
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, B(at::kStyle));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
     for (U k = 0; k < n; ++k) {
         const U record = RecordOf(B(at::kPartyList + k));
         const int y = static_cast<int>(54 * k) + 0x3E;
@@ -794,13 +794,13 @@ extern "C" void __cdecl PartyForm_Draw(void) {
         DrawFont8(0x1A, y + 5, (Rec(record)[0xB] & 2) ? 7 : 0);
     }
     SH_CALL(PartyForm_DrawReserve)(0x96, 0x3B);
-    const unsigned char pick = B(at::kPickColumn);
+    const unsigned char pick = static_cast<unsigned char>(ShopStates_Clear0A);
     if (pick != 0x7F) {
-        const U cell = at::kPickCells + static_cast<U>(6 * (S8(pick) + 2 * S8(B(at::kPickRow))));
+        const U cell = at::kPickCells + static_cast<U>(6 * (S8(pick) + 2 * FieldS_PickRow));
         const bool wide = B(cell + 4) != 0;
         SH_CALL(Menu_DrawCursorBox)(static_cast<int>(W(cell)), static_cast<int>(W(cell + 2)), wide ? 0x7E : 0x80, wide ? 0x30 : 0x34, 0, 6);
     }
-    const U cell = at::kPickCells + static_cast<U>(6 * (S8(B(at::kColumn)) + 2 * S8(B(at::kRow))));
+    const U cell = at::kPickCells + static_cast<U>(6 * (FieldS_Column + 2 * BattleE1_ModeByte9));
     const bool wide = B(cell + 4) != 0;
     SH_CALL(Menu_DrawCursorBox)(static_cast<int>(W(cell)), static_cast<int>(W(cell + 2)), wide ? 0x7E : 0x80, wide ? 0x30 : 0x34, 1, 6);
 }
@@ -871,7 +871,7 @@ namespace {
 // 0x34, blink, 6). The row's upper half is a callee's leftover in the
 // original; Menu_DrawCursorBox reads the low word.
 void MemberCursor(int blink) {
-    SH_CALL(Menu_DrawCursorBox)(0x11, 54 * S8(B(at::kCursor)) + 0x3E, 0x80, 0x34, blink, 6);
+    SH_CALL(Menu_DrawCursorBox)(0x11, 54 * BattleActorCopies_ItemActor + 0x3E, 0x80, 0x34, blink, 6);
 }
 }  // namespace
 
@@ -882,17 +882,17 @@ void MemberCursor(int blink) {
 extern "C" void __cdecl ShopResist_Open(void) {
     if (B(at::kTimer) == 6) Sound(0x102);
     SH_CALL(ShopResist_DrawMembers)(1);
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 32 * static_cast<int>(B(at::kTimer)) + 0x98, 0x3F, 0, 0xFF);
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 32 * static_cast<int>(B(at::kTimer)) + 0x98, 0x3F, 0, 0xFF);
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
     if (t != 0) return;
-    const auto state = B(at::kState);
-    B(at::kCursor) = 0;
+    const auto state = FieldS_State;
+    BattleActorCopies_ItemActor = 0;
     B(at::kTimer) = 0;
-    B(at::kMenu05) = 0;
-    B(at::kMessageEnd) = 0;
-    B(at::kState) = static_cast<unsigned char>(state + 1);
-    B(at::kStep) = 0;
+    MenuLists_Cursor = 0;
+    AreaW3c_Load0F = 0;
+    FieldS_State = static_cast<unsigned char>(state + 1);
+    FieldS_Step = 0;
 }
 
 // original 0x583880: ShopResist_States[1], the member. The members, message
@@ -907,43 +907,43 @@ extern "C" void __cdecl ShopResist_PickMember(void) {
     auto count = static_cast<unsigned char>(SH_CALL(Party_Count)(0));
     SH_CALL(ShopResist_DrawMembers)(0);
     SH_CALL(Text_DrawAt)(0x1C, 0x15, 0, 0xFF, Message(0x63));
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 0x98, 0x3F, 0, 0xFF);
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 0x98, 0x3F, 0, 0xFF);
     MemberCursor(1);
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0x5000);
     if (repeat & 0x4000) {
         Sound(0x100);
-        const auto c = static_cast<unsigned char>(B(at::kCursor) + 1);
-        B(at::kCursor) = c;
-        if (S8(c) >= S8(count)) B(at::kCursor) = 0;
+        const auto c = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_ItemActor) + 1);
+        BattleActorCopies_ItemActor = c;
+        if (S8(c) >= S8(count)) BattleActorCopies_ItemActor = 0;
     }
     if (repeat & 0x1000) {
         Sound(0x100);
-        const auto c = static_cast<unsigned char>(B(at::kCursor) - 1);
-        B(at::kCursor) = c;
+        const auto c = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_ItemActor) - 1);
+        BattleActorCopies_ItemActor = c;
         if (S8(c) < 0) {
             --count;
-            B(at::kCursor) = count;
+            BattleActorCopies_ItemActor = count;
         }
     }
     if (Confirmed(Pressed())) {
-        if (Rec(MemberAt(S8(B(at::kCursor))))[0x1D] != 0) {
+        if (Rec(MemberAt(BattleActorCopies_ItemActor))[0x1D] != 0) {
             Sound(0x107);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 6);
-            B(at::kAnswer) = 1;
-            B(at::kState) = state;
-            B(at::kMessageEnd) = 2;
+            const auto state = static_cast<unsigned char>(FieldS_State + 6);
+            FieldS_Answer = 1;
+            FieldS_State = state;
+            AreaW3c_Load0F = 2;
             B(at::kTimer) = 0x3C;
         } else {
             Sound(0x104);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-            B(at::kPickRow) = 0;
-            B(at::kState) = state;
+            const auto state = static_cast<unsigned char>(FieldS_State + 1);
+            FieldS_PickRow = 0;
+            FieldS_State = state;
         }
     }
     if (Cancelled(Pressed())) {
         Sound(0x106);
-        B(at::kAnswer) = 0xF;
-        B(at::kState) = 6;
+        FieldS_Answer = 0xF;
+        FieldS_State = 6;
         B(at::kTimer) = 0x3C;
     }
 }
@@ -957,43 +957,43 @@ extern "C" void __cdecl ShopResist_PickMember(void) {
 // one. Cancel: sound 0x106 and the state down one.
 extern "C" void __cdecl ShopResist_PickBit(void) {
     SH_CALL(ShopResist_DrawMembers)(0);
-    SH_CALL(Text_DrawAt)(0x1C, 0x15, 0, 0xFF, Message(static_cast<U>(S8(B(at::kPickRow)) + 0x65)));
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 0x98, 0x3F, 0, 0xFF);
+    SH_CALL(Text_DrawAt)(0x1C, 0x15, 0, 0xFF, Message(static_cast<U>(FieldS_PickRow + 0x65)));
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 0x98, 0x3F, 0, 0xFF);
     MemberCursor(0);
-    SH_CALL(Menu_DrawHand)(0x9B, 13 * S8(B(at::kPickRow)) + 0x44, 0);
+    SH_CALL(Menu_DrawHand)(0x9B, 13 * FieldS_PickRow + 0x44, 0);
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0x5000);
     if (repeat & 0x4000) {
         Sound(0x100);
-        const auto b = static_cast<unsigned char>(B(at::kPickRow) + 1);
-        B(at::kPickRow) = b;
-        if (S8(b) >= 8) B(at::kPickRow) = 0;
+        const auto b = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_PickRow) + 1);
+        FieldS_PickRow = b;
+        if (S8(b) >= 8) FieldS_PickRow = 0;
     }
     if (repeat & 0x1000) {
         Sound(0x100);
-        const auto b = static_cast<unsigned char>(B(at::kPickRow) - 1);
-        B(at::kPickRow) = b;
-        if (S8(b) < 0) B(at::kPickRow) = 7;
+        const auto b = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_PickRow) - 1);
+        FieldS_PickRow = b;
+        if (S8(b) < 0) FieldS_PickRow = 7;
     }
     if (Confirmed(Pressed())) {
-        const U record = MemberAt(S8(B(at::kCursor)));
-        const U zenny = L(at::kZenny);
+        const U record = MemberAt(BattleActorCopies_ItemActor);
+        const U zenny = Party_Zenny;
         if (10u * Rec(record)[0xA] > zenny) {
             Sound(0x107);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 5);
-            B(at::kAnswer) = 0xB;
-            B(at::kState) = state;
-            B(at::kMessageEnd) = 0xC;
+            const auto state = static_cast<unsigned char>(FieldS_State + 5);
+            FieldS_Answer = 0xB;
+            FieldS_State = state;
+            AreaW3c_Load0F = 0xC;
             B(at::kTimer) = 0x3C;
         } else {
             Sound(0x104);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-            B(at::kAnswer) = 0;
-            B(at::kState) = state;
+            const auto state = static_cast<unsigned char>(FieldS_State + 1);
+            FieldS_Answer = 0;
+            FieldS_State = state;
         }
     }
     if (Cancelled(Pressed())) {
         Sound(0x106);
-        B(at::kState) = static_cast<unsigned char>(B(at::kState) - 1);
+        FieldS_State = static_cast<unsigned char>(FieldS_State - 1);
     }
 }
 
@@ -1005,22 +1005,22 @@ extern "C" void __cdecl ShopResist_PickBit(void) {
 extern "C" void __cdecl ShopResist_Confirm(void) {
     SH_CALL(ShopResist_DrawMembers)(0);
     SH_CALL(Text_DrawAt)(0x1C, 0x15, 0, 0xFF, Message(0x6D));
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 0x98, 0x3F, 0, B(at::kPickRow));
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 0x98, 0x3F, 0, static_cast<unsigned char>(FieldS_PickRow));
     MemberCursor(0);
     if ((SH_CALL(Menu_YesNo)() & 0xFF) == 0) return;
-    if (B(at::kAnswer) != 0) {
-        const int cursor = S8(B(at::kCursor));
-        B(at::kAnswer) = 0xC;
+    if (static_cast<unsigned char>(FieldS_Answer) != 0) {
+        const int cursor = BattleActorCopies_ItemActor;
+        FieldS_Answer = 0xC;
         B(at::kTimer) = 0x3C;
         const U level = Rec(MemberAt(cursor))[0xA];
-        const U zenny = L(at::kZenny) - 10u * level;
-        const auto state = static_cast<unsigned char>(B(at::kState) + 2);
-        SetL(at::kZenny, zenny);
-        B(at::kState) = state;
+        const U zenny = Party_Zenny - 10u * level;
+        const auto state = static_cast<unsigned char>(FieldS_State + 2);
+        Party_Zenny = zenny;
+        FieldS_State = state;
         return;
     }
     Sound(0x106);
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) - 2);
+    FieldS_State = static_cast<unsigned char>(FieldS_State - 2);
 }
 
 // original 0x583CD0: ShopResist_States[4], sliding out. The members sliding,
@@ -1028,14 +1028,14 @@ extern "C" void __cdecl ShopResist_Confirm(void) {
 // mode 1 (the field), state and step 0.
 extern "C" void __cdecl ShopResist_Close(void) {
     SH_CALL(ShopResist_DrawMembers)(1);
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 32 * static_cast<int>(B(at::kTimer)) + 0x98, 0x3F, 0, 0xFF);
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 32 * static_cast<int>(B(at::kTimer)) + 0x98, 0x3F, 0, 0xFF);
     const auto t = static_cast<unsigned char>(B(at::kTimer) + 1);
     B(at::kTimer) = t;
     if (t != 7) return;
     B(at::kTimer) = 0;
-    B(at::kMode) = 1;
-    B(at::kState) = 0;
-    B(at::kStep) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
+    FieldS_Step = 0;
 }
 
 // original 0x583D30: ShopResist_States[5], the grant. The bits with the chosen
@@ -1044,38 +1044,38 @@ extern "C" void __cdecl ShopResist_Close(void) {
 // the s8 bit, its count masked to five bits: 8 and up give 0),
 // Char_RecalcStats of the record and the state down four (the member).
 extern "C" void __cdecl ShopResist_Grant(void) {
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 0x98, 0x3F, 0, B(at::kPickRow));
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 0x98, 0x3F, 0, static_cast<unsigned char>(FieldS_PickRow));
     SH_CALL(ShopResist_DrawMembers)(0);
     MemberCursor(0);
-    if ((SH_CALL(ShopResist_Message)(At(at::kAnswer), 0xF) & 0xFF) == 0) return;
-    const U record = MemberAt(S8(B(at::kCursor)));
-    const U count = static_cast<U>(B(at::kPickRow)) & 0x1F;
+    if ((SH_CALL(ShopResist_Message)(At(FieldS_Answer_addr), 0xF) & 0xFF) == 0) return;
+    const U record = MemberAt(BattleActorCopies_ItemActor);
+    const U count = static_cast<std::uint32_t>(static_cast<unsigned char>(FieldS_PickRow)) & 0x1F;
     Rec(record)[0x1D] = static_cast<unsigned char>(count >= 8 ? 0 : (1u << count));
     SH_CALL(Char_RecalcStats)(Rec(record));
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) - 4);
+    FieldS_State = static_cast<unsigned char>(FieldS_State - 4);
 }
 
 // original 0x583DE0: ShopResist_States[6], the farewell. The bits, the
 // members; the messages to 0x10; done, the counter 0 and the state down two
 // (the slide out).
 extern "C" void __cdecl ShopResist_Farewell(void) {
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 0x98, 0x3F, 0, 0xFF);
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 0x98, 0x3F, 0, 0xFF);
     SH_CALL(ShopResist_DrawMembers)(0);
-    if ((SH_CALL(ShopResist_Message)(At(at::kAnswer), 0x10) & 0xFF) == 0) return;
-    const auto state = B(at::kState);
+    if ((SH_CALL(ShopResist_Message)(At(FieldS_Answer_addr), 0x10) & 0xFF) == 0) return;
+    const auto state = FieldS_State;
     B(at::kTimer) = 0;
-    B(at::kState) = static_cast<unsigned char>(state - 2);
+    FieldS_State = static_cast<unsigned char>(state - 2);
 }
 
 // original 0x583E30: ShopResist_States[7], a notice (the record refused, the
 // zenny short). The bits, the members, the cursor box blinking; the messages
 // to 0x929F0F (a byte); done, the state down six (the member).
 extern "C" void __cdecl ShopResist_Notice(void) {
-    SH_CALL(ShopResist_DrawBits)(B(at::kCursor), 0x98, 0x3F, 0, 0xFF);
+    SH_CALL(ShopResist_DrawBits)(static_cast<unsigned char>(BattleActorCopies_ItemActor), 0x98, 0x3F, 0, 0xFF);
     SH_CALL(ShopResist_DrawMembers)(0);
     MemberCursor(1);
-    if ((SH_CALL(ShopResist_Message)(At(at::kAnswer), B(at::kMessageEnd)) & 0xFF) == 0) return;
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) - 6);
+    if ((SH_CALL(ShopResist_Message)(At(FieldS_Answer_addr), AreaW3c_Load0F) & 0xFF) == 0) return;
+    FieldS_State = static_cast<unsigned char>(FieldS_State - 6);
 }
 
 // original 0x583EA0: the bits box of member row `member` (its record through
@@ -1097,7 +1097,7 @@ extern "C" void __cdecl ShopResist_DrawBits(unsigned member, int x, int y, unsig
     const U record = MemberAt(static_cast<int>(member & 0xFF));
     const U price = (10u * B(RecAddr(record) + 0xA)) & 0xFFFF;
     U text = colour & 0xFFFFFF00u;
-    if (L(at::kZenny) >= price && B(RecAddr(record) + 0x1D) == 0)
+    if (Party_Zenny >= price && B(RecAddr(record) + 0x1D) == 0)
         text |= (colour & 0xFF) != 0 ? 7u : 0u;
     else
         text |= 7u;
@@ -1124,7 +1124,7 @@ extern "C" void __cdecl ShopResist_DrawBits(unsigned member, int x, int y, unsig
 // Menu_DrawMemberStatus's draws and Menu_DrawMoneyBox's read the low word.
 extern "C" void __cdecl ShopResist_DrawMembers(unsigned sliding) {
     const int s = (sliding & 0xFF) != 0 ? static_cast<int>(B(at::kTimer)) : 0;
-    SH_CALL(Menu_DrawTitleBox)(0x14, 0x10 - 10 * s, 0x118, 0x13, B(at::kStyle));
+    SH_CALL(Menu_DrawTitleBox)(0x14, 0x10 - 10 * s, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
     if (PartyCount() != 0) {
         unsigned char k = 0;
         do {
@@ -1133,7 +1133,7 @@ extern "C" void __cdecl ShopResist_DrawMembers(unsigned sliding) {
             ++k;
         } while (k < PartyCount());
     }
-    SH_CALL(Menu_DrawMoneyBox)(32 * s + 0xB4, 0x26, 0, L(at::kZenny));
+    SH_CALL(Menu_DrawMoneyBox)(32 * s + 0xB4, 0x26, 0, Party_Zenny);
 }
 
 // original 0x584120: one message of a run - system message 0x63 + *index at
@@ -1165,9 +1165,9 @@ extern "C" unsigned char __cdecl ShopResist_Message(unsigned char* index, unsign
 // state up one.
 extern "C" void __cdecl SharedList_Begin(void) {
     SH_CALL(SharedList_Setup)();
-    const auto state = B(at::kState);
-    B(at::kSharedChoice) = 0;
-    B(at::kState) = static_cast<unsigned char>(state + 1);
+    const auto state = FieldS_State;
+    FieldS_SharedChoice = 0;
+    FieldS_State = static_cast<unsigned char>(state + 1);
 }
 
 // original 0x5841B0: SharedList_States[1], the choice (0x6BC8C4). Window 1's
@@ -1183,7 +1183,7 @@ extern "C" void __cdecl SharedList_Begin(void) {
 // sound 0x106, windows 0 and 1 closing (+3 1), the hand off, window 5's +3 1
 // without the key item, counter 5, state 4 (the close).
 extern "C" void __cdecl SharedList_Menu(void) {
-    const U choice = static_cast<U>(S8(B(at::kSharedChoice)));
+    const U choice = FieldS_SharedChoice;
     B(0x80318F) = 0xFF;
     SetW(0x803170, choice + 0x73);
     if (B(0x803187) == 0) {
@@ -1198,27 +1198,27 @@ extern "C" void __cdecl SharedList_Menu(void) {
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xA000);
     if (repeat & 0xA000) {
         Sound(0x101);
-        B(at::kSharedChoice) = static_cast<unsigned char>(B(at::kSharedChoice) ^ 1);
+        FieldS_SharedChoice = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_SharedChoice) ^ 1);
     }
     const U pressed = Pressed();
     if (Confirmed(pressed)) {
-        if (B(at::kSharedChoice) != 0) {
+        if (static_cast<unsigned char>(FieldS_SharedChoice) != 0) {
             if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0 &&
                 (SH_CALL(Inventory_Count)(0, at::kInkItem, 0) & 0xFFFF) == 0) {
                 Sound(0x107);
                 return;
             }
             if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0) {
-                const auto state = B(at::kState);
-                B(at::kAnswer) = 1;
-                B(at::kState) = static_cast<unsigned char>(state + 1);
+                const auto state = FieldS_State;
+                FieldS_Answer = 1;
+                FieldS_State = static_cast<unsigned char>(state + 1);
             } else {
                 Sound(0x102);
                 const unsigned char first = B(at::kJoined);
-                const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+                const auto state = static_cast<unsigned char>(FieldS_State + 1);
                 B(0x8031A9) = 7;
                 B(0x8031CD) = 7;
-                B(at::kPickIndex) = 0;
+                FieldS_PickIndex = 0;
                 B(0x8031AA) = 0xD;
                 B(0x8031AB) = 2;
                 B(0x8031A8) = 1;
@@ -1234,19 +1234,19 @@ extern "C" void __cdecl SharedList_Menu(void) {
                 B(0x8031D9) = 0;
                 SetW(0x8031D0, 0x140);
                 SetW(0x8031D2, 0x3E);
-                B(at::kState) = state;
-                B(at::kStep) = 1;
+                FieldS_State = state;
+                FieldS_Step = 1;
                 Sound(0x103);
-                B(0x80318F) = B(at::kSharedChoice);
+                B(0x80318F) = static_cast<unsigned char>(FieldS_SharedChoice);
                 B(at::kTimer) = 5;
                 return;
             }
         } else {
             Sound(0x104);
             Sound(0x102);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 2);
+            const auto state = static_cast<unsigned char>(FieldS_State + 2);
             B(0x8031F1) = 7;
-            B(at::kState) = state;
+            FieldS_State = state;
             B(0x8031F2) = 0xB;
             B(0x8031F3) = 3;
             B(0x8031F0) = 1;
@@ -1257,10 +1257,10 @@ extern "C" void __cdecl SharedList_Menu(void) {
             SetW(0x8031F4, 0xFF56);
             SetW(0x8031F6, 0x3E);
         }
-        B(0x80318F) = B(at::kSharedChoice);
+        B(0x80318F) = static_cast<unsigned char>(FieldS_SharedChoice);
         Sound(0x103);
         B(at::kTimer) = 5;
-        B(at::kStep) = 0;
+        FieldS_Step = 0;
         return;
     }
     if (!Cancelled(pressed)) return;
@@ -1270,13 +1270,13 @@ extern "C" void __cdecl SharedList_Menu(void) {
     B(0x803454) = 0;
     if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0) B(0x80323B) = 1;
     B(at::kTimer) = 5;
-    B(at::kState) = 4;
+    FieldS_State = 4;
 }
 
 // original 0x584460: SharedList_States[2], a tail jump through
 // SharedList_MoveSteps 0x664268 by the step byte, unchecked.
 extern "C" void __cdecl SharedList_MoveStep(void) {
-    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(at::kSharedListMoveSteps, B(at::kStep), "SharedList_MoveStep"))();
+    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(SharedList_MoveSteps_addr, FieldS_Step, "SharedList_MoveStep"))();
 }
 
 // original 0x584470: SharedList_MoveSteps[0], "use the item?". The help word
@@ -1294,8 +1294,8 @@ unsigned char g_use_item_yes_no_hand = 0;
 
 extern "C" void __cdecl SharedList_UseItem(void) {
     const U hand_x = g_use_item_yes_no_hand
-                         ? static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(W(0x803164)) + 7, S8(B(at::kAnswer))))
-                         : W(0x803164) - 36u * static_cast<U>(S8(B(at::kAnswer))) + 0xE8;
+                         ? static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(W(0x803164)) + 7, FieldS_Answer))
+                         : W(0x803164) - 36u * static_cast<std::uint32_t>(FieldS_Answer) + 0xE8;
     const U hand_y = W(0x803166) + 5;
     U pressed = L(at::kPressed);
     SetW(0x803170, 0x36);
@@ -1304,26 +1304,26 @@ extern "C" void __cdecl SharedList_UseItem(void) {
     SetW(0x80345A, hand_y);
     if (pressed & 0xA000) {
         Sound(0x101);
-        B(at::kAnswer) = static_cast<unsigned char>(B(at::kAnswer) ^ 1);
+        FieldS_Answer = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
         pressed = L(at::kPressed);
     }
     if (Confirmed(pressed)) {
-        if (B(at::kAnswer) != 0) {
+        if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             Sound(0x104);
             Sound(0x102);
-            B(at::kPickIndex) = 0;
+            FieldS_PickIndex = 0;
             SH_CALL(Inventory_Remove)(0, at::kInkItem, 1);
-            const unsigned char rec = B(at::kJoined + B(at::kPickIndex));
-            const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
+            const unsigned char rec = B(at::kJoined + FieldS_PickIndex);
+            const auto step = static_cast<unsigned char>(FieldS_Step + 1);
             OpenMemberWindows(rec);
-            B(at::kStep) = step;
+            FieldS_Step = step;
             return;
         }
     } else if (!Cancelled(pressed)) {
         return;
     }
     Sound(0x106);
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) - 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State - 1);
 }
 
 // original 0x5845E0: SharedList_MoveSteps[1], and ShopMode_States[9]'s step
@@ -1331,7 +1331,7 @@ extern "C" void __cdecl SharedList_UseItem(void) {
 extern "C" void __cdecl Menu_StepAfterTimer(void) {
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
-    if (t == 0) B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    if (t == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x584600: SharedList_MoveSteps[2], the member. Its record's name
@@ -1344,7 +1344,7 @@ extern "C" void __cdecl Menu_StepAfterTimer(void) {
 // window 3 +3 3, the step up one. Cancel: sound 0x106, windows 2 and 3 +3 1,
 // the state down one.
 extern "C" void __cdecl SharedList_PickMember(void) {
-    SH_CALL(TextRecord_Set)(0, 8, Rec(B(at::kJoined + B(at::kPickIndex))));
+    SH_CALL(TextRecord_Set)(0, 8, Rec(B(at::kJoined + FieldS_PickIndex)));
     const unsigned char open = B(0x8031CF);
     SetW(0x803170, 0x75);
     if (open == 0) {
@@ -1359,26 +1359,26 @@ extern "C" void __cdecl SharedList_PickMember(void) {
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     if (repeat & 0x8000) {
         Sound(0x101);
-        const auto p = static_cast<unsigned char>(B(at::kPickIndex) - 1);
+        const auto p = static_cast<unsigned char>(FieldS_PickIndex - 1);
         B(0x8031D9) = 0x32;
-        B(at::kPickIndex) = p;
-        if (S8(p) < 0) B(at::kPickIndex) = static_cast<unsigned char>(B(at::kJoinedCount) - 1);
+        FieldS_PickIndex = p;
+        if (S8(p) < 0) FieldS_PickIndex = static_cast<unsigned char>(FieldS_JoinedCount - 1);
     } else if (repeat & 0x2000) {
         Sound(0x101);
-        const auto p = static_cast<unsigned char>(B(at::kPickIndex) + 1);
-        const int last = static_cast<int>(B(at::kJoinedCount)) - 1;
-        B(at::kPickIndex) = p;
+        const auto p = static_cast<unsigned char>(FieldS_PickIndex + 1);
+        const int last = FieldS_JoinedCount - 1;
+        FieldS_PickIndex = p;
         B(0x8031D9) = 0x31;
-        if (static_cast<int>(B(at::kPickIndex)) > last) B(at::kPickIndex) = 0;
+        if (FieldS_PickIndex > last) FieldS_PickIndex = 0;
     }
-    const unsigned char rec = B(at::kJoined + B(at::kPickIndex));
+    const unsigned char rec = B(at::kJoined + FieldS_PickIndex);
     B(0x8031B2) = rec;
     B(0x8031D6) = rec;
     const U pressed = Pressed();
     if (Confirmed(pressed)) {
         Sound(0x103);
         Sound(0x102);
-        const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
+        const auto step = static_cast<unsigned char>(FieldS_Step + 1);
         B(0x8031FA) = 0;
         B(0x8031FB) = 0;
         B(0x8031FD) = 0;
@@ -1392,15 +1392,15 @@ extern "C" void __cdecl SharedList_PickMember(void) {
         B(0x8031FC) = 0xFF;
         SetW(0x8031F4, 0x140);
         SetW(0x8031F6, 0x3E);
-        B(at::kStep) = step;
+        FieldS_Step = step;
         return;
     }
     if (!Cancelled(pressed)) return;
     Sound(0x106);
-    const auto state = static_cast<unsigned char>(B(at::kState) - 1);
+    const auto state = static_cast<unsigned char>(FieldS_State - 1);
     B(0x8031AB) = 1;
     B(0x8031CF) = 1;
-    B(at::kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x5847F0: SharedList_MoveSteps[3], the member's slot (window 3's
@@ -1453,7 +1453,7 @@ extern "C" void __cdecl SharedList_PickSlot(void) {
     if (Confirmed(pressed)) {
         Sound(0x103);
         B(0x8031D8) = B(0x8031D7);
-        B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+        FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
     }
     if (pressed & 0x10) {
@@ -1469,12 +1469,12 @@ extern "C" void __cdecl SharedList_PickSlot(void) {
     if (!Cancelled(pressed)) return;
     Sound(0x102);
     Sound(0x106);
-    const auto step = static_cast<unsigned char>(B(at::kStep) - 1);
+    const auto step = static_cast<unsigned char>(FieldS_Step - 1);
     B(0x8031AB) = 2;
     B(0x8031CF) = 4;
     B(0x8031D8) = 0xFF;
     B(0x8031F3) = 1;
-    B(at::kStep) = step;
+    FieldS_Step = step;
 }
 
 // original 0x5849B0: SharedList_MoveSteps[4], the shared list's entry
@@ -1511,18 +1511,18 @@ extern "C" void __cdecl SharedList_PickShared(void) {
         B(slot) = entry;
         B(at::kSharedList + B(0x8031FB)) = had;
         Sound(0x103);
-        B(at::kStep) = static_cast<unsigned char>(B(at::kStep) - 1);
+        FieldS_Step = static_cast<unsigned char>(FieldS_Step - 1);
         return;
     }
     if (!Cancelled(pressed)) return;
     Sound(0x106);
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) - 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step - 1);
 }
 
 // original 0x584BB0: SharedList_States[3], a tail jump through
 // SharedList_SortSteps 0x66427C by the step byte, unchecked.
 extern "C" void __cdecl SharedList_SortStep(void) {
-    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(at::kSharedListSortSteps, B(at::kStep), "SharedList_SortStep"))();
+    [[clang::musttail]] return reinterpret_cast<Handler>(CodeAt(SharedList_SortSteps_addr, FieldS_Step, "SharedList_SortStep"))();
 }
 
 // original 0x584BC0: SharedList_SortSteps[0]: the counter down one; at 0
@@ -1532,7 +1532,7 @@ extern "C" void __cdecl SharedList_SortOpen(void) {
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
     if (t != 0) return;
-    const auto step = B(at::kStep);
+    const auto step = FieldS_Step;
     B(0x803215) = 7;
     B(0x803216) = 0xE;
     B(0x803214) = 1;
@@ -1540,7 +1540,7 @@ extern "C" void __cdecl SharedList_SortOpen(void) {
     B(0x80321F) = 0xFF;
     SetW(0x803218, 0xC8);
     SetW(0x80321A, 0x3F);
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x584C10: SharedList_SortSteps[1], window 6's three rows (+0xA).
@@ -1571,7 +1571,7 @@ extern "C" void __cdecl SharedList_SortMenu(void) {
         const unsigned char row = B(0x80321E);
         if (row == 0) {
             B(0x80321F) = 0;
-            B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+            FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
             return;
         }
         SH_CALL(SharedList_Sort)(row);
@@ -1580,10 +1580,10 @@ extern "C" void __cdecl SharedList_SortMenu(void) {
     if (!Cancelled(pressed)) return;
     Sound(0x102);
     Sound(0x106);
-    const auto state = static_cast<unsigned char>(B(at::kState) - 2);
+    const auto state = static_cast<unsigned char>(FieldS_State - 2);
     B(0x803214) = 0;
     B(0x8031F3) = 4;
-    B(at::kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x584D30: SharedList_SortSteps[2], two entries of the shared list
@@ -1635,7 +1635,7 @@ extern "C" void __cdecl SharedList_Arrange(void) {
         return;
     }
     B(0x80321F) = 0xFF;
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) - 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step - 1);
 }
 
 // original 0x584F90: the shared list's set-up. The joined records (+0xB bit
@@ -1646,10 +1646,10 @@ extern "C" void __cdecl SharedList_Arrange(void) {
 // 7, +2 0x12, +3 2, on, at (0x140, 0x26)) - the item count's.
 extern "C" void __cdecl SharedList_Setup(void) {
     unsigned char n = 0;
-    B(at::kJoinedCount) = 0;
+    FieldS_JoinedCount = 0;
     for (unsigned char r = 0; r < 8; ++r)
         if (Rec(r)[0xB] & 1) B(at::kJoined + n++) = r;
-    B(at::kJoinedCount) = n;
+    FieldS_JoinedCount = n;
     B(0x803161) = 7;
     B(0x803162) = 0;
     B(0x803163) = 2;
@@ -1700,7 +1700,7 @@ extern "C" void __cdecl SharedList_Setup(void) {
 extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     const int wx = static_cast<int>(move_script::Word(window + 4));
     const int wy = static_cast<int>(move_script::Word(window + 6));
-    SH_CALL(Menu_DrawBox)(wx + 3, wy + 3, 0x99, 0x9A, 0, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(wx + 3, wy + 3, 0x99, 0x9A, 0, static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0;   // both written by Menu_ListScroll on every path
     unsigned char moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(window + 0xA, &offset, &moving, window + 0xD);
@@ -1725,8 +1725,8 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
             SH_CALL(Menu_DrawSkillRow)(x, y, 0, kind, At(record), B(record + 0x12), 0);
         }
     }
-    SH_CALL(Menu_DrawBox)(move_script::Word(window + 4) + 3, move_script::Word(window + 6) + 3, 0x99, 0x14, window[9], B(at::kStyle));
-    SH_CALL(Menu_DrawBox)(move_script::Word(window + 4) + 3, move_script::Word(window + 6) + 0x92, 0x99, 8, window[9], B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(move_script::Word(window + 4) + 3, move_script::Word(window + 6) + 3, 0x99, 0x14, window[9], static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(move_script::Word(window + 4) + 3, move_script::Word(window + 6) + 0x92, 0x99, 8, window[9], static_cast<unsigned char>(BattleDraw_Colour));
     const int title_y = move_script::Word(window + 6) + 7;
     const unsigned char length = SH_CALL(Text_CharCount)(Text(at::kListTitle));
     SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + move_script::Word(window + 4), title_y, 0, 0x10, Text(at::kListTitle));
@@ -1763,7 +1763,7 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
 // above it); the lit row's colour over the stack's; Menu_DrawSkillRow reads
 // the kind's byte and six bits of the colour.
 extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
-    SH_CALL(Menu_DrawBox)(move_script::Word(window + 4) + 3, move_script::Word(window + 6) + 3, 0x92, 0xA0, 0, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(move_script::Word(window + 4) + 3, move_script::Word(window + 6) + 3, 0x92, 0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
     int y = move_script::Word(window + 6) + 0x1A;
     U slot = RecAddr(window[0xA]) + 0x7E;
     for (unsigned char k = 0; k < 0xA; ++k, y += 0xD, ++slot) {
@@ -1801,7 +1801,7 @@ extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
 // which reads none): 0 compacts, 1 sorts up, 2 down.
 extern "C" void __cdecl SharedList_Sort(unsigned how) {
     [[clang::musttail]] return reinterpret_cast<void (__cdecl*)(unsigned)>(
-        CodeAt(at::kSharedListSorts, how & 0xFF, "SharedList_Sort"))(how);
+        CodeAt(SharedList_Sorts_addr, how & 0xFF, "SharedList_Sort"))(how);
 }
 
 // original 0x5857F0: SharedList_Sorts[0]: the empty entries of the shared
@@ -1851,10 +1851,10 @@ extern "C" void __cdecl SharedList_SortCostUp(void) {
 // 0x58, 0), a word) in the 12 px font at (x + 0x34, y + 4); the piece lists
 // 0x66422C, 0x664238 nine times 8 apart, 0x664244.
 extern "C" void __cdecl SharedList_DrawItemCount(int x, int y) {
-    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x55, 0x10, 0, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x55, 0x10, 0, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(Text_DrawAt)(x + 4, y + 4, 0, 0xFF, Text(at::kItemLabel));
     const U count = SH_CALL(Inventory_Count)(0, at::kInkItem, 0) & 0xFFFF;
-    SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtItems), count);
+    SH_CALL(Crt_sprintf)(PrintBuf(), Format(Boss26Fx_CountFormat_addr), count);
     SH_CALL(Text_DrawFont12)(x + 0x34, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     SH_CALL(Menu_DrawPieces)(x, y, Text(at::kPiecesF), 0);
     for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPieces)(x + 8 * i, y, Text(at::kPiecesG), 0);
@@ -1884,7 +1884,7 @@ extern "C" void __cdecl SharedList_DrawItemCount(int x, int y) {
 // +0xB 0xFF, each member's window (0x8031F0 + 0x24 k) +3 8, the hand off, the
 // counter 0, the state down two.
 extern "C" void __cdecl Equip_ChooseSlot(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const U slot0 = B(0x80333E);
     B(0x803454) = 1;
     SetW(0x803458, L(0x803338) + 6);
@@ -1940,9 +1940,9 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
         const U m = B(0x803340);
         const unsigned char s = B(0x80333E);
         B(0x80333F) = s;
-        const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+        const auto state = static_cast<unsigned char>(FieldS_State + 1);
         B(0x803363) = B(at::kEquipCursor + s + 6u * m);
-        B(at::kState) = state;
+        FieldS_State = state;
         return;
     }
     if (pressed & 0x10) {
@@ -1970,10 +1970,10 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
             ++k;
         } while (k < PartyCount());
     }
-    const auto state = B(at::kState);
+    const auto state = FieldS_State;
     B(0x803454) = 0;
     B(at::kTimer) = 0;
-    B(at::kState) = static_cast<unsigned char>(state - 2);
+    FieldS_State = static_cast<unsigned char>(state - 2);
 }
 
 // original 0x58CAE0: the item (the item window 0x803358: +0xA the top, +0xB
@@ -1989,7 +1989,7 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
 // 0x58D570, the cursor 0xFF and the state down one; without, a buzz. Cancel:
 // sound 0x106, the cursor 0xFF, window 0x803400's +0xC 0, the state down one.
 extern "C" void __cdecl Equip_ChooseItem(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const U hand_y = 13 * (static_cast<U>(B(0x803363)) - B(0x803362) + 2) + W(0x80335E);
     SetW(0x803458, L(0x80335C) + 7);
     B(0x803454) = 1;
@@ -2068,9 +2068,9 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
         if (B(0x803365) != 0) {
             Sound(0x104);
             SH_AT(void (__cdecl*)(), at::kEquipApply)();
-            const auto state = B(at::kState);
+            const auto state = FieldS_State;
             B(0x803363) = 0xFF;
-            B(at::kState) = static_cast<unsigned char>(state - 1);
+            FieldS_State = static_cast<unsigned char>(state - 1);
             return;
         }
         Sound(0x107);
@@ -2078,10 +2078,10 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     }
     if (!Cancelled(pressed)) return;
     Sound(0x106);
-    const auto state = B(at::kState);
+    const auto state = FieldS_State;
     B(0x803363) = 0xFF;
     B(0x80340C) = 0;
-    B(at::kState) = static_cast<unsigned char>(state - 1);
+    FieldS_State = static_cast<unsigned char>(state - 1);
 }
 
 void FieldS_Inject() {
