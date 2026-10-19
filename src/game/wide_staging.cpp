@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/band_census.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -28,6 +29,12 @@ using move_script::Pos;
 using move_script::SetLong;
 using move_script::SetPos;
 using move_script::SetWord;
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
+// sprite head that every family shares, unless the pointer is an object's.
+static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 const unsigned char* Pointer(std::uint32_t a) { return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a)); }
@@ -477,7 +484,7 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
         // back and runs the op again): the sprite has not moved from where it
         // began, so that element is issued again.
         const Element& last = l->plan.e[l->next - 1];
-        if (last.steps != 0 && Long(Sprite_Current + 0x34) == l->x && Long(Sprite_Current + 0x38) == l->z) --l->next;
+        if (last.steps != 0 && SC()->x == l->x && SC()->z == l->z) --l->next;
         if (l->restore) {
             context[4] = l->speed;
             l->restore = false;
@@ -503,8 +510,8 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
     }
     const Element e = l->plan.e[l->next];
     ++l->next;
-    l->x = Long(Sprite_Current + 0x34);
-    l->z = Long(Sprite_Current + 0x38);
+    l->x = SC()->x;
+    l->z = SC()->z;
     if (e.fast && g_fast_index != 0) {
         l->speed = context[4];
         l->restore = true;
@@ -545,8 +552,8 @@ void Placed0DSite(unsigned char* context, const unsigned char* script, unsigned 
         if (!StepDisplacement(context, dir & 7u, dx, dz)) return;
         const auto k = static_cast<std::int32_t>(Steps(s));
         unsigned char* const sprite = Sprite_Current;
-        SetLong(sprite + 0x34, Long(sprite + 0x34) - k * dx);
-        SetLong(sprite + 0x38, Long(sprite + 0x38) - k * dz);
+        Spr(sprite)->x = Spr(sprite)->x - k * dx;
+        Spr(sprite)->z = Spr(sprite)->z - k * dz;
         Live* l = Take(context);
         if (l->restore && l->area == area && context[4] == g_fast_index) context[4] = l->speed;
         *l = Live{};
@@ -569,7 +576,7 @@ void PlacedSite(const unsigned char* op) {
         const std::uint32_t at = Address(sprite), objects = Address(Sprite_Objects);
         // The handler leaves its object current, its home (+0x8C / +0x90) where it put it.
         if (at < objects || at >= objects + 30u * 0xA4u || (at - objects) % 0xA4u != 0 || sprite[0x83] != s.index ||
-            Long(sprite + 0x8C) != Long(sprite + 0x34) || Long(sprite + 0x90) != Long(sprite + 0x38)) {
+            Spr(sprite)->target_x != Spr(sprite)->x || Spr(sprite)->target_z != Spr(sprite)->z) {
             bof3::Log("DIV-0122    site %u: the placement op at %08X did not leave its object current (%08X); not moved", i,
                       a, at);
             return;
@@ -581,9 +588,9 @@ void PlacedSite(const unsigned char* op) {
         std::int32_t dx, dz;
         if (!StepDisplacement(context, dir & 7u, dx, dz)) return;
         const auto k = static_cast<std::int32_t>(Steps(s));
-        SetLong(sprite + 0x34, Long(sprite + 0x34) - k * dx);
-        SetLong(sprite + 0x38, Long(sprite + 0x38) - k * dz);
-        SetWord(sprite + 0x3E, static_cast<unsigned>(AreaMap_Elevation(Long(sprite + 0x34), Long(sprite + 0x38))));
+        Spr(sprite)->x = Spr(sprite)->x - k * dx;
+        Spr(sprite)->z = Spr(sprite)->z - k * dz;
+        SetWord(sprite + 0x3E, static_cast<unsigned>(AreaMap_Elevation(Spr(sprite)->x, Spr(sprite)->z)));
         Live* l = Take(context);
         // A placement sets the object afresh: its speed is the op's, never one a stale entry would put back.
         *l = Live{};

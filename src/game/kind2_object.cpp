@@ -22,12 +22,18 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
 
 using namespace move_script;
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
+// sprite head that every family shares, unless the pointer is an object's.
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -136,8 +142,8 @@ extern "C" void __cdecl Kind2_Script(void) {
     if (result == 0xFF) {
         if (flags & 4) {   // a glide toward Field_Kind2X / Z
             const long x = Field_Kind2X, z = Field_Kind2Z;
-            const std::int32_t dx = Abs32(static_cast<std::uint32_t>(x) - static_cast<std::uint32_t>(Long(k + 0x34)));
-            const std::int32_t dz = Abs32(static_cast<std::uint32_t>(z) - static_cast<std::uint32_t>(Long(k + 0x38)));
+            const std::int32_t dx = Abs32(static_cast<std::uint32_t>(x) - static_cast<std::uint32_t>(Spr(k)->x));
+            const std::int32_t dz = Abs32(static_cast<std::uint32_t>(z) - static_cast<std::uint32_t>(Spr(k)->z));
             const std::int32_t distance = dx >= dz ? dx : dz;
             if (distance == 0) {   // already there
                 k[0x80] = static_cast<unsigned char>(flags & 0xFB);
@@ -148,22 +154,22 @@ extern "C" void __cdecl Kind2_Script(void) {
             const unsigned char speed = Field_MoveSpeeds[k[0x84]];   // an unchecked byte index, as the original's
             MoveScript_F3Divisor = static_cast<short>(static_cast<std::uint16_t>(speed << 3));
             const long ground = g.elevation(x, z);
-            const auto rest = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(k + 0x3C)) -
+            const auto rest = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(k)->height) -
                                                         (static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16));
             const std::int32_t per_speed = Idiv(0x80, MoveScript_F3Divisor);
             MoveScript_FAWord = 0;
             k[2] = 3;
             const auto frames = static_cast<std::int32_t>(static_cast<std::int16_t>(twice >> 16));
             const std::int32_t slope = Idiv(rest, static_cast<std::int32_t>(static_cast<std::uint32_t>(per_speed) * static_cast<std::uint32_t>(frames)));
-            Field_Kind2X = Long(k + 0x34);
-            Field_Kind2Z = Long(k + 0x38);
-            SetLong(k + 0x14, slope);
+            Field_Kind2X = Spr(k)->x;
+            Field_Kind2Z = Spr(k)->z;
+            Spr(k)->step_y = slope;
             SetWord(k + 0x3E, static_cast<std::uint16_t>(MapView_Elevation));
             return;
         }
         // No glide: the view is reset on the object where it stands.
-        Field_Kind2X = Long(k + 0x34);
-        Field_Kind2Z = Long(k + 0x38);
+        Field_Kind2X = Spr(k)->x;
+        Field_Kind2Z = Spr(k)->z;
         g.view_reset();
         k[8] = 0;
         k[2] = 0;
@@ -182,7 +188,7 @@ extern "C" void __cdecl Kind2_Script(void) {
         return;
     }
     // A timed move began: its first frame of elevation, then state 1.
-    SetLong(k + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(k + 0x3C)) + static_cast<std::uint32_t>(Long(k + 0x14))));
+    Spr(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(k)->height) + static_cast<std::uint32_t>(Spr(k)->step_y));
     g.set_elevation(Word(k + 0x3E));
     k[2] = 1;
 }
@@ -199,7 +205,7 @@ extern "C" void __cdecl Kind2_Script(void) {
 extern "C" void __cdecl Kind2_Move(void) {
     unsigned char* const k = Sprite_Kind2;
     if (Field_Kind2Hold != 0) {
-        SetLong(k + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(k + 0x3C)) + static_cast<std::uint32_t>(Long(k + 0x14))));
+        Spr(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(k)->height) + static_cast<std::uint32_t>(Spr(k)->step_y));
         g.set_elevation(Word(k + 0x3E));
         return;
     }
@@ -228,15 +234,15 @@ extern "C" void __cdecl Kind2_WaitRequest(void) {
 extern "C" void __cdecl Kind2_Travel(void) {
     unsigned char* const k = Sprite_Kind2;
     if (Field_Kind2Hold != 0) {
-        const std::int32_t slope = Long(k + 0x14);
+        const std::int32_t slope = Spr(k)->step_y;
         if (slope == 0) return;
-        SetLong(k + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(k + 0x3C)) + static_cast<std::uint32_t>(slope)));
+        Spr(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(k)->height) + static_cast<std::uint32_t>(slope));
         g.set_elevation(Word(k + 0x3E));
         return;
     }
     g.set_elevation(static_cast<int>(g.elevation(Field_Kind2X, Field_Kind2Z)));
     const unsigned char flags = k[0x80];
-    SetLong(k + 0x14, 0);
+    Spr(k)->step_y = 0;
     k[0x80] = static_cast<unsigned char>(flags & 0xFB);
     k[8] = 0;
     k[2] = 0;
@@ -312,8 +318,8 @@ std::uint32_t Id(const void* p) {
 void Shift(std::uint32_t h) {
     unsigned char* const k = Sprite_Kind2;
     const std::uint32_t by_x = Hash(h), by_z = Hash(h + 1);
-    SetLong(k + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(k + 0x34)) + by_x));
-    SetLong(k + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(k + 0x38)) + by_z));
+    Spr(k)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(k)->x) + by_x);
+    Spr(k)->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(k)->z) + by_z);
     Field_Kind2X = static_cast<long>(static_cast<std::uint32_t>(Field_Kind2X) + by_x);
     Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(Field_Kind2Z) + by_z);
 }
@@ -329,13 +335,13 @@ unsigned char __cdecl StubStep(unsigned char* context, const unsigned char* scri
     if (h % 3 == 0) k[0x87] = static_cast<unsigned char>(Hash(2) % 3);
     if (h % 5 == 0) k[0x84] = static_cast<unsigned char>(1 + Hash(3) % 5);
     if (h % 7 == 0) Shift(4);
-    if (h % 11 == 0) SetLong(k + 0x14, static_cast<std::int32_t>(Hash(6)));
-    if (h % 13 == 0) SetLong(k + 0x3C, static_cast<std::int32_t>(Hash(7)));
+    if (h % 11 == 0) Spr(k)->step_y = static_cast<std::int32_t>(Hash(6));
+    if (h % 13 == 0) Spr(k)->height = static_cast<std::int32_t>(Hash(7));
     if (h % 17 == 0) { k[1] = static_cast<unsigned char>(Hash(8)); k[2] = static_cast<unsigned char>(Hash(9)); k[3] = static_cast<unsigned char>(Hash(10)); }
     const unsigned char result = (h >> 28) < 7 ? 0xFF : static_cast<unsigned char>(Hash(11));
     // For the coverage count: what the caller branches on after this.
-    const std::int32_t dx = Abs32(static_cast<std::uint32_t>(Field_Kind2X) - static_cast<std::uint32_t>(Long(k + 0x34)));
-    const std::int32_t dz = Abs32(static_cast<std::uint32_t>(Field_Kind2Z) - static_cast<std::uint32_t>(Long(k + 0x38)));
+    const std::int32_t dx = Abs32(static_cast<std::uint32_t>(Field_Kind2X) - static_cast<std::uint32_t>(Spr(k)->x));
+    const std::int32_t dz = Abs32(static_cast<std::uint32_t>(Field_Kind2Z) - static_cast<std::uint32_t>(Spr(k)->z));
     g_after_step = {k[0x80], result, k[0x87], static_cast<std::uint32_t>(dx >= dz ? dx : dz)};
     return result;
 }
@@ -345,7 +351,7 @@ long __cdecl StubElevation(long x, long z) {
     Record(2, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z));
     unsigned char* const k = Sprite_Kind2;
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) SetLong(k + 0x3C, static_cast<std::int32_t>(Hash(1)));
+    if (h % 3 == 0) Spr(k)->height = static_cast<std::int32_t>(Hash(1));
     if (h % 4 == 0) MapView_Elevation = static_cast<long>(Hash(2));
     if (h % 5 == 0) MoveScript_F3Divisor = static_cast<short>(1 + Hash(3) % 0x80);
     if (h % 7 == 0) k[0x80] = static_cast<unsigned char>(Hash(4));
@@ -474,8 +480,8 @@ void SeedDistance() {
     if (Next() % 2) { dx = minor; dz = major; }
     if (Next() % 2) dx = 0u - dx;
     if (Next() % 2) dz = 0u - dz;
-    Field_Kind2X = static_cast<long>(static_cast<std::uint32_t>(Long(k + 0x34)) + dx);
-    Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(Long(k + 0x38)) + dz);
+    Field_Kind2X = static_cast<long>(static_cast<std::uint32_t>(Spr(k)->x) + dx);
+    Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(Spr(k)->z) + dz);
 }
 
 // A dispatcher's copy: its `jmp [eax*4 + table]` re-aimed at `table`.
@@ -526,7 +532,7 @@ void SelfTest(void* const (&theirs)[kCount]) {
         o[0x84] = static_cast<unsigned char>(1 + Next() % 5);
         o[0x87] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
         o[9] = static_cast<unsigned char>(Next() % 2 ? 0 : 1 + Next() % 3);
-        if (Often()) SetLong(o + 0x14, 0);
+        if (Often()) Spr(o)->step_y = 0;
         if (Next() % 2) Field_Kind2Hold = 0;
         if (Next() % 2) Field_Request = 2;
         MoveScript_F3Divisor = static_cast<short>(Next());
