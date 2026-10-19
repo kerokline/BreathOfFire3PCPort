@@ -1298,7 +1298,7 @@ extern "C" unsigned char __cdecl EventCond_ChapterAtMost(const unsigned char** a
 extern "C" unsigned char __cdecl EventCond_RecordBit0(const unsigned char** at) { return Record(**at)[0xB] & 1; }
 // original 0x57C2F0: condition 16 - bit `operand` of the gene flags 0x904650
 // (Flags_Test; the dword's 18 bits, battle_e5.md).
-extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { return SH_CALL(Flags_Test)(At(0x904650), **at); }
+extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { return SH_CALL(Flags_Test)(At(ScenaSc7_EventFlags_addr), **at); }
 
 // original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC): bit 6
 // of the three party objects' first byte cleared - ObjTrio_SetBit40's inverse.

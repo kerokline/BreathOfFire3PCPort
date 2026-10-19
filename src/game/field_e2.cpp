@@ -683,7 +683,7 @@ extern "C" void __cdecl PartySet_ErrorLoop(void) {
 // Called by mode 11's step GameMode11_Frame 0x496790. PSX twin 0x80167CBC (call, a
 // hypothesis).
 extern "C" void __cdecl Mode11_ObjectFrame(void) {
-    const std::uint16_t held = W(0x7E1BE8);
+    const std::uint16_t held = Input_Held;
     const U state = B(at::kObject + 1);
     Sprite_Current = At(FieldEvent_Object905DA0_addr);
     Field_State = ObjTrio;

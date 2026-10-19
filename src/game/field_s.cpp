@@ -307,8 +307,8 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
             rv::Current<records::PartyMember>()->state4 = 0;
         } while (i < Field_MemberCount);
     }
-    Field_Kind2X = static_cast<long>(L(0x802D74));
-    Field_Kind2Z = static_cast<long>(L(0x802D78));
+    Field_Kind2X = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
+    Field_Kind2Z = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
     SH_CALL(Field_ViewReset)();
     const U descriptor = L(at::kAreaDescriptors + 4 * static_cast<std::uint32_t>(Game_AreaNumber));
     SH_CALL(Area_RunPlacement)(reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(descriptor))));
@@ -540,7 +540,7 @@ extern "C" void __cdecl PartyForm_LeaveBlack(void) {
 // the view; Transition_Start(3) and the step up one.
 extern "C" void __cdecl PartyForm_Reload(void) {
     SH_CALL(Menu_DrawBlackScreen)();
-    const unsigned char kept = B(0x802DC9);
+    const unsigned char kept = rv::As<records::PartyMember>(ObjTrio)->char_id;
     SH_CALL(PartySet_Load)(Cond_Flags[0xd2], Cond_Flags[0xd3], Cond_Flags[0xd4], 0);
     bool lone = false;
     if (AreaW3c_CampFlag != 0) {
@@ -549,12 +549,12 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         if (((flag & 0xFF) == 0 || area == 0xBB) && area != 0x85) lone = true;
     }
     if (lone) {
-        const unsigned char member = B(0x903A79);
+        const unsigned char member = rv::As<records::CharRecord>(At(bof3::addr::CharacterRecords))->char_id;
         std::memcpy(At(at::kLeaderName), At(at::kRecords), 0xA4);
-        B(0x802D45) = 0;
+        rv::As<records::PartyMember>(ObjTrio)->actor = 0;
         Sprite_Current = ObjTrio;
         Field_MemberCount = 1;
-        B(0x802D88) = 0;
+        rv::As<records::PartyMember>(ObjTrio)->scale_mode = 0;
         SH_CALL(Field_MemberSprite)(member, 0);
         SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
         rv::Current<records::PartyMember>()->state = 0;
@@ -581,14 +581,14 @@ extern "C" void __cdecl PartyForm_Reload(void) {
                 ++i;
             } while (i < Field_MemberCount);
         }
-        if (kept != 2 && B(0x802DC9) == 2) {
-            const U facing = B(0x802D48) * 4u;
-            SetL(0x802D74, L(0x802D74) + (static_cast<U>(S16(W(at::kFacingSteps + facing))) << 15));
-            SetL(0x802D78, L(0x802D78) + (static_cast<U>(S16(W(at::kFacingSteps + 2 + facing))) << 15));
+        if (kept != 2 && rv::As<records::PartyMember>(ObjTrio)->char_id == 2) {
+            const U facing = rv::As<records::PartyMember>(ObjTrio)->direction * 4u;
+            rv::As<records::PartyMember>(ObjTrio)->x = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x) + (static_cast<U>(S16(W(at::kFacingSteps + facing))) << 15);
+            rv::As<records::PartyMember>(ObjTrio)->z = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z) + (static_cast<U>(S16(W(at::kFacingSteps + 2 + facing))) << 15);
         }
         if ((Field_StatusBits & 0x40) == 0) {
-            Field_Kind2X = static_cast<long>(L(0x802D74));
-            Field_Kind2Z = static_cast<long>(L(0x802D78));
+            Field_Kind2X = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
+            Field_Kind2Z = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
             SH_CALL(Field_ViewReset)();
         }
     }
@@ -605,8 +605,8 @@ extern "C" void __cdecl PartyForm_Reload(void) {
             FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
             return;
         }
-        Field_Kind2X = static_cast<long>(L(0x802D74));
-        Field_Kind2Z = static_cast<long>(L(0x802D78));
+        Field_Kind2X = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
+        Field_Kind2Z = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
         SH_CALL(Field_ViewReset)();
     }
     if (Game_AreaNumber == 0x5C) {
@@ -616,13 +616,13 @@ extern "C" void __cdecl PartyForm_Reload(void) {
                 const U obj = 0x802D40 + i * at::kObjStride;
                 SetL(obj + 0x34, 0x190000);
                 SetL(obj + 0x38, 0x3C0000);
-                const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(0x802D74)), static_cast<long>(L(0x802D78)));
+                const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x)), static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z)));
                 SetL(obj + 0x3C, static_cast<U>(S16(static_cast<U>(h))) << 16);
                 ++i;
             } while (i < Field_MemberCount);
         }
-        Field_Kind2X = static_cast<long>(L(0x802D74));
-        Field_Kind2Z = static_cast<long>(L(0x802D78));
+        Field_Kind2X = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
+        Field_Kind2Z = static_cast<long>(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
         SH_CALL(Field_ViewReset)();
     }
     SH_CALL(Transition_Start)(3);
