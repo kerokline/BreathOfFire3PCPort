@@ -12,7 +12,6 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
-- **D321, PSP-JP-only item lists stop at start** ([`known-defects.md`](known-defects.md) D321): the L1 / R1 corner has no Japanese source - blank, the Latin icons, or part of the ja-JP layer (D280)?
 
 ## 2026-10-18, the install-gap round
 
@@ -57,6 +56,7 @@ the doc that has the reading.
   A/B/C caches, the attract gate, the hash routes, the captures) has not run.
   This is a machine setting only you can make:
   [`install-gap-round.md`](install-gap-round.md) 5, [`install-gap-reads.md`](install-gap-reads.md) 8.
+- **D321, PSP-JP-only item lists stop at start** ([`known-defects.md`](known-defects.md) D321): the L1 / R1 corner has no Japanese source - blank, the Latin icons, or part of the ja-JP layer (D280)?
 
 ## 2026-10-17, the button unification round
 
