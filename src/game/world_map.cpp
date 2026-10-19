@@ -87,10 +87,6 @@ U Long(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void PutWord(unsigned char* p, U v) {
-    const auto w = static_cast<std::uint16_t>(v);
-    std::memcpy(p, &w, sizeof w);
-}
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 unsigned char* Object() { return At(Long(At(at::Sprite_CurrentAt()))); }
@@ -293,18 +289,18 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawNeedle(
     g.set_trans_matrix(reinterpret_cast<const unsigned long*>(matrix));
     unsigned char* const prim = PacketNext();
     unsigned char* const scratch = At(at::Prim_VertexScratchAt());
-    PutWord(scratch + 0x00, 0xFFF6);   // (-10, 0, 0)
-    PutWord(scratch + 0x02, 0);
-    PutWord(scratch + 0x04, 0);
-    PutWord(scratch + 0x08, 0);        // (0, -4, 0)
-    PutWord(scratch + 0x0A, 0xFFFC);
-    PutWord(scratch + 0x0C, 0);
-    PutWord(scratch + 0x10, 0);        // (0, 4, 0)
-    PutWord(scratch + 0x12, 4);
-    PutWord(scratch + 0x14, 0);
-    PutWord(scratch + 0x18, 0xA);      // (10, 0, 0)
-    PutWord(scratch + 0x1A, 0);
-    PutWord(scratch + 0x1C, 0);
+    rv::As<records::SVector>(scratch)[0].x = 0xFFF6;   // (-10, 0, 0)
+    rv::As<records::SVector>(scratch)[0].y = 0;
+    rv::As<records::SVector>(scratch)[0].z = 0;
+    rv::As<records::SVector>(scratch)[1].x = 0;        // (0, -4, 0)
+    rv::As<records::SVector>(scratch)[1].y = 0xFFFC;
+    rv::As<records::SVector>(scratch)[1].z = 0;
+    rv::As<records::SVector>(scratch)[2].x = 0;        // (0, 4, 0)
+    rv::As<records::SVector>(scratch)[2].y = 4;
+    rv::As<records::SVector>(scratch)[2].z = 0;
+    rv::As<records::SVector>(scratch)[3].x = 0xA;      // (10, 0, 0)
+    rv::As<records::SVector>(scratch)[3].y = 0;
+    rv::As<records::SVector>(scratch)[3].z = 0;
     g.set_poly_g4(prim);
     long depth, flag;
     g.rot_trans_pers4(reinterpret_cast<const short*>(scratch), reinterpret_cast<const short*>(scratch + 8),
