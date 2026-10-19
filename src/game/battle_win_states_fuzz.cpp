@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_win_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include <windows.h>
@@ -406,9 +407,9 @@ void Fix(unsigned k) {
     At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
     // no gauge top of 0: the original faults on it (section 4), ours aborts
     for (unsigned e = 0; e < 6; ++e)
-        if (Word(Enemy(e) + 0x30) == 0) SetWord(Enemy(e) + 0x30, 1 + Next() % 0xFFFF);
+        if (reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp == 0) reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp = 1 + Next() % 0xFFFF;
     for (unsigned m = 0; m < 5; ++m)
-        if (Word(Member(m) + 0xA0) == 0) SetWord(Member(m) + 0xA0, 1 + Next() % 0xFFFF);
+        if (reinterpret_cast<records::PartyMember*>(Member(m))->max_hp == 0) reinterpret_cast<records::PartyMember*>(Member(m))->max_hp = 1 + Next() % 0xFFFF;
 }
 
 // A value against its top: 0, the gauge's floor (55 v < top), a quarter
@@ -427,40 +428,41 @@ unsigned Against(unsigned top) {
 unsigned Top() { return Often() ? 1 + Next() % 999 : Half() ? 1 + Next() % 4 : 1 + Next() % 0xFFFF; }
 
 void SeedEnemy(unsigned e) {
-    unsigned char* const r = Enemy(e);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80);
     const unsigned top = Top();
-    SetWord(r + 0x30, top);
-    SetWord(r + 0x24, Against(top));
-    SetWord(r + 0x12, Next() & 0xFFFF);
+    enemy_rec->max_hp = top;
+    enemy_rec->hp = Against(top);
+    enemy_rec->status = Next() & 0xFFFF;
     At(at::kEnemies + at::kEnemyStride * e - 0x78)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next());
 }
 void SeedMember(unsigned m, bool ap_top_zero_often) {
-    unsigned char* const r = Member(m);
+    auto* const member_rec = reinterpret_cast<records::PartyMember*>(Member(m));
     const unsigned top = Top();
-    SetWord(r + 0xA0, top);
-    SetWord(r + 0x98, Against(top));
+    member_rec->max_hp = top;
+    member_rec->hp = Against(top);
     const unsigned ap = ap_top_zero_often && Half() ? 0 : Top();
-    SetWord(r + 0xA2, ap);
-    SetWord(r + 0x9A, ap ? Against(ap) : Next() & 0xFFFF);
-    SetWord(r + 0x90, Next() & 0xFFFF);
-    r[8] = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 6);
-    r[0x89] = static_cast<unsigned char>(Often() ? Next() % 11 : Next());
+    member_rec->max_ap = ap;
+    member_rec->ap = ap ? Against(ap) : Next() & 0xFFFF;
+    member_rec->status = Next() & 0xFFFF;
+    member_rec->direction = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 6);
+    member_rec->char_id = static_cast<unsigned char>(Often() ? Next() % 11 : Next());
 }
 
 void Seed(unsigned k) {
     unsigned char* const w = Current();
+    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
     switch (k) {
-    case kRun: w[2] = static_cast<unsigned char>(Next() % 8); break;
+    case kRun: window_rec->kind = static_cast<unsigned char>(Next() % 8); break;
     case kPartyStates: case kCrossStates: case kLabelStates: case kBannerStates: case kMemberStates:
-        w[3] = static_cast<unsigned char>(Next() % 3);
+        window_rec->state = static_cast<unsigned char>(Next() % 3);
         break;
-    case kEnemyStates: w[3] = static_cast<unsigned char>(Next() % 4); break;
+    case kEnemyStates: window_rec->state = static_cast<unsigned char>(Next() % 4); break;
     default: break;
     }
     switch (k) {
     case kSlideIn: {
         static const unsigned kY[] = {0xC4, 0xC7, 0xC8, 0xC9, 0xCB, 0xCC, 0xCD, 0x100, 0x7FFF, 0x8000, 0xFFFF, 0};
-        SetWord(w + 6, Often() ? kY[Next() % 12] : Next() & 0xFFFF);
+        window_rec->centre_y = Often() ? kY[Next() % 12] : Next() & 0xFFFF;
         break;
     }
     case kCrossGrow:

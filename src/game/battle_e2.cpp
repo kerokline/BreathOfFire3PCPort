@@ -35,6 +35,7 @@
 #include "game/battle_e2_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -60,11 +61,18 @@ unsigned char* PtrAt(U cell) { return At(UL(At(cell))); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return PtrAt(at::kOwner); }
 unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
+// Sprite_Current typed by who runs: a battle task slot, or the enemy an
+// enemy op runs on (docs/battle_e2.md 1.1, 1.3).
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // An enemy object and a party member by an actor's index, as the originals
 // address them (32-bit wrap: an index below its base reads below the array).
 unsigned char* EnemyObj(U index) { return At(at::kEnemies + index * at::kEnemyStride); }
 unsigned char* Member(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
 unsigned char* Task(U slot) { return At(at::kTasks + slot * at::kTaskStride); }
+records::BattleEnemy* EnemyObjRec(U index) { return reinterpret_cast<records::BattleEnemy*>(EnemyObj(index)); }
+records::PartyMember* MemberRec(U index) { return reinterpret_cast<records::PartyMember*>(Member(index)); }
 
 // A party member the restore steps write through (or read from before they
 // write): the original indexes the three records by a byte it never checks;
@@ -126,9 +134,9 @@ U Dispatch(const char* who, U table, unsigned n, unsigned at_, U word) {
 // The animation set pointer 0x9039D8 at the battle's pose pool around a task's
 // state call, the field's after (as BattleFx_PoseTask and the actor watch).
 void WithBattlePoses(const char* who, const U* entries, unsigned n) {
-    unsigned char* const s = Sprite_Current;   // read before the store, as the original
+    auto* const cur_task = ScTask();   // read before the store, as the original
     BattleE2_AnimSet = at::kAnimSetBattle;
-    CallState(who, entries, n, s[1]);
+    CallState(who, entries, n, cur_task->state);
     BattleE2_AnimSet = at::kAnimSetField;
 }
 
@@ -140,7 +148,7 @@ void MarkerLook() {
     Sc()[0x25] = 0x1E;
     Sc()[0x26] = 0;
     Sc()[0x24] = 0x80;
-    Sc()[0x27] = 0x1B;
+    ScTask()->clut = 0x1B;
     Sc()[0x28] = 1;
     SetWord(Sc() + 0x2C, 2);
     Sc()[0x2B] = 0;
@@ -208,7 +216,7 @@ extern "C" void __cdecl BattleFx_PlaceOverOwner(void) {
     unsigned char* o = Owner();
     const unsigned actor = o[5];
     if (actor <= 2) {
-        const unsigned row = Member(actor)[0x89];
+        const unsigned row = MemberRec(actor)->char_id;
         const auto dx = static_cast<std::int8_t>(At(BattleWin_MemberTargetOffsets_addr + (o[8] + row * 4) * 2)[0]);
         SetWord(Sc() + 0x2E, static_cast<unsigned>(dx + Word(o + 0x2E)));
         o = Owner();
@@ -242,13 +250,13 @@ extern "C" void __cdecl BattleFx_PlaceOverOwner(void) {
 extern "C" void __cdecl BattleFx_WatchIcon(void) {
     if ((UL(At(at::kRoundFlags)) & 0x400) != 0) {
         if (Owner()[5] == B(at::kActor)) {
-            ++Sprite_Current[1];
+            ++ScTask()->state;
             return;
         }
         if (B(at::kActKind) == 4) {
             const unsigned id = Word(At(at::kMagicId));
             if (id == 0x97 || id == 0xE1) {
-                ++Sprite_Current[1];
+                ++ScTask()->state;
                 return;
             }
         }
@@ -262,7 +270,7 @@ extern "C" void __cdecl BattleFx_WatchIcon(void) {
             BH_CALL(BattleTask_FreeCurrent)();
             return;
         }
-        Sc()[0x27] = 0xFF;
+        ScTask()->clut = 0xFF;
         Sc()[0xA] = 0x3C;
         if (Sc()[0xB] != icon) {
             BH_CALL(Sprite_SetAnimation)(At(at::kStatusIcons + icon)[0]);
@@ -271,11 +279,11 @@ extern "C" void __cdecl BattleFx_WatchIcon(void) {
     }
     const unsigned actor = Owner()[5];
     const bool shown = actor <= 2 ? (Member(actor)[0x90] & 0x58) != 0 : (EnemyObj(actor - 3)[0x92] & 0x58) != 0;
-    if (!shown) Sc()[1] = 0;
+    if (!shown) ScTask()->state = 0;
     BH_CALL(BattleFx_PlaceOverOwner)();
     BH_CALL(Sprite_ScriptTick)();
     BH_CALL(Sprite_QueueOverlay)();
-    if (BH_CALL(Battle_ActorIsOut)(Owner()[5]) != 0 && (Owner()[0] & 1) == 0) Sc()[1] = 0;
+    if (BH_CALL(Battle_ActorIsOut)(Owner()[5]) != 0 && (Owner()[0] & 1) == 0) ScTask()->state = 0;
 }
 
 // ===========================================================================
@@ -287,8 +295,8 @@ extern "C" void __cdecl BattleFx_WatchIcon(void) {
 // has +0x134 bit 0 before a record not in use is met; else 0.
 extern "C" unsigned char __cdecl Battle_BackupFlagged(void) {
     for (unsigned i = 0; i < 3; ++i) {
-        const unsigned char* const r = At(at::kBackup + i * at::kPartyStride);
-        if ((r[0] & 1) == 0) return 0;
+        auto* const member_rec = reinterpret_cast<const records::PartyMember*>(At(at::kBackup + i * at::kPartyStride));
+        if ((member_rec->flags & 1) == 0) return 0;
         if ((At(at::kBackupFlags + i * at::kPartyStride)[0] & 1) != 0) return 1;
     }
     return 0;
@@ -313,60 +321,65 @@ namespace {
 // (the copy can overwrite the owner itself - it is the member's record in
 // the game); Sprite_Current is re-read after 0x453300 and after each call.
 void RestoreBody(const char* who, unsigned char* o, bool keep8) {
-    auto rec = [&]() { return Rec(who, o[5]); };
-    const unsigned char kept8 = rec()[8];
+    auto* const owner_rec = reinterpret_cast<records::PartyMember*>(o);
+    auto rec = [&]() { return Rec(who, owner_rec->member); };
+    auto recm = [&]() { return reinterpret_cast<records::PartyMember*>(rec()); };
+    const unsigned char kept8 = recm()->direction;
     {
         unsigned char* const to = rec();
-        const unsigned char* const from = At(at::kBackup + static_cast<U>(o[5]) * at::kPartyStride);
+        const unsigned char* const from = At(at::kBackup + static_cast<U>(owner_rec->member) * at::kPartyStride);
         for (unsigned k = 0; k < at::kPartyStride; k += 4) SetLong(to + k, Long(from + k));   // rep movsd, forward
     }
-    rec()[1] = 6;
-    rec()[2] = 4;
-    rec()[3] = 4;
-    rec()[4] = 1;
-    if (keep8) rec()[8] = kept8;
+    recm()->state[0] = 6;
+    recm()->state[1] = 4;
+    recm()->state[2] = 4;
+    recm()->state[3] = 1;
+    if (keep8) recm()->direction = kept8;
     rec()[0x48] = 2;
     SetUL(rec() + 0x40, 0);
-    SetUL(rec() + 0x130, UL(rec() + 0x130) | 0x2000);
-    SetUL(Task(o[5]) + 0x34, UL(At(at::kMemberPositions + static_cast<U>(o[5]) * 8)));
-    SetUL(Task(o[5]) + 0x38, UL(At(at::kMemberPositions + 4 + static_cast<U>(o[5]) * 8)));
+    recm()->flags_130 = static_cast<U>(recm()->flags_130) | 0x2000;
+    SetUL(Task(owner_rec->member) + 0x34, UL(At(at::kMemberPositions + static_cast<U>(owner_rec->member) * 8)));
+    SetUL(Task(owner_rec->member) + 0x38, UL(At(at::kMemberPositions + 4 + static_cast<U>(owner_rec->member) * 8)));
     {
-        unsigned char* const t = Task(o[5]);
-        const long ground = BH_CALL(AreaMap_Elevation)(Long(t + 0x34), Long(t + 0x38));
-        SetUL(Task(o[5]) + 0x3C, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
+        unsigned char* const t = Task(owner_rec->member);
+        auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+        const long ground = BH_CALL(AreaMap_Elevation)(task_rec->x, Long(t + 0x38));
+        SetUL(Task(owner_rec->member) + 0x3C, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
     }
-    const unsigned char character = rec()[0x89];
+    const unsigned char character = recm()->char_id;
     if (character == 7 || character == 0) {
-        SetWord(rec() + 0x9A, BattleE2_KeptAp);
+        recm()->ap = BattleE2_KeptAp;
         SetWord(rec() + 0x90, BattleE2_KeptStatus);
         {
             unsigned char* const r = rec();
-            r[0x9E] = At(Field_ActorStates_addr + 0xe + static_cast<U>(r[0x148]) * 0xA4)[0];
+            auto* const member_rec = reinterpret_cast<records::PartyMember*>(r);
+            r[0x9E] = At(Field_ActorStates_addr + 0xe + static_cast<U>(member_rec->char_index) * 0xA4)[0];
         }
         SetUL(rec() + 0x130, BattleE2_KeptFlags);
         SetUL(rec() + 0x134, BattleE2_KeptFlags2);
         for (unsigned k = 1; k <= 8; ++k) rec()[0x137 + k] = 0;
         BH_AT(void (__cdecl*)(), at::kMemberRecalc)();
     }
-    BH_AT(void (__cdecl*)(unsigned), at::kMemberStatusSet)(Sprite_Current[5]);
+    BH_AT(void (__cdecl*)(unsigned), at::kMemberStatusSet)(reinterpret_cast<records::PartyMember*>(Sprite_Current)->member);
     unsigned char* const s = Sprite_Current;
+    auto* const cur_member = reinterpret_cast<records::PartyMember*>(s);
     {
-        unsigned i = s[5];
-        SetWord(At(at::kPartyValues + i * 0x24), Word(Rec(who, i) + 0x98));
-        i = s[5];
-        SetWord(At(at::kPartyValues + 2 + i * 0x24), Word(Rec(who, i) + 0x9A));
-        i = s[5];
-        const unsigned hp = Word(Rec(who, i) + 0x98), max_hp = Word(Rec(who, i) + 0xA0);
+        unsigned i = cur_member->member;
+        SetWord(At(at::kPartyValues + i * 0x24), reinterpret_cast<records::PartyMember*>(Rec(who, i))->hp);
+        i = cur_member->member;
+        SetWord(At(at::kPartyValues + 2 + i * 0x24), reinterpret_cast<records::PartyMember*>(Rec(who, i))->ap);
+        i = cur_member->member;
+        const unsigned hp = reinterpret_cast<records::PartyMember*>(Rec(who, i))->hp, max_hp = reinterpret_cast<records::PartyMember*>(Rec(who, i))->max_hp;
         if (max_hp == 0) bof3::Fatal("%s: member %u's max HP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
         At(at::kPartyGauges + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * hp) / static_cast<std::int32_t>(max_hp));
-        i = s[5];
-        const unsigned ap = Word(Rec(who, i) + 0x9A), max_ap = Word(Rec(who, i) + 0xA2);
+        i = cur_member->member;
+        const unsigned ap = reinterpret_cast<records::PartyMember*>(Rec(who, i))->ap, max_ap = reinterpret_cast<records::PartyMember*>(Rec(who, i))->max_ap;
         if (max_ap == 0) bof3::Fatal("%s: member %u's max AP is 0 - the original divides by it (docs/battle_e2.md section 7)", who, i);
         At(at::kPartyGauges + 1 + i * 0x24)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(55 * ap) / static_cast<std::int32_t>(max_ap));
     }
-    BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(s[8] + 4));
-    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<U>(Sprite_Current[5]) << 6))), 0);
-    BH_CALL(Battle_StatusTint)(Word(Rec(who, Sprite_Current[5]) + 0x90));
+    BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(cur_member->direction + 4));
+    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<U>(reinterpret_cast<records::PartyMember*>(Sprite_Current)->member) << 6))), 0);
+    BH_CALL(Battle_StatusTint)(reinterpret_cast<records::PartyMember*>(Rec(who, reinterpret_cast<records::PartyMember*>(Sprite_Current)->member))->status);
     BH_CALL(Sprite_SetClutStp)();
 }
 
@@ -409,22 +422,23 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
             do {
                 unsigned char* const member = Member(m);
                 const unsigned slot = BH_CALL(BattleTask_Create)(0, 0x11);
-                SetUL(NewTask(kWho, slot) + 0x80, Key(member));
+                reinterpret_cast<records::BattleTask*>(NewTask(kWho, slot))->owner = Key(member);
                 ++m;
             } while (m < B(at::kPartyCount));
         }
     }
     unsigned char* const saved = Sprite_Current;
     unsigned char* const o = Owner();
+    auto* const owner_rec = reinterpret_cast<records::PartyMember*>(o);
     Sprite_Current = o;
-    Field_State = Rec(kWho, o[5]);
-    const unsigned char character = Rec(kWho, o[5])[0x89];
+    Field_State = Rec(kWho, owner_rec->member);
+    const unsigned char character = Rec(kWho, owner_rec->member)[0x89];
     if (character == 7 || character == 0) {
-        const unsigned char* const r = Rec(kWho, o[5]);
-        BattleE2_KeptAp = Word(r + 0x9A);
-        BattleE2_KeptStatus = Word(r + 0x90) & 0xBFFF;
-        BattleE2_KeptFlags = UL(r + 0x130) & 0xFFFE7FFFu;
-        BattleE2_KeptFlags2 = UL(r + 0x134) & 0xFFF884FDu;
+        auto* const member_rec = reinterpret_cast<const records::PartyMember*>(Rec(kWho, owner_rec->member));
+        BattleE2_KeptAp = member_rec->ap;
+        BattleE2_KeptStatus = member_rec->status & 0xBFFF;
+        BattleE2_KeptFlags = static_cast<U>(member_rec->flags_130) & 0xFFFE7FFFu;
+        BattleE2_KeptFlags2 = static_cast<U>(member_rec->flags_134) & 0xFFF884FDu;
     }
     RestoreBody(kWho, o, true);
     if ((UL(At(at::kRoundFlags)) & 0x8000) != 0) {
@@ -432,9 +446,9 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
         B(at::kPlaceCells) = a;
         B(at::kPlaceCells + 1) = b;
     } else {
-        unsigned char* const s = Sprite_Current;
-        B(at::kPlaceCells + static_cast<U>(s[5]) * 3) = BattleE2_Place94;
-        B(at::kPlaceCells + 1 + static_cast<U>(s[5]) * 3) = BattleE2_Place95;
+        auto* const cur_member = reinterpret_cast<records::PartyMember*>(Sprite_Current);
+        B(at::kPlaceCells + static_cast<U>(cur_member->member) * 3) = BattleE2_Place94;
+        B(at::kPlaceCells + 1 + static_cast<U>(cur_member->member) * 3) = BattleE2_Place95;
     }
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0x7FFF);
     Sprite_Current = saved;
@@ -449,12 +463,13 @@ extern "C" void __cdecl BattleFx_RestoreParty(void) {
 extern "C" void __cdecl BattleFx_RestoreMember(void) {
     static const char* const kWho = "BattleFx_RestoreMember";
     unsigned char* const o = Owner();
+    auto* const owner_rec = reinterpret_cast<records::PartyMember*>(o);
     unsigned char* const saved = Sprite_Current;
     Sprite_Current = o;
-    Field_State = Rec(kWho, o[5]);
+    Field_State = Rec(kWho, owner_rec->member);
     SetUL(o + 0x40, 0);
     RestoreBody(kWho, Sprite_Current, false);
-    Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
+    reinterpret_cast<records::PartyMember*>(Sprite_Current)->flags = static_cast<unsigned char>(reinterpret_cast<records::PartyMember*>(Sprite_Current)->flags & 0xBF);
     Sprite_Current = saved;
     ++saved[1];
 }
@@ -472,9 +487,9 @@ extern "C" void __cdecl BattleFx_RestoreFade(void) {
         return;
     }
     o[0x48] = 0;
-    unsigned char* const o2 = Owner();
-    SetUL(Rec("BattleFx_RestoreFade", o2[5]) + 0x130, UL(Rec("BattleFx_RestoreFade", o2[5]) + 0x130) & ~0x2000u);
-    SetUL(Rec("BattleFx_RestoreFade", o2[5]) + 0x134, UL(Rec("BattleFx_RestoreFade", o2[5]) + 0x134) & 0xFFFCFFF9u);
+    auto* const owner2 = reinterpret_cast<records::PartyMember*>(Owner());
+    reinterpret_cast<records::PartyMember*>(Rec("BattleFx_RestoreFade", owner2->member))->flags_130 = static_cast<U>(reinterpret_cast<records::PartyMember*>(Rec("BattleFx_RestoreFade", owner2->member))->flags_130) & ~0x2000u;
+    reinterpret_cast<records::PartyMember*>(Rec("BattleFx_RestoreFade", owner2->member))->flags_134 = static_cast<U>(reinterpret_cast<records::PartyMember*>(Rec("BattleFx_RestoreFade", owner2->member))->flags_134) & 0xFFFCFFF9u;
     BH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -483,7 +498,7 @@ extern "C" void __cdecl BattleFx_RestoreFade(void) {
 // BattleFx_RestoreFade} (a stack table; ours aborts past 1).
 extern "C" void __cdecl BattleFx_RestoreMemberTask(void) {
     static constexpr U kSteps[2] = {bof3::addr::BattleFx_RestoreMember, bof3::addr::BattleFx_RestoreFade};
-    CallState("BattleFx_RestoreMemberTask", kSteps, 2, Sprite_Current[1]);
+    CallState("BattleFx_RestoreMemberTask", kSteps, 2, ScTask()->state);
 }
 
 // ===========================================================================
@@ -504,7 +519,7 @@ extern "C" void __cdecl BattleFx_GridMark(void) {
 extern "C" void __cdecl BattleFx_GridMarkStart(void) {
     MarkerLook();
     GridPlace();
-    ++Sprite_Current[1];
+    ++ScTask()->state;
     BH_CALL(Sprite_SetAnimation)(Sprite_Current[0x4B]);
     BH_CALL(Sprite_QueueOverlay)();
 }
@@ -517,7 +532,7 @@ extern "C" void __cdecl BattleFx_GridMarkRun(void) {
     static constexpr U kSteps[2] = {bof3::addr::BattleFx_GridMarkCount, bof3::addr::BattleFx_GridMarkPlace};
     CallState("BattleFx_GridMarkRun", kSteps, 2, Sprite_Current[2]);
     if ((BattleE4_Above & 1) == 0) {
-        Sc()[1] = 2;
+        ScTask()->state = 2;
         Sc()[2] = 0;
         return;
     }
@@ -578,7 +593,7 @@ extern "C" void __cdecl BattleFx_ListHandStart(void) {
     MarkerLook();
     SetWord(Sc() + 0x2E, UL(At(BattleE4_Above_addr + 4)) + 0x14);
     SetWord(Sc() + 0x30, Word(At(BattleE4_Above_addr + 6)) + 0x12);
-    ++Sprite_Current[1];
+    ++ScTask()->state;
     BH_CALL(Sprite_SetAnimation)(0x13);
     BH_CALL(Sprite_QueueOverlay)();
 }
@@ -591,9 +606,10 @@ extern "C" void __cdecl BattleFx_ListHandRun(void) {
     static constexpr U kSteps[2] = {bof3::addr::BattleFx_ListHandPress, bof3::addr::BattleFx_ListHandWait};
     CallState("BattleFx_ListHandRun", kSteps, 2, Sprite_Current[2]);
     unsigned char* const s = Sprite_Current;
-    if ((s[0] & 1) == 0) return;
+    auto* const cur_task = reinterpret_cast<records::BattleTask*>(s);
+    if ((cur_task->flags & 1) == 0) return;
     if ((BattleE4_Above & 1) == 0) {
-        s[1] = 2;
+        cur_task->state = 2;
         Sprite_Current[2] = 0;
         return;
     }
@@ -616,7 +632,7 @@ extern "C" void __cdecl BattleFx_ListHandPress(void) {
 extern "C" void __cdecl BattleFx_ListHandWait(void) {
     if (BattleE5_GeneRow != 0xFF) Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] - 1);
     if ((BattleE4_Above & 1) != 0) return;
-    ++Sprite_Current[1];
+    ++ScTask()->state;
     Sprite_Current[2] = 0;
 }
 
@@ -647,12 +663,12 @@ void CursorStart(U window, U grid) {
 // the script ticked and the overlay queued.
 void CursorRun(U window, U grid) {
     if ((B(window) & 1) == 0) {
-        Sc()[1] = 2;
+        ScTask()->state = 2;
         Sc()[2] = 0;
         return;
     }
     if (Word(At(window + 0x1E)) != Word(At(window + 0x12))) {
-        Sc()[1] = 0;
+        ScTask()->state = 0;
         return;
     }
     unsigned char* s = Sprite_Current;
@@ -759,7 +775,7 @@ extern "C" unsigned char __cdecl Battle_EnemyLowestHp(void) {
     unsigned lowest = 0xFFFF;
     for (unsigned char a = 3; a <= 10; ++a) {
         if (BH_CALL(Battle_ActorIsOut)(a) != 0) continue;
-        const unsigned hp = Word(EnemyObj(a - 3u) + 0xA4);
+        const unsigned hp = EnemyObjRec(a - 3u)->hp;
         if (lowest > hp) {
             lowest = hp;
             best = a;
@@ -775,7 +791,7 @@ extern "C" unsigned char __cdecl Battle_MemberLowestHp(void) {
     unsigned lowest = 0x2710;
     for (unsigned char m = 0; m <= 2; ++m) {
         if (BH_CALL(Battle_ActorIsOut)(m) != 0) continue;
-        const unsigned hp = Word(Member(m) + 0x98);
+        const unsigned hp = MemberRec(m)->hp;
         if (lowest > hp) {
             lowest = hp;
             best = m;
@@ -814,7 +830,7 @@ extern "C" unsigned char __cdecl BattleEnemy_PickTarget(unsigned enemy) {
     static const char* const kWho = "BattleEnemy_PickTarget";
     const unsigned kind = B(at::kActKind);
     if (kind == 1) {
-        const unsigned flags = Word(EnemyArg(kWho, enemy) + 0x90);
+        const unsigned flags = reinterpret_cast<records::BattleEnemy*>(EnemyArg(kWho, enemy))->flags_90;
         if ((flags & 1) != 0) {
             const unsigned char t = BH_CALL(BattleEnemy_OtherEnemy)(enemy);
             if (t != 0xFF) return t;
@@ -823,10 +839,10 @@ extern "C" unsigned char __cdecl BattleEnemy_PickTarget(unsigned enemy) {
         if ((flags & 0x10) != 0) return BH_CALL(Battle_MemberLowestHp)();
         return BH_CALL(Battle_RandomMember)();
     }
-    if (kind != 4) return EnemyArg(kWho, enemy)[5];
-    const unsigned char* const e = EnemyArg(kWho, enemy);
-    const unsigned id = Word(e + 0x106);
-    const unsigned flags = Word(e + 0x90);
+    if (kind != 4) return reinterpret_cast<records::BattleEnemy*>(EnemyArg(kWho, enemy))->actor;
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(EnemyArg(kWho, enemy));
+    const unsigned id = enemy_rec->ability;
+    const unsigned flags = enemy_rec->flags_90;
     const unsigned char a = At(at::kAbilities + id * 24)[0];
     const bool one = (flags & 1) != 0;
     if ((a & 0x10) != 0) {
@@ -876,10 +892,11 @@ extern "C" unsigned char __cdecl BattleEnemy_PickAnyTarget(unsigned enemy) {
 extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
     static const char* const kWho = "BattleEnemy_PickAction";
     unsigned char* const e = EnemyArg(kWho, enemy);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
     const unsigned r = static_cast<unsigned>(BH_CALL(Rand)());
-    unsigned char kind = static_cast<unsigned char>((At(at::kActKinds + e[0x8E])[0] >> ((r & 3) * 2)) & 3);
+    unsigned char kind = static_cast<unsigned char>((At(at::kActKinds + enemy_rec->odds_index)[0] >> ((r & 3) * 2)) & 3);
     B(at::kActKind) = kind;
-    if ((UL(At(at::kRoundFlags)) & 0x4000) != 0 && Word(e + 0xBA) <= 1) {
+    if ((UL(At(at::kRoundFlags)) & 0x4000) != 0 && enemy_rec->intel <= 1) {
         kind = 0;
         B(at::kActKind) = 0;
     }
@@ -887,7 +904,7 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
     case 1:
         if ((e[0x90] & 0x80) != 0) {
             B(at::kActKind) = 2;
-            SetUL(e + 0x110, UL(e + 0x110) | 2);
+            enemy_rec->flags_110 = static_cast<U>(enemy_rec->flags_110) | 2;
         } else {
             B(at::kActKind) = 1;
         }
@@ -899,7 +916,7 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
         if ((e[0x90] & 0x20) != 0) {
             B(at::kActKind) = 4;
             const unsigned r2 = static_cast<unsigned>(BH_CALL(Rand)()) & 7;
-            SetWord(e + 0x106, e[0x9C + r2]);
+            enemy_rec->ability = e[0x9C + r2];
         } else {
             B(at::kActKind) = 1;
         }
@@ -910,7 +927,7 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
     }
     const auto may_act = BH_AT(unsigned char (__cdecl*)(unsigned), at::kActorMayAct);
     const unsigned actor = (enemy + 3) & 0xFF;
-    if ((e[0x92] & 0x20) != 0 || (UL(e + 0x114) & 0x4000) != 0) {
+    if ((e[0x92] & 0x20) != 0 || (static_cast<U>(enemy_rec->flags_114) & 0x4000) != 0) {
         B(at::kActKind) = 1;
         if (may_act(actor) != 0) BH_CALL(BattleEnemy_PickAnyTarget)(enemy);
     } else if (may_act(actor) != 0) {
@@ -919,13 +936,13 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
     if (BattleActions_EventBattle != 0) {
         BattleE3_CurrentEnemy = Key(e);
         Sprite_Current = e;
-        reinterpret_cast<boss_harness::Hook>(static_cast<std::uintptr_t>(UL(e + 0xF4)))(0);
+        reinterpret_cast<boss_harness::Hook>(static_cast<std::uintptr_t>(static_cast<U>(enemy_rec->event_hook)))(0);
     }
     if (B(at::kTarget) == 0xFF) {
-        e[0x105] = 0;
+        enemy_rec->command = 0;
         B(at::kActKind) = 0;
     } else {
-        e[0x105] = B(at::kActKind);
+        enemy_rec->command = B(at::kActKind);
     }
 }
 
@@ -951,20 +968,20 @@ extern "C" unsigned long __cdecl EnemyOp_SlideDispatch(unsigned long word) {
 // +0x38 (described in docs/battle_e2.md section 7, not changed); +2 steps,
 // not +3.
 extern "C" void __cdecl EnemyOp_SlideStart(void) {
-    Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
+    ScEnemy()->flags = static_cast<unsigned char>(ScEnemy()->flags & 0xBF);
     BH_CALL(BattleEnemy_SetAnimation)(0);
     const auto turn = BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity);
-    SetUL(Sc() + 0x18, UL(Sc() + 0x34));
-    SetUL(Sc() + 0x1C, UL(Sc() + 0x38));
+    SetUL(Sc() + 0x18, static_cast<U>(ScEnemy()->x));
+    SetUL(Sc() + 0x1C, static_cast<U>(ScEnemy()->z));
     SetUL(Sc() + 0xC, 0x80000);
     SetUL(Sc() + 0x10, 0);
     turn(Sprite_Current);
-    SetUL(Sc() + 0x34, UL(Sc() + 0x34) - UL(Sc() + 0xC));
-    SetUL(Sc() + 0x34, UL(Sc() + 0x34) - UL(Sc() + 0x10));
+    ScEnemy()->x = static_cast<U>(ScEnemy()->x) - UL(Sc() + 0xC);
+    ScEnemy()->x = static_cast<U>(ScEnemy()->x) - UL(Sc() + 0x10);
     SetUL(Sc() + 0xC, 0x8000);
     SetUL(Sc() + 0x10, 0);
     turn(Sprite_Current);
-    ++Sprite_Current[2];
+    ++ScEnemy()->state[1];
 }
 
 // original 0x436330 (PSX 0x801E34A4, gap44): EnemyOp_EnterSubs2 1:
@@ -973,15 +990,16 @@ extern "C" void __cdecl EnemyOp_SlideStart(void) {
 // destination +0x18 / +0x1C the steps +1..+3 = 3, 0, 0.
 extern "C" void __cdecl EnemyOp_SlideStep(void) {
     BH_CALL(BattleEnemy_ScriptTick)();
-    SetUL(Sc() + 0x34, UL(Sc() + 0x34) + UL(Sc() + 0xC));
-    SetUL(Sc() + 0x38, UL(Sc() + 0x38) + UL(Sc() + 0x10));
-    const long ground = BH_CALL(AreaMap_Elevation)(Long(Sc() + 0x34), Long(Sc() + 0x38));
+    ScEnemy()->x = static_cast<U>(ScEnemy()->x) + UL(Sc() + 0xC);
+    ScEnemy()->z = static_cast<U>(ScEnemy()->z) + UL(Sc() + 0x10);
+    const long ground = BH_CALL(AreaMap_Elevation)(ScEnemy()->x, ScEnemy()->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
     unsigned char* const s = Sprite_Current;
-    if (UL(s + 0x34) != UL(s + 0x18) || UL(s + 0x38) != UL(s + 0x1C)) return;
-    s[1] = 3;
-    Sprite_Current[2] = 0;
-    Sprite_Current[3] = 0;
+    auto* const cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    if (static_cast<U>(cur_enemy->x) != UL(s + 0x18) || static_cast<U>(cur_enemy->z) != UL(s + 0x1C)) return;
+    cur_enemy->state[0] = 3;
+    ScEnemy()->state[1] = 0;
+    ScEnemy()->state[2] = 0;
 }
 
 // original 0x4365D0 (PSX 0x801E38F8, gap44): EnemyOp_Steps 4 (and every
@@ -989,10 +1007,10 @@ extern "C" void __cdecl EnemyOp_SlideStep(void) {
 // area's enemy data record +0xF0 of 0x939AD8 (stride 0x8C); +1 on, +2 = 0.
 extern "C" void __cdecl EnemyOp_TurnStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(2);
-    const unsigned record = Enemy()[0xF0];
+    const unsigned record = EnemyRec()->data_id;
     Sprite_Current[9] = At(at::kEnemyDataCount + record * 0x8C)[0];
-    ++Sprite_Current[1];
-    Sprite_Current[2] = 0;
+    ++ScEnemy()->state[0];
+    ScEnemy()->state[1] = 0;
 }
 
 // original 0x436620 (PSX 0x801E3978, gap44): EnemyOp_Steps 5 (and every
@@ -1014,12 +1032,13 @@ extern "C" void __cdecl EnemyOp_PlayCreatureCue(void) {
     if (Sprite_Current[9] != 0) return;
     const unsigned char fight = BattleActions_EventBattle;
     const unsigned char* const e = Enemy();
+    auto* const enemy_rec = reinterpret_cast<const records::BattleEnemy*>(e);
     if (fight != 0) {
         BH_AT(void (__cdecl*)(unsigned), at::kPlayCue)(Word(PtrIn(e + 0xF8)));
     } else {
-        BH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(0x600 + 2 * e[0xF0]));
+        BH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(0x600 + 2 * enemy_rec->data_id));
     }
-    ++Sprite_Current[2];
+    ++ScEnemy()->state[1];
 }
 
 // original 0x4366B0 (PSX 0x801E3A7C, gap44): EnemyOp_Step5Subs 1: once
@@ -1047,14 +1066,14 @@ extern "C" unsigned long __cdecl EnemyOp_Act3Dispatch(unsigned long word) {
 // (0x446770, BE4's); +0xA = 4; BattleEnemy_ScriptTick (answer unused);
 // Sound_PlayEffect(0x205); +3 on.
 extern "C" void __cdecl EnemyOp_KnockStart(void) {
-    SetWord(Enemy() + 0x108, 0);
+    EnemyRec()->hp_change = 0;
     SetUL(Sc() + 0xC, 0xFFFFE000u);
     SetUL(Sc() + 0x10, 0);
     BH_AT(void (__cdecl*)(unsigned char*), at::kTurnVelocity)(Sprite_Current);
     Sprite_Current[0xA] = 4;
     BH_CALL(BattleEnemy_ScriptTick)();
     BH_CALL(Sound_PlayEffect)(0x205);
-    ++Sprite_Current[3];
+    ++ScEnemy()->state[2];
 }
 
 // original 0x436C40 (PSX 0x801E449C, table-anchored): EnemyOp_Act3Subs 1:
@@ -1065,10 +1084,10 @@ extern "C" unsigned char __cdecl EnemyOp_KnockBack(void) {
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
     if (Sc()[0xA] == 0) {
         Sc()[0xA] = 4;
-        ++Sprite_Current[3];
+        ++ScEnemy()->state[2];
     }
-    SetUL(Sc() + 0x34, UL(Sc() + 0x34) + UL(Sc() + 0xC));
-    SetUL(Sc() + 0x38, UL(Sc() + 0x38) + UL(Sc() + 0x10));
+    ScEnemy()->x = static_cast<U>(ScEnemy()->x) + UL(Sc() + 0xC);
+    ScEnemy()->z = static_cast<U>(ScEnemy()->z) + UL(Sc() + 0x10);
     return BH_CALL(BattleEnemy_ScriptTick)();
 }
 
@@ -1084,25 +1103,31 @@ extern "C" unsigned char __cdecl EnemyOp_KnockBack(void) {
 extern "C" void __cdecl EnemyOp_KnockReturn(void) {
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
     unsigned char* s = Sprite_Current;
+    records::BattleEnemy* cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
     if (s[0xA] == 0) {
-        const unsigned char* const e = Enemy();
-        if ((e[0x10C] & 0x10) != 0) {
-            BH_CALL(Battle_SetDamagePopup)(Word(e + 0x108), s[5]);
+        auto* const enemy_rec = EnemyRec();
+        if ((enemy_rec->shown & 0x10) != 0) {
+            BH_CALL(Battle_SetDamagePopup)(static_cast<std::uint16_t>(enemy_rec->hp_change), cur_enemy->actor);
             s = Sprite_Current;
+            cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
         } else {
             const unsigned slot = BH_CALL(BattleTask_Create)(0, 1);
             unsigned char* const t = NewTask("EnemyOp_KnockReturn", slot);
+            auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
             s = Sprite_Current;
-            SetUL(t + 0x80, Key(s));
+            cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+            task_rec->owner = Key(s);
             t[7] = 3;
-            t[0x27] = 0;
+            task_rec->clut = 0;
         }
-        s[3] = static_cast<unsigned char>(s[3] + 1);
+        cur_enemy->state[2] = static_cast<unsigned char>(cur_enemy->state[2] + 1);
         s = Sprite_Current;
+        cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
     }
-    SetUL(s + 0x34, UL(s + 0x34) - UL(s + 0xC));
+    cur_enemy->x = static_cast<U>(cur_enemy->x) - UL(s + 0xC);
     s = Sprite_Current;
-    SetUL(s + 0x38, UL(s + 0x38) - UL(s + 0x10));
+    cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    cur_enemy->z = static_cast<U>(cur_enemy->z) - UL(s + 0x10);
     BH_CALL(BattleEnemy_ScriptTick)();
 }
 
@@ -1111,7 +1136,7 @@ extern "C" void __cdecl EnemyOp_KnockReturn(void) {
 // (0x939AD8's +0x110 bit 1) or 0.
 extern "C" void __cdecl EnemyOp_KnockPose(void) {
     if (BH_CALL(BattleEnemy_ScriptTickOnce)() == 0) return;
-    ++Sprite_Current[3];
+    ++ScEnemy()->state[2];
     BH_CALL(BattleEnemy_SetAnimation)((Enemy()[0x110] & 2) != 0 ? 8u : 0u);
 }
 
@@ -1129,28 +1154,28 @@ extern "C" unsigned long __cdecl EnemyOp_Act5Dispatch(unsigned long word) {
 // with +0x10C bit 0 Battle_SetDamagePopup(+0x108, Sprite_Current +5);
 // BattleEnemy_ScriptTick (answer unused); +3 on.
 extern "C" void __cdecl EnemyOp_ApplyHpChange(void) {
-    unsigned char* e = Enemy();
-    const auto change = static_cast<std::int16_t>(Word(e + 0x108));
-    const auto hp = static_cast<std::int32_t>(Word(e + 0xA4));
+    records::BattleEnemy* enemy_rec = EnemyRec();
+    const auto change = static_cast<std::int16_t>(static_cast<std::uint16_t>(enemy_rec->hp_change));
+    const auto hp = static_cast<std::int32_t>(enemy_rec->hp);
     if (hp <= change) {
-        SetWord(e + 0xA4, 0);
-        SetWord(Enemy() + 0x92, 0x4000);
-        e = Enemy();
+        enemy_rec->hp = 0;
+        EnemyRec()->status = 0x4000;
+        enemy_rec = EnemyRec();
     } else {
         if (change < 0) {
             BH_CALL(Sound_PlayEffect)(0x206);
-            e = Enemy();
+            enemy_rec = EnemyRec();
         }
-        SetWord(e + 0xA4, Word(e + 0xA4) - Word(e + 0x108));
-        e = Enemy();
-        if (Word(e + 0xA4) > Word(e + 0xB0)) {
-            SetWord(e + 0xA4, Word(e + 0xB0));
-            e = Enemy();
+        enemy_rec->hp = enemy_rec->hp - static_cast<std::uint16_t>(enemy_rec->hp_change);
+        enemy_rec = EnemyRec();
+        if (enemy_rec->hp > enemy_rec->max_hp) {
+            enemy_rec->hp = enemy_rec->max_hp;
+            enemy_rec = EnemyRec();
         }
     }
-    if ((e[0x10C] & 1) != 0) BH_CALL(Battle_SetDamagePopup)(Word(e + 0x108), Sprite_Current[5]);
+    if ((enemy_rec->shown & 1) != 0) BH_CALL(Battle_SetDamagePopup)(static_cast<std::uint16_t>(enemy_rec->hp_change), ScEnemy()->actor);
     BH_CALL(BattleEnemy_ScriptTick)();
-    ++Sprite_Current[3];
+    ++ScEnemy()->state[2];
 }
 
 // original 0x436FD0 (PSX 0x801E49A8, table-anchored): EnemyOp_Act5Subs 2:
@@ -1158,17 +1183,17 @@ extern "C" void __cdecl EnemyOp_ApplyHpChange(void) {
 // Battle_ClearActorBit(+5) and the steps 2, 0, 0.
 extern "C" void __cdecl EnemyOp_Act5End(void) {
     const unsigned char* const e = Enemy();
-    unsigned char* const s = Sprite_Current;
+    auto* const cur_enemy = ScEnemy();
     if ((e[0x93] & 0x40) != 0) {
-        s[1] = 6;
-        Sprite_Current[2] = 4;
-        Sprite_Current[3] = 0;
+        cur_enemy->state[0] = 6;
+        ScEnemy()->state[1] = 4;
+        ScEnemy()->state[2] = 0;
         return;
     }
-    BH_CALL(Battle_ClearActorBit)(s[5]);
-    Sprite_Current[1] = 2;
-    Sprite_Current[2] = 0;
-    Sprite_Current[3] = 0;
+    BH_CALL(Battle_ClearActorBit)(cur_enemy->actor);
+    ScEnemy()->state[0] = 2;
+    ScEnemy()->state[1] = 0;
+    ScEnemy()->state[2] = 0;
 }
 
 // ============================================================================

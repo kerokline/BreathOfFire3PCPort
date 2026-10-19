@@ -1,0 +1,1061 @@
+# typed-data round stage B1, group battle: the record sites left raw (docs/typed-data-round.md 3). Addresses, names and reasons only.
+file	line	offset	reason	evidence
+src/game/battle_actions.cpp	100	(index & 0xFF) * 4	family	no record family established for this pointer here (-)
+src/game/battle_actions.cpp	118	at::kBX	family	no record family established for this pointer here (-)
+src/game/battle_actions.cpp	119	at::kBY	family	no record family established for this pointer here (-)
+src/game/battle_actions.cpp	120	at::kBZ	family	no record family established for this pointer here (-)
+src/game/battle_actions.cpp	127	at::kBX	family	no record family established for this pointer here (param)
+src/game/battle_actions.cpp	128	at::kBY	family	no record family established for this pointer here (param)
+src/game/battle_actions.cpp	129	at::kBZ	family	no record family established for this pointer here (param)
+src/game/battle_actions.cpp	325	at::kBAction) + 2	family	no record family established for this pointer here (via=PtrAt)
+src/game/battle_actions.cpp	431	at::kBAction) + 2	family	no record family established for this pointer here (via=PtrAt)
+src/game/battle_actions.cpp	461	at::kBAction) + 2	family	no record family established for this pointer here (via=PtrAt)
+src/game/battle_actions.cpp	470	at::kBAction) + 2	family	no record family established for this pointer here (via=PtrAt)
+src/game/battle_actions.cpp	531	at::kBAction) + 2	family	no record family established for this pointer here (via=PtrAt)
+src/game/battle_actions_fuzz.cpp	133	(a < 3 ? 0x90 : 0x92)	family	no record family established for this pointer here (via=ActorObj)
+src/game/battle_actions_fuzz.cpp	134	(a < 3 ? 0x9A : 0xA6)	family	no record family established for this pointer here (via=ActorObj)
+src/game/battle_actions_fuzz.cpp	245	(a < 3 ? 0x9A : 0xA6)	family	no record family established for this pointer here (via=ActorObj)
+src/game/battle_actions_fuzz.cpp	247	(a < 3 ? 0x9A : 0xA6)	family	no record family established for this pointer here (via=ActorObj)
+src/game/battle_actions_fuzz.cpp	495	2	not-record	not one of the nine records.h families (via=ActionOf)
+src/game/battle_actions_fuzz.cpp	562	2	not-record	not one of the nine records.h families (via=ActionOf)
+src/game/battle_actions_fuzz.cpp	566	2	not-record	not one of the nine records.h families (via=ActionOf)
+src/game/battle_actions_fuzz.cpp	567	(a < 3 ? 0x9A : 0xA6)	family	no record family established for this pointer here (via=ActorObj)
+src/game/battle_actions_fuzz.cpp	593	-	family	no record family established for this pointer here (via=At)
+src/game/battle_actor_copies.cpp	254	0x10	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_actor_copies.cpp	293	0x10	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_actor_copies.cpp	384	2	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_actor_copies.cpp	388	2	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_actor_copies.cpp	432	2	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_actor_copies_fuzz.cpp	113	2	not-record	not one of the nine records.h families (via=Cmd)
+src/game/battle_actor_copies_fuzz.cpp	114	0x10	not-record	not one of the nine records.h families (via=Cmd)
+src/game/battle_actor_copies_fuzz.cpp	363	2	not-record	not one of the nine records.h families (via=Cmd)
+src/game/battle_actor_copies_fuzz.cpp	418	0x10	not-record	not one of the nine records.h families (via=Cmd)
+src/game/battle_actor_copies_fuzz.cpp	510	4 * i	family	no record family established for this pointer here (-)
+src/game/battle_actor_copies_fuzz.cpp	515	4 * i	family	no record family established for this pointer here (-)
+src/game/battle_actor_copies_fuzz.cpp	561	4 * i	family	no record family established for this pointer here (-)
+src/game/battle_damage.cpp	216	4 * n	family	no record family established for this pointer here (-)
+src/game/battle_damage.cpp	217	4 * n + 2	family	no record family established for this pointer here (-)
+src/game/battle_damage.cpp	264	2	family	no record family established for this pointer here (table=0x939a80)
+src/game/battle_damage.cpp	267	Word(p + at::kPCommandId) 	not-record	not one of the nine records.h families (base=NameTable_Abilities)
+src/game/battle_damage.cpp	267	at::kPCommandId	union	PartyMember +0x126 w2
+src/game/battle_damage.cpp	288	2	family	no record family established for this pointer here (table=0x939a80)
+src/game/battle_damage.cpp	384	4 * (U32(roll) & 7)	not-record	not one of the nine records.h families (base=Battle_DamageVarianceTable)
+src/game/battle_damage.cpp	393	2 * holy	not-record	not one of the nine records.h families (base=Battle_HolyAffinityTable)
+src/game/battle_damage.cpp	472	weapon * at::kWeaponStride +	not-record	not one of the nine records.h families (base=NameTable_Weapons)
+src/game/battle_damage.cpp	611	at::kEHp	gate	BattleEnemy->hp typed changed the object
+src/game/battle_damage.cpp	619	at::kEHp	gate	BattleEnemy->hp typed changed the object
+src/game/battle_damage.cpp	718	2	family	no record family established for this pointer here (via=At)
+src/game/battle_damage.cpp	725	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	726	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	729	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	730	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	733	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	734	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	737	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	754	at::kPHp	gate	PartyMember->hp typed changed the object
+src/game/battle_damage.cpp	756	at::kPHp	gate	PartyMember->hp typed changed the object
+src/game/battle_damage.cpp	767	at::kEHp	gate	BattleEnemy->hp typed changed the object
+src/game/battle_damage.cpp	771	at::kEHp	gate	BattleEnemy->hp typed changed the object
+src/game/battle_damage.cpp	773	at::kEHp	gate	BattleEnemy->hp typed changed the object
+src/game/battle_damage.cpp	781	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	782	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	785	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	786	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	789	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage.cpp	796	at::kPAp	gate	PartyMember->ap typed changed the object
+src/game/battle_damage.cpp	813	at::kEAp	gate	BattleEnemy->ap typed changed the object
+src/game/battle_damage.cpp	840	(U32(Long(At(at::kAbility)	not-record	not one of the nine records.h families (base=NameTable_Abilities)
+src/game/battle_damage.cpp	870	id * at::kAbilityStride + 	not-record	not one of the nine records.h families (base=NameTable_Abilities)
+src/game/battle_damage_fuzz.cpp	292	-	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_damage_fuzz.cpp	457	(party ? at::kPHp : at::kEHp)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	458	(party ? at::kPAp : at::kEAp)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	459	(party ? at::kPHp : at::kEHp)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	459	(party ? at::kPMaxHp : at::kEMaxHp)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	460	(party ? at::kPAp : at::kEAp)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	460	(party ? at::kPMaxAp : at::kEMaxAp)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	462	(party ? at::kPFlags : at::kEFlags)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	463	(party ? at::kPFlags2 : at::kEFlags2)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	464	(party ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	506	(a <= 2 ? at::kPFlags2 : at::kEFlags2)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	508	(a <= 2 ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	512	at::kPCommandId	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	537	(party ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_damage_fuzz.cpp	538	(party ? at::kPFlags2 : at::kEFlags2)	family	no record family established for this pointer here (via=PartyAt)
+src/game/battle_draw.cpp	147	0x08	family	no record family established for this pointer here (param)
+src/game/battle_draw.cpp	147	8	family	no record family established for this pointer here (param)
+src/game/battle_draw.cpp	149	0x10	family	no record family established for this pointer here (param)
+src/game/battle_draw.cpp	182	8	not-record	not one of the nine records.h families (via=Vertex)
+src/game/battle_draw.cpp	340	0x10	union	WindowRecord +0x10 w2
+src/game/battle_draw.cpp	341	0x10	union	WindowRecord +0x10 w2
+src/game/battle_draw.cpp	395	0x10	union	WindowRecord +0x10 w2
+src/game/battle_draw.cpp	412	0x14	union	WindowRecord +0x14 w2
+src/game/battle_draw.cpp	430	0x14	union	WindowRecord +0x14 w2
+src/game/battle_draw_fuzz.cpp	211	g_last_top + (h >> 10) % 10	not-record	not one of the nine records.h families (stride=0x4)
+src/game/battle_draw_fuzz.cpp	222	((h >> 8) % 2 ? 0x10 : 0x14)	family	no record family established for this pointer here (-)
+src/game/battle_draw_fuzz.cpp	579	i	family	no record family established for this pointer here (param)
+src/game/battle_draw_fuzz.cpp	596	8 + c * 0x10 + f * 4	family	no record family established for this pointer here (param)
+src/game/battle_draw_fuzz.cpp	635	4	family	no record family established for this pointer here (-)
+src/game/battle_draw_fuzz.cpp	636	6	family	no record family established for this pointer here (-)
+src/game/battle_draw_fuzz.cpp	643	0x14	family	no record family established for this pointer here (-)
+src/game/battle_draw_fuzz.cpp	652	0x10	family	no record family established for this pointer here (-)
+src/game/battle_e1.cpp	88	4 * index	family	no record family established for this pointer here (-)
+src/game/battle_e1.cpp	113	0x16	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	115	8	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	116	0xC	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	119	0x18	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	120	0x1A	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	130	2 * k	family	no record family established for this pointer here (param)
+src/game/battle_e1.cpp	613	0x126	union	PartyMember +0x126 w2
+src/game/battle_e1.cpp	687	24u * id	not-record	not one of the nine records.h families (base=NameTable_Abilities)
+src/game/battle_e1.cpp	688	2	not-record	not one of the nine records.h families (table=0x904b40)
+src/game/battle_e1.cpp	717	2	not-record	not one of the nine records.h families (table=0x904b40)
+src/game/battle_e1.cpp	727	0x20	not-record	not one of the nine records.h families (base=Text_Records)
+src/game/battle_e1.cpp	731	0x20	not-record	not one of the nine records.h families (base=Text_Records)
+src/game/battle_e1.cpp	732	0x24	not-record	not one of the nine records.h families (base=Text_Records)
+src/game/battle_e1.cpp	732	4	not-record	not one of the nine records.h families (base=Ability_Records)
+src/game/battle_e1.cpp	733	0x28	not-record	not one of the nine records.h families (base=Text_Records)
+src/game/battle_e1.cpp	733	8	not-record	not one of the nine records.h families (base=Ability_Records)
+src/game/battle_e1.cpp	734	0x2C	not-record	not one of the nine records.h families (base=Text_Records)
+src/game/battle_e1.cpp	734	0xC	not-record	not one of the nine records.h families (base=Ability_Records)
+src/game/battle_e1.cpp	777	0x58	field-missing	PartyMember +0x58 w2
+src/game/battle_e1.cpp	817	0x20	not-record	not one of the nine records.h families (base=Text_Records)
+src/game/battle_e1.cpp	824	6	not-record	not one of the nine records.h families (table=0x658f48;stride=0x63)
+src/game/battle_e1.cpp	825	7	not-record	not one of the nine records.h families (table=0x658f48;stride=0x63)
+src/game/battle_e1.cpp	872	0xC	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_e1.cpp	931	4	not-record	not one of the nine records.h families (table=0x904ab0)
+src/game/battle_e1.cpp	1040	8	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1041	0xC	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1042	0x14	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1043	0x18	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1064	0xC	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1065	0x14	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1066	0x18	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1078	0xC	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1081	0x1C	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1082	0x2C	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1.cpp	1084	0x3C	not-record	not one of the nine records.h families (via=Packet)
+src/game/battle_e1_fuzz.cpp	266	0xC	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_e2.cpp	131	4 * state	family	no record family established for this pointer here (-)
+src/game/battle_e2.cpp	153	0x2C	field-missing	BattleTask +0x2C w2
+src/game/battle_e2.cpp	156	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e2.cpp	164	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e2.cpp	167	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e2.cpp	173	0x12	family	no record family established for this pointer here (param)
+src/game/battle_e2.cpp	174	static_cast<U>(row) * 4 + s[0xA]	family	no record family established for this pointer here (param)
+src/game/battle_e2.cpp	193	0x92	gate	BattleEnemy->status typed changed the object
+src/game/battle_e2.cpp	193	0x90	gate	PartyMember->status typed changed the object
+src/game/battle_e2.cpp	221	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e2.cpp	221	0x2E	family	no record family established for this pointer here (via=Owner)
+src/game/battle_e2.cpp	225	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e2.cpp	225	0x30	family	no record family established for this pointer here (via=Owner)
+src/game/battle_e2.cpp	228	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e2.cpp	228	0x2E	family	no record family established for this pointer here (via=Owner)
+src/game/battle_e2.cpp	232	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e2.cpp	232	0x30	family	no record family established for this pointer here (via=Owner)
+src/game/battle_e2.cpp	234	0x32	family	no record family established for this pointer here (via=Owner)
+src/game/battle_e2.cpp	234	0x32	union	BattleTask +0x32 w2 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e2.cpp	331	k	family	no record family established for this pointer here (table=0x939ae0;stride=0x14c)
+src/game/battle_e2.cpp	331	k	not-record	not one of the nine records.h families (via=rec)
+src/game/battle_e2.cpp	339	0x40	field-missing	PartyMember +0x40 w4
+src/game/battle_e2.cpp	341	0x34	gate	BattleTask->x typed changed the object
+src/game/battle_e2.cpp	342	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e2.cpp	346	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e2.cpp	347	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e2.cpp	352	0x90	gate	PartyMember->status typed changed the object
+src/game/battle_e2.cpp	358	0x130	gate	PartyMember->flags_130 typed changed the object
+src/game/battle_e2.cpp	359	0x134	gate	PartyMember->flags_134 typed changed the object
+src/game/battle_e2.cpp	470	0x40	field-missing	PartyMember +0x40 w4
+src/game/battle_e2.cpp	484	0x40	field-missing	PartyMember +0x40 w4
+src/game/battle_e2.cpp	486	0x40	field-missing	PartyMember +0x40 w4
+src/game/battle_e2.cpp	571	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e2.cpp	572	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e2.cpp	594	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e2.cpp	595	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e2.cpp	616	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e2.cpp	617	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e2.cpp	656	0x12	family	no record family established for this pointer here (-)
+src/game/battle_e2.cpp	656	0x1E	family	no record family established for this pointer here (-)
+src/game/battle_e2.cpp	670	0x12	family	no record family established for this pointer here (param)
+src/game/battle_e2.cpp	670	0x1E	family	no record family established for this pointer here (param)
+src/game/battle_e2.cpp	675	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e2.cpp	675	4	family	no record family established for this pointer here (param)
+src/game/battle_e2.cpp	677	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e2.cpp	677	6	family	no record family established for this pointer here (param)
+src/game/battle_e2.cpp	758	(UL(At(Cond_Flags_addr + 0xd0)) & 0xFF) * n + m	not-record	not one of the nine records.h families (table=0x64b18c)
+src/game/battle_e2.cpp	765	(UL(At(Cond_Flags_addr + 0xd0)) & 0xFF) * n + m	not-record	not one of the nine records.h families (table=0x64b18c)
+src/game/battle_e2.cpp	974	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/battle_e2.cpp	975	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/battle_e2.cpp	976	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_e2.cpp	977	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_e2.cpp	979	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_e2.cpp	980	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_e2.cpp	981	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_e2.cpp	982	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_e2.cpp	993	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_e2.cpp	994	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_e2.cpp	996	0x3E	width	BattleEnemy +0x3E w2
+src/game/battle_e2.cpp	999	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/battle_e2.cpp	999	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/battle_e2.cpp	1070	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_e2.cpp	1071	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_e2.cpp	1089	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_e2.cpp	1090	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_e2.cpp	1127	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_e2.cpp	1130	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_e2_fuzz.cpp	218	0x10	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	218	0xC	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	220	0x10	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	220	0xC	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	221	0x10	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	221	0xC	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	222	0x10	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	222	0xC	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	344	0xA0	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	344	0xA0	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	345	0xA2	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	345	0xA2	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	366	0x12	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	367	0x12	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	367	0x12	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	367	0x1E	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	378	i	family	no record family established for this pointer here (-)
+src/game/battle_e2_fuzz.cpp	402	0x18	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e2_fuzz.cpp	402	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e2_fuzz.cpp	402	0xC	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e2_fuzz.cpp	403	0x10	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e2_fuzz.cpp	403	0x1C	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e2_fuzz.cpp	403	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e2_fuzz.cpp	462	0x40	family	no record family established for this pointer here (via=Owner)
+src/game/battle_e2_fuzz.cpp	494	0x106	gate	BattleEnemy->ability typed changed the object
+src/game/battle_e2_fuzz.cpp	498	0xA4	gate	BattleEnemy->hp typed changed the object
+src/game/battle_e2_fuzz.cpp	502	0x98	gate	PartyMember->hp typed changed the object
+src/game/battle_e3.cpp	77	AbilityId() * at::kAbilityStride	family	no record family established for this pointer here (-)
+src/game/battle_e3.cpp	95	4 * index	family	no record family established for this pointer here (-)
+src/game/battle_e3.cpp	215	0xF8)) + 2	family	no record family established for this pointer here (via=PtrAt)
+src/game/battle_e3.cpp	390	0x140	gate	PartyMember->saved_script_pos typed changed the object
+src/game/battle_e3.cpp	390	0x58	field-missing	PartyMember +0x58 w2
+src/game/battle_e3.cpp	440	0x124 + 4	union	PartyMember +0x128 w2
+src/game/battle_e3.cpp	441	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_e3.cpp	458	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_e3.cpp	468	0x128	union	PartyMember +0x128 w2
+src/game/battle_e3.cpp	492	0x128	union	PartyMember +0x128 w2
+src/game/battle_e3.cpp	497	0x12A	union	PartyMember +0x12A w2
+src/game/battle_e3.cpp	601	0x128	union	PartyMember +0x128 w2
+src/game/battle_e3.cpp	642	0x128	union	PartyMember +0x128 w2
+src/game/battle_e3.cpp	943	0x128	union	PartyMember +0x128 w2
+src/game/battle_e3.cpp	951	0x128	union	PartyMember +0x128 w2
+src/game/battle_e3.cpp	955	0x12A	union	PartyMember +0x12A w2
+src/game/battle_e3.cpp	997	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_e3.cpp	999	0x30	gate	PartyMember->screen_y typed changed the object
+src/game/battle_e3.cpp	999	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_e3_fuzz.cpp	89	4	family	no record family established for this pointer here (-)
+src/game/battle_e3_fuzz.cpp	89	6	family	no record family established for this pointer here (-)
+src/game/battle_e3_fuzz.cpp	91	4	family	no record family established for this pointer here (-)
+src/game/battle_e3_fuzz.cpp	92	6	family	no record family established for this pointer here (-)
+src/game/battle_e3_fuzz.cpp	364	off	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	104	4 * state	family	no record family established for this pointer here (-)
+src/game/battle_e4.cpp	190	0x126	union	PartyMember +0x126 w2
+src/game/battle_e4.cpp	247	8	not-record	not one of the nine records.h families (via=TileHead)
+src/game/battle_e4.cpp	248	0xC	not-record	not one of the nine records.h families (via=TileHead)
+src/game/battle_e4.cpp	249	0x14	not-record	not one of the nine records.h families (via=TileHead)
+src/game/battle_e4.cpp	250	0x18	not-record	not one of the nine records.h families (via=TileHead)
+src/game/battle_e4.cpp	270	2	not-record	not one of the nine records.h families (table=0x64e268)
+src/game/battle_e4.cpp	398	0x128	union	PartyMember +0x128 w2
+src/game/battle_e4.cpp	451	x	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	452	x + 4	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	455	x	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	456	x + 4	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	459	x	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	460	x + 4	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	463	x	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	464	x + 4	family	no record family established for this pointer here (param)
+src/game/battle_e4.cpp	513	0x18	not-record	not one of the nine records.h families (via=CharRecord)
+src/game/battle_e4.cpp	514	0x1A	not-record	not one of the nine records.h families (via=CharRecord)
+src/game/battle_e4.cpp	519	0x10	not-record	not one of the nine records.h families (via=CharRecord)
+src/game/battle_e4.cpp	920	0x126	union	PartyMember +0x126 w2
+src/game/battle_e4.cpp	921	2	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_e4.cpp	1012	0x126	union	PartyMember +0x126 w2
+src/game/battle_e4.cpp	1046	0x126	union	PartyMember +0x126 w2
+src/game/battle_e4.cpp	1158	0x126	union	PartyMember +0x126 w2
+src/game/battle_e4.cpp	1389	0x126	union	PartyMember +0x126 w2
+src/game/battle_e4_fuzz.cpp	464	0x126	union	PartyMember +0x126 w2
+src/game/battle_e5.cpp	148	0xD0	field-missing	BattleEnemy +0xD0 w2
+src/game/battle_e5.cpp	149	0xD2	field-missing	BattleEnemy +0xD2 w2
+src/game/battle_e5.cpp	150	0xD4	field-missing	BattleEnemy +0xD4 w2
+src/game/battle_e5.cpp	151	0xD6	field-missing	BattleEnemy +0xD6 w2
+src/game/battle_e5.cpp	152	0xD8	field-missing	BattleEnemy +0xD8 w2
+src/game/battle_e5.cpp	153	0xDA	field-missing	BattleEnemy +0xDA w2
+src/game/battle_e5.cpp	234	6	family	no record family established for this pointer here (-)
+src/game/battle_e5.cpp	238	6	family	no record family established for this pointer here (-)
+src/game/battle_e5.cpp	261	2	family	no record family established for this pointer here (table=0x939fc0)
+src/game/battle_e5.cpp	308	0x130	family	no record family established for this pointer here (via=Key)
+src/game/battle_e5.cpp	308	d.at	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_e5.cpp	308	d.party_stat	computed	PartyMember, offset d.party_stat
+src/game/battle_e5.cpp	311	0x110	family	no record family established for this pointer here (via=Key)
+src/game/battle_e5.cpp	311	d.at	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_e5.cpp	311	d.enemy_stat	computed	BattleEnemy, offset d.enemy_stat
+src/game/battle_e5.cpp	326	d.at	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_e5.cpp	329	d.at	family	no record family established for this pointer here (via=At)
+src/game/battle_e5.cpp	378	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_e5.cpp	411	0x22	field-missing	PartyMember +0xC0 w2
+src/game/battle_e5.cpp	413	0x26	field-missing	PartyMember +0xC4 w2
+src/game/battle_e5.cpp	413	0x26	field-missing	PartyMember +0xC4 w2
+src/game/battle_e5.cpp	414	0x26	field-missing	PartyMember +0xC4 w2
+src/game/battle_e5.cpp	415	0x28	field-missing	PartyMember +0xC6 w2
+src/game/battle_e5.cpp	415	0x28	field-missing	PartyMember +0xC6 w2
+src/game/battle_e5.cpp	416	0x28	field-missing	PartyMember +0xC6 w2
+src/game/battle_e5.cpp	417	0x2A	field-missing	PartyMember +0xC8 w2
+src/game/battle_e5.cpp	417	0x2A	field-missing	PartyMember +0xC8 w2
+src/game/battle_e5.cpp	418	0x2A	field-missing	PartyMember +0xC8 w2
+src/game/battle_e5.cpp	419	0x2C	field-missing	PartyMember +0xCA w2
+src/game/battle_e5.cpp	419	0x2C	field-missing	PartyMember +0xCA w2
+src/game/battle_e5.cpp	420	0x2C	field-missing	PartyMember +0xCA w2
+src/game/battle_e5.cpp	442	4 * index	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	476	3	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	480	0x10	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	480	0x12	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	524	3	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	526	1	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	526	1	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	527	2	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	527	2	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	537	j	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	550	2	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	551	3	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	552	4	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	553	6	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	554	0x10	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	555	0x12	family	no record family established for this pointer here (param)
+src/game/battle_e5.cpp	1174	j	not-record	not one of the nine records.h families (table=0x904608)
+src/game/battle_e5.cpp	1174	j	not-record	not one of the nine records.h families (table=0x904620)
+src/game/battle_e5_fuzz.cpp	287	0x12	union	WindowRecord +0x12 w2
+src/game/battle_e5_fuzz.cpp	288	0x10	union	WindowRecord +0x10 w2
+src/game/battle_e5_fuzz.cpp	318	4	gate	WindowRecord->centre_x typed changed the object
+src/game/battle_e5_fuzz.cpp	319	4	gate	WindowRecord->centre_x typed changed the object
+src/game/battle_e5_fuzz.cpp	322	0x9A	gate	PartyMember->ap typed changed the object
+src/game/battle_e5_fuzz.cpp	323	0x9A	family	no record family established for this pointer here (-)
+src/game/battle_e5_fuzz.cpp	338	0x108	gate	BattleEnemy->hp_change typed changed the object
+src/game/battle_e5_fuzz.cpp	352	6	family	no record family established for this pointer here (-)
+src/game/battle_e5_fuzz.cpp	353	0xA4	family	no record family established for this pointer here (via=Enemy)
+src/game/battle_e5_fuzz.cpp	354	0x94	family	no record family established for this pointer here (via=Enemy)
+src/game/battle_e5_fuzz.cpp	355	0x96	family	no record family established for this pointer here (via=Enemy)
+src/game/battle_e5_fuzz.cpp	364	at_	computed	BattleEnemy, offset at_
+src/game/battle_e5_fuzz.cpp	365	0xD0	field-missing	BattleEnemy +0xD0 w2
+src/game/battle_e5_fuzz.cpp	366	0xD2	field-missing	BattleEnemy +0xD2 w2
+src/game/battle_e5_fuzz.cpp	375	2	family	no record family established for this pointer here (table=0x939fc0)
+src/game/battle_e5_fuzz.cpp	474	0xA4	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	100	0xC4	family	no record family established for this pointer here (param)
+src/game/battle_e6.cpp	101	0xC0	family	no record family established for this pointer here (param)
+src/game/battle_e6.cpp	111	field	family	no record family established for this pointer here (param)
+src/game/battle_e6.cpp	112	field	family	no record family established for this pointer here (param)
+src/game/battle_e6.cpp	113	field	family	no record family established for this pointer here (param)
+src/game/battle_e6.cpp	114	field - 0x20	family	no record family established for this pointer here (param)
+src/game/battle_e6.cpp	143	4 * state	family	no record family established for this pointer here (param)
+src/game/battle_e6.cpp	224	0x138	union	PartyMember +0x138 w4
+src/game/battle_e6.cpp	225	0x13C	union	PartyMember +0x13C w4
+src/game/battle_e6.cpp	251	i	not-record	not one of the nine records.h families (table=0x90461c)
+src/game/battle_e6.cpp	251	i	not-record	not one of the nine records.h families (table=0x90461c)
+src/game/battle_e6.cpp	367	0x40	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_e6.cpp	378	field	computed	PartyMember, offset field
+src/game/battle_e6.cpp	380	field + 2	computed	PartyMember, offset field + 2
+src/game/battle_e6.cpp	381	field	computed	PartyMember, offset field
+src/game/battle_e6.cpp	382	field - 0x20	computed	PartyMember, offset field - 0x20
+src/game/battle_e6.cpp	515	0x40	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_e6.cpp	518	0xC4	field-missing	PartyMember +0xC4 w2
+src/game/battle_e6.cpp	519	0xC4	field-missing	PartyMember +0xC4 w2
+src/game/battle_e6.cpp	619	0x20	field-missing	BattleTask +0x20 w4
+src/game/battle_e6.cpp	619	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e6.cpp	640	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e6.cpp	641	0x20	field-missing	BattleTask +0x20 w4
+src/game/battle_e6.cpp	642	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e6.cpp	655	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	674	i	computed	BattleTask, offset i
+src/game/battle_e6.cpp	674	i	computed	BattleTask, offset i
+src/game/battle_e6.cpp	710	0xC	union	BattleTask +0xC w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	711	0x10	union	BattleTask +0x10 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	711	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	712	0x14	field-missing	BattleTask +0x14 w4
+src/game/battle_e6.cpp	713	0x20	field-missing	BattleTask +0x20 w4
+src/game/battle_e6.cpp	714	0x18	union	BattleTask +0x18 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	714	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e6.cpp	725	0x34	gate	BattleTask->x typed changed the object
+src/game/battle_e6.cpp	725	0xC	union	BattleTask +0xC w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	728	0x10	union	BattleTask +0x10 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	728	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	728	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	731	0x14	field-missing	BattleTask +0x14 w2
+src/game/battle_e6.cpp	731	0x3E	field-missing	BattleTask +0x3E w2
+src/game/battle_e6.cpp	731	0x3E	field-missing	BattleTask +0x3E w2
+src/game/battle_e6.cpp	734	0x18	union	BattleTask +0x18 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	734	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e6.cpp	734	0x3C	field-missing	BattleTask +0x3C w4
+src/game/battle_e6.cpp	737	0x14	field-missing	BattleTask +0x14 w4
+src/game/battle_e6.cpp	737	0x14	field-missing	BattleTask +0x14 w4
+src/game/battle_e6.cpp	737	0x20	field-missing	BattleTask +0x20 w4
+src/game/battle_e6.cpp	740	0x14	field-missing	BattleTask +0x14 w4
+src/game/battle_e6.cpp	820	0xB4 + 2 * i	computed	BattleEnemy, offset 0xB4 + 2 * i
+src/game/battle_e6.cpp	821	0xD4 + 2 * i	computed	BattleEnemy, offset 0xD4 + 2 * i
+src/game/battle_e6.cpp	850	0x24 + 2 * i	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	851	0x44 + 2 * i	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	904	2	family	no record family established for this pointer here (via=At)
+src/game/battle_e6.cpp	953	0x60	union	BattleTask +0x60 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	956	0x60	union	BattleTask +0x60 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_e6.cpp	990	0xC	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	991	4	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1103	4	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1107	4	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1109	8	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1132	4 + 4 * k	not-record	not one of the nine records.h families (stride=0x18)
+src/game/battle_e6.cpp	1143	0x14	not-record	not one of the nine records.h families (stride=0x18)
+src/game/battle_e6.cpp	1163	4	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1164	2	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1164	4	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1166	2	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1167	4	family	no record family established for this pointer here (-)
+src/game/battle_e6.cpp	1204	(head + 2 * frame) * 4 + 0xC	family	no record family established for this pointer here (-)
+src/game/battle_e6_fuzz.cpp	355	2 * i	family	no record family established for this pointer here (-)
+src/game/battle_e6_fuzz.cpp	445	2	family	no record family established for this pointer here (via=Pointer)
+src/game/battle_e6_fuzz.cpp	470	0x20	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e6_fuzz.cpp	470	0x3C	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e6_fuzz.cpp	478	0x20	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e6_fuzz.cpp	479	0x14	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_e6_fuzz.cpp	511	i	family	no record family established for this pointer here (-)
+src/game/battle_e7.cpp	123	0x14	union	WindowRecord +0x14 w2
+src/game/battle_e7.cpp	444	0x16	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_e7.cpp	449	0x18	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_e7.cpp	450	0x1A	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_e7.cpp	523	0x12	union	WindowRecord +0x12 w2
+src/game/battle_e7.cpp	534	0x12	union	WindowRecord +0x12 w2
+src/game/battle_e7.cpp	539	0x12	union	WindowRecord +0x12 w2
+src/game/battle_e7.cpp	554	0x10	union	WindowRecord +0x10 w2
+src/game/battle_e7.cpp	557	0x10	union	WindowRecord +0x10 w2
+src/game/battle_e7.cpp	578	0x12	union	WindowRecord +0x12 w2
+src/game/battle_e7.cpp	587	0x12	union	WindowRecord +0x12 w2
+src/game/battle_e7.cpp	602	0x10	union	WindowRecord +0x10 w2
+src/game/battle_e7.cpp	811	kStats[k]	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_e7.cpp	835	0x10	family	no record family established for this pointer here (-)
+src/game/battle_e7.cpp	848	0x10	family	no record family established for this pointer here (-)
+src/game/battle_e7_fuzz.cpp	232	at	family	no record family established for this pointer here (via=Rec)
+src/game/battle_e7_fuzz.cpp	248	4 * r	family	no record family established for this pointer here (param)
+src/game/battle_e7_fuzz.cpp	255	0x12	family	no record family established for this pointer here (via=Rec)
+src/game/battle_e7_fuzz.cpp	256	0x10	family	no record family established for this pointer here (via=Rec)
+src/game/battle_flow.cpp	384	slot	computed	BattleEnemy, offset slot
+src/game/battle_flow.cpp	395	slot	computed	BattleEnemy, offset slot
+src/game/battle_flow.cpp	397	slot	computed	BattleEnemy, offset slot
+src/game/battle_flow.cpp	404	slot	computed	BattleEnemy, offset slot
+src/game/battle_flow.cpp	408	slot	computed	BattleEnemy, offset slot
+src/game/battle_flow.cpp	487	0x36	width	BattleTask +0x36 w2
+src/game/battle_flow.cpp	488	0x3A	width	BattleTask +0x3A w2
+src/game/battle_flow.cpp	522	0x16	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	526	8	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	527	0xC	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	529	0x18	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	531	0x1A	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	551	0x16	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	555	8	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	556	0xC	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	559	0x18	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow.cpp	560	0x1A	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_flow_fuzz.cpp	110	slot	family	no record family established for this pointer here (-)
+src/game/battle_flow_fuzz.cpp	120	0x32 + 4 * (w % 3)	family	no record family established for this pointer here (-)
+src/game/battle_flow_fuzz.cpp	127	0x110	family	no record family established for this pointer here (-)
+src/game/battle_flow_fuzz.cpp	253	4	family	no record family established for this pointer here (param)
+src/game/battle_flow_fuzz.cpp	567	slot	family	no record family established for this pointer here (via=Current)
+src/game/battle_flow_fuzz.cpp	598	0x32	family	no record family established for this pointer here (-)
+src/game/battle_fx_tasks.cpp	88	0x80	family	no record family established for this pointer here (-)
+src/game/battle_fx_tasks.cpp	189	0x36	width	BattleTask +0x36 w2
+src/game/battle_fx_tasks.cpp	190	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	190	0x60	width	BattleTask +0x60 w2
+src/game/battle_fx_tasks.cpp	195	0x36	width	BattleTask +0x36 w2
+src/game/battle_fx_tasks.cpp	196	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	223	0x2C	family	no record family established for this pointer here (via=OwnerOf)
+src/game/battle_fx_tasks.cpp	224	0x2E	family	no record family established for this pointer here (via=OwnerOf)
+src/game/battle_fx_tasks.cpp	224	0x36	width	BattleTask +0x36 w2
+src/game/battle_fx_tasks.cpp	227	0x2C	family	no record family established for this pointer here (via=OwnerOf)
+src/game/battle_fx_tasks.cpp	228	0x30	family	no record family established for this pointer here (via=OwnerOf)
+src/game/battle_fx_tasks.cpp	228	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	230	0x36	width	BattleTask +0x36 w2
+src/game/battle_fx_tasks.cpp	231	0x2E	family	no record family established for this pointer here (via=OwnerOf)
+src/game/battle_fx_tasks.cpp	235	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	236	0x30	family	no record family established for this pointer here (via=OwnerOf)
+src/game/battle_fx_tasks.cpp	241	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	241	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	284	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	287	0x36	width	BattleTask +0x36 w2
+src/game/battle_fx_tasks.cpp	300	0x36	width	BattleTask +0x36 w2
+src/game/battle_fx_tasks.cpp	300	0x3A	width	BattleTask +0x3A w2
+src/game/battle_fx_tasks.cpp	364	0x2C	field-missing	BattleTask +0x2C w2
+src/game/battle_fx_tasks.cpp	479	c.offset	family	no record family established for this pointer here (table=0x93b940)
+src/game/battle_fx_tasks.cpp	479	c.offset	computed	BattleTask, offset c.offset
+src/game/battle_fx_tasks.cpp	480	c.offset	family	no record family established for this pointer here (table=0x93b940)
+src/game/battle_fx_tasks.cpp	480	c.offset	computed	BattleTask, offset c.offset
+src/game/battle_fx_tasks_fuzz.cpp	42	0x80	family	no record family established for this pointer here (-)
+src/game/battle_fx_tasks_fuzz.cpp	87	0x36 + 4 * (w % 2)	computed	BattleTask, offset 0x36 + 4 * (w % 2)
+src/game/battle_fx_tasks_fuzz.cpp	89	0x60	width	BattleTask +0x60 w2
+src/game/battle_fx_tasks_fuzz.cpp	357	0x2C	family	no record family established for this pointer here (via=Slot)
+src/game/battle_fx_tasks_fuzz.cpp	363	0x2C	family	no record family established for this pointer here (via=EnemyObj)
+src/game/battle_fx_tasks_fuzz.cpp	404	0x36	width	BattleTask +0x36 w2
+src/game/battle_fx_tasks_fuzz.cpp	404	0x3A	width	BattleTask +0x3A w2
+src/game/battle_items.cpp	207	0x34	family	no record family established for this pointer here (via=Actor)
+src/game/battle_items.cpp	207	0x14	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	208	0x38	family	no record family established for this pointer here (via=Actor)
+src/game/battle_items.cpp	208	0x18	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	209	0x3C	family	no record family established for this pointer here (via=Actor)
+src/game/battle_items.cpp	209	0x1C	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	210	0x2E	family	no record family established for this pointer here (via=Actor)
+src/game/battle_items.cpp	210	at::kX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	211	0x30	family	no record family established for this pointer here (via=Actor)
+src/game/battle_items.cpp	211	at::kY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	233	at::kBaseX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	233	at::kX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	236	at::kDriftY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	240	at::kWave	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	259	at::kWave	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	259	at::kWave	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	264	at::kBaseX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	264	at::kX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	266	at::kDriftY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	266	at::kY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	266	at::kY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	304	0x14	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	304	0x18	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	308	0x14	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	308	0x18	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	326	at::kX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	327	at::kY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	360	at::kX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	361	at::kY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	407	at::kX	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	408	at::kY	family	no record family established for this pointer here (via=Cur)
+src/game/battle_items.cpp	519	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	520	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	591	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	592	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	598	0x2A	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_items.cpp	599	0x16	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_items.cpp	632	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	632	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	650	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	650	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	682	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	683	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	690	0x2E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	690	8	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_items.cpp	691	0x30	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items.cpp	691	0xC	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_items_fuzz.cpp	175	4	family	no record family established for this pointer here (param)
+src/game/battle_items_fuzz.cpp	623	at::kWave	family	no record family established for this pointer here (-)
+src/game/battle_items_fuzz.cpp	650	0x3E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_items_fuzz.cpp	651	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_menu_states.cpp	81	4 * i	family	no record family established for this pointer here (-)
+src/game/battle_menu_states.cpp	179	0xC	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_menu_states.cpp	179	0xC	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_menu_states.cpp	261	4	width	WindowRecord +0x4 w4
+src/game/battle_menu_states.cpp	273	0x10	union	WindowRecord +0x10 w2
+src/game/battle_menu_states.cpp	277	0x10	union	WindowRecord +0x10 w2
+src/game/battle_menu_states.cpp	292	0x12	union	WindowRecord +0x12 w2
+src/game/battle_menu_states.cpp	298	0x12	union	WindowRecord +0x12 w2
+src/game/battle_menu_states.cpp	338	0x12	union	WindowRecord +0x12 w2
+src/game/battle_menu_states.cpp	342	4	width	WindowRecord +0x4 w4
+src/game/battle_menu_states.cpp	377	2	not-record	not one of the nine records.h families (via=Command)
+src/game/battle_menu_states.cpp	565	0xC	union	WindowRecord +0xC w4
+src/game/battle_menu_states.cpp	572	0xC	union	WindowRecord +0xC w4
+src/game/battle_menu_states_fuzz.cpp	96	4	family	no record family established for this pointer here (-)
+src/game/battle_menu_states_fuzz.cpp	96	6	family	no record family established for this pointer here (-)
+src/game/battle_menu_states_fuzz.cpp	97	0x12	family	no record family established for this pointer here (-)
+src/game/battle_menu_states_fuzz.cpp	103	0x10	family	no record family established for this pointer here (-)
+src/game/battle_menu_states_fuzz.cpp	447	0x12	family	no record family established for this pointer here (-)
+src/game/battle_misc.cpp	148	0x2C	family	no record family established for this pointer here (via=Field_StateAt)
+src/game/battle_misc.cpp	176	0x80	family	no record family established for this pointer here (via=Context)
+src/game/battle_misc.cpp	178	0x34	family	no record family established for this pointer here (via=Context)
+src/game/battle_misc.cpp	178	0x34	family	no record family established for this pointer here (via=SpriteCurrent)
+src/game/battle_misc.cpp	179	0x38	family	no record family established for this pointer here (via=Context)
+src/game/battle_misc.cpp	179	0x38	family	no record family established for this pointer here (via=SpriteCurrent)
+src/game/battle_misc.cpp	180	0x3C	family	no record family established for this pointer here (via=Context)
+src/game/battle_misc.cpp	180	0x3C	family	no record family established for this pointer here (via=SpriteCurrent)
+src/game/battle_misc.cpp	228	0x134	family	no record family established for this pointer here (via=ObjTrioAt;stride=0x14c)
+src/game/battle_misc.cpp	232	0x114	family	no record family established for this pointer here (stride=0x128)
+src/game/battle_misc.cpp	237	k	family	no record family established for this pointer here (via=Context)
+src/game/battle_misc.cpp	237	k	family	no record family established for this pointer here (stride=0x128)
+src/game/battle_misc.cpp	238	0x80	family	no record family established for this pointer here (via=Context)
+src/game/battle_misc.cpp	268	4	not-record	not one of the nine records.h families (stride=0x4)
+src/game/battle_misc.cpp	306	At(kItemWindowCursor)[0]	not-record	not one of the nine records.h families (base=BattleActorCopies_ItemActor)
+src/game/battle_misc.cpp	328	5	not-record	not one of the nine records.h families (base=BattleE4_MenuActor)
+src/game/battle_misc.cpp	335	0x10	union	WindowRecord +0x10 w2
+src/game/battle_misc.cpp	337	0x10	not-record	not one of the nine records.h families (base=BattleActorCopies_Command)
+src/game/battle_misc.cpp	338	0x14	union	WindowRecord +0x14 w2
+src/game/battle_misc.cpp	341	5	not-record	not one of the nine records.h families (base=BattleE4_MenuActor)
+src/game/battle_misc.cpp	374	0x10	union	WindowRecord +0x10 w2
+src/game/battle_misc.cpp	435	8	family	no record family established for this pointer here (param)
+src/game/battle_misc.cpp	436	4	family	no record family established for this pointer here (param)
+src/game/battle_misc.cpp	492	4	not-record	not one of the nine records.h families (stride=0x8)
+src/game/battle_misc.cpp	527	n	not-record	not one of the nine records.h families (base=BattleMisc_NameSuffix)
+src/game/battle_misc.cpp	532	k	family	no record family established for this pointer here (-)
+src/game/battle_misc.cpp	532	k	not-record	not one of the nine records.h families (base=BattleMisc_NameSuffix)
+src/game/battle_misc.cpp	533	k	family	no record family established for this pointer here (-)
+src/game/battle_misc.cpp	533	k	not-record	not one of the nine records.h families (base=BattleMisc_NameSuffix)
+src/game/battle_misc.cpp	573	0xF0	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	581	0x108	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	584	0x108	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	587	0x92	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	590	0x92	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	593	0xAA	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	599	0x108	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	602	0xA4	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	603	0x108	family	no record family established for this pointer here (via=CurrentEnemy)
+src/game/battle_misc.cpp	642	6	not-record	not one of the nine records.h families (via=Sprite_ObjectsAt;stride=0xa4)
+src/game/battle_misc_fuzz.cpp	221	(k < 3 ? 0x134 : 0x114)	family	no record family established for this pointer here (stride=0x14c)
+src/game/battle_misc_fuzz.cpp	278	((h >> 8) % 4) * 16	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	283	0x108	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	321	6	not-record	not one of the nine records.h families (stride=0xa4)
+src/game/battle_misc_fuzz.cpp	352	+	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	352	+	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	606	0x2C	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_misc_fuzz.cpp	666	i * kPartyStride	family	no record family established for this pointer here (param)
+src/game/battle_misc_fuzz.cpp	700	at	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	703	at	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	785	0x10	not-record	not one of the nine records.h families (via=Addr)
+src/game/battle_misc_fuzz.cpp	954	k	not-record	not one of the nine records.h families (via=Addr)
+src/game/battle_misc_fuzz.cpp	955	slen	not-record	not one of the nine records.h families (via=Addr)
+src/game/battle_misc_fuzz.cpp	986	0x108	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	987	0xA4	family	no record family established for this pointer here (-)
+src/game/battle_misc_fuzz.cpp	1003	i * 16	not-record	not one of the nine records.h families (stride=0x8c)
+src/game/battle_misc_fuzz.cpp	1041	i * 0xA4	family	no record family established for this pointer here (param)
+src/game/battle_obj_states.cpp	85	o	computed	PartyMember, offset o
+src/game/battle_obj_states.cpp	91	0x3E	width	PartyMember +0x3E w2
+src/game/battle_obj_states.cpp	152	0x34	gate	PartyMember->x typed changed the object
+src/game/battle_obj_states.cpp	153	0x38	gate	PartyMember->z typed changed the object
+src/game/battle_obj_states.cpp	156	0x38	gate	PartyMember->z typed changed the object
+src/game/battle_obj_states.cpp	156	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_obj_states.cpp	179	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/battle_obj_states_fuzz.cpp	122	0x9A	gate	PartyMember->ap typed changed the object
+src/game/battle_odds.cpp	91	8	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	93	8	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	93	8	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	95	8	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	99	1	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	121	8	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	123	8	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	126	8	not-record	not one of the nine records.h families (via=BannerCurrent)
+src/game/battle_odds.cpp	143	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_odds.cpp	159	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/battle_odds.cpp	201	s[0xA] * 12u + k	not-record	not one of the nine records.h families (via=TintRecordsAt)
+src/game/battle_odds.cpp	237	0xB	family	no record family established for this pointer here (via=SpriteCurrent)
+src/game/battle_odds_fuzz.cpp	336	1	not-record	not one of the nine records.h families (via=Next;stride=0xc)
+src/game/battle_odds_fuzz.cpp	337	8	not-record	not one of the nine records.h families (via=Next;stride=0xc)
+src/game/battle_odds_fuzz.cpp	417	0xA	family	no record family established for this pointer here (via=Pick)
+src/game/battle_odds_fuzz.cpp	442	0xB	not-record	not one of the nine records.h families (via=GetLong)
+src/game/battle_odds_fuzz.cpp	452	0xB	family	no record family established for this pointer here (via=SomeObject)
+src/game/battle_phases.cpp	90	index * 4	family	no record family established for this pointer here (-)
+src/game/battle_phases.cpp	227	0x138	union	PartyMember +0x138 w4
+src/game/battle_phases.cpp	228	0x13C	union	PartyMember +0x13C w4
+src/game/battle_phases.cpp	479	0x126	union	PartyMember +0x126 w2
+src/game/battle_phases.cpp	574	0xC	not-record	not one of the nine records.h families (via=MenuRecord)
+src/game/battle_phases.cpp	574	0xC	not-record	not one of the nine records.h families (via=MenuRecord)
+src/game/battle_phases.cpp	610	0x126	union	PartyMember +0x126 w2
+src/game/battle_phases.cpp	640	4	width	BattleEnemy +0x84 w4
+src/game/battle_phases.cpp	640	4	not-record	not one of the nine records.h families (table=0x904ce0)
+src/game/battle_phases.cpp	641	2	family	no record family established for this pointer here (table=0x939fbc;stride=0x4)
+src/game/battle_phases.cpp	642	8	width	BattleEnemy +0x88 w4
+src/game/battle_phases.cpp	642	8	not-record	not one of the nine records.h families (table=0x904ce0)
+src/game/battle_phases_fuzz.cpp	97	0x126	union	PartyMember +0x126 w2
+src/game/battle_phases_fuzz.cpp	289	4 + 2 * (v % 2)	computed	WindowRecord, offset 4 + 2 * (v % 2)
+src/game/battle_phases_fuzz.cpp	318	4 + 2 * ((h >> 8) % 2)	computed	WindowRecord, offset 4 + 2 * ((h >> 8) % 2)
+src/game/battle_phases_fuzz.cpp	756	4 * i	family	no record family established for this pointer here (param)
+src/game/battle_phases_fuzz.cpp	760	4 * i	family	no record family established for this pointer here (param)
+src/game/battle_phases_fuzz.cpp	764	4 * i	family	no record family established for this pointer here (param)
+src/game/battle_result.cpp	100	index * 4	family	no record family established for this pointer here (-)
+src/game/battle_result_fuzz.cpp	525	3	not-record	not one of the nine records.h families (via=Dw)
+src/game/battle_result_fuzz.cpp	621	4 * i	family	no record family established for this pointer here (param)
+src/game/battle_setup.cpp	313	at::kPQueuedItem	union	PartyMember +0x126 w2
+src/game/battle_setup.cpp	351	at::kPHpChange	union	PartyMember +0x128 w2
+src/game/battle_setup.cpp	479	(party ? at::kPApChange : at::kEApChange)	family	no record family established for this pointer here (via=P)
+src/game/battle_setup.cpp	480	(party ? at::kPHpChange : at::kEHpChange)	family	no record family established for this pointer here (via=P)
+src/game/battle_setup.cpp	513	at::kPApChange	union	PartyMember +0x12A w2
+src/game/battle_setup.cpp	531	at::kPHpChange	union	PartyMember +0x128 w2
+src/game/battle_setup.cpp	575	at::kPHpChange	union	PartyMember +0x128 w2
+src/game/battle_setup.cpp	576	at::kPApChange	union	PartyMember +0x12A w2
+src/game/battle_setup.cpp	578	at::kPApChange	union	PartyMember +0x12A w2
+src/game/battle_setup_fuzz.cpp	90	at::kPHp + 2 * (w % 5)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	91	(party ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	97	(party ? at::kPHpChange : at::kEHpChange)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	144	(i <= 2 ? at::kPApChange : at::kEApChange)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	144	(i <= 2 ? at::kPHpChange : at::kEHpChange)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	145	(i <= 2 ? at::kPHpChange : at::kEHpChange)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	163	at::kPStatus	family	no record family established for this pointer here (param)
+src/game/battle_setup_fuzz.cpp	164	at::kEStatus	family	no record family established for this pointer here (param)
+src/game/battle_setup_fuzz.cpp	362	(i <= 2 ? at::kPFlags : at::kEFlags)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	363	(i <= 2 ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	405	at::kPHp	gate	PartyMember->hp typed changed the object
+src/game/battle_setup_fuzz.cpp	464	(i <= 2 ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	466	(i <= 2 ? at::kPAgi : at::kEAgi)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	477	(actor <= 2 ? at::kPStatus : at::kEStatus)	family	no record family established for this pointer here (via=Obj)
+src/game/battle_setup_fuzz.cpp	484	at::kPAgi	gate	PartyMember->agi typed changed the object
+src/game/battle_sprites.cpp	104	2	not-record	not one of the nine records.h families (via=Ptr)
+src/game/battle_sprites.cpp	268	4	not-record	not one of the nine records.h families (via=ActionRecord)
+src/game/battle_sprites.cpp	486	0x126	union	PartyMember +0x126 w2
+src/game/battle_sprites.cpp	529	0x126	union	PartyMember +0x126 w2
+src/game/battle_sprites.cpp	564	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_sprites.cpp	564	0x2E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	565	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_sprites.cpp	565	0x30	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	566	0x32	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	571	0x2E	field-missing	BattleTask +0x2E w2
+src/game/battle_sprites.cpp	571	0x2E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	572	0x30	field-missing	BattleTask +0x30 w2
+src/game/battle_sprites.cpp	572	0x30	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	573	0x32	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	595	8	not-record	not one of the nine records.h families (stride=0xc)
+src/game/battle_sprites.cpp	609	8	not-record	not one of the nine records.h families (stride=0xc)
+src/game/battle_sprites.cpp	611	8	not-record	not one of the nine records.h families (stride=0xc)
+src/game/battle_sprites.cpp	762	4	family	no record family established for this pointer here (table=0x939f00;stride=0xc)
+src/game/battle_sprites.cpp	762	8	family	no record family established for this pointer here (table=0x939f00;stride=0xc)
+src/game/battle_sprites.cpp	793	0x14	field-missing	BattleEnemy +0x14 w4
+src/game/battle_sprites.cpp	794	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/battle_sprites.cpp	795	0xC	field-missing	BattleEnemy +0xC w4
+src/game/battle_sprites.cpp	796	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/battle_sprites.cpp	797	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/battle_sprites.cpp	798	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/battle_sprites.cpp	815	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	815	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/battle_sprites.cpp	816	0x3E	width	BattleEnemy +0x3E w2
+src/game/battle_sprites.cpp	846	4	width	BattleEnemy +0x84 w4
+src/game/battle_sprites.cpp	846	4	width	EnemyData +0x4 w4
+src/game/battle_sprites.cpp	847	8	width	BattleEnemy +0x88 w4
+src/game/battle_sprites.cpp	847	8	width	EnemyData +0x8 w4
+src/game/battle_sprites.cpp	855	0x1C	width	BattleEnemy +0x9C w4
+src/game/battle_sprites.cpp	855	0x1C	width	EnemyData +0x1C w4
+src/game/battle_sprites.cpp	856	0x20	width	BattleEnemy +0xA0 w4
+src/game/battle_sprites.cpp	856	0x20	width	EnemyData +0x20 w4
+src/game/battle_sprites.cpp	858	0x28	field-missing	BattleEnemy +0xA8 w4
+src/game/battle_sprites.cpp	858	0x30	field-missing	EnemyData +0x30 w4
+src/game/battle_sprites.cpp	859	0x2C	field-missing	BattleEnemy +0xAC w4
+src/game/battle_sprites.cpp	859	0x34	field-missing	EnemyData +0x34 w4
+src/game/battle_sprites.cpp	860	0x50	field-missing	BattleEnemy +0xD0 w2
+src/game/battle_sprites.cpp	862	0x52	field-missing	BattleEnemy +0xD2 w2
+src/game/battle_sprites.cpp	864	0x54	field-missing	BattleEnemy +0xD4 w2
+src/game/battle_sprites.cpp	865	0x56	field-missing	BattleEnemy +0xD6 w2
+src/game/battle_sprites.cpp	866	0x58	field-missing	BattleEnemy +0xD8 w2
+src/game/battle_sprites.cpp	867	0x5A	field-missing	BattleEnemy +0xDA w2
+src/game/battle_sprites.cpp	881	0x98	field-missing	BattleEnemy +0x118 w4
+src/game/battle_sprites.cpp	882	0x9C	field-missing	BattleEnemy +0x11C w4
+src/game/battle_sprites.cpp	909	(k - 8) * 4	not-record	not one of the nine records.h families (via=__builtin_frame_address)
+src/game/battle_sprites.cpp	910	(k - 8) * 4 + 2	not-record	not one of the nine records.h families (via=__builtin_frame_address)
+src/game/battle_sprites.cpp	913	(k - 8) * 4 + 2	not-record	not one of the nine records.h families (via=__builtin_frame_address)
+src/game/battle_sprites.cpp	974	0x10	union	WindowRecord +0x10 w2
+src/game/battle_sprites.cpp	976	0x12	union	WindowRecord +0x12 w2
+src/game/battle_sprites_fuzz.cpp	107	2	family	no record family established for this pointer here (-)
+src/game/battle_sprites_fuzz.cpp	464	i	family	no record family established for this pointer here (-)
+src/game/battle_sprites_fuzz.cpp	498	2	family	no record family established for this pointer here (param)
+src/game/battle_sprites_fuzz.cpp	517	0x126	union	PartyMember +0x126 w2
+src/game/battle_sprites_fuzz.cpp	536	8	not-record	not one of the nine records.h families (stride=0xc)
+src/game/battle_turn_steps.cpp	96	index * 4	family	no record family established for this pointer here (-)
+src/game/battle_turn_steps.cpp	357	at::kFlags2	gate	PartyMember->flags_130 typed changed the object
+src/game/battle_turn_steps.cpp	485	0x18	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_turn_steps.cpp	488	0x10	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_turn_steps.cpp	488	0x10	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_turn_steps_fuzz.cpp	182	at::kStatus	gate	PartyMember->status typed changed the object
+src/game/battle_turn_steps_fuzz.cpp	219	0x18	family	no record family established for this pointer here (param)
+src/game/battle_turn_steps_fuzz.cpp	220	0x10	family	no record family established for this pointer here (param)
+src/game/battle_win_states.cpp	381	0x14	union	WindowRecord +0x14 w2
+src/game/battle_win_states.cpp	383	0x1C	union	WindowRecord +0x1C w2
+src/game/battle_win_states.cpp	413	-	family	no record family established for this pointer here (table=0x93b9e0)
+src/game/battle_win_states.cpp	414	-	family	no record family established for this pointer here (table=0x93b9e0)
+src/game/battle_win_states.cpp	415	-	family	no record family established for this pointer here (table=0x93b9e0)
+src/game/battle_win_states.cpp	449	0x14	union	WindowRecord +0x14 w2
+src/game/battle_win_states.cpp	451	0x1C	union	WindowRecord +0x1C w2
+src/game/battle_win_states.cpp	467	0x16	union	WindowRecord +0x16 w2
+src/game/battle_win_states.cpp	469	0x1E	union	WindowRecord +0x1E w2
+src/game/battle_window_draw.cpp	182	0x16	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	188	0x18	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	189	0x1A	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	208	0x0	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	209	0x2	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	210	0x4	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	211	0x6	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	212	0x8	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	213	0xA	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	214	0xC	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	215	0xE	not-record	not one of the nine records.h families (table=0x64e148)
+src/game/battle_window_draw.cpp	235	2	not-record	not one of the nine records.h families (table=0x64e268)
+src/game/battle_window_draw.cpp	254	2	not-record	not one of the nine records.h families (table=0x64e268)
+src/game/battle_window_draw.cpp	275	0x26	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	277	0x16	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	303	0x26	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	304	0x16	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	341	0x18	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	343	0x1A	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	345	0x16	not-record	not one of the nine records.h families (via=Next)
+src/game/battle_window_draw.cpp	465	0x1A	family	no record family established for this pointer here (table=0x802dc0;stride=0x14c)
+src/game/battle_window_draw_fuzz.cpp	280	0x1A	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_window_draw_fuzz.cpp	461	0x1A	not-record	not one of the nine records.h families (table=0x903a70;stride=0xa4)
+src/game/battle_window_draw_fuzz.cpp	577	0x14	not-record	not one of the nine records.h families (via=Ability)
+src/game/battle_windows.cpp	238	0x126	union	PartyMember +0x126 w2
+src/game/battle_windows.cpp	424	0x26	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_windows.cpp	426	0x16	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/battle_windows.cpp	494	0xF	family	no record family established for this pointer here (param)
+src/game/battle_windows.cpp	602	0x10	union	WindowRecord +0x10 w2
+src/game/battle_windows.cpp	605	0x12	union	WindowRecord +0x12 w2
+src/game/battle_windows_fuzz.cpp	587	0x126	union	PartyMember +0x126 w2
+src/game/boss_h.cpp	75	4 * state	family	no record family established for this pointer here (param)
+src/game/boss_h.cpp	81	3 * (kind - 8)	not-record	not one of the nine records.h families (via=AddressOf)
+src/game/boss_h.cpp	218	0x40	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_h.cpp	219	0x44	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_h.cpp	248	off	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_h.cpp	249	off	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_h.cpp	313	4 * value	not-record	not one of the nine records.h families (via=AddressOf)
+src/game/boss_h.cpp	314	2 * cell	not-record	not one of the nine records.h families (via=AddressOf)
+src/game/boss_h.cpp	315	2 * cell + 1	not-record	not one of the nine records.h families (via=AddressOf)
+src/game/boss_h_fuzz.cpp	155	0x40	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_h_fuzz.cpp	156	0x44	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_harness.cpp	586	0x10	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	586	0xC	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	588	0x10	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	588	0xC	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	589	0x10	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	589	0xC	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	590	0x10	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	590	0xC	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	1234	d.stride * i	family	no record family established for this pointer here (-)
+src/game/boss_harness.cpp	1468	d.stride * i	family	no record family established for this pointer here (-)
+src/game/boss_sa.cpp	80	4 * state	family	no record family established for this pointer here (-)
+src/game/boss_sa.cpp	91	4 * i	family	no record family established for this pointer here (param)
+src/game/boss_sa.cpp	115	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sa.cpp	115	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sa.cpp	116	0x3E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sa.cpp	287	2	family	no record family established for this pointer here (via=At)
+src/game/boss_sa.cpp	289	0xA4	family	no record family established for this pointer here (-)
+src/game/boss_sa.cpp	290	0xB0	family	no record family established for this pointer here (-)
+src/game/boss_sa.cpp	342	0x58	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sa.cpp	342	0x58	family	no record family established for this pointer here (-)
+src/game/boss_sa.cpp	343	0x5A	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sa.cpp	343	0x5A	family	no record family established for this pointer here (-)
+src/game/boss_sa.cpp	529	i	family	no record family established for this pointer here (table=0x93b960;stride=0x128)
+src/game/boss_sa.cpp	529	i	family	no record family established for this pointer here (table=0x93a000;stride=0x84)
+src/game/boss_sa.cpp	538	0x80	family	no record family established for this pointer here (table=0x93a000;stride=0x84)
+src/game/boss_sa_fuzz.cpp	203	2	not-record	not one of the nine records.h families (via=SpriteRecord)
+src/game/boss_sb.cpp	71	4 * index	family	no record family established for this pointer here (-)
+src/game/boss_sb.cpp	124	2	family	no record family established for this pointer here (via=At)
+src/game/boss_sb.cpp	201	0x58	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sb.cpp	202	0x5A	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sb.cpp	202	2	family	no record family established for this pointer here (param)
+src/game/boss_sb.cpp	225	0x58	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sb.cpp	226	0x5A	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sb.cpp	295	0x3E	width	BattleEnemy +0x3E w2
+src/game/boss_sb.cpp	370	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sb.cpp	371	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sb.cpp	372	0x3C	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sb.cpp	419	4	family	no record family established for this pointer here (via=At)
+src/game/boss_sb_fuzz.cpp	73	2	not-record	not one of the nine records.h families (via=SpriteRecord)
+src/game/boss_sc.cpp	87	4 * index	family	no record family established for this pointer here (param)
+src/game/boss_sc.cpp	181	0x58	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sc.cpp	182	0x5A	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sc.cpp	242	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sc.cpp	243	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/boss_sc.cpp	244	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sc.cpp	248	0x20	field-missing	BattleEnemy +0x20 w2
+src/game/boss_sc.cpp	256	0x20	field-missing	BattleEnemy +0x20 w2
+src/game/boss_sc.cpp	257	0x20	field-missing	BattleEnemy +0x20 w2
+src/game/boss_sc.cpp	260	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sc.cpp	260	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sc.cpp	261	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sc.cpp	298	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sc.cpp	299	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/boss_sc.cpp	299	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sc.cpp	301	0x18	not-record	not one of the nine records.h families (via=Packet)
+src/game/boss_sc.cpp	303	0x1A	not-record	not one of the nine records.h families (via=Packet)
+src/game/boss_sc.cpp	322	0x26	not-record	not one of the nine records.h families (via=Packet)
+src/game/boss_sc.cpp	325	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sc.cpp	325	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sc.cpp	325	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/boss_sc.cpp	325	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sc.cpp	326	0xC	not-record	not one of the nine records.h families (via=Packet)
+src/game/boss_sc.cpp	328	0x1C	not-record	not one of the nine records.h families (via=Packet)
+src/game/boss_sc.cpp	381	0xD0	field-missing	BattleEnemy +0xD0 w2
+src/game/boss_sc.cpp	666	0x58	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sc.cpp	667	0x5A	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sc.cpp	672	0x58	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sc.cpp	673	0x5A	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sc_fuzz.cpp	279	0xA4	gate	BattleEnemy->hp typed changed the object
+src/game/boss_sc_fuzz.cpp	284	0xA4	gate	BattleEnemy->hp typed changed the object
+src/game/boss_sc_fuzz.cpp	285	0x108	gate	BattleEnemy->hp_change typed changed the object
+src/game/boss_sc_fuzz.cpp	299	0x20	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sd.cpp	70	4 * index	family	no record family established for this pointer here (-)
+src/game/boss_sd.cpp	114	0xA4	gate	BattleEnemy->hp typed changed the object
+src/game/boss_sd.cpp	115	0xA6	gate	BattleEnemy->ap typed changed the object
+src/game/boss_sd_fuzz.cpp	200	6	family	no record family established for this pointer here (-)
+src/game/boss_sd_fuzz.cpp	261	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_se.cpp	69	4 * state	family	no record family established for this pointer here (-)
+src/game/boss_se.cpp	82	4 * i	family	no record family established for this pointer here (param)
+src/game/boss_se.cpp	105	0xA4	gate	BattleEnemy->hp typed changed the object
+src/game/boss_se.cpp	106	0xD0	field-missing	BattleEnemy +0xD0 w2
+src/game/boss_se.cpp	107	0xB0	gate	BattleEnemy->max_hp typed changed the object
+src/game/boss_se.cpp	108	0xD4	field-missing	BattleEnemy +0xD4 w2
+src/game/boss_se.cpp	109	0xB4	gate	BattleEnemy->atk typed changed the object
+src/game/boss_se.cpp	110	0xD6	field-missing	BattleEnemy +0xD6 w2
+src/game/boss_se.cpp	111	0xB6	gate	BattleEnemy->def typed changed the object
+src/game/boss_se.cpp	189	0xFC	gate	BattleEnemy->anim_table typed changed the object
+src/game/boss_se.cpp	734	0x90	width	PartyMember +0x90 w4
+src/game/boss_sf.cpp	72	4 * index	family	no record family established for this pointer here (-)
+src/game/boss_sf.cpp	94	4 * state	family	no record family established for this pointer here (param)
+src/game/boss_sf.cpp	133	id * at::kAbilityStride	family	no record family established for this pointer here (param)
+src/game/boss_sf.cpp	144	0x14	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	144	0x3E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	144	0x3E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	146	0x14	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	146	0x20	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	148	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	148	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	150	0x3E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf.cpp	228	0x90	width	PartyMember +0x90 w4
+src/game/boss_sf.cpp	440	0x36	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sf.cpp	440	0x36	width	BattleTask +0x36 w2
+src/game/boss_sf.cpp	441	0x38	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sf.cpp	441	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sf.cpp	442	0x3E	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sf.cpp	442	0x3E	field-missing	BattleTask +0x3E w2
+src/game/boss_sf.cpp	465	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sf.cpp	466	0x3E	field-missing	BattleTask +0x3E w2
+src/game/boss_sf.cpp	488	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sf.cpp	489	0x3E	field-missing	BattleTask +0x3E w2
+src/game/boss_sf.cpp	525	0x34	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sf.cpp	525	0x34	gate	BattleTask->x typed changed the object
+src/game/boss_sf.cpp	526	0x38	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sf.cpp	526	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sf.cpp	529	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sf.cpp	530	0x3E	field-missing	BattleTask +0x3E w2
+src/game/boss_sf.cpp	841	i	family	no record family established for this pointer here (via=TaskSlot)
+src/game/boss_sf_fuzz.cpp	96	0x3E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf_fuzz.cpp	164	id * at::kAbilityStride	not-record	not one of the nine records.h families (table=0x65c4dd)
+src/game/boss_sf_fuzz.cpp	374	0x3E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf_fuzz.cpp	375	0x14	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sf_fuzz.cpp	376	0x20	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg.cpp	66	4 * index	family	no record family established for this pointer here (-)
+src/game/boss_sg.cpp	101	4 * state	family	no record family established for this pointer here (param)
+src/game/boss_sg.cpp	352	0x90	width	PartyMember +0x90 w4
+src/game/boss_sg.cpp	415	0x20	field-missing	BattleTask +0x20 w4
+src/game/boss_sg.cpp	415	0x3C	field-missing	BattleTask +0x3C w4
+src/game/boss_sg.cpp	438	0x3C	field-missing	BattleTask +0x3C w4
+src/game/boss_sg.cpp	439	0x20	field-missing	BattleTask +0x20 w4
+src/game/boss_sg.cpp	440	0x3C	field-missing	BattleTask +0x3C w4
+src/game/boss_sg.cpp	456	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	521	0x34	family	no record family established for this pointer here (via=EnemyByIndex)
+src/game/boss_sg.cpp	521	0xC	union	BattleTask +0xC w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	524	0x38	family	no record family established for this pointer here (via=EnemyByIndex)
+src/game/boss_sg.cpp	524	0x10	union	BattleTask +0x10 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	524	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	525	0x14	field-missing	BattleTask +0x14 w4
+src/game/boss_sg.cpp	526	0x20	field-missing	BattleTask +0x20 w4
+src/game/boss_sg.cpp	529	0x3C	family	no record family established for this pointer here (via=EnemyByIndex)
+src/game/boss_sg.cpp	529	0x18	union	BattleTask +0x18 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	529	0x3C	field-missing	BattleTask +0x3C w4
+src/game/boss_sg.cpp	541	0x34	gate	BattleTask->x typed changed the object
+src/game/boss_sg.cpp	541	0xC	union	BattleTask +0xC w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	542	0x10	union	BattleTask +0x10 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	542	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	542	0x38	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	543	0x14	field-missing	BattleTask +0x14 w2
+src/game/boss_sg.cpp	543	0x3E	field-missing	BattleTask +0x3E w2
+src/game/boss_sg.cpp	543	0x3E	field-missing	BattleTask +0x3E w2
+src/game/boss_sg.cpp	544	0x18	union	BattleTask +0x18 w4 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sg.cpp	544	0x3C	field-missing	BattleTask +0x3C w4
+src/game/boss_sg.cpp	544	0x3C	field-missing	BattleTask +0x3C w4
+src/game/boss_sg.cpp	545	0x14	field-missing	BattleTask +0x14 w4
+src/game/boss_sg.cpp	545	0x14	field-missing	BattleTask +0x14 w4
+src/game/boss_sg.cpp	545	0x20	field-missing	BattleTask +0x20 w4
+src/game/boss_sg.cpp	546	0x14	field-missing	BattleTask +0x14 w4
+src/game/boss_sg.cpp	667	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sg.cpp	668	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/boss_sg.cpp	669	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sg.cpp	670	0xC	field-missing	BattleEnemy +0xC w4
+src/game/boss_sg.cpp	671	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/boss_sg.cpp	688	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sg.cpp	688	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sg.cpp	689	0xC	field-missing	BattleEnemy +0xC w4
+src/game/boss_sg.cpp	691	0xC	field-missing	BattleEnemy +0xC w4
+src/game/boss_sg.cpp	692	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/boss_sg.cpp	692	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/boss_sg.cpp	694	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/boss_sg.cpp	695	0x10	field-missing	BattleEnemy +0x10 w4
+src/game/boss_sg.cpp	696	0x20	field-missing	BattleEnemy +0x20 w4
+src/game/boss_sg.cpp	762	0x26	not-record	not one of the nine records.h families (base=Gfx_PacketNext)
+src/game/boss_sg.cpp	774	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sg.cpp	775	0x1C	field-missing	BattleEnemy +0x1C w4
+src/game/boss_sg_fuzz.cpp	381	0x20	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg_fuzz.cpp	383	0x3C	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg_fuzz.cpp	396	0x20	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg_fuzz.cpp	397	0x14	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg_fuzz.cpp	454	0xC	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg_fuzz.cpp	455	0x10	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg_fuzz.cpp	459	0xC	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sg_fuzz.cpp	460	0x10	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sh.cpp	70	4 * index	family	no record family established for this pointer here (-)
+src/game/boss_sh.cpp	244	0x90	width	PartyMember +0x90 w4
+src/game/boss_sh.cpp	270	0x58	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sh.cpp	271	0x5A	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sh.cpp	409	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sh.cpp	410	0xC	field-missing	BattleEnemy +0xC w4
+src/game/boss_sh.cpp	431	0xC	field-missing	BattleEnemy +0xC w4
+src/game/boss_sh.cpp	434	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sh.cpp	438	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sh.cpp	438	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sh.cpp	457	0xC	field-missing	BattleEnemy +0xC w4
+src/game/boss_sh.cpp	460	0x18	field-missing	BattleEnemy +0x18 w4
+src/game/boss_sh_fuzz.cpp	357	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sh_fuzz.cpp	358	0xC	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sh_fuzz.cpp	361	0x18	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si.cpp	73	4 * index	family	no record family established for this pointer here (-)
+src/game/boss_si.cpp	221	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si.cpp	223	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si.cpp	494	0x2E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si.cpp	494	0x2E	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si.cpp	495	0x30	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si.cpp	495	0x30	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si_fuzz.cpp	81	0x34	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si_fuzz.cpp	82	0x38	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_si_fuzz.cpp	298	0x34	family	no record family established for this pointer here (table=0x93c178)
+src/game/boss_si_fuzz.cpp	299	0x38	family	no record family established for this pointer here (table=0x93c178)
+src/game/boss_sj.cpp	78	4 * state	family	no record family established for this pointer here (-)
+src/game/boss_sj.cpp	89	4 * state	family	no record family established for this pointer here (param)
+src/game/boss_sj.cpp	101	4 * i	family	no record family established for this pointer here (param)
+src/game/boss_sj.cpp	147	0x90	width	PartyMember +0x90 w4
+src/game/boss_sj.cpp	175	0x3C	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sj.cpp	197	0x3C	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sj.cpp	230	scale_at	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/boss_sj.cpp	302	i	family	no record family established for this pointer here (table=0x93b960;stride=0x128)
+src/game/boss_sj.cpp	302	i	family	no record family established for this pointer here (table=0x93a000;stride=0x84)
+src/game/boss_sj.cpp	610	0x40	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sj.cpp	610	0x40	field-missing	BattleTask +0x40 w4
+src/game/boss_sj.cpp	611	0x44	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sj.cpp	611	0x44	field-missing	BattleTask +0x44 w4
+src/game/boss_sj.cpp	615	0x2E	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sj.cpp	615	0x2E	field-missing	BattleTask +0x2E w2
+src/game/boss_sj.cpp	616	0x30	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sj.cpp	616	0x30	field-missing	BattleTask +0x30 w2
+src/game/boss_sj.cpp	617	0x32	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sj.cpp	617	0x32	union	BattleTask +0x32 w2 (a BattleTask byte whose meaning varies by task kind)
+src/game/boss_sj_fuzz.cpp	171	0x40	family	no record family established for this pointer here (via=Owner)
+src/game/boss_sj_fuzz.cpp	172	0x44	family	no record family established for this pointer here (via=Owner)
+src/game/boss_spawn.cpp	112	0x34	family	no record family established for this pointer here (-)
+src/game/boss_spawn.cpp	113	0x38	family	no record family established for this pointer here (-)
+src/game/boss_spawn.cpp	114	0x3C	family	no record family established for this pointer here (-)
+src/game/boss_spawn.cpp	118	0x50	family	no record family established for this pointer here (-)
+src/game/boss_spawn.cpp	119	0x54	family	no record family established for this pointer here (-)
+src/game/boss_spawn.cpp	120	0x58	family	no record family established for this pointer here (-)
+src/game/boss_spawn.cpp	121	0x5A	family	no record family established for this pointer here (-)
+src/game/enemy_ai_ops.cpp	86	Word(At(at::kMagicId)) * 24u	family	no record family established for this pointer here (param)
+src/game/enemy_ai_ops.cpp	319	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/enemy_ai_ops.cpp	320	6	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/enemy_ai_ops.cpp	324	0xB0 + i	computed	BattleEnemy, offset 0xB0 + i
+src/game/enemy_ai_ops.cpp	330	4	union	the action / result record (party +0x124, enemy +0x104), either side
+src/game/enemy_ai_ops.cpp	389	0xF8) + 4	not-record	not one of the nine records.h families (via=PtrIn)
+src/game/enemy_ai_ops.cpp	497	0xF8) + 6	not-record	not one of the nine records.h families (via=PtrIn)
+src/game/enemy_ai_ops.cpp	511	0x44	field-missing	BattleEnemy +0x44 w4
+src/game/enemy_ai_ops_fuzz.cpp	95	0x108	gate	BattleEnemy->hp_change typed changed the object
+src/game/enemy_ai_ops_fuzz.cpp	96	0x10A	gate	BattleEnemy->ap_change typed changed the object
+src/game/enemy_ai_ops_fuzz.cpp	97	0xA4	gate	BattleEnemy->hp typed changed the object
+src/game/enemy_ai_ops_fuzz.cpp	98	0x110	gate	BattleEnemy->flags_110 typed changed the object
+src/game/enemy_ai_ops_fuzz.cpp	215	0xA4	gate	BattleEnemy->hp typed changed the object
+src/game/enemy_ai_ops_fuzz.cpp	419	0x40	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/enemy_ai_ops_fuzz.cpp	463	0x44	family	no record family established for this pointer here (base=Sprite_Current)
+src/game/enemy_ai_ops_fuzz.cpp	464	0x10	family	no record family established for this pointer here (base=Sprite_Current)

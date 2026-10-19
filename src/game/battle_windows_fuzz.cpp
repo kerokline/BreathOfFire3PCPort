@@ -29,6 +29,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_windows_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include <windows.h>
@@ -535,14 +536,15 @@ void SeedLineColour() {
     SetWord(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)), w);
 }
 void SeedMember(unsigned char* m) {
+    auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
     static const unsigned kFlags[] = {0, 0x4000, 0x0004, 0x0800, 0x2000, 0x0080, 0x0040, 0x0BFC, 0x0400, 0x6000,
                                       0x20C0, 0x1000};
-    SetWord(m + 0x90, Often() ? kFlags[Next() % 12] | (Half() ? 0 : Next() & 0xFFFF) : Next());
+    member_rec->status = Often() ? kFlags[Next() % 12] | (Half() ? 0 : Next() & 0xFFFF) : Next();
     const unsigned top = Half() ? 0 : Next() % 1000;
-    SetWord(m + 0xA2, top);
+    member_rec->max_ap = top;
     const unsigned quarter = top >> 2;
     static const int kNear[] = {-1, 0, 1};
-    SetWord(m + 0x9A, Half() ? (Half() ? 0 : static_cast<unsigned>(static_cast<int>(quarter) + kNear[Next() % 3])) : Next());
+    member_rec->ap = Half() ? (Half() ? 0 : static_cast<unsigned>(static_cast<int>(quarter) + kNear[Next() % 3])) : Next();
 }
 
 Args Seed(unsigned k) {

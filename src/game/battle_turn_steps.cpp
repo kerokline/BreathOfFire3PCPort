@@ -29,6 +29,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_turn_steps_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/psp_code.h"
 #include "hook/detour.h"
 
@@ -81,6 +82,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + (i & 0xFF) * at::kPartyStride); }
+records::PartyMember* MemberRec(unsigned i) { return reinterpret_cast<records::PartyMember*>(Member(i)); }
 bool Yes(unsigned al) { return (al & 0xFFu) != 0; }
 unsigned char& B(std::uint32_t address) { return *At(address); }
 // `inc byte ptr [m]` / `dec byte ptr [m]`: read, step, store, as one.
@@ -265,7 +267,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
     }
     g.clear_commands();
     for (unsigned i = 0; i <= 2; ++i)
-        if (!Yes(g.actor_is_out(i))) Member(i)[at::kState] = 2;
+        if (!Yes(g.actor_is_out(i))) MemberRec(i)->state[0] = 2;
     B(at::kRoundFlags) &= 0xF7;
     BattlePhases_Initiative = 0;
     B(at::kPhase) = 1;
@@ -317,7 +319,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_StartMembe
             if (!Yes(out) && (Member(cursor)[at::kFlags] & 3) != 0) {
                 Member(cursor)[at::kFlags2 + 1] |= 0x20;
                 unsigned parameter = 0xB;
-                if (Member(cursor)[at::kCharId] != 4) {
+                if (MemberRec(cursor)->char_id != 4) {
                     for (unsigned k = 0; k < 3; ++k) At(at::kCopies + k * at::kPartyStride)[at::kFlags] &= 0xFE;
                     parameter = 0xC;
                 }
@@ -362,14 +364,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_AwaitMembe
         if (count != 0) {
             for (unsigned i = 0;;) {
                 unsigned char* const m = Member(i);
+                auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
                 Sprite_Current = m;
                 if (m[at::kStatus + 1] & 8) {
-                    SetWord(m + at::kHp, Word(m + at::kMaxHp));
-                    SetWord(m + at::kAp, Word(m + at::kMaxAp));
-                    m[at::kByte9C] = m[at::kByteAE];
-                    g.clear_status(i, Word(m + at::kStatus) & 0xBFFF);
+                    member_rec->hp = member_rec->max_hp;
+                    member_rec->ap = member_rec->max_ap;
+                    member_rec->survive = member_rec->byte_ae;
+                    g.clear_status(i, member_rec->status & 0xBFFF);
                 }
-                g.clear_status(i, Word(m + at::kStatus) & 0xBF5F);
+                g.clear_status(i, member_rec->status & 0xBF5F);
                 g.release_tint(m);
                 g.return_item(i);
                 i = (i + 1) & 0xFF;
@@ -403,7 +406,7 @@ extern "C" void __cdecl BattleEnd_WinStep() {
 // 0x904AA2 on.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_WinBegin() {
     for (unsigned i = 0; i < 3; ++i)
-        if (Member(i)[0] & 1) Member(i)[at::kState] = 2;
+        if (MemberRec(i)->flags & 1) MemberRec(i)->state[0] = 2;
     if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
         g.fade_out(10);
         g.music_play(0xA5, 10);
@@ -476,8 +479,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
     if (B(at::kMembers) != 0) {
         for (unsigned i = 0;;) {
             const unsigned char* const m = Member(i);
+            auto* const member_rec = reinterpret_cast<const records::PartyMember*>(m);
             if (m[at::kStatus + 1] & 0x40) {
-                unsigned char* const r = At(at::kRecords + m[at::kRecord] * at::kRecordStride);
+                unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
                 SetWord(r + 0x18, 1);
                 r[0x1C] = 1;
                 if (r[0x1E] < 5) ++r[0x1E];

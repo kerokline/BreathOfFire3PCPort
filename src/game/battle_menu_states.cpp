@@ -18,6 +18,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_menu_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -252,17 +253,18 @@ extern "C" void __cdecl BattleItemCmd_OpenList(void) {
 // record 16's x and y and the pad are read after the calls before them.
 extern "C" void __cdecl BattleItemCmd_List(void) {
     unsigned char* const list = List();
-    if (list[3] != 0) return;
+    auto* const list_window = reinterpret_cast<records::WindowRecord*>(list);
+    if (list_window->state != 0) return;
     const unsigned actor = Acting()[5];
-    unsigned char* const hand = At(BattleE4_Hand_addr);
-    hand[0] = 1;
-    SetWord(hand + 4, static_cast<unsigned>(Long(list + 4)) + 7);
+    auto* const hand_window = reinterpret_cast<records::WindowRecord*>(At(BattleE4_Hand_addr));
+    hand_window->in_use = 1;
+    hand_window->centre_x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
-    unsigned char* const member = At(ObjTrio_addr + actor * at::kMemberSize);
-    SetLong(member + 0x130, Long(member + 0x130) & 0xBFFF);
+    auto* const member_rec = reinterpret_cast<records::PartyMember*>(At(ObjTrio_addr + actor * at::kMemberSize));
+    member_rec->flags_130 = static_cast<std::int32_t>(member_rec->flags_130) & 0xBFFF;
     const unsigned cursor_row = list[0xC];
     const unsigned pressed = Input_Pressed & Sigma(0xF00C);
-    SetWord(hand + 6, (cursor_row - top_row + 2) * 13 + Word(list + 6));
+    hand_window->centre_y = (cursor_row - top_row + 2) * 13 + list_window->centre_y;
     const unsigned repeat = g.auto_repeat(pressed);
 
     if (repeat & 0x8000) {
@@ -338,13 +340,14 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     if (up && before == 0) {
         g.sound(0x100);
         const std::uint32_t x = static_cast<std::uint32_t>(Long(list + 4)) + 0x20;
-        const unsigned y = Word(list + 6) - 0x16u;
+        const unsigned y = list_window->centre_y - 0x16u;
         unsigned char* const above = At(BattleE4_Above_addr);
-        above[1] = 8;
-        above[2] = 5;
-        above[0] = 1;
-        SetWord(above + 4, x);
-        SetWord(above + 6, y);
+        auto* const above_window = reinterpret_cast<records::WindowRecord*>(above);
+        above_window->handler = 8;
+        above_window->kind = 5;
+        above_window->in_use = 1;
+        above_window->centre_x = x;
+        above_window->centre_y = y;
         above[0xA] = 0;
         above[0xB] = 0xFF;
         Byte(at::kRecord4) = 0;
@@ -357,8 +360,8 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
         const unsigned char page = list[0xA], top = list[0xB], row = list[0xC];
         BattleMisc_PartyPages = page;
         unsigned char* const acting = Acting();
-        list[3] = 1;
-        hand[0] = 0;
+        list_window->state = 1;
+        hand_window->in_use = 0;
         At(at::kQueue + 1 + entry)[0] = 1;
         Byte(at::kSavedList + 1) = top;
         Byte(at::kSavedList + 2) = row;
@@ -384,8 +387,8 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     Byte(at::kSavedList + 1) = top;
     Byte(at::kSavedList + 2) = row;
     g.sound(0x103);
-    list[3] = 1;
-    hand[0] = 0;
+    list_window->state = 1;
+    hand_window->in_use = 0;
     BattleE4_Step3 = 3;
 }
 

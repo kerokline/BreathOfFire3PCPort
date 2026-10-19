@@ -41,6 +41,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_sb_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -57,6 +58,9 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
 // A table entry as the original's jmp reaches it: the word its caller left on
@@ -93,9 +97,9 @@ unsigned long HookDispatch(const char* who, U table, unsigned word) {
 // A kind's state 0: the enemy's (0x939AD8's) +0xFC animation table, +0xF4
 // hook and +0xF8 table, then Sprite_Current +1 = 2 and Sprite_ScriptTick.
 void StoreTables(U fc, U hook, U f8) {
-    SetLong(Enemy() + 0xFC, static_cast<std::int32_t>(fc));
-    SetLong(Enemy() + 0xF4, static_cast<std::int32_t>(hook));
-    SetLong(Enemy() + 0xF8, static_cast<std::int32_t>(f8));
+    EnemyRec()->anim_table = static_cast<std::int32_t>(fc);
+    EnemyRec()->event_hook = static_cast<std::int32_t>(hook);
+    EnemyRec()->cue_table = static_cast<std::int32_t>(f8);
 }
 unsigned char Enter(U fc, U hook, U f8) {
     StoreTables(fc, hook, f8);
@@ -268,7 +272,7 @@ extern "C" unsigned long __cdecl BossEngineer_HitDispatch(unsigned word) {
 extern "C" void __cdecl BossEngineer_HitStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(4);
     Sprite_Current[9] = 0x3C;
-    Sprite_Current[2] += 1;
+    ScEnemy()->state[1] += 1;
 }
 
 // original 0x438350: BossEngineer_HitSteps 1: +9 down by one; at 0:
@@ -283,19 +287,19 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
     if (Sprite_Current[9] == 0) {
         BH_CALL(Sprite_SetAnimationBank)(0x5F);
         const bool fight5 = BattleActions_EventBattle == 5;
-        Sprite_Current[0x2A] = fight5 ? 0 : 1;
+        ScEnemy()->flip = fight5 ? 0 : 1;
         unsigned char* const axis = Sprite_Current + (fight5 ? 0x38 : 0x34);
         SetLong(axis, static_cast<std::int32_t>(static_cast<U>(Long(axis)) + 0x18000u));
-        const unsigned char* const s = Sprite_Current;
-        const long ground = BH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+        auto* const cur_enemy = ScEnemy();
+        const long ground = BH_CALL(AreaMap_Elevation)(cur_enemy->x, cur_enemy->z);
         SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground) & 0xFFFF);
-        SetLong(Enemy() + 0xFC, static_cast<std::int32_t>(AddressOf(BossEngineer_AnimsHit)));
+        EnemyRec()->anim_table = static_cast<std::int32_t>(AddressOf(BossEngineer_AnimsHit));
         BH_CALL(Sprite_SetAnimation)(1);
         BattleActions_BattleEnd |= 4;
-        unsigned char* const t = Sprite_Current;
-        const unsigned count = t[5] & 0x1F;
+        auto* const cur_enemy_t = ScEnemy();
+        const unsigned count = cur_enemy_t->actor & 0x1F;
         BossSe_Script |= static_cast<unsigned char>(count < 8 ? 1u << count : 0u);
-        t[2] += 1;
+        cur_enemy_t->state[1] += 1;
     }
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -398,8 +402,8 @@ extern "C" unsigned long __cdecl BossOperator_Dispatch(unsigned word) {
 // 2; Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossOperator_Enter(void) {
     StoreTables(AddressOf(BossOperator_Anims), bof3::addr::BossOperator_Hook, AddressOf(BossOperator_Cues));
-    Sprite_Current[8] = 0;
-    Sprite_Current[1] = 2;
+    ScEnemy()->layout = 0;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 

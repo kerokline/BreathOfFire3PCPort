@@ -34,6 +34,7 @@
 #include "game/battle_e5_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -61,6 +62,7 @@ S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
 unsigned char* Party(unsigned member) { return At(ObjTrio_addr + member * at::kPartyStride); }
 unsigned char* EnemyObj(unsigned n) { return At(at::kEnemies + n * at::kEnemyStride); }
+records::PartyMember* PartyRec(unsigned member) { return reinterpret_cast<records::PartyMember*>(Party(member)); }
 
 // The callees nobody owns yet, by address (battle_e5_callees.h).
 using Void0 = void (__cdecl*)();
@@ -107,10 +109,11 @@ extern "C" unsigned char __cdecl EnemyAI_OtherRowsDone(unsigned row, unsigned en
 // `shl al, cl` on a byte, so rows 8..31 name no bit) set when `on`'s byte is
 // not 0, else cleared.
 extern "C" void __cdecl EnemyAI_SetRowDone(unsigned char* enemy, unsigned row, unsigned on) {
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(enemy);
     const unsigned shift = row & 31;
     const unsigned char bit = static_cast<unsigned char>(shift < 8 ? 1u << shift : 0u);
-    if (on & 0xFF) enemy[0xF1] = static_cast<unsigned char>(enemy[0xF1] | bit);
-    else enemy[0xF1] = static_cast<unsigned char>(enemy[0xF1] & ~bit);
+    if (on & 0xFF) enemy_rec->ai_rows_done = static_cast<unsigned char>(enemy_rec->ai_rows_done | bit);
+    else enemy_rec->ai_rows_done = static_cast<unsigned char>(enemy_rec->ai_rows_done & ~bit);
 }
 
 // original 0x44B320: whether the action that just hit carries one of `mask`'s
@@ -121,7 +124,7 @@ extern "C" void __cdecl EnemyAI_SetRowDone(unsigned char* enemy, unsigned row, u
 // weapon +0x92 and its element byte (0x657463, 28 bytes a weapon) against
 // the mask's low byte. Anything else 0. al out.
 extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
-    if (Word(Ptr(at::kCurrentEnemy) + 0x108) == 0) return 0;
+    if (static_cast<std::uint16_t>(reinterpret_cast<records::BattleEnemy*>(Ptr(at::kCurrentEnemy))->hp_change) == 0) return 0;
     const unsigned actor = B(at::kActor);
     const unsigned kind = B(at::kActingKind);
     if (kind == 4) {
@@ -129,7 +132,7 @@ extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
         return (W(at::kAbilityRows + ability * 24) & mask & 0xFFFF) != 0;
     }
     if (kind != 1 || actor > 2 || (mask & 0x100) != 0) return 0;
-    const unsigned weapon = Party(actor)[0x92];
+    const unsigned weapon = PartyRec(actor)->weapon;
     return (B(at::kWeaponElement + weapon * 28) & mask & 0xFF) != 0;
 }
 
@@ -139,15 +142,16 @@ extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
 // capped at 999, 6 +0x98 by the factor squared, capped at 999; others
 // nothing.
 extern "C" void __cdecl EnemyAI_ScaleStat(unsigned char* enemy, unsigned which, unsigned factor) {
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(enemy);
     const U f = factor & 0xFF;
     switch (which & 0xFF) {
-    case 0: ScaleCapped(enemy + 0xA4, Word(enemy + 0xA4) * f, Word(enemy + 0xD0)); break;
-    case 1: ScaleCapped(enemy + 0xA6, Word(enemy + 0xA6) * f, Word(enemy + 0xD2)); break;
+    case 0: ScaleCapped(enemy + 0xA4, enemy_rec->hp * f, Word(enemy + 0xD0)); break;
+    case 1: ScaleCapped(enemy + 0xA6, enemy_rec->ap * f, Word(enemy + 0xD2)); break;
     case 2: ScaleCapped(enemy + 0xD4, Word(enemy + 0xD4) * f, 999); break;
     case 3: ScaleCapped(enemy + 0xD6, Word(enemy + 0xD6) * f, 999); break;
     case 4: ScaleCapped(enemy + 0xD8, Word(enemy + 0xD8) * f, 999); break;
     case 5: ScaleCapped(enemy + 0xDA, Word(enemy + 0xDA) * f, 999); break;
-    case 6: ScaleCapped(enemy + 0x98, Word(enemy + 0x98) * f * f, 999); break;
+    case 6: ScaleCapped(enemy + 0x98, enemy_rec->level * f * f, 999); break;
     default: break;
     }
 }
@@ -181,14 +185,15 @@ extern "C" void __cdecl EnemyAI_SetAttrByte(unsigned char* enemy, unsigned which
 // count 0x93C2A2 below 8 - an enemy message: enemy +5 minus 3, the word (a
 // system message BattleAction_EnemyMessages / BattleCommit_QueueMessages show).
 extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned char* row) {
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(enemy);
     switch (row[1]) {
     case 1:
-        SetWord(enemy + 0x90, row[2]);
+        enemy_rec->flags_90 = row[2];
         break;
     case 2: {
         unsigned char* const saved = Sprite_Current;
         Sprite_Current = enemy;
-        const U cleared = BH_CALL(Battle_ClearStatus)(enemy[5], 0xFFFF);
+        const U cleared = BH_CALL(Battle_ClearStatus)(enemy_rec->actor, 0xFFFF);
         const U status = enemy[0x92];
         const unsigned char* const current = Sprite_Current;
         const U word = (cleared & 0xFFFF0000u) | status | row[2];
@@ -209,12 +214,12 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
         break;
     }
     case 5:
-        if (row[2] & 2) enemy[0xAA] = row[3];
+        if (row[2] & 2) enemy_rec->steal_row = row[3];
         if (row[2] & 1) enemy[0xAE] = row[3];
         break;
     case 6:
-        if (row[2] & 2) ScaleCapped(enemy + 0x96, static_cast<U>(row[3]) * Word(enemy + 0x96), 0xFFFF);
-        if (row[2] & 1) ScaleCapped(enemy + 0x94, static_cast<U>(row[3]) * Word(enemy + 0x94), 0xFFFF);
+        if (row[2] & 2) ScaleCapped(enemy + 0x96, static_cast<U>(row[3]) * enemy_rec->exp, 0xFFFF);
+        if (row[2] & 1) ScaleCapped(enemy + 0x94, static_cast<U>(row[3]) * enemy_rec->zenny, 0xFFFF);
         break;
     case 7:
         BattleDamage_AiByteB97 = row[2];
@@ -222,14 +227,14 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
     default:
         break;
     }
-    enemy[0x8E] = row[4];
+    enemy_rec->odds_index = row[4];
     for (unsigned i = 0; i < 8; ++i) enemy[0x9C + i] = row[8 + i];
     const U tail = static_cast<U>(reinterpret_cast<std::uintptr_t>(row + 16));
-    BH_AT(U1, at::kStatusPick)((tail & 0xFFFFFF00u) | enemy[5]);
-    if (Word(enemy + 0xA4) != 0 && Word(row + 6) != 0) {
+    BH_AT(U1, at::kStatusPick)((tail & 0xFFFFFF00u) | enemy_rec->actor);
+    if (enemy_rec->hp != 0 && Word(row + 6) != 0) {
         const unsigned n = BattleE5_EnemyMessageCount;
         if (n < 8) {
-            B(at::kEnemyMessages + n * 4) = static_cast<unsigned char>(enemy[5] - 3);
+            B(at::kEnemyMessages + n * 4) = static_cast<unsigned char>(enemy_rec->actor - 3);
             SetW(at::kEnemyMessages + n * 4 + 2, Word(row + 6));
             BattleE5_EnemyMessageCount = static_cast<unsigned char>(n + 1);
         }
@@ -399,19 +404,20 @@ extern "C" void __cdecl BattleForm_ApplyStats(void) {
     const std::uint16_t ee4 = W(0x939EE4);
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const c = Party(m) + 0x9E;
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(c - 0x9E);
         if ((c[0x96] & 2) == 0) continue;
         const S32 product = static_cast<S32>(static_cast<U>(c[0]) * static_cast<U>(S16(ee0)) + 5u);
         const std::uint16_t hp = static_cast<std::uint16_t>(S16(ee0) - product / 10);
         SetWord(c + 0x22, hp);
-        SetWord(c + 2, hp);
+        member_rec->max_hp = hp;
         SetWord(c + 0x26, Word(c + 0x26) + W(0x939EE2));
-        SetWord(c + 6, Word(c + 0x26));
+        member_rec->atk = Word(c + 0x26);
         SetWord(c + 0x28, Word(c + 0x28) + ee4);
-        SetWord(c + 8, Word(c + 0x28));
+        member_rec->def = Word(c + 0x28);
         SetWord(c + 0x2A, Word(c + 0x2A) + W(0x939EE6));
-        SetWord(c + 0xA, Word(c + 0x2A));
+        member_rec->agi = Word(c + 0x2A);
         SetWord(c + 0x2C, Word(c + 0x2C) + ee8);
-        SetWord(c + 0xC, Word(c + 0x2C));
+        member_rec->intel = Word(c + 0x2C);
         for (unsigned i = 0; i < 6; ++i) {
             c[0x31 + i] = B(0x939EEA + i);
             c[0x11 + i] = c[0x31 + i];
@@ -458,9 +464,10 @@ void ShowLine(const unsigned char* text) {
     SetLong(At(at::kMsgText + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
 }
 unsigned char* Member() { return Ptr(at::kMenuActor); }
+records::PartyMember* MemberRec() { return reinterpret_cast<records::PartyMember*>(Member()); }
 void MarkMember() {
-    unsigned char* const m = Member();
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    auto* const member_rec = MemberRec();
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
 }
 U Pressed() { return Input_Pressed; }
 bool Cancel(U pressed) { return (Field_CancelButtons & pressed & 0xFFFF) != 0; }
@@ -518,7 +525,7 @@ unsigned char Affordable(U slot) {
     unsigned char cost = B(at::kGeneCostTable + B(slot));
     if (B(slot + 1) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 1)));
     if (B(slot + 2) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 2)));
-    return cost <= W(0x802DDA + Member()[5] * at::kPartyStride);
+    return cost <= W(0x802DDA + MemberRec()->member * at::kPartyStride);
 }
 
 // A slot's genes into 0x904B84..86 (0x450610, 0x450E70): the count 0x904B87
@@ -799,9 +806,9 @@ extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(BattleE4_Slots_ad
 extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
     TakeSlot(SlotOf(at::kSlots, BattleE4_Slots_addr));
     BH_AT(Void0, at::kDragonTask)();
-    unsigned char* const m = Member();
+    auto* const member_rec = MemberRec();
     B(at::kWin18 + 3) = 2;
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
@@ -889,7 +896,7 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
     if (Confirm(pressed)) {
         const unsigned char row = BattleE5_GeneRow;
         if (row == 0xFF) {
-            if (BattleE5_GeneCount != 0 && Word(Member() + 0x9A) >= BattleActions_ApCost) {
+            if (BattleE5_GeneCount != 0 && MemberRec()->ap >= BattleActions_ApCost) {
                 NextStep();
                 return;
             }
@@ -953,9 +960,9 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
 // member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
     Sound(0x104);
-    unsigned char* const m = Member();
+    auto* const member_rec = MemberRec();
     B(at::kWin21 + 3) = 2;
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
@@ -983,7 +990,7 @@ extern "C" void __cdecl DragonCmd_Commit(void) {
     Gfx_ClutStripDirty = 1;
     BattleE4_Picking = 0;
     command[1] = 4;
-    Member()[1] = 2;
+    MemberRec()->state[0] = 2;
     const unsigned char count = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     BattleActions_Step = 1;
     BattleActorCopies_EntryCount = count;
@@ -1062,9 +1069,9 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
     TakeSlot(SlotOf(at::kSlots2, BattleE4_Hand_addr));
     BH_AT(Void0, at::kDragonTask)();
     Sound(0x104);
-    unsigned char* const m = Member();
+    auto* const member_rec = MemberRec();
     B(at::kWin19 + 3) = 2;
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 

@@ -38,7 +38,7 @@ constexpr unsigned kPShown2 = 0x11D;                // u8, cleared with a cured 
 constexpr unsigned kPFlags = 0x120;                 // u32
 constexpr unsigned kPFlags2 = 0x124;                // u32
 constexpr unsigned kPCharge = 0x134, kPCharge2 = 0x135;   // u8 charge counts (attack, ability)
-constexpr unsigned kPWeaponKind = 0x138;            // u8, 5: the weapon's element rolls apply
+constexpr unsigned kPCharIndex = 0x138;             // u8, record +0x148: the character index (5: the weapon's element rolls apply; docs/typed-records.md 3)
 
 // The enemies: EnemyWorkingRecords 0x93B9E0, 0x128 apart; the "object" the AI
 // and the tests address is the record - 0x80 (0x93B960), so an enemy's

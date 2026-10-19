@@ -44,6 +44,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1044,10 +1045,10 @@ void Fix() {
         SetPointer(at::kTasks + k * at::kTaskStride + 0x80, OwnerFor(Next()));
     }
     for (unsigned k = 0; k < at::kEnemyCount; ++k) {
-        unsigned char* const e = EnemyAt(k);
-        move_script::SetLong(e + 0xF4, static_cast<std::int32_t>(g_hook_enemy));
-        move_script::SetLong(e + 0xF8, static_cast<std::int32_t>(Key(g_records[0])));
-        move_script::SetLong(e + 0xFC, static_cast<std::int32_t>(Key(g_records[1])));
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(EnemyAt(k));
+        enemy_rec->event_hook = static_cast<std::int32_t>(g_hook_enemy);
+        enemy_rec->cue_table = static_cast<std::int32_t>(Key(g_records[0]));
+        enemy_rec->anim_table = static_cast<std::int32_t>(Key(g_records[1]));
     }
     move_script::SetLong(Mem(BattleHook_End_addr), static_cast<std::int32_t>(g_hook_end));
     move_script::SetLong(Mem(BattleHook_Exit_addr), static_cast<std::int32_t>(g_hook_exit));

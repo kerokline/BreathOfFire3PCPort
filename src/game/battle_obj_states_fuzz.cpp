@@ -18,6 +18,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_obj_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -89,10 +90,10 @@ void Disturb() {
         else S()[7] = static_cast<unsigned char>(v % kTintSlots);
         break;
     case 6: S()[8] = static_cast<unsigned char>(v % 4); break;
-    case 7: F()[0x89] = static_cast<unsigned char>(v % 14); break;
+    case 7: reinterpret_cast<records::PartyMember*>(F())->char_id = static_cast<unsigned char>(v % 14); break;
     case 8: F()[0x125] = static_cast<unsigned char>(v % 2 ? 4 : v % 6); break;
     case 9: F()[0x134] = static_cast<unsigned char>(F()[0x134] ^ (1u << (v % 3))); break;
-    case 10: SetLong(F() + 0x130, Long(F() + 0x130) ^ static_cast<std::int32_t>(1u << (9 + v % 4))); break;
+    case 10: reinterpret_cast<records::PartyMember*>(F())->flags_130 = static_cast<std::int32_t>(reinterpret_cast<records::PartyMember*>(F())->flags_130) ^ static_cast<std::int32_t>(1u << (9 + v % 4)); break;
     case 11: {
         static const unsigned char kBits[] = {4, 0x40, 0x80};
         if (w % 3 == 0) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ (w % 2 ? 0x08 : 0x80));
@@ -375,9 +376,10 @@ void Fix() {
     Field_State = Next() % 4 == 0 ? Member(Next() % 3) : Member(m);
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const o = Member(i);
-        o[5] = static_cast<unsigned char>(Often() ? Next() % 3 : Next() % kTaskSlots);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        member_rec->member = static_cast<unsigned char>(Often() ? Next() % 3 : Next() % kTaskSlots);
         o[7] = static_cast<unsigned char>(Next() % kTintSlots);
-        if (Often()) o[8] = static_cast<unsigned char>(Next() % 4);
+        if (Often()) member_rec->direction = static_cast<unsigned char>(Next() % 4);
     }
     SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_target + Next() % sizeof g_target)));
     SetWord(At(at::kSkillId), Next() % kSkills);
@@ -389,6 +391,7 @@ unsigned char* Target() { return move_script::At(static_cast<std::uint32_t>(Long
 void Seed(unsigned k) {
     unsigned char* const s = S();
     unsigned char* const f = F();
+    auto* const member_f = reinterpret_cast<records::PartyMember*>(f);
     switch (k) {
     case kIdleFn: {
         static const unsigned char kPhases[] = {0, 1, 1, 5, 5, 2};
@@ -396,11 +399,11 @@ void Seed(unsigned k) {
         static const unsigned char kArgs[] = {0, 1, 2, 0xFF};
         At(BattleActions_Step_addr)[0] = kArgs[Next() % 4];
         At(BattleE4_AutoMember_addr)[0] = static_cast<unsigned char>(Next() % 3);
-        if (Half()) f[0x89] = At(ObjTrio_addr + At(BattleE4_AutoMember_addr)[0] * at::kMemberSize + 0x89)[0];
+        if (Half()) member_f->char_id = At(ObjTrio_addr + At(BattleE4_AutoMember_addr)[0] * at::kMemberSize + 0x89)[0];
         if (Often()) f[0x90] = static_cast<unsigned char>(f[0x90] | 0x20);
         static const signed char kSteps[] = {10, 11, 12, 13, -10, -11, -12, -13, 0, 127, -128};
         Slot(s[5] % kTaskSlots)[9] = static_cast<unsigned char>(kSteps[Next() % 11]);
-        if (Half()) SetLong(f + 0x130, Long(f + 0x130) & ~0x1000);
+        if (Half()) member_f->flags_130 = static_cast<std::int32_t>(member_f->flags_130) & ~0x1000;
         break;
     }
     case kTintOn:
@@ -412,7 +415,7 @@ void Seed(unsigned k) {
     }
     case kAttack:
         f[0x134] = static_cast<unsigned char>(Half() ? f[0x134] & ~1u : f[0x134] | 1);
-        f[0x89] = static_cast<unsigned char>(Often() ? Next() % 12 : Next());
+        member_f->char_id = static_cast<unsigned char>(Often() ? Next() % 12 : Next());
         break;
     case kAttackStart:
     case kCastStart:
@@ -420,7 +423,7 @@ void Seed(unsigned k) {
         if (Half()) f[0x134] = static_cast<unsigned char>(f[0x134] ^ 2);
         static const unsigned char kKinds[] = {4, 7, 8, 3, 5, 6, 9, 0};
         At(BattlePhases_B89_addr)[0] = Often() ? kKinds[Next() % 8] : static_cast<unsigned char>(Next() % 28);
-        f[0x89] = static_cast<unsigned char>(Often() ? Next() % 12 : Next() % 0x24);
+        member_f->char_id = static_cast<unsigned char>(Often() ? Next() % 12 : Next() % 0x24);
         if (Half()) f[0x125] = 4;
         static const unsigned char kCounts[] = {0, 1, 2};
         if (Often()) s[9] = kCounts[Next() % 3];
@@ -439,7 +442,7 @@ void Seed(unsigned k) {
         // the same count in every member most rounds: the tick's stand-in
         // moves Sprite_Current half the time
         if (Often())
-            for (unsigned i = 0; i < 3; ++i) Member(i)[9] = s[9];
+            for (unsigned i = 0; i < 3; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->step_frames = s[9];
         static const unsigned char kPercents[] = {0, 1, 50, 99, 100, 0xFF};
         if (Often()) f[0xBA] = kPercents[Next() % 6];
         break;

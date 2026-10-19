@@ -33,6 +33,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_sj_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -54,6 +55,9 @@ using RoundHighFn = U (__cdecl*)(U, U);
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
@@ -121,11 +125,11 @@ void StoreHooks(U end, U exit, U event) {
 // +0x114 |= 8 - 0x939AD8 read for each; Sprite_Current +1 = 2; a tail jump to
 // Sprite_ScriptTick, whose al is the answer.
 unsigned char Enter(U fc, U f4, U f8) {
-    SetLong(Enemy() + 0xFC, S(fc));
-    SetLong(Enemy() + 0xF4, S(f4));
-    SetLong(Enemy() + 0xF8, S(f8));
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x114, S(static_cast<U>(Long(e + 0x114)) | 8));
+    EnemyRec()->anim_table = S(fc);
+    EnemyRec()->event_hook = S(f4);
+    EnemyRec()->cue_table = S(f8);
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -137,11 +141,12 @@ unsigned char Enter(U fc, U f4, U f8) {
 void PoseParty() {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
-        if ((p[0] & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(p[5]);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        if ((member_rec->flags & 1) == 0) continue;
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
-        const unsigned pose = static_cast<unsigned char>(p[8] + ((flags & 0x4000) != 0 ? 0x1C : 4));
+        const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
 }
@@ -263,13 +268,13 @@ extern "C" void __cdecl BossDLord_Death(void) {
     BH_CALL(Sprite_EnsureAnimation)(3);
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x110, S(static_cast<U>(Long(e + 0x110)) | 0x1000));
-    unsigned char* const s = Sprite_Current;
-    s[0] &= 0xBF;
-    s[1] = 3;
-    s[2] = 0;
-    s[3] = 0;
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_110 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
+    auto* const cur_enemy = ScEnemy();
+    cur_enemy->flags &= 0xBF;
+    cur_enemy->state[0] = 3;
+    cur_enemy->state[1] = 0;
+    cur_enemy->state[2] = 0;
 }
 
 // original 0x43F8A0: the +0xF4 hook: by the word's low byte through
@@ -599,11 +604,12 @@ extern "C" void __cdecl BossMyriaFx_Follow(void) {
     {
         const unsigned char* const o = Owner();
         unsigned char* const s = Sprite_Current;
-        s[0] = o[0];
+        auto* const cur_task = reinterpret_cast<records::BattleTask*>(s);
+        cur_task->flags = o[0];
         s[0x48] = o[0x48];
         SetLong(s + 0x40, Long(o + 0x40));
         SetLong(s + 0x44, Long(o + 0x44));
-        s[0x27] = o[0x27];
+        cur_task->clut = o[0x27];
         s[0x28] = o[0x28];
         s[0x2A] = o[0x2A];
         SetWord(s + 0x2E, Word(o + 0x2E));

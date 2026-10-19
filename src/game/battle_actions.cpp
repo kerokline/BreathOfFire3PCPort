@@ -21,6 +21,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_actions_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/psp_code.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -88,6 +89,8 @@ std::int32_t L(std::uint32_t address) { return Long(At(address)); }
 // `and eax, 0xFF`).
 unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + (actor & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
+records::PartyMember* PartyRec(unsigned actor) { return reinterpret_cast<records::PartyMember*>(Party(actor)); }
+records::BattleEnemy* EnemyRec(unsigned actor) { return reinterpret_cast<records::BattleEnemy*>(Enemy(actor)); }
 
 // One entry of a step table in .data, read afresh; the byte picks it and is
 // not checked (a byte past the table's count reaches the next table's
@@ -107,21 +110,23 @@ void EventHook(int n) { reinterpret_cast<HookFn>(PtrAt(at::kEventHook))(n); }
 // order of the reads and stores is not observable; it is the original's.
 void SetMemberBlock(std::uint32_t block, unsigned actor) {
     unsigned char* const o = Party(actor);
+    auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
     SetPtrAt(block + at::kBAction, o + 0x124);
     SetPtrAt(block + at::kBObject, o);
-    const unsigned stand = o[8] + o[0x89] * 4u;
+    const unsigned stand = member_rec->direction + member_rec->char_id * 4u;
     const unsigned char* const pair = At(BattleWin_MemberTargetOffsets_addr + stand * 2);
-    SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(pair[0])) + Word(o + 0x2E));
-    SetWord(At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(pair[1])) + Word(o + 0x30));
-    SetWord(At(block + at::kBZ), Word(o + 0x32));
+    SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(pair[0])) + static_cast<std::uint16_t>(member_rec->screen_x));
+    SetWord(At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(pair[1])) + static_cast<std::uint16_t>(member_rec->screen_y));
+    SetWord(At(block + at::kBZ), member_rec->draw_key);
 }
 void SetEnemyBlock(std::uint32_t block, unsigned actor) {
     unsigned char* const o = Enemy(actor);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(o);
     SetPtrAt(block + at::kBAction, o + 0x104);
     SetPtrAt(block + at::kBObject, o);
-    SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(o[0xF2])) + Word(o + 0x2E));
-    SetWord(At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(o[0xF3])) + Word(o + 0x30));
-    SetWord(At(block + at::kBZ), Word(o + 0x32));
+    SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(o[0xF2])) + static_cast<std::uint16_t>(enemy_rec->screen_x));
+    SetWord(At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(o[0xF3])) + static_cast<std::uint16_t>(enemy_rec->screen_y));
+    SetWord(At(block + at::kBZ), enemy_rec->draw_key);
 }
 
 // The actor's effective stat block (a member's +0xA0, an enemy's +0xB0; the
@@ -150,8 +155,8 @@ void EnemyNameToText0(const unsigned char* record) {
 struct Standing { unsigned status, ap; };
 Standing ActorStanding(unsigned actor) {
     const unsigned a = actor & 0xFF;
-    if (a <= 2) return {Word(Party(a) + 0x90), Word(Party(a) + 0x9A)};
-    return {Word(Enemy(a) + 0x92), Word(Enemy(a) + 0xA6)};
+    if (a <= 2) return {PartyRec(a)->status, PartyRec(a)->ap};
+    return {EnemyRec(a)->status, EnemyRec(a)->ap};
 }
 
 }  // namespace
@@ -322,9 +327,9 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         g.remove_from_turn_order(B(at::kActor));
         const unsigned a = B(at::kActor);
         SetB(at::kPhase, 3);
-        unsigned char* const o = Party(a);
-        o[1] = 2;
-        o[2] = 0;
+        auto* const member_rec = PartyRec(a);
+        member_rec->state[0] = 2;
+        member_rec->state[1] = 0;
         BattleActions_Step = 0;
         BattleE4_Step2 = 0;
         return;
@@ -346,7 +351,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     unsigned char cost;
     if (Word(At(at::kAbility)) != 0x97) {
         const unsigned id = B(at::kAbility);
-        const unsigned who = a <= 2 ? Party(a)[5] : Enemy(a)[5];
+        const unsigned who = a <= 2 ? PartyRec(a)->member : EnemyRec(a)->actor;
         cost = g.skill_ap_cost(who, id, 1);
     } else {
         cost = BattleActions_ApCost;
@@ -431,9 +436,9 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
         SetB(at::kPhase, 3);
         BattleActions_Step = 0;
         BattleE4_Step2 = 0;
-        unsigned char* const o = Party(a);
-        o[1] = 2;
-        o[2] = 0;
+        auto* const member_rec = PartyRec(a);
+        member_rec->state[0] = 2;
+        member_rec->state[1] = 0;
         return;
     }
     const unsigned char* const r = PtrAt(at::kActor + at::kBAction);
@@ -485,20 +490,22 @@ extern "C" void __cdecl BattleAction_ItemStart(void) {
 extern "C" void __cdecl BattleAction_EffectWait(void) {
     for (unsigned a = 0; a <= 2; ++a) {
         unsigned char* const o = Party(a);
-        if ((o[0x130] & 0x40) == 0 || o[1] == 6) continue;
-        o[1] = 6;
-        o[2] = 0;
-        o[3] = 0;
-        o[4] = 0;
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        if ((o[0x130] & 0x40) == 0 || member_rec->state[0] == 6) continue;
+        member_rec->state[0] = 6;
+        member_rec->state[1] = 0;
+        member_rec->state[2] = 0;
+        member_rec->state[3] = 0;
         g.set_actor_bit(a);
     }
     for (unsigned a = 3; a <= 10; ++a) {
         unsigned char* const o = Enemy(a);
-        if ((o[0x110] & 0x40) == 0 || o[1] == 6) continue;
-        o[1] = 6;
-        o[2] = 0;
-        o[3] = 0;
-        o[4] = 0;
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(o);
+        if ((o[0x110] & 0x40) == 0 || enemy_rec->state[0] == 6) continue;
+        enemy_rec->state[0] = 6;
+        enemy_rec->state[1] = 0;
+        enemy_rec->state[2] = 0;
+        enemy_rec->state[3] = 0;
         g.set_actor_bit(a);
     }
     if (g.any_flag_f0() != 0) return;

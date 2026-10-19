@@ -25,6 +25,7 @@
 #include "game/boss_sf.h"
 #include "game/boss_sf_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 
 namespace boss_sf {
 namespace {
@@ -184,8 +185,8 @@ void Disturb(U h) {
     case 5: B(BossSf_WindowUp_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 6: B(BattleMisc_BannerKinds_addr) ^= 2; break;
     case 7: {
-        unsigned char* const e = bh::Pointer(BattleE3_CurrentEnemy_addr);
-        e[0x105] = static_cast<unsigned char>(v & 1 ? 4 : v >> 1);
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+        enemy_rec->command = static_cast<unsigned char>(v & 1 ? 4 : v >> 1);
         break;
     }
     default: Mem(at::kEnemyData + (v % 8) * at::kEnemyDataStride)[0x8A + (v >> 8) % 2] = static_cast<unsigned char>(v >> 4); break;
@@ -319,8 +320,8 @@ const bh::DataTable kTablesK33[] = {{0x64D448, 3, 4, 1}, {0x64D404, 12}, {0x64D4
 // the count's ends; a dispatcher's other state bytes inside its table.
 void SeedKindCommon(const bh::Clone& c) {
     if (c.shape == S::kDispatch) OtherStates(c.state_at, c.states);
-    unsigned char* const e = bh::Pointer(BattleE3_CurrentEnemy_addr);
-    if (bh::Often()) e[0xF0] = static_cast<unsigned char>(bh::Next() % 8);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+    if (bh::Often()) enemy_rec->data_id = static_cast<unsigned char>(bh::Next() % 8);
     Sprite_Current[9] = Counter();
 }
 void SeedK33(unsigned k) { SeedKindCommon(kClonesK33[k]); }
@@ -448,8 +449,8 @@ void SeedK62(unsigned k) {
     B(at::kActKind) = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 1, 3, 5, 0x84, 0xFF));
     SetWord(Mem(BossSa_EndCount_addr), bh::Often() ? BH_PICK(0, 3, 5, 8, 4, 6, 7, 0x103) : bh::Next());
     B(at::kRoundFlags) = static_cast<unsigned char>(bh::Half() ? B(at::kRoundFlags) | 4 : B(at::kRoundFlags) & 0xFB);
-    unsigned char* const e = bh::Pointer(BattleE3_CurrentEnemy_addr);
-    e[0x105] = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+    enemy_rec->command = static_cast<unsigned char>(bh::Half() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
     if (bh::Next() % 6 == 0) B(BattleActions_EventBattle_addr) = 0;
     if (k == kMy8Dispatch && bh::Often()) Sprite_Current[1] = 8;
 }
