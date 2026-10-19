@@ -6,7 +6,7 @@ docs/quicksave-round.md section 2 "RC").
     python tools/quicksave_check.py run   RECIPE.txt --out DIR [--defaults] [--lock DIR] [--plain P.sh]
     python tools/quicksave_check.py inproc RUN.sh [--log bof3x.log] [--plain PLAIN.sh]
     python tools/quicksave_check.py cross LIVE.sh LOADED.sh [--log-live L] [--log-loaded L]
-    python tools/quicksave_check.py same  A.sh B.sh          (the identity reference: keys pressed, nothing changed)
+    python tools/quicksave_check.py same  A.sh B.sh [--refb A2.sh]   (the identity reference: keys pressed, nothing changed)
     python tools/quicksave_check.py selftest
 
 make    From a recorded route (wait / hold / one-frame shot lines only) and
@@ -43,7 +43,9 @@ cross   The cross-process proof: LOADED is a hashed run of quick_N_cross.txt,
         there to the shorter run's end.
 same    Two hashed runs compared tick for tick (statehash.py diff, with the
         pages named as above): the identity reference, quick_N_keys.txt
-        against the route while F6 and F7 do nothing.
+        against the route while F6 and F7 do nothing. --refb A2: a second run
+        of the route; a page A and A2 disagree on at a tick is noise there
+        (statehash.py check's rule), listed apart and not a difference.
 run     One live run through tools/input_run.py with BOF3X_STATEHASH and the
         skip list, the hash conditions (BOF3X_OPT=none BOF3X_LAYERING=0)
         unless --defaults, --slot0-hold and --no-front; then the analysis the
@@ -403,16 +405,36 @@ def cmd_cross(a):
 
 def cmd_same(a):
     ra, rb = HashRun(a.a), HashRun(a.b)
-    out = statehash.same_headers([ra, rb])
+    rr = HashRun(a.refb) if getattr(a, 'refb', None) else None
+    out = statehash.same_headers([ra, rr, rb] if rr else [ra, rb])
     sa, sb = states(ra), states(rb)
-    first, per, total = compare(ra, 0, 0, sa, sb, max(len(sa), len(sb)), out)
-    lens = f'{len(sa)} and {len(sb)} records'
+    sr = states(rr) if rr else None
+    n = min(len(sa), len(sb), len(sr) if sr else len(sb))
+    per, noise, first = {}, {}, None
+    for t in range(n):
+        x, y = sa[t][3], sb[t][3]
+        if x == y:
+            continue
+        for p in range(ra.pages):
+            if x[p] == y[p] or p in out:
+                continue
+            # with --refb: a page the two runs of A's side disagree on at this tick is noise there
+            d = noise if sr is not None and sr[t][3][p] != x[p] else per
+            v = d.get(p)
+            d[p] = (t, t, 1) if v is None else (v[0], t, v[2] + 1)
+            if d is per and first is None:
+                first = t
+    lens = f'{len(sa)} and {len(sb)} records' + (f', the second reference {len(sr)}' if sr else '')
+    if noise:
+        print(f'noise (the two references disagree there too): {len(noise)} pages')
+        print_pages(ra, noise, n)
     if first is None:
-        print(f'RESULT: identical on all {total} compared ticks ({lens})')
+        print(f'RESULT: identical on all {n} compared ticks ({lens})'
+              + (' where the references agree' if sr else ''))
         return 0
-    print(f'RESULT: differs from tick {sa[first][0]} (recipe frame {sa[first][2]}); {len(per)} pages over {total} '
+    print(f'RESULT: differs from tick {sa[first][0]} (recipe frame {sa[first][2]}); {len(per)} pages over {n} '
           f'ticks ({lens})')
-    print_pages(ra, per, total)
+    print_pages(ra, per, n)
     return 1
 
 
@@ -472,7 +494,7 @@ def cmd_run(a):
     if meta and meta[0] == 'replay':
         return cmd_inproc(argparse.Namespace(run=sh, log=log, plain=a.plain, window=None))
     if a.plain:
-        return cmd_same(argparse.Namespace(a=a.plain, b=sh))
+        return cmd_same(argparse.Namespace(a=a.plain, b=sh, refb=None))
     return 0
 
 
@@ -565,7 +587,16 @@ def cmd_selftest(a):
     expect('cross differing (page 3)',
            cmd_cross(argparse.Namespace(live=os.path.join(d, 'eq.sh'), loaded=lp3, log_live=None,
                                         log_loaded=None, frames=None)), 1)
-    expect('same: a run against itself', cmd_same(argparse.Namespace(a=pl, b=pl)), 0)
+    expect('same: a run against itself', cmd_same(argparse.Namespace(a=pl, b=pl, refb=None)), 0)
+    # --refb: a page the two references disagree on is noise, not a difference
+    base = synthetic(restore=False)
+    noisy = [(fc, rf, st[:2] + [st[2] ^ 1] + st[3:]) if fc == 5 else (fc, rf, st) for fc, rf, st in base]
+    other = [(fc, rf, st[:6] + [st[6] ^ 1] + st[7:]) if fc == 9 else (fc, rf, st) for fc, rf, st in noisy]
+    a2, b1, b2 = (os.path.join(d, f) for f in ('refb.sh', 'noisy.sh', 'other.sh'))
+    write_sh(a2, base); write_sh(b1, noisy); write_sh(b2, other)
+    expect('same --refb, the difference only where the references disagree',
+           cmd_same(argparse.Namespace(a=pl, b=b1, refb=b1)), 0)
+    expect('same --refb, a difference where they agree', cmd_same(argparse.Namespace(a=pl, b=b2, refb=b1)), 1)
     # a page is named by the skip list's rows on it: 0x6BC000 holds Sound_Banks' row
     fake = argparse.Namespace(base=statehash.BASE, page=0x1000)
     lo, syms, rows = page_name(fake, (0x6BC000 - statehash.BASE) // 0x1000)
@@ -605,6 +636,7 @@ def main():
     p = sub.add_parser('same')
     p.add_argument('a')
     p.add_argument('b')
+    p.add_argument('--refb', help="a second run of A's side: where it and A disagree is noise, not reported")
     p.set_defaults(fn=cmd_same)
     p = sub.add_parser('run')
     p.add_argument('recipe')
