@@ -33,6 +33,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -53,6 +54,10 @@ constexpr std::uint32_t kS = 0x903850;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -133,8 +138,8 @@ void SpawnCopy(unsigned parameter) {
 // The owner's direction byte and position (+0x34..+0x3C) to this task.
 void TakeOwnerPlace() {
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -161,7 +166,7 @@ void Rise() {
 // +0x3C moved by the source's less the owner's.
 void OverSource(unsigned char* s) {
     SetLong(s + 0x34, Long(Source() + 0x34));
-    SetLong(Sc() + 0x38, Long(Source() + 0x38));
+    Store(ScTask()->y, Long(Source() + 0x38));
     const std::uint32_t d = static_cast<std::uint32_t>(Long(Source() + 0x3C)) - static_cast<std::uint32_t>(Long(Owner() + 0x3C));
     AddL(Sc() + 0x3C, d);
 }
@@ -184,7 +189,7 @@ void FadeHome(bool shrink) {
     }
     if (s[0x5D] != 0x80) return;
     SetLong(s + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Inc(Sc()[2]);
 }
@@ -473,10 +478,11 @@ S01_EXPORT void __cdecl JumpChild_Hover(void) {
     SetLong(Sc() + 0x20, -8);
     const unsigned char* const o = Owner();
     const unsigned char* const t = Sc();
-    const auto dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(Long(t + 0x38)));
-    const auto dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(Long(t + 0x34)));
+    const records::BattleTask* const tt = reinterpret_cast<const records::BattleTask*>(t);
+    const auto dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(tt->y));
+    const auto dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(tt->x));
     const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-    SetLong(Sc() + 0xC, heading);
+    ScTask()->vel_x = heading;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
@@ -489,14 +495,16 @@ S01_EXPORT void __cdecl JumpChild_Hover(void) {
 S01_EXPORT void __cdecl JumpChild_Return(void) {
     {
         unsigned char* const s = Sc();
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         unsigned char* const x = s + 0x34;
-        const int v = MH_CALL(Math_Sin)(Long(s + 0xC));
+        const int v = MH_CALL(Math_Sin)(ts->vel_x);
         AddL(x, Twice(v));
     }
     {
         unsigned char* const s = Sc();
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         unsigned char* const z = s + 0x38;
-        const int v = MH_CALL(Math_Cos)(Long(s + 0xC));
+        const int v = MH_CALL(Math_Cos)(ts->vel_x);
         AddL(z, Twice(v));
     }
     Rise();
@@ -519,9 +527,10 @@ S01_EXPORT void __cdecl JumpChild_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const short angles[4] = {0, 0, 0, 0};
     const unsigned char* const s = Sc();
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
     short v[4];
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
     const int height = s[2] < 2 ? S16(Owner() + 0x3E) : S16(Source() + 0x3E);
     v[2] = static_cast<short>(-(height / 2));
     v[3] = 0;
