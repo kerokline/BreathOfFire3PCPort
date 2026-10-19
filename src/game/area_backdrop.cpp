@@ -5,6 +5,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/area_backdrop_callees.h"
+#include "game/record_views.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -281,8 +282,8 @@ extern "C" void __cdecl AreaMap_SlotZones(const unsigned char* entry) {
 // point is centred on the 320-wide view, so under the wide picture's
 // primitive shift it stays centred: nothing to widen.
 extern "C" void __cdecl WorldMap_PinSprite(void) {
-    SetWord(Sprite_Current + 0x2E, 0xA0);
-    SetWord(Sprite_Current + 0x30, 0x50);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, 0xA0);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, 0x50);
 }
 
 void AreaBackdrop_Inject() {

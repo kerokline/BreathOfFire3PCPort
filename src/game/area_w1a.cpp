@@ -23,6 +23,7 @@
 #include "game/area_w1a_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -86,11 +87,11 @@ void SpawnForMember(U list, U record) {
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 6;
     EffectAt(cur[0xB])[6] = 3;
-    SetLong(EffectAt(cur[0xB]) + 0xC, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->step_x, 0);
     const auto step = static_cast<signed char>(B(Area38_EffectBytes_addr + B(list)));
-    SetLong(EffectAt(cur[0xB]) + 0x10, step);
-    SetWord(EffectAt(cur[0xB]) + 0x2E, static_cast<std::uint16_t>(tCur->screen_x));
-    SetWord(EffectAt(cur[0xB]) + 0x30, static_cast<std::uint16_t>(tCur->screen_y));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->step_z, step);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->screen_x, static_cast<std::uint16_t>(tCur->screen_x));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->screen_y, static_cast<std::uint16_t>(tCur->screen_y));
 }
 
 // Area 40's four lever choices (0x405810..0x4058D0): message 0xFFFF; answer
@@ -132,7 +133,7 @@ bool InGrid(U x, U z) {
 // bytes +2..+4 moved by `d`, the index re-read for each.
 void TintBy(unsigned char d) {
     unsigned char* const cur = Sprite_Current;
-    AddLong(cur + 0x34, static_cast<U>(Long(cur + 0xC)));
+    AddLong(cur + 0x34, static_cast<U>(rv::As<records::SpriteHead>(cur)->step_x));
     unsigned char* const leader = Field_State;
     for (unsigned off = 2; off <= 4; ++off) MoveScript_TintRecords[leader[0x149] * 12u + off] += d;
 }
@@ -252,7 +253,7 @@ extern "C" void __cdecl Area39_PlayMusicA3(void) { AH_CALL(Music_Play)(0xA3, 8);
 
 // original 0x405710 (Area39_Handlers[11]; PSX 0x801F2EEC): Field_ScriptFlags'
 // low byte |= 8.
-extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(0x9039A2) = static_cast<unsigned char>(B(0x9039A2) | 8); }
+extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 8); }
 
 // original 0x405720 (Area39_Handlers[12]; PSX 0x801F2F0C): the first key-item
 // byte of 0xE becomes 4; none: 0x591900(4), the key item 4 added.
@@ -374,7 +375,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
         break;
     case 1:
         if (B(at::kCounter0) != 0x63) break;
-        B(0x9039A2) = static_cast<unsigned char>(B(0x9039A2) | 6);
+        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 6);
         B(at::kCounter0) = 0;
         B(AreaW0c_TailState_addr) = 2;
         break;

@@ -23,6 +23,7 @@
 #include "game/area_w2a_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -254,7 +255,7 @@ extern "C" void __cdecl Area77_LeapStep(void) {
     if (area >= at::kDescriptorCount)
         bof3::Fatal("Area77_LeapStep: Game_AreaNumber %u past Area_Descriptors' %u", area, at::kDescriptorCount);
     const std::uint32_t descriptor = static_cast<std::uint32_t>(Long(Mem(Area_Descriptors_addr + area * 4)));
-    const unsigned position = Word(object + 0xA);
+    const unsigned position = rv::As<records::ScriptContext>(object)->position;
     const std::uint32_t scripts = static_cast<std::uint32_t>(Long(Mem(descriptor + 0x10)));
     const std::uint32_t script = static_cast<std::uint32_t>(Long(Mem(scripts + object[3] * 4u)));
     const unsigned char operand = B(script + position + 2);
@@ -269,7 +270,7 @@ extern "C" void __cdecl Area77_LeapStep(void) {
         const unsigned char* const cur = Sprite_Current;
         const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
         const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
         AH_CALL(Sprite_SetAnimation)(0);
     }
     AddWord(MoveScript_Object + 0xA, 1);
@@ -436,8 +437,8 @@ extern "C" void __cdecl Area81_ChoiceMessageCounter3or4(void) { ChoiceMessageCou
 extern "C" void __cdecl Area81_SpawnEffect27AtObject(void) {
     unsigned char* const e = SpawnEffectRecord(0x27);
     if (e == nullptr) return;
-    SetLong(e + 0x34, rv::Current<records::SpriteObject>()->x);
-    SetLong(e + 0x38, rv::Current<records::SpriteObject>()->z);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(e)->x, rv::Current<records::SpriteObject>()->x);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(e)->z, rv::Current<records::SpriteObject>()->z);
 }
 
 // original 0x40F5F0 (Area81_Handlers[1]; PSX 0x801F2D14): Camera_ShiftY -

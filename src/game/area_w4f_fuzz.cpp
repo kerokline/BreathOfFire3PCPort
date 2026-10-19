@@ -22,6 +22,7 @@
 #include "game/area_w4f.h"
 #include "game/area_w4f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w4f {
@@ -167,7 +168,7 @@ unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr 
 // record.
 unsigned char* ScriptRecord(U v) { return v & 1 ? ah::Object(v >> 1) : ah::PartyOf(static_cast<unsigned char>(v >> 1)); }
 // The focus object: a field object, or one of Sprite_ObjectsExtra's four.
-unsigned char* FocusRecord(U v) { return v % 5 == 0 ? ah::Mem(0x802000 + (v >> 3) % 4 * at::kObjectStride) : ah::Object(v >> 3); }
+unsigned char* FocusRecord(U v) { return v % 5 == 0 ? ah::Mem(Sprite_ObjectsExtra_addr + (v >> 3) % 4 * at::kObjectStride) : ah::Object(v >> 3); }
 // A value of Field_ActiveMember: on a field object's record (0..6) two times in
 // three, else between two or just below the first (its distance from
 // Sprite_Objects is a signed quotient; its +0x80 and +0x8A, which some
@@ -541,7 +542,7 @@ void Seed198(unsigned k) {
         if (ah::Often()) object[2] = static_cast<unsigned char>(AH_PICK(0, 4, 8, 0xC, 1, 2, 3, 0x7C, 0x80, 0x84, 0xFF));
         // the word +0x3E, after its - 0x10, on and beside each compare
         static const U kHeights[] = {0xFD80, 0xFD7F, 0xFD81, 0xF600, 0xF5FF, 0xF601, 0xF380, 0xF37F, 0xF381, 0, 0x8000, 0x7FFF};
-        if (ah::Often()) SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ah::Pick(kHeights, sizeof kHeights / sizeof kHeights[0]) + 0x10));
+        if (ah::Often()) rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ah::Pick(kHeights, sizeof kHeights / sizeof kHeights[0]) + 0x10));
         for (unsigned off = 0x5D; off <= 0x5F; ++off)
             if (ah::Half()) Sprite_Current[off] = static_cast<unsigned char>(AH_PICK(0x80, 0x81, 0x7F, 0, 0xFF));
         break;
@@ -553,7 +554,7 @@ void Seed198(unsigned k) {
         break;
     case k198Walk: {
         static const std::int32_t kOff[] = {0, 1, 0x7FFF, 0x8000, -1, -0x8000, -0x8001, 0x10000, -0x10000, 0x7FFFFF};
-        if (ah::Often()) SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(0x190000u - static_cast<U>(kOff[ah::Next() % 10])));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(0x190000u - static_cast<U>(kOff[ah::Next() % 10])));
         break;
     }
     case k198Release:

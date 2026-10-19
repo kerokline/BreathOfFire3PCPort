@@ -20,6 +20,7 @@
 #include "game/area_w1c_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -88,7 +89,7 @@ void MoveScriptObject(unsigned char dir) {
         }
     }
     rv::Current<records::SpriteObject>()->step_y = 0;
-    SetWord(Sprite_Current + 0x3E, 0x480);
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, 0x480);
 }
 
 // The count 0x92BEE7 as area 48 reads it: 2, 6, 8, or any other.
@@ -177,9 +178,9 @@ void StashColumn(unsigned x, unsigned z, unsigned shift) {
 // layer call.
 void RestoreColumn(unsigned x, unsigned z, unsigned shift) {
     SetLayer(x, z, 0);
-    SetByte(x, z, Sar(Long(Sprite_Current + 0x18), shift));
+    SetByte(x, z, Sar(rv::Current<records::SpriteHead>()->work_18, shift));
     SetLayer(x, z + 1, 0);
-    SetByte(x, z + 1, Sar(Long(Sprite_Current + 0x1C), shift));
+    SetByte(x, z + 1, Sar(rv::Current<records::SpriteHead>()->work_1c, shift));
 }
 
 // Area 52's handlers 3 and 4 (0x40A1D0, 0x40A260): Area52_BlockCell; with
@@ -471,9 +472,9 @@ extern "C" void __cdecl Area49_EffectFrame(void) {
                         unsigned char* const cur = Sprite_Current;
                         if (cur[8] != dir) {
                             cur[8] = dir;
-                            SetLong(cur + 0xC, -Long(cur + 0xC));
-                            SetLong(cur + 0x10, -Long(cur + 0x10));
-                            SetLong(cur + 0x14, -Long(cur + 0x14));
+                            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_x, -rv::As<records::SpriteHead>(cur)->step_x);
+                            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_z, -rv::As<records::SpriteHead>(cur)->step_z);
+                            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_y, -rv::As<records::SpriteHead>(cur)->step_y);
                             cur[9] = static_cast<unsigned char>(8 - cur[9]);
                         }
                     }
@@ -693,12 +694,12 @@ extern "C" void __cdecl Area51_MemberAtObject(void) {
 // store, as the original's.
 extern "C" void __cdecl Area51_PlaceAtMember(void) {
     const unsigned char* const from = Field_ActiveMember - 0x668;
-    SetLong(Sprite_Current + 0x34, Long(from + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(from + 0x38));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(from + 0x34));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(from + 0x38));
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const std::int32_t ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground - 0x40));
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground - 0x40));
 }
 
 // original 0x409D80 (Area51_Choices[0]): message 1 for an answer not 0, 0x14
@@ -811,8 +812,8 @@ extern "C" void __cdecl Area52_MoveBlockB(void) { MoveBlock(0x668000); }
 // Field_Request 5, Area52_RestoreBlock(*x, z). Counter 3 at 0: the script
 // position back 2 and 0; else 1.
 extern "C" unsigned char __cdecl Area52_BlockCell(long* x, long* z) {
-    *x = static_cast<long>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)) - 0x8000u);
-    const auto zv = static_cast<long>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x38)) - 0x8000u);
+    *x = static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->x) - 0x8000u);
+    const auto zv = static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->z) - 0x8000u);
     *z = zv;
     if (Field_Request == 5) AH_CALL(Area52_RestoreBlock)(*x, zv);
     if (B(at::kCounter3) != 0) return 1;
@@ -833,9 +834,9 @@ extern "C" void __cdecl Area52_ShiftBlockX(long xv, long zv) {
     SetLayer(x, z1, 0);
     SetByte(x, z1, Sprite_Current[0x1C]);
     unsigned char* cur = Sprite_Current;
-    SetLong(cur + 0x18, static_cast<std::int32_t>(Sar(Long(cur + 0x18), 8)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->work_18, static_cast<std::int32_t>(Sar(rv::As<records::SpriteHead>(cur)->work_18, 8)));
     cur = Sprite_Current;
-    SetLong(cur + 0x1C, static_cast<std::int32_t>(Sar(Long(cur + 0x1C), 8)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->work_1c, static_cast<std::int32_t>(Sar(rv::As<records::SpriteHead>(cur)->work_1c, 8)));
     const auto x2 = static_cast<std::uint16_t>(x + 2);
     SetLayer(x2, z, 0x10);
     unsigned char* p = Sprite_Current + 0x18;
@@ -857,8 +858,8 @@ extern "C" void __cdecl Area52_ShiftBlockX(long xv, long zv) {
 // (RestoreColumn at 8), then both shifted left by 8.
 extern "C" void __cdecl Area52_DropColumn(long xv, long zv) {
     RestoreColumn(static_cast<std::uint16_t>(High(xv) + 1), High(zv), 8);
-    SetLong(Sprite_Current + 0x18, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x18)) << 8));
-    SetLong(Sprite_Current + 0x1C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x1C)) << 8));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->work_18) << 8));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_1c, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteHead>()->work_1c) << 8));
 }
 
 // original 0x40A4C0 (called by Area52_BlockCell, `(x, z)`, their high words
@@ -908,8 +909,8 @@ extern "C" unsigned char __cdecl Area52_PartyInRect(void) {
     const unsigned char* const rect = Mem(Area52_Rects_addr + (armed ? 4u : 0u));
     for (unsigned char m = 0; m < count; ++m) {
         const unsigned char* const record = PartyAt(m);
-        if (static_cast<std::uint16_t>(Word(record + 0x36) - rect[0]) >= rect[2]) continue;
-        if (static_cast<std::uint16_t>(Word(record + 0x3A) - rect[1]) < rect[3]) return 1;
+        if (static_cast<std::uint16_t>(rv::As<records::PartyMember>(record)->x_whole - rect[0]) >= rect[2]) continue;
+        if (static_cast<std::uint16_t>(rv::As<records::PartyMember>(record)->z_whole - rect[1]) < rect[3]) return 1;
     }
     return 0;
 }

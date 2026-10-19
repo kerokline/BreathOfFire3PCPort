@@ -169,7 +169,7 @@ U MovesCurrent(const U*, U answer) {
 // into it through a pointer taken before the call), and the running object.
 U ByteAtEffect(const U* a, U answer) {
     const U n = ah::Noise();
-    if (n & 4) SetLong(Sprite_Current + 0x20, static_cast<std::int32_t>(ah::Noise()));
+    if (n & 4) rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_20, static_cast<std::int32_t>(ah::Noise()));
     return MovesCurrent(a, answer);
 }
 // Crt_sprintf: the choice answer choice 1 reads again after it.
@@ -438,15 +438,15 @@ void Seed(unsigned k) {
             if (ah::Half()) continue;
             unsigned char* const o = m < 3 ? ah::PartyOf(static_cast<unsigned char>(m)) : ah::Object(m - 3);
             const U i = ah::Next() % 4;
-            SetLong(o + 0x34, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2)) << 16 | 0x8000));
-            SetLong(o + 0x38, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2 + 1)) << 16 | 0x8000));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->x, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2)) << 16 | 0x8000));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->z, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2 + 1)) << 16 | 0x8000));
         }
         // the running object on one of the four cells two rounds in three
         if (ah::Often()) {
             const U i = ah::Next() % 4;
-            SetLong(cur + 0x34, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2)) << 16 | 0x8000));
-            SetLong(cur + 0x38, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2 + 1)) << 16 |
-                                                          (ah::Often() ? 0x8000 : 0)));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2)) << 16 | 0x8000));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2 + 1)) << 16 |
+                                                                                                   (ah::Often() ? 0x8000 : 0)));
         }
         break;
     case kQueueRun: SeedState(at::kArea135QueueReach); break;
@@ -454,16 +454,16 @@ void Seed(unsigned k) {
     case kLiftRun: SeedState(at::kArea135LiftReach); break;
     case kSpawnRun: SeedState(at::kArea135SpawnReach); break;
     case kQueueZ:
-        SetLong(cur + 0x38, static_cast<std::int32_t>(0xC8000 + (ah::Next() % 6 << 17) + AH_PICK(0, 0x4000, 0x7FFF, 0x8000, 0xFFFFC000u, 0xFFFF8000u, 0x123456)));
+        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(0xC8000 + (ah::Next() % 6 << 17) + AH_PICK(0, 0x4000, 0x7FFF, 0x8000, 0xFFFFC000u, 0xFFFF8000u, 0x123456)));
         break;
     case kQueueX:
-        SetLong(cur + 0x34, static_cast<std::int32_t>(Near(0x208000, 0x4000)));
+        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(Near(0x208000, 0x4000)));
         break;
-    case kWalkX: SetLong(cur + 0x34, static_cast<std::int32_t>(Near(0x1C8000, 0x4000))); break;
-    case kWalkZ: SetLong(cur + 0x38, static_cast<std::int32_t>(Near(0x148000, 0x4000))); break;
+    case kWalkX: rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(Near(0x1C8000, 0x4000))); break;
+    case kWalkZ: rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(Near(0x148000, 0x4000))); break;
     case kLiftDone:
-        if (ah::Often()) SetLong(cur + 0x34, static_cast<std::int32_t>(ah::Often() ? 0x168000 : AH_PICK(0x168001, 0x167FFF, 0x178000)));
-        if (ah::Often()) SetLong(cur + 0x38, static_cast<std::int32_t>(ah::Often() ? 0x128000 : AH_PICK(0x128001, 0x127FFF, 0x138000)));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(ah::Often() ? 0x168000 : AH_PICK(0x168001, 0x167FFF, 0x178000)));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(ah::Often() ? 0x128000 : AH_PICK(0x128001, 0x127FFF, 0x138000)));
         break;
     case kSpawnCopy: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(ah::Often() ? ah::Next() % 4 : ah::Next()); break;
     case kSpawnCount: cur[0xA] = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0x80, 0xFF)); break;
@@ -561,7 +561,7 @@ void Args(unsigned k, U* a) {
         if ((q & 0xF) == 0) q += 1 + ah::Next() % 15;
         if (q > 255) q = 255;
         const U d = q * 128 + ah::Next() % 128;
-        const U word = Word(Sprite_Current + 0x3E) + (ah::Half() ? d : 0u - d);
+        const U word = rv::Current<records::SpriteHead>()->height_whole + (ah::Half() ? d : 0u - d);
         a[0] = (ah::Half() ? ah::Next() & 0xFFFF0000u : 0) | (word & 0xFFFF);
         break;
     }

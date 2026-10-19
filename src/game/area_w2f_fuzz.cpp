@@ -22,6 +22,7 @@
 #include "game/area_w2f_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -242,7 +243,7 @@ U MovesScriptObject(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) ah::SetPointer(MoveScript_Object_addr, ScriptRecord(n >> 8));
     if (n & 2) MoveCurrent(n >> 4);
-    if (n & 4) SetWord(ah::Pointer(MoveScript_Object_addr) + 0xA, n >> 16);
+    if (n & 4) rv::Store<unsigned>(rv::As<records::ScriptContext>(ah::Pointer(MoveScript_Object_addr))->position, n >> 16);
     return answer;
 }
 U MovesTail(const U*, U answer) {
@@ -392,9 +393,9 @@ void SeedMemberStrips() {
     for (unsigned m = 1; m < 3; ++m) {
         unsigned char* const r = ah::PartyOf(static_cast<unsigned char>(m));
         if (ah::Often())
-            SetWord(r + 0x36, AH_PICK(0x27, 0x28, 0x38, 0x39, 0x21, 0x22, 0x32, 0x33, 0x34, 0x35, 0x1B, 0x1C, 0x1D, 0x1E, 0x8000, 0x7FFF, 0x133));
+            rv::Store<unsigned>(rv::As<records::PartyMember>(r)->x_whole, AH_PICK(0x27, 0x28, 0x38, 0x39, 0x21, 0x22, 0x32, 0x33, 0x34, 0x35, 0x1B, 0x1C, 0x1D, 0x1E, 0x8000, 0x7FFF, 0x133));
         if (ah::Often())
-            SetWord(r + 0x3A, AH_PICK(0x52, 0x53, 0x54, 0x55, 0x3A, 0x3B, 0x40, 0x41, 0x42, 0x43, 0x8000, 0x7FFF, 0x153));
+            rv::Store<unsigned>(rv::As<records::PartyMember>(r)->z_whole, AH_PICK(0x52, 0x53, 0x54, 0x55, 0x3A, 0x3B, 0x40, 0x41, 0x42, 0x43, 0x8000, 0x7FFF, 0x153));
     }
     if (ah::Next() % 12 == 0) Field_MemberCount = static_cast<unsigned char>(AH_PICK(0, 9, 10));
 }
@@ -415,8 +416,8 @@ void Seed108(unsigned k) {
             case 2: d = (d + 1) & 7; break;
             default: break;
             }
-            SetWord(ExtraRecord(1) + 0x36, x);
-            SetWord(ExtraRecord(1) + 0x3A, z);
+            rv::Store<unsigned>(rv::As<records::SpriteObject>(ExtraRecord(1))->x_whole, x);
+            rv::Store<unsigned>(rv::As<records::SpriteObject>(ExtraRecord(1))->z_whole, z);
             B(ObjTrio_addr + 0x8) = static_cast<unsigned char>((ah::Half() ? 0 : ah::Next() & 0xF8) | (d & 7));
         }
         SeedMemberStrips();
@@ -428,7 +429,7 @@ void Seed108(unsigned k) {
     case k108Effect5: {
         const auto index = static_cast<unsigned char>(ah::Often() ? ah::Next() % 0x18 : ah::Next());
         B(ObjTrio_addr + 0x89) = index;
-        if (index < 0x18 && ah::Half()) B(0x66972C + index) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
+        if (index < 0x18 && ah::Half()) B(MoveScript_EffectState_addr + index) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
         break;
     }
     case k108FadeRun: Sprite_Current[4] = static_cast<unsigned char>(ah::Next() % at::kArea108FadeStateCount); break;
@@ -511,8 +512,8 @@ U CellWord(U base, int lo, int hi) {
 }
 // Sprite_Current at a grid cell (lo..hi each way), facing any direction.
 void SeedCurrentCell(int lo, int hi) {
-    SetWord(Sprite_Current + 0x36, CellWord(0xB, lo, hi));
-    SetWord(Sprite_Current + 0x3A, CellWord(0xB1, lo, hi));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->x_whole, CellWord(0xB, lo, hi));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->z_whole, CellWord(0xB1, lo, hi));
     if (ah::Often()) Sprite_Current[8] = static_cast<unsigned char>(ah::Next() % 8 | (ah::Half() ? 0 : ah::Next() & 0xF8));
 }
 // The leader at a grid cell.
@@ -541,7 +542,7 @@ void Seed111(unsigned k) {
         SeedGrid(2);
         SeedLeaderCell(ah::Often() ? 0 : -2, ah::Often() ? 6 : 8);
         break;
-    case k111Counter3: SetLong(Sprite_Current + 0x18, AH_PICK(0, 1, 2, 3, 4, 7, 8, 31, 32, 33, 0x80000003u)); break;
+    case k111Counter3: rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, AH_PICK(0, 1, 2, 3, 4, 7, 8, 31, 32, 33, 0x80000003u)); break;
     case k111WaitBit: {
         const unsigned idx = ah::Next() % 4;
         if (ah::Often()) ah::SetPointer(Field_ActiveMember_addr, ExtraRecord(idx));
@@ -552,8 +553,8 @@ void Seed111(unsigned k) {
         // the object's cell inside the grid (the write's row and byte), its x
         // word down to 0xA (-1 halves to 0), the grid holding the member keys
         SeedGrid(3);
-        SetWord(Sprite_Current + 0x36, AH_PICK(0xA, 0xB, 0xC) + 2 * (ah::Next() % 7));
-        SetWord(Sprite_Current + 0x3A, AH_PICK(0xB0, 0xB1, 0xB2) + 2 * (ah::Next() % 7));
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->x_whole, AH_PICK(0xA, 0xB, 0xC) + 2 * (ah::Next() % 7));
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->z_whole, AH_PICK(0xB0, 0xB1, 0xB2) + 2 * (ah::Next() % 7));
         if (ah::Often()) ah::SetPointer(Field_ActiveMember_addr, ExtraRecord(ah::Next()));
         break;
     case k111AttachAhead: {
@@ -562,8 +563,8 @@ void Seed111(unsigned k) {
         Sprite_Current[0x18] = static_cast<unsigned char>(extra);
         unsigned char* const e = ah::Mem(Sprite_ObjectsExtra_addr + extra * at::kExtraStride);
         if (extra < 4) {
-            SetWord(e + 0x36, CellWord(0xB, -1, 7));
-            SetWord(e + 0x3A, CellWord(0xB1, -1, 7));
+            rv::Store<unsigned>(rv::As<records::SpriteObject>(e)->x_whole, CellWord(0xB, -1, 7));
+            rv::Store<unsigned>(rv::As<records::SpriteObject>(e)->z_whole, CellWord(0xB1, -1, 7));
         }
         if (ah::Often()) Sprite_Current[8] = static_cast<unsigned char>(ah::Next() % 8 | (ah::Half() ? 0 : ah::Next() & 0xF8));
         break;
@@ -573,7 +574,7 @@ void Seed111(unsigned k) {
         SeedCurrentCell(-1, 7);
         break;
     case k111StepExtra:
-        SetLong(Sprite_Current + 0x18, ah::Often() ? ah::Next() % 4 : AH_PICK(4, 5, 0x10));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_18, ah::Often() ? ah::Next() % 4 : AH_PICK(4, 5, 0x10));
         if (ah::Often()) ah::Pointer(MoveScript_Object_addr)[4] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next());
         break;
     case k111Tail:

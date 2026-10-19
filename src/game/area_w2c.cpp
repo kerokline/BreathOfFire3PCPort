@@ -23,6 +23,7 @@
 #include "game/area_w2c_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -102,10 +103,10 @@ void SpawnInline(U record, unsigned char kind, U args, U list) {
     EffectAt(r[0xB])[0] = 1;
     EffectAt(r[0xB])[5] = 6;
     EffectAt(r[0xB])[6] = kind;
-    SetLong(EffectAt(r[0xB]) + 0xC, 0);
-    SetLong(EffectAt(r[0xB]) + 0x10, static_cast<signed char>(B(args + B(list))));
-    SetWord(EffectAt(r[0xB]) + 0x2E, static_cast<std::uint16_t>(tR->screen_x));
-    SetWord(EffectAt(r[0xB]) + 0x30, static_cast<std::uint16_t>(tR->screen_y));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->step_x, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->step_z, static_cast<signed char>(B(args + B(list))));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->screen_x, static_cast<std::uint16_t>(tR->screen_x));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(r[0xB]))->screen_y, static_cast<std::uint16_t>(tR->screen_y));
 }
 
 // Area 94's spawns: Effect_Spawn(kind, 0, `args`[the list byte], the record's
@@ -311,10 +312,10 @@ extern "C" void __cdecl Area91_DrawGlow(unsigned radius_word, unsigned colour_by
 // Area91_DrawGlow(0x12C, 0xFF).
 extern "C" void __cdecl Area91_State3Place(void) {
     if (Field_Kind2Hold == 0) {
-        SetLong(Sprite_Current + 0x70, 0);
-        SetLong(Sprite_Current + 0x34, 0x1F8000);
-        SetLong(Sprite_Current + 0x38, 0x1A0000);
-        SetWord(Sprite_Current + 0x3E, 0xFF00);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->reach, 0);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, 0x1F8000);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, 0x1A0000);
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, 0xFF00);
         Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
         ++Sprite_Current[4];
         unsigned char* const object = Sprite_Current;

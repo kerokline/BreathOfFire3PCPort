@@ -26,6 +26,7 @@
 #include "game/area_w2f_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -130,7 +131,7 @@ template <typename Pass> unsigned char MemberMask(Pass pass) {
     if (count <= 1) return 0;
     for (unsigned i = 0; i + 1 < count; ++i) {
         const unsigned char* const r = Record(i + 1);
-        if (!pass(static_cast<std::int16_t>(Word(r + 0x36)), static_cast<std::int16_t>(Word(r + 0x3A)))) continue;
+        if (!pass(static_cast<std::int16_t>(rv::As<records::PartyMember>(r)->x_whole), static_cast<std::int16_t>(rv::As<records::PartyMember>(r)->z_whole))) continue;
         const unsigned s = i & 31;
         if (s < 8) mask = static_cast<unsigned char>(mask | (1u << s));
     }
@@ -151,10 +152,10 @@ void MemberScript(unsigned char script) {
 void PlaceAtCell(U table) {
     const unsigned index = static_cast<unsigned char>(Extra(1)[0x83] - 1);
     const unsigned char* const e = Mem(table + index * 4);
-    SetWord(Sprite_Current + 0x36, e[0]);
-    SetWord(Sprite_Current + 0x34, e[1] != 0 ? 0x8000u : 0u);
-    SetWord(Sprite_Current + 0x3A, e[2]);
-    SetWord(Sprite_Current + 0x38, e[3] != 0 ? 0x8000u : 0u);
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->x_whole, e[0]);
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->x_frac, e[1] != 0 ? 0x8000u : 0u);
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->z_whole, e[2]);
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->z_frac, e[3] != 0 ? 0x8000u : 0u);
 }
 
 // ---- area 110 ----
@@ -184,7 +185,7 @@ void PlaceRandomObject(U cells, U weights) {
         tObject->x = x;
         tObject->z = z;
         const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
-        SetWord(object + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
@@ -254,8 +255,8 @@ extern "C" void __cdecl Area108_PlaceScene(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
     if (B(ObjTrio_addr + 0x89) != 2) return;
     const unsigned direction = B(ObjTrio_addr + 0x8) & 7u;
-    const std::uint16_t x = Word(Extra(1) + 0x36);
-    const std::uint16_t z = Word(Extra(1) + 0x3A);
+    const std::uint16_t x = rv::As<records::SpriteObject>(Extra(1))->x_whole;
+    const std::uint16_t z = rv::As<records::SpriteObject>(Extra(1))->z_whole;
     unsigned place = 0;
     for (; place < at::kArea108PlaceCount; ++place) {
         const unsigned char* const e = Mem(Area108_Places_addr + place * 3);
@@ -326,7 +327,7 @@ extern "C" void __cdecl Area108_ScriptByFlags1E(void) {
 // MoveCmd_TestFB(1, 0xB), the running object's +0 = 0.
 extern "C" void __cdecl Area108_FlagIfEffectState5(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B(0x66972C + B(ObjTrio_addr + 0x89)) != 5) return; // MoveScript_EffectState
+    if (B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89)) != 5) return;
     Set(0x30);
     AH_CALL(MoveCmd_TestFB)(1, 0xB);
     Sprite_Current[0] = 0;
@@ -444,8 +445,8 @@ extern "C" unsigned char __cdecl Area108_CellHook(long x, long z) {
         r[5] = 0x18;
         r[0xB] = 0x1B;
         r[1] = 0;
-        SetWord(r + 0x36, e[0]);
-        SetWord(r + 0x3A, e[1]);
+        rv::Store<unsigned>(rv::As<records::EffectObject>(r)->x_whole, e[0]);
+        rv::Store<unsigned>(rv::As<records::EffectObject>(r)->z_whole, e[1]);
     }
     return 1;
 }
@@ -615,7 +616,7 @@ extern "C" void __cdecl Area111_ChoiceStartVar7(void) {
 
 // original 0x4176A0 (area 111 +0x3C[0]; PSX 0x801F3448): extra object 0's
 // dword +0x6C = extra object 1's.
-extern "C" void __cdecl Area111_CopyExtra6C(void) { SetLong(Extra(0) + 0x6C, static_cast<std::int32_t>(rv::As<records::SpriteObject>(Extra(1))->angle[2])); }
+extern "C" void __cdecl Area111_CopyExtra6C(void) { rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Extra(0))->angle[2], static_cast<std::int32_t>(rv::As<records::SpriteObject>(Extra(1))->angle[2])); }
 
 // original 0x4176B0 (area 111 +0x3C[1]; PSX 0x801F3460): the running
 // object's grid cell (x, z high words less 0xB / 0xB1, halved rounding down)
@@ -657,9 +658,9 @@ extern "C" void __cdecl Area111_AttachAtLeaderCell(void) {
     if (block == 0xFF) return;
     const unsigned char slot = FieldStateSlot();
     unsigned char* const object = MoveScript_Object;
-    const std::uint16_t position = Word(object + 0xA);
+    const std::uint16_t position = rv::As<records::ScriptContext>(object)->position;
     AH_CALL(MoveCmd_Attach)(object, 7, block, slot, 0x10);
-    SetWord(MoveScript_Object + 0xA, position);
+    rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, position);
     Sprite_Current[8] = static_cast<unsigned char>(Extra(block)[8] & 7);
     Sprite_Kind2[8] = Sprite_Current[8];
 }
@@ -730,9 +731,9 @@ extern "C" void __cdecl Area111_AttachAhead(void) {
     if (block >= 4) return;
     const unsigned char slot = FieldStateSlot();
     unsigned char* const object = MoveScript_Object;
-    const std::uint16_t position = Word(object + 0xA);
+    const std::uint16_t position = rv::As<records::ScriptContext>(object)->position;
     AH_CALL(MoveCmd_Attach)(object, 7, block, slot, 0xC);
-    SetWord(MoveScript_Object + 0xA, position);
+    rv::Store<unsigned>(rv::As<records::ScriptContext>(MoveScript_Object)->position, position);
     Extra(block)[8] = static_cast<unsigned char>(Sprite_Current[8] & 7);
     ScriptStep(-6);
 }
@@ -746,8 +747,8 @@ extern "C" void __cdecl Area111_AttachAhead(void) {
 // dword +0x14 = 0 and word +0x3E = 0xFB00.
 extern "C" void __cdecl Area111_SlideAhead(void) {
     const unsigned char* const cur = Sprite_Current;
-    auto col = static_cast<unsigned char>(static_cast<std::uint16_t>(Word(cur + 0x36) - 0xB) >> 1);
-    auto row = static_cast<unsigned char>(static_cast<std::uint16_t>(Word(cur + 0x3A) - 0xB1) >> 1);
+    auto col = static_cast<unsigned char>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->x_whole - 0xB) >> 1);
+    auto row = static_cast<unsigned char>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->z_whole - 0xB1) >> 1);
     const unsigned d = (cur[8] & 7u) * 2;
     const unsigned char step = B(at::kCellDelta + d);
     unsigned char count = 0;
@@ -765,7 +766,7 @@ extern "C" void __cdecl Area111_SlideAhead(void) {
     MoveScript_FAWord = 0;
     MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] | 0x40);
     rv::Current<records::SpriteObject>()->step_y = 0;
-    SetWord(Sprite_Current + 0x3E, 0xFB00);
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, 0xFB00);
 }
 
 // original 0x417C10 (area 111 +0x3C[8]; PSX 0x801F3D3C): extra object k's
@@ -777,28 +778,28 @@ extern "C" void __cdecl Area111_SlideAhead(void) {
 // the record would lie outside the image's .data.
 extern "C" void __cdecl Area111_StepToExtra(void) {
     const unsigned char* const cur = Sprite_Current;
-    const U k = static_cast<U>(Long(cur + 0x18));
+    const U k = static_cast<U>(rv::As<records::SpriteHead>(cur)->work_18);
     const U record = Sprite_ObjectsExtra_addr + k * at::kExtraStride;
     if (record < at::kDataStart || record > at::kDataEnd - 0x3C)
         bof3::Fatal("Area111_StepToExtra: extra object %u lies at 0x%X, outside the image's .data", k, record);
     const unsigned char* const extra = Mem(record);
     const U z0 = static_cast<U>(Long(cur + 0x38));
-    U x = static_cast<U>(Long(extra + 0x34));
-    U z = static_cast<U>(Long(extra + 0x38));
+    U x = static_cast<U>(rv::As<records::SpriteObject>(extra)->x);
+    U z = static_cast<U>(rv::As<records::SpriteObject>(extra)->z);
     const unsigned d = (cur[8] & 7u) * 2;
     const auto sx = static_cast<std::uint16_t>(static_cast<signed char>(B(at::kCellDelta + d)) * 2);
     const auto sz = static_cast<std::uint16_t>(static_cast<signed char>(B(at::kCellDelta + d + 1)) * 2);
     x = (x & 0xFFFFu) | static_cast<U>(static_cast<std::uint16_t>((x >> 16) + sx)) << 16;
     z = (z & 0xFFFFu) | static_cast<U>(static_cast<std::uint16_t>((z >> 16) + sz)) << 16;
-    const auto dx = static_cast<std::int32_t>(x - static_cast<U>(Long(cur + 0x34)));
+    const auto dx = static_cast<std::int32_t>(x - static_cast<U>(rv::As<records::SpriteHead>(cur)->x));
     const auto dz = static_cast<std::int32_t>(z - z0);
     const long ground = AH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
-    const auto dy = static_cast<std::int16_t>(static_cast<std::uint16_t>(ground) - Word(Sprite_Current + 0x3E));
+    const auto dy = static_cast<std::int16_t>(static_cast<std::uint16_t>(ground) - rv::Current<records::SpriteObject>()->height_whole);
     if (MoveScript_Object[4] == 0) return;
     Sprite_Current[9] = 0x20;
-    SetLong(Sprite_Current + 0xC, dx / 32);
-    SetLong(Sprite_Current + 0x10, dz / 32);
-    SetLong(Sprite_Current + 0x14, static_cast<std::int32_t>(dy) / 32);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dx / 32);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dz / 32);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, static_cast<std::int32_t>(dy) / 32);
 }
 
 // original 0x417CF0 (Field_ModeTailKinds[17], armed by Area111_ArriveHook and
@@ -1257,7 +1258,7 @@ extern "C" unsigned char __cdecl Area113_Trigger63(unsigned char* object, unsign
     AH_CALL(ScriptFlags_Set40)();
     B(AreaW0a_TailKind_addr) = 0x3E;
     B(AreaW0c_TailState_addr) = 0;
-    SetWord(object + 0x88, 5);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->trigger_word, 5);
     return 0;
 }
 

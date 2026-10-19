@@ -41,6 +41,7 @@
 #include "game/area_w3g_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/world_map.h"
 #include "hook/detour.h"
@@ -179,9 +180,9 @@ void Kind13(U slot, U x, U y, unsigned char life) {
     unsigned char* const e = EffectAt(slot);
     e[0] = 1;
     e[5] = 0x13;
-    SetLong(e + 0x64, static_cast<std::int32_t>(x));
-    SetLong(e + 0x68, angle);
-    SetLong(e + 0x6C, static_cast<std::int32_t>(y));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], static_cast<std::int32_t>(x));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[1], angle);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[2], static_cast<std::int32_t>(y));
     e[9] = life;
 }
 
@@ -198,12 +199,12 @@ void DrawModeLink(int dtd) {
     const unsigned tpage = AH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0) & 0xFFFFu;
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, dtd, tpage, 0);
     unsigned char* const o = Cur();
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(o + 0x18)), static_cast<U>(Long(o + 0x1C)), 0, 0xC);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::As<records::SpriteHead>(o)->work_18), static_cast<U>(rv::As<records::SpriteHead>(o)->work_1c), 0, 0xC);
 }
 // A primitive linked at the running effect's (+0x18, +0x1C).
 void LinkHere(unsigned size) {
     unsigned char* const o = Cur();
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(o + 0x18)), static_cast<U>(Long(o + 0x1C)), 0, size);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(rv::As<records::SpriteHead>(o)->work_18), static_cast<U>(rv::As<records::SpriteHead>(o)->work_1c), 0, size);
 }
 // (trig * r) >> 12, the product 32-bit, the shift arithmetic.
 std::int32_t Scaled(int trig, std::int32_t r) {
@@ -368,7 +369,7 @@ extern "C" void __cdecl Area148_BeamRun(void) {
 // 0x50, +1 = 1 (Sprite_Current read again for each).
 extern "C" void __cdecl Area148_BeamStart(void) {
     Cur()[8] = Cur()[0xB];
-    SetWord(Cur() + 0x3E, Word(Cur() + 0x3E) + 0xC0u);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, rv::Current<records::SpriteHead>()->height_whole + 0xC0u);
     AH_CALL(Area148_BeamAhead)();
     Cur()[8] = static_cast<unsigned char>((Cur()[8] + 3) & 7);
     AH_CALL(Area148_BeamVelocity)();
@@ -387,9 +388,9 @@ extern "C" void __cdecl Area148_BeamSweep(void) {
         AH_CALL(Area148_DrawBeam)(reinterpret_cast<const long*>(o + 0x34), reinterpret_cast<const long*>(o + 0x18));
         return;
     }
-    SetLong(o + 0x18, static_cast<std::int32_t>(static_cast<U>(Long(o + 0x18)) + static_cast<U>(Long(o + 0xC))));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_18, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->work_18) + static_cast<U>(rv::As<records::SpriteHead>(o)->step_x)));
     o = Cur();
-    SetLong(o + 0x1C, static_cast<std::int32_t>(static_cast<U>(Long(o + 0x1C)) + static_cast<U>(Long(o + 0x10))));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_1c, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->work_1c) + static_cast<U>(rv::As<records::SpriteHead>(o)->step_z)));
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     o = Cur();
     AH_CALL(Area148_DrawBeam)(reinterpret_cast<const long*>(o + 0x34), reinterpret_cast<const long*>(o + 0x18));
@@ -426,21 +427,21 @@ extern "C" void __cdecl Area148_BeamPause(void) {
 // elevation there (AreaMap_Elevation's low word, sign-extended) << 16.
 extern "C" void __cdecl Area148_BeamAhead(void) {
     unsigned char* o = Cur();
-    SetLong(o + 0x18, static_cast<std::int32_t>(static_cast<U>(Long(At(Field_DirectionSteps_addr + o[8] * 8u))) * 5u + static_cast<U>(Long(o + 0x34))));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_18, static_cast<std::int32_t>(static_cast<U>(Long(At(Field_DirectionSteps_addr + o[8] * 8u))) * 5u + static_cast<U>(rv::As<records::SpriteHead>(o)->x)));
     o = Cur();
-    SetLong(o + 0x1C, static_cast<std::int32_t>(static_cast<U>(Long(At(Field_DirectionSteps_addr + 4 + o[8] * 8u))) * 5u + static_cast<U>(Long(o + 0x38))));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_1c, static_cast<std::int32_t>(static_cast<U>(Long(At(Field_DirectionSteps_addr + 4 + o[8] * 8u))) * 5u + static_cast<U>(rv::As<records::SpriteHead>(o)->z)));
     o = Cur();
-    const long h = AH_CALL(AreaMap_Elevation)(Long(o + 0x18), Long(o + 0x1C));
-    SetLong(Cur() + 0x20, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(h))) << 16));
+    const long h = AH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(o)->work_18, rv::As<records::SpriteHead>(o)->work_1c);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_20, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(h))) << 16));
 }
 
 // original 0x422A20: the velocity +0xC / +0x10 = the walk deltas 0x6696DC by
 // the facing +8 (unchecked), each << 1.
 extern "C" void __cdecl Area148_BeamVelocity(void) {
     unsigned char* o = Cur();
-    SetLong(o + 0xC, static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + o[8] * 8u))) << 1));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_x, static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + o[8] * 8u))) << 1));
     o = Cur();
-    SetLong(o + 0x10, static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 4 + o[8] * 8u))) << 1));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_z, static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 4 + o[8] * 8u))) << 1));
 }
 
 // original 0x422A50: with +0x3C set to +0x20 for the two asks (then put back,
@@ -453,15 +454,15 @@ extern "C" void __cdecl Area148_BeamTurnMembers(void) {
     unsigned char* const o = Cur();
     const unsigned q = static_cast<unsigned char>((o[8] & 6) << 2);
     const unsigned s = static_cast<unsigned char>(o[9] >> 3);
-    const std::int32_t saved = Long(o + 0x3C);
-    SetLong(o + 0x3C, Long(o + 0x20));
+    const std::int32_t saved = rv::As<records::SpriteHead>(o)->height;
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->height, rv::As<records::SpriteHead>(o)->work_20);
     for (U k = 0; k < 2; ++k) {
         const std::int32_t index = (static_cast<std::int32_t>(static_cast<signed char>(B(Area148_TurnSteps_addr + s * 2 + k))) + static_cast<std::int32_t>(q)) * 2;
         const std::int32_t dx = static_cast<signed char>(B(at::kA148TurnCells + static_cast<U>(index)));
         const std::int32_t dz = static_cast<signed char>(B(at::kA148TurnCells + 1 + static_cast<U>(index)));
         unsigned char* const c = Cur();
-        const U z = (static_cast<U>(dz) << 16) + static_cast<U>(Long(c + 0x38));
-        const U x = (static_cast<U>(dx) << 16) + static_cast<U>(Long(c + 0x34));
+        const U z = (static_cast<U>(dz) << 16) + static_cast<U>(rv::As<records::SpriteHead>(c)->z);
+        const U x = (static_cast<U>(dx) << 16) + static_cast<U>(rv::As<records::SpriteHead>(c)->x);
         const unsigned char member = AH_CALL(Party_MemberAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (member == 0xFF) continue;
         if ((Field_ScriptFlags2 & 0x1400) != 0) continue;
@@ -473,7 +474,7 @@ extern "C" void __cdecl Area148_BeamTurnMembers(void) {
         p[8] = facing;
         AH_CALL(Member_SetState2_8)(member, 2);
     }
-    SetLong(Cur() + 0x3C, saved);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, saved);
 }
 
 // original 0x422B50 (from, ahead: the effect's +0x34 and +0x18 points): nothing
@@ -602,7 +603,7 @@ namespace {
 void DustThenAgain(int dx) {
     AH_CALL(Area149_SpawnDust)(static_cast<signed char>(dx));
     unsigned char* const script = MoveScript_Object;
-    SetWord(script + 0xA, Word(script + 0xA) + 0xFFFEu);
+    rv::Store<unsigned>(rv::As<records::ScriptContext>(script)->position, rv::As<records::ScriptContext>(script)->position + 0xFFFEu);
 }
 // Extra record 0's x (s32 +0x34) below the kind-2 x + 0x20000 (signed): its
 // +0x84 = 3.
@@ -636,7 +637,7 @@ void ShiftMap(int sign, U focus, bool effects) {
             if ((e[0] & 1) == 0 || e[5] != 0x37) continue;
             tE->x = static_cast<std::int32_t>(static_cast<U>(tE->x) + step);
             const long eh = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
-            SetWord(e + 0x3E, static_cast<U>(eh));
+            rv::Store<unsigned>(rv::As<records::EffectObject>(e)->height_whole, static_cast<U>(eh));
         }
     }
     const std::int32_t ex = static_cast<std::int32_t>(static_cast<U>(Long(At(Sprite_ObjectsExtra_addr + 0x34))) + step);
@@ -710,12 +711,12 @@ extern "C" void __cdecl Area149_SpawnDust(signed char dx) {
         const U z = (k != 0 ? 0xFFFF0000u : 0x10000u) + static_cast<U>(Field_Kind2Z);
         e[0] = 1;
         e[5] = 0x37;
-        SetWord(e + 0x2C, 0x2C0);
+        rv::Store<unsigned>(rv::As<records::EffectObject>(e)->column, 0x2C0);
         tE->x = static_cast<std::int32_t>(x);
         tE->z = static_cast<std::int32_t>(z);
         const long h = AH_CALL(AreaMap_Elevation)(tE->x, static_cast<long>(z));
-        SetWord(e + 0x3E, static_cast<U>(h));
-        SetWord(e + 0x2C, 0x2C0);
+        rv::Store<unsigned>(rv::As<records::EffectObject>(e)->height_whole, static_cast<U>(h));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(e)->column, 0x2C0);
         e[9] = 1;
         e[6] = 0;
         e[7] = 0;
@@ -774,12 +775,12 @@ extern "C" void __cdecl Area149_Init(void) {
     unsigned char* const x0 = At(Sprite_ObjectsExtra_addr);
     auto* const tX0 = rv::As<records::SpriteObject>(x0);
     if (AreaW2c_LastArea == 0x94) {
-        SetWord(x0 + 0x36, Word(x0 + 0x36) + 0x16u);
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(x0)->x_whole, rv::As<records::SpriteObject>(x0)->x_whole + 0x16u);
         const std::int32_t z = tX0->z, x = tX0->x;
         x0[0x83] = 1;
         tX0->script_position = 0;
         const long h = AH_CALL(AreaMap_Elevation)(x, z);
-        SetWord(x0 + 0x3E, static_cast<U>(h));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(x0)->height_whole, static_cast<U>(h));
         Cond_ByteFE = 1;
         if (AH_CALL(Flags_Test)(Bank904000(), 0x11) != 0) {
             AreaW0a_TailKind = 0x21;
@@ -1003,8 +1004,8 @@ void PlateRun(const WorldMapTables& t) {
     const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
-    SetLong(Cur() + 0xC, x);
-    SetLong(Cur() + 0x10, z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, z);
     unsigned char kind;
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) kind = 1;
     else if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA0) kind = 2;
@@ -1028,7 +1029,7 @@ void PlateShow(const WorldMapTables& t) {
         const unsigned place = AreaW0b_Place;
         U entry = t.plate_anims;
         while (Word(At(entry)) != place) entry += 4;
-        SetLong(Cur() + 0x18, static_cast<std::int32_t>(place));
+        rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->work_18, static_cast<std::int32_t>(place));
         animation = At(entry + 2)[0];
     } else if (kind == 2) {
         animation = 3;
@@ -1039,8 +1040,8 @@ void PlateShow(const WorldMapTables& t) {
     } else {
         return;
     }
-    SetLong(Cur() + 0x40, 0);
-    SetLong(Cur() + 0x44, 0x10000);
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_x, 0);
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_y, 0x10000);
     Cur()[0x48] = 2;
     Cur()[9] = 8;
     AH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(animation));
@@ -1051,7 +1052,7 @@ void PlateShow(const WorldMapTables& t) {
 // +0x48 = 0 and +1 = 3; then a tail jump to Sprite_QueueOverlay.
 void PlateGrow() {
     AH_CALL(WorldMap_PinSprite)();
-    SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) + 0x2000));
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::Current<records::EffectObject>()->scale_x) + 0x2000));
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     unsigned char* const o = Cur();
     if (o[9] == 0) {
@@ -1071,7 +1072,7 @@ void PlateHold() {
         unsigned char* const o = Cur();
         const unsigned shown = o[7];
         const bool leaves = o[0xB] != shown || Field_Request == 5 ||
-                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != AreaW0b_Place);
+                            (shown == 1 && static_cast<U>(rv::As<records::EffectObject>(o)->work_18) != AreaW0b_Place);
         if (leaves) {
             o[0x48] = 2;
             Cur()[9] = 8;
@@ -1086,7 +1087,7 @@ void PlateHold() {
 // Effect_Release, else +0x48 = 0 and +1 = 1.
 void PlateShrink() {
     AH_CALL(WorldMap_PinSprite)();
-    SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) - 0x2000));
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::Current<records::EffectObject>()->scale_x) - 0x2000));
     Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
     unsigned char* const o = Cur();
     if (o[9] != 0) {
@@ -1246,10 +1247,10 @@ void DrawSprite(const WorldMapTables& t, int x, int y, unsigned index) {
     std::memcpy(prim + 8, &fx, 4);
     prim[4] = prim[5] = prim[6] = 0x80;
     std::memcpy(prim + 0xC, &fy, 4);
-    SetWord(prim + 0x16, 0x7B80);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->clut, 0x7B80);
     const unsigned char* const entry = At(t.sprites + (index & 0xFF) * 4u);
-    SetWord(prim + 0x18, entry[0]);
-    SetWord(prim + 0x1A, entry[1]);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->w, entry[0]);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(prim)->h, entry[1]);
     prim[0x14] = entry[2];
     prim[0x15] = entry[3];
     AH_CALL(Gfx_CommitPrim)(1, 0x1C);
@@ -1284,30 +1285,30 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x48] = 0;
     Cur()[0x24] = 0;
     Cur()[0x29] = 5;
-    SetLong(Cur() + 0xC, dir(Cur(), 0));
-    SetLong(Cur() + 0x10, dir(Cur(), 2));
-    SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
-    SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, dir(Cur(), 0));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, dir(Cur(), 2));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(ObjTrio_addr + 0x34)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
     auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
-        SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(o)->x_whole, rv::As<records::EffectObject>(o)->x_whole - static_cast<unsigned>(dir(o, 0) >> 13));
         o = Cur();
         tO = rv::As<records::EffectObject>(o);
-        SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 13));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(o)->z_whole, rv::As<records::EffectObject>(o)->z_whole - static_cast<unsigned>(dir(o, 2) >> 13));
         o = Cur();
         tO = rv::As<records::EffectObject>(o);
         const bool along_x = tO->step_x == 0;
         const unsigned step = o[6] == 1 ? 2u : 0xFFFEu;
-        if (along_x) SetWord(o + 0x36, Word(o + 0x36) + step);
-        else SetWord(o + 0x3A, Word(o + 0x3A) + step);
+        if (along_x) rv::Store<unsigned>(rv::As<records::EffectObject>(o)->x_whole, rv::As<records::EffectObject>(o)->x_whole + step);
+        else rv::Store<unsigned>(rv::As<records::EffectObject>(o)->z_whole, rv::As<records::EffectObject>(o)->z_whole + step);
         o = Cur();
         tO = rv::As<records::EffectObject>(o);
     }
-    SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 9));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(o)->x_whole, rv::As<records::EffectObject>(o)->x_whole - static_cast<unsigned>(dir(o, 0) >> 9));
     o = Cur();
     tO = rv::As<records::EffectObject>(o);
-    SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 9));
+    rv::Store<unsigned>(rv::As<records::EffectObject>(o)->z_whole, rv::As<records::EffectObject>(o)->z_whole - static_cast<unsigned>(dir(o, 2) >> 9));
     Cur()[0xB] = 0;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
     AH_CALL(Sprite_SetAnimation)(At(t.record8_anims + Cur()[8] * 2u)[0]);
@@ -1357,17 +1358,17 @@ void Record4MarkCell(const WorldMapTables& t) {
 void DrawDrift(const WorldMapTables& t) {
     unsigned char* o = Cur();
     if (o[2] == 0) {
-        SetWord(o + 0x3A, Word(o + 0x3A) + (Frame_Counter & 0xF));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, rv::As<records::SpriteHead>(o)->z_whole + (Frame_Counter & 0xF));
         Cur()[2] = static_cast<unsigned char>(Cur()[2] + 1);
         o = Cur();
     }
     if ((Draw_PassFlags & 4) == 0) return;
     const std::int32_t b = o[0xB];
     const std::int32_t e = b - 2;
-    SetLong(o + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(o + 0x38)) + (static_cast<U>(b) << 10)));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->z, static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteHead>(o)->z) + (static_cast<U>(b) << 10)));
     o = Cur();
     if (S16(o + 0x3A) > AreaMap_Header[1] + 8) {
-        SetWord(o + 0x3A, 0xFFF8);
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, 0xFFF8);
         o = Cur();
     }
     std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
@@ -1386,21 +1387,21 @@ void DrawDrift(const WorldMapTables& t) {
     std::int32_t r = 15 - static_cast<std::int32_t>(Frame_Counter & 0x1F);
     if (r < 0) r = -r;
     r += static_cast<std::int32_t>(static_cast<U>(side) << 8);
-    const std::int32_t cx = (Long(o + 0x34) >> 9) - 0x3FC0;
-    const std::int32_t cz = (Long(o + 0x38) >> 9) - 0x3FC0;
+    const std::int32_t cx = (rv::As<records::SpriteHead>(o)->x >> 9) - 0x3FC0;
+    const std::int32_t cz = (rv::As<records::SpriteHead>(o)->z >> 9) - 0x3FC0;
     unsigned char* const v = reinterpret_cast<unsigned char*>(Prim_VertexScratch);
-    SetWord(v + 4, 0xFD00);
-    SetWord(v + 0x12, static_cast<unsigned>(cz + r));
-    SetWord(v + 0x1A, static_cast<unsigned>(cz + r));
-    SetWord(v + 0x08, static_cast<unsigned>(cx + r));
-    SetWord(v + 0x18, static_cast<unsigned>(cx + r));
-    SetWord(v + 0x00, static_cast<unsigned>(cx - r));
-    SetWord(v + 0x10, static_cast<unsigned>(cx - r));
-    SetWord(v + 0x02, static_cast<unsigned>(cz - r));
-    SetWord(v + 0x0A, static_cast<unsigned>(cz - r));
-    SetWord(v + 0x0C, 0xFD00);
-    SetWord(v + 0x14, 0xFD00);
-    SetWord(v + 0x1C, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[0].z, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[2].y, static_cast<unsigned>(cz + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[3].y, static_cast<unsigned>(cz + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[1].x, static_cast<unsigned>(cx + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[3].x, static_cast<unsigned>(cx + r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[0].x, static_cast<unsigned>(cx - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[2].x, static_cast<unsigned>(cx - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[0].y, static_cast<unsigned>(cz - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[1].y, static_cast<unsigned>(cz - r));
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[1].z, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[2].z, 0xFD00);
+    rv::Store<unsigned>(rv::As<records::SVector>(v)[3].z, 0xFD00);
     long depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
     using Pers4 = long (__cdecl*)(const short*, const short*, const short*, const short*, float*, float*, float*, float*,
@@ -1427,13 +1428,13 @@ void DrawDrift(const WorldMapTables& t) {
             std::memcpy(q + 0x18, item + 0x18, 12);
             std::memcpy(q + 0x28, item + 0x28, 12);
             std::memcpy(q + 0x38, item + 0x38, 12);
-            SetWord(q + 0x16, 0x78CB);
-            SetWord(q + 0x26, 0x5B);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(q)->clut, 0x78CB);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(q)->tpage, 0x5B);
             q[4] = q[5] = q[6] = 0x28;
             const U m = At(t.drift_size + static_cast<U>(e))[0];
             const U ubase = At(t.drift_u + static_cast<U>(e))[0];
             const U vbase = At(t.drift_v + static_cast<U>(e))[0];
-            const U scroll = (Word(Cur() + 0x38) * m) >> 16;
+            const U scroll = (rv::Current<records::SpriteHead>()->z_frac * m) >> 16;
             const U ui = static_cast<U>(i), uj = static_cast<U>(j);
             q[0x14] = static_cast<unsigned char>(ui * m + ubase);
             q[0x15] = static_cast<unsigned char>(uj * m - scroll + vbase);
