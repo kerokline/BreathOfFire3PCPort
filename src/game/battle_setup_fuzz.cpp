@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_setup_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -342,12 +343,14 @@ void SeedActors() {
     static const unsigned kSmall[] = {0, 1, 2, 3, 4, 5, 6, 0xFF};
     for (unsigned i = 0; i <= 10; ++i) {
         unsigned char* const p = P(i);
-        if (Often()) p[at::kPCount4000] = static_cast<unsigned char>(Pick(kSmall, 8));
-        if (Often()) p[at::kPCount800] = static_cast<unsigned char>(Pick(kSmall, 8));
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        if (Often()) member_rec->count_4000 = static_cast<unsigned char>(Pick(kSmall, 8));
+        if (Often()) member_rec->count_800 = static_cast<unsigned char>(Pick(kSmall, 8));
         if (i > 2) {
             unsigned char* const e = E(i);
-            if (Often()) e[at::kECount4000] = static_cast<unsigned char>(Pick(kSmall, 8));
-            if (Half()) e[at::kECounter] = static_cast<unsigned char>(Pick(kSmall, 8));
+            auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+            if (Often()) enemy_rec->count_4000 = static_cast<unsigned char>(Pick(kSmall, 8));
+            if (Half()) enemy_rec->counter = static_cast<unsigned char>(Pick(kSmall, 8));
             if (Half()) e[at::kPresent] |= 1;
         } else {
             if (Half()) p[at::kPCounter] = static_cast<unsigned char>(Pick(kSmall, 8));
@@ -382,21 +385,22 @@ Args Seed(unsigned k) {
         if (Half()) At(BattlePhases_B89_addr)[0] = 0x12;
         for (unsigned i = 0; i <= 2; ++i) {
             unsigned char* const o = P(i);
+            auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
             static const unsigned kIds[] = {0, 6, 7, 1, 5, 8};
             static const unsigned kMaxHp[] = {0, 1, 9, 10, 11, 19, 20, 29, 30, 999, 0x7FFF, 0xFFF5, 0xFFFF};
-            if (Often()) o[at::kPCharId] = static_cast<unsigned char>(Pick(kIds, 6));
-            if (Half()) o[at::kPWeapon] = 0x52;
+            if (Often()) member_rec->char_id = static_cast<unsigned char>(Pick(kIds, 6));
+            if (Half()) member_rec->weapon = 0x52;
             if (Half()) o[at::kPArmour3] = 0x1F;
             static const unsigned kAcc[] = {0x16, 0x17, 0x15, 0x18};
-            if (Half()) o[at::kPAccessory] = static_cast<unsigned char>(Pick(kAcc, 4));
-            if (Half()) o[at::kPAccessory + 1] = static_cast<unsigned char>(Pick(kAcc, 4));
-            if (Often()) SetWord(o + at::kPMaxHp, Pick(kMaxHp, 13));
+            if (Half()) member_rec->accessory[0] = static_cast<unsigned char>(Pick(kAcc, 4));
+            if (Half()) member_rec->accessory[1] = static_cast<unsigned char>(Pick(kAcc, 4));
+            if (Often()) member_rec->max_hp = Pick(kMaxHp, 13);
             if (Half()) o[at::kPStatus] = static_cast<unsigned char>(Next() & 0xFE);
             if (Half()) o[at::kPFlags] = static_cast<unsigned char>(Half() ? 2 : 0);
             if (Half()) {
                 // HP next to what the weapon's term reaches: (max HP + 10) / 20 and the terms before it
-                const unsigned n = (Word(o + at::kPMaxHp) + 10) / 20;
-                SetWord(o + at::kPHp, n + (Next() % 5) - 2);
+                const unsigned n = (member_rec->max_hp + 10) / 20;
+                member_rec->hp = n + (Next() % 5) - 2;
             } else if (Half()) {
                 SetWord(o + at::kPHp, Next() % 3);
             }
@@ -411,23 +415,25 @@ Args Seed(unsigned k) {
         }
         for (unsigned i = 0; i <= 2; ++i) {
             unsigned char* const o = P(i);
+            auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
             if (Often()) o[at::kPFlags] = static_cast<unsigned char>((Next() & ~0x22u) | (Often() ? 2 : 0) | (Half() ? 0 : 0x20));
             const unsigned cost = ((Long(At(BattleActions_ApCost_addr)) & 0xFF) + 1) / 2;
-            if (Often()) SetWord(o + at::kPAp, cost + (Next() % 3) - 1);
+            if (Often()) member_rec->ap = cost + (Next() % 3) - 1;
         }
         break;
     case kRestoreK:
         for (unsigned i = 0; i <= 2; ++i) {
             unsigned char* const o = P(i);
+            auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
             if (Often()) o[at::kPStatus + 1] = static_cast<unsigned char>(Next() | 8);
-            if (Often()) o[at::kPCount800] = static_cast<unsigned char>(Half() ? 5 : 4 + Next() % 3);
+            if (Often()) member_rec->count_800 = static_cast<unsigned char>(Half() ? 5 : 4 + Next() % 3);
         }
         break;
     case kExpireK:
         for (unsigned i = 0; i <= 10; ++i) {
             unsigned char* const o = Obj(i);
             if (Often()) o[(i <= 2 ? at::kPFlags : at::kEFlags) + 1] = static_cast<unsigned char>(Next() | 0x40);
-            if (Often()) P(i)[at::kPCount4000] = static_cast<unsigned char>(Half() ? 3 : 2 + Next() % 3);
+            if (Often()) reinterpret_cast<records::PartyMember*>(P(i))->count_4000 = static_cast<unsigned char>(Half() ? 3 : 2 + Next() % 3);
             if (i > 2 && Half()) E(i)[at::kECount4000] = static_cast<unsigned char>(Half() ? 3 : Next());
         }
         break;

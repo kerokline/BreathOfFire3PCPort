@@ -30,6 +30,7 @@
 #include "game/battle_turn_steps_callees.h"
 #include "game/psp_code.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -115,6 +116,7 @@ void Disturb() {
     const auto v = static_cast<unsigned char>(h >> 12);
     const unsigned w = h >> 20;
     unsigned char* const m = Member((h >> 8) % 5);
+    auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
     switch ((h >> 4) % 19) {
     case 0: B(BattleActions_Step_addr) = static_cast<unsigned char>(v % 4); break;
     case 1: B(BattleE4_Step2_addr) = static_cast<unsigned char>(v % 15); break;
@@ -125,14 +127,14 @@ void Disturb() {
     case 6: B(BattleActions_EventBattle_addr) = (w & 1) ? 0 : v; break;
     case 7: m[at::kStatus + (w & 1)] = v; break;
     case 8: m[at::kFlags] = v; break;
-    case 9: m[at::kCharId] = (w & 1) ? 4 : v; break;
+    case 9: member_rec->char_id = (w & 1) ? 4 : v; break;
     case 10: B(Music_Track_addr) = (w & 1) ? 0xFF : v; break;
     case 11: B(BattleTurnSteps_MusicFlags_addr) = v; break;
     case 12: SetWord(At(Input_Pressed_addr), (w & 1) ? 0 : v); break;
     case 13: m[at::kFlags2 + 1] = v; break;
     case 14: SetWord(At(BattleActions_Pending_addr), (w & 1) ? 0 : v); break;
     case 15: B(BattlePhases_Initiative_addr) = (w & 1) ? 2 : v; break;
-    case 16: m[0] = v; break;
+    case 16: member_rec->flags = v; break;
     case 17: Sprite_Current = At(0x10000u + (h & 0xFFFF0u)); break;
     default: B(BattlePhases_B7A_addr) = v; break;
     }
@@ -449,7 +451,7 @@ void SetPtr(std::uint32_t at, const void* p) { SetLong(At(at), static_cast<std::
 // runs to it), each member's CharacterRecord index, the hooks.
 void Fix() {
     B(at::kMembers) = static_cast<unsigned char>(Next() % 5);
-    for (unsigned i = 0; i < 5; ++i) Member(i)[at::kRecord] = static_cast<unsigned char>(Next() % 10);
+    for (unsigned i = 0; i < 5; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->char_index = static_cast<unsigned char>(Next() % 10);
     SetPtr(BattleHook_End_addr, reinterpret_cast<const void*>(&StubHookEnd));
     SetPtr(BattleHook_Exit_addr, reinterpret_cast<const void*>(&StubHookExit));
     SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHookEvent));
@@ -497,9 +499,10 @@ void Seed(unsigned k) {
         B(BossSb_Countdown_addr) = static_cast<unsigned char>(Half() ? Next() % (count + 1) : Pick(kCursorAt, 7));
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
+            auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
             if (Often()) m[at::kFlags] = static_cast<unsigned char>((m[at::kFlags] & ~3u) | (Half() ? 0 : Next() % 4));
-            if (Half()) m[at::kCharId] = 4;
-            else if (Half()) m[at::kCharId] = static_cast<unsigned char>(Next() % 9);
+            if (Half()) member_rec->char_id = 4;
+            else if (Half()) member_rec->char_id = static_cast<unsigned char>(Next() % 9);
             if (Half()) m[at::kFlags2 + 1] &= 0xDF;
         }
         break;
@@ -519,7 +522,7 @@ void Seed(unsigned k) {
         break;
     }
     case kWinK:
-        for (unsigned i = 0; i < 3; ++i) Member(i)[0] = static_cast<unsigned char>(Member(i)[0] ^ (Half() ? 1 : 0));
+        for (unsigned i = 0; i < 3; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->flags = static_cast<unsigned char>(reinterpret_cast<records::PartyMember*>(Member(i))->flags ^ (Half() ? 1 : 0));
         if (Half()) B(BattleTurnSteps_MusicFlags_addr) ^= 0x40;
         break;
     case kInputK:
@@ -532,8 +535,9 @@ void Seed(unsigned k) {
     case kFinishK:
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
+            auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
             if (Half()) m[at::kStatus + 1] ^= 0x40;
-            unsigned char* const r = At(at::kRecords + m[at::kRecord] * at::kRecordStride);
+            unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
             static const unsigned kCounts[] = {0, 3, 4, 4, 5, 5, 6, 0xFF};
             if (Often()) r[0x1E] = static_cast<unsigned char>(Pick(kCounts, 8));
         }

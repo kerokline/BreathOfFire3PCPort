@@ -31,6 +31,7 @@
 #include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -194,10 +195,11 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
         break;
     case kWindow: {
         unsigned char* const w = At(at::kWindows + (a & 0xFF) * at::kWindowStride);
-        w[0] = 1;
-        w[1] = static_cast<unsigned char>(b);
-        w[2] = static_cast<unsigned char>(h >> 8);
-        w[3] = static_cast<unsigned char>(h >> 16);
+        auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+        window_rec->in_use = 1;
+        window_rec->handler = static_cast<unsigned char>(b);
+        window_rec->kind = static_cast<unsigned char>(h >> 8);
+        window_rec->state = static_cast<unsigned char>(h >> 16);
         w[8] = static_cast<unsigned char>(h >> 20);
         break;
     }
@@ -507,21 +509,23 @@ void SeedRound(unsigned regions) {
     g_mine.field[0x92] = Often() ? Pick(kKinds) : static_cast<unsigned char>(Next());
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const p = At(ObjTrio_addr + i * at::kPartyStride);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
         p[0xB7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
         p[0x124] = TargetValue();
         p[0x125] = static_cast<unsigned char>(Often() ? Next() % 7 : Next());
         SetWord(p + 0x126, ActionId());
-        std::uint32_t status = static_cast<std::uint32_t>(Long(p + 0x134)) & ~0x14001u;
+        std::uint32_t status = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~0x14001u;
         if (Rarely()) status |= 1;
         if (Rarely()) status |= Half() ? 0x4000 : 0x10000;
-        SetLong(p + 0x134, static_cast<std::int32_t>(status));
+        member_rec->flags_134 = static_cast<std::int32_t>(status);
         if (Half()) p[0x90] &= 0xDF;
     }
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const e = At(at::kEnemies + k * at::kEnemyStride);
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
         SeedSprite(e);
-        e[0x8C] = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
+        enemy_rec->kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
         e[0xC7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
     }
@@ -548,9 +552,9 @@ void SeedRound(unsigned regions) {
 void SeedEightKinds() {
     At(BattleActorCopies_EnemyCount_addr)[0] = 8;
     for (unsigned k = 0; k < 8; ++k) {
-        unsigned char* const e = At(at::kEnemies + k * at::kEnemyStride);
-        e[0] |= 1;
-        e[0x8C] = static_cast<unsigned char>(0x10 + k);
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(At(at::kEnemies + k * at::kEnemyStride));
+        enemy_rec->flags |= 1;
+        enemy_rec->kind = static_cast<unsigned char>(0x10 + k);
     }
 }
 
@@ -597,8 +601,9 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
     }
     if (f == fAutoTarget && Often()) {   // the plain path to modes 4 and 5
         unsigned char* const p = At(ObjTrio_addr + (a[0] & 0xFF) * at::kPartyStride);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
         p[0x90] &= 0xDF;
-        SetLong(p + 0x134, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(p + 0x134)) & ~0x14001u));
+        member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~0x14001u);
         At(at::kBattleFlags)[0] &= 0xEF;
         p[0x124] = static_cast<unsigned char>(Next() % 3);
         p[0x125] = static_cast<unsigned char>(4 + Next() % 2);
@@ -613,7 +618,8 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
         }
     if (f == fAnyF0 && Half()) {   // one present member with bit 7 alone
         unsigned char* const p = At(ObjTrio_addr + (Next() % 3) * at::kPartyStride);
-        p[0] |= 1;
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        member_rec->flags |= 1;
         p[0x130] = 0x80;
     }
 }
