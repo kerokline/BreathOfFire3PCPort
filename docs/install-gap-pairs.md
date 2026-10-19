@@ -8,6 +8,13 @@ regenerates. Built; nothing played. Addresses, symbol names and counts only
 (CLAUDE.md rule 1). The scratch scripts and their outputs stay in the harness
 root `C:\Users\kerok\g_fp`.
 
+**Second pass** (2026-10-19, branch `pairs/unpaired` off `19180e63`, section 8):
+the unpaired rows' readers, seeded by hand from three engine tables (the boss
+kinds, the area descriptors, the scenario hooks). 385 more `psx` pairs and 125
+`psx_overlay` fields at the `hypothesis` tier; four more `immref` rows on
+psx-jp, measured in scratch. Recipes **not** regenerated (the coordinator's).
+Nothing built or played. Scratch in `C:\Users\kerok\g_pairs`.
+
 The problem ([`exe-immediate-places.md`](exe-immediate-places.md) 0 and 6). The
 `immref` kind places a P3 row through the PSX twin of a function that reads it.
 OT's code-pointer pairs reached the readers of only 11 of 66 P3 rows. They
@@ -368,6 +375,180 @@ On psx-jp this takes the row count from 24 to 29 and the bytes from 92 to 114.
   status: `unread`, by an `exe_own.py` `REGIONS` row (PT's file). No ledger
   draft: nothing an install gets differs.
 
+## 8. The unpaired rows, second pass (2026-10-19)
+
+Section 5 left two groups with no twinned reader: the three boss rows, and the
+OF-A area and scenario rows. This pass seeds `exe_imm.py pair` from three engine
+tables, by a scratch script (`C:\Users\kerok\g_pairs\run.py`). The script
+builds the `Pairing`, adds the seeds, runs the seven methods unchanged, and
+writes through `pair_write`. `tools/` is unchanged. All counts are psx-jp's.
+
+### 8.1 Results
+
+| | before | after |
+|---|---:|---:|
+| `symbols.toml` functions with `psx` | 5,206 | 5,591 |
+| with `psx_overlay` | 4,471 | 4,980 |
+| `psx_status = "hypothesis"` | 3,678 | 4,063 |
+| psx-jp `exe-gaps.tsv` rows with a twinned reader (of 251) | 87 | 93 |
+| `find_imm` regions with a twinned reader (of 265) | 107 | 113 |
+| `find_imm` `immref` rows placed / bytes | 24 / 103 | 28 / 127 |
+
+The placement counts come from a scratch run of `exe_tables.recipe_imm` over
+psx-jp alone (`g_pairs\place.py`), with the committed places and pointers.
+
+The four new rows:
+
+| Row | Range | Twin |
+|---|---|---|
+| `BossDolphin_Sounds` | `0x64D484..0x64D48C` | `BOSS/BOSS029.EMI#16` `0x800C1848` (`BossDolphin_Enter`) |
+| `BossGaist_Anims+0x2` | `0x64D78E..0x64D798` | `BOSS/BOSS035.EMI#16` `0x800C1860` (`BossGaist_Enter`) |
+| `BossTorch_Sounds` | `0x64D7A0..0x64D7A8` | `BOSS/BOSS035.EMI#16` `0x800C1994` (`BossTorch_Enter`) |
+| `Scena04_Quake` + `Scena04_TremorSteps` | `0x660FFC..0x661004` | `SCENARIO/SCENA04.EMI#0` `0x801F8680` (`Scena04_Scene1`) |
+
+That settles 5 of the 17 listed rows. One more, `Area135_EffectKinds`, gains a
+twinned reader but needs section 6's change to place. The Western and PSP builds
+reach these twins through `build_twins` when the coordinator regenerates; those
+builds were not measured here.
+
+### 8.2 The boss kinds, by hand
+
+- **The table.** `BattleEnemy_States` (`0x64B084`, 64 entries) has its twin at
+  `BATTLE/BATTLE.EMI#3` `0x801EB208`. Entry 0 there is `EnemyOp_StepDispatch`'s
+  `psx` (`0x801E3140`), and entry 1 is null on both sides. The three
+  entries symbols.toml already held (kinds 23, 24 and 27, `BOSS018.EMI#16`)
+  equal the table's words. One function addresses the table:
+  `BATTLE.EMI#3` `0x801E20F4`, `BattleEnemy_RunAll`'s twin. Its gate fails (no
+  call to compare), so it is not written. The same 64 words are in
+  `BATTLE2.EMI#3` and in 40 `BOSS*.EMI` files.
+- **The file.** A boss kind's entry is an address at `0x800C1xxx` that 18 to 40
+  boss files hold, so the address alone does not name a file. The file comes from
+  round eleven's boss-id evidence (`Boss29_Setup`, `Boss35_Setup`, by
+  `tools/boss_rows.py --disc`). That evidence is independent of these rows'
+  bytes. The bytes then agree with it:
+  - **kind 35, Dolphin, `BOSS029`.** `0x800C1804`. Of the 40 candidate files,
+    BOSS029 is the only one whose state 0 addresses bytes equal to both
+    `BossDolphin_Anims` (not a gap row) and `_Sounds`.
+  - **kind 42, Gaist, `BOSS035`.** `0x800C181C`. Only BOSS035 and BOSS047 (one
+    image, by section md5) hold both `BossGaist_Anims` and `_Sounds`.
+  - **kind 43, Torch, `BOSS035`.** `0x800C1950`. Only BOSS035, BOSS047 and
+    BOSS038 hold a dispatcher there with a table, and of those only BOSS035 and
+    BOSS047 hold `BossTorch_Sounds`.
+- **State 0.** Each `*_Enter` is paired as state 0 of the twin dispatcher's
+  table. The gate refuses it: it makes no call, and its constants are object
+  offsets. The PSX `*_Enter`'s lui pairs are what `find_imm` reads.
+- **`tables` and `order-align` then.** `tables` reads all three twin tables:
+  `0x800C19BC` in BOSS029, and `0x800C1D2C` / `0x800C1D68` in BOSS035. It adds
+  nothing for these kinds. State 0 fails the gate. State 1 is
+  `Port_DroppedCall` on the PC. States 2..11 are the resident `EnemyOp_*`
+  functions in `BATTLE.EMI#3`, already held or refused. `order-align` does run
+  inside BOSS035. It pairs `BossGaist_Hook` (`0x43E5C0` with `0x800C18C4`,
+  which is also the hook word the twin `BossGaist_Enter` stores) and
+  `BossGaist_HookClearBit1` (`0x43E5D0` with `0x800C190C`). Dolphin has no
+  paired neighbour after it in BOSS029, so `order-align` adds nothing there.
+- **The other kinds** were not fed. `choose()` alone, the `kinds` method's file
+  choice, picks a file for 22 of the 61 non-null kinds, and the three that
+  were already held agree. It sends kinds 37, 54 and 56 to one address in BOSS014 among
+  ties, so a `bosskinds` method needs the boss-id evidence as its file
+  choice, not `choose()`.
+
+### 8.3 The area descriptors and the scenario tables
+
+- **Areas** (`Area_Descriptors` `0x667590` against the boot table
+  `0x801802EC`). Area *k*'s descriptor is in `AREA`*kkk*`.EMI`, in the
+  section that holds it (`#13`, or `#14` in some files). All 200 areas agree on
+  handler count and on whether there is an init. That gives 741 slots, and 4
+  slots fall outside every section.
+- **Precision of the slots against symbols.toml** (before the filter below):
+  - 390 agree;
+  - 39 are a copy (the same body in another area's file: the PC keeps one
+    function where the PSX has one per area);
+  - 15 are the same address in another file;
+  - 7 differ.
+
+  The filter has two rules:
+  - an area is dropped whole where one of its slots contradicts a held pair:
+    areas 34, 39, 41, 60, 75, 99 and 108, 59 slots;
+  - a PC function is dropped where its slots name different bodies: 5 slots.
+
+  After the filter, 3 differences remain. Each is two identical bodies in the
+  one file (AREA098 handler 5, AREA134 handler 13, AREA148 handler 5).
+- **Scenario** (`Scenario_Hooks` / `_CallATables` / `_CallBTables`
+  against `GAME.EMI#0` `0x801C944C` / `0x801CDC4C` / `0x801CDC9C`). For each
+  chapter, the table's slots go to that chapter's `SCENAnn.EMI#0`. That gives
+  247 slots. 12 hit a held pair and all 12 agree. 66 are copies of a shared
+  PC function.
+- **Held-out run.** The seeds were the boot executable's evidence tier (250)
+  plus these table seeds. The run found 3,911 new pairs, and 3,308 of them hit a
+  held `psx`:
+  - 3,262 agree;
+  - 23 are a copy;
+  - 19 are the same address in another file;
+  - **4 differ (0.12%)**.
+
+  The four are one area slot (AREA148, an identical body), two cross-file
+  copies from `order-align`, and one `order` pair in `GAME.EMI`. This compares
+  with section 2.2's 268 to 1.
+- **Precision on the bytes.** A pair agrees when an 8-byte `.data` operand of
+  the PC function (two non-zero bytes, pointer words wild) appears at an address
+  one of the twin's lui pairs forms. Results:
+  - the 336 table seeds that were new to this run (6 boss, 167 area, 163
+    scenario): 29 testable, 28 agree;
+  - all the pairs the seeds account for: about 38 testable, 34 agree;
+  - for reference, the 3,678 `hypothesis` pairs already held: 311 testable,
+    261 agree (84%).
+
+  Most functions have no testable operand.
+- **Three of a plain rerun's pairs move.** On today's symbols.toml,
+  `exe_imm.py pair` with no seeds derives 99 new pairs, from merges since FP.
+  Three of them conflict with a descriptor slot: `0x42C200` (AREA192 init),
+  `0x402D80` (AREA019 handler 1) and `0x41D810` (AREA008 handler 6). For the
+  first two, `order` or `order-align` chose a neighbour of the address the
+  engine's own pointer gives. The descriptor slot wins.
+
+### 8.4 What was written
+
+`pair_write` wrote only what the seeds account for: the 514 pairs new against a
+run with no seeds, and the three above. It skipped the 99 other pairs of a
+plain rerun and its 25 `located` overlays, which a plain `pair --write` gives.
+Two fields went in:
+
+- `psx` + `psx_overlay` + `psx_status = "hypothesis"` + `psx_evidence` on
+  385 functions that had no `psx`;
+- `psx_overlay` alone on 125 functions whose existing `psx` (with no overlay)
+  a seed or a derivation confirms (110 area, 15 scenario). `sym_twins` reads
+  these in the right file now.
+
+These were not written: 7 functions whose held `psx` names another
+area's copy, all small shared camera helpers.
+
+The seeds' `psx_evidence` reads "table seed 2026-10-19 (docs/install-gap-pairs.md
+8; a scratch seeding of exe_imm.py pair, not one of its methods)". The derived
+pairs' evidence ends "from section 8's table seeds".
+
+Checks:
+- `tomllib` loads 10,100 functions.
+- `gen_symbols.py` gives 10,088 ours, unchanged.
+- `exe_imm.py selftest` reports 0 problems.
+
+The 385 written, by method: the seeds (6 boss, 46 area, 147 scenario), then
+tables 120, order-align 44, calls 13, order 5 and tablesearch 4.
+
+### 8.5 The rows left
+
+| Row | Why |
+|---|---|
+| `Area96_Handlers+0x184`, `Area154_ChoicePairs+0x18C8` / `+0x19B8`, `Area172_EffectStates+0xFF0`, `Area196_Keys1+0x658` | No reader by `text_readers` (section 5). No pairing reaches a row nothing reads. |
+| `Area115_Directions` | Reader `Area115_Record8Place` (`0x419680`). Area 115's descriptor has no handlers and no init on either side, and nothing in AREA115 is paired. |
+| `Area121_BandHeights` | Reader `Area121_DrawTopBand` (`0x41C790`). Its PC neighbours' pairs are another file's copy (`Area121_RingRise` with AREA104), so `order` has no bound inside AREA121. |
+| `Area135_EffectKinds` | **Twinned** (`Area135_SpawnKind1AtLeader`, handler 19, `AREA135.EMI#14` `0x801F50B0`). Its 9 leading bytes equal the disc's. Then the PC holds 4 zero bytes where the PSX's next data begins, so it waits on section 6's `find_imm` change, as `Area141_CellEntries` does. |
+| `Scena02_EffectX` | Readers `Scena02_PlaceEffect70` / `68` are still unpaired after the run. Why the order walks miss them was not measured. |
+| `Scena03_Bob4`, `Scena03_Bob2` | Readers `Scena03_BobParty4` / `2`. They lie between two paired SCENA03 functions (`0x801FC1D0`, `0x801FC46C`) with exactly two PSX functions between (`0x801FC3B4`, `0x801FC410`), whose lui pairs address two words 4 apart, as the PC's operands `0x660F94` / `0x660F98` are. The gate refuses them (no call; the constants are offsets). A position-only rule would place them. Not written, because section 1 found position alone right only about half the time for table slots. |
+| `LinkedObjectD_Amounts` | Reader `LinkedObjectD_ShowAmount` (`0x537CE0`). No function in the `LinkedObject*` group is paired, and which overlay holds their twins is not established. |
+
+`Area91_RingTurns`, listed in section 5, was already out of `exe-gaps.tsv`
+(PT 6.7). The area seeds twin its reader `0x412590` too.
+
 ## For the other files
 
 - **`install-gap-census.md` section 8** (the coordinator's):
@@ -378,3 +559,12 @@ On psx-jp this takes the row count from 24 to 29 and the bytes from 92 to 114.
 - **PT:** section 6 (`find_imm`), section 7 (`REGIONS`), and the
   `Area104_PlateAnims` exclusion.
 - **The owner or the coordinator:** the `psx` corrections in 2.3.
+- **Section 8, for the coordinator:**
+  - regenerate the recipes. Expect the four `immref` rows of 8.1 on psx-jp;
+  - census 8.5: the boss rows and `Scena04_Quake` / `_TremorSteps` move
+    to FIXED once they place. `Area135_EffectKinds` moves to "twinned,
+    not placed";
+  - a plain `exe_imm.py pair --write` still has 99 pairs and 25 overlays to
+    give (8.4).
+- **PT:** `Area135_EffectKinds` joins section 6's list of rows the
+  zero-tail change would place (not measured with the change applied).
