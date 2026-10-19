@@ -5,6 +5,8 @@
 merged; IDEAS.md I43 step 2). 77 watched runs - the attract and the ten
 state-hash routes on each of the seven one-source installs - plus 15 targeted
 runs. Nothing fixed; nothing captured; no recipe regenerated.
+**Re-run 2026-10-18 evening** on the merged round (`e5c5cad7`): section 9, with
+the verdict for I43 step 4 in 9.7.
 
 The census ([`install-gap-census.md`](install-gap-census.md)) gave every row of
 `recipes/exe-gaps.tsv` a status by reading its readers. This document answers the
@@ -63,7 +65,7 @@ counts only (CLAUDE.md rule 1): the watch never reads a value.
    routes never reach (one area-named item's area is reached:
    `Area141_CellEntries+0x7C`, a chapter-14 event's operand, not read in area
    141's field).
-6. **I43 step 4's condition is not met.** "No range read in play still zero" is
+6. **I43 step 4's condition is not met** (on `06a209bd`; for the merged round see section 9.7). "No range read in play still zero" is
    false: the eight live rows above are read on the installs listed, the two
    OWNER CALL rows on every Western one (the empty-slot row on all seven).
    `BOF3X_EXEIMAGE_STRICT=1` as the default would refuse every one-source
@@ -566,6 +568,239 @@ binary) ran until it too was taken. A run whose launcher was taken mid-run still
 finished. The handler must not read a word under its own debug register (it
 traps inside the handler and the process dies without a `CRASH` line); hence the
 read / write register pairs.
+
+## 9. The re-run on the merged round (2026-10-18 evening)
+
+**Status:** MEASURED (the install-gap round's live end batch, agent RW2,
+branch `install-gap/rw2` off `e5c5cad7`, the tip of `install-gap/round` with
+both stages, the end docs and origin/main merged; the recipes there are the
+coordinator's regeneration after FP, `34804ec0`). The question
+(`install-gap-round.md` 5 item 6, I43 step 4): with the round's placements
+in, is any range play reads still zero?
+
+### 9.1 What ran
+
+- **Root `C:\Users\kerok\g_rw2`**, new; nothing reused from `g_rw` but its
+  scripts, copied (`scripts\batch.sh`, `pin.sh`, `doc_tables.py`, `areas.py`,
+  `pinned.py`, `sums.py`) and pointed at the new root. Caches and installs
+  rebuilt by this branch's tools: `abc_run.py prepare --installs
+  <root>\installs.toml --set rw` (RW's installs file, the watch folder
+  changed): the seven disc builds, each `install --base` with its own
+  language, 1,883 s.
+- **The same batch as section 2**: the attract (11,000 frames) and the ten
+  state-hash routes on each of the seven installs, 77 runs, one game at a
+  time, `BOF3X_GAPWATCH_CLASSES=gap,unread,language`, `BOF3X_DATLOG=1`, the
+  harness's `BOF3X_OPT=none BOF3X_LAYERING=0`, `--every 100000`. 381,900
+  latches, 35.1 ms a latch, 80..83 guard faults a latch (93..96 on
+  `06a209bd`: the placed rows took pages out of the watch). The image now
+  has 276 watched ranges on psx-us (324 before), 247 on psp-jp (284).
+- **The instrument on this build**: `BOF3X_SHADOW=gapwatch` from an
+  ini-less launcher copy passed (`76 faults, 74 steps`, `inject: 10087
+  ours`, `self-test only: done`).
+- **Areas reached**: the same 19 as section 2. 74 of the 77 runs follow
+  psx-us's area sequence (RW: 73). psx-jp `masterAndManillo` now does. Still
+  apart: psp-jp `combat` and `dragonTransform`, and psx-fr
+  `worldMapAndAreaTransition` (areas 7, 33, 7, 14). The psp-jp ones are 9.4,
+  not text timing.
+- **Defender** took the first launcher copy as the batch started (17:37 to
+  17:38, `Behavior:Win32/DefenseEvasion.A!ml` on `g_rw2\L\bof3x-launcher.exe`,
+  process `python.exe`; then on `lb1\` and `L\bof3x-launcher-dev.exe` when
+  `sha256sum` and `head` read them). A second build directory (`lb2`), the
+  taken `L` set aside as `L_q1` and a fresh `prepare` into a new `L` ran
+  the whole batch and every pin. Nothing quarantined after 17:41 on this
+  root. Every run below is confirmed from its own `_run.txt` (`recipe done`,
+  `end: done`) and its watch file, never from an exit code.
+
+### 9.2 Ranges read before a write
+
+| Range | Symbol | class | Read before a write on | First read (frame, area) | Verdict |
+|---|---|---|---|---|---|
+| `0x65385E..0x65385F` | `Title_Sprites+0xE` | gap (game-value) | psx-us, psx-eu-en, psx-fr, psx-de: every route, at the title (`Title_Sprite` 0x462560) | cutsceneAndNue 7, area 0 (psx-eu-en) | **OWNER CALL** (D266), as expected |
+| `0x669CCC..0x669CD4` | `Encounter_SlotChance+0x1C` | gap (language-zero) | all 7: every route with the load screen (`Text_DrawString` through `Crt_sprintf`) | cutsceneAndNue 136, area 0 (psp-eu) | **OWNER CALL** (the empty slot), as expected |
+| `0x66A228..0x66A2FC` | `Menu_Verbs` | language | all 7 | masterAndManillo 721, area 0x1E (psp-jp) | Western: written (CW, 9.3). JP: D280 / D279, and 9.4 |
+| `0x66A31C..0x66A32C` | `Menu_Verbs+0xF4` | language | all 7 | worldMapAndAreaTransition 639, area 7 (psp-eu) | Western: written (9.3). JP: D280 |
+| `0x66A0E8..0x66A164` | `CommuName_RecordNames+0x144` | language | all 7 | dragonTransform 976, area 0x8D (psp-eu) | Western: written (9.3). JP: D280 |
+| `0x669CD4..0x669CE8` | `Encounter_SlotChance+0x24` | language | psx-jp, psp-jp | masterAndManillo 2299, area 0x1E (psp-jp) | D280 |
+| `0x669D28..0x669D60` | `Battle_CommandLabels` | language | psx-jp, psp-jp | combat 499, area 0x1D (psx-jp) | D280 |
+| `0x669D7C..0x669DE0` | `Battle_CommandLabelPointers+0x1C` | language | psx-jp, psp-jp | whelpBoss 700, area 2 (psp-jp) | D280 |
+| `0x669FC0..0x66A088` | `CommuName_RecordNames+0x1C` | language | psx-jp, psp-jp | masterAndManillo 715, area 0x1E (psp-jp) | D279 |
+| `0x66A170..0x66A228` | `CommuName_RecordNames+0x1CC` | language | psx-jp | combat 514, area 0x1D (psx-jp) | D280 |
+
+The readers are section 3's, unchanged. Per build: psx-jp, psp-jp and psp-eu
+read one `gap` range while zero (the empty slot); psx-us, psx-eu-en, psx-fr
+and psx-de two (with the title mark). **No other `gap` range is read before
+a write on any run.**
+
+**RW's ten rows, then and now:**
+
+| RW's row (section 0) | On `e5c5cad7` | In this batch |
+|---|---|---|
+| `ChlorineCloud_Offsets` `0x65A608` | placed, all 7 (CW's twin, PT) | no watched range: not a gap on any build |
+| `EventScript_OpLengths+0x10`, the light pair `0x663B1C` | placed, PSPs (PB) | not a gap |
+| `Sprite_ScreenMargins` `0x663B28` | placed, PSPs (PB's margins rule) | not a gap |
+| `Char_WhelpSlot+0x3` `0x669739` | placed, PSPs (CW's table twin, PT) | not a gap |
+| `Fish_Kinds+0x72A` `0x66ADBA` | placed, JP (TW) | not a gap |
+| `EffectKind0F_PanelTitles` `0x653EA0` | `language` on FR / DE (LA's D286 layer) | not read before a write; the layer logs `DIV-0069: 4 of 4 fishing headings (D286)` at load. Its page `0x653000` parked on 1,532 of 3,840 latches of psx-fr caughFish, so a read there is sampled (9.3) |
+| `Equip_SlotIcons` labels `0x663660` | placed, DE (`BATE.EMI#0`, PT) | not a gap |
+| `ConfigMenu_Steps+0xC` = `Char_TraitLists` list 1 `0x667518` | placed, PSPs (PT, the pointer-table route) | not a gap: the pin is refused, `BOF3X_GAPWATCH_PIN=0x667518: no watched range holds that address`, on psp-eu and psp-jp, field_menu and menu_screens |
+| `Title_Sprites+0xE` | OWNER CALL | read while zero (above) |
+| `Encounter_SlotChance+0x1C` | OWNER CALL | read while zero (above) |
+
+### 9.3 CW's finding, and how this section treats the `language` rows
+
+CW ([`install-gap-live-rows.md`](install-gap-live-rows.md) 3) showed that the
+watch's "read before a write" on the three Western `language` rows is a
+blind spot: the debug registers hold only `gap` words, page `0x66A000` is
+parked on most latches, and the layer's `PauseText` patches re-protect it.
+This batch shows the same shape, so the same reading is taken:
+
+- **The watch saw no write on any of the three rows on any build**, in every
+  run that read them before a write. Every such run had the row's page parked
+  (`scripts\lang_rows.py`: for `Menu_Verbs+0xF4`, 4 or 5 runs a build, all
+  parked; the same for the other two).
+- **Each Western install's log has the layer's writes** before the reads:
+  `DIV-0018: 22 menu verbs` and 23 `DIV-0064` group lines on psx-us, psx-eu-en,
+  psx-fr and psx-de, 19 on psp-eu, four `PauseText` lines on each.
+- So on the five Western installs these three rows are counted **written, not
+  zero**, and nothing in 9.2's Western cells is a defect. This is CW's
+  inference carried over, not a new measurement: the watch still cannot see
+  those writes.
+- On psx-jp and psp-jp no layer writes them (no `DIV-0018` line; psx-jp one
+  `DIV-0064` line, psp-jp none), so there the reads really are of zero. They
+  are D280's and D279's (CW 3.2, the owner's call), with one new reader (9.4).
+
+The same blind spot reaches `language` reads as well as writes:
+`EffectKind0F_PanelTitles` (now `language`) shows no read and no write on FR /
+DE, against RW's reads on the same routes. Its page was parked. "Not read" for
+a `language` row on a parked page means only that it was not seen.
+
+### 9.4 New: the item lists stop psp-jp (ShoulderGlyphs)
+
+Five of psp-jp's eleven routes end in a `FATAL` at the moment an item, skill or
+shop list opens:
+
+```
+FATAL: ShoulderGlyphs: 0x66A2FC[4] is not a one-byte glyph string
+```
+
+These are combat (recipe frame 515, a battle), shop (935, area 7),
+cutsceneAndNue (4,443, area 23), dragonTransform (849, a battle) and
+menu_screens (1,159, area 141). The other six end `done`. The same five fail
+with the watch off, so the watch is not the cause (`installs_off.toml`,
+`control.log`: combat and menu_screens, each the same `FATAL`).
+
+- **The reader.** `GlyphCode` (`src/game/shoulder_glyphs.cpp`), DIV-0138's
+  plan for the lists' L1 / R1 corner, from `Menu_DrawPiece`. On a PSP base
+  the page has no L1 / R1 art, so it takes the Config panel's glyph. Under a
+  Latin layer that is DIV-0051's icon. Otherwise it is the port's one-byte
+  stand-in string through `0x66A2FC[k]`, and those strings
+  (`0x66A2E0..`, the tail of `Menu_Verbs`) are zero under `ja-JP`. The check
+  then refuses the empty string, as rule 4 asks.
+- **Where.** Only psp-jp: a PSP base under `ja-JP`. psx-jp has the page's
+  art (`ShoulderGlyphs ... on (a PC or PSX base: L1 / R1 art)`), and psp-eu has
+  a Latin layer.
+- **Not new in the tree, new in the record.** RW's own psp-jp runs on
+  `06a209bd` ended the same way. All five `_run.txt` files in
+  `g_rw\runs\rw_psp-jp_*` say `end: FATAL` with this line, which is why
+  section 2's psp-jp latches are short (480, 840, 900, 1,140, 4,440). Section
+  2 put two of them down to text timing. They were this `FATAL`.
+- **What it means.** A PSP-JP disc-only install stops at the first item list:
+  in battle, in a shop, in the menu. It is the same zero as D280 (the `ja-JP`
+  layer carries no kind 7..12 text) reaching a reader that, unlike the
+  original's, refuses it. The fix is the owner's call through D280: a `ja-JP`
+  layer from the Japan disc, or a stand-in under `ja-JP` drawn by rule. Either
+  needs a ledger line on DIV-0138. Not fixed here, and not numbered. It is
+  described for the coordinator: **ShoulderGlyphs FATAL at every list's L1 /
+  R1 corner on PSP-JP disc-only**.
+
+STRICT does not see this one: `Menu_Verbs` is `language`, not `gap`, and
+STRICT refuses only `gap` ranges. It is listed in 9.6 anyway, because a
+default meant to fail loudly instead of drawing wrong is met here by a loud
+failure that is not STRICT's.
+
+### 9.5 The pinned runs
+
+Section 4.2's fifteen again, as `scripts\pin.sh`, plus `Encounter_SlotChance+0x38`
+on the two Japanese installs, where it is still a `gap`:
+
+| Row | Install, route | Latches pinned / run | Result |
+|---|---|---:|---|
+| `ConfigMenu_Steps+0xC` / `Char_TraitLists` list 1 `0x667518` (the decisive pin of 4.2) | psp-eu, psp-jp: field_menu, menu_screens | - | **no longer a watched range**: the pin is refused at start on all four (placed by PT) |
+| `MasterWin_Requirements+0x44` `0x66B468` (now `unread`) | psx-us, psx-eu-en, psx-fr, psx-de: masterAndManillo | 5,520 / 5,520 each | not read, not written |
+| `Music_LoadedTrack+0x1E30` `0x6671EC` (now `unread`) | psx-us: attract; whelpBoss | 10,980; 13,140 | not read |
+| `GameMode3_Steps+0xC` `0x656A80` | psx-us: whelpBoss | 13,140 / 13,140 | not read |
+| `CommuName_RecordNames+0xF0` `0x66A094` | psx-us: caughFish | 3,840 / 3,840 | not read |
+| `Equip_SlotIcons+0x10` `0x663670` (now `language` on FR) | psx-fr: menu_screens | 1,740 / 1,740 | written 6 times (the debug register's write-only half), never read before it: LA's layer reaches it now |
+| `MenuList_GeneWinSteps+0x27` / `+0x25` (now `language`) | psx-de / psx-fr: dragonTransform | 4,320 / 4,320 each | written (5 / 4), not read before it |
+| `Encounter_SlotChance+0x38` `0x669CE8` (a `gap` on JP) | psx-jp: cutsceneAndNue; psp-jp: cutsceneAndNue | 7,380; 4,440 (psp-jp ends at 9.4's `FATAL`) | not read |
+| `Encounter_SlotChance+0x38` on psx-us | cutsceneAndNue | - | refused: on the Western builds the address is inside `language` `0x669CD4..0x669D20`, more than two words |
+| `EffectKind18Sub64_States+0x1C` `0x65F578` | psx-us: worldMapAndAreaTransition | - | refused: no longer a watched range (placed) |
+
+`Music_LoadedTrack+0x1E30` on whelpBoss: its first pinned run finished, but
+its file was overwritten by the next pin on the same route (one folder for
+every pin, files named by build and route). It was run again into its own
+folder, `gw_pin_m`: 13,140 latches of 13,140 pinned, not read, not written.
+
+### 9.6 The rows not read
+
+88 `gap` rows were never read before a write (RW: 137). 40 had pages the watch
+saw whole in every run, so "not read on these routes" is exact for them. 48
+had a parked page in some run, so they were sampled (4.1's caveat stands: the
+debug registers took them in turn, two words a latch). Of the area-named rows,
+only `Area141_CellEntries+0x7C`'s area is one the routes reach, as before. The
+rest belong to areas, effects, bosses and magic these eleven routes do not
+play.
+
+### 9.7 Verdict for I43 step 4 (`BOF3X_EXEIMAGE_STRICT=1` as a disc-only default)
+
+**The read condition is met, apart from the owner's two rows.** On all seven
+one-source installs, over the attract, the ten routes and the pins, the only
+`gap` ranges play reads while zero are `Title_Sprites+0xE` (Western PSX) and
+`Encounter_SlotChance+0x1C` (all seven). Both are the owner's calls. All eight
+of RW's live rows are gone from the image's gaps, and no new `gap` row is read.
+
+**STRICT still cannot be the default today.** Three things block it, in this
+order:
+
+1. **STRICT refuses every `gap` range, read or not.** `exe_image.cpp` calls
+   `Fatal` at the first range with `how == "gap"`, and every build still has
+   52 (psp-eu) to 78 (psx-de) of them (`recipes/exe-gaps.tsv`). The
+   coordinator's note puts PSP-only's first stop at `Area65_DriftUV`
+   `0x604958`, a port-relaid row the owner holds. Read in play or not, strict
+   as the default refuses all seven installs at start. The step means "a
+   *new* gap fails loudly", and that needs the switch to tell the measured,
+   accounted rows (this list, the census's statuses, the owner's rows) from
+   a new one. For example, it could refuse only a range missing from a
+   reviewed list kept beside `exe-gaps.tsv`. That is a code and ledger
+   change (DIV-0101), and it is not made here.
+2. **The owner's two rows.** `Title_Sprites+0xE` (D266) and
+   `Encounter_SlotChance+0x1C` (the empty slot, the staged localisation PR)
+   are read on every run that reaches the title or a load screen. Under a
+   narrowed STRICT they would be the reviewed list's first entries, or
+   placed by the owner's answer.
+3. **Coverage.** "Not read" is for these eleven routes: 19 areas and four
+   battles. 48 of the 88 unread rows were sampled, and psp-jp's coverage is
+   cut short at five routes by 9.4. A clean list here is necessary for the
+   default, not sufficient.
+
+**Not STRICT's, but in the way of a disc-only default on PSP-JP:** 9.4's
+`ShoulderGlyphs` `FATAL` stops psp-jp at the first item list, and the `ja-JP`
+`language` rows (D280 / D279) are read as zero on both Japanese installs. A
+default that is meant to make a disc-only install fail loudly instead of
+drawing wrong should wait for the owner's D280 answer on the Japanese builds.
+
+STRICT's default is unchanged.
+
+### 9.8 Running it again
+
+```
+bash <root>/scripts/build.sh lbN          # a fresh build directory (Defender)
+bash <root>/scripts/prepare.sh lbN        # the seven installs, the launcher copy
+bash <root>/scripts/batch.sh              # 77 runs, resumable; a run is done only on `recipe done` and its file
+bash <root>/scripts/pin.sh                # the pins (one watch folder: a second pin on the same build and route overwrites)
+bash <root>/scripts/tables.sh             # this section's tables (doc_tables.py, RW's)
+python <root>/scripts/lang_rows.py <checkout> <root>/gw    # 9.3
+```
 
 ## Appendix: every run
 
