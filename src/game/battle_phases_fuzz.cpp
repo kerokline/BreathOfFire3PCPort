@@ -96,7 +96,7 @@ void Disturb() {
         case 3: m[0x125] = static_cast<unsigned char>(w % 2 ? 5 : w); break;
         case 4: SetWord(m + 0x126, h >> 16); break;
         case 5: m[0x12E] = static_cast<unsigned char>(w); break;
-        default: SetLong(m + 0x130, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130)) ^ 0x4000u)); break;
+        default: member_rec->flags_130 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130)) ^ 0x4000u); break;
         }
         break;
     case 11: SetWord(At(Input_Pressed_addr), (h >> 16) & 0xF10C); break;
@@ -209,8 +209,8 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
         switch ((h2 >> 2) % 6) {
         case 0: member_rec->char_id = static_cast<unsigned char>(h2 >> 12); break;
         case 1: member_rec->direction = static_cast<unsigned char>(h2 >> 12); break;
-        case 2: SetWord(m + 0x2E, h2 >> 16); break;
-        case 3: SetWord(m + 0x30, h2 >> 16); break;
+        case 2: member_rec->screen_x = h2 >> 16; break;
+        case 3: member_rec->screen_y = h2 >> 16; break;
         case 4: B(at::kFacing) = static_cast<unsigned char>(h2 >> 12); break;
         default: B(BattlePhases_Initiative_addr) = static_cast<unsigned char>((h2 >> 12) % 4); break;
         }

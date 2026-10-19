@@ -93,7 +93,7 @@ void Disturb() {
     case 7: reinterpret_cast<records::PartyMember*>(F())->char_id = static_cast<unsigned char>(v % 14); break;
     case 8: F()[0x125] = static_cast<unsigned char>(v % 2 ? 4 : v % 6); break;
     case 9: F()[0x134] = static_cast<unsigned char>(F()[0x134] ^ (1u << (v % 3))); break;
-    case 10: SetLong(F() + 0x130, static_cast<std::int32_t>(reinterpret_cast<records::PartyMember*>(F())->flags_130) ^ static_cast<std::int32_t>(1u << (9 + v % 4))); break;
+    case 10: reinterpret_cast<records::PartyMember*>(F())->flags_130 = static_cast<std::int32_t>(reinterpret_cast<records::PartyMember*>(F())->flags_130) ^ static_cast<std::int32_t>(1u << (9 + v % 4)); break;
     case 11: {
         static const unsigned char kBits[] = {4, 0x40, 0x80};
         if (w % 3 == 0) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ (w % 2 ? 0x08 : 0x80));
