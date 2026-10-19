@@ -84,6 +84,12 @@ void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn r
 void Snapshot_RequestTake();
 void Snapshot_RequestLoad(unsigned slot);
 
+// The line the last take or load showed through Overlay_Text ("Quickload",
+// "Quickload refused: ..."), "" before any: the quick menu (QM) reads it
+// after Snapshot_Pending ran its load, to stay open on a refusal and say why
+// (with our back buffer the overlay line reaches only the log).
+const char* Snapshot_LastLine();
+
 // WinMain's loop, after Task_RunAll, Gfx_LinkOTags and the frame count and
 // before the next frame's draw - the one point where every task is suspended
 // and the main thread holds nothing but the loop's locals. Runs a requested

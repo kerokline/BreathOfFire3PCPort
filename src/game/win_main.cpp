@@ -409,7 +409,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         }
         return 0;
     case WM_KEYDOWN: {
-        // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md 10): F5
+        // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5
         // opens the quick menu, pausing; while it is open every key is its own.
         if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;
         const bool was_paused = Game_Paused != 0;
@@ -761,6 +761,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // suspended on its slice and this frame's logic and lists are
                 // done; the next iteration draws what the span then holds.
                 bof3::Snapshot_Pending();
+                bof3::QuickMenu_AfterPoint();   // F5's menu: a load it asked ran, or stays open refused
             }
         }
     }

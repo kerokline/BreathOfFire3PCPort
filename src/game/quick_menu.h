@@ -1,6 +1,6 @@
 // The quick menu: F5's list of the sixteen quicksaves, newest first, three
 // shown at a time as the save menu shows them; Load or Back per slot (the
-// quicksave round's QM, docs/quicksave.md 10; ledger draft D).
+// quicksave round's QM, docs/quicksave.md, section QM; ledger draft D).
 #pragma once
 
 #include <cstdint>
@@ -17,6 +17,11 @@ bool QuickMenu_Key(unsigned vk, long lparam);
 // draw when it is open (true), nothing otherwise (false: the pause lines are
 // drawn as ever).
 bool QuickMenu_Frame();
+
+// WinMain's loop, right after Snapshot_Pending: when the menu asked a load
+// this frame, closes the menu if it ran (the game resumes in the restored
+// state) or keeps it open with the refusal's reason drawn.
+void QuickMenu_AfterPoint();
 
 // InjectAll, after every module's self-test: the self-test of the two lists
 // and the cursor (BOF3X_SELFTEST_ONLY in the exe host, BOF3X_SHADOW=quick_menu

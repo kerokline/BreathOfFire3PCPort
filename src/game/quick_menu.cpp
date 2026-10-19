@@ -1,10 +1,13 @@
-// DIVERGENCE (the quicksave round's draft D, docs/quicksave.md 10): F5's
+// DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5's
 // quick menu - the sixteen quicksaves BISLPS10.DAT..BISLPS1F.DAT listed
 // newest first (slot 0 is 0x10, the one F7 loads), three shown at a time as
 // the save menu shows them, and per slot Load (a quick-load of that slot,
 // asked of the snapshot core) or Back; an empty slot offers Back only. Load
 // only: F6 is the one way to make a quicksave (the owner, 2026-10-17;
-// docs/quicksave-round.md 5).
+// docs/quicksave-round.md 5). A load the core refuses (another build, no
+// snapshot, ...) leaves the game untouched and the menu open, its reason on a
+// line above the slots - the overlay line the core writes reaches only the
+// log while the back buffer is ours (win_main.cpp, Overlay).
 //
 // It runs while Game_Paused is set, in WinMain's paused branch where the
 // pause lines are drawn: no task runs, so the menu reads the pad itself each
@@ -156,6 +159,9 @@ int ListQuicksaves(const char* dir) {
 Menu g_menu;
 bool g_open = false;
 bool g_paused_by_us = false;   // the game was not paused (F9) when F5 opened the menu
+bool g_loading = false;        // a Load asked; Snapshot_Pending runs it at this frame's end
+unsigned g_loading_slot = 0;
+char g_refusal[64];            // the last refusal, upper case for the 8 x 8 font; "" for none
 
 constexpr int kSlotsX = 0x20, kSlotsY = 0x30;
 const unsigned char kTitle[] = "QUICKLOAD";
@@ -166,6 +172,7 @@ void Open() {
     const int n = ListQuicksaves("");
     g_menu = Menu{};
     g_open = true;
+    g_refusal[0] = 0;
     g_paused_by_us = Game_Paused == 0;
     if (g_paused_by_us) {
         Game_Paused = 1;
@@ -203,7 +210,8 @@ void DrawChoices(int x, int y, U rows, U choice, const unsigned char* const* lab
 
 void Draw() {
     Menu_DrawBlackScreen();
-    Text_DrawFont8(kSlotsX + 0x18, kSlotsY - 0x10, 0, kTitle);
+    Text_DrawFont8(kSlotsX + 0x18, kSlotsY - 0x1C, 0, kTitle);
+    if (g_refusal[0] != 0) Text_DrawFont8(kSlotsX - 0x10, kSlotsY - 0xC, 0, reinterpret_cast<const unsigned char*>(g_refusal));
     save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.choosing ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
     if (!g_menu.choosing) return;
     const int y = kSlotsY + 56 * static_cast<int>(g_menu.cursor - g_menu.first) + 6;
@@ -414,15 +422,48 @@ bool QuickMenu_Frame() {
     const Act act = Step(g_menu, ReadPad(), Field_ConfirmButtons, Field_CancelButtons, g_summaries);
     if (act == Act::Close) {
         Close("cancel");
-    } else if (act == Act::Load) {
-        const unsigned slot = kFirstSlot + g_menu.cursor;
-        bof3::Log("quickmenu   Load of BISLPS%02X.DAT asked at Frame_Counter %u", slot, static_cast<U>(Frame_Counter));
-        Close("Load");
-        Snapshot_RequestLoad(slot);   // run at the loop's point (Snapshot_Pending), its refusal line its own
-    } else {
-        Draw();
+        return true;
     }
+    if (act == Act::Load) {
+        // Still paused and open: the snapshot core runs the load at this
+        // frame's end (Snapshot_Pending), and QuickMenu_AfterPoint reads how
+        // it went.
+        g_loading_slot = kFirstSlot + g_menu.cursor;
+        g_loading = true;
+        g_menu.choosing = false;
+        bof3::Log("quickmenu   Load of BISLPS%02X.DAT asked at Frame_Counter %u", g_loading_slot, static_cast<U>(Frame_Counter));
+        Snapshot_RequestLoad(g_loading_slot);
+    }
+    Draw();
     return true;
+}
+
+void QuickMenu_AfterPoint() {
+    if (!g_loading) return;
+    g_loading = false;
+    const char* const line = Snapshot_LastLine();
+    constexpr char kRefused[] = "Quickload refused: ";
+    if (std::strncmp(line, kRefused, sizeof kRefused - 1) == 0) {
+        // Refused, the game untouched: the menu stays, with the reason.
+        std::snprintf(g_refusal, sizeof g_refusal, "REFUSED: %s", line + sizeof kRefused - 1);
+        for (char* c = g_refusal; *c; ++c)
+            if (*c >= 'a' && *c <= 'z') *c = static_cast<char>(*c - 'a' + 'A');
+        bof3::Log("quickmenu   BISLPS%02X.DAT not loaded (%s); the menu stays open", g_loading_slot, line);
+        return;
+    }
+    // Restored: the span holds the take's Game_Paused (0: a take is never
+    // made while paused - F6's WM_KEYDOWN ends a pause first, and the menu
+    // takes F6 while it is open). The sound the menu paused is resumed.
+    g_open = false;
+    if (Game_Paused != 0) {
+        // Not a path known to exist: then the game is paused as the take
+        // had it, the pause lines up, and the next key resumes it and its sound.
+        bof3::Log("quickmenu   BISLPS%02X.DAT loaded with Game_Paused set (the take's): left paused", g_loading_slot);
+        return;
+    }
+    Sound_ResumeAll();
+    bof3::Log("quickmenu   closed at Frame_Counter %u (BISLPS%02X.DAT loaded: %s)", static_cast<U>(Frame_Counter),
+              g_loading_slot, line);
 }
 
 void QuickMenu_Inject() {

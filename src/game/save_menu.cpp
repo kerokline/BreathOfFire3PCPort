@@ -216,7 +216,7 @@ extern "C" int __cdecl Save_ReadFile(const char* path, unsigned size, int offset
     return 0;
 }
 
-// The quicksave round's draft B (docs/quicksave.md 10, "The two lists"): the
+// The quicksave round's draft B (docs/quicksave.md, section QM): the
 // listing and the summary read take their pattern and their tables, so the
 // quick menu (quick_menu.cpp) lists BISLPS1?.DAT into tables of its own; the
 // original's callers pass Save_Directory and the summaries at 0x905BC0, with

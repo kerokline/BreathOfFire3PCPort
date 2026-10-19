@@ -9,7 +9,7 @@
 
 void SaveMenu_Inject();
 
-// The quicksave round's draft B (docs/quicksave.md 10): the save list as
+// The quicksave round's draft B (docs/quicksave.md, section QM): the save list as
 // BISLPS0?.DAT and bounded at sixteen, switched on by PatchBytes "SaveLists"
 // (BOF3X_ORIGINAL=SaveLists keeps BISLPS??.DAT, unbounded). InjectAll, after
 // every module's self-test.
