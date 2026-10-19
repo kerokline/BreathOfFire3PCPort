@@ -192,7 +192,7 @@ S26_EXPORT void __cdecl Magic114_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xA] = 0;
     Inc(Sc()[1]);
 }
@@ -417,7 +417,7 @@ S26_EXPORT void __cdecl Magic114_TrailRun(void) {
 S26_EXPORT void __cdecl Magic114_TrailAim(void) {
     MH_CALL(MagicFx_CenterOnSide)();
     unsigned char* s = Sc();
-    SetLong(s + 0x14, S16(s + 0x3E));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, S16(s + 0x3E));
     SetLong(s + 0xC, Shl(Magic114_RingOffsets[4], 5));
     SetLong(s + 0x10, Shl(Magic114_RingOffsets[5], 5));
     Turn();
@@ -429,7 +429,7 @@ S26_EXPORT void __cdecl Magic114_TrailAim(void) {
     SetLong(s + 0x38, AddL(Long(owner + 0x38), Long(s + 0x10)));
     owner = Owner();
     s = Sc();
-    SetWord(s + 0x3E, (Word(owner + 0x3E) + 0x200) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (Word(owner + 0x3E) + 0x200) & 0xFFFF);
     Sc()[0xA] = 0;
     Sc()[9] = 0;
     Inc(Sc()[2]);
@@ -455,7 +455,7 @@ S26_EXPORT void __cdecl Magic114_TrailSpawn(void) {
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         tchild->x = AddL(ts->step_x, kx);
         tchild->z = AddL(ts->step_z, Field_Kind2Z);
-        SetWord(child + 0x3E, Word(s + 0x14));
+        rv::Store<unsigned>(tchild->height_whole, static_cast<std::uint16_t>(ts->step_y));
     }
     unsigned char* s = Sc();
     if (s[9] == 0) {
@@ -469,7 +469,7 @@ S26_EXPORT void __cdecl Magic114_TrailSpawn(void) {
         child[8] = s[8];
         tchild->step_x = Long(s + 0xC);
         tchild->step_z = Long(s + 0x10);
-        SetWord(child + 0x3E, Word(s + 0x14));
+        rv::Store<unsigned>(tchild->height_whole, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
         child[9] = 0x10;
         child[0xB] = 0;
     }
@@ -510,10 +510,10 @@ S26_EXPORT void __cdecl Magic114_DrawTrail(void) {
     s = Sc();
     SetVW(0x18, Pos9(AddL(Long(s + 0xC), Field_Kind2X)));
     SetVW(0x1A, Pos9(AddL(Long(s + 0x10), Field_Kind2Z)));
-    SetVW(0x1C, NegHalf(Long(s + 0x14)));
+    SetVW(0x1C, NegHalf(rv::As<records::BattleTask>(s)->step_y));
     SetVW(0x10, Pos9(x));
     SetVW(0x12, Pos9(z));
-    SetVW(0x14, NegHalf(Long(s + 0x14)));
+    SetVW(0x14, NegHalf(rv::As<records::BattleTask>(s)->step_y));
     Average4(p);
     p[4] = 0x10;
     p[5] = 1;
@@ -559,8 +559,8 @@ S26_EXPORT void __cdecl Magic114_BeamWait(void) {
     SetLong(s + 0x38, AddL(Long(s + 0x10), Field_Kind2Z));
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
-    SetLong(Sc() + 0x14, 0);
-    SetLong(Sc() + 0x20, 0);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 0);
     Inc(Sc()[2]);
 }
 
@@ -568,15 +568,15 @@ S26_EXPORT void __cdecl Magic114_BeamWait(void) {
 // 0x10; the length +0x14 up 2, and at 0xC0 +0xB 1 (additive) and +2 on.
 S26_EXPORT void __cdecl Magic114_BeamGrow(void) {
     unsigned char* s = Sc();
-    SetLong(s + 0x20, AddL(Long(s + 0x20), -5));
+    rv::Store(rv::As<records::BattleTask>(s)->work_20, AddL(rv::As<records::BattleTask>(s)->work_20, -5));
     s = Sc();
-    if (Long(s + 0x14) == 0x30) {
+    if (rv::As<records::BattleTask>(s)->step_y == 0x30) {
         MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
         s = Sc();
     }
-    SetLong(s + 0x14, AddL(Long(s + 0x14), 2));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, AddL(rv::As<records::BattleTask>(s)->step_y, 2));
     s = Sc();
-    if (Long(s + 0x14) == 0xC0) {
+    if (rv::As<records::BattleTask>(s)->step_y == 0xC0) {
         s[0xB] = 1;
         Inc(Sc()[2]);
     }
@@ -586,9 +586,9 @@ S26_EXPORT void __cdecl Magic114_BeamGrow(void) {
 // task freed (a tail jmp).
 S26_EXPORT void __cdecl Magic114_BeamFade(void) {
     unsigned char* s = Sc();
-    SetLong(s + 0x20, AddL(Long(s + 0x20), -5));
+    rv::Store(rv::As<records::BattleTask>(s)->work_20, AddL(rv::As<records::BattleTask>(s)->work_20, -5));
     s = Sc();
-    SetLong(s + 0x14, AddL(Long(s + 0x14), 2));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, AddL(rv::As<records::BattleTask>(s)->step_y, 2));
     Dec(Sc()[9]);
     if (Sc()[9] == 0) MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -613,7 +613,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
     Turn();
     s = Sc();
     VertexOffset(0x18, s);
-    if (Long(s + 0x14) <= 1) return;
+    if (rv::As<records::BattleTask>(s)->step_y <= 1) return;
     std::int32_t i = 1;
     for (std::int32_t y = -0x8000;; y -= 0x8000) {
         if (y <= -0x1C0000) return;
@@ -628,7 +628,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
         SetVW(0xC, VW(0x1C));
         s = Sc();
         {
-            const std::int32_t d = SubL(Long(s + 0x14), i);
+            const std::int32_t d = SubL(rv::As<records::BattleTask>(s)->step_y, i);
             SetLong(s + 0xC, d < 0x20 ? Shl(d, 0xE) : 0x80000);
         }
         rv::Current<records::BattleTask>()->step_z = y;
@@ -636,7 +636,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
         s = Sc();
         VertexOffset(0x10, s);
         {
-            const std::int32_t length = Long(s + 0x14);
+            const std::int32_t length = rv::As<records::BattleTask>(s)->step_y;
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
         rv::Current<records::BattleTask>()->step_z = y;
@@ -646,7 +646,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
         SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
         SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2) & 0xFFFF);
         s = Sc();
-        SetWord(Mem(kS), (static_cast<std::uint32_t>(AddL(Long(s + 0x20), i * 4)) % 0xBC + 0x40) & 0xFFFF);
+        SetWord(Mem(kS), (static_cast<std::uint32_t>(AddL(rv::As<records::BattleTask>(s)->work_20, i * 4)) % 0xBC + 0x40) & 0xFFFF);
         p[0x14] = 0x40;
         p[0x24] = 0xC0;
         p[0x15] = SB(0);
@@ -671,7 +671,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
         p[6] = SB(2);
         MH_CALL(Gfx_CommitPrim)(3, 0x48);
         ++i;
-        if (!(i < Long(Sc() + 0x14))) return;
+        if (!(i < rv::Current<records::BattleTask>()->step_y)) return;
     }
 }
 
@@ -692,7 +692,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
     Turn();
     s = Sc();
     VertexOffset(0x18, s);
-    if (Long(s + 0x14) <= 1) return;
+    if (rv::As<records::BattleTask>(s)->step_y <= 1) return;
     std::int32_t i = 1;
     for (std::int32_t y = -0x8000;; y -= 0x8000) {
         if (y <= -0x1C0000) return;
@@ -707,7 +707,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
         SetVW(0xC, VW(0x1C));
         s = Sc();
         {
-            const std::int32_t d = SubL(Long(s + 0x14), i);
+            const std::int32_t d = SubL(rv::As<records::BattleTask>(s)->step_y, i);
             SetLong(s + 0xC, d < 0x20 ? Shl(d, 0xE) : 0x80000);
         }
         rv::Current<records::BattleTask>()->step_z = y;
@@ -715,7 +715,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
         s = Sc();
         VertexOffset(0x10, s);
         {
-            const std::int32_t length = Long(s + 0x14);
+            const std::int32_t length = rv::As<records::BattleTask>(s)->step_y;
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
         rv::Current<records::BattleTask>()->step_z = y;
@@ -741,7 +741,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
         p[6] = SB(2);
         MH_CALL(Gfx_CommitPrim)(5, 0x48);
         ++i;
-        if (!(i < Long(Sc() + 0x14))) return;
+        if (!(i < rv::Current<records::BattleTask>()->step_y)) return;
     }
 }
 
@@ -772,7 +772,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
         SetVW(0xC, h);
         SetVW(4, h);
     }
-    if (Long(s + 0x14) <= 1) return;
+    if (rv::As<records::BattleTask>(s)->step_y <= 1) return;
     std::int32_t i = 1;
     for (std::int32_t y = -0x8000;; y -= 0x8000) {
         if (y <= -0x1C0000) return;
@@ -785,7 +785,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
         SetVW(0x12, VW(0x1A));
         s = Sc();
         {
-            const std::int32_t length = Long(s + 0x14);
+            const std::int32_t length = rv::As<records::BattleTask>(s)->step_y;
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
         rv::Current<records::BattleTask>()->step_z = y;
@@ -794,7 +794,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
         SetVW(8, Pos9(AddL(Long(s + 0x34), Long(s + 0xC))));
         SetVW(0xA, Pos9(AddL(Long(s + 0x38), Long(s + 0x10))));
         {
-            const std::int32_t length = Long(s + 0x14);
+            const std::int32_t length = rv::As<records::BattleTask>(s)->step_y;
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 5), 0xD)) : 0xFFFB0000u);
         }
         rv::Current<records::BattleTask>()->step_z = y;
@@ -819,7 +819,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
         p[0x36] = 1;
         MH_CALL(Gfx_CommitPrim)(5, 0x44);
         ++i;
-        if (!(i < Long(Sc() + 0x14))) return;
+        if (!(i < rv::Current<records::BattleTask>()->step_y)) return;
     }
 }
 
@@ -849,7 +849,7 @@ S26_EXPORT void __cdecl Magic114_SpriteStart(void) {
     }
     Sc()[0x29] = 4;
     Sc()[0x24] = 0;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     Sc()[9] = 0;
     Inc(Sc()[2]);
@@ -925,7 +925,7 @@ S26_EXPORT void __cdecl Magic114_PushRayMatrix(void) {
     SetLong(s + 0x38, AddL(Long(owner + 0x38), Long(s + 0x10)));
     owner = Owner();
     s = Sc();
-    SetWord(s + 0x3E, (Word(owner + 0x3E) + 0x200) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (Word(owner + 0x3E) + 0x200) & 0xFFFF);
     s = Sc();
     short v[4];
     v[0] = static_cast<short>(Pos9(Long(s + 0x34)));
@@ -957,7 +957,7 @@ S26_EXPORT void __cdecl Magic115_Start(void) {
     unsigned char* const source = Source();
     rv::Store(rv::Current<records::BattleTask>()->x, Long(source + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(source + 0x38));
-    SetLong(Sc() + 0x3C, Long(source + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(source + 0x3C));
     const unsigned slot = NewTask(0x30);
     unsigned char* const child = TaskSlot(slot);
     SetL(child + 0x80, Key(Sc()));
@@ -1041,7 +1041,7 @@ static void Magic115_SpriteSetUp() {
     Sc()[0x5C] = 0;
     Sc()[0x2A] = 0;
     Sc()[0x29] = 4;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
 }
 
@@ -1050,7 +1050,7 @@ static void Magic115_SpriteSetUp() {
 S26_EXPORT void __cdecl Magic115_OrbitStart(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetWord(Sc() + 0x3E, (Word(Owner() + 0x3E) + 0x2C0) & 0xFFFF);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, (Word(Owner() + 0x3E) + 0x2C0) & 0xFFFF);
     Magic115_SpriteSetUp();
     MH_CALL(Sprite_SetAnimation)(0);
     Sc()[9] = 0xFF;
@@ -1097,7 +1097,7 @@ S26_EXPORT void __cdecl Magic115_Orbit(void) {
         child[9] = static_cast<unsigned char>(((s[9] >> 2) + 2) << 2);
         tchild->x = Long(s + 0x34);
         tchild->z = Long(s + 0x38);
-        SetLong(child + 0x3C, Long(s + 0x3C));
+        rv::Store(tchild->height, rv::As<records::BattleTask>(s)->height);
         Inc(owner[9]);
         Inc(Owner()[0xB]);
         s = Sc();

@@ -251,7 +251,7 @@ S22_EXPORT void __cdecl BlizzardShard_Launch(void) {
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     const unsigned char* const s = Sc();
     const unsigned direction = s[8];
     if (direction <= 3) {
@@ -569,7 +569,7 @@ S22_EXPORT void __cdecl Blizzard_CenterOnTargets(void) {
                     enemies ? "enemy" : "party member");
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(SD(0) / SD(0xC) + 0x4000) << 9));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(SD(4) / SD(0xC) + 0x4000) << 9));
-    SetWord(Sc() + 0x3E, static_cast<unsigned>(SD(8) / SD(0xC)) & 0xFFFF);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<unsigned>(SD(8) / SD(0xC)) & 0xFFFF);
 }
 
 // ===========================================================================
@@ -600,7 +600,7 @@ void StartBolts(unsigned parameter) {
         child[3] = static_cast<unsigned char>(i);
         tchild->x = x;
         tchild->z = z;
-        SetLong(child + 0x3C, Long(r + 0x3C));
+        rv::Store(tchild->height, Long(r + 0x3C));
         child[9] = static_cast<unsigned char>(self[0xB] * 10 + 1);
         Inc(self[0xB]);
     }
@@ -608,7 +608,7 @@ void StartBolts(unsigned parameter) {
     const records::BattleTask* const tlast = rv::AsConst<records::BattleTask>(last);
     rv::Store(rv::Current<records::BattleTask>()->x, tlast->x);
     rv::Store(rv::Current<records::BattleTask>()->z, tlast->z);
-    SetLong(Sc() + 0x3C, Long(last + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, tlast->height);
     MH_CALL(Sound_PlayById)(0x100);
     Inc(Sc()[1]);
 }
@@ -736,9 +736,9 @@ S22_EXPORT void __cdecl JoltBolt_Run(void) {
     Call3(bof3::addr::JoltBolt_DrawBand, 0xC, 0x60, 0x1F);
     Call0(bof3::addr::JoltBolt_DrawArcs);
     AddB(Sc()[0xB], 0xF8);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + 0x10u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + 0x10u);
     Call0(bof3::addr::JoltBolt_DrawFlash);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) - 0x20u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) - 0x20u);
     Call0(bof3::addr::JoltBolt_DrawFlash);
     MH_CALL(Gte_PopMatrix)();
 }
@@ -994,9 +994,9 @@ S22_EXPORT void __cdecl LightningBolt_Run(void) {
     AddB(Sc()[0xB], 6);
     Call3(bof3::addr::LightningBolt_DrawBand, 0x10, 0x80, 0x1F);
     AddB(Sc()[0xB], 0xF0);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + 0x18u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + 0x18u);
     Call0(bof3::addr::LightningBolt_DrawFlash);
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) - 0x30u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) - 0x30u);
     Call0(bof3::addr::LightningBolt_DrawFlash);
     MH_CALL(Gte_PopMatrix)();
 }
@@ -1173,7 +1173,7 @@ S22_EXPORT void __cdecl Myollnir_Start(void) {
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     MH_CALL(Sprite_ReleaseTint)(src);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(src, 0, 0, 0, 1);
     Sc()[0xA] = tint;
@@ -1267,7 +1267,7 @@ S22_EXPORT void __cdecl MyollnirBolt_Start(void) {
     Sc()[0xA] = 0;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Inc(Sc()[2]);
 }
 
@@ -1335,7 +1335,7 @@ S22_EXPORT void __cdecl MyollnirOrb_Start(void) {
     Sc()[0xA] = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(Sc()[3] << 5));
     Orbit(0x28);
-    SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
     Inc(Sc()[2]);
 }
 
@@ -1524,7 +1524,7 @@ S22_EXPORT void __cdecl MyollnirRing_Start(void) {
     Sc()[0xA] = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>((Sc()[3] << 5) + 0x10));
     Orbit(0x18);
-    SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
     Inc(Sc()[2]);
 }
 
