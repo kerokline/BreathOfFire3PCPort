@@ -124,23 +124,25 @@ void SwapBytes(U a, U b) { SH_AT(void (__cdecl*)(unsigned char*, unsigned char*)
 // 0x8031CC): the member list and the member's slots, the joined record `rec`
 // shown in both.
 void OpenMemberWindows(unsigned char rec) {
-    B(0x8031A9) = 7;
-    B(0x8031AA) = 0xD;
+    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * 0x24);
+    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 3 * 0x24);
+    win2->handler = 7;
+    win2->kind = 0xD;
     B(0x8031B2) = rec;
     B(0x8031D6) = rec;
-    B(0x8031AB) = 2;
-    B(0x8031A8) = 1;
-    SetW(0x8031AC, 0xFF6A);
-    SetW(0x8031AE, 0x74);
-    B(0x8031CD) = 7;
-    B(0x8031CE) = 0xC;
-    B(0x8031CF) = 2;
-    B(0x8031CC) = 1;
+    win2->state = 2;
+    win2->in_use = 1;
+    win2->x = 0xFF6A;
+    win2->y = 0x74;
+    win3->handler = 7;
+    win3->kind = 0xC;
+    win3->state = 2;
+    win3->in_use = 1;
     B(0x8031D7) = 0;
     B(0x8031D8) = 0xFF;
     B(0x8031D9) = 0;
-    SetW(0x8031D0, 0x140);
-    SetW(0x8031D2, 0x3E);
+    win3->x = 0x140;
+    win3->y = 0x3E;
 }
 
 // The scroll of a 128-entry list shown nine rows at a time (SharedList_PickShared
@@ -818,27 +820,30 @@ extern "C" void __cdecl PartyForm_Draw(void) {
 // +0xA / +0xB / +0xD 0, +0xC 0x7F, +8 0, at (-0x64, 0x3E), on). Called by
 // 0x583370.
 extern "C" void __cdecl ShopBrowse_InitWindows(void) {
-    B(0x803161) = 7;
-    B(0x803162) = 0;
-    B(0x803163) = 2;
-    B(0x803160) = 1;
-    SetW(0x803164, 0x14);
-    SetW(0x803166, 0xFFEC);
+    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * 0x24);
+    records::WindowRecord* const win1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
+    win0->handler = 7;
+    win0->kind = 0;
+    win0->state = 2;
+    win0->in_use = 1;
+    win0->x = 0x14;
+    win0->y = 0xFFEC;
     SetW(0x803170, 0);
-    B(0x803455) = 7;
-    B(0x803456) = 3;
-    B(0x803454) = 0;
-    B(0x803185) = 7;
-    B(0x803186) = 0xF;
-    B(0x803187) = 2;
+    win21->handler = 7;
+    win21->kind = 3;
+    win21->in_use = 0;
+    win1->handler = 7;
+    win1->kind = 0xF;
+    win1->state = 2;
     B(0x80318F) = 0;
     B(0x80318E) = 0;
     B(0x803190) = 0x7F;
     B(0x803191) = 0;
     B(0x80318C) = 0;
-    SetW(0x803188, 0xFF9C);
-    SetW(0x80318A, 0x3E);
-    B(0x803184) = 1;
+    win1->x = 0xFF9C;
+    win1->y = 0x3E;
+    win1->in_use = 1;
 }
 
 // original 0x583770: two more windows - record 2 (0x8031A8: kind 7, +2 0x10,
@@ -846,19 +851,21 @@ extern "C" void __cdecl ShopBrowse_InitWindows(void) {
 // (0x8031CC: kind 7, +2 0x11, +3 2, at (0xB4, 0xF0), on). Called by 0x5833E0
 // on a confirm.
 extern "C" void __cdecl ShopBrowse_OpenDetail(void) {
+    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * 0x24);
+    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 3 * 0x24);
     B(0x8031B2) = B(0x803191);
-    B(0x8031A9) = 7;
-    B(0x8031AA) = 0x10;
-    B(0x8031AB) = 2;
-    SetW(0x8031AC, 0x140);
-    SetW(0x8031AE, 0x3F);
-    B(0x8031A8) = 1;
-    B(0x8031CD) = 7;
-    B(0x8031CE) = 0x11;
-    B(0x8031CF) = 2;
-    SetW(0x8031D0, 0xB4);
-    SetW(0x8031D2, 0xF0);
-    B(0x8031CC) = 1;
+    win2->handler = 7;
+    win2->kind = 0x10;
+    win2->state = 2;
+    win2->x = 0x140;
+    win2->y = 0x3F;
+    win2->in_use = 1;
+    win3->handler = 7;
+    win3->kind = 0x11;
+    win3->state = 2;
+    win3->x = 0xB4;
+    win3->y = 0xF0;
+    win3->in_use = 1;
 }
 
 // ===========================================================================
@@ -1186,17 +1193,24 @@ extern "C" void __cdecl SharedList_Begin(void) {
 // sound 0x106, windows 0 and 1 closing (+3 1), the hand off, window 5's +3 1
 // without the key item, counter 5, state 4 (the close).
 extern "C" void __cdecl SharedList_Menu(void) {
+    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * 0x24);
+    records::WindowRecord* const win1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * 0x24);
+    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * 0x24);
+    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 3 * 0x24);
+    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 4 * 0x24);
+    records::WindowRecord* const win6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 6 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     const U choice = FieldS_SharedChoice;
     B(0x80318F) = 0xFF;
     SetW(0x803170, choice + 0x73);
-    if (B(0x803187) == 0) {
+    if (win1->state == 0) {
         const U x = 48 * choice + L(0x803188);
-        const U y = W(0x80318A) + 4;
-        B(0x803454) = 1;
-        SetW(0x803458, x);
-        SetW(0x80345A, y);
+        const U y = static_cast<U>(win1->y) + 4;
+        win21->in_use = 1;
+        win21->x = x;
+        win21->y = y;
     } else {
-        B(0x803454) = 0;
+        win21->in_use = 0;
     }
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xA000);
     if (repeat & 0xA000) {
@@ -1219,24 +1233,24 @@ extern "C" void __cdecl SharedList_Menu(void) {
                 Sound(0x102);
                 const unsigned char first = B(at::kJoined);
                 const auto state = static_cast<unsigned char>(FieldS_State + 1);
-                B(0x8031A9) = 7;
-                B(0x8031CD) = 7;
+                win2->handler = 7;
+                win3->handler = 7;
                 FieldS_PickIndex = 0;
-                B(0x8031AA) = 0xD;
-                B(0x8031AB) = 2;
-                B(0x8031A8) = 1;
+                win2->kind = 0xD;
+                win2->state = 2;
+                win2->in_use = 1;
                 B(0x8031B2) = first;
-                SetW(0x8031AC, 0xFF6A);
-                SetW(0x8031AE, 0x74);
-                B(0x8031CE) = 0xC;
-                B(0x8031CF) = 2;
-                B(0x8031CC) = 1;
+                win2->x = 0xFF6A;
+                win2->y = 0x74;
+                win3->kind = 0xC;
+                win3->state = 2;
+                win3->in_use = 1;
                 B(0x8031D6) = first;
                 B(0x8031D7) = 0;
                 B(0x8031D8) = 0xFF;
                 B(0x8031D9) = 0;
-                SetW(0x8031D0, 0x140);
-                SetW(0x8031D2, 0x3E);
+                win3->x = 0x140;
+                win3->y = 0x3E;
                 FieldS_State = state;
                 FieldS_Step = 1;
                 Sound(0x103);
@@ -1248,17 +1262,17 @@ extern "C" void __cdecl SharedList_Menu(void) {
             Sound(0x104);
             Sound(0x102);
             const auto state = static_cast<unsigned char>(FieldS_State + 2);
-            B(0x8031F1) = 7;
+            win4->handler = 7;
             FieldS_State = state;
-            B(0x8031F2) = 0xB;
-            B(0x8031F3) = 3;
-            B(0x8031F0) = 1;
+            win4->kind = 0xB;
+            win4->state = 3;
+            win4->in_use = 1;
             B(0x8031FA) = 0;
             B(0x8031FB) = 0;
             B(0x8031FC) = 0xFF;
             B(0x8031FD) = 0;
-            SetW(0x8031F4, 0xFF56);
-            SetW(0x8031F6, 0x3E);
+            win4->x = 0xFF56;
+            win4->y = 0x3E;
         }
         B(0x80318F) = static_cast<unsigned char>(FieldS_SharedChoice);
         Sound(0x103);
@@ -1268,10 +1282,10 @@ extern "C" void __cdecl SharedList_Menu(void) {
     }
     if (!Cancelled(pressed)) return;
     Sound(0x106);
-    B(0x803163) = 1;
-    B(0x803187) = 1;
-    B(0x803454) = 0;
-    if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0) B(0x80323B) = 1;
+    win0->state = 1;
+    win1->state = 1;
+    win21->in_use = 0;
+    if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) == 0) win6->state = 1;
     B(at::kTimer) = 5;
     FieldS_State = 4;
 }
@@ -1296,15 +1310,17 @@ extern "C" void __cdecl SharedList_MoveStep(void) {
 unsigned char g_use_item_yes_no_hand = 0;
 
 extern "C" void __cdecl SharedList_UseItem(void) {
+    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     const U hand_x = g_use_item_yes_no_hand
-                         ? static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(W(0x803164)) + 7, FieldS_Answer))
-                         : W(0x803164) - 36u * static_cast<std::uint32_t>(FieldS_Answer) + 0xE8;
-    const U hand_y = W(0x803166) + 5;
+                         ? static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(static_cast<U>(win0->x)) + 7, FieldS_Answer))
+                         : static_cast<U>(win0->x) - 36u * static_cast<std::uint32_t>(FieldS_Answer) + 0xE8;
+    const U hand_y = static_cast<U>(win0->y) + 5;
     U pressed = L(at::kPressed);
     SetW(0x803170, 0x36);
-    B(0x803454) = 1;
-    SetW(0x803458, hand_x);
-    SetW(0x80345A, hand_y);
+    win21->in_use = 1;
+    win21->x = hand_x;
+    win21->y = hand_y;
     if (pressed & 0xA000) {
         Sound(0x101);
         FieldS_Answer = static_cast<unsigned char>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
@@ -1347,17 +1363,21 @@ extern "C" void __cdecl Menu_StepAfterTimer(void) {
 // window 3 +3 3, the step up one. Cancel: sound 0x106, windows 2 and 3 +3 1,
 // the state down one.
 extern "C" void __cdecl SharedList_PickMember(void) {
+    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * 0x24);
+    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 3 * 0x24);
+    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 4 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     SH_CALL(TextRecord_Set)(0, 8, Rec(B(at::kJoined + FieldS_PickIndex)));
-    const unsigned char open = B(0x8031CF);
+    const unsigned char open = win3->state;
     SetW(0x803170, 0x75);
     if (open == 0) {
         const U x = L(0x8031D0) + 0x2A;
-        const U y = W(0x8031D2) + 7;
-        B(0x803454) = 1;
-        SetW(0x803458, x);
-        SetW(0x80345A, y);
+        const U y = static_cast<U>(win3->y) + 7;
+        win21->in_use = 1;
+        win21->x = x;
+        win21->y = y;
     } else {
-        B(0x803454) = 0;
+        win21->in_use = 0;
     }
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     if (repeat & 0x8000) {
@@ -1385,24 +1405,24 @@ extern "C" void __cdecl SharedList_PickMember(void) {
         B(0x8031FA) = 0;
         B(0x8031FB) = 0;
         B(0x8031FD) = 0;
-        B(0x8031AB) = 1;
+        win2->state = 1;
         B(0x8031D8) = 0xFF;
-        B(0x8031CF) = 3;
-        B(0x8031F1) = 7;
-        B(0x8031F2) = 0xB;
-        B(0x8031F3) = 2;
-        B(0x8031F0) = 1;
+        win3->state = 3;
+        win4->handler = 7;
+        win4->kind = 0xB;
+        win4->state = 2;
+        win4->in_use = 1;
         B(0x8031FC) = 0xFF;
-        SetW(0x8031F4, 0x140);
-        SetW(0x8031F6, 0x3E);
+        win4->x = 0x140;
+        win4->y = 0x3E;
         FieldS_Step = step;
         return;
     }
     if (!Cancelled(pressed)) return;
     Sound(0x106);
     const auto state = static_cast<unsigned char>(FieldS_State - 1);
-    B(0x8031AB) = 1;
-    B(0x8031CF) = 1;
+    win2->state = 1;
+    win3->state = 1;
     FieldS_State = state;
 }
 
@@ -1416,17 +1436,21 @@ extern "C" void __cdecl SharedList_PickMember(void) {
 // an empty slot buzzes (0x107). Cancel: sounds 0x102 and 0x106, windows 2 +3 2,
 // 3 +3 4 and +0xC 0xFF, 4 +3 1, the step down one.
 extern "C" void __cdecl SharedList_PickSlot(void) {
+    records::WindowRecord* const win2 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 2 * 0x24);
+    records::WindowRecord* const win3 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 3 * 0x24);
+    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 4 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     const U member_rec = B(0x8031D6);
     unsigned char slot = B(0x8031D7);
     const U ability = B(RecAddr(member_rec) + 0x7E + slot);
     SetW(0x803170, W(at::kAbilityRecords + 0x16 + 24 * ability));
-    if (B(0x8031CF) == 0) {
+    if (win3->state == 0) {
         const U x = L(0x8031D0) + 7;
-        SetW(0x803458, x);
-        B(0x803454) = 1;
-        SetW(0x80345A, 13 * (slot + 2u) + W(0x8031D2));
+        win21->x = x;
+        win21->in_use = 1;
+        win21->y = 13 * (slot + 2u) + static_cast<U>(win3->y);
     } else {
-        B(0x803454) = 0;
+        win21->in_use = 0;
     }
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     unsigned char cl = B(0x8031D7);
@@ -1473,10 +1497,10 @@ extern "C" void __cdecl SharedList_PickSlot(void) {
     Sound(0x102);
     Sound(0x106);
     const auto step = static_cast<unsigned char>(FieldS_Step - 1);
-    B(0x8031AB) = 2;
-    B(0x8031CF) = 4;
+    win2->state = 2;
+    win3->state = 4;
     B(0x8031D8) = 0xFF;
-    B(0x8031F3) = 1;
+    win4->state = 1;
     FieldS_Step = step;
 }
 
@@ -1489,11 +1513,13 @@ extern "C" void __cdecl SharedList_PickSlot(void) {
 // swapped, sound 0x103 and the step down one. Cancel: sound 0x106 and the
 // step down one.
 extern "C" void __cdecl SharedList_PickShared(void) {
+    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 4 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     const unsigned char cur = B(0x8031FB);
-    B(0x803454) = 1;
+    win21->in_use = 1;
     SetW(0x803170, W(at::kAbilityRecords + 0x16 + 24u * B(at::kSharedList + cur)));
-    SetW(0x803458, L(0x8031F4) + 7);
-    SetW(0x80345A, 13 * (static_cast<U>(cur) - B(0x8031FA) + 2) + W(0x8031F6));
+    win21->x = L(0x8031F4) + 7;
+    win21->y = 13 * (static_cast<U>(cur) - B(0x8031FA) + 2) + static_cast<U>(win4->y);
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0x500C));
     const unsigned char before = B(0x8031FB);
     unsigned char cl = ScrollList(repeat, 0x8031FB, 0x8031FA, 0x8031FD);
@@ -1532,17 +1558,18 @@ extern "C" void __cdecl SharedList_SortStep(void) {
 // window 6 (0x803214) open - kind 7, +2 0xE, +0xA 0, +0xB 0xFF, at (0xC8,
 // 0x3F) - and the step up one.
 extern "C" void __cdecl SharedList_SortOpen(void) {
+    records::WindowRecord* const win5 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 5 * 0x24);
     const auto t = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = t;
     if (t != 0) return;
     const auto step = FieldS_Step;
-    B(0x803215) = 7;
-    B(0x803216) = 0xE;
-    B(0x803214) = 1;
+    win5->handler = 7;
+    win5->kind = 0xE;
+    win5->in_use = 1;
     B(0x80321E) = 0;
     B(0x80321F) = 0xFF;
-    SetW(0x803218, 0xC8);
-    SetW(0x80321A, 0x3F);
+    win5->x = 0xC8;
+    win5->y = 0x3F;
     FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
@@ -1553,9 +1580,12 @@ extern "C" void __cdecl SharedList_SortOpen(void) {
 // (the arranging); else SharedList_Sort(row). Cancel: sounds 0x102 and 0x106,
 // window 6 off, window 4's +3 4, the state down two.
 extern "C" void __cdecl SharedList_SortMenu(void) {
+    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 4 * 0x24);
+    records::WindowRecord* const win5 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 5 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     SetW(0x803170, 0x18);
-    SetW(0x803458, W(0x803218) + 5);
-    SetW(0x80345A, 16u * B(0x80321E) + W(0x80321A) + 0x1A);
+    win21->x = static_cast<U>(win5->x) + 5;
+    win21->y = 16u * B(0x80321E) + static_cast<U>(win5->y) + 0x1A;
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0x5000);
     if (repeat & 0x1000) {
         Sound(0x101);
@@ -1584,8 +1614,8 @@ extern "C" void __cdecl SharedList_SortMenu(void) {
     Sound(0x102);
     Sound(0x106);
     const auto state = static_cast<unsigned char>(FieldS_State - 2);
-    B(0x803214) = 0;
-    B(0x8031F3) = 4;
+    win5->in_use = 0;
+    win4->state = 4;
     FieldS_State = state;
 }
 
@@ -1598,11 +1628,13 @@ extern "C" void __cdecl SharedList_SortMenu(void) {
 // Cancel: sound 0x106; a pick is dropped, or window 6's +0xB 0xFF and the
 // step down one.
 extern "C" void __cdecl SharedList_Arrange(void) {
+    records::WindowRecord* const win4 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 4 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     const unsigned char cur = B(0x8031FB);
-    B(0x803454) = 1;
+    win21->in_use = 1;
     SetW(0x803170, W(at::kAbilityRecords + 0x16 + 24u * B(at::kSharedList + cur)));
-    SetW(0x803458, W(0x8031F4));
-    SetW(0x80345A, 13 * (static_cast<U>(cur) - B(0x8031FA) + 2) + W(0x8031F6));
+    win21->x = static_cast<U>(win4->x);
+    win21->y = 13 * (static_cast<U>(cur) - B(0x8031FA) + 2) + static_cast<U>(win4->y);
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0x500C));
     const unsigned char before = B(0x8031FB);
     unsigned char cl = ScrollList(repeat, 0x8031FB, 0x8031FA, 0x8031FD);
@@ -1648,37 +1680,41 @@ extern "C" void __cdecl SharedList_Arrange(void) {
 // (kind 7, +2 3, +0xA 4, off); without key item 0xF, window 5 (0x803238: kind
 // 7, +2 0x12, +3 2, on, at (0x140, 0x26)) - the item count's.
 extern "C" void __cdecl SharedList_Setup(void) {
+    records::WindowRecord* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * 0x24);
+    records::WindowRecord* const win1 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 1 * 0x24);
+    records::WindowRecord* const win6 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 6 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     unsigned char n = 0;
     FieldS_JoinedCount = 0;
     for (unsigned char r = 0; r < 8; ++r)
         if (Rec(r)[0xB] & 1) B(at::kJoined + n++) = r;
     FieldS_JoinedCount = n;
-    B(0x803161) = 7;
-    B(0x803162) = 0;
-    B(0x803163) = 2;
-    B(0x803160) = 1;
+    win0->handler = 7;
+    win0->kind = 0;
+    win0->state = 2;
+    win0->in_use = 1;
     B(0x80316A) = 0;
-    SetW(0x803164, 0x14);
-    SetW(0x803166, 0xFFEC);
-    B(0x803185) = 7;
-    B(0x803186) = 2;
-    B(0x803187) = 2;
-    B(0x803184) = 1;
+    win0->x = 0x14;
+    win0->y = 0xFFEC;
+    win1->handler = 7;
+    win1->kind = 2;
+    win1->state = 2;
+    win1->in_use = 1;
     B(0x80318E) = 4;
     B(0x80318F) = 0xFF;
-    SetW(0x803188, 0x70);
-    SetW(0x80318A, 0xFFEC);
-    B(0x803455) = 7;
-    B(0x803456) = 3;
+    win1->x = 0x70;
+    win1->y = 0xFFEC;
+    win21->handler = 7;
+    win21->kind = 3;
     B(0x80345E) = 4;
-    B(0x803454) = 0;
+    win21->in_use = 0;
     if ((SH_CALL(KeyItem_Has)(at::kKeyItemInk) & 0xFF) != 0) return;
-    B(0x803239) = 7;
-    B(0x80323A) = 0x12;
-    B(0x80323B) = 2;
-    B(0x803238) = 1;
-    SetW(0x80323C, 0x140);
-    SetW(0x80323E, 0x26);
+    win6->handler = 7;
+    win6->kind = 0x12;
+    win6->state = 2;
+    win6->in_use = 1;
+    win6->x = 0x140;
+    win6->y = 0x26;
 }
 
 // original 0x585090: window kind handler (called by 0x59BE50 with the window
@@ -1889,11 +1925,14 @@ extern "C" void __cdecl SharedList_DrawItemCount(int x, int y) {
 // +0xB 0xFF, each member's window (0x8031F0 + 0x24 k) +3 8, the hand off, the
 // counter 0, the state down two.
 extern "C" void __cdecl Equip_ChooseSlot(void) {
+    records::WindowRecord* const win13 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 13 * 0x24);
+    records::WindowRecord* const win14 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 14 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const U slot0 = B(0x80333E);
-    B(0x803454) = 1;
-    SetW(0x803458, L(0x803338) + 6);
-    SetW(0x80345A, 13 * slot0 + W(0x80333A) + 0x57);
+    win21->in_use = 1;
+    win21->x = L(0x803338) + 6;
+    win21->y = 13 * slot0 + static_cast<U>(win13->y) + 0x57;
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & 0xF000);
     B(0x80333F) = 0xFF;
     B(0x803341) = 1;
@@ -1964,8 +2003,8 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
     if (!Cancelled(pressed)) return;
     Sound(0x106);
     Sound(0x102);
-    B(0x80335B) = 3;
-    B(0x803337) = 4;
+    win14->state = 3;
+    win13->state = 4;
     B(0x80333F) = 0xFF;
     B(0x80333E) = 0xFF;
     if (PartyCount() != 0) {
@@ -1976,7 +2015,7 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
         } while (k < PartyCount());
     }
     const auto state = FieldS_State;
-    B(0x803454) = 0;
+    win21->in_use = 0;
     B(at::kTimer) = 0;
     FieldS_State = static_cast<unsigned char>(state - 2);
 }
@@ -1994,11 +2033,14 @@ extern "C" void __cdecl Equip_ChooseSlot(void) {
 // 0x58D570, the cursor 0xFF and the state down one; without, a buzz. Cancel:
 // sound 0x106, the cursor 0xFF, window 0x803400's +0xC 0, the state down one.
 extern "C" void __cdecl Equip_ChooseItem(void) {
+    records::WindowRecord* const win14 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 14 * 0x24);
+    records::WindowRecord* const win19 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 19 * 0x24);
+    records::WindowRecord* const win21 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 21 * 0x24);
     SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
-    const U hand_y = 13 * (static_cast<U>(B(0x803363)) - B(0x803362) + 2) + W(0x80335E);
-    SetW(0x803458, L(0x80335C) + 7);
-    B(0x803454) = 1;
-    SetW(0x80345A, hand_y);
+    const U hand_y = 13 * (static_cast<U>(B(0x803363)) - B(0x803362) + 2) + static_cast<U>(win14->y);
+    win21->x = L(0x80335C) + 7;
+    win21->in_use = 1;
+    win21->y = hand_y;
     SetW(0x8032FC, SH_CALL(Item_HelpMessage)(B(0x803360), B(0x803365)));
     const U repeat = SH_CALL(Input_AutoRepeat)(Pressed() & Sigma(0xF00C));
     SH_AT(void (__cdecl*)(), at::kEquipPreview)();
@@ -2085,7 +2127,7 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
     Sound(0x106);
     const auto state = FieldS_State;
     B(0x803363) = 0xFF;
-    B(0x80340C) = 0;
+    win19->in_use = 0;
     FieldS_State = static_cast<unsigned char>(state - 1);
 }
 
