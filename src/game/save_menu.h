@@ -44,4 +44,9 @@ void DrawLoadWindows(unsigned message);
 void DrawSlotsOver(int x, int y, unsigned highlight, const unsigned char* summaries,
                    const volatile std::uint32_t* top_word, const volatile std::uint32_t* cursor_word);
 
+// DIV-0129's flag (Sound_StreamDone answers 1 while a stream's file is
+// missing), read and put back by the quicksave's audio participant (sound.cpp):
+// logic-visible, so a quick-load restores it as it was at the take.
+bool StreamMissing();
+void SetStreamMissing(bool missing);
 }  // namespace save_menu

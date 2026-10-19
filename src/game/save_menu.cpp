@@ -390,8 +390,9 @@ extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx) {
 // otherwise, formatted as before. The path buffer is MAX_PATH for the
 // cache's absolute path (the original's 0x28 holds every SND\ name).
 //
-// DIVERGENCE DIV-0129: a failed open is remembered (g_stream_missing, ours,
-// no game state) until the next open succeeds, and Sound_StreamDone answers
+// DIVERGENCE DIV-0129: a failed open is remembered (g_stream_missing, ours;
+// logic-visible, so the quicksave's SOUND record carries it, sound.cpp) until
+// the next open succeeds, and Sound_StreamDone answers
 // 1 meanwhile - the original's wait went on asking about the area's song,
 // which the failed load never stopped, so the inn and the camp hung on an
 // install without the jingle (D255).
@@ -399,6 +400,8 @@ namespace {
 bool g_stream_missing = false;
 }
 void save_menu::StreamMissingClear() { g_stream_missing = false; }
+bool save_menu::StreamMissing() { return g_stream_missing; }                  // the quicksave (sound.cpp)
+void save_menu::SetStreamMissing(bool missing) { g_stream_missing = missing; }
 extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     const U kind = id >> 12;
     PutLong(at::kStreamKind, kind);

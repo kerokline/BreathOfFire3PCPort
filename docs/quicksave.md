@@ -744,3 +744,227 @@ hashes beside them: `bof3x.log`, `quick_<route>.sh`, `check.txt`, `frames.txt`.
 
 No ledger draft: the picture after a load is part of draft A's quick-load;
 `BOF3X_FRAMEHASH` is instrumentation.
+
+## 10. The audio participant `SOUND` (SP-A)
+
+Stage B's group SP-A, branch `quicksave/spa` (2026-10-19): `src/game/sound.cpp`
+(the participant and its self-test), one optional hook in SN's registry
+(10.2), and DIV-0129's flag read and set beside its row in
+`save_menu.cpp`. Built, self-tested headless in the exe host, measured
+in-process on three routes (10.5). **Not heard by the owner.**
+
+### 10.1 What a restore must do for sound
+
+The span holds the game's words about sound, but most of what they name
+belongs to the process (census 4 and 5): DirectSound buffers (`Sound_Banks`'
+voice entries, `Sound_Channels`, `SndStream_Buffer`, `Music_Buffer`,
+`Music_Notify`, the two events), heap blocks (each bank's sample data at
+record `+0x380`, the last stream's file `0x6BDE44`, `Music_File`,
+`Music_Data`), the MP3 decoder and DIV-0087's synth. Written back as the take
+had them, they name buffers and blocks that a later load has released or
+freed: **section 8's combat crash** (`DSOUND.dll+0x2DF88`), and in this
+round's "before" runs (10.5) heap corruption in `ntdll` as the next bank,
+stream or BGM file was loaded - each such load frees the take's stale
+pointer a second time.
+
+### 10.2 Two halves around the span write
+
+A participant's `Restore` sees the span already written, so the live
+pointers are gone by then. `Snapshot_Register` takes an optional fourth
+argument, a **discard**, which `Restore` (`snapshot.cpp`) calls for every
+participant in the file **after the file is checked and before the span is
+written**. Nothing else of SN's changed (`SnapshotDiscardFn`, a field of the
+registry's entry, one loop): SP-G may want the same for its surfaces.
+
+- **Discard** (the live words): for every bank whose data word is set, each
+  voice entry's buffer that `Snd_LoadBank` made (`SndBuf_Release`: stopped,
+  released) and the sample data freed - what a reload of that bank does;
+  `SndStream_Stop`; `Music_Release` (the ring, its notification and events,
+  the file's copy, the decoder, the synth stopped); the last stream's file
+  and `Music_File` freed. `Snd_Device` and `Snd_Primary` are the process's
+  and are kept, by value.
+- **Restore** (the take's words): the device put back; every stale pointer
+  cleared; then, in order -
+  1. **the banks**: each loaded bank's sample data from the record into a
+     new block, the 64 voice entries rebased onto it (same offsets), and a
+     buffer made for each from its own wave by `SndBuf_FromWave` - so
+     `0x5A69E0`'s buffer, as `Snd_LoadBank` makes them. The cues and the
+     rest of each record come from the span untouched;
+  2. **the channels**: each of the 23 names the new buffer of the entry its
+     old buffer belonged to at the take (found by the take's buffer word
+     among the entries); a channel holds only a looping voice
+     (`Sound_PlayEffect`), so one that was playing plays again, looping, at
+     its frequency and play position (`GetFrequency` / `GetCurrentPosition`
+     at the take). **A one-shot voice playing at the take is cut**, as the
+     round doc allows;
+  3. **the last stream's file** from the record, and a voice stream
+     (`SndStream_Buffer`, kind > 0) playing from it at the take made again by
+     `SndStream_Play` at its position (stopped if it had stopped: the inn's
+     and the camp's waits read it through `Sound_StreamDone`);
+  4. **`Music_File`** read again: `Music_LoadFile(Music_LoadedTrack)` (the
+     cache's song under DIV-0087), refused with a Fatal unless size, loop
+     flag and track come back as the span had them;
+  5. **the music stream**: `Music_Start` of the same stream - `Music_File`'s
+     track, or the record's copy of `Music_Data` for a `Sound_LoadStream`
+     stream - moved before its first half is decoded to **the sample heard at
+     the take** by `ResumeSkip`, DIV-0092's own mechanism (the MP3 decoded
+     from the top and dropped, bit-exact; the synth by `FastForward`); the
+     heard sample is the play cursor's (`HeardFolded`, the code `Remember`
+     used, now shared), folded into the first pass and loop as DIV-0092
+     folds it. Then `Music_SetVolume` from the span's `Music_Volume`; a
+     once-only stream that had played past its end gets zeros in both halves
+     and `Music_Finished` set, so the pump stops it at its next notification
+     as it would have; a stream that was stopped is stopped again;
+  6. **our statics**: DIV-0092's position (`g_resume`: remembered and
+     pending), DIV-0028's `g_fade_frame` and `g_stop_unseen`, DIV-0132's
+     `g_unducked`, DIV-0129's `g_stream_missing`;
+  7. `Snd_BufferDesc` .. `Snd_WaveFormat` (`0x7DE378`, 0x3C bytes, every
+     `CreateSoundBuffer`'s scratch) put back as the span had them: the
+     rebuild wrote them once a buffer, and the first run showed them on page
+     `0x7DE000` until the game's next buffer (115 ticks in combat).
+
+**Rebuilt, not copied:** the decoder, the synth, the ring and
+`Music_Staging` (`Music_CreateBuffer` and the pump refill it), the measured
+loop's position (`g_loop`, by the skip), DIV-0092's ring bookkeeping
+(`g_ring`), every buffer. **Saved:** each bank's sample data (a copy of the
+heap block; its size from the toolchain's allocator, `_msize` - every
+`Crt_malloc` is `std::malloc` since crt-rest 2.6), the last stream's file,
+a non-track stream's `Music_Data`, the channels' entries and play state,
+the voice stream's, the music's kind, play state, loop flag and heard
+sample, our six statics. SC's eight rows: `g_loop`, `g_ring` rebuilt;
+`g_resume`, `g_fade_frame`, `g_stop_unseen`, `g_unducked`,
+`g_stream_missing` saved; `music_seq`'s `g_s` rebuilt by `LoadFile` and
+`FastForward` (not exercised live: no cache on the measured install).
+
+**Which file each bank came from is not recorded**, as SC suggested: the
+block is copied instead, which needs no hook in `Snd_LoadBank`
+(`display_env.cpp`) or `Snd_LoadBankFile` and holds under DIV-0089's cache and
+DIV-0113's layers alike. It costs the record **623,096 bytes** in the combat
+route's battle (six banks) and 1,161,348 in `musicStopCheck`'s; the file was
+4,652,284 bytes in combat against 3,944,065 before. Recording (file, layer,
+tag) instead is IDEAS I45's (the size), not needed for correctness.
+
+The record's version is 1; a record of another version is a Fatal (the
+build check refuses another build first).
+
+### 10.3 Refusals and Fatals (rule 4)
+
+A restore with no discard before it, a bank whose data word in the span is
+not the record's, a bank with data and no bytes, a voice entry pointing
+outside its bank's data, a channel naming a bank or entry out of range, a
+`Music_File` that does not read back as the take's, a track stream with no
+file: each a Fatal naming it. At the take: a synth stream that is not
+`Music_File`'s track is a Fatal (it cannot happen: `IsSong` holds only for
+it); a channel naming a buffer no entry holds is logged and comes back
+silent.
+
+### 10.4 The self-test
+
+In the exe host's `BOF3X_SELFTEST_ONLY` start (beside SN's), hosted under
+`BOF3X_SHADOW=sound`. The participant's own `Save`, `Discard` and `Restore`,
+with SN's span write played by hand between them (the take's words written
+back), on stand-ins: DirectSound buffers with a vtable of ours (status,
+frequency, cursor, play flags, releases counted), the heap through
+`std::malloc`, `Music_LoadFile` and `Music_Start` recorded.
+
+- **Fades** - a DIV-0132 duck five frames in (then the unduck), a fade to a
+  stop four steps in (DIV-0143's state, `musicStopCheck`'s), one taken before
+  its first tick (DIV-0028's unseen stop), a fade in half way: each saved,
+  run on, everything of ours scribbled, restored and run again; the two runs
+  equal tick for tick in volume, count, track, stops and every
+  `Music_SetVolume`, the stopping ones stopping once.
+- **Banks** - two banks loaded by `Snd_LoadBank` from synthetic payloads, two
+  looping voices playing on channels 5 and 9 and a stopped one on 7, a voice
+  stream; after the take bank 1 reloaded (its buffers released, its data
+  freed: the crash's case) and bank 2 loaded; the restore: every buffer of
+  the take and of the live process released exactly once, the heads and
+  sample data of banks 1 and 3 equal to the take's, bank 2 unloaded, every
+  voice rebased and its buffer made anew from its own wave (hash of the data
+  chunk equal), the channels on the new buffers, the two looping ones
+  playing with loop set at their frequency and position, the stopped one
+  not; the stream's file and its voice playing again at its position.
+- **Music** - a track stream with the play cursor `0x800` bytes into the
+  ring's second half: `Music_LoadFile(200)` called with `Music_File`
+  cleared, `Music_Start(Music_File, 1000, 0)` with the skip armed at the
+  folded heard sample (55,296), the volume set from the span, DIV-0092's
+  position back; and the same with the stream stopped, which is stopped
+  again once.
+
+Measured 2026-10-19: passes (`q_spa\launcher`, the release launcher, no
+ini). A mutation (the fade frame restored one off) failed seven of its
+checks, the frame comparisons among them.
+
+### 10.5 The measurement
+
+`tools/quicksave_check.py run tools/recipes/quick_<r>.txt` then its
+`inproc` analysis; the exe host, the PC install hard-linked into
+`C:\Users\kerok\q_spa\game`, an ini-less release launcher, `BOF3X_OPT=none
+BOF3X_LAYERING=0`, the 173-range skip list, `BOF3X_MUSIC_LOG=1`. "Before" is
+the round's tip `a8002f6f` (no participant); "after" this branch.
+
+| Route (F6 / F7) | Before | After |
+|---|---|---|
+| `quick_combat` (900 / 1200) | first difference k = 1 (`0x6BC000`, `0x7DE000`); **crash** in `ntdll` heap code (`0xC0000005` at `ntdll+0x4FFCC`) after the window, at recipe frame about 2028 (some 830 frames after the restore), the first `DAT\COMN_SE.DAT` load since (a bank: `Snd_LoadBank` freeing the take's stale block) | **no crash**: the 300-tick window and the route to its end (battle won, track 165 at f2501); `SND\091_03.DAT` loaded twice after the restore. First difference **k = 1**: `0x6BC000` for 120 ticks (`Overlay_Frames`, SN's "Quickload" line) and `0x7DE000` at k = 1 only (`Gpu_DispEnv` / `Gpu_DrawEnv` `+2`: the display's buffer parity) |
+| `quick_musicStopCheck` (2808 / 3108) | first difference k = 1; **crash** in `ntdll` heap code at k = 30, f2838, as `Music_LoadFile` read `BGM\091.DAT` (the stale `Music_File` freed); DIV-0092's position gone - track 91 from the top, fade 10 | first difference **k = 1**, the same two pages; the fade to a stop completes at f2814 as live; **track 91 resumes at sample 479,232 with the 30-frame fade, as live**; then at k = 81 a Fatal `render: Release of a surface with no references` (SP-G's surfaces, not sound) |
+| `quick_shop` (1110 / 1410) | first difference k = 1; **crash** at k = 67 (a call through a null pointer, area 7 mode 7) | **no crash**, the 300-tick window; first difference **k = 1**, the same two pages |
+
+The raw dumps (`BOF3X_STATEHASH_DUMP`) at k = 1 and k = 10 or 20 on each
+route, byte for byte: what differs on the sound pages is **only pointer
+words** - `Sound_Banks`' sample and buffer pointers and data words,
+`Music_File`, `Music_Events`, `Music_Buffer`, `Music_Notify`, `Music_Data`
+(every one inside a skip row) - and `Music_Staging`'s 73,728 bytes
+(refilled). No sound word the game reads as a number differed:
+`Music_FadeCount`, `Music_FadeStep`, `Music_FadeStops`, `Music_Volume`,
+`Music_Track`, `Music_Loops`, the kind word and the banks' cues all equal.
+The rest of each dump's differences are SN's overlay and SP-G's rows
+(`Gfx_ClutRows`, `Gfx_TexCache`, `D3d_CellTexCache`, `D3d_Vertices`,
+`Gpu_DispEnv` / `Gpu_DrawEnv`).
+
+**The music's position.** `quick_combat` again with `BOF3X_WAV_DIR` (the
+dump goes on through the counter's jump back; its clock is the run's frames,
+`docs/wav-dump.md` 1). The take held battle track 151 at heard sample
+695,899, folded to 695,808 (the frame's start); the restore started it there
+(`asked 695808`). The dump's half-second windows from k = 0 to 285 in steps
+of 15, after the take against after the restore, cross-correlated over +-1 s
+(`scratch\wav_lag.py` and an inline loop): every window where the music is
+alone peaks at **lag +3,140 samples (71.2 ms) with correlation 1.000** (k =
+30..105, 150, 255) - the same music sample for sample, 71 ms later after the
+restore than after the take; windows carrying the battle's effects peak at
+lag 0 (the replayed effects land on the same frames). **Within a buffer's
+length** (the ring's 36,864 samples, 836 ms) and within a fifth of a half.
+The 3,140 is the dump's measure of where the device's play cursor stood
+against the dump's own model of the queue at the take (the resume takes the
+cursor; the dump plays the queue at the frames' pace), plus the 91 samples
+of the frame floor; not separated further.
+
+Run folders, logs, dumps and crash dumps: `C:\Users\kerok\q_spa\runs\`
+(`base_*`, `after_*`, `after_*_3` with the dumps); the scripts in
+`C:\Users\kerok\q_spa\scratch\`. Game-derived, outside the tree.
+
+### 10.6 What still differs, and whose
+
+- **SP-G:** the texture caches and CLUT rows (pages `0x6C3000`..,
+  `0x7CB000`..), the display's buffer parity for one tick (`Gpu_DispEnv` /
+  `Gpu_DrawEnv`), and the `render: Release of a surface with no references`
+  Fatal 81 frames into `musicStopCheck`'s window.
+- **SN:** `Overlay_Text` / `Overlay_Frames`, written after the span by
+  design (the "Quickload" line), 120 ticks.
+- **Sound, by design:** a one-shot effect playing at the take is cut; a
+  voice stream playing an older file than the last stream's (a kind-0
+  stream loaded over it while it played) is cut, logged; the MP3 on a
+  rewinding track resumes at the start of the frame holding the heard
+  sample (26 ms at most early, DIV-0092's fold).
+- **Not measured:** the cross-process form; an install with DIV-0087's
+  cache (the synth's `FastForward` path is DIV-0092's, tested there);
+  a quick-load during a voice stream (no route holds one).
+
+### 10.7 Ledger: an addendum to draft A (for the coordinator)
+
+No behaviour of the game changes outside a quick-load. Inside one, draft A
+should say what sound does, so that "what a restore gives back" is on the
+record: *"Sound after a quick-load: the music resumes at the sample that was
+heard at the take (for an MP3 on a track that rewinds, the start of its
+26 ms frame), at the take's volume and fade; looping sound effects and a
+playing voice stream resume at their positions; a one-shot sound effect
+playing at the take is not resumed."*
+
