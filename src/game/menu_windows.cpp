@@ -198,12 +198,12 @@ extern "C" void __cdecl MsgBox_DrawArrow(int x, int y) {
     g.commit(1, 0xC);
     unsigned char* const p = Next();
     g.set_sprt(p);
-    SetWord(p + 0x16, g.get_clut(0xC0, 0x1E0));
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, g.get_clut(0xC0, 0x1E0));
     p[4] = p[5] = p[6] = 0x80;
     Put(p + 8, F(S16(x)));
     Put(p + 0xC, F(S16(y)));
-    SetWord(p + 0x18, 8);
-    SetWord(p + 0x1A, 8);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 8);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
     p[0x14] = 0xD0;
     p[0x15] = 0xF8;
     g.set_semi(p, 1);
@@ -237,9 +237,9 @@ extern "C" void __cdecl Text_DrawFont12(int x, int y, int colour, const unsigned
             pen_y += 0xC;
             pen_x = static_cast<std::uint32_t>(x);
         } else if (c != 0x20 && c != 0) {
-            SetWord(p + 0x16, clut);
-            SetWord(p + 0x18, 0xC);
-            SetWord(p + 0x1A, 0xC);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0xC);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0xC);
             p[4] = p[5] = p[6] = 0x80;
             p[0x14] = static_cast<unsigned char>((c % 21) * 12);
             p[0x15] = static_cast<unsigned char>((c / 21) * 12);
@@ -275,7 +275,7 @@ extern "C" void __cdecl Text_DrawFont8(int x, int y, int colour, const unsigned 
             pen_y += 8;
             pen_x = static_cast<std::uint32_t>(x);
         } else if (c != 0x20 && c != 0) {
-            SetWord(p + 0x16, clut);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
             p[4] = p[5] = p[6] = 0x80;
             const int cell = static_cast<int>(c) - 0x20;
             p[0x14] = static_cast<unsigned char>((cell % 32) * 8);
@@ -384,8 +384,8 @@ extern "C" void __cdecl Menu_DrawBox(int x, int y, int w, int h, int flags, int 
         Put(p + 0x2C, Add(fyh, -4.0));
         p[0x35] = static_cast<unsigned char>(yhb - 4);
     }
-    SetWord(p + 0x16, g.get_clut(static_cast<int>(clut_x & 0xFFFF), 0x1E1));
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(static_cast<int>(clut_x & 0xFFFF), 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     g.commit(1, 0x48);
 
     const auto wv = static_cast<std::uint32_t>(w);
@@ -508,10 +508,10 @@ void PieceSprite(int x, int y, unsigned u, unsigned v, unsigned w, unsigned h, u
     Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
     p[0x14] = static_cast<unsigned char>(u);
     p[0x15] = static_cast<unsigned char>(v);
-    SetWord(p + 0x18, w);
-    SetWord(p + 0x1A, h);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, w);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, h);
     const unsigned clut = (f & 2) ? g.get_clut(0x80, 0x1E2) : g.get_clut(0xB0, 0x1E1);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
     p[4] = p[5] = p[6] = 0x80;
     g.commit(1, 0x1C);
 }
@@ -563,10 +563,10 @@ extern "C" void __cdecl Menu_DrawPiece(int x, int y, unsigned id, unsigned flags
     Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
     p[0x14] = rect[0];
     p[0x15] = rect[1];
-    SetWord(p + 0x18, rect[2]);
-    SetWord(p + 0x1A, rect[3]);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, rect[2]);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, rect[3]);
     const unsigned clut = (f & 2) ? g.get_clut(0x80, 0x1E2) : g.get_clut(0xB0, 0x1E1);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
     p[4] = p[5] = p[6] = 0x80;
     g.commit(1, 0x1C);
 }
@@ -671,7 +671,7 @@ extern "C" void __cdecl Menu_DrawIcon8(int x, int y, int icon, int dim) {
     p[0x15] = 0xF8;
     p[0x14] = static_cast<unsigned char>((icon + 7) << 3);
     const unsigned i = static_cast<unsigned>(icon) & 0xFF;
-    SetWord(p + 0x16, (i == 1 || i == 3 || i == 15) ? 0x780E : 0x780C);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, (i == 1 || i == 3 || i == 15) ? 0x780E : 0x780C);
     g.commit(1, 0x18);
 }
 
@@ -755,8 +755,8 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     const auto hb3 = static_cast<unsigned char>(hb - 3);
     p[0x35] = hb3;
     const int clut_x = static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 5) + 0x10;
-    SetWord(p + 0x16, g.get_clut(clut_x, 0x1E1));
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     g.commit(1, 0x48);
 
     const std::int32_t ws = U16(w1);
@@ -784,8 +784,8 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     p[0x44] = static_cast<unsigned char>(half);
     p[0x45] = hb;
     p[4] = p[5] = p[6] = 0xAC;
-    SetWord(p + 0x16, g.get_clut(clut_x, 0x1E1));
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     g.commit(1, 0x48);
 
     p = Next();
@@ -810,8 +810,8 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     p[0x44] = u3;
     p[0x45] = hb;
     p[4] = p[5] = p[6] = 0xAC;
-    SetWord(p + 0x16, g.get_clut(clut_x, 0x1E1));
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     g.commit(1, 0x48);
 
     p = Next();
@@ -837,8 +837,8 @@ extern "C" void __cdecl Menu_DrawTitleBox(int x, int y, int w, int h, int colour
     p[0x25] = 2;
     p[0x35] = static_cast<unsigned char>(hb - 1);
     p[0x45] = hb3;
-    SetWord(p + 0x16, g.get_clut(clut_x, 0x1E1));
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(clut_x, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     g.commit(1, 0x48);
 
     const unsigned char* const whole = PoolRect(0, 0, 0x100, 0x100);
@@ -873,9 +873,9 @@ extern "C" void __cdecl Menu_DrawBigIcon(int x, int y, int icon, int shade) {
     Put(p + 0xC, F(U16(static_cast<std::uint32_t>(y))));
     p[0x14] = r[0];
     p[0x15] = r[1];
-    SetWord(p + 0x18, 0x28);
-    SetWord(p + 0x1A, 0x30);
-    SetWord(p + 0x16, ((r[3] + 0x1E0u) << 6) | static_cast<unsigned>(r[2] >> 4));
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x28);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0x30);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, ((r[3] + 0x1E0u) << 6) | static_cast<unsigned>(r[2] >> 4));
     g.commit(1, 0x1C);
 }
 
@@ -1208,8 +1208,8 @@ extern "C" void __cdecl Menu_DrawMoneyBox(int x, int y, int, unsigned value) {
     g.font12(x + 4, y + 4, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     g.text_draw_at(x + 0x58, y + 4, 0, 0xFF, At(at::kMoneyLabel));
     g.pieces(x, y, At(0x6633A8), 0);
-    for (unsigned i = 0; i < 11; ++i) g.pieces(x + static_cast<int>(i * 8), y, At(0x6633B4), 0);
-    g.pieces(x, y, At(0x6633C0), 0);
+    for (unsigned i = 0; i < 11; ++i) g.pieces(x + static_cast<int>(i * 8), y, At(Menu_PlayTimePieces_addr), 0);
+    g.pieces(x, y, At(Menu_PlayTimePieces_addr + 0xc), 0);
 }
 
 // original 0x575430 (PSX 0x801DB988 and three more overlays' copies): a
@@ -1301,13 +1301,13 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
                 g.set_sprt(p);
                 g.set_semi(p, 0);
                 Put(p + 8, fcolumn);
-                SetWord(p + 0x16, clut);
+                rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
                 Put(p + 0xC, F(S16(row)));
                 const unsigned char* const r = At(at::kBackdropRects + *pattern++ * 4u);
                 p[0x14] = r[0];
                 p[0x15] = r[1];
-                SetWord(p + 0x18, r[2]);
-                SetWord(p + 0x1A, r[3]);
+                rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, r[2]);
+                rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, r[3]);
                 p[4] = p[5] = p[6] = 0x80;
                 g.commit(1, 0x1C);
                 row += r[3];
@@ -1354,7 +1354,7 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
                 dim = 1;
             }
             unsigned char colour = dim ? 7 : 0;
-            const unsigned char adj = (Word(w + 0x12) & 0xFFF0) != 0xF0 ? moving : 0;
+            const unsigned char adj = (static_cast<std::uint16_t>(rv::As<records::ItemListWindow>(w)->scroll) & 0xFFF0) != 0xF0 ? moving : 0;
             const unsigned mark = w[0xD] + static_cast<unsigned>(adj);
             const unsigned here = w[0xB] + static_cast<unsigned>(i);
             if (here == mark) colour = 2;
@@ -1395,8 +1395,8 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
     g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At((w[0x10] & 2) ? 0x66349C : 0x663484), 1);
     g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At((w[0x10] & 1) ? 0x6634A8 : 0x663490), 1);
     {
-        const unsigned t = Word(w + 0x10);
-        SetWord(w + 0x10, (t & 0xF0) ? t - 0x10 : 0);
+        const unsigned t = static_cast<std::uint16_t>(rv::As<records::ItemListWindow>(w)->arrows);
+        rv::Store<unsigned>(rv::As<records::ItemListWindow>(w)->arrows, (t & 0xF0) ? t - 0x10 : 0);
     }
     for (unsigned b = 0; b < 10; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 0x28, rv::As<records::WindowRecord>(w)->y, 1, 1);
     for (unsigned b = 0; b < 15; ++b) g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 0x18, 4, 1);
@@ -1483,8 +1483,8 @@ extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned 
     Put(p + 0x3C, fbottom);
     p[0x35] = 0x9F;
     p[0x45] = 0x9F;
-    SetWord(p + 0x26, g.get_tpage(0, 0, 0x340, 0x100));
-    SetWord(p + 0x16, g.get_clut(0xB0, 0x1E1));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(0xB0, 0x1E1));
     p[4] = p[5] = p[6] = 0x80;
     g.commit(1, 0x48);
 }
