@@ -475,6 +475,15 @@ void Rebound() {
     if (g_sigma_on != 0) Follow("the Config screen's rebind", "the rebind only swaps: a fault of ours");
 }
 
+void SnapshotRestored(bool release_words) {
+    g_release_words = release_words;
+    if (!g_armed) return;
+    std::string why;
+    g_table = Build(Words(), why);
+    if (g_sigma_on != 0 && !g_table.valid)
+        bof3::Fatal("ButtonSigma: after a quickload the Config's six lines are not one button each (%s)", why.c_str());
+}
+
 void Arm() {
     if (bof3::WantsShadow("sigma")) SelfTest();
     std::string how;
