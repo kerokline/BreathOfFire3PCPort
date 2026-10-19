@@ -285,8 +285,8 @@ extern "C" void __cdecl BattleIntro_OpenWindows(void) {
     auto* const window_first = rv::As<records::WindowRecord>(Window(g.window_alloc(0x14, 3) & 0xFF));
     window_first->kind = 7;
     window_first->state = 0;
-    window_first->centre_x = 0x14;
-    window_first->centre_y = 0xFFEA;
+    window_first->x = 0x14;
+    window_first->y = 0xFFEA;
     if (BattlePhases_Initiative == 1) g.queue_push(2, 0x30, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g.msg_system_ptr(0x16))));
     if (BattlePhases_Initiative == 2) g.queue_push(2, 0x30, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g.msg_system_ptr(0x17))));
     for (unsigned m = 0; m < 3; ++m) {
@@ -299,8 +299,8 @@ extern "C" void __cdecl BattleIntro_OpenWindows(void) {
         window_rec->kind = 5;
         window_rec->state = 0;
         const unsigned facing = ((B(at::kFacing) ^ 2u) >> 1) * 2u;
-        window_rec->centre_x = static_cast<unsigned>(S8(at::kFacingOffsets + facing) + S8(at::kStatusOffsets + pair) + static_cast<std::uint16_t>(member_rec->screen_x));
-        window_rec->centre_y = static_cast<unsigned>(S8(at::kStatusOffsets + pair + 1) + static_cast<std::uint16_t>(member_rec->screen_y) + 0xC);
+        window_rec->x = static_cast<unsigned>(S8(at::kFacingOffsets + facing) + S8(at::kStatusOffsets + pair) + static_cast<std::uint16_t>(member_rec->screen_x));
+        window_rec->y = static_cast<unsigned>(S8(at::kStatusOffsets + pair + 1) + static_cast<std::uint16_t>(member_rec->screen_y) + 0xC);
         w[0xA] = static_cast<unsigned char>(m);
         w[8] = 0;
         w[9] = 0;
@@ -469,7 +469,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         records::PartyMember* member_rec = rv::As<records::PartyMember>(p);
         SetPtrAt(at::kMenuActor, p);
         member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~4u);
-        rv::As<records::PartyMember>(MenuActor())->state[0] = 2;
+        rv::As<records::PartyMember>(MenuActor())->state = 2;
         p = MenuActor();
         member_rec = rv::As<records::PartyMember>(p);
         if (p[0x125] == 5) {
@@ -501,14 +501,14 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
     unsigned held = Input_Held;
     if ((held & 0x100) != 0) {
         g.play_effect(0x104);
-        const unsigned y = rv::As<records::WindowRecord>(Window(2))->centre_y;
-        const unsigned x = rv::As<records::WindowRecord>(Window(2))->centre_x;
+        const unsigned y = rv::As<records::WindowRecord>(Window(2))->y;
+        const unsigned x = rv::As<records::WindowRecord>(Window(2))->x;
         rv::As<records::WindowRecord>(Window(2))->state = 2;
         rv::As<records::WindowRecord>(Window(1))->state = 2;
         rv::As<records::WindowRecord>(Window(3))->state = 2;
         g.draw_command_cross(static_cast<int>(x), static_cast<int>(y));
         g.draw_command_label(B(at::kCommand));
-        g.draw_party_status(static_cast<int>(rv::As<records::WindowRecord>(Window(1))->centre_x), static_cast<int>(rv::As<records::WindowRecord>(Window(1))->centre_y));
+        g.draw_party_status(static_cast<int>(rv::As<records::WindowRecord>(Window(1))->x), static_cast<int>(rv::As<records::WindowRecord>(Window(1))->y));
         BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
         return;
     }
@@ -566,11 +566,11 @@ extern "C" void __cdecl BattleMenu_ConfirmDispatch(void) {
 // each use, as the original.
 extern "C" void __cdecl Cmd_ConfirmDefend(void) {
     MenuRecord()[1] = 2;
-    const unsigned char target = rv::As<records::PartyMember>(MenuActor())->member;
+    const unsigned char target = rv::As<records::PartyMember>(MenuActor())->actor;
     MenuRecord()[0] = target;
     unsigned char* const r = MenuRecord();
     SetLong(r + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(r + 0xC)) | 2u));
-    rv::As<records::PartyMember>(MenuActor())->state[0] = 2;
+    rv::As<records::PartyMember>(MenuActor())->state = 2;
     const unsigned char index = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     BattleActions_Step = 1;
     BattleActorCopies_EntryCount = index;

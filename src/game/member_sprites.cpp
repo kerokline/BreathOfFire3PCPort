@@ -113,7 +113,7 @@ unsigned FlagsLow() { return (Field_ScriptFlags2 | Field_ScriptFlags) & 0xFF; }
 // jumps (a tail call).
 extern "C" void __cdecl Field_MemberFrame(void) {
     g.restore_clut();
-    Dispatch(g.member_states, rv::Current<records::PartyMember>()->state[0]);
+    Dispatch(g.member_states, rv::Current<records::PartyMember>()->state);
 }
 
 // original 0x51AC70, state 0 (PSX 0x801BCE90): the member's counters cleared,
@@ -123,7 +123,7 @@ extern "C" void __cdecl Member_Start(void) {
     SetLong(Sprite_Current + 0x18, 0);
     SetLong(Sprite_Current + 0x1C, 0);
     SetLong(Sprite_Current + 0x20, 0);
-    Sprite_Current[6] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->member - 1);
+    Sprite_Current[6] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->actor - 1);
     Sprite_Current[7] = 0;
     {
         const records::PartyMember* const c = rv::Current<records::PartyMember>();
@@ -139,8 +139,8 @@ extern "C" void __cdecl Member_Start(void) {
     Field_State[0x137] = 0;
     Field_State[0x136] = 0;
     g.set_animation(rv::Current<records::PartyMember>()->direction);
-    rv::Current<records::PartyMember>()->state[0] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->state[0] + 1);
-    rv::Current<records::PartyMember>()->state[1] = 0;
+    rv::Current<records::PartyMember>()->state = static_cast<unsigned char>(rv::Current<records::PartyMember>()->state + 1);
+    rv::Current<records::PartyMember>()->step = 0;
 }
 
 // original 0x51AD40, state 1 (PSX 0x801BCFAC): its sub-state through the
@@ -149,7 +149,7 @@ extern "C" void __cdecl Member_Start(void) {
 // As the original has it: the sub-state Sprite_Current +2 is unchecked; the
 // tick is a tail jump whose al no caller reads.
 extern "C" void __cdecl Member_Control(void) {
-    Dispatch(g.control_states, rv::Current<records::PartyMember>()->state[1]);
+    Dispatch(g.control_states, rv::Current<records::PartyMember>()->step);
     g.script_tick();
 }
 
@@ -166,24 +166,24 @@ extern "C" void __cdecl Member_Control(void) {
 // side effect is all it leaves); the animation 8 on is a byte add.
 extern "C" void __cdecl Member_Follow(void) {
     if (Field_Request == 9) {
-        rv::Current<records::PartyMember>()->state[0] = 0xE;
-        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->state = 0xE;
+        rv::Current<records::PartyMember>()->step = 0;
         return;
     }
     const unsigned flags = Field_ScriptFlags2;
     if (flags & 0x1000) {
-        rv::Current<records::PartyMember>()->state[0] = 5;
-        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->state = 5;
+        rv::Current<records::PartyMember>()->step = 0;
         Sprite_Current[0xB] = 0;
         return;
     }
     if (flags & 0xC00) return;
     if (g.test_535120(1)) return;
     if (g.test_535240(1)) return;
-    if (rv::As<records::PartyMember>(ObjTrio)->state[0] == 0xA) {
+    if (rv::As<records::PartyMember>(ObjTrio)->state == 0xA) {
         g.ensure_animation(rv::Current<records::PartyMember>()->direction);
-        rv::Current<records::PartyMember>()->state[0] = 7;
-        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->state = 7;
+        rv::Current<records::PartyMember>()->step = 0;
         return;
     }
     if (g.idle()) return;
@@ -191,7 +191,7 @@ extern "C" void __cdecl Member_Follow(void) {
     case 0: {
         if (g.test_531df0()) {
             g.ensure_animation(rv::Current<records::PartyMember>()->direction);
-            rv::Current<records::PartyMember>()->state[1] = 0;
+            rv::Current<records::PartyMember>()->step = 0;
             return;
         }
         records::PartyMember* const state = rv::As<records::PartyMember>(Field_State);
@@ -209,7 +209,7 @@ extern "C" void __cdecl Member_Follow(void) {
         rv::Current<records::PartyMember>()->step_frames = static_cast<unsigned char>(rv::Current<records::PartyMember>()->step_frames - 1);
         g.call_52e140();
         Field_State[0x137] = 1;
-        rv::Current<records::PartyMember>()->state[1] = 1;
+        rv::Current<records::PartyMember>()->step = 1;
         return;
     }
     case 1:
@@ -219,22 +219,22 @@ extern "C" void __cdecl Member_Follow(void) {
         g.clear_steps();
         g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         Field_State[0x137] = 0;
-        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->step = 0;
         return;
     case 5:
         Field_State[0x128] = 3;
         g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         Field_State[0x137] = 4;
-        rv::Current<records::PartyMember>()->state[0] = 2;
-        rv::Current<records::PartyMember>()->state[1] = 3;
+        rv::Current<records::PartyMember>()->state = 2;
+        rv::Current<records::PartyMember>()->step = 3;
         return;
     case 6: {
         Field_State[0x128] = 3;
         g.ensure_animation(rv::Current<records::PartyMember>()->direction);
         Field_State[0x137] = 3;
-        rv::Current<records::PartyMember>()->state[0] = 8;
+        rv::Current<records::PartyMember>()->state = 8;
         records::PartyMember* const c = rv::Current<records::PartyMember>();
-        c->state[1] = (c->direction == 1 || c->direction == 7) ? 0 : 1;
+        c->step = (c->direction == 1 || c->direction == 7) ? 0 : 1;
         return;
     }
     default:
@@ -272,8 +272,8 @@ extern "C" void __cdecl Member_WalkEnd(void) {
     records::PartyMember* const c = rv::Current<records::PartyMember>();
     if (c->step_x != 0) return;
     if (c->step_z != 0) return;
-    if (c->state[0] != 1) return;
-    c->state[1] = 0;
+    if (c->state != 1) return;
+    c->step = 0;
 }
 
 // --- following the leader -------------------------------------------------------
@@ -297,7 +297,7 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     const std::uint32_t leader_steps = leader->step_frames;
     const std::uint32_t tx = leader_steps * static_cast<std::uint32_t>(leader->step_x) + static_cast<std::uint32_t>(leader->x);
     const std::uint32_t tz = leader_steps * static_cast<std::uint32_t>(leader->step_z) + static_cast<std::uint32_t>(leader->z);
-    const unsigned char who = c->member;
+    const unsigned char who = c->actor;
     if (Member((who & 0xFFu) ^ 3u)[0x137] != 9) {
         if (who == 2) {
             rv::Bytes(c)[6] = Member(1)[6] != 0 ? 0 : 1;
@@ -378,8 +378,8 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     const long here = g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
     SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(here));
     rv::Current<records::PartyMember>()->ot_slot = Member(0)[0x29];
-    rv::Current<records::PartyMember>()->state[0] = 2;
-    rv::Current<records::PartyMember>()->state[1] = 2;
+    rv::Current<records::PartyMember>()->state = 2;
+    rv::Current<records::PartyMember>()->step = 2;
     return 0xFF;
 }
 
@@ -608,14 +608,14 @@ extern "C" unsigned char __cdecl Member_Idle(void) {
     if (s[0x136] <= 0xF0) return 0;
     s[0x136] = 0;
     if (ObjTrio[0x137] == 9) return 0;
-    if (Member((rv::Current<records::PartyMember>()->member & 0xFFu) ^ 3u)[0x137] == 9) return 0;
+    if (Member((rv::Current<records::PartyMember>()->actor & 0xFFu) ^ 3u)[0x137] == 9) return 0;
     const unsigned pick = (static_cast<unsigned>(g.rand()) & 1u) + 1u;
-    if (rv::Current<records::PartyMember>()->member != pick) return 0;
+    if (rv::Current<records::PartyMember>()->actor != pick) return 0;
     Field_State[0x137] = 9;
     g.ensure_animation(rv::Current<records::PartyMember>()->direction);
     rv::Current<records::PartyMember>()->step_frames = 2;
-    rv::Current<records::PartyMember>()->state[0] = 6;
-    rv::Current<records::PartyMember>()->state[1] = 0;
+    rv::Current<records::PartyMember>()->state = 6;
+    rv::Current<records::PartyMember>()->step = 0;
     return 1;
 }
 
@@ -936,7 +936,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     const unsigned char from = g.byte_at(static_cast<short>(x0), static_cast<short>(z0));
     switch (to & 0xF0) {
     case 0x80:
-        if (rv::Current<records::PartyMember>()->member != 0) return 0xFF;
+        if (rv::Current<records::PartyMember>()->actor != 0) return 0xFF;
         [[fallthrough]];
     case 0x00:
     case 0x60:
@@ -975,7 +975,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
                 if (to == 0xAE) return 0;
             }
             if (to == 0xAF) return 0xA1;
-            if (rv::Current<records::PartyMember>()->member != 0) return 0xFF;
+            if (rv::Current<records::PartyMember>()->actor != 0) return 0xFF;
             return to;
         }
         if (to == 0xA2 || to == 0xA3) return 0xFF;

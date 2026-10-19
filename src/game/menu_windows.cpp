@@ -309,8 +309,8 @@ extern "C" void __cdecl Window_Kind2List() {
         const unsigned char* const record = Ptr(at::kCurrent);
         const unsigned char* const xy = At(at::kSetXY + set * 6);
         const auto dy = static_cast<std::uint16_t>(Word(xy + 4) * static_cast<std::uint16_t>(i));
-        const auto y = static_cast<std::uint16_t>(dy + (S16(rv::As<records::WindowRecord>(record)->centre_y) >> 4) + Word(xy + 2));
-        const auto x = static_cast<std::uint16_t>((S16(rv::As<records::WindowRecord>(record)->centre_x) >> 4) + Word(xy));
+        const auto y = static_cast<std::uint16_t>(dy + (S16(rv::As<records::WindowRecord>(record)->y) >> 4) + Word(xy + 2));
+        const auto x = static_cast<std::uint16_t>((S16(rv::As<records::WindowRecord>(record)->x) >> 4) + Word(xy));
         text = g.text_immediate(x, y, text);
         ++i;
         if (i > MenuWindows_ListCount) break;
@@ -1336,13 +1336,13 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
 // when it runs out), the frame's pieces and the scroll bar.
 extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
     unsigned char* const w = window;
-    g.box(rv::As<records::WindowRecord>(w)->centre_x + 3, rv::As<records::WindowRecord>(w)->centre_y + 3, 0x99, 0x9A, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x9A, w[9], static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const unsigned category = w[0xA];
     const unsigned char* items = Ptr(at::kInventory + category * 4) + top;
     const unsigned char* counts = Ptr(at::kCounts + category * 4) + top;
-    std::uint32_t row = static_cast<std::uint16_t>(static_cast<signed char>(offset) + rv::As<records::WindowRecord>(w)->centre_y) + 0x1Au;
+    std::uint32_t row = static_cast<std::uint16_t>(static_cast<signed char>(offset) + rv::As<records::WindowRecord>(w)->y) + 0x1Au;
     const unsigned rows = moving + 9u;
     for (unsigned char i = 0; i < rows; ++i) {
         if (items[0] != 0) {
@@ -1362,10 +1362,10 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
             const unsigned char count = row_category == 4 ? 1 : counts[0];
             if (here == mark || here == w[0xC] + static_cast<unsigned>(adj)) {
                 if (colour != 7)
-                    g.item_row(rv::As<records::WindowRecord>(w)->centre_x + 7, static_cast<int>(row), 7, row_category, items[0], count, 1);
-                g.item_row(rv::As<records::WindowRecord>(w)->centre_x + 7, static_cast<int>(row) - 2, colour, w[0xA], items[0], count, dim);
+                    g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row), 7, row_category, items[0], count, 1);
+                g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row) - 2, colour, w[0xA], items[0], count, dim);
             } else {
-                g.item_row(rv::As<records::WindowRecord>(w)->centre_x + 7, static_cast<int>(row), colour, row_category, items[0], count, dim);
+                g.item_row(rv::As<records::WindowRecord>(w)->x + 7, static_cast<int>(row), colour, row_category, items[0], count, dim);
             }
         }
         ++items;
@@ -1373,15 +1373,15 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         row += 0xD;
     }
 
-    g.box(rv::As<records::WindowRecord>(w)->centre_x + 3, rv::As<records::WindowRecord>(w)->centre_y + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(BattleDraw_Colour));
-    g.box(rv::As<records::WindowRecord>(w)->centre_x + 3, rv::As<records::WindowRecord>(w)->centre_y + 0x92, 0x99, 8, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 0x92, 0x99, 8, w[9], static_cast<unsigned char>(BattleDraw_Colour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
-        const int label_y = rv::As<records::WindowRecord>(w)->centre_y + 7;
+        const int label_y = rv::As<records::WindowRecord>(w)->y + 7;
         const unsigned char* const label = Ptr(at::kCategoryLabels + w[0xA] * 4u);
         const unsigned n = g.char_count(label);
         // DIVERGENCE DIV-0059: the original's 6 * (13 - n) unless a Latin overlay is on.
-        g.text_draw_at(static_cast<std::uint16_t>(ListTitle_X(label, static_cast<int>(n)) + rv::As<records::WindowRecord>(w)->centre_x), label_y, grey, 0x10,
+        g.text_draw_at(static_cast<std::uint16_t>(ListTitle_X(label, static_cast<int>(n)) + rv::As<records::WindowRecord>(w)->x), label_y, grey, 0x10,
                        label);
     }
     {
@@ -1390,30 +1390,30 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         const unsigned have = g.count_category(cat) & 0xFF;
         g.sprintf_(PrintBuf(), Format(at::kFmt3d3d), have, room);
         const unsigned char grey = w[9] ? 7 : 0;
-        g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x55, rv::As<records::WindowRecord>(w)->centre_y + 0x92, grey, reinterpret_cast<const unsigned char*>(PrintBuf()));
+        g.font8(rv::As<records::WindowRecord>(w)->x + 0x55, rv::As<records::WindowRecord>(w)->y + 0x92, grey, reinterpret_cast<const unsigned char*>(PrintBuf()));
     }
-    g.pieces(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y, At((w[0x10] & 2) ? 0x66349C : 0x663484), 1);
-    g.pieces(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y, At((w[0x10] & 1) ? 0x6634A8 : 0x663490), 1);
+    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At((w[0x10] & 2) ? 0x66349C : 0x663484), 1);
+    g.pieces(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, At((w[0x10] & 1) ? 0x6634A8 : 0x663490), 1);
     {
         const unsigned t = Word(w + 0x10);
         SetWord(w + 0x10, (t & 0xF0) ? t - 0x10 : 0);
     }
-    for (unsigned b = 0; b < 10; ++b) g.piece(rv::As<records::WindowRecord>(w)->centre_x + static_cast<int>(b * 8) + 0x28, rv::As<records::WindowRecord>(w)->centre_y, 1, 1);
-    for (unsigned b = 0; b < 15; ++b) g.piece(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y + static_cast<int>(b * 8) + 0x18, 4, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0x90, rv::As<records::WindowRecord>(w)->centre_y + 0x18, 0x16, 1);
-    for (unsigned b = 0; b < 12; ++b) g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0x90, rv::As<records::WindowRecord>(w)->centre_y + static_cast<int>(b * 8) + 0x28, 0x17, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0x90, rv::As<records::WindowRecord>(w)->centre_y + 0x88, 0x18, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y + 0x90, 0x19, 1);
-    for (unsigned b = 0; b < 9; ++b) g.piece(rv::As<records::WindowRecord>(w)->centre_x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->centre_y + 0x90, 0x1A, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0x50, rv::As<records::WindowRecord>(w)->centre_y + 0x90, 0x1B, 1);
-    for (unsigned b = 0; b < 6; ++b) g.piece(rv::As<records::WindowRecord>(w)->centre_x + static_cast<int>(b * 8) + 0x58, rv::As<records::WindowRecord>(w)->centre_y + 0x90, 0x1C, 1);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0x88, rv::As<records::WindowRecord>(w)->centre_y + 0x90, 0x1D, 1);
+    for (unsigned b = 0; b < 10; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 0x28, rv::As<records::WindowRecord>(w)->y, 1, 1);
+    for (unsigned b = 0; b < 15; ++b) g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 0x18, 4, 1);
+    g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x18, 0x16, 1);
+    for (unsigned b = 0; b < 12; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 0x28, 0x17, 1);
+    g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x88, 0x18, 1);
+    g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + 0x90, 0x19, 1);
+    for (unsigned b = 0; b < 9; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1A, 1);
+    g.piece(rv::As<records::WindowRecord>(w)->x + 0x50, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1B, 1);
+    for (unsigned b = 0; b < 6; ++b) g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 0x58, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1C, 1);
+    g.piece(rv::As<records::WindowRecord>(w)->x + 0x88, rv::As<records::WindowRecord>(w)->y + 0x90, 0x1D, 1);
     if (w[0xA] == 4) {
-        g.piece(rv::As<records::WindowRecord>(w)->centre_x + 8, rv::As<records::WindowRecord>(w)->centre_y, 0x32, 1);
-        g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0x90, rv::As<records::WindowRecord>(w)->centre_y, 0x33, 1);
+        g.piece(rv::As<records::WindowRecord>(w)->x + 8, rv::As<records::WindowRecord>(w)->y, 0x32, 1);
+        g.piece(rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y, 0x33, 1);
     }
     const unsigned char cat = w[0xA];
-    g.scroll_bar(Ptr(at::kInventory + cat * 4u), w[0xB], rv::As<records::WindowRecord>(w)->centre_x + 0x90, rv::As<records::WindowRecord>(w)->centre_y + 0x18, 9,
+    g.scroll_bar(Ptr(at::kInventory + cat * 4u), w[0xB], rv::As<records::WindowRecord>(w)->x + 0x90, rv::As<records::WindowRecord>(w)->y + 0x18, 9,
                  cat == 4 ? 0x20 : 0x80, 0x74);
 }
 
@@ -1502,9 +1502,9 @@ extern "C" void __cdecl Menu_DrawScrollBar(const unsigned char* items, unsigned 
 // again after each entry. Then the border (x, y, 0x14, 0x13).
 extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
     unsigned char* const w = window;
-    g.box(rv::As<records::WindowRecord>(w)->centre_x + 3, rv::As<records::WindowRecord>(w)->centre_y + 3, 0xAD, 0x9F, w[0xA], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAD, 0x9F, w[0xA], static_cast<unsigned char>(BattleDraw_Colour));
     const unsigned char* const list = Ptr(Addr(w + 0x20));
-    std::uint32_t text_y = static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->centre_y + 8);
+    std::uint32_t text_y = static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 8);
     std::uint32_t row_y = text_y + 3;
     if (list[0] != 0) {
         unsigned char i = 0;
@@ -1526,19 +1526,19 @@ extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
             g.sprintf_(PrintBuf(), Format(at::kFmt6dZ), cost);
             if (i == w[0xC]) {
                 if (colour == 0) {
-                    g.icon8(rv::As<records::WindowRecord>(w)->centre_x + 4, static_cast<int>(row_y), At(at::kBuyIcons)[kind], 1);
+                    g.icon8(rv::As<records::WindowRecord>(w)->x + 4, static_cast<int>(row_y), At(at::kBuyIcons)[kind], 1);
                     const unsigned n = g.char_count(name);
-                    g.text_draw_at(rv::As<records::WindowRecord>(w)->centre_x + 0xE, static_cast<int>(text_y), 7, static_cast<int>(n), name);
-                    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x71, static_cast<int>(row_y), 7,
+                    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), 7, static_cast<int>(n), name);
+                    g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), 7,
                             reinterpret_cast<const unsigned char*>(PrintBuf()));
                 }
                 text_y -= 2;
                 row_y -= 2;
             }
-            g.icon8(rv::As<records::WindowRecord>(w)->centre_x + 4, static_cast<int>(row_y), At(at::kBuyIcons)[kind], dim);
+            g.icon8(rv::As<records::WindowRecord>(w)->x + 4, static_cast<int>(row_y), At(at::kBuyIcons)[kind], dim);
             const unsigned n = g.char_count(name);
-            g.text_draw_at(rv::As<records::WindowRecord>(w)->centre_x + 0xE, static_cast<int>(text_y), colour, static_cast<int>(n), name);
-            g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x71, static_cast<int>(row_y), colour,
+            g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, static_cast<int>(text_y), colour, static_cast<int>(n), name);
+            g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, static_cast<int>(row_y), colour,
                     reinterpret_cast<const unsigned char*>(PrintBuf()));
             if (i == w[0xC]) {
                 text_y += 2;
@@ -1549,7 +1549,7 @@ extern "C" void __cdecl Shop_DrawBuyList(unsigned char* window) {
             ++i;
         } while (i < list[0]);
     }
-    g.border(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y, 0x14, 0x13);
+    g.border(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, 0x14, 0x13);
 }
 
 namespace {
@@ -1560,17 +1560,17 @@ namespace {
 void DetailFrame(const unsigned char* w, int bottom, unsigned rows) {
     PiecePage(0x380);
     for (unsigned b = 0; b < 0x14; ++b) {
-        g.piece(rv::As<records::WindowRecord>(w)->centre_x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->centre_y, 0x29, 0);
-        g.piece(rv::As<records::WindowRecord>(w)->centre_x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->centre_y + bottom, 0x3B, 0);
+        g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y, 0x29, 0);
+        g.piece(rv::As<records::WindowRecord>(w)->x + static_cast<int>(b * 8) + 8, rv::As<records::WindowRecord>(w)->y + bottom, 0x3B, 0);
     }
     for (unsigned b = 0; b < rows; ++b) {
-        g.piece(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y + static_cast<int>(b * 8) + 8, 0x2B, 0);
-        g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0xA8, rv::As<records::WindowRecord>(w)->centre_y + static_cast<int>(b * 8) + 8, 0x2C, 0);
+        g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 8, 0x2B, 0);
+        g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y + static_cast<int>(b * 8) + 8, 0x2C, 0);
     }
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y, 0x28, 0);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0xA8, rv::As<records::WindowRecord>(w)->centre_y, 0x2A, 0);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y + bottom, 0x3A, 0);
-    g.piece(rv::As<records::WindowRecord>(w)->centre_x + 0xA8, rv::As<records::WindowRecord>(w)->centre_y + bottom, 0x3C, 0);
+    g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y, 0x28, 0);
+    g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y, 0x2A, 0);
+    g.piece(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y + bottom, 0x3A, 0);
+    g.piece(rv::As<records::WindowRecord>(w)->x + 0xA8, rv::As<records::WindowRecord>(w)->y + bottom, 0x3C, 0);
 }
 
 }  // namespace
@@ -1589,25 +1589,25 @@ extern "C" void __cdecl Shop_DrawBuyDetail(unsigned char* window) {
     const unsigned price = g.item_price(category, id) & 0xFFFF;
     const std::uint32_t cost = g.price_scale(price, percent);
     const unsigned char* const name = g.item_name(category, id);
-    g.box(rv::As<records::WindowRecord>(w)->centre_x + 3, rv::As<records::WindowRecord>(w)->centre_y + 3, 0xAA, 0x3C, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x3C, 0, static_cast<unsigned char>(BattleDraw_Colour));
     const unsigned kind = g.item_kind(category, id) & 0xFF;
-    g.icon8(rv::As<records::WindowRecord>(w)->centre_x + 4, rv::As<records::WindowRecord>(w)->centre_y + 7, At(at::kBuyDetailIcons)[kind], 0);
+    g.icon8(rv::As<records::WindowRecord>(w)->x + 4, rv::As<records::WindowRecord>(w)->y + 7, At(at::kBuyDetailIcons)[kind], 0);
     const unsigned n = g.char_count(name);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->centre_x + 0xE, rv::As<records::WindowRecord>(w)->centre_y + 4, 0, static_cast<int>(n), name);
+    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
     g.sprintf_(PrintBuf(), Format(at::kFmt7dZ), w[0xC] * cost);
-    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x69, rv::As<records::WindowRecord>(w)->centre_y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     g.sprintf_(PrintBuf(), Format(at::kFmtCount), static_cast<unsigned>(w[0xC]));
-    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x89, rv::As<records::WindowRecord>(w)->centre_y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     const unsigned char* const held = g.msg_system_ptr(0x27);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->centre_x + 0xE, rv::As<records::WindowRecord>(w)->centre_y + 0x20, 0, 0xFF, held);
+    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x20, 0, 0xFF, held);
     const unsigned owned = g.count_owned(category, id, 0) & 0xFFFF;
     g.sprintf_(PrintBuf(), Format(at::kFmtCount), owned);
-    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x89, rv::As<records::WindowRecord>(w)->centre_y + 0x23, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x23, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     const unsigned char* const equipped = g.msg_system_ptr(0x28);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->centre_x + 0xE, rv::As<records::WindowRecord>(w)->centre_y + 0x2D, 0, 0xFF, equipped);
+    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x2D, 0, 0xFF, equipped);
     const unsigned worn = g.count_owned(category, id, 1) & 0xFFFF;
     g.sprintf_(PrintBuf(), Format(at::kFmtCount), worn);
-    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x89, rv::As<records::WindowRecord>(w)->centre_y + 0x30, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    g.font8(rv::As<records::WindowRecord>(w)->x + 0x89, rv::As<records::WindowRecord>(w)->y + 0x30, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     DetailFrame(w, 0x38, 6);
 }
 
@@ -1620,17 +1620,17 @@ extern "C" void __cdecl Shop_DrawSellDetail(unsigned char* window) {
     const unsigned char id = w[0xB], category = w[0xA], flag = w[0xD];
     const std::uint32_t unit = g.sell_price(category, id, flag);
     const unsigned char* const name = g.item_name(category, id);
-    g.box(rv::As<records::WindowRecord>(w)->centre_x + 3, rv::As<records::WindowRecord>(w)->centre_y + 3, 0xAA, 0x1C, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(rv::As<records::WindowRecord>(w)->x + 3, rv::As<records::WindowRecord>(w)->y + 3, 0xAA, 0x1C, 0, static_cast<unsigned char>(BattleDraw_Colour));
     const unsigned kind = g.item_kind(category, id) & 0xFF;
-    g.icon8(rv::As<records::WindowRecord>(w)->centre_x + 7, rv::As<records::WindowRecord>(w)->centre_y + 6, At(at::kSellIcons)[kind], 0);
+    g.icon8(rv::As<records::WindowRecord>(w)->x + 7, rv::As<records::WindowRecord>(w)->y + 6, At(at::kSellIcons)[kind], 0);
     const unsigned n = g.char_count(name);
-    g.text_draw_at(rv::As<records::WindowRecord>(w)->centre_x + 0x11, rv::As<records::WindowRecord>(w)->centre_y + 4, 0, static_cast<int>(n), name);
+    g.text_draw_at(rv::As<records::WindowRecord>(w)->x + 0x11, rv::As<records::WindowRecord>(w)->y + 4, 0, static_cast<int>(n), name);
     g.sprintf_(PrintBuf(), Format(at::kFmt6dZ), unit);
-    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x71, rv::As<records::WindowRecord>(w)->centre_y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    g.font8(rv::As<records::WindowRecord>(w)->x + 0x71, rv::As<records::WindowRecord>(w)->y + 7, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     g.sprintf_(PrintBuf(), Format(at::kFmt7dZ), w[0xC] * unit);
-    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0x69, rv::As<records::WindowRecord>(w)->centre_y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    g.font8(rv::As<records::WindowRecord>(w)->x + 0x69, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     g.sprintf_(PrintBuf(), Format(at::kFmtCount), static_cast<unsigned>(w[0xC]));
-    g.font8(rv::As<records::WindowRecord>(w)->centre_x + 0xE, rv::As<records::WindowRecord>(w)->centre_y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
+    g.font8(rv::As<records::WindowRecord>(w)->x + 0xE, rv::As<records::WindowRecord>(w)->y + 0x12, 0, reinterpret_cast<const unsigned char*>(PrintBuf()));
     DetailFrame(w, 0x18, 2);
 }
 

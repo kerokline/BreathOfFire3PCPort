@@ -143,7 +143,7 @@ void PoseParty() {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
@@ -272,9 +272,9 @@ extern "C" void __cdecl BossDLord_Death(void) {
     enemy_rec->flags_110 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
     auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     cur_enemy->flags &= 0xBF;
-    cur_enemy->state[0] = 3;
-    cur_enemy->state[1] = 0;
-    cur_enemy->state[2] = 0;
+    cur_enemy->state = 3;
+    cur_enemy->step = 0;
+    cur_enemy->state3 = 0;
 }
 
 // original 0x43F8A0: the +0xF4 hook: by the word's low byte through

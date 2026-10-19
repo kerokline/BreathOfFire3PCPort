@@ -189,7 +189,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             rv::Current<records::SpriteObject>()->flags2 |= 8;
             if (script[Pos(object) + 3u] & 1) rv::Current<records::SpriteObject>()->flags |= 0x10;
             else rv::Current<records::SpriteObject>()->flags &= 0xEF;
-            rv::Current<records::SpriteObject>()->pose = script[Pos(object) + 2u];
+            rv::Current<records::SpriteObject>()->flip = script[Pos(object) + 2u];
             const unsigned at = Pos(object);
             if (script[at + 3] & 2) {
                 g.set_animation_at(animation, script[at + 4]);

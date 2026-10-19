@@ -187,7 +187,7 @@ void LightClutRow(unsigned runs, const bool* stp) {
 // The task at its owner: +0x34 / +0x38 / +0x3C from the owner's.
 void AtOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -224,7 +224,7 @@ S27_EXPORT void __cdecl Burn_Task(void) {
 S27_EXPORT void __cdecl Burn_Start(void) {
     const unsigned char* const src = Source();
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 8; ++i) {
@@ -982,7 +982,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_PushMatrix(void) {
     }
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {
@@ -1012,7 +1012,7 @@ S27_EXPORT void __cdecl WhelpBreathGlow_Draw(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = r[8];
         ts->x = tr->x;
-        ts->y = tr->z;
+        ts->z = tr->z;
         SetWord(s + 0x3E, Word(r + 0x3E));
         MH_CALL(MagicFx_PushActorMatrix)();
         Call0(bof3::addr::WhelpBreathGlow_DrawFan);
@@ -1138,7 +1138,7 @@ S27_EXPORT void __cdecl DragonBreathBeam_Aim(void) {
     Sc()[0x5D] = static_cast<unsigned char>(RandCall() & 1);
     Sc()[0x5E] = static_cast<unsigned char>(RandCall() & 3);
     Sc()[0x5F] = static_cast<unsigned char>(RandCall() & 3);
-    rv::Current<records::BattleTask>()->vel_x = 0;
+    rv::Current<records::BattleTask>()->step_x = 0;
     Sc()[4] = 0;
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
@@ -1172,8 +1172,8 @@ S27_EXPORT void __cdecl DragonBreathBeam_Brighten(void) {
 S27_EXPORT void __cdecl DragonBreathBeam_Hold(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->vel_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->vel_x) + 1);
-    if (rv::Current<records::BattleTask>()->vel_x == 0x2E) Inc(Sc()[2]);
+    ts->step_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->step_x) + 1);
+    if (rv::Current<records::BattleTask>()->step_x == 0x2E) Inc(Sc()[2]);
 }
 
 // original 0x4DC570: +4 down by two; at 0 +2 on.

@@ -378,7 +378,7 @@ void Fix() {
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const o = Member(i);
         auto* const member_rec = rv::As<records::PartyMember>(o);
-        member_rec->member = static_cast<unsigned char>(Often() ? Next() % 3 : Next() % kTaskSlots);
+        member_rec->actor = static_cast<unsigned char>(Often() ? Next() % 3 : Next() % kTaskSlots);
         o[7] = static_cast<unsigned char>(Next() % kTintSlots);
         if (Often()) member_rec->direction = static_cast<unsigned char>(Next() % 4);
     }

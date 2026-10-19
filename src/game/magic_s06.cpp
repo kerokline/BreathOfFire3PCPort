@@ -123,13 +123,13 @@ unsigned char* MakeDouble(unsigned parameter, unsigned char body) {
 // Sprite_Current's position (+0x34..+0x3C) from `from`, read afresh.
 void CopyPosition(const unsigned char* from) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(from + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(from + 0x38));
     SetLong(Sc() + 0x3C, Long(from + 0x3C));
 }
 // The same from the owner, the owner read again for each word.
 void CopyOwnerPosition() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 // The sprite's colour +0x5D..+0x5F, each moved by `by` (a byte).
@@ -519,8 +519,8 @@ S06_EXPORT void __cdecl Magic008Dash_Start(void) {
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     const unsigned index = sc[0xB];
     if (index >= kDashOffsetCount) bof3::Fatal("Magic008Dash_Start: +0xB %u, past the %u offsets", index, kDashOffsetCount);
-    tsc->vel_x = Long(Mem(Magic008Dash_Offsets_addr + 8 * index));
-    tsc->vel_y = Long(Mem(Magic008Dash_Offsets_addr + 8 * index + 4));
+    tsc->step_x = Long(Mem(Magic008Dash_Offsets_addr + 8 * index));
+    tsc->step_z = Long(Mem(Magic008Dash_Offsets_addr + 8 * index + 4));
     MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset)(Sc());
     const unsigned char size = MH_CALL(BattleActor_FxSize)();
     Sc()[9] = size;
@@ -531,14 +531,14 @@ namespace {
 // The dashing double's position: the owner's plus its offset (+0xC, +0x10).
 void BesideOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
-                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x)));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
-                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_y)));
+                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
 }
 // On the owner (x, z only).
 void OnOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
 }
 }  // namespace
 

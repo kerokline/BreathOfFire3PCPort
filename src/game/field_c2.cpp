@@ -549,7 +549,7 @@ extern "C" void __cdecl EffectKind34_V0Burst(void) {
         if (n == 0xFF) continue;
         const unsigned char* const s = S();
         records::EffectObject* const e = rv::As<records::EffectObject>(EffectRecord("EffectKind34_V0Burst", n));
-        e->in_use = 1;
+        e->flags = 1;
         e->kind = 0x34;
         e->step = 2;
         e->param = static_cast<unsigned char>(i);
@@ -754,7 +754,7 @@ extern "C" void __cdecl EffectKind34_V2Spawn(void) {
     s = rv::As<records::EffectObject>(S());
     if (n != 0xFF) {
         records::EffectObject* const e = rv::As<records::EffectObject>(EffectRecord("EffectKind34_V2Spawn", n));
-        e->in_use = 1;
+        e->flags = 1;
         e->kind = 0x34;
         e->state = 2;
         e->step = 2;
@@ -874,7 +874,7 @@ extern "C" void __cdecl EffectKind34_V4Move(void) {
     s->x = static_cast<U>(s->x) + static_cast<U>(s->step_x);
     s->z = static_cast<U>(s->z) + static_cast<U>(s->step_z);
     SetWord(rv::Bytes(s) + 0x3E, Word(rv::Bytes(s) + 0x3E) + Word(rv::Bytes(s) + 0x14));
-    if ((s->in_use & 0x80) != 0)
+    if ((s->flags & 0x80) != 0)
         SH_CALL(Effect_Release)();
     else
         SH_CALL(Sprite_UpdateScreenSlot)();
@@ -1063,7 +1063,7 @@ extern "C" unsigned char __cdecl EffectKind3A_Hit(void) {
         // record before the pool, 0x14..0x7F one past it - a Fatal either way
         records::EffectObject* const e = rv::As<records::EffectObject>(EffectRecord("EffectKind3A_Hit", n));
         const records::EffectObject* const cur = rv::As<records::EffectObject>(S());
-        e->in_use = 1;
+        e->flags = 1;
         e->kind = 0x34;
         e->state = 1;
         e->x = static_cast<U>(cur->x);

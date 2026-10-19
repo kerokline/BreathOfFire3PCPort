@@ -585,10 +585,10 @@ extern "C" unsigned char __cdecl Leader_HopFall(void) {
         Ensure(s->direction);
         SH_CALL(Sprite_ClearSteps)();
         Field_State[0x137] = 0;
-        rv::Current<records::PartyMember>()->state[0] = 1;
-        rv::Current<records::PartyMember>()->state[1] = 0;
-        rv::Current<records::PartyMember>()->state[2] = 0;
-        rv::Current<records::PartyMember>()->state[3] = 0;
+        rv::Current<records::PartyMember>()->state = 1;
+        rv::Current<records::PartyMember>()->step = 0;
+        rv::Current<records::PartyMember>()->state3 = 0;
+        rv::Current<records::PartyMember>()->state4 = 0;
         return 1;
     }
     s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
@@ -610,7 +610,7 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     const int floor = S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
     records::PartyMember* const s = rv::Current<records::PartyMember>();
-    if (S16(W(Key(rv::Bytes(s)) + 0x3E)) >= floor) s->state[1] = 3;
+    if (S16(W(Key(rv::Bytes(s)) + 0x3E)) >= floor) s->step = 3;
     return SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -628,8 +628,8 @@ extern "C" unsigned char __cdecl Leader_Sink(void) {
         SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
         SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
         Field_State[0x137] = 0;
-        rv::Current<records::PartyMember>()->state[0] = 1;
-        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->state = 1;
+        rv::Current<records::PartyMember>()->step = 0;
     }
     return SH_CALL(Sprite_ScriptTick)();
 }
@@ -643,9 +643,9 @@ extern "C" void __cdecl Leader_TurnBack(void) {
     SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
     SH_CALL(Sprite_ClearSteps)();
     SetL(Key(Sprite_Current) + 0x20, 0xFFFFFFF8u);
-    rv::Current<records::PartyMember>()->state[0] = 2;
-    rv::Current<records::PartyMember>()->state[1] = 3;
-    rv::Current<records::PartyMember>()->state[2] = 3;
+    rv::Current<records::PartyMember>()->state = 2;
+    rv::Current<records::PartyMember>()->step = 3;
+    rv::Current<records::PartyMember>()->state3 = 3;
 }
 
 // ============================================================================

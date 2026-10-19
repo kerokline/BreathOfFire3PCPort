@@ -219,11 +219,11 @@ bool CountDown(unsigned k) {
 void LeapSetUp() {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->start_x = ts->x;
-    ts->start_y = ts->y;
+    ts->work_18 = ts->x;
+    ts->work_1c = ts->z;
     SetLong(s + 0x44, Long(s + 0x3C));
-    ts->vel_x = 0x2000;
-    ts->vel_y = 0;
+    ts->step_x = 0x2000;
+    ts->step_z = 0;
     SetLong(s + 0x14, 0x300000);
     SetLong(s + 0x20, static_cast<std::int32_t>(0xFFF80000u));
     Turn(Sc());
@@ -397,7 +397,7 @@ S02_EXPORT void __cdecl SuperCombo_ShowCount(void) {
 S02_EXPORT void __cdecl SuperCombo_Strike(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -482,8 +482,8 @@ S02_EXPORT void __cdecl SuperComboDash_Hit(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[9] != 0xFF) return;
-    ts->vel_x = static_cast<std::int32_t>(0xFFFFE000u);
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    ts->step_x = static_cast<std::int32_t>(0xFFFFE000u);
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     Inc(Sc()[2]);
 }
@@ -547,8 +547,8 @@ S02_EXPORT void __cdecl SuperComboImage_Leap(void) {
 
 // original 0x49AFE0: the step 0xFFFFE000 turned back; the script ticked; +2 on.
 S02_EXPORT void __cdecl SuperComboImage_Turn(void) {
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0xFFFFE000u));
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFFFE000u));
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     Tick();
     Inc(Sc()[2]);
@@ -596,7 +596,7 @@ S02_EXPORT void __cdecl SuperComboHit_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
@@ -822,7 +822,7 @@ S02_EXPORT void __cdecl ElemStrike_Task(void) {
 S02_EXPORT void __cdecl ElemStrike_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0;
@@ -987,7 +987,7 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
 // animation 0; +9 the kind's delay (0x65A5A8 + +4); +2 on.
 S02_EXPORT void __cdecl ElemStrikeFx_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
     SetLong(Sc() + 0x3C,
             static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C)) + 0x800000u));
     unsigned char* const s = Sc();

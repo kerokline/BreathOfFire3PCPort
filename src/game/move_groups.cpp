@@ -485,7 +485,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
     case 0xCB:
         g.animation_bank(static_cast<unsigned short>(p[1] << 8 | p[2]));
         g.set_animation(operand(3));
-        rv::Current<records::SpriteObject>()->pose = operand(4) & 1;
+        rv::Current<records::SpriteObject>()->flip = operand(4) & 1;
         SetPos(object, Pos(object) + 4u);
         return value;
     case 0xCC:

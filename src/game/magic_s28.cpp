@@ -186,10 +186,10 @@ void OffsetByDirection() {
     unsigned char* const sc = Sc();
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     switch (sc[8]) {
-    case 0: tsc->vel_x = 0x29; tsc->vel_y = -13; break;
-    case 1: tsc->vel_x = -41; tsc->vel_y = -13; break;
-    case 2: tsc->vel_x = -38; tsc->vel_y = -38; break;
-    default: tsc->vel_x = 0x26; tsc->vel_y = -38; break;
+    case 0: tsc->step_x = 0x29; tsc->step_z = -13; break;
+    case 1: tsc->step_x = -41; tsc->step_z = -13; break;
+    case 2: tsc->step_x = -38; tsc->step_z = -38; break;
+    default: tsc->step_x = 0x26; tsc->step_z = -38; break;
     }
 }
 
@@ -197,7 +197,7 @@ void OffsetByDirection() {
 // the task and the owner read again.
 void CopyOwnerPosition() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -557,7 +557,7 @@ S28_EXPORT void __cdecl BreathMote_Launch(void) {
     }
     Sc()[3] = U8(MH_CALL(Rand)() & 7);
     const int speed = MH_CALL(Rand)();
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, (speed & 7) + 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_x, (speed & 7) + 8);
     Sc()[0xB] = U8(MH_CALL(Rand)());
     Sc()[9] = U8((MH_CALL(Rand)() & 0xF) + 8);
     Sc()[0xA] = 2;
@@ -886,7 +886,7 @@ S28_EXPORT void __cdecl ThunderBolt_Aim(void) {
     const bool odd = (Sc()[4] & 1) != 0;
     const int r = MH_CALL(Rand)() & 7;
     SetLong(heading, Long(heading) + Shl(odd ? r : -r, 6));
-    rv::Current<records::BattleTask>()->vel_x = 0;
+    rv::Current<records::BattleTask>()->step_x = 0;
     Sc()[0xB] = U8(MH_CALL(Rand)() & 0x3F);
     Sc()[9] = 0x10;
     Sc()[0xA] = 0;
@@ -904,8 +904,8 @@ S28_EXPORT void __cdecl ThunderBolt_Grow(void) {
 S28_EXPORT void __cdecl ThunderBolt_Flicker(void) {
     const int s = Sin((Sc()[0xB] & 0x3F) << 6);
     Sc()[0xA] = U8(Sar(Shl(s, 2), 12) + 0x10);
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, rv::Current<records::BattleTask>()->vel_x + 1);
-    if (rv::Current<records::BattleTask>()->vel_x == 0x10) Inc(Sc()[2]);
+    rv::Store(rv::Current<records::BattleTask>()->step_x, rv::Current<records::BattleTask>()->step_x + 1);
+    if (rv::Current<records::BattleTask>()->step_x == 0x10) Inc(Sc()[2]);
 }
 
 // original 0x4DFA90: as the flicker, then +9 down by 2; at 0 the owner's +0xB

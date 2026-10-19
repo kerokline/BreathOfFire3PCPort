@@ -236,21 +236,21 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleWin_MemberGaug
 // signed word compare); on arriving, the state steps on. Drawn every frame.
 extern "C" void __cdecl BattleWin_PartyRowSlideIn() {
     records::WindowRecord* win = rv::As<records::WindowRecord>(Current());
-    const auto y = static_cast<std::int16_t>(win->centre_y);
+    const auto y = static_cast<std::int16_t>(win->y);
     if (y <= 0xC8) {
-        win->centre_y = 0xC8;
+        win->y = 0xC8;
         ++rv::As<records::WindowRecord>(Current())->state;
     } else {
-        win->centre_y = static_cast<unsigned>(y - 4);
+        win->y = static_cast<unsigned>(y - 4);
     }
     win = rv::As<records::WindowRecord>(Current());
-    g.party_status(win->centre_x, win->centre_y);
+    g.party_status(win->x, win->y);
 }
 
 // original 0x597070: state 1 - the row drawn where it is.
 extern "C" void __cdecl BattleWin_PartyRowDraw() {
     auto* const win = rv::As<records::WindowRecord>(Current());
-    g.party_status(win->centre_x, win->centre_y);
+    g.party_status(win->x, win->y);
 }
 
 // ===========================================================================
@@ -268,8 +268,8 @@ extern "C" void __cdecl BattleWin_CrossGrow() {
         const unsigned half = grow >> 1;
         const unsigned char* const arm = At(at::kCrossArms + 2 * i);
         auto* const win = rv::As<records::WindowRecord>(Current());
-        const unsigned y = win->centre_y + arm[1] + half;
-        const unsigned x = win->centre_x + arm[0] + half;
+        const unsigned y = win->y + arm[1] + half;
+        const unsigned x = win->x + arm[0] + half;
         g.icon(i, x, y, size, size, 0x80);
     }
     if (At(at::kCrossGrow)[0] == 0) {
@@ -294,7 +294,7 @@ extern "C" void __cdecl BattleWin_CrossFrame() {
         }
     }
     auto* const win = rv::As<records::WindowRecord>(Current());
-    g.command_cross(win->centre_x, win->centre_y);
+    g.command_cross(win->x, win->y);
 }
 
 // ===========================================================================
@@ -346,7 +346,7 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
     win = rv::As<records::WindowRecord>(w);
     const std::uint32_t off = at::kBannerStride * w[0xA];
     const bool wide = At(at::kBanners + 2 + off)[0] != 0;
-    const unsigned x = win->centre_x, y = win->centre_y;
+    const unsigned x = win->x, y = win->y;
     if (wide) {
         g.medium_box(static_cast<std::uint16_t>(x - 0x10), y);
     } else {
@@ -357,8 +357,8 @@ extern "C" void __cdecl BattleWin_BannerFrame() {
     const std::uint32_t o = at::kBannerStride * w[0xA];
     // eax: the record offset with its low byte replaced by the colour
     const unsigned colour = (o & ~0xFFu) | At(at::kBanners + 0xA + o)[0];
-    const unsigned ty = static_cast<std::uint16_t>(win->centre_y + 3);
-    const unsigned tx = static_cast<std::uint16_t>(BannerTextX(win->centre_x, n, wide, text(o)));
+    const unsigned ty = static_cast<std::uint16_t>(win->y + 3);
+    const unsigned tx = static_cast<std::uint16_t>(BannerTextX(win->x, n, wide, text(o)));
     g.text_draw_at(static_cast<int>(tx), static_cast<int>(ty), static_cast<int>(colour), wide ? 0x12 : 8, text(o));
 }
 
@@ -391,7 +391,7 @@ extern "C" void __cdecl BattleWin_EnemyGaugeOpen() {
 extern "C" void __cdecl BattleWin_EnemyGaugeFrame() {
     const unsigned char* w = Current();
     auto* const win = rv::AsConst<records::WindowRecord>(w);
-    g.enemy_status(win->centre_x, win->centre_y, w[0xA]);
+    g.enemy_status(win->x, win->y, w[0xA]);
     if (!Choosing()) return;
     const unsigned char t = Target()[0];
     if (t == Current()[0xA]) g.flag_advance();
@@ -410,12 +410,12 @@ extern "C" void __cdecl BattleWin_EnemyTargetFrame() {
     const std::uint32_t off = at::kEnemyStride * ((w[0xA] - 3u) & 0xFFu);
     const std::uint32_t e = at::kEnemies + off;
     const int dx = SideDx(At(e - 0x78)[0]);
-    win->centre_x = static_cast<unsigned>(S8(e + 0x72) + Word(At(e - 0x52)) + dx);
+    win->x = static_cast<unsigned>(S8(e + 0x72) + Word(At(e - 0x52)) + dx);
     const unsigned y = static_cast<unsigned>(S8(e + 0x73) + Word(At(e - 0x50)) + 0xC);
-    rv::As<records::WindowRecord>(Current())->centre_y = y;
+    rv::As<records::WindowRecord>(Current())->y = y;
     w = Current();
     win = rv::As<records::WindowRecord>(w);
-    g.target_enemy(win->centre_x, win->centre_y, w[0xA]);
+    g.target_enemy(win->x, win->y, w[0xA]);
     if (!Choosing()) {
         g.restore_back();
         return;
@@ -498,11 +498,11 @@ extern "C" void __cdecl BattleWin_MemberTargetFrame() {
     const unsigned id = member_rec->char_id, side = member_rec->direction;
     const int dx = SideDx(side);
     const std::uint32_t pair = BattleWin_MemberTargetOffsets_addr + 2 * (side + 4 * id);
-    win->centre_x = static_cast<unsigned>(S8(pair) + static_cast<std::uint16_t>(member_rec->screen_x) + dx);
+    win->x = static_cast<unsigned>(S8(pair) + static_cast<std::uint16_t>(member_rec->screen_x) + dx);
     w = Current();
     win = rv::As<records::WindowRecord>(w);
     member_rec = rv::As<records::PartyMember>(Member(w[0xA]));
-    win->centre_y = static_cast<unsigned>(static_cast<std::uint16_t>(member_rec->screen_y) + S8(pair + 1) + 0xC);
+    win->y = static_cast<unsigned>(static_cast<std::uint16_t>(member_rec->screen_y) + S8(pair + 1) + 0xC);
     if (!Choosing()) {
         Current()[0xF] = 0;
         --rv::As<records::WindowRecord>(Current())->state;
@@ -517,7 +517,7 @@ extern "C" void __cdecl BattleWin_MemberTargetFrame() {
         --rv::As<records::WindowRecord>(Current())->state;
         return;
     }
-    g.target_member(win->centre_x, win->centre_y, w[0xA]);
+    g.target_member(win->x, win->y, w[0xA]);
 }
 
 // ===========================================================================

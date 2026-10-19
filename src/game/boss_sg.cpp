@@ -347,7 +347,7 @@ extern "C" void __cdecl Boss32_End(void) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = L(p + 0x90);
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
@@ -477,8 +477,8 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Strike(void) {
         auto* const cur_task = rv::As<records::BattleTask>(t);
         std::memmove(t, s, 0x80);
         cur_task->flags &= 0xBF;
-        cur_task->kind = 3;
-        cur_task->param = 6;
+        cur_task->runner = 3;
+        cur_task->kind = 6;
         cur_task->state = 1;
         t[2] = 0;
         t[3] = 0;
@@ -627,7 +627,7 @@ extern "C" void __cdecl BossMikba_DeathWait(void) {
     if ((BH_CALL(Sprite_ScriptTick)() & 0xFF) == 0) return;
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0x20;
-    rv::Current<records::BattleEnemy>()->state[2] = 1;
+    rv::Current<records::BattleEnemy>()->state3 = 1;
 }
 
 // original 0x43DCC0: death step 1, the flashes. With +9 equal to +0xA: unless
@@ -648,7 +648,7 @@ extern "C" void __cdecl BossMikba_DeathFlash(void) {
     } else {
         s[9] = static_cast<unsigned char>(count - 1);
     }
-    if (Sprite_Current[9] == 0) rv::Current<records::BattleEnemy>()->state[2] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[2] + 1);
+    if (Sprite_Current[9] == 0) rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DD30: death step 2. Sprite_ScriptTickOnce (answer not read);
@@ -674,7 +674,7 @@ extern "C" void __cdecl BossMikba_DeathOpen(void) {
     s[0x24] |= 0x88;
     BH_CALL(Sound_PlayEffect)(0x602);
     BH_CALL(BossMikba_DrawQuad)(Sprite_Current[9]);
-    rv::Current<records::BattleEnemy>()->state[2] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[2] + 1);
+    rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DDE0: death step 3. +0x20 += the byte +0xA; the s32 +0xC above
@@ -694,7 +694,7 @@ extern "C" void __cdecl BossMikba_DeathSpread(void) {
     if (h > 0x28) SetLong(s + 0x10, h - 1);
     BH_CALL(BossMikba_DrawQuad)(L(s + 0x20));
     if (Frame_Counter & 7) Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] + 1);
-    if (Sprite_Current[0xA] >= 0x40) rv::Current<records::BattleEnemy>()->state[2] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[2] + 1);
+    if (Sprite_Current[0xA] >= 0x40) rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DE60: death step 4. Sprite_SetAnimationBank(0x1C1); the
@@ -708,7 +708,7 @@ extern "C" void __cdecl BossMikba_DeathLoad(void) {
     Sprite_Current[0x24] &= 0x77;
     BH_CALL(Sprite_ScriptTick)();
     BH_CALL(LoadDatFile)(0xD0);
-    rv::Current<records::BattleEnemy>()->state[2] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[2] + 1);
+    rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
 
 // original 0x43DEA0: death step 5. Sprite_ScriptTick (answer not read); when
@@ -721,9 +721,9 @@ extern "C" void __cdecl BossMikba_DeathEnd(void) {
     BH_CALL(Battle_EnemyDefeated)();
     auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     cur_enemy->flags &= 0xBF;
-    cur_enemy->state[0] = 6;
-    cur_enemy->state[1] = 4;
-    cur_enemy->state[2] = 6;
+    cur_enemy->state = 6;
+    cur_enemy->step = 4;
+    cur_enemy->state3 = 6;
 }
 
 // original 0x43DEE0: the +0xF4 hook through BossMikba_Hooks (3, all BareRet).

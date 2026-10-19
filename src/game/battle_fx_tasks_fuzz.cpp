@@ -354,7 +354,7 @@ void Fix() {
         unsigned char* const t = Slot(i);
         auto* const task_rec = rv::As<records::BattleTask>(t);
         SetPtr(Address(t + 0x80), AnyOwner(Next()));
-        task_rec->param = static_cast<unsigned char>(Next() % 11);
+        task_rec->kind = static_cast<unsigned char>(Next() % 11);
         SetWord(t + 0x2C, Next() % 8);
         task_rec->state = static_cast<unsigned char>(Next() % 5);
     }
@@ -374,8 +374,8 @@ void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const o = Owner();
     switch (k) {
-    case kDispatch: task_rec->param = static_cast<unsigned char>(Next() % 19); break;
-    case kMagicDispatch: task_rec->param = static_cast<unsigned char>(Next() % 110); break;
+    case kDispatch: task_rec->kind = static_cast<unsigned char>(Next() % 19); break;
+    case kMagicDispatch: task_rec->kind = static_cast<unsigned char>(Next() % 110); break;
     case kMagicRow:
         sc[5] = static_cast<unsigned char>(Often() ? Next() % at::kMagicRowCount : Next() % 2 ? 0 : 150);
         if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 8);
@@ -403,8 +403,8 @@ void Seed(unsigned k) {
     }
     case kPopupBounce: {
         const int y = static_cast<short>(Word(t + 0x3A)), x = static_cast<short>(Word(t + 0x36));
-        if (Often()) task_rec->start_y = y + static_cast<int>(Next() % 3) - 1;
-        if (Often()) task_rec->start_x = x + static_cast<int>(Next() % 2);
+        if (Often()) task_rec->work_1c = y + static_cast<int>(Next() % 3) - 1;
+        if (Often()) task_rec->work_18 = x + static_cast<int>(Next() % 2);
         break;
     }
     case kPoseTask: sc[1] = static_cast<unsigned char>(Next() % 2); break;

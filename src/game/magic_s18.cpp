@@ -125,7 +125,7 @@ void CallPhase(const std::uint32_t* phases, unsigned entries, const char* who) {
 void LinkAt(unsigned dy, unsigned size) {
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
                                 static_cast<int>(dy), size);
 }
 
@@ -170,7 +170,7 @@ template <void (__cdecl* Draw)(void)> void OrbTask(const unsigned long* phases, 
 // Place the task at an object's position plus (dx, dz, dy).
 void PlaceAt(const unsigned char* obj, std::uint32_t dx, std::uint32_t dz, std::uint32_t dy) {
     rv::Store(rv::Current<records::BattleTask>()->x, AddL(Long(obj + 0x34), dx));
-    rv::Store(rv::Current<records::BattleTask>()->y, AddL(Long(obj + 0x38), dz));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(Long(obj + 0x38), dz));
     SetLong(SC() + 0x3C, AddL(Long(obj + 0x3C), dy));
 }
 
@@ -557,7 +557,7 @@ MS18_EXPORT void __cdecl Buff_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SC()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(SC() + 0x3C, Long(src + 0x3C));
     const unsigned char kind = MH_CALL(Buff_Kind)();
     SC()[4] = kind;
@@ -574,7 +574,7 @@ MS18_EXPORT void __cdecl Buff_Start(void) {
         t[4] = sc[4];
         t[9] = 0;
         tt->x = tsc->x;
-        tt->y = tsc->y;
+        tt->z = tsc->z;
         SetLong(t + 0x3C, Long(sc + 0x3C));
         Bump(sc[0xB]);
     }
@@ -894,7 +894,7 @@ MS18_EXPORT void __cdecl BuffSpike_Orbit(void) {
     int r = Sin(Ds(4));
     rv::Store(rv::Current<records::BattleTask>()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x34))));
     r = Cos(Ds(4));
-    rv::Store(rv::Current<records::BattleTask>()->y, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
     Bump(SC()[0xA]);
     if (SC()[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -976,7 +976,7 @@ MS18_EXPORT void __cdecl BuffSpike_Draw(void) {
         const unsigned char* const sc = SC();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
         MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(tsc->x),
-                                                             static_cast<unsigned long>(tsc->y), depths, up, 4,
+                                                             static_cast<unsigned long>(tsc->z), depths, up, 4,
                                                              0x34, 2);
     }
     unsigned char* const down = Gfx_PacketNext;
@@ -984,7 +984,7 @@ MS18_EXPORT void __cdecl BuffSpike_Draw(void) {
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(tsc->x),
-                                                         static_cast<unsigned long>(tsc->y), depths, down, 4,
+                                                         static_cast<unsigned long>(tsc->z), depths, down, 4,
                                                          0x34, 2);
 }
 

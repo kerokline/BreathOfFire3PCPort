@@ -182,7 +182,7 @@ void DrawModeCommit(unsigned tpage, unsigned layer) {
 void LinkAt(unsigned dy, unsigned size) {
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
                                 static_cast<int>(dy), size);
 }
 
@@ -754,7 +754,7 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SC()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(SC() + 0x3C, Long(src + 0x3C));
     SC()[0xB] = 0;
     SC()[9] = 0x10;
@@ -768,7 +768,7 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
         t[1] = 0;
         t[9] = 0;
         tt->x = tsc->x;
-        tt->y = tsc->y;
+        tt->z = tsc->z;
         SetLong(t + 0x3C, Long(sc + 0x3C));
         Bump(sc[0xB]);
     }
@@ -1080,7 +1080,7 @@ MS12_EXPORT void __cdecl CeleritySpark_Orbit(void) {
     int r = Sin(Ds(4));
     rv::Store(rv::Current<records::BattleTask>()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x34))));
     r = Cos(Ds(4));
-    rv::Store(rv::Current<records::BattleTask>()->y, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
     Bump(SC()[0xA]);
     if (SC()[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -1161,14 +1161,14 @@ MS12_EXPORT void __cdecl CeleritySpark_Draw(void) {
     {
         const unsigned char* const sc = SC();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-        MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->y), depths,
+        MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->z), depths,
                                      U32(up), 4, 0x34, 2);
     }
     unsigned char* const down = Gfx_PacketNext;
     SparkRow(CeleritySpark_ColorsDown, false, depths);
     const unsigned char* const sc = SC();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->y), depths,
+    MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(tsc->x), static_cast<unsigned>(tsc->z), depths,
                                  U32(down), 4, 0x34, 2);
 }
 

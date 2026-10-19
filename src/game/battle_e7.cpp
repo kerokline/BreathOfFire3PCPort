@@ -135,7 +135,7 @@ unsigned RowCost(const unsigned char* row) {
 // cost, else 0.
 unsigned CostColour(unsigned cost) {
     auto* const member = rv::AsConst<records::PartyMember>(At(BattleE4_MenuActor));
-    const unsigned ap = W(At(ObjTrio_addr + 0x9a + member->member * at::kPartyStride));
+    const unsigned ap = W(At(ObjTrio_addr + 0x9a + member->actor * at::kPartyStride));
     return ap < (cost & 0xFFFF) ? 7u : 0u;
 }
 
@@ -247,14 +247,14 @@ extern "C" void __cdecl BattleResultWin_DrawItem(U x, U y, U colour, U category,
 extern "C" void __cdecl BattleResultWin_DrawDrops(void) {
     const unsigned char* const rec = Win();
     auto* const win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(BattleResultWin_DrawFrame)(static_cast<unsigned>(win->centre_x), static_cast<unsigned>(win->centre_y), 0x118, rec[9]);
+    BH_CALL(BattleResultWin_DrawFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), 0x118, rec[9]);
     for (unsigned i = 0; (i & 0xFF) < BattleE7_DropCount; i = (i + 1) & 0xFF) {
         const unsigned word = W(At(at::kDropItems + 2 * i));
         if (word == 0) continue;
         const unsigned count = B(at::kDropCounts + i);
         auto* const win2 = rv::As<records::WindowRecord>(Win());
-        const U y = ((13u * (i >> 1) + static_cast<unsigned>(win2->centre_y)) & 0xFFFF) + 4;
-        const U x = ((138u * (i & 1) + static_cast<unsigned>(win2->centre_x)) & 0xFFFF) + 5;
+        const U y = ((13u * (i >> 1) + static_cast<unsigned>(win2->y)) & 0xFFFF) + 4;
+        const U x = ((138u * (i & 1) + static_cast<unsigned>(win2->x)) & 0xFFFF) + 5;
         BH_CALL(BattleResultWin_DrawItem)(x, y, 0, word >> 8, word & 0xFF, count, 0);
     }
 }
@@ -303,44 +303,44 @@ extern "C" void __cdecl GeneWin_DrawFrame(U x, U y, U cols_arg, U rows_arg) {
 extern "C" void __cdecl GeneWin_DrawGrid(void) {
     const unsigned char* rec = Win();
     const records::WindowRecord* win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(GeneWin_DrawFrame)(static_cast<unsigned>(win->centre_x), static_cast<unsigned>(win->centre_y), rec[8], rec[9]);
+    BH_CALL(GeneWin_DrawFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), rec[8], rec[9]);
     unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 6), static_cast<int>(static_cast<unsigned>(win->centre_y) + 0x21),
+    BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 6), static_cast<int>(static_cast<unsigned>(win->y) + 0x21),
                           static_cast<int>(rec[8] * 8u - 0xF), static_cast<int>(rec[9] * 8u - 0x27), 0,
                           static_cast<int>(colour));
     colour = static_cast<unsigned char>(BattleDraw_Colour);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x36), static_cast<int>(static_cast<unsigned>(win->centre_y) + 6), 0x48, 0x18, 0,
+    BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 0x36), static_cast<int>(static_cast<unsigned>(win->y) + 6), 0x48, 0x18, 0,
                           static_cast<int>(colour));
     colour = static_cast<unsigned char>(BattleDraw_Colour);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x87), static_cast<int>(static_cast<unsigned>(win->centre_y) + 0xA), 0x30, 0x10, 0,
+    BH_CALL(Menu_DrawBox)(static_cast<int>(static_cast<unsigned>(win->x) + 0x87), static_cast<int>(static_cast<unsigned>(win->y) + 0xA), 0x30, 0x10, 0,
                           static_cast<int>(colour));
     auto* const member = rv::AsConst<records::PartyMember>(At(BattleE4_MenuActor));
     const unsigned text_colour = static_cast<unsigned>(member->ap) < BattleActions_ApCost ? 7u : 0u;
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Text_DrawFont12)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x88), static_cast<int>(static_cast<unsigned>(win->centre_y) + 0xC),
+    BH_CALL(Text_DrawFont12)(static_cast<int>(static_cast<unsigned>(win->x) + 0x88), static_cast<int>(static_cast<unsigned>(win->y) + 0xC),
                              static_cast<int>(text_colour), Text(at::kApLabel));
     BH_CALL(Crt_sprintf)(Buf(at::kPrintBuf), Str(Boss26Fx_CountFormat_addr), BattleActions_ApCost);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Text_DrawFont12)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0xA0), static_cast<int>(static_cast<unsigned>(win->centre_y) + 0xC),
+    BH_CALL(Text_DrawFont12)(static_cast<int>(static_cast<unsigned>(win->x) + 0xA0), static_cast<int>(static_cast<unsigned>(win->y) + 0xC),
                              static_cast<int>(text_colour), Text(at::kPrintBuf));
     if (BattleE4_Step3 != 4) return;
     const unsigned row = BattleE5_GeneRow;
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     if (row == 0xFF) {
-        BH_CALL(Menu_DrawHand)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0xE), static_cast<int>(static_cast<unsigned>(win->centre_y) + 0xC), 0);
+        BH_CALL(Menu_DrawHand)(static_cast<int>(static_cast<unsigned>(win->x) + 0xE), static_cast<int>(static_cast<unsigned>(win->y) + 0xC), 0);
         return;
     }
-    const U hy = (row << 5) + static_cast<unsigned>(win->centre_y) + 0x2C;
-    const U hx = BattleE1_Roster * 30u + static_cast<unsigned>(win->centre_x) + 0xE;
+    const U hy = (row << 5) + static_cast<unsigned>(win->y) + 0x2C;
+    const U hx = BattleE1_Roster * 30u + static_cast<unsigned>(win->x) + 0xE;
     BH_CALL(Menu_DrawHand)(static_cast<int>(hx), static_cast<int>(hy), 0);
 }
 
@@ -374,8 +374,8 @@ extern "C" void __cdecl GeneWin_DrawChoices(U x, U y) {
 // original 0x598DF0: the choice box's open state: +4 = 0x5A, +6 = -0x17, +3
 // + 1.
 extern "C" void __cdecl GeneWin_ChoiceOpen(void) {
-    rv::As<records::WindowRecord>(Win())->centre_x = 0x5A;
-    rv::As<records::WindowRecord>(Win())->centre_y = 0xFFE9;
+    rv::As<records::WindowRecord>(Win())->x = 0x5A;
+    rv::As<records::WindowRecord>(Win())->y = 0xFFE9;
     ++rv::As<records::WindowRecord>(Win())->state;
 }
 
@@ -383,20 +383,20 @@ extern "C" void __cdecl GeneWin_ChoiceOpen(void) {
 // its draw at (+4, +6).
 extern "C" void __cdecl GeneWin_ChoiceSlideIn(void) {
     auto* const win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_y));
-    win->centre_y = v >= 0x29 ? 0x29u : static_cast<unsigned>(v + 0x10);
+    const std::int32_t v = S16(static_cast<unsigned>(win->y));
+    win->y = v >= 0x29 ? 0x29u : static_cast<unsigned>(v + 0x10);
     auto* const win2 = rv::As<records::WindowRecord>(Win());
-    BH_CALL(GeneWin_DrawChoices)(static_cast<unsigned>(win2->centre_x), static_cast<unsigned>(win2->centre_y));
+    BH_CALL(GeneWin_DrawChoices)(static_cast<unsigned>(win2->x), static_cast<unsigned>(win2->y));
 }
 
 // original 0x598E50: the box slides up: +6 (signed) to -0x17 by 0x10, then
 // its draw.
 extern "C" void __cdecl GeneWin_ChoiceSlideOut(void) {
     auto* const win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_y));
-    win->centre_y = v <= -0x17 ? 0xFFE9u : static_cast<unsigned>(v - 0x10);
+    const std::int32_t v = S16(static_cast<unsigned>(win->y));
+    win->y = v <= -0x17 ? 0xFFE9u : static_cast<unsigned>(v - 0x10);
     auto* const win2 = rv::As<records::WindowRecord>(Win());
-    BH_CALL(GeneWin_DrawChoices)(static_cast<unsigned>(win2->centre_x), static_cast<unsigned>(win2->centre_y));
+    BH_CALL(GeneWin_DrawChoices)(static_cast<unsigned>(win2->x), static_cast<unsigned>(win2->y));
 }
 
 // original 0x598DC0: kind 1 of 0x598890, the choice box: its stack table by
@@ -511,12 +511,12 @@ extern "C" void __cdecl GeneWin_DrawCursorBox(U x, U y, U w, U h, U flash, U sid
 extern "C" void __cdecl GeneWin_DrawList(void) {
     const unsigned char* rec = Win();
     const records::WindowRecord* win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(GeneWin_DrawListFrame)(static_cast<unsigned>(win->centre_x), static_cast<unsigned>(win->centre_y), rec[8], rec[9], 0);
+    BH_CALL(GeneWin_DrawListFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), rec[8], rec[9], 0);
     for (unsigned k = 0; k < 6; ++k) B(at::kScrollMarks + k) = static_cast<unsigned char>(B(at::kGeneList + 3 + 4 * k) + 1);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Menu_DrawScrollBar)(At(at::kScrollMarks), rec[0x12], static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x80),
-                                static_cast<int>(static_cast<unsigned>(win->centre_y) + 0x18), 3, rec[0x14], 0x5C);
+    BH_CALL(Menu_DrawScrollBar)(At(at::kScrollMarks), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
+                                static_cast<int>(static_cast<unsigned>(win->y) + 0x18), 3, rec[0x14], 0x5C);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     for (unsigned i = 0; i < 3; ++i) {
@@ -527,34 +527,34 @@ extern "C" void __cdecl GeneWin_DrawList(void) {
         BH_CALL(Crt_sprintf)(Buf(at::kPrintBuf), Str(at::kFmtNumber), index + 1);
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        BH_CALL(Text_DrawFont12)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 4), static_cast<int>(((i + 1) << 5) + static_cast<unsigned>(win->centre_y)),
+        BH_CALL(Text_DrawFont12)(static_cast<int>(static_cast<unsigned>(win->x) + 4), static_cast<int>(((i + 1) << 5) + static_cast<unsigned>(win->y)),
                                  static_cast<int>(colour), Text(at::kPrintBuf));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
         const unsigned form = B(at::kGeneList + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4));
         if (form == 0xFF) continue;
-        BH_CALL(GeneWin_DrawFormIcon)(static_cast<unsigned>(win->centre_x) + 0x10, static_cast<unsigned>(win->centre_y) + (i << 5) + 0x18, form & 0x1F);
+        BH_CALL(GeneWin_DrawFormIcon)(static_cast<unsigned>(win->x) + 0x10, static_cast<unsigned>(win->y) + (i << 5) + 0x18, form & 0x1F);
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
         const unsigned f = B(at::kGeneList + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4)) & 0x1F;
         const unsigned char* const label = BH_CALL(Msg_SystemPtr)(B(at::kFormLabels + f));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        BH_CALL(Text_DrawSmall)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x10), static_cast<int>(static_cast<unsigned>(win->centre_y) + (i << 5) + 0x2D), colour,
+        BH_CALL(Text_DrawSmall)(static_cast<int>(static_cast<unsigned>(win->x) + 0x10), static_cast<int>(static_cast<unsigned>(win->y) + (i << 5) + 0x2D), colour,
                                 0xFF, label);
         BH_CALL(Crt_sprintf)(Buf(at::kPrintBuf), Str(at::kFmtCost), cost);
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        BH_CALL(Text_DrawFont8)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x58), static_cast<int>(static_cast<unsigned>(win->centre_y) + (i << 5) + 0x2D),
+        BH_CALL(Text_DrawFont8)(static_cast<int>(static_cast<unsigned>(win->x) + 0x58), static_cast<int>(static_cast<unsigned>(win->y) + (i << 5) + 0x2D),
                                 static_cast<int>(colour), Text(at::kPrintBuf));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
     }
     if (BattleE4_Step3 == 6 && BattleE4_Step4 != 5) {
-        BH_CALL(GeneWin_DrawCursorBox)(static_cast<unsigned>(win->centre_x) + 5, (W(rec + 0x10) << 5) + static_cast<unsigned>(win->centre_y) + 0x18, 0x79, 0x20, 0, 6);
+        BH_CALL(GeneWin_DrawCursorBox)(static_cast<unsigned>(win->x) + 5, (W(rec + 0x10) << 5) + static_cast<unsigned>(win->y) + 0x18, 0x79, 0x20, 0, 6);
         return;
     }
-    BH_CALL(Menu_DrawHand)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 7), static_cast<int>(((W(rec + 0x10) + 1) << 5) + static_cast<unsigned>(win->centre_y)), 0);
+    BH_CALL(Menu_DrawHand)(static_cast<int>(static_cast<unsigned>(win->x) + 7), static_cast<int>(((W(rec + 0x10) + 1) << 5) + static_cast<unsigned>(win->y)), 0);
 }
 
 // original 0x599570: the second list window's draw (kinds 3 and 4): its frame
@@ -565,13 +565,13 @@ extern "C" void __cdecl GeneWin_DrawList(void) {
 extern "C" void __cdecl GeneWin_DrawList2(void) {
     const unsigned char* rec = Win();
     const records::WindowRecord* win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(GeneWin_DrawListFrame)(static_cast<unsigned>(win->centre_x), static_cast<unsigned>(win->centre_y), rec[8], rec[9], 1);
+    BH_CALL(GeneWin_DrawListFrame)(static_cast<unsigned>(win->x), static_cast<unsigned>(win->y), rec[8], rec[9], 1);
     for (unsigned k = 0; k < 12; ++k)
         B(at::kScrollMarks2 + k) = static_cast<unsigned char>(B(at::kGeneList2 + 3 + 4 * k) + 1);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
-    BH_CALL(Menu_DrawScrollBar)(At(at::kScrollMarks2), rec[0x12], static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x80),
-                                static_cast<int>(static_cast<unsigned>(win->centre_y) + 0x18), 3, rec[0x14], 0x5C);
+    BH_CALL(Menu_DrawScrollBar)(At(at::kScrollMarks2), rec[0x12], static_cast<int>(static_cast<unsigned>(win->x) + 0x80),
+                                static_cast<int>(static_cast<unsigned>(win->y) + 0x18), 3, rec[0x14], 0x5C);
     rec = Win();
     win = rv::AsConst<records::WindowRecord>(rec);
     for (unsigned i = 0; i < 3; ++i) {
@@ -581,25 +581,25 @@ extern "C" void __cdecl GeneWin_DrawList2(void) {
         if (form == 0xFF) continue;
         const unsigned cost = RowCost(row);
         const unsigned colour = CostColour(cost);
-        BH_CALL(GeneWin_DrawFormIcon)(static_cast<unsigned>(win->centre_x) + 0x10, static_cast<unsigned>(win->centre_y) + (i << 5) + 0x18, form & 0x1F);
+        BH_CALL(GeneWin_DrawFormIcon)(static_cast<unsigned>(win->x) + 0x10, static_cast<unsigned>(win->y) + (i << 5) + 0x18, form & 0x1F);
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
         const unsigned f = B(at::kGeneList2 + 3 + static_cast<U>((S16(W(rec + 0x12)) + static_cast<std::int32_t>(i)) * 4)) & 0x1F;
         const unsigned char* const label = BH_CALL(Msg_SystemPtr)(B(at::kFormLabels + f));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        BH_CALL(Text_DrawSmall)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x10), static_cast<int>(static_cast<unsigned>(win->centre_y) + (i << 5) + 0x2D), colour,
+        BH_CALL(Text_DrawSmall)(static_cast<int>(static_cast<unsigned>(win->x) + 0x10), static_cast<int>(static_cast<unsigned>(win->y) + (i << 5) + 0x2D), colour,
                                 0xFF, label);
         BH_CALL(Crt_sprintf)(Buf(at::kPrintBuf), Str(at::kFmtCost), cost);
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
-        BH_CALL(Text_DrawFont8)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 0x58), static_cast<int>(static_cast<unsigned>(win->centre_y) + (i << 5) + 0x2D),
+        BH_CALL(Text_DrawFont8)(static_cast<int>(static_cast<unsigned>(win->x) + 0x58), static_cast<int>(static_cast<unsigned>(win->y) + (i << 5) + 0x2D),
                                 static_cast<int>(colour), Text(at::kPrintBuf));
         rec = Win();
         win = rv::AsConst<records::WindowRecord>(rec);
     }
     if (BattleE4_Step3 == 6 && BattleE4_Step4 == 5) return;
-    BH_CALL(Menu_DrawHand)(static_cast<int>(static_cast<unsigned>(win->centre_x) + 7), static_cast<int>(((W(rec + 0x10) + 1) << 5) + static_cast<unsigned>(win->centre_y)), 0);
+    BH_CALL(Menu_DrawHand)(static_cast<int>(static_cast<unsigned>(win->x) + 7), static_cast<int>(((W(rec + 0x10) + 1) << 5) + static_cast<unsigned>(win->y)), 0);
 }
 
 // original 0x598FA0: the first list's open state: nine tasks (0, 0xD), each
@@ -617,8 +617,8 @@ extern "C" void __cdecl GeneWin_ListOpen(void) {
 extern "C" void __cdecl GeneWin_ListSlideIn(void) {
     BH_CALL(GeneWin_DrawList)();
     auto* const win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
-    win->centre_x = v >= 0x5B ? 0x5Bu : static_cast<unsigned>(v + 0x20);
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
+    win->x = v >= 0x5B ? 0x5Bu : static_cast<unsigned>(v + 0x20);
 }
 
 // original 0x599050: the list slides left by 0x20, after its draw; at +4 <=
@@ -634,12 +634,12 @@ extern "C" void __cdecl GeneWin_ListSlideOut(void) {
     BH_CALL(GeneWin_DrawList)();
     Widescreen_SlideUndraw(Win());
     auto* const win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
     if (v <= bound) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
-    win->centre_x = static_cast<unsigned>(v - 0x20);
+    win->x = static_cast<unsigned>(v - 0x20);
 }
 
 // original 0x599080: after the draw, +4 moves left by 0x20 while above 0x11
@@ -647,24 +647,24 @@ extern "C" void __cdecl GeneWin_ListSlideOut(void) {
 extern "C" void __cdecl GeneWin_ListShiftLeft(void) {
     BH_CALL(GeneWin_DrawList)();
     records::WindowRecord* win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
     if (v > 0x11) {
-        win->centre_x = static_cast<unsigned>(v - 0x20);
+        win->x = static_cast<unsigned>(v - 0x20);
         win = rv::As<records::WindowRecord>(Win());
     }
-    if (S16(static_cast<unsigned>(win->centre_x)) < 0x11) win->centre_x = 0x11;
+    if (S16(static_cast<unsigned>(win->x)) < 0x11) win->x = 0x11;
 }
 
 // original 0x5990B0: the same to the right, to 0x5B.
 extern "C" void __cdecl GeneWin_ListShiftRight(void) {
     BH_CALL(GeneWin_DrawList)();
     records::WindowRecord* win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
     if (v < 0x5B) {
-        win->centre_x = static_cast<unsigned>(v + 0x20);
+        win->x = static_cast<unsigned>(v + 0x20);
         win = rv::As<records::WindowRecord>(Win());
     }
-    if (S16(static_cast<unsigned>(win->centre_x)) > 0x5B) win->centre_x = 0x5B;
+    if (S16(static_cast<unsigned>(win->x)) > 0x5B) win->x = 0x5B;
 }
 
 // original 0x598F60: kind 2 of 0x598890, the first list: its stack table by
@@ -691,8 +691,8 @@ extern "C" void __cdecl GeneWin_List2Open(void) {
 extern "C" void __cdecl GeneWin_List2SlideIn(void) {
     BH_CALL(GeneWin_DrawList2)();
     auto* const win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
-    win->centre_x = v <= 0x5B ? 0x5Bu : static_cast<unsigned>(v - 0x20);
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
+    win->x = v <= 0x5B ? 0x5Bu : static_cast<unsigned>(v - 0x20);
 }
 
 // original 0x599440: after the draw, right by 0x20; at +4 >= 0x15B the
@@ -703,12 +703,12 @@ extern "C" void __cdecl GeneWin_List2SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     Widescreen_SlideUndraw(Win());
     auto* const win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
     if (v >= bound) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
-    win->centre_x = static_cast<unsigned>(v + 0x20);
+    win->x = static_cast<unsigned>(v + 0x20);
 }
 
 // original 0x599360: kind 3 of 0x598890: GeneWin_List2Open, _List2SlideIn,
@@ -731,12 +731,12 @@ extern "C" void __cdecl GeneWin_List3Open(void) {
 extern "C" void __cdecl GeneWin_List3SlideIn(void) {
     BH_CALL(GeneWin_DrawList2)();
     records::WindowRecord* win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
     if (v > 0xA3) {
-        win->centre_x = static_cast<unsigned>(v - 0x20);
+        win->x = static_cast<unsigned>(v - 0x20);
         win = rv::As<records::WindowRecord>(Win());
     }
-    if (S16(static_cast<unsigned>(win->centre_x)) < 0xA3) win->centre_x = 0xA3;
+    if (S16(static_cast<unsigned>(win->x)) < 0xA3) win->x = 0xA3;
 }
 
 // original 0x599540: after the draw, right by 0x20; at +4 >= 0x143 the
@@ -747,12 +747,12 @@ extern "C" void __cdecl GeneWin_List3SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     Widescreen_SlideUndraw(Win());
     auto* const win = rv::As<records::WindowRecord>(Win());
-    const std::int32_t v = S16(static_cast<unsigned>(win->centre_x));
+    const std::int32_t v = S16(static_cast<unsigned>(win->x));
     if (v >= bound) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
-    win->centre_x = static_cast<unsigned>(v + 0x20);
+    win->x = static_cast<unsigned>(v + 0x20);
 }
 
 // original 0x599470: kind 4 of 0x598890: GeneWin_List3Open, _List3SlideIn,

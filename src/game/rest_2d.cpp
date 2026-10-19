@@ -701,8 +701,8 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
     const auto c = BattleActorCopies_ItemActor;
     B(0x80340C) = 1;
     const U member_window = at::kWindows + at::kWindowStride * static_cast<U>(4 + c);
-    SetWord(At(0x803410), rv::As<records::WindowRecord>(At(member_window))->centre_x);
-    SetWord(At(0x803412), rv::As<records::WindowRecord>(At(member_window))->centre_y);
+    SetWord(At(0x803410), rv::As<records::WindowRecord>(At(member_window))->x);
+    SetWord(At(0x803412), rv::As<records::WindowRecord>(At(member_window))->y);
     SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(MoveScript_EffectState[Cond_Flags[0xd2 + c]])));
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x8032FC), 0x12);

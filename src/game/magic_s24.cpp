@@ -152,13 +152,13 @@ unsigned char* SpawnRingChild(unsigned parameter, unsigned phase, unsigned index
     t[0xB] = static_cast<unsigned char>(index);
     t[9] = 0;
     t[0xA] = spin;
-    tsc->vel_x = dx;
-    rv::Store(rv::Current<records::BattleTask>()->vel_y, Long(Mem(Fx104_ChildOffsets_addr + 8 * index + 4)));
+    tsc->step_x = dx;
+    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(Fx104_ChildOffsets_addr + 8 * index + 4)));
     TurnByFacing(Sprite_Current);
     const unsigned char* const s = Sprite_Current;
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    tt->x = Add(ts->vel_x, Field_Kind2X);
-    tt->y = Add(ts->vel_y, Field_Kind2Z);
+    tt->x = Add(ts->step_x, Field_Kind2X);
+    tt->z = Add(ts->step_z, Field_Kind2Z);
     SetLong(t + 0x3C, Long(s + 0x3C));
     return t;
 }
@@ -372,7 +372,7 @@ S24_EXPORT void __cdecl Fx104_DrawFunnel(void) {
             unsigned char* const mode = Gfx_PacketNext;
             Put16(kD + 2, t);
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
-            const std::int32_t z = Add(Shl(static_cast<short>(t), 9), ts->y);
+            const std::int32_t z = Add(Shl(static_cast<short>(t), 9), ts->z);
             MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0xB5, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
@@ -459,7 +459,7 @@ S24_EXPORT void __cdecl Fx104_PushMatrix(void) {
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     if (sc[5] == 0xC) angles[2] = static_cast<short>((Frame_Counter & 0xF) << 8);
     short v[3];
-    PointOf(v, tsc->x, tsc->y, S16(sc + 0x3E));
+    PointOf(v, tsc->x, tsc->z, S16(sc + 0x3E));
     PushMatrix(v, angles);
 }
 
@@ -498,7 +498,7 @@ S24_EXPORT void __cdecl Fx104_DrawDisc(void) {
         t >>= 12;
         Put16(kC + 2, t);
         const std::int32_t x = Add(c0 >> 9, ts->x);
-        const std::int32_t z = Add(static_cast<short>(t) >> 9, ts->y);
+        const std::int32_t z = Add(static_cast<short>(t) >> 9, ts->z);
         DrawMode(0x35);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -700,7 +700,7 @@ S24_EXPORT void __cdecl Fx104_DrawSphere(void) {
             const unsigned char* const s = Sprite_Current;
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
-            const std::int32_t z = Add(Shl(dz, 9), ts->y);
+            const std::int32_t z = Add(Shl(dz, 9), ts->z);
             DrawMode(0xB5);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
@@ -772,8 +772,8 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
     }
     CentreOnTargets();
     Sprite_Current[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0xFFF80000u));
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFF80000u));
+    rv::Current<records::BattleTask>()->step_z = 0;
     TurnByFacing(Sprite_Current);
     unsigned char* sc = Sprite_Current;
     SetLong(sc + 0x34, Add(Long(sc + 0xC), Field_Kind2X));
@@ -783,7 +783,7 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
     const std::int32_t dz = Sub(Field_Kind2Z, Long(sc + 0x38));
     const std::int32_t dx = Sub(Field_Kind2X, Long(sc + 0x34));
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-    rv::Current<records::BattleTask>()->vel_x = angle;
+    rv::Current<records::BattleTask>()->step_x = angle;
     Sprite_Current[0xB] = 0;
     for (unsigned i = 0; i < 7; ++i) {
         unsigned char* const t = TaskSlot(MH_CALL(BattleTask_Create)(1, 0x33));
@@ -830,7 +830,7 @@ S24_EXPORT void __cdecl Fx105_Orb(void) {
 // (0x65B88C + 2i and 0x65B88E + 2i, unbounded); +0xB, +9, +0xA 0; +2 on.
 S24_EXPORT void __cdecl Fx105_OrbStart(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     unsigned char* sc = Sprite_Current;
     SetLong(sc + 0xC, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), Long(Owner() + 0xC)));
@@ -859,7 +859,7 @@ S24_EXPORT void __cdecl Fx105_OrbEmit(void) {
             m[1] = 0;
             m[2] = 0;
             m[9] = s[9];
-            tm->vel_y = ts->vel_y;
+            tm->step_z = ts->step_z;
             Bump(s[0xB]);
         }
     }
@@ -893,7 +893,7 @@ S24_EXPORT void __cdecl Fx105_PushMatrix(void) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     short v[3];
-    PointOf(v, tsc->x, tsc->y, S16(sc + 0x3E));
+    PointOf(v, tsc->x, tsc->z, S16(sc + 0x3E));
     PushMatrix(v, angles);
 }
 
@@ -910,15 +910,15 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         const unsigned char c = Mem(colours + j)[0];
         Put16(kW4 + 2 * j, c - (c >> 6) * sc[0xA]);
     }
-    int t = Sin(tsc->vel_x);
+    int t = Sin(tsc->step_x);
     Put16(kA, Shl(t, 6) >> 12);
-    t = Cos(rv::Current<records::BattleTask>()->vel_x);
+    t = Cos(rv::Current<records::BattleTask>()->step_x);
     const unsigned char* s = Sprite_Current;
     Put16(kA + 2, Shl(t, 6) >> 12);
     Put16(kA + 4, 0);
     t = Sin(Long(s + 0x10));
     Put16(kB, Shl(t, 6) >> 12);
-    t = Cos(rv::Current<records::BattleTask>()->vel_y);
+    t = Cos(rv::Current<records::BattleTask>()->step_z);
     Put16(kB + 2, Shl(t, 6) >> 12);
     Put16(kB + 4, 0);
     if (Sprite_Current[9] + 1 <= 1) return;
@@ -943,14 +943,14 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         Put16(kD + 4, b4);
         t = Sin(Long(s + 0xC));
         Put16(kA, Mul(t, G16(kR)) >> 12);
-        t = Cos(rv::Current<records::BattleTask>()->vel_x);
+        t = Cos(rv::Current<records::BattleTask>()->step_x);
         t = Mul(t, G16(kR)) >> 12;
         const short h = G16(kR2);
         Put16(kA + 2, t);
         Put16(kA + 4, h);
-        t = Sin(rv::Current<records::BattleTask>()->vel_y);
+        t = Sin(rv::Current<records::BattleTask>()->step_z);
         Put16(kB, Mul(t, G16(kR)) >> 12);
-        t = Cos(rv::Current<records::BattleTask>()->vel_y);
+        t = Cos(rv::Current<records::BattleTask>()->step_z);
         t = Mul(t, G16(kR));
         const short ax = G16(kA), az = G16(kA + 2);
         unsigned char* const mode = Gfx_PacketNext;
@@ -1016,9 +1016,9 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     t = Sin(Long(sc + 0x10));
     t = (Mul(t, G16(kR)) >> 3);
     rv::Store(rv::Current<records::BattleTask>()->x, Add(t, Long(Owner() + 0x34)));
-    t = Cos(rv::Current<records::BattleTask>()->vel_y);
+    t = Cos(rv::Current<records::BattleTask>()->step_z);
     t = (Mul(t, G16(kR)) >> 3);
-    rv::Store(rv::Current<records::BattleTask>()->y, Add(t, Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(t, Long(Owner() + 0x38)));
     SetWord(Sprite_Current + 0x3E, Word(Owner() + 0x3E) + Word(Mem(kR2)) - 0x20u);
     sc = Sprite_Current;
     const long ground = MH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
@@ -1176,7 +1176,7 @@ S24_EXPORT void __cdecl Fx106_Start(void) {
         k[2] = 0;
     }
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
     SetLong(Sprite_Current + 0x3C, Add(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C), 0x1000000));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;

@@ -355,7 +355,7 @@ void Seed(unsigned k) {
     case kBannerOut:
     case kMsgIn:
     case kMsgOut:
-        rv::As<records::WindowRecord>(r)->centre_y = SlideY();
+        rv::As<records::WindowRecord>(r)->y = SlideY();
         break;
     case kMsgRun:
         r[3] = static_cast<unsigned char>(Next() % 4);

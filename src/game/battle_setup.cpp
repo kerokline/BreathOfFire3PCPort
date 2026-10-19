@@ -120,8 +120,8 @@ extern "C" void __cdecl Battle_OpenMsgWindow() {
     auto* const window_rec = rv::As<records::WindowRecord>(At(at::kMsgWindow) - 2);
     window_rec->kind = 6;
     window_rec->state = 0;
-    window_rec->centre_x = 0x14;
-    window_rec->centre_y = 0xFFEA;
+    window_rec->x = 0x14;
+    window_rec->y = 0xFFEA;
 }
 
 // original 0x445550 (PSX 0x801DB2C0, the same): 1 when the actor is present
@@ -565,9 +565,9 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
         }
         const int cost = static_cast<int>((static_cast<std::uint32_t>(Long(At(BattleActions_ApCost_addr))) & 0xFF) + 1) / 2;
         if (static_cast<int>(member_rec->ap) < cost) {
-            member_rec->state[0] = 6;
-            member_rec->state[1] = 4;
-            member_rec->state[2] = 4;
+            member_rec->state = 6;
+            member_rec->step = 4;
+            member_rec->state3 = 4;
             g.set_pending(i);
             continue;
         }

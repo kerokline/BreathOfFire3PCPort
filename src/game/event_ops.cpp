@@ -277,7 +277,7 @@ extern "C" void __cdecl EventOp_9x(const unsigned char* op) {
     {
         unsigned char* const sc = Sprite_Current;
         rv::As<records::SpriteObject>(Object(Count()))->trigger_word = 0;
-        rv::As<records::SpriteObject>(sc)->accel_x = static_cast<std::int32_t>(static_cast<unsigned>(op[9]) << 8 | op[0xA]);
+        rv::As<records::SpriteObject>(sc)->work_18 = static_cast<std::int32_t>(static_cast<unsigned>(op[9]) << 8 | op[0xA]);
     }
     Sprite_Current[5] = op[8];
     Sprite_Current[0xB] = op[0xC];

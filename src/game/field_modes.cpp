@@ -97,7 +97,7 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
     records::EffectObject* const e = rv::As<records::EffectObject>(Effect_Objects + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7));
     const int ex = x();
     const int ey = Angle(1);
-    e->in_use = 1;
+    e->flags = 1;
     e->kind = 0x13;
     SetLong(rv::Bytes(e) + 0x64, ex);
     SetLong(rv::Bytes(e) + 0x68, ey);

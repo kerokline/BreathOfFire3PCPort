@@ -223,7 +223,7 @@ extern "C" void __cdecl Boss27_End(void) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
@@ -319,7 +319,7 @@ extern "C" unsigned char __cdecl BossGazer_Enter(void) {
     SetCell(Enemy() + 0xFC, AddressOf(BossGazer_Anims));
     SetCell(Enemy() + 0xF4, bof3::addr::BossGazer_Hook);
     SetCell(Enemy() + 0xF8, AddressOf(BossGazer_Sounds));
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -335,7 +335,7 @@ extern "C" unsigned __cdecl BossGazer_State4Dispatch(unsigned passed) {
 extern "C" void __cdecl BossGazer_State4Start(void) {
     Sprite_Current[9] = EnemyDataByte(0x8A);
     BH_CALL(BattleEnemy_SetAnimation)(2);
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x43C8D0: state 4 step 1 - +9 down by one; at 0 the enemy's sound
@@ -352,7 +352,7 @@ extern "C" void __cdecl BossGazer_State4Wait(void) {
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
     task[1] = 0;
     SetCell(task + 0x80, Key(s));
-    cur_enemy->state[1] += 1;
+    cur_enemy->step += 1;
 }
 
 // original 0x43C950: state 5. jmp [BossGazer_State5Steps + 4 * Sprite_Current
@@ -367,7 +367,7 @@ extern "C" void __cdecl BossGazer_State5Start(void) {
     BH_CALL(Sprite_SetAnimation)(2);
     B(at::kTarget) = 0x80;
     BH_CALL(Battle_SetTargetFlag40)(0x80);
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x43C9A0: state 5 step 1 (and Myria's, BossMyria_State5Steps 1) -
@@ -569,7 +569,7 @@ extern "C" unsigned char __cdecl BossMyria_Enter(void) {
     BH_CALL(BossMyria_SpawnFx)(1, 6);
     BH_CALL(BossMyria_SpawnFx)(2, 6);
     BH_AT(void (__cdecl*)(unsigned char*, U), at::kSlotStart)(Sprite_Current, at::kMyriaSlotScript);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -587,7 +587,7 @@ extern "C" void __cdecl BossMyria_IdleStart(void) {
     BossSa_EndCount = 0;
     BH_CALL(BattleEnemy_SetAnimation)(0);
     BH_CALL(BattleEnemy_ScriptTick)();
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x440190: idle step 1 - +0xB = 0, BattleEnemy_ScriptTick (its al
@@ -595,8 +595,8 @@ extern "C" void __cdecl BossMyria_IdleStart(void) {
 extern "C" void __cdecl BossMyria_IdleEnd(void) {
     Sprite_Current[0xB] = 0;
     BH_CALL(BattleEnemy_ScriptTick)();
-    rv::Current<records::BattleEnemy>()->state[0] += 1;
-    rv::Current<records::BattleEnemy>()->state[1] = 0;
+    rv::Current<records::BattleEnemy>()->state += 1;
+    rv::Current<records::BattleEnemy>()->step = 0;
 }
 
 // original 0x4401C0: state 4. jmp [BossMyria_State4Steps + 4 * +2] (2).
@@ -609,7 +609,7 @@ extern "C" unsigned __cdecl BossMyria_State4Dispatch(unsigned passed) {
 extern "C" void __cdecl BossMyria_State4Start(void) {
     BH_CALL(BossMyria_SpawnFxAndWait)(4, 2, 2);
     Sprite_Current[9] = EnemyDataByte(0x8A);
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x440220: state 4 step 1 - +9 down by one; at 0 the enemy's sound;
@@ -629,7 +629,7 @@ extern "C" unsigned __cdecl BossMyria_State5Dispatch(unsigned passed) {
 // 0x904B44); +2 up by one. (Step 1 is BossGazer_State5Close.)
 extern "C" void __cdecl BossMyria_State5Start(void) {
     BH_CALL(Battle_SetTargetFlag40)(B(at::kTarget));
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x4402A0: state 6 (an action taken or received). jmp
@@ -645,7 +645,7 @@ extern "C" void __cdecl BossMyria_ActPick(void) {
     if (B(at::kActKind) != 4 || (AbilityByte(at::kAbilityFlags4, Word(At(at::kAbility))) & 4) != 0) {
         BH_CALL(BossMyria_SpawnFxAndWait)(5, 4, 4);
     }
-    rv::Current<records::BattleEnemy>()->state[1] = 1;
+    rv::Current<records::BattleEnemy>()->step = 1;
 }
 
 // original 0x440310: action step 4 (the death) - Sprite_ScriptTickOnce,
@@ -659,9 +659,9 @@ extern "C" void __cdecl BossMyria_Death(void) {
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     SetCell(e + 0x110, static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
     rv::Current<records::BattleEnemy>()->flags &= 0xBF;
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
-    rv::Current<records::BattleEnemy>()->state[1] = 0;
-    rv::Current<records::BattleEnemy>()->state[2] = 0;
+    rv::Current<records::BattleEnemy>()->state = 2;
+    rv::Current<records::BattleEnemy>()->step = 0;
+    rv::Current<records::BattleEnemy>()->state3 = 0;
 }
 
 // original 0x440370: state 7. jmp [BossMyria_State7Steps + 4 * +2] (3).
@@ -695,7 +695,7 @@ extern "C" unsigned char __cdecl BossMyria_State7Start(void) {
     }
     const unsigned id = Word(At(at::kAbility));
     if (AbilityByte(at::kAbilityFlags8, id) & 8) {
-        rv::Current<records::BattleEnemy>()->state[0] += 1;
+        rv::Current<records::BattleEnemy>()->state += 1;
         return BH_CALL(BattleEnemy_ScriptTickOnce)();
     }
     Sprite_Current[9] = EnemyDataByte(0x8B);
@@ -717,7 +717,7 @@ extern "C" unsigned char __cdecl BossMyria_State7Start(void) {
         BH_CALL(BattleEnemy_SetAnimation)(0xA);
         break;
     }
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
     return BH_CALL(BattleEnemy_ScriptTickOnce)();
 }
 
@@ -746,8 +746,8 @@ extern "C" unsigned char __cdecl BossMyria_State7Count(void) {
 // +1 up by one (state 8) and +2 = 0.
 extern "C" void __cdecl BossMyria_State7End(void) {
     if (BH_CALL(BattleEnemy_ScriptTickOnce)() == 0) return;
-    rv::Current<records::BattleEnemy>()->state[0] += 1;
-    rv::Current<records::BattleEnemy>()->state[1] = 0;
+    rv::Current<records::BattleEnemy>()->state += 1;
+    rv::Current<records::BattleEnemy>()->step = 0;
 }
 
 // original 0x440510: state 8 - call [BossMyria_State8Steps + 4 * +2] (5);
@@ -756,14 +756,14 @@ extern "C" void __cdecl BossMyria_State7End(void) {
 extern "C" void __cdecl BossMyria_State8Dispatch(void) {
     Step("BossMyria_State8Dispatch", AddressOf(BossMyria_State8Steps), 5, 2);
     auto* const cur_enemy = rv::Current<records::BattleEnemy>();
-    if (cur_enemy->state[0] == 8 && cur_enemy->state[1] <= 2) BH_CALL(BossMyria_State8Check)();
+    if (cur_enemy->state == 8 && cur_enemy->step <= 2) BH_CALL(BossMyria_State8Check)();
 }
 
 // original 0x440540: state 8 step 0 - BattleEnemy_ScriptTickOnce (its al not
 // read), +2 up by one.
 extern "C" void __cdecl BossMyria_State8Tick(void) {
     BH_CALL(BattleEnemy_ScriptTickOnce)();
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x440550: state 8 step 1 - BattleEnemy_ScriptTickOnce; with
@@ -779,7 +779,7 @@ extern "C" void __cdecl BossMyria_State8Cost(void) {
     }
     B(at::kRoundFlagsHi) |= 8;
     enemy_rec->command = 0;
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x440590: state 8 step 2 - unless the ability's record byte
@@ -799,8 +799,8 @@ extern "C" void __cdecl BossMyria_State8Clear(void) { Sprite_Current[0xB] = 0; }
 // 2 and +2 = 0 (Sprite_Current read for each).
 extern "C" void __cdecl BossMyria_State8Close(void) {
     BH_AT(Handler, at::kEnemyActEnd)();
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
-    rv::Current<records::BattleEnemy>()->state[1] = 0;
+    rv::Current<records::BattleEnemy>()->state = 2;
+    rv::Current<records::BattleEnemy>()->step = 0;
 }
 
 // original 0x4405E0: state 8's check - nothing without 0x904AA8 bit 2; with
@@ -815,7 +815,7 @@ extern "C" void __cdecl BossMyria_State8Check(void) {
     Sprite_Current[0xB] = 1;
     auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     BossSa_EndCount = 8;
-    cur_enemy->state[1] = 3;
+    cur_enemy->step = 3;
 }
 
 // original 0x440620: the +0xF4 hook: by the word's low byte through

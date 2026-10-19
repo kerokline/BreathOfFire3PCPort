@@ -298,8 +298,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
         auto* const window_rec = rv::As<records::WindowRecord>(w);
         const int last = static_cast<int>(n) - 1;
         window_rec->kind = 1;
-        window_rec->centre_x = 0x14;
-        window_rec->centre_y = 0x46;
+        window_rec->x = 0x14;
+        window_rec->y = 0x46;
         w[9] = static_cast<unsigned char>((last / 2) * 13 + 0x12);
         if (n > 1) {
             unsigned char i = 0;

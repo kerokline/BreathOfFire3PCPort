@@ -449,8 +449,8 @@ int HalfStep(const unsigned char* r, unsigned offset) {
 // and Window_DrawOutline keep only the low 16 bits of the first two and the
 // low byte of the last two, so what the original leaves in the upper halves
 // of the registers it pushes never reaches either.
-int RecX(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->centre_x) >> 4; }
-int RecY(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->centre_y) >> 4; }
+int RecX(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->x) >> 4; }
+int RecY(const unsigned char* r) { return static_cast<std::int16_t>(rv::As<records::WindowRecord>(r)->y) >> 4; }
 int RecW(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x10)) >> 4; }
 int RecH(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x12)) >> 4; }
 
@@ -473,10 +473,10 @@ extern "C" void __cdecl Window_Grow(void) {
     unsigned char* r = Rec();
     SetWord(r + 0x10, Word(r + 0x10) + Word(r + 0x14));
     r = Rec();
-    rv::As<records::WindowRecord>(r)->centre_x = rv::As<records::WindowRecord>(r)->centre_x - static_cast<unsigned>(HalfStep(r, 0x14));
+    rv::As<records::WindowRecord>(r)->x = rv::As<records::WindowRecord>(r)->x - static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
     if (RecW(r) > r[0xA]) {
-        rv::As<records::WindowRecord>(r)->centre_x = SettledX(r);
+        rv::As<records::WindowRecord>(r)->x = SettledX(r);
         r = Rec();
         settled = 1;
         SetWord(r + 0x10, r[0xA] << 4);
@@ -484,10 +484,10 @@ extern "C" void __cdecl Window_Grow(void) {
     }
     SetWord(r + 0x12, Word(r + 0x12) + Word(r + 0x16));
     r = Rec();
-    rv::As<records::WindowRecord>(r)->centre_y = rv::As<records::WindowRecord>(r)->centre_y - static_cast<unsigned>(HalfStep(r, 0x16));
+    rv::As<records::WindowRecord>(r)->y = rv::As<records::WindowRecord>(r)->y - static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (RecH(r) > r[0xB]) {
-        rv::As<records::WindowRecord>(r)->centre_y = SettledY(r);
+        rv::As<records::WindowRecord>(r)->y = SettledY(r);
         r = Rec();
         SetWord(r + 0x12, r[0xB] << 4);
         r = Rec();
@@ -520,7 +520,7 @@ extern "C" void __cdecl Window_Shrink(void) {
     unsigned char* r = Rec();
     SetWord(r + 0x10, Word(r + 0x10) - Word(r + 0x14));
     r = Rec();
-    rv::As<records::WindowRecord>(r)->centre_x = rv::As<records::WindowRecord>(r)->centre_x + static_cast<unsigned>(HalfStep(r, 0x14));
+    rv::As<records::WindowRecord>(r)->x = rv::As<records::WindowRecord>(r)->x + static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
     if (static_cast<std::int16_t>(Word(r + 0x10)) < 0) {
         const unsigned half = r[0xA] >> 1;
@@ -537,7 +537,7 @@ extern "C" void __cdecl Window_Shrink(void) {
             place = SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + half;
             break;
         }
-        rv::As<records::WindowRecord>(r)->centre_x = place << 4;
+        rv::As<records::WindowRecord>(r)->x = place << 4;
         r = Rec();
         settled = 1;
         SetWord(r + 0x10, 0);
@@ -545,7 +545,7 @@ extern "C" void __cdecl Window_Shrink(void) {
     }
     SetWord(r + 0x12, Word(r + 0x12) - Word(r + 0x16));
     r = Rec();
-    rv::As<records::WindowRecord>(r)->centre_y = rv::As<records::WindowRecord>(r)->centre_y + static_cast<unsigned>(HalfStep(r, 0x16));
+    rv::As<records::WindowRecord>(r)->y = rv::As<records::WindowRecord>(r)->y + static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (static_cast<std::int16_t>(Word(r + 0x12)) < 0) {
         const unsigned half = r[0xB] >> 1;
@@ -562,7 +562,7 @@ extern "C" void __cdecl Window_Shrink(void) {
             place = Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + half;
             break;
         }
-        rv::As<records::WindowRecord>(r)->centre_y = place << 4;
+        rv::As<records::WindowRecord>(r)->y = place << 4;
         r = Rec();
         ++settled;
         SetWord(r + 0x12, 0);

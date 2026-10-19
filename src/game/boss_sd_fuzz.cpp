@@ -272,7 +272,7 @@ void SeedK26(unsigned k) {
 void SettleK26() {
     for (unsigned i = 0; i < bh::at::kEnemyCount; ++i) {
         auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::EnemyAt(i));
-        if (enemy_rec->state[0] >= 12) enemy_rec->state[0] = static_cast<unsigned char>(enemy_rec->state[0] % 12);
+        if (enemy_rec->state >= 12) enemy_rec->state = static_cast<unsigned char>(enemy_rec->state % 12);
     }
 }
 void ArgsK26(unsigned k, U* a) {

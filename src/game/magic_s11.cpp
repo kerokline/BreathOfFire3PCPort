@@ -155,7 +155,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 void LinkAtCurrent(int dy, unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), dy, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), dy, size);
 }
 
 // Gte_RotTransPers4 with the ten arguments the originals push: the four
@@ -247,7 +247,7 @@ S11_EXPORT void __cdecl Sanctuary_Start(void) {
     Mem(Sanctuary_Reached_addr + 10)[0] = 0;
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -303,9 +303,9 @@ S11_EXPORT void __cdecl SanctuaryRing_Task(void) {
 S11_EXPORT void __cdecl SanctuaryRing_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
-    rv::Current<records::BattleTask>()->vel_x = 8;
+    rv::Current<records::BattleTask>()->step_x = 8;
     Sc()[0xA] = 0x10;
     Inc(Sc()[2]);
 }
@@ -339,7 +339,7 @@ void SendMotes(unsigned char actor) {
 // not the acting actor (byte 0x904B34) is marked reached (0xFF) and sent two
 // motes. At +0xC past 0x600 (signed) +2 on.
 S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, Add(rv::Current<records::BattleTask>()->vel_x, 0x20));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Add(rv::Current<records::BattleTask>()->step_x, 0x20));
     SetSW(0, Word(Sc() + 0xC));
     for (unsigned i = 0; i < 8; ++i) {
         const auto actor = static_cast<unsigned char>(3 + i);
@@ -361,7 +361,7 @@ S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
         reached[0] = 0xFF;
         SendMotes(actor);
     }
-    if (rv::Current<records::BattleTask>()->vel_x > 0x600) Inc(Sc()[2]);
+    if (rv::Current<records::BattleTask>()->step_x > 0x600) Inc(Sc()[2]);
 }
 
 // original 0x4AF490: the owner's count +0xB down and the task freed (a tail
@@ -405,10 +405,10 @@ S11_EXPORT void __cdecl SanctuaryMote_Wait(void) {
     const unsigned actor = s[0xB];
     const unsigned char* const r = actor < 3 ? PartyRecord(actor) : EnemyRecord(actor);
     ts->x = Long(r + 0x34);
-    ts->y = Long(r + 0x38);
+    ts->z = Long(r + 0x38);
     SetLong(s + 0x3C, Long(r + 0x3C));
-    ts->vel_x = 0x10;
-    ts->start_x = 0x10;
+    ts->step_x = 0x10;
+    ts->work_18 = 0x10;
     s[0xA] = 0x10;
     Inc(s[2]);
     Inc(s[2]);
@@ -419,9 +419,9 @@ S11_EXPORT void __cdecl SanctuaryMote_Wait(void) {
 S11_EXPORT void __cdecl SanctuaryMote_Slow(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->vel_x = Add(ts->vel_x, ts->start_x);
-    ts->start_x = Add(ts->start_x, -1);
-    if (ts->start_x == 0x10) Inc(s[2]);
+    ts->step_x = Add(ts->step_x, ts->work_18);
+    ts->work_18 = Add(ts->work_18, -1);
+    if (ts->work_18 == 0x10) Inc(s[2]);
 }
 
 // original 0x4AF650: +0xC += +0x18; on odd frames (Frame_Counter bit 0)
@@ -430,9 +430,9 @@ S11_EXPORT void __cdecl SanctuaryMote_Slow(void) {
 S11_EXPORT void __cdecl SanctuaryMote_Fade(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->vel_x = Add(ts->vel_x, ts->start_x);
+    ts->step_x = Add(ts->step_x, ts->work_18);
     if ((Frame_Counter & 1) == 0) return;
-    ts->start_x = Add(ts->start_x, -1);
+    ts->work_18 = Add(ts->work_18, -1);
     Dec(s[0xA]);
     if (s[0xA] != 0) return;
     Dec(Owner()[0xB]);
@@ -577,7 +577,7 @@ void SpawnRing(unsigned angle, unsigned char kind, std::int32_t radius, std::int
         m[1] = 0;
         m[9] = static_cast<unsigned char>((i << 3) + angle);
         m[0xB] = kind;
-        tm->vel_x = radius;
+        tm->step_x = radius;
         SetLong(m + 0x14, height);
         Inc(s[0xB]);
     }
@@ -621,15 +621,15 @@ S11_EXPORT void __cdecl Tornado_Start(void) {
     Mem(kFlagsB)[0] = static_cast<unsigned char>(Mem(kFlagsB)[0] | 2);
     Gfx_ClutStripDirty = 1;
     Sc()[8] = Pointer(MagicS23_ActorSprite_addr)[8];
-    rv::Current<records::BattleTask>()->vel_x = 0x40000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x40000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(TaskFn, kTurnOffset)(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->start_x, Add(rv::Current<records::BattleTask>()->vel_x, static_cast<int>(Field_Kind2X)));
-    rv::Store(rv::Current<records::BattleTask>()->start_y, Add(rv::Current<records::BattleTask>()->vel_y, static_cast<int>(Field_Kind2Z)));
+    rv::Store(rv::Current<records::BattleTask>()->work_18, Add(rv::Current<records::BattleTask>()->step_x, static_cast<int>(Field_Kind2X)));
+    rv::Store(rv::Current<records::BattleTask>()->work_1c, Add(rv::Current<records::BattleTask>()->step_z, static_cast<int>(Field_Kind2Z)));
     int v = Sin(0);
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_x));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(Shl(v, 6), rv::Current<records::BattleTask>()->work_18));
     v = Cos(0);
-    rv::Store(rv::Current<records::BattleTask>()->y, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_y));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(Shl(v, 6), rv::Current<records::BattleTask>()->work_1c));
     Call0(bof3::addr::Tornado_AverageHeight);
     MH_CALL(Sound_PlayById)(0x100);
     unsigned char* const s = Sc();
@@ -646,9 +646,9 @@ S11_EXPORT void __cdecl Tornado_Spin(void) {
     const auto angle = static_cast<std::uint16_t>(Sc()[9] << 4);
     SetSW(0xE, angle);
     int v = Sin(static_cast<short>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_x));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(Shl(v, 6), rv::Current<records::BattleTask>()->work_18));
     v = Cos(SS(0xE));
-    rv::Store(rv::Current<records::BattleTask>()->y, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_y));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(Shl(v, 6), rv::Current<records::BattleTask>()->work_1c));
     if (Sc()[0xB] != 0) return;
     MarkDoneAndFree();
 }
@@ -703,11 +703,11 @@ S11_EXPORT void __cdecl TornadoFunnel_PushMatrix(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
     ts->x = Long(o + 0x34);
-    ts->y = Long(o + 0x38);
+    ts->z = Long(o + 0x38);
     SetWord(s + 0x3E, Word(o + 0x3E));
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {
@@ -884,7 +884,7 @@ S11_EXPORT void __cdecl TornadoMote_Task(void) {
     {
         const int r = SS(0);
         const std::int32_t oz = Long(Owner() + 0x38);
-        rv::Store(rv::Current<records::BattleTask>()->y, Add(MulSar(v, r, 3), oz));
+        rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(v, r, 3), oz));
     }
     const std::uint32_t frame = Frame_Counter;
     unsigned char* const cell = Sc() + 0x38;
@@ -901,7 +901,7 @@ S11_EXPORT void __cdecl TornadoMote_Place(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
     ts->x = Long(o + 0x34);
-    ts->y = Long(o + 0x38);
+    ts->z = Long(o + 0x38);
     SetLong(s + 0x3C, Add(Long(o + 0x3C), Long(s + 0x14)));
     s[0xA] = 0;
     Inc(s[2]);

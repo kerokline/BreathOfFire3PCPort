@@ -71,9 +71,9 @@ std::uint32_t En() { return static_cast<std::uint32_t>(Long(At(BattleE3_CurrentE
 // The step bytes inside the swapped block: +1 below 12, +2 below 6, +3 below 9.
 void SmallSteps(unsigned char* e, std::uint32_t h) {
     auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
-    enemy_rec->state[0] = static_cast<unsigned char>(h % 12);
-    enemy_rec->state[1] = static_cast<unsigned char>((h >> 4) % 6);
-    enemy_rec->state[2] = static_cast<unsigned char>((h >> 8) % 9);
+    enemy_rec->state = static_cast<unsigned char>(h % 12);
+    enemy_rec->step = static_cast<unsigned char>((h >> 4) % 6);
+    enemy_rec->state3 = static_cast<unsigned char>((h >> 8) % 9);
 }
 unsigned Actor(std::uint32_t h) { return h % 4 == 0 ? (h >> 2) % 64 : 3 + (h >> 2) % 8; }
 

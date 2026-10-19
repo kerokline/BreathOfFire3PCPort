@@ -106,7 +106,7 @@ extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned 
         const unsigned char* const record = Offset(Ptr(at::kMemberAnimations + member * 4u), (animation & 0x7Fu) * 4u);
         g.set_bank(Word(record));
         rv::Current<records::SpriteObject>()->animation = record[2];
-        rv::Current<records::SpriteObject>()->pose = record[3];
+        rv::Current<records::SpriteObject>()->flip = record[3];
     } else {
         records::SpriteObject* sprite = rv::Current<records::SpriteObject>();
         const unsigned char flags = sprite->draw_flags;
@@ -181,7 +181,7 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
         SetLong(At(Gfx_UploadQueueRecord_addr + count * 4u), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(image)));
         Gfx_UploadQueueCount = static_cast<unsigned char>(Gfx_UploadQueueCount + 1);
     }
-    sprite->pose = entry[2];
+    sprite->flip = entry[2];
     unsigned char* const script = Offset(words, Word(words + entry[1] * 2u));
     rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(script));
     return script;
@@ -241,7 +241,7 @@ extern "C" void __cdecl Sprite_FaceDirection(unsigned char direction) {
         return;
     }
     const unsigned pair = direction * 2u;
-    rv::Current<records::SpriteObject>()->pose = At(at::kDirectionAnimations)[pair + 1];
+    rv::Current<records::SpriteObject>()->flip = At(at::kDirectionAnimations)[pair + 1];
     const unsigned char start = Field_ActiveMember[0xA1];
     const unsigned char animation = At(at::kDirectionAnimations)[pair];
     if (start == 0xFF) {

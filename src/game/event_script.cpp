@@ -491,8 +491,8 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     Sprite_Current[2] = op[7];
     Sprite_Current[6] = static_cast<unsigned char>((op[0] >> 4) - 1);
     SetDword(Sprite_Current + 0x20, 0);
-    rv::Current<records::SpriteObject>()->accel_z = 0;
-    rv::Current<records::SpriteObject>()->accel_x = 0;
+    rv::Current<records::SpriteObject>()->work_1c = 0;
+    rv::Current<records::SpriteObject>()->work_18 = 0;
     {
         unsigned char* const sc = Sprite_Current;
         unsigned char* source;

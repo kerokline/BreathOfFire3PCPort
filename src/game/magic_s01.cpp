@@ -136,7 +136,7 @@ void SpawnCopy(unsigned parameter) {
 void TakeOwnerPlace() {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -163,7 +163,7 @@ void Rise() {
 // +0x3C moved by the source's less the owner's.
 void OverSource(unsigned char* s) {
     SetLong(s + 0x34, Long(Source() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Source() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Source() + 0x38));
     const std::uint32_t d = static_cast<std::uint32_t>(Long(Source() + 0x3C)) - static_cast<std::uint32_t>(Long(Owner() + 0x3C));
     AddL(Sc() + 0x3C, d);
 }
@@ -186,7 +186,7 @@ void FadeHome(bool shrink) {
     }
     if (s[0x5D] != 0x80) return;
     SetLong(s + 0x34, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Inc(Sc()[2]);
 }
@@ -476,10 +476,10 @@ S01_EXPORT void __cdecl JumpChild_Hover(void) {
     const unsigned char* const o = Owner();
     const unsigned char* const t = Sc();
     const records::BattleTask* const tt = rv::AsConst<records::BattleTask>(t);
-    const auto dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(tt->y));
+    const auto dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(tt->z));
     const auto dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(tt->x));
     const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-    rv::Current<records::BattleTask>()->vel_x = heading;
+    rv::Current<records::BattleTask>()->step_x = heading;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
@@ -494,14 +494,14 @@ S01_EXPORT void __cdecl JumpChild_Return(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         unsigned char* const x = s + 0x34;
-        const int v = MH_CALL(Math_Sin)(ts->vel_x);
+        const int v = MH_CALL(Math_Sin)(ts->step_x);
         AddL(x, Twice(v));
     }
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         unsigned char* const z = s + 0x38;
-        const int v = MH_CALL(Math_Cos)(ts->vel_x);
+        const int v = MH_CALL(Math_Cos)(ts->step_x);
         AddL(z, Twice(v));
     }
     Rise();
@@ -527,7 +527,7 @@ S01_EXPORT void __cdecl JumpChild_PushMatrix(void) {
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
     const int height = s[2] < 2 ? S16(Owner() + 0x3E) : S16(Source() + 0x3E);
     v[2] = static_cast<short>(-(height / 2));
     v[3] = 0;

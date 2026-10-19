@@ -281,13 +281,13 @@ bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     auto* const window_rec = rv::As<records::WindowRecord>(w);
-    g.box(static_cast<U>(window_rec->centre_x) + 3, static_cast<U>(window_rec->centre_y) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const U category = w[0xA];
     U items = Long(At(kInventory + category * 4)) + top;
     U counts = Long(At(kCounts + category * 4)) + top;   // 0 + top for key items: not read then
-    U row = static_cast<std::uint16_t>(S8(offset) + static_cast<U>(window_rec->centre_y)) + 0x1Au;
+    U row = static_cast<std::uint16_t>(S8(offset) + static_cast<U>(window_rec->y)) + 0x1Au;
     const unsigned rows = moving + 7u;
     for (unsigned char i = 0; i < rows; ++i) {
         const unsigned char item = At(items)[0];
@@ -303,10 +303,10 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
             if (here == cursor) colour = 2;
             const unsigned char row_category = w[0xA];
             const unsigned char count = row_category == 4 ? 1 : At(counts)[0];
-            const int x = static_cast<int>(static_cast<U>(window_rec->centre_x)) + 7;
+            const int x = static_cast<int>(static_cast<U>(window_rec->x)) + 7;
             if (here == cursor || here == w[0xC]) {
                 if (colour != 7) g.item_row(x, static_cast<int>(row), 7, row_category, At(items)[0], count, 1);
-                g.item_row(static_cast<int>(static_cast<U>(window_rec->centre_x)) + 7, static_cast<int>(row) - 2, colour, w[0xA],
+                g.item_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, w[0xA],
                            At(items)[0], count, dim);
             } else {
                 g.item_row(x, static_cast<int>(row), colour, row_category, At(items)[0], count, dim);
@@ -317,14 +317,14 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         row += 0xD;
     }
 
-    g.box(static_cast<U>(window_rec->centre_x) + 3, static_cast<U>(window_rec->centre_y) + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(BattleDraw_Colour));
-    g.box(static_cast<U>(window_rec->centre_x) + 3, static_cast<U>(window_rec->centre_y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(BattleDraw_Colour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
         const unsigned char* const label = At(Long(At(kItemLabels + w[0xA] * 4u)));
-        const int y = static_cast<int>(static_cast<U>(window_rec->centre_y)) + 7;
+        const int y = static_cast<int>(static_cast<U>(window_rec->y)) + 7;
         const unsigned n = g.char_count(label);
-        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(n)) + static_cast<int>(static_cast<U>(window_rec->centre_x))), y, grey,
+        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(n)) + static_cast<int>(static_cast<U>(window_rec->x))), y, grey,
                        0x10, label);
     }
     {
@@ -333,25 +333,25 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         const unsigned have = g.count_used(cat) & 0xFFu;
         g.sprintf_(reinterpret_cast<char*>(At(kPrintBuf)), reinterpret_cast<const char*>(At(kFmt3d3d)), have, room);
         const unsigned char grey = w[9] ? 7 : 0;
-        g.font8(static_cast<U>(window_rec->centre_x) + 0x55, static_cast<U>(window_rec->centre_y) + 0x7A, grey, At(kPrintBuf));
+        g.font8(static_cast<U>(window_rec->x) + 0x55, static_cast<U>(window_rec->y) + 0x7A, grey, At(kPrintBuf));
     }
-    g.pieces(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y), At((w[0x10] & 2) ? kTitleBit1On : kTitleBit1Off), 1);
-    g.pieces(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y), At((w[0x10] & 1) ? kTitleBit0On : kTitleBit0Off), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 2) ? kTitleBit1On : kTitleBit1Off), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[0x10] & 1) ? kTitleBit0On : kTitleBit0Off), 1);
     {
         const U t = Word(w + 0x10);
         PutWord(w + 0x10, (t & 0xF0) ? t - 0x10 : 0);
     }
-    for (int b = 0; b < 10; ++b) g.piece(static_cast<U>(window_rec->centre_x) + b * 8 + 0x28, static_cast<U>(window_rec->centre_y), 1, 1);
-    for (int b = 0; b < 12; ++b) g.piece(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y) + b * 8 + 0x18, 4, 1);
-    g.piece(static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y) + 0x18, 0x16, 1);
-    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y) + b * 8 + 0x28, 0x17, 1);
-    g.piece(static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y) + 0x70, 0x18, 1);
-    g.piece(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y) + 0x78, 0x19, 1);
-    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->centre_x) + b * 8 + 8, static_cast<U>(window_rec->centre_y) + 0x78, 0x1A, 1);
-    g.piece(static_cast<U>(window_rec->centre_x) + 0x50, static_cast<U>(window_rec->centre_y) + 0x78, 0x1B, 1);
-    for (int b = 0; b < 6; ++b) g.piece(static_cast<U>(window_rec->centre_x) + b * 8 + 0x58, static_cast<U>(window_rec->centre_y) + 0x78, 0x1C, 1);
-    g.piece(static_cast<U>(window_rec->centre_x) + 0x88, static_cast<U>(window_rec->centre_y) + 0x78, 0x1D, 1);
-    g.scroll_bar(At(Long(At(kInventory + w[0xA] * 4u))), w[0xB], static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y) + 0x18, 7, 0x80,
+    for (int b = 0; b < 10; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 0x28, static_cast<U>(window_rec->y), 1, 1);
+    for (int b = 0; b < 12; ++b) g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + b * 8 + 0x18, 4, 1);
+    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 0x16, 1);
+    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + b * 8 + 0x28, 0x17, 1);
+    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x70, 0x18, 1);
+    g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + 0x78, 0x19, 1);
+    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 8, static_cast<U>(window_rec->y) + 0x78, 0x1A, 1);
+    g.piece(static_cast<U>(window_rec->x) + 0x50, static_cast<U>(window_rec->y) + 0x78, 0x1B, 1);
+    for (int b = 0; b < 6; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 0x58, static_cast<U>(window_rec->y) + 0x78, 0x1C, 1);
+    g.piece(static_cast<U>(window_rec->x) + 0x88, static_cast<U>(window_rec->y) + 0x78, 0x1D, 1);
+    g.scroll_bar(At(Long(At(kInventory + w[0xA] * 4u))), w[0xB], static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 7, 0x80,
                  0x5C);
 }
 
@@ -378,11 +378,11 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
 // and the scroll bar over the list's 10 entries.
 extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     auto* const window_rec = rv::As<records::WindowRecord>(w);
-    g.box(static_cast<U>(window_rec->centre_x) + 3, static_cast<U>(window_rec->centre_y) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0x10, &offset, &moving, w + 0x12);
     U ids = Addr(g.skill_list(w[0xA], w[0xB], 1)) + top;
-    U row = static_cast<std::uint16_t>(S8(offset) + static_cast<U>(window_rec->centre_y)) + 0x1Au;
+    U row = static_cast<std::uint16_t>(S8(offset) + static_cast<U>(window_rec->y)) + 0x1Au;
     const unsigned rows = moving + 7u;
     for (unsigned char i = 0; i < rows; ++i) {
         const unsigned char id = At(ids)[0];
@@ -396,45 +396,45 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
             const std::int32_t here = static_cast<std::int32_t>(i) + S16(Word(w + 0x10));
             const unsigned char* const record = At(kSkillRecords + At(ids)[0] * 0x18u);
             if (here == static_cast<std::int32_t>(w[0xD]) || here == static_cast<std::int32_t>(w[0xC])) {
-                if (colour != 7) g.skill_row(static_cast<int>(static_cast<U>(window_rec->centre_x)) + 7, static_cast<int>(row), 7, icon, record, cost, 1);
-                g.skill_row(static_cast<int>(static_cast<U>(window_rec->centre_x)) + 7, static_cast<int>(row) - 2, colour, icon, record, cost,
+                if (colour != 7) g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row), 7, icon, record, cost, 1);
+                g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row) - 2, colour, icon, record, cost,
                             dim);
             } else {
-                g.skill_row(static_cast<int>(static_cast<U>(window_rec->centre_x)) + 7, static_cast<int>(row), colour, icon, record, cost, dim);
+                g.skill_row(static_cast<int>(static_cast<U>(window_rec->x)) + 7, static_cast<int>(row), colour, icon, record, cost, dim);
             }
         }
         ++ids;
         row += 0xD;
     }
 
-    g.box(static_cast<U>(window_rec->centre_x) + 3, static_cast<U>(window_rec->centre_y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(static_cast<U>(window_rec->x) + 3, static_cast<U>(window_rec->y) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(BattleDraw_Colour));
     {
         const unsigned char* const label =
             At(Word(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : Long(At(kSkillLabels + w[0xB] * 4u)));
-        const int y = static_cast<int>(static_cast<U>(window_rec->centre_y)) + 7;
+        const int y = static_cast<int>(static_cast<U>(window_rec->y)) + 7;
         const U length = static_cast<U>(std::strlen(reinterpret_cast<const char*>(label)));
-        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + static_cast<U>(window_rec->centre_x)), y, 0, 0x10, label);
+        g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + static_cast<U>(window_rec->x)), y, 0, 0x10, label);
     }
-    g.pieces(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y), At((w[9] & 2) ? kTitleBit1On : kTitleBit1Off), 1);
-    g.pieces(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y), At((w[9] & 1) ? kTitleBit0On : kTitleBit0Off), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 2) ? kTitleBit1On : kTitleBit1Off), 1);
+    g.pieces(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y), At((w[9] & 1) ? kTitleBit0On : kTitleBit0Off), 1);
     {
         const unsigned char t = w[9];
         w[9] = (t & 0xF0) ? static_cast<unsigned char>(t - 0x10) : 0;
     }
-    for (int b = 0; b < 10; ++b) g.piece(static_cast<U>(window_rec->centre_x) + b * 8 + 0x28, static_cast<U>(window_rec->centre_y), 1, 1);
-    for (int b = 0; b < 12; ++b) g.piece(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y) + b * 8 + 0x18, 4, 1);
-    g.piece(static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y) + 0x18, 0x16, 1);
-    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y) + b * 8 + 0x28, 0x17, 1);
-    g.piece(static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y) + 0x70, 0x18, 1);
-    g.piece(static_cast<U>(window_rec->centre_x), static_cast<U>(window_rec->centre_y) + 0x78, 0x19, 1);
-    for (int b = 0; b < 17; ++b) g.piece(static_cast<U>(window_rec->centre_x) + b * 8 + 8, static_cast<U>(window_rec->centre_y) + 0x78, 0x1A, 1);
+    for (int b = 0; b < 10; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 0x28, static_cast<U>(window_rec->y), 1, 1);
+    for (int b = 0; b < 12; ++b) g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + b * 8 + 0x18, 4, 1);
+    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x18, 0x16, 1);
+    for (int b = 0; b < 9; ++b) g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + b * 8 + 0x28, 0x17, 1);
+    g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y) + 0x70, 0x18, 1);
+    g.piece(static_cast<U>(window_rec->x), static_cast<U>(window_rec->y) + 0x78, 0x19, 1);
+    for (int b = 0; b < 17; ++b) g.piece(static_cast<U>(window_rec->x) + b * 8 + 8, static_cast<U>(window_rec->y) + 0x78, 0x1A, 1);
     if (Word(w + 0x14) != 0) {
-        g.piece(static_cast<U>(window_rec->centre_x) + 8, static_cast<U>(window_rec->centre_y), 0x32, 1);
-        g.piece(static_cast<U>(window_rec->centre_x) + 0x90, static_cast<U>(window_rec->centre_y), 0x33, 1);
+        g.piece(static_cast<U>(window_rec->x) + 8, static_cast<U>(window_rec->y), 0x32, 1);
+        g.piece(static_cast<U>(window_rec->x) + 0x90, static_cast<U>(window_rec->y), 0x33, 1);
     }
     {
         // x, y and the top read before the list lookup, as the original's
-        const int x = static_cast<int>(static_cast<U>(window_rec->centre_x)) + 0x90, y = static_cast<int>(static_cast<U>(window_rec->centre_y)) + 0x18;
+        const int x = static_cast<int>(static_cast<U>(window_rec->x)) + 0x90, y = static_cast<int>(static_cast<U>(window_rec->y)) + 0x18;
         const unsigned char first = w[0x10];
         const unsigned char* const list = g.skill_list(w[0xA], w[0xB], 1);
         g.scroll_bar(list, first, x, y, 7, 0xA, 0x5C);

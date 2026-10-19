@@ -221,10 +221,10 @@ C1_EXPORT void __cdecl Magic080_Task(void) {
 // elevation there; +0xB Rand & 0x3F (0 picks the text); +9 0x30; +1 on.
 C1_EXPORT void __cdecl Magic080_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(Field_Kind2X));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(Field_Kind2Z));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(Field_Kind2Z));
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    const long h = MH_CALL(AreaMap_Elevation)(ts->x, ts->y);
+    const long h = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
     SetWord(Sc() + 0x3E, static_cast<unsigned>(h));
     const std::uint32_t r = RandCall();
     Sc()[0xB] = static_cast<unsigned char>(r & 0x3F);
@@ -353,7 +353,7 @@ C1_EXPORT void __cdecl Pentagram_Start(void) {
     }
     const unsigned char* const src = Source();
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     ClutCopy(0x1A00, 0x1A10, 0x8000);
     Gfx_ClutStripDirty = 1;
@@ -382,7 +382,7 @@ unsigned char* NewChild(unsigned kind) {
     child[9] = 0;
     child[0xA] = 0;
     tchild->x = tself->x;
-    tchild->y = tself->y;
+    tchild->z = tself->z;
     SetWord(child + 0x3E, Word(self + 0x3E));
     return child;
 }
@@ -440,7 +440,7 @@ C1_EXPORT void __cdecl Pentagram_Sprites(void) {
         child[0xA] = 0;
         child[0xB] = static_cast<unsigned char>(i >> 1);
         tchild->x = Long(self + 0x34);
-        tchild->y = Long(self + 0x38);
+        tchild->z = Long(self + 0x38);
         SetWord(child + 0x3E, Word(self + 0x3E));
     }
     // the task as Sprite_Current was read after the last create
@@ -747,7 +747,7 @@ C1_EXPORT void __cdecl PentagramBand_Draw(void) {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(VS(0x18))) << 9) + static_cast<std::uint32_t>(ts->x);
-        const std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(zr)) << 9) + static_cast<std::uint32_t>(ts->y);
+        const std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(zr)) << 9) + static_cast<std::uint32_t>(ts->z);
         DrawMode(0x35);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -905,12 +905,12 @@ namespace {
 // dx / dz turned by the direction (0x446770); the screen point; +9 and +0xA 0;
 // +2 on. The base is read once; what it holds is read after the turn.
 void PuffPlace(const unsigned char* base, std::uint32_t offsets) {
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, Long(Mem(offsets + 12u * Sc()[0xB])));
-    rv::Store(rv::Current<records::BattleTask>()->vel_y, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(offsets + 12u * Sc()[0xB])));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x) +
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) +
                                                    static_cast<std::uint32_t>(Long(base + 0x34))));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_y) +
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z) +
                                                    static_cast<std::uint32_t>(Long(base + 0x38))));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(offsets + 8 + 12u * Sc()[0xB]))) +
                                                    static_cast<std::uint32_t>(Long(base + 0x3C))));
@@ -940,7 +940,7 @@ C1_EXPORT void __cdecl InkPuff_Start(void) {
 // position (dy 2).
 C1_EXPORT void __cdecl Ink_DrawPuff(void) {
     DrawMode(0x55);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->y), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->z), 2,
                                 0xC);
     unsigned char* const p = Gfx_PacketNext;
     SetSW(0, Sc()[9] * 2u);
@@ -967,7 +967,7 @@ C1_EXPORT void __cdecl Ink_DrawPuff(void) {
     p[4] = SB(4);
     p[5] = SB(4);
     p[6] = SB(4);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->y), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::Current<records::BattleTask>()->x), static_cast<unsigned long>(rv::Current<records::BattleTask>()->z), 2,
                                 0x48);
 }
 
@@ -1107,7 +1107,7 @@ C1_EXPORT void __cdecl InkInkActor_Start(void) {
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[8] = rec[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(rec + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(rec + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
     SetLong(Sc() + 0x3C, Long(rec + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[2]);
@@ -1137,15 +1137,15 @@ C1_EXPORT void __cdecl InkInkPuff_Start(void) {
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
-    rv::Store(rv::Current<records::BattleTask>()->vel_y, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->x) +
-                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x)));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->y) +
-                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_y)));
+                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->z) +
+                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0x3C)) +
                                                    static_cast<std::uint32_t>(Long(Mem(Addr(InkInkPuff_Offsets) + 8 + 12u * Sc()[0xB])))));
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1217,7 +1217,7 @@ C1_EXPORT void __cdecl Magic213Actor_Start(void) {
     if (s[9] != 0) return;
     unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
     ts->x = Long(rec + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(rec + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
     SetLong(Sc() + 0x3C, Long(rec + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
@@ -1283,7 +1283,7 @@ C1_EXPORT void __cdecl Magic213Mote_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
                                                    static_cast<std::uint32_t>(v) * 12u));
     v = MH_CALL(Math_Cos)(static_cast<short>(SW(0)));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
                                                    static_cast<std::uint32_t>(v) * 12u));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1800000u));
     Sc()[0x25] = 0x1D;

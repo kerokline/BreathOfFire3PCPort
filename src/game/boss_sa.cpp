@@ -192,7 +192,7 @@ extern "C" U __cdecl BossGary_EndDispatch(void) { return Dispatch("BossGary_EndD
 extern "C" void __cdecl BossGary_EndStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(4);
     BH_CALL(MoveCmd_TestFB)(0x63, 0x14);
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x437AD0: BossGary_EndSteps 1 - once Mogu's count 0x904B7E is 0:
@@ -204,7 +204,7 @@ extern "C" unsigned char __cdecl BossGary_EndAwait(void) {
         EndStep(AddressOf(BossGary_AnimsEnd), 1);
         BattleActions_BattleEnd |= 4;
         BH_CALL(MoveCmd_TestFB)(0x64, 0x14);
-        rv::Current<records::BattleEnemy>()->state[1] += 1;
+        rv::Current<records::BattleEnemy>()->step += 1;
     }
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -239,7 +239,7 @@ extern "C" void __cdecl BossMogu_EndStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(4);
     auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     BossSa_EndCount = 0x3C;
-    cur_enemy->state[1] += 1;
+    cur_enemy->step += 1;
 }
 
 // original 0x437C30: BossMogu_EndSteps 1 - the count 0x904B7E down by one;
@@ -250,7 +250,7 @@ extern "C" unsigned char __cdecl BossMogu_EndCount(void) {
     BossSa_EndCount = count;
     if (count == 0) {
         EndStep(AddressOf(BossMogu_AnimsEnd), 0);
-        rv::Current<records::BattleEnemy>()->state[1] += 1;
+        rv::Current<records::BattleEnemy>()->step += 1;
     }
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -365,7 +365,7 @@ extern "C" U __cdecl BossNue_EndDispatch(void) { return Dispatch("BossNue_EndDis
 // Sprite_Current (read after the call) +2 up by one.
 extern "C" void __cdecl BossNue_EndPose(void) {
     BH_CALL(Sprite_SetAnimation)(6);
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x437F80: BossNue_EndSteps 1 - the walk (EndWalk); when it is over,
@@ -551,7 +551,7 @@ extern "C" void __cdecl BossWeretigr_State4Cue(void) {
     using Cue = void (__cdecl*)(unsigned);
     BH_AT(Cue, at::kPlayCue)(Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)))));
     BH_AT(Cue, at::kPlayCue)((Word(At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)))) + 4u) & 0xFFFF);
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x43D560: BossWeretigr_State4Steps 2 - once Sprite_Current +0 has
@@ -569,7 +569,7 @@ extern "C" void __cdecl BossWeretigr_State4End(void) {
 // Sprite_Current (read after the call) +2 up by one.
 extern "C" void __cdecl BossWeretigr_EndPose(void) {
     BH_CALL(Sprite_SetAnimation)(0);
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x43D5A0: BossWeretigr_State4Steps 4 - the walk (EndWalk); when it

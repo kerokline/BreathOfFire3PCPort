@@ -179,7 +179,7 @@ extern "C" void __cdecl Battle_SetTargetFlags(unsigned target, unsigned bits) {
             for (unsigned i = 0; i <= 2; ++i) {
                 if (g.actor_out(i)) continue;
                 OrLong(Party(i) + 0x130, low);
-                rv::As<records::PartyMember>(Party(i))->state[0] = 0xB;
+                rv::As<records::PartyMember>(Party(i))->state = 0xB;
                 g.mark_actor(i);
             }
         }
@@ -187,7 +187,7 @@ extern "C" void __cdecl Battle_SetTargetFlags(unsigned target, unsigned bits) {
             for (unsigned i = 3; i <= 10; ++i) {
                 if (g.actor_out(i)) continue;
                 OrLong(Enemy(i - 3) + 0x110, low);
-                rv::As<records::BattleEnemy>(Enemy(i - 3))->state[0] = 0xB;
+                rv::As<records::BattleEnemy>(Enemy(i - 3))->state = 0xB;
                 g.mark_actor(i);
             }
         }
@@ -196,10 +196,10 @@ extern "C" void __cdecl Battle_SetTargetFlags(unsigned target, unsigned bits) {
     if (g.actor_out(target)) return;
     if (t <= 2) {
         OrLong(Party(t) + 0x130, low);
-        rv::As<records::PartyMember>(Party(t))->state[0] = 0xB;
+        rv::As<records::PartyMember>(Party(t))->state = 0xB;
     } else {
         OrLong(Enemy(t - 3u) + 0x110, low);
-        rv::As<records::BattleEnemy>(Enemy(t - 3u))->state[0] = 0xB;
+        rv::As<records::BattleEnemy>(Enemy(t - 3u))->state = 0xB;
     }
     g.mark_actor(target);
 }
@@ -279,7 +279,7 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
         pick = passed[g.rand() % static_cast<int>(count)];
     }
     OrLong(Party(pick) + 0x130, 8);
-    rv::As<records::PartyMember>(Party(pick))->state[0] = 0xA;
+    rv::As<records::PartyMember>(Party(pick))->state = 0xA;
     return 1;
 }
 
@@ -781,10 +781,10 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     Sprite_Current = e;
     enemy_rec->flags = 1;
     if (enemy_data->bank == 0x2CD || enemy_data->bank == 0x2E1) rv::Current<records::BattleEnemy>()->flags = 0x21;
-    rv::Current<records::BattleEnemy>()->state[0] = 0;
-    rv::Current<records::BattleEnemy>()->state[3] = 0;
-    rv::Current<records::BattleEnemy>()->state[2] = 0;
-    rv::Current<records::BattleEnemy>()->state[1] = 0;
+    rv::Current<records::BattleEnemy>()->state = 0;
+    rv::Current<records::BattleEnemy>()->state4 = 0;
+    rv::Current<records::BattleEnemy>()->state3 = 0;
+    rv::Current<records::BattleEnemy>()->step = 0;
     rv::Current<records::BattleEnemy>()->ot_slot = 4;
     rv::Current<records::BattleEnemy>()->actor = static_cast<unsigned char>(slot + 3);
     Sprite_Current[0x24] = 0;
@@ -970,9 +970,9 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                     window_rec->kind = 4;
                     window_rec->state = 0;
                     SetWord(w + 0x10, x);
-                    window_rec->centre_x = x;
+                    window_rec->x = x;
                     SetWord(w + 0x12, row);
-                    window_rec->centre_y = row;
+                    window_rec->y = row;
                     w[0xA] = static_cast<unsigned char>(e + 3);
                     w[8] = 0;
                     w[9] = 0;

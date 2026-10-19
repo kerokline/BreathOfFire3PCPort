@@ -247,7 +247,7 @@ unsigned char* Enemy(unsigned actor) { return M(at::kEnemies + ((actor & 0xFF) -
 void Indices() {
     for (unsigned m = 0; m < 3; ++m) {
         auto* const member_rec = rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(m)));
-        member_rec->member = static_cast<unsigned char>(bh::Often() ? m : bh::Next() % 3);
+        member_rec->actor = static_cast<unsigned char>(bh::Often() ? m : bh::Next() % 3);
         member_rec->char_index = static_cast<unsigned char>(bh::Next() % 8);
         member_rec->char_id = static_cast<unsigned char>(bh::Next() % 8);
     }
@@ -272,7 +272,7 @@ void Settle() {
     if (*category > 4) *category = static_cast<unsigned char>(*category % 5);
     for (unsigned m = 0; m < 3; ++m) {
         auto* const member_rec = rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(m)));
-        if (member_rec->member > 2) member_rec->member = static_cast<unsigned char>(member_rec->member % 3);
+        if (member_rec->actor > 2) member_rec->actor = static_cast<unsigned char>(member_rec->actor % 3);
     }
 }
 

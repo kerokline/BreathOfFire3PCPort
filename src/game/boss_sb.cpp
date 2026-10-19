@@ -272,7 +272,7 @@ extern "C" unsigned long __cdecl BossEngineer_HitDispatch(unsigned word) {
 extern "C" void __cdecl BossEngineer_HitStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(4);
     Sprite_Current[9] = 0x3C;
-    rv::Current<records::BattleEnemy>()->state[1] += 1;
+    rv::Current<records::BattleEnemy>()->step += 1;
 }
 
 // original 0x438350: BossEngineer_HitSteps 1: +9 down by one; at 0:
@@ -299,7 +299,7 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
         auto* const cur_enemy_t = rv::Current<records::BattleEnemy>();
         const unsigned count = cur_enemy_t->actor & 0x1F;
         BossSe_Script |= static_cast<unsigned char>(count < 8 ? 1u << count : 0u);
-        cur_enemy_t->state[1] += 1;
+        cur_enemy_t->step += 1;
     }
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -403,7 +403,7 @@ extern "C" unsigned long __cdecl BossOperator_Dispatch(unsigned word) {
 extern "C" unsigned char __cdecl BossOperator_Enter(void) {
     StoreTables(AddressOf(BossOperator_Anims), bof3::addr::BossOperator_Hook, AddressOf(BossOperator_Cues));
     rv::Current<records::BattleEnemy>()->layout = 0;
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 

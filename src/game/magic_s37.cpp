@@ -227,7 +227,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
                                 size);
 }
 
@@ -473,15 +473,15 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     if (Sc()[9] != 0) return;
     const unsigned char* const actor = Pointer(MagicS23_ActorSprite_addr);
     Sc()[8] = actor[8];
-    rv::Current<records::BattleTask>()->vel_x = 0x20000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x20000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     int v;
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(U(ts->vel_x) + U(Long(actor + 0x34)));
-        ts->y = static_cast<std::int32_t>(U(ts->vel_y) + U(Long(actor + 0x38)));
+        ts->x = static_cast<std::int32_t>(U(ts->step_x) + U(Long(actor + 0x34)));
+        ts->z = static_cast<std::int32_t>(U(ts->step_z) + U(Long(actor + 0x38)));
         SetLong(s + 0x3C, static_cast<std::int32_t>(U(Long(actor + 0x3C)) + 0x800000u));
         const unsigned b = s[0xB];
         SetSD(0, ((b >> 3) + 2) << 4);
@@ -491,12 +491,12 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     }
     {
         const std::uint32_t x = Mul(v, SD(0)) + U(Long(Owner() + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(x));
+        rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(x));
     }
     v = Cos(SD(4));
     {
         const std::uint32_t z = Mul(v, SD(0)) + U(Long(Owner() + 0x38));
-        rv::Store(rv::Current<records::BattleTask>()->vel_y, static_cast<std::int32_t>(z));
+        rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(z));
     }
     CopyLong(Sc() + 0x14, Owner() + 0x3C);
     {
@@ -522,10 +522,10 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const auto dz = static_cast<std::int32_t>(U(ts->vel_y) - U(ts->y));
-        const auto dx = static_cast<std::int32_t>(U(ts->vel_x) - U(ts->x));
+        const auto dz = static_cast<std::int32_t>(U(ts->step_z) - U(ts->z));
+        const auto dx = static_cast<std::int32_t>(U(ts->step_x) - U(ts->x));
         const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-        rv::Current<records::BattleTask>()->start_x = angle;
+        rv::Current<records::BattleTask>()->work_18 = angle;
     }
     Sc()[9] = 3;
     Sc()[0xA] = 4;
@@ -555,16 +555,16 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Fly(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         const std::int32_t h = Long(s + 0x14);
-        px = ts->vel_x;
-        pz = ts->vel_y;
+        px = ts->step_x;
+        pz = ts->step_z;
         CopyLong(s + 0x1C, s + 0x18);
-        const auto dz = static_cast<std::int32_t>(U(pz) - U(ts->y));
+        const auto dz = static_cast<std::int32_t>(U(pz) - U(ts->z));
         const auto dx = static_cast<std::int32_t>(U(px) - U(ts->x));
         x = (px >> 9) - 0x4000;
         z = (pz >> 9) - 0x4000;
         y = (static_cast<short>(U(h) >> 16) + 0xC0) >> 1;
         const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-        rv::Current<records::BattleTask>()->start_x = angle;
+        rv::Current<records::BattleTask>()->work_18 = angle;
     }
     MH_CALL(MagicFx_StepTowardPoint)(U(x), U(z), U(y), 0, 0x40);
     if (MH_CALL(MagicFx_NearPoint)(U(px), U(pz), 0x8000) != 0) {
@@ -573,9 +573,9 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Fly(void) {
     }
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->start_y = static_cast<std::int32_t>((U(ts->start_y) & 0xFFF) - (U(ts->start_x) & 0xFFF));
-    if (ts->start_y < 0) ts->start_y = static_cast<std::int32_t>(0u - U(ts->start_y));
-    const std::int32_t turned = ts->start_y;
+    ts->work_1c = static_cast<std::int32_t>((U(ts->work_1c) & 0xFFF) - (U(ts->work_18) & 0xFFF));
+    if (ts->work_1c < 0) ts->work_1c = static_cast<std::int32_t>(0u - U(ts->work_1c));
+    const std::int32_t turned = ts->work_1c;
     if (turned > 0x600 && turned < 0xA00) Inc(s[2]);
 }
 
@@ -623,7 +623,7 @@ S37_EXPORT void __cdecl MagicFx_PushRecordMatrix(void) {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-        v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+        v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
         const int height = S16(Owner() + 0x3E);
         v[2] = static_cast<short>(-(static_cast<int>(U(height) - U(height >> 31)) >> 1));
         v[3] = 0;
@@ -715,7 +715,7 @@ S37_EXPORT void __cdecl GeoBreath_Start(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = Field_Kind2X;
-        ts->y = Field_Kind2Z;
+        ts->z = Field_Kind2Z;
         s[0xB] = 0;
         s[9] = 0x38;
         Inc(s[1]);
@@ -832,13 +832,13 @@ void SpawnGeoRecords() {
 void ShakeAboutOwner() {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    const std::uint32_t d = U(ts->vel_x);
+    const std::uint32_t d = U(ts->step_x);
     if ((Frame_Counter & 1) != 0) {
         ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + d);
-        ts->y = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) - d);
+        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) - d);
     } else {
         ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) - d);
-        ts->y = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + d);
+        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + d);
     }
 }
 
@@ -871,7 +871,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Burst(void) {
     SpawnGeoRecords();
     if (Sc()[0xA] == 2) Sound(0x101);
     Sound(0x102);
-    rv::Current<records::BattleTask>()->vel_x = 0x800;
+    rv::Current<records::BattleTask>()->step_x = 0x800;
     Sc()[9] = 4;
     Inc(Sc()[2]);
 }
@@ -986,7 +986,7 @@ S37_EXPORT void __cdecl GeoBreathRecord_Start(void) {
     int v = Sin(static_cast<short>(angle));
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + Mul(v, 24)));
     v = Cos(SS(4));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + Mul(v, 24)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + Mul(v, 24)));
     CopyLong(Sc() + 0x3C, Owner() + 0x3C);
     unsigned char* const s = Sc();
     s[9] = 8;
@@ -1323,12 +1323,12 @@ void MoteOrbit() {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(Mul(v, ts->vel_x) + U(Long(Owner() + 0x34)));
+        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + U(Long(Owner() + 0x34)));
     }
     v = Cos(SS(4));
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->y = static_cast<std::int32_t>(Mul(v, ts->vel_x) + U(Long(Owner() + 0x38)));
+    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + U(Long(Owner() + 0x38)));
 }
 
 }  // namespace
@@ -1337,7 +1337,7 @@ void MoteOrbit() {
 // its owner's height; +9 8, +0xA 0x10, +2 on.
 S37_EXPORT void __cdecl CombustionMote_Start(void) {
     const std::uint32_t r = RandCall();
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>((r & 7) + 8));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>((r & 7) + 8));
     MoteOrbit();
     CopyLong(Sc() + 0x3C, Owner() + 0x3C);
     unsigned char* const s = Sc();

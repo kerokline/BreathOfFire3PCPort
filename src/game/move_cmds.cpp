@@ -374,7 +374,7 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
     if (rv::Current<records::SpriteObject>()->state == 7) g.detach();
     rv::Current<records::SpriteObject>()->state = mode;
     if (rv::Current<records::SpriteObject>()->state != 7) return;
-    rv::Current<records::SpriteObject>()->accel_x = handle;
+    rv::Current<records::SpriteObject>()->work_18 = handle;
     SetLong(Sprite_Current + 0x1C, s);
     if (context[4] != 0) g.attach_move(t);
     SetPos(context, Pos(context) + 3u);

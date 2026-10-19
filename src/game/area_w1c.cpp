@@ -744,8 +744,8 @@ extern "C" void __cdecl Area52_StashBlock(void) {
     auto* const tCur = rv::As<records::SpriteObject>(cur);
     const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) - 0x8000u));
     const std::uint16_t x = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->x) - 0x8000u));
-    tCur->accel_x = 0;
-    rv::Current<records::SpriteObject>()->accel_z = 0;
+    tCur->work_18 = 0;
+    rv::Current<records::SpriteObject>()->work_1c = 0;
     for (unsigned i = 0; i < 2; ++i) StashColumn(static_cast<std::uint16_t>(x + i), z, i * 8);
 }
 
@@ -761,11 +761,11 @@ extern "C" void __cdecl Area52_ShiftBlockZ(void) {
     SetLayer(x, z, 0);
     SetByte(x, z, Sprite_Current[0x18]);
     SetLayer(static_cast<std::uint16_t>(x + 1), z, 0);
-    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(rv::Current<records::SpriteObject>()->accel_x, 8));
+    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(rv::Current<records::SpriteObject>()->work_18, 8));
     unsigned char* const cur = Sprite_Current;
     auto* const tCur = rv::As<records::SpriteObject>(cur);
-    tCur->accel_x = tCur->accel_z;
-    rv::Current<records::SpriteObject>()->accel_z = 0;
+    tCur->work_18 = tCur->work_1c;
+    rv::Current<records::SpriteObject>()->work_1c = 0;
     z = static_cast<std::uint16_t>(z + 2);
     SetLayer(x, z, 0x10);
     unsigned char* p = Sprite_Current + 0x1C;
@@ -793,8 +793,8 @@ extern "C" void __cdecl Area52_ResetBlock(void) {
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     if (tCur->x != 0x118000 || tCur->z != 0x298000) return;
     for (unsigned i = 0; i < 2; ++i) RestoreColumn(0x11 + i, 0x29, i * 8);
-    rv::Current<records::SpriteObject>()->accel_x = 0;
-    rv::Current<records::SpriteObject>()->accel_z = 0;
+    rv::Current<records::SpriteObject>()->work_18 = 0;
+    rv::Current<records::SpriteObject>()->work_1c = 0;
     rv::Current<records::SpriteObject>()->z = 0x78000;
     const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) - 0x8000u));
     for (unsigned i = 0; i < 2; ++i) StashColumn(0x11 + i, z, i * 8);

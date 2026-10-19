@@ -3123,11 +3123,11 @@ src/game/battle_e2.cpp	RestoreBody	record	Long	from + k	0	-	table=0x939ae0;strid
 src/game/battle_e2.cpp	RestoreBody	record	SetLong	to + k	0	-	via=rec	not-record	not one of the nine records.h families (via=rec)	b1-battle
 src/game/battle_e2.cpp	RestoreBody	record	SetUL	rec() + 0x40	0	-	via=rec	field-missing	PartyMember +0x40 w4	b1-battle
 src/game/battle_e2.cpp	RestoreBody	global	At	at::kMemberPositions	0	0x7e06e0	-	no-entry	at::kMemberPositions 0x7e06e0 -	b0
-src/game/battle_e2.cpp	RestoreBody	record	SetUL	Task(owner_rec->member) + 0x34	0	-	via=Task	gate	BattleTask->x typed changed the object	b1-battle
+src/game/battle_e2.cpp	RestoreBody	record	SetUL	Task(owner_rec->actor) + 0x34	0	-	via=Task	gate	BattleTask->x typed changed the object	b1-battle
 src/game/battle_e2.cpp	RestoreBody	global	At	at::kMemberPositions	1	0x7e06e0	-	no-entry	at::kMemberPositions 0x7e06e0 -	b0
-src/game/battle_e2.cpp	RestoreBody	record	SetUL	Task(owner_rec->member) + 0x38	0	-	via=Task	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)	b1-battle
+src/game/battle_e2.cpp	RestoreBody	record	SetUL	Task(owner_rec->actor) + 0x38	0	-	via=Task	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)	b1-battle
 src/game/battle_e2.cpp	RestoreBody	record	Long	t + 0x38	0	-	via=Task	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)	b1-battle
-src/game/battle_e2.cpp	RestoreBody	record	SetUL	Task(owner_rec->member) + 0x3C	0	-	via=Task	field-missing	BattleTask +0x3C w4	b1-battle
+src/game/battle_e2.cpp	RestoreBody	record	SetUL	Task(owner_rec->actor) + 0x3C	0	-	via=Task	field-missing	BattleTask +0x3C w4	b1-battle
 src/game/battle_e2.cpp	RestoreBody	record	SetWord	rec() + 0x90	0	-	via=rec	gate	PartyMember->status typed changed the object	b1-battle
 src/game/battle_e2.cpp	RestoreBody	record	SetUL	rec() + 0x130	0	-	via=rec	gate	PartyMember->flags_130 typed changed the object	b1-battle
 src/game/battle_e2.cpp	RestoreBody	record	SetUL	rec() + 0x134	0	-	via=rec	gate	PartyMember->flags_134 typed changed the object	b1-battle
@@ -3391,7 +3391,7 @@ src/game/battle_e4.cpp	SlotCursor	global	B	at::kSlots	4	0x8033e8	-	inside-entry	
 src/game/battle_e4.cpp	SlotCursor	global	B	at::kSlots	5	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 BattleE4_Slots	b0
 src/game/battle_e4.cpp	SlotHand	global	B	at::kSlots	0	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 BattleE4_Slots	b0
 src/game/battle_e4.cpp	SlotHand	global	B	at::kSlots	1	0x8033e8	-	inside-entry	at::kSlots 0x8033e8 BattleE4_Slots	b0
-src/game/battle_e4.cpp	MemberItem	record	Word	Party(rv::As<records::PartyMember>(MenuActor())->member) + 0	0	-	via=Party	union	PartyMember +0x126 w2	b1-battle
+src/game/battle_e4.cpp	MemberItem	record	Word	Party(rv::As<records::PartyMember>(MenuActor())->actor) + 0x	0	-	via=Party	union	PartyMember +0x126 w2	b1-battle
 src/game/battle_e4.cpp	FieldStep	global	At	at::kFaceStep	0	0x904aac	-	no-entry	at::kFaceStep 0x904aac -	b0
 src/game/battle_e4.cpp	FieldStep	global	B	at::kFacePairs	0	0x64e4f4	-	no-entry	at::kFacePairs 0x64e4f4 -	b0
 src/game/battle_e4.cpp	FieldStep	global	B	at::kFacePairs	1	0x64e4f4	-	no-entry	at::kFacePairs 0x64e4f4 -	b0
@@ -3693,7 +3693,7 @@ src/game/battle_e5.cpp	Affordable	record	B	slot + 1	1	-	param	family	no record f
 src/game/battle_e5.cpp	Affordable	global	B	at::kGeneCostTable	2	0x64ec9c	-	no-entry	at::kGeneCostTable 0x64ec9c -	b0
 src/game/battle_e5.cpp	Affordable	record	B	slot + 2	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_e5.cpp	Affordable	record	B	slot + 2	1	-	param	family	no record family established for this pointer here (param)	b1-battle
-src/game/battle_e5.cpp	Affordable	raw	W	0x802DDA + rv::As<records::PartyMember>(Member())->member *	0	0x802dda	-	-	-	-
+src/game/battle_e5.cpp	Affordable	raw	W	0x802DDA + rv::As<records::PartyMember>(Member())->actor * a	0	0x802dda	-	-	-	-
 src/game/battle_e5.cpp	TakeSlot	record	B	slot + j	0	-	param	family	no record family established for this pointer here (param)	b1-battle
 src/game/battle_e5.cpp	TakeSlot	global	B	at::kGenes	0	0x904b84	-	no-entry	at::kGenes 0x904b84 -	b0
 src/game/battle_e5.cpp	OpenList	record	B	window + 2	0	-	param	family	no record family established for this pointer here (param)	b1-battle
@@ -4494,7 +4494,7 @@ src/game/battle_obj_states.cpp	BattleObj_StateIdle	global	At	at::kRoundFlags	0	0
 src/game/battle_obj_states.cpp	BattleObj_StateIdle	record	SetLong	S() + 0x34	0	-	via=S	gate	PartyMember->x typed changed the object	b1-battle
 src/game/battle_obj_states.cpp	BattleObj_StateIdle	record	SetLong	S() + 0x38	0	-	via=S	gate	PartyMember->z typed changed the object	b1-battle
 src/game/battle_obj_states.cpp	BattleObj_StateIdle	record	SetLong	S() + 0x38	1	-	via=S	gate	PartyMember->z typed changed the object	b1-battle
-src/game/battle_obj_states.cpp	BattleObj_StateIdle	record	Long	Task(rv::As<records::PartyMember>(S())->member) + 0x38	0	-	via=Task	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)	b1-battle
+src/game/battle_obj_states.cpp	BattleObj_StateIdle	record	Long	Task(rv::As<records::PartyMember>(S())->actor) + 0x38	0	-	via=Task	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)	b1-battle
 src/game/battle_obj_states.cpp	BattleObj_StateIdle	record	Long	t + 0x38	0	-	via=Task	union	BattleTask +0x38 w4 (a BattleTask byte whose meaning varies by task kind)	b1-battle
 src/game/battle_obj_states.cpp	BattleObj_IdleTintOff	global	At	at::kTintLevel	0	0x904ac8	-	no-entry	at::kTintLevel 0x904ac8 -	b0
 src/game/battle_obj_states.cpp	BattleObj_AttackStart	global	At	at::kAttackCountBy	0	0x64e058	-	no-entry	at::kAttackCountBy 0x64e058 -	b0

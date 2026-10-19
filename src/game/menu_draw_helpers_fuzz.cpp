@@ -366,7 +366,7 @@ void Seed(unsigned k) {
     case kCursor: r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next()); break;
     case kMoneyUp: {
         static const int kY[] = {-4, -3, -5, -20, -19, -21, -36, 0, 0x10, 0x7FF0};
-        rv::As<records::WindowRecord>(r)->centre_y = Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next());
+        rv::As<records::WindowRecord>(r)->y = Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next());
         break;
     }
     case kLeft: {
@@ -374,21 +374,21 @@ void Seed(unsigned k) {
         const int bound = Often() ? kBound[Next() % 7] : static_cast<short>(Next());
         const U imm = (Next() % 2 ? 0xFFFF0000u : Next() & 0xFFFF0000u) | static_cast<std::uint16_t>(bound);
         std::memcpy(g_bound, &imm, 4);
-        rv::As<records::WindowRecord>(r)->centre_x = Around(bound, -0x20);
+        rv::As<records::WindowRecord>(r)->x = Around(bound, -0x20);
         break;
     }
-    case kMemberUp: rv::As<records::WindowRecord>(r)->centre_y = Around(0x3E, -0x10); break;
+    case kMemberUp: rv::As<records::WindowRecord>(r)->y = Around(0x3E, -0x10); break;
     case kMemberDown: {
         r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
-        rv::As<records::WindowRecord>(r)->centre_y = Around(r[0xA] * 0x36 + 0x3E, 0x10);
+        rv::As<records::WindowRecord>(r)->y = Around(r[0xA] * 0x36 + 0x3E, 0x10);
         break;
     }
-    case kEquipIn: rv::As<records::WindowRecord>(r)->centre_x = Around(0xF, 0x20); break;
-    case kBuy84: rv::As<records::WindowRecord>(r)->centre_x = Around(0x84, -0x20); break;
-    case kBuy46: rv::As<records::WindowRecord>(r)->centre_x = Around(0x46, -0x20); break;
-    case kItemIn: rv::As<records::WindowRecord>(r)->centre_x = Around(0x4B, -0x20); break;
-    case kBattleRight: rv::As<records::WindowRecord>(r)->centre_x = Around(0x53, 0x20); break;
-    case kBattleSkillIn: rv::As<records::WindowRecord>(r)->centre_x = Around(0x53, -0x20); break;
+    case kEquipIn: rv::As<records::WindowRecord>(r)->x = Around(0xF, 0x20); break;
+    case kBuy84: rv::As<records::WindowRecord>(r)->x = Around(0x84, -0x20); break;
+    case kBuy46: rv::As<records::WindowRecord>(r)->x = Around(0x46, -0x20); break;
+    case kItemIn: rv::As<records::WindowRecord>(r)->x = Around(0x4B, -0x20); break;
+    case kBattleRight: rv::As<records::WindowRecord>(r)->x = Around(0x53, 0x20); break;
+    case kBattleSkillIn: rv::As<records::WindowRecord>(r)->x = Around(0x53, -0x20); break;
     default: break;
     }
 }

@@ -656,7 +656,7 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     rv::As<records::SpriteObject>(Sprite())->draw_mode = static_cast<unsigned char>(op[3] & 0xF);
     {
         records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
-        s->pose = static_cast<unsigned char>((s->flags2 >> 4) & 1);
+        s->flip = static_cast<unsigned char>((s->flags2 >> 4) & 1);
     }
     g.set_animation(rv::As<records::SpriteObject>(Sprite())->direction);
     {

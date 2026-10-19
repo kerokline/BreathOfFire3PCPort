@@ -481,7 +481,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         {
             const unsigned char* const s = Sc();
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y),
+            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z),
                                         2, 0xC);
         }
         unsigned char* const p = Gfx_PacketNext;
@@ -510,7 +510,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         p[0x26] = 1;
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
                                     0x34);
     }
 }

@@ -524,7 +524,7 @@ unsigned char Affordable(U slot) {
     unsigned char cost = B(at::kGeneCostTable + B(slot));
     if (B(slot + 1) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 1)));
     if (B(slot + 2) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 2)));
-    return cost <= W(0x802DDA + rv::As<records::PartyMember>(Member())->member * at::kPartyStride);
+    return cost <= W(0x802DDA + rv::As<records::PartyMember>(Member())->actor * at::kPartyStride);
 }
 
 // A slot's genes into 0x904B84..86 (0x450610, 0x450E70): the count 0x904B87
@@ -989,7 +989,7 @@ extern "C" void __cdecl DragonCmd_Commit(void) {
     Gfx_ClutStripDirty = 1;
     BattleE4_Picking = 0;
     command[1] = 4;
-    rv::As<records::PartyMember>(Member())->state[0] = 2;
+    rv::As<records::PartyMember>(Member())->state = 2;
     const unsigned char count = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     BattleActions_Step = 1;
     BattleActorCopies_EntryCount = count;

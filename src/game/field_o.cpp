@@ -667,7 +667,7 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     SetWord(Sc() + 0x3E, static_cast<U>(ground));
     sc = rv::As<records::SpriteObject>(Sc());
     const unsigned s = shift & 31u;
-    if (static_cast<U>(sc->accel_z) + static_cast<U>(sc->accel_x) == 0) {
+    if (static_cast<U>(sc->work_1c) + static_cast<U>(sc->work_18) == 0) {
         const unsigned d = rv::Bytes(sc)[8] & 7u;
         const std::int32_t x0 = sc->x;
         rv::As<records::SpriteObject>(Fam())->target_x = static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d]) << 1) * shift + static_cast<U>(x0));
@@ -676,7 +676,7 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
         SetLong(Fam() + 0x90, static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d2 + 1]) << 1) * shift + static_cast<U>(z0)));
         if (toward) {
             SetLong(Sc() + 0x18, vx >> s);
-            rv::As<records::SpriteObject>(Sc())->accel_z = vz >> s;
+            rv::As<records::SpriteObject>(Sc())->work_1c = vz >> s;
             SetLong(Sc() + 0xC, 0);
             SetLong(Sc() + 0x10, 0);
         } else {
@@ -732,8 +732,8 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     SetLong(Sc() + 0x38, rv::As<records::SpriteObject>(Fam())->target_z);
     rv::As<records::SpriteObject>(Sc())->step_x = vx;
     rv::As<records::SpriteObject>(Sc())->step_z = vz;
-    rv::As<records::SpriteObject>(Sc())->accel_z = 0;
-    rv::As<records::SpriteObject>(Sc())->accel_x = 0;
+    rv::As<records::SpriteObject>(Sc())->work_1c = 0;
+    rv::As<records::SpriteObject>(Sc())->work_18 = 0;
     return 0;
 }
 
@@ -922,7 +922,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Arc(unsigned char* object, signed c
         sc = rv::As<records::SpriteObject>(Sc());
     }
     if (!(sc->step_y > 0) && !(rise < 0) && e != 0xFF) {
-        if (sc->type != 6) sc->pose = f & 1;
+        if (sc->type != 6) sc->flip = f & 1;
         SH_CALL(Sprite_EnsureAnimation)(e);
         sc = rv::As<records::SpriteObject>(Sc());
     }
@@ -1222,8 +1222,8 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     Sc()[2] = op[7];
     rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
     SetLong(Sc() + 0x20, 0);
-    rv::As<records::SpriteObject>(Sc())->accel_z = 0;
-    rv::As<records::SpriteObject>(Sc())->accel_x = 0;
+    rv::As<records::SpriteObject>(Sc())->work_1c = 0;
+    rv::As<records::SpriteObject>(Sc())->work_18 = 0;
     {
         unsigned char* const sc = Sc();
         sc[0x70] = PtrAt(sc + 0x54)[2];
