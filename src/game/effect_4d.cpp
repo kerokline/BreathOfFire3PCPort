@@ -50,6 +50,7 @@
 #include "game/effect_4d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -67,6 +68,7 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -646,12 +648,13 @@ extern "C" void __cdecl EffectKind97_EmitSpark(void) {
         }
     if (r == nullptr) return;
     const unsigned char* const s = S();
+    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
     r[0] = 1;
     r[1] = 0;
     r[2] = 0x20;
-    SetUL(r + 4, UL(s + 0x34));
-    SetUL(r + 8, UL(s + 0x38));
-    SetUL(r + 0xC, UL(s + 0x3C));
+    SetUL(r + 4, static_cast<std::uint32_t>(so->x));
+    SetUL(r + 8, static_cast<std::uint32_t>(so->z));
+    SetUL(r + 0xC, static_cast<std::uint32_t>(so->height));
     SetWord(r + 0x14, 0x180);
     r[0x16] = s[0x5D];
     r[0x17] = 0;
@@ -734,9 +737,9 @@ extern "C" void __cdecl EffectKind97_DrawSpark(unsigned char* spark) {
 // _Z; 0x5A7C70 for each edge); the scale +0x28 4 + Rand & 3; +0x20, +0x22,
 // +0x24 (its angle), +0x2A (its shade) 0.
 extern "C" void __cdecl EffectKind97_DebrisInit(unsigned char* d) {
-    SetUL(d + 0, UL(S() + 0x34));
-    SetUL(d + 4, UL(S() + 0x38));
-    SetUL(d + 8, UL(S() + 0x3C));
+    SetUL(d + 0, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(d + 4, static_cast<std::uint32_t>(CurFx()->z));
+    SetUL(d + 8, static_cast<std::uint32_t>(CurFx()->height));
     const U ax = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     const U ay = (static_cast<U>(SH_CALL(Rand)()) & 0x7FFu) - 0x400u;
     const U az = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
@@ -856,10 +859,11 @@ void Kind98Project() {
     SH_CALL(Gte_PushMatrix)();
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     long point[4];
-    point[0] = Long(s + 0x34);
-    point[1] = Long(s + 0x38);
-    point[2] = Long(s + 0x3C);
+    point[0] = so->x;
+    point[1] = so->z;
+    point[2] = so->height;
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     SH_CALL(Gte_PopMatrix)();
 }
@@ -937,8 +941,8 @@ extern "C" void __cdecl EffectKind98_DrawBurst(int radius, int centre, int rim) 
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        SetUL(prim + 8, UL(S() + 0x74));
-        SetUL(prim + 0xC, UL(S() + 0x78));
+        SetUL(prim + 8, CurFx()->screen_xf);
+        SetUL(prim + 0xC, CurFx()->screen_yf);
         const U a = angle & 0xFFFFu;
         std::int32_t v = static_cast<std::int32_t>(Sar(Mul(static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))), r), 12));
         FildAdd(v, S() + 0x74, prim + 0x18);

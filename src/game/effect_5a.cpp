@@ -43,6 +43,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -58,6 +59,9 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+const records::EffectObject* AsFx(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -465,10 +469,11 @@ extern "C" void __cdecl EffectKind18_1A_WaitOn(void) {
 // original 0x4FDC20 (state 2): +0x38 + 0x2000, +0x3E + 0x10; +0x38 0x350000:
 // +2 up one; the draw.
 extern "C" void __cdecl EffectKind18_1A_SlideOut(void) {
-    SetUL(S() + 0x38, UL(S() + 0x38) + 0x2000);
+    CurFx()->z = static_cast<std::uint32_t>(CurFx()->z) + 0x2000;
     SetWord(S() + 0x3E, Word(S() + 0x3E) + 0x10u);
     unsigned char* const s = S();
-    if (UL(s + 0x38) == 0x350000) s[2] = static_cast<unsigned char>(s[2] + 1);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    if (static_cast<std::uint32_t>(so->z) == 0x350000) s[2] = static_cast<unsigned char>(s[2] + 1);
     SH_CALL(EffectKind18_1A_Draw)();
 }
 
@@ -481,10 +486,11 @@ extern "C" void __cdecl EffectKind18_1A_WaitOff(void) {
 // original 0x4FDC80 (state 4): +0x38 - 0x2000, +0x3E - 0x10; +0x38 0x340000:
 // +2 1; the draw.
 extern "C" void __cdecl EffectKind18_1A_SlideBack(void) {
-    SetUL(S() + 0x38, UL(S() + 0x38) - 0x2000);
+    CurFx()->z = static_cast<std::uint32_t>(CurFx()->z) - 0x2000;
     SetWord(S() + 0x3E, Word(S() + 0x3E) - 0x10u);
     unsigned char* const s = S();
-    if (UL(s + 0x38) == 0x340000) s[2] = 1;
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    if (static_cast<std::uint32_t>(so->z) == 0x340000) s[2] = 1;
     SH_CALL(EffectKind18_1A_Draw)();
 }
 
@@ -492,9 +498,9 @@ extern "C" void __cdecl EffectKind18_1A_SlideBack(void) {
 // cell, its height +0x3E -/+ 0x30, linked at (0x5D0000, 0x340000).
 extern "C" void __cdecl EffectKind18_1A_Draw(void) {
     unsigned char* s = S();
-    const U z = static_cast<U>(Sar(UL(s + 0x38), 9) - 0x4000);
+    const U z = static_cast<U>(Sar(static_cast<std::uint32_t>(AsFx(s)->z), 9) - 0x4000);
     unsigned char* const p = Gfx_PacketNext;
-    const U x = static_cast<U>(Sar(UL(s + 0x34), 9) - 0x4000);
+    const U x = static_cast<U>(Sar(static_cast<std::uint32_t>(AsFx(s)->x), 9) - 0x4000);
     SH_CALL(Gpu_SetPolyFT4)(p);
     SH_CALL(Gpu_SetShadeTex)(p, 0);
     s = S();
@@ -691,16 +697,16 @@ extern "C" void __cdecl EffectKind18_07_Start(void) {
     if (DoorFlag(Door(kWho, S()))) {
         S()[2] = 3;
         unsigned char* const s = S();
-        SetUL(s + 0x38, T(at::kRows7 + Door(kWho, s)) + 2u);
+        AsFx(s)->z = T(at::kRows7 + Door(kWho, s)) + 2u;
     } else {
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
         unsigned char* const s = S();
-        SetUL(s + 0x38, T(at::kRows7 + Door(kWho, s)));
+        AsFx(s)->z = T(at::kRows7 + Door(kWho, s));
         SH_CALL(AreaMap_SetByte)(0x29, T(at::kRows7 + Door(kWho, S())), 0x50);
         SH_CALL(AreaMap_SetByte)(0x29, T(at::kRows7 + Door(kWho, S())) + 1u, 0x50);
     }
-    SetUL(S() + 0x38, (UL(S() + 0x38) << 7) - 0x4040);
-    SetUL(S() + 0x34, 0xFFFFD480u);
+    CurFx()->z = (static_cast<std::uint32_t>(CurFx()->z) << 7) - 0x4040;
+    CurFx()->x = 0xFFFFD480u;
     DrawDoor();
 }
 
@@ -718,7 +724,7 @@ extern "C" void __cdecl EffectKind18_07_Wait(void) {
 extern "C" void __cdecl EffectKind18_07_Slide(void) {
     static const char kWho[] = "EffectKind18_07_Slide";
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
-    SetUL(S() + 0x38, UL(S() + 0x38) + 8);
+    CurFx()->z = static_cast<std::uint32_t>(CurFx()->z) + 8;
     unsigned char* const s = S();
     if (s[9] >= 0x20) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -742,7 +748,7 @@ extern "C" void __cdecl EffectKind18_07_Draw(void) {
         Project4(p);
         SH_CALL(Prim_SetTexture)(TL(at::kTextures7 + 4 * i), p, 1);
         s = S();
-        SH_CALL(MapView_LinkPrimAt)((UL(s + 0x34) + 0x4000) << 9, (UL(s + 0x38) + 0x80 * i + 0x4040) << 9, 1, 0x48);
+        SH_CALL(MapView_LinkPrimAt)((static_cast<std::uint32_t>(AsFx(s)->x) + 0x4000) << 9, (static_cast<std::uint32_t>(AsFx(s)->z) + 0x80 * i + 0x4040) << 9, 1, 0x48);
     }
 }
 
@@ -759,7 +765,7 @@ extern "C" void __cdecl EffectKind18_07_DrawTop(void) {
     Project4(p);
     SH_CALL(Prim_SetTexture)(0xBD5000F9u, p, 1);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)((UL(s + 0x34) + 0x4000) << 9, (UL(s + 0x38) + 0x40C0) << 9, 1, 0x48);
+    SH_CALL(MapView_LinkPrimAt)((static_cast<std::uint32_t>(AsFx(s)->x) + 0x4000) << 9, (static_cast<std::uint32_t>(AsFx(s)->z) + 0x40C0) << 9, 1, 0x48);
 }
 
 // ===========================================================================
@@ -776,12 +782,12 @@ extern "C" void __cdecl EffectKind18_08_Run(void) {
 extern "C" void __cdecl EffectKind18_08_Start(void) {
     if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x18), 6) != 0) {
         S()[2] = 6;
-        SetUL(S() + 0x34, 0xFFFFD6C0u);
+        CurFx()->x = 0xFFFFD6C0u;
     } else {
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
-        SetUL(S() + 0x34, 0xFFFFD480u);
+        CurFx()->x = 0xFFFFD480u;
     }
-    SetUL(S() + 0x38, 0xFFFFCE40u);
+    CurFx()->z = 0xFFFFCE40u;
     SetWord(S() + 0x3E, 0xFF80);
     DrawDoor();
 }
@@ -800,11 +806,11 @@ extern "C" void __cdecl EffectKind18_08_Wait(void) {
 extern "C" void __cdecl EffectKind18_08_Shake(void) {
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     unsigned char* s = S();
-    SetUL(s + 0x34, (s[9] & 1u) * 8 - 0x2B80u);
+    AsFx(s)->x = (s[9] & 1u) * 8 - 0x2B80u;
     s = S();
     if (s[9] >= 8) {
         s[9] = 0;
-        SetUL(S() + 0x34, 0xFFFFD480u);
+        CurFx()->x = 0xFFFFD480u;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
     DrawDoor();
@@ -814,7 +820,7 @@ extern "C" void __cdecl EffectKind18_08_Shake(void) {
 // one; the draws.
 extern "C" void __cdecl EffectKind18_08_WaitPush(void) {
     if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x18), 6) != 0) {
-        SetUL(S() + 0x34, UL(S() + 0x34) + 0x40);
+        CurFx()->x = static_cast<std::uint32_t>(CurFx()->x) + 0x40;
         S()[9] = 0;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -909,7 +915,7 @@ extern "C" void __cdecl EffectKind18_08_DrawTilted(unsigned angle) {
         Project4(p);
         SH_CALL(Prim_SetTexture)(TL(at::kTextures7 + 4 * i), p, 1);
         s = S();
-        SH_CALL(MapView_LinkPrimAt)((UL(s + 0x34) + 0x4000) << 9, (UL(s + 0x38) + counter + 0x4040) << 9, 2, 0x48);
+        SH_CALL(MapView_LinkPrimAt)((static_cast<std::uint32_t>(AsFx(s)->x) + 0x4000) << 9, (static_cast<std::uint32_t>(AsFx(s)->z) + counter + 0x4040) << 9, 2, 0x48);
         counter += 0x80;
     }
     SH_CALL(Gte_PopMatrix)();
