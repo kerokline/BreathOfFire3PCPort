@@ -49,7 +49,9 @@ every group below.
 > the skip row `0x66C854` holds only the scheduler's words. (2) Our code is not
 > at a fixed address in the exe host: `bof3x.dll` is `DYNAMIC_BASE` and was
 > measured loading at different bases from two directories; the file records
-> the DLL base and refuses a mismatch (a fixed link base is the owner's call).
+> the DLL base and refuses a mismatch. The owner chose a fixed link base
+> (2026-10-19): SN links `bof3x.dll` without `DYNAMIC_BASE` at a set base,
+> keeping its relocations so a taken base still loads (and the check refuses).
 > Also: the music stream has no thread of its own (`Music_Pump` runs from
 > `Sound_Tick` on the main thread), so nothing is paused around a restore.
 
