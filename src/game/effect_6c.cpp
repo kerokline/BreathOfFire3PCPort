@@ -263,22 +263,22 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
         S()[0x5E] = 0;
         S()[0x5F] = 0;
     }
-    SetWord(S() + 0x32, 0x3200);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x3200);
     SetV(0, Sar(((static_cast<U>(Field_Kind2X) - 1u) & 0xFFFFFFu) + 1u, 9) - 0x4000u);
-    SetV(4, 0u - DivP2(static_cast<U>(S16(at::kLeaderLift)), 1));
+    SetV(4, 0u - DivP2(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::PartyMember>(ObjTrio)->height_whole))), 1));
     SetV(2, Sar(((static_cast<U>(Field_Kind2Z) - 1u) & 0xFFFFFFu) + 1u, 9) - 0x4000u);
     long p;
     SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &p);
     rv::Current<records::EffectObject>()->screen_xf = 0x43200000u; // 160.0f
-    SetWord(S() + 0x2E, 0xA0);
-    if (UL(at::kLeaderMoving) != 0) {
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0xA0);
+    if (static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->step_y) != 0) {
         CopyQuiet(S() + 0x78, At(MapView_ScreenXY_addr + 0x4));
-        SetWord(S() + 0x30, Ftol(D(at::kScreenY)));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol(D(at::kScreenY)));
         SetWord(At(ObjTrio_addr + 0x30), Ftol(D(at::kScreenY)));
     } else {
-        SetD(S() + 0x78, Fi(static_cast<U>(S16(at::kLeaderDepth))));
+        SetD(S() + 0x78, Fi(static_cast<U>(static_cast<std::int32_t>(rv::As<records::PartyMember>(ObjTrio)->screen_y))));
         unsigned char* const s = S();
-        SetWord(s + 0x30, Ftol(static_cast<double>(F(s + 0x78))));
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, Ftol(static_cast<double>(F(s + 0x78))));
     }
     const unsigned count = Sprite_DrawListCount;
     if (count < 0x28) {
@@ -659,7 +659,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
             SH_CALL(EffectKind18Sub44_Commit)(0x48);
         }
     }
-    const U stars = Word(Vertices() + 8);
+    const U stars = static_cast<std::uint16_t>(rv::As<records::SVector>(Vertices())[1].x);
     if (stars != 0) SH_CALL(EffectKind18Sub44_DrawStars)(static_cast<std::int16_t>(stars));
     for (U layer = 0x20, row = 0; I(layer) < 0x60; layer += 0x20, ++row) {
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, (layer & 0x60) | 0x95, 0);
@@ -772,8 +772,8 @@ extern "C" void __cdecl EffectKind18Sub45_DrawRing(int outer_word, int inner_wor
         p[6] = 0x50;
         p[5] = 0x50;
         p[4] = 0x50;
-        SetWord(p + 0x26, (Sar((half << 7) + 0x140u, 6) & 0xF) | 0x90u);
-        SetWord(p + 0x16, 0x7940);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, (Sar((half << 7) + 0x140u, 6) & 0xF) | 0x90u);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x7940);
         const U q0 = DivP2(angle, 5), q1 = DivP2(angle + 0x1000u, 5);
         const unsigned char* const uv = At(at::kRingUv + 2 * half);
         struct Corner { unsigned at; U q; U radius; };
@@ -1047,8 +1047,8 @@ extern "C" void __cdecl EffectKind18Sub55_Draw(int shade_word, int lift_word) {
             p[0x35] = 0x4F;
             p[0x44] = 0xFF;
             p[0x45] = 0x4F;
-            SetWord(p + 0x26, 0x3B);
-            SetWord(p + 0x16, 0x78CA);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, 0x3B);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x78CA);
             p[5] = static_cast<unsigned char>(DivP2(shade << 7, 7));
             SH_CALL(MapView_LinkPrimAt)(x << 16, z << 16, 1, 0x48);
         }
@@ -1380,8 +1380,8 @@ extern "C" void __cdecl EffectKind18Sub66_Run(void) {
             p[0x44] = 0xFF;
             p[0x45] = 0xFF;
             p[4] = p[5] = p[6] = shade;
-            SetWord(p + 0x26, 0x7B);
-            SetWord(p + 0x16, 0x78C0);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, 0x7B);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x78C0);
             SH_CALL(Gfx_CommitPrim)(4, 0x48);
         }
         unsigned char* const whole = Rect(0, 0, 0x100, 0x100);

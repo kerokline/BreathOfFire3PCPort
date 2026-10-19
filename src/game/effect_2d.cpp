@@ -116,9 +116,9 @@ extern "C" void __cdecl EffectKind45_Start(void) {
     }
     unsigned char* const flags_high = reinterpret_cast<unsigned char*>(&Field_ScriptFlags) + 1;   // byte 0x9039A3
     *flags_high = static_cast<unsigned char>(*flags_high | 1);
-    SetWord(S() + 0x2E, 0);
-    SetWord(S() + 0x30, 0xA00);
-    SetWord(S() + 0x32, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0xA00);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0);
     S()[0x5D] = 0;
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
     if (SH_CALL(Flags_Test)(Row(), 0x25)) {
@@ -136,22 +136,22 @@ extern "C" void __cdecl EffectKind45_Tune(void) {
     SH_CALL(EffectKind45_DrawPanel)(0x82, 0xA);
     for (unsigned pass = 0; pass < 2; ++pass) {
         unsigned char* s = S();
-        SetWord(s + 0x2E, Word(s + 0x2E) + 1u);
-        if (SW(s + 0x2E) >= 0x48) SetWord(s + 0x2E, 0);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_2e + 1u);
+        if (static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) >= 0x48) rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, 0);
         if (SH_CALL(Flags_Test)(Row(), 0x25)) {
             s = S();
-            SetWord(s + 0x30, Word(s + 0x30) + 0xFFF0u);
-            if (SW(s + 0x30) < 0x200) SetWord(s + 0x30, 0x200);
-            SetWord(s + 0x32, Word(s + 0x32) + ((Frame_Counter & 3u) == 0 ? 1u : 0u));
-            if (SW(s + 0x32) > 0x18) SetWord(s + 0x32, 0x18);
-            SetWord(s + 0x36, 0);
+            rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, Word(s + 0x30) + 0xFFF0u);
+            if (static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30) < 0x200) rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0x200);
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->draw_key + ((Frame_Counter & 3u) == 0 ? 1u : 0u));
+            if (static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->draw_key) > 0x18) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, 0x18);
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, 0);
         }
         s = S();
-        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, Word(s + 0x2E), Word(s + 0x30), Word(s + 0x32), Word(s + 0x36));
+        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->x_whole);
     }
     SH_CALL(EffectKind45_DrawTrace)(0x82, 0xA);
     unsigned char* const s = S();
-    if (Word(s + 0x32) == 0x18 && Word(s + 0x30) == 0x200) {
+    if (rv::As<records::EffectObject>(s)->draw_key == 0x18 && rv::As<records::EffectWork>(s)->work_30 == 0x200) {
         s[1] = static_cast<unsigned char>(s[1] + 1);
         return;
     }
@@ -168,25 +168,25 @@ extern "C" void __cdecl EffectKind45_Tune(void) {
 extern "C" void __cdecl EffectKind45_Aim(void) {
     {
         unsigned char* const s = S();
-        if (Word(s + 0x36) == 8 && Word(s + 0x2E) == 0x20) s[0x5D] = 0x80;
+        if (rv::As<records::EffectObject>(s)->x_whole == 8 && rv::As<records::EffectWork>(s)->work_2e == 0x20) s[0x5D] = 0x80;
     }
     SH_CALL(EffectKind45_DrawPanel)(0x82, 0xA);
     for (unsigned pass = 0; pass < 2; ++pass) {
         unsigned char* s = S();
-        SetWord(s + 0x2E, Word(s + 0x2E) + 1u);
-        if (SW(s + 0x2E) >= 0x48) {
-            SetWord(s + 0x2E, 0);
-            SetWord(s + 0x36, static_cast<unsigned char>(s[0x36] - 8) & 0x1Fu);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_2e + 1u);
+        if (static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) >= 0x48) {
+            rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, 0);
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, static_cast<unsigned char>(s[0x36] - 8) & 0x1Fu);
         }
-        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, Word(s + 0x2E), Word(s + 0x30), Word(s + 0x32), Word(s + 0x36));
+        SH_CALL(EffectKind45_PushSample)(0x82, 0xA, rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectObject>(s)->draw_key, rv::As<records::EffectObject>(s)->x_whole);
         s = S();
-        if (Word(s + 0x2E) == 2) SH_CALL(Sound_PlayEffect)(0x205);
+        if (rv::As<records::EffectWork>(s)->work_2e == 2) SH_CALL(Sound_PlayEffect)(0x205);
     }
     SH_CALL(EffectKind45_DrawTrace)(0x82, 0xA);
     const unsigned short pressed = Input_Pressed;
     if ((Field_ConfirmButtons & pressed) != 0) {
         unsigned char* const s = S();
-        if (Word(s + 0x36) == 8 && SW(s + 0x2E) >= 0x1C && SW(s + 0x2E) <= 0x24) {
+        if (rv::As<records::EffectObject>(s)->x_whole == 8 && static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) >= 0x1C && static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e) <= 0x24) {
             SH_CALL(Flags_Set)(Row(), 0x26);
             S()[1] = 3;
             return;
@@ -804,8 +804,8 @@ extern "C" void __cdecl EffectKind48_DrawSpark(const unsigned char* spark) {
     std::memcpy(prim + 0x30, &screen[2], 4);
     std::memcpy(prim + 0x20, &screen[2], 4);
     std::memcpy(prim + 0x10, &screen[2], 4);
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     prim[0x15] = 0x30;
     prim[0x25] = 0x30;
     prim[0x14] = 0xE0;
@@ -840,7 +840,7 @@ extern "C" void __cdecl EffectKind49_V0Run(void) {
 // dword +0xC = 0x40; +2 up.
 extern "C" void __cdecl EffectKind49_V0Start(void) {
     SH_AT(void (__cdecl*)(), at::kPuffsClear)();
-    SetUL(S() + 0xC, 0x40);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x40);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
@@ -854,9 +854,9 @@ extern "C" void __cdecl EffectKind49_V0Emit(void) {
     }
     SH_AT(unsigned char (__cdecl*)(), at::kPuffsStep)();
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0xC) - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1u);
     s = S();
-    if (UL(s + 0xC) == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
+    if (rv::As<records::EffectWork>(s)->work_0c == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
 }
 
 // original 0x4785F0 (variant 0, state 2): the puffs stepped; none live:
@@ -872,19 +872,19 @@ extern "C" void __cdecl EffectKind49_V1Run(void) {
 
 // original 0x478620 (variant 1, state 0): the dword +0x10 = -8; +2 up.
 extern "C" void __cdecl EffectKind49_V1Start(void) {
-    SetUL(S() + 0x10, 0xFFFFFFF8u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0xFFFFFFF8u);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
 // original 0x478640 (variant 1, state 1): Area85_ClutShift(+0x10); +0x10 up 1 on
 // a frame a multiple of 16; at 0 Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind49_V1Fade(void) {
-    SH_CALL(Area85_ClutShift)(Long(S() + 0x10));
+    SH_CALL(Area85_ClutShift)(static_cast<std::int32_t>(rv::As<records::EffectWork>(S())->work_10));
     const U up = (Frame_Counter & 0xFu) == 0 ? 1u : 0u;
     unsigned char* s = S();
-    SetUL(s + 0x10, UL(s + 0x10) + up);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, rv::As<records::EffectWork>(s)->work_10 + up);
     s = S();
-    if (UL(s + 0x10) == 0) SH_CALL(Effect_Release)();
+    if (rv::As<records::EffectWork>(s)->work_10 == 0) SH_CALL(Effect_Release)();
 }
 
 // original 0x478680: variant 2, jmp [EffectKind49_V2States + +2 * 4],
@@ -899,14 +899,14 @@ extern "C" void __cdecl EffectKind49_V2Run(void) {
 // Sound_PlayEffect(0x202); +0x14 negated; +2 up.
 extern "C" void __cdecl EffectKind49_V2Launch(void) {
     SetWord(At(EffectKind30_Shards_addr + 0x51e), 0xC0);
-    SetUL(S() + 0x14, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0);
     for (unsigned i = 0; i < 16; ++i) {
-        SetUL(S() + 0x14, UL(S() + 0x14) + 0x800000u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y) + 0x800000u);
         rv::Current<records::EffectObject>()->x = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x) + 0x10000u;
-        rv::Current<records::EffectObject>()->height = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height) + UL(S() + 0x14);
+        rv::Current<records::EffectObject>()->height = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y);
     }
     SH_CALL(Sound_PlayEffect)(0x202);
-    SetUL(S() + 0x14, 0u - UL(S() + 0x14));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0u - static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y));
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
@@ -926,10 +926,10 @@ extern "C" void __cdecl EffectKind49_V2Fly(void) {
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
     so->x = static_cast<std::uint32_t>(so->x) + 0xFFFF0000u;
-    so->height = static_cast<std::uint32_t>(so->height) + UL(s + 0x14);
-    const U speed = UL(s + 0x14);
-    if (speed != 0) SetUL(s + 0x14, speed + 0x800000u);
-    if (static_cast<std::uint32_t>(so->x) == UL(s + 0xC) && static_cast<std::uint32_t>(so->z) == UL(s + 0x10)) {
+    so->height = static_cast<std::uint32_t>(so->height) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y);
+    const U speed = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y);
+    if (speed != 0) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, speed + 0x800000u);
+    if (static_cast<std::uint32_t>(so->x) == rv::As<records::EffectWork>(s)->work_0c && static_cast<std::uint32_t>(so->z) == rv::As<records::EffectWork>(s)->work_10) {
         s[9] = 0x2F;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
@@ -985,7 +985,7 @@ extern "C" void __cdecl EffectKind49_V3Start(void) {
     rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground))) << 16);
     SH_AT(void (__cdecl*)(), at::kDustClear)();
     S()[9] = 0;
-    SetUL(S() + 0xC, 0x5F);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0x5F);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
     SH_CALL(Sound_PlayEffect)(0x205);
 }
@@ -1017,9 +1017,9 @@ extern "C" void __cdecl EffectKind49_V3Burst(void) {
     if ((s[0xC] & 0xF) == 0) s[9] = static_cast<unsigned char>(s[9] + 1);
     SH_AT(unsigned char (__cdecl*)(), at::kDustStep)();
     s = S();
-    SetUL(s + 0xC, UL(s + 0xC) - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - 1u);
     s = S();
-    if (UL(s + 0xC) == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
+    if (rv::As<records::EffectWork>(s)->work_0c == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
 }
 
 // original 0x4789A0 (variant 3, state 2): the dust stepped; none live:

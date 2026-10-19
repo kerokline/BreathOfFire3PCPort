@@ -62,7 +62,6 @@ using move_script::Word;
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
-void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
@@ -250,8 +249,8 @@ extern "C" void __cdecl EffectKind66_DrawPiece(unsigned piece, unsigned place) {
     p[0x45] = static_cast<unsigned char>(v + dv);
     p[5] = 0x80;
     p[6] = 0x80;
-    SetWord(p + 0x16, SH_CALL(Gpu_GetClut)(0, 0x1E8));
-    SetWord(p + 0x26, SH_CALL(Gpu_GetTPage)(1, 0, 0x240, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E8));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(1, 0, 0x240, 0x100));
     SH_CALL(Gfx_CommitPrim)(1, 0x48);
 }
 
@@ -367,8 +366,8 @@ extern "C" void __cdecl EffectKind18Sub20_Draw(void) {
         SetWord(v + 0x18, kFar);
         SetWord(v + 0x10, kFar);
         s = S();
-        SetWord(v + 0x1C, Word(s + 0x3C));
-        SetWord(v + 0x14, Word(s + 0x3C));
+        SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_frac);
+        SetWord(v + 0x14, rv::As<records::EffectObject>(s)->height_frac);
         SH_CALL(Gte_RotTransPers4)(vertex(3), vertex(1), vertex(2), vertex(0), reinterpret_cast<float*>(p + 8),
                                    reinterpret_cast<float*>(p + 0x18), reinterpret_cast<float*>(p + 0x28),
                                    reinterpret_cast<float*>(p + 0x38), &depth);
@@ -446,7 +445,7 @@ extern "C" void __cdecl EffectKind15_Begin(void) {
 extern "C" void __cdecl EffectKind15_WaitPose4(void) {
     if (EndedTo(9) || HitTaken()) return;
     unsigned char* const self = S();
-    const bool pose = W(at::kMember1Pose) == 4;
+    const bool pose = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos) == 4;
     OnMember1();
     if (!pose || Field_Members[0x4e] != 1) return;
     const U r = static_cast<U>(SH_CALL(Rand)()) & 7u;
@@ -523,7 +522,7 @@ extern "C" void __cdecl EffectKind15_Hit(void) {
 extern "C" void __cdecl EffectKind15_WaitPose8(void) {
     if (EndedTo(9)) return;
     unsigned char* const self = S();
-    const bool pose = W(at::kMember1Pose) == 8;
+    const bool pose = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos) == 8;
     OnMember1();
     if (!pose || Field_Members[0x4e] != 1) return;
     SH_CALL(Sprite_SetAnimation)(1);
@@ -925,7 +924,7 @@ extern "C" void __cdecl EffectKind5B_Start(void) {
     B(at::kArea75EffectSlots + slot) =
         static_cast<unsigned char>(static_cast<std::int32_t>(AddressOf(s) - AddressOf(Effect_Objects)) >> 7);
     s[0xA] = 0x80;
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     S()[6] = 0x1E;
     S()[0x5D] = 0x80;
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -936,7 +935,7 @@ extern "C" void __cdecl EffectKind5B_Start(void) {
 extern "C" void __cdecl EffectKind5B_Glow(void) {
     unsigned char* const s = S();
     s[0xA] = static_cast<unsigned char>(s[0xA] + s[0xC]);
-    SetUL(S() + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     SH_CALL(EffectKind5B_DrawBeam)(S()[6], 0);
 }
 
@@ -1005,8 +1004,8 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     point[1] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0x8000u);
     point[2] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0xE00000u);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x38));
-    SetWord(p + 0x16, SH_CALL(Gpu_GetClut)(0xD0, 0x1E3));
-    SetWord(p + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0xD0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     s = S();
     const auto u = static_cast<unsigned char>(s[0xA] & 7);
     p[0x15] = 0;

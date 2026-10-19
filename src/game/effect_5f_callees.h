@@ -9,8 +9,8 @@
 namespace effect_5f::at {
 
 // --- the leader: ObjTrio record 0's point (ObjTrio + 0x34 / + 0x38, 16.16) ----
-constexpr std::uint32_t kLeaderX = 0x802D74;
-constexpr std::uint32_t kLeaderZ = 0x802D78;
+// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x (records.h).
+// kLeaderZ: now rv::As<records::PartyMember>(ObjTrio)->z (records.h).
 constexpr std::uint32_t kObjTrioStride = 0x14C;   // ObjTrio's records
 constexpr unsigned kObjTrioCount = 3;
 

@@ -370,12 +370,12 @@ extern "C" void __cdecl EffectKind78_Run(void) {
 // (0x7DEFFA), +9 0x14, +0xC and +0x10 0, +0x2E / +0x30 its screen words
 // (0x7DEFF6 / 0x7DEFF8); +1 up.
 extern "C" void __cdecl EffectKind78_Start(void) {
-    SetWord(S() + 0x32, W(at::kObject2Turn));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key));
     S()[9] = 0x14;
-    SetUL(S() + 0xC, 0);
-    SetUL(S() + 0x10, 0);
-    SetWord(S() + 0x2E, W(at::kObject2Screen));
-    SetWord(S() + 0x30, W(at::kObject2Screen + 2));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_x)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_y)));
     NextState();
 }
 
@@ -385,17 +385,17 @@ namespace {
 // the upper halves of those registers; the ring reads each as its low word.
 void DrawRingOfRecord() {
     unsigned char* const s = S();
-    const U rx = UL(s + 0xC), ry = UL(s + 0x10);
-    SH_CALL(EffectKind78_DrawRing)((rx & 0xFFFF0000u) | W(s + 0x2E), (ry & 0xFFFF0000u) | W(s + 0x30), rx, ry);
+    const U rx = rv::As<records::EffectWork>(s)->work_0c, ry = rv::As<records::EffectWork>(s)->work_10;
+    SH_CALL(EffectKind78_DrawRing)((rx & 0xFFFF0000u) | static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), (ry & 0xFFFF0000u) | static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30), rx, ry);
 }
 }  // namespace
 
 // original 0x4863E0 (state 1): record 2 turned 0xF00; the radii grow (+0xC by
 // 0xF, +0x10 by 0xA); the ring; +9 down, at 0 +9 0x3C and +1 up.
 extern "C" void __cdecl EffectKind78_Grow(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
-    SetUL(S() + 0xC, UL(S() + 0xC) + 0xF);
-    SetUL(S() + 0x10, UL(S() + 0x10) + 0xA);
+    SetWord(At(Sprite_Objects_addr + 0x17a), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key) + 0xF00u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, rv::As<records::EffectWork>(S())->work_0c + 0xF);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, rv::As<records::EffectWork>(S())->work_10 + 0xA);
     DrawRingOfRecord();
     if (CountDown()) {
         S()[9] = 0x3C;
@@ -406,17 +406,17 @@ extern "C" void __cdecl EffectKind78_Grow(void) {
 // original 0x486450 (state 2): record 2 turned 0xF00, the ring; +9 down, at 0
 // +1 up.
 extern "C" void __cdecl EffectKind78_Spin(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
+    SetWord(At(Sprite_Objects_addr + 0x17a), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key) + 0xF00u);
     unsigned char* const s = S();
     // here the upper halves are the caller's (the dispatcher's ecx, Sprite_Current); the ring reads the low words
-    SH_CALL(EffectKind78_DrawRing)(W(s + 0x2E), W(s + 0x30), W(s + 0xC), W(s + 0x10));
+    SH_CALL(EffectKind78_DrawRing)(static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30), W(s + 0xC), W(s + 0x10));
     if (CountDown()) NextState();
 }
 
 // original 0x4864A0 (state 3): record 2's turn put back from +0x32; a tail jump
 // to Effect_Release.
 extern "C" void __cdecl EffectKind78_End(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), W(S() + 0x32));
+    SetWord(At(Sprite_Objects_addr + 0x17a), static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key));
     SH_CALL(Effect_Release)();
 }
 
@@ -467,7 +467,7 @@ extern "C" void __cdecl EffectKind78_DrawRing(unsigned cx, unsigned cy, unsigned
             p[5] = 0;
             p[6] = 0;
         }
-        SH_CALL(MapView_LinkPrimAt)(UL(at::kObject2Point), UL(at::kObject2Point + 4), 0xC, 0x2C);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->z), 0xC, 0x2C);
     }
 }
 
@@ -485,9 +485,9 @@ extern "C" void __cdecl EffectKind7D_Run(void) {
 // (0x675DC8 + +6, unchecked: only an address).
 extern "C" void __cdecl EffectKind7D_Start(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
-    SetWord(S() + 0x2E, 5);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 5);
     unsigned char* const s = S();
-    SetUL(s + 0x4C, at::kDials + s[6]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->anim_data, at::kDials + s[6]);
 }
 
 // original 0x486690 (state 1): the dial +0x4C points at turned by the press
@@ -496,26 +496,26 @@ extern "C" void __cdecl EffectKind7D_Start(void) {
 // sound 0x205, the answer 0x9039F6 1, dial +6 the turn, +1 up one; cancel:
 // sound 0x206, the answer 0xFF, +1 up two. Then the panel at (+0x2E, +0x30).
 extern "C" void __cdecl EffectKind7D_Input(void) {
-    unsigned char* dial = P(UL(S() + 0x4C));
+    unsigned char* dial = P(rv::As<records::EffectObject>(S())->anim_data);
     const unsigned before = *dial;
     if (UL(at::kInputPressed) & 0x8000u) {
         *dial = static_cast<unsigned char>(before + 1);
-        dial = P(UL(S() + 0x4C));
+        dial = P(rv::As<records::EffectObject>(S())->anim_data);
         if (*dial >= 9) *dial = 0;
     }
     if (UL(at::kInputPressed) & 0x2000u) {
-        dial = P(UL(S() + 0x4C));
+        dial = P(rv::As<records::EffectObject>(S())->anim_data);
         *dial = static_cast<unsigned char>(*dial - 1);
-        dial = P(UL(S() + 0x4C));
+        dial = P(rv::As<records::EffectObject>(S())->anim_data);
         if (static_cast<signed char>(*dial) < 0) *dial = 8;
     }
-    if (before != *P(UL(S() + 0x4C))) SH_CALL(Sound_PlayEffect)(0x204);
+    if (before != *P(rv::As<records::EffectObject>(S())->anim_data)) SH_CALL(Sound_PlayEffect)(0x204);
     const U pressed = UL(at::kInputPressed);
     if ((Field_ConfirmButtons & pressed & 0xFFFFu) != 0) {
         SH_CALL(Sound_PlayEffect)(0x205);
         unsigned char* const s = S();
         const unsigned which = s[6];
-        const unsigned char turn = *P(UL(s + 0x4C));
+        const unsigned char turn = *P(rv::As<records::EffectObject>(s)->anim_data);
         SetWord(At(at::kDialAnswer), 1);
         if (which >= at::kDialCount)
             bof3::Fatal("EffectKind7D_Input: +6 is %u, past the three dials at 0x675DC8 - the original writes the byte "
@@ -530,7 +530,7 @@ extern "C" void __cdecl EffectKind7D_Input(void) {
         s[1] = static_cast<unsigned char>(s[1] + 2);
     }
     unsigned char* const s = S();
-    SH_CALL(EffectKind7D_DrawPanel)(W(s + 0x2E), W(s + 0x30));
+    SH_CALL(EffectKind7D_DrawPanel)(static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30));
 }
 
 // original 0x486790 (state 2): the dials applied to the map, +1 up (state 3 is
@@ -731,8 +731,8 @@ extern "C" void __cdecl EffectKind7F_Run(void) {
 // original 0x486F30 (state 0): +0x2E 0, +0x30 0x100, +9 0x28, +1 up;
 // Sound_PlayEffect(0x206).
 extern "C" void __cdecl EffectKind7F_Start(void) {
-    SetWord(S() + 0x2E, 0);
-    SetWord(S() + 0x30, 0x100);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0x100);
     S()[9] = 0x28;
     NextState();
     SH_CALL(Sound_PlayEffect)(0x206);
@@ -742,9 +742,9 @@ extern "C" void __cdecl EffectKind7F_Start(void) {
 // the radii +0x2E and +0x30, both then 0x40 wider; +9 down, at 0 +1 up.
 extern "C" void __cdecl EffectKind7F_Grow(void) {
     unsigned char* const s = S();
-    SH_CALL(EffectKind7F_DrawCone)(reinterpret_cast<const long*>(s + 0x34), W(s + 0x2E), W(s + 0x30));
-    SetWord(S() + 0x2E, W(S() + 0x2E) + 0x40);
-    SetWord(S() + 0x30, W(S() + 0x30) + 0x40);
+    SH_CALL(EffectKind7F_DrawCone)(reinterpret_cast<const long*>(s + 0x34), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e) + 0x40);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30) + 0x40);
     if (CountDown()) NextState();
 }
 
@@ -1013,9 +1013,9 @@ extern "C" void __cdecl EffectKind81_Run(void) {
 // original 0x4878B0 (state 0): the record's point the leader's (ObjTrio +0x34,
 // +0x38, +0x3C); the drops cleared, the sources placed; +1 up.
 extern "C" void __cdecl EffectKind81_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(at::kLeaderPoint));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(at::kLeaderPoint + 4));
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(at::kLeaderPoint + 8));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->height));
     SH_CALL(EffectKind81_ClearDrops)();
     SH_CALL(EffectKind81_PlaceSources)();
     NextState();
@@ -1192,8 +1192,8 @@ namespace {
 // Field_State the leader; true when Sprite_Objects record 0's x is the
 // leader's or past it (signed).
 bool ObjectReached() {
-    const auto object_x = static_cast<std::int32_t>(UL(at::kObject0X));
-    const auto leader_x = static_cast<std::int32_t>(UL(at::kLeaderX));
+    const auto object_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects)->x));
+    const auto leader_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
     Field_State = ObjTrio;
     return object_x >= leader_x;
 }

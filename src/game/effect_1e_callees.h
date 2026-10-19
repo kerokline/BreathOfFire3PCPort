@@ -47,14 +47,14 @@ constexpr std::uint32_t kPoolWord5E = 0x80365E;
 // kEff0Hold: now Effect_Objects[0xb] (symbols.toml). record 0 +0xB
 constexpr std::uint32_t kEff0StepX = 0x7E11EC;      // record 0 +0xC (s32)
 constexpr std::uint32_t kEff0StepY = 0x7E11F0;      // record 0 +0x10 (s32)
-constexpr std::uint32_t kEff0StepZ = 0x7E11F4;      // record 0 +0x14 (s32)
+// kEff0StepZ: now rv::As<records::EffectObject>(Effect_Objects)->step_y (records.h). record 0 +0x14 (s32)
 constexpr std::uint32_t kEff0X = 0x7E1214;          // record 0 +0x34 (s32, 16.16)
-constexpr std::uint32_t kEff0Z = 0x7E1218;          // record 0 +0x38 (s32)
+// kEff0Z: now rv::As<records::EffectObject>(Effect_Objects)->z (records.h). record 0 +0x38 (s32)
 // kEff0Height: now Effect_Objects[0x3e] (symbols.toml). record 0 +0x3E (s16)
 // kEff1State: now Effect_Objects[0x81] (symbols.toml). record 1 +1
 // kEff1Sub: now Effect_Objects[0x82] (symbols.toml). record 1 +2
 // kEff2State: now Effect_Objects[0x101] (symbols.toml). record 2 +1
-constexpr std::uint32_t kEff2Word = 0x7E12F8;       // record 2 +0x18 (u32)
+// kEff2Word: now rv::As<records::EffectObject>(Effect_Objects + 0x100)->work_18 (records.h). record 2 +0x18 (u32)
 // kEff3State: now Effect_Objects[0x181] (symbols.toml). record 3 +1
 // kEff4State: now Effect_Objects[0x201] (symbols.toml). record 4 +1
 // kEff4Mode: now Effect_Objects[0x206] (symbols.toml). record 4 +6

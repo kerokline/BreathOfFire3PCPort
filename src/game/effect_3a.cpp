@@ -63,7 +63,6 @@ using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t SW(U a) { return SW(At(a)); }
@@ -93,7 +92,6 @@ void StF(unsigned char* p, LD v) {
 }
 
 long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
 
@@ -256,8 +254,8 @@ extern "C" void __cdecl EffectKind61_Capture(void) {
     eo->x = static_cast<std::uint32_t>(rv::As<records::PartyMember>(Member("EffectKind61_Capture", S()[7]))->x);
     eo->z = static_cast<std::uint32_t>(rv::As<records::PartyMember>(Member("EffectKind61_Capture", S()[7]))->z);
     eo->height = static_cast<std::uint32_t>(rv::As<records::PartyMember>(Member("EffectKind61_Capture", S()[7]))->height);
-    SetWord(e + 0x2E, Word(At(Frame("EffectKind61_Capture"))));
-    SetWord(e + 0x30, Word(At(Frame("EffectKind61_Capture") + 2)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_2e, Word(At(Frame("EffectKind61_Capture"))));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_30, Word(At(Frame("EffectKind61_Capture") + 2)));
     const U tp = SH_CALL(Gpu_GetTPage)(0, 0, 0x340, 0x100);
     e[0x25] = static_cast<unsigned char>(tp);
     e[0x26] = 0x80;
@@ -459,10 +457,10 @@ extern "C" void __cdecl EffectKind62_Rays(void) {
     if (Field_Request == 2) return;
     if (Word(At(at::kMessageWord)) != 0x12) return;
     if (MoveScript_PartyRecords[0x65] != 0xC) return;
-    SetUL(S() + 0xC, 0xA000);
-    SetUL(S() + 0x10, 0xB000);
-    SetUL(S() + 0x18, 0);
-    SetUL(S() + 0x1C, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xA000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0xB000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, 0);
     S()[9] = 0;
     NextState();
 }
@@ -482,22 +480,22 @@ extern "C" void __cdecl EffectKind62_Blast(void) {
         s[9] = static_cast<unsigned char>(s[9] + 1);
         s = S();
     }
-    SH_CALL(EffectKind62_DrawRing)(Point(s + 0x34), static_cast<int>(UL(s + 0xC)), static_cast<int>(UL(s + 0x10)));
-    SetUL(S() + 0x18, UL(S() + 0x18) + 0x80u);
-    SetUL(S() + 0x1C, UL(S() + 0x1C) + 0x8Cu);
+    SH_CALL(EffectKind62_DrawRing)(Point(s + 0x34), static_cast<int>(rv::As<records::EffectWork>(s)->work_0c), static_cast<int>(rv::As<records::EffectWork>(s)->work_10));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18) + 0x80u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c) + 0x8Cu);
     s = S();
-    SetUL(s + 0xC, UL(s + 0xC) - UL(s + 0x18));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, rv::As<records::EffectWork>(s)->work_0c - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18));
     s = S();
-    SetUL(s + 0x10, UL(s + 0x10) - UL(s + 0x1C));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, rv::As<records::EffectWork>(s)->work_10 - static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c));
     s = S();
-    if (Long(s + 0xC) < 0) {
-        SetUL(s + 0xC, 0);
+    if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_0c) < 0) {
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
         s = S();
     }
-    if (Long(s + 0x10) < 0) SetUL(s + 0x10, 0);
+    if (static_cast<std::int32_t>(rv::As<records::EffectWork>(s)->work_10) < 0) rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, 0);
     if (SH_CALL(EffectKind62_StepRays)() != 0) return;
     s = S();
-    if (UL(s + 0xC) != 0 || UL(s + 0x10) != 0) return;
+    if (rv::As<records::EffectWork>(s)->work_0c != 0 || rv::As<records::EffectWork>(s)->work_10 != 0) return;
     SH_CALL(Effect_Release)();
 }
 
@@ -564,9 +562,9 @@ extern "C" unsigned char __cdecl EffectKind62_StepRays(void) {
         any = 1;
         SH_CALL(EffectKind62_DrawRay)(ray);
         if (ray[1] == 0) {
-            SetUL(ray + 8, UL(ray + 8) + UL(ray + 0x28));
-            SetUL(ray + 0xC, UL(ray + 0xC) + UL(ray + 0x2C));
-            SetUL(ray + 0x10, UL(ray + 0x10) + UL(ray + 0x30));
+            rv::Store<std::uint32_t>(rv::As<records::EffectRay>(ray)->end0_x, static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->end0_x) + static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->speed_x));
+            rv::Store<std::uint32_t>(rv::As<records::EffectRay>(ray)->end0_z, static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->end0_z) + static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->speed_z));
+            rv::Store<std::uint32_t>(rv::As<records::EffectRay>(ray)->end0_height, static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->end0_height) + static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->speed_height));
             ray[3] = static_cast<unsigned char>(ray[3] - 10);
             ray[2] = static_cast<unsigned char>(ray[2] - 1);
             if (ray[2] == 0) {
@@ -574,9 +572,9 @@ extern "C" unsigned char __cdecl EffectKind62_StepRays(void) {
                 ray[1] = static_cast<unsigned char>(ray[1] + 1);
             }
         } else if (ray[1] == 1) {
-            SetUL(ray + 0x18, UL(ray + 0x18) + UL(ray + 0x28));
-            SetUL(ray + 0x1C, UL(ray + 0x1C) + UL(ray + 0x2C));
-            SetUL(ray + 0x20, UL(ray + 0x20) + UL(ray + 0x30));
+            rv::Store<std::uint32_t>(rv::As<records::EffectRay>(ray)->end1_x, static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->end1_x) + static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->speed_x));
+            rv::Store<std::uint32_t>(rv::As<records::EffectRay>(ray)->end1_z, static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->end1_z) + static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->speed_z));
+            rv::Store<std::uint32_t>(rv::As<records::EffectRay>(ray)->end1_height, static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->end1_height) + static_cast<std::uint32_t>(rv::As<records::EffectRay>(ray)->speed_height));
             ray[4] = static_cast<unsigned char>(ray[4] - 10);
             ray[2] = static_cast<unsigned char>(ray[2] - 1);
             if (ray[2] == 0) ray[0] = 0;
@@ -678,10 +676,10 @@ extern "C" void __cdecl EffectKind64_Run(void) {
 // leader's (ObjTrio +0x34..), its height 0x80 up; the size +0x2E = 0; +9 = 8;
 // +1 up.
 extern "C" void __cdecl EffectKind64_Start(void) {
-    SetUL(S() + 0x64, UL(at::kLeaderPoint));
-    SetUL(S() + 0x68, UL(at::kLeaderPoint + 4));
-    SetUL(S() + 0x6C, UL(at::kLeaderPoint + 8) + 0x800000u);
-    SetWord(S() + 0x2E, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[0], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[1], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->height) + 0x800000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     S()[9] = 8;
     NextState();
 }
@@ -690,9 +688,9 @@ extern "C" void __cdecl EffectKind64_Start(void) {
 // (EffectKind64_DrawGlow(+0x64, +0x2E, 6)); +9 down, at 0 +9 = 0x80, +1 up and
 // Sound_PlayEffect(0x209).
 extern "C" void __cdecl EffectKind64_Grow(void) {
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0x20u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0x20u);
     unsigned char* const s = S();
-    SH_CALL(EffectKind64_DrawGlow)(Point(s + 0x64), Word(s + 0x2E), 6);
+    SH_CALL(EffectKind64_DrawGlow)(Point(s + 0x64), rv::As<records::EffectWork>(s)->work_2e, 6);
     if (!CountDown()) return;
     S()[9] = 0x80;
     NextState();
@@ -702,7 +700,7 @@ extern "C" void __cdecl EffectKind64_Grow(void) {
 // original 0x480E10 (state 2): the glow drawn; +9 down, at 0 +9 = 0x20, +1 up.
 extern "C" void __cdecl EffectKind64_Hold(void) {
     unsigned char* const s = S();
-    SH_CALL(EffectKind64_DrawGlow)(Point(s + 0x64), Word(s + 0x2E), 6);
+    SH_CALL(EffectKind64_DrawGlow)(Point(s + 0x64), rv::As<records::EffectWork>(s)->work_2e, 6);
     if (!CountDown()) return;
     S()[9] = 0x20;
     NextState();
@@ -713,18 +711,18 @@ extern "C" void __cdecl EffectKind64_Hold(void) {
 // (EffectKind64_ClearSparks); the record's point +0x34.. the glow's; the 16
 // shards at 0x92C040 started (EffectKind64_InitShard); Sound_PlayEffect(0x207).
 extern "C" void __cdecl EffectKind64_Rise(void) {
-    SetUL(S() + 0x6C, UL(S() + 0x6C) + 0xC0000u);
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0xFFFAu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], rv::As<records::EffectObject>(S())->angle[2] + 0xC0000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0xFFFAu);
     unsigned char* const s = S();
-    SH_CALL(EffectKind64_DrawGlow)(Point(s + 0x64), Word(s + 0x2E), 6);
+    SH_CALL(EffectKind64_DrawGlow)(Point(s + 0x64), rv::As<records::EffectWork>(s)->work_2e, 6);
     if (!CountDown()) return;
     S()[9] = 0x20;
     S()[6] = 0;
     NextState();
     SH_CALL(EffectKind64_ClearSparks)();
-    rv::Current<records::EffectObject>()->x = UL(S() + 0x64);
-    rv::Current<records::EffectObject>()->z = UL(S() + 0x68);
-    rv::Current<records::EffectObject>()->height = UL(S() + 0x6C);
+    rv::Current<records::EffectObject>()->x = rv::As<records::EffectObject>(S())->angle[0];
+    rv::Current<records::EffectObject>()->z = rv::As<records::EffectObject>(S())->angle[1];
+    rv::Current<records::EffectObject>()->height = rv::As<records::EffectObject>(S())->angle[2];
     for (unsigned i = 0; i < at::kShardCount64; ++i)
         SH_CALL(EffectKind64_InitShard)(At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64));
     SH_CALL(Sound_PlayEffect)(0x207);
@@ -751,11 +749,11 @@ extern "C" void __cdecl EffectKind64_Burst(void) {
     SH_CALL(EffectKind64_StepSparks)();
     if (!CountDown()) return;
     unsigned char* const s = S();
-    SetUL(s + 0x18, UL(s + 0x64));
-    SetUL(S() + 0x1C, UL(S() + 0x68));
-    SetUL(S() + 0x20, UL(S() + 0x6C));
-    SetUL(S() + 0xC, 0xFFFFF000u);
-    SetUL(S() + 0x10, 0xFFFFFC00u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18, rv::As<records::EffectObject>(s)->angle[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c, rv::As<records::EffectObject>(S())->angle[1]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20, rv::As<records::EffectObject>(S())->angle[2]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0xFFFFF000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0xFFFFFC00u);
     NextState();
 }
 
@@ -778,12 +776,12 @@ extern "C" void __cdecl EffectKind64_Fly(void) {
     SH_CALL(EffectKind64_DrawShards)();
     unsigned char* const s = S();
     SH_CALL(EffectKind64_DrawTrail)(Point(s + 0x18), Point(s + 0x34), 0x40);
-    SetUL(S() + 0xC, UL(S() + 0xC) + 0xFFFFF800u);
-    SetUL(S() + 0x10, UL(S() + 0x10) + 0xFFFFFE00u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, rv::As<records::EffectWork>(S())->work_0c + 0xFFFFF800u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, rv::As<records::EffectWork>(S())->work_10 + 0xFFFFFE00u);
     unsigned char* t = S();
-    SetUL(t + 0x18, UL(t + 0x18) + UL(t + 0xC));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(t)->work_18, static_cast<std::uint32_t>(rv::As<records::EffectObject>(t)->work_18) + rv::As<records::EffectWork>(t)->work_0c);
     t = S();
-    SetUL(t + 0x1C, UL(t + 0x1C) + UL(t + 0x10));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(t)->work_1c, static_cast<std::uint32_t>(rv::As<records::EffectObject>(t)->work_1c) + rv::As<records::EffectWork>(t)->work_10);
     S()[3] = static_cast<unsigned char>(S()[3] + 0xFC);
     if (!CountDown()) return;
     S()[9] = 0x80;
@@ -810,7 +808,7 @@ extern "C" void __cdecl EffectKind64_FlyWait(void) {
 // the sparks drawn; the trail (+0x18, +0x34, the shade); +9 down, at 0
 // Effect_Release (a tail jmp).
 extern "C" void __cdecl EffectKind64_Fade(void) {
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 0xFFF0u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e + 0xFFF0u);
     S()[3] = static_cast<unsigned char>(S()[3] + 0xF8);
     SH_CALL(EffectKind64_StepSparks)();
     unsigned char* const s = S();
@@ -982,7 +980,7 @@ extern "C" unsigned char __cdecl EffectKind64_StepSparks(void) {
         unsigned char* const k = Spark(i);
         if (k[0] == 0) continue;
         const unsigned char life = k[2];
-        SetWord(k + 0x14, Word(k + 0x14) + 0xFFF0u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectGlowSpark>(k)->size, rv::As<records::EffectGlowSpark>(k)->size + 0xFFF0u);
         any = 1;
         k[2] = static_cast<unsigned char>(life - 1);
         if (k[2] == 0) k[0] = 0;
@@ -1000,7 +998,7 @@ extern "C" unsigned char __cdecl EffectKind64_StepSparks(void) {
 // to slot 2.
 extern "C" void __cdecl EffectKind64_DrawSpark(unsigned char* spark) {
     DrawMode(1, 0x3C0, 0, 1, 2);
-    alignas(4) short sz[2] = {static_cast<short>(Word(spark + 0x14)), 0};
+    alignas(4) short sz[2] = {static_cast<short>(rv::As<records::EffectGlowSpark>(spark)->size), 0};
     alignas(4) short r[2];
     SH_CALL(EffectGte_ProjectSize)(Point(spark + 4), sz, r);
     alignas(4) unsigned char o[12];
@@ -1047,17 +1045,17 @@ extern "C" void __cdecl EffectKind64_DrawSpark(unsigned char* spark) {
 // = 0.
 extern "C" void __cdecl EffectKind64_InitShard(unsigned char* shard) {
     SetUL(shard, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
-    SetUL(shard + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
-    SetUL(shard + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->z, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->height, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
     const U x = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     const U y = (static_cast<U>(SH_CALL(Rand)()) & 0x7FFu) - 0x400u;
     const U z = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
-    SetWord(shard + 0x10, static_cast<U>(SH_CALL(Math_Cos)(0x10)));
-    SetWord(shard + 0x12, static_cast<U>(SH_CALL(Math_Sin)(0x10)));
-    SetWord(shard + 0x14, 0);
-    SetWord(shard + 0x18, static_cast<U>(SH_CALL(Math_Cos)(-0x10)));
-    SetWord(shard + 0x1A, static_cast<U>(SH_CALL(Math_Sin)(-0x10)));
-    SetWord(shard + 0x1C, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->edge0.x, static_cast<U>(SH_CALL(Math_Cos)(0x10)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->edge0.y, static_cast<U>(SH_CALL(Math_Sin)(0x10)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->edge0.z, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->edge1.x, static_cast<U>(SH_CALL(Math_Cos)(-0x10)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->edge1.y, static_cast<U>(SH_CALL(Math_Sin)(-0x10)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->edge1.z, 0);
     alignas(4) short m[16];
     SH_CALL(EffectGte_SetDiagonalOne)(m);
     SH_CALL(Gte_RotMatrixX)(static_cast<std::int16_t>(x), m);
@@ -1067,11 +1065,11 @@ extern "C" void __cdecl EffectKind64_InitShard(unsigned char* shard) {
     SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x10), reinterpret_cast<short*>(shard + 0x10));
     SH_AT(Turn, at::kMatrixVector)(m, reinterpret_cast<short*>(shard + 0x18), reinterpret_cast<short*>(shard + 0x18));
     const U speed = (static_cast<U>(SH_CALL(Rand)()) & 2u) + 3u;
-    SetWord(shard + 0x2A, 0x20);
-    SetWord(shard + 0x28, speed);
-    SetWord(shard + 0x20, 0);
-    SetWord(shard + 0x22, 0);
-    SetWord(shard + 0x24, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->shade, 0x20);
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->speed, speed);
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[0], 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[1], 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[2], 0);
 }
 
 // original 0x482360: a draw mode (Gpu_GetTPage(0, 1, 0x380, 0x100), dtd 1,
@@ -1083,7 +1081,7 @@ extern "C" void __cdecl EffectKind64_DrawShards(void) {
     for (unsigned i = 0; i < at::kShardCount64; ++i) {
         unsigned char* const shard = At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64);
         SH_AT(void (__cdecl*)(unsigned char*), at::kShardDraw)(shard);
-        SetWord(shard + 0x24, Word(shard + 0x24) + 0x10u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[2], rv::As<records::EffectShard>(shard)->angle[2] + 0x10u);
     }
 }
 
@@ -1102,8 +1100,8 @@ extern "C" void __cdecl EffectKind68_Run(void) {
 // count +0x2E = 0x40, the frame +0x30 = 0; +1 up; Sound_PlayEffect(0x200).
 extern "C" void __cdecl EffectKind68_Start(void) {
     SH_CALL(EffectKind68_ClearMotes)();
-    SetWord(S() + 0x2E, 0x40);
-    SetWord(S() + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0x40);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     NextState();
     SH_CALL(Sound_PlayEffect)(0x200);
 }
@@ -1113,15 +1111,15 @@ extern "C" void __cdecl EffectKind68_Start(void) {
 // the motes stepped (EffectKind68_StepMotes); the count down, at 0 +9 = 0 and
 // +1 up.
 extern "C" void __cdecl EffectKind68_Rise(void) {
-    SetWord(S() + 0x30, Word(S() + 0x30) + 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, rv::As<records::EffectWork>(S())->work_30 + 1u);
     if ((S()[0x2E] & 3) == 0) {
         unsigned char* const mote = SH_CALL(EffectKind68_FindMote)();
         if (mote != nullptr) SH_CALL(EffectKind68_InitMote)(mote);
     }
     SH_CALL(EffectKind68_StepMotes)();
-    SetWord(S() + 0x2E, Word(S() + 0x2E) - 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, rv::As<records::EffectWork>(S())->work_2e - 1u);
     unsigned char* const s = S();
-    if (Word(s + 0x2E) != 0) return;
+    if (rv::As<records::EffectWork>(s)->work_2e != 0) return;
     s[9] = 0;
     NextState();
 }
@@ -1132,30 +1130,30 @@ extern "C" void __cdecl EffectKind68_Rise(void) {
 // left - the count +0x2E = 0x5A, +1 up.
 extern "C" void __cdecl EffectKind68_Wall(void) {
     unsigned char* s = S();
-    if (Word(s + 0x30) == 0x5A) {
+    if (rv::As<records::EffectWork>(s)->work_30 == 0x5A) {
         SH_CALL(Sound_PlayEffect)(0x201);
         s = S();
     }
-    SetWord(s + 0x30, Word(s + 0x30) + 1u);
-    const U frame = Word(S() + 0x30);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 + 1u);
+    const U frame = rv::As<records::EffectWork>(S())->work_30;
     if (static_cast<std::int16_t>(frame) > 0x5A) SH_CALL(EffectKind68_DrawWall)(WallShade(frame));
     if (SH_CALL(EffectKind68_StepMotes)() != 0) return;
-    SetWord(S() + 0x2E, 0x5A);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0x5A);
     NextState();
 }
 
 // original 0x481260 (state 3): the frame up; past 0x5A the wall drawn as in
 // state 2; the count down, at 0 Effect_Release (a tail jmp).
 extern "C" void __cdecl EffectKind68_End(void) {
-    SetWord(S() + 0x30, Word(S() + 0x30) + 1u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, rv::As<records::EffectWork>(S())->work_30 + 1u);
     unsigned char* s = S();
-    const U frame = Word(s + 0x30);
+    const U frame = rv::As<records::EffectWork>(s)->work_30;
     if (static_cast<std::int16_t>(frame) > 0x5A) {
         SH_CALL(EffectKind68_DrawWall)(WallShade(frame));
         s = S();
     }
-    SetWord(s + 0x2E, Word(s + 0x2E) - 1u);
-    if (Word(S() + 0x2E) == 0) SH_CALL(Effect_Release)();
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, rv::As<records::EffectWork>(s)->work_2e - 1u);
+    if (rv::As<records::EffectWork>(S())->work_2e == 0) SH_CALL(Effect_Release)();
 }
 
 // original 0x481B80: the 16 motes of 0x1C at 0x92BF80 out of use; the two

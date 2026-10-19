@@ -187,7 +187,7 @@ extern "C" void __cdecl EffectKind18Sub23_Run(void) {
 // original 0x506A30 (sub-state 0): +0x30 = 0; story flag 0x28 already set: a
 // tail jump to Effect_Release; else +2 up and a tail jump to the draw.
 extern "C" void __cdecl EffectKind18Sub23_Start(void) {
-    SetWord(S() + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub23Flag)) {
         SH_CALL(Effect_Release)();
         return;
@@ -206,9 +206,9 @@ extern "C" void __cdecl EffectKind18Sub23_WaitFlag(void) {
 // Effect_Release - and the draw all the same.
 extern "C" void __cdecl EffectKind18Sub23_Slide(void) {
     unsigned char* s = S();
-    SetWord(s + 0x30, W(s + 0x30) + 4);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) + 4);
     s = S();
-    if (SW(s + 0x30) >= 0x100) SH_CALL(Effect_Release)();
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30)) >= 0x100) SH_CALL(Effect_Release)();
     SH_CALL(EffectKind18Sub23_Draw)();
 }
 
@@ -224,19 +224,19 @@ extern "C" void __cdecl EffectKind18Sub23_Draw(void) {
     unsigned char* const p = TexturedQuad();
     unsigned char* const v = Vtx();
     unsigned char* const s = S();
-    const U near = W(s + 0x30) - 0x37C0u, far = W(s + 0x30) - 0x36C0u;
-    SetWord(v + 0x10, near);
-    SetWord(v + 0x0, near);
-    SetWord(v + 0x18, far);
-    SetWord(v + 0x8, far);
-    SetWord(v + 0x1A, 0x16C0);
-    SetWord(v + 0x12, 0x16C0);
-    SetWord(v + 0xA, 0x16C0);
-    SetWord(v + 0x2, 0x16C0);
-    SetWord(v + 0xC, 0x140);
-    SetWord(v + 0x4, 0x140);
-    SetWord(v + 0x1C, 0x280);
-    SetWord(v + 0x14, 0x280);
+    const U near = W(s + 0x30) - 0x37C0u, far = static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) - 0x36C0u;
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, near);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, near);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, far);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, far);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, 0x16C0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, 0x16C0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, 0x16C0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, 0x16C0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, 0x140);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0x140);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, 0x280);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, 0x280);
     Project4(p);
     SH_CALL(Gte_PrimDepths4_10)(p);
     SH_CALL(Prim_SetTexture)(0x2378013D, p, 1);
@@ -257,14 +257,14 @@ namespace {
 void Place(U dx, U dz, U height, U level) {
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);
-    so->x = Sar(UL(s + 0xC) + dx, 9) - 0x4000u;
-    so->z = Sar(UL(s + 0x10) + dz, 9) - 0x4000u;
+    so->x = Sar(rv::As<records::EffectWork>(s)->work_0c + dx, 9) - 0x4000u;
+    so->z = Sar(rv::As<records::EffectWork>(s)->work_10 + dz, 9) - 0x4000u;
     so->height = height;
-    SetWord(s + 0x32, 0);
-    SetUL(s + 0x14, 0x53020);
-    SetWord(s + 0x30, level);
-    SetUL(s + 0x10, 0);
-    SetUL(s + 0xC, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y, 0x53020);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, level);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, 0);
 }
 
 // The speed's step: +0x14 / 10000 (0x68DB8BAD, sar 12).
@@ -274,7 +274,7 @@ U Speed(U v) { return Div(0x68DB8BAD, v, 12); }
 // 1 cleared too).
 void Turn() {
     unsigned char* const s = S();
-    SetWord(s + 0x32, (W(s + 0x32) - Speed(UL(s + 0x14))) & 0xFFDu);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) - Speed(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->step_y))) & 0xFFDu);
 }
 
 // Each time bit 11 of the angle changes (and, for the fade, the level +0x30 is
@@ -294,9 +294,9 @@ unsigned char* Kick(unsigned char* s, bool fading) {
 // read after each Rand).
 void Jitter(U mask) {
     const U x = static_cast<U>(SH_CALL(Rand)());
-    SetUL(S() + 0xC, x & mask);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, x & mask);
     const U z = static_cast<U>(SH_CALL(Rand)());
-    SetUL(S() + 0x10, z & mask);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, z & mask);
 }
 
 // One of the trails' corners: the (x, z) byte pair k of kSub24Points, each
@@ -363,26 +363,26 @@ extern "C" void __cdecl EffectKind18Sub24_Beat3(void) {
 // 0x10). The draw; +9 up; above 7: +2 up and sound 0x200.
 extern "C" void __cdecl EffectKind18Sub24_Trails(void) {
     unsigned char* const v = Vtx();
-    SetWord(v + 0x0, 0xE5C0);
-    SetWord(v + 0x2, 0xEB40);
-    SetWord(v + 0x4, 0x160);
-    SetWord(v + 0x8, 0x620);
-    SetWord(v + 0xA, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, 0xE5C0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, 0xEB40);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0x160);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, 0x620);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, 0);
     U k = 0;
     for (U angle = 0xE00; angle < 0x1E00; angle += 0x400, ++k) {
         const U frame = Frame_Counter;
         unsigned char* const s = S();
-        SetWord(v + 0xC, ((k << 5) + frame) << 5);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, ((k << 5) + frame) << 5);
         SH_CALL(EffectKind18Sub24_DrawTrail)(static_cast<int>(static_cast<U>(s[9]) << 2), 0x1F, static_cast<int>(angle), 0x18);
     }
     if (S()[9] >= 3) {
-        SetWord(v + 0x4, 0x3A0);
-        SetWord(v + 0x8, 0x400);
-        SetWord(v + 0xA, 0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0x3A0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, 0x400);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, 0);
         for (U j = 0; j < at::kSub24PointCount; ++j) {
-            SetWord(v + 0x2, CornerZ(j));
-            SetWord(v + 0xC, ((j << 5) + Frame_Counter) << 5);
-            SetWord(v + 0x0, CornerX(j));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, CornerZ(j));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, ((j << 5) + Frame_Counter) << 5);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, CornerX(j));
             SH_CALL(EffectKind18Sub24_DrawTrail)(0, 0x1E, static_cast<int>(j << 10), 0x10);
         }
     }
@@ -398,13 +398,13 @@ extern "C" void __cdecl EffectKind18Sub24_Trails(void) {
 // 0x903848 up, +9 0, +2 up.
 extern "C" void __cdecl EffectKind18Sub24_TrailsOut(void) {
     unsigned char* const v = Vtx();
-    SetWord(v + 0x4, 0x3A0);
-    SetWord(v + 0x8, 0x400);
-    SetWord(v + 0xA, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0x3A0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, 0x400);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, 0);
     for (U j = 0; j < at::kSub24PointCount; ++j) {
-        SetWord(v + 0x0, CornerX(j));
-        SetWord(v + 0x2, CornerZ(j));
-        SetWord(v + 0xC, ((j << 5) + Frame_Counter) << 5);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, CornerX(j));
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, CornerZ(j));
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, ((j << 5) + Frame_Counter) << 5);
         const U from = (static_cast<U>(S()[9]) << 2) - 0x20u;
         SH_CALL(EffectKind18Sub24_DrawTrail)(static_cast<int>(from), 0x1E, static_cast<int>(j << 10), 0x10);
     }
@@ -450,9 +450,9 @@ extern "C" void __cdecl EffectKind18Sub24_Fade(void) {
     Jitter(0x2000);
     Kick(S(), true);
     unsigned char* s = S();
-    SetWord(s + 0x30, W(s + 0x30) - 2);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) - 2);
     s = S();
-    if (W(s + 0x30) == 0) {
+    if (static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) == 0) {
         B(at::kCounter) = static_cast<unsigned char>(B(at::kCounter) + 1);
         SH_CALL(Effect_Release)();
     }
@@ -470,8 +470,8 @@ extern "C" void __cdecl EffectKind18Sub24_Fade(void) {
 // committed (5, 0x48). Gte_PopMatrix.
 extern "C" void __cdecl EffectKind18Sub24_Draw(void) {
     unsigned char* s = S();
-    short pos[4] = {static_cast<short>(W(s + 0x34)), static_cast<short>(W(s + 0x38)), static_cast<short>(W(s + 0x3C)), 0};
-    short angles[4] = {0, 0, static_cast<short>(W(s + 0x32)), 0};
+    short pos[4] = {static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_frac)), static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_frac)), static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_frac)), 0};
+    short angles[4] = {0, 0, static_cast<short>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key)), 0};
     SH_CALL(Gte_PushMatrix)();
     Matrix m;
     SH_CALL(Gte_RotTrans)(pos, m.t);
@@ -494,28 +494,28 @@ extern "C" void __cdecl EffectKind18Sub24_Draw(void) {
     for (U k = 0; k < at::kSub24PointCount; ++k) {
         unsigned char* const p = TexturedQuad();
         const U n = ((k + 1) & 3) * 2;
-        SetWord(v + 0xA, 0);
-        SetWord(v + 0x2, 0);
-        SetWord(v + 0x8, 0);
-        SetWord(v + 0x10, (SB(at::kSub24Points + 2 * k) * 3u) << 7);
-        SetWord(v + 0x0, 0);
-        SetWord(v + 0x1C, 0);
-        SetWord(v + 0x14, 0);
-        SetWord(v + 0x12, (SB(at::kSub24Points + 2 * k + 1) * 3u) << 7);
-        SetWord(v + 0x1A, (SB(at::kSub24Points + n + 1) * 3u) << 7);
-        SetWord(v + 0x18, (SB(at::kSub24Points + n) * 3u) << 7);
-        SetWord(v + 0xC, 0xFDC0);
-        SetWord(v + 0x4, 0xFDC0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, 0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, 0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, 0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, (SB(at::kSub24Points + 2 * k) * 3u) << 7);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, 0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, 0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, 0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, (SB(at::kSub24Points + 2 * k + 1) * 3u) << 7);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, (SB(at::kSub24Points + n + 1) * 3u) << 7);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, (SB(at::kSub24Points + n) * 3u) << 7);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, 0xFDC0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0xFDC0);
         Project4(p);
         SH_CALL(Gte_PrimDepths4_10)(p);
         s = S();
         U level;
-        if (SW(s + 0x30) > 0x40) {
-            const U cosine = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<U>(SW(s + 0x32)) + turn)));
+        if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30)) > 0x40) {
+            const U cosine = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->draw_key))) + turn)));
             s = S();
-            level = static_cast<U>(SW(s + 0x30)) - Sar(cosine, 7) - 0x20u;
+            level = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30))) - Sar(cosine, 7) - 0x20u;
         } else {
-            level = static_cast<U>(SW(s + 0x30));
+            level = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30)));
         }
         SH_CALL(Prim_SetTexture)(((level & 0xFFF8u) << 16) | texture, p, 1);
         SH_CALL(Gfx_CommitPrim)(5, 0x48);
@@ -557,12 +557,12 @@ extern "C" void __cdecl EffectKind18Sub24_DrawTrail(int from, int to, int angle,
                             static_cast<int>(i), static_cast<int>(i), static_cast<int>(i + 1), at::kTrailPairCount);
             const U pair = at::kTrailPairs + 2 * i;
             const U s = static_cast<U>(scale);
-            SetWord(v + 0x18, 0);
-            SetWord(v + 0x12, SB(pair + 1) * s);
-            SetWord(v + 0x10, 0);
-            SetWord(v + 0x1A, SB(pair + 3) * s);
-            SetWord(v + 0x14, (0u - SB(pair) * 3u) << 4);
-            SetWord(v + 0x1C, (0u - SB(pair + 2) * 3u) << 4);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, 0);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, SB(pair + 1) * s);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, 0);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, SB(pair + 3) * s);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, (0u - SB(pair) * 3u) << 4);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, (0u - SB(pair + 2) * 3u) << 4);
             for (std::int32_t j = 0; j < 4; j += 2) {
                 unsigned char* const p = Gfx_PacketNext;
                 SH_CALL(Gpu_SetPolyG4)(p);
@@ -745,12 +745,12 @@ extern "C" void __cdecl EffectKind18Sub3F_Trail(void) {
     const U frame = Frame_Counter;
     unsigned char* const s = S();
     unsigned char* const v = Vtx();
-    SetWord(v + 0x0, 0xD1C0);
-    SetWord(v + 0x2, 0xCDC0);
-    SetWord(v + 0x4, 0xFC20);
-    SetWord(v + 0x8, 0);
-    SetWord(v + 0xA, 0);
-    SetWord(v + 0xC, frame << 5);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, 0xD1C0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, 0xCDC0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0xFC20);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, frame << 5);
     SH_CALL(EffectKind18Sub24_DrawTrail)(static_cast<int>(static_cast<U>(s[9]) << 2), 0x1F, 0, 0x18);
     Sky(kSkyNight);
     if (Count(7)) Step();
@@ -784,7 +784,7 @@ extern "C" void __cdecl EffectKind18Sub3F_SpinFade(void) {
     Sky(kSkyNight);
     Turn();
     unsigned char* const s = S();
-    SetWord(s + 0x30, W(s + 0x30) - 6);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) - 6);
     SH_CALL(EffectKind18Sub24_Draw)();
     if (Count(0xF)) Step();
 }
@@ -888,10 +888,10 @@ namespace {
 // +0x36 << 16 or the next; with +8 clear the same with x and z swapped.
 bool LeaderAt(const unsigned char* s, std::int32_t across, std::int32_t along) {
     const bool lengthwise = s[8] != 0;
-    const U first = lengthwise ? UL(at::kLeaderZ) : UL(at::kLeaderX);
+    const U first = lengthwise ? static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z) : static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x);
     const U middle = ((static_cast<U>(SW(s + (lengthwise ? 0x3A : 0x36))) + 1u) << 16) | 0x8000u;
     if (Abs(first - middle) > across) return false;
-    const U second = (lengthwise ? UL(at::kLeaderX) : UL(at::kLeaderZ)) - (static_cast<U>(SW(s + (lengthwise ? 0x36 : 0x3A))) << 16);
+    const U second = (lengthwise ? static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x) : static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z)) - (static_cast<U>(SW(s + (lengthwise ? 0x36 : 0x3A))) << 16);
     if (Abs(second) <= along) return true;
     return Abs(second - 0x10000u) <= along;
 }
@@ -907,25 +907,25 @@ struct Variants {
 };
 void StartLid(const Variants& t) {
     unsigned char* s = S();
-    const std::int32_t v = SW(s + 0x36);
-    s[8] = W(s + 0x3A) == 0 ? 1 : 0;
+    const std::int32_t v = static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(s)->x_whole));
+    s[8] = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole) == 0 ? 1 : 0;
     if (v < 0 || v >= static_cast<std::int32_t>(t.count))
         bof3::Fatal("%s: the variant +0x36 is %d, past the %u of its tables - the original reads the .data after "
                     "(docs/effect_5e.md section 6)",
                     t.who, v, t.count);
     const U i = static_cast<U>(v);
     s = S();
-    SetWord(s + 0x36, B(t.cells + 2 * i));
-    SetWord(s + 0x3A, B(t.cells + 2 * i + 1));
-    SetWord(s + 0x3E, W(At(t.heights + 2 * i)));
-    if (t.words) SetUL(s + 0x20, UL(t.words + 4 * i));
-    SetWord(s + 0x2E, W(At(t.pages + 2 * i)));
-    SetWord(s + 0x32, B(t.lids + i));
-    SetWord(s + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, B(t.cells + 2 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, B(t.cells + 2 * i + 1));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, W(At(t.heights + 2 * i)));
+    if (t.words) rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20, UL(t.words + 4 * i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e, W(At(t.pages + 2 * i)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key, B(t.lids + i));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     Step();
     s = S();
     if (LeaderAt(s, 0x8000, 0x10000)) {
-        SetWord(s + 0x30, 0x80);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0x80);
         S()[2] = 3;
     }
 }
@@ -949,25 +949,25 @@ void WaitNear() {
 // 0 with a lid (+0x32), else -1.
 int Open() {
     unsigned char* s = S();
-    SetWord(s + 0x30, W(s + 0x30) + 0x10);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) + 0x10);
     s = S();
-    if (SW(s + 0x30) >= 0x80) {
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30)) >= 0x80) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
         s = S();
     }
-    return W(s + 0x32) != 0 ? 0 : -1;
+    return static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) != 0 ? 0 : -1;
 }
 // Sub-state 4 of both: +0x30 down 0x10; at 0 or below, sound 0x201 unless
 // Field_Request is set and +2 = 1.
 int Close() {
     unsigned char* s = S();
-    SetWord(s + 0x30, W(s + 0x30) - 0x10);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) - 0x10);
     s = S();
-    if (SW(s + 0x30) <= 0) {
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30)) <= 0) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x201);
         S()[2] = 1;
     }
-    return W(S() + 0x32) != 0 ? 0 : -1;
+    return static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key) != 0 ? 0 : -1;
 }
 
 // The lid's texture: the dword `index` of the table (entry 0 is the leaves'
@@ -989,22 +989,22 @@ void Leaf(U i, U signs) {
     unsigned char* const s = S();
     if (s[8]) {
         const U sign = SB(signs + i);
-        const U base = (i + W(s + 0x36)) << 7;
-        const U a = base - W(s + 0x30) * sign - 0x4040u;
-        SetWord(v + 0x10, a);
-        SetWord(v + 0x0, a);
-        const U b = base - W(s + 0x30) * sign - 0x3FC0u;
-        SetWord(v + 0x18, b);
-        SetWord(v + 0x8, b);
+        const U base = (i + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole)) << 7;
+        const U a = base - static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) * sign - 0x4040u;
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, a);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, a);
+        const U b = base - static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) * sign - 0x3FC0u;
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, b);
     } else {
         const U sign = SB(signs + i);
-        const U base = (W(s + 0x3A) - i) << 7;
-        const U a = base + W(s + 0x30) * sign - 0x3F40u;
-        SetWord(v + 0x12, a);
-        SetWord(v + 0x2, a);
-        const U b = base + W(s + 0x30) * sign - 0x3FC0u;
-        SetWord(v + 0x1A, b);
-        SetWord(v + 0xA, b);
+        const U base = (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole) - i) << 7;
+        const U a = base + static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) * sign - 0x3F40u;
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, a);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, a);
+        const U b = base + static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) * sign - 0x3FC0u;
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, b);
     }
 }
 
@@ -1013,16 +1013,16 @@ void LidCorners(const unsigned char* s) {
     unsigned char* const v = Vtx();
     if (s[8]) {
         const U a = (W(s + 0x36) << 7) - 0x40C0u, b = (W(s + 0x36) << 7) - 0x4040u;
-        SetWord(v + 0x10, a);
-        SetWord(v + 0x0, a);
-        SetWord(v + 0x18, b);
-        SetWord(v + 0x8, b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, a);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, a);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, b);
     } else {
         const U a = (W(s + 0x3A) << 7) - 0x4040u, b = (W(s + 0x3A) << 7) - 0x40C0u;
-        SetWord(v + 0x12, a);
-        SetWord(v + 0x2, a);
-        SetWord(v + 0x1A, b);
-        SetWord(v + 0xA, b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, a);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, a);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, b);
     }
 }
 
@@ -1033,16 +1033,16 @@ void CellEdge(const unsigned char* s) {
     unsigned char* const v = Vtx();
     if (s[8]) {
         const U y = (W(s + 0x3A) << 7) - 0x3FC0u;
-        SetWord(v + 0x1A, y);
-        SetWord(v + 0x12, y);
-        SetWord(v + 0xA, y);
-        SetWord(v + 0x2, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
     } else {
         const U x = (W(s + 0x36) << 7) - 0x3FC0u;
-        SetWord(v + 0x18, x);
-        SetWord(v + 0x10, x);
-        SetWord(v + 0x8, x);
-        SetWord(v + 0x0, x);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->x, x);
     }
 }
 
@@ -1099,33 +1099,33 @@ extern "C" void __cdecl EffectKind18Sub25_Draw(int dy) {
     unsigned char* s = S();
     unsigned char* const v = Vtx();
     CellEdge(s);
-    const U low = W(s + 0x3E) - 0x180u;
-    SetWord(v + 0xC, low);
-    SetWord(v + 0x4, low);
-    const U high = W(s + 0x3E);
-    SetWord(v + 0x1C, high);
-    SetWord(v + 0x14, high);
+    const U low = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole) - 0x180u;
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, low);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, low);
+    const U high = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, high);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, high);
     for (U i = 0; i < 2; ++i) {
         unsigned char* const p = TexturedQuad();
         Leaf(i, at::kSub25Textures);
         Project4(p);
         SH_CALL(Gte_PrimDepths4_10)(p);
         s = S();
-        const U word = (static_cast<U>(SW(s + 0x2E)) + i) | (static_cast<U>(s[8]) << 21) | 0x14500000u;
+        const U word = (static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_2e))) + i) | (static_cast<U>(s[8]) << 21) | 0x14500000u;
         SH_CALL(Prim_SetTexture)(word, p, 1);
         LinkAtRecord(dy, 0x48);
     }
     s = S();
-    if (W(s + 0x32) == 0) return;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) == 0) return;
     unsigned char* const p = TexturedQuad();
     s = S();
     LidCorners(s);
-    const U lid = W(s + 0x3E) - 0x140u;
-    SetWord(v + 0xC, lid);
-    SetWord(v + 0x4, lid);
+    const U lid = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole) - 0x140u;
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, lid);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, lid);
     Project4(p);
     SH_CALL(Gte_PrimDepths4_10)(p);
-    const U texture = LidTexture("EffectKind18Sub25_Draw", at::kSub25Textures, at::kSub25TextureCount, SW(S() + 0x32));
+    const U texture = LidTexture("EffectKind18Sub25_Draw", at::kSub25Textures, at::kSub25TextureCount, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->draw_key)));
     SH_CALL(Prim_SetTexture)(texture, p, 1);
     LinkAtRecord(0, 0x48);
 }
@@ -1168,29 +1168,29 @@ extern "C" void __cdecl EffectKind18Sub26_Draw(int dy) {
     unsigned char* s = S();
     unsigned char* const v = Vtx();
     CellEdge(s);
-    const U low = W(s + 0x3E) - W(s + 0x2E);
-    SetWord(v + 0xC, low);
-    SetWord(v + 0x4, low);
-    const U high = W(s + 0x3E);
-    SetWord(v + 0x1C, high);
-    SetWord(v + 0x14, high);
+    const U low = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole) - static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, low);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, low);
+    const U high = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, high);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, high);
     for (U i = 0; i < 2; ++i) {
         unsigned char* const p = TexturedQuad();
         Leaf(i, at::kSub26Textures);
         Project4(p);
         SH_CALL(Gte_PrimDepths4_10)(p);
         s = S();
-        const U word = (UL(s + 0x20) + i) | (static_cast<U>(s[8]) << 21);
+        const U word = (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20) + i) | (static_cast<U>(s[8]) << 21);
         SH_CALL(Prim_SetTexture)(word, p, 1);
         LinkAtRecord(dy, 0x48);
     }
     s = S();
-    if (W(s + 0x32) == 0) return;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->draw_key) == 0) return;
     unsigned char* const p = TexturedQuad();
     LidCorners(S());
     Project4(p);
     SH_CALL(Gte_PrimDepths4_10)(p);
-    const U texture = LidTexture("EffectKind18Sub26_Draw", at::kSub26Textures, at::kSub26TextureCount, SW(S() + 0x32));
+    const U texture = LidTexture("EffectKind18Sub26_Draw", at::kSub26Textures, at::kSub26TextureCount, static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectObject>(S())->draw_key)));
     SH_CALL(Prim_SetTexture)(texture, p, 1);
     LinkAtRecord(0, 0x48);
 }
@@ -1210,12 +1210,12 @@ extern "C" void __cdecl EffectKind18Sub39_Run(void) {
 // draw of the halves (0, -2); clear: +0x30 0, +2 up, the draws (0, 1), (1, 1).
 extern "C" void __cdecl EffectKind18Sub39_Start(void) {
     if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub39Flag)) {
-        SetWord(S() + 0x30, 0x80);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0x80);
         S()[2] = 3;
         SH_CALL(EffectKind18Sub39_Draw)(0, -2);
         return;
     }
-    SetWord(S() + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, 0);
     Step();
     SH_CALL(EffectKind18Sub39_Draw)(0, 1);
     SH_CALL(EffectKind18Sub39_Draw)(1, 1);
@@ -1236,9 +1236,9 @@ extern "C" void __cdecl EffectKind18Sub39_WaitFlag(void) {
 // -1), (1, 1).
 extern "C" void __cdecl EffectKind18Sub39_Open(void) {
     unsigned char* s = S();
-    SetWord(s + 0x30, W(s + 0x30) + 8);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30) + 8);
     s = S();
-    if (SW(s + 0x30) >= 0x80) s[2] = static_cast<unsigned char>(s[2] + 1);
+    if (static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::EffectWork>(s)->work_30)) >= 0x80) s[2] = static_cast<unsigned char>(s[2] + 1);
     SH_CALL(EffectKind18Sub39_Draw)(0, -1);
     SH_CALL(EffectKind18Sub39_Draw)(1, 1);
 }

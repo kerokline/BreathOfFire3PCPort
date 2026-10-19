@@ -10,8 +10,8 @@
 namespace effect_6d::at {
 
 // --- cells -------------------------------------------------------------------------
-constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio +0x34: the leader's x, 16.16
-constexpr std::uint32_t kLeaderZ = 0x802D78;        // ObjTrio +0x38: its z, 16.16
+// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio +0x34: the leader's x, 16.16
+// kLeaderZ: now rv::As<records::PartyMember>(ObjTrio)->z (records.h). ObjTrio +0x38: its z, 16.16
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0: the bit row Flags_Set / _Clear take
 constexpr std::uint32_t kKind2ZCell = 0x905E62;     // Field_Kind2Z's high word (s16): sub-kind 0x62's first row
 constexpr std::uint32_t kKind2XCell = 0x905E66;     // Field_Kind2X's high word (s16): its first column

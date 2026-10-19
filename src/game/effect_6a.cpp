@@ -125,14 +125,14 @@ constexpr std::int32_t kFront = 1, kFront3E = -2;
 // already at the front: the slide `open` and +2 = 3. Answers whether it was.
 bool PlaceCells(const char* who, U cells, unsigned room, std::int32_t delta, U open) {
     unsigned char* const s = S();
-    s[8] = Word(s + 0x3A) == 0 ? 1 : 0;
+    s[8] = rv::As<records::EffectObject>(s)->z_whole == 0 ? 1 : 0;
     const U v = Variant(who, s, room);
-    SetWord(s + 0x36, At(cells + 2 * v)[0]);
-    SetWord(s + 0x3A, At(cells + 2 * v + 1)[0]);
-    SetWord(s + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(cells + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(cells + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     s[2] = static_cast<unsigned char>(s[2] + 1);
     if (!LeaderAt(s, delta, 0x8000, 0x10000)) return false;
-    SetWord(s + 0x30, open);
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, open);
     s[2] = 3;
     return true;
 }
@@ -151,7 +151,7 @@ void WaitNear(std::int32_t delta) {
 // words), +2 up.
 void Open(bool up) {
     unsigned char* const s = S();
-    SetWord(s + 0x30, Word(s + 0x30) + (up ? 0x20u : 0xFFE0u));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 + (up ? 0x20u : 0xFFE0u));
     const std::int32_t slide = S16(S() + 0x30);
     if (up ? slide >= 0x100 : slide <= -0x100) S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -165,7 +165,7 @@ void WaitFar(std::int32_t delta) {
 // unless a message is up, +2 = 1 (read after the sound).
 void Close(bool up) {
     unsigned char* const s = S();
-    SetWord(s + 0x30, Word(s + 0x30) + (up ? 0xFFE0u : 0x20u));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, rv::As<records::EffectWork>(s)->work_30 + (up ? 0xFFE0u : 0x20u));
     const std::int32_t slide = S16(S() + 0x30);
     if (up ? slide > 0 : slide < 0) return;
     if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(at::kSoundShut);
@@ -212,25 +212,25 @@ void GroundDraw(U (*texture)(const unsigned char* s)) {
     SH_CALL(Gpu_SetShadeTex)(p, 0);
     {
         const unsigned char* const s = S();
-        const U slide = Word(s + 0x30);
+        const U slide = rv::As<records::EffectWork>(s)->work_30;
         if (s[8] != 0) {
-            const U y = (static_cast<U>(Word(s + 0x3A)) << 7) - 0x3FC0u;
-            SetWord(v + 0x1A, y);
-            SetWord(v + 0x12, y);
-            SetWord(v + 0xA, y);
-            SetWord(v + 2, y);
-            const U x = (static_cast<U>(Word(s + 0x36)) << 7) - slide;
+            const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - 0x3FC0u;
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
+            const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - slide;
             SetWord(v + 0x10, x - 0x3F40u);
             SetWord(v, x - 0x3F40u);
             SetWord(v + 0x18, x - 0x4040u);
             SetWord(v + 8, x - 0x4040u);
         } else {
-            const U x = (static_cast<U>(Word(s + 0x36)) << 7) - 0x3FC0u;
-            SetWord(v + 0x18, x);
-            SetWord(v + 0x10, x);
-            SetWord(v + 8, x);
+            const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - 0x3FC0u;
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x);
             SetWord(v, x);
-            const U y = (static_cast<U>(Word(s + 0x3A)) << 7) + slide;
+            const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) + slide;
             SetWord(v + 0x12, y - 0x3F40u);
             SetWord(v + 2, y - 0x3F40u);
             SetWord(v + 0x1A, y - 0x4040u);
@@ -239,14 +239,14 @@ void GroundDraw(U (*texture)(const unsigned char* s)) {
     }
     const long x0 = Ground(v), y0 = Ground(v + 2);
     long h = SH_CALL(AreaMap_Elevation)(x0, y0);
-    SetWord(v + 4, Above(0x40, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, Above(0x40, h));
     h = SH_CALL(AreaMap_Elevation)(x0, y0);
     const long x1 = Ground(v + 8), y1 = Ground(v + 0xA);
-    SetWord(v + 0x14, Above(0x180, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, Above(0x180, h));
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
-    SetWord(v + 0xC, Above(0x40, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, Above(0x40, h));
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
-    SetWord(v + 0x1C, Above(0x180, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, Above(0x180, h));
     Project(p);
     const U word = texture(S());
     SH_CALL(Prim_SetTexture)(word, p, 1);
@@ -268,9 +268,9 @@ extern "C" void __cdecl EffectKind18Sub4A_WaitCond(void) {
     {
         unsigned char* s = S();
         if ((s[0xB] & Cond_ByteFE) != 0 && Field_Request != 2) {
-            SH_CALL(AreaMap_SetByte)(Word(s + 0x36), Word(s + 0x3A), at::kMapOpen);
+            SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, rv::As<records::EffectObject>(s)->z_whole, at::kMapOpen);
             s = S();
-            SH_CALL(AreaMap_SetByte)(Word(s + 0x36), (Word(s + 0x3A) + 1u) & 0xFFFFu, at::kMapOpen);
+            SH_CALL(AreaMap_SetByte)(rv::As<records::EffectObject>(s)->x_whole, (rv::As<records::EffectObject>(s)->z_whole + 1u) & 0xFFFFu, at::kMapOpen);
             if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(at::kSoundOpen);
             S()[2] = static_cast<unsigned char>(S()[2] + 1);
         }
@@ -309,34 +309,34 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
                         "EffectKind18Sub3E_States (docs/effect_6a.md section 7)",
                         side, at::kSidesRoom, (unsigned)at::kSub2DSides);
         const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub2DSides)[side])));
-        const U slide = sign * Word(s + 0x30);
+        const U slide = sign * rv::As<records::EffectWork>(s)->work_30;
         if (s[8] != 0) {
-            const U y = (static_cast<U>(Word(s + 0x3A)) << 7) - 0x3FC0u;
-            SetWord(v + 0x1A, y);
-            SetWord(v + 0x12, y);
-            SetWord(v + 0xA, y);
-            SetWord(v + 2, y);
-            const U x = (static_cast<U>(Word(s + 0x36)) << 7) - slide;
+            const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - 0x3FC0u;
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
+            const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - slide;
             SetWord(v + 0x10, x - 0x3F40u);
             SetWord(v, x - 0x3F40u);
             SetWord(v + 0x18, x - 0x4040u);
             SetWord(v + 8, x - 0x4040u);
         } else {
-            const U x = (static_cast<U>(Word(s + 0x36)) << 7) - 0x3FC0u;
-            SetWord(v + 0x18, x);
-            SetWord(v + 0x10, x);
-            SetWord(v + 8, x);
+            const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - 0x3FC0u;
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x);
             SetWord(v, x);
-            const U y = slide + (static_cast<U>(Word(s + 0x3A)) << 7);
+            const U y = slide + (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7);
             SetWord(v + 0x12, y - 0x3F40u);
             SetWord(v + 2, y - 0x3F40u);
             SetWord(v + 0x1A, y - 0x4040u);
             SetWord(v + 0xA, y - 0x4040u);
         }
-        SetWord(v + 0xC, Word(s + 0x3E) - 0x140u);
-        SetWord(v + 4, Word(s + 0x3E) - 0x140u);
-        SetWord(v + 0x1C, Word(s + 0x3E));
-        SetWord(v + 0x14, Word(s + 0x3E));
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, rv::As<records::EffectObject>(s)->height_whole - 0x140u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, rv::As<records::EffectObject>(s)->height_whole - 0x140u);
+        SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_whole);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectObject>(s)->height_whole);
     }
     Project(p);
     {
@@ -365,13 +365,13 @@ extern "C" void __cdecl EffectKind18Sub2D_Place(void) {
     const U v = Variant("EffectKind18Sub2D_Place", s, at::kSub2DVariants);
     s[0xA] = static_cast<unsigned char>((static_cast<signed char>(z) >> 1) & 1);
     s[8] = static_cast<unsigned char>(~z & 1);
-    SetWord(s + 0x36, At(at::kSub2DCells + 2 * v)[0]);
-    SetWord(s + 0x3A, At(at::kSub2DCells + 2 * v + 1)[0]);
-    SetWord(s + 0x3E, Word(At(at::kSub2DHeights + 2 * v)));
-    SetWord(s + 0x30, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->x_whole, At(at::kSub2DCells + 2 * v)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->z_whole, At(at::kSub2DCells + 2 * v + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(s)->height_whole, Word(At(at::kSub2DHeights + 2 * v)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0);
     s[2] = static_cast<unsigned char>(s[2] + 1);
     if (LeaderAt(s, kFront, 0x8000, 0x10000)) {
-        SetWord(s + 0x30, 0x100);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, 0x100);
         s[2] = 3;
     }
     SH_CALL(EffectKind18Sub2D_Draw)();

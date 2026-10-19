@@ -275,7 +275,7 @@ extern "C" void __cdecl LeaderPanel_S2Begin(void) {
 extern "C" void __cdecl LeaderPanel_S2Wait(void) {
     const unsigned pressed = Input_Pressed;
     if (Field_ConfirmButtons & pressed) {
-        SetL(at::kEff2Word, 0);
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects + 0x100)->work_18, 0);
         Sound(0x200);
         Effect1e_PoseWas = 0xFF;
         Effect1e_Pose = 0xFF;
@@ -297,7 +297,7 @@ extern "C" void __cdecl LeaderPanel_S2Wait(void) {
 extern "C" void __cdecl LeaderPanel_S2Anim(void) {
     Tick();
     unsigned char* const s = S();
-    if (Word(s + 0x58) != 6) return;
+    if (rv::As<records::PartyMember>(s)->script_pos != 6) return;
     Effect_Objects[1] = static_cast<unsigned char>(Effect_Objects[1] + 1);
     s[0xB] = 0;
     S()[7] = 0;
@@ -317,7 +317,7 @@ extern "C" void __cdecl LeaderPanel_S2Steer(void) {
         Tick();
         return;
     }
-    if (L(at::kEff0StepZ) == 0 && (Input_Pressed & Sigma(0x20))) {
+    if (rv::As<records::EffectObject>(Effect_Objects)->step_y == 0 && (Input_Pressed & Sigma(0x20))) {
         const std::int32_t y = L(at::kEff0StepY);
         if (y > 0x110000) SetL(at::kEff0StepY, static_cast<U>(y) - 0x4000u);
     }
@@ -394,7 +394,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
         Effect_Objects[0x181] = 7;
         return;
     }
-    const std::int32_t z = L(at::kEff0Z);
+    const std::int32_t z = rv::As<records::EffectObject>(Effect_Objects)->z;
     if (z >= 0x3E8000) {
         Sound(0x203);
         unsigned char* const t = S();
@@ -405,15 +405,15 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
         return;
     }
     bool pose = true;
-    const auto ground = static_cast<short>(SH_CALL(AreaMap_Elevation)(L(at::kEff0X), z));
+    const auto ground = static_cast<short>(SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(Effect_Objects)->x, z));
     if (static_cast<short>(Word(At(Effect_Objects_addr + 0x3e))) <= ground) {
         const unsigned r = static_cast<unsigned>(SH_CALL(Rand)()) & 0xF;
         if (static_cast<signed char>(RecordB()[0x11]) > static_cast<signed char>(r) && (Frame_Counter & 0xF) == 0) {
-            const std::int32_t z2 = L(at::kEff0Z);
+            const std::int32_t z2 = rv::As<records::EffectObject>(Effect_Objects)->z;
             const std::int32_t camera = Field_Kind2Z;
             SetL(at::kEff0StepX, 0);
             SetL(at::kEff0StepY, 0);
-            SetL(at::kEff0StepZ, 0);
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->step_y, 0);
             if (camera < z2) Field_Kind2Z = z2;
             unsigned char* const t = S();
             MoveScript_F3Divisor = 0x10;
@@ -421,7 +421,7 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             S()[3] = 0;
             return;
         }
-        const long h = SH_CALL(AreaMap_Elevation)(L(at::kEff0X), L(at::kEff0Z));
+        const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(Effect_Objects)->x, rv::As<records::EffectObject>(Effect_Objects)->z);
         SetWord(At(Effect_Objects_addr + 0x3e), static_cast<unsigned>(h));
     }
     SH_AT(void (__cdecl*)(), at::kHoldTest)();
@@ -436,13 +436,13 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             Effect1e_Pose = 1;
             SetL(at::kEff0StepX, 0xFFFFF000u);
             SetL(at::kEff0StepY, 0x1000);
-            SetL(at::kEff0StepZ, static_cast<U>(Long(r + 8)));
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->step_y, static_cast<U>(Long(r + 8)));
             animation = 6;
         } else if (held & 0x2000) {
             Effect1e_Pose = 1;
             SetL(at::kEff0StepX, 0x1000);
             SetL(at::kEff0StepY, 0x1000);
-            SetL(at::kEff0StepZ, static_cast<U>(Long(RecordB() + 8)));
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->step_y, static_cast<U>(Long(RecordB() + 8)));
             animation = 5;
         } else if (held & Sigma(0x20)) {
             const unsigned char sloped = B(0x903850);
@@ -451,13 +451,13 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
                 unsigned char* const r = RecordB();
                 Effect1e_Pose = 2;
                 SetL(at::kEff0StepY, 0x2000);
-                SetL(at::kEff0StepZ, static_cast<U>(Long(r + 8)));
+                rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->step_y, static_cast<U>(Long(r + 8)));
                 animation = 4;
             } else {
                 unsigned char* const r = RecordB();
                 Effect1e_Pose = 1;
                 SetL(at::kEff0StepY, 0x1000);
-                SetL(at::kEff0StepZ, static_cast<U>(Long(r + 4)));
+                rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->step_y, static_cast<U>(Long(r + 4)));
                 animation = 3;
             }
         } else if (B(0x903850) != 0) {
@@ -465,28 +465,28 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             Effect1e_Pose = 2;
             SetL(at::kEff0StepX, 0);
             SetL(at::kEff0StepY, 0x1000);
-            SetL(at::kEff0StepZ, static_cast<U>(Long(r + 8)));
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->step_y, static_cast<U>(Long(r + 8)));
             animation = 4;
         } else {
             unsigned char* const r = RecordB();
             Effect1e_Pose = 0;
             SetL(at::kEff0StepX, 0);
             SetL(at::kEff0StepY, 0);
-            SetL(at::kEff0StepZ, static_cast<U>(Long(r)));
+            rv::Store<std::uint32_t>(rv::As<records::EffectObject>(Effect_Objects)->step_y, static_cast<U>(Long(r)));
             animation = 3;
         }
         Animate(animation);
     }
     PoseSound();
     const std::int32_t step = L(at::kEff0StepY);
-    const std::int32_t z3 = L(at::kEff0Z);
+    const std::int32_t z3 = rv::As<records::EffectObject>(Effect_Objects)->z;
     Field_Kind2Z = z3;
     MoveScript_F3Divisor = static_cast<short>(step != 0 ? step >> 8 : 0x10);
     if (z3 < 0x150000)
         Field_Kind2Z = 0x150000;
     else if (z3 > 0x3C0000)
         Field_Kind2Z = 0x3C0000;
-    const std::int32_t x = L(at::kEff0X);
+    const std::int32_t x = rv::As<records::EffectObject>(Effect_Objects)->x;
     const std::int32_t dx = L(at::kEff0StepX);
     if ((x <= 0x80000 && dx < 0) || (x >= 0x120000 && dx > 0)) SetL(at::kEff0StepX, 0);
     if (step > 0) Tick();
@@ -596,7 +596,7 @@ extern "C" void __cdecl LeaderPanel_S4Blink(void) {
 // pose 1 by its +4; nothing: the rest pose. Each way ends in 0x52B1B0.
 extern "C" void __cdecl LeaderPanel_S4Run(void) {
     Effect1e_PoseWas = Effect1e_Pose;
-    if (L(at::kEff0Z) >= 0x3E8000) {
+    if (rv::As<records::EffectObject>(Effect_Objects)->z >= 0x3E8000) {
         Effect_Objects[0x206] = 4;
         Effect_Objects[0x81] = 4;
         Effect_Objects[1] = 0;
