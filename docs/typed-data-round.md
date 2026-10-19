@@ -93,6 +93,13 @@ with one lacking a `ctype`): the entry, with the width the readers use
 an **address-to-name check**: a module constant whose address has a
 `[[data]]` entry is flagged by CS as retirable. SG does not touch sites.
 
+SG's widths are measured by `tools/data_widths.py`. It skips the 7
+`[[block]]` base addresses but not scalars inside a block's records: 73 SG
+entries sat inside MsgBoxState, WindowRecords, EnemyWorkingRecords and
+CharacterRecords at the first SG commit (counted by the SG verification,
+2026-10-19; 74 after its fixes, over the same address ranges). They become
+fields of SD's record types in stage C, not before.
+
 ## 3. Stage B (after SD and SG merge; file groups in parallel)
 
 The conversion, by file group as the takeover rounds split the sources
