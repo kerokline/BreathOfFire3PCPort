@@ -331,3 +331,192 @@ until it exists a quick-load across a sound-bank change is unsafe.
   save-anywhere is not.
 - **Reversible?** The keys are ours; without them nothing of the game
   changes. The ordinary save list (`BISLPS0?.DAT`) is draft B's (QM).
+
+## QM. The quick menu (F5) and the two lists
+
+The quicksave round's group QM (branch `quicksave/qm`, 2026-10-19):
+`src/game/quick_menu.{h,cpp}` (new), the lists' and the slot draw's bodies in
+`src/game/save_menu.{h,cpp}`, one line each in `Game_WndProc` and twice in the
+loop (`win_main.cpp`), `InputScript_PausedWord` (`input_script.{h,cpp}`),
+`Snapshot_LastLine` (`snapshot.{h,cpp}`), `QuickMenu_Inject` last in
+`InjectAll`, and `tools/recipes/quick_menu.txt`.
+
+### QM.1 The two lists
+
+`Save_ListFiles` (`0x4548B0`) and `Save_ReadSummaries` (`0x588DC0`) keep
+their entries; their bodies are `save_menu::ListFiles(pattern, table,
+bounded, close)` and `save_menu::ReadSummaries(table, summaries, read,
+context)`, and `SaveMenu_DrawSlots` (`0x588D20`) is
+`save_menu::DrawSlotsOver(x, y, highlight, summaries, first word, cursor
+word)`.
+
+| List | Pattern | Table, summaries | Read through | Bound |
+|---|---|---|---|---|
+| the saves (the original's callers: `TitleFlow_Begin`, `LoadMenu_List`, the inn's `FieldSave_Begin`, DIV-0002's `Save_WriteFile`) | `BISLPS0?.DAT` (the original: `BISLPS??.DAT` at `0x65289C`) | `Save_Directory` `0x929F40`, the summaries `0x905BC0` | `Save_ReadFile` into `Save_Staging`, as the original | sixteen, the rest not stored and logged |
+| the quicksaves (the quick menu, at every F5) | `BISLPS1?.DAT` | two tables of ours in `bof3x.dll`'s `.bss` (`0x180` and `0x1C0` bytes), outside the span and in no participant: a listing, read fresh at each F5 | `fopen` / `fseek(0xCA0)` / `fread(0x1C)`: nothing of the game's file layer (`File_Slots`) or `Save_Staging`, both in the span | sixteen, the rest not stored and logged; the search closed |
+
+`name[7]` stays the slot digit in both: `BISLPS13.DAT` is quick slot 3.
+A name of `0x14` bytes or more with its NUL (it would run into the entry's
+size word) is not stored either, logged. The save list's `_findclose` is
+still missing (the original's handle leak, [`save-files.md`](save-files.md)
+2, kept); the quick list closes its search.
+
+The switch: `SaveLists`, a `PatchBytes` of a flag of ours set by
+`SaveLists_Arm` from `QuickMenu_Inject`, after every module's self-test. So
+`save_menu`'s fuzz still compares Capcom's `Save_ListFiles` (the pattern
+`0x65289C`, unbounded) and `BOF3X_ORIGINAL=SaveLists` keeps it in play.
+
+### QM.2 The menu
+
+- **F5** (`QuickMenu_Key`, the first line of `WM_KEYDOWN`): opens the menu
+  wherever the loop runs (`Frame_Counter` non-zero: not during the intro
+  videos), setting `Game_Paused` and calling `Sound_PauseAll` as F9 does
+  (already paused by F9: left so). A second F5 closes it. While it is open
+  **every key is the menu's** and does nothing - F6, F7, F8, F9 included -
+  since any key would otherwise end the pause (and F9 quit to the title).
+- **Each paused frame** (`QuickMenu_Frame`, in the loop's paused branch in
+  place of the pause lines): the pad through `Pad_Read` (zero while another
+  window is in front, DIV-0033), or the playing recipe's word
+  (`InputScript_PausedWord`: the paused latch steps a recipe but drops its
+  words, so without it a recipe could not drive the menu); then the draw:
+  `Menu_DrawBlackScreen`, `QUICKLOAD` in the 8 x 8 font, `DrawSlotsOver` at
+  (`0x20`, `0x30`) over the quick summaries with the menu's own first-shown
+  and cursor words. The game's `0x9036D4`, `0x8034D0`, `0x6BC881` and the
+  summaries `0x905BC0` are not touched; the draws write what any paused
+  frame's draw writes (the packet pool, the ordering table, the text scratch
+  `0x904BA0`).
+- **Slots**: up / down over 0..15 (empty ones included, as the save menu's
+  cursor), on the press and then every 4 frames once held 20; the three shown
+  follow the cursor. Slot 0 is `BISLPS10.DAT`, the newest: F6's rotation
+  keeps the history newest first. Confirm opens the choice window; cancel
+  closes the menu.
+- **Choices**: `SaveMenu_DrawChoices`' window (`Menu_DrawBox` inside
+  `Menu_DrawBorder`, rows 20 apart, `Menu_DrawHand` at x + `0xC`) sized for
+  its rows, beside the slot, the labels `LOAD` / `BACK` in the 8 x 8 font (the
+  font of the slot numbers and of `ID` / `FILE NOT FOUND`). The system
+  messages `0xD2..0xD4` that `SaveMenu_DrawChoices` itself draws are the
+  inn's three choices, so its draw is reused, not called. An empty slot
+  offers `BACK` only. Back or cancel returns to the slots.
+- **Confirm and cancel** are the game's words 7 and 8
+  (`Field_ConfirmButtons` `0x90358E`, `Field_CancelButtons` `0x903590`), as
+  `FieldSave_Choose` tests them: they follow sigma (DIV-0133) and the
+  release's buttons, cross on PSX-West / PSP-EU since PR #85.
+- **A press that leaves the menu acts at its release** (Load, and cancel on
+  the slots): the game's next latch would otherwise see the button newly
+  down against the `Input_Held` from before the pause - or, after a load, the
+  quicksave's.
+- **Load** asks `Snapshot_RequestLoad(0x10 + cursor)` (SN's entry already
+  takes any slot `0x10..0x1F`) and stays open and paused for that frame; the
+  core runs the load at the loop's point, and `QuickMenu_AfterPoint` (right
+  after `Snapshot_Pending`) reads `Snapshot_LastLine()`. Restored: the span
+  holds the take's `Game_Paused`, 0 (a take is never made paused: F6's
+  `WM_KEYDOWN` ends a pause first, and the menu takes F6), so the menu
+  closes and `Sound_ResumeAll` runs. **Refused** ("Quickload refused: ...",
+  the game untouched): the menu stays, with `REFUSED: <the reason>` above the
+  slots. The core's overlay line alone would not show: with our back buffer
+  the loop's `Overlay` writes it to the log, not the screen.
+
+`Snapshot_LastLine` is the one addition to SN's files: an accessor of the
+line `Show` last wrote (`g_overlay`).
+
+### QM.3 Measured (2026-10-19)
+
+- **Self-test** (`QuickMenu_Inject`: `BOF3X_SELFTEST_ONLY=1` in the exe
+  host, `BOF3X_SHADOW=quick_menu` hosted; both from ini-less copies in
+  `C:\Users\kerok\q_qm`, exit 0). Two temporary directories of `0xCBC`-byte
+  files whose bytes are each one's own mark (no save data):
+  A = `BISLPS00..0F`, `BISLPS0G`, `BISLPS10`, `13`, `1F`;
+  B = `BISLPS10..1F`, `BISLPS1G`. The save list of A: 16, every entry
+  `BISLPS0?`, `0G` logged and not stored, slot *n*'s summary file *n*'s; the
+  quick list of A: 3, slots 0, 3 and F shown, the rest empty; of B: 16 of 17,
+  `1G` logged. Each table has `0x40` guard bytes after its sixteen entries,
+  unwritten every time. **The trap, measured**: B listed with the original's
+  `BISLPS??.DAT` shows `BISLPS10.DAT`'s summary as save slot 0; A has 20
+  matches under it. The cursor, stepped as a value over slots 0, 3, F
+  present: down 1..15 with the first shown `max(0, n - 2)`, no step past F or
+  0, up keeping the cursor among the three, a held down = 1 + 3 steps in 30
+  frames, a button held at the open not counted, `BACK` alone on an empty
+  slot, `LOAD` acting only at the confirm's release (slot 3), cancel closing
+  at its release.
+- **The fuzz**: `BOF3X_SHADOW=save_menu` hosted, 66,000 rounds (1,500 per
+  kind, 44 kinds), 0 mismatches with the bodies split.
+- **Live** (exe host, the PC install hard-linked in `q_qm\game`, the `town`
+  save in slot 0, `en-US`, ini-less launcher): the capture form of
+  `quick_menu.txt`. F5 on the field with no quicksave: `open, 0 quicksaves
+  listed`, three empty slots; F5 again closed it. Three F6, 20 frames apart,
+  at `Frame_Counter` 617, 637, 657: three files of 3,944,065 bytes; F5: `open,
+  3 quicksaves listed`; down, confirm: `LOAD` / `BACK` beside slot 1;
+  confirm: `Load of BISLPS11.DAT asked at Frame_Counter 727`, then `F7
+  BISLPS11.DAT restored at Frame_Counter 728: back to Frame_Counter 637` -
+  the second take, as slot 1 should be; the field ran on.
+- Captures (outside the tree): `C:\Users\kerok\q_qm\caps`.
+
+### QM.4 Ledger draft B (for the coordinator to number)
+
+- **Subsystem:** the save list (`Save_ListFiles` `0x4548B0`,
+  `Save_ReadSummaries` `0x588DC0`, ours in `src/game/save_menu.cpp`;
+  [`save-files.md`](save-files.md) 2).
+- **Original behaviour:** `Save_ListFiles` lists `BISLPS??.DAT` into the
+  sixteen `0x18`-byte entries of `Save_Directory`, with no bound, and
+  `Save_ReadSummaries` gives each entry the slot of its `name[7]`, one hex
+  digit.
+- **New behaviour:** the save list is `BISLPS0?.DAT`, at most sixteen
+  entries (a seventeenth match, or a name too long for an entry, is logged
+  and not stored); the two functions take the pattern and the tables, so
+  the quick menu lists `BISLPS1?.DAT` into tables of its own. The title's
+  load menu and the inn's save menu never list a quicksave.
+- **Why:** the quicksaves (`BISLPS10..1F.DAT`, draft A) match the
+  original's pattern and their `name[7]` is a hex digit: `BISLPS10.DAT` would
+  show as save slot 0 when slot 0 holds no save (and loading it would open
+  `BISLPS00.DAT`, which is not there), and sixteen saves plus any quicksave
+  overrun the table. The owner, 2026-10-17: the quicksaves are reached from
+  F5 only (round doc 5, answer 2).
+- **Also in the PSX version?** No: a memory card has no file listing of
+  this kind; the PC port's own.
+- **Verification:** QM.3.
+- **Reversible?** `BOF3X_ORIGINAL=SaveLists` (the original's pattern and its
+  unbounded table, quicksaves included in the list).
+
+### QM.5 Ledger draft D (for the coordinator to number)
+
+- **Subsystem:** the window procedure's F5 and the loop's paused branch
+  (`Game_WndProc` `0x4FC6F0`, `WinMain` `0x4FCB00`, ours in `win_main.cpp`;
+  `src/game/quick_menu.cpp`).
+- **Original behaviour:** F5 did nothing but end a pause, as any key does.
+- **New behaviour:** F5 pauses and opens the quick menu (QM.2): the sixteen
+  quicksaves newest first, three shown, Load or Back per slot (Back only on
+  an empty one); Load restores that quicksave to the frame, a refusal keeps
+  the menu open with its reason; a second F5 or cancel closes it. The menu
+  reads the pad itself while paused and draws with the save menu's pieces;
+  it writes none of the game's menu words.
+- **Why:** the owner's design of 2026-10-17 (round doc 5, answers 2, 3 and
+  5): F5 the only way to the quicksaves, load only, sixteen slots newest
+  first, three shown as the save menu shows them.
+- **Also in the PSX version?** No quicksaves there; ours.
+- **Verification:** QM.3.
+- **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
+  replaced; without the key nothing changes).
+
+### QM.6 The defect fixed on the way (for the coordinator to number)
+
+**`Save_ListFiles` has no bound** (Capcom's, the PC port's code;
+[`save-files.md`](save-files.md) 2): every match of `BISLPS??.DAT` is stored,
+`0x18` bytes apart from `Save_Directory` `0x929F40`, so a seventeenth file
+writes past the table's `0x180` bytes towards `Save_Staging` `0x92A0E0`, and
+each name is copied whole (`strlen + 1`) into a `0x14`-byte field. A player
+reaches it with sixteen saves and one more matching file (a copy, or since
+draft A any quicksave). Fixed by draft B's bound under `SaveLists`; measured
+by the self-test (QM.3: twenty matches in A, sixteen stored, the guard
+unwritten). The search handle's leak is not fixed.
+
+### QM.7 Open, for the owner
+
+- The labels are English in the 8 x 8 font (`QUICKLOAD`, `LOAD`, `BACK`,
+  the refusal) on every language. The empty slot's text is the game's own
+  (`0x669CCC`: Chinese on an `en-US` run, as the save menu shows it there).
+  A localised set would go through the overlay's text, as DIV-0038's pause
+  lines do.
+- No sound for the cursor or the choices: the game's sound is paused while
+  the menu is open, and a cue would write `Sound_Channels` in the span.
+- After a menu load, `Sound_ResumeAll` runs after the participants'
+  restores: SP-A's participant decides what is playing then.
