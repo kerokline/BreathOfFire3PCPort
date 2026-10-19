@@ -38,7 +38,6 @@ void SetW(uint32_t a, unsigned v) { move_script::SetWord(At(a), v); }
 uint32_t L(uint32_t a) { return static_cast<uint32_t>(move_script::Long(At(a))); }
 void SetL(uint32_t a, uint32_t v) { move_script::SetLong(At(a), static_cast<int32_t>(v)); }
 void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<int32_t>(v)); }
-uint32_t L(const unsigned char* p) { return static_cast<uint32_t>(move_script::Long(p)); }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
 unsigned char* Row() { return At(AreaW0c_FlagRow); }

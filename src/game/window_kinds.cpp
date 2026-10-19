@@ -46,7 +46,6 @@ unsigned char* Rec() {
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
 static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
-static records::WindowRecord* WinRec() { return Win(Rec()); }
 
 short S(const unsigned char* at) { return static_cast<short>(Word(at)); }
 

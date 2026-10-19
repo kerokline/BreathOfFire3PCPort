@@ -47,7 +47,6 @@ unsigned char* Rec() {
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
 static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
-static records::WindowRecord* WinRec() { return Win(Rec()); }
 
 // DIV-0041 (psp-widescreen-placements.md 2.6, the owner's answer of
 // 2026-10-12): the side placements move out to the wide frame's edges. The

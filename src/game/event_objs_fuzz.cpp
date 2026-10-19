@@ -44,7 +44,6 @@ void SetWord(unsigned char* p, unsigned v) {
     const auto w = static_cast<std::uint16_t>(v);
     std::memcpy(p, &w, sizeof w);
 }
-void SetLong(unsigned char* p, std::uint32_t v) { std::memcpy(p, &v, sizeof v); }
 
 std::uint32_t g_rng = 0x6B43A9B5u;
 std::uint32_t Next() {
