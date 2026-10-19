@@ -267,7 +267,7 @@ S38_EXPORT void __cdecl Tempest_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[9] = 8;
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -408,7 +408,7 @@ S38_EXPORT void __cdecl TempestGust_Launch(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     {
         unsigned char* const s = Sc();
@@ -427,7 +427,7 @@ S38_EXPORT void __cdecl TempestGust_Launch(void) {
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Long(Mem(TempestGust_Angles_addr + 4u * s[8])));
+        rv::Store(rv::As<records::BattleTask>(s)->step_y, Long(Mem(TempestGust_Angles_addr + 4u * s[8])));
     }
     Sc()[0xB] = Word(Mem(kAbility)) == 0xDF ? 0 : 0x10;
     Sc()[9] = 0;
@@ -441,13 +441,13 @@ S38_EXPORT void __cdecl TempestGust_Drift(void) {
     {
         unsigned char* const s = Sc();
         unsigned char* const x = s + 0x2E;
-        const int v = Sin(Long(s + 0x14));
+        const int v = Sin(rv::As<records::BattleTask>(s)->step_y);
         AddWord(x, static_cast<std::uint32_t>(Mul12(v, 8)));
     }
     {
         unsigned char* const s = Sc();
         unsigned char* const y = s + 0x30;
-        const int v = Cos(Long(s + 0x14));
+        const int v = Cos(rv::As<records::BattleTask>(s)->step_y);
         AddWord(y, static_cast<std::uint32_t>(Mul12(v, 8)));
     }
     Inc(Sc()[9]);
@@ -462,13 +462,13 @@ S38_EXPORT void __cdecl TempestGust_Fly(void) {
     {
         unsigned char* const s = Sc();
         unsigned char* const x = s + 0x2E;
-        const int v = Sin(Long(s + 0x14));
+        const int v = Sin(rv::As<records::BattleTask>(s)->step_y);
         AddWord(x, static_cast<std::uint32_t>(Mul12(v, 24)));
     }
     {
         unsigned char* const s = Sc();
         unsigned char* const y = s + 0x30;
-        const int v = Cos(Long(s + 0x14));
+        const int v = Cos(rv::As<records::BattleTask>(s)->step_y);
         AddWord(y, static_cast<std::uint32_t>(Mul12(v, 24)));
     }
     Inc(Sc()[9]);
@@ -496,7 +496,7 @@ S38_EXPORT void __cdecl TempestGust_Draw(void) {
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     static constexpr std::uint32_t kCorners[4] = {0xF78, 0x888, 0x88, 0x773};
     for (unsigned c = 0; c < 4; ++c) {
-        const std::uint32_t angle = static_cast<std::uint32_t>(Long(Sc() + 0x14)) + kCorners[c];
+        const std::uint32_t angle = static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_y) + kCorners[c];
         SetSD(4, angle);
         int v = Sin(static_cast<int>(angle));
         PutFloat(p + 8 + 0x10 * c, Mul12(v, SD(0)) + S16(Sc() + 0x2E));
@@ -867,7 +867,7 @@ S38_EXPORT void __cdecl Magic225Shard_Launch(void) {
         ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->step_z) +
                                                     static_cast<std::uint32_t>(Long(rec + 0x38)));
     }
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(rec + 0x3C)) + 0x1000000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(rec + 0x3C)) + 0x1000000u));
     {
         const unsigned char* const o = Owner();
         const unsigned char* const s = Sc();
@@ -877,7 +877,7 @@ S38_EXPORT void __cdecl Magic225Shard_Launch(void) {
         const auto dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) -
                                                   static_cast<std::uint32_t>(ts->x));
         const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-        SetLong(Sc() + 0x14, heading);
+        rv::Store(rv::Current<records::BattleTask>()->step_y, heading);
     }
     {
         unsigned char* const s = Sc();
@@ -894,8 +894,8 @@ S38_EXPORT void __cdecl Magic225Shard_Launch(void) {
         unsigned char* const s = Sc();
         s[0x25] = 0x1D;
         s[0x26] = 0x80;
-        SetLong(s + 0x40, 0x10000);
-        SetLong(s + 0x44, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_x, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_y, 0x10000);
         s[0x48] = 2;
         s[0x27] = 2;
         s[0x28] = 1;
@@ -906,7 +906,7 @@ S38_EXPORT void __cdecl Magic225Shard_Launch(void) {
         s[0x5F] = 0;
         s[0x2A] = static_cast<unsigned char>(s[8] & 1);
         s[0x29] = 2;
-        SetWord(s + 0x2C, 0);
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
         s[0x2B] = 1;
     }
     MH_CALL(Sprite_SetAnimation)(0);
@@ -925,13 +925,13 @@ S38_EXPORT void __cdecl Magic225Shard_Fly(void) {
     {
         unsigned char* const s = Sc();
         unsigned char* const x = s + 0x34;
-        const int v = Sin(Long(s + 0x14));
+        const int v = Sin(rv::As<records::BattleTask>(s)->step_y);
         AddLong(x, Mul(v, rv::Current<records::BattleTask>()->step_x));
     }
     {
         unsigned char* const s = Sc();
         unsigned char* const z = s + 0x38;
-        const int v = Cos(Long(s + 0x14));
+        const int v = Cos(rv::As<records::BattleTask>(s)->step_y);
         AddLong(z, Mul(v, rv::Current<records::BattleTask>()->step_x));
     }
     if ((Mem(Frame_Counter_addr)[0] & 1) == 0) return;
@@ -955,13 +955,13 @@ S38_EXPORT void __cdecl Magic225Shard_Fall(void) {
     {
         unsigned char* const s = Sc();
         unsigned char* const x = s + 0x34;
-        const int v = Sin(Long(s + 0x14));
+        const int v = Sin(rv::As<records::BattleTask>(s)->step_y);
         AddLong(x, static_cast<std::uint32_t>(Shl(v, 2)));
     }
     {
         unsigned char* const s = Sc();
         unsigned char* const z = s + 0x38;
-        const int v = Cos(Long(s + 0x14));
+        const int v = Cos(rv::As<records::BattleTask>(s)->step_y);
         AddLong(z, static_cast<std::uint32_t>(Shl(v, 2)));
     }
     Dec(Sc()[9]);
@@ -1076,7 +1076,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Launch(void) {
     Sc()[8] = Owner()[8];
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    SetLong(Sc() + 0x14, 0x9000000);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x9000000);
     Turn(Sc());
     {
         unsigned char* const s = Sc();
@@ -1091,11 +1091,11 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Launch(void) {
     {
         const std::uint32_t height = static_cast<std::uint32_t>(Long(Owner() + 0x3C));
         unsigned char* const s = Sc();
-        SetLong(s + 0x3C, static_cast<std::int32_t>(height + static_cast<std::uint32_t>(Long(s + 0x14))));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(height + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y)));
     }
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFFFF000u));
     rv::Current<records::BattleTask>()->step_z = 0;
-    SetLong(Sc() + 0x20, 0x300000);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 0x300000);
     Turn(Sc());
     {
         unsigned char* const s = Sc();
@@ -1103,8 +1103,8 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Launch(void) {
         s[0x26] = 0;
         s[0x27] = 0x1A;
         s[0x28] = 1;
-        SetLong(s + 0x40, 0x10000);
-        SetLong(s + 0x44, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_x, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_y, 0x10000);
         s[0x48] = 0;
         s[0x5D] = 0;
         s[0x5E] = 0;
@@ -1112,7 +1112,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Launch(void) {
         s[0x5C] = 0;
         s[0x2A] = 0;
         s[0x29] = 4;
-        SetWord(s + 0x2C, 0);
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
         s[0x2B] = 0;
         s[0x24] = 0;
     }
@@ -1144,12 +1144,12 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Fall(void) {
     }
     {
         unsigned char* const s = Sc();
-        AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(Long(s + 0x20)));
+        AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20));
     }
     {
         const std::uint32_t height = static_cast<std::uint32_t>(Long(Owner() + 0x3C));
         unsigned char* const s = Sc();
-        SetLong(s + 0x3C, static_cast<std::int32_t>(height + static_cast<std::uint32_t>(Long(s + 0x14))));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(height + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y)));
     }
     AddB(Sc()[0xB], 6);
     if ((Mem(Frame_Counter_addr)[0] & 3) == 0) {
@@ -1332,14 +1332,14 @@ S38_EXPORT void __cdecl MeteorStrikeChip_Launch(void) {
         const std::uint32_t base = static_cast<std::uint32_t>(Long(Owner() + 0x38));
         rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(base + Mul(v, 24)));
     }
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Long(Mem(MeteorStrikeChip_Lifts_addr + 4u * (s[0xB] & 3u))));
+        rv::Store(rv::As<records::BattleTask>(s)->step_y, Long(Mem(MeteorStrikeChip_Lifts_addr + 4u * (s[0xB] & 3u))));
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x20, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(DivPow2(Long(s + 0x14), 4))));
+        rv::Store(rv::As<records::BattleTask>(s)->work_20, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(DivPow2(rv::As<records::BattleTask>(s)->step_y, 4))));
     }
     Sc()[0x5E] = 0x10;
     Sc()[9] = 0x20;
@@ -1367,11 +1367,11 @@ void ChipDrift(int scale) {
     }
     {
         unsigned char* const s = Sc();
-        AddLong(s + 0x3C, static_cast<std::uint32_t>(Long(s + 0x14)));
+        AddLong(s + 0x3C, static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y));
     }
     {
         unsigned char* const s = Sc();
-        AddLong(s + 0x14, static_cast<std::uint32_t>(Long(s + 0x20)));
+        AddLong(s + 0x14, static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20));
     }
 }
 
@@ -1383,11 +1383,11 @@ S38_EXPORT void __cdecl MeteorStrikeChip_Rise(void) {
     if (Sc()[9] != 0) return;
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Long(Mem(MeteorStrikeChip_Lifts_addr + 4u * (s[0xB] & 3u))));
+        rv::Store(rv::As<records::BattleTask>(s)->step_y, Long(Mem(MeteorStrikeChip_Lifts_addr + 4u * (s[0xB] & 3u))));
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x20, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(DivPow2(Long(s + 0x14), 3))));
+        rv::Store(rv::As<records::BattleTask>(s)->work_20, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(DivPow2(rv::As<records::BattleTask>(s)->step_y, 3))));
     }
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
@@ -1479,8 +1479,8 @@ S38_EXPORT void __cdecl MeteorStrikeTrail_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) - 0x3000000u));
-    SetLong(Sc() + 0x14, 0x60000);
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) - 0x3000000u));
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x60000);
     Sc()[9] = 8;
     Sc()[0xA] = 0x10;
     Inc(Sc()[2]);
@@ -1491,7 +1491,7 @@ void TrailFollow() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     unsigned char* const s = Sc();
-    AddLong(s + 0x3C, 0u - static_cast<std::uint32_t>(Long(s + 0x14)));
+    AddLong(s + 0x3C, 0u - static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y));
 }
 
 // original 0x4FAC40: at the rock, its height down by +0x14; +9 up; at 0x18 +2 on.

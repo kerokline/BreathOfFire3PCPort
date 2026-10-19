@@ -188,7 +188,7 @@ void LightClutRow(unsigned runs, const bool* stp) {
 void AtOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
 }
 
 }  // namespace
@@ -225,7 +225,7 @@ S27_EXPORT void __cdecl Burn_Start(void) {
     const unsigned char* const src = Source();
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 8; ++i) {
         const unsigned slot = NewTask(0x2F);
@@ -280,8 +280,8 @@ S27_EXPORT void __cdecl BurnFlame_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     AtOwner();
-    SetLong(Sc() + 0x14, 0);
-    SetLong(Sc() + 0x20, 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Sc()[0xA] = 2;
     Sc()[0xB] = 0x10;
     Sc()[9] = 0x20;
@@ -293,9 +293,9 @@ namespace {
 // speed (dwords).
 void Climb() {
     unsigned char* const s = Sc();
-    SetLong(s + 0x20, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x20)) + s[0xA]));
-    SetLong(s + 0x14, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x14)) +
-                                                static_cast<std::uint32_t>(Long(s + 0x20))));
+    rv::Store(rv::As<records::BattleTask>(s)->work_20, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20) + s[0xA]));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y) +
+                                                static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20)));
 }
 }  // namespace
 
@@ -501,13 +501,13 @@ void Aim() {
     Sc()[8] = Owner()[8];
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetSW(0xC, Word(Sc() + 0x2E));
-    SetSW(0xE, Word(Sc() + 0x30));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+    SetSW(0xE, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     MH_CALL(MagicFx_FormationOffset)();
     AtOwner();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + Word(Sc() + 0xC));
-    SetWord(Sc() + 0x30, Word(Sc() + 0x30) + Word(Sc() + 0x10));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_z));
     const unsigned char* const s = Sc();
     const short x = S16(s + 0x2E), y = S16(s + 0x30);
     SetSW(8, static_cast<std::uint16_t>(x));
@@ -517,7 +517,7 @@ void Aim() {
     const float first = static_cast<float>(SS(0xC) - x);
     const float second = static_cast<float>(SS(0xE) - y);
     const int angle = MH_CALL(Math_Ratan2)(first, second);
-    SetLong(Sc() + 0x14, angle);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, angle);
 }
 
 }  // namespace
@@ -687,9 +687,9 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Draw(void) {
     ModeCommit(3, 0x35);
     {
         const unsigned char* const s = Sc();
-        SetSW(8, Word(s + 0x2E));
-        SetSW(0xA, Word(s + 0x30));
-        SetSW(2, Word(s + 0x14));
+        SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
+        SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
     }
     for (int k = 1; k < Sc()[0xA] + 1; ++k) {
         SetSW(0xC, SW(8));
@@ -798,7 +798,7 @@ S27_EXPORT void __cdecl WhelpBreathSprite_Start(void) {
     s[0x2A] = static_cast<unsigned char>(Owner()[8] & 1);
     s[0x29] = 3;
     s[0x24] = 4;
-    SetWord(s + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 0;
     switch (s[0xB]) {
     case 0:
@@ -908,7 +908,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
                                                         static_cast<std::uint32_t>(Long(s + 0xC))));
             SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x10)) +
                                                         static_cast<std::uint32_t>(tr->z)));
-            SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 8)) +
+            rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 8)) +
                                                         static_cast<std::uint32_t>(tr->height)));
             s[8] = r[8];
             Call0(bof3::addr::WhelpBreathFlames_PushMatrix);
@@ -1013,7 +1013,7 @@ S27_EXPORT void __cdecl WhelpBreathGlow_Draw(void) {
         s[8] = r[8];
         ts->x = tr->x;
         ts->z = tr->z;
-        SetWord(s + 0x3E, Word(r + 0x3E));
+        rv::Store<unsigned>(ts->height_whole, Word(r + 0x3E));
         MH_CALL(MagicFx_PushActorMatrix)();
         Call0(bof3::addr::WhelpBreathGlow_DrawFan);
         MH_CALL(Gte_PopMatrix)();
@@ -1256,15 +1256,15 @@ S27_EXPORT void __cdecl DragonBreathBeam_Draw(void) {
     ModeCommit(3, 0x35);
     {
         const unsigned char* const s = Sc();
-        SetSW(8, Word(s + 0x2E));
-        SetSW(0xA, Word(s + 0x30));
+        SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
     unsigned cur = 0;
     for (int k = 1; k < Sc()[0xA] + 1; ++k) {
         SetSW(0xC, SW(8));
         SetSW(0xE, SW(0xA));
-        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(Long(Sc() + 0x14)), 12)));
-        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(Long(Sc() + 0x14)), 12)));
+        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(rv::Current<records::BattleTask>()->step_y), 12)));
+        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(rv::Current<records::BattleTask>()->step_y), 12)));
         {
             const unsigned char* const s = Sc();
             const unsigned b = s[0xB];
@@ -1349,12 +1349,12 @@ void DrawLines(unsigned n, unsigned side) {
     ModeCommit(3, 0x35);
     {
         const unsigned char* const s = Sc();
-        SetSW(8, Word(s + 0x2E));
-        SetSW(0xA, Word(s + 0x30));
+        SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
     for (unsigned i = (n & 0xFF) + 1; i != 0; --i) {
-        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(Long(Sc() + 0x14)), 12)));
-        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(Long(Sc() + 0x14)), 12)));
+        AddSW(8, static_cast<std::uint32_t>(Mul12(Sin(rv::Current<records::BattleTask>()->step_y), 12)));
+        AddSW(0xA, static_cast<std::uint32_t>(Mul12(Cos(rv::Current<records::BattleTask>()->step_y), 12)));
     }
     SetVW(8, SW(8));
     SetVW(0xA, SW(0xA));
@@ -1378,7 +1378,7 @@ void DrawLines(unsigned n, unsigned side) {
         SetSW(0, step);
         if (walked < 12) {
             AddSW(8, static_cast<std::uint32_t>(SinK(Long(Sc() + 0x14), 0)));
-            AddSW(0xA, static_cast<std::uint32_t>(CosK(Long(Sc() + 0x14), 0)));
+            AddSW(0xA, static_cast<std::uint32_t>(CosK(rv::Current<records::BattleTask>()->step_y, 0)));
             SetSW(0xC, SinShlW(SS(4), 5, 8));
         } else {
             walked = 0;
@@ -1387,7 +1387,7 @@ void DrawLines(unsigned n, unsigned side) {
                 SetSW(8, static_cast<std::uint32_t>(Mul12(v, 12)) + VW(8));
             }
             {
-                const int c = Cos(Long(Sc() + 0x14));
+                const int c = Cos(rv::Current<records::BattleTask>()->step_y);
                 const std::uint16_t x = SW(8);
                 const std::uint32_t y = static_cast<std::uint32_t>(Mul12(c, 12)) + VW(0xA);
                 SetVW(8, x);

@@ -228,7 +228,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
     Inc(Sc()[1]);
@@ -242,7 +242,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
         c[9] = 0;
         tc->x = ts->x;
         tc->z = ts->z;
-        SetWord(c + 0x3E, Word(s + 0x3E));
+        rv::Store<unsigned>(tc->height_whole, ts->height_whole);
         Inc(s[0xB]);
     }
     for (unsigned i = 0; i < 8; ++i) {
@@ -256,7 +256,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
         c[9] = static_cast<unsigned char>((i >> 2) * 0x28 + 0x11);
         tc->x = ts->x;
         tc->z = ts->z;
-        SetLong(c + 0x3C, Long(s + 0x3C));
+        rv::Store(tc->height, ts->height);
         Inc(s[0xB]);
     }
     MH_CALL(Sound_PlayById)(0x100);
@@ -759,7 +759,7 @@ S35_EXPORT void __cdecl Cure_Start(void) {
         Sc()[8] = src[8];
         rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
         rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-        SetLong(Sc() + 0x3C, Long(src + 0x3C));
+        rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sc()[0xB] = 0;
@@ -1125,7 +1125,7 @@ S35_EXPORT void __cdecl Benediction_Start(void) {
         r[2] = 0;
     }
     MH_CALL(MagicFx_CenterOnSide)();
-    SetLong(Sc() + 0x3C, Add32(Long(Sc() + 0x3C), 0xC00000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::Current<records::BattleTask>()->height, 0xC00000));
     for (unsigned k = 0x1A00; k < 0x1B00; ++k)
         Gfx_ClutStrip[k] = static_cast<unsigned short>(Gfx_ClutStripSource[k] | 0x8000);
     Gfx_ClutStrip[0x1A00] = Gfx_ClutStripSource[0x1A00];
@@ -1244,7 +1244,7 @@ S35_EXPORT void __cdecl BenedictionChild_Start(void) {
         Sc()[8] = m[8];
         rv::Store(rv::Current<records::BattleTask>()->x, tm->x);
         rv::Store(rv::Current<records::BattleTask>()->z, tm->z);
-        SetLong(Sc() + 0x3C, tm->height);
+        rv::Store(rv::Current<records::BattleTask>()->height, tm->height);
     }
     Sc()[0xB] = 0;
     Sc()[9] = 8;
@@ -1369,11 +1369,11 @@ void BlessMoteOrbit() {
 // +0x3C += +0x14.
 void BlessMoteRise() {
     unsigned char* const s = Sc();
-    const std::int32_t d = Long(s + 0x20);
-    const std::int32_t h = Long(s + 0x14);
+    const std::int32_t d = rv::As<records::BattleTask>(s)->work_20;
+    const std::int32_t h = rv::As<records::BattleTask>(s)->step_y;
     if (d >= h) return;
-    SetLong(s + 0x14, Add32(h, -d));
-    SetLong(Sc() + 0x3C, Add32(Long(Sc() + 0x3C), Long(Sc() + 0x14)));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, Add32(h, -d));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::Current<records::BattleTask>()->height, rv::Current<records::BattleTask>()->step_y));
 }
 }  // namespace
 
@@ -1385,12 +1385,12 @@ S35_EXPORT void __cdecl BenedictionMote_Launch(void) {
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 8;
     BlessMoteOrbit();
-    SetLong(Sc() + 0x3C, Add32(Long(Owner() + 0x3C), 0x800000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(Long(Owner() + 0x3C), 0x800000));
     {
         const std::uint32_t rnd = RandCall();
-        SetLong(Sc() + 0x14, static_cast<std::int32_t>(((rnd & 3) + 2) << 20));
+        rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<std::int32_t>(((rnd & 3) + 2) << 20));
     }
-    SetLong(Sc() + 0x20, DivPow2(Long(Sc() + 0x14), 4));
+    rv::Store(rv::Current<records::BattleTask>()->work_20, DivPow2(rv::Current<records::BattleTask>()->step_y, 4));
     for (unsigned k = 0x5D; k < 0x60; ++k) {
         const std::uint32_t rnd = RandCall();
         Sc()[k] = static_cast<unsigned char>((rnd & 7) + 6);

@@ -181,7 +181,7 @@ void LoadPaletteOfCurrent() {
 void AtOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
 }
 
 // A new kind-1 child (0x44) owned by this task with phase `phase`, counted in
@@ -508,7 +508,7 @@ S33_EXPORT void __cdecl AccessionCtl_Start(void) {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
-        SetWord(Sc() + 0x3E, U(ground) & 0xFFFF);
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, U(ground) & 0xFFFF);
     }
     Sc()[0xB] = 0;
     Sc()[9] = 4;
@@ -1173,7 +1173,7 @@ S33_EXPORT void __cdecl AccessionRing_Run(void) {
 // original 0x4ECBC0: at the owner; +0x14 0x100, +9 0x10, +2 on.
 S33_EXPORT void __cdecl AccessionRing_Start(void) {
     AtOwner();
-    SetLong(Sc() + 0x14, 0x100);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
 }
@@ -1181,7 +1181,7 @@ S33_EXPORT void __cdecl AccessionRing_Start(void) {
 // original 0x4ECC20: the radius +0x14 up by 0x80; at 0x400 +2 on.
 S33_EXPORT void __cdecl AccessionRing_Widen(void) {
     AddLong(Sc() + 0x14, 0x80);
-    if (Long(Sc() + 0x14) == 0x400) Inc(Sc()[2]);
+    if (rv::Current<records::BattleTask>()->step_y == 0x400) Inc(Sc()[2]);
 }
 
 namespace {
@@ -1312,7 +1312,7 @@ S33_EXPORT void __cdecl MightyChop_Throw(void) {
     Turn(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_x) + U(Long(source + 0x34))));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_z) + U(Long(source + 0x38))));
-    SetLong(Sc() + 0x3C, Long(source + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(source + 0x3C));
     MH_CALL(Sound_PlayById)(0x100);
     for (unsigned i = 0; i < 6; ++i) {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x52) & 0xFFu;
@@ -1382,9 +1382,9 @@ S33_EXPORT void __cdecl MightyChopBlade_Start(void) {
     Turn(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(rv::Current<records::BattleTask>()->step_x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(rv::Current<records::BattleTask>()->step_z)));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
-    SetLong(Sc() + 0x40, 0x8000);
-    SetLong(Sc() + 0x44, 0x8000);
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x8000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x8000);
     Sc()[0x48] = 2;
     Sc()[0x25] = 0x1D;
     Sc()[0x26] = 0;
@@ -1393,7 +1393,7 @@ S33_EXPORT void __cdecl MightyChopBlade_Start(void) {
     Sc()[0x2A] = static_cast<unsigned char>(Sc()[8] & 1);
     Sc()[0x29] = 3;
     Sc()[0x24] = 4;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     MH_CALL(Sprite_SetAnimation)(0);
     MH_CALL(Sprite_ScriptTick)();

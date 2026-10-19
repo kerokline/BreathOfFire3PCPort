@@ -173,15 +173,15 @@ Handler TableEntry(const char* who, std::uint32_t table, unsigned entries, unsig
 // the direction (Depress).
 void Swing() {
     unsigned char* sc = Sprite_Current;
-    const std::int32_t w = Long(sc + 0x64);
+    const std::int32_t w = static_cast<std::int32_t>(rv::As<records::BattleTask>(sc)->angle[0]);
     if (sc[0xB] == 0) {
-        SetLong(sc + 0x64, w + 8);
+        rv::Store<std::int32_t>(rv::As<records::BattleTask>(sc)->angle[0], w + 8);
         sc = Sprite_Current;
-        if (Long(sc + 0x64) >= 0x80) sc[0xB] = 1;
+        if (static_cast<std::int32_t>(rv::As<records::BattleTask>(sc)->angle[0]) >= 0x80) sc[0xB] = 1;
     } else {
-        SetLong(sc + 0x64, w - 8);
+        rv::Store<std::int32_t>(rv::As<records::BattleTask>(sc)->angle[0], w - 8);
         sc = Sprite_Current;
-        if (Long(sc + 0x64) <= -0x80) sc[0xB] = 0;
+        if (static_cast<std::int32_t>(rv::As<records::BattleTask>(sc)->angle[0]) <= -0x80) sc[0xB] = 0;
     }
 }
 
@@ -218,7 +218,7 @@ S25_EXPORT void __cdecl SpellSleep_Start(void) {
     child[8] = caster[8];
     tchild->x = Field_Kind2X;
     tchild->z = Field_Kind2Z;
-    SetLong(child + 0x3C, Long(sc + 0x3C) + 0x4000000);
+    rv::Store(tchild->height, rv::As<records::BattleTask>(sc)->height + 0x4000000);
     MH_CALL(Sound_PlayById)(0x100);
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
@@ -728,7 +728,7 @@ S25_EXPORT void __cdecl SpellConfuse_Start(void) {
     child[8] = source[8];
     tchild->x = Long(source + 0x34);
     tchild->z = Long(source + 0x38);
-    SetLong(child + 0x3C, Long(source + 0x3C));
+    rv::Store(tchild->height, Long(source + 0x3C));
     sc[0xB] = 0;
     Bump(Sprite_Current[1]);
 }
@@ -760,15 +760,15 @@ S25_EXPORT void __cdecl SpellConfuse_ChildInit(void) {
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     tsc->x = tsc->x + tsc->step_x;
     tsc->z = tsc->z + tsc->step_z;
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + 0xC0u);
+    rv::Store<unsigned>(tsc->height_whole, tsc->height_whole + 0xC0u);
     tsc->work_18 = tsc->x;
     tsc->work_1c = tsc->z;
-    SetLong(sc + 0x20, Long(sc + 0x3C));
+    rv::Store(tsc->work_20, tsc->height);
     const unsigned char actor = Mem(at::kActor)[0];
     const unsigned char* const record = actor <= 2 ? PartyOf(actor) : EnemyOf(actor);
     tsc->x = Long(record + 0x34);
     tsc->z = Long(record + 0x38);
-    SetLong(sc + 0x3C, Long(record + 0x3C) + 0xC00000);
+    rv::Store(tsc->height, Long(record + 0x3C) + 0xC00000);
     sc[0xB] = 0;
     sc[9] = 0;
     sc[0xA] = 0;
@@ -785,12 +785,12 @@ S25_EXPORT void __cdecl SpellConfuse_ChildFly(void) {
     Bump(Sprite_Current[0xA]);
     const unsigned char* sc = Sprite_Current;
     MH_AT(void (__cdecl*)(int, int, int, int, int), bof3::addr::MagicFx_StepTowardPoint)(
-        (Long(sc + 0x18) >> 9) - 0x4000, (Long(sc + 0x1C) >> 9) - 0x4000, Long(sc + 0x20) >> 17, 0, 0x20);
+        (Long(sc + 0x18) >> 9) - 0x4000, (Long(sc + 0x1C) >> 9) - 0x4000, rv::As<records::BattleTask>(sc)->work_20 >> 17, 0, 0x20);
     sc = Sprite_Current;
     if (MH_AT(int (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t),
               bof3::addr::MagicFx_NearPoint3D)(static_cast<std::uint32_t>(Long(sc + 0x18)),
                                                static_cast<std::uint32_t>(Long(sc + 0x1C)),
-                                               static_cast<std::uint32_t>(Long(sc + 0x20)), 0x8000) != 0)
+                                               static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_20), 0x8000) != 0)
         Bump(Sprite_Current[1]);
 }
 
@@ -1027,7 +1027,7 @@ S25_EXPORT void __cdecl SpellDepress_Start(void) {
     Sprite_Current[9] = 2;
     const unsigned char* sc = Sprite_Current;
     short rect[4];
-    rect[0] = static_cast<short>(Word(sc + 0x2E) - sc[9]);
+    rect[0] = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x) - sc[9]);
     rect[1] = static_cast<short>(Gfx_BufferIndex * 0xF0 + Word(sc + 0x30) - sc[9]);
     rect[2] = static_cast<short>(sc[9] * 2);
     rect[3] = static_cast<short>(sc[9] * 2);
@@ -1036,14 +1036,14 @@ S25_EXPORT void __cdecl SpellDepress_Start(void) {
     const std::uint32_t corners = bof3::addr::SpellDepress_Corners;
     unsigned corner;
     if (Mem(at::kTarget)[0] & 0x40) {
-        SetWord(Sprite_Current + 0x2E, Word(Mem(corners + (Mem(kSideCorner)[0]) * 8)));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(kSideCorner)[0]) * 8)));
         corner = Mem(kSideCorner)[0];
     } else {
-        SetWord(Sprite_Current + 0x2E, Word(Mem(corners + (Mem(kSideCorner)[0] ^ 2u) * 8)));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Mem(corners + (Mem(kSideCorner)[0] ^ 2u) * 8)));
         corner = Mem(kSideCorner)[0] ^ 2u;
     }
-    SetWord(Sprite_Current + 0x30, Word(Mem(corners + 4 + corner * 8)));
-    SetLong(Sprite_Current + 0x64, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Mem(corners + 4 + corner * 8)));
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->angle[0], 0);
     Bump(Sprite_Current[1]);
 }
 
@@ -1057,7 +1057,7 @@ S25_EXPORT void __cdecl SpellDepress_Open(void) {
         Sprite_Current[0xA] = 0x40;
         sc = Sprite_Current;
     }
-    MH_CALL(SpellDepress_DrawVortex)(Long(sc + 0x64));
+    MH_CALL(SpellDepress_DrawVortex)(static_cast<std::int32_t>(rv::As<records::BattleTask>(sc)->angle[0]));
 }
 
 // original 0x4D4BE0 (phase 2): +0xA down; when it was 0 the target flagged
@@ -1070,7 +1070,7 @@ S25_EXPORT void __cdecl SpellDepress_Hold(void) {
         MH_CALL(Battle_SetTargetFlags)(Mem(at::kTarget)[0], 0x10);
         Bump(Sprite_Current[1]);
     }
-    MH_CALL(SpellDepress_DrawVortex)(Long(Sprite_Current + 0x64));
+    MH_CALL(SpellDepress_DrawVortex)(static_cast<std::int32_t>(rv::Current<records::BattleTask>()->angle[0]));
     Swing();
 }
 
@@ -1086,7 +1086,7 @@ S25_EXPORT void __cdecl SpellDepress_Close(void) {
         MH_CALL(BattleTask_FreeCurrent)();
         return;
     }
-    MH_CALL(SpellDepress_DrawVortex)(Long(sc + 0x64));
+    MH_CALL(SpellDepress_DrawVortex)(static_cast<std::int32_t>(rv::As<records::BattleTask>(sc)->angle[0]));
     Swing();
 }
 
@@ -1135,7 +1135,7 @@ S25_EXPORT void __cdecl SpellDepress_DrawVortex(int step) {
     {
         const unsigned char* const sc = Sprite_Current;
         short rect[4];
-        rect[0] = static_cast<short>(Word(sc + 0x2E) - sc[9]);
+        rect[0] = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x) - sc[9]);
         rect[1] = static_cast<short>(Gfx_BufferIndex * 0xF0 + Word(sc + 0x30) - sc[9]);
         rect[2] = static_cast<short>(sc[9] * 2);
         rect[3] = static_cast<short>(sc[9] * 2);
@@ -1187,7 +1187,7 @@ S25_EXPORT void __cdecl SpellDepress_DrawVortex(int step) {
             const unsigned char* const inner_now = Mem(inner + 8 * now);
             const std::uint32_t tex_was = (was + static_cast<unsigned>(band_row)) << 3;
             const std::uint32_t tex_now = (static_cast<unsigned>(band_row) + now) << 3;
-            if (Long(Sprite_Current + 0x64) > 0) {
+            if (static_cast<std::int32_t>(rv::Current<records::BattleTask>()->angle[0]) > 0) {
                 VortexVertex(g, 8, f, 8, outer_was);
                 VortexVertex(g, 0x1C, f, 0x14, outer_now);
                 VortexVertex(g, 0x30, f, 0x20, inner_was);
@@ -1388,15 +1388,15 @@ S25_EXPORT void __cdecl SpellRagnarok_SpriteChild(void) {
 // scale +0x40 0x30000 / +0x44 0xC000, +0x48 2, +0x5C..+0x5F 0, +0x2A 0,
 // +0x29 2, word +0x2C 0, +0x2B 1 - and Sprite_SetAnimation(0); +2 on.
 S25_EXPORT void __cdecl SpellRagnarok_SpriteInit(void) {
-    SetWord(Sprite_Current + 0x2E, 0xA0);
-    SetWord(Sprite_Current + 0x30, 0x12C);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, 0xA0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, 0x12C);
     Sprite_Current[0x25] = 0x1D;
     Sprite_Current[0x26] = 0;
     Sprite_Current[0x27] = 0x1A;
     Sprite_Current[0x28] = 1;
     Sprite_Current[0x24] = 0x80;
-    SetLong(Sprite_Current + 0x40, 0x30000);
-    SetLong(Sprite_Current + 0x44, 0xC000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x30000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0xC000);
     Sprite_Current[0x48] = 2;
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
@@ -1404,7 +1404,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SpriteInit(void) {
     Sprite_Current[0x5C] = 0;
     Sprite_Current[0x2A] = 0;
     Sprite_Current[0x29] = 2;
-    SetWord(Sprite_Current + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sprite_Current[0x2B] = 1;
     MH_CALL(Sprite_SetAnimation)(0);
     Bump(Sprite_Current[2]);
@@ -1413,24 +1413,24 @@ S25_EXPORT void __cdecl SpellRagnarok_SpriteInit(void) {
 // The sprite's jitter: screen x 0x9F + Rand() & 3.
 void Jitter() {
     const int r = MH_CALL(Rand)();
-    SetWord(Sprite_Current + 0x2E, static_cast<unsigned>((r & 3) + 0x9F));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<unsigned>((r & 3) + 0x9F));
 }
 
 // original 0x4D58C0 (sprite phase 2): jitter; up 2; scale +0x44 up 0x2000; on
 // at 0x18000.
 S25_EXPORT void __cdecl SpellRagnarok_SpriteRise(void) {
     Jitter();
-    SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) - 2u);
-    SetLong(Sprite_Current + 0x44, Long(Sprite_Current + 0x44) + 0x2000);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) - 2u);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, rv::Current<records::BattleTask>()->scale_y + 0x2000);
     unsigned char* const sc = Sprite_Current;
-    if (Long(sc + 0x44) >= 0x18000) Bump(sc[2]);
+    if (rv::As<records::BattleTask>(sc)->scale_y >= 0x18000) Bump(sc[2]);
 }
 
 // original 0x4D5910 (sprite phase 3): jitter; up 4; below y 0xB2 the owner's
 // count +0xB down and on.
 S25_EXPORT void __cdecl SpellRagnarok_SpriteClimb(void) {
     Jitter();
-    SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) - 4u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) - 4u);
     if (S16(Sprite_Current + 0x30) >= 0xB2) return;
     unsigned char* const owner = Pointer(BattleE2_Owner_addr);
     owner[0xB] = static_cast<unsigned char>(owner[0xB] - 1);
@@ -1441,7 +1441,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SpriteClimb(void) {
 // count down and the slot freed.
 S25_EXPORT void __cdecl SpellRagnarok_SpriteLeave(void) {
     Jitter();
-    SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) - 2u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) - 2u);
     if (S16(Sprite_Current + 0x30) >= 0x80) return;
     unsigned char* const owner = Pointer(BattleE2_Owner_addr);
     owner[0xB] = static_cast<unsigned char>(owner[0xB] - 1);
@@ -1470,17 +1470,17 @@ S25_EXPORT void __cdecl SpellRagnarok_RingInit(void) {
     rv::Current<records::BattleTask>()->step_z = 0x60000;
     rv::Store(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->step_x + Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::Current<records::BattleTask>()->step_z + Field_Kind2Z);
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
-    SetLong(Sprite_Current + 0x14, 0x100);
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
     Sprite_Current[9] = 0x10;
     Bump(Sprite_Current[2]);
 }
 
 // original 0x4D5A50 (ring phase 1): radius up 0x40; on at 0xC00.
 S25_EXPORT void __cdecl SpellRagnarok_RingGrow(void) {
-    SetLong(Sprite_Current + 0x14, Long(Sprite_Current + 0x14) + 0x40);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, rv::Current<records::BattleTask>()->step_y + 0x40);
     unsigned char* const sc = Sprite_Current;
-    if (Long(sc + 0x14) == 0xC00) Bump(sc[2]);
+    if (rv::As<records::BattleTask>(sc)->step_y == 0xC00) Bump(sc[2]);
 }
 
 // original 0x4D5A70: a disc of 64 gouraud triangles of radius (the word) +0x14
@@ -1489,7 +1489,7 @@ S25_EXPORT void __cdecl SpellRagnarok_DrawDisc(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x55, 0);
     MH_CALL(Gfx_CommitPrim)(2, 0xC);
     const unsigned char* const sc = Sprite_Current;
-    SetWord(S(0), Word(sc + 0x14));
+    SetWord(S(0), static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->step_y));
     SetWord(S(4), static_cast<unsigned>(sc[9]) << 2);
     int s = MH_CALL(Math_Sin)(0);
     SetWord(V(0x10), static_cast<unsigned>(Sar12(Mul(s, S16(S(0))))));
@@ -1593,7 +1593,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SparkInit(void) {
     const std::uint32_t offsets = bof3::addr::SpellRagnarok_SparkOffsets;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(offsets + Sprite_Current[0xB] * 8u)) + Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(offsets + 4 + Sprite_Current[0xB] * 8u)) + Field_Kind2Z);
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     Sprite_Current[9] = 0x60;
     Sprite_Current[0xA] = 0x40;
     Bump(Sprite_Current[2]);

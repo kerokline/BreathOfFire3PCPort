@@ -248,8 +248,8 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             t[9] = nine;
             tt->x = te->x;
             tt->z = te->z;
-            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(te->height) + 0x800000u));
-            SetWord(t + 0x3E, Word(t + 0x3E) + Mem(kEnemyLift + e[0xF0] * kEnemyLiftStride)[0]);
+            rv::Store(tt->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(te->height) + 0x800000u));
+            rv::Store<unsigned>(tt->height_whole, tt->height_whole + Mem(kEnemyLift + e[0xF0] * kEnemyLiftStride)[0]);
             Bump(sc[0xB], 1);
         }
     } else {
@@ -267,7 +267,7 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             t[9] = nine;
             tt->x = m_rec->x;
             tt->z = m_rec->z;
-            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(m_rec->height) + 0x800000u));
+            rv::Store(tt->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(m_rec->height) + 0x800000u));
             Bump(sc[0xB], 1);
         }
     }
@@ -499,7 +499,7 @@ S20_EXPORT void __cdecl Magic087_OrbitSpin(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
     const int c = MH_CALL(Math_Cos)(Long(Scr(4)));
     rv::Store(rv::Current<records::BattleTask>()->z, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
-    SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     sc = Sprite_Current;
     if (sc[0xA] < 0x21) Bump(sc[0xA], 1);
     sc = Sprite_Current;
@@ -555,7 +555,7 @@ S20_EXPORT void __cdecl Magic087_RiseStart(void) {
 // original 0x4C3FE0: rise phase 1: 8 up (+0x3C less 0x80000), +9 up, +0xA
 // down; at 0 on and freed (the phase written, then cleared with +0..+4).
 S20_EXPORT void __cdecl Magic087_RiseStep(void) {
-    SetLong(Sprite_Current + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x3C)) + 0xFFF80000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->height) + 0xFFF80000u));
     Bump(Sprite_Current[9], 1);
     Bump(Sprite_Current[0xA], -1);
     if (Sprite_Current[0xA] != 0) return;
@@ -1199,8 +1199,8 @@ void Shades(unsigned char* p, const unsigned char (&v)[12]) {
 // the original reuses across quads, kept as it keeps them).
 S20_EXPORT void __cdecl Magic092_DrawFlame(void) {
     const unsigned char* sc = Sprite_Current;
-    SetWord(Scr(4), Word(sc + 0x2E));
-    SetWord(Scr(6), Word(sc + 0x30));
+    SetWord(Scr(4), static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
+    SetWord(Scr(6), static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y));
     const unsigned step = sc[0xA];
     unsigned counter = 4;
     SetWord(Scr(0), sc[9]);
@@ -1309,8 +1309,8 @@ S20_EXPORT void __cdecl Magic092_SparkRun(void) {
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sprite_Current;
-    SetWord(s + 0x2E, Word(s + 0x2E) + (s[0xB] == 1 ? 0xFFF0u : 0x10u));
-    SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) + 0xFFF4u);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) + (s[0xB] == 1 ? 0xFFF0u : 0x10u));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) + 0xFFF4u);
     MH_AT(VoidFn, bof3::addr::WallOfFireSpark_Draw)();
 }
 

@@ -255,12 +255,12 @@ S29_EXPORT void __cdecl DivineBeam_Wait(void) {
     if (Sc()[9] != 0) return;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Add(Long(Owner() + 0x3C), 0x4000000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add(Long(Owner() + 0x3C), 0x4000000));
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const std::uint32_t r = RandCall();
         Sc()[k] = static_cast<unsigned char>((r & 3) + 4);
     }
-    SetLong(Sc() + 0x14, 0x100);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
     Sc()[9] = 0x10;
     Sc()[0xA] = 8;
     Inc(Sc()[2]);
@@ -268,7 +268,7 @@ S29_EXPORT void __cdecl DivineBeam_Wait(void) {
 
 // original 0x4E0BB0: the height down 0x800000; +0xA down, at 0 +2 on.
 S29_EXPORT void __cdecl DivineBeam_Descend(void) {
-    SetLong(Sc() + 0x3C, Add(Long(Sc() + 0x3C), static_cast<std::int32_t>(0xFF800000u)));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(0xFF800000u)));
     Dec(Sc()[0xA]);
     if (Sc()[0xA] == 0) Inc(Sc()[2]);
 }
@@ -276,7 +276,7 @@ S29_EXPORT void __cdecl DivineBeam_Descend(void) {
 // original 0x4E0BE0: the radius +0x14 up 0x20; +9 down; at 0 the owner's
 // +0xB down and the task freed.
 S29_EXPORT void __cdecl DivineBeam_Widen(void) {
-    SetLong(Sc() + 0x14, Add(Long(Sc() + 0x14), 0x20));
+    rv::Store(rv::Current<records::BattleTask>()->step_y, Add(rv::Current<records::BattleTask>()->step_y, 0x20));
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Dec(Owner()[0xB]);
@@ -304,7 +304,7 @@ void BeamColours() {
 S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
     DrawMode(0x35);
     Commit(5, 0xC);
-    Put(cell::kR, Word(Sc() + 0x14));
+    Put(cell::kR, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
         const int s = Sin(0);
         Put(Prim_VertexScratch_addr + 0x10, Mul12(s, SS(cell::kR)));
@@ -350,7 +350,7 @@ S29_EXPORT void __cdecl DivineBeam_DrawDisc(void) {
 // each after Gpu_SetDrawMode(.., 0x35) linked by MapView_LinkPrimAt at the
 // task's point plus the new rim point << 9 (0, 0xC), and again (0, 0x44).
 S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
-    Put(cell::kR, Word(Sc() + 0x14));
+    Put(cell::kR, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_y));
     {
         const int s = Sin(0);
         Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR)));
@@ -421,12 +421,12 @@ S29_EXPORT void __cdecl DivineBurst_Wait(void) {
     if (Sc()[9] != 0) return;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0x5D] = 0xF;
     Sc()[0x5E] = 0xF;
     Sc()[0x5F] = 0xF;
-    SetLong(Sc() + 0x14, 0x100);
-    SetLong(Sc() + 0x20, 0x21);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 0x21);
     Sc()[9] = 0x10;
     Sc()[0xA] = 0x1E;
     Inc(Sc()[2]);
@@ -440,13 +440,13 @@ S29_EXPORT void __cdecl DivineBurst_Wait(void) {
 S29_EXPORT void __cdecl DivineBurst_Shrink(void) {
     {
         unsigned char* const s = Sc();
-        if (Long(s + 0x20) != 1) SetLong(s + 0x20, Sub(Long(s + 0x20), 2));
+        if (rv::As<records::BattleTask>(s)->work_20 != 1) rv::Store(rv::As<records::BattleTask>(s)->work_20, Sub(rv::As<records::BattleTask>(s)->work_20, 2));
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Sub(Long(s + 0x14), Long(s + 0x20)));
+        rv::Store(rv::As<records::BattleTask>(s)->step_y, Sub(rv::As<records::BattleTask>(s)->step_y, rv::As<records::BattleTask>(s)->work_20));
     }
-    if (Long(Sc() + 0x14) >= 0x30) return;
+    if (rv::Current<records::BattleTask>()->step_y >= 0x30) return;
     MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
     MH_CALL(Sound_PlayById)(0x101);
     for (unsigned i = 0; i < 0x40; ++i) {
@@ -468,7 +468,7 @@ S29_EXPORT void __cdecl DivineBurst_Shrink(void) {
 S29_EXPORT void __cdecl DivineBurst_Fade(void) {
     {
         unsigned char* const s = Sc();
-        if (Long(s + 0x14) > 8) SetLong(s + 0x14, Sub(Long(s + 0x14), 1));
+        if (rv::As<records::BattleTask>(s)->step_y > 8) rv::Store(rv::As<records::BattleTask>(s)->step_y, Sub(rv::As<records::BattleTask>(s)->step_y, 1));
     }
     if ((Frame_Counter & 1) == 0) return;
     Dec(Sc()[9]);
@@ -525,9 +525,9 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->step_x = 0x5000;
         ts->work_18 = 0x200;
-        SetLong(s + 0x14, 0x80000);
-        SetLong(s + 0x20, 0x40000);
-        Put(cell::kR, Word(s + 0xC));
+        rv::Store(ts->step_y, 0x80000);
+        rv::Store(ts->work_20, 0x40000);
+        Put(cell::kR, static_cast<std::uint16_t>(ts->step_x));
         Put(cell::kW4, MoteAngle(s));
     }
     {
@@ -540,7 +540,7 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
         const std::int32_t v = Add(Mul12(c, SS(cell::kR)), Long(Owner() + 0x38));
         rv::Current<records::BattleTask>()->z = v;
     }
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const std::uint32_t r = RandCall();
         Sc()[k] = static_cast<unsigned char>((r & 7) + 5);
@@ -564,12 +564,12 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Add(Long(s + 0x14), Long(s + 0x20)));
+        rv::Store(rv::As<records::BattleTask>(s)->step_y, Add(rv::As<records::BattleTask>(s)->step_y, rv::As<records::BattleTask>(s)->work_20));
     }
     unsigned char* x = nullptr;
     {
         unsigned char* const s = Sc();
-        Put(cell::kR, Word(s + 0xC));
+        Put(cell::kR, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
         x = s + 0x34;
         Put(cell::kW4, MoteAngle(s));
     }
@@ -584,7 +584,7 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x3C, Add(Long(s + 0x3C), Long(s + 0x14)));
+        rv::Store(rv::As<records::BattleTask>(s)->height, Add(rv::As<records::BattleTask>(s)->height, rv::As<records::BattleTask>(s)->step_y));
     }
     if (rv::Current<records::BattleTask>()->step_x != 0) return;
     Dec(Owner()[0xB]);
@@ -600,11 +600,11 @@ S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
     Put(cell::kR, Sc()[0xA]);
     {
         const int s = Sin(0);
-        Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR)) + Word(Sc() + 0x2E));
+        Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
     }
     {
         const int c = Cos(0);
-        Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR)) + Word(Sc() + 0x30));
+        Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     }
     {
         const unsigned char* const s = Sc();
@@ -625,12 +625,12 @@ S29_EXPORT void __cdecl DivineMote_DrawStar(void) {
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR)) + Word(Sc() + 0x2E));
+            Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
             PutFloat(p + 0x28, SS(Prim_VertexScratch_addr));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR)) + Word(Sc() + 0x30));
+            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 0xF0);
             PutFloat(p + 0x2C, SS(Prim_VertexScratch_addr + 2));
             Shade3(p + 0x14);
@@ -654,10 +654,10 @@ S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
     const auto rim = [](int a, std::uint32_t radius, std::uint32_t v) {
         {
             const int s = Sin(a);
-            Put(v, Mul12(s, SS(radius)) + Word(Sc() + 0x2E));
+            Put(v, Mul12(s, SS(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
         }
         const int c = Cos(a);
-        Put(v + 2, Mul12(c, SS(radius)) + Word(Sc() + 0x30));
+        Put(v + 2, Mul12(c, SS(radius)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     };
     rim(0, cell::kR2, Prim_VertexScratch_addr);
     rim(0, cell::kR, cell::kV1);
@@ -671,22 +671,22 @@ S29_EXPORT void __cdecl DivineMote_DrawRing(void) {
         PutFloat(p + 0x2C, SS(Prim_VertexScratch_addr + 0x8 + 2));
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR2)) + Word(Sc() + 0x2E));
+            Put(Prim_VertexScratch_addr, Mul12(s, SS(cell::kR2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
             PutFloat(p + 0x18, SS(Prim_VertexScratch_addr));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR2)) + Word(Sc() + 0x30));
+            Put(Prim_VertexScratch_addr + 2, Mul12(c, SS(cell::kR2)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             PutFloat(p + 0x1C, SS(Prim_VertexScratch_addr + 2));
         }
         {
             const int s = Sin(a);
-            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR)) + Word(Sc() + 0x2E));
+            Put(Prim_VertexScratch_addr + 0x8, Mul12(s, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
             PutFloat(p + 0x38, SS(Prim_VertexScratch_addr + 0x8));
         }
         {
             const int c = Cos(a);
-            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(cell::kR)) + Word(Sc() + 0x30));
+            Put(Prim_VertexScratch_addr + 0x8 + 2, Mul12(c, SS(cell::kR)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
             Fill3(p + 4, 1);
             Fill3(p + 0x14, 1);
             PutFloat(p + 0x3C, SS(Prim_VertexScratch_addr + 0x8 + 2));
@@ -986,7 +986,7 @@ S29_EXPORT void __cdecl ShadowGlow_Wait(void) {
     MH_CALL(Sound_PlayById)(0x100);
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0x14;
     Sc()[0xA] = 0;
@@ -1011,8 +1011,8 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
         Put(cell::kR, 0x28);
         Put(cell::kR2, s[9]);
         Put(cell::kW4, s[0xA] << 3);
-        Put(Scratch_Swap_addr, Word(s + 0x2E));
-        Put(cell::kY, Word(s + 0x30));
+        Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        Put(cell::kY, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
     DrawMode(0xB5);
     LinkAtSc(0xC);
@@ -1105,7 +1105,7 @@ S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
     Sc()[8] = Pointer(MagicS23_ActorSprite_addr)[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(MagicS23_ActorSprite_addr) + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(MagicS23_ActorSprite_addr) + 0x38));
-    SetLong(Sc() + 0x3C, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
     rv::Current<records::BattleTask>()->step_x = 0x8000;
     rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(TaskFn, magic_s29::kTurnByFacing)(Sc());
@@ -1114,7 +1114,7 @@ S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = Add(ts->x, ts->step_x);
         ts->z = Add(ts->z, ts->step_z);
-        SetLong(s + 0x3C, Add(Long(s + 0x3C), 0x800000));
+        rv::Store(ts->height, Add(ts->height, 0x800000));
     }
     const int heading = HeadingToOwner();
     rv::Current<records::BattleTask>()->step_x = heading;
@@ -1218,8 +1218,8 @@ S29_EXPORT void __cdecl ShadowSeeker_Draw(void) {
         const unsigned char* const s = Sc();
         Put(cell::kW4, 0);
         Put(cell::kR, 0x18);
-        Put(Scratch_Swap_addr, Word(s + 0x2E));
-        Put(cell::kY, Word(s + 0x30));
+        Put(Scratch_Swap_addr, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        Put(cell::kY, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
         const unsigned char* const c = Mem(ShadowSeeker_Colours_addr + s[0xB] * 2u);
         Put(cell::kW6, c[0] * s[9]);
         Put(cell::kW8, s[9]);

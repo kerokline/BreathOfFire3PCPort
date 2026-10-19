@@ -198,7 +198,7 @@ void OffsetByDirection() {
 void CopyOwnerPosition() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
 }
 
 // The beam's half-width at a step: v (a word) divided by the task's +0xB, plus
@@ -285,18 +285,18 @@ S28_EXPORT void __cdecl BreathBeam_Aim(void) {
     Sc()[8] = Owner()[8];
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetSW(0xC, Word(Sc() + 0x2E));
-    SetSW(0xE, Word(Sc() + 0x30));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+    SetSW(0xE, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     CopyOwnerPosition();
     MH_CALL(BattleActor_UpdateScreenXY)();
     OffsetByDirection();
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + Word(Sc() + 0xC));
-    SetWord(Sc() + 0x30, Word(Sc() + 0x30) + Word(Sc() + 0x10));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_z));
     const short x = S16(Sc() + 0x2E), y = S16(Sc() + 0x30);
     SetSW(8, static_cast<unsigned short>(x));
     SetSW(0xA, static_cast<unsigned short>(y));
     const int angle = Ratan2(SS(0xC) - x, SS(0xE) - y);
-    SetLong(Sc() + 0x14, angle);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, angle);
     Sc()[4] = 0x10;
     Sc()[0xB] = 0x11;
     Sc()[9] = 0;
@@ -364,9 +364,9 @@ BeamStep BeamWalk(int i, unsigned mask, unsigned shift) {
 void BeamStart() {
     DrawMode(0x35);
     const unsigned char* const sc = Sc();
-    SetSW(8, Word(sc + 0x2E));
-    SetSW(0xA, Word(sc + 0x30));
-    SetSW(2, Word(sc + 0x14));
+    SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
+    SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y));
+    SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->step_y));
 }
 // A vertex at the half-width S50 from the point (base x, base y) along S54.
 void BeamVertex(unsigned char* p, unsigned off, unsigned bx, unsigned by) {
@@ -502,18 +502,18 @@ S28_EXPORT void __cdecl Icebreath_Start(void) {
     Sc()[8] = Owner()[8];
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetSW(0xA, Word(Sc() + 0x2E));
-    SetSW(0xC, Word(Sc() + 0x30));
+    SetSW(0xA, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     CopyOwnerPosition();
     MH_CALL(BattleActor_UpdateScreenXY)();
     OffsetByDirection();
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + Word(Sc() + 0xC));
-    SetWord(Sc() + 0x30, Word(Sc() + 0x30) + Word(Sc() + 0x10));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_z));
     const short x = S16(Sc() + 0x2E), y = S16(Sc() + 0x30);
     SetSW(6, static_cast<unsigned short>(x));
     SetSW(8, static_cast<unsigned short>(y));
     const int angle = Ratan2(SS(0xA) - x, SS(0xC) - y);
-    SetLong(Sc() + 0x14, angle);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, angle);
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < kMotes; ++i) {
         const unsigned k = MH_CALL(IcePool_Alloc)() & 0xFFu;
@@ -546,14 +546,14 @@ S28_EXPORT void __cdecl BreathMote_Task(void) { CallCell("BreathMote_Task", Brea
 S28_EXPORT void __cdecl BreathMote_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    SetWord(Sc() + 0x2E, Word(Owner() + 0x2E));
-    SetWord(Sc() + 0x30, Word(Owner() + 0x30));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Owner() + 0x2E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30));
     if (MH_CALL(Rand)() & 1) {
         const int r = MH_CALL(Rand)();
-        SetLong(Sc() + 0x14, (r & 0xFF) + Long(Owner() + 0x14));
+        rv::Store(rv::Current<records::BattleTask>()->step_y, (r & 0xFF) + Long(Owner() + 0x14));
     } else {
         const int r = MH_CALL(Rand)();
-        SetLong(Sc() + 0x14, Long(Owner() + 0x14) - (r & 0xFF));
+        rv::Store(rv::Current<records::BattleTask>()->step_y, Long(Owner() + 0x14) - (r & 0xFF));
     }
     Sc()[3] = U8(MH_CALL(Rand)() & 7);
     const int speed = MH_CALL(Rand)();
@@ -577,15 +577,15 @@ S28_EXPORT void __cdecl BreathMote_Fly(void) {
     const unsigned angle = static_cast<unsigned>(Sar(Shl(s, 7), 12) + Word(sc + 0x14)) & 0xFFFF;
     unsigned char* const px = sc + 0x2E;
     SetSW(4, angle);
-    SetSW(0, Word(sc + 0xC));
+    SetSW(0, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->step_x));
     s = Sin(static_cast<short>(angle));
     SetWord(px, Word(px) + static_cast<unsigned>(Sar(Mul(s, SS(0)), 12)));
     unsigned char* const py = Sc() + 0x30;
     s = Cos(SS(4));
     SetWord(py, Word(py) + static_cast<unsigned>(Sar(Mul(s, SS(0)), 12)));
     sc = Sc();
-    SetSW(6, Word(sc + 0x2E));
-    SetSW(8, Word(sc + 0x30));
+    SetSW(6, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
+    SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y));
     if (static_cast<int>(sc[0xA]) < static_cast<int>(sc[3]) + 6) {
         sc[0xA] = U8(sc[0xA] + 2);
         sc = Sc();
@@ -710,9 +710,9 @@ S28_EXPORT void __cdecl BreathMote_DrawBurst(void) {
         const int r = MH_CALL(Rand)();
         SetSW(0, static_cast<unsigned>((r & 3) + Sc()[0xB] * 2 + 4));
         int s = Sin(a);
-        SetSW(6, static_cast<unsigned>(Sar(Mul(s, SS(0)), 12)) + Word(Sc() + 0x2E));
+        SetSW(6, static_cast<unsigned>(Sar(Mul(s, SS(0)), 12)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
         s = Cos(a);
-        SetSW(8, static_cast<unsigned>(Sar(Mul(s, SS(0)), 12)) + Word(Sc() + 0x30));
+        SetSW(8, static_cast<unsigned>(Sar(Mul(s, SS(0)), 12)) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -768,8 +768,8 @@ S28_EXPORT void __cdecl Thunderbreath_Start(void) {
     CopyOwnerPosition();
     MH_CALL(BattleActor_UpdateScreenXY)();
     MH_CALL(MagicFx_FormationOffset)();
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) + Word(Sc() + 0xC));
-    SetWord(Sc() + 0x30, Word(Sc() + 0x30) + Word(Sc() + 0x10));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_z));
     Sc()[0xB] = 0;
     Sc()[9] = 8;
     Sc()[0xA] = 0x10;
@@ -859,8 +859,8 @@ S28_EXPORT void __cdecl ThunderBolt_Task(void) {
     unsigned char* const owner = Owner();
     trec->owner = static_cast<std::int32_t>(Addr(owner));
     rec[1] = 1;
-    SetWord(rec + 0x2E, x);
-    SetWord(rec + 0x30, SW(0xA));
+    rv::Store<unsigned>(trec->screen_x, x);
+    rv::Store<unsigned>(trec->screen_y, SW(0xA));
     Inc(owner[0xB]);
 }
 
@@ -874,14 +874,14 @@ S28_EXPORT void __cdecl ThunderBolt_Aim(void) {
     if (Sc()[9] != 0) return;
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetSW(0xC, Word(Sc() + 0x2E));
-    SetSW(0xE, Word(Sc() + 0x30));
-    SetWord(Sc() + 0x2E, Word(Owner() + 0x2E));
-    SetSW(8, Word(Sc() + 0x2E));
-    SetWord(Sc() + 0x30, Word(Owner() + 0x30));
-    SetSW(0xA, Word(Sc() + 0x30));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+    SetSW(0xE, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Owner() + 0x2E));
+    SetSW(8, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30));
+    SetSW(0xA, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     const int angle = Ratan2(SS(0xC) - SS(8), SS(0xE) - SS(0xA));
-    SetLong(Sc() + 0x14, angle);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, angle);
     unsigned char* const heading = Sc() + 0x14;
     const bool odd = (Sc()[4] & 1) != 0;
     const int r = MH_CALL(Rand)() & 7;
@@ -976,8 +976,8 @@ S28_EXPORT void __cdecl ThunderBolt_Draw(void) {
         b8 = U8(c9 << 3);
         b4 = U8(c9 << 2);
         grey = U8(c9 * 0xF);
-        SetSW(0xC, Word(sc + 0x2E));
-        SetVW(0, Word(sc + 0x2E));
+        SetSW(0xC, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
+        SetVW(0, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_x));
         SetSW(0xE, Word(sc + 0x30));
         SetVW(2, Word(sc + 0x30));
         phase = sc[0xB];
@@ -998,9 +998,9 @@ S28_EXPORT void __cdecl ThunderBolt_Draw(void) {
         if ((i & 7) == 0) SetSW(2, static_cast<unsigned>((MH_CALL(Rand)() & 3) + 2));
         SetSW(0xC, SW(8));
         SetSW(0xE, SW(0xA));
-        s = Sin(Long(Sc() + 0x14));
+        s = Sin(rv::Current<records::BattleTask>()->step_y);
         SetVW(0, VW(0) + static_cast<unsigned>(Sar(Shl(s, 4), 12)));
-        s = Cos(Long(Sc() + 0x14));
+        s = Cos(rv::Current<records::BattleTask>()->step_y);
         SetVW(2, VW(2) + static_cast<unsigned>(Sar(Shl(s, 4), 12)));
         const unsigned count = Sc()[0xA];
         if (count == 0) bof3::Fatal("ThunderBolt_Draw: +0xA is 0 (the original divides by zero)");

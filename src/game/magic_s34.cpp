@@ -216,7 +216,7 @@ void StartMotes(std::uint32_t pool, unsigned motes, std::uint32_t alloc) {
         s[8] = src[8];
         ts->x = Long(src + 0x34);
         ts->z = Long(src + 0x38);
-        SetLong(s + 0x3C, Long(src + 0x3C));
+        rv::Store(ts->height, Long(src + 0x3C));
         s[0xB] = 0;
         Inc(s[1]);
     }
@@ -277,15 +277,15 @@ void LaunchMote(std::uint32_t colours, std::uint32_t lift, std::uint32_t fall, u
         const std::int32_t z = Long(Owner() + 0x38);
         rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(v, 15, 12)) + static_cast<std::uint32_t>(z)));
     }
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + lift));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + lift));
     const unsigned k = RandCall() & 7u;
     unsigned char* const s = Sc();
     const unsigned char* const c = Mem(colours + 3 * k);
     s[0x5D] = c[0];
     s[0x5E] = c[1];
     s[0x5F] = c[2];
-    SetLong(s + 0x14, 0x80);
-    SetLong(s + 0x20, static_cast<std::int32_t>(fall));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, 0x80);
+    rv::Store(rv::As<records::BattleTask>(s)->work_20, static_cast<std::int32_t>(fall));
     s[9] = count;
     s[0xA] = size;
     Inc(s[2]);
@@ -303,8 +303,8 @@ void SpiralMote(unsigned angle) {
     v = Cos(SS(4));
     AddLong(at, static_cast<std::uint32_t>(ShlSar(v, 12, 12)));
     unsigned char* const s = Sc();
-    AddLong(s + 0x14, static_cast<std::uint32_t>(Long(s + 0x20)));
-    AddWord(s + 0x3E, Word(s + 0x14));
+    AddLong(s + 0x14, static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20));
+    AddWord(s + 0x3E, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
 }
 
 // The mote freed: the owner's count +0xB down, +0..+4 cleared.
@@ -418,7 +418,7 @@ S34_EXPORT void __cdecl CharmMote_ToOwner(void) {
     AddWord(s + 0x3E, 0xFFA0);
     if (s[9] != 0x10) Inc(s[9]);
     if (s[0xA] != 0x10) s[0xA] = static_cast<unsigned char>(s[0xA] + 2);
-    if (Word(s + 0x3E) == Word(Owner() + 0x3E)) Inc(s[2]);
+    if (rv::As<records::BattleTask>(s)->height_whole == Word(Owner() + 0x3E)) Inc(s[2]);
 }
 
 // original 0x4ED990: the spiral at (+0xB & 0xF) << 8; +0xA down, at 0 the
@@ -536,7 +536,7 @@ S34_EXPORT void __cdecl Magic159_Start(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = Long(src + 0x34);
         ts->z = Long(src + 0x38);
-        SetLong(s + 0x3C, Long(src + 0x3C));
+        rv::Store(ts->height, Long(src + 0x3C));
         s[0xB] = 0;
         Inc(s[1]);
     }
@@ -586,7 +586,7 @@ S34_EXPORT void __cdecl Magic159Child_Wait(void) {
     if (s[9] != 0) return;
     ts->x = Long(Owner() + 0x34);
     ts->z = Long(Owner() + 0x38);
-    SetLong(s + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(ts->height, Long(Owner() + 0x3C));
     s[9] = 0x10;
     s[0xA] = 0;
     Inc(s[2]);
@@ -683,7 +683,7 @@ S34_EXPORT void __cdecl TimedBlow_Start(void) {
         s[8] = Owner()[8];
         ts->x = Long(Owner() + 0x34);
         ts->z = Long(Owner() + 0x38);
-        SetLong(s + 0x3C, Long(Owner() + 0x3C));
+        rv::Store(ts->height, Long(Owner() + 0x3C));
         s[0xB] = 0;
         Inc(s[1]);
     }
@@ -869,7 +869,7 @@ S34_EXPORT void __cdecl Transfer_Start(void) {
         s[8] = src[8];
         ts->x = Long(src + 0x34);
         ts->z = Long(src + 0x38);
-        SetLong(s + 0x3C, Long(src + 0x3C));
+        rv::Store(ts->height, Long(src + 0x3C));
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
     {

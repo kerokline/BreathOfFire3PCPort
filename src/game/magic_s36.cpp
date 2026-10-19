@@ -219,7 +219,7 @@ S36_EXPORT void __cdecl MagicBall_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned core = NewTask(0x51);
@@ -322,7 +322,7 @@ S36_EXPORT void __cdecl MagicBallCore_Run(void) {
 S36_EXPORT void __cdecl MagicBallCore_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, I32(U32(Owner() + 0x3C) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, I32(U32(Owner() + 0x3C) + 0x800000u));
     const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
     rv::Current<records::BattleTask>()->step_x = angle;
     Sc()[0xB] = 0;
@@ -412,7 +412,7 @@ S36_EXPORT void __cdecl MagicBallOrb_Start(void) {
     if (Sc()[9] != 0) return;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, I32(U32(Owner() + 0x3C) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, I32(U32(Owner() + 0x3C) + 0x800000u));
     const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
     rv::Current<records::BattleTask>()->step_x = angle;
     Sc()[9] = 0;
@@ -672,7 +672,7 @@ S36_EXPORT void __cdecl Intimidate_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     for (unsigned i = 0; i < 2; ++i) {
@@ -741,7 +741,7 @@ S36_EXPORT void __cdecl IntimidateTrail_Start(void) {
     }
     rv::Store(rv::Current<records::BattleTask>()->step_x, I32(dx));
     rv::Current<records::BattleTask>()->step_z = 0;
-    SetLong(Sc() + 0x14, I32(dy));
+    rv::Store(rv::Current<records::BattleTask>()->step_y, I32(dy));
     Turn(Sc());
     for (unsigned k = 0; k < 3; ++k) {
         unsigned char* const s = Sc();
@@ -752,10 +752,10 @@ S36_EXPORT void __cdecl IntimidateTrail_Start(void) {
     rv::Current<records::BattleTask>()->step_z = 0;
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
-    SetWord(TrailPoint(s[4], 0), Word(s + 0x2E));
-    SetWord(TrailPoint(s[4], 0) + 2, Word(s + 0x30));
-    SetWord(TrailPoint(s[4], 1), Word(s + 0x2E));
-    SetWord(TrailPoint(s[4], 1) + 2, Word(s + 0x30));
+    SetWord(TrailPoint(s[4], 0), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetWord(TrailPoint(s[4], 0) + 2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
+    SetWord(TrailPoint(s[4], 1), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetWord(TrailPoint(s[4], 1) + 2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     s[0xB] = 0;
     Sc()[9] = 0x10;
     Sc()[0xA] = 1;
@@ -810,7 +810,7 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
     child[1] = 1;
     tchild->x = ts->x;
     tchild->z = ts->z;
-    SetLong(child + 0x3C, Long(s + 0x3C));
+    rv::Store(tchild->height, ts->height);
     Inc(owner[0xB]);
 }
 
@@ -869,7 +869,7 @@ void TrailShift(unsigned x, unsigned y) {
 // +0xB, the points to +0xA moved on.
 S36_EXPORT void __cdecl IntimidateTrail_Push(void) {
     const unsigned char* const s = Sc();
-    TrailShift(Word(s + 0x2E), Word(s + 0x30));
+    TrailShift(static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x), static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
 }
 
 // original 0x4F46D0: a gap (-1, -1) pushed onto the trail the same way.
@@ -1057,7 +1057,7 @@ S36_EXPORT void __cdecl IntimidateBurst_Start(void) {
     s[0x5C] = 0;
     s[0x2A] = 0;
     s[0x29] = 3;
-    SetWord(s + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 1;
     MH_CALL(Sprite_SetAnimation)(0);
     Sc()[9] = 0;
@@ -1140,7 +1140,7 @@ S36_EXPORT void __cdecl AuraBreath_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned slot = NewTask(0x67);
@@ -1189,7 +1189,7 @@ S36_EXPORT void __cdecl AuraBreathDome_Wait(void) {
     const unsigned char* const o = Owner();
     ts->x = Long(o + 0x34);
     ts->z = Long(o + 0x38);
-    SetLong(s + 0x3C, Long(o + 0x3C));
+    rv::Store(ts->height, Long(o + 0x3C));
     s[0x5D] = 0x10;
     s[9] = 0x10;
     s[0xA] = 4;
