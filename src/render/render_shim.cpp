@@ -297,7 +297,7 @@ void ReleaseDeferred() {
 // The quicksave's graphics check (docs/quicksave.md, the graphics participant): a restore
 // followed by a frame must draw what the live game drew from the same state.
 // At each present one line per walk of the lists in the frame: a 64-bit FNV-1a
-// over the walk's commands in order - the kind, the pipe state but its
+// over the walk's commands in order but the clears - the kind, the pipe state but its
 // pointers, the vertices each draw names, and for a textured draw the CONTENT
 // of the texture version it samples (size, format, colour key, the pixels row
 // by row within the width) - never an address, so two walks drawn with rebuilt
@@ -352,15 +352,18 @@ void LogWalkHash(U first, U end, U tag) {
     constexpr U kSeen = 512;
     static const TexVersion* seen[kSeen];
     static unsigned long long seen_hash[kSeen];
-    U n_seen = 0, n_textures = 0, n_vertices = 0;
+    U n_seen = 0, n_textures = 0, n_vertices = 0, n_clears = 0;
     Fnv f;
     for (U i = first; i < end; ++i) {
         const Command& c = g_frame.commands[i];
-        f.Put(c.kind);
         if (c.kind == Cmd::kClear) {
-            f.Put(c.color);
+            // Not hashed: the back buffer's clear follows a present
+            // (Gfx_ClearPresent), and a walk drawn after two logic frames
+            // follows none - the present's timing, not the lists'.
+            ++n_clears;
             continue;
         }
+        f.Put(c.kind);
         if (c.kind == Cmd::kGrab) {
             f.Put(c.grab_x);
             f.Put(c.grab_y);
@@ -409,8 +412,8 @@ void LogWalkHash(U first, U end, U tag) {
         n_vertices += c.count;
         if (c.first + c.count <= g_frame.n_vertices) f.Bytes(g_frame.vertices + c.first, c.count * sizeof(Vertex));
     }
-    bof3::Log("framehash   drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X", tag, end - first,
-              n_vertices, n_textures, static_cast<U>(f.h >> 32), static_cast<U>(f.h));
+    bof3::Log("framehash   drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
+              end - first - n_clears, n_vertices, n_textures, static_cast<U>(f.h >> 32), static_cast<U>(f.h), n_clears);
 }
 
 void LogFrameHash() {
