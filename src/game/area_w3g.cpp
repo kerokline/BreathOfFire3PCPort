@@ -40,6 +40,7 @@
 #include "game/area_harness.h"
 #include "game/area_w3g_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/world_map.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -57,6 +58,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
+records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
 unsigned char* Bank904000() { return At(Cond_Flags_addr + 0x70); }
@@ -630,9 +632,10 @@ void ShiftMap(int sign, U focus, bool effects) {
     if (effects) {
         for (U k = 0; k < at::kEffectCount; ++k) {
             unsigned char* const e = EffectAt(k);
+            auto* const tE = reinterpret_cast<records::EffectObject*>(e);
             if ((e[0] & 1) == 0 || e[5] != 0x37) continue;
-            SetLong(e + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(e + 0x34)) + step));
-            const long eh = AH_CALL(AreaMap_Elevation)(Long(e + 0x34), Long(e + 0x38));
+            tE->x = static_cast<std::int32_t>(static_cast<U>(tE->x) + step);
+            const long eh = AH_CALL(AreaMap_Elevation)(tE->x, tE->z);
             SetWord(e + 0x3E, static_cast<U>(eh));
         }
     }
@@ -702,14 +705,15 @@ extern "C" void __cdecl Area149_SpawnDust(signed char dx) {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
         if (slot == 0xFF) continue;
         unsigned char* const e = EffectAt(slot);
+        auto* const tE = reinterpret_cast<records::EffectObject*>(e);
         const U x = (static_cast<U>(static_cast<std::int32_t>(dx)) << 16) + static_cast<U>(Field_Kind2X);
         const U z = (k != 0 ? 0xFFFF0000u : 0x10000u) + static_cast<U>(Field_Kind2Z);
         e[0] = 1;
         e[5] = 0x37;
         SetWord(e + 0x2C, 0x2C0);
-        SetLong(e + 0x34, static_cast<std::int32_t>(x));
-        SetLong(e + 0x38, static_cast<std::int32_t>(z));
-        const long h = AH_CALL(AreaMap_Elevation)(Long(e + 0x34), static_cast<long>(z));
+        tE->x = static_cast<std::int32_t>(x);
+        tE->z = static_cast<std::int32_t>(z);
+        const long h = AH_CALL(AreaMap_Elevation)(tE->x, static_cast<long>(z));
         SetWord(e + 0x3E, static_cast<U>(h));
         SetWord(e + 0x2C, 0x2C0);
         e[9] = 1;
@@ -768,11 +772,12 @@ extern "C" void __cdecl Area149_Tail33(void) {
 // and Cond_ByteFE 2, tail kind 33 at state 0xA, the timer 0x5A.
 extern "C" void __cdecl Area149_Init(void) {
     unsigned char* const x0 = At(Sprite_ObjectsExtra_addr);
+    auto* const tX0 = reinterpret_cast<records::SpriteObject*>(x0);
     if (AreaW2c_LastArea == 0x94) {
         SetWord(x0 + 0x36, Word(x0 + 0x36) + 0x16u);
-        const std::int32_t z = Long(x0 + 0x38), x = Long(x0 + 0x34);
+        const std::int32_t z = tX0->z, x = tX0->x;
         x0[0x83] = 1;
-        SetWord(x0 + 0x8A, 0);
+        tX0->script_position = 0;
         const long h = AH_CALL(AreaMap_Elevation)(x, z);
         SetWord(x0 + 0x3E, static_cast<U>(h));
         Cond_ByteFE = 1;
@@ -783,7 +788,7 @@ extern "C" void __cdecl Area149_Init(void) {
         }
     }
     if (AreaW2c_LastArea == 0xA7) {
-        SetWord(x0 + 0x8A, 0);
+        tX0->script_position = 0;
         x0[0x83] = 2;
         Cond_ByteFE = 2;
         AreaW0a_TailKind = 0x21;
@@ -1099,7 +1104,7 @@ void PlateShrink() {
 // The dial frame's slide, state 1: the word +0x2E += 0x10; at 0x10 and above
 // (s16) +2 + 1; then a tail jump to the copy's FrameHold.
 void FrameSlideIn(const WorldMapTables& t) {
-    SetWord(Cur() + 0x2E, Word(Cur() + 0x2E) + 0x10u);
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(t.fn_frame_hold)();
@@ -1116,7 +1121,7 @@ void FrameHold(const WorldMapTables& t) {
 // State 3: the word +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the
 // mode byte is 2, +2 = 1 (over the 0); DrawFrame(0x10, y).
 void FrameSlideOut(const WorldMapTables& t) {
-    SetWord(Cur() + 0x2E, Word(Cur() + 0x2E) - 0x10u);
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -1134,7 +1139,7 @@ void FrameSlideOut(const WorldMapTables& t) {
 // with the object pointer's high half above the word, which the drawing
 // never reads.
 void BoxSlideIn(const WorldMapTables& t) {
-    SetWord(Cur() + 0x30, Word(Cur() + 0x30) - 10u);
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -1170,7 +1175,7 @@ void BoxHold(const WorldMapTables& t) {
 // byte is set (whatever +0xB), Field_Request is 2 or Field_ScriptFlags bit
 // 8, +3 = 1; DrawHud(0x5C, y).
 void BoxSlideOut(const WorldMapTables& t) {
-    SetWord(Cur() + 0x30, Word(Cur() + 0x30) + 10u);
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
@@ -1284,24 +1289,30 @@ void Record8Place(const WorldMapTables& t) {
     SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
     SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
+    auto* tO = reinterpret_cast<records::EffectObject*>(o);
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
         o = Cur();
+        tO = reinterpret_cast<records::EffectObject*>(o);
         SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 13));
         o = Cur();
-        const bool along_x = Long(o + 0xC) == 0;
+        tO = reinterpret_cast<records::EffectObject*>(o);
+        const bool along_x = tO->step_x == 0;
         const unsigned step = o[6] == 1 ? 2u : 0xFFFEu;
         if (along_x) SetWord(o + 0x36, Word(o + 0x36) + step);
         else SetWord(o + 0x3A, Word(o + 0x3A) + step);
         o = Cur();
+        tO = reinterpret_cast<records::EffectObject*>(o);
     }
     SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 9));
     o = Cur();
+    tO = reinterpret_cast<records::EffectObject*>(o);
     SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 9));
     Cur()[0xB] = 0;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
     AH_CALL(Sprite_SetAnimation)(At(t.record8_anims + Cur()[8] * 2u)[0]);
     o = Cur();
+    tO = reinterpret_cast<records::EffectObject*>(o);
     o[0x2A] = At(t.record8_anims + 1 + o[8] * 2u)[0];
     AH_CALL(Sprite_UpdateScreen)();
 }
