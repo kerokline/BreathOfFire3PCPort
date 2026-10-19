@@ -516,8 +516,8 @@ extern "C" void __cdecl EffectKind30_SparkQuad(const long* point, unsigned size,
     std::memcpy(prim + 0x30, &screen[2], 4);
     std::memcpy(prim + 0x20, &screen[2], 4);
     std::memcpy(prim + 0x10, &screen[2], 4);
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::As<records::GpuPolyFT4>(prim)->clut = SH_CALL(Gpu_GetClut)(0xA0, 0x1E3);
+    rv::As<records::GpuPolyFT4>(prim)->tpage = SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100);
     prim[4] = static_cast<unsigned char>(shade);
     prim[5] = static_cast<unsigned char>(shade);
     prim[6] = static_cast<unsigned char>(shade);

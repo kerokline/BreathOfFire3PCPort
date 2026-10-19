@@ -322,9 +322,9 @@ extern "C" void __cdecl Menu_DrawTile16(int x, int y, unsigned u, unsigned dim) 
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x2F, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     unsigned char* const p = Gfx_PacketNext;
-    SetWord(p + 0x18, 0x10);
-    SetWord(p + 0x1A, 8);
-    SetWord(p + 0x16, 0x7800);
+    rv::As<records::GpuSprt>(p)->w = 0x10;
+    rv::As<records::GpuSprt>(p)->h = 8;
+    rv::As<records::GpuSprt>(p)->clut = 0x7800;
     const unsigned char shade = static_cast<unsigned char>(dim) ? 0x10 : 0x80;
     p[6] = p[5] = p[4] = shade;
     PutFloat(p + 8, static_cast<std::int32_t>(static_cast<U>(x) & 0xFFFF));

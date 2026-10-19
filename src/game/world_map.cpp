@@ -248,10 +248,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawSprite(
     PutFloat(prim + 8, static_cast<float>(static_cast<short>(x)));
     PutFloat(prim + 0xC, static_cast<float>(static_cast<short>(y)));
     prim[4] = prim[5] = prim[6] = 0x80;
-    PutWord(prim + 0x16, 0x7B80);
+    rv::As<records::GpuSprt>(prim)->clut = 0x7B80;
     const unsigned char* const entry = At(kSpriteTable + (index & 0xFF) * 4u);
-    PutWord(prim + 0x18, entry[0]);
-    PutWord(prim + 0x1A, entry[1]);
+    rv::As<records::GpuSprt>(prim)->w = entry[0];
+    rv::As<records::GpuSprt>(prim)->h = entry[1];
     prim[0x14] = entry[2];
     prim[0x15] = entry[3];
     g.commit_prim(1, 0x1C);
@@ -550,7 +550,7 @@ void EmitDim(int x, int y, int w, const unsigned char* text, unsigned colour) {
     const unsigned char* const uv = At(kSmallUV + (colour >> 4) * 2);
     unsigned glyph = (text[0] - 0x26u) & 0xFFFF;
     if (const unsigned small = Labels_SmallGlyph(text)) glyph = small;
-    PutWord(PacketNext() + 0x16, glyph);
+    rv::Store<U>(rv::As<records::GpuGlyph>(PacketNext())->glyph, glyph);
     Text_EmitGlyph(x, y, w, static_cast<int>(8 - uv[1]), static_cast<int>(uv[0]), static_cast<int>(uv[1]),
                    static_cast<int>(DimClut(colour)));
 }
@@ -674,7 +674,7 @@ void Start(int x, int y, bool withheld) {
     static const char kStart[] = "START";
     for (int i = 0; kStart[i] != 0; ++i) {
         const auto glyph = static_cast<std::uint16_t>(static_cast<unsigned char>(kStart[i]) - 0x26u);
-        PutWord(PacketNext() + 0x16, glyph);
+        rv::Store<U>(rv::As<records::GpuGlyph>(PacketNext())->glyph, glyph);
         Text_EmitGlyph(x + kStartDx + i * kStartAdvance, y, kStartWidth, static_cast<int>(8 - v),
                        static_cast<int>(u), static_cast<int>(v),
                        static_cast<int>(withheld ? DimClut(0) : 0x7800));

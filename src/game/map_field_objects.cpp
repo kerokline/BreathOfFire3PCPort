@@ -222,8 +222,8 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
             prim[0x45] = v23;
             prim[0x35] = v23;
             prim[6] = prim[5] = prim[4] = 0x80;
-            SetWord(prim + 0x16, (Byte(at::UprightClutAt() + e) >> 4) | 0x78C0u);
-            SetWord(prim + 0x26, 0x1B);
+            rv::As<records::GpuPolyFT4>(prim)->clut = (Byte(at::UprightClutAt() + e) >> 4) | 0x78C0u;
+            rv::As<records::GpuPolyFT4>(prim)->tpage = 0x1B;
             g.commit(slot, 0x48);
         }
         const U base = (i + e * 3u) * 2u;
@@ -523,7 +523,7 @@ extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned
     prim[0x15] = static_cast<unsigned char>(v << 3);
     SetFloat(prim + 0xC, static_cast<float>(static_cast<std::int32_t>(y & 0xFFFFu)));
     prim[0x14] = static_cast<unsigned char>(u << 3);
-    SetWord(prim + 0x16, clut);
+    rv::As<records::GpuSprt>(prim)->clut = clut;
     prim[6] = prim[5] = prim[4] = static_cast<unsigned char>(shade);
     g.set_semi(prim, 0);
     return g.commit(1, 0x18);

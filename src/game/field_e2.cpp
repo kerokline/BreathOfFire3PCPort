@@ -963,8 +963,8 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     prim[4] = 0x80;
     prim[5] = 0x80;
     prim[6] = 0x80;
-    SetW(Key(prim) + 0x26, 0xF);
-    SetW(Key(prim) + 0x16, 0x7802);
+    rv::As<records::GpuPolyFT4>(prim)->tpage = 0xF;
+    rv::As<records::GpuPolyFT4>(prim)->clut = 0x7802;
     CommitAtObject(0x48);
     SH_CALL(Gte_PushMatrix)();
     const unsigned char* const s = Sprite_Current;
