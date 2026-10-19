@@ -776,12 +776,12 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
     rv::Current<records::BattleTask>()->step_z = 0;
     TurnByFacing(Sprite_Current);
     unsigned char* sc = Sprite_Current;
-    SetLong(sc + 0x34, Add(Long(sc + 0xC), Field_Kind2X));
+    rv::Store(rv::As<records::BattleTask>(sc)->x, Add(rv::As<records::BattleTask>(sc)->step_x, Field_Kind2X));
     sc = Sprite_Current;
-    SetLong(sc + 0x38, Add(Long(sc + 0x10), Field_Kind2Z));
+    rv::Store(rv::As<records::BattleTask>(sc)->z, Add(rv::As<records::BattleTask>(sc)->step_z, Field_Kind2Z));
     sc = Sprite_Current;
-    const std::int32_t dz = Sub(Field_Kind2Z, Long(sc + 0x38));
-    const std::int32_t dx = Sub(Field_Kind2X, Long(sc + 0x34));
+    const std::int32_t dz = Sub(Field_Kind2Z, rv::As<records::BattleTask>(sc)->z);
+    const std::int32_t dx = Sub(Field_Kind2X, rv::As<records::BattleTask>(sc)->x);
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
     rv::Current<records::BattleTask>()->step_x = angle;
     Sprite_Current[0xB] = 0;
@@ -833,9 +833,9 @@ S24_EXPORT void __cdecl Fx105_OrbStart(void) {
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     unsigned char* sc = Sprite_Current;
-    SetLong(sc + 0xC, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), Long(Owner() + 0xC)));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_x, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), Long(Owner() + 0xC)));
     sc = Sprite_Current;
-    SetLong(sc + 0x10, Add(G16(Fx105_OrbAngles_addr + 2 + 2u * sc[4]), Long(Owner() + 0xC)));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, Add(G16(Fx105_OrbAngles_addr + 2 + 2u * sc[4]), Long(Owner() + 0xC)));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0;
@@ -916,7 +916,7 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
     const unsigned char* s = Sprite_Current;
     Put16(kA + 2, Shl(t, 6) >> 12);
     Put16(kA + 4, 0);
-    t = Sin(Long(s + 0x10));
+    t = Sin(rv::As<records::BattleTask>(s)->step_z);
     Put16(kB, Shl(t, 6) >> 12);
     t = Cos(rv::Current<records::BattleTask>()->step_z);
     Put16(kB + 2, Shl(t, 6) >> 12);
@@ -941,7 +941,7 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         s = Sprite_Current;
         Put16(kD + 2, b2);
         Put16(kD + 4, b4);
-        t = Sin(Long(s + 0xC));
+        t = Sin(rv::As<records::BattleTask>(s)->step_x);
         Put16(kA, Mul(t, G16(kR)) >> 12);
         t = Cos(rv::Current<records::BattleTask>()->step_x);
         t = Mul(t, G16(kR)) >> 12;
@@ -957,8 +957,8 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         Put16(kB + 2, t >> 12);
         Put16(kB + 4, G16(kR2));
         s = Sprite_Current;
-        const std::int32_t x = Add(Shl(ax, 9), Long(s + 0x34));
-        const std::int32_t z = Add(Shl(az, 9), Long(s + 0x38));
+        const std::int32_t x = Add(Shl(ax, 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add(Shl(az, 9), rv::As<records::BattleTask>(s)->z);
         MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -1013,7 +1013,7 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     unsigned char* sc = Sprite_Current;
     Put16(kR2, Shl(Mul(t, 3), 7) >> 11);
     Put16(kR, (sc[9] + 1) << 6);
-    t = Sin(Long(sc + 0x10));
+    t = Sin(rv::As<records::BattleTask>(sc)->step_z);
     t = (Mul(t, G16(kR)) >> 3);
     rv::Store(rv::Current<records::BattleTask>()->x, Add(t, Long(Owner() + 0x34)));
     t = Cos(rv::Current<records::BattleTask>()->step_z);
@@ -1021,7 +1021,7 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     rv::Store(rv::Current<records::BattleTask>()->z, Add(t, Long(Owner() + 0x38)));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E) + Word(Mem(kR2)) - 0x20u);
     sc = Sprite_Current;
-    const long ground = MH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
+    const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(sc)->x, rv::As<records::BattleTask>(sc)->z);
     rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<short>(ground));
     Sprite_Current[0x25] = 0x1D;
     Sprite_Current[0x26] = 0;

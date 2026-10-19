@@ -149,11 +149,11 @@ void TargetDone() {
 void Orbit() {
     const int s = Sin(S16(Mem(kScratchB)));
     unsigned char* sc = Sprite_Current;
-    SetLong(sc + 0x34, Wrap(static_cast<std::uint32_t>(s) * static_cast<std::uint32_t>(Long(sc + 0xC)) +
+    rv::Store(rv::As<records::BattleTask>(sc)->x, Wrap(static_cast<std::uint32_t>(s) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
                             static_cast<std::uint32_t>(Long(Owner() + 0x34))));
     const int c = Cos(S16(Mem(kScratchB)));
     sc = Sprite_Current;
-    SetLong(sc + 0x38, Wrap(static_cast<std::uint32_t>(c) * static_cast<std::uint32_t>(Long(sc + 0xC)) +
+    rv::Store(rv::As<records::BattleTask>(sc)->z, Wrap(static_cast<std::uint32_t>(c) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
                             static_cast<std::uint32_t>(Long(Owner() + 0x38))));
 }
 void MoteAngle() { SetWord(Mem(kScratchB), static_cast<unsigned>((Sprite_Current[0xB] & 0xF) << 8)); }
@@ -727,7 +727,7 @@ MS17_EXPORT void __cdecl LeechShell_Task(void) {
     unsigned char* sc = Sprite_Current;
     if (sc[2] < 3) {
         const unsigned frame = Frame_Counter;
-        SetLong(sc + 0xC, (frame & 0xFF) == 0x40 ? 0x1000 : static_cast<std::int32_t>((frame & 0x3F) << 6));
+        rv::Store(rv::As<records::BattleTask>(sc)->step_x, (frame & 0xFF) == 0x40 ? 0x1000 : static_cast<std::int32_t>((frame & 0x3F) << 6));
         sc = Sprite_Current;
     }
     Entry(LeechShell_Phases_addr, sc[2])();
@@ -934,12 +934,12 @@ MS17_EXPORT void __cdecl LeechShell_Draw(void) {
         }
     }
     sc = Sprite_Current;
-    MH_AT(SortFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(Long(sc + 0x34)),
-                                                   static_cast<std::uint32_t>(Long(sc + 0x38)), depths, first, 0x10,
+    MH_AT(SortFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->x),
+                                                   static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->z), depths, first, 0x10,
                                                    0x38, 2);
     sc = Sprite_Current;
-    MH_AT(SortFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(Long(sc + 0x34)),
-                                                   static_cast<std::uint32_t>(Long(sc + 0x38)), line_depths, line_base,
+    MH_AT(SortFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->x),
+                                                   static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->z), line_depths, line_base,
                                                    0xC, 0x38, 2);
     Gfx_PacketNext = lines;
 }
@@ -1118,9 +1118,9 @@ MS17_EXPORT void __cdecl LeechOrb_DrawRings(void) {
             SetWord(VB(0x1C), static_cast<unsigned>(M(s, R())));
             const unsigned char* sc = Sprite_Current;
             const std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(S16(VB(0x18)))) << 9) +
-                                    static_cast<std::uint32_t>(Long(sc + 0x34));
+                                    static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->x);
             const std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(S16(VB(0x1A)))) << 9) +
-                                    static_cast<std::uint32_t>(Long(sc + 0x38));
+                                    static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->z);
             DrawMode(0xB5);
             MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
             unsigned char* const p = Gfx_PacketNext;

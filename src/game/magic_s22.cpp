@@ -370,8 +370,8 @@ S22_EXPORT void __cdecl BlizzardShard_DrawCrystal(void) {
         SetVW(0x14, 0u - SW(6));
         unsigned char* p = Gfx_PacketNext;
         const unsigned char* s = Sc();
-        std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(VS(8))) << 9) + static_cast<std::uint32_t>(Long(s + 0x34));
-        std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(VS(0xA))) << 9) + static_cast<std::uint32_t>(Long(s + 0x38));
+        std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(VS(8))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x);
+        std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(VS(0xA))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x95, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         p = Gfx_PacketNext;
@@ -413,8 +413,8 @@ S22_EXPORT void __cdecl BlizzardShard_DrawCrystal(void) {
         SetVW(0x1A, static_cast<unsigned>(Mul12(v, SS(2))));
         SetVW(0x1C, 0);
         s = Sc();
-        x = (static_cast<std::uint32_t>(static_cast<int>(VS(0x10))) << 9) + static_cast<std::uint32_t>(Long(s + 0x34));
-        z = (static_cast<std::uint32_t>(static_cast<int>(VS(0x12))) << 9) + static_cast<std::uint32_t>(Long(s + 0x38));
+        x = (static_cast<std::uint32_t>(static_cast<int>(VS(0x10))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x);
+        z = (static_cast<std::uint32_t>(static_cast<int>(VS(0x12))) << 9) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z);
         p = Gfx_PacketNext;
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x95, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);

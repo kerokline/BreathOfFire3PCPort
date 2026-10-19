@@ -439,8 +439,8 @@ C1_EXPORT void __cdecl Pentagram_Sprites(void) {
         child[9] = static_cast<unsigned char>(((i >> 1) << 3) + 1);
         child[0xA] = 0;
         child[0xB] = static_cast<unsigned char>(i >> 1);
-        tchild->x = Long(self + 0x34);
-        tchild->z = Long(self + 0x38);
+        tchild->x = rv::As<records::BattleTask>(self)->x;
+        tchild->z = rv::As<records::BattleTask>(self)->z;
         rv::Store<unsigned>(tchild->height_whole, rv::As<records::BattleTask>(self)->height_whole);
     }
     // the task as Sprite_Current was read after the last create

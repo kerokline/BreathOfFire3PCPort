@@ -503,8 +503,8 @@ S35_EXPORT void __cdecl LastResortBeam_DrawColumn(void) {
         }
         const std::int32_t half = DivPow2(top, 1);   // [esp+0x18]
         s = Sc();
-        const std::int32_t x = Add32(Shl(VS(0x18), 9), Long(s + 0x34));
-        const std::int32_t z = Add32(Shl(VS(0x1A), 9), Long(s + 0x38));
+        const std::int32_t x = Add32(Shl(VS(0x18), 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add32(Shl(VS(0x1A), 9), rv::As<records::BattleTask>(s)->z);
         DrawMode(0x35);
         Link(x, z, 0, 0xC);
         unsigned char* p = Gfx_PacketNext;
@@ -694,8 +694,8 @@ S35_EXPORT void __cdecl LastResortBeam_DrawSparks(int k) {
         SetVW(4, static_cast<unsigned>(height));
         if (static_cast<short>(height) > 0) SetVW(4, 0);
         s = Sc();
-        const std::int32_t x = Add32(Shl(VS(0), 9), Long(s + 0x34));
-        const std::int32_t z = Add32(Shl(static_cast<short>(cy), 9), Long(s + 0x38));
+        const std::int32_t x = Add32(Shl(VS(0), 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add32(Shl(static_cast<short>(cy), 9), rv::As<records::BattleTask>(s)->z);
         DrawMode(0x35);
         Link(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;

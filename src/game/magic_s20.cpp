@@ -338,12 +338,12 @@ S20_EXPORT void __cdecl Magic087_ChildRing(void) {
         unsigned index = MH_CALL(Magic087_PoolAlloc)() & 0xFFu;
         unsigned char* sc = Sprite_Current;
         unsigned char* m = PoolA(index);
-        SetLong(m + 0x80, PtrValue(sc));
+        rv::Store<std::int32_t>(rv::As<records::BattleTask>(m)->owner, PtrValue(sc));
         m[1] = 2;
         index = MH_CALL(Magic087_PoolAlloc)() & 0xFFu;
         sc = Sprite_Current;
         m = PoolA(index);
-        SetLong(m + 0x80, PtrValue(sc));
+        rv::Store<std::int32_t>(rv::As<records::BattleTask>(m)->owner, PtrValue(sc));
         m[1] = 3;
         sc[9] = 8;
         Bump(Sprite_Current[0xA], -1);
@@ -493,7 +493,7 @@ S20_EXPORT void __cdecl Magic087_OrbitSpin(void) {
     Bump(Sprite_Current[9], 1);
     unsigned char* sc = Sprite_Current;
     SetLong(Scr(4), static_cast<std::int32_t>((sc[9] & 0x3Fu) << 6));
-    SetLong(sc + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0xC)) - static_cast<std::uint32_t>(Long(sc + 0x18))));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) - static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_18)));
     SetLong(Scr(0), rv::Current<records::BattleTask>()->step_x);
     const int s = MH_CALL(Math_Sin)(Long(Scr(4)));
     rv::Store(rv::Current<records::BattleTask>()->x, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
@@ -503,7 +503,7 @@ S20_EXPORT void __cdecl Magic087_OrbitSpin(void) {
     sc = Sprite_Current;
     if (sc[0xA] < 0x21) Bump(sc[0xA], 1);
     sc = Sprite_Current;
-    if (Long(sc + 0xC) != 0) return;
+    if (rv::As<records::BattleTask>(sc)->step_x != 0) return;
     if (sc[4] == 0) {
         Bump(sc[2], 1);
         return;
@@ -702,7 +702,7 @@ S20_EXPORT void __cdecl Magic088_Start(void) {
     unsigned index = MH_CALL(BattleTask_Create)(1, 0x20) & 0xFFu;
     unsigned char* sc = Sprite_Current;
     unsigned char* t = Task(index);
-    SetLong(t + 0x80, PtrValue(sc));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(t)->owner, PtrValue(sc));
     t[1] = 0;
     t[9] = 0;
     t[0xA] = 0;
@@ -711,7 +711,7 @@ S20_EXPORT void __cdecl Magic088_Start(void) {
     index = MH_CALL(BattleTask_Create)(1, 0x20) & 0xFFu;
     sc = Sprite_Current;
     t = Task(index);
-    SetLong(t + 0x80, PtrValue(sc));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(t)->owner, PtrValue(sc));
     t[1] = 1;
     t[4] = sc[4];
     t[9] = sc[9];

@@ -347,7 +347,7 @@ C2_EXPORT void __cdecl BoneDanceBone_Fall(void) {
     AddLong(s + 0x14, rv::As<records::BattleTask>(s)->work_20);
     MH_CALL(Sprite_ScriptTick)();
     s = Sc();
-    const long ground = MH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(s)->x, rv::As<records::BattleTask>(s)->z);
     if (static_cast<short>(rv::Current<records::BattleTask>()->height_whole) >= static_cast<short>(ground)) return;
     int r = RandCall() % 6;
     rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r + 2) << 16), Long(Owner() + 0x34)));
@@ -1025,7 +1025,7 @@ C2_EXPORT void __cdecl HolocaustBeam_Aim(void) {
     s = Sc();
     SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
     SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
-    SetLong(s + 0xC, (SS(0xC) - SS(8)) / 16);
+    rv::Store(rv::As<records::BattleTask>(s)->step_x, (SS(0xC) - SS(8)) / 16);
     rv::Store(rv::Current<records::BattleTask>()->step_z, (SS(0xE) - SS(0xA)) / 16);
     const int dy = SS(0xE) - SS(0xA);
     const int dx = SS(0xC) - SS(8);
@@ -1304,12 +1304,12 @@ C2_EXPORT void __cdecl HolocaustSpark_Run(void) {
     if (s[0] == 0 || s[2] == 0) return;
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), 2, 0xC);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::As<records::BattleTask>(s)->x), static_cast<unsigned long>(rv::As<records::BattleTask>(s)->z), 2, 0xC);
     MH_CALL(BattleActor_UpdateScreenXY)();
     Call0(addr::HolocaustSpark_Draw);
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x15, 0);
     s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), 2, 0xC);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::As<records::BattleTask>(s)->x), static_cast<unsigned long>(rv::As<records::BattleTask>(s)->z), 2, 0xC);
 }
 
 // original 0x4E40B0: +9 (the delay) down; at 0 the spark starts: rising (+0x14
@@ -1403,7 +1403,7 @@ C2_EXPORT void __cdecl HolocaustSpark_Draw(void) {
             p[0x24 + k] = 1;
         }
         s = Sc();
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), 2,
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(rv::As<records::BattleTask>(s)->x), static_cast<unsigned long>(rv::As<records::BattleTask>(s)->z), 2,
                                     0x34);
     }
 }

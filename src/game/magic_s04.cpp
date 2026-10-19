@@ -407,7 +407,7 @@ S04_EXPORT void __cdecl SnapWave_Swing(void) {
         Inc(Sc()[2]);
         return;
     }
-    SetLong(s + 0xC, static_cast<std::int32_t>(0xFFFFA000u));
+    rv::Store(rv::As<records::BattleTask>(s)->step_x, static_cast<std::int32_t>(0xFFFFA000u));
     rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     Dec(Sc()[2]);

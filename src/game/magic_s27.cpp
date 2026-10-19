@@ -361,8 +361,8 @@ S27_EXPORT void __cdecl BurnFlame_Draw(void) {
         SetVW(0x1C, 0);
         const unsigned char* s = Sc();
         const std::uint32_t shift = static_cast<std::uint32_t>(static_cast<int>(VS(8))) << 9;
-        const std::uint32_t x = static_cast<std::uint32_t>(Long(s + 0x34)) + shift;
-        const std::uint32_t z = static_cast<std::uint32_t>(Long(s + 0x38)) + shift;
+        const std::uint32_t x = static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x) + shift;
+        const std::uint32_t z = static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z) + shift;
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -900,13 +900,13 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
             unsigned char* s = Sc();
             s[0xB] = static_cast<unsigned char>(i);
             s[0xA] = static_cast<unsigned char>(e);
-            SetLong(s + 0xC, Long(offset));
-            SetLong(s + 0x10, Long(offset + 4));
+            rv::Store(rv::As<records::BattleTask>(s)->step_x, Long(offset));
+            rv::Store(rv::As<records::BattleTask>(s)->step_z, Long(offset + 4));
             MH_AT(PrimFn, raw::kTurnOffset)(s);
             s = Sc();
-            SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(tr->x) +
-                                                        static_cast<std::uint32_t>(Long(s + 0xC))));
-            SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x10)) +
+            rv::Store(rv::As<records::BattleTask>(s)->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(tr->x) +
+                                                        static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_x)));
+            rv::Store(rv::As<records::BattleTask>(s)->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_z) +
                                                         static_cast<std::uint32_t>(tr->z)));
             rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 8)) +
                                                         static_cast<std::uint32_t>(tr->height)));

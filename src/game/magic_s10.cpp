@@ -991,8 +991,8 @@ S10_EXPORT void __cdecl EbonfireRing_Draw(void) {
         SetVW(0x1A, static_cast<unsigned>(Mul12(v, SS(4))));
         const std::uint32_t lean = Shl(VS(8), 9);
         SetVW(0x1C, 0);
-        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x34)) + lean);
-        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x38)) + lean);
+        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x) + lean);
+        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z) + lean);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x55, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
         p = Gfx_PacketNext;

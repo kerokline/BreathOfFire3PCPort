@@ -535,17 +535,17 @@ MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
     const std::uint32_t r = static_cast<std::uint32_t>(MH_CALL(Rand)());
     CrystalFrame((r & 3) + (wide ? 0x40u : 0x18u));
     unsigned char* now = Sprite_Current;
-    if (Long(now + 0xC) < 4) {
-        SetLong(now + 0x10, Add(Long(now + 0x10), 1));
+    if (rv::As<records::BattleTask>(now)->step_x < 4) {
+        rv::Store(rv::As<records::BattleTask>(now)->step_z, Add(rv::As<records::BattleTask>(now)->step_z, 1));
         now = Sprite_Current;
         if ((now[0x10] & 7) == 0) {
-            SetLong(now + 0xC, Add(Long(now + 0xC), 1));
+            rv::Store(rv::As<records::BattleTask>(now)->step_x, Add(rv::As<records::BattleTask>(now)->step_x, 1));
             now = Sprite_Current;
         }
     }
     now[9] = static_cast<unsigned char>(now[9] + now[0xC]);
     now = Sprite_Current;
-    if (Long(now + 0xC) != 4) return;
+    if (rv::As<records::BattleTask>(now)->step_x != 4) return;
     Drop(now[0xA]);
     now = Sprite_Current;
     if (now[0xA] != 0) return;

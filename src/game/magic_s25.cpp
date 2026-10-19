@@ -785,11 +785,11 @@ S25_EXPORT void __cdecl SpellConfuse_ChildFly(void) {
     Bump(Sprite_Current[0xA]);
     const unsigned char* sc = Sprite_Current;
     MH_AT(void (__cdecl*)(int, int, int, int, int), bof3::addr::MagicFx_StepTowardPoint)(
-        (Long(sc + 0x18) >> 9) - 0x4000, (Long(sc + 0x1C) >> 9) - 0x4000, rv::As<records::BattleTask>(sc)->work_20 >> 17, 0, 0x20);
+        (rv::As<records::BattleTask>(sc)->work_18 >> 9) - 0x4000, (rv::As<records::BattleTask>(sc)->work_1c >> 9) - 0x4000, rv::As<records::BattleTask>(sc)->work_20 >> 17, 0, 0x20);
     sc = Sprite_Current;
     if (MH_AT(int (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t),
-              bof3::addr::MagicFx_NearPoint3D)(static_cast<std::uint32_t>(Long(sc + 0x18)),
-                                               static_cast<std::uint32_t>(Long(sc + 0x1C)),
+              bof3::addr::MagicFx_NearPoint3D)(static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_18),
+                                               static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_1c),
                                                static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_20), 0x8000) != 0)
         Bump(Sprite_Current[1]);
 }

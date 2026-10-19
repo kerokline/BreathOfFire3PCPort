@@ -379,7 +379,7 @@ C3_EXPORT void __cdecl Magic111_Start(void) {
     unsigned char* child = TaskSlot(slot);
     std::memmove(child, record, 0x80);
     unsigned char* self = Sc();
-    SetLong(child + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(child)->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
     child[1] = 0;
     child[2] = 0;
     child[6] = 1;
@@ -389,7 +389,7 @@ C3_EXPORT void __cdecl Magic111_Start(void) {
         slot = MH_CALL(BattleTask_Create)(1, 0x57) & 0xFFu;
         child = TaskSlot(slot);
         self = Sc();
-        SetLong(child + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
+        rv::Store<std::int32_t>(rv::As<records::BattleTask>(child)->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(self)));
         child[1] = static_cast<unsigned char>(kind);
         Inc(self[0xB]);
     }

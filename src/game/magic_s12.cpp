@@ -1031,24 +1031,24 @@ MS12_EXPORT void __cdecl CeleritySpark_Fall(void) {
 MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* sc = SC();
-    const bool wide = Long(sc + 0xC) == 4 && sc[0xA] < 5;
+    const bool wide = rv::As<records::BattleTask>(sc)->step_x == 4 && sc[0xA] < 5;
     const int r = MH_CALL(Rand)();
     DrawDisc(static_cast<unsigned>((r & 3) + (wide ? 0x40 : 0x18)));
     MH_CALL(MagicFx_PushActorMatrix)();
     Call0(bof3::addr::CeleritySpark_Draw);
     MH_CALL(Gte_PopMatrix)();
     sc = SC();
-    if (Long(sc + 0xC) < 4) {
-        SetLong(sc + 0x10, AddL(Long(sc + 0x10), 1));
+    if (rv::As<records::BattleTask>(sc)->step_x < 4) {
+        rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 1));
         sc = SC();
         if ((sc[0x10] & 7) == 0) {
-            SetLong(sc + 0xC, AddL(Long(sc + 0xC), 1));
+            rv::Store(rv::As<records::BattleTask>(sc)->step_x, AddL(rv::As<records::BattleTask>(sc)->step_x, 1));
             sc = SC();
         }
     }
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();
-    if (Long(sc + 0xC) != 4) return;
+    if (rv::As<records::BattleTask>(sc)->step_x != 4) return;
     Drop(sc[0xA]);
     sc = SC();
     if (sc[0xA] != 0) return;
@@ -1056,7 +1056,7 @@ MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
         MH_CALL(Sound_PlayById)(0x101);
         sc = SC();
     }
-    SetLong(sc + 0x10, 8);
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, 8);
     rv::Store(rv::Current<records::BattleTask>()->step_y, 8);
     rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Bump(SC()[2]);
@@ -1069,7 +1069,7 @@ MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
 MS12_EXPORT void __cdecl CeleritySpark_Orbit(void) {
     SparkFrame(0x20);
     unsigned char* sc = SC();
-    SetLong(sc + 0x10, AddL(Long(sc + 0x10), 4));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 4));
     sc = SC();
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();

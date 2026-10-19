@@ -430,8 +430,8 @@ S08_EXPORT void __cdecl BerserkRing_Draw(void) {
         SetVW(0x1A, static_cast<unsigned>(Mul12(v, SS(0))));
         s = Sc();
         const std::uint32_t lift = static_cast<std::uint32_t>(Shl(VS(0x18), 9));
-        const std::uint32_t x = static_cast<std::uint32_t>(Long(s + 0x34)) + lift;
-        const std::uint32_t z = static_cast<std::uint32_t>(Long(s + 0x38)) + lift;
+        const std::uint32_t x = static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x) + lift;
+        const std::uint32_t z = static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z) + lift;
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;

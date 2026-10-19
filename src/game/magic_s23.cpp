@@ -368,12 +368,12 @@ S23_EXPORT void __cdecl FxFunnel_Orbit(void) {
             tsc->step_z = (tsc->step_z & 0xFFF) - (tsc->step_y & 0xFFF);
         }
         unsigned char* sc = Sc();
-        const std::int32_t d = Long(sc + 0x10);
+        const std::int32_t d = rv::As<records::BattleTask>(sc)->step_z;
         if (d < 0) {
-            SetLong(sc + 0x10, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(d)));
+            rv::Store(rv::As<records::BattleTask>(sc)->step_z, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(d)));
             sc = Sc();
         }
-        const std::int32_t moved = Long(sc + 0x10);
+        const std::int32_t moved = rv::As<records::BattleTask>(sc)->step_z;
         if (moved <= 0x400 || moved >= 0xC00) return;
     }
     Bump(Owner()[9]);

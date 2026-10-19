@@ -185,7 +185,7 @@ void FadeHome(bool shrink) {
         s = Sc();
     }
     if (s[0x5D] != 0x80) return;
-    SetLong(s + 0x34, Long(Owner() + 0x34));
+    rv::Store(rv::As<records::BattleTask>(s)->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Inc(Sc()[2]);
