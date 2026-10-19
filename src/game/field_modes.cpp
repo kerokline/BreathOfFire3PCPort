@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_modes_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -61,6 +62,9 @@ namespace {
 using namespace field_modes;
 using VoidFn = void (__cdecl*)();
 
+// The typed views of these records (src/game/records.h).
+unsigned char* Bytes(records::EffectObject* p) { return reinterpret_cast<unsigned char*>(p); }
+
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.
 VoidFn Entry(std::uint32_t table, int index) {
@@ -91,15 +95,15 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
     const unsigned char slot = g.effect_alloc();
     At(kSlot)[0] = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect_Objects + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7);
+    records::EffectObject* const e = reinterpret_cast<records::EffectObject*>(Effect_Objects + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7));
     const int ex = x();
     const int ey = Angle(1);
-    e[0] = 1;
-    e[5] = 0x13;
-    SetLong(e + 0x64, ex);
-    SetLong(e + 0x68, ey);
-    SetLong(e + 0x6C, Angle(2));
-    e[9] = mode;
+    e->in_use = 1;
+    e->kind = 0x13;
+    SetLong(Bytes(e) + 0x64, ex);
+    SetLong(Bytes(e) + 0x68, ey);
+    SetLong(Bytes(e) + 0x6C, Angle(2));
+    e->timer = mode;
 }
 
 }  // namespace

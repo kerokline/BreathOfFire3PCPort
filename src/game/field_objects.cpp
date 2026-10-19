@@ -11,12 +11,19 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
 
 using namespace move_script;
+
+// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// record or another family whose first 0x80 bytes are a sprite object's (an
+// ObjTrio member, the kind-2 object), so only that part is named.
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -72,64 +79,65 @@ unsigned char PartySlot() {
 // a blocked step return before the motion - a blocked move with the step
 // undone: its script position and loop counter put back.
 extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
+    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
     unsigned char* const context = object + 0x80;
-    const unsigned char direction = Sprite_Current[8];
+    const unsigned char direction = Cur()->direction;
     // The step's two effects a blocked move undoes: the script position
     // (context +0xA) and the loop counter (context +2).
-    const unsigned char loop = object[0x82];
-    const std::uint16_t position = Word(object + 0x8A);
-    if (Sprite_Current[9] == 0) {
-        const unsigned char speed_index = object[0x84];
+    const unsigned char loop = obj->loop;
+    const std::uint16_t position = obj->script_position;
+    if (Cur()->step_frames == 0) {
+        const unsigned char speed_index = obj->speed;
         const unsigned char speed = Field_MoveSpeeds[speed_index];
-        if (object[0x87] == 0) {
+        if (obj->move_steps == 0) {
             if (speed_index != 0) {
                 const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
                 const unsigned char* const* scripts;
                 std::memcpy(&scripts, descriptor + 0x10, sizeof scripts);
-                const unsigned char result = g.step(context, scripts[object[0x83]]);
-                if (object[0x81]) g.pose_wait(context);
+                const unsigned char result = g.step(context, scripts[obj->area_script]);
+                if (obj->pose_wait) g.pose_wait(context);
                 if (result == 0xFF) return;
-                if (Sprite_Current[8] != result) {
-                    Sprite_Current[8] = result;
+                if (Cur()->direction != result) {
+                    Cur()->direction = result;
                     context[0] |= 8;
                 }
-                if (object[0x87] != 0) {   // the step began a timed move
+                if (obj->move_steps != 0) {   // the step began a timed move
                     Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
-                    --object[0x87];
-                    if (!(Sprite_Current[7] & 0x80) && g.blocked(object)) {
-                        Sprite_Current[8] &= 7;
+                    --obj->move_steps;
+                    if (!(Cur()->flags2 & 0x80) && g.blocked(object)) {
+                        Cur()->direction &= 7;
                         context[0] |= 0x18;
-                        SetWord(object + 0x8A, position);
-                        object[0x82] = loop;
-                        object[0x87] = 0;
-                        Sprite_Current[9] = 0;
+                        obj->script_position = position;
+                        obj->loop = loop;
+                        obj->move_steps = 0;
+                        Cur()->step_frames = 0;
                         return;
                     }
-                } else if (Sprite_Current[6] == 0x0A && (context[0] & 8) && !(context[0] & 0x80)) {
+                } else if (Cur()->type == 0x0A && (context[0] & 8) && !(context[0] & 0x80)) {
                     Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
-                    SetLong(Sprite_Current + 0xC, 0);
-                    SetLong(Sprite_Current + 0x10, 0);
-                    SetLong(Sprite_Current + 0x14, 0);
+                    Cur()->step_x = 0;
+                    Cur()->step_z = 0;
+                    Cur()->step_y = 0;
                 }
                 for (const unsigned char bit : {2, 4}) {
                     if (context[0] & bit) {
-                        Sprite_Current[3] = Sprite_Current[1];
-                        Sprite_Current[1] = bit == 2 ? 8 : 9;
+                        Sprite_Current[3] = Cur()->state;
+                        Cur()->state = bit == 2 ? 8 : 9;
                         Sprite_Current[4] = 0;
                     }
                 }
             }
         } else {   // steps left: the next one, unless blocked
-            if (!(Sprite_Current[7] & 0x80) && g.blocked(object)) {
-                Sprite_Current[8] &= 7;
-                object[0x80] |= 0x18;
-                Sprite_Current[9] = 0;
+            if (!(Cur()->flags2 & 0x80) && g.blocked(object)) {
+                Cur()->direction &= 7;
+                obj->context |= 0x18;
+                Cur()->step_frames = 0;
                 return;
             }
             Sprite_Current[0xA] = static_cast<unsigned char>(0x10 / speed);
-            --object[0x87];
-            g.move(context, Sprite_Current[8] & 7);
-            Sprite_Current[8] |= 8;
+            --obj->move_steps;
+            g.move(context, Cur()->direction & 7);
+            Cur()->direction |= 8;
             context[0] |= 8;
         }
         g.settle(object, direction);
@@ -139,36 +147,37 @@ extern "C" void __cdecl Field_ObjectUpdate(unsigned char* object) {
 
 // original 0x518980: the timed move's motion, every frame (PSX FUN_801A3544).
 extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
+    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
     unsigned char* const context = object + 0x80;
-    if (Sprite_Current[9] != 0) {
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)) +
-                                                                 static_cast<std::uint32_t>(Long(Sprite_Current + 0xC))));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x38)) +
-                                                                 static_cast<std::uint32_t>(Long(Sprite_Current + 0x10))));
+    if (Cur()->step_frames != 0) {
+        Cur()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->x) +
+                                                                 static_cast<std::uint32_t>(Cur()->step_x));
+        Cur()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->z) +
+                                                                 static_cast<std::uint32_t>(Cur()->step_z));
         SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(Word(Sprite_Current + 0x3E) + Word(Sprite_Current + 0x14)));
-        --Sprite_Current[9];
-        if (Sprite_Current[9] == 0) {   // arrived
+        --Cur()->step_frames;
+        if (Cur()->step_frames == 0) {   // arrived
             if (!(context[0] & 0x80))
-                SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(g.elevation(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38))));
-            SetWord(object + 0x9C, 0);
+                SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(g.elevation(Cur()->x, Cur()->z)));
+            obj->counter = 0;
             const unsigned char after = Sprite_Current[2];
             if (static_cast<int>(after) - 1 < 3) {
                 const auto frames = static_cast<unsigned char>((after & 3) * 0x1E);
-                object[0x81] = frames;
+                obj->pose_wait = frames;
                 if (frames != 0) {   // a wait of 30, 60 or 90 frames in pose 5
                     g.pose_wait(context);
-                    if (!(Sprite_Current[7] & 8)) {
-                        Sprite_Current[8] &= 7;
+                    if (!(Cur()->flags2 & 8)) {
+                        Cur()->direction &= 7;
                         context[0] |= 8;
                     }
-                    object[0xA1] = (context[0] & 0x40) ? 0xFF : (Word(Sprite_Current + 0x58) < 8 ? 6 : 0);
+                    object[0xA1] = (context[0] & 0x40) ? 0xFF : (Cur()->script_pos < 8 ? 6 : 0);
                 }
             }
         }
     }
     g.party_apply(context);
     if (Field_Request != 2) {
-        if (Sprite_Current[9] > Sprite_Current[0xA]) context[0] &= 0xEF;
+        if (Cur()->step_frames > Sprite_Current[0xA]) context[0] &= 0xEF;
         else context[0] |= 0x10;
     }
 }
@@ -177,47 +186,48 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
 // (PSX FUN_801A4D24). Its argument is unused.
 extern "C" void __cdecl Party_ApplyRecord(unsigned char* context) {
     (void)context;
-    unsigned char* sprite = Sprite_Current;
-    if (sprite[6] != 0x0A) return;
+    records::SpriteObject* sprite = Cur();
+    if (sprite->type != 0x0A) return;
     unsigned char slot = PartySlot();
     if (static_cast<signed char>(slot) < 0) slot = 4;
     unsigned char* const r = MoveScript_PartyRecords + static_cast<signed char>(slot) * 16;
     if (r[1] != 0) {
         --r[1];
-        SetLong(sprite + 0x64, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sprite + 0x64)) + static_cast<std::uint32_t>(Long(r + 4))));
-        SetLong(Sprite_Current + 0x68, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x68)) +
-                                                                 static_cast<std::uint32_t>(Long(r + 8))));
-        sprite = Sprite_Current;
+        sprite->angle[0] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[0])) + static_cast<std::uint32_t>(Long(r + 4)));
+        Cur()->angle[1] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(Cur()->angle[1])) +
+                                                                 static_cast<std::uint32_t>(Long(r + 8)));
+        sprite = Cur();
     }
     if (r[2] != 0) {
         --r[2];
-        SetLong(sprite + 0x6C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sprite + 0x6C)) + static_cast<std::uint32_t>(Long(r + 0xC))));
+        sprite->angle[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[2])) + static_cast<std::uint32_t>(Long(r + 0xC)));
     }
 }
 
 // original 0x518D10: the direction settled after the step (PSX FUN_801A3AEC);
 // `direction` is Sprite_Current[8] as Field_ObjectUpdate found it.
 extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char direction) {
-    unsigned char* const sprite = Sprite_Current;
-    if (sprite[6] == 0x0A) {
-        if (sprite[9] == 0) return;
+    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    records::SpriteObject* const sprite = Cur();
+    if (sprite->type == 0x0A) {
+        if (sprite->step_frames == 0) return;
         if (!(Field_ActiveMember[0x80] & 8)) return;
-        g.party_move(object, sprite[8] & 7);
-        object[0x80] &= 0xF7;
+        g.party_move(object, sprite->direction & 7);
+        obj->context &= 0xF7;
         return;
     }
-    if (sprite[7] & 8) {
-        object[0x80] &= 0xF7;
+    if (sprite->flags2 & 8) {
+        obj->context &= 0xF7;
         return;
     }
-    object[0x80] |= 8;
-    if (Sprite_Current[9] != 0) Sprite_Current[8] |= 8;
-    else Sprite_Current[8] &= 7;
+    obj->context |= 8;
+    if (Cur()->step_frames != 0) Cur()->direction |= 8;
+    else Cur()->direction &= 7;
     if (Scratch()[3] == 0xFF) {   // op E4's flag, consumed
         Scratch()[3] = 0;
         return;
     }
-    if (direction == Sprite_Current[8]) object[0x80] &= 0xF7;
+    if (direction == Cur()->direction) obj->context &= 0xF7;
 }
 
 // original 0x5192A0: the update of an attached object (PSX ov_entry_801A4418):
@@ -228,19 +238,19 @@ extern "C" void __cdecl Field_ObjectSettle(unsigned char* object, unsigned char 
 extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
     const unsigned char n = g.by_handle(Sprite_Current[0x18]);
     const unsigned char* const other = n >= 0x1E ? Sprite_ObjectsExtra + (n - 0x1Eu) * 0xA4u : Sprite_Objects + n * 0xA4u;
-    if (Sprite_Current[9] == 0) {
-        Sprite_Current[0x24] |= 0x20;
+    if (Cur()->step_frames == 0) {
+        Cur()->draw_flags |= 0x20;
         for (const unsigned at : {0x34u, 0x38u, 0x3Cu}) SetLong(Sprite_Current + at, Long(other + at));
-        if (Sprite_Current[6] != 0x0A)
+        if (Cur()->type != 0x0A)
             for (const unsigned at : {0x64u, 0x68u, 0x6Cu}) SetLong(Sprite_Current + at, Long(other + at));
         long offset[3];
         g.attach_offset(offset, Sprite_Current[0x1C]);
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x34)) + static_cast<std::uint32_t>(offset[0])));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x38)) + static_cast<std::uint32_t>(offset[1])));
+        Cur()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->x) + static_cast<std::uint32_t>(offset[0]));
+        Cur()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->z) + static_cast<std::uint32_t>(offset[1]));
         SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(Word(Sprite_Current + 0x3E) + static_cast<std::uint16_t>(offset[2])));
     }
     g.update(object);
-    Sprite_Current[8] &= 7;
+    Cur()->direction &= 7;
 }
 
 // original 0x578EB0: an attachment's offset (PSX FUN_801AD1DC) - vector
@@ -314,8 +324,8 @@ std::uint32_t Id(const void* p) {
 void Disturb() {
     const std::uint32_t h = Hash();
     if (h % 4 == 0) g_object[0x80] = static_cast<unsigned char>(h >> 8);
-    if (h % 5 == 0) Sprite_Current[8] = static_cast<unsigned char>(h >> 16);
-    if (h % 7 == 0) Sprite_Current[9] = static_cast<unsigned char>(h >> 24) % 3;
+    if (h % 5 == 0) Cur()->direction = static_cast<unsigned char>(h >> 16);
+    if (h % 7 == 0) Cur()->step_frames = static_cast<unsigned char>(h >> 24) % 3;
 }
 
 unsigned char __cdecl StubStep(unsigned char* context, const unsigned char* script) {
@@ -332,7 +342,7 @@ unsigned char __cdecl StubStep(unsigned char* context, const unsigned char* scri
     if (h % 7 == 0) g_object[0x80] = static_cast<unsigned char>(h >> 16);
     switch (h >> 28) {
     case 0: case 1: case 2: return 0xFF;
-    case 3: case 4: case 5: return Sprite_Current[8];
+    case 3: case 4: case 5: return Cur()->direction;
     default: return static_cast<unsigned char>(h >> 20);
     }
 }
@@ -514,18 +524,18 @@ void SelfTest(void* const (&theirs)[kCount]) {
         // The boundaries: a timed move running or not, arriving or not; a speed
         // (never 0 with steps left); the sprite's type byte 0x0A; bit 7 of
         // Sprite_Current[7]; E4's flag; the entry direction repeated.
-        unsigned char* const sprite = Sprite_Current;
-        sprite[9] = static_cast<unsigned char>(Next() % 2 ? 0 : Next() % 3);
+        records::SpriteObject* const sprite = Cur();
+        sprite->step_frames = static_cast<unsigned char>(Next() % 2 ? 0 : Next() % 3);
         g_object[0x87] = static_cast<unsigned char>(Next() % 2 ? 0 : Next() % 4);
         g_object[0x84] = static_cast<unsigned char>(g_object[0x87] ? 1 + Next() % 5 : Next() % 6);
         g_object[0x81] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
-        if (Often()) sprite[6] = 0x0A;
-        if (Often()) sprite[7] &= 0x7F;
-        if (Often()) sprite[2] = static_cast<unsigned char>(Next() % 5);
-        if (Often()) SetWord(sprite + 0x58, Next() % 16);
+        if (Often()) sprite->type = 0x0A;
+        if (Often()) sprite->flags2 &= 0x7F;
+        if (Often()) Bytes(sprite)[2] = static_cast<unsigned char>(Next() % 5);
+        if (Often()) sprite->script_pos = Next() % 16;
         if (Often()) Scratch()[3] = 0xFF;
         if (Often()) Field_Request = 2;
-        const unsigned char direction = Often() ? static_cast<unsigned char>(sprite[8] | (sprite[9] ? 8 : 0)) : static_cast<unsigned char>(Next());
+        const unsigned char direction = Often() ? static_cast<unsigned char>(sprite->direction | (sprite->step_frames ? 8 : 0)) : static_cast<unsigned char>(Next());
         if (k == 2 && Often()) {   // the party record's counts, one or both running
             unsigned char* const r = MoveScript_PartyRecords + (PartySlot() & 7) * 16;
             r[1] = static_cast<unsigned char>(Next() % 3);

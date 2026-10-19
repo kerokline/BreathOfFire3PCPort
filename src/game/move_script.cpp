@@ -11,6 +11,7 @@
 #include "hook/log.h"
 
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/wide_staging.h"
 
 namespace {
@@ -18,6 +19,12 @@ namespace {
 using namespace move_script;
 
 using AreaHandler = void (__cdecl*)();
+
+// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// record or another family whose first 0x80 bytes are a sprite object's (an
+// ObjTrio member, the kind-2 object), so only that part is named.
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 using CounterOp = signed char (__cdecl*)(const unsigned char*);
 using GroupFn = unsigned char (__cdecl*)(unsigned char*, const unsigned char*, unsigned char);
 
@@ -131,7 +138,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             AreaHandler const* handlers;
             std::memcpy(&handlers, descriptor + 0x3C, sizeof handlers);
             handlers[p[1]]();
-            result = Sprite_Current[8];
+            result = Cur()->direction;
             SetPos(object, Pos(object) + 2u);
             break;
         }
@@ -170,7 +177,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
                 wide_staging::Placed0D(object, script, Pos(object));   // DIV-0122: a site's start moved out (wide only)
-                const long h = g.elevation(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
+                const long h = g.elevation(Cur()->x, Cur()->z);
                 SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(h));
             }
             SetPos(object, Pos(object) + 5u);
@@ -180,10 +187,10 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
             const unsigned char animation = op == 0x0E
                 ? p[1] : MoveScript_AnimByState[p[1] * 11u + Field_State[0x89]];
             object[0] |= 0x40;
-            Sprite_Current[7] |= 8;
-            if (script[Pos(object) + 3u] & 1) Sprite_Current[0] |= 0x10;
-            else Sprite_Current[0] &= 0xEF;
-            Sprite_Current[0x2A] = script[Pos(object) + 2u];
+            Cur()->flags2 |= 8;
+            if (script[Pos(object) + 3u] & 1) Cur()->flags |= 0x10;
+            else Cur()->flags &= 0xEF;
+            Cur()->pose = script[Pos(object) + 2u];
             const unsigned at = Pos(object);
             if (script[at + 3] & 2) {
                 g.set_animation_at(animation, script[at + 4]);
@@ -243,7 +250,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                     object[0] |= 0x80;
                 }
             }
-            SetLong(Sprite_Current + 0x14, 0);
+            Cur()->step_y = 0;
             const unsigned at = Pos(object);
             SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
             SetPos(object, Pos(object) + 4u);
@@ -252,10 +259,10 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                 g.move(object, value);
                 const unsigned at = Pos(object);
                 const auto target = static_cast<std::int16_t>(script[at + 3] << 8 | script[at + 4]);
-                unsigned char* const sprite = Sprite_Current;
-                const std::int32_t rise = target - static_cast<std::int16_t>(Word(sprite + 0x3E));
-                const std::int32_t frames = static_cast<std::int32_t>(sprite[9]) * object[7];
-                SetLong(sprite + 0x14, rise / frames);
+                records::SpriteObject* const sprite = Cur();
+                const std::int32_t rise = target - static_cast<std::int16_t>(Word(Bytes(sprite) + 0x3E));
+                const std::int32_t frames = static_cast<std::int32_t>(sprite->step_frames) * object[7];
+                sprite->step_y = rise / frames;
                 object[0] |= 0x80;
                 SetPos(object, Pos(object) + 4u);
             } else {
@@ -277,15 +284,15 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
     }
     case 0xF4: {   // F4 th tl n: rise to th.tl over n frames (0 counts as 1)
         object[0] |= 0x80;
-        Sprite_Current[9] = p[3];
-        if (Sprite_Current[9] == 0) Sprite_Current[9] = 1;
-        unsigned char* const sprite = Sprite_Current;
+        Cur()->step_frames = p[3];
+        if (Cur()->step_frames == 0) Cur()->step_frames = 1;
+        records::SpriteObject* const sprite = Cur();
         const unsigned at = Pos(object);
         const auto target = static_cast<std::int16_t>(script[at + 1] << 8 | script[at + 2]);
-        const std::int32_t rise = target - static_cast<std::int16_t>(Word(sprite + 0x3E));
-        SetLong(sprite + 0x14, rise / static_cast<std::int32_t>(sprite[9]));
-        SetLong(Sprite_Current + 0xC, 0);
-        SetLong(Sprite_Current + 0x10, 0);
+        const std::int32_t rise = target - static_cast<std::int16_t>(Word(Bytes(sprite) + 0x3E));
+        sprite->step_y = rise / static_cast<std::int32_t>(sprite->step_frames);
+        Cur()->step_x = 0;
+        Cur()->step_z = 0;
         SetPos(object, Pos(object) + 3u);
         return value;
     }
@@ -315,7 +322,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
             return 0xFF;
         }
         SetPos(object, Pos(object) + 2u);
-        return static_cast<unsigned char>(Sprite_Current[8] & 7);
+        return static_cast<unsigned char>(Cur()->direction & 7);
     case 0xFB: case 0xFC: {
         unsigned char* const sprite = Sprite_Current;
         const auto x = static_cast<short>(Word(sprite + 0x36)), z = static_cast<short>(Word(sprite + 0x3A));
@@ -324,7 +331,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
     }
     case 0xFD:
         if (!g.tick_once()) {
-            Sprite_Current[7] |= 0x20;
+            Cur()->flags2 |= 0x20;
             SetPos(object, Pos(object) - 1u);
         }
         return value;
@@ -332,7 +339,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
         if (Field_Request != 3) {
             const std::uint16_t next = g.peek();
             SetWord(Scratch(), next);
-            if (Word(Sprite_Current + 0x58) != next) {
+            if (Cur()->script_pos != next) {
                 const unsigned at = Pos(object);
                 if (next == script[at + 2]) g.sound(static_cast<unsigned short>(script[at + 1] + 0x200u));
             }
@@ -351,7 +358,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
 // Returns al: the flow pass's value, the op's group for 0x10-0x4F, or what
 // the group handler returned.
 extern "C" unsigned char __cdecl MoveScript_Step(unsigned char* object, const unsigned char* script) {
-    const unsigned char start = Sprite_Current[8];
+    const unsigned char start = Cur()->direction;
     MoveScript_Object = object;
     unsigned char result = MoveScript_Flow(object, script, start);
     const std::uint16_t pos = Pos(object);
