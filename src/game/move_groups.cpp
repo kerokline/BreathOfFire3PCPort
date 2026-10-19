@@ -11,6 +11,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -88,15 +89,22 @@ unsigned char* PartyRecord(int slot) { return MoveScript_PartyRecords + slot * 1
 unsigned char* TintRecord(unsigned char n) { return MoveScript_TintRecords + n * 12u; }
 unsigned char* ActiveMember() { return Field_ActiveMember; }
 
+// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// record or another family whose first 0x80 bytes are a sprite object's (an
+// ObjTrio member, the kind-2 object), so only that part is named.
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+records::PartyMember* Leader() { return reinterpret_cast<records::PartyMember*>(ObjTrio); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
+
 // Ops C8 and CE: the sprite's direction one step toward a target, then its
 // facing (kind 1: the animation itself), and the op repeats.
 unsigned char TurnStep(unsigned char* object, unsigned char direction, unsigned char mode) {
-    Sprite_Current[8] = direction;
-    if (g.kind() == 1) g.set_animation(Sprite_Current[8]);
-    else g.face(Sprite_Current[8]);
+    Cur()->direction = direction;
+    if (g.kind() == 1) g.set_animation(Cur()->direction);
+    else g.face(Cur()->direction);
     object[1] = mode;
     SetPos(object, Pos(object) - 1u);
-    return Sprite_Current[8];
+    return Cur()->direction;
 }
 
 }  // namespace
@@ -107,17 +115,17 @@ extern "C" unsigned char __cdecl MoveScript_Group9(unsigned char* object, const 
     const unsigned char* const p = script + pos;
     const unsigned char op = p[0];
     if (op >= 0x90 && op <= 0x95) {
-        unsigned char* const sprite = Sprite_Current;
+        records::SpriteObject* const sprite = Cur();
         const unsigned char n = g.effect_spawn(static_cast<unsigned char>(op - 0x90), static_cast<signed char>(p[1]),
-                                               static_cast<signed char>(p[2]), static_cast<short>(Word(sprite + 0x2E)),
-                                               static_cast<short>(Word(sprite + 0x30)));
+                                               static_cast<signed char>(p[2]), static_cast<short>(static_cast<std::uint16_t>(sprite->screen_x)),
+                                               static_cast<short>(static_cast<std::uint16_t>(sprite->screen_y)));
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 2u);
     } else if (op >= 0x98 && op <= 0x9D) {
-        unsigned char* const sprite = Sprite_Current;
+        records::SpriteObject* const sprite = Cur();
         const unsigned char n = g.effect_spawn_at(static_cast<unsigned char>(op - 0x98), static_cast<signed char>(p[1]),
-                                                  static_cast<signed char>(p[2]), Long(sprite + 0x34), Long(sprite + 0x38),
-                                                  Long(sprite + 0x3C));
+                                                  static_cast<signed char>(p[2]), sprite->x, sprite->z,
+                                                  sprite->height);
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 2u);
     } else if (op == 0x9F) {   // wait while the effect lives
@@ -130,8 +138,8 @@ extern "C" unsigned char __cdecl MoveScript_Group9(unsigned char* object, const 
 // sprite's direction. Returns Sprite_Current[8], not `value`.
 extern "C" unsigned char __cdecl MoveScript_Group6(unsigned char* object, const unsigned char* script, unsigned char value) {
     (void)value;
-    unsigned char* const sprite = Sprite_Current;
-    const unsigned char d = sprite[8];
+    records::SpriteObject* const sprite = Cur();
+    const unsigned char d = sprite->direction;
     unsigned char animation;
     switch (script[Pos(object)]) {
     case 0x61: animation = static_cast<unsigned char>((d & 7) + 0x14); break;
@@ -140,14 +148,14 @@ extern "C" unsigned char __cdecl MoveScript_Group6(unsigned char* object, const 
     case 0x64: animation = static_cast<unsigned char>((d & 7) + 0x2C); break;
     case 0x65: case 0x66:
         animation = static_cast<unsigned char>(((d >> 1) & 3) + (script[Pos(object)] == 0x65 ? 0x34 : 0x10));
-        sprite[8] = static_cast<unsigned char>((d & 6) + 1);
+        sprite->direction = static_cast<unsigned char>((d & 6) + 1);
         break;
     default: animation = d & 7; break;
     }
     object[0] |= 0x40;
-    Sprite_Current[7] |= 8;
+    Cur()->flags2 |= 8;
     g.set_animation(animation);
-    return Sprite_Current[8];
+    return Cur()->direction;
 }
 
 // original 0x577280: the flow pass's 0xB0 group (PSX FUN_801AA6E4) - sound and
@@ -206,7 +214,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
     const unsigned char op = p[0];
     switch (op) {
     case 0xE1:   // E1 d t: face d, then turn toward t
-        object[5] = Sprite_Current[8];
+        object[5] = Cur()->direction;
         g.face(p[1]);
         SetWord(object + 8, script[Pos(object) + 2u]);
         g.turn_target(object);
@@ -216,18 +224,18 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
     case 0xE0: case 0xE3: {   // E0 t: face the way ObjTrio 0 faces, reversed; E3 t: keep facing; then turn toward t
         if (op == 0xE0) {
             object[0] |= 8;
-            object[5] = Sprite_Current[8];
-            value = static_cast<unsigned char>(ObjTrio[8] ^ 4);
+            object[5] = Cur()->direction;
+            value = static_cast<unsigned char>(Leader()->direction ^ 4);
             g.face(value);
         } else {
-            object[5] = Sprite_Current[8] & 7;
+            object[5] = Cur()->direction & 7;
         }
         SetPos(object, Pos(object) + 1u);
         SetWord(object + 8, script[Pos(object)]);
         g.turn_target(object);
         const auto flags = static_cast<unsigned char>(object[0] & 0xEF);
         object[0] = flags;
-        object[0] = static_cast<unsigned char>((Sprite_Current[7] & 4) ? flags & 0xDF : flags | 0x20);
+        object[0] = static_cast<unsigned char>((Cur()->flags2 & 4) ? flags & 0xDF : flags | 0x20);
         return value;
     }
     case 0xE2:
@@ -236,15 +244,15 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         return value;
     case 0xE4:
         Scratch()[3] = 0xFF;
-        Sprite_Current[7] &= 0xD7;
+        Cur()->flags2 &= 0xD7;
         object[0] &= 0xBF;
         return value;
     case 0xE5:
         Field_ScriptFlags &= 0xFEFF;
-        Sprite_Current[1] = Sprite_Current[3];
+        Cur()->state = Sprite_Current[3];
         return value;
     case 0xE6:   // the sprite's flags cleared: the object ends
-        Sprite_Current[0] = 0;
+        Cur()->flags = 0;
         return value;
     case 0xE7:
         SetPos(object, pos + 1u);
@@ -259,26 +267,26 @@ extern "C" unsigned char __cdecl MoveScript_GroupE(unsigned char* object, const 
         if (g.op_e9(object, static_cast<signed char>(p[1]), static_cast<signed char>(p[2]),
                     static_cast<unsigned short>(p[3] << 8 | p[4]), static_cast<unsigned short>(p[5] << 8 | p[6]), p[7], p[8])) {
             SetPos(object, Pos(object) - 1u);
-            return g.kind() == 2 ? Sprite_Current[8] : 0xFF;
+            return g.kind() == 2 ? Cur()->direction : 0xFF;
         }
         SetPos(object, Pos(object) + 8u);
         return value;
     case 0xEA: {   // EA r g b a: a tint; a type-0x0A sprite keeps r g b itself
-        unsigned char* const sprite = Sprite_Current;
-        if (sprite[6] == 0x0A) {
-            sprite[0x5D] = p[1];
-            Sprite_Current[0x5E] = script[Pos(object) + 2u];
-            Sprite_Current[0x5F] = script[Pos(object) + 3u];
+        records::SpriteObject* const sprite = Cur();
+        if (sprite->type == 0x0A) {
+            sprite->shade[0] = p[1];
+            Cur()->shade[1] = script[Pos(object) + 2u];
+            Cur()->shade[2] = script[Pos(object) + 3u];
         } else {
-            g.tint(sprite, p[1], p[2], p[3], p[4]);
+            g.tint(Bytes(sprite), p[1], p[2], p[3], p[4]);
         }
         SetPos(object, Pos(object) + 4u);
         return value;
     }
-    case 0xEB: Sprite_Current[0] ^= 0x40; return value;
-    case 0xEC: Sprite_Current[7] ^= 4; return value;
-    case 0xED: Sprite_Current[7] ^= 8; return value;
-    case 0xEE: Sprite_Current[7] ^= 0x20; return value;
+    case 0xEB: Cur()->flags ^= 0x40; return value;
+    case 0xEC: Cur()->flags2 ^= 4; return value;
+    case 0xED: Cur()->flags2 ^= 8; return value;
+    case 0xEE: Cur()->flags2 ^= 0x20; return value;
     case 0xEF:   // the end of the script: context bit 8
         object[0] |= 8;
         return value;
@@ -308,7 +316,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         if (Field_Request != 3) {
             const std::uint16_t next = g.peek();
             SetWord(Scratch(), next);
-            if (Word(Sprite_Current + 0x58) != next) {
+            if (Cur()->script_pos != next) {
                 const unsigned char* const q = script + Pos(object);
                 if (next == q[3]) g.play_by_id(static_cast<unsigned short>(q[1] << 8 | q[2]));
             }
@@ -316,11 +324,11 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         SetPos(object, Pos(object) + 4u);
         return value;
     case 0xD2:
-        Sprite_Current[7] ^= 0x40;
-        Sprite_Current[0x48] = (Sprite_Current[7] & 0x40) ? 0 : 1;
+        Cur()->flags2 ^= 0x40;
+        Cur()->scale_mode = (Cur()->flags2 & 0x40) ? 0 : 1;
         return value;
     case 0xD3:
-        Sprite_Current[7] ^= 0x80;
+        Cur()->flags2 ^= 0x80;
         return value;
     case 0xD4: {   // D4 x x y y z z n: the party slot moves by x y z over n frames, or the sprite's +0x64..+0x6C
         unsigned char slot = PartySlot();
@@ -380,7 +388,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         return value;
     case 0xDB:
         g.op_db();
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(g.elevation(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38))));
+        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(g.elevation(Cur()->x, Cur()->z)));
         [[fallthrough]];
     case 0xDC:
         g.test_fb(static_cast<short>(Word(Sprite_Current + 0x36)), static_cast<short>(Word(Sprite_Current + 0x3A)));
@@ -393,7 +401,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         AreaHandler const* handlers;
         std::memcpy(&handlers, descriptor + 0x3C, sizeof handlers);
         handlers[p[1]]();
-        const unsigned char result = Sprite_Current[8];
+        const unsigned char result = Cur()->direction;
         SetPos(object, Pos(object) + 1u);
         return result;
     }
@@ -432,7 +440,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         return value;
     }
     case 0xC3: case 0xC4: {
-        Sprite_Current[0x48] = p[1];
+        Cur()->scale_mode = p[1];
         const std::int32_t a = Fixed88(script + Pos(object) + 2);
         (p[0] == 0xC3 ? AddLong : SubLong)(Sprite_Current + 0x40, a);
         const std::int32_t b = Fixed88(script + Pos(object) + 4);
@@ -441,35 +449,35 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         return value;
     }
     case 0xC5:
-        if (p[1] & 0x80) Sprite_Current[0] |= 0x20;
-        else Sprite_Current[0] &= 0xDF;
-        Sprite_Current[0x5C] = operand(1) & 3;
+        if (p[1] & 0x80) Cur()->flags |= 0x20;
+        else Cur()->flags &= 0xDF;
+        Cur()->draw_mode = operand(1) & 3;
         SetPos(object, Pos(object) + 1u);
         return value;
     case 0xC6:
-        Sprite_Current[0x5D] = static_cast<unsigned char>(Sprite_Current[0x5D] + p[1]);
-        Sprite_Current[0x5E] = static_cast<unsigned char>(Sprite_Current[0x5E] + operand(2));
-        Sprite_Current[0x5F] = static_cast<unsigned char>(Sprite_Current[0x5F] + operand(3));
+        Cur()->shade[0] = static_cast<unsigned char>(Cur()->shade[0] + p[1]);
+        Cur()->shade[1] = static_cast<unsigned char>(Cur()->shade[1] + operand(2));
+        Cur()->shade[2] = static_cast<unsigned char>(Cur()->shade[2] + operand(3));
         SetPos(object, Pos(object) + 3u);
         return value;
     case 0xC7: {
-        Sprite_Current[0x48] = 2;
+        Cur()->scale_mode = 2;
         static const unsigned kFields[] = {0x40, 0x44, 0x34, 0x38, 0x3C};
         for (unsigned i = 0; i < 5; ++i) AddLong(Sprite_Current + kFields[i], Fixed88(script + Pos(object) + 1 + 2 * i));
         SetPos(object, Pos(object) + 10u);
         return value;
     }
     case 0xC8: {   // C8 d s: turn toward direction d, one step a frame, s & 0xF to context +1
-        unsigned char* const sprite = Sprite_Current;
-        if (sprite[8] == p[1]) {
+        records::SpriteObject* const sprite = Cur();
+        if (sprite->direction == p[1]) {
             SetPos(object, pos + 2u);
-            return Sprite_Current[8];
+            return Cur()->direction;
         }
         const unsigned char s = p[2];
-        return TurnStep(object, static_cast<unsigned char>((sprite[8] + ((s & 0x80) ? 1 : -1)) & 7), s & 0xF);
+        return TurnStep(object, static_cast<unsigned char>((sprite->direction + ((s & 0x80) ? 1 : -1)) & 7), s & 0xF);
     }
     case 0xC9:
-        Sprite_Current[0x2B] = p[1];
+        Cur()->key_class = p[1];
         SetPos(object, Pos(object) + 1u);
         return value;
     case 0xCA:
@@ -479,7 +487,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
     case 0xCB:
         g.animation_bank(static_cast<unsigned short>(p[1] << 8 | p[2]));
         g.set_animation(operand(3));
-        Sprite_Current[0x2A] = operand(4) & 1;
+        Cur()->pose = operand(4) & 1;
         SetPos(object, Pos(object) + 4u);
         return value;
     case 0xCC:
@@ -489,10 +497,10 @@ extern "C" unsigned char __cdecl MoveScript_GroupC(unsigned char* object, const 
         g.tint_release(Sprite_Current);
         return value;
     case 0xCE: {   // turn toward ObjTrio 0's direction, reversed
-        unsigned char* const sprite = Sprite_Current;
-        const auto target = static_cast<unsigned char>(ObjTrio[8] ^ 4);
-        const auto now = static_cast<unsigned char>(sprite[8] & 7);
-        if (now == target) return sprite[8];
+        records::SpriteObject* const sprite = Cur();
+        const auto target = static_cast<unsigned char>(Leader()->direction ^ 4);
+        const auto now = static_cast<unsigned char>(sprite->direction & 7);
+        if (now == target) return sprite->direction;
         const int step = static_cast<signed char>(target - now) <= 0 ? -1 : 1;
         return TurnStep(object, static_cast<unsigned char>((now + step) & 7), 2);
     }
@@ -518,14 +526,14 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         long buffer[4];
         const long* const at = g.handle_position(buffer, p[1], p[2]);
         const long x = at[0], y = at[1], z = at[2];
-        SetLong(Sprite_Current + 0x34, x);
-        SetLong(Sprite_Current + 0x38, y);
-        SetLong(Sprite_Current + 0x3C, z);
+        Cur()->x = x;
+        Cur()->z = y;
+        Cur()->height = z;
         SetPos(object, Pos(object) + 2u);
         return value;
     }
     case 0x85: {   // the kind-2 object toward ObjTrio 0, repeating until it is there
-        const long x = Field_Kind2X, to_x = Long(ObjTrio + 0x34), to_z = Long(ObjTrio + 0x38), z = Field_Kind2Z;
+        const long x = Field_Kind2X, to_x = Leader()->x, to_z = Leader()->z, z = Field_Kind2Z;
         if (x == to_x && z == to_z) {
             if (Field_Kind2Hold == 0) {
                 g.set_elevation(g.elevation(x, z));
@@ -543,7 +551,7 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         const unsigned char steps_z = away(z, to_z);
         if (steps < steps_z) steps = steps_z;
         g.elevation(x, z);
-        const long nx = Long(ObjTrio + 0x34), nz = Long(ObjTrio + 0x38);
+        const long nx = Leader()->x, nz = Leader()->z;
         Field_Kind2X = nx;
         Field_Kind2Z = nz;
         const long h = g.elevation(nx, nz);
@@ -582,10 +590,10 @@ extern "C" unsigned char __cdecl MoveScript_Group8(unsigned char* object, const 
         if (g.stream_done() == 0) SetPos(object, Pos(object) - 1u);
         return value;
     case 0x8C: {
-        unsigned char* const sprite = Sprite_Current;
+        records::SpriteObject* const sprite = Cur();
         const auto arg = static_cast<signed char>(MoveScript_EffectArg[MoveScript_EffectState[Field_State[0x89]]]);
         const unsigned char n = g.effect_spawn_at(static_cast<unsigned char>(p[1] - 0x90), p[1] == 0x94 ? 10 : 0, arg,
-                                                  Long(sprite + 0x34), Long(sprite + 0x38), Long(sprite + 0x3C));
+                                                  sprite->x, sprite->z, sprite->height);
         Sprite_Current[0xB] = n;
         SetPos(object, Pos(object) + 1u);
         return value;
