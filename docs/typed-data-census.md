@@ -242,3 +242,25 @@ rows not in the old table - 9 module-constant globals, 9 helper records, 2
 `SetSW` offset records - each read against its source line and its
 constant's definition: 20 / 20 correct (file, line, shape, accessor,
 constant, address).
+
+## 6. After the stage-A merge (2026-10-19)
+
+Section 1 measures `origin/main`'s `symbols.toml`. On `typed/integration`
+(SG's corrected `[[data]]` entries, the second pairing pass, SD's
+`records.h`, this census, merged in that order) the table was regenerated.
+The site count is unchanged; only coverage moves:
+
+| Count | Section 1 | After the merge |
+|---|---:|---:|
+| sites | 50,943 | 50,943 |
+| global sites covered exactly by a `[[data]]` entry | 6,831 | 16,854 |
+| global sites uncovered | 18,338 | 8,315 |
+| distinct `at` data addresses with a `[[data]]` name | 933 | 1,384 |
+| distinct `at` data addresses with no name | 1,608 | 1,157 |
+| module-only addresses with no `[[data]]` entry | 332 | 295 |
+| all distinct data addresses with no name | 1,939 | 1,451 |
+| `static_assert` on `offsetof` / `sizeof` | 70 | 342 |
+| `symbols.toml` `[[data]]` entries / with a `ctype` | 2,696 / 2,610 | 3,184 / 3,099 |
+
+The 295 module-only addresses with no entry were outside SG's scan (it read
+the `at` constants only); they are a follow-up for the next globals pass.
