@@ -17,6 +17,7 @@
 #include "game/area_w3d.h"
 #include "game/area_w3d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace area_w3d {
@@ -488,19 +489,21 @@ void Seed(unsigned k) {
             // one object alone at the cell (object 29 half the time), in use
             // and of kind 0xA
             unsigned char* const o = ah::Object(ah::Half() ? 29 : ah::Next() % at::kObjectCount);
+            auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
             o[0] = static_cast<unsigned char>(o[0] | 1);
             o[6] = 0xA;
-            SetLong(o + 0x34, static_cast<std::int32_t>(g_cellX));
-            SetLong(o + 0x38, static_cast<std::int32_t>(g_cellZ));
+            tO->x = static_cast<std::int32_t>(g_cellX);
+            tO->z = static_cast<std::int32_t>(g_cellZ);
             break;
         }
         for (unsigned i = 0; i < at::kObjectCount; ++i) {
             if (ah::Next() % 5 == 0) continue;
             unsigned char* const o = ah::Object(i);
+            auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
             o[0] = static_cast<unsigned char>(ah::Next() % 4 ? o[0] | 1 : o[0] & 0xFE);
             o[6] = static_cast<unsigned char>(ah::Next() % 4 ? 0xA : AH_PICK(0xB, 0x8A, 0));
-            SetLong(o + 0x34, static_cast<std::int32_t>(ah::Next() % 4 ? g_cellX : g_cellX + 0x8000));
-            SetLong(o + 0x38, static_cast<std::int32_t>(ah::Next() % 4 ? g_cellZ : g_cellZ ^ 0x10000));
+            tO->x = static_cast<std::int32_t>(ah::Next() % 4 ? g_cellX : g_cellX + 0x8000);
+            tO->z = static_cast<std::int32_t>(ah::Next() % 4 ? g_cellZ : g_cellZ ^ 0x10000);
             if (ah::Next() % 3) break;
         }
         break;
