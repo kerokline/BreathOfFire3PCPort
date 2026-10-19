@@ -12,12 +12,12 @@
 # that showed it and the reason it is not a defect - a platform object, or a
 # DIVERGENCE.md entry by number; never to quiet a difference nobody has read.
 
-# the task scheduler: saved stack pointers and the task stacks (return addresses, locals)
+# the task scheduler: saved stack pointers (the task stacks themselves hang below the main thread's esp, outside the image: docs/quicksave-census.md)
 0x66C7D4 4       # ours   a task record's saved esp (Task_Records+0x4)
 0x66C7F4 4       # ours   the next record's saved esp
 0x66C814 4       # ours   the third record's saved esp
 0x66C834 4       # ours   the fourth record's (by the stride; not yet seen to differ)
-0x66C854 37292   # both   Task_SchedulerEsp and the task stacks, to Area42_Rank
+0x66C854 37292   # both   Task_SchedulerEsp, Task_StackTop and unread data, to Area42_Rank
 
 # the window, the clock
 0x6BC620 12      # noise  Game_Hwnd, Game_HInstance, Frame_Deadline
@@ -27,7 +27,7 @@
 0x6BDE44 4       # noise  the pointer before Music_FileSize (differs run to run while a track plays)
 0x6BDE50 4       # noise  Music_File
 0x6BDE5C 4       # both   Music_Volume
-0x7CC378 73728   # noise  Music_Staging (the stream decodes on its own thread)
+0x7CC378 73728   # noise  Music_Staging (Music_Pump refills it from Sound_Tick on the main thread)
 0x7DE3B4 40      # noise  Music_Events, Snd_Device, Music_Notify, Music_Decoder, Music_Data
 0x7DE3E0 4       # noise  Music_Finished: set from the stream's own timing, a frame or twelve apart between two runs of one code
 

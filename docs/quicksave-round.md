@@ -41,6 +41,18 @@ every group below.
 
 ## 1. What is already known, and the one trap
 
+> **Corrected by SC's census (2026-10-19, [`quicksave-census.md`](quicksave-census.md)).**
+> Two premises below are false as staged. (1) The task stacks are not in the
+> image: `Task_SetStackBase` hangs four `0x4000`-byte slices below the main
+> thread's esp (`[Task_StackTop-0x10000, Task_StackTop)`), so SN copies them
+> as a second span and runs the take and restore on a stack of their own;
+> the skip row `0x66C854` holds only the scheduler's words. (2) Our code is not
+> at a fixed address in the exe host: `bof3x.dll` is `DYNAMIC_BASE` and was
+> measured loading at different bases from two directories; the file records
+> the DLL base and refuses a mismatch (a fixed link base is the owner's call).
+> Also: the music stream has no thread of its own (`Music_Pump` runs from
+> `Sound_Tick` on the main thread), so nothing is paused around a restore.
+
 - **The image is one flat span at a fixed base** and holds the task stacks
   (`0x66C854`, 37,292 bytes, the skip list's "task stacks") and the
   scheduler's saved stack pointers: a copy between frames captures every
