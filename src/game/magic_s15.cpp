@@ -618,9 +618,9 @@ S15_EXPORT void __cdecl Foretell_Task(void) {
 // +0x3C); one child (kind 1, 0x1C, +1 0, +0x80 this task); +0xB 1, +1 on.
 S15_EXPORT void __cdecl Foretell_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     const unsigned slot = NewTask(0x1C);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
@@ -839,9 +839,9 @@ S15_EXPORT void __cdecl ForetellOrb_Run(void) {
 // +0xB 0, +9 0xF, +0xA 3, +2 on.
 S15_EXPORT void __cdecl ForetellOrb_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x2000000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x2000000u));
     MH_CALL(BattleActor_UpdateScreenXY)();
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[0xB] = 0;
@@ -944,8 +944,8 @@ S15_EXPORT void __cdecl Influence_Task(void) {
 S15_EXPORT void __cdecl Influence_Start(void) {
     {
         const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(source + 0x2E));
-        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(source + 0x30));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_x));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_y));
     }
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -1012,7 +1012,7 @@ S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 0xB;
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Owner() + 0x2E) + 0x37u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x) + 0x37u);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
     Sc()[0xA] = 0x20;
@@ -1097,7 +1097,7 @@ S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 0xB;
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Owner() + 0x2E) - 0x37u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x) - 0x37u);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
     Sc()[0xA] = 0x20;

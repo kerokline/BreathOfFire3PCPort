@@ -173,9 +173,9 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 
 // The task's position (+0x34 / +0x38 / +0x3C) the owner's, each read again.
 void PositionFromOwner() {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 
 // Row 26 of Gfx_ClutStrip, its 32 words, back from its source.
@@ -347,9 +347,9 @@ S07_EXPORT void __cdecl BonebreakMote_Launch(void) {
     if (Sc()[9] != 0) return;
     const unsigned k = RandCall() & 7;
     const unsigned char* const src = Source();
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, ((k << 5) + Word(src + 0x3E)) & 0xFFFF);
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, ((k << 5) + rv::As<records::SpriteHead>(src)->height_whole) & 0xFFFF);
     SetSW(0, (0xC - k) << 4);
     const unsigned angle = (RandCall() & 7) << 9;
     unsigned char* const x = Sc() + 0x34;
@@ -494,15 +494,15 @@ void OrbitStep() {
     std::uint32_t angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) & 0x7F) << 5;
     SetSD(0, angle);
     int v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(v, 0x11) >> 12, Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(v, 0x11) >> 12, rv::As<records::SpriteHead>(Owner())->x));
     v = MH_CALL(Math_Cos)(SD(0));
-    rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(v, 0x11) >> 12, Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(v, 0x11) >> 12, rv::As<records::SpriteHead>(Owner())->z));
     AddLong(Sc() + 0x14, 1);
     angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_y) & 0x3F) << 6;
     SetSD(4, 0x800);
     SetSD(0, angle);
     v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->height, Sum(Imul(v, SD(4)), Long(Owner() + 0x3C)));
+    rv::Store(rv::Current<records::BattleTask>()->height, Sum(Imul(v, SD(4)), rv::As<records::SpriteHead>(Owner())->height));
 }
 
 }  // namespace
@@ -559,7 +559,7 @@ S07_EXPORT void __cdecl WarShout_Rally(void) {
         if (MH_CALL(Battle_ActorIsOut)(enemies ? i + 3 : i) != 0) continue;
         const unsigned slot = NewTask(0x59);
         const unsigned char* const rec = enemies ? Mem(at::kEnemies + i * at::kEnemyStride) : PartyRecord(i);
-        const std::int32_t x = Long(rec + 0x34);
+        const std::int32_t x = rv::As<records::SpriteHead>(rec)->x;
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
         records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
@@ -568,8 +568,8 @@ S07_EXPORT void __cdecl WarShout_Rally(void) {
         child[3] = static_cast<unsigned char>(i);
         child[4] = 2;
         tchild->x = x;
-        tchild->z = Long(rec + 0x38);
-        rv::Store(tchild->height, Long(rec + 0x3C));
+        tchild->z = rv::As<records::SpriteHead>(rec)->z;
+        rv::Store(tchild->height, rv::As<records::SpriteHead>(rec)->height);
         Inc(self[0xB]);
     }
     Inc(Sc()[1]);
@@ -612,13 +612,13 @@ S07_EXPORT void __cdecl WarShoutMote_Appear(void) {
     std::uint32_t angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) & 0x7F) << 5;
     SetSD(0, angle);
     int v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(v, 0x12) >> 12, rv::As<records::SpriteHead>(Owner())->x));
     v = MH_CALL(Math_Cos)(SD(0));
-    rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(v, 0x12) >> 12, rv::As<records::SpriteHead>(Owner())->z));
     angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_y) & 0x3F) << 6;
     SetSD(0, angle);
     v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->height, Sum(Shl(v, 0x17) >> 12, Long(Owner() + 0x3C)));
+    rv::Store(rv::Current<records::BattleTask>()->height, Sum(Shl(v, 0x17) >> 12, rv::As<records::SpriteHead>(Owner())->height));
     unsigned char* const s = Sc();
     s[0x25] = 0x1D;
     s[0x26] = 0;
@@ -858,10 +858,10 @@ S07_EXPORT void __cdecl FocusMote_Start(void) {
     const unsigned angle = (static_cast<unsigned>(Sc()[0xB]) << 9) & 0xFFFF;
     SetSW(0xA, angle);
     int v = MH_CALL(Math_Cos)(static_cast<short>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(Imul(v, 3), 0xE) >> 12, rv::As<records::SpriteHead>(Owner())->x));
     v = MH_CALL(Math_Sin)(SS(0xA));
-    rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x38)));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(Imul(v, 3), 0xE) >> 12, rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[9] = 0;
     Sc()[0xA] = 4;
     Inc(Sc()[2]);

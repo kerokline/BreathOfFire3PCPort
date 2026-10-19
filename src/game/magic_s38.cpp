@@ -265,9 +265,9 @@ S38_EXPORT void __cdecl Tempest_Task(void) {
 S38_EXPORT void __cdecl Tempest_Start(void) {
     ClearPool(Tempest_GustPool_addr, kGusts);
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[9] = 8;
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -406,9 +406,9 @@ S38_EXPORT void __cdecl TempestGust_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     MH_CALL(BattleActor_UpdateScreenXY)();
     {
         unsigned char* const s = Sc();
@@ -859,22 +859,22 @@ S38_EXPORT void __cdecl Magic225Shard_Launch(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->step_x) +
-                                                    static_cast<std::uint32_t>(Long(rec + 0x34)));
+                                                    static_cast<std::uint32_t>(rv::As<records::SpriteHead>(rec)->x));
     }
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->step_z) +
-                                                    static_cast<std::uint32_t>(Long(rec + 0x38)));
+                                                    static_cast<std::uint32_t>(rv::As<records::SpriteHead>(rec)->z));
     }
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(rec + 0x3C)) + 0x1000000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(rec)->height) + 0x1000000u));
     {
         const unsigned char* const o = Owner();
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const auto dz = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) -
+        const auto dz = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->z) -
                                                   static_cast<std::uint32_t>(ts->z));
-        const auto dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) -
+        const auto dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->x) -
                                                   static_cast<std::uint32_t>(ts->x));
         const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
         rv::Store(rv::Current<records::BattleTask>()->step_y, heading);
@@ -1071,8 +1071,8 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Run(void) {
 // 0x10000, frame table 0x1D / 0x1A, layer 4, ...); animation 0; +4 0, +0xB 0,
 // +9 0x20, +0xA 0x10, +2 on.
 S38_EXPORT void __cdecl MeteorStrikeRock_Launch(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
     Sc()[8] = Owner()[8];
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
@@ -1089,7 +1089,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Launch(void) {
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
     }
     {
-        const std::uint32_t height = static_cast<std::uint32_t>(Long(Owner() + 0x3C));
+        const std::uint32_t height = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height);
         unsigned char* const s = Sc();
         rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(height + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y)));
     }
@@ -1147,7 +1147,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Fall(void) {
         AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20));
     }
     {
-        const std::uint32_t height = static_cast<std::uint32_t>(Long(Owner() + 0x3C));
+        const std::uint32_t height = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height);
         unsigned char* const s = Sc();
         rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(height + static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y)));
     }
@@ -1324,15 +1324,15 @@ S38_EXPORT void __cdecl MeteorStrikeChip_Launch(void) {
     SetSW(4, static_cast<unsigned>(angle));
     int v = Sin(angle);
     {
-        const std::uint32_t base = static_cast<std::uint32_t>(Long(Owner() + 0x34));
+        const std::uint32_t base = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x);
         rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(base + Mul(v, 24)));
     }
     v = Cos(SS(4));
     {
-        const std::uint32_t base = static_cast<std::uint32_t>(Long(Owner() + 0x38));
+        const std::uint32_t base = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z);
         rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(base + Mul(v, 24)));
     }
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     {
         unsigned char* const s = Sc();
         rv::Store(rv::As<records::BattleTask>(s)->step_y, Long(Mem(MeteorStrikeChip_Lifts_addr + 4u * (s[0xB] & 3u))));
@@ -1477,9 +1477,9 @@ S38_EXPORT void __cdecl MeteorStrikeTrail_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) - 0x3000000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) - 0x3000000u));
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x60000);
     Sc()[9] = 8;
     Sc()[0xA] = 0x10;
@@ -1488,8 +1488,8 @@ S38_EXPORT void __cdecl MeteorStrikeTrail_Start(void) {
 
 // The trail at the rock's x / z, its height +0x3C down by +0x14 a frame.
 void TrailFollow() {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
     unsigned char* const s = Sc();
     AddLong(s + 0x3C, 0u - static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->step_y));
 }

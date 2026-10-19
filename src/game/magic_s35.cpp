@@ -226,9 +226,9 @@ S35_EXPORT void __cdecl LastResort_Task(void) {
 S35_EXPORT void __cdecl LastResort_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = src[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
     Inc(Sc()[1]);
@@ -757,9 +757,9 @@ S35_EXPORT void __cdecl Cure_Start(void) {
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
-        rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-        rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+        rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sc()[0xB] = 0;
@@ -827,11 +827,11 @@ S35_EXPORT void __cdecl CureMote_Run(void) {
 S35_EXPORT void __cdecl CureMote_Wait(void) {
     Dec(Cur()[5]);
     if (Cur()[5] != 0) return;
-    SetLong(Cur() + 0x14, Long(Owner() + 0x34));
-    SetLong(Cur() + 0x18, Long(Owner() + 0x38));
-    SetLong(Cur() + 0x1C, Long(Owner() + 0x3C));
-    SetWord(Cur() + 0x20, Word(Owner() + 0x2E));
-    SetWord(Cur() + 0x22, Word(Owner() + 0x30));
+    SetLong(Cur() + 0x14, rv::As<records::SpriteHead>(Owner())->x);
+    SetLong(Cur() + 0x18, rv::As<records::SpriteHead>(Owner())->z);
+    SetLong(Cur() + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
+    SetWord(Cur() + 0x20, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+    SetWord(Cur() + 0x22, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     {
         unsigned char* const x = Cur() + 0x20;
         const short dx = static_cast<short>(Word(Mem(CureMote_Offsets_addr + (Cur()[7] & 0x1Fu) * 4)));
@@ -1356,13 +1356,13 @@ void BlessMoteOrbit() {
         const int sn = MH_CALL(Math_Sin)(static_cast<short>(angle));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Add32(Mul32(sn, ts->step_x), Long(Owner() + 0x34));
+        ts->x = Add32(Mul32(sn, ts->step_x), rv::As<records::SpriteHead>(Owner())->x);
     }
     {
         const int cs = MH_CALL(Math_Cos)(SS(4));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->z = Add32(Mul32(cs, ts->step_x), Long(Owner() + 0x38));
+        ts->z = Add32(Mul32(cs, ts->step_x), rv::As<records::SpriteHead>(Owner())->z);
     }
 }
 // The rise: while dword +0x20 is below +0x14 (signed), +0x14 -= +0x20 and
@@ -1385,7 +1385,7 @@ S35_EXPORT void __cdecl BenedictionMote_Launch(void) {
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 8;
     BlessMoteOrbit();
-    rv::Store(rv::Current<records::BattleTask>()->height, Add32(Long(Owner() + 0x3C), 0x800000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::As<records::SpriteHead>(Owner())->height, 0x800000));
     {
         const std::uint32_t rnd = RandCall();
         rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<std::int32_t>(((rnd & 3) + 2) << 20));

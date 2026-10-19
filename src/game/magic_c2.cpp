@@ -260,9 +260,9 @@ C2_EXPORT void __cdecl BoneDance_Spawn(void) {
     t[1] = 0;
     t[2] = 0;
     const unsigned char* const owner = Owner();
-    tt->x = Long(owner + 0x34);
-    tt->z = Long(owner + 0x38);
-    rv::Store(tt->height, Long(owner + 0x3C));
+    tt->x = rv::As<records::SpriteHead>(owner)->x;
+    tt->z = rv::As<records::SpriteHead>(owner)->z;
+    rv::Store(tt->height, rv::As<records::SpriteHead>(owner)->height);
     unsigned char* const self = Sc();
     tt->owner = static_cast<std::int32_t>(Key(self));
     Inc(self[9]);
@@ -311,9 +311,9 @@ C2_EXPORT void __cdecl BoneDanceBone_Run(void) {
 // animation 0; +9 3 (bounces); +2 on.
 C2_EXPORT void __cdecl BoneDanceBone_Start(void) {
     int r = (Sc()[8] & 1) ? RandCall() % 6 + 2 : RandCall() % 6 - 3;
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), rv::As<records::SpriteHead>(Owner())->x));
     r = (Sc()[8] & 1) ? RandCall() % 6 + 3 : RandCall() % 6 + 2;
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), rv::As<records::SpriteHead>(Owner())->z));
     unsigned char* const s = Sc();
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, rv::As<records::BattleTask>(s)->height_whole + 0x600u);
     rv::Store(rv::As<records::BattleTask>(s)->step_y, -32);
@@ -350,9 +350,9 @@ C2_EXPORT void __cdecl BoneDanceBone_Fall(void) {
     const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(s)->x, rv::As<records::BattleTask>(s)->z);
     if (static_cast<short>(rv::Current<records::BattleTask>()->height_whole) >= static_cast<short>(ground)) return;
     int r = RandCall() % 6;
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r + 2) << 16), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r + 2) << 16), rv::As<records::SpriteHead>(Owner())->x));
     r = RandCall() % 6;
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r - 3) << 16), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r - 3) << 16), rv::As<records::SpriteHead>(Owner())->z));
     s = Sc();
     rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, rv::As<records::BattleTask>(s)->height_whole + 0x600u);
     rv::Store(rv::As<records::BattleTask>(s)->step_y, -32);
@@ -462,8 +462,8 @@ namespace {
 // elevation at (x, x) - the original passes x twice (docs/magic_c2.md
 // section 8).
 void FollowOwner() {
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(Long(Owner() + 0x34), -1));
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(Long(Owner() + 0x38), -1));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(rv::As<records::SpriteHead>(Owner())->x, -1));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(rv::As<records::SpriteHead>(Owner())->z, -1));
     const std::int32_t x = rv::Current<records::BattleTask>()->x;
     const long ground = MH_CALL(AreaMap_Elevation)(x, x);
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<unsigned>(ground));
@@ -523,9 +523,9 @@ C2_EXPORT void __cdecl RottenBreath_Start(void) {
         r[1] = 0;
         r[2] = 0;
     }
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
     Gfx_ClutStripDirty = 1;
     for (unsigned i = 0; i < 16; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)) | 0x8000u);
     SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), Word(Mem(Gfx_ClutStripSource_addr + 0x3400)));
@@ -582,9 +582,9 @@ C2_EXPORT void __cdecl RottenBreathCloud_Run(void) {
 // height word; the aim (kind 1, parameter 0x42, +1 = 1) with the cloud its
 // owner, its slot in +0xA, unchecked; sound 0x100; +0xB and +9 0; +2 on.
 C2_EXPORT void __cdecl RottenBreathCloud_Start(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(Long(Owner() + 0x34), 0x20000));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(rv::As<records::SpriteHead>(Owner())->x, 0x20000));
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
     const unsigned slot = NewTask(0x42) & 0xFF;
     unsigned char* const self = Sc();
     unsigned char* const t = TaskSlot(slot);
@@ -638,9 +638,9 @@ C2_EXPORT void __cdecl RottenBreathMote_Run(void) {
 // 0x100); its heading +0x14 Math_Ratan2(dx, dz) toward the aim, the task slot
 // the cloud's +0xA names (unchecked); +9 0; +2 on.
 C2_EXPORT void __cdecl RottenBreathMote_Start(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(Long(Owner() + 0x34), 0x2000));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E) + 0x100u);
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(rv::As<records::SpriteHead>(Owner())->x, 0x2000));
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + 0x100u);
     const unsigned char* const aim = TaskSlot(Owner()[0xA]);
     const records::BattleTask* const taim = rv::AsConst<records::BattleTask>(aim);
     const unsigned char* const s = Sc();
@@ -769,9 +769,9 @@ C2_EXPORT void __cdecl UtmostAttack_Task(void) {
 // original 0x4D9B20: the task at the caster, 0x100 units higher (+0x3C +
 // 0x1000000); the streaks cleared; the caster's animation 1; +1 on.
 C2_EXPORT void __cdecl UtmostAttack_Start(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Caster() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Caster() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Add(Long(Caster() + 0x3C), 0x1000000));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Caster())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Caster())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::As<records::SpriteHead>(Caster())->height, 0x1000000));
     Call0(addr::UtmostAttack_ClearStreaks);
     CasterAnimation(1);
     Inc(Sc()[1]);
@@ -1326,11 +1326,11 @@ C2_EXPORT void __cdecl HolocaustSpark_Start(void) {
     const int angle = static_cast<short>((Sc()[0xB] & 0x1F) << 7);
     int v = Sin(angle);
     rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * static_cast<std::uint32_t>(radius)),
-                             Long(Owner() + 0x34)));
+                             rv::As<records::SpriteHead>(Owner())->x));
     v = Cos(angle);
     rv::Store(rv::Current<records::BattleTask>()->z, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * static_cast<std::uint32_t>(radius)),
-                             Long(Owner() + 0x38)));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+                             rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0x5D] = static_cast<unsigned char>((RandCall() & 7) + 5);
     Sc()[0x5E] = static_cast<unsigned char>((RandCall() & 7) + 5);
     Sc()[0x5F] = static_cast<unsigned char>((RandCall() & 7) + 5);

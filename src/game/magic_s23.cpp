@@ -230,9 +230,9 @@ S23_EXPORT void __cdecl Cyclone_Task(void) {
 // 0x100.
 S23_EXPORT void __cdecl Cyclone_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height);
     Sc()[9] = 0;
     Sc()[0xB] = 0;
     Bump(Sc()[1]);
@@ -293,25 +293,25 @@ S23_EXPORT void __cdecl FxFunnel_Wait(void) {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Long(owner + 0x34) + ts->step_x;
+        ts->x = rv::As<records::SpriteHead>(owner)->x + ts->step_x;
     }
     {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->z = Long(owner + 0x38) + ts->step_z;
+        ts->z = rv::As<records::SpriteHead>(owner)->z + ts->step_z;
     }
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     {
         const unsigned char* const owner = Owner();
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const std::int32_t dz = Long(owner + 0x38) - ts->z;
-        const std::int32_t dx = Long(owner + 0x34) - ts->x;
+        const std::int32_t dz = rv::As<records::SpriteHead>(owner)->z - ts->z;
+        const std::int32_t dx = rv::As<records::SpriteHead>(owner)->x - ts->x;
         const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
         rv::Store(rv::Current<records::BattleTask>()->work_20, (heading - 0x800) & 0xFFF);
     }
@@ -676,9 +676,9 @@ S23_EXPORT void __cdecl FxSpiral_Wait(void) {
     unsigned char* const sc = Sc();
     if (sc[9] != 0) return;
     sc[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C) + 0x1800000);
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height + 0x1800000);
     {
         unsigned char* const s = Sc();
         s[0xB] = static_cast<unsigned char>((s[4] << 2) & 0x3F);
@@ -705,7 +705,7 @@ void Bob() {
     const int s = Sin(static_cast<int>((Frame_Counter & 0x1F) << 7));
     const unsigned char* const owner = Owner();
     unsigned char* const sc = Sc();
-    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, static_cast<unsigned>((Shl(s, 5) >> 12) + Word(owner + 0x3E) + 0x180));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, static_cast<unsigned>((Shl(s, 5) >> 12) + rv::As<records::SpriteHead>(owner)->height_whole + 0x180));
 }
 
 // original 0x4CDB30: FxSpiral_Phases[1]. Bob; +0xA up 2, at 0x10 on.
@@ -1138,9 +1138,9 @@ S23_EXPORT void __cdecl SimoonDome_Task(void) {
 // +9 and +0xA 0; on.
 S23_EXPORT void __cdecl SimoonDome_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(src + 0x3E));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(src)->height_whole);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Bump(Sc()[2]);
@@ -1405,9 +1405,9 @@ S23_EXPORT void __cdecl SimoonFan_Task(void) {
 // +0xA 0; on.
 S23_EXPORT void __cdecl SimoonFan_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Bump(Sc()[2]);

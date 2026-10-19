@@ -352,9 +352,9 @@ C1_EXPORT void __cdecl Pentagram_Start(void) {
         return;
     }
     const unsigned char* const src = Source();
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     ClutCopy(0x1A00, 0x1A10, 0x8000);
     Gfx_ClutStripDirty = 1;
     Sc()[0xB] = 0;
@@ -1106,9 +1106,9 @@ C1_EXPORT void __cdecl InkInkActor_Start(void) {
     const unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[8] = rec[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(rec + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(rec + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(rec)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(rec)->height);
     Sc()[0xB] = 0;
     Inc(Sc()[2]);
     SpawnRecords(bof3::addr::InkInkPuff_Alloc, InkInkPuff_Pool_addr, 1, 2, 7);
@@ -1136,9 +1136,9 @@ C1_EXPORT void __cdecl InkInkPuff_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
@@ -1216,9 +1216,9 @@ C1_EXPORT void __cdecl Magic213Actor_Start(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[9] != 0) return;
     unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
-    ts->x = Long(rec + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(rec + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(rec)->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(rec)->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
     Sc()[0xA] = 0;
@@ -1280,12 +1280,12 @@ C1_EXPORT void __cdecl Magic213Mote_Start(void) {
     if (Sc()[9] != 0) return;
     SetSW(0, static_cast<unsigned>(Sc()[0xB] & 7) << 9);
     int v = MH_CALL(Math_Sin)(static_cast<short>(SW(0)));
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x) +
                                                    static_cast<std::uint32_t>(v) * 12u));
     v = MH_CALL(Math_Cos)(static_cast<short>(SW(0)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z) +
                                                    static_cast<std::uint32_t>(v) * 12u));
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1800000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x1800000u));
     Sc()[0x25] = 0x1D;
     Sc()[0x26] = 0;
     Sc()[0x27] = 0xA0;

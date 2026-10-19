@@ -222,7 +222,7 @@ S10_EXPORT void __cdecl Ovum_Spawn(void) {
     child[2] = 0;
     RandCall();
     const std::uint32_t r1 = RandCall();
-    rv::Store<unsigned>(tchild->screen_x, (r1 & 0xF) + Word(Pointer(BattleOdds_ActorObject_addr) + 0x2E));
+    rv::Store<unsigned>(tchild->screen_x, (r1 & 0xF) + static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->screen_x));
     const std::uint32_t r2 = RandCall();
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     rv::Store<unsigned>(tchild->screen_y, Word(src + 0x30) - (r2 & 0x1F));
@@ -414,12 +414,12 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
     SetSW(0, (r & 0x10) + 0x18);
     int v = Sin(angle);
     {
-        const std::uint32_t x = Mul(v, SS(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x34));
+        const std::uint32_t x = Mul(v, SS(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x);
         rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(x));
     }
     v = Cos(SS(4));
     {
-        const std::uint32_t z = Mul(v, SS(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x38));
+        const std::uint32_t z = Mul(v, SS(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z);
         rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(z));
     }
     Sc()[8] = Owner()[8];
@@ -432,7 +432,7 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
-        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
+        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) +
                                                     static_cast<std::uint32_t>(ts->step_y)));
         ts->step_x = static_cast<std::int32_t>(0xFFFFE000u);
         ts->step_z = 0;
@@ -478,7 +478,7 @@ S10_EXPORT void __cdecl LavaburstChild_Rise(void) {
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
         AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(ts->work_20));
-        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
+        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) +
                                                     static_cast<std::uint32_t>(ts->step_y)));
         AddB(s[0xB], 8);
         Dec(s[9]);
@@ -603,12 +603,12 @@ void RecordOrbit() {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(Long(Owner() + 0x34)));
+        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x));
     }
     v = Cos(SS(4));
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(Long(Owner() + 0x38)));
+    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z));
 }
 
 }  // namespace
@@ -797,9 +797,9 @@ S10_EXPORT void __cdecl HowlingChild_Start(void) {
     const unsigned char* const rec = CopiedRecord();
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->x = Long(rec + 0x34);
-    ts->z = Long(rec + 0x38);
-    rv::Store(ts->height, Long(rec + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(rec)->x;
+    ts->z = rv::As<records::SpriteHead>(rec)->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(rec)->height);
     rv::Store(ts->scale_x, 0x10000);
     rv::Store(ts->scale_y, 0x10000);
     s[0x48] = 2;
@@ -884,9 +884,9 @@ S10_EXPORT void __cdecl Ebonfire_Start(void) {
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
-        rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-        rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+        rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     }
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 6; ++i) {
@@ -1126,9 +1126,9 @@ S10_EXPORT void __cdecl SacrificeRing_Run(void) {
 
 // original 0x4ADB50: the owner's position; +9 and +0xA 0; +2 on.
 S10_EXPORT void __cdecl SacrificeFx_TakeOwnerPos(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Inc(Sc()[2]);
@@ -1412,9 +1412,9 @@ S10_EXPORT void __cdecl SacrificeActor_Darken(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     TintBy(s, 0xF0);
     if (s[0x5D] != 0x80) return;
-    ts->x = Long(Owner() + 0x34);
-    ts->z = Long(Owner() + 0x38);
-    rv::Store(ts->height, Long(Owner() + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(Owner())->x;
+    ts->z = rv::As<records::SpriteHead>(Owner())->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(Owner())->height);
     Inc(s[2]);
 }
 
@@ -1488,9 +1488,9 @@ S10_EXPORT void __cdecl SacrificeActor_Return(void) {
         TintBy(s, 0xF0);
         if (s[0x5D] != 0x80) return;
         const unsigned char* const actor_sprite = Pointer(MagicS23_ActorSprite_addr);
-        ts->x = Long(actor_sprite + 0x34);
-        ts->z = Long(Pointer(MagicS23_ActorSprite_addr) + 0x38);
-        rv::Store(ts->height, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
+        ts->x = rv::As<records::SpriteHead>(actor_sprite)->x;
+        ts->z = rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->z;
+        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->height);
     }
     const std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(at::kActor)));
     if ((actor & 0xFF) < 3) MemberAndCopyAnimation(actor & 0xFF, 0x1C);

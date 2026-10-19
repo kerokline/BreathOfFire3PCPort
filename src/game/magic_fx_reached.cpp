@@ -233,9 +233,9 @@ MFX_EXPORT void __cdecl FxRing_Wait(void) {
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
-    tsc->x = Long(Ptr(at::kOwner) + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Ptr(at::kOwner) + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Ptr(at::kOwner) + 0x3C));
+    tsc->x = rv::As<records::SpriteHead>(Ptr(at::kOwner))->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Ptr(at::kOwner))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Ptr(at::kOwner))->height);
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0;
     Sprite_Current[0xB] = 0;

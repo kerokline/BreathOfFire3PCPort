@@ -135,9 +135,9 @@ void SpawnCopy(unsigned parameter) {
 // The owner's direction byte and position (+0x34..+0x3C) to this task.
 void TakeOwnerPlace() {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 
 // The effect CLUT row from the owner's sprite (its answer to +0x27), the
@@ -162,9 +162,9 @@ void Rise() {
 // At the top of the rise: over the source sprite (+0x34, +0x38), the height
 // +0x3C moved by the source's less the owner's.
 void OverSource(unsigned char* s) {
-    SetLong(s + 0x34, Long(Source() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Source() + 0x38));
-    const std::uint32_t d = static_cast<std::uint32_t>(Long(Source() + 0x3C)) - static_cast<std::uint32_t>(Long(Owner() + 0x3C));
+    SetLong(s + 0x34, rv::As<records::SpriteHead>(Source())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Source())->z);
+    const std::uint32_t d = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Source())->height) - static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height);
     AddL(Sc() + 0x3C, d);
 }
 
@@ -185,9 +185,9 @@ void FadeHome(bool shrink) {
         s = Sc();
     }
     if (s[0x5D] != 0x80) return;
-    rv::Store(rv::As<records::BattleTask>(s)->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::As<records::BattleTask>(s)->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Inc(Sc()[2]);
 }
 
@@ -476,8 +476,8 @@ S01_EXPORT void __cdecl JumpChild_Hover(void) {
     const unsigned char* const o = Owner();
     const unsigned char* const t = Sc();
     const records::BattleTask* const tt = rv::AsConst<records::BattleTask>(t);
-    const auto dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(tt->z));
-    const auto dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(tt->x));
+    const auto dz = static_cast<int>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->z) - static_cast<std::uint32_t>(tt->z));
+    const auto dx = static_cast<int>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->x) - static_cast<std::uint32_t>(tt->x));
     const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
     rv::Current<records::BattleTask>()->step_x = heading;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());

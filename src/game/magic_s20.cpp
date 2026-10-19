@@ -496,10 +496,10 @@ S20_EXPORT void __cdecl Magic087_OrbitSpin(void) {
     rv::Store(rv::As<records::BattleTask>(sc)->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) - static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_18)));
     SetLong(Scr(0), rv::Current<records::BattleTask>()->step_x);
     const int s = MH_CALL(Math_Sin)(Long(Scr(4)));
-    rv::Store(rv::Current<records::BattleTask>()->x, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add32(MulSar(s, Long(Scr(0)), 3), rv::As<records::SpriteHead>(Owner())->x));
     const int c = MH_CALL(Math_Cos)(Long(Scr(4)));
-    rv::Store(rv::Current<records::BattleTask>()->z, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add32(MulSar(c, Long(Scr(0)), 3), rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     sc = Sprite_Current;
     if (sc[0xA] < 0x21) Bump(sc[0xA], 1);
     sc = Sprite_Current;

@@ -829,13 +829,13 @@ S24_EXPORT void __cdecl Fx105_Orb(void) {
 // the owner's +0xC plus a word of Fx105_OrbAngles by the orb's index +4
 // (0x65B88C + 2i and 0x65B88E + 2i, unbounded); +0xB, +9, +0xA 0; +2 on.
 S24_EXPORT void __cdecl Fx105_OrbStart(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     unsigned char* sc = Sprite_Current;
-    rv::Store(rv::As<records::BattleTask>(sc)->step_x, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), Long(Owner() + 0xC)));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_x, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), rv::As<records::SpriteHead>(Owner())->step_x));
     sc = Sprite_Current;
-    rv::Store(rv::As<records::BattleTask>(sc)->step_z, Add(G16(Fx105_OrbAngles_addr + 2 + 2u * sc[4]), Long(Owner() + 0xC)));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, Add(G16(Fx105_OrbAngles_addr + 2 + 2u * sc[4]), rv::As<records::SpriteHead>(Owner())->step_x));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0;
@@ -1015,11 +1015,11 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     Put16(kR, (sc[9] + 1) << 6);
     t = Sin(rv::As<records::BattleTask>(sc)->step_z);
     t = (Mul(t, G16(kR)) >> 3);
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(t, Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(t, rv::As<records::SpriteHead>(Owner())->x));
     t = Cos(rv::Current<records::BattleTask>()->step_z);
     t = (Mul(t, G16(kR)) >> 3);
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(t, Long(Owner() + 0x38)));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E) + Word(Mem(kR2)) - 0x20u);
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(t, rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + Word(Mem(kR2)) - 0x20u);
     sc = Sprite_Current;
     const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(sc)->x, rv::As<records::BattleTask>(sc)->z);
     rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<short>(ground));
@@ -1175,9 +1175,9 @@ S24_EXPORT void __cdecl Fx106_Start(void) {
         k[1] = 0;
         k[2] = 0;
     }
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Add(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C), 0x1000000));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height, 0x1000000));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Bump(Sprite_Current[1]);
@@ -1234,10 +1234,10 @@ S24_EXPORT void __cdecl Fx106_SparkDelay(void) {
     const int angle = (k[4] & 0x1F) << 7;
     Put16(kW4, angle);
     int t = Sin(static_cast<short>(angle));
-    SetLong(Spark() + 0x10, Add(Mul(t, G16(kR)), Long(Owner() + 0x34)));
+    SetLong(Spark() + 0x10, Add(Mul(t, G16(kR)), rv::As<records::SpriteHead>(Owner())->x));
     t = Cos(G16(kW4));
-    SetLong(Spark() + 0x14, Add(Mul(t, G16(kR)), Long(Owner() + 0x38)));
-    SetLong(Spark() + 0x18, Long(Owner() + 0x3C));
+    SetLong(Spark() + 0x14, Add(Mul(t, G16(kR)), rv::As<records::SpriteHead>(Owner())->z));
+    SetLong(Spark() + 0x18, rv::As<records::SpriteHead>(Owner())->height);
     SetWord(Spark() + 0xE, Word(Mem(kW4)));
     for (unsigned c = 5; c <= 7; ++c) {
         const int r = MH_CALL(Rand)();
@@ -1259,10 +1259,10 @@ namespace {
 void SparkPlace() {
     int t = Sin(S16(Spark() + 0xE));
     unsigned char* k = Spark();
-    SetLong(k + 0x10, Add(Mul(t, S16(k + 0xC)), Long(Owner() + 0x34)));
+    SetLong(k + 0x10, Add(Mul(t, S16(k + 0xC)), rv::As<records::SpriteHead>(Owner())->x));
     t = Cos(S16(Spark() + 0xE));
     k = Spark();
-    SetLong(k + 0x14, Add(Mul(t, S16(k + 0xC)), Long(Owner() + 0x38)));
+    SetLong(k + 0x14, Add(Mul(t, S16(k + 0xC)), rv::As<records::SpriteHead>(Owner())->z));
 }
 void SparkTurn() {
     unsigned char* const k = Spark();

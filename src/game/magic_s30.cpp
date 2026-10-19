@@ -908,7 +908,7 @@ S30_EXPORT void __cdecl KaiserPillar_Run(void) {
 S30_EXPORT void __cdecl KaiserPillar_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, Field_Kind2Z);
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0x5D] = 0x10;
     Sc()[9] = 0x20;
     Sc()[0xA] = 8;
@@ -1032,7 +1032,7 @@ S30_EXPORT void __cdecl KaiserRing_Run(void) {
 S30_EXPORT void __cdecl KaiserRing_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, Field_Kind2Z);
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
@@ -1169,7 +1169,7 @@ S30_EXPORT void __cdecl KaiserMoteA_Run(void) {
 // +5 0x10, +6 0x14, +2 on.
 S30_EXPORT void __cdecl KaiserMoteA_Start(void) {
     MotePlace(AngleA(), false);
-    SetLong(Cur() + 0x1C, Long(Owner() + 0x3C));
+    SetLong(Cur() + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
     SetWord(Cur() + 0xC, 0x40);
     Cur()[5] = 0x10;
     Cur()[6] = 0x14;
@@ -1216,7 +1216,7 @@ S30_EXPORT void __cdecl KaiserMoteB_Run(void) {
 // KaiserMoteB_Lift[+7] << 6 (+7 unbounded); +0xC 0x40, +5 0x10, +6 8, +2 on.
 S30_EXPORT void __cdecl KaiserMoteB_Start(void) {
     MotePlace(AngleB(), false);
-    SetLong(Cur() + 0x1C, Long(Owner() + 0x3C));
+    SetLong(Cur() + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
     AddW(Cur() + 0x1E, static_cast<unsigned>(Mem(Addr(KaiserMoteB_Lift))[Cur()[7]]) << 6);
     SetWord(Cur() + 0xC, 0x40);
     Cur()[5] = 0x10;

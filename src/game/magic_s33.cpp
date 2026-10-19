@@ -179,9 +179,9 @@ void LoadPaletteOfCurrent() {
 
 // The owner's position +0x34 / +0x38 / +0x3C to the task's.
 void AtOwner() {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 
 // A new kind-1 child (0x44) owned by this task with phase `phase`, counted in
@@ -1310,9 +1310,9 @@ S33_EXPORT void __cdecl MightyChop_Throw(void) {
     rv::Current<records::BattleTask>()->step_x = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(0xFFFE8000u));
     Turn(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_x) + U(Long(source + 0x34))));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_z) + U(Long(source + 0x38))));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(source + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_x) + U(rv::As<records::SpriteHead>(source)->x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_z) + U(rv::As<records::SpriteHead>(source)->z)));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(source)->height);
     MH_CALL(Sound_PlayById)(0x100);
     for (unsigned i = 0; i < 6; ++i) {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x52) & 0xFFu;
@@ -1380,9 +1380,9 @@ S33_EXPORT void __cdecl MightyChopBlade_Start(void) {
     rv::Current<records::BattleTask>()->step_x = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Sc()[0xB]) << 15));
     Turn(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(rv::Current<records::BattleTask>()->step_x)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(rv::Current<records::BattleTask>()->step_z)));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + U(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + U(rv::Current<records::BattleTask>()->step_z)));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x8000);
     rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x8000);
     Sc()[0x48] = 2;

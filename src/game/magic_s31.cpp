@@ -346,7 +346,7 @@ S31_EXPORT void __cdecl DoomBreathOrb_Launch(void) {
                                                     static_cast<std::uint32_t>(Field_Kind2Z));
     }
     {
-        const std::uint32_t height = static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x800000u;
+        const std::uint32_t height = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x800000u;
         rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(height));
     }
     rv::Current<records::BattleTask>()->step_x = 0x8000;
@@ -1205,9 +1205,9 @@ S31_EXPORT void __cdecl ThunderClap_Start(void) {
     unsigned char* const s = Sc();
     tt->owner = static_cast<std::int32_t>(Key(s));
     t[1] = 0;
-    tt->x = Long(source + 0x34);
-    tt->z = Long(source + 0x38);
-    rv::Store(tt->height, Long(source + 0x3C));
+    tt->x = rv::As<records::SpriteHead>(source)->x;
+    tt->z = rv::As<records::SpriteHead>(source)->z;
+    rv::Store(tt->height, rv::As<records::SpriteHead>(source)->height);
     s[0xB] = 1;
     MH_CALL(Sound_PlayById)(0x100);
     Inc(Sc()[1]);

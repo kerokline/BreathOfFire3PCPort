@@ -196,9 +196,9 @@ void OffsetByDirection() {
 // The caster's position (+0x34, +0x38, +0x3C from the owner), each dword with
 // the task and the owner read again.
 void CopyOwnerPosition() {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 
 // The beam's half-width at a step: v (a word) divided by the task's +0xB, plus
@@ -546,14 +546,14 @@ S28_EXPORT void __cdecl BreathMote_Task(void) { CallCell("BreathMote_Task", Brea
 S28_EXPORT void __cdecl BreathMote_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Owner() + 0x2E));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     if (MH_CALL(Rand)() & 1) {
         const int r = MH_CALL(Rand)();
-        rv::Store(rv::Current<records::BattleTask>()->step_y, (r & 0xFF) + Long(Owner() + 0x14));
+        rv::Store(rv::Current<records::BattleTask>()->step_y, (r & 0xFF) + rv::As<records::SpriteHead>(Owner())->step_y);
     } else {
         const int r = MH_CALL(Rand)();
-        rv::Store(rv::Current<records::BattleTask>()->step_y, Long(Owner() + 0x14) - (r & 0xFF));
+        rv::Store(rv::Current<records::BattleTask>()->step_y, rv::As<records::SpriteHead>(Owner())->step_y - (r & 0xFF));
     }
     Sc()[3] = U8(MH_CALL(Rand)() & 7);
     const int speed = MH_CALL(Rand)();
@@ -876,9 +876,9 @@ S28_EXPORT void __cdecl ThunderBolt_Aim(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     SetSW(0xC, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
     SetSW(0xE, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(Owner() + 0x2E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
     SetSW(8, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     SetSW(0xA, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
     const int angle = Ratan2(SS(0xC) - SS(8), SS(0xE) - SS(0xA));
     rv::Store(rv::Current<records::BattleTask>()->step_y, angle);

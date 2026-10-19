@@ -150,11 +150,11 @@ void Orbit() {
     const int s = Sin(S16(Mem(kScratchB)));
     unsigned char* sc = Sprite_Current;
     rv::Store(rv::As<records::BattleTask>(sc)->x, Wrap(static_cast<std::uint32_t>(s) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
-                            static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+                            static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
     const int c = Cos(S16(Mem(kScratchB)));
     sc = Sprite_Current;
     rv::Store(rv::As<records::BattleTask>(sc)->z, Wrap(static_cast<std::uint32_t>(c) * static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_x) +
-                            static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+                            static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
 }
 void MoteAngle() { SetWord(Mem(kScratchB), static_cast<unsigned>((Sprite_Current[0xB] & 0xF) << 8)); }
 
@@ -183,9 +183,9 @@ MS17_EXPORT void __cdecl Purify_Task(void) {
 // sound 0x100.
 MS17_EXPORT void __cdecl Purify_Start(void) {
     unsigned char* const src = Source();
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
     unsigned char number = 0;
@@ -259,11 +259,11 @@ MS17_EXPORT void __cdecl PurifyMote_Place(void) {
     SetLong(Mem(kScratchA), angle);
     const int s = Sin(angle);
     const int dx = static_cast<int>((static_cast<std::uint32_t>(s) * 5u) << 13) >> 12;
-    rv::Store(rv::Current<records::BattleTask>()->x, Wrap(static_cast<std::uint32_t>(dx) + static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->x, Wrap(static_cast<std::uint32_t>(dx) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
     const int c = Cos(Long(Mem(kScratchA)));
     const int dz = static_cast<int>((static_cast<std::uint32_t>(c) * 5u) << 13) >> 12;
-    rv::Store(rv::Current<records::BattleTask>()->z, Wrap(static_cast<std::uint32_t>(dz) + static_cast<std::uint32_t>(Long(Owner() + 0x38))));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E) + 0x180u);
+    rv::Store(rv::Current<records::BattleTask>()->z, Wrap(static_cast<std::uint32_t>(dz) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + 0x180u);
     sc = Sprite_Current;
     sc[0x25] = 0x1D;
     sc[0x26] = 0;
@@ -339,9 +339,9 @@ MS17_EXPORT void __cdecl Revive_Start(void) {
     Sprite_Current[4] = strong;
     unsigned char* const src = Source();
     Sprite_Current[8] = src[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0x3C;
     Sprite_Current[0xA] = 0;
@@ -427,9 +427,9 @@ MS17_EXPORT void __cdecl ReviveHalo_Wait(void) {
     unsigned char* const sc = Sprite_Current;
     if (sc[9] != 0) return;
     sc[4] = Owner()[4];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0xC00000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, Wrap(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0xC00000u));
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0x3C;
     Bump(Sprite_Current[2]);
@@ -561,7 +561,7 @@ MS17_EXPORT void __cdecl ReviveMote_Launch(void) {
     rv::Current<records::BattleTask>()->step_x = 8;
     MoteAngle();
     Orbit();
-    rv::Store(rv::Current<records::BattleTask>()->height, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, Wrap(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x800000u));
     const int r = MH_CALL(Rand)();
     rv::Store(rv::Current<records::BattleTask>()->step_y, ((r & 3) + 2) << 20);
     unsigned char* sc = Sprite_Current;
@@ -686,9 +686,9 @@ MS17_EXPORT void __cdecl Leech_Start(void) {
     unsigned char* const owner = Owner();
     shell[1] = 0;
     shell[9] = 0;
-    tshell->x = Long(owner + 0x34);
-    tshell->z = Long(owner + 0x38);
-    rv::Store(tshell->height, Wrap(static_cast<std::uint32_t>(Long(owner + 0x3C)) + 0x2000000u));
+    tshell->x = rv::As<records::SpriteHead>(owner)->x;
+    tshell->z = rv::As<records::SpriteHead>(owner)->z;
+    rv::Store(tshell->height, Wrap(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(owner)->height) + 0x2000000u));
     const unsigned s2 = MH_CALL(BattleTask_Create)(1, 0xD) & 0xFF;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const orb = Task(s2);
@@ -697,9 +697,9 @@ MS17_EXPORT void __cdecl Leech_Start(void) {
     rv::Store<std::int32_t>(torb->anim_data, static_cast<std::int32_t>(Key(sc)));
     orb[1] = 1;
     orb[9] = 0;
-    torb->x = Long(src + 0x34);
-    torb->z = Long(src + 0x38);
-    rv::Store(torb->height, Wrap(static_cast<std::uint32_t>(Long(src + 0x3C)) + 0x1000000u));
+    torb->x = rv::As<records::SpriteHead>(src)->x;
+    torb->z = rv::As<records::SpriteHead>(src)->z;
+    rv::Store(torb->height, Wrap(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(src)->height) + 0x1000000u));
     MH_CALL(Sound_PlayById)(0x100);
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
@@ -763,8 +763,8 @@ MS17_EXPORT void __cdecl LeechShell_Aim(void) {
     const unsigned char* const src = Source();
     const unsigned char* sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    const int dx = Wrap(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(tsc->x));
-    const int dz = Wrap(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(tsc->z));
+    const int dx = Wrap(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(src)->x) - static_cast<std::uint32_t>(tsc->x));
+    const int dz = Wrap(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(src)->z) - static_cast<std::uint32_t>(tsc->z));
     const int r = MH_CALL(Math_Ratan2)(static_cast<float>(dz), static_cast<float>(dx));
     unsigned char* const now = Sprite_Current;
     records::BattleTask* const tnow = rv::As<records::BattleTask>(now);

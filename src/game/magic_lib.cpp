@@ -198,9 +198,9 @@ MLIB_EXPORT void __cdecl BuffPopup_Task(void) {
 MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleE2_Owner_addr) + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
     PopupSettle();
 }
 
@@ -485,8 +485,8 @@ MLIB_EXPORT void __cdecl MagicFx_CenterOnSide(void) {
         const unsigned actor = enemies ? i + 3 : i;
         if (MH_CALL(Battle_ActorIsOut)(actor) != 0) continue;
         const unsigned char* const r = ActorRecord(actor);
-        sx += static_cast<std::uint32_t>(Long(r + 0x34) >> 9);
-        sz += static_cast<std::uint32_t>(Long(r + 0x38) >> 9);
+        sx += static_cast<std::uint32_t>(rv::As<records::SpriteHead>(r)->x >> 9);
+        sz += static_cast<std::uint32_t>(rv::As<records::SpriteHead>(r)->z >> 9);
         sy += static_cast<std::uint32_t>(static_cast<int>(S16(r + 0x3E)));
         ++n;
     }

@@ -190,9 +190,9 @@ S26_EXPORT void __cdecl Magic114_Start(void) {
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xA] = 0;
     Inc(Sc()[1]);
 }
@@ -290,7 +290,7 @@ S26_EXPORT void __cdecl Magic114_DrawRing(void) {
         MH_AT(void (__cdecl*)(int*), addr::Magic114_DrawTriangle)(keys);
     }
     const unsigned char* const owner = Owner();
-    MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(Long(owner + 0x34)), static_cast<unsigned>(Long(owner + 0x38)), keys,
+    MH_CALL(MagicFx_LinkByDepth)(static_cast<unsigned>(rv::As<records::SpriteHead>(owner)->x), static_cast<unsigned>(rv::As<records::SpriteHead>(owner)->z), keys,
                                  prims, 8, 0x34, 2);
     MH_CALL(Gte_PopMatrix)();
 }
@@ -385,8 +385,8 @@ S26_EXPORT void __cdecl Magic114_PushMatrix(void) {
     const unsigned char* const owner = Owner();
     const short rot[4] = {0, 0, static_cast<short>(((size & 0x1F) - 2) << 7), 0};
     short v[4];
-    v[0] = static_cast<short>(Pos9(Long(owner + 0x34)));
-    v[1] = static_cast<short>(Pos9(Long(owner + 0x38)));
+    v[0] = static_cast<short>(Pos9(rv::As<records::SpriteHead>(owner)->x));
+    v[1] = static_cast<short>(Pos9(rv::As<records::SpriteHead>(owner)->z));
     v[2] = static_cast<short>(NegHalf(S16(owner + 0x3E) + 0x200));
     v[3] = 0;
     PushMatrixAt(rot, v);
@@ -423,13 +423,13 @@ S26_EXPORT void __cdecl Magic114_TrailAim(void) {
     Turn();
     unsigned char* owner = Owner();
     s = Sc();
-    rv::Store(rv::As<records::BattleTask>(s)->x, AddL(Long(owner + 0x34), rv::As<records::BattleTask>(s)->step_x));
+    rv::Store(rv::As<records::BattleTask>(s)->x, AddL(rv::As<records::SpriteHead>(owner)->x, rv::As<records::BattleTask>(s)->step_x));
     owner = Owner();
     s = Sc();
-    rv::Store(rv::As<records::BattleTask>(s)->z, AddL(Long(owner + 0x38), rv::As<records::BattleTask>(s)->step_z));
+    rv::Store(rv::As<records::BattleTask>(s)->z, AddL(rv::As<records::SpriteHead>(owner)->z, rv::As<records::BattleTask>(s)->step_z));
     owner = Owner();
     s = Sc();
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (Word(owner + 0x3E) + 0x200) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (rv::As<records::SpriteHead>(owner)->height_whole + 0x200) & 0xFFFF);
     Sc()[0xA] = 0;
     Sc()[9] = 0;
     Inc(Sc()[2]);
@@ -919,13 +919,13 @@ S26_EXPORT void __cdecl Magic114_PushRayMatrix(void) {
     Turn();
     unsigned char* owner = Owner();
     s = Sc();
-    rv::Store(rv::As<records::BattleTask>(s)->x, AddL(Long(owner + 0x34), rv::As<records::BattleTask>(s)->step_x));
+    rv::Store(rv::As<records::BattleTask>(s)->x, AddL(rv::As<records::SpriteHead>(owner)->x, rv::As<records::BattleTask>(s)->step_x));
     owner = Owner();
     s = Sc();
-    rv::Store(rv::As<records::BattleTask>(s)->z, AddL(Long(owner + 0x38), rv::As<records::BattleTask>(s)->step_z));
+    rv::Store(rv::As<records::BattleTask>(s)->z, AddL(rv::As<records::SpriteHead>(owner)->z, rv::As<records::BattleTask>(s)->step_z));
     owner = Owner();
     s = Sc();
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (Word(owner + 0x3E) + 0x200) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (rv::As<records::SpriteHead>(owner)->height_whole + 0x200) & 0xFFFF);
     s = Sc();
     short v[4];
     v[0] = static_cast<short>(Pos9(rv::As<records::BattleTask>(s)->x));
@@ -955,9 +955,9 @@ S26_EXPORT void __cdecl Magic115_Task(void) {
 // 1, +9 0, +1 on.
 S26_EXPORT void __cdecl Magic115_Start(void) {
     unsigned char* const source = Source();
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(source + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(source + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(source + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(source)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(source)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(source)->height);
     const unsigned slot = NewTask(0x30);
     unsigned char* const child = TaskSlot(slot);
     SetL(child + 0x80, Key(Sc()));
@@ -1048,9 +1048,9 @@ static void Magic115_SpriteSetUp() {
 // original 0x4D9690: at the owner (height + 0x2C0), the sprite set up,
 // animation 0, +9 0xFF, +2 on.
 S26_EXPORT void __cdecl Magic115_OrbitStart(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, (Word(Owner() + 0x3E) + 0x2C0) & 0xFFFF);
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, (rv::As<records::SpriteHead>(Owner())->height_whole + 0x2C0) & 0xFFFF);
     Magic115_SpriteSetUp();
     MH_CALL(Sprite_SetAnimation)(0);
     Sc()[9] = 0xFF;
@@ -1067,14 +1067,14 @@ static void Magic115_Circle() {
     {
         const int sn = MH_CALL(Math_Sin)(static_cast<int>(angle));
         const unsigned char* const owner = Owner();
-        rv::Store(rv::Current<records::BattleTask>()->x, AddL(Shl(MulL(sn, 3), 0xE) >> 0xC, Long(owner + 0x34)));
+        rv::Store(rv::Current<records::BattleTask>()->x, AddL(Shl(MulL(sn, 3), 0xE) >> 0xC, rv::As<records::SpriteHead>(owner)->x));
     }
     {
         const int c = MH_CALL(Math_Cos)(Long(Mem(kS)));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         const unsigned char* const owner = Owner();
-        ts->z = AddL(Shl(MulL(c, 3), 0xE) >> 0xC, Long(owner + 0x38));
+        ts->z = AddL(Shl(MulL(c, 3), 0xE) >> 0xC, rv::As<records::SpriteHead>(owner)->z);
     }
 }
 

@@ -355,9 +355,9 @@ static void ColumnPlace() {
     const unsigned char* sc = Sprite_Current;
     SetWord(Scr(0xA), static_cast<unsigned>((sc[4] & 7) << 9));
     const int s = MH_CALL(Math_Sin)(S16(Scr(0xA)));
-    rv::Store(rv::Current<records::BattleTask>()->x, (Mul(s, S16(Scr(0))) >> 3) + Long(Pointer(BattleE2_Owner_addr) + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->x, (Mul(s, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->x);
     const int c = MH_CALL(Math_Cos)(S16(Scr(0xA)));
-    rv::Store(rv::Current<records::BattleTask>()->z, (Mul(c, S16(Scr(0))) >> 3) + Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, (Mul(c, S16(Scr(0))) >> 3) + rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->z);
 }
 
 // original 0x4C6770: +0xA = (Rand & 3) << 4; the radius 0xC0 - +0xA; placed
@@ -368,7 +368,7 @@ MS21_EXPORT void __cdecl FlameColumn_Start(void) {
     Sprite_Current[0xA] = U8((r & 3) << 4);
     SetWord(Scr(0), 0xC0u - Sprite_Current[0xA]);
     ColumnPlace();
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
     const int r2 = MH_CALL(Rand)();
     Sprite_Current[0xB] = U8(r2);
     Sprite_Current[9] = 0;
@@ -516,9 +516,9 @@ MS21_EXPORT void __cdecl FlameSpark_Start(void) {
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
-    tsc->x = Long(Pointer(BattleE2_Owner_addr) + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleE2_Owner_addr) + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    tsc->x = rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
     SetWord(Scr(0), 0x100);
     const int r = MH_CALL(Rand)();
     unsigned char* const x = Sprite_Current + 0x34;
@@ -656,16 +656,16 @@ MS21_EXPORT void __cdecl Frost_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(src + 0x2E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_x));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(src + 0x30) - 0x10u);
     const unsigned k = MH_CALL(BattleTask_Create)(1, 0x15);
     unsigned char* const child = Mem(at::kTasks + k * at::kTaskStride);
     unsigned char* const sc = Sprite_Current;
     SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));
     child[8] = src[8];
-    SetLong(child + 0x34, Long(src + 0x34));
-    SetLong(child + 0x38, Long(src + 0x38));
-    rv::Store(rv::As<records::BattleTask>(child)->height, Long(src + 0x3C));
+    SetLong(child + 0x34, rv::As<records::SpriteHead>(src)->x);
+    SetLong(child + 0x38, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::As<records::BattleTask>(child)->height, rv::As<records::SpriteHead>(src)->height);
     sc[0xB] = 0;
     Bump(Sprite_Current[1]);
     MH_CALL(Sound_PlayById)(0x100);
@@ -676,7 +676,7 @@ MS21_EXPORT void __cdecl Frost_Start(void) {
 // 0x40, the done flag, free.
 MS21_EXPORT void __cdecl Frost_Wait(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(src + 0x2E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_x));
     rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(src + 0x30) - 0x10u);
     if (Sprite_Current[0xB] != 0xFF) return;
     MH_CALL(Sprite_ReleaseTint)(TargetRecord());
@@ -942,11 +942,11 @@ MS21_EXPORT void __cdecl Iceblast_Task(void) {
 // 0x30 - 4 i (the delay), +0xA 0, +0xB i; sound 0x100; +9, +0xA 0; on.
 MS21_EXPORT void __cdecl Iceblast_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(src + 0x2E));
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(src + 0x30));
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_x));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(src)->screen_y));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     for (unsigned i = 0; i < 0x38; ++i) {
         unsigned char v;
         if (MH_CALL(Rand)() & 1)

@@ -334,11 +334,11 @@ S04_EXPORT void __cdecl SnapWave_Start(void) {
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1000000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x1000000u));
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFFFA000u));
     rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
@@ -559,12 +559,12 @@ S04_EXPORT void __cdecl SnapSpark_Launch(void) {
     {
         const int r = Sin(static_cast<int>(a));
         rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
-                                                       static_cast<std::uint32_t>(Long(src + 0x34))));
+                                                       static_cast<std::uint32_t>(rv::As<records::SpriteHead>(src)->x)));
     }
     {
         const int r = Cos(SD(4));
         rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
-                                                       static_cast<std::uint32_t>(Long(src + 0x38))));
+                                                       static_cast<std::uint32_t>(rv::As<records::SpriteHead>(src)->z)));
     }
     CopyL(Sc() + 0x3C, src + 0x3C);
     const std::uint32_t r = RandCall();
@@ -768,7 +768,7 @@ S04_EXPORT void __cdecl FlyingKick_Start(void) {
     Sc()[8] = Owner()[8];
     CopyL(Sc() + 0x34, Owner() + 0x34);
     CopyL(Sc() + 0x38, Owner() + 0x38);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
     Sc()[0xB] = 1;
     MH_CALL(BattleActor_SetAnimation)(8, 0);
     {
@@ -831,8 +831,8 @@ void AimAtOwner() {
     const unsigned char* const o = Owner();
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    const int dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(ts->z));
-    const int dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(ts->x));
+    const int dz = static_cast<int>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->z) - static_cast<std::uint32_t>(ts->z));
+    const int dx = static_cast<int>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(o)->x) - static_cast<std::uint32_t>(ts->x));
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
     rv::Current<records::BattleTask>()->step_x = angle;
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
@@ -1055,7 +1055,7 @@ S04_EXPORT void __cdecl AirRaidImage_Rise(void) {
     const unsigned char* const src = Source();
     CopyL(s + 0x34, src + 0x34);
     CopyL(Sc() + 0x38, src + 0x38);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, (Word(src + 0x3E) + 0xC00) & 0xFFFF);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, (rv::As<records::SpriteHead>(src)->height_whole + 0xC00) & 0xFFFF);
     MH_CALL(MagicFx_StepAround)(Owner(), 0x20000, 0);
     Inc(Sc()[2]);
 }
@@ -1144,7 +1144,7 @@ S04_EXPORT void __cdecl AirRaidImage_Bounce(void) {
     MH_CALL(MagicFx_StepAround)(Pointer(MagicS23_ActorSprite_addr), 0x2000, 0);
     RiseAndFall();
     s = Sc();
-    if (rv::As<records::BattleTask>(s)->step_y >= 0 || rv::As<records::BattleTask>(s)->height >= Long(Source() + 0x3C)) return;
+    if (rv::As<records::BattleTask>(s)->step_y >= 0 || rv::As<records::BattleTask>(s)->height >= rv::As<records::SpriteHead>(Source())->height) return;
     if (s[0xB] != 0) {
         Dec(Owner()[0xB]);
         MH_CALL(BattleTask_FreeCurrent)();
@@ -1255,7 +1255,7 @@ S04_EXPORT void __cdecl FlyingKickImage_Bounce(void) {
         Inc(s[9]);
         s = Sc();
     }
-    if (rv::As<records::BattleTask>(s)->step_y >= 0 || rv::As<records::BattleTask>(s)->height >= Long(Source() + 0x3C)) return;
+    if (rv::As<records::BattleTask>(s)->step_y >= 0 || rv::As<records::BattleTask>(s)->height >= rv::As<records::SpriteHead>(Source())->height) return;
     s[0] = static_cast<unsigned char>(s[0] | 0x20);
     Sc()[0x5C] = 1;
     Sc()[0x5D] = 0;

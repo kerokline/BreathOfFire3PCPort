@@ -247,11 +247,11 @@ S22_EXPORT void __cdecl BlizzardShard_Launch(void) {
     rv::Store(rv::Current<records::BattleTask>()->step_x, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u));
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(reinterpret_cast<const unsigned char*>(BlizzardShard_Offsets) + Sc()[4] * 8u + 4));
     MH_AT(PrimFn, kTurnOffset)(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     const unsigned char* const s = Sc();
     const unsigned direction = s[8];
     if (direction <= 3) {
@@ -1171,9 +1171,9 @@ S22_EXPORT void __cdecl Myollnir_Task(void) {
 S22_EXPORT void __cdecl Myollnir_Start(void) {
     unsigned char* const src = Source();
     Sc()[8] = src[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     MH_CALL(Sprite_ReleaseTint)(src);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(src, 0, 0, 0, 1);
     Sc()[0xA] = tint;
@@ -1265,9 +1265,9 @@ S22_EXPORT void __cdecl MyollnirBolt_Start(void) {
     Sc()[0xB] = static_cast<unsigned char>(r & 0xF);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Inc(Sc()[2]);
 }
 
@@ -1315,9 +1315,9 @@ void Orbit(std::uint32_t radius) {
     SetSD(0, radius);
     SetSD(4, angle);
     int v = MH_CALL(Math_Cos)(static_cast<int>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
     v = MH_CALL(Math_Sin)(SD(4));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(MulU(v, SD(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
 }
 // A circling child's step: +0xB up, the angle +0xC up, the circle.
 void OrbitStep(std::uint32_t radius) {
@@ -1335,7 +1335,7 @@ S22_EXPORT void __cdecl MyollnirOrb_Start(void) {
     Sc()[0xA] = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(Sc()[3] << 5));
     Orbit(0x28);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
     Inc(Sc()[2]);
 }
 
@@ -1524,7 +1524,7 @@ S22_EXPORT void __cdecl MyollnirRing_Start(void) {
     Sc()[0xA] = 0;
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>((Sc()[3] << 5) + 0x10));
     Orbit(0x18);
-    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
     Inc(Sc()[2]);
 }
 

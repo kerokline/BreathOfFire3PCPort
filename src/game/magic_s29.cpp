@@ -253,9 +253,9 @@ S29_EXPORT void __cdecl DivineBeam_Run(void) {
 S29_EXPORT void __cdecl DivineBeam_Wait(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Add(Long(Owner() + 0x3C), 0x4000000));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::As<records::SpriteHead>(Owner())->height, 0x4000000));
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const std::uint32_t r = RandCall();
         Sc()[k] = static_cast<unsigned char>((r & 3) + 4);
@@ -419,9 +419,9 @@ S29_EXPORT void __cdecl DivineBurst_Run(void) {
 S29_EXPORT void __cdecl DivineBurst_Wait(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0x5D] = 0xF;
     Sc()[0x5E] = 0xF;
     Sc()[0x5F] = 0xF;
@@ -532,15 +532,15 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
     }
     {
         const int sn = Sin(SS(cell::kW4));
-        const std::int32_t v = Add(Mul12(sn, SS(cell::kR)), Long(Owner() + 0x34));
+        const std::int32_t v = Add(Mul12(sn, SS(cell::kR)), rv::As<records::SpriteHead>(Owner())->x);
         rv::Current<records::BattleTask>()->x = v;
     }
     {
         const int c = Cos(SS(cell::kW4));
-        const std::int32_t v = Add(Mul12(c, SS(cell::kR)), Long(Owner() + 0x38));
+        const std::int32_t v = Add(Mul12(c, SS(cell::kR)), rv::As<records::SpriteHead>(Owner())->z);
         rv::Current<records::BattleTask>()->z = v;
     }
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const std::uint32_t r = RandCall();
         Sc()[k] = static_cast<unsigned char>((r & 7) + 5);
@@ -984,9 +984,9 @@ S29_EXPORT void __cdecl ShadowGlow_Wait(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     MH_CALL(Sound_PlayById)(0x100);
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0x14;
     Sc()[0xA] = 0;
@@ -1088,8 +1088,8 @@ int HeadingToOwner() {
     const unsigned char* const o = Owner();
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    const std::int32_t dz = Sub(Long(o + 0x38), ts->z);
-    const std::int32_t dx = Sub(Long(o + 0x34), ts->x);
+    const std::int32_t dz = Sub(rv::As<records::SpriteHead>(o)->z, ts->z);
+    const std::int32_t dx = Sub(rv::As<records::SpriteHead>(o)->x, ts->x);
     return MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
 }
 
@@ -1103,9 +1103,9 @@ S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Pointer(MagicS23_ActorSprite_addr)[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(MagicS23_ActorSprite_addr) + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(MagicS23_ActorSprite_addr) + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->height);
     rv::Current<records::BattleTask>()->step_x = 0x8000;
     rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(TaskFn, magic_s29::kTurnByFacing)(Sc());
@@ -1289,12 +1289,12 @@ template <typename Radius> void ShadeCircle(Radius radius) {
     {
         const int s = Sin(static_cast<short>(SW(cell::kW4)));
         unsigned char* const r = Cur();
-        SetLong(r + 0x10, Add(Mul(s, radius(r)), Long(Owner() + 0x34)));
+        SetLong(r + 0x10, Add(Mul(s, radius(r)), rv::As<records::SpriteHead>(Owner())->x));
     }
     {
         const int c = Cos(SS(cell::kW4));
         unsigned char* const r = Cur();
-        SetLong(r + 0x14, Add(Mul(c, radius(r)), Long(Owner() + 0x38)));
+        SetLong(r + 0x14, Add(Mul(c, radius(r)), rv::As<records::SpriteHead>(Owner())->z));
     }
 }
 int SpreadRadius(const unsigned char* r) { return r[7]; }
@@ -1321,7 +1321,7 @@ S29_EXPORT void __cdecl ShadowMote_Wait(void) {
     Put(cell::kW4, ShadeAngle(r));
     Put(cell::kR, (r[4] >> 4) * 8 + 8);
     ShadeCircle([](const unsigned char*) { return static_cast<int>(SS(cell::kR)); });
-    SetLong(Cur() + 0x18, Add(Long(Owner() + 0x3C), 0x800000));
+    SetLong(Cur() + 0x18, Add(rv::As<records::SpriteHead>(Owner())->height, 0x800000));
     SetLong(Cur() + 8, 0);
     Cur()[5] = 0;
     Cur()[6] = 0;

@@ -726,9 +726,9 @@ S25_EXPORT void __cdecl SpellConfuse_Start(void) {
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     SetPointer(child + 0x80, sc);
     child[8] = source[8];
-    tchild->x = Long(source + 0x34);
-    tchild->z = Long(source + 0x38);
-    rv::Store(tchild->height, Long(source + 0x3C));
+    tchild->x = rv::As<records::SpriteHead>(source)->x;
+    tchild->z = rv::As<records::SpriteHead>(source)->z;
+    rv::Store(tchild->height, rv::As<records::SpriteHead>(source)->height);
     sc[0xB] = 0;
     Bump(Sprite_Current[1]);
 }
@@ -1470,7 +1470,7 @@ S25_EXPORT void __cdecl SpellRagnarok_RingInit(void) {
     rv::Current<records::BattleTask>()->step_z = 0x60000;
     rv::Store(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->step_x + Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::Current<records::BattleTask>()->step_z + Field_Kind2Z);
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
     Sprite_Current[9] = 0x10;
     Bump(Sprite_Current[2]);
@@ -1593,7 +1593,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SparkInit(void) {
     const std::uint32_t offsets = bof3::addr::SpellRagnarok_SparkOffsets;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(offsets + Sprite_Current[0xB] * 8u)) + Field_Kind2X);
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(offsets + 4 + Sprite_Current[0xB] * 8u)) + Field_Kind2Z);
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Pointer(BattleE2_Owner_addr))->height);
     Sprite_Current[9] = 0x60;
     Sprite_Current[0xA] = 0x40;
     Bump(Sprite_Current[2]);

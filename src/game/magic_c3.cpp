@@ -153,7 +153,7 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
     rv::Store(tball->step_y, 0);
     tball->work_18 = 0x28;
     ball[9] = 0;
-    const int dx = static_cast<short>(Word(source + 0x2E)) - x0;
+    const int dx = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_x)) - x0;
     tball->work_1c = static_cast<std::int32_t>(static_cast<std::uint32_t>(dx) << 16) / 10;
     const int dy = static_cast<short>(Word(source + 0x30)) - y0;
     rv::Store(tball->work_20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
@@ -366,9 +366,9 @@ C3_EXPORT void __cdecl Magic111_Task(void) {
 // +1 = 2. Sounds 0x100 and 0x101; the owner's +0 bit 0x40 set.
 C3_EXPORT void __cdecl Magic111_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Inc(Sc()[1]);

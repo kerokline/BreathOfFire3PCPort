@@ -117,23 +117,23 @@ void BurstPoint() {
     {
         const int s = MH_CALL(Math_Sin)(S16(M() + 0xE));
         unsigned char* const m = M();
-        SetLong(m + 0x10, static_cast<std::int32_t>(U(s) * U(S16(m + 0xC)) + U(Long(Owner() + 0x34))));
+        SetLong(m + 0x10, static_cast<std::int32_t>(U(s) * U(S16(m + 0xC)) + U(rv::As<records::SpriteHead>(Owner())->x)));
     }
     {
         const int c = MH_CALL(Math_Cos)(S16(M() + 0xE));
         unsigned char* const m = M();
-        SetLong(m + 0x14, static_cast<std::int32_t>(U(c) * U(S16(m + 0xC)) + U(Long(Owner() + 0x38))));
+        SetLong(m + 0x14, static_cast<std::int32_t>(U(c) * U(S16(m + 0xC)) + U(rv::As<records::SpriteHead>(Owner())->z)));
     }
 }
 // The orbit's: a fixed radius of 32 (`shl 5`).
 void OrbitPoint() {
     {
         const int s = MH_CALL(Math_Sin)(S16(M() + 0xE));
-        SetLong(M() + 0x10, static_cast<std::int32_t>((U(s) << 5) + U(Long(Owner() + 0x34))));
+        SetLong(M() + 0x10, static_cast<std::int32_t>((U(s) << 5) + U(rv::As<records::SpriteHead>(Owner())->x)));
     }
     {
         const int c = MH_CALL(Math_Cos)(S16(M() + 0xE));
-        SetLong(M() + 0x14, static_cast<std::int32_t>((U(c) << 5) + U(Long(Owner() + 0x38))));
+        SetLong(M() + 0x14, static_cast<std::int32_t>((U(c) << 5) + U(rv::As<records::SpriteHead>(Owner())->z)));
     }
 }
 // The angle word +0xE on by `step`, mod 0x1000.
@@ -263,9 +263,9 @@ S13_EXPORT void __cdecl SuddenDeathChild_Run(void) {
 S13_EXPORT void __cdecl SuddenDeathChild_Start(void) {
     {
         const unsigned char* const rec = ActorRecord(Sc()[4]);
-        rv::Store(rv::Current<records::BattleTask>()->x, Long(rec + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
-        rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(U(Long(rec + 0x3C)) + 0x2000000u));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(rec)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
+        rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(rec)->height) + 0x2000000u));
     }
     {
         const unsigned r = RandByte();
@@ -378,13 +378,13 @@ S13_EXPORT void __cdecl SuddenDeathBurst_Launch(void) {
         const unsigned angle = (m[4] & 0x1Fu) << 7;
         SetSW(4, angle);
         const int s = MH_CALL(Math_Sin)(static_cast<int>(angle));
-        SetLong(M() + 0x10, static_cast<std::int32_t>(U(s) * U(SS(0)) + U(Long(Owner() + 0x34))));
+        SetLong(M() + 0x10, static_cast<std::int32_t>(U(s) * U(SS(0)) + U(rv::As<records::SpriteHead>(Owner())->x)));
     }
     {
         const int c = MH_CALL(Math_Cos)(SS(4));
-        SetLong(M() + 0x14, static_cast<std::int32_t>(U(c) * U(SS(0)) + U(Long(Owner() + 0x38))));
+        SetLong(M() + 0x14, static_cast<std::int32_t>(U(c) * U(SS(0)) + U(rv::As<records::SpriteHead>(Owner())->z)));
     }
-    SetLong(M() + 0x18, Long(Owner() + 0x3C));
+    SetLong(M() + 0x18, rv::As<records::SpriteHead>(Owner())->height);
     SetWord(M() + 0xE, SW(4));
     RandColours();
     M()[3] = 0;
@@ -545,13 +545,13 @@ S13_EXPORT void __cdecl SuddenDeathOrbit_Run(void) {
 S13_EXPORT void __cdecl SuddenDeathOrbit_Start(void) {
     {
         const int s = MH_CALL(Math_Sin)(0);
-        SetLong(M() + 0x10, static_cast<std::int32_t>((U(s) << 5) + U(Long(Owner() + 0x34))));
+        SetLong(M() + 0x10, static_cast<std::int32_t>((U(s) << 5) + U(rv::As<records::SpriteHead>(Owner())->x)));
     }
     {
         const int c = MH_CALL(Math_Cos)(0);
-        SetLong(M() + 0x14, static_cast<std::int32_t>((U(c) << 5) + U(Long(Owner() + 0x38))));
+        SetLong(M() + 0x14, static_cast<std::int32_t>((U(c) << 5) + U(rv::As<records::SpriteHead>(Owner())->z)));
     }
-    SetLong(M() + 0x18, Long(Owner() + 0x3C));
+    SetLong(M() + 0x18, rv::As<records::SpriteHead>(Owner())->height);
     RandColours();
     SetWord(M() + 0xE, 0);
     M()[3] = 7;

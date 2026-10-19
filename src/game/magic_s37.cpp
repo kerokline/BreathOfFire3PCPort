@@ -480,9 +480,9 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(U(ts->step_x) + U(Long(actor + 0x34)));
-        ts->z = static_cast<std::int32_t>(U(ts->step_z) + U(Long(actor + 0x38)));
-        rv::Store(ts->height, static_cast<std::int32_t>(U(Long(actor + 0x3C)) + 0x800000u));
+        ts->x = static_cast<std::int32_t>(U(ts->step_x) + U(rv::As<records::SpriteHead>(actor)->x));
+        ts->z = static_cast<std::int32_t>(U(ts->step_z) + U(rv::As<records::SpriteHead>(actor)->z));
+        rv::Store(ts->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(actor)->height) + 0x800000u));
         const unsigned b = s[0xB];
         SetSD(0, ((b >> 3) + 2) << 4);
         const std::uint32_t angle = (((b >> 3) + (b & 7) * 2) & 0xF) << 8;
@@ -490,12 +490,12 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
         v = Sin(static_cast<int>(angle));
     }
     {
-        const std::uint32_t x = Mul(v, SD(0)) + U(Long(Owner() + 0x34));
+        const std::uint32_t x = Mul(v, SD(0)) + U(rv::As<records::SpriteHead>(Owner())->x);
         rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(x));
     }
     v = Cos(SD(4));
     {
-        const std::uint32_t z = Mul(v, SD(0)) + U(Long(Owner() + 0x38));
+        const std::uint32_t z = Mul(v, SD(0)) + U(rv::As<records::SpriteHead>(Owner())->z);
         rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(z));
     }
     CopyLong(Sc() + 0x14, Owner() + 0x3C);
@@ -769,7 +769,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Start(void) {
         unsigned char* const s = Sc();
         CopyLong(s + 0x34, Owner() + 0x34);
         CopyLong(s + 0x38, Owner() + 0x38);
-        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(Long(Owner() + 0x3C)) + 0x1600000u));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->height) + 0x1600000u));
         s[0x25] = 0x1D;
         s[0x26] = 0;
         s[0x27] = 0x1A;
@@ -834,11 +834,11 @@ void ShakeAboutOwner() {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const std::uint32_t d = U(ts->step_x);
     if ((Frame_Counter & 1) != 0) {
-        ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + d);
-        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) - d);
+        ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + d);
+        ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) - d);
     } else {
-        ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) - d);
-        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + d);
+        ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) - d);
+        ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + d);
     }
 }
 
@@ -984,9 +984,9 @@ S37_EXPORT void __cdecl GeoBreathRecord_Start(void) {
     const auto angle = static_cast<std::uint16_t>(static_cast<unsigned>(Sc()[0xB]) << 8);
     SetSW(4, angle);
     int v = Sin(static_cast<short>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + Mul(v, 24)));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + Mul(v, 24)));
     v = Cos(SS(4));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + Mul(v, 24)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + Mul(v, 24)));
     CopyLong(Sc() + 0x3C, Owner() + 0x3C);
     unsigned char* const s = Sc();
     s[9] = 8;
@@ -1126,7 +1126,7 @@ S37_EXPORT void __cdecl CombustionSprite_Start(void) {
         rv::Store(rv::As<records::BattleTask>(s)->work_20, 0x600000);
         CopyLong(s + 0x34, Owner() + 0x34);
         CopyLong(s + 0x38, Owner() + 0x38);
-        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(Long(Owner() + 0x3C)) + U(rv::As<records::BattleTask>(s)->step_y)));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->height) + U(rv::As<records::BattleTask>(s)->step_y)));
         s[0x25] = 0x1D;
         s[0x26] = 0;
         s[0x27] = 0x1A;
@@ -1157,7 +1157,7 @@ S37_EXPORT void __cdecl CombustionSprite_Fall(void) {
     {
         unsigned char* const s = Sc();
         rv::Store(rv::As<records::BattleTask>(s)->step_y, static_cast<std::int32_t>(U(rv::As<records::BattleTask>(s)->step_y) - U(rv::As<records::BattleTask>(s)->work_20)));
-        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(Long(Owner() + 0x3C)) + U(rv::As<records::BattleTask>(s)->step_y)));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->height) + U(rv::As<records::BattleTask>(s)->step_y)));
         Dec(s[9]);
         if (s[9] != 0) return;
     }
@@ -1323,12 +1323,12 @@ void MoteOrbit() {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + U(Long(Owner() + 0x34)));
+        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + U(rv::As<records::SpriteHead>(Owner())->x));
     }
     v = Cos(SS(4));
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + U(Long(Owner() + 0x38)));
+    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + U(rv::As<records::SpriteHead>(Owner())->z));
 }
 
 }  // namespace
@@ -1389,8 +1389,8 @@ S37_EXPORT void __cdecl CombustionFlash_Run(void) {
 S37_EXPORT void __cdecl CombustionFlash_Start(void) {
     {
         unsigned char* const s = Sc();
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, Word(Owner() + 0x2E));
-        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, Word(Owner() + 0x30));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     }
     MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
     unsigned char* const s = Sc();

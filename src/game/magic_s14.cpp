@@ -339,7 +339,7 @@ S14_EXPORT void __cdecl Weretiger_LoadForm(void) {
     DrawCrossFade(self);
     const unsigned char* const owner = Owner();
     Sprite_Current = self;
-    const bool second = Word(owner + 0x2C) != 0;
+    const bool second = rv::As<records::SpriteHead>(owner)->column != 0;
     const unsigned char facing = owner[8];
     const bool near = facing == 0 || facing == 1;
     MH_CALL(LoadDatFile)(second ? (near ? 0x2ED : 0x2F0) : (near ? 0x2EC : 0x2EF));
@@ -935,9 +935,9 @@ S14_EXPORT void __cdecl Tsunami_Task(void) {
 // then without it; the strip dirty; sound effect 0x100; +0xB 0, +9 0x18, +1
 // on.
 S14_EXPORT void __cdecl Tsunami_Start(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     const unsigned slot = NewTask(0x11);
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
@@ -999,7 +999,7 @@ S14_EXPORT void __cdecl TsunamiWave_Run(void) {
 S14_EXPORT void __cdecl TsunamiWave_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Field_Kind2X) + 0xFFEE0000u));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Field_Kind2Z) + 0x880000u));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0x1A;
     Sc()[9] = 0x10;
     rv::Current<records::BattleTask>()->step_z = 0;

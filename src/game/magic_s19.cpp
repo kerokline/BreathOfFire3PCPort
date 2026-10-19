@@ -458,10 +458,10 @@ MS19_EXPORT void __cdecl ShieldSpark_Place(void) {
     const std::uint32_t angle = (cur[0xB] & 0x1Fu) << 7;
     Put16(kAngle, angle);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, 176, 3), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, 176, 3), rv::As<records::SpriteHead>(Owner())->x));
     const std::int32_t c = Cos(S16(kAngle));
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, 176, 3), Long(Owner() + 0x38)));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, 176, 3), rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
     rv::Store(rv::Current<records::BattleTask>()->work_20, -4);
     Sprite_Current[9] = 0;
@@ -574,9 +574,9 @@ MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     Put16(kAngle, angle);
     Put16(kRadius, static_cast<std::uint32_t>(cur[0xA]) * Word(cur + 0x10) + 0xB0);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, S16(kRadius), 3), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, S16(kRadius), 3), rv::As<records::SpriteHead>(Owner())->x));
     const std::int32_t c = Cos(S16(kAngle));
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, S16(kRadius), 3), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, S16(kRadius), 3), rv::As<records::SpriteHead>(Owner())->z));
     Bump(Sprite_Current[0xA]);
     if (Sprite_Current[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -720,9 +720,9 @@ void SpawnPart(unsigned char type) {
 // the phase on.
 MS19_EXPORT void __cdecl Barrier_Start(void) {
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(source + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(source + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(source + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(source)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(source)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(source)->height);
     SpawnPart(0);
     SpawnPart(1);
     MH_CALL(Sound_PlayById)(0x100);

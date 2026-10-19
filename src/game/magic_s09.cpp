@@ -184,9 +184,9 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 // The task's +8 and position (+0x34 / +0x38 / +0x3C) the owner's.
 void FacingAndPositionFromOwner() {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 
 // Gfx_ClutStrip 0x1A00..0x1A0F (row 26's first sixteen words) back from its
@@ -314,9 +314,9 @@ S09_EXPORT void __cdecl BoneDartShaft_Start(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(ts->step_x));
-        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(ts->step_z));
-        rv::Store<unsigned>(ts->height_whole, (Word(Owner() + 0x3E) + 0x100u) & 0xFFFF);
+        ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + U(ts->step_x));
+        ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + U(ts->step_z));
+        rv::Store<unsigned>(ts->height_whole, (rv::As<records::SpriteHead>(Owner())->height_whole + 0x100u) & 0xFFFF);
         s[0x25] = 0x1D;
         s[0x26] = 0;
         rv::Store(ts->scale_x, 0x10000);
@@ -349,8 +349,8 @@ S09_EXPORT void __cdecl BoneDartShaft_Fly(void) {
     MH_CALL(Sprite_ScriptTick)();
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-        const std::int32_t x = (Long(src + 0x34) >> 9) - 0x4000;
-        const std::int32_t z = (Long(src + 0x38) >> 9) - 0x4000;
+        const std::int32_t x = (rv::As<records::SpriteHead>(src)->x >> 9) - 0x4000;
+        const std::int32_t z = (rv::As<records::SpriteHead>(src)->z >> 9) - 0x4000;
         const std::int32_t y = (S16(src + 0x3E) + 0xC0) >> 1;
         MH_CALL(MagicFx_StepTowardPoint)(U(x), U(z), U(y), 0, 0x30);
     }
@@ -368,8 +368,8 @@ S09_EXPORT void __cdecl BoneDartShaft_Fly(void) {
         s[0x5E] = 0;
         s[0x5F] = 0;
         const unsigned char* const o = Owner();
-        const std::int32_t dz = static_cast<std::int32_t>(U(Long(o + 0x38)) - U(ts->z));
-        const std::int32_t dx = static_cast<std::int32_t>(U(Long(o + 0x34)) - U(ts->x));
+        const std::int32_t dz = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->z) - U(ts->z));
+        const std::int32_t dx = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->x) - U(ts->x));
         const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
         unsigned char* const t = Sc();
         records::BattleTask* const tt = rv::As<records::BattleTask>(t);
@@ -425,9 +425,9 @@ S09_EXPORT void __cdecl BoneDartShadow_Start(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Long(Owner() + 0x34);
-        ts->z = Long(Owner() + 0x38);
-        rv::Store<unsigned>(ts->height_whole, Word(Owner() + 0x3E));
+        ts->x = rv::As<records::SpriteHead>(Owner())->x;
+        ts->z = rv::As<records::SpriteHead>(Owner())->z;
+        rv::Store<unsigned>(ts->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
         s[0x25] = 0x1D;
         s[0x26] = 0;
         rv::Store(ts->scale_x, 0x10000);
@@ -642,8 +642,8 @@ S09_EXPORT void __cdecl ElemBreathMote_Start(void) {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const unsigned char* const o = Owner();
-        const std::int32_t dz = static_cast<std::int32_t>(U(ts->z) - U(Long(o + 0x38)));
-        const std::int32_t dx = static_cast<std::int32_t>(U(ts->x) - U(Long(o + 0x34)));
+        const std::int32_t dz = static_cast<std::int32_t>(U(ts->z) - U(rv::As<records::SpriteHead>(o)->z));
+        const std::int32_t dx = static_cast<std::int32_t>(U(ts->x) - U(rv::As<records::SpriteHead>(o)->x));
         angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
     }
     Sc()[8] = Owner()[8];
@@ -670,9 +670,9 @@ S09_EXPORT void __cdecl ElemBreathMote_Start(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
-    ts->x = static_cast<std::int32_t>(U(Long(o + 0x34)) + U(ts->step_x));
-    ts->z = static_cast<std::int32_t>(U(Long(o + 0x38)) + U(ts->step_z));
-    rv::Store(ts->height, static_cast<std::int32_t>(U(Long(o + 0x3C)) + U(ts->step_y)));
+    ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->x) + U(ts->step_x));
+    ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->z) + U(ts->step_z));
+    rv::Store(ts->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->height) + U(ts->step_y)));
     rv::Store(ts->step_y, static_cast<std::int32_t>(U(angle) & 0xFFF));
     s[9] = 0;
     Inc(s[2]);
@@ -912,8 +912,8 @@ S09_EXPORT void __cdecl DreamBreathMote_Start(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(ts->step_x));
-        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(ts->step_z));
+        ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + U(ts->step_x));
+        ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + U(ts->step_z));
         ts->step_x = 0x80000;
         ts->step_z = 0;
     }
@@ -922,7 +922,7 @@ S09_EXPORT void __cdecl DreamBreathMote_Start(void) {
     AddLong(s + 0xC, U(Field_Kind2X));
     AddLong(s + 0x10, U(Field_Kind2Z));
     rv::Store(rv::As<records::BattleTask>(s)->step_y, S16(s + 0x3E) + 0x100);
-    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (Word(Owner() + 0x3E) + 0x100u) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (rv::As<records::SpriteHead>(Owner())->height_whole + 0x100u) & 0xFFFF);
     s[9] = 0;
     s[0xA] = 0;
     Inc(s[2]);
@@ -1108,8 +1108,8 @@ S09_EXPORT void __cdecl Pollen_Start(void) {
     Sc()[0xB] = 0;
     MH_CALL(MagicFx_CenterOnSide)();
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
     Sc()[9] = 0;
     Sc()[0xB] = 0;
     Inc(Sc()[1]);

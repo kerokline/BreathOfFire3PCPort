@@ -111,9 +111,9 @@ void TakeOwnerAndAnimate(unsigned arg) {
         const unsigned char facing = Owner()[8];
         Sc()[8] = facing;
     }
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Inc(Sc()[1]);
@@ -301,11 +301,11 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x34)) +
+        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->x) +
                                                     static_cast<std::uint32_t>(ts->step_x));
-        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x38)) +
+        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->z) +
                                                     static_cast<std::uint32_t>(ts->step_z));
-        rv::Store(ts->height, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
+        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height);
         ts->step_x = 0;
         ts->step_z = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
         Turn(s);
@@ -389,9 +389,9 @@ S05_EXPORT void __cdecl Magic017Image_Home(void) {
     Tint(s, 0xF8);
     Dec(s[9]);
     if (s[9] != 0) return;
-    ts->x = Long(Owner() + 0x34);
-    ts->z = Long(Owner() + 0x38);
-    rv::Store(ts->height, Long(Owner() + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(Owner())->x;
+    ts->z = rv::As<records::SpriteHead>(Owner())->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(Owner())->height);
     s[9] = 8;
     Inc(s[2]);
 }

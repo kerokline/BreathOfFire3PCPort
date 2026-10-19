@@ -217,9 +217,9 @@ S36_EXPORT void __cdecl MagicBall_Task(void) {
 // i + 1, +0xB i), each with +0x80 this task and counted in +0xB; sound 0x100.
 S36_EXPORT void __cdecl MagicBall_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned core = NewTask(0x51);
@@ -320,8 +320,8 @@ S36_EXPORT void __cdecl MagicBallCore_Run(void) {
 // original 0x4F2220: the owner's point, 0x800000 higher; the heading +0xC the
 // angle to the source sprite (0x904B4C); +0xB, +9, +0xA 0; +2 on.
 S36_EXPORT void __cdecl MagicBallCore_Start(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
     rv::Store(rv::Current<records::BattleTask>()->height, I32(U32(Owner() + 0x3C) + 0x800000u));
     const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
     rv::Current<records::BattleTask>()->step_x = angle;
@@ -410,8 +410,8 @@ S36_EXPORT void __cdecl MagicBallOrb_Run(void) {
 S36_EXPORT void __cdecl MagicBallOrb_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
     rv::Store(rv::Current<records::BattleTask>()->height, I32(U32(Owner() + 0x3C) + 0x800000u));
     const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
     rv::Current<records::BattleTask>()->step_x = angle;
@@ -670,9 +670,9 @@ S36_EXPORT void __cdecl Intimidate_Task(void) {
 // counted in +0xB; row 26 of the CLUT strip back; sound 0x100.
 S36_EXPORT void __cdecl Intimidate_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     for (unsigned i = 0; i < 2; ++i) {
@@ -789,8 +789,8 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
         arrived = TurnedPast();
     }
     if (arrived) {
-        rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
         Inc(Sc()[2]);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1138,9 +1138,9 @@ S36_EXPORT void __cdecl AuraBreath_Start(void) {
     SetLong(Mem(AuraBreath_Struck_addr), 0);
     SetLong(Mem(AuraBreath_Struck_addr + 4), 0);
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned slot = NewTask(0x67);
@@ -1187,9 +1187,9 @@ S36_EXPORT void __cdecl AuraBreathDome_Wait(void) {
     Dec(s[9]);
     if (s[9] != 0) return;
     const unsigned char* const o = Owner();
-    ts->x = Long(o + 0x34);
-    ts->z = Long(o + 0x38);
-    rv::Store(ts->height, Long(o + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(o)->x;
+    ts->z = rv::As<records::SpriteHead>(o)->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(o)->height);
     s[0x5D] = 0x10;
     s[9] = 0x10;
     s[0xA] = 4;

@@ -246,9 +246,9 @@ S11_EXPORT void __cdecl Sanctuary_Start(void) {
     SetWord(Mem(Sanctuary_Reached_addr + 8), 0);
     Mem(Sanctuary_Reached_addr + 10)[0] = 0;
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned slot = NewTask(0x3F);
@@ -302,9 +302,9 @@ S11_EXPORT void __cdecl SanctuaryRing_Task(void) {
 // radius +0xC (dword) 8, +0xA 0x10; +2 on.
 S11_EXPORT void __cdecl SanctuaryRing_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Current<records::BattleTask>()->step_x = 8;
     Sc()[0xA] = 0x10;
     Inc(Sc()[2]);
@@ -702,9 +702,9 @@ S11_EXPORT void __cdecl TornadoFunnel_PushMatrix(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
-    ts->x = Long(o + 0x34);
-    ts->z = Long(o + 0x38);
-    rv::Store<unsigned>(ts->height_whole, Word(o + 0x3E));
+    ts->x = rv::As<records::SpriteHead>(o)->x;
+    ts->z = rv::As<records::SpriteHead>(o)->z;
+    rv::Store<unsigned>(ts->height_whole, rv::As<records::SpriteHead>(o)->height_whole);
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
     v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
@@ -877,13 +877,13 @@ S11_EXPORT void __cdecl TornadoMote_Task(void) {
     v = Cos(SS(0xE));
     {
         const int r = SS(0);
-        const std::int32_t ox = Long(Owner() + 0x34);
+        const std::int32_t ox = rv::As<records::SpriteHead>(Owner())->x;
         rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(v, r, 3), ox));
     }
     v = Sin(SS(0xE));
     {
         const int r = SS(0);
-        const std::int32_t oz = Long(Owner() + 0x38);
+        const std::int32_t oz = rv::As<records::SpriteHead>(Owner())->z;
         rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(v, r, 3), oz));
     }
     const std::uint32_t frame = Frame_Counter;
@@ -900,9 +900,9 @@ S11_EXPORT void __cdecl TornadoMote_Place(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
-    ts->x = Long(o + 0x34);
-    ts->z = Long(o + 0x38);
-    rv::Store(ts->height, Add(Long(o + 0x3C), ts->step_y));
+    ts->x = rv::As<records::SpriteHead>(o)->x;
+    ts->z = rv::As<records::SpriteHead>(o)->z;
+    rv::Store(ts->height, Add(rv::As<records::SpriteHead>(o)->height, ts->step_y));
     s[0xA] = 0;
     Inc(s[2]);
 }
