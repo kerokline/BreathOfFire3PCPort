@@ -29,10 +29,12 @@
 #include "game/area_harness.h"
 #include "game/area_w4f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w4f::at;
 using area_harness::Handler;
@@ -52,6 +54,7 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
 // Sprite_Objects record `k` (a byte index, unchecked as the originals').
 unsigned char* ObjectAt(unsigned k) { return Mem(Sprite_Objects_addr + k * at::kObjectStride); }
+records::SpriteObject* TObjectAt(unsigned k) { return reinterpret_cast<records::SpriteObject*>(ObjectAt(k)); }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 // The answer as the originals' movsx reads it.
@@ -166,12 +169,14 @@ int ShakeStep(U table) { return static_cast<signed char>(B(table + (Sprite_Curre
 // (32-bit), Sprite_Current and the step read again for each.
 void ShakeXZ(U table) {
     unsigned char* c = Sprite_Current;
-    std::int32_t x = Long(c + 0x34);
+    auto* tC = reinterpret_cast<records::SpriteObject*>(c);
+    std::int32_t x = tC->x;
     int s = ShakeStep(table);
-    SetLong(c + 0x34, static_cast<std::int32_t>(static_cast<U>(x) + (static_cast<U>(s) << 11)));
+    tC->x = static_cast<std::int32_t>(static_cast<U>(x) + (static_cast<U>(s) << 11));
     c = Sprite_Current;
+    tC = reinterpret_cast<records::SpriteObject*>(c);
     s = ShakeStep(table);
-    SetLong(c + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(c + 0x38)) + (static_cast<U>(-s) << 11)));
+    tC->z = static_cast<std::int32_t>(static_cast<U>(tC->z) + (static_cast<U>(-s) << 11));
 }
 
 // Area 198's effect kind 0xA6's record `k` (8 bytes: s16 x scale, s16 z scale,
@@ -655,10 +660,11 @@ extern "C" void __cdecl Area197_SpawnEffect92(void) {
     if (slot == 0xFF) return;
     const unsigned char who = MemberIndex();
     unsigned char* const r = EffectAt(slot);
+    auto* const tR = reinterpret_cast<records::EffectObject*>(r);
     r[0] = 1;
     r[5] = 0x92;
-    SetWord(r + 0x2E, 0);
-    SetWord(r + 0x30, 0xFFE2);
+    tR->screen_x = 0;
+    tR->screen_y = 0xFFE2;
     r[0x29] = 6;
     r[0xB] = who;
 }
@@ -820,7 +826,7 @@ extern "C" void __cdecl Area198_Shake(void) {
 // +7 = abs(d) as a byte, the running object's +8 (its direction) 3,
 // MoveCmd_Move(the script object, +8) - each pointer read again.
 extern "C" void __cdecl Area198_WalkToX190(void) {
-    const auto d = static_cast<std::int32_t>(0x190000u - static_cast<U>(Long(Sprite_Current + 0x34))) >> 15;
+    const auto d = static_cast<std::int32_t>(0x190000u - static_cast<U>(CurSprite()->x)) >> 15;
     if (d == 0) return;
     MoveScript_Object[7] = static_cast<unsigned char>(d < 0 ? 0u - static_cast<U>(d) : static_cast<U>(d));
     Sprite_Current[8] = 3;
@@ -896,6 +902,7 @@ extern "C" void __cdecl Area198_SpawnEffectA7(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     Sprite_Current[0xB] = slot;
     unsigned char* const c = Sprite_Current;
+    auto* const tC = reinterpret_cast<records::SpriteObject*>(c);
     if (c[0xB] == 0xFF) {
         ScriptStep(-2);
         return;
@@ -903,10 +910,11 @@ extern "C" void __cdecl Area198_SpawnEffectA7(void) {
     EffectAt(c[0xB])[0] = 1;
     EffectAt(c[0xB])[5] = 0xA7;
     unsigned char* const r34 = EffectAt(c[0xB]);
-    SetLong(r34 + 0x34, Long(c + 0x34));
-    const std::int32_t z = Long(c + 0x38);
+    auto* const tR34 = reinterpret_cast<records::EffectObject*>(r34);
+    tR34->x = tC->x;
+    const std::int32_t z = tC->z;
     SetLong(EffectAt(c[0xB]) + 0x38, z);
-    const std::int32_t y = Long(c + 0x3C);
+    const std::int32_t y = tC->height;
     SetLong(EffectAt(c[0xB]) + 0x3C, static_cast<std::int32_t>(static_cast<U>(y) + 0x1000000u));
 }
 
@@ -935,9 +943,9 @@ extern "C" void __cdecl Area198_EffectA6Run(void) {
 // +0x24 0, +0x2A 0; Sprite_SetAnimation(the animation of record +6); +1 1;
 // then a tail jmp into state 1 (0x42D580, the next byte).
 extern "C" void __cdecl Area198_EffectA6Start(void) {
-    SetLong(Sprite_Current + 0x34, Long(ObjectAt(Sprite_Current[7]) + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(ObjectAt(Sprite_Current[7]) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(ObjectAt(Sprite_Current[7]) + 0x3C));
+    SetLong(Sprite_Current + 0x34, TObjectAt(Sprite_Current[7])->x);
+    SetLong(Sprite_Current + 0x38, TObjectAt(Sprite_Current[7])->z);
+    SetLong(Sprite_Current + 0x3C, TObjectAt(Sprite_Current[7])->height);
     AH_CALL(Sprite_SetAnimationBank)(Word(A6Record(Sprite_Current[6]) + 4));
     Sprite_Current[0x48] = 1;
     Sprite_Current[0x24] = 0;
@@ -957,6 +965,7 @@ extern "C" void __cdecl Area198_EffectA6Start(void) {
 // 0x10000). Each word's address taken before its call, added to after.
 extern "C" void __cdecl Area198_EffectA6Follow(void) {
     unsigned char* const o = ObjectAt(Sprite_Current[7]);
+    auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
     Sprite_Current[0] = o[0];
     AH_CALL(Sprite_ScriptTick)();
     AH_CALL(Sprite_QueueOverlay)();
@@ -966,12 +975,12 @@ extern "C" void __cdecl Area198_EffectA6Follow(void) {
     Sprite_Current[0x5F] = o[0x5F];
     Sprite_Current[0x27] = o[0x27];
     Sprite_Current[0x48] = o[0x48];
-    SetLong(Sprite_Current + 0x40, Long(o + 0x40));
-    SetLong(Sprite_Current + 0x44, Long(o + 0x44));
-    SetWord(Sprite_Current + 0x2E, Word(o + 0x2E));
-    SetWord(Sprite_Current + 0x30, Word(o + 0x30));
-    SetWord(Sprite_Current + 0x32, Word(o + 0x32));
-    SetLong(Sprite_Current + 0x60, Long(o + 0x60));
+    SetLong(Sprite_Current + 0x40, tO->scale_x);
+    SetLong(Sprite_Current + 0x44, tO->scale_y);
+    SetWord(Sprite_Current + 0x2E, static_cast<std::uint16_t>(tO->screen_x));
+    SetWord(Sprite_Current + 0x30, static_cast<std::uint16_t>(tO->screen_y));
+    SetWord(Sprite_Current + 0x32, tO->draw_key);
+    SetLong(Sprite_Current + 0x60, tO->depth);
     Sprite_Current[0x29] = 6;
     unsigned char* c = Sprite_Current;
     if (c[0x48] != 0) {
