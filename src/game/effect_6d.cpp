@@ -42,6 +42,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_6d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -59,6 +60,8 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -162,7 +165,8 @@ void Project(unsigned char* p) {
 void PanelMode() { SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, 0); }
 void Link(int dy, unsigned size) {
     unsigned char* const s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), dy, size);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), dy, size);
 }
 // A texture window of 8 bytes taken from the packet cursor (mov ecx,
 // [Gfx_PacketNext]; add 8): x, y 0 and w, h - its address the draw mode's
@@ -1017,8 +1021,9 @@ extern "C" void __cdecl EffectKind18Sub61_WaitFocus(void) {
 extern "C" void __cdecl EffectKind18Sub61_Slide(void) {
     const U by = (Frame_Counter & 3) == 0 ? 1u : 0u;
     unsigned char* const s = S();
-    SetUL(s + 0x34, UL(s + 0x34) - by);
-    SH_CALL(EffectKind18Sub61_DrawOverlay)(I(UL(S() + 0x34)));
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->x = static_cast<std::uint32_t>(so->x) - by;
+    SH_CALL(EffectKind18Sub61_DrawOverlay)(CurFx()->x);
 }
 
 // original 0x515070 (step 2): the overlay at y 0.
@@ -1029,26 +1034,27 @@ extern "C" void __cdecl EffectKind18Sub61_Hold(void) { SH_CALL(EffectKind18Sub61
 // +0x38 up 2, the overlay; else up 1, the overlay.
 extern "C" void __cdecl EffectKind18Sub61_Rise(void) {
     unsigned char* const s = S();
-    const U v = UL(s + 0x38);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    const U v = static_cast<std::uint32_t>(so->z);
     if (I(v) > 0x100) {
         SH_CALL(EffectKind18Sub61_DrawGlow)();
     } else if (I(v) > 0x80) {
         SH_CALL(EffectKind18Sub61_DrawGlow)();
-        SetUL(S() + 0x38, UL(S() + 0x38) + 2);
+        CurFx()->z = static_cast<std::uint32_t>(CurFx()->z) + 2;
     } else if (I(v) > 0x60) {
-        SetUL(s + 0x38, v + 2);
+        so->z = v + 2;
     } else {
-        SetUL(s + 0x38, v + 1);
+        so->z = v + 1;
     }
-    SH_CALL(EffectKind18Sub61_DrawOverlay)(I(UL(S() + 0x38)));
+    SH_CALL(EffectKind18Sub61_DrawOverlay)(CurFx()->z);
 }
 
 // original 0x515100 (step 4): +0x38 0, +0x34 0x54, +0x3C 0; the ring's first
 // entry (0x7E, 0x14, 1) and (0x54, 0x13, 0); Cond_ByteFE 0.
 extern "C" void __cdecl EffectKind18Sub61_Reset(void) {
-    SetUL(S() + 0x38, 0);
-    SetUL(S() + 0x34, 0x54);
-    SetUL(S() + 0x3C, 0);
+    CurFx()->z = 0;
+    CurFx()->x = 0x54;
+    CurFx()->height = 0;
     unsigned char* const ring = At(at::kTrackRing);
     ring[0] = 0x7E;
     ring[1] = 0x14;
@@ -1238,14 +1244,14 @@ extern "C" void __cdecl EffectKind18Sub64_Draw(unsigned scale, int width, unsign
         SetWord(v + 0xA, z - along - l);
         {
             unsigned char* const r = S();
-            const long h = SH_CALL(AreaMap_Elevation)(Long(r + 0x34), Long(r + 0x38));
+            const long h = SH_CALL(AreaMap_Elevation)(AsFx(r)->x, AsFx(r)->z);
             const U top = (0u - (2 * w + 0xC0u)) - Half(h);
             SetWord(v + 0xC, top);
             SetWord(v + 4, top);
         }
         {
             unsigned char* const r = S();
-            const long h = SH_CALL(AreaMap_Elevation)(Long(r + 0x34), Long(r + 0x38));
+            const long h = SH_CALL(AreaMap_Elevation)(AsFx(r)->x, AsFx(r)->z);
             const U bottom = 0xFFFFFF40u - Half(h);
             SetWord(v + 0x1C, bottom);
             SetWord(v + 0x14, bottom);
@@ -1278,9 +1284,10 @@ void Sub64Plain() { SH_CALL(EffectKind18Sub64_Draw)(0x80, 0x40, 1, 0); }
 // (0x93BA88 + 0x128 v), +9 and +0xA 0, +2 up. The draw (0x80, 0x40, 1, 0).
 extern "C" void __cdecl EffectKind18Sub64_Place(void) {
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     const U v = Variant("EffectKind18Sub64_Place", s, at::kSub64Variants);
-    SetUL(s + 0x34, static_cast<U>(At(at::kSub64Cells + 2 * v)[0]) << 16);
-    SetUL(s + 0x38, static_cast<U>(At(at::kSub64Cells + 2 * v + 1)[0]) << 16);
+    so->x = static_cast<U>(At(at::kSub64Cells + 2 * v)[0]) << 16;
+    so->z = static_cast<U>(At(at::kSub64Cells + 2 * v + 1)[0]) << 16;
     SetUL(s + 0xC, at::kEnemyRecords + at::kEnemyStride * v);
     s[9] = 0;
     s[0xA] = 0;

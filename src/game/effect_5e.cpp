@@ -51,6 +51,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -154,7 +155,8 @@ unsigned char* TexturedQuad() {
 // for it.
 void LinkAtRecord(int dy, unsigned size) {
     unsigned char* const s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), dy, size);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), dy, size);
 }
 
 // The x87 as the original has it (the game's control word: round to nearest,
@@ -253,9 +255,10 @@ namespace {
 // each, as the original does - no call between).
 void Place(U dx, U dz, U height, U level) {
     unsigned char* const s = S();
-    SetUL(s + 0x34, Sar(UL(s + 0xC) + dx, 9) - 0x4000u);
-    SetUL(s + 0x38, Sar(UL(s + 0x10) + dz, 9) - 0x4000u);
-    SetUL(s + 0x3C, height);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->x = Sar(UL(s + 0xC) + dx, 9) - 0x4000u;
+    so->z = Sar(UL(s + 0x10) + dz, 9) - 0x4000u;
+    so->height = height;
     SetWord(s + 0x32, 0);
     SetUL(s + 0x14, 0x53020);
     SetWord(s + 0x30, level);
