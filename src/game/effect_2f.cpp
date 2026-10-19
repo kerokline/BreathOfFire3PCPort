@@ -42,6 +42,7 @@
 #include "game/effect_2f_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -58,6 +59,14 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+records::SpriteObject* AsSpr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U SW(const unsigned char* p) { return static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(Word(p)))); }
@@ -426,9 +435,9 @@ extern "C" void __cdecl EffectKind50_SpawnSpeck(void) {
     if (k == nullptr) return;
     k[0] = 1;
     k[2] = 0;
-    SetUL(k + 4, UL(S() + 0x34));
-    SetUL(k + 8, UL(S() + 0x38));
-    SetUL(k + 0xC, Sar(UL(S() + 0x3C), 8));
+    SetUL(k + 4, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(k + 8, static_cast<std::uint32_t>(CurFx()->z));
+    SetUL(k + 0xC, Sar(static_cast<std::uint32_t>(CurFx()->height), 8));
     const U a = Sar(static_cast<U>(SH_CALL(Math_Sin)(I(UL(S() + 0xC)))) << 8, 12);
     const U e = (a & 0xFFFFu) + (S()[6] == 7 ? 0x800u : 0x400u);
     SetUL(k + 0x14, static_cast<U>(SH_CALL(Math_Cos)(I(e))) * 3u);
@@ -595,7 +604,8 @@ extern "C" void __cdecl EffectKind51_RingFade(void) {
 extern "C" void __cdecl EffectKind51_Burst(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
-    const long point[4] = {Long(s + 0x34), Long(s + 0x38), Long(s + 0x3C), 0};
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    const long point[4] = {so->x, so->z, so->height, 0};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     SetWord(S() + 0x32, 0x140);
     SetWord(S() + 0x5A, 0x14);
@@ -654,7 +664,8 @@ extern "C" void __cdecl EffectKind51_PushAngle(unsigned angle) {
 extern "C" void __cdecl EffectKind51_DrawFrame(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
-    const long point[4] = {Long(s + 0x34), Long(s + 0x38), Long(s + 0x3C), 0};
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    const long point[4] = {so->x, so->z, so->height, 0};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     SH_CALL(EffectKind51_DrawMoves)();
     SH_CALL(EffectKind51_PushAngle)(Word(S() + 0x58));
@@ -902,11 +913,12 @@ void SubCountDown(unsigned char reload) {
 // AreaMap_Elevation(+0x34, +0x38)'s low word << 16; +9 = 0x20, +2 up and
 // Sound_PlayEffect(0x202).
 void TrailPlace(U x, U z) {
-    SetUL(S() + 0x34, x);
-    SetUL(S() + 0x38, z);
+    CurFx()->x = x;
+    CurFx()->z = z;
     const unsigned char* const s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
-    SetUL(S() + 0x3C, S16(static_cast<U>(ground)) << 16);
+    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    Store<U>(CurFx()->height, S16(static_cast<U>(ground)) << 16);
     S()[9] = 0x20;
     NextSub();
     SH_CALL(Sound_PlayEffect)(0x202);
@@ -974,7 +986,8 @@ extern "C" void __cdecl EffectKind52_TrailStart(void) {
 // and +2 up.
 extern "C" void __cdecl EffectKind52_TrailRise(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x38, UL(s + 0x38) + 0x10000u);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->z = static_cast<std::uint32_t>(so->z) + 0x10000u;
     SubCountDown(0x10);
 }
 
@@ -991,7 +1004,8 @@ extern "C" void __cdecl EffectKind52_TrailTurn(void) {
 // 0x80 and +2 up.
 extern "C" void __cdecl EffectKind52_TrailFall(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x38, UL(s + 0x38) + 0xFFFF0000u);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->z = static_cast<std::uint32_t>(so->z) + 0xFFFF0000u;
     SubCountDown(0x80);
 }
 
@@ -1258,7 +1272,7 @@ extern "C" void __cdecl EffectKind53_Run(void) {
 // Sprite_ObjectsExtra record the dword +0x18 names; +9 = 0, +1 = 1.
 extern "C" void __cdecl EffectKind53_Start(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x54, UL(Extra(UL(s + 0x18), "EffectKind53_Start") + 0x54));
+    SetUL(s + 0x54, AsSpr(Extra(UL(s + 0x18), "EffectKind53_Start"))->frames);
     s[9] = 0;
     s[1] = 1;
 }
@@ -1282,11 +1296,13 @@ extern "C" void __cdecl EffectKind53_Start(void) {
 // linked. Then the texture window (0, 0, 0x100, 0x100) at the record.
 extern "C" void __cdecl EffectKind53_Beam(void) {
     unsigned char* const self = S();
+    auto* const selfo = reinterpret_cast<records::EffectObject*>(self);
     unsigned char* const sprite = Extra(UL(self + 0x18), "EffectKind53_Beam");
+    auto* const spriteo = reinterpret_cast<records::SpriteObject*>(sprite);
     Sprite_Current = sprite;
-    SetUL(self + 0x34, UL(sprite + 0x34));
-    SetUL(self + 0x38, UL(S() + 0x38));
-    SetUL(self + 0x3C, UL(S() + 0x3C));
+    selfo->x = static_cast<std::uint32_t>(spriteo->x);
+    selfo->z = UL(S() + 0x38);
+    selfo->height = UL(S() + 0x3C);
     const unsigned char* s = S();
     if (s[9] != 0) {
         unsigned char c = self[9];
@@ -1305,8 +1321,8 @@ extern "C" void __cdecl EffectKind53_Beam(void) {
     const U height = SW(s + 0x3E) + static_cast<U>(offset[2]);
     vertex[2] = static_cast<short>(0u - Sar(height + (height >> 31), 1));
     long depth_cue = 0;
-    SetUL(self + 0x60, static_cast<U>(SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<unsigned long*>(prim + 0x38),
-                                                                &depth_cue)));
+    selfo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<unsigned long*>(prim + 0x38),
+                                                                &depth_cue));
     SH_CALL(Gte_PrimDepthFlat4_10)(prim);
     LD t = X(prim + 0x38) - 8.0L;
     SetUL(prim + 0xC, 0);
@@ -1410,13 +1426,13 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
     const U phase = Frame_Counter & 0xFu;
     S()[0x5D] = 0;
     unsigned char* s = S();
-    U h = UL(s + 0x3C) - (phase << 20);
+    U h = static_cast<std::uint32_t>(AsFx(s)->height) - (phase << 20);
     for (unsigned steps = 0; I(UL(s + 0x14)) < I(h); ++steps) {
         if (steps == 0x100)
             bof3::Fatal("EffectKind56_Markers: the ground 0x%X is below every height the walk from 0x%X reaches - the "
                         "original loops for ever (docs/effect_2f.md section 2)",
                         (unsigned)UL(s + 0x14), (unsigned)h);
-        SH_CALL(EffectKind56_DrawCross)(Long(s + 0x34), Long(s + 0x38), static_cast<long>(h), 1);
+        SH_CALL(EffectKind56_DrawCross)(AsFx(s)->x, AsFx(s)->z, static_cast<long>(h), 1);
         s = S();
         s[0x5D] = static_cast<unsigned char>(s[0x5D] + 0x2A);
         if (s[0x5D] > 0x80) s[0x5D] = 0x80;
@@ -1424,7 +1440,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
     }
     s[0x5D] = 0xFF;
     s = S();
-    SH_CALL(EffectKind56_DrawCross)(Long(s + 0x34), Long(s + 0x38), Long(s + 0x14), 0);
+    SH_CALL(EffectKind56_DrawCross)(AsFx(s)->x, AsFx(s)->z, Long(s + 0x14), 0);
     if (At(at::kCounter3)[0] == 0xE) S()[1] = 1;
 }
 
@@ -1434,12 +1450,13 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
 // never reads.
 extern "C" void __cdecl EffectKind56_Place(void) {
     const unsigned char* const extra = At(Sprite_ObjectsExtra_addr + 0x34);
-    SetUL(S() + 0x34, UL(extra));
-    SetUL(S() + 0x38, UL(extra + 4));
-    SetUL(S() + 0x3C, UL(extra + 8));
+    Store<U>(CurFx()->x, UL(extra));
+    Store<U>(CurFx()->z, UL(extra + 4));
+    Store<U>(CurFx()->height, UL(extra + 8));
     const unsigned char* const s = S();
+    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
     MapView_HeightScale = 1;
-    const long ground = SH_CALL(MapView_GroundAt)(Long(s + 0x34), Long(s + 0x38));
+    const long ground = SH_CALL(MapView_GroundAt)(so->x, so->z);
     SetUL(S() + 0x14, S16(static_cast<U>(ground)) << 16);
 }
 

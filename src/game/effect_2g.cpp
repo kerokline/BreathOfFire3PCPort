@@ -43,6 +43,7 @@
 #include "game/effect_2g_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -58,6 +59,13 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -268,10 +276,10 @@ extern "C" void __cdecl EffectKind18Sub20_Run(void) {
 // -0x180 and +2 = 3; clear: +0x3C = -0x90 and +2 up. Then the draw (a tail jump).
 extern "C" void __cdecl EffectKind18Sub20_Start(void) {
     if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub20Flag)) {
-        SetUL(S() + 0x3C, 0xFFFFFE80u);
+        CurFx()->height = 0xFFFFFE80u;
         S()[2] = 3;
     } else {
-        SetUL(S() + 0x3C, 0xFFFFFF70u);
+        CurFx()->height = 0xFFFFFF70u;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
     SH_CALL(EffectKind18Sub20_Draw)();
@@ -291,9 +299,9 @@ extern "C" void __cdecl EffectKind18Sub20_WaitSet(void) {
 extern "C" void __cdecl EffectKind18Sub20_Lower(void) {
     unsigned char* s = S();
     Cond_ByteFE = 0;
-    SetUL(s + 0x3C, UL(s + 0x3C) - 8u);
+    AsFx(s)->height = static_cast<std::uint32_t>(AsFx(s)->height) - 8u;
     s = S();
-    if (static_cast<std::int32_t>(UL(s + 0x3C)) <= -0x180) {
+    if (AsFx(s)->height <= -0x180) {
         SH_CALL(MoveCmd_TestFB)(0x27, 0x2F);
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -315,9 +323,9 @@ extern "C" void __cdecl EffectKind18Sub20_WaitClear(void) {
 extern "C" void __cdecl EffectKind18Sub20_Raise(void) {
     unsigned char* s = S();
     Cond_ByteFE = 0;
-    SetUL(s + 0x3C, UL(s + 0x3C) + 8u);
+    AsFx(s)->height = static_cast<std::uint32_t>(AsFx(s)->height) + 8u;
     s = S();
-    if (static_cast<std::int32_t>(UL(s + 0x3C)) >= -0x90) s[2] = 1;
+    if (AsFx(s)->height >= -0x90) s[2] = 1;
     SH_CALL(EffectKind18Sub20_Draw)();
 }
 
@@ -621,7 +629,8 @@ extern "C" void __cdecl EffectKind54_Strike(void) {
         return;
     }
     unsigned char* const o = Object("EffectKind54_Strike", index);
-    if (Word(o + 0x58) == 8 && o[0x4A] == 1) {
+    auto* const oo = reinterpret_cast<records::SpriteObject*>(o);
+    if (oo->script_pos == 8 && o[0x4A] == 1) {
         SH_CALL(Sprite_SetAnimation)(4);
         self[1] = 4;
     }
@@ -644,7 +653,8 @@ void WaitPose(const char* who, unsigned pose, unsigned char next) {
         return;
     }
     unsigned char* const o = Object(who, index);
-    if (Word(o + 0x58) == pose && o[0x4A] == 1) self[1] = next;
+    auto* const oo = reinterpret_cast<records::SpriteObject*>(o);
+    if (oo->script_pos == pose && o[0x4A] == 1) self[1] = next;
     Sprite_Current = self;
 }
 
@@ -683,7 +693,8 @@ extern "C" void __cdecl EffectKind54_Recoil(void) {
         return;
     }
     unsigned char* const o = Object("EffectKind54_Recoil", index);
-    if (Word(o + 0x58) == 8 && o[0x4A] == 1) {
+    auto* const oo = reinterpret_cast<records::SpriteObject*>(o);
+    if (oo->script_pos == 8 && o[0x4A] == 1) {
         SH_CALL(Sprite_SetAnimation)(4);
         self[1] = 0xB;
     }
@@ -878,11 +889,12 @@ extern "C" void __cdecl EffectKind5A_Run(void) {
 // x = 0xA0000, z = 0x630000; the height +0x3C the ground's there
 // (AreaMap_Elevation, its low word << 16); +1 up.
 extern "C" void __cdecl EffectKind5A_Place(void) {
-    SetUL(S() + 0x34, 0xA0000);
-    SetUL(S() + 0x38, 0x630000);
+    CurFx()->x = 0xA0000;
+    CurFx()->z = 0x630000;
     unsigned char* const s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(s + 0x34)), static_cast<long>(UL(s + 0x38)));
-    SetUL(S() + 0x3C, static_cast<U>(S16(static_cast<U>(ground))) << 16);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    Store<U>(CurFx()->height, static_cast<U>(S16(static_cast<U>(ground))) << 16);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
@@ -890,7 +902,8 @@ extern "C" void __cdecl EffectKind5A_Place(void) {
 // (+0x34, +0x38, +0x3C copied to the stack).
 extern "C" void __cdecl EffectKind5A_Draw(void) {
     unsigned char* const s = S();
-    const long point[3] = {static_cast<long>(UL(s + 0x34)), static_cast<long>(UL(s + 0x38)), static_cast<long>(UL(s + 0x3C))};
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    const long point[3] = {so->x, so->z, so->height};
     SH_CALL(Area146_DrawGlowCylinder)(point);
 }
 
@@ -970,33 +983,33 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     SetWord(rect + 6, 0x10);
     SH_AT(Rect, at::kPrimFromRect)(Gfx_PacketNext, rect);
     unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
     const U d = (length & 0xFFFF) << 15;
     s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(s + 0x34) - d), static_cast<long>(UL(s + 0x38)));
+    const long ground = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->x) - d), AsFx(s)->z);
     unsigned char* const p = Gfx_PacketNext;
     const U low = (static_cast<U>(S16(static_cast<U>(ground))) << 16) + 0xE00000u;
     SH_CALL(Gpu_SetPolyFT4)(p);
     long point[3];
     s = S();
-    point[0] = static_cast<long>(UL(s + 0x34) - d);
-    point[1] = static_cast<long>(UL(s + 0x38) - 0x8000u);
+    point[0] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->x) - d);
+    point[1] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->z) - 0x8000u);
     point[2] = static_cast<long>(low);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 8));
     s = S();
-    point[0] = static_cast<long>(UL(s + 0x34));
-    point[1] = static_cast<long>(UL(s + 0x38) - 0x8000u);
-    point[2] = static_cast<long>(UL(s + 0x3C) + 0xE00000u);
+    point[0] = AsFx(s)->x;
+    point[1] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->z) - 0x8000u);
+    point[2] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->height) + 0xE00000u);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x18));
     s = S();
-    point[0] = static_cast<long>(UL(s + 0x34) - d);
-    point[1] = static_cast<long>(UL(s + 0x38) + 0x8000u);
+    point[0] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->x) - d);
+    point[1] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->z) + 0x8000u);
     point[2] = static_cast<long>(low);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x28));
     s = S();
-    point[0] = static_cast<long>(UL(s + 0x34));
-    point[1] = static_cast<long>(UL(s + 0x38) + 0x8000u);
-    point[2] = static_cast<long>(UL(s + 0x3C) + 0xE00000u);
+    point[0] = AsFx(s)->x;
+    point[1] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->z) + 0x8000u);
+    point[2] = static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->height) + 0xE00000u);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x38));
     SetWord(p + 0x16, SH_CALL(Gpu_GetClut)(0xD0, 0x1E3));
     SetWord(p + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
@@ -1016,7 +1029,7 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     SH_CALL(Gpu_SetSemiTrans)(p, abr & 0xFF);
     SH_CALL(Gpu_SetShadeTex)(p, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0x48);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x48);
     rect = Gfx_PacketNext;
     Gfx_PacketNext = rect + 8;
     SetWord(rect, 0);
@@ -1025,7 +1038,7 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     SetWord(rect + 6, 0x100);
     SH_AT(Rect, at::kPrimFromRect)(Gfx_PacketNext, rect);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
 }
 
 // ===========================================================================

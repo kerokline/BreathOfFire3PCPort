@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_2b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -49,6 +50,7 @@ using U = std::uint32_t;
 using Handler = void (__cdecl*)();
 
 unsigned char* Cur() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SW(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -288,9 +290,9 @@ extern "C" void __cdecl EffectKind33_Run(void) {
 // the record's point +0x34..+0x3C, its radius +0x1C 0; +9 0xA, +1 up.
 extern "C" void __cdecl EffectKind33_Start(void) {
     unsigned char* const s = Cur();
-    SetUL(s + 0xC, UL(Cur() + 0x34));
-    SetUL(s + 0x10, UL(Cur() + 0x38));
-    const U height = UL(Cur() + 0x3C);
+    SetUL(s + 0xC, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(s + 0x10, static_cast<std::uint32_t>(CurFx()->z));
+    const U height = static_cast<std::uint32_t>(CurFx()->height);
     SetUL(s + 0x1C, 0);
     SetUL(s + 0x14, height);
     Cur()[9] = 0xA;
@@ -823,7 +825,8 @@ static void Kind3BGlow(unsigned offset) {
     Mode(1, 0x380, 0x100, 1);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned char* const s = Cur();
-    const long point[3] = {Long(s + 0x34), Long(s + 0x38), Long(s + 0x3C)};
+    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    const long point[3] = {so->x, so->z, so->height};
     SH_CALL(EffectKind3B_DrawGlow)(point, static_cast<U>(s[offset]) << 2, 0x80, 0);
 }
 
@@ -959,12 +962,13 @@ extern "C" void __cdecl EffectKind3B_DrawSpiral(unsigned char* spiral) {
 // shade 0, angle 0x1000 * i / 3.
 extern "C" void __cdecl EffectKind3B_InitSpirals(void) {
     const unsigned char* const s = Cur();
+    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
     for (U i = 0; i < at::kSpiralCount; ++i) {
         unsigned char* const r = At(EffectKind30_Shards_addr + at::kSpiralStride * i);
-        SetUL(r + 0, UL(s + 0x34));
-        SetUL(r + 4, UL(s + 0x38));
+        SetUL(r + 0, static_cast<std::uint32_t>(so->x));
+        SetUL(r + 4, static_cast<std::uint32_t>(so->z));
         SetWord(r + 0x12, 0xC00);
-        SetUL(r + 8, UL(s + 0x3C) + 0x3800000u);
+        SetUL(r + 8, static_cast<std::uint32_t>(so->height) + 0x3800000u);
         SetWord(r + 0x14, 0);
         SetWord(r + 0x10, 0x1000u * i / 3u);
     }
