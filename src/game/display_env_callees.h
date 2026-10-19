@@ -16,27 +16,28 @@ using U = std::uint32_t;
 
 // --- Data, all Capcom's addresses (docs/display-env.md section 1) -----------
 constexpr U kDispEnv = 0x7DECE0;        // Gpu_DispEnv: the last DISPENV put, 0x14 bytes
-constexpr U kDrawEnv = 0x7DED00;        // Gpu_DrawEnv: the last DRAWENV put, 0x5C bytes
-constexpr U kDrawEnvBackground = 0x7DED18;   // Gpu_DrawEnv +0x18, the DRAWENV's isbg byte
+// kDrawEnv: now Gpu_DrawEnv (symbols.toml). Gpu_DrawEnv: the last DRAWENV put, 0x5C bytes
+// kDrawEnvBackground: now Gpu_DrawEnv[0x18] (symbols.toml). Gpu_DrawEnv +0x18, the DRAWENV's isbg byte
 constexpr U kRenderFlags = 0x6C3A4C;    // Gfx_RenderFlags: bit 0 software, bit 0x200 (a dword test) windowed
-constexpr U kPrimary = 0x7CC338;        // DDraw_Primary, an IDirectDrawSurface *
-constexpr U kBackBuffer = 0x7CC33C;     // DDraw_BackBuffer
+// kPrimary: now DDraw_Primary (symbols.toml). DDraw_Primary, an IDirectDrawSurface *
+// kBackBuffer: now DDraw_BackBuffer (symbols.toml). DDraw_BackBuffer
 constexpr U kViewport = 0x7CC354;       // D3d_Viewport, an IDirect3DViewport *
-constexpr U kBackMaterial = 0x7CC358;   // D3d_BackMaterial, an IDirect3DMaterial *
-constexpr U kBackHandle = 0x6C3A40;     // D3d_BackMaterialHandle, what SetBackground takes
-constexpr U kScreenRect = 0x66B708;     // Gfx_ScreenRect, {0, 0, 640, 480} in the image
-constexpr U kWindowRect = 0x6BE1D0;     // Gfx_WindowRect, the client area on the desktop (0x5A5130 sets it)
+// kBackMaterial: now D3d_BackMaterial (symbols.toml). D3d_BackMaterial, an IDirect3DMaterial *
+// kBackHandle: now D3d_BackMaterialHandle (symbols.toml). D3d_BackMaterialHandle, what SetBackground takes
+// kScreenRect: now Gfx_ScreenRect (symbols.toml). Gfx_ScreenRect, {0, 0, 640, 480} in the image
+// kWindowRect: now Gfx_WindowRect (symbols.toml). Gfx_WindowRect, the client area on the desktop (0x5A5130 sets it)
 constexpr rdata::Const kInverse255At{0x5C4620};   // float 1 / 255, 0x3B808081
 
 // The sound banks (docs/sound.md section 1): bank n's record is
 // Sound_Banks + (n - 1) * 0x384 - cues from +0, 64 voice entries of 8 bytes
 // (sample, buffer) from +0x180, the sample data pointer at +0x380 - and the 23
 // channel dwords Sound_Channels 0x6BC8C8..0x6BC924.
-constexpr U kBanks = 0x6BC928;
+// kBanks: now Sound_Banks (symbols.toml).
 constexpr U kBankBytes = 0x384;
 constexpr U kBankHeader = 0x380;
 constexpr U kVoices = 0x180;
-constexpr U kChannels = 0x6BC8C8, kChannelsEnd = 0x6BC924;
+// kChannels: now Sound_Channels (symbols.toml).
+constexpr U kChannelsEnd = 0x6BC924;
 
 // --- COM, as the original calls it: through the vtable each time -----------
 // IDirectDrawSurface: Blt +0x14, Flip +0x2C, Restore +0x6C.

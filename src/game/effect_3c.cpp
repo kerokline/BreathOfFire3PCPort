@@ -74,7 +74,7 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 U Half(U v) { return Sar(v + (S32(v) < 0 ? 1u : 0u), 1); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
-const unsigned char* Story() { return At(at::kStoryFlags); }
+const unsigned char* Story() { return At(Cond_Flags_addr + 0xa0); }
 U Cell(U cell) { return UL(At(cell)); }
 void SetCell(U cell, U v) { SetUL(At(cell), v); }
 
@@ -239,10 +239,10 @@ extern "C" void __cdecl EffectKind6E_Start(void) {
 extern "C" void __cdecl EffectKind6E_Emit(void) {
     if ((Frame_Counter & 3u) == 0) {
         unsigned char* const r = SH_CALL(EffectKind6E_FindShard)();
-        SetCell(at::kShardCursor, AddressOf(r));
+        Effect3c_ShardCursor = AddressOf(r);
         if (r != nullptr) {
             SH_CALL(EffectKind6E_ShardInit)(r);
-            SetUL(At(Cell(at::kShardCursor)) + 0x1C, 0x200000);
+            SetUL(At(Effect3c_ShardCursor) + 0x1C, 0x200000);
         }
     }
     if (CountDown()) {
@@ -258,13 +258,13 @@ extern "C" void __cdecl EffectKind6E_Emit(void) {
 extern "C" void __cdecl EffectKind6E_EmitSlower(void) {
     if ((Frame_Counter & 3u) == 0) {
         unsigned char* const r = SH_CALL(EffectKind6E_FindShard)();
-        SetCell(at::kShardCursor, AddressOf(r));
+        Effect3c_ShardCursor = AddressOf(r);
         if (r != nullptr) {
             SH_CALL(EffectKind6E_ShardInit)(r);
             unsigned char* s = S();
             SetUL(s + 0xC, UL(s + 0xC) + 0xFFFF0000u);
             s = S();
-            SetUL(At(Cell(at::kShardCursor)) + 0x1C, UL(s + 0xC));
+            SetUL(At(Effect3c_ShardCursor) + 0x1C, UL(s + 0xC));
         }
     }
     if (CountDown()) Step(1);
@@ -316,29 +316,29 @@ extern "C" unsigned char __cdecl EffectKind6E_DrawShards(void) {
     DrawMode(1, 0x3C0, 0, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     U c = Shards();
-    SetCell(at::kShardCursor, c);
+    Effect3c_ShardCursor = c;
     unsigned char any = 0;
     for (unsigned n = at::kShardCount; n != 0; --n) {
         unsigned char* const r = At(c);
         if (r[0] != 0) {
             SetUL(r + 0xC, UL(r + 0xC) + UL(r + 0x1C));
-            unsigned char* cur = At(Cell(at::kShardCursor));
+            unsigned char* cur = At(Effect3c_ShardCursor);
             SetWord(cur + 0x24, Word(cur + 0x24) + 8u);
-            cur = At(Cell(at::kShardCursor));
+            cur = At(Effect3c_ShardCursor);
             cur[3] = static_cast<unsigned char>(cur[3] + 0xFA);
-            cur = At(Cell(at::kShardCursor));
+            cur = At(Effect3c_ShardCursor);
             cur[2] = static_cast<unsigned char>(cur[2] - 1);
-            cur = At(Cell(at::kShardCursor));
+            cur = At(Effect3c_ShardCursor);
             if (cur[2] == 0) {
                 cur[0] = 0;
-                cur = At(Cell(at::kShardCursor));
+                cur = At(Effect3c_ShardCursor);
             }
             SH_AT(RecordFn, at::kShardQuad)(cur);
-            c = Cell(at::kShardCursor);
+            c = Effect3c_ShardCursor;
             any = 1;
         }
         c += at::kShardStride;
-        SetCell(at::kShardCursor, c);
+        Effect3c_ShardCursor = c;
     }
     return any;
 }
@@ -939,21 +939,21 @@ extern "C" void __cdecl EffectKind73_SparkInit(unsigned char* r) {
 // last).
 extern "C" unsigned char* __cdecl EffectKind73_FindSpark(void) {
     U p = Shards();
-    SetCell(at::kSparkCursor, p);
+    Effect3c_SparkCursor = p;
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
         if (At(p)[0] == 0) return At(p);
         p += at::kSparkStride;
-        SetCell(at::kSparkCursor, p);
+        Effect3c_SparkCursor = p;
     }
     return nullptr;
 }
 
 // original 0x485840: +0 = 0 in the 32 sparks, through the cursor.
 extern "C" void __cdecl EffectKind73_ClearSparks(void) {
-    SetCell(at::kSparkCursor, Shards());
+    Effect3c_SparkCursor = Shards();
     for (unsigned n = at::kSparkCount; n != 0; --n) {
-        At(Cell(at::kSparkCursor))[0] = 0;
-        SetCell(at::kSparkCursor, Cell(at::kSparkCursor) + at::kSparkStride);
+        At(Effect3c_SparkCursor)[0] = 0;
+        Effect3c_SparkCursor = Effect3c_SparkCursor + at::kSparkStride;
     }
 }
 
@@ -965,40 +965,40 @@ extern "C" void __cdecl EffectKind73_ClearSparks(void) {
 extern "C" unsigned char __cdecl EffectKind73_MoveSparks(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     U c = Shards();
-    SetCell(at::kSparkCursor, c);
+    Effect3c_SparkCursor = c;
     unsigned char any = 0;
     for (unsigned n = at::kSparkCount; n != 0; --n) {
         unsigned char* const r = At(c);
         if (r[0] != 0) {
             SetUL(r + 4, UL(r + 4) + 0x2000u);
             if (S()[1] == 0) {
-                unsigned char* const cur = At(Cell(at::kSparkCursor));
+                unsigned char* const cur = At(Effect3c_SparkCursor);
                 SetWord(cur + 0x14, Word(cur + 0x14) + 8u);
             } else {
-                unsigned char* cur = At(Cell(at::kSparkCursor));
+                unsigned char* cur = At(Effect3c_SparkCursor);
                 unsigned char* p = cur + 4;
                 U v = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<U>(cur[0x17]) << 8)));
                 SetUL(p, UL(p) + v);
-                cur = At(Cell(at::kSparkCursor));
+                cur = At(Effect3c_SparkCursor);
                 p = cur + 0xC;
                 v = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(static_cast<U>(cur[0x17]) << 8)));
                 SetUL(p, UL(p) + (v << 8));
             }
-            unsigned char* cur = At(Cell(at::kSparkCursor));
+            unsigned char* cur = At(Effect3c_SparkCursor);
             cur[3] = static_cast<unsigned char>(cur[3] + 0xFE);
-            cur = At(Cell(at::kSparkCursor));
+            cur = At(Effect3c_SparkCursor);
             cur[2] = static_cast<unsigned char>(cur[2] - 1);
-            cur = At(Cell(at::kSparkCursor));
+            cur = At(Effect3c_SparkCursor);
             if (cur[2] == 0) {
                 cur[0] = 0;
-                cur = At(Cell(at::kSparkCursor));
+                cur = At(Effect3c_SparkCursor);
             }
             SH_CALL(EffectKind73_DrawSpark)(cur);
-            c = Cell(at::kSparkCursor);
+            c = Effect3c_SparkCursor;
             any = 1;
         }
         c += at::kSparkStride;
-        SetCell(at::kSparkCursor, c);
+        Effect3c_SparkCursor = c;
     }
     return any;
 }

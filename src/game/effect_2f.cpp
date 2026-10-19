@@ -887,7 +887,7 @@ extern "C" void __cdecl EffectKind51_DrawRing(unsigned radius) {
 
 namespace {
 
-unsigned char* Trail() { return At(at::kTrail); }
+unsigned char* Trail() { return At(EffectKind30_Shards_addr + 0xe0); }
 
 // The timer byte +9 down; at 0, +9 = `reload` and +2 up.
 void SubCountDown(unsigned char reload) {
@@ -966,7 +966,7 @@ extern "C" void __cdecl EffectKind52_Trail(void) {
 // width (its last word, 0x92C49E) = 0xC0; the record put at (0x6B, 0x46) on the
 // ground.
 extern "C" void __cdecl EffectKind52_TrailStart(void) {
-    SetWord(At(at::kTrailSize), 0xC0);
+    SetWord(At(EffectKind30_Shards_addr + 0x51e), 0xC0);
     TrailPlace(0x6B0000, 0x460000);
 }
 
@@ -1002,7 +1002,7 @@ extern "C" void __cdecl EffectKind52_TrailHold(void) { SubCountDown(8); }
 // width down 0x18; +9 down, at 0 a tail jmp to Effect_Release.
 extern "C" void __cdecl EffectKind52_TrailFade(void) {
     unsigned char* const s = S();
-    unsigned char* const size = At(at::kTrailSize);
+    unsigned char* const size = At(EffectKind30_Shards_addr + 0x51e);
     SetWord(size, Word(size) - 0x18u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] == 0) SH_CALL(Effect_Release)();
@@ -1433,7 +1433,7 @@ extern "C" void __cdecl EffectKind56_Markers(void) {
 // MapView_GroundAt(x, z)'s low word << 16. The callers push an argument it
 // never reads.
 extern "C" void __cdecl EffectKind56_Place(void) {
-    const unsigned char* const extra = At(at::kExtra0Point);
+    const unsigned char* const extra = At(Sprite_ObjectsExtra_addr + 0x34);
     SetUL(S() + 0x34, UL(extra));
     SetUL(S() + 0x38, UL(extra + 4));
     SetUL(S() + 0x3C, UL(extra + 8));

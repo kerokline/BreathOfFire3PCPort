@@ -199,26 +199,26 @@ void Pulse(const char* who) {
     const unsigned frames = s[9];
     s[9] = static_cast<unsigned char>(frames + 1);
     if (frames >= 0x10) {
-        const unsigned index = B(at::kPulseIndex);
+        const unsigned index = Effect3d_PulseIndex;
         if (index >= at::kPulseShadeCount)
             bof3::Fatal("%s: 0x676279 is %u, past the two shades at 0x654AF8 - the original reads the bytes after "
                         "(docs/effect_3d.md section 7)",
                         who, index);
-        B(at::kPulseShade) = B(at::kPulseShades + index);
+        Effect3d_PulseShade = B(at::kPulseShades + index);
         S()[9] = 0;
-        const unsigned old = B(at::kPulseIndex);
-        B(at::kPulseIndex) = static_cast<unsigned char>(old + 1);
-        if (old >= 1) B(at::kPulseIndex) = 0;
+        const unsigned old = Effect3d_PulseIndex;
+        Effect3d_PulseIndex = static_cast<unsigned char>(old + 1);
+        if (old >= 1) Effect3d_PulseIndex = 0;
     }
-    FullScreen(2, At(at::kPulseShade));
+    FullScreen(2, At(Effect3d_PulseShade_addr));
 }
 
 // Kinds 0x7B / 0x7C state 0: +9 0, +1 1, the shade 0xF, the index 0.
 void PulseStart() {
     S()[9] = 0;
     S()[1] = 1;
-    B(at::kPulseShade) = 0xF;
-    B(at::kPulseIndex) = 0;
+    Effect3d_PulseShade = 0xF;
+    Effect3d_PulseIndex = 0;
 }
 
 }  // namespace
@@ -314,7 +314,7 @@ extern "C" void __cdecl EffectKind77_Tick(void) {
     unsigned frames = (((word >> 8) & 0x7Fu) + 1u) & 0xFFu;
     if (pace == 0 ? frames >= 0x1E : frames >= 0x28) {
         count = (count + 1u) & 0xFFu;
-        if (SH_CALL(Flags_Test)(P(UL(at::kFlagRow)), at::kTallySoundFlag)) SH_CALL(Sound_PlayEffect)(0x20A);
+        if (SH_CALL(Flags_Test)(P(AreaW0c_FlagRow), at::kTallySoundFlag)) SH_CALL(Sound_PlayEffect)(0x20A);
         frames = 0;
     }
     const unsigned high = ((pace << 7) | frames) & 0xFFu;
@@ -328,9 +328,9 @@ extern "C" void __cdecl EffectKind77_Tick(void) {
 extern "C" void __cdecl EffectKind77_End(void) {
     if (Field_Request == 2) return;
     if (Game_Mode == 4) return;
-    if (SH_CALL(Flags_Test)(P(UL(at::kFlagRow)), at::kTallyEndFlag)) return;
+    if (SH_CALL(Flags_Test)(P(AreaW0c_FlagRow), at::kTallyEndFlag)) return;
     B(at::kScriptFlagsHigh) = static_cast<unsigned char>(B(at::kScriptFlagsHigh) | 1u);
-    B(at::kStep) = 0x19;
+    MoveScript_PartyRecords[0x65] = 0x19;
     MoveScript_Var7 = 5;
     SH_CALL(Effect_Release)();
 }
@@ -391,7 +391,7 @@ void DrawRingOfRecord() {
 // original 0x4863E0 (state 1): record 2 turned 0xF00; the radii grow (+0xC by
 // 0xF, +0x10 by 0xA); the ring; +9 down, at 0 +9 0x3C and +1 up.
 extern "C" void __cdecl EffectKind78_Grow(void) {
-    SetWord(At(at::kObject2Turn), W(at::kObject2Turn) + 0xF00u);
+    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
     SetUL(S() + 0xC, UL(S() + 0xC) + 0xF);
     SetUL(S() + 0x10, UL(S() + 0x10) + 0xA);
     DrawRingOfRecord();
@@ -404,7 +404,7 @@ extern "C" void __cdecl EffectKind78_Grow(void) {
 // original 0x486450 (state 2): record 2 turned 0xF00, the ring; +9 down, at 0
 // +1 up.
 extern "C" void __cdecl EffectKind78_Spin(void) {
-    SetWord(At(at::kObject2Turn), W(at::kObject2Turn) + 0xF00u);
+    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
     unsigned char* const s = S();
     // here the upper halves are the caller's (the dispatcher's ecx, Sprite_Current); the ring reads the low words
     SH_CALL(EffectKind78_DrawRing)(W(s + 0x2E), W(s + 0x30), W(s + 0xC), W(s + 0x10));
@@ -414,7 +414,7 @@ extern "C" void __cdecl EffectKind78_Spin(void) {
 // original 0x4864A0 (state 3): record 2's turn put back from +0x32; a tail jump
 // to Effect_Release.
 extern "C" void __cdecl EffectKind78_End(void) {
-    SetWord(At(at::kObject2Turn), W(S() + 0x32));
+    SetWord(At(Sprite_Objects_addr + 0x17a), W(S() + 0x32));
     SH_CALL(Effect_Release)();
 }
 
@@ -681,7 +681,7 @@ extern "C" void __cdecl EffectKind7D_DrawPanel(unsigned x, unsigned y) {
 // 0x654B4C (off or on); and the draw item MapView_ItemAt answers there, if any,
 // retextured from that dword (Prim_SetTexture, 2).
 extern "C" void __cdecl EffectKind7D_SetMap(void) {
-    const bool open = SH_CALL(Flags_Test)(P(at::kStoryFlags), at::kDialsSolvedFlag) == 0;
+    const bool open = SH_CALL(Flags_Test)(P(Cond_Flags_addr + 0xa0), at::kDialsSolvedFlag) == 0;
     for (U row = 0; row < at::kGridRows; ++row) {
         for (U column = 0; column < at::kGridColumns; ++column) {
             unsigned on = 0;
@@ -700,12 +700,12 @@ extern "C" void __cdecl EffectKind7D_SetMap(void) {
             }
             const unsigned height = (B(at::kMapHeights + at::kGridColumns * row + column) * on) & 0xFFu;
             SH_CALL(AreaMap_SetByte)(column + at::kMapColumn0, row + at::kMapRow0, height);
-            const U width = B(at::kAreaHeader);
+            const U width = AreaMap_Header[0];
             const U z = row + at::kMapRow0;
             const U base = W(at::kAreaHeader + 2);
             const U word = W(at::kAreaWords + 2 * (width * z + column + 2 * base));
-            const U index = (B(at::kAreaHeader + 1) * width + 1) / 2 + base + word;
-            unsigned char* const cell = P(at::kAreaHeader + 4 * index);
+            const U index = (AreaMap_Header[1] * width + 1) / 2 + base + word;
+            unsigned char* const cell = P(AreaMap_Header_addr + 4 * index);
             SetUL(cell, UL(cell) & 0xFFFFFF00u);
             SetUL(cell, UL(cell) | B(at::kMapBits + at::kGridColumns * (at::kGridRows * on + row) + column));
             const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(static_cast<long>(column + at::kMapColumn0),
@@ -827,8 +827,8 @@ extern "C" void __cdecl EffectKind80_Start(void) {
     SetUL(S() + 0x34, 0x10000);
     SetUL(S() + 0x38, 0x250000);
     SetUL(S() + 0x3C, 0x3800000);
-    SetWord(At(at::kTrailSize), 0x60);
-    for (int n = 0x20; n != 0; --n) SH_CALL(EffectKind80_TrailStep)(P(at::kTrail));
+    SetWord(At(EffectKind30_Shards_addr + 0x43e), 0x60);
+    for (int n = 0x20; n != 0; --n) SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
     S()[9] = 0;
     NextState();
 }
@@ -841,8 +841,8 @@ extern "C" void __cdecl EffectKind80_Rise(void) {
     const unsigned frames = s[9];
     s[9] = static_cast<unsigned char>(frames + 1);
     if (frames == 0) SH_CALL(Sound_PlayEffect)(0x200);
-    SH_CALL(EffectKind80_TrailStep)(P(at::kTrail));
-    SH_CALL(EffectKind80_DrawTrail)(P(at::kTrail));
+    SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
+    SH_CALL(EffectKind80_DrawTrail)(P(EffectKind30_Shards_addr));
     SetUL(S() + 0x34, UL(S() + 0x34) + 0x10000);
     if (UL(S() + 0x34) == 0x170000) {
         S()[9] = 0x20;
@@ -852,8 +852,8 @@ extern "C" void __cdecl EffectKind80_Rise(void) {
 
 // original 0x487360 (state 2): stepped and drawn; +9 down, at 0 +9 0x10 and +1 up.
 extern "C" void __cdecl EffectKind80_Hold(void) {
-    SH_CALL(EffectKind80_TrailStep)(P(at::kTrail));
-    SH_CALL(EffectKind80_DrawTrail)(P(at::kTrail));
+    SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
+    SH_CALL(EffectKind80_DrawTrail)(P(EffectKind30_Shards_addr));
     if (CountDown()) {
         S()[9] = 0x10;
         NextState();
@@ -863,9 +863,9 @@ extern "C" void __cdecl EffectKind80_Hold(void) {
 // original 0x4873A0 (state 3): stepped and drawn, the size 6 narrower; +9 down,
 // at 0 +1 up.
 extern "C" void __cdecl EffectKind80_Fade(void) {
-    SH_CALL(EffectKind80_TrailStep)(P(at::kTrail));
-    SH_CALL(EffectKind80_DrawTrail)(P(at::kTrail));
-    SetWord(At(at::kTrailSize), W(at::kTrailSize) - 6u);
+    SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
+    SH_CALL(EffectKind80_DrawTrail)(P(EffectKind30_Shards_addr));
+    SetWord(At(EffectKind30_Shards_addr + 0x43e), W(at::kTrailSize) - 6u);
     if (CountDown()) NextState();
 }
 
@@ -1038,7 +1038,7 @@ extern "C" void __cdecl EffectKind81_Drain(void) {
 // of the 256 drop records at 0x92BF80 (0x18 each) cleared.
 extern "C" void __cdecl EffectKind81_ClearDrops(void) {
     for (U i = 0; i < at::kDropCount; ++i) {
-        unsigned char* const d = P(at::kDrops + at::kDropStride * i);
+        unsigned char* const d = P(EffectKind30_Shards_addr + at::kDropStride * i);
         d[0] = 0;
         d[1] = 0;
         d[2] = 0;
@@ -1051,14 +1051,14 @@ extern "C" void __cdecl EffectKind81_ClearDrops(void) {
 // down - at 0 its +0 and +1 cleared. al 1 when any was in use, else 0.
 extern "C" unsigned char __cdecl EffectKind81_MoveDrops(void) {
     unsigned char any = 0;
-    SetWord(At(at::kDropsMoving), 0);
+    Effect3d_DropsMoving = 0;
     SH_CALL(EffectGte_LoadMapCamera)();
     for (U i = 0; i < at::kDropCount; ++i) {
-        unsigned char* const d = P(at::kDrops + at::kDropStride * i);
+        unsigned char* const d = P(EffectKind30_Shards_addr + at::kDropStride * i);
         if (d[0] == 0) continue;
         const U speed = UL(d + 0x14) + 0x20000u;
         const U height = UL(d + 0xC);
-        SetWord(At(at::kDropsMoving), W(at::kDropsMoving) + 1u);
+        Effect3d_DropsMoving = static_cast<std::uint32_t>(Effect3d_DropsMoving) + 1u;
         any = 1;
         const auto blink = static_cast<unsigned char>(d[3] ^ 1u);
         SetUL(d + 0x14, speed);
@@ -1162,7 +1162,7 @@ extern "C" unsigned char __cdecl EffectKind81_Emit(void) {
 // of the 256 drop records whose +0 is 0, else null (eax).
 extern "C" unsigned char* __cdecl EffectKind81_FindFreeDrop(void) {
     for (U i = 0; i < at::kDropCount; ++i) {
-        unsigned char* const d = P(at::kDrops + at::kDropStride * i);
+        unsigned char* const d = P(EffectKind30_Shards_addr + at::kDropStride * i);
         if (d[0] == 0) return d;
     }
     return nullptr;

@@ -283,7 +283,7 @@ unsigned char* Member(const char* who, unsigned m) {
         bof3::Fatal("%s: Party_MemberAt answered %u - the original indexes ObjTrio past its three records "
                     "(docs/effect_2a.md section 2)",
                     who, m);
-    return At(at::kObjTrio + at::kObjStride * m);
+    return At(ObjTrio_addr + at::kObjStride * m);
 }
 
 // Kind 0x2A's row: the ground under +0xC / +0x10, both points' heights 0x100
@@ -310,8 +310,8 @@ void RowPoints2A(U z) {
 // Kind 0x2D's draws: the link cell and the record's screen point
 // ===========================================================================
 
-U LinkX() { return UL(At(at::kLinkX)); }
-U LinkZ() { return UL(At(at::kLinkZ)); }
+U LinkX() { return Effect2a_LinkX; }
+U LinkZ() { return Effect2a_LinkZ; }
 // A draw mode for the page (0x380, 0x100) linked at kind 0x2D's cell.
 void LinkedMode(unsigned abr, int dtd) {
     DrawMode(abr, 0x380, 0x100, dtd);
@@ -319,7 +319,7 @@ void LinkedMode(unsigned abr, int dtd) {
 }
 
 // The pool's records.
-unsigned char* Pool(U stride, unsigned i) { return At(at::kPool + stride * i); }
+unsigned char* Pool(U stride, unsigned i) { return At(EffectKind30_Shards_addr + stride * i); }
 
 }  // namespace
 
@@ -344,14 +344,14 @@ extern "C" void __cdecl EffectKind28_Start(void) {
     SetUL(S() + 0x20, height);
     SetWord(S() + 0x3E, static_cast<U>(ground));
     SetUL(S() + 0x70, 0);
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kStoryFlags), 0xB);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xB);
     S()[1] = set == 0 ? 1 : 2;
 }
 
 // original 0x470390 (state 1): once story flag 0xB is set, +1 = 0 (back to the
 // start).
 extern "C" void __cdecl EffectKind28_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0xB) != 0) S()[1] = 0;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xB) != 0) S()[1] = 0;
 }
 
 // original 0x4703B0 (state 2): the beam from +0xC to +0x18 drawn, the row
@@ -360,7 +360,7 @@ extern "C" void __cdecl EffectKind28_Beam(void) {
     const unsigned char* const s = S();
     SH_CALL(EffectKind28_DrawBeam)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
     SH_CALL(EffectKind28_PushParty)();
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0xB) == 0) S()[1] = 0;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xB) == 0) S()[1] = 0;
 }
 
 // original 0x4703F0: for each of the eight x cells of the byte table 0x654308:
@@ -584,7 +584,7 @@ extern "C" void __cdecl EffectKind29_DrawSegments(unsigned t, unsigned shade) {
     SH_CALL(EffectGte_LoadMapCamera)();
     const U tt = t & 0xFFu, level = shade & 0xFFu;
     for (unsigned k = 0; k < at::kSegmentCount; ++k) {
-        const unsigned char* const a = At(at::kSegments + at::kSegmentStride * k);
+        const unsigned char* const a = At(Effect2a_Segments_addr + at::kSegmentStride * k);
         const unsigned char* const b = a + 0x10;
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetLineG2)(p);
@@ -616,7 +616,7 @@ extern "C" void __cdecl EffectKind2A_Run(void) { Dispatch("EffectKind2A_Run", Ad
 // original 0x4710C0 (state 0): +1 = 2 while story flag 0xD is clear, 1 once it
 // is set; the dword +0x3C = 0x1000000 either way.
 extern "C" void __cdecl EffectKind2A_Start(void) {
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kStoryFlags), 0xD);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xD);
     S()[1] = set == 0 ? 2 : 1;
     SetUL(S() + 0x3C, 0x1000000);
 }
@@ -628,7 +628,7 @@ extern "C" void __cdecl EffectKind2A_Beam(void) {
     S()[6] = 1;
     RowPoints2A(0x118000);
     Row2A();
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0xD) == 0) S()[1] = 2;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xD) == 0) S()[1] = 2;
 }
 
 // original 0x4711B0 (state 2): the same beam at z 0xD8000 (+6 = 0) and at
@@ -641,7 +641,7 @@ extern "C" void __cdecl EffectKind2A_Beams(void) {
     S()[6] = 2;
     RowPoints2A(0x158000);
     Row2A();
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0xD) != 0) S()[1] = 1;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xD) != 0) S()[1] = 1;
 }
 
 // original 0x4712E0: for the ten x cells 0x61..0x6A (each + 0x8000, the cell's
@@ -888,9 +888,9 @@ extern "C" void __cdecl EffectKind2C_Run(void) { Dispatch("EffectKind2C_Run", Ad
 
 // The centre 0x92D380: Sprite_ObjectsExtra[0]'s x, z and height sar 8.
 static void SparkCentreFromExtra() {
-    const U h = UL(At(at::kExtra0Point + 8));
-    const U x = UL(At(at::kExtra0Point));
-    const U z = UL(At(at::kExtra0Point + 4));
+    const U h = UL(At(Sprite_ObjectsExtra_addr + 0x34 + 8));
+    const U x = UL(At(Sprite_ObjectsExtra_addr + 0x34));
+    const U z = UL(At(Sprite_ObjectsExtra_addr + 0x34 + 4));
     SetUL(At(at::kSparkCentre), x);
     SetUL(At(at::kSparkCentre + 4), z);
     SetUL(At(at::kSparkCentre + 8), Sar(h, 8));
@@ -1059,9 +1059,9 @@ extern "C" void __cdecl EffectKind2E_Start(void) {
 
 // Sprite_Objects[1]'s point into a spark: x, z, height sar 8.
 static void SparkAtObject1(unsigned char* r) {
-    SetUL(r, UL(At(at::kObject1Point)));
-    SetUL(r + 4, UL(At(at::kObject1Point + 4)));
-    SetUL(r + 8, Sar(UL(At(at::kObject1Point + 8)), 8));
+    SetUL(r, UL(At(Sprite_Objects_addr + 0xd8)));
+    SetUL(r + 4, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
+    SetUL(r + 8, Sar(UL(At(Sprite_Objects_addr + 0xd8 + 8)), 8));
 }
 
 // original 0x472090 (state 1): when the frame's low three bits are 0, a free
@@ -1121,15 +1121,15 @@ extern "C" void __cdecl EffectKind2D_Run(void) { Dispatch("EffectKind2D_Run", Ad
 // = 0, x and y scaled by the float 0x5C41D8; Msg_OpenScript(0x14), Field_Request
 // = 2, +9 = 0x32, +1 up, Sound_PlayEffect(0x200).
 extern "C" void __cdecl EffectKind2D_Start(void) {
-    SetUL(At(at::kLinkX), 0x1C0000);
-    SetUL(At(at::kLinkZ), 0x180000);
+    Effect2a_LinkX = 0x1C0000;
+    Effect2a_LinkZ = 0x180000;
     unsigned char* const q = S() + 0xC;
     SH_CALL(EffectGte_LoadMapCamera)();
-    long point[3] = {Long(At(at::kObject0Point)), Long(At(at::kObject0Point + 4)), Long(At(at::kObject0Point + 8))};
+    long point[3] = {Long(At(Sprite_Objects_addr + 0x34)), Long(At(Sprite_Objects_addr + 0x34 + 4)), Long(At(Sprite_Objects_addr + 0x34 + 8))};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(q));
-    point[0] = Long(At(at::kObject1Point));
-    point[1] = Long(At(at::kObject1Point + 4));
-    point[2] = Long(At(at::kObject1Point + 8));
+    point[0] = Long(At(Sprite_Objects_addr + 0xd8));
+    point[1] = Long(At(Sprite_Objects_addr + 0xd8 + 4));
+    point[2] = Long(At(Sprite_Objects_addr + 0xd8 + 8));
     float other[3];
     SH_CALL(EffectGte_ProjectPoint)(point, other);
     SetF(q, X87Add(other[0], F(q)));

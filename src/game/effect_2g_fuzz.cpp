@@ -275,7 +275,7 @@ const std::uint8_t kKinds[] = {0x15, 0x18, 0x54, 0x55, 0x57, 0x5A, 0x5B, 0x5D, 0
 // Beyond effect mode's standard regions: kind 0x15's wait byte and area 75's
 // cells (the two effect slots among them).
 const sh::Region kRegions[] = {
-    {at::kKind15Wait, 1},
+    {EffectKind51_Angles_addr + 0x80, 1},
     {0x93C340, 0x14},
 };
 
@@ -305,11 +305,11 @@ void Seed(unsigned k) {
     Mem(at::kScore)[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? (sh::Next() | 0x80) : PickOf(0xF, 0x10, 0x11, 0, 0x7F, sh::Next() & 0x7F));
     Mem(at::kCue)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5, 0x81, sh::Next()));
     Mem(at::kHit)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, sh::Next()));
-    if (sh::Half()) SetWord(Mem(at::kTimerWord), PickOf(0xFF, 0xFF, 0x1FF, 0xFE));
-    Mem(at::kKind15Wait)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
+    if (sh::Half()) SetWord(Mem(MoveScript_PartyRecords_addr + 0x66), PickOf(0xFF, 0xFF, 0x1FF, 0xFE));
+    Mem(EffectKind51_Angles_addr + 0x80)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
     // ObjTrio record 1's animation word and flag
-    SetWord(Mem(at::kMember1Pose), PickOf(4, 8, 4, 8, 0, 0x104, 0x108, sh::Next()));
-    Mem(at::kMember1PoseDone)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 0x81, sh::Next()));
+    SetWord(Mem(Field_Members_addr + 0x5c), PickOf(4, 8, 4, 8, 0, 0x104, 0x108, sh::Next()));
+    Mem(Field_Members_addr + 0x4e)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 0x81, sh::Next()));
     // the frame counts
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 7, 8, 9, 0xFF, sh::Next()));
     switch (k) {
@@ -349,8 +349,8 @@ void Seed(unsigned k) {
     case k15Pose8:
         // the member's animation run through half the time, no hit to take
         if (sh::Half()) {
-            SetWord(Mem(at::kMember1Pose), k == k15Pose4 ? 4 : 8);
-            Mem(at::kMember1PoseDone)[0] = 1;
+            SetWord(Mem(Field_Members_addr + 0x5c), k == k15Pose4 ? 4 : 8);
+            Mem(Field_Members_addr + 0x4e)[0] = 1;
             Mem(at::kHit)[0] = 0;
         }
         break;

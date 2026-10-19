@@ -21,10 +21,10 @@ constexpr unsigned kKind66PlaceCount = 3;
 constexpr std::uint32_t kKind66Pieces = 0x654788;  // four records of 4: u8 u, v, w, h in the texture page
 constexpr unsigned kKind66PieceCount = 4;
 constexpr std::uint32_t kMessageWord = 0x7DEE48;   // u16: the message MsgBox_FrameTask types, 0xFFFF none
-constexpr std::uint32_t kMsgBoxStep = 0x7DEE46;    // u8, MsgBoxState + 6
+// kMsgBoxStep: now Msgbox_Delay (symbols.toml). u8, MsgBoxState + 6
 
 // --- kind 0x18's sub-kind 0x20 -----------------------------------------------
-constexpr std::uint32_t kStoryFlags = 0x904030;    // Cond_Flags' story row (Flags_Test's bank)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags' story row (Flags_Test's bank)
 constexpr unsigned kSub20Flag = 0x2A;              // the story flag the sub-kind follows
 
 // --- kinds 0x15, 0x54 and 0x55: the counters they share ----------------------
@@ -35,10 +35,10 @@ constexpr std::uint32_t kTimerWord = 0x8034E6;     // u16: the chapter timer (sc
 constexpr std::uint32_t kKind15Wait = 0x67625C;    // u8: kind 0x15's frame count (nothing else in the image reads it)
 constexpr std::uint32_t kKind15Delays8 = 0x6547AC; // 8 bytes: a wait by Rand() & 7
 constexpr std::uint32_t kKind15Delays4 = 0x6547B8; // 4 bytes: a wait by Rand() & 3
-constexpr std::uint32_t kMember1 = 0x802E8C;       // ObjTrio record 1 (ObjTrio + 0x14C), the second member's
-constexpr std::uint32_t kMember1Flags = 0x802FB0;  // its +0x124 (bit 6 held)
+// kMember1: now Field_Members[4] (symbols.toml). ObjTrio record 1 (ObjTrio + 0x14C), the second member's
+// kMember1Flags: now Field_Members[0x128] (symbols.toml). its +0x124 (bit 6 held)
 constexpr std::uint32_t kMember1Pose = 0x802EE4;   // its +0x58 (u16, the animation)
-constexpr std::uint32_t kMember1PoseDone = 0x802ED6; // its +0x4A (1 when the animation has run)
+// kMember1PoseDone: now Field_Members[0x4e] (symbols.toml). its +0x4A (1 when the animation has run)
 constexpr std::uint32_t kObjectStride = 0xA4;      // Sprite_Objects' records
 constexpr unsigned kObjectCount = 30;
 constexpr std::uint32_t kKind55TimeFormat = 0x654830; // the seconds-and-hundredths format (field_o_callees.h kFmtTime)

@@ -125,8 +125,8 @@ void Ground(U lift) {
 // Sprite_Current's +0x34 / +0x38 = the leader's x / z (each store to the record
 // as read then).
 void AtLeader() {
-    SetUL(S() + 0x34, UL(At(at::kLeaderX)));
-    SetUL(S() + 0x38, UL(At(at::kLeaderZ)));
+    SetUL(S() + 0x34, UL(At(ObjTrio_addr + 0x34)));
+    SetUL(S() + 0x38, UL(At(ObjTrio_addr + 0x38)));
 }
 
 // States 8 and 10's start: 0x6761CC = the spiral record; its point = the
@@ -134,13 +134,13 @@ void AtLeader() {
 // (0x4799C0); +0xC = 0x28, +2 up.
 void SpiralStart(unsigned turn) {
     unsigned char* s = S();
-    SetUL(At(at::kSpiralPtr), at::kSpiral);
-    SetUL(At(at::kSpiral), UL(s + 0x34));
-    SetUL(At(at::kSpiral + 4), UL(s + 0x38));
+    Effect2e_SpiralPtr = EffectKind30_Shards_addr + 0x524;
+    SetUL(At(EffectKind30_Shards_addr + 0x524), UL(s + 0x34));
+    SetUL(At(EffectKind30_Shards_addr + 0x524 + 4), UL(s + 0x38));
     const U height = UL(s + 0x3C) + 0x2000000u;
-    SetWord(At(at::kSpiralTurn), turn);
-    SetUL(At(at::kSpiral + 8), height);
-    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralInit)(At(at::kSpiral));
+    Effect2e_SpiralTurn = turn;
+    SetUL(At(EffectKind30_Shards_addr + 0x524 + 8), height);
+    SH_AT(void (__cdecl*)(unsigned char*), at::kSpiralInit)(At(EffectKind30_Shards_addr + 0x524));
     s = S();
     SetUL(s + 0xC, 0x28);
     NextStep();
@@ -159,8 +159,8 @@ void SpiralTurn(unsigned turn) {
 
 // State 12's frame: the burst record stepped (0x4794D0) and drawn (0x4796B0).
 void BurstFrame() {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(at::kBurst));
-    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstDraw)(At(at::kBurst));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(EffectKind30_Shards_addr + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kBurstDraw)(At(EffectKind30_Shards_addr + 0xe0));
 }
 
 // A draw mode: Gpu_GetTPage(0, 1, x, y) into Gpu_SetDrawMode(packet, 0, dtd,
@@ -192,11 +192,11 @@ static_assert(sizeof(Matrix) == 0x20, "a MATRIX is 32 bytes");
 extern "C" void __cdecl EffectKind48_State7_Start(void) {
     Ground(0);
     unsigned char* const s = S();
-    SetUL(At(at::kRingPtr), at::kRingRecord);
-    SetUL(At(at::kRingRecord), UL(s + 0x34));
-    SetUL(At(at::kRingRecord + 4), UL(s + 0x38));
-    SetUL(At(at::kRingRecord + 8), UL(s + 0x3C));
-    SetWord(At(at::kRingRecord + 0x10), 0);
+    Effect2d_DustAnchor = Effect2e_RingRecord_addr;
+    Effect2e_RingRecord = UL(s + 0x34);
+    SetUL(At(Effect2e_RingRecord_addr + 4), UL(s + 0x38));
+    SetUL(At(Effect2e_RingRecord_addr + 8), UL(s + 0x3C));
+    SetWord(At(Effect2e_RingRecord_addr + 0x10), 0);
     s[9] = 0;
     SetUL(S() + 0xC, 0x5F);
     NextStep();
@@ -362,8 +362,8 @@ extern "C" void __cdecl EffectKind48_State12_Run(void) {
 // original 0x478F10 (step 0): the burst's size word 0x92C49E = 0xC0; the burst
 // stepped 32 times (0x4794D0); when +6 is set Sound_PlayEffect(0x203); +2 up.
 extern "C" void __cdecl EffectKind48_State12_Start(void) {
-    SetWord(At(at::kBurstSize), 0xC0);
-    for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(at::kBurst));
+    SetWord(At(EffectKind30_Shards_addr + 0x51e), 0xC0);
+    for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(EffectKind30_Shards_addr + 0xe0));
     if (S()[6] != 0) SH_CALL(Sound_PlayEffect)(0x203);
     NextStep();
 }
@@ -401,7 +401,7 @@ extern "C" void __cdecl EffectKind48_State12_Hold(void) {
 // at 0 +9 = 0x20 and +2 up.
 extern "C" void __cdecl EffectKind48_State12_Grow(void) {
     BurstFrame();
-    AddWord(At(at::kBurstSize), 6);
+    AddWord(At(EffectKind30_Shards_addr + 0x51e), 6);
     unsigned char* s;
     if (!CountDown9(&s)) return;
     s[9] = 0x20;
@@ -412,7 +412,7 @@ extern "C" void __cdecl EffectKind48_State12_Grow(void) {
 // down, at 0 +2 up (to WeretigerFx_Next).
 extern "C" void __cdecl EffectKind48_State12_Shrink(void) {
     BurstFrame();
-    AddWord(At(at::kBurstSize), 0xFFF4u);
+    AddWord(At(EffectKind30_Shards_addr + 0x51e), 0xFFF4u);
     unsigned char* s;
     if (!CountDown9(&s)) return;
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -446,7 +446,7 @@ extern "C" long __cdecl EffectAngle_Mean(unsigned a, unsigned b) {
 // the light (32-bit), when above 0 the square root (0x5A7A90) at most 0xFFF,
 // sar 7, else 0. al 0.
 extern "C" unsigned char __cdecl EffectSphere_Build(void) {
-    unsigned char* v = At(at::kSphereVerts);
+    unsigned char* v = At(Effect2e_SphereVerts_addr);
     SetWord(v, 0);
     SetWord(v + 2, 0);
     SetWord(v + 4, 0x1000);
@@ -488,12 +488,12 @@ extern "C" unsigned char __cdecl EffectSphere_Build(void) {
         const U e = k + 1 < 0x20 ? k + 1 : 0;
         quad(0x1C1 + k, 0x1C1 + e, 0x1E1, 0x1E1);
     }
-    unsigned char* const light = At(at::kSphereLight);
+    unsigned char* const light = At(Effect2e_SphereLight_addr);
     SetUL(light, 0);
     SetUL(light + 4, 0x1000);
     SetUL(light + 8, 0x1000);
     SH_CALL(Gte_VectorNormal)(reinterpret_cast<const long*>(light), reinterpret_cast<long*>(light));
-    const unsigned char* vert = At(at::kSphereVerts);
+    const unsigned char* vert = At(Effect2e_SphereVerts_addr);
     unsigned char* shade = At(at::kSphereShades);
     for (unsigned i = 0; i < at::kSphereVertCount; ++i, vert += 8, ++shade) {
         const U dot = SW(vert + 4) * UL(light + 8) + SW(vert) * UL(light) + SW(vert + 2) * UL(light + 4);
@@ -529,7 +529,7 @@ unsigned SphereVertex(U n) {
 // vertex's shade (r = g = b), committed 0x44. al 0.
 extern "C" unsigned char __cdecl EffectSphere_Draw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
-    const unsigned char* v = At(at::kSphereVerts);
+    const unsigned char* v = At(Effect2e_SphereVerts_addr);
     for (unsigned i = 0; i < at::kSphereVertCount; ++i, v += 8) {
         const unsigned char* const s = S();
         long point[3];
@@ -567,9 +567,9 @@ extern "C" void __cdecl EffectKind4A_Run(void) {
 // (+0x34 / +0x38 / +0x3C); +0xC = 0xB4; the trail set (EffectKind4A_TrailInit);
 // +1 up.
 extern "C" void __cdecl EffectKind4A_Start(void) {
-    SetUL(S() + 0x34, UL(At(at::kSprite1Point)));
-    SetUL(S() + 0x38, UL(At(at::kSprite1Point + 4)));
-    SetUL(S() + 0x3C, UL(At(at::kSprite1Point + 8)));
+    SetUL(S() + 0x34, UL(At(Sprite_Objects_addr + 0xd8)));
+    SetUL(S() + 0x38, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
+    SetUL(S() + 0x3C, UL(At(Sprite_Objects_addr + 0xd8 + 8)));
     SetUL(S() + 0xC, 0xB4);
     SH_CALL(EffectKind4A_TrailInit)();
     NextState();
@@ -583,15 +583,15 @@ extern "C" void __cdecl EffectKind4A_Start(void) {
 extern "C" void __cdecl EffectKind4A_Follow(void) {
     SH_CALL(Gte_PushMatrix)();
     unsigned char* const s = S();
-    if (UL(s + 0xC) == 0xA5) At(at::kTrailSpin)[0] = 1;
+    if (UL(s + 0xC) == 0xA5) Effect2e_TrailSpin = 1;
     if (SL(s + 0xC) > 0x5A) {
-        SetUL(s + 0x34, UL(At(at::kSprite1Point)));
-        SetUL(S() + 0x38, UL(At(at::kSprite1Point + 4)));
-        SetUL(S() + 0x3C, UL(At(at::kSprite1Point + 8)));
+        SetUL(s + 0x34, UL(At(Sprite_Objects_addr + 0xd8)));
+        SetUL(S() + 0x38, UL(At(Sprite_Objects_addr + 0xd8 + 4)));
+        SetUL(S() + 0x3C, UL(At(Sprite_Objects_addr + 0xd8 + 8)));
     }
     SH_CALL(EffectKind4A_TrailStep)();
     SH_CALL(EffectKind4A_TrailDraw)();
-    SH_CALL(EffectKind4A_DrawGlow)(reinterpret_cast<const long*>(At(at::kTrail)), 0x80, 0x80, 0);
+    SH_CALL(EffectKind4A_DrawGlow)(reinterpret_cast<const long*>(At(EffectKind30_Shards_addr)), 0x80, 0x80, 0);
     SH_CALL(Gte_PopMatrix)();
     unsigned char* t;
     if (!CountDownC(&t)) return;
@@ -603,10 +603,10 @@ extern "C" void __cdecl EffectKind4A_Follow(void) {
 // its angle word +0x30 = 0.
 extern "C" void __cdecl EffectKind4A_TrailInit(void) {
     const unsigned char* const s = S();
-    SetWord(At(at::kTrailTurn), 0);
-    At(at::kTrailSpin)[0] = 0;
+    Effect2e_TrailTurn = 0;
+    Effect2e_TrailSpin = 0;
     for (unsigned i = 0; i < at::kTrailCount; ++i) {
-        unsigned char* const p = At(at::kTrail + at::kTrailStride * i);
+        unsigned char* const p = At(EffectKind30_Shards_addr + at::kTrailStride * i);
         SetUL(p, UL(s + 0x34));
         SetUL(p + 4, UL(s + 0x38));
         SetUL(p + 8, UL(s + 0x3C));
@@ -624,23 +624,23 @@ extern "C" void __cdecl EffectKind4A_TrailInit(void) {
 // c, height - (s << 8).
 extern "C" void __cdecl EffectKind4A_TrailStep(void) {
     for (int i = static_cast<int>(at::kTrailCount) - 2; i >= 0; --i)
-        std::memcpy(At(at::kTrail + at::kTrailStride * (i + 1)), At(at::kTrail + at::kTrailStride * i), at::kTrailStride);
+        std::memcpy(At(EffectKind30_Shards_addr + at::kTrailStride * (i + 1)), At(EffectKind30_Shards_addr + at::kTrailStride * i), at::kTrailStride);
     const U frame = Frame_Counter;
     const unsigned char* s = S();
-    unsigned char* const head = At(at::kTrail);
+    unsigned char* const head = At(EffectKind30_Shards_addr);
     SetUL(head, UL(s + 0x34));
     SetUL(head + 4, UL(s + 0x38));
     const U bob = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(~(frame << 7) & 0xFFFFu)));
     s = S();
-    const unsigned char spin = At(at::kTrailSpin)[0];
+    const unsigned char spin = Effect2e_TrailSpin;
     SetUL(head + 8, (bob << 10) + UL(s + 0x3C));
-    SetWord(head + 0x30, Word(At(at::kTrailTurn)));
+    SetWord(head + 0x30, Effect2e_TrailTurn);
     if (spin != 0) {
-        AddWord(At(at::kTrailTurn), 0x40);
-        if (Word(At(at::kTrailTurn)) == 0) At(at::kTrailSpin)[0] = 0;
+        AddWord(At(Effect2e_TrailTurn_addr), 0x40);
+        if (Effect2e_TrailTurn == 0) Effect2e_TrailSpin = 0;
     }
     for (unsigned i = 0; i < at::kTrailCount; ++i) {
-        unsigned char* const p = At(at::kTrail + at::kTrailStride * i);
+        unsigned char* const p = At(EffectKind30_Shards_addr + at::kTrailStride * i);
         const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(Word(p + 0x30)))) << 3;
         const U n = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(Word(p + 0x30)))) << 3;
         const U x = UL(p);
@@ -667,11 +667,11 @@ extern "C" void __cdecl EffectKind4A_TrailDraw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     float a[3];
     float b[3];
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(at::kTrail + 0x10)), a);
-    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(at::kTrail + 0x20)), b);
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(EffectKind30_Shards_addr + 0x10)), a);
+    SH_CALL(EffectGte_ProjectPoint)(reinterpret_cast<const long*>(At(EffectKind30_Shards_addr + 0x20)), b);
     unsigned char red = 0x40;
     unsigned char half = 0x20;
-    U edge = at::kTrail + 0x20;
+    U edge = EffectKind30_Shards_addr + 0x20;
     for (unsigned n = 0; n < at::kTrailCount - 1; ++n) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG4)(prim);
@@ -909,7 +909,7 @@ extern "C" void __cdecl EffectKind4D_Start(void) {
     SetUL(s + 0x24, 0x1000000);
     s[9] = 0x3C;
     s[1] = static_cast<unsigned char>(s[1] + 1);
-    SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(0x208 + (At(at::kSoundSwitch)[0] != 0 ? 1 : 0)));
+    SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(0x208 + (Effect2e_SoundSwitch != 0 ? 1 : 0)));
 }
 
 // original 0x47B350 (state 1): the top +0x1C up 0x1000000, at most the base +
@@ -1022,10 +1022,10 @@ extern "C" void __cdecl EffectKind4E_Run(void) {
 // +0x7C (the record read after); +9 = 0, +1 up. The original hands a fourth
 // argument, a stack slot the callee never reads.
 extern "C" void __cdecl EffectKind4E_Start(void) {
-    const U x = UL(At(at::kLeaderX));
-    const U z = UL(At(at::kLeaderZ));
+    const U x = UL(At(ObjTrio_addr + 0x34));
+    const U z = UL(At(ObjTrio_addr + 0x38));
     Prim_VertexScratch[0] = static_cast<short>(Sar(x, 9) - 0x4000u);
-    const std::int32_t height = static_cast<std::int16_t>(Word(At(at::kLeaderHeight)));
+    const std::int32_t height = static_cast<std::int16_t>(Word(At(ObjTrio_addr + 0x3e)));
     Prim_VertexScratch[1] = static_cast<short>(Sar(z, 9) - 0x4000u);
     Prim_VertexScratch[2] = static_cast<short>(-(height / 2));
     long depth = 0;

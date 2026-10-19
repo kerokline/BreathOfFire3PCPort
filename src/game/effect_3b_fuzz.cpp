@@ -264,7 +264,7 @@ U FxLines(const U*, U answer) {
     sh::Note(Key(s));
     if (sh::InRegions(s, 0x80)) sh::Note(s[0xA], s[0xB]);
     if (sh::InRegions(Mem(at::kScale), 0x10)) sh::FillBytes(Mem(at::kScale), 0x10);
-    if (sh::InRegions(Mem(at::kV0), 6)) sh::FillBytes(Mem(at::kV0), 6);
+    if (sh::InRegions(Mem(Prim_VertexScratch_addr), 6)) sh::FillBytes(Mem(Prim_VertexScratch_addr), 6);
     Advance(0x30);
     return answer;
 }
@@ -322,13 +322,13 @@ const std::uint8_t kKinds[] = {0x63, 0x65, 0x67, 0x69, 0x6C};
 // Beyond effect mode's standard regions: kind 0x69's parent and kind 0x6C's
 // spark cursor (two pointers).
 const sh::Region kRegions[] = {
-    {at::kParent, 8},
+    {EffectKind69_Parent_addr, 8},
 };
 
 // --- the seed ------------------------------------------------------------------------
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
-U SparkAt(unsigned k) { return at::kSparks + at::kSparkStride * k; }
+U SparkAt(unsigned k) { return EffectKind30_Shards_addr + at::kSparkStride * k; }
 // The spark records a cursor can reach: the sixteen and sixteen more past them
 // (a cursor moved to the last by the disturbance runs on), inside the shards'
 // region (0x644 bytes = 40 records).
@@ -343,8 +343,8 @@ void Seed(unsigned k) {
         Rec(r)[4] = static_cast<unsigned char>(sh::Half() ? sh::Next() % 4 : sh::Next());
     }
     // the parent (a record) and the spark cursor (one of the sixteen)
-    SetLong(Mem(at::kParent), static_cast<std::int32_t>(Key(Rec(sh::Next()))));
-    SetLong(Mem(at::kSparkCursor), static_cast<std::int32_t>(SparkAt(sh::Next() % at::kSparkCount)));
+    SetLong(Mem(EffectKind69_Parent_addr), static_cast<std::int32_t>(Key(Rec(sh::Next()))));
+    SetLong(Mem(Effect3c_ShardCursor_addr), static_cast<std::int32_t>(SparkAt(sh::Next() % at::kSparkCount)));
     // the sparks: live a third of the time not, +1 below the two states
     for (unsigned i = 0; i < kSparkReach; ++i) {
         unsigned char* const c = P(SparkAt(i));
@@ -366,7 +366,7 @@ void Seed(unsigned k) {
     case k65Check:
     case k65Close:
         Field_Request = static_cast<unsigned char>(PickOf(3, 2, 3, 2, 0, sh::Next()));
-        SetLong(Mem(at::kKind65Count), static_cast<std::int32_t>(sh::Half() ? 5u * (sh::Next() % 0x33333333u) : sh::Next()));
+        SetLong(Mem(Rest4a_Clock_addr), static_cast<std::int32_t>(sh::Half() ? 5u * (sh::Next() % 0x33333333u) : sh::Next()));
         break;
     case k65WaitInput: Input_Held = static_cast<unsigned short>(sh::Half() ? 0 : PickOf(1, 0x100, 0x8000, sh::Next())); break;
     case k69Spawn:
@@ -443,12 +443,12 @@ void Disturb(U h) {
     case 4: SetLong(Mem(at::kScale), static_cast<std::int32_t>(v)); break;
     case 5: SetLong(Mem(at::kAngle), static_cast<std::int32_t>(v)); break;
     case 6: Mem(at::kShade)[0] = static_cast<unsigned char>(v); break;
-    case 7: SetLong(Mem(at::kParent), static_cast<std::int32_t>(Key(Rec(v)))); break;
-    case 8: SetLong(Mem(at::kSparkCursor), static_cast<std::int32_t>(SparkAt(v % at::kSparkCount))); break;
+    case 7: SetLong(Mem(EffectKind69_Parent_addr), static_cast<std::int32_t>(Key(Rec(v)))); break;
+    case 8: SetLong(Mem(Effect3c_ShardCursor_addr), static_cast<std::int32_t>(SparkAt(v % at::kSparkCount))); break;
     case 9: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
     case 10: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? at::kCounterCue : v >> 1); break;
     case 11: if (here) SetLong(s + 0x18, static_cast<std::int32_t>(v)); break;
-    case 12: SetWord(Mem(at::kV0 + 2 * (v % 16)), v >> 4); break;
+    case 12: SetWord(Mem(Prim_VertexScratch_addr + 2 * (v % 16)), v >> 4); break;
     case 13: if (here) s[0x5C + (v % 4)] = static_cast<unsigned char>(v >> 2); break;
     default: break;
     }

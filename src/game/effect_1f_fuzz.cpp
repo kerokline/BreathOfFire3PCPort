@@ -82,7 +82,7 @@ const sh::Clone kAll15[] = {
 #undef E1F_N
 
 enum : unsigned {
-    kChoice, kStep, kEnter, kPickSlot, kPickItem, kScaled, kAllScaled, kReset, kPoints, kTotal, kFrame, kTrade, kWait,
+    kChoice, kStep, kEnter, kPickSlot, kPickItem, kScaled, kAllScaled, kReset, kPoints, kTotal, kFrame, kTrade, MoveScript_WaitWordDA_addr,
     kSetMode, kDraw, kCount
 };
 static_assert(kCount == sizeof kAll15 / sizeof kAll15[0], "one enum entry a clone, in order");
@@ -104,7 +104,7 @@ U Get32(U a) {
     std::memcpy(&v, M(a), 4);
     return v;
 }
-unsigned char* R6() { return M(at::kRecord6); }
+unsigned char* R6() { return M(Effect_Objects_addr + 0x300); }
 
 // --- the stand-ins' effects: deterministic in the log so far and the state ------
 
@@ -256,27 +256,27 @@ void Menu() {
     for (unsigned i = 0; i < 0x80; ++i)
         if (*reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kAccessoryKind + 24 * M(at::kAccessoryIds)[i])) == 0xA) ++count;
     const U cursor = Counter();
-    Put32(at::kRecord6 + 0xC, cursor);
-    Put32(at::kRecord6 + 0x18, PickOf(Counter(), cursor + 1, cursor + 2, cursor + 3, cursor));
+    Put32(Effect_Objects_addr + 0x300 + 0xC, cursor);
+    Put32(Effect_Objects_addr + 0x300 + 0x18, PickOf(Counter(), cursor + 1, cursor + 2, cursor + 3, cursor));
     // the item cursor at 0 about one time in three (the scroll-up branch, whose
     // re-read of the scroll word after its sound control C95 tests)
-    Put32(at::kRecord6 + 0x10, PickOf(Counter(), 0, 0, 8, 8, 7, 9));
+    Put32(Effect_Objects_addr + 0x300 + 0x10, PickOf(Counter(), 0, 0, 8, 8, 7, 9));
     const U scroll = PickOf(0, 1, 8, 9, 10, 0x7F, 0x8000, 0xFFFF, 0xFFF8, sh::Next() % 0x80, count - 9, count - 8, count - 10, count - 9);
-    Put32(at::kRecord6 + 0x38, (sh::Next() & 0xFFFF0000u) | (scroll & 0xFFFF));
-    Put32(at::kRecord6 + 0x1C, PickOf(Counter(), 0x40 + sh::Next() % 0x40, 9, 17, 18, count, count, count - 1, count + 1,
+    Put32(Effect_Objects_addr + 0x300 + 0x38, (sh::Next() & 0xFFFF0000u) | (scroll & 0xFFFF));
+    Put32(Effect_Objects_addr + 0x300 + 0x1C, PickOf(Counter(), 0x40 + sh::Next() % 0x40, 9, 17, 18, count, count, count - 1, count + 1,
                                       (scroll & 0xFFFF) + 8, (scroll & 0xFFFF) + 9, (scroll & 0xFFFF) + 7));
-    Put16(at::kRecord6 + 0x36, ListIndex());
-    Put16(at::kRecord6 + 0x3A, ListIndex());
+    Put16(Effect_Objects_addr + 0x300 + 0x36, ListIndex());
+    Put16(Effect_Objects_addr + 0x300 + 0x3A, ListIndex());
     // the slots: empty, random, or the id the cursor is on
-    const auto at36 = static_cast<short>(Get32(at::kRecord6 + 0x36) & 0xFFFF);
-    const auto at3A = static_cast<short>(Get32(at::kRecord6 + 0x3A) & 0xFFFF);
+    const auto at36 = static_cast<short>(Get32(Effect_Objects_addr + 0x300 + 0x36) & 0xFFFF);
+    const auto at3A = static_cast<short>(Get32(Effect_Objects_addr + 0x300 + 0x3A) & 0xFFFF);
     // half the time the id under each cursor of the kind its list shows (the
     // confirms' swaps run; the count above may then be one off, also wanted)
     if (at36 >= 0 && at36 < 0x80 && sh::Half()) M(at::kAccessoryIds)[at36] = IdOf(1);
     if (at3A >= 0 && at3A < 0x80 && sh::Half()) M(at::kAccessoryIds)[at3A] = IdOf(0);
     M(at::kExtraAccessory)[0] = static_cast<unsigned char>(PickOf(0, sh::Next(), IdOf(1), 0));
     const unsigned char under = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kAccessoryIds + static_cast<U>(static_cast<int>(at3A))));
-    M(at::kExtraItem)[0] = static_cast<unsigned char>(PickOf(0, sh::Next(), under, under, IdOf(0)));
+    M(CharStats_ExtraItem_addr)[0] = static_cast<unsigned char>(PickOf(0, sh::Next(), under, under, IdOf(0)));
     Buttons();
 }
 
@@ -328,7 +328,7 @@ void Args(unsigned k, U* a) {
     case kPoints: {
         const U kind = sh::Often() ? sh::Next() % 0x20 : sh::Next() % 0x100;
         a[0] = (sh::Next() & 0xFFFFFF00u) | kind;
-        const U threshold = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kKindRecords + 36 * kind + 0xF));
+        const U threshold = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Fish_Kinds_addr + 0x10 + 36 * kind + 0xF));
         const U low = PickOf(threshold, threshold - 1, threshold + 1, 0, 1, 0xFFFF, threshold * 2, sh::Next() % 0x100, sh::Next());
         a[1] = (sh::Next() & 0xFFFF0000u) | (low & 0xFFFF);
         break;
@@ -351,12 +351,12 @@ void Disturb(U h) {
         r[kAt[(v & 0xF) % 5]] = static_cast<unsigned char>(v >> 4);
         break;
     }
-    case 1: Put32(at::kRecord6 + 0xC + 4 * (v % 5), v >> 12); break;           // +0xC, +0x10, +0x14, +0x18, +0x1C
-    case 2: Put16(at::kRecord6 + ((v & 1) ? 0x36 : 0x3A), (v >> 4) % 0x180); break;
-    case 3: Put16(at::kRecord6 + 0x38, v >> 3); break;
+    case 1: Put32(Effect_Objects_addr + 0x300 + 0xC + 4 * (v % 5), v >> 12); break; // +0xC, +0x10, +0x14, +0x18, +0x1C
+    case 2: Put16(Effect_Objects_addr + 0x300 + ((v & 1) ? 0x36 : 0x3A), (v >> 4) % 0x180); break;
+    case 3: Put16(Effect_Objects_addr + 0x300 + 0x38, v >> 3); break;
     case 4: Put16(0x7E1BEC, v >> 5); break;
     case 5: Put16((v & 1) ? 0x903590 : 0x90358E, 1u << ((v >> 1) % 16)); break;
-    case 6: M((v & 1) ? at::kExtraItem : at::kExtraAccessory)[0] = static_cast<unsigned char>(v >> 3); break;
+    case 6: M((v & 1) ? CharStats_ExtraItem_addr : at::kExtraAccessory)[0] = static_cast<unsigned char>(v >> 3); break;
     case 7: M(at::kAccessoryIds)[v % 0x80] = static_cast<unsigned char>(v >> 7); break;
     case 8: M(at::kKindCounts)[v % 0x20] = static_cast<unsigned char>(v >> 5); break;
     case 9: {

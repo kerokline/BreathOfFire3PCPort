@@ -37,20 +37,20 @@ constexpr rdata::Const kCullY{0x5C41DC};         // a float constant (read in pl
 
 // --- kind 0x65 ------------------------------------------------------------------------
 constexpr std::uint32_t kKind65Count = 0x904134;   // dword in the save block, tested for a multiple of 5
-constexpr std::uint32_t kStoryFlags = 0x904030;    // Cond_Flags' story row (Flags_Toggle's bank)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags' story row (Flags_Toggle's bank)
 constexpr unsigned kKind65Flag = 0x4F;             // the story flag kind 0x65 toggles
 constexpr std::uint32_t kShakeSteps = 0x6549E8;    // EffectKind65_ShakeSteps: four signed bytes by +9 & 3
 
 // --- kind 0x67 ------------------------------------------------------------------------
-constexpr std::uint32_t kCameraAngle1 = 0x929ECA;  // Camera_Angles + 2 (s16)
+// kCameraAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles + 2 (s16)
 
 // --- kind 0x69 ------------------------------------------------------------------------
 constexpr std::uint32_t kParent = 0x676268;        // EffectKind69_Parent: the spawning record (a pointer)
 
 // --- kind 0x6C: the sparks, 16 records of 0x28 at EffectKind30_Shards ------------------
-constexpr std::uint32_t kSparkCursor = 0x67626C;   // the spark record the states act on (a pointer; E3C's
+// kSparkCursor: now Effect3c_ShardCursor (symbols.toml). the spark record the states act on (a pointer; E3C's
                                                    // kind 0x484050.. uses it too: left unnamed for E3C)
-constexpr std::uint32_t kSparks = 0x92BF80;        // EffectKind30_Shards
+// kSparks: now EffectKind30_Shards (symbols.toml). EffectKind30_Shards
 constexpr std::uint32_t kSparkStride = 0x28;
 constexpr unsigned kSparkCount = 16;
 

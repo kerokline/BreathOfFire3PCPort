@@ -158,10 +158,10 @@ static_assert(kCount == sizeof kAll_ / sizeof kAll_[0], "one enum entry a clone,
 
 // The .data tables the dispatchers read in place, each to its own length.
 const sh::DataTable kTables[] = {
-    {at::kChildren, at::kChildrenCount},       {at::kChild0Steps, at::kChild0Count},
-    {at::kChild1Steps, at::kChild1Count},      {at::kChild2Steps, at::kChild2Count},
-    {at::kChild3Steps, at::kChild3Count},      {at::kChild4Steps, at::kChild4Count},
-    {at::kChild5Steps, at::kChild5Count},      {at::kKind14States, at::kKind14Count},
+    {EffectKind0F_Children_addr, at::kChildrenCount},       {EffectKind0F_Child0Steps_addr, at::kChild0Count},
+    {EffectKind0F_Child1Steps_addr, at::kChild1Count},      {EffectKind0F_Child2Steps_addr, at::kChild2Count},
+    {EffectKind0F_Child3Steps_addr, at::kChild3Count},      {EffectKind0F_Child4Steps_addr, at::kChild4Count},
+    {EffectKind0F_Child5Steps_addr, at::kChild5Count},      {EffectKind14_States_addr, at::kKind14Count},
 };
 
 // --- the stand-ins ------------------------------------------------------------------
@@ -229,7 +229,7 @@ const sh::Region kRegions[] = {
     {at::kItemIds, 0x80},        // the accessories' ids (seeded below 52)
     {at::kItemCounts, 0x80},     // their counts
     {0x803668, 0x318},           // MessagePools past the standard 0xE8, to 0x803980 (the offsets the ids reach)
-    {at::kStyleColours, 0x400},  // the colour words of styles 0..15 (the seed keeps the style byte there)
+    {Gfx_ClutStripSource_addr + 0x228, 0x400}, // the colour words of styles 0..15 (the seed keeps the style byte there)
 };
 
 // A move of the cells the functions read again after a call, from the hash
@@ -238,14 +238,14 @@ void Disturb(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     unsigned char* const s = Sprite_Current;
     switch ((h >> 16) % 9) {
-    case 0: B(at::kLeader4) = static_cast<unsigned char>(v & 1 ? 2 : v); break;
+    case 0: B(ObjTrio_addr + 0x4) = static_cast<unsigned char>(v & 1 ? 2 : v); break;
     case 1: B(at::kItemIds + (h >> 24) % 0x80) = static_cast<unsigned char>(v % at::kAccessoryCount); break;
     case 2: B(at::kItemCounts + (h >> 24) % 0x80) = static_cast<unsigned char>(v % 4); break;
-    case 3: B(at::kStyle) = static_cast<unsigned char>(v % 16); break;
+    case 3: B(BattleDraw_Colour_addr) = static_cast<unsigned char>(v % 16); break;
     case 4: if (sh::InRegions(s, 0x80)) s[7] = static_cast<unsigned char>(s[7] ^ (1u << (v & 7))); break;
     case 5: if (sh::InRegions(s, 0x80)) SetLong(s + 0xC + 4 * (v & 1), static_cast<std::int32_t>(v % 12)); break;
     case 6:   // record 6's +1 is an index of kind 0x14's clone's table: for EffectKind0F_Child only
-        if (g_k == kChild) B(v & 1 ? at::kRecord6State : at::kRecord6Hold) = static_cast<unsigned char>(v & 2 ? (v & 1 ? 0xE : 0) : v); break;
+        if (g_k == kChild) B(v & 1 ? (Effect_Objects_addr + 0x301) : (Effect_Objects_addr + 0x308)) = static_cast<unsigned char>(v & 2 ? (v & 1 ? 0xE : 0) : v); break;
     case 7: if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>(v); break;
     case 8: B(at::kEquipA + 2 * (v & 1)) = static_cast<unsigned char>(v); break;
     default: break;
@@ -267,9 +267,9 @@ void Seed(unsigned k) {
         B(at::kItemIds + i) = static_cast<unsigned char>(sh::Next() % at::kAccessoryCount);
         if (sh::Next() % 3 == 0) B(at::kItemCounts + i) = static_cast<unsigned char>(sh::Next() % 3);
     }
-    B(at::kStyle) = static_cast<unsigned char>(sh::Next() % 16);
-    B(at::kLeader3) = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));
-    B(at::kLeader4) = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next() % 4);
+    B(BattleDraw_Colour_addr) = static_cast<unsigned char>(sh::Next() % 16);
+    B(ObjTrio_addr + 0x3) = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));
+    B(ObjTrio_addr + 0x4) = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next() % 4);
     switch (k) {
     case kListOpen:
     case kListShow:
@@ -279,8 +279,8 @@ void Seed(unsigned k) {
         s[6] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next() % 32, sh::Next()));
         break;
     case kChild:   // record 6 holding state 0xE, or not (its +1 is kind 0x14's index elsewhere: seeded here only)
-        B(at::kRecord6Hold) = static_cast<unsigned char>(sh::Often() ? 0 : sh::Next());
-        B(at::kRecord6State) = static_cast<unsigned char>(sh::Often() ? 0xE : PickOf(0xD, 0xF, sh::Next()));
+        B(Effect_Objects_addr + 0x308) = static_cast<unsigned char>(sh::Often() ? 0 : sh::Next());
+        B(Effect_Objects_addr + 0x301) = static_cast<unsigned char>(sh::Often() ? 0xE : PickOf(0xD, 0xF, sh::Next()));
         break;
     case kChild0: s[3] = static_cast<unsigned char>(sh::Next() % at::kChild0Count); break;
     case kChild1: s[3] = static_cast<unsigned char>(sh::Next() % at::kChild1Count); break;

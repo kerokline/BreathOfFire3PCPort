@@ -41,18 +41,18 @@ constexpr std::uint32_t kKind1EShardStates = 0x65424C;   // EffectKind1E_ShardSt
 constexpr std::uint32_t kKind1FStates = 0x65425C;   // EffectKind1F_States, 3 (the last Effect_StateRelease)
 constexpr std::uint32_t kKind20States = 0x654268;   // EffectKind20_States, 7 (then kind 0x21's, E1D's)
 constexpr std::uint32_t kKind36Frames = 0x653F88;   // EffectKind36_Frames: four (s16 x, s16 y) VRAM origins
-constexpr std::uint32_t kShards = 0x92BF80;         // EffectKind30_Shards: 0x80 records of 0x14 (kinds 0x1C / 0x1D), or
+// kShards: now EffectKind30_Shards (symbols.toml). EffectKind30_Shards: 0x80 records of 0x14 (kinds 0x1C / 0x1D), or
                                                     // 8 of 0x28 (kind 0x1E's shards), or 32 of 0x2C (kind 0x1F's debris)
 constexpr std::uint32_t kShardCount = 0x80;
 constexpr std::uint32_t kShardStride = 0x14;
-constexpr std::uint32_t kPieces = 0x92C0C0;         // kind 0x1E: 27 piece records of 0x18 (the centre, its direction,
+// kPieces: now EffectKind30_Shards[0x140] (symbols.toml). kind 0x1E: 27 piece records of 0x18 (the centre, its direction,
                                                     // the velocity), then at 0x92C348 27 face copies of 0x28
-constexpr std::uint32_t kPieceCopies = 0x92C348;
+// kPieceCopies: now EffectKind30_Shards[0x3c8] (symbols.toml).
 constexpr std::uint32_t kPieceCount = 27;
 constexpr std::uint32_t kDebris = 0x92C780;         // kind 0x1E: 16 debris records of 0x2C, to 0x92CA40
-constexpr std::uint32_t kShardCursor = 0x675FDC;    // EffectKind1E_ShardCursor: the shard kind 0x1E's shard
+// kShardCursor: now EffectKind1E_ShardCursor (symbols.toml). EffectKind1E_ShardCursor: the shard kind 0x1E's shard
                                                     // states step (a pointer)
-constexpr std::uint32_t kModelFaces = 0x802050;     // Sprite_ObjectsExtra[0] +0x50: the model's faces (0x28 bytes each)
+// kModelFaces: now Sprite_ObjectsExtra[0x50] (symbols.toml). Sprite_ObjectsExtra[0] +0x50: the model's faces (0x28 bytes each)
 constexpr std::uint32_t kModelCount = 0x802054;     // Sprite_ObjectsExtra[0] +0x54: points at the face count (a byte)
 
 }  // namespace effect_1c::at

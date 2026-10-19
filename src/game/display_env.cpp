@@ -66,16 +66,16 @@ void CopyDwords(U dst, U src, U n) {
 // material D3d_SetBackColor last set. The DDBLTFX is the original's stack
 // block: 0x64 bytes zeroed, dwSize 0x64, dwFillColor (+0x50) 0 again.
 void ClearBack() {
-    if (At(kRenderFlags)[0] & 1) {
+    if (Gfx_RenderFlags & 1) {
         unsigned char fx[kBltFxBytes];
         std::memset(fx, 0, sizeof fx);
         const U size = kBltFxBytes;
         std::memcpy(fx, &size, sizeof size);
-        void* const back = Ptr(kBackBuffer);
+        void* const back = DDraw_BackBuffer;
         Method<ComBlt>(back, kBlt)(back, nullptr, nullptr, nullptr, kBltWait | kBltColorFill, fx);
     } else {
-        void* const viewport = Ptr(kViewport);
-        Method<ComClear>(viewport, kClear)(viewport, 1, At(kScreenRect), kClearTarget);
+        void* const viewport = D3d_Viewport;
+        Method<ComClear>(viewport, kClear)(viewport, 1, At(Gfx_ScreenRect_addr), kClearTarget);
     }
 }
 
@@ -93,7 +93,7 @@ using namespace display_env;
 // The eax the original leaves is not read by its caller.
 void Gpu_PutDispEnv(const unsigned char* env) {
     if (Word(kDispEnv + 2) != Word(Addr(env) + 2)) g.present();
-    CopyDwords(kDispEnv, Addr(env), 5);
+    CopyDwords(Gpu_DispEnv_addr, Addr(env), 5);
 }
 
 // 0x5A7890, PutDrawEnv by shape; once a rendered frame from WinMain
@@ -109,10 +109,10 @@ void Gpu_PutDispEnv(const unsigned char* env) {
 void Gpu_PutDrawEnv(const unsigned char* env) {
     const U e = Addr(env);
     const U r = At(e + 0x19)[0];
-    if (At(kDrawEnv + 0x19)[0] != r || At(kDrawEnv + 0x1A)[0] != At(e + 0x1A)[0] ||
-        At(kDrawEnv + 0x1B)[0] != At(e + 0x1B)[0])
+    if (Gpu_DrawEnv[0x19] != r || Gpu_DrawEnv[0x1a] != At(e + 0x1A)[0] ||
+        Gpu_DrawEnv[0x1b] != At(e + 0x1B)[0])
         g.set_back_color(r, At(e + 0x1A)[0], At(e + 0x1B)[0]);
-    CopyDwords(kDrawEnv, e, 0x17);
+    CopyDwords(Gpu_DrawEnv_addr, e, 0x17);
 }
 
 // 0x5A78E0, SetDefDispEnv by shape; twice from the set-up 0x4FD110. The
@@ -160,18 +160,18 @@ unsigned char* Gpu_SetDefDrawEnv(unsigned char* env, int x, int y, int w, int h)
 // clears the back buffer for the next frame. Nothing else is checked.
 void Gfx_Present(void) {
     const U flags = Long(kRenderFlags);
-    void* const primary = Ptr(kPrimary);
+    void* const primary = DDraw_Primary;
     long result;
     if (flags & 0x200)
-        result = Method<ComBlt>(primary, kBlt)(primary, At(kWindowRect), Ptr(kBackBuffer), At(kScreenRect), kBltWait,
+        result = Method<ComBlt>(primary, kBlt)(primary, At(Gfx_WindowRect_addr), DDraw_BackBuffer, At(Gfx_ScreenRect_addr), kBltWait,
                                                nullptr);
     else
-        result = Method<ComFlip>(primary, kFlip)(primary, Ptr(kBackBuffer), kFlipWait);
+        result = Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
     if (result == kSurfaceLost) {
-        void* const again = Ptr(kPrimary);
+        void* const again = DDraw_Primary;
         Method<ComCall>(again, kRestore)(again);
     }
-    if (At(kDrawEnvBackground)[0] != 0) g.clear_present(1);
+    if (Gpu_DrawEnv[0x18] != 0) g.clear_present(1);
 }
 
 // 0x59ECE0; sole caller Gfx_Present, with 1. Only the low byte of flags is
@@ -184,12 +184,12 @@ void Gfx_ClearPresent(unsigned flags) {
     if (f & 1) ClearBack();
     if (!(f & 2)) return;
     const U render = Long(kRenderFlags);
-    void* const primary = Ptr(kPrimary);
+    void* const primary = DDraw_Primary;
     if (render & 0x200) {
-        Method<ComBlt>(primary, kBlt)(primary, At(kWindowRect), Ptr(kBackBuffer), At(kScreenRect), kBltWait, nullptr);
+        Method<ComBlt>(primary, kBlt)(primary, At(Gfx_WindowRect_addr), DDraw_BackBuffer, At(Gfx_ScreenRect_addr), kBltWait, nullptr);
         return;
     }
-    Method<ComFlip>(primary, kFlip)(primary, Ptr(kBackBuffer), kFlipWait);
+    Method<ComFlip>(primary, kFlip)(primary, DDraw_BackBuffer, kFlipWait);
     ClearBack();
 }
 
@@ -204,7 +204,7 @@ void Gfx_ClearPresent(unsigned flags) {
 // one rounding of the exact product to float is what it computes; ours is
 // that, in double.
 void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
-    void* const material = Ptr(kBackMaterial);
+    void* const material = D3d_BackMaterial;
     if (material == nullptr) return;
     if (Long(kViewport) == 0) return;
     const double k = Float(kInverse255At);
@@ -221,8 +221,8 @@ void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
     std::memcpy(m + 0x20, &one, 4);
     std::memcpy(m + 0x4C, &ramp, 4);     // dwRampSize
     Method<ComPointer>(material, kSetMaterial)(material, m);
-    void* const viewport = Ptr(kViewport);
-    Method<ComValue>(viewport, kSetBackground)(viewport, Long(kBackHandle));
+    void* const viewport = D3d_Viewport;
+    Method<ComValue>(viewport, kSetBackground)(viewport, D3d_BackMaterialHandle);
 }
 
 // 0x587CD0; callers LoadDatFile (0x454704, ours) and 0x4547E9, for each
@@ -239,7 +239,7 @@ void D3d_SetBackColor(unsigned r, unsigned g, unsigned b) {
 // from the record each time) and its buffer SndBuf_FromWave of that. An
 // entry whose offset is 0 keeps the buffer dword the payload's head carried.
 void Snd_LoadBank(unsigned bank, const void* payload, unsigned size) {
-    const U record = kBanks + (static_cast<U>(bank) - 1u) * kBankBytes;
+    const U record = Sound_Banks_addr + (static_cast<U>(bank) - 1u) * kBankBytes;
     const U old = Long(record + kBankHeader);
     if (old != 0) {
         g.free(At(old));
@@ -249,7 +249,7 @@ void Snd_LoadBank(unsigned bank, const void* payload, unsigned size) {
             if (buffer == 0) continue;
             g.release(At(buffer));
             const U now = Long(entry);
-            for (U c = kChannels; c < kChannelsEnd; c += 4)
+            for (U c = Sound_Channels_addr; c < kChannelsEnd; c += 4)
                 if (Long(c) == now) PutLong(c, 0);
         }
     }

@@ -157,7 +157,7 @@ template <typename... T> U PickOf(T... v) {
 U ElevationEffect(const U*, U answer) {
     const U h = sh::Noise();
     if (h % 3 == 0) return answer;
-    return (answer & 0xFFFF0000u) | ((Word(Mem(at::kEff0Height)) + (h >> 4) % 3 - 1) & 0xFFFFu);
+    return (answer & 0xFFFF0000u) | ((Word(Mem(Effect_Objects_addr + 0x3e)) + (h >> 4) % 3 - 1) & 0xFFFFu);
 }
 // 0x52B2E0: the sloped byte 0x903850 it writes, which stage 3 reads after it.
 U HoldTestEffect(const U*, U answer) {
@@ -168,8 +168,8 @@ U HoldTestEffect(const U*, U answer) {
 // original's 0x52B460 moves the effect records).
 U EffectsStepEffect(const U*, U answer) {
     const U h = sh::Noise();
-    if (h & 1) Mem(at::kEff0Hold)[0] = static_cast<unsigned char>(h & 2 ? 0 : h >> 8);
-    if (h & 4) Mem(at::kPose)[0] = static_cast<unsigned char>((h >> 16) % 3);
+    if (h & 1) Mem(Effect_Objects_addr + 0xb)[0] = static_cast<unsigned char>(h & 2 ? 0 : h >> 8);
+    if (h & 4) Mem(Effect1e_Pose_addr)[0] = static_cast<unsigned char>((h >> 16) % 3);
     return answer;
 }
 // Louder, a quarter of the time each, for the re-reads the group's cases 0 and
@@ -179,12 +179,12 @@ U EffectsStepEffect(const U*, U answer) {
 // record 0's y step, which S3Run reads after it.
 U Effect3ModeEffect(const U*, U answer) {
     const U h = sh::Noise();
-    if (h % 4 == 0) Mem(at::kEff4State)[0] = static_cast<unsigned char>((h >> 8) & 1 ? 0 : (h >> 9) % 5);
+    if (h % 4 == 0) Mem(Effect_Objects_addr + 0x201)[0] = static_cast<unsigned char>((h >> 8) & 1 ? 0 : (h >> 9) % 5);
     return answer;
 }
 U PoseSoundEffect(const U*, U answer) {
     const U h = sh::Noise();
-    if (h % 4 == 0) SetLong(Mem(at::kEff0StepY), static_cast<std::int32_t>((h >> 8) & 1 ? 0u : h >> 12));
+    if (h % 4 == 0) SetLong(Mem(Effect_Objects_addr + 0x10), static_cast<std::int32_t>((h >> 8) & 1 ? 0u : h >> 12));
     return answer;
 }
 // The round's clone (Seed's k). FieldPanel_DrawBox3 under LeaderPanel_S1Out:
@@ -301,34 +301,34 @@ void Seed(unsigned k) {
     // the picked sprite record, its kind below 0x74 (the best counts 0x9040EC +
     // kind stay in the save block's region) and its count near +9
     const unsigned pick = sh::Next() % at::kSpriteCount;
-    Mem(at::kSpriteIndex)[0] = static_cast<unsigned char>(pick);
+    Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(pick);
     unsigned char* const p = Sprite_Objects + pick * at::kSpriteStride;
     p[6] = static_cast<unsigned char>(PickOf(0x16, 0x16, sh::Next() % 0x16, sh::Next() % 0x16, sh::Next() % 0x74));
     SetWord(p + 0x9C, PickOf(s[9], s[9] + 1u, s[9] - 1u, sh::Next() & 0xFF, sh::Next()));
     Mem(at::kBestCounts + p[6])[0] = static_cast<unsigned char>(PickOf(p[0x9C], p[0x9C] - 1u, p[0x9C] + 1u, 0, sh::Next()));
     // the record pointers into the scratch buffers
-    sh::SetPointer(at::kRecordA, sh::Scratch(0) + sh::Next() % 0x30);
-    sh::SetPointer(at::kRecordB, sh::Scratch(1) + sh::Next() % 0x28);
-    unsigned char* const a = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(at::kRecordA)))));
-    unsigned char* const b = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(at::kRecordB)))));
+    sh::SetPointer(Effect1a_PanelScript_addr, sh::Scratch(0) + sh::Next() % 0x30);
+    sh::SetPointer(Effect1a_PanelSet_addr, sh::Scratch(1) + sh::Next() % 0x28);
+    unsigned char* const a = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(Effect1a_PanelScript_addr)))));
+    unsigned char* const b = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(Effect1a_PanelSet_addr)))));
     a[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
     b[0x11] = static_cast<unsigned char>(PickOf(0, 1, 8, 0xF, 0x10, sh::Next()));
-    Mem(at::kBlink)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+    Mem(Effect1e_Blink_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
     // the effect records' bytes the stages compare
-    Mem(at::kEff0State)[0] = static_cast<unsigned char>(PickOf(3, 3, 0, sh::Next()));
-    Mem(at::kEff3State)[0] = static_cast<unsigned char>(PickOf(0, 0, 4, 6, sh::Next()));
-    Mem(at::kEff4State)[0] = static_cast<unsigned char>(PickOf(0, 3, 4, 3, sh::Next()));
-    Mem(at::kEff6State)[0] = static_cast<unsigned char>(PickOf(3, 4, 8, 0xE, 5, sh::Next()));
-    Mem(at::kEff6Choice)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0, 0xFF, sh::Next()));
-    Mem(at::kEff0Hold)[0] = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
-    SetLong(Mem(at::kEff0StepZ), static_cast<std::int32_t>(PickOf(0, 0, sh::Next())));
-    SetLong(Mem(at::kEff0StepY), static_cast<std::int32_t>(PickOf(0, 0x110000, 0x110001, 0x114000, 0x100, 0xFFFFFFFFu, 0x2000, sh::Next())));
-    SetLong(Mem(at::kEff0StepX), static_cast<std::int32_t>(PickOf(0xFFFFFFFFu, 0, 1, 0x800, sh::Next())));
-    SetLong(Mem(at::kEff0X), static_cast<std::int32_t>(PickOf(0x60000, 0x60001, 0x80000, 0x80001, 0x120000, 0x11FFFF, 0x150000, 0x14FFFF, sh::Next())));
+    Mem(Effect_Objects_addr + 0x1)[0] = static_cast<unsigned char>(PickOf(3, 3, 0, sh::Next()));
+    Mem(Effect_Objects_addr + 0x181)[0] = static_cast<unsigned char>(PickOf(0, 0, 4, 6, sh::Next()));
+    Mem(Effect_Objects_addr + 0x201)[0] = static_cast<unsigned char>(PickOf(0, 3, 4, 3, sh::Next()));
+    Mem(Effect_Objects_addr + 0x301)[0] = static_cast<unsigned char>(PickOf(3, 4, 8, 0xE, 5, sh::Next()));
+    Mem(Effect_Objects_addr + 0x306)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0, 0xFF, sh::Next()));
+    Mem(Effect_Objects_addr + 0xb)[0] = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
+    SetLong(Mem(Effect_Objects_addr + 0x14), static_cast<std::int32_t>(PickOf(0, 0, sh::Next())));
+    SetLong(Mem(Effect_Objects_addr + 0x10), static_cast<std::int32_t>(PickOf(0, 0x110000, 0x110001, 0x114000, 0x100, 0xFFFFFFFFu, 0x2000, sh::Next())));
+    SetLong(Mem(Effect_Objects_addr + 0xc), static_cast<std::int32_t>(PickOf(0xFFFFFFFFu, 0, 1, 0x800, sh::Next())));
+    SetLong(Mem(Effect_Objects_addr + 0x34), static_cast<std::int32_t>(PickOf(0x60000, 0x60001, 0x80000, 0x80001, 0x120000, 0x11FFFF, 0x150000, 0x14FFFF, sh::Next())));
     const U z = PickOf(0x3E8000, 0x3E7FFF, 0x150000, 0x14FFFF, 0x3C0000, 0x3C0001, 0x200000, sh::Next());
-    SetLong(Mem(at::kEff0Z), static_cast<std::int32_t>(z));
+    SetLong(Mem(Effect_Objects_addr + 0x38), static_cast<std::int32_t>(z));
     Field_Kind2Z = static_cast<long>(PickOf(z, z - 1, z + 1, sh::Next()));
-    SetWord(Mem(at::kEff0Height), sh::Next());
+    SetWord(Mem(Effect_Objects_addr + 0x3e), sh::Next());
     Frame_Counter = sh::Half() ? sh::Next() & ~0xFu : sh::Next();
     Mem(0x903850)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
     // the pad: the bits the stages test, often alone, the buttons' words overlapping them
@@ -346,8 +346,8 @@ void Seed(unsigned k) {
     g_k = k;
     if (k == kS1Out && sh::Half()) Sc()[9] = 4;
     if (k == kS9Menu && sh::Half()) {
-        Mem(at::kEff6Choice)[0] = 2;
-        Mem(at::kEff6State)[0] = 0xE;
+        Mem(Effect_Objects_addr + 0x306)[0] = 2;
+        Mem(Effect_Objects_addr + 0x301)[0] = 0xE;
     }
 }
 
@@ -355,22 +355,22 @@ void Seed(unsigned k) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     switch (sh::DisturbCase(h, 12)) {
-    case 0: Mem(at::kEff4State)[0] = static_cast<unsigned char>(b % 5); break;
+    case 0: Mem(Effect_Objects_addr + 0x201)[0] = static_cast<unsigned char>(b % 5); break;
     case 1: Mem(0x903850)[0] = static_cast<unsigned char>(b & 1); break;
-    case 2: Mem(at::kEff0Hold)[0] = static_cast<unsigned char>(b & 1 ? 0 : b); break;
-    case 3: Mem(at::kPose)[0] = static_cast<unsigned char>(b % 3); break;
+    case 2: Mem(Effect_Objects_addr + 0xb)[0] = static_cast<unsigned char>(b & 1 ? 0 : b); break;
+    case 3: Mem(Effect1e_Pose_addr)[0] = static_cast<unsigned char>(b % 3); break;
     case 4: Sc()[9] = static_cast<unsigned char>(b % 9); break;
     case 5: Sc()[0xB] = static_cast<unsigned char>(b % 3); break;
     case 6: Sc()[6] = static_cast<unsigned char>(b & 1); break;
-    case 7: Mem(at::kEff6Choice)[0] = static_cast<unsigned char>(b % 4); break;
+    case 7: Mem(Effect_Objects_addr + 0x306)[0] = static_cast<unsigned char>(b % 4); break;
     case 8: {
         static const unsigned char kStates[] = {3, 4, 8, 0xE};
-        Mem(at::kEff6State)[0] = kStates[(h >> 8) % 4];
+        Mem(Effect_Objects_addr + 0x301)[0] = kStates[(h >> 8) % 4];
         break;
     }
-    case 9: SetLong(Mem(at::kEff0StepY), static_cast<std::int32_t>(b & 1 ? 0u : h >> 4)); break;
-    case 10: Mem(at::kEff3State)[0] = static_cast<unsigned char>(b & 1 ? 0 : b); break;
-    case 11: Mem(at::kSpriteIndex)[0] = static_cast<unsigned char>(b % at::kSpriteCount); break;
+    case 9: SetLong(Mem(Effect_Objects_addr + 0x10), static_cast<std::int32_t>(b & 1 ? 0u : h >> 4)); break;
+    case 10: Mem(Effect_Objects_addr + 0x181)[0] = static_cast<unsigned char>(b & 1 ? 0 : b); break;
+    case 11: Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(b % at::kSpriteCount); break;
     default: break;
     }
 }

@@ -48,7 +48,7 @@ constexpr std::uint32_t kSwingTarget = 0x904B44;  // u8: Battle_SetTargetFlag40'
 constexpr std::uint32_t kSkillId = 0x904B80;      // u16: the skill (24-byte records at 0x65C4DC)
 // kSkillCost: now BattleE3_Cost (symbols.toml). u8: subtracted from Field_State +0x9A after a skill
 // kCastKind: now BattlePhases_B89 (symbols.toml). u8: 4, 7 and 8 are special to states 7
-constexpr std::uint32_t kSoundSet = 0x904B8D;     // u8: Battle_LoadSoundByKey's set
+// kSoundSet: now BattleE3_SoundSet (symbols.toml). u8: Battle_LoadSoundByKey's set
 // kTargetPtr: now BattleActorCopies_Command (symbols.toml). unsigned char*: its byte is the target (0x80 = all)
 // kHomeX: now BossSi_CentreX (symbols.toml). dword: x in phase 5 with 0x904AA8 bit 15
 // kHomeY: now BossSi_CentreZ (symbols.toml). dword: y

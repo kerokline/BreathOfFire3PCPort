@@ -186,7 +186,7 @@ extern "C" void __cdecl EffectKind2F_Run(void) {
 // (EffectKind2F_InitTrail); Sound_PlayEffect(0x206); +9 0x40, +1 up.
 extern "C" void __cdecl EffectKind2F_Start(void) {
     for (U i = 0; i < at::kTrailCount; ++i) {
-        unsigned char* const r = At(at::kTrails + at::kTrailStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kTrailStride * i);
         SetUL(r + 0, 0x20000);
         SetUL(r + 4, 0xC0000);
         SetUL(r + 8, 0xB0000);
@@ -206,7 +206,7 @@ extern "C" void __cdecl EffectKind2F_Start(void) {
 // 1 - at 0, Effect_Release.
 extern "C" void __cdecl EffectKind2F_Spin(void) {
     for (U i = 0; i < at::kTrailCount; ++i) {
-        unsigned char* const r = At(at::kTrails + at::kTrailStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kTrailStride * i);
         for (unsigned k = 0; k < 4; ++k) {
             const U height = UL(r + 8), radius = UL(r + 0x10);
             SetWord(r + 0x14, Word(r + 0x14) + 0x40u);
@@ -401,7 +401,7 @@ extern "C" void __cdecl EffectKind35_Burst(void) {
 // original 0x473800 (EffectKind35_States[2]): Sprite_ObjectsExtra[1]'s +0 = 0
 // (the model's record freed); Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind35_FreeModel(void) {
-    At(at::kExtra1Use)[0] = 0;
+    Sprite_ObjectsExtra[0xa4] = 0;
     SH_CALL(Effect_Release)();
 }
 
@@ -409,7 +409,7 @@ extern "C" void __cdecl EffectKind35_FreeModel(void) {
 // set to EffectKind30_Shards, then sixteen times EffectKind1E_ShardInit(the
 // cursor) (E1C's, ours) and the cursor up 0x28 (read again after the call).
 extern "C" void __cdecl EffectKind35_ShardsInit(void) {
-    SetCursor(at::kShards35);
+    SetCursor(EffectKind30_Shards_addr);
     for (U i = 0; i < at::kShard35Count; ++i) {
         SH_CALL(EffectKind1E_ShardInit)(Cursor());
         SetCursor(Key(Cursor()) + 0x28);
@@ -423,7 +423,7 @@ extern "C" void __cdecl EffectKind35_ShardsInit(void) {
 // 1 when any was in use.
 extern "C" unsigned char __cdecl EffectKind35_ShardsDraw(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
-    U c = at::kShards35;
+    U c = EffectKind30_Shards_addr;
     SetCursor(c);
     unsigned char any = 0;
     for (U i = 0; i < at::kShard35Count; ++i) {
@@ -539,10 +539,10 @@ extern "C" void __cdecl EffectKind35_ShardFade(void) {
 // +0x10..+0x15 0; then the copy's twelve vertex words made relative to the
 // centre.
 extern "C" void __cdecl EffectKind35_SplitModel(void) {
-    U src = UL(At(at::kExtra1Model));
+    U src = UL(At(Sprite_ObjectsExtra_addr + 0xf4));
     for (U i = 0; i < at::kPiece35Count; ++i) {
         unsigned char* const d = At(at::kCopies35 + 0x28 * i);
-        unsigned char* const r = At(at::kPieces35 + 0x18 * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + 0x280 + 0x18 * i);
         for (U j = 0; j < 0x28; j += 4) SetUL(d + j, UL(At(src + j)));
         SetWord(r + 0, static_cast<U>((SW(d + 8) + SW(d + 0x14) + SW(d + 0xE) + SW(d + 2)) >> 2));
         SetWord(r + 2, static_cast<U>((SW(d + 4) + SW(d + 0x16) + SW(d + 0xA) + SW(d + 0x10)) >> 2));
@@ -566,9 +566,9 @@ extern "C" void __cdecl EffectKind35_SplitModel(void) {
 // face, the piece)); the model's faces from Sprite_ObjectsExtra[1] +0x50 read
 // once.
 extern "C" void __cdecl EffectKind35_StepPieces(void) {
-    const U model = UL(At(at::kExtra1Model));
+    const U model = UL(At(Sprite_ObjectsExtra_addr + 0xf4));
     for (U i = 0; i < at::kPiece35Count; ++i) {
-        unsigned char* const r = At(at::kPieces35 + 0x18 * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + 0x280 + 0x18 * i);
         const U vx = Word(r + 8);
         SetWord(r + 0xC, Word(r + 0xC) + 1u);
         SetWord(r + 0, Word(r + 0) + vx);
@@ -837,7 +837,7 @@ extern "C" void __cdecl EffectKind3B_Rise(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* s = nullptr;
     for (U i = 0; i < at::kSpiralCount; ++i) {
-        unsigned char* const r = At(at::kSpirals + at::kSpiralStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kSpiralStride * i);
         SH_CALL(EffectKind3B_DrawSpiral)(r);
         s = Cur();
         SetWord(r + 0x14, Word(r + 0x14) + 4u);
@@ -869,7 +869,7 @@ extern "C" void __cdecl EffectKind3B_Fade(void) {
     Kind3BGlow(9);
     SH_CALL(EffectGte_LoadMapCamera)();
     for (U i = 0; i < at::kSpiralCount; ++i) {
-        unsigned char* const r = At(at::kSpirals + at::kSpiralStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kSpiralStride * i);
         SH_CALL(EffectKind3B_DrawSpiral)(r);
         SetWord(r + 0x10, Word(r + 0x10) + 0x40u);
         SetWord(r + 0x14, Word(r + 0x14) - 8u);
@@ -960,7 +960,7 @@ extern "C" void __cdecl EffectKind3B_DrawSpiral(unsigned char* spiral) {
 extern "C" void __cdecl EffectKind3B_InitSpirals(void) {
     const unsigned char* const s = Cur();
     for (U i = 0; i < at::kSpiralCount; ++i) {
-        unsigned char* const r = At(at::kSpirals + at::kSpiralStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kSpiralStride * i);
         SetUL(r + 0, UL(s + 0x34));
         SetUL(r + 4, UL(s + 0x38));
         SetWord(r + 0x12, 0xC00);
@@ -1047,7 +1047,7 @@ extern "C" void __cdecl EffectKind3D_Fade(void) {
 extern "C" void __cdecl EffectKind3D_DrawGlow(unsigned size) {
     Mode(1, 0x380, 0x100, 1);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
-    const unsigned char* const leader = At(at::kLeaderPoint);
+    const unsigned char* const leader = At(ObjTrio_addr + 0x34);
     const long point[3] = {Long(leader), Long(leader + 4), static_cast<long>(UL(leader + 8) + 0x800000u)};
     SH_CALL(EffectKind3D_DrawFan)(point, size, 0x60, 0);
 }
@@ -1060,14 +1060,14 @@ extern "C" void __cdecl EffectKind3D_DrawFan(const long* point, unsigned size, u
 
 // original 0x474C30: the sixteen rings' in-use bytes (+0x14) cleared.
 extern "C" void __cdecl EffectKind3D_RingsClear(void) {
-    for (U i = 0; i < at::kRingCount; ++i) At(at::kRings + at::kRingStride * i + 0x14)[0] = 0;
+    for (U i = 0; i < at::kRingCount; ++i) At(EffectKind30_Shards_addr + at::kRingStride * i + 0x14)[0] = 0;
 }
 
 // original 0x474C50: the first free ring of the sixteen (+0x14 0) in use, its
 // state +0x15 0; none free, nothing.
 extern "C" void __cdecl EffectKind3D_RingSpawn(void) {
     for (U i = 0; i < at::kRingCount; ++i) {
-        unsigned char* const r = At(at::kRings + at::kRingStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kRingStride * i);
         if (r[0x14]) continue;
         r[0x14] = 1;
         r[0x15] = 0;
@@ -1083,7 +1083,7 @@ extern "C" void __cdecl EffectKind3D_RingSpawn(void) {
 extern "C" unsigned char __cdecl EffectKind3D_RingsStep(void) {
     unsigned char any = 0;
     for (U i = 0; i < at::kRingCount; ++i) {
-        unsigned char* const r = At(at::kRings + at::kRingStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kRingStride * i);
         if (!r[0x14]) continue;
         any = 1;
         if (r[0x15] == 0) {
@@ -1094,7 +1094,7 @@ extern "C" unsigned char __cdecl EffectKind3D_RingsStep(void) {
             r[0x15] = state;
             r[0x16] = 0x20;
         } else if (r[0x15] == 1) {
-            const unsigned char* const leader = At(at::kLeaderPoint);
+            const unsigned char* const leader = At(ObjTrio_addr + 0x34);
             const U x = UL(leader), z = UL(leader + 4);
             SetWord(r + 0x10, Word(r + 0x10) + 8u);
             SetUL(r + 4, z);

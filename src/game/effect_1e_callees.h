@@ -25,16 +25,16 @@ constexpr std::uint32_t kLeaveOnPress = bof3::addr::LeaderPanel_LeaveOnPress;   
 
 // Data: the state machine's cells (docs/effect_1e.md section 2).
 constexpr std::uint32_t kSpriteIndex = 0x939A1C;    // u8: the Sprite_Objects record the stages read (0xFF: none; 0x5289C0 writes it)
-constexpr std::uint32_t kRecordA = 0x939A20;        // pointer: a 10-byte record (0x66A4E8 + 10 * (0x904130 - 0x2E), 0x52B250)
-constexpr std::uint32_t kRecordB = 0x939A24;        // pointer: a 20-byte record (0x66A528 + 20 * (0x90412E - 0x1C), 0x52B250)
-constexpr std::uint32_t kBlink = 0x939A28;          // u8: FieldPanel_DrawBlink's switch
+// kRecordA: now Effect1a_PanelScript (symbols.toml). pointer: a 10-byte record (0x66A4E8 + 10 * (0x904130 - 0x2E), 0x52B250)
+// kRecordB: now Effect1a_PanelSet (symbols.toml). pointer: a 20-byte record (0x66A528 + 20 * (0x90412E - 0x1C), 0x52B250)
+// kBlink: now Effect1e_Blink (symbols.toml). u8: FieldPanel_DrawBlink's switch
 constexpr std::uint32_t kChoice = 0x6BC709;         // u8 (0x528A90's, not ours)
 constexpr std::uint32_t kCounter = 0x6BC70C;        // u32: cleared by stage 3's start
-constexpr std::uint32_t kPoseWas = 0x6BC71C;        // u8: the pose 0x52B1B0 compares with
-constexpr std::uint32_t kPose = 0x6BC71D;           // u8: 0, 1 or 2
+// kPoseWas: now Effect1e_PoseWas (symbols.toml). u8: the pose 0x52B1B0 compares with
+// kPose: now Effect1e_Pose (symbols.toml). u8: 0, 1 or 2
 constexpr std::uint32_t kBestCounts = 0x9040EC;     // u8 by Sprite_Objects +6: the best of each kind (save data)
-constexpr std::uint32_t kItemA = 0x90412E;          // u8 and the next: cleared when Inventory_Remove fails
-constexpr std::uint32_t kItemA2 = 0x90412F;
+// kItemA: now CharStats_ExtraItem (symbols.toml). u8 and the next: cleared when Inventory_Remove fails
+// kItemA2: now CharStats_ExtraCount (symbols.toml).
 constexpr std::uint32_t kKindSounds = 0x66A6AD;     // u8 by 36 * kind: 2 or more picks sound 0x20C over 0x20B (image table, read-only)
 constexpr std::uint32_t kPools = 0x803580;          // MessagePools: the base the offset words below are added to
 constexpr std::uint32_t kPoolWord00 = 0x803600;     // u16: the stage-1 prompt's message
@@ -43,27 +43,27 @@ constexpr std::uint32_t kPoolWord40 = 0x803640;
 constexpr std::uint32_t kPoolWord5E = 0x80365E;
 
 // Effect_Objects cells the stages drive (record n at 0x7E11E0 + 0x80 n).
-constexpr std::uint32_t kEff0State = 0x7E11E1;      // record 0 +1
-constexpr std::uint32_t kEff0Hold = 0x7E11EB;       // record 0 +0xB
+// kEff0State: now Effect_Objects[1] (symbols.toml). record 0 +1
+// kEff0Hold: now Effect_Objects[0xb] (symbols.toml). record 0 +0xB
 constexpr std::uint32_t kEff0StepX = 0x7E11EC;      // record 0 +0xC (s32)
 constexpr std::uint32_t kEff0StepY = 0x7E11F0;      // record 0 +0x10 (s32)
 constexpr std::uint32_t kEff0StepZ = 0x7E11F4;      // record 0 +0x14 (s32)
 constexpr std::uint32_t kEff0X = 0x7E1214;          // record 0 +0x34 (s32, 16.16)
 constexpr std::uint32_t kEff0Z = 0x7E1218;          // record 0 +0x38 (s32)
-constexpr std::uint32_t kEff0Height = 0x7E121E;     // record 0 +0x3E (s16)
-constexpr std::uint32_t kEff1State = 0x7E1261;      // record 1 +1
-constexpr std::uint32_t kEff1Sub = 0x7E1262;        // record 1 +2
-constexpr std::uint32_t kEff2State = 0x7E12E1;      // record 2 +1
+// kEff0Height: now Effect_Objects[0x3e] (symbols.toml). record 0 +0x3E (s16)
+// kEff1State: now Effect_Objects[0x81] (symbols.toml). record 1 +1
+// kEff1Sub: now Effect_Objects[0x82] (symbols.toml). record 1 +2
+// kEff2State: now Effect_Objects[0x101] (symbols.toml). record 2 +1
 constexpr std::uint32_t kEff2Word = 0x7E12F8;       // record 2 +0x18 (u32)
-constexpr std::uint32_t kEff3State = 0x7E1361;      // record 3 +1
-constexpr std::uint32_t kEff4State = 0x7E13E1;      // record 4 +1
-constexpr std::uint32_t kEff4Mode = 0x7E13E6;       // record 4 +6
-constexpr std::uint32_t kEff5State = 0x7E1461;      // record 5 +1
+// kEff3State: now Effect_Objects[0x181] (symbols.toml). record 3 +1
+// kEff4State: now Effect_Objects[0x201] (symbols.toml). record 4 +1
+// kEff4Mode: now Effect_Objects[0x206] (symbols.toml). record 4 +6
+// kEff5State: now Effect_Objects[0x281] (symbols.toml). record 5 +1
 constexpr std::uint32_t kEff5Count = 0x7E146A;      // record 5 +0xA
 constexpr std::uint32_t kEff5Frame = 0x7E1470;      // record 5 +0x10 (s32)
-constexpr std::uint32_t kEff6State = 0x7E14E1;      // record 6 +1
-constexpr std::uint32_t kEff6Choice = 0x7E14E6;     // record 6 +6
-constexpr std::uint32_t kEff6Hold = 0x7E14EB;       // record 6 +0xB
+// kEff6State: now Effect_Objects[0x301] (symbols.toml). record 6 +1
+// kEff6Choice: now Effect_Objects[0x306] (symbols.toml). record 6 +6
+// kEff6Hold: now Effect_Objects[0x30b] (symbols.toml). record 6 +0xB
 
 // Sprite_Objects fields the stages read by kSpriteIndex (stride 0xA4, 30 records).
 constexpr std::uint32_t kSpriteStride = 0xA4;

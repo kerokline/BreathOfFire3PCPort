@@ -294,10 +294,10 @@ const sh::Callee kCallees[] = {
 // [[data]], each checked by hand), and the world map records' +4 / +8 cells
 // of the eleven records (index 11's are kind 1's and kind 7's tables).
 const sh::DataTable kTables[] = {
-    {at::kKind01States, 2}, {at::kKind07States, 5}, {at::kKind08States, 4}, {at::kKind09States, 10},
-    {at::kKind0BStates, 5}, {at::kKind02States, 5}, {at::kKind03States, 4}, {at::kKind05States, 6},
-    {at::kKind0AStates, 2}, {at::kKind0CStates, 3}, {at::kKind0DStates, 5}, {at::kKind0FStates, 13},
-    {at::kKind1AStates, 17},
+    {EffectKind01_States_addr, 2}, {EffectKind07_States_addr, 5}, {EffectKind08_States_addr, 4}, {EffectKind09_States_addr, 10},
+    {EffectKind0B_States_addr, 5}, {EffectKind02_States_addr, 5}, {EffectKind03_States_addr, 4}, {EffectKind05_States_addr, 6},
+    {EffectKind0A_States_addr, 2}, {EffectKind0C_States_addr, 3}, {EffectKind0D_States_addr, 5}, {EffectKind0F_States_addr, 13},
+    {EffectKind1A_States_addr, 17},
     {0x653914, 2}, {0x653930, 2}, {0x65394C, 2}, {0x653968, 2}, {0x653984, 2}, {0x6539A0, 2},
     {0x6539BC, 2}, {0x6539D8, 2}, {0x6539F4, 2}, {0x653A10, 2}, {0x653A2C, 2},
 };
@@ -347,20 +347,20 @@ void Records(unsigned k) {
 void Seed(unsigned k) {
     Records(k);
     unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
-    unsigned char* const r0 = Mem(at::kRecord0);
+    unsigned char* const r0 = Mem(Effect_Objects_addr);
     // the parameter blocks
-    sh::SetPointer(at::kPanelScript, g_script);
-    sh::SetPointer(at::kPanelSet, g_script + 0x20);
+    sh::SetPointer(Effect1a_PanelScript_addr, g_script);
+    sh::SetPointer(Effect1a_PanelSet_addr, g_script + 0x20);
     g_script[1] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
     g_script[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
-    Mem(at::kPanelObject)[0] = static_cast<unsigned char>(sh::Half() ? sh::Next() % 4 : sh::Next() % at::kObjectCount);
+    Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(sh::Half() ? sh::Next() % 4 : sh::Next() % at::kObjectCount);
     // the shared cells: record 0's state and height, record 3's state, the
     // leader's bytes, the kind-2 hold, the area
     r0[1] = static_cast<unsigned char>(PickOf(0, 4, 1, sh::Next()));
     SetWord(r0 + 0x3E, PickOf(0, 1, 0xFFFF, 0x8000, 0x20, 0xFFE0, sh::Next()));
-    Mem(at::kRecord3 + 1)[0] = static_cast<unsigned char>(PickOf(2, 3, 4, 7, sh::Next()));
-    Mem(at::kLeader + 2)[0] = static_cast<unsigned char>(PickOf(3, 4, sh::Next()));
-    Mem(at::kLeader + 3)[0] = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));
+    Mem(Effect_Objects_addr + 0x180 + 1)[0] = static_cast<unsigned char>(PickOf(2, 3, 4, 7, sh::Next()));
+    Mem(ObjTrio_addr + 2)[0] = static_cast<unsigned char>(PickOf(3, 4, sh::Next()));
+    Mem(ObjTrio_addr + 3)[0] = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));
     Field_Kind2Hold = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     Game_AreaNumber = static_cast<unsigned short>(PickOf(0x68, 0x79, sh::Next()));
     // the kind counts: none, some, all, or one (the last half the time: the
@@ -401,12 +401,12 @@ void Seed(unsigned k) {
         SetWord(s + 0x3E, PickOf(0, 1, 0xFFFF, sh::Next()));
         break;
     }
-    case k05Follow: SetLong(Mem(at::kRecord5 + 0x10), static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, sh::Next()))); break;
+    case k05Follow: SetLong(Mem(Effect_Objects_addr + 0x280 + 0x10), static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, sh::Next()))); break;
     case k0AStart:
     case k0AFollow: r0[1] = static_cast<unsigned char>(PickOf(0, 1, sh::Next())); break;
     case k0CAim: {
         SetLong(s + 0x10, static_cast<std::int32_t>(PickOf(0, 0, 1, 0xFFFFFFFFu, sh::Next())));
-        unsigned char* const o = Mem(at::kObjects + Mem(at::kPanelObject)[0] * at::kObjectStride);
+        unsigned char* const o = Mem(Sprite_Objects_addr + Mem(Effect1a_PanelObject_addr)[0] * at::kObjectStride);
         SetWord(s + 0x30, sh::Next() % 0x40 - 0x20);
         const unsigned margin = g_script[3] * 4u + 0xC;
         o[0xA] = static_cast<unsigned char>(Word(s + 0x30) + PickOf(0, margin, margin + 1, 0u - margin, 0u - margin - 1, sh::Next()));
@@ -417,7 +417,7 @@ void Seed(unsigned k) {
     case k0DSlideIn:
     case k0DSlideOut: SetWord(s + 0x2E, PickOf(0xBE, 0xBF, 0xC0, 0xFFD8, 0xFFD7, 0xFFD9, sh::Next())); break;
     case k0FRun:
-        if (sh::Half()) Sprite_Current = Mem(at::kRecord3);
+        if (sh::Half()) Sprite_Current = Mem(Effect_Objects_addr + 0x180);
         break;
     case k0FOpen:
     case k0FClose: SetWord(s + 0x30, PickOf(0xA, 0xB, 0xC, 0xFFEF, 0xFFF0, 0xFFF1, sh::Next())); break;
@@ -484,12 +484,12 @@ void Disturb(U h) {
     case 2: s[0x49] = static_cast<unsigned char>(v); break;
     case 3: SetWord(s + 0x3E, v % 0x20); break;
     case 4:
-        if (s != Mem(at::kRecord0)) Mem(at::kRecord0 + 1)[0] = static_cast<unsigned char>(v);
+        if (s != Mem(Effect_Objects_addr)) Mem(Effect_Objects_addr + 1)[0] = static_cast<unsigned char>(v);
         break;
-    case 5: Mem(at::kLeader + 2 + (v & 1))[0] = static_cast<unsigned char>(v >> 1); break;
-    case 6: Mem(at::kPanelObject)[0] = static_cast<unsigned char>(v % at::kObjectCount); break;
+    case 5: Mem(ObjTrio_addr + 2 + (v & 1))[0] = static_cast<unsigned char>(v >> 1); break;
+    case 6: Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(v % at::kObjectCount); break;
     case 7:
-        if (s != Mem(at::kRecord3)) Mem(at::kRecord3 + 1)[0] = static_cast<unsigned char>(v);
+        if (s != Mem(Effect_Objects_addr + 0x180)) Mem(Effect_Objects_addr + 0x180 + 1)[0] = static_cast<unsigned char>(v);
         break;
     default: break;
     }

@@ -267,18 +267,18 @@ U FxUpdateScreen(const U*, U answer) {
 }
 // EffectKind40_ShardDraw reads the shard cursor: logged.
 U FxShardDraw(const U*, U answer) {
-    sh::Note(static_cast<U>(Long(P(at::kShardCursor))));
+    sh::Note(static_cast<U>(Long(P(EffectKind40_ShardCursor_addr))));
     return answer;
 }
 // EffectKind40_ShardFind / EffectKind44_SparkFind: 0 a third of the time, else
 // one of the records (a caller writes through it).
 U FxShardFind(const U*, U answer) {
     if (answer % 3 == 0) return 0;
-    return at::kShards + at::kShardStride * ((answer >> 2) % at::kShardCount);
+    return EffectKind30_Shards_addr + at::kShardStride * ((answer >> 2) % at::kShardCount);
 }
 U FxSparkFind(const U*, U answer) {
     if (answer % 3 == 0) return 0;
-    return at::kSparks44 + at::kSparkStride44 * ((answer >> 2) % at::kSparkCount44);
+    return EffectKind30_Shards_addr + 0xfc + at::kSparkStride44 * ((answer >> 2) % at::kSparkCount44);
 }
 
 #define E2C_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
@@ -340,10 +340,10 @@ const std::uint8_t kKinds[] = {0x3E, 0x3F, 0x40, 0x42, 0x43, 0x44, 0x6B};
 // original's 0x50 x 0x48 would make 5,760 particles, past the state the
 // harness holds).
 const sh::Region kRegions[] = {
-    {at::kShards + 0x644, at::kSparkCount43 * at::kSparkStride43 - 0x644},
+    {EffectKind30_Shards_addr + 0x644, at::kSparkCount43 * at::kSparkStride43 - 0x644},
     {at::kPixels, 80 * at::kPixelStride},
-    {at::kShardCursor, 0xB8},
-    {at::kFrameX, 8},
+    {EffectKind40_ShardCursor_addr, 0xB8},
+    {EffectKind6B_Frame_addr, 8},
 };
 constexpr unsigned kPixelsSeeded = 80;
 
@@ -376,13 +376,13 @@ void SeedPoint(unsigned char* at) {
 // clockwise, or all at one point (every product 0), or noise.
 void SeedDisc() {
     const float cx = Moderate(60.0f, 260.0f), cy = Moderate(40.0f, 200.0f);
-    SetFloat(P(at::kDiscCentre), cx);
-    SetFloat(P(at::kDiscCentre + 4), cy);
-    SeedFloat(P(at::kDiscCentre + 8), 0.0f, 4.0f);
+    SetFloat(P(EffectKind30_Shards_addr + 0x300), cx);
+    SetFloat(P(EffectKind30_Shards_addr + 0x300 + 4), cy);
+    SeedFloat(P(EffectKind30_Shards_addr + 0x300 + 8), 0.0f, 4.0f);
     const U how = sh::Next() % 5;
     const float r = Moderate(20.0f, 140.0f);
     for (unsigned i = 0; i < 32; ++i) {
-        unsigned char* const v = P(at::kDiscRim + 12 * i);
+        unsigned char* const v = P(EffectKind30_Shards_addr + 0x30c + 12 * i);
         const float t = 6.2831853f * static_cast<float>(i) / 32.0f;
         if (how <= 1) {
             SetFloat(v, cx + r * std::cos(t));
@@ -401,7 +401,7 @@ void SeedDisc() {
 // inside the rim or not.
 void SeedShards() {
     for (unsigned i = 0; i < at::kShardCount; ++i) {
-        unsigned char* const p = P(at::kShards + at::kShardStride * i);
+        unsigned char* const p = P(EffectKind30_Shards_addr + at::kShardStride * i);
         if (sh::Next() % 3 == 0) p[0] = 0;
         U h = PickOf(0x280, 0xA0, 0x9F, 0x81, 0x80, 0x7F, 0x60, 0x20, 1, 0xFFFF, 0x8000, 0x7FFF, sh::Next());
         if ((h & 0xFFFF) == 0) h = 0x80;
@@ -425,7 +425,7 @@ void SeedInUse(U base, U stride, unsigned count) {
 // five), counts at 1, sides 0 and 1.
 void SeedSparks43() {
     for (unsigned i = 0; i < at::kSparkCount43; ++i) {
-        unsigned char* const r = P(at::kShards + at::kSparkStride43 * i);
+        unsigned char* const r = P(EffectKind30_Shards_addr + at::kSparkStride43 * i);
         r[0] = sh::Half() ? 0 : static_cast<unsigned char>(sh::Next() | 1);
         r[1] = static_cast<unsigned char>(PickOf(1, 1, 2, 0, 0x20, sh::Next()));
         r[2] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xFF, sh::Next()));
@@ -435,8 +435,8 @@ void SeedSparks43() {
 // Kind 0x6B's rectangle: x and y small, w * h at most the 80 particles seeded
 // (w up to the original's 0x50 with one row), with 0 and negatives.
 void SeedFrame() {
-    SetWord(P(at::kFrameX), PickOf(0x30, 0, 0xFFF0, sh::Next() & 0x7F));
-    SetWord(P(at::kFrameY), PickOf(0x36, 0, 0xFFF0, sh::Next() & 0x7F));
+    SetWord(P(EffectKind6B_Frame_addr), PickOf(0x30, 0, 0xFFF0, sh::Next() & 0x7F));
+    SetWord(P(EffectKind6B_Frame_addr + 0x2), PickOf(0x36, 0, 0xFFF0, sh::Next() & 0x7F));
     U w = PickOf(0, 0xFFFF, 0x8000, 1, 2, 3, 5, 8, 10, 0x50, 0x4F, 0x51, 1 + sh::Next() % 16);
     U h;
     if (w == 0x50 || w == 0x4F || w == 0x51) {
@@ -447,13 +447,13 @@ void SeedFrame() {
     } else {
         h = PickOf(0, 1, 3, 0xFFFF);
     }
-    SetWord(P(at::kFrameW), w);
-    SetWord(P(at::kFrameH), h);
+    SetWord(P(EffectKind6B_Frame_addr + 0x4), w);
+    SetWord(P(EffectKind6B_Frame_addr + 0x6), h);
 }
 // Kind 0x6B's heights (80 s16) round the particles' y range.
 void SeedHeights() {
     for (unsigned i = 0; i < at::kHeightCount; ++i)
-        SetWord(P(at::kHeights + 2 * i), PickOf(0, 0x80, 0x100, 0x7FFF, 0x8000, sh::Next() & 0x3FF, sh::Next()));
+        SetWord(P(EffectKind6B_Heights_addr + 2 * i), PickOf(0, 0x80, 0x100, 0x7FFF, 0x8000, sh::Next() & 0x3FF, sh::Next()));
 }
 // Kind 0x6B's particles: every flags phase, counts at 1, columns inside the
 // 80 heights (a disturbed count may reach any of the 80).
@@ -470,7 +470,7 @@ void SeedPixels() {
 }
 // Kind 0x44's ring: the cell on a record inside the regions; its points
 // projected somewhere on or off the screen.
-U RingAt() { return at::kShards + 0x40 * (sh::Next() % 8); }
+U RingAt() { return EffectKind30_Shards_addr + 0x40 * (sh::Next() % 8); }
 void SeedRing(U ring) {
     unsigned char* const r = P(ring);
     SetWord(r + 0x20, PickOf(0x150, 0x151, 0x152, 0x180, 0x181, 0x7FF0, 0, sh::Next()));
@@ -500,10 +500,10 @@ void Seed(unsigned k) {
     case k40ShardDraw:
         SeedShards();
         SeedDisc();
-        SetU(at::kShardCursor, at::kShards + at::kShardStride * (sh::Next() % at::kShardCount));
+        SetU(EffectKind40_ShardCursor_addr, EffectKind30_Shards_addr + at::kShardStride * (sh::Next() % at::kShardCount));
         break;
     case k40ShardFind:
-        SeedInUse(at::kShards, at::kShardStride, at::kShardCount);
+        SeedInUse(EffectKind30_Shards_addr, at::kShardStride, at::kShardCount);
         break;
     case k43Gather:
         SetWord(s + 0x32, PickOf(1, 1, 2, 0, sh::Next()));
@@ -512,7 +512,7 @@ void Seed(unsigned k) {
         if (sh::Next() % 3 == 0) sh::Mem(at::kCounter)[0] = 0x11;
         break;
     case k43AddSpark:
-        SeedInUse(at::kShards, at::kSparkStride43, at::kSparkCount43);
+        SeedInUse(EffectKind30_Shards_addr, at::kSparkStride43, at::kSparkCount43);
         break;
     case k43SparksRun:
         SeedSparks43();
@@ -525,7 +525,7 @@ void Seed(unsigned k) {
         break;
     case k6BArm:
     case k6BFall:
-        SetWord(P(at::kPixelCount), PickOf(0, 1, 2, 79, 80, sh::Next() % (kPixelsSeeded + 1)));
+        SetWord(P(EffectKind6B_PixelCount_addr), PickOf(0, 1, 2, 79, 80, sh::Next() % (kPixelsSeeded + 1)));
         SeedPixels();
         SeedHeights();
         break;
@@ -535,15 +535,15 @@ void Seed(unsigned k) {
     case k44Follow:
     case k44FadeOut: {
         const U ring = RingAt();
-        SetU(at::kRingCell, ring);
+        SetU(EffectKind44_RingCell_addr, ring);
         SeedRing(ring);
         break;
     }
     case k44SparksStep:
     case k44SparkFind:
-        SeedInUse(at::kSparks44, at::kSparkStride44, at::kSparkCount44);
+        SeedInUse(EffectKind30_Shards_addr + 0xfc, at::kSparkStride44, at::kSparkCount44);
         for (unsigned i = 0; i < at::kSparkCount44; ++i)
-            P(at::kSparks44 + at::kSparkStride44 * i)[1] = static_cast<unsigned char>(PickOf(1, 2, 0, sh::Next()));
+            P(EffectKind30_Shards_addr + 0xfc + at::kSparkStride44 * i)[1] = static_cast<unsigned char>(PickOf(1, 2, 0, sh::Next()));
         break;
     case k44SparkEmit:
         if (sh::Half()) Frame_Counter &= ~3u;
@@ -561,13 +561,13 @@ void Args(unsigned k, U* a) {
         a[1] = (sh::Next() & 0xFFFF0000u) | PickOf(0, 1, 0x10, 0x40, 0x8000, 0xFFFF, sh::Next() & 0xFFFF);
         a[4] = (sh::Next() & 0xFFFF0000u) | PickOf(0, 1, 0x10, 0x40, 0x8000, 0xFFFF, sh::Next() & 0xFFFF);
         break;
-    case k40ShardSpawn: a[0] = at::kShards + at::kShardStride * (sh::Next() % at::kShardCount); break;
+    case k40ShardSpawn: a[0] = EffectKind30_Shards_addr + at::kShardStride * (sh::Next() % at::kShardCount); break;
     case k40DrawDisc: a[0] = (sh::Next() & 0xFFFF0000u) | PickOf(0, 0x40, 0x3C0, 0x400, 0x8000, 0xFFFF, sh::Next() & 0xFFFF); break;
-    case k43SparkDraw: a[0] = at::kShards + at::kSparkStride43 * (sh::Next() % at::kSparkCount43); break;
+    case k43SparkDraw: a[0] = EffectKind30_Shards_addr + at::kSparkStride43 * (sh::Next() % at::kSparkCount43); break;
     case k44RingProject:
     case k44RingDraw:
     case k44RingCone: a[0] = RingAt(); break;
-    case k44SparkTrail: a[0] = at::kSparks44 + at::kSparkStride44 * (sh::Next() % at::kSparkCount44); break;
+    case k44SparkTrail: a[0] = EffectKind30_Shards_addr + 0xfc + at::kSparkStride44 * (sh::Next() % at::kSparkCount44); break;
     default: break;
     }
 }
@@ -575,7 +575,7 @@ void Args(unsigned k, U* a) {
 // before the arguments, so the three ring helpers' records are seeded whole.
 void SeedRingArgs(unsigned k) {
     if (k == k44RingProject || k == k44RingDraw || k == k44RingCone)
-        for (unsigned i = 0; i < 8; ++i) SeedRing(at::kShards + 0x40 * i);
+        for (unsigned i = 0; i < 8; ++i) SeedRing(EffectKind30_Shards_addr + 0x40 * i);
 }
 
 // What the states read again after a call, moved by the group's case of the
@@ -585,12 +585,12 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
     switch (h % 8) {
-    case 0: SetU(at::kShardCursor, at::kShards + at::kShardStride * (v % at::kShardCount)); break;
-    case 1: SetU(at::kSparkCursor, at::kSparks44 + at::kSparkStride44 * (v % at::kSparkCount44)); break;
-    case 2: SetU(at::kRingCell, at::kShards + 0x40 * (v % 8)); break;
+    case 0: SetU(EffectKind40_ShardCursor_addr, EffectKind30_Shards_addr + at::kShardStride * (v % at::kShardCount)); break;
+    case 1: SetU(EffectKind44_SparkCursor_addr, EffectKind30_Shards_addr + 0xfc + at::kSparkStride44 * (v % at::kSparkCount44)); break;
+    case 2: SetU(EffectKind44_RingCell_addr, EffectKind30_Shards_addr + 0x40 * (v % 8)); break;
     case 3: sh::Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? ((v & 2) ? 0x19 : 0x11) : v >> 2); break;
     case 4: s[9] = static_cast<unsigned char>((v & 1) ? 1 : v >> 1); break;
-    case 5: SetWord(P(at::kPixelCount), v % (kPixelsSeeded + 1)); break;
+    case 5: SetWord(P(EffectKind6B_PixelCount_addr), v % (kPixelsSeeded + 1)); break;
     case 6: SetWord(s + 0x32, (v & 1) ? 1u : v >> 1); break;
     case 7: SetWord(s + 0x2E, (v & 1) ? 0x3C0u : v >> 1); break;
     default: break;

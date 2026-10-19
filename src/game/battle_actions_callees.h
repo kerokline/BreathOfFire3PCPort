@@ -54,7 +54,7 @@ constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int)
 // kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost when the action is 0x97
 constexpr std::uint32_t kAbility = 0x904B80;       // u16: the action id of the action in hand
 // kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show
-constexpr std::uint32_t kCostShown = 0x904B88;     // u8: the AP cost Skill_ApCost answered
+// kCostShown: now BattleE3_Cost (symbols.toml). u8: the AP cost Skill_ApCost answered
 // kAbilityShown: now BattleE3_SoundSet (symbols.toml). u8: the ability's low byte
 constexpr std::uint32_t kText0 = 0x904CE0, kText1 = 0x904D00;   // Text_Records[0] and [1], 32 bytes each
 constexpr std::uint32_t kNameBuf = 0x904EA0;       // the banner's 16-byte name copy

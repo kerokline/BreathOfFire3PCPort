@@ -48,7 +48,7 @@ constexpr std::uint32_t kCommand = 0x904AB4;       // u8: the command the cross 
 constexpr std::uint32_t kEntryOrder = 0x904AB6;    // u8 x 3: members in menu order, 0xFF none
 constexpr std::uint32_t kCrossGrow = 0x904ABC;     // u8 x 7: the command cross's arms' growth
 // kMenuIndex: now BattleActorCopies_EntryCount (symbols.toml). s8: the entry of kEntryOrder the menu is at
-constexpr std::uint32_t kInitiative = 0x904AE4;    // u8: 1 and 2 show messages 0x16 / 0x17 at the start; 2+ no cross
+// kInitiative: now BattlePhases_Initiative (symbols.toml). u8: 1 and 2 show messages 0x16 / 0x17 at the start; 2+ no cross
 // kAE6: now BattlePhases_AE6 (symbols.toml).
 constexpr std::uint32_t kDropCount = 0x904AE7;
 constexpr std::uint32_t kBattleEnd = 0x904AE8;

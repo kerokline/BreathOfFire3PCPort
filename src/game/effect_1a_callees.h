@@ -41,8 +41,8 @@ constexpr std::uint32_t kStringCount = bof3::addr::EffectKind0F_CharCount;
 constexpr std::uint32_t kPrimFromRect = bof3::addr::Gpu_SetTexWindow;
 
 // --- the image's tables, read in place (never copied) ------------------------------
-constexpr std::uint32_t kRecordSlot4 = 0x653914;    // WorldMap_Records' +4 (kind 0xE's handler)
-constexpr std::uint32_t kRecordSlot8 = 0x653918;    // WorldMap_Records' +8 (kind 0x16's handler)
+// kRecordSlot4: now WorldMap_Records[1] (symbols.toml). WorldMap_Records' +4 (kind 0xE's handler)
+// kRecordSlot8: now WorldMap_Records[2] (symbols.toml). WorldMap_Records' +8 (kind 0x16's handler)
 constexpr std::uint32_t kRecordSize = 0x1C;
 constexpr unsigned kRecordCount = 12;               // the eleven records and index 11, "none" (WorldMap_RecordIndex)
 constexpr std::uint32_t kMarkerShades = 0x653AF8;   // four bytes: EffectHud_Marker's u by (Frame_Counter >> 3) & 3
@@ -61,44 +61,44 @@ constexpr rdata::Const kQuadHalf{0x5C41C8};       // 4.0f
 constexpr rdata::Const kQuadEight{0x5C41CC};      // 8.0f
 constexpr rdata::Const kQuadSixteen{0x5C41D0};    // 16.0f
 constexpr rdata::Const kQuadThirtyTwo{0x5C41D4};  // 32.0f
-constexpr std::uint32_t kCountFormat = 0x64D3EC;    // Boss26Fx_CountFormat
+// kCountFormat: now Boss26Fx_CountFormat (symbols.toml). Boss26Fx_CountFormat
 constexpr std::uint32_t kAccessoryNames = bof3::addr::NameTable_Accessories; // NameTable_Accessories, 0x18 bytes a name
 
 // The effect kinds' state tables (symbols.toml [[data]], this group's names).
-constexpr std::uint32_t kKind01States = 0x653A44;
-constexpr std::uint32_t kKind07States = 0x653A4C;
-constexpr std::uint32_t kKind08States = 0x653A60;
-constexpr std::uint32_t kKind09States = 0x653A70;
-constexpr std::uint32_t kKind0BStates = 0x653A98;
-constexpr std::uint32_t kKind02States = 0x653AC0;
-constexpr std::uint32_t kKind03States = 0x653AFC;
-constexpr std::uint32_t kKind05States = 0x653B0C;
-constexpr std::uint32_t kKind0AStates = 0x653B64;
-constexpr std::uint32_t kKind0CStates = 0x653B6C;
-constexpr std::uint32_t kKind0DStates = 0x653B78;
-constexpr std::uint32_t kKind0FStates = 0x653C28;
-constexpr std::uint32_t kKind1AStates = 0x653C5C;
+// kKind01States: now EffectKind01_States (symbols.toml).
+// kKind07States: now EffectKind07_States (symbols.toml).
+// kKind08States: now EffectKind08_States (symbols.toml).
+// kKind09States: now EffectKind09_States (symbols.toml).
+// kKind0BStates: now EffectKind0B_States (symbols.toml).
+// kKind02States: now EffectKind02_States (symbols.toml).
+// kKind03States: now EffectKind03_States (symbols.toml).
+// kKind05States: now EffectKind05_States (symbols.toml).
+// kKind0AStates: now EffectKind0A_States (symbols.toml).
+// kKind0CStates: now EffectKind0C_States (symbols.toml).
+// kKind0DStates: now EffectKind0D_States (symbols.toml).
+// kKind0FStates: now EffectKind0F_States (symbols.toml).
+// kKind1AStates: now EffectKind1A_States (symbols.toml).
 
 // --- cells ----------------------------------------------------------------------------
 constexpr std::uint32_t kRecord0 = 0x7E11E0;        // Effect_Objects record 0 (the kinds' HUD reads it)
 constexpr std::uint32_t kRecord2 = 0x7E12E0;        // record 2 (+0xC scales kind 5's height)
 constexpr std::uint32_t kRecord3 = 0x7E1360;        // record 3 (kind 0xF runs only there, or while its +1 is above 3;
                                                     // its +0x30 is the window's y the other kind-0xF records draw at)
-constexpr std::uint32_t kRecord5 = 0x7E1460;        // record 5 (+0x10's sign picks kind 5's follow animation)
+// kRecord5: now Effect_Objects[0x280] (symbols.toml). record 5 (+0x10's sign picks kind 5's follow animation)
 constexpr std::uint32_t kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
-constexpr std::uint32_t kExtras = 0x802000;         // Sprite_ObjectsExtra, four of 0xA4
+// kExtras: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra, four of 0xA4
 constexpr unsigned kExtraCount = 4;
-constexpr std::uint32_t kObjects = 0x7DEE80;        // Sprite_Objects, thirty of 0xA4
+// kObjects: now Sprite_Objects (symbols.toml). Sprite_Objects, thirty of 0xA4
 constexpr unsigned kObjectCount = 30;
 constexpr std::uint32_t kObjectStride = 0xA4;
 constexpr std::uint32_t kLeader = 0x802D40;         // ObjTrio 0
 constexpr std::uint32_t kTextBuffer = 0x904BA0;     // the text scratch sprintf writes
 constexpr std::uint32_t kCounterByte = 0x903848;
 constexpr std::uint32_t kAccessoryA = 0x904130;     // the two accessory bytes kind 3 names (the first read as a dword)
-constexpr std::uint32_t kAccessoryB = 0x90412E;
+// kAccessoryB: now CharStats_ExtraItem (symbols.toml).
 constexpr std::uint32_t kKindCounts = 0x9040EC;     // 32 bytes kind 0x1A walks by +0x3E
-constexpr std::uint32_t kPanelObject = 0x939A1C;    // a Sprite_Objects index byte (kinds 5 and 0xC)
+// kPanelObject: now Effect1a_PanelObject (symbols.toml). a Sprite_Objects index byte (kinds 5 and 0xC)
 constexpr std::uint32_t kPanelScript = 0x939A20;    // a pointer: kind 3's and 5's parameters
 constexpr std::uint32_t kPanelSet = 0x939A24;       // a pointer: kind 3's and 5's second block
 

@@ -218,7 +218,7 @@ U FxSetTrans(const U* a, U answer) {
 // and marked in use, as the real one writes +0..+0xF; al its index, 0x80 none.
 U FxShardSpawn(const U*, U answer) {
     for (U r = 0; r < at::kShardCount; ++r) {
-        unsigned char* const s = P(at::kShards + r * at::kShardStride);
+        unsigned char* const s = P(EffectKind30_Shards_addr + r * at::kShardStride);
         if (s[0]) continue;
         sh::FillBytes(s, 0x10);
         s[0] = 1;
@@ -296,8 +296,8 @@ const sh::DataTable kTables[] = {
 // specks past the standard 0x644 (with kind 0x1E's pieces 0x92C0C0.. and debris
 // 0x92C780..0x92CA40 after), the shard cursor, the fuzz's model and count.
 const sh::Region kRegions[] = {
-    {at::kShards + 0x644, at::kDebris + 16 * 0x2C - (at::kShards + 0x644)},
-    {at::kShardCursor, 4},
+    {EffectKind30_Shards_addr + 0x644, at::kDebris + 16 * 0x2C - (EffectKind30_Shards_addr + 0x644)},
+    {EffectKind1E_ShardCursor_addr, 4},
     {0, sizeof g_model},
     {0, sizeof g_count},
 };
@@ -305,14 +305,14 @@ sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 
 // --- the seed ------------------------------------------------------------------------
 
-unsigned char* Shard28(unsigned i) { return P(at::kShards + 0x28 * (i % 8)); }
+unsigned char* Shard28(unsigned i) { return P(EffectKind30_Shards_addr + 0x28 * (i % 8)); }
 
 // Kind 0x1C's / 0x1D's specks: a third in use, the speed +2 small, the height
 // +0xC after the rise at, one either side of, or anywhere about the record's
 // +0x3C (the free test's boundary).
 void Specks(const unsigned char* s) {
     for (U r = 0; r < at::kShardCount; ++r) {
-        unsigned char* const k = P(at::kShards + r * at::kShardStride);
+        unsigned char* const k = P(EffectKind30_Shards_addr + r * at::kShardStride);
         k[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 1 + sh::Next() % 0xFF : 0);
         SetWord(k + 2, PickOf(0, 1, 0x1000, 0x1FFF, sh::Next()));
         const U rise = static_cast<U>(static_cast<int>(static_cast<short>(Word(k + 2)))) << 8;
@@ -329,16 +329,16 @@ void Shards28() {
         k[1] = static_cast<unsigned char>(sh::Next() % 4);
         k[2] = static_cast<unsigned char>(PickOf(1, 1, 2, 0, sh::Next()));
     }
-    move_script::SetLong(Mem(at::kShardCursor), static_cast<std::int32_t>(Key(Shard28(sh::Next()))));
+    move_script::SetLong(Mem(EffectKind1E_ShardCursor_addr), static_cast<std::int32_t>(Key(Shard28(sh::Next()))));
 }
 
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // what every kind may read: the model and its count, the shard cursor, the counter byte
-    SetLong(Mem(at::kModelFaces), static_cast<std::int32_t>(Key(g_model)));
-    SetLong(Mem(at::kModelCount), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
+    SetLong(Mem(Sprite_ObjectsExtra_addr + 0x50), static_cast<std::int32_t>(Key(g_model)));
+    SetLong(Mem(Sprite_ObjectsExtra_addr + 0x54), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
     for (unsigned i = 0; i < 4; ++i) g_count[i] = static_cast<unsigned char>(PickOf(0, 1, 2, 27, sh::Next() % 28));
-    move_script::SetLong(Mem(at::kShardCursor), static_cast<std::int32_t>(Key(Shard28(sh::Next()))));
+    move_script::SetLong(Mem(EffectKind1E_ShardCursor_addr), static_cast<std::int32_t>(Key(Shard28(sh::Next()))));
     Mem(0x903848)[0] = static_cast<unsigned char>(PickOf(0x1F, 0x1F, 0x1E, 0x20, sh::Next()));
     s[9] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 4, 0xFC, 0xFF, 0x20, 0x7E, 0x80, 0x44, 0x45, 3, sh::Next()));
     switch (k) {
@@ -382,9 +382,9 @@ void Args(unsigned k, U* a) {
     case k1EShardInit:
     case k1EShardQuad: a[0] = Key(Shard28(i)); break;
     case k1ETurn:
-        a[0] = at::kPieceCopies + 0x28 * (i % at::kPieceCount);
+        a[0] = EffectKind30_Shards_addr + 0x3c8 + 0x28 * (i % at::kPieceCount);
         a[1] = Key(g_model) + 0x28 * (i % at::kPieceCount);
-        a[2] = at::kPieces + 0x18 * (i % at::kPieceCount);
+        a[2] = EffectKind30_Shards_addr + 0x140 + 0x18 * (i % at::kPieceCount);
         break;
     case k1EDebrisOne: a[0] = at::kDebris + 0x2C * (i % 16); break;
     default: break;
@@ -410,7 +410,7 @@ void Disturb(U h) {
         k[2] = static_cast<unsigned char>(v >> 5);
         break;
     }
-    case 4: P(at::kShards + (v % at::kShardCount) * at::kShardStride)[0] = static_cast<unsigned char>(v >> 7); break;
+    case 4: P(EffectKind30_Shards_addr + (v % at::kShardCount) * at::kShardStride)[0] = static_cast<unsigned char>(v >> 7); break;
     case 5: Mem(0x903848)[0] = static_cast<unsigned char>((v & 1) ? 0x1F : v >> 1); break;
     case 6: SetLong(s + 0x3C, static_cast<std::int32_t>(v)); break;
     default: break;

@@ -17,17 +17,17 @@ constexpr std::uint32_t kTradeDispatch = bof3::addr::ItemTrade_Dispatch; // grou
 // --- the cells ---
 constexpr std::uint32_t kRecord6 = 0x7E14E0;       // Effect_Objects record 6: the menu's state (+1, +6, +7, +8,
                                                    // +0xA, +0xC, +0x10, +0x18, +0x1C, +0x2C, +0x36, +0x38, +0x3A)
-constexpr std::uint32_t kRecord2State = 0x7E1261;  // Effect_Objects record 2 +1
+// kRecord2State: now Effect_Objects[0x81] (symbols.toml). Effect_Objects record 2 +1
 constexpr std::uint32_t kLabelA = 0x803622;        // MessagePools' word: the first slot's label
 constexpr std::uint32_t kLabelB = 0x803624;        // the second slot's label
 constexpr std::uint32_t kListLabelA = 0x803626;    // the kind-0xB list's label
 constexpr std::uint32_t kListLabelB = 0x803628;    // the kind-0xA list's label
 constexpr std::uint32_t kKindCounts = 0x9040EC;    // 32 count bytes, one a kind (FieldPanel_KindTotal's)
-constexpr std::uint32_t kExtraItem = 0x90412E;     // the extra item slot (char_stats.cpp's name), its count 0x90412F
+// kExtraItem: now CharStats_ExtraItem (symbols.toml). the extra item slot (char_stats.cpp's name), its count 0x90412F
 constexpr std::uint32_t kExtraCount = 0x90412F;
 constexpr std::uint32_t kExtraAccessory = 0x904130;// the extra accessory slot
 constexpr std::uint32_t kAccessoryIds = 0x9042D4;  // category 3's 128 inventory ids (Inventory_IdLists[3])
 constexpr std::uint32_t kAccessoryKind = 0x658462; // NameTable_Accessories + 0x12: a 24-byte record's kind byte
-constexpr std::uint32_t kKindRecords = 0x66A6A0;   // the kinds' 36-byte records (+0xF threshold, +0x12 points)
+// kKindRecords: now Fish_Kinds[0x10] (symbols.toml). the kinds' 36-byte records (+0xF threshold, +0x12 points)
 
 }  // namespace effect_1f::at

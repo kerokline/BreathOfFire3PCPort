@@ -47,34 +47,34 @@ constexpr std::uint32_t kDiscDraw = bof3::addr::EffectKind4E_DrawDisc;     // E2
 constexpr std::uint32_t kState7Steps = 0x65460C;  // two byte tables after kind 0x48's state-7 table (0x6545FC): the
 constexpr std::uint32_t kState7Adds = 0x654614;   // mask and the add EffectKind48_State7_Swell indexes by +9
 constexpr std::uint32_t kSpiral = 0x92C4A4;       // the 0xD20-byte record kind 0x48's states 8 and 10 use
-constexpr std::uint32_t kSpiralTurn = 0x92D1B4;   // its turn word (+0xD10)
+// kSpiralTurn: now Effect2e_SpiralTurn (symbols.toml). its turn word (+0xD10)
 constexpr std::uint32_t kSpiralPtr = 0x6761CC;    // unsigned char *: points at kSpiral
 constexpr std::uint32_t kRingRecord = 0x92D1C8;   // the ring record of state 7: +0..+8 its point, +0x10 a word
 constexpr std::uint32_t kRingPtr = 0x6761D0;      // unsigned char *: points at kRingRecord
-constexpr std::uint32_t kSoundSwitch = 0x6761D8;  // a byte: kind 0x4D's sound 0x209 when set, else 0x208
-constexpr std::uint32_t kBurst = 0x92C060;        // state 12's record (0x440 bytes)
+// kSoundSwitch: now Effect2e_SoundSwitch (symbols.toml). a byte: kind 0x4D's sound 0x209 when set, else 0x208
+// kBurst: now EffectKind30_Shards[0xe0] (symbols.toml). state 12's record (0x440 bytes)
 constexpr std::uint32_t kBurstSize = 0x92C49E;    // a word inside it: state 12's size
-constexpr std::uint32_t kSparks = 0x92BF80;       // 8 records of 0x1C (state 9's sparks), or kind 0x4A's trail
-constexpr std::uint32_t kTrail = 0x92BF80;        // kind 0x4A: 64 records of 0x34 (a point +0..+8, its two edge points
+// kSparks: now EffectKind30_Shards (symbols.toml). 8 records of 0x1C (state 9's sparks), or kind 0x4A's trail
+// kTrail: now EffectKind30_Shards (symbols.toml). kind 0x4A: 64 records of 0x34 (a point +0..+8, its two edge points
                                                   // +0x10 / +0x20, an angle word +0x30), to 0x92CC80
 constexpr std::uint32_t kTrailStride = 0x34;
 constexpr unsigned kTrailCount = 64;
-constexpr std::uint32_t kTrailTurn = 0x92CC80;    // kind 0x4A: the angle word the newest point takes
-constexpr std::uint32_t kTrailSpin = 0x92CC82;    // kind 0x4A: a byte, set: the angle word turns 0x40 a frame
+// kTrailTurn: now Effect2e_TrailTurn (symbols.toml). kind 0x4A: the angle word the newest point takes
+// kTrailSpin: now Effect2e_TrailSpin (symbols.toml). kind 0x4A: a byte, set: the angle word turns 0x40 a frame
 constexpr std::uint32_t kDebris = 0x92CC84;       // kind 0x4B: 32 debris records of 0x2C, to 0x92D204
 constexpr std::uint32_t kDebrisStride = 0x2C;
 constexpr unsigned kDebrisCount = 32;
-constexpr std::uint32_t kSphereVerts = 0x92D9DC;  // the sphere: 0x1E2 vertices of 8 bytes (x, y, z, pad) ...
+// kSphereVerts: now Effect2e_SphereVerts (symbols.toml). the sphere: 0x1E2 vertices of 8 bytes (x, y, z, pad) ...
 constexpr std::uint32_t kSphereScreen = 0x92E8EC; // ... projected, 0x1E2 of 12 bytes (x, y, depth) ...
 constexpr std::uint32_t kSphereQuads = 0x92FF84;  // ... 0x200 quads of four u16 vertex numbers ...
 constexpr std::uint32_t kSphereShades = 0x930F84; // ... a shade byte a vertex ...
-constexpr std::uint32_t kSphereLight = 0x931168;  // ... and the light, three longs, to 0x931174
+// kSphereLight: now Effect2e_SphereLight (symbols.toml). ... and the light, three longs, to 0x931174
 constexpr unsigned kSphereVertCount = 0x1E2;
 constexpr unsigned kSphereQuadCount = 0x200;
-constexpr std::uint32_t kSprite1Point = 0x7DEF58; // Sprite_Objects[1] +0x34 / +0x38 / +0x3C: kind 0x4A follows it
-constexpr std::uint32_t kLeaderX = 0x802D74;      // ObjTrio record 0 (the leader) +0x34, x (16.16)
-constexpr std::uint32_t kLeaderZ = 0x802D78;      // +0x38, z
-constexpr std::uint32_t kLeaderHeight = 0x802D7E; // +0x3E, the height's integer word
+// kSprite1Point: now Sprite_Objects[0xd8] (symbols.toml). Sprite_Objects[1] +0x34 / +0x38 / +0x3C: kind 0x4A follows it
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio record 0 (the leader) +0x34, x (16.16)
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml). +0x38, z
+// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). +0x3E, the height's integer word
 constexpr std::uint32_t kEffectStride = 0x80;     // Effect_Objects' records
 
 }  // namespace effect_2e::at

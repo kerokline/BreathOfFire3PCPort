@@ -203,10 +203,10 @@ extern "C" void __cdecl EffectKind66_Message(void) {
     const unsigned char state = B(bof3::addr::MsgBoxState);
     if (state == 2) {
         B(bof3::addr::MsgBoxState) = 7;
-        B(at::kMsgBoxStep) = 0xA;
+        Msgbox_Delay = 0xA;
         return;
     }
-    if (state == 7) B(at::kMsgBoxStep) = 0xA;
+    if (state == 7) Msgbox_Delay = 0xA;
 }
 
 // original 0x47DE50 (called by states 2..4; cdecl): a POLY_FT4 at
@@ -267,7 +267,7 @@ extern "C" void __cdecl EffectKind18Sub20_Run(void) {
 // original 0x47DFF0 (sub-state 0): story flag 0x2A set: the height +0x3C =
 // -0x180 and +2 = 3; clear: +0x3C = -0x90 and +2 up. Then the draw (a tail jump).
 extern "C" void __cdecl EffectKind18Sub20_Start(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), at::kSub20Flag)) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub20Flag)) {
         SetUL(S() + 0x3C, 0xFFFFFE80u);
         S()[2] = 3;
     } else {
@@ -281,7 +281,7 @@ extern "C" void __cdecl EffectKind18Sub20_Start(void) {
 // set, sound 0x202 and +2 up (read after the sound). Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub20_WaitSet(void) {
     Cond_ByteFE = 1;
-    if (!SH_CALL(Flags_Test)(At(at::kStoryFlags), at::kSub20Flag)) return;
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub20Flag)) return;
     SH_CALL(Sound_PlayEffect)(0x202);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -304,7 +304,7 @@ extern "C" void __cdecl EffectKind18Sub20_Lower(void) {
 // clear, MoveCmd_TestFB(0x27, 0x2F), sound 0x202 and +2 up. Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub20_WaitClear(void) {
     Cond_ByteFE = 2;
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), at::kSub20Flag)) return;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub20Flag)) return;
     SH_CALL(MoveCmd_TestFB)(0x27, 0x2F);
     SH_CALL(Sound_PlayEffect)(0x202);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -382,7 +382,7 @@ extern "C" void __cdecl EffectKind18Sub20_Draw(void) {
 
 namespace {
 
-unsigned char* Member1() { return At(at::kMember1); }
+unsigned char* Member1() { return At(Field_Members_addr + 0x4); }
 
 // Field_State and Sprite_Current to ObjTrio record 1 (the second member).
 void OnMember1() {
@@ -427,10 +427,10 @@ extern "C" void __cdecl EffectKind15_Start(void) {
 // cue 1, Sprite_Current back, +1 = 2.
 extern "C" void __cdecl EffectKind15_Begin(void) {
     if (EndedTo(9)) return;
-    const auto flags = static_cast<unsigned char>(B(at::kMember1Flags) | 0x40);
+    const auto flags = static_cast<unsigned char>(Field_Members[0x128] | 0x40);
     unsigned char* const self = S();
     OnMember1();
-    B(at::kMember1Flags) = flags;
+    Field_Members[0x128] = flags;
     SH_CALL(Sprite_SetAnimation)(0x10);
     B(at::kCue) = 1;
     Sprite_Current = self;
@@ -446,7 +446,7 @@ extern "C" void __cdecl EffectKind15_WaitPose4(void) {
     unsigned char* const self = S();
     const bool pose = W(at::kMember1Pose) == 4;
     OnMember1();
-    if (!pose || B(at::kMember1PoseDone) != 1) return;
+    if (!pose || Field_Members[0x4e] != 1) return;
     const U r = static_cast<U>(SH_CALL(Rand)()) & 7u;
     Sprite_Current = self;
     B(at::kKind15Wait) = B(at::kKind15Delays8 + r);
@@ -486,7 +486,7 @@ extern "C" void __cdecl EffectKind15_Cooldown(void) {
     B(at::kCue) = 0;
     unsigned char wait;
     if (mark) {
-        SetWord(At(at::kTimerWord), 0);
+        SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
         wait = 2;
     } else {
         wait = B(at::kKind15Wait);
@@ -504,10 +504,10 @@ extern "C" void __cdecl EffectKind15_Cooldown(void) {
 extern "C" void __cdecl EffectKind15_Hit(void) {
     S()[9] = 0;
     if (EndedTo(9)) return;
-    const auto flags = static_cast<unsigned char>(B(at::kMember1Flags) | 0x40);
+    const auto flags = static_cast<unsigned char>(Field_Members[0x128] | 0x40);
     unsigned char* const self = S();
     OnMember1();
-    B(at::kMember1Flags) = flags;
+    Field_Members[0x128] = flags;
     SH_CALL(Sound_PlayEffect)(0x20E);
     SH_CALL(Sprite_SetAnimation)(0x57);
     Sprite_Current = self;
@@ -523,7 +523,7 @@ extern "C" void __cdecl EffectKind15_WaitPose8(void) {
     unsigned char* const self = S();
     const bool pose = W(at::kMember1Pose) == 8;
     OnMember1();
-    if (!pose || B(at::kMember1PoseDone) != 1) return;
+    if (!pose || Field_Members[0x4e] != 1) return;
     SH_CALL(Sprite_SetAnimation)(1);
     const U r = static_cast<U>(SH_CALL(Rand)()) & 3u;
     Sprite_Current = self;
@@ -614,7 +614,7 @@ extern "C" void __cdecl EffectKind54_Strike(void) {
         B(at::kHit) = 2;
         B(at::kScore) = score;
         SH_CALL(Sound_PlayEffect)(0x20D);
-        if (Word(S() + 0x58) <= 4) SetWord(At(at::kTimerWord), 0xFF);
+        if (Word(S() + 0x58) <= 4) SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0xFF);
         SH_CALL(Sprite_SetAnimation)(2);
         self[1] = 7;
         Sprite_Current = self;

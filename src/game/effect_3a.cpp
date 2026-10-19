@@ -145,12 +145,12 @@ unsigned char* Member(const char* who, unsigned m) {
 // Kind 0x61's frame record (the variant byte 0x676266): a Fatal past its two,
 // where the original reads kind 0x61's state table as a frame.
 U Frame(const char* who) {
-    const unsigned v = B(at::kVariant);
+    const unsigned v = Effect3a_Variant;
     if (v >= at::kFrameCount)
         bof3::Fatal("%s: the frame byte 0x676266 is %u, past the two frames at 0x654948 - the original reads what "
                     "follows (docs/effect_3a.md section 6)",
                     who, v);
-    return at::kFrames + 8 * v;
+    return EffectKind61_Frames_addr + 8 * v;
 }
 
 // Effect_FindFree's record (answer & 0xFF, as the original widens it): a Fatal
@@ -241,7 +241,7 @@ extern "C" void __cdecl EffectKind61_Capture(void) {
         return;
     }
     const unsigned char* const member = Member("EffectKind61_Capture", S()[7]);
-    B(at::kVariant) = member[at::kMemberFlag] != 0 ? 1 : 0;
+    Effect3a_Variant = member[at::kMemberFlag] != 0 ? 1 : 0;
     unsigned char* const e = NewRecord("EffectKind61_Capture", found);
     SH_CALL(Gfx_ClearRect)(0x340, 0x100, 0x80, 0x100);
     const unsigned char* const from = Member("EffectKind61_Capture", S()[7]);
@@ -275,7 +275,7 @@ extern "C" void __cdecl EffectKind61_Store(void) {
     if (!CountDown()) return;
     const U f = Frame("EffectKind61_Store");
     alignas(4) short rect[4] = {0x340, 0x100, static_cast<short>(Word(At(f + 4))), static_cast<short>(Word(At(f + 6)))};
-    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(at::kShards));
+    SH_AT(void (__cdecl*)(const short*, void*), at::kStoreImage)(rect, At(EffectKind30_Shards_addr));
     NextState();
 }
 
@@ -297,7 +297,7 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(o));
     const U f = Frame("EffectKind61_Scatter");
     U count = 0;
-    SetWord(At(at::kParticleCount), 0);
+    Effect3a_ParticleCount = 0;
     if (SW(f + 6) <= 0) {
         NextState();
         return;
@@ -306,7 +306,7 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
         bof3::Fatal("EffectKind61_Scatter: the frame is %d x %d - the original's row and column bytes never reach past "
                     "0xFF, it never ends (docs/effect_3a.md section 6)",
                     (int)SW(f + 4), (int)SW(f + 6));
-    U pixel = at::kShards;
+    U pixel = EffectKind30_Shards_addr;
     unsigned char row = 0;
     do {
         const std::int32_t width = SW(f + 4);
@@ -324,7 +324,7 @@ extern "C" void __cdecl EffectKind61_Scatter(void) {
                 pixel += 2;
                 ++column;
             } while (static_cast<std::int32_t>(column) < width);
-            SetWord(At(at::kParticleCount), count);
+            Effect3a_ParticleCount = count;
         }
         ++row;
     } while (static_cast<std::int32_t>(row) < SW(f + 6));
@@ -341,7 +341,7 @@ extern "C" void __cdecl EffectKind61_Arm(void) {
     unsigned char pattern[16];
     for (unsigned i = 0; i < 16; ++i) pattern[i] = static_cast<unsigned char>(i & 1);
     U next = 0;
-    for (U i = 0; (i & 0xFFFFu) < Word(At(at::kParticleCount)); ++i) {
+    for (U i = 0; (i & 0xFFFFu) < Effect3a_ParticleCount; ++i) {
         unsigned char* const p = Particle(i & 0xFFFFu);
         if ((i & 0xF) == 0) {
             for (unsigned k = 0; k < 16; ++k) {
@@ -381,7 +381,7 @@ extern "C" void __cdecl EffectKind61_Arm(void) {
 // 15-bit pixel's channels (<< 3, >> 2, >> 7, each & 0xF8), committed to slot 2
 // (0x14). Every particle's flag toggled (bit 0). +9 down, at 0 Effect_Release.
 extern "C" void __cdecl EffectKind61_Twinkle(void) {
-    for (U i = 0; (i & 0xFFFFu) < Word(At(at::kParticleCount)); ++i) {
+    for (U i = 0; (i & 0xFFFFu) < Effect3a_ParticleCount; ++i) {
         unsigned char* const p = Particle(i & 0xFFFFu);
         if (p[0] != 0) {
             const unsigned char out = S()[6];
@@ -455,7 +455,7 @@ extern "C" void __cdecl EffectKind62_Rays(void) {
     SH_CALL(EffectKind62_StepRays)();
     if (Field_Request == 2) return;
     if (Word(At(at::kMessageWord)) != 0x12) return;
-    if (B(at::kStep) != 0xC) return;
+    if (MoveScript_PartyRecords[0x65] != 0xC) return;
     SetUL(S() + 0xC, 0xA000);
     SetUL(S() + 0x10, 0xB000);
     SetUL(S() + 0x18, 0);
@@ -722,7 +722,7 @@ extern "C" void __cdecl EffectKind64_Rise(void) {
     SetUL(S() + 0x38, UL(S() + 0x68));
     SetUL(S() + 0x3C, UL(S() + 0x6C));
     for (unsigned i = 0; i < at::kShardCount64; ++i)
-        SH_CALL(EffectKind64_InitShard)(At(at::kShards64 + i * at::kShardStride64));
+        SH_CALL(EffectKind64_InitShard)(At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64));
     SH_CALL(Sound_PlayEffect)(0x207);
 }
 
@@ -1077,7 +1077,7 @@ extern "C" void __cdecl EffectKind64_DrawShards(void) {
     DrawMode(1, 0x380, 0x100, 1, 2);
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kShardCount64; ++i) {
-        unsigned char* const shard = At(at::kShards64 + i * at::kShardStride64);
+        unsigned char* const shard = At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64);
         SH_AT(void (__cdecl*)(unsigned char*), at::kShardDraw)(shard);
         SetWord(shard + 0x24, Word(shard + 0x24) + 0x10u);
     }
@@ -1158,8 +1158,8 @@ extern "C" void __cdecl EffectKind68_End(void) {
 // flags 0x676261 and 0x676260 cleared.
 extern "C" void __cdecl EffectKind68_ClearMotes(void) {
     for (unsigned i = 0; i < at::kMotes; ++i) Mote(i)[0] = 0;
-    B(at::kMoteFlagA) = 0;
-    B(at::kMoteFlagB) = 0;
+    Effect3a_MoteFlagA = 0;
+    Effect3a_MoteFlagB = 0;
 }
 
 // original 0x481BB0: the first free mote of the 16, or null.
@@ -1265,7 +1265,7 @@ extern "C" void __cdecl EffectKind68_MoteGlow(unsigned char* mote) {
     if (mote[2] != 0) return;
     mote[2] = mote[4];
     mote[1] = static_cast<unsigned char>(mote[1] + 1);
-    if (B(at::kMoteFlagA) == 0) B(at::kMoteFlagA) = 1;
+    if (Effect3a_MoteFlagA == 0) Effect3a_MoteFlagA = 1;
 }
 
 // original 0x481E40 (EffectKind68_MoteStates[1]): the count down, at 0 the
@@ -1281,7 +1281,7 @@ extern "C" void __cdecl EffectKind68_MoteHold(unsigned char* mote) {
 // speed +8 up 0x400 and the height +0x10 up by it; the shade down 8; the count
 // down, at 0 out of use.
 extern "C" void __cdecl EffectKind68_MoteRise(unsigned char* mote) {
-    if (B(at::kMoteFlagB) == 0) B(at::kMoteFlagB) = 1;
+    if (Effect3a_MoteFlagB == 0) Effect3a_MoteFlagB = 1;
     const U speed = UL(mote + 8) + 0x400u;
     SetUL(mote + 8, speed);
     SetUL(mote + 0x10, UL(mote + 0x10) + speed);

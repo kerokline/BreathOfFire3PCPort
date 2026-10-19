@@ -65,8 +65,8 @@ void StoreFloat(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 // The x87 at the game's 53-bit precision: a float plus or less a whole number
 // rounded once to 53 bits, then to a float at the store.
 void StoreSum(unsigned char* p, float a, int b) { StoreFloat(p, static_cast<float>(static_cast<double>(a) + static_cast<double>(b))); }
-unsigned char* Row() { return *reinterpret_cast<unsigned char**>(At(at::kFlagRow)); }
-unsigned char* Colour() { return At(at::kPanelColour); }   // [0] 0x6761C4, [1] 0x6761C5, [2] 0x6761C6
+unsigned char* Row() { return *reinterpret_cast<unsigned char**>(At(AreaW0c_FlagRow_addr)); }
+unsigned char* Colour() { return At(Effect2d_PanelColour_addr); } // [0] 0x6761C4, [1] 0x6761C5, [2] 0x6761C6
 
 // mov ecx, [Sprite_Current]; xor eax, eax; mov al, [ecx + which]; jmp [table +
 // eax * 4]: the table's `entries` handlers read in place (the fuzz swaps the
@@ -600,7 +600,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
     }
     SpriteRec(who, self[4])[0] = 1;
     unsigned char model = ObjTrio[0x4B];
-    if (self[0xB] == 0) model = At(at::kObject2)[0x4B];
+    if (self[0xB] == 0) model = Sprite_Objects[0x193];
     unsigned k = 0;
     while (k < 5 && model != At(at::kTwinAnims + 3 * k)[0]) ++k;
     const unsigned char* const triple = At(at::kTwinAnims + 3 * k);
@@ -637,7 +637,7 @@ extern "C" void __cdecl EffectKind47_Start(void) {
 // +0 = 0 and +1 = 2.
 extern "C" void __cdecl EffectKind47_Blink(void) {
     unsigned char* const s = S();
-    unsigned char* const model = s[0xB] != 0 ? ObjTrio : At(at::kObject2);
+    unsigned char* const model = s[0xB] != 0 ? ObjTrio : At(Sprite_Objects_addr + 0x148);
     if (s[9] != 0) {
         model[0] = static_cast<unsigned char>(model[0] | 0x40);
         s[9] = static_cast<unsigned char>(s[9] - 1);
@@ -896,7 +896,7 @@ extern "C" void __cdecl EffectKind49_V2Run(void) {
 // 0x10000, the height +0x3C up +0x14 - the glow lifted along its arc at once;
 // Sound_PlayEffect(0x202); +0x14 negated; +2 up.
 extern "C" void __cdecl EffectKind49_V2Launch(void) {
-    SetWord(At(at::kGlowHeight), 0xC0);
+    SetWord(At(EffectKind30_Shards_addr + 0x51e), 0xC0);
     SetUL(S() + 0x14, 0);
     for (unsigned i = 0; i < 16; ++i) {
         SetUL(S() + 0x14, UL(S() + 0x14) + 0x800000u);
@@ -911,8 +911,8 @@ extern "C" void __cdecl EffectKind49_V2Launch(void) {
 namespace {
 // Variant 2's glow record 0x92C060 stepped (0x4794D0) and drawn (0x4796B0).
 void Glow() {
-    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowStep)(At(at::kGlow));
-    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowDraw)(At(at::kGlow));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowStep)(At(EffectKind30_Shards_addr + 0xe0));
+    SH_AT(void (__cdecl*)(unsigned char*), at::kGlowDraw)(At(EffectKind30_Shards_addr + 0xe0));
 }
 }  // namespace
 
@@ -949,7 +949,7 @@ extern "C" void __cdecl EffectKind49_V2Wait(void) {
 extern "C" void __cdecl EffectKind49_V2Rise(void) {
     Glow();
     unsigned char* const s = S();
-    SetWord(At(at::kGlowHeight), Word(At(at::kGlowHeight)) + 6u);
+    SetWord(At(EffectKind30_Shards_addr + 0x51e), Word(At(EffectKind30_Shards_addr + 0x51e)) + 6u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] != 0) return;
     s[9] = 0x20;
@@ -961,7 +961,7 @@ extern "C" void __cdecl EffectKind49_V2Rise(void) {
 extern "C" void __cdecl EffectKind49_V2Sink(void) {
     Glow();
     unsigned char* const s = S();
-    SetWord(At(at::kGlowHeight), Word(At(at::kGlowHeight)) + 0xFFF4u);
+    SetWord(At(EffectKind30_Shards_addr + 0x51e), Word(At(EffectKind30_Shards_addr + 0x51e)) + 0xFFF4u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] == 0) s[2] = static_cast<unsigned char>(s[2] + 1);
 }
@@ -997,7 +997,7 @@ extern "C" void __cdecl EffectKind49_V3Burst(void) {
     const unsigned step = s[9];
     if ((s[0xC] & At(at::kBurstMask)[step]) == 0) {
         const unsigned char add = At(at::kBurstCount)[step];
-        unsigned char* const anchor = *reinterpret_cast<unsigned char**>(At(at::kDustAnchor));
+        unsigned char* const anchor = *reinterpret_cast<unsigned char**>(At(Effect2d_DustAnchor_addr));
         SetWord(anchor + 0x10, Word(anchor + 0x10) + add);
         s = S();
         if (At(at::kBurstCount)[s[9]] != 0) {

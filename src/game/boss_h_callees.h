@@ -55,7 +55,7 @@ constexpr U kEnemy2 = 0x93BBB0;           // enemy 2's object
 
 // --- a byte Boss_SetByLeaderId writes (0x2C..0x2F by the leader's id); the
 // field code at 0x532EB4 reads it - what it selects was not read.
-constexpr U kLeaderPick = 0x92BF18;
+// kLeaderPick: now BossH_LeaderPick (symbols.toml).
 
 // --- the callees nobody owns ------------------------------------------------
 constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1

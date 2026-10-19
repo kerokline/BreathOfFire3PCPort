@@ -217,7 +217,7 @@ U FxDustFind(const U*, U) { return FindFirstFree(at::kDust, 0x20, 64); }
 // EffectKind45_DrawLine / _FillRect read the colour bytes 0x6761C4..C6 at the
 // call: noted, so a colour set wrong and overwritten before the end shows.
 U FxColour(const U*, U answer) {
-    sh::NoteBytes(move_script::At(at::kPanelColour), 3);
+    sh::NoteBytes(move_script::At(Effect2d_PanelColour_addr), 3);
     return answer;
 }
 
@@ -273,7 +273,7 @@ const std::uint8_t kKinds[] = {0x45, 0x46, 0x47, 0x48, 0x49};
 // The panel's colour bytes and the dust anchor pointer (0x6761C4..0x6761D3);
 // the word the anchor points at (0x92D1C8.., where 0x4789D0 aims it) and the 64
 // dust records after it (0x92D1DC..).
-const sh::Region kRegions[] = {{at::kPanelColour, 0x10}, {0x92D1C8, 0x14 + 64 * 0x20}};
+const sh::Region kRegions[] = {{Effect2d_PanelColour_addr, 0x10}, {0x92D1C8, 0x14 + 64 * 0x20}};
 
 // --- the seed ------------------------------------------------------------------------
 
@@ -359,7 +359,7 @@ void Seed(unsigned k) {
         if (sh::Often()) {   // the model's animation byte one of the five keys (or not)
             const unsigned char key = move_script::At(at::kTwinAnims + 3 * (sh::Next() % 5))[0];
             ObjTrio[0x4B] = key;
-            move_script::At(at::kObject2)[0x4B] = sh::Half() ? key : static_cast<unsigned char>(sh::Next());
+            move_script::At(Sprite_Objects_addr + 0x148)[0x4B] = sh::Half() ? key : static_cast<unsigned char>(sh::Next());
         }
         break;
     case k48Start:
@@ -407,7 +407,7 @@ void Seed(unsigned k) {
         // low byte against the masks, and the anchor at the word the harness compares
         for (unsigned r = 0; r < at::kEffects; ++r) Rec(r)[9] = static_cast<unsigned char>(sh::Next() % 8);
         SetLong(s + 0xC, static_cast<std::int32_t>(PickOf(0, 1, 2, 3, 0x10, 0x11, 0x5F, 0x50, sh::Next())));
-        SetLong(move_script::At(at::kDustAnchor), static_cast<std::int32_t>(0x92D1C8 + sh::Next() % 0xE));
+        SetLong(move_script::At(Effect2d_DustAnchor_addr), static_cast<std::int32_t>(0x92D1C8 + sh::Next() % 0xE));
         break;
     default: break;
     }
