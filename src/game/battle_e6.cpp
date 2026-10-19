@@ -322,6 +322,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
     unsigned char* const member = Party(Actor());
     auto* const member_rec = rv::As<records::PartyMember>(member);
     const unsigned char* const character = At(at::kCharRecords + member_rec->char_index * at::kCharStride);
+    static_assert(at::kCharStride == sizeof(records::CharRecord));
     unsigned char* const sums = At(at::kMixSums);
     for (unsigned i = 0; i < 14; ++i) sums[i] = 0;
     const unsigned count = BattleE5_GeneCount;
@@ -509,6 +510,7 @@ extern "C" void __cdecl DragonForm_ApplyRecipe(unsigned recipe) {
     const unsigned r = recipe & 0xFF;
     const unsigned char* const row = At(at::kRecipeStats + r * 14);
     const unsigned char* const character = At(at::kCharRecords + member_rec->char_index * at::kCharStride);
+    static_assert(at::kCharStride == sizeof(records::CharRecord));
     FirstStat(member, character,
               static_cast<std::uint16_t>(Percent9999(rv::As<records::CharRecord>(character)->base.max_hp, static_cast<std::int32_t>(row[0]) * 10)));
     // RecipeStat's first store is the old value: the first stat left it at 0x939EE2 already

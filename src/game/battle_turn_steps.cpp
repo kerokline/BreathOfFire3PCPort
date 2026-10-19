@@ -483,6 +483,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
             if (m[at::kStatus + 1] & 0x40) {
                 unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
                 auto* const char_rec = rv::As<records::CharRecord>(r);  // 0x903A70 + 0xA4 n
+                static_assert(at::kRecordStride == sizeof(records::CharRecord));
                 rv::Store<unsigned>(char_rec->hp, 1);
                 r[0x1C] = 1;
                 if (r[0x1E] < 5) ++r[0x1E];

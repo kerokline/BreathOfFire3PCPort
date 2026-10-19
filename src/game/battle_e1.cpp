@@ -865,6 +865,7 @@ extern "C" unsigned short __cdecl Char_LevelUpGain(unsigned roster_arg, unsigned
     const U roster = roster_arg & 0xFF;
     const U base = roster * 99;
     const unsigned char* const record = At(at::kCharRecords + roster * at::kCharSize);
+    static_assert(at::kCharSize == sizeof(records::CharRecord));
     const unsigned char level = record[0xA];
     unsigned char reached = 1;
     U sum = 0;

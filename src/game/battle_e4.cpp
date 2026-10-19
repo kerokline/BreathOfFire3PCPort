@@ -507,6 +507,7 @@ extern "C" void __cdecl Battle_WriteBackMember(unsigned member) {
     if ((member_rec->flags & 1) == 0) return;
     unsigned char* const r = CharRecord(member_rec->char_index);
     auto* const char_rec = rv::As<records::CharRecord>(r);  // 0x903A70 + 0xA4 n
+    static_assert(at::kCharStride == sizeof(records::CharRecord));
     rv::Store<unsigned>(char_rec->hp, member_rec->hp);
     rv::Store<unsigned>(char_rec->ap, member_rec->ap);
     const unsigned char c = member_rec->survive;
