@@ -990,7 +990,9 @@ class Converter:
         return site
 
     def address_only(self, site, addr_tiers, cname, off):
-        if 'at::' not in cname and off:
+        # a module constant handed on bare is taken for an address only when
+        # it is an entry's own (a value inside one may be a bound or a size)
+        if site.kind == 'bare' and 'at::' not in cname and off:
             site.reason = 'inside-entry'
             return site
         site.tiers = addr_tiers
@@ -1002,8 +1004,14 @@ class Converter:
         if off % esize != 0 or (off and 'count' not in entry):
             return []
         name = entry['name'] + '_addr'
-        rep = name if off == 0 else f'({name} + {off:#x})'
-        # bare `(at::kX)` needs no extra parentheses
+        if off == 0:
+            rep = name
+        else:
+            code = site.f.code
+            p, _ = prev_token(code, site.ref_s)
+            t, _ = next_token(code, site.ref_e)
+            loose = p in ('(', ',', '=', '{', 'return', '[', '+') and t in (')', ',', ';', ']', '}', '+', '-')
+            rep = f'{name} + {off:#x}' if loose else f'({name} + {off:#x})'
         return [(site.ref_s, site.ref_e, [rep], 'addr')]
 
     def addr_form(self, f, arg, rs, re_):
@@ -1570,7 +1578,7 @@ def find_bad(ok, base, cand):
 # comment after it on its last line
 CONST_STMT = re.compile(r'(?m)^([ \t]*)((?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+(?:\s+(?:int|long|short|char))?)\s+'
                         r'(k\w*\s*(?:=[^;{}]*?|\{[^{};,]*\}))\s*;[ \t]*(?://[ \t]?([^\n]*))?$')
-NOTE = re.compile(r'^[ 	]*// (k\w+): now \w+ \(symbols\.toml\)')
+NOTE = re.compile(r'^[ \t]*// (k\w+): now [\w\[\]]+ \(symbols\.toml\)')
 
 
 def retire(conv, dry_run=False, since=None):
@@ -1599,7 +1607,19 @@ def retire(conv, dry_run=False, since=None):
     for f in files:
         for g in dc.include_closure(f, by_rel):
             includers[g.rel].add(f.rel)
-    typed_pcs = {e['pc']: e for e in conv.entries.data if e.get('ctype')}
+    def typed_name(v):
+        """The typed name at address v: an entry, or an element of a typed array."""
+        e, off = conv.entries.find(v)
+        if e is None or not e.get('ctype'):
+            return None
+        size = conv.entries.elem_size(e)
+        if off == 0:
+            return e['name']
+        if not size or off % size or 'count' not in e:
+            return None
+        i = off // size
+        return f"{e['name']}[{i if i < 10 else hex(i)}]"
+
     removed = []
 
     def strip_notes(text):
@@ -1631,7 +1651,7 @@ def retire(conv, dry_run=False, since=None):
             gone = []
             for name, rhs in decls:
                 v = dc.eval_expr(rhs, env)
-                if v is None or v not in typed_pcs:
+                if v is None or typed_name(v) is None:
                     continue
                 pat = re.compile(r'(?<![\w])' + re.escape(name) + r'(?![\w])')
                 uses = 0
@@ -1666,9 +1686,9 @@ def retire(conv, dry_run=False, since=None):
             indent, head, comment = m.group(1), m.group(2), m.group(4)
             names_gone = {n for n, _ in gone}
             for name, v in gone:
-                removed.append((f.rel, dc.line_of(f.starts, m.start()), name, v, typed_pcs[v]['name']))
+                removed.append((f.rel, dc.line_of(f.starts, m.start()), name, v, typed_name(v)))
             keep = [(n, r) for n, r in decls if n not in names_gone]
-            out = [f'{indent}// {n}: now {typed_pcs[v]["name"]} (symbols.toml).' for n, v in gone]
+            out = [f'{indent}// {n}: now {typed_name(v)} (symbols.toml).' for n, v in gone]
             if keep:
                 parts = [f'{n} = {" ".join(r.split())}' for n, r in keep]
                 one = f'{indent}{head} ' + ', '.join(parts) + ';'
