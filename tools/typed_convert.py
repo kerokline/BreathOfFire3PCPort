@@ -1786,7 +1786,8 @@ def main():
         for st in sites:
             ch = st.choice()
             if a.remaining and st.reason is None:
-                st.reason = 'gate'
+                # --gate builds objects; a header's own sites were never tried
+                st.reason = 'gate' if f.rel.endswith('.cpp') else 'no-object'
             if st.reason is not None or ch is None:
                 reason = st.reason or 'none'
                 stats['left:' + reason] += 1
