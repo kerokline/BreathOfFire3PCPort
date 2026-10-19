@@ -77,9 +77,9 @@ extern "C" unsigned char __cdecl Area_LinkAt(unsigned x_arg, unsigned z_arg) {
 found:
     unsigned char flags;
     if (Word(link + 2) != 0xFFFF) {
-        SetWord(At(kPendingArea), Word(link + 2));
+        AreaW0b_Place = Word(link + 2);
         SetLong(At(kPendingX), static_cast<std::int32_t>((Word(link + 4) & 0xFF80u) << 8));
-        SetLong(At(kPendingZ), static_cast<std::int32_t>((Word(link + 6) & 0xFF80u) << 8));
+        AreaEntry_PendingZ = static_cast<std::int32_t>((Word(link + 6) & 0xFF80u) << 8);
         flags = link[0xA];
     } else {
         const unsigned index = Word(link + 4);
@@ -87,16 +87,16 @@ found:
         const unsigned char* choice = Ptr(Ptr(descriptor + 0x24) + index * 4);
         for (unsigned i = 0; i < count; ++i, choice += 10)
             if (g.flags_test(Cond_Flags + choice[6] * 8u, choice[7]) != 0) break;
-        SetWord(At(kPendingArea), Word(choice));
+        AreaW0b_Place = Word(choice);
         SetLong(At(kPendingX), static_cast<std::int32_t>((Word(choice + 2) & 0xFF80u) << 8));
-        SetLong(At(kPendingZ), static_cast<std::int32_t>((Word(choice + 4) & 0xFF80u) << 8));
+        AreaEntry_PendingZ = static_cast<std::int32_t>((Word(choice + 4) & 0xFF80u) << 8);
         flags = choice[8];
     }
-    At(kPendingFlags)[0] = static_cast<unsigned char>(flags & 0x8F);
+    AreaEntry_PendingFlags = static_cast<unsigned char>(flags & 0x8F);
     At(kLinkHigh)[0] = static_cast<unsigned char>((flags >> 4) & 7);
     g.classify();
-    g.pick_music(static_cast<unsigned>(Long(At(kPendingX)) >> 16), static_cast<unsigned>(Long(At(kPendingZ)) >> 16),
-                 Word(At(kPendingArea)));
+    g.pick_music(static_cast<unsigned>(Long(At(kPendingX)) >> 16), static_cast<unsigned>(static_cast<std::int32_t>(AreaEntry_PendingZ) >> 16),
+                 AreaW0b_Place);
     return 0;
 }
 
@@ -138,7 +138,7 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
     ++list;
     if ((header & 0xC0) == 0) {
         if (Field_MemberCount != n) return (table & 0xFFFFFF00u) | 1u;
-        for (unsigned i = 0; i < n; ++i) At(kPickFree)[i] = At(kPartyList)[i];
+        for (unsigned i = 0; i < n; ++i) At(kPickFree)[i] = Cond_Flags[0xd2 + i];
         for (unsigned i = 0; i < n; ++i) {
             const unsigned char wanted = list[i];
             const unsigned members = Field_MemberCount;
@@ -154,7 +154,7 @@ extern "C" unsigned __cdecl Party_DropIn(unsigned entry_arg) {
             At(kPickSlot)[i] = static_cast<unsigned char>(j);
             At(kPickFree)[j] = 0xFF;
         }
-        for (unsigned i = 0; i < n; ++i) At(kPartyList)[i] = Record(At(kPickSlot)[i])[kRecMember];
+        for (unsigned i = 0; i < n; ++i) Cond_Flags[0xd2 + i] = Record(At(kPickSlot)[i])[kRecMember];
         for (unsigned s = 0; static_cast<int>(s) < static_cast<int>(n) - 1; ++s) {
             const unsigned char there = At(kPickSlot)[s];
             if (s == there) continue;

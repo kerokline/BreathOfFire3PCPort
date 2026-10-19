@@ -166,12 +166,12 @@ std::uint32_t MovesCounter3(const std::uint32_t*, std::uint32_t answer) {
 }
 std::uint32_t MovesAnswer(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) *ah::Mem(at::kChoiceAnswer) = static_cast<unsigned char>((n >> 8) % 4);
+    if (n & 1) *ah::Mem(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>((n >> 8) % 4);
     return answer;
 }
 std::uint32_t MovesTailState(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) *ah::Mem(at::kTailState) = static_cast<unsigned char>((n >> 8) % 6 - 1);
+    if (n & 1) *ah::Mem(AreaW0c_TailState_addr) = static_cast<unsigned char>((n >> 8) % 6 - 1);
     return answer;
 }
 
@@ -193,24 +193,24 @@ const ah::Callee kCallees[] = {
 
 // The areas' own .data state tables, swapped for recorders while the fuzz
 // runs (their other entries are other groups' shared bodies).
-const ah::DataTable kTables32[] = {{at::kArea32StatesA, 2}, {at::kArea32StatesB, 2}};
-const ah::DataTable kTables33[] = {{at::kRecord08States, 3}, {at::kRecord04States, 2}};
-const ah::DataTable kTables36[] = {{at::kArea36EffectStates, 2}};
+const ah::DataTable kTables32[] = {{Area32_StatesA_addr, 2}, {Area32_StatesB_addr, 2}};
+const ah::DataTable kTables33[] = {{WorldMap33_Record08States_addr, 3}, {WorldMap33_Record04States_addr, 2}};
+const ah::DataTable kTables36[] = {{Area36_EffectStates_addr, 2}};
 
 // Beyond the field frame: the effect records the spawns write (slots 0..3),
 // the active member and script object pointers and what the areas read of
 // the chapter row, the pending kind, area 37's mark, the character byte,
 // the wait word and the pass flags.
 const ah::Region kRegions[] = {
-    {at::kEffectObjects, 4 * at::kEffectStride},
-    {at::kActiveMember, 4},
-    {at::kScriptObject, 4},
-    {at::kFlagRow, 4},
-    {at::kPendingKind, 1},
-    {at::kAnswerMark, 1},
+    {Effect_Objects_addr, 4 * at::kEffectStride},
+    {Field_ActiveMember_addr, 4},
+    {MoveScript_Object_addr, 4},
+    {AreaW0c_FlagRow_addr, 4},
+    {AreaW0c_PendingKind_addr, 1},
+    {AreaW0c_AnswerMark_addr, 1},
     {at::kRecord0Byte9, 1},
-    {at::kWaitWord, 2},
-    {at::kPassFlags, 1},
+    {MoveScript_WaitWordDA_addr, 2},
+    {Draw_PassFlags_addr, 1},
 };
 
 unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
@@ -220,7 +220,7 @@ unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
 // party record, or the running object itself (the two alias in the game).
 unsigned char* MemberRecord(std::uint32_t v) {
     switch (v % 4) {
-    case 0: return ah::Mem(at::kSpriteObjectsExtra + (v >> 2) % 4 * 0xA4);
+    case 0: return ah::Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4);
     case 1: return ah::Object(v >> 2);
     case 2: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return Sprite_Current;
@@ -229,8 +229,8 @@ unsigned char* MemberRecord(std::uint32_t v) {
 
 // Every round: the pointers the areas follow put back inside the regions.
 void Common() {
-    ah::SetPointer(at::kActiveMember, MemberRecord(ah::Next()));
-    ah::SetPointer(at::kScriptObject, ah::Half() ? ah::Object(ah::Next()) : ah::PartyOf(static_cast<unsigned char>(ah::Next())));
+    ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ah::Half() ? ah::Object(ah::Next()) : ah::PartyOf(static_cast<unsigned char>(ah::Next())));
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -238,11 +238,11 @@ void Common() {
 void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 6) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(v % 7 - 1); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 7 - 1); break;
     case 1: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? v : (h & 0x200 ? 0x31 : 0x20)); break;
-    case 2: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 4); break;
-    case 3: ah::SetPointer(at::kActiveMember, MemberRecord(h >> 16)); break;
-    case 4: B(at::kFlagRow + (h >> 16) % 4) = v; break;
+    case 2: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 4); break;
+    case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
+    case 4: B(AreaW0c_FlagRow_addr + (h >> 16) % 4) = v; break;
     default: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? 1 : v); break;
     }
 }
@@ -250,12 +250,12 @@ void Disturb(std::uint32_t h) {
 // A choice answer: each value a handler tests, its neighbours, a negative
 // byte (tested signed by some), anything.
 void SeedAnswer() {
-    if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 0xFF, 0x80, 0x81, 0x7F, 4));
+    if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 0xFF, 0x80, 0x81, 0x7F, 4));
 }
 // The mode tail's state, each case and the two out-of-range sides.
 void SeedTailState(unsigned last) {
-    if (ah::Often()) B(at::kTailState) = static_cast<unsigned char>(ah::Next() % (last + 3) - 1);
-    else if (ah::Half()) B(at::kTailState) = static_cast<unsigned char>(last);
+    if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(ah::Next() % (last + 3) - 1);
+    else if (ah::Half()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(last);
 }
 
 // ---- area 27 ----
@@ -282,7 +282,7 @@ void Seed32(unsigned k) {
     case k32Spawn4F:
         // only subtracted and divided here, never followed: any value, below
         // Sprite_Objects too (the division is signed)
-        if (ah::Half()) move_script::SetLong(ah::Mem(at::kActiveMember), static_cast<std::int32_t>(ah::Next()));
+        if (ah::Half()) move_script::SetLong(ah::Mem(Field_ActiveMember_addr), static_cast<std::int32_t>(ah::Next()));
         break;
     case k32TintStep: {
         // all three at 0xC0, or one step short, or either side of the signed compare
@@ -341,16 +341,16 @@ void Seed36(unsigned k) {
         // half the rounds every test passes but at most one, drawn to fail
         if (ah::Half()) {
             Cond_ByteFD = 2;
-            B(at::kLeaderByte8) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
-            ah::Mem(at::kStoryFlags)[0x33 >> 3] |= 1u << (0x33 & 7);   // for the record: Flags_Test is a recorder
+            B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
+            ah::Mem((Cond_Flags_addr + 0xa0))[0x33 >> 3] |= 1u << (0x33 & 7); // for the record: Flags_Test is a recorder
             if (ah::Half()) {
                 if (ah::Half()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(1, 3, 0x82));
-                else B(at::kLeaderByte8) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
+                else B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
             }
             break;
         }
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
-        if (ah::Often()) B(at::kLeaderByte8) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
+        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
         break;
     case k36Run: Sprite_Current[1] = static_cast<unsigned char>(ah::Next() % 2); break;
     default: break;
@@ -390,7 +390,7 @@ void Seed37(unsigned k) {
 // Area 34's and 37's object triggers are called (object, story flags).
 void ArgsTrigger(unsigned, std::uint32_t* a) {
     a[0] = Key(ah::Object(a[0]));
-    a[1] = at::kStoryFlags;
+    a[1] = (Cond_Flags_addr + 0xa0);
 }
 
 void Seed28(unsigned) { Common(); }

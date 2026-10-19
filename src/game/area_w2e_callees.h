@@ -39,34 +39,34 @@ using U = std::uint32_t;
 
 // --- the field frame's cells -----------------------------------------------------
 constexpr U kStoryFlags = 0x904030;        // the flag bank every Flags_* call here is handed
-constexpr U kTailKind = 0x9039F3;          // Field_ModeTailKinds' index (s8)
-constexpr U kTailState = 0x9039F4;         // s8: the armed tail kind's (or a place hook's) state
-constexpr U kTailArg = 0x9039F5;
+// kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or a place hook's) state
+// kTailArg: now AreaW0c_TailSub (symbols.toml).
 constexpr U kScriptFlags = 0x9039A2;       // Field_ScriptFlags (u16; read as a dword where tested)
 constexpr U kScriptFlags2 = 0x905BA4;      // Field_ScriptFlags2's low byte
-constexpr U kInputHeld = 0x7E1BE8;         // Input_Held (the code reads its low 16 bits)
-constexpr U kFieldInputHeld = 0x905BA6;    // Field_InputHeld (u16)
-constexpr U kFieldInputFlags = 0x905BA2;   // Field_InputFlags
+// kInputHeld: now Input_Held (symbols.toml). Input_Held (the code reads its low 16 bits)
+// kFieldInputHeld: now Field_InputHeld (symbols.toml). Field_InputHeld (u16)
+// kFieldInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags
 constexpr U kButtonMap0 = 0x903580;        // the field's button words: 0, 1 (the charge button) ..
 constexpr U kButtonCharge = 0x903582;
 constexpr U kActorStates = 0x903A80;       // Field_ActorStates: records of 0xA4
 constexpr U kActorStride = 0xA4;
-constexpr U kEdgeBits = 0x905B80;          // Field_EdgeBits (u16)
-constexpr U kF3Divisor = 0x937F8C;         // MoveScript_F3Divisor (u16)
-constexpr U kFAWord = 0x904EFE;            // MoveScript_FAWord (u16)
-constexpr U kDirectionSteps = 0x6697B0;    // Field_DirectionSteps: (dx, dz) dwords by facing
+// kEdgeBits: now Field_EdgeBits (symbols.toml). Field_EdgeBits (u16)
+// kF3Divisor: now MoveScript_F3Divisor (symbols.toml). MoveScript_F3Divisor (u16)
+// kFAWord: now MoveScript_FAWord (symbols.toml). MoveScript_FAWord (u16)
+// kDirectionSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: (dx, dz) dwords by facing
 constexpr U kPendingArea = 0x937F82;       // u16: the pending area / the place (world map)
 constexpr U kPendingX = 0x903860;          // the pending area's cells (Field_ChangeArea's x, z)
-constexpr U kPendingZ = 0x90384C;
-constexpr U kPendingFlags = 0x905B88;
-constexpr U kCell904EE0 = 0x904EE0;        // zeroed with 0x937F98 = 0xC by area 104's exit cell
-constexpr U kCell937F98 = 0x937F98;
+// kPendingZ: now AreaEntry_PendingZ (symbols.toml).
+// kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
+// kCell904EE0: now ModeFlow_AreaTransition (symbols.toml). zeroed with 0x937F98 = 0xC by area 104's exit cell
+// kCell937F98: now AreaW0c_PendingKind (symbols.toml).
 constexpr U kFoundX = 0x903850;            // the scratch word the step hook of area 105 stores the facing in
-constexpr U kStatusBits = 0x8034E1;        // Field_StatusBits
-constexpr U kCondFA = 0x8034E0;            // Cond_ByteFA (s8, the chapter)
-constexpr U kCondFD = 0x8034F1;            // Cond_ByteFD
-constexpr U kCondFE = 0x905E20;            // Cond_ByteFE
-constexpr U kPrevArea = 0x802290;          // u16: the area the party came from
+// kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits
+// kCondFA: now Cond_ByteFA (symbols.toml). Cond_ByteFA (s8, the chapter)
+// kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
+// kCondFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
+// kPrevArea: now AreaW2c_LastArea (symbols.toml). u16: the area the party came from
 constexpr U kLeader = 0x802D40;            // ObjTrio + 0, the leader's record
 constexpr U kLeaderState = 0x802D41;       // its +1 (leader state 12: area 104's controller)
 constexpr U kLeaderDir = 0x802D48;         // its +8, the facing
@@ -79,42 +79,42 @@ constexpr U kLeaderCellWordX = 0x802D76;   // the high words of +0x34 / +0x38
 constexpr U kLeaderCellWordZ = 0x802D7A;
 constexpr U kLeaderHeight = 0x802D7E;      // the word +0x3E
 constexpr U kLeader89 = 0x802DC9;          // its +0x89
-constexpr U kEffects = 0x7E11E0;           // Effect_Objects: twenty records of 0x80
+// kEffects: now Effect_Objects (symbols.toml). Effect_Objects: twenty records of 0x80
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
-constexpr U kObjects = 0x7DEE80;           // Sprite_Objects: thirty of 0xA4
-constexpr U kObjectsExtra = 0x802000;      // Sprite_ObjectsExtra: four more
+// kObjects: now Sprite_Objects (symbols.toml). Sprite_Objects: thirty of 0xA4
+// kObjectsExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra: four more
 constexpr U kObjectStride = 0xA4;
-constexpr U kActiveMember = 0x9035A4;      // Field_ActiveMember (a pointer)
-constexpr U kScriptObject = 0x929E80;      // MoveScript_Object (a pointer)
+// kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember (a pointer)
+// kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object (a pointer)
 constexpr U kEffectStates = 0x66972C;      // MoveScript_EffectState: a byte per +0x89 value
-constexpr U kDescriptors = 0x667590;       // Area_Descriptors
+// kDescriptors: now Area_Descriptors (symbols.toml). Area_Descriptors
 constexpr U kPacketNext = 0x7E0670;        // Gfx_PacketNext
 constexpr U kPassFlags = 0x7E0918;         // Draw_PassFlags
 constexpr U kFrameCounter = 0x937F94;      // Frame_Counter
 constexpr U kClutDirty = 0x937F90;         // Gfx_ClutStripDirty
-constexpr U kMenuColour = 0x903A5A;        // the byte area 104's countdown hands Menu_DrawBox
+// kMenuColour: now BattleDraw_Colour (symbols.toml). the byte area 104's countdown hands Menu_DrawBox
 constexpr U kCountdownText = 0x904BA0;     // the countdown's text buffer (Crt_sprintf's)
 constexpr U kCountdownFormat = 0x61BC74;   // its format (data, read in place)
-constexpr U kPanelTris = 0x61BC44;         // four (x0, x1, x2, y0, y1, y2) s16 rows: the panel's triangles
+// kPanelTris: now Area104_PanelTris (symbols.toml). four (x0, x1, x2, y0, y1, y2) s16 rows: the panel's triangles
 constexpr U kPanelTrisEnd = 0x61BC74;
 // The minimap's image, its upload and its CLUT row (area 104's init).
-constexpr U kUnpack = 0x8E4580;            // Gfx_UnpackScratch: two words (0x14, 0x44), then 69 rows of 40 bytes
+// kUnpack: now Gfx_UnpackScratch (symbols.toml). Gfx_UnpackScratch: two words (0x14, 0x44), then 69 rows of 40 bytes
 constexpr U kUnpackBytes = 4 + 0x45 * 0x28;
 constexpr U kUploadCount = 0x9035A0;       // Gfx_UploadQueueCount
-constexpr U kUploadX = 0x903680;           // Gfx_UploadQueueX: twenty words
-constexpr U kUploadY = 0x9036A8;           // Gfx_UploadQueueY: twenty words
-constexpr U kUploadRecord = 0x92BF20;      // Gfx_UploadQueueRecord: twenty pointers
+// kUploadX: now Gfx_UploadQueueX (symbols.toml). Gfx_UploadQueueX: twenty words
+// kUploadY: now Gfx_UploadQueueY (symbols.toml). Gfx_UploadQueueY: twenty words
+// kUploadRecord: now Gfx_UploadQueueRecord (symbols.toml). Gfx_UploadQueueRecord: twenty pointers
 constexpr unsigned kUploadSlots = 20;
 constexpr U kClutWords = 0x811440;         // four words of the live CLUT strip (the minimap's)
 
 // --- area 104's own tables (its descriptor 0x61BB38) --------------------------------
-constexpr U kA104LeaderStates = 0x61BC28;  // 2: Area104_LeaderIdle, Area104_LeaderStep (by the leader's +2)
+// kA104LeaderStates: now Area104_LeaderStates (symbols.toml). 2: Area104_LeaderIdle, Area104_LeaderStep (by the leader's +2)
 constexpr unsigned kA104LeaderStateCount = 2;
-constexpr U kA104Kind5CStates = 0x61BC30;  // 5: kind 0x5C's states by +1 (the last, 0x41C5B0, AR3B's)
+// kA104Kind5CStates: now Area104_Kind5CStates (symbols.toml). 5: kind 0x5C's states by +1 (the last, 0x41C5B0, AR3B's)
 constexpr unsigned kA104Kind5CStateCount = 5;
 constexpr U kA104EntryPlus8 = 8;           // Sprite_InitFromEntry(descriptor[+8] + 8)
-constexpr U kA106Cells = 0x61C6B4;         // four (x, z) byte pairs: area 106's handler 2
+// kA106Cells: now Area106_Cells (symbols.toml). four (x, z) byte pairs: area 106's handler 2
 constexpr U kA106CellsEnd = 0x61C6BC;
 
 // The world-map copy's tables (area 45's layout, docs/area_w1b.md section 5):
@@ -130,12 +130,12 @@ struct WorldMapTables {
     U fn_frame_step, fn_frame_hold, fn_box_step, fn_draw_frame, fn_draw_sprite, fn_draw_hud;
 };
 constexpr U kAreaText = 0x803580;
-constexpr U kPlace = kPendingArea;         // the place the party stands on (world map)
-constexpr U kMapMode = 0x9045FA;           // the world map's mode byte
+// kPlace: now AreaW0b_Place (symbols.toml). the place the party stands on (world map)
+// kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;       // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
 constexpr U kButtonMap6 = 0x90358C;        // the field's button word 6
-constexpr U kPartySet = 0x90412C;          // & 0x7F: the party set (0xC shows the third legend)
+// kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr U kLeaderSteps = 0x802D49;       // the leader's +9
 constexpr U kLeaderDirX = 0x802D4C;        // its +0xC / +0x10
 constexpr U kLeaderDirZ = 0x802D50;

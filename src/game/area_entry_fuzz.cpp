@@ -68,11 +68,11 @@ std::uint32_t __cdecl StubFlagsTest(const unsigned char* bits, std::uint32_t ind
 }
 // Area_ClassifyPending writes none of these; the caller reads them after it.
 void __cdecl StubClassify() {
-    Record(2, Word(At(kPendingArea)), static_cast<std::uint32_t>(Long(At(kPendingX))), static_cast<std::uint32_t>(Long(At(kPendingZ))));
+    Record(2, Word(At(AreaW0b_Place_addr)), static_cast<std::uint32_t>(Long(At(kPendingX))), static_cast<std::uint32_t>(Long(At(AreaEntry_PendingZ_addr))));
     const std::uint32_t h = Hash();
     if (h % 3 == 0) SetLong(At(kPendingX), static_cast<std::int32_t>(h * 7));
-    if (h % 5 == 0) SetLong(At(kPendingZ), static_cast<std::int32_t>(h * 13));
-    if (h % 7 == 0) SetWord(At(kPendingArea), h >> 9);
+    if (h % 5 == 0) SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(h * 13));
+    if (h % 7 == 0) SetWord(At(AreaW0b_Place_addr), h >> 9);
 }
 // Area_PickMusic masks the area to a word (the original pushes it stale).
 void __cdecl StubPickMusic(unsigned x, unsigned z, unsigned area) { Record(3, x, z, area & 0xFFFF); }
@@ -195,8 +195,8 @@ const Region kRegions[] = {
     {0x903840, 0x40},                           // Camera_Distance.. the pending x / z, the scratch lists
     {0x904060, 0x20},                           // the party list and what follows
     {kCharacterRecords, 8 * kCharacterBytes},
-    {kPendingArea, 2},
-    {kPendingFlags, 1},
+    {AreaW0b_Place_addr, 2},
+    {AreaEntry_PendingFlags_addr, 1},
     {Address(&Field_ScriptFlags), 2},
     {Address(&Field_ScriptFlags2), 2},
     {Address(&Sprite_Current), 4},
@@ -328,7 +328,7 @@ Args Generate(unsigned k, State& input) {
         else members = n + Next() % 3 - 1;
         Field_MemberCount = static_cast<unsigned char>(members & 0xFF);
         for (unsigned i = 0; i < 6; ++i)
-            if (Often()) At(kPartyList)[i] = 0xFF;
+            if (Often()) At((Cond_Flags_addr + 0xd2))[i] = 0xFF;
         for (unsigned i = 0; i < n; ++i) {
             const unsigned r = Next() % 4;
             if (r == 0) p[1 + i] = 0x80;

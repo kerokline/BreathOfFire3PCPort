@@ -53,7 +53,7 @@ Handler StateEntry(const char* who, std::uint32_t table, unsigned count, unsigne
 
 // Choice handlers read the message box's answer; most set the message word
 // to 0xFFFF (no new message) first.
-signed char Answer() { return static_cast<signed char>(B(at::kChoiceAnswer)); }
+signed char Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 
 // Effect_FindFree's slot to the running object's +0xB, then (0xFF: none) a
@@ -107,21 +107,21 @@ struct DropInTail {
     unsigned flags;
 };
 void RunDropInTail(const DropInTail& t) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
     case 0:
         if (Field_Request == 2) return;
         AH_CALL(ScriptFlags_Set40)();
-        AH_CALL(Flags_Set)(Mem(at::kStoryFlags), t.flag);
-        B(at::kTailState) = 1;
+        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), t.flag);
+        B(AreaW0c_TailState_addr) = 1;
         return;
     case 1:
         AH_CALL(Party_DropIn)(t.entry);
-        B(at::kTailState) = 2;
+        B(AreaW0c_TailState_addr) = 2;
         return;
     case 2:
         if (B(at::kCounter3) != t.wait) return;
         SetWord(Mem(at::kTailTimer), 0x10);
-        B(at::kTailState) = 3;
+        B(AreaW0c_TailState_addr) = 3;
         return;
     case 3: {
         const auto left = static_cast<std::uint16_t>(Word(Mem(at::kTailTimer)) - 1);
@@ -129,7 +129,7 @@ void RunDropInTail(const DropInTail& t) {
         if (left != 0) return;
         AH_CALL(Field_ChangeArea)(0x1B, t.x, 0x380000, t.flags);
         const auto counter = static_cast<unsigned char>(B(at::kCounter3) + 1);
-        B(at::kTailState) = 4;
+        B(AreaW0c_TailState_addr) = 4;
         B(at::kCounter3) = counter;
         return;
     }
@@ -137,9 +137,9 @@ void RunDropInTail(const DropInTail& t) {
         if (B(at::kCounter3) != 0x31) return;
         B(at::kCounter3) = 0;
         AH_CALL(ScriptFlags_Clear40)();
-        AH_CALL(Flags_Clear)(Mem(at::kStoryFlags), t.flag);
-        B(at::kTailKind) = 0;
-        B(at::kTailState) = 0;
+        AH_CALL(Flags_Clear)(Mem((Cond_Flags_addr + 0xa0)), t.flag);
+        B(AreaW0a_TailKind_addr) = 0;
+        B(AreaW0c_TailState_addr) = 0;
         return;
     default: return;   // above 4 or negative: `ja` to the ret
     }
@@ -157,24 +157,24 @@ void SetCounters(unsigned char n) {
     B(at::kCounter2) = 0;
     B(at::kCounter3) = 0;
     MoveScript_Var7 = 4;
-    B(at::kVar7Step) = 0x14;
+    B((MoveScript_PartyRecords_addr + 0x65)) = 0x14;
 }
 
 // Area 37's paired choice handlers: "ask" (answer 0: message `yes`; else
 // message `no` and the mark 6) and "confirm" (answer not 0: message `no` and
 // the mark 6; else 0xFFFF). The answer is tested as a byte.
 void ChoiceAsk(unsigned yes, unsigned no) {
-    if (B(at::kChoiceAnswer) == 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) == 0) {
         SetMessage(yes);
         return;
     }
     SetMessage(no);
-    B(at::kAnswerMark) = 6;
+    B(AreaW0c_AnswerMark_addr) = 6;
 }
 void ChoiceConfirm(unsigned no) {
-    if (B(at::kChoiceAnswer) != 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
         SetMessage(no);
-        B(at::kAnswerMark) = 6;
+        B(AreaW0c_AnswerMark_addr) = 6;
         return;
     }
     SetMessage(0xFFFF);
@@ -184,8 +184,8 @@ void ChoiceConfirm(unsigned no) {
 // the mode tail kind 4 with sub-kind `sub`; answer 0 in al.
 unsigned char TriggerTail4(unsigned char sub) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 4;
-    B(at::kTailSub) = sub;
+    B(AreaW0a_TailKind_addr) = 4;
+    B(AreaW0c_TailSub_addr) = sub;
     return 0;
 }
 
@@ -199,20 +199,20 @@ unsigned char TriggerTail4(unsigned char sub) {
 // original 0x403400 (Area27_Choices[0]): message 0xFFFF; an answer with bit
 // 0 clear arms the mode tail kind 1 (Area27_TailDropIn1) at state 0.
 extern "C" void __cdecl Area27_ChoiceTail1(void) {
-    const unsigned char answer = B(at::kChoiceAnswer);
+    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
     if (answer & 1) return;
-    B(at::kTailKind) = 1;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = 1;
+    B(AreaW0c_TailState_addr) = 0;
 }
 
 // original 0x403430 (Area27_Choices[1]): the same for tail kind 2.
 extern "C" void __cdecl Area27_ChoiceTail2(void) {
-    const unsigned char answer = B(at::kChoiceAnswer);
+    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
     if (answer & 1) return;
-    B(at::kTailKind) = 2;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = 2;
+    B(AreaW0c_TailState_addr) = 0;
 }
 
 // original 0x403460 (Area27_Choices[2]): message 0xFFFF; answer 0 sets
@@ -298,7 +298,7 @@ extern "C" void __cdecl Area28_SpawnEffect40(void) {
 // animation 0x80 on the leader (Sprite_Current made ObjTrio for the call,
 // then put back).
 extern "C" void __cdecl Area32_ChoiceLeaderAnim(void) {
-    const unsigned char answer = B(at::kChoiceAnswer);
+    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
     if (answer != 1) return;
     unsigned char* const kept = Sprite_Current;
@@ -310,7 +310,7 @@ extern "C" void __cdecl Area32_ChoiceLeaderAnim(void) {
 // original 0x4038C0 (Area32_Choices[2] = Area32_Handlers[0]; PSX
 // 0x801F36E4): Area32_StatesA by Sprite_Current[4].
 extern "C" void __cdecl Area32_RunA(void) {
-    StateEntry("Area32_RunA", at::kArea32StatesA, at::kArea32States, Sprite_Current[4])();
+    StateEntry("Area32_RunA", Area32_StatesA_addr, at::kArea32States, Sprite_Current[4])();
 }
 
 // original 0x4038E0 (Area32_StatesA[0]): Sprite_ShadeFadeBegin; the object's
@@ -341,7 +341,7 @@ extern "C" void __cdecl Area32_ShadeStep(void) {
 // original 0x403960 (Area32_Choices[3] = Area32_Handlers[1]; PSX
 // 0x801F3800): Area32_StatesB by Sprite_Current[4].
 extern "C" void __cdecl Area32_RunB(void) {
-    StateEntry("Area32_RunB", at::kArea32StatesB, at::kArea32States, Sprite_Current[4])();
+    StateEntry("Area32_RunB", Area32_StatesB_addr, at::kArea32States, Sprite_Current[4])();
 }
 
 // original 0x403980 (Area32_StatesB[0]): Sprite_SetTint(the object, 0, 0,
@@ -401,7 +401,7 @@ extern "C" void __cdecl Area32_SpawnEffect4F(void) {
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     unsigned char* const cur = Sprite_Current;
     if (cur[0xB] == 0xFF) return;
-    const auto from = static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) - at::kSpriteObjects);
+    const auto from = static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Field_ActiveMember)) - Sprite_Objects_addr);
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 0x4F;
     EffectAt(cur[0xB])[0xB] = static_cast<unsigned char>(from / 0xA4);
@@ -425,7 +425,7 @@ extern "C" void __cdecl Area32_SpawnEffect50Far(void) { SpawnEffect50(0x8000, 0x
 // Sprite_Current[1] - 0x4253C0 (shared by ten world maps), Area33_Record08Start,
 // 0x40C490 (shared).
 extern "C" void __cdecl Area33_Record08Run(void) {
-    StateEntry("Area33_Record08Run", at::kRecord08States, at::kRecord08StateCount, Sprite_Current[1])();
+    StateEntry("Area33_Record08Run", WorldMap33_Record08States_addr, at::kRecord08StateCount, Sprite_Current[1])();
 }
 
 // original 0x4046A0 (WorldMap33_Record08States[1]): animation bank 0x46;
@@ -443,12 +443,12 @@ extern "C" void __cdecl Area33_Record08Start(void) {
     cur[0x48] = 0;
     cur[0x24] = 0;
     cur[0x29] = 5;
-    const auto StepX = [&] { return S16(Mem(at::kRecord08Steps + cur[8] * 4u)); };
-    const auto StepZ = [&] { return S16(Mem(at::kRecord08Steps + 2 + cur[8] * 4u)); };
+    const auto StepX = [&] { return S16(Mem(WorldMap33_Record08Steps_addr + cur[8] * 4u)); };
+    const auto StepZ = [&] { return S16(Mem(WorldMap33_Record08Steps_addr + 2 + cur[8] * 4u)); };
     SetLong(cur + 0xC, StepX());
     SetLong(cur + 0x10, StepZ());
-    SetLong(cur + 0x34, Long(Mem(at::kLeaderX)));
-    SetLong(cur + 0x38, Long(Mem(at::kLeaderZ)));
+    SetLong(cur + 0x34, Long(Mem((ObjTrio_addr + 0x34))));
+    SetLong(cur + 0x38, Long(Mem((ObjTrio_addr + 0x38))));
     if (cur[6] != 0) {
         AddWord(cur + 0x36, -static_cast<std::int16_t>(StepX() >> 13));
         AddWord(cur + 0x3A, -static_cast<std::int16_t>(StepZ() >> 13));
@@ -460,9 +460,9 @@ extern "C" void __cdecl Area33_Record08Start(void) {
     AddWord(cur + 0x3A, -static_cast<std::int16_t>(StepZ() >> 9));
     cur[0xB] = 0;
     cur[1] = static_cast<unsigned char>(cur[1] + 1);
-    AH_CALL(Sprite_SetAnimation)(B(at::kRecord08Anims + cur[8] * 2u));
+    AH_CALL(Sprite_SetAnimation)(B(WorldMap33_Record08Anims_addr + cur[8] * 2u));
     cur = Sprite_Current;
-    cur[0x2A] = B(at::kRecord08Anims + 1 + cur[8] * 2u);
+    cur[0x2A] = B(WorldMap33_Record08Anims_addr + 1 + cur[8] * 2u);
     AH_CALL(Sprite_UpdateScreen)();
 }
 
@@ -470,7 +470,7 @@ extern "C" void __cdecl Area33_Record08Start(void) {
 // Sprite_Current[1] - Area33_Record04Start, 0x408990 (shared by ten world
 // maps).
 extern "C" void __cdecl Area33_Record04Run(void) {
-    StateEntry("Area33_Record04Run", at::kRecord04States, at::kRecord04StateCount, Sprite_Current[1])();
+    StateEntry("Area33_Record04Run", WorldMap33_Record04States_addr, at::kRecord04StateCount, Sprite_Current[1])();
 }
 
 // original 0x404820 (WorldMap33_Record04States[0]): with CharacterRecords
@@ -494,7 +494,7 @@ extern "C" void __cdecl Area33_Record04Start(void) {
     cur[0x5E] = 0;
     cur[0x5F] = 0;
     const unsigned width = AreaMap_Header[0];
-    const std::uint32_t cell = at::kRecord04Cells + cur[0xB] * 4u;
+    const std::uint32_t cell = WorldMap33_Record04Cells_addr + cur[0xB] * 4u;
     const unsigned z = B(cell + 1), x = B(cell);
     const_cast<unsigned char*>(AreaMap_Bytes)[z * width + x] = 0xA0;
     AH_CALL(Sprite_SetAnimation)(0);
@@ -515,19 +515,19 @@ extern "C" void __cdecl Area34_ChoiceTail5(void) {
     const signed char answer = Answer();
     SetMessage(0xFFFF);
     if (answer == 0 || answer == 1) {
-        B(at::kTailSub) = answer == 0 ? 5 : 4;
-        B(at::kTailKind) = 5;
-        AH_CALL(Flags_Set)(Mem(at::kStoryFlags), 0x1E);
+        B(AreaW0c_TailSub_addr) = answer == 0 ? 5 : 4;
+        B(AreaW0a_TailKind_addr) = 5;
+        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x1E);
     }
-    if (B(at::kChoiceAnswer) == 2) return;
+    if (B(AreaW0c_ChoiceAnswer_addr) == 2) return;
     if (static_cast<unsigned char>(Cond_ByteFA) != 8) return;
-    const auto row = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(at::kFlagRow)))));
+    const auto row = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(AreaW0c_FlagRow_addr)))));
     if (AH_CALL(Flags_Test)(row, 3) != 0) return;
-    B(at::kTailKind) = 0;
+    B(AreaW0a_TailKind_addr) = 0;
     AH_CALL(ScriptFlags_Set40)();
     AH_CALL(Party_DropIn)(2);
     MoveScript_Var7 = 2;
-    B(at::kVar7Step) = 0;
+    B((MoveScript_PartyRecords_addr + 0x65)) = 0;
 }
 
 // original 0x404DE0 (Area34_Choices[1] = Area34_Handlers[0]; PSX
@@ -552,10 +552,10 @@ extern "C" void __cdecl Area34_SpawnEffect51(void) {
 // story flag 0x6D set; when flags 0x6D..0x70 are all set, flag 0x71 too.
 // Answers 0 in al.
 extern "C" unsigned char __cdecl Area34_Trigger51(unsigned char*, unsigned char*) {
-    AH_CALL(Flags_Set)(Mem(at::kStoryFlags), 0x6D);
+    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x6D);
     for (unsigned flag = 0x6D; flag <= 0x70; ++flag)
-        if (!AH_CALL(Flags_Test)(Mem(at::kStoryFlags), flag)) return 0;
-    AH_CALL(Flags_Set)(Mem(at::kStoryFlags), 0x71);
+        if (!AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), flag)) return 0;
+    AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x71);
     return 0;
 }
 
@@ -587,10 +587,10 @@ extern "C" void __cdecl Area35_HideObject(void) {
 // 7: counter 0 = 0, Party_DropIn(0), answer 1. Otherwise 0.
 extern "C" int __cdecl Area36_StepHook(long x, long z) {
     if (Cond_ByteFD != 2) return 0;
-    if (!AH_CALL(Flags_Test)(Mem(at::kStoryFlags), 0x33)) return 0;
+    if (!AH_CALL(Flags_Test)(Mem((Cond_Flags_addr + 0xa0)), 0x33)) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(x) >> 16) - 0x46) >= 3) return 0;
     if (static_cast<std::uint16_t>((static_cast<std::uint32_t>(z) >> 16) - 0x23) >= 3) return 0;
-    const unsigned char pose = B(at::kLeaderByte8);
+    const unsigned char pose = B((ObjTrio_addr + 0x8));
     if (pose != 0 && pose != 7 && pose != 6) return 0;
     B(at::kCounter0) = 0;
     AH_CALL(Party_DropIn)(0);
@@ -600,7 +600,7 @@ extern "C" int __cdecl Area36_StepHook(long x, long z) {
 // original 0x404FE0 (Effect_KindHandlers entry 0xB5): Area36_EffectStates by
 // Sprite_Current[1] - 0x40B4F0 (shared by seven areas), Area36_EffectStep.
 extern "C" void __cdecl Area36_EffectRun(void) {
-    StateEntry("Area36_EffectRun", at::kArea36EffectStates, at::kArea36EffectStateCount, Sprite_Current[1])();
+    StateEntry("Area36_EffectRun", Area36_EffectStates_addr, at::kArea36EffectStateCount, Sprite_Current[1])();
 }
 
 // original 0x405000 (Area36_EffectStates[1]): the object's position
@@ -632,7 +632,7 @@ extern "C" void __cdecl Area37_ChoiceConfirm9C(void) { ChoiceConfirm(0x9C); }
 // original 0x4051B0 (Area37_Choices[20]): answer 0: message 0xFFFF, counter
 // 3 = 0x64, Party_DropIn(3); else message 0xBD, counter 3 = 0.
 extern "C" void __cdecl Area37_ChoiceDropIn(void) {
-    if (B(at::kChoiceAnswer) == 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) == 0) {
         SetMessage(0xFFFF);
         B(at::kCounter3) = 0x64;
         AH_CALL(Party_DropIn)(3);
@@ -647,10 +647,10 @@ extern "C" void __cdecl Area37_ChoiceDropIn(void) {
 // counter 3 = 0x5F; message 0xFFFF for those three, the message word left
 // alone for any other answer.
 extern "C" void __cdecl Area37_ChoiceTail2E(void) {
-    const unsigned char answer = B(at::kChoiceAnswer);
+    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     if (answer == 0) {
         AH_CALL(ScriptFlags_Set40)();
-        B(at::kTailKind) = 0x2E;
+        B(AreaW0a_TailKind_addr) = 0x2E;
         SetMessage(0xFFFF);
     } else if (answer == 1) {
         SetMessage(0xFFFF);
@@ -670,37 +670,37 @@ extern "C" void __cdecl Area37_ChoiceTail2E(void) {
 // waits for MoveScript_WaitWordDA 0, then ScriptFlags_Clear40, the tail
 // disarmed and counter 3 = 0. The state is re-read after each call.
 extern "C" void __cdecl Area37_TailLeave(void) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
     case 0: {
         if (Field_Request == 2) return;
-        AH_CALL(Flags_Set)(Mem(at::kStoryFlags), 0x72);
+        AH_CALL(Flags_Set)(Mem((Cond_Flags_addr + 0xa0)), 0x72);
         AH_CALL(Field_ChangeArea)(0x25, 0x2C8000, 0x270000, 1);
-        const auto next = static_cast<unsigned char>(B(at::kTailState) + 1);
-        B(at::kPendingKind) = 0xFE;
-        B(at::kTailState) = next;
+        const auto next = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
+        B(AreaW0c_PendingKind_addr) = 0xFE;
+        B(AreaW0c_TailState_addr) = next;
         return;
     }
     case 1: {
         if (Field_Request != 0) return;
         AH_CALL(Msg_OpenScript)(0xB5);
-        const auto next = static_cast<unsigned char>(B(at::kTailState) + 1);
+        const auto next = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
         Field_Request = 2;
-        B(at::kTailState) = next;
+        B(AreaW0c_TailState_addr) = next;
         return;
     }
     case 2: {
         if (Field_Request == 2) return;
         AH_CALL(Transition_Start)(1);
-        const auto next = static_cast<unsigned char>(B(at::kTailState) + 1);
+        const auto next = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
         Draw_PassFlags = 0x1F;
-        B(at::kTailState) = next;
+        B(AreaW0c_TailState_addr) = next;
         return;
     }
     case 3:
         if (MoveScript_WaitWordDA != 0) return;
         AH_CALL(ScriptFlags_Clear40)();
-        B(at::kTailKind) = 0;
-        B(at::kTailState) = 0;
+        B(AreaW0a_TailKind_addr) = 0;
+        B(AreaW0c_TailState_addr) = 0;
         B(at::kCounter3) = 0;
         return;
     default: return;   // above 3 or negative: `ja` to the ret

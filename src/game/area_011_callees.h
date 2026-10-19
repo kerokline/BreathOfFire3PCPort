@@ -19,7 +19,7 @@ constexpr std::uint32_t kInitFlags = 0x904000;
 constexpr unsigned kInitFlagOn = 0x13, kInitFlagOff = 0x14;
 // The leader's record (ObjTrio + 0) and its words +0x2E / +0x30, what the
 // movement-script ops 90..95 pass Effect_Spawn as x and z.
-constexpr std::uint32_t kLeader = 0x802D40;
+// kLeader: now ObjTrio (symbols.toml).
 // The area block's header entries, from AreaMap_EntryBase (as
 // AreaMap_HeaderPass walks them): the kind in the top byte, the step to the
 // next in dwords at byte +2, a zero dword the end. Kind 0x81 (kind 1 with

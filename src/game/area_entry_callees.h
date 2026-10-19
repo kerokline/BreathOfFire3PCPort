@@ -14,10 +14,10 @@ namespace area_entry {
 // --- Addresses without a name --------------------------------------------
 // The pending area change Field_ChangeArea writes (PSX 0x80143F10..1C;
 // window_task_callees.h has the same four).
-constexpr std::uint32_t kPendingArea = 0x937F82;    // u16
+// kPendingArea: now AreaW0b_Place (symbols.toml). u16
 constexpr std::uint32_t kPendingX = 0x903860;       // s32, 16.16
-constexpr std::uint32_t kPendingZ = 0x90384C;       // s32, 16.16
-constexpr std::uint32_t kPendingFlags = 0x905B88;   // u8
+// kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16
+// kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8
 // Bits 4-6 of a link's flags byte: the PSX scratchpad's 0x1F800001, which
 // the PC keeps at DamageScratch + 1. What reads it is not established.
 constexpr std::uint32_t kLinkHigh = 0x903851;

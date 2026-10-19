@@ -60,8 +60,8 @@ using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-unsigned char* Bank() { return At(at::kStoryFlags); }
-unsigned char* PartyRecord(U index) { return At(at::kLeader + index * at::kPartyStride); }
+unsigned char* Bank() { return At((Cond_Flags_addr + 0xa0)); }
+unsigned char* PartyRecord(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours
@@ -118,7 +118,7 @@ extern "C" void __cdecl Area85_Kind2Walk(void) {
 // each); then the script word MoveScript_Object +0xA - 2 (the op runs again
 // next frame).
 extern "C" void __cdecl Area85_FollowMember2(void) {
-    if (At(at::kScriptVar7)[0] == 6 && At(at::kScriptStep)[0] == 0xC) {
+    if (static_cast<unsigned char>(MoveScript_Var7) == 6 && MoveScript_PartyRecords[0x65] == 0xC) {
         Cur()[0] = static_cast<unsigned char>(Cur()[0] & 0xBF);
         AH_CALL(Field_MemberSprite)(2, 2);
         AH_CALL(Sprite_SetAnimation)(1);
@@ -228,11 +228,11 @@ extern "C" void __cdecl Area85_ClutShift(int delta) {
         return v > 0x1F ? 0x1Fu : static_cast<U>(v);
     };
     for (U n = 0; n < 0x100; ++n) {
-        const U word = Word(At(at::kClutRow6 + n * 2));
+        const U word = Word(At((Gfx_ClutStripSource_addr + 0xc00) + n * 2));
         const U r = channel(word & 0x1F);
         const U g = channel((word >> 5) & 0x1F);
         const U b = channel((word >> 10) & 0x1F);
-        SetWord(At(at::kClutRow6Live + n * 2), (((b << 5) | g) << 5) | (word & 0x8000) | r);
+        SetWord(At((Gfx_ClutStrip_addr + 0xc00) + n * 2), (((b << 5) | g) << 5) | (word & 0x8000) | r);
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -252,11 +252,11 @@ extern "C" void __cdecl Area85_ClutShift(int delta) {
 // 0x469FE0(0xF) (an effect of kind 4, which sets flag 0x1C), al 1.
 extern "C" unsigned char __cdecl Area86_SwitchHook(unsigned x, unsigned z) {
     U k = 0;
-    for (U a = at::kA86Switches + 1; a < at::kA86SwitchesEnd + 1; a += 4, ++k) {
-        if (At(a - 1)[0] == (x & 0xFF) && At(a)[0] == (z & 0xFF) && At(a + 1)[0] == At(at::kLeaderDir)[0]) break;
+    for (U a = Area86_Switches_addr + 1; a < at::kA86SwitchesEnd + 1; a += 4, ++k) {
+        if (At(a - 1)[0] == (x & 0xFF) && At(a)[0] == (z & 0xFF) && At(a + 1)[0] == ObjTrio[8]) break;
     }
     if (k == 3) return 0;
-    const unsigned char* const rect = At(at::kA86Rects + k * 4);
+    const unsigned char* const rect = At(Area86_Rects_addr + k * 4);
     for (std::int32_t cx = rect[0]; cx < rect[2]; ++cx) {
         for (std::int32_t cz = rect[1]; cz < rect[3]; ++cz) {
             const auto near = static_cast<signed char>(AH_AT(NearFn, kMemberNear86)(static_cast<unsigned>(cx), static_cast<unsigned>(cz)));
@@ -264,7 +264,7 @@ extern "C" unsigned char __cdecl Area86_SwitchHook(unsigned x, unsigned z) {
         }
     }
     if (AH_CALL(Flags_Test)(Bank(), 0x1C) != 0) return 0;
-    AH_AT(BitsFn, area_w2b::kFlagsToggle)(Bank(), At(at::kA86Switches + 3 + k * 4)[0]);
+    AH_AT(BitsFn, area_w2b::kFlagsToggle)(Bank(), At(Area86_Switches_addr + 3 + k * 4)[0]);
     AH_CALL(Sound_PlayEffect)(0x200);
     AH_AT(ValueFn, area_w2b::kSpawnKind4)(0xF);
     return 1;
@@ -307,7 +307,7 @@ extern "C" void __cdecl Area86_Init(void) {
 // +0x40 - in area 86's block by address): when the party came from area 0x3C
 // (the word 0x802290), Field_ScriptFlags bit 13 cleared.
 extern "C" void __cdecl Area87_Init(void) {
-    if (Word(At(at::kPrevArea)) == 0x3C) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xDFFF);
+    if (AreaW2c_LastArea == 0x3C) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xDFFF);
 }
 
 // ===========================================================================
@@ -321,7 +321,7 @@ namespace {
 // The region box's leave test the HUD machine's states share: the map's mode
 // byte set while +0xB is, or Field_Request 2, or bit 8 of Field_ScriptFlags.
 bool BoxLeaves(const unsigned char* o) {
-    if (At(at::kMapMode)[0] != 0 && o[0xB] != 0) return true;
+    if (AreaW0b_MapMode != 0 && o[0xB] != 0) return true;
     if (Field_Request == 2) return true;
     return (Field_ScriptFlags & 0x100) != 0;
 }
@@ -345,29 +345,29 @@ bool BoxLeaves(const unsigned char* o) {
 // Any other state does nothing. As the original: neither the row, the byte
 // nor the set 3 (which reads the plate state table's bytes) is checked.
 void PlaceMessage(const WorldMapTables& t) {
-    const auto state = static_cast<signed char>(At(at::kMsgState)[0]);
+    const auto state = AreaW0c_TailState;
     if (state == 1) {
         if (Field_Request == 2) return;
         AH_CALL(ScriptFlags_Clear40)();
-        At(at::kMsgMode)[0] = 0;
-        At(at::kMsgState)[0] = 0;
-        At(at::kMsgArg)[0] = 0;
+        AreaW0a_TailKind = 0;
+        AreaW0c_TailState = 0;
+        AreaW0c_TailSub = 0;
         return;
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At(at::kLeaderCellWordZ)));
-    const auto x = static_cast<short>(Word(At(at::kLeaderCellWordX)));
+    const auto z = static_cast<short>(Word(At((ObjTrio_addr + 0x3a))));
+    const auto x = static_cast<short>(Word(At((ObjTrio_addr + 0x36))));
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
-        const unsigned place = Word(At(at::kPlace));
+        const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
         for (U a = t.place_messages; a < t.place_messages_end; a += 0x20, ++row)
             if (Word(At(a)) == place) break;
         const std::int32_t index = (row << 4) + Cond_ByteFA;
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(t.place_messages + static_cast<U>(index * 2)))));
     } else {
-        const unsigned cx = Word(At(at::kLeaderCellWordX));
-        const unsigned cz = Word(At(at::kLeaderCellWordZ));
+        const unsigned cx = Word(At((ObjTrio_addr + 0x36)));
+        const unsigned cz = Word(At((ObjTrio_addr + 0x3a)));
         U cell = t.cells;
         while (!(At(cell)[0] == cx && At(cell)[1] == cz)) cell += 4;
         const unsigned id = At(cell)[3];
@@ -385,15 +385,15 @@ void PlaceMessage(const WorldMapTables& t) {
                 out[8] = 0;
             } else {
                 const unsigned char* const name =
-                    item == 0x16 ? At(at::kItemNameKey) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
+                    item == 0x16 ? At(AreaW0b_ItemNameKey_addr) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
                 std::memcpy(out, name, 16);
             }
         }
         AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(set + 0x16));
     }
-    const auto next = static_cast<unsigned char>(At(at::kMsgState)[0] + 1);
+    const auto next = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
     Field_Request = 2;
-    At(at::kMsgState)[0] = next;
+    AreaW0c_TailState = next;
 }
 
 // The place plate (the record's +0: effect kind 0). The cell ahead of the
@@ -403,9 +403,9 @@ void PlaceMessage(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = At(at::kLeaderSteps)[0];
-    const U zs = steps * static_cast<U>(Long(At(at::kLeaderDirZ))) + static_cast<U>(Long(At(at::kLeaderZ)));
-    const U xs = steps * static_cast<U>(Long(At(at::kLeaderDirX))) + static_cast<U>(Long(At(at::kLeaderX)));
+    const U steps = ObjTrio[9];
+    const U zs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0x10)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x38))));
+    const U xs = steps * static_cast<U>(Long(At((ObjTrio_addr + 0xc)))) + static_cast<U>(Long(At((ObjTrio_addr + 0x34))));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     SetLong(Cur() + 0xC, x);
@@ -444,7 +444,7 @@ void PlateShow(const WorldMapTables& t) {
     const unsigned kind = Cur()[0xB];
     unsigned animation;
     if (kind == 1) {
-        const unsigned place = Word(At(at::kPlace));
+        const unsigned place = AreaW0b_Place;
         U entry = t.plate_anims;
         while (Word(At(entry)) != place) entry += 4;
         SetLong(Cur() + 0x18, static_cast<std::int32_t>(place));
@@ -490,7 +490,7 @@ void PlateHold() {
         unsigned char* const o = Cur();
         const unsigned shown = o[7];
         const bool leaves = o[0xB] != shown || Field_Request == 5 ||
-                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != Word(At(at::kPlace)));
+                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != AreaW0b_Place);
         if (leaves) {
             o[0x48] = 2;
             Cur()[9] = 8;
@@ -533,7 +533,7 @@ void FrameSlideIn(const WorldMapTables& t) {
 // +0x2E). The y pushed carries a stale high half the drawing never reads:
 // ours passes the word sign-extended.
 void FrameHold(const WorldMapTables& t) {
-    if (At(at::kMapMode)[0] == 2) Cur()[2] = 3;
+    if (AreaW0b_MapMode == 2) Cur()[2] = 3;
     AH_AT(DrawAt, t.fn_draw_frame)(0x10, S16(Cur() + 0x2E));
 }
 
@@ -546,7 +546,7 @@ void FrameSlideOut(const WorldMapTables& t) {
         o[2] = 0;
         o = Cur();
     }
-    if (At(at::kMapMode)[0] != 2) {
+    if (AreaW0b_MapMode != 2) {
         o[2] = 1;
         o = Cur();
     }
@@ -600,7 +600,7 @@ void BoxSlideOut(const WorldMapTables& t) {
         o[3] = 0;
         o = Cur();
     }
-    if (At(at::kMapMode)[0] == 0 && Field_Request != 2 && (Field_ScriptFlags & 0x100) == 0) {
+    if (AreaW0b_MapMode == 0 && Field_Request != 2 && (Field_ScriptFlags & 0x100) == 0) {
         o[3] = 1;
         o = Cur();
     }
@@ -632,16 +632,16 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
-    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(at::kButtonMap0))), x + 0x38, y + 8,
+    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f000)))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(at::kButtonMap6))), x + 0x38, y + 0x10,
+    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At((Gfx_UnpackScratch_addr + 0x1f00c)))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
-    if (!third) third = (At(at::kPartySet)[0] & 0x7F) == 0xC;
+    if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
     if (third) sprite(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
@@ -705,8 +705,8 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x29] = 5;
     SetLong(Cur() + 0xC, dir(Cur(), 0));
     SetLong(Cur() + 0x10, dir(Cur(), 2));
-    SetLong(Cur() + 0x34, Long(At(at::kLeaderX)));
-    SetLong(Cur() + 0x38, Long(At(at::kLeaderZ)));
+    SetLong(Cur() + 0x34, Long(At((ObjTrio_addr + 0x34))));
+    SetLong(Cur() + 0x38, Long(At((ObjTrio_addr + 0x38))));
     unsigned char* o = Cur();
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
@@ -779,7 +779,7 @@ void DrawDrift(const WorldMapTables& t) {
     const std::int32_t e = b - 2;
     SetLong(o + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(o + 0x38)) + (static_cast<U>(b) << 10)));
     o = Cur();
-    if (S16(o + 0x3A) > static_cast<std::int32_t>(At(at::kMapHeight)[0]) + 8) {
+    if (S16(o + 0x3A) > AreaMap_Header[1] + 8) {
         SetWord(o + 0x3A, 0xFFF8);
         o = Cur();
     }

@@ -196,7 +196,7 @@ void Scribble(U at, unsigned n) {
 // record, one of the four party objects.
 unsigned char* AnyRecord(U v) {
     switch (v % 4) {
-    case 0: return ah::Mem(at::kSpriteObjectsExtra + (v >> 2) % 4 * 0xA4);
+    case 0: return ah::Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4);
     case 1: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return ah::Object(v >> 2);
     }
@@ -244,33 +244,33 @@ U MovesCurrent(const U*, U answer) {
 }
 U MovesMember(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kActiveMember, AnyRecord(n >> 8));
+    if (n & 1) ah::SetPointer(Field_ActiveMember_addr, AnyRecord(n >> 8));
     return answer;
 }
 U EventOpEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) Sprite_Current = n & 2 ? ah::Object(n >> 8) : RunningRecord(n >> 8);
-    if (n & 4) ah::SetPointer(at::kActiveMember, AnyRecord(n >> 12));
+    if (n & 4) ah::SetPointer(Field_ActiveMember_addr, AnyRecord(n >> 12));
     return answer;
 }
 U Set40Effect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kFocusObject, ah::Object(n >> 8));
+    if (n & 1) ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(n >> 8));
     return answer;
 }
 // Area 75's cells, kept to what indexes a table or a record.
 void MoveCell(U n) {
     switch ((n >> 4) % 10) {
     case 0: B(at::kObjectA) = static_cast<unsigned char>((n >> 8) % 30); break;
-    case 1: B(at::kObjectB) = static_cast<unsigned char>((n >> 8) % 30); break;
+    case 1: B(AreaW1f_ObjectB_addr) = static_cast<unsigned char>((n >> 8) % 30); break;
     case 2: B(at::kOtherEffect) = static_cast<unsigned char>((n >> 8) % 4); break;
-    case 3: B(at::kPlayerEffect) = static_cast<unsigned char>((n >> 8) % 4); break;
-    case 4: B(at::kPressFlags) = static_cast<unsigned char>(n >> 8); break;
-    case 5: B(at::kMove) = static_cast<unsigned char>((n >> 8) % 4); break;
-    case 6: B(at::kList) = static_cast<unsigned char>((n >> 8) % 3); break;
-    case 7: SetWord(ah::Mem(at::kPlayerCounter), n >> 12); break;
-    case 8: SetWord(ah::Mem(at::kOtherCounter), n >> 12); break;
-    default: B(at::kListPos) = static_cast<unsigned char>((n >> 8) % 8); break;
+    case 3: B(AreaW1f_PlayerEffect_addr) = static_cast<unsigned char>((n >> 8) % 4); break;
+    case 4: B(AreaW1f_PressFlags_addr) = static_cast<unsigned char>(n >> 8); break;
+    case 5: B(AreaW1f_Move_addr) = static_cast<unsigned char>((n >> 8) % 4); break;
+    case 6: B(AreaW1f_List_addr) = static_cast<unsigned char>((n >> 8) % 3); break;
+    case 7: SetWord(ah::Mem(AreaW1f_PlayerCounter_addr), n >> 12); break;
+    case 8: SetWord(ah::Mem(AreaW1f_OtherCounter_addr), n >> 12); break;
+    default: B(AreaW1f_ListPos_addr) = static_cast<unsigned char>((n >> 8) % 8); break;
     }
 }
 U MovesCells(const U*, U answer) {
@@ -281,14 +281,14 @@ U MovesCells(const U*, U answer) {
 // Sprite_ScriptTick: the two press counts the callers bump after it.
 U TickEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(n & 2 ? at::kEarlyPresses : at::kIdleFrames) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(n & 2 ? AreaW1f_EarlyPresses_addr : AreaW1f_IdleFrames_addr) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 // Area75_ResetPresses: object A and the flags byte the tail reads after it.
 U ResetEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) B(at::kObjectA) = static_cast<unsigned char>((n >> 8) % 30);
-    if (n & 2) B(at::kPressFlags) = static_cast<unsigned char>(n >> 16);
+    if (n & 2) B(AreaW1f_PressFlags_addr) = static_cast<unsigned char>(n >> 16);
     return answer;
 }
 // Area75_PhaseRun: the tail state its caller reads again (the real phases 3
@@ -296,13 +296,13 @@ U ResetEffect(const U*, U answer) {
 U PhaseRunEffect(const U*, U answer) {
     static const unsigned char kStates[] = {0x1E, 0, 6, 0xE, 0x15, 0xF};
     const U n = ah::Noise();
-    if (n & 1) B(at::kTailState) = kStates[(n >> 8) % 6];
+    if (n & 1) B(AreaW0c_TailState_addr) = kStates[(n >> 8) % 6];
     return answer;
 }
 // Msg_OpenScript: the flags byte the tail's state 9 reads after it.
 U MsgEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(at::kPressFlags) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(AreaW1f_PressFlags_addr) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 // Inventory_CountUsed: a count around the choice's 0xF.
@@ -368,47 +368,47 @@ const ah::Callee kCallees[] = {
 #undef W1F_OURS
 #undef W1F_THEIRS
 
-const ah::DataTable kTables68[] = {{at::kArea68GlideStatesA, 2}, {at::kArea68GlideStatesB, 2}};
-const ah::DataTable kTables69[] = {{at::kArea69GlideStates, 2}};
-const ah::DataTable kTables75[] = {{at::kArea75FlyStates, 2}, {at::kArea75FollowStates, 2}, {at::kArea75Phases, at::kArea75PhaseCount}};
+const ah::DataTable kTables68[] = {{Area68_GlideStatesA_addr, 2}, {Area68_GlideStatesB_addr, 2}};
+const ah::DataTable kTables69[] = {{Area69_GlideStates_addr, 2}};
+const ah::DataTable kTables75[] = {{Area75_FlyStates_addr, 2}, {Area75_FollowStates_addr, 2}, {Area75_Phases_addr, at::kArea75PhaseCount}};
 
 // Beyond the field frame: the effect records (slots 0..3), the active member,
 // script object and focus object pointers, the mark, area 75's cells,
 // Input_Pressed, Draw_PassFlags, the wait word, the music byte, the packet
 // cursor and the fuzz's packet buffer, areas 72 and 73's weights (.data).
 ah::Region g_regions[] = {
-    {at::kEffectObjects, 4 * at::kEffectStride},
-    {at::kActiveMember, 4},
-    {at::kScriptObject, 4},
-    {at::kFocusObject, 4},
-    {at::kAnswerMark, 1},
-    {at::kArea75Cells, at::kArea75CellBytes},
-    {at::kInputPressed, 2},
-    {at::kPassFlags, 1},
-    {at::kWaitWord, 2},
-    {at::kMusicCurrent, 1},
-    {at::kPacketNext, 4},
+    {Effect_Objects_addr, 4 * at::kEffectStride},
+    {Field_ActiveMember_addr, 4},
+    {MoveScript_Object_addr, 4},
+    {AreaW1a_FocusObject_addr, 4},
+    {AreaW0c_AnswerMark_addr, 1},
+    {AreaW1f_Phase_addr, at::kArea75CellBytes},
+    {Input_Pressed_addr, 2},
+    {Draw_PassFlags_addr, 1},
+    {MoveScript_WaitWordDA_addr, 2},
+    {AreaW1f_MusicCurrent_addr, 1},
+    {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},   // g_packets (set at start-up)
-    {at::kArea72Weights, 8},
-    {at::kArea73Weights, 8},
+    {Area72_Weights_addr, 8},
+    {Area73_Weights_addr, 8},
 };
 constexpr unsigned kPacketRegion = 11;
 
 // Every round: the pointers the areas follow put back inside the regions, and
 // every cell of area 75's that indexes a table or a record kept inside it.
 void Common() {
-    ah::SetPointer(at::kActiveMember, AnyRecord(ah::Next()));
-    ah::SetPointer(at::kScriptObject, ah::Next() & 1 ? ah::Object(ah::Next()) : ah::PartyOf(static_cast<unsigned char>(ah::Next())));
-    ah::SetPointer(at::kFocusObject, ah::Object(ah::Next()));
+    ah::SetPointer(Field_ActiveMember_addr, AnyRecord(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ah::Next() & 1 ? ah::Object(ah::Next()) : ah::PartyOf(static_cast<unsigned char>(ah::Next())));
+    ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(ah::Next()));
     B(at::kObjectA) = static_cast<unsigned char>(ah::Next() % 30);
-    B(at::kObjectB) = static_cast<unsigned char>(ah::Next() % 30);
+    B(AreaW1f_ObjectB_addr) = static_cast<unsigned char>(ah::Next() % 30);
     B(at::kOtherEffect) = static_cast<unsigned char>(ah::Next() % 4);
-    B(at::kPlayerEffect) = static_cast<unsigned char>(ah::Next() % 4);
-    B(at::kList) = static_cast<unsigned char>(ah::Next() % 3);
-    B(at::kPhase) = static_cast<unsigned char>(ah::Next() % at::kArea75PhaseCount);
+    B(AreaW1f_PlayerEffect_addr) = static_cast<unsigned char>(ah::Next() % 4);
+    B(AreaW1f_List_addr) = static_cast<unsigned char>(ah::Next() % 3);
+    B(AreaW1f_Phase_addr) = static_cast<unsigned char>(ah::Next() % at::kArea75PhaseCount);
     Gfx_PacketNext = g_packets + (ah::Next() % 4) * 4;
-    if (ah::Often()) std::memcpy(ah::Mem(at::kArea72Weights), g_weights72, sizeof g_weights72);
-    if (ah::Often()) std::memcpy(ah::Mem(at::kArea73Weights), g_weights73, sizeof g_weights73);
+    if (ah::Often()) std::memcpy(ah::Mem(Area72_Weights_addr), g_weights72, sizeof g_weights72);
+    if (ah::Often()) std::memcpy(ah::Mem(Area73_Weights_addr), g_weights73, sizeof g_weights73);
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -416,21 +416,21 @@ void Common() {
 void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 8) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(h & 0x100 ? v % 0x24 : v); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 0x24 : v); break;
     case 1: B(at::kCounter0) = v; break;
-    case 2: ah::SetPointer(at::kActiveMember, AnyRecord(h >> 16)); break;
-    case 3: ah::SetPointer(at::kScriptObject, ah::Object(h >> 16)); break;
+    case 2: ah::SetPointer(Field_ActiveMember_addr, AnyRecord(h >> 16)); break;
+    case 3: ah::SetPointer(MoveScript_Object_addr, ah::Object(h >> 16)); break;
     case 4: MoveCell(h >> 4); break;
-    case 5: SetWord(ah::Mem(h & 0x100 ? at::kPlayerCounter : at::kOtherCounter), h >> 12); break;
-    case 6: B(at::kInputPressed) = v; break;
-    default: SetWord(ah::Mem(at::kWaitWord), h & 0x100 ? 0 : v); break;
+    case 5: SetWord(ah::Mem(h & 0x100 ? AreaW1f_PlayerCounter_addr : AreaW1f_OtherCounter_addr), h >> 12); break;
+    case 6: B(Input_Pressed_addr) = v; break;
+    default: SetWord(ah::Mem(MoveScript_WaitWordDA_addr), h & 0x100 ? 0 : v); break;
     }
 }
 
 // A choice answer: each value a handler tests, its neighbours, a negative
 // byte (the table choices read it signed), anything.
 void SeedAnswer() {
-    if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 0xFF, 0x80, 0x7F, 3));
+    if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 0xFF, 0x80, 0x7F, 3));
 }
 // The running object's state byte for the two-state dispatchers (a state of
 // 2 or more aborts ours and faults the original: never seeded).
@@ -438,7 +438,7 @@ void SeedState() { Sprite_Current[4] = static_cast<unsigned char>(ah::Next() & 1
 // An object trigger is called (a field object, 0x904030).
 void ArgsTrigger(U* a) {
     a[0] = Key(ah::Object(a[0]));
-    a[1] = at::kStoryFlags;
+    a[1] = (Cond_Flags_addr + 0xa0);
 }
 
 // ---- area 68 ----
@@ -452,7 +452,7 @@ void Seed68(unsigned k) {
         break;
     case k68Spawn4M1: case k68Spawn4M2: case k68Spawn1M1: case k68Spawn1M2: case k68Spawn3M1: case k68Spawn3M2:
         for (unsigned m = 1; m < 3; ++m)
-            if (ah::Often()) B(at::kPartyList0 + m) = static_cast<unsigned char>(ah::Next() % 12);
+            if (ah::Often()) B((Cond_Flags_addr + 0xd2) + m) = static_cast<unsigned char>(ah::Next() % 12);
         break;
     default: break;
     }
@@ -483,13 +483,13 @@ void Seed74(unsigned k) {
     case k74Ask92:
     case k74Answer94:
         SeedAnswer();
-        if (k == k74Ask92 && ah::Half()) B(at::kFlagByte9C) = static_cast<unsigned char>(B(at::kFlagByte9C) ^ 0x20);
+        if (k == k74Ask92 && ah::Half()) B(AreaW1f_FlagByte9C_addr) = static_cast<unsigned char>(B(AreaW1f_FlagByte9C_addr) ^ 0x20);
         break;
     case k74Push:
         // each gate passed four times in five, so the move is reached often
-        if (ah::Next() % 5) B(at::kLeaderByte89) = static_cast<unsigned char>(AH_PICK(2, 2, 2, 1, 3, 0x82));
+        if (ah::Next() % 5) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(2, 2, 2, 1, 3, 0x82));
         if (ah::Next() % 5) Sprite_Current[9] = 0;
-        if (ah::Next() % 5) B(at::kLeaderDir) = static_cast<unsigned char>((B(at::kLeaderDir) & 0xF8) | AH_PICK(5, 1, 5, 1, 5, 1, 0, 3, 4, 6));
+        if (ah::Next() % 5) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>((B((ObjTrio_addr + 0x8)) & 0xF8) | AH_PICK(5, 1, 5, 1, 5, 1, 0, 3, 4, 6));
         break;
     default: break;
     }
@@ -506,8 +506,8 @@ void SeedGap(U gap) {
     const U base = ah::Next() % 0x5DD;
     const U other = ah::Half() ? base + gap : base - gap;
     const bool swap = ah::Half();
-    SetWord(ah::Mem(swap ? at::kPlayerCounter : at::kOtherCounter), base);
-    SetWord(ah::Mem(swap ? at::kOtherCounter : at::kPlayerCounter), other);
+    SetWord(ah::Mem(swap ? AreaW1f_PlayerCounter_addr : AreaW1f_OtherCounter_addr), base);
+    SetWord(ah::Mem(swap ? AreaW1f_OtherCounter_addr : AreaW1f_PlayerCounter_addr), other);
 }
 void SeedCounterAt(U counter, U edge) {
     SetWord(ah::Mem(counter), ah::Often() ? edge + AH_PICK(0, 0, 1, 0xFFFFFFFFu, 2) : ah::Next());
@@ -521,20 +521,20 @@ void SeedTail() {
                                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xF, 0x14, 0x15, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23,
                                 0xE, 0x10, 0x13, 0x16, 0x1D, 0x24, 0x7F, 0x80, 0xFF, 0xFA};
     const auto state = static_cast<unsigned char>(ah::Pick(kStates, sizeof kStates / sizeof kStates[0]));
-    B(at::kTailState) = state;
+    B(AreaW0c_TailState_addr) = state;
     const bool on = ah::Often();
     switch (state) {
     case 1: case 3: case 4: case 0x20: case 0x23:
-        SetWord(ah::Mem(at::kWaitWord), on ? 0 : AH_PICK(1, 0x100, 0xFFFF));
+        SetWord(ah::Mem(MoveScript_WaitWordDA_addr), on ? 0 : AH_PICK(1, 0x100, 0xFFFF));
         break;
     case 5: B(at::kCounter0) = static_cast<unsigned char>(on ? 3 : AH_PICK(2, 4, 0x83)); break;
     case 7: B(at::kCounter0) = static_cast<unsigned char>(on ? 6 : AH_PICK(5, 7, 0x86)); break;
     case 9: B(at::kCounter0) = static_cast<unsigned char>(on ? 9 : AH_PICK(8, 0xA, 0x89)); break;
     case 0xD: B(at::kCounter0) = static_cast<unsigned char>(on ? 0xC : AH_PICK(0xB, 0xD, 0x8C)); break;
     case 0x1F: B(at::kCounter0) = static_cast<unsigned char>(on ? 0x1A : AH_PICK(0x19, 0x1B, 0x9A)); break;
-    case 6: SeedCounterAt(at::kOtherCounter, 0x578); break;
-    case 8: SeedCounterAt(at::kPlayerCounter, 0x578); break;
-    case 0xC: SeedCounterAt(at::kOtherCounter, 0x47E); break;
+    case 6: SeedCounterAt(AreaW1f_OtherCounter_addr, 0x578); break;
+    case 8: SeedCounterAt(AreaW1f_PlayerCounter_addr, 0x578); break;
+    case 0xC: SeedCounterAt(AreaW1f_OtherCounter_addr, 0x47E); break;
     case 0xB: SeedGap(AH_PICK(0x96, 0x97, 0x95, 0x200, 0)); break;
     case 0xA: case 0x14: case 0x21:
         Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 5, 3) : 2);
@@ -546,13 +546,13 @@ void SeedTail() {
 
 // The rhythm row and the move's frames on a press of the table (half the time).
 void SeedRhythm() {
-    B(at::kRow) = static_cast<unsigned char>(ah::Often() ? ah::Next() % 2 : ah::Next() % 16);
+    B(AreaW1f_Row_addr) = static_cast<unsigned char>(ah::Often() ? ah::Next() % 2 : ah::Next() % 16);
     if (!ah::Half()) return;
-    const unsigned char* const row = ah::Mem(at::kArea75Rhythm + B(at::kRow) * 15u);
+    const unsigned char* const row = ah::Mem(Area75_Rhythm_addr + B(AreaW1f_Row_addr) * 15u);
     for (unsigned tries = 0; tries < 15; ++tries) {
         const unsigned k = ah::Next() % 15;
         if (row[k] != 0) {
-            SetWord(ah::Mem(at::kMoveFrames), k + 15 * (ah::Next() % 8));
+            SetWord(ah::Mem(AreaW1f_MoveFrames_addr), k + 15 * (ah::Next() % 8));
             return;
         }
     }
@@ -569,29 +569,29 @@ void Seed75(unsigned k) {
     case k75Choice14: case k75ChoiceF: SeedAnswer(); break;
     case k75Tail: SeedTail(); break;
     case k75Deal: {
-        SeedCounterAt(at::kPlayerCounter, 0x1F4);
-        if (ah::Often()) B(at::kMove) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 0xFF));
+        SeedCounterAt(AreaW1f_PlayerCounter_addr, 0x1F4);
+        if (ah::Often()) B(AreaW1f_Move_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 0xFF));
         // the list position at its count less one (the list ends here) or beside
-        const unsigned char count = B(at::kArea75Lists + 4 + B(at::kList) * 8u);
-        if (ah::Often()) B(at::kListPos) = static_cast<unsigned char>(count - AH_PICK(1, 1, 2, 0, 3));
+        const unsigned char count = B(Area75_Lists_addr + 4 + B(AreaW1f_List_addr) * 8u);
+        if (ah::Often()) B(AreaW1f_ListPos_addr) = static_cast<unsigned char>(count - AH_PICK(1, 1, 2, 0, 3));
         break;
     }
     case k75Play:
-        B(at::kMove) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 2, 3, 0xFF));
-        if (ah::Often()) SetWord(ah::Mem(at::kMoveFrames), AH_PICK(1, 1, 0, 2));
-        if (ah::Half()) B(at::kPressFlags) = static_cast<unsigned char>(B(at::kPressFlags) & ~8u);
-        if (ah::Often()) B(at::kEarlyPresses) = static_cast<unsigned char>(AH_PICK(3, 4, 0, 0x83));
-        if (ah::Often()) B(at::kIdleFrames) = static_cast<unsigned char>(AH_PICK(0x1E, 0x1F, 0, 0x9E));
+        B(AreaW1f_Move_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 2, 3, 0xFF));
+        if (ah::Often()) SetWord(ah::Mem(AreaW1f_MoveFrames_addr), AH_PICK(1, 1, 0, 2));
+        if (ah::Half()) B(AreaW1f_PressFlags_addr) = static_cast<unsigned char>(B(AreaW1f_PressFlags_addr) & ~8u);
+        if (ah::Often()) B(AreaW1f_EarlyPresses_addr) = static_cast<unsigned char>(AH_PICK(3, 4, 0, 0x83));
+        if (ah::Often()) B(AreaW1f_IdleFrames_addr) = static_cast<unsigned char>(AH_PICK(0x1E, 0x1F, 0, 0x9E));
         if (ah::Often()) SeedGap(AH_PICK(0xC8, 0xC9, 0xC7, 0));
         SeedRhythm();
         break;
     case k75Reached: if (ah::Often()) Cond_ByteFA = static_cast<signed char>(AH_PICK(0xA, 0xA, 9, 0xB, 0x8A)); break;
     case k75OtherPress: SeedRhythm(); break;
     case k75PlayerPress: case k75EarlyPress:
-        if (ah::Half()) B(at::kPressFlags) = static_cast<unsigned char>(B(at::kPressFlags) & ~8u);
+        if (ah::Half()) B(AreaW1f_PressFlags_addr) = static_cast<unsigned char>(B(AreaW1f_PressFlags_addr) & ~8u);
         break;
     case k75DrawCounters:
-        if (ah::Half()) B(at::kPressFlags) = static_cast<unsigned char>(B(at::kPressFlags) & ~1u);
+        if (ah::Half()) B(AreaW1f_PressFlags_addr) = static_cast<unsigned char>(B(AreaW1f_PressFlags_addr) & ~1u);
         if (ah::Often()) SeedGap(AH_PICK(0x96, 0x97, 0x95, 0));
         break;
     default: break;
@@ -634,8 +634,8 @@ void RunArea(int area, const ah::Clone* clones, unsigned n, const ah::DataTable*
 void SelfTest() {
     constexpr unsigned kRounds = 6000;
     g_regions[kPacketRegion].at = Key(g_packets);
-    std::memcpy(g_weights72, ah::Mem(at::kArea72Weights), sizeof g_weights72);
-    std::memcpy(g_weights73, ah::Mem(at::kArea73Weights), sizeof g_weights73);
+    std::memcpy(g_weights72, ah::Mem(Area72_Weights_addr), sizeof g_weights72);
+    std::memcpy(g_weights73, ah::Mem(Area73_Weights_addr), sizeof g_weights73);
     RunArea(68, kClones68, sizeof kClones68 / sizeof kClones68[0], kTables68, 2, &Seed68, &Args68, kRounds);
     RunArea(69, kClones69, sizeof kClones69 / sizeof kClones69[0], kTables69, 1, &Seed69, nullptr, kRounds);
     RunArea(71, kClones71, sizeof kClones71 / sizeof kClones71[0], nullptr, 0, &Seed71, nullptr, kRounds);

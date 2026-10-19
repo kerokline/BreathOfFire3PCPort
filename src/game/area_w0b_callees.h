@@ -28,7 +28,7 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
-constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
+// kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
 constexpr U kLeaderSteps = 0x802D49;      // u8 step count
 constexpr U kLeaderDirX = 0x802D4C;       // dword direction
 constexpr U kLeaderDirZ = 0x802D50;
@@ -37,22 +37,22 @@ constexpr U kLeaderZ = 0x802D78;
 constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
 constexpr U kLeaderCellWordZ = 0x802D7A;  // the high word of +0x38
 constexpr U kLeaderEdge = 0x802E74;       // the leader's dword +0x134 (Field_EdgeBits = it - 5)
-constexpr U kPlace = 0x937F82;            // u16: the place the party stands on (world map)
-constexpr U kMsgMode = 0x9039F3;          // the tail kind byte (Field_ModeTailKinds' index)
-constexpr U kMsgState = 0x9039F4;         // s8: the field hook's state
-constexpr U kMsgArg = 0x9039F5;
-constexpr U kMapMode = 0x9045FA;          // the world map's mode byte
+// kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
+// kMsgMode: now AreaW0a_TailKind (symbols.toml). the tail kind byte (Field_ModeTailKinds' index)
+// kMsgState: now AreaW0c_TailState (symbols.toml). s8: the field hook's state
+// kMsgArg: now AreaW0c_TailSub (symbols.toml).
+// kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
 constexpr U kMapHeight = 0x8CB581;        // AreaMap_Header's second byte: the map's height in cells
 constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0, the first legend's button
 constexpr U kButtonMap6 = 0x90358C;       // word 6, the second's
-constexpr U kPartySet = 0x90412C;         // & 0x7F: the party set (0xC shows the third legend)
+// kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr U kAreaText = 0x803580;         // the area's text section: the region label at +[0x803588] & 0xFFFF
 constexpr U kAreaTextOffset = 0x803588;
 constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen (the hook's list shows "????????")
-constexpr U kItemNameKey = 0x669CD8;      // the 16-byte name the hook copies for item 0x16 (no Item_NamePtr call)
-constexpr U kMoney = 0x904058;            // dword
+// kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16 (no Item_NamePtr call)
+// kMoney: now Party_Zenny (symbols.toml). dword
 constexpr U kChoice = 0x7DEE67;           // s8: the choice the message box committed
 constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
 constexpr U kCounter = 0x90384B;          // area 21's trade counter, 0..7
@@ -70,35 +70,35 @@ constexpr U kAreaRecords = 0x668D80;      // a pointer per area; area 18's init 
 
 // --- area 16's tables (the world-map copy's, in its data block after area
 // 17's descriptor; tools/area_rows.py moves them to area 16) -----------------
-constexpr U kA16PlateAnims = 0x5E5BE0;    // (u16 place, u8 animation, u8) x 9, searched with NO bound
-constexpr U kA16Cells = 0x5E5C04;         // (u8 x, u8 z, u8, u8 id) x 138, searched with NO bound
+// kA16PlateAnims: now Area16_PlateAnims (symbols.toml). (u16 place, u8 animation, u8) x 9, searched with NO bound
+// kA16Cells: now Area16_Cells (symbols.toml). (u8 x, u8 z, u8, u8 id) x 138, searched with NO bound
 constexpr U kA16CellsEnd = 0x5E5E2C;
-constexpr U kA16PlaceMessages = 0x5E5E2C; // 9 rows of 0x20: u16 place, fifteen u16 messages
+// kA16PlaceMessages: now Area16_PlaceMessages (symbols.toml). 9 rows of 0x20: u16 place, fifteen u16 messages
 constexpr U kA16PlaceMessagesEnd = 0x5E5F4C;
-constexpr U kA16NameSets = 0x5E5F4C;      // 3 records of (u8 id, u8 item x 4)
+// kA16NameSets: now Area16_NameSets (symbols.toml). 3 records of (u8 id, u8 item x 4)
 constexpr U kA16NameSetsEnd = 0x5E5F5B;
-constexpr U kA16PlateStates = 0x5E5F5C;   // 5 handlers
-constexpr U kA16HudStates = 0x5E5F70;     // 2
-constexpr U kA16FrameStates = 0x5E5F78;   // 4
-constexpr U kA16BoxStates = 0x5E5F88;     // 4
-constexpr U kA16Sprites = 0x5E5F98;       // (w, h, u, v) x 22, by index & 0xFF unchecked
-constexpr U kA16Buttons = 0x5E5FF0;       // (u16 mask, u8 sprite, u8) x 6; the second legend reads EIGHT
+// kA16PlateStates: now Area16_PlateStates (symbols.toml). 5 handlers
+// kA16HudStates: now Area16_HudStates (symbols.toml). 2
+// kA16FrameStates: now Area16_FrameStates (symbols.toml). 4
+// kA16BoxStates: now Area16_BoxStates (symbols.toml). 4
+// kA16Sprites: now Area16_Sprites (symbols.toml). (w, h, u, v) x 22, by index & 0xFF unchecked
+// kA16Buttons: now Area16_Buttons (symbols.toml). (u16 mask, u8 sprite, u8) x 6; the second legend reads EIGHT
 constexpr U kA16Buttons6End = 0x5E6008;
 constexpr U kA16Buttons8End = 0x5E6010;
-constexpr U kA16Record8States = 0x5E6008; // 3 (0x4253C0 and 0x40C490 other areas' shared ones)
-constexpr U kA16Directions = 0x5E6014;    // (s16 dx, s16 dz) x 4 by +8, unchecked
-constexpr U kA16Record8Anims = 0x5E6024;  // (u8 animation, u8 +0x2A) x 4 by +8, unchecked
-constexpr U kA16Record4States = 0x5E602C; // 2 (0x408990 another area's shared one)
-constexpr U kA16DriftUBase = 0x5E6034;    // u8 by +0xB - 2; v base +4, cell size +8
+// kA16Record8States: now Area16_Record8States (symbols.toml). 3 (0x4253C0 and 0x40C490 other areas' shared ones)
+// kA16Directions: now Area16_Directions (symbols.toml). (s16 dx, s16 dz) x 4 by +8, unchecked
+// kA16Record8Anims: now Area16_Record8Anims (symbols.toml). (u8 animation, u8 +0x2A) x 4 by +8, unchecked
+// kA16Record4States: now Area16_Record4States (symbols.toml). 2 (0x408990 another area's shared one)
+// kA16DriftUBase: now Area16_DriftUV (symbols.toml). u8 by +0xB - 2; v base +4, cell size +8
 constexpr U kA16DriftVBase = 0x5E6038;
 constexpr U kA16DriftSize = 0x5E603C;
 
 // --- the other areas' tables --------------------------------------------------
-constexpr U kA20Cells = 0x5E6C3C;         // (u8 x, u8 z) x 8
-constexpr U kA20Weights = 0x5E6C4C;       // u8 x 8, summing to 64
-constexpr U kA21Messages = 0x5E72C4;      // u16 by the s8 choice, unchecked
-constexpr U kA26Messages = 0x5EC5E4;      // u16 by the s8 choice, unchecked
-constexpr U kA26EffectKinds = 0x5EC5E8;   // u8 by the first member id, unchecked
+// kA20Cells: now Area20_Cells (symbols.toml). (u8 x, u8 z) x 8
+// kA20Weights: now Area20_Weights (symbols.toml). u8 x 8, summing to 64
+// kA21Messages: now Area21_Messages (symbols.toml). u16 by the s8 choice, unchecked
+// kA26Messages: now Area26_Messages (symbols.toml). u16 by the s8 choice, unchecked
+// kA26EffectKinds: now Area26_EffectKinds (symbols.toml). u8 by the first member id, unchecked
 
 }  // namespace at
 

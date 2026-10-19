@@ -21,13 +21,13 @@ namespace at {
 // The message box's answer to a choice (the cursor's row), read as a signed
 // byte by some handlers and as a byte by others (docs/item-use.md section 5),
 // and the message word a choice handler leaves (0xFFFF: no new message).
-constexpr std::uint32_t kChoiceAnswer = 0x7DEE67;
+// kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
 constexpr std::uint32_t kMessage = 0x7DEE48;
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub-kind, and a word timer.
-constexpr std::uint32_t kTailKind = 0x9039F3;
-constexpr std::uint32_t kTailState = 0x9039F4;
-constexpr std::uint32_t kTailSub = 0x9039F5;
+// kTailKind: now AreaW0a_TailKind (symbols.toml).
+// kTailState: now AreaW0c_TailState (symbols.toml).
+// kTailSub: now AreaW0c_TailSub (symbols.toml).
 constexpr std::uint32_t kTailTimer = 0x9039F6;
 // The movement script's four counters (MoveScript_CounterOps, ops A0..AF).
 constexpr std::uint32_t kCounter0 = 0x903848;
@@ -46,16 +46,16 @@ constexpr std::uint32_t kStoryFlags = 0x904030;
 constexpr std::uint32_t kCondRow5 = 0x903FB8;
 constexpr std::uint32_t kCondRow9 = 0x903FD8;
 constexpr std::uint32_t kCondRow14 = 0x904000;
-constexpr std::uint32_t kFlagRow = 0x929ED0;
+// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
 constexpr std::uint32_t kPartyList0 = 0x904062;
 // A byte area 50's choice compares with 0x1E; no other reader read this round.
-constexpr std::uint32_t kByte9045FB = 0x9045FB;
+// kByte9045FB: now AreaW1c_Byte9045FB (symbols.toml).
 // A byte area 50's choice sets to 6 beside the message it opens (area 37's
 // choices do the same, docs/area_w0c.md); no reader read this round.
-constexpr std::uint32_t kAnswerMark = 0x9398CF;
+// kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
 // The pending area word the world map and Field_ChangeArea keep.
-constexpr std::uint32_t kPendingArea = 0x937F82;
+// kPendingArea: now AreaW0b_Place (symbols.toml).
 // The leader's record (ObjTrio): byte +8 (the pose the hooks compare), byte
 // +0x89 (MoveScript_EffectState's index, op 8C).
 constexpr std::uint32_t kLeader = 0x802D40;
@@ -72,13 +72,13 @@ constexpr std::uint32_t kByte803490 = 0x803490;
 constexpr std::uint32_t kEffectStride = 0x80;
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
-constexpr std::uint32_t kEffectObjects = 0x7E11E0;     // Effect_Objects
+// kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects
 constexpr std::uint32_t kSpriteObjects = 0x7DEE80;     // Sprite_Objects
-constexpr std::uint32_t kSpriteObjectsExtra = 0x802000;   // Sprite_ObjectsExtra
-constexpr std::uint32_t kActiveMember = 0x9035A4;      // Field_ActiveMember
-constexpr std::uint32_t kScriptObject = 0x929E80;      // MoveScript_Object
-constexpr std::uint32_t kCameraShiftY = 0x903802;      // Camera_ShiftY
-constexpr std::uint32_t kEffectState = 0x66972C;       // MoveScript_EffectState (24 bytes)
+// kSpriteObjectsExtra: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
+// kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
+// kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
+// kCameraShiftY: now Camera_ShiftY (symbols.toml). Camera_ShiftY
+// kEffectState: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState (24 bytes)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 
@@ -87,20 +87,20 @@ constexpr std::uint32_t kEffectState = 0x66972C;       // MoveScript_EffectState
 // effect frame tests each member against, the two choices' message words
 // (two each, by the answer), the nine cell switches of four bytes (x, z,
 // pose, story flag).
-constexpr std::uint32_t kArea49EffectKinds = 0x5F98F0;   // Area49_EffectKinds, 8
-constexpr std::uint32_t kArea49Zones = 0x5FBB70;         // Area49_Zones, 7 x 6 bytes
+// kArea49EffectKinds: now Area49_EffectKinds (symbols.toml). Area49_EffectKinds, 8
+// kArea49Zones: now Area49_Zones (symbols.toml). Area49_Zones, 7 x 6 bytes
 constexpr unsigned kArea49ZoneCount = 7;
-constexpr std::uint32_t kArea49ChoiceMessages = 0x5FBC3C;   // Area49_ChoiceMessages, 4 words
-constexpr std::uint32_t kArea49CellSwitches = 0x5FBC44;  // Area49_CellSwitches, 9 x 4 bytes
+// kArea49ChoiceMessages: now Area49_ChoiceMessages (symbols.toml). Area49_ChoiceMessages, 4 words
+// kArea49CellSwitches: now Area49_CellSwitches (symbols.toml). Area49_CellSwitches, 9 x 4 bytes
 constexpr unsigned kArea49CellSwitchCount = 9;
 // Area 52: its descriptor's +0x08 extra-object entries (two of 8 bytes; the
 // tail writes entry 0's byte +1), the two rectangles of four bytes (x0, z0,
 // width, depth) its cell hook tests the party against, the four cell
 // switches of five bytes (x, z, pose in the low nibble, story flag, tail
 // state).
-constexpr std::uint32_t kArea52ExtraObjects = 0x5FE048;  // Area52_ExtraObjects, 16 bytes
-constexpr std::uint32_t kArea52Rects = 0x5FE0E8;         // Area52_Rects, 2 x 4 bytes
-constexpr std::uint32_t kArea52CellSwitches = 0x5FE0F0;  // Area52_CellSwitches, 4 x 5 bytes
+// kArea52ExtraObjects: now Area52_ExtraObjects (symbols.toml). Area52_ExtraObjects, 16 bytes
+// kArea52Rects: now Area52_Rects (symbols.toml). Area52_Rects, 2 x 4 bytes
+// kArea52CellSwitches: now Area52_CellSwitches (symbols.toml). Area52_CellSwitches, 4 x 5 bytes
 constexpr unsigned kArea52CellSwitchCount = 4;
 
 // --- the four callees nobody owns this wave (raw addresses) ---

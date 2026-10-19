@@ -158,13 +158,13 @@ enum : unsigned { k103Talk, k103First, k103Skip, k103Count, k103Shake, k103Groun
 #undef AH_N
 #undef OURS
 
-const ah::DataTable kTables99[] = {{at::kArea99DriftStates, at::kArea99StateCount}, {at::kArea99LeapStates, at::kArea99StateCount}};
-const ah::DataTable kTables100[] = {{at::kArea100EffectStates, at::kArea100EffectStateCount}};
+const ah::DataTable kTables99[] = {{Area99_DriftStates_addr, at::kArea99StateCount}, {Area99_LeapStates_addr, at::kArea99StateCount}};
+const ah::DataTable kTables100[] = {{Area100_EffectStates_addr, at::kArea100EffectStateCount}};
 
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
-unsigned char* EffectRecord(unsigned slot) { return ah::Mem(at::kEffectObjects + slot % at::kEffectCount * at::kEffectStride); }
+unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 
 // Which area and function the round is running (set by the seeds; read by
 // Settle and the louder stand-ins).
@@ -177,7 +177,7 @@ bool Running(int area, unsigned k) { return g_area == area && g_k == k; }
 // object itself (the two alias in the game).
 unsigned char* MemberRecord(std::uint32_t v) {
     switch (v % 4) {
-    case 0: return ah::Mem(at::kSpriteObjectsExtra + (v >> 2) % 4 * 0xA4);
+    case 0: return ah::Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4);
     case 1: return ah::Object(v >> 2);
     case 2: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return Sprite_Current;
@@ -189,7 +189,7 @@ unsigned char* ScriptRecord(std::uint32_t v) {
 // The focus object: a field object, or one of Sprite_ObjectsExtra's four
 // (whose index from Sprite_Objects is past the thirty).
 unsigned char* FocusRecord(std::uint32_t v) {
-    return v % 5 == 0 ? ah::Mem(at::kSpriteObjectsExtra + (v >> 3) % 4 * 0xA4) : ah::Object(v >> 3);
+    return v % 5 == 0 ? ah::Mem(Sprite_ObjectsExtra_addr + (v >> 3) % 4 * 0xA4) : ah::Object(v >> 3);
 }
 
 // Area 95's leap divides by the running object's +9 and area 99's leap start
@@ -198,8 +198,8 @@ unsigned char* FocusRecord(std::uint32_t v) {
 // the harness's disturbance and after a louder stand-in moves the object.
 void Settle() {
     if (Running(95, k95Leap) && Sprite_Current[9] == 0) Sprite_Current[9] = 1;
-    const unsigned speed = B(at::kMoveSpeed3);
-    if (speed == 0 || speed > 16) B(at::kMoveSpeed3) = static_cast<unsigned char>(1 + speed % 16);
+    const unsigned speed = B((Field_MoveSpeeds_addr + 0x3));
+    if (speed == 0 || speed > 16) B((Field_MoveSpeeds_addr + 0x3)) = static_cast<unsigned char>(1 + speed % 16);
 }
 
 // ---- the stand-ins the group lists ----
@@ -225,7 +225,7 @@ std::uint32_t MovesCurrent(const std::uint32_t*, std::uint32_t answer) {
 }
 std::uint32_t MovesScriptObject(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kScriptObject, ScriptRecord(n >> 8));
+    if (n & 1) ah::SetPointer(MoveScript_Object_addr, ScriptRecord(n >> 8));
     if (n & 2) MoveCurrent(n >> 4);
     return answer;
 }
@@ -256,7 +256,7 @@ std::uint32_t ElevationEffect(const std::uint32_t*, std::uint32_t answer) {
 std::uint32_t FindFreeEffect(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
     if (n & 1) MoveCurrent(n);
-    if (n & 2) ah::SetPointer(ah::at::kFieldState,ah::PartyOf(static_cast<unsigned char>(n >> 8)));
+    if (n & 2) ah::SetPointer(Field_State_addr,ah::PartyOf(static_cast<unsigned char>(n >> 8)));
     return answer;
 }
 
@@ -295,14 +295,14 @@ const ah::Callee kCallees[] = {
 // object pointer after it, the mark, MoveScript_PartyRecords record 0,
 // Field_MoveSpeeds[3], Cond_ByteFE.
 const ah::Region kRegions[] = {
-    {at::kEffectObjects, at::kEffectCount * at::kEffectStride},
-    {at::kActiveMember, 4},
-    {at::kScriptObject, 4},
-    {at::kFlagRow, 4},
-    {at::kCameraShiftY, 6},
-    {at::kAnswerMark, 1},
-    {at::kPartyRecord0, 16},
-    {at::kMoveSpeed3, 1},
+    {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
+    {Field_ActiveMember_addr, 4},
+    {MoveScript_Object_addr, 4},
+    {AreaW0c_FlagRow_addr, 4},
+    {Camera_ShiftY_addr, 6},
+    {AreaW0c_AnswerMark_addr, 1},
+    {MoveScript_PartyRecords_addr, 16},
+    {(Field_MoveSpeeds_addr + 0x3), 1},
     {0x905E20, 1},   // Cond_ByteFE
 };
 
@@ -311,10 +311,10 @@ const ah::Region kRegions[] = {
 void Common(int area, unsigned k) {
     g_area = area;
     g_k = k;
-    ah::SetPointer(at::kActiveMember, MemberRecord(ah::Next()));
-    ah::SetPointer(at::kScriptObject, ScriptRecord(ah::Next()));
-    ah::SetPointer(at::kFocusObject, FocusRecord(ah::Next()));
-    B(at::kMoveSpeed3) = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 2, 3, 4, 5, 8, 15, 16) : 1 + ah::Next() % 16);
+    ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
+    ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(ah::Next()));
+    B((Field_MoveSpeeds_addr + 0x3)) = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 2, 3, 4, 5, 8, 15, 16) : 1 + ah::Next() % 16);
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -322,22 +322,22 @@ void Common(int area, unsigned k) {
 void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 9) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(h & 0x100 ? v % 6 : v); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 6 : v); break;
     case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
     case 2: B(at::kCounter3) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
-    case 3: ah::SetPointer(at::kActiveMember, MemberRecord(h >> 16)); break;
-    case 4: ah::SetPointer(at::kScriptObject, ScriptRecord(h >> 16)); break;
-    case 5: ah::SetPointer(at::kFocusObject, FocusRecord(h >> 16)); break;
+    case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
+    case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
+    case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
     case 6: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
-    case 7: B(at::kMoveSpeed3) = static_cast<unsigned char>(1 + v % 16); break;
-    default: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 6); break;
+    case 7: B((Field_MoveSpeeds_addr + 0x3)) = static_cast<unsigned char>(1 + v % 16); break;
+    default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 6); break;
     }
 }
 
 // A choice answer: each value a handler tests, its neighbours, a negative
 // byte (tested signed by area 100's), anything.
 void SeedAnswer() {
-    if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5, 0xFF, 0x80, 0x81, 0x7F));
+    if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5, 0xFF, 0x80, 0x81, 0x7F));
 }
 // A 16.16 word with the high word `high` and any low word.
 std::uint32_t At16(std::uint32_t high, std::uint32_t low) { return (high & 0xFFFF) << 16 | (low & 0xFFFF); }
@@ -387,7 +387,7 @@ void SeedEffectsAtCell() {
         default: break;
         }
     }
-    if (ah::Half()) B(at::kLeader137) = 0;
+    if (ah::Half()) B((ObjTrio_addr + 0x137)) = 0;
 }
 
 void Seed95(unsigned k) {
@@ -431,11 +431,11 @@ void Seed97(unsigned k) {
     Common(97, k);
     switch (k) {
     case k97Tail:
-        if (ah::Often()) B(at::kTailState) = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 0xFF, 0x80, 0x81));
+        if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 0xFF, 0x80, 0x81));
         if (ah::Often()) B(at::kCounter3) = static_cast<unsigned char>(AH_PICK(2, 2, 1, 3, 0, 0x82));
         break;
     case k97Step:
-        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 7, 0x80, 0x81));
+        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 7, 0x80, 0x81));
         break;
     default: break;
     }
@@ -454,7 +454,7 @@ void Seed98(unsigned k) {
     switch (k) {
     case k98Flag9: case k98Ask: case k98Arm: SeedAnswer(); break;
     case k98Tail:
-        if (ah::Often()) B(at::kTailState) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 0xFF));
+        if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 0xFF));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 0, 1, 3, 0x82));
         break;
     default: break;
@@ -463,7 +463,7 @@ void Seed98(unsigned k) {
 // An object trigger is called (a field object, 0x904030).
 void ArgsTrigger(unsigned, std::uint32_t* a) {
     a[0] = Key(ah::Object(a[0]));
-    a[1] = at::kStoryFlags;
+    a[1] = (Cond_Flags_addr + 0xa0);
 }
 
 // ---- area 99 ----
@@ -498,7 +498,7 @@ void Seed100(unsigned k) {
     case k100Tail: {
         static const std::uint32_t kStates[] = {0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 0xFF, 0x80, 0x7F};
         const auto state = static_cast<unsigned char>(ah::Pick(kStates, sizeof kStates / sizeof kStates[0]));
-        B(at::kTailState) = state;
+        B(AreaW0c_TailState_addr) = state;
         const bool on = ah::Often();   // the cell the state waits on, at its value or beside it
         switch (state) {
         case 1: B(at::kCounter0) = static_cast<unsigned char>(on ? 1 : AH_PICK(0, 2, 0x81)); break;
@@ -512,7 +512,7 @@ void Seed100(unsigned k) {
     }
     case k100Step:
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(3, 3, 2, 4, 0x83));
-        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 1, 5, 8, 0x80));
+        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(AH_PICK(0, 7, 6, 1, 5, 8, 0x80));
         break;
     case k100EffRun:
         Sprite_Current = EffectRecord(ah::Next() % 4);
@@ -540,7 +540,7 @@ void Seed103(unsigned k) {
     case k103First: {
         // each member's +0x89 one of the three keys (or beside one), the count
         // 1..3, 0 a tenth of the time
-        const unsigned char* const keys = ah::Mem(at::kArea103MemberKeys);
+        const unsigned char* const keys = ah::Mem(Area103_MemberKeys_addr);
         for (unsigned m = 0; m < 3; ++m) {
             unsigned char* const record = ah::PartyOf(static_cast<unsigned char>(m));
             if (ah::Often()) record[0x89] = static_cast<unsigned char>(keys[ah::Next() % 3] + (ah::Half() ? 0 : 1));

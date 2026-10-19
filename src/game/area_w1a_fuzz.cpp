@@ -80,8 +80,8 @@ unsigned char* FlagRowAt(U v) { return Mem(0x903F90 + 8 * (v % 0x3A)); }
 U FindFreeEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) Sprite_Current = MemberRecord(n >> 8);
-    if (n & 2) B(n & 4 ? at::kPartyList1 : at::kPartyList2) = static_cast<unsigned char>(n & 8 ? 0 : n >> 16);
-    if (n & 0x10) ah::SetPointer(at::kActiveMember, MemberRecord(n >> 12));
+    if (n & 2) B(n & 4 ? (Cond_Flags_addr + 0xd3) : (Cond_Flags_addr + 0xd4)) = static_cast<unsigned char>(n & 8 ? 0 : n >> 16);
+    if (n & 0x10) ah::SetPointer(Field_ActiveMember_addr, MemberRecord(n >> 12));
     return answer;
 }
 // Party_DropIn: area 41's choice reads the pointer 0x903804 after it, area
@@ -89,9 +89,9 @@ U FindFreeEffect(const U*, U answer) {
 // area, Cond_ByteFD.
 U DropInEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kFocusObject, ah::Object(n >> 8));
+    if (n & 1) ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(n >> 8));
     if (n & 2) B(at::kScriptFlagsHigh) = static_cast<unsigned char>(B(at::kScriptFlagsHigh) ^ 0x10);
-    if (n & 4) B(at::kTailState) = static_cast<unsigned char>(n & 8 ? 0xA : 1);
+    if (n & 4) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n & 8 ? 0xA : 1);
     if (n & 0x10) Cond_ByteFD = static_cast<unsigned char>(n & 0x20 ? 6 : 5);
     return answer;
 }
@@ -100,9 +100,9 @@ U DropInEffect(const U*, U answer) {
 U TestEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) Cond_ByteFD = static_cast<unsigned char>(n & 2 ? 2 : 6);
-    if (n & 4) B(at::kEntryZone) = static_cast<unsigned char>(n & 8 ? 4 : 6);
-    if (n & 0x10) ah::SetPointer(at::kFlagRow, FlagRowAt(n >> 8));
-    if (n & 0x20) B(at::kTailState) = static_cast<unsigned char>(n & 0x40 ? 0xA : 0);
+    if (n & 4) B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(n & 8 ? 4 : 6);
+    if (n & 0x10) ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(n >> 8));
+    if (n & 0x20) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n & 0x40 ? 0xA : 0);
     return answer;
 }
 // Flags_Set: area 40's choice 0 reads Field_StatusBits after it.
@@ -114,7 +114,7 @@ U SetEffect(const U*, U answer) {
 // Flags_Clear: area 40's init reads the entry zone after it.
 U ClearEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(at::kEntryZone) = static_cast<unsigned char>(n & 2 ? 4 : 6);
+    if (n & 1) B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(n & 2 ? 4 : 6);
     return answer;
 }
 // AreaMap_SetByte: area 40's init reads Cond_ByteFD after its gate loop.
@@ -126,13 +126,13 @@ U SetByteEffect(const U*, U answer) {
 // Inventory_Add: area 41's choice reads the row pointer again after it.
 U AddEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kFlagRow, FlagRowAt(n >> 8));
+    if (n & 1) ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(n >> 8));
     return answer;
 }
 // 0x57CD90: area 40's handler reads MoveScript_Object after it.
 U FreeObjectEffect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kScriptObject, ah::Object(n >> 8));
+    if (n & 1) ah::SetPointer(MoveScript_Object_addr, ah::Object(n >> 8));
     return answer;
 }
 // Area40_DrawGrid (a stand-in in the tail's fuzz): the tail's way out reads
@@ -140,7 +140,7 @@ U FreeObjectEffect(const U*, U answer) {
 U DrawGridEffect(const U*, U answer) {
     const U n = ah::Noise();
     switch (n % 4) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(n & 0x100 ? 0xA : 2); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n & 0x100 ? 0xA : 2); break;
     case 1: Game_AreaNumber = static_cast<unsigned short>(n & 0x100 ? 0x28 : 0x29); break;
     case 2: Cond_ByteFD = static_cast<unsigned char>(n & 0x100 ? 6 : 7); break;
     default: break;
@@ -155,7 +155,7 @@ U TileLitEffect(const U* a, U answer) {
     const U x = (a[0] & 0xFFFF) - at::kGridX, z = (a[1] & 0xFFFF) - at::kGridZ;
     const U n = ah::Noise();
     if (x >= at::kGridSide || z >= at::kGridSide || n % 32 == 0) return answer;
-    const U want = B(at::kArea40Pattern + z * 4 + x);
+    const U want = B(Area40_Pattern_addr + z * 4 + x);
     return (answer & 0xFFFFFF00u) | (n % 64 == 1 ? want ^ 1 : want);
 }
 // AreaMap_ByteAt: the grid's lit byte 0x50 three times in four.
@@ -226,28 +226,28 @@ const ah::Callee kCallees[] = {
 // and buffer, DrawItems' first eight halves) and area 41's tint records (232
 // of them: with Effect_Objects after them every byte index lands in a region).
 ah::Region g_regions[] = {
-    {at::kEffectObjects, 4 * at::kEffectStride},
-    {at::kActiveMember, 4},
-    {at::kScriptObject, 4},
-    {at::kFlagRow, 4},
-    {at::kFocusObject, 4},
-    {at::kAnswerMark, 1},
+    {Effect_Objects_addr, 4 * at::kEffectStride},
+    {Field_ActiveMember_addr, 4},
+    {MoveScript_Object_addr, 4},
+    {AreaW0c_FlagRow_addr, 4},
+    {AreaW1a_FocusObject_addr, 4},
+    {AreaW0c_AnswerMark_addr, 1},
     {at::kKeyItems, at::kKeyItemCount},
-    {at::kInputHeld, 4},
-    {at::kPacketNext, 4},
+    {Input_Held_addr, 4},
+    {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},            // g_packets (set at start-up)
-    {at::kOrigin, 4},
-    {at::kViewColumn, 6},
-    {at::kViewCells, at::kViewCellCount * 2},
-    {at::kDrawItems, 8 * at::kDrawItemStride},
-    {at::kTintRecords, 0xAE0},
+    {MapView_Origin_addr, 4},
+    {MapView_Column_addr, 6},
+    {MapView_Cells_addr, at::kViewCellCount * 2},
+    {DrawItems_addr, 8 * at::kDrawItemStride},
+    {MoveScript_TintRecords_addr, 0xAE0},
 };
 
 void Common() {
-    ah::SetPointer(at::kActiveMember, MemberRecord(ah::Next()));
-    ah::SetPointer(at::kScriptObject, ah::Half() ? ah::Object(ah::Next()) : ah::PartyOf(static_cast<unsigned char>(ah::Next())));
-    ah::SetPointer(at::kFocusObject, ah::Object(ah::Next()));
-    ah::SetPointer(at::kFlagRow, FlagRowAt(ah::Next()));
+    ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ah::Half() ? ah::Object(ah::Next()) : ah::PartyOf(static_cast<unsigned char>(ah::Next())));
+    ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(ah::Next()));
+    ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(ah::Next()));
     Gfx_PacketNext = g_packets + (ah::Next() % 4) * 4;
 }
 
@@ -256,17 +256,17 @@ void Common() {
 void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 12) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(h & 0x10000 ? v : (h & 0x20000 ? 0xA : v % 3)); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x10000 ? v : (h & 0x20000 ? 0xA : v % 3)); break;
     case 1: Cond_ByteFD = static_cast<unsigned char>(h & 0x10000 ? v : (h & 0x20000 ? 6 : 2)); break;
-    case 2: B(at::kEntryZone) = static_cast<unsigned char>(h & 0x10000 ? v : (h & 0x20000 ? 4 : 6)); break;
+    case 2: B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(h & 0x10000 ? v : (h & 0x20000 ? 4 : 6)); break;
     case 3: Game_AreaNumber = static_cast<unsigned short>(h & 0x10000 ? 0x28 : 0x29); break;
     case 4: Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ v); break;
-    case 5: ah::SetPointer(at::kFlagRow, FlagRowAt(h >> 16)); break;
-    case 6: ah::SetPointer(at::kFocusObject, ah::Object(h >> 16)); break;
-    case 7: ah::SetPointer(at::kActiveMember, MemberRecord(h >> 16)); break;
-    case 8: B(at::kPartyList0 + (h >> 16) % 3) = static_cast<unsigned char>(h & 0x40000 ? v : (h & 0x80000 ? 0 : 4)); break;
+    case 5: ah::SetPointer(AreaW0c_FlagRow_addr, FlagRowAt(h >> 16)); break;
+    case 6: ah::SetPointer(AreaW1a_FocusObject_addr, ah::Object(h >> 16)); break;
+    case 7: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
+    case 8: B((Cond_Flags_addr + 0xd2) + (h >> 16) % 3) = static_cast<unsigned char>(h & 0x40000 ? v : (h & 0x80000 ? 0 : 4)); break;
     case 9: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (h & 0x10000 ? 0x1000 : 0x8)); break;
-    case 10: ah::SetPointer(at::kScriptObject, ah::Object(h >> 16)); break;
+    case 10: ah::SetPointer(MoveScript_Object_addr, ah::Object(h >> 16)); break;
     default: Gfx_BufferIndex = static_cast<unsigned char>(h & 0x10000 ? Gfx_BufferIndex ^ 1 : v); break;
     }
 }
@@ -274,7 +274,7 @@ void Disturb(U h) {
 // A choice answer: each value a handler tests, its neighbours, a negative
 // byte, anything.
 void SeedAnswer() {
-    if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0xFF, 0x80, 0x7F, 3));
+    if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0xFF, 0x80, 0x7F, 3));
 }
 
 // ===========================================================================
@@ -297,7 +297,7 @@ enum : unsigned { k38Clear, k38Set, k38Member1, k38Member2 };
 void Seed38(unsigned k) {
     Common();
     if (k == k38Member1 || k == k38Member2) {
-        const U list = k == k38Member1 ? at::kPartyList1 : at::kPartyList2;
+        const U list = k == k38Member1 ? (Cond_Flags_addr + 0xd3) : (Cond_Flags_addr + 0xd4);
         if (ah::Often()) B(list) = 0;
         else if (ah::Half()) B(list) = static_cast<unsigned char>(AH_PICK(1, 7, 0x80, 0xFF));
     }
@@ -330,7 +330,7 @@ const ah::Clone kClones39[] = {
     {"Area39_Counter1Not4", 0x405760, 0x10, nullptr, 0, nullptr, 0, nullptr, 0, reinterpret_cast<const void*>(&::Area39_Counter1Not4), 0, false, S::kHandler},
 };
 enum : unsigned { k39Run, k39DriftStart, k39DriftStep, k39Spawn, k39Clear, k39Set51, k39Set50, k39Music, k39Flag8, k39KeyItem, k39Fade, k39Counter };
-const ah::DataTable kTables39[] = {{at::kArea39States, at::kArea39StateCount}};
+const ah::DataTable kTables39[] = {{Area39_States_addr, at::kArea39StateCount}};
 
 void Seed39(unsigned k) {
     Common();
@@ -347,7 +347,7 @@ void Seed39(unsigned k) {
         if (ah::Half()) B(at::kKeyItems + ah::Next() % at::kKeyItemCount) = 0xE;
         break;
     case k39Counter:
-        if (ah::Often()) B(at::kPartyList0) = static_cast<unsigned char>(AH_PICK(4, 4, 3, 5, 0x84, 0));
+        if (ah::Often()) B((Cond_Flags_addr + 0xd2)) = static_cast<unsigned char>(AH_PICK(4, 4, 3, 5, 0x84, 0));
         break;
     default: break;
     }
@@ -407,9 +407,9 @@ void PlantRuns() {
     MapView_Row = static_cast<short>(static_cast<int>(ah::Next() % 0x38) - 1);
     MapView_Column = static_cast<short>(static_cast<int>(ah::Next() % 0x1C) - 1);
     const U base = ah::Next() % 0x40;
-    SetLong(Mem(at::kCellBase), static_cast<std::int32_t>((ah::Next() & 0xFFFF0000u) | base));
+    SetLong(Mem(AreaMap_CellBase_addr), static_cast<std::int32_t>((ah::Next() & 0xFFFF0000u) | base));
     const U patch = 0x600 + ah::Next() % 0x40;
-    SetLong(Mem(at::kPatchBase), static_cast<std::int32_t>((ah::Next() & 0xFFFF0000u) | patch));
+    SetLong(Mem(AreaMap_PatchBase_addr), static_cast<std::int32_t>((ah::Next() & 0xFFFF0000u) | patch));
     static constexpr U kRuns[4] = {0x140, 0x180, 0x1C0, 0x200};
     for (U run : kRuns) {
         const U n = ah::Next() % 7;
@@ -426,7 +426,7 @@ void PlantRuns() {
         }
     }
     for (unsigned i = 0; i < at::kViewCellCount; ++i)
-        SetWord(Mem(at::kViewCells + i * 2), ah::Next() % 4 == 0 ? 0u : kRuns[ah::Next() % 4] - base);
+        SetWord(Mem(MapView_Cells_addr + i * 2), ah::Next() % 4 == 0 ? 0u : kRuns[ah::Next() % 4] - base);
 }
 
 void Seed40(unsigned k) {
@@ -437,15 +437,15 @@ void Seed40(unsigned k) {
         break;
     case k40Flag5: case k40LeverB: case k40LeverA: case k40Lever9: case k40Lever8: SeedAnswer(); break;
     case k40Gate:
-        if (ah::Often()) B(at::kLeverNibble) = static_cast<unsigned char>((ah::Next() & 0xF0) | AH_PICK(5, 5, 4, 6, 0xD, 0x7));
+        if (ah::Often()) B((Cond_Flags_addr + 0x21)) = static_cast<unsigned char>((ah::Next() & 0xF0) | AH_PICK(5, 5, 4, 6, 0xD, 0x7));
         break;
     case k40Tail16:
         SeedAnswer();
-        if (ah::Often()) B(at::kLeaderByte89) = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
-        if (ah::Often()) B(at::kTailKind) = static_cast<unsigned char>(AH_PICK(0, 0, 0x10, 1));
+        if (ah::Often()) B((ObjTrio_addr + 0x89)) = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
+        if (ah::Often()) B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(AH_PICK(0, 0, 0x10, 1));
         break;
     case k40Tail:
-        if (ah::Often()) B(at::kTailState) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 2, 3, 0xFF, 0xA));
+        if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 2, 3, 0xFF, 0xA));
         if (ah::Often()) B(at::kCounter0) = static_cast<unsigned char>(AH_PICK(0x63, 0x63, 0x62, 0x64, 0xE3));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2));
         if (ah::Half()) Game_AreaNumber = static_cast<unsigned short>(AH_PICK(0x29, 0x128, 0x27));
@@ -456,26 +456,26 @@ void Seed40(unsigned k) {
         if (ah::Half()) {
             Cond_ByteFD = 6;
             Field_State[0x2B] = 0;
-            B(at::kTailKind) = 0x10;
+            B(AreaW0a_TailKind_addr) = 0x10;
             if (ah::Half()) {
                 switch (ah::Next() % 3) {
                 case 0: Cond_ByteFD = static_cast<unsigned char>(AH_PICK(5, 7, 0x86)); break;
                 case 1: Field_State[0x2B] = static_cast<unsigned char>(AH_PICK(1, 0x80)); break;
-                default: B(at::kTailKind) = static_cast<unsigned char>(AH_PICK(0xF, 0x11, 0x90)); break;
+                default: B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(AH_PICK(0xF, 0x11, 0x90)); break;
                 }
             }
         }
         break;
     case k40TileLit: PlantRuns(); break;
     case k40Behind:
-        if (ah::Often()) B(at::kLeaderByte8) = static_cast<unsigned char>(ah::Next() % 8 | (ah::Half() ? 0 : ah::Next() & 0xF8));
+        if (ah::Often()) B((ObjTrio_addr + 0x8)) = static_cast<unsigned char>(ah::Next() % 8 | (ah::Half() ? 0 : ah::Next() & 0xF8));
         break;
     case k40Draw:
         if (ah::Half()) Gfx_BufferIndex = static_cast<unsigned char>(ah::Next() % 2);
         break;
     case k40Init:
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(1, 2, 6, 6, 5, 0x86));
-        if (ah::Often()) B(at::kEntryZone) = static_cast<unsigned char>(AH_PICK(4, 4, 6, 6, 5, 0x84));
+        if (ah::Often()) B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(AH_PICK(4, 4, 6, 6, 5, 0x84));
         break;
     default: break;
     }
@@ -558,7 +558,7 @@ enum : unsigned {
     k41DropIn12, k41DropIn34, k41Give, k41Trade, k41Confirm, k41Run, k41TintStart, k41TintRise, k41Slide, k41TintFall,
     k41TintUp, k41Clear, k41Kind2, k41Trigger29, k41TriggerFlag
 };
-const ah::DataTable kTables41[] = {{at::kArea41States, at::kArea41StateCount}};
+const ah::DataTable kTables41[] = {{Area41_States_addr, at::kArea41StateCount}};
 
 // The field object a trigger is called with, drawn by the seed (the
 // harness captures the state before it asks for the arguments).
