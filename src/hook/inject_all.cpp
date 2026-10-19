@@ -1,6 +1,7 @@
 #include "hook/inject_all.h"
 
 #include "game/band_census.h"
+#include "hook/gapwatch.h"
 #include "game/wide_staging.h"
 #include "game/wide_rand.h"
 #include "game/config_text.h"
@@ -1444,6 +1445,9 @@ void InjectAll() {
                                 // page - after every module's self-test, whose frame-draw fuzzes all ran the original's
     AreaKeepStoppingNone_Arm(); // DIV-0143 (issue #88): an area change keeping a track that is fading to a stop
                                 // keeps none - after every module's self-test, which all ran Capcom's keep
+    FishingEmpty_Arm();         // DIV-0144 (D279): the fishing banner declines an empty line and a one-byte code below
+                                // 0x26 - after every module's self-test, which all compared Capcom's draws; before
+                                // FishingText_Arm, so its self-test (fishing_empty) reads the original's label
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
@@ -1453,6 +1457,8 @@ void InjectAll() {
     wide_staging::Inject();     // DIV-0122 / 0123 / 0124 (docs/wide-staging.md): the wide modes' re-staged walks, case zero and
                                 // the 21:9 hide - armed after every module's self-test, which all ran the original's
                                 // walks and draws (MoveScript_Step's, EventScript_Op's and Sprite_Draw's fuzzes)
+    if (WantsShadow("gapwatch"))   // BOF3X_GAPWATCH's self-test (gapwatch.h): a scratch page, no game state; the watch
+        GapWatch_SelfTest();       // itself arms in Engine_Main, after InputScript_Start
     band_census::Inject();      // BOF3X_BANDLOG, an instrument (docs/band-census.md): armed after every module's self-test,
                                 // whose stand-in sprites Sprite_UpdateScreen must not hand it; reads Widescreen_Live
     d3d_lines::Arm();           // DIV-0079: the six LINE handlers draw quads of the scale's width (BOF3X_LINES) - after

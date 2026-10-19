@@ -6770,8 +6770,6 @@ pc	kind	target
 0x635334	data	0x6347C4
 0x63533C	data	0x63505C
 0x635340	data	0x600000
-0x635358	data	0x60FFA0
-0x63535C	data	0x60FEF0
 0x635364	code	Area148_ChoiceMessage
 0x635368	code	Area148_ChoiceSetFlag59
 0x63536C	code	Area196_SetCondFE
@@ -13539,7 +13537,6 @@ pc	kind	target
 0x65A5FC	code	ChlorineCloud_Start
 0x65A600	code	ChlorineCloud_Grow
 0x65A604	code	EnlightenRays_Fade
-0x65A61C	number	-
 0x65A62C	code	BlitzBolt_Run
 0x65A630	code	BlitzBolt_Start
 0x65A634	code	BlitzBolt_Seek

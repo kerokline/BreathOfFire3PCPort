@@ -2,7 +2,9 @@
 
 **Status:** IN PROGRESS (verified 2026-10-17 against `origin/main` `cf809700`;
 a reading and counting pass - no game run, no capture, nothing fixed, no
-recipe regenerated)
+recipe regenerated. Section 8 rewritten 2026-10-18 with each item's status
+after the install-gap round, at `install-gap/round` `0baf26f7`; sections 0..7
+are the 2026-10-17 census as it was)
 
 A census of what each kind of player install - PC-only, PSX-only (`psx-jp`,
 `psx-us`, `psx-eu-en`, `psx-fr`, `psx-de`), PSP-only (`psp-jp`, `psp-eu`) -
@@ -409,82 +411,293 @@ port's text and the MP3s. It lacks only what a disc adds:
 
 The launcher lists each one, greyed with its reason.
 
-## 8. The NEEDS FIX items, prioritised
+## 8. The NEEDS FIX items after the install-gap round
 
-**P1 - a screen or gameplay effect on a common path:**
+Rewritten 2026-10-18 at the end of the install-gap round
+([`install-gap-round.md`](install-gap-round.md); stages A and B merged on
+`install-gap/round`, the recipes regenerated at `0baf26f7`). Every item of the
+2026-10-17 list keeps its number. Each now has its status after the round and
+the group and doc that settled it. The statuses are **FIXED**, **HARMLESS**
+(unread), **NEEDS FIX** and **OWNER CALL**. The groups' docs:
 
-1. **DONE 2026-10-17 (D310).** **Level-up ability names** `0x654900` (Western PSX): an engine-own `%s`
-   (4.1). Every level-up that teaches an ability.
-2. **DONE 2026-10-17 (D316, issue #83).** **Event battle music** `EventBattle_Records` track half (all 7): every
-   boss and event fight asked for track 0. The `pairs` rule now fills it from the battle file's own
-   music copy through the disc's song table (known-defects D316).
-3. **DONE 2026-10-17 (D311, a `twin` from `COMMU02.EMI#8`).** **Hi-lo payouts** `CommuHiLo_DealSteps+0x14` (all 7): the game pays 0. A
-   `twin` (1 of 1 windows on the disc).
-4. **DONE 2026-10-17 (D310).** **Play-time colon** `0x6637E0` (all 7): an engine-own glyph (4.1).
-5. **DONE 2026-10-17 (D278, engine-own: the found rows did not match the Western discs).** **Identify `?` marks** (D278; all 7 by the row): the two `twin` rows already
-   found.
-6. **DONE 2026-10-17 (D310).** **Village board rows** `0x653084..0x653098` (all 7): engine-own strings (4.1).
-7. **Area-169 dial panel** `Area169_Rects+0xA` (PSX 5): a `twin` (20 of 21
-   windows). Not a verbatim run on any PSX disc (2026-10-17: 0 copies of the
-   whole 189 bytes), so a twin row will not place it; a pieced rule is needed.
-8. **A master's requirement list** `MasterWin_Requirements+0x44` (Western
-   PSX): the Western disc's own list, ledgered.
-9. **DONE 2026-10-17 (D310).** **Countdown and counter formats** `0x61BC74` (all 7), `0x60ABF0` (PSX):
-   engine-own strings (4.1).
-10. **DONE 2026-10-17 (a twin, and a twin takes back another file's differing byte).** **Meteor Strike lifts** (D267, all 7) and **`AREA111`'s overreach** (D268,
-    PSX): the `twin` from `MAGIC226.EMI#3` with the segment trimmed, and a
-    trimmed segment.
+| Group | Doc |
+|---|---|
+| RD | [`install-gap-readers.md`](install-gap-readers.md) |
+| TW, PB (5), PT (6) | [`install-gap-twins.md`](install-gap-twins.md) |
+| OT | [`exe-immediate-places.md`](exe-immediate-places.md) |
+| LA | [`install-gap-labels.md`](install-gap-labels.md) |
+| RW | [`install-gap-reads.md`](install-gap-reads.md) |
+| CW | [`install-gap-live-rows.md`](install-gap-live-rows.md) |
+| FP | [`install-gap-pairs.md`](install-gap-pairs.md) |
 
-**P2 - a twin the disc search already locates, or a PSP value read every area:**
+The ledger is DIVERGENCE's DIV-0101 amendment of 2026-10-18 (the placement
+kinds), with DIV-0103's (the PSP's screen margins), DIV-0069's (D286's FR /
+DE headings) and DIV-0064's (D289 and groups 20..23, the owner's confirmation
+pending).
 
-11. The disc-unplaced rows with windows found:
-    - `Area115_Sprites` (10 of 10) and `_Buttons` (2 of 2): world map 115's
-      legend frame.
-    - `EffectKind99_States` 3 of 3, `Fx106_ShardTables` 3 of 3.
-    - `EffectKind33_SignX` / `_SignZ`, `EffectKindA0_States`,
-      `MagicBallOrb_Shades`, `AuraBreathDome_V`.
-    - `BossDolphin_Anims`, `BossGaist_Sounds`.
-    - `Area121_Cells`, `Area146_EffectStates`, `Area124_Weights` (EU, DE).
-    - `EffectKind3C_Op` / `66` / `5B` (Western).
-    - `EffectKind18_08` / `Sub5D`, `EffectKind86` (DE),
-      `CommuMusic_CloseSteps` (FR, DE).
-    - `Fish_Kinds+0x72A` (JP only).
+### 8.1 Before and after: the `gap` rows
 
-    Most are one segment each. [`exe-engine-own.md`](exe-engine-own.md) 4.4:
-    "a byte search per region places most of these".
-12. PSP-only, from `BOOT.BIN` ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6):
-    - the default light pair `0x663B20` (read at every area entry);
-    - `Sprite_ScreenMargins` (the off-screen cull);
-    - `MoveScript_EffectArg+0x45` (the leader's climbing scripts; 1 of 3
-      windows).
-13. `EffectKind2A_States` (the rows that push the party) and
-    `EffectKind86_States` (two objects placed by an EventOp operand), PSX
-    builds: the owning-function method, ahead of the purely visual tail.
+`recipes/exe-gaps.tsv`'s `gap` class, as rows / bytes / the PC's non-zero
+bytes, counted from the recipe against `bof3\BOF3.exe`'s `.data` (scratch
+`C:\Users\kerok\g_end\gapcount.py`). "Before" is `06a209bd`'s file, the
+round's base. The census's own section 2 is older (`cf809700`) and counts rows
+and non-zero bytes only; its `gap` sums are in the first column for reference.
 
-**P3 - the long tail** (section 4's remaining rows, about 75 items):
-- the area tables' and effect / magic / scenario state tables' numbers
-  beside their code pointers, by the owning-function method once the effect
-  functions' PSX twins exist ([`exe-chinese-remaining.md`](exe-chinese-remaining.md)
-  5.3: 4 of 216 pointers have one today);
-- the PSP-EU-only and FR / DE-only rows by their own disc's copy;
-- D286's FR / DE headings, D289's faerie names, the language-zero `0x669CE8`,
-  `0x66A094`, `0x66A098`;
-- `Magic080_TextPointers`, and the area message words, after checking they
-  are message numbers.
+| Build | section 2 (`cf809700`), rows / nz | before (`06a209bd`) | after (`0baf26f7`) | change |
+|---|---:|---:|---:|---:|
+| psx-jp | 162 / 905 | 104 / 1,486 / 797 | **58 / 673 / 311** | -46 / -813 / -486 |
+| psx-us | 181 / 1,430 | 122 / 2,089 / 1,320 | **76 / 1,172 / 761** | -46 / -917 / -559 |
+| psx-eu-en | 177 / 1,458 | 118 / 2,120 / 1,348 | **75 / 1,262 / 827** | -43 / -858 / -521 |
+| psx-fr | 181 / 1,570 | 122 / 2,269 / 1,460 | **76 / 1,295 / 857** | -46 / -974 / -603 |
+| psx-de | 184 / 1,584 | 125 / 2,297 / 1,474 | **78 / 1,314 / 865** | -47 / -983 / -609 |
+| psp-jp | 150 / 736 | 92 / 1,069 / 628 | **54 / 548 / 296** | -38 / -521 / -332 |
+| psp-eu | 151 / 742 | 93 / 1,079 / 634 | **52 / 517 / 274** | -41 / -562 / -360 |
 
-**P4 - find a reader first:**
-- `Music_LoadedTrack+0x1E30` `0x6671EC..0x6671F3`;
-- `ConfigMenu_Steps+0xC` (PSP);
-- song 166 on a disc-only install.
+`tools/exe_scan.py` was run on the seven discs, with no cache: it builds each
+one-source image from the disc as setup does (`--out C:\Users\kerok\g_end\scan`,
+2026-10-18, at `0baf26f7`). It gives `missing/gap` 311, 761, 827, 857, 865, 296
+and 274, the last column byte for byte. By symbol, 61 of the 145 symbols with
+a `gap` row at `06a209bd` have none left. 90 remain, six of them the
+remainders of TW's pieced rows (`EffectKind66_States+0x20` / `+0x28`,
+`EffectKind5B_States+0x20` / `+0x24` / `+0x28`, `CommuMusic_CloseSteps+0x40`).
 
-**The owner's, not counted above:**
-- DIV-0055's plates (the 9 `port-relaid` rows, every world map);
-- D266's Western title mark;
-- `Scena17_EndSteps`, the Western ending (no PSX disc holds the PC's; PSP-JP's
-  `BOOT.BIN` does);
-- the empty save slot `0x669CCC` (the staged localisation PR);
-- D257, D246, D277, D256, D280;
-- the US button assignment.
+The other classes moved by reclassing, not by placing, except where an
+`immref` row filled a `language` row (OT's area message words):
+
+| Build | `language` before -> after | `unread` before -> after |
+|---|---|---|
+| psx-jp | 87 / 2,818 / 1,351 -> 82 / 2,795 / 1,338 | 108 / 37,335 / 3,933 -> 110 / 37,344 / 3,940 |
+| psx-us | 94 / 2,825 / 1,358 -> 89 / 2,852 / 1,373 | 108 / 37,335 / 3,933 -> 111 / 37,353 / 3,946 |
+| psx-eu-en | 94 / 2,825 / 1,358 -> 89 / 2,852 / 1,373 | 108 / 37,335 / 3,933 -> 111 / 37,353 / 3,946 |
+| psx-fr | 94 / 2,825 / 1,358 -> 93 / 2,895 / 1,404 | 108 / 37,335 / 3,933 -> 112 / 37,361 / 3,951 |
+| psx-de | 94 / 2,825 / 1,358 -> 93 / 2,900 / 1,406 | 108 / 37,335 / 3,933 -> 112 / 37,361 / 3,951 |
+| psp-jp | 87 / 2,826 / 1,350 -> 86 / 2,822 / 1,347 | 105 / 37,267 / 3,930 -> 107 / 37,276 / 3,937 |
+| psp-eu | 87 / 2,822 / 1,350 -> 86 / 2,868 / 1,375 | 109 / 37,294 / 3,946 -> 111 / 37,303 / 3,953 |
+
+The `language` gains on the Latin builds are LA's rows (`LANGUAGE_ZERO` per
+build and `exe_own.py`'s language regions, PT 6.5): the three language-zero
+rows (`0x653200`, `0x669CE8`, `0x66A098`) are `language` on the five Latin
+builds and stay `gap` / `language-zero` under ja-JP. The `unread` gains are
+`Music_LoadedTrack+0x1E30` (RD 1, OT 5), `MagicBallOrb_Shades+0x10` (PT 6.3),
+`MasterWin_Requirements+0x44` (FP 7) and `SKILL` at `0x664290` (LA 2.3). The
+`keys` row is unchanged.
+
+### 8.2 The ten rows read in play while zero (RW)
+
+RW's watch, run over the attract, ten routes and targeted runs on the seven
+installs (RW 0), and their status on the round's tip:
+
+| Row | Read on | Status | By |
+|---|---|---|---|
+| `ChlorineCloud_Offsets` `0x65A608` | psx-jp, us, eu-en, psp-eu (the Nue fight) | **FIXED**, all 7 | CW's source, PT's `twin` from `MAGIC009.EMI#3` (twins 6.6); FP's `immref` reaches it too |
+| the default light pair `0x663B20` | both PSPs, every area entry | **FIXED** | PB, `BOOT.BIN` twin (twins 5.2) |
+| `Sprite_ScreenMargins` `0x663B28` | both PSPs, every field frame | **FIXED** | PB, the `margins` rule (twins 5.3; DIV-0103) |
+| `Char_WhelpSlot+0x3` `0x669739` | both PSPs, six routes | **FIXED** | CW's source, PT's `BOOT.BIN` twin of the whole table (live rows 2, twins 6.6) |
+| `Fish_Kinds+0x72A` `0x66ADBA` | psx-jp, every area change | **FIXED** | TW, `GAME.EMI#0` (twins 1) |
+| `EffectKind0F_PanelTitles` `0x653EA0` (D286) | psx-fr, psx-de | **FIXED** under the layer | LA, kind 16 tag 3 (labels 1; DIV-0069) |
+| `Equip_SlotIcons` labels `0x663660` | psx-de (the shop) | **FIXED**: the labels under the layer, the slot icons by a `twin` (D319) | LA group 21 (labels 2); PT, `BATE.EMI` (twins 6.2) |
+| `ConfigMenu_Steps+0xC` `0x667518` | psp-eu, every save load | **FIXED** | RD's reader (`Char_TraitLists`' list 1), PT's table route (twins 6.1) |
+| `Title_Sprites+0xE` `0x65385E` | the four Western PSX, the title | **OWNER CALL** (D266) | read in play; the call stands |
+| `Encounter_SlotChance+0x1C` `0x669CCC` | all 7, the load screen | **OWNER CALL** (the empty save slot) | read in play; the staged localisation PR |
+
+RW's `language` rows "read before a write" (`Menu_Verbs`, `+0xF4`,
+`CommuName_RecordNames+0x144`): **HARMLESS** on the Western installs. The layer
+writes them before the read, and the watch missed the writes on a parked or
+re-protected page (CW 3.1). Under ja-JP they and five more are D280's (OWNER
+CALL), and the fishing label is a second path to D279 (CW 3.2). The watch was
+run before stages A and B merged; it is to be re-run on the merged branch
+before I43 step 4.
+
+### 8.3 P1 - a screen or gameplay effect on a common path
+
+1. **FIXED 2026-10-17 (D310).** Level-up ability names `0x654900` (Western PSX).
+   OT found that `immref` would place a disc copy from `SCENA10.EMI` on PSX-US.
+   The region is kept the engine's, and whether the disc's copy should win is an
+   **OWNER CALL** (OT 4).
+2. **FIXED 2026-10-17 (D316).** Event battle music, the track half.
+3. **FIXED 2026-10-17 (D311).** Hi-lo payouts.
+4. **FIXED 2026-10-17 (D310).** Play-time colon.
+5. **FIXED 2026-10-17 (D278).** Identify `?` marks.
+6. **FIXED 2026-10-17 (D310).** Village board rows.
+7. **FIXED.** Area-169 dial panel `Area169_Rects+0xA` (PSX 5). There was no
+   need for a pieced rule: the 187 non-zero bytes are one verbatim run in
+   `WORLD04/AREA170.EMI#13`, the dial panel being area 170's. TW, twins 2.
+8. **HARMLESS (unread).** `MasterWin_Requirements+0x44` is not a requirement
+   list. It is a six-character string after the 17-pointer table, which no
+   operand or word names, and which was not read on the master route on four
+   Western installs. No Western `SHOP.EMI` holds it. It is now an `unread` region.
+   FP 7; RW 4.2.
+9. **FIXED 2026-10-17 (D310).** Countdown and counter formats.
+10. **FIXED 2026-10-17 (D267, D268).** Meteor Strike lifts, `AREA111`'s overreach.
+
+### 8.4 P2 - twins the disc search locates, PSP values read every area
+
+11. The disc-unplaced rows with windows found (TW, twins 1 to 3):
+    - **FIXED:**
+      - `Area115_Sprites` / `_Buttons`, world map 115's legend frame (all 7);
+      - `EffectKind99_States`, `Fx106_ShardTables` (PSX 5);
+      - `EffectKind33_SignX` / `_SignZ` (AREA026, chosen by kind 0x33's handler);
+      - `EffectKindA0_States`, `AuraBreathDome_V`;
+      - `MagicBallOrb_Shades`, pairs 0..7;
+      - `BossDolphin_Anims`, `BossGaist_Sounds`;
+      - `Area121_Cells` (PSX 5);
+      - both `Area146_EffectStates` rows (area 148's attach vectors, RD 4);
+      - `EffectKind3C_Op` (US, EU, FR);
+      - `EffectKind18_08` / `Sub5D`;
+      - `EffectKind86_States`, whole on all 7 (an EventOp operand);
+      - `Fish_Kinds+0x72A` (JP).
+    - **HARMLESS (unread):** `MagicBallOrb_Shades+0x10`, pairs 8 and 9. Only
+      eight orbs exist, and nothing reaches the index (PT 6.3).
+    - **FIXED in part, the rest OWNER CALL:** `EffectKind66_States+0x18` and
+      `EffectKind5B_States+0xC` (Western PSX), by pieced segments (twins 2).
+      Three u16 fields each are the Western discs' own values. The choice of
+      which values an install gets is a regional call.
+    - **OWNER CALL:** `Area124_Weights+0x50` (EU, DE). The European discs give
+      area 125 other weights, and the PC's eight bytes have no reader on any
+      disc (twins 3).
+    - **`CommuMusic_CloseSteps`:**
+      - **FIXED (FR, DE):** the two segments FR and DE keep in the PC's words
+        (twins 2).
+      - **OWNER CALL:** the FR / DE labels (`+0x28`, `+0x40`, `+0x66`). The
+        draw is a texture-page quad, not a font glyph, so it waits on a capture
+        of the page on each install kind (labels 4.4).
+      - **NEEDS FIX - P3:** the three glyphs `+0x68` (JP, US, both PSPs). No
+        disc holds them, and the twins' pairs address nothing that fits (FP 5).
+12. PSP-only, from `BOOT.BIN` (PB, twins 5):
+    - **FIXED:** the default light pair;
+    - **FIXED:** `Sprite_ScreenMargins`, by the `margins` rule (DIV-0103);
+    - **FIXED:** `MoveScript_EffectArg+0x45`, by two twins: the PSP packs the
+      scripts without the PC's padding.
+    - **FIXED** with them: the four `EffectKind18Sub1C` / `1D` / `33` / `64`
+      tails on the PSPs.
+13. **FIXED:**
+    - `EffectKind2A_States+0x10` (PSX 5), an `immref` from
+      `WORLD01/AREA048.EMI#13` through FP's pair and the zero-tail end (FP 6);
+    - `EffectKind86_States` (item 11).
+
+Added by the round:
+
+14. **FIXED.** `ConfigMenu_Steps+0xC` (PSP), from P4. It is `Char_TraitLists`'
+    list 1, read at every save load. RD 2, RW 4.2, PT 6.1.
+15. **FIXED.** `Char_WhelpSlot+0x3` (PSP), from P3 and read in play. CW 2, PT 6.6.
+16. **NEEDS FIX - P2.** Song 166, the lost fight's music, from P4. It is
+    missing on every PSX-only and PSP-only install, so a lost fight restarts the
+    fight's own music (D320, through D24). The fix is the importer's 165 rule
+    for sub-song 2, after a render confirms the pairing. It needs a ledger
+    entry. RD 3.
+
+### 8.5 P3 - the long tail
+
+**FIXED by the round:**
+
+- **The area message words** (OT 2, `immref`, PSX 5; `Area08_ChoiceMessages`
+  on the PSPs too): `Area05_MessagesB`, `Area08_ChoiceMessages`,
+  `Area10_MessagesB`, `Area21_Messages+0x8`, `Area150_MessagesB+0x4`.
+- **Other area rows:**
+  - `Area26_EffectKinds+0x4` (OT 2);
+  - `Area94_EffectArgsE` (OT 2, PSX 5; still a gap on both PSPs);
+  - `Area91_RingTurns`, `Area151_DriftUV+0x8` (PT 6.7, a section's tail);
+  - `Area118_SpawnKinds` (FP, the zero-tail end).
+- **OF-E rows** (FP 4, `immref`):
+  - `EffectKind27_States+0xC`, `EffectKind29_States+0x18`,
+    `EffectKind65_ShakeSteps`, `EffectKind6D_States+0x48` (PSX 5),
+    `EffectKind9A_Branches` (PSX 5);
+  - `ChlorineCloud_Offsets`, `SnapWave_FacingPhase`,
+    `Magic020Slash_Animations`, `Magic087_RisePhases+0x8`,
+    `WhelpBreath_GlowAngles`, `InkPuff_Offsets+0x11`, `InkInkPuff_Offsets`;
+  - `BreathMote_Angles` (US, EU, DE; the zero-tail end);
+  - `EffectKind18Sub1C`, `1D`, `33`, `64` (PSX 5; PB's twins on the PSPs);
+  - `Sub2F`, `Sub32` (the zero-tail end);
+  - `Sub37` (psx-jp only).
+- **The FR / DE language rows** (LA, under the layer):
+  - D286's headings (DIV-0069);
+  - `Equip_SlotIcons` labels (group 21);
+  - `SharedList_SortSteps+0xC` (group 22);
+  - `MenuList_GeneWinSteps+0x25` / `+0x27` (group 23).
+- **D289**, the faerie names (group 16's slots; DIV-0064, the owner's
+  confirmation pending).
+- **`0x669CE8` and `0x66A098`** on the five Latin builds (groups 17 and 20; PSP-EU's
+  17 from `BOOT.BIN`). On the JP builds they are D280's.
+
+**HARMLESS (unread):** `SharedList_SortSteps+0xC`'s `SKILL` slot `0x664290`, which
+nothing in `BOF3.exe` reads (LA 2.3).
+
+**OWNER CALL:**
+
+- `CommuName_RecordNames+0xF0` `0x66A094` (all 7). The Western routine draws no
+  word and a narrower box, so there is no Western source. The choice is between
+  that layout and drawing nothing under a Western layer (LA 4.3). On JP it is
+  D280's.
+- The JP builds' `0x653200`, `0x669CE8` and `0x66A098` (D280).
+
+**NEEDS FIX - P3, still** (none seen read in play by RW's routes, RW 5). FP's
+reach is 38 of the 63 stage-B rows with a twinned reader, against 10 before it
+(FP 5).
+
+- *Twinned, not placed:*
+  - under the four-byte floor: `EffectKind75_States+0xC`,
+    `BoneDanceShake_Counts`, `GameMode3_Steps+0xC`;
+  - the twin's addressed bytes differ, not settled as a finding:
+    `EffectKind18Sub31` / `Sub2E` / `Sub30`, `AuraBreathDome_Height`;
+  - the twin's body not found once on the other builds: `Sub37` outside psx-jp;
+  - an offset run: `Area141_CellEntries+0x7C`;
+  - nothing fitting addressed: `TornadoMote_Phases` (`+0x10` PSX, `+0x15` PSP),
+    `CommuMusic_CloseSteps+0x68`.
+- *Readers unpaired:*
+  - the bosses (`BossDolphin_Sounds`, `BossGaist_Anims+0x2`,
+    `BossTorch_Sounds`): `BattleEnemy_RunAll`'s kind table has no twin;
+  - `ReviveHalo_MoteCounts`, `WardMote_Tilts` (`+0x1` on the PSPs);
+  - `EffectKind18Sub21` / `Sub38` / `Sub45`.
+- *OF-A, no method seeds area or scenario code yet:*
+  - `Area115_Directions`, `Area121_BandHeights`, `Area135_EffectKinds`,
+    `Area96_Handlers+0x184`, `Area154_ChoicePairs` (two rows),
+    `Area172_EffectStates+0xFF0`, `Area196_Keys1+0x658`;
+  - `Scena02_EffectX`, `Scena03_Bob2` / `_Bob4`, `Scena04_Quake` /
+    `_TremorSteps`, `LinkedObjectD_Amounts`;
+  - `AirRaidImage_ShadeSteps`, `Area94_EffectArgsE` on the PSPs.
+
+  The next method is the area descriptor table's handlers as seeds (FP 5).
+  `Area96`, `Area154`, `Area172`, `Area196` and `AirRaidImage` have no reader by
+  `text_readers` at all.
+
+Rows still in the file that this list never named keep the status sections
+4 and 5 give them. `Char_DefaultRecords` and the formation names
+`Equip_SlotIcons+0x50..` are HARMLESS, since a layer writes them.
+`ConfigScreen_OpenStates+0x141` is the bytes after D282's row tables, split
+off section 5's IN FLIGHT row by D282's fix.
+
+### 8.6 P4 - find a reader first
+
+- **HARMLESS (unread).** `Music_LoadedTrack+0x1E30`. It is the tail of the PSX
+  title overlay's lists, which the PC never reads; it was not read on the attract
+  or `whelpBoss` with its words pinned. It is now an `exe_own.py` `unread` region.
+  RD 1, RW 4.2, OT 5.
+- `ConfigMenu_Steps+0xC` (PSP): a reader found, now P2 item 14, **FIXED**.
+- Song 166: now P2 item 16, **NEEDS FIX** (D320).
+
+### 8.7 The owner's
+
+These are unchanged from 2026-10-17:
+
+- DIV-0055's plates (the `port-relaid` rows). `IMM_SKIP` keeps
+  `Area104_PlateAnims` out of the `immref` places, which would otherwise take it.
+- D266's Western title mark (read in play, 8.2).
+- `Scena17_EndSteps`, the Western ending.
+- The empty save slot `0x669CCC` (read in play, 8.2; the staged localisation PR).
+- D257, D246, D277, D256 and D280.
+- The US button assignment, settled by the button round's DIV-0134.
+
+New from the round, each one line in [`owner-review.md`](owner-review.md)
+"2026-10-18, the install-gap round":
+
+- DIV-0064's amendment (LA's DIV-B);
+- `Area124_Weights+0x50`;
+- the Western u16 fields of `EffectKind66` / `EffectKind5B`;
+- `0x66A094`'s layout;
+- the FR / DE music-player labels;
+- D310's format against a disc copy;
+- the two disputed `LeaderPanel` `psx` entries;
+- the Defender exclusion.
 
 ## For the other files
 

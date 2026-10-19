@@ -73,16 +73,30 @@ REGIONS = [
     (0x653084, 0x653098, "game-format", "CommuBoard_DrawRows' dash and formats (D310)"),
     (0x6531F4, 0x6536E0, "language", "the page-format and glyph tables rest_4e.cpp names (exe-import-engine.md 3.2)"),
     (0x6536F8, 0x653808, "language", "the config screen's labels (ConfigScreen_OpenStates+): text in the port's code page"),
+    # The labels a Latin layer writes in place where FR / DE re-word them (docs/install-gap-labels.md
+    # 1, 2.1; kind 16 tag 3, label groups 21..23); a twin or the map places the PC's words elsewhere.
+    (0x653EA0, 0x653EB4, "language", "EffectKind0F_PanelTitles: the fishing panels' four fixed fields (kind 16 tag 3)"),
     (0x654900, 0x654904, "game-format", "the level-up's ability name format, EffectKind5E_DrawMenu's (D310)"),
     (0x656AEC, 0x656B00, "rule", "the field button map's defaults Boot_Task copies: the default button of each action, "
                                  "by name (docs/controls.md 2.1)"),
     (0x65AAC4, 0x65AAD0, "game-format", "the Identify panel's unknown marks (Identify_Draw*; D278)"),
+    (0x65C1B8, 0x65C1BC, "unread", "MagicBallOrb_Shades' pairs 8 and 9: an orb's +0xB is 0..7 (MagicBall_Start's eight, "
+                                   "kept), so MagicBallOrb_DrawDisc never reaches them (docs/install-gap-twins.md 6.3)"),
     (0x65DA44, 0x65DAE8, "port-platform", "Game_WinMain's and Cfg_Load's initial values and strings"),
+    (0x663668, 0x66367C, "language", "Equip_SlotIcons' labels: the equipment and EXP panels' three words (label group 21)"),
     (0x6637E0, 0x6637E4, "game-format", "Menu_DrawPlayTime's separator (D310)"),
     (0x6639D4, 0x6639D8, "port-platform", "the save slot's number format (Menu_DrawSaveSlot; D254)"),
     (0x664068, 0x664078, "port-platform", "the save file's name format (FieldSave_Write, Save_QuickWrite)"),
+    (0x664288, 0x664290, "language", "the shared list's title (SharedList_DrawList; label group 22)"),
+    (0x664290, 0x664298, "unread", "the word after the shared list's title: no operand and no dword of BOF3.exe names it "
+                                   "(docs/install-gap-labels.md 2.3)"),
     (0x6653BC, 0x666FC6, "port-platform", "Sound_LoadStream's 891 SND/ names, Music_LoadedTrack, the SND and BGM formats"),
+    (0x666FC6, 0x6671F4, "unread", "three lists of the PSX title overlay and their tail: no instruction and no word of "
+                                   "the exe's file names them (docs/install-gap-readers.md 1.4)"),
     (0x669CCC, 0x66A450, "language", "the battle command labels, the community's member names, Menu_Verbs, pause lines"),
+    (0x66B1F0, 0x66B1F8, "language", "the gene list's title (MenuList_GeneWinDraw; label group 23)"),
+    (0x66B468, 0x66B46E, "unread", "MasterWin_Requirements+0x44: a six-character string after the 17-pointer table; no "
+                                   "operand or word names it, unread on the master route (docs/install-gap-pairs.md)"),
     (0x66B5D8, 0x66B6A8, "port-platform", "the AVI player's MCI command strings (Fmv_Play, Fmv_WndProc)"),
     (0x66B708, 0x66BC58, "port-platform", "the display / sound / file layer's rect, caches, error strings and formats; the OT end; the GTE identity"),
     (0x66BC58, 0x66C45C, "rule", "Math_SinTable: PSX libgte's quarter-wave sine, computed"),

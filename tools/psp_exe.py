@@ -51,6 +51,19 @@ pspmap (2026-10-13, docs/exe-image-twins-1013.md
 PSX-JP's own bytes either side of it put it in this disc's file (own_place; the recipe
 needs the PSX-JP disc beside the PSP discs).
 
+BOOT.BIN as a twin's file (2026-10-18, docs/install-gap-twins.md 5): the PSP links the
+PSX's overlays into its one ELF, so a run one overlay holds on a PSX disc is often in
+BOOT.BIN too, and the PSP's native code reads BOOT.BIN's copy. A `twin` that names
+BOOT.BIN is placed by the ELF's relocations, not by the first equal bytes (boot_place): the
+one copy in .rodata / .data that a .text hi16/lo16 relocation pair reads into, whose
+pointer words the PC has before the run within its symbol are relocated words in the copy's
+place too; none, or more than one, and the row is not written. PSP builds only. And
+
+    margins  Sprite_ScreenMargins (two entries of x+, x-, y+, y- bytes): the PSP moved
+             each x margin 32 out for its 384-wide view; read back to the 4:3 frame (x -
+             32, y copied) from the copy BOOT.BIN's code reads, found as boot_place finds
+             a twin's. PSP builds (DIV-0103's 16:9 re-framing undone, as unwide and boxxy)
+
 The file numbering. A disc names a file by its index in the disc's file table; the PSP's
 BOOT.BIN holds that table as 0x40-byte path records (found by the disc's own paths). The
 PC names a DAT/ file by its index in Dat_FileNames (symbols.toml), whose words
@@ -96,13 +109,16 @@ RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 TRACK_NONE = 0xFF            # an event battle's track when its file has no music: Music_Play(0xFF) plays nothing
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
-         "faerie", "pspmap", "verb", "fishrec", "fishpen")   # widen<k>: the disc's name is k bytes
+         "faerie", "pspmap", "verb", "fishrec", "fishpen", "margins")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
 # (the PSX builds place it already, exe-places.tsv, and a twin there would split that place;
 # None: every build), and a sixth takes the file's n-th copy (0-based) instead of the first,
-# for a file that holds the run more than once and whose reader reads a later one.
+# for a file that holds the run more than once and whose reader reads a later one; a seventh
+# (the pieced rule, docs/install-gap-twins.md 2) lists sub-ranges of the run: the place is
+# where every one holds BOF3.exe's bytes at one displacement, and each becomes a recipe row
+# of its own (so fill's other-file rule, D268's, applies per segment).
 # Addresses and names only.
 TWINS = [
     (0x64AE18, 0x64AE28, "BATTLE/BATTLE.EMI", "the BATE equipment screen's slot icons and categories"),
@@ -186,7 +202,8 @@ TWINS = [
     # disc-unplaced, each read in its file by a lui/imm pair into its table. Left out: runs
     # the file holds more than once with no reader to choose by (Area154_ChoicePairs+0x18C8),
     # a run that is only the start of another table's copy (EffectKind18Sub38_States+0x10,
-    # inside AREA166's Sub35 run) and BOOT.BIN's ConfigMenu_Steps+0xC (no reader found).
+    # inside AREA166's Sub35 run) and BOOT.BIN's ConfigMenu_Steps+0xC (no reader found then;
+    # since 2026-10-18 Char_TraitLists' list 1, placed through its table, below).
     (0x617EBC, 0x617EC8, "WORLD02/AREA098.EMI", "Area96_Handlers+0x194 (area 98's)"),
     (0x63FF40, 0x63FF48, "WORLD04/AREA173.EMI", "Area172_EffectStates+0x100C (area 173's)"),
     (0x654308, 0x654310, "WORLD01/AREA042.EMI", "EffectKind28_States+0x10"),
@@ -240,6 +257,70 @@ TWINS = [
     # STATUS.EMI each hold the 13 bytes on all seven discs, after the build's own records;
     # the padding past them differs by disc, so the run stops at the count table's last row.
     (0x653808, 0x653815, "ETC/START.EMI", "the Config screen's row tables (first record, option count)"),
+    # The install-gap round's P2 twins (docs/install-gap-twins.md 1): each run BOF3.exe's
+    # verbatim in its reader's overlay, the file chosen by the overlay's code (a lui/imm pair
+    # into the table, or the effect kind's handler reading the state table before it) or by
+    # the PSX-US map's neighbouring segments where several overlays hold the bytes. A range
+    # that stops short of the census row stops where the disc's own bytes begin; every byte
+    # the PC has non-zero past it is said in the doc.
+    (0x62034C, 0x6203A4, "WORLD03/AREA115.EMI", "Area115_Sprites (world map 115's legend frame)"),
+    (0x6203A4, 0x6203BC, "WORLD03/AREA115.EMI", "Area115_Buttons"),
+    (0x62390C, 0x623910, "WORLD03/AREA121.EMI", "Area121_Cells+0x26C (the next map segment's displacement)", PSX),
+    # Area146_EffectStates+0x1230..+0x1250 and Area169_Rects+0xB9C are areas 148 and 170's
+    # attach vectors (Area_Descriptors[148] / [170] +0x0C tables, MoveCmd_AttachOffset;
+    # docs/install-gap-readers.md 4.2): the tables + 4 and + 0x10. AREA170 holds the four
+    # bytes three times; the third is its table's (0x801F6448 + 0x10 on all seven discs).
+    (0x635344, 0x635364, "WORLD03/AREA148.EMI", "area 148's attach vectors (Area146_EffectStates+0x1230)"),
+    (0x63CA48, 0x63CB03, "WORLD04/AREA170.EMI", "Area169_Rects+0xC, area 170's three dial grids (EffectKind7D_SetMap, _DrawDial)", PSX),
+    (0x63D5D8, 0x63D5DC, "WORLD04/AREA170.EMI", "area 170's attach vectors + 0x10 (Area169_Rects+0xB9C)", None, 2),
+    (0x64D478, 0x64D484, "BOSS/BOSS029.EMI", "BossDolphin_Anims"),
+    (0x64D798, 0x64D7A0, "BOSS/BOSS035.EMI", "BossGaist_Sounds"),
+    (0x653FA8, 0x653FB9, "SCENARIO/SCENA03.EMI", "EffectKind3C_Op", ("psx-us", "psx-eu-en", "psx-fr")),
+    (0x6543F0, 0x654400, "WORLD00/AREA026.EMI", "EffectKind33_SignX (kind 0x33's handler is AREA026's)"),
+    (0x654400, 0x654410, "WORLD00/AREA026.EMI", "EffectKind33_SignZ"),
+    (0x654D88, 0x654D99, "SCENARIO/SCENA13.EMI", "EffectKind86_States+0x14, EffectKind86_Spawn's 17-byte EventOp operand"),
+    (0x6550E0, 0x655100, "WORLD03/AREA134.EMI", "EffectKind99_States+0x10 (kind 0x99's handler is AREA134's)"),
+    (0x655208, 0x655210, "SCENARIO/SCE15EF1.EMI", "EffectKindA0_States+0x24"),
+    (0x65B8F4, 0x65B918, "BMAGIC/MAGIC106.EMI", "Fx106_ShardTables", PSX),
+    (0x65C1A8, 0x65C1B8, "BMAGIC/MAGIC172.EMI", "MagicBallOrb_Shades' first eight pairs (the section ends there)"),
+    (0x65C21C, 0x65C224, "BMAGIC/MAGIC218.EMI", "AuraBreathDome_V"),
+    (0x65DE5E, 0x65DE76, "WORLD02/AREA109.EMI", "EffectKind18_08_States+0x8A", ("psx-jp", "psx-us", "psx-fr", "psx-de")),
+    (0x65F438, 0x65F44E, "WORLD04/AREA174.EMI", "EffectKind18Sub5D_States+0x14", ("psx-jp", "psx-us", "psx-fr", "psx-de")),
+    (0x66ADBC, 0x66ADD6, "ETC/GAME.EMI", "Fish_Kinds+0x72C on PSX-JP (its last two bytes are the disc's own)", ("psx-jp",)),
+    # Pieced (a seventh field, the segments): one table at one place, the segments BOF3.exe's
+    # bytes there and the bytes between them the disc's own (the Western discs' re-laid
+    # numbers, FR / DE's own label words), which stay unfilled (docs/install-gap-twins.md 2).
+    (0x654770, 0x654798, "WORLD03/AREA135.EMI", "EffectKind66_States+0x18 (u16 fields; three are the West's own)",
+     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654772, 0x654778), (0x65477A, 0x654780), (0x654782, 0x654798))),
+    (0x654858, 0x654876, "SCENARIO/SCENA10.EMI", "EffectKind5B_States+0xC (u16 fields; three are the West's own)",
+     ("psx-us", "psx-eu-en", "psx-fr", "psx-de"), 0, ((0x654858, 0x65486C), (0x65486E, 0x654870), (0x654872, 0x654874))),
+    (0x653104, 0x653150, "ETC/COMMU03.EMI", "the music player's labels FR / DE keep in the PC's words (at the US map's place)",
+     ("psx-fr", "psx-de"), 0, ((0x65310C, 0x65311C), (0x65313C, 0x653142))),
+    # PB's BOOT.BIN twins (docs/install-gap-twins.md 5): each copy the one the PSP's relocated
+    # lui / lo16 pairs read (boot_place); the PSX builds keep these as gaps.
+    (0x663B20, 0x663B28, "BOOT.BIN", "the default light pair (Area_Enter's kDefaultLight, Light_Angles)", PSP),
+    (0x66978C, 0x6697A2, "BOOT.BIN", "MoveScript_EffectArg+0x48: a leader climbing move script", PSP),
+    (0x6697A4, 0x6697B0, "BOOT.BIN", "MoveScript_EffectArg+0x60: the next move script's head", PSP),
+    (0x65E2DC, 0x65E2E0, "BOOT.BIN", "EffectKind18Sub1C_States+0x14", PSP),
+    (0x65E2F4, 0x65E2F8, "BOOT.BIN", "EffectKind18Sub1D_States+0x14", PSP),
+    (0x65EBD4, 0x65EBD8, "BOOT.BIN", "EffectKind18Sub33_States+0x14", PSP),
+    (0x65F578, 0x65F57C, "BOOT.BIN", "EffectKind18Sub64_States+0x1C", PSP),
+    # Char_TraitLists' list 1 (the census's ConfigMenu_Steps+0xC; docs/install-gap-readers.md 2,
+    # install-gap-twins.md 6.1): BOOT.BIN's one copy is no pair's, but entry 1 of the PSP's
+    # trait-list table (read by Char_ApplyTraits' twin), lined up with the PC's 0x667548
+    # (boot_place's table route). The five bytes Char_ApplyTraits reads; the PC's two
+    # alignment bytes after them are zero and the PSP's list is 2-aligned.
+    (0x667518, 0x66751D, "BOOT.BIN", "Char_TraitLists' list 1 (ConfigMenu_Steps+0xC)", PSP),
+    # Equip_SlotIcons' six slot icons on DE (docs/install-gap-labels.md 2.2, install-gap-twins.md
+    # 6.2): the map's segment stops at the German labels after them, 8 bytes under its window.
+    # BATE.EMI's second of three copies: the one its Menu_DrawEquipPanel twin reads (the label
+    # + 8 read just before it, + 0x10 by the EXP panel's), where every other PSX map takes
+    # 0x663660.. from and DE's own map its 0x663677 at the same displacement.
+    (0x663660, 0x663668, "ETC/BATE.EMI", "Equip_SlotIcons: the equipment panel's slot icons (Menu_DrawEquipPanel)",
+     ("psx-de",), 1),
+    # CW (docs/install-gap-live-rows.md): the two live rows RW found read while zero.
+    (0x65A608, 0x65A62C, "BMAGIC/MAGIC009.EMI", "ChlorineCloud_Offsets (ChlorineCloud_Start's twin 0x801EF198 reads it at 0x801EF8B0)"),
+    (0x669738, 0x669743, "BOOT.BIN", "Char_WhelpSlot+0x2: the member flag bytes (Field_MemberSprite's kMemberFlags, to sprite +0x2B)", PSP),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -310,6 +391,12 @@ VERB_BUILDS = ("psx-us", "psx-eu-en", "psx-fr", "psx-de")
 # entries the PSP left alone (0..2), the PC's at recipe time.
 BOX_XY, BOX_TABLES, BOX_ENTRIES, BOX_PC_STRIDE, BOX_PSP_STRIDE = 0x66ADD8, 2, 7, 0x10, 0x1C
 BOX_UNWIDE = {3: 32, 4: -32, 5: 32, 6: -32}
+# margins: Sprite_ScreenMargins (field_frame.cpp: Sprite_ProjectA's off-screen test, x above
+# 0x140 + [0] or below -[1], y above 0xF0 + [2] or below -[3], entry 0 or 1 by the record's
+# byte 3 bit 3). The PSP's BOOT.BIN holds the two entries with each x margin 32 wider, the
+# 32 columns either side of its 384-wide view (docs/psp-widescreen.md 2.4); the y margins as
+# the PC's. PSP builds: x - 32, y copied.
+MARGINS, MARGIN_ENTRIES, MARGIN_X, MARGIN_UNWIDE = 0x663B28, 2, (0, 1), 32
 MUSIC_SETS = 0x669A48       # Area_ZoneTrack's 8-byte records (window_task.cpp: a list pointer, a count)
 PSX_MAP = "psx-jp"          # psxmap: the map whose segments a PSP disc's same files are read by
 _RECIPE_BASE = False        # True while `recipe` builds the image the fills are found against
@@ -362,6 +449,40 @@ class Elf:
     def data_pointers(self):
         """The .data words a R_MIPS_32 relocation names (the ELF's pointer words)."""
         return {off for off, info in self.rel.get(".data", []) if info & 0xFF == R_MIPS_32}
+
+    @functools.cached_property
+    def pointer_words(self):
+        """The .rodata and .data words a R_MIPS_32 relocation names."""
+        return {off for sec in (".rodata", ".data") for off, info in self.rel.get(sec, [])
+                if info & 0xFF == R_MIPS_32}
+
+    @functools.cached_property
+    def text_refs(self):
+        """{address in the first program header: [.text addresses that read it]}: the code's
+        hi16 / lo16 relocation pairs settled. A relocation's info is its type (bits 0..7), the
+        program header its place is in (8..15) and the one its address is in (16..23); the
+        image is unrelocated, at 0, so an address in the first header is the pair's value as it
+        stands. A lo16 pairs with the latest hi16 whose lui wrote its base register, in the
+        same header and at most 0x400 bytes before it (the PSP's compiler interleaves pairs,
+        so the list's order alone does not pair them); a lo16 with none is left out."""
+        out = collections.defaultdict(list)
+        his = {}
+        for loc, info in self.rel.get(".text", []):
+            kind, to = info & 0xFF, (info >> 16) & 0xFF
+            w = self.word(loc)
+            if kind == R_MIPS_HI16:
+                his[(w >> 16) & 31] = (loc, w, to)
+            elif kind == R_MIPS_LO16:
+                h = his.get((w >> 21) & 31)
+                if h is None or h[2] != to or not 0 <= loc - h[0] <= 0x400 or to != 0:
+                    continue
+                lo = w & 0xFFFF
+                out[((h[1] & 0xFFFF) << 16) + (lo - 0x10000 if lo & 0x8000 else lo)].append(loc)
+        return dict(out)
+
+    def readers(self, lo, hi):
+        """The .text addresses whose relocated pair reads into [lo, hi)."""
+        return sorted(r for t, rs in self.text_refs.items() if lo <= t < hi for r in rs)
 
 
 def boot_bin(disc):
@@ -720,6 +841,14 @@ def build_fill(row, disc, elf, rule, srcs):
         for i in range(3):
             out[i] = blob[at + FI_ENTRY * i + 2]
             mask[i] = True
+    elif rl == "margins":
+        if (lo, hi) != (MARGINS, MARGINS + 4 * MARGIN_ENTRIES) or row["file"] != "BOOT.BIN":
+            fail("%s: a margins row is not BOOT.BIN's Sprite_ScreenMargins" % row["build"])
+        for i in range(hi - lo):
+            v = blob[at + i] - (MARGIN_UNWIDE if i % 4 in MARGIN_X else 0)
+            if v < 0:
+                fail("%s: BOOT.BIN 0x%X margin %d is under the PSP's widening" % (row["build"], row["addr"], i))
+            out[i], mask[i] = v, True
     elif rl == "verb":
         if hi - lo != 1 or lo != VERB_AT or blob[at] != VERB_WEST:
             fail("%s: %s 0x%X is not set 8's Western 23rd verb (0x%02X)" % (row["build"], row["file"], row["addr"], VERB_WEST))
@@ -860,12 +989,27 @@ def find_rows(disc, bid, pc, ref_srcs=None):
     for tlo, thi, tfile, _, *extra in TWINS:
         only = extra[0] if extra else None
         nth = extra[1] if len(extra) > 1 else 0
+        segs = extra[2] if len(extra) > 2 else ((tlo, thi),)
         if only and bid not in only:
             continue
-        t = twin_place(srcs, pc, tlo, thi, tfile, nth)
+        if tfile == "BOOT.BIN":
+            if not psp or nth or len(segs) > 1:
+                fail("TWINS 0x%06X: a BOOT.BIN twin is a PSP build's, its copy the one its reader reads (no n-th, no segments)" % tlo)
+            a, rd, via = boot_place(elf, pc[tlo - DATA_LO:thi - DATA_LO], tlo)
+            if a is None:
+                print("  %s twin 0x%06X..0x%06X: BOOT.BIN, %s" % (bid, tlo, thi, rd))
+                continue
+            print("  %s twin 0x%06X..0x%06X: BOOT.BIN 0x%X, %sread at %s" % (
+                bid, tlo, thi, a, "" if via is None else "entry +0x%X of the table 0x%X, " % (via[1], via[0]),
+                " ".join("0x%X" % r for r in rd[:4]) + (" ..." if len(rd) > 4 else "")))
+            rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": None,
+                         "addr": a})
+            continue
+        t = twin_place(srcs, pc, tlo, thi, tfile, nth, segs)
         if t:
-            rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": t[0],
-                         "addr": t[1]})
+            for slo, shi in segs:                     # the pieced rule: a recipe row per segment
+                rows.append({"build": bid, "rule": "twin", "pc": slo, "pc_end": shi, "file": tfile, "section": t[0],
+                             "addr": t[1] + slo - tlo})
         else:
             print("  %s twin 0x%06X..0x%06X: not in %s" % (bid, tlo, thi, tfile))
     rows += link_rows(bid, srcs, pc)
@@ -916,6 +1060,12 @@ def find_rows(disc, bid, pc, ref_srcs=None):
                          "file": "BOOT.BIN", "section": None, "addr": m})
         else:
             print("  %s msets: no single run of %d records in BOOT.BIN" % (bid, len(sets)))
+        mg, rd = margins_place(elf, pc)
+        if mg is not None:
+            rows.append({"build": bid, "rule": "margins", "pc": MARGINS, "pc_end": MARGINS + 4 * MARGIN_ENTRIES,
+                         "file": "BOOT.BIN", "section": None, "addr": mg})
+        else:
+            print("  %s margins: Sprite_ScreenMargins not found in BOOT.BIN (%s)" % (bid, rd))
     rows.sort(key=lambda r: r["pc"])
     kept = []
     for r in rows:
@@ -1273,19 +1423,183 @@ def faerie_records(n):
     return (n - FA_FIELD - 4) // FA_STRIDE + 1 if n >= FA_FIELD + 4 else 0
 
 
-def twin_place(srcs, pc, lo, hi, file, nth=0):
+def twin_place(srcs, pc, lo, hi, file, nth=0, segs=None):
     """The nth (0: the first) copy of BOF3.exe's [lo, hi) in `file`'s sections, in
-    section and address order: (section, disc address) or None."""
-    nd = pc[lo - DATA_LO:hi - DATA_LO]
+    section and address order: (section, disc address of lo) or None.
+
+    `segs` (the pieced rule, docs/install-gap-twins.md 2): sub-ranges of [lo, hi); a copy
+    is then a place where every segment holds BOF3.exe's bytes at one displacement from
+    lo - the bytes between them are the disc's own and are not compared. Found by the
+    longest segment's copies, each checked for the rest in the same section."""
+    segs = segs or ((lo, hi),)
+    key_lo, key_hi = max(segs, key=lambda s: s[1] - s[0])
+    nd = pc[key_lo - DATA_LO:key_hi - DATA_LO]
     for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
         if f == file:
             at = blob.find(nd)
             while at >= 0:
-                if nth == 0:
-                    return s, base + at
-                nth -= 1
+                a = at - (key_lo - lo)               # lo's offset in the section
+                if a >= 0 and all(blob[a + s0 - lo:a + s1 - lo] == pc[s0 - DATA_LO:s1 - DATA_LO] for s0, s1 in segs):
+                    if nth == 0:
+                        return s, base + a
+                    nth -= 1
                 at = blob.find(nd, at + 1)
     return None
+
+
+@functools.lru_cache(None)
+def _data_starts():
+    with open(os.path.join(ROOT, "symbols.toml"), "rb") as f:
+        return sorted(e["pc"] for e in tomllib.load(f)["data"])
+
+
+@functools.lru_cache(None)
+def _layout_pointers():
+    import exe_tables
+    return frozenset(a for a, k, _ in exe_tables.load_layout() if k in ("code", "data", "rdata", "bss"))
+
+
+@functools.lru_cache(None)
+def _layout_data_targets():
+    """{PC pointer word: its target} for the layout's `data` words (recipes/exe-layout.tsv)."""
+    import exe_tables
+    return {a: int(t, 16) for a, k, t in exe_tables.load_layout() if k == "data"}
+
+
+def pc_tables_to(lo):
+    """The PC's pointer tables with an entry naming `lo`: [(table, the entry's offset, the
+    offsets of the table's pointer words)], a table being the symbols.toml symbol that
+    holds the entry, to the next symbol's start, and its pointer words the layout's."""
+    starts, tg = _data_starts(), _layout_data_targets()
+    out = []
+    for w in sorted(x for x, t in tg.items() if t == lo):
+        i = bisect.bisect_right(starts, w) - 1
+        if i < 0:
+            continue
+        t0, t1 = starts[i], starts[i + 1] if i + 1 < len(starts) else DATA_HI
+        out.append((t0, w - t0, frozenset(x - t0 for x in tg if t0 <= x < t1)))
+    return out
+
+
+def table_hits(elf, a, k, offs):
+    """BOOT.BIN's tables whose entry at offset `k` is a relocated word naming `a`, whose
+    relocated words sit at exactly the PC table's pointer-word offsets `offs` (over the PC
+    table's span to its last pointer word: a null where the PC has a null), and which a
+    .text relocated pair reads into: [(table, readers)]."""
+    span = max(offs) + 4
+    out = []
+    for w in sorted(x for x in elf.pointer_words if elf.word(x) == a):
+        t = w - k
+        if {o for o in range(0, span, 4) if t + o in elf.pointer_words} != set(offs):
+            continue
+        rd = elf.readers(t, t + span)
+        if rd:
+            out.append((t, rd))
+    return out
+
+
+def boot_place(elf, want, lo, tables=None):
+    """BOOT.BIN's copy of `want` (BOF3.exe's bytes from `lo`) that the PSP's code reads:
+    among the copies in .rodata and .data, those a .text relocation pair reads into
+    (Elf.readers) and whose place agrees with the PC's pointer words before `lo` in its
+    symbols.toml symbol (each a relocated word in the copy's place too).
+
+    When no copy is read so, a copy reached through a relocated pointer table
+    (docs/install-gap-twins.md 6.1, Char_TraitLists' list 1): the PC has a table of the
+    layout's data words with an entry naming `lo` (pc_tables_to, or `tables` given), and
+    BOOT.BIN a table a relocated pair reads into whose same entry is a relocated word naming
+    the copy and whose relocated words line up with the PC table's pointer words
+    (table_hits). The entry names `lo` itself, so the words before `lo` in its symbol are
+    not asked for (they are another table's, ConfigMenu_Steps' there).
+
+    (address, readers, (table, entry offset) or None) for exactly one such copy, else
+    (None, why, None)."""
+    starts = _data_starts()
+    i = bisect.bisect_right(starts, lo) - 1
+    sym = starts[i] if i >= 0 else lo
+    ptrs = [x for x in range(sym, lo) if x in _layout_pointers()]
+    copies, hits = [], []
+    for sec in (".rodata", ".data"):
+        s0, s1 = elf.span(sec)
+        a = elf.img.find(want, s0, s1)
+        while a >= 0:
+            copies.append(a)
+            rd = elf.readers(a, a + len(want))
+            if rd and all(a - (lo - x) in elf.pointer_words for x in ptrs):
+                hits.append((a, rd, None))
+            a = elf.img.find(want, a + 1, s1)
+    why = "%d copies, %d read by a relocated pair with the symbol's pointer words in place" % (len(copies), len(hits))
+    if not hits:
+        tabs = pc_tables_to(lo) if tables is None else tables
+        for a in copies:
+            for _, k, offs in tabs:
+                hits += [(a, rd, (t, k)) for t, rd in table_hits(elf, a, k, offs)]
+        why += "; %d through a relocated table lined up with the PC's %s" % (
+            len(hits), ", ".join("0x%06X+0x%X" % (t0, k) for t0, k, _ in tabs) or "(no PC table names it)")
+    if len(hits) == 1:
+        return hits[0]
+    return None, why, None
+
+
+class _FakeElf(Elf):
+    """check()'s synthetic BOOT.BIN: an image, its sections, relocated words and pairs."""
+
+    def __init__(self, img, sections, pointer_words, refs):
+        self.img, self.sections = bytes(img), sections
+        self.__dict__["pointer_words"] = frozenset(pointer_words)
+        self.__dict__["text_refs"] = refs
+
+
+def table_selftest():
+    """boot_place's table route on a synthetic BOOT.BIN: the lined-up table is accepted;
+    near misses (the table unread, one entry a null where the PC's is a pointer, an extra
+    relocated word where the PC's is a null, the entry naming another copy) refused.
+    Returns the problems."""
+    want, lo = b"\x01\x02\x03\x04\x0e", 0x667518          # five bytes; the place is synthetic
+    offs = frozenset((4, 8, 0x10))                       # the PC table's pointer words
+    tables = [(0x667548, 4, offs)]
+    img = bytearray(0x400)
+    data = (0x100, 0x300)
+    copy, other, t = 0x140, 0x180, 0x200
+    img[copy:copy + 5] = img[other:other + 5] = want
+    for o, v in ((4, copy), (8, 0x150), (0x10, 0x160)):
+        struct.pack_into("<I", img, t + o, v)
+
+    def case(pw, refs, image=img):
+        e = _FakeElf(image, {".rodata": (0, 0), ".data": (data[0], data[1] - data[0])}, pw, refs)
+        return boot_place(e, want, lo, tables)[0]
+
+    good = {t + 4, t + 8, t + 0x10}
+    errs = []
+    if case(good, {t: [0x40]}) != copy:
+        errs.append("table_selftest: the lined-up table is not accepted")
+    if case(good, {}) is not None:
+        errs.append("table_selftest: an unread table is accepted")
+    if case(good - {t + 0x10}, {t: [0x40]}) is not None:
+        errs.append("table_selftest: a table with a null where the PC has a pointer is accepted")
+    if case(good | {t + 0xC}, {t: [0x40]}) is not None:
+        errs.append("table_selftest: a table with a pointer where the PC has a null is accepted")
+    moved = bytearray(img)                           # the entry names no copy; a later one does
+    struct.pack_into("<I", moved, t + 4, 0x170)
+    struct.pack_into("<I", moved, t + 0x14, copy)
+    if case(good | {t + 0x14}, {t: [0x40]}, moved) is not None:
+        errs.append("table_selftest: a copy named at another entry is accepted")
+    twice = bytearray(img)                           # two lined-up tables name the copy
+    for o, v in ((4, copy), (8, 0x150), (0x10, 0x160)):
+        struct.pack_into("<I", twice, t + 0x80 + o, v)
+    if case(good | {t + 0x84, t + 0x88, t + 0x90}, {t: [0x40], t + 0x80: [0x48]}, twice) is not None:
+        errs.append("table_selftest: a copy two tables name is accepted")
+    return errs
+
+
+def margins_place(elf, pc):
+    """BOOT.BIN's Sprite_ScreenMargins: BOF3.exe's bytes with each x margin MARGIN_UNWIDE
+    wider, at the one place boot_place accepts. (address, readers) or (None, why)."""
+    want = bytearray(pc[MARGINS - DATA_LO:MARGINS + 4 * MARGIN_ENTRIES - DATA_LO])
+    for e in range(MARGIN_ENTRIES):
+        for k in MARGIN_X:
+            want[4 * e + k] += MARGIN_UNWIDE
+    return boot_place(elf, bytes(want), MARGINS)[:2]
 
 
 def write_recipe(rows):
@@ -1298,7 +1612,8 @@ def write_recipe(rows):
              "# at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),",
              "# msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from",
              "# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit), fishrec and",
-             "# fishpen (the fishing banner's line records and the release's own label pens, D313) - and how",
+             "# fishpen (the fishing banner's line records and the release's own label pens, D313), margins",
+             "# (Sprite_ScreenMargins from BOOT.BIN, the PSP's x margins less its 32 columns) - and how",
              "# many bytes it fills.",
              "# A row is written only when every",
              "# byte equals BOF3.exe's, but a fishpen row (each release's own pens) and a pairs track",
@@ -1431,6 +1746,13 @@ def check():
     build, of a PSP build, sized as its rule wants, and clear of every pointer word."""
     import exe_tables
     errs = []
+    for tlo, thi, tfile, _, *extra in TWINS:            # a pieced row's segments: inside, in order, apart
+        segs = extra[2] if len(extra) > 2 else ((tlo, thi),)
+        if not (DATA_LO <= tlo < thi <= DATA_HI) or not segs or any(
+                not (tlo <= s0 < s1 <= thi) for s0, s1 in segs) or any(
+                a[1] > b[0] for a, b in zip(segs, segs[1:])):
+            errs.append("TWINS 0x%06X..0x%06X %s: a segment outside the run, empty or out of order" % (tlo, thi, tfile))
+    errs += table_selftest()
     rows = load_recipe()
     ptr = set()
     for p, n, _ in exe_tables.load_pointers():
@@ -1447,7 +1769,7 @@ def check():
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
             want = {"rows8": n // 2, "pairs": n, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n,
-                    "fishrec": 4 * FI_COUNT, "fishpen": 3}.get(r["rule"])
+                    "fishrec": 4 * FI_COUNT, "fishpen": 3, "margins": n}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
@@ -1457,6 +1779,11 @@ def check():
             if r["rule"] == "verb" and (bid not in VERB_BUILDS
                                         or (r["pc"], r["pc_end"], r["file"]) != (VERB_AT, VERB_AT + 1, VERB_FILE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: a verb row off the rule" % (bid, r["pc"]))
+            if r["rule"] == "margins" and (bid not in PSP or (r["pc"], r["pc_end"], r["file"])
+                                           != (MARGINS, MARGINS + 4 * MARGIN_ENTRIES, "BOOT.BIN")):
+                errs.append("exe-psp.tsv: %s 0x%06X: a margins row off the rule" % (bid, r["pc"]))
+            if r["rule"] == "twin" and r["file"] == "BOOT.BIN" and bid not in PSP:
+                errs.append("exe-psp.tsv: %s 0x%06X: a BOOT.BIN twin on a PSX build" % (bid, r["pc"]))
             if r["rule"] == "faerie" and (r["pc"], r["pc_end"], r["file"]) != (FA_RECORDS, FA_END, FA_FILE):
                 errs.append("exe-psp.tsv: %s 0x%06X: a faerie row off the rule" % (bid, r["pc"]))
             if r["rule"] == "fishrec" and (r["pc"], r["pc_end"]) != (FI_RECORDS, FI_RECORDS + FI_COUNT * FI_STRIDE):

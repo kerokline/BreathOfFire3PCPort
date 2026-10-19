@@ -41,6 +41,9 @@ written down; validated identity and swapped on four install kinds ([`button-rou
   payouts (D311), the Meteor Strike lifts and area 112's link list (D267, D268: a `twin` takes back another file's
   differing byte) - DIV-0101 amended;
 - **the PSP-only title's logo** cut where the PSP's art lies (D256, DIV-0131, [`psp-title-framing.md`](psp-title-framing.md)).
+**The install-gap round** (`install-gap/round` `0baf26f7`, 2026-10-18, unpushed; item 4) has placed most of the
+census's remainder: every disc-built image has 36 to 44 percent fewer `gap` rows, and eight of the ten rows read in
+play while zero are fixed. The live end batch waits on a Defender exclusion.
 
 ## Pick up here
 
@@ -108,21 +111,41 @@ written down; validated identity and swapped on four install kinds ([`button-rou
    - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
      beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
    - D270 fixed by DIV-0121 - the owner's look owed, and whether such a field has another way out; D284 (area 23's
-     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed but on FR / DE
-     ([`fishing-rule-pages.md`](fishing-rule-pages.md)); D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
+     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) fixed, FR / DE too since the install-gap round
+     ([`install-gap-labels.md`](install-gap-labels.md)); D287 (the launcher's clipped lines); D289 fixed by the same round (the owner's
+     confirmation of DIV-0064's amendment pending).
 
-4. **The install-gap census's remainder** - staged as parallel groups in
-   [`install-gap-round.md`](install-gap-round.md) (2026-10-17, not launched; it can run with no owner present,
-   rebased on the button round, whose ledger numbers it follows).
+4. **The install-gap round: merged on `install-gap/round` (`0baf26f7`), its end docs on `install-gap/end-docs`;
+   neither pushed, PR next** ([`install-gap-round.md`](install-gap-round.md), its status line). Stage A (RD, PB, OT,
+   TW, LA, RW) and stage B as run (PT, CW, FP) placed the census's P1 items 7 and 8, P2 items 11..13, the P4 rows
+   and most of P3's reach. The `gap` rows went from 104..125 per PSX build to 58..78, and from 92 / 93 per PSP build
+   to 54 / 52; the PC's non-zero bytes left fell from 797..1,474 to 311..865 (the census's 8.1, `exe_scan.py`
+   agreeing byte for byte). The new placement kinds are DIV-0101's amendment; also DIV-0103 (the PSP's screen
+   margins), DIV-0069 (D286's FR / DE headings) and DIV-0064 (D289, groups 20..23); D319 fixed, D320 open. Of RW's ten
+   rows read in play while zero, eight are fixed and two are the owner's. **Left:**
+   - **the live end batch** (staging 5 items 3 and 4: rebuild the A/B/C caches, the US attract under the gate, the
+     eleven hash routes against `cn_*_orig2`, the headless self-test per install kind, one capture per row that
+     draws). It needs the owner's Defender exclusion first, since every local launcher build is quarantined;
+   - **RW's watch re-run on the merged branch** ([`install-gap-reads.md`](install-gap-reads.md) 8). Then I43 step 4,
+     `BOF3X_EXEIMAGE_STRICT=1` as the default, once no row read in play is still zero except the owner's two
+     (staging 5 item 6; a DIV-0101 amendment);
+   - **the unpaired rows** ([`install-gap-pairs.md`](install-gap-pairs.md) 5):
+     - the bosses: pair one boss kind's table by hand from `BattleEnemy_RunAll`'s twin;
+     - the OF-A areas and scenario rows: the area descriptor table's handlers as seeds for `order-align`;
+     - the rows under `find_imm`'s four-byte floor (`EffectKind75_States+0xC`, `BoneDanceShake_Counts`,
+       `GameMode3_Steps+0xC`);
+     - the `EffectKind18Sub*` rows whose twins' bytes differ;
+   - **the census's remaining NEEDS FIX items** ([`install-gap-census.md`](install-gap-census.md) 8.4..8.6):
+     - song 166 on the disc-only installs (D320, P2), the importer's 165 rule after a render;
+     - `CommuMusic_CloseSteps+0x68`'s glyphs;
+     - P3's tail as listed there.
+
+     The owner's new calls are in [`owner-review.md`](owner-review.md) "2026-10-18, the install-gap round".
+   Regenerate after any tool change (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
+   `exe_tables.py gaps`, `exe_tables.py recipe`, the seven discs) and check with `tools/exe_scan.py`.
    Also staged 2026-10-17, none launched: the quicksave round (save states behind F5 / F6 / F7, the owner's design)
    in [`quicksave-round.md`](quicksave-round.md), and the typed-data round (I44's stages 1 and 2, no behaviour
-   change) in [`typed-data-round.md`](typed-data-round.md). The button round itself is done (PR #85).
-   The census's own remainder ([`install-gap-census.md`](install-gap-census.md) 8, the authority):
-   P1 still open (the event battles' track words done 2026-10-17, D316, `fix/event-battle-tracks`) - the area-169 dial panel (no verbatim run on any PSX disc: a pieced rule), a master's requirement
-   list on the Western images; then P2's twins the disc search already locates (world map 115's legend frame, the
-   effect tables, the PSP's light pair and screen margins) and P3's long tail by the owning-function method.
-   Regenerate the recipes after each (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
-   `exe_tables.py gaps`, `exe_tables.py recipe`, the seven discs) and check with `tools/exe_scan.py`.
+   change) in [`typed-data-round.md`](typed-data-round.md).
 
 5. **The follow-up round: disc-only and PSP polish** (not staged). Done: D254, D255, D256, D282. Still open: what
    is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6: 39 ranges, the

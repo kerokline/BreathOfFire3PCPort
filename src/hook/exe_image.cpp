@@ -309,6 +309,15 @@ bool ExeImage_DiscMapped() { return g_disc_mapped; }
 
 const char* ExeImage_MappedBuild() { return g_disc_mapped ? g_mapped.build.c_str() : nullptr; }
 
+int ExeImage_MappedRanges() { return g_disc_mapped ? static_cast<int>(g_mapped.ranges.size()) : 0; }
+
+ExeImageRange ExeImage_MappedRange(int i) {
+    if (i < 0 || i >= ExeImage_MappedRanges())
+        Fatal("ExeImage_MappedRange(%d): the mapped image has %d ranges", i, ExeImage_MappedRanges());
+    const Range& r = g_mapped.ranges[static_cast<std::size_t>(i)];
+    return {r.lo, r.hi, r.how.c_str(), r.from.c_str()};
+}
+
 // --- DIV-0111: the exe tables layer ----------------------------------------------
 namespace {
 

@@ -13,7 +13,15 @@
 //   2  the three tab labels over the equip menu, three 8-byte slots at
 //      0x66A070 behind the pointer table 0x66A088, which only
 //      EffectKind0F_DrawToggles (0x468AC0, ours in effect_1b.cpp) reads: the
-//      same, three pointers re-aimed.
+//      same, three pointers re-aimed;
+//   3  (D286, 2026-10-18, docs/install-gap-labels.md) the four panel headings
+//      ROD, LURE, EQUIP, GUIDE - fixed fields at 0x653EA0 / A4 / A8 / AD that
+//      EffectKind0F_DrawItemsB / _DrawItemsA / _DrawEquipped (ours) draw with
+//      the counts 3, 4, 5, 5. The French and German modules lay their words
+//      out at other widths (Canne, the German RUTE ...), so a disc-built
+//      image has no bytes there; the builder reads each word off the
+//      module's draws and our draws, once armed, centre it where the PC's
+//      centre is. Kept in buffers of ours; nothing in .data is re-aimed.
 //
 // The strings are the disc's own (tools/loc_build.py, chunk kind 16): the
 // fishing module every fishing area carries has the same records - 12 bytes,
@@ -82,6 +90,8 @@ constexpr std::uint32_t kTabTable = 0x66A088;      // 3 pointers, read by 0x468A
 constexpr std::uint32_t kTabCount = 3;
 constexpr std::uint32_t kTabRoom = 16;             // tools/loc_build.py FISH_TAB_ROOM
 constexpr std::uint32_t kTabShipped[kTabCount] = {0x66A070, 0x66A078, 0x66A080};
+constexpr std::uint32_t kHeadCount = 4;            // tools/loc_build.py FISH_HEAD_COUNT
+constexpr std::uint32_t kHeadRoom = 16;            // tools/loc_build.py FISH_HEAD_ROOM
 
 // DIV-0051's icons: loc_build.py's ICONS_AT, after the 8 x 8 set (0xA00, 100
 // cells) and its blank - circle, cross, triangle, square, L1, R1, as
@@ -116,6 +126,16 @@ namespace sg = bof3x::input::sigma;
 
 char g_lines[kLineCount][kLineRoom];
 char g_tabs[kTabCount][kTabRoom];
+char g_heads[kHeadCount][kHeadRoom];
+// D279 (2026-10-18): tag 4, the disc's own three button labels (a Japanese
+// disc's; tools/loc_build.py convert_fishing_ja), one character each by the
+// label byte's entry (circle, cross, triangle), read by Label() in place of
+// 0x66A2FC's string once armed (FishingText_Arm, so effect_1a's fuzz compares
+// Capcom's reads).
+constexpr unsigned kDiscLabelCount = 3;            // tools/loc_build.py FISH_LABEL_COUNT
+constexpr unsigned kDiscLabelRoom = 8;             // tools/loc_build.py FISH_LABEL_ROOM
+char g_disc_labels[kDiscLabelCount][kDiscLabelRoom];
+bool g_disc_labels_armed = false;
 bool g_on = false;
 // PatchBytes "FishingLabelSigma" (DIV-0136), set by FishingText_Arm.
 unsigned char g_label_sigma = 0;
@@ -382,18 +402,89 @@ void SelfTest() {
 
 }  // namespace
 
+// Tag 3: four NUL-ended strings into g_heads (an empty one keeps the shipped
+// field). No pointer in the image names the buffers, so nothing is re-aimed.
+void ApplyHeadings(const std::uint8_t* payload, std::uint32_t size) {
+    const std::uint8_t* p = payload;
+    const std::uint8_t* const end = payload + size;
+    if (p >= end || *p++ != kHeadCount) bof3::Fatal("fishing headings chunk: count is not %u", (unsigned)kHeadCount);
+    std::uint32_t written = 0;
+    for (std::uint32_t i = 0; i < kHeadCount; ++i) {
+        const auto* s = reinterpret_cast<const char*>(p);
+        while (p < end && *p) ++p;
+        if (p >= end) bof3::Fatal("fishing headings chunk: ran out inside string %u", (unsigned)i);
+        ++p;
+        const std::size_t len = std::strlen(s);
+        if (len + 1 > kHeadRoom)
+            bof3::Fatal("fishing headings chunk: string %u is %u bytes, the buffer holds %u", (unsigned)i,
+                        (unsigned)len + 1, (unsigned)kHeadRoom);
+        std::memset(g_heads[i], 0, kHeadRoom);
+        std::memcpy(g_heads[i], s, len);
+        if (len != 0) ++written;
+    }
+    if (p != end) bof3::Fatal("fishing headings chunk: %u bytes left over", (unsigned)(end - p));
+    bof3::Log("DIV-0069: %u of %u fishing headings (D286)", (unsigned)written, (unsigned)kHeadCount);
+}
+
+// Tag 4 (D279): three NUL-ended one-character strings into g_disc_labels (an
+// empty one keeps 0x66A2FC's string). Nothing in the image is re-aimed: the
+// Config cell 0x461C00 reads the same table and is D280's, not this.
+void ApplyDiscLabels(const std::uint8_t* payload, std::uint32_t size) {
+    const std::uint8_t* p = payload;
+    const std::uint8_t* const end = payload + size;
+    if (p >= end || *p++ != kDiscLabelCount)
+        bof3::Fatal("fishing labels chunk: count is not %u", (unsigned)kDiscLabelCount);
+    std::uint32_t written = 0;
+    for (std::uint32_t i = 0; i < kDiscLabelCount; ++i) {
+        const auto* s = reinterpret_cast<const char*>(p);
+        while (p < end && *p) ++p;
+        if (p >= end) bof3::Fatal("fishing labels chunk: ran out inside string %u", (unsigned)i);
+        ++p;
+        const std::size_t len = std::strlen(s);
+        if (len + 1 > kDiscLabelRoom)
+            bof3::Fatal("fishing labels chunk: string %u is %u bytes, the buffer holds %u", (unsigned)i,
+                        (unsigned)len + 1, (unsigned)kDiscLabelRoom);
+        const std::size_t first = (static_cast<unsigned char>(s[0]) & 0x80) != 0 ? 2 : 1;
+        if (len != 0 && len != first)
+            bof3::Fatal("fishing labels chunk: string %u is %u bytes, not one character", (unsigned)i, (unsigned)len);
+        std::memset(g_disc_labels[i], 0, kDiscLabelRoom);
+        std::memcpy(g_disc_labels[i], s, len);
+        if (len != 0) ++written;
+    }
+    if (p != end) bof3::Fatal("fishing labels chunk: %u bytes left over", (unsigned)(end - p));
+    bof3::Log("DIV-0069: %u of %u fishing labels (D279)", (unsigned)written, (unsigned)kDiscLabelCount);
+}
+
 void FishingText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size) {
     if (tag == 1)
         Repoint("lines", payload, size, kLineCount, &g_lines[0][0], kLineRoom, kLineRecords, 8, kLineShipped);
     else if (tag == 2)
         Repoint("tabs", payload, size, kTabCount, &g_tabs[0][0], kTabRoom, kTabTable, 4, kTabShipped);
+    else if (tag == 3)
+        ApplyHeadings(payload, size);
+    else if (tag == 4)
+        ApplyDiscLabels(payload, size);
     else
-        bof3::Fatal("fishing chunk tag is 0x%X: 1 the lines, 2 the tabs", (unsigned)tag);
+        bof3::Fatal("fishing chunk tag is 0x%X: 1 the lines, 2 the tabs, 3 the headings, 4 the labels", (unsigned)tag);
+}
+
+const unsigned char* FishingText_DiscLabel(unsigned entry) {
+    if (entry >= kEntries) bof3::Fatal("FishingText_DiscLabel: entry %u, past the six buttons", entry);
+    if (!g_disc_labels_armed || entry >= kDiscLabelCount || g_disc_labels[entry][0] == 0) return nullptr;
+    return reinterpret_cast<const unsigned char*>(g_disc_labels[entry]);
+}
+
+const unsigned char* FishingText_Heading(unsigned i) {
+    if (i >= kHeadCount) bof3::Fatal("FishingText_Heading: heading %u, past the four", i);
+    if (!g_on || g_heads[i][0] == 0) return nullptr;
+    return reinterpret_cast<const unsigned char*>(g_heads[i]);
 }
 
 void FishingText_Arm() {
     g_on = Lang_Latin();
     if (g_on) bof3::Log("DIV-0069: the fishing text's Latin layout armed");
+    // D279: the disc's labels (tag 4, a Japanese layer's) from here on.
+    g_disc_labels_armed = true;
     // D313: the terms of the image's line pens, before the self-test reads them.
     g_image_release = ImageRelease(g_image_how);
     // DIV-0136: after sigma::Arm, which InjectAll calls first.

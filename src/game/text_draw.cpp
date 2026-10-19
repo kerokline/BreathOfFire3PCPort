@@ -23,6 +23,7 @@ namespace {
 // never sees a different number.
 constexpr unsigned kOriginalGlyphLimit = 0xA00;
 unsigned g_glyph_limit = kOriginalGlyphLimit;
+unsigned g_glyph_count = 0;   // the loaded table's glyphs, as TextDraw_SetGlyphCount was last told
 constexpr int kCell = 12;
 constexpr int kRecordBytes = 0x20;
 
@@ -420,8 +421,11 @@ extern "C" const unsigned char* __cdecl Text_DrawString(unsigned color_arg, unsi
 }
 
 void TextDraw_SetGlyphCount(unsigned glyphs) {
+    g_glyph_count = glyphs;
     g_glyph_limit = glyphs > kOriginalGlyphLimit + 1 ? glyphs - 1 : kOriginalGlyphLimit;
 }
+
+unsigned TextDraw_GlyphCount() { return g_glyph_count; }
 
 void TextDraw_Inject() {
     if (bof3::WantsShadow("text_draw")) {
