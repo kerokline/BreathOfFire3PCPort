@@ -104,12 +104,12 @@ void Disturb() {
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 4) % 16) {
     case 0: Sprite_Current = TaskAt(v); break;
-    case 1: SetPointer(at::kOwner, OwnerFor(v)); break;
-    case 2: SetPointer(at::kSource, g_records[v & 1]); break;
-    case 3: SetPointer(at::kCurrentSlot, TaskAt(v >> 2)); break;
+    case 1: SetPointer(BattleE2_Owner_addr, OwnerFor(v)); break;
+    case 2: SetPointer(BattleOdds_ActorObject_addr, g_records[v & 1]); break;
+    case 3: SetPointer(BattleFlow_TaskCurrent_addr, TaskAt(v >> 2)); break;
     case 4: Mem(at::kTarget)[0] = static_cast<unsigned char>(v % 11); break;
     case 5: Mem(at::kActor)[0] = static_cast<unsigned char>(v % 5); break;
-    case 6: Mem(at::kMessageUp)[0] = b; break;
+    case 6: Mem(BattleE1_MessageUp_addr)[0] = b; break;
     case 7: Mem(at::kFlags)[0] = b; break;
     case 8: Frame_Counter = h >> 6; break;
     case 9: case 10: {
@@ -122,7 +122,7 @@ void Disturb() {
     }
     case 11: {
         static const unsigned kFields[] = {0, 8, 9, 0xA, 0xB, 0x34, 0x38, 0x3C};
-        Pointer(at::kOwner)[kFields[v % 8]] = b;
+        Pointer(BattleE2_Owner_addr)[kFields[v % 8]] = b;
         break;
     }
     case 12: case 13:
@@ -215,7 +215,7 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
         return Hash();
     }
     if (s.answer == Answer::kPhase) {
-        Log5(I, Cur(), static_cast<std::uint32_t>(move_script::Long(Mem(at::kOwner))),
+        Log5(I, Cur(), static_cast<std::uint32_t>(move_script::Long(Mem(BattleE2_Owner_addr))),
              Sprite_Current[1] | static_cast<std::uint32_t>(Sprite_Current[2]) << 8,
              s.masks[0] ? static_cast<std::uint32_t>(move_script::Long(Mem(s.masks[0]))) : 0);
         Disturb();
@@ -429,9 +429,9 @@ void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
 // Random bytes put back inside what every effect dereferences.
 void Fix() {
     Sprite_Current = TaskAt(Next());
-    SetPointer(at::kCurrentSlot, Half() ? Sprite_Current : TaskAt(Next()));
-    SetPointer(at::kOwner, OwnerFor(Next()));
-    SetPointer(at::kSource, g_records[Next() & 1]);
+    SetPointer(BattleFlow_TaskCurrent_addr, Half() ? Sprite_Current : TaskAt(Next()));
+    SetPointer(BattleE2_Owner_addr, OwnerFor(Next()));
+    SetPointer(BattleOdds_ActorObject_addr, g_records[Next() & 1]);
     Mem(at::kTarget)[0] = static_cast<unsigned char>(Next() % 11);
     Mem(at::kActor)[0] = static_cast<unsigned char>(Next() % 5);
     for (unsigned k = 0; k < 4; ++k) {
@@ -475,7 +475,7 @@ unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* EnemyOf(unsigned char target) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
-unsigned char* PartyOf(unsigned char actor) { return Mem(at::kParty + actor * at::kPartyStride); }
+unsigned char* PartyOf(unsigned char actor) { return Mem(ObjTrio_addr + actor * at::kPartyStride); }
 void SetPointer(std::uint32_t cell, const void* p) { move_script::SetLong(Mem(cell), static_cast<std::int32_t>(Key(p))); }
 unsigned char* Pointer(std::uint32_t cell) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(move_script::Long(Mem(cell)))));
@@ -560,8 +560,8 @@ void Run(const Group& group) {
         {0x93B8C0, 0xA0},                                  // the current slot, the owner, and 0x93B8E0.. (an enemy index of 2)
         {0x937F88, 0x10},                                  // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter
         {at::kBattle, at::kBattleSize},
-        {at::kMessageUp, 4},
-        {at::kParty, 5 * at::kPartyStride},
+        {BattleE1_MessageUp_addr, 4},
+        {ObjTrio_addr, 5 * at::kPartyStride},
         {at::kEnemies, 8 * at::kEnemyStride},
         {Key(g_records), sizeof g_records},
     };

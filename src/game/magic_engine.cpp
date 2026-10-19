@@ -51,14 +51,14 @@ using move_script::Word;
 // BattleEnemy_RunAll ran last, not the caster. Its +0xF8 is a pointer to a
 // table of u16 sound cues that only the event-battle set-ups write
 // (0x437A55, 0x437BB5, ... : 0x64C7A0 and on).
-constexpr std::uint32_t kCurrentEnemy = 0x939AD8;
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
 constexpr unsigned kEnemyCues = 0xF8;
 // Sound_PlayEffect(id) unless id is 0xFFFF - unnamed, no group's
 // (battle_items_callees.h, enemy_ai_ops_callees.h).
 constexpr std::uint32_t kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
 using PlayCueFn = void (__cdecl*)(unsigned);
 // A bit per actor with a reaction to show (docs/battle_actions.md).
-constexpr std::uint32_t kPending = 0x904B82;
+// kPending: now BattleActions_Pending (symbols.toml).
 // The task slots' owner cells: slot i's +0x80.
 constexpr std::uint32_t kSlotOwners = at::kTasks + 0x80;
 
@@ -73,7 +73,7 @@ void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void SetDone() { Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4); }
 
 // The task slot's owner (0x93B8C4's +0x80), read at the point of the call.
-unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(at::kCurrentSlot))) + 0x80); }
+unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(BattleFlow_TaskCurrent_addr))) + 0x80); }
 
 // A stack-table dispatcher: the phase byte through the table the original
 // builds on its stack, unchecked there; past the table ours aborts.
@@ -148,7 +148,7 @@ MENGINE_EXPORT void __cdecl RestoreForm_Start(void) {
 // original 0x452660: nothing while any actor is pending (the word 0x904B82);
 // then the effect-done bit and the slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl RestoreForm_Wait(void) {
-    if (Word(Mem(kPending)) != 0) return;
+    if (Word(Mem(BattleActions_Pending_addr)) != 0) return;
     SetDone();
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -179,7 +179,7 @@ MENGINE_EXPORT void __cdecl Paralyzer_Task(void) {
 MENGINE_EXPORT void __cdecl Paralyzer_Start(void) {
     unsigned char* const slot = Sprite_Current;
     unsigned char* const owner = SlotOwner();
-    const unsigned char* const enemy = Pointer(kCurrentEnemy);
+    const unsigned char* const enemy = Pointer(BattleE3_CurrentEnemy_addr);
     Sprite_Current = owner;
     const unsigned char* const cues = Pointer(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(enemy)) + kEnemyCues);
     const unsigned cue = static_cast<unsigned>(Word(cues) + 4) & 0xFFFF;
@@ -393,7 +393,7 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
 // slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Land(void) {
     MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-    unsigned char* const owner = Pointer(at::kOwner);
+    unsigned char* const owner = Pointer(BattleE2_Owner_addr);
     owner[0xA] = static_cast<unsigned char>(owner[0xA] - 1);
     MH_CALL(BattleTask_FreeCurrent)();
 }

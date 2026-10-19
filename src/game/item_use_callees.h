@@ -43,7 +43,7 @@ constexpr std::uint32_t kPartyLists = 0x904062;    // Party_Count's 3-byte lists
 // kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per party entry: its record index (MoveScript_EffectState)
 constexpr std::uint32_t kItemFlags = 0x656B38;     // NameTable_Consumables + 0x10: each record's flags byte
 constexpr std::uint32_t kItemStride = 22;
-constexpr std::uint32_t kStoryFlags = 0x904030;    // Cond_Flags + 0xA0 (title-states.md section 3)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0 (title-states.md section 3)
 // ItemUse_FaerieTiara's cells.
 // kMenuState: now FieldS_State (symbols.toml). u8, set to 0xA
 constexpr std::uint32_t kTiaraCount = 0x905B61;    // u8, 0xB9 less the clear flags counted

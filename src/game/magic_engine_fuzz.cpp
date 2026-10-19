@@ -205,8 +205,8 @@ const mh::Callee kCallees[] = {
 #undef ME_OURS
 
 // The regions the standard ones lack.
-constexpr std::uint32_t kCurrentEnemy = 0x939AD8;
-constexpr std::uint32_t kPending = 0x904B82;
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
+// kPending: now BattleActions_Pending (symbols.toml).
 alignas(4) unsigned char g_cues[16];
 mh::Region g_regions[3];
 
@@ -219,7 +219,7 @@ void Seed(unsigned k) {
     // Every round: the current enemy points at a record whose +0xF8 leads into
     // the fuzz's cue table (Paralyzer_Start reads through both, unchecked).
     unsigned char* const enemy = EnemyLike(mh::Next());
-    mh::SetPointer(kCurrentEnemy, enemy);
+    mh::SetPointer(BattleE3_CurrentEnemy_addr, enemy);
     mh::SetPointer(static_cast<std::uint32_t>(Key(enemy)) + 0xF8, g_cues + 2 * (mh::Next() % 4));
     switch (k) {
     case kMagicHold_Task:
@@ -230,8 +230,8 @@ void Seed(unsigned k) {
         if (mh::Often()) sc[9] = static_cast<unsigned char>(MH_PICK(0, 0, 1, 2, 0xFF));
         break;
     case kRestoreForm_Wait:
-        if (mh::Half()) move_script::SetWord(mh::Mem(kPending), 0);
-        else if (mh::Half()) move_script::SetWord(mh::Mem(kPending), MH_PICK(1, 0x100, 0x400, 0x8000));
+        if (mh::Half()) move_script::SetWord(mh::Mem(BattleActions_Pending_addr), 0);
+        else if (mh::Half()) move_script::SetWord(mh::Mem(BattleActions_Pending_addr), MH_PICK(1, 0x100, 0x400, 0x8000));
         break;
     case kParalyzer_Task:
         sc[1] = static_cast<unsigned char>(mh::Next() % 3);
@@ -283,8 +283,8 @@ void Seed(unsigned k) {
 
 void SelfTest() {
     unsigned r = 0;
-    g_regions[r++] = {kCurrentEnemy, 4};
-    g_regions[r++] = {kPending, 2};
+    g_regions[r++] = {BattleE3_CurrentEnemy_addr, 4};
+    g_regions[r++] = {BattleActions_Pending_addr, 2};
     g_regions[r++] = {Key(g_cues), sizeof g_cues};
     const mh::Group group = {
         "magic_engine", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],

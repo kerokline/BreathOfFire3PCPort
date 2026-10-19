@@ -55,7 +55,7 @@ using move_script::Word;
 
 // The target's sprite (the harness's kSource): what the tint and the
 // position come from.
-constexpr std::uint32_t kTargetSprite = 0x904B4C;
+// kTargetSprite: now BattleOdds_ActorObject (symbols.toml).
 // A bit per enemy kind (the enemy record's byte +0x8C): set once identified.
 constexpr std::uint32_t kSeenBits = 0x9040A8;
 // The panel's texts: two in the engine's .data the originals centre, a label
@@ -68,16 +68,18 @@ constexpr std::uint32_t kElementGlyphs = 0x66A398;
 // Celerity_End's byte, and Celerity_ApplyStat's cells: the result record
 // pointer, the ability word and the step byte of its NameTable_Abilities
 // record (+3, records of 0x18).
-constexpr std::uint32_t kEndByte = 0x90465C;
-constexpr std::uint32_t kResultRecord = 0x904B60, kAbility = 0x904B80, kAbilityStep = 0x65C4DB;
+// kEndByte: now ModeFlow_CountdownA (symbols.toml).
+// kResultRecord: now BattleDamage_Result (symbols.toml).
+constexpr std::uint32_t kAbility = 0x904B80, kAbilityStep = 0x65C4DB;
 // Capcom's, unnamed, in no group: a stat change for the target
 // (MagicFx_ApplyBuff's 0x44F650 calls it the same way).
 constexpr std::uint32_t kStatChanged = bof3::addr::Battle_RecalcStats;   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
 // Celerity_Start's CLUT strip: 16 words at +0 and 16 at +0x20, copied over.
-constexpr std::uint32_t kClutFrom = 0x80E980, kClutTo = 0x812980;
+// kClutFrom: now Gfx_ClutStripSource[0x1a00] (symbols.toml).
+// kClutTo: now Gfx_ClutStrip[0x1a00] (symbols.toml).
 
 unsigned char* SC() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char* Slot(unsigned k) { return Mem(at::kTasks + (k & 0xFFu) * at::kTaskStride); }
 std::int32_t Ptr(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -90,21 +92,21 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // The records as the originals index them, unchecked: a member by its index
 // (stride 0x14C), an enemy by its index (stride 0x128) - the battle index
 // less 3, which a party index sends below the enemy records.
-unsigned char* PartyRec(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRec(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRec(int i) { return Mem(at::kEnemies + static_cast<std::uint32_t>(i) * at::kEnemyStride); }
 
 // The scratch words DamageScratch + k and the vertex scratch
 // Prim_VertexScratch + k (SVECTORs at +0, +8, +0x10, +0x18).
 constexpr std::uint32_t kDs = bof3::addr::DamageScratch;
-constexpr std::uint32_t kVx = 0x9037A0;
+// kVx: now Prim_VertexScratch (symbols.toml).
 short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
 void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }
 std::int32_t Dd(unsigned k) { return Long(Mem(kDs + k)); }
 void SetDd(unsigned k, std::uint32_t v) { SetLong(Mem(kDs + k), static_cast<std::int32_t>(v)); }
 unsigned char DsByte(unsigned k) { return Mem(kDs + k)[0]; }
-short Vx(unsigned k) { return static_cast<short>(Word(Mem(kVx + k))); }
-void SetVx(unsigned k, unsigned v) { SetWord(Mem(kVx + k), v); }
-const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(kVx + k)); }
+short Vx(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
+void SetVx(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v); }
+const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 // `imul` (a 32-bit product that wraps) then `sar n`; `shl l` then `sar r`.
 int MulSar(int a, int b, int n) {
@@ -682,8 +684,8 @@ MS12_EXPORT void __cdecl IdentifyTint_Task(void) { CallCell(IdentifyTint_Steps, 
 // original 0x4B1B60: the target's sprite's tint released and a black one
 // taken (Sprite_SetTint(.., 0, 0, 0, 1), its record into +0xB); +9 0, on.
 MS12_EXPORT void __cdecl IdentifyTint_Start(void) {
-    MH_CALL(Sprite_ReleaseTint)(Pointer(kTargetSprite));
-    const unsigned char record = MH_CALL(Sprite_SetTint)(Pointer(kTargetSprite), 0, 0, 0, 1);
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
+    const unsigned char record = MH_CALL(Sprite_SetTint)(Pointer(BattleOdds_ActorObject_addr), 0, 0, 0, 1);
     SC()[0xB] = record;
     SC()[9] = 0;
     Bump(SC()[2]);
@@ -715,7 +717,7 @@ MS12_EXPORT void __cdecl IdentifyTint_Dim(void) {
     }
     if (tints[sc[0xB] * 12u + 2] == 0) sc[2] = 1;
     if ((Owner()[0xB] & 0x80) == 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(kTargetSprite));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
     MH_CALL(BattleActor_Flash)(TargetByte());
     Drop(Owner()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
@@ -742,7 +744,7 @@ MS12_EXPORT void __cdecl Celerity_Task(void) {
 // task's +9). The CLUT strip 0x80E980 (16 + 16 words) to 0x812980,
 // Gfx_ClutStripDirty 1, Sound_PlayById(0x100).
 MS12_EXPORT void __cdecl Celerity_Start(void) {
-    const unsigned char* const src = Pointer(kTargetSprite);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SC()[8] = src[8];
     SetLong(SC() + 0x34, Long(src + 0x34));
     SetLong(SC() + 0x38, Long(src + 0x38));
@@ -775,8 +777,8 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
         ++spark;
     }
     for (unsigned i = 0; i < 0x20; i += 2) {
-        SetWord(Mem(kClutTo + i), Word(Mem(kClutFrom + i)));
-        SetWord(Mem(kClutTo + 0x20 + i), Word(Mem(kClutFrom + 0x20 + i)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + i)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 0x20 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 0x20 + i)));
     }
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -795,7 +797,7 @@ MS12_EXPORT void __cdecl Celerity_Apply(void) {
     Drop(tints[sc[0xA] * 12u + 4]);
     Drop(sc[9]);
     if (SC()[9] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(kTargetSprite));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
     MH_CALL(BattleActor_Flash)(TargetByte());
     for (unsigned i = 0; i < 4; ++i) {
         MH_AT(FnU, bof3::addr::Celerity_ApplyStat)(MagicFx_BuffStats[i]);
@@ -815,7 +817,7 @@ MS12_EXPORT void __cdecl Celerity_Apply(void) {
 MS12_EXPORT void __cdecl Celerity_End(void) {
     if (SC()[0xB] != 0) return;
     Mem(at::kFlags)[0] |= 4;
-    Mem(kEndByte)[0] = 5;
+    Mem(ModeFlow_CountdownA_addr)[0] = 5;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -828,12 +830,12 @@ MS12_EXPORT void __cdecl Celerity_End(void) {
 MS12_EXPORT void __cdecl Celerity_ApplyStat(unsigned stat) {
     const unsigned char target = TargetByte();
     unsigned char* const rec = target < 3 ? PartyRec(target) + 0x124 : EnemyRec(static_cast<int>(target) - 3) + 0x104;
-    SetLong(Mem(kResultRecord), Ptr(rec));
-    SetWord(Pointer(kResultRecord) + 4, 0);
-    SetWord(Pointer(kResultRecord) + 6, 0);
-    Pointer(kResultRecord)[8] = 0;
+    SetLong(Mem(BattleDamage_Result_addr), Ptr(rec));
+    SetWord(Pointer(BattleDamage_Result_addr) + 4, 0);
+    SetWord(Pointer(BattleDamage_Result_addr) + 6, 0);
+    Pointer(BattleDamage_Result_addr)[8] = 0;
     const signed char step = static_cast<signed char>(Mem(kAbilityStep + 0x18u * Word(Mem(kAbility)))[0]);
-    unsigned char* const cell = Pointer(kResultRecord) + 0x14 + (stat & 0xFFu);
+    unsigned char* const cell = Pointer(BattleDamage_Result_addr) + 0x14 + (stat & 0xFFu);
     const int value = static_cast<signed char>(cell[0]) + step;
     if (value > 100) {
         cell[0] = 100;

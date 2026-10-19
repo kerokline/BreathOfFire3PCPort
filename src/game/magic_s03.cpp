@@ -52,19 +52,19 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..). Both are read again after every
 // call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The overlays' own .data the functions read in place (symbols.toml [[data]]).
-constexpr std::uint32_t kBladeRadii = 0x65A5EC;   // MindSword_BladeRadii: four words, [1..3] read
-constexpr std::uint32_t kCloudOffsets = 0x65A608; // ChlorineCloud_Offsets: three (dx, dz, dy) dwords
+// kBladeRadii: now MindSword_BladeRadii (symbols.toml). MindSword_BladeRadii: four words, [1..3] read
+// kCloudOffsets: now ChlorineCloud_Offsets (symbols.toml). ChlorineCloud_Offsets: three (dx, dz, dy) dwords
 constexpr unsigned kCloudOffsetCount = 3;
 
 // CLUT row 26 of Gfx_ClutStrip (and of its source), in words.
 constexpr unsigned kRow26 = 0x1A00;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Src() { return Pointer(at::kSource); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Src() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 
@@ -75,9 +75,9 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -105,7 +105,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // The originals index the records unchecked: the party's by the index, the
 // enemies' by the battle index - 3 (the acting actor) or by an enemy index
 // (Blitz's bolts).
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyByBattleIndex(unsigned battle_index) {
     return Mem(at::kEnemies + (battle_index - 3u) * at::kEnemyStride);
 }
@@ -452,7 +452,7 @@ S03_EXPORT void __cdecl MindSwordBlade_DrawLead(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetSW(6, Word(Mem(kBladeRadii + (i / 2) * 2)));
+        SetSW(6, Word(Mem(MindSword_BladeRadii_addr + (i / 2) * 2)));
         AngleVertex(p, 8, BladeAngle((i + 1) << 9), 6);
         AngleVertex(p, 0x18, BladeAngle(i << 9), 4);
         AngleVertex(p, 0x28, BladeAngle((i + 2) << 9), 4);
@@ -745,7 +745,7 @@ S03_EXPORT void __cdecl ChlorineCloud_Start(void) {
     auto offset = [](unsigned field) {
         const unsigned i = Sc()[0xB];
         if (i >= kCloudOffsetCount) bof3::Fatal("ChlorineCloud_Start: offset %u, past the %u-entry table", i, kCloudOffsetCount);
-        return Long(Mem(kCloudOffsets + 12 * i + field));
+        return Long(Mem(ChlorineCloud_Offsets_addr + 12 * i + field));
     };
     SetLong(Sc() + 0xC, offset(0));
     SetLong(Sc() + 0x10, offset(4));

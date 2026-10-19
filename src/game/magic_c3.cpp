@@ -45,7 +45,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 
@@ -141,12 +141,12 @@ C3_EXPORT void __cdecl Magic002_Task(void) {
 C3_EXPORT void __cdecl Magic002_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(3, 1) & 0xFFu;
     unsigned char* const ball = TaskSlot(slot);
-    const int x0 = static_cast<short>(Word(Mem(at::kParty + 0x2E)));
-    const int y0 = static_cast<short>(Word(Mem(at::kParty + 0x30)));
+    const int x0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2E)));
+    const int y0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
     ball[1] = 0;
     SetLong(ball + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(x0) << 16));
     SetLong(ball + 0x10, static_cast<std::int32_t>(static_cast<std::uint32_t>(y0) << 16));
-    const unsigned char* const source = Pointer(at::kSource);
+    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     SetLong(ball + 0x14, 0);
     SetLong(ball + 0x18, 0x28);
     ball[9] = 0;
@@ -156,14 +156,14 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
     SetLong(ball + 0x20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
     SetLong(ball + 0x60, 0x100);
     SetWord(ball + 0x58, 0x100);
-    SetLong(Pointer(at::kCurrentSlot) + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
+    SetLong(Pointer(BattleFlow_TaskCurrent_addr) + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
     Inc(Sc()[1]);
 }
 
 // original 0x499E90: +1 on once the ball's +9 (through the current slot's
 // +0x80) reaches 0x28.
 C3_EXPORT void __cdecl Magic002_Wait(void) {
-    const unsigned char* const slot = Pointer(at::kCurrentSlot);
+    const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
     const auto* const ball = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
     if (ball[9] < 0x28) return;
     Inc(Sc()[1]);
@@ -370,7 +370,7 @@ C3_EXPORT void __cdecl Magic111_Start(void) {
     unsigned slot = MH_CALL(BattleTask_Create)(1, 0x57) & 0xFFu;
     const unsigned actor = Mem(at::kActor)[0];
     const unsigned char* const record =
-        actor <= 2 ? Mem(at::kParty + actor * at::kPartyStride) : Mem(at::kEnemies + (actor - 3) * at::kEnemyStride);
+        actor <= 2 ? Mem(ObjTrio_addr + actor * at::kPartyStride) : Mem(at::kEnemies + (actor - 3) * at::kEnemyStride);
     unsigned char* child = TaskSlot(slot);
     std::memmove(child, record, 0x80);
     unsigned char* self = Sc();

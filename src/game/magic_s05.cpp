@@ -49,7 +49,7 @@ using move_script::Long;
 using move_script::SetLong;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -65,7 +65,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // stride 0x14C) at 0..2, else the enemy by index - 3 (0x93B960, stride
 // 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
-    if (actor <= 2) return Mem(at::kParty + actor * at::kPartyStride);
+    if (actor <= 2) return Mem(ObjTrio_addr + actor * at::kPartyStride);
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
 }
 
@@ -295,11 +295,11 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(at::kSource) + 0x34)) +
+        SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x34)) +
                                                     static_cast<std::uint32_t>(Long(s + 0xC))));
-        SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(at::kSource) + 0x38)) +
+        SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x38)) +
                                                     static_cast<std::uint32_t>(Long(s + 0x10))));
-        SetLong(s + 0x3C, Long(Pointer(at::kSource) + 0x3C));
+        SetLong(s + 0x3C, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
         SetLong(s + 0xC, 0);
         SetLong(s + 0x10, (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u));
         Turn(s);

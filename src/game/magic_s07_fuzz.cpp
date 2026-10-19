@@ -249,8 +249,11 @@ constexpr unsigned kPacketBytes = 0x800;
 alignas(16) unsigned char g_packets[kPacketBytes];
 unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0, kFrameSet = 0x9039D8, kAbilityId = 0x904B80,
-                        kFormIndex = 0x904B89, kMotePool = 0x679B40, kPoolBytes = 64 * 0x84;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kFormIndex: now BattlePhases_B89 (symbols.toml).
+// kMotePool: now BonebreakMote_Pool (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kAbilityId = 0x904B80, kPoolBytes = 64 * 0x84;
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 
@@ -276,7 +279,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // A flag from the recorders' own stream (0 a third of the time, garbage
@@ -313,7 +316,7 @@ std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
     const unsigned w = (h >> 4) % 24;
     const auto v = static_cast<std::uint16_t>(h >> 16);
     if (w < 8) SetWord(mh::Mem(kScratch + w * 2), v);
-    else SetWord(mh::Mem(kVertices + (w - 8) * 2), v);
+    else SetWord(mh::Mem(Prim_VertexScratch_addr + (w - 8) * 2), v);
     return answer;
 }
 
@@ -373,11 +376,11 @@ const mh::Callee kCallees[] = {
     {S07_RAW(0x4A4D90), 0, {}, mh::Answer::kByte, 0, 0xFF},
     // WarShoutMote_Run's steps, called with the frame-offset table swapped:
     // listed before their .data table registers them as plain handlers.
-    {S07_RAW(0x4A4750), 0, {kFrameSet}, kPh, 0, 0},
-    {S07_RAW(0x4A48B0), 0, {kFrameSet}, kPh, 0, 0},
-    {S07_RAW(0x4A49D0), 0, {kFrameSet}, kPh, 0, 0},
-    {S07_RAW(0x4A4AD0), 0, {kFrameSet}, kPh, 0, 0},
-    {S07_RAW(0x4AF490), 0, {kFrameSet}, kPh, 0, 0},
+    {S07_RAW(0x4A4750), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S07_RAW(0x4A48B0), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S07_RAW(0x4A49D0), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S07_RAW(0x4A4AD0), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S07_RAW(0x4AF490), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
 };
 #undef S07_OURS
 #undef S07_RAW
@@ -391,7 +394,7 @@ const mh::DataTable kTables[] = {
 
 mh::Region g_regions[] = {
     {kScratch, 0x10},
-    {kVertices, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPacketBytes},                           // g_packets (filled in at start-up)
     {0x7E0700, 0xC00},                           // MoveScript_TintRecords
@@ -399,9 +402,9 @@ mh::Region g_regions[] = {
     {0x80E980, 0x40},                            // Gfx_ClutStripSource, the same
     {0x80F980, 0x20},                            // Gfx_ClutStrip 0x200..0x20F
     {0x80B980, 0x20},                            // Gfx_ClutStripSource, the same
-    {kFrameSet, 4},                              // the frame-offset table pointer
+    {BattleE2_AnimSet_addr, 4},                  // the frame-offset table pointer
     {kAbilityId, 0x10},                          // the ability word 0x904B80, the form index 0x904B89
-    {kMotePool, kPoolBytes},                     // BonebreakMote_Pool
+    {BonebreakMote_Pool_addr, kPoolBytes},       // BonebreakMote_Pool
     // the overlays' .data the functions read, less the handler cells
     {0x65A718, 0x10},                            // WarShoutMote_Animations
     {0x65A730, 0x20},                            // FocusAura_DiscShades .. FocusMote_Delays
@@ -409,7 +412,7 @@ mh::Region g_regions[] = {
 };
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* PoolRecord(unsigned i) { return mh::Mem(kMotePool + (i & 63) * 0x84u); }
+unsigned char* PoolRecord(unsigned i) { return mh::Mem(BonebreakMote_Pool_addr + (i & 63) * 0x84u); }
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 
 // A real slot or record for a pool record's owner (the walk makes it the
@@ -436,12 +439,12 @@ void Disturb(std::uint32_t h) {
     }
     case 0: Gfx_PacketNext = PacketAt(v); break;
     case 1: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
-    case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: PoolRecord(v)[0] ^= 1; break;
-    case 4: mh::Pointer(mh::at::kOwner)[0xB] = Byte(v % 3); break;
+    case 4: mh::Pointer(BattleE2_Owner_addr)[0xB] = Byte(v % 3); break;
     case 5: SetWord(mh::Mem(kAbilityId), (v & 1) ? 0xA3 : word); break;
     case 6: mh::Mem(0x7E0700 + v % 0xC00)[0] = Byte(h >> 24); break;
-    case 7: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 7: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     default: break;
     }
 }
@@ -460,7 +463,7 @@ void FillPool() {
         unsigned char* const rec = PoolRecord(i);
         if (mode == 0) rec[0] = Byte(rec[0] | 1);   // full
         else if (mode == 1) rec[0] = Byte(i < taken ? rec[0] | 1 : rec[0] & ~1u);
-        mh::SetPointer(kMotePool + i * 0x84u + 0x80, SomeOwner(mh::Next()));
+        mh::SetPointer(BonebreakMote_Pool_addr + i * 0x84u + 0x80, SomeOwner(mh::Next()));
     }
 }
 
@@ -525,7 +528,7 @@ void Seed(unsigned k) {
             rec[0x134] = Byte(mh::Half() ? rec[0x134] | 2 : rec[0x134] & ~2u);
             if (mh::Often()) rec[0x89] = Byte(mh::Next() % 11);
         }
-        if (mh::Often()) mh::Mem(kFormIndex)[0] = Byte(mh::Next() % 25);
+        if (mh::Often()) mh::Mem(BattlePhases_B89_addr)[0] = Byte(mh::Next() % 25);
         if (mh::Often()) sc[8] = Byte(mh::Next() % 5);
         break;
     }

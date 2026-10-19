@@ -15,7 +15,7 @@ namespace event_objs {
 // --- Addresses without a name --------------------------------------------
 // Row 15 of Gfx_ClutStrip (0x80F580 + 15 * 256 * 2): 64 bytes of CLUT per
 // Sprite_Current +5. Sprite_ShadeFadeBegin sets bit 15 of its words.
-constexpr std::uint32_t kShadeClut = 0x811380;
+// kShadeClut: now Gfx_ClutStrip[0xf00] (symbols.toml).
 // Row 15 of Gfx_ClutStripSource: where Sprite_ShadeFadeStep reloads a
 // palette from (Sprite_LoadPalette's dst; docs/field-event.md section 3).
 // kShadeSource: now Gfx_ClutStripSource[0xf00] (symbols.toml).

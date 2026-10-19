@@ -108,7 +108,7 @@ unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 unsigned char* Enemy(unsigned char index) {
     return At(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(index) - 3) * static_cast<int>(at::kEnemyStride)));
 }
-unsigned char* Party(unsigned char index) { return At(at::kParty + index * at::kPartyStride); }
+unsigned char* Party(unsigned char index) { return At(ObjTrio_addr + index * at::kPartyStride); }
 // A .data dispatch table's entry, read as the original reads it.
 Handler Entry(std::uint32_t table, unsigned index) {
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + 4 * index)))));
@@ -170,10 +170,10 @@ MFX_EXPORT void __cdecl FxDiscFan_Start(void) {
         t[9] = static_cast<unsigned char>(i * 6 + 1);
         Bump(sc[0xB], 1);
     }
-    for (std::uint32_t a = at::kClutRow + 2; a < at::kClutRow + 0x20; a += 2)
+    for (std::uint32_t a = Gfx_ClutStrip_addr + 0x3400 + 2; a < (Gfx_ClutStrip_addr + 0x3400) + 0x20; a += 2)
         SetWord(At(a), Word(At(a - 0x4000)) | 0x8000u);
     const unsigned char target = Byte(at::kTarget);
-    SetWord(At(at::kClutRow), 0);
+    Gfx_ClutStrip[0x1a00] = 0;
     Gfx_ClutStripDirty = 1;
     g.set_target_flags(target, 0x10);
     g.play_by_id(0x100);
@@ -216,7 +216,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Fade(void) {
 // 0x4AD300 never reached: phase 2 frees the task), then while it lives and
 // is past its wait (+0 and +1 not zero) the ring under the actor's matrix.
 MFX_EXPORT void __cdecl FxRing_Task(void) {
-    Entry(at::kRingPhases, Sprite_Current[1])();
+    Entry(FxRing_Phases_addr, Sprite_Current[1])();
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[1] == 0) return;
     g.push_matrix();
@@ -338,7 +338,7 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
     const int diff = static_cast<int>(Word(Party(Byte(at::kActor)) + at::kThiefSpeed)) -
                      static_cast<int>(Word(enemy + at::kEnemySpeed));
     const int multiplier = StealMultiplier(diff);
-    const int rate = static_cast<signed char>(At(at::kStealRates)[enemy[at::kStealRate]]);
+    const int rate = Steal_RateTable[enemy[at::kStealRate]];
     const int r = g.rand();
     unsigned char* const e = Enemy(Byte(at::kTarget));
     // DIV-0046 (BOF3X_STEAL=1): the mask is 0 when the cheat's patch is in
@@ -390,7 +390,7 @@ MFX_EXPORT void __cdecl Steal_Wait(void) {
 // As the original has it: the message id travels in the low word of a dword
 // whose high word is Sprite_Current's (Msg_SystemPtr reads the word).
 MFX_EXPORT void __cdecl Steal_Report(void) {
-    if (Byte(at::kMessageUp) != 0) return;
+    if (BattleE1_MessageUp != 0) return;
     const unsigned char* sc = Sprite_Current;
     if (sc[0xA] == 0x38) {
         g.item_name(sc[0x2C], sc[0x2D]);
@@ -405,7 +405,7 @@ MFX_EXPORT void __cdecl Steal_Report(void) {
 // 0x4F50B0): once the message window is down, 0x904AA8 bit 2 and the task
 // freed (a tail jmp in the original).
 MFX_EXPORT void __cdecl MagicFx_EndWhenIdle(void) {
-    if (Byte(at::kMessageUp) != 0) return;
+    if (BattleE1_MessageUp != 0) return;
     At(at::kFlags)[0] = static_cast<unsigned char>(At(at::kFlags)[0] | 4);
     g.free_current();
 }
@@ -413,7 +413,7 @@ MFX_EXPORT void __cdecl MagicFx_EndWhenIdle(void) {
 // original 0x4B5810: the thief's double (kind 1, parameter 0x45): a jmp
 // through StealClone_Types 0x65AC28 by +1, read in place, unchecked (two
 // entries; +1 stays 0 - Steal_Start clears it and nothing steps it).
-MFX_EXPORT void __cdecl StealClone_Dispatch(void) { Entry(at::kCloneTypes, Sprite_Current[1])(); }
+MFX_EXPORT void __cdecl StealClone_Dispatch(void) { Entry(StealClone_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4B5830: the double's type 0. Its phase +2 through a four-entry
 // table on the original's stack (0x4ED5C0 its size, StealClone_Run,
@@ -459,14 +459,14 @@ MFX_EXPORT void __cdecl Sparkle_Task(void) {
     const unsigned phase = Sprite_Current[1];
     if (phase >= 6) bof3::Fatal("Sparkle_Task: phase %u, past the six-entry table", phase);
     g.sparkle_task[phase]();
-    const std::int32_t saved = Long(At(at::kOwner));
+    const std::int32_t saved = static_cast<std::int32_t>(BattleE2_Owner);
     for (unsigned i = 0; i < at::kSparkles; ++i) {
         unsigned char* const s = At(at::kSparklePool + i * at::kSparkleStride);
         if ((s[0] & 1) == 0) continue;
-        SetLong(At(at::kSparkleCurrent), PtrValue(s));
-        SetLong(At(at::kOwner), Long(s + 0x28));
+        BattleItems_SparkleCurrent = PtrValue(s);
+        BattleE2_Owner = Long(s + 0x28);
         g.sparkle_dispatch();
-        SetLong(At(at::kOwner), saved);
+        BattleE2_Owner = saved;
     }
 }
 
@@ -496,7 +496,7 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
     Sprite_Current[0xA] = 0;
     Bump(Sprite_Current[1], 1);
     unsigned char n = 0;
-    if (At(at::kSparkleCounts)[Sprite_Current[4]] != 0) {
+    if (Sparkle_CountByKind[Sprite_Current[4]] != 0) {
         do {
             const unsigned char a = g.sparkle_alloc();
             if (a != 0xFF) {
@@ -509,11 +509,11 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
                 s[3] = static_cast<unsigned char>(r & 3);
                 s[4] = sc[4];
                 s[7] = n;
-                s[5] = static_cast<unsigned char>(At(at::kSparkleSteps)[sc[4]] * static_cast<unsigned>(n >> 2) + 1);
+                s[5] = static_cast<unsigned char>(Sparkle_DelayByKind[sc[4]] * static_cast<unsigned>(n >> 2) + 1);
                 Bump(sc[0xB], 1);
             }
             ++n;
-        } while (n < At(at::kSparkleCounts)[Sprite_Current[4]]);
+        } while (n < Sparkle_CountByKind[Sprite_Current[4]]);
     }
     g.play_effect(0x100);
 }
@@ -525,7 +525,7 @@ MFX_EXPORT void __cdecl Sparkle_Spawn(void) {
 MFX_EXPORT void __cdecl Sparkle_End(void) {
     unsigned char* const sc = Sprite_Current;
     for (unsigned k = 2; k <= 4; ++k) {
-        unsigned char* const tint = At(at::kTints + sc[0xA] * 12u + k);
+        unsigned char* const tint = At(MoveScript_TintRecords_addr + sc[0xA] * 12u + k);
         Bump(*tint, -1);
     }
     Bump(sc[9], -1);
@@ -570,7 +570,7 @@ MFX_EXPORT void __cdecl Sparkle_Update(void) {
 // original 0x4FAFF0: the dim task (kind 1, parameter 0x43): a jmp through
 // FxDim_Phases 0x65C3A0 by +1, read in place, unchecked (entry 0 is
 // 0x4332E0, group CE's; the fifth word is 0).
-MFX_EXPORT void __cdecl FxDim_Dispatch(void) { Entry(at::kDimPhases, Sprite_Current[1])(); }
+MFX_EXPORT void __cdecl FxDim_Dispatch(void) { Entry(FxDim_Phases_addr, Sprite_Current[1])(); }
 
 // original 0x4FB010: +9 down; at -6 the phase on; the map's CLUTs tinted by
 // +9 (signed).

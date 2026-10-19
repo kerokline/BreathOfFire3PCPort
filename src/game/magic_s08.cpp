@@ -57,22 +57,22 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
 constexpr std::uint32_t kAbility = 0x904B80;       // u16: the ability being cast
-constexpr std::uint32_t kFormIndex = 0x904B89;     // u8: indexes CounterMark_FormIndex
-constexpr std::uint32_t kTints = 0x7E0700;         // MoveScript_TintRecords, 12 bytes a record
-constexpr std::uint32_t kWardPool = 0x67BC40;      // WardMote_Pool: 64 records of 0x84
-constexpr std::uint32_t kTrails = 0x67DD40;        // EvilEyeBeam_Trails: 32 points of 4 bytes a beam
-constexpr std::uint32_t kMemberOffsets = 0x65A838; // CounterMark_MemberOffsets
-constexpr std::uint32_t kFormOffsets = 0x65A890;   // CounterMark_FormOffsets
+// kFormIndex: now BattlePhases_B89 (symbols.toml). u8: indexes CounterMark_FormIndex
+// kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12 bytes a record
+// kWardPool: now WardMote_Pool (symbols.toml). WardMote_Pool: 64 records of 0x84
+// kTrails: now EvilEyeBeam_Trails (symbols.toml). EvilEyeBeam_Trails: 32 points of 4 bytes a beam
+// kMemberOffsets: now CounterMark_MemberOffsets (symbols.toml). CounterMark_MemberOffsets
+// kFormOffsets: now CounterMark_FormOffsets (symbols.toml). CounterMark_FormOffsets
 constexpr std::uint32_t kFormBytes = 0x65A8E8;     // CounterMark_FormIndex
-constexpr std::uint32_t kWardTilts = 0x65A918;     // WardMote_Tilts
+// kWardTilts: now WardMote_Tilts (symbols.toml). WardMote_Tilts
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -80,10 +80,10 @@ short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -109,12 +109,12 @@ void PutFloat(unsigned char* p, int v) {
 }
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 // The enemy records by battle index - 3, unchecked, as the originals index them.
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
-unsigned char* TintRecord(unsigned index) { return Mem(kTints + index * 12u); }
+unsigned char* TintRecord(unsigned index) { return Mem(MoveScript_TintRecords_addr + index * 12u); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -199,22 +199,22 @@ void ClearPool(std::uint32_t pool) {
 // owner, then the task and owner as they were after the phase call.
 void WalkPool(std::uint32_t pool, std::uint32_t run) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < 64; ++i) {
         unsigned char* const rec = Mem(pool + i * 0x84u);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), rec_owner);
+        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(run);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = self;
     }
 }
 
 // EvilEyeBeam_Trails: point j of beam `beam` (+4 of the task), x then y.
 unsigned char* Trail(unsigned beam, int j) {
-    return Mem(kTrails + static_cast<std::uint32_t>((static_cast<int>(beam) * 32 + j) * 4));
+    return Mem(EvilEyeBeam_Trails_addr + static_cast<std::uint32_t>((static_cast<int>(beam) * 32 + j) * 4));
 }
 
 }  // namespace
@@ -604,10 +604,10 @@ S08_EXPORT void __cdecl CounterMark_Place(void) {
     std::uint32_t table;
     unsigned row;
     if (member[0x134] & 2) {
-        table = kFormOffsets;
-        row = Mem(kFormBytes + Mem(kFormIndex)[0])[0];
+        table = CounterMark_FormOffsets_addr;
+        row = Mem(CounterMark_FormIndex_addr + Mem(BattlePhases_B89_addr)[0])[0];
     } else {
-        table = kMemberOffsets;
+        table = CounterMark_MemberOffsets_addr;
         row = member[0x89];
     }
     unsigned char* const s = Sc();
@@ -767,7 +767,7 @@ S08_EXPORT void __cdecl Ward_Task(void) {
     static constexpr std::uint32_t kPhases[5] = {bof3::addr::Ward_Start, bof3::addr::Ward_Tint, bof3::addr::Ward_Brighten,
                                                  bof3::addr::Ward_Fade, bof3::addr::BattleFx_Finish};
     StackCall(kPhases, 5, Sc()[1], "Ward_Task");
-    WalkPool(kWardPool, bof3::addr::WardMote_Task);
+    WalkPool(WardMote_Pool_addr, bof3::addr::WardMote_Task);
 }
 
 // original 0x4A78C0: the pool cleared; the source sprite's direction and
@@ -776,7 +776,7 @@ S08_EXPORT void __cdecl Ward_Task(void) {
 // delay 1, 9, .., 0x39, counted in +0xB; row 26's first 32 CLUT entries from
 // their source as they are; Gfx_ClutStripDirty; sound 0x100.
 S08_EXPORT void __cdecl Ward_Start(void) {
-    ClearPool(kWardPool);
+    ClearPool(WardMote_Pool_addr);
     const unsigned char* const src = Source();
     Sc()[8] = src[8];
     SetLong(Sc() + 0x34, Long(src + 0x34));
@@ -790,7 +790,7 @@ S08_EXPORT void __cdecl Ward_Start(void) {
         const unsigned char got = MH_AT(Alloc, bof3::addr::WardMote_Alloc)();
         if (got != 0xFF) {
             unsigned char* const self = Sc();
-            unsigned char* const rec = Mem(kWardPool + got * 0x84u);
+            unsigned char* const rec = Mem(WardMote_Pool_addr + got * 0x84u);
             SetLong(rec + 0x80, static_cast<std::int32_t>(Key(self)));
             rec[0xB] = index;
             rec[9] = static_cast<unsigned char>(delay);
@@ -956,7 +956,7 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 S08_EXPORT void __cdecl WardMote_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const unsigned char* const s = Sc();
-    const short rot[4] = {0x400, static_cast<short>(Word(Mem(kWardTilts + s[8] * 2u))), 0, 0};
+    const short rot[4] = {0x400, static_cast<short>(Word(Mem(WardMote_Tilts_addr + s[8] * 2u))), 0, 0};
     short v[4];
     v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
     v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
@@ -1053,7 +1053,7 @@ S08_EXPORT void __cdecl WardMote_Draw(void) {
 // +0 clear gets it, its index in al; 0xFF when all are taken.
 S08_EXPORT unsigned char __cdecl WardMote_Alloc(void) {
     for (unsigned i = 0; i < 64; ++i) {
-        unsigned char* const rec = Mem(kWardPool + i * 0x84u);
+        unsigned char* const rec = Mem(WardMote_Pool_addr + i * 0x84u);
         if (rec[0] & 1) continue;
         rec[0] = static_cast<unsigned char>(rec[0] | 1);
         return static_cast<unsigned char>(i);

@@ -53,17 +53,17 @@ using move_script::SetWord;
 using move_script::Word;
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kActorRecord = 0x904B3C;   // unsigned char *: the acting actor's sprite record
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
 constexpr std::uint32_t kAbility = 0x904B80;       // u16: the ability being used
-constexpr std::uint32_t kComboHits = 0x904B96;     // u8: MAGIC003's hit count, for the damage
+// kComboHits: now Rest3c_Hits (symbols.toml). u8: MAGIC003's hit count, for the damage
 constexpr std::uint32_t kFxBits = 0x904AA9;        // u8: bit 0x20 set by ElemStrike_Start
-constexpr std::uint32_t kFrameSet = 0x9039D8;      // the sprite frame-offset table pointer (sprite_pose.h)
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
 constexpr std::uint32_t kFrameSetHit = 0x8C5D80;
 
 // SuperComboHit_Pool: 32 task-like entries of 0x84 bytes (.bss).
-constexpr std::uint32_t kPool = 0x6769C0;
+// kPool: now SuperComboHit_Pool (symbols.toml).
 constexpr unsigned kPoolCount = 32;
 constexpr std::uint32_t kPoolStride = 0x84;
 
@@ -103,7 +103,7 @@ unsigned KindCase(std::uint32_t index) {
 }
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 
@@ -123,11 +123,11 @@ void PutFloat(unsigned char* at, int v) {
 }
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* PoolEntry(unsigned i) { return Mem(kPool + i * kPoolStride); }
+unsigned char* PoolEntry(unsigned i) { return Mem(SuperComboHit_Pool_addr + i * kPoolStride); }
 // The originals index the records by the battle index, unchecked: a party
 // member below 3 (the target) or at most 2 (the actor), else the enemy by
 // index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -277,15 +277,15 @@ S02_EXPORT void __cdecl SuperCombo_Task(void) {
     if (phase >= 10) PastTable("SuperCombo_Task", phase, 10);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const current = Sc();
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const e = PoolEntry(i);
         if ((e[0] & 1) == 0) continue;
         const std::int32_t entry_owner = Long(e + 0x80);
         Sprite_Current = e;
-        SetLong(Mem(at::kOwner), entry_owner);
+        SetLong(Mem(BattleE2_Owner_addr), entry_owner);
         Call0(bof3::addr::SuperComboHit_Task);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = current;
     }
 }
@@ -410,7 +410,7 @@ S02_EXPORT void __cdecl SuperCombo_Strike(void) {
 // sprite's +0 bit 0x40 cleared, the caster's animation 4, +1 on.
 S02_EXPORT void __cdecl SuperCombo_WaitChildren(void) {
     if (Sc()[0xB] != 0) return;
-    Pointer(kActorRecord)[0] &= 0xBF;
+    Pointer(MagicS23_ActorSprite_addr)[0] &= 0xBF;
     MH_CALL(BattleActor_SetAnimation)(4, 0);
     Inc(Sc()[1]);
 }
@@ -421,7 +421,7 @@ S02_EXPORT void __cdecl SuperCombo_End(void) {
     MH_CALL(Sound_PlayById)(0x102);
     const unsigned char count = Sc()[0xA];
     const unsigned char target = TargetByte();
-    Mem(kComboHits)[0] = count;
+    Mem(Rest3c_Hits_addr)[0] = count;
     MH_CALL(Battle_SetTargetFlag40)(target);
     Mem(at::kFlags)[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
@@ -574,13 +574,13 @@ S02_EXPORT void __cdecl SuperComboHit_Task(void) {
 // queued; the battle's table (0x8B3580) back.
 S02_EXPORT void __cdecl SuperComboHit_Run(void) {
     static constexpr std::uint32_t kSteps[2] = {bof3::addr::SuperComboHit_Start, bof3::addr::SuperComboHit_Play};
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetHit));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetHit));
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("SuperComboHit_Run", phase, 2);
     magic_harness::Phase(kSteps[phase])();
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_QueueOverlay)();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x49B0F0: +9 down; at 0 the entry placed at the source sprite
@@ -588,7 +588,7 @@ S02_EXPORT void __cdecl SuperComboHit_Run(void) {
 // 0x65A550 by +0xB, +0x2A bit 0 of +4), animation +0xB; +2 on.
 S02_EXPORT void __cdecl SuperComboHit_Start(void) {
     if (!CountDown(9)) return;
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = src[8];
     SetLong(Sc() + 0x34, Long(src + 0x34));
     SetLong(Sc() + 0x38, Long(src + 0x38));
@@ -965,10 +965,10 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
                                                 bof3::addr::ElemStrikeFx_Play};
     DrawModeCommit(0x15, 3);
     const unsigned phase = Sc()[2];
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     if (phase >= 3) PastTable("ElemStrikeFx_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x49C280: at the source sprite, 0x800000 higher; the sprite bytes
@@ -976,10 +976,10 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
 // 0x1D, +0x26 0, +0x5C..+0x5F 0, +0x2A 0, +0x29 4, +0x2C 0, +0x2B 1);
 // animation 0; +9 the kind's delay (0x65A5A8 + +4); +2 on.
 S02_EXPORT void __cdecl ElemStrikeFx_Start(void) {
-    SetLong(Sc() + 0x34, Long(Pointer(at::kSource) + 0x34));
-    SetLong(Sc() + 0x38, Long(Pointer(at::kSource) + 0x38));
+    SetLong(Sc() + 0x34, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
+    SetLong(Sc() + 0x38, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
     SetLong(Sc() + 0x3C,
-            static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(at::kSource) + 0x3C)) + 0x800000u));
+            static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C)) + 0x800000u));
     unsigned char* const s = Sc();
     s[0x25] = 0x1D;
     s[0x26] = 0;

@@ -242,11 +242,13 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kActorSprite = 0x904B3C, kPool = 0x677A40,
-                        kPoolStride = 0x84;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kActorSprite: now MagicS23_ActorSprite (symbols.toml).
+// kPool: now SnapSpark_Pool (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kPoolStride = 0x84;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* PoolRecord(unsigned i) { return mh::Mem(kPool + (i & 63) * kPoolStride); }
+unsigned char* PoolRecord(unsigned i) { return mh::Mem(SnapSpark_Pool_addr + (i & 63) * kPoolStride); }
 // A real slot or record for an owner cell the recorders write through.
 const void* SomeOwner(std::uint32_t v) {
     return (v & 4) ? static_cast<const void*>(mh::SpriteRecord(v & 1)) : static_cast<const void*>(mh::TaskAt(v & 3));
@@ -420,9 +422,9 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850..
-    {kPool, 64 * kPoolStride},            // SnapSpark_Pool
+    {SnapSpark_Pool_addr, 64 * kPoolStride}, // SnapSpark_Pool
     {0x80E980, 0x40},                     // Gfx_ClutStripSource 0x1A00..0x1A1F
     {0x812980, 0x40},                     // Gfx_ClutStrip 0x1A00..0x1A1F
 };
@@ -437,11 +439,11 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
     case 3: PoolRecord(v)[0] ^= 1; break;
-    case 4: mh::SetPointer(kPool + (v & 63) * kPoolStride + 0x80, SomeOwner(h >> 24)); break;
-    case 5: mh::SetPointer(kActorSprite, mh::SpriteRecord(v)); break;
+    case 4: mh::SetPointer(SnapSpark_Pool_addr + (v & 63) * kPoolStride + 0x80, SomeOwner(h >> 24)); break;
+    case 5: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
     case 6: {
         static const unsigned kFields[] = {0x14, 0x20, 0x3E, 0x40, 0x44, 0x5D, 0x5E, 0x5F};
         const unsigned f = kFields[v % 8];
@@ -449,7 +451,7 @@ void Disturb(std::uint32_t h) {
         else SetWord(Sc() + f, h >> 16);
         break;
     }
-    case 7: mh::Pointer(mh::at::kOwner)[0xB] = Byte(v % 3); break;
+    case 7: mh::Pointer(BattleE2_Owner_addr)[0xB] = Byte(v % 3); break;
     default: break;
     }
 }
@@ -470,15 +472,15 @@ void FillPool() {
         unsigned char* const rec = PoolRecord(i);
         if (mode == 0) rec[0] = Byte(rec[0] | 1);                     // full
         else if (mode == 1) rec[0] = Byte(i < taken ? rec[0] | 1 : rec[0] & ~1u);
-        mh::SetPointer(kPool + i * kPoolStride + 0x80, SomeOwner(mh::Next()));
+        mh::SetPointer(SnapSpark_Pool_addr + i * kPoolStride + 0x80, SomeOwner(mh::Next()));
     }
 }
 
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kActorSprite, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     FillPool();
     g_keep_facing = k == kSnapWave_PushMatrixA || k == kSnapWave_PushMatrixB;
     if (mh::Often()) sc[8] = Byte(mh::Next() % 5);
@@ -543,7 +545,7 @@ void Seed(unsigned k) {
         // the height either side of the source's after the rise is added to
         // its high word (+0x3E): the compare sees +0x3C once it has moved
         if (mh::Often()) {
-            unsigned char* const src = mh::Pointer(mh::at::kSource);
+            unsigned char* const src = mh::Pointer(BattleOdds_ActorObject_addr);
             const std::uint32_t moved = (static_cast<std::uint32_t>(Long(sc + 0x14)) + static_cast<std::uint32_t>(Long(sc + 0x20))) << 16;
             const std::uint32_t at = static_cast<std::uint32_t>(Long(src + 0x3C)) + mh::Next() % 3 - 1;
             SetLong(sc + 0x3C, static_cast<std::int32_t>(at - moved));

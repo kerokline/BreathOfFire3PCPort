@@ -140,18 +140,20 @@ const mh::Callee kCallees[] = {
 
 // --- the state -----------------------------------------------------------------
 
-constexpr std::uint32_t kPacketNext = 0x7E0670, kOrigin = 0x7E0688, kBufferIndex = 0x905B89;
-constexpr std::uint32_t kPackets = 0x7E1C00;   // the first pool's start (Gfx_PacketPools)
+// kPacketNext: now Gfx_PacketNext (symbols.toml).
+// kOrigin: now MapView_Origin (symbols.toml).
+// kBufferIndex: now Gfx_BufferIndex (symbols.toml).
+// kPackets: now Gfx_PacketPools (symbols.toml). the first pool's start (Gfx_PacketPools)
 constexpr std::uint32_t kPoolEnd = 0x7F1BAC;
-constexpr std::uint32_t kStrip = 0x80F580;
+// kStrip: now Gfx_ClutStrip (symbols.toml).
 constexpr unsigned kStripWords = 0x2000;
 constexpr std::uint32_t kFxRowWord = 0x200;    // 0x80F980, the strip's row 2
 
 int g_keys[16];
 
 const mh::Region kRegions[] = {
-    {kPacketNext, 4}, {kOrigin, 4}, {0x905B88, 4}, {0x8022C0, 0xA90}, {0x904B50, 0x40}, {0x939F80, 0x20},
-    {kPackets, 0x200}, {0x8C5652, 0x8C * 16}, {kStrip, kStripWords * 2}, {0x80B980, 0x200}, {Key(g_keys), sizeof g_keys},
+    {Gfx_PacketNext_addr, 4}, {MapView_Origin_addr, 4}, {0x905B88, 4}, {0x8022C0, 0xA90}, {0x904B50, 0x40}, {0x939F80, 0x20},
+    {Gfx_PacketPools_addr, 0x200}, {0x8C5652, 0x8C * 16}, {Gfx_ClutStrip_addr, kStripWords * 2}, {0x80B980, 0x200}, {Key(g_keys), sizeof g_keys},
 };
 
 // --- the seed ---------------------------------------------------------------------
@@ -194,7 +196,7 @@ void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
     for (std::uint32_t& w : g_args) w = mh::Next();
     g_have_args = true;
-    mh::Mem(kBufferIndex)[0] = static_cast<unsigned char>(mh::Next() % 2);
+    mh::Mem(Gfx_BufferIndex_addr)[0] = static_cast<unsigned char>(mh::Next() % 2);
     switch (k) {
     case kTask:
     case kAtTask:
@@ -217,7 +219,7 @@ void Seed(unsigned k) {
         if (mh::Often()) sc[9] = 0x1B;
         break;
     case kDraw:
-        SetU32(mh::Mem(kPacketNext), kPackets + mh::Next() % 0x40);
+        SetU32(mh::Mem(Gfx_PacketNext_addr), Gfx_PacketPools_addr + mh::Next() % 0x40);
         g_args[0] = (g_args[0] & 0xFFFFFF00u) | mh::Next() % 9;
         break;
     case kApply:
@@ -235,8 +237,8 @@ void Seed(unsigned k) {
         const unsigned size = mh::Next() & 0xFF;
         const unsigned bias = mh::Next() & 0xFF;
         const short ox = static_cast<short>(mh::Next() % 64 - 32), oz = static_cast<short>(mh::Next() % 64 - 32);
-        move_script::SetWord(mh::Mem(kOrigin), static_cast<unsigned short>(ox));
-        move_script::SetWord(mh::Mem(kOrigin + 2), static_cast<unsigned short>(oz));
+        move_script::SetWord(mh::Mem(MapView_Origin_addr), static_cast<unsigned short>(ox));
+        move_script::SetWord(mh::Mem(MapView_Origin_addr + 2), static_cast<unsigned short>(oz));
         std::uint32_t x = (mh::Next() % 64) << 16 | (mh::Next() % 4 == 0 ? 0 : mh::Next() & 0xFFFF);
         std::uint32_t z = mh::Next() % 4 == 0 ? 0 : mh::Next() & 0xFFFF;
         const int want = mh::Half() ? static_cast<int>(MH_PICK(static_cast<std::uint32_t>(-1), 0, 1, 0x36, 0x37, 0x38))
@@ -245,9 +247,9 @@ void Seed(unsigned k) {
         const int hz = want - hx + ((z & 0xFFFF) == 0) + ((x & 0xFFFF) == 0) + oz + ox - static_cast<int>(bias) - 2;
         z |= static_cast<std::uint32_t>(hz) << 16;
         if (mh::Next() % 8 == 0) x = mh::Next(), z = mh::Next();
-        const std::uint32_t end = kPoolEnd + (static_cast<std::uint32_t>(mh::Mem(kBufferIndex)[0]) << 16);
-        SetU32(mh::Mem(kPacketNext),
-               mh::Half() ? kPackets + (mh::Next() & 0xFFF) : end - size + MH_PICK(static_cast<std::uint32_t>(-1), 0, 1, 2));
+        const std::uint32_t end = kPoolEnd + (static_cast<std::uint32_t>(mh::Mem(Gfx_BufferIndex_addr)[0]) << 16);
+        SetU32(mh::Mem(Gfx_PacketNext_addr),
+               mh::Half() ? Gfx_PacketPools_addr + (mh::Next() & 0xFFF) : end - size + MH_PICK(static_cast<std::uint32_t>(-1), 0, 1, 2));
         g_args[0] = x;
         g_args[1] = z;
         g_args[2] = Key(g_keys);
@@ -340,8 +342,8 @@ void Args(unsigned, std::uint32_t* a) {
 // target and result record.
 void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 4) {
-    case 0: SetU32(mh::Mem(kPacketNext), kPackets + ((h >> 12) & 1) * 0x80 + ((h >> 16) & 0x3F)); break;
-    case 1: mh::Mem(kBufferIndex)[0] = static_cast<unsigned char>((h >> 12) & 1); break;
+    case 0: SetU32(mh::Mem(Gfx_PacketNext_addr), Gfx_PacketPools_addr + ((h >> 12) & 1) * 0x80 + ((h >> 16) & 0x3F)); break;
+    case 1: mh::Mem(Gfx_BufferIndex_addr)[0] = static_cast<unsigned char>((h >> 12) & 1); break;
     case 2: mh::Mem(0x904B54)[0] = static_cast<unsigned char>(h >> 16); break;
     default: SetU32(mh::Mem(0x904B60), h); break;
     }

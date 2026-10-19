@@ -37,7 +37,7 @@ using move_script::Word;
 // The ability path's target and result record (docs/battle_odds.md), which
 // MagicFx_ApplyBuff points at the actor for one call and puts back.
 constexpr std::uint32_t kResultTarget = 0x904B54;   // u8
-constexpr std::uint32_t kResultRecord = 0x904B60;   // unsigned char *
+// kResultRecord: now BattleDamage_Result (symbols.toml). unsigned char *
 constexpr std::uint32_t kStatsCopy = 0x939F80;      // 32 bytes: the actor's +0xA0 (party) / +0xB0 (enemy)
 // The byte FxSize's and FxSizeB's second tables and the formation rows are
 // indexed by (battle_items.cpp's kFxSizeSelect).
@@ -50,12 +50,12 @@ using BuffRollFn = unsigned char (__cdecl*)(unsigned);
 // The packet pools' end (Gfx_PacketPools + 0x10000 - 0x54, symbols.toml), per
 // buffer, and the frame's depth nodes (Gfx_FrameNodes + 4): 0x38 of 0x30 bytes.
 constexpr std::uint32_t kPoolEnd = 0x7F1BAC;
-constexpr std::uint32_t kDepthCells = 0x8022C4;
+// kDepthCells: now DrawLayers[9] (symbols.toml).
 constexpr int kDepths = 0x38;
 // The strip's row 2 (Gfx_ClutStrip + 0x400) the CLUT helpers borrow, and the
 // same row of the strip as loaded.
-constexpr std::uint32_t kFxRow = 0x80F980;
-constexpr std::uint32_t kFxRowSource = 0x80B980;
+// kFxRow: now Gfx_ClutStrip[0x200] (symbols.toml).
+// kFxRowSource: now Gfx_ClutStripSource[0x200] (symbols.toml).
 constexpr std::uint32_t kEnemyFxSizeB = 0x8C5653;   // + 0x8C * the enemy's type: FxSize's byte + 1
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -68,7 +68,7 @@ void PutFloat(unsigned char* p, int v) {
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + (i - 3u) * at::kEnemyStride); }
 // An actor's record by the battle index, as the originals index it (0..2 the
 // party, 3.. an enemy; unchecked above).
@@ -197,9 +197,9 @@ MLIB_EXPORT void __cdecl BuffPopup_Task(void) {
 MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    SetLong(Sprite_Current + 0x34, Long(Pointer(at::kOwner) + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Pointer(at::kOwner) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(at::kOwner) + 0x3C));
+    SetLong(Sprite_Current + 0x34, Long(Pointer(BattleE2_Owner_addr) + 0x34));
+    SetLong(Sprite_Current + 0x38, Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     PopupSettle();
 }
 
@@ -233,7 +233,7 @@ MLIB_EXPORT void __cdecl BuffPopup_Fall(void) {
 MLIB_EXPORT void __cdecl BuffPopup_End(void) {
     Bump(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x1C) return;
-    unsigned char* const owner = Pointer(at::kOwner);
+    unsigned char* const owner = Pointer(BattleE2_Owner_addr);
     owner[0xB] = static_cast<unsigned char>(owner[0xB] - 1);
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -280,21 +280,21 @@ MLIB_EXPORT void __cdecl BuffPopup_Draw(unsigned icon) {
 // roll answered 0 (not resisted), else 0. The actor unchecked above 2.
 MLIB_EXPORT unsigned char __cdecl MagicFx_ApplyBuff(unsigned stat, unsigned actor) {
     const unsigned char kept_target = Mem(kResultTarget)[0];
-    const std::int32_t kept_record = Long(Mem(kResultRecord));
+    const std::int32_t kept_record = Long(Mem(BattleDamage_Result_addr));
     const unsigned a = actor & 0xFF;
     Mem(kResultTarget)[0] = static_cast<unsigned char>(a);
     const unsigned char* stats;
     if (a < 3) {
-        SetLong(Mem(kResultRecord), I32(Addr(PartyRecord(a) + 0x124)));
+        SetLong(Mem(BattleDamage_Result_addr), I32(Addr(PartyRecord(a) + 0x124)));
         stats = PartyRecord(a) + 0xA0;
     } else {
-        SetLong(Mem(kResultRecord), I32(Addr(EnemyRecord(a) + 0x104)));
+        SetLong(Mem(BattleDamage_Result_addr), I32(Addr(EnemyRecord(a) + 0x104)));
         stats = EnemyRecord(a) + 0xB0;
     }
     for (unsigned i = 0; i < 32; i += 4) SetLong(Mem(kStatsCopy + i), Long(stats + i));
     const unsigned char resisted = MH_AT(BuffRollFn, kBuffRoll)(stat);
     Mem(kResultTarget)[0] = kept_target;
-    SetLong(Mem(kResultRecord), kept_record);
+    SetLong(Mem(BattleDamage_Result_addr), kept_record);
     return resisted == 0 ? 1 : 0;
 }
 
@@ -350,9 +350,9 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
         if (keys[best] == 0) continue;
         const std::uint32_t prim = prims + sz * best;
         keys[best] = 0;
-        unsigned char* const head = Mem(kDepthCells + (Gfx_BufferIndex + row) * 8);
+        unsigned char* const head = Mem(DrawLayers_addr + 0x24 + (Gfx_BufferIndex + row) * 8);
         MH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(U32(head))), prim);
-        SetLong(Mem(kDepthCells + (Gfx_BufferIndex + row) * 8), I32(prim));
+        SetLong(Mem(DrawLayers_addr + 0x24 + (Gfx_BufferIndex + row) * 8), I32(prim));
     }
 }
 
@@ -453,7 +453,7 @@ MLIB_EXPORT void __cdecl SpriteClut_ClearEntry31(const unsigned char* s) {
 MLIB_EXPORT unsigned __cdecl SpriteClut_CopyToFxRow(const unsigned char* s) {
     const unsigned cell = ClutCell(s, "SpriteClut_CopyToFxRow");
     for (unsigned i = 0; i < SpriteClut_Counts[s[0x28]] * 16u; ++i)
-        SetWord(Mem(kFxRow + 2 * i), Word(StripWord(cell + i)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x400 + 2 * i), Word(StripWord(cell + i)));
     Gfx_ClutStripDirty = 1;
     return SpriteClut_Divisors[s[0x28]] * 2u;
 }
@@ -461,7 +461,7 @@ MLIB_EXPORT unsigned __cdecl SpriteClut_CopyToFxRow(const unsigned char* s) {
 // original 0x4FC000: the strip's row 2 (256 entries) put back from the strip
 // as loaded (Gfx_ClutStripSource); Gfx_ClutStripDirty 1.
 MLIB_EXPORT void __cdecl SpriteClut_RestoreFxRow(void) {
-    for (unsigned i = 0; i < 0x200; i += 2) SetWord(Mem(kFxRow + i), Word(Mem(kFxRowSource + i)));
+    for (unsigned i = 0; i < 0x200; i += 2) SetWord(Mem(Gfx_ClutStrip_addr + 0x400 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x400 + i)));
     Gfx_ClutStripDirty = 1;
 }
 
@@ -501,7 +501,7 @@ MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
     const unsigned char i = Mem(at::kActor)[0];
     if (i < 3) {
         const unsigned char* const r = PartyRecord(i);
-        if (r[0x134] & 2) return FxSizeB_AltTable[Mem(kFormation)[0]];
+        if (r[0x134] & 2) return FxSizeB_AltTable[Mem(BattlePhases_B89_addr)[0]];
         return FxSizeB_Table[r[0x89]];
     }
     return Mem(kEnemyFxSizeB + EnemyRecord(i)[0xF0] * 0x8Cu)[0];
@@ -511,7 +511,7 @@ MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
 // of shorts MagicFx_FormationOffsets[(MagicFx_FormationRows[byte 0x904B89] *
 // 4 + (+8 & 3)) * 2 ..], both indices unchecked.
 MLIB_EXPORT void __cdecl MagicFx_FormationOffset(void) {
-    const unsigned row = MagicFx_FormationRows[Mem(kFormation)[0]] * 4u;
+    const unsigned row = MagicFx_FormationRows[Mem(BattlePhases_B89_addr)[0]] * 4u;
     SetLong(Sprite_Current + 0xC, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2]);
     SetLong(Sprite_Current + 0x10, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2 + 1]);
 }

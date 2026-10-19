@@ -56,16 +56,16 @@ using move_script::Word;
 // Prim_VertexScratch (0x9037A0..0x9037BF), read again after every call as the
 // originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kActorSprite = 0x904B3C;   // unsigned char *: the acting actor's sprite record
+// kActorSprite: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
 constexpr std::uint32_t kPoolStride = 0x84;
 constexpr unsigned kPoolRecords = 64;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
@@ -75,9 +75,9 @@ short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -195,7 +195,7 @@ void GroundPoint(const unsigned char* s, short height, short* v) {
 // The acting actor's record as the originals index it (a party member at
 // 0..2, else the enemy by index - 3, unchecked).
 unsigned char* ActorRecord(unsigned char a) {
-    if (a < 3) return Mem(at::kParty + a * at::kPartyStride);
+    if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
     return Mem(at::kEnemies + (a - 3u) * at::kEnemyStride);
 }
 // A kind-1 child of parameter 0x23 made a copy of the acting actor's record's
@@ -235,15 +235,15 @@ namespace {
 // and the owner are read after the phase call that precedes the walk.
 void WalkPool() {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolRecords; ++i) {
         unsigned char* const rec = PoolRecord(i);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), rec_owner);
+        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(bof3::addr::SnapSpark_Task);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = self;
     }
 }
@@ -1130,7 +1130,7 @@ S04_EXPORT void __cdecl AirRaidImage_Bounce(void) {
     }
     if (s[9] != 0x10) Dec(s[9]);
     MH_CALL(Sprite_ScriptTickOnce)();
-    MH_CALL(MagicFx_StepAround)(Pointer(kActorSprite), 0x2000, 0);
+    MH_CALL(MagicFx_StepAround)(Pointer(MagicS23_ActorSprite_addr), 0x2000, 0);
     RiseAndFall();
     s = Sc();
     if (Long(s + 0x14) >= 0 || Long(s + 0x3C) >= Long(Source() + 0x3C)) return;
@@ -1232,7 +1232,7 @@ S04_EXPORT void __cdecl FlyingKickImage_Dive(void) {
 // +0x5D..+0x5F 0) on the source's height, +2 on.
 S04_EXPORT void __cdecl FlyingKickImage_Bounce(void) {
     MH_CALL(Sprite_ScriptTickOnce)();
-    MH_CALL(MagicFx_StepAround)(Pointer(kActorSprite), 0x2000, 0);
+    MH_CALL(MagicFx_StepAround)(Pointer(MagicS23_ActorSprite_addr), 0x2000, 0);
     RiseAndFall();
     unsigned char* s = Sc();
     if (Long(s + 0x14) >= 0) {

@@ -56,7 +56,7 @@ constexpr std::uint32_t kPlacedFlags = 0x9040CC;     // the bits EventOp_9x test
 // kButtonHeld: now Gfx_UnpackScratch[0x1f006] (symbols.toml).
 // kButtonSwap: now Gfx_UnpackScratch[0x1f008] (symbols.toml).
 // kButtonCheck: now Gfx_UnpackScratch[0x1f00c] (symbols.toml).
-constexpr std::uint32_t kWalkDelta = 0x6696DC;       // s32 x, z per direction, 8 bytes apart (the step's unit)
+// kWalkDelta: now MoveCmd_F9Steps (symbols.toml). s32 x, z per direction, 8 bytes apart (the step's unit)
 constexpr std::uint32_t kCellDelta = 0x66971C;       // s8 x, z per direction, 2 bytes apart
 constexpr std::uint32_t kStepSounds = 0x660960;      // u16 per byte 0x903851
 constexpr std::uint32_t kSwapKinds = 0x660A34;       // three bytes Party_CanSwap looks a member's +2 up in

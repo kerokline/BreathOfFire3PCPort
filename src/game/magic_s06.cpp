@@ -55,13 +55,13 @@ using move_script::Word;
 
 // The cells the overlays read beyond the harness's names.
 constexpr std::uint32_t kAbility = 0x904B80;        // u16: the ability being cast
-constexpr std::uint32_t kFrameSet = 0x9039D8;       // the sprite frame-offset table pointer (sprite_pose.h)
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetSlash = 0x8C5D80;
 constexpr std::uint32_t kShade = 0x903852;          // u16: DamageScratch +2, Magic020_DrawFade's shade
-constexpr std::uint32_t kDashOffsets = 0x65A6B8;    // Magic008Dash_Offsets: 3 x (dword dx, dword dz)
+// kDashOffsets: now Magic008Dash_Offsets (symbols.toml). Magic008Dash_Offsets: 3 x (dword dx, dword dz)
 constexpr unsigned kDashOffsetCount = 3;
-constexpr std::uint32_t kSlashAnimations = 0x65A6DC;   // Magic020Slash_Animations: 12 bytes to the next table
+// kSlashAnimations: now Magic020Slash_Animations (symbols.toml). Magic020Slash_Animations: 12 bytes to the next table
 constexpr unsigned kSlashAnimationCount = 12;
 
 // Capcom's, unnamed, in no group: 0x446770 turns the dx / dz pair +0xC / +0x10
@@ -73,10 +73,10 @@ constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf
 // Magic008Dash_Run's stack table names S04's KickImage_Tick (ours now).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 std::uint16_t Ability() { return Word(Mem(kAbility)); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -88,7 +88,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // The acting actor's record as the originals index it: a member below 3, else
 // the enemy by index - 3, unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
-    if (actor < 3) return Mem(at::kParty + actor * at::kPartyStride);
+    if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
     return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 // A battle actor's state byte +1, as the reaction steps read it.
@@ -514,8 +514,8 @@ S06_EXPORT void __cdecl Magic008Dash_Start(void) {
     unsigned char* const sc = Sc();
     const unsigned index = sc[0xB];
     if (index >= kDashOffsetCount) bof3::Fatal("Magic008Dash_Start: +0xB %u, past the %u offsets", index, kDashOffsetCount);
-    SetLong(sc + 0xC, Long(Mem(kDashOffsets + 8 * index)));
-    SetLong(sc + 0x10, Long(Mem(kDashOffsets + 8 * index + 4)));
+    SetLong(sc + 0xC, Long(Mem(Magic008Dash_Offsets_addr + 8 * index)));
+    SetLong(sc + 0x10, Long(Mem(Magic008Dash_Offsets_addr + 8 * index + 4)));
     MH_AT(void (__cdecl*)(unsigned char*), kTurnOffset)(Sc());
     const unsigned char size = MH_CALL(BattleActor_FxSize)();
     Sc()[9] = size;
@@ -931,13 +931,13 @@ S06_EXPORT void __cdecl Magic020Shadow_Approach(void) {
 // sprite queued (Sprite_QueueOverlay); the table the battle's (0x8B3580) again.
 S06_EXPORT void __cdecl Magic020Slash_Run(void) {
     static constexpr std::uint32_t kSteps[2] = {bof3::addr::Magic020Slash_Start, bof3::addr::Magic020Slash_Play};
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetSlash));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetSlash));
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("Magic020Slash_Run", phase, 2);
     magic_harness::Phase(kSteps[phase])();
     const unsigned char* const sc = Sc();
     if (sc[0] != 0 && sc[2] != 0) MH_CALL(Sprite_QueueOverlay)();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4A3950: +9 (its delay) down; at 0: the direction and position the
@@ -963,7 +963,7 @@ S06_EXPORT void __cdecl Magic020Slash_Start(void) {
         const unsigned index = sc[0xB];
         if (index >= kSlashAnimationCount)
             bof3::Fatal("Magic020Slash_Start: +0xB %u, past the %u animations", index, kSlashAnimationCount);
-        sc[0x27] = static_cast<unsigned char>(Mem(kSlashAnimations)[index] - 0x50);
+        sc[0x27] = static_cast<unsigned char>(Mem(Magic020Slash_Animations_addr)[index] - 0x50);
     }
     {
         unsigned char* const sc = Sc();

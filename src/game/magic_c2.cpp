@@ -51,15 +51,15 @@ using move_script::Word;
 // words of Prim_VertexScratch (0x9037A0). Both are read again after every
 // call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (magic_s17.cpp's kFrameSet): the
 // bones switch it to 0x8E3580 around their phase and put back 0x8B3580.
 constexpr std::uint32_t kFrameSet = 0x9039D8;
 // Row 26 of Gfx_ClutStrip and of its source, 0x4000 bytes below.
-constexpr std::uint32_t kClutRow26 = 0x812980;
-constexpr std::uint32_t kClutRow26Source = 0x80E980;
+// kClutRow26: now Gfx_ClutStrip[0x1a00] (symbols.toml).
+// kClutRow26Source: now Gfx_ClutStripSource[0x1a00] (symbols.toml).
 // The overlays' own .data and .bss.
-constexpr std::uint32_t kShakeCounts = 0x65AA64;      // BoneDanceShake_Counts: four bytes by +9
+// kShakeCounts: now BoneDanceShake_Counts (symbols.toml). BoneDanceShake_Counts: four bytes by +9
 constexpr std::uint32_t kRottenTypes = 0x65B358;      // RottenBreathChild_Types: two entries by +1
 constexpr std::uint32_t kBeamTypes = 0x65BC30;        // HolocaustBeam_Types: by +1 (one entry used)
 constexpr std::uint32_t kBeamPhases = 0x65BC34;       // HolocaustBeam_Phases: four entries by +2
@@ -81,10 +81,10 @@ constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
 // S37's MagicFx_FreeCurrentRecord.
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 // [[0x93B8C4] + 0x80]: the current slot's owner - the caster's sprite.
 unsigned char* Caster() {
-    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Pointer(at::kCurrentSlot) + 0x80))));
+    return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Pointer(BattleFlow_TaskCurrent_addr) + 0x80))));
 }
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -92,8 +92,8 @@ std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 int SS(unsigned k) { return static_cast<short>(SW(k)); }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-int VS(unsigned k) { return static_cast<short>(Word(Mem(kV + k))); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+int VS(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
 
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -148,15 +148,15 @@ void CallCell(std::uint32_t table, unsigned index) {
 // after the task's own phase.
 void Walk(std::uint32_t pool, unsigned count, std::uint32_t fn) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < count; ++i) {
         unsigned char* const r = Mem(pool + i * kRecord);
         if (!(r[0] & 1)) continue;
         const std::int32_t its = Long(r + 0x80);
         Sprite_Current = r;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         Call0(fn);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = self;
     }
 }
@@ -295,10 +295,10 @@ C2_EXPORT void __cdecl BoneDanceChild_Task(void) {
 C2_EXPORT void __cdecl BoneDanceBone_Run(void) {
     static constexpr std::uint32_t kPhases[3] = {addr::BoneDanceBone_Start, addr::BoneDanceBone_Fall,
                                                  addr::BoneDanceBone_End};
-    SetLong(Mem(kFrameSet), 0x8E3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     Step(kPhases, 3, Sc()[2], "BoneDanceBone_Run");
     if (Sc()[0] & 1) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), 0x8B3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 // original 0x4AEAD0: the bone placed round the owner - x by Rand % 6 + 2 (bit 0
@@ -375,7 +375,7 @@ C2_EXPORT void __cdecl BoneDanceShake_Run(void) {
 C2_EXPORT void __cdecl BoneDanceShake_Start(void) {
     Sc()[9] = 0;
     unsigned char* const s = Sc();
-    s[0xA] = Mem(kShakeCounts)[s[9]];
+    s[0xA] = Mem(BoneDanceShake_Counts_addr)[s[9]];
     MH_CALL(Sound_PlayById)(0x100);
     SetLong(Sc() + 0x10, 0);
     Inc(Sc()[2]);
@@ -397,7 +397,7 @@ C2_EXPORT void __cdecl BoneDanceShake_Step(void) {
             s = Sc();
             Inc(s[9]);
             s = Sc();
-            s[0xA] = Mem(kShakeCounts)[s[9]];
+            s[0xA] = Mem(BoneDanceShake_Counts_addr)[s[9]];
             MH_CALL(Sound_PlayById)(0x100);
             s = Sc();
             if (s[9] == 3) {
@@ -445,10 +445,10 @@ C2_EXPORT void __cdecl BoneDanceShake_Up(void) {
 C2_EXPORT void __cdecl BoneDanceFollow_Run(void) {
     static constexpr std::uint32_t kPhases[3] = {addr::BoneDanceFollow_Start, addr::BoneDanceFollow_Step,
                                                  addr::BattleFx_FreeTask};
-    SetLong(Mem(kFrameSet), 0x8E3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     Step(kPhases, 3, Sc()[2], "BoneDanceFollow_Run");
     if ((Sc()[0] & 1) && Owner()[0xA] == 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), 0x8B3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 namespace {
@@ -521,8 +521,8 @@ C2_EXPORT void __cdecl RottenBreath_Start(void) {
     SetLong(Sc() + 0x38, Long(Owner() + 0x38));
     SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
     Gfx_ClutStripDirty = 1;
-    for (unsigned i = 0; i < 16; ++i) SetWord(Mem(kClutRow26 + 2 * i), Word(Mem(kClutRow26Source + 2 * i)) | 0x8000u);
-    SetWord(Mem(kClutRow26), Word(Mem(kClutRow26Source)));
+    for (unsigned i = 0; i < 16; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)) | 0x8000u);
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), Word(Mem(Gfx_ClutStripSource_addr + 0x3400)));
     CasterAnimation(1);
     Inc(Sc()[1]);
 }
@@ -950,7 +950,7 @@ C2_EXPORT void __cdecl Holocaust_Start(void) {
         return;
     }
     for (unsigned member = 0; member < 3; ++member) {
-        if (!(Mem(at::kParty + member * at::kPartyStride)[0] & 1)) continue;
+        if (!(Mem(ObjTrio_addr + member * at::kPartyStride)[0] & 1)) continue;
         const unsigned slot = NewTask(0x6A) & 0xFF;
         unsigned char* const self = Sc();
         unsigned char* const t = TaskSlot(slot);
@@ -981,7 +981,7 @@ namespace {
 unsigned char* EnemyRecord(int i) {
     return Mem(static_cast<std::uint32_t>(static_cast<int>(at::kEnemies) + i * static_cast<int>(at::kEnemyStride)));
 }
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 }  // namespace
 
 // original 0x4E3410: +9 down; at 0 the beam aims. Its far end: the task at the
@@ -1041,7 +1041,7 @@ C2_EXPORT void __cdecl HolocaustBeam_Emit(void) {
     if (s[9] > 0x10 && (Frame_Counter & 3) == 0) {
         const unsigned k = MH_AT(FnB, addr::HolocaustSpark_Alloc)() & 0xFFu;
         unsigned char* const r = Mem(kSparks + k * kRecord);
-        SetLong(r + 0x80, Long(Mem(at::kOwner)));
+        SetLong(r + 0x80, Long(Mem(BattleE2_Owner_addr)));
         r[1] = 0;
         r[0xB] = static_cast<unsigned char>(RandCall() & 0x1F);
         unsigned char* const owner = Owner();

@@ -50,20 +50,20 @@ using move_script::Word;
 // and the three SVECTORs of Prim_VertexScratch it projects; both read again
 // after every call, as the original reads them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
 short SS(unsigned k) { return static_cast<short>(Word(Mem(kS + k))); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -117,7 +117,7 @@ void SpawnCopy(unsigned parameter) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu;
     const unsigned actor = ActorByte();
     const unsigned char* const from =
-        actor < 3 ? Mem(at::kParty + actor * at::kPartyStride)
+        actor < 3 ? Mem(ObjTrio_addr + actor * at::kPartyStride)
                   : Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(actor) - 3) * at::kEnemyStride);
     unsigned char* const task = Mem(at::kTasks + slot * at::kTaskStride);
     unsigned char* const self = Sc();

@@ -62,21 +62,21 @@ using move_script::Word;
 // four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read
 // again after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kFrameSet = 0x9039D8;         // the sprite frame-offset table pointer (sprite_pose.h)
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-constexpr std::uint32_t kEventBattle = 0x904AAA;      // u8: not 0 in an event battle
-constexpr std::uint32_t kCurrentEnemy = 0x939AD8;     // unsigned char *: the enemy the per-frame loops set last
+// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). unsigned char *: the enemy the per-frame loops set last
 constexpr std::uint32_t kAbilityId = 0x904B80;        // u16: the ability id (0x32 Pollen, 0x33 Venom Breath)
 
 // This group's .data (symbols.toml [[data]]).
-constexpr std::uint32_t kMotePool = 0x67DE40;         // ElemBreath_Motes: 48 records of 0x84 bytes
+// kMotePool: now ElemBreath_Motes (symbols.toml). ElemBreath_Motes: 48 records of 0x84 bytes
 constexpr unsigned kMoteRecords = 48;
-constexpr std::uint32_t kPollenDelays = 0x65A988;     // Pollen_Delays: 10 bytes
-constexpr std::uint32_t kPollenOffsets = 0x65A998;    // PollenMote_Offsets: (dx, dz) dword pairs
+// kPollenDelays: now Pollen_Delays (symbols.toml). Pollen_Delays: 10 bytes
+// kPollenOffsets: now PollenMote_Offsets (symbols.toml). PollenMote_Offsets: (dx, dz) dword pairs
 
 // The phase handlers of other units a table holds (docs/magic_s09.md
 // section 3): the engine's below by address; the rest ours now and named in
@@ -86,7 +86,7 @@ constexpr std::uint32_t kPollenOffsets = 0x65A998;    // PollenMote_Offsets: (dx
 constexpr std::uint32_t kScriptUntilDone = bof3::addr::BattleFx_ScriptUntilDone;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -96,9 +96,9 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -124,10 +124,10 @@ void PutFloat(unsigned char* at, int v) {
 }
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* PoolRecord(unsigned index) { return Mem(kMotePool + index * 0x84u); }
+unsigned char* PoolRecord(unsigned index) { return Mem(ElemBreath_Motes_addr + index * 0x84u); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -283,11 +283,11 @@ S09_EXPORT void __cdecl BoneDartChild_Task(void) {
 // call through `steps` (four entries) by +2; the screen update while +0 and
 // +2 are set.
 static void BoneDartChildRun(const std::uint32_t* steps, const char* who) {
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(steps, 4, Sc()[2], who);
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4A99C0: the dart, through BoneDartShaft_Steps (the last
@@ -342,13 +342,13 @@ S09_EXPORT void __cdecl BoneDartShaft_Start(void) {
 S09_EXPORT void __cdecl BoneDartShaft_Fly(void) {
     MH_CALL(Sprite_ScriptTick)();
     {
-        const unsigned char* const src = Pointer(at::kSource);
+        const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         const std::int32_t x = (Long(src + 0x34) >> 9) - 0x4000;
         const std::int32_t z = (Long(src + 0x38) >> 9) - 0x4000;
         const std::int32_t y = (S16(src + 0x3E) + 0xC0) >> 1;
         MH_CALL(MagicFx_StepTowardPoint)(U(x), U(z), U(y), 0, 0x30);
     }
-    if (MH_CALL(MagicFx_NearSprite)(Pointer(at::kSource), 0x8000) == 0) return;
+    if (MH_CALL(MagicFx_NearSprite)(Pointer(BattleOdds_ActorObject_addr), 0x8000) == 0) return;
     const unsigned char target = TargetByte();
     Mem(at::kFlags + 1)[0] |= 0x20;
     MH_CALL(Battle_SetTargetFlag40)(target);
@@ -493,15 +493,15 @@ S09_EXPORT void __cdecl ElemBreath_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::ElemBreath_Start, bof3::addr::BattleFx_Finish};
     Dispatch(kPhases, 2, Sc()[1], "ElemBreath_Task");
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kMoteRecords; ++i) {
         unsigned char* const rec = PoolRecord(i);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), rec_owner);
+        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(bof3::addr::ElemBreathMote_Run);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = self;
     }
 }
@@ -525,7 +525,7 @@ S09_EXPORT void __cdecl ElemBreath_Start(void) {
         SetLong(child + 0x80, static_cast<std::int32_t>(Key(Sc())));
         child[1] = 0;
     }
-    if (Mem(kEventBattle)[0] != 0 && Pointer(kCurrentEnemy)[0x100] == 0x29) {
+    if (Mem(BattleActions_EventBattle_addr)[0] != 0 && Pointer(BattleE3_CurrentEnemy_addr)[0x100] == 0x29) {
         const unsigned slot = NewTask(0x32);
         unsigned char* const child = TaskSlot(slot);
         SetLong(child + 0x80, static_cast<std::int32_t>(Key(Sc())));
@@ -1090,7 +1090,7 @@ S09_EXPORT void __cdecl Pollen_Start(void) {
     Inc(Sc()[1]);
     for (unsigned i = 0; i < 10; ++i) {
         const unsigned slot = NewTask(4);
-        const unsigned char delay = Mem(kPollenDelays + i)[0];
+        const unsigned char delay = Mem(Pollen_Delays_addr + i)[0];
         unsigned char* const child = TaskSlot(slot);
         unsigned char* const s = Sc();
         SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
@@ -1145,8 +1145,8 @@ S09_EXPORT void __cdecl PollenMote_Run(void) {
 S09_EXPORT void __cdecl PollenMote_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    SetLong(Sc() + 0xC, Long(Mem(kPollenOffsets + 8u * Sc()[0xB])));
-    SetLong(Sc() + 0x10, Long(Mem(kPollenOffsets + 4 + 8u * Sc()[0xB])));
+    SetLong(Sc() + 0xC, Long(Mem(PollenMote_Offsets_addr + 8u * Sc()[0xB])));
+    SetLong(Sc() + 0x10, Long(Mem(PollenMote_Offsets_addr + 4 + 8u * Sc()[0xB])));
     Turn(Sc());
     {
         unsigned char* const s = Sc();

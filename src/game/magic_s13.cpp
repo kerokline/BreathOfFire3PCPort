@@ -44,7 +44,7 @@ using move_script::Word;
 // (0x9037A0..0x9037B7). Both are read again after every call, as the
 // originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The mote pool: 96 records of 0x20 bytes (SuddenDeath_Motes) and the cell
 // naming the one being run (SuddenDeath_CurrentMote).
@@ -52,7 +52,7 @@ constexpr unsigned kMotes = 0x60;
 constexpr unsigned kMoteStride = 0x20;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* M() { return SuddenDeath_CurrentMote; }
 unsigned char* MoteAt(unsigned i) { return SuddenDeath_Motes + i * kMoteStride; }
 
@@ -60,8 +60,8 @@ std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -77,7 +77,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3.
 unsigned char* ActorRecord(unsigned a) {
-    if (a < 3) return Mem(at::kParty + a * at::kPartyStride);
+    if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
     return Mem(at::kEnemies + (a - 3) * at::kEnemyStride);
 }
 
@@ -201,14 +201,14 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 S13_EXPORT void __cdecl SuddenDeath_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::SuddenDeath_Spawn, bof3::addr::MagicFx_EndWhenChildrenDone};
     StackCall(kPhases, 2, Sc()[1], "SuddenDeath_Task");
-    const std::int32_t saved = Long(Mem(at::kOwner));
+    const std::int32_t saved = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kMotes; ++i) {
         unsigned char* const m = MoteAt(i);
         if ((m[0] & 1) == 0) continue;
         SuddenDeath_CurrentMote = m;
-        SetLong(Mem(at::kOwner), Long(m + 0x1C));
+        SetLong(Mem(BattleE2_Owner_addr), Long(m + 0x1C));
         Call0(bof3::addr::SuddenDeathMote_Task);
-        SetLong(Mem(at::kOwner), saved);
+        SetLong(Mem(BattleE2_Owner_addr), saved);
     }
 }
 

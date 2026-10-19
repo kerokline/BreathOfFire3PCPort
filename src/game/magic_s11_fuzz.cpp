@@ -168,8 +168,14 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kActorRecord = 0x904B3C, kKind2 = 0x905E60;
-constexpr std::uint32_t kSanctuaryPool = 0x680780, kReached = 0x681A10, kTornadoPool = 0x681A20, kStride = 0x84;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml).
+// kKind2: now Field_Kind2Z (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
+// kSanctuaryPool: now SanctuaryMote_Pool (symbols.toml).
+// kReached: now Sanctuary_Reached (symbols.toml).
+// kTornadoPool: now TornadoMote_Pool (symbols.toml).
+constexpr std::uint32_t kStride = 0x84;
 constexpr unsigned kSanctuaryMotes = 36, kTornadoMotes = 24;
 
 // Set by the seed for the one function it matters to.
@@ -309,10 +315,10 @@ const mh::DataTable kTables[] = {{0x65AA68, 2}, {0x65AA80, 5}, {0x65AA94, 5}};
 mh::Region g_regions[] = {
     {0x7E0670, 4},                          // Gfx_PacketNext
     {0, kPrimBytes},                        // g_prims (filled in at start-up)
-    {kVertex, 0x20},                        // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},        // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                       // 0x903850.., Scratch_Swap at +0xC
-    {kKind2, 8},                            // Field_Kind2Z, Field_Kind2X
-    {kSanctuaryPool, 0x1F00},               // SanctuaryMote_Pool, Sanctuary_Reached, TornadoMote_Pool
+    {Field_Kind2Z_addr, 8},                 // Field_Kind2Z, Field_Kind2X
+    {SanctuaryMote_Pool_addr, 0x1F00},      // SanctuaryMote_Pool, Sanctuary_Reached, TornadoMote_Pool
     {0x80E980, 0x200},                      // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                      // Gfx_ClutStrip row 26
 };
@@ -328,23 +334,23 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     // a scratch word; half the time the angle word 0x90385E, which Tornado_Spin,
     // the band and the mote read back after a call
     case 2: SetWord(mh::Mem(kScratch + (v % 2 ? 0xE : 2 * (v / 2 % 8))), h >> 16); break;
-    case 3: SetLong(mh::Mem(kKind2 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 4: mh::SetPointer(kActorRecord, mh::SpriteRecord(v)); break;
+    case 3: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 4: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
     case 5: {
-        unsigned char* const r = Record(kSanctuaryPool, v % kSanctuaryMotes);
+        unsigned char* const r = Record(SanctuaryMote_Pool_addr, v % kSanctuaryMotes);
         r[0] = static_cast<unsigned char>(r[0] ^ 1);
         break;
     }
     case 6: {
-        unsigned char* const r = Record(kTornadoPool, v % kTornadoMotes);
+        unsigned char* const r = Record(TornadoMote_Pool_addr, v % kTornadoMotes);
         r[0] = static_cast<unsigned char>(r[0] ^ 1);
         break;
     }
-    case 7: mh::Mem(kReached + v % 11)[0] = Byte(h >> 24); break;
+    case 7: mh::Mem(Sanctuary_Reached_addr + v % 11)[0] = Byte(h >> 24); break;
     default: break;
     }
 }
@@ -380,9 +386,9 @@ void Seed(unsigned k) {
     Gfx_PacketNext = PrimAt(mh::Next());
     // every pool record's owner a real sprite: the pool runners make it the
     // owner cell, which the disturbance writes through
-    for (unsigned i = 0; i < kSanctuaryMotes; ++i) mh::SetPointer(kSanctuaryPool + i * kStride + 0x80, SomeSprite());
-    for (unsigned i = 0; i < kTornadoMotes; ++i) mh::SetPointer(kTornadoPool + i * kStride + 0x80, SomeSprite());
-    mh::SetPointer(kActorRecord, mh::SpriteRecord(mh::Next()));
+    for (unsigned i = 0; i < kSanctuaryMotes; ++i) mh::SetPointer(SanctuaryMote_Pool_addr + i * kStride + 0x80, SomeSprite());
+    for (unsigned i = 0; i < kTornadoMotes; ++i) mh::SetPointer(TornadoMote_Pool_addr + i * kStride + 0x80, SomeSprite());
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     g_keep_in = k == kTornado_AverageHeight;
     g_keep_party = mh::Next() % 3;
     g_keep_enemy = 3 + mh::Next() % 8;
@@ -390,8 +396,8 @@ void Seed(unsigned k) {
     if (mh::Half()) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables
-    case kSanctuary_Task: sc[1] = Byte(mh::Next() % 3); PoolBits(kSanctuaryPool, kSanctuaryMotes); break;
-    case kTornado_Task: sc[1] = Byte(mh::Next() % 2); PoolBits(kTornadoPool, kTornadoMotes); break;
+    case kSanctuary_Task: sc[1] = Byte(mh::Next() % 3); PoolBits(SanctuaryMote_Pool_addr, kSanctuaryMotes); break;
+    case kTornado_Task: sc[1] = Byte(mh::Next() % 2); PoolBits(TornadoMote_Pool_addr, kTornadoMotes); break;
     case kSanctuaryRing_Dispatch: case kSanctuaryMote_Dispatch: case kTornadoFunnel_Dispatch: case kTornadoMote_Dispatch:
         sc[1] = 0;
         break;
@@ -399,11 +405,11 @@ void Seed(unsigned k) {
     case kTornadoFunnel_Task: case kTornadoMote_Task: sc[2] = Byte(mh::Next() % 4); break;
     // the counters: at their thresholds
     case kSanctuary_Message: case kTornado_Spin: if (mh::Half()) sc[0xB] = Byte(mh::Half() ? 0 : 1); break;
-    case kSanctuary_End: if (mh::Half()) mh::Mem(mh::at::kMessageUp)[0] = 0; break;
+    case kSanctuary_End: if (mh::Half()) mh::Mem(BattleE1_MessageUp_addr)[0] = 0; break;
     case kSanctuaryRing_Spread:
         NearLong(sc + 0xC, 0x5E0 - 1);
         for (unsigned i = 0; i < 11; ++i) {
-            if (mh::Often()) mh::Mem(kReached + i)[0] = 0;
+            if (mh::Often()) mh::Mem(Sanctuary_Reached_addr + i)[0] = 0;
         }
         break;
     case kSanctuaryMote_Wait:
@@ -415,9 +421,9 @@ void Seed(unsigned k) {
     case kTornadoFunnel_Grow: if (mh::Half()) sc[0xA] = Byte(0x1D + mh::Next() % 3); break;
     case kTornadoFx_Hold: Near(sc[9], 0x9E); break;
     case kTornadoMote_Rise: Near(sc[0xA], 0x1E); break;
-    case kSanctuaryMote_Alloc: PoolDepth(kSanctuaryPool, kSanctuaryMotes); break;
-    case kTornadoMote_Alloc: PoolDepth(kTornadoPool, kTornadoMotes); break;
-    case kTornado_Start: if (mh::Often()) mh::Pointer(kActorRecord)[8] = Byte(mh::Next() % 4); break;
+    case kSanctuaryMote_Alloc: PoolDepth(SanctuaryMote_Pool_addr, kSanctuaryMotes); break;
+    case kTornadoMote_Alloc: PoolDepth(TornadoMote_Pool_addr, kTornadoMotes); break;
+    case kTornado_Start: if (mh::Often()) mh::Pointer(MagicS23_ActorSprite_addr)[8] = Byte(mh::Next() % 4); break;
     case kTornado_AverageHeight:
         if (mh::Half()) mh::Mem(mh::at::kActor)[0] = Byte(mh::Half() ? 2 : 3);
         break;
