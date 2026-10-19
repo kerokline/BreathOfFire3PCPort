@@ -183,8 +183,8 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 void PushTurnedMatrix(const unsigned char* s, short turn) {
     const short rot[4] = {0, 0, turn, 0};
     short v[4];
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(s)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(s)->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
@@ -206,15 +206,15 @@ void MarkAt(const unsigned char* record, unsigned index, unsigned parameter) {
     const unsigned slot = NewTask(parameter);
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
-    const std::int32_t x = Long(record + 0x34);
+    const std::int32_t x = rv::As<records::SpriteHead>(record)->x;
     unsigned char* const s = Sc();
     tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = 2;
     child[3] = static_cast<unsigned char>(index);
     child[4] = 5;
     tchild->x = x;
-    tchild->z = Long(record + 0x38);
-    rv::Store(tchild->height, Long(record + 0x3C));
+    tchild->z = rv::As<records::SpriteHead>(record)->z;
+    rv::Store(tchild->height, rv::As<records::SpriteHead>(record)->height);
     Inc(s[0xB]);
 }
 

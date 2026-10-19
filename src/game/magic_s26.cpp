@@ -143,8 +143,8 @@ void PushMatrixAt(const short* rot, const short* v) {
 // The vertex word triple of the task's position moved by its +0xC / +0x10
 // (both dwords, wrapping) and its height word +0x3E halved.
 void VertexOffset(unsigned k, const unsigned char* s) {
-    SetVW(k, Pos9(AddL(Long(s + 0x34), Long(s + 0xC))));
-    SetVW(k + 2, Pos9(AddL(Long(s + 0x38), Long(s + 0x10))));
+    SetVW(k, Pos9(AddL(rv::As<records::SpriteHead>(s)->x, rv::As<records::SpriteHead>(s)->step_x)));
+    SetVW(k + 2, Pos9(AddL(rv::As<records::SpriteHead>(s)->z, rv::As<records::SpriteHead>(s)->step_z)));
     SetVW(k + 4, NegHalf(S16(s + 0x3E)));
 }
 

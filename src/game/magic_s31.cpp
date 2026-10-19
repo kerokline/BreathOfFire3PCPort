@@ -199,8 +199,8 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 void PushTurnedMatrix(const unsigned char* s, short turn) {
     const short rot[4] = {0, 0, turn, 0};
     short v[4];
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(s)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(s)->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;

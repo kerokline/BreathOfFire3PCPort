@@ -1209,9 +1209,9 @@ void RingAt(unsigned height, unsigned index, const unsigned char* actor) {
     const unsigned char* const offset = Mem(TsunamiRing_Offsets_addr + 0xC * height);
     Sc()[0xB] = static_cast<unsigned char>(height);
     Sc()[0xA] = static_cast<unsigned char>(index);
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(offset)) + U(Long(actor + 0x34))));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(actor + 0x38)) + U(Long(offset + 4))));
-    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(U(Long(offset + 8)) + U(Long(actor + 0x3C))));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(offset)) + U(rv::As<records::SpriteHead>(actor)->x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(actor)->z) + U(Long(offset + 4))));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(U(Long(offset + 8)) + U(rv::As<records::SpriteHead>(actor)->height)));
     Call0(bof3::addr::TsunamiRing_PushMatrix);
     Call0(bof3::addr::TsunamiRing_DrawQuads);
     MH_CALL(Gte_PopMatrix)();

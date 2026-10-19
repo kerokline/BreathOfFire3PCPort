@@ -122,9 +122,9 @@ unsigned char* MakeDouble(unsigned parameter, unsigned char body) {
 
 // Sprite_Current's position (+0x34..+0x3C) from `from`, read afresh.
 void CopyPosition(const unsigned char* from) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(from + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(from + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(from)->height);
 }
 // The same from the owner, the owner read again for each word.
 void CopyOwnerPosition() {

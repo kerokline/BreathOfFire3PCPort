@@ -99,9 +99,9 @@ void PopupSettle() {
 }
 
 void CopyPosition(const unsigned char* from) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(from + 0x38));
-    rv::Store(rv::Current<records::BattleTask>()->height, Long(from + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(from)->height);
 }
 
 // One of the popup's two quads: a POLY_FT4 at Gfx_PacketNext, 0x30 x +0xA at

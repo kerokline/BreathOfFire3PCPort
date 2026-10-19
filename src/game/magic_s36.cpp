@@ -168,8 +168,8 @@ void RestoreRow26Stp() {
 // 0x4000, (z sar 9) - 0x4000, (y + lift) sar 0x11; the fourth word the
 // original pushes is its own uninitialised stack, which the callee never reads.
 void StepTowardSource(const unsigned char* src, std::uint32_t lift, int speed) {
-    const std::uint32_t x = static_cast<std::uint32_t>((Long(src + 0x34) >> 9) - 0x4000);
-    const std::uint32_t z = static_cast<std::uint32_t>((Long(src + 0x38) >> 9) - 0x4000);
+    const std::uint32_t x = static_cast<std::uint32_t>((rv::As<records::SpriteHead>(src)->x >> 9) - 0x4000);
+    const std::uint32_t z = static_cast<std::uint32_t>((rv::As<records::SpriteHead>(src)->z >> 9) - 0x4000);
     const std::uint32_t y = static_cast<std::uint32_t>(I32(U32(src + 0x3C) + lift) >> 0x11);
     MH_CALL(MagicFx_StepTowardPoint)(x, z, y, 0, speed);
 }

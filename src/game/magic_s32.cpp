@@ -202,9 +202,9 @@ void BeamDrawMode() {
 // A task's position (+0x34, +0x38, +0x3C) from another's, read one dword at a
 // time as the originals read it.
 void CopyPosition(unsigned char* to, const unsigned char* from) {
-    SetLong(to + 0x34, Long(from + 0x34));
-    SetLong(to + 0x38, Long(from + 0x38));
-    SetLong(to + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::As<records::SpriteHead>(to)->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::As<records::SpriteHead>(to)->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::As<records::SpriteHead>(to)->height, rv::As<records::SpriteHead>(from)->height);
 }
 
 }  // namespace

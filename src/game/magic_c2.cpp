@@ -120,9 +120,9 @@ unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, para
 int Sin(int a) { return MH_CALL(Math_Sin)(a); }
 int Cos(int a) { return MH_CALL(Math_Cos)(a); }
 void CopyPosition(unsigned char* to, const unsigned char* from) {
-    SetLong(to + 0x34, Long(from + 0x34));
-    SetLong(to + 0x38, Long(from + 0x38));
-    SetLong(to + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::As<records::SpriteHead>(to)->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::As<records::SpriteHead>(to)->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::As<records::SpriteHead>(to)->height, rv::As<records::SpriteHead>(from)->height);
 }
 
 // This group's functions called by address, as the originals call them: in the

@@ -179,7 +179,7 @@ namespace {
 // The writes are in the original's order (the slot may be the effect's own).
 void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order, unsigned char& delay) {
     const unsigned char slot = MH_CALL(BattleTask_Create)(1, 0x22);
-    const std::int32_t x = Long(record + 0x34);
+    const std::int32_t x = rv::As<records::SpriteHead>(record)->x;
     unsigned char* const t = Task(slot);
     records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     unsigned char* const cur = Sprite_Current;
@@ -190,8 +190,8 @@ void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order
     t[0xB] = order;
     t[9] = delay;
     tt->x = x;
-    tt->z = Long(record + 0x38);
-    rv::Store(tt->height, Long(record + 0x3C));
+    tt->z = rv::As<records::SpriteHead>(record)->z;
+    rv::Store(tt->height, rv::As<records::SpriteHead>(record)->height);
     Bump(order);
     delay = static_cast<unsigned char>(delay + 0x10);
     Bump(cur[0xB]);

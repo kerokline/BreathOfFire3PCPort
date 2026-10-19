@@ -146,8 +146,8 @@ void LinkAtSprite(int dy, unsigned size) {
 // caller has pushed the matrix; it pops nothing.
 void LoadActorMatrix(const unsigned char* sc, const short* angles) {
     short v[4];
-    v[0] = static_cast<short>((Long(sc + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(sc + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(sc)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(sc)->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(sc + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {

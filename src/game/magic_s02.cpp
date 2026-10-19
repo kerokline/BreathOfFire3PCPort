@@ -241,7 +241,7 @@ void GroundMove(unsigned char* s) {
     AddLong(s + 0x34, s + 0xC);
     AddLong(s + 0x38, s + 0x10);
 }
-bool BackAtStart(const unsigned char* s) { return Long(s + 0x34) == Long(s + 0x18) && Long(s + 0x38) == Long(s + 0x1C); }
+bool BackAtStart(const unsigned char* s) { return rv::As<records::BattleTask>(s)->x == rv::As<records::BattleTask>(s)->work_18 && rv::As<records::BattleTask>(s)->z == rv::As<records::BattleTask>(s)->work_1c; }
 unsigned char Tick() { return MH_CALL(Sprite_ScriptTickOnce)(); }
 
 // A dash's count-down to its hit (+9 0xFF once hit): at 0 two sounds, the hit

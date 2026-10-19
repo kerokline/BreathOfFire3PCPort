@@ -116,8 +116,8 @@ void LoadMatrix(const short* angles, const short* vector) {
 // The translation the three matrices share: the task's position in map units
 // (+0x34 / +0x38 sar 9, less 0x4000) and minus half its height.
 void Position(const unsigned char* sc, int height, short* v) {
-    v[0] = static_cast<short>((Long(sc + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(sc + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(sc)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(sc)->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(height / 2));
 }
 
@@ -198,7 +198,7 @@ void Opaque(unsigned char* e) {
 }
 
 long Ground(const unsigned char* at_position) {
-    return MH_CALL(AreaMap_Elevation)(Long(at_position + 0x34), Long(at_position + 0x38));
+    return MH_CALL(AreaMap_Elevation)(rv::As<records::SpriteHead>(at_position)->x, rv::As<records::SpriteHead>(at_position)->z);
 }
 
 // Quake_Heave's idiv by a Quake_Divisors byte: the original faults on 0.
@@ -332,8 +332,8 @@ S23_EXPORT void __cdecl FxFunnel_Wait(void) {
 // The funnel's spin: +0x20 up 0x200 for an odd +0xB, down for an even, in
 // 0..0xFFF.
 void Spin(unsigned char* sc) {
-    const std::int32_t a = Long(sc + 0x20);
-    SetLong(sc + 0x20, ((sc[0xB] & 1) ? a + 0x200 : a - 0x200) & 0xFFF);
+    const std::int32_t a = rv::As<records::BattleTask>(sc)->work_20;
+    rv::Store(rv::As<records::BattleTask>(sc)->work_20, ((sc[0xB] & 1) ? a + 0x200 : a - 0x200) & 0xFFF);
 }
 
 // original 0x4CCC90: FxFunnel_Phases[1]. Spin; 0x4FBB40 moves the funnel

@@ -193,7 +193,7 @@ void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
 }
 // Linked at the sprite's +0x34 / +0x38 (the task's or the mote's).
-void LinkAt(const unsigned char* at, int dy, unsigned size) { Link(Long(at + 0x34), Long(at + 0x38), dy, size); }
+void LinkAt(const unsigned char* at, int dy, unsigned size) { Link(rv::As<records::SpriteHead>(at)->x, rv::As<records::SpriteHead>(at)->z, dy, size); }
 // Linked at a MAGIC168 mote's +0x14 / +0x18.
 void LinkCure(int dy, unsigned size) {
     const unsigned char* const r = Cur();

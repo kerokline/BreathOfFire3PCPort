@@ -189,8 +189,8 @@ void SetMatrix(const short* angles, const short* v) {
 // ((+0x34 sar 9) - 0x4000, (+0x38 sar 9) - 0x4000, height): the task's point in
 // the GTE's units.
 void GroundPoint(const unsigned char* s, short height, short* v) {
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(s)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(s)->z >> 9) - 0x4000);
     v[2] = height;
     v[3] = 0;
 }

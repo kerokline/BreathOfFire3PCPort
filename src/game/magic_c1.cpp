@@ -910,11 +910,11 @@ void PuffPlace(const unsigned char* base, std::uint32_t offsets) {
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) +
-                                                   static_cast<std::uint32_t>(Long(base + 0x34))));
+                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z) +
-                                                   static_cast<std::uint32_t>(Long(base + 0x38))));
+                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->z)));
     rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(offsets + 8 + 12u * Sc()[0xB]))) +
-                                                   static_cast<std::uint32_t>(Long(base + 0x3C))));
+                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->height)));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sc()[9] = 0;
     Sc()[0xA] = 0;

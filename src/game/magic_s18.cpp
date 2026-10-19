@@ -169,9 +169,9 @@ template <void (__cdecl* Draw)(void)> void OrbTask(const unsigned long* phases, 
 
 // Place the task at an object's position plus (dx, dz, dy).
 void PlaceAt(const unsigned char* obj, std::uint32_t dx, std::uint32_t dz, std::uint32_t dy) {
-    rv::Store(rv::Current<records::BattleTask>()->x, AddL(Long(obj + 0x34), dx));
-    rv::Store(rv::Current<records::BattleTask>()->z, AddL(Long(obj + 0x38), dz));
-    rv::Store(rv::Current<records::BattleTask>()->height, AddL(Long(obj + 0x3C), dy));
+    rv::Store(rv::Current<records::BattleTask>()->x, AddL(rv::As<records::SpriteHead>(obj)->x, dx));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(rv::As<records::SpriteHead>(obj)->z, dz));
+    rv::Store(rv::Current<records::BattleTask>()->height, AddL(rv::As<records::SpriteHead>(obj)->height, dy));
 }
 
 }  // namespace

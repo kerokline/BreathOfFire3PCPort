@@ -162,7 +162,7 @@ void Rise() {
 // At the top of the rise: over the source sprite (+0x34, +0x38), the height
 // +0x3C moved by the source's less the owner's.
 void OverSource(unsigned char* s) {
-    SetLong(s + 0x34, rv::As<records::SpriteHead>(Source())->x);
+    rv::Store(rv::As<records::SpriteHead>(s)->x, rv::As<records::SpriteHead>(Source())->x);
     rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Source())->z);
     const std::uint32_t d = static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Source())->height) - static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height);
     AddL(Sc() + 0x3C, d);
