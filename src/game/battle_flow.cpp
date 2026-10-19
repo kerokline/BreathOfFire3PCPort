@@ -97,7 +97,7 @@ unsigned ItemRow(unsigned id) {
 // The magic file of a row: the u16 at the head of its 8-byte record; 0xFFFF
 // is none. A file asked for sets bit 2 of 0x904AA9 (the round flags' 0x400).
 void LoadMagicRow(unsigned row) {
-    const unsigned file = Word(At(at::kMagicFiles + row * 8));
+    const unsigned file = Word(At(Magic_Rows_addr + row * 8));
     if (file == 0xFFFF) return;
     g.load_dat(static_cast<int>(file));
     At(at::kLoadFlags)[0] = static_cast<unsigned char>(At(at::kLoadFlags)[0] | 4);
@@ -128,7 +128,7 @@ using HookFn = void (__cdecl*)(int);
 // on the original's stack, its own return address first; ours aborts
 // instead (CLAUDE.md rule 4, as mode_flow's Transition_Task).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch(void) {
-    const unsigned char event = At(at::kEventBattle)[0];
+    const unsigned char event = BattleActions_EventBattle;
     std::uint32_t phase = static_cast<std::uint32_t>(Long(At(at::kPhase)));
     if (event != 0 && (phase & 0xFF) != 0) {
         reinterpret_cast<HookFn>(PtrAt(at::kEventHook))(3);
@@ -157,7 +157,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleTask_RunAll(vo
         const std::int32_t owner = Long(t + 0x80);
         SetPtrAt(at::kTaskCurrent, t);
         Sprite_Current = t;
-        SetLong(At(at::kTaskOwner), owner);
+        BattleE2_Owner = owner;
         const unsigned kind = t[6];
         if (kind >= 4) bof3::Fatal("BattleTask_RunAll: slot %u has kind %u, past the four-entry table", i, kind);
         g.tasks[kind]();
@@ -216,16 +216,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(v
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObject(i);
         if (e[0] == 0) continue;
-        const unsigned char event = At(at::kEventBattle)[0];
+        const unsigned char event = BattleActions_EventBattle;
         Sprite_Current = e;
         SetPtrAt(at::kEnemyCurrent, e);
         if (event != 0) {
             if (e[1] != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(e + 0xF4))))(2);
             const unsigned state = Enemy()[0x100];
-            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(at::kEnemyStates + 4))[state]();
+            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(BattleEnemy_States_addr + 4))[state]();
         } else {
             const unsigned state = e[0x100];
-            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(at::kEnemyStates))[state]();
+            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(BattleEnemy_States_addr))[state]();
         }
     }
 }
@@ -271,7 +271,7 @@ extern "C" void __cdecl BattleEnemy_SetAnimation(unsigned animation) {
 extern "C" unsigned char __cdecl BattleEnemy_ScriptTick(void) {
     const unsigned char* const e = Enemy();
     if ((e[0x92] & 0x44) != 0) return 1;
-    if (At(at::kAnimGate)[0] != 0 && (e[0x114] & 0x10) == 0) return 1;
+    if (BattleFlow_AnimGate != 0 && (e[0x114] & 0x10) == 0) return 1;
     return g.script_tick();
 }
 
@@ -280,7 +280,7 @@ extern "C" unsigned char __cdecl BattleEnemy_ScriptTick(void) {
 extern "C" unsigned char __cdecl BattleEnemy_ScriptTickOnce(void) {
     const unsigned char* const e = Enemy();
     if ((e[0x92] & 0x44) != 0) return 1;
-    if (At(at::kAnimGate)[0] != 0 && (e[0x114] & 0x10) == 0) return 1;
+    if (BattleFlow_AnimGate != 0 && (e[0x114] & 0x10) == 0) return 1;
     return g.script_tick_once();
 }
 
@@ -296,7 +296,7 @@ extern "C" unsigned char __cdecl BattleEnemy_Chance70(void) {
     if ((Word(e + 0x92) & 0x4064) != 0) return 0;
     if (At(at::kTurnGate)[0] >= 3) return 0;
     if (At(at::kFormation)[0] == 4 && Word(At(at::kMagicId)) == 0xA1) return 0;
-    if (At(at::kAnimGate)[0] != 0 && (e[0x114] & 0x10) == 0) return 0;
+    if (BattleFlow_AnimGate != 0 && (e[0x114] & 0x10) == 0) return 0;
     if ((e[0x90] & 2) == 0) return 0;
     if ((Long(e + 0x110) & 0x8000) != 0) return 1;
     return g.crt_rand() % 100 < 70 ? 1 : 0;
@@ -325,17 +325,17 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_EnemyDefeated
     unsigned char* e = Enemy();
     // DIV-0045: the yields times the launcher's multipliers, 1 unless set
     // (src/game/cheats.cpp); the enemy's record keeps its own numbers.
-    SetLong(At(at::kExpTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kExpTotal))) + Word(e + 0x96) * Cheats_ExpMultiplier()));
-    SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kZennyTotal))) + Word(e + 0x94) * Cheats_ZennyMultiplier()));
+    BattleFlow_ExpTotal = static_cast<std::int32_t>(BattleFlow_ExpTotal + Word(e + 0x96) * Cheats_ExpMultiplier());
+    BattleFlow_ZennyTotal = static_cast<std::int32_t>(BattleFlow_ZennyTotal + Word(e + 0x94) * Cheats_ZennyMultiplier());
     SetWord(e + 0x94, 0);
     e = Enemy();
     e[0x93] = static_cast<unsigned char>(e[0x93] | 0x40);
     g.remove_from_turn_order(Sprite_Current[5]);
     g.roll_drops();
-    const auto left = static_cast<unsigned char>(At(at::kEnemiesLeft)[0] - 1);
-    At(at::kEnemiesLeft)[0] = left;
-    if (left == 0) At(at::kBattleEnd)[0] = static_cast<unsigned char>(At(at::kBattleEnd)[0] | 2);
-    if ((Long(At(at::kRoundFlags)) & 0x4000) != 0 && At(at::kActorAt)[0] == Sprite_Current[5])
+    const auto left = static_cast<unsigned char>(BattleE2_EnemiesLeft - 1);
+    BattleE2_EnemiesLeft = left;
+    if (left == 0) BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 2);
+    if ((Long(At(at::kRoundFlags)) & 0x4000) != 0 && BattleFlow_ActorAt == Sprite_Current[5])
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xBFFF);
     g.set_flag_bit(Enemy()[0x8C]);
     g.release_tint(Sprite_Current);
@@ -378,7 +378,7 @@ extern "C" void __cdecl Battle_RollDrops(void) {
         const unsigned cls = e[slot + 2];
         if (cls >= 8) bof3::Fatal("Battle_RollDrops: drop class %u, past the eight-entry table", cls);
         if (kChance[cls] < roll) continue;
-        unsigned count = At(at::kDropCount)[0];
+        unsigned count = BattleE7_DropCount;
         if (count != 0) {
             unsigned i = 0;
             do {
@@ -386,15 +386,15 @@ extern "C" void __cdecl Battle_RollDrops(void) {
                     At(at::kDropCounts)[i] = static_cast<unsigned char>(At(at::kDropCounts)[i] + 1);
                     SetWord(e + slot, 0);
                     e = Enemy();
-                    count = At(at::kDropCount)[0];
+                    count = BattleE7_DropCount;
                 }
                 i = (i + 1) & 0xFF;
             } while (i < count);
         }
         SetWord(At(at::kDropItems + count * 2), Word(e + slot));
-        At(at::kDropCounts)[At(at::kDropCount)[0]] = 1;
-        const unsigned char entries = At(at::kDropCount)[0];
-        if (entries < 0xF) At(at::kDropCount)[0] = static_cast<unsigned char>(entries + 1);
+        At(at::kDropCounts)[BattleE7_DropCount] = 1;
+        const unsigned char entries = BattleE7_DropCount;
+        if (entries < 0xF) BattleE7_DropCount = static_cast<unsigned char>(entries + 1);
         SetWord(e + slot, 0);
         e = Enemy();
     }
@@ -560,7 +560,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_DrawLabel(int
 extern "C" unsigned char __cdecl Battle_ActorIsOut(unsigned actor) {
     const unsigned a = actor & 0xFF;
     if (a < 3) {
-        const unsigned char* const m = At(at::kMembers + a * at::kMemberSize);
+        const unsigned char* const m = At(ObjTrio_addr + a * at::kMemberSize);
         if ((m[0] & 1) == 0) return 1;
         return (m[0x91] & 0x40) != 0 ? 1 : 0;
     }

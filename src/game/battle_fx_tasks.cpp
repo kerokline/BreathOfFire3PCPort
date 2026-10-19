@@ -93,7 +93,7 @@ unsigned char* Sc() { return Sprite_Current; }
 // it, the enemy index (actor - 3) is not checked, and the arithmetic is the
 // original's 32-bit wrap.
 unsigned char* ActorFlagByte(unsigned actor) {
-    if (actor <= 2) return At(at::kMembers + 0x130 + actor * at::kMemberSize);
+    if (actor <= 2) return At(ObjTrio_addr + 0x130 + actor * at::kMemberSize);
     return At(at::kEnemies + 0x110 + (actor - 3u) * at::kEnemySize);
 }
 
@@ -215,11 +215,11 @@ extern "C" void __cdecl BattleFx_PopupStart(void) {
     unsigned actor = o[5];
     if (actor <= 2) {
         std::uint32_t k = Word(o + 0x2C) * 4u + o[8];
-        SetWord(s + 0x36, static_cast<unsigned>(static_cast<signed char>(At(at::kPartyOffsets + k * 2)[0])) + Word(o + 0x2E));
+        SetWord(s + 0x36, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + k * 2)[0])) + Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         k = Word(o + 0x2C) * 4u + o[8];
-        SetWord(s + 0x3A, static_cast<unsigned>(static_cast<signed char>(At(at::kPartyOffsets + 1 + k * 2)[0])) + Word(o + 0x30));
+        SetWord(s + 0x3A, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + 1 + k * 2)[0])) + Word(o + 0x30));
     } else {
         SetWord(s + 0x36, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x2E));
@@ -321,9 +321,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PopupEnd(vo
 // put back unconditionally; the index is not checked (ours aborts past 1).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseTask(void) {
     unsigned char* const sc = Sc();
-    SetLong(At(at::kAnimSet), static_cast<std::int32_t>(at::kAnimSetBattle));
+    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetBattle);
     CallIndex(g.pose, 2, sc[1], "BattleFx_PoseTask");
-    SetLong(At(at::kAnimSet), static_cast<std::int32_t>(at::kAnimSetField));
+    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetField);
 }
 
 // original 0x4331D0 (state 0): Sprite_Current's draw bytes - +0x29 = 0, +0x25
@@ -391,9 +391,9 @@ extern "C" void __cdecl BattleFx_StepReset(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatch(void) {
     if (At(at::kPhase)[0] == 5) return;
     unsigned char* const sc = Sc();
-    SetLong(At(at::kAnimSet), static_cast<std::int32_t>(at::kAnimSetBattle));
+    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetBattle);
     CallIndex(g.watch, 5, sc[1], "BattleFx_ActorWatch");
-    SetLong(At(at::kAnimSet), static_cast<std::int32_t>(at::kAnimSetField));
+    BattleE2_AnimSet = static_cast<std::int32_t>(at::kAnimSetField);
 }
 
 // original 0x4334C0 (state 0): waits on its owner's actor (the owner
@@ -416,7 +416,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_ActorWatchT
     if (actor <= 2) {
         if (g.actor_is_out(arg) != 0) return;
         const unsigned now = PtrAt(at::kTaskOwner)[5];
-        if ((At(at::kMembers + 0x90 + now * at::kMemberSize)[0] & 0x58) == 0) return;
+        if ((At(ObjTrio_addr + 0x90 + now * at::kMemberSize)[0] & 0x58) == 0) return;
     } else {
         if (g.actor_is_out(arg) != 0) return;
         const unsigned now = PtrAt(at::kTaskOwner)[5];
@@ -481,10 +481,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_FollowOwner
 //
 // As the original has it: the flag byte is read once, before the area word.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Script(void) {
-    if ((At(at::kBattleEnd)[0] & 1) == 0) return;
-    if (Word(At(at::kLastArea)) != 0xBD) return;
-    At(at::kScriptVar7)[0] = 1;
-    At(at::kScriptVar7 + 1)[0] = 0x19;
+    if ((BattleActions_BattleEnd & 1) == 0) return;
+    if (AreaW2c_LastArea != 0xBD) return;
+    MoveScript_Var7 = 1;
+    At(MoveScript_Var7_addr + 1)[0] = 0x19;
     g.script_flags_set40();
     g.after_area_script();
 }
@@ -493,10 +493,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Sc
 // state and called by 0x4317B0 (group CC's). With the same two conditions:
 // Transition_Start(4), then byte 0x904AA2 + 1 (read after the call).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleHook_Area189Transition(void) {
-    if ((At(at::kBattleEnd)[0] & 1) == 0) return;
-    if (Word(At(at::kLastArea)) != 0xBD) return;
+    if ((BattleActions_BattleEnd & 1) == 0) return;
+    if (AreaW2c_LastArea != 0xBD) return;
     g.transition_start(4);
-    At(at::kRoundCount)[0] = static_cast<unsigned char>(At(at::kRoundCount)[0] + 1);
+    BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
 }
 
 // ===========================================================================

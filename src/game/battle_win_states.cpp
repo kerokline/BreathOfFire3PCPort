@@ -83,16 +83,16 @@ using namespace battle_win_states;
 namespace {
 
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(at::kCurrent)))); }
-const unsigned char* Target() { return At(static_cast<std::uint32_t>(Long(At(at::kTarget)))); }
-bool Choosing() { return At(at::kChoosing)[0] != 0; }
+unsigned char* Current() { return At(BattleWinStates_Current); }
+const unsigned char* Target() { return At(BattleActorCopies_Command); }
+bool Choosing() { return BattleE4_Picking != 0; }
 int S8(std::uint32_t address) { return static_cast<signed char>(At(address)[0]); }
 
 // Enemy slot t's record: 0x93B9E0 + 0x128 * (t - 3), the subtraction at full
 // width (0x597320, 0x597400 - `sub eax, 3` on the zero-extended byte).
 unsigned char* Enemy(unsigned slot) { return At(at::kEnemies + at::kEnemyStride * (slot - 3u)); }
 // A party member's battle object, ObjTrio 0x802D40 + 0x14C * m.
-unsigned char* Member(unsigned m) { return At(at::kMembers + at::kMemberStride * m); }
+unsigned char* Member(unsigned m) { return At(ObjTrio_addr + at::kMemberStride * m); }
 
 using Handler = void (__cdecl*)();
 void Run(std::uint32_t handler) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(handler))(); }
@@ -126,7 +126,7 @@ void LowFlag(unsigned char* status, unsigned value, unsigned top) {
 }
 
 // The target banner's x offset: 0x64E2BC for side bytes 0 and 3, else 0x64E2BE.
-int SideDx(unsigned side) { return (side == 0 || side == 3) ? S8(at::kSideDx) : S8(at::kOtherDx); }
+int SideDx(unsigned side) { return (side == 0 || side == 3) ? S8(at::kSideDx) : BattleWinStates_OtherDx; }
 
 }  // namespace
 
@@ -294,7 +294,7 @@ extern "C" void __cdecl BattleWin_CrossFrame() {
 // original 0x5971E0: state 1 - the selected command's label banner, unless
 // the byte 0x903A5D is set.
 extern "C" void __cdecl BattleWin_LabelFrame() {
-    if (At(at::kLabelGate)[0] != 0) return;
+    if (BattleWinStates_LabelGate != 0) return;
     g.command_label(At(at::kCrossSel)[0]);
 }
 
@@ -481,7 +481,7 @@ extern "C" void __cdecl BattleWin_MemberTargetFrame() {
     const unsigned char* m = Member(w[0xA]);
     const unsigned id = m[0x89], side = m[8];
     const int dx = SideDx(side);
-    const std::uint32_t pair = at::kMemberOffsets + 2 * (side + 4 * id);
+    const std::uint32_t pair = BattleWin_MemberTargetOffsets_addr + 2 * (side + 4 * id);
     SetWord(w + 4, static_cast<unsigned>(S8(pair) + Word(m + 0x2E) + dx));
     w = Current();
     m = Member(w[0xA]);

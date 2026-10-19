@@ -33,7 +33,7 @@ using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char& B(std::uint32_t address) { return *At(address); }
-unsigned char* Member(unsigned i) { return At(at::kMembers + i * at::kMemberSize); }
+unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kMemberSize); }
 unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
 unsigned char* Window(unsigned i) { return At(at::kWindows + i * at::kWindowSize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
@@ -70,20 +70,20 @@ void Disturb() {
     const unsigned w = h >> 20;
     unsigned char* const m = Member(w % 3);
     switch ((h >> 4) % 22) {
-    case 0: B(at::kEventBattle) = static_cast<unsigned char>(v % 2 ? 0 : v % 3 ? 0x25 : v); break;
+    case 0: B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(v % 2 ? 0 : v % 3 ? 0x25 : v); break;
     case 1: {
         static const unsigned char kBits[] = {2, 8, 0x10};
         B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ kBits[v % 3]);
         break;
     }
     case 2: B(at::kActorCount) = static_cast<unsigned char>(v % 6); break;
-    case 3: B(at::kInitiative) = static_cast<unsigned char>(v % 4); break;
+    case 3: B(BattlePhases_Initiative_addr) = static_cast<unsigned char>(v % 4); break;
     case 4: B(at::kPhase + w % 3) = static_cast<unsigned char>(v % 8); break;
-    case 5: B(at::kMenuIndex) = static_cast<unsigned char>(1 + v % 3); break;
+    case 5: B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>(1 + v % 3); break;
     case 6: B(at::kCommand) = static_cast<unsigned char>(v % 8); break;
-    case 7: B(at::kTapTimer) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 9); B(at::kTapCommand) = static_cast<unsigned char>(w % 8); break;
-    case 8: SetPtr(at::kMenuActor, Member(v % 3)); break;
-    case 9: SetPtr(at::kMenuRecord, Member(v % 3) + 0x124); break;
+    case 7: B(BossSb_Countdown_addr) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 9); B(BattleE5_GeneRow_addr) = static_cast<unsigned char>(w % 8); break;
+    case 8: SetPtr(BattleE4_MenuActor_addr, Member(v % 3)); break;
+    case 9: SetPtr(BattleActorCopies_Command_addr, Member(v % 3) + 0x124); break;
     case 10:
         switch (v % 7) {
         case 0: m[0] = static_cast<unsigned char>(m[0] ^ 1); break;
@@ -95,20 +95,20 @@ void Disturb() {
         default: SetLong(m + 0x130, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(m + 0x130)) ^ 0x4000u)); break;
         }
         break;
-    case 11: SetWord(At(at::kInputPressed), (h >> 16) & 0xF10C); break;
-    case 12: SetWord(At(at::kInputHeld), (h >> 16) & 0xF10C); break;
+    case 11: SetWord(At(Input_Pressed_addr), (h >> 16) & 0xF10C); break;
+    case 12: SetWord(At(Input_Held_addr), (h >> 16) & 0xF10C); break;
     case 13: SetWord(At(at::kWindows + (w % 16) * at::kWindowSize + 4 + 2 * (v % 2)), h >> 16); break;
     case 14: Window(1 + w % 4)[3] = static_cast<unsigned char>(v % 3); break;
-    case 15: B(at::kMessageCount) = static_cast<unsigned char>(v % 9); break;
-    case 16: SetWord(At(at::kWaitFrames), v % 3); break;
+    case 15: B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(v % 9); break;
+    case 16: SetWord(At(BattleResult_TickStep_addr), v % 3); break;
     case 17: Sprite_Current = v % 2 ? Member(w % 3) : EnemyObj(w % 8); break;
     case 18: B(at::kFacing) = static_cast<unsigned char>(v); break;
-    case 19: B(at::kAE9) = static_cast<unsigned char>(B(at::kAE9) ^ 2); B(at::kWindows) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 20: B(at::kActorsIn) = static_cast<unsigned char>(v); break;
+    case 19: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) ^ 2); B(at::kWindows) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 20: B(BattleSprites_PartyPick_addr) = static_cast<unsigned char>(v); break;
     default: {
         if (v % 2) m[0x90] = static_cast<unsigned char>(m[0x90] ^ 0x20);
         else SetLong(m + 0x134, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(m + 0x134)) ^ (v % 4 == 1 ? 2u : 0x4000u)));
-        SetWord(At(at::kBattleMusic), h >> 16);
+        SetWord(At(Game_AreaNumber_addr), h >> 16);
         break;
     }
     }
@@ -121,7 +121,7 @@ void Disturb() {
 // section 4), from bits of its own hash, not Disturb's.
 std::uint32_t H2() { return (Hash() ^ 0x165667B1u) * 0x27D4EB2Du; }
 bool Nudging(std::uint32_t h) { return h % 4 != 0; }
-void FlipEvent(std::uint32_t h) { B(at::kEventBattle) = static_cast<unsigned char>(B(at::kEventBattle) ? 0 : 1 + (h >> 24) % 0x30); }
+void FlipEvent(std::uint32_t h) { B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(B(BattleActions_EventBattle_addr) ? 0 : 1 + (h >> 24) % 0x30); }
 
 // The void(void) callees, by a number of their own; the six stack-table
 // handlers (100..), the .data tables' sixteen (120..). Every one may move
@@ -136,13 +136,13 @@ template <unsigned N> void __cdecl StubV() {
     const std::uint32_t h = H2();
     if (Nudging(h)) {
         if constexpr (N == 50) {
-            B(at::kSubStep) = static_cast<unsigned char>((h >> 8) % at::kMenuStepCount);
+            B(BattleE4_Step2_addr) = static_cast<unsigned char>((h >> 8) % at::kMenuStepCount);
         } else if constexpr (N >= 22 && N <= 24) {
             Member((h >> 8) % 3)[0] = static_cast<unsigned char>(Member((h >> 8) % 3)[0] ^ 1);
         } else if constexpr (N == 25) {
             for (unsigned i = 0; i < 3; ++i) Member(i)[0xA0 + (h >> (8 + 3 * i)) % 0x40] ^= static_cast<unsigned char>(1 + (h >> 20) % 0xFF);
         } else if constexpr (N == 34) {
-            B(at::kSubStep) = static_cast<unsigned char>(h >> 8);
+            B(BattleE4_Step2_addr) = static_cast<unsigned char>(h >> 8);
         } else if ((h >> 2) % 2) {
             FlipEvent(h);
         } else {
@@ -187,7 +187,7 @@ void __cdecl StubLoadDat(int file) {
 // The event hook moves the step: the original increments it after the call.
 void __cdecl StubEventHook(int n) {
     Record(29, static_cast<std::uint32_t>(n));
-    if (Hash() % 2) B(at::kStep) = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 2) B(BattleActions_Step_addr) = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 // Mostly a record 0..15, now and then 0xFF (taken) - the upper bytes
@@ -206,7 +206,7 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
         case 2: SetWord(m + 0x2E, h2 >> 16); break;
         case 3: SetWord(m + 0x30, h2 >> 16); break;
         case 4: B(at::kFacing) = static_cast<unsigned char>(h2 >> 12); break;
-        default: B(at::kInitiative) = static_cast<unsigned char>((h2 >> 12) % 4); break;
+        default: B(BattlePhases_Initiative_addr) = static_cast<unsigned char>((h2 >> 12) % 4); break;
         }
     }
     Disturb();
@@ -218,7 +218,7 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
 // The intro re-reads the initiative byte after these.
 void NudgeInitiative() {
     const std::uint32_t h = H2();
-    if (Nudging(h)) B(at::kInitiative) = static_cast<unsigned char>((h >> 8) % 4);
+    if (Nudging(h)) B(BattlePhases_Initiative_addr) = static_cast<unsigned char>((h >> 8) % 4);
 }
 const unsigned char* __cdecl StubMsgPtr(unsigned id) {
     Record(31, id & 0xFFFF);
@@ -231,13 +231,13 @@ unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value)
     Record(32, a, b, static_cast<std::uint32_t>(value));
     const std::uint32_t h = H2();
     if (Nudging(h)) {
-        if ((h >> 2) % 2) B(at::kInitiative) = static_cast<unsigned char>((h >> 8) % 4);
-        else B(at::kMessageCount) = static_cast<unsigned char>((h >> 8) % 9);
+        if ((h >> 2) % 2) B(BattlePhases_Initiative_addr) = static_cast<unsigned char>((h >> 8) % 4);
+        else B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>((h >> 8) % 9);
     }
     Disturb();
     return Hash();
 }
-void __cdecl StubOpenStatus(unsigned s) { Record(33, s); if (Nudging(H2())) B(at::kSubStep) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
+void __cdecl StubOpenStatus(unsigned s) { Record(33, s); if (Nudging(H2())) B(BattleE4_Step2_addr) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
 void __cdecl StubOpenSub1(unsigned s) { Record(35, s); NudgeInitiative(); Disturb(); }
 unsigned char __cdecl StubQueuePending() { Record(36); NudgeInitiative(); Disturb(); return static_cast<unsigned char>(Hash() % 2 ? 0 : Hash() | 1); }
 // 0 a third of the time; 0x100 now and then (a byte test would miss it).
@@ -248,10 +248,10 @@ int __cdecl StubLoadDone() {
     const std::uint32_t h2 = H2();
     if (Nudging(h2)) {
         switch ((h2 >> 2) % 4) {
-        case 0: B(at::kInitiative) = static_cast<unsigned char>((h2 >> 8) % 4); break;
-        case 1: B(at::kMenuIndex) = static_cast<unsigned char>((h2 >> 8) % 4); break;
+        case 0: B(BattlePhases_Initiative_addr) = static_cast<unsigned char>((h2 >> 8) % 4); break;
+        case 1: B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>((h2 >> 8) % 4); break;
         case 2: B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10); break;
-        default: SetWord(At(at::kWaitFrames), (h2 >> 8) % 3); break;
+        default: SetWord(At(BattleResult_TickStep_addr), (h2 >> 8) % 3); break;
         }
     }
     Disturb();
@@ -260,10 +260,10 @@ int __cdecl StubLoadDone() {
 }
 void __cdecl StubOpenSub2(unsigned s) { Record(38, s); Disturb(); }
 void __cdecl StubOpenSub3(unsigned s) { Record(39, s); if (Nudging(H2())) B(at::kPhase) = static_cast<unsigned char>(H2() >> 8); Disturb(); }
-unsigned long __cdecl StubSpawnCopies() { Record(43); if (Nudging(H2())) B(at::kStep) = static_cast<unsigned char>(H2() >> 8); Disturb(); return Hash(); }
+unsigned long __cdecl StubSpawnCopies() { Record(43); if (Nudging(H2())) B(BattleActions_Step_addr) = static_cast<unsigned char>(H2() >> 8); Disturb(); return Hash(); }
 unsigned long __cdecl StubShowName(const unsigned char* actor) {
     Record(44, Address(actor));
-    if (Nudging(H2())) B(at::kStep) = static_cast<unsigned char>(H2() >> 8);
+    if (Nudging(H2())) B(BattleActions_Step_addr) = static_cast<unsigned char>(H2() >> 8);
     Disturb();
     return Hash();
 }
@@ -276,15 +276,15 @@ void __cdecl StubSound(unsigned short id) {
     if (Nudging(h)) {
         const unsigned v = (h >> 8) & 0xFF;
         switch ((h >> 2) % 8) {
-        case 0: B(at::kMenuIndex) = static_cast<unsigned char>(1 + v % 3); break;
-        case 1: B(at::kStep) = static_cast<unsigned char>(v); break;
+        case 0: B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>(1 + v % 3); break;
+        case 1: B(BattleActions_Step_addr) = static_cast<unsigned char>(v); break;
         case 2: B(at::kCommand) = static_cast<unsigned char>(v % 8); break;
-        case 3: B(at::kTapTimer) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 9); B(at::kTapCommand) = static_cast<unsigned char>((h >> 16) % 8); break;
+        case 3: B(BossSb_Countdown_addr) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 9); B(BattleE5_GeneRow_addr) = static_cast<unsigned char>((h >> 16) % 8); break;
         case 4: SetWord(Window(2) + 4 + 2 * (v % 2), h >> 16); break;
-        case 5: SetWord(At(at::kInputPressed), (h >> 16) & 0xF10C); break;
-        case 6: SetWord(At(at::kInputHeld), (h >> 16) & 0xF10C); break;
+        case 5: SetWord(At(Input_Pressed_addr), (h >> 16) & 0xF10C); break;
+        case 6: SetWord(At(Input_Held_addr), (h >> 16) & 0xF10C); break;
         default: {
-            unsigned char* const r = At(static_cast<std::uint32_t>(Long(At(at::kMenuRecord))));
+            unsigned char* const r = At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr))));
             r[0x10] = static_cast<unsigned char>(r[0x10] ^ 2);
             break;
         }
@@ -297,7 +297,7 @@ void __cdecl StubSound(unsigned short id) {
 unsigned char __cdecl StubReturnItem(unsigned slot, unsigned item) {
     Record(46, slot & 0xFF, item & 0xFFFF);
     const std::uint32_t h = H2();
-    if (Nudging(h)) SetPtr(at::kMenuActor, Member((h >> 8) % 3));
+    if (Nudging(h)) SetPtr(BattleE4_MenuActor_addr, Member((h >> 8) % 3));
     Disturb();
     return static_cast<unsigned char>(Hash());
 }
@@ -310,7 +310,7 @@ void NudgeSelect() {
     switch ((h >> 2) % 3) {
     case 0: B(at::kCommand) = static_cast<unsigned char>((h >> 8) % 8); break;
     case 1: SetWord(Window(1) + 4 + 2 * ((h >> 8) % 2), h >> 16); break;
-    default: B(at::kStep) = static_cast<unsigned char>(h >> 8); break;
+    default: B(BattleActions_Step_addr) = static_cast<unsigned char>(h >> 8); break;
     }
 }
 void __cdecl StubDrawCross(int x, int y) {
@@ -473,19 +473,19 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kMembers, 0x3E4},                                      // ObjTrio
+    {ObjTrio_addr, 0x3E4},                                      // ObjTrio
     {at::kWindows, 0x240},                                      // windows 0..15
     {at::kWindows + 0xFF * at::kWindowSize, 8},                 // window 0xFF's, which Window_Alloc's 0xFF reaches
-    {at::kClutFrom, 0x20},
-    {at::kClutTo, 0x20},
-    {at::kInputHeld, 8},                                        // Input_Held .. Input_Pressed
-    {at::kConfirmButtons, 4},                                   // Field_ConfirmButtons, Field_CancelButtons
+    {Gfx_ClutStripSource_addr + 0x1fe0, 0x20},
+    {Gfx_ClutStrip_addr + 0x1fe0, 0x20},
+    {Input_Held_addr, 8},                                       // Input_Held .. Input_Pressed
+    {Field_ConfirmButtons_addr, 4},                             // Field_ConfirmButtons, Field_CancelButtons
     {0x904A00, 0x300},                                          // the battle's globals, the hook, Text_Records[0]
-    {at::kBattleMusic, 4},                                      // 0x904EFC, 0x904EFE
+    {Game_AreaNumber_addr, 4},                                  // 0x904EFC, 0x904EFE
     {0x937F88, 4},                                              // Sprite_Current
     {0x939EC0, 0x500},                                          // 0x939EC4, 0x939F60, 0x939FA0, the message records
     {at::kB8E0, 0x9D0},                                         // 0x93B8E0, the eight enemy objects, 0x93C2A0..A2
-    {at::kStatusOffsets, 0xA00},                                // constant, random here and put back: 0x64DF70, 0x64E2BC
+    {BattleWin_MemberTargetOffsets_addr, 0xA00},                // constant, random here and put back: 0x64DF70, 0x64E2BC
 };
 constexpr unsigned kRegionBytes = 0x3E4 + 0x240 + 8 + 0x20 + 0x20 + 8 + 4 + 0x300 + 4 + 4 + 0x500 + 0x9D0 + 0xA00;
 
@@ -525,15 +525,15 @@ bool Half() { return (Next() & 1) != 0; }
 // enemies, the event hook.
 void Fix() {
     const unsigned actor = Next() % 3;
-    SetPtr(at::kMenuActor, Member(actor));
-    SetPtr(at::kMenuRecord, Member(Half() ? actor : Next() % 3) + 0x124);
+    SetPtr(BattleE4_MenuActor_addr, Member(actor));
+    SetPtr(BattleActorCopies_Command_addr, Member(Half() ? actor : Next() % 3) + 0x124);
     Sprite_Current = Half() ? Member(Next() % 3) : EnemyObj(Next() % 8);
     for (unsigned i = 0; i < 3; ++i) B(at::kEntryOrder + i) = static_cast<unsigned char>(Next() % 3);
-    B(at::kMenuIndex) = static_cast<unsigned char>(Next() % 4);
-    B(at::kMessageCount) = static_cast<unsigned char>(Next() % 9);
+    B(BattleActorCopies_EntryCount_addr) = static_cast<unsigned char>(Next() % 4);
+    B(BattleE5_EnemyMessageCount_addr) = static_cast<unsigned char>(Next() % 9);
     for (unsigned n = 0; n <= 8; ++n) B(at::kMessages + 4 * n) = static_cast<unsigned char>(Next() % 8);
-    SetPtr(at::kEventHook, reinterpret_cast<const void*>(&StubEventHook));
-    if (Half()) B(at::kEventBattle) = 0;
+    SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubEventHook));
+    if (Half()) B(BattleActions_EventBattle_addr) = 0;
     if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) & ~0x12u);
 }
 
@@ -542,11 +542,11 @@ void Seed(unsigned k) {
     switch (k) {
     case kFrame:
         if (Half()) B(at::kWindows) = 0;
-        if (Half()) B(at::kAE9) = static_cast<unsigned char>(B(at::kAE9) & ~2u);
+        if (Half()) B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(B(BattleMisc_BannerKinds_addr) & ~2u);
         if (Half()) B(at::kPhase) = 5;
         break;
     case kStart:
-        B(at::kStep) = static_cast<unsigned char>(Next() % 2);
+        B(BattleActions_Step_addr) = static_cast<unsigned char>(Next() % 2);
         break;
     case kInit: {
         B(at::kActorCount) = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % 16);
@@ -558,17 +558,17 @@ void Seed(unsigned k) {
             SetWord(p + 0x98, (max >> 2) + (Next() % 3) - 1);
         }
         static const unsigned char kEvent[] = {0, 0, 0x25, 0x10, 1};
-        B(at::kEventBattle) = kEvent[Next() % 5];
+        B(BattleActions_EventBattle_addr) = kEvent[Next() % 5];
         break;
     }
     case kIntro:
-        B(at::kSubStep) = static_cast<unsigned char>(Next() % 4);
+        B(BattleE4_Step2_addr) = static_cast<unsigned char>(Next() % 4);
         break;
     case kOpenWindows:
     case kFinish:
     case kPrepareCross: {
         static const unsigned char kInit[] = {0, 1, 2, 3, 0xFF};
-        B(at::kInitiative) = kInit[Next() % 5];
+        B(BattlePhases_Initiative_addr) = kInit[Next() % 5];
         if (Half()) Window(2)[3] = 1;
         for (unsigned i = 0; i < 3; ++i) if (Half()) Member(i)[0] = static_cast<unsigned char>(Member(i)[0] | 1);
         break;
@@ -577,7 +577,7 @@ void Seed(unsigned k) {
         if (Half()) Window(1)[3] = 1;
         break;
     case kInput:
-        B(at::kStep) = static_cast<unsigned char>(Next() % at::kInputStepCount);
+        B(BattleActions_Step_addr) = static_cast<unsigned char>(Next() % at::kInputStepCount);
         break;
     case kRoundStart:
         if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x10);
@@ -596,13 +596,13 @@ void Seed(unsigned k) {
         break;
     case kCommandSelect: {
         static const unsigned char kTimer[] = {0, 0, 1, 2, 8};
-        B(at::kTapTimer) = kTimer[Next() % 5];
-        B(at::kTapCommand) = static_cast<unsigned char>(Next() % 8);
+        B(BossSb_Countdown_addr) = kTimer[Next() % 5];
+        B(BattleE5_GeneRow_addr) = static_cast<unsigned char>(Next() % 8);
         B(at::kCommand) = static_cast<unsigned char>(Next() % 8);
         static const std::uint16_t kShape[] = {0x10, 0x20, 0x40, 0x80, 0x43, 0x30};
         const unsigned cancel = kShape[Next() % 6], confirm = kShape[Next() % 6];
-        SetWord(At(at::kCancelButtons), cancel);
-        SetWord(At(at::kConfirmButtons), confirm);
+        SetWord(At(Field_CancelButtons_addr), cancel);
+        SetWord(At(Field_ConfirmButtons_addr), confirm);
         static const std::uint16_t kDirs[] = {0x1000, 0x4000, 0x8000, 0x2000, 0x0004, 0x0008};
         unsigned pressed = 0, held = 0;
         switch (Next() % 8) {
@@ -616,16 +616,16 @@ void Seed(unsigned k) {
             const unsigned d = Next() % 6;
             held = kDirs[d] | (Half() ? kDirs[Next() % 6] : 0u);
             if (Often()) pressed = kDirs[d];
-            if (Often()) B(at::kTapCommand) = static_cast<unsigned char>(d + 1);
-            if (Half() && B(at::kTapTimer) == 0) B(at::kTapTimer) = 8;
+            if (Often()) B(BattleE5_GeneRow_addr) = static_cast<unsigned char>(d + 1);
+            if (Half() && B(BossSb_Countdown_addr) == 0) B(BossSb_Countdown_addr) = 8;
             break;
         }
         default: break;
         }
         if (Next() % 4 == 0) pressed |= Next() & 0xF1FF;
         if (Next() % 4 == 0) held |= Next() & 0xF1FF;
-        SetWord(At(at::kInputPressed), pressed);
-        SetWord(At(at::kInputHeld), held);
+        SetWord(At(Input_Pressed_addr), pressed);
+        SetWord(At(Input_Held_addr), held);
         for (unsigned i = 0; i < 3; ++i) {
             unsigned char* const a = Member(i);
             a[0x125] = static_cast<unsigned char>(Often() ? 5 : Next());
@@ -634,10 +634,10 @@ void Seed(unsigned k) {
         break;
     }
     case kConfirmDispatch:
-        B(at::kSubStep) = static_cast<unsigned char>(Next() % at::kMenuStepCount);
+        B(BattleE4_Step2_addr) = static_cast<unsigned char>(Next() % at::kMenuStepCount);
         break;
     case kCommit:
-        B(at::kStep) = static_cast<unsigned char>(Next() % at::kCommitStepCount);
+        B(BattleActions_Step_addr) = static_cast<unsigned char>(Next() % at::kCommitStepCount);
         break;
     case kCommitRound:
         if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x10);
@@ -649,13 +649,13 @@ void Seed(unsigned k) {
         }
         break;
     case kQueueMessages:
-        if (Often()) B(at::kMessageBusy) = 0;
-        if (Next() % 4 == 0) B(at::kMessageCount) = 0;
+        if (Often()) B(BattleE1_MessageUp_addr) = 0;
+        if (Next() % 4 == 0) B(BattleE5_EnemyMessageCount_addr) = 0;
         break;
     case kWaitLoad: {
         if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x10);
         static const std::uint16_t kWait[] = {0, 0, 1, 2, 0xFFFF, 0x8000};
-        SetWord(At(at::kWaitFrames), Often() ? kWait[Next() % 6] : Next());
+        SetWord(At(BattleResult_TickStep_addr), Often() ? kWait[Next() % 6] : Next());
         break;
     }
     default:
@@ -690,7 +690,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         break;
     case kInit:
         for (unsigned i = 0; i < 3; ++i) {
-            const std::uint32_t p = at::kMembers + i * at::kMemberSize;
+            const std::uint32_t p = ObjTrio_addr + i * at::kMemberSize;
             if (!(Byte(in, p) & 1)) continue;
             if (Byte(out, p + 0x91) & 0x20) ++g_cover.low_hp_set;
             else ++g_cover.low_hp_cleared;
@@ -708,11 +708,11 @@ void Cover(unsigned k, const State& in, const State& out) {
         else if (Byte(out, at::kPhase) != Byte(in, at::kPhase)) ++g_cover.none_left;
         break;
     case kCommandSelect:
-        if (Byte(out, at::kTapCommand) == 0 && Byte(in, at::kTapCommand) != 0 && Byte(out, at::kStep) != (Byte(in, at::kStep) + 2) % 256)
+        if (Byte(out, BattleE5_GeneRow_addr) == 0 && Byte(in, BattleE5_GeneRow_addr) != 0 && Byte(out, BattleActions_Step_addr) != (Byte(in, BattleActions_Step_addr) + 2) % 256)
             ++g_cover.tap_greyed;
-        if (Byte(out, at::kStep) == (Byte(in, at::kStep) + 2) % 256 && Byte(out, at::kTapTimer) == 0 && Count(out, 45) && out.log[0].a == 0x101)
+        if (Byte(out, BattleActions_Step_addr) == (Byte(in, BattleActions_Step_addr) + 2) % 256 && Byte(out, BossSb_Countdown_addr) == 0 && Count(out, 45) && out.log[0].a == 0x101)
             ++g_cover.chose_by_tap;
-        if (Byte(out, at::kTapTimer) == 8) ++g_cover.tap_started;
+        if (Byte(out, BossSb_Countdown_addr) == 8) ++g_cover.tap_started;
         if (Byte(in, at::kCommand) != 0 && Byte(out, at::kCommand) == 0 && out.log_n == 0) ++g_cover.cleared_command;
         break;
     case kQueueMessages:
@@ -793,9 +793,9 @@ void SelfTest() {
     static State saved, input, their_out, our_out;
     std::uint32_t saved_input[at::kInputStepCount], saved_menu[at::kMenuStepCount], saved_commit[at::kCommitStepCount];
     Capture(saved);
-    SwapTable(at::kInputSteps, kInputTargets, kInputStubs, at::kInputStepCount, saved_input);
-    SwapTable(at::kMenuSteps, kMenuTargets, kMenuStubs, at::kMenuStepCount, saved_menu);
-    SwapTable(at::kCommitSteps, kCommitTargets, kCommitStubs, at::kCommitStepCount, saved_commit);
+    SwapTable(Battle_InputSteps_addr, kInputTargets, kInputStubs, at::kInputStepCount, saved_input);
+    SwapTable(Battle_MenuSteps_addr, kMenuTargets, kMenuStubs, at::kMenuStepCount, saved_menu);
+    SwapTable(Battle_CommitSteps_addr, kCommitTargets, kCommitStubs, at::kCommitStepCount, saved_commit);
     g = kStubs;
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
@@ -836,9 +836,9 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    RestoreTable(at::kInputSteps, saved_input, at::kInputStepCount);
-    RestoreTable(at::kMenuSteps, saved_menu, at::kMenuStepCount);
-    RestoreTable(at::kCommitSteps, saved_commit, at::kCommitStepCount);
+    RestoreTable(Battle_InputSteps_addr, saved_input, at::kInputStepCount);
+    RestoreTable(Battle_MenuSteps_addr, saved_menu, at::kMenuStepCount);
+    RestoreTable(Battle_CommitSteps_addr, saved_commit, at::kCommitStepCount);
     Apply(saved);
 
     bof3::Log("shadow      battle_phases self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

@@ -88,8 +88,8 @@ void Disturb() {
     case 4: o[party ? at::kPCounter : at::kECounter] = v; break;
     case 5: if (party) SetWord(o + at::kPHp + 2 * (w % 5), v * 3); else o[at::kECount4000] = static_cast<unsigned char>(v % 4); break;
     case 6: SetWord(o + (party ? at::kPAgi : at::kEAgi), v); break;
-    case 7: At(at::kTimer)[0] = static_cast<unsigned char>(v % 3); break;
-    case 8: SetWord(At(at::kPending), (w & 1) ? 0 : v); break;
+    case 7: At(BattleFlow_AnimGate_addr)[0] = static_cast<unsigned char>(v % 3); break;
+    case 8: SetWord(At(BattleActions_Pending_addr), (w & 1) ? 0 : v); break;
     case 9: Sprite_Current = At(0x10000u + (h & 0xFFFF0u)); break;
     case 10: if (party) o[at::kPByteAE] = v; break;
     case 11: if (party) o[at::kPCharId] = static_cast<unsigned char>(v % 9); break;
@@ -109,7 +109,7 @@ unsigned __cdecl StubAbsent(unsigned a) { Record(1, a & 0xFF); Disturb(); return
 unsigned __cdecl StubCanAct(unsigned a) { Record(2, a & 0xFF); Disturb(); return Answer(4); }
 void __cdecl StubSetPending(unsigned a) {
     Record(3, a & 0xFF);
-    SetWord(At(at::kPending), Word(At(at::kPending)) | ((1u << (a & 31)) & 0xFFFF));
+    SetWord(At(BattleActions_Pending_addr), Word(At(BattleActions_Pending_addr)) | ((1u << (a & 31)) & 0xFFFF));
     Disturb();
 }
 void __cdecl StubMessage(unsigned a, unsigned b, unsigned c, unsigned d, const unsigned char* text) {
@@ -159,7 +159,7 @@ unsigned __cdecl StubReturnItem(unsigned slot, unsigned item) {
 void __cdecl StubReleaseTint(unsigned char* object) {
     Record(13, Address(object));
     const std::uint32_t a = Address(object);
-    if (a >= at::kParty && a < at::kParty + 3 * at::kPartyStride) SetWord(object + at::kPStatus, Hash());
+    if (a >= ObjTrio_addr && a < ObjTrio_addr + 3 * at::kPartyStride) SetWord(object + at::kPStatus, Hash());
     else SetWord(object + at::kEStatus, Hash());
     Sprite_Current = At(0x30000u + (Hash() & 0xFFF0u));
     Disturb();
@@ -359,8 +359,8 @@ void SeedActors() {
         if (Next() % 4 == 0) SetLong(o + (i <= 2 ? at::kPFlags : at::kEFlags), static_cast<std::int32_t>(Next() & Next()));
         if (Next() % 4 == 0) SetWord(o + (i <= 2 ? at::kPStatus : at::kEStatus), Next() & Next() & Next());
     }
-    if (Half()) At(at::kTimer)[0] = static_cast<unsigned char>(Next() % 3);
-    if (Half()) SetWord(At(at::kPending), 0);
+    if (Half()) At(BattleFlow_AnimGate_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    if (Half()) SetWord(At(BattleActions_Pending_addr), 0);
 }
 
 Args Seed(unsigned k) {
@@ -378,8 +378,8 @@ Args Seed(unsigned k) {
         break;
     }
     case kHpDriftK:
-        if (Half()) At(at::kHpDriftMode)[0] = 5;
-        if (Half()) At(at::kField12)[0] = 0x12;
+        if (Half()) At(Cond_Flags_addr + 0xd0)[0] = 5;
+        if (Half()) At(BattlePhases_B89_addr)[0] = 0x12;
         for (unsigned i = 0; i <= 2; ++i) {
             unsigned char* const o = P(i);
             static const unsigned kIds[] = {0, 6, 7, 1, 5, 8};
@@ -407,12 +407,12 @@ Args Seed(unsigned k) {
     case kApK:
         if (Often()) {
             static const unsigned kCost[] = {0, 1, 2, 3, 0x7F, 0xFE, 0xFF};
-            SetLong(At(at::kApCost), static_cast<std::int32_t>(Garbage(0xFF, Pick(kCost, 7))));
+            SetLong(At(BattleActions_ApCost_addr), static_cast<std::int32_t>(Garbage(0xFF, Pick(kCost, 7))));
         }
         for (unsigned i = 0; i <= 2; ++i) {
             unsigned char* const o = P(i);
             if (Often()) o[at::kPFlags] = static_cast<unsigned char>((Next() & ~0x22u) | (Often() ? 2 : 0) | (Half() ? 0 : 0x20));
-            const unsigned cost = ((Long(At(at::kApCost)) & 0xFF) + 1) / 2;
+            const unsigned cost = ((Long(At(BattleActions_ApCost_addr)) & 0xFF) + 1) / 2;
             if (Often()) SetWord(o + at::kPAp, cost + (Next() % 3) - 1);
         }
         break;
@@ -447,7 +447,7 @@ Args Seed(unsigned k) {
     case kSkippedK: {
         const unsigned actor = Next() % 11;
         x.a[0] = Byte(actor);
-        if (Half()) At(at::kTimer)[0] = static_cast<unsigned char>(Half() ? 0 : 1 + Next() % 3);
+        if (Half()) At(BattleFlow_AnimGate_addr)[0] = static_cast<unsigned char>(Half() ? 0 : 1 + Next() % 3);
         if (Half()) Obj(actor)[actor <= 2 ? at::kPFlags : at::kEFlags] ^= 0x10;
         break;
     }
@@ -487,9 +487,9 @@ Args Seed(unsigned k) {
         x.a[0] = Byte(actor);
         static const unsigned kFrom[] = {0, 1, 1, 2, 3, 8, 0x10, 0xFF};
         static const unsigned kTo[] = {0, 1, 2, 3, 4, 8, 9, 0x10, 0xFF};
-        if (Often()) At(at::kQueueFrom)[0] = static_cast<unsigned char>(Pick(kFrom, 8));
-        if (Often()) At(at::kQueueTo)[0] = static_cast<unsigned char>(Pick(kTo, 9));
-        const unsigned from = static_cast<unsigned char>(At(at::kQueueFrom)[0] - 1), to = At(at::kQueueTo)[0];
+        if (Often()) At(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(Pick(kFrom, 8));
+        if (Often()) At(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(Pick(kTo, 9));
+        const unsigned from = static_cast<unsigned char>(At(BossSe_RoundSlot_addr)[0] - 1), to = At(BattleDamage_TurnCount_addr)[0];
         if (from < to && Often()) {
             // in the range: at its first, its last, or anywhere in it
             const unsigned r = Next() % 3;

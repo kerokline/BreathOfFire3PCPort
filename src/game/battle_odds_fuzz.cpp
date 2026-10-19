@@ -122,15 +122,15 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every game region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {kBannerCurrent, 4}, {kBanners, 0x60}, {kBannerKinds, 1}, {kScratch, 1},       {kWindows, kWindowBytes},
-    {kResult, 4},        {kTarget, 1},     {kActing, 4},      {kActorObject, 4},   {kFlagTarget, 1},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60}, {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},       {kWindows, kWindowBytes},
+    {BattleDamage_Result_addr, 4},        {kTarget, 1},     {kActing, 4},      {BattleOdds_ActorObject_addr, 4},   {kFlagTarget, 1},
     {kRoundFlags, 4},    {kSprite, 4},     {kTints, kTintBytes},
 };
 
 // Every region a function could write, the game's and the fuzz's.
 const Region g_writes[] = {
-    {kBannerCurrent, 4}, {kBanners, 0x60},  {kBannerKinds, 1}, {kScratch, 1},
-    {kWindows, kWindowBytes}, {kResult, 4}, {kRoundFlags, 4},  {kActorObject, 4},
+    {BattleMisc_BannerCurrent_addr, 4}, {kBanners, 0x60},  {BattleMisc_BannerKinds_addr, 1}, {kScratch, 1},
+    {kWindows, kWindowBytes}, {BattleDamage_Result_addr, 4}, {kRoundFlags, 4},  {BattleOdds_ActorObject_addr, 4},
     {kSprite, 4},        {kTints, kTintBytes}, {0, sizeof g_objects}, {0, sizeof g_results},
 };
 Region g_regions[sizeof g_writes / sizeof g_writes[0]];
@@ -163,11 +163,11 @@ U SomeObject(U h) { return Addr(g_objects) + (h % 16) * 0x20; }
 // BattleBanner_NoneOfKind: the kind; it may move the current entry, change the
 // kinds seen or the window bytes the handlers store after it.
 U __cdecl StubNoneOfKind(U kind) {
-    Record(1, kind, GetLong(At(kBannerCurrent)), At(kBannerKinds)[0]);
+    Record(1, kind, GetLong(At(BattleMisc_BannerCurrent_addr)), At(BattleMisc_BannerKinds_addr)[0]);
     const U h = Mix(1);
     switch ((h >> 4) % 5) {
-    case 0: PutLong(At(kBannerCurrent), kBanners + ((h >> 8) % 8) * 0xC); break;
-    case 1: At(kBannerKinds)[0] = static_cast<unsigned char>(h >> 12); break;
+    case 0: PutLong(At(BattleMisc_BannerCurrent_addr), kBanners + ((h >> 8) % 8) * 0xC); break;
+    case 1: At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(h >> 12); break;
     case 2: At(kWindows + 3)[0] = static_cast<unsigned char>(h >> 16); At(kWindows + 4 * 0x24 + 3)[0] = static_cast<unsigned char>(h >> 20); break;
     default: break;
     }
@@ -179,7 +179,7 @@ U __cdecl StubNoneOfKind(U kind) {
 U __cdecl StubCalcDamage(U attacker, U target, U element) {
     Record(2, attacker & 0xFF, target & 0xFF, element);
     const U h = Mix(3);
-    if (h % 4 == 0) PutLong(At(kResult), Addr(g_results) + ((h >> 8) % 0x38));
+    if (h % 4 == 0) PutLong(At(BattleDamage_Result_addr), Addr(g_results) + ((h >> 8) % 0x38));
     const U low = (h >> 12) % 2 ? PickH(h >> 14, {0, 1, 2, 3, 0x7FFF, 0x8000, 0x8001, 0xFFFF, 0xFFFE, 9999, 0xD8F1})
                                 : (h >> 14) & 0xFFFF;
     return (Mix(4) & 0xFFFF0000u) | low;
@@ -195,7 +195,7 @@ void DisturbSprite(U salt) {
     const U h = Mix(salt);
     switch ((h >> 4) % 4) {
     case 0: PutLong(At(kSprite), SomeObject(h >> 8)); break;
-    case 1: PutLong(At(kActorObject), SomeObject(h >> 8)); break;
+    case 1: PutLong(At(BattleOdds_ActorObject_addr), SomeObject(h >> 8)); break;
     default: break;
     }
 }
@@ -329,10 +329,10 @@ bool Called(const d3d_fuzz::Log& log, U what) {
 void RandomBanner() {
     FillRandom(kBanners, 0x60);
     FillRandom(kWindows, kWindowBytes);
-    At(kBannerKinds)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 4, 0xFF}) : Next());
+    At(BattleMisc_BannerKinds_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Pick({0, 1, 2, 3, 4, 0xFF}) : Next());
     At(kScratch)[0] = static_cast<unsigned char>(Next());
     const U entry = kBanners + (Next() % 8) * 0xC;
-    PutLong(At(kBannerCurrent), entry);
+    PutLong(At(BattleMisc_BannerCurrent_addr), entry);
     At(entry + 1)[0] = static_cast<unsigned char>(Next() % 3 ? Pick({1, 2, 0, 3, 4}) : Next());
     PutWord(At(entry + 8), Next() % 4 ? Pick({0, 1, 1, 1, 2, 0xFF, 0x100, 0xFE, 0x1FF, 0xFFFF, 0x8000}) : Next());
 }
@@ -352,7 +352,7 @@ void FuzzHeal(Tally& t, const void* clone, unsigned rounds) {
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x300000u + r;
         FillRandom(Addr(g_results), sizeof g_results);
-        PutLong(At(kResult), Addr(g_results) + Next() % 0x38);
+        PutLong(At(BattleDamage_Result_addr), Addr(g_results) + Next() % 0x38);
         Pass(t, clone, As<const void*>(&Effect_Heal20));
     }
 }
@@ -362,7 +362,7 @@ void FuzzHalf(Tally& t, const void* clone, unsigned rounds) {
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x400000u + r;
         FillRandom(Addr(g_results), sizeof g_results);
-        PutLong(At(kResult), Addr(g_results) + Next() % 0x38);
+        PutLong(At(BattleDamage_Result_addr), Addr(g_results) + Next() % 0x38);
         PutLong(At(kActing), Next() % 2 ? (Next() & 0xFFFF0000u) | (Next() % 11) : Next());
         At(kTarget)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 11 : Next());
         Pass(t, clone, As<const void*>(&Effect_HalfAttack));
@@ -395,7 +395,7 @@ void FuzzTint(Tally& t, const void* clone, unsigned rounds) {
         g_round = 0x600000u + r;
         RandomObjects();
         PutLong(At(kSprite), SomeObject(Next()));
-        PutLong(At(kActorObject), OneIn(4) ? Next() : SomeObject(Next()));
+        PutLong(At(BattleOdds_ActorObject_addr), OneIn(4) ? Next() : SomeObject(Next()));
         Pass(t, clone, As<const void*>(&BattleFx_TintActor));
         t.hits += Called(g_theirs, 5);
     }

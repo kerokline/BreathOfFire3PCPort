@@ -33,15 +33,15 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0, the harness's battle bytes) ---
-constexpr U kStep1 = 0x904AA1;            // u8: the phase's step (the Dragon run's commit sets 1)
-constexpr U kStep2 = 0x904AA2;            // u8: the command (BattleMenu_ConfirmDispatch's index)
+// kStep1: now BattleActions_Step (symbols.toml). u8: the phase's step (the Dragon run's commit sets 1)
+// kStep2: now BattleE4_Step2 (symbols.toml). u8: the command (BattleMenu_ConfirmDispatch's index)
 constexpr U kStep3 = 0x904AA3;            // u8: the Dragon command's part (0x44FF00's index into 0x64ECCC)
-constexpr U kStep4 = 0x904AA4;            // u8: the part's step (the seven dispatchers' index)
-constexpr U kPick = 0x904AA5;             // u8: the Dragon menu's line 0..2; bit 7 while a list is up
-constexpr U kGeneRow = 0x904AA6;          // u8: the gene grid's row 0..2, 0xFF the "done" line
-constexpr U kGeneCol = 0x904AA7;          // u8: the gene grid's column 0..5
+// kStep4: now BattleE4_Step4 (symbols.toml). u8: the part's step (the seven dispatchers' index)
+// kPick: now BossSb_Countdown (symbols.toml). u8: the Dragon menu's line 0..2; bit 7 while a list is up
+// kGeneRow: now BattleE5_GeneRow (symbols.toml). u8: the gene grid's row 0..2, 0xFF the "done" line
+// kGeneCol: now BattleE1_Roster (symbols.toml). u8: the gene grid's column 0..5
 constexpr U kFlags = 0x904AA8;            // u8: the round flags' low byte (bit 7 set by Effect_QuarterAttack)
-constexpr U kCommitClear = 0x904AAF;      // u8: zeroed by the commit
+// kCommitClear: now BattleE4_Picking (symbols.toml). u8: zeroed by the commit
 constexpr U kCommitCount = 0x904AC3;      // u8: counted up by the commit
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActingKind = 0x904B35;       // u8: 4 an ability, 1 an attack
@@ -50,11 +50,11 @@ constexpr U kActingSprite2 = 0x904B40;    // unsigned char *: +8 the drain's fla
 constexpr U kResult = 0x904B60;           // unsigned char *: the result record (+4 HP, +6 AP delta, +8 flags)
 constexpr U kWord72 = 0x904B72;           // u16: zeroed by the Dragon run's opening
 constexpr U kAsk = 0x904B74;              // u16 (read as u32 for the hand): the store prompt's answer 0 / 1
-constexpr U kGeneCost = 0x904B78;         // u8: 0x4525B0's (read against the member's AP)
+// kGeneCost: now BattleActions_ApCost (symbols.toml). u8: 0x4525B0's (read against the member's AP)
 constexpr U kAbility = 0x904B80;          // u16: the acting ability
 constexpr U kGenes = 0x904B84;            // u8[3]: the genes picked
 constexpr U kGeneCount = 0x904B87;        // u8: how many of kGenes are picked, 0..3
-constexpr U kAiFlag = 0x904B97;           // u8: set by an AI row of kind 7
+// kAiFlag: now BattleDamage_AiByteB97 (symbols.toml). u8: set by an AI row of kind 7
 
 // --- the command menu's cells (docs/battle_menu_states.md) ---
 constexpr U kMenuActor = 0x939EC4;        // unsigned char *: the acting member's ObjTrio record
@@ -62,9 +62,9 @@ constexpr U kCommandRecord = 0x939FA0;    // unsigned char *: the member's +0x12
 
 // --- the keys (symbols.toml Input_Pressed, Field_ConfirmButtons, Field_CancelButtons: their
 // names are macros in symbols.gen.h, so the fuzz seeds them by these) ---
-constexpr U kInputPressed = 0x7E1BEC;
-constexpr U kConfirmButtons = 0x90358E;
-constexpr U kCancelButtons = 0x903590;
+// kInputPressed: now Input_Pressed (symbols.toml).
+// kConfirmButtons: now Field_ConfirmButtons (symbols.toml).
+// kCancelButtons: now Field_CancelButtons (symbols.toml).
 
 // --- the Dragon run's tables ---
 constexpr U kSlots = 0x904608;            // 18 dwords: three gene bytes and a fourth (0xFF: empty); 0..5 the first list
@@ -90,7 +90,7 @@ constexpr U kAbilityRows = 0x65C4DC;      // .data: 24 bytes an ability, +0 the 
 constexpr U kWeaponElement = 0x657463;    // .data: NameTable_Weapons' element byte, 28 bytes a weapon
 
 // --- the party (ObjTrio, stride 0x14C) ---
-constexpr U kParty = 0x802D40;
+// kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
 
 // --- the window records (WindowRecords 0x803160, stride 0x24) the run uses ---
@@ -103,12 +103,12 @@ constexpr U kWin21 = 0x803160 + 21 * 0x24;   // 0x803454: the Dragon menu
 
 // --- the Dragon run's .data step tables (0x44FF00 indexes 0x64ECCC by kStep3) ---
 constexpr U kPartTable = 0x64ECCC;        // 7: the seven parts (not ours: 0x44FF00 reads it)
-constexpr U kLoadSteps = 0x64ECE8;        // 2
-constexpr U kMenuSteps = 0x64ECF0;        // 5
-constexpr U kSlotsSteps = 0x64ED04;       // 7
-constexpr U kGenesSteps = 0x64ED20;       // 5
-constexpr U kSlots2Steps = 0x64ED34;      // 7
-constexpr U kStoreSteps = 0x64ED50;       // 7 (the last BE6's 0x451480)
+// kLoadSteps: now DragonCmd_LoadSteps (symbols.toml). 2
+// kMenuSteps: now DragonCmd_MenuSteps (symbols.toml). 5
+// kSlotsSteps: now DragonCmd_SlotsSteps (symbols.toml). 7
+// kGenesSteps: now DragonCmd_GenesSteps (symbols.toml). 5
+// kSlots2Steps: now DragonCmd_Slots2Steps (symbols.toml). 7
+// kStoreSteps: now DragonCmd_StoreSteps (symbols.toml). 7 (the last BE6's 0x451480)
 
 // --- the callees nobody owns yet ---
 constexpr U kTargetPrompt = bof3::addr::ItemMenu_SetupForMember;     // BE4's

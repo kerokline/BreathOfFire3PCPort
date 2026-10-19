@@ -31,16 +31,16 @@ namespace at {
 // table 0x64AE28 dispatches on, the command 0x42EED0 dispatches on through
 // 0x64AE54 (2 the item command, 3 the one whose states are here first), and
 // the command's state and sub-state.
-constexpr std::uint32_t kStep = 0x904AA1;
-constexpr std::uint32_t kCommand = 0x904AA2;
-constexpr std::uint32_t kState = 0x904AA3;
-constexpr std::uint32_t kSubState = 0x904AA4;
+// kStep: now BattleActions_Step (symbols.toml).
+// kCommand: now BattleE4_Step2 (symbols.toml).
+// kState: now BattleE4_Step3 (symbols.toml).
+// kSubState: now BattleE4_Step4 (symbols.toml).
 // u8: 1 while a target is being picked (set with the latch cleared, 0 on the
 // commit; its readers were not read - a hypothesis: the target cursor's)
-constexpr std::uint32_t kPicking = 0x904AAF;
+// kPicking: now BattleE4_Picking (symbols.toml).
 constexpr std::uint32_t kPartyCount = 0x904AB0;  // read as a dword, its low byte used
 constexpr std::uint32_t kEnemyCount = 0x904AB2;  // u8
-constexpr std::uint32_t kCommandsChosen = 0x904AC3;  // u8, one up for each command committed
+// kCommandsChosen: now BattleActorCopies_EntryCount (symbols.toml). u8, one up for each command committed
 // The party item list's last page, top row and cursor, kept for its next
 // opening (ItemMenu_SetupForParty reads them back).
 constexpr std::uint32_t kSavedList = 0x904605;
@@ -51,7 +51,7 @@ constexpr std::uint32_t kSavedList = 0x904605;
 constexpr std::uint32_t kCommandRecord = 0x939FA0;
 constexpr std::uint32_t kActing = 0x939EC4;
 // The party's records.
-constexpr std::uint32_t kMembers = 0x802D40;
+// kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
 // Input_AutoRepeat's latch word: zeroed so that a held direction starts over.
 constexpr std::uint32_t kRepeatLatch = 0x7E01B8;
@@ -64,8 +64,8 @@ constexpr std::uint32_t kRepeatLatch = 0x7E01B8;
 //   Record 21 (0x803454): opened by the list's up-at-the-top.
 //   Record 4 (0x8031F0): +0 cleared then.
 constexpr std::uint32_t kList = 0x8033A0;
-constexpr std::uint32_t kHand = 0x80340C;
-constexpr std::uint32_t kAbove = 0x803454;
+// kHand: now BattleE4_Hand (symbols.toml).
+// kAbove: now BattleE4_Above (symbols.toml).
 constexpr std::uint32_t kRecord4 = 0x8031F0;
 // The inventory lists by category: ids and counts, five pointers each
 // (0x904154 + 0x80 c and 0x904354 + 0x80 c for 0..3; docs/char-stats.md).
@@ -74,12 +74,12 @@ constexpr std::uint32_t kInventoryCounts = 0x656B14;
 // The battle message queue: 16 entries of 8 (+0 a, +1 b, dword +4 the text)
 // and its write index (BattleQueue_Push).
 constexpr std::uint32_t kQueue = 0x93C2C0;
-constexpr std::uint32_t kQueueWrite = 0x93C2A1;
+// kQueueWrite: now BattleActorCopies_QueueWrite (symbols.toml).
 // The four dispatch tables (.data).
-constexpr std::uint32_t kAttackStates = 0x64E44C;
-constexpr std::uint32_t kItemStates = 0x64E45C;
-constexpr std::uint32_t kItemOpenSteps = 0x64E484;
-constexpr std::uint32_t kItemTargetSteps = 0x64E48C;
+// kAttackStates: now BattleAttackCmd_States (symbols.toml).
+// kItemStates: now BattleItemCmd_States (symbols.toml).
+// kItemOpenSteps: now BattleItemCmd_OpenSteps (symbols.toml).
+// kItemTargetSteps: now BattleItemCmd_TargetSteps (symbols.toml).
 
 }  // namespace at
 

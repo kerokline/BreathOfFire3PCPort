@@ -87,9 +87,9 @@ std::uint32_t Id(const void* p) {
 }
 std::uint32_t IdOf(std::uint32_t a) { return Id(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a))); }
 
-unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(at::kCurrent)))); }
+unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr)))); }
 unsigned char* Enemy(unsigned e) { return At(at::kEnemies + at::kEnemyStride * e); }
-unsigned char* Member(unsigned m) { return At(at::kMembers + at::kMemberStride * m); }
+unsigned char* Member(unsigned m) { return At(ObjTrio_addr + at::kMemberStride * m); }
 unsigned char Slot(std::uint32_t v) { return static_cast<unsigned char>(g_slot_lo + v % g_slot_n); }
 
 // A target byte: this window's slot, with or without a side bit, a side
@@ -114,7 +114,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const auto byte = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 14) {
-    case 0: SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(g_buf.windows[v % kWindows]))); break;
+    case 0: SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(g_buf.windows[v % kWindows]))); break;
     case 1:
     case 2: {
         unsigned char* const w = g_buf.windows[v % kWindows];
@@ -122,13 +122,13 @@ void Disturb() {
         w[field] = field == 0xA ? Slot(h >> 8) : byte;
         break;
     }
-    case 3: At(at::kChoosing)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte | 1); break;
+    case 3: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte | 1); break;
     case 4: {
-        unsigned char* const t = At(static_cast<std::uint32_t>(Long(At(at::kTarget))));
+        unsigned char* const t = At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr))));
         *t = TargetByte(v, h >> 8);
         break;
     }
-    case 5: SetLong(At(at::kTarget), static_cast<std::int32_t>(Address(g_buf.targets + v % kTargets))); break;
+    case 5: SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_buf.targets + v % kTargets))); break;
     case 6: At(at::kCrossSel)[0] = static_cast<unsigned char>(v % 8); break;
     case 7: At(at::kCrossGrow + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     case 8: {
@@ -142,7 +142,7 @@ void Disturb() {
         break;
     }
     case 10: At(at::kBanners + (h >> 20) % 0x60)[0] = byte; break;
-    case 11: At(at::kLabelGate)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 11: At(BattleWinStates_LabelGate_addr)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     default: break;
     }
 }
@@ -168,7 +168,7 @@ void __cdecl StubFlagAdvance() {
     Record(9, Id(Current()));
     Disturb();
     const std::uint32_t h = Hash() * 0x27D4EB2Fu;
-    if (h & 0x10000) *At(static_cast<std::uint32_t>(Long(At(at::kTarget)))) = TargetByte(h >> 8, h >> 20);
+    if (h & 0x10000) *At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr)))) = TargetByte(h >> 8, h >> 20);
 }
 void __cdecl StubRestoreBack() { Record(10, Id(Current())); Disturb(); }
 unsigned __cdecl StubDispatchKind(unsigned a0, unsigned a1, unsigned a2, unsigned a3, unsigned a4, unsigned a5,
@@ -400,10 +400,10 @@ void SlotRange(unsigned k) {
 void Fix(unsigned k) {
     SlotRange(k);
     for (auto& w : g_buf.windows) w[0xA] = Slot(Next());
-    SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(g_buf.windows[Next() % kWindows])));
-    SetLong(At(at::kTarget), static_cast<std::int32_t>(Address(g_buf.targets + Next() % kTargets)));
+    SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(g_buf.windows[Next() % kWindows])));
+    SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_buf.targets + Next() % kTargets)));
     for (auto& t : g_buf.targets) t = TargetByte(Next(), Next());
-    At(at::kChoosing)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+    At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
     // no gauge top of 0: the original faults on it (section 4), ours aborts
     for (unsigned e = 0; e < 6; ++e)
         if (Word(Enemy(e) + 0x30) == 0) SetWord(Enemy(e) + 0x30, 1 + Next() % 0xFFFF);
@@ -474,7 +474,7 @@ void Seed(unsigned k) {
             At(at::kCrossGrow + j)[0] = Often() ? kGrow[Next() % 8] : static_cast<unsigned char>(Next());
         break;
     }
-    case kLabelFrame: At(at::kLabelGate)[0] = static_cast<unsigned char>(Half() ? 0 : Next()); break;
+    case kLabelFrame: At(BattleWinStates_LabelGate_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next()); break;
     case kBannerFrame:
         for (unsigned b = 0; b < 8; ++b) At(at::kBanners + at::kBannerStride * b + 2)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
         break;

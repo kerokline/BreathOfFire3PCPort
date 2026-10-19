@@ -66,7 +66,7 @@ const Callees kOriginals = {
     Fn<void (__cdecl*)(int, int, int, int, unsigned, unsigned, unsigned)>(kLineSemi1),
     Fn<unsigned (__cdecl*)(unsigned)>(kEnemyNameShown),
     Fn<const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*)>(kTinyFont),
-    reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(at::kStateTable)),
+    reinterpret_cast<const std::uint32_t*>(static_cast<std::uintptr_t>(BattleObj_StateTable_addr)),
     {at::kKindHandlers[0], at::kKindHandlers[1], at::kKindHandlers[2]},
     BattleObj_RunState,
     BattleWin_DrawCommandIcon,
@@ -101,8 +101,8 @@ void PutFloat(unsigned char* at, std::int32_t v) {
 // 0x903A5A, as three bytes 0..0xF8. Read once, where the original reads it.
 struct Rgb { unsigned r, g, b; };
 Rgb WindowRgb() {
-    const int row = static_cast<signed char>(At(at::kColour)[0]);
-    const unsigned w = Word(At(at::kClutShadow + static_cast<std::uint32_t>(row * 64)));
+    const int row = BattleDraw_Colour;
+    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)));
     return {(w & 0x1F) << 3, ((w >> 5) & 0x1F) << 3, ((w >> 10) & 0x1F) << 3};
 }
 
@@ -125,7 +125,7 @@ unsigned Darker(unsigned c) {
 }
 
 // A party member's battle object (ObjTrio, stride 0x14C) and its words.
-unsigned char* Member(unsigned i) { return At(at::kPartyObjects + at::kObjectStride * i); }
+unsigned char* Member(unsigned i) { return At(ObjTrio_addr + at::kObjectStride * i); }
 
 // A status colour from the member's +0x90 flags: 2 when bit 14 (grey),
 // else what the caller derives.
@@ -181,7 +181,7 @@ extern "C" void __cdecl BattleParty_UpdateScreens() {
 extern "C" unsigned char __cdecl BattleObj_ScriptTick() {
     unsigned char* const f = FieldState();
     if (f[0x90] & 4) return 1;
-    if (At(at::kTickGate)[0] != 0 && !(f[0x134] & 0x10)) return 1;
+    if (BattleFlow_AnimGate != 0 && !(f[0x134] & 0x10)) return 1;
     return static_cast<unsigned char>(g.script_tick());
 }
 
@@ -190,7 +190,7 @@ extern "C" unsigned char __cdecl BattleObj_ScriptTick() {
 extern "C" unsigned char __cdecl BattleObj_ScriptTickOnce() {
     unsigned char* const f = FieldState();
     if (f[0x90] & 4) return 1;
-    if (At(at::kTickGate)[0] != 0 && !(f[0x134] & 0x10)) return 1;
+    if (BattleFlow_AnimGate != 0 && !(f[0x134] & 0x10)) return 1;
     return static_cast<unsigned char>(g.script_tick_once());
 }
 
@@ -205,9 +205,9 @@ extern "C" unsigned char __cdecl BattleObj_ScriptTickOnce() {
 // (0x65C4DD + 24 skill), 8 or 0x28, 5 -> 4; 3 and above 5 change nothing and
 // answer the action. The answer is the callee's eax.
 extern "C" unsigned __cdecl BattleObj_PickPose() {
-    const bool own_poses = At(at::kBattleKind)[0] == 5 && (At(at::kKindFlags)[0] & 2) != 0;
+    const bool own_poses = At(at::kBattleKind)[0] == 5 && (BattleActions_BattleEnd & 2) != 0;
     if (own_poses) {
-        const bool high = (At(at::kPoseFlags)[0] & 0x20) != 0;
+        const bool high = (BattleTurnSteps_MusicFlags & 0x20) != 0;
         if (FieldState()[0x91] & 0x40)
             return g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x1C), at::kPoseSet, 0x1800);
         if (high) return g.pose_from(Sprite()[0x4B], at::kPoseSet, 0x1800);
@@ -457,8 +457,8 @@ extern "C" void __cdecl BattleWin_DrawMediumBox(int x, int y) { PlainBox(x, y, 0
 extern "C" void __cdecl BattleWin_DrawCommandLabel(unsigned k) {
     OpenDrawMode(0);
     const unsigned i = k & 0xFF;
-    const int y = Word(At(at::kCommandBoxes + 8 * i + 2));
-    const int x = Word(At(at::kCommandBoxes + 8 * i));
+    const int y = Word(At(Battle_CommandBoxes_addr + 8 * i + 2));
+    const int x = Word(At(Battle_CommandBoxes_addr + 8 * i));
     const Rgb c = WindowRgb();
     g.draw_tile(x, y + 2, 5, 1);
     g.draw_edge(x, y, 0xA, 1);
@@ -467,7 +467,7 @@ extern "C" void __cdecl BattleWin_DrawCommandLabel(unsigned k) {
     g.line_semi1(x + 2, y + 3, x + 2, y + 0x10, c.r, c.g, c.b);
     g.line_semi0(x + 0x25, y + 2, x + 0x25, y + 0x10, c.r, c.g, c.b);
     g.line_semi0(x + 2, y + 0x10, x + 0x25, y + 0x10, c.r, c.g, c.b);
-    const auto* const label = At(static_cast<std::uint32_t>(Long(At(at::kCommandLabels + 4 * i))));
+    const auto* const label = At(static_cast<std::uint32_t>(Long(At(Battle_CommandLabelPointers_addr + 4 * i))));
     g.text_draw_at(x + 8, y + 3, 0, 8, label);
 }
 
@@ -502,8 +502,8 @@ void EnemyGauge(int x, int y, std::uint32_t enemy) {
 // darker (clamped at 0).
 extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
     OpenDrawMode(0);
-    const unsigned w = Word(At(at::kClutShadow + static_cast<std::uint32_t>(
-                                  static_cast<int>(static_cast<signed char>(At(at::kColour)[0])) * 64)));
+    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(
+                                  BattleDraw_Colour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
     TargetFrame(x, y);
@@ -523,8 +523,8 @@ extern "C" void __cdecl BattleWin_DrawTargetEnemy(int x, int y, unsigned t) {
 // so, and four lines in the window colour.
 extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
     OpenDrawMode(0);
-    const int row = static_cast<signed char>(At(at::kColour)[0]);
-    const unsigned w = Word(At(at::kClutShadow + static_cast<std::uint32_t>(row * 64)));
+    const int row = BattleDraw_Colour;
+    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     const unsigned e = static_cast<unsigned char>(t - 3);
     g.draw_tile(x, y + 2, 8, 1);
@@ -549,8 +549,8 @@ extern "C" void __cdecl BattleWin_DrawEnemyStatus(int x, int y, unsigned t) {
 // 0, the two outer lines and the two inner ones 0x10 darker.
 extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     OpenDrawMode(0);
-    const unsigned w = Word(At(at::kClutShadow + static_cast<std::uint32_t>(
-                                  static_cast<int>(static_cast<signed char>(At(at::kColour)[0])) * 64)));
+    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(
+                                  BattleDraw_Colour * 64)));
     const unsigned r = (w & 0x1F) << 3, gr = ((w >> 5) & 0x1F) << 3, b = ((w >> 10) & 0x1F) << 3;
     g.draw_tile(x + 4, y + 8, 8, 1);
     g.draw_edge(x + 4, y + 6, 2, 1);
@@ -629,7 +629,7 @@ extern "C" __attribute__((disable_tail_calls, noinline)) unsigned __cdecl Window
 extern "C" void __cdecl BattleWin_DrawMessage() {
     const unsigned char* w = Current();
     g.message_box(Word(w + 4), Word(w + 6));
-    const unsigned index = At(at::kMsgHead)[0];
+    const unsigned index = BattleWindows_MsgHead;
     const auto* const text = At(static_cast<std::uint32_t>(Long(At(at::kMsgRing + 8 * index))));
     w = Current();
     g.text_draw_at(static_cast<std::uint16_t>(Word(w + 4) + 4), static_cast<std::uint16_t>(Word(w + 6) + 3), 0, 0xFF,
@@ -639,9 +639,9 @@ extern "C" void __cdecl BattleWin_DrawMessage() {
 // original 0x597F20: the battle message ring's read index 0x93C2A0 stepped
 // on (mod 16); 1 when it has reached the write index 0x93C2A1.
 extern "C" unsigned char __cdecl BattleMsg_Advance() {
-    const auto head = static_cast<unsigned char>((At(at::kMsgHead)[0] + 1) & 0xF);
-    const unsigned char tail = At(at::kMsgTail)[0];
-    At(at::kMsgHead)[0] = head;
+    const auto head = static_cast<unsigned char>((BattleWindows_MsgHead + 1) & 0xF);
+    const unsigned char tail = BattleActorCopies_QueueWrite;
+    BattleWindows_MsgHead = head;
     return tail == head ? 1 : 0;
 }
 

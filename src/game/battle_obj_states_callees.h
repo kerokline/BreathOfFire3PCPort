@@ -30,7 +30,7 @@ namespace at {
 // +0x3E the ground height, +0x5D..+0x5F a colour, +0x89 the character,
 // +0x90 / +0x91 status flags, +0x9A a u16 (MP, by 0x442BD0's subtraction -
 // hypothesis), +0xBA a percentage, +0x125 the action, +0x130 / +0x134 flags.
-constexpr std::uint32_t kMembers = 0x802D40;
+// kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
 // The 48 battle-task slots (battle_flow.md): 0x441570 moves the byte +9 of
 // slot Sprite_Current +5 and reads its +0x34 / +0x38.
@@ -38,21 +38,21 @@ constexpr std::uint32_t kTasks = 0x93A000;
 constexpr std::uint32_t kTaskSize = 0x84;
 // The battle's globals (PSX 0x801462E0..).
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8: 1 and 5 matter to 0x441570
-constexpr std::uint32_t kPhaseArg = 0x904AA1;     // u8: above 1 in phase 1, the targeted colour
+// kPhaseArg: now BattleActions_Step (symbols.toml). u8: above 1 in phase 1, the targeted colour
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // dword / u16 / u8: bits 2, 6, 7, 11, 15 read or set here
 constexpr std::uint32_t kPoseBase = 0x904AAC;     // u8: 0x441200's pose base
-constexpr std::uint32_t kTargetMember = 0x904AAE; // u8: the member whose character 0x441570 compares
+// kTargetMember: now BattleE4_AutoMember (symbols.toml). u8: the member whose character 0x441570 compares
 constexpr std::uint32_t kTintOn = 0x904AAF;       // u8: non-zero while the target tint is shown
 constexpr std::uint32_t kTintLevel = 0x904AC8;    // u8: the tint's three channel bytes
 constexpr std::uint32_t kSwingTarget = 0x904B44;  // u8: Battle_SetTargetFlag40's target after a swing
 constexpr std::uint32_t kSkillId = 0x904B80;      // u16: the skill (24-byte records at 0x65C4DC)
-constexpr std::uint32_t kSkillCost = 0x904B88;    // u8: subtracted from Field_State +0x9A after a skill
-constexpr std::uint32_t kCastKind = 0x904B89;     // u8: 4, 7 and 8 are special to states 7
+// kSkillCost: now BattleE3_Cost (symbols.toml). u8: subtracted from Field_State +0x9A after a skill
+// kCastKind: now BattlePhases_B89 (symbols.toml). u8: 4, 7 and 8 are special to states 7
 constexpr std::uint32_t kSoundSet = 0x904B8D;     // u8: Battle_LoadSoundByKey's set
-constexpr std::uint32_t kTargetPtr = 0x939FA0;    // unsigned char*: its byte is the target (0x80 = all)
-constexpr std::uint32_t kHomeX = 0x903780;        // dword: x in phase 5 with 0x904AA8 bit 15
-constexpr std::uint32_t kHomeY = 0x903784;        // dword: y
-constexpr std::uint32_t kTints = 0x7E0700;        // MoveScript_TintRecords, 12 bytes each: +2..+4 written
+// kTargetPtr: now BattleActorCopies_Command (symbols.toml). unsigned char*: its byte is the target (0x80 = all)
+// kHomeX: now BossSi_CentreX (symbols.toml). dword: x in phase 5 with 0x904AA8 bit 15
+// kHomeY: now BossSi_CentreZ (symbols.toml). dword: y
+// kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12 bytes each: +2..+4 written
 constexpr std::uint32_t kSkillWord = 0x65C4DC;    // u16 of each 24-byte skill record (bit 11: 0x65C4DD bit 3)
 // Byte tables after the state table.
 constexpr std::uint32_t kAttackCount = 0x64E04C;  // u8 by character: +9 / +0xA of 0x441890
@@ -62,13 +62,13 @@ constexpr std::uint32_t kCastCountBy = 0x64E0FC;  // u8 by 0x904B89: the same wh
 
 // The dispatch tables (code pointers, indices unchecked).
 constexpr std::uint32_t kStates = 0x64DFE0;       // BattleObj_StateTable, 27 dwords by +1 (BattleObj_RunState's)
-constexpr std::uint32_t kIdleSubs = 0x64E014;     // by +2, called by state 3 (slots 13 and 14 of 0x64DFE0)
-constexpr std::uint32_t kAttackByChar = 0x64E01C; // by Field_State +0x89, state 4's tail jump (slots 15..)
-constexpr std::uint32_t kAttackSpecial = 0x64E048;// the dword state 4 jumps through while +0x134 bit 0 (slot 26)
-constexpr std::uint32_t kSwingSubs = 0x64E074;    // by +2, state 5
-constexpr std::uint32_t kCastSubs = 0x64E0E4;     // by +2, state 7
-constexpr std::uint32_t kCastDoneSubs = 0x64E118; // by +2, called by state 8
-constexpr std::uint32_t kState12Subs = 0x64E134;  // by +2, state 12
+// kIdleSubs: now BattleObj_StateTable[0xd] (symbols.toml). by +2, called by state 3 (slots 13 and 14 of 0x64DFE0)
+// kAttackByChar: now BattleObj_StateTable[0xf] (symbols.toml). by Field_State +0x89, state 4's tail jump (slots 15..)
+// kAttackSpecial: now BattleObj_StateTable[0x1a] (symbols.toml). the dword state 4 jumps through while +0x134 bit 0 (slot 26)
+// kSwingSubs: now BattleObj_SwingSubs (symbols.toml). by +2, state 5
+// kCastSubs: now BattleObj_CastSubs (symbols.toml). by +2, state 7
+// kCastDoneSubs: now BattleObj_CastDoneSubs (symbols.toml). by +2, called by state 8
+// kState12Subs: now BattleObj_State12Subs (symbols.toml). by +2, state 12
 
 }  // namespace at
 

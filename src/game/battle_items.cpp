@@ -100,13 +100,13 @@ void PutDword(unsigned char* at, std::uint32_t v) { std::memcpy(at, &v, sizeof v
 
 // The sparkle being updated, and the battle actor the effect plays on - each
 // read from its cell every time the original reads it.
-unsigned char* Cur() { return *reinterpret_cast<unsigned char**>(At(at::kSparkleCurrent)); }
-unsigned char* Actor() { return *reinterpret_cast<unsigned char**>(At(at::kFxActor)); }
+unsigned char* Cur() { return *reinterpret_cast<unsigned char**>(At(BattleItems_SparkleCurrent_addr)); }
+unsigned char* Actor() { return *reinterpret_cast<unsigned char**>(At(BattleE2_Owner_addr)); }
 
 // The scratch words: DamageScratch + k, and the vertex scratch + k.
 unsigned char* Scr(unsigned k) { return At(at::kScratch + k); }
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
-unsigned char* Vtx(unsigned k) { return At(at::kVertex + k); }
+unsigned char* Vtx(unsigned k) { return At(Prim_VertexScratch_addr + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 
 // `imul` then `sar 0xC`: a 32-bit product that wraps, shifted arithmetically.
@@ -148,7 +148,7 @@ template <typename F> F Method(void* object, unsigned offset) {
     std::memcpy(&f, *reinterpret_cast<unsigned char**>(object) + offset, sizeof f);
     return f;
 }
-void*& StreamBuffer() { return *reinterpret_cast<void**>(At(at::kStreamBuffer)); }
+void*& StreamBuffer() { return *reinterpret_cast<void**>(At(SndStream_Buffer_addr)); }
 constexpr long kBufferLost = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
 
 }  // namespace
@@ -697,7 +697,7 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
     if (g.is_out(index) != 0) return;
     const unsigned i = index & 0xFF;
     if (i < 3) {
-        unsigned char* const r = At(at::kPartyRecords + i * at::kPartyStride);
+        unsigned char* const r = At(ObjTrio_addr + i * at::kPartyStride);
         if (r[0x90] & 0x80) g.set_tint(r, 0xFFFFFFFAu, 0xFFFFFFF6u, 0, 0);
         return;
     }
@@ -713,14 +713,14 @@ extern "C" void __cdecl BattleActor_Flash(unsigned index) {
 extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
     const unsigned char index = At(at::kActorIndex)[0];
     if (index < 3) {
-        Field_State = At(at::kPartyRecords + index * at::kPartyStride);
+        Field_State = At(ObjTrio_addr + index * at::kPartyStride);
         const auto a = static_cast<unsigned char>(first);
         if (a != 0) g.actor_sound(static_cast<unsigned char>(a + 1));
         if (static_cast<unsigned char>(second) != 0) g.actor_sound(second);
         return;
     }
     const unsigned char* const r = At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride);
-    if (At(at::kEnemySoundMode)[0] != 0) {
+    if (BattleActions_EventBattle != 0) {
         const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(Long(r + 0xF8)));
         g.enemy_sound(Word(cue));
     } else {
@@ -736,8 +736,8 @@ extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
 extern "C" unsigned char __cdecl BattleActor_FxSize(void) {
     const unsigned char index = At(at::kActorIndex)[0];
     if (index < 3) {
-        const unsigned char* const r = At(at::kPartyRecords + index * at::kPartyStride);
-        if (r[0x134] & 2) return At(at::kFxSizeAltTable)[At(at::kFxSizeSelect)[0]];
+        const unsigned char* const r = At(ObjTrio_addr + index * at::kPartyStride);
+        if (r[0x134] & 2) return At(at::kFxSizeAltTable)[BattlePhases_B89];
         return At(at::kFxSizeTable)[r[0x89]];
     }
     const unsigned char type = At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride + 0xF0)[0];

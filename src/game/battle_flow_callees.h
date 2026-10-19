@@ -44,7 +44,7 @@ constexpr std::uint32_t kEnemies = 0x93B960;
 constexpr std::uint32_t kEnemySize = 0x128;
 constexpr unsigned kEnemyCount = 8;
 constexpr std::uint32_t kEnemyCurrent = 0x939AD8;  // unsigned char*: the enemy being run (PSX 0x801EB458)
-constexpr std::uint32_t kEnemyStates = 0x64B084;   // code pointers by +0x100; 0x64B088 in an event battle
+// kEnemyStates: now BattleEnemy_States (symbols.toml). code pointers by +0x100; 0x64B088 in an event battle
 // The battle's globals (PSX 0x801462E0..).
 constexpr std::uint32_t kPhase = 0x904AA0;         // dword; its low byte picks Battle_PhaseDispatch's entry
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
@@ -53,11 +53,11 @@ constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
 // "event battle" is a guess from what it switches on here (the hook below,
 // the enemies' +0xF4 hooks and the shifted state table)
 constexpr std::uint32_t kEventBattle = 0x904AAA;
-constexpr std::uint32_t kEnemiesLeft = 0x904AB3;   // u8 (PSX 0x801462EF)
+// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8 (PSX 0x801462EF)
 constexpr std::uint32_t kDropCount = 0x904AE7;     // u8, at most 15 (PSX 0x80146323)
 constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8, |= 2 when the last enemy falls (PSX 0x80146324)
-constexpr std::uint32_t kExpTotal = 0x904AEC;      // dword (PSX 0x80146328)
-constexpr std::uint32_t kZennyTotal = 0x904AF0;    // dword (PSX 0x8014632C)
+// kExpTotal: now BattleFlow_ExpTotal (symbols.toml). dword (PSX 0x80146328)
+// kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml). dword (PSX 0x8014632C)
 constexpr std::uint32_t kDropItems = 0x904AF4;     // u16 x 16 (PSX 0x80146330)
 constexpr std::uint32_t kDropCounts = 0x904B14;    // u8 x 16 (PSX 0x80146350)
 constexpr std::uint32_t kTurnGate = 0x904B34;      // u8, BattleEnemy_Chance70's "3 or more" gate
@@ -65,19 +65,19 @@ constexpr std::uint32_t kFormation = 0x904B35;     // u8, BattleEnemy_Chance70's
 constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int): BattleHook_Event, stored by the boss set-ups (Boss_SetupTable 0x656954:
                                                    // Boss01_Event 0x437CF0, Boss04_Event 0x438450, BareRetZero 0x43C9F0 ...); called with 3
 constexpr std::uint32_t kMagicId = 0x904B80;       // u16: the item or ability the magic loaders were given
-constexpr std::uint32_t kActorAt = 0x904B8A;       // u8 (PSX 0x801463C6)
-constexpr std::uint32_t kAnimGate = 0x904B8E;      // u8 (PSX 0x801463CA)
+// kActorAt: now BattleFlow_ActorAt (symbols.toml). u8 (PSX 0x801463C6)
+// kAnimGate: now BattleFlow_AnimGate (symbols.toml). u8 (PSX 0x801463CA)
 constexpr std::uint32_t kNumberText = 0x904BA0;    // char[]: Battle_DrawNumber's sprintf buffer
 constexpr std::uint32_t kLoadFlags = 0x904AA9;     // u8, |= 4 once a magic file is asked for
 // Constant tables in .data.
 constexpr std::uint32_t kItemRows = 0x64B274;      // 4 pointers to u8 tables: (id >> 8, id & 0xFF) -> row (PSX 0x800B39F0)
 constexpr std::uint32_t kAbilityRows = 0x64C1D0;   // u8 by ability (PSX 0x800B3450)
-constexpr std::uint32_t kMagicFiles = 0x64C2B8;    // 8-byte rows, the u16 DAT file first (PSX 0x800B3538)
+// kMagicFiles: now Magic_Rows (symbols.toml). 8-byte rows, the u16 DAT file first (PSX 0x800B3538)
 constexpr std::uint32_t kAbilityFlags = 0x65C4DD;  // a byte in each 24-byte ability record; bit 0x10 wants a second task
 constexpr std::uint32_t kNumberFormat = 0x64E324;  // "%3d"
 // The party's working records (ObjTrio, 0x14C each) and the enemy objects,
 // as Battle_ActorIsOut reads them: actor 0..2 a member, 3.. an enemy.
-constexpr std::uint32_t kMembers = 0x802D40;
+// kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
 
 }  // namespace at

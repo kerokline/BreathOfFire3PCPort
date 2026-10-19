@@ -122,7 +122,7 @@ std::int32_t Speed() {
 
 void SeedTorast(unsigned k) {
     unsigned char* const s = Sprite_Current;
-    unsigned char* const e = bh::Pointer(bh::at::kEnemyCurrent);
+    unsigned char* const e = bh::Pointer(BattleE3_CurrentEnemy_addr);
     // the kind whose colour is drawn: 8..11 mostly (the table's four), else any
     if (bh::Often()) e[0x100] = static_cast<unsigned char>(8 + bh::Next() % 4);
     // the dispatchers' other state bytes inside the tables most of the time,
@@ -205,7 +205,7 @@ const bh::Callee kCalleesOps[] = {
 // The loaded area block as far as a corner index of any width reaches
 // (255 * 16 + 0xC8 dwords past AreaMap_Corners), and the byte
 // Boss_SetByLeaderId writes.
-const bh::Region kRegionsOps[] = {{at::kMapHeader, 0x4400}, {at::kLeaderPick, 1}};
+const bh::Region kRegionsOps[] = {{AreaMap_Header_addr, 0x4400}, {BossH_LeaderPick_addr, 1}};
 
 unsigned char StatusByte() {
     return static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 0x20, 0x40, 0x60, 0x21, 0x9F, 0xBF, 0xDF) : bh::Next());
@@ -217,19 +217,19 @@ void SeedOps(unsigned k) {
     case kOpDeath:
         break;
     case kRetarget:
-        Mem(at::kLeaderTarget)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(4, 4, 3, 5, 0x84, 0) : bh::Next());
+        Mem(ObjTrio_addr + 0x124)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(4, 4, 3, 5, 0x84, 0) : bh::Next());
         break;
     case kLeaderId:
-        Mem(at::kLeaderId)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
+        Mem(ObjTrio_addr + 0x89)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         break;
     case kUpdate:
-        Mem(at::kEnemy1Status)[1] = StatusByte();
-        Mem(at::kEnemy2Status)[1] = StatusByte();
-        Mem(at::kLeaderFlags)[0] = static_cast<unsigned char>(bh::Next());
+        Mem(BossH_Enemy1Status_addr)[1] = StatusByte();
+        Mem(BossH_Enemy2Status_addr)[1] = StatusByte();
+        Mem(ObjTrio_addr + 0x134)[0] = static_cast<unsigned char>(bh::Next());
         [[fallthrough]];
     case kCorners:
         // the grid's width: small, the area's own (a few dozen cells), or any
-        if (bh::Often()) Mem(at::kMapHeader)[0] = static_cast<unsigned char>(bh::Half() ? 0x20 + bh::Next() % 0x40 : bh::Next() % 4);
+        if (bh::Often()) Mem(AreaMap_Header_addr)[0] = static_cast<unsigned char>(bh::Half() ? 0x20 + bh::Next() % 0x40 : bh::Next() % 4);
         break;
     default:
         break;
@@ -250,12 +250,12 @@ void ArgsOps(unsigned k, U* a) {
 // bits pointer (read before each Flags call).
 void DisturbOps(U h) {
     switch ((h >> 8) % 6) {
-    case 5: bh::SetPointer(at::kFlagBits, Mem(bh::at::kCondFlags + 8 * ((h >> 16) % 40))); break;
-    case 0: Mem(at::kEnemy1Status)[1] = static_cast<unsigned char>(h >> 16); break;
-    case 1: Mem(at::kEnemy2Status)[1] = static_cast<unsigned char>(h >> 16); break;
-    case 2: Mem(at::kMapHeader)[0] = static_cast<unsigned char>((h >> 16) % 0x40); break;
-    case 3: Mem(at::kLeaderFlags)[0] = static_cast<unsigned char>(h >> 16); break;
-    default: Mem(at::kLeaderTarget)[0] = static_cast<unsigned char>(h >> 16); break;
+    case 5: bh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
+    case 0: Mem(BossH_Enemy1Status_addr)[1] = static_cast<unsigned char>(h >> 16); break;
+    case 1: Mem(BossH_Enemy2Status_addr)[1] = static_cast<unsigned char>(h >> 16); break;
+    case 2: Mem(AreaMap_Header_addr)[0] = static_cast<unsigned char>((h >> 16) % 0x40); break;
+    case 3: Mem(ObjTrio_addr + 0x134)[0] = static_cast<unsigned char>(h >> 16); break;
+    default: Mem(ObjTrio_addr + 0x124)[0] = static_cast<unsigned char>(h >> 16); break;
     }
 }
 
@@ -281,7 +281,7 @@ static_assert(kExitBit + 1 == BH_COUNT(kClonesHooks), "the hooks' seeding indice
 
 void SeedHooks(unsigned k) {
     if (k == kEndPick)
-        Mem(at::kBattleEnd)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82) : bh::Next());
+        Mem(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0xFD, 0x82) : bh::Next());
 }
 
 // BOF3X_BH_RUN=torast|ops|hooks runs that one alone (the controls script's

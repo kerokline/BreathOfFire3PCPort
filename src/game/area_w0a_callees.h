@@ -35,7 +35,7 @@ constexpr std::uint32_t kEffectSlot = 0x903850;
 // The dword holding the flag bits the chapter's Flags_Test calls are given.
 // kFlagBank: now AreaW0c_FlagRow (symbols.toml).
 // A byte area 3's choice handlers set to 6 with the message 0x44.
-constexpr std::uint32_t kByte9398CF = 0x9398CF;
+// kByte9398CF: now AreaW0c_AnswerMark (symbols.toml).
 // The scene's timer (u16, docs/field-modes.md).
 constexpr std::uint32_t kTimer = 0x8034E6;
 // Field object 6's x (Sprite_Objects + 6 * 0xA4 + 0x34), a dword.

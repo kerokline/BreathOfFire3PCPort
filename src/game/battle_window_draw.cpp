@@ -86,8 +86,8 @@ void Put(unsigned char* at, float f) { std::memcpy(at, &f, sizeof f); }
 // read again for each channel, as the originals do.
 void ShadeColour(unsigned char* p, unsigned row) {
     const auto entry = [row]() {
-        const std::int32_t colour = static_cast<signed char>(At(at::kColour)[0]);
-        return At(at::kClutShadow + static_cast<std::uint32_t>((static_cast<std::int32_t>(row) + colour * 2) << 5));
+        const std::int32_t colour = BattleDraw_Colour;
+        return At(Gfx_ClutStripSource_addr + 0x208 + static_cast<std::uint32_t>((static_cast<std::int32_t>(row) + colour * 2) << 5));
     };
     p[4] = static_cast<unsigned char>((entry()[0] & 0x1F) << 3);
     p[5] = static_cast<unsigned char>(((Word(entry()) >> 5) & 0x1F) << 3);
@@ -450,8 +450,8 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
     const unsigned char* const rec = At(at::kAbilities + ability * at::kAbilityStride);
     const unsigned m = mode & 0xFF;
     if (m == 1) {
-        const unsigned character = At(at::kPartyLists + (member & 0xFF))[0];
-        const unsigned record = At(at::kMemberRecord + character)[0];
+        const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
+        const unsigned record = At(MoveScript_EffectState_addr + character)[0];
         const unsigned cost = g.ap_cost((member & 0xFFFFFF00u) | record, id, 0) & 0xFF;
         if (Word(At(at::kCharRecords + record * at::kCharStride + 0x1A)) < cost) return 0;
         return (rec[0x10] & 1) ? 1 : 0;
@@ -466,15 +466,15 @@ extern "C" unsigned char __cdecl Skill_CanUse(unsigned mode, unsigned member, un
     switch (ability) {
     case 0x14: return w[0x1E] < 5 ? 1 : 0;
     case 0x15: {
-        const unsigned char* const f = At(at::kFlags15);
+        const unsigned char* const f = At(Rest3c_Byte660_addr);
         return (f[0] | f[1] | f[2] | f[3]) == 0 ? 1 : 0;
     }
     case 0x3E: {
-        const unsigned char* const f = At(at::kFlags3E);
+        const unsigned char* const f = At(ModeFlow_CountdownA_addr);
         return (f[0] | f[1] | f[2] | f[3]) == 0 ? 1 : 0;
     }
     case 0x8C: return ap == 0 ? 1 : 0;
-    case 0x97: return At(at::kBattle97)[0] == 0x25 ? 0 : 1;
+    case 0x97: return BattleActions_EventBattle == 0x25 ? 0 : 1;
     default: return 1;
     }
 }
@@ -491,7 +491,7 @@ extern "C" void __cdecl Menu_DrawSkillRow(int x, int y, int colour, unsigned kin
     g.icon8(x, y + 2, icon, dim);
     const unsigned char n = g.char_count(name);
     g.text_draw_at(x + 10, y, colour, n, name);
-    g.sprintf_(PrintBuf(), Format(at::kFmtCost), cost & 0xFF);
+    g.sprintf_(PrintBuf(), Format(Boss26Fx_CountFormat_addr), cost & 0xFF);
     g.font8(x + 0x6D, y + 2, colour, reinterpret_cast<const unsigned char*>(PrintBuf()));
 }
 
@@ -542,8 +542,8 @@ extern "C" unsigned char __cdecl Skill_ApCost(unsigned member, unsigned id, unsi
 extern "C" unsigned char* __cdecl Char_AbilityList(unsigned member, unsigned type, unsigned battle) {
     unsigned char* r;
     if ((battle & 0xFF) == 0) {
-        const unsigned character = At(at::kPartyLists + (member & 0xFF))[0];
-        r = At(at::kCharRecords + At(at::kMemberRecord + character)[0] * at::kCharStride);
+        const unsigned character = At(Cond_Flags_addr + 0xd2 + (member & 0xFF))[0];
+        r = At(at::kCharRecords + At(MoveScript_EffectState_addr + character)[0] * at::kCharStride);
     } else {
         r = At(at::kWorking + (member & 0xFF) * at::kWorkingStride);
     }

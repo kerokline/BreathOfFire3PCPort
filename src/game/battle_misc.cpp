@@ -100,7 +100,7 @@ U Addr(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p
 
 U SpriteCurrent() { return Long(At(at::Sprite_CurrentAt())); }
 void SetSpriteCurrent(U v) { PutLong(At(at::Sprite_CurrentAt()), v); }
-U CurrentEnemy() { return Long(At(kCurrentEnemy)); }
+U CurrentEnemy() { return BattleE3_CurrentEnemy; }
 unsigned char* Banner(U i) { return At(kBanners + i * 0xC); }
 
 // The context a slot byte names: 0x93A000 + slot * 0x84, no bound.
@@ -127,13 +127,13 @@ extern "C" long __cdecl Battle_WrapIndex(long high, long low, long value) {
 // reloads eax.
 extern "C" void __cdecl Battle_PulseStep(void) {
     const unsigned char c = At(kPulse)[0];
-    if (c >= 0x1F) At(kPulseDown)[0] = 1;
+    if (c >= 0x1F) BattleMisc_PulseDown = 1;
     if (c == 0) {
-        At(kPulseDown)[0] = 0;
+        BattleMisc_PulseDown = 0;
         At(kPulse)[0] = static_cast<unsigned char>(c + 2);
         return;
     }
-    At(kPulse)[0] = static_cast<unsigned char>(At(kPulseDown)[0] == 1 ? c - 2 : c + 2);
+    At(kPulse)[0] = static_cast<unsigned char>(BattleMisc_PulseDown == 1 ? c - 2 : c + 2);
 }
 
 // original 0x446A50 (PSX 0x801DD820 Battle_PlayActorCue): Sound_PlayEffect of the
@@ -199,7 +199,7 @@ extern "C" void __cdecl Battle_InitActorContexts(void) {
         const U object = kEnemyObjects + i * kEnemyStride;
         if (At(object)[0] & 1) {
             SetSpriteCurrent(object);
-            PutLong(At(kCurrentEnemy), object);
+            BattleE3_CurrentEnemy = object;
             g.init_context();
         } else {
             g.alloc_context(0, 0);
@@ -281,12 +281,12 @@ extern "C" unsigned char __cdecl Battle_LoadSoundByKey(unsigned key, unsigned se
 // which callers such as 0x42FBE0 push on with a word written over the low half.
 extern "C" unsigned long __cdecl Battle_SetActorBit(unsigned actor) {
     const U bit = 1u << (actor & 31);
-    PutWord(At(kActorBits), Word(At(kActorBits)) | bit);
+    BattleActions_Pending = static_cast<std::uint32_t>(BattleActions_Pending) | bit;
     return bit;
 }
 extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
     const U mask = ~(1u << (actor & 31));
-    PutWord(At(kActorBits), Word(At(kActorBits)) & mask);
+    BattleActions_Pending = static_cast<std::uint32_t>(BattleActions_Pending) & mask;
     return mask;
 }
 
@@ -301,10 +301,10 @@ extern "C" unsigned long __cdecl Battle_ClearActorBit(unsigned actor) {
 // mov al); the first call's carry the entry's stale eax and ecx, which
 // 0x591E50 masks off. The one caller (0x447776) tests al.
 extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
-    const U list = g.item_list(At(kItemActor)[0], At(kItemWindowPage)[0], 1);
+    const U list = g.item_list(static_cast<unsigned char>(BattleActorCopies_ItemActor), BattleActorCopies_ItemPage, 1);
     const U item = At(list + At(kItemWindowCursor)[0])[0];
     const U high = list & 0xFFFF0000u;
-    const U usable = g.item_usable(2, high | At(kItemActor)[0], high | item);
+    const U usable = g.item_usable(2, high | static_cast<unsigned char>(BattleActorCopies_ItemActor), high | item);
     return (usable & 0xFF) == 0;
 }
 
@@ -317,8 +317,8 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 // then 0x80340C = 0, 0x80340E = 0, kItemActor = the actor byte read again,
 // 0x80340D = 8. In that order. The one caller (0x447469) reloads eax.
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
-    const U acting = Long(At(kActingActor));
-    unsigned char* const w = At(kItemWindow);
+    const U acting = BattleE4_MenuActor;
+    unsigned char* const w = At(BattleE4_List_addr);
     w[0] = 1;
     w[1] = 8;
     w[2] = 2;
@@ -332,15 +332,15 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     w[9] = 0;
     PutWord(w + 0x10, At(kActorPages + 1 + actor * 3)[0]);
     w[0xC] = At(kActorPages + 2 + actor * 3)[0];
-    const U flags = Long(At(Long(At(kCommandSource)) + 0x10));
+    const U flags = Long(At(BattleActorCopies_Command + 0x10));
     PutWord(w + 0x14, ((flags & 2) && !(flags & 0x20000)) ? 2 : 0);
     PutWord(w + 4, 0x140);
     PutWord(w + 6, 0x3F);
     const unsigned char again = At(acting + 5)[0];
-    At(kItemWindowExtra)[0] = 0;
-    At(kItemWindowExtra + 2)[0] = 0;
-    At(kItemActor)[0] = again;
-    At(kItemWindowExtra + 1)[0] = 8;
+    BattleE4_Hand = 0;
+    At(BattleE4_Hand_addr + 2)[0] = 0;
+    BattleActorCopies_ItemActor = again;
+    At(BattleE4_Hand_addr + 1)[0] = 8;
 }
 
 // original 0x449E00 (PSX 0x80097F44, `return 1` there too): al = 1. Thirteen
@@ -354,14 +354,14 @@ extern "C" unsigned char __cdecl Battle_ReturnTrue(void) { return 1; }
 // word +4 = 0xFF56, word +6 = 0x3F, 0x80340C = 0, 0x80340D = 8, 0x80340E = 0.
 // eax is 0 at the end (xor eax, eax); ours returns it.
 extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
-    unsigned char* const w = At(kItemWindow);
-    const unsigned char a = At(kPartyPages)[0];
+    unsigned char* const w = At(BattleE4_List_addr);
+    const unsigned char a = BattleMisc_PartyPages;
     w[0] = 1;
     w[2] = 1;
     w[0xA] = a;
-    const unsigned char b = At(kPartyPages + 1)[0];
+    const unsigned char b = At(BattleMisc_PartyPages_addr + 1)[0];
     w[0xB] = b;
-    const unsigned char c = At(kPartyPages + 2)[0];
+    const unsigned char c = At(BattleMisc_PartyPages_addr + 2)[0];
     w[3] = 2;
     w[8] = 2;
     w[1] = 8;
@@ -371,9 +371,9 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     PutWord(w + 0x10, 0);
     PutWord(w + 4, 0xFF56);
     PutWord(w + 6, 0x3F);
-    At(kItemWindowExtra)[0] = 0;
-    At(kItemWindowExtra + 1)[0] = 8;
-    At(kItemWindowExtra + 2)[0] = 0;
+    BattleE4_Hand = 0;
+    At(BattleE4_Hand_addr + 1)[0] = 8;
+    At(BattleE4_Hand_addr + 2)[0] = 0;
     return 0;
 }
 
@@ -384,7 +384,7 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
 extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
     U eax = 0;
     for (U k = 0; k < 4; ++k) {
-        PutLong(At(kWindowCurrent), kItemWindow + k * 0x24);
+        BattleWinStates_Current = BattleE4_List_addr + k * 0x24;
         eax = g.free_window();
     }
     return eax;
@@ -404,14 +404,14 @@ extern "C" unsigned long __cdecl ItemMenu_FreeWindows(void) {
 // reproduced, so ours aborts loudly (CLAUDE.md rule 4) - the kinds the callers
 // push are constants 1 and 2 (docs/battle_misc.md section 1).
 extern "C" void __cdecl BattleBanner_Dispatch(void) {
-    At(kBannerKinds)[0] = 0;
+    BattleMisc_BannerKinds = 0;
     for (U layer = 0; layer < 2; ++layer) {
         for (U i = 0; i < 8; ++i) {
             unsigned char* const entry = Banner(i);
-            PutLong(At(kBannerCurrent), Addr(entry));
+            BattleMisc_BannerCurrent = Addr(entry);
             if (entry[0] == 0) continue;
             if (entry[3] != layer) continue;
-            if (At(kBannerKinds)[0] & entry[1]) continue;
+            if (BattleMisc_BannerKinds & entry[1]) continue;
             At(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(i);
             const U kind = entry[1];
             if (kind >= 5) bof3::Fatal("banner entry %u has kind %u; the original's stack table holds five", i, kind);
@@ -482,19 +482,19 @@ extern "C" unsigned char __cdecl BattleBanner_NoneOfKind(unsigned kind) {
 // on what it indexes) gets +0 = a, +1 = b, dword +4 = value; kQueueWrite =
 // (index + 1) & 0xF. eax the entry's offset, index * 8 (0x42FF2F returns it).
 extern "C" unsigned long __cdecl BattleQueue_Push(unsigned a, unsigned b, unsigned long value) {
-    const U index = At(kQueueWrite)[0];
+    const U index = BattleActorCopies_QueueWrite;
     unsigned char* const entry = At(kQueue + index * 8);
     entry[0] = static_cast<unsigned char>(a);
     entry[1] = static_cast<unsigned char>(b);
     PutLong(entry + 4, static_cast<U>(value));
-    At(kQueueWrite)[0] = static_cast<unsigned char>((index + 1) & 0xF);
+    BattleActorCopies_QueueWrite = static_cast<unsigned char>((index + 1) & 0xF);
     return index * 8;
 }
 
 // original 0x44A8C0 (PSX 0x801DE8F4): al 1 while the write index differs from the
 // read index. The one caller (0x42E942) tests al.
 extern "C" unsigned char __cdecl BattleQueue_Pending(void) {
-    return At(kQueueWrite)[0] != At(kQueueRead)[0];
+    return BattleActorCopies_QueueWrite != BattleWindows_MsgHead;
 }
 
 // original 0x44A8E0 (PSX 0x801DE914): Str_CopyN(kBannerText, kMessages[msg &
@@ -518,8 +518,8 @@ extern "C" unsigned long __cdecl BattleBanner_SetMessage(unsigned msg, unsigned 
 // is returned.
 extern "C" unsigned long __cdecl BattleBanner_ShowName(const unsigned char* actor) {
     g.copy_n(kBannerText, Addr(actor) + 0x80, 8);
-    if (At(kSuffixOn)[0] != 0) {
-        const U src = Long(At(kNameSuffix));
+    if (BattlePhases_B7A != 0) {
+        const U src = BattleMisc_NameSuffix;
         U n = 0;
         while (At(src + n)[0] != 0) ++n;
         ++n;

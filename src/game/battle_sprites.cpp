@@ -95,12 +95,12 @@ Callees g = kOriginals;
 namespace {
 
 // Actor records, indexed in 32 bits as the originals' lea chains do.
-unsigned char* Party(std::uint32_t i) { return At(at::kParty + i * at::kPartyStride); }
+unsigned char* Party(std::uint32_t i) { return At(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* Enemy(std::uint32_t i) { return At(at::kEnemies + i * at::kEnemyStride); }
 unsigned char* Ptr(const unsigned char* at) { return At(static_cast<std::uint32_t>(Long(at))); }
 std::int32_t Address(const void* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* ActionRecord(std::uint32_t action) { return At(at::kActions + action * at::kActionStride); }
-std::uint16_t CurrentAction() { return Word(Ptr(At(at::kAction)) + 2); }
+std::uint16_t CurrentAction() { return Word(Ptr(At(BattleSprites_Action_addr)) + 2); }
 unsigned char Target() { return At(at::kTarget)[0]; }
 void SetTarget(unsigned char t) { At(at::kTarget)[0] = t; }
 void OrLong(unsigned char* at, std::uint32_t bits) { SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) | bits)); }
@@ -310,13 +310,13 @@ extern "C" unsigned char __cdecl Battle_SettleFlag8(void) {
             SetLong(p + 0x130, static_cast<std::int32_t>(flags & ~8u));
             continue;
         }
-        if (g.action_flag(Ptr(At(at::kAction))[2])) continue;
+        if (g.action_flag(Ptr(At(BattleSprites_Action_addr))[2])) continue;
         const std::uint16_t action = CurrentAction();
         if (ActionRecord(action)[5] & 2) {
             g.inventory_put(action, i, 0, 1);
-            g.inventory_put(Ptr(At(at::kAction))[2], p[0x148], 0, 0);
+            g.inventory_put(Ptr(At(BattleSprites_Action_addr))[2], p[0x148], 0, 0);
             const std::uint16_t again = CurrentAction();
-            OrLong(At(at::kActionFlags + (again >> 5) * 4u), 1u << (again & 31));
+            OrLong(At(Cond_Flags_addr + 0xf8 + (again >> 5) * 4u), 1u << (again & 31));
         }
         answer = 1;
     }
@@ -337,7 +337,7 @@ extern "C" void __cdecl Formation_ApplyStatMods(void) {
     auto stat = [](std::uint32_t address) { return reinterpret_cast<unsigned short*>(At(address)); };
     auto half = [](std::uint32_t address) { return static_cast<unsigned>(Word(At(address)) >> 1); };
     auto quarter = [](std::uint32_t address) { return static_cast<unsigned>(Word(At(address)) >> 2); };
-    switch (static_cast<std::uint32_t>(Long(At(at::kFormation)) & 0xFF) - 1) {
+    switch (static_cast<std::uint32_t>(Long(At(Cond_Flags_addr + 0xd0)) & 0xFF) - 1) {
     case 0:
         g.add_clamped(stat(0x802E04), half(0x802E04));
         g.add_clamped(stat(0x802E06), 0u - quarter(0x802E06));
@@ -430,7 +430,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
         }
         if (!(p[0x134] & 1)) {
             const unsigned char roll = static_cast<unsigned char>(g.rand() & 7);
-            if (static_cast<signed char>(roll) >= 3 && At(at::kPartyPick)[0] != 1)
+            if (static_cast<signed char>(roll) >= 3 && BattleSprites_PartyPick != 1)
                 SetTarget(g.pick_party(member));
             else
                 SetTarget(g.pick_enemy_b(static_cast<unsigned char>((g.rand() & 7) + 3)));
@@ -455,7 +455,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
     // A party target of the member's own choosing: 0x454310 unless 0x904AB1
     // is 1, then the member itself.
     auto party_pick = [member]() {
-        if (At(at::kPartyPick)[0] != 1) SetTarget(g.pick_party(member));
+        if (BattleSprites_PartyPick != 1) SetTarget(g.pick_party(member));
         else SetTarget(static_cast<unsigned char>(member));
     };
     switch (p[0x125]) {
@@ -508,7 +508,7 @@ extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
             party_pick();
             return;
         }
-        if (At(at::kEnemyPick)[0] != 1) SetTarget(g.pick_enemy_a(again));
+        if (BattleE2_EnemiesLeft != 1) SetTarget(g.pick_enemy_a(again));
         else SetTarget(g.pick_enemy_b(again));
         return;
     }
@@ -546,14 +546,14 @@ extern "C" void __cdecl Battle_PlayHitSound(void) {
 extern "C" void __cdecl Battle_SetHitPopup(void) {
     const unsigned slot = g.popup_slot(0, 3) & 0xFFu;
     const unsigned char actor = At(at::kActor)[0];
-    const unsigned char* const block = Ptr(At(at::kHitBlock));
+    const unsigned char* const block = Ptr(At(BattleSprites_HitBlock_addr));
     unsigned char* const rec = At(at::kPopups + slot * at::kPopupStride);
     unsigned char* const s = Sprite_Current;
     SetLong(rec + 0x80, Address(s));
     if (actor <= 2) rec[7] = (block[0xC] & 2) ? 7 : At(at::kHitClass)[Party(actor)[0x92] * 0x1Cu];
     else rec[7] = (block[0xC] & 2) ? 7 : Enemy(actor - 3u)[0x101];
     if (s[5] > 2) {
-        const unsigned char* const offsets = Ptr(At(at::kEnemyOffsets));
+        const unsigned char* const offsets = Ptr(At(BattleE3_CurrentEnemy_addr));
         SetWord(rec + 0x2E, static_cast<unsigned>(static_cast<signed char>(offsets[0xF2]) + Word(s + 0x2E)));
         SetWord(rec + 0x30, static_cast<unsigned>(static_cast<signed char>(offsets[0xF3]) + Word(s + 0x30)));
         SetWord(rec + 0x32, Word(s + 0x32));
@@ -561,8 +561,8 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
         return;
     }
     const unsigned char* const field = Field_State;
-    SetWord(rec + 0x2E, static_cast<unsigned>(static_cast<signed char>(At(at::kPartyOffsets)[(s[8] + field[0x89] * 4u) * 2]) + Word(s + 0x2E)));
-    SetWord(rec + 0x30, static_cast<unsigned>(static_cast<signed char>(At(at::kPartyOffsets + 1)[(s[8] + field[0x89] * 4u) * 2]) + Word(s + 0x30)));
+    SetWord(rec + 0x2E, static_cast<unsigned>(BattleWin_MemberTargetOffsets[(s[8] + field[0x89] * 4u) * 2] + Word(s + 0x2E)));
+    SetWord(rec + 0x30, static_cast<unsigned>(BattleWin_MemberTargetOffsets[0x1 + (s[8] + field[0x89] * 4u) * 2] + Word(s + 0x30)));
     SetWord(rec + 0x32, Word(s + 0x32));
     rec[8] = Party(s[5])[8];
 }
@@ -576,9 +576,9 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
 extern "C" unsigned char __cdecl Sprite_SetTint(unsigned char* sprite, unsigned char r, unsigned char g_, unsigned char b,
                                                 unsigned char a) {
     unsigned i = 0;
-    while (At(at::kTints + i * 12)[0] & 1)
+    while (At(MoveScript_TintRecords_addr + i * 12)[0] & 1)
         if (++i == 32) return 0xFF;
-    unsigned char* const rec = At(at::kTints + i * 12);
+    unsigned char* const rec = At(MoveScript_TintRecords_addr + i * 12);
     const unsigned char head = static_cast<unsigned char>((a << 1) + 0x41);
     rec[0] = head;
     if (sprite[0x28] == 0 && !(sprite[0x24] & 4)) rec[0] = static_cast<unsigned char>(head | 0x80);
@@ -596,7 +596,7 @@ extern "C" unsigned char __cdecl Sprite_SetTint(unsigned char* sprite, unsigned 
 // if in use: bit 7 clears bit 2 of the sprite's +0x24, +0 = 0, the sprite's
 // +0x27 back from +1, and its clut cells freed (ClutMap_Mark(+5, index, 0)).
 extern "C" void __cdecl Tint_Release(unsigned char index) {
-    unsigned char* const rec = At(at::kTints + index * 12u);
+    unsigned char* const rec = At(MoveScript_TintRecords_addr + index * 12u);
     const unsigned char head = rec[0];
     if (!(head & 1)) return;
     if (head & 0x80) Ptr(rec + 8)[0x24] &= 0xFB;
@@ -723,7 +723,7 @@ extern "C" void __cdecl Sprite_SetClutStp(void) {
 // original 0x494280 (0x800A8AD4, the PSX's Battle_InitEncounterKind): a boss
 // encounter (0x904AAA not 0) or an ordinary one - both tail jumps.
 extern "C" void __cdecl Battle_InitEncounterKind(void) {
-    if (At(at::kBoss)[0]) g.boss_encounter();
+    if (BattleActions_EventBattle) g.boss_encounter();
     else g.normal_encounter();
 }
 
@@ -737,8 +737,8 @@ extern "C" void __cdecl Battle_InitEncounterKind(void) {
 // about 3,000 times per self-test, so expect that many lines there.
 extern "C" void __cdecl Battle_InitBossEncounter(void) {
     g.boss_common();
-    const unsigned id = At(at::kBoss)[0];
-    const std::uint32_t handler = static_cast<std::uint32_t>(Long(At(at::kBossHandlers + id * 4u)));
+    const unsigned id = BattleActions_EventBattle;
+    const std::uint32_t handler = static_cast<std::uint32_t>(Long(At(Boss_SetupTable_addr + id * 4u)));
     bof3::Log("boss encounter: id %u (0x%02X) -> set-up 0x%08X", id, id, static_cast<unsigned>(handler));
     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(handler))();
 }
@@ -747,7 +747,7 @@ extern "C" void __cdecl Battle_InitBossEncounter(void) {
 // the eight at 0x939F00 set up as the next enemy (Battle_SetupEnemy(n, +1,
 // +4, +8)); 0x904AB3 = the count Battle_SetupEnemy left.
 extern "C" void __cdecl Battle_InitEnemies(void) {
-    At(at::kEnemyCount)[0] = 0;
+    BattleActorCopies_EnemyCount = 0;
     unsigned char n = 0;
     for (unsigned r = 0; r < 8; ++r) {
         const unsigned char* const rec = At(at::kEncounter + r * 12);
@@ -755,7 +755,7 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
         g.setup_enemy(n, rec[1], Long(rec + 4), Long(rec + 8));
         ++n;
     }
-    At(at::kEnemyPick)[0] = At(at::kEnemyCount)[0];
+    BattleE2_EnemiesLeft = BattleActorCopies_EnemyCount;
 }
 
 // original 0x494320 (no twin found): enemy `slot` from enemy data `id` at
@@ -812,7 +812,7 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     g.copy_enemy(slot, id);
     g.enemy_offset(slot, id);
     e[0x8F] = g.kind_flag(data[0xC]);
-    At(at::kEnemyCount)[0] = static_cast<unsigned char>(At(at::kEnemyCount)[0] + 1);
+    BattleActorCopies_EnemyCount = static_cast<unsigned char>(BattleActorCopies_EnemyCount + 1);
 }
 
 // original 0x4946C0 (0x800A9148): the enemy data `id` (by its low byte) into
@@ -904,7 +904,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
     };
 
     unsigned char listed = 0;
-    unsigned char enemies = At(at::kEnemyCount)[0];
+    unsigned char enemies = BattleActorCopies_EnemyCount;
     if (enemies) {
         for (unsigned e = 0, left = enemies; left; --left, ++e) {
             const unsigned char* const rec = Enemy(e);
@@ -920,7 +920,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
             counts[listed] = 1;
             ++listed;
         }
-        enemies = At(at::kEnemyCount)[0];
+        enemies = BattleActorCopies_EnemyCount;
     }
     if (enemies > 1 && listed > 1)
         for (unsigned char d = 1; d < listed; ++d)
@@ -952,7 +952,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
         y = static_cast<std::uint16_t>(y - left * 8u - 0xD);
         const std::uint16_t top = y;
         std::uint16_t row = y;
-        if (At(at::kEnemyCount)[0])
+        if (BattleActorCopies_EnemyCount)
             for (unsigned char e = 0; left;) {
                 if (kind(k) == Enemy(e)[0x8C]) {
                     set_count(k, count(k) - 1u);
@@ -971,7 +971,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
                     --left;
                     row = static_cast<std::uint16_t>(row + 8);
                 }
-                if (!(++e < At(at::kEnemyCount)[0])) break;
+                if (!(++e < BattleActorCopies_EnemyCount)) break;
             }
         y = static_cast<std::uint16_t>(top - 2);
         ++k;
@@ -982,13 +982,13 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
 // in Battle_SetupEnemy, an enemy kind's flag (a kind seen before, perhaps).
 extern "C" unsigned char __cdecl Battle_EnemyKindFlag(unsigned kind) {
     const std::uint32_t k = kind & 0xFFFF;
-    return (static_cast<std::uint32_t>(Long(At(at::kKindFlags + (k >> 5) * 4))) & (1u << (k & 31))) ? 1 : 0;
+    return (static_cast<std::uint32_t>(Long(At(Cond_Flags_addr + 0xd8 + (k >> 5) * 4))) & (1u << (k & 31))) ? 1 : 0;
 }
 
 // original 0x494ED0: sets that bit. Called from 0x437470 (group BB).
 extern "C" void __cdecl Battle_SetEnemyKindFlag(unsigned kind) {
     const std::uint32_t k = kind & 0xFFFF;
-    OrLong(At(at::kKindFlags + (k >> 5) * 4), 1u << (k & 31));
+    OrLong(At(Cond_Flags_addr + 0xd8 + (k >> 5) * 4), 1u << (k & 31));
 }
 
 // original 0x494F00: enemy `slot`'s +0xF2 / +0xF3 from the enemy data `id`

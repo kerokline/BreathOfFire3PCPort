@@ -35,9 +35,9 @@ using U = std::uint32_t;
 
 // --- the field frame's cells --------------------------------------------------
 constexpr U kStoryFlags = 0x904030;
-constexpr U kTailKind = 0x9039F3;         // Field_ModeTailKinds' index (s8)
-constexpr U kTailState = 0x9039F4;        // s8: the armed tail kind's (or the field hook's) state
-constexpr U kTailArg = 0x9039F5;
+// kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the field hook's) state
+// kTailArg: now AreaW0c_TailSub (symbols.toml).
 // kMsgMode: now AreaW0a_TailKind (symbols.toml).
 // kMsgState: now AreaW0c_TailState (symbols.toml).
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).

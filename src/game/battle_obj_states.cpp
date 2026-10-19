@@ -41,8 +41,8 @@ const std::uint32_t* Table(std::uint32_t address) { return reinterpret_cast<cons
 }  // namespace
 
 const Callees kOriginals = {
-    Table(at::kIdleSubs), Table(at::kAttackByChar), Table(at::kAttackSpecial), Table(at::kSwingSubs),
-    Table(at::kCastSubs), Table(at::kCastDoneSubs), Table(at::kState12Subs),
+    Table(BattleObj_StateTable_addr + 0x34), Table(BattleObj_StateTable_addr + 0x3c), Table(BattleObj_StateTable_addr + 0x68), Table(BattleObj_SwingSubs_addr),
+    Table(BattleObj_CastSubs_addr), Table(BattleObj_CastDoneSubs_addr), Table(BattleObj_State12Subs_addr),
     BattleObj_EndAction,
     BattleObj_PickPose, BattleObj_ScriptTick, BattleObj_ScriptTickOnce, AreaMap_Elevation, Sprite_EnsureAnimation,
     Sprite_SetTint, Tint_Release, Battle_RollPendingFlag, Rand, Battle_PlayActorCue, BattleTask_Create,
@@ -129,9 +129,9 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
     S()[0x5D] = 0;
     bool phase5 = false;
     if (At(at::kPhase)[0] == 1) {
-        if (At(at::kPhaseArg)[0] > 1) {
-            const unsigned member = At(at::kTargetMember)[0];
-            const unsigned char c = F()[0x89] == At(at::kMembers + member * at::kMemberSize + 0x89)[0] ? 0x78 : 0xE2;
+        if (BattleActions_Step > 1) {
+            const unsigned member = BattleE4_AutoMember;
+            const unsigned char c = F()[0x89] == At(ObjTrio_addr + member * at::kMemberSize + 0x89)[0] ? 0x78 : 0xE2;
             S()[0x5F] = c;
             S()[0x5E] = c;
             S()[0x5D] = c;
@@ -143,8 +143,8 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
     unsigned char* const f = F();
     if (phase5) {
         if ((Long(At(at::kRoundFlags)) & 0x8000) != 0 && (F()[0x134] & 2) != 0) {
-            SetLong(S() + 0x34, Long(At(at::kHomeX)));
-            SetLong(S() + 0x38, Long(At(at::kHomeY)));
+            SetLong(S() + 0x34, static_cast<std::int32_t>(BossSi_CentreX));
+            SetLong(S() + 0x38, static_cast<std::int32_t>(BossSi_CentreZ));
         } else {
             SetLong(S() + 0x34, Long(Task(S()[5]) + 0x34));
             SetLong(S() + 0x38, Long(Task(S()[5]) + 0x38));
@@ -182,9 +182,9 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
 // Sprite_SetTint(Sprite_Current, 0, 0, 0, 0) into +7 - and the sub-state
 // becomes 1.
 extern "C" void __cdecl BattleObj_IdleTintOn(void) {
-    if (At(at::kTintOn)[0] == 0) return;
+    if (BattleE4_Picking == 0) return;
     unsigned char* const s = S();
-    const unsigned char target = At(static_cast<std::uint32_t>(Long(At(at::kTargetPtr))))[0];
+    const unsigned char target = At(BattleActorCopies_Command)[0];
     if (target != s[5] && (target & 0x80) == 0) return;
     const unsigned char r = g.set_tint(s, 0, 0, 0, 0);
     S()[7] = r;
@@ -201,11 +201,11 @@ extern "C" void __cdecl BattleObj_IdleTintOn(void) {
 extern "C" void __cdecl BattleObj_IdleTintOff(void) {
     unsigned char* const s = S();
     const unsigned char level = At(at::kTintLevel)[0];
-    At(at::kTints + 4 + s[7] * 12u)[0] = level;
-    At(at::kTints + 3 + s[7] * 12u)[0] = level;
-    At(at::kTints + 2 + s[7] * 12u)[0] = level;
-    if (At(at::kTintOn)[0] != 0) {
-        const unsigned char target = At(static_cast<std::uint32_t>(Long(At(at::kTargetPtr))))[0];
+    At(MoveScript_TintRecords_addr + 4 + s[7] * 12u)[0] = level;
+    At(MoveScript_TintRecords_addr + 3 + s[7] * 12u)[0] = level;
+    At(MoveScript_TintRecords_addr + 2 + s[7] * 12u)[0] = level;
+    if (BattleE4_Picking != 0) {
+        const unsigned char target = At(BattleActorCopies_Command)[0];
         if (target == s[5]) return;
         if (target & 0x80) return;
     }
@@ -242,8 +242,8 @@ extern "C" void __cdecl BattleObj_StateAttack(void) {
 // again for the second counter.
 extern "C" void __cdecl BattleObj_AttackStart(void) {
     if (F()[0x134] & 2) {
-        S()[9] = At(at::kAttackCountBy + At(at::kCastKind)[0])[0];
-        S()[0xA] = At(at::kAttackCountBy + At(at::kCastKind)[0])[0];
+        S()[9] = At(at::kAttackCountBy + BattlePhases_B89)[0];
+        S()[0xA] = At(at::kAttackCountBy + BattlePhases_B89)[0];
     } else {
         S()[9] = At(at::kAttackCount + F()[0x89])[0];
         S()[0xA] = At(at::kAttackCount + F()[0x89])[0];
@@ -324,12 +324,12 @@ extern "C" void __cdecl BattleObj_CastStart(void) {
     unsigned char* const f = F();
     if (f[0x125] == 4) {
         if ((f[0x134] & 2) == 0) {
-            const unsigned char set = At(at::kSoundSet)[0];
+            const unsigned char set = BattleE3_SoundSet;
             S()[9] = g.load_sound(f[0x89], set) != 0 ? 0 : 0x1E;
         } else {
-            const unsigned char kind = At(at::kCastKind)[0];
+            const unsigned char kind = BattlePhases_B89;
             if (kind == 4 || kind == 7 || kind == 8) {
-                const unsigned char set = At(at::kSoundSet)[0];
+                const unsigned char set = BattleE3_SoundSet;
                 if (g.load_sound(f[0x89], set) != 0) S()[9] = 0;
             }
         }
@@ -338,7 +338,7 @@ extern "C" void __cdecl BattleObj_CastStart(void) {
     }
     const unsigned skill = Word(At(at::kSkillId));
     if ((At(at::kSkillWord + 1 + skill * 24)[0] & 8) == 0) {
-        const unsigned char count = (F()[0x134] & 2) ? At(at::kCastCountBy + At(at::kCastKind)[0])[0]
+        const unsigned char count = (F()[0x134] & 2) ? At(at::kCastCountBy + BattlePhases_B89)[0]
                                                      : At(at::kCastCount + F()[0x89])[0];
         S()[9] = count;
         Pose(0x2C);
@@ -361,7 +361,7 @@ extern "C" void __cdecl BattleObj_CastCue(void) {
     } else {
         g.play_cue(5);
         if (F()[0x134] & 2) {
-            const unsigned char kind = At(at::kCastKind)[0];
+            const unsigned char kind = BattlePhases_B89;
             if (kind != 4 && kind != 7 && kind != 8) g.play_cue(3);
         }
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -405,7 +405,7 @@ extern "C" void __cdecl BattleObj_CastDoneTick(void) {
 extern "C" void __cdecl BattleObj_CastDone(void) {
     unsigned char* f = F();
     if (f[0x125] == 4) {
-        SetWord(f + 0x9A, Word(f + 0x9A) - At(at::kSkillCost)[0]);
+        SetWord(f + 0x9A, Word(f + 0x9A) - BattleE3_Cost);
         f = F();
     }
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) | 0x800);

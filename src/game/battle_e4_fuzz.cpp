@@ -109,7 +109,8 @@ constexpr bh::CallSite kCalls44A910[] = {{0x38, 0x5171A0}};
 constexpr bh::CallSite kCalls44A960[] = {{0x21, 0x5171A0}};
 constexpr bh::CallSite kCalls44AA90[] = {{0x22, 0x497740}, {0x30, 0x44A650}};
 
-constexpr U kS3 = at::kStep3, kS4 = at::kStep4;
+// kS3: now BattleE4_Step3 (symbols.toml).
+// kS4: now BattleE4_Step4 (symbols.toml).
 
 const bh::Clone kAll56[] = {
     // the screen tiles
@@ -137,37 +138,37 @@ const bh::Clone kAll56[] = {
     C("BattleEnd_EnterStep3", 0x446E20, 0x16, nullptr, 0, BH_FN(BattleEnd_EnterStep3), S::kHelper),
     // the item command's states 5..9 and the equipment window
     C("ItemMenu_SetupForMember", 0x447F40, 0x8C, nullptr, 0, BH_FN(ItemMenu_SetupForMember), S::kHelper),
-    C("BattleItemCmd_SideBegin", 0x448BA0, 0x51, kCalls448BA0, BH_N(kCalls448BA0), BH_FN(BattleItemCmd_SideBegin), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_SidePick", 0x448C00, 0x7C, kCalls448C00, BH_N(kCalls448C00), BH_FN(BattleItemCmd_SidePick), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipMenu", 0x448CA0, 0x138, kCalls448CA0, BH_N(kCalls448CA0), BH_FN(BattleItemCmd_EquipMenu), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipSlotPick", 0x448DE0, 0x1DD, kCalls448DE0, BH_N(kCalls448DE0), BH_FN(BattleItemCmd_EquipSlotPick), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipItemPick", 0x448FC0, 0x210, kCalls448FC0, BH_N(kCalls448FC0), BH_FN(BattleItemCmd_EquipItemPick), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipUsePick", 0x4491D0, 0x202, kCalls4491D0, BH_N(kCalls4491D0), BH_FN(BattleItemCmd_EquipUsePick), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipUseKind", 0x4493E0, 0x9B, kCalls4493E0, BH_N(kCalls4493E0), BH_FN(BattleItemCmd_EquipUseKind), S::kStep, 0, 10, kS3),
-    C("BattleItemCmd_EquipTargetDispatch", 0x449480, 0x11, nullptr, 0, BH_FN(BattleItemCmd_EquipTargetDispatch), S::kDispatch, 0, 5, kS4),
-    C("BattleItemCmd_EquipTargetBegin", 0x4494A0, 0x93, kCalls4494A0, BH_N(kCalls4494A0), BH_FN(BattleItemCmd_EquipTargetBegin), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipPickEnemy", 0x449540, 0x13C, kCalls449540, BH_N(kCalls449540), BH_FN(BattleItemCmd_EquipPickEnemy), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipPickMember", 0x449680, 0x1AC, kCalls449680, BH_N(kCalls449680), BH_FN(BattleItemCmd_EquipPickMember), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipCommit", 0x449830, 0x69, kCalls449830, BH_N(kCalls449830), BH_FN(BattleItemCmd_EquipCommit), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipCancel", 0x4498A0, 0x4A, kCalls4498A0, BH_N(kCalls4498A0), BH_FN(BattleItemCmd_EquipCancel), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipSideDispatch", 0x4498F0, 0x11, nullptr, 0, BH_FN(BattleItemCmd_EquipSideDispatch), S::kDispatch, 0, 4, kS4),
-    C("BattleItemCmd_EquipSideBegin", 0x449910, 0x52, kCalls449910, BH_N(kCalls449910), BH_FN(BattleItemCmd_EquipSideBegin), S::kStep, 0, 8, kS4),
-    C("BattleItemCmd_EquipSidePick", 0x449970, 0x83, kCalls449970, BH_N(kCalls449970), BH_FN(BattleItemCmd_EquipSidePick), S::kStep, 0, 8, kS4),
+    C("BattleItemCmd_SideBegin", 0x448BA0, 0x51, kCalls448BA0, BH_N(kCalls448BA0), BH_FN(BattleItemCmd_SideBegin), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_SidePick", 0x448C00, 0x7C, kCalls448C00, BH_N(kCalls448C00), BH_FN(BattleItemCmd_SidePick), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipMenu", 0x448CA0, 0x138, kCalls448CA0, BH_N(kCalls448CA0), BH_FN(BattleItemCmd_EquipMenu), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipSlotPick", 0x448DE0, 0x1DD, kCalls448DE0, BH_N(kCalls448DE0), BH_FN(BattleItemCmd_EquipSlotPick), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipItemPick", 0x448FC0, 0x210, kCalls448FC0, BH_N(kCalls448FC0), BH_FN(BattleItemCmd_EquipItemPick), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipUsePick", 0x4491D0, 0x202, kCalls4491D0, BH_N(kCalls4491D0), BH_FN(BattleItemCmd_EquipUsePick), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipUseKind", 0x4493E0, 0x9B, kCalls4493E0, BH_N(kCalls4493E0), BH_FN(BattleItemCmd_EquipUseKind), S::kStep, 0, 10, BattleE4_Step3_addr),
+    C("BattleItemCmd_EquipTargetDispatch", 0x449480, 0x11, nullptr, 0, BH_FN(BattleItemCmd_EquipTargetDispatch), S::kDispatch, 0, 5, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipTargetBegin", 0x4494A0, 0x93, kCalls4494A0, BH_N(kCalls4494A0), BH_FN(BattleItemCmd_EquipTargetBegin), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipPickEnemy", 0x449540, 0x13C, kCalls449540, BH_N(kCalls449540), BH_FN(BattleItemCmd_EquipPickEnemy), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipPickMember", 0x449680, 0x1AC, kCalls449680, BH_N(kCalls449680), BH_FN(BattleItemCmd_EquipPickMember), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipCommit", 0x449830, 0x69, kCalls449830, BH_N(kCalls449830), BH_FN(BattleItemCmd_EquipCommit), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipCancel", 0x4498A0, 0x4A, kCalls4498A0, BH_N(kCalls4498A0), BH_FN(BattleItemCmd_EquipCancel), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipSideDispatch", 0x4498F0, 0x11, nullptr, 0, BH_FN(BattleItemCmd_EquipSideDispatch), S::kDispatch, 0, 4, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipSideBegin", 0x449910, 0x52, kCalls449910, BH_N(kCalls449910), BH_FN(BattleItemCmd_EquipSideBegin), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("BattleItemCmd_EquipSidePick", 0x449970, 0x83, kCalls449970, BH_N(kCalls449970), BH_FN(BattleItemCmd_EquipSidePick), S::kStep, 0, 8, BattleE4_Step4_addr),
     C("BattleEquip_Apply", 0x449A00, 0x1A3, kCalls449A00, BH_N(kCalls449A00), BH_FN(BattleEquip_Apply), S::kHelper),
     C("BattleEquip_Preview", 0x449BB0, 0xBD, kCalls449BB0, BH_N(kCalls449BB0), BH_FN(BattleEquip_Preview), S::kHelper),
     C("BattleEquip_RemoveSlot", 0x449C70, 0x18C, kCalls449C70, BH_N(kCalls449C70), BH_FN(BattleEquip_RemoveSlot), S::kHelper, 0xFF),
     C("BattleEquip_OpenChange", 0x449E90, 0xC9, nullptr, 0, BH_FN(BattleEquip_OpenChange), S::kHelper),
     C("BattleEquip_OpenUse", 0x449F60, 0x73, nullptr, 0, BH_FN(BattleEquip_OpenUse), S::kHelper),
     // the escape
-    C("Escape_Roll", 0x44A010, 0x113, kCalls44A010, BH_N(kCalls44A010), BH_FN(Escape_Roll), S::kStep, 0, 4, kS3),
-    C("Escape_FailDispatch", 0x44A130, 0x11, nullptr, 0, BH_FN(Escape_FailDispatch), S::kDispatch, 0, 4, kS4),
-    C("Escape_Begin", 0x44A150, 0x18F, kCalls44A150, BH_N(kCalls44A150), BH_FN(Escape_Begin), S::kStep, 0, 8, kS4),
-    C("Escape_StepBack", 0x44A2E0, 0x49, nullptr, 0, BH_FN(Escape_StepBack), S::kStep, 0, 8, kS4),
-    C("Escape_StepOn", 0x44A330, 0x49, nullptr, 0, BH_FN(Escape_StepOn), S::kStep, 0, 8, kS4),
-    C("Escape_Failed", 0x44A380, 0xCD, kCalls44A380, BH_N(kCalls44A380), BH_FN(Escape_Failed), S::kStep, 0, 8, kS4),
-    C("Escape_WinDispatch", 0x44A450, 0x11, nullptr, 0, BH_FN(Escape_WinDispatch), S::kDispatch, 0, 3, kS4),
-    C("Escape_Leave", 0x44A470, 0x73, kCalls44A470, BH_N(kCalls44A470), BH_FN(Escape_Leave), S::kStep, 0, 8, kS4),
-    C("Escape_End", 0x44A4F0, 0x30, nullptr, 0, BH_FN(Escape_End), S::kStep, 0, 8, kS4),
+    C("Escape_Roll", 0x44A010, 0x113, kCalls44A010, BH_N(kCalls44A010), BH_FN(Escape_Roll), S::kStep, 0, 4, BattleE4_Step3_addr),
+    C("Escape_FailDispatch", 0x44A130, 0x11, nullptr, 0, BH_FN(Escape_FailDispatch), S::kDispatch, 0, 4, BattleE4_Step4_addr),
+    C("Escape_Begin", 0x44A150, 0x18F, kCalls44A150, BH_N(kCalls44A150), BH_FN(Escape_Begin), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("Escape_StepBack", 0x44A2E0, 0x49, nullptr, 0, BH_FN(Escape_StepBack), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("Escape_StepOn", 0x44A330, 0x49, nullptr, 0, BH_FN(Escape_StepOn), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("Escape_Failed", 0x44A380, 0xCD, kCalls44A380, BH_N(kCalls44A380), BH_FN(Escape_Failed), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("Escape_WinDispatch", 0x44A450, 0x11, nullptr, 0, BH_FN(Escape_WinDispatch), S::kDispatch, 0, 3, BattleE4_Step4_addr),
+    C("Escape_Leave", 0x44A470, 0x73, kCalls44A470, BH_N(kCalls44A470), BH_FN(Escape_Leave), S::kStep, 0, 8, BattleE4_Step4_addr),
+    C("Escape_End", 0x44A4F0, 0x30, nullptr, 0, BH_FN(Escape_End), S::kStep, 0, 8, BattleE4_Step4_addr),
     C("Escape_Chance", 0x44A520, 0x96, kCalls44A520, BH_N(kCalls44A520), BH_FN(Escape_Chance), S::kHelper, 0xFF),
     // text
     C("Battle_MemberNameToText", 0x44A910, 0x41, kCalls44A910, BH_N(kCalls44A910), BH_FN(Battle_MemberNameToText), S::kHelper),
@@ -175,12 +176,12 @@ const bh::Clone kAll56[] = {
     C("BattleBanner_AddLine", 0x44AA90, 0x39, kCalls44AA90, BH_N(kCalls44AA90), BH_FN(BattleBanner_AddLine), S::kHelper),
     // four entries again, through the dispatcher that reaches them in the game
     V("BattleItemCmd_SideBegin via 0x448B80", 0x448BA0, 0x51, kCalls448BA0, BH_N(kCalls448BA0), BH_FN(BattleItemCmd_SideBegin), 0x448B80,
-      0x64E4A0, 0, kS4),
+      0x64E4A0, 0, BattleE4_Step4_addr),
     V("BattleItemCmd_EquipSlotPick via 0x448C80", 0x448DE0, 0x1DD, kCalls448DE0, BH_N(kCalls448DE0), BH_FN(BattleItemCmd_EquipSlotPick),
-      0x448C80, 0x64E4B4, 1, kS4),
+      0x448C80, 0x64E4B4, 1, BattleE4_Step4_addr),
     V("BattleItemCmd_EquipUseKind via BattleItemCmd_Dispatch", 0x4493E0, 0x9B, kCalls4493E0, BH_N(kCalls4493E0),
-      BH_FN(BattleItemCmd_EquipUseKind), bof3::addr::BattleItemCmd_Dispatch, 0x64E45C + 4 * 7, 7, kS3),
-    V("Escape_Roll via 0x44A000", 0x44A010, 0x113, kCalls44A010, BH_N(kCalls44A010), BH_FN(Escape_Roll), 0x44A000, 0x64E4FC, 0, kS3),
+      BH_FN(BattleItemCmd_EquipUseKind), bof3::addr::BattleItemCmd_Dispatch, 0x64E45C + 4 * 7, 7, BattleE4_Step3_addr),
+    V("Escape_Roll via 0x44A000", 0x44A010, 0x113, kCalls44A010, BH_N(kCalls44A010), BH_FN(Escape_Roll), 0x44A000, 0x64E4FC, 0, BattleE4_Step3_addr),
 };
 
 // The dispatchers' tables, counted from the code (docs/battle_e4.md section 5).
@@ -215,11 +216,11 @@ const bh::Callee kCallees[] = {
 const bh::Region kRegions[] = {
     {0x903B24, 0x903F90 - 0x903B24},   // CharacterRecords 1..7 (0x903A70 + 8 x 0xA4 = Cond_Flags)
     {0x904060, 0x10},                  // 0x904065..0x904067
-    {at::kCharOf, 0x18},               // MoveScript_EffectState
+    {MoveScript_EffectState_addr, 0x18}, // MoveScript_EffectState
     {at::kPreview, 8},
     {at::kTint, 4},
     {0x904EFC, 4},                     // MoveScript_FAWord
-    {at::kKind2Z, 8},                  // Field_Kind2Z, Field_Kind2X
+    {Field_Kind2Z_addr, 8},            // Field_Kind2Z, Field_Kind2X
     {at::kRepeatLatch, 4},
     {0x904154, 0x9045FC - 0x904154},   // the inventory's id and count lists (0x656B00 / 0x656B14)
     {0x93C320, 0x3C0},                 // the queue's tail to 0x93C340, Escape_Roll's objects past the eight
@@ -248,11 +249,11 @@ void Indices() {
         p[0x148] = static_cast<unsigned char>(bh::Next() % 8);
         p[0x89] = static_cast<unsigned char>(bh::Next() % 8);
     }
-    for (unsigned i = 0; i < 3; ++i) M(at::kMemberChar)[i] = static_cast<unsigned char>(bh::Next() % 8);
-    for (unsigned i = 0; i < 8; ++i) M(at::kCharOf)[i] = static_cast<unsigned char>(bh::Next() % 8);
-    M(at::kSlots + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 6);
-    M(at::kSlots + 0xC)[0] = static_cast<unsigned char>(bh::Next() % 3);
-    M(at::kList + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 5);
+    for (unsigned i = 0; i < 3; ++i) M(Cond_Flags_addr + 0xd5)[i] = static_cast<unsigned char>(bh::Next() % 8);
+    for (unsigned i = 0; i < 8; ++i) M(MoveScript_EffectState_addr)[i] = static_cast<unsigned char>(bh::Next() % 8);
+    M(BattleE4_Slots_addr + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 6);
+    M(BattleE4_Slots_addr + 0xC)[0] = static_cast<unsigned char>(bh::Next() % 3);
+    M(BattleE4_List_addr + 0xA)[0] = static_cast<unsigned char>(bh::Next() % 5);
 }
 
 // After every disturbance: the same cells a function reads again after a call
@@ -261,11 +262,11 @@ void Indices() {
 // inside their tables - the engine disturbance moves bytes of the current
 // window record and of Sprite_Current, which may be those.
 void Settle() {
-    unsigned char* const cursor = M(at::kSlots + 0xA);
+    unsigned char* const cursor = M(BattleE4_Slots_addr + 0xA);
     if (*cursor > 5) *cursor = static_cast<unsigned char>(*cursor % 6);
-    unsigned char* const member = M(at::kSlots + 0xC);
+    unsigned char* const member = M(BattleE4_Slots_addr + 0xC);
     if (*member > 2) *member = static_cast<unsigned char>(*member % 3);
-    unsigned char* const category = M(at::kList + 0xA);
+    unsigned char* const category = M(BattleE4_List_addr + 0xA);
     if (*category > 4) *category = static_cast<unsigned char>(*category % 5);
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
@@ -280,24 +281,24 @@ void Buttons() {
     const U cancel = kBits[bh::Next() % 7];
     U confirm = kBits[bh::Next() % 7];
     if (confirm == cancel) confirm = cancel == 0x20 ? 0x40 : 0x20;
-    SetWord(M(at::kCancelButtons), cancel);
-    SetWord(M(at::kConfirmButtons), confirm);
+    SetWord(M(Field_CancelButtons_addr), cancel);
+    SetWord(M(Field_ConfirmButtons_addr), confirm);
     const U pressed = Word16({0, cancel, confirm, 0x10, 0x1000, 0x2000, 0x4000, 0x8000, 0xA000, 4, 8, bh::Next() & 0xFFFF,
                               cancel | 0x1000});
-    SetWord(M(at::kInputPressed), pressed);
+    SetWord(M(Input_Pressed_addr), pressed);
 }
 
 // The command states' windows: record 21's option and +3, record 18's +3 and
 // word +0x10, record 17's +3, top, cursor and item at their ends.
 void Windows() {
-    M(at::kAbove + 0xA)[0] = Byte({0, 1, 0, 1, 2, 0xFF});
-    M(at::kAbove + 3)[0] = Byte({0, 0, 1});
-    M(at::kSlots + 3)[0] = Byte({0, 0, 1, 2});
-    SetWord(M(at::kSlots + 0x10), bh::Half() ? 0 : bh::Next());
-    M(at::kCands + 3)[0] = Byte({0, 0, 1});
-    M(at::kCands + 0xA)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x73, 0x78, 0x79, bh::Next()});
-    M(at::kCands + 0xB)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x7E, 0x7F, 0x80, bh::Next()});
-    M(at::kCands + 0xD)[0] = Byte({0, 0, bh::Next()});
+    M(BattleE4_Above_addr + 0xA)[0] = Byte({0, 1, 0, 1, 2, 0xFF});
+    M(BattleE4_Above_addr + 3)[0] = Byte({0, 0, 1});
+    M(BattleE4_Slots_addr + 3)[0] = Byte({0, 0, 1, 2});
+    SetWord(M(BattleE4_Slots_addr + 0x10), bh::Half() ? 0 : bh::Next());
+    M(BattleE4_Cands_addr + 3)[0] = Byte({0, 0, 1});
+    M(BattleE4_Cands_addr + 0xA)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x73, 0x78, 0x79, bh::Next()});
+    M(BattleE4_Cands_addr + 0xB)[0] = Byte({0, 1, 6, 7, 8, 0x72, 0x7E, 0x7F, 0x80, bh::Next()});
+    M(BattleE4_Cands_addr + 0xD)[0] = Byte({0, 0, bh::Next()});
 }
 
 const bh::Clone* g_cur = nullptr;
@@ -309,8 +310,8 @@ void Seed(unsigned k) {
     Windows();
     // the counts every loop runs to: the party 0..3 (1..3 where it divides), the divisors at least 1
     M(at::kPartyCount)[0] = Byte({0, 1, 2, 3, 3, 3});
-    M(at::kPartyDivisor)[0] = Byte({1, 1, 2, 3, 8});
-    M(at::kEnemyDivisor)[0] = Byte({1, 2, 3, 8});
+    M(BattleSprites_PartyPick_addr)[0] = Byte({1, 1, 2, 3, 8});
+    M(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 2, 3, 8});
     M(at::kFaceStep)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 4 : bh::Next());
     switch (base) {
     case 0x4463E0:   // divides by the count
@@ -319,8 +320,8 @@ void Seed(unsigned k) {
     case 0x446110:
     case 0x4461B0:
         M(at::kFlags)[0] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? M(at::kFlags)[0] | 0x80 : M(at::kFlags)[0] & 0x7F);
-        M(at::kEvadeParty)[0] = Byte({0, 1, 49, 50, 98, 99, 100, 0xFF});
-        M(at::kHitEnemy)[0] = Byte({0, 1, 49, 50, 98, 99, 100, 0xFF});
+        M(BattleE3_EvadeBoost_addr)[0] = Byte({0, 1, 49, 50, 98, 99, 100, 0xFF});
+        M(BattleE4_HitEnemy_addr)[0] = Byte({0, 1, 49, 50, 98, 99, 100, 0xFF});
         break;
     case 0x446810: {
         unsigned char* const fs = Field_State;
@@ -330,16 +331,16 @@ void Seed(unsigned k) {
         if (bh::Often()) SetWord(fs + 0x90, Word(fs + 0x90) & ~0x4864u);
         M(at::kActionKind)[0] = Byte({4, 4, 1, bh::Next()});
         SetWord(M(at::kAbility), Word16({0xA1, 0xA1, 0xA0, bh::Next() & 0xFFFF}));
-        M(at::kCharged)[0] = Byte({0, 0, 1, bh::Next()});
+        M(BattleFlow_AnimGate_addr)[0] = Byte({0, 0, 1, bh::Next()});
         fs[0xB9] = Byte({0, 1, 50, 99, 100, bh::Next()});
         break;
     }
     case 0x446720:   // the entry order: members or the 0xFF end, the count 0..3
-        M(at::kCommandsChosen)[0] = static_cast<unsigned char>(bh::Next() % 4);
+        M(BattleActorCopies_EntryCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 4);
         for (unsigned i = 0; i < 3; ++i) M(at::kEntryOrder)[i] = Byte({0, 1, 2, 0xFF});
         break;
     case 0x446700:   // the front stays inside the battle bytes (0x904ACC + 0xD3 = 0x904B9F)
-        M(at::kOrderCursor)[0] = static_cast<unsigned char>(1 + bh::Next() % 0x20);
+        M(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(1 + bh::Next() % 0x20);
         break;
     case 0x446770:
     case 0x4467C0:
@@ -366,43 +367,43 @@ void Seed(unsigned k) {
         break;
     case 0x449BB0:   // it only reads the record: any character byte a third of the time (the mask's bit past 7)
         if (bh::Next() % 3 == 0)
-            for (unsigned i = 0; i < 8; ++i) M(at::kCharOf)[i] = static_cast<unsigned char>(bh::Next());
+            for (unsigned i = 0; i < 8; ++i) M(MoveScript_EffectState_addr)[i] = static_cast<unsigned char>(bh::Next());
         break;
     case 0x449A00: {   // preview bytes: none, the same as worn, or another
-        const unsigned member = M(at::kSlots + 0xC)[0];
-        const unsigned char c = M(at::kCharOf + M(at::kMemberChar + member)[0])[0];
+        const unsigned member = M(BattleE4_Slots_addr + 0xC)[0];
+        const unsigned char c = M(MoveScript_EffectState_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
         const unsigned char* const r = M(at::kCharRecords + c * at::kCharStride);
         for (unsigned i = 0; i < 6; ++i) M(at::kPreview + i)[0] = Byte({0, r[0x12 + i], r[0x12 + i], bh::Next()});
         break;
     }
     case 0x449C70: {   // the slot's item: none a third of the time
-        const unsigned member = M(at::kSlots + 0xC)[0];
-        const unsigned char c = M(at::kCharOf + M(at::kMemberChar + member)[0])[0];
+        const unsigned member = M(BattleE4_Slots_addr + 0xC)[0];
+        const unsigned char c = M(MoveScript_EffectState_addr + M(Cond_Flags_addr + 0xd5 + member)[0])[0];
         unsigned char* const r = M(at::kCharRecords + c * at::kCharStride);
-        if (bh::Next() % 3 == 0) r[0x12 + M(at::kSlots + 0xA)[0]] = 0;
-        if (bh::Next() % 4 == 0) M(at::kSlots + 0xA)[0] = 0;
+        if (bh::Next() % 3 == 0) r[0x12 + M(BattleE4_Slots_addr + 0xA)[0]] = 0;
+        if (bh::Next() % 4 == 0) M(BattleE4_Slots_addr + 0xA)[0] = 0;
         break;
     }
     case 0x44A010:
-        if (bh::Half()) M(at::kFight)[0] = 0;
-        M(at::kEscapeTries)[0] = Byte({0, 1, 2, 3, 0xFF});
-        M(at::kEscapeRun)[0] = Byte({1, 0, bh::Next()});
+        if (bh::Half()) M(BattleActions_EventBattle_addr)[0] = 0;
+        M(BattlePhases_AE6_addr)[0] = Byte({0, 1, 2, 3, 0xFF});
+        M(BattlePhases_Initiative_addr)[0] = Byte({1, 0, bh::Next()});
         break;
     case 0x44A520:
-        M(at::kEscapeTries)[0] = Byte({2, 2, 1, bh::Next()});
+        M(BattlePhases_AE6_addr)[0] = Byte({2, 2, 1, bh::Next()});
         break;
     case 0x44A150:
-        M(at::kStep3)[0] = Byte({2, 1, bh::Next()});
+        M(BattleE4_Step3_addr)[0] = Byte({2, 1, bh::Next()});
         for (unsigned m = 0; m < 3; ++m) bh::PartyOf(static_cast<unsigned char>(m))[0x125] = Byte({5, 5, bh::Next()});
         break;
     case 0x44A2E0:
     case 0x44A330:
     case 0x44A380:
     case 0x44A470:
-        M(at::kKind2Hold)[0] = Byte({0, 0, bh::Next()});
+        M(Field_Kind2Hold_addr)[0] = Byte({0, 0, bh::Next()});
         break;
     case 0x44A4F0:
-        M(at::kEndHold)[0] = Byte({0, 0, bh::Next()});
+        M(BattleMisc_BannerKinds_addr)[0] = Byte({0, 0, bh::Next()});
         break;
     default:
         break;
@@ -459,11 +460,11 @@ void Disturb(U h) {
     switch ((h >> 8) % 7) {
     case 0: bh::PartyOf(static_cast<unsigned char>(b % 3))[5] = static_cast<unsigned char>((h >> 24) % 3); break;
     case 1: SetWord(bh::PartyOf(static_cast<unsigned char>(b % 3)) + 0x126, h >> 12); break;
-    case 2: SetWord(M(at::kSlots + 0x10), b & 1 ? 0 : h >> 12); break;
-    case 3: M(at::kCands + 0xD)[0] = b; break;
-    case 4: M(at::kAbove + 0xA)[0] = b & 1; break;
+    case 2: SetWord(M(BattleE4_Slots_addr + 0x10), b & 1 ? 0 : h >> 12); break;
+    case 3: M(BattleE4_Cands_addr + 0xD)[0] = b; break;
+    case 4: M(BattleE4_Above_addr + 0xA)[0] = b & 1; break;
     case 5: M(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
-    default: M(at::kKind2Hold)[0] = b & 1; break;
+    default: M(Field_Kind2Hold_addr)[0] = b & 1; break;
     }
 }
 

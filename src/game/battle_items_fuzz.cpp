@@ -98,16 +98,16 @@ void Disturb() {
     if (h % 3 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 13) {
-    case 0: SetPointer(at::kSparkleCurrent, Sparkle(v)); break;
-    case 1: SetPointer(at::kFxActor, g_actors[v & 1]); break;
+    case 0: SetPointer(BattleItems_SparkleCurrent_addr, Sparkle(v)); break;
+    case 1: SetPointer(BattleE2_Owner_addr, g_actors[v & 1]); break;
     case 2: Sprite_Current = g_sprites[v & 1]; break;
     case 3: Gfx_PacketNext = PrimAt(v); break;
-    case 4: SetPointer(at::kStreamBuffer, &g_fakes[v & 1]); break;
+    case 4: SetPointer(SndStream_Buffer_addr, &g_fakes[v & 1]); break;
     case 5: SetWord(At(at::kScratch + 2 * (v % 8)), h >> 16); break;
-    case 6: SetWord(At(at::kVertex + 2 * (v % 16)), h >> 16); break;
+    case 6: SetWord(At(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 7: {
         static const unsigned kFields[] = {5, 6, 7, 3, 4, 8, 9, 0xA, 0xC, 0x20, 0x21, 0x22, 0x14, 0x18};
-        Pointer(at::kSparkleCurrent)[kFields[v % 14]] = static_cast<unsigned char>(h >> 20);
+        Pointer(BattleItems_SparkleCurrent_addr)[kFields[v % 14]] = static_cast<unsigned char>(h >> 20);
         break;
     }
     case 8: {
@@ -116,7 +116,7 @@ void Disturb() {
         break;
     }
     case 9: Frame_Counter = h >> 8; break;
-    case 10: Pointer(at::kFxActor)[0xB] = static_cast<unsigned char>(h >> 20); break;
+    case 10: Pointer(BattleE2_Owner_addr)[0xB] = static_cast<unsigned char>(h >> 20); break;
     default: break;
     }
 }
@@ -345,7 +345,7 @@ void __cdecl StubPlayById(unsigned v) {
     Disturb();
 }
 void __cdecl StubStreamStop() {
-    Record(33, Address(Pointer(at::kStreamBuffer)));
+    Record(33, Address(Pointer(SndStream_Buffer_addr)));
     Disturb();
 }
 void* __cdecl StubCreate(const unsigned char* wave) {
@@ -366,11 +366,11 @@ long __cdecl StubWrite(void* buffer, const void* src, unsigned offset, unsigned 
     return static_cast<long>(Hash());
 }
 void __cdecl StubFree() {
-    Record(37, Address(Pointer(at::kSparkleCurrent)));
+    Record(37, Address(Pointer(BattleItems_SparkleCurrent_addr)));
     Disturb();
 }
 template <unsigned N> void __cdecl StubType() {
-    Record(40 + N, Address(Pointer(at::kSparkleCurrent)));
+    Record(40 + N, Address(Pointer(BattleItems_SparkleCurrent_addr)));
     Disturb();
 }
 
@@ -530,21 +530,21 @@ static_assert(kStopK + 1 == kCount, "the seeding's indices");
 struct Region { std::uint32_t at, size; };
 Region g_regions[] = {
     {at::kSparklePool, at::kSparkles * at::kSparkleStride},   // the pool
-    {at::kSparkleCurrent, 4},
-    {at::kFxActor, 4},
+    {BattleItems_SparkleCurrent_addr, 4},
+    {BattleE2_Owner_addr, 4},
     {at::kScratch, 0x10},
-    {at::kVertex, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {at::kSparkleOffsets, 0x104},                             // 0x65AD34..0x65AE38: the sparkles' tables, Sparkle_Types[0..3]
     {0x937F88, 0x10},                                         // Sprite_Current, Frame_Counter (0x937F94)
     {0x7E0670, 4},                                            // Gfx_PacketNext
     {at::kActorIndex, 4},
-    {at::kFxSizeSelect, 1},
-    {at::kEnemySoundMode, 1},
-    {at::kPartyRecords, 3 * at::kPartyStride},
+    {BattlePhases_B89_addr, 1},
+    {BattleActions_EventBattle_addr, 1},
+    {ObjTrio_addr, 3 * at::kPartyStride},
     {at::kEnemyRecords, 8 * at::kEnemyStride},
     {0x905D98, 4},                                            // Field_State
     {0x7DE3BC, 4},                                            // Snd_Device
-    {at::kStreamBuffer, 4},
+    {SndStream_Buffer_addr, 4},
     {0, kPrimBytes},                                          // g_prims (filled in at start-up)
     {0, 2 * kRecordBytes},                                    // g_sprites
     {0, 2 * kRecordBytes},                                    // g_actors
@@ -581,8 +581,8 @@ void Apply(const State& s) {
 // enemy records (upper bytes random: 0x4FC1F0 reads a dword), the enemies'
 // cue pointers into g_cues, the dispatch table's first four entries.
 void Fix(const void* const* types) {
-    SetPointer(at::kSparkleCurrent, Sparkle(Next()));
-    SetPointer(at::kFxActor, g_actors[Next() & 1]);
+    SetPointer(BattleItems_SparkleCurrent_addr, Sparkle(Next()));
+    SetPointer(BattleE2_Owner_addr, g_actors[Next() & 1]);
     Sprite_Current = g_sprites[Next() & 1];
     Gfx_PacketNext = PrimAt(Next());
     At(at::kActorIndex)[0] = static_cast<unsigned char>(Next() % 11);
@@ -590,7 +590,7 @@ void Fix(const void* const* types) {
         SetPointer(at::kEnemyRecords + j * at::kEnemyStride + 0xF8, g_cues + Next() % 0x20);
     for (unsigned t = 0; t < 4; ++t) SetPointer(at::kSparkleTypes + 4 * t, types[t]);
     SetPointer(0x7DE3BC, Next() % 4 == 0 ? nullptr : &g_fake);
-    SetPointer(at::kStreamBuffer, Next() % 4 == 0 ? nullptr : &g_fake);
+    SetPointer(SndStream_Buffer_addr, Next() % 4 == 0 ? nullptr : &g_fake);
 }
 
 struct Args { std::uint32_t a[3]; };
@@ -600,7 +600,7 @@ std::uint32_t Stale(std::uint32_t low_bits, std::uint32_t value) { return Half()
 
 Args Seed(unsigned k) {
     Args args{{Next(), Next(), Next()}};
-    unsigned char* const cur = Pointer(at::kSparkleCurrent);
+    unsigned char* const cur = Pointer(BattleItems_SparkleCurrent_addr);
     unsigned char* const sc = Sprite_Current;
     switch (k) {
     case kPolyG3: case kLineG2: case kLineG3: case kTile1:
@@ -662,7 +662,7 @@ Args Seed(unsigned k) {
         if (k == kFlashK) {
             args.a[0] = Stale(0xFF, kIndex[Next() % 6]);
             const unsigned i = args.a[0] & 0xFF;
-            unsigned char* const r = i < 3 ? At(at::kPartyRecords + i * at::kPartyStride)
+            unsigned char* const r = i < 3 ? At(ObjTrio_addr + i * at::kPartyStride)
                                            : At(at::kEnemyRecords + (i - 3) * at::kEnemyStride);
             if (Half()) r[i < 3 ? 0x90 : 0x92] ^= 0x80;
         }
@@ -670,12 +670,12 @@ Args Seed(unsigned k) {
             static const std::uint32_t kSounds[] = {0, 0xFF, 1, 0xFE};
             args.a[0] = Stale(0xFF, Often() ? kSounds[Next() % 4] : Next() & 0xFF);
             args.a[1] = Stale(0xFF, Often() ? kSounds[Next() % 4] : Next() & 0xFF);
-            At(at::kEnemySoundMode)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+            At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         }
         if (k == kFxSizeK && index >= 3)   // a type the region covers
             At(at::kEnemyRecords + (index - 3) * at::kEnemyStride + 0xF0)[0] = static_cast<unsigned char>(Next() % 8);
         if (k == kFxSizeK && index < 3) {
-            unsigned char* const r = At(at::kPartyRecords + index * at::kPartyStride);
+            unsigned char* const r = At(ObjTrio_addr + index * at::kPartyStride);
             if (Half()) r[0x134] ^= 2;
         }
         break;

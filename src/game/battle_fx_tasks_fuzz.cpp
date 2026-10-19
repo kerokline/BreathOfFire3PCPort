@@ -36,8 +36,8 @@ unsigned char* Slot(unsigned i) { return At(at::kTasks + i * at::kTaskSize); }
 unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + i * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
-unsigned char* CurSlot() { return PtrAt(at::kTaskCurrent); }
-unsigned char* Owner() { return PtrAt(at::kTaskOwner); }
+unsigned char* CurSlot() { return PtrAt(BattleFlow_TaskCurrent_addr); }
+unsigned char* Owner() { return PtrAt(BattleE2_Owner_addr); }
 unsigned char* OwnerOf(const unsigned char* slot) { return At(static_cast<std::uint32_t>(Long(slot + 0x80))); }
 
 // --- the stand-ins' log ----------------------------------------------------
@@ -73,18 +73,18 @@ void Disturb() {
     const unsigned w = h >> 20;
     switch ((h >> 4) % 14) {
     case 0: Sprite_Current = AnySlot(w); break;
-    case 1: SetPtr(at::kTaskCurrent, AnySlot(w)); break;
-    case 2: SetPtr(at::kTaskOwner, AnyOwner(w)); break;
+    case 1: SetPtr(BattleFlow_TaskCurrent_addr, AnySlot(w)); break;
+    case 2: SetPtr(BattleE2_Owner_addr, AnyOwner(w)); break;
     case 3: CurSlot()[1] = static_cast<unsigned char>(v % 6); break;
     case 4: CurSlot()[7] = static_cast<unsigned char>(v % 5); break;
     case 5: Sprite_Current[0] = static_cast<unsigned char>(v); break;
     case 6: At(at::kPhase)[0] = static_cast<unsigned char>(v % 7); break;
-    case 7: At(at::kRoundCount)[0] = static_cast<unsigned char>(v); break;
+    case 7: At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(v); break;
     case 8: Owner()[0] = static_cast<unsigned char>(v); break;
     case 9: Owner()[5] = static_cast<unsigned char>(v % 11); break;
     case 10: CurSlot()[0x27] = static_cast<unsigned char>(v); break;
     case 11: SetWord(CurSlot() + 0x36 + 4 * (w % 2), h >> 16); break;
-    case 12: SetLong(At(at::kAnimSet), static_cast<std::int32_t>(h)); break;
+    case 12: SetLong(At(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     default: SetWord(CurSlot() + 0x60, h >> 16); break;
     }
 }
@@ -95,7 +95,7 @@ void Disturb() {
 // animation set pointer (which the pose task and the actor watch set before
 // the call and put back after it).
 template <unsigned N> void __cdecl StubHandler() {
-    Record(N, Address(Sprite_Current), Address(CurSlot()), static_cast<std::uint32_t>(Long(At(at::kAnimSet))));
+    Record(N, Address(Sprite_Current), Address(CurSlot()), static_cast<std::uint32_t>(Long(At(BattleE2_AnimSet_addr))));
     Disturb();
 }
 // Magic_Rows' 151 code pointers.
@@ -131,7 +131,7 @@ void __cdecl StubFree() {
 unsigned char __cdecl StubActorIsOut(unsigned a) {
     Record(5, a & 0xFF);
     const std::uint32_t h = Hash();
-    if (h % 2) SetPtr(at::kTaskOwner, AnyOwner(h >> 8));
+    if (h % 2) SetPtr(BattleE2_Owner_addr, AnyOwner(h >> 8));
     if ((h >> 1) % 2) Owner()[5] = static_cast<unsigned char>((h >> 16) % 11);
     Disturb();
     const std::uint32_t r = Hash();
@@ -150,16 +150,16 @@ unsigned char __cdecl StubScriptTick() {
 void __cdecl StubUpdateScreen() {
     Record(9, Address(Sprite_Current), Address(Owner()));
     const std::uint32_t h = Hash();
-    if (h % 2) SetPtr(at::kTaskOwner, AnyOwner(h >> 8));
+    if (h % 2) SetPtr(BattleE2_Owner_addr, AnyOwner(h >> 8));
     if ((h >> 1) % 2) Owner()[0] = static_cast<unsigned char>(Owner()[0] ^ 1);
     Disturb();
 }
-void __cdecl StubScriptFlags() { Record(10, At(at::kScriptVar7)[0], At(at::kScriptVar7 + 1)[0]); Disturb(); }
+void __cdecl StubScriptFlags() { Record(10, At(MoveScript_Var7_addr)[0], At(MoveScript_Var7_addr + 1)[0]); Disturb(); }
 void __cdecl StubAfterArea() { Record(11); Disturb(); }
 // The transition moves 0x904AA2 half the time: the hook adds to it after.
 void __cdecl StubTransition(unsigned char k) {
     Record(12, k);
-    if (Hash() % 2) At(at::kRoundCount)[0] = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 2) At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 
@@ -310,10 +310,10 @@ const Region kRegions[] = {
     {at::kTasks, 0x22A0},      // the 48 slots, 0x93B8C4, 0x93B940, the eight enemy objects
     {0x937F88, 4},             // Sprite_Current
     {at::kPhase, 0xA0},        // the battle's globals to 0x904B40
-    {at::kMembers, 0x3E4},     // ObjTrio
-    {at::kAnimSet, 4},
-    {at::kLastArea, 2},
-    {at::kScriptVar7, 2},
+    {ObjTrio_addr, 0x3E4},     // ObjTrio
+    {BattleE2_AnimSet_addr, 4},
+    {AreaW2c_LastArea_addr, 2},
+    {MoveScript_Var7_addr, 2},
 };
 constexpr unsigned kRegionBytes = 0x22A0 + 4 + 0xA0 + 0x3E4 + 4 + 2 + 2;
 
@@ -345,9 +345,9 @@ bool Half() { return (Next() & 1) != 0; }
 // indices the stack tables are read by.
 void Fix() {
     unsigned char* const cur = Slot(Next() % at::kTaskCount);
-    SetPtr(at::kTaskCurrent, cur);
+    SetPtr(BattleFlow_TaskCurrent_addr, cur);
     Sprite_Current = Half() ? cur : Slot(Next() % at::kTaskCount);   // BattleTask_RunAll sets both; a mix-up shows
-    SetPtr(at::kTaskOwner, AnyOwner(Next()));
+    SetPtr(BattleE2_Owner_addr, AnyOwner(Next()));
     for (unsigned i = 0; i < at::kTaskCount; ++i) {
         unsigned char* const t = Slot(i);
         SetPtr(Address(t + 0x80), AnyOwner(Next()));
@@ -421,8 +421,8 @@ void Seed(unsigned k) {
         // neighbours and at none; the test is only reached past the actor test
         static const unsigned char kStatus[] = {0, 0x40, 0x10, 0x08, 0x20, 0x80, 0x04, 0x58};
         for (unsigned i = 0; i < 3; ++i) {
-            At(at::kMembers + 0x90 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
-            At(at::kMembers + 0x91 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
+            At(ObjTrio_addr + 0x90 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
+            At(ObjTrio_addr + 0x91 + i * at::kMemberSize)[0] = kStatus[Next() % 8];
         }
         for (unsigned i = 0; i < 8; ++i) {
             At(at::kEnemies + 0x92 + i * at::kEnemySize)[0] = kStatus[Next() % 8];
@@ -437,7 +437,7 @@ void Seed(unsigned k) {
         break;
     case kHookScript:
     case kHookTransition:
-        if (Often()) SetWord(At(at::kLastArea), Half() ? 0xBD : 0x1BD);
+        if (Often()) SetWord(At(AreaW2c_LastArea_addr), Half() ? 0xBD : 0x1BD);
         break;
     default:
         break;
@@ -465,8 +465,8 @@ void Cover(unsigned k, const State& in, const State& out) {
         if (out.log[i].what < 600) ++g_cover.logged[out.log[i].what];
         if (out.log[i].what < 16) ++counts[out.log[i].what];
     }
-    const std::uint32_t cur = static_cast<std::uint32_t>(Byte(in, at::kTaskCurrent)) | Byte(in, at::kTaskCurrent + 1) << 8 |
-                              Byte(in, at::kTaskCurrent + 2) << 16 | Byte(in, at::kTaskCurrent + 3) << 24;
+    const std::uint32_t cur = static_cast<std::uint32_t>(Byte(in, BattleFlow_TaskCurrent_addr)) | Byte(in, BattleFlow_TaskCurrent_addr + 1) << 8 |
+                              Byte(in, BattleFlow_TaskCurrent_addr + 2) << 16 | Byte(in, BattleFlow_TaskCurrent_addr + 3) << 24;
     switch (k) {
     case kPopup:
         if (counts[1]) ++g_cover.popup_digits;
@@ -568,11 +568,11 @@ void SelfTest() {
 
     static State saved, input, their_out, our_out;
     std::uint32_t saved_rows[at::kMagicRowCount];
-    for (unsigned i = 0; i < at::kMagicRowCount; ++i) saved_rows[i] = static_cast<std::uint32_t>(Long(At(at::kMagicRows + i * 8 + 4)));
+    for (unsigned i = 0; i < at::kMagicRowCount; ++i) saved_rows[i] = static_cast<std::uint32_t>(Long(At(Magic_Rows_addr + i * 8 + 4)));
     Capture(saved);
     g = Stubs();
     for (unsigned i = 0; i < at::kMagicRowCount; ++i)
-        SetPtr(at::kMagicRows + i * 8 + 4, reinterpret_cast<const void*>(kRowStubs[i]));
+        SetPtr(Magic_Rows_addr + i * 8 + 4, reinterpret_cast<const void*>(kRowStubs[i]));
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
     for (unsigned round = 0; round < kPerFunction * kCount; ++round) {
@@ -612,7 +612,7 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    for (unsigned i = 0; i < at::kMagicRowCount; ++i) SetLong(At(at::kMagicRows + i * 8 + 4), static_cast<std::int32_t>(saved_rows[i]));
+    for (unsigned i = 0; i < at::kMagicRowCount; ++i) SetLong(At(Magic_Rows_addr + i * 8 + 4), static_cast<std::int32_t>(saved_rows[i]));
     Apply(saved);
 
     bof3::Log("shadow      battle_fx_tasks self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

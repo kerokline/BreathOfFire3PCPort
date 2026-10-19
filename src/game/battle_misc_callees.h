@@ -47,10 +47,10 @@ constexpr U kSoundLists = 0x6565BC;
 constexpr U kActorBits = 0x904B82;
 // Window record 16 of the window task's records (0x803160 + 16 * 0x24) and the
 // three after it: the item window. Record 16's fields the two set-ups write.
-constexpr U kItemWindow = 0x8033A0;
+// kItemWindow: now BattleE4_List (symbols.toml).
 constexpr U kItemWindowPage = 0x8033AB;      // byte: the inventory page
 constexpr U kItemWindowCursor = 0x8033AC;    // byte: the cursor's item index
-constexpr U kItemWindowExtra = 0x80340C;     // three bytes 0x80340C..E
+// kItemWindowExtra: now BattleE4_Hand (symbols.toml). three bytes 0x80340C..E
 constexpr U kWindowCurrent = 0x905B84;       // the window task's current record
 constexpr U kItemActor = 0x929F06;           // byte: the actor the item window is for
 constexpr U kActingActor = 0x939EC4;         // pointer: the acting actor's context, its byte +5 the actor
@@ -70,7 +70,7 @@ constexpr U kBannerKind2 = bof3::addr::BattleBanner_TickKind2;         // kind 2
 // and read indices (PSX 0x801EB520, 0x801EC298 / 0x801EBE74).
 constexpr U kQueue = 0x93C2C0;
 constexpr U kQueueWrite = 0x93C2A1;
-constexpr U kQueueRead = 0x93C2A0;
+// kQueueRead: now BattleWindows_MsgHead (symbols.toml).
 // The banner's text buffer, the message table (localised strings: entry 1 is
 // also the name suffix) and the suffix switch.
 constexpr U kBannerText = 0x904EC0;

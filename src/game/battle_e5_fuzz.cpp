@@ -51,7 +51,7 @@ bh::Clone C(const char* name, U base, U size, const bh::CallSite* calls, int n, 
 bh::Clone Disp(const char* name, U base, const void* ours, std::uint8_t steps) {
     bh::Clone c{name, base, 0x11, nullptr, 0, nullptr, 0, nullptr, 0, ours, 0, false, S::kDispatch};
     c.states = steps;
-    c.state_cell = at::kStep4;
+    c.state_cell = BattleE4_Step4_addr;
     return c;
 }
 
@@ -177,8 +177,8 @@ static_assert(sizeof kAll52 / sizeof kAll52[0] == 52, "52 functions");
 U DragonTaskEffect(const U*, U) {
     const U n = bh::Noise();
     if (n & 1) {
-        bh::Note(Mem(at::kGeneCount)[0]);
-        Mem(at::kGeneCount)[0] = static_cast<unsigned char>((n >> 8) % 5);
+        bh::Note(Mem(BattleE5_GeneCount_addr)[0]);
+        Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>((n >> 8) % 5);
     }
     return bh::Noise();
 }
@@ -196,8 +196,8 @@ U PopupEffect(const U*, U answer) {
 U SoundEffect(const U*, U answer) {
     const U n = bh::Noise();
     if (n & 1) {
-        bh::Note(move_script::Word(Mem(at::kInputPressed)));
-        SetWord(Mem(at::kInputPressed), n >> 8);
+        bh::Note(move_script::Word(Mem(Input_Pressed_addr)));
+        SetWord(Mem(Input_Pressed_addr), n >> 8);
     }
     return answer;
 }
@@ -231,7 +231,7 @@ const bh::Callee kCallees[] = {
 };
 
 const bh::DataTable kTables[] = {
-    {at::kLoadSteps, 2}, {at::kMenuSteps, 5}, {at::kSlotsSteps, 7}, {at::kGenesSteps, 5}, {at::kSlots2Steps, 7}, {at::kStoreSteps, 7},
+    {DragonCmd_LoadSteps_addr, 2}, {DragonCmd_MenuSteps_addr, 5}, {DragonCmd_SlotsSteps_addr, 7}, {DragonCmd_GenesSteps_addr, 5}, {DragonCmd_Slots2Steps_addr, 7}, {DragonCmd_StoreSteps_addr, 7},
 };
 
 // The cells beyond the engine frame the group reads or writes.
@@ -261,7 +261,7 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
 unsigned char* Enemy(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
-unsigned char* Member(unsigned n) { return Mem(at::kParty + (n % 3) * at::kPartyStride); }
+unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* Win(U window) { return Mem(window); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 
@@ -270,11 +270,11 @@ U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 void Keys() {
     const U confirm = BH_PICK(0x20, 0x40, 0x2000, 0x60);
     const U cancel = BH_PICK(0x40, 0x80, 0x100, 0x4000);
-    SetWord(Mem(at::kConfirmButtons), confirm);
-    SetWord(Mem(at::kCancelButtons), cancel);
+    SetWord(Mem(Field_ConfirmButtons_addr), confirm);
+    SetWord(Mem(Field_CancelButtons_addr), cancel);
     const U picks[] = {0, 0, confirm, cancel, 0x10, confirm | 0x10, cancel | confirm, 0x8};
     const U pressed = bh::Often() ? bh::Pick(picks, BH_COUNT(picks)) : bh::Next();
-    SetWord(Mem(at::kInputPressed), pressed);
+    SetWord(Mem(Input_Pressed_addr), pressed);
 }
 
 // A list's cursor (window +0x12 a, +0x10 b) inside the slots it indexes, with
@@ -296,24 +296,24 @@ void Slots() {
 // The Dragon run's frame: every step reads some of it.
 void DragonFrame() {
     Keys();
-    Mem(at::kPick)[0] = Byte({0, 1, 2, 3, 0x80, 0x81, 0x82, 0xFF, 0x7F});
-    Mem(at::kGeneRow)[0] = static_cast<unsigned char>(BH_PICK(0, 1, 2, 0xFF));   // a gene's flag is written: never past the grid
-    Mem(at::kGeneCol)[0] = static_cast<unsigned char>(bh::Next() % 7);
-    Mem(at::kGeneCount)[0] = static_cast<unsigned char>(bh::Next() % 5);
+    Mem(BossSb_Countdown_addr)[0] = Byte({0, 1, 2, 3, 0x80, 0x81, 0x82, 0xFF, 0x7F});
+    Mem(BattleE5_GeneRow_addr)[0] = static_cast<unsigned char>(BH_PICK(0, 1, 2, 0xFF)); // a gene's flag is written: never past the grid
+    Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(bh::Next() % 7);
+    Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 5);
     for (unsigned j = 0; j < 3; ++j) Mem(at::kGenes + j)[0] = static_cast<unsigned char>(bh::Next() % 20);   // written through
     for (unsigned i = 0; i < 18; ++i) Mem(at::kGeneFlags + i)[0] = static_cast<unsigned char>(bh::Half() ? 0 : 1 + bh::Next() % 3);
-    Mem(at::kGeneCost)[0] = Byte({0, 1, 8, 0x20, 0xFF});
+    Mem(BattleActions_ApCost_addr)[0] = Byte({0, 1, 8, 0x20, 0xFF});
     SetWord(Mem(at::kAsk), Word16({0, 1, 2, 0x100}));
     Slots();
-    Cursor(at::kWin18, 4, 3);
-    Cursor(at::kWin19, 10, 3);
-    for (U w : {at::kWin4, at::kWin16, at::kWin17, at::kWin18, at::kWin19, at::kWin21}) {
+    Cursor(BattleE4_Slots_addr, 4, 3);
+    Cursor(BattleE4_Hand_addr, 10, 3);
+    for (U w : {at::kWin4, BattleE4_List_addr, BattleE4_Cands_addr, BattleE4_Slots_addr, BattleE4_Hand_addr, BattleE4_Above_addr}) {
         Win(w)[0] = static_cast<unsigned char>(bh::Half() ? Win(w)[0] & 0xFE : Win(w)[0] | 1);
         Win(w)[3] = Byte({0, 0, 1, 2});
     }
-    SetWord(Win(at::kWin18) + 4, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
-    SetWord(Win(at::kWin19) + 4, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
-    unsigned char* const actor = bh::Pointer(at::kMenuActor);
+    SetWord(Win(BattleE4_Slots_addr) + 4, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
+    SetWord(Win(BattleE4_Hand_addr) + 4, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
+    unsigned char* const actor = bh::Pointer(BattleE4_MenuActor_addr);
     actor[5] = Byte({0, 1, 2});
     SetWord(Member(actor[5]) + 0x9A, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
     SetWord(actor + 0x9A, Word16({0, 1, 8, 0x20, 0x40, 0xFFFF}));
@@ -331,7 +331,7 @@ void Seed(unsigned k) {
         break;
     }
     case 0x44B320: {   // EnemyAI_CondElement: +0x108, the acting kind, the actor, the ability, the weapons
-        SetWord(bh::Pointer(at::kCurrentEnemy) + 0x108, Word16({0, 0, 1, 0x100}));
+        SetWord(bh::Pointer(BattleE3_CurrentEnemy_addr) + 0x108, Word16({0, 0, 1, 0x100}));
         Mem(at::kActingKind)[0] = Byte({4, 4, 1, 1, 0, 2, 5, 0x81});
         Mem(at::kActor)[0] = Byte({0, 1, 2, 3, 0x80});
         SetWord(Mem(at::kAbility), Word16({0, 1, 0x10, 0x4E, 0xA3, 0xC0}));
@@ -350,7 +350,7 @@ void Seed(unsigned k) {
         SetWord(g_obj + 0x94, Word16({0, 1, 0x7FFF, 0xFFFF, 6554, 6553}));
         SetWord(g_obj + 0x96, Word16({0, 1, 0x7FFF, 0xFFFF, 6554, 6553}));
         g_obj[5] = Byte({3, 4, 10, 0, 2});
-        Mem(at::kEnemyMessageCount)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 6, 7, 8, 8) : bh::Next() % 9);
+        Mem(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 6, 7, 8, 8) : bh::Next() % 9);
         break;
     }
     case 0x44B5E0: {   // EnemyAI_ScaleStat: the stats against their caps
@@ -364,7 +364,7 @@ void Seed(unsigned k) {
         break;
     }
     case 0x44B920: {   // EnemyAI_DedupMessages: up to eight entries with repeats
-        Mem(at::kEnemyMessageCount)[0] = static_cast<unsigned char>(bh::Next() % 9);
+        Mem(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 9);
         for (unsigned i = 0; i < 8; ++i) {
             unsigned char* const q = Mem(at::kEnemyMessages + 4 * i);
             q[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 11);
@@ -452,15 +452,15 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 12) {
-    case 0: SetWord(Mem(at::kInputPressed), h >> 12); break;
-    case 1: SetWord(Mem(at::kConfirmButtons), 1u << (b % 16)); break;
-    case 2: Mem(at::kPick)[0] = b; break;
-    case 3: Mem(at::kGeneRow)[0] = static_cast<unsigned char>(b % 4 == 3 ? 0xFF : b % 3); break;
-    case 4: Mem(at::kGeneCol)[0] = static_cast<unsigned char>(b % 7); break;
-    case 5: Mem(at::kGeneCount)[0] = static_cast<unsigned char>(b % 5); break;
-    case 6: Mem(at::kMsgCount)[0] = b; break;
+    case 0: SetWord(Mem(Input_Pressed_addr), h >> 12); break;
+    case 1: SetWord(Mem(Field_ConfirmButtons_addr), 1u << (b % 16)); break;
+    case 2: Mem(BossSb_Countdown_addr)[0] = b; break;
+    case 3: Mem(BattleE5_GeneRow_addr)[0] = static_cast<unsigned char>(b % 4 == 3 ? 0xFF : b % 3); break;
+    case 4: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 7); break;
+    case 5: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 5); break;
+    case 6: Mem(BattleActorCopies_QueueWrite_addr)[0] = b; break;
     case 7: SetWord(Mem(at::kAsk), b & 3); break;
-    case 8: SetWord(Mem(b & 1 ? at::kWin18 + 0x10 : at::kWin19 + 0x10), (b >> 1) % 4); break;
+    case 8: SetWord(Mem(b & 1 ? BattleE4_Slots_addr + 0x10 : BattleE4_Hand_addr + 0x10), (b >> 1) % 4); break;
     case 9: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;
     case 10: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
     default:

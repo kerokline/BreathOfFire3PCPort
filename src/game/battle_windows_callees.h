@@ -20,8 +20,8 @@ namespace battle_windows {
 namespace at {
 
 constexpr std::uint32_t kColour = 0x903A5A;        // s8: the window colour (Config), a CLUT row
-constexpr std::uint32_t kClutShadow = 0x80B7A8;    // 64 bytes a row: word 0 is the window's line colour
-constexpr std::uint32_t kPartyObjects = 0x802D40;  // ObjTrio: the battle's party objects, stride 0x14C
+// kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 64 bytes a row: word 0 is the window's line colour
+// kPartyObjects: now ObjTrio (symbols.toml). ObjTrio: the battle's party objects, stride 0x14C
 constexpr std::uint32_t kObjectStride = 0x14C;
 constexpr std::uint32_t kPartyBars = 0x80333F;     // 36 bytes a member: +0 +1 +2 +3 the bar bytes
 constexpr std::uint32_t kEnemies = 0x93B9E0;       // EnemyWorkingRecords, stride 0x128: +0 the name, +0xF 1 = has bar
@@ -33,20 +33,20 @@ constexpr std::uint32_t kCrossExtra5 = 0x904AC1;
 constexpr std::uint32_t kCrossExtra6 = 0x904AC2;
 constexpr std::uint32_t kActor = 0x939EC4;         // the acting member's record pointer (+0x134 bit 1)
 constexpr std::uint32_t kCrossArms = 0x64E2AC;     // (x, y) bytes per arm, 7 of them
-constexpr std::uint32_t kCommandBoxes = 0x64E2C8;  // Battle_CommandBoxes: s16 x, y per command, stride 8
-constexpr std::uint32_t kCommandLabels = 0x669D60; // Battle_CommandLabelPointers: 7 pointers to 0x669D28 + 8 i
+// kCommandBoxes: now Battle_CommandBoxes (symbols.toml). Battle_CommandBoxes: s16 x, y per command, stride 8
+// kCommandLabels: now Battle_CommandLabelPointers (symbols.toml). Battle_CommandLabelPointers: 7 pointers to 0x669D28 + 8 i
 constexpr std::uint32_t kSlash = 0x64E31C;         // "/"
 constexpr std::uint32_t kPrintBuf = 0x904BA0;      // the sprintf buffer
 constexpr std::uint32_t kCurrent = 0x905B84;       // the window record Field_RunTaskRecords is running
-constexpr std::uint32_t kMsgHead = 0x93C2A0;       // u8: the battle message ring's read index (0..15)
-constexpr std::uint32_t kMsgTail = 0x93C2A1;       // u8: its write index
+// kMsgHead: now BattleWindows_MsgHead (symbols.toml). u8: the battle message ring's read index (0..15)
+// kMsgTail: now BattleActorCopies_QueueWrite (symbols.toml). u8: its write index
 constexpr std::uint32_t kMsgRing = 0x93C2C4;       // 8 bytes an entry: +0 the text pointer
-constexpr std::uint32_t kStateTable = 0x64DFE0;    // 27 handlers of a party object's state byte +1
-constexpr std::uint32_t kPoseFlags = 0x904AE5;     // u8, bit 0x20
+// kStateTable: now BattleObj_StateTable (symbols.toml). 27 handlers of a party object's state byte +1
+// kPoseFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8, bit 0x20
 constexpr std::uint32_t kBattleKind = 0x904AA0;    // u8, 5 = a kind with its own poses
-constexpr std::uint32_t kKindFlags = 0x904AE8;     // u8, bit 1
+// kKindFlags: now BattleActions_BattleEnd (symbols.toml). u8, bit 1
 constexpr std::uint32_t kPoseMode = 0x904AA8;      // u8, bit 0x10
-constexpr std::uint32_t kTickGate = 0x904B8E;      // u8: 0x441180 / 0x4411B0 tick unless set
+// kTickGate: now BattleFlow_AnimGate (symbols.toml). u8: 0x441180 / 0x4411B0 tick unless set
 constexpr std::uint32_t kSkillFlags = 0x65C4DD;    // 24 bytes a skill: bit 3 of this byte
 constexpr std::uint32_t kPoseSet = 0x8C5D80;       // the pose set 0x589110 is handed (0x1800 bytes)
 // The three handlers of window kind 0x597A30 dispatches on (+0 of its eighth

@@ -25,7 +25,7 @@ using U = std::uint32_t;
 
 // --- the party and the enemies (ObjTrio stride 0x14C; the enemies' objects
 // 0x93B960 + (actor - 3) * 0x128, as every original indexes them) ----------
-constexpr U kParty = 0x802D40;
+// kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
 constexpr U kEnemies = 0x93B960;
 constexpr U kEnemyStride = 0x128;
@@ -40,41 +40,41 @@ constexpr U kCharOf = 0x66972C;           // u8[]: MoveScript_EffectState - a ch
 // --- the battle bytes (0x904AA0..0x904BA0) ------------------------------------
 constexpr U kPhase = 0x904AA0;
 constexpr U kStep = 0x904AA1;
-constexpr U kStep2 = 0x904AA2;
-constexpr U kStep3 = 0x904AA3;            // the command's state (BattleItemCmd_States, the escape states)
+// kStep2: now BattleE4_Step2 (symbols.toml).
+// kStep3: now BattleE4_Step3 (symbols.toml). the command's state (BattleItemCmd_States, the escape states)
 constexpr U kStep4 = 0x904AA4;            // the sub-state (a dword whose low byte the dispatchers index by)
 constexpr U kFlags = 0x904AA8;            // u16: the round flags
-constexpr U kFight = 0x904AAA;            // u8: the event battle (0 none)
-constexpr U kAutoMember = 0x904AAE;       // u8: the member AutoBattle_FillCommands filled last
-constexpr U kPicking = 0x904AAF;          // u8: a target pick is up
+// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (0 none)
+// kAutoMember: now BattleE4_AutoMember (symbols.toml). u8: the member AutoBattle_FillCommands filled last
+// kPicking: now BattleE4_Picking (symbols.toml). u8: a target pick is up
 constexpr U kPartyCount = 0x904AB0;       // u8 (read as a dword's low byte too)
-constexpr U kPartyDivisor = 0x904AB1;     // u8: Escape_Roll divides the party's sum by it
+// kPartyDivisor: now BattleSprites_PartyPick (symbols.toml). u8: Escape_Roll divides the party's sum by it
 constexpr U kEnemyCount = 0x904AB2;       // u8: the enemies set up (the target wrap)
-constexpr U kEnemyDivisor = 0x904AB3;     // u8: enemies left (Escape_Roll divides by it)
+// kEnemyDivisor: now BattleE2_EnemiesLeft (symbols.toml). u8: enemies left (Escape_Roll divides by it)
 constexpr U kEntryOrder = 0x904AB6;       // u8[3]: the members by entry order, 0xFF past the last
-constexpr U kCommandsChosen = 0x904AC3;   // u8: members whose command is chosen
+// kCommandsChosen: now BattleActorCopies_EntryCount (symbols.toml). u8: members whose command is chosen
 constexpr U kOrder = 0x904ACC;            // u8[]: the turn order
-constexpr U kOrderCursor = 0x904AE2;      // u8: its front (Battle_OrderPushFront moves it down one)
-constexpr U kEscapeRun = 0x904AE4;        // u8: Escape_Roll's second chance when 1
-constexpr U kEscapeTries = 0x904AE6;      // u8: Escape_Roll counts its calls here
-constexpr U kEndHold = 0x904AE9;          // u8: Escape_End waits while it is set
+// kOrderCursor: now BossSe_RoundSlot (symbols.toml). u8: its front (Battle_OrderPushFront moves it down one)
+// kEscapeRun: now BattlePhases_Initiative (symbols.toml). u8: Escape_Roll's second chance when 1
+// kEscapeTries: now BattlePhases_AE6 (symbols.toml). u8: Escape_Roll counts its calls here
+// kEndHold: now BattleMisc_BannerKinds (symbols.toml). u8: Escape_End waits while it is set
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActionKind = 0x904B35;       // u8
 constexpr U kTarget = 0x904B44;           // u8
 constexpr U kAbility = 0x904B80;          // u16
-constexpr U kCharged = 0x904B8E;          // u8
+// kCharged: now BattleFlow_AnimGate (symbols.toml). u8
 constexpr U kFaceStep = 0x904AAC;         // u8: Escape_Begin's index into 0x64E4F4 (a pair of s8 per value)
 
 // --- the command menu (battle_menu_states.md) ---------------------------------
 constexpr U kMenuActor = 0x939EC4;        // unsigned char *: the member choosing (+5 its party index)
 constexpr U kCommand = 0x939FA0;          // unsigned char *: its command record (the member's +0x124)
-constexpr U kPartyDefBonus = 0x939F86;    // u16: added to the party's mean +0xA6 (Battle_PartyDefenceMean)
-constexpr U kEvadeParty = 0x939F9B;       // u8: Battle_HitOrMissParty's percentage
-constexpr U kHitEnemy = 0x939FFC;         // dword, low byte: Battle_HitOrMissEnemy's percentage
+// kPartyDefBonus: now BattleDamage_TargetDef (symbols.toml). u16: added to the party's mean +0xA6 (Battle_PartyDefenceMean)
+// kEvadeParty: now BattleE3_EvadeBoost (symbols.toml). u8: Battle_HitOrMissParty's percentage
+// kHitEnemy: now BattleE4_HitEnemy (symbols.toml). dword, low byte: Battle_HitOrMissEnemy's percentage
 constexpr U kRepeatLatch = 0x7E01B8;      // u16: Input_AutoRepeat's latch, zeroed as a pick begins
-constexpr U kInputPressed = 0x7E1BEC;     // Input_Pressed (a u16; EquipMenu reads the dword)
-constexpr U kConfirmButtons = 0x90358E;   // Field_ConfirmButtons
-constexpr U kCancelButtons = 0x903590;    // Field_CancelButtons
+// kInputPressed: now Input_Pressed (symbols.toml). Input_Pressed (a u16; EquipMenu reads the dword)
+// kConfirmButtons: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons
+// kCancelButtons: now Field_CancelButtons (symbols.toml). Field_CancelButtons
 
 // --- the window records (WindowRecords, 0x24 each) ------------------------------
 constexpr U kRecord4 = 0x8031F0;          // record 4: +0 set as the item menu hands back, +3 by Escape_Begin
@@ -96,22 +96,22 @@ constexpr U kWakeResist = 0x64E3E0;       // u8[] .data: its second roll's table
 
 // --- the battle message queue (BattleQueue_Push's: 16 of 8, the write index) ---
 constexpr U kQueue = 0x93C2C0;
-constexpr U kQueueWrite = 0x93C2A1;
+// kQueueWrite: now BattleActorCopies_QueueWrite (symbols.toml).
 
 // --- the inventory's list pointers (ids, then counts, five each) --------------
 constexpr U kInventoryIds = 0x656B00;
 constexpr U kInventoryCounts = 0x656B14;
 
 // --- the escape's field cells --------------------------------------------------
-constexpr U kKind2Z = 0x905E60;           // Field_Kind2Z (long; its high word 0x905E62 moved)
-constexpr U kKind2X = 0x905E64;           // Field_Kind2X (long; its high word 0x905E66 moved)
-constexpr U kKind2Hold = 0x929F12;        // Field_Kind2Hold
-constexpr U kElevation = 0x929F1C;        // MapView_Elevation
-constexpr U kF3Divisor = 0x937F8C;        // MoveScript_F3Divisor (u16)
-constexpr U kFaWord = 0x904EFE;           // MoveScript_FAWord (u16)
+// kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z (long; its high word 0x905E62 moved)
+// kKind2X: now Field_Kind2X (symbols.toml). Field_Kind2X (long; its high word 0x905E66 moved)
+// kKind2Hold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
+// kElevation: now MapView_Elevation (symbols.toml). MapView_Elevation
+// kF3Divisor: now MoveScript_F3Divisor (symbols.toml). MoveScript_F3Divisor (u16)
+// kFaWord: now MoveScript_FAWord (symbols.toml). MoveScript_FAWord (u16)
 constexpr U kFlee = 0x93B8E0;             // u8: zeroed by Escape_Begin
-constexpr U kFleeText = 0x669E08;         // const char *: Escape_Begin's banner text
-constexpr U kGeneMember = 0x929F06;       // u8: the member whose list is up
+// kFleeText: now BattleE1_BannerText (symbols.toml). const char *: Escape_Begin's banner text
+// kGeneMember: now BattleActorCopies_ItemActor (symbols.toml). u8: the member whose list is up
 constexpr U kListReset = 0x929F04;        // u8: zeroed as the candidates open
 
 // --- the text record the names are copied into ---------------------------------

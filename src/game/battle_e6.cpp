@@ -62,10 +62,10 @@ void SetF(unsigned char* p, float f) { std::memcpy(p, &f, sizeof f); }
 
 // The party's records and the enemies' objects as the originals index them:
 // unchecked (an actor past 2 reaches past the three members, as there).
-unsigned char* Party(unsigned member) { return At(at::kParty + (member & 0xFFu) * at::kPartyStride); }
+unsigned char* Party(unsigned member) { return At(ObjTrio_addr + (member & 0xFFu) * at::kPartyStride); }
 unsigned char* Enemy(unsigned index) { return At(at::kEnemies + index * at::kEnemyStride); }
 unsigned Actor() { return B(at::kActor); }
-unsigned char* Owner() { return At(L(At(at::kOwner))); }
+unsigned char* Owner() { return At(BattleE2_Owner); }
 
 // The three pure percent helpers nobody owns: (value * percent) / 100 clamped.
 using Percent = U (__cdecl*)(U value, std::int32_t percent);
@@ -80,7 +80,7 @@ U CellHeight(std::int32_t x, std::int32_t z) { return BH_AT(U (__cdecl*)(std::in
 void BackUpParty() {
     const unsigned n = B(at::kPartyCount);
     if (n == 0) return;
-    for (U i = 0; i < n * at::kPartyStride; i += 4) SetL(At(at::kPartyBackup + i), L(At(at::kParty + i)));
+    for (U i = 0; i < n * at::kPartyStride; i += 4) SetL(At(at::kPartyBackup + i), L(At(ObjTrio_addr + i)));
 }
 
 // The first stat of a form (the u16 at +0xC0, +0xA0 and +0x98): `percent` of
@@ -119,7 +119,7 @@ void EndAbilities(unsigned char* list, unsigned char count) {
 // Picks a party form when the actor holds `gene` (the group code then 1).
 unsigned char PartyPick(unsigned char gene, unsigned char held, unsigned char plain) {
     if (BH_CALL(DragonGenes_Held)(gene) != 0) {
-        B(at::kFormGroupWork) = 1;
+        BattleE6_FormGroupWork = 1;
         return held;
     }
     return plain;
@@ -194,10 +194,10 @@ void CheckEntries(const char* who, const unsigned char* record, unsigned first, 
 // original 0x451480 (the gene history's step table 0x64ED50, entry 6, by
 // 0x904AA4): windows 18 and 19's +3 = 4 and 2, 0x904AA3 = 3, 0x904AA4 = 2.
 extern "C" void __cdecl DragonHistory_Leave(void) {
-    B(at::kWindow18State) = 4;
-    B(at::kWindow19State) = 2;
-    B(at::kStep2) = 3;
-    B(at::kStep3) = 2;
+    BattleE6_Window18State = 4;
+    BattleE6_Window19State = 2;
+    BattleE4_Step3 = 3;
+    BattleE4_Step4 = 2;
 }
 
 // original 0x4514A0 (called by Accession_Start 0x4EAEA0): the actor's
@@ -221,14 +221,14 @@ extern "C" void __cdecl DragonForm_Transform(void) {
         BH_CALL(Battle_RecalcStats)(who);
     }
     unsigned char* const member = Party(Actor());
-    B(at::kFormCode) = 0;
-    B(at::kFormGroupWork) = 0;
+    BattleE6_FormCode = 0;
+    BattleE6_FormGroupWork = 0;
     SetL(member + 0x134, L(member + 0x134) | 2);
     unsigned char form = BH_CALL(DragonForm_FindRecipe)();
     if (form != 0xFF) {
         BH_CALL(DragonForm_ApplyRecipe)(form);
         form = static_cast<unsigned char>(form + 4);
-        B(at::kFormCode) = form;
+        BattleE6_FormCode = form;
         if (form == 8) {
             unsigned char* const m = Party(Actor());
             SetL(m + 0x134, L(m + 0x134) | 0x10000);
@@ -238,22 +238,22 @@ extern "C" void __cdecl DragonForm_Transform(void) {
         }
     } else {
         BH_CALL(DragonForm_Mix)(0xFF);
-        form = B(at::kFormCode);
+        form = BattleE6_FormCode;
     }
     for (U record = at::kHistoryLast; record > at::kHistory; record -= 4)
         for (U i = 0; i < 4; ++i) B(record + i) = B(record - 4 + i);
-    const unsigned count = B(at::kGeneCount);
+    const unsigned count = BattleE5_GeneCount;
     unsigned kept = 0;
     if (count > 0) {
         for (unsigned i = 0; i < count; ++i) B(at::kHistory + i) = B(at::kGenes + i);
         kept = count;
     }
     for (unsigned i = kept; i < 3; ++i) B(at::kHistory + i) = 0xFF;
-    const unsigned char group = B(at::kFormGroupWork);
-    B(at::kFormGroup) = group;
+    const unsigned char group = BattleE6_FormGroupWork;
+    BattleE6_FormGroup = group;
     const unsigned who = Actor();
     B(at::kHistoryForm) = static_cast<unsigned char>((group << 5) + (form & 0x1F));
-    B(at::kForm) = form;
+    BattlePhases_B89 = form;
     BH_CALL(Battle_RecalcStats)(who);
 }
 
@@ -272,7 +272,7 @@ extern "C" unsigned char __cdecl DragonForm_FindRecipe(void) {
         unsigned slot = 0;
         while (slot < 3 && BH_CALL(DragonForm_RecipeSlotHeld)(recipe, slot) != 0) ++slot;
         if (slot == 3) {
-            B(at::kFormGroupWork) = At(at::kRecipeGroups)[recipe];
+            BattleE6_FormGroupWork = At(at::kRecipeGroups)[recipe];
             return static_cast<unsigned char>(recipe);
         }
         if (++recipe > 10) return 0xFF;
@@ -284,7 +284,7 @@ extern "C" unsigned char __cdecl DragonForm_FindRecipe(void) {
 extern "C" unsigned char __cdecl DragonForm_RecipeSlotHeld(unsigned recipe, unsigned slot) {
     const unsigned char gene = At(at::kRecipeGenes)[(recipe & 0xFF) * 3 + (slot & 0xFF)];
     if (gene == 0xFF) return 1;
-    const unsigned count = B(at::kGeneCount);
+    const unsigned count = BattleE5_GeneCount;
     for (unsigned i = 0; i < count; ++i)
         if (B(at::kGenes + i) == gene) return 1;
     return 0;
@@ -293,9 +293,9 @@ extern "C" unsigned char __cdecl DragonForm_RecipeSlotHeld(unsigned recipe, unsi
 // original 0x451750: when a chosen gene is 0x10 and the party's size byte
 // 0x904AB1 (read once) is 3, DragonForm_PartyRecipe's answer; else 0.
 extern "C" unsigned char __cdecl DragonForm_TryPartyRecipe(void) {
-    const unsigned count = B(at::kGeneCount);
+    const unsigned count = BattleE5_GeneCount;
     if (count == 0) return 0;
-    const unsigned char size = B(at::kPartySize);
+    const unsigned char size = BattleSprites_PartyPick;
     for (unsigned i = 0; i < count; ++i)
         if (B(at::kGenes + i) == 0x10 && size == 3) return BH_CALL(DragonForm_PartyRecipe)();
     return 0;
@@ -318,7 +318,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
     const unsigned char* const character = At(at::kCharRecords + member[0x148] * at::kCharStride);
     unsigned char* const sums = At(at::kMixSums);
     for (unsigned i = 0; i < 14; ++i) sums[i] = 0;
-    const unsigned count = B(at::kGeneCount);
+    const unsigned count = BattleE5_GeneCount;
     if (count > 0) {
         for (unsigned k = 0; k < count; ++k) {
             const unsigned char gene = B(at::kGenes + k);
@@ -342,18 +342,18 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
             const unsigned char v = sums[i];
             sums[i] = static_cast<unsigned char>(way & 1 ? v + 1 : v - 1);
         }
-        limit = B(at::kGeneCount);
+        limit = BattleE5_GeneCount;
     }
     const unsigned char s13 = sums[13];
-    B(at::kFormCode) = 0;
-    if (S8(s13) >= 1) B(at::kFormCode) = 3;
-    else if (S8(sums[11]) >= 1) B(at::kFormCode) = 2;
-    else if (S8(sums[10]) >= 2) B(at::kFormCode) = 1;
+    BattleE6_FormCode = 0;
+    if (S8(s13) >= 1) BattleE6_FormCode = 3;
+    else if (S8(sums[11]) >= 1) BattleE6_FormCode = 2;
+    else if (S8(sums[10]) >= 2) BattleE6_FormCode = 1;
 
     // the first stat: 1 below 1
     {
         const unsigned char shift = BH_CALL(DragonForm_StatShift)(sums[5]);
-        const unsigned column = At(at::kShiftColumns)[B(at::kFormCode) * 5];
+        const unsigned column = At(at::kShiftColumns)[BattleE6_FormCode * 5];
         const auto sum = static_cast<std::uint16_t>(S8(shift) + static_cast<std::int32_t>(column));
         std::uint16_t value = 1;
         if (S16(sum) > 0) value = static_cast<std::uint16_t>(Percent9999(Word(character + 0x40), S16(sum) * 10));
@@ -364,7 +364,7 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
     for (unsigned n = 0; n < 4; ++n) {
         const unsigned field = 0xC4 + 2 * n;
         const unsigned char shift = BH_CALL(DragonForm_StatShift)(sums[6 + n]);
-        const unsigned column = At(at::kShiftColumns)[B(at::kFormCode) * 5 + 1 + n];
+        const unsigned column = At(at::kShiftColumns)[BattleE6_FormCode * 5 + 1 + n];
         const auto sum = static_cast<std::uint16_t>(S8(shift) + static_cast<std::int32_t>(column));
         std::uint16_t value = 0;
         if (S16(sum) > 0) value = static_cast<std::uint16_t>(Percent999(Word(member + field), S16(sum) * 10));
@@ -375,13 +375,13 @@ extern "C" void __cdecl DragonForm_Mix(unsigned) {
         if (n < 3) SetWord(At(deltas[n + 1]), next);
     }
     unsigned char positive = 0;
-    B(at::kFormGroupWork) = 0;
+    BattleE6_FormGroupWork = 0;
     for (unsigned i = 0; i < 5; ++i)
         if (S8(sums[i]) >= 1) {
             ++positive;
-            B(at::kFormGroupWork) = static_cast<unsigned char>(i + 1);
+            BattleE6_FormGroupWork = static_cast<unsigned char>(i + 1);
         }
-    if (positive >= 2) B(at::kFormGroupWork) = 6;
+    if (positive >= 2) BattleE6_FormGroupWork = 6;
     BH_CALL(DragonForm_SetMixBytes)(sums[0], sums[1], sums[2], sums[3], sums[4]);
     BH_CALL(DragonForm_MixAbilities)();
 }
@@ -434,7 +434,7 @@ extern "C" void __cdecl DragonForm_MixAbilities(void) {
     unsigned char* const list = Party(Actor()) + 0xF4;
     unsigned char count = 0;
     for (unsigned j = 0; j < 3; ++j) {
-        const unsigned char ability = At(at::kFormAbilities)[B(at::kFormCode) * 3u + j];
+        const unsigned char ability = At(at::kFormAbilities)[BattleE6_FormCode * 3u + j];
         if (ability == 0) break;
         list[count++] = ability;
     }
@@ -575,7 +575,7 @@ extern "C" unsigned char __cdecl DragonForm_PartyRecipe(void) {
 
 // original 0x452570: 1 when `gene` is among the chosen genes, else 0.
 extern "C" unsigned char __cdecl DragonGenes_Held(unsigned gene) {
-    const unsigned count = B(at::kGeneCount);
+    const unsigned count = BattleE5_GeneCount;
     for (unsigned i = 0; i < count; ++i)
         if (B(at::kGenes + i) == static_cast<unsigned char>(gene)) return 1;
     return 0;
@@ -585,12 +585,12 @@ extern "C" unsigned char __cdecl DragonGenes_Held(unsigned gene) {
 // 0x450700, 0x450E70): 0x904B78 = the chosen genes' costs (0x64EC9C) summed,
 // a byte, stored after each.
 extern "C" void __cdecl DragonGenes_SumCost(void) {
-    const unsigned count = B(at::kGeneCount);
+    const unsigned count = BattleE5_GeneCount;
     unsigned char sum = 0;
-    B(at::kGeneCost) = 0;
+    BattleActions_ApCost = 0;
     for (unsigned i = 0; i < count; ++i) {
         sum = static_cast<unsigned char>(sum + At(at::kGeneCosts)[B(at::kGenes + i)]);
-        B(at::kGeneCost) = sum;
+        BattleActions_ApCost = sum;
     }
 }
 
@@ -601,7 +601,7 @@ extern "C" void __cdecl DragonGenes_SumCost(void) {
 
 // original 0x452680: slot 15 (a copy of the acting member, 0x442E60's task):
 // through BattleFxDash_Steps by +1 (7).
-extern "C" void __cdecl BattleFxDash_Dispatch(void) { TaskDispatch("BattleFxDash_Dispatch", at::kDashSteps, 7); }
+extern "C" void __cdecl BattleFxDash_Dispatch(void) { TaskDispatch("BattleFxDash_Dispatch", BattleFxDash_Steps_addr, 7); }
 
 // original 0x4526B0: state 0: +0x20 = +0x3C + 0x4000000; pose +8 + 0x38;
 // +0xB = 0x10; on.
@@ -634,15 +634,15 @@ extern "C" unsigned char __cdecl BattleFxDash_Rise(void) {
         unsigned side;
         if (B(at::kTarget) >= 3) {
             side = B(at::kFormTable);
-            SetL(s + 0x34, static_cast<U>(S8(At(at::kDashSides)[side * 2])) + L(At(at::kKind2X)));
+            SetL(s + 0x34, static_cast<U>(S8(At(at::kDashSides)[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X));
             side = B(at::kFormTable);
         } else {
             s[8] ^= 2;
             side = B(at::kFormTable) ^ 2u;
-            SetL(Sprite_Current + 0x34, static_cast<U>(S8(At(at::kDashSides)[side * 2])) + L(At(at::kKind2X)));
+            SetL(Sprite_Current + 0x34, static_cast<U>(S8(At(at::kDashSides)[side * 2])) + static_cast<std::uint32_t>(Field_Kind2X));
             side = B(at::kFormTable) ^ 2u;
         }
-        SetL(Sprite_Current + 0x38, static_cast<U>(S8(At(at::kDashSides)[side * 2 + 1])) + L(At(at::kKind2Z)));
+        SetL(Sprite_Current + 0x38, static_cast<U>(S8(At(at::kDashSides)[side * 2 + 1])) + static_cast<std::uint32_t>(Field_Kind2Z));
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 0x40));
         Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
     }
@@ -739,7 +739,7 @@ extern "C" void __cdecl BattleFxDash_Land(void) {
 }
 
 // original 0x452AD0: slot 16: through BattleFxPose_Steps by +1 (2).
-extern "C" void __cdecl BattleFxPose_Dispatch(void) { TaskDispatch("BattleFxPose_Dispatch", at::kPoseSteps, 2); }
+extern "C" void __cdecl BattleFxPose_Dispatch(void) { TaskDispatch("BattleFxPose_Dispatch", BattleFxPose_Steps_addr, 2); }
 
 // original 0x452B00: state 0: pose +8 + 0x50, BattleObj_ScriptTickOnce (not
 // read), +0x29 = 3, +9 = 8, on.
@@ -761,7 +761,7 @@ extern "C" void __cdecl BattleFxPose_WaitOwner(void) {
 // original 0x452B60: slot 18 (the trail BattleFxDash_Advance creates): through
 // BattleFxTrail_Steps by +1 (2: this group's start, then
 // BossWeretigrFx_TrailFade).
-extern "C" void __cdecl BattleFxTrail_Dispatch(void) { TaskDispatch("BattleFxTrail_Dispatch", at::kTrailSteps, 2); }
+extern "C" void __cdecl BattleFxTrail_Dispatch(void) { TaskDispatch("BattleFxTrail_Dispatch", BattleFxTrail_Steps_addr, 2); }
 
 // original 0x452B90: state 0: +0 |= 0x20, +0x5C = 3, the shade bytes +0x5D,
 // +0x5F, +0x5E = +0xB * 0xF0 (a byte), +9 = 8, on; a tail jump to
@@ -794,7 +794,7 @@ extern "C" void __cdecl Battle_RecalcStats(unsigned actor) {
     unsigned index;
     if ((actor & 0xFF) <= 2) {
         index = actor & 0xFF;
-        BH_CALL(Battle_RecalcMemberStats)(At(at::kParty + 0x80 + index * at::kPartyStride), actor);
+        BH_CALL(Battle_RecalcMemberStats)(At(ObjTrio_addr + 0x80 + index * at::kPartyStride), actor);
     } else {
         index = (actor - 3) & 0xFF;
         unsigned char* const e = Enemy(index);
@@ -853,7 +853,7 @@ extern "C" void __cdecl Battle_RecalcMemberStats(unsigned char* view, unsigned m
         SetWord(r + 0xA4, static_cast<std::uint16_t>(Word(r + 0xA4) + Word(r + 0xA6)));
         SetWord(r + 0xA6, 0);
     }
-    if ((r[0x134] & 2) && B(at::kForm) == 0x16) {
+    if ((r[0x134] & 2) && BattlePhases_B89 == 0x16) {
         r[0xBB] = static_cast<unsigned char>(r[0xBB] + 0x1E);
         r[0xBA] = static_cast<unsigned char>(r[0xBA] + 0x1E);
         r[0xBB] = static_cast<unsigned char>(Percent100(r[0xBB], 100));
@@ -878,10 +878,10 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
     unsigned char* const r = Party(member);
     if (!(r[0x130] & 1)) return 0;
     if (r[0x124] != B(at::kActor)) return 0;
-    if (BH_CALL(Battle_ActionBitSet)(At(L(At(at::kActingSprite2)))[2]) != 0) return 0;
+    if (BH_CALL(Battle_ActionBitSet)(At(BattleSprites_Action)[2]) != 0) return 0;
     if (BH_CALL(Battle_MemberListFull)(member) != 0) return 0;
-    const U table = At(at::kEffectState)[r[0x89]] == 6 ? at::kRollOddsB : at::kRollOdds;
-    const unsigned id = Word(At(L(At(at::kActingSprite2))) + 2);
+    const U table = MoveScript_EffectState[r[0x89]] == 6 ? at::kRollOddsB : at::kRollOdds;
+    const unsigned id = Word(At(BattleSprites_Action) + 2);
     const unsigned nibble = At(at::kActionRows + id * at::kActionRowStride)[0] >> 4;
     const unsigned odds = At(table)[nibble];
     const int roll = BH_CALL(Rand)();
@@ -896,7 +896,7 @@ extern "C" unsigned char __cdecl Battle_MemberRollByAction(unsigned member) {
 // set: 1, else 0 (the action's low byte).
 extern "C" unsigned char __cdecl Battle_ActionBitSet(unsigned action) {
     const unsigned a = action & 0xFF;
-    return (L(At(at::kActionBits + (a >> 5) * 4)) >> (a & 31)) & 1 ? 1 : 0;
+    return (L(At(Cond_Flags_addr + 0xf8 + (a >> 5) * 4)) >> (a & 31)) & 1 ? 1 : 0;
 }
 
 // original 0x453AC0: 1 when every one of the member's ten bytes +0xFE.. is
@@ -955,7 +955,7 @@ extern "C" void __cdecl Battle_SetApPopup(unsigned amount, unsigned actor) {
 // `object` released (Field_SlotRelease).
 extern "C" void __cdecl Field_SlotsReleaseOwner(const unsigned char* object) {
     for (unsigned i = 0; i < 8; ++i)
-        if (L(At(at::kFieldSlots + 0xC + 0x10 * i)) == Addr(object)) BH_CALL(Field_SlotRelease)(i);
+        if (L(At(Field_Slots_addr + 0xC + 0x10 * i)) == Addr(object)) BH_CALL(Field_SlotRelease)(i);
 }
 
 // original 0x455290: the first Field_Slots record without +0 bit 0 taken:
@@ -963,7 +963,7 @@ extern "C" void __cdecl Field_SlotsReleaseOwner(const unsigned char* object) {
 // +0x27; its index the answer, 0xFF when none is free.
 extern "C" unsigned char __cdecl Field_SlotStart(unsigned char* object, unsigned script) {
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const slot = At(at::kFieldSlots + 0x10 * i);
+        unsigned char* const slot = At(Field_Slots_addr + 0x10 * i);
         if (slot[0] & 1) continue;
         slot[0] = 1;
         SetL(slot + 0xC, Addr(object));
@@ -1100,7 +1100,7 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
         Matrix m{};
         BH_CALL(Gte_RotTrans)(&centre.x, reinterpret_cast<long*>(m.t));
         BH_CALL(Gte_RotMatrix)(angles, m.m);
-        BH_CALL(Gte_MulMatrix0)(reinterpret_cast<const short*>(At(at::kCameraMatrix)), m.m, m.m);
+        BH_CALL(Gte_MulMatrix0)(reinterpret_cast<const short*>(At(Camera_Matrix_addr)), m.m, m.m);
         BH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m));
         BH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m));
         unsigned char* const prim = Gfx_PacketNext;
@@ -1138,14 +1138,14 @@ extern "C" void __cdecl MapCell_DrawSpinQuads(const unsigned char* record, unsig
 // by byte 8 unchecked: ours aborts on 0.
 extern "C" void __cdecl MapCell_DrawGroundSprite(const unsigned char* record, unsigned b1, unsigned b0) {
     if (BH_CALL(Area_TestCondition)(Word(record)) == 0) return;
-    unsigned char* const point = At(at::kVertexScratch);
+    unsigned char* const point = At(Prim_VertexScratch_addr);
     SetWord(point, (static_cast<U>(S8(static_cast<unsigned char>(L(record + 4) >> 24))) + ((b1 - 0x80) << 6)) << 1);
     SetWord(point + 2, (static_cast<U>(S8(static_cast<unsigned char>(L(record + 4) >> 16))) + ((b0 - 0x80) << 6)) << 1);
     const long height = BH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<U>(S16(Word(point)) + 0x4000) << 9),
                                                    static_cast<long>(static_cast<U>(S16(Word(point + 2)) + 0x4000) << 9));
     SetWord(point + 4, static_cast<U>(-(S16(static_cast<U>(height)) / 2)));
     long p = 0;
-    unsigned char* const screen = At(at::kScreenXY);
+    unsigned char* const screen = At(MapView_ScreenXY_addr);
     const long z = BH_AT(Pers, bof3::addr::Gte_RotTransPers)(point, screen, &p);
     const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
     if (!(F(screen) >= F(At(at::kSpriteXLo)) - fill)) return;

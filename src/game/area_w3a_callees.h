@@ -26,9 +26,9 @@ using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the flag bank every Flags_* call here is handed
-constexpr U kTailKind = 0x9039F3;         // Field_ModeTailKinds' index (s8)
-constexpr U kTailState = 0x9039F4;        // s8: the armed tail kind's (or the place hook's) state
-constexpr U kTailArg = 0x9039F5;
+// kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the place hook's) state
+// kTailArg: now AreaW0c_TailSub (symbols.toml).
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
 // kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
 // kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16

@@ -18,14 +18,14 @@ using U = std::uint32_t;
 // The banner pool's current entry and the mask of kinds seen this frame
 // (battle_misc_callees.h has the pool's layout).
 constexpr U kBannerCurrent = 0x93B8C0;
-constexpr U kBannerKinds = 0x904AE9;
+// kBannerKinds: now BattleMisc_BannerKinds (symbols.toml).
 constexpr U kBanners = 0x93B8E0;
 // Window records (WindowRecords 0x803160, 0x24 bytes each) the two banner
 // handlers write: record 0's +3 and +0xA, record 4's +3 and +0xA.
 constexpr U kWin0State = 0x803163;
-constexpr U kWin0Index = 0x80316A;
+// kWin0Index: now BattleOdds_Win0Index (symbols.toml).
 constexpr U kWin4State = 0x8031F3;
-constexpr U kWin4Index = 0x8031FA;
+// kWin4Index: now BattleOdds_Win4Index (symbols.toml).
 // Effect_ApplyResult's operands (battle_damage_callees.h): the result record's
 // pointer, the target byte, the acting dword (its low byte the actor).
 constexpr U kResult = 0x904B60;

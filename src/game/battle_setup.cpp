@@ -103,7 +103,7 @@ void ShowLine(const unsigned char* text) { g.message(2, 0, 0, 0x2D, text); }
 // caller, all in this file, tests al alone).
 extern "C" unsigned __cdecl Battle_ActorSkipped(unsigned actor) {
     const unsigned a = actor & 0xFF;
-    if (At(at::kTimer)[0] != 0) {
+    if (BattleFlow_AnimGate != 0) {
         const unsigned char flags = a <= 2 ? P(a)[at::kPFlags] : E(a)[at::kEFlags];
         if ((flags & 0x10) == 0) return 1;
     }
@@ -133,7 +133,7 @@ extern "C" unsigned __cdecl Battle_ActorStanding(unsigned actor) {
     unsigned r;
     if (a < 3) {
         offset = a * at::kPartyStride;
-        const unsigned char* const o = At(at::kParty + offset);
+        const unsigned char* const o = At(ObjTrio_addr + offset);
         r = (o[at::kPresent] & 1) && (Word(o + at::kPStatus) & 0x4944) == 0 ? 1 : 0;
     } else {
         offset = ((a - 3) & 0xFF) * at::kEnemyStride;
@@ -200,7 +200,7 @@ extern "C" void __cdecl Battle_TickCounters() {
         unsigned char* const o = E(i);
         if ((Long(o + at::kEFlags) & 0x4000) && o[at::kECount4000] <= 2) ++o[at::kECount4000];
     }
-    unsigned char* const timer = At(at::kTimer);
+    unsigned char* const timer = At(BattleFlow_AnimGate_addr);
     if (*timer == 0) return;
     if (--*timer != 0) return;
     for (unsigned i = 0; i <= 2; ++i)
@@ -296,8 +296,8 @@ extern "C" unsigned __cdecl Battle_ClearStatus(unsigned actor, unsigned mask) {
 extern "C" void __cdecl Battle_ReturnQueuedItem(unsigned actor) {
     const unsigned a = actor & 0xFF;
     if (a > 2) return;
-    const unsigned to = At(at::kQueueTo)[0];
-    unsigned i = static_cast<unsigned char>(At(at::kQueueFrom)[0] - 1);
+    const unsigned to = BattleDamage_TurnCount;
+    unsigned i = static_cast<unsigned char>(BossSe_RoundSlot - 1);
     for (;;) {
         if (i >= to) return;
         if (At(at::kItemQueue + i)[0] == a) break;
@@ -503,11 +503,11 @@ extern "C" unsigned __cdecl BattleStep_HpDrift() {
         unsigned char* const o = P(i);
         std::uint16_t w = 0;
         SetWord(o + at::kPApChange, 0);
-        if (At(at::kHpDriftMode)[0] == 5) --w;
+        if (Cond_Flags[0xd0] == 5) --w;
         const int n = static_cast<int>(Word(o + at::kPMaxHp)) + 10;
         if (o[at::kPCharId] == 6) w = static_cast<std::uint16_t>(w + n / -20);
         const unsigned char id = o[at::kPCharId];
-        if ((id == 7 || id == 0) && (o[at::kPFlags] & 2) && At(at::kField12)[0] == 0x12)
+        if ((id == 7 || id == 0) && (o[at::kPFlags] & 2) && BattlePhases_B89 == 0x12)
             w = static_cast<std::uint16_t>(w + n / -20);
         if (o[at::kPWeapon] == 0x52) {
             w = static_cast<std::uint16_t>(w + n / 20);
@@ -535,7 +535,7 @@ extern "C" unsigned __cdecl BattleStep_HpDrift() {
         o[at::kEEffect] = 0x11;
         g.set_pending(i);
     }
-    return Word(At(at::kPending)) != 0 ? 1 : 0;
+    return BattleActions_Pending != 0 ? 1 : 0;
 }
 
 // original 0x430F40 (PSX 0x801D62A8, the same): each member the chain does not
@@ -554,7 +554,7 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
             SetLong(o + at::kPFlags, static_cast<std::int32_t>(flags & ~0x20u));
             continue;
         }
-        const int cost = static_cast<int>((static_cast<std::uint32_t>(Long(At(at::kApCost))) & 0xFF) + 1) / 2;
+        const int cost = static_cast<int>((static_cast<std::uint32_t>(Long(At(BattleActions_ApCost_addr))) & 0xFF) + 1) / 2;
         if (static_cast<int>(Word(o + at::kPAp)) < cost) {
             o[at::kState1] = 6;
             o[at::kState2] = 4;
@@ -571,7 +571,7 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
         o[at::kPEffect] = 2;
         g.set_pending(i);
     }
-    return Word(At(at::kPending)) != 0 ? 1 : 0;
+    return BattleActions_Pending != 0 ? 1 : 0;
 }
 
 // ===========================================================================

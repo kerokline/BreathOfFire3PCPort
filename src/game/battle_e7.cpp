@@ -55,7 +55,7 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 // The record 0x905B84 names, read afresh wherever the original reads it.
-unsigned char* Win() { return At(static_cast<U>(Long(At(at::kWindowCurrent)))); }
+unsigned char* Win() { return At(BattleWinStates_Current); }
 std::int32_t S16(unsigned v) { return static_cast<std::int16_t>(v); }
 unsigned W(const unsigned char* p) { return Word(p); }
 // `fild dword` then `fstp dword`: an int made a float (exact below 2^24).
@@ -72,8 +72,8 @@ const unsigned char* Text(U address) { return At(address); }
 // 0x80B7A8), one five-bit field shifted into a byte. Read afresh each time,
 // as the original reads it.
 unsigned ColourField(unsigned shift) {
-    const int row = static_cast<signed char>(B(at::kColour));
-    const unsigned w = Word(At(at::kClutShadow + static_cast<U>(row * 64)));
+    const int row = BattleDraw_Colour;
+    const unsigned w = Word(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(row * 64)));
     return (((w >> shift) & 0x1F) << 3) & 0xFF;
 }
 
@@ -132,8 +132,8 @@ unsigned RowCost(const unsigned char* row) {
 // 7 when the menu actor's AP (+0x9A of the member its +5 names) is below the
 // cost, else 0.
 unsigned CostColour(unsigned cost) {
-    const unsigned char* const actor = At(static_cast<U>(Long(At(at::kMenuActor))));
-    const unsigned ap = W(At(at::kPartyAp + actor[5] * at::kPartyStride));
+    const unsigned char* const actor = At(BattleE4_MenuActor);
+    const unsigned ap = W(At(ObjTrio_addr + 0x9a + actor[5] * at::kPartyStride));
     return ap < (cost & 0xFFFF) ? 7u : 0u;
 }
 
@@ -245,7 +245,7 @@ extern "C" void __cdecl BattleResultWin_DrawItem(U x, U y, U colour, U category,
 extern "C" void __cdecl BattleResultWin_DrawDrops(void) {
     const unsigned char* const rec = Win();
     BH_CALL(BattleResultWin_DrawFrame)(W(rec + 4), W(rec + 6), 0x118, rec[9]);
-    for (unsigned i = 0; (i & 0xFF) < B(at::kDropCount); i = (i + 1) & 0xFF) {
+    for (unsigned i = 0; (i & 0xFF) < BattleE7_DropCount; i = (i + 1) & 0xFF) {
         const unsigned word = W(At(at::kDropItems + 2 * i));
         if (word == 0) continue;
         const unsigned count = B(at::kDropCounts + i);
@@ -300,37 +300,37 @@ extern "C" void __cdecl GeneWin_DrawFrame(U x, U y, U cols_arg, U rows_arg) {
 extern "C" void __cdecl GeneWin_DrawGrid(void) {
     const unsigned char* rec = Win();
     BH_CALL(GeneWin_DrawFrame)(W(rec + 4), W(rec + 6), rec[8], rec[9]);
-    unsigned colour = B(at::kColour);
+    unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
     rec = Win();
     BH_CALL(Menu_DrawBox)(static_cast<int>(W(rec + 4) + 6), static_cast<int>(W(rec + 6) + 0x21),
                           static_cast<int>(rec[8] * 8u - 0xF), static_cast<int>(rec[9] * 8u - 0x27), 0,
                           static_cast<int>(colour));
-    colour = B(at::kColour);
+    colour = static_cast<unsigned char>(BattleDraw_Colour);
     rec = Win();
     BH_CALL(Menu_DrawBox)(static_cast<int>(W(rec + 4) + 0x36), static_cast<int>(W(rec + 6) + 6), 0x48, 0x18, 0,
                           static_cast<int>(colour));
-    colour = B(at::kColour);
+    colour = static_cast<unsigned char>(BattleDraw_Colour);
     rec = Win();
     BH_CALL(Menu_DrawBox)(static_cast<int>(W(rec + 4) + 0x87), static_cast<int>(W(rec + 6) + 0xA), 0x30, 0x10, 0,
                           static_cast<int>(colour));
-    const unsigned char* const actor = At(static_cast<U>(Long(At(at::kMenuActor))));
-    const unsigned text_colour = W(actor + 0x9A) < B(at::kApCost) ? 7u : 0u;
+    const unsigned char* const actor = At(BattleE4_MenuActor);
+    const unsigned text_colour = W(actor + 0x9A) < BattleActions_ApCost ? 7u : 0u;
     rec = Win();
     BH_CALL(Text_DrawFont12)(static_cast<int>(W(rec + 4) + 0x88), static_cast<int>(W(rec + 6) + 0xC),
                              static_cast<int>(text_colour), Text(at::kApLabel));
-    BH_CALL(Crt_sprintf)(Buf(at::kPrintBuf), Str(at::kFmtAp), B(at::kApCost));
+    BH_CALL(Crt_sprintf)(Buf(at::kPrintBuf), Str(Boss26Fx_CountFormat_addr), BattleActions_ApCost);
     rec = Win();
     BH_CALL(Text_DrawFont12)(static_cast<int>(W(rec + 4) + 0xA0), static_cast<int>(W(rec + 6) + 0xC),
                              static_cast<int>(text_colour), Text(at::kPrintBuf));
-    if (B(at::kStep2) != 4) return;
-    const unsigned row = B(at::kGeneRow);
+    if (BattleE4_Step3 != 4) return;
+    const unsigned row = BattleE5_GeneRow;
     rec = Win();
     if (row == 0xFF) {
         BH_CALL(Menu_DrawHand)(static_cast<int>(W(rec + 4) + 0xE), static_cast<int>(W(rec + 6) + 0xC), 0);
         return;
     }
     const U hy = (row << 5) + W(rec + 6) + 0x2C;
-    const U hx = B(at::kGeneColumn) * 30u + W(rec + 4) + 0xE;
+    const U hx = BattleE1_Roster * 30u + W(rec + 4) + 0xE;
     BH_CALL(Menu_DrawHand)(static_cast<int>(hx), static_cast<int>(hy), 0);
 }
 
@@ -342,10 +342,10 @@ extern "C" void __cdecl GeneWin_DrawGrid(void) {
 // and 0x66AF3C, and the hand at box (0x904AA5 & 0x7F), y + 4.
 extern "C" void __cdecl GeneWin_DrawChoices(U x, U y) {
     for (unsigned k = 0; k < 3; ++k) {
-        const unsigned colour = B(at::kColour);
+        const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
         const U bx = x + 48 * k;
         BH_CALL(Menu_DrawBox)(static_cast<int>(bx), static_cast<int>(y), 0x2D, 0x14, 0, static_cast<int>(colour));
-        const unsigned choice = B(at::kGeneChoice);
+        const unsigned choice = BossSb_Countdown;
         const unsigned char* const text = At(static_cast<U>(Long(At(at::kChoiceTexts + 4 * k))));
         U pieces = at::kChoicePieces;
         unsigned text_colour = 0;
@@ -356,7 +356,7 @@ extern "C" void __cdecl GeneWin_DrawChoices(U x, U y) {
         BH_CALL(Text_DrawAt)(static_cast<int>(bx + 4), static_cast<int>(y + 3), static_cast<int>(text_colour), 0x10, text);
         BH_CALL(Menu_DrawPieces)(static_cast<int>(bx), static_cast<int>(y), Text(pieces), 1);
     }
-    const unsigned choice = B(at::kGeneChoice);
+    const unsigned choice = BossSb_Countdown;
     if (choice & 0x80) return;
     BH_CALL(Menu_DrawHand)(static_cast<int>(x + 48 * (choice & 0x7F)), static_cast<int>(y + 4), 0);
 }
@@ -405,9 +405,9 @@ extern "C" void __cdecl GeneWin_ChoiceStates(void) {
 // and fourth words are pushed by its callers and never read.
 extern "C" void __cdecl GeneWin_DrawListFrame(U x, U y, U, U, U title) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
-    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x82, 0, B(at::kColour));
-    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x14, 0, B(at::kColour));
-    BH_CALL(Menu_DrawBox)(xi + 3, yi + 0x7A, 0x89, 8, 0, B(at::kColour));
+    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x82, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    BH_CALL(Menu_DrawBox)(xi + 3, yi + 3, 0x89, 0x14, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    BH_CALL(Menu_DrawBox)(xi + 3, yi + 0x7A, 0x89, 8, 0, static_cast<unsigned char>(BattleDraw_Colour));
     const unsigned char* const text = At(at::kTitles + (title & 0xFF) * 5);
     const unsigned n = BH_CALL(Text_CharCount)(text);
     BH_CALL(Text_DrawAt)(xi + 0x46 - 6 * static_cast<int>(n & 0xFF), yi + 7, 0, 0x10, text);
@@ -531,7 +531,7 @@ extern "C" void __cdecl GeneWin_DrawList(void) {
                                 static_cast<int>(colour), Text(at::kPrintBuf));
         rec = Win();
     }
-    if (B(at::kStep2) == 6 && B(at::kStep3) != 5) {
+    if (BattleE4_Step3 == 6 && BattleE4_Step4 != 5) {
         BH_CALL(GeneWin_DrawCursorBox)(W(rec + 4) + 5, (W(rec + 0x10) << 5) + W(rec + 6) + 0x18, 0x79, 0x20, 0, 6);
         return;
     }
@@ -572,7 +572,7 @@ extern "C" void __cdecl GeneWin_DrawList2(void) {
                                 static_cast<int>(colour), Text(at::kPrintBuf));
         rec = Win();
     }
-    if (B(at::kStep2) == 6 && B(at::kStep3) == 5) return;
+    if (BattleE4_Step3 == 6 && BattleE4_Step4 == 5) return;
     BH_CALL(Menu_DrawHand)(static_cast<int>(W(rec + 4) + 7), static_cast<int>(((W(rec + 0x10) + 1) << 5) + W(rec + 6)), 0);
 }
 
@@ -772,7 +772,7 @@ unsigned char g_equip_labels_row = 0;
 extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, U record) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
     const int label_y = g_equip_labels_row ? 0x1A : 0x27;
-    BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, B(at::kColour));
+    BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char* const ch = At(at::kCharRecords + (member & 0xFF) * at::kCharStride);
     unsigned n = BH_CALL(Text_CharCount)(ch) & 0xFF;
     if (n > 5) n = 5;
@@ -814,7 +814,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
         unsigned colour = 0;
         if (r == rec[0xB]) colour = 2;
         if (rec[0xD] & 2) {
-            const unsigned slot = B(at::kPartyOrder + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFieldMember)))));
+            const unsigned slot = B(at::kPartyOrder + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
             const unsigned who = B(at::kMemberIds + slot);
             if (BH_CALL(Item_CanUse)(2, who, category, items[r]) == 0) {
                 colour = 7;

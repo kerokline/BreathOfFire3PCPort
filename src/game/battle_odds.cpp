@@ -68,7 +68,7 @@ void PutWord(unsigned char* p, U v) {
     std::memcpy(p, &w, sizeof w);
 }
 
-U BannerCurrent() { return Long(At(kBannerCurrent)); }
+U BannerCurrent() { return BattleMisc_BannerCurrent; }
 U SpriteCurrent() { return Long(At(at::Sprite_CurrentAt())); }
 unsigned char* Sprite() { return At(SpriteCurrent()); }
 
@@ -89,21 +89,21 @@ unsigned char* Sprite() { return At(SpriteCurrent()); }
 extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
     unsigned char* e = At(BannerCurrent());
     if (Word(e + 8) != 0xFF) {
-        At(kBannerKinds)[0] = static_cast<unsigned char>(At(kBannerKinds)[0] | e[1]);
+        BattleMisc_BannerKinds = static_cast<unsigned char>(BattleMisc_BannerKinds | e[1]);
         PutWord(e + 8, Word(e + 8) - 1);
         e = At(BannerCurrent());
         if (Word(e + 8) == 0) {
             e[0] = 0;
             const U entry = BannerCurrent();
-            const unsigned char kinds = At(kBannerKinds)[0];
+            const unsigned char kinds = BattleMisc_BannerKinds;
             const unsigned char kind = At(entry + 1)[0];
-            At(kBannerKinds)[0] = static_cast<unsigned char>(kinds & static_cast<unsigned char>(~kind));
+            BattleMisc_BannerKinds = static_cast<unsigned char>(kinds & static_cast<unsigned char>(~kind));
             const U eax = g.none_of_kind(1);
             if (eax & 0xFF) At(kWin4State)[0] = 0;
             return eax;
         }
     }
-    At(kWin4Index)[0] = At(bof3::addr::DamageScratch)[0];
+    BattleOdds_Win4Index = At(bof3::addr::DamageScratch)[0];
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 
@@ -116,8 +116,8 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind1(void) {
 // at 0xFF the entry the first read found is tested, which is never 0.
 extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
     unsigned char* e = At(BannerCurrent());
-    const unsigned char kinds = At(kBannerKinds)[0];
-    At(kBannerKinds)[0] = static_cast<unsigned char>(kinds | e[1]);
+    const unsigned char kinds = BattleMisc_BannerKinds;
+    BattleMisc_BannerKinds = static_cast<unsigned char>(kinds | e[1]);
     const U timer = Word(e + 8);
     if (timer != 0xFF) {
         PutWord(e + 8, timer - 1);
@@ -129,7 +129,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
         if (eax & 0xFF) At(kWin0State)[0] = 2;
         return eax;
     }
-    At(kWin0Index)[0] = At(bof3::addr::DamageScratch)[0];
+    BattleOdds_Win0Index = At(bof3::addr::DamageScratch)[0];
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(e));
 }
 
@@ -139,7 +139,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
 // (word +4 of *kResult) = -20, a heal of 20 (positive is damage,
 // Effect_ApplyResult). eax the record pointer.
 extern "C" unsigned long __cdecl Effect_Heal20(void) {
-    const U result = Long(At(kResult));
+    const U result = BattleDamage_Result;
     PutWord(At(result + 4), 0xFFEC);
     return result;
 }
@@ -156,7 +156,7 @@ extern "C" unsigned long __cdecl Effect_HalfAttack(void) {
     const U actor = At(kActing)[0];
     const U amount = g.calc_damage(actor, target, 0xFFFF);
     const U half = static_cast<std::uint16_t>(static_cast<std::int16_t>(amount) >> 1);
-    PutWord(At(Long(At(kResult)) + 4), half);
+    PutWord(At(BattleDamage_Result + 4), half);
     return (amount & 0xFFFF0000u) | half;
 }
 
@@ -176,7 +176,7 @@ extern "C" unsigned long __cdecl BattleFx_FreeTask(void) { return g.free_task();
 // whose index (al) becomes +0xA; then +9 = 8 and the next state. Sprite_Current
 // is read again for each store. eax is Sprite_Current as last read.
 extern "C" unsigned long __cdecl BattleFx_TintActor(void) {
-    const U object = Long(At(kActorObject));
+    const U object = BattleOdds_ActorObject;
     unsigned char* s = Sprite();
     s[9] = static_cast<unsigned char>(s[9] - 1);
     s = Sprite();
