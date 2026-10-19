@@ -24,6 +24,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_se_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -42,6 +43,14 @@ using move_script::Word;
 // original reads the word [0x903850]) and the bank word after it.
 short Count() { return static_cast<short>(Word(At(at::kCount))); }
 unsigned char* Object(int n) { return Sprite_Objects + n * static_cast<int>(at::kObjectStride); }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
+// sprite head that every family shares, unless the pointer is an object's.
+static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::SpriteObject* Obj(int n) { return Spr(Object(n)); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 // A placement's x or z: the whole part from `whole`, the half (0x8000) when
 // `half` is not 0 - `neg / sbb / and 0x8000`, then `or` the whole << 16.
@@ -105,10 +114,10 @@ extern "C" void __cdecl Effect_SpawnAtCell(unsigned state, unsigned x, unsigned 
     e[0] = 1;
     e[5] = at::kCellFxKind;
     e[1] = static_cast<unsigned char>(state);
-    SetLong(e + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16));
+    Fx(e)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
     const auto zz = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
-    SetLong(e + 0x38, zz);
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(e + 0x34), zz);
+    Fx(e)->z = zz;
+    const long ground = SH_CALL(AreaMap_Elevation)(Fx(e)->x, zz);
     SetWord(e + 0x3E, static_cast<unsigned>(ground) + 0x100);
     e[0xB] = 0;
 }
@@ -149,20 +158,20 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     SH_CALL(Sprite_SetAnimationBank)(Word(At(at::kBank)));
     Sprite_Current[0] = 1;
     SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
-    SetLong(Object(Count()) + 0x8C, Long(Sprite_Current + 0x34));
+    SetLong(Object(Count()) + 0x8C, SC()->x);
     SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
-    SetLong(Object(Count()) + 0x90, Long(Sprite_Current + 0x38));
-    SetLong(Object(Count()) + 0x94, 0);
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
+    SetLong(Object(Count()) + 0x90, SC()->z);
+    Obj(Count())->best_score = 0;
+    const long ground = SH_CALL(AreaMap_Elevation)(SC()->x, SC()->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
     Sprite_Current[8] = static_cast<unsigned char>(op[0] & 0xF);
     Sprite_Current[6] = static_cast<unsigned char>(op[0] >> 4);
     unsigned char* const n = Object(Count());
-    SetWord(n + 0x98, op[4]);
-    SetWord(n + 0x9A, op[5]);
-    SetWord(n + 0x88, static_cast<unsigned>(op[0xE]) << 8 | op[0xF]);
+    Spr(n)->half_w = op[4];
+    Spr(n)->half_d = op[5];
+    Spr(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
     n[0x83] = op[0x10];
     n[0x84] = op[0xB];
     n[0xA0] = 0x7F;
