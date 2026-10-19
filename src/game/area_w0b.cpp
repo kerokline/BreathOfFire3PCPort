@@ -28,6 +28,7 @@
 #include "game/area_harness.h"
 #include "game/area_w0b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/world_map.h"
 #include "hook/detour.h"
@@ -45,7 +46,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Pointer(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 // A handler read from a .data table in place, as the originals' `call` /
@@ -302,7 +302,7 @@ extern "C" void __cdecl Area16_FrameStep(void) { Entry(Area16_FrameStates_addr +
 // original 0x4020D0 (Area16_FrameStates 1): the word +0x2E += 0x10; at 0x10
 // and above (s16) +2 + 1; then a tail jump to Area16_FrameHold.
 extern "C" void __cdecl Area16_FrameSlideIn(void) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
+    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(kFrameHold16)();
@@ -320,7 +320,7 @@ extern "C" void __cdecl Area16_FrameHold(void) {
 // and below +2 = 0; unless the mode byte is 2, +2 = 1 (over the 0);
 // Area16_DrawFrame(0x10, y).
 extern "C" void __cdecl Area16_FrameSlideOut(void) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
+    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -343,7 +343,7 @@ extern "C" void __cdecl Area16_BoxStep(void) { Entry(Area16_BoxStates_addr + Cur
 // Area16_DrawHud(0x5C, y) - the y pushed with the object pointer's high half
 // above the word, which the drawing never reads.
 extern "C" void __cdecl Area16_BoxSlideIn(void) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -381,7 +381,7 @@ extern "C" void __cdecl Area16_BoxHold(void) {
 // +0xB), Field_Request is 2 or Field_ScriptFlags bit 8, +3 = 1;
 // Area16_DrawHud(0x5C, y).
 extern "C" void __cdecl Area16_BoxSlideOut(void) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
@@ -501,30 +501,30 @@ extern "C" void __cdecl Area16_Record8Place(void) {
     SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
     SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
-    auto* tO = reinterpret_cast<records::EffectObject*>(o);
+    auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
         SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 13));
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
         const bool along_x = tO->step_x == 0;
         const unsigned step = o[6] == 1 ? 2u : 0xFFFEu;
         if (along_x) SetWord(o + 0x36, Word(o + 0x36) + step);
         else SetWord(o + 0x3A, Word(o + 0x3A) + step);
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
     }
     SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 9));
     o = Cur();
-    tO = reinterpret_cast<records::EffectObject*>(o);
+    tO = rv::As<records::EffectObject>(o);
     SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 9));
     Cur()[0xB] = 0;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
     AH_CALL(Sprite_SetAnimation)(At(Area16_Record8Anims_addr + Cur()[8] * 2u)[0]);
     o = Cur();
-    tO = reinterpret_cast<records::EffectObject*>(o);
+    tO = rv::As<records::EffectObject>(o);
     o[0x2A] = At(Area16_Record8Anims_addr + 1 + o[8] * 2u)[0];
     AH_CALL(Sprite_UpdateScreen)();
 }
@@ -752,7 +752,7 @@ extern "C" void __cdecl Area20_PickFieldObject(void) {
     if (keep < 8) {
         const unsigned cell = static_cast<unsigned>(AH_CALL(Rand)()) & 7;
         unsigned char* const o = Sprite_Objects + keep * 0xA4;
-        auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
+        auto* const tO = rv::As<records::SpriteObject>(o);
         const U x = static_cast<U>(At(Area20_Cells_addr + cell * 2)[0]) << 16;
         const U z = static_cast<U>(At(Area20_Cells_addr + cell * 2 + 1)[0]) << 16;
         tO->x = static_cast<std::int32_t>(x);
@@ -1011,7 +1011,7 @@ extern "C" void __cdecl Area26_PlaceEffect(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const record = Effect_Objects + static_cast<U>(slot) * 0x80u;
-    auto* const tRecord = reinterpret_cast<records::EffectObject*>(record);
+    auto* const tRecord = rv::As<records::EffectObject>(record);
     tRecord->z = 0x68000;
     tRecord->x = 0x70000;
     record[0] = 1;

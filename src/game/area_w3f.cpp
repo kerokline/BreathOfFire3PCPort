@@ -21,13 +21,13 @@
 #include "game/area_harness.h"
 #include "game/area_w3f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3f::at;
 using area_harness::Handler;
@@ -186,7 +186,7 @@ void GlowCylinder(const std::int32_t* p) {
 // +0x3C) to a cylinder (0x420B20, 0x4220A0).
 void CylinderAtCurrent(void (__cdecl* cylinder)(const long*)) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::EffectObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
     const long point[3] = {tCur->x, tCur->z, tCur->height};
     cylinder(point);
 }
@@ -194,7 +194,7 @@ void CylinderAtCurrent(void (__cdecl* cylinder)(const long*)) {
 // ---- area 144's walks (0x420FA0, 0x421040) ----
 
 // (target - the running object's z) >> 15, 32-bit, arithmetic.
-std::int32_t StepsToZ(U target) { return static_cast<std::int32_t>(target - static_cast<U>(CurSprite()->z)) >> 15; }
+std::int32_t StepsToZ(U target) { return static_cast<std::int32_t>(target - static_cast<U>(rv::Current<records::SpriteObject>()->z)) >> 15; }
 unsigned char Magnitude(std::int32_t d) { return static_cast<unsigned char>(d < 0 ? 0u - static_cast<U>(d) : static_cast<U>(d)); }
 
 // ---- area 145's trails (0x421B20 .. 0x421EA0) ----
@@ -543,7 +543,7 @@ extern "C" void __cdecl Area144_SpawnEffect85(void) {
 // script object's +4, its +0x87 1; MoveCmd_MoveKind2(3).
 extern "C" void __cdecl Area144_MoveKind2Here(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     unsigned char* const k2 = Mem(Sprite_Kind2_addr);
     SetLong(k2 + 0x34, tCur->x);
     const std::int32_t z = tCur->z;
@@ -628,11 +628,11 @@ extern "C" void __cdecl Area145_RunDrop(void) { StateEntry("Area145_RunDrop", Ar
 // the script position - 2. Sprite_Current read again for every store.
 extern "C" void __cdecl Area145_DropStart(void) {
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
-    const long ground = AH_CALL(MapView_GroundAt)(CurSprite()->x, CurSprite()->z);
+    const long ground = AH_CALL(MapView_GroundAt)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     SetWord(Sprite_Current + 0x3E, static_cast<U>(ground) + 0x7D0u);
-    CurSprite()->step_x = 0;
-    CurSprite()->step_z = 0;
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_x = 0;
+    rv::Current<records::SpriteObject>()->step_z = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     SetLong(Sprite_Current + 0x20, -8);
     Sprite_Current[4] = 1;
     AH_CALL(Sprite_SetAnimation)(0x3B);
@@ -648,16 +648,16 @@ extern "C" void __cdecl Area145_DropStart(void) {
 // 2, Sprite_SetAnimation(0x39), the script object's +1 = 4. Else the script
 // position - 2.
 extern "C" void __cdecl Area145_DropFall(void) {
-    CurSprite()->step_y = static_cast<std::int32_t>(static_cast<U>(CurSprite()->step_y) + static_cast<U>(Long(Sprite_Current + 0x20)));
+    rv::Current<records::SpriteObject>()->step_y = static_cast<std::int32_t>(static_cast<U>(rv::Current<records::SpriteObject>()->step_y) + static_cast<U>(Long(Sprite_Current + 0x20)));
     AH_CALL(Field_LeaderStepTick)();
-    const long ground = AH_CALL(MapView_GroundAt)(CurSprite()->x, CurSprite()->z);
+    const long ground = AH_CALL(MapView_GroundAt)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     unsigned char* const cur = Sprite_Current;
     if (static_cast<std::int16_t>(ground) <= static_cast<std::int16_t>(Word(cur + 0x3E))) {
         ScriptStep(-2);
         return;
     }
     SetWord(cur + 0x3E, static_cast<U>(ground));
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     SetLong(Sprite_Current + 0x20, 0);
     Sprite_Current[4] = 2;
     AH_CALL(Sprite_SetAnimation)(0x39);
@@ -943,7 +943,7 @@ extern "C" unsigned char __cdecl Area145_TrailLeg2(unsigned t, unsigned k) {
 extern "C" unsigned char __cdecl Area145_SpawnTrail(long x0, long z0, long x1, long z1) {
     if (SpawnSlot() == 0xFF) return 1;
     unsigned char* const e = ScratchRecord();
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x3F;
     tE->step_x = static_cast<std::int32_t>(x0);

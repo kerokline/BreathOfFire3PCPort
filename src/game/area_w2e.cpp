@@ -48,6 +48,7 @@
 #include "game/area_harness.h"
 #include "game/area_w2e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/world_map.h"
 #include "game/widescreen.h"
@@ -67,8 +68,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
 unsigned char& B(U address) { return *At(address); }
@@ -298,7 +297,7 @@ void PlateShrink() {
 // The dial frame's slide, state 1: the word +0x2E += 0x10; at 0x10 and above
 // (s16) +2 + 1; then a tail jump to the copy's FrameHold.
 void FrameSlideIn(const WorldMapTables& t) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
+    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(t.fn_frame_hold)();
@@ -315,7 +314,7 @@ void FrameHold(const WorldMapTables& t) {
 // State 3: the word +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the
 // mode byte is 2, +2 = 1 (over the 0); DrawFrame(0x10, y).
 void FrameSlideOut(const WorldMapTables& t) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
+    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -331,7 +330,7 @@ void FrameSlideOut(const WorldMapTables& t) {
 // The region box, state 1: y +0x30 -= 10; at 0xC8 and below (s16) +3 + 1;
 // when the box leaves +3 = 3; the copy's DrawHud(0x5C, y).
 void BoxSlideIn(const WorldMapTables& t) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -367,7 +366,7 @@ void BoxHold(const WorldMapTables& t) {
 // byte is set (whatever +0xB), Field_Request is 2 or Field_ScriptFlags bit
 // 8, +3 = 1; DrawHud(0x5C, y).
 void BoxSlideOut(const WorldMapTables& t) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
@@ -1385,8 +1384,8 @@ extern "C" void __cdecl Area106_Handler0(void) {
 // (Sprite_Current read again for each store.)
 extern "C" void __cdecl Area106_PlaceByFlags(void) {
     if (AH_CALL(Flags_Test)(Bank(), 0x51) != 0) {
-        CurSprite()->x = 0x128000;
-        CurSprite()->z = 0xB8000;
+        rv::Current<records::SpriteObject>()->x = 0x128000;
+        rv::Current<records::SpriteObject>()->z = 0xB8000;
         if (AH_CALL(Flags_Test)(Bank(), 0x4F) != 0) {
             SetWord(Cur() + 0x3E, 0x850);
             move_script::SetPos(MoveScript_Object, move_script::Pos(MoveScript_Object) + 2u);
@@ -1397,13 +1396,13 @@ extern "C" void __cdecl Area106_PlaceByFlags(void) {
         return;
     }
     if (AH_CALL(Flags_Test)(Bank(), 0x4F) != 0) {
-        CurSprite()->x = 0x128000;
-        CurSprite()->z = 0x238000;
+        rv::Current<records::SpriteObject>()->x = 0x128000;
+        rv::Current<records::SpriteObject>()->z = 0x238000;
         SetWord(Cur() + 0x3E, 0x850);
         return;
     }
-    CurSprite()->x = 0x118000;
-    CurSprite()->z = 0x1F8000;
+    rv::Current<records::SpriteObject>()->x = 0x118000;
+    rv::Current<records::SpriteObject>()->z = 0x1F8000;
     SetWord(Cur() + 0x3E, 0x300);
     move_script::SetPos(MoveScript_Object, move_script::Pos(MoveScript_Object) + 4u);
 }

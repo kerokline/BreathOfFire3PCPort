@@ -22,6 +22,7 @@
 #include "game/area_harness.h"
 #include "game/area_w4e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -205,7 +206,7 @@ extern "C" void __cdecl Area188_ChoiceFocusPair(void) {
 // 2 (MoveScript_Object read again for each).
 extern "C" void __cdecl Area188_WalkWhileZUnder(void) {
     const unsigned char* const cur = Cur();
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const U v = static_cast<U>(Long(Mem(Field_DirectionSteps_addr + 0x4 + (cur[8] & 7u) * 8))) + static_cast<U>(tCur->z);
     const U limit = static_cast<U>(B(Area188_ZLimits_addr + B(AreaW0c_TailSub_addr))) << 16;
     if (v > limit) return;

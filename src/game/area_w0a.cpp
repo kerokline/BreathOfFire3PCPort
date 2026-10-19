@@ -19,6 +19,7 @@
 #include "game/area_harness.h"
 #include "game/area_w0a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -394,7 +395,7 @@ extern "C" void __cdecl Area10_SpawnEffect1C(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = Effect(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x1C;
     tE->x = Long(Sprite_Current + 0x34);

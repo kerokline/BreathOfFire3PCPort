@@ -29,12 +29,12 @@
 #include "game/area_harness.h"
 #include "game/area_w4f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w4f::at;
 using area_harness::Handler;
@@ -54,7 +54,6 @@ unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
 // Sprite_Objects record `k` (a byte index, unchecked as the originals').
 unsigned char* ObjectAt(unsigned k) { return Mem(Sprite_Objects_addr + k * at::kObjectStride); }
-records::SpriteObject* TObjectAt(unsigned k) { return reinterpret_cast<records::SpriteObject*>(ObjectAt(k)); }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 // The answer as the originals' movsx reads it.
@@ -169,12 +168,12 @@ int ShakeStep(U table) { return static_cast<signed char>(B(table + (Sprite_Curre
 // (32-bit), Sprite_Current and the step read again for each.
 void ShakeXZ(U table) {
     unsigned char* c = Sprite_Current;
-    auto* tC = reinterpret_cast<records::SpriteObject*>(c);
+    auto* tC = rv::As<records::SpriteObject>(c);
     std::int32_t x = tC->x;
     int s = ShakeStep(table);
     tC->x = static_cast<std::int32_t>(static_cast<U>(x) + (static_cast<U>(s) << 11));
     c = Sprite_Current;
-    tC = reinterpret_cast<records::SpriteObject*>(c);
+    tC = rv::As<records::SpriteObject>(c);
     s = ShakeStep(table);
     tC->z = static_cast<std::int32_t>(static_cast<U>(tC->z) + (static_cast<U>(-s) << 11));
 }
@@ -660,7 +659,7 @@ extern "C" void __cdecl Area197_SpawnEffect92(void) {
     if (slot == 0xFF) return;
     const unsigned char who = MemberIndex();
     unsigned char* const r = EffectAt(slot);
-    auto* const tR = reinterpret_cast<records::EffectObject*>(r);
+    auto* const tR = rv::As<records::EffectObject>(r);
     r[0] = 1;
     r[5] = 0x92;
     tR->screen_x = 0;
@@ -826,7 +825,7 @@ extern "C" void __cdecl Area198_Shake(void) {
 // +7 = abs(d) as a byte, the running object's +8 (its direction) 3,
 // MoveCmd_Move(the script object, +8) - each pointer read again.
 extern "C" void __cdecl Area198_WalkToX190(void) {
-    const auto d = static_cast<std::int32_t>(0x190000u - static_cast<U>(CurSprite()->x)) >> 15;
+    const auto d = static_cast<std::int32_t>(0x190000u - static_cast<U>(rv::Current<records::SpriteObject>()->x)) >> 15;
     if (d == 0) return;
     MoveScript_Object[7] = static_cast<unsigned char>(d < 0 ? 0u - static_cast<U>(d) : static_cast<U>(d));
     Sprite_Current[8] = 3;
@@ -902,7 +901,7 @@ extern "C" void __cdecl Area198_SpawnEffectA7(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     Sprite_Current[0xB] = slot;
     unsigned char* const c = Sprite_Current;
-    auto* const tC = reinterpret_cast<records::SpriteObject*>(c);
+    auto* const tC = rv::As<records::SpriteObject>(c);
     if (c[0xB] == 0xFF) {
         ScriptStep(-2);
         return;
@@ -910,7 +909,7 @@ extern "C" void __cdecl Area198_SpawnEffectA7(void) {
     EffectAt(c[0xB])[0] = 1;
     EffectAt(c[0xB])[5] = 0xA7;
     unsigned char* const r34 = EffectAt(c[0xB]);
-    auto* const tR34 = reinterpret_cast<records::EffectObject*>(r34);
+    auto* const tR34 = rv::As<records::EffectObject>(r34);
     tR34->x = tC->x;
     const std::int32_t z = tC->z;
     SetLong(EffectAt(c[0xB]) + 0x38, z);
@@ -943,9 +942,9 @@ extern "C" void __cdecl Area198_EffectA6Run(void) {
 // +0x24 0, +0x2A 0; Sprite_SetAnimation(the animation of record +6); +1 1;
 // then a tail jmp into state 1 (0x42D580, the next byte).
 extern "C" void __cdecl Area198_EffectA6Start(void) {
-    SetLong(Sprite_Current + 0x34, TObjectAt(Sprite_Current[7])->x);
-    SetLong(Sprite_Current + 0x38, TObjectAt(Sprite_Current[7])->z);
-    SetLong(Sprite_Current + 0x3C, TObjectAt(Sprite_Current[7])->height);
+    SetLong(Sprite_Current + 0x34, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->x);
+    SetLong(Sprite_Current + 0x38, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->z);
+    SetLong(Sprite_Current + 0x3C, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->height);
     AH_CALL(Sprite_SetAnimationBank)(Word(A6Record(Sprite_Current[6]) + 4));
     Sprite_Current[0x48] = 1;
     Sprite_Current[0x24] = 0;
@@ -965,7 +964,7 @@ extern "C" void __cdecl Area198_EffectA6Start(void) {
 // 0x10000). Each word's address taken before its call, added to after.
 extern "C" void __cdecl Area198_EffectA6Follow(void) {
     unsigned char* const o = ObjectAt(Sprite_Current[7]);
-    auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
+    auto* const tO = rv::As<records::SpriteObject>(o);
     Sprite_Current[0] = o[0];
     AH_CALL(Sprite_ScriptTick)();
     AH_CALL(Sprite_QueueOverlay)();

@@ -21,6 +21,7 @@
 #include "game/area_harness.h"
 #include "game/area_w0c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -76,7 +77,7 @@ bool SpawnFromCurrent(unsigned char kind) {
 void SpawnEffect50(std::int32_t lift, unsigned char timer) {
     if (!SpawnFromCurrent(0x50)) return;
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     EffectAt(cur[0xB])[6] = cur[8];
     SetLong(EffectAt(cur[0xB]) + 0x34, tCur->x);
     SetLong(EffectAt(cur[0xB]) + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) + static_cast<std::uint32_t>(lift)));
@@ -89,7 +90,7 @@ void SpawnEffect50(std::int32_t lift, unsigned char timer) {
 // elevation there, as a word, in the high half.
 void SpawnAtCell(unsigned slot, std::int32_t x, std::int32_t z, unsigned char kind, bool state6) {
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     tE->z = z;
     tE->x = x;
     e[0] = 1;
@@ -322,7 +323,7 @@ extern "C" void __cdecl Area32_RunA(void) {
 extern "C" void __cdecl Area32_ShadeStart(void) {
     AH_CALL(Sprite_ShadeFadeBegin)();
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     cur[0x5C] = 1;
     AddLong(cur + 0x34, tCur->step_x);
     cur[4] = 1;
@@ -339,7 +340,7 @@ extern "C" void __cdecl Area32_ShadeStep(void) {
     }
     AddWord(Field_State + 0x12E, -2);
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     AddLong(cur + 0x34, tCur->step_x);
 }
 
@@ -358,7 +359,7 @@ extern "C" void __cdecl Area32_TintStart(void) {
     const unsigned char tint = AH_CALL(Sprite_SetTint)(Sprite_Current, 0, 0, 0, 1);
     Field_ActiveMember[0x9F] = tint;
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     cur[0] |= 0x20;
     cur[0] &= 0xBF;
     cur[0x5C] = 1;
@@ -378,13 +379,13 @@ extern "C" void __cdecl Area32_TintStart(void) {
 // otherwise the object moves by its step and the member's +0x8A less 2.
 extern "C" void __cdecl Area32_TintStep(void) {
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* tCur = rv::As<records::SpriteObject>(cur);
     for (unsigned off = 0x5D; off <= 0x5F; ++off)
         if (static_cast<signed char>(cur[off]) < static_cast<signed char>(0xC0)) cur[off] = static_cast<unsigned char>(cur[off] + 4);
     if (cur[0x5D] == 0xC0 && cur[0x5E] == 0xC0 && cur[0x5F] == 0xC0) {
         AH_CALL(Tint_Release)(Field_ActiveMember[0x9F]);
         cur = Sprite_Current;
-        tCur = reinterpret_cast<records::SpriteObject*>(cur);
+        tCur = rv::As<records::SpriteObject>(cur);
         cur[0] &= 0xDF;
         cur[0x5C] = 0;
         cur[0x5F] = 0;
@@ -448,7 +449,7 @@ extern "C" void __cdecl Area33_Record08Run(void) {
 extern "C" void __cdecl Area33_Record08Start(void) {
     AH_CALL(Sprite_SetAnimationBank)(0x46);
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::EffectObject*>(cur);
+    auto* tCur = rv::As<records::EffectObject>(cur);
     cur[0x48] = 0;
     cur[0x24] = 0;
     cur[0x29] = 5;
@@ -471,7 +472,7 @@ extern "C" void __cdecl Area33_Record08Start(void) {
     cur[1] = static_cast<unsigned char>(cur[1] + 1);
     AH_CALL(Sprite_SetAnimation)(B(WorldMap33_Record08Anims_addr + cur[8] * 2u));
     cur = Sprite_Current;
-    tCur = reinterpret_cast<records::EffectObject*>(cur);
+    tCur = rv::As<records::EffectObject>(cur);
     cur[0x2A] = B(WorldMap33_Record08Anims_addr + 1 + cur[8] * 2u);
     AH_CALL(Sprite_UpdateScreen)();
 }
@@ -617,7 +618,7 @@ extern "C" void __cdecl Area36_EffectRun(void) {
 // dwords +0x34, +0x38, +0x3C copied to the stack and handed to 0x4220D0.
 extern "C" void __cdecl Area36_EffectStep(void) {
     const unsigned char* const cur = Sprite_Current;
-    const auto* const tCur = reinterpret_cast<const records::EffectObject*>(cur);
+    const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
     std::int32_t position[3] = {tCur->x, tCur->z, tCur->height};
     AH_AT(void (__cdecl*)(std::int32_t*), at::kPositionHook)(position);
 }

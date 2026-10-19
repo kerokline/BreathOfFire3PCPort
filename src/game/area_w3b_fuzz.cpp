@@ -19,6 +19,7 @@
 #include "game/area_w3b.h"
 #include "game/area_w3b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -659,7 +660,7 @@ void SeedLeader(unsigned k) {
         g_k = ah::Often() ? AH_PICK(0, 1, 5, 0x1D, 0x1E, 0x21, 0xFF) : ah::Next() % 0x22;
         if (ah::Half()) g_k |= ah::Next() & 0xFFFFFF00u;
         const unsigned char* const r = Record(g_k == 0xFF ? 0 : g_k);
-        const auto* const tR = reinterpret_cast<const records::SpriteObject*>(r);
+        const auto* const tR = rv::AsConst<records::SpriteObject>(r);
         const auto around = [](U v) { return v + AH_PICK(0, 0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, 0x80000000u); };
         g_x = ah::Often() ? around(static_cast<U>(tR->x)) : ah::Next();
         g_z = ah::Often() ? around(static_cast<U>(tR->z)) : ah::Next();

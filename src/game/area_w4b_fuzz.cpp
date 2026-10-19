@@ -17,6 +17,7 @@
 #include "game/area_w4b.h"
 #include "game/area_w4b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -565,7 +566,7 @@ U Exact(U v) {
 void SeedMembers(U rects) {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const record = ah::PartyOf(static_cast<unsigned char>(m));
-        auto* const tRecord = reinterpret_cast<records::PartyMember*>(record);
+        auto* const tRecord = rv::As<records::PartyMember>(record);
         const unsigned char* const r = ah::Mem(rects + (ah::Next() % 2) * at::kRectStride);
         if (ah::Often()) {
             const U edge = static_cast<U>(ah::Half() ? r[0] : r[2]) << 16;
