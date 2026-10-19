@@ -37,6 +37,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_damage_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -92,6 +93,10 @@ using move_script::Word;
 // working record by the byte alone, as the original does (`and eax, 0xFF`).
 unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + 0x10 + (actor & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3) * at::kEnemyStride); }
+// The same records typed from their starts: Party is +0x10 into the member
+// record (0x802D50), Enemy +0x80 into the enemy object (0x93B9E0).
+records::PartyMember* PartyRec(unsigned actor) { return reinterpret_cast<records::PartyMember*>(Party(actor) - 0x10); }
+records::BattleEnemy* EnemyRec(unsigned actor) { return reinterpret_cast<records::BattleEnemy*>(Enemy(actor) + at::kEObject); }
 unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 std::int32_t S32(std::uint32_t v) { return static_cast<std::int32_t>(v); }
 std::uint32_t U32(std::int32_t v) { return static_cast<std::uint32_t>(v); }
@@ -146,15 +151,17 @@ extern "C" unsigned char __cdecl Battle_LevelClass(unsigned level, unsigned row)
 extern "C" unsigned char __cdecl Battle_ActorCanAct(unsigned actor) {
     if ((actor & 0xFF) < 3) {
         const unsigned char* const p = Party(actor);
-        if ((p[at::kPPresent] & 1) == 0) return 0;
-        if (Word(p + at::kPStatus) & 0x4944) return 0;
+        auto* const pr = reinterpret_cast<const records::PartyMember*>(p - 0x10);
+        if ((pr->flags & 1) == 0) return 0;
+        if (pr->status & 0x4944) return 0;
         if (BattleFlow_AnimGate != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
         const unsigned char side = BattlePhases_Initiative;
         return side == 2 || side == 3 ? 0 : 1;
     }
     const unsigned char* const e = Enemy(actor);
-    if ((e[at::kEPresent] & 1) == 0) return 0;
-    if (Word(e + at::kEStatus) & 0x4144) return 0;
+    auto* const er = reinterpret_cast<const records::BattleEnemy*>(e - 0x80);
+    if ((er->flags & 1) == 0) return 0;
+    if (er->status & 0x4144) return 0;
     if (BattleFlow_AnimGate != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
     const unsigned char side = BattlePhases_Initiative;
     return side == 1 || side == 3 ? 0 : 1;
@@ -167,18 +174,20 @@ extern "C" unsigned char __cdecl Battle_ActorCanAct(unsigned actor) {
 extern "C" unsigned char __cdecl Battle_ActorCanCommand(unsigned actor) {
     if ((actor & 0xFF) < 3) {
         const unsigned char* const p = Party(actor);
-        if ((p[at::kPPresent] & 1) == 0) return 0;
-        if (Word(p + at::kPStatus) & 0x4964) return 0;
+        auto* const pr = reinterpret_cast<const records::PartyMember*>(p - 0x10);
+        if ((pr->flags & 1) == 0) return 0;
+        if (pr->status & 0x4964) return 0;
         if (BattleFlow_AnimGate != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
-        if (Long(p + at::kPFlags2) & 0x14001) return 0;
+        if (static_cast<std::int32_t>(pr->flags_134) & 0x14001) return 0;
         const unsigned char side = BattlePhases_Initiative;
         return side == 2 || side == 3 ? 0 : 1;
     }
     const unsigned char* const e = Enemy(actor);
-    if ((e[at::kEPresent] & 1) == 0) return 0;
-    if (Word(e + at::kEStatus) & 0x4164) return 0;
+    auto* const er = reinterpret_cast<const records::BattleEnemy*>(e - 0x80);
+    if ((er->flags & 1) == 0) return 0;
+    if (er->status & 0x4164) return 0;
     if (BattleFlow_AnimGate != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
-    if (Long(e + at::kEFlags2) & 0x4000) return 0;
+    if (static_cast<std::int32_t>(er->flags_114) & 0x4000) return 0;
     const unsigned char side = BattlePhases_Initiative;
     return side == 1 || side == 3 ? 0 : 1;
 }
@@ -201,9 +210,10 @@ extern "C" void __cdecl Battle_BuildEntryOrder() {
     unsigned n = 0;
     for (unsigned a = 0; a <= 2; ++a) {
         const unsigned char* const p = Party(a);
+        auto* const pr = reinterpret_cast<const records::PartyMember*>(p - 0x10);
         if (Gated(p + at::kPFlags2)) continue;
         if (!g.can_command(a)) continue;
-        SetWord(list + 4 * n, Word(p + at::kPAgi));
+        SetWord(list + 4 * n, pr->agi);
         SetWord(list + 4 * n + 2, a);
         ++n;
     }
@@ -246,6 +256,7 @@ extern "C" void __cdecl Battle_BuildTurnOrder() {
     unsigned n = 0;
     for (unsigned a = 0; a <= 2; ++a) {
         unsigned char* const p = Party(a);
+        auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
         if (Gated(p + at::kPFlags2)) continue;
         if (!g.can_act(a)) continue;
         unsigned char* const slot = At(at::kTurnWork + 4 * n);
@@ -258,21 +269,22 @@ extern "C" void __cdecl Battle_BuildTurnOrder() {
             else if (kind == 1 || kind == 3) SetWord(slot, 2);
         }
         if (command == 5) SetWord(slot, 1);
-        const unsigned level_class = g.level_class(p[at::kPLevel], 1);
+        const unsigned level_class = g.level_class(pr->level, 1);
         const unsigned percent = Word(At(at::kTurnPercent + 2 * level_class));
         const int product = S16(percent * Word(slot));
-        SetWord(slot, static_cast<unsigned>(product / 100) + Word(p + at::kPAgi));
+        SetWord(slot, static_cast<unsigned>(product / 100) + pr->agi);
         ++n;
     }
     for (unsigned a = 3; a <= 10; ++a) {
         const unsigned char* const e = Enemy(a);
+        auto* const er = reinterpret_cast<const records::BattleEnemy*>(e - 0x80);
         if (Gated(e + at::kEFlags2)) continue;
         if (!g.can_act(a)) continue;
         unsigned char* const slot = At(at::kTurnWork + 4 * n);
         const unsigned level_class = g.level_class(e[at::kELevel], 0);
         const unsigned roll = static_cast<unsigned>(g.rand()) & 0xF;
         const int jitter = static_cast<signed char>(Byte(at::kTurnJitter + 16 * level_class + roll));
-        SetWord(slot, static_cast<unsigned>(jitter) + Word(e + at::kEAgi));
+        SetWord(slot, static_cast<unsigned>(jitter) + er->agi);
         SetWord(slot + 2, a);
         ++n;
     }
@@ -292,13 +304,14 @@ extern "C" void __cdecl Battle_BuildTurnOrder() {
 extern "C" void __cdecl Battle_ClearCommands() {
     for (unsigned a = 0; a < 3; ++a) {
         unsigned char* const p = Party(a);
+        auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
         p[at::kPCommand] = 0;
-        SetLong(p + at::kPFlags, 0);
+        pr->flags_130 = 0;
     }
     for (unsigned a = 3; a < 11; ++a) {
-        unsigned char* const e = Enemy(a);
-        e[at::kECommand] = 0;
-        SetLong(e + at::kEFlags, 0);
+        auto* const er = EnemyRec(a);
+        er->command = 0;
+        er->flags_110 = 0;
     }
 }
 
@@ -334,13 +347,14 @@ extern "C" void __cdecl Battle_RemoveFromTurnOrder(unsigned actor) {
     const unsigned char b = static_cast<unsigned char>(actor);
     if (b <= 2) {
         unsigned char* const p = Party(actor);
+        auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
         p[at::kPCommand] = 0;
-        SetLong(p + at::kPFlags, S32(U32(Long(p + at::kPFlags)) & ~2u));
-        SetLong(p + at::kPFlags2, S32(U32(Long(p + at::kPFlags2)) & ~4u));
+        pr->flags_130 = S32(U32(static_cast<std::int32_t>(pr->flags_130)) & ~2u);
+        pr->flags_134 = S32(U32(static_cast<std::int32_t>(pr->flags_134)) & ~4u);
     } else {
-        unsigned char* const e = Enemy(actor);
-        e[at::kECommand] = 0;
-        SetLong(e + at::kEFlags, S32(U32(Long(e + at::kEFlags)) & ~2u));
+        auto* const er = EnemyRec(actor);
+        er->command = 0;
+        er->flags_110 = S32(U32(static_cast<std::int32_t>(er->flags_110)) & ~2u);
     }
     for (unsigned k = 0; k < BattleDamage_TurnCount; ++k)
         if (Byte(at::kTurnOrder + k) == b) At(at::kTurnOrder + k)[0] = 0xFF;
@@ -375,7 +389,7 @@ extern "C" int __cdecl Battle_ScaleDamage(unsigned attacker, unsigned target, in
         scratch = Word(At(bof3::addr::DamageScratch));
     }
     if (scratch & 0x20) {
-        const unsigned holy = (target & 0xFF) <= 2 ? Party(target)[at::kPHoly] : Enemy(target)[at::kEHoly];
+        const unsigned holy = (target & 0xFF) <= 2 ? PartyRec(target)->holy : EnemyRec(target)->holy;
         v = Mul(S16(Word(At(bof3::addr::Battle_HolyAffinityTable + 2 * holy))), v) / 100;
     }
     if ((v & 0xFF) >= 0x80) v = S32(U32(v) + 0x100);
@@ -409,7 +423,7 @@ extern "C" int __cdecl Battle_BaseDamage(unsigned attacker, unsigned target, uns
         if (x > -5) index = 0;
         if (x < -0x33) index = 8;
         const std::int32_t factor = g.rand() % 2 + 2;
-        const std::int32_t numerator = S32(U32(Mul(factor, Word(Enemy(attacker) + at::kELevel))) << 16);
+        const std::int32_t numerator = S32(U32(Mul(factor, EnemyRec(attacker)->level)) << 16);
         const std::int32_t divisor = static_cast<std::int32_t>(Byte(at::kBonusDivisor + index)) << 8;
         if (divisor == 0) bof3::Fatal("Battle_BaseDamage: a zero divisor, where the original divides by zero");
         v = S32(U32(numerator / divisor) + (U32(x) << 8)) >> 8;
@@ -454,7 +468,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
     unsigned char* const scratch = At(bof3::addr::DamageScratch);
     if ((element & 0xFFFF) == 0xFFFF) {
         if (a <= 2) {
-            const unsigned weapon = Party(a)[at::kPWeapon];
+            const unsigned weapon = PartyRec(a)->weapon;
             SetWord(scratch, Byte(bof3::addr::NameTable_Weapons + weapon * at::kWeaponStride + at::kWeaponElement));
         } else {
             SetWord(scratch, 0);
@@ -465,26 +479,28 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
     unsigned char* const atk = At(at::kAttackerAtk);
     if (a <= 2) {
         unsigned char* const p = Party(a);
+        auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
         if (p[at::kPFlags2] & 0x40) {
-            const std::int32_t add = static_cast<std::int32_t>(p[at::kPCharge] * (U32(Long(atk)) & 0xFFFF)) >> 1;
+            const std::int32_t add = static_cast<std::int32_t>(pr->count_40 * (U32(Long(atk)) & 0xFFFF)) >> 1;
             SetWord(atk, Word(atk) + U32(add));
-            p[at::kPCharge] = 0;
-            SetLong(p + at::kPFlags2, S32(U32(Long(p + at::kPFlags2)) & ~0x40u));
+            pr->count_40 = 0;
+            pr->flags_134 = S32(U32(static_cast<std::int32_t>(pr->flags_134)) & ~0x40u);
         }
     } else {
         unsigned char* const e = Enemy(a);
+        auto* const er = reinterpret_cast<records::BattleEnemy*>(e - 0x80);
         if (e[at::kEFlags2] & 0x40) {
-            const std::int32_t set = static_cast<std::int32_t>(e[at::kECharge] * (U32(Long(atk)) & 0xFFFF)) >> 1;
+            const std::int32_t set = static_cast<std::int32_t>(er->count_40 * (U32(Long(atk)) & 0xFFFF)) >> 1;
             SetWord(atk, U32(set));
-            e[at::kECharge] = 0;
-            SetLong(e + at::kEFlags2, S32(U32(Long(e + at::kEFlags2)) & ~0x40u));
+            er->count_40 = 0;
+            er->flags_114 = S32(U32(static_cast<std::int32_t>(er->flags_114)) & ~0x40u);
         }
     }
     std::int32_t v = g.base_damage(attacker, target, 0);
     if (a <= 2 && t >= 3) {
-        const unsigned char weapon = Party(a)[at::kPWeapon];
-        if ((weapon == 0x13 || weapon == 0x17 || weapon == 0x33) && Enemy(t)[at::kEFamily] == 4) v = S32(U32(v) * 2);
-        if ((weapon == 0x16 || weapon == 0x35 || weapon == 0x40) && Enemy(t)[at::kEFamily] == 1) v = S32(U32(v) * 2);
+        const unsigned char weapon = PartyRec(a)->weapon;
+        if ((weapon == 0x13 || weapon == 0x17 || weapon == 0x33) && EnemyRec(t)->family == 4) v = S32(U32(v) * 2);
+        if ((weapon == 0x16 || weapon == 0x35 || weapon == 0x40) && EnemyRec(t)->family == 1) v = S32(U32(v) * 2);
     }
     unsigned char status, flags;
     if (t <= 2) {
@@ -500,22 +516,22 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
         if (status & 0x40) {
             At(at::kCuredBits)[0] = static_cast<unsigned char>(Byte(at::kCuredBits) | 0x40);
             if (t <= 2) {
-                g.cure(Party(t)[at::kPCureId], 0x40);
+                g.cure(PartyRec(t)->member, 0x40);
                 Party(t)[at::kPShown2] = 0;
             } else {
-                g.cure(Enemy(t)[at::kECureId], 0x40);
-                Enemy(t)[at::kEShown2] = 0;
+                g.cure(EnemyRec(t)->actor, 0x40);
+                EnemyRec(t)->counter = 0;
             }
             if ((U32(v) & 0xFFFF) == 0) v = 1;
         }
         if (status & 0x20) {
             SetWord(At(at::kCuredBits), Word(At(at::kCuredBits)) | 0x20);
             if (t <= 2) {
-                g.cure(Party(t)[at::kPCureId], 0x20);
+                g.cure(PartyRec(t)->member, 0x20);
                 Party(t)[at::kPShown2] = 0;
             } else {
-                g.cure(Enemy(t)[at::kECureId], 0x20);
-                Enemy(t)[at::kEShown2] = 0;
+                g.cure(EnemyRec(t)->actor, 0x20);
+                EnemyRec(t)->counter = 0;
             }
             if ((U32(v) & 0xFFFF) == 0) v = 1;
         }
@@ -535,7 +551,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
     if (status & 0x80) d = static_cast<unsigned short>(d - static_cast<unsigned short>(S16(d) >> 2));
     if ((status & 0x60) && d == 0) d = 1;
     if ((Byte(at::kBattleFlags) & 0x80) && d == 0) d = 1;
-    if (t <= 2 ? (Long(Party(t) + at::kPFlags) & 0x10000) : (Long(Enemy(t) + at::kEFlags) & 0x10000)) return 0;
+    if (t <= 2 ? (static_cast<std::int32_t>(PartyRec(t)->flags_130) & 0x10000) : (static_cast<std::int32_t>(EnemyRec(t)->flags_110) & 0x10000)) return 0;
     if (S16(d) > 9999) return 9999;
     if (S16(d) < -9999) return -9999;
     return S16(d);
@@ -557,65 +573,67 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
 extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) {
     const unsigned t = target & 0xFF;
     if (t <= 2) Party(t)[at::kPShown] = 0x11;
-    else Enemy(t)[at::kEShown] = 0x11;
+    else EnemyRec(t)->shown = 0x11;
     std::int32_t v = g.calc_damage(attacker, target, 0xFFFF);
     if (t <= 2) {
         unsigned char* const p = Party(t);
-        if (Long(p + at::kPFlags) & 0x100) {
-            v = Word(p + at::kPHp);
+        auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
+        if (static_cast<std::int32_t>(pr->flags_130) & 0x100) {
+            v = pr->hp;
             g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
-            const std::uint32_t f = U32(Long(p + at::kPFlags)) & ~0x100u;
+            const std::uint32_t f = U32(static_cast<std::int32_t>(pr->flags_130)) & ~0x100u;
             At(at::kInstantKill)[0] = 1;
-            SetLong(p + at::kPFlags, S32(f));
+            pr->flags_130 = S32(f);
         }
-        const std::int32_t hp = Word(p + at::kPHp);
+        const std::int32_t hp = pr->hp;
         if (v > 0) {
             if (hp > v) {
-                SetWord(p + at::kPHp, U32(hp - v));
+                pr->hp = U32(hp - v);
             } else {
-                if (v - hp < p[at::kPSurvive] && (p[at::kPFlags2] & 3) == 0)
-                    SetLong(p + at::kPFlags, S32(U32(Long(p + at::kPFlags)) | 4));
-                SetWord(p + at::kPHp, 0);
+                if (v - hp < pr->survive && (p[at::kPFlags2] & 3) == 0)
+                    pr->flags_130 = S32(U32(static_cast<std::int32_t>(pr->flags_130)) | 4);
+                pr->hp = 0;
             }
         } else {
-            const std::int32_t max = Word(p + at::kPMaxHp);
+            const std::int32_t max = pr->max_hp;
             if (hp - v < max) {
-                SetWord(p + at::kPHp, U32(hp - v));
+                pr->hp = U32(hp - v);
             } else {
-                SetWord(p + at::kPHp, U32(max));
+                pr->hp = U32(max);
                 p[at::kPShown] = static_cast<unsigned char>(p[at::kPShown] | 4);
             }
         }
     } else {
         unsigned char* const e = Enemy(t);
-        if (Word(e + at::kEHp) != 0xFFFF) {
-            if ((Long(e + at::kEFlags) & 0x100) && Word(e + at::kEHp) <= 0x7FFF) {
+        auto* const er = reinterpret_cast<records::BattleEnemy*>(e - 0x80);
+        if (er->hp != 0xFFFF) {
+            if ((static_cast<std::int32_t>(er->flags_110) & 0x100) && er->hp <= 0x7FFF) {
                 v = Word(e + at::kEHp);
                 g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
-                const std::uint32_t f = U32(Long(e + at::kEFlags)) & ~0x100u;
+                const std::uint32_t f = U32(static_cast<std::int32_t>(er->flags_110)) & ~0x100u;
                 At(at::kInstantKill)[0] = 1;
-                SetLong(e + at::kEFlags, S32(f));
+                er->flags_110 = S32(f);
             }
-            const std::int32_t hp = Word(e + at::kEHp);
+            const std::int32_t hp = er->hp;
             if (v > 0) {
                 SetWord(e + at::kEHp, hp > v ? U32(hp - v) : 0);
             } else {
-                const std::int32_t max = Word(e + at::kEMaxHp);
+                const std::int32_t max = er->max_hp;
                 if (hp - v < max) {
-                    SetWord(e + at::kEHp, U32(hp - v));
+                    er->hp = U32(hp - v);
                 } else {
-                    SetWord(e + at::kEHp, U32(max));
-                    e[at::kEShown] = static_cast<unsigned char>(e[at::kEShown] | 4);
+                    er->hp = U32(max);
+                    er->shown = static_cast<unsigned char>(er->shown | 4);
                 }
             }
         }
     }
     if ((attacker & 0xFF) <= 2) {
-        const unsigned char* const p = Party(attacker);
-        if (p[at::kPWeaponKind] == 5 && v != 0) {
-            if (p[at::kPWeapon] == 'J' && !g.element_resisted(attacker, target)) g.inflict(target, 0x40);
-            if (p[at::kPWeapon] == 'L' && !g.element_resisted(attacker, target)) g.inflict(target, 8);
-            if (p[at::kPWeapon] == 'O' && !g.element_resisted(attacker, target)) g.inflict(target, 0x20);
+        auto* const pr = PartyRec(attacker);
+        if (pr->char_index == 5 && v != 0) {
+            if (pr->weapon == 'J' && !g.element_resisted(attacker, target)) g.inflict(target, 0x40);
+            if (pr->weapon == 'L' && !g.element_resisted(attacker, target)) g.inflict(target, 8);
+            if (pr->weapon == 'O' && !g.element_resisted(attacker, target)) g.inflict(target, 0x20);
         }
     }
     return static_cast<short>(v);
@@ -666,7 +684,7 @@ unsigned char* Result() { return At(BattleDamage_Result); }
 extern "C" void __cdecl Effect_ApplyResult() {
     const unsigned target0 = Byte(at::kTarget);
     if (target0 <= 2) Party(target0)[at::kPShown] = static_cast<unsigned char>(Party(target0)[at::kPShown] | 0x31);
-    else Enemy(target0)[at::kEShown] = static_cast<unsigned char>(Enemy(target0)[at::kEShown] | 0x31);
+    else EnemyRec(target0)->shown = static_cast<unsigned char>(EnemyRec(target0)->shown | 0x31);
     const std::uint32_t acting = U32(Long(At(at::kActing)));
     const std::uint32_t ability = U32(Long(At(at::kAbility)));
     const unsigned actor = acting & 0xFF;
@@ -675,19 +693,21 @@ extern "C" void __cdecl Effect_ApplyResult() {
         unsigned char* const power = At(BattleDamage_AttackerInt_addr);
         if (actor <= 2) {
             unsigned char* const p = Party(actor);
+            auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
             if (p[at::kPFlags2] & 0x80) {
-                const unsigned times = p[at::kPCharge2] + 1u;
-                p[at::kPCharge2] = 0;
+                const unsigned times = pr->count_80 + 1u;
+                pr->count_80 = 0;
                 SetWord(power, times * Word(power));
-                SetLong(p + at::kPFlags2, S32(U32(Long(p + at::kPFlags2)) & ~0x80u));
+                pr->flags_134 = S32(U32(static_cast<std::int32_t>(pr->flags_134)) & ~0x80u);
             }
         } else {
             unsigned char* const e = Enemy(actor);
+            auto* const er = reinterpret_cast<records::BattleEnemy*>(e - 0x80);
             if (e[at::kEFlags2] & 0x80) {
-                const unsigned times = e[at::kECharge2] + 1u;
-                e[at::kECharge2] = 0;
+                const unsigned times = er->count_80 + 1u;
+                er->count_80 = 0;
                 SetWord(power, times * Word(power));
-                SetLong(e + at::kEFlags2, S32(U32(Long(e + at::kEFlags2)) & ~0x80u));
+                er->flags_114 = S32(U32(static_cast<std::int32_t>(er->flags_114)) & ~0x80u);
             }
         }
     }
@@ -701,7 +721,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
     reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(U32(Long(At(Effect_Handlers_addr + 4 * handler)))))();
 
     const unsigned t = Byte(at::kTarget);
-    if (t <= 2 ? (Long(Party(t) + at::kPFlags) & 0x10000) : (Long(Enemy(t) + at::kEFlags) & 0x10000)) {
+    if (t <= 2 ? (static_cast<std::int32_t>(PartyRec(t)->flags_130) & 0x10000) : (static_cast<std::int32_t>(EnemyRec(t)->flags_110) & 0x10000)) {
         SetWord(Result() + 4, 0);
         SetWord(Result() + 6, 0);
     }
@@ -718,17 +738,18 @@ extern "C" void __cdecl Effect_ApplyResult() {
     if (hp_delta != 0) {
         if (t <= 2) {
             unsigned char* const p = Party(t);
-            const std::int32_t hp = Word(p + at::kPHp);
+            auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
+            const std::int32_t hp = pr->hp;
             if (hp_delta > 0) {
                 if (hp > hp_delta) {
-                    SetWord(p + at::kPHp, U32(hp - hp_delta));
+                    pr->hp = U32(hp - hp_delta);
                 } else {
-                    if (hp_delta - hp < p[at::kPSurvive] && (p[at::kPFlags2] & 3) == 0)
-                        SetLong(p + at::kPFlags, S32(U32(Long(p + at::kPFlags)) | 4));
-                    SetWord(p + at::kPHp, 0);
+                    if (hp_delta - hp < pr->survive && (p[at::kPFlags2] & 3) == 0)
+                        pr->flags_130 = S32(U32(static_cast<std::int32_t>(pr->flags_130)) | 4);
+                    pr->hp = 0;
                 }
             } else {
-                const std::int32_t max = Word(p + at::kPMaxHp);
+                const std::int32_t max = pr->max_hp;
                 if (hp - hp_delta < max) {
                     SetWord(p + at::kPHp, U32(hp - hp_delta));
                 } else {
@@ -739,17 +760,18 @@ extern "C" void __cdecl Effect_ApplyResult() {
             }
         } else {
             unsigned char* const e = Enemy(t);
-            const std::int32_t hp = Word(e + at::kEHp);
+            auto* const er = reinterpret_cast<records::BattleEnemy*>(e - 0x80);
+            const std::int32_t hp = er->hp;
             if (hp != 0xFFFF) {
                 if (hp_delta > 0) {
                     SetWord(e + at::kEHp, hp > hp_delta ? U32(hp - hp_delta) : 0);
                 } else {
-                    const std::int32_t max = Word(e + at::kEMaxHp);
+                    const std::int32_t max = er->max_hp;
                     if (hp - hp_delta < max) {
                         SetWord(e + at::kEHp, U32(hp - hp_delta));
                     } else {
                         SetWord(e + at::kEHp, U32(max));
-                        e[at::kEShown] = static_cast<unsigned char>((e[at::kEShown] & 0xEF) | 5);
+                        er->shown = static_cast<unsigned char>((er->shown & 0xEF) | 5);
                     }
                     r = Result();
                 }
@@ -768,30 +790,32 @@ extern "C" void __cdecl Effect_ApplyResult() {
     if (ap_delta == 0) return;
     if (t <= 2) {
         unsigned char* const p = Party(t);
-        const std::int32_t ap = Word(p + at::kPAp);
+        auto* const pr = reinterpret_cast<records::PartyMember*>(p - 0x10);
+        const std::int32_t ap = pr->ap;
         if (ap_delta > 0) {
             SetWord(p + at::kPAp, ap > ap_delta ? U32(ap - ap_delta) : 0);
         } else {
-            const std::int32_t max = Word(p + at::kPMaxAp);
+            const std::int32_t max = pr->max_ap;
             if (ap - ap_delta < max) {
-                SetWord(p + at::kPAp, U32(ap - ap_delta));
+                pr->ap = U32(ap - ap_delta);
             } else {
-                SetWord(p + at::kPAp, U32(max));
+                pr->ap = U32(max);
                 p[at::kPShown] = static_cast<unsigned char>((p[at::kPShown] & 0xDF) | 0xA);
             }
         }
         return;
     }
     unsigned char* const e = Enemy(t);
-    const std::int32_t ap = Word(e + at::kEAp);
+    auto* const er = reinterpret_cast<records::BattleEnemy*>(e - 0x80);
+    const std::int32_t ap = er->ap;
     if (ap == 0xFFFF) return;
     if (ap_delta > 0) {
         SetWord(e + at::kEAp, ap > ap_delta ? U32(ap - ap_delta) : 0);
-    } else if (ap - ap_delta < Word(e + at::kEMaxHp)) {
-        SetWord(e + at::kEAp, U32(ap - ap_delta));
+    } else if (ap - ap_delta < er->max_hp) {
+        er->ap = U32(ap - ap_delta);
     } else {
-        SetWord(e + at::kEAp, Word(e + at::kEMaxAp));
-        e[at::kEShown] = static_cast<unsigned char>((e[at::kEShown] & 0xDF) | 0xA);
+        er->ap = er->max_ap;
+        er->shown = static_cast<unsigned char>((er->shown & 0xDF) | 0xA);
     }
 }
 
@@ -822,13 +846,13 @@ extern "C" int __cdecl Effect_SkillDamage(unsigned caster, unsigned target, unsi
     std::int32_t amount = Mul(Word(At(at::kPowerVariance + 2 * roll)), S32(v)) / 10000;
     if (Byte(at::kTarget) <= 2 && Cond_Flags[0xd0] == 2 && amount > 0) amount -= amount >> 2;
     if ((target & 0xFF) <= 2) {
-        const unsigned char* const p = Party(target);
-        if (Long(p + at::kPFlags2) & 0x200) amount /= 2;
-        if (Long(p + at::kPFlags) & 0x10000) return 0;
+        auto* const pr = PartyRec(target);
+        if (static_cast<std::int32_t>(pr->flags_134) & 0x200) amount /= 2;
+        if (static_cast<std::int32_t>(pr->flags_130) & 0x10000) return 0;
     } else {
-        const unsigned char* const e = Enemy(target);
-        if (Long(e + at::kEFlags2) & 0x200) amount /= 2;
-        if (Long(e + at::kEFlags) & 0x10000) return 0;
+        auto* const er = EnemyRec(target);
+        if (static_cast<std::int32_t>(er->flags_114) & 0x200) amount /= 2;
+        if (static_cast<std::int32_t>(er->flags_110) & 0x10000) return 0;
     }
     return amount;
 }
@@ -845,7 +869,7 @@ extern "C" int __cdecl Effect_HealAmount(unsigned caster, unsigned target) {
     const std::uint32_t id = U32(Long(At(at::kAbility))) & 0xFFFF;
     const std::uint32_t power = Byte(bof3::addr::NameTable_Abilities + id * at::kAbilityStride + 3);
     const std::uint32_t base = power * (BattleDamage_AttackerInt + 100u) * 100u / 100u;
-    const unsigned holy = (target & 0xFF) <= 2 ? Party(target)[at::kPHoly] : Enemy(target)[at::kEHoly];
+    const unsigned holy = (target & 0xFF) <= 2 ? PartyRec(target)->holy : EnemyRec(target)->holy;
     return Mul(S16(Word(At(at::kHealTable + 2 * holy))), S32(base)) / -10000;
 }
 
@@ -884,9 +908,10 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
     for (unsigned e = 0; e < 8; ++e) {
         if (g.is_out(e + 3)) continue;
         unsigned char* const obj = Enemy(e + 3) + at::kEObject;
+        auto* const er = reinterpret_cast<records::BattleEnemy*>(obj);
         for (unsigned r = 0; r < 4; ++r) {
-            const unsigned char* const row = At(at::kAiScripts + obj[0xF0] * at::kAiScriptStride + 16 * r);
-            const unsigned hp = Word(obj + 0xA4), ap = Word(obj + 0xA6), max_hp = Word(obj + 0xB0), max_ap = Word(obj + 0xB2);
+            const unsigned char* const row = At(at::kAiScripts + er->data_id * at::kAiScriptStride + 16 * r);
+            const unsigned hp = er->hp, ap = er->ap, max_hp = er->max_hp, max_ap = er->max_ap;
             const std::uint32_t counter = U32(Long(At(at::kTurnCounter)));
             bool holds;
             switch (row[0]) {
@@ -906,7 +931,7 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
             case 0x12: holds = ap > (max_ap >> 1); break;
             case 0x13: holds = counter == 2; break;
             case 0x14: holds = counter == 10; break;
-            case 0x15: holds = static_cast<std::int32_t>(Party(0)[at::kPLevel]) - static_cast<std::int32_t>(Word(obj + 0x98)) > 5; break;
+            case 0x15: holds = static_cast<std::int32_t>(PartyRec(0)->level) - static_cast<std::int32_t>(er->level) > 5; break;
             case 0x19: holds = (counter & 1) == 0; break;
             case 0x1A: holds = (counter & 1) != 0; break;
             case 0x1B: holds = counter % 3 == 0; break;
