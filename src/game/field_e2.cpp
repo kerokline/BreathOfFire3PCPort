@@ -30,6 +30,7 @@
 #include "game/field_e2_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/text_advance.h"
 #include "hook/detour.h"
@@ -51,6 +52,13 @@ void SetL(U a, U v) { SetLong(At(a), static_cast<std::int32_t>(v)); }
 std::uint16_t W(U a) { return Word(At(a)); }
 void SetW(U a, unsigned v) { SetWord(At(a), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+
+// The typed views (src/game/records.h): the leader helpers run on the leader,
+// an ObjTrio record, and Field_State is one.
+records::PartyMember* Self() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
+records::PartyMember* State() { return reinterpret_cast<records::PartyMember*>(Field_State); }
+unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
+const unsigned char* Bytes(const records::PartyMember* p) { return reinterpret_cast<const unsigned char*>(p); }
 U LongAt(const unsigned char* p) { return static_cast<U>(Long(p)); }
 int S8(unsigned v) { return static_cast<signed char>(v); }
 int S16(unsigned v) { return static_cast<short>(v); }
@@ -245,19 +253,19 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     const U kind = kind_arg & 0xFF;
     if (kind > 8) bof3::Fatal("Field_FloorHurt: kind %u past the nine the stack table holds", (unsigned)kind);
     const unsigned char* const t = kTable + 3u * kind;
-    SH_CALL(Char_LoseHp)(t[0], Field_State[0x89]);
-    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kHpLoss2)(t[1], Field_State[0x89]);
+    SH_CALL(Char_LoseHp)(t[0], State()->char_id);
+    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kHpLoss2)(t[1], State()->char_id);
     const unsigned char flags = t[2];
     if (flags & 0x80) Field_State[0x124] = 0xA;
     if (flags & 0x20) Field_State[0x125] = 0x28;
-    unsigned char* fs = Field_State;
-    U actor = at::kCharRecords + fs[0x148] * at::kRecordStride;
+    records::PartyMember* fs = State();
+    U actor = at::kCharRecords + fs->char_index * at::kRecordStride;
     if (W(actor + 0x18) <= (W(actor + 0x20) >> 2)) {
         SetW(actor + 0x10, W(actor + 0x10) | 0x2000u);
-        SetW(Key(fs) + 0x90, W(Key(fs) + 0x90) | 0x2000u);
-        fs = Field_State;
+        fs->status = fs->status | 0x2000u;
+        fs = State();
     }
-    const U id = fs[0x148];
+    const U id = fs->char_index;
     actor = at::kCharRecords + id * at::kRecordStride;
     SetW(actor + 0x10, W(actor + 0x10) | flags);
     // the member byte as the original pushes it: edx of `lea edx, [id + id * 4]` with dl the byte
@@ -422,7 +430,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
 // ============================================================================
 
 // original 0x535FC0: Sprite_EnsureAnimation(0x3C) facing 7, else (0x3D).
-extern "C" void __cdecl Leader_Pose3C(void) { Ensure(Sprite_Current[8] == 7 ? 0x3C : 0x3D); }
+extern "C" void __cdecl Leader_Pose3C(void) { Ensure(Self()->direction == 7 ? 0x3C : 0x3D); }
 
 // The hop's set-up, 0x535FE0 and 0x5363C0 alike: Field_State +0x128 = +0x70
 // + 2, Field_JumpSetUp; +0x14 = 0; +9 = (+0x70 + 1) * +9 * 2 and +0xA = +9 / 2
@@ -432,11 +440,11 @@ void HopSetUp() {
     Field_State[0x128] = static_cast<unsigned char>(Sprite_Current[0x70] + 2);
     SH_CALL(Field_JumpSetUp)();
     SetL(Key(Sprite_Current) + 0x14, 0);
-    unsigned char* s = Sprite_Current;
-    s[9] = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(s[0x70] + 1) * s[9]) << 1);
-    s = Sprite_Current;
-    s[0xA] = static_cast<unsigned char>(s[9] >> 1);
-    Ensure(static_cast<unsigned char>(Sprite_Current[8] + 8));
+    records::PartyMember* s = Self();
+    s->step_frames = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(Bytes(s)[0x70] + 1) * s->step_frames) << 1);
+    s = Self();
+    Bytes(s)[0xA] = static_cast<unsigned char>(s->step_frames >> 1);
+    Ensure(static_cast<unsigned char>(Self()->direction + 8));
     SH_CALL(Sprite_ApplyVelocity)();
 }
 }  // namespace
@@ -444,7 +452,7 @@ void HopSetUp() {
 // original 0x535FE0: the hop's set-up (HopSetUp), +9 - 1.
 extern "C" void __cdecl Leader_HopStart(void) {
     HopSetUp();
-    Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
+    Self()->step_frames = static_cast<unsigned char>(Self()->step_frames - 1);
 }
 
 // original 0x5363C0: nothing (al 0) until Sprite_ScriptTickOnce answers; then
@@ -452,7 +460,7 @@ extern "C" void __cdecl Leader_HopStart(void) {
 extern "C" unsigned char __cdecl Leader_HopStartAfterTick(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return 0;
     HopSetUp();
-    Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
+    Self()->step_frames = static_cast<unsigned char>(Self()->step_frames - 1);
     return 1;
 }
 
@@ -462,14 +470,14 @@ extern "C" unsigned char __cdecl Leader_HopStartAfterTick(void) {
 // word 0x8113BE + +5 * 0x40 = 0 with Gfx_ClutStripDirty; Sprite_ScriptTick,
 // al 0.
 extern "C" unsigned char __cdecl Leader_HopFlight(void) {
-    unsigned char* const s = Sprite_Current;
-    if (s[9] == 0) {
-        Ensure(s[8]);
+    records::PartyMember* const s = Self();
+    if (s->step_frames == 0) {
+        Ensure(s->direction);
         Sprite_Current[0xA] = 4;
         SH_CALL(Sprite_ScriptTick)();
         return 1;
     }
-    s[9] = static_cast<unsigned char>(s[9] - 1);
+    s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     SH_CALL(Sprite_ApplyVelocity)();
     unsigned char* const t = Sprite_Current;
     if (t[9] == t[0xA]) {
@@ -485,15 +493,15 @@ extern "C" unsigned char __cdecl Leader_HopFlight(void) {
 // facing 3, else +0xA + 1), +9 = 1, al 0.
 extern "C" unsigned char __cdecl Leader_HopPose(void) {
     Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] - 1);
-    const unsigned char* const s = Sprite_Current;
-    const unsigned char left = s[0xA];
+    const records::PartyMember* const s = Self();
+    const unsigned char left = Bytes(s)[0xA];
     if (left == 0) {
-        Ensure(s[8] == 3 ? 0x37 : 0x34);
-        Sprite_Current[8] = static_cast<unsigned char>(Sprite_Current[8] ^ 4);
+        Ensure(s->direction == 3 ? 0x37 : 0x34);
+        Self()->direction = static_cast<unsigned char>(Self()->direction ^ 4);
         return 1;
     }
-    Ensure(s[8] == 3 ? static_cast<unsigned char>(7 - left) : static_cast<unsigned char>(left + 1));
-    Sprite_Current[9] = 1;
+    Ensure(s->direction == 3 ? static_cast<unsigned char>(7 - left) : static_cast<unsigned char>(left + 1));
+    Self()->step_frames = 1;
     return 0;
 }
 
@@ -501,7 +509,7 @@ extern "C" unsigned char __cdecl Leader_HopPose(void) {
 // Sprite_EnsureAnimation(0x3E facing 7, else 0x3F), al 1.
 extern "C" unsigned char __cdecl Leader_Pose3E(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return 0;
-    Ensure(Sprite_Current[8] == 7 ? 0x3E : 0x3F);
+    Ensure(Self()->direction == 7 ? 0x3E : 0x3F);
     return 1;
 }
 
@@ -519,16 +527,16 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     std::int32_t x, z;
     Ahead(s, x, z);
     const std::uint16_t height = W(Key(s) + 0x3E);
-    const U actor = Field_State[0x89];
+    const U actor = State()->char_id;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) > S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + actor * 2u))) {
         SetW(Key(s) + 0x3E, static_cast<unsigned>(height) - B(at::kPaceRises + actor));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
-        const std::uint16_t offset = W(at::kPaceHeights + Field_State[0x89] * 2u);
+        const std::uint16_t offset = W(at::kPaceHeights + State()->char_id * 2u);
         SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again) - offset);
-        Ensure(Sprite_Current[8] == 7 ? 0x3C : 0x3D);
+        Ensure(Self()->direction == 7 ? 0x3C : 0x3D);
         result = 1;
     }
     FollowAndTick(Sprite_Current);
@@ -538,10 +546,10 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
 // original 0x536290: the member slot's CLUT word 0x8113BE + +5 * 0x40 = 0 with
 // Gfx_ClutStripDirty, then Sprite_EnsureAnimation(0x37 facing 7, else 0x34).
 extern "C" void __cdecl Leader_Pose34(void) {
-    unsigned char* const s = Sprite_Current;
+    records::PartyMember* const s = Self();
     Gfx_ClutStripDirty = 1;
-    SetW(ClutWord(s), 0);
-    Ensure(s[8] == 7 ? 0x37 : 0x34);
+    SetW(ClutWord(Bytes(s)), 0);
+    Ensure(s->direction == 7 ? 0x37 : 0x34);
 }
 
 // original 0x5362D0: a step down. The point ahead as Leader_StepUp's and the
@@ -558,11 +566,11 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) < S16(static_cast<U>(ground))) {
-        SetW(Key(s) + 0x3E, B(at::kPaceRises + Field_State[0x89]) + static_cast<unsigned>(height));
+        SetW(Key(s) + 0x3E, B(at::kPaceRises + State()->char_id) + static_cast<unsigned>(height));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
         SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again));
-        Ensure(Sprite_Current[8] == 7 ? 0x3E : 0x3F);
+        Ensure(Self()->direction == 7 ? 0x3E : 0x3F);
         result = 1;
     }
     FollowAndTick(Sprite_Current);
@@ -575,18 +583,18 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
 // at +9 == +0xA the member's palette (Sprite_LoadPalette(0x80D380 + +5 *
 // 0x40, 0)), Sprite_ScriptTick, al 0.
 extern "C" unsigned char __cdecl Leader_HopFall(void) {
-    unsigned char* const s = Sprite_Current;
-    if (s[9] == 0) {
-        Ensure(s[8]);
+    records::PartyMember* const s = Self();
+    if (s->step_frames == 0) {
+        Ensure(s->direction);
         SH_CALL(Sprite_ClearSteps)();
         Field_State[0x137] = 0;
-        Sprite_Current[1] = 1;
-        Sprite_Current[2] = 0;
-        Sprite_Current[3] = 0;
-        Sprite_Current[4] = 0;
+        Self()->state[0] = 1;
+        Self()->state[1] = 0;
+        Self()->state[2] = 0;
+        Self()->state[3] = 0;
         return 1;
     }
-    s[9] = static_cast<unsigned char>(s[9] - 1);
+    s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     SH_CALL(Sprite_ApplyVelocity)();
     const unsigned char* const t = Sprite_Current;
     if (t[9] == t[0xA]) SH_CALL(Sprite_LoadPalette)(Palette(t), 0);
@@ -603,9 +611,9 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
     std::int32_t x, z;
     Ahead(Sprite_Current, x, z);
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
-    const int floor = S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + Field_State[0x89] * 2u));
-    unsigned char* const s = Sprite_Current;
-    if (S16(W(Key(s) + 0x3E)) >= floor) s[2] = 3;
+    const int floor = S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + State()->char_id * 2u));
+    records::PartyMember* const s = Self();
+    if (S16(W(Key(Bytes(s)) + 0x3E)) >= floor) s->state[1] = 3;
     return SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -620,11 +628,11 @@ extern "C" unsigned char __cdecl Leader_Sink(void) {
     s = Sprite_Current;
     if (S16(static_cast<U>(ground)) > S16(W(Key(s) + 0x3E))) {
         SetW(Key(s) + 0x3E, static_cast<U>(ground));
-        SH_CALL(Sprite_SetAnimation)(Sprite_Current[8]);
+        SH_CALL(Sprite_SetAnimation)(Self()->direction);
         SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
         Field_State[0x137] = 0;
-        Sprite_Current[1] = 1;
-        Sprite_Current[2] = 0;
+        Self()->state[0] = 1;
+        Self()->state[1] = 0;
     }
     return SH_CALL(Sprite_ScriptTick)();
 }
@@ -633,14 +641,14 @@ extern "C" unsigned char __cdecl Leader_Sink(void) {
 // 3, else 0x3B), the member's palette, Sprite_ClearSteps, +0x20 = -8, the
 // states +1 = 2, +2 = 3, +3 = 3.
 extern "C" void __cdecl Leader_TurnBack(void) {
-    Sprite_Current[8] = static_cast<unsigned char>(Sprite_Current[8] ^ 4);
-    Ensure(Sprite_Current[8] == 3 ? 0x3A : 0x3B);
+    Self()->direction = static_cast<unsigned char>(Self()->direction ^ 4);
+    Ensure(Self()->direction == 3 ? 0x3A : 0x3B);
     SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
     SH_CALL(Sprite_ClearSteps)();
     SetL(Key(Sprite_Current) + 0x20, 0xFFFFFFF8u);
-    Sprite_Current[1] = 2;
-    Sprite_Current[2] = 3;
-    Sprite_Current[3] = 3;
+    Self()->state[0] = 2;
+    Self()->state[1] = 3;
+    Self()->state[2] = 3;
 }
 
 // ============================================================================
