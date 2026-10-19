@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_4f.h"
 #include "game/rest_4f_callees.h"
 #include "game/scenario_harness.h"
@@ -49,6 +50,12 @@ __attribute__((naked)) void R4fCellTheirs() { asm("jmp *_g_r4f_cell_copy"); }
 
 namespace rest_4f {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
+[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -406,10 +413,10 @@ void SeedTrace(unsigned char* e) {
     unsigned char* const o = Sprite_Objects + idx * 0xA4u;
     const U target = sh::Often() ? 0x138000u - PickOf(0, 0x8000, 0x7FFF, 0x8001, 0x10000, sh::Next() % 0xA0000)
                                  : static_cast<U>(sh::Next() % 0x200000);
-    SetLong(o + 0x38, static_cast<std::int32_t>(target));
+    SpriteRec(o)->z = static_cast<std::int32_t>(target);
     const U z = sh::Often() ? target - PickOf(0, 0x8000, 0x7FFF, 0x8001, 1, sh::Next() % 0xA0000)
                             : target + PickOf(1, 0x8000, sh::Next() % 0x40000);
-    SetLong(e + 0x38, static_cast<std::int32_t>(z));
+    EffectRec(e)->z = static_cast<std::int32_t>(z);
 }
 
 void Seed(unsigned k) {

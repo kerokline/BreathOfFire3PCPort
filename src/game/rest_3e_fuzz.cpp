@@ -21,6 +21,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3e.h"
 #include "game/rest_3e_callees.h"
 #include "game/scenario_harness.h"
@@ -29,6 +30,10 @@
 
 namespace rest_3e {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -445,17 +450,17 @@ void Seed(unsigned k) {
         break;
     case k5DBoard: case k5EMenu: SeedCounts(); break;
     case k5FLaunch: case k5FBounce: s[9] = static_cast<unsigned char>(PickOf(1, 1, 0, sh::Next())); break;
-    case k5FHop: if (sh::Half()) SetLong(s + 0x34, 0x4A0000); break;
+    case k5FHop: if (sh::Half()) EffectRec(s)->x = 0x4A0000; break;
     case k5FFly: case k5FFlyAway:
         if (sh::Half()) {
             const U target = k == k5FFly ? 0x4B0000u : 0x360000u;
             const U by = sh::Next() % 0x40000;
             SetLong(s + 0x10, static_cast<std::int32_t>(by));
-            SetLong(s + 0x38, static_cast<std::int32_t>(target - by));
+            EffectRec(s)->z = static_cast<std::int32_t>(target - by);
         }
         break;
-    case k5FSlide: if (sh::Half()) SetLong(s + 0x34, 0xF0000); break;
-    case k5FSlideOut: if (sh::Half()) SetLong(s + 0x38, static_cast<std::int32_t>(PickOf(0x180000, 0x17FFFF, 0x190000, sh::Next()))); break;
+    case k5FSlide: if (sh::Half()) EffectRec(s)->x = 0xF0000; break;
+    case k5FSlideOut: if (sh::Half()) EffectRec(s)->z = static_cast<std::int32_t>(PickOf(0x180000, 0x17FFFF, 0x190000, sh::Next())); break;
     default: break;
     }
 }

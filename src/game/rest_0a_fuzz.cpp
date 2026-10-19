@@ -19,6 +19,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -26,6 +27,10 @@
 
 namespace rest_0a {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -218,8 +223,8 @@ void SeedEffects(bool line_up) {
         unsigned char* const e = Effect(i);
         e[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 1, sh::Next() | 1));
         e[5] = static_cast<unsigned char>(PickOf(0x30, 0x30, 0x30, 0x17, 0x31, 0x2F, sh::Next()));
-        SetLong(e + 0x34, static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x34)) : Coordinate()));
-        SetLong(e + 0x38, static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x38)) : Coordinate()));
+        EffectRec(e)->x = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x34)) : Coordinate());
+        EffectRec(e)->z = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x38)) : Coordinate());
         SetWord(e + 0x3E, Height());
     }
 }
