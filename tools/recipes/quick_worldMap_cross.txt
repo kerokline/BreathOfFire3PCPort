@@ -1,0 +1,47 @@
+# quick cross f6 1270 f7 0 gap 300 from worldMapAndAreaTransition.txt
+# The cross-process form of quick_worldMap.txt: f7 at recipe frame 0 loads the quicksave a live run
+# took at frame 1270, then the route from frame 1271. No save header: nothing is loaded through
+# slot 0 (run it with --no-save). Compare with `quicksave_check.py cross LIVE.sh LOADED.sh`.
+# Why frame 1270 (the world map): on the Yraall Region map (area 33, mode 2) under the Cedar Woods
+# place plate, between two walking legs; the window holds the Guide message (1290..), the walk into the
+# woods' area (area 8 from about 1470) and the map again, so the restore returns to the map from an area.
+# The recorded route's header:
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+key f7
+wait 19
+hold cross 3
+wait 79
+hold cross 4
+wait 20
+hold r1 4
+wait 11
+hold r2 4
+wait 123
+hold right+down 16
+hold right 1
+wait 58
+hold right+down 16
+hold right+down+left 1
+hold down+left 14
+hold down 1
+hold right+down 27
+hold right+down+left 2
+hold down+left 12
+hold down 1
+hold right+down 43
+wait 16
+hold r2 3
+wait 62
+hold square 1
+hold square+down 1
+hold square+right+down 72
+hold square+right+down+left 10
+hold square+down+left 18
+hold square+down 3
+hold square+right+down 84
+hold square 1
+wait 40
+hold square 2
+hold square+right+down 100
