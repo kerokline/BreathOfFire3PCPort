@@ -44,6 +44,7 @@
 #include "game/effect_3a_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -60,6 +61,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::PartyMember* AsPm(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -243,6 +246,7 @@ extern "C" void __cdecl EffectKind61_Capture(void) {
     const unsigned char* const member = Member("EffectKind61_Capture", S()[7]);
     Effect3a_Variant = member[at::kMemberFlag] != 0 ? 1 : 0;
     unsigned char* const e = NewRecord("EffectKind61_Capture", found);
+    auto* const eo = reinterpret_cast<records::EffectObject*>(e);
     SH_CALL(Gfx_ClearRect)(0x340, 0x100, 0x80, 0x100);
     const unsigned char* const from = Member("EffectKind61_Capture", S()[7]);
     for (unsigned i = 0; i < scenario_harness::at::kEffectStride; i += 4) SetUL(e + i, UL(from + i));
@@ -250,9 +254,9 @@ extern "C" void __cdecl EffectKind61_Capture(void) {
     e[1] = 2;
     e[2] = 0;
     e[5] = 0x3A;
-    SetUL(e + 0x34, UL(Member("EffectKind61_Capture", S()[7]) + 0x34));
-    SetUL(e + 0x38, UL(Member("EffectKind61_Capture", S()[7]) + 0x38));
-    SetUL(e + 0x3C, UL(Member("EffectKind61_Capture", S()[7]) + 0x3C));
+    eo->x = static_cast<std::uint32_t>(AsPm(Member("EffectKind61_Capture", S()[7]))->x);
+    eo->z = static_cast<std::uint32_t>(AsPm(Member("EffectKind61_Capture", S()[7]))->z);
+    eo->height = static_cast<std::uint32_t>(AsPm(Member("EffectKind61_Capture", S()[7]))->height);
     SetWord(e + 0x2E, Word(At(Frame("EffectKind61_Capture"))));
     SetWord(e + 0x30, Word(At(Frame("EffectKind61_Capture") + 2)));
     const U tp = SH_CALL(Gpu_GetTPage)(0, 0, 0x340, 0x100);
@@ -528,16 +532,17 @@ extern "C" void __cdecl EffectKind62_SpawnRay(void) {
     q += q >> 31;
     ray[4] = static_cast<unsigned char>(q);
     ray[3] = static_cast<unsigned char>(q);
-    U v = MulSar(SH_CALL(Math_Cos)(static_cast<int>(angle)), r, 12) + UL(S() + 0x34);
+    U v = MulSar(SH_CALL(Math_Cos)(static_cast<int>(angle)), r, 12) + static_cast<std::uint32_t>(CurFx()->x);
     SetUL(ray + 0x18, v);
     SetUL(ray + 8, v);
     v = MulSar(SH_CALL(Math_Sin)(static_cast<int>(angle)), r, 12);
     unsigned char* const s = S();
-    v += UL(s + 0x38);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    v += static_cast<std::uint32_t>(so->z);
     SetUL(ray + 0x1C, v);
     SetUL(ray + 0xC, v);
-    SetUL(ray + 0x20, UL(s + 0x3C));
-    SetUL(ray + 0x10, UL(s + 0x3C));
+    SetUL(ray + 0x20, static_cast<std::uint32_t>(so->height));
+    SetUL(ray + 0x10, static_cast<std::uint32_t>(so->height));
     SetUL(ray + 0x28, (0u - static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(angle)))) << 1);
     const U sin = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
     SetUL(ray + 0x30, 0);
@@ -718,9 +723,9 @@ extern "C" void __cdecl EffectKind64_Rise(void) {
     S()[6] = 0;
     NextState();
     SH_CALL(EffectKind64_ClearSparks)();
-    SetUL(S() + 0x34, UL(S() + 0x64));
-    SetUL(S() + 0x38, UL(S() + 0x68));
-    SetUL(S() + 0x3C, UL(S() + 0x6C));
+    CurFx()->x = UL(S() + 0x64);
+    CurFx()->z = UL(S() + 0x68);
+    CurFx()->height = UL(S() + 0x6C);
     for (unsigned i = 0; i < at::kShardCount64; ++i)
         SH_CALL(EffectKind64_InitShard)(At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64));
     SH_CALL(Sound_PlayEffect)(0x207);
@@ -1042,9 +1047,9 @@ extern "C" void __cdecl EffectKind64_DrawSpark(unsigned char* spark) {
 // shade +0x2A = 0x20, its speed +0x28 = (Rand & 2) + 3, its angles +0x20..+0x25
 // = 0.
 extern "C" void __cdecl EffectKind64_InitShard(unsigned char* shard) {
-    SetUL(shard, UL(S() + 0x34));
-    SetUL(shard + 4, UL(S() + 0x38));
-    SetUL(shard + 8, UL(S() + 0x3C));
+    SetUL(shard, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(shard + 4, static_cast<std::uint32_t>(CurFx()->z));
+    SetUL(shard + 8, static_cast<std::uint32_t>(CurFx()->height));
     const U x = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     const U y = (static_cast<U>(SH_CALL(Rand)()) & 0x7FFu) - 0x400u;
     const U z = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
@@ -1180,10 +1185,10 @@ extern "C" void __cdecl EffectKind68_InitMote(unsigned char* mote) {
     SetUL(mote + 8, 0);
     mote[4] = 0x20;
     const U spread = ((static_cast<U>(SH_CALL(Rand)()) & 0xFFu) - 0x80u) << 10;
-    SetUL(mote + 0xC, spread + UL(S() + 0x34));
-    SetUL(mote + 0x10, UL(S() + 0x38));
+    SetUL(mote + 0xC, spread + static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(mote + 0x10, static_cast<std::uint32_t>(CurFx()->z));
     const std::int32_t rise = static_cast<std::int32_t>(SH_CALL(Rand)()) % 0x300;
-    SetUL(mote + 0x14, (static_cast<U>(rise) << 16) + UL(S() + 0x3C));
+    SetUL(mote + 0x14, (static_cast<U>(rise) << 16) + static_cast<std::uint32_t>(CurFx()->height));
 }
 
 // original 0x481C40: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1,
@@ -1301,9 +1306,10 @@ extern "C" void __cdecl EffectKind68_DrawWall(unsigned shade) {
     DrawMode(1, 0x3C0, 0, 1, 2);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     alignas(4) unsigned char q[12];
-    SetUL(q, UL(s + 0x34) - 0x20000u);
-    SetUL(q + 4, UL(s + 0x38));
+    SetUL(q, static_cast<std::uint32_t>(so->x) - 0x20000u);
+    SetUL(q + 4, static_cast<std::uint32_t>(so->z));
     SetUL(q + 8, 0x2000000);
     alignas(4) unsigned char a[12], b[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(a));

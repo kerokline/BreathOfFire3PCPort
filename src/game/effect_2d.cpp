@@ -40,6 +40,7 @@
 #include "game/effect_2d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -56,6 +57,12 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SW(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -720,10 +727,10 @@ extern "C" void __cdecl EffectKind48_SpawnRing(void) {
         const U a = angle & 0xFFFFu;
         spark[0x16] = 8;
         const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a)));
-        SetUL(spark, (c << 4) + UL(S() + 0x34));
+        SetUL(spark, (c << 4) + static_cast<std::uint32_t>(CurFx()->x));
         const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a)));
-        SetUL(spark + 4, (sn << 4) + UL(S() + 0x38));
-        const U height = UL(S() + 0x3C);
+        SetUL(spark + 4, (sn << 4) + static_cast<std::uint32_t>(CurFx()->z));
+        const U height = static_cast<std::uint32_t>(CurFx()->height);
         SetUL(spark + 0x10, 0x1800);
         SetUL(spark + 8, height);
         spark[0x14] = 0xC0;
@@ -900,8 +907,8 @@ extern "C" void __cdecl EffectKind49_V2Launch(void) {
     SetUL(S() + 0x14, 0);
     for (unsigned i = 0; i < 16; ++i) {
         SetUL(S() + 0x14, UL(S() + 0x14) + 0x800000u);
-        SetUL(S() + 0x34, UL(S() + 0x34) + 0x10000u);
-        SetUL(S() + 0x3C, UL(S() + 0x3C) + UL(S() + 0x14));
+        CurFx()->x = static_cast<std::uint32_t>(CurFx()->x) + 0x10000u;
+        CurFx()->height = static_cast<std::uint32_t>(CurFx()->height) + UL(S() + 0x14);
     }
     SH_CALL(Sound_PlayEffect)(0x202);
     SetUL(S() + 0x14, 0u - UL(S() + 0x14));
@@ -922,11 +929,12 @@ void Glow() {
 extern "C" void __cdecl EffectKind49_V2Fly(void) {
     Glow();
     unsigned char* const s = S();
-    SetUL(s + 0x34, UL(s + 0x34) + 0xFFFF0000u);
-    SetUL(s + 0x3C, UL(s + 0x3C) + UL(s + 0x14));
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->x = static_cast<std::uint32_t>(so->x) + 0xFFFF0000u;
+    so->height = static_cast<std::uint32_t>(so->height) + UL(s + 0x14);
     const U speed = UL(s + 0x14);
     if (speed != 0) SetUL(s + 0x14, speed + 0x800000u);
-    if (UL(s + 0x34) == UL(s + 0xC) && UL(s + 0x38) == UL(s + 0x10)) {
+    if (static_cast<std::uint32_t>(so->x) == UL(s + 0xC) && static_cast<std::uint32_t>(so->z) == UL(s + 0x10)) {
         s[9] = 0x2F;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
@@ -977,8 +985,9 @@ extern "C" void __cdecl EffectKind49_V3Run(void) {
 // Sound_PlayEffect(0x205).
 extern "C" void __cdecl EffectKind49_V3Start(void) {
     const unsigned char* const s = S();
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
-    SetUL(S() + 0x3C, static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground))) << 16);
+    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
+    Store<U>(CurFx()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground))) << 16);
     SH_AT(void (__cdecl*)(), at::kDustClear)();
     S()[9] = 0;
     SetUL(S() + 0xC, 0x5F);

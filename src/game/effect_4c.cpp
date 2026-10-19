@@ -48,6 +48,7 @@
 #include "game/effect_4c_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -66,6 +67,8 @@ using RecordFn = void (__cdecl*)(unsigned char*);
 using VoidFn = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -824,8 +827,8 @@ extern "C" void __cdecl EffectKind90_EmitOne(void) {
     r[2] = 0;
     r[3] = 0x80;
     SetWord(r + 4, 0x80);
-    SetUL(r + 8, UL(S() + 0x34));
-    const U z = UL(S() + 0x38);
+    SetUL(r + 8, static_cast<std::uint32_t>(CurFx()->x));
+    const U z = static_cast<std::uint32_t>(CurFx()->z);
     SetUL(r + 0x10, 0);
     SetUL(r + 0xC, z);
     SetUL(r + 0x18, 0x1800);
@@ -928,11 +931,11 @@ extern "C" void __cdecl EffectKind93_Run(void) {
 extern "C" void __cdecl EffectKind93_Start(void) {
     SH_CALL(EffectKind90_ClearShards)();
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0x34));
+    SetUL(s + 0xC, static_cast<std::uint32_t>(AsFx(s)->x));
     s = S();
-    SetUL(s + 0x10, UL(s + 0x38));
+    SetUL(s + 0x10, static_cast<std::uint32_t>(AsFx(s)->z));
     s = S();
-    SetUL(s + 0x14, UL(s + 0x3C));
+    SetUL(s + 0x14, static_cast<std::uint32_t>(AsFx(s)->height));
     s = S();
     SetUL(s + 0x1C, UL(s + 0x14));
     SetWord(S() + 0x20, 0);
@@ -997,10 +1000,11 @@ extern "C" void __cdecl EffectKind99_Run(void) {
 // +0x10) << 16, its radius +0x1C 0; +9 = 0xA, +1 up.
 extern "C" void __cdecl EffectKind99_Start(void) {
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     unsigned char* const c = s + 0xC;
-    SetUL(c, UL(s + 0x34) - 0x10000u);
+    SetUL(c, static_cast<std::uint32_t>(so->x) - 0x10000u);
     const U x = UL(c);
-    const U z = UL(S() + 0x38) + 0xFFFF0000u;
+    const U z = static_cast<std::uint32_t>(CurFx()->z) + 0xFFFF0000u;
     SetUL(c + 4, z);
     const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
     SetUL(c + 8, High(h));

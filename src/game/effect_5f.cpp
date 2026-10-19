@@ -42,6 +42,7 @@
 #include "game/draw_pool.h"
 #include "game/effect_5f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -57,6 +58,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -206,7 +208,8 @@ unsigned char* Quad() {
 }
 void LinkAtRecord(int dy, unsigned size) {
     unsigned char* const s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), dy, size);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), dy, size);
 }
 
 // The panel's four corners on the axis +8 does not pick: c = (w << 7) - 0x3FC0
@@ -474,12 +477,13 @@ extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(long x, long z) {
                         "original reads what follows them (docs/effect_5f.md section 6)",
                         (unsigned)count);
         const unsigned char* const o = ObjTrio + at::kObjTrioStride * i;
+        auto* const oo = reinterpret_cast<const records::PartyMember*>(o);
         if (o[0] == 0) continue;
         const U t = o[9];
         const std::int32_t reach = static_cast<std::int32_t>((static_cast<U>(o[0x70]) + 3) << 15);
-        const U px = UL(o + 0xC) * t + UL(o + 0x34);
+        const U px = static_cast<std::uint32_t>(oo->step_x) * t + static_cast<std::uint32_t>(oo->x);
         if (Abs(px - static_cast<U>(x)) >= reach) continue;
-        const U pz = UL(o + 0x10) * t + UL(o + 0x38);
+        const U pz = static_cast<std::uint32_t>(oo->step_z) * t + static_cast<std::uint32_t>(oo->z);
         if (Abs(pz - static_cast<U>(z)) < reach) return static_cast<unsigned char>(i);
     }
     return 0xFF;
@@ -515,8 +519,8 @@ extern "C" void __cdecl EffectKind18Sub42_WaitFlag(void) {
     const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), s[0xB]);
     s = S();
     if (static_cast<unsigned char>(set ^ s[8]) == 0) return;
-    const unsigned char who = SH_CALL(EffectKind18Sub42_MemberNear)(static_cast<long>(UL(s + 0x34) | 0x8000u),
-                                                                    static_cast<long>(UL(s + 0x38) | 0x8000u));
+    const unsigned char who = SH_CALL(EffectKind18Sub42_MemberNear)(static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->x) | 0x8000u),
+                                                                    static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->z) | 0x8000u));
     if (static_cast<signed char>(who) >= 0) return;
     s = S();
     SH_CALL(MoveCmd_TestFB)(static_cast<short>(Word(s + 0x36) + 1), static_cast<short>(Word(s + 0x3A) + 1));
@@ -678,7 +682,7 @@ void Start29(const char* who) {
     SetWord(s + 0x36, B(at::kSub29Cell + 2 * i));
     SetWord(s + 0x3A, B(at::kSub29Cell + 2 * i + 1));
     s = S();
-    const long e = Elevation(UL(s + 0x34), UL(s + 0x38));
+    const long e = Elevation(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z));
     s = S();
     SetWord(s + 0x3E, 0u - Half(e) - W(at::kSub29Height + 2 * i));
     SetUL(s + 0x20, UL(at::kSub29Texture + 4 * i));
@@ -813,12 +817,12 @@ extern "C" void __cdecl EffectKind18Sub4B_Run(void) {
         ++s[2];
     }
     if ((Draw_PassFlags & 4) == 0) return;
-    SetUL(s + 0x38, UL(s + 0x38) + UL(s + 0x10));
+    AsFx(s)->z = static_cast<std::uint32_t>(AsFx(s)->z) + UL(s + 0x10);
     if (S16(Word(s + 0x3A)) > S16(Word(s + 0x30))) SetWord(s + 0x3A, Word(s + 0x2E));
     const U pulse = Frame_Counter & 0x1F;
-    const U z0 = static_cast<U>(static_cast<std::int32_t>(UL(s + 0x38)) >> 9) - 0x3FC0u;
+    const U z0 = static_cast<U>(AsFx(s)->z >> 9) - 0x3FC0u;
     const U b = static_cast<U>(Abs(0xFu - pulse)) + ((2u - v) << 8);
-    const U x0 = static_cast<U>(static_cast<std::int32_t>(UL(s + 0x34)) >> 9) - 0x4EC0u;
+    const U x0 = static_cast<U>(AsFx(s)->x >> 9) - 0x4EC0u;
     DrawMode();
     SH_CALL(Gfx_CommitPrim)(6, 0xC);
     const U texture = v | 0xBB509100u;
@@ -908,7 +912,7 @@ extern "C" void __cdecl EffectKind18Sub2A_Start(void) {
     SetWord(s + 0x36, B(at::kSub2ACell + 2 * i));
     SetWord(s + 0x3A, B(at::kSub2ACell + 2 * i + 1));
     s = S();
-    const long e = Elevation(UL(s + 0x34), UL(s + 0x38));
+    const long e = Elevation(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z));
     s = S();
     SetWord(s + 0x3E, 0u - Half(e) - W(at::kSub2AHeight + 2 * i));
     SetWord(s + 0x30, 0);

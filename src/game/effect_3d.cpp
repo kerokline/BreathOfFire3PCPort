@@ -47,6 +47,7 @@
 #include "game/effect_3d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -63,6 +64,12 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -824,9 +831,9 @@ extern "C" void __cdecl EffectKind80_Run(void) {
 // 0x250000, 0x3800000), the trail's size 0x60, the trail stepped 32 times (all
 // its points at the point); +9 0, +1 up.
 extern "C" void __cdecl EffectKind80_Start(void) {
-    SetUL(S() + 0x34, 0x10000);
-    SetUL(S() + 0x38, 0x250000);
-    SetUL(S() + 0x3C, 0x3800000);
+    CurFx()->x = 0x10000;
+    CurFx()->z = 0x250000;
+    CurFx()->height = 0x3800000;
     SetWord(At(at::kTrailSize), 0x60);
     for (int n = 0x20; n != 0; --n) SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
     S()[9] = 0;
@@ -843,8 +850,8 @@ extern "C" void __cdecl EffectKind80_Rise(void) {
     if (frames == 0) SH_CALL(Sound_PlayEffect)(0x200);
     SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
     SH_CALL(EffectKind80_DrawTrail)(P(EffectKind30_Shards_addr));
-    SetUL(S() + 0x34, UL(S() + 0x34) + 0x10000);
-    if (UL(S() + 0x34) == 0x170000) {
+    CurFx()->x = static_cast<std::uint32_t>(CurFx()->x) + 0x10000;
+    if (static_cast<std::uint32_t>(CurFx()->x) == 0x170000) {
         S()[9] = 0x20;
         NextState();
     }
@@ -882,9 +889,9 @@ extern "C" void __cdecl EffectKind80_Fade(void) {
 extern "C" void __cdecl EffectKind80_TrailStep(unsigned char* pool) {
     for (int i = static_cast<int>(at::kTrailPoints) - 2; i >= 0; --i)
         std::memcpy(pool + at::kTrailStride * (i + 1), pool + at::kTrailStride * i, at::kTrailStride);
-    SetUL(pool, UL(S() + 0x34));
-    SetUL(pool + 4, UL(S() + 0x38));
-    SetUL(pool + 8, UL(S() + 0x3C));
+    SetUL(pool, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(pool + 4, static_cast<std::uint32_t>(CurFx()->z));
+    SetUL(pool + 8, static_cast<std::uint32_t>(CurFx()->height));
     SH_CALL(EffectGte_LoadMapCamera)();
     for (U i = 0; i < at::kTrailPoints; ++i) {
         unsigned char* const p = pool + at::kTrailStride * i;
@@ -1011,9 +1018,9 @@ extern "C" void __cdecl EffectKind81_Run(void) {
 // original 0x4878B0 (state 0): the record's point the leader's (ObjTrio +0x34,
 // +0x38, +0x3C); the drops cleared, the sources placed; +1 up.
 extern "C" void __cdecl EffectKind81_Start(void) {
-    SetUL(S() + 0x34, UL(at::kLeaderPoint));
-    SetUL(S() + 0x38, UL(at::kLeaderPoint + 4));
-    SetUL(S() + 0x3C, UL(at::kLeaderPoint + 8));
+    Store<U>(CurFx()->x, UL(at::kLeaderPoint));
+    Store<U>(CurFx()->z, UL(at::kLeaderPoint + 4));
+    Store<U>(CurFx()->height, UL(at::kLeaderPoint + 8));
     SH_CALL(EffectKind81_ClearDrops)();
     SH_CALL(EffectKind81_PlaceSources)();
     NextState();

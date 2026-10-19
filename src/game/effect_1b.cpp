@@ -72,6 +72,7 @@
 #include "game/effect_1b_callees.h"
 #include "game/fishing_text.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/text_advance.h"
 #include "game/widescreen.h"
@@ -1385,9 +1386,10 @@ extern "C" void __cdecl EffectKind92_Follow() {
         bof3::Fatal("EffectKind92_Follow: sprite object %u past the %u (the original writes past Sprite_Objects)", n,
                     at::kSpriteCount);
     unsigned char* const o = Sprite_Objects + at::kSpriteStride * n;
+    auto* const oo = reinterpret_cast<records::SpriteObject*>(o);
     if ((s[0] & 0x40) == 0) {
-        SetWord(o + 0x2E, Word(o + 0x2E) + Word(s + 0x2E));
-        SetWord(o + 0x30, Word(o + 0x30) + Word(s + 0x30));
+        oo->screen_x = static_cast<std::uint16_t>(oo->screen_x) + Word(s + 0x2E);
+        oo->screen_y = static_cast<std::uint16_t>(oo->screen_y) + Word(s + 0x30);
         o[0x29] = s[0x29];
     }
     if ((o[0] & 1) == 0) SH_CALL(Effect_Release)();
