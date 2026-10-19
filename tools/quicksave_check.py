@@ -300,7 +300,16 @@ def log_lines(path):
     if not path or not os.path.exists(path):
         return []
     pat = re.compile(r'key f[67]|uicksave|uickload|uick-load|napshot|recipe (done|FAILED)|FATAL', re.I)
-    return [l.rstrip() for l in open(path, encoding='utf-8', errors='replace') if pat.search(l)]
+    out = []
+    for l in open(path, encoding='utf-8', errors='replace'):
+        if not pat.search(l):
+            continue
+        l = l.rstrip()
+        if out and out[-1][0] == l:      # the overlay logs its line every frame it shows
+            out[-1][1] += 1
+        else:
+            out.append([l, 1])
+    return [l if n == 1 else f'{l}   (x{n})' for l, n in out]
 
 
 def cmd_inproc(a):
@@ -351,12 +360,15 @@ def cmd_inproc(a):
 
 
 # What a correct restore still changes, by design, measured by raw dumps
-# (docs/quicksave-routes.md, stage C): SN's "Quickload" line is written after
-# the span (Overlay_Text / Overlay_Frames on page 0x6BC000, 120 frames), and
-# the display's buffer parity (Gpu_DispEnv / Gpu_DrawEnv on page 0x7DE000)
-# differs for the first tick. A page rule, not a byte rule - the hash is per
-# page - so each holds only inside its window of k.
-EXPECT_DEFAULT = ['0x6BC000:0-120', '0x7DE000:0-1']
+# (docs/quicksave-routes.md, stage C 2): outside the skip list only
+# Overlay_Frames (0x6BC630) differs on page 0x6BC000 - SN's "Quickload" line
+# is set after the span, its count one to three behind the take's "Quicksave
+# OK" and counted down on drawn frames only, so late ticks stretch it past 120
+# (132 seen with 13 late ticks) - and only Gpu_DispEnv+2 / Gpu_DrawEnv+2
+# (0x7DECE2, 0x7DED02, the display's buffer parity) on page 0x7DE000 at k=1.
+# A page rule, not a byte rule - the hash is per page - so each holds only
+# inside its window of k, and a dump is the way to see more.
+EXPECT_DEFAULT = ['0x6BC000:0-140', '0x7DE000:0-1']
 
 
 def parse_expect(rules):
@@ -509,7 +521,10 @@ def cmd_run(a):
            '--env', f'BOF3X_STATEHASH={sh}', '--env', f'BOF3X_STATEHASH_SKIP={SKIP_FILE}']
     if not a.defaults:
         cmd += ['--env', 'BOF3X_OPT=none', '--env', 'BOF3X_LAYERING=0']
-    cmd += ['--no-save'] if meta and meta[0] == 'cross' else ['--slot0-hold']
+    if a.save:      # a cross run given the live run's recipe save, held in slot 0 as the live run held it
+        cmd += ['--save', a.save, '--slot0-hold']
+    else:
+        cmd += ['--no-save'] if meta and meta[0] == 'cross' else ['--slot0-hold']
     if a.launcher:
         cmd += ['--launcher', a.launcher]
     if a.game:
@@ -703,6 +718,8 @@ def main():
     p.add_argument('--minutes', type=float, default=10)
     p.add_argument('--env', action='append', default=[])
     p.add_argument('--expect', action='append', default=None, metavar='PAGE:K0-K1')
+    p.add_argument('--save', help='the recipe save to hold in slot 0 (input_run --save); for a cross run, the live '
+                   'run, so a save list read later in the route lists the same file on both sides')
     p.set_defaults(fn=cmd_run)
     p = sub.add_parser('selftest')
     p.set_defaults(fn=cmd_selftest)
