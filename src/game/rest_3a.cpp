@@ -89,7 +89,7 @@ void CallStack(const char* who, const U* table, unsigned n, unsigned index) {
 // original writes into the window records (docs/rest_3a.md section 7).
 unsigned char* MemberForWrite(unsigned index, const char* who) {
     if (index > 2) bof3::Fatal("%s: the member index is %u, past ObjTrio's three - the original writes on past them", who, index);
-    return At(at::kMembers + index * at::kMemberSize);
+    return At(ObjTrio_addr + index * at::kMemberSize);
 }
 
 }  // namespace
@@ -114,7 +114,7 @@ extern "C" void __cdecl WorldMap33_FrameSlideIn(void) {
 // +0x2E). The y is pushed in edx with a stale high half; every reader takes
 // its low word (world_map.cpp), so ours passes the word sign-extended.
 extern "C" void __cdecl WorldMap33_FrameShown(void) {
-    if (B(at::kMapMode) == 2) Sc()[2] = 3;
+    if (AreaW0b_MapMode == 2) Sc()[2] = 3;
     const short y = S16(Sc() + 0x2E);
     BH_CALL(WorldMap_DrawFrame)(0x10, y);
 }
@@ -131,7 +131,7 @@ extern "C" void __cdecl WorldMap33_FrameSlideOut(void) {
         s[2] = 0;
         s = Sc();
     }
-    if (B(at::kMapMode) != 2) {
+    if (AreaW0b_MapMode != 2) {
         s[2] = 1;
         s = Sc();
     }
@@ -146,42 +146,42 @@ extern "C" void __cdecl WorldMap33_FrameSlideOut(void) {
 // (dword 0x929F00 & 0xFF)], 4 entries (the run of code pointers to
 // BattleExtra_TallySteps; ours aborts past them).
 extern "C" unsigned long __cdecl BattleExtra_Dispatch(unsigned long through) {
-    return Dispatch("BattleExtra_Dispatch", at::kStates, L(at::kMode) & 0xFF, 4, through);
+    return Dispatch("BattleExtra_Dispatch", BattleExtra_States_addr, L(at::kMode) & 0xFF, 4, through);
 }
 
 // original 0x42D730 (BattleExtra_States[0]): the state 0x904C9F + 2, the step
 // and the sub-step 0.
 extern "C" void __cdecl BattleExtra_Start(void) {
-    const auto state = static_cast<unsigned char>(B(at::kModeRequest) + 2);
-    B(at::kMode) = state;
-    B(at::kModeStep) = 0;
-    B(at::kModeSub) = 0;
+    const auto state = static_cast<unsigned char>(ScenaSc6_Byte904C9F + 2);
+    BattleE1_Mode = state;
+    FieldS_State = 0;
+    FieldS_Step = 0;
 }
 
 // original 0x42D750 (BattleExtra_States[1]): Window_ResetAll, Game_Step + 1.
 extern "C" void __cdecl BattleExtra_Leave(void) {
     BH_CALL(Window_ResetAll)();
-    SetWord(At(at::kGameStep), Word(At(at::kGameStep)) + 1);
+    Game_Step = Game_Step + 1;
 }
 
 // original 0x42D760 (BattleExtra_States[3]): jmp [BattleExtra_TallySteps + 4
 // * byte 0x929F01], 3 (BattleExtra_TallyOpenDispatch, BattleExtra_TallyCount,
 // BattleExtra_TallyClose).
 extern "C" unsigned long __cdecl BattleExtra_TallyDispatch(unsigned long through) {
-    return Dispatch("BattleExtra_TallyDispatch", at::kTallySteps, B(at::kModeStep), 3, through);
+    return Dispatch("BattleExtra_TallyDispatch", BattleExtra_TallySteps_addr, FieldS_State, 3, through);
 }
 
 // original 0x42D770 (BattleExtra_TallySteps[0]): jmp [BattleExtra_TallyOpenSteps
 // + 4 * byte 0x929F02], 2 (BattleExtra_OpenTransition, BattleExtra_TallyOpen).
 extern "C" unsigned long __cdecl BattleExtra_TallyOpenDispatch(unsigned long through) {
-    return Dispatch("BattleExtra_TallyOpenDispatch", at::kTallyOpenSteps, B(at::kModeSub), 2, through);
+    return Dispatch("BattleExtra_TallyOpenDispatch", BattleExtra_TallyOpenSteps_addr, FieldS_Step, 2, through);
 }
 
 // original 0x42D780 (BattleExtra_TallyOpenSteps[0], BattleExtra_EquipOpenSteps[0]):
 // Transition_Start(3), the sub-step + 1 (read after the call).
 extern "C" void __cdecl BattleExtra_OpenTransition(void) {
     BH_CALL(Transition_Start)(3);
-    B(at::kModeSub) = static_cast<unsigned char>(B(at::kModeSub) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // ============================================================================
@@ -207,7 +207,7 @@ extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {
     for (unsigned i = 0;;) {
         const unsigned char who = B(at::kPartyList + i);
         if (who == 0 || who == 7) {
-            B(at::kWin0Cursor) = static_cast<unsigned char>(i);
+            Rest3a_Win0Cursor = static_cast<unsigned char>(i);
             break;
         }
         i = (i + 1) & 0xFF;
@@ -262,7 +262,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleExtra_EquipCom
     for (unsigned i = 0; i < at::kChosenCount; ++i) {
         const unsigned char chosen = B(at::kChosen + i);
         if (chosen == 0) continue;
-        unsigned char* const held = At(at::kGuestEquip + i);
+        unsigned char* const held = At(Rest3a_GuestEquip_addr + i);
         if (chosen == held[0]) continue;
         BH_CALL(Inventory_Remove)(B(at::kCategories + i), chosen, 1);
         const unsigned char back = held[0];
@@ -279,15 +279,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleExtra_EquipCom
 // window 0's +0xD. al: +0x17 (the last byte loaded; the caller does not read
 // it). The cursor indexes unchecked; ours aborts past the six bytes.
 extern "C" unsigned char __cdecl BattleExtra_EquipRefresh(void) {
-    const unsigned char category = B(at::kWin0Category);
-    const unsigned char item = B(at::kWin0Item);
+    const unsigned char category = Rest3a_Win0Category;
+    const unsigned char item = Rest3a_Win0Item;
     const unsigned fits = BH_CALL(Item_EquipMask)(category, item);
     const unsigned char e14 = B(at::kGuestEquip + 2);
-    const unsigned char e12 = B(at::kGuestEquip + 0);
+    const unsigned char e12 = Rest3a_GuestEquip;
     B(at::kWin13Dim) = static_cast<unsigned char>(~fits & 1);
     const unsigned char e13 = B(at::kGuestEquip + 1);
     B(at::kChosen + 2) = e14;
-    const unsigned slot = B(at::kWin1Slot);
+    const unsigned slot = Rest3a_Win1Slot;
     B(at::kChosen + 0) = e12;
     const unsigned char e15 = B(at::kGuestEquip + 3);
     B(at::kChosen + 1) = e13;
@@ -310,7 +310,7 @@ extern "C" unsigned char __cdecl BattleExtra_EquipRefresh(void) {
 // [BattleEnd_LossSteps + 4 * byte 0x904AA2], 3 (BattleEnd_LossBanner,
 // BattleEnd_LossAwaitLoad, BattleLoss_Dispatch).
 extern "C" unsigned long __cdecl BattleEnd_LossDispatch(unsigned long through) {
-    return Dispatch("BattleEnd_LossDispatch", at::kLossSteps, B(at::kSubStep), 3, through);
+    return Dispatch("BattleEnd_LossDispatch", BattleEnd_LossSteps_addr, BattleE4_Step2, 3, through);
 }
 
 // original 0x431550 (BattleEnd_LossSteps[0]): unless 0x904AE5 bit 0x40 keeps
@@ -318,27 +318,27 @@ extern "C" unsigned long __cdecl BattleEnd_LossDispatch(unsigned long through) {
 // Battle_OpenMsgWindow; BattleBanner_Set(0, 2, 0, 0, 0xFF, Msg_SystemPtr(0x11));
 // 0x904AA2 + 1 (read after the calls). The win's BattleEnd_WinBegin plays 0xA5.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_LossBanner(void) {
-    if ((B(at::kMusicFlags) & 0x40) == 0) {
+    if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
         BH_CALL(Music_FadeOutStop)(10);
         BH_CALL(Music_Play)(0xA6, 10);
     }
     BH_CALL(Battle_OpenMsgWindow)();
     const unsigned char* const text = BH_CALL(Msg_SystemPtr)(0x11);
     BH_CALL(BattleBanner_Set)(0, 2, 0, 0, 0xFF, reinterpret_cast<const char*>(text));
-    B(at::kSubStep) = static_cast<unsigned char>(B(at::kSubStep) + 1);
+    BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
 }
 
 // original 0x4315A0 (BattleEnd_LossSteps[1]): 0x904AA2 + 1 once File_LoadDone
 // answers (its whole eax tested).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_LossAwaitLoad(void) {
-    if (BH_CALL(File_LoadDone)() != 0) B(at::kSubStep) = static_cast<unsigned char>(B(at::kSubStep) + 1);
+    if (BH_CALL(File_LoadDone)() != 0) BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
 }
 
 // original 0x4315B0 (BattleEnd_Steps[3]): jmp [BattleEnd_RestoreSteps + 4 *
 // byte 0x904AA2], 5 (BattleEnd_TasksBegin, BattleEnd_StartMemberTask,
 // BattleEnd_AwaitRestore, BattleEnd_RestoreLoadBank, BattleEnd_RestoreAwaitBank).
 extern "C" unsigned long __cdecl BattleEnd_RestoreDispatch(unsigned long through) {
-    return Dispatch("BattleEnd_RestoreDispatch", at::kRestoreSteps, B(at::kSubStep), 5, through);
+    return Dispatch("BattleEnd_RestoreDispatch", BattleEnd_RestoreSteps_addr, BattleE4_Step2, 5, through);
 }
 
 // original 0x431710 (BattleEnd_RestoreSteps[3]): once File_LoadDone answers,
@@ -346,25 +346,25 @@ extern "C" unsigned long __cdecl BattleEnd_RestoreDispatch(unsigned long through
 // 0x904AA2 + 1 (read after the call).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_RestoreLoadBank(void) {
     if (BH_CALL(File_LoadDone)() == 0) return;
-    BH_CALL(Snd_LoadBankFile)(Word(At(at::kAreaNumber)) + 3);
-    B(at::kSubStep) = static_cast<unsigned char>(B(at::kSubStep) + 1);
+    BH_CALL(Snd_LoadBankFile)(Game_AreaNumber + 3);
+    BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
 }
 
 // original 0x431740 (BattleEnd_RestoreSteps[4]): once File_LoadDone answers,
 // 0x904AA1 = 4 (BattleEnd_ExitStep) and 0x904AA2 = 0.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_RestoreAwaitBank(void) {
     if (BH_CALL(File_LoadDone)() == 0) return;
-    B(at::kStep) = 4;
-    B(at::kSubStep) = 0;
+    BattleActions_Step = 4;
+    BattleE4_Step2 = 0;
 }
 
 // original 0x4318F0 (BattleEnd_ExitSteps[3]): once MoveScript_WaitWordDA is 0,
 // Draw_PassFlags = 0 and 0x904AA2 - 1 (back to BattleEnd_Finish).
 extern "C" void __cdecl BattleEnd_ExitAwaitFade(void) {
-    if (Word(At(at::kWaitWord)) != 0) return;
-    const unsigned char step = B(at::kSubStep);
-    B(at::kPassFlags) = 0;
-    B(at::kSubStep) = static_cast<unsigned char>(step - 1);
+    if (MoveScript_WaitWordDA != 0) return;
+    const unsigned char step = BattleE4_Step2;
+    Draw_PassFlags = 0;
+    BattleE4_Step2 = static_cast<unsigned char>(step - 1);
 }
 
 // ============================================================================
@@ -404,7 +404,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Dispat
 // 0x669DFC for a party actor, 0x669E00 for an enemy); window 4's +3 = 1; the
 // slot's +0xC = 0x100, +0x10 = 0, +9 = 2, +1 up (the slot read again each).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Banner(void) {
-    const U text = B(at::kActor) < 3 ? L(at::kBannerParty) : L(at::kBannerEnemy);
+    const U text = B(at::kActor) < 3 ? Rest3a_BannerParty : Rest3a_BannerEnemy;
     BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
     unsigned char* const s = Slot();
     B(0x8031F3) = 1;
@@ -420,12 +420,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Banner
 // down, at 0 +1 up and +9 = 2.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Rise(void) {
     const unsigned zoom = Word(Slot() + 0xC);
-    SetWord(At(at::kCameraDistance), Word(At(at::kCameraDistance)) - zoom);
+    Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) - zoom;
     FlashTile();
     unsigned char* s = Slot();
     SetLong(s + 0x10, static_cast<std::int32_t>(L(Addr(s + 0x10)) + 8));
     s = Slot();
-    B(at::kRedraw) = 2;
+    MapView_Redraw = 2;
     if (s[9] != 0) {
         s[9] = static_cast<unsigned char>(s[9] - 1);
         return;
@@ -439,12 +439,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Rise(v
 // BattleTask_FreeCurrent.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxFlash_Fall(void) {
     const unsigned zoom = Word(Slot() + 0xC);
-    SetWord(At(at::kCameraDistance), Word(At(at::kCameraDistance)) + zoom);
+    Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) + zoom;
     FlashTile();
     unsigned char* s = Slot();
     SetLong(s + 0x10, static_cast<std::int32_t>(L(Addr(s + 0x10)) - 8));
     s = Slot();
-    B(at::kRedraw) = 2;
+    MapView_Redraw = 2;
     if (s[9] != 0) {
         s[9] = static_cast<unsigned char>(s[9] - 1);
         return;
@@ -650,16 +650,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Reloa
     unsigned char* const owner = Owner();
     unsigned char* const kept = Sc();
     Sprite_Current = owner;
-    SetLong(At(at::kFieldState), static_cast<std::int32_t>(Addr(MemberForWrite(owner[5], "BattleFxReform_Reload"))));
+    SetLong(At(Field_State_addr), static_cast<std::int32_t>(Addr(MemberForWrite(owner[5], "BattleFxReform_Reload"))));
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(owner[8] + 4));
     BH_CALL(Sprite_ReleaseTint)(MemberForWrite(Sc()[5], "BattleFxReform_Reload"));
     const unsigned palette = Sc()[5];
     MemberForWrite(palette, "BattleFxReform_Reload");   // the palette slot is the member's: past 2 it writes on
-    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(at::kPalettes + (palette << 6))), 0);
+    BH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + (palette << 6))), 0);
     const unsigned member = Sc()[5];
-    BH_CALL(Battle_StatusTint)(Word(At(at::kMembers + 0x90 + member * at::kMemberSize)));
+    BH_CALL(Battle_StatusTint)(Word(At(ObjTrio_addr + 0x90 + member * at::kMemberSize)));
     BH_CALL(Sprite_SetClutStp)();
-    unsigned char* const field = PtrAt(at::kFieldState);
+    unsigned char* const field = Field_State;
     SetLong(field + 0x134, static_cast<std::int32_t>(L(Addr(field + 0x134)) & 0xFFFFFFFEu));
     BH_CALL(BattleParty_RecalcStats)();
     Sprite_Current = kept;
@@ -718,19 +718,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxRestore_Load
     };
     if (L(at::kFlags) & 0x8000) {
         if (BH_CALL(Battle_BackupFlagged)() != 0) {
-            if (B(at::kPartySet) == 7) BH_CALL(LoadDatFile)(low() ? 0x122 : 0x126);
-            if (B(at::kPartySet) == 0xD) BH_CALL(LoadDatFile)(low() ? 0x123 : 0x127);
-            if (B(at::kPartySet) == 0xE) BH_CALL(LoadDatFile)(low() ? 0x124 : 0x128);
-            if (B(at::kPartySet) == 0xF) BH_CALL(LoadDatFile)(low() ? 0x125 : 0x129);
+            if (AreaW0b_PartySet == 7) BH_CALL(LoadDatFile)(low() ? 0x122 : 0x126);
+            if (AreaW0b_PartySet == 0xD) BH_CALL(LoadDatFile)(low() ? 0x123 : 0x127);
+            if (AreaW0b_PartySet == 0xE) BH_CALL(LoadDatFile)(low() ? 0x124 : 0x128);
+            if (AreaW0b_PartySet == 0xF) BH_CALL(LoadDatFile)(low() ? 0x125 : 0x129);
         } else {
             const bool first = low();
-            const unsigned set = B(at::kPartySet);
+            const unsigned set = AreaW0b_PartySet;
             BH_CALL(LoadDatFile)(static_cast<int>(set + (first ? 0xFCu : 0x10Fu)));
         }
     } else {
         const bool first = low();
-        const unsigned set = B(at::kPartySet);
-        const U table = L(first ? at::kRestoreFilesA : at::kRestoreFilesB);
+        const unsigned set = AreaW0b_PartySet;
+        const U table = L(first ? Rest3a_RestoreFilesA_addr : Rest3a_RestoreFilesB_addr);
         if (set >= at::kPartySetCount)
             bof3::Fatal("BattleFxRestore_LoadDat: party set %u, past the %u entries of 0x%X (docs/rest_3a.md section 7)", set,
                         at::kPartySetCount, (unsigned)table);
@@ -790,22 +790,22 @@ unsigned char* EnemyByActor(unsigned actor, const char* who) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnimationAs(unsigned actor, unsigned animation) {
     unsigned char* const enemy = EnemyByActor(actor, "BattleEnemy_SetAnimationAs");
     unsigned char* const sprite = Sc();
-    const U current = L(at::kEnemyCurrent);
+    const U current = BattleE3_CurrentEnemy;
     Sprite_Current = enemy;
-    SetLong(At(at::kEnemyCurrent), static_cast<std::int32_t>(Addr(enemy)));
+    BattleE3_CurrentEnemy = static_cast<std::int32_t>(Addr(enemy));
     BH_CALL(BattleEnemy_SetAnimation)(animation);
-    SetLong(At(at::kEnemyCurrent), static_cast<std::int32_t>(current));
+    BattleE3_CurrentEnemy = static_cast<std::int32_t>(current);
     Sprite_Current = sprite;
 }
 
 // original 0x435A70 (PSX 0x801E2500, call-anchored): the same with 0x939AD8
 // alone (Sprite_Current untouched).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnimationOf(unsigned actor, unsigned animation) {
-    const U current = L(at::kEnemyCurrent);
+    const U current = BattleE3_CurrentEnemy;
     unsigned char* const enemy = EnemyByActor(actor, "BattleEnemy_SetAnimationOf");
-    SetLong(At(at::kEnemyCurrent), static_cast<std::int32_t>(Addr(enemy)));
+    BattleE3_CurrentEnemy = static_cast<std::int32_t>(Addr(enemy));
     BH_CALL(BattleEnemy_SetAnimation)(animation);
-    SetLong(At(at::kEnemyCurrent), static_cast<std::int32_t>(current));
+    BattleE3_CurrentEnemy = static_cast<std::int32_t>(current);
 }
 
 // ============================================================================
@@ -824,7 +824,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_SetAnima
 extern "C" void __cdecl NewGame_InitCharacters(void) {
     for (unsigned n = 0; n < 7; ++n) {
         unsigned char* const record = At(at::kCharRecords + n * at::kCharSize);
-        std::memcpy(record, At(at::kDefaultRecords + n * at::kCharSize), at::kCharSize);
+        std::memcpy(record, At(Char_DefaultRecords_addr + n * at::kCharSize), at::kCharSize);
         const std::int32_t level = record[0xA];
         const unsigned divisor = B(at::kLevelDivisors + 2 * n);
         if (divisor == 0) bof3::Fatal("NewGame_InitCharacters: record %u's divisor is 0 - the original faults", n);
@@ -833,7 +833,7 @@ extern "C" void __cdecl NewGame_InitCharacters(void) {
         record[0x1C] = derived;
         record[0x2E] = derived;
     }
-    const unsigned slot = B(at::kWhelpSlot);
+    const unsigned slot = Char_WhelpSlot;
     if (slot >= at::kCharCount)
         bof3::Fatal("NewGame_InitCharacters: Char_WhelpSlot is %u, past the %u records - the original writes on", slot, at::kCharCount);
     std::memcpy(At(at::kCharRecords + slot * at::kCharSize), At(at::kWhelpRecord), at::kCharSize);

@@ -66,8 +66,8 @@ void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", tab
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked, as the originals index it.
-U StepX(unsigned d) { return static_cast<U>(Long(At(at::kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(at::kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: dec eax;
 // cdq; sub eax, edx; sar eax, 1 on the zero-extended byte - (d - 1) / 2
@@ -105,8 +105,8 @@ void SideProbe(unsigned d, U row) {
 }
 void SideProbes() {
     S()[0x2B] = 1;
-    SideProbe(3, at::kStepRow3);
-    SideProbe(5, at::kStepRow5);
+    SideProbe(3, Field_DirectionSteps_addr + 0x18);
+    SideProbe(5, Field_DirectionSteps_addr + 0x28);
 }
 
 // Sprite_ObjectAt's index, as the originals use it: bit 0 of the object's
@@ -121,9 +121,9 @@ void FlagObject(const char* who, unsigned char found) {
                     "byte outside them (docs/rest_1e.md section 5)",
                     who, static_cast<unsigned>(found));
     if (i < static_cast<int>(at::kObjectCount))
-        At(at::kObjectFlag + static_cast<U>(i) * at::kObjectStride)[0] |= 1;
+        At(Sprite_Objects_addr + 0x80 + static_cast<U>(i) * at::kObjectStride)[0] |= 1;
     else
-        At(at::kExtraFlag + static_cast<U>(i - static_cast<int>(at::kObjectCount)) * at::kObjectStride)[0] |= 1;
+        At(Sprite_ObjectsExtra_addr + 0x80 + static_cast<U>(i - static_cast<int>(at::kObjectCount)) * at::kObjectStride)[0] |= 1;
 }
 
 // An Effect_Objects record by an index the original uses unchecked; ours aborts

@@ -48,11 +48,12 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 
-constexpr U kSteps = 0x6697B0;                         // Field_DirectionSteps: 8 rows of two longs
-constexpr U kStep3 = 0x6697C8, kStep5 = 0x6697D8;      // rows 3 and 5, read by address
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
+// kStep3: now Field_DirectionSteps[6] (symbols.toml).
+// kStep5: now Field_DirectionSteps[0xa] (symbols.toml). rows 3 and 5, read by address
 constexpr U kSloped = 0x903850;                        // DamageScratch's first byte: AreaMap_Slope's "sloped" flag
-constexpr U kObjectFlag = 0x7DEF00;                    // Sprite_Objects + 0x80
-constexpr U kExtraFlag = 0x802080;                     // Sprite_ObjectsExtra + 0x80
+// kObjectFlag: now Sprite_Objects[0x80] (symbols.toml). Sprite_Objects + 0x80
+// kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml). Sprite_ObjectsExtra + 0x80
 constexpr U kObjectStride = 0xA4;
 constexpr U kScriptFlagsHigh = 0x9039A3;               // Field_ScriptFlags' high byte
 constexpr U kEffectStride = 0x80;
@@ -99,8 +100,8 @@ void ByStep(U table, const char* who) { Entry(table, Sprite_Current[3], who)(); 
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked (`shl eax, 3` on the zero-extended byte), as the originals read it.
-U StepX(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: (d - 1) / 2
 // as a signed division (cdq, sub, sar), so direction 0 gives 0; plus a base, as
@@ -122,8 +123,8 @@ void MarkObject(unsigned char found, const char* who) {
     if (found > 0x21)
         bof3::Fatal("%s: Sprite_ObjectAt answered 0x%02X, past the 34 objects; the original writes bit 0 of +0x80 there unchecked",
                     who, found);
-    if (found < 0x1E) At(kObjectFlag + found * kObjectStride)[0] |= 1;
-    else At(kExtraFlag + (found - 0x1E) * kObjectStride)[0] |= 1;
+    if (found < 0x1E) At(Sprite_Objects_addr + 0x80 + found * kObjectStride)[0] |= 1;
+    else At(Sprite_ObjectsExtra_addr + 0x80 + (found - 0x1E) * kObjectStride)[0] |= 1;
 }
 
 // An Effect_Objects record by an index the original writes through unchecked;
@@ -172,8 +173,8 @@ unsigned char __cdecl BlockedAhead() { return SH_CALL(PartyAction_BlockedAhead)(
 // Sprite_EnsureAnimation(the turn + 0x42), +0xA = 5.
 void BeginLevel() {
     Sprite_Current[0x2B] = 1;
-    ProbeSide(kStep3, 3);
-    ProbeSide(kStep5, 5);
+    ProbeSide(Field_DirectionSteps_addr + 0x18, 3);
+    ProbeSide(Field_DirectionSteps_addr + 0x28, 5);
     SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(Word(Sprite_Current + 0x2C) + 0x100));
     SH_CALL(Sprite_EnsureAnimation)(Turned(Sprite_Current[8], 0x42));
     Sprite_Current[0xA] = 5;

@@ -79,8 +79,8 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-constexpr U kSteps = 0x6697B0;   // Field_DirectionSteps: 8 rows of two longs
-unsigned char* Steps() { return sh::Mem(kSteps); }
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
+unsigned char* Steps() { return sh::Mem(Field_DirectionSteps_addr); }
 unsigned char* Effect(unsigned i) { return sh::EffectRecord(i); }
 
 // --- the stand-ins' answers (Noise() and the state only: both passes the same) -----
@@ -163,7 +163,7 @@ const sh::Callee kCallees[] = {
 // (0x524DA0 its rows 3 and 5 by address), so that the seed can put every row's
 // boundaries in. .data, restored after the run as every region is.
 const sh::Region kRegions[] = {
-    {kSteps, 0x40},
+    {Field_DirectionSteps_addr, 0x40},
 };
 
 // --- the seed -------------------------------------------------------------------------

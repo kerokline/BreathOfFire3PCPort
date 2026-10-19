@@ -167,13 +167,26 @@ unsigned char* Mem(U a) { return sh::Mem(a); }
 unsigned char& B(U a) { return sh::Mem(a)[0]; }
 
 // The cells (rest_2f.cpp's).
-constexpr U kStep = 0x929F01, kSub = 0x929F02, kTimer = 0x929F04, kCol = 0x929F08, kRow = 0x929F09, kHeldCol = 0x929F0A,
-            kHeldRow = 0x929F0D, kDirect = 0x929F10, kShown = 0x929F06;
+// kStep: now FieldS_State (symbols.toml).
+// kSub: now FieldS_Step (symbols.toml).
+// kCol: now FieldS_Column (symbols.toml).
+// kRow: now BattleE1_ModeByte9 (symbols.toml).
+// kHeldCol: now ShopStates_Clear0A (symbols.toml).
+// kHeldRow: now FieldS_PickRow (symbols.toml).
+// kDirect: now ScenaSc6_Load10 (symbols.toml).
+// kShown: now BattleActorCopies_ItemActor (symbols.toml).
+constexpr U kTimer = 0x929F04;
 constexpr U kGrid = 0x6BDFBC, kSetCol = 0x6BDFC5, kPickCol = 0x6BDFC6, kSetRow = 0x6BDFC7, kPickRow = 0x6BDFC8,
             kCurCol = 0x6BDFC9, kCurRow = 0x6BDFCA, kTopChoice = 0x6BDFCB, kReserve = 0x6BDFD4, kRefused = 0x6BDFD7;
-constexpr U kFormationSet = 0x904060, kParty = 0x904062, kCharacters = 0x903A70, kPressed = 0x7E1BEC, kConfirm = 0x90358E,
-            kCancel = 0x903590, kCurrent = 0x905B84, kListText = 0x7DEE50, kListLast = 0x7DEE66, kListCursor = 0x7DEE67,
-            kWindows = 0x803160;
+// kFormationSet: now Cond_Flags[0xd0] (symbols.toml).
+// kParty: now Cond_Flags[0xd2] (symbols.toml).
+// kPressed: now Input_Pressed (symbols.toml).
+// kConfirm: now Field_ConfirmButtons (symbols.toml).
+// kCancel: now Field_CancelButtons (symbols.toml).
+// kCurrent: now BattleWinStates_Current (symbols.toml).
+// kListText: now MenuWindows_ListText (symbols.toml).
+// kListCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
+constexpr U kCharacters = 0x903A70, kListLast = 0x7DEE66, kWindows = 0x803160;
 U Rec(unsigned n, unsigned at) { return kWindows + 0x24 * n + at; }
 
 // The kind-1 choices' text (a region of its own; a tail of zeros after it that
@@ -221,7 +234,7 @@ U SwapEffect(const U* a, U answer) {
         *y = t;
     }
     const U n = sh::Noise();
-    if (n % 4 == 0) B(n & 4 ? kRow : kHeldRow) = static_cast<unsigned char>((n >> 8) % 5);
+    if (n % 4 == 0) B(n & 4 ? BattleE1_ModeByte9_addr : FieldS_PickRow_addr) = static_cast<unsigned char>((n >> 8) % 5);
     return answer;
 }
 
@@ -234,7 +247,7 @@ U SwapEffect(const U* a, U answer) {
 // stores (controls 49, 50).
 U SoundEffect(const U* a, U answer) {
     const U n = sh::Noise();
-    if (PickRunning() && (a[0] & 0xFFFF) == 0x103 && n % 2 == 0) B(kRow) = static_cast<unsigned char>((n >> 8) % 5);
+    if (PickRunning() && (a[0] & 0xFFFF) == 0x103 && n % 2 == 0) B(BattleE1_ModeByte9_addr) = static_cast<unsigned char>((n >> 8) % 5);
     return answer;
 }
 
@@ -389,27 +402,27 @@ void Seed(unsigned k) {
     for (unsigned n = 0; n < 22; ++n) SeedRecord(Mem(Rec(n, 0)));
     const unsigned current = sh::Next() % 22;
     unsigned char* const cur = Mem(Rec(current, 0));
-    sh::SetPointer(kCurrent, cur);
+    sh::SetPointer(BattleWinStates_Current_addr, cur);
     if (const unsigned e = KindEntries(k)) cur[2] = static_cast<unsigned char>(sh::Next() % e);
     if (const unsigned e = StateEntries(k)) cur[3] = static_cast<unsigned char>(sh::Next() % e);
     SeedText();
-    sh::SetPointer(kListText, g_text + sh::Next() % 0x40);
-    B(kListLast) = static_cast<unsigned char>(PickOf(0xFF, 0, 1, 2, 3, 4, 5, 6, 0x80));
-    B(kListCursor) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next() % 8));
+    sh::SetPointer(MenuWindows_ListText_addr, g_text + sh::Next() % 0x40);
+    B(MenuWindows_ListCount_addr) = static_cast<unsigned char>(PickOf(0xFF, 0, 1, 2, 3, 4, 5, 6, 0x80));
+    B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next() % 8));
     // the menu block
-    B(kStep) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
-    B(kSub) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));
+    B(FieldS_State_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
+    B(FieldS_Step_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));
     B(kTimer) = static_cast<unsigned char>(PickOf(1, 1, 2, 0, 5, sh::Next()));
-    if (const unsigned e = Entries(k)) B(k == kFormation || k == kMembers ? kSub : kStep) = static_cast<unsigned char>(sh::Next() % e);
-    B(kShown) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, 3));
-    B(kCol) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, 2, 0xFF));
-    B(kRow) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, 5, 7));
+    if (const unsigned e = Entries(k)) B(k == kFormation || k == kMembers ? FieldS_Step_addr : FieldS_State_addr) = static_cast<unsigned char>(sh::Next() % e);
+    B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, 3));
+    B(FieldS_Column_addr) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, 2, 0xFF));
+    B(BattleE1_ModeByte9_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, 5, 7));
     const bool held = sh::Half();
-    B(kHeldCol) = static_cast<unsigned char>(held ? PickOf(0, 1, B(kCol)) : 0x7F);
-    B(kHeldRow) = static_cast<unsigned char>(held ? PickOf(0, 1, 2, 3, B(kRow)) : PickOf(0x7F, 0x7F, 1));
-    if (k == kSwapK && B(kHeldCol) == 0x7F) B(kHeldCol) = static_cast<unsigned char>(sh::Next() & 1);
-    if (k == kSwapK && B(kHeldRow) == 0x7F) B(kHeldRow) = static_cast<unsigned char>(sh::Next() % 4);
-    B(kDirect) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(ShopStates_Clear0A_addr) = static_cast<unsigned char>(held ? PickOf(0, 1, B(FieldS_Column_addr)) : 0x7F);
+    B(FieldS_PickRow_addr) = static_cast<unsigned char>(held ? PickOf(0, 1, 2, 3, B(BattleE1_ModeByte9_addr)) : PickOf(0x7F, 0x7F, 1));
+    if (k == kSwapK && B(ShopStates_Clear0A_addr) == 0x7F) B(ShopStates_Clear0A_addr) = static_cast<unsigned char>(sh::Next() & 1);
+    if (k == kSwapK && B(FieldS_PickRow_addr) == 0x7F) B(FieldS_PickRow_addr) = static_cast<unsigned char>(sh::Next() % 4);
+    B(ScenaSc6_Load10_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     // Tactics' cells
     SeedGrid();
     B(kTopChoice) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
@@ -417,17 +430,17 @@ void Seed(unsigned k) {
     B(kRefused) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0, 1, 5, 7));
     B(Rec(12, 0xA)) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5));
     // the party and the characters: ids 0..7, the flags +0xB at bits 0 and 1
-    for (unsigned i = 0; i < 6; ++i) B(kParty + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, sh::Next() % 8));
+    for (unsigned i = 0; i < 6; ++i) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, sh::Next() % 8));
     for (unsigned m = 0; m < 8; ++m) {
         unsigned char* const c = Mem(kCharacters + 0xA4 * m);
         c[9] = static_cast<unsigned char>(PickOf(m, m, m, sh::Next() % 8));
         c[0xB] = static_cast<unsigned char>(PickOf(0, 1, 1, 3, 2, sh::Next()));
     }
-    B(kFormationSet) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, sh::Next()));
+    B(Cond_Flags_addr + 0xd0) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, sh::Next()));
     // the buttons
-    SetWord(Mem(kConfirm), PickOf(0x20, 0x20, 0x4000, sh::Next()));
-    SetWord(Mem(kCancel), PickOf(0x40, 0x40, 0x1000, sh::Next()));
-    SetWord(Mem(kPressed), PickOf(0, 0, 0x20, 0x40, 0x60, 0x1000, 0x2000, 0x4000, 0x8000, 0x5000, 0xA000, 0x1020, sh::Next()));
+    SetWord(Mem(Field_ConfirmButtons_addr), PickOf(0x20, 0x20, 0x4000, sh::Next()));
+    SetWord(Mem(Field_CancelButtons_addr), PickOf(0x40, 0x40, 0x1000, sh::Next()));
+    SetWord(Mem(Input_Pressed_addr), PickOf(0, 0, 0x20, 0x40, 0x60, 0x1000, 0x2000, 0x4000, 0x8000, 0x5000, 0xA000, 0x1020, sh::Next()));
     // the formation build's limits by the members' bits
     B(0x904061) = static_cast<unsigned char>(PickOf(0x3F, 0x15, 0x2A, 0, sh::Next()));
     // the trade's s8 cells
@@ -468,11 +481,11 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     const U v = h >> 8;
-    unsigned char* const cur = sh::Pointer(kCurrent);
+    unsigned char* const cur = sh::Pointer(BattleWinStates_Current_addr);
     const bool rec = sh::InRegions(cur, 0x24);
     switch (sh::DisturbCase(h, 15)) {
-    case 0: B(kStep) = static_cast<unsigned char>(b % 7); break;
-    case 1: B(kSub) = static_cast<unsigned char>(b % 3); break;
+    case 0: B(FieldS_State_addr) = static_cast<unsigned char>(b % 7); break;
+    case 1: B(FieldS_Step_addr) = static_cast<unsigned char>(b % 3); break;
     case 2: B(kTopChoice) = static_cast<unsigned char>(b & 1); break;
     case 3: B(kTimer) = static_cast<unsigned char>(b % 4); break;
     case 4: if (rec) SetWord(cur + (b & 1 ? 4 : 6), v & 0x1FF); break;
@@ -482,11 +495,11 @@ void Disturb(U h) {
     case 5: if (rec && cur[0xA] != 4) cur[0xA] = static_cast<unsigned char>(b % 4); break;
     case 6: if (rec) cur[0xB] = static_cast<unsigned char>(b % 0x80); break;
     case 7: if (rec) SetWord(cur + 0x10, v & 0x1F3); break;
-    case 8: sh::SetPointer(kCurrent, Mem(Rec(b % 22, 0))); break;
-    case 9: B(kListLast) = static_cast<unsigned char>(b % 7); break;
-    case 10: B(kParty + b % 6) = static_cast<unsigned char>(v % 8); break;
+    case 8: sh::SetPointer(BattleWinStates_Current_addr, Mem(Rec(b % 22, 0))); break;
+    case 9: B(MenuWindows_ListCount_addr) = static_cast<unsigned char>(b % 7); break;
+    case 10: B(Cond_Flags_addr + 0xd2 + b % 6) = static_cast<unsigned char>(v % 8); break;
     case 11: if (B(Rec(12, 0xA)) != 4) B(Rec(12, 0xA)) = static_cast<unsigned char>(b % 4); break;   // record 12 may be the list's
-    case 12: B(b & 1 ? kRow : kHeldRow) = static_cast<unsigned char>(v % 5); break;
+    case 12: B(b & 1 ? BattleE1_ModeByte9_addr : FieldS_PickRow_addr) = static_cast<unsigned char>(v % 5); break;
     case 13: if (rec) cur[9] = static_cast<unsigned char>(b & 1); break;
     // the category (a 4 stays a 4) or the top of the record the two draws are handed
     case 14:

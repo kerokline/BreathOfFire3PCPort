@@ -58,7 +58,7 @@ unsigned char* Result() { return Ptr(at::kResult); }
 
 // A record by an actor byte, as the original computes the address: unchecked
 // (a read), the enemy's index the byte less 3 in 32 bits.
-unsigned char* Party(U member) { return At(at::kParty + member * at::kPartyStride); }
+unsigned char* Party(U member) { return At(ObjTrio_addr + member * at::kPartyStride); }
 unsigned char* Enemy(U index) { return At(at::kEnemies + index * at::kEnemyStride); }
 unsigned char* CharRecord(U character) { return At(at::kCharRecords + character * at::kCharStride); }
 // ... and for a write: a Fatal past the three members or the eight enemies,
@@ -195,10 +195,10 @@ extern "C" void __cdecl Effect_DoubleDamage(void) {
     const unsigned target = B(at::kTarget);
     const unsigned actor = B(at::kActor);
     B(at::kFlags2) = static_cast<unsigned char>(B(at::kFlags2) | 0x20);
-    SetW(at::kTargetDef, 0);
+    BattleDamage_TargetDef = 0;
     const short damage = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
     SetWord(Result() + 4, static_cast<unsigned>(static_cast<std::uint16_t>(damage)) << 1);
-    B(at::kByte660) = 5;
+    Rest3c_Byte660 = 5;
 }
 
 // original 0x44D1C0 (slot 63): for kind 4 with ability 0x9A, 0x904AA9 |=
@@ -208,7 +208,7 @@ extern "C" void __cdecl Effect_QuarterDamage(void) {
     if (B(at::kActingKind) == 4 && W(at::kAbility) == 0x9A) B(at::kFlags2) = static_cast<unsigned char>(B(at::kFlags2) | 0x20);
     const unsigned target = B(at::kTarget);
     const unsigned actor = B(at::kActor);
-    SetW(at::kTargetDef, 0);
+    BattleDamage_TargetDef = 0;
     const short damage = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
     SetWord(Result() + 4, static_cast<unsigned>(S32(damage) / 4));
 }
@@ -293,8 +293,8 @@ extern "C" unsigned __cdecl Effect_FlagActorPair(void) {
     const unsigned actor = B(at::kActor);
     const unsigned other = B(at::kOtherActor);
     B(at::kFlags2) = static_cast<unsigned char>(B(at::kFlags2) | 0x40);
-    B(at::kPairActor) = static_cast<unsigned char>(actor);
-    B(at::kPairOther) = static_cast<unsigned char>(other);
+    BattleFlow_ActorAt = static_cast<unsigned char>(actor);
+    BattlePhases_B8B = static_cast<unsigned char>(other);
     return MissTail();
 }
 
@@ -499,7 +499,7 @@ extern "C" void __cdecl Effect_SureHitHalfDamage(void) {
     const unsigned bit = w & 8;
     SetWord(status, w & 0xFFF7);
     const unsigned target = B(at::kTarget);
-    B(at::kHitPercent) = 0x64;
+    BattleE4_HitEnemy = 0x64;
     const short damage = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
     SetWord(Result() + 4, static_cast<unsigned>(S32(damage) / 2));
     const unsigned again = B(at::kActor);
@@ -545,12 +545,12 @@ extern "C" void __cdecl Effect_FlushTurnOrder(void) {
     const char* const who = "Effect_FlushTurnOrder (0x44DC10)";
     MissTail();
     const unsigned t = B(at::kTarget);
-    const unsigned first = B(at::kTurnCursor);
-    B(at::kGate) = 4;
+    const unsigned first = BossSe_RoundSlot;
+    BattleFlow_AnimGate = 4;
     unsigned char* const p = PartyWrite(t, who);
     SetLong(p + 0x134, static_cast<S32>(static_cast<U>(Long(p + 0x134)) | 0x10));
     unsigned i = static_cast<unsigned char>(first - 1);
-    if (i > B(at::kTurnCount)) return;
+    if (i > BattleDamage_TurnCount) return;
     do {
         if (i > 11)
             bof3::Fatal("%s: turn order slot %u past the eleven and the byte after - the original reads and writes on "
@@ -561,7 +561,7 @@ extern "C" void __cdecl Effect_FlushTurnOrder(void) {
             B(at::kTurnOrder + i) = 0xFF;
         }
         i = static_cast<unsigned char>(i + 1);
-    } while (i <= B(at::kTurnCount));
+    } while (i <= BattleDamage_TurnCount);
 }
 
 // original 0x44DCA0 (slot 98): 0x44FB30; 0x44F650(10, 4) - the result
@@ -616,7 +616,7 @@ extern "C" void __cdecl Effect_HealAndCureBFC(void) {
 extern "C" void __cdecl Effect_MultiHit(void) {
     S32 sum = 0;
     unsigned i = 0;
-    if (B(at::kHits) != 0) {
+    if (Rest3c_Hits != 0) {
         do {
             const S32 scale = i < 7 ? static_cast<signed char>(B(at::kHitScale + i)) : 3;
             const unsigned target = B(at::kTarget);
@@ -624,7 +624,7 @@ extern "C" void __cdecl Effect_MultiHit(void) {
             const short damage = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
             sum += static_cast<S32>(static_cast<U>(S32(damage)) * static_cast<U>(scale)) / 10;
             i = static_cast<unsigned char>(i + 1);
-        } while (i < B(at::kHits));
+        } while (i < Rest3c_Hits);
         if (sum > 9999) sum = 9999;
         else if (sum < -9999) sum = -9999;
     }

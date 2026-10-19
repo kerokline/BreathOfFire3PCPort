@@ -39,7 +39,7 @@ constexpr unsigned kMaxHp = 0x20;       // u16, effective
 constexpr unsigned kMaxAp = 0x22;       // u16, effective
 constexpr unsigned kRecordBytes = 0xA4;
 
-constexpr std::uint32_t kPartyLists = 0x904062;    // Party_Count's 3-byte lists (move_cmds_callees.h)
+// kPartyLists: now Cond_Flags[0xd2] (symbols.toml). Party_Count's 3-byte lists (move_cmds_callees.h)
 // kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per party entry: its record index (MoveScript_EffectState)
 constexpr std::uint32_t kItemFlags = 0x656B38;     // NameTable_Consumables + 0x10: each record's flags byte
 constexpr std::uint32_t kItemStride = 22;

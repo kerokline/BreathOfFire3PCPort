@@ -21,7 +21,7 @@ namespace at {
 // kControlStates: now Field_LeaderControlSteps (symbols.toml). 3 handlers, by Sprite_Current +2
 // kPendingJumps: now Field_PendingJumps (symbols.toml). 4 handlers, by 0x904EF1
 // kZoneCounter: now ObjTrio[0x134] (symbols.toml). word, ObjTrio +0x134
-constexpr std::uint32_t kLeaderXHigh = 0x802D76;      // ObjTrio +0x36, the integer x's low byte
+// kLeaderXHigh: now ObjTrio[0x36] (symbols.toml). ObjTrio +0x36, the integer x's low byte
 // kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml). ObjTrio +0x3A
 constexpr std::uint32_t kZoneBases = 0x660A24;        // 2 bytes a zone: base, most added
 constexpr std::uint32_t kZoneLists = 0x668D80;        // an 8-byte record list per area

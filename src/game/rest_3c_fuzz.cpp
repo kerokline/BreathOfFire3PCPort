@@ -191,7 +191,7 @@ U RecordEffect(const U* a, U answer) {
 // loop copies to +0xA0 after it: the stand-in notes one member's block (the
 // first loop's copy, compared) and moves it.
 U StatModsEffect(const U*, U answer) {
-    unsigned char* const m = Mem(at::kParty + (bh::Noise() % 3) * at::kPartyStride + 0xC0);
+    unsigned char* const m = Mem(ObjTrio_addr + (bh::Noise() % 3) * at::kPartyStride + 0xC0);
     bh::NoteBytes(m, 32);
     bh::FillBytes(m, 32);
     return answer;
@@ -207,7 +207,7 @@ U CalcEffect(const U* a, U answer) {
     if (n % 3 == 0) return answer;
     const unsigned t = a[1] & 0xFF;
     if (t > 10) return answer;
-    const unsigned hp = t < 3 ? Word(Mem(at::kParty + t * at::kPartyStride + 0x98)) : Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xA4));
+    const unsigned hp = t < 3 ? Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0x98)) : Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xA4));
     static const unsigned kPick[] = {0, 1, 0xFFFFFFFFu, 0, 1};
     const unsigned k = (n >> 4) % 5;
     const unsigned v = k < 2 ? kPick[k] : hp + kPick[k];   // k 2..4: HP - 1, HP, HP + 1
@@ -265,7 +265,7 @@ const bh::Region kRegions[] = {
 const bh::Clone* g_cur = nullptr;   // the Run's clones (for Seed and Disturb)
 U g_base = 0;                       // the clone the round runs
 
-unsigned char* Member(unsigned n) { return Mem(at::kParty + (n % 3) * at::kPartyStride); }
+unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* EnemyObj(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
 unsigned char* CharRecord(unsigned c) { return Mem(at::kCharRecords + c * at::kCharStride); }
 std::uint16_t Word16(std::initializer_list<U> often) {
@@ -331,9 +331,9 @@ void Seed(unsigned k) {
         e[0x92] = static_cast<unsigned char>(bh::Half() ? e[0x92] & ~0x48 : e[0x92] | 0x48);
     }
     // the multi-hit count, the turn order's cursor, end and slots
-    Mem(at::kHits)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 10 : bh::Next() % 21);
-    Mem(at::kTurnCursor)[0] = static_cast<unsigned char>(bh::Next() % 13);
-    Mem(at::kTurnCount)[0] = static_cast<unsigned char>(bh::Next() % 12);
+    Mem(Rest3c_Hits_addr)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 10 : bh::Next() % 21);
+    Mem(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(bh::Next() % 13);
+    Mem(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 12);
     for (unsigned i = 0; i < 12; ++i)
         Mem(at::kTurnOrder + i)[0] = static_cast<unsigned char>(bh::Half() ? 0xFF : bh::Next() % 11);
 }
@@ -348,9 +348,9 @@ void Disturb(U h) {
     case 0: Mem(at::kTarget)[0] = TargetFor(g_base, v); break;
     case 1: Mem(at::kActor)[0] = static_cast<unsigned char>(v % 11); break;
     case 2: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(v % 4); break;
-    case 3: Mem(at::kTurnCount)[0] = static_cast<unsigned char>(v % 12); break;
+    case 3: Mem(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(v % 12); break;
     case 4: Mem(at::kTurnOrder + v % 12)[0] = static_cast<unsigned char>(v & 0x100 ? 0xFF : (v >> 4) % 11); break;
-    case 5: Mem(at::kHits)[0] = static_cast<unsigned char>(v % 10); break;
+    case 5: Mem(Rest3c_Hits_addr)[0] = static_cast<unsigned char>(v % 10); break;
     case 6: SetWord(Member(v) + 0x98, v >> 2); break;
     case 7: SetWord(EnemyObj(v) + 0xA4, v >> 3); break;
     case 8: {

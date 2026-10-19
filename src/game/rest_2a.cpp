@@ -52,7 +52,7 @@ constexpr unsigned kEffectCount = 20;
 // any other byte no code of this band stores, and ours aborts.
 const unsigned char* EffectRead(unsigned index, const char* who) {
     if (index < kEffectCount) return Effect_Objects + index * kEffectStride;
-    if (index == 0xFF) return At(at::kEffectNone);
+    if (index == 0xFF) return At(Gfx_PacketPools_addr + 0x7560);
     bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads at 0x%X", who, index,
                 static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
     return nullptr;
@@ -83,7 +83,7 @@ void Dispatch(const U* states, unsigned count, const char* who) {
 // is never 0, so the call is unconditional. It pushes eax whole, the upper
 // bytes Rand's answer; Sprite_FaceDirection reads the byte.
 void FaceAwayFromLeader() {
-    const unsigned char lead = At(at::kLeaderDirection)[0];
+    const unsigned char lead = ObjTrio[8];
     SH_CALL(Sprite_FaceDirection)(static_cast<unsigned char>((lead ^ 0xFC) & 7));
 }
 
@@ -206,7 +206,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
         }
         const unsigned count = At(at::kBankCount)[0];
         const unsigned char* const records = reinterpret_cast<const unsigned char*>(
-            static_cast<std::uintptr_t>(static_cast<U>(Long(At(at::kBankRecords)))));
+            static_cast<std::uintptr_t>(static_cast<U>(Long(At(MoveScript_TintRecords_addr + 0x180)))));
         const unsigned bank_byte = Word(s + 0x2C);
         unsigned i = 0;
         while (i < count && records[i * 8 + 7] != bank_byte) ++i;
@@ -438,7 +438,7 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
 // / 28 (a signed division: imul by 0x92492493, add, sar 4, the sign added);
 // negative, shifted left 2 (al only). Answers al.
 extern "C" unsigned char __cdecl LinkedObject_EffectRise(void) {
-    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - At(at::kLeader30)[0]));
+    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - ObjTrio[0x30]));
     const auto q = static_cast<unsigned char>(static_cast<int>(d) / 28);
     return static_cast<signed char>(q) < 0 ? static_cast<unsigned char>(q << 2) : q;
 }

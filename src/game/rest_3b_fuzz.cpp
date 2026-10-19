@@ -128,15 +128,15 @@ const bh::Clone kAll64[] = {
     ROW(BattleTarget_Cancel, 0x4473E0, 0x42, kCalls4473E0),
     ROW(BattleItem_CloseWait, 0x447880, 0x23, kCalls447880),
     ROW(BattleItem_TargetCancel, 0x447D30, 0x3A, kCalls447D30),
-    Disp("BattleItem_SideDispatch", 0x447D70, 0x11, BH_FN(BattleItem_SideDispatch), at::kStep4, 4),
+    Disp("BattleItem_SideDispatch", 0x447D70, 0x11, BH_FN(BattleItem_SideDispatch), BattleE4_Step4_addr, 4),
     ROW0(BattleItem_SideBegin, 0x447D90, 0x3B),
     ROW(BattleItem_SidePick, 0x447DD0, 0x86, kCalls447DD0),
     ROW(BattleAttackCmd_Cancel, 0x448140, 0x3D, kCalls448140),
     ROW(BattleItemCmd_CloseWait, 0x448600, 0x23, kCalls448600),
     ROW(BattleItemCmd_TargetCancel, 0x448B40, 0x3A, kCalls448B40),
-    Disp("BattleItemCmd_SideDispatch", 0x448B80, 0x11, BH_FN(BattleItemCmd_SideDispatch), at::kStep4, 4),
-    Disp("BattleItemCmd_EquipDispatch", 0x448C80, 0x11, BH_FN(BattleItemCmd_EquipDispatch), at::kStep4, 4),
-    Disp("Escape_Dispatch", 0x44A000, 0xE, BH_FN(Escape_Dispatch), at::kStep3, 3),
+    Disp("BattleItemCmd_SideDispatch", 0x448B80, 0x11, BH_FN(BattleItemCmd_SideDispatch), BattleE4_Step4_addr, 4),
+    Disp("BattleItemCmd_EquipDispatch", 0x448C80, 0x11, BH_FN(BattleItemCmd_EquipDispatch), BattleE4_Step4_addr, 4),
+    Disp("Escape_Dispatch", 0x44A000, 0xE, BH_FN(Escape_Dispatch), BattleE4_Step3_addr, 3),
     // Effect_Handlers slots
     ROW(EffectSlot00_Miss, 0x44BED0, 0x5, kCalls44BED0),
     ROW(EffectSlot01_VariedHit, 0x44BEE0, 0x90, kCalls44BEE0),
@@ -199,7 +199,7 @@ static_assert(sizeof kAll64 / sizeof kAll64[0] == 64, "64 functions");
 U RosterMoves(const U*, U answer) {
     const U n = bh::Noise();
     if (n & 1) {
-        unsigned char* const id = Mem(at::kParty + (n >> 8) % 3 * at::kPartyStride + 0x89);
+        unsigned char* const id = Mem(ObjTrio_addr + (n >> 8) % 3 * at::kPartyStride + 0x89);
         bh::Note(id[0]);
         id[0] = static_cast<unsigned char>((n >> 12) % 24);
     }
@@ -223,7 +223,7 @@ U AbilityListEffect(const U*, U) { return Key(bh::TextBuffer() + bh::Noise() % 0
 // A record as the originals index it by an actor / target byte (a member
 // below 3, else the enemy object byte - 3, the difference in 32 bits).
 unsigned char* Rec(unsigned n, U party_at, U enemy_at) {
-    return n < 3 ? Mem(at::kParty + n * at::kPartyStride + party_at)
+    return n < 3 ? Mem(ObjTrio_addr + n * at::kPartyStride + party_at)
                  : Mem(at::kEnemies + static_cast<U>(static_cast<std::int32_t>(n) - 3) * at::kEnemyStride + enemy_at);
 }
 // Battle_CalcDamage answers, a third of the time, the target's HP less 1, 0
@@ -258,7 +258,7 @@ U RandMovesTarget(const U*, U answer) {
 // 28 and 29 count one up around the call): a store moved across the call is
 // compared, not hidden.
 U ClearNotesCounts(const U*, U answer) {
-    bh::Note(Mem(at::kPartyUp)[0], Mem(at::kEnemiesLeft)[0]);
+    bh::Note(Mem(BattleSprites_PartyPick_addr)[0], Mem(BattleE2_EnemiesLeft_addr)[0]);
     return answer;
 }
 
@@ -300,7 +300,7 @@ const bh::Callee kCallees[] = {
 };
 
 const bh::DataTable kTables[] = {
-    {at::kItemSideSteps, 4}, {at::kItemCmdSideSteps, 4}, {at::kItemCmdEquipSteps, 4}, {at::kEscapeStates, 3},
+    {BattleItem_SideSteps_addr, 4}, {BattleItemCmd_SideSteps_addr, 4}, {BattleItemCmd_EquipSteps_addr, 4}, {Escape_States_addr, 3},
 };
 
 // The cells beyond the engine frame the group reads or writes.
@@ -329,7 +329,7 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     const U* v = often.begin();
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
-unsigned char* Member(unsigned n) { return Mem(at::kParty + (n % 3) * at::kPartyStride); }
+unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* EnemyN(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 
@@ -338,10 +338,10 @@ U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 void Keys() {
     const U confirm = BH_PICK(0x20, 0x40, 0x2000, 0x60);
     const U cancel = BH_PICK(0x40, 0x80, 0x100, 0x4000);
-    SetWord(Mem(at::kConfirmButtons), confirm);
-    SetWord(Mem(at::kCancelButtons), cancel);
+    SetWord(Mem(Field_ConfirmButtons_addr), confirm);
+    SetWord(Mem(Field_CancelButtons_addr), cancel);
     const U picks[] = {0, 0x1000, 0x2000, 0x4000, 0x8000, 0x5000, 0xA000, confirm, cancel, cancel | confirm, 0x10};
-    SetWord(Mem(at::kInputPressed), bh::Often() ? bh::Pick(picks, BH_COUNT(picks)) : bh::Next());
+    SetWord(Mem(Input_Pressed_addr), bh::Often() ? bh::Pick(picks, BH_COUNT(picks)) : bh::Next());
 }
 
 // Every round: the actor and the target 0..10 (past 10 an enemy object runs
@@ -368,7 +368,7 @@ void BattleFrame() {
         SetWord(e + 0x92, static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u));
     }
     SetWord(Mem(at::kAbility), Word16({0, 1, 0x55, 0x5D, 0x62, 0x65, 0x66, 0xE2}) % 0xE4);
-    SetWord(Mem(at::kPowerAdd2), Word16({0, 1, 139, 140, 141, 142, 0xFFFF}));
+    SetWord(Mem(Rest3b_PowerAdd2_addr), Word16({0, 1, 139, 140, 141, 142, 0xFFFF}));
     Mem(at::kPartyCount)[0] = static_cast<unsigned char>(bh::Next() % 4);
 }
 
@@ -377,13 +377,13 @@ void BattleFrame() {
 // command word +2 inside the ability rows.
 void MenuFrame() {
     Keys();
-    unsigned char* const c = bh::Pointer(at::kCommand);
+    unsigned char* const c = bh::Pointer(BattleActorCopies_Command_addr);
     c[0] = Byte({0, 1, 2, 3, 0x40, 0x80, 0xC0, 0xFF, 0x7F});
     SetWord(c + 2, Word16({0, 1, 0x20, 0x97, 0xE3}) % 0xE4);
-    Mem(at::kWin16Closing)[0] = Byte({0, 0, 1});
-    Mem(at::kWin16Page)[0] = Byte({0, 1, 2, 3});
+    Mem(BattleActorCopies_ItemState_addr)[0] = Byte({0, 0, 1});
+    Mem(BattleActorCopies_ItemPage_addr)[0] = Byte({0, 1, 2, 3});
     SetLong(Mem(at::kWin16Cursor), static_cast<std::int32_t>(bh::Next()));
-    Mem(at::kAbilityActor)[0] = Byte({0, 1, 2});
+    Mem(BattleActorCopies_ItemActor_addr)[0] = Byte({0, 1, 2});
 }
 
 void Seed(unsigned k) {
@@ -442,8 +442,8 @@ void Disturb(U h) {
     case 3: Member(b)[0x89] = static_cast<unsigned char>((b >> 2) % 24); break;
     case 4: Member(b)[0x91] = static_cast<unsigned char>(Member(b)[0x91] ^ 0x40); break;
     case 5: EnemyN(b)[0x93] = static_cast<unsigned char>(EnemyN(b)[0x93] ^ 0x40); break;
-    case 6: bh::Pointer(at::kCommand)[0] = b; break;
-    default: SetWord(Mem(at::kPowerAdd2), h >> 20); break;
+    case 6: bh::Pointer(BattleActorCopies_Command_addr)[0] = b; break;
+    default: SetWord(Mem(Rest3b_PowerAdd2_addr), h >> 20); break;
     }
 }
 

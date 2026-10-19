@@ -60,7 +60,7 @@ std::int32_t Sx(const unsigned char* p) { return static_cast<std::int32_t>(S(p))
 // original re-reads it. Volatile so that ours cannot cache it either: the
 // fuzz's stand-ins repoint it between calls.
 unsigned char* Rec() {
-    return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(at::kCurrent)));
+    return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr)));
 }
 
 // `call [table + 4 * record +3]` over a .data table of `entries` handlers, read
@@ -268,7 +268,7 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
 // Menu_DrawStatsPanel at the record's (+4, +6) for the character record of
 // party slot +0xA.
 extern "C" void __cdecl MenuList_StatsPanel(void) {
-    State("MenuList_StatsPanel", at::kStatsStates, 7);
+    State("MenuList_StatsPanel", MenuList_StatsStates_addr, 7);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawStatsPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]));
 }
@@ -276,7 +276,7 @@ extern "C" void __cdecl MenuList_StatsPanel(void) {
 // original 0x59A190, kind 6: the state from MenuList_EquipStates, then
 // Menu_DrawEquipPanel likewise.
 extern "C" void __cdecl MenuList_EquipPanel(void) {
-    State("MenuList_EquipPanel", at::kEquipStates, 3);
+    State("MenuList_EquipPanel", MenuList_EquipStates_addr, 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawEquipPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]));
 }
@@ -284,7 +284,7 @@ extern "C" void __cdecl MenuList_EquipPanel(void) {
 // original 0x59A200, kind 7: the state from MenuList_ExpStates, then
 // Menu_DrawExpPanel likewise with `next` 0 (the record's EXP).
 extern "C" void __cdecl MenuList_ExpPanel(void) {
-    State("MenuList_ExpPanel", at::kExpStates, 3);
+    State("MenuList_ExpPanel", MenuList_ExpStates_addr, 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawExpPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]), 0);
 }
@@ -292,7 +292,7 @@ extern "C" void __cdecl MenuList_ExpPanel(void) {
 // original 0x59A270, kind 8: the state from MenuList_NextLevelStates, then
 // Menu_DrawExpPanel with `next` 1 (the EXP of the next level).
 extern "C" void __cdecl MenuList_NextLevelPanel(void) {
-    State("MenuList_NextLevelPanel", at::kNextLevelStates, 3);
+    State("MenuList_NextLevelPanel", MenuList_NextLevelStates_addr, 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawExpPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]), 1);
 }
@@ -303,8 +303,8 @@ extern "C" void __cdecl MenuList_NextLevelPanel(void) {
 // colour 0, and for +0x10 0x1A or 0x31 system text 0xF over it at the same
 // place. The record re-read after each call, as the original.
 extern "C" void __cdecl MenuList_WideTitleBox(void) {
-    State("MenuList_WideTitleBox", at::kWideTitleStates, 3);
-    const unsigned colour = B(at::kColour);
+    State("MenuList_WideTitleBox", MenuList_WideTitleStates_addr, 3);
+    const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned char* r = Rec();
     SH_CALL(Menu_DrawTitleBox)(Word(r + 4), Word(r + 6), 0x118, 0x13, static_cast<int>(colour));
     r = Rec();
@@ -328,7 +328,7 @@ extern "C" void __cdecl MenuList_WideTitleBox(void) {
 // blink +0xB, the sides 6.
 extern "C" void __cdecl MenuList_CursorBox(void) {
     const unsigned char* const r = Rec();
-    const U pair = at::kCursorBoxSizes + 4u * r[0xA];
+    const U pair = MenuList_CursorBoxSizes_addr + 4u * r[0xA];
     SH_CALL(Menu_DrawCursorBox)(Word(r + 4), Word(r + 6), Word(At(pair)), Word(At(pair + 2)), r[0xB], 6);
 }
 
@@ -341,7 +341,7 @@ extern "C" void __cdecl MenuList_CursorBox(void) {
 // above them (the register it was loaded into); the record re-read after the
 // wheel and after the step.
 extern "C" void __cdecl MenuList_IconWheel(void) {
-    State("MenuList_IconWheel", at::kIconWheelStates, 3);
+    State("MenuList_IconWheel", MenuList_IconWheelStates_addr, 3);
     const unsigned char* r = Rec();
     const std::int32_t angle = Sx(r + 0x10);
     const U above = static_cast<U>(angle);
@@ -357,7 +357,7 @@ extern "C" void __cdecl MenuList_IconWheel(void) {
 // original 0x59A560, kind 12: the state from MenuList_ItemListStates, then
 // Menu_DrawItemList of the record (re-read).
 extern "C" void __cdecl MenuList_ItemList(void) {
-    State("MenuList_ItemList", at::kItemListStates, 5);
+    State("MenuList_ItemList", MenuList_ItemListStates_addr, 5);
     SH_CALL(Menu_DrawItemList)(Rec());
 }
 
@@ -366,7 +366,7 @@ extern "C" void __cdecl MenuList_ItemList(void) {
 // it: x carries the record pointer's upper half (it is loaded into the
 // register that held the pointer).
 extern "C" void __cdecl MenuList_ButtonRow(void) {
-    State("MenuList_ButtonRow", at::kButtonRowStates, 3);
+    State("MenuList_ButtonRow", MenuList_ButtonRowStates_addr, 3);
     const unsigned char* const r = Rec();
     SH_CALL(Menu_DrawButtonRow)(static_cast<int>((Key(r) & 0xFFFF0000u) | Word(r + 4)), Word(r + 6), r[0xA], r[0xB], 0);
 }
@@ -392,7 +392,7 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
     auto x = [rec](unsigned d) { return static_cast<int>((Word(rec + 4) + d) & 0xFFFF); };
     auto y = [rec](unsigned d) { return static_cast<int>((Word(rec + 6) + d) & 0xFFFF); };
     auto text = [](unsigned index) { return At(static_cast<U>(Long(At(at::kLabelTexts + 4 * index)))); };
-    const unsigned colour = B(at::kColour);
+    const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned count = B(at::kLabelRows + 6u * rec[0xA]);
     SH_CALL(Menu_DrawBox)(x(3), y(3), 0x65, static_cast<int>((count << 4) + 0x19), 0, static_cast<int>(colour));
     SH_CALL(Text_DrawAt)(x(0x2A), y(7), 0, 0xFF, text(0));
@@ -428,7 +428,7 @@ extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
 // As the original has it: x carries the upper half of +0x20 (loaded into the
 // register that held it), and the record index x's upper three bytes.
 extern "C" void __cdecl MenuList_EquipCompare(void) {
-    State("MenuList_EquipCompare", at::kEquipCompareStates, 5);
+    State("MenuList_EquipCompare", MenuList_EquipCompareStates_addr, 5);
     unsigned char* const r = Rec();
     const U set = static_cast<U>(Long(r + 0x20));
     const U x = (set & 0xFFFF0000u) | Word(r + 4);
@@ -439,21 +439,21 @@ extern "C" void __cdecl MenuList_EquipCompare(void) {
 // original 0x59A9C0, kind 17: the state from MenuList_AbilityStates, then
 // Menu_DrawAbilityPanel of the record (re-read).
 extern "C" void __cdecl MenuList_AbilityPanel(void) {
-    State("MenuList_AbilityPanel", at::kAbilityStates, 5);
+    State("MenuList_AbilityPanel", MenuList_AbilityStates_addr, 5);
     SH_CALL(Menu_DrawAbilityPanel)(Rec());
 }
 
 // original 0x59AA10, kind 18: the state from MenuList_ItemPanelStates, then
 // Menu_DrawItemPanel of the record.
 extern "C" void __cdecl MenuList_ItemPanel(void) {
-    State("MenuList_ItemPanel", at::kItemPanelStates, 5);
+    State("MenuList_ItemPanel", MenuList_ItemPanelStates_addr, 5);
     SH_CALL(Menu_DrawItemPanel)(Rec());
 }
 
 // original 0x59AA30, kind 19: the state from MenuList_ReserveStates, then
 // 0x59AA80 (R2H's: the reserve list, menu_frame.cpp) of the record.
 extern "C" void __cdecl MenuList_ReservePanel(void) {
-    State("MenuList_ReservePanel", at::kReserveStates, 3);
+    State("MenuList_ReservePanel", MenuList_ReserveStates_addr, 3);
     SH_AT(void (__cdecl*)(unsigned char*), rest_2g::kReserveList)(Rec());
 }
 

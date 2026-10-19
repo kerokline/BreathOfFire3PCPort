@@ -35,27 +35,27 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 using Pickup = unsigned char (__cdecl*)(unsigned, unsigned);
 
-constexpr U kSteps = 0x6697B0;         // Field_DirectionSteps: 8 rows of two longs (x, z)
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs (x, z)
 constexpr U kCellOffsets = 0x66971C;   // two signed bytes a direction: the cell ahead
 constexpr U kCells = 0x903850;         // DamageScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;   // Sprite_Objects; 0x1E.. Sprite_ObjectsExtra's four
 constexpr unsigned kEffectCount = 20;
-constexpr U kEffectsAt = 0x7E11E0;     // Effect_Objects (its name is a macro here)
-constexpr U kObjectsAt = 0x7DEE80;     // Sprite_Objects
-constexpr U kExtraAt = 0x802000;       // Sprite_ObjectsExtra
+// kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects (its name is a macro here)
+// kObjectsAt: now Sprite_Objects (symbols.toml). Sprite_Objects
+// kExtraAt: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 constexpr U kEffectStride = 0x80;
 constexpr U kPanelPose = 0x6BC716;     // the leader panel's cells (docs/effect_1e.md section 1)
-constexpr U kPanelCounter = 0x6BC709;
-constexpr U kPanelBlink = 0x939A28;    // FieldPanel_DrawBlink's switch
+// kPanelCounter: now Effect1e_Choice (symbols.toml).
+// kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char& Cell(unsigned i) { return At(kCells)[i & 0xFF]; }
 // A Field_DirectionSteps row, read in place with the direction unmasked (the
 // originals' `shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as they do.
-U StepX(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 // The pose offset of a direction: (d - 1) / 2 as the originals compute it
 // (`dec eax; cdq; sub eax, edx; sar eax, 1`), so direction 0 gives 0.
 unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((static_cast<int>(d) - 1) / 2); }
@@ -92,7 +92,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes 0x%X "
                     "(docs/rest_1f.md section 7)",
-                    who, index, static_cast<unsigned>(kEffectsAt + index * kEffectStride));
+                    who, index, static_cast<unsigned>(Effect_Objects_addr + index * kEffectStride));
     return Effect_Objects + index * kEffectStride;
 }
 
@@ -112,8 +112,8 @@ void MarkObject(unsigned char found, const char* who) {
                     "original sets a bit at 0x%X (docs/rest_1f.md section 7)",
                     who, found,
                     static_cast<unsigned>(i < static_cast<int>(kObjectCount)
-                                              ? kObjectsAt + 0x80u + static_cast<U>(i * static_cast<int>(kObjectStride))
-                                              : kExtraAt + 0x80u +
+                                              ? Sprite_Objects_addr + 0x80u + static_cast<U>(i * static_cast<int>(kObjectStride))
+                                              : Sprite_ObjectsExtra_addr + 0x80u +
                                                     static_cast<U>((i - static_cast<int>(kObjectCount)) * static_cast<int>(kObjectStride))));
 }
 
@@ -950,8 +950,8 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
 // Sprite_SetAnimation(0xB); +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Begin(void) {
     At(kPanelPose)[0] = 0;
-    At(kPanelCounter)[0] = 0;
-    At(kPanelBlink)[0] = 0;
+    Effect1e_Choice = 0;
+    Effect1e_Blink = 0;
     Sc()[0x29] = 5;
     const unsigned char* const s = Sc();
     const long height = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));

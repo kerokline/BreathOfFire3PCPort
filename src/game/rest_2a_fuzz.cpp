@@ -181,7 +181,7 @@ const sh::Callee kCallees[] = {
 const sh::Region kRegions[] = {  // (dynamic initialisation: the first is a symbol's address)
     {Key(&Field_ActiveMember), 4},
     {at::kBankCount, 4 + 17 * 8},
-    {at::kBankRecords, 4},
+    {MoveScript_TintRecords_addr + 0x180, 4},
     {0x92BF18, 4},
     {bof3::addr::Text_Records, 0x10},
     {0x903A94, 0x903F90 - 0x903A94},
@@ -195,7 +195,7 @@ unsigned char* Records() { return sh::Mem(at::kBankRecordsAt); }
 // Mode11_ScreenBanks (read in place) and a +7 byte.
 void SeedBanks() {
     sh::Mem(at::kBankCount)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 8, 16, sh::Next() % 17));
-    sh::SetPointer(at::kBankRecords, Records());
+    sh::SetPointer(MoveScript_TintRecords_addr + 0x180, Records());
     unsigned char* const r = Records();
     for (unsigned i = 0; i < 17; ++i) {
         const U bank = sh::Often() ? Mode11_ScreenBanks[sh::Next() % (Mode11_ScreenBanks_count - 1)] : PickOf(0xFFFF, 0, sh::Next());

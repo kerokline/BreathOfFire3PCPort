@@ -41,7 +41,7 @@ constexpr std::uint32_t kPendingX = 0x903860;
 // kPendingZ: now AreaEntry_PendingZ (symbols.toml).
 // kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
 // kPendingKind: now AreaW0c_PendingKind (symbols.toml).
-constexpr std::uint32_t kAreaTrack = 0x904CD0;
+// kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml).
 // kMusicTrack: now Music_Track (symbols.toml).
 // kAreaTransition: now ModeFlow_AreaTransition (symbols.toml). GameMode_Field's Transition_Start kind for the area change
 // The saved position a new or loaded game starts from (GameMode_Start):

@@ -14,11 +14,11 @@ namespace at {
 constexpr std::uint32_t kWindows = 0x803160;
 constexpr std::uint32_t kWindowStride = 0x24;
 constexpr unsigned kWindowCount = 22;
-constexpr std::uint32_t kCurrent = 0x905B84;          // the record Field_RunTaskRecords is running
+// kCurrent: now BattleWinStates_Current (symbols.toml). the record Field_RunTaskRecords is running
 constexpr std::uint32_t kRecord4X = 0x8031F4;         // window record 4's +4 (the field menu's first member panel)
 
 // The window style byte (Menu_DrawBox's colour) and the party list the panels read.
-constexpr std::uint32_t kColour = 0x903A5A;
+// kColour: now BattleDraw_Colour (symbols.toml).
 constexpr std::uint32_t kParty = 0x904062;            // the party's three character ids, then the reserve's
 constexpr std::uint32_t kMemberRecord = 0x66972C;     // the character-to-record byte (MoveScript_EffectState in symbols.toml; docs/menu_lists.md section 8)
 
@@ -44,19 +44,19 @@ constexpr unsigned kTaskCount = 48;
 // unchecked in the original): each is named in symbols.toml; `run` is the
 // run of code pointers that starts there (it runs on into the next tables) -
 // past it the original would call data.
-constexpr std::uint32_t kStatsStates = 0x66B044;      // kind 5
-constexpr std::uint32_t kEquipStates = 0x66B060;      // kind 6
-constexpr std::uint32_t kExpStates = 0x66B06C;        // kind 7
-constexpr std::uint32_t kNextLevelStates = 0x66B078;  // kind 8
-constexpr std::uint32_t kWideTitleStates = 0x66B084;  // kind 9
-constexpr std::uint32_t kCursorBoxSizes = 0x66B090;   // kind 10's sizes, a word pair each
-constexpr std::uint32_t kIconWheelStates = 0x66B0A0;  // kind 11
-constexpr std::uint32_t kItemListStates = 0x66B0AC;   // kind 12
-constexpr std::uint32_t kButtonRowStates = 0x66B0C0;  // kind 13
-constexpr std::uint32_t kEquipCompareStates = 0x66B184;   // kind 16
-constexpr std::uint32_t kAbilityStates = 0x66B198;    // kind 17
-constexpr std::uint32_t kItemPanelStates = 0x66B1AC;  // kind 18
-constexpr std::uint32_t kReserveStates = 0x66B1C0;    // kind 19
+// kStatsStates: now MenuList_StatsStates (symbols.toml). kind 5
+// kEquipStates: now MenuList_EquipStates (symbols.toml). kind 6
+// kExpStates: now MenuList_ExpStates (symbols.toml). kind 7
+// kNextLevelStates: now MenuList_NextLevelStates (symbols.toml). kind 8
+// kWideTitleStates: now MenuList_WideTitleStates (symbols.toml). kind 9
+// kCursorBoxSizes: now MenuList_CursorBoxSizes (symbols.toml). kind 10's sizes, a word pair each
+// kIconWheelStates: now MenuList_IconWheelStates (symbols.toml). kind 11
+// kItemListStates: now MenuList_ItemListStates (symbols.toml). kind 12
+// kButtonRowStates: now MenuList_ButtonRowStates (symbols.toml). kind 13
+// kEquipCompareStates: now MenuList_EquipCompareStates (symbols.toml). kind 16
+// kAbilityStates: now MenuList_AbilityStates (symbols.toml). kind 17
+// kItemPanelStates: now MenuList_ItemPanelStates (symbols.toml). kind 18
+// kReserveStates: now MenuList_ReserveStates (symbols.toml). kind 19
 // The label list (kind 15): its piece lists, the text pointers and the rows
 // (a count, then up to five text indices, 6 bytes a row).
 constexpr std::uint32_t kLabelPieces = 0x66B0CC;

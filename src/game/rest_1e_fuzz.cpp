@@ -151,7 +151,7 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-unsigned char* Steps() { return sh::Mem(at::kSteps); }
+unsigned char* Steps() { return sh::Mem(Field_DirectionSteps_addr); }
 unsigned char* Effect(unsigned i) { return sh::EffectRecord(i); }
 
 // --- the stand-ins' answers (Noise() and the state only: both passes the same) -----
@@ -273,7 +273,7 @@ const sh::Callee kCallees[] = {
 // Beyond field mode's standard regions: Field_DirectionSteps (every state that
 // steps reads it) and Text_Records' first 16 bytes (the item name copied).
 const sh::Region kRegions[] = {
-    {at::kSteps, 0x40},
+    {Field_DirectionSteps_addr, 0x40},
     {bof3::addr::Text_Records, 0x10},
 };
 

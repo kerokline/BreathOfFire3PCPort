@@ -34,16 +34,16 @@ constexpr unsigned kEffectCount = 20;
 constexpr unsigned kMemberStride = 0x14C;
 // ObjTrio's record 1 (0x802D40 + 0x14C): the originals start their member loop
 // here, at index 1, as `mov edi, 0x802E8C`.
-constexpr U kMemberOne = 0x802D40 + kMemberStride;   // ObjTrio + 0x14C
-constexpr U kSteps = 0x6697B0;                        // Field_DirectionSteps
-constexpr U kEffects = 0x7E11E0;                      // Effect_Objects
+// kMemberOne: now Field_Members[4] (symbols.toml). ObjTrio + 0x14C
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps
+// kEffects: now Effect_Objects (symbols.toml). Effect_Objects
 
 // Field_DirectionSteps' row for a direction (x then z, 16.16), read in place
 // with the direction unmasked, as the originals index it (`shl eax, 3` on the
 // zero-extended byte): the table has 8 rows; a byte above 7 reads the .data
 // after it (docs/rest_0a.md section 5).
-U StepX(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 
 // A 16.16 coordinate's cell, the high word, as the originals pass it to
 // AreaMap_ByteAt (a dword whose low word is the cell; the callee reads that
@@ -58,11 +58,11 @@ const unsigned char* EffectByArgument(unsigned index, const char* who) {
     const unsigned i = index & 0xFF;
     if (i >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads 0x%X unchecked", who, i,
-                    static_cast<unsigned>(kEffects + i * kEffectStride));
+                    static_cast<unsigned>(Effect_Objects_addr + i * kEffectStride));
     return Effect_Objects + i * kEffectStride;
 }
 
-const unsigned char* Member(unsigned m) { return At(kMemberOne + (m - 1) * kMemberStride); }
+const unsigned char* Member(unsigned m) { return At(Field_Members_addr + 0x4 + (m - 1) * kMemberStride); }
 
 bool MapTarget(unsigned char b) { return b == 0xF2; }
 bool MapBlocked(unsigned char b) { return b == 0xF0 || b == 0xF1 || b == 0xF4 || b == 0xF6 || b == 0xF7; }

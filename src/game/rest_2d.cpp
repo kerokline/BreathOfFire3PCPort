@@ -82,12 +82,12 @@ void PromptBox(U x, U y, U w, U h, U style) { SH_AT(void (__cdecl*)(U, U, U, U, 
 // The master's message: word [0x6644E8 + 2 * master] + k (the master byte
 // unbounded: the table is read in place).
 unsigned short MasterMessage(unsigned k) {
-    return static_cast<unsigned short>(Word(At(at::kMasterMessages + 2u * B(at::kMaster))) + k);
+    return static_cast<unsigned short>(Word(At(at::kMasterMessages + 2u * AreaW0c_TailSub)) + k);
 }
 // Field_Members' byte of the party slot `slot` (ObjTrio + 0x148, 0x14C apart).
 unsigned char MemberAt(unsigned slot) { return Field_Members[slot * at::kObjStride]; }
 // The member under the cursor: a CharacterRecords index.
-unsigned char CursorMember() { return MemberAt(B(at::kCursor)); }
+unsigned char CursorMember() { return MemberAt(Rest2d_Cursor); }
 U RecordOf(unsigned member) { return at::kRecords + member * at::kRecordStride; }
 
 // The name (the record's first nine bytes) into Text_Records' first slot.
@@ -108,8 +108,8 @@ void DrawMasterScreen(U message, unsigned blink, const unsigned char* (*line)(U)
         MemberPanel(0x11, y, MemberAt(i), i);
         MemberLabel(0x89, y, MemberAt(i));
     }
-    SH_CALL(MasterScreen_DrawCursorFrame)(0x11, 0x3E + 54u * B(at::kCursor), 0x110, 0x34, blink, 6);
-    PromptBox(0x14, 0x10, 0x118, 0x13, B(at::kStyle));
+    SH_CALL(MasterScreen_DrawCursorFrame)(0x11, 0x3E + 54u * Rest2d_Cursor, 0x110, 0x34, blink, 6);
+    PromptBox(0x14, 0x10, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
     line(message);
 }
 
@@ -146,16 +146,16 @@ void AskHand(U x) {
 void TellAndStep(unsigned k) {
     if (Field_Request == 2) return;
     SH_CALL(Msg_OpenScript)(MasterMessage(k));
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
 }
 // ... and the closing one: message 4, and state 6 (the screen leaves).
 void TellAndLeave() {
     if (Field_Request == 2) return;
     SH_CALL(Msg_OpenScript)(MasterMessage(4));
     Field_Request = 2;
-    B(at::kState) = 6;
+    AreaW0c_AnswerMark = 6;
 }
 
 }  // namespace
@@ -175,28 +175,28 @@ extern "C" void __cdecl MasterScreen_PickMember(unsigned message, unsigned appre
     const U held = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0x5000);
     if (Field_ConfirmButtons & Input_Pressed) {
         const unsigned char master = At(RecordOf(CursorMember()))[0x1F];
-        const bool same = master == B(at::kMaster);
+        const bool same = master == AreaW0c_TailSub;
         const bool want = (apprentices & 0xFF) != 0;
         if (same == want) {
             SH_CALL(Sound_PlayEffect)(0x104);
-            const unsigned char step = B(at::kStep);
-            B(at::kAnswer) = 0;
-            B(at::kStep) = static_cast<unsigned char>(step + 1);
+            const unsigned char step = AreaW3f_AnswerMarkD1;
+            Rest2d_Answer = 0;
+            AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
         } else {
             SH_CALL(Sound_PlayEffect)(0x107);
         }
     } else if (Field_CancelButtons & Input_Pressed) {
-        B(at::kAnswer) = 1;
+        Rest2d_Answer = 1;
         SH_CALL(Sound_PlayEffect)(0x102);
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kStep) = 4;
+        AreaW3f_AnswerMarkD1 = 4;
     } else if (held & 0x1000) {
-        if (B(at::kCursor) == 0) B(at::kCursor) = static_cast<unsigned char>(Field_MemberCount - 1);
-        else B(at::kCursor) = static_cast<unsigned char>(B(at::kCursor) - 1);
+        if (Rest2d_Cursor == 0) Rest2d_Cursor = static_cast<unsigned char>(Field_MemberCount - 1);
+        else Rest2d_Cursor = static_cast<unsigned char>(Rest2d_Cursor - 1);
         SH_CALL(Sound_PlayEffect)(0x100);
     } else if (held & 0x4000) {
-        if (static_cast<int>(B(at::kCursor)) == static_cast<int>(Field_MemberCount) - 1) B(at::kCursor) = 0;
-        else B(at::kCursor) = static_cast<unsigned char>(B(at::kCursor) + 1);
+        if (Rest2d_Cursor == static_cast<int>(Field_MemberCount) - 1) Rest2d_Cursor = 0;
+        else Rest2d_Cursor = static_cast<unsigned char>(Rest2d_Cursor + 1);
         SH_CALL(Sound_PlayEffect)(0x100);
     }
     DrawMasterScreen(message, 1, &PickLine);
@@ -263,25 +263,25 @@ extern "C" void __cdecl MasterScreen_AskYesNo(unsigned message) {
     const U held = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xA000);
     if (Field_ConfirmButtons & Input_Pressed) {
         unsigned char step;
-        if (B(at::kAnswer) != 0) {
-            step = static_cast<unsigned char>(B(at::kStep) - 1);
+        if (Rest2d_Answer != 0) {
+            step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 - 1);
         } else {
             SH_CALL(Sound_PlayEffect)(0x102);
-            step = static_cast<unsigned char>(B(at::kStep) + 1);
+            step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
         }
-        B(at::kStep) = step;
+        AreaW3f_AnswerMarkD1 = step;
         SH_CALL(Sound_PlayEffect)(0x104);
     } else if (Field_CancelButtons & Input_Pressed) {
-        const auto step = static_cast<unsigned char>(B(at::kStep) - 1);
-        B(at::kAnswer) = 1;
-        B(at::kStep) = step;
+        const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 - 1);
+        Rest2d_Answer = 1;
+        AreaW3f_AnswerMarkD1 = step;
         SH_CALL(Sound_PlayEffect)(0x106);
     } else if (held & 0xFFFF) {
         SH_CALL(Sound_PlayEffect)(0x100);
-        B(at::kAnswer) = static_cast<unsigned char>(B(at::kAnswer) ^ 1);
+        Rest2d_Answer = static_cast<unsigned char>(Rest2d_Answer ^ 1);
     }
     DrawMasterScreen(message, 0, &AskLine);
-    AskHand(0xCF + 36u * B(at::kAnswer));
+    AskHand(0xCF + 36u * Rest2d_Answer);
 }
 
 // original 0x587680 (0x35 bytes): CharacterRecords[member & 0xFF]'s first nine
@@ -294,15 +294,15 @@ extern "C" void __cdecl MasterScreen_NameToText(unsigned member) { NameToText(Re
 // tail's step on.
 extern "C" void __cdecl MasterScreen_State6Leave(void) {
     if (Field_Request == 2) return;
-    const unsigned char pose = B(at::kMasterLeavePose + B(at::kMaster));
+    const unsigned char pose = B(at::kMasterLeavePose + AreaW0c_TailSub);
     if (pose != 0xFF) {
-        const U sprite = RecordChecked(at::kSprites, 0xA4, 30, B(at::kScriptObject), "Sprite_Objects",
+        const U sprite = RecordChecked(Sprite_Objects_addr, 0xA4, 30, B(at::kScriptObject), "Sprite_Objects",
                                        "MasterScreen_State6Leave");
         B(sprite + 1) = pose;
     }
-    const unsigned char step = B(at::kTailStep);
-    B(at::kState) = 0;
-    B(at::kTailStep) = static_cast<unsigned char>(step + 1);
+    const unsigned char step = static_cast<unsigned char>(AreaW0c_TailState);
+    AreaW0c_AnswerMark = 0;
+    AreaW0c_TailState = static_cast<unsigned char>(step + 1);
 }
 
 // --- state 3: a member made the master's apprentice (R2C's step table 0x664548) ---------------
@@ -315,11 +315,11 @@ extern "C" void __cdecl MasterJoin_Step3Ask(void) { SH_CALL(MasterScreen_AskYesN
 // +0x1F = the master, +0x88 = its level +0xA, +0x89..+0x8E = the master's six
 // bytes of 0x664370; message 0xA, the step on.
 extern "C" void __cdecl MasterJoin_Step5Apply(void) {
-    if (B(at::kAnswer) != 0) {
+    if (Rest2d_Answer != 0) {
         SH_CALL(Msg_OpenScript)(MasterMessage(4));
         Field_Request = 2;
-        B(at::kState) = 6;
-        B(at::kStep) = 0;
+        AreaW0c_AnswerMark = 6;
+        AreaW3f_AnswerMarkD1 = 0;
         return;
     }
     const U record = RecordChecked(at::kRecords, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
@@ -328,14 +328,14 @@ extern "C" void __cdecl MasterJoin_Step5Apply(void) {
     unsigned char* const text = At(bof3::addr::Text_Records);
     std::memcpy(text, r, 8);
     const unsigned char name8 = r[8];
-    r[0x1F] = B(at::kMaster);
+    r[0x1F] = AreaW0c_TailSub;
     text[8] = name8;
     r[0x88] = r[0xA];
-    for (unsigned k = 0; k < 6; ++k) r[0x89 + k] = B(at::kMasterStats + 6u * B(at::kMaster) + k);
+    for (unsigned k = 0; k < 6; ++k) r[0x89 + k] = B(at::kMasterStats + 6u * AreaW0c_TailSub + k);
     SH_CALL(Msg_OpenScript)(MasterMessage(0xA));
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x587010 (0x39 bytes), step 6: once no message is open, message 0xB,
@@ -347,18 +347,18 @@ extern "C" void __cdecl MasterJoin_Step6Told(void) { TellAndStep(0xB); }
 // message 7, the step on; else step 0.
 extern "C" void __cdecl MasterJoin_Step7AllCheck(void) {
     if (Field_Request == 2) return;
-    const unsigned char master = B(at::kMaster);
+    const unsigned char master = AreaW0c_TailSub;
     const int n = Field_MemberCount;
     int i = 0;
     while (i < n && At(RecordOf(MemberAt(static_cast<unsigned>(i))))[0x1F] == master) ++i;
     if (i < n) {
-        B(at::kStep) = 0;
+        AreaW3f_AnswerMarkD1 = 0;
         return;
     }
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(at::kMasterMessages + 2u * master)) + 7));
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x5870E0 (0x34 bytes), step 8: once no message is open, message 4 and
@@ -369,7 +369,7 @@ extern "C" void __cdecl MasterJoin_Step8Close(void) { TellAndLeave(); }
 
 // original 0x587120 (0xE bytes), 0x66450C[4]: jmp [MasterQuit_Steps + 4 * the
 // step], unchecked.
-extern "C" void __cdecl MasterQuit_ByStep(void) { Jump(at::kQuitSteps, at::kQuitStepCount, B(at::kStep), "MasterQuit_ByStep"); }
+extern "C" void __cdecl MasterQuit_ByStep(void) { Jump(MasterQuit_Steps_addr, at::kQuitStepCount, AreaW3f_AnswerMarkD1, "MasterQuit_ByStep"); }
 
 // original 0x587130 (0x1F bytes), step 2: the pick of an apprentice, message 0x10.
 extern "C" void __cdecl MasterQuit_Step2Pick(void) { SH_CALL(MasterScreen_PickMember)(MasterMessage(0x10), 1); }
@@ -381,11 +381,11 @@ extern "C" void __cdecl MasterQuit_Step3Ask(void) { SH_CALL(MasterScreen_AskYesN
 // yes the cursor's member's name into Text_Records, its record's master byte
 // 0xFF and +0x88..+0x8E 0; message 0xC, the step on.
 extern "C" void __cdecl MasterQuit_Step5Apply(void) {
-    if (B(at::kAnswer) != 0) {
+    if (Rest2d_Answer != 0) {
         SH_CALL(Msg_OpenScript)(MasterMessage(4));
-        B(at::kStep) = 0;
+        AreaW3f_AnswerMarkD1 = 0;
         Field_Request = 2;
-        B(at::kState) = 6;
+        AreaW0c_AnswerMark = 6;
         return;
     }
     const U record = RecordChecked(at::kRecords, at::kRecordStride, 8, CursorMember(), "CharacterRecords",
@@ -398,9 +398,9 @@ extern "C" void __cdecl MasterQuit_Step5Apply(void) {
     for (unsigned k = 0; k < 7; ++k) r[0x88 + k] = 0;
     text[8] = name8;
     SH_CALL(Msg_OpenScript)(MasterMessage(0xC));
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x587260 (0x39 bytes), step 6: once no message is open, message 0xD,
@@ -411,18 +411,18 @@ extern "C" void __cdecl MasterQuit_Step6Told(void) { TellAndStep(0xD); }
 // still the master's apprentice: step 0; none: message 9, the step on.
 extern "C" void __cdecl MasterQuit_Step7NoneLeftCheck(void) {
     if (Field_Request == 2) return;
-    const unsigned char master = B(at::kMaster);
+    const unsigned char master = AreaW0c_TailSub;
     const int n = Field_MemberCount;
     int i = 0;
     while (i < n && At(RecordOf(MemberAt(static_cast<unsigned>(i))))[0x1F] != master) ++i;
     if (i < n) {
-        B(at::kStep) = 0;
+        AreaW3f_AnswerMarkD1 = 0;
         return;
     }
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(At(at::kMasterMessages + 2u * master)) + 9));
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x587330 (0x34 bytes), step 8: once no message is open, message 4 and
@@ -433,15 +433,15 @@ extern "C" void __cdecl MasterQuit_Step8Close(void) { TellAndLeave(); }
 
 // original 0x587370 (0xE bytes), 0x66450C[5]: jmp [MasterGrant_Steps + 4 * the
 // step], unchecked.
-extern "C" void __cdecl MasterGrant_ByStep(void) { Jump(at::kGrantSteps, at::kGrantStepCount, B(at::kStep), "MasterGrant_ByStep"); }
+extern "C" void __cdecl MasterGrant_ByStep(void) { Jump(MasterGrant_Steps_addr, at::kGrantStepCount, AreaW3f_AnswerMarkD1, "MasterGrant_ByStep"); }
 
 // original 0x587380 (0x37 bytes), step 0: message 5, the step on, the cursor 0.
 extern "C" void __cdecl MasterGrant_Step0Open(void) {
     SH_CALL(Msg_OpenScript)(MasterMessage(5));
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = AreaW3f_AnswerMarkD1;
     Field_Request = 2;
-    B(at::kCursor) = 0;
-    B(at::kStep) = static_cast<unsigned char>(step + 1);
+    Rest2d_Cursor = 0;
+    AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x5873C0 (0x2B4 bytes with its four-case table at +0x2A4), step 1:
@@ -459,7 +459,7 @@ extern "C" void __cdecl MasterGrant_Step1Member(void) {
     if (Field_Request == 2) return;
     const unsigned char member = CursorMember();
     const U record = RecordOf(member);
-    const unsigned char master = B(at::kMaster);
+    const unsigned char master = AreaW0c_TailSub;
     bool told = false;
     if (At(record)[0x1F] == master) {
         const auto gained = static_cast<unsigned char>(At(record)[0xA] - At(record)[0x88]);
@@ -467,15 +467,15 @@ extern "C" void __cdecl MasterGrant_Step1Member(void) {
         if (which <= 3) {
             if (gained >= 3) {
                 if (which == 1) {
-                    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x6C) == 0 && SH_CALL(Inventory_Add)(3, 0x16, 1) != 0) {
-                        SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x6C);
+                    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x6C) == 0 && SH_CALL(Inventory_Add)(3, 0x16, 1) != 0) {
+                        SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x6C);
                         SH_CALL(MasterScreen_NameToText)(CursorMember());
                         told = true;
                     }
                 } else {
                     const unsigned char bit = which == 0 ? 8 : which == 2 ? 0x10 : 0x20;
-                    if ((B(at::kMasterBits) & bit) == 0) {
-                        B(at::kMasterBits) = static_cast<unsigned char>(B(at::kMasterBits) | bit);
+                    if ((Cond_Flags[0xd1] & bit) == 0) {
+                        Cond_Flags[0xd1] = static_cast<unsigned char>(Cond_Flags[0xd1] | bit);
                         SH_CALL(MasterScreen_NameToText)(member);
                         told = true;
                     }
@@ -483,18 +483,18 @@ extern "C" void __cdecl MasterGrant_Step1Member(void) {
             }
         } else {
             for (unsigned i = 0; i < 6; ++i) {
-                const U pair = at::kMasterSkills + 2 * (6u * B(at::kMaster) + i);
+                const U pair = at::kMasterSkills + 2 * (6u * AreaW0c_TailSub + i);
                 if (B(pair) > gained) continue;
                 const unsigned char ability = B(pair + 1);
                 const U bit = 1u << (ability & 0x1F);
-                if (static_cast<U>(Long(At(at::kAbilityBits + 4u * (ability >> 5)))) & bit) continue;
+                if (static_cast<U>(Long(At(Cond_Flags_addr + 0xf8 + 4u * (ability >> 5)))) & bit) continue;
                 if (SH_CALL(AbilityList_Add)(ability, CursorMember(), 0, 0) == 0) continue;
                 SH_CALL(MasterScreen_NameToText)(CursorMember());
-                const unsigned char taught = B(at::kMasterSkills + 2 * (6u * B(at::kMaster) + i) + 1);
+                const unsigned char taught = B(at::kMasterSkills + 2 * (6u * AreaW0c_TailSub + i) + 1);
                 const U from = at::kAbilityRecords + 0x18u * taught;
                 unsigned char* const text = At(bof3::addr::Text_Records + 0x20);
                 std::memcpy(text, At(from), 16);
-                unsigned char* const word = At(at::kAbilityBits + 4u * (taught >> 5));
+                unsigned char* const word = At(Cond_Flags_addr + 0xf8 + 4u * (taught >> 5));
                 SetLong(word, static_cast<std::int32_t>(static_cast<U>(Long(word)) | (1u << (taught & 0x1F))));
                 told = true;
                 break;
@@ -505,17 +505,17 @@ extern "C" void __cdecl MasterGrant_Step1Member(void) {
         SH_CALL(Msg_OpenScript)(MasterMessage(0xE));
         Field_Request = 2;
     }
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    AreaW3f_AnswerMarkD1 = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
 }
 
 // original 0x5876C0 (0x2F bytes), step 2: once no message is open, the cursor
 // on; past the last member state 2; step 1.
 extern "C" void __cdecl MasterGrant_Step2Next(void) {
     if (Field_Request == 2) return;
-    const auto cursor = static_cast<unsigned char>(B(at::kCursor) + 1);
-    B(at::kCursor) = cursor;
-    if (cursor >= Field_MemberCount) B(at::kState) = 2;
-    B(at::kStep) = 1;
+    const auto cursor = static_cast<unsigned char>(Rest2d_Cursor + 1);
+    Rest2d_Cursor = cursor;
+    if (cursor >= Field_MemberCount) AreaW0c_AnswerMark = 2;
+    AreaW3f_AnswerMarkD1 = 1;
 }
 
 // ============================================================================================
@@ -526,16 +526,16 @@ extern "C" void __cdecl MasterGrant_Step2Next(void) {
 // the timer down, at 0 the screen of the top bar's entry: the mode = the
 // entry + 2, the state, step and 0x929F03 0, the timer 5.
 extern "C" void __cdecl FieldMenu_TopBarCountdown(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;
-    const auto mode = static_cast<unsigned char>(B(at::kTopCursor) + 2);
+    const auto mode = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) + 2);
     B(at::kMenuTimer) = 5;
-    B(at::kMenuMode) = mode;
-    B(at::kMenuState) = 0;
-    B(at::kMenuStep) = 0;
-    B(at::kMenuSub) = 0;
+    BattleE1_Mode = mode;
+    FieldS_State = 0;
+    FieldS_Step = 0;
+    Rest2d_MenuSub = 0;
 }
 
 // original 0x589FB0 (0x2F bytes): al 0 when the leader's cell (AreaMap_ByteAt of
@@ -633,7 +633,7 @@ extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned targ
     else if (b == 0x50) index = 7;
     else index = b == 0xA8 ? 9 : 0;
     using Effect = unsigned (__cdecl*)(unsigned, unsigned, unsigned);
-    const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(at::kAbilityEffects + 4 * index)))));
+    const auto handler = reinterpret_cast<Effect>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(FieldAbility_Effects_addr + 4 * index)))));
     const auto answer = static_cast<unsigned char>(handler(caster, target, battle));
     if (answer == 1 || answer == 5) {
         const unsigned char again = SH_CALL(Skill_ApCost)(caster, ability, 0);
@@ -648,26 +648,26 @@ extern "C" unsigned char __cdecl FieldAbility_Use(unsigned caster, unsigned targ
 
 namespace {
 const unsigned char* StatusRecord() {
-    const auto c = static_cast<signed char>(B(at::kStatusCursor));
-    return At(RecordOf(MoveScript_EffectState[B(at::kPartyList + c)]));
+    const auto c = BattleActorCopies_ItemActor;
+    return At(RecordOf(MoveScript_EffectState[Cond_Flags[0xd2 + c]]));
 }
 }  // namespace
 
 // original 0x58A4C0 (0xE bytes), FieldMenu_States[6]: jmp [FieldMenuStatus_States
 // + 4 * the menu state], unchecked.
 extern "C" void __cdecl FieldMenuStatus_ByState(void) {
-    Jump(at::kStatusStates, at::kStatusStateCount, B(at::kMenuState), "FieldMenuStatus_ByState");
+    Jump(FieldMenuStatus_States_addr, at::kStatusStateCount, FieldS_State, "FieldMenuStatus_ByState");
 }
 
 // original 0x58A4D0 (0x3A bytes), state 0: Menu_DrawBackdrop, the windows placed;
 // the cursor 0, the timer 8, the state on; Sound_PlayEffect(0x102).
 extern "C" void __cdecl FieldMenuStatus_Open(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     SH_CALL(FieldMenuStatus_PlaceWindows)();
-    const auto state = static_cast<unsigned char>(B(at::kMenuState) + 1);
-    B(at::kStatusCursor) = 0;
+    const auto state = static_cast<unsigned char>(FieldS_State + 1);
+    BattleActorCopies_ItemActor = 0;
     B(at::kMenuTimer) = 8;
-    B(at::kMenuState) = state;
+    FieldS_State = state;
     SH_CALL(Sound_PlayEffect)(0x102);
 }
 
@@ -676,12 +676,12 @@ extern "C" void __cdecl FieldMenuStatus_Open(void) {
 // Menu_DrawBackdrop; the timer down, the state on when it was 0.
 extern "C" void __cdecl FieldMenuStatus_SlideIn(void) {
     SH_CALL(TextRecord_Set)(0, 8, StatusRecord());
-    const unsigned char kind = B(at::kBackdrop);
+    const unsigned char kind = FieldS_Backdrop;
     SetWord(At(0x8032FC), 0x12);
     SH_CALL(Menu_DrawBackdrop)(kind);
     const unsigned char t = B(at::kMenuTimer);
     B(at::kMenuTimer) = static_cast<unsigned char>(t - 1);
-    if (t == 0) B(at::kMenuState) = static_cast<unsigned char>(B(at::kMenuState) + 1);
+    if (t == 0) FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 // original 0x58A570 (0x1B8 bytes), state 2: Menu_DrawBackdrop; window 19 on at the
@@ -694,32 +694,32 @@ extern "C" void __cdecl FieldMenuStatus_SlideIn(void) {
 // on; cancel (Input_Pressed read again) - 0x106, 0x102, windows 12 + i state 1
 // for each member, window 11 state 1, window 19 off, the timer 8, state + 2.
 extern "C" void __cdecl FieldMenuStatus_Choose(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
-    const auto c = static_cast<signed char>(B(at::kStatusCursor));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    const auto c = BattleActorCopies_ItemActor;
     B(0x80340C) = 1;
     const U member_window = at::kWindows + at::kWindowStride * static_cast<U>(4 + c);
     SetWord(At(0x803410), Word(At(member_window + 4)));
     SetWord(At(0x803412), Word(At(member_window + 6)));
-    SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(MoveScript_EffectState[B(at::kPartyList + c)])));
+    SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(MoveScript_EffectState[Cond_Flags[0xd2 + c]])));
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x8032FC), 0x12);
     const U held = SH_CALL(Input_AutoRepeat)(pressed & 0x5000);
     const auto count = static_cast<unsigned char>(SH_CALL(Party_Count)(0));
-    const unsigned char old = B(at::kStatusCursor);
+    const unsigned char old = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     unsigned char cursor = old;
     if (held & 0x1000) {
         cursor = static_cast<unsigned char>(cursor - 1);
-        B(at::kStatusCursor) = cursor;
+        BattleActorCopies_ItemActor = cursor;
         if (static_cast<signed char>(cursor) < 0) {
             cursor = static_cast<unsigned char>(count - 1);
-            B(at::kStatusCursor) = cursor;
+            BattleActorCopies_ItemActor = cursor;
         }
     } else if (held & 0x4000) {
         cursor = static_cast<unsigned char>(cursor + 1);
-        B(at::kStatusCursor) = cursor;
+        BattleActorCopies_ItemActor = cursor;
         if (static_cast<int>(static_cast<signed char>(cursor)) >= static_cast<int>(count)) {
             cursor = 0;
-            B(at::kStatusCursor) = 0;
+            BattleActorCopies_ItemActor = 0;
         }
     }
     if (static_cast<int>(old) != static_cast<int>(static_cast<signed char>(cursor))) SH_CALL(Sound_PlayEffect)(0x100);
@@ -727,10 +727,10 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         SH_CALL(Sound_PlayEffect)(0x103);
         SH_CALL(Sound_PlayEffect)(0x102);
         SH_CALL(FieldMenuStatus_DetailWindows)();
-        const unsigned char state = B(at::kMenuState);
+        const unsigned char state = FieldS_State;
         B(0x80340C) = 0;
         B(at::kMenuTimer) = 8;
-        B(at::kMenuState) = static_cast<unsigned char>(state + 1);
+        FieldS_State = static_cast<unsigned char>(state + 1);
     }
     if (Field_CancelButtons & Input_Pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
@@ -742,11 +742,11 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
                 ++i;
             } while (i < static_cast<int>(static_cast<unsigned char>(SH_CALL(Party_Count)(0))));
         }
-        const unsigned char state = B(at::kMenuState);
+        const unsigned char state = FieldS_State;
         B(0x8032EF) = 1;
         B(0x80340C) = 0;
         B(at::kMenuTimer) = 8;
-        B(at::kMenuState) = static_cast<unsigned char>(state + 2);
+        FieldS_State = static_cast<unsigned char>(state + 2);
     }
 }
 
@@ -754,7 +754,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
 // window 11's +0x10 = 0x12; while the timer runs it counts down; then cancel -
 // 0x106, 0x102, the list's windows, the timer 8, the state back two.
 extern "C" void __cdecl FieldMenuStatus_Detail(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     SH_CALL(TextRecord_Set)(0, 8, StatusRecord());
     const unsigned char t = B(at::kMenuTimer);
     SetWord(At(0x8032FC), 0x12);
@@ -766,16 +766,16 @@ extern "C" void __cdecl FieldMenuStatus_Detail(void) {
     SH_CALL(Sound_PlayEffect)(0x106);
     SH_CALL(Sound_PlayEffect)(0x102);
     SH_CALL(FieldMenuStatus_ListWindows)();
-    const unsigned char state = B(at::kMenuState);
+    const unsigned char state = FieldS_State;
     B(at::kMenuTimer) = 8;
-    B(at::kMenuState) = static_cast<unsigned char>(state - 2);
+    FieldS_State = static_cast<unsigned char>(state - 2);
 }
 
 // original 0x58A7D0 (0x7F bytes), state 4: Menu_DrawBackdrop; the timer down, at
 // 0 the screen's windows cleared, windows 4 + i state 4 for each member, the
 // timer 0, windows 7..10 state 2, back to the top bar (mode 1, state 0).
 extern "C" void __cdecl FieldMenuStatus_Close(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;
@@ -792,8 +792,8 @@ extern "C" void __cdecl FieldMenuStatus_Close(void) {
     B(0x803283) = 2;
     B(0x8032A7) = 2;
     B(0x8032CB) = 2;
-    B(at::kMenuMode) = 1;
-    B(at::kMenuState) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
 }
 
 // original 0x58A850 (0xCF bytes): for each member i (Party_Count(0) asked each
@@ -834,7 +834,7 @@ namespace {
 void MemberWindowStates(unsigned char mine, unsigned char mine_list, unsigned char other, unsigned char other_list,
                         const char* who) {
     for (unsigned char i = 0; i < static_cast<unsigned char>(SH_CALL(Party_Count)(0));) {
-        const bool at_cursor = static_cast<int>(i) == static_cast<int>(static_cast<signed char>(B(at::kStatusCursor)));
+        const bool at_cursor = static_cast<int>(i) == BattleActorCopies_ItemActor;
         B(Window(4 + i, who) + 3) = at_cursor ? mine : other;
         B(Window(12 + i, who) + 3) = at_cursor ? mine_list : other_list;
         ++i;
@@ -848,7 +848,7 @@ void MemberWindowStates(unsigned char mine, unsigned char mine_list, unsigned ch
 // cursor.
 extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
     MemberWindowStates(5, 3, 7, 5, "FieldMenuStatus_DetailWindows");
-    const unsigned char cursor = B(at::kStatusCursor);
+    const unsigned char cursor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     B(0x80337F) = 2;
     B(0x8033A3) = 2;
     B(0x8033C7) = 2;
@@ -896,32 +896,32 @@ extern "C" void __cdecl FieldMenuStatus_ClearWindows(void) {
 // original 0x58AAE0 (0xE bytes), FieldMenu_States[2]: jmp [FieldMenuItems_States
 // + 4 * the menu state], unchecked.
 extern "C" void __cdecl FieldMenuItems_ByState(void) {
-    Jump(at::kItemsStates, at::kItemsStateCount, B(at::kMenuState), "FieldMenuItems_ByState");
+    Jump(FieldMenuItems_States_addr, at::kItemsStateCount, FieldS_State, "FieldMenuItems_ByState");
 }
 
 // original 0x58AAF0 (0x38 bytes), state 0: Menu_DrawBackdrop, the windows placed
 // (R2E's 0x58BC30), Sound_PlayEffect(0x102); the state on, the category 0,
 // the timer 5.
 extern "C" void __cdecl FieldMenuItems_Open(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     SH_AT(void (__cdecl*)(), at::kItemsWindows)();
     SH_CALL(Sound_PlayEffect)(0x102);
-    const unsigned char state = B(at::kMenuState);
-    B(at::kItemsCategory) = 0;
+    const unsigned char state = FieldS_State;
+    Rest2d_ItemsCategory = 0;
     B(at::kMenuTimer) = 5;
-    B(at::kMenuState) = static_cast<unsigned char>(state + 1);
+    FieldS_State = static_cast<unsigned char>(state + 1);
 }
 
 // original 0x58AB30 (0x30 bytes), state 1: Menu_DrawBackdrop; the timer down, at
 // 0 the timer 0 and the state on.
 extern "C" void __cdecl FieldMenuItems_SlideIn(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;
-    const unsigned char state = B(at::kMenuState);
+    const unsigned char state = FieldS_State;
     B(at::kMenuTimer) = 0;
-    B(at::kMenuState) = static_cast<unsigned char>(state + 1);
+    FieldS_State = static_cast<unsigned char>(state + 1);
 }
 
 // original 0x58AB60 (0x1C8 bytes), state 2: the category row. Menu_DrawBackdrop;
@@ -935,8 +935,8 @@ extern "C" void __cdecl FieldMenuItems_SlideIn(void) {
 // 0x9398B8 / 0x939898 by its own +0xA, state + 1. Cancel - 0x106, 0x102,
 // windows 11, 12, 13 state 1, the hand off, the timer + 5, state + 2.
 extern "C" void __cdecl FieldMenuItems_Category(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
-    const auto category = static_cast<signed char>(B(at::kItemsCategory));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    const auto category = Rest2d_ItemsCategory;
     B(0x80333C) = 0;
     const U window_x = static_cast<U>(Long(At(0x803314)));
     SetWord(At(0x8032FC), static_cast<unsigned>(category + 0x13));
@@ -948,55 +948,55 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
     SetWord(At(0x80345A), y);
     B(0x80331B) = 0xFF;
     const U held = SH_CALL(Input_AutoRepeat)(pressed & 0xA000);
-    unsigned char c = B(at::kItemsCategory);
+    unsigned char c = static_cast<unsigned char>(Rest2d_ItemsCategory);
     const unsigned char was = c;
     if (held & 0x8000) {
         c = static_cast<unsigned char>(c - 1);
-        B(at::kItemsCategory) = c;
+        Rest2d_ItemsCategory = c;
         if (static_cast<signed char>(c) < 0) {
             c = 3;
-            B(at::kItemsCategory) = 3;
+            Rest2d_ItemsCategory = 3;
         }
     }
     if (held & 0x2000) {
         c = static_cast<unsigned char>(c + 1);
-        B(at::kItemsCategory) = c;
+        Rest2d_ItemsCategory = c;
         if (static_cast<signed char>(c) > 3) {
             c = 0;
-            B(at::kItemsCategory) = 0;
+            Rest2d_ItemsCategory = 0;
         }
     }
     if (was != c) {
         SH_CALL(Sound_PlayEffect)(0x101);
-        c = B(at::kItemsCategory);
+        c = static_cast<unsigned char>(Rest2d_ItemsCategory);
     }
     if (Field_ConfirmButtons & Input_Pressed) {
         B(0x80331B) = c;
         SH_CALL(Sound_PlayEffect)(0x104);
-        const unsigned char chosen = B(at::kItemsCategory);
+        const unsigned char chosen = static_cast<unsigned char>(Rest2d_ItemsCategory);
         if (chosen == 1) {
-            const unsigned char state = B(at::kMenuState);
-            B(at::kMenuStep) = 0;
-            B(at::kMenuState) = static_cast<unsigned char>(state + 3);
+            const unsigned char state = FieldS_State;
+            FieldS_Step = 0;
+            FieldS_State = static_cast<unsigned char>(state + 3);
             return;
         }
         if (chosen == 3) {
             const unsigned char pick = B(0x93989C);
             const unsigned char top = B(0x9398BC);
             B(0x803340) = pick;
-            const unsigned char state = B(at::kMenuState);
+            const unsigned char state = FieldS_State;
             B(0x80333E) = 4;
             B(0x80333F) = top;
-            B(at::kMenuState) = static_cast<unsigned char>(state + 7);
+            FieldS_State = static_cast<unsigned char>(state + 7);
             return;
         }
         const unsigned char list = B(0x80333E);
         B(0x803341) = 0xFF;
         const unsigned char top = B(at::kItemsTops + list);
-        const unsigned char state = B(at::kMenuState);
+        const unsigned char state = FieldS_State;
         B(0x80333F) = top;
         const unsigned char pick = B(at::kItemsPicks + list);
-        B(at::kMenuState) = static_cast<unsigned char>(state + 1);
+        FieldS_State = static_cast<unsigned char>(state + 1);
         B(0x803340) = pick;
         return;
     }
@@ -1004,13 +1004,13 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
         SH_CALL(Sound_PlayEffect)(0x106);
         SH_CALL(Sound_PlayEffect)(0x102);
         const unsigned char t = B(at::kMenuTimer);
-        const unsigned char state = B(at::kMenuState);
+        const unsigned char state = FieldS_State;
         B(0x8032EF) = 1;
         B(0x803313) = 1;
         B(0x803337) = 1;
         B(0x803454) = 0;
         B(at::kMenuTimer) = static_cast<unsigned char>(t + 5);
-        B(at::kMenuState) = static_cast<unsigned char>(state + 2);
+        FieldS_State = static_cast<unsigned char>(state + 2);
     }
 }
 
@@ -1044,8 +1044,8 @@ U ListOf(U table, unsigned category, const char* who) {
 // - and one without: the cursor 0, +0xD the pick, the hand off, state + 4.
 // Cancel - 0x106, the state back.
 extern "C" void __cdecl FieldMenuItems_List(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
-    const unsigned char cursor_row = B(at::kItemsCategory);
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
+    const unsigned char cursor_row = static_cast<unsigned char>(Rest2d_ItemsCategory);
     const unsigned char category = B(0x80333E);
     const U ids = ListOf(at::kItemIdLists, category, "FieldMenuItems_List");
     B(0x80333C) = cursor_row != 0 ? 3 : 1;
@@ -1161,7 +1161,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
             return;
         }
         SH_CALL(Sound_PlayEffect)(0x103);
-        if (B(at::kItemsCategory) != 0) {
+        if (static_cast<unsigned char>(Rest2d_ItemsCategory) != 0) {
             const unsigned char cat = B(0x80333E);
             const unsigned char it = B(ListOf(at::kItemIdLists, cat, "FieldMenuItems_List") + B(0x803340));
             if (SH_CALL(Item_CanUse)(B(0x80333C), 0, cat, it) == 0) {
@@ -1170,9 +1170,9 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
             }
             const unsigned char p = B(0x803340);
             B(0x803341) = p;
-            const unsigned char state = B(at::kMenuState);
-            B(at::kMenuAnswer) = 0;
-            B(at::kMenuState) = static_cast<unsigned char>(state + 3);
+            const unsigned char state = FieldS_State;
+            FieldS_Answer = 0;
+            FieldS_State = static_cast<unsigned char>(state + 3);
             return;
         }
         if (SH_CALL(Item_CanUse)(B(0x80333C), 0, B(0x80333E), B(id_at)) == 0) {
@@ -1181,12 +1181,12 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
         }
         const unsigned char it = B(id_at);
         if ((B(at::kItemFlags + 22u * it) & 0x10) == 0) {
-            const unsigned char state = B(at::kMenuState);
+            const unsigned char state = FieldS_State;
             const unsigned char p = B(0x803340);
-            B(at::kStatusCursor) = 0;
+            BattleActorCopies_ItemActor = 0;
             B(0x803341) = p;
             B(0x803454) = 0;
-            B(at::kMenuState) = static_cast<unsigned char>(state + 4);
+            FieldS_State = static_cast<unsigned char>(state + 4);
             return;
         }
         const unsigned char used = SH_CALL(ItemUse_Dispatch)(0, it, 0);
@@ -1206,7 +1206,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
     }
     if (Field_CancelButtons & Input_Pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kMenuState) = static_cast<unsigned char>(B(at::kMenuState) - 1);
+        FieldS_State = static_cast<unsigned char>(FieldS_State - 1);
     }
 }
 
@@ -1214,7 +1214,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
 // 0 the windows taken down (R2E's 0x58C2A0), windows 4 + i state 3 for each
 // member, the timer 0, windows 7..10 state 2, back to the top bar.
 extern "C" void __cdecl FieldMenuItems_Close(void) {
-    SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop));
+    SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const auto t = static_cast<unsigned char>(B(at::kMenuTimer) - 1);
     B(at::kMenuTimer) = t;
     if (t != 0) return;
@@ -1229,14 +1229,14 @@ extern "C" void __cdecl FieldMenuItems_Close(void) {
     B(0x803283) = 2;
     B(0x8032A7) = 2;
     B(0x8032CB) = 2;
-    B(at::kMenuMode) = 1;
-    B(at::kMenuState) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
 }
 
 // original 0x58B1C0 (0xE bytes), FieldMenuItems_States[5]: jmp
 // [FieldMenuItems_State5Steps + 4 * the menu step], unchecked.
 extern "C" void __cdecl FieldMenuItems_State5ByStep(void) {
-    Jump(at::kItemsState5Steps, at::kItemsState5StepCount, B(at::kMenuStep), "FieldMenuItems_State5ByStep");
+    Jump(FieldMenuItems_State5Steps_addr, at::kItemsState5StepCount, FieldS_Step, "FieldMenuItems_State5ByStep");
 }
 
 // ============================================================================================

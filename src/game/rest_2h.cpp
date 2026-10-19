@@ -82,10 +82,10 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 
 // The current window record, re-read at every use (the originals reload
 // 0x905B84 after each call).
-unsigned char* Rec() { return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(at::kCurrent))); }
+unsigned char* Rec() { return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))); }
 int X(const unsigned char* w) { return Word(w + 4); }
 int Y(const unsigned char* w) { return Word(w + 6); }
-unsigned char Style() { return B(at::kStyle); }
+unsigned char Style() { return static_cast<unsigned char>(BattleDraw_Colour); }
 
 // The step: the current record's +3 through a step table, called through the
 // word the table holds (the fuzz swaps the words for recorders); past the
@@ -229,7 +229,7 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
 // +3: a bare ret, MenuSlide_RightOff, 0x59AA50 - R2G's), then
 // MenuList_GeneWinDraw(the record, re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_GeneWinRun(void) {
-    Step("MenuList_GeneWinRun", at::kGeneSteps, 3);
+    Step("MenuList_GeneWinRun", MenuList_GeneWinSteps_addr, 3);
     SH_CALL(MenuList_GeneWinDraw)(Rec());
 }
 
@@ -251,7 +251,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_GeneWinRun(
 // 9, in place; +0xB is re-read after the lit row's calls; the title's y is
 // read before Text_CharCount and its x after.
 extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
-    const U genes = L(at::kGenes);
+    const U genes = ScenaSc7_EventFlags;
     unsigned char n = 0;
     for (unsigned i = 0; i < 0x12; ++i)
         if (genes & (1u << i)) B(at::kGeneList + n++) = static_cast<unsigned char>(i + 1);
@@ -310,7 +310,7 @@ extern "C" void __cdecl MenuList_GeneWinDraw(unsigned char* w) {
 // MenuSlide_RightOff, 0x59AA50 - R2G's, ShopWin_SharedListSlideTo28, 0x596920 -
 // R2F's), then SharedList_DrawList(the record, re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SharedListRun(void) {
-    Step("ShopWin_SharedListRun", at::kSharedListSteps, 5);
+    Step("ShopWin_SharedListRun", ShopWin_SharedListSteps_addr, 5);
     SH_CALL(SharedList_DrawList)(Rec());
 }
 
@@ -321,7 +321,7 @@ extern "C" void __cdecl ShopWin_SharedListSlideTo28(void) { Slide(4, 0x20, 0x28,
 // MenuSlide_RightOff, 0x59AA50, 0x59A960, 0x59A9E0 - R2G's), then
 // SharedList_DrawMember(the record, re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SharedMemberRun(void) {
-    Step("ShopWin_SharedMemberRun", at::kSharedMemberSteps, 5);
+    Step("ShopWin_SharedMemberRun", ShopWin_SharedMemberSteps_addr, 5);
     SH_CALL(SharedList_DrawMember)(Rec());
 }
 
@@ -330,7 +330,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SharedMember
 // +6, +0xA, 0) of the record re-read - pushed with a fifth word 0, which the
 // callee does not read.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatusRun(void) {
-    Step("ShopWin_MemberStatusRun", at::kMemberStatusSteps, 3);
+    Step("ShopWin_MemberStatusRun", ShopWin_MemberStatusSteps_addr, 3);
     const unsigned char* const w = Rec();
     using Five = unsigned long (__cdecl*)(int, int, unsigned, unsigned, unsigned);
     reinterpret_cast<Five>(SH_CALL(Menu_DrawMemberStatus))(X(w), Y(w), w[0xA], 0, 0);
@@ -350,13 +350,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_RowMenuRun(v
 // once in 0; the pieces 0x66B330 at (x, y + 16 i + 0x18) and (x, y + 16 i +
 // 0x20); last the pieces 0x66B33C at (x, y + 16 n + 0x18).
 extern "C" void __cdecl ShopWin_DrawRowMenu(unsigned char* w) {
-    const unsigned n0 = B(at::kRowCount);
+    const unsigned n0 = Rest2h_RowCount;
     const unsigned char style = Style();
     SH_CALL(Menu_DrawBox)(X(w) + 3, Y(w) + 3, 0x65, static_cast<int>((n0 << 4) + 0x19), 0, style);
     SH_CALL(Text_DrawAt)(X(w) + 0x1E, Y(w) + 7, 0, 0xFF, At(L(at::kRowText)));
     Pieces(X(w), Y(w), at::kRowPiecesA);
     unsigned char i = 0;
-    if (B(at::kRowCount) != 0) {
+    if (Rest2h_RowCount != 0) {
         do {
             const unsigned char* const text = At(L(at::kRowText + 4u * B(at::kRowOrder + i)));
             const int dy = static_cast<int>(i) << 4;
@@ -372,7 +372,7 @@ extern "C" void __cdecl ShopWin_DrawRowMenu(unsigned char* w) {
             SH_CALL(Menu_DrawPieces)(X(w), Y(w) + dy + 0x18, Text(at::kRowPiecesB), 1);
             SH_CALL(Menu_DrawPieces)(X(w), ((static_cast<int>(i) + 2) << 4) + Y(w), Text(at::kRowPiecesB), 1);
             ++i;
-        } while (i < B(at::kRowCount));
+        } while (i < Rest2h_RowCount);
     }
     SH_CALL(Menu_DrawPieces)(X(w), (static_cast<int>(i) << 4) + Y(w) + 0x18, Text(at::kRowPiecesC), 1);
 }
@@ -381,7 +381,7 @@ extern "C" void __cdecl ShopWin_DrawRowMenu(unsigned char* w) {
 // MasterWin_SlideOut, MasterWin_SlideTo64, 0x59A960 - R2G's), then
 // MasterWin_DrawList(the record, re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MasterListRun(void) {
-    Step("ShopWin_MasterListRun", at::kMasterListSteps, 4);
+    Step("ShopWin_MasterListRun", ShopWin_MasterListSteps_addr, 4);
     SH_CALL(MasterWin_DrawList)(Rec());
 }
 
@@ -409,7 +409,7 @@ extern "C" void __cdecl MasterWin_SlideTo64(void) { Slide(4, 0x20, 0x64, false, 
 // MenuSlide_RightOff, MasterWin_CaptionSlideTo8C), then
 // MasterWin_DrawCaption(the record, re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MasterCaptionRun(void) {
-    Step("ShopWin_MasterCaptionRun", at::kMasterCaptionSteps, 3);
+    Step("ShopWin_MasterCaptionRun", ShopWin_MasterCaptionSteps_addr, 3);
     SH_CALL(MasterWin_DrawCaption)(Rec());
 }
 
@@ -420,7 +420,7 @@ extern "C" void __cdecl MasterWin_CaptionSlideTo8C(void) { Slide(4, -0x20, 0x8C,
 // MasterWin_PupilsSlideDown, MasterWin_PupilsSlideUp), then
 // MasterWin_DrawPupils(the record, re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_PupilsRun(void) {
-    Step("ShopWin_PupilsRun", at::kPupilsSteps, 3);
+    Step("ShopWin_PupilsRun", ShopWin_PupilsSteps_addr, 3);
     SH_CALL(MasterWin_DrawPupils)(Rec());
 }
 
@@ -434,7 +434,7 @@ extern "C" void __cdecl MasterWin_PupilsSlideUp(void) { Slide(6, -0x10, 0x80, tr
 // MenuSlide_RightOff, ShopWin_ItemCountSlideToD2), then
 // SharedList_DrawItemCount(+4, +6) of the record re-read.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_ItemCountRun(void) {
-    Step("ShopWin_ItemCountRun", at::kItemCountSteps, 3);
+    Step("ShopWin_ItemCountRun", ShopWin_ItemCountSteps_addr, 3);
     const unsigned char* const w = Rec();
     SH_CALL(SharedList_DrawItemCount)(X(w), Y(w));
 }
@@ -549,16 +549,16 @@ extern "C" void __cdecl MasterWin_DrawList(unsigned char* w) {
 extern "C" unsigned char __cdecl MasterWin_Available(unsigned index) {
     const unsigned k = index & 0xFF;
     switch (k) {
-    case 0xB: return (B(at::kPartyBits) & 8) ? 1 : 0;
-    case 0xC: return SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x6C) ? 1 : 0;
-    case 0xD: return (B(at::kPartyBits) & 0x10) ? 1 : 0;
-    case 0xE: return (B(at::kPartyBits) & 0x20) ? 1 : 0;
+    case 0xB: return (Cond_Flags[0xd1] & 8) ? 1 : 0;
+    case 0xC: return SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x6C) ? 1 : 0;
+    case 0xD: return (Cond_Flags[0xd1] & 0x10) ? 1 : 0;
+    case 0xE: return (Cond_Flags[0xd1] & 0x20) ? 1 : 0;
     default: break;
     }
     if (k >= at::kMasterCount)
         bof3::Fatal("MasterWin_Available (0x59C780): master %u past the %u lists of 0x%X - the original reads the next "
                     ".data as a pointer (docs/rest_2h.md section 7)",
-                    k, at::kMasterCount, (unsigned)at::kRequirements);
+                    k, at::kMasterCount, (unsigned)MasterWin_Requirements_addr);
     const unsigned char* p = At(L(at::kRequirements + 4 * k));
     while (*p != 0xFF) {
         if (SH_CALL(MasterWin_SkillKnown)(*p) == 0) return 0;
@@ -574,7 +574,7 @@ extern "C" unsigned char __cdecl MasterWin_SkillKnown(unsigned skill) {
     const auto s = static_cast<unsigned char>(skill);
     for (U k = 0; k < 7; ++k)
         for (U j = 0; j < 0xA; ++j)
-            if (B(at::kSkillSlots + k * at::kRecordStride + j) == s) return 1;
+            if (B(Field_ActorStates_addr + 0x6e + k * at::kRecordStride + j) == s) return 1;
     for (U j = 0; j < 0x80; ++j)
         if (B(at::kSharedList + j) == s) return 1;
     return 0;
@@ -605,7 +605,7 @@ extern "C" void __cdecl MasterWin_DrawPupils(unsigned char* w) {
     for (U k = 0; k < 8; ++k) {
         const unsigned char* const rec = Record(k);
         if (!(rec[0xB] & 1)) continue;
-        if (rec[0x1F] != B(at::kWindow1Master)) continue;
+        if (rec[0x1F] != Rest2h_Window1Master) continue;
         const unsigned portrait = rec[9];
         SH_CALL(MasterWin_DrawPortrait)(dx + X(w) + 4, dy + Y(w) + 5, portrait, 0);
         dx += 0x25;
@@ -672,7 +672,7 @@ extern "C" void __cdecl BattleMenuWin_ItemListSlideLeft(void) { Slide(4, -0x20, 
 // then BattleEquipWin_Draw(the member 0x66972C[0x904065[+0xC]], +4, +6, +0x20,
 // +0xD, the record) of the record re-read.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_EquipRun(void) {
-    Step("BattleMenuWin_EquipRun", at::kEquipSteps, 4);
+    Step("BattleMenuWin_EquipRun", BattleMenuWin_EquipSteps_addr, 4);
     unsigned char* const w = Rec();
     const U member = RecordOf(B(at::kBattleParty + w[0xC]));
     SH_CALL(BattleEquipWin_Draw)(member, static_cast<unsigned>(X(w)), static_cast<unsigned>(Y(w)),
@@ -686,7 +686,7 @@ extern "C" void __cdecl BattleMenuWin_EquipSlideTo62(void) { Slide(4, 0x20, 0x62
 // a bare ret, BattleMenuWin_EquipItemsSlideTo98, MenuSlide_RightOff, 0x59A610 -
 // R2G's), then BattleEquipWin_DrawItems(the record, re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_EquipItemsRun(void) {
-    Step("BattleMenuWin_EquipItemsRun", at::kEquipItemsSteps, 4);
+    Step("BattleMenuWin_EquipItemsRun", BattleMenuWin_EquipItemsSteps_addr, 4);
     SH_CALL(BattleEquipWin_DrawItems)(Rec());
 }
 
@@ -820,12 +820,12 @@ extern "C" void __cdecl Menu_DrawVerbPair(int x, int y, unsigned selected) {
     const unsigned char style = Style();
     SH_CALL(Menu_DrawBox)(x, y, 0x2D, 0x14, 0, style);
     const auto s = static_cast<unsigned char>(selected);
-    SH_CALL(Text_DrawAt)(x + 0xA, y + 3, s == 0xFF || s == 0 ? 0 : 7, 0x10, Text(at::kVerbA));
+    SH_CALL(Text_DrawAt)(x + 0xA, y + 3, s == 0xFF || s == 0 ? 0 : 7, 0x10, Text(Menu_Verbs_addr));
     SH_CALL(Menu_DrawPieces)(x, y, Text(s == 0 ? at::kVerbPiecesOn : at::kVerbPiecesOff), 1);
     const int x2 = x + 0x30;
     const unsigned char style2 = Style();
     SH_CALL(Menu_DrawBox)(x2, y, 0x2D, 0x14, 0, style2);
-    SH_CALL(Text_DrawAt)(x2 + 0xA, y + 3, s == 0xFF || s == 1 ? 0 : 7, 0x10, Text(at::kVerbB));
+    SH_CALL(Text_DrawAt)(x2 + 0xA, y + 3, s == 0xFF || s == 1 ? 0 : 7, 0x10, Text(Menu_Verbs_addr + 0x18));
     SH_CALL(Menu_DrawPieces)(x2, y, Text(s == 1 ? at::kVerbPiecesOn : at::kVerbPiecesOff), 1);
 }
 

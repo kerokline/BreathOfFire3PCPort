@@ -51,18 +51,18 @@ using rest_2f::kTitleCall;
 // --- the cells ------------------------------------------------------------------------
 
 // The menu block.
-constexpr U kMode = 0x929F00;        // FieldMenu_States' index
-constexpr U kStep = 0x929F01;        // the screen's step
-constexpr U kSub = 0x929F02;         // its sub-step
-constexpr U kByte03 = 0x929F03;
+// kMode: now BattleE1_Mode (symbols.toml). FieldMenu_States' index
+// kStep: now FieldS_State (symbols.toml). the screen's step
+// kSub: now FieldS_Step (symbols.toml). its sub-step
+// kByte03: now Rest2d_MenuSub (symbols.toml).
 constexpr U kTimer = 0x929F04;       // a countdown of frames
-constexpr U kTopCursor = 0x929F05;   // the top bar's cursor
-constexpr U kShown = 0x929F06;       // the party slot a screen shows (s8)
-constexpr U kCol = 0x929F08;         // Tactics' members screen: the cursor's column (0 party, 1 reserve), s8
-constexpr U kRow = 0x929F09;         // its row, s8
-constexpr U kHeldCol = 0x929F0A;     // the cell picked: 0x7F none
-constexpr U kHeldRow = 0x929F0D;
-constexpr U kDirect = 0x929F10;      // 1: Tactics was entered at its step 5 (the cancel leaves the menu)
+// kTopCursor: now MenuLists_Cursor (symbols.toml). the top bar's cursor
+// kShown: now BattleActorCopies_ItemActor (symbols.toml). the party slot a screen shows (s8)
+// kCol: now FieldS_Column (symbols.toml). Tactics' members screen: the cursor's column (0 party, 1 reserve), s8
+// kRow: now BattleE1_ModeByte9 (symbols.toml). its row, s8
+// kHeldCol: now ShopStates_Clear0A (symbols.toml). the cell picked: 0x7F none
+// kHeldRow: now FieldS_PickRow (symbols.toml).
+// kDirect: now ScenaSc6_Load10 (symbols.toml). 1: Tactics was entered at its step 5 (the cancel leaves the menu)
 
 // Tactics' own cells (0x6BDFBC..0x6BDFD8).
 constexpr U kGrid = 0x6BDFBC;        // 3 x 3 bytes: the formation's cells that may be picked
@@ -81,8 +81,8 @@ constexpr U kRefused = 0x6BDFD7;     // the member a swap refused, 0xFF none (= 
 constexpr U kConfigSaved = 0x6BDFD8; // the top bar's cursor while Config runs (= kReserve + 4)
 
 // Save data and the records.
-constexpr U kFormation = 0x904060;   // the formation set (u8)
-constexpr U kFormationBits = 0x904061;   // which of the six cells may hold a member
+// kFormation: now Cond_Flags[0xd0] (symbols.toml). the formation set (u8)
+// kFormationBits: now Cond_Flags[0xd1] (symbols.toml). which of the six cells may hold a member
 constexpr U kParty = 0x904062;       // the party's member ids (0x904065: the battle order's copy)
 constexpr U kPartyCopy = 0x904065;
 constexpr U kCharacters = 0x903A70;  // CharacterRecords: 0xA4 a member
@@ -90,14 +90,14 @@ constexpr U kCharacterStride = 0xA4;
 constexpr U kWorking = 0x802DC0;     // the party's working records' +0x80 (ObjTrio + 0x80), 0x14C a slot
 constexpr U kWorkingStride = 0x14C;
 constexpr U kEffectState = 0x66972C; // MoveScript_EffectState: the record of a member id
-constexpr U kStyle = 0x903A5A;       // the window colour
-constexpr U kBackdrop = 0x903A5B;    // the Config "Background" byte
-constexpr U kGameStep = 0x66C7EA;    // Game_Step (u16)
-constexpr U kPressed = 0x7E1BEC;     // Input_Pressed (u16)
-constexpr U kConfirm = 0x90358E;     // Field_ConfirmButtons (u16)
-constexpr U kCancel = 0x903590;      // Field_CancelButtons (u16)
-constexpr U kInputFlags = 0x905BA2;  // Field_InputFlags: bit 0, the members screen allowed
-constexpr U kCurrent = 0x905B84;     // the window record Field_RunTaskRecords runs
+// kStyle: now BattleDraw_Colour (symbols.toml). the window colour
+// kBackdrop: now FieldS_Backdrop (symbols.toml). the Config "Background" byte
+// kGameStep: now Game_Step (symbols.toml). Game_Step (u16)
+// kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
+// kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
+// kInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags: bit 0, the members screen allowed
+// kCurrent: now BattleWinStates_Current (symbols.toml). the window record Field_RunTaskRecords runs
 constexpr U kWindows = 0x803160;     // WindowRecords
 constexpr U kWindowStride = 0x24;
 constexpr U kPools = 0x803580;       // MessagePools
@@ -108,9 +108,9 @@ constexpr U kPortraitA = 0x939880;
 constexpr U kPortraitB = 0x9398A0;
 
 // Window kind 1's message cells (the choice list).
-constexpr U kListText = 0x7DEE50;    // the choices' text (a pointer)
+// kListText: now MenuWindows_ListText (symbols.toml). the choices' text (a pointer)
 constexpr U kListLast = 0x7DEE66;    // the last choice's index (s8)
-constexpr U kListCursor = 0x7DEE67;  // the cursor (s8)
+// kListCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the cursor (s8)
 constexpr U kListRows = 0x7DEE6F;    // a byte a choice: its line, then its y
 
 // Image tables, read in place.
@@ -140,7 +140,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 // Window record n's byte / word at `at`.
 U Rec(unsigned n, unsigned at) { return kWindows + kWindowStride * n + at; }
 // The record Field_RunTaskRecords runs, read afresh at each use.
-unsigned char* Cur() { return At(static_cast<U>(Long(At(kCurrent)))); }
+unsigned char* Cur() { return At(BattleWinStates_Current); }
 int Wx(const unsigned char* r) { return static_cast<int>(Word(r + 4)); }
 int Wy(const unsigned char* r) { return static_cast<int>(Word(r + 6)); }
 
@@ -156,7 +156,7 @@ void Run(const char* who, const unsigned long* table, unsigned entries, unsigned
 }
 
 // --- the callees ------------------------------------------------------------------------
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(B(kBackdrop)); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
 unsigned char PartyCount() { return static_cast<unsigned char>(SH_CALL(Party_Count)(0)); }
 U Repeat(U pressed) { return SH_CALL(Input_AutoRepeat)(pressed); }
@@ -308,7 +308,7 @@ extern "C" void __cdecl FieldMenu_FreeRecords13To18(void) {
 // step byte 0x929F01, unchecked (ours aborts past its 7: steps 0..6, of which 6
 // is TacticsFormation_Steps[0] by the tables' layout).
 extern "C" void __cdecl Tactics_Run(void) {
-    Run("Tactics_Run (0x58F080)", TacticsMenu_Steps, TacticsMenu_Steps_count, B(kStep), "0x929F01");
+    Run("Tactics_Run (0x58F080)", TacticsMenu_Steps, TacticsMenu_Steps_count, FieldS_State, "0x929F01");
 }
 
 // original 0x58F090: TacticsMenu_Steps[0] - window records 11 (kind 9), 19, 20
@@ -329,7 +329,7 @@ extern "C" void __cdecl Tactics_Open(void) {
         B(Rec(n, 0)) = 0;
         B(Rec(n, 0xA)) = 0;
     }
-    const unsigned char kind = B(kBackdrop);
+    const unsigned char kind = FieldS_Backdrop;
     B(Rec(18, 1)) = 6;
     B(Rec(18, 2)) = 0xD;
     B(Rec(18, 3)) = 2;
@@ -344,10 +344,10 @@ extern "C" void __cdecl Tactics_Open(void) {
     SH_CALL(Menu_DrawBackdrop)(kind);
     B(kTopChoice) = 0;
     Sound(0x102);
-    const unsigned char step = B(kStep);
-    B(kSub) = 0;
+    const unsigned char step = FieldS_State;
+    FieldS_Step = 0;
     B(kTimer) = 5;
-    B(kStep) = static_cast<unsigned char>(step + 1);
+    FieldS_State = static_cast<unsigned char>(step + 1);
 }
 
 // original 0x58F170: TacticsMenu_Steps[1] - the top. Record 11's word +0x10 is
@@ -373,17 +373,17 @@ extern "C" void __cdecl Tactics_Top(void) {
     } else {
         B(Rec(21, 0)) = 0;
     }
-    const U pressed = W(kPressed);
+    const U pressed = Input_Pressed;
     B(Rec(18, 0xB)) = 0xFF;
     if (Repeat(pressed & 0xA000) & 0xA000) {
         Sound(0x101);
         B(kTopChoice) = static_cast<unsigned char>(B(kTopChoice) ^ 1);
     }
-    const U now = W(kPressed);
-    if (W(kConfirm) & now) {
+    const U now = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_ConfirmButtons) & now) {
         if (B(kTopChoice) == 0) {
             SH_CALL(TacticsFormation_Build)();
-        } else if (B(kInputFlags) & 1) {
+        } else if (Field_InputFlags & 1) {
             SH_CALL(TacticsMembers_Build)();
         } else {
             Sound(0x107);
@@ -392,32 +392,32 @@ extern "C" void __cdecl Tactics_Top(void) {
         Sound(0x102);
         Sound(0x104);
         const unsigned char c = B(kTopChoice);
-        const unsigned char step = B(kStep);
+        const unsigned char step = FieldS_State;
         B(Rec(18, 0xB)) = c;
         B(Rec(21, 0)) = 0;
-        B(kSub) = 0;
-        B(kStep) = static_cast<unsigned char>(step + c + 1);
+        FieldS_Step = 0;
+        FieldS_State = static_cast<unsigned char>(step + c + 1);
         B(kTimer) = 5;
         return;
     }
-    if (!(W(kCancel) & now)) return;
+    if (!(static_cast<std::uint32_t>(Field_CancelButtons) & now)) return;
     Sound(0x102);
     Sound(0x106);
-    const unsigned char step = B(kStep);
+    const unsigned char step = FieldS_State;
     B(Rec(11, 3)) = 1;
     B(Rec(18, 3)) = 1;
     B(Rec(21, 0)) = 0;
     B(Rec(19, 0)) = 0;
     B(Rec(20, 0)) = 0;
-    B(kStep) = static_cast<unsigned char>(step + 3);
-    B(kSub) = 0;
+    FieldS_State = static_cast<unsigned char>(step + 3);
+    FieldS_Step = 0;
     B(kTimer) = 5;
 }
 
 // original 0x58F2F0: TacticsMenu_Steps[2] - jmp through TacticsFormation_Steps
 // by the sub-step 0x929F02, unchecked (ours aborts past its 3).
 extern "C" void __cdecl Tactics_Formation(void) {
-    Run("Tactics_Formation (0x58F2F0)", TacticsFormation_Steps, TacticsFormation_Steps_count, B(kSub), "0x929F02");
+    Run("Tactics_Formation (0x58F2F0)", TacticsFormation_Steps, TacticsFormation_Steps_count, FieldS_Step, "0x929F02");
 }
 
 namespace {
@@ -447,7 +447,7 @@ extern "C" void __cdecl TacticsFormation_Enter(void) {
     Backdrop();
     if (!CountedDown()) return;
     ForParty([](unsigned char i) { B(Rec(4u + i, 0xB)) = 1; });
-    B(kSub) = static_cast<unsigned char>(B(kSub) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x58F370: TacticsFormation_Steps[1] - the formation grid. Record 19
@@ -502,8 +502,8 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
         B(Rec(11, 0xC) + kWindowStride * static_cast<U>(set)) = mark;
         SetW(Rec(11, 0x10), col == 0 ? 0x3Bu : static_cast<U>(c + 2 * row + 0x76));
     }
-    const U pressed = W(kPressed);
-    if (W(kConfirm) & pressed) {
+    const U pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         B(Rec(19, 0)) = 0;
         if (col != 0) {
             Sound(0x104);
@@ -520,8 +520,8 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
             B(kPickRow) = B(kCurRow);
         } else {
             Sound(0x104);
-            unsigned char* const picked = At(kPartyCopy + static_cast<U>(static_cast<int>(Sb(kPickRow))));
-            unsigned char* const cursor = At(kPartyCopy + static_cast<U>(static_cast<int>(Sb(kCurRow))));
+            unsigned char* const picked = At(Cond_Flags_addr + 0xd5 + static_cast<U>(static_cast<int>(Sb(kPickRow))));
+            unsigned char* const cursor = At(Cond_Flags_addr + 0xd5 + static_cast<U>(static_cast<int>(Sb(kCurRow))));
             Swap(cursor, picked);
             const unsigned char a = B(kCurRow), b = B(kPickRow);
             if (a != b) {
@@ -531,7 +531,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
             B(kPickCol) = 0x7F;
             B(kPickRow) = 0x7F;
         }
-    } else if (W(kCancel) & pressed) {
+    } else if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         Sound(0x106);
         const unsigned char pick = B(kPickCol);
         B(Rec(19, 0)) = 0;
@@ -539,26 +539,26 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
         if (pick != 0x7F) {
             B(kPickCol) = 0x7F;
             B(kPickRow) = 0x7F;
-        } else if (B(kDirect) == 1) {
-            SetW(kGameStep, W(kGameStep) + 1);
-            B(kStep) = 6;
-            B(kSub) = 0;
-            B(kDirect) = 0;
+        } else if (ScenaSc6_Load10 == 1) {
+            Game_Step = static_cast<std::uint32_t>(Game_Step) + 1;
+            FieldS_State = 6;
+            FieldS_Step = 0;
+            ScenaSc6_Load10 = 0;
         } else {
             const unsigned char set = static_cast<unsigned char>(B(kSetRow) * 2 + B(kSetCol) - 1);
             B(kTimer) = 0;
-            B(kFormation) = set;
+            Cond_Flags[0xd0] = set;
             Sound(0x102);
             for (unsigned n = 12; n <= 17; ++n)
                 if (B(Rec(n, 0)) != 0 && B(Rec(n, 2)) == 0xB) B(Rec(n, 3)) = 1;
-            const unsigned char sub = B(kSub);
+            const unsigned char sub = FieldS_Step;
             B(kTimer) = 5;
-            B(kSub) = static_cast<unsigned char>(sub + 1);
+            FieldS_Step = static_cast<unsigned char>(sub + 1);
         }
     }
     // the cursor: up / down, then (while 0x6BDFC6 is not 0) left / right
     unsigned char step;
-    const U v = Repeat(W(kPressed) & 0x5000);
+    const U v = Repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
     if (v & 0x1000) step = 0xFF;
     else step = vdelta;
     if (v & 0x4000) {
@@ -579,7 +579,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
     if (B(kPickCol) == 0) {
         before = zero;
     } else {
-        const U h = Repeat(W(kPressed) & 0xA000);
+        const U h = Repeat(static_cast<std::uint32_t>(Input_Pressed) & 0xA000);
         if (h & 0x8000) hdelta = 0xFF;
         if (h & 0x2000) hdelta = 1;
         row = B(kCurRow);
@@ -594,7 +594,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
         B(kCurCol) = c;
     }
     if (before != c || old_row != row) Sound(0x101);
-    B(kFormation) = static_cast<unsigned char>(B(kSetRow) * 2 + B(kSetCol) - 1);
+    Cond_Flags[0xd0] = static_cast<unsigned char>(B(kSetRow) * 2 + B(kSetCol) - 1);
 }
 
 // original 0x58F760: TacticsFormation_Steps[2] - the backdrop; at the
@@ -604,13 +604,13 @@ extern "C" void __cdecl TacticsFormation_Leave(void) {
     Backdrop();
     if (!CountedDown()) return;
     ForParty([](unsigned char i) { B(Rec(4u + i, 0xB)) = 0; });
-    B(kStep) = static_cast<unsigned char>(B(kStep) - 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State - 1);
 }
 
 // original 0x58F7D0: TacticsMenu_Steps[3] - jmp through TacticsMembers_Steps by
 // the sub-step 0x929F02, unchecked (ours aborts past its 3).
 extern "C" void __cdecl Tactics_Members(void) {
-    Run("Tactics_Members (0x58F7D0)", TacticsMembers_Steps, TacticsMembers_Steps_count, B(kSub), "0x929F02");
+    Run("Tactics_Members (0x58F7D0)", TacticsMembers_Steps, TacticsMembers_Steps_count, FieldS_Step, "0x929F02");
 }
 
 // original 0x58F7E0: TacticsMembers_Steps[0] - the backdrop; at the countdown's
@@ -621,10 +621,10 @@ extern "C" void __cdecl TacticsMembers_Enter(void) {
     if (!CountedDown()) return;
     ForParty([](unsigned char i) {
         const U r = Rec(4u + i, 0);
-        const unsigned char id = B(kParty + 3u * B(r + 0xB) + B(r + 0xA));
+        const unsigned char id = B(Cond_Flags_addr + 0xd2 + 3u * B(r + 0xB) + B(r + 0xA));
         if (Character(id)[0xB] & 2) B(r + 0xC) = 1;
     });
-    B(kSub) = static_cast<unsigned char>(B(kSub) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x58F890: TacticsMembers_Steps[1] - the members screen. Record 19
@@ -641,16 +641,16 @@ extern "C" void __cdecl TacticsMembers_Enter(void) {
 extern "C" void __cdecl TacticsMembers_Pick(void) {
     Backdrop();
     {
-        const U e = kMemberCells + 8u * static_cast<U>(Sb(kCol) + 2 * Sb(kRow));
+        const U e = kMemberCells + 8u * static_cast<U>(FieldS_Column + 2 * BattleE1_ModeByte9);
         B(Rec(20, 0)) = 0;
         B(Rec(19, 0)) = 1;
         B(Rec(19, 0xB)) = 1;
         SetW(Rec(19, 4), W(e));
         B(Rec(19, 0xA)) = B(e + 4);
         SetW(Rec(19, 6), W(e + 2));
-        const unsigned char held = B(kHeldRow);
+        const unsigned char held = static_cast<unsigned char>(FieldS_PickRow);
         if (held != 0x7F) {
-            const U f = kMemberCells + 8u * static_cast<U>(Sb(kHeldCol) + 2 * static_cast<signed char>(held));
+            const U f = kMemberCells + 8u * static_cast<U>(ShopStates_Clear0A + 2 * static_cast<signed char>(held));
             B(Rec(20, 0)) = 1;
             B(Rec(20, 0xB)) = 0;
             SetW(Rec(20, 4), W(f));
@@ -667,72 +667,72 @@ extern "C" void __cdecl TacticsMembers_Pick(void) {
             SetW(Rec(11, 0x10), 0x61);
         }
     }
-    const U keys = Repeat(W(kPressed) & 0xF000);
+    const U keys = Repeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     const unsigned char count = PartyCount();
-    unsigned char col = B(kCol);
+    unsigned char col = static_cast<unsigned char>(FieldS_Column);
     const unsigned char reserve = B(Rec(12, 0xA));
     const unsigned char old_col = col;
     if ((keys & 0xA000) && reserve != 0) {
         col = static_cast<unsigned char>(col ^ 1);
-        B(kCol) = col;
+        FieldS_Column = col;
     }
-    unsigned char row = B(kRow);
+    unsigned char row = static_cast<unsigned char>(BattleE1_ModeByte9);
     const int old_row = static_cast<signed char>(row);
     if (col == 0) {
         if (old_row > static_cast<int>(count) - 1) {
             row = static_cast<unsigned char>(count - 1);
-            B(kRow) = row;
+            BattleE1_ModeByte9 = row;
         }
     } else {
         if (old_row > static_cast<int>(reserve) - 1) {
             row = static_cast<unsigned char>(reserve - 1);
-            B(kRow) = row;
+            BattleE1_ModeByte9 = row;
         }
     }
     if (keys & 0x1000) {
         row = static_cast<unsigned char>(row - 1);
-        B(kRow) = row;
+        BattleE1_ModeByte9 = row;
         if (static_cast<signed char>(row) < 0) {
-            row = B(kCol) == 0 ? static_cast<unsigned char>(count - 1) : static_cast<unsigned char>(reserve - 1);
-            B(kRow) = row;
+            row = static_cast<unsigned char>(FieldS_Column) == 0 ? static_cast<unsigned char>(count - 1) : static_cast<unsigned char>(reserve - 1);
+            BattleE1_ModeByte9 = row;
         }
     } else if (keys & 0x4000) {
-        const unsigned char now = B(kCol);
+        const unsigned char now = static_cast<unsigned char>(FieldS_Column);
         row = static_cast<unsigned char>(row + 1);
-        B(kRow) = row;
+        BattleE1_ModeByte9 = row;
         const int last = now == 0 ? static_cast<int>(count) - 1 : static_cast<int>(reserve) - 1;
         if (static_cast<signed char>(row) > last) {
             row = 0;
-            B(kRow) = row;
+            BattleE1_ModeByte9 = row;
         }
     }
-    if (static_cast<int>(old_col) != Sb(kCol) || old_row != static_cast<signed char>(row)) Sound(0x100);
-    const U pressed = W(kPressed);
-    if (W(kConfirm) & pressed) {
-        if (B(kHeldCol) == 0x7F) {
+    if (static_cast<int>(old_col) != FieldS_Column || old_row != static_cast<signed char>(row)) Sound(0x100);
+    const U pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
+        if (static_cast<unsigned char>(ShopStates_Clear0A) == 0x7F) {
             Sound(0x103);
-            B(kHeldCol) = B(kCol);
-            B(kHeldRow) = B(kRow);
+            ShopStates_Clear0A = static_cast<unsigned char>(FieldS_Column);
+            FieldS_PickRow = static_cast<unsigned char>(BattleE1_ModeByte9);
             return;
         }
         const unsigned char refused = SH_CALL(TacticsMembers_Swap)();
         B(kRefused) = refused;
         Sound(refused == 0xFF ? 0x103 : 0x107);
-        B(kHeldCol) = 0x7F;
-        B(kHeldRow) = 0x7F;
+        ShopStates_Clear0A = 0x7F;
+        FieldS_PickRow = 0x7F;
         return;
     }
-    if (!(W(kCancel) & pressed)) return;
+    if (!(static_cast<std::uint32_t>(Field_CancelButtons) & pressed)) return;
     Sound(0x106);
-    if (B(kHeldCol) != 0x7F) {
-        B(kHeldCol) = 0x7F;
-        B(kHeldRow) = 0x7F;
+    if (static_cast<unsigned char>(ShopStates_Clear0A) != 0x7F) {
+        ShopStates_Clear0A = 0x7F;
+        FieldS_PickRow = 0x7F;
         return;
     }
-    const unsigned char sub = B(kSub);
+    const unsigned char sub = FieldS_Step;
     B(kTimer) = 5;
     B(Rec(12, 3)) = 1;
-    B(kSub) = static_cast<unsigned char>(sub + 1);
+    FieldS_Step = static_cast<unsigned char>(sub + 1);
     B(Rec(19, 0)) = 0;
     B(Rec(20, 0)) = 0;
 }
@@ -744,7 +744,7 @@ extern "C" void __cdecl TacticsMembers_Leave(void) {
     Backdrop();
     if (!CountedDown()) return;
     ForParty([](unsigned char i) { B(Rec(4u + i, 0xC)) = 0; });
-    B(kStep) = static_cast<unsigned char>(B(kStep) - 2);
+    FieldS_State = static_cast<unsigned char>(FieldS_State - 2);
 }
 
 // original 0x58FBD0: TacticsMenu_Steps[4] - the backdrop; at the countdown's
@@ -758,8 +758,8 @@ extern "C" void __cdecl Tactics_Close(void) {
     ForParty([](unsigned char i) { B(Rec(4u + i, 3)) = 4; });
     B(kTimer) = 5;
     for (unsigned n = 7; n <= 10; ++n) B(Rec(n, 3)) = 2;
-    B(kMode) = 1;
-    B(kStep) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
 }
 
 // original 0x58FC60: TacticsMenu_Steps[5] - Tactics entered at the formation:
@@ -795,8 +795,8 @@ extern "C" void __cdecl Tactics_OpenFormation(void) {
     });
     Backdrop();
     SH_CALL(TacticsFormation_Build)();
-    B(kStep) = 2;
-    B(kSub) = 0;
+    FieldS_State = 2;
+    FieldS_Step = 0;
     B(kTimer) = 5;
 }
 
@@ -832,7 +832,7 @@ extern "C" void __cdecl TacticsFormation_Build(void) {
             }
             *cell = 0;
             if (col == 0) continue;
-            if ((B(kFormationBits) & mask) && n < limit) {
+            if ((Cond_Flags[0xd1] & mask) && n < limit) {
                 *cell = 1;
                 const U r = Rec(12u + n, 0);
                 SetW(r + 4, 0x4Bu * col + 0xF5);
@@ -852,7 +852,7 @@ extern "C" void __cdecl TacticsFormation_Build(void) {
             mask = static_cast<unsigned char>(mask << 1);
         }
     }
-    const unsigned char set = B(kFormation);
+    const unsigned char set = Cond_Flags[0xd0];
     B(kCurCol) = 0;
     B(kSetRow) = static_cast<unsigned char>(set >> 1);
     B(kSetCol) = static_cast<unsigned char>((set & 1) + 1);
@@ -895,10 +895,10 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
     if (count == 0 || count < 3)
         for (U p = kMemberFlags + 2 * from; p < kMemberFlags + 6; p += 2) B(p) = 0;
     for (unsigned j = 0; j < n; ++j) B(kMemberFlags + 1 + 2 * j) = 1;
-    B(kCol) = 0;
-    B(kRow) = 0;
-    B(kHeldCol) = 0x7F;
-    B(kHeldRow) = 0x7F;
+    FieldS_Column = 0;
+    BattleE1_ModeByte9 = 0;
+    ShopStates_Clear0A = 0x7F;
+    FieldS_PickRow = 0x7F;
     B(kRefused) = 0xFF;
 }
 
@@ -913,23 +913,23 @@ extern "C" void __cdecl TacticsMembers_Build(void) {
 // (0x904062.. and the copy 0x904065..) that is A becomes B, every reserve byte
 // that is B becomes A, and A's row's portrait cells cleared.
 extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
-    const unsigned char col = B(kCol);
-    if (col == B(kHeldCol)) {
+    const unsigned char col = static_cast<unsigned char>(FieldS_Column);
+    if (col == static_cast<unsigned char>(ShopStates_Clear0A)) {
         if (col != 0) {
-            Swap(At(kReserve + static_cast<U>(static_cast<int>(Sb(kRow)))),
-                 At(kReserve + static_cast<U>(static_cast<int>(Sb(kHeldRow)))));
+            Swap(At(kReserve + static_cast<std::uint32_t>(BattleE1_ModeByte9)),
+                 At(kReserve + static_cast<std::uint32_t>(FieldS_PickRow)));
             return 0xFF;
         }
         {
-            const int held = Sb(kHeldRow), row = Sb(kRow);
+            const int held = FieldS_PickRow, row = BattleE1_ModeByte9;
             const U h = Rec(4, 0xC) + kWindowStride * static_cast<U>(held);
             const U r = Rec(4, 0xC) + kWindowStride * static_cast<U>(row);
             const unsigned char a = B(h), b = B(r);
             B(r) = a;
             B(h) = b;
-            Swap(At(kParty + static_cast<U>(row)), At(kParty + static_cast<U>(held)));
+            Swap(At(Cond_Flags_addr + 0xd2 + static_cast<U>(row)), At(Cond_Flags_addr + 0xd2 + static_cast<U>(held)));
         }
-        const int held = Sb(kHeldRow), row = Sb(kRow);
+        const int held = FieldS_PickRow, row = BattleE1_ModeByte9;
         U p = kPortrait4 + 4u * static_cast<U>(held), q = kPortrait4 + 4u * static_cast<U>(row);
         for (unsigned k = 0; k < 4; ++k, ++p, ++q) {
             const unsigned char x = B(p), y = B(q);
@@ -952,13 +952,13 @@ extern "C" unsigned char __cdecl TacticsMembers_Swap(void) {
     int row;
     unsigned char a, b;
     if (col == 0) {
-        row = Sb(kRow);
+        row = BattleE1_ModeByte9;
         a = B(kParty + static_cast<U>(row));
-        b = B(kReserve + static_cast<U>(static_cast<int>(Sb(kHeldRow))));
+        b = B(kReserve + static_cast<std::uint32_t>(FieldS_PickRow));
     } else {
-        row = Sb(kHeldRow);
+        row = FieldS_PickRow;
         a = B(kParty + static_cast<U>(row));
-        b = B(kReserve + static_cast<U>(static_cast<int>(Sb(kRow))));
+        b = B(kReserve + static_cast<std::uint32_t>(BattleE1_ModeByte9));
     }
     if (Character(a)[0xB] & 2) return a;
     if (Character(b)[0xB] & 2) return b;
@@ -994,13 +994,13 @@ extern "C" void __cdecl FieldMenu_FreeRecords12To18(void) {
 // original 0x5902D0: FieldMenu_States[8] - jmp through FieldMenu_State8Steps
 // (four bare rets) by 0x929F01, unchecked (ours aborts past its 4).
 extern "C" void __cdecl FieldMenu_State8Run(void) {
-    Run("FieldMenu_State8Run (0x5902D0)", FieldMenu_State8Steps, FieldMenu_State8Steps_count, B(kStep), "0x929F01");
+    Run("FieldMenu_State8Run (0x5902D0)", FieldMenu_State8Steps, FieldMenu_State8Steps_count, FieldS_State, "0x929F01");
 }
 
 // original 0x5902E0: FieldMenu_States[7] - jmp through ConfigMenu_Steps by
 // 0x929F01, unchecked (ours aborts past its 3).
 extern "C" void __cdecl ConfigMenu_Run(void) {
-    Run("ConfigMenu_Run (0x5902E0)", ConfigMenu_Steps, ConfigMenu_Steps_count, B(kStep), "0x929F01");
+    Run("ConfigMenu_Run (0x5902E0)", ConfigMenu_Steps, ConfigMenu_Steps_count, FieldS_State, "0x929F01");
 }
 
 // original 0x5902F0: ConfigMenu_Steps[0] - the backdrop; the step on, the
@@ -1008,14 +1008,14 @@ extern "C" void __cdecl ConfigMenu_Run(void) {
 // 0x6BDFD8 and cleared (Config uses it for its row).
 extern "C" void __cdecl ConfigMenu_Open(void) {
     Backdrop();
-    const unsigned char step = B(kStep);
-    const unsigned char cursor = B(kTopCursor);
-    B(kStep) = static_cast<unsigned char>(step + 1);
+    const unsigned char step = FieldS_State;
+    const unsigned char cursor = static_cast<unsigned char>(MenuLists_Cursor);
+    FieldS_State = static_cast<unsigned char>(step + 1);
     B(kTimer) = 5;
-    B(kSub) = 0;
-    B(kByte03) = 2;
+    FieldS_Step = 0;
+    Rest2d_MenuSub = 2;
     B(kConfigSaved) = cursor;
-    B(kTopCursor) = 0;
+    MenuLists_Cursor = 0;
 }
 
 // original 0x590340: ConfigMenu_Steps[1] - a tail jump to the Config screen's
@@ -1037,10 +1037,10 @@ extern "C" void __cdecl ConfigMenu_Close(void) {
     const unsigned char cursor = B(kConfigSaved);
     for (unsigned n = 7; n <= 10; ++n) B(Rec(n, 3)) = 2;
     B(kTimer) = 0;
-    B(kMode) = 1;
-    B(kStep) = 0;
-    B(kSub) = 0;
-    B(kTopCursor) = cursor;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
+    FieldS_Step = 0;
+    MenuLists_Cursor = cursor;
 }
 
 // ===========================================================================
@@ -1132,20 +1132,20 @@ extern "C" void __cdecl ItemTrade_TakeNeeds(void) {
 // byte (0x7DEE6F + n), the text from 0x7DEE50 and on from where each ended.
 // The y word's upper half is the text pointer's, as the original's eax has it.
 extern "C" void __cdecl Window_Kind1List(void) {
-    U text = static_cast<U>(Long(At(kListText)));
-    if (Sb(kListLast) < 0) return;
+    U text = MenuWindows_ListText;
+    if (MenuWindows_ListCount < 0) return;
     int n = 0;
     do {
         const U y = (text & 0xFFFF0000u) | B(kListRows + static_cast<U>(n));
         text = Key(SH_CALL(Text_DrawImmediate)(0x3A, static_cast<int>(y), At(text)));
         ++n;
-    } while (n <= Sb(kListLast));
+    } while (n <= MenuWindows_ListCount);
 }
 
 // original 0x596120 (PSX 0x8015AC54, gap47): Window_Kind1Frame's tail jump -
 // the hand at x (the record's x >> 4, signed) + 4, the cursor's choice's y.
 extern "C" void __cdecl Window_Kind1Cursor(void) {
-    const int c = Sb(kListCursor);
+    const int c = AreaW0c_ChoiceAnswer;
     const unsigned char* const r = Cur();
     const U y = B(kListRows + static_cast<U>(c));
     const U hi = c < 0 ? 0xFFFF0000u : 0u;
@@ -1164,8 +1164,8 @@ extern "C" void __cdecl Window_Kind1Cursor(void) {
 // + 13 lines) / 2, bytes.
 extern "C" void __cdecl Window_Kind1Layout(void) {
     unsigned char lines = 0;
-    if (Sb(kListLast) >= 0) {
-        const unsigned char* text = At(static_cast<U>(Long(At(kListText))));
+    if (MenuWindows_ListCount >= 0) {
+        const unsigned char* text = At(MenuWindows_ListText);
         unsigned char n = 0;
         do {
             B(kListRows + n) = lines;
@@ -1191,12 +1191,12 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
                 }
             }
             ++n;
-        } while (static_cast<int>(n) <= Sb(kListLast));
+        } while (static_cast<int>(n) <= MenuWindows_ListCount);
     }
     unsigned char* r = Cur();
     r[0xA] = 0xDC;
     r = Cur();
-    r[0xB] = static_cast<unsigned char>((B(kListLast) + 4) * 2 + static_cast<unsigned char>(lines * 13));
+    r[0xB] = static_cast<unsigned char>((static_cast<unsigned char>(MenuWindows_ListCount) + 4) * 2 + static_cast<unsigned char>(lines * 13));
     r = Cur();
     SetWord(r + 4, ((r[0xA] >> 1) + 0x30u) << 4);
     const U n13 = 13u * lines;
@@ -1204,7 +1204,7 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
     SetWord(r + 6, ((r[0xB] >> 1) - (n13 >> 1) + 0x78u) << 4);
     SetWord(Cur() + 0x18, 0x30);
     {
-        const int sum = Sb(kListLast) + static_cast<int>(n13);
+        const int sum = MenuWindows_ListCount + static_cast<int>(n13);
         SetWord(Cur() + 0x1A, static_cast<U>(0x78 - sum / 2));
     }
     SetWord(Cur() + 0x10, 0);
@@ -1213,7 +1213,7 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
     SetWord(r + 0x14, (static_cast<U>(r[0xA]) << 4) / 5);
     r = Cur();
     SetWord(r + 0x16, (static_cast<U>(r[0xB]) << 4) / 5);
-    const int last = Sb(kListLast);
+    const int last = MenuWindows_ListCount;
     const auto top = static_cast<unsigned char>(0x7C - static_cast<unsigned char>((last + static_cast<int>(n13)) / 2));
     if (last < 0) return;
     unsigned char add = 0, n = 0;
@@ -1222,7 +1222,7 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
         B(kListRows + n) = static_cast<unsigned char>(static_cast<unsigned char>(v * 13) + add + top);
         add = static_cast<unsigned char>(add + 2);
         ++n;
-    } while (static_cast<int>(n) <= Sb(kListLast));
+    } while (static_cast<int>(n) <= MenuWindows_ListCount);
 }
 
 // ===========================================================================
@@ -1244,7 +1244,7 @@ extern "C" void __cdecl Window_Handler1Kinds(void) {
 extern "C" void __cdecl Win1_TitleStrip(void) {
     Run("Win1_TitleStrip (0x596550)", Win1_TitleStripStates, Win1_TitleStripStates_count, Cur()[3],
         "the window record's +3");
-    const unsigned char colour = B(kStyle);
+    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned char* r = Cur();
     SH_CALL(Menu_DrawTitleBox)(Wx(r), Wy(r), 0x118, 0x13, colour);
     r = Cur();
@@ -1281,7 +1281,7 @@ extern "C" void __cdecl Win1_ShisuPanel(void) {
 // frame's pieces.
 extern "C" void __cdecl Win1_DrawShisuPanel(unsigned char* rec) {
     SH_CALL(Menu_DrawBox)(static_cast<int>((Word(rec + 4) + 3u) & 0xFFFF), static_cast<int>((Word(rec + 6) + 3u) & 0xFFFF), 0x95,
-                          0xA0, 0, B(kStyle));
+                          0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
     for (unsigned char i = 0; i < 4; ++i) {
         const unsigned char held = At(static_cast<U>(Long(rec + 0x20)))[i];
         const unsigned colour = held != 0 ? 0 : 7;
@@ -1386,7 +1386,7 @@ extern "C" void __cdecl Win2_EquipCompare(void) {
 // message it names (Msg_SystemPtr) at (x + 7, y + 3), colour 0, count 0xFF.
 extern "C" void __cdecl Win2_TitleBox(void) {
     Run("Win2_TitleBox (0x5969E0)", Win2_TitleBoxStates, Win2_TitleBoxStates_count, Cur()[3], "the window record's +3");
-    const unsigned char colour = B(kStyle);
+    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned char* r = Cur();
     SH_CALL(Menu_DrawTitleBox)(Wx(r), Wy(r), static_cast<int>(Word(r + 0x12)), 0x13, colour);
     r = Cur();
@@ -1425,7 +1425,7 @@ extern "C" void __cdecl MenuSlide_DownTo40(void) {
 // (or the word cleared); the frame's pieces; the scroll bar over 9 rows.
 extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     SH_CALL(Menu_DrawBox)(static_cast<int>((Word(rec + 4) + 3u) & 0xFFFF), static_cast<int>((Word(rec + 6) + 3u) & 0xFFFF), 0x99,
-                          0x9A, rec[9], B(kStyle));
+                          0x9A, rec[9], static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = static_cast<unsigned char>(Key(rec));
     unsigned char moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(rec + 0xB, &offset, &moving, rec + 0x12);
@@ -1439,7 +1439,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         if (item == 0) continue;
         unsigned char dim = 1;
         if (rec[9] == 0) {
-            const unsigned char who = B(kParty + static_cast<U>(static_cast<int>(Sb(kShown))));
+            const unsigned char who = B(kParty + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
             const unsigned char member = B(kEffectState + who);
             dim = SH_CALL(Item_CanUse)(rec[8], member, rec[0xA], item) ? 0 : 1;
         }
@@ -1457,9 +1457,9 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         Row(Wx(rec) + 7, y - 2, colour, rec[0xA], *ids, count, dim);
     }
     SH_CALL(Menu_DrawBox)(static_cast<int>((Word(rec + 4) + 3u) & 0xFFFF), static_cast<int>((Word(rec + 6) + 3u) & 0xFFFF), 0x99,
-                          0x14, rec[9], B(kStyle));
+                          0x14, rec[9], static_cast<unsigned char>(BattleDraw_Colour));
     {
-        const unsigned char colour = B(kStyle);
+        const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
         const unsigned char flags = rec[9];
         SH_CALL(Menu_DrawBox)(static_cast<int>((Word(rec + 4) + 3u) & 0xFFFF), static_cast<int>((Word(rec + 6) + 0x92u) & 0xFFFF),
                               0x99, 8, flags, colour);

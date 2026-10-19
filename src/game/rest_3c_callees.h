@@ -47,7 +47,7 @@ using U = std::uint32_t;
 constexpr U kFlags2 = 0x904AA9;           // u8: the round flags' second byte (0x20, 0x40 set here)
 constexpr U kPartyCount = 0x904AB0;       // u8: the members in battle, 0..3 (ObjTrio's)
 constexpr U kTurnOrder = 0x904ACC;        // u8[11]: the actors in turn order, 0xFF a spent slot
-constexpr U kTurnCursor = 0x904AE2;       // u8: the order's front (the loops start one before it)
+// kTurnCursor: now BossSe_RoundSlot (symbols.toml). u8: the order's front (the loops start one before it)
 constexpr U kTurnCount = 0x904AE3;        // u8: how many of kTurnOrder are filled, 0..11
 constexpr U kActor = 0x904B34;            // u8: the acting actor 0..10 (read as a dword where noted)
 constexpr U kActingKind = 0x904B35;       // u8: 4 an ability
@@ -55,19 +55,19 @@ constexpr U kOtherActor = 0x904B44;       // u8: the battle's other target cell 
 constexpr U kTarget = 0x904B54;           // u8: the effect's target 0..10 (read as a dword where noted)
 constexpr U kResult = 0x904B60;           // unsigned char *: the result record (+4 HP, +6 AP delta, +8 flags)
 constexpr U kAbility = 0x904B80;          // u16: the acting ability
-constexpr U kPairActor = 0x904B8A;        // u8: slot 74 stores the actor here ...
-constexpr U kPairOther = 0x904B8B;        // u8: ... and kOtherActor here
-constexpr U kGate = 0x904B8E;             // u8: slot 97 stores 4
-constexpr U kHits = 0x904B96;             // u8: slot 103's hit count
-constexpr U kByte660 = 0x904660;          // u8: slot 62 stores 5 (Skill_CanUse's four bytes for ability 0x15 start here)
+// kPairActor: now BattleFlow_ActorAt (symbols.toml). u8: slot 74 stores the actor here ...
+// kPairOther: now BattlePhases_B8B (symbols.toml). u8: ... and kOtherActor here
+// kGate: now BattleFlow_AnimGate (symbols.toml). u8: slot 97 stores 4
+// kHits: now Rest3c_Hits (symbols.toml). u8: slot 103's hit count
+// kByte660: now Rest3c_Byte660 (symbols.toml). u8: slot 62 stores 5 (Skill_CanUse's four bytes for ability 0x15 start here)
 
 // --- the damage formula's cells (battle_damage_callees.h) ---
-constexpr U kTargetDef = 0x939F86;        // u16: zeroed by slots 62 and 63 before Battle_CalcDamage
+// kTargetDef: now BattleDamage_TargetDef (symbols.toml). u16: zeroed by slots 62 and 63 before Battle_CalcDamage
 constexpr U kAttackerAtk = 0x939FE4;      // u16: the attacker's power, read as a dword & 0xFFFF
-constexpr U kHitPercent = 0x939FFC;       // u8: slot 94 stores 100
+// kHitPercent: now BattleE4_HitEnemy (symbols.toml). u8: slot 94 stores 100
 
 // --- the records ---
-constexpr U kParty = 0x802D40;            // ObjTrio, stride 0x14C
+// kParty: now ObjTrio (symbols.toml). ObjTrio, stride 0x14C
 constexpr U kPartyStride = 0x14C;
 constexpr unsigned kPartyMax = 3;
 constexpr U kEnemies = 0x93B960;          // the enemies' objects, stride 0x128

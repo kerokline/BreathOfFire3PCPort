@@ -14,36 +14,36 @@ namespace rest_2h {
 namespace at {
 
 // --- the step tables (the window record's +3 indexes each, unchecked) --------
-constexpr std::uint32_t kGeneSteps = 0x66B1CC;            // 3  MenuList_GeneWinRun
-constexpr std::uint32_t kSharedListSteps = 0x66B2D8;      // 5  ShopWin_SharedListRun
-constexpr std::uint32_t kSharedMemberSteps = 0x66B2EC;    // 5  ShopWin_SharedMemberRun
-constexpr std::uint32_t kMemberStatusSteps = 0x66B300;    // 3  ShopWin_MemberStatusRun
-constexpr std::uint32_t kMasterListSteps = 0x66B384;      // 4  ShopWin_MasterListRun
-constexpr std::uint32_t kMasterCaptionSteps = 0x66B394;   // 3  ShopWin_MasterCaptionRun
-constexpr std::uint32_t kPupilsSteps = 0x66B3A0;          // 3  ShopWin_PupilsRun
-constexpr std::uint32_t kItemCountSteps = 0x66B3AC;       // 3  ShopWin_ItemCountRun
-constexpr std::uint32_t kEquipSteps = 0x66B56C;           // 4  BattleMenuWin_EquipRun
-constexpr std::uint32_t kEquipItemsSteps = 0x66B57C;      // 4  BattleMenuWin_EquipItemsRun
+// kGeneSteps: now MenuList_GeneWinSteps (symbols.toml). 3  MenuList_GeneWinRun
+// kSharedListSteps: now ShopWin_SharedListSteps (symbols.toml). 5  ShopWin_SharedListRun
+// kSharedMemberSteps: now ShopWin_SharedMemberSteps (symbols.toml). 5  ShopWin_SharedMemberRun
+// kMemberStatusSteps: now ShopWin_MemberStatusSteps (symbols.toml). 3  ShopWin_MemberStatusRun
+// kMasterListSteps: now ShopWin_MasterListSteps (symbols.toml). 4  ShopWin_MasterListRun
+// kMasterCaptionSteps: now ShopWin_MasterCaptionSteps (symbols.toml). 3  ShopWin_MasterCaptionRun
+// kPupilsSteps: now ShopWin_PupilsSteps (symbols.toml). 3  ShopWin_PupilsRun
+// kItemCountSteps: now ShopWin_ItemCountSteps (symbols.toml). 3  ShopWin_ItemCountRun
+// kEquipSteps: now BattleMenuWin_EquipSteps (symbols.toml). 4  BattleMenuWin_EquipRun
+// kEquipItemsSteps: now BattleMenuWin_EquipItemsSteps (symbols.toml). 4  BattleMenuWin_EquipItemsRun
 
 // --- the window records ----------------------------------------------------------
-constexpr std::uint32_t kCurrent = 0x905B84;       // unsigned char *: the record Field_RunTaskRecords is on
+// kCurrent: now BattleWinStates_Current (symbols.toml). unsigned char *: the record Field_RunTaskRecords is on
 constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, 22 of 0x24
 constexpr std::uint32_t kWindowStride = 0x24;
-constexpr std::uint32_t kWindow1Master = 0x803191; // window 1's +0xD: the master list's chosen entry
-constexpr std::uint32_t kStyle = 0x903A5A;         // the window colour byte Menu_DrawBox is handed
+// kWindow1Master: now Rest2h_Window1Master (symbols.toml). window 1's +0xD: the master list's chosen entry
+// kStyle: now BattleDraw_Colour (symbols.toml). the window colour byte Menu_DrawBox is handed
 
 // --- the character records and the party ------------------------------------------
 constexpr std::uint32_t kRecords = 0x903A70;       // CharacterRecords, 0xA4 each
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kMemberMap = 0x66972C;     // a member id's record (MoveScript_EffectState's bytes), unbounded
-constexpr std::uint32_t kPartyBits = 0x904061;     // the byte MasterWin_Available tests (bits 3..5)
-constexpr std::uint32_t kStoryFlags = 0x904030;    // Cond_Flags + 0xA0
+// kPartyBits: now Cond_Flags[0xd1] (symbols.toml). the byte MasterWin_Available tests (bits 3..5)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0
 constexpr std::uint32_t kBattleParty = 0x904065;   // the second party list (three bytes)
 constexpr std::uint32_t kSharedList = 0x904574;    // the shared ability list, 128 bytes
-constexpr std::uint32_t kSkillSlots = 0x903AEE;    // a record's ten ability slots (+0x7E)
+// kSkillSlots: now Field_ActorStates[0x6e] (symbols.toml). a record's ten ability slots (+0x7E)
 
 // --- the gene list (MenuList kind 20) -------------------------------------------------
-constexpr std::uint32_t kGenes = 0x904650;         // u32: the eighteen gene bits
+// kGenes: now ScenaSc7_EventFlags (symbols.toml). u32: the eighteen gene bits
 constexpr std::uint32_t kGeneList = 0x6BE0B0;      // 18 bytes: bit + 1 of each set bit, then 0
 constexpr std::uint32_t kGeneTitle = 0x66B1F0;     // the list's title
 constexpr std::uint32_t kGenePiecesA = 0x66B1D8;
@@ -83,8 +83,8 @@ constexpr std::uint32_t kUsePiecesB = 0x66B4BC;
 constexpr std::uint32_t kFmtCount = 0x6639C8;      // "n / total"
 
 // --- the verb pair (handler 8 kind 5) -------------------------------------------------
-constexpr std::uint32_t kVerbA = 0x66A228;         // Menu_Verbs' entries 0 and 3
-constexpr std::uint32_t kVerbB = 0x66A240;
+// kVerbA: now Menu_Verbs (symbols.toml). Menu_Verbs' entries 0 and 3
+// kVerbB: now Menu_Verbs[0x18] (symbols.toml).
 constexpr std::uint32_t kVerbPiecesOn = 0x66B500;
 constexpr std::uint32_t kVerbPiecesOff = 0x66B4F8;
 

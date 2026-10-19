@@ -16,49 +16,49 @@ namespace rest_2c {
 namespace at {
 
 // --- the state tables the group's dispatchers read (in address order) ---------
-constexpr std::uint32_t kRestStates = 0x663FB8;          // Rest_States: 7, by 0x929F01 (Rest_Dispatch)
-constexpr std::uint32_t kPartyFormStates = 0x66409C;     // PartyForm_States: 4, by 0x929F01 (PartyForm_Dispatch)
-constexpr std::uint32_t kShopSellStates = 0x66416C;      // ShopSell_States: 4, by 0x929F01 (ShopSell_Dispatch)
-constexpr std::uint32_t kShopSellSellSteps = 0x66417C;   // ShopSell_SellSteps: 5, by 0x929F02 (ShopSell_SellStep)
-constexpr std::uint32_t kBrowseStates = 0x664190;        // ShopBrowse_States: 3, by 0x929F01 (ShopBrowse_Dispatch)
-constexpr std::uint32_t kBrowseOpenSteps = 0x66419C;     // ShopBrowse_OpenSteps: 2, by 0x929F02
-constexpr std::uint32_t kBrowseChooseSteps = 0x6641A4;   // ShopBrowse_ChooseSteps: 3, by 0x929F02
-constexpr std::uint32_t kBrowseCloseSteps = 0x6641B0;    // ShopBrowse_CloseSteps: 3, by 0x929F02
-constexpr std::uint32_t kResistStates = 0x6641BC;        // ShopResist_States: 8, by 0x929F01 (ShopResist_Dispatch)
-constexpr std::uint32_t kSharedListStates = 0x664254;    // SharedList_States: 5, by 0x929F01 (SharedList_Dispatch)
-constexpr std::uint32_t kTalkStates = 0x66450C;          // MasterTalk_States: 7, by 0x9398CF (MasterTalk_Dispatch)
-constexpr std::uint32_t kTalkIntroSteps = 0x664528;      // MasterTalk_IntroSteps: 2, by 0x9398D1
-constexpr std::uint32_t kTalkAskSteps = 0x664530;        // MasterTalk_AskSteps: 6, by 0x9398D1
-constexpr std::uint32_t kTalkPickSteps = 0x664548;       // MasterTalk_PickSteps: 9, by 0x9398D1
+// kRestStates: now Rest_States (symbols.toml). Rest_States: 7, by 0x929F01 (Rest_Dispatch)
+// kPartyFormStates: now PartyForm_States (symbols.toml). PartyForm_States: 4, by 0x929F01 (PartyForm_Dispatch)
+// kShopSellStates: now ShopSell_States (symbols.toml). ShopSell_States: 4, by 0x929F01 (ShopSell_Dispatch)
+// kShopSellSellSteps: now ShopSell_SellSteps (symbols.toml). ShopSell_SellSteps: 5, by 0x929F02 (ShopSell_SellStep)
+// kBrowseStates: now ShopBrowse_States (symbols.toml). ShopBrowse_States: 3, by 0x929F01 (ShopBrowse_Dispatch)
+// kBrowseOpenSteps: now ShopBrowse_OpenSteps (symbols.toml). ShopBrowse_OpenSteps: 2, by 0x929F02
+// kBrowseChooseSteps: now ShopBrowse_ChooseSteps (symbols.toml). ShopBrowse_ChooseSteps: 3, by 0x929F02
+// kBrowseCloseSteps: now ShopBrowse_CloseSteps (symbols.toml). ShopBrowse_CloseSteps: 3, by 0x929F02
+// kResistStates: now ShopResist_States (symbols.toml). ShopResist_States: 8, by 0x929F01 (ShopResist_Dispatch)
+// kSharedListStates: now SharedList_States (symbols.toml). SharedList_States: 5, by 0x929F01 (SharedList_Dispatch)
+// kTalkStates: now MasterTalk_States (symbols.toml). MasterTalk_States: 7, by 0x9398CF (MasterTalk_Dispatch)
+// kTalkIntroSteps: now MasterTalk_IntroSteps (symbols.toml). MasterTalk_IntroSteps: 2, by 0x9398D1
+// kTalkAskSteps: now MasterTalk_AskSteps (symbols.toml). MasterTalk_AskSteps: 6, by 0x9398D1
+// kTalkPickSteps: now MasterTalk_PickSteps (symbols.toml). MasterTalk_PickSteps: 9, by 0x9398D1
 // A table the group's functions sit in but no code of the group reads:
 constexpr std::uint32_t kFigureStates = 0x663E28;        // MasterFigure_States: 6, by 0x9398E1 (R2B's 0x57F320)
 
 // --- the menu block and the shop's cells ---------------------------------------
-constexpr std::uint32_t kMode = 0x929F00;        // ShopMode_States' index
+// kMode: now BattleE1_Mode (symbols.toml). ShopMode_States' index
 constexpr std::uint32_t kState = 0x929F01;       // the mode's state
-constexpr std::uint32_t kStep = 0x929F02;        // the state's step
+// kStep: now FieldS_Step (symbols.toml). the state's step
 constexpr std::uint32_t kTimer = 0x929F04;       // a frame counter
-constexpr std::uint32_t kAnswer = 0x929F0B;      // a yes / no answer (0 the first)
-constexpr std::uint32_t kObject = 0x929F0C;      // the touched object (0xFF none, 0xFE the save point)
-constexpr std::uint32_t kKeptObject = 0x929F0F;  // the object Inn_Begin kept
+// kAnswer: now FieldS_Answer (symbols.toml). a yes / no answer (0 the first)
+// kObject: now ModeStates_ShopObject (symbols.toml). the touched object (0xFF none, 0xFE the save point)
+// kKeptObject: now AreaW3c_Load0F (symbols.toml). the object Inn_Begin kept
 constexpr std::uint32_t kMemberCount = 0x929EC0; // Field_MemberCount
-constexpr std::uint32_t kColour = 0x903A5A;      // the window style byte
-constexpr std::uint32_t kZenny = 0x904058;       // Party_Zenny
-constexpr std::uint32_t kPressed = 0x7E1BEC;     // Input_Pressed's low word
-constexpr std::uint32_t kConfirm = 0x90358E;     // Field_ConfirmButtons (u16)
-constexpr std::uint32_t kCancel = 0x903590;      // Field_CancelButtons (u16)
+// kColour: now BattleDraw_Colour (symbols.toml). the window style byte
+// kZenny: now Party_Zenny (symbols.toml). Party_Zenny
+// kPressed: now Input_Pressed (symbols.toml). Input_Pressed's low word
+// kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
 constexpr std::uint32_t kMsgFlags = 0x7DEE44;    // the message box's flags (bit 1: done)
-constexpr std::uint32_t kInputFlags = 0x905BA2;  // Field_InputFlags
-constexpr std::uint32_t kArea = 0x904EFC;        // Game_AreaNumber (u16)
-constexpr std::uint32_t kWait = 0x66C810;        // MoveScript_WaitWordDA (u16)
-constexpr std::uint32_t kRequest = 0x66C7D8;     // Field_Request (u8)
-constexpr std::uint32_t kSaveBack = 0x6BC880;    // the save menu's "saved" byte (FieldSave_End reads it)
-constexpr std::uint32_t kInnCursor = 0x6BC881;   // the inn prompt's cursor
-constexpr std::uint32_t kSellFlag = 0x6BC8A4;    // cleared by ShopSell_Open
-constexpr std::uint32_t kSellOn = 0x6BC8AA;      // set by ShopSell_Open
+// kInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags
+// kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
+// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA (u16)
+// kRequest: now Field_Request (symbols.toml). Field_Request (u8)
+// kSaveBack: now Rest2c_SaveBack (symbols.toml). the save menu's "saved" byte (FieldSave_End reads it)
+// kInnCursor: now ShopStates_Choice (symbols.toml). the inn prompt's cursor
+// kSellFlag: now Rest2c_SellFlag (symbols.toml). cleared by ShopSell_Open
+// kSellOn: now ShopStates2_SellFlag (symbols.toml). set by ShopSell_Open
 
 // --- the save ---------------------------------------------------------------------
-constexpr std::uint32_t kSlot = 0x9036D4;        // u32: the save cursor, 0..15
+// kSlot: now Rest2c_Slot (symbols.toml). u32: the save cursor, 0..15
 constexpr std::uint32_t kPath = 0x904BA0;        // the text scratch: the save file's name
 constexpr std::uint32_t kPathFormat = 0x664068;  // its format (one number: the slot)
 constexpr std::uint32_t kSaveSize = 0x12B0;      // Save_WriteFile's size
@@ -75,20 +75,20 @@ constexpr std::uint32_t kMemberRecord = 0x66972C; // MoveScript_EffectState: a p
 constexpr std::uint32_t kRecords = 0x903A70;     // the character records, 0xA4 each
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kPartyList = 0x904062;   // the party's three ids
-constexpr std::uint32_t kStoryByte = 0x90412C;   // its low 7 bits compared with 5 and 0xC (id 4's form)
-constexpr std::uint32_t kStoryFlags = 0x904030;  // the story flags (Flags_Test row)
+// kStoryByte: now AreaW0b_PartySet (symbols.toml). its low 7 bits compared with 5 and 0xC (id 4's form)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Flags_Test row)
 
 // --- the master's cells --------------------------------------------------------------
-constexpr std::uint32_t kMaster = 0x9039F5;      // the master spoken to (the per-master message table's index)
+// kMaster: now AreaW0c_TailSub (symbols.toml). the master spoken to (the per-master message table's index)
 constexpr std::uint32_t kMetFlags = 0x904654;    // Flags_Set by master when the introduction opens
 constexpr std::uint32_t kIntroFlags = 0x904657;  // Flags_Test / Flags_Set by master: the introduction done
 constexpr std::uint32_t kMasterMessages = 0x6644E8;  // u16 per master: its script messages' base
-constexpr std::uint32_t kTalkMode = 0x9398CF;    // MasterTalk_States' index
-constexpr std::uint32_t kTalkStep = 0x9398D1;    // its step
-constexpr std::uint32_t kTalkSlide = 0x9398D3;   // the panels' slide counter (4 out .. 0 in)
-constexpr std::uint32_t kTalkPick = 0x9398CE;    // the pick (cleared when the panels are in)
-constexpr std::uint32_t kTalkD0 = 0x9398D0;      // cleared by MasterTalk_Reset
-constexpr std::uint32_t kTalkCD = 0x9398CD;      // cleared by MasterTalk_Reset
+// kTalkMode: now AreaW0c_AnswerMark (symbols.toml). MasterTalk_States' index
+// kTalkStep: now AreaW3f_AnswerMarkD1 (symbols.toml). its step
+// kTalkSlide: now Rest2c_TalkSlide (symbols.toml). the panels' slide counter (4 out .. 0 in)
+// kTalkPick: now Rest2d_Cursor (symbols.toml). the pick (cleared when the panels are in)
+// kTalkD0: now Rest2c_TalkD0 (symbols.toml). cleared by MasterTalk_Reset
+// kTalkCD: now Rest2c_TalkCD (symbols.toml). cleared by MasterTalk_Reset
 constexpr std::uint32_t kMembers = 0x802E88;     // ObjTrio + 0x148: Field_Members' record index, 0x14C apart
 constexpr std::uint32_t kObjStride = 0x14C;
 constexpr std::uint32_t kExpTable = 0x658F48;    // Char_ExpTable: 0x318 bytes a member, a u16 every 8
@@ -113,17 +113,17 @@ constexpr rdata::Const kBoxSubBottom{0x5C41B8};
 // R2B's layout (docs/rest_2c.md 1.1): model A 0x80 bytes, model B 0x939960, then
 // the screen's cells 0x9399E0.. - the cells past +0x80 below are not A's.
 constexpr std::uint32_t kFigure = 0x9398E0;
-constexpr std::uint32_t kFigureDone = 0x9398E6;  // +6: 1 when a move reached its end
-constexpr std::uint32_t kFigureY = 0x93991C;     // +0x3C: the height, 16.16
-constexpr std::uint32_t kFigureScale = 0x939920; // +0x40
+// kFigureDone: now Rest2c_FigureDone (symbols.toml). +6: 1 when a move reached its end
+// kFigureY: now Rest2c_FigureY (symbols.toml). +0x3C: the height, 16.16
+// kFigureScale: now Rest2c_FigureScale (symbols.toml). +0x40
 constexpr std::uint32_t kFigureRgb = 0x93993D;   // +0x5D..+0x5F: the colour
-constexpr std::uint32_t kFigureAngle = 0x93994C; // +0x6C
-constexpr std::uint32_t kFigureLift = 0x9399A0;  // model B's scale (+0x40): A stands on B, in 0xA00ths
-constexpr std::uint32_t kFigureFade = 0x9399E7;  // the fourth "given" count (R2B's 0x9399E4 + 3): the fade's step
-constexpr std::uint32_t kFigureScaleIndex = 0x9399EB;  // R2B's level (Shisu_ScaleIndex's answer)
+// kFigureAngle: now Rest2c_FigureAngle (symbols.toml). +0x6C
+// kFigureLift: now Rest2c_FigureLift (symbols.toml). model B's scale (+0x40): A stands on B, in 0xA00ths
+// kFigureFade: now Rest2c_FigureFade (symbols.toml). the fourth "given" count (R2B's 0x9399E4 + 3): the fade's step
+// kFigureScaleIndex: now Rest2c_FigureScaleIndex (symbols.toml). R2B's level (Shisu_ScaleIndex's answer)
 constexpr std::uint32_t kScaleTable = 0x663D7C;  // the scales the index reads (in place)
-constexpr std::uint32_t kKind2X = 0x905E64;      // Field_Kind2X
-constexpr std::uint32_t kKind2Z = 0x905E60;      // Field_Kind2Z
+// kKind2X: now Field_Kind2X (symbols.toml). Field_Kind2X
+// kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z
 
 // --- the windows (WindowRecords 0x803160, 0x24 each) ---------------------------------
 constexpr std::uint32_t kWindows = 0x803160;

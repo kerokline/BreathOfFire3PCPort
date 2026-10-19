@@ -37,7 +37,7 @@ constexpr unsigned kEffectCount = 20;
 constexpr unsigned kObjectStride = 0xA4;   // Sprite_Objects and Sprite_ObjectsExtra
 constexpr unsigned kObjects = 0x1E;        // Sprite_Objects' 30, then Sprite_ObjectsExtra's 4
 constexpr unsigned kObjectsAll = 0x22;
-constexpr U kSteps = 0x6697B0;   // Field_DirectionSteps: 8 rows of two longs
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
 constexpr U kScriptFlagsHigh = 0x9039A3;                // Field_ScriptFlags' high byte (0x9039A2, u16)
 
 unsigned char* S() { return Sprite_Current; }
@@ -64,8 +64,8 @@ void ByStep(U table, unsigned count, const char* who) { CodeAt(table, count, S()
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked (`shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as the originals do.
-U StepX(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: (d - 1) / 2
 // as a signed division (cdq, sub, sar), so direction 0 gives 0.
