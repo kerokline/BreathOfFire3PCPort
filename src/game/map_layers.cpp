@@ -755,7 +755,7 @@ void ArmSideDup() {
               "(BOF3X_SIDE_DUP=0 for the original's read)");
 }
 
-// The quicksave (SP-G, docs/quicksave.md section 9): g_file_sides is the area
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): g_file_sides is the area
 // file's heights as loaded, and the arena they came from has been patched
 // since (the sea bridge's sky), so it is carried, not rebuilt: up to its last
 // non-zero byte, the rest zero.

@@ -473,7 +473,7 @@ void RunEnd() {
     g_in_run = false;
 }
 
-// The quicksave (SP-G, docs/quicksave.md section 9). Between two logic
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant). Between two logic
 // frames the last pass's runs are the table g_pass stamped, and the next
 // pass's Defer reads them: they are what the next frame's layering is judged
 // by, so a quicksave carries them (not the census's g_pass += 2, which would

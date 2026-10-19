@@ -269,7 +269,7 @@ void Restore(bof3::SnapshotReader& r) {
 // made since, a row freed since, other pixels, other generations); the live
 // caches' objects released only after a present, and the tables emptied; the
 // kept words keeping their live values; the record read to its end. The glyph
-// rebuild and the first frame are the live check's (docs/quicksave.md 9).
+// rebuild and the first frame are the live check's (docs/quicksave.md, the graphics participant).
 
 int g_fails = 0;
 void Check(bool ok, const char* what) {
@@ -406,6 +406,5 @@ void GfxSnapshot_Inject() {
     if (Va(&D3d_ShadeModeCache) != 0x6C3A44) Fatal("gfx_snapshot: D3d_ShadeModeCache moved");
     if (bof3::IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : bof3::WantsShadow("gfx_snapshot"))
         SelfTest();
-    bof3::Snapshot_Register("GFX", &Save, &Restore);
-    bof3::Snapshot_RegisterBeforeRestore("GFX", &Before);
+    bof3::Snapshot_Register("GFX", &Save, &Restore, &Before);
 }

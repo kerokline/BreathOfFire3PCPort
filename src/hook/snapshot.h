@@ -68,6 +68,12 @@ private:
 
 using SnapshotSaveFn = void (*)(SnapshotWriter&);
 using SnapshotRestoreFn = void (*)(SnapshotReader&);
+// Optional (SP-A, the audio participant): runs at a restore once the file has
+// been checked and before the span is written, so the words it reads are the
+// live process's - the participant lets go of what they name (DirectSound
+// buffers, heap blocks), which after the span is written it could no longer
+// find: the words are then the take's.
+using SnapshotDiscardFn = void (*)();
 
 // A module owning state outside the span registers once, at start-up (its
 // _Inject): `tag` 1..15 printable characters, unique. Save runs at the take;
@@ -76,18 +82,8 @@ using SnapshotRestoreFn = void (*)(SnapshotReader&);
 // (a participant that needs the live values it had - a device pointer to
 // release - keeps its own copy outside the span). A registration after the
 // first take or restore, or a second one of a tag, is a Fatal.
-void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore);
-
-// Optional, for a participant already registered (SP-G, the graphics
-// participant): `before` runs at a restore once the file has been checked and
-// accepted, BEFORE the span is written - the one moment the span still holds
-// the live process's values. For what a Restore cannot reach afterwards: the
-// device objects the live span names, to release, and the live words of the
-// process to keep. It runs for every participant that has one, in the file's
-// record order, on the own stack. Registered at start-up like the rest; a tag
-// with no participant, or a second one, is a Fatal.
-using SnapshotBeforeFn = void (*)();
-void Snapshot_RegisterBeforeRestore(const char* tag, SnapshotBeforeFn before);
+void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore,
+                       SnapshotDiscardFn discard = nullptr);
 
 // The keys' requests (Game_WndProc) and the quick menu's (stage B): nothing
 // happens until Snapshot_Pending. Slots are 0x10..0x1F; F7 loads 0x10, the

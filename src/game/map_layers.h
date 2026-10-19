@@ -17,7 +17,7 @@ class SnapshotReader;
 
 namespace map_layers {
 
-// The quicksave (SP-G, docs/quicksave.md section 9): DIV-0085's side faces as
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): DIV-0085's side faces as
 // the area file loaded them, in the graphics participant's record.
 void QuickSaveSides(bof3::SnapshotWriter& w);
 void QuickRestoreSides(bof3::SnapshotReader& r);

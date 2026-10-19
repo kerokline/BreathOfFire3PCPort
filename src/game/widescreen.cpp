@@ -638,7 +638,7 @@ void Widescreen_ArmFills() {
                   g_live);
 }
 
-// The quicksave (SP-G, docs/quicksave.md section 9): the faster slide's split
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): the faster slide's split
 // of the 22 window records - where each box is drawn against Capcom's x, and
 // its leg - is the DLL's, not the span's, and changes in play: carried whole.
 void Widescreen_QuickSave(bof3::SnapshotWriter& w) {

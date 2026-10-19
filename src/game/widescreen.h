@@ -190,7 +190,7 @@ class SnapshotWriter;
 class SnapshotReader;
 }  // namespace bof3
 
-// The quicksave (SP-G, docs/quicksave.md section 9): DIV-0041's slide split,
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): DIV-0041's slide split,
 // in the graphics participant's record.
 void Widescreen_QuickSave(bof3::SnapshotWriter& w);
 void Widescreen_QuickRestore(bof3::SnapshotReader& r);

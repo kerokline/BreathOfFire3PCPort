@@ -56,7 +56,7 @@ bool Band();
 int __cdecl DrawOnly();
 std::uint32_t* DrawOnlySeed();
 
-// The quicksave (SP-G, docs/quicksave.md section 9): the generator's seed and
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): the generator's seed and
 // the last inset noted, in the graphics participant's record.
 void QuickSave(bof3::SnapshotWriter& w);
 void QuickRestore(bof3::SnapshotReader& r);

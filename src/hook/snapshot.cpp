@@ -105,7 +105,7 @@ struct Participant {
     std::string tag;
     SnapshotSaveFn save;
     SnapshotRestoreFn restore;
-    SnapshotBeforeFn before = nullptr;   // Snapshot_RegisterBeforeRestore: before the span is written
+    SnapshotDiscardFn discard = nullptr;   // before the span is written (SP-A)
 };
 using Registry = std::vector<Participant>;
 
@@ -500,10 +500,10 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
 // caller's check, so a refusal there still leaves everything untouched.
 void Restore(const Parsed& p, const Registry& registry) {
     const Header& h = p.header;
+    for (const Parsed::Rec& r : p.records)   // the live process's resources let go while its words still name them
+        if (registry[r.participant].discard) registry[r.participant].discard();
     std::vector<std::vector<unsigned char>> live(kKeptCount);
     for (std::size_t i = 0; i < kKeptCount; ++i) live[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
-    for (const Parsed::Rec& r : p.records)
-        if (registry[r.participant].before) registry[r.participant].before();
     WriteRange(h.span_base, p.image, h.span_bytes);
     if (h.pool_bytes) WriteRange(h.pool_base, p.pool, h.pool_bytes);
     for (std::size_t i = 0; i < kKeptCount; ++i) WriteRange(kKept[i].at, live[i].data(), kKept[i].bytes);
@@ -1025,7 +1025,7 @@ void SelfTest() {
 
 }  // namespace
 
-void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore) {
+void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore, SnapshotDiscardFn discard) {
     if (g_registry_closed) Fatal("snapshot: participant '%s' registered after the first quicksave or quickload", tag);
     const std::size_t n = tag ? std::strlen(tag) : 0;
     if (n == 0 || n >= kTagBytes) Fatal("snapshot: a participant's tag must be 1..%u characters", (unsigned)kTagBytes - 1);
@@ -1034,20 +1034,8 @@ void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn r
     if (!save || !restore) Fatal("snapshot: participant '%s' registered without both Save and Restore", tag);
     for (const Participant& p : g_registry)
         if (p.tag == tag) Fatal("snapshot: participant '%s' registered twice", tag);
-    g_registry.push_back({tag, save, restore});
+    g_registry.push_back({tag, save, restore, discard});
     Log("quicksave   participant '%s' registered", tag);
-}
-
-void Snapshot_RegisterBeforeRestore(const char* tag, SnapshotBeforeFn before) {
-    if (g_registry_closed) Fatal("snapshot: participant '%s' given a before-restore step after the first quicksave or quickload", tag);
-    if (!before) Fatal("snapshot: participant '%s' given a null before-restore step", tag);
-    for (Participant& p : g_registry) {
-        if (p.tag != tag) continue;
-        if (p.before) Fatal("snapshot: participant '%s' given a before-restore step twice", tag);
-        p.before = before;
-        return;
-    }
-    Fatal("snapshot: a before-restore step for '%s', which is not a registered participant", tag ? tag : "(null)");
 }
 
 void Snapshot_RequestTake() {

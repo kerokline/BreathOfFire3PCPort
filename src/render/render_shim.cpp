@@ -267,7 +267,7 @@ TexVersion* NewVersion(Surface* s) {
     return v;
 }
 
-// --- the quicksave's deferred releases (SP-G, docs/quicksave.md section 9) ---
+// --- the quicksave's deferred releases (SP-G, docs/quicksave.md, the graphics participant) ---
 // A quick-load gives up every texture the live caches held. The frame recorded
 // before the load is still to be presented (the next Gpu_PutDispEnv), and its
 // draws name those surfaces' versions: released now, each would copy its
@@ -294,7 +294,7 @@ void ReleaseDeferred() {
 }
 
 // --- BOF3X_FRAMEHASH: what each presented frame draws, as one number --------------
-// The quicksave's graphics check (docs/quicksave.md section 9): a restore
+// The quicksave's graphics check (docs/quicksave.md, the graphics participant): a restore
 // followed by a frame must draw what the live game drew from the same state.
 // Each present logs a 64-bit FNV-1a over its commands in order: the kind, the
 // pipe state but its pointers, the vertices each draw names, and for a
@@ -1222,7 +1222,7 @@ Surface* const* AllSurfaces(U* n) {
     return g_surfaces;
 }
 
-// --- the quicksave (SP-G, docs/quicksave.md section 9) -----------------------------
+// --- the quicksave (SP-G, docs/quicksave.md, the graphics participant) -----------------------------
 
 void ReleaseAfterPresent(void* object) {
     if (!object) return;

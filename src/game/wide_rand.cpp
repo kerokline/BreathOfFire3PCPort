@@ -65,7 +65,7 @@ int __cdecl DrawOnly() {
 }
 std::uint32_t* DrawOnlySeed() { return &g_seed; }
 
-// The quicksave (SP-G, docs/quicksave.md section 9): the draw-only generator
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): the draw-only generator
 // steps in play, and the last inset NoteInset saw decides the next split -
 // both the DLL's, carried as numbers.
 void QuickSave(bof3::SnapshotWriter& w) {

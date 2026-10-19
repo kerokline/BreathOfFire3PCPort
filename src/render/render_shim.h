@@ -196,7 +196,7 @@ void ShadowWritten(int x, int y, int w, int h);
 // page whose texel (0, 0) is VRAM cell (x, y), tiling a w x h window.
 void NoteDirectPage(void* texture, int x, int y, int w, int h);
 
-// --- the quicksave (SP-G, docs/quicksave.md section 9) -----------------------
+// --- the quicksave (SP-G, docs/quicksave.md, the graphics participant) -----------------------
 // Called at a quick-load, between two logic frames.
 
 // Releases a surface or texture interface (vtable slot 2) right after the next
