@@ -162,8 +162,8 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
         rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->step_x = 0;
         const unsigned arg = static_cast<unsigned char>(MoveScript_EffectArg[rv::As<records::PartyMember>(Field_State)->char_id]);
         rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->step_z = static_cast<std::int32_t>(arg);
-        SetWord(Effect(rv::Bytes(c)[0xB]) + 0x2E, static_cast<std::uint16_t>(c->screen_x));
-        SetWord(Effect(rv::Bytes(c)[0xB]) + 0x30, static_cast<std::uint16_t>(c->screen_y));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->screen_x, static_cast<std::uint16_t>(c->screen_x));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->screen_y, static_cast<std::uint16_t>(c->screen_y));
         c->step = 2;
         break;
     }
@@ -228,7 +228,7 @@ void ProbeSide(unsigned d) {
     if (Byte(at::kScratch) == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = g.ground_at(x, z);
     s = rv::Current<records::PartyMember>();
-    if (static_cast<short>(Word(rv::Bytes(s) + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
+    if (static_cast<short>(s->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
 }  // namespace
 
@@ -420,12 +420,12 @@ FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
     records::EffectObject* const e = rv::As<records::EffectObject>(Effect(i));
     e->flags = 1;
     e->kind = op[1];
-    SetWord(rv::Bytes(e) + 0x36, op[3]);
-    SetWord(rv::Bytes(e) + 0x34, op[2] != 0 ? 0x8000 : 0);
-    SetWord(rv::Bytes(e) + 0x3A, op[5]);
-    SetWord(rv::Bytes(e) + 0x38, op[4] != 0 ? 0x8000 : 0);
+    e->x_whole = op[3];
+    e->x_frac = op[2] != 0 ? 0x8000 : 0;
+    e->z_whole = op[5];
+    e->z_frac = op[4] != 0 ? 0x8000 : 0;
     const long h = g.elevation(e->x, e->z);
-    SetWord(rv::Bytes(e) + 0x3E, static_cast<std::uint16_t>(h));
+    e->height_whole = static_cast<std::uint16_t>(h);
     rv::Bytes(e)[0xB] = op[6];
 }
 

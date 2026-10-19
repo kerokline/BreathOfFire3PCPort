@@ -344,9 +344,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
             SetLong(r + 8, S16(script + Pos(object) + 3) / static_cast<signed char>(r[2]));
             SetLong(r + 4, S16(script + Pos(object) + 1) / static_cast<signed char>(r[2]));
         } else {
-            SetLong(Sprite_Current + 0x6C, S16(script + Pos(object) + 5));
-            SetLong(Sprite_Current + 0x68, S16(script + Pos(object) + 3));
-            SetLong(Sprite_Current + 0x64, S16(script + Pos(object) + 1));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[2], S16(script + Pos(object) + 5));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[1], S16(script + Pos(object) + 3));
+            rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->angle[0], S16(script + Pos(object) + 1));
         }
         object[0] |= 8;
         SetPos(object, Pos(object) + 7u);
@@ -386,13 +386,13 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
         return value;
     case 0xDB:
         g.op_db();
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
         [[fallthrough]];
     case 0xDC:
-        g.test_fb(static_cast<short>(Word(Sprite_Current + 0x36)), static_cast<short>(Word(Sprite_Current + 0x3A)));
+        g.test_fb(static_cast<short>(rv::Current<records::SpriteObject>()->x_whole), static_cast<short>(rv::Current<records::SpriteObject>()->z_whole));
         return value;
     case 0xDD:
-        g.test_fc(static_cast<short>(Word(Sprite_Current + 0x36)), static_cast<short>(Word(Sprite_Current + 0x3A)));
+        g.test_fc(static_cast<short>(rv::Current<records::SpriteObject>()->x_whole), static_cast<short>(rv::Current<records::SpriteObject>()->z_whole));
         return value;
     case 0xDE: {   // DE n: the area's handler n, as flow op 03
         const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];

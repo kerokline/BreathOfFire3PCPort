@@ -111,9 +111,9 @@ extern "C" void __cdecl Field_LeaderFrame(void) {
 // state 0xC (Field_InputFlags bit 0x20) or 0xD (area 0xBD).
 extern "C" void __cdecl Field_LeaderStart(void) {
     g.clear_steps();
-    SetLong(Sprite_Current + 0x18, 0);
-    SetLong(Sprite_Current + 0x1C, 0);
-    SetLong(Sprite_Current + 0x20, 0);
+    rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_18, 0);
+    rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_1c, 0);
+    rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_20, 0);
     rv::Current<records::PartyMember>()->step_frames = 0;
     Sprite_Current[0xA] = 0;
     Sprite_Current[6] = 0;
@@ -123,7 +123,7 @@ extern "C" void __cdecl Field_LeaderStart(void) {
         const records::PartyMember* const c = rv::Current<records::PartyMember>();
         const long z = c->z, x = c->x;
         const long ground = g.ground_at(x, z);
-        SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(ground));
+        rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(ground));
     }
     Field_State[0x128] = 3;
     Field_State[0x136] = 0;
@@ -474,8 +474,8 @@ extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
         rv::Current<records::PartyMember>()->actor = static_cast<unsigned char>(i);
         g.member_sprite(list[i], i);
         Sprite_Current[0x48] = 0;
-        SetLong(Sprite_Current + 0x40, 0x10000);
-        SetLong(Sprite_Current + 0x44, 0x10000);
+        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->scale_x, 0x10000);
+        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->scale_y, 0x10000);
         const unsigned char actor = MoveScript_EffectState[list[i]];
         m->char_index = actor;
         CopyActor(rv::Bytes(m) + 0x80, Actor(actor));
@@ -519,7 +519,7 @@ extern "C" void __cdecl Field_PartyPosition(long x, long z, unsigned direction) 
         }
         m->direction = d;
         const long ground = g.ground_at(m->x, m->z);
-        SetWord(rv::Bytes(m) + 0x3E, static_cast<std::uint16_t>(ground));
+        m->height_whole = static_cast<std::uint16_t>(ground);
         if (i != 0)
             m->flags = static_cast<unsigned char>(m->flags | 0x40);
         else

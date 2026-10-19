@@ -127,7 +127,7 @@ extern "C" void __cdecl Party_MoveMember(unsigned char* object, unsigned char di
         const unsigned char* const step = At(Address(Field_DirectionSteps) + direction * 8u);
         const long ground = g.elevation(Add(Long(step), sprite->x), Add(Long(step + 4), sprite->z));
         sprite = rv::Current<records::SpriteObject>();
-        const auto rise = static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - Word(rv::Bytes(sprite) + 0x3E));
+        const auto rise = static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - sprite->height_whole);
         if (direction & 2) {
             sprite->angle[0] = 0;
             const auto slope = static_cast<short>(direction == 3 ? rise : 0u - rise);
@@ -258,7 +258,7 @@ extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direct
     const long* const unit = MoveCmd_F9Steps + direction * 2u;
     sprite = rv::Current<records::SpriteObject>();
     sprite->step_x = Mul(unit[0], speed);
-    SetLong(Sprite_Current + 0x10, Mul(unit[1], speed));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_z, Mul(unit[1], speed));
     sprite = rv::Current<records::SpriteObject>();
     const std::int32_t frames = sprite->step_frames;
     const std::int32_t x = Add(Mul(sprite->step_x, frames), sprite->x);
@@ -290,14 +290,14 @@ extern "C" void __cdecl MoveCmd_OpF7(long x, long z, unsigned char frames, unsig
     const std::int32_t dz = Sub(z, sprite->z);
     const std::int32_t dx = Sub(x, sprite->x);
     const long ground = g.elevation(x, z);
-    const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - Word(Sprite_Current + 0x3E)));
+    const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground) - rv::Current<records::SpriteObject>()->height_whole));
     if (context[4] == 0) return;
     const unsigned char n = frames ? frames : 1;
     rv::Current<records::SpriteObject>()->step_frames = n;
     Sprite_Current[0xA] = static_cast<unsigned char>(n + 1);
-    SetLong(Sprite_Current + 0xC, dx / n);
-    SetLong(Sprite_Current + 0x10, dz / n);
-    SetLong(Sprite_Current + 0x14, rise / n);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_x, dx / n);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_z, dz / n);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->step_y, rise / n);
     rv::Current<records::SpriteObject>()->flags |= 0x10;
 }
 
@@ -336,7 +336,7 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
     const records::SpriteObject* const at = rv::Current<records::SpriteObject>();
     const std::int32_t x = Add(buffer[0], at->x);
     const std::int32_t z = Add(buffer[1], at->z);
-    const std::int32_t y = Add(buffer[2], static_cast<short>(Word(rv::Bytes(at) + 0x3E)));
+    const std::int32_t y = Add(buffer[2], static_cast<short>(at->height_whole));
     std::memcpy(&Sprite_Current, At(MapView_CornerPtr_addr), 4);
     out[0] = x;
     out[1] = z;
@@ -362,8 +362,8 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
             return;
         }
         Sprite_Current[2] = 1;
-        SetLong(Sprite_Current + 0x18, handle);
-        SetLong(Sprite_Current + 0x1C, s);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_18, handle);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_1c, s);
         if (context[4] != 0) {
             g.attach_move(t);
             context[7] = 1;
@@ -375,7 +375,7 @@ extern "C" void __cdecl MoveCmd_Attach(unsigned char* context, unsigned char mod
     rv::Current<records::SpriteObject>()->state = mode;
     if (rv::Current<records::SpriteObject>()->state != 7) return;
     rv::Current<records::SpriteObject>()->work_18 = handle;
-    SetLong(Sprite_Current + 0x1C, s);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_1c, s);
     if (context[4] != 0) g.attach_move(t);
     SetPos(context, Pos(context) + 3u);
 }
@@ -405,7 +405,7 @@ extern "C" void __cdecl MoveCmd_AttachMove(unsigned char t) {
     const std::int32_t n = static_cast<signed char>(count);
     rv::Current<records::SpriteObject>()->step_x = Sub(x, rv::Current<records::SpriteObject>()->x) / n;
     rv::Current<records::SpriteObject>()->step_z = Sub(z, rv::Current<records::SpriteObject>()->z) / n;
-    rv::Current<records::SpriteObject>()->step_y = Sub(y, static_cast<short>(Word(Sprite_Current + 0x3E))) / n;
+    rv::Current<records::SpriteObject>()->step_y = Sub(y, static_cast<short>(rv::Current<records::SpriteObject>()->height_whole)) / n;
 }
 
 // original 0x579450: the position of label `label` in `script` (PSX

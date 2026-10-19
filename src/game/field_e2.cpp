@@ -436,7 +436,7 @@ namespace {
 void HopSetUp() {
     Field_State[0x128] = static_cast<unsigned char>(Sprite_Current[0x70] + 2);
     SH_CALL(Field_JumpSetUp)();
-    SetL(Key(Sprite_Current) + 0x14, 0);
+    rv::Store<U>(rv::Current<records::PartyMember>()->step_y, 0);
     records::PartyMember* s = rv::Current<records::PartyMember>();
     s->step_frames = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(rv::Bytes(s)[0x70] + 1) * s->step_frames) << 1);
     s = rv::Current<records::PartyMember>();
@@ -523,16 +523,16 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     unsigned char* const s = Sprite_Current;
     std::int32_t x, z;
     Ahead(s, x, z);
-    const std::uint16_t height = W(Key(s) + 0x3E);
+    const std::uint16_t height = rv::As<records::PartyMember>(s)->height_whole;
     const U actor = rv::As<records::PartyMember>(Field_State)->char_id;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) > S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + actor * 2u))) {
-        SetW(Key(s) + 0x3E, static_cast<unsigned>(height) - B(at::kPaceRises + actor));
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<unsigned>(height) - B(at::kPaceRises + actor));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
         const std::uint16_t offset = W(at::kPaceHeights + rv::As<records::PartyMember>(Field_State)->char_id * 2u);
-        SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again) - offset);
+        rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again) - offset);
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3C : 0x3D);
         result = 1;
     }
@@ -559,14 +559,14 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     unsigned char* const s = Sprite_Current;
     std::int32_t x, z;
     Ahead(s, x, z);
-    const std::uint16_t height = W(Key(s) + 0x3E);
+    const std::uint16_t height = rv::As<records::PartyMember>(s)->height_whole;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) < S16(static_cast<U>(ground))) {
-        SetW(Key(s) + 0x3E, B(at::kPaceRises + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, B(at::kPaceRises + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
-        SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again));
+        rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again));
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3E : 0x3F);
         result = 1;
     }
@@ -604,13 +604,13 @@ extern "C" unsigned char __cdecl Leader_HopFall(void) {
 // height at or above it (s16), the state +2 = 3. Then a tail jump to
 // Sprite_ScriptTick, whose al it answers.
 extern "C" unsigned char __cdecl Leader_Rise(void) {
-    SetW(Key(Sprite_Current) + 0x3E, W(Key(Sprite_Current) + 0x3E) + 0x10u);
+    rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, rv::Current<records::PartyMember>()->height_whole + 0x10u);
     std::int32_t x, z;
     Ahead(Sprite_Current, x, z);
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     const int floor = S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
     records::PartyMember* const s = rv::Current<records::PartyMember>();
-    if (S16(W(Key(rv::Bytes(s)) + 0x3E)) >= floor) s->step = 3;
+    if (S16(s->height_whole) >= floor) s->step = 3;
     return SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -619,12 +619,12 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
 // the member's palette, Field_State +0x137 = 0, the states +1 = 1, +2 = 0.
 // Then a tail jump to Sprite_ScriptTick, whose al it answers.
 extern "C" unsigned char __cdecl Leader_Sink(void) {
-    SetW(Key(Sprite_Current) + 0x3E, W(Key(Sprite_Current) + 0x3E) - 0x10u);
+    rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, rv::Current<records::PartyMember>()->height_whole - 0x10u);
     unsigned char* s = Sprite_Current;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(LongAt(s + 0x34)), static_cast<long>(LongAt(s + 0x38)));
     s = Sprite_Current;
-    if (S16(static_cast<U>(ground)) > S16(W(Key(s) + 0x3E))) {
-        SetW(Key(s) + 0x3E, static_cast<U>(ground));
+    if (S16(static_cast<U>(ground)) > S16(rv::As<records::PartyMember>(s)->height_whole)) {
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<U>(ground));
         SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
         SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
         Field_State[0x137] = 0;
@@ -642,7 +642,7 @@ extern "C" void __cdecl Leader_TurnBack(void) {
     Ensure(rv::Current<records::PartyMember>()->direction == 3 ? 0x3A : 0x3B);
     SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
     SH_CALL(Sprite_ClearSteps)();
-    SetL(Key(Sprite_Current) + 0x20, 0xFFFFFFF8u);
+    rv::Store<U>(rv::Current<records::PartyMember>()->work_20, 0xFFFFFFF8u);
     rv::Current<records::PartyMember>()->state = 2;
     rv::Current<records::PartyMember>()->step = 3;
     rv::Current<records::PartyMember>()->state3 = 3;
@@ -750,7 +750,7 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
         const std::int32_t far = dx >= dz ? dx : dz;
         const U n = static_cast<U>(far >> 13) & 0xFF;
         U word = 0;
-        if (n != 0) word = static_cast<U>(S16(static_cast<U>(W(Key(fs) + 0x3E) - W(at::kElevation))) / static_cast<int>(n));
+        if (n != 0) word = static_cast<U>(S16(static_cast<U>(rv::As<records::PartyMember>(fs)->height_whole - W(at::kElevation))) / static_cast<int>(n));
         MoveScript_FAWord = word;
         fs[0x128] = 3;
         Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x40);
@@ -829,7 +829,7 @@ extern "C" void __cdecl Mode11_ObjectMove(void) {
 // MapView_SetElevation(Field_State's +0x3E) and Field_Request 0.
 extern "C" void __cdecl Mode11_ObjectEnd(void) {
     if (Field_Kind2Hold != 0) return;
-    SH_CALL(MapView_SetElevation)(static_cast<short>(W(Key(Field_State) + 0x3E)));
+    SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::PartyMember>(Field_State)->height_whole));
     Field_Request = 0;
 }
 

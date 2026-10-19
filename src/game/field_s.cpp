@@ -296,9 +296,9 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
             SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
             const U row = at::kPlaceTable + 16 * (3 * kind + i);
             ++i;
-            move_script::SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(L(row)));
-            move_script::SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(L(row + 4)));
-            move_script::SetLong(Sprite_Current + 0x3C, static_cast<std::int32_t>(L(row + 8)));
+            rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->x, static_cast<std::int32_t>(L(row)));
+            rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->z, static_cast<std::int32_t>(L(row + 4)));
+            rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->height, static_cast<std::int32_t>(L(row + 8)));
             rv::Current<records::PartyMember>()->state = 0;
             rv::Current<records::PartyMember>()->step = 0;
             rv::Current<records::PartyMember>()->state3 = 0;

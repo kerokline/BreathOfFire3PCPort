@@ -627,16 +627,16 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     g.obj_reset();
     g.set_bank(Word(At(kScratchBank)));
     rv::As<records::SpriteObject>(Sprite())->flags = 1;
-    SetDword(Sprite() + 0x34, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
+    rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->x, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
     SetDword(At(Sprite_Objects_addr + 0x8c + S16(Word(At(kScratchX))) * kObjectStride), static_cast<U>(rv::As<records::SpriteObject>(Sprite())->x));
-    SetDword(Sprite() + 0x38, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
+    rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->z, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
     {
         records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
         const U n = S16(Word(At(kScratchX))) * kObjectStride;
         SetDword(At(Sprite_Objects_addr + 0x90 + n), static_cast<U>(s->z));
         SetDword(At(Sprite_Objects_addr + 0x94 + n), 0);
         const long elevation = g.elevation(static_cast<long>(static_cast<U>(s->x)), static_cast<long>(static_cast<U>(s->z)));
-        SetWord(Sprite() + 0x3E, static_cast<U>(elevation));
+        rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->height_whole, static_cast<U>(elevation));
     }
     rv::As<records::SpriteObject>(Sprite())->state = op[8];
     Sprite()[2] = op[0xA];
@@ -661,19 +661,19 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     g.set_animation(rv::As<records::SpriteObject>(Sprite())->direction);
     {
         unsigned char* const s = Sprite();
-        g.set_byte(Word(s + 0x36), Word(s + 0x3A), 0x10);
+        g.set_byte(static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole), static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole), 0x10);
     }
     unsigned char* s = Sprite();
-    if (Word(s + 0x34) != 0) {
-        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, Word(s + 0x3A), 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->x_frac) != 0) {
+        g.set_byte((static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole) + 1u) & 0xFFFFu, static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole), 0x10);
         s = Sprite();
     }
-    if (Word(s + 0x38) != 0) {
-        g.set_byte(Word(s + 0x36), (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->z_frac) != 0) {
+        g.set_byte(static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole), (static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole) + 1u) & 0xFFFFu, 0x10);
         s = Sprite();
     }
-    if (Word(s + 0x34) != 0 && Word(s + 0x38) != 0)
-        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->x_frac) != 0 && static_cast<U>(rv::As<records::SpriteObject>(s)->z_frac) != 0)
+        g.set_byte((static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole) + 1u) & 0xFFFFu, (static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole) + 1u) & 0xFFFFu, 0x10);
     SetWord(At(kScratchX), Word(At(kScratchX)) + 1u);
 }
 

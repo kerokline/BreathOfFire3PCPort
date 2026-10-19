@@ -99,9 +99,9 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
     const int ey = Angle(1);
     e->flags = 1;
     e->kind = 0x13;
-    SetLong(rv::Bytes(e) + 0x64, ex);
-    SetLong(rv::Bytes(e) + 0x68, ey);
-    SetLong(rv::Bytes(e) + 0x6C, Angle(2));
+    e->angle[0] = ex;
+    e->angle[1] = ey;
+    e->angle[2] = Angle(2);
     e->timer = mode;
 }
 

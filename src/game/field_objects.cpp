@@ -153,11 +153,11 @@ extern "C" void __cdecl Field_ObjectMotion(unsigned char* object) {
                                                                  static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->step_x));
         rv::Current<records::SpriteObject>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) +
                                                                  static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->step_z));
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(Word(Sprite_Current + 0x3E) + Word(Sprite_Current + 0x14)));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(rv::Current<records::SpriteObject>()->height_whole + Word(Sprite_Current + 0x14)));
         --rv::Current<records::SpriteObject>()->step_frames;
         if (rv::Current<records::SpriteObject>()->step_frames == 0) {   // arrived
             if (!(context[0] & 0x80))
-                SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
+                rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z)));
             obj->counter = 0;
             const unsigned char after = Sprite_Current[2];
             if (static_cast<int>(after) - 1 < 3) {
@@ -246,7 +246,7 @@ extern "C" void __cdecl Field_ObjectFollow(unsigned char* object) {
         g.attach_offset(offset, Sprite_Current[0x1C]);
         rv::Current<records::SpriteObject>()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x) + static_cast<std::uint32_t>(offset[0]));
         rv::Current<records::SpriteObject>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z) + static_cast<std::uint32_t>(offset[1]));
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(Word(Sprite_Current + 0x3E) + static_cast<std::uint16_t>(offset[2])));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(rv::Current<records::SpriteObject>()->height_whole + static_cast<std::uint16_t>(offset[2])));
     }
     g.update(object);
     rv::Current<records::SpriteObject>()->direction &= 7;

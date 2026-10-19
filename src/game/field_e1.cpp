@@ -444,7 +444,7 @@ extern "C" void __cdecl Field_JumpAir(void) {
     else if (held & 0x4000) Fe2(at::kJumpAirB);
     else if (W(at::kButtonMap) & held) Fe2(at::kJumpAirC);
     if (ScriptFlag8()) return;
-    SH_CALL(MapView_SetElevation)(static_cast<short>(Word(Sc() + 0x3E)));
+    SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::PartyMember>(Sc())->height_whole));
     SH_CALL(Field_JumpCamera)();
 }
 
@@ -555,8 +555,8 @@ extern "C" void __cdecl Field_ContentEnd(void) {
         records::SpriteObject* const object = rv::As<records::SpriteObject>(ContentObject());
         if (rv::Bytes(object)[0xB] & 1) {
             object->flags = 0;
-        } else if (Word(rv::Bytes(object) + 0x34) == 0 && Word(rv::Bytes(object) + 0x38) == 0) {
-            SH_CALL(AreaMap_SetByte)(Word(rv::Bytes(object) + 0x36), Word(rv::Bytes(object) + 0x3A), 0x10);
+        } else if (object->x_frac == 0 && object->z_frac == 0) {
+            SH_CALL(AreaMap_SetByte)(object->x_whole, object->z_whole, 0x10);
         }
     }
     if (Field_InputFlags & 0x20) {
@@ -804,7 +804,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
 extern "C" void __cdecl Party_PlaceAtSlots(void) {
     const unsigned n = Field_MemberCount;
     for (unsigned i = 0; i < n; ++i) {
-        SetLong(Member(i) + 0x34, L(at::kSlotPositions + 8 * i));
+        rv::Store<std::int32_t>(rv::As<records::PartyMember>(Member(i))->x, L(at::kSlotPositions + 8 * i));
         rv::As<records::PartyMember>(Member(i))->z = L(at::kSlotPositions + 8 * i + 4);
     }
     unsigned k = 0;
@@ -872,7 +872,7 @@ extern "C" void __cdecl Party_PlacesByList(void) {
             m->z = z;
             const long ground = SH_CALL(MapView_GroundAt)(m->x, z);
             count = Field_MemberCount;
-            SetWord(rv::Bytes(m) + 0x3E, static_cast<std::uint32_t>(ground));
+            m->height_whole = static_cast<std::uint32_t>(ground);
             members = count;
         }
     }
@@ -951,9 +951,9 @@ extern "C" void __cdecl Field_PendingDrop(void) {
     SH_CALL(Sprite_EnsureAnimation)(rv::As<records::PartyMember>(Sc())->direction == 3 ? 0x3A : 0x3B);
     rv::As<records::PartyMember>(Sc())->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(Sc())->flags & 0xBF);
     const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::PartyMember>(Sc())->x, rv::As<records::PartyMember>(Sc())->z);
-    SetWord(Sc() + 0x3E, static_cast<std::uint32_t>(ground) + 0x7D0);
+    rv::Store<unsigned>(rv::As<records::PartyMember>(Sc())->height_whole, static_cast<std::uint32_t>(ground) + 0x7D0);
     SH_CALL(Sprite_ClearSteps)();
-    SetLong(Sc() + 0x20, -8);
+    rv::Store<std::int32_t>(rv::As<records::PartyMember>(Sc())->work_20, -8);
     rv::As<records::PartyMember>(Sc())->state = 2;
     rv::As<records::PartyMember>(Sc())->step = 3;
     rv::As<records::PartyMember>(Sc())->state3 = 3;

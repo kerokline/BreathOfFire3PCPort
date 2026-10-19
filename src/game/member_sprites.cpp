@@ -120,16 +120,16 @@ extern "C" void __cdecl Field_MemberFrame(void) {
 // +6 its index less one, grounded, walking speed 3, its animation, state 1.
 extern "C" void __cdecl Member_Start(void) {
     g.clear_steps();
-    SetLong(Sprite_Current + 0x18, 0);
-    SetLong(Sprite_Current + 0x1C, 0);
-    SetLong(Sprite_Current + 0x20, 0);
+    rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_18, 0);
+    rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_1c, 0);
+    rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->work_20, 0);
     Sprite_Current[6] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->actor - 1);
     Sprite_Current[7] = 0;
     {
         const records::PartyMember* const c = rv::Current<records::PartyMember>();
         const long z = c->z, x = c->x;
         const long ground = g.ground_at(x, z);
-        SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(ground));
+        rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(ground));
     }
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
@@ -376,7 +376,7 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] & 0xFE);
     Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] | (Member(0)[0x138] & 1));
     const long here = g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
-    SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(here));
+    rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(here));
     rv::Current<records::PartyMember>()->ot_slot = Member(0)[0x29];
     rv::Current<records::PartyMember>()->state = 2;
     rv::Current<records::PartyMember>()->step = 2;
@@ -491,8 +491,8 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     bool found = false;
     for (;;) {
         g.direction_to(x_arg, z_arg, &dir);
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(((RowX(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(((RowZ(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
+        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->x, static_cast<std::int32_t>(((RowX(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
+        rv::Store<std::int32_t>(rv::Current<records::PartyMember>()->z, static_cast<std::int32_t>(((RowZ(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
         {
             const records::PartyMember* c = rv::Current<records::PartyMember>();
             const long object = g.object_at(c->x, c->z, dir);
@@ -557,7 +557,7 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     } else if (Abs(static_cast<std::uint32_t>(c->x) - U(Member(0) + 0x34)) <= 0x60000 && Abs(static_cast<std::uint32_t>(c->z) - U(Member(0) + 0x38)) <= 0x60000) {
         c->x = static_cast<std::int32_t>(ox);
         rv::Current<records::PartyMember>()->z = static_cast<std::int32_t>(oz);
-    } else if (g.map_cell(Word(rv::Bytes(c) + 0x36), Word(rv::Bytes(c) + 0x3A))) {
+    } else if (g.map_cell(c->x_whole, c->z_whole)) {
         Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] & 0xFE);
         rv::Current<records::PartyMember>()->ot_slot = Draw_OtSlot;
         rv::Current<records::PartyMember>()->direction = dir;
@@ -569,7 +569,7 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     rv::Current<records::PartyMember>()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::PartyMember>()->z) & 0xFFFF8000u);
     c = rv::Current<records::PartyMember>();
     const long ground = g.ground_at(c->x, c->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(ground));
+    rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<std::uint16_t>(ground));
 }
 
 // original 0x51B9D0 (PSX 0x801BE288): the direction from the sprite to
@@ -643,17 +643,17 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
     if (Field_ScriptFlags & 0x400) return 1;
     const records::PartyMember* c = rv::Current<records::PartyMember>();
     const unsigned char facing = c->direction;
-    if (Word(rv::Bytes(c) + 0x34) != 0 && Word(rv::Bytes(c) + 0x38) != 0) return 1;
+    if (c->x_frac != 0 && c->z_frac != 0) return 1;
     const unsigned char* const offsets = At(at::kCellOffsets) + facing * 2u;
-    const std::uint16_t ahead_z = static_cast<std::uint16_t>(static_cast<signed char>(offsets[1]) + Word(rv::Bytes(c) + 0x3A));
-    const std::uint16_t ahead_x = static_cast<std::uint16_t>(static_cast<signed char>(offsets[0]) + Word(rv::Bytes(c) + 0x36));
+    const std::uint16_t ahead_z = static_cast<std::uint16_t>(static_cast<signed char>(offsets[1]) + c->z_whole);
+    const std::uint16_t ahead_x = static_cast<std::uint16_t>(static_cast<signed char>(offsets[0]) + c->x_whole);
     g.read_cells(ahead_x, ahead_z);
     c = rv::Current<records::PartyMember>();
     const unsigned char dir = c->direction;
     if (dir & 1) {
         // Diagonal.
-        const std::uint16_t fx = Word(rv::Bytes(c) + 0x34);
-        if (fx == 0 && Word(rv::Bytes(c) + 0x38) == 0) {
+        const std::uint16_t fx = c->x_frac;
+        if (fx == 0 && c->z_frac == 0) {
             const unsigned char k = g.cell_class(1, 0, 0);
             Cell(8) = k;
             if (k == 0xB0) return 6;
@@ -661,7 +661,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             if ((k & 0xF0) != 0xA0) return 3;
             return g.cell_slope(8);
         }
-        if (fx != 0 && Word(rv::Bytes(c) + 0x38) == 0) {
+        if (fx != 0 && c->z_frac == 0) {
             if (dir & 2) return 3;
             const unsigned char k = g.cell_class(2, 4, 0);
             Cell(8) = k;
@@ -678,7 +678,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             }
             if ((k & 0xF0) == 0xA0) return g.cell_slope(8);
             const unsigned char* const s = Sprite_Current;
-            const long ax = Half(static_cast<std::uint32_t>(static_cast<short>(Word(s + 0x36))) * 0x20000u + 0x10000u);
+            const long ax = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->x_whole)) * 0x20000u + 0x10000u);
             const long az = static_cast<long>(High(ahead_z));
             const long r = g.object_at(ax, az, 1);
             if (Cell(0) == 0) return 3;
@@ -703,7 +703,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         }
         if ((k & 0xF0) == 0xA0) return g.cell_slope(8);
         const unsigned char* const s = Sprite_Current;
-        const long az = Half(static_cast<std::uint32_t>(static_cast<short>(Word(s + 0x3A))) * 0x20000u + 0x10000u);
+        const long az = Half(static_cast<std::uint32_t>(static_cast<short>(rv::As<records::PartyMember>(s)->z_whole)) * 0x20000u + 0x10000u);
         const long ax = static_cast<long>(High(ahead_x));
         const long r = g.object_at(ax, az, 1);
         if (Cell(0) == 0) return 3;
@@ -713,8 +713,8 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
     }
 
     // Straight.
-    const std::uint16_t fx = Word(rv::Bytes(c) + 0x34);
-    if (fx == 0 && Word(rv::Bytes(c) + 0x38) == 0) {
+    const std::uint16_t fx = c->x_frac;
+    if (fx == 0 && c->z_frac == 0) {
         // On a cell's corner: ahead, and either side.
         Cell(8) = g.cell_class(1, 2, 3);
         Cell(9) = g.cell_class(2, 0, 0);
@@ -752,7 +752,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         }
         if (s->direction & 1) return 3;
         {
-            const long ax = Half((static_cast<std::uint32_t>(static_cast<short>(Word(rv::Bytes(s) + 0x36))) +
+            const long ax = Half((static_cast<std::uint32_t>(static_cast<short>(s->x_whole)) +
                                   static_cast<std::uint32_t>(static_cast<short>(ahead_x))) << 16);
             const long r = g.object_at(ax, static_cast<long>(High(ahead_z)), 3);
             if (Cell(0) != 0 && static_cast<short>(r) > 0x40) {
@@ -762,7 +762,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         }
         const records::PartyMember* const t = rv::Current<records::PartyMember>();
         if (t->direction & 1) return 3;
-        const long az = Half((static_cast<std::uint32_t>(static_cast<short>(Word(rv::Bytes(t) + 0x3A))) +
+        const long az = Half((static_cast<std::uint32_t>(static_cast<short>(t->z_whole)) +
                               static_cast<std::uint32_t>(static_cast<short>(ahead_z))) << 16);
         const long r = g.object_at(static_cast<long>(High(ahead_x)), az, 1);
         if (Cell(0) == 0) return 3;
@@ -770,7 +770,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         g.turn_unless(2, 4, 3);
         return 1;
     }
-    if (fx != 0 && Word(rv::Bytes(c) + 0x38) == 0) {
+    if (fx != 0 && c->z_frac == 0) {
         // On an x edge: ahead on x.
         unsigned char k = g.cell_class(2, 4, 0);
         Cell(8) = k;
@@ -899,20 +899,20 @@ extern "C" unsigned char __cdecl Field_CellPairTurn(unsigned a, unsigned b, unsi
 // as Field_CellKind of it from the sprite's own cell.
 extern "C" void __cdecl Field_ReadCells(unsigned x, unsigned z) {
     const unsigned char* c = Sprite_Current;
-    Cell(1) = g.cell_kind(x, z, Word(c + 0x36), Word(c + 0x3A));
+    Cell(1) = g.cell_kind(x, z, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
     c = Sprite_Current;
-    Cell(2) = g.cell_kind(Word(c + 0x36), z, Word(c + 0x36), Word(c + 0x3A));
+    Cell(2) = g.cell_kind(rv::As<records::PartyMember>(c)->x_whole, z, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
     c = Sprite_Current;
-    Cell(3) = g.cell_kind(x, Word(c + 0x3A), Word(c + 0x36), Word(c + 0x3A));
+    Cell(3) = g.cell_kind(x, rv::As<records::PartyMember>(c)->z_whole, rv::As<records::PartyMember>(c)->x_whole, rv::As<records::PartyMember>(c)->z_whole);
     c = Sprite_Current;
     {
-        const unsigned x1 = static_cast<std::uint16_t>(Word(c + 0x36) + 1);
-        Cell(4) = g.cell_kind(x1, z, x1, Word(c + 0x3A));
+        const unsigned x1 = static_cast<std::uint16_t>(rv::As<records::PartyMember>(c)->x_whole + 1);
+        Cell(4) = g.cell_kind(x1, z, x1, rv::As<records::PartyMember>(c)->z_whole);
     }
     c = Sprite_Current;
     {
-        const unsigned z1 = static_cast<std::uint16_t>(Word(c + 0x3A) + 1);
-        Cell(5) = g.cell_kind(x, z1, Word(c + 0x36), z1);
+        const unsigned z1 = static_cast<std::uint16_t>(rv::As<records::PartyMember>(c)->z_whole + 1);
+        Cell(5) = g.cell_kind(x, z1, rv::As<records::PartyMember>(c)->x_whole, z1);
     }
 }
 
@@ -929,7 +929,7 @@ extern "C" void __cdecl Field_ReadCells(unsigned x, unsigned z) {
 extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned x0, unsigned z0) {
     const std::uint32_t X1 = High(x), Z1 = High(z), X0 = High(x0), Z0 = High(z0);
     const unsigned char* const c = Sprite_Current;
-    const bool whole_x = Word(c + 0x34) == 0, whole_z = Word(c + 0x38) == 0, ground = c[0x70] == 0;
+    const bool whole_x = rv::As<records::PartyMember>(c)->x_frac == 0, whole_z = rv::As<records::PartyMember>(c)->z_frac == 0, ground = c[0x70] == 0;
     const long px = whole_x == ground ? Half(X1 + X0) : static_cast<long>(X1);
     const long pz = whole_z == ground ? Half(Z1 + Z0) : static_cast<long>(Z1);
     const unsigned char to = g.byte_at(static_cast<short>(x), static_cast<short>(z));
