@@ -146,16 +146,16 @@ extern "C" void __cdecl Menu_DrawStatsPanel(int x, int y, unsigned record) {
     const unsigned char* const rec = Record(record);
     const int left = x + 0xB;
     SH_CALL(Text_DrawAt)(left, y + 8, 0, 0xFF, Text(at::kStatLabels));
-    Sprintf(at::kFmtNumber, static_cast<unsigned>(Word(rec + 0x24)));
+    Sprintf(at::kFmtNumber, static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.atk));
     SH_CALL(Text_DrawFont8)(x + 0x30, y + 0xA, 0, Buf());
     SH_CALL(Text_DrawAt)(left, y + 0x15, 0, 0xFF, Text(at::kStatLabels + 8));
-    Sprintf(at::kFmtNumber, static_cast<unsigned>(Word(rec + 0x26)));
+    Sprintf(at::kFmtNumber, static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.def));
     SH_CALL(Text_DrawFont8)(x + 0x30, y + 0x17, 0, Buf());
     SH_CALL(Text_DrawAt)(x + 0x53, y + 8, 0, 0xFF, Text(at::kStatLabels + 0x10));
-    Sprintf(at::kFmtNumber, static_cast<unsigned>(Word(rec + 0x2A)));
+    Sprintf(at::kFmtNumber, static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.intel));
     SH_CALL(Text_DrawFont8)(x + 0x78, y + 0xA, 0, Buf());
     SH_CALL(Text_DrawAt)(x + 0x53, y + 0x15, 0, 0xFF, Text(at::kStatLabels + 0x18));
-    Sprintf(at::kFmtNumber, static_cast<unsigned>(Word(rec + 0x28)));
+    Sprintf(at::kFmtNumber, static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.agi));
     SH_CALL(Text_DrawFont8)(x + 0x78, y + 0x17, 0, Buf());
     const unsigned char trait = rec[0x1F];
     if (trait != 0xFF) {
@@ -179,7 +179,7 @@ extern "C" void __cdecl Menu_DrawExpPanel(int x, int y, unsigned record, unsigne
     const bool want = static_cast<unsigned char>(next) != 0;
     SH_CALL(Text_DrawAt)(x + 0x1E + (want ? 0 : 6), y + 7, 0, 0xFF, Text(want ? at::kExpLabel + 4 : at::kExpLabel));
     const std::int32_t v = want ? SH_CALL(Char_ExpForLevel)(record, static_cast<unsigned char>(rec[0xA] + 1))
-                                : Long(rec + 0xC);
+                                : rv::As<records::CharRecord>(rec)->exp;
     if (v == -1) Sprintf(at::kFmtExpNone);
     else Sprintf(at::kFmtExp, v);
     SH_CALL(Text_DrawFont12)(x + 5, y + 0x1A, 0, Buf());

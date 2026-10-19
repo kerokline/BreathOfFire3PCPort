@@ -257,8 +257,8 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (flags & 0x20) Field_State[0x125] = 0x28;
     records::PartyMember* fs = rv::As<records::PartyMember>(Field_State);
     U actor = at::kCharRecords + fs->char_index * at::kRecordStride;
-    if (W(actor + 0x18) <= (W(actor + 0x20) >> 2)) {
-        SetW(actor + 0x10, W(actor + 0x10) | 0x2000u);
+    if (rv::As<records::CharRecord>(At(actor))->hp <= (rv::As<records::CharRecord>(At(actor))->stats.max_hp >> 2)) {
+        rv::As<records::CharRecord>(At(actor))->status = rv::As<records::CharRecord>(At(actor))->status | 0x2000u;
         fs->status = fs->status | 0x2000u;
         fs = rv::As<records::PartyMember>(Field_State);
     }
@@ -269,7 +269,7 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (SH_CALL(Actor_EquipCount)(((id * 5u) & 0xFFFFFF00u) | id, 3, 8) == 0) return;
     unsigned char* const f = Field_State;
     const U a = at::kCharRecords + f[0x148] * at::kRecordStride;
-    SetW(a + 0x10, W(a + 0x10) & 0xFFDFu);
+    rv::As<records::CharRecord>(At(a))->status = rv::As<records::CharRecord>(At(a))->status & 0xFFDFu;
     f[0x125] = 0;
 }
 

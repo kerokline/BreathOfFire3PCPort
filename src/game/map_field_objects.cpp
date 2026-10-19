@@ -468,7 +468,7 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat3d)), record[0xA]);
     g.font8(x + 0x16, y + 0x17, static_cast<int>(colour), text);
-    const U flags = Word(record + 0x10);
+    const U flags = static_cast<U>(rv::As<records::CharRecord>(record)->status);
     U status = 0;
     if (flags & 0x80u) {
         if (flags & 0x20u) status = (Byte(at::FrameCounterAt()) & 0x20u) ? kStatusText0 : kStatusText1;
@@ -477,11 +477,11 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
         status = kStatusText1;
     }
     if (status != 0) g.tiny_font(x + 0x2E, y + 0x17, colour != 0 ? colour : 1u, 0x10, At(status));
-    const U hp = Word(record + 0x18);
-    if (hp < (Word(record + 0x20) >> 2)) SetWord(record + 0x10, Word(record + 0x10) | 0x2000u);
-    else SetWord(record + 0x10, Word(record + 0x10) & 0xDFFFu);
+    const U hp = static_cast<U>(rv::As<records::CharRecord>(record)->hp);
+    if (hp < (static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp) >> 2)) rv::As<records::CharRecord>(record)->status = static_cast<U>(rv::As<records::CharRecord>(record)->status) | 0x2000u;
+    else rv::As<records::CharRecord>(record)->status = static_cast<U>(rv::As<records::CharRecord>(record)->status) & 0xDFFFu;
     if (!lit) {
-        if (Word(record + 0x10) & 0x2000u) colour = 4;
+        if (static_cast<U>(rv::As<records::CharRecord>(record)->status) & 0x2000u) colour = 4;
         if (hp <= 1) colour = 2;
     } else {
         colour = 7;
@@ -489,22 +489,22 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), hp);
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = lit ? 7u : (record[0x1E] != 0 ? 4u : 0u);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), Word(record + 0x20));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp));
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = bl;
     if (!lit) {
-        const U ap = Word(record + 0x1A);
-        if (ap < (Word(record + 0x22) >> 2)) colour = 4;
+        const U ap = static_cast<U>(rv::As<records::CharRecord>(record)->ap);
+        if (ap < (static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap) >> 2)) colour = 4;
         if (ap == 0) colour = 2;
     } else {
         colour = 7;
     }
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), Word(record + 0x1A));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), static_cast<U>(rv::As<records::CharRecord>(record)->ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(colour), text);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), Word(record + 0x22));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(bl), text);
     const U eax = g.pieces(x, y, At(Menu_MemberPieces_addr), 0);
-    const U exp = Dword(record + 0xC);
+    const U exp = static_cast<U>(rv::As<records::CharRecord>(record)->exp);
     const U level = (eax & 0xFFFFFF00u) | record[0xA];
     return g.exp_bar(x + 0x14, y + 0x12, member, level, exp);
 }

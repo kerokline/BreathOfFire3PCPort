@@ -725,7 +725,7 @@ extern "C" void __cdecl PartyForm_DrawReserve(int x, int y) {
         DrawFont8(pen, hp_y, colour);
         const int ap_y = base + 0x10;
         SH_AT(void (__cdecl*)(int, int, int, int), at::kDrawTag)(X + 2, ap_y, 1, 0);
-        const U quarter = (W(RecAddr(index) + 0x22) >> 2) & 0xFFFF;
+        const U quarter = (static_cast<U>(rv::As<records::CharRecord>(Rec(index))->stats.max_ap) >> 2) & 0xFFFF;
         const U ap = W(RecAddr(index) + 0x1A);
         colour = 0;
         if (ap <= quarter) colour = 4;
@@ -1105,15 +1105,15 @@ extern "C" void __cdecl ShopResist_DrawBits(unsigned member, int x, int y, unsig
     SH_CALL(Menu_DrawBorder)(x, y, 0x12, 0xD);
     int row_y = y + 6;
     const U record = MemberAt(static_cast<int>(member & 0xFF));
-    const U price = (10u * B(RecAddr(record) + 0xA)) & 0xFFFF;
+    const U price = (10u * rv::As<records::CharRecord>(Rec(record))->level) & 0xFFFF;
     U text = colour & 0xFFFFFF00u;
-    if (Party_Zenny >= price && B(RecAddr(record) + 0x1D) == 0)
+    if (Party_Zenny >= price && rv::As<records::CharRecord>(Rec(record))->halving == 0)
         text |= (colour & 0xFF) != 0 ? 7u : 0u;
     else
         text |= 7u;
     for (U k = 0; k < 8; ++k) {
         const U bit = 1u << k;
-        if ((B(RecAddr(record) + 0x1D) & bit & 0xFF) == 0 && k != (highlight & 0xFF))
+        if ((rv::As<records::CharRecord>(Rec(record))->halving & bit & 0xFF) == 0 && k != (highlight & 0xFF))
             SH_CALL(Text_DrawAt)(x + 8, row_y, static_cast<int>(text), 0xFF, Message(k + 0xDE));
         else
             SH_CALL(Text_DrawAt)(x + 8, row_y, 2, 0xFF, Message(k + 0xDE));
