@@ -27,13 +27,13 @@ using move_script::Word;
 // Bytes the handlers touch that have no name (docs/title-states.md has the
 // PSX twin of each).
 constexpr std::uint32_t kPlayClock = 0x9040C8;      // four bytes zeroed starting the demo (PSX 0x80144FBC)
-constexpr std::uint32_t kPartyCombo = 0x90412C;     // 0xFF when the demo ends (PSX 0x80145020)
-constexpr std::uint32_t kMusicTrack = 0x904131;     // the track Music_Play last started, 0xFF none
+// kPartyCombo: now AreaW0b_PartySet (symbols.toml). 0xFF when the demo ends (PSX 0x80145020)
+// kMusicTrack: now Music_Track (symbols.toml). the track Music_Play last started, 0xFF none
 constexpr std::uint32_t kScenarioBytes = 0x8034E0;  // Cond_ByteFA and the nine bytes after it (PSX 0x8014686C)
-constexpr std::uint32_t kScenarioFlags = 0x929ED0;  // the address of the chapter's Cond_Flags dword (PSX 0x80146868)
-constexpr std::uint32_t kSubState = 0x9039F0;       // the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
+// kScenarioFlags: now AreaW0c_FlagRow (symbols.toml). the address of the chapter's Cond_Flags dword (PSX 0x80146868)
+// kSubState: now ScenaSc7_DrawPool (symbols.toml). the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
 constexpr std::uint32_t kSubInitTable = 0x662CD8;   // 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
-constexpr std::uint32_t kStoryFlags = 0x904030;     // Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
 constexpr std::uint32_t kDemoEntry = bof3::addr::Field_Task;      // task 0's entry for the demo (the field task)
 constexpr std::uint32_t kMenuEntry = bof3::addr::TitleTask_Run;      // task 0's entry for the title menu
 constexpr std::uint32_t kModeDispatch = bof3::addr::Field_ModeDispatch;   // Field_ModeDispatch, another file's: called by address
@@ -232,7 +232,7 @@ extern "C" void __cdecl Title_StateDemo(void) {
 // until then the badge (a tail jump).
 extern "C" void __cdecl Title_StateDemoEnd(void) {
     if (TaskZeroState() == 0) {
-        At(kPartyCombo)[0] = 0xFF;
+        AreaW0b_PartySet = 0xFF;
         Title_State = 0;
         return;
     }
@@ -258,7 +258,7 @@ extern "C" void __cdecl Title_StateMenu(void) {
 // original 0x4624B0: fade the music out over 0x10 frames, unless none plays
 // (PSX 0x801D1134, which fades through a per-track table).
 extern "C" void __cdecl Title_FadeMusic(void) {
-    if (At(kMusicTrack)[0] != 0xFF) g.music_fade_out(0x10);
+    if (Music_Track != 0xFF) g.music_fade_out(0x10);
 }
 
 // original 0x4624D0: fade out and stop over 0xA frames, and forget the track,
@@ -267,9 +267,9 @@ extern "C" void __cdecl Title_FadeMusic(void) {
 // As the original has it: 0xFF is stored after the call, whatever the call
 // left there.
 extern "C" void __cdecl Title_StopMusic(void) {
-    if (At(kMusicTrack)[0] == 0xFF) return;
+    if (Music_Track == 0xFF) return;
     g.music_fade_stop(0xA);
-    At(kMusicTrack)[0] = 0xFF;
+    Music_Track = 0xFF;
 }
 
 // original 0x4624F0: the demo's corner badge (PSX 0x801D11E4) - sprite 0xA at
@@ -403,7 +403,7 @@ extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned sha
 // never runs.
 extern "C" void __cdecl Scenario_Start(int chapter) {
     const auto c = static_cast<signed char>(chapter);
-    unsigned char* const s = At(kScenarioBytes);
+    unsigned char* const s = At(Cond_ByteFA_addr);
     s[0] = static_cast<unsigned char>(c);
     s[2] = 0;
     s[3] = 0;
@@ -414,7 +414,7 @@ extern "C" void __cdecl Scenario_Start(int chapter) {
     SetWord(s + 8, 0);
     const std::uint32_t flags = kCondFlags + static_cast<std::uint32_t>(8 * static_cast<int>(c));
     SetLong(At(flags), 0);
-    SetLong(At(kScenarioFlags), static_cast<std::int32_t>(flags));
+    AreaW0c_FlagRow = static_cast<std::int32_t>(flags);
     g.scenario_load();
     while (g.load_done() == 0) {
         if (Game_AreaNumber != 0xFFFF && Field_Request != 5) g.loading_frame();
@@ -438,7 +438,7 @@ extern "C" void __cdecl Scenario_Load(void) {
 // As the original has it: four dword copies (the PSX copies bytewise); the
 // table and the flags do not overlap, so the order is unobservable.
 extern "C" void __cdecl Scenario_SubInit(void) {
-    unsigned char* const s = At(kSubState);
+    unsigned char* const s = At(ScenaSc7_DrawPool_addr);
     s[2] = 1;
     s[0] = 0;
     s[3] = 0;
@@ -447,7 +447,7 @@ extern "C" void __cdecl Scenario_SubInit(void) {
     s[5] = 0;
     s[1] = 0;
     SetWord(s + 8, 0);
-    for (unsigned i = 0; i < 16; i += 4) SetLong(At(kStoryFlags + i), Long(At(kSubInitTable + i)));
+    for (unsigned i = 0; i < 16; i += 4) SetLong(At(Cond_Flags_addr + 0xa0 + i), Long(At(kSubInitTable + i)));
 }
 
 namespace {
@@ -497,13 +497,13 @@ const Watch kWatch[] = {
     {0x66C7F8, 0, 1},     // Title_BadgeOn
     {0x66C806, 1, 0},     // Title_BlinkCount
     {0x66C807, 0, 1},
-    {kMusicTrack, 0xFE, 0xFF},
+    {Music_Track_addr, 0xFE, 0xFF},
     {0x937F90, 1, 0},     // Gfx_ClutStripDirty
     {kPlayClock, 1, 0},
     {kPlayClock + 3, 1, 0},
     {0x7E0918, 1, 0},     // Draw_PassFlags
     {kScenarioBytes + 4, 1, 0},   // MoveScript_Var7
-    {kPartyCombo, 1, 0},
+    {AreaW0b_PartySet_addr, 1, 0},
     {0x66C7D8, 4, 6},     // Field_Request
     {0x904EFC, 0xFE, 0xFF},  // Game_AreaNumber, low byte
     {0x904EFD, 0xFE, 0xFF},
@@ -529,7 +529,7 @@ void __cdecl StubSleep(int frames) { Record(4, static_cast<std::uint32_t>(frames
 void __cdecl StubClutRestore() { Record(5); Disturb(); }
 void __cdecl StubMusicPlay(unsigned track, int unknown) {
     Record(6, track, static_cast<std::uint32_t>(unknown));
-    At(kMusicTrack)[0] = static_cast<unsigned char>(track);
+    Music_Track = static_cast<unsigned char>(track);
     Disturb();
 }
 void __cdecl StubTransition(unsigned kind) { Record(7, kind & 0xFF); Disturb(); }
@@ -544,12 +544,12 @@ void __cdecl StubTaskCreate(int slot, void* entry) {
 // The fades may end the track or leave it: what Title_StopMusic stores over.
 void __cdecl StubMusicFadeOut(int frames) {
     Record(13, static_cast<std::uint32_t>(frames));
-    At(kMusicTrack)[0] = static_cast<unsigned char>(Hash() >> 8);
+    Music_Track = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 void __cdecl StubMusicFadeStop(int frames) {
     Record(14, static_cast<std::uint32_t>(frames));
-    At(kMusicTrack)[0] = static_cast<unsigned char>(Hash() >> 8);
+    Music_Track = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 void __cdecl StubBadge() { Record(15); Disturb(); }
@@ -582,7 +582,7 @@ void __cdecl StubShade(unsigned char* prim, unsigned level) {
 }
 void __cdecl StubScenarioLoad() { Record(24); Disturb(); }
 void __cdecl StubLoadingFrame() { Record(25, Field_Request, Game_AreaNumber); Disturb(); }
-void __cdecl StubModeDispatch() { Record(26, At(kScenarioBytes)[0]); Disturb(); }
+void __cdecl StubModeDispatch() { Record(26, static_cast<unsigned char>(Cond_ByteFA)); Disturb(); }
 
 // The stand-ins take bytes as dwords and mask them: the copies push whole
 // registers.
@@ -684,8 +684,8 @@ const Region kRegions[] = {
     {0x7E0918, 1},                      // Draw_PassFlags
     {0x937F90, 1},                      // Gfx_ClutStripDirty
     {kScenarioBytes, 0x10},             // Cond_ByteFA .. Field_EdgeBitsPrev
-    {kScenarioFlags, 4},
-    {kSubState, 0x10},
+    {AreaW0c_FlagRow_addr, 4},
+    {ScenaSc7_DrawPool_addr, 0x10},
     {0x903F90 - 0x400, 0x808},          // Cond_Flags - 0x400: every chapter's dword, the story flags,
                                         // the play clock, the party combination and the music track
     {0x904EFC, 2},                      // Game_AreaNumber
@@ -758,7 +758,7 @@ void Seed(unsigned k, std::uint32_t (&args)[4]) {
     case kFadeMusic:
     case kStopMusic: {
         static const unsigned char kTrack[] = {0xFF, 0xFF, 0xFE, 0x00, 0x7F};
-        if (Often()) At(kMusicTrack)[0] = kTrack[Next() % 5];
+        if (Often()) Music_Track = kTrack[Next() % 5];
         break;
     }
     case kBadge: {
@@ -794,7 +794,7 @@ void Seed(unsigned k, std::uint32_t (&args)[4]) {
     }
     case kScenarioLoad: {
         static const unsigned char kChapter[] = {0x10, 0, 0x7F, 0x80, 0xFF};
-        if (Often()) At(kScenarioBytes)[0] = kChapter[Next() % 5];
+        if (Often()) Cond_ByteFA = kChapter[Next() % 5];
         break;
     }
     default:

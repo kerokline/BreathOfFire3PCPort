@@ -19,16 +19,16 @@ using U = std::uint32_t;
 namespace at {
 
 // The menu state block 0x929F00 (docs/menu-screens.md), as the shop mode uses it.
-constexpr U kState = 0x929F00;         // u8: the mode's state, ShopMode_States' index
-constexpr U kStep = 0x929F01;          // u8: the inn's step, Inn_Steps' index
-constexpr U kSub = 0x929F02;           // u8: the step's state (the three state tables' index)
+// kState: now BattleE1_Mode (symbols.toml). u8: the mode's state, ShopMode_States' index
+// kStep: now FieldS_State (symbols.toml). u8: the inn's step, Inn_Steps' index
+// kSub: now FieldS_Step (symbols.toml). u8: the step's state (the three state tables' index)
 constexpr U kCount = 0x929F04;         // u8: the menus' frame counter
 // kClear0A: now ShopStates_Clear0A (symbols.toml). u8: cleared by ShopMode_Begin (its reader not read)
 // kAnswer: now FieldS_Answer (symbols.toml). u8: Menu_YesNo's answer, 1 yes
-constexpr U kObject = 0x929F0C;        // s8: the object touched (Sprite_Objects index); 0xFE a save point, 0xFF none
+// kObject: now ModeStates_ShopObject (symbols.toml). s8: the object touched (Sprite_Objects index); 0xFE a save point, 0xFF none
 // kSavedObject: now AreaW3c_Load0F (symbols.toml). u8: kObject kept while a forced save point runs
 constexpr U kShopKind = 0x929EC2;      // u8: the state - 2 when no object is touched
-constexpr U kShopNumber = 0x929EC3;    // u8: the object's +0x1C; the inn's night costs ten times it
+// kShopNumber: now ScenaSc1_ShopByteB (symbols.toml). u8: the object's +0x1C; the inn's night costs ten times it
 // kShopRecord: now ShopStates2_ShopList (symbols.toml). u32: 0x658930 + 23 * kShopNumber
 constexpr U kShopRecords = 0x658930;   // 23-byte records, one per shop number
 constexpr U kShopRecordBytes = 23;
@@ -64,7 +64,7 @@ constexpr U kRepeatLatch = 0x7E01B8;   // u16: Input_AutoRepeat's latch
 constexpr U kSlot = 0x9036D4;          // u32: the save cursor, 0..15
 constexpr U kSlotTop = 0x8034D0;       // u32: the first of the three slots shown
 // kInnFlag: now ShopStates_InnFlag (symbols.toml). u8: with kSaveBack clear, FieldSave_End opens message 0xD0 (unread)
-constexpr U kSaveBack = 0x6BC880;      // u8: set by the save menu's state 5 (0x5800D0, R2C's FieldSave_Written)
+// kSaveBack: now Rest2c_SaveBack (symbols.toml). u8: set by the save menu's state 5 (0x5800D0, R2C's FieldSave_Written)
 // kChoice: now ShopStates_Choice (symbols.toml). u8: the inn's three-way cursor (the save menu's too)
 // kCancelled: now ShopStates_Cancelled (symbols.toml). u8: the inn's prompt was cancelled
 

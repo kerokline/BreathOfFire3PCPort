@@ -25,7 +25,7 @@ using U = std::uint32_t;
 // (0x411310 - shared by eleven such tables - 0x404180, 0x4041B0, 0x4041E0).
 // Entries 4..7 at 0x5EF608 are the HUD state machine 0x404230's table, read
 // by 0x404230 alone.
-constexpr U kStateTable = 0x5EF5F8;
+// kStateTable: now WorldMap33_FrameStates (symbols.toml).
 constexpr U kState0 = bof3::addr::WorldMap_FrameWait;   // state 0: y = -0x30 and state 1 unless the mode byte is 2 or Field_ScriptFlags bit 8
 // The frame's event test: 0x531920(x, y), one of Field_LeaderCellEvent's
 // exits (docs/event-ops.md section 11); al non-zero shows the third legend.
@@ -50,10 +50,10 @@ constexpr U kButtonMap0 = 0x903580;
 constexpr U kButtonMap6 = 0x90358C;
 // The world map's mode byte (docs/event-ops.md: "pad 0x100 cycles 0x9045FA"):
 // 2 holds the frame on screen and keeps state 0 from starting a slide.
-constexpr U kMapMode = 0x9045FA;
+// kMapMode: now AreaW0b_MapMode (symbols.toml).
 // The party-set byte (symbols.toml: 0x90412C & 0x7F, 0xFF for none): set 0xC
 // shows the third legend.
-constexpr U kPartySet = 0x90412C;
+// kPartySet: now AreaW0b_PartySet (symbols.toml).
 // The cells the leader stands on: the high words of Field_Kind2X / Field_Kind2Z.
 constexpr U kLeaderCellX = 0x905E66;
 constexpr U kLeaderCellZ = 0x905E62;

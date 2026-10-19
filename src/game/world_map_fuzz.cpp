@@ -114,7 +114,7 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 Region g_all[] = {
     {kSpriteCurrent, 4}, {kPacketNext, 4},   {kPassFlags, 1},    {kFlags, 2},        {kFlags2, 2},
     {kAngles, 6},        {kScratch, 0x20},   {kOrigin, 4},       {kBufferIndex, 1},  {kButtonMap0, 4},
-    {kButtonMap6, 4},    {kMapMode, 1},      {kPartySet, 1},     {kLeaderCellZ, 8},  {kAreaTextOffset, 4},
+    {kButtonMap6, 4},    {AreaW0b_MapMode_addr, 1},      {AreaW0b_PartySet_addr, 1},     {kLeaderCellZ, 8},  {kAreaTextOffset, 4},
     {kRowTails - 4, kRowTailsBytes},
 };
 
@@ -139,9 +139,9 @@ void DisturbFrame(U salt) {
     switch ((h >> 2) % 7) {
     case 0: PutWord(At(kFlags2), GetWord(At(kFlags2)) ^ 0x1000); break;
     case 1: PutWord(At(kFlags), GetWord(At(kFlags)) ^ 0x4000); break;
-    case 2: At(kPartySet)[0] = static_cast<unsigned char>(h >> 8); break;
-    case 3: PutLong(At(kButtonMap0), h >> 8); break;
-    case 4: PutLong(At(kButtonMap6), h >> 8); break;
+    case 2: At(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(h >> 8); break;
+    case 3: PutLong(At(Gfx_UnpackScratch_addr + 0x1f000), h >> 8); break;
+    case 4: PutLong(At(Gfx_UnpackScratch_addr + 0x1f00c), h >> 8); break;
     case 5: PutLong(At(kAreaTextOffset), h >> 8); break;
     default: PutWord(At(kLeaderCellZ + 2), h >> 8); PutWord(At(kLeaderCellZ + 6), h >> 12); break;
     }
@@ -150,7 +150,7 @@ void DisturbFrame(U salt) {
 void __cdecl StubState0() {
     Record(1);
     const U h = Mix(1);
-    if (h % 3 == 0) At(kMapMode)[0] = static_cast<unsigned char>(h >> 8);   // read by no caller after; harmless
+    if (h % 3 == 0) At(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(h >> 8); // read by no caller after; harmless
 }
 void __cdecl StubDrawFrame(U x, U y) { Record(2, x, y & 0xFFFF); }
 void __cdecl StubSetDrawMode(unsigned char* prim, U dfe, U dtd, U tpage, U tw) {
@@ -394,10 +394,10 @@ void RelocateStepTable(void* copy) {
     constexpr U kBase = 0x404160, kSize = 0xC1;
     U disp;
     std::memcpy(&disp, code + 0xE, sizeof disp);
-    if (disp != kStateTable || code[0xB] != 0xFF || code[0xC] != 0x24 || code[0xD] != 0x85)
+    if (disp != WorldMap33_FrameStates_addr || code[0xB] != 0xFF || code[0xC] != 0x24 || code[0xD] != 0x85)
         bof3::Fatal("world_map: WorldMap_FrameStep's copy has no jump table operand at +0xE");
     for (U i = 0; i < 4; ++i) {
-        const U target = GetLong(At(kStateTable + i * 4));
+        const U target = GetLong(At(WorldMap33_FrameStates_addr + i * 4));
         if (i == 0) {
             if (target != kState0) bof3::Fatal("world_map: state table entry 0 is 0x%X, not 0x411310", (unsigned)target);
             g_step_table[0] = Addr(As<const void*>(&StubState0));
@@ -472,7 +472,7 @@ U Coordinate() {
 
 void FuzzStep(Tally& t, void* clone, unsigned rounds) {
     using Fn = void(__cdecl*)();
-    const Region regions[] = {{Addr(g_object), sizeof g_object}, {kMapMode, 1}};
+    const Region regions[] = {{Addr(g_object), sizeof g_object}, {AreaW0b_MapMode_addr, 1}};
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x100000u + r;
         FillRandom(g_object, sizeof g_object);
@@ -480,7 +480,7 @@ void FuzzStep(Tally& t, void* clone, unsigned rounds) {
         g_object[2] = static_cast<unsigned char>(Next() % 4);
         PutWord(g_object + 0x2E, Next() % 2 ? Next() : Pick({0xFFC0, 0xFFD0, 0xFFCF, 0xFFD1, 0xFFE0, 0, 0xF, 0x10, 0x11, 0x20,
                                                              0xFFC1, 0xFFBF}));
-        At(kMapMode)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 4 : Next());
+        At(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 4 : Next());
         Pass(t, regions, 2, 0, [&] { reinterpret_cast<Fn>(clone)(); return 0u; },
              [&] { WorldMap_FrameStep(); return 0u; });
         if (g_theirs.n && g_theirs.calls[0].what == 2) ++t.hits;
@@ -503,7 +503,7 @@ U ButtonWord() {
 void FuzzFrame(Tally& t, void* clone, unsigned rounds) {
     using Fn = void(__cdecl*)(U, U);
     const Region regions[] = {{Addr(g_packets), sizeof g_packets}, {kPacketNext, 4},  {kPassFlags, 1},
-                              {kFlags, 2},                          {kFlags2, 2},     {kPartySet, 1},
+                              {kFlags, 2},                          {kFlags2, 2},     {AreaW0b_PartySet_addr, 1},
                               {kButtonMap0, 4},                     {kButtonMap6, 4}, {kLeaderCellZ, 8},
                               {kBufferIndex, 1}};
     for (unsigned r = 0; r < rounds; ++r) {
@@ -513,9 +513,9 @@ void FuzzFrame(Tally& t, void* clone, unsigned rounds) {
         At(kPassFlags)[0] = static_cast<unsigned char>(Next() % 4 ? Next() : Pick({0, 0x1B, 0xE4, 1, 2, 8, 0x10, 0x20}));
         PutWord(At(kFlags), Next() % 2 ? Next() : Pick({0, 0x4000, 0xBFFF, 0xFFFF}));
         PutWord(At(kFlags2), Next() % 2 ? Next() : Pick({0, 0x1000, 0xEFFF, 0xFFFF}));
-        At(kPartySet)[0] = static_cast<unsigned char>(Next() % 2 ? Next() : Pick({0xC, 0x8C, 0xFF, 0, 0xB, 0xD}));
-        PutLong(At(kButtonMap0), ButtonWord());
-        PutLong(At(kButtonMap6), ButtonWord());
+        At(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() : Pick({0xC, 0x8C, 0xFF, 0, 0xB, 0xD}));
+        PutLong(At(Gfx_UnpackScratch_addr + 0x1f000), ButtonWord());
+        PutLong(At(Gfx_UnpackScratch_addr + 0x1f00c), ButtonWord());
         FillRandom(kLeaderCellZ, 8);
         At(kBufferIndex)[0] = static_cast<unsigned char>(Next() % 2);
         const U x = WordArg(Coordinate()), y = WordArg(Coordinate());
@@ -553,7 +553,7 @@ void FuzzSprite(Tally& t, void* clone, unsigned rounds) {
 
 void FuzzHud(Tally& t, void* clone, unsigned rounds) {
     using Fn = void(__cdecl*)(U, U);
-    const Region regions[] = {{kPassFlags, 1}, {kAreaTextOffset, 4}, {kFlags2, 2}, {kFlags, 2}, {kPartySet, 1},
+    const Region regions[] = {{kPassFlags, 1}, {kAreaTextOffset, 4}, {kFlags2, 2}, {kFlags, 2}, {AreaW0b_PartySet_addr, 1},
                               {kButtonMap0, 4}, {kButtonMap6, 4}, {kLeaderCellZ, 8}};
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x400000u + r;
@@ -632,7 +632,7 @@ void FuzzLinkPrim(Tally& t, void* clone, unsigned rounds) {
     const Region regions[] = {{kRowTails - 4, kRowTailsBytes}, {kPacketNext, 4}, {kBufferIndex, 1}, {kOrigin, 4}};
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x700000u + r;
-        if (r % 8 == 0) FillRandom(kRowTails - 4, kRowTailsBytes);
+        if (r % 8 == 0) FillRandom(DrawLayers_addr + 0x24 - 4, kRowTailsBytes);
         // Origins small mostly, so the row's 16-bit halves can reach it; the
         // edges one round in four (the sum then leaves the row's range).
         PutWord(At(kOrigin), Next() % 4 ? Next() % 0x40 : Pick({0, 0xFFFF, 0x8000, 0x7FFF, 0x10, Next()}));

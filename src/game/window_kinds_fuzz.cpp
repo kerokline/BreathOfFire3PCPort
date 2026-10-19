@@ -65,7 +65,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 // moved across a call shows. Once in 23 the current record itself is
 // repointed - the thing these functions re-read after every call out.
 const std::uint32_t kWatch[] = {
-    at::kMsgHead, at::kMsgTail, at::kMsgOpen, at::kBannerMask, 0x7E1BEC /* Input_Pressed */,
+    BattleWindows_MsgHead_addr, BattleActorCopies_QueueWrite_addr, BattleE1_MessageUp_addr, at::kBannerMask, 0x7E1BEC /* Input_Pressed */,
     at::kMsgRing, at::kMsgRing + 1, at::kMsgRing + 8, at::kMsgRing + 9, at::kScratch,
 };
 void Disturb() {
@@ -73,12 +73,12 @@ void Disturb() {
     if (h % 3 == 0) return;
     if (h % 23 == 0) {
         const std::uint32_t record = at::kRecords + ((h >> 8) % 22u) * 0x24u;
-        SetLong(At(at::kCurrent), static_cast<std::int32_t>(record));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(record));
         return;
     }
     const std::uint32_t where = kWatch[(h >> 4) % (sizeof kWatch / sizeof kWatch[0])];
     std::uint32_t v = (h >> 12) & 0xFF;
-    if (where == at::kMsgHead || where == at::kMsgTail) v &= 0xF;   // the ring's indices stay inside it
+    if (where == BattleWindows_MsgHead_addr || where == BattleActorCopies_QueueWrite_addr) v &= 0xF; // the ring's indices stay inside it
     At(where)[0] = static_cast<unsigned char>(v);
 }
 
@@ -105,9 +105,9 @@ void __cdecl StubDrawMessage() {
 // BattleMsg_Advance as it is: the read index on, 1 when it meets the write
 // index - so that the caller's re-read of the index after it sees a change.
 unsigned char __cdecl StubAdvance() {
-    const auto head = static_cast<unsigned char>((At(at::kMsgHead)[0] + 1) & 0xF);
-    At(at::kMsgHead)[0] = head;
-    const unsigned char r = At(at::kMsgTail)[0] == head ? 1 : 0;
+    const auto head = static_cast<unsigned char>((At(BattleWindows_MsgHead_addr)[0] + 1) & 0xF);
+    At(BattleWindows_MsgHead_addr)[0] = head;
+    const unsigned char r = At(BattleActorCopies_QueueWrite_addr)[0] == head ? 1 : 0;
     Record(4, r);
     Disturb();
     return r;
@@ -115,7 +115,7 @@ unsigned char __cdecl StubAdvance() {
 // Window_FreeCurrent as it is: bytes 0, +2 and +3 of the current record.
 void __cdecl StubFree() {
     Record(5);
-    unsigned char* const w = At(static_cast<std::uint32_t>(Long(At(at::kCurrent))));
+    unsigned char* const w = At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr))));
     w[0] = 0;
     w[2] = 0;
     w[3] = 0;
@@ -228,11 +228,11 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {at::kRecords, 0x318},       // the 22 window records
-    {at::kCurrent, 4},           // the record running (a pointer: Fix sets it)
-    {at::kMsgHead, 2},           // the ring's read and write indices
+    {BattleWinStates_Current_addr, 4}, // the record running (a pointer: Fix sets it)
+    {BattleWindows_MsgHead_addr, 2}, // the ring's read and write indices
     {at::kMsgRing, 0x80},        // the ring's 16 entries
-    {at::kMsgOpen, 1},
-    {at::kBannerCurrent, 4},     // a pointer: Fix sets it inside the pool
+    {BattleE1_MessageUp_addr, 1},
+    {BattleMisc_BannerCurrent_addr, 4}, // a pointer: Fix sets it inside the pool
     {at::kBannerPool, 0x60},     // the banner pool's 8 entries
     {at::kBannerMask, 1},
     {0x7E1BEC, 2},               // Input_Pressed
@@ -269,14 +269,14 @@ std::uint32_t Next() { g_rng ^= g_rng << 13; g_rng ^= g_rng >> 17; g_rng ^= g_rn
 bool Often() { return Next() % 3 != 0; }
 bool Half() { return (Next() & 1) != 0; }
 
-unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(at::kCurrent)))); }
+unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr)))); }
 
 // The indices put back inside the ring, the pool pointer inside the pool.
 void Fix() {
-    SetLong(At(at::kCurrent), static_cast<std::int32_t>(at::kRecords + (Next() % 22u) * 0x24u));
-    At(at::kMsgHead)[0] = static_cast<unsigned char>(Next() & 0xF);
-    At(at::kMsgTail)[0] = static_cast<unsigned char>(Half() ? At(at::kMsgHead)[0] : Next() & 0xF);
-    SetLong(At(at::kBannerCurrent), static_cast<std::int32_t>(at::kBannerPool + (Next() % 8u) * 0xCu));
+    SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + (Next() % 22u) * 0x24u));
+    At(BattleWindows_MsgHead_addr)[0] = static_cast<unsigned char>(Next() & 0xF);
+    At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>(Half() ? At(BattleWindows_MsgHead_addr)[0] : Next() & 0xF);
+    SetLong(At(BattleMisc_BannerCurrent_addr), static_cast<std::int32_t>(at::kBannerPool + (Next() % 8u) * 0xCu));
 }
 
 // A y the slides compare, at and around both of their ends.
@@ -354,10 +354,10 @@ void Seed(unsigned k) {
         r[3] = static_cast<unsigned char>(Next() % 4);
         break;
     case kMsgWait:
-        if (Half()) At(at::kMsgTail)[0] = At(at::kMsgHead)[0];
+        if (Half()) At(BattleActorCopies_QueueWrite_addr)[0] = At(BattleWindows_MsgHead_addr)[0];
         break;
     case kMsgShow: {
-        const unsigned head = At(at::kMsgHead)[0];
+        const unsigned head = At(BattleWindows_MsgHead_addr)[0];
         static const unsigned char kTimer[] = {0xFF, 1, 0, 2, 0xFE};
         for (unsigned i = 0; i < 2; ++i) {
             unsigned char* const e = At(at::kMsgRing + 8 * ((head + i) & 0xF));
@@ -365,7 +365,7 @@ void Seed(unsigned k) {
             e[1] = Often() ? kTimer[Next() % 5] : static_cast<unsigned char>(Next());
         }
         SetWord(At(0x7E1BEC), Half() ? 0 : static_cast<std::uint16_t>(1u << (Next() % 16)));
-        if (Half()) At(at::kMsgTail)[0] = static_cast<unsigned char>((head + 1 + Next() % 2) & 0xF);
+        if (Half()) At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>((head + 1 + Next() % 2) & 0xF);
         break;
     }
     case kHandler4: {

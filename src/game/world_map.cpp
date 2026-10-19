@@ -150,7 +150,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
         if (Short(object + 0x2E) >= 0x10) object[2] = static_cast<unsigned char>(object[2] + 1);
         [[fallthrough]];
     case 2:
-        if (At(kMapMode)[0] == 2) {
+        if (AreaW0b_MapMode == 2) {
             object = Object();
             object[2] = 3;
         }
@@ -164,7 +164,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep()
             object[2] = 0;
             object = Object();
         }
-        if (At(kMapMode)[0] != 2) {
+        if (AreaW0b_MapMode != 2) {
             object[2] = 1;
             object = Object();
         }
@@ -209,15 +209,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
     const bool withheld1 =
         cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!withheld1) g.draw_sprite(x + 0x30, y, 1);
-    world_map_legend::Key(g.draw_sprite, kButtonTable, 6, Long(At(kButtonMap0)), x + 0x38, y + 8, withheld1);
+    world_map_legend::Key(g.draw_sprite, kButtonTable, 6, Long(At(Gfx_UnpackScratch_addr + 0x1f000)), x + 0x38, y + 8, withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) g.draw_sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(g.draw_sprite, kButtonTable, 8, Long(At(kButtonMap6)), x + 0x38, y + 0x10, withheld2);
+    world_map_legend::Key(g.draw_sprite, kButtonTable, 8, Long(At(Gfx_UnpackScratch_addr + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
     const unsigned char event =
         g.cell_event(static_cast<short>(Word(At(kLeaderCellX))), static_cast<short>(Word(At(kLeaderCellZ))));
     bool third = event != 0;
     if (!third) third = (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
-    if (!third) third = (At(kPartySet)[0] & 0x7F) == 0xC;
+    if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Word(At(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
     if (third) g.draw_sprite(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
@@ -370,10 +370,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
         return;
     }
     const U slot_index = static_cast<U>(row) * 6u;
-    unsigned char* const slot = At(kRowTails + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
+    unsigned char* const slot = At(DrawLayers_addr + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
     g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(Long(slot))), prim);
     const U next = Long(At(at::Gfx_PacketNextAt()));
-    PutLong(At(kRowTails + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
+    PutLong(At(DrawLayers_addr + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
     PutLong(At(at::Gfx_PacketNextAt()), next + bytes);
 }
 
