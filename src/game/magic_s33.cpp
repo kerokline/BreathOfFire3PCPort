@@ -309,7 +309,7 @@ S33_EXPORT void __cdecl Accession_LoadFormA(void) {
 // STP bits, animation +8 + 4 ensured; Sprite_Current back, +3 on.
 S33_EXPORT void __cdecl Accession_ApplyA(void) {
     if (MH_CALL(File_LoadDone)() == 0) return;
-    if ((U(Long(Mem(at::kFlags))) & 0x4000) != 0 && Mem(0x904B8A)[0] == Mem(at::kActor)[0])
+    if ((U(Long(Mem(at::kFlags))) & 0x4000) != 0 && Mem(BattleFlow_ActorAt_addr)[0] == Mem(at::kActor)[0])
         SetWord(Mem(at::kFlags), Word(Mem(at::kFlags)) & 0xBFFFu);
     unsigned char* const saved = Sc();
     unsigned char* const rec = PartyRecord(ActorIndex());
@@ -413,9 +413,9 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         PartyRecord(1)[0] = 0;
         PartyRecord(2)[0] = 0;
         Mem(at::kActor)[0] = 0;
-        Mem(0x904B8F)[0] = was;
+        Mem(BattleE2_SavedCount_addr)[0] = was;
         Mem(0x904AB0)[0] = 1;
-        Mem(0x904AB1)[0] = 1;
+        Mem(BattleSprites_PartyPick_addr)[0] = 1;
     }
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char* const m = PartyRecord(i);
@@ -442,7 +442,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     }
     const unsigned char was = Mem(0x904AB0)[0];
     unsigned char* const saved = Sc();
-    Mem(0x80318E)[0] = was;
+    Mem(Rest3a_Win1Slot_addr)[0] = was;
     const unsigned a = ActorIndex();
     SetWord(Mem(at::kFlags), Word(Mem(at::kFlags)) & 0xBFFFu);
     SetWord(Mem(0x803188), 0x70);

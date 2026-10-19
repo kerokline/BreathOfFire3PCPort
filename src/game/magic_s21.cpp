@@ -224,7 +224,7 @@ MS21_EXPORT void __cdecl Inferno_Start(void) {
         Bump(sc[0xB]);
     }
     for (std::uint32_t p = kClut; p < kClutEnd; p += 2) SetWord(Mem(p), Word(Mem(p - 0x4000)) | 0x8000u);
-    Mem(0x937F90)[0] = 1;   // Gfx_ClutStripDirty
+    Mem(Gfx_ClutStripDirty_addr)[0] = 1;
     MH_CALL(Sound_PlayById)(0x100);
 }
 
