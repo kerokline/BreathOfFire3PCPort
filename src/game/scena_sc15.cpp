@@ -43,6 +43,7 @@
 // are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
 // of the wave that wrote them.
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc15_callees.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -201,6 +202,12 @@ void ClearAt(uint32_t row, unsigned n) { SH_CALL(Flags_Clear)(At(row), n); }
 
 unsigned char* Effect(unsigned slot) { return At(Effect_Objects_addr + ((slot & 0xFFu) << 7)); }
 unsigned char* Sprite(unsigned k) { return At(Sprite_Objects_addr + (k & 0xFFu) * 0xA4u); }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
+// sprite head that every family shares, unless the pointer is an object's.
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 unsigned Area() { return Game_AreaNumber; }
 void Step(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
@@ -436,7 +443,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_PlaceEffect(unsigned kind, int x, int 
     SetL(e + 0x64, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(x))));
     SetL(e + 0x68, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))));
     SetL(e + 0x6C, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(z))));
-    SetL(e + 0xC, static_cast<uint32_t>(twelve));
+    Fx(e)->step_x = static_cast<uint32_t>(twelve);
     e[9] = static_cast<unsigned char>(nine);
     return 1;
 }
@@ -772,11 +779,11 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
             e[0] = 1;
             e[5] = 0x88;
             e[6] = 1;
-            SetL(e + 0x34, 0x3B8000);
-            SetL(e + 0x38, 0x220000);
-            SetL(e + 0x3C, 0x8000000);
-            SetL(e + 0xC, 0x3F8000);
-            SetL(e + 0x10, 0x220000);
+            Fx(e)->x = 0x3B8000;
+            Fx(e)->z = 0x220000;
+            Fx(e)->height = 0x8000000;
+            Fx(e)->step_x = 0x3F8000;
+            Fx(e)->step_z = 0x220000;
             SetL(e + 0x14, 0x6000000);
         }
         Timer(0x20);
@@ -1030,12 +1037,12 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
             unsigned char* const e = Effect(s);
             e[0] = 1;
             e[5] = 0x1D;
-            SetL(e + 0x34, 0x2F8000);
-            SetL(e + 0x38, 0x278000);
-            const long z = static_cast<long>(L(e + 0x38));
-            const long x = static_cast<long>(L(e + 0x34));
+            Fx(e)->x = 0x2F8000;
+            Fx(e)->z = 0x278000;
+            const long z = static_cast<long>(static_cast<uint32_t>(Fx(e)->z));
+            const long x = static_cast<long>(static_cast<uint32_t>(Fx(e)->x));
             const long elev = SH_CALL(AreaMap_Elevation)(x, z);
-            SetL(e + 0x3C, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) << 16));
+            Fx(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) << 16);
         }
         SH_CALL(Music_Play)(0x82, 8);
         Timer(0x3C);
@@ -1128,10 +1135,10 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
     case 0x1F:
         if (B(kCounter0) != 0x2A) return;
         for (unsigned k = 0; k < 0x1E; ++k) {
-            if ((SH_CALL(Scena15_RecordWord)(W(Sprite(k) + 0x2C)) & 0xFFFFu) != 0x308) continue;
+            if ((SH_CALL(Scena15_RecordWord)(Spr(Sprite(k))->column) & 0xFFFFu) != 0x308) continue;
             unsigned char* const o = Sprite(k);
             o[0x83] = 0x24;
-            SetW(o + 0x8A, 0);
+            Spr(o)->script_position = 0;
             break;
         }
         Set(0x11);
@@ -1564,10 +1571,10 @@ SC15_EXPORT unsigned char __cdecl Scena15_SpawnMarker(long x, long z, unsigned s
     unsigned char* const e = Effect(s);
     e[0] = 1;
     e[5] = 0x9E;
-    SetL(e + 0x34, static_cast<uint32_t>(x));
-    SetL(e + 0x38, static_cast<uint32_t>(z));
-    const long elev = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(e + 0x34)), z);
-    SetL(e + 0x3C, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) + 0x200) << 16);
+    Fx(e)->x = static_cast<uint32_t>(x);
+    Fx(e)->z = static_cast<uint32_t>(z);
+    const long elev = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(Fx(e)->x)), z);
+    Fx(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) + 0x200) << 16;
     e[6] = static_cast<unsigned char>(six);
     e[7] = static_cast<unsigned char>(seven);
     e[0xB] = static_cast<unsigned char>(eleven);
@@ -1611,7 +1618,7 @@ void ObjectFlag(unsigned char* object, unsigned flag, unsigned member) {
     Set40();
     Set(flag);
     if (member != 0xFF) DropIn(member);
-    SetW(object + 0x8A, W(object + 0x8A) + 1u);
+    Spr(object)->script_position = Spr(object)->script_position + 1u;
 }
 
 }  // namespace
@@ -1631,7 +1638,7 @@ SC15_EXPORT void __cdecl Scena15_Object10(unsigned char* object, unsigned char*)
 // word +0x8A counted.
 SC15_EXPORT void __cdecl Scena15_Object11(unsigned char* object, unsigned char*) {
     Set40();
-    SetW(object + 0x8A, W(object + 0x8A) + 1u);
+    Spr(object)->script_position = Spr(object)->script_position + 1u;
 }
 
 // original 0x56B030: chapter 15's vtable slot 2, the step hook (PSX

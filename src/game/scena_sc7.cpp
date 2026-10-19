@@ -32,6 +32,7 @@
 // are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
 // of the wave that wrote them.
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc7_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -179,6 +180,12 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 // The record 0x903850 names, read back as a dword's low byte, as the
 // originals index it after the store.
 unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF); }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
+// sprite head that every family shares, unless the pointer is an object's.
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 }  // namespace
 
@@ -407,7 +414,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         SetLong(e + 0x64, Camera_Angles[0]);
         SetLong(e + 0x68, Camera_Angles[1]);
         SetLong(e + 0x6C, S16(at::kPitch));
-        SetLong(e + 0xC, -0x380);
+        Fx(e)->step_x = -0x380;
         e[9] = 0x40;
         return;
     }
@@ -573,11 +580,11 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         e[0] = 1;
         e[5] = 6;
         e[6] = 1;
-        SetLong(e + 0xC, 0);
-        SetLong(e + 0x10, static_cast<std::int32_t>(arg));
-        SetWord(e + 0x2E, Word(At(ObjTrio_addr + 0x2E)));
+        Fx(e)->step_x = 0;
+        Fx(e)->step_z = static_cast<std::int32_t>(arg);
+        Fx(e)->screen_x = Word(At(ObjTrio_addr + 0x2E));
         SetStep(1);
-        SetWord(e + 0x30, Word(At(ObjTrio_addr + 0x30)));
+        Fx(e)->screen_y = Word(At(ObjTrio_addr + 0x30));
         return;
     }
     case 1:
@@ -604,9 +611,9 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         SetTimer(0x8C);
         SetStep(5);
         Live(e, 0x3B);
-        SetLong(e + 0x34, Long(Sprite(0) + 0x34));
-        SetLong(e + 0x38, Long(Sprite(0) + 0x38));
-        SetLong(e + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite(0) + 0x3C)) + 0x1000000u));
+        Fx(e)->x = Spr(Sprite(0))->x;
+        Fx(e)->z = Spr(Sprite(0))->z;
+        Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(Sprite(0))->height) + 0x1000000u);
         return;
     }
     case 5:
@@ -795,8 +802,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0xC: {
         if (C0() != 3) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(0);
-        SetLong(p + 0x34, 0x160000);
-        SetLong(p + 0x38, 0x3E0000);
+        Fx(p)->x = 0x160000;
+        Fx(p)->z = 0x3E0000;
         SetTimer(0xC8);
         SetStep(0xD);
         out = kDone;
@@ -815,8 +822,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0xE: {
         if (C0() != 7) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(0);
-        SetLong(p + 0x34, 0x360000);
-        SetLong(p + 0x38, 0x410000);
+        Fx(p)->x = 0x360000;
+        Fx(p)->z = 0x410000;
         SetTimer(0xA8);
         SetStep(0xF);
         out = kDone;
@@ -828,13 +835,13 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(2);
-        SetLong(p + 0xC, 0x270000);
-        const std::int32_t x = Long(p + 0xC);
-        SetLong(p + 0x34, 0x390000);
-        SetLong(p + 0x38, 0x410000);
-        SetLong(p + 0x10, 0x410000);
+        Fx(p)->step_x = 0x270000;
+        const std::int32_t x = Fx(p)->step_x;
+        Fx(p)->x = 0x390000;
+        Fx(p)->z = 0x410000;
+        Fx(p)->step_z = 0x410000;
         const long e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
-        SetLong(p + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(e))) << 16));
+        Fx(p)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(e))) << 16);
         SetTimer(8);
         SetStep(0x10);
         out = kDone;
@@ -888,11 +895,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         if (C0() != 0x15) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(9);
         p[6] = 0;
-        SetLong(p + 0x34, 0x170000);
-        SetLong(p + 0x38, 0x3F0000);
-        SetLong(p + 0x3C, 0x5C00000);
-        SetLong(p + 0xC, 0x10000);
-        SetLong(p + 0x10, 0);
+        Fx(p)->x = 0x170000;
+        Fx(p)->z = 0x3F0000;
+        Fx(p)->height = 0x5C00000;
+        Fx(p)->step_x = 0x10000;
+        Fx(p)->step_z = 0;
         SetLong(p + 0x14, static_cast<std::int32_t>(0xFFE00000u));
         SetLong(p + 0x18, 0x2D0000);
         SetLong(p + 0x1C, 0x3F0000);
@@ -910,13 +917,13 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(9);
-        SetLong(p + 0x38, 0x410000);
+        Fx(p)->z = 0x410000;
         SetLong(p + 0x1C, 0x410000);
         p[6] = 1;
-        SetLong(p + 0x34, 0x2D0000);
-        SetLong(p + 0x3C, 0x3000000);
-        SetLong(p + 0xC, static_cast<std::int32_t>(0xFFFF0000u));
-        SetLong(p + 0x10, 0);
+        Fx(p)->x = 0x2D0000;
+        Fx(p)->height = 0x3000000;
+        Fx(p)->step_x = static_cast<std::int32_t>(0xFFFF0000u);
+        Fx(p)->step_z = 0;
         SetLong(p + 0x14, 0);
         SetLong(p + 0x18, 0x270000);
         SetLong(p + 0x20, 0x3000000);
@@ -992,11 +999,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0x20: {
         if (C0() != 0x1F) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(3);
-        SetLong(p + 0x34, 0x258000);
-        SetLong(p + 0x38, 0x410000);
+        Fx(p)->x = 0x258000;
+        Fx(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(4);
-        SetLong(q + 0x34, 0x258000);
-        SetLong(q + 0x38, 0x410000);
+        Fx(q)->x = 0x258000;
+        Fx(q)->z = 0x410000;
         SetTimer(0x70);
         SetStep(0x21);
         out = kShake;
@@ -1008,11 +1015,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(5);
-        SetLong(p + 0x34, 0x258000);
-        SetLong(p + 0x38, 0x410000);
+        Fx(p)->x = 0x258000;
+        Fx(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(8);
-        SetLong(q + 0x34, 0x258000);
-        SetLong(q + 0x38, 0x410000);
+        Fx(q)->x = 0x258000;
+        Fx(q)->z = 0x410000;
         const unsigned char c = static_cast<unsigned char>(C0() + 1);
         SetTimer(0x3C);
         C0() = c;
@@ -1036,11 +1043,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(6);
-        SetLong(p + 0x34, 0x258000);
-        SetLong(p + 0x38, 0x410000);
+        Fx(p)->x = 0x258000;
+        Fx(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(7);
-        SetLong(q + 0x34, 0x258000);
-        SetLong(q + 0x38, 0x410000);
+        Fx(q)->x = 0x258000;
+        Fx(q)->z = 0x410000;
         SetTimer(0x3C);
         SetStep(0x24);
         out = kShake;
@@ -1176,7 +1183,7 @@ void ObjectTo4(unsigned char* object, unsigned animation) {
     object[1] = 4;
     object[0x84] = 2;
     object[0x83] = static_cast<unsigned char>(animation);
-    SetWord(object + 0x8A, 0);
+    Spr(object)->script_position = 0;
 }
 // Object handlers 3 and 4: the counters cleared, run 7 at `step`, or at 0x14
 // when chapter 6's flag `flag` is set.
@@ -1540,15 +1547,15 @@ extern "C" void __cdecl Scena08_Scene1(void) {
         if (C0() != 4) return;
         if (TakeInto(at::kSlot) != 0xFF) {
             unsigned char* const e = Slot850();
-            SetLong(e + 0x38, 0x550000);
-            const std::int32_t z = Long(e + 0x38);
-            SetLong(e + 0x34, 0x8E0000);
-            const std::int32_t x = Long(e + 0x34);
+            Fx(e)->z = 0x550000;
+            const std::int32_t z = Fx(e)->z;
+            Fx(e)->x = 0x8E0000;
+            const std::int32_t x = Fx(e)->x;
             e[0] = 1;
             e[5] = 0x52;
             e[1] = 0;
             const long h = SH_CALL(AreaMap_Elevation)(x, z);
-            SetLong(e + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16));
+            Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetTimer(0x3C);
         SetStep(3);
@@ -1645,7 +1652,7 @@ extern "C" void __cdecl Scena08_Scene2(void) {
     switch (Step()) {
     case 0:
         Sprite_ObjectsExtra[0x83] = 3;
-        SetWord(At(Sprite_ObjectsExtra_addr) + 0x8A, 0);
+        Spr(At(Sprite_ObjectsExtra_addr))->script_position = 0;
         SetStep(1);
         return;
     case 1:
@@ -1702,15 +1709,15 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         if (C0() != 5) return;
         if (TakeInto(at::kSlot) != 0xFF) {
             unsigned char* const e = Slot850();
-            SetLong(e + 0x38, 0x418000);
-            const std::int32_t z = Long(e + 0x38);
-            SetLong(e + 0x34, 0x158000);
-            const std::int32_t x = Long(e + 0x34);
+            Fx(e)->z = 0x418000;
+            const std::int32_t z = Fx(e)->z;
+            Fx(e)->x = 0x158000;
+            const std::int32_t x = Fx(e)->x;
             e[0] = 1;
             e[5] = 0x51;
             e[1] = 0;
             const long h = SH_CALL(AreaMap_Elevation)(x, z);
-            SetLong(e + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16));
+            Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetStep(3);
         return;
@@ -2045,8 +2052,8 @@ extern "C" void __cdecl Scena08_Scene7(void) {
     case 0xF:
         if (C0() != 0) return;
         FocusObject()[6] = 5;
-        SetLong(FocusObject() + 0x18, 1);
-        SetLong(FocusObject() + 0x1C, 3);
+        Spr(FocusObject())->accel_x = 1;
+        Spr(FocusObject())->accel_z = 3;
         Clear40();
         SetRun(0);
         SetStep(0);
