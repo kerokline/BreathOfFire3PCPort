@@ -331,8 +331,14 @@ def cmd_inproc(a):
         print(f'restore {n + 1}: tick {st[R][0]} (recipe frame {st[R][2]}) holds Frame_Counter {fc}, '
               f'last held at tick {st[S][0]} (recipe frame {st[S][2]}): window {win} ticks')
         first, per, total = compare(run, S, R, st, st, win)
+        exp, per = split_expected(run, per, getattr(a, 'expect', None))
+        if exp:
+            print(f'expected (by the --expect rules, each a page and a window of k): {len(exp)} pages')
+            print_pages(run, exp, total)
+        first = min((v[0] for v in per.values()), default=None)
         if first is None:
-            print(f'RESULT: equal - the {total} ticks after the restore equal the {total} after the take, tick for tick')
+            print(f'RESULT: equal - the {total} ticks after the restore equal the {total} after the take, tick for tick'
+                  + (', but for the expected pages above' if exp else ''))
         else:
             rc = 1
             print(f'RESULT: differs - first at k={first}: tick {st[R + first][0]} (recipe frame {st[R + first][2]}) '
@@ -342,6 +348,38 @@ def cmd_inproc(a):
     if a.plain:
         rc = max(rc, plain_check(run, st, back, a.plain))
     return rc
+
+
+# What a correct restore still changes, by design, measured by raw dumps
+# (docs/quicksave-routes.md, stage C): SN's "Quickload" line is written after
+# the span (Overlay_Text / Overlay_Frames on page 0x6BC000, 120 frames), and
+# the display's buffer parity (Gpu_DispEnv / Gpu_DrawEnv on page 0x7DE000)
+# differs for the first tick. A page rule, not a byte rule - the hash is per
+# page - so each holds only inside its window of k.
+EXPECT_DEFAULT = ['0x6BC000:0-120', '0x7DE000:0-1']
+
+
+def parse_expect(rules):
+    out = []
+    for r in rules or []:
+        page, _, win = r.partition(':')
+        lo, _, hi = win.partition('-')
+        out.append((int(page, 0), int(lo), int(hi or lo)))
+    return out
+
+
+def split_expected(run, per, rules):
+    """(expected, the rest) of per: a page whose every differing k lies in
+    one rule's window for that page is expected."""
+    exp, rest = {}, {}
+    rules = parse_expect(rules)
+    for p, (f, l, c) in per.items():
+        addr = run.base + p * run.page
+        if any(addr == pa and lo <= f and l <= hi for pa, lo, hi in rules):
+            exp[p] = (f, l, c)
+        else:
+            rest[p] = (f, l, c)
+    return exp, rest
 
 
 def plain_check(run, st, back, plain_path):
@@ -394,8 +432,14 @@ def cmd_cross(a):
           f'live: tick {sl[L][0]} (recipe frame {sl[L][2]}, {"its own restore" if back and L >= back[0] else "the take"})')
     n = a.frames if a.frames else max(len(sl), len(sd))
     first, per, total = compare(live, L, R, sl, sd, n, out)
+    exp, per = split_expected(live, per, getattr(a, 'expect', None))
+    if exp:
+        print(f'expected (by the --expect rules): {len(exp)} pages')
+        print_pages(live, exp, total)
+    first = min((v[0] for v in per.values()), default=None)
     if first is None:
-        print(f'RESULT: equal - {total} ticks from the restore, tick for tick')
+        print(f'RESULT: equal - {total} ticks from the restore, tick for tick'
+              + (', but for the expected pages above' if exp else ''))
         return 0
     print(f'RESULT: differs - first at k={first}: loaded tick {sd[R + first][0]} against live tick {sl[L + first][0]}; '
           f'{len(per)} pages over {total} compared ticks')
@@ -491,8 +535,8 @@ def cmd_run(a):
     if not os.path.exists(sh):
         print(f'no state hash written ({sh})')
         return 1
-    if meta and meta[0] == 'replay':
-        return cmd_inproc(argparse.Namespace(run=sh, log=log, plain=a.plain, window=None))
+    if not meta or meta[0] == 'replay':      # a proof form, or a recipe of its own (quick_menu.txt)
+        return cmd_inproc(argparse.Namespace(run=sh, log=log, plain=a.plain, window=None, expect=a.expect))
     if a.plain:
         return cmd_same(argparse.Namespace(a=a.plain, b=sh, refb=None))
     return 0
@@ -559,6 +603,11 @@ def cmd_selftest(a):
     good = '0x5DF000' in buf.getvalue()
     print(f'{"ok  " if good else "FAIL"} the differing page is page 5, 0x5DF000')
     ok &= good
+    divp = os.path.join(d, 'div.sh')
+    expect('--expect covering the page and its window (k 17..30 in 0..40)',
+           cmd_inproc(argparse.Namespace(run=divp, log=None, plain=None, window=None, expect=['0x5DF000:0-40'])), 0)
+    expect('--expect whose window ends too soon (0..20)',
+           cmd_inproc(argparse.Namespace(run=divp, log=None, plain=None, window=None, expect=['0x5DF000:0-20'])), 1)
     p = os.path.join(d, 'none.sh')
     write_sh(p, synthetic(restore=False))
     expect('no restore (f7 did nothing)', cmd_inproc(argparse.Namespace(run=p, log=None, plain=None, window=None)), 2)
@@ -625,6 +674,9 @@ def main():
     p.add_argument('--log')
     p.add_argument('--plain')
     p.add_argument('--window', type=int)
+    p.add_argument('--expect', action='append', default=None, metavar='PAGE:K0-K1',
+                   help='a page allowed to differ inside a window of k (default: ' + ' '.join(EXPECT_DEFAULT)
+                   + '; --expect none for no rule)')
     p.set_defaults(fn=cmd_inproc)
     p = sub.add_parser('cross')
     p.add_argument('live')
@@ -632,6 +684,7 @@ def main():
     p.add_argument('--log-live')
     p.add_argument('--log-loaded')
     p.add_argument('--frames', type=int)
+    p.add_argument('--expect', action='append', default=None, metavar='PAGE:K0-K1')
     p.set_defaults(fn=cmd_cross)
     p = sub.add_parser('same')
     p.add_argument('a')
@@ -649,10 +702,13 @@ def main():
     p.add_argument('--lang', default='en-US')
     p.add_argument('--minutes', type=float, default=10)
     p.add_argument('--env', action='append', default=[])
+    p.add_argument('--expect', action='append', default=None, metavar='PAGE:K0-K1')
     p.set_defaults(fn=cmd_run)
     p = sub.add_parser('selftest')
     p.set_defaults(fn=cmd_selftest)
     a = ap.parse_args()
+    if hasattr(a, 'expect'):
+        a.expect = EXPECT_DEFAULT if a.expect is None else [] if a.expect == ['none'] else a.expect
     sys.exit(a.fn(a) or 0)
 
 
