@@ -33,6 +33,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -73,10 +74,6 @@ constexpr std::uint32_t kFacing = 0x904AAC;
 constexpr std::uint32_t kSetFiles = 0x64E9BC;
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Cur() { return Pointer(KaiserMote_Current_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -226,7 +223,7 @@ S30_EXPORT void __cdecl Venom_Start(void) {
         const unsigned slot = NewTask(0x66);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = PtrValue(self);
         child[1] = 0;
         Inc(self[0xB]);
@@ -235,7 +232,7 @@ S30_EXPORT void __cdecl Venom_Start(void) {
         const unsigned slot = NewTask(0x66);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = PtrValue(self);
         child[1] = 1;
         child[0xB] = static_cast<unsigned char>(i);
@@ -484,7 +481,7 @@ S30_EXPORT void __cdecl Kaiser_Start(void) {
     const unsigned slot = NewTask(0x69);
     unsigned char* const self = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = PtrValue(self);
     child[1] = 1;
     Inc(self[0xB]);
@@ -515,7 +512,7 @@ S30_EXPORT void __cdecl Kaiser_HideParty(void) {
     const unsigned slot = NewTask(0x69);
     unsigned char* const self = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = PtrValue(self);
     child[1] = 0;
     child[4] = 0x21;
@@ -533,7 +530,7 @@ S30_EXPORT void __cdecl Kaiser_WaitChildren(void) {
     const unsigned slot = NewTask(0x69);
     unsigned char* const self = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = PtrValue(self);
     child[1] = 1;
     Inc(self[0xB]);
@@ -598,7 +595,7 @@ S30_EXPORT void __cdecl Kaiser_ShowParty(void) {
     unsigned i = 0;
     do {
         unsigned char* const m = PartyRecord(i);
-        records::PartyMember* const tm = reinterpret_cast<records::PartyMember*>(m);
+        records::PartyMember* const tm = rv::As<records::PartyMember>(m);
         Sprite_Current = m;
         m[0] = 1;
         MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(m[8] + 4));
@@ -659,18 +656,18 @@ bool FacingAcross() {
 // One step of the sprite's glide: the velocity +0xC / +0x10 by +0x18 / +0x1C,
 // the screen point by the velocity (as words).
 void Accelerate() {
-    AddL(Sc() + 0xC, ScTask()->start_x);
-    AddL(Sc() + 0x10, ScTask()->start_y);
+    AddL(Sc() + 0xC, rv::Current<records::BattleTask>()->start_x);
+    AddL(Sc() + 0x10, rv::Current<records::BattleTask>()->start_y);
 }
 void Move() {
     AddW(Sc() + 0x2E, Word(Sc() + 0xC));
     AddW(Sc() + 0x30, Word(Sc() + 0x10));
 }
 void SetVelocity(std::int32_t vx, std::int32_t vy, std::int32_t ax, std::int32_t ay) {
-    ScTask()->vel_x = vx;
-    ScTask()->vel_y = vy;
-    ScTask()->start_x = ax;
-    ScTask()->start_y = ay;
+    rv::Current<records::BattleTask>()->vel_x = vx;
+    rv::Current<records::BattleTask>()->vel_y = vy;
+    rv::Current<records::BattleTask>()->start_x = ax;
+    rv::Current<records::BattleTask>()->start_y = ay;
 }
 
 }  // namespace
@@ -698,8 +695,8 @@ S30_EXPORT void __cdecl KaiserSprite_Start(void) {
         Accelerate();
         Move();
     }
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(ScTask()->vel_x)));
-    Store(ScTask()->vel_y, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(ScTask()->vel_y)));
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x)));
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_y)));
     SpriteFields(5, 2, 0, 0);
     Sc()[0x29] = 2;
     SetWord(Sc() + 0x2C, 0);
@@ -763,7 +760,7 @@ S30_EXPORT void __cdecl KaiserSprite_Breathe(void) {
         const unsigned slot = NewTask(0x69);
         unsigned char* const owner = Owner();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = PtrValue(owner);
         child[1] = static_cast<unsigned char>(kind);
         Inc(owner[0xB]);
@@ -825,7 +822,7 @@ S30_EXPORT void __cdecl KaiserSprite_Leave(void) {
 S30_EXPORT void __cdecl KaiserSprite_Exit(void) {
     if ((Frame_Counter & 1) != 0 && Sc()[9] < 8) {
         Inc(Sc()[9]);
-        AddL(Sc() + 0x10, ScTask()->start_y);
+        AddL(Sc() + 0x10, rv::Current<records::BattleTask>()->start_y);
     }
     Move();
     Dec(Sc()[0xA]);

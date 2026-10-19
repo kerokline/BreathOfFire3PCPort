@@ -44,6 +44,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -53,10 +54,6 @@
 // bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::EnemyOf;
@@ -136,7 +133,7 @@ void Rtp4(unsigned char* p, unsigned a, unsigned b, unsigned c, unsigned d) {
 }
 void LinkAtSprite(int dy, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y),
                                 dy, size);
 }
@@ -216,7 +213,7 @@ S25_EXPORT void __cdecl SpellSleep_Start(void) {
     const unsigned char* const caster = Pointer(MagicS23_ActorSprite_addr);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const child = Task(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     SetPointer(child + 0x80, sc);
     child[8] = caster[8];
     tchild->x = Field_Kind2X;
@@ -726,7 +723,7 @@ S25_EXPORT void __cdecl SpellConfuse_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x1A);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const child = Task(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     SetPointer(child + 0x80, sc);
     child[8] = source[8];
     tchild->x = Long(source + 0x34);
@@ -756,11 +753,11 @@ S25_EXPORT void __cdecl SpellConfuse_Child(void) {
 // record 0..2, else enemy - 3) raised 0xC00000; +0xB, +9, +0xA 0; on; sound
 // 0x100.
 S25_EXPORT void __cdecl SpellConfuse_ChildInit(void) {
-    ScTask()->vel_x = 0x20000;
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->vel_x = 0x20000;
+    rv::Current<records::BattleTask>()->vel_y = 0;
     MH_AT(void (__cdecl*)(unsigned char*), kTurnByFacing)(Sprite_Current);
     unsigned char* sc = Sprite_Current;
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     tsc->x = tsc->x + tsc->vel_x;
     tsc->y = tsc->y + tsc->vel_y;
     SetWord(sc + 0x3E, Word(sc + 0x3E) + 0xC0u);
@@ -1469,10 +1466,10 @@ S25_EXPORT void __cdecl SpellRagnarok_RingChild(void) {
 // original 0x4D59E0 (ring phase 0): the ring at the field's kind-2 point plus
 // (0x60000, 0x60000), the owner's height; radius +0x14 0x100; +9 0x10; on.
 S25_EXPORT void __cdecl SpellRagnarok_RingInit(void) {
-    ScTask()->vel_x = 0x60000;
-    ScTask()->vel_y = 0x60000;
-    Store(ScTask()->x, ScTask()->vel_x + Field_Kind2X);
-    Store(ScTask()->y, ScTask()->vel_y + Field_Kind2Z);
+    rv::Current<records::BattleTask>()->vel_x = 0x60000;
+    rv::Current<records::BattleTask>()->vel_y = 0x60000;
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->vel_x + Field_Kind2X);
+    rv::Store(rv::Current<records::BattleTask>()->y, rv::Current<records::BattleTask>()->vel_y + Field_Kind2Z);
     SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     SetLong(Sprite_Current + 0x14, 0x100);
     Sprite_Current[9] = 0x10;
@@ -1594,8 +1591,8 @@ S25_EXPORT void __cdecl SpellRagnarok_SparkChild(void) {
 // checked), the owner's height; +9 0x60, +0xA 0x40; on.
 S25_EXPORT void __cdecl SpellRagnarok_SparkInit(void) {
     const std::uint32_t offsets = bof3::addr::SpellRagnarok_SparkOffsets;
-    Store(ScTask()->x, Long(Mem(offsets + Sprite_Current[0xB] * 8u)) + Field_Kind2X);
-    Store(ScTask()->y, Long(Mem(offsets + 4 + Sprite_Current[0xB] * 8u)) + Field_Kind2Z);
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(offsets + Sprite_Current[0xB] * 8u)) + Field_Kind2X);
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Mem(offsets + 4 + Sprite_Current[0xB] * 8u)) + Field_Kind2Z);
     SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     Sprite_Current[9] = 0x60;
     Sprite_Current[0xA] = 0x40;

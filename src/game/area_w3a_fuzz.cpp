@@ -19,6 +19,7 @@
 #include "game/area_w3a.h"
 #include "game/area_w3a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -710,7 +711,7 @@ void SeedTwinRect() {
     const unsigned char* const r = Mem(g_tw->rect);
     g_member = ah::Often() ? ah::Next() % 3 : ah::Next() % 4 | (ah::Next() & 0xFFFFFF00u);
     unsigned char* const p = ah::PartyOf(static_cast<unsigned char>(g_member & 0xFF));
-    auto* const tP = reinterpret_cast<records::PartyMember*>(p);
+    auto* const tP = rv::As<records::PartyMember>(p);
     if ((g_member & 0xFF) >= 3) return;
     // x and z at each edge, one axis sometimes far off so each test decides
     tP->x = ah::Often() ? Edge(r[ah::Half() ? 0 : 2]) : static_cast<std::int32_t>(ah::Next());

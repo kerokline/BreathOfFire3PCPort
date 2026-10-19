@@ -22,6 +22,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2d_callees.h"
 #include "game/scenario_harness.h"
@@ -36,9 +37,6 @@ using bof3x::input::sigma::Sigma;
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace at = rest_2d::at;
 using U = std::uint32_t;
@@ -703,8 +701,8 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
     const auto c = BattleActorCopies_ItemActor;
     B(0x80340C) = 1;
     const U member_window = at::kWindows + at::kWindowStride * static_cast<U>(4 + c);
-    SetWord(At(0x803410), WindowRec(At(member_window))->centre_x);
-    SetWord(At(0x803412), WindowRec(At(member_window))->centre_y);
+    SetWord(At(0x803410), rv::As<records::WindowRecord>(At(member_window))->centre_x);
+    SetWord(At(0x803412), rv::As<records::WindowRecord>(At(member_window))->centre_y);
     SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(MoveScript_EffectState[Cond_Flags[0xd2 + c]])));
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x8032FC), 0x12);
@@ -808,10 +806,10 @@ extern "C" void __cdecl FieldMenuStatus_Close(void) {
 extern "C" void __cdecl FieldMenuStatus_PlaceWindows(void) {
     for (unsigned char i = 0; i < static_cast<unsigned char>(SH_CALL(Party_Count)(0));) {
         const U w = Window(12 + i, "FieldMenuStatus_PlaceWindows");
-        WindowRec(At(w))->handler = 6;
-        WindowRec(At(w))->kind = 5;
-        WindowRec(At(w))->state = 2;
-        WindowRec(At(w))->in_use = 1;
+        rv::As<records::WindowRecord>(At(w))->handler = 6;
+        rv::As<records::WindowRecord>(At(w))->kind = 5;
+        rv::As<records::WindowRecord>(At(w))->state = 2;
+        rv::As<records::WindowRecord>(At(w))->in_use = 1;
         SetWord(At(w + 4), 0x140);
         const unsigned short y = Word(At(at::kWindows + at::kWindowStride * (4u + i) + 6));
         B(w + 0xA) = i;
@@ -840,7 +838,7 @@ void MemberWindowStates(unsigned char mine, unsigned char mine_list, unsigned ch
                         const char* who) {
     for (unsigned char i = 0; i < static_cast<unsigned char>(SH_CALL(Party_Count)(0));) {
         const bool at_cursor = static_cast<int>(i) == BattleActorCopies_ItemActor;
-        WindowRec(At(Window(4 + i, who)))->state = at_cursor ? mine : other;
+        rv::As<records::WindowRecord>(At(Window(4 + i, who)))->state = at_cursor ? mine : other;
         B(Window(12 + i, who) + 3) = at_cursor ? mine_list : other_list;
         ++i;
     }

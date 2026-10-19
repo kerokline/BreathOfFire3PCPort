@@ -29,6 +29,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_windows_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/text_pairs.h"
 #include "hook/detour.h"
@@ -127,7 +128,6 @@ unsigned Darker(unsigned c) {
 
 // A party member's battle object (ObjTrio, stride 0x14C) and its words.
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + at::kObjectStride * i); }
-records::WindowRecord* CurrentRec() { return reinterpret_cast<records::WindowRecord*>(Current()); }
 
 // A status colour from the member's +0x90 flags: 2 when bit 14 (grey),
 // else what the caller derives.
@@ -170,7 +170,7 @@ extern "C" unsigned __cdecl BattleParty_RunStates() {
 extern "C" void __cdecl BattleParty_UpdateScreens() {
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const o = Member(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        auto* const member_rec = rv::As<records::PartyMember>(o);
         Field_State = o;
         Sprite_Current = o;
         const unsigned char b = member_rec->flags;
@@ -217,7 +217,7 @@ extern "C" unsigned __cdecl BattleObj_PickPose() {
         return g.pose_from(static_cast<unsigned char>(Sprite()[8] + 0x20), at::kPoseSet, 0x1800);
     }
     unsigned char* const f = FieldState();
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(f);
+    auto* const member_rec = rv::As<records::PartyMember>(f);
     const unsigned flags = member_rec->status;
     const auto pose = [](unsigned add) { return g.ensure_pose(static_cast<unsigned char>(Sprite()[8] + add)); };
     if (flags & 0x4000) return pose(0x1C);
@@ -271,7 +271,7 @@ extern "C" void __cdecl BattleWin_DrawPartyStatus(int x, int y) {
         const unsigned char b1 = bars[2], b0 = bars[0];
         g.draw_bar(xs, y + 0xE, b0, b1, 0);
         unsigned char* const m = Member(i);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+        auto* const member_rec = rv::As<records::PartyMember>(m);
         if (member_rec->max_ap != 0) {
             g.line_semi1(xs, y + 0xE, bars[1] + slot + 0x14, y + 0xE, 0x64, 0, 0xC8);
             const unsigned char extra = bars[3];
@@ -565,7 +565,7 @@ extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
     g.draw_edge(x, y, 2, 0);
     g.draw_edge(x, y + 0x13, 3, 0);
     unsigned char* const o = Member(m & 0xFF);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+    auto* const member_rec = rv::As<records::PartyMember>(o);
     g.tiny_font(x + 4, y + 2, StatusColourName(member_rec->status), 5, o + 0x80);
     const unsigned colour = StatusColourHp(member_rec->status);
     g.draw_digit(x + 2, y + 0xA, 0);
@@ -591,20 +591,20 @@ extern "C" void __cdecl BattleWin_DrawTargetMember(int x, int y, unsigned m) {
 // stepped on.
 extern "C" void __cdecl Window_FlagAndAdvance() {
     Current()[0xF] = 1;
-    ++CurrentRec()->state;
+    ++rv::As<records::WindowRecord>(Current())->state;
 }
 
 // original 0x597A00: the current window record's position +4 / +6 put back
 // from +0x10 / +0x12, +0xF cleared, its state +3 stepped back.
 extern "C" void __cdecl Window_RestoreAndBack() {
     unsigned char* w = Current();
-    records::WindowRecord* win = reinterpret_cast<records::WindowRecord*>(w);
+    records::WindowRecord* win = rv::As<records::WindowRecord>(w);
     win->centre_x = Word(w + 0x10);
     w = Current();
-    win = reinterpret_cast<records::WindowRecord*>(w);
+    win = rv::As<records::WindowRecord>(w);
     win->centre_y = Word(w + 0x12);
     Current()[0xF] = 0;
-    --CurrentRec()->state;
+    --rv::As<records::WindowRecord>(Current())->state;
 }
 
 // original 0x597A30: a window kind's handler by the byte its eighth argument
@@ -635,11 +635,11 @@ extern "C" __attribute__((disable_tail_calls, noinline)) unsigned __cdecl Window
 // through Text_DrawAt at (+4 + 4, +6 + 3), to its end. The record and the
 // index are read after the box.
 extern "C" void __cdecl BattleWin_DrawMessage() {
-    const records::WindowRecord* win = CurrentRec();
+    const records::WindowRecord* win = rv::As<records::WindowRecord>(Current());
     g.message_box(win->centre_x, win->centre_y);
     const unsigned index = BattleWindows_MsgHead;
     const auto* const text = At(static_cast<std::uint32_t>(Long(At(at::kMsgRing + 8 * index))));
-    win = CurrentRec();
+    win = rv::As<records::WindowRecord>(Current());
     g.text_draw_at(static_cast<std::uint16_t>(win->centre_x + 4), static_cast<std::uint16_t>(win->centre_y + 3), 0, 0xFF,
                    text);
 }

@@ -5,6 +5,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/event_script_callees.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/wide_staging.h"
 #include "hook/detour.h"
@@ -75,16 +76,13 @@ void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
 unsigned char* Extra(unsigned n) { return Sprite_ObjectsExtra + n * 0xA4u; }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Obj() is a Sprite_Objects record. Ext() is a
-// Sprite_ObjectsExtra record.
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::SpriteObject* Obj(int n) { return Spr(Object(n)); }
-static records::SpriteObject* Ext(unsigned n) { return Spr(Extra(n)); }
+// Sprite_Kind2 record: Object(n) is a Sprite_Objects record, Extra(n) a
+// Sprite_ObjectsExtra one.
 
 // A placement's x or z: the whole part from `whole`, and the half (0x8000) if
 // `half` is non-zero - `neg / sbb / and 0x8000`.
@@ -342,11 +340,11 @@ extern "C" void __cdecl EventObj_Reset(void) {
     Sprite_Current[0x24] = 0;
     Sprite_Current[0xA] = 0;
     Sprite_Current[9] = 0;
-    SC()->scale_y = 0x10000;
-    SC()->scale_x = 0x10000;
-    SC()->angle[2] = 0;
-    SC()->angle[1] = 0;
-    SC()->angle[0] = 0;
+    rv::Current<records::SpriteObject>()->scale_y = 0x10000;
+    rv::Current<records::SpriteObject>()->scale_x = 0x10000;
+    rv::Current<records::SpriteObject>()->angle[2] = 0;
+    rv::Current<records::SpriteObject>()->angle[1] = 0;
+    rv::Current<records::SpriteObject>()->angle[0] = 0;
     Field_ActiveMember[0x80] = 0;
     Field_ActiveMember[0x81] = 0;
     Field_ActiveMember[0x82] = 0;
@@ -388,12 +386,12 @@ void Place(const unsigned char* op, bool two) {
     g.set_bank(Bank());
     Sprite_Current[0] = 1;
     SetDword(Sprite_Current + 0x34, Coordinate(op[6], op[7]));
-    SetDword(Object(Count()) + 0x8C, static_cast<std::uint32_t>(SC()->x));
+    SetDword(Object(Count()) + 0x8C, static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x));
     SetDword(Sprite_Current + 0x38, Coordinate(op[8], op[9]));
-    SetDword(Object(Count()) + 0x90, static_cast<std::uint32_t>(SC()->z));
-    Obj(Count())->best_score = 0;
-    const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(SC()->x)),
-                                       static_cast<long>(static_cast<std::uint32_t>(SC()->z)));
+    SetDword(Object(Count()) + 0x90, static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z));
+    rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
+    const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+                                       static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
@@ -404,9 +402,9 @@ void Place(const unsigned char* op, bool two) {
     Sprite_Current[8] = op[0] & 0xF;
     Sprite_Current[6] = op[0] >> 4;
     unsigned char* const n = Object(Count());
-    Spr(n)->half_w = op[4];
-    Spr(n)->half_d = op[5];
-    Spr(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
+    rv::As<records::SpriteObject>(n)->half_w = op[4];
+    rv::As<records::SpriteObject>(n)->half_d = op[5];
+    rv::As<records::SpriteObject>(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
     n[0x84] = op[0xB];
     if (two) n[0x83] = op[0x10];
     n[0xA0] = 0x7F;
@@ -454,12 +452,12 @@ extern "C" void __cdecl Sprite_InitFromEntry(unsigned char* entry) {
     Sprite_Current[0] = 1;
     Sprite_Current[0x24] = 0x40;
     Sprite_Current[0x48] = 1;
-    SC()->scale_x = 0x1000;
-    SC()->scale_y = 0x1000;
+    rv::Current<records::SpriteObject>()->scale_x = 0x1000;
+    rv::Current<records::SpriteObject>()->scale_y = 0x1000;
     SetDword(Sprite_Current + 0x50, Dword(entry + 4));
     SetDword(Sprite_Current + 0x54, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(entry)));
-    SC()->angle[1] = 0;
-    SC()->angle[0] = 0;
+    rv::Current<records::SpriteObject>()->angle[1] = 0;
+    rv::Current<records::SpriteObject>()->angle[0] = 0;
     SetDword(Sprite_Current + 0x6C, Sprite_DirectionAngles[Sprite_Current[8]]);
 }
 
@@ -486,24 +484,24 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     g.init_entry(entry);
     SetDword(Sprite_Current + 0x34, Coordinate(op[1], op[2]));
     SetDword(Sprite_Current + 0x38, Coordinate(op[3], op[4]));
-    const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(SC()->x)),
-                                       static_cast<long>(static_cast<std::uint32_t>(SC()->z)));
+    const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
+                                       static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[5];
     Sprite_Current[2] = op[7];
     Sprite_Current[6] = static_cast<unsigned char>((op[0] >> 4) - 1);
     SetDword(Sprite_Current + 0x20, 0);
-    SC()->accel_z = 0;
-    SC()->accel_x = 0;
+    rv::Current<records::SpriteObject>()->accel_z = 0;
+    rv::Current<records::SpriteObject>()->accel_x = 0;
     {
         unsigned char* const sc = Sprite_Current;
         unsigned char* source;
         std::memcpy(&source, sc + 0x54, sizeof source);
         sc[0x70] = source[2];
     }
-    Ext(op[0xB])->best_score = 0;
-    Ext(op[0xB])->target_z = 0;
-    Ext(op[0xB])->target_x = 0;
+    rv::As<records::SpriteObject>(Extra(op[0xB]))->best_score = 0;
+    rv::As<records::SpriteObject>(Extra(op[0xB]))->target_z = 0;
+    rv::As<records::SpriteObject>(Extra(op[0xB]))->target_x = 0;
     Extra(op[0xB])[0x83] = op[0xA];
     Extra(op[0xB])[0x84] = op[6];
     SetWord(Extra(op[0xB]) + 0x88, static_cast<unsigned>(op[0xC]) << 8 | op[0xD]);

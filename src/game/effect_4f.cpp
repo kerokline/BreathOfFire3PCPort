@@ -50,6 +50,7 @@
 #include "game/effect_4f_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -68,12 +69,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-// A setter's store through a typed field: the record's address is evaluated
-// before the value, as the setter call evaluates its arguments, and the value
-// goes through the setter's parameter type P.
-template <typename P, typename T>
-void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -219,9 +214,9 @@ extern "C" void __cdecl EffectKindAB_Run(void) {
 // point +0x34 / +0x38 / +0x3C the leader's (ObjTrio +0x34..); the drops cleared
 // (EffectKind81_ClearDrops), the eight sources placed; +9 = 0x78; +1 up.
 extern "C" void __cdecl EffectKindAB_Start(void) {
-    Store<U>(CurFx()->x, UL(at::kLeaderPoint));
-    Store<U>(CurFx()->z, UL(at::kLeaderPoint + 4));
-    Store<U>(CurFx()->height, UL(at::kLeaderPoint + 8));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(at::kLeaderPoint));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(at::kLeaderPoint + 4));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(at::kLeaderPoint + 8));
     SH_CALL(EffectKind81_ClearDrops)();
     SH_CALL(EffectKindAB_PlaceSources)();
     S()[9] = 0x78;
@@ -472,7 +467,7 @@ extern "C" void __cdecl EffectKindAE_Run(void) {
 // (EffectKindAE_Draw); +9 down, at 0 +9 = 4, +1 up.
 extern "C" void __cdecl EffectKindAE_Sink(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     so->height = static_cast<std::uint32_t>(so->height) + 0xFF000000u;
     SH_CALL(EffectKindAE_Draw)();
     if (!CountDown()) return;
@@ -848,9 +843,9 @@ extern "C" void __cdecl EffectKindB9_Rise(void) {
     S()[6] = 0;
     NextState();
     SH_CALL(EffectKind64_ClearSparks)();
-    CurFx()->x = UL(S() + 0x64);
-    CurFx()->z = UL(S() + 0x68);
-    CurFx()->height = UL(S() + 0x6C);
+    rv::Current<records::EffectObject>()->x = UL(S() + 0x64);
+    rv::Current<records::EffectObject>()->z = UL(S() + 0x68);
+    rv::Current<records::EffectObject>()->height = UL(S() + 0x6C);
     for (U i = 0; i < at::kShardCount; ++i) SH_CALL(EffectKind64_InitShard)(Shard(i));
     SH_CALL(Sound_PlayEffect)(0x215);
 }
@@ -1023,7 +1018,7 @@ extern "C" void __cdecl EffectKindB9_SpawnSpark(void) {
         unsigned char* const k = Spark(i);
         if (k[0] != 0) continue;
         const unsigned char* const s = S();
-        auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+        auto* const so = rv::AsConst<records::EffectObject>(s);
         k[0] = 1;
         k[1] = 0;
         k[2] = 0x10;

@@ -21,6 +21,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/psp_code.h"
 #include "game/rest_3g.h"
@@ -32,9 +33,6 @@
 namespace rest_3g {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -294,7 +292,7 @@ void Seed(unsigned k) {
     case kACFadeIn:
     case kACFadeOut: s[9] = static_cast<unsigned char>(PickOf(1, 2, 7, 8, 9, 0, sh::Next())); break;
     case kADRise: Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0xB, 0xB, 0xA, 0xC, sh::Next())); break;
-    case kBALine: EffectRec(s)->screen_x = PickOf(0x149, 0x149, 0x14A, 0x148, 0, sh::Next()); break;
+    case kBALine: rv::As<records::EffectObject>(s)->screen_x = PickOf(0x149, 0x149, 0x14A, 0x148, 0, sh::Next()); break;
     case kWinding:
         // three screen points: small floats, often two equal, the cross product's sign either way
         for (unsigned i = 0; i < 3; ++i) {
@@ -407,7 +405,7 @@ void Disturb(U h) {
         if (sh::InRegions(s, 0x80)) s[9] = static_cast<unsigned char>((v & 1) ? 1 + (v >> 1) % 8 : v >> 1);
         break;
     case 1:
-        if (sh::InRegions(s, 0x80)) EffectRec(s)->screen_x = (v & 1) ? 0x149u : v >> 1;
+        if (sh::InRegions(s, 0x80)) rv::As<records::EffectObject>(s)->screen_x = (v & 1) ? 0x149u : v >> 1;
         break;
     case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
     case 3: Mem(Music_Track_addr)[0] = static_cast<unsigned char>((v & 1) ? Mem(AreaW1f_MusicCurrent_addr)[0] : v >> 1); break;

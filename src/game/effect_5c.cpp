@@ -56,6 +56,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -78,8 +79,6 @@ using QuadsFn = void(__cdecl*)(unsigned);
 using MovesFn = void(__cdecl*)(void);
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
@@ -237,7 +236,7 @@ void Project4(unsigned char* prim, unsigned o0, unsigned o1, unsigned o2, unsign
 // offset 1.
 void LinkAtRecord(unsigned size) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), 1, size);
 }
 
@@ -268,10 +267,10 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
     unsigned char* s = S();
     s[0xB] = s[0x36];
     unsigned v = Sub50Variant(kWho, s[0xB]);
-    AsFx(s)->x = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v)[0]) << 16;
+    rv::As<records::EffectObject>(s)->x = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v)[0]) << 16;
     v = Sub50Variant(kWho, s[0xB]);
-    AsFx(s)->z = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v + 1)[0]) << 16;
-    const long ground = SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z);
+    rv::As<records::EffectObject>(s)->z = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v + 1)[0]) << 16;
+    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z);
     s = S();
     v = Sub50Variant(kWho, s[0xB]);
     SetWord(s + 0x3E, (0u - HalfOf(ground)) - Word(At(AddressOf(EffectKind18Sub50_Heights) + 2 * v)));
@@ -753,7 +752,7 @@ extern "C" void __cdecl EffectKind18Sub57_Spawn(void) {
     if (n == 0xFF) return;
     unsigned char* const cur = S();
     unsigned char* const rec = NewRecord(kWho, n);
-    auto* const reco = reinterpret_cast<records::EffectObject*>(rec);
+    auto* const reco = rv::As<records::EffectObject>(rec);
     rec[0] = 1;
     rec[5] = 0x18;
     rec[1] = 0x58;
@@ -832,7 +831,7 @@ extern "C" void __cdecl EffectKind18Sub58_Fade(void) {
 // (0x48). n = 8 divides by zero in the original; ours aborts.
 extern "C" void __cdecl EffectKind18Sub58_DrawColumn(unsigned n) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     const U b = (Frame_Counter & 1u) << 2;
     const U x = Sar(static_cast<std::uint32_t>(so->x), 9) - 0x4000u;
     const U z = Sar(static_cast<std::uint32_t>(so->z), 9) - 0x4000u;
@@ -932,7 +931,7 @@ template <bool (*Done)(), void (*Draw)(unsigned, unsigned)> void TileStart() {
 template <bool (*Done)(), void (*Draw)(unsigned, unsigned)> void TileWait() {
     if (!Done()) return;
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     Cond_ByteFE = 1;
     so->height = 0xFFFFFF00u;
     s[0xB] = 0x80;
@@ -942,7 +941,7 @@ template <bool (*Done)(), void (*Draw)(unsigned, unsigned)> void TileWait() {
 }
 // Sub-state 2: the tiles at +0x3C shade 0x80; +9 down; at 0 the cells 0, +2 up.
 template <void (*Draw)(unsigned, unsigned)> void TileOpen() {
-    Draw(static_cast<std::uint32_t>(CurFx()->height), 0x80);
+    Draw(static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height), 0x80);
     unsigned char* s = S();
     s[9] = static_cast<unsigned char>(s[9] - 1);
     s = S();
@@ -954,11 +953,11 @@ template <void (*Draw)(unsigned, unsigned)> void TileOpen() {
 // above -0xC0 a tail jump to Effect_Release.
 template <void (*Draw)(unsigned, unsigned)> void TileSink() {
     unsigned char* s = S();
-    Draw(static_cast<std::uint32_t>(AsFx(s)->height), s[0xB] & 0xF8u);
+    Draw(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), s[0xB] & 0xF8u);
     s = S();
-    AsFx(s)->height = static_cast<std::uint32_t>(AsFx(s)->height) + 1u;
+    rv::As<records::EffectObject>(s)->height = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 1u;
     s[0xB] = static_cast<unsigned char>(s[0xB] - 2);
-    if (AsFx(s)->height > -0xC0) SH_CALL(Effect_Release)();
+    if (rv::As<records::EffectObject>(s)->height > -0xC0) SH_CALL(Effect_Release)();
 }
 void Draw11(unsigned y, unsigned shade) { SH_CALL(EffectKind18Sub11_DrawTiles)(y, shade); }
 void Draw12(unsigned y, unsigned shade) { SH_CALL(EffectKind18Sub12_DrawTiles)(y, shade); }
@@ -1298,9 +1297,9 @@ unsigned char Wave(U angle, U scale) {
 extern "C" void __cdecl EffectKind18Sub16_Run(void) {
     unsigned char* s = S();
     if (s[2] == 0) {
-        AsFx(s)->x = 0xFFFFC700u;
-        AsFx(s)->z = 0xFFFFC780u;
-        AsFx(s)->height = 0xFFFFF810u;
+        rv::As<records::EffectObject>(s)->x = 0xFFFFC700u;
+        rv::As<records::EffectObject>(s)->z = 0xFFFFC780u;
+        rv::As<records::EffectObject>(s)->height = 0xFFFFF810u;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
     SH_CALL(Gte_PushMatrix)();
@@ -1442,7 +1441,7 @@ extern "C" void __cdecl EffectKind18Sub17_Run(void) {
 // 0x140000), +0x3E = 0xFF00, +0x32 = 0, +9 = 0, +0xB = 0; +2 up.
 extern "C" void __cdecl EffectKind18Sub17_Start(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     so->x = 0x570000;
     so->z = 0x140000;
     SetWord(s + 0x3E, 0xFF00);
@@ -1487,7 +1486,7 @@ extern "C" void __cdecl EffectKind18Sub17_Rise(void) {
 // else +2 up. The shared tail.
 extern "C" void __cdecl EffectKind18Sub17_MoveZ(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     if (SW(Word(s + 0x3A)) < 0x19) so->z = static_cast<std::uint32_t>(so->z) + 0x1000u;
     else s[2] = static_cast<unsigned char>(s[2] + 1);
     Sub17Tail();
@@ -1497,7 +1496,7 @@ extern "C" void __cdecl EffectKind18Sub17_MoveZ(void) {
 // 0x800; else +2 up. The shared tail.
 extern "C" void __cdecl EffectKind18Sub17_MoveXZ(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     if (SW(Word(s + 0x3A)) < 0x1C) {
         so->x = static_cast<std::uint32_t>(so->x) + 0xFFFFF800u;
         so->z = static_cast<std::uint32_t>(so->z) + 0x800u;
@@ -1511,7 +1510,7 @@ extern "C" void __cdecl EffectKind18Sub17_MoveXZ(void) {
 // 0x1000; else with (Frame_Counter / 5) & 3 = 3 +2 up. The shared tail.
 extern "C" void __cdecl EffectKind18Sub17_MoveX(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     if (SW(Word(s + 0x36)) >= 0x4F) so->x = static_cast<std::uint32_t>(so->x) + 0xFFFFF000u;
     else if (((Frame_Counter / 5u) & 3u) == 3) s[2] = static_cast<unsigned char>(s[2] + 1);
     Sub17Tail();
@@ -1572,7 +1571,7 @@ extern "C" void __cdecl EffectKind18Sub17_End(void) {
 // +0xB = 1; MoveCmd_TestFB(0x55, 0x19) (al unread); +2 up.
 extern "C" void __cdecl EffectKind18Sub17_Start10(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     so->x = 0x430000;
     so->z = 0x1A0000;
     SetWord(s + 0x3E, 0xFF00);

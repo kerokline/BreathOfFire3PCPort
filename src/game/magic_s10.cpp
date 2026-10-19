@@ -36,6 +36,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -76,10 +77,6 @@ constexpr unsigned kPoolRecords = 32;
 // kChildDelays: now Lavaburst_ChildDelays (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
@@ -219,7 +216,7 @@ S10_EXPORT void __cdecl Ovum_Spawn(void) {
     }
     const unsigned slot = NewTask(0x50);
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = static_cast<std::int32_t>(Key(Sc()));
     child[1] = 0;
     child[2] = 0;
@@ -304,7 +301,7 @@ void WalkPool() {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolRecords; ++i) {
         unsigned char* const rec = PoolRecord(i);
-        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+        records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
@@ -358,7 +355,7 @@ S10_EXPORT void __cdecl Lavaburst_Start(void) {
         const unsigned slot = NewTask(0x5E);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         const unsigned char delay = Mem(Lavaburst_ChildDelays_addr)[i];
         tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 0;
@@ -418,21 +415,21 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
     int v = Sin(angle);
     {
         const std::uint32_t x = Mul(v, SS(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x34));
-        Store(ScTask()->x, static_cast<std::int32_t>(x));
+        rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(x));
     }
     v = Cos(SS(4));
     {
         const std::uint32_t z = Mul(v, SS(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x38));
-        Store(ScTask()->y, static_cast<std::int32_t>(z));
+        rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(z));
     }
     Sc()[8] = Owner()[8];
-    ScTask()->vel_x = 0x20000;
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->vel_x = 0x20000;
+    rv::Current<records::BattleTask>()->vel_y = 0;
     SetLong(Sc() + 0x14, 0x6000000);
     Turn(Sc());
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
         SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
@@ -477,7 +474,7 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
 S10_EXPORT void __cdecl LavaburstChild_Rise(void) {
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
         AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(Long(s + 0x20)));
@@ -493,7 +490,7 @@ S10_EXPORT void __cdecl LavaburstChild_Rise(void) {
         const unsigned index = MH_AT(ByteFn, addr::Lavaburst_PoolAlloc)() & 0xFFu;
         if (index == 0xFF) continue;
         unsigned char* const rec = PoolRecord(index);
-        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+        records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         unsigned char* const self = Sc();
         trec->owner = static_cast<std::int32_t>(Key(self));
         rec[1] = 0;
@@ -605,12 +602,12 @@ void RecordOrbit() {
     int v = Sin(static_cast<short>(angle));
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = static_cast<std::int32_t>(Mul(v, ts->vel_x) + static_cast<std::uint32_t>(Long(Owner() + 0x34)));
     }
     v = Cos(SS(4));
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->y = static_cast<std::int32_t>(Mul(v, ts->vel_x) + static_cast<std::uint32_t>(Long(Owner() + 0x38)));
 }
 
@@ -706,7 +703,7 @@ namespace {
 void CopyToChild(unsigned char* rec, unsigned number) {
     const unsigned slot = NewTask(0x2C);
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     CopyRecord(child, rec);
     unsigned char* const self = Sc();
     tchild->owner = static_cast<std::int32_t>(Key(self));
@@ -785,7 +782,7 @@ unsigned char* CopiedRecord() {
 // +0x40 / +0x44 on by them.
 void ScaleStep() {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     AddLong(s + 0xC, static_cast<std::uint32_t>(ts->start_x));
     AddLong(s + 0x10, static_cast<std::uint32_t>(ts->start_y));
     AddLong(s + 0x40, static_cast<std::uint32_t>(ts->vel_x));
@@ -799,7 +796,7 @@ void ScaleStep() {
 S10_EXPORT void __cdecl HowlingChild_Start(void) {
     const unsigned char* const rec = CopiedRecord();
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->x = Long(rec + 0x34);
     ts->y = Long(rec + 0x38);
     SetLong(s + 0x3C, Long(rec + 0x3C));
@@ -819,7 +816,7 @@ S10_EXPORT void __cdecl HowlingChild_Out(void) {
     MH_CALL(Sprite_ScriptTick)();
     ScaleStep();
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (ts->vel_x != 0) return;
     s[9] = 0x10;
     Inc(s[2]);
@@ -831,7 +828,7 @@ S10_EXPORT void __cdecl HowlingChild_Hold(void) {
     MH_CALL(Sprite_ScriptTick)();
     Dec(Sc()[9]);
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[9] != 0) return;
     ts->start_x = 0x60;
     ts->start_y = static_cast<std::int32_t>(0xFFFFFF80u);
@@ -843,7 +840,7 @@ S10_EXPORT void __cdecl HowlingChild_Back(void) {
     MH_CALL(Sprite_ScriptTick)();
     ScaleStep();
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (ts->vel_x == 0xC00) Inc(s[2]);
 }
 
@@ -887,8 +884,8 @@ S10_EXPORT void __cdecl Ebonfire_Start(void) {
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
-        Store(ScTask()->x, Long(src + 0x34));
-        Store(ScTask()->y, Long(src + 0x38));
+        rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
+        rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
         SetLong(Sc() + 0x3C, Long(src + 0x3C));
     }
     Sc()[0xB] = 0;
@@ -896,7 +893,7 @@ S10_EXPORT void __cdecl Ebonfire_Start(void) {
         const unsigned slot = NewTask(0x34);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = static_cast<std::int32_t>(Key(self));
         child[9] = static_cast<unsigned char>(i * 6 + 1);
         Inc(self[0xB]);
@@ -1055,7 +1052,7 @@ S10_EXPORT void __cdecl Sacrifice_Start(void) {
     MH_CALL(BattleActor_SetAnimation)(8, 0);
     const unsigned slot = NewTask(0x55);
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     CopyRecord(child, ActingRecord(ActorByte()));
     unsigned char* const self = Sc();
     tchild->owner = static_cast<std::int32_t>(Key(self));
@@ -1129,8 +1126,8 @@ S10_EXPORT void __cdecl SacrificeRing_Run(void) {
 
 // original 0x4ADB50: the owner's position; +9 and +0xA 0; +2 on.
 S10_EXPORT void __cdecl SacrificeFx_TakeOwnerPos(void) {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -1232,7 +1229,7 @@ S10_EXPORT void __cdecl SacrificeRing_Draw(void) {
             const auto y = static_cast<short>(Mul12(v, SS(4)));
             const std::uint32_t dx = Shl(VS(0x18), 9);
             const unsigned char* const s = Sc();
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             SetVW(0x1A, static_cast<unsigned>(y));
             const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x) + dx);
             const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->y) + Shl(y, 9));
@@ -1412,7 +1409,7 @@ S10_EXPORT void __cdecl SacrificeActor_Play(void) {
 // position and +2 on.
 S10_EXPORT void __cdecl SacrificeActor_Darken(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     TintBy(s, 0xF0);
     if (s[0x5D] != 0x80) return;
     ts->x = Long(Owner() + 0x34);
@@ -1444,7 +1441,7 @@ S10_EXPORT void __cdecl SacrificeActor_Split(void) {
     for (unsigned char kind : {0, 2}) {
         const unsigned slot = NewTask(0x55);
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         unsigned char* const owner = Owner();
         tchild->owner = static_cast<std::int32_t>(Key(owner));
         child[1] = kind;
@@ -1487,7 +1484,7 @@ S10_EXPORT void __cdecl SacrificeActor_Return(void) {
     MH_CALL(Sprite_ScriptTick)();
     {
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         TintBy(s, 0xF0);
         if (s[0x5D] != 0x80) return;
         const unsigned char* const actor_sprite = Pointer(MagicS23_ActorSprite_addr);

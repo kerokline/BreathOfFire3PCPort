@@ -34,6 +34,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -41,9 +42,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 using U = std::uint32_t;
 using move_script::At;
@@ -99,7 +97,7 @@ Handler Entry(U table, unsigned index, const char* who) {
                     count, (unsigned)table, (unsigned)at);
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(at)))));
 }
-void ByForm(U table, const char* who) { Entry(table, MemberRec(Sprite_Current)->column, who)(); }
+void ByForm(U table, const char* who) { Entry(table, rv::Current<records::PartyMember>()->column, who)(); }
 void ByState(U table, const char* who) { Entry(table, Sprite_Current[2], who)(); }
 void ByStep(U table, const char* who) { Entry(table, Sprite_Current[3], who)(); }
 
@@ -150,8 +148,8 @@ unsigned char* EffectToWrite(int index, const char* who) {
 // probe, and PartyAction5_Form0Begin's ProbeSide.
 void ProbeSide(U row, unsigned d) {
     const unsigned char* s = Sprite_Current;
-    const U x = static_cast<U>(MemberRec(s)->x) + static_cast<U>(Long(At(row)));
-    const U z = static_cast<U>(MemberRec(s)->z) + static_cast<U>(Long(At(row + 4)));
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + static_cast<U>(Long(At(row)));
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + static_cast<U>(Long(At(row + 4)));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (Sloped() == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -202,8 +200,8 @@ void Form0Begin() {
     FirstTurn(&TargetAhead);
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (Sloped() != 0 && static_cast<short>(slope) > 0x40) BeginSteep();
     else BeginLevel();
@@ -219,8 +217,8 @@ void Form2Begin() {
     FirstTurn(&TargetAhead);
     const unsigned char* s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = Sprite_Current;
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(s + 0x3E)));
@@ -242,7 +240,7 @@ void Form0Resolve(CellFn pickup, const char* who) {
     if (Sprite_Current[0xA] == 0) {
         const unsigned char* const s = Sprite_Current;
         const unsigned d = s[8];
-        const U x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
+        const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
         const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (found != 0xFF) MarkObject(found, who);
@@ -340,7 +338,7 @@ void BlockedResolve(CellFn hit, const char* who) {
             } else {
                 const unsigned char* const c = Sprite_Current;
                 const unsigned d = c[8];
-                const U x = static_cast<U>(MemberRec(c)->x) + 2u * StepX(d);
+                const U x = static_cast<U>(rv::As<records::PartyMember>(c)->x) + 2u * StepX(d);
                 const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZ(d);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
@@ -439,8 +437,8 @@ void Kind30Begin(const char* who) {
     }
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
     if ((Field_State[0x138] & 1) == 0) {
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 1);
         if (found != 0xFF) MarkObject(found, who);

@@ -22,6 +22,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2a_callees.h"
 #include "game/scenario_harness.h"
@@ -30,13 +31,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
-[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_2a::at;
 using U = std::uint32_t;
@@ -216,7 +210,7 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
         const unsigned count = At(at::kBankCount)[0];
         const unsigned char* const records = reinterpret_cast<const unsigned char*>(
             static_cast<std::uintptr_t>(static_cast<U>(Long(At(MoveScript_TintRecords_addr + 0x180)))));
-        const unsigned bank_byte = SpriteRec(s)->column;
+        const unsigned bank_byte = rv::As<records::SpriteObject>(s)->column;
         unsigned i = 0;
         while (i < count && records[i * 8 + 7] != bank_byte) ++i;
         const unsigned bank = Word(records + (i & 0xFF) * 8);
@@ -251,7 +245,7 @@ extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
     unsigned char* const actor = Record(fs[0x148]);
     if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) return;
     SetWord(actor + 0x10, Word(actor + 0x10) & 0xDFFF);
-    MemberRec(fs)->status = MemberRec(fs)->status & 0xDFFF;
+    rv::As<records::PartyMember>(fs)->status = rv::As<records::PartyMember>(fs)->status & 0xDFFF;
 }
 
 // original 0x537500 (PSX 0x80168BC0, pairs_propagated call): the member
@@ -438,9 +432,9 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
     const unsigned char rise = SH_CALL(LinkedObject_EffectRise)();
     SetLong(EffectWrite(*index, who) + 0x10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
     const unsigned char* const c = Sprite_Current;
-    EffectRec(EffectWrite(*index, who))->x = SpriteRec(c)->x;
-    EffectRec(EffectWrite(*index, who))->z = SpriteRec(c)->z;
-    EffectRec(EffectWrite(*index, who))->height = SpriteRec(c)->height;
+    rv::As<records::EffectObject>(EffectWrite(*index, who))->x = rv::As<records::SpriteObject>(c)->x;
+    rv::As<records::EffectObject>(EffectWrite(*index, who))->z = rv::As<records::SpriteObject>(c)->z;
+    rv::As<records::EffectObject>(EffectWrite(*index, who))->height = rv::As<records::SpriteObject>(c)->height;
 }
 
 // original 0x537EA0: (s8)(Sprite_Current +0x30 - the leader's +0x30, bytes)

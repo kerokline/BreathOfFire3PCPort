@@ -22,6 +22,7 @@
 #include "game/area_harness.h"
 #include "game/area_w1f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -81,7 +82,7 @@ void RunState(const char* who, std::uint32_t table) {
 // The list byte indexes the table unchecked (it stays in .data).
 void SpawnAtMember(unsigned member, unsigned char kind, std::uint32_t kinds) {
     const unsigned char* const record = PartyAt(member);
-    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto* const tRecord = rv::AsConst<records::PartyMember>(record);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
     const unsigned char effect = B(kinds + B(Cond_Flags_addr + 0xd2 + member));
@@ -104,7 +105,7 @@ void GlideBegin(unsigned char count) {
 // one and the script word +0x12E back by 2.
 void GlideStep(std::uint32_t steps) {
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     const unsigned char count = cur[0xA];
     if (count == 0) {
         cur[4] = 0;
@@ -139,7 +140,7 @@ void PlaceRandomObject(std::uint32_t cells, std::uint32_t weights) {
     if (chosen < 8) {
         const unsigned pick = static_cast<unsigned char>(AH_CALL(Rand)() & 7);
         unsigned char* const object = ObjectAt(chosen);
-        auto* const tObject = reinterpret_cast<records::SpriteObject*>(object);
+        auto* const tObject = rv::As<records::SpriteObject>(object);
         const auto x = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(cells + pick * 2)) << 16);
         const auto z = static_cast<std::int32_t>(static_cast<std::uint32_t>(B(cells + pick * 2 + 1)) << 16);
         tObject->x = x;
@@ -174,7 +175,7 @@ void DropCounter(std::uint32_t counter, int r) {
 // An effect record's dword +0xC less one.
 void DrainEffect(unsigned slot) {
     unsigned char* const e = EffectAt(slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     tE->step_x = tE->step_x - 1;
 }
 // |player counter - other counter|, the words as the originals subtract them.
@@ -467,7 +468,7 @@ extern "C" void __cdecl Area75_ShowEffects(void) {
 // +0x8A = 0, +0x84 = 2, +1 = 4.
 extern "C" void __cdecl Area75_PoseObject5(void) {
     unsigned char* const object = ObjectAt(5);
-    auto* const tObject = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const tObject = rv::As<records::SpriteObject>(object);
     object[0x83] = 7;
     tObject->script_position = 0;
     object[0x84] = 2;
@@ -482,7 +483,7 @@ extern "C" void __cdecl Area75_PoseObject5(void) {
 extern "C" void __cdecl Area75_SpawnFive(void) {
     unsigned char* const member = Field_ActiveMember;
     unsigned char* const self = Sprite_Current;
-    auto* const tSelf = reinterpret_cast<records::SpriteObject*>(self);
+    auto* const tSelf = rv::As<records::SpriteObject>(self);
     std::uint32_t op = Area75_SpawnOps_addr;
     for (unsigned char i = 0; i < 5; ++i, op += at::kArea75SpawnOpStride) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
@@ -510,7 +511,7 @@ extern "C" void __cdecl Area75_FlyRun(void) { RunState("Area75_FlyRun", Area75_F
 // 1; the script object's position word +0xA back by 2.
 extern "C" void __cdecl Area75_FlyBegin(void) {
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     tCur->step_y = B(Area75_FlyHeights_addr + cur[0xB]);
     Sprite_Current[0x2B] = 3;
     Sprite_Current[4] = 1;
@@ -523,7 +524,7 @@ extern "C" void __cdecl Area75_FlyBegin(void) {
 // script position back by 2.
 extern "C" void __cdecl Area75_FlyStep(void) {
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     if (cur[0x5D] == 0x80) {
         cur[0] = 0;
         return;
@@ -973,11 +974,11 @@ extern "C" void __cdecl Area75_PhaseReached(void) {
     B(AreaW0c_TailState_addr) = 0;
     B(MoveScript_PartyRecords_addr + 0x65) = 0;
     unsigned char* const object_b = ObjectAt(b);
-    auto* const tObject_b = reinterpret_cast<records::SpriteObject*>(object_b);
+    auto* const tObject_b = rv::As<records::SpriteObject>(object_b);
     object_b[0x83] = 4;
     tObject_b->script_position = 0;
     unsigned char* const object_a = ObjectAt(a);
-    auto* const tObject_a = reinterpret_cast<records::SpriteObject*>(object_a);
+    auto* const tObject_a = rv::As<records::SpriteObject>(object_a);
     MoveScript_Var7 = 5;
     object_a[0x83] = 5;
     tObject_a->script_position = 0;

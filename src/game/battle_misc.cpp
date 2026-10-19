@@ -38,6 +38,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/battle_misc_callees.h"
 #include "game/battle_text.h"
@@ -320,7 +321,7 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     const U acting = BattleE4_MenuActor;
     unsigned char* const w = At(BattleE4_List_addr);
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->in_use = 1;
     window_rec->handler = 8;
     window_rec->kind = 2;
@@ -357,7 +358,7 @@ extern "C" unsigned char __cdecl Battle_ReturnTrue(void) { return 1; }
 // eax is 0 at the end (xor eax, eax); ours returns it.
 extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     unsigned char* const w = At(BattleE4_List_addr);
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const window_rec = rv::As<records::WindowRecord>(w);
     const unsigned char a = BattleMisc_PartyPages;
     window_rec->in_use = 1;
     window_rec->kind = 1;

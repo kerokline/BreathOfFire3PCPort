@@ -19,6 +19,7 @@
 #include "game/area_w2b.h"
 #include "game/area_w2b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -210,7 +211,7 @@ void Seed86(unsigned k) {
         // and past the reach ((+0x70) + 2) << 15, on either side
         for (unsigned m = 0; m < 3; ++m) {
             unsigned char* const r = ah::PartyOf(static_cast<unsigned char>(m));
-            auto* const tR = reinterpret_cast<records::PartyMember*>(r);
+            auto* const tR = rv::As<records::PartyMember>(r);
             if (!ah::Often()) continue;
             r[0] = static_cast<unsigned char>(ah::Half() ? 1 : AH_PICK(0, 0x80, 0xFF));
             if (ah::Half()) r[0x70] = static_cast<unsigned char>(AH_PICK(0, 1, 0xFE, 0xFF, 0x10));

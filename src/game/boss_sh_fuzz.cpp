@@ -21,6 +21,7 @@
 #include "game/boss_sh.h"
 #include "game/boss_sh_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 
 namespace boss_sh {
@@ -366,7 +367,7 @@ void SeedK43(unsigned k) {
     unsigned char* const s = Sprite_Current;
     switch (k) {
     case kAdvanceStart: {
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(bh::Pointer(BattleE3_CurrentEnemy_addr));
         enemy_rec->data_id = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         break;
     }

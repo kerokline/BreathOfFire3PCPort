@@ -42,6 +42,7 @@
 #include "game/effect_3b_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -58,12 +59,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-// A setter's store through a typed field: the record's address is evaluated
-// before the value, as the setter call evaluates its arguments, and the value
-// goes through the setter's parameter type P.
-template <typename P, typename T>
-void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -203,9 +198,9 @@ void Orbit(U radius) {
     const U angle = (UL(S() + 0xC) & 0x7F) << 5;
     SetUL(at::kAngle, angle);
     const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
-    Store<U>(CurFx()->x, Mul(c, UL(at::kScale)) + UL(Parent() + 0x34));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, Mul(c, UL(at::kScale)) + UL(Parent() + 0x34));
     const int n = SH_CALL(Math_Sin)(static_cast<int>(UL(at::kAngle)));
-    Store<U>(CurFx()->z, Mul(n, UL(at::kScale)) + UL(Parent() + 0x38));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, Mul(n, UL(at::kScale)) + UL(Parent() + 0x38));
 }
 
 // A part's place: +0xB = Rand() & 0xF, +9 = +0xA = 0, +0xC = (+4 << 5) + start,
@@ -271,9 +266,9 @@ extern "C" void __cdecl EffectKind63_Run(void) {
 // rim shade +0x5C = 0x3D, +1 = 1, the tint +0x5D..+0x5F = 0 (eax cleared after
 // the call; Sprite_Current read again for each store).
 extern "C" void __cdecl EffectKind63_Start(void) {
-    CurFx()->x = 0x240000;
-    CurFx()->z = 0x418000;
-    const long h = SH_CALL(AreaMap_Elevation)(CurFx()->x, CurFx()->z);
+    rv::Current<records::EffectObject>()->x = 0x240000;
+    rv::Current<records::EffectObject>()->z = 0x418000;
+    const long h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
     SetWord(S() + 0x3E, static_cast<U>(h));
     SetUL(S() + 0x18, 0);
     S()[0x5C] = 0x3D;
@@ -650,13 +645,13 @@ extern "C" void __cdecl EffectKind69_PushPointMatrix(void) {
 extern "C" void __cdecl EffectKind69_Part0Place(void) {
     const int r = SH_CALL(Rand)();
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     s[0xB] = static_cast<unsigned char>(r & 0xF);
     s[9] = 0;
     s[0xA] = 0;
     so->x = UL(Parent() + 0x34);
     so->z = UL(Parent() + 0x38);
-    const long h = SH_CALL(AreaMap_Elevation)(CurFx()->x, CurFx()->z);
+    const long h = SH_CALL(AreaMap_Elevation)(rv::Current<records::EffectObject>()->x, rv::Current<records::EffectObject>()->z);
     SetWord(S() + 0x3E, static_cast<U>(h));
     S()[3] = static_cast<unsigned char>(S()[3] + 1);
 }
@@ -1008,9 +1003,9 @@ extern "C" void __cdecl EffectKind6C_Run(void) {
 // original 0x483BC0 (state 0): the point (0xB8000, 0x548000, 0x1000000), the
 // sparks scattered from it, +1 up.
 extern "C" void __cdecl EffectKind6C_Start(void) {
-    CurFx()->x = 0xB8000;
-    CurFx()->z = 0x548000;
-    CurFx()->height = 0x1000000;
+    rv::Current<records::EffectObject>()->x = 0xB8000;
+    rv::Current<records::EffectObject>()->z = 0x548000;
+    rv::Current<records::EffectObject>()->height = 0x1000000;
     SH_CALL(EffectKind6C_ScatterSparks)();
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
@@ -1031,9 +1026,9 @@ extern "C" void __cdecl EffectKind6C_Live(void) {
 extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
     Effect3c_ShardCursor = EffectKind30_Shards_addr;
     for (unsigned left = at::kSparkCount; left != 0; --left) {
-        SetUL(Spark() + 4, static_cast<std::uint32_t>(CurFx()->x));
-        SetUL(Spark() + 8, static_cast<std::uint32_t>(CurFx()->z));
-        SetUL(Spark() + 0xC, static_cast<std::uint32_t>(CurFx()->height));
+        SetUL(Spark() + 4, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+        SetUL(Spark() + 8, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+        SetUL(Spark() + 0xC, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height));
         const U distance = (static_cast<U>(SH_CALL(Rand)()) & 0x7F) << 2;
         const U angle = ((static_cast<U>(SH_CALL(Rand)()) & 0x3FF) + 0x200) & 0xFFFF;
         // the cursor read after each call (kept out of the call's expression:

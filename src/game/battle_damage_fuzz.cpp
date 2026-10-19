@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_damage_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -71,9 +72,8 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 
 unsigned char* PartyAt(unsigned a) { return At(ObjTrio_addr + 0x10 + (a & 0xFF) * at::kPartyStride); }
 unsigned char* EnemyAt(unsigned a) { return At(at::kEnemy + ((a & 0xFF) - 3) * at::kEnemyStride); }
-// PartyAt / EnemyAt point +0x10 / +0x80 into their records; these start at them.
-records::PartyMember* PartyRec(unsigned a) { return reinterpret_cast<records::PartyMember*>(PartyAt(a) - 0x10); }
-records::BattleEnemy* EnemyRec(unsigned a) { return reinterpret_cast<records::BattleEnemy*>(EnemyAt(a) + at::kEObject); }
+// PartyAt / EnemyAt point +0x10 / +0x80 into their records; their typed views
+// start at the records (PartyAt(a) - 0x10, EnemyAt(a) + at::kEObject).
 
 // The round's two actors: the stand-ins scribble on their fields.
 unsigned g_actor[2];
@@ -143,7 +143,7 @@ unsigned char __cdecl StubLevelClass(unsigned level, unsigned row) {
 }
 int TargetHp() {
     const unsigned t = g_actor[1] & 0xFF;
-    return t <= 2 ? PartyRec(t)->hp : EnemyRec(t)->hp;
+    return t <= 2 ? rv::As<records::PartyMember>(PartyAt(t) - 0x10)->hp : rv::As<records::BattleEnemy>(EnemyAt(t) + at::kEObject)->hp;
 }
 short __cdecl StubCalcDamage(unsigned attacker, unsigned target, unsigned element) {
     Record(4, attacker, target, element);
@@ -275,8 +275,8 @@ template <unsigned N> void __cdecl StubHandler() {
     Record(100 + N);
     std::uint32_t h = Hash();
     const unsigned t = g_actor[1] & 0xFF;
-    const int hp = t <= 2 ? PartyRec(t)->hp : EnemyRec(t)->hp;
-    const int ap = t <= 2 ? PartyRec(t)->ap : EnemyRec(t)->ap;
+    const int hp = t <= 2 ? rv::As<records::PartyMember>(PartyAt(t) - 0x10)->hp : rv::As<records::BattleEnemy>(EnemyAt(t) + at::kEObject)->hp;
+    const int ap = t <= 2 ? rv::As<records::PartyMember>(PartyAt(t) - 0x10)->ap : rv::As<records::BattleEnemy>(EnemyAt(t) + at::kEObject)->ap;
     static const short kValues[] = {0, 1, -1, 9999, 10000, -9999, -10000, 0x7FFF, -0x8000, 9998, -9998};
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned base = k ? static_cast<unsigned>(ap) : static_cast<unsigned>(hp);
@@ -598,11 +598,11 @@ Args Seed(unsigned k) {
     }
     case kAiK:
         for (unsigned e = 0; e < 8; ++e) {
-            auto* const enemy_rec = EnemyRec(e + 3);
+            auto* const enemy_rec = rv::As<records::BattleEnemy>(EnemyAt(e + 3) + at::kEObject);
             if (Often()) enemy_rec->data_id = static_cast<unsigned char>(Next() % 16);
             if (Half()) enemy_rec->hp = enemy_rec->max_hp / (Half() ? 4 : 2) + Next() % 3 - 1;
             if (Half()) enemy_rec->ap = enemy_rec->max_ap / (Half() ? 5 : 2) + Next() % 3 - 1;
-            if (Half()) enemy_rec->level = PartyRec(0)->level - 5 + Next() % 3 - 1;
+            if (Half()) enemy_rec->level = rv::As<records::PartyMember>(PartyAt(0) - 0x10)->level - 5 + Next() % 3 - 1;
         }
         for (unsigned i = 0; i < 0x900; i += 16)
             if (Often()) At(at::kAiScripts + i)[0] = static_cast<unsigned char>(0xB + Next() % 0x1D);

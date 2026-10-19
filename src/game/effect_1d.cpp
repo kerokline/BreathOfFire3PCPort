@@ -36,6 +36,7 @@
 #include "game/effect_1d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -52,7 +53,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -220,9 +220,9 @@ extern "C" void __cdecl EffectKind22_SpawnArms(void) {
         e[0] = 1;
         e[6] = 0;
         e[5] = 0x21;
-        SetUL(e + 0xC, static_cast<std::uint32_t>(CurFx()->x));
-        SetUL(e + 0x10, static_cast<std::uint32_t>(CurFx()->z));
-        const U height = static_cast<std::uint32_t>(CurFx()->height);
+        SetUL(e + 0xC, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+        SetUL(e + 0x10, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+        const U height = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height);
         SetUL(e + 0x14, height);
         SetWord(e + 0x58, 6);
         SetWord(e + 0x5A, 0);
@@ -345,7 +345,7 @@ extern "C" void __cdecl EffectKind25_Start(void) {
     long depth = 0;
     const long answer =
         SH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
-    CurFx()->depth = static_cast<U>(answer);
+    rv::Current<records::EffectObject>()->depth = static_cast<U>(answer);
     const auto* const screen = reinterpret_cast<const unsigned char*>(MapView_ScreenXY);
     SetWord(S() + 0x2E, Ftol16(screen));
     SetWord(S() + 0x30, Ftol16(screen + 4));
@@ -450,7 +450,7 @@ extern "C" void __cdecl EffectKind26_Start(void) {
 // above 0x500 (signed), +1 up.
 extern "C" void __cdecl EffectKind26_Widen(void) {
     const unsigned char* const s = S();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     SH_CALL(EffectKind26_DrawBand)(so->x, so->z, so->height, Word(s + 0xC));
     unsigned char* t = S();
     SetUL(t + 0xC, UL(t + 0xC) + 0x10u);
@@ -583,13 +583,13 @@ extern "C" void __cdecl EffectKind27_Emit(void) {
         const unsigned char found = SH_CALL(Effect_FindFree)();
         if (found != 0xFF) {
             unsigned char* const e = NewRecord("EffectKind27_Emit", found);
-            auto* const eo = reinterpret_cast<records::EffectObject*>(e);
+            auto* const eo = rv::As<records::EffectObject>(e);
             e[0] = 1;
             e[5] = 0x26;
-            eo->x = static_cast<std::uint32_t>(CurFx()->x);
-            eo->z = static_cast<std::uint32_t>(CurFx()->z);
+            eo->x = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x);
+            eo->z = static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z);
             const unsigned char* const s = S();
-            auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+            auto* const so = rv::AsConst<records::EffectObject>(s);
             const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
             eo->height = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16;
         }

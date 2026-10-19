@@ -20,6 +20,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/event_objs_callees.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -27,11 +28,11 @@
 namespace event_objs {
 namespace {
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* At(std::uint32_t a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
@@ -450,7 +451,7 @@ void RandomSprite(unsigned char* s) {
     // x and z whole (no fraction) now and then, for the cells' fraction tests.
     if (OneIn(3)) SetWord(s + 0x34, 0);
     if (OneIn(3)) SetWord(s + 0x38, 0);
-    if (OneIn(4)) Spr(s)->step_y = Next() % 5 - 2;
+    if (OneIn(4)) rv::As<records::SpriteObject>(s)->step_y = Next() % 5 - 2;
 }
 
 Args Generate(unsigned k, State& input) {

@@ -34,6 +34,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_4f_callees.h"
 #include "game/scenario_harness.h"
@@ -46,11 +47,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
-[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_4f::at;
 using U = std::uint32_t;
@@ -712,8 +708,8 @@ extern "C" void __cdecl EffectKind07_FadeOut(void) {
 // 5, +1 = 1.
 extern "C" void __cdecl EffectKind08_Start(void) {
     unsigned char* s = S();
-    EffectRec(s)->x = 0xB0000;
-    EffectRec(s)->z = 0xF8000;
+    rv::As<records::EffectObject>(s)->x = 0xB0000;
+    rv::As<records::EffectObject>(s)->z = 0xF8000;
     const long e = SH_CALL(AreaMap_Elevation)(SL(s + 0x34), SL(s + 0x38));
     s = S();
     SetWord(s + 0x3E, static_cast<U>(e));
@@ -807,8 +803,8 @@ void Run(Trace& t, std::int32_t target, U oh, int dir, bool back, U colour) {
 extern "C" void __cdecl EffectKind08_TraceLine(void) {
     const unsigned char* const s = S();
     const unsigned char* const o = TraceObject("EffectKind08_TraceLine");
-    Trace t{static_cast<std::uint32_t>(EffectRec(s)->x), static_cast<std::uint32_t>(EffectRec(s)->z), static_cast<std::uint32_t>(EffectRec(s)->height), static_cast<std::uint32_t>(EffectRec(s)->height)};
-    Run(t, SL(o + 0x38), static_cast<std::uint32_t>(SpriteRec(o)->height), +1, false, 0xC0C0C0);
+    Trace t{static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height)};
+    Run(t, SL(o + 0x38), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(o)->height), +1, false, 0xC0C0C0);
     if (B(at::kChapterByte4A) == 0x32) S()[1] = 2;
 }
 
@@ -821,8 +817,8 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
     const unsigned char* const s = S();
     const unsigned char* const o = TraceObject("EffectKind08_TraceTwo");
     const std::int32_t target = SL(o + 0x38);
-    const U oh = static_cast<std::uint32_t>(SpriteRec(o)->height);
-    Trace t{static_cast<std::uint32_t>(EffectRec(s)->x), static_cast<std::uint32_t>(EffectRec(s)->z), static_cast<std::uint32_t>(EffectRec(s)->height), 0};
+    const U oh = static_cast<std::uint32_t>(rv::As<records::SpriteObject>(o)->height);
+    Trace t{static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height), 0};
     Run(t, target, oh, +1, false, 0xC0C0C0);
     t.x = 0xB0000;
     t.z = 0x138000;
@@ -841,8 +837,8 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
 // +0x20, +0x1C, +0x18 0; +0xA, +0xB, +8, +7, +6 0; sound 0x20E; +1 = 1.
 extern "C" void __cdecl EffectKind09_Start(void) {
     unsigned char* s = S();
-    EffectRec(s)->x = 0x638000;
-    EffectRec(s)->z = 0xD0000;
+    rv::As<records::EffectObject>(s)->x = 0x638000;
+    rv::As<records::EffectObject>(s)->z = 0xD0000;
     SetWord(s + 0x3E, 0x300);
     SetUL(s + 0x64, 0);
     SetUL(s + 0x68, 0);
@@ -1092,7 +1088,7 @@ extern "C" void __cdecl EffectKind0B_Start(void) {
                                    static_cast<std::int16_t>(W(at::kExtra0 + 0x2E)))));
     StF(s + 0x78, I(static_cast<U>(static_cast<signed char>(B(at::kKind0BOffset + 1)) +
                                    static_cast<std::int16_t>(W(at::kExtra0 + 0x30)))));
-    EffectRec(s)->depth_f = 0x3C23D70Au;
+    rv::As<records::EffectObject>(s)->depth_f = 0x3C23D70Au;
     s[9] = 0;
     s[6] = 0x20;
     s[0x5F] = s[0x5E] = s[0x5D] = 0x80;
@@ -1156,17 +1152,17 @@ extern "C" void __cdecl EffectKind0B_Drop(void) {
 // byte +0x1C (x, z, and the height word +0x3E); +1 up.
 extern "C" void __cdecl EffectKind0B_Attach(void) {
     unsigned char* s = S();
-    EffectRec(s)->x = L(at::kExtra0 + 0x34);
-    EffectRec(s)->z = L(at::kExtra0 + 0x38);
-    EffectRec(s)->height = L(at::kExtra0 + 0x3C);
+    rv::As<records::EffectObject>(s)->x = L(at::kExtra0 + 0x34);
+    rv::As<records::EffectObject>(s)->z = L(at::kExtra0 + 0x38);
+    rv::As<records::EffectObject>(s)->height = L(at::kExtra0 + 0x3C);
     SetUL(s + 0x64, L(at::kExtra0 + 0x64));
     SetUL(s + 0x68, L(at::kExtra0 + 0x68));
     SetUL(s + 0x6C, L(at::kExtra0 + 0x6C));
     long out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, s[0x1C]);
     s = S();
-    EffectRec(s)->x = static_cast<std::uint32_t>(EffectRec(s)->x) + static_cast<U>(out[0]);
-    EffectRec(s)->z = static_cast<std::uint32_t>(EffectRec(s)->z) + static_cast<U>(out[1]);
+    rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) + static_cast<U>(out[0]);
+    rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + static_cast<U>(out[1]);
     SetWord(s + 0x3E, Word(s + 0x3E) + static_cast<U>(out[2]));
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -1280,8 +1276,8 @@ extern "C" void __cdecl EffectKind02_Start(void) {
     s[0x28] = ObjTrio[0x28];
     s[0x29] = 2;
     s[0x24] = 0x80;
-    EffectRec(s)->screen_x = 0x39;
-    EffectRec(s)->screen_y = 0xC8;
+    rv::As<records::EffectObject>(s)->screen_x = 0x39;
+    rv::As<records::EffectObject>(s)->screen_y = 0xC8;
     s[0x48] = s[0x5C] = s[0x5D] = s[0x5E] = s[0x5F] = 0;
     SetUL(s + 0x10, 0xF0);
     s[1] = static_cast<unsigned char>(s[1] + 1);

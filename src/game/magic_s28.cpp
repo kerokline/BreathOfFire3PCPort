@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -57,10 +58,6 @@ constexpr std::uint32_t kS = 0x903850;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
@@ -142,7 +139,7 @@ void RunPool(std::uint32_t pool, unsigned n, void (__cdecl* dispatch)()) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < n; ++i) {
         unsigned char* const rec = Record(pool, i);
-        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+        records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
@@ -187,7 +184,7 @@ void OffsetByDirection() {
         return;
     }
     unsigned char* const sc = Sc();
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     switch (sc[8]) {
     case 0: tsc->vel_x = 0x29; tsc->vel_y = -13; break;
     case 1: tsc->vel_x = -41; tsc->vel_y = -13; break;
@@ -199,8 +196,8 @@ void OffsetByDirection() {
 // The caster's position (+0x34, +0x38, +0x3C from the owner), each dword with
 // the task and the owner read again.
 void CopyOwnerPosition() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -243,7 +240,7 @@ S28_EXPORT void __cdecl Firebreath_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x38) & 0xFFu;
     unsigned char* const self = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = static_cast<std::int32_t>(Addr(self));
     child[1] = 0;
     child[9] = 4;
@@ -522,7 +519,7 @@ S28_EXPORT void __cdecl Icebreath_Start(void) {
         const unsigned k = MH_CALL(IcePool_Alloc)() & 0xFFu;
         unsigned char* const self = Sc();
         unsigned char* const rec = Record(BreathMote_Pool_addr, k);
-        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+        records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         trec->owner = static_cast<std::int32_t>(Addr(self));
         rec[1] = U8(i & 1);
         rec[9] = U8((i >> 2) * 3 + 1);
@@ -560,7 +557,7 @@ S28_EXPORT void __cdecl BreathMote_Launch(void) {
     }
     Sc()[3] = U8(MH_CALL(Rand)() & 7);
     const int speed = MH_CALL(Rand)();
-    Store(ScTask()->vel_x, (speed & 7) + 8);
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, (speed & 7) + 8);
     Sc()[0xB] = U8(MH_CALL(Rand)());
     Sc()[9] = U8((MH_CALL(Rand)() & 0xF) + 8);
     Sc()[0xA] = 2;
@@ -781,7 +778,7 @@ S28_EXPORT void __cdecl Thunderbreath_Start(void) {
         const unsigned k = MH_CALL(ThunderPool_Alloc)() & 0xFFu;
         unsigned char* const self = Sc();
         unsigned char* const rec = Record(ThunderPool_addr, k);
-        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+        records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
         trec->owner = static_cast<std::int32_t>(Addr(self));
         rec[1] = 0;
         rec[4] = U8(i);
@@ -857,7 +854,7 @@ S28_EXPORT void __cdecl ThunderBolt_Task(void) {
     const unsigned char k = MH_CALL(ThunderPool_Alloc)();
     if (k == 0xFF) return;
     unsigned char* const rec = Record(ThunderPool_addr, k);
-    records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+    records::BattleTask* const trec = rv::As<records::BattleTask>(rec);
     const std::uint16_t x = SW(8);
     unsigned char* const owner = Owner();
     trec->owner = static_cast<std::int32_t>(Addr(owner));
@@ -889,7 +886,7 @@ S28_EXPORT void __cdecl ThunderBolt_Aim(void) {
     const bool odd = (Sc()[4] & 1) != 0;
     const int r = MH_CALL(Rand)() & 7;
     SetLong(heading, Long(heading) + Shl(odd ? r : -r, 6));
-    ScTask()->vel_x = 0;
+    rv::Current<records::BattleTask>()->vel_x = 0;
     Sc()[0xB] = U8(MH_CALL(Rand)() & 0x3F);
     Sc()[9] = 0x10;
     Sc()[0xA] = 0;
@@ -907,8 +904,8 @@ S28_EXPORT void __cdecl ThunderBolt_Grow(void) {
 S28_EXPORT void __cdecl ThunderBolt_Flicker(void) {
     const int s = Sin((Sc()[0xB] & 0x3F) << 6);
     Sc()[0xA] = U8(Sar(Shl(s, 2), 12) + 0x10);
-    Store(ScTask()->vel_x, ScTask()->vel_x + 1);
-    if (ScTask()->vel_x == 0x10) Inc(Sc()[2]);
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, rv::Current<records::BattleTask>()->vel_x + 1);
+    if (rv::Current<records::BattleTask>()->vel_x == 0x10) Inc(Sc()[2]);
 }
 
 // original 0x4DFA90: as the flicker, then +9 down by 2; at 0 the owner's +0xB

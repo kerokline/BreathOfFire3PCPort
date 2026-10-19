@@ -52,6 +52,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -68,7 +69,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -184,7 +184,7 @@ extern "C" void __cdecl EffectKind18Sub17_Close(void) {
 // Gpu_SetDrawMove copies from (0x170, 0x1A0), each committed to slot 6 (0x18).
 extern "C" void __cdecl EffectKind18Sub17_ScrollTexture(void) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     const U u = (static_cast<U>(I(static_cast<std::uint32_t>(so->x) ^ 0xFFFF1FFFu) >> 13)) & 0xF;
     const U v = static_cast<U>(so->z >> 12) & 0x1F;
     unsigned char rect[8];
@@ -215,9 +215,9 @@ extern "C" void __cdecl EffectKind18Sub17_ScrollTexture(void) {
 extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
     if ((Draw_PassFlags & 4) == 0) return;
     unsigned char* s = S();
-    const std::int32_t x0 = (AsFx(s)->x >> 9) - 0x4000;
+    const std::int32_t x0 = (rv::As<records::EffectObject>(s)->x >> 9) - 0x4000;
     StoreFloat(reinterpret_cast<unsigned char*>(MapView_ScreenXY), static_cast<long double>(x0));
-    const std::int32_t z0 = (AsFx(s)->z >> 9) - 0x4000;
+    const std::int32_t z0 = (rv::As<records::EffectObject>(s)->z >> 9) - 0x4000;
     StoreFloat(At(MapView_ScreenXY_addr + 0x4), static_cast<long double>(z0));
     if (variant >= at::kPatchVariants)
         bof3::Fatal("EffectKind18Sub17_DrawPatch: variant %u, past the three bytes of each 0x65E1E8 record - the original "
@@ -231,7 +231,7 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
         const U row = i >> 2;
         const U dy = ((i & 3) + row - 1) & 0xFF;
         s = S();
-        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), static_cast<int>(dy), 0xC);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<int>(dy), 0xC);
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
@@ -264,7 +264,7 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
         }
         SH_CALL(Prim_SetTexture)((static_cast<U>(B(rec + 4)) << 16) | B(rec + 5 + variant) | page, p, 1);
         s = S();
-        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), static_cast<int>(dy), 0x48);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<int>(dy), 0x48);
     }
 }
 
@@ -359,7 +359,7 @@ extern "C" void __cdecl EffectKind18Sub18_DrawColumn(U grow, U unused) {
     unsigned char* s = S();
     const U x = static_cast<U>(S16(W(s + 0x36)) - 0x80) << 7;
     const U z = static_cast<U>(S16(W(s + 0x3A)) - 0x80) << 7;
-    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z));
+    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z));
     const U y = static_cast<U>(-(S16(e) / 2));
     const U odd = (FC() & 1) << 2;
     U b = static_cast<U>(I(odd * grow) / 4) + 8;
@@ -387,7 +387,7 @@ extern "C" void __cdecl EffectKind18Sub18_DrawColumn(U grow, U unused) {
         SH_CALL(Gte_StoreDepthF4)(Fp(p + 0x20), Fp(p + 0x30), Fp(p + 0x40), Fp(p + 0x10));
         SH_CALL(Prim_SetTexture)((static_cast<U>(I(shade - odd) / 4) << 19) | 0xBA009124u, p, 1);
         s = S();
-        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 2, 0x48);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 2, 0x48);
         b += grow * 2;
         ++level;
         c -= 0x400000;
@@ -405,7 +405,7 @@ extern "C" void __cdecl EffectKind18Sub18_DrawRing(U radius) {
     unsigned char* s = S();
     const U x = static_cast<U>(S16(W(s + 0x36)) - 0x80) << 7;
     const U z = static_cast<U>(S16(W(s + 0x3A)) - 0x80) << 7;
-    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z));
+    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z));
     SetV(4, static_cast<U>(-(S16(e) / 2)));
     SetV(0, x);
     SetV(2, z);
@@ -413,7 +413,7 @@ extern "C" void __cdecl EffectKind18Sub18_DrawRing(U radius) {
     SH_CALL(Gte_RotTransPers)(Vx(0), ScreenXY(), depth);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
     const U r = radius << 2;
     const unsigned char blue = static_cast<unsigned char>((r & 0xFF) ^ 0x3F);
     const unsigned char red = static_cast<unsigned char>(blue << 1);
@@ -433,7 +433,7 @@ extern "C" void __cdecl EffectKind18Sub18_DrawRing(U radius) {
         p[5] = static_cast<unsigned char>((FC() & 1) * red);
         p[6] = static_cast<unsigned char>((FC() & 1) * blue);
         s = S();
-        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 2, 0x14);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 2, 0x14);
     }
 }
 
@@ -548,13 +548,13 @@ extern "C" void __cdecl EffectKind18Sub19_Run(void) {
         s[0xB] = s[0x36];
         s = S();
         U k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19X);
-        AsFx(s)->x = (static_cast<U>(B(at::kSub19X + k)) << 7) - 0x3FC8u;
+        rv::As<records::EffectObject>(s)->x = (static_cast<U>(B(at::kSub19X + k)) << 7) - 0x3FC8u;
         s = S();
         k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19Z);
-        AsFx(s)->z = (static_cast<U>(B(at::kSub19Z + k)) - 0x80u) << 7;
+        rv::As<records::EffectObject>(s)->z = (static_cast<U>(B(at::kSub19Z + k)) - 0x80u) << 7;
         s = S();
         k = Index(kWho, s[0xB], at::kSub19Count, at::kSub19Height);
-        AsFx(s)->height = static_cast<U>(S16(W(at::kSub19Height + 2 * k)));
+        rv::As<records::EffectObject>(s)->height = static_cast<U>(S16(W(at::kSub19Height + 2 * k)));
         s = S();
         s[2] = static_cast<unsigned char>(s[2] + 1);
         s = S();
@@ -590,7 +590,7 @@ extern "C" void __cdecl EffectKind18Sub68_Draw(void) {
         if ((arc & 3) == 0) {
             SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
             unsigned char* const s = S();
-            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), static_cast<int>(first), 0xC);
+            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<int>(first), 0xC);
         }
         const U angle = static_cast<U>(I(a) / 8) + 0xFFFFFF00u;
         U k = 0;
@@ -619,7 +619,7 @@ extern "C" void __cdecl EffectKind18Sub68_Draw(void) {
             p += 0x10;
             SH_CALL(Gte_StoreDepthF)(Fp(p));
             unsigned char* const s = S();
-            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), static_cast<int>(first), 0x14);
+            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), static_cast<int>(first), 0x14);
         }
     }
 }
@@ -731,7 +731,7 @@ extern "C" void __cdecl EffectKind18Sub1C_Run(void) {
 // and x's cell), +9 (Rand & 0x2F) + it; the cell's map byte 0; +2 up.
 extern "C" void __cdecl EffectKind18Sub1C_Start(void) {
     unsigned char* s = S();
-    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z));
+    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z));
     SetWord(S() + 0x3E, e);
     s = S();
     s[0xA] = B(at::kSub1CWaits + (((s[0x3A] & 1u) << 1) | (s[0x36] & 1u)));
@@ -913,11 +913,11 @@ extern "C" void __cdecl EffectKind18Sub1D_Start(void) {
     s = S();
     s[9] = s[0xA];
     s = S();
-    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z));
+    const U e = static_cast<U>(SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(s)->x, rv::As<records::EffectObject>(s)->z));
     SetWord(S() + 0x3E, e);
     s = S();
     const U e2 = static_cast<U>(
-        SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->x) + 0x8000), static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->z) - 0x8000)));
+        SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) + 0x8000), static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) - 0x8000)));
     s = S();
     if (S16(e2) > S16(W(s + 0x3E))) {
         SetUL(s + 0xC, 0);
@@ -1315,7 +1315,7 @@ extern "C" void __cdecl EffectKind18Sub52_Draw(void) {
     if (I(near) > 0x14) return;
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
     s = S();
     s[9] = static_cast<unsigned char>(s[9] + 2);
     for (U ring = 0; ring < 0x10; ++ring) {
@@ -1331,10 +1331,10 @@ extern "C" void __cdecl EffectKind18Sub52_Draw(void) {
             p[6] = static_cast<unsigned char>(grey);
             const U sn = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(((FC() & 0xF) << 4) * static_cast<U>(sign) + turn)));
             s = S();
-            SetV(0, static_cast<U>((I(sn) >> 6) * 3 + (AsFx(s)->x >> 9) - 0x4000));
+            SetV(0, static_cast<U>((I(sn) >> 6) * 3 + (rv::As<records::EffectObject>(s)->x >> 9) - 0x4000));
             const U cs = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(((FC() & 0xF) << 4) * static_cast<U>(sign) + turn)));
             s = S();
-            SetV(2, static_cast<U>((I(cs) >> 6) * 3 + (AsFx(s)->z >> 9) - 0x4000));
+            SetV(2, static_cast<U>((I(cs) >> 6) * 3 + (rv::As<records::EffectObject>(s)->z >> 9) - 0x4000));
             const U fade = (s[9] - static_cast<unsigned char>(ring * 0x10)) & 0xFF;
             SetV(4, (0xFFFFFF40u - fade) << 1);
             long depth[2];
@@ -1342,12 +1342,12 @@ extern "C" void __cdecl EffectKind18Sub52_Draw(void) {
             p += 0x10;
             SH_CALL(Gte_StoreDepthF)(Fp(p));
             s = S();
-            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x14);
+            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0x14);
         }
     }
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x), static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z), 1, 0xC);
 }
 
 // ===========================================================================

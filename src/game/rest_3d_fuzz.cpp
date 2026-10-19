@@ -21,6 +21,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3d.h"
 #include "game/rest_3d_callees.h"
@@ -29,11 +30,6 @@
 namespace rest_3d {
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace bh = boss_harness;
 using U = std::uint32_t;
@@ -297,15 +293,15 @@ void Frame() {
         unsigned char* const p = Member(m);
         for (unsigned i = 0; i < 4; ++i) p[0xB4 + i] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         SetLong(p + 0x130, static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u));
-        MemberRec(p)->status = Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80});
+        rv::As<records::PartyMember>(p)->status = Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80});
         p[0x148] = static_cast<unsigned char>(bh::Next() % 8);
         Mem(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride + 0x1E)[0] = Byte({0, 7, 8, 9, 10});
     }
     for (unsigned n = 0; n < 8; ++n) {
         unsigned char* const e = EnemyN(n);
         for (unsigned i = 0; i < 4; ++i) e[0xC4 + i] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
-        EnemyRec(e)->flags_110 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
-        EnemyRec(e)->status = Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80});
+        rv::As<records::BattleEnemy>(e)->flags_110 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
+        rv::As<records::BattleEnemy>(e)->status = Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80});
         e[0x8D] = Byte({4, 4, 3, 5});
     }
     unsigned char* const fs = bh::Pointer(Field_State_addr);

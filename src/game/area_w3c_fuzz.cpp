@@ -17,6 +17,7 @@
 #include "game/area_w3c.h"
 #include "game/area_w3c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -220,7 +221,7 @@ U ElevationEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n % 3 == 0) {
         unsigned char* const e = ah::Mem(Effect_Objects_addr + ((n >> 4) % 4) * at::kEffectStride);
-        auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+        auto* const tE = rv::As<records::EffectObject>(e);
         tE->x = static_cast<std::int32_t>(n);
     }
     static const U kEdges[] = {0x7FFF, 0x8000, 0xFFFF, 0, 0xFE00, 0x7E00};

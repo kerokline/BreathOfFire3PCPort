@@ -22,12 +22,12 @@
 #include "game/area_harness.h"
 #include "game/area_w1a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w1a::at;
 using area_harness::Mem;
@@ -81,7 +81,7 @@ void SpawnForMember(U list, U record) {
     Sprite_Current = Mem(record);
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     if (cur[0xB] == 0xFF) return;
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 6;
@@ -657,7 +657,7 @@ extern "C" void __cdecl Area41_Run(void) {
 // up (Area41_TintUp), then +0xA = 7 and state 1 (Sprite_Current read again
 // for each); the leader's word +0x12E less 2.
 extern "C" void __cdecl Area41_TintStart(void) {
-    CurSprite()->step_x = 0x4000;
+    rv::Current<records::SpriteObject>()->step_x = 0x4000;
     AH_CALL(Area41_TintUp)();
     Sprite_Current[0xA] = 7;
     Sprite_Current[4] = 1;
@@ -675,7 +675,7 @@ extern "C" void __cdecl Area41_TintRise(void) {
 // fall (state 3) for 8.
 extern "C" void __cdecl Area41_Slide(void) {
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     AddLong(cur + 0x34, static_cast<U>(tCur->step_x));
     CountDown(3);
 }

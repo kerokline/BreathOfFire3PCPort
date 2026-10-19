@@ -18,6 +18,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_menu_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -253,14 +254,14 @@ extern "C" void __cdecl BattleItemCmd_OpenList(void) {
 // record 16's x and y and the pad are read after the calls before them.
 extern "C" void __cdecl BattleItemCmd_List(void) {
     unsigned char* const list = List();
-    auto* const list_window = reinterpret_cast<records::WindowRecord*>(list);
+    auto* const list_window = rv::As<records::WindowRecord>(list);
     if (list_window->state != 0) return;
     const unsigned actor = Acting()[5];
-    auto* const hand_window = reinterpret_cast<records::WindowRecord*>(At(BattleE4_Hand_addr));
+    auto* const hand_window = rv::As<records::WindowRecord>(At(BattleE4_Hand_addr));
     hand_window->in_use = 1;
     hand_window->centre_x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(At(ObjTrio_addr + actor * at::kMemberSize));
+    auto* const member_rec = rv::As<records::PartyMember>(At(ObjTrio_addr + actor * at::kMemberSize));
     member_rec->flags_130 = static_cast<std::int32_t>(member_rec->flags_130) & 0xBFFF;
     const unsigned cursor_row = list[0xC];
     const unsigned pressed = Input_Pressed & Sigma(0xF00C);
@@ -342,7 +343,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
         const std::uint32_t x = static_cast<std::uint32_t>(Long(list + 4)) + 0x20;
         const unsigned y = list_window->centre_y - 0x16u;
         unsigned char* const above = At(BattleE4_Above_addr);
-        auto* const above_window = reinterpret_cast<records::WindowRecord*>(above);
+        auto* const above_window = rv::As<records::WindowRecord>(above);
         above_window->handler = 8;
         above_window->kind = 5;
         above_window->in_use = 1;

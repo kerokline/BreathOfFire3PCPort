@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -80,10 +81,6 @@ constexpr std::uint32_t kMemberC10 = 0x939C10;     // u32
 constexpr std::uint32_t kWindowRows = 0x803337;    // the battle windows 0xD.. (Window_Alloc's records +3, stride 0x24)
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
@@ -117,7 +114,6 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // The originals index the records by the battle index, unchecked: the party's
 // by the index, the enemy's by index - 3.
 unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
-records::PartyMember* PartyRecordTyped(unsigned i) { return reinterpret_cast<records::PartyMember*>(PartyRecord(i)); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -170,7 +166,7 @@ void Rtp4(unsigned char* prim, unsigned step) {
 }
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
                                 size);
 }
@@ -183,8 +179,8 @@ void LoadPaletteOfCurrent() {
 
 // The owner's position +0x34 / +0x38 / +0x3C to the task's.
 void AtOwner() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -194,7 +190,7 @@ unsigned char* Child44(unsigned char phase) {
     const unsigned slot = NewTask(0x44);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = phase;
     return child;
@@ -327,7 +323,7 @@ S33_EXPORT void __cdecl Accession_ApplyA(void) {
         MH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(Mem(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<unsigned>(c[5]) << 6))),
                                     index);
     }
-    MH_CALL(Battle_StatusTint)(PartyRecordTyped(ActorIndex())->status);
+    MH_CALL(Battle_StatusTint)(rv::As<records::PartyMember>(PartyRecord(ActorIndex()))->status);
     MH_CALL(Sprite_SetClutStp)();
     MH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
     Sprite_Current = saved;
@@ -394,7 +390,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     MH_CALL(Battle_ClearActorBit)(Mem(at::kActor)[0]);
     {
         unsigned char* const first = PartyRecord(0);
-        records::PartyMember* const tfirst = reinterpret_cast<records::PartyMember*>(first);
+        records::PartyMember* const tfirst = rv::As<records::PartyMember>(first);
         const unsigned char* const from = PartyRecord(ActorIndex());
         const std::int32_t x = Long(Mem(BossSi_CentreX_addr));
         // rep movsd: 0x53 dwords, forward, one at a time
@@ -423,7 +419,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
     }
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char* const m = PartyRecord(i);
-        const records::PartyMember* const tm = reinterpret_cast<const records::PartyMember*>(m);
+        const records::PartyMember* const tm = rv::AsConst<records::PartyMember>(m);
         unsigned char* const w = Mem(kWindowRows + i * 0x24u);
         if ((m[0] & 1) == 0) continue;
         MH_CALL(Window_Alloc)(i + 0xD, 3);
@@ -459,7 +455,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         MH_CALL(Field_MemberSprite)(Mem(MoveScript_EffectArg_addr + 0xc + set * 3u)[0], 0);
     }
     LoadPaletteOfCurrent();
-    MH_CALL(Battle_StatusTint)(PartyRecordTyped(ActorIndex())->status);
+    MH_CALL(Battle_StatusTint)(rv::As<records::PartyMember>(PartyRecord(ActorIndex()))->status);
     MH_CALL(Sprite_SetClutStp)();
     MH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
     Sprite_Current = saved;
@@ -506,11 +502,11 @@ S33_EXPORT void __cdecl AccessionCtl_Run(void) {
 // sound 0x102.
 S33_EXPORT void __cdecl AccessionCtl_Start(void) {
     Sc()[8] = Pointer(BattleOdds_ActorObject_addr)[8];
-    Store(ScTask()->x, Long(Mem(BossSi_CentreX_addr)));
-    Store(ScTask()->y, Long(Mem(BossSi_CentreZ_addr)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(BossSi_CentreX_addr)));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Mem(BossSi_CentreZ_addr)));
     {
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->y);
         SetWord(Sc() + 0x3E, U(ground) & 0xFFFF);
     }
@@ -713,7 +709,7 @@ S33_EXPORT void __cdecl AccessionOrb_DrawShell(void) {
             SetVW(0x1A, static_cast<unsigned short>(z));
             unsigned char* p = Gfx_PacketNext;
             const unsigned char* const s = Sc();
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             const std::uint32_t wx = Shl(vx, 9) + U(ts->x);
             const std::uint32_t wz = Shl(z, 9) + U(ts->y);
             MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x55, 0);
@@ -802,7 +798,7 @@ S33_EXPORT void __cdecl AccessionOrb_DrawGlow(void) {
         SetVW(0x1A, static_cast<unsigned short>(z));
         unsigned char* p = Gfx_PacketNext;
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const std::uint32_t wx = Shl(vx, 9) + U(ts->x);
         const std::uint32_t wz = Shl(z, 9) + U(ts->y);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x35, 0);
@@ -853,7 +849,7 @@ S33_EXPORT void __cdecl AccessionSpark_Run(void) {
 S33_EXPORT void __cdecl AccessionSpark_Start(void) {
     AtOwner();
     const std::uint32_t r = RandCall();
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(r & 0x1F));
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(r & 0x1F));
     Sc()[0x5D] = 0x10;
     Sc()[0xB] = 0;
     Sc()[9] = 0;
@@ -933,7 +929,7 @@ S33_EXPORT void __cdecl AccessionSpark_Draw(unsigned a1, unsigned a2) {
         unsigned tpage;
         {
             const unsigned char* const s = Sc();
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             wx = Shl(vx, 9) + U(ts->x);
             tpage = ((s[0xB] & 3u) << 5) | 0x15u;
             wz = Shl(z, 9) + U(ts->y);
@@ -1287,7 +1283,7 @@ S33_EXPORT void __cdecl MightyChop_Start(void) {
     const unsigned char* const record = actor < 3 ? PartyRecord(actor) : EnemyRecord(actor);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     // rep movsd: 0x20 dwords, forward, one at a time (the two can overlap)
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(child + k, Long(record + k));
     tchild->owner = static_cast<std::int32_t>(Key(s));
@@ -1311,18 +1307,18 @@ S33_EXPORT void __cdecl MightyChop_Throw(void) {
     if (Sc()[0xB] != 0) return;
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = source[8];
-    ScTask()->vel_x = 0;
-    Store(ScTask()->vel_y, static_cast<std::int32_t>(0xFFFE8000u));
+    rv::Current<records::BattleTask>()->vel_x = 0;
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, static_cast<std::int32_t>(0xFFFE8000u));
     Turn(Sc());
-    Store(ScTask()->x, static_cast<std::int32_t>(U(ScTask()->vel_x) + U(Long(source + 0x34))));
-    Store(ScTask()->y, static_cast<std::int32_t>(U(ScTask()->vel_y) + U(Long(source + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->vel_x) + U(Long(source + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->vel_y) + U(Long(source + 0x38))));
     SetLong(Sc() + 0x3C, Long(source + 0x3C));
     MH_CALL(Sound_PlayById)(0x100);
     for (unsigned i = 0; i < 6; ++i) {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x52) & 0xFFu;
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 0;
         child[0xB] = static_cast<unsigned char>(i);
@@ -1381,11 +1377,11 @@ S33_EXPORT void __cdecl MightyChopBlade_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    ScTask()->vel_x = 0;
-    Store(ScTask()->vel_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Sc()[0xB]) << 15));
+    rv::Current<records::BattleTask>()->vel_x = 0;
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Sc()[0xB]) << 15));
     Turn(Sc());
-    Store(ScTask()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(ScTask()->vel_x)));
-    Store(ScTask()->y, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(ScTask()->vel_y)));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(rv::Current<records::BattleTask>()->vel_x)));
+    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(rv::Current<records::BattleTask>()->vel_y)));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     SetLong(Sc() + 0x40, 0x8000);
     SetLong(Sc() + 0x44, 0x8000);

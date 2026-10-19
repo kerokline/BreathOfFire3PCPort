@@ -18,6 +18,7 @@
 #include "game/area_w3e.h"
 #include "game/area_w3e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -456,7 +457,7 @@ void SeedCell140() {
     const unsigned rx = Word(r), rz = Word(r + 2);
     const unsigned m = ah::Next() % 3;
     unsigned char* const p = ah::PartyOf(static_cast<unsigned char>(m));
-    auto* const tP = reinterpret_cast<records::PartyMember*>(p);
+    auto* const tP = rv::As<records::PartyMember>(p);
     const unsigned n = ah::Next() % 4;
     p[9] = static_cast<unsigned char>(n);
     const unsigned dx = AH_PICK(0, 1, 0, 1, 2, 0xFFFF);

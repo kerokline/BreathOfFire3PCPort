@@ -21,6 +21,7 @@
 #include "game/area_harness.h"
 #include "game/area_w3d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -31,7 +32,6 @@
 using bof3x::input::sigma::Sigma;
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3d::at;
 using area_harness::Mem;
@@ -109,7 +109,7 @@ void HeldMove(unsigned word, short least, unsigned char direction) {
     MoveScript_Object[7] = 2;
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     ScriptStep(0xFFFE);
 }
 
@@ -304,10 +304,10 @@ extern "C" void __cdecl Area135_HeldMove7(void) { HeldMove(0x36, 6, 7); }
 // there: Area135_FallTo(AreaMap_Elevation(x, z) + 0x280); none:
 // Area135_FallTo(the highest + 0x180).
 extern "C" void __cdecl Area135_FallToFloor(void) {
-    U z = static_cast<U>(CurSprite()->z) - 0x8000;
+    U z = static_cast<U>(rv::Current<records::SpriteObject>()->z) - 0x8000;
     U best = 0xFFFF8000u;
     for (unsigned row = 0; row < 2; ++row) {
-        U x = static_cast<U>(CurSprite()->x) - 0x18000;
+        U x = static_cast<U>(rv::Current<records::SpriteObject>()->x) - 0x18000;
         for (unsigned column = 0; column < 4; ++column) {
             MapView_HeightScale = 1;
             const auto ground = static_cast<U>(AH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z)));
@@ -317,10 +317,10 @@ extern "C" void __cdecl Area135_FallToFloor(void) {
         z += 0x10000;
     }
     const unsigned char found =
-        AH_CALL(Area135_ObjectAtCell)(CurSprite()->x, CurSprite()->z);
+        AH_CALL(Area135_ObjectAtCell)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     B(AreaW0c_TailSub_addr) = found;
     if (found != 0xFF) {
-        const long top = AH_CALL(AreaMap_Elevation)(CurSprite()->x, CurSprite()->z);
+        const long top = AH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
         AH_CALL(Area135_FallTo)(static_cast<unsigned>(top + 0x280));
         return;
     }
@@ -351,7 +351,7 @@ extern "C" void __cdecl Area135_RestoreOnRequest5(void) {
 // passed (12 when none stopped it).
 extern "C" void __cdecl Area135_JumpByOccupied(void) {
     const unsigned char* cur = Sprite_Current;
-    const auto* tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const auto* tCur = rv::AsConst<records::SpriteObject>(cur);
     unsigned k = 0;
     for (; k < 4; ++k) {
         const U x = static_cast<U>(B(Area135_JumpCells_addr + k * 2)) << 16 | 0x8000;
@@ -360,7 +360,7 @@ extern "C" void __cdecl Area135_JumpByOccupied(void) {
         if (static_cast<U>(tCur->z) != z) continue;
         if (AH_CALL(Area135_ObjectAtCell)(static_cast<long>(x), static_cast<long>(z)) != 0xFF) break;
         cur = Sprite_Current;
-        tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+        tCur = rv::AsConst<records::SpriteObject>(cur);
     }
     ScriptStep(k * 3);
 }
@@ -379,7 +379,7 @@ extern "C" void __cdecl Area135_QueueRun(void) {
 extern "C" void __cdecl Area135_QueueStepZ(void) {
     const U n = AH_CALL(Area135_CountQueue)() & 0xFFu;
     Sprite_Current[8] = 5;
-    const std::int32_t step = Sar((n << 17) - static_cast<U>(CurSprite()->z) + 0xC8000, 15);
+    const std::int32_t step = Sar((n << 17) - static_cast<U>(rv::Current<records::SpriteObject>()->z) + 0xC8000, 15);
     MoveScript_Object[7] = static_cast<unsigned char>(step);
     unsigned char* object = MoveScript_Object;
     if (static_cast<signed char>(object[7]) < 0) {
@@ -389,7 +389,7 @@ extern "C" void __cdecl Area135_QueueStepZ(void) {
     }
     if (object[7] != 0) {
         AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-        CurSprite()->step_y = 0;
+        rv::Current<records::SpriteObject>()->step_y = 0;
     }
     Sprite_Current[4] = static_cast<unsigned char>(Sprite_Current[4] + 1);
     ScriptStep(0xFFFE);
@@ -404,11 +404,11 @@ extern "C" void __cdecl Area135_QueueStepX(void) {
     if (n == 4) return;
     Sprite_Current[8] = 3;
     const U cell = static_cast<U>(B(Area135_QueueCells_addr + n)) << 16 | 0x8000;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(cell - static_cast<U>(CurSprite()->x), 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(cell - static_cast<U>(rv::Current<records::SpriteObject>()->x), 15));
     unsigned char* const object = MoveScript_Object;
     if (object[7] != 0) {
         AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-        CurSprite()->step_y = 0;
+        rv::Current<records::SpriteObject>()->step_y = 0;
     }
     Sprite_Current[4] = 0;
 }
@@ -424,14 +424,14 @@ extern "C" void __cdecl Area135_WalkRun(void) {
 // +0x14 = 0, the state + 1, the script back 2.
 extern "C" void __cdecl Area135_WalkToX(void) {
     Sprite_Current[8] = 7;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(static_cast<U>(CurSprite()->x) - 0x1C8000, 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(static_cast<U>(rv::Current<records::SpriteObject>()->x) - 0x1C8000, 15));
     if (static_cast<signed char>(MoveScript_Object[7]) < 0) {
         Sprite_Current[8] = static_cast<unsigned char>(Sprite_Current[8] ^ 4);
         MoveScript_Object[7] = static_cast<unsigned char>(0u - MoveScript_Object[7]);
     }
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     Sprite_Current[4] = static_cast<unsigned char>(Sprite_Current[4] + 1);
     ScriptStep(0xFFFE);
 }
@@ -440,10 +440,10 @@ extern "C" void __cdecl Area135_WalkToX(void) {
 // (0x148000 - z) >> 15; MoveCmd_Move, +0x14 = 0, the state 0.
 extern "C" void __cdecl Area135_WalkToZ(void) {
     Sprite_Current[8] = 5;
-    MoveScript_Object[7] = static_cast<unsigned char>(Sar(0x148000u - static_cast<U>(CurSprite()->z), 15));
+    MoveScript_Object[7] = static_cast<unsigned char>(Sar(0x148000u - static_cast<U>(rv::Current<records::SpriteObject>()->z), 15));
     unsigned char* const object = MoveScript_Object;
     AH_CALL(MoveCmd_Move)(object, Sprite_Current[8]);
-    CurSprite()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     Sprite_Current[4] = 0;
 }
 
@@ -460,11 +460,11 @@ extern "C" void __cdecl Area135_LiftDown(void) { Lift(0xFFFFFFFCu); }
 // script on by 1 (the running object read again); the state 0.
 extern "C" void __cdecl Area135_LiftDone(void) {
     unsigned char* cur = Sprite_Current;
-    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* tCur = rv::As<records::SpriteObject>(cur);
     if (tCur->x == 0x168000 && tCur->z == 0x128000) {
         ScriptStep(1);
         cur = Sprite_Current;
-        tCur = reinterpret_cast<records::SpriteObject*>(cur);
+        tCur = rv::As<records::SpriteObject>(cur);
     }
     cur[4] = 0;
 }
@@ -488,7 +488,7 @@ extern "C" void __cdecl Area135_SpawnCopy(void) {
     if (slot == 0xFF) return;
     AH_CALL(Area135_RestoreCells)();
     unsigned char* const self = Sprite_Current;
-    auto* const tSelf = reinterpret_cast<records::SpriteObject*>(self);
+    auto* const tSelf = rv::As<records::SpriteObject>(self);
     const unsigned sub = B(AreaW0c_TailSub_addr);
     AH_CALL(EventOp_9x)(Mem(Area135_SpawnOps_addr + sub * at::kArea135SpawnOpStride));
     SetLong(Sprite_Current + 0x34, tSelf->x);
@@ -689,7 +689,7 @@ extern "C" void __cdecl Area135_Tail18(void) {
         }
         B(AreaW0c_TailState_addr) = 0x1C;
         unsigned char* const o = ObjectAt(kWho, sub);
-        auto* const tO = reinterpret_cast<records::SpriteObject*>(o);
+        auto* const tO = rv::As<records::SpriteObject>(o);
         o[1] = 7;
         tO->accel_x = 0;
         tO->accel_z = 5;
@@ -804,7 +804,7 @@ extern "C" unsigned char __cdecl Area135_ObjectAtCell(long x, long z) {
     const unsigned char* const self = Sprite_Current;
     for (unsigned i = 0; i < at::kObjectCount; ++i) {
         const unsigned char* const o = Mem(Sprite_Objects_addr + i * at::kObjectStride);
-        const auto* const tO = reinterpret_cast<const records::SpriteObject*>(o);
+        const auto* const tO = rv::AsConst<records::SpriteObject>(o);
         if (!(o[0] & 1)) continue;
         if (o == self) continue;
         if (o[6] != 0xA) continue;
@@ -836,7 +836,7 @@ extern "C" void __cdecl Area135_StampCells(void) {
         return;
     }
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     const U x = static_cast<U>(tCur->x) - 0x8000;
     const U z = static_cast<U>(tCur->z) - 0x8000;
     const unsigned cx = (x >> 16) & 0xFFFF;

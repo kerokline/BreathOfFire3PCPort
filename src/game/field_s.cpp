@@ -57,6 +57,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "game/menu_frame.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "input/sigma.h"
 
@@ -82,9 +83,6 @@ int S16(U v) { return static_cast<short>(static_cast<unsigned short>(v)); }
 unsigned char* Rec(U n) { return At(at::kRecords + n * at::kRecordStride); }
 U RecAddr(U n) { return at::kRecords + n * at::kRecordStride; }
 
-// The typed views of these records (src/game/records.h).
-records::PartyMember* CurMember() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
-unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
 // A member id's record index: MoveScript_EffectState[id], unchecked.
 U RecordOf(U id) { return MoveScript_EffectState[id & 0xFF]; }
 // Field_Members of ObjTrio record k (s8, unchecked): the byte +0x148.
@@ -292,19 +290,19 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
     if (Field_MemberCount != 0) {
         unsigned char i = 0;
         do {
-            records::PartyMember* const obj = reinterpret_cast<records::PartyMember*>(ObjTrio + i * at::kObjStride);
-            Sprite_Current = Bytes(obj);
+            records::PartyMember* const obj = rv::As<records::PartyMember>(ObjTrio + i * at::kObjStride);
+            Sprite_Current = rv::Bytes(obj);
             SH_CALL(Field_MemberSprite)(obj->char_id, i);
-            SH_CALL(Sprite_SetAnimation)(CurMember()->direction);
+            SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
             const U row = at::kPlaceTable + 16 * (3 * kind + i);
             ++i;
             move_script::SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(L(row)));
             move_script::SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(L(row + 4)));
             move_script::SetLong(Sprite_Current + 0x3C, static_cast<std::int32_t>(L(row + 8)));
-            CurMember()->state[0] = 0;
-            CurMember()->state[1] = 0;
-            CurMember()->state[2] = 0;
-            CurMember()->state[3] = 0;
+            rv::Current<records::PartyMember>()->state[0] = 0;
+            rv::Current<records::PartyMember>()->state[1] = 0;
+            rv::Current<records::PartyMember>()->state[2] = 0;
+            rv::Current<records::PartyMember>()->state[3] = 0;
         } while (i < Field_MemberCount);
     }
     Field_Kind2X = static_cast<long>(L(0x802D74));
@@ -556,27 +554,27 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         Field_MemberCount = 1;
         B(0x802D88) = 0;
         SH_CALL(Field_MemberSprite)(member, 0);
-        SH_CALL(Sprite_SetAnimation)(CurMember()->direction);
-        CurMember()->state[0] = 0;
-        CurMember()->state[1] = 0;
-        CurMember()->state[2] = 0;
-        CurMember()->state[3] = 0;
+        SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
+        rv::Current<records::PartyMember>()->state[0] = 0;
+        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->state[2] = 0;
+        rv::Current<records::PartyMember>()->state[3] = 0;
     } else {
         Field_MemberCount = static_cast<unsigned char>(SH_CALL(Party_Count)(0));
         SH_CALL(Field_PartyLoad)(0);
         if (Field_MemberCount != 0) {
             U i = 0;
             do {
-                records::PartyMember* const obj = reinterpret_cast<records::PartyMember*>(ObjTrio + i * at::kObjStride);
+                records::PartyMember* const obj = rv::As<records::PartyMember>(ObjTrio + i * at::kObjStride);
                 const unsigned char member = obj->char_id;
-                Sprite_Current = Bytes(obj);
+                Sprite_Current = rv::Bytes(obj);
                 SH_CALL(Field_MemberSprite)(member, i);
-                SH_CALL(Sprite_SetAnimation)(CurMember()->direction);
+                SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
                 if (AreaW3c_CampFlag != 0) {
-                    CurMember()->state[0] = 0;
-                    CurMember()->state[1] = 0;
-                    CurMember()->state[2] = 0;
-                    CurMember()->state[3] = 0;
+                    rv::Current<records::PartyMember>()->state[0] = 0;
+                    rv::Current<records::PartyMember>()->state[1] = 0;
+                    rv::Current<records::PartyMember>()->state[2] = 0;
+                    rv::Current<records::PartyMember>()->state[3] = 0;
                 }
                 ++i;
             } while (i < Field_MemberCount);
@@ -1703,7 +1701,7 @@ extern "C" void __cdecl SharedList_Setup(void) {
 // (Menu_DrawSkillRow reads the byte, six bits of the colour); an extra 0x80
 // is pushed before 0x591AC0's three and popped with the next calls'.
 extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
-    auto* const w = reinterpret_cast<records::WindowRecord*>(window);
+    auto* const w = rv::As<records::WindowRecord>(window);
     const int wx = static_cast<int>(w->centre_x);
     const int wy = static_cast<int>(w->centre_y);
     SH_CALL(Menu_DrawBox)(wx + 3, wy + 3, 0x99, 0x9A, 0, static_cast<unsigned char>(BattleDraw_Colour));
@@ -1769,7 +1767,7 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
 // above it); the lit row's colour over the stack's; Menu_DrawSkillRow reads
 // the kind's byte and six bits of the colour.
 extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
-    auto* const w = reinterpret_cast<records::WindowRecord*>(window);
+    auto* const w = rv::As<records::WindowRecord>(window);
     SH_CALL(Menu_DrawBox)(w->centre_x + 3, w->centre_y + 3, 0x92, 0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
     int y = w->centre_y + 0x1A;
     U slot = RecAddr(window[0xA]) + 0x7E;

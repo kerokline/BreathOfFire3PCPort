@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_window_draw_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -75,7 +76,6 @@ using move_script::Word;
 
 unsigned char* Next() { return Gfx_PacketNext; }
 unsigned char* Window(unsigned slot) { return At(at::kWindows + slot * at::kWindowStride); }
-records::WindowRecord* WindowRec(unsigned slot) { return reinterpret_cast<records::WindowRecord*>(Window(slot)); }
 char* PrintBuf() { return reinterpret_cast<char*>(At(at::kPrintBuf)); }
 const char* Format(std::uint32_t at) { return reinterpret_cast<const char*>(At(at)); }
 
@@ -111,7 +111,7 @@ void ShadeColour(unsigned char* p, unsigned row) {
 extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
     g.window_alloc(1, 3);
     unsigned char* const w = Window(1);
-    auto* const win = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const win = rv::As<records::WindowRecord>(w);
     win->state = static_cast<unsigned char>(state);
     const unsigned size = At(at::kPartyCount)[0];
     w[0xA] = static_cast<unsigned char>(size);
@@ -125,7 +125,7 @@ extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
 // original 0x444290 (PSX 0x801D9358): window 2, sub-kind 1, at (0x88, 0x58).
 extern "C" void __cdecl BattleWin_OpenSub1(unsigned state) {
     g.window_alloc(2, 3);
-    auto* const win = WindowRec(2);
+    auto* const win = rv::As<records::WindowRecord>(Window(2));
     win->kind = 1;
     win->state = static_cast<unsigned char>(state);
     win->centre_x = 0x88;
@@ -136,7 +136,7 @@ extern "C" void __cdecl BattleWin_OpenSub1(unsigned state) {
 // left as it was.
 extern "C" void __cdecl BattleWin_OpenSub2(unsigned state) {
     g.window_alloc(3, 3);
-    auto* const win = WindowRec(3);
+    auto* const win = rv::As<records::WindowRecord>(Window(3));
     win->kind = 2;
     win->state = static_cast<unsigned char>(state);
 }
@@ -144,7 +144,7 @@ extern "C" void __cdecl BattleWin_OpenSub2(unsigned state) {
 // original 0x4442E0 (PSX 0x801D93F8): window 4, sub-kind 3, at (0x7C, 0x2A).
 extern "C" void __cdecl BattleWin_OpenSub3(unsigned state) {
     g.window_alloc(4, 3);
-    auto* const win = WindowRec(4);
+    auto* const win = rv::As<records::WindowRecord>(Window(4));
     win->kind = 3;
     win->state = static_cast<unsigned char>(state);
     win->centre_x = 0x7C;
@@ -417,7 +417,7 @@ extern "C" unsigned char __cdecl BattleWin_FirstOfKind(unsigned enemy) {
     signed char k = 7;
     do {
         const unsigned char* const w = Window(static_cast<unsigned>(5 + k));
-        auto* const win = reinterpret_cast<const records::WindowRecord*>(w);
+        auto* const win = rv::AsConst<records::WindowRecord>(w);
         if (win->state != 2 && win->state != 3) {
             const std::int32_t index = static_cast<std::int32_t>(w[0xA]) - 3;
             const std::uint32_t at = at::kEnemies + at::kEnemyKind + static_cast<std::uint32_t>(index * static_cast<std::int32_t>(at::kEnemyStride));

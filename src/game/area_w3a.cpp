@@ -46,6 +46,7 @@
 #include "game/area_harness.h"
 #include "game/area_w3a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/world_map.h"
 #include "hook/detour.h"
@@ -65,7 +66,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
 unsigned char* PartyRecord(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
@@ -306,7 +306,7 @@ void PlateShrink() {
 // The dial frame's slide, state 1: the word +0x2E += 0x10; at 0x10 and above
 // (s16) +2 + 1; then a tail jump to the copy's FrameHold.
 void FrameSlideIn(const WorldMapTables& t) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
+    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(t.fn_frame_hold)();
@@ -323,7 +323,7 @@ void FrameHold(const WorldMapTables& t) {
 // State 3: the word +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the
 // mode byte is 2, +2 = 1 (over the 0); DrawFrame(0x10, y).
 void FrameSlideOut(const WorldMapTables& t) {
-    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
+    rv::Current<records::EffectObject>()->screen_x = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_x) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -341,7 +341,7 @@ void FrameSlideOut(const WorldMapTables& t) {
 // with the object pointer's high half above the word, which the drawing
 // never reads.
 void BoxSlideIn(const WorldMapTables& t) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -377,7 +377,7 @@ void BoxHold(const WorldMapTables& t) {
 // byte is set (whatever +0xB), Field_Request is 2 or Field_ScriptFlags bit
 // 8, +3 = 1; DrawHud(0x5C, y).
 void BoxSlideOut(const WorldMapTables& t) {
-    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
+    rv::Current<records::EffectObject>()->screen_y = static_cast<std::uint16_t>(rv::Current<records::EffectObject>()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
@@ -491,30 +491,30 @@ void Record8Place(const WorldMapTables& t) {
     SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
     SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
-    auto* tO = reinterpret_cast<records::EffectObject*>(o);
+    auto* tO = rv::As<records::EffectObject>(o);
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
         SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 13));
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
         const bool along_x = tO->step_x == 0;
         const unsigned step = o[6] == 1 ? 2u : 0xFFFEu;
         if (along_x) SetWord(o + 0x36, Word(o + 0x36) + step);
         else SetWord(o + 0x3A, Word(o + 0x3A) + step);
         o = Cur();
-        tO = reinterpret_cast<records::EffectObject*>(o);
+        tO = rv::As<records::EffectObject>(o);
     }
     SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 9));
     o = Cur();
-    tO = reinterpret_cast<records::EffectObject*>(o);
+    tO = rv::As<records::EffectObject>(o);
     SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 9));
     Cur()[0xB] = 0;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
     AH_CALL(Sprite_SetAnimation)(At(t.record8_anims + Cur()[8] * 2u)[0]);
     o = Cur();
-    tO = reinterpret_cast<records::EffectObject*>(o);
+    tO = rv::As<records::EffectObject>(o);
     o[0x2A] = At(t.record8_anims + 1 + o[8] * 2u)[0];
     AH_CALL(Sprite_UpdateScreen)();
 }
@@ -800,7 +800,7 @@ namespace {
 // after the call (area 11's Area11_SpawnEffect is the same shape).
 void SpawnAtMember(U member, U table, unsigned char kind) {
     const unsigned char* const rec = PartyRecord(member);
-    const auto* const tRec = reinterpret_cast<const records::PartyMember*>(rec);
+    const auto* const tRec = rv::AsConst<records::PartyMember>(rec);
     const auto z = static_cast<short>(static_cast<std::uint16_t>(tRec->screen_y));
     const auto x = static_cast<short>(static_cast<std::uint16_t>(tRec->screen_x));
     const unsigned id = At(Cond_Flags_addr + 0xd2 + member)[0];
@@ -893,7 +893,7 @@ namespace {
 // the first containing it, or 0xFF.
 unsigned char MemberRect(const TwinTables& t, unsigned member) {
     const unsigned char* const rec = PartyRecord(member & 0xFF);
-    const auto* const tRec = reinterpret_cast<const records::PartyMember*>(rec);
+    const auto* const tRec = rv::AsConst<records::PartyMember>(rec);
     const std::int32_t x = tRec->x;
     const std::int32_t z = tRec->z;
     unsigned index = 0;

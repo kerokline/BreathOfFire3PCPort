@@ -23,6 +23,7 @@
 #include "game/battle_e5_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -264,9 +265,6 @@ std::uint16_t Word16(std::initializer_list<U> often) {
 unsigned char* Enemy(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
 unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* Win(U window) { return Mem(window); }
-records::BattleEnemy* EnemyRec(unsigned n) { return reinterpret_cast<records::BattleEnemy*>(Enemy(n)); }
-records::PartyMember* MemberRec(unsigned n) { return reinterpret_cast<records::PartyMember*>(Member(n)); }
-records::WindowRecord* WinRec(U window) { return reinterpret_cast<records::WindowRecord*>(Win(window)); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 
 // The keys: the confirm and cancel masks single bits, the pressed word one of
@@ -312,8 +310,8 @@ void DragonFrame() {
     Cursor(BattleE4_Slots_addr, 4, 3);
     Cursor(BattleE4_Hand_addr, 10, 3);
     for (U w : {at::kWin4, BattleE4_List_addr, BattleE4_Cands_addr, BattleE4_Slots_addr, BattleE4_Hand_addr, BattleE4_Above_addr}) {
-        WinRec(w)->in_use = static_cast<unsigned char>(bh::Half() ? WinRec(w)->in_use & 0xFE : WinRec(w)->in_use | 1);
-        WinRec(w)->state = Byte({0, 0, 1, 2});
+        rv::As<records::WindowRecord>(Win(w))->in_use = static_cast<unsigned char>(bh::Half() ? rv::As<records::WindowRecord>(Win(w))->in_use & 0xFE : rv::As<records::WindowRecord>(Win(w))->in_use | 1);
+        rv::As<records::WindowRecord>(Win(w))->state = Byte({0, 0, 1, 2});
     }
     SetWord(Win(BattleE4_Slots_addr) + 4, Word16({0x5B, 0x5B, 0x5C, 0xFF5B}));
     SetWord(Win(BattleE4_Hand_addr) + 4, Word16({0x5B, 0x5B, 0xA3, 0xA3, 0x5A}));
@@ -328,7 +326,7 @@ void Seed(unsigned k) {
     switch (c.base) {
     case 0x44B240: {   // EnemyAI_OtherRowsDone: the enemy's script in the area block, rows 0x63 or not
         g_enemy = bh::Next() % 8;   // the callers' loop 0..7; past the eight the objects run off the image's end 0x93F000
-        auto* const enemy_rec = EnemyRec(g_enemy);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(g_enemy));
         enemy_rec->data_id = static_cast<unsigned char>(bh::Next() % 7);
         for (unsigned i = 0; i < 4; ++i)
             Mem(at::kAiScripts + enemy_rec->data_id * 0x8C + i * 16)[0] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? 0x63 : bh::Next());
@@ -339,7 +337,7 @@ void Seed(unsigned k) {
         Mem(at::kActingKind)[0] = Byte({4, 4, 1, 1, 0, 2, 5, 0x81});
         Mem(at::kActor)[0] = Byte({0, 1, 2, 3, 0x80});
         SetWord(Mem(at::kAbility), Word16({0, 1, 0x10, 0x4E, 0xA3, 0xC0}));
-        for (unsigned m = 0; m < 3; ++m) MemberRec(m)->weapon = static_cast<unsigned char>(bh::Next() % 0x80);
+        for (unsigned m = 0; m < 3; ++m) rv::As<records::PartyMember>(Member(m))->weapon = static_cast<unsigned char>(bh::Next() % 0x80);
         break;
     }
     case 0x44B3A0: {   // EnemyAI_ApplyAction: the row (kind 0..8 and past), HP, the message count at its end
@@ -383,7 +381,7 @@ void Seed(unsigned k) {
         Mem(at::kTarget)[0] = static_cast<unsigned char>(bh::Next() % 11);   // 0..10: past 10 the objects run off the image
         Mem(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
         for (unsigned m = 0; m < 3; ++m) {
-            auto* const member = MemberRec(m);
+            auto* const member = rv::As<records::PartyMember>(Member(m));
             member->flags_130 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
             const U max_hp = Word16({1, 100, 999, 9999}), max_ap = Word16({1, 50, 999});
             member->max_hp = max_hp;
@@ -392,7 +390,7 @@ void Seed(unsigned k) {
             member->ap = bh::Half() ? max_ap - bh::Next() % 4 : bh::Next();
         }
         for (unsigned n = 0; n < 8; ++n) {
-            auto* const enemy_rec = EnemyRec(n);
+            auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(n));
             enemy_rec->flags_110 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
             const U max_hp = Word16({1, 100, 999, 9999}), max_ap = Word16({1, 50, 999});
             enemy_rec->max_hp = max_hp;

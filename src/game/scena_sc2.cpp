@@ -35,6 +35,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc2_callees.h"
 #include "game/scenario_harness.h"
@@ -117,15 +118,13 @@ bool TakeEffect() {
 // The record of the slot 0x903850 holds, read back as the original does.
 unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Party() is a party member (ObjTrio, Field_State). Fx()
-// is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static const records::SpriteObject* Spr(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
-static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::PartyMember>(p) is given party members
+// (ObjTrio, Field_State), rv::As<records::EffectObject>(p) effect objects
+// (Effect_Objects).
 // A kind-0x13 effect live at (x, z) with +0x6C `far` and +9 `life`.
 void AimEffect(int x, int z, int far, unsigned life) {
     unsigned char* const e = Effect();
@@ -2116,8 +2115,8 @@ namespace {
 void Near(unsigned char n, int xlo, int xhi, int zlo, int zhi) {
     if (Cond_ByteFD != 0) return;
     const unsigned char* const s = Sprite_Objects + 0xA4u * n;
-    const int sx = Spr(s)->x, sz = Spr(s)->z;
-    const int lx = Party(Leader())->x, lz = Party(Leader())->z;
+    const int sx = rv::As<records::SpriteObject>(s)->x, sz = rv::As<records::SpriteObject>(s)->z;
+    const int lx = rv::As<records::PartyMember>(Leader())->x, lz = rv::As<records::PartyMember>(Leader())->z;
     if (lz > Plus(sz, zhi) || lz < Plus(sz, zlo)) return;
     if (lx < Plus(sx, xlo) || lx > Plus(sx, xhi)) return;
     SH_CALL(Scena02_StartRun07)();
@@ -2285,10 +2284,10 @@ void PlaceEffect(unsigned char kind, unsigned char sub) {
     rec()[0] = 1;
     rec()[5] = kind;
     rec()[6] = sub;
-    Fx(rec())->step_x = 0;
+    rv::As<records::EffectObject>(rec())->step_x = 0;
     SetLong(rec() + 0x10, static_cast<signed char>(At(Scena02_EffectX_addr + LeadMember())[0]));
-    SetWord(rec() + 0x2E, static_cast<std::uint16_t>(Spr(cur)->screen_x));
-    SetWord(rec() + 0x30, static_cast<std::uint16_t>(Spr(cur)->screen_y));
+    SetWord(rec() + 0x2E, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_x));
+    SetWord(rec() + 0x30, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->screen_y));
 }
 
 }  // namespace

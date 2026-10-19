@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3c_callees.h"
 #include "hook/detour.h"
@@ -39,11 +40,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_3c::at;
 using U = std::uint32_t;
@@ -255,11 +251,11 @@ extern "C" void __cdecl Effect_DamageInflict40(void) {
     const unsigned t = target & 0xFF;
     std::uint16_t hp, status;
     if (t < 3) {
-        hp = MemberRec(Party(t))->hp;
-        status = MemberRec(Party(t))->status;
+        hp = rv::As<records::PartyMember>(Party(t))->hp;
+        status = rv::As<records::PartyMember>(Party(t))->status;
     } else {
-        hp = EnemyRec(Enemy(t - 3))->hp;
-        status = EnemyRec(Enemy(t - 3))->status;
+        hp = rv::As<records::BattleEnemy>(Enemy(t - 3))->hp;
+        status = rv::As<records::BattleEnemy>(Enemy(t - 3))->status;
     }
     const short damage = BH_CALL(Battle_CalcDamage)(B(at::kActor), target, 2);
     SetWord(Result() + 4, static_cast<std::uint16_t>(damage));
@@ -487,7 +483,7 @@ extern "C" unsigned __cdecl Effect_TargetFlag2000(void) {
         SetLong(p + 0x134, static_cast<S32>(static_cast<U>(Long(p + 0x134)) | 0x2000));
     } else {
         unsigned char* const e = EnemyWrite(t - 3, who);
-        EnemyRec(e)->flags_114 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(EnemyRec(e)->flags_114)) | 0x2000);
+        rv::As<records::BattleEnemy>(e)->flags_114 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(e)->flags_114)) | 0x2000);
     }
     BH_CALL(Battle_RecalcStats)(target);
     return MissTail();
@@ -520,12 +516,12 @@ extern "C" void __cdecl Effect_SureHitHalfDamage(void) {
 extern "C" void __cdecl Effect_EnemyDouble94And96(void) {
     MissTail();
     unsigned char* const e = EnemyWrite(static_cast<U>(B(at::kTarget)) - 3, "Effect_EnemyDouble94And96 (0x44DB40)");
-    const unsigned a = EnemyRec(e)->zenny;
-    const unsigned b = EnemyRec(e)->exp;
+    const unsigned a = rv::As<records::BattleEnemy>(e)->zenny;
+    const unsigned b = rv::As<records::BattleEnemy>(e)->exp;
     const unsigned a2 = a * 2 > 0xFFFF ? 0xFFFF : a * 2;
     const unsigned b2 = b * 2 > 0xFFFF ? 0xFFFF : b * 2;
-    EnemyRec(e)->zenny = a2;
-    EnemyRec(e)->exp = b2;
+    rv::As<records::BattleEnemy>(e)->zenny = a2;
+    rv::As<records::BattleEnemy>(e)->exp = b2;
 }
 
 // original 0x44DBC0 (slot 96): the HP delta 0; resisted - the result's flags =
@@ -586,11 +582,11 @@ extern "C" void __cdecl Effect_ActorHpToDamage(void) {
     const unsigned a = B(at::kActor);
     B(at::kFlags2) = static_cast<unsigned char>(B(at::kFlags2) | 0x20);
     if (a < 3) {
-        SetWord(Result() + 4, MemberRec(Party(a))->hp - 1u);
-        MemberRec(PartyWrite(B(at::kActor), who))->hp = 1;
+        SetWord(Result() + 4, rv::As<records::PartyMember>(Party(a))->hp - 1u);
+        rv::As<records::PartyMember>(PartyWrite(B(at::kActor), who))->hp = 1;
     } else {
-        SetWord(Result() + 4, EnemyRec(Enemy(a - 3))->hp - 1u);
-        EnemyRec(EnemyWrite(static_cast<U>(B(at::kActor)) - 3, who))->hp = 1;
+        SetWord(Result() + 4, rv::As<records::BattleEnemy>(Enemy(a - 3))->hp - 1u);
+        rv::As<records::BattleEnemy>(EnemyWrite(static_cast<U>(B(at::kActor)) - 3, who))->hp = 1;
     }
 }
 
@@ -651,7 +647,7 @@ extern "C" void __cdecl Effect_SkillDamageLessDef(void) {
     SetWord(Result() + 4, static_cast<unsigned>(damage));
     const unsigned t = B(at::kTarget);
     unsigned char* const r = Result();
-    const std::uint16_t def = t <= 2 ? MemberRec(Party(t))->def : EnemyRec(Enemy(t - 3))->def;
+    const std::uint16_t def = t <= 2 ? rv::As<records::PartyMember>(Party(t))->def : rv::As<records::BattleEnemy>(Enemy(t - 3))->def;
     SetWord(r + 4, Word(r + 4) - static_cast<unsigned>(def));
     unsigned char* const r2 = Result();
     if (S16(Word(r2 + 4)) < 0) SetWord(r2 + 4, 0);
@@ -691,16 +687,16 @@ extern "C" void __cdecl Effect_ActorStepThenHpToOne(void) {
         RecalcParty(who);
     } else {
         unsigned char* const e = Enemy(a - 3);
-        const unsigned max = EnemyRec(e)->max_hp;
+        const unsigned max = rv::As<records::BattleEnemy>(e)->max_hp;
         if (max != 0xFFFF) {
             const S32 tenth = static_cast<S32>(Word(At(at::kEnemyData + e[0xF0] * at::kEnemyDataStride + 0x24))) / 10;
             if (static_cast<S32>(max) > tenth) {
                 unsigned char* const w = EnemyWrite(a - 3, who);
-                EnemyRec(w)->max_hp = max - static_cast<unsigned>(tenth);
+                rv::As<records::BattleEnemy>(w)->max_hp = max - static_cast<unsigned>(tenth);
                 const S32 down = static_cast<S32>(Word(At(at::kEnemyData + w[0xF0] * at::kEnemyDataStride + 0x24))) / -10;
                 SetWord(w + 0xD0, Word(w + 0xD0) + static_cast<unsigned>(down));
-                const std::uint16_t new_max = EnemyRec(w)->max_hp;
-                if (EnemyRec(w)->hp > new_max) EnemyRec(w)->hp = new_max;
+                const std::uint16_t new_max = rv::As<records::BattleEnemy>(w)->max_hp;
+                if (rv::As<records::BattleEnemy>(w)->hp > new_max) rv::As<records::BattleEnemy>(w)->hp = new_max;
             }
         }
     }

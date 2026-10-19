@@ -21,6 +21,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_actions_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/psp_code.h"
 #include "hook/detour.h"
@@ -89,8 +90,6 @@ std::int32_t L(std::uint32_t address) { return Long(At(address)); }
 // `and eax, 0xFF`).
 unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + (actor & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
-records::PartyMember* PartyRec(unsigned actor) { return reinterpret_cast<records::PartyMember*>(Party(actor)); }
-records::BattleEnemy* EnemyRec(unsigned actor) { return reinterpret_cast<records::BattleEnemy*>(Enemy(actor)); }
 
 // One entry of a step table in .data, read afresh; the byte picks it and is
 // not checked (a byte past the table's count reaches the next table's
@@ -110,7 +109,7 @@ void EventHook(int n) { reinterpret_cast<HookFn>(PtrAt(at::kEventHook))(n); }
 // order of the reads and stores is not observable; it is the original's.
 void SetMemberBlock(std::uint32_t block, unsigned actor) {
     unsigned char* const o = Party(actor);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+    auto* const member_rec = rv::As<records::PartyMember>(o);
     SetPtrAt(block + at::kBAction, o + 0x124);
     SetPtrAt(block + at::kBObject, o);
     const unsigned stand = member_rec->direction + member_rec->char_id * 4u;
@@ -121,7 +120,7 @@ void SetMemberBlock(std::uint32_t block, unsigned actor) {
 }
 void SetEnemyBlock(std::uint32_t block, unsigned actor) {
     unsigned char* const o = Enemy(actor);
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(o);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(o);
     SetPtrAt(block + at::kBAction, o + 0x104);
     SetPtrAt(block + at::kBObject, o);
     SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(o[0xF2])) + static_cast<std::uint16_t>(enemy_rec->screen_x));
@@ -155,8 +154,8 @@ void EnemyNameToText0(const unsigned char* record) {
 struct Standing { unsigned status, ap; };
 Standing ActorStanding(unsigned actor) {
     const unsigned a = actor & 0xFF;
-    if (a <= 2) return {PartyRec(a)->status, PartyRec(a)->ap};
-    return {EnemyRec(a)->status, EnemyRec(a)->ap};
+    if (a <= 2) return {rv::As<records::PartyMember>(Party(a))->status, rv::As<records::PartyMember>(Party(a))->ap};
+    return {rv::As<records::BattleEnemy>(Enemy(a))->status, rv::As<records::BattleEnemy>(Enemy(a))->ap};
 }
 
 }  // namespace
@@ -327,7 +326,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         g.remove_from_turn_order(B(at::kActor));
         const unsigned a = B(at::kActor);
         SetB(at::kPhase, 3);
-        auto* const member_rec = PartyRec(a);
+        auto* const member_rec = rv::As<records::PartyMember>(Party(a));
         member_rec->state[0] = 2;
         member_rec->state[1] = 0;
         BattleActions_Step = 0;
@@ -351,7 +350,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     unsigned char cost;
     if (Word(At(at::kAbility)) != 0x97) {
         const unsigned id = B(at::kAbility);
-        const unsigned who = a <= 2 ? PartyRec(a)->member : EnemyRec(a)->actor;
+        const unsigned who = a <= 2 ? rv::As<records::PartyMember>(Party(a))->member : rv::As<records::BattleEnemy>(Enemy(a))->actor;
         cost = g.skill_ap_cost(who, id, 1);
     } else {
         cost = BattleActions_ApCost;
@@ -436,7 +435,7 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
         SetB(at::kPhase, 3);
         BattleActions_Step = 0;
         BattleE4_Step2 = 0;
-        auto* const member_rec = PartyRec(a);
+        auto* const member_rec = rv::As<records::PartyMember>(Party(a));
         member_rec->state[0] = 2;
         member_rec->state[1] = 0;
         return;
@@ -490,7 +489,7 @@ extern "C" void __cdecl BattleAction_ItemStart(void) {
 extern "C" void __cdecl BattleAction_EffectWait(void) {
     for (unsigned a = 0; a <= 2; ++a) {
         unsigned char* const o = Party(a);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        auto* const member_rec = rv::As<records::PartyMember>(o);
         if ((o[0x130] & 0x40) == 0 || member_rec->state[0] == 6) continue;
         member_rec->state[0] = 6;
         member_rec->state[1] = 0;
@@ -500,7 +499,7 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
     }
     for (unsigned a = 3; a <= 10; ++a) {
         unsigned char* const o = Enemy(a);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(o);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(o);
         if ((o[0x110] & 0x40) == 0 || enemy_rec->state[0] == 6) continue;
         enemy_rec->state[0] = 6;
         enemy_rec->state[1] = 0;

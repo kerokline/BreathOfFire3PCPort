@@ -28,6 +28,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/event_ops_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -39,11 +40,11 @@ using move_script::At;
 using move_script::SetWord;
 using move_script::Word;
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -948,7 +949,7 @@ void Seed(bool objects) {
             if (OneIn(2)) SetWord(o + 0x38, 0);
             static const unsigned char kKinds[] = {8, 9, 9, 0, 1};
             if (OneIn(2)) o[6] = Pick(kKinds);
-            if (OneIn(4)) Spr(o)->trigger_word = 0xFFFF;
+            if (OneIn(4)) rv::As<records::SpriteObject>(o)->trigger_word = 0xFFFF;
         }
     g_objects_live = objects;
     Sprite_Current = PickSprite(objects);
@@ -1132,7 +1133,7 @@ void RunTests(unsigned rounds, unsigned only) {
                 const auto seed_object = [](unsigned char* o) {
                     if (OneIn(4)) return;
                     o[6] = static_cast<unsigned char>(OneIn(6) ? 8 : Next() % 8);
-                    if (!OneIn(6)) Spr(o)->trigger_word = Next() % 0xFFFF;
+                    if (!OneIn(6)) rv::As<records::SpriteObject>(o)->trigger_word = Next() % 0xFFFF;
                     static const int kRise[] = {0x100, -0x100, 0x101, -0x101, 0xFF, 0};
                     SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(Word(Sprite_Current + 0x3E)) + Pick(kRise)));
                 };

@@ -37,6 +37,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_4a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -304,7 +305,7 @@ extern "C" void __cdecl EffectKind83_Finish(void) {
     const U object_x = UL(At(Sprite_Objects_addr + 0x34));
     const U leader_x = UL(At(ObjTrio_addr + 0x34));
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     Field_State = ObjTrio;
     so->x = leader_x - object_x;
     MoveScript_PartyRecords[0x65] = 0x1E;
@@ -526,10 +527,10 @@ extern "C" void __cdecl EffectKind86_Spawn(void) {
     SH_CALL(EventOp_0x)(P(at::kPlaceOp));
     Sprite_Current = s;
     unsigned char* const a = Object(kWho, s[3]);
-    auto* const ao = reinterpret_cast<records::SpriteObject*>(a);
+    auto* const ao = rv::As<records::SpriteObject>(a);
     ao->z = static_cast<std::uint32_t>(ao->z) + 0xFFFF0000u;
     unsigned char* const b = Object(kWho, s[4]);
-    auto* const bo = reinterpret_cast<records::SpriteObject*>(b);
+    auto* const bo = rv::As<records::SpriteObject>(b);
     bo->z = static_cast<std::uint32_t>(bo->z) + 0x10000u;
     Object(kWho, s[3])[0] |= 0x20;
     Object(kWho, s[4])[0] |= 0x20;
@@ -552,10 +553,10 @@ extern "C" void __cdecl EffectKind86_Slide(void) {
         return;
     }
     unsigned char* const a = Object(kWho, s[3]);
-    auto* const ao = reinterpret_cast<records::SpriteObject*>(a);
+    auto* const ao = rv::As<records::SpriteObject>(a);
     ao->z = static_cast<std::uint32_t>(ao->z) + 0x800u;
     unsigned char* const b = Object(kWho, s[4]);
-    auto* const bo = reinterpret_cast<records::SpriteObject*>(b);
+    auto* const bo = rv::As<records::SpriteObject>(b);
     bo->z = static_cast<std::uint32_t>(bo->z) + 0xFFFFF800u;
     s[9] = static_cast<unsigned char>(s[9] - 1);
 }

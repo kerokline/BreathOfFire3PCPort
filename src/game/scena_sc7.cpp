@@ -32,6 +32,7 @@
 // are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
 // of the wave that wrote them.
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc7_callees.h"
 #include "game/scenario_harness.h"
@@ -181,12 +182,12 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 // originals index it after the store.
 unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 
 }  // namespace
 
@@ -415,7 +416,7 @@ extern "C" void __cdecl Scena07_Scene2(void) {
         SetLong(e + 0x64, Camera_Angles[0]);
         SetLong(e + 0x68, Camera_Angles[1]);
         SetLong(e + 0x6C, S16(at::kPitch));
-        Fx(e)->step_x = -0x380;
+        rv::As<records::EffectObject>(e)->step_x = -0x380;
         e[9] = 0x40;
         return;
     }
@@ -581,11 +582,11 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         e[0] = 1;
         e[5] = 6;
         e[6] = 1;
-        Fx(e)->step_x = 0;
-        Fx(e)->step_z = static_cast<std::int32_t>(arg);
-        Fx(e)->screen_x = Word(At(ObjTrio_addr + 0x2E));
+        rv::As<records::EffectObject>(e)->step_x = 0;
+        rv::As<records::EffectObject>(e)->step_z = static_cast<std::int32_t>(arg);
+        rv::As<records::EffectObject>(e)->screen_x = Word(At(ObjTrio_addr + 0x2E));
         SetStep(1);
-        Fx(e)->screen_y = Word(At(ObjTrio_addr + 0x30));
+        rv::As<records::EffectObject>(e)->screen_y = Word(At(ObjTrio_addr + 0x30));
         return;
     }
     case 1:
@@ -612,9 +613,9 @@ extern "C" void __cdecl Scena07_Scene4(void) {
         SetTimer(0x8C);
         SetStep(5);
         Live(e, 0x3B);
-        Fx(e)->x = Spr(Sprite(0))->x;
-        Fx(e)->z = Spr(Sprite(0))->z;
-        Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(Spr(Sprite(0))->height) + 0x1000000u);
+        rv::As<records::EffectObject>(e)->x = rv::As<records::SpriteObject>(Sprite(0))->x;
+        rv::As<records::EffectObject>(e)->z = rv::As<records::SpriteObject>(Sprite(0))->z;
+        rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite(0))->height) + 0x1000000u);
         return;
     }
     case 5:
@@ -803,8 +804,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0xC: {
         if (C0() != 3) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(0);
-        Fx(p)->x = 0x160000;
-        Fx(p)->z = 0x3E0000;
+        rv::As<records::EffectObject>(p)->x = 0x160000;
+        rv::As<records::EffectObject>(p)->z = 0x3E0000;
         SetTimer(0xC8);
         SetStep(0xD);
         out = kDone;
@@ -823,8 +824,8 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0xE: {
         if (C0() != 7) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(0);
-        Fx(p)->x = 0x360000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x360000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         SetTimer(0xA8);
         SetStep(0xF);
         out = kDone;
@@ -836,13 +837,13 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(2);
-        Fx(p)->step_x = 0x270000;
-        const std::int32_t x = Fx(p)->step_x;
-        Fx(p)->x = 0x390000;
-        Fx(p)->z = 0x410000;
-        Fx(p)->step_z = 0x410000;
+        rv::As<records::EffectObject>(p)->step_x = 0x270000;
+        const std::int32_t x = rv::As<records::EffectObject>(p)->step_x;
+        rv::As<records::EffectObject>(p)->x = 0x390000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->step_z = 0x410000;
         const long e = SH_CALL(AreaMap_Elevation)(x, 0x410000);
-        Fx(p)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(e))) << 16);
+        rv::As<records::EffectObject>(p)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(e))) << 16);
         SetTimer(8);
         SetStep(0x10);
         out = kDone;
@@ -896,11 +897,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         if (C0() != 0x15) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(9);
         p[6] = 0;
-        Fx(p)->x = 0x170000;
-        Fx(p)->z = 0x3F0000;
-        Fx(p)->height = 0x5C00000;
-        Fx(p)->step_x = 0x10000;
-        Fx(p)->step_z = 0;
+        rv::As<records::EffectObject>(p)->x = 0x170000;
+        rv::As<records::EffectObject>(p)->z = 0x3F0000;
+        rv::As<records::EffectObject>(p)->height = 0x5C00000;
+        rv::As<records::EffectObject>(p)->step_x = 0x10000;
+        rv::As<records::EffectObject>(p)->step_z = 0;
         SetLong(p + 0x14, static_cast<std::int32_t>(0xFFE00000u));
         SetLong(p + 0x18, 0x2D0000);
         SetLong(p + 0x1C, 0x3F0000);
@@ -918,13 +919,13 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(9);
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         SetLong(p + 0x1C, 0x410000);
         p[6] = 1;
-        Fx(p)->x = 0x2D0000;
-        Fx(p)->height = 0x3000000;
-        Fx(p)->step_x = static_cast<std::int32_t>(0xFFFF0000u);
-        Fx(p)->step_z = 0;
+        rv::As<records::EffectObject>(p)->x = 0x2D0000;
+        rv::As<records::EffectObject>(p)->height = 0x3000000;
+        rv::As<records::EffectObject>(p)->step_x = static_cast<std::int32_t>(0xFFFF0000u);
+        rv::As<records::EffectObject>(p)->step_z = 0;
         SetLong(p + 0x14, 0);
         SetLong(p + 0x18, 0x270000);
         SetLong(p + 0x20, 0x3000000);
@@ -1000,11 +1001,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
     case 0x20: {
         if (C0() != 0x1F) break;
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(3);
-        Fx(p)->x = 0x258000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x258000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(4);
-        Fx(q)->x = 0x258000;
-        Fx(q)->z = 0x410000;
+        rv::As<records::EffectObject>(q)->x = 0x258000;
+        rv::As<records::EffectObject>(q)->z = 0x410000;
         SetTimer(0x70);
         SetStep(0x21);
         out = kShake;
@@ -1016,11 +1017,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(5);
-        Fx(p)->x = 0x258000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x258000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(8);
-        Fx(q)->x = 0x258000;
-        Fx(q)->z = 0x410000;
+        rv::As<records::EffectObject>(q)->x = 0x258000;
+        rv::As<records::EffectObject>(q)->z = 0x410000;
         const unsigned char c = static_cast<unsigned char>(C0() + 1);
         SetTimer(0x3C);
         C0() = c;
@@ -1044,11 +1045,11 @@ extern "C" void __cdecl Scena07_Scene6(void) {
             break;
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(6);
-        Fx(p)->x = 0x258000;
-        Fx(p)->z = 0x410000;
+        rv::As<records::EffectObject>(p)->x = 0x258000;
+        rv::As<records::EffectObject>(p)->z = 0x410000;
         unsigned char* const q = SH_CALL(Scena07_TakeEffect49)(7);
-        Fx(q)->x = 0x258000;
-        Fx(q)->z = 0x410000;
+        rv::As<records::EffectObject>(q)->x = 0x258000;
+        rv::As<records::EffectObject>(q)->z = 0x410000;
         SetTimer(0x3C);
         SetStep(0x24);
         out = kShake;
@@ -1184,7 +1185,7 @@ void ObjectTo4(unsigned char* object, unsigned animation) {
     object[1] = 4;
     object[0x84] = 2;
     object[0x83] = static_cast<unsigned char>(animation);
-    Spr(object)->script_position = 0;
+    rv::As<records::SpriteObject>(object)->script_position = 0;
 }
 // Object handlers 3 and 4: the counters cleared, run 7 at `step`, or at 0x14
 // when chapter 6's flag `flag` is set.
@@ -1548,15 +1549,15 @@ extern "C" void __cdecl Scena08_Scene1(void) {
         if (C0() != 4) return;
         if (TakeInto(at::kSlot) != 0xFF) {
             unsigned char* const e = Slot850();
-            Fx(e)->z = 0x550000;
-            const std::int32_t z = Fx(e)->z;
-            Fx(e)->x = 0x8E0000;
-            const std::int32_t x = Fx(e)->x;
+            rv::As<records::EffectObject>(e)->z = 0x550000;
+            const std::int32_t z = rv::As<records::EffectObject>(e)->z;
+            rv::As<records::EffectObject>(e)->x = 0x8E0000;
+            const std::int32_t x = rv::As<records::EffectObject>(e)->x;
             e[0] = 1;
             e[5] = 0x52;
             e[1] = 0;
             const long h = SH_CALL(AreaMap_Elevation)(x, z);
-            Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
+            rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetTimer(0x3C);
         SetStep(3);
@@ -1653,7 +1654,7 @@ extern "C" void __cdecl Scena08_Scene2(void) {
     switch (Step()) {
     case 0:
         Sprite_ObjectsExtra[0x83] = 3;
-        Spr(At(Sprite_ObjectsExtra_addr))->script_position = 0;
+        rv::As<records::SpriteObject>(At(Sprite_ObjectsExtra_addr))->script_position = 0;
         SetStep(1);
         return;
     case 1:
@@ -1710,15 +1711,15 @@ extern "C" void __cdecl Scena08_Scene3(void) {
         if (C0() != 5) return;
         if (TakeInto(at::kSlot) != 0xFF) {
             unsigned char* const e = Slot850();
-            Fx(e)->z = 0x418000;
-            const std::int32_t z = Fx(e)->z;
-            Fx(e)->x = 0x158000;
-            const std::int32_t x = Fx(e)->x;
+            rv::As<records::EffectObject>(e)->z = 0x418000;
+            const std::int32_t z = rv::As<records::EffectObject>(e)->z;
+            rv::As<records::EffectObject>(e)->x = 0x158000;
+            const std::int32_t x = rv::As<records::EffectObject>(e)->x;
             e[0] = 1;
             e[5] = 0x51;
             e[1] = 0;
             const long h = SH_CALL(AreaMap_Elevation)(x, z);
-            Fx(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
+            rv::As<records::EffectObject>(e)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<int>(static_cast<short>(h))) << 16);
         }
         SetStep(3);
         return;
@@ -2053,8 +2054,8 @@ extern "C" void __cdecl Scena08_Scene7(void) {
     case 0xF:
         if (C0() != 0) return;
         FocusObject()[6] = 5;
-        Spr(FocusObject())->accel_x = 1;
-        Spr(FocusObject())->accel_z = 3;
+        rv::As<records::SpriteObject>(FocusObject())->accel_x = 1;
+        rv::As<records::SpriteObject>(FocusObject())->accel_z = 3;
         Clear40();
         SetRun(0);
         SetStep(0);

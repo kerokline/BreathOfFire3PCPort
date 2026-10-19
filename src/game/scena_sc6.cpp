@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc6_callees.h"
 #include "game/scenario_harness.h"
@@ -149,12 +150,12 @@ unsigned char& RecordB(unsigned k) {
 
 unsigned char* Effect(unsigned slot) { return &B(at::kEffects + (slot & 0xFFu) * at::kEffectStride); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 std::int32_t Angle(std::uint32_t a) { return static_cast<std::int16_t>(W(a)); }
 
 // Effect_FindFree into the slot byte 0x903850 (stored before it is tested);
@@ -212,8 +213,8 @@ void MemberEffect(std::uint32_t object, unsigned char six, std::uint32_t member)
     Effect(s[0xB])[6] = six;
     Put32(Effect(s[0xB]) + 0xC, 0);
     Put32(Effect(s[0xB]) + 0x10, static_cast<signed char>(B(at::kMemberBytes + B(member))));
-    Fx(Effect(s[0xB]))->screen_x = Spr(s)->screen_x;
-    Fx(Effect(s[0xB]))->screen_y = Spr(s)->screen_y;
+    rv::As<records::EffectObject>(Effect(s[0xB]))->screen_x = rv::As<records::SpriteObject>(s)->screen_x;
+    rv::As<records::EffectObject>(Effect(s[0xB]))->screen_y = rv::As<records::SpriteObject>(s)->screen_y;
 }
 
 // A table entry read in place, the index checked against the table.

@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/event_leader_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -66,13 +67,12 @@ std::uint32_t g_edge_no_area = 0;
 
 using namespace event_leader;
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 namespace {
 
@@ -212,8 +212,8 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         if (input & 2) {
             const unsigned char d = sc[8];
             const std::uint32_t n = sc[0x70];
-            const std::uint32_t x = StepX(d) * n + static_cast<std::uint32_t>(Spr(sc)->x);
-            const std::uint32_t z = StepZ(d) * n + static_cast<std::uint32_t>(Spr(sc)->z);
+            const std::uint32_t x = StepX(d) * n + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->x);
+            const std::uint32_t z = StepZ(d) * n + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(sc)->z);
             const std::uint32_t edge_x = (static_cast<std::uint32_t>(AreaMap_Header[0]) - 3u) << 16;
             const std::uint32_t edge_z = (static_cast<std::uint32_t>(AreaMap_Header[1]) - 3u) << 16;
             if (x == 0x20000 || z == 0x20000 || x == edge_x || z == edge_z) {
@@ -233,7 +233,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
     }
     if (!stop) {
-        if (g.cells_all(Spr(sc)->x, Spr(sc)->z, sc[0x70], 0xA7, 0)) {
+        if (g.cells_all(rv::As<records::SpriteObject>(sc)->x, rv::As<records::SpriteObject>(sc)->z, sc[0x70], 0xA7, 0)) {
             {
                 unsigned char* const s = Sprite_Current;
                 g.link_at(Word(s + 0x36), Word(s + 0x3A));
@@ -245,7 +245,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
         {
             unsigned char* const s = Sprite_Current;
-            if (!g.cells_none(Spr(s)->x, Spr(s)->z, s[0x70], 0xA6, 0)) {
+            if (!g.cells_none(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, s[0x70], 0xA6, 0)) {
                 g.ensure_animation(Sprite_Current[8]);
                 const std::int32_t z = Long(At(AreaW2d_ReturnPoint_addr + 4));
                 const std::int32_t x = static_cast<std::int32_t>(AreaW2d_ReturnPoint);
@@ -285,7 +285,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         if (g.effect_test(pace)) return;
         {
             unsigned char* const s = Sprite_Current;
-            stop = g.arrive_hook(Spr(s)->x, Spr(s)->z) != 0;
+            stop = g.arrive_hook(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z) != 0;
         }
         if (!stop) {
             g.bit80_tick();
@@ -489,7 +489,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
         long ground;
         {
             unsigned char* const s = Sprite_Current;
-            ground = g.ground_at(Spr(s)->x, Spr(s)->z);
+            ground = g.ground_at(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
         }
         SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
         g.set_animation(Sprite_Current[8]);
@@ -561,8 +561,8 @@ extern "C" void __cdecl Field_SwapSpinIn(void) {
                 Sprite_Current[0x5C] = 0;
                 Sprite_Current[9] = 0;
                 g.clear_steps();
-                SC()->accel_x = 0;
-                SC()->accel_z = 0;
+                rv::Current<records::SpriteObject>()->accel_x = 0;
+                rv::Current<records::SpriteObject>()->accel_z = 0;
                 SetLong(Sprite_Current + 0x20, 0);
                 count = Field_MemberCount;
             }

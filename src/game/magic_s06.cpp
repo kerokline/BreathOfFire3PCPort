@@ -36,6 +36,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -74,10 +75,6 @@ constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf
 // Magic008Dash_Run's stack table names S04's KickImage_Tick (ours now).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
@@ -113,7 +110,7 @@ unsigned char* MakeDouble(unsigned parameter, unsigned char body) {
     const unsigned slot = NewTask(parameter);
     const unsigned char* const from = ActorRecord(ActorByte());
     unsigned char* const to = TaskSlot(slot);
-    records::BattleTask* const tto = reinterpret_cast<records::BattleTask*>(to);
+    records::BattleTask* const tto = rv::As<records::BattleTask>(to);
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(to + k, Long(from + k));
     tto->owner = static_cast<std::int32_t>(Key(Sc()));
     to[1] = body;
@@ -125,14 +122,14 @@ unsigned char* MakeDouble(unsigned parameter, unsigned char body) {
 
 // Sprite_Current's position (+0x34..+0x3C) from `from`, read afresh.
 void CopyPosition(const unsigned char* from) {
-    Store(ScTask()->x, Long(from + 0x34));
-    Store(ScTask()->y, Long(from + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(from + 0x38));
     SetLong(Sc() + 0x3C, Long(from + 0x3C));
 }
 // The same from the owner, the owner read again for each word.
 void CopyOwnerPosition() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 // The sprite's colour +0x5D..+0x5F, each moved by `by` (a byte).
@@ -213,7 +210,7 @@ S06_EXPORT void __cdecl Magic008_Apply(void) {
         const unsigned char took = MH_CALL(MagicFx_ApplyBuff)(MagicFx_BuffStats[Sc()[4] & 3], TargetByte());
         const unsigned slot = NewTask(0x48);
         unsigned char* const popup = TaskSlot(slot);
-        records::BattleTask* const tpopup = reinterpret_cast<records::BattleTask*>(popup);
+        records::BattleTask* const tpopup = rv::As<records::BattleTask>(popup);
         unsigned char* const sc = Sc();
         tpopup->owner = static_cast<std::int32_t>(Key(sc));
         popup[4] = took != 0 ? sc[4] : 8;
@@ -519,7 +516,7 @@ S06_EXPORT void __cdecl Magic008Dash_Start(void) {
     Sc()[8] = Owner()[8];
     CopyOwnerPosition();
     unsigned char* const sc = Sc();
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     const unsigned index = sc[0xB];
     if (index >= kDashOffsetCount) bof3::Fatal("Magic008Dash_Start: +0xB %u, past the %u offsets", index, kDashOffsetCount);
     tsc->vel_x = Long(Mem(Magic008Dash_Offsets_addr + 8 * index));
@@ -533,15 +530,15 @@ S06_EXPORT void __cdecl Magic008Dash_Start(void) {
 namespace {
 // The dashing double's position: the owner's plus its offset (+0xC, +0x10).
 void BesideOwner() {
-    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
-                                                    static_cast<std::uint32_t>(ScTask()->vel_x)));
-    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
-                                                    static_cast<std::uint32_t>(ScTask()->vel_y)));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
+                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x)));
+    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_y)));
 }
 // On the owner (x, z only).
 void OnOwner() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
 }
 }  // namespace
 
@@ -770,7 +767,7 @@ S06_EXPORT void __cdecl Magic020_Darken(void) {
         const unsigned slot = NewTask(0x2E);
         unsigned char* const sc = Sc();
         unsigned char* const slash = TaskSlot(slot);
-        records::BattleTask* const tslash = reinterpret_cast<records::BattleTask*>(slash);
+        records::BattleTask* const tslash = rv::As<records::BattleTask>(slash);
         tslash->owner = static_cast<std::int32_t>(Key(sc));
         slash[1] = 2;
         slash[2] = 0;

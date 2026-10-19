@@ -21,6 +21,7 @@
 #include "game/area_w2f.h"
 #include "game/area_w2f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -643,7 +644,7 @@ void Args111(unsigned k, U* a) {
 void SeedNearBoxes() {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const r = ah::PartyOf(static_cast<unsigned char>(m));
-        auto* const tR = reinterpret_cast<records::PartyMember*>(r);
+        auto* const tR = rv::As<records::PartyMember>(r);
         if (!ah::Often()) continue;
         const unsigned char* const box = ah::Mem(Area112_Boxes_addr + (ah::Next() % at::kArea112BoxCount) * 4);
         r[9] = static_cast<unsigned char>(ah::Next() % 3);

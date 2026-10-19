@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_win_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -407,7 +408,7 @@ void Fix(unsigned k) {
     At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
     // no gauge top of 0: the original faults on it (section 4), ours aborts
     for (unsigned e = 0; e < 6; ++e)
-        if (reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp == 0) reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp = 1 + Next() % 0xFFFF;
+        if (rv::As<records::BattleEnemy>(Enemy(e) - 0x80)->max_hp == 0) rv::As<records::BattleEnemy>(Enemy(e) - 0x80)->max_hp = 1 + Next() % 0xFFFF;
     for (unsigned m = 0; m < 5; ++m)
         if (Word(Member(m) + 0xA0) == 0) SetWord(Member(m) + 0xA0, 1 + Next() % 0xFFFF);
 }
@@ -428,7 +429,7 @@ unsigned Against(unsigned top) {
 unsigned Top() { return Often() ? 1 + Next() % 999 : Half() ? 1 + Next() % 4 : 1 + Next() % 0xFFFF; }
 
 void SeedEnemy(unsigned e) {
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(e) - 0x80);
     const unsigned top = Top();
     enemy_rec->max_hp = top;
     enemy_rec->hp = Against(top);
@@ -450,7 +451,7 @@ void SeedMember(unsigned m, bool ap_top_zero_often) {
 
 void Seed(unsigned k) {
     unsigned char* const w = Current();
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const window_rec = rv::As<records::WindowRecord>(w);
     switch (k) {
     case kRun: window_rec->kind = static_cast<unsigned char>(Next() % 8); break;
     case kPartyStates: case kCrossStates: case kLabelStates: case kBannerStates: case kMemberStates:

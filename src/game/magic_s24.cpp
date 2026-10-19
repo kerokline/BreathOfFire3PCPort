@@ -32,16 +32,13 @@
 #include "game/magic_harness.h"
 #include "game/magic_s24_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 namespace cell = magic_s24::cell;
@@ -146,20 +143,20 @@ void PointOf(short v[3], std::int32_t x, std::int32_t z, short height) {
 // which matters when the new slot is the current one.
 unsigned char* SpawnRingChild(unsigned parameter, unsigned phase, unsigned index, unsigned char spin) {
     unsigned char* const t = TaskSlot(MH_CALL(BattleTask_Create)(1, parameter));
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     const std::int32_t dx = Long(Mem(Fx104_ChildOffsets_addr + 8 * index));
     unsigned char* const sc = Sprite_Current;
-    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+    records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     SetPtr(t + 0x80, sc);
     t[1] = static_cast<unsigned char>(phase);
     t[0xB] = static_cast<unsigned char>(index);
     t[9] = 0;
     t[0xA] = spin;
     tsc->vel_x = dx;
-    Store(ScTask()->vel_y, Long(Mem(Fx104_ChildOffsets_addr + 8 * index + 4)));
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, Long(Mem(Fx104_ChildOffsets_addr + 8 * index + 4)));
     TurnByFacing(Sprite_Current);
     const unsigned char* const s = Sprite_Current;
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     tt->x = Add(ts->vel_x, Field_Kind2X);
     tt->y = Add(ts->vel_y, Field_Kind2Z);
     SetLong(t + 0x3C, Long(s + 0x3C));
@@ -371,7 +368,7 @@ S24_EXPORT void __cdecl Fx104_DrawFunnel(void) {
             t = Mul(t, Cos(angle)) >> 12;
             const short dx = G16(kD);
             const unsigned char* const s = Sprite_Current;
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             unsigned char* const mode = Gfx_PacketNext;
             Put16(kD + 2, t);
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
@@ -459,7 +456,7 @@ S24_EXPORT void __cdecl Fx104_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     short angles[3] = {0, 0, 0};
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     if (sc[5] == 0xC) angles[2] = static_cast<short>((Frame_Counter & 0xF) << 8);
     short v[3];
     PointOf(v, tsc->x, tsc->y, S16(sc + 0x3E));
@@ -496,7 +493,7 @@ S24_EXPORT void __cdecl Fx104_DrawDisc(void) {
         t = Mul(t, G16(kR));
         const short c0 = G16(kC);
         const unsigned char* const s = Sprite_Current;
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         Put16(kC + 4, 0);
         t >>= 12;
         Put16(kC + 2, t);
@@ -701,7 +698,7 @@ S24_EXPORT void __cdecl Fx104_DrawSphere(void) {
             const short dx = G16(kD), dz = G16(kD + 2);
             Put16(kD + 4, t >> 12);
             const unsigned char* const s = Sprite_Current;
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             const std::int32_t x = Add(Shl(dx, 9), ts->x);
             const std::int32_t z = Add(Shl(dz, 9), ts->y);
             DrawMode(0xB5);
@@ -747,7 +744,7 @@ S24_EXPORT void __cdecl Fx105_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < cell::kMotes; ++i) {
         unsigned char* const m = Mote(i);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
@@ -775,8 +772,8 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
     }
     CentreOnTargets();
     Sprite_Current[8] = Owner()[8];
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(0xFFF80000u));
-    ScTask()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0xFFF80000u));
+    rv::Current<records::BattleTask>()->vel_y = 0;
     TurnByFacing(Sprite_Current);
     unsigned char* sc = Sprite_Current;
     SetLong(sc + 0x34, Add(Long(sc + 0xC), Field_Kind2X));
@@ -786,7 +783,7 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
     const std::int32_t dz = Sub(Field_Kind2Z, Long(sc + 0x38));
     const std::int32_t dx = Sub(Field_Kind2X, Long(sc + 0x34));
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-    ScTask()->vel_x = angle;
+    rv::Current<records::BattleTask>()->vel_x = angle;
     Sprite_Current[0xB] = 0;
     for (unsigned i = 0; i < 7; ++i) {
         unsigned char* const t = TaskSlot(MH_CALL(BattleTask_Create)(1, 0x33));
@@ -832,8 +829,8 @@ S24_EXPORT void __cdecl Fx105_Orb(void) {
 // the owner's +0xC plus a word of Fx105_OrbAngles by the orb's index +4
 // (0x65B88C + 2i and 0x65B88E + 2i, unbounded); +0xB, +9, +0xA 0; +2 on.
 S24_EXPORT void __cdecl Fx105_OrbStart(void) {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     unsigned char* sc = Sprite_Current;
     SetLong(sc + 0xC, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), Long(Owner() + 0xC)));
@@ -855,9 +852,9 @@ S24_EXPORT void __cdecl Fx105_OrbEmit(void) {
         const unsigned char k = MH_AT(AllocFn, bof3::addr::Fx105_MoteAlloc)();
         if (k != 0xFF) {
             unsigned char* const m = Mote(k);
-            records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+            records::BattleTask* const tm = rv::As<records::BattleTask>(m);
             unsigned char* const s = Sprite_Current;
-            records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+            records::BattleTask* const ts = rv::As<records::BattleTask>(s);
             SetPtr(m + 0x80, s);
             m[1] = 0;
             m[2] = 0;
@@ -894,7 +891,7 @@ S24_EXPORT void __cdecl Fx105_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const short angles[3] = {0, 0, 0};
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     short v[3];
     PointOf(v, tsc->x, tsc->y, S16(sc + 0x3E));
     PushMatrix(v, angles);
@@ -907,7 +904,7 @@ S24_EXPORT void __cdecl Fx105_PushMatrix(void) {
 // ordering row of its first corner, draw mode 0x35.
 S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     const std::uint32_t colours = Fx105_OrbColours_addr + 3u * sc[4];
     for (unsigned j = 0; j < 6; ++j) {
         const unsigned char c = Mem(colours + j)[0];
@@ -915,13 +912,13 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
     }
     int t = Sin(tsc->vel_x);
     Put16(kA, Shl(t, 6) >> 12);
-    t = Cos(ScTask()->vel_x);
+    t = Cos(rv::Current<records::BattleTask>()->vel_x);
     const unsigned char* s = Sprite_Current;
     Put16(kA + 2, Shl(t, 6) >> 12);
     Put16(kA + 4, 0);
     t = Sin(Long(s + 0x10));
     Put16(kB, Shl(t, 6) >> 12);
-    t = Cos(ScTask()->vel_y);
+    t = Cos(rv::Current<records::BattleTask>()->vel_y);
     Put16(kB + 2, Shl(t, 6) >> 12);
     Put16(kB + 4, 0);
     if (Sprite_Current[9] + 1 <= 1) return;
@@ -946,14 +943,14 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         Put16(kD + 4, b4);
         t = Sin(Long(s + 0xC));
         Put16(kA, Mul(t, G16(kR)) >> 12);
-        t = Cos(ScTask()->vel_x);
+        t = Cos(rv::Current<records::BattleTask>()->vel_x);
         t = Mul(t, G16(kR)) >> 12;
         const short h = G16(kR2);
         Put16(kA + 2, t);
         Put16(kA + 4, h);
-        t = Sin(ScTask()->vel_y);
+        t = Sin(rv::Current<records::BattleTask>()->vel_y);
         Put16(kB, Mul(t, G16(kR)) >> 12);
-        t = Cos(ScTask()->vel_y);
+        t = Cos(rv::Current<records::BattleTask>()->vel_y);
         t = Mul(t, G16(kR));
         const short ax = G16(kA), az = G16(kA + 2);
         unsigned char* const mode = Gfx_PacketNext;
@@ -1018,10 +1015,10 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     Put16(kR, (sc[9] + 1) << 6);
     t = Sin(Long(sc + 0x10));
     t = (Mul(t, G16(kR)) >> 3);
-    Store(ScTask()->x, Add(t, Long(Owner() + 0x34)));
-    t = Cos(ScTask()->vel_y);
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(t, Long(Owner() + 0x34)));
+    t = Cos(rv::Current<records::BattleTask>()->vel_y);
     t = (Mul(t, G16(kR)) >> 3);
-    Store(ScTask()->y, Add(t, Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->y, Add(t, Long(Owner() + 0x38)));
     SetWord(Sprite_Current + 0x3E, Word(Owner() + 0x3E) + Word(Mem(kR2)) - 0x20u);
     sc = Sprite_Current;
     const long ground = MH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
@@ -1178,8 +1175,8 @@ S24_EXPORT void __cdecl Fx106_Start(void) {
         k[1] = 0;
         k[2] = 0;
     }
-    Store(ScTask()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
-    Store(ScTask()->y, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
     SetLong(Sprite_Current + 0x3C, Add(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C), 0x1000000));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;

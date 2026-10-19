@@ -52,6 +52,7 @@
 #include "game/effect_1e_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/sound.h"
@@ -75,7 +76,6 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
-records::PartyMember* CurPm() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
 unsigned char& B(U address) { return At(address)[0]; }
 std::int32_t L(U address) { return Long(At(address)); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
@@ -280,7 +280,7 @@ extern "C" void __cdecl LeaderPanel_S2Wait(void) {
         Effect1e_PoseWas = 0xFF;
         Effect1e_Pose = 0xFF;
         Animate(2);
-        CurPm()->z = 0x410000;
+        rv::Current<records::PartyMember>()->z = 0x410000;
         S()[9] = 0;
         S()[3] = 2;
     } else if ((Field_CancelButtons & pressed) && Effect_Objects[0x181] == 0) {
@@ -525,7 +525,7 @@ extern "C" void __cdecl LeaderPanel_S4(void) {
 extern "C" void __cdecl LeaderPanel_S4Begin(void) {
     const auto state = static_cast<unsigned char>(Effect_Objects[0x201] + 1);
     unsigned char* const p = Picked("LeaderPanel_S4Begin");
-    auto* const po = reinterpret_cast<records::SpriteObject*>(p);
+    auto* const po = rv::As<records::SpriteObject>(p);
     Effect_Objects[0x201] = state;
     Effect_Objects[0x101] = 0;
     Effect_Objects[0x206] = 2;
@@ -687,7 +687,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
 extern "C" void __cdecl LeaderPanel_S4Best(void) {
     if (Effect_Objects[0x201] == 4) {
         unsigned char* const p = Picked("LeaderPanel_S4Best");
-        auto* const po = reinterpret_cast<records::SpriteObject*>(p);
+        auto* const po = rv::As<records::SpriteObject>(p);
         unsigned char& best = B(at::kBestCounts + p[6]);
         if (po->counter > best) {
             Effect1e_Blink = 1;

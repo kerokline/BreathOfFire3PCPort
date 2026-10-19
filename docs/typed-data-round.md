@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (staged 2026-10-17; stages A and B run 2026-10-19 on
 `typed/b1`, 50,943 raw data sites down to 27,394 with the machine code
 identical to `origin/main`; stage C staged in
-[`typed-data-stage-c.md`](typed-data-stage-c.md). The idea is
+[`typed-data-stage-c.md`](typed-data-stage-c.md), its C0 run on `typed/c0`, section 3. The idea is
 [`IDEAS.md`](IDEAS.md) I44; this round is its first two stages, which change
 no behaviour. Stage 3, the relocatable image, is not staged here.)
 
@@ -271,7 +271,8 @@ Converted: 19,910 references.
   - less the 81 put back, spread over these kinds.
 
 Left raw: 11,521 references, every one in `analysis/typed_b0_left.tsv`
-(regenerated from the final tree with `--dry-run --remaining`):
+(regenerated from the final tree with `--dry-run --remaining`; since C0,
+folded into `analysis/typed_left.tsv`):
 
 | Reason | References |
 |---|---:|
@@ -340,7 +341,8 @@ the lists are outside the tree (`C:\Users\kerok\b1\`); stage C reuses them.
   Record sites 20,079 -> 15,219; all raw sites 32,265 -> 27,394.
 - **Left raw:** every site with a reason, in
   `analysis/typed_b1_<group>_left.tsv` (15,228 rows; the totals by reason
-  are in [`typed-data-stage-c.md`](typed-data-stage-c.md) 0).
+  are in [`typed-data-stage-c.md`](typed-data-stage-c.md) 0; since C0,
+  folded into `analysis/typed_left.tsv`).
 - **The family audit.** The gate cannot catch a pointer typed as the wrong
   struct when the offsets agree. Three read-only audits checked about 1,500
   typed pointers and found 13 wrong (one in magic, nine in battle's fuzz
@@ -355,6 +357,85 @@ the lists are outside the tree (`C:\Users\kerok\b1\`); stage C reuses them.
   sprite head's bytes are padding in four structs; several struct field names
   mislead (`WindowRecord::centre_x` is the top-left corner; `BattleTask::y` is
   world z).
+
+### C0 as run (2026-10-19)
+
+The consolidation of [`typed-data-stage-c.md`](typed-data-stage-c.md)
+section 2, one agent alone on the tree, on `typed/c0` from `main` 56d81b42.
+No site converted and no behaviour change.
+
+- **The shared views.** `src/game/record_views.h`, namespace `rv`, always
+  spelled qualified: about thirty files keep a local function-pointer
+  `As<T>(f)` and nine a local `Current()`, which would hide an unqualified
+  shared name. Five templates, each a cast and nothing else:
+  - `rv::As<T>(p)`: the record of family `T` at `p`, const when `p` is (the
+    rest group's const / non-const helper pairs);
+  - `rv::AsConst<T>(p)`: a read-only view of a writable pointer (the old
+    `reinterpret_cast<const records::T*>`);
+  - `rv::Current<T>()`: `Sprite_Current` as `T`, read at every call;
+  - `rv::Bytes(r)`: a typed record's own bytes, for an offset the struct
+    pads or reads at another width;
+  - `rv::Store(field, v)` / `rv::Store<P>(field, v)`: a setter's store
+    through a typed field, a call like the setter, so the field's pointer is
+    evaluated in the setter's order and not after the value as `p->f = v`
+    would be; `P` is the setter's parameter type. The header documents the
+    order.
+- **The survey.** 488 per-file helper definitions on 56d81b42, in 217 files:
+  401 typed views (`ScTask()` 49 files, `EnemyRec` 24, `CurFx` 24, `AsFx` 24,
+  `Spr` 22, `CurSprite` 17, `Fx` 14, `CurEffect` 12, `ScEnemy` 12, `Cur` 12,
+  `Win` 12, and 41 more names), 29 `Bytes(records::T*)` reverse views, 58
+  `Store` (15 effect files' `template <P, T> void Store(T&, P)`, 43 magic
+  files' `void Store(std::int32_t&, std::int32_t)`). Every one was a pure
+  cast of an expression (`Sprite_Current`, `p`, `Party(i)`, `Party(a) -
+  0x10`, `Enemy(a) + at::kEObject`, `Member(slot) - 0x80`, ...), a call of
+  another view (`Obj(n)` = `Spr(Object(n))`), or the store. All 488 went;
+  none needed to stay. The list with each replacement is in the round's
+  scratch (`C:\Users\kerok\c_typed\c0\survey.tsv`).
+- **The move.** A script replaced each call with its body under the shared
+  name, the arguments put in place of the parameters (`PartyRec(a)` became
+  `rv::As<records::PartyMember>(Party(a) - 0x10)`), and the 1,137 inline
+  `reinterpret_cast<records::T*>` locals with `rv::As` / `rv::AsConst`, in
+  seven batches by group (256 files). The tree now spells 3,059 `rv::As`, 244
+  `rv::AsConst`, 1,786 `rv::Current`, 431 `rv::Bytes` and 361 `rv::Store`.
+  The family notes beside the helpers stay where they were, reworded for the
+  shared names. After every batch the full build and `codegen_same.py`
+  against a `main` 56d81b42 build printed `640 objects compared, 0 differ`.
+- **`tools/typed_convert.py`.** Two zero-width insertions at one offset each
+  lay within the other, so `render` dropped both (B1's effect group: 34
+  false gate failures); they are merged in site order. An insertion at the
+  edge of a replaced span was dropped the same way and now renders beside
+  it. `--selftest` checks the renderer on ten cases (six failed before).
+- **One left-raw list.** `tools/typed_left.py` writes
+  `analysis/typed_left.tsv` from the tree: one row per census site (27,408),
+  keyed by file, function, shape, accessor, address expression and an
+  ordinal, with the reason, evidence and source carried by key, so a list
+  no longer goes stale with an edit; `--check` says whether the committed
+  file is current. It replaces `analysis/typed_b0_left.tsv` and the seven
+  `analysis/typed_b1_<group>_left.tsv` (B0 and B1 above cite them; they are
+  in git history at `56d81b42`). `typed_left.py import` built it once,
+  carrying each old row's line from the tree its list was written against
+  by a line diff and matching it to the census site there by offset or
+  constant: 25,501 of the 26,745 rows landed. The 1,244 that did not are
+  1,234 of B0's bare module-constant references, which the census does not
+  count; 9 B1 `audit-family` rows on subscript writes (`p[k] = v`), which
+  the census does not count either; and one B1 `gate` row in
+  `save_menu.cpp` whose site the quicksave round has since typed. 1,914
+  sites carry no reason yet (`-`): 1,827 raw-literal sites no list covered,
+  56 global, 31 record.
+- **The census.** 27,407 -> 27,408. Not a new access: deleting `Dir()` in
+  `save_menu.cpp` uncovered one record site it had hidden from the census's
+  accessor scan, `At(dir + n * at::kDirectoryBytes)` (now under
+  `rv::As<records::SaveDirEntry>`). `data_census.py --check` fails by that
+  one until the census is regenerated.
+- **For C1 and C2.** The event, scenario and field dialects viewed any
+  sprite-family pointer as `SpriteObject` (`Spr(p)`, the field's typed
+  `Sprite_Current`) and used it below +0x80 only; those are now
+  `rv::As<records::SpriteObject>` / `rv::Current<records::SpriteObject>()`
+  on party members, kind-2 objects and enemies too, sound only for the head:
+  they want C1's `SpriteHead`. The 431 `rv::Bytes` sites are offsets the
+  structs pad or read at another width: mostly the 16.16 halves +0x36 /
+  +0x3A / +0x3E (86), +0x14 and +0x20 (46), +0x34 / +0x38 read as words
+  (30).
 
 ## 4. Stage C
 
@@ -371,6 +452,7 @@ and the census's strict rule.
 |---|---|
 | `tools/data_census.py`, `analysis/data_census.tsv`, the CI rule | CS |
 | `src/game/records.h` | SD |
+| `src/game/record_views.h` (the shared typed views, `rv::`) | C0 |
 | `symbols.toml` `[[data]]` entries | SG in stage A; in stage B each file group adds only entries its own files need, merged by entry keyed on `pc`, then a `tomllib` check |
 | `tools/gen_symbols.py` | SG in stage A, stage C's group after |
 | each source file | its file group in stage B, one owner |

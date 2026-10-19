@@ -51,6 +51,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -155,7 +156,7 @@ unsigned char* TexturedQuad() {
 // for it.
 void LinkAtRecord(int dy, unsigned size) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), dy, size);
 }
 
@@ -255,7 +256,7 @@ namespace {
 // each, as the original does - no call between).
 void Place(U dx, U dz, U height, U level) {
     unsigned char* const s = S();
-    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    auto* const so = rv::As<records::EffectObject>(s);
     so->x = Sar(UL(s + 0xC) + dx, 9) - 0x4000u;
     so->z = Sar(UL(s + 0x10) + dz, 9) - 0x4000u;
     so->height = height;

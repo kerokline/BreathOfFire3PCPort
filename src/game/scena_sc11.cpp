@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc11_callees.h"
 #include "game/scenario_harness.h"
@@ -77,14 +78,13 @@ VoidFn Entry(std::uint32_t table, int index) {
 unsigned char* Flags() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
 unsigned char* EffectRecord(unsigned slot) { return Effect_Objects + ((slot & 0xFFu) << 7); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 
 void CallA(unsigned n) { SH_CALL(Scenario_CallA)(n); }
 void CallB(unsigned n) { SH_CALL(Scenario_CallB)(n); }
@@ -516,7 +516,7 @@ SC11_EXPORT void __cdecl Scena11_EffectAnimate(unsigned slot) {
     Sprite_Current[0x2A] = 0;
     Sprite_Current[0x2B] = static_cast<unsigned char>(Sprite_Current[0x2B] + 1);
     Sprite_Current[0x48] = 0;
-    SC()->step_y = 0;
+    rv::Current<records::SpriteObject>()->step_y = 0;
     SetLong(Sprite_Current + 0x20, -8);
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
@@ -547,9 +547,9 @@ SC11_EXPORT void __cdecl Scena11_Scene4(void) {
         unsigned char* const e = EffectRecord(B(kSlot));
         e[0] = 1;
         e[5] = 0x34;
-        Fx(e)->x = 0x250000;
-        Fx(e)->z = 0xB0000;
-        Fx(e)->height = 0x5000000;
+        rv::As<records::EffectObject>(e)->x = 0x250000;
+        rv::As<records::EffectObject>(e)->z = 0xB0000;
+        rv::As<records::EffectObject>(e)->height = 0x5000000;
         const unsigned roll = static_cast<unsigned>(SH_CALL(Rand)()) & 0xFu;
         const unsigned char kind = Scena11_EffectRolls[roll];
         EffectRecord(B(kSlot))[1] = kind;
@@ -708,16 +708,16 @@ SC11_EXPORT void __cdecl Scena11_Scene5(void) {
         EffectRecord(p[0xB])[0] = 1;
         EffectRecord(p[0xB])[5] = 6;
         EffectRecord(p[0xB])[6] = 3;
-        Fx(EffectRecord(p[0xB]))->step_x = 0;
-        Fx(EffectRecord(p[0xB]))->step_z = 0x3A;
+        rv::As<records::EffectObject>(EffectRecord(p[0xB]))->step_x = 0;
+        rv::As<records::EffectObject>(EffectRecord(p[0xB]))->step_z = 0x3A;
         {
             unsigned char* const e = EffectRecord(p[0xB]);
-            Fx(e)->screen_x = static_cast<std::uint16_t>(Spr(p)->screen_x);
+            rv::As<records::EffectObject>(e)->screen_x = static_cast<std::uint16_t>(rv::As<records::SpriteObject>(p)->screen_x);
         }
         unsigned char* const e = EffectRecord(p[0xB]);
-        const unsigned w = static_cast<std::uint16_t>(Spr(p)->screen_y);
+        const unsigned w = static_cast<std::uint16_t>(rv::As<records::SpriteObject>(p)->screen_y);
         MoveScript_PartyRecords[0x65] = 0xA;
-        Fx(e)->screen_y = w;
+        rv::As<records::EffectObject>(e)->screen_y = w;
         return;
     }
     case 10:
@@ -1022,7 +1022,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         if (!TakeSlot()) return;
         MoveScript_PartyRecords[0x65] = 4;
         unsigned char* const e = Place(0x31, -0x2AA, 0x200, 0xFF);
-        Fx(e)->step_x = 0;
+        rv::As<records::EffectObject>(e)->step_x = 0;
         return;
     }
     case 4:
@@ -1123,7 +1123,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         B(kCounter3) = B(kSlot);
         MoveScript_PartyRecords[0x65] = 0x13;
         unsigned char* const e = Place(0x31, -0x370, 0x258, 0x3C);
-        Fx(e)->step_x = 0x580;
+        rv::As<records::EffectObject>(e)->step_x = 0x580;
         return;
     }
     case 19:
@@ -1147,7 +1147,7 @@ SC11_EXPORT void __cdecl Scena11_Scene8(void) {
         B(kCounter3) = B(kSlot);
         MoveScript_PartyRecords[0x65] = 0x16;
         unsigned char* const e = Place(0x31, -0x386, 0xE2, 0x3C);
-        Fx(e)->step_x = 0;
+        rv::As<records::EffectObject>(e)->step_x = 0;
         return;
     }
     case 22:

@@ -40,6 +40,7 @@
 #include "game/effect_2c_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -58,14 +59,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
-records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
-records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-const records::EffectObject* AsFx(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
-// A setter's store through a typed field: the record's address is evaluated
-// before the value, as the setter call evaluates its arguments, and the value
-// goes through the setter's parameter type P.
-template <typename P, typename T>
-void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -187,8 +180,8 @@ extern "C" void __cdecl EffectKind3E_Run(void) {
 // original 0x474F60 (state 0): the point (+0x34, +0x38) = (0x318000, 0x638000),
 // the heights +0x20 and +0x14 = 0x500000; Sound_PlayById(0x208); +1 up, +2 = 0.
 extern "C" void __cdecl EffectKind3E_Start(void) {
-    CurFx()->x = 0x318000;
-    CurFx()->z = 0x638000;
+    rv::Current<records::EffectObject>()->x = 0x318000;
+    rv::Current<records::EffectObject>()->z = 0x638000;
     SetUL(S() + 0x20, 0x500000);
     SetUL(S() + 0x14, 0x500000);
     SH_CALL(Sound_PlayById)(0x208);
@@ -616,9 +609,9 @@ extern "C" void __cdecl EffectKind40_DrawDisc(unsigned radius) {
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* s = S();
     alignas(4) unsigned char q[12];
-    SetUL(q, static_cast<std::uint32_t>(AsFx(s)->x));
-    SetUL(q + 4, static_cast<std::uint32_t>(AsFx(s)->z));
-    SetUL(q + 8, static_cast<std::uint32_t>(AsFx(s)->height));
+    SetUL(q, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
+    SetUL(q + 4, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     alignas(4) unsigned char c[12];
     alignas(4) unsigned char p[12];
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(c));
@@ -628,11 +621,11 @@ extern "C" void __cdecl EffectKind40_DrawDisc(unsigned radius) {
     SetUL(at::kDiscCentre + 4, UL(c + 4));
     SetUL(at::kDiscCentre + 8, UL(c + 8));
     U v = MulSar(SH_CALL(Math_Cos)(static_cast<int>(angle)), r, 4);
-    SetUL(q, v + static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(q, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
     v = MulSar(SH_CALL(Math_Sin)(static_cast<int>(angle)), r, 4);
     s = S();
-    SetUL(q + 4, v + static_cast<std::uint32_t>(AsFx(s)->z));
-    SetUL(q + 8, static_cast<std::uint32_t>(AsFx(s)->height));
+    SetUL(q + 4, v + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(p));
     U rim = EffectKind30_Shards_addr + 0x30c;
     for (unsigned n = 0x20; n != 0; --n) {
@@ -644,11 +637,11 @@ extern "C" void __cdecl EffectKind40_DrawDisc(unsigned radius) {
         Copy12(prim + 0x18, p);
         const U t = angle & 0xFFFFu;
         v = MulSar(SH_CALL(Math_Cos)(static_cast<int>(t)), r, 4);
-        SetUL(q, v + static_cast<std::uint32_t>(CurFx()->x));
+        SetUL(q, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
         v = MulSar(SH_CALL(Math_Sin)(static_cast<int>(t)), r, 4);
         s = S();
-        SetUL(q + 4, v + static_cast<std::uint32_t>(AsFx(s)->z));
-        SetUL(q + 8, static_cast<std::uint32_t>(AsFx(s)->height));
+        SetUL(q + 4, v + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+        SetUL(q + 8, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
         SH_CALL(EffectGte_ProjectPoint)(Point(q), Out(p));
         Copy12(prim + 0x28, p);
         Copy12(At(rim), p);
@@ -674,7 +667,7 @@ extern "C" void __cdecl EffectKind42_Run(void) {
 // record's point; +1 stays (the record runs until something releases it).
 extern "C" void __cdecl EffectKind42_Glow(void) {
     const unsigned char* const s = S();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     alignas(4) long point[4];
     point[0] = so->x;
     point[1] = so->z;
@@ -738,12 +731,12 @@ extern "C" void __cdecl EffectKind43_Fade(void) {
 // the ground (AreaMap_Elevation's s16 << 16 into +0x3C); the 256 spark records
 // of 0x1C at 0x92BF80 out of use.
 extern "C" void __cdecl EffectKind43_Setup(void) {
-    CurFx()->x = 0x250000;
-    CurFx()->z = 0x748000;
+    rv::Current<records::EffectObject>()->x = 0x250000;
+    rv::Current<records::EffectObject>()->z = 0x748000;
     const unsigned char* const s = S();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     const long ground = SH_CALL(AreaMap_Elevation)(so->x, so->z);
-    Store<U>(CurFx()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(ground))) << 16);
     for (unsigned i = 0; i < at::kSparkCount43; ++i) At(EffectKind30_Shards_addr + i * at::kSparkStride43)[0] = 0;
 }
 
@@ -794,9 +787,9 @@ extern "C" unsigned char __cdecl EffectKind43_SparksRun(void) {
             const unsigned char* const s = S();
             const bool side = r[3] != 0;
             r[1] = 0x20;
-            SetUL(r + 0xC, static_cast<std::uint32_t>(AsFx(s)->x));
-            SetUL(r + 0x10, (side ? 0x50000u : 0u) + 0xFFFD8000u + static_cast<std::uint32_t>(AsFx(s)->z));
-            SetUL(r + 0x14, static_cast<std::uint32_t>(AsFx(s)->height) + 0x1800000u);
+            SetUL(r + 0xC, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
+            SetUL(r + 0x10, (side ? 0x50000u : 0u) + 0xFFFD8000u + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+            SetUL(r + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0x1800000u);
             const U v = ((static_cast<U>(SH_CALL(Rand)()) & 0x1FFu) - 0x180u) << 16;
             SetUL(r + 4, static_cast<U>(DivPow2(v, 5)));
             r[2] = static_cast<unsigned char>(r[2] + 1);
@@ -820,10 +813,10 @@ extern "C" unsigned char __cdecl EffectKind43_SparksRun(void) {
         case 2:
         case 3: {
             const int c = SH_CALL(Math_Cos)(static_cast<int>(Word(r + 8)));
-            SetUL(r + 0xC, ((static_cast<U>(c) - 0x5800u) << 4) + static_cast<std::uint32_t>(CurFx()->x));
+            SetUL(r + 0xC, ((static_cast<U>(c) - 0x5800u) << 4) + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
             const int sn = SH_CALL(Math_Sin)(static_cast<int>(Word(r + 8)));
             const unsigned char* const s = S();
-            SetUL(r + 0x10, (static_cast<U>(sn) << 4) + static_cast<std::uint32_t>(AsFx(s)->z));
+            SetUL(r + 0x10, (static_cast<U>(sn) << 4) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
             const unsigned char count = r[1];
             SetWord(r + 8, ((r[3] != 0 ? 0x80u : 0xFF80u) + Word(r + 8)) & 0xFFFu);
             if (r[2] == 2) {
@@ -910,7 +903,7 @@ extern "C" void __cdecl EffectKind6B_Capture(void) {
         return;
     }
     unsigned char* const e = NewRecord("EffectKind6B_Capture", found);
-    auto* const eo = reinterpret_cast<records::EffectObject*>(e);
+    auto* const eo = rv::As<records::EffectObject>(e);
     SH_CALL(Gfx_ClearRect)(0x340, 0x100, 0x80, 0x100);
     for (unsigned i = 0; i < at::kEffectStride; i += 4) SetUL(e + i, UL(at::kSprite2 + i));
     e[0] = 1;
@@ -1086,11 +1079,11 @@ extern "C" void __cdecl EffectKind44_Run(void) {
 // 0x800 up (+8 + 0x8000000) and centre the record's point, radius 0, shades
 // 0x20 and 0; the sparks cleared (EffectKind44_SparksClear); +9 = 0x10, +1 up.
 extern "C" void __cdecl EffectKind44_Start(void) {
-    Store<U>(CurFx()->x, UL(at::kSprite1Point));
-    Store<U>(CurFx()->z, UL(at::kSprite1Point + 4));
-    Store<U>(CurFx()->height, UL(at::kSprite1Point + 8));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(at::kSprite1Point));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(at::kSprite1Point + 4));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(at::kSprite1Point + 8));
     const unsigned char* const s = S();
-    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
+    auto* const so = rv::AsConst<records::EffectObject>(s);
     SetUL(at::kRingCell, EffectKind30_Shards_addr);
     SetUL(at::kShards, static_cast<std::uint32_t>(so->x));
     SetUL(at::kShards + 4, static_cast<std::uint32_t>(so->z));
@@ -1412,17 +1405,17 @@ extern "C" void __cdecl EffectKind44_SparkEmit(void) {
     const unsigned frame = Frame_Counter & 0xFFu;
     SetUL(at::kSparkCursor, AddressOf(found));
     if ((frame & 3u) != 0 || found == nullptr) return;
-    SetUL(found + 0x18, static_cast<std::uint32_t>(CurFx()->x));
-    SetUL(EffectKind44_SparkCursor + 0x1C, static_cast<std::uint32_t>(CurFx()->z));
-    SetUL(EffectKind44_SparkCursor + 0x20, static_cast<std::uint32_t>(CurFx()->height) + 0x6000000u);
+    SetUL(found + 0x18, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
+    SetUL(EffectKind44_SparkCursor + 0x1C, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
+    SetUL(EffectKind44_SparkCursor + 0x20, static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->height) + 0x6000000u);
     U e = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     U spread = static_cast<U>(SH_CALL(Rand)()) & 0x1FFu;
     e &= 0xFFFFu;
     spread -= 0x100u;
     U v = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(e))) << 8;
-    SetUL(EffectKind44_SparkCursor + 0x28, v + static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(EffectKind44_SparkCursor + 0x28, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->x));
     v = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(e))) << 8;
-    SetUL(EffectKind44_SparkCursor + 0x2C, v + static_cast<std::uint32_t>(CurFx()->z));
+    SetUL(EffectKind44_SparkCursor + 0x2C, v + static_cast<std::uint32_t>(rv::Current<records::EffectObject>()->z));
     const unsigned char* q = EffectKind44_SparkCursor;
     const long ground = SH_CALL(AreaMap_Elevation)(Long(q + 0x28), Long(q + 0x2C));
     const U angle = static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(spread))) + e + 0x800u;

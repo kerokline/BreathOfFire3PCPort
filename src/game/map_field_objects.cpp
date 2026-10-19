@@ -32,6 +32,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/map_field_objects_callees.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -121,8 +122,7 @@ U OtSlot() { return Byte(at::OtSlotAt()); }
 U SpriteCurrent() { return Dword(At(Sprite_Current_addr)); }
 unsigned char* Sprite() { return At(SpriteCurrent()); }
 
-// EventOp_8x's object, a Sprite_Objects record, typed (src/game/records.h).
-records::SpriteObject* Obj() { return reinterpret_cast<records::SpriteObject*>(Sprite()); }
+// EventOp_8x's object, Sprite(), is a Sprite_Objects record.
 
 // The slot a cell handler commits to: 6 when the record's top nibble is set
 // (kinds 0x10 and up), else Draw_OtSlot - zero-extended from its byte.
@@ -626,22 +626,22 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     SetWord(At(kScratchBank), (static_cast<U>(op[1]) << 8) | op[2]);
     g.obj_reset();
     g.set_bank(Word(At(kScratchBank)));
-    Obj()->flags = 1;
+    rv::As<records::SpriteObject>(Sprite())->flags = 1;
     SetDword(Sprite() + 0x34, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
-    SetDword(At(Sprite_Objects_addr + 0x8c + S16(Word(At(kScratchX))) * kObjectStride), static_cast<U>(Obj()->x));
+    SetDword(At(Sprite_Objects_addr + 0x8c + S16(Word(At(kScratchX))) * kObjectStride), static_cast<U>(rv::As<records::SpriteObject>(Sprite())->x));
     SetDword(Sprite() + 0x38, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
     {
-        records::SpriteObject* const s = Obj();
+        records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
         const U n = S16(Word(At(kScratchX))) * kObjectStride;
         SetDword(At(Sprite_Objects_addr + 0x90 + n), static_cast<U>(s->z));
         SetDword(At(Sprite_Objects_addr + 0x94 + n), 0);
         const long elevation = g.elevation(static_cast<long>(static_cast<U>(s->x)), static_cast<long>(static_cast<U>(s->z)));
         SetWord(Sprite() + 0x3E, static_cast<U>(elevation));
     }
-    Obj()->state = op[8];
+    rv::As<records::SpriteObject>(Sprite())->state = op[8];
     Sprite()[2] = op[0xA];
-    Obj()->direction = static_cast<unsigned char>(op[0] & 0xF);
-    Obj()->type = static_cast<unsigned char>(op[0] >> 4);
+    rv::As<records::SpriteObject>(Sprite())->direction = static_cast<unsigned char>(op[0] & 0xF);
+    rv::As<records::SpriteObject>(Sprite())->type = static_cast<unsigned char>(op[0] >> 4);
     {
         const U n = S16(Word(At(kScratchX))) * kObjectStride;
         SetWord(At(Sprite_Objects_addr + 0x88 + n), 0xFFFF);
@@ -649,16 +649,16 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
         At(Sprite_Objects_addr + 0xa0 + n)[0] = 0x7F;
     }
     g.set_flags(op + 0xB);
-    if (op[3] & 0x80) Obj()->flags = static_cast<unsigned char>(Obj()->flags | 0x20);
-    Obj()->shade[0] = 0;
-    Obj()->shade[2] = 0;
-    Obj()->shade[1] = 0;
-    Obj()->draw_mode = static_cast<unsigned char>(op[3] & 0xF);
+    if (op[3] & 0x80) rv::As<records::SpriteObject>(Sprite())->flags = static_cast<unsigned char>(rv::As<records::SpriteObject>(Sprite())->flags | 0x20);
+    rv::As<records::SpriteObject>(Sprite())->shade[0] = 0;
+    rv::As<records::SpriteObject>(Sprite())->shade[2] = 0;
+    rv::As<records::SpriteObject>(Sprite())->shade[1] = 0;
+    rv::As<records::SpriteObject>(Sprite())->draw_mode = static_cast<unsigned char>(op[3] & 0xF);
     {
-        records::SpriteObject* const s = Obj();
+        records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
         s->pose = static_cast<unsigned char>((s->flags2 >> 4) & 1);
     }
-    g.set_animation(Obj()->direction);
+    g.set_animation(rv::As<records::SpriteObject>(Sprite())->direction);
     {
         unsigned char* const s = Sprite();
         g.set_byte(Word(s + 0x36), Word(s + 0x3A), 0x10);

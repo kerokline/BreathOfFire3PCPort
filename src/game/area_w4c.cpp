@@ -27,12 +27,12 @@
 #include "game/area_harness.h"
 #include "game/area_w4c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w4c::at;
 using area_harness::Mem;
@@ -78,7 +78,7 @@ unsigned char ActiveMemberIndex() {
 // index byte, word +0x2E = `word2E`, word +0x30 = 0xA5.
 void Effect9D(const char* who, unsigned slot, unsigned char sub, unsigned char index, unsigned word2E) {
     unsigned char* const e = EffectAt(who, slot);
-    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    auto* const tE = rv::As<records::EffectObject>(e);
     e[0] = 1;
     e[5] = 0x9D;
     e[6] = sub;
@@ -114,7 +114,7 @@ void EffectA2(const char* who, unsigned char state) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     Sprite_Current[0xB] = slot;
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     if (cur[0xB] == 0xFF) {
         ScriptStep(0xFFFE);
         return;
@@ -401,7 +401,7 @@ extern "C" void __cdecl Area174_ScriptAnimationAt(void) {
     const unsigned offset = Word(MoveScript_Object + 0xA);
     const unsigned char pose = script[offset + 3];
     const unsigned char animation = script[offset + 2];
-    const auto start = static_cast<unsigned short>(CurSprite()->script_pos - 2u);
+    const auto start = static_cast<unsigned short>(rv::Current<records::SpriteObject>()->script_pos - 2u);
     AH_CALL(Sprite_SetAnimationAt)(animation, start);
     Sprite_Current[0x2A] = pose;
     ScriptStep(2);
@@ -412,7 +412,7 @@ extern "C" void __cdecl Area174_ScriptAnimationAt(void) {
 // at 2: Sprite_SetAnimationAt(the script's byte +2, 0), +0x2A = the script's
 // byte +3, the script on 2; else the script back 2.
 extern "C" void __cdecl Area174_ScriptAnimationOn2(void) {
-    if (CurSprite()->script_pos != 2) {
+    if (rv::Current<records::SpriteObject>()->script_pos != 2) {
         ScriptStep(0xFFFE);
         return;
     }
@@ -445,7 +445,7 @@ extern "C" void __cdecl Area174_StepByScript(void) {
     const unsigned char limit = B(at::kStepLimit);
     const unsigned char b = script[offset + 2];
     unsigned char* const cur = Sprite_Current;
-    auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    auto* const tCur = rv::As<records::SpriteObject>(cur);
     if (limit < b) {
         const auto dx = static_cast<signed char>(B(Area174_StepDeltas_addr + (cur[0xA] & 0xF)));
         tCur->x = static_cast<std::int32_t>(static_cast<U>(tCur->x) + (static_cast<U>(dx) << 11));

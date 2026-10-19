@@ -41,6 +41,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_si_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -58,9 +59,8 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
-// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
+// the slot in an effect task.
 unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -100,10 +100,10 @@ unsigned long HookDispatch(const char* who, U table, unsigned word) {
 // again for each store) +0xFC = its animation bytes, +0xF4 = its hook, +0xF8 =
 // its cue words, then its +0x114 |= 8 (the dword), and Sprite_Current +1 = 2.
 void EnterStores(U fc, U hook, U f8) {
-    EnemyRec()->anim_table = S(fc);
-    EnemyRec()->event_hook = S(hook);
-    EnemyRec()->cue_table = S(f8);
-    auto* const enemy_rec = EnemyRec();
+    rv::As<records::BattleEnemy>(Enemy())->anim_table = S(fc);
+    rv::As<records::BattleEnemy>(Enemy())->event_hook = S(hook);
+    rv::As<records::BattleEnemy>(Enemy())->cue_table = S(f8);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8u);
     Sprite_Current[1] = 2;
 }
@@ -175,7 +175,7 @@ extern "C" void __cdecl BossAmmonite_Enter(void) {
     const unsigned char* const bits = At(static_cast<U>(Long(At(0x929ED0))));
     if (BH_CALL(Flags_Test)(bits, 2) == 0) return;
     const unsigned id = BH_CALL(EnemyData_FindByTag)(0x96);
-    const unsigned slot = static_cast<unsigned char>(EnemyRec()->actor - 3);
+    const unsigned slot = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Enemy())->actor - 3);
     BH_CALL(Battle_CopyEnemyData)(slot, id);
 }
 
@@ -430,7 +430,7 @@ extern "C" unsigned long __cdecl BossArwan_State4Dispatch(unsigned word) {
 // (read after the call), and its +2 up by one (the step then waits on
 // BareRet: the task moves the enemy to state 5).
 extern "C" void __cdecl BossArwan_State4Fx(void) {
-    const unsigned type = EnemyRec()->data_id;
+    const unsigned type = rv::As<records::BattleEnemy>(Enemy())->data_id;
     Sprite_Current[9] = At(at::kEnemyDataCount + at::kEnemyDataStride * type)[0];
     const unsigned slot = BH_CALL(BattleTask_Create)(3, 7) & 0xFF;
     if (slot >= at::kTaskCount)
@@ -471,7 +471,7 @@ extern "C" void __cdecl Boss51_End(void) { EndStep(0xF); }
 // them (the original calls through its caller's frame); the entry's eax back.
 extern "C" unsigned long __cdecl BossArwanFx_Dispatch(void) {
     static const U kSteps[] = {at::kFxStart, at::kFxCount, at::kFxFinish, at::kFxDone};
-    const unsigned step = ScTask()->state;
+    const unsigned step = rv::Current<records::BattleTask>()->state;
     if (step >= 4)
         bof3::Fatal("BossArwanFx_Dispatch: step +1 is %u, past the 4 of its stack table - the original calls through its "
                     "caller's frame (docs/boss_si.md section 6)",

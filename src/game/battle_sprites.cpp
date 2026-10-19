@@ -34,6 +34,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_sprites_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -106,9 +107,6 @@ unsigned char Target() { return At(at::kTarget)[0]; }
 void SetTarget(unsigned char t) { At(at::kTarget)[0] = t; }
 void OrLong(unsigned char* at, std::uint32_t bits) { SetLong(at, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(at)) | bits)); }
 unsigned char* EnemyData(std::uint32_t id) { return At(at::kEnemyData + id * at::kEnemyDataStride); }
-records::PartyMember* PartyRec(std::uint32_t i) { return reinterpret_cast<records::PartyMember*>(Party(i)); }
-records::BattleEnemy* EnemyRec(std::uint32_t i) { return reinterpret_cast<records::BattleEnemy*>(Enemy(i)); }
-records::EnemyData* EnemyDataRec(std::uint32_t id) { return reinterpret_cast<records::EnemyData*>(EnemyData(id)); }
 
 // The four action ids that want a target that is out (Battle_ActionSuitsTarget,
 // Battle_MemberOutAction): by their shape revivals - unconfirmed.
@@ -181,7 +179,7 @@ extern "C" void __cdecl Battle_SetTargetFlags(unsigned target, unsigned bits) {
             for (unsigned i = 0; i <= 2; ++i) {
                 if (g.actor_out(i)) continue;
                 OrLong(Party(i) + 0x130, low);
-                PartyRec(i)->state[0] = 0xB;
+                rv::As<records::PartyMember>(Party(i))->state[0] = 0xB;
                 g.mark_actor(i);
             }
         }
@@ -189,7 +187,7 @@ extern "C" void __cdecl Battle_SetTargetFlags(unsigned target, unsigned bits) {
             for (unsigned i = 3; i <= 10; ++i) {
                 if (g.actor_out(i)) continue;
                 OrLong(Enemy(i - 3) + 0x110, low);
-                EnemyRec(i - 3)->state[0] = 0xB;
+                rv::As<records::BattleEnemy>(Enemy(i - 3))->state[0] = 0xB;
                 g.mark_actor(i);
             }
         }
@@ -198,10 +196,10 @@ extern "C" void __cdecl Battle_SetTargetFlags(unsigned target, unsigned bits) {
     if (g.actor_out(target)) return;
     if (t <= 2) {
         OrLong(Party(t) + 0x130, low);
-        PartyRec(t)->state[0] = 0xB;
+        rv::As<records::PartyMember>(Party(t))->state[0] = 0xB;
     } else {
         OrLong(Enemy(t - 3u) + 0x110, low);
-        EnemyRec(t - 3u)->state[0] = 0xB;
+        rv::As<records::BattleEnemy>(Enemy(t - 3u))->state[0] = 0xB;
     }
     g.mark_actor(target);
 }
@@ -228,9 +226,9 @@ extern "C" void __cdecl Battle_SetTargetFlag40(unsigned target) {
 // any of bits 4..7 in its flags' low byte, party first; else 0.
 extern "C" unsigned char __cdecl Battle_AnyFlagF0(void) {
     for (unsigned i = 0; i <= 2; ++i)
-        if ((PartyRec(i)->flags & 1) && (Party(i)[0x130] & 0xF0)) return 1;
+        if ((rv::As<records::PartyMember>(Party(i))->flags & 1) && (Party(i)[0x130] & 0xF0)) return 1;
     for (unsigned i = 3; i <= 10; ++i)
-        if ((EnemyRec(i - 3)->flags & 1) && (Enemy(i - 3)[0x110] & 0xF0)) return 1;
+        if ((rv::As<records::BattleEnemy>(Enemy(i - 3))->flags & 1) && (Enemy(i - 3)[0x110] & 0xF0)) return 1;
     return 0;
 }
 
@@ -281,7 +279,7 @@ extern "C" unsigned char __cdecl Battle_PickFlag8Member(void) {
         pick = passed[g.rand() % static_cast<int>(count)];
     }
     OrLong(Party(pick) + 0x130, 8);
-    PartyRec(pick)->state[0] = 0xA;
+    rv::As<records::PartyMember>(Party(pick))->state[0] = 0xA;
     return 1;
 }
 
@@ -307,7 +305,7 @@ extern "C" unsigned char __cdecl Battle_MemberCoinFlip(unsigned i) {
 extern "C" unsigned char __cdecl Battle_SettleFlag8(void) {
     unsigned char answer = 0;
     for (unsigned i = 0; i <= 2; ++i) {
-        auto* const member_rec = PartyRec(i);
+        auto* const member_rec = rv::As<records::PartyMember>(Party(i));
         if (g.actor_out(i)) continue;
         const std::uint32_t flags = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130));
         if (!(flags & 8)) {
@@ -378,7 +376,7 @@ extern "C" void __cdecl Formation_ApplyStatMods(void) {
 extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
     const unsigned slot = g.popup_slot(0, 1);
     unsigned char* const rec = At(at::kPopups + (slot & 0xFFu) * at::kPopupStride);
-    auto* const popup = reinterpret_cast<records::BattleTask*>(rec);
+    auto* const popup = rv::As<records::BattleTask>(rec);
     rec[0xB] = 0;
     const unsigned char who = static_cast<unsigned char>(actor);
     unsigned char bits;
@@ -386,7 +384,7 @@ extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
         bits = Party(who)[0x12C];
         popup->owner = Address(Party(who));
     } else {
-        bits = EnemyRec(who - 3u)->shown;
+        bits = rv::As<records::BattleEnemy>(Enemy(who - 3u))->shown;
         popup->owner = Address(Enemy(who - 3u));
     }
     const std::int32_t value = static_cast<short>(amount);
@@ -426,7 +424,7 @@ extern "C" void __cdecl Battle_SetDamagePopup(unsigned amount, unsigned actor) {
 // nothing.
 extern "C" void __cdecl Battle_MemberAutoTarget(unsigned member) {
     unsigned char* const p = Party(member & 0xFFu);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+    auto* const member_rec = rv::As<records::PartyMember>(p);
     At(at::kAutoMode)[0] = p[0x125];
     if ((p[0x90] & 0x20) || (static_cast<std::int32_t>(member_rec->flags_134) & 0x14000) || (p[0x134] & 1)) {
         if (!g.auto_allowed(member)) {
@@ -537,7 +535,7 @@ extern "C" unsigned char __cdecl Battle_MemberOutAction(unsigned i) {
 extern "C" void __cdecl Battle_PlayHitSound(void) {
     const unsigned critical = At(at::kBattleFlags)[0] >> 7;
     const unsigned char actor = At(at::kActor)[0];
-    const unsigned hit_class = actor <= 2 ? At(at::kHitClass)[PartyRec(actor)->weapon * 0x1Cu] : EnemyRec(actor - 3u)->hit_class;
+    const unsigned hit_class = actor <= 2 ? At(at::kHitClass)[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu] : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;
     g.play_effect(Word(At(at::kHitSounds + (hit_class + critical * 7) * 2)));
 }
 
@@ -554,11 +552,11 @@ extern "C" void __cdecl Battle_SetHitPopup(void) {
     const unsigned char actor = At(at::kActor)[0];
     const unsigned char* const block = Ptr(At(BattleSprites_HitBlock_addr));
     unsigned char* const rec = At(at::kPopups + slot * at::kPopupStride);
-    auto* const popup = reinterpret_cast<records::BattleTask*>(rec);
+    auto* const popup = rv::As<records::BattleTask>(rec);
     unsigned char* const s = Sprite_Current;
     popup->owner = Address(s);
-    if (actor <= 2) popup->mode = (block[0xC] & 2) ? 7 : At(at::kHitClass)[PartyRec(actor)->weapon * 0x1Cu];
-    else popup->mode = (block[0xC] & 2) ? 7 : EnemyRec(actor - 3u)->hit_class;
+    if (actor <= 2) popup->mode = (block[0xC] & 2) ? 7 : At(at::kHitClass)[rv::As<records::PartyMember>(Party(actor))->weapon * 0x1Cu];
+    else popup->mode = (block[0xC] & 2) ? 7 : rv::As<records::BattleEnemy>(Enemy(actor - 3u))->hit_class;
     if (s[5] > 2) {
         const unsigned char* const offsets = Ptr(At(BattleE3_CurrentEnemy_addr));
         SetWord(rec + 0x2E, static_cast<unsigned>(static_cast<signed char>(offsets[0xF2]) + Word(s + 0x2E)));
@@ -778,17 +776,17 @@ extern "C" void __cdecl Battle_InitEnemies(void) {
 extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, long z) {
     const std::uint32_t n = slot & 0xFF;
     unsigned char* const e = Enemy(n);
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
-    auto* const enemy_data = EnemyDataRec(id & 0xFFFF);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
+    auto* const enemy_data = rv::As<records::EnemyData>(EnemyData(id & 0xFFFF));
     Sprite_Current = e;
     enemy_rec->flags = 1;
-    if (enemy_data->bank == 0x2CD || enemy_data->bank == 0x2E1) reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->flags = 0x21;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->state[0] = 0;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->state[3] = 0;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->state[2] = 0;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->state[1] = 0;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->ot_slot = 4;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->actor = static_cast<unsigned char>(slot + 3);
+    if (enemy_data->bank == 0x2CD || enemy_data->bank == 0x2E1) rv::Current<records::BattleEnemy>()->flags = 0x21;
+    rv::Current<records::BattleEnemy>()->state[0] = 0;
+    rv::Current<records::BattleEnemy>()->state[3] = 0;
+    rv::Current<records::BattleEnemy>()->state[2] = 0;
+    rv::Current<records::BattleEnemy>()->state[1] = 0;
+    rv::Current<records::BattleEnemy>()->ot_slot = 4;
+    rv::Current<records::BattleEnemy>()->actor = static_cast<unsigned char>(slot + 3);
     Sprite_Current[0x24] = 0;
     SetLong(Sprite_Current + 0x14, 0);
     SetLong(Sprite_Current + 0x10, 0);
@@ -796,9 +794,9 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     SetLong(Sprite_Current + 0x20, 0);
     SetLong(Sprite_Current + 0x1C, 0);
     SetLong(Sprite_Current + 0x18, 0);
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->draw_key = 0;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->screen_y = 0;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->screen_x = 0;
+    rv::Current<records::BattleEnemy>()->draw_key = 0;
+    rv::Current<records::BattleEnemy>()->screen_y = 0;
+    rv::Current<records::BattleEnemy>()->screen_x = 0;
     Sprite_Current[0x5F] = 0;
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5D] = 0;
@@ -806,11 +804,11 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
     Sprite_Current[6] = 0;
     Sprite_Current[7] = 0;
     const unsigned char layout = static_cast<unsigned char>(At(at::kLayout)[0] ^ 2);
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->layout = layout;
+    rv::Current<records::BattleEnemy>()->layout = layout;
     Sprite_Current[0x48] = 0;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->animation = 0xFF;
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->x = static_cast<std::int32_t>(x);
-    reinterpret_cast<records::BattleEnemy*>(Sprite_Current)->z = static_cast<std::int32_t>(z);
+    rv::Current<records::BattleEnemy>()->animation = 0xFF;
+    rv::Current<records::BattleEnemy>()->x = static_cast<std::int32_t>(x);
+    rv::Current<records::BattleEnemy>()->z = static_cast<std::int32_t>(z);
     unsigned char* const s = Sprite_Current;
     const long ground = g.elevation(Long(s + 0x34), Long(s + 0x38));
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
@@ -839,9 +837,9 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
 // slot next (docs/trigger-mode-enemies.md).
 extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
     const unsigned char* const src = EnemyData(id & 0xFF);
-    auto* const from_rec = reinterpret_cast<const records::EnemyData*>(src);
+    auto* const from_rec = rv::AsConst<records::EnemyData>(src);
     unsigned char* const dst = Enemy(slot & 0xFF) + 0x80;
-    auto* const to_rec = reinterpret_cast<records::BattleEnemy*>(dst - 0x80);
+    auto* const to_rec = rv::As<records::BattleEnemy>(dst - 0x80);
     SetLong(dst, Long(src));
     SetLong(dst + 4, Long(src + 4));
     SetLong(dst + 8, Long(src + 8));
@@ -917,7 +915,7 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
     unsigned char enemies = BattleActorCopies_EnemyCount;
     if (enemies) {
         for (unsigned e = 0, left = enemies; left; --left, ++e) {
-            auto* const enemy_rec = EnemyRec(e);
+            auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(e));
             if (!(enemy_rec->flags & 1)) continue;
             const std::uint16_t k = enemy_rec->kind;
             unsigned c = 0;
@@ -964,11 +962,11 @@ extern "C" void __cdecl Battle_OpenEnemyNames(void) {
         std::uint16_t row = y;
         if (BattleActorCopies_EnemyCount)
             for (unsigned char e = 0; left;) {
-                if (kind(k) == EnemyRec(e)->kind) {
+                if (kind(k) == rv::As<records::BattleEnemy>(Enemy(e))->kind) {
                     set_count(k, count(k) - 1u);
                     g.window_open(static_cast<unsigned char>(0xC - shown), 3);
                     unsigned char* const w = At(at::kWindows + 0x1B0 - shown * at::kWindowStride);
-                    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+                    auto* const window_rec = rv::As<records::WindowRecord>(w);
                     window_rec->kind = 4;
                     window_rec->state = 0;
                     SetWord(w + 0x10, x);
