@@ -38,6 +38,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/shop_states_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -161,8 +162,10 @@ extern "C" void __cdecl ShopMode_Begin(void) {
     }
     for (U n = 0; n < at::kActors; ++n) {
         const U r = Field_ActorStates_addr + n * at::kActorStride;
-        const auto quarter = static_cast<std::uint16_t>(Word(r + 0x10) >> 2);
-        if (quarter > Word(r + 8)) B(r + 1) = static_cast<unsigned char>(B(r + 1) | 0x20);
+        // r is character record n's +0x10, its status word (Field_ActorStates 0x903A80 = CharacterRecords + 0x10)
+        const auto* const c = rv::AsConst<records::CharRecord>(At(r - 0x10));
+        const auto quarter = static_cast<std::uint16_t>(c->stats.max_hp >> 2);
+        if (quarter > c->hp) B(r + 1) = static_cast<unsigned char>(B(r + 1) | 0x20);
         else PutWord(r, Word(r) & 0xDFFFu);
     }
     FieldS_State = 0;

@@ -371,7 +371,7 @@ void Seed(unsigned k) {
             e[0] = static_cast<unsigned char>((e[0] & ~3u) | (Next() & 3));
             e[1] = Often() ? kTimer[Next() % 5] : static_cast<unsigned char>(Next());
         }
-        SetWord(At(0x7E1BEC), Half() ? 0 : static_cast<std::uint16_t>(1u << (Next() % 16)));
+        SetWord(At(Input_Pressed_addr), Half() ? 0 : static_cast<std::uint16_t>(1u << (Next() % 16)));
         if (Half()) At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>((head + 1 + Next() % 2) & 0xF);
         break;
     }

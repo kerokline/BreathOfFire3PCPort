@@ -225,7 +225,7 @@ void Disturb() {
     case 13:
         // a bit of Field_ScriptFlags2, or the pad's pressed word
         if (g_field) {
-            if (b & 1) move_script::SetWord(Mem(0x905BA4), Word(0x905BA4) ^ (1u << ((b >> 1) & 15)));
+            if (b & 1) move_script::SetWord(Mem(0x905BA4), Word(Field_ScriptFlags2_addr) ^ (1u << ((b >> 1) & 15)));
             else move_script::SetWord(Mem(0x7E1BEC), h >> 16);
         }
         break;
@@ -886,7 +886,7 @@ std::uint32_t FxPanelPrims(const std::uint32_t*, std::uint32_t answer) { Drew(0x
 // linked at 0x48 each), the four vertices in Prim_VertexScratch 0x9037A0.. and
 // MapView_ScreenXY 0x903820 written on the way - both filled here.
 std::uint32_t FxShadow(const std::uint32_t*, std::uint32_t answer) {
-    if (!(Byte(0x7E0918)[0] & 4)) return answer;
+    if (!(Byte(Draw_PassFlags_addr)[0] & 4)) return answer;
     if (InRegions(Mem(Prim_VertexScratch_addr), 0x20)) FillBytes(Mem(Prim_VertexScratch_addr), 0x20);
     FillFloats(0x903820, 2);
     Drew(16 * 0x54);

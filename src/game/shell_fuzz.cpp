@@ -456,7 +456,7 @@ void Generate(unsigned k, U* args, unsigned* coverage) {
     switch (k) {
     case kLatch:
         // The old words equal to the new now and then: no edge.
-        if (Next() % 4 == 0) std::memset(At(0x7E1BE8), 0, 0x10);
+        if (Next() % 4 == 0) std::memset(At(Input_Held_addr), 0, 0x10);
         break;
     case kCfgLoad: {
         // The line count's boundaries (0, 1, 2, 3) weighted; up to 20.

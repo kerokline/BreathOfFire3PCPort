@@ -870,7 +870,7 @@ void Move17(std::uint32_t h) {
     case 3: SetW(Scena15_Bytes_addr + 0x4, (h >> 12) % 352); break;
     case 4: B(Scena15_Bytes_addr + 0x6) = static_cast<unsigned char>((h >> 12) % 0x17); break;
     case 5: B(kCounter3) = static_cast<unsigned char>((h >> 12) & 3); break;
-    case 6: SetL(0x905E60, h); break;   // Field_Kind2Z
+    case 6: SetL(Field_Kind2Z_addr, h); break; // Field_Kind2Z
     default: B(Scena15_Bytes_addr + 0x7) = static_cast<unsigned char>((h >> 12) & 1); break;
     }
 }

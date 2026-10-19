@@ -249,7 +249,7 @@ void RandomTable(unsigned* coverage) {
     At(D3d_AfterDrawRequest_addr)[0] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
     At(D3d_AfterDrawRequest_addr)[1] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
     At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
-    for (U i = 0; i < 0xA00; ++i) At(0x7C9F50)[i] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < 0xA00; ++i) At(Font_TexCache_addr)[i] = static_cast<unsigned char>(Next());
     for (U i = 0; i < 0x1400; i += 4) PutLong(0x7CAE38 + i, Next());
 }
 
