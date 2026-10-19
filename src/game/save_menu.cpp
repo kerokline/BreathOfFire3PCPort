@@ -325,6 +325,8 @@ namespace {
 bool g_stream_missing = false;
 }
 void save_menu::StreamMissingClear() { g_stream_missing = false; }
+bool save_menu::StreamMissing() { return g_stream_missing; }                  // the quicksave (sound.cpp)
+void save_menu::SetStreamMissing(bool missing) { g_stream_missing = missing; }
 extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     const U kind = id >> 12;
     PutLong(at::kStreamKind, kind);
