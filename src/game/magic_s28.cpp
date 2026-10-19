@@ -37,6 +37,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -402,8 +403,8 @@ S28_EXPORT void __cdecl BreathBeam_DrawTextured(void) {
             PutF(p, in1 + 4, SS(0xE));
             PutF(p, out1, SS(8));
             PutF(p, out1 + 4, SS(0xA));
-            SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
-            SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
             p[0x14] = side == 0 ? 0x40 : 0;
             p[0x28] = side == 0 ? 0x80 : 0x40;
             p[0x15] = U8((Sc()[9] * 0x1E + i) << 3);

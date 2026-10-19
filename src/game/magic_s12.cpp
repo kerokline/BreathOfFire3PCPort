@@ -29,6 +29,7 @@
 #include "game/lang_layout.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/text_advance.h"
 #include "game/magic_s12.h"
 
@@ -505,8 +506,8 @@ void DrawElementIcon(int x, int y, int right, unsigned i, unsigned char shade) {
     p[0x24] = u1; p[0x25] = v0;
     p[0x34] = u0; p[0x35] = v1;
     p[0x44] = u1; p[0x45] = v1;
-    SetWord(p + 0x16, (i == 1 || i == 3) ? 0x780Eu : 0x780Cu);
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, (i == 1 || i == 3) ? 0x780Eu : 0x780Cu);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     MH_CALL(Gfx_CommitPrim)(2, 0x48);
 }
 
@@ -524,14 +525,14 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
     for (unsigned i = 0; i < 6; ++i) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetCode6C)(p);
-        SetWord(p + 0xA, static_cast<unsigned>(y));
-        SetWord(p + 0x12, static_cast<unsigned>(y));
-        SetWord(p + 0x1A, static_cast<unsigned>(y + 0xC));
-        SetWord(p + 0x22, static_cast<unsigned>(y + 0xC));
-        SetWord(p + 8, static_cast<unsigned>(x));
-        SetWord(p + 0x10, static_cast<unsigned>(right));
-        SetWord(p + 0x18, static_cast<unsigned>(x));
-        SetWord(p + 0x20, static_cast<unsigned>(right));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y0, static_cast<unsigned>(y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y1, static_cast<unsigned>(y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y2, static_cast<unsigned>(y + 0xC));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y3, static_cast<unsigned>(y + 0xC));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x0, static_cast<unsigned>(x));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x1, static_cast<unsigned>(right));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x2, static_cast<unsigned>(x));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x3, static_cast<unsigned>(right));
         unsigned shade = 0x30;
         SetDd(4, 0x30);
         if (EnemyRec(index)[kResist[i]] <= (i == 5 ? 3 : 1)) {
@@ -548,8 +549,8 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
         p[5] = DsByte(4);
         p[6] = DsByte(4);
         const unsigned char* const glyph = Pointer(kElementGlyphs + 4 * i);
-        SetWord(p + 0x16, (static_cast<unsigned>(glyph[0] & 0x7F) << 8) + glyph[1]);
-        SetWord(p + 0xE, MH_CALL(Gpu_GetClut)(0, 0x1E0));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->glyph, (static_cast<unsigned>(glyph[0] & 0x7F) << 8) + glyph[1]);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         p[0xC] = 0;
         p[0xD] = 0;
         p[0x14] = 0xC;

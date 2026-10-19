@@ -27,6 +27,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -643,8 +644,8 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
         Turn();
         s = Sc();
         VertexOffset(0x18, s);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2) & 0xFFFF);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2) & 0xFFFF);
         s = Sc();
         SetWord(Mem(kS), (static_cast<std::uint32_t>(AddL(rv::As<records::BattleTask>(s)->work_20, i * 4)) % 0xBC + 0x40) & 0xFFFF);
         p[0x14] = 0x40;
@@ -722,8 +723,8 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
         Turn();
         s = Sc();
         VertexOffset(0x18, s);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, abr, 0x340, 0x100) & 0xFFFF);
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2) & 0xFFFF);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, abr, 0x340, 0x100) & 0xFFFF);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2) & 0xFFFF);
         SetWord(Mem(kS), (static_cast<unsigned>(i) & 0xF) * 12 + 0x40);
         p[0x14] = 0;
         p[0x24] = 0xC4;

@@ -35,6 +35,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1236,8 +1237,8 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
             MH_CALL(Gpu_SetSemiTrans)(prim, 1);
             Project4(prim, 8, 0x1C, 0x30, 0x44);
             MH_CALL(Gte_PrimDepths4_14)(prim);
-            SetWord(prim + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-            SetWord(prim + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
             const unsigned char u0 = static_cast<unsigned char>(j << 3);
             const unsigned char u1 = static_cast<unsigned char>((j + 1) << 3);
             prim[0x14] = u0;
@@ -1368,8 +1369,8 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
         const float fy = static_cast<float>(y);
         std::memcpy(prim + kX[k] + 4, &fy, sizeof fy);
     }
-    SetWord(prim + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-    SetWord(prim + 0x16, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(prim)->clut, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
     prim[0x14] = 1;
     prim[0x15] = 1;
     prim[0x28] = 0x1F;

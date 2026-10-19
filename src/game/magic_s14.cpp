@@ -36,6 +36,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -823,8 +824,8 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     PutFloat(p + 0xC, S16(Sc() + 0x30) - 0x40);
     p[0x14] = Mem(WeretigerImage_UV_addr + 4u * which)[0];
     p[0x15] = Mem(WeretigerImage_UV_addr + 2 + 4u * which)[0];
-    SetWord(p + 0x18, 0x50);
-    SetWord(p + 0x1A, 0x48);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x50);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0x48);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
@@ -1119,8 +1120,8 @@ S14_EXPORT void __cdecl TsunamiWave_Draw(void) {
         p[4] = SB(2);
         p[5] = SB(2);
         p[6] = SB(2);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         SetSW(8, (0xEu - ((static_cast<unsigned>(Sc()[0xB]) + static_cast<unsigned>(i)) & 7u)) << 4);
         p[0x14] = 0;
         p[0x24] = 0xF8;
@@ -1271,8 +1272,8 @@ S14_EXPORT void __cdecl TsunamiRing_DrawQuads(void) {
             SetVW(8 * v + 2, static_cast<unsigned>(Mul12(t, SS(0))));
             SetVW(8 * v + 4, static_cast<unsigned>(-static_cast<int>(SW(4))));
         }
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2));
         p[0x14] = 0;
         p[0x15] = 0;
         p[0x24] = 0x20;

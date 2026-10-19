@@ -35,6 +35,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -994,9 +995,9 @@ S30_EXPORT void __cdecl KaiserPillar_Draw(void) {
             MH_CALL(Gpu_SetPolyFT4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
             const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100);
-            SetWord(p + 0x26, tpage & 0xFFFF);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage & 0xFFFF);
             const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-            SetWord(p + 0x16, clut & 0xFFFF);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut & 0xFFFF);
             const auto u = static_cast<unsigned char>(((q & 1) + band) << 6);
             p[0x14] = u;
             p[0x15] = tv;
@@ -1102,9 +1103,9 @@ S30_EXPORT void __cdecl KaiserRing_Draw(void) {
         MH_CALL(Gpu_SetPolyFT4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, Sc()[0xB]);
         const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, Sc()[0xB], 0x340, 0x100);
-        SetWord(p + 0x26, tpage & 0xFFFF);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage & 0xFFFF);
         const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-        SetWord(p + 0x16, clut & 0xFFFF);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut & 0xFFFF);
         const auto u = static_cast<unsigned char>((counter & 1) << 6);
         p[0x15] = 0;
         p[0x14] = u;

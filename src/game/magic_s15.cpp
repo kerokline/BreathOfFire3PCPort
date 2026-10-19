@@ -40,6 +40,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -491,9 +492,9 @@ S15_EXPORT void __cdecl ChillRay_Draw(void) {
             for (unsigned k : {0x2Du, 0x2Eu, 0x40u, 0x41u, 0x42u}) p[k] = SB(2);
         }
         const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100);
-        SetWord(p + 0x2A, tpage);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, tpage);
         const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1E2);
-        SetWord(p + 0x16, clut);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, clut);
         {
             const std::uint32_t scroll = ~(static_cast<std::uint32_t>(Frame_Counter) * 2u) + static_cast<std::uint32_t>(i);
             SetSW(0xE, (0x54u - (scroll & 0x3Fu)) * 3u);
@@ -910,9 +911,9 @@ S15_EXPORT void __cdecl ForetellOrb_Draw(void) {
     p[6] = 0x80;
     PutFloat(p + 0x3C, S16(Sc() + 0x30) + 0xC);
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1E0);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x14] = Sc()[0xB];
     p[0x15] = 0x24;
     p[0x25] = 0x24;
@@ -1214,9 +1215,9 @@ S15_EXPORT void __cdecl InfluenceMark_Draw(void) {
     PutFloat(p + 0x38, S16(Sc() + 0x2E) + 0x30);
     PutFloat(p + 0x3C, S16(Sc() + 0x30) + Sc()[0xA]);
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0x20, 0x1FA);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x14] = 0;
     p[0x15] = 0x20;
     p[0x24] = 0x40;

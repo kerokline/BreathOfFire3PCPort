@@ -46,6 +46,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -1177,7 +1178,7 @@ S25_EXPORT void __cdecl SpellDepress_DrawVortex(int step) {
             f[6] = 0;
             unsigned char* const g = Gfx_PacketNext + 0x38;
             MH_CALL(Gpu_SetPolyGT4)(g);
-            SetWord(g + 0x2A, 0x11D);
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(g)->tpage, 0x11D);
             for (unsigned o : {4u, 5u, 6u, 0x18u, 0x19u, 0x1Au}) g[o] = outside;
             for (unsigned o : {0x2Cu, 0x2Du, 0x2Eu, 0x40u, 0x41u, 0x42u}) g[o] = shade;
             const unsigned was = (k - 1) & 0xF, now = k & 0xF;
@@ -1625,8 +1626,8 @@ S25_EXPORT void __cdecl SpellRagnarok_DrawSpark(void) {
         SetWord(V(8 * k + 2), static_cast<unsigned>(Sar12(Mul(s, S16(S(0))))));
         SetWord(V(8 * k + 4), 0);
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2));
     p[0x14] = 0;
     p[0x15] = 0x80;
     p[0x25] = 0x80;

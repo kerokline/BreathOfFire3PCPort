@@ -23,6 +23,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -117,8 +118,8 @@ void PopupQuad(const unsigned char* uv, int d, int w, unsigned char shade) {
     PutFloat(p + 0x2C, S16(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
     PutFloat(p + 0x38, S16(Sprite_Current + 0x2E) + w);
     PutFloat(p + 0x3C, S16(Sprite_Current + 0x30) + Sprite_Current[0xA] + d);
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x10, 0x1FA));
     p[0x14] = uv[0];
     p[0x15] = uv[2];
     p[0x24] = static_cast<unsigned char>(uv[0] + 0x30);

@@ -38,6 +38,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1033,11 +1034,11 @@ S29_EXPORT void __cdecl ShadowGlow_Draw(void) {
         PutFloat(p + 0x48, foot);
         {
             const unsigned t = MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100);
-            SetWord(p + 0x2A, t & 0xFFFFu);
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, t & 0xFFFFu);
         }
         {
             const unsigned c = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-            SetWord(p + 0x16, c & 0xFFFFu);
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, c & 0xFFFFu);
         }
         const auto v = [](unsigned add) { return static_cast<unsigned char>(SB(cell::kR2) + add); };
         if (k == 0) {
@@ -1398,11 +1399,11 @@ S29_EXPORT void __cdecl ShadowMote_Draw(void) {
     }
     {
         const unsigned t = MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100);
-        SetWord(p + 0x26, t & 0xFFFFu);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, t & 0xFFFFu);
     }
     {
         const unsigned c = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-        SetWord(p + 0x16, c & 0xFFFFu);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, c & 0xFFFFu);
     }
     p[0x15] = 8;
     p[0x25] = 8;

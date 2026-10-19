@@ -34,6 +34,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -1116,19 +1117,19 @@ S24_EXPORT void __cdecl Fx105_MoteDraw(void) {
         MH_CALL(Gfx_CommitPrim)(Sprite_Current[0x29], 0xC);
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetSprt)(p);
-        SetWord(p + 0x18, Mem(Fx105_MoteSizes_addr)[(part[0] & 0xF) * 2]);
-        SetWord(p + 0x1A, Mem(Fx105_MoteSizes_addr + 1)[(part[0] & 0xF) * 2]);
+        rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, Mem(Fx105_MoteSizes_addr)[(part[0] & 0xF) * 2]);
+        rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, Mem(Fx105_MoteSizes_addr + 1)[(part[0] & 0xF) * 2]);
         p[0x14] = part[3];
         const unsigned char v = part[4];
         const unsigned char row = Sprite_Current[0x26];
-        SetWord(p + 0x16, clut);
+        rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
         p[0x15] = static_cast<unsigned char>(row + v);
         p[4] = static_cast<unsigned char>(Sprite_Current[0x5D] + 0x80);
         p[5] = static_cast<unsigned char>(Sprite_Current[0x5E] + 0x80);
         p[6] = static_cast<unsigned char>(Sprite_Current[0x5F] + 0x80);
         const unsigned char* const s = Sprite_Current;
         if ((part[0] & 0x80) && s[0x2A] != 0) {
-            PutFloat(p + 8, S16(s + 0x2E) - static_cast<signed char>(part[1]) - static_cast<int>(Word(p + 0x18)));
+            PutFloat(p + 8, S16(s + 0x2E) - static_cast<signed char>(part[1]) - static_cast<int>(rv::As<records::GpuSprt>(p)->w));
         } else {
             PutFloat(p + 8, S16(s + 0x2E) + static_cast<signed char>(part[1]));
         }

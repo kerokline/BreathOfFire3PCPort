@@ -38,6 +38,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -954,8 +955,8 @@ S11_EXPORT void __cdecl TornadoMote_Draw(void) {
         v = Sin(kCorners[k]);
         PutFloat(p + 0xC + k * 0x10, Add(Mul12(v, SS(0)), S16(Sc() + 0x30)));
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100) & 0xFFFF);
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
     p[0x14] = 0;
     p[0x15] = 0;
     p[0x24] = 0x1F;

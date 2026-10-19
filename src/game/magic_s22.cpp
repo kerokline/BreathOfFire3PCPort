@@ -31,6 +31,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -420,8 +421,8 @@ S22_EXPORT void __cdecl BlizzardShard_DrawCrystal(void) {
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyFT4)(p);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 0, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 0, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         p[0x24] = static_cast<unsigned char>(u - 0x68);
         p[0x44] = static_cast<unsigned char>(u - 0x68);
         p[0x14] = u;

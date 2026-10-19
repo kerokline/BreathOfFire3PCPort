@@ -40,6 +40,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -349,8 +350,8 @@ void DrawTexturedQuad(unsigned shade) {
         SetVW(c * 8 + 2, static_cast<unsigned>(Mul12(v, SS(0))));
         SetVW(c * 8 + 4, 0);
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2));
     p[0x15] = 0x80;
     p[0x25] = 0x80;
     p[0x14] = 0;

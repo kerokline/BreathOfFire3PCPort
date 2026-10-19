@@ -33,6 +33,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -798,9 +799,9 @@ S03_EXPORT void __cdecl ChlorineCloud_Draw(void) {
         PutFloat(p + 0xC + 0x10 * k, Add(Mul12(v, SD(0)), S16(Sc() + 0x30)));
     }
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0x20, 0x1FA);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x14] = 0x80;
     p[0x34] = 0x80;
     p[0x15] = 0x20;
@@ -1076,9 +1077,9 @@ S03_EXPORT void __cdecl BlitzBolt_Draw(unsigned unused, unsigned abr) {
         PutFloat(p + 0xC + 0x10 * k, Add(Mul12(v, SD(0)), S16(Sc() + 0x30)));
     }
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, e, 0x340, 0x100);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x15] = 0;
     p[0x14] = static_cast<unsigned char>(Sc()[0xB] << 5);
     p[0x25] = 0;

@@ -33,6 +33,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -380,8 +381,8 @@ S27_EXPORT void __cdecl BurnFlame_Draw(void) {
         p[0x40] = SB(0xA);
         p[0x41] = SB(0xA);
         p[0x42] = SB(0xA);
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         const auto u0 = static_cast<unsigned char>(k << 3);
         const auto u1 = static_cast<unsigned char>((k + 1) << 3);
         s = Sc();
@@ -724,8 +725,8 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Draw(void) {
         PutFloat(p + 0xC, SS(0xE));
         PutFloat(p + 0x30, SS(8));
         PutFloat(p + 0x34, SS(0xA));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
         p[0x14] = 0x40;
         p[0x28] = 0x80;
         p[0x3C] = 0x40;
@@ -748,8 +749,8 @@ S27_EXPORT void __cdecl WhelpBreathBeam_Draw(void) {
         PutFloat(p + 0x20, SS(0xE));
         PutFloat(p + 0x44, SS(8));
         PutFloat(p + 0x48, SS(0xA));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x380, 0x100));
         p[0x14] = 0;
         p[0x28] = 0x40;
         p[0x3C] = 0;
@@ -944,8 +945,8 @@ S27_EXPORT void __cdecl WhelpBreathFlames_DrawColumn(void) {
             SetVW(8 * c + 2, static_cast<std::uint32_t>(SinK(kCorners[c], 0)));
             SetVW(8 * c + 4, height);
         }
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
         p[0x14] = 8;
         p[0x15] = 0x40;
         p[0x24] = 0x28;

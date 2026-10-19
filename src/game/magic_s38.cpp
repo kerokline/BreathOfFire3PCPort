@@ -41,6 +41,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -503,8 +504,8 @@ S38_EXPORT void __cdecl TempestGust_Draw(void) {
         v = Cos(SD(4));
         PutFloat(p + 0xC + 0x10 * c, Mul12(v, SD(0)) + S16(Sc() + 0x30));
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(Sc()[0xB], 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(Sc()[0xB], 0x1FA));
     p[0x14] = 8;
     {
         const unsigned char* const s = Sc();
@@ -1435,8 +1436,8 @@ S38_EXPORT void __cdecl MeteorStrikeChip_Draw(void) {
         v = Sin(kAngles[c]);
         PutFloat(p + 0xC + 0x10 * c, Mul12(v, SS(0)) + S16(Sc() + 0x30));
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2));
     p[0x15] = 0x80;
     p[0x25] = 0x80;
     p[0x14] = 0;

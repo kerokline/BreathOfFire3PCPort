@@ -43,6 +43,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -753,9 +754,9 @@ S09_EXPORT void __cdecl ElemBreathMote_Draw(void) {
         PutFloat(p + c.y, Mul12(v, SS(0)) + SS(6));
     }
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100);
-    SetWord(p + 0x2A, tpage & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, tpage & 0xFFFF);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-    SetWord(p + 0x16, clut & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, clut & 0xFFFF);
     p[0x14] = 1;
     p[0x15] = 1;
     p[0x28] = 0x1F;

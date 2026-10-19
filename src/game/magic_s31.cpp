@@ -40,6 +40,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -465,9 +466,9 @@ S31_EXPORT void __cdecl DoomBreathOrb_DrawStream(void) {
             p[6] = SB(4);
         }
         const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100);
-        SetWord(p + 0x26, tpage);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
         const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-        SetWord(p + 0x16, clut);
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
         SetSW(6, ((Sc()[0xA] + static_cast<unsigned>(i)) % 14u << 4) + 8);
         p[0x14] = 8;
         p[0x24] = 0xF8;
@@ -828,9 +829,9 @@ S31_EXPORT void __cdecl CoronaRay_Draw(void) {
             for (unsigned k : {0x2Du, 0x2Eu, 0x40u, 0x41u, 0x42u}) p[k] = SB(2);
         }
         const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100);
-        SetWord(p + 0x2A, tpage);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, tpage);
         const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-        SetWord(p + 0x16, clut);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, clut);
         {
             const std::uint32_t scroll = ~(static_cast<std::uint32_t>(Frame_Counter) * 2u) + static_cast<std::uint32_t>(i);
             const std::uint32_t u = (0x3Fu - (scroll & 0x3Fu)) << 2;

@@ -33,6 +33,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1311,8 +1312,8 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
             unsigned char* const p = Gfx_PacketNext;
             MH_CALL(Gpu_SetPolyFT4)(p);
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
-            SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
-            SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
+            rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
             const unsigned char u = static_cast<unsigned char>(((j & 1) + half) << 6);
             const unsigned char tv = Mem(AuraBreathDome_V_addr + band)[0];
             const unsigned char bottom = static_cast<unsigned char>(tv + Mem(AuraBreathDome_Height_addr + band)[0] - 1);

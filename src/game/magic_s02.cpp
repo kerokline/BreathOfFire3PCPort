@@ -37,6 +37,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -731,8 +732,8 @@ S02_EXPORT void __cdecl SuperCombo_DrawButton(unsigned button) {
     MH_CALL(Gpu_SetPolyFT4)(p);
     Quad12(p, x, y);
     const unsigned b = button & 0xFF;
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0) & 0xFFFF);
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(Mem(kButtonCluts)[b], 0x1E0) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(Mem(kButtonCluts)[b], 0x1E0) & 0xFFFF);
     GlyphUv(p, (b + 0xF) * 12, (b + 0x10) * 12, 0x30, 0x3C);
     MH_CALL(Gfx_CommitPrim)(2, 0x48);
 }

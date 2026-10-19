@@ -37,6 +37,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -425,8 +426,8 @@ S20_EXPORT void __cdecl Magic087_DrawColumn(int offset) {
         for (unsigned k : {0x2Cu, 0x2Du, 0x2Eu, 0x40u, 0x41u, 0x42u}) p[k] = Scr(8)[0];
         SetLong(Scr(8), row48 >= 0x120 ? down : up);
         for (unsigned k : {4u, 5u, 6u, 0x18u, 0x19u, 0x1Au}) p[k] = Scr(8)[0];
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         p[0x14] = 0;
         const auto v = static_cast<unsigned char>(((Sprite_Current[4] + static_cast<unsigned char>(i << 2)) << 1) & 0x1F);
         p[0x28] = 8;

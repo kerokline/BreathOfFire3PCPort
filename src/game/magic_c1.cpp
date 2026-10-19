@@ -33,6 +33,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -259,20 +260,20 @@ C1_EXPORT void __cdecl Magic080_DrawText(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetCode6C)(p);
         const unsigned x = i * 12;
-        SetWord(p + 8, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x);
-        SetWord(p + 0xA, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
-        SetWord(p + 0x10, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x + 12);
-        SetWord(p + 0x12, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
-        SetWord(p + 0x18, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x);
-        SetWord(p + 0x1A, Word(Sc() + 0x30) + 12u);
-        SetWord(p + 0x20, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x + 12);
-        SetWord(p + 0x22, Word(Sc() + 0x30) + 12u);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x0, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y0, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x1, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x + 12);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y1, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x2, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y2, Word(Sc() + 0x30) + 12u);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x3, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x + 12);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y3, Word(Sc() + 0x30) + 12u);
         p[4] = 0x80;
         p[5] = 0x80;
         p[6] = 0x80;
         const unsigned char* const str = Magic080_TextPointers[i];
-        SetWord(p + 0x16, ((str[0] & 0x7Fu) << 8) + str[1]);
-        SetWord(p + 0xE, MH_CALL(Gpu_GetClut)(0, 0x1E0));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->glyph, ((str[0] & 0x7Fu) << 8) + str[1]);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         p[0xC] = 0;
         p[0xD] = 0;
         p[0x14] = 12;
@@ -304,8 +305,8 @@ C1_EXPORT void __cdecl Magic080_DrawGlyphs(void) {
         p[5] = 0x80;
         p[6] = 0x80;
         PutFloat(p + 0x3C, S16(Sc() + 0x30) + 12);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E0));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         const unsigned char* const uv = Magic080_GlyphCells + 4 * i;
         p[0x14] = uv[0];
         p[0x15] = uv[2];
@@ -954,8 +955,8 @@ C1_EXPORT void __cdecl Ink_DrawPuff(void) {
         v = MH_CALL(Math_Sin)(kAngles[k]);
         PutFloat(p + 0xC + 0x10 * k, Mul12(v, static_cast<short>(SW(0))) + S16(Sc() + 0x30));
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 2, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 2, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
     p[0x14] = 0x80;
     p[0x34] = 0x80;
     p[0x15] = 0x20;
