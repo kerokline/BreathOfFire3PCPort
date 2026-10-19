@@ -364,7 +364,8 @@ BEGIN
     PUSHBUTTON      "Cancel", IDCANCEL, 194, 53, 48, 14
 END
 
-// The music player (docs/music-player.md): a source greyed when the install lacks it.
+// The music player (docs/music-player.md): a source greyed when the install lacks it; the song
+// list owner-drawn, so a stream the source lacks is drawn greyed (section 6).
 IDD_MUSIC DIALOGEX 0, 0, 320, 186
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Jukebox"
@@ -377,7 +378,7 @@ BEGIN
     LTEXT           "", IDC_MP_NOTE, 14, 34, 296, 34
 
     LTEXT           "S&ong:", -1, 7, 80, 30, 9
-    COMBOBOX        IDC_MP_SONG, 40, 78, 273, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    COMBOBOX        IDC_MP_SONG, 40, 78, 273, 200, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP | WS_GROUP
     LTEXT           "", IDC_MP_STATUS, 7, 98, 306, 18
 
     GROUPBOX        "In the game (a sound effect, not a song)", -1, 7, 118, 306, 42
