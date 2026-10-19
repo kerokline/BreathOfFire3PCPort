@@ -755,10 +755,10 @@ extern "C" unsigned char __cdecl PartyForm_Swap(void) {
     }
     unsigned char party, other;
     if (column == 0) {
-        party = B(at::kPartyList + static_cast<std::uint32_t>(BattleE1_ModeByte9));
+        party = B(Cond_Flags_addr + 0xd2 + static_cast<std::uint32_t>(BattleE1_ModeByte9));
         other = B(at::kReserve + static_cast<std::uint32_t>(FieldS_PickRow));
     } else {
-        party = B(at::kPartyList + static_cast<std::uint32_t>(FieldS_PickRow));
+        party = B(Cond_Flags_addr + 0xd2 + static_cast<std::uint32_t>(FieldS_PickRow));
         other = B(at::kReserve + static_cast<std::uint32_t>(BattleE1_ModeByte9));
     }
     if (Rec(RecordOf(party))[0xB] & 2) return party;
