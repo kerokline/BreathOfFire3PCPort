@@ -56,7 +56,7 @@ constexpr std::uint32_t kFacing = 0x6BE070;         // u8: the formation's facin
 // kPlaced: now FieldHidden_Placed (symbols.toml). u8: enemies placed / reachable
 constexpr std::uint32_t kEnemyCount = 0x6BE084;     // u8: Encounter_FillSlots' answer
 // kRowUsed: now FieldHidden_RowUsed (symbols.toml). unsigned char *: the row Encounter_PickRow chose
-constexpr std::uint32_t kCentreX = 0x903780;        // i32 16.16: the fight's centre
+// kCentreX: now BossSi_CentreX (symbols.toml). i32 16.16: the fight's centre
 // kCentreZ: now BossSi_CentreZ (symbols.toml).
 constexpr std::uint32_t kMemberPos = 0x7E06E0;      // i32 x, z per member
 constexpr std::uint32_t kPartyList2 = 0x904065;     // u8 x 3: the members' ids the placement reads

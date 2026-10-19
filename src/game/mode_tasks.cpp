@@ -29,11 +29,11 @@ constexpr std::uint32_t kBattleBytes = 0x904AA0;     // three bytes zeroed enter
 constexpr std::uint32_t kMemberByte0 = 0x802D4B;     // one byte in each of three 0x14C-byte records,
 constexpr std::uint32_t kMemberByte1 = 0x802E97;     // zeroed entering mode 5 (PSX 0x80145E97,
 constexpr std::uint32_t kMemberByte2 = 0x802FE3;     // 0x80145FD7, 0x80146117 - 0x140 apart there)
-constexpr std::uint32_t kFieldFlags = 0x905BA4;      // byte |= 0x40 on the area change (PSX 0x80146256)
-constexpr std::uint32_t kMusicTrack = 0x904131;      // the track Music_Play last started, 0xFF none
-constexpr std::uint32_t kAreaTrack = 0x904CD0;       // the track the next area wants (PSX 0x80143F1F)
-constexpr std::uint32_t kAreaTransition = 0x904EE0; // Transition_Start's kind for the area change, 0xFF none
-constexpr std::uint32_t kMenuBlock = 0x929F00;       // the menu's state block (docs/menu-screens.md)
+// kFieldFlags: now Field_ScriptFlags2 (symbols.toml). byte |= 0x40 on the area change (PSX 0x80146256)
+// kMusicTrack: now Music_Track (symbols.toml). the track Music_Play last started, 0xFF none
+// kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml). the track the next area wants (PSX 0x80143F1F)
+// kAreaTransition: now ModeFlow_AreaTransition (symbols.toml). Transition_Start's kind for the area change, 0xFF none
+// kMenuBlock: now BattleE1_Mode (symbols.toml). the menu's state block (docs/menu-screens.md)
 constexpr std::uint32_t kMode11Bytes = 0x905DA0;     // five bytes set entering mode 11 (PSX 0x80146268)
 
 // Every callee, through pointers so that the start-up fuzz can stand
@@ -291,60 +291,60 @@ extern "C" void __cdecl GameMode_Field(void) {
         Game_Mode = 4;
         return;
     case 3: {   // battle
-        const std::int32_t count = Long(At(kBattleCount));
+        const std::int32_t count = static_cast<std::int32_t>(Rest4a_Clock);
         Game_Mode = 5;
         At(kBattleBytes)[0] = 0;
         At(kBattleBytes)[1] = 0;
         At(kBattleBytes)[2] = 0;
-        At(kMemberByte0)[0] = 0;
-        At(kMemberByte1)[0] = 0;
-        At(kMemberByte2)[0] = 0;
+        ObjTrio[0xb] = 0;
+        Field_Members[0xf] = 0;
+        ObjTrio[0x2a3] = 0;
         Game_Step = 0;
-        SetLong(At(kBattleCount), static_cast<std::int32_t>(static_cast<std::uint32_t>(count) + 1u));
+        Rest4a_Clock = static_cast<std::int32_t>(static_cast<std::uint32_t>(count) + 1u);
         return;
     }
     case 4:
         Game_Mode = 6;
         return;
     case 5: {   // the area change
-        unsigned char track = At(kMusicTrack)[0];
-        At(kFieldFlags)[0] |= 0x40;
-        if (track != 0xFF && At(kAreaTrack)[0] != track) {
+        unsigned char track = Music_Track;
+        At(Field_ScriptFlags2_addr)[0] |= 0x40;
+        if (track != 0xFF && AreaW1f_MusicCurrent != track) {
             g.music_fade(0x10);
-            track = At(kMusicTrack)[0];
+            track = Music_Track;
         }
-        const unsigned char kind = At(kAreaTransition)[0];
+        const unsigned char kind = ModeFlow_AreaTransition;
         if (kind != 0xFF) {
             g.transition(kind);
             g.wait_transition(0);
-            track = At(kMusicTrack)[0];
+            track = Music_Track;
         }
-        if (track != 0xFF && At(kAreaTrack)[0] != track) g.music_stop(0xA);
+        if (track != 0xFF && AreaW1f_MusicCurrent != track) g.music_stop(0xA);
         Game_Mode = 1;
         return;
     }
     case 6:
-        At(kMenuBlock)[0] = 6;
-        At(kMenuBlock)[1] = 0;
-        At(kMenuBlock)[2] = 0;
+        BattleE1_Mode = 6;
+        At(BattleE1_Mode_addr)[1] = 0;
+        At(BattleE1_Mode_addr)[2] = 0;
         Game_Step = 0;
-        At(kMenuBlock)[0xC] = 0xFF;
+        At(BattleE1_Mode_addr)[0xC] = 0xFF;
         Game_Mode = 7;
         return;
     case 7:
     case 8:
         Game_Mode = Field_Request == 7 ? 9 : 0xA;
         Game_Step = 0;
-        At(kMenuBlock)[0] = 0;
-        At(kMenuBlock)[1] = 0;
-        At(kMenuBlock)[2] = 0;
+        BattleE1_Mode = 0;
+        At(BattleE1_Mode_addr)[1] = 0;
+        At(BattleE1_Mode_addr)[2] = 0;
         return;
     case 9:
-        At(kMode11Bytes)[0] = 1;
-        At(kMode11Bytes)[1] = 0;
-        At(kMode11Bytes)[2] = 0;
-        At(kMode11Bytes)[3] = 0;
-        At(kMode11Bytes)[4] = 0;
+        FieldEvent_Object905DA0 = 1;
+        At(FieldEvent_Object905DA0_addr)[1] = 0;
+        At(FieldEvent_Object905DA0_addr)[2] = 0;
+        At(FieldEvent_Object905DA0_addr)[3] = 0;
+        At(FieldEvent_Object905DA0_addr)[4] = 0;
         Game_Mode = 0xB;
         return;
     default:
@@ -429,9 +429,9 @@ void DisturbTitle() {
 void DisturbField() {
     const std::uint32_t h = Hash();
     if (h % 3 == 0) Field_Request = static_cast<unsigned char>(h % 7 ? (h >> 8) % 11 : h >> 8);
-    if (h % 4 == 0) At(kMusicTrack)[0] = static_cast<unsigned char>(h % 8 ? h >> 16 : 0xFF);
-    if (h % 5 == 0) At(kAreaTrack)[0] = static_cast<unsigned char>(h % 2 ? At(kMusicTrack)[0] : h >> 20);
-    if (h % 6 == 0) At(kAreaTransition)[0] = static_cast<unsigned char>(h >> 24);
+    if (h % 4 == 0) Music_Track = static_cast<unsigned char>(h % 8 ? h >> 16 : 0xFF);
+    if (h % 5 == 0) AreaW1f_MusicCurrent = static_cast<unsigned char>(h % 2 ? Music_Track : h >> 20);
+    if (h % 6 == 0) ModeFlow_AreaTransition = static_cast<unsigned char>(h >> 24);
 }
 
 void __cdecl StubClearPrivate() { Record(1); DisturbTitle(); }
@@ -494,8 +494,8 @@ void __cdecl StubWaitTransition(unsigned char run) { Record(32, run); DisturbFie
 void __cdecl StubMusicFade(int frames) {
     Record(33, static_cast<std::uint32_t>(frames));
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) At(kMusicTrack)[0] = 0xFF;
-    else if (h % 3 == 1) At(kMusicTrack)[0] = At(kAreaTrack)[0];
+    if (h % 3 == 0) Music_Track = 0xFF;
+    else if (h % 3 == 1) Music_Track = AreaW1f_MusicCurrent;
 }
 void __cdecl StubMusicStop(int frames) { Record(34, static_cast<std::uint32_t>(frames)); DisturbField(); }
 
@@ -567,15 +567,15 @@ const Region kRegions[] = {
     {bof3::addr::Task_Records, 0x48},   // task 0's state, Field_Request, Game_Mode / Game_Step,
                                         // task 1's words, MoveScript_WaitWordDA
     {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&Input_Pressed)), 2},
-    {kMusicTrack - 1, 8},               // the track and the battle count
+    {Music_Track_addr - 1, 8},          // the track and the battle count
     {kBattleBytes, 4},
     {kMemberByte0, 1},
     {kMemberByte1, 1},
     {kMemberByte2, 1},
-    {kAreaTrack, 1},
-    {kAreaTransition, 1},
-    {kFieldFlags, 1},
-    {kMenuBlock, 0x10},
+    {AreaW1f_MusicCurrent_addr, 1},
+    {ModeFlow_AreaTransition_addr, 1},
+    {Field_ScriptFlags2_addr, 1},
+    {BattleE1_Mode_addr, 0x10},
     {kMode11Bytes, 8},
 };
 constexpr unsigned kRegionBytes = 0x48 + 2 + 8 + 4 + 1 + 1 + 1 + 1 + 1 + 1 + 0x10 + 8;
@@ -667,9 +667,9 @@ void Seed(unsigned k) {
     }
     case kField:
         Field_Request = static_cast<unsigned char>(Next() % 4 == 0 ? 5 : Next() % 5 ? Next() % 11 : Next());
-        if (Often()) At(kMusicTrack)[0] = 0xFF;
-        if (Often()) At(kAreaTrack)[0] = At(kMusicTrack)[0];
-        if (Often()) At(kAreaTransition)[0] = 0xFF;
+        if (Often()) Music_Track = 0xFF;
+        if (Often()) AreaW1f_MusicCurrent = Music_Track;
+        if (Often()) ModeFlow_AreaTransition = 0xFF;
         break;
     default:
         break;

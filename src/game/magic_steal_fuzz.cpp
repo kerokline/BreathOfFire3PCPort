@@ -35,8 +35,8 @@ const mh::Clone kClones[] = {
 #undef MH_N
 enum : unsigned { kTask, kStart, kRoll };
 
-constexpr std::uint32_t kRates = 0x65C204;   // SkillSteal_RateTable, 8 signed bytes
-const mh::Region kRegions[] = {{kRates, 8}};
+// kRates: now SkillSteal_RateTable (symbols.toml). SkillSteal_RateTable, 8 signed bytes
+const mh::Region kRegions[] = {{SkillSteal_RateTable_addr, 8}};
 
 constexpr unsigned kEnemyItem = 0xA8, kEnemyRate = 0xAA, kEnemySpeed = 0xB8, kThiefSpeed = 0xA8;
 
@@ -57,7 +57,7 @@ void Seed(unsigned k) {
         mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Often() ? 3 + mh::Next() % 8 : mh::Next() % 3);
         unsigned char* const e = mh::EnemyOf(mh::Mem(mh::at::kTarget)[0]);
         if (mh::Often()) e[kEnemyRate] = static_cast<unsigned char>(mh::Half() ? 1 + mh::Next() % 7 : mh::Next() % 8);
-        if (mh::Often()) std::memcpy(mh::Mem(kRates), g_exe_rates, sizeof g_exe_rates);
+        if (mh::Often()) std::memcpy(mh::Mem(SkillSteal_RateTable_addr), g_exe_rates, sizeof g_exe_rates);
         if (mh::Half()) {
             const unsigned item = mh::Half() ? 0 : mh::Next() & 0xFFFF;
             e[kEnemyItem] = static_cast<unsigned char>(item);
@@ -83,7 +83,7 @@ void Seed(unsigned k) {
             tier = d >= 49 ? 12 : d >= 29 ? 11 : d >= 19 ? 10 : d >= 9 ? 9 : d >= -10 ? 8 : d >= -20 ? 7 : d >= -30 ? 6 : d >= -50 ? 5 : 4;
         }
         const unsigned rate =
-            e[kEnemyRate] < 8 ? static_cast<unsigned>(static_cast<signed char>(mh::Mem(kRates)[e[kEnemyRate]])) : 0;
+            e[kEnemyRate] < 8 ? static_cast<unsigned>(static_cast<signed char>(mh::Mem(SkillSteal_RateTable_addr)[e[kEnemyRate]])) : 0;
         const std::uint32_t hint = rate * tier;
         mh::SetRandHint(hint);
         // Half the time the roll lands on the compare exactly, or one below.
@@ -98,7 +98,7 @@ void Seed(unsigned k) {
 }  // namespace
 
 void SelfTest() {
-    std::memcpy(g_exe_rates, mh::Mem(kRates), sizeof g_exe_rates);
+    std::memcpy(g_exe_rates, mh::Mem(SkillSteal_RateTable_addr), sizeof g_exe_rates);
     const mh::Group group = {
         "magic_steal", kClones, sizeof kClones / sizeof kClones[0], nullptr, 0, nullptr, 0,
         kRegions, sizeof kRegions / sizeof kRegions[0], &Seed, nullptr, 2000,

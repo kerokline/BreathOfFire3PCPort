@@ -93,10 +93,10 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Task(void) {
 // +0x34 / +0x38 / +0x3C to the task, the owner and Sprite_Current read again
 // for each; +0xB 0; the phase on.
 MSTEAL_EXPORT void __cdecl SkillSteal_Start(void) {
-    Sprite_Current[8] = Pointer(at::kOwner)[8];
-    SetLong(Sprite_Current + 0x34, Long(Pointer(at::kOwner) + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Pointer(at::kOwner) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(at::kOwner) + 0x3C));
+    Sprite_Current[8] = Pointer(BattleE2_Owner_addr)[8];
+    SetLong(Sprite_Current + 0x34, Long(Pointer(BattleE2_Owner_addr) + 0x34));
+    SetLong(Sprite_Current + 0x38, Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
 }

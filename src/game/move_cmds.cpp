@@ -311,7 +311,7 @@ extern "C" void __cdecl MoveCmd_OpF7(long x, long z, unsigned char frames, unsig
 // stack dword there (and on the PSX); 0 here. Neither caller reads it
 // (MoveScript_Group8's op 84 copies three; MoveCmd_AttachMove's copy is dead).
 extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle, unsigned char offset) {
-    std::memcpy(At(kSavedSprite), &Sprite_Current, 4);
+    std::memcpy(At(MapView_CornerPtr_addr), &Sprite_Current, 4);
     unsigned char* object;
     if (handle & 0x80) {
         unsigned char count = 0;
@@ -331,7 +331,7 @@ extern "C" long* __cdecl MoveCmd_HandlePosition(long* out, unsigned char handle,
     const std::int32_t x = Add(buffer[0], Long(at + 0x34));
     const std::int32_t z = Add(buffer[1], Long(at + 0x38));
     const std::int32_t y = Add(buffer[2], static_cast<short>(Word(at + 0x3E)));
-    std::memcpy(&Sprite_Current, At(kSavedSprite), 4);
+    std::memcpy(&Sprite_Current, At(MapView_CornerPtr_addr), 4);
     out[0] = x;
     out[1] = z;
     out[2] = y;
@@ -432,7 +432,7 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 1: return Game_AreaNumber;
     case 2: {
         const unsigned char* flags;
-        std::memcpy(&flags, At(kFlagsPtr), sizeof flags);
+        std::memcpy(&flags, At(AreaW0c_FlagRow_addr), sizeof flags);
         return Long(flags);
     }
     case 3: case 4: case 5: case 6: return At(kCounters)[index - 3];
@@ -440,8 +440,8 @@ extern "C" int __cdecl MoveScript_Variable(unsigned char index) {
     case 8: return Cond_ByteFD;
     case 9: return Field_StatusBits & 1;
     case 10: return Word(Sprite_Current + 0x58);
-    case 11: return At(kNameIndex)[0];
-    case 12: return Long(At(kStoryFlags));
+    case 11: return ObjTrio[0x89];
+    case 12: return Long(At(Cond_Flags_addr + 0xa0));
     case 13: return 1;
     default: return 0xFF;
     }
@@ -489,9 +489,9 @@ extern "C" unsigned short __cdecl Sprite_ScriptPeek(void) {
 // callers never read eax (symbols.toml there).
 extern "C" void __cdecl Scena16_PartyReset(void) {
     g.partyset_load(0xA, 0xFF, 0xFF, 0);
-    const auto flags = static_cast<unsigned char>(At(kPartyFlags)[0] | 7);
-    for (unsigned i = 0; i < 6; ++i) At(kPartyLists)[i] = 0xFF;
-    At(kPartyFlags)[0] = flags;
+    const auto flags = static_cast<unsigned char>(Cond_Flags[0xd1] | 7);
+    for (unsigned i = 0; i < 6; ++i) Cond_Flags[0xd2 + i] = 0xFF;
+    Cond_Flags[0xd1] = flags;
     Field_MemberCount = 0;
     g.party_join(0xA);
 }

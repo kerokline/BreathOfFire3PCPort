@@ -33,8 +33,8 @@
 namespace {
 
 constexpr std::uint32_t kVerbs = 22;
-constexpr std::uint32_t kPointers = 0x6637E4;
-constexpr std::uint32_t kSlots = 0x66A228;
+// kPointers: now Menu_VerbPointers (symbols.toml).
+// kSlots: now Menu_Verbs (symbols.toml).
 constexpr std::uint32_t kSlotRoom = 8;
 
 constexpr std::uint32_t kTextDrawAt = 0x516B30;   // Text_DrawAt: the site's target in Capcom's bytes, a patch fact (raw)
@@ -76,7 +76,7 @@ struct SlotTable {
     std::uint32_t pointers, slots, count, room;
 };
 
-constexpr SlotTable kVerbTable = {"menu verbs", "DIV-0018", kPointers, kSlots, kVerbs, kSlotRoom};
+constexpr SlotTable kVerbTable = {"menu verbs", "DIV-0018", Menu_VerbPointers_addr, Menu_Verbs_addr, kVerbs, kSlotRoom};
 
 // DIVERGENCE DIV-0019: the battle's command labels - the box beside the
 // command cross, 2026-09-21. Seven 8-byte slots at 0x669D28 behind the

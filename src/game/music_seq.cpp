@@ -30,7 +30,7 @@ using sound::g;
 // 0x461070 flips it, task 0 at 0x4FCF.. zeroes it (symbols.toml; docs/
 // config-screen.md section 1, row 3). The PC's driver never reads it; on the
 // PSX the same row calls SsSetMono / SsSetStereo (libsnd-reading.md 8).
-constexpr std::uint32_t kSoundMono = 0x903A59;
+// kSoundMono: now Rest4f_Setting3 (symbols.toml).
 
 // The CRT's fopen takes a path of up to MAX_PATH - 1 characters. File_Open
 // (0x5A7380, ours in file_io.cpp) retries a failed open with File_CdRoot in
@@ -90,7 +90,7 @@ void Objects() {
     g_s.synth = new psx::MusicSynth;
 }
 
-bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(kSoundMono)) != 0; }
+bool Mono() { return *reinterpret_cast<const volatile unsigned char*>(static_cast<std::uintptr_t>(Rest4f_Setting3_addr)) != 0; }
 
 // The whole of `path` through the sound layer's file callees into `out`
 // (the bank; the song is read in LoadFile as the original reads an MP3).

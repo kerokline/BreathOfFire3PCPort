@@ -65,8 +65,8 @@ namespace {
 // stores them 0x90393F, 3E, 3D, 0x9038AF, AE, AD with nothing in between.
 void SetFadeHold(unsigned char v) {
     for (unsigned i = 0; i < 3; ++i) {
-        At(at::kFadeHoldA)[i] = v;
-        At(at::kFadeHoldB)[i] = v;
+        At(ModeFlow_FadeHoldA_addr)[i] = v;
+        At(ModeFlow_FadeHoldB_addr)[i] = v;
     }
 }
 
@@ -98,7 +98,7 @@ unsigned char SlotByte(const unsigned char& argument) { return *reinterpret_cast
 // the call a no-op (the kind is not stored).
 extern "C" void __cdecl Transition_Start(unsigned char kind) {
     if (MoveScript_WaitWordDA != 0) return;
-    SetWord(At(at::kTransitionKind), SlotByte(kind));
+    ModeFlow_TransitionKind = SlotByte(kind);
     g.task_create(2, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTransitionEntry)));
 }
 
@@ -112,7 +112,7 @@ extern "C" void __cdecl Transition_Start(unsigned char kind) {
 // callers pass constants 0..0x13 and GameMode_Field's area kinds (0xA, 0x14,
 // 0 and the pending kind byte).
 extern "C" void __cdecl Transition_Task(void) {
-    const unsigned kind = Word(At(at::kTransitionKind));
+    const unsigned kind = ModeFlow_TransitionKind;
     if (kind >= 21) bof3::Fatal("Transition_Task: kind %u, past the 21-entry table", kind);
     g.transitions[kind]();
 }
@@ -213,8 +213,8 @@ void SwingOut(int step) {
 // the last frame's turn is not slept on.
 void SwingIn() {
     std::int32_t level = 0x7FFF;
-    SetWord(At(kCameraYaw), 0xFEAB);
-    SetWord(At(kCameraAngle), 0x355);
+    Camera_Angles[0] = 0xFEAB;
+    SetWord(At(Cond_AngleFB_addr), 0x355);
     MapView_Redraw = 2;
     for (int i = 0; i < 5; ++i) {
         g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
@@ -231,8 +231,8 @@ void SwingIn() {
         g.sleep(1);
         if (done == 0) done = g.draw_tile(reinterpret_cast<short*>(&level), -0x400, 1, 0, 2);
     }
-    SetWord(At(kCameraYaw), 0xFD56);
-    SetWord(At(kCameraAngle), 0x200);
+    Camera_Angles[0] = 0xFD56;
+    SetWord(At(Cond_AngleFB_addr), 0x200);
     MapView_Redraw = 2;
     g.task_exit();
 }
@@ -278,7 +278,7 @@ extern "C" void __cdecl Transition_Kind19(void) { g.fade_sub(0x100, 1, 0); }    
 extern "C" void __cdecl Transition_Kind20(void) {
     std::int32_t level = 0;
     while (g.draw_tile(reinterpret_cast<short*>(&level), 0x800, 1, 0, 2) == 0) {
-        SetWord(At(kCameraAngle), (static_cast<std::uint32_t>(Long(At(kCameraAngle))) + 0x20u) & 0xFFFu);
+        SetWord(At(Cond_AngleFB_addr), (Cond_AngleFB + 0x20u) & 0xFFFu);
         g.sleep(1);
     }
     SetFadeHold(0);
@@ -325,11 +325,11 @@ extern "C" void __cdecl GameMode_Start(void) {
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
     g.party_load(0);
-    const unsigned char flags = At(at::kStartArea)[3];
-    const std::int32_t z = Long(At(at::kStartArea + 8));
-    const std::int32_t x = Long(At(at::kStartArea + 4));
+    const unsigned char flags = At(FieldModes_Pending_addr)[3];
+    const std::int32_t z = Long(At(FieldModes_Pending_addr + 8));
+    const std::int32_t x = Long(At(FieldModes_Pending_addr + 4));
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
-    const std::uint16_t area = Word(At(at::kStartArea));
+    const std::uint16_t area = FieldModes_Pending;
     At(0x905B82)[0] = 0;   // Field_EdgeBits + 2
     At(0x7E0941)[0] = 0;   // Sprite_Kind2 + 1..3
     At(0x7E0942)[0] = 0;
@@ -346,10 +346,10 @@ extern "C" void __cdecl GameMode_Start(void) {
         // track (0xFF - the port's F12 save, written while the music was off)
         // keeps the one Field_ChangeArea just chose from the area's zone instead
         // of silence. Capcom's rule copies the 0xFF.
-        const unsigned char saved = At(at::kMusicTrack)[0];
-        if (!(mode_flow::g_area_track_fallback && saved == 0xFF)) At(at::kAreaTrack)[0] = saved;
+        const unsigned char saved = Music_Track;
+        if (!(mode_flow::g_area_track_fallback && saved == 0xFF)) AreaW1f_MusicCurrent = saved;
     }
-    At(at::kMusicTrack)[0] = 0xFF;
+    Music_Track = 0xFF;
     Game_Mode = 1;
 }
 
@@ -369,16 +369,16 @@ extern "C" void __cdecl GameMode_Start(void) {
 // input flags are read afresh after every call; the area number is read once
 // for both 0xBD tests, after the last call before them.
 extern "C" void __cdecl GameMode_Enter(void) {
-    const unsigned char flags = At(at::kPendingFlags)[0];
-    const std::int32_t z = Long(At(at::kPendingZ));
+    const unsigned char flags = AreaEntry_PendingFlags;
+    const std::int32_t z = static_cast<std::int32_t>(AreaEntry_PendingZ);
     const std::int32_t x = Long(At(at::kPendingX));
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFF7);
-    g.area_enter(Word(At(at::kPendingArea)), x, z, flags);
+    g.area_enter(AreaW0b_Place, x, z, flags);
     if (Field_InputFlags & 8) {
         Game_Mode = 8;
         return;
     }
-    const unsigned char kind = At(at::kPendingKind)[0];
+    const unsigned char kind = AreaW0c_PendingKind;
     if (kind == 0xFE) {
         Draw_PassFlags = 0;
     } else if (kind != 0xFF) {
@@ -388,9 +388,9 @@ extern "C" void __cdecl GameMode_Enter(void) {
     }
     const bool bit0 = (Field_InputFlags & 1) != 0;
     const std::uint16_t area = Game_AreaNumber;
-    if (bit0) At(at::kAreaTransition)[0] = 0xA;
-    else if (area == 0xBD) At(at::kAreaTransition)[0] = 0x14;
-    else At(at::kAreaTransition)[0] = 0;
+    if (bit0) ModeFlow_AreaTransition = 0xA;
+    else if (area == 0xBD) ModeFlow_AreaTransition = 0x14;
+    else ModeFlow_AreaTransition = 0;
     if (area != 0xBD) g.zone_roll(1);
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFBF);
     Field_Request = 0;
@@ -484,8 +484,8 @@ extern "C" void __cdecl Game_ClockTick(void) {
             }
         }
     }
-    CountDown(at::kCountdownA);
-    CountDown(at::kCountdownB);
+    CountDown(ModeFlow_CountdownA_addr);
+    CountDown(Rest3c_Byte660_addr);
 }
 
 // original 0x594E60: entering an area, once per area change from
@@ -510,13 +510,13 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     const std::uint16_t previous = Game_AreaNumber;
     const unsigned char zone = Cond_ByteFD;
     const long kind2_x = Field_Kind2X, kind2_z = Field_Kind2Z;
-    SetWord(At(at::kLastArea), previous);
-    At(at::kLastZone)[0] = zone;
-    SetLong(At(at::kLastKind2Z), kind2_z);
-    SetLong(At(at::kLastKind2X), kind2_x);
-    const unsigned char track = At(at::kAreaTrack)[0];
+    AreaW2c_LastArea = previous;
+    AreaW1a_EntryZone = zone;
+    SetLong(At(MoveScript_TintRecords_addr + 0x220), kind2_z);
+    SetLong(At(MoveScript_TintRecords_addr + 0x21c), kind2_x);
+    const unsigned char track = AreaW1f_MusicCurrent;
     if (track != 0xFF) g.music_play(track, 8);
-    else At(at::kMusicTrack)[0] = 0xFF;
+    else Music_Track = 0xFF;
     if (Game_AreaNumber != static_cast<std::uint16_t>(area) && Field_Request == 5) {
         Game_AreaNumber = static_cast<std::uint16_t>(area);
         g.load_dat(static_cast<int>((area & 0xFFFF) + 3));
@@ -537,8 +537,8 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
         SetLong(At(0x90359C), Long(own + 0x24));
     } else {
         g.colour_matrix(Fn<const unsigned long*>(at::kDefaultColour));
-        SetLong(At(0x903598), Long(At(at::kDefaultLight)));
-        SetLong(At(0x90359C), Long(At(at::kDefaultLight + 4)));
+        SetLong(At(0x903598), static_cast<std::int32_t>(ModeFlow_DefaultLight));
+        SetLong(At(0x90359C), Long(At(ModeFlow_DefaultLight_addr + 4)));
     }
     if (Field_StatusBits & 0x80) {
         auto chapter = static_cast<unsigned char>(Cond_ByteFA + 1);
@@ -552,7 +552,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     g.run_placement(Fn<const unsigned char*>(static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber]))));
     const auto hook = static_cast<std::uint32_t>(Long(Area_Descriptors[Game_AreaNumber] + 0x40));
     if (hook != 0) Fn<Handler>(hook)();
-    g.flags_clear(At(at::kStoryFlags), 0x1C);
+    g.flags_clear(At(Cond_Flags_addr + 0xa0), 0x1C);
     At(0x8034E2)[0] = 1;   // Field_StatusBits + 1
     g.mode_dispatch();
     g.first_frame();
@@ -560,7 +560,7 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
     const std::uint16_t bits = Field_ScriptFlags2;
     if (bits & 0x8000) {
         if (drop_in) {
-            At(at::kWalk)[0] = 0;
+            EventLeader_PendingFlag = 0;
             g.place_party(flags & ~0x80u);
             Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 & 0xFFEF);
             g.members_frame();
@@ -601,16 +601,16 @@ extern "C" void __cdecl Area_Enter(unsigned area, int x, int z, unsigned flags) 
 extern "C" void __cdecl Area_EntryWalk(unsigned direction, int x, int z) {
     const auto dir = static_cast<unsigned char>(direction);
     if (dir != 0) Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 8);
-    SetLong(At(at::kWalkX), x);
+    EventLeader_PendingX = x;
     const unsigned members = Field_MemberCount;
-    At(at::kWalk)[0] = 1;
-    At(at::kWalk)[1] = dir;
-    At(at::kWalk)[2] = 0;
-    SetLong(At(at::kWalkZ), z);
+    EventLeader_PendingFlag = 1;
+    At(EventLeader_PendingFlag_addr)[1] = dir;
+    At(EventLeader_PendingFlag_addr)[2] = 0;
+    EventLeader_PendingZ = z;
     if (members == 0) return;
     const unsigned char pose = At(at::kWalkPoses)[dir];
     for (unsigned i = 0; i < members; ++i) {
-        unsigned char* const m = At(at::kMemberWalk + i * 0x14C);
+        unsigned char* const m = At(ObjTrio_addr + 0x137 + i * 0x14C);
         m[0] = pose;
         m[1] = static_cast<unsigned char>(m[1] | 2);
     }
@@ -628,7 +628,7 @@ extern "C" void __cdecl Window_ResetAll(void) {
         r[3] = 0;
         r[0xF] = 0;
     }
-    At(at::kWindowPass)[0] = 0;
+    BossSa_WindowPass = 0;
 }
 
 // ===========================================================================
@@ -660,15 +660,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     g.load_dat(0x225);
     while (g.load_done() == 0) g.sleep(1);
     std::memset(At(at::kBootClear), 0, at::kBootClearBytes);
-    std::memcpy(At(at::kButtons), At(at::kButtonDefaults), 0x12);
+    std::memcpy(At(Gfx_UnpackScratch_addr + 0x1f000), At(ModeFlow_ButtonDefaults_addr), 0x12);
     // DIV-0133 and DIV-0134 (docs/button-sigma.md): the release's starting
     // words by source, then words 7 / 8 as Speak's and Action's and the
     // table - nothing until sigma::Arm, after every module's self-test.
     bof3x::input::sigma::BootDefaultsWritten();
-    At(at::kPartyCombination)[0] = 0xFF;
+    AreaW0b_PartySet = 0xFF;
     Field_ScriptFlags = 0;
     Field_ScriptFlags2 = 0;
-    unsigned char* const config = At(at::kConfigBytes);
+    unsigned char* const config = At(ModeFlow_ConfigBytes_addr);
     config[0] = 1;
     for (unsigned i = 1; i < 7; ++i) config[i] = 0;
     g.window_reset();
@@ -676,8 +676,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Boot_Task(void) {
     g.slots_release();
     Draw_PassFlags = 0x1F;
     Draw_OtSlot = 6;
-    SetLong(At(at::kPoolA), 0x8B3580);
-    SetLong(At(at::kPoolB), 0x8C3584);
+    BattleE2_AnimSet = 0x8B3580;
+    SetLong(At(MoveScript_TintRecords_addr + 0x180), 0x8C3584);
     g.clut_restore();
     Gfx_ClutStripDirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
     g.task_create(1, reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTitleLoadEntry)));
@@ -703,7 +703,7 @@ extern "C" int __cdecl File_LoadDone(void) { return 1; }
 // rows 28..31 come out zero too. The PSX zeroes the same four rows first.
 // Gfx_ClutStripDirty is not touched.
 extern "C" void __cdecl Gfx_ClutStripRestore(void) {
-    std::memset(At(at::kClutStripZero), 0, 0x800);
+    std::memset(At(Gfx_ClutStripSource_addr + 0x3800), 0, 0x800);
     std::memcpy(Gfx_ClutStrip, Gfx_ClutStripSource, 0x4000);
 }
 

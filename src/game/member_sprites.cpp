@@ -36,7 +36,7 @@ template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(s
 // nobody's, Capcom's addresses typed from their call sites and, where read,
 // their first instructions (docs/member-sprites.md, section 3).
 const Callees kOriginals = {
-    Sprite_RestoreClut, reinterpret_cast<const std::uint32_t*>(at::kMemberStates),
+    Sprite_RestoreClut, reinterpret_cast<const std::uint32_t*>(Member_States_addr),
     Sprite_ClearSteps, MapView_GroundAt, Sprite_SetAnimation,
     reinterpret_cast<const std::uint32_t*>(at::kControlStates), Sprite_ScriptTick,
     Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile89), Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile8A),
@@ -317,8 +317,8 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     const std::uint32_t gz = U(target + 0x10) * target_steps + U(target + 0x38);
     const unsigned dir = target[8];
     const std::int32_t near = target[0x70] ? 0x20000 : 0x18000;
-    const std::uint32_t px = gx - (RowX(at::kDirSteps, dir) << 1);
-    const std::uint32_t pz = gz - (RowZ(at::kDirSteps, dir) << 1);
+    const std::uint32_t px = gx - (RowX(Field_DirectionSteps_addr, dir) << 1);
+    const std::uint32_t pz = gz - (RowZ(Field_DirectionSteps_addr, dir) << 1);
     if (Abs(U(c + 0x34) - gx) <= near && Abs(U(c + 0x38) - gz) <= near) return 1;
 
     g.catch_up(static_cast<long>(px), static_cast<long>(pz));
@@ -347,7 +347,7 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
         c = Sprite_Current;
         const std::int32_t mine = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(U(c + 0x38) - pz)) +
                                                             static_cast<std::uint32_t>(Abs(U(c + 0x34) - px)));
-        const std::int32_t aim = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(U(At(at::kAimZ)) - pz)) +
+        const std::int32_t aim = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(Scratch_Swap - pz)) +
                                                            static_cast<std::uint32_t>(Abs(U(At(at::kAimX)) - px)));
         if (mine >= aim) return answer;
         c[8] = facing;
@@ -396,7 +396,7 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
         unsigned char* const c = Sprite_Current;
         c[9] = (c[8] == 2 || c[8] == 6) ? 0x20 : 0x10;
     }
-    const unsigned speed = At(at::kMoveSpeeds)[Field_State[0x128]];
+    const unsigned speed = Field_MoveSpeeds[Field_State[0x128]];
     {
         unsigned char* const c = Sprite_Current;
         const volatile int divisor = static_cast<int>(speed);
@@ -406,14 +406,14 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
     const std::uint32_t frames = c[9];
     std::uint32_t ax, az;
     if (c[0x70] == 0) {
-        ax = RowX(at::kDirUnits, c[8]) * frames * speed + U(c + 0x34);
-        az = RowZ(at::kDirUnits, c[8]) * frames * speed + U(c + 0x38);
+        ax = RowX(MoveCmd_F9Steps_addr, c[8]) * frames * speed + U(c + 0x34);
+        az = RowZ(MoveCmd_F9Steps_addr, c[8]) * frames * speed + U(c + 0x38);
     } else {
-        ax = U(c + 0x34) + ((RowX(at::kDirUnits, c[8]) * frames * speed) << 1);
-        az = U(c + 0x38) + ((RowZ(at::kDirUnits, c[8]) * frames * speed) << 1);
+        ax = U(c + 0x34) + ((RowX(MoveCmd_F9Steps_addr, c[8]) * frames * speed) << 1);
+        az = U(c + 0x38) + ((RowZ(MoveCmd_F9Steps_addr, c[8]) * frames * speed) << 1);
     }
     SetLong(At(at::kAimX), static_cast<std::int32_t>(ax));
-    SetLong(At(at::kAimZ), static_cast<std::int32_t>(az));
+    Scratch_Swap = static_cast<std::int32_t>(az);
     switch (kind) {
     case 0:
     case 2:
@@ -427,7 +427,7 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
             Sprite_Current[8] = facing;
             return 1;
         }
-        g.ground_at(Long(At(at::kAimX)), Long(At(at::kAimZ)));
+        g.ground_at(Long(At(at::kAimX)), static_cast<std::int32_t>(Scratch_Swap));
         return 0;
     }
     case 6: return 5;
@@ -486,8 +486,8 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     bool found = false;
     for (;;) {
         g.direction_to(x_arg, z_arg, &dir);
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(((RowX(at::kDirSteps, dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(((RowZ(at::kDirSteps, dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
+        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(((RowX(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
+        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(((RowZ(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
         {
             const unsigned char* c = Sprite_Current;
             const long object = g.object_at(Long(c + 0x34), Long(c + 0x38), dir);
@@ -946,7 +946,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     case 0x10:
         if (to == 0x11) {
             const unsigned char* const s = Sprite_Current;
-            if (Address(s) == at::kObject905DA0) return (s[0xB] & 1) ? 0 : 0xFF;
+            if (Address(s) == FieldEvent_Object905DA0_addr) return (s[0xB] & 1) ? 0 : 0xFF;
             return (Field_State[0x138] & 1) ? 0 : 0xFF;
         }
         [[fallthrough]];

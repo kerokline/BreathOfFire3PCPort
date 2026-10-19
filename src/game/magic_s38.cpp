@@ -63,24 +63,24 @@ using move_script::Word;
 // (0x9037A0..0x9037BF). Both are read again after every call, as the
 // originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kActorRecord = 0x904B3C;   // unsigned char *: the acting actor's sprite record
-constexpr std::uint32_t kEventBattle = 0x904AAA;   // u8: not 0 in an event battle (its kind)
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
+// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle (its kind)
 constexpr std::uint32_t kAbility = 0x904B80;       // u16: the acting ability (battle_actions.cpp)
-constexpr std::uint32_t kFrameSet = 0x9039D8;      // the sprite frame-offset table pointer (sprite_pose.h)
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-constexpr std::uint32_t kFrameCounter = 0x937F94;  // Frame_Counter, read as a byte
+// kFrameCounter: now Frame_Counter (symbols.toml). Frame_Counter, read as a byte
 
 // The three overlays' pools of task-like records (0x84 bytes, bit 0 of +0 in
 // use, +0x80 the owner), each walked by its kind-2 task.
-constexpr std::uint32_t kGustPool = 0x6B7BE0;       // Tempest_GustPool, 64
+// kGustPool: now Tempest_GustPool (symbols.toml). Tempest_GustPool, 64
 constexpr unsigned kGusts = 64;
-constexpr std::uint32_t kShardPool = 0x6B9CE0;      // Magic225_ShardPool, 32
+// kShardPool: now Magic225_ShardPool (symbols.toml). Magic225_ShardPool, 32
 constexpr unsigned kShards = 32;
-constexpr std::uint32_t kRecordPool = 0x6BAD60;     // MeteorStrike_RecordPool, 48
+// kRecordPool: now MeteorStrike_RecordPool (symbols.toml). MeteorStrike_RecordPool, 48
 constexpr unsigned kRecords = 48;
 
 // The fills' bottom edge; their 319.0 right edges are Widescreen_FillRight
@@ -88,7 +88,7 @@ constexpr unsigned kRecords = 48;
 constexpr std::int32_t kBottom = 0x436F0000;   // 239.0f
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char ActorByte() { return Mem(at::kActor)[0]; }
 
@@ -99,10 +99,10 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -136,7 +136,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 unsigned char* PoolRecord(std::uint32_t pool, unsigned index) { return Mem(pool + index * 0x84u); }
 // The side's records as MAGIC225 walks them: the party member i, the enemy i
 // (from 0).
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyByOrder(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -176,15 +176,15 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 // owner are read after the phase call that precedes the walk.
 void WalkPool(std::uint32_t pool, unsigned records, std::uint32_t task) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < records; ++i) {
         unsigned char* const rec = PoolRecord(pool, i);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), rec_owner);
+        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(task);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = self;
     }
 }
@@ -241,7 +241,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 // MAGIC223 (row 137, Tempest and Hurricane read one id down)
 
 namespace {
-constexpr std::uint32_t kGustAngles = 0x65C308;   // TempestGust_Angles: four dwords by direction
+// kGustAngles: now TempestGust_Angles (symbols.toml). TempestGust_Angles: four dwords by direction
 }  // namespace
 
 // original 0x4F8640: the kind-2 task. A three-entry stack table by +1
@@ -250,7 +250,7 @@ constexpr std::uint32_t kGustAngles = 0x65C308;   // TempestGust_Angles: four dw
 S38_EXPORT void __cdecl Tempest_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {addr::Tempest_Start, addr::MagicFx_CountDownFlag10, addr::Tempest_End};
     Dispatch(kPhases, 3, Sc()[1], "Tempest_Task");
-    WalkPool(kGustPool, kGusts, addr::TempestGust_Task);
+    WalkPool(Tempest_GustPool_addr, kGusts, addr::TempestGust_Task);
 }
 
 // original 0x4F86C0: the gust pool's +0..+2 cleared; the owner's direction and
@@ -259,7 +259,7 @@ S38_EXPORT void __cdecl Tempest_Task(void) {
 // (a full pool skips one); CLUT row 26's words 1..15 and 17..31 back with
 // their STP bits, words 0 and 16 cleared; sound 0x100.
 S38_EXPORT void __cdecl Tempest_Start(void) {
-    ClearPool(kGustPool, kGusts);
+    ClearPool(Tempest_GustPool_addr, kGusts);
     Sc()[8] = Owner()[8];
     SetLong(Sc() + 0x34, Long(Owner() + 0x34));
     SetLong(Sc() + 0x38, Long(Owner() + 0x38));
@@ -272,7 +272,7 @@ S38_EXPORT void __cdecl Tempest_Start(void) {
         const unsigned index = Alloc(addr::Tempest_GustAlloc);
         if (index == 0xFF) continue;
         unsigned char* const self = Sc();
-        unsigned char* const rec = PoolRecord(kGustPool, index);
+        unsigned char* const rec = PoolRecord(Tempest_GustPool_addr, index);
         SetLong(rec + 0x80, static_cast<std::int32_t>(Key(self)));
         rec[1] = 0;
         rec[0xB] = static_cast<unsigned char>(i);
@@ -410,7 +410,7 @@ S38_EXPORT void __cdecl TempestGust_Launch(void) {
         unsigned char* const x = s + 0x2E;
         const std::uint32_t phase = (s[0xB] & 7u) << 8;
         SetSD(4, phase);
-        const std::uint32_t angle = phase + static_cast<std::uint32_t>(Long(Mem(kGustAngles + 4u * s[8]))) + 0x400;
+        const std::uint32_t angle = phase + static_cast<std::uint32_t>(Long(Mem(TempestGust_Angles_addr + 4u * s[8]))) + 0x400;
         SetSD(4, angle);
         const int v = Sin(static_cast<int>(angle));
         AddWord(x, static_cast<std::uint32_t>(Mul12(v, 72)));
@@ -422,7 +422,7 @@ S38_EXPORT void __cdecl TempestGust_Launch(void) {
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Long(Mem(kGustAngles + 4u * s[8])));
+        SetLong(s + 0x14, Long(Mem(TempestGust_Angles_addr + 4u * s[8])));
     }
     Sc()[0xB] = Word(Mem(kAbility)) == 0xDF ? 0 : 0x10;
     Sc()[9] = 0;
@@ -520,14 +520,14 @@ S38_EXPORT void __cdecl TempestGust_Draw(void) {
 
 // original 0x4F8EE0: the first of the gust pool's 64 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S38_EXPORT unsigned char __cdecl Tempest_GustAlloc(void) { return PoolAlloc(kGustPool, kGusts); }
+S38_EXPORT unsigned char __cdecl Tempest_GustAlloc(void) { return PoolAlloc(Tempest_GustPool_addr, kGusts); }
 
 // ===========================================================================
 // MAGIC225 (row 140, an id with no label read one id down)
 
 namespace {
 
-constexpr std::uint32_t kBurstColours = 0x65C31C;   // Magic225Veil_BurstColours: four RGB byte triples
+// kBurstColours: now Magic225Veil_BurstColours (symbols.toml). Magic225Veil_BurstColours: four RGB byte triples
 
 // The side's live actors (Battle_ActorIsOut 0) given draw layer `layer`
 // (+0x29): the enemies 0..7 when the target's side bit is set, else the party
@@ -573,14 +573,14 @@ S38_EXPORT void __cdecl Magic225_Task(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::Magic225_Start, addr::Magic225_Spawn, addr::Magic225_Apply,
                                                  addr::BattleFx_Finish};
     Dispatch(kPhases, 4, Sc()[1], "Magic225_Task");
-    WalkPool(kShardPool, kShards, addr::Magic225Shard_Task);
+    WalkPool(Magic225_ShardPool_addr, kShards, addr::Magic225Shard_Task);
 }
 
 // original 0x4F8FD0: the shard pool's +0..+2 cleared; the task at the side's
 // centre; +0xB 0, +9 0x18, +1 on; the veil (kind 1, 0x65); CLUT rows 2 and 26
 // back from their source as they are (no STP bits); sound 0x101.
 S38_EXPORT void __cdecl Magic225_Start(void) {
-    ClearPool(kShardPool, kShards);
+    ClearPool(Magic225_ShardPool_addr, kShards);
     MH_CALL(MagicFx_CenterOnSide)();
     Sc()[0xB] = 0;
     Sc()[9] = 0x18;
@@ -606,7 +606,7 @@ S38_EXPORT void __cdecl Magic225_Spawn(void) {
         const unsigned index = Alloc(addr::Magic225_ShardAlloc);
         if (index == 0xFF) continue;
         unsigned char* const self = Sc();
-        unsigned char* const rec = PoolRecord(kShardPool, index);
+        unsigned char* const rec = PoolRecord(Magic225_ShardPool_addr, index);
         SetLong(rec + 0x80, static_cast<std::int32_t>(Key(self)));
         rec[1] = 0;
         rec[0xB] = static_cast<unsigned char>(i);
@@ -648,7 +648,7 @@ S38_EXPORT void __cdecl Magic225Veil_Run(void) {
                                                 addr::BarrierRing_Grow, addr::Magic225Veil_WaitBuffs,
                                                 addr::Magic225Veil_End};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 5, phase, "Magic225Veil_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) {
@@ -658,16 +658,16 @@ S38_EXPORT void __cdecl Magic225Veil_Run(void) {
         MH_AT(BurstFn, addr::Magic225Veil_DrawBurst)(0x40, 0xF0, 0x6C, 2);
         MH_AT(BurstFn, addr::Magic225Veil_DrawBurst)(0x140, 0xF0, 0x5C, 3);
     }
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4F9450: the actor's sprite (0x904B3C) and the side's live
 // actors to draw layer 2; the veil's own layer 7 in the event battle of kind
 // 0x37, else 3; +0xB 1, +9 0, +0xA 0, +2 on.
 S38_EXPORT void __cdecl Magic225Veil_Start(void) {
-    Pointer(kActorRecord)[0x29] = 2;
+    Pointer(MagicS23_ActorSprite_addr)[0x29] = 2;
     LayerSide(2);
-    Sc()[0x29] = Mem(kEventBattle)[0] == 0x37 ? 7 : 3;
+    Sc()[0x29] = Mem(BattleActions_EventBattle_addr)[0] == 0x37 ? 7 : 3;
     Sc()[0xB] = 1;
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -700,7 +700,7 @@ S38_EXPORT void __cdecl Magic225Veil_End(void) {
     }
     Dec(Sc()[0xA]);
     if (Sc()[0xA] != 0) return;
-    Pointer(kActorRecord)[0x29] = 4;
+    Pointer(MagicS23_ActorSprite_addr)[0x29] = 4;
     LayerSide(4);
     Dec(Owner()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
@@ -721,7 +721,7 @@ S38_EXPORT void __cdecl Magic225Veil_DrawBurst(int x, int y, int radius, int kin
     SetSD(4, static_cast<std::uint32_t>(r + DivPow2(r, 1)));
     {
         const unsigned char* const s = Sc();
-        const unsigned char* const colour = Mem(kBurstColours + 3u * (static_cast<unsigned>(kind) & 0xFF));
+        const unsigned char* const colour = Mem(Magic225Veil_BurstColours_addr + 3u * (static_cast<unsigned>(kind) & 0xFF));
         SetSD(0xC, static_cast<std::uint32_t>(s[9]) << 2);
         SetSD(0x10, Mul(colour[0], s[9]));
         SetSD(0x14, Mul(colour[1], s[9]));
@@ -827,11 +827,11 @@ S38_EXPORT void __cdecl Magic225Shard_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {addr::Magic225Shard_Launch, addr::Magic225Shard_Fly,
                                                 addr::Magic225Shard_Fall};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 3, phase, "Magic225Shard_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4F9AA0: +9 down; at 0 the shard starts at the acting actor's
@@ -843,7 +843,7 @@ S38_EXPORT void __cdecl Magic225Shard_Run(void) {
 S38_EXPORT void __cdecl Magic225Shard_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    unsigned char* const rec = Pointer(kActorRecord);
+    unsigned char* const rec = Pointer(MagicS23_ActorSprite_addr);
     Sc()[8] = rec[8];
     SetLong(Sc() + 0xC, 0x10000);
     SetLong(Sc() + 0x10, 0);
@@ -924,7 +924,7 @@ S38_EXPORT void __cdecl Magic225Shard_Fly(void) {
         const int v = Cos(Long(s + 0x14));
         AddLong(z, Mul(v, Long(Sc() + 0xC)));
     }
-    if ((Mem(kFrameCounter)[0] & 1) == 0) return;
+    if ((Mem(Frame_Counter_addr)[0] & 1) == 0) return;
     unsigned char* const s = Sc();
     const std::int32_t speed = Long(s + 0xC);
     if (speed == 4) {
@@ -961,15 +961,15 @@ S38_EXPORT void __cdecl Magic225Shard_Fall(void) {
 
 // original 0x4F9D80: the first of the shard pool's 32 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S38_EXPORT unsigned char __cdecl Magic225_ShardAlloc(void) { return PoolAlloc(kShardPool, kShards); }
+S38_EXPORT unsigned char __cdecl Magic225_ShardAlloc(void) { return PoolAlloc(Magic225_ShardPool_addr, kShards); }
 
 // ===========================================================================
 // MAGIC226/227 (rows 135 and 147, MeteorStrike read one id down)
 
 namespace {
-constexpr std::uint32_t kChipShades = 0x65C364;   // MeteorStrikeChip_Shades: four bytes by i / 8
-constexpr std::uint32_t kChipFades = 0x65C368;    // MeteorStrikeChip_Fades: four bytes by i / 8
-constexpr std::uint32_t kChipLifts = 0x65C374;    // MeteorStrikeChip_Lifts: four dwords by +0xB & 3
+// kChipShades: now MeteorStrikeChip_Shades (symbols.toml). MeteorStrikeChip_Shades: four bytes by i / 8
+// kChipFades: now MeteorStrikeChip_Fades (symbols.toml). MeteorStrikeChip_Fades: four bytes by i / 8
+// kChipLifts: now MeteorStrikeChip_Lifts (symbols.toml). MeteorStrikeChip_Lifts: four dwords by +0xB & 3
 }  // namespace
 
 // original 0x4F9DE0: the kind-2 task. A three-entry stack table by +1
@@ -979,7 +979,7 @@ S38_EXPORT void __cdecl MeteorStrike_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {addr::MeteorStrike_Start, addr::MagicFx_CountDownFlag10,
                                                  addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "MeteorStrike_Task");
-    WalkPool(kRecordPool, kRecords, addr::MeteorStrikeRecord_Task);
+    WalkPool(MeteorStrike_RecordPool_addr, kRecords, addr::MeteorStrikeRecord_Task);
 }
 
 // original 0x4F9E60: the record pool's +0..+2 cleared; the task at the side's
@@ -989,12 +989,12 @@ S38_EXPORT void __cdecl MeteorStrike_Task(void) {
 // +1 on; the rock (kind 1, 0x5F); sound 0x100; CLUT row 26 and the first 16
 // words of row 2 back with their STP bits, the first word of each without.
 S38_EXPORT void __cdecl MeteorStrike_Start(void) {
-    ClearPool(kRecordPool, kRecords);
+    ClearPool(MeteorStrike_RecordPool_addr, kRecords);
     MH_CALL(MagicFx_CenterOnSide)();
     MH_CALL(BattleActor_UpdateScreenXY)();
     const bool enemies = (TargetByte() & 0x40) != 0;
     const unsigned actor = ActorByte();
-    unsigned char facing = Pointer(kActorRecord)[8];
+    unsigned char facing = Pointer(MagicS23_ActorSprite_addr)[8];
     if (enemies ? actor < 3 : actor >= 3) facing = static_cast<unsigned char>(facing ^ 2);
     Sc()[8] = facing;
     Sc()[0xB] = 0;
@@ -1040,7 +1040,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Run(void) {
                                                 addr::MeteorStrikeRock_Shake, addr::MeteorStrikeRock_Hide,
                                                 addr::MeteorStrikeRock_End};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 5, phase, "MeteorStrikeRock_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
@@ -1051,7 +1051,7 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Run(void) {
         Call0(addr::MeteorStrikeRock_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4FA030: the rock starts at the owner, its direction; lifted by
@@ -1137,11 +1137,11 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Fall(void) {
         SetLong(s + 0x3C, static_cast<std::int32_t>(height + static_cast<std::uint32_t>(Long(s + 0x14))));
     }
     AddB(Sc()[0xB], 6);
-    if ((Mem(kFrameCounter)[0] & 3) == 0) {
+    if ((Mem(Frame_Counter_addr)[0] & 3) == 0) {
         const unsigned index = Alloc(addr::MeteorStrike_RecordAlloc);
         if (index != 0xFF) {
             unsigned char* const self = Sc();
-            unsigned char* const rec = PoolRecord(kRecordPool, index);
+            unsigned char* const rec = PoolRecord(MeteorStrike_RecordPool_addr, index);
             SetLong(rec + 0x80, static_cast<std::int32_t>(Key(self)));
             rec[1] = 1;
             rec[9] = 1;
@@ -1154,13 +1154,13 @@ S38_EXPORT void __cdecl MeteorStrikeRock_Fall(void) {
         const unsigned index = Alloc(addr::MeteorStrike_RecordAlloc);
         if (index == 0xFF) continue;
         unsigned char* const owner = Owner();
-        unsigned char* const rec = PoolRecord(kRecordPool, index);
+        unsigned char* const rec = PoolRecord(MeteorStrike_RecordPool_addr, index);
         SetLong(rec + 0x80, static_cast<std::int32_t>(Key(owner)));
         rec[1] = 0;
-        rec[0x5D] = Mem(kChipShades)[i >> 3];
+        rec[0x5D] = Mem(MeteorStrikeChip_Shades_addr)[i >> 3];
         rec[0xB] = static_cast<unsigned char>(i & 7);
         rec[9] = static_cast<unsigned char>((i >> 3) * 3 + 1);
-        rec[0xA] = Mem(kChipFades)[i >> 3];
+        rec[0xA] = Mem(MeteorStrikeChip_Fades_addr)[i >> 3];
         Inc(owner[0xB]);
     }
     Camera_Angles[0] = static_cast<short>(Camera_Angles[0] + 0x14);
@@ -1318,7 +1318,7 @@ S38_EXPORT void __cdecl MeteorStrikeChip_Launch(void) {
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Long(Mem(kChipLifts + 4u * (s[0xB] & 3u))));
+        SetLong(s + 0x14, Long(Mem(MeteorStrikeChip_Lifts_addr + 4u * (s[0xB] & 3u))));
     }
     {
         unsigned char* const s = Sc();
@@ -1366,7 +1366,7 @@ S38_EXPORT void __cdecl MeteorStrikeChip_Rise(void) {
     if (Sc()[9] != 0) return;
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x14, Long(Mem(kChipLifts + 4u * (s[0xB] & 3u))));
+        SetLong(s + 0x14, Long(Mem(MeteorStrikeChip_Lifts_addr + 4u * (s[0xB] & 3u))));
     }
     {
         unsigned char* const s = Sc();
@@ -1570,7 +1570,7 @@ S38_EXPORT void __cdecl MeteorStrikeTrail_Draw(void) {
 
 // original 0x4FAF90: the first of the record pool's 48 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S38_EXPORT unsigned char __cdecl MeteorStrike_RecordAlloc(void) { return PoolAlloc(kRecordPool, kRecords); }
+S38_EXPORT unsigned char __cdecl MeteorStrike_RecordAlloc(void) { return PoolAlloc(MeteorStrike_RecordPool_addr, kRecords); }
 
 void MagicS38_Inject() {
     if (bof3::WantsShadow("magic_s38")) magic_s38::SelfTest();

@@ -25,14 +25,14 @@ namespace at {
 
 constexpr U kRecords = 0x803160;     // 22 window records of 0x24 bytes (Window_Alloc 0x59E2D0)
 constexpr U kRecordsEnd = 0x803478;
-constexpr U kCurrent = 0x905B84;     // dword: the record Field_RunTaskRecords is running
-constexpr U kColour = 0x903A5A;      // s8: the window colour (Config), a CLUT row
-constexpr U kZenny = 0x904058;       // dword: the party's zenny
-constexpr U kPartyList = 0x904062;   // u8 x 3: the party's members, in order
+// kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record Field_RunTaskRecords is running
+// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour (Config), a CLUT row
+// kZenny: now Party_Zenny (symbols.toml). dword: the party's zenny
+// kPartyList: now Cond_Flags[0xd2] (symbols.toml). u8 x 3: the party's members, in order
 // u8 per member id: its character record (the byte item_use.cpp and
 // battle_draw read; symbols.toml calls it MoveScript_EffectState, a
 // hypothesis this group does not own - docs/menu_draw_helpers.md section 6).
-constexpr U kMemberRecord = 0x66972C;
+// kMemberRecord: now MoveScript_EffectState (symbols.toml).
 // The imm32 of MenuWin_SlideOutLeft's `mov ecx, 0xFFFFFF6A` (-150) at
 // 0x59B445: the bound Widescreen_Inject (DIV-0041) widens in place. Ours reads
 // it back, so the divergence survives the takeover.
@@ -43,18 +43,18 @@ constexpr U kSlideLeftBound = 0x59B446;
 
 // The dispatch tables (symbols.toml [[data]], by the name in each comment).
 namespace table {
-constexpr U kHandler7Kinds = 0x66B1F8;        // Window_Handler7KindTable, 19, by +2
-constexpr U kHandler8Kinds = 0x66B534;        // Window_Handler8KindTable, 6, by +2
-constexpr U kTitleSteps = 0x66B244;                 // ShopWin_TitleSteps, 3, by +3
-constexpr U kButtonsSteps = 0x66B250;             // ShopWin_ButtonsSteps, 3
-constexpr U kMoneySteps = 0x66B25C;                 // ShopWin_MoneySteps, 3
-constexpr U kCursorWidths = 0x66B268;          // ShopWin_CursorBoxWidths, u16 x 2, by +0xA
-constexpr U kMemberSteps = 0x66B26C;          // ShopWin_MemberStatsSteps, 5
-constexpr U kEquipSteps = 0x66B280;                 // ShopWin_EquipSteps, 3
-constexpr U kBuyListSteps = 0x66B28C;             // ShopWin_BuyListSteps, 4
-constexpr U kItemListSteps = 0x66B2BC;           // ShopWin_ItemListSteps, 3
-constexpr U kBattleItemSteps = 0x66B54C;   // BattleMenuWin_ItemListSteps, 5
-constexpr U kBattleSkillSteps = 0x66B560; // BattleMenuWin_SkillListSteps, 3
+// kHandler7Kinds: now Window_Handler7KindTable (symbols.toml). Window_Handler7KindTable, 19, by +2
+// kHandler8Kinds: now Window_Handler8KindTable (symbols.toml). Window_Handler8KindTable, 6, by +2
+// kTitleSteps: now ShopWin_TitleSteps (symbols.toml). ShopWin_TitleSteps, 3, by +3
+// kButtonsSteps: now ShopWin_ButtonsSteps (symbols.toml). ShopWin_ButtonsSteps, 3
+// kMoneySteps: now ShopWin_MoneySteps (symbols.toml). ShopWin_MoneySteps, 3
+// kCursorWidths: now ShopWin_CursorBoxWidths (symbols.toml). ShopWin_CursorBoxWidths, u16 x 2, by +0xA
+// kMemberSteps: now ShopWin_MemberStatsSteps (symbols.toml). ShopWin_MemberStatsSteps, 5
+// kEquipSteps: now ShopWin_EquipSteps (symbols.toml). ShopWin_EquipSteps, 3
+// kBuyListSteps: now ShopWin_BuyListSteps (symbols.toml). ShopWin_BuyListSteps, 4
+// kItemListSteps: now ShopWin_ItemListSteps (symbols.toml). ShopWin_ItemListSteps, 3
+// kBattleItemSteps: now BattleMenuWin_ItemListSteps (symbols.toml). BattleMenuWin_ItemListSteps, 5
+// kBattleSkillSteps: now BattleMenuWin_SkillListSteps (symbols.toml). BattleMenuWin_SkillListSteps, 3
 }  // namespace table
 
 struct Callees {

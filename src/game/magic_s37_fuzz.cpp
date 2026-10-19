@@ -237,9 +237,15 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kActorRecord = 0x904B3C, kFrameSet = 0x9039D8,
-                        kMagmaPool = 0x6B4A60, kMagmaBytes = 32 * 0x84, kGeoPool = 0x6B5AE0, kGeoBytes = 64 * 0x84,
-                        kField = 0x905E60, kShiftX = 0x903800, kCamera = 0x929EC8;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kMagmaPool: now MagmaBreath_Pool (symbols.toml).
+// kGeoPool: now GeoBreath_Pool (symbols.toml).
+// kField: now Field_Kind2Z (symbols.toml).
+// kShiftX: now Camera_ShiftX (symbols.toml).
+// kCamera: now Camera_Angles (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kMagmaBytes = 32 * 0x84, kGeoBytes = 64 * 0x84;
 
 // Math_Ratan2's answer near the fuzzed function's threshold (MagmaBreathRecord_Fly).
 bool g_ratan_on = false;
@@ -279,7 +285,7 @@ std::uint32_t NoteSpriteOnce(const std::uint32_t* a, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // Math_Sin and Math_Cos: a third of the time a scratch or vertex word moved.
@@ -288,7 +294,7 @@ std::uint32_t StirScratch(const std::uint32_t*, std::uint32_t answer) {
     if (r % 3 != 0) return answer;
     const auto v = static_cast<std::uint16_t>(mh::Noise() >> 16);
     if (r & 0x100) SetWord(mh::Mem(kScratch + 2 * ((r >> 12) % 8)), v);
-    else SetWord(mh::Mem(kVertex + 2 * ((r >> 12) % 16)), v);
+    else SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * ((r >> 12) % 16)), v);
     return answer;
 }
 // Math_Ratan2: near the seeded angle three times in four while it is on.
@@ -406,24 +412,24 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850..
-    {kFrameSet, 4},                       // the frame-offset table pointer the Run steps swap
-    {kMagmaPool, kMagmaBytes},            // MagmaBreath_Pool
-    {kGeoPool, kGeoBytes},                // GeoBreath_Pool
+    {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the Run steps swap
+    {MagmaBreath_Pool_addr, kMagmaBytes}, // MagmaBreath_Pool
+    {GeoBreath_Pool_addr, kGeoBytes},     // GeoBreath_Pool
     {0x80F980, 0x200},                    // Gfx_ClutStrip row 2
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
     {0x80B980, 0x200},                    // Gfx_ClutStripSource row 2
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
-    {kField, 0x10},                       // Field_Kind2Z, Field_Kind2X, .., MapView_Redraw (0x905E69)
-    {kShiftX, 2},                         // Camera_ShiftX
-    {kCamera, 2},                         // Camera_Angles[0]
+    {Field_Kind2Z_addr, 0x10},            // Field_Kind2Z, Field_Kind2X, .., MapView_Redraw (0x905E69)
+    {Camera_ShiftX_addr, 2},              // Camera_ShiftX
+    {Camera_Angles_addr, 2},              // Camera_Angles[0]
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* MagmaRecord(unsigned i) { return mh::Mem(kMagmaPool + (i & 31) * 0x84u); }
-unsigned char* GeoRecord(unsigned i) { return mh::Mem(kGeoPool + (i & 63) * 0x84u); }
+unsigned char* MagmaRecord(unsigned i) { return mh::Mem(MagmaBreath_Pool_addr + (i & 31) * 0x84u); }
+unsigned char* GeoRecord(unsigned i) { return mh::Mem(GeoBreath_Pool_addr + (i & 63) * 0x84u); }
 
 // A real slot or record for a pool record's owner (the walk makes it the
 // owner cell, which the recorders write through).
@@ -436,19 +442,19 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
-    case 3: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 4:
         if (v & 1) MagmaRecord(v >> 1)[0] ^= 1;
         else GeoRecord(v >> 1)[0] ^= 1;
         break;
-    case 5: SetLong(mh::Mem(kField + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 6: mh::SetPointer(kActorRecord, mh::SpriteRecord(v)); break;
+    case 5: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 6: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
     case 7:
-        if (v % 3 == 0) SetWord(mh::Mem(kShiftX), h >> 16);
-        else if (v % 3 == 1) SetWord(mh::Mem(kCamera), h >> 16);
-        else mh::Mem(kField + 9)[0] = Byte(h >> 24);
+        if (v % 3 == 0) SetWord(mh::Mem(Camera_ShiftX_addr), h >> 16);
+        else if (v % 3 == 1) SetWord(mh::Mem(Camera_Angles_addr), h >> 16);
+        else mh::Mem(Field_Kind2Z_addr + 9)[0] = Byte(h >> 24);
         break;
     default: break;
     }
@@ -462,8 +468,8 @@ void Near(unsigned char& b, unsigned before) {
 
 // Each pool record's owner a real one, its in-use bit as the fill left it.
 void FillPools() {
-    for (unsigned i = 0; i < 32; ++i) mh::SetPointer(kMagmaPool + i * 0x84u + 0x80, SomeOwner(mh::Next()));
-    for (unsigned i = 0; i < 64; ++i) mh::SetPointer(kGeoPool + i * 0x84u + 0x80, SomeOwner(mh::Next()));
+    for (unsigned i = 0; i < 32; ++i) mh::SetPointer(MagmaBreath_Pool_addr + i * 0x84u + 0x80, SomeOwner(mh::Next()));
+    for (unsigned i = 0; i < 64; ++i) mh::SetPointer(GeoBreath_Pool_addr + i * 0x84u + 0x80, SomeOwner(mh::Next()));
 }
 // For an allocator: a third of the time every record taken, a third all but
 // one (and that one a boundary a third of those), else as the fill left it.
@@ -481,7 +487,7 @@ void FillForAlloc(unsigned char* (*record)(unsigned), unsigned records) {
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kActorRecord, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     FillPools();
     g_ratan_on = false;
     if (mh::Half()) sc[0] = 0;

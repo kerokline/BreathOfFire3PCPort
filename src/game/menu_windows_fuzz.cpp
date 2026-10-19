@@ -122,12 +122,12 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 16) {
-    case 0: At(at::kColour)[0] = static_cast<unsigned char>(v); break;
-    case 1: At(at::kYesNo)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v & 1); break;
-    case 2: At(at::kInputPressed + (v & 1))[0] = static_cast<unsigned char>(h >> 20); break;
-    case 3: At(at::kListCount)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 9) - 1); break;
-    case 4: At(at::kListSet)[0] = static_cast<unsigned char>(v % 4); break;
-    case 5: SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(Window(v % kWindows)))); break;
+    case 0: At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(v); break;
+    case 1: At(FieldS_Answer_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v & 1); break;
+    case 2: At(Input_Pressed_addr + (v & 1))[0] = static_cast<unsigned char>(h >> 20); break;
+    case 3: At(MenuWindows_ListCount_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 9) - 1); break;
+    case 4: At(MenuWindows_ListSet_addr)[0] = static_cast<unsigned char>(v % 4); break;
+    case 5: SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(Window(v % kWindows)))); break;
     case 6:
     case 7: {
         // a byte of the window records' fields. +0xA stays a category the
@@ -153,9 +153,9 @@ void Disturb() {
         break;
     }
     case 10: At(0x904154 + (h >> 16) % 0x480)[0] = static_cast<unsigned char>(v); break;
-    case 11: At(at::kGold + (v & 3))[0] = static_cast<unsigned char>(h >> 24); break;
-    case 12: At(at::kInputFlags)[0] = static_cast<unsigned char>(v); break;
-    case 13: At(at::kCondFA)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : 6 + v % 4); break;
+    case 11: At(Party_Zenny_addr + (v & 3))[0] = static_cast<unsigned char>(h >> 24); break;
+    case 12: At(Field_InputFlags_addr)[0] = static_cast<unsigned char>(v); break;
+    case 13: At(Cond_ByteFA_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : 6 + v % 4); break;
     default: break;
     }
 }
@@ -689,10 +689,10 @@ void Text(unsigned char* s, unsigned size, bool controls) {
 }
 void Fix() {
     Gfx_PacketNext = g_buf.pool + Next() % 0x40;
-    SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(Window(Next() % kWindows))));
-    SetLong(At(at::kListText), static_cast<std::int32_t>(Address(g_buf.texts[Next() % kTexts])));
-    At(at::kListSet)[0] = static_cast<unsigned char>(Next() % 4);
-    At(at::kListCount)[0] = static_cast<unsigned char>(static_cast<signed char>(Next() % 10) - 2);
+    SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(Window(Next() % kWindows))));
+    SetLong(At(MenuWindows_ListText_addr), static_cast<std::int32_t>(Address(g_buf.texts[Next() % kTexts])));
+    At(MenuWindows_ListSet_addr)[0] = static_cast<unsigned char>(Next() % 4);
+    At(MenuWindows_ListCount_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(Next() % 10) - 2);
     for (unsigned k = 0; k < kWindows; ++k) {
         unsigned char* const w = Window(k);
         w[0xA] = static_cast<unsigned char>(Next() % 5);
@@ -703,7 +703,7 @@ void Fix() {
     for (unsigned k = 0; k < kTexts; ++k) Text(g_buf.texts[k], kTextBytes, true);
     for (unsigned k = 0; k < kNames; ++k) Text(g_buf.names[k], kNameBytes, false);
     // the gold near the prices the scale stand-in answers
-    if (Often()) SetLong(At(at::kGold), static_cast<std::int32_t>(990 + Next() % 20));
+    if (Often()) SetLong(At(Party_Zenny_addr), static_cast<std::int32_t>(990 + Next() % 20));
 }
 
 struct Args { std::uint32_t a[8]; };
@@ -719,7 +719,7 @@ Args Seed(unsigned k) {
     switch (k) {
     case kOpenSystem: break;
     case kArrow:
-        At(at::kFrameCounter)[0] = static_cast<unsigned char>(Half() ? 0x20 | Next() : Next() & ~0x20u);
+        At(Frame_Counter_addr)[0] = static_cast<unsigned char>(Half() ? 0x20 | Next() : Next() & ~0x20u);
         args.a[0] = Coord();
         args.a[1] = Coord();
         break;
@@ -738,7 +738,7 @@ Args Seed(unsigned k) {
         args.a[2] = Coord();
         args.a[3] = Coord();
         args.a[4] = Half() ? Garbage(0xFF, 0) : Next();
-        At(at::kFrameCounter)[0] = static_cast<unsigned char>(Next());
+        At(Frame_Counter_addr)[0] = static_cast<unsigned char>(Next());
         break;
     }
     case kIcon:
@@ -749,7 +749,7 @@ Args Seed(unsigned k) {
         args.a[2] = Half() ? Garbage(0xFF, 4) : Garbage(0xFF, Next() % 0x18);
         args.a[3] = Often() ? Garbage(0xFF, kShades[Next() % 6]) : Next();
         static const unsigned char kFA[] = {7, 8, 9, 0x7F, 0x80, 0xFF, 0};
-        At(at::kCondFA)[0] = kFA[Next() % 7];
+        At(Cond_ByteFA_addr)[0] = kFA[Next() % 7];
         break;
     }
     case kExpBar: {
@@ -761,12 +761,12 @@ Args Seed(unsigned k) {
     case kMoneyBox: args.a[0] = Coord(); args.a[1] = Coord(); break;
     case kYesNo: {
         static const unsigned char kSel[] = {0, 1, 0xFF, 0x80, 2};
-        At(at::kYesNo)[0] = kSel[Next() % 5];
+        At(FieldS_Answer_addr)[0] = kSel[Next() % 5];
         const std::uint32_t buttons = Next();
-        SetWord(At(at::kCancelButtons), Half() ? 0 : 1u << (buttons % 16));
-        SetWord(At(at::kConfirmButtons), Half() ? 0 : 1u << ((buttons >> 4) % 16));
+        SetWord(At(Field_CancelButtons_addr), Half() ? 0 : 1u << (buttons % 16));
+        SetWord(At(Field_ConfirmButtons_addr), Half() ? 0 : 1u << ((buttons >> 4) % 16));
         static const std::uint32_t kPressed[] = {0, 0x2000, 0x8000, 0xA000, 0x4000, 0x1000, 0x10000, 0xFFFF0000u};
-        SetLong(At(at::kInputPressed),
+        SetLong(At(Input_Pressed_addr),
                 static_cast<std::int32_t>(Often() ? kPressed[Next() % 8] | (Half() ? 0 : 1u << (Next() % 16)) : Next()));
         break;
     }
@@ -825,7 +825,7 @@ Args Seed(unsigned k) {
             w[0xC] = static_cast<unsigned char>(w[0xB] + Next() % 12);
             w[0xD] = static_cast<unsigned char>(w[0xB] + Next() % 12);
         }
-        At(at::kMenuMember)[0] = static_cast<unsigned char>(Next() % 4);
+        At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(Next() % 4);
         break;
     }
     case kBorder:

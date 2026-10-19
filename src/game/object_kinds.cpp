@@ -33,12 +33,12 @@ std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t
 // Data these read that symbols.toml does not name.
 constexpr std::uint32_t kPaceTable = 0x65F5DC;      // 7 handlers, by Sprite_Current[2], no bound
 constexpr std::uint32_t kAsideRows = 0x65F624;      // 4 directions per leader direction
-constexpr std::uint32_t kSteps = 0x6697B0;          // per direction: x, z step (16.16)
-constexpr std::uint32_t kCounter = 0x905B80;        // byte: a counter the loop copies...
+// kSteps: now Field_DirectionSteps (symbols.toml). per direction: x, z step (16.16)
+// kCounter: now Field_EdgeBits (symbols.toml). byte: a counter the loop copies...
 constexpr std::uint32_t kCounterSeen = 0x8034E8;    // ...here after each pass
 constexpr std::uint32_t kBlockFlags = 0x8034E1;     // bit 6: blocks the idle turn
-constexpr std::uint32_t kEncounter = 0x929F00;      // bytes +0, +1 and +0xC: a type-5 touch
-constexpr std::uint32_t kTalker = 0x903804;         // dword: Field_ActiveMember of the last talk
+// kEncounter: now BattleE1_Mode (symbols.toml). bytes +0, +1 and +0xC: a type-5 touch
+// kTalker: now AreaW1a_FocusObject (symbols.toml). dword: Field_ActiveMember of the last talk
 constexpr std::uint32_t kLeaderDirection = 0x802D48;  // ObjTrio +8
 constexpr std::uint32_t kLinkArgument = 0x802DC9;   // ObjTrio +0x89
 
@@ -225,7 +225,7 @@ void FadeInStep() {
 // step up (to 0xFA, by `add` - so Field_Pace5's 0xF9 reaches 0xFB) and
 // return 1; else with flags bit 1 and steps left, a move's frames.
 unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags, unsigned char bit, unsigned char add) {
-    if ((flags & 1) && ((At(kCounter)[0] ^ At(kCounterSeen)[0]) & bit)) {
+    if ((flags & 1) && ((At(Field_EdgeBits_addr)[0] ^ At(Field_EdgeBitsPrev_addr)[0]) & bit)) {
         if (object[0x87] < 0xFA) object[0x87] = static_cast<unsigned char>(object[0x87] + add);
         return 1;
     }
@@ -390,7 +390,7 @@ extern "C" unsigned char __cdecl Field_ObjectRandomTurn(unsigned char* object) {
 // original 0x518000 (PSX FUN_801A2A60): whether the next step stays in the
 // home box. Everything from the argument, not Sprite_Current.
 extern "C" unsigned char __cdecl Field_ObjectInHome(unsigned char* object) {
-    const unsigned char* const step = At(kSteps) + (object[8] & 7) * 8u;
+    const unsigned char* const step = At(Field_DirectionSteps_addr) + (object[8] & 7) * 8u;
     const std::uint32_t x = static_cast<std::uint32_t>(Long(step)) + static_cast<std::uint32_t>(Long(object + 0x34));
     const std::uint32_t z = static_cast<std::uint32_t>(Long(step + 4)) + static_cast<std::uint32_t>(Long(object + 0x38));
     int dx = static_cast<short>(x >> 16) - static_cast<short>(Word(object + 0x8E));
@@ -415,7 +415,7 @@ extern "C" void __cdecl Field_ObjectLinked() {
         call = sprite[6] == 4 || (Field_ActiveMember[0xA0] & 0x7F) != 0x7F;
     }
     if (call) {
-        g.area_handler(At(kLinkArgument)[0]);
+        g.area_handler(ObjTrio[0x89]);
         return;
     }
     Field_ActiveMember[0x80] &= 0xFE;
@@ -433,7 +433,7 @@ extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
     const unsigned char direction = Sprite_Current[8];
     unsigned char n = 0;
     for (; n < 4; ++n) {
-        Sprite_Current[8] = At(kAsideRows)[n + (At(kLeaderDirection)[0] & 7) * 4u];
+        Sprite_Current[8] = At(kAsideRows)[n + (ObjTrio[8] & 7) * 4u];
         if (g.blocked_ahead(object)) continue;
         if (Sprite_Current[1] == 3 || Sprite_Current[3] == 3) {
             if (g.in_home(object)) break;
@@ -470,15 +470,15 @@ extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
     if (Field_Request == 2) return;
     unsigned char* const sprite = Sprite_Current;
     if (sprite[6] == 5) {
-        At(kEncounter)[0] = 0;
-        At(kEncounter)[1] = 0;
+        BattleE1_Mode = 0;
+        At(BattleE1_Mode_addr)[1] = 0;
         Game_Mode = 7;
         // (object - Sprite_Objects) / 0xA4, signed as the original's imul.
         const auto offset = static_cast<std::int32_t>(Address(object) - Address(Sprite_Objects));
-        At(kEncounter)[0xC] = static_cast<unsigned char>(offset / 0xA4);
+        At(BattleE1_Mode_addr)[0xC] = static_cast<unsigned char>(offset / 0xA4);
         return;
     }
-    if (!(At(kBlockFlags)[0] & 0x40)) {
+    if (!(Field_StatusBits & 0x40)) {
         if (!(sprite[7] & 8)) {
             sprite[8] = object[0x85];
             object[0x80] |= 8;
@@ -511,7 +511,7 @@ extern "C" unsigned char __cdecl MoveScript_SetTurnTarget(unsigned char* context
     SetWord(context + 8, word);
     if (Sprite_Current[7] & 4) context[0] &= 0xDF;
     unsigned char* const member = Field_ActiveMember;
-    std::memcpy(At(kTalker), &member, sizeof member);
+    std::memcpy(At(AreaW1a_FocusObject_addr), &member, sizeof member);
     return 1;
 }
 
@@ -729,11 +729,11 @@ const Region kRegions[] = {
     {kObjectsLow, 0x7E1300 - kObjectsLow},
     {Address(&Field_Request), 1},
     {Address(&Game_Mode), 2},
-    {kEncounter, 0x10},
+    {BattleE1_Mode_addr, 0x10},
     {0x8034E0, 0x10},   // kBlockFlags, kCounterSeen
     {Address(&Field_ScriptFlags), 2},
-    {kTalker, 4},
-    {kCounter, 1},
+    {AreaW1a_FocusObject_addr, 4},
+    {Field_EdgeBits_addr, 1},
     {Address(ObjTrio), 0x100},   // kLeaderDirection, kLinkArgument
 };
 constexpr unsigned kRegionBytes = (0x7E1300 - kObjectsLow) + 1 + 2 + 0x10 + 0x10 + 2 + 4 + 1 + 0x100;
@@ -856,14 +856,14 @@ unsigned char* Seed(unsigned k, State& input, unsigned& speed, unsigned& flags) 
     }
     // Globals.
     if (Often()) Field_Request = 2;
-    if (Often()) At(kBlockFlags)[0] &= 0xBF;
-    if (Often()) At(kCounter)[0] = At(kCounterSeen)[0];
+    if (Often()) Field_StatusBits &= 0xBF;
+    if (Often()) At(Field_EdgeBits_addr)[0] = At(Field_EdgeBitsPrev_addr)[0];
     // The talk word: none, a script, a system message, a script message.
     const unsigned talk = Next() % 4;
     SetWord(object + 0x88, talk == 0 ? 0xFFFFu : talk == 1 ? (0x8000u | Next()) : talk == 2 ? ((Next() & 0x5FFFu) | 0x2000u) : Next() & 0x5FFFu);
     // The home box: the next step's high words at the edge, just in, just out.
     if (k == kInHome && Next() % 4) {
-        const unsigned char* const step = At(kSteps) + (object[8] & 7) * 8u;
+        const unsigned char* const step = At(Field_DirectionSteps_addr) + (object[8] & 7) * 8u;
         for (unsigned axis = 0; axis < 2; ++axis) {
             const auto home = static_cast<std::int16_t>(Next() % 4 ? Next() % 64 : Next());
             const auto half = static_cast<std::int16_t>(Next() % 8 ? Next() % 8 : Next());

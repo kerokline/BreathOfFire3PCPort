@@ -129,10 +129,10 @@ void Disturb() {
     case 11: Cond_ByteFA = static_cast<signed char>(v % 2 ? 0xE + v % 4 : v); break;
     case 12: Field_StatusBits = static_cast<unsigned char>(v); break;
     case 13: At(at::kKind2XHigh)[0] = static_cast<unsigned char>(v); break;
-    case 14: At(at::kStartArea + (v % 12))[0] = static_cast<unsigned char>(h >> 20); break;
-    case 15: At(at::kAreaTrack)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : h >> 20); break;
-    case 16: At(at::kMusicTrack)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : h >> 20); break;
-    case 17: At(at::kPendingKind)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFE : v % 3 == 1 ? 0xFF : h >> 20); break;
+    case 14: At(FieldModes_Pending_addr + (v % 12))[0] = static_cast<unsigned char>(h >> 20); break;
+    case 15: At(AreaW1f_MusicCurrent_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : h >> 20); break;
+    case 16: At(Music_Track_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : h >> 20); break;
+    case 17: At(AreaW0c_PendingKind_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? 0xFE : v % 3 == 1 ? 0xFF : h >> 20); break;
     case 18: At(at::kClock + v % 4)[0] = static_cast<unsigned char>(v % 2 ? 0 : h >> 20); break;
     case 19: Gfx_ClutStripDirty = static_cast<unsigned char>(v); break;
     case 20: Camera_Angles[0] = static_cast<short>(h >> 16); break;
@@ -257,7 +257,7 @@ void __cdecl StubSetSemi(unsigned char* prim, unsigned abe) { Record(24, Id(prim
 // GameMode_Start reads the saved position after it.
 void __cdecl StubPartyLoad(unsigned slot) {
     Record(25, slot);
-    if (Hash() % 2) At(at::kStartArea + (Hash() >> 8) % 12)[0] = static_cast<unsigned char>(Hash() >> 16);
+    if (Hash() % 2) At(FieldModes_Pending_addr + (Hash() >> 8) % 12)[0] = static_cast<unsigned char>(Hash() >> 16);
     Disturb();
 }
 void __cdecl StubChangeArea(unsigned area, int x, int z, unsigned flags) {
@@ -434,7 +434,7 @@ constexpr Call kClearRectCalls[] = {{0x36, 0x59E650}};
 
 enum : unsigned {
     kStart, kTask, kKind0,
-    kFadeSub = kKind0 + 21, kFadeAdd, kTile, kFieldTask, kModeStart, kModeEnter, kWait, kClock, kAreaEnter, kWalk,
+    kFadeSub = kKind0 + 21, kFadeAdd, kTile, kFieldTask, kModeStart, kModeEnter, kWait, kClock, kAreaEnter, EventLeader_PendingFlag_addr,
     kWindowReset, kBoot, kTitleLoad, kLoadDone, kClutRestore, kTintReset, kSlotRelease, kSlotsRelease, kClearRect,
     kCount
 };
@@ -497,8 +497,8 @@ const Region kRegions[] = {
     {at::kBootClear, at::kBootClearBytes},   // the game state Boot_Task zeroes: the start position, the config bytes,
                                              // Cond_Flags, the clock, the party byte, the track, the countdowns
     {0x904A90, 0x70},          // 0x904AAA, 0x904AE5
-    {at::kAreaTrack, 1},
-    {at::kAreaTransition, 0x1E},   // the kind, the entry walk, Game_AreaNumber
+    {AreaW1f_MusicCurrent_addr, 1},
+    {ModeFlow_AreaTransition_addr, 0x1E}, // the kind, the entry walk, Game_AreaNumber
     {0x903580, 0xC0},          // the buttons, Light_Angles, Field_Slots
     {0x9036D0, 1},
     {0x903840, 0x100},         // Camera_Distance, the pending x and z, the six hold bytes
@@ -510,12 +510,12 @@ const Region kRegions[] = {
     {at::kTintMarks, 0x1E4},   // the -1 marks, MoveScript_TintRecords, the pool pointer 0x7E0880
     {0x7E0918, 0xC},           // Draw_PassFlags, the last Kind2 X / Z
     {0x7E0940, 4},             // Sprite_Kind2 + 1..3
-    {at::kLastArea, 2},
-    {at::kWindowPass, 0x760},  // the pass byte, the members' walk bytes, the 22 window records
+    {AreaW2c_LastArea_addr, 2},
+    {BossSa_WindowPass_addr, 0x760}, // the pass byte, the members' walk bytes, the 22 window records
     {0x8034E0, 0x12},          // Cond_ByteFA, Field_StatusBits and the byte after, Cond_ByteFD
     {at::kWalkPoses, 4},       // constant data, read by Area_EntryWalk: random here, put back after
-    {at::kButtonDefaults, 0x12},
-    {at::kDefaultLight, 8},
+    {ModeFlow_ButtonDefaults_addr, 0x12},
+    {ModeFlow_DefaultLight_addr, 8},
 };
 constexpr unsigned kRegionBytes = 0x60 + 0x40 + at::kBootClearBytes + 0x70 + 1 + 0x1E + 0xC0 + 1 + 0x100 + 0x28 + 0x10 +
                                   0x10 + 1 + 0x1C + 0x1E4 + 0xC + 4 + 2 + 0x760 + 0x12 + 4 + 0x12 + 8;
@@ -576,7 +576,7 @@ void Fix() {
     Game_Mode = static_cast<std::uint16_t>(Next() % 12);
     Game_AreaNumber = static_cast<std::uint16_t>(Next() % kAreas);
     Field_MemberCount = static_cast<unsigned char>(Next() % 5);
-    SetWord(At(at::kTransitionKind), Next() % 21);
+    SetWord(At(ModeFlow_TransitionKind_addr), Next() % 21);
     if (Often()) MoveScript_WaitWordDA = 0;
     for (unsigned a = 0; a < kAreas; ++a) {
         unsigned char* const d = g_desc[a];
@@ -628,11 +628,11 @@ Args Seed(unsigned k) {
         break;
     case kModeStart:
         for (unsigned i = 0; i < 4; ++i) if (Half()) At(at::kClock + i)[0] = 0;
-        if (Half()) At(at::kMusicTrack)[0] = 0xFF;
+        if (Half()) At(Music_Track_addr)[0] = 0xFF;
         break;
     case kModeEnter: {
         static const unsigned char kKinds_[] = {0xFE, 0xFF, 0, 1, 0xA, 0x14};
-        At(at::kPendingKind)[0] = Often() ? kKinds_[Next() % 6] : static_cast<unsigned char>(Next());
+        At(AreaW0c_PendingKind_addr)[0] = Often() ? kKinds_[Next() % 6] : static_cast<unsigned char>(Next());
         Field_InputFlags = static_cast<unsigned char>(Often() ? Next() % 16 : Next());
         if (Half()) Game_AreaNumber = 0xBD;
         break;
@@ -659,7 +659,7 @@ Args Seed(unsigned k) {
             c[2] = static_cast<unsigned char>(0x3A + Next() % 3);
             c[3] = static_cast<unsigned char>(0x1C + Next() % 2);
         }
-        for (std::uint32_t t : {at::kCountdownA, at::kCountdownB}) {
+        for (std::uint32_t t : {ModeFlow_CountdownA_addr, Rest3c_Byte660_addr}) {
             unsigned char* const d = At(t);
             if (Half()) { d[0] = 0; d[1] = 0; d[2] = 0; d[3] = 0; }
             if (Often()) d[0] = static_cast<unsigned char>(Half() ? 0 : Next() % 3);
@@ -674,12 +674,12 @@ Args Seed(unsigned k) {
         args.a[0] = Garbage(0xFFFF, Next() % kAreas);
         args.a[3] = Half() ? (Next() | 0x80) : (Next() & ~0x80u);
         if (Half()) Field_Request = 5;
-        if (Half()) At(at::kAreaTrack)[0] = 0xFF;
+        if (Half()) At(AreaW1f_MusicCurrent_addr)[0] = 0xFF;
         if (Half()) At(0x905BA5)[0] = static_cast<unsigned char>(Half() ? 0x80 : 0);
         if (Half()) At(0x9039A3)[0] = static_cast<unsigned char>(Half() ? 8 : 0);
         if (Half()) Cond_ByteFA = static_cast<signed char>(0xE + Next() % 4);
         break;
-    case kWalk:
+    case EventLeader_PendingFlag_addr:
         args.a[0] = Half() ? Next() % 4 : Garbage(0xFF, Next() % 4);
         break;
     case kBoot:
@@ -719,7 +719,7 @@ void Cover(unsigned k, const State& in, const State& out, bool cut) {
         if (Byte(in, at::kClock + 1) != Byte(out, at::kClock + 1)) ++g_cover.clock_minutes;
         if (Byte(in, at::kClock) != Byte(out, at::kClock)) ++g_cover.clock_hours;
         if (Byte(in, at::kClock) == 0x63 && Byte(in, at::kClock + 1) == 0x3B && Byte(in, at::kClock + 2) == 0x3B) ++g_cover.clock_capped;
-        for (std::uint32_t t : {at::kCountdownA, at::kCountdownB}) {
+        for (std::uint32_t t : {ModeFlow_CountdownA_addr, Rest3c_Byte660_addr}) {
             if (Byte(out, t) != Byte(in, t)) ++g_cover.count_hour_down;
             if (Byte(in, t) == 0 && Byte(in, t + 1) == 0 && Byte(out, t + 3) == 0x1D && Byte(in, t + 3) == 0) ++g_cover.count_zero;
         }
@@ -740,9 +740,9 @@ void Cover(unsigned k, const State& in, const State& out, bool cut) {
     }
     case kModeEnter:
         if ((Byte(out, 0x66C7E8) | Byte(out, 0x66C7E9) << 8) == 8) ++g_cover.enter_mode8;
-        if (Byte(in, at::kPendingKind) == 0xFE) ++g_cover.enter_fe;
+        if (Byte(in, AreaW0c_PendingKind_addr) == 0xFE) ++g_cover.enter_fe;
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i) if (out.log[i].what == 10) ++g_cover.enter_transition;
-        if (Byte(out, at::kAreaTransition) == 0x14) ++g_cover.enter_bd;
+        if (Byte(out, ModeFlow_AreaTransition_addr) == 0x14) ++g_cover.enter_bd;
         break;
     case kKind0 + 11:
     case kKind0 + 18:
@@ -783,23 +783,24 @@ void PatchTable(void* copy) {
 
 // Gfx_ClutStripRestore alone: no calls, 32 KB of memory. Twenty rounds.
 unsigned CheckClutRestore(const void* theirs) {
-    constexpr std::uint32_t kFrom = 0x80B580, kBytes = 0x8000;
+    // kFrom: now Gfx_ClutStripSource (symbols.toml).
+    constexpr std::uint32_t kBytes = 0x8000;
     static unsigned char saved[kBytes], input[kBytes], out_theirs[kBytes];
-    std::memcpy(saved, At(kFrom), kBytes);
+    std::memcpy(saved, At(Gfx_ClutStripSource_addr), kBytes);
     unsigned bad = 0;
     for (unsigned round = 0; round < 20; ++round) {
         for (unsigned i = 0; i < kBytes; i += 4) {
             const std::uint32_t v = Next();
             std::memcpy(input + i, &v, 4);
         }
-        std::memcpy(At(kFrom), input, kBytes);
+        std::memcpy(At(Gfx_ClutStripSource_addr), input, kBytes);
         reinterpret_cast<void (__cdecl*)()>(const_cast<void*>(theirs))();
-        std::memcpy(out_theirs, At(kFrom), kBytes);
-        std::memcpy(At(kFrom), input, kBytes);
+        std::memcpy(out_theirs, At(Gfx_ClutStripSource_addr), kBytes);
+        std::memcpy(At(Gfx_ClutStripSource_addr), input, kBytes);
         Gfx_ClutStripRestore();
-        if (std::memcmp(out_theirs, At(kFrom), kBytes) != 0) ++bad;
+        if (std::memcmp(out_theirs, At(Gfx_ClutStripSource_addr), kBytes) != 0) ++bad;
     }
-    std::memcpy(At(kFrom), saved, kBytes);
+    std::memcpy(At(Gfx_ClutStripSource_addr), saved, kBytes);
     return bad;
 }
 

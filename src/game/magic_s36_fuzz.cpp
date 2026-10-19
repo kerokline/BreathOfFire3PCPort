@@ -209,8 +209,11 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kFrameSet = 0x9039D8, kTrail = 0x6B2858,
-                        kStruck = 0x6B4A58;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kTrail: now IntimidateTrail_Points (symbols.toml).
+// kStruck: now AuraBreath_Struck (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
 // IntimidateTrail_Points as far as a trail +4 below 48 and a point index up
 // to 256 reach: 4 x ((47 << 5) + 256) + 4 bytes.
 constexpr std::uint32_t kTrailBytes = 0x1B84;
@@ -247,7 +250,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -359,29 +362,29 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},              // Gfx_PacketNext
     {0, kPrimBytes},            // g_prims (filled in at start-up)
-    {kVertex, 0x20},            // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},           // 0x903850.., Scratch_Swap at +0xC
-    {kFrameSet, 4},             // the frame-offset table pointer the burst swaps
+    {BattleE2_AnimSet_addr, 4}, // the frame-offset table pointer the burst swaps
     {0x80E980, 0x200},          // Gfx_ClutStripSource row 26
     {0x812980, 0x200},          // Gfx_ClutStrip row 26
-    {kTrail, kTrailBytes},      // IntimidateTrail_Points (and past it, as far as the indices reach)
-    {kStruck, 8},               // AuraBreath_Struck
+    {IntimidateTrail_Points_addr, kTrailBytes}, // IntimidateTrail_Points (and past it, as far as the indices reach)
+    {AuraBreath_Struck_addr, 8}, // AuraBreath_Struck
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Point(unsigned trail, unsigned k) { return mh::Mem(kTrail + ((trail << 5) + k) * 4); }
+unsigned char* Point(unsigned trail, unsigned k) { return mh::Mem(IntimidateTrail_Points_addr + ((trail << 5) + k) * 4); }
 
 // The group's cells a recorder may move (the harness's case 14).
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
-    case 3: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
-    case 4: SetWord(mh::Mem(kTrail + 2 * (v % (kTrailBytes / 2))), h >> 16); break;
-    case 5: mh::Mem(kStruck + v % 8)[0] = Byte(h >> 24); break;
+    case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
+    case 4: SetWord(mh::Mem(IntimidateTrail_Points_addr + 2 * (v % (kTrailBytes / 2))), h >> 16); break;
+    case 5: mh::Mem(AuraBreath_Struck_addr + v % 8)[0] = Byte(h >> 24); break;
     case 6: {
         static const unsigned kFields[] = {0x2E, 0x30, 0x10, 0x14, 0x5D};
         const unsigned f = kFields[v % 5];
@@ -472,7 +475,7 @@ void Seed(unsigned k) {
         Near(sc[9], 0x5D);
         Near(sc[0xA], 0x1F);
         for (unsigned i = 0; i < 8; ++i)
-            if (mh::Often()) mh::Mem(kStruck + i)[0] = 0;
+            if (mh::Often()) mh::Mem(AuraBreath_Struck_addr + i)[0] = 0;
         if (mh::Half()) mh::Mem(mh::at::kActor)[0] = Byte(3 + mh::Next() % 8);
         break;
     case kAuraBreath_InReach: {

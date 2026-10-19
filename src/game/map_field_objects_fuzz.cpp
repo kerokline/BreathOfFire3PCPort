@@ -137,7 +137,7 @@ U Rec(const void* p) { return Addr(p) - Addr(g_record); }
 // Regions the fuzz randomises and compares.
 constexpr U kHeaderBytes = 0x2000;
 constexpr U kUprightTables = 0x663280 - 0x66313C;   // MapCell_UprightCounts .. MapCell_WallTextures
-constexpr U kObjectsFrom = kObjects - 3 * kObjectStride, kObjectsBytes = 33 * kObjectStride;
+constexpr U kObjectsFrom = Sprite_Objects_addr - 3 * kObjectStride, kObjectsBytes = 33 * kObjectStride;
 constexpr U kMembersBytes = 16 * kCharStride;
 
 // --- disturbances ------------------------------------------------------------------------
@@ -153,12 +153,12 @@ void SetWatch(std::initializer_list<Watch> w) {
     g_watches = 0;
     for (const Watch& x : w) g_watch[g_watches++] = x;
 }
-U SomeObject(U h) { return kObjects + (h % 33 - 3) * kObjectStride; }
+U SomeObject(U h) { return Sprite_Objects_addr + (h % 33 - 3) * kObjectStride; }
 void Disturb(U salt) {
     const U h = Hash(salt + 0x51);
     if (h % 3 != 0) return;
     if (g_move_sprite && (h >> 4) % 3 == 0) {
-        if ((h >> 6) % 2) SetDword(At(kSpriteCurrent), SomeObject(h >> 8));
+        if ((h >> 6) % 2) SetDword(At(Sprite_Current_addr), SomeObject(h >> 8));
         else SetWord(At(kScratchX), (h >> 8) % 33 - 3);
         return;
     }
@@ -287,7 +287,7 @@ void __cdecl StubSetTexture(unsigned long texture, unsigned char* prim, int coun
 }
 void __cdecl StubFlatOverlay(int faces, unsigned item) { Record(11, static_cast<U>(faces), item); }
 void __cdecl StubApplyPatch(const unsigned char* entry) {
-    Record(12, Addr(entry) - kHeader, Dword(g_record));
+    Record(12, Addr(entry) - AreaMap_Header_addr, Dword(g_record));
 }
 // Only the low 16 bits reach the real one (map_cells.cpp): the originals push
 // ax with stale bits above.
@@ -384,29 +384,29 @@ const unsigned char* __cdecl StubSkipControl(const unsigned char* at) {
     return at + 1 + Hash(54) % 5;
 }
 void __cdecl StubObjReset() {
-    Record(29, Word(At(kScratchBank)), Dword(At(kSpriteCurrent)));
+    Record(29, Word(At(kScratchBank)), Dword(At(Sprite_Current_addr)));
     Disturb(55);
     const U h = Hash(56);
     if (h % 4 == 0) SetWord(At(kScratchBank), h >> 8);
 }
 U __cdecl StubSetBank(U bank) {
-    Record(30, bank & 0xFFFFu, Dword(At(kSpriteCurrent)));
+    Record(30, bank & 0xFFFFu, Dword(At(Sprite_Current_addr)));
     Disturb(57);
     return Hash(58);
 }
 void __cdecl StubSetFlags(const unsigned char* flags) {
-    Record(31, Rec(flags), Dword(At(kSpriteCurrent)));
+    Record(31, Rec(flags), Dword(At(Sprite_Current_addr)));
     Disturb(59);
 }
 // Sprite_SetAnimation takes a byte; the original pushes ecx with
 // Sprite_Current's upper bits above it.
 void __cdecl StubSetAnimation(U animation) {
-    Record(32, animation & 0xFFu, Dword(At(kSpriteCurrent)));
+    Record(32, animation & 0xFFu, Dword(At(Sprite_Current_addr)));
     Disturb(60);
 }
 // AreaMap_SetByte (ours) reads the low words of x and z, the value's byte.
 U __cdecl StubSetByte(U x, U z, U value) {
-    Record(33, x & 0xFFFFu, z & 0xFFFFu, value & 0xFFu, Dword(At(kSpriteCurrent)));
+    Record(33, x & 0xFFFFu, z & 0xFFFFu, value & 0xFFu, Dword(At(Sprite_Current_addr)));
     Disturb(61);
     return Hash(62);
 }
@@ -588,13 +588,13 @@ bool Logged(const Log& log, U what, U a) {
 
 // Common regions.
 const Region kScratch = {kScratchX, 0x10};
-const Region kVertices = {kVertex0, 0x20};
-const Region kScreen = {kScreen0, 0x18};
+const Region kVertices = {Prim_VertexScratch_addr, 0x20};
+const Region kScreen = {MapView_ScreenXY_addr, 0x18};
 Region PacketRegion() { return {Addr(g_packets), kPacketBytes}; }
 Region RecordRegion() { return {Addr(g_record), sizeof g_record}; }
 const Region kPacketNext = {0x7E0670, 4};
 const Region kOtSlot = {0x92BF19, 1};
-const Region kHeaderRegion = {kHeader, kHeaderBytes};
+const Region kHeaderRegion = {AreaMap_Header_addr, kHeaderBytes};
 const Region kUprights = {0x66313C, kUprightTables};
 
 void PlacePacket() { SetDword(At(at::PacketNextAt()), Addr(g_packets) + (OneIn(4) ? 4 * (Next() % 16) : 0)); }
@@ -635,7 +635,7 @@ void TestUprights(Tally& t, void* clone, unsigned rounds) {
 
 void RandomCorners(U& b1, U& b0) {
     const U width = 1 + Next() % 32;
-    At(kHeader)[0] = static_cast<unsigned char>(width);
+    At(AreaMap_Header_addr)[0] = static_cast<unsigned char>(width);
     b1 = OneIn(6) ? Pick({0, 0x7F, 0x80, 0x81}) : Next() % 64;
     const U rows = (kHeaderBytes - 0x40 - 64 * 4) / (width * 4);
     b0 = Next() % (rows < 256 ? rows : 256);
@@ -692,12 +692,12 @@ void TestFlatFaces(Tally& t, void* clone, unsigned rounds) {
 void TestPatch(Tally& t, void* clone, unsigned rounds, void(__cdecl* ours)(unsigned char*, unsigned, unsigned)) {
     using Fn = void(__cdecl*)(unsigned char*, unsigned, unsigned);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{kPatchBase, 4}, RecordRegion()};
+    const Region r[] = {{AreaMap_PatchBase_addr, 4}, RecordRegion()};
     const int n = sizeof r / sizeof r[0];
     SetWatch({});
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
-        if (OneIn(3)) SetDword(At(kPatchBase), Pick({0, 0xFFFF, 0x10000, 0xFFFFFFFFu}));
+        if (OneIn(3)) SetDword(At(AreaMap_PatchBase_addr), Pick({0, 0xFFFF, 0x10000, 0xFFFFFFFFu}));
         if (OneIn(3)) SetDword(g_record, Pick({0x24000000u, 0x24FFFFFFu, 0x2500FFFFu, 0xFF000000u, 0x00FFFFFFu}));
         const U b1 = Next(), b0 = Next();
         Pair(t, r, n, false, [&] { theirs(g_record, b1, b0); return 0u; }, [&] { ours(g_record, b1, b0); return 0u; });
@@ -710,7 +710,7 @@ void TestAnimated(Tally& t, void* clone, unsigned rounds) {
     const Region r[] = {kVertices, kScreen, PacketRegion(), RecordRegion(), kPacketNext, kOtSlot, {at::FrameCounterAt(), 4}};
     const int n = sizeof r / sizeof r[0];
     // The period byte +8 is never disturbed (a 0 divides by zero on both sides).
-    SetWatch({{kScreen0, 8}, {Addr(g_record) + 4, 4}, {Addr(g_record) + 9, 1}, {Addr(g_record) + 0x18, 0x158}});
+    SetWatch({{MapView_ScreenXY_addr, 8}, {Addr(g_record) + 4, 4}, {Addr(g_record) + 9, 1}, {Addr(g_record) + 0x18, 0x158}});
     g_lo_x = -60, g_hi_x = 380, g_lo_y = -150, g_hi_y = 300;
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
@@ -769,14 +769,14 @@ void TestSetupTexture(Tally& t, void* clone, unsigned rounds) {
         Randomize(r, n);
         At(at::CondByteFFAt())[0] = static_cast<unsigned char>(Pick({0, 0, 1, 0x80, 0xFF, Next()}));
         const U width = 1 + Next() % 32, height = Next() % 33, offset = Next() % 0x101;
-        At(kHeader)[0] = static_cast<unsigned char>(width);
-        At(kHeader)[1] = static_cast<unsigned char>(height);
-        SetWord(At(kHeaderOffset), offset);
+        At(AreaMap_Header_addr)[0] = static_cast<unsigned char>(width);
+        At(AreaMap_Header_addr)[1] = static_cast<unsigned char>(height);
+        SetWord(At(AreaMap_Header_addr + 0x2), offset);
         const U y = Next() % 32, x = Next() % 32;
         g_record[0] = static_cast<unsigned char>(y);
         g_record[1] = static_cast<unsigned char>(x);
-        const U tile_at = kHeader + (y * width + x + offset * 2) * 2;
-        if (tile_at < kHeader + 0x40) continue;   // the tile would overlap the header's own bytes: redraw
+        const U tile_at = AreaMap_Header_addr + (y * width + x + offset * 2) * 2;
+        if (tile_at < AreaMap_Header_addr + 0x40) continue; // the tile would overlap the header's own bytes: redraw
         SetWord(At(tile_at), OneIn(4) ? Pick({0, 1, 0xFF, 0x100}) : Next() % 0x101);
         Pair(t, r, n, false, [&] { theirs(g_record); return 0u; }, [&] { AreaMap_SetupTexture(g_record); return 0u; });
         t.cover[0] += At(at::CondByteFFAt())[0] != 0;
@@ -790,7 +790,7 @@ int SomeCoordinate() { return static_cast<int>(OneIn(4) ? Next() : Next() % 0x20
 void TestMemberStatus(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(int, int, unsigned, unsigned);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{kCharRecords, kMembersBytes}, {kPrintBuf, 0x20}, {kWindowColour, 1}, {at::FrameCounterAt(), 4}};
+    const Region r[] = {{kCharRecords, kMembersBytes}, {kPrintBuf, 0x20}, {BattleDraw_Colour_addr, 1}, {at::FrameCounterAt(), 4}};
     const int n = sizeof r / sizeof r[0];
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
@@ -807,7 +807,7 @@ void TestMemberStatus(Tally& t, void* clone, unsigned rounds) {
         SetWord(rec + 0x1A, ap);
         if (OneIn(2)) rec[0x1E] = 0;
         const U highlight = OneIn(2) ? (Next() & 0xFFFFFF00u) : Next();
-        SetWatch({{Addr(rec) + 9, 0x1A}, {at::FrameCounterAt(), 1}, {kWindowColour, 1}});
+        SetWatch({{Addr(rec) + 9, 0x1A}, {at::FrameCounterAt(), 1}, {BattleDraw_Colour_addr, 1}});
         const int x = SomeCoordinate(), y = SomeCoordinate();
         Pair(t, r, n, true, [&] { return theirs(x, y, member, highlight); },
              [&] { return static_cast<U>(Menu_DrawMemberStatus(x, y, member, highlight)); });
@@ -836,12 +836,12 @@ void TestCell8(Tally& t, void* clone, unsigned rounds) {
 void TestPlayTime(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(int, int);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{kClockHours, 4}, {kPrintBuf, 0x20}, {kWindowColour, 1}};
+    const Region r[] = {{kClockHours, 4}, {kPrintBuf, 0x20}, {BattleDraw_Colour_addr, 1}};
     const int n = sizeof r / sizeof r[0];
-    SetWatch({{kClockHours, 4}, {kWindowColour, 1}});
+    SetWatch({{kClockHours, 4}, {BattleDraw_Colour_addr, 1}});
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
-        At(kClockFrames)[0] = static_cast<unsigned char>(Pick({0, 14, 15, 16, 29, 0x80, 0xFF, Next()}));
+        At(MapFieldObjects_ClockFrames_addr)[0] = static_cast<unsigned char>(Pick({0, 14, 15, 16, 29, 0x80, 0xFF, Next()}));
         const int x = SomeCoordinate(), y = SomeCoordinate();
         Pair(t, r, n, true, [&] { return theirs(x, y); }, [&] { return static_cast<U>(Menu_DrawPlayTime(x, y)); });
         t.cover[0] += g_logs[0].counts[22] != 0;   // the colon drawn
@@ -879,12 +879,12 @@ void TestSkipSwitch(Tally& t, void* clone, unsigned rounds) {
 void TestSetByte(Tally& t, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(U, U, U);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {{Addr(g_bytes), sizeof g_bytes}, {kHeader, 4}, {at::BytesAt(), 4}};
+    const Region r[] = {{Addr(g_bytes), sizeof g_bytes}, {AreaMap_Header_addr, 4}, {at::BytesAt(), 4}};
     const int n = sizeof r / sizeof r[0];
     for (unsigned round = 0; round < rounds; ++round) {
         Randomize(r, n);
         const U width = OneIn(8) ? 0 : 1 + Next() % 32;
-        At(kHeader)[0] = static_cast<unsigned char>(width);
+        At(AreaMap_Header_addr)[0] = static_cast<unsigned char>(width);
         SetDword(At(at::BytesAt()), Addr(g_bytes) + 0x200);
         const U z = (Next() & 0xFFFF0000u) | static_cast<std::uint16_t>(static_cast<std::int32_t>(Next() % 0x44) - 2);
         const U x = (Next() & 0xFFFF0000u) | static_cast<std::uint16_t>(static_cast<std::int32_t>(Next() % 0x108) - 8);
@@ -896,7 +896,7 @@ void TestSetByte(Tally& t, void* clone, unsigned rounds) {
 void TestOp8x(Tally& t, void* clone, unsigned rounds) {
     using Fn = void(__cdecl*)(const unsigned char*);
     const Fn theirs = reinterpret_cast<Fn>(clone);
-    const Region r[] = {RecordRegion(), {kObjectsFrom, kObjectsBytes}, kScratch, {kSpriteCurrent, 4}, {kActiveMember, 4}};
+    const Region r[] = {RecordRegion(), {kObjectsFrom, kObjectsBytes}, kScratch, {Sprite_Current_addr, 4}, {Field_ActiveMember_addr, 4}};
     const int n = sizeof r / sizeof r[0];
     SetWatch({{kScratchBank, 2}, {kObjectsFrom, kObjectsBytes}});
     g_move_sprite = true;
@@ -904,7 +904,7 @@ void TestOp8x(Tally& t, void* clone, unsigned rounds) {
         Randomize(r, n);
         const U index = OneIn(4) ? Pick({0x1D, 0x1E, 0x1F, 0x7FFF, 0xFFFF, 0xFFFD, 0}) : Next() % 0x1E;
         SetWord(At(kScratchX), index);
-        SetDword(At(kSpriteCurrent), SomeObject(Next()));
+        SetDword(At(Sprite_Current_addr), SomeObject(Next()));
         for (U k = 4; k <= 7; ++k)
             if (OneIn(2)) g_record[k] = 0;
         Pair(t, r, n, false, [&] { theirs(g_record); return 0u; }, [&] { EventOp_8x(g_record); return 0u; });
@@ -952,8 +952,8 @@ void SelfTest() {
         kScratch, kVertices, kScreen, kPacketNext, kOtSlot, kUprights, kHeaderRegion,
         {at::OriginAt(), 4}, {at::RowAt(), 2}, {at::ColumnAt(), 2}, {0x937FA0, 56 * 28 * 4},
         {at::FrameCounterAt(), 4}, {at::CondByteFFAt(), 1}, {kCharRecords, kMembersBytes}, {kPrintBuf, 0x20},
-        {kWindowColour, 1}, {kClockHours, 4}, {at::BytesAt(), 4}, {kObjectsFrom, kObjectsBytes},
-        {kSpriteCurrent, 4}, {kActiveMember, 4}, {at::StatusBitsAt(), 1}, {at::ScriptFlagsAt(), 2},
+        {BattleDraw_Colour_addr, 1}, {kClockHours, 4}, {at::BytesAt(), 4}, {kObjectsFrom, kObjectsBytes},
+        {Sprite_Current_addr, 4}, {Field_ActiveMember_addr, 4}, {at::StatusBitsAt(), 1}, {at::ScriptFlagsAt(), 2},
     };
     const int n_all = sizeof all / sizeof all[0];
     static unsigned char saved[kStateMax * 2];

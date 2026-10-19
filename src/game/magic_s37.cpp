@@ -60,25 +60,25 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kActorRecord = 0x904B3C;   // unsigned char *: the acting actor's sprite record
-constexpr std::uint32_t kFrameSet = 0x9039D8;      // the sprite frame-offset table pointer (sprite_pose.h)
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
 
 // The two pools of task-like records (0x84 bytes, like the task slots) the
 // overlays walk from their kind-2 tasks, and MAGIC219's spawn delays (24
 // bytes, read in place).
-constexpr std::uint32_t kMagmaPool = 0x6B4A60;     // MagmaBreath_Pool, 32 records
+// kMagmaPool: now MagmaBreath_Pool (symbols.toml). MagmaBreath_Pool, 32 records
 constexpr unsigned kMagmaRecords = 32;
-constexpr std::uint32_t kGeoPool = 0x6B5AE0;       // GeoBreath_Pool, 64 records
+// kGeoPool: now GeoBreath_Pool (symbols.toml). GeoBreath_Pool, 64 records
 constexpr unsigned kGeoRecords = 64;
-constexpr std::uint32_t kMagmaDelays = 0x65C22C;   // MagmaBreath_SpawnDelays
+// kMagmaDelays: now MagmaBreath_SpawnDelays (symbols.toml). MagmaBreath_SpawnDelays
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -88,9 +88,9 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -114,8 +114,8 @@ void PutFloat(unsigned char* at, int v) {
 }
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* MagmaRecord(unsigned index) { return Mem(kMagmaPool + index * 0x84u); }
-unsigned char* GeoRecord(unsigned index) { return Mem(kGeoPool + index * 0x84u); }
+unsigned char* MagmaRecord(unsigned index) { return Mem(MagmaBreath_Pool_addr + index * 0x84u); }
+unsigned char* GeoRecord(unsigned index) { return Mem(GeoBreath_Pool_addr + index * 0x84u); }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
 unsigned NewTask(unsigned parameter) { return MH_CALL(BattleTask_Create)(1, parameter) & 0xFFu; }
@@ -153,15 +153,15 @@ void Dispatch(const std::uint32_t* table, unsigned entries, unsigned phase, cons
 // task's own two cells, read once after the phase, put back after each.
 void WalkPool(std::uint32_t pool, unsigned records, std::uint32_t task) {
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < records; ++i) {
         unsigned char* const rec = Mem(pool + i * 0x84u);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), rec_owner);
+        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(task);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = self;
     }
 }
@@ -378,14 +378,14 @@ S37_EXPORT void __cdecl MagmaBreath_Task(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::MagmaBreath_Start, addr::MagmaBreath_Spawn,
                                                  addr::MagmaBreath_Strike, addr::BattleFx_Finish};
     Dispatch(kPhases, 4, Sc()[1], "MagmaBreath_Task");
-    WalkPool(kMagmaPool, kMagmaRecords, addr::MagmaBreathRecord_Task);
+    WalkPool(MagmaBreath_Pool_addr, kMagmaRecords, addr::MagmaBreathRecord_Task);
 }
 
 // original 0x4F5A60: the pool's +0..+2 cleared; the task at the side's
 // centre; +0xB 0, +1 on; CLUT rows 2 and 26 back whole with their STP bits,
 // the first word of each without; sound 0x100.
 S37_EXPORT void __cdecl MagmaBreath_Start(void) {
-    ClearPool(kMagmaPool, kMagmaRecords);
+    ClearPool(MagmaBreath_Pool_addr, kMagmaRecords);
     MH_CALL(MagicFx_CenterOnSide)();
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -414,7 +414,7 @@ S37_EXPORT void __cdecl MagmaBreath_Spawn(void) {
         rec[1] = 0;
         rec[0xB] = static_cast<unsigned char>(i);
         const std::uint32_t r = RandCall();
-        rec[9] = static_cast<unsigned char>((r & 1) + Mem(kMagmaDelays)[i] + 1);
+        rec[9] = static_cast<unsigned char>((r & 1) + Mem(MagmaBreath_SpawnDelays_addr)[i] + 1);
         Inc(Sc()[0xB]);
     }
     Sc()[9] = 8;
@@ -445,7 +445,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Task(void) {
 S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {addr::MagmaBreathRecord_Launch, addr::MagmaBreathRecord_Fly,
                                                 addr::MagmaBreathRecord_Land, addr::MagmaBreathRecord_Burn};
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 4, Sc()[2], "MagmaBreathRecord_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) {
@@ -454,7 +454,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
         Call0(addr::MagmaBreathRecord_DrawGlow);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4F5C30: +9 down; at 0 the record starts: the acting actor's
@@ -467,7 +467,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_Run(void) {
 S37_EXPORT void __cdecl MagmaBreathRecord_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    const unsigned char* const actor = Pointer(kActorRecord);
+    const unsigned char* const actor = Pointer(MagicS23_ActorSprite_addr);
     Sc()[8] = actor[8];
     SetLong(Sc() + 0xC, 0x20000);
     SetLong(Sc() + 0x10, 0);
@@ -670,7 +670,7 @@ S37_EXPORT void __cdecl MagmaBreathRecord_DrawGlow(void) {
 
 // original 0x4F6230: the first of MagmaBreath_Pool's 32 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S37_EXPORT unsigned char __cdecl MagmaBreath_PoolAlloc(void) { return PoolAlloc(kMagmaPool, kMagmaRecords); }
+S37_EXPORT unsigned char __cdecl MagmaBreath_PoolAlloc(void) { return PoolAlloc(MagmaBreath_Pool_addr, kMagmaRecords); }
 
 // original 0x4F6290: bytes +0..+4 of Sprite_Current cleared (Sprite_Current
 // read again for each) - a pool record's free, bit 0 of +0 its "in use". The
@@ -691,7 +691,7 @@ S37_EXPORT void __cdecl GeoBreath_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {addr::GeoBreath_Start, addr::MagicFx_CountDownFlag10,
                                                  addr::BattleFx_Finish};
     Dispatch(kPhases, 3, Sc()[1], "GeoBreath_Task");
-    WalkPool(kGeoPool, kGeoRecords, addr::GeoBreathRecord_Task);
+    WalkPool(GeoBreath_Pool_addr, kGeoRecords, addr::GeoBreathRecord_Task);
 }
 
 // original 0x4F6340: the pool's +0..+2 cleared; the task at the side's
@@ -700,7 +700,7 @@ S37_EXPORT void __cdecl GeoBreath_Task(void) {
 // counted in +0xB; CLUT row 26 back whole and the first 16 words of row 2
 // with their STP bits, the first word of each without.
 S37_EXPORT void __cdecl GeoBreath_Start(void) {
-    ClearPool(kGeoPool, kGeoRecords);
+    ClearPool(GeoBreath_Pool_addr, kGeoRecords);
     MH_CALL(MagicFx_CenterOnSide)();
     {
         unsigned char* const s = Sc();
@@ -738,7 +738,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Run(void) {
     static constexpr std::uint32_t kSteps[8] = {
         addr::GeoBreathChild_Start, addr::GeoBreathChild_Swirl,  addr::GeoBreathChild_Burst, addr::GeoBreathChild_Shake,
         addr::GeoBreathChild_Quake, addr::GeoBreathChild_Settle, addr::BuffRing_Wait,         addr::GeoBreathChild_End};
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 8, Sc()[2], "GeoBreathChild_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
@@ -748,7 +748,7 @@ S37_EXPORT void __cdecl GeoBreathChild_Run(void) {
         Call0(addr::GeoBreathChild_DrawRing);
         MH_CALL(Gte_PopMatrix)();
     }
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4F64C0: the child at its owner's point, 0x1600000 above it; its
@@ -1030,7 +1030,7 @@ S37_EXPORT void __cdecl GeoBreathRecord_Draw(void) { DrawTexturedQuad(6); }
 
 // original 0x4F7190: the first of GeoBreath_Pool's 64 records without bit 0
 // of +0 gets it; its index in al, 0xFF when all are taken.
-S37_EXPORT unsigned char __cdecl GeoBreath_PoolAlloc(void) { return PoolAlloc(kGeoPool, kGeoRecords); }
+S37_EXPORT unsigned char __cdecl GeoBreath_PoolAlloc(void) { return PoolAlloc(GeoBreath_Pool_addr, kGeoRecords); }
 
 // ===========================================================================
 // MAGIC222 (row 133, Combustion read one id down)
@@ -1090,14 +1090,14 @@ S37_EXPORT void __cdecl CombustionSprite_Run(void) {
     static constexpr std::uint32_t kSteps[6] = {addr::CombustionSprite_Start, addr::CombustionSprite_Fall,
                                                 addr::CombustionSprite_Shake, addr::CombustionSprite_Flash,
                                                 addr::MeteorStrikeRock_Hide,  addr::CombustionSprite_Fade};
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 6, Sc()[2], "CombustionSprite_Run");
     const unsigned char* const s = Sc();
     if ((s[0] & 1) != 0 && s[2] != 0) {
         MH_CALL(BattleActor_UpdateScreenXY)();
         MH_CALL(Sprite_UpdateScreen)();
     }
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4F73F0: +9 down; at 0 the sprite starts 0x7800000 over its

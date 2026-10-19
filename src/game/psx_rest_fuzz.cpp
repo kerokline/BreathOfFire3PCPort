@@ -170,10 +170,10 @@ unsigned char g_text[kTextBytes];   // Display_TextOut's string
 
 struct Region { U at, bytes; };
 constexpr Region kRegions[] = {
-    {kClutRows - 0x10, 0x1010},             // Gfx_ClutRows and the 0x10 bytes below
+    {Gfx_ClutRows_addr - 0x10, 0x1010},     // Gfx_ClutRows and the 0x10 bytes below
     {0x6C3A40, 0x10},                       // to Gfx_RenderFlags
-    {kTexCache - 0x10, 0x6020},             // Gfx_TexCache
-    {kFontCache - 0x10, 0xA20},             // Font_TexCache
+    {Gfx_TexCache_addr - 0x10, 0x6020},     // Gfx_TexCache
+    {Font_TexCache_addr - 0x10, 0xA20},     // Font_TexCache
     {0x7CADE0, 0x60},                       // the after-draw block and the orphans, to D3d_CellTexCache
     {kBackdropBlock - 8, 0x28},             // the backdrop block
     {0x7CC330, 0x30},                       // the DirectX 6 slots
@@ -473,12 +473,12 @@ void CloneAll() {
                                      {kSeven[5].offset, tree[5], kSeven[5].callee},
                                      {kSeven[6].offset, tree[6], kSeven[6].callee}});
     g_clones[kTextOut] = Clone("Display_TextOut", 0x5A66B0, 0x6D, {});
-    PatchImport("Display_TextOut", g_clones[kTextOut], 0x22, kImportSetTextColor, &g_slot_set_text_color);
-    PatchImport("Display_TextOut", g_clones[kTextOut], 0x2F, kImportSetBkMode, &g_slot_set_bk_mode);
-    PatchImport("Display_TextOut", g_clones[kTextOut], 0x56, kImportTextOutA, &g_slot_text_out);
+    PatchImport("Display_TextOut", g_clones[kTextOut], 0x22, PsxRest_ImportSetTextColor_addr, &g_slot_set_text_color);
+    PatchImport("Display_TextOut", g_clones[kTextOut], 0x2F, PsxRest_ImportSetBkMode_addr, &g_slot_set_bk_mode);
+    PatchImport("Display_TextOut", g_clones[kTextOut], 0x56, PsxRest_ImportTextOutA_addr, &g_slot_text_out);
     g_clones[kErrorBox] = Clone("Display_ErrorBox", 0x5A6720, 0x39, {});
-    PatchImport("Display_ErrorBox", g_clones[kErrorBox], 0x1C, kImportMessageBoxA, &g_slot_message_box);
-    PatchImport("Display_ErrorBox", g_clones[kErrorBox], 0x34, kImportMessageBoxA, &g_slot_message_box);
+    PatchImport("Display_ErrorBox", g_clones[kErrorBox], 0x1C, PsxRest_ImportMessageBoxA_addr, &g_slot_message_box);
+    PatchImport("Display_ErrorBox", g_clones[kErrorBox], 0x34, PsxRest_ImportMessageBoxA_addr, &g_slot_message_box);
     g_clones[kSoundShutdown] = Clone("Sound_Shutdown", 0x5A6980, 0x3D,
                                      {{0x0, F(&StubStreamStop), 0x5A71C0}, {0x5, F(&StubMusicRelease), 0x5A70A0}});
 }
@@ -516,7 +516,7 @@ void Run(const void* fn, unsigned k, const Args& x) {
 U RandomCom(unsigned odds_null) { return Next() % odds_null == 0 ? 0 : FakeAddr(Next()); }
 
 void FillClutRows() {
-    for (U at = kClutRows; at < kClutRowsEnd; at += 8) {
+    for (U at = Gfx_ClutRows_addr; at < kClutRowsEnd; at += 8) {
         PutLong(at, Next());
         PutLong(at + 4, Next() % 3 == 0 ? 0 : Next() | 1);
         if (Next() % 8 == 0) AddHot(at + 4, kPlain);
@@ -524,7 +524,7 @@ void FillClutRows() {
 }
 // Each page live to a prefix: mostly short, sometimes all 32, sometimes none.
 void FillTexCache() {
-    for (U page = kTexCache; page < kTexCacheEnd; page += kTexPageBytes) {
+    for (U page = Gfx_TexCache_addr; page < kTexCacheEnd; page += kTexPageBytes) {
         const U r = Next() % 16;
         const U live = r == 0 ? 0 : r == 1 ? 32 : r < 4 ? Next() % 33 : Next() % 4;
         for (U i = 0; i < 0x20; ++i) {
@@ -542,7 +542,7 @@ void FillTexCache() {
     }
 }
 void FillFontCache() {
-    for (U entry = kFontCache; entry < kFontCacheEnd; entry += kFontEntryBytes) {
+    for (U entry = Font_TexCache_addr; entry < kFontCacheEnd; entry += kFontEntryBytes) {
         for (U k = 0; k < kFontEntryBytes; k += 4) PutLong(entry + k, Next());
         PutLong(entry + 8, RandomCom(3));
         PutLong(entry + 0xC, RandomCom(3));
@@ -551,36 +551,36 @@ void FillFontCache() {
 }
 void FillSmall() {
     for (U at = 0x7CADE0; at < 0x7CAE40; at += 4) PutLong(at, Next());
-    for (U at : {kAfterDrawSurface, kAfterDrawTexSurface, kAfterDrawTexture}) {
+    for (U at : {D3d_CaptureSurface_addr, D3d_CaptureTexSurface_addr, D3d_CaptureTexture_addr}) {
         PutLong(at, RandomCom(3));
         AddHot(at, kNullable);
     }
-    for (U at = kOrphans; at < kOrphans + 0x18; at += 4) {
+    for (U at = PsxRest_Orphans_addr; at < PsxRest_Orphans_addr + 0x18; at += 4) {
         PutLong(at, RandomCom(3));
         AddHot(at, kNullable);
     }
     for (U at = kBackdropBlock - 8; at < kBackdropBlock + 0x20; at += 4) PutLong(at, Next());
-    for (U at = kBackdrop; at < kBackdrop + 0x14; at += 4) {
+    for (U at = Dd_CellBackdrop_addr; at < Dd_CellBackdrop_addr + 0x14; at += 4) {
         PutLong(at, RandomCom(3));
         AddHot(at, kNullable);
     }
 }
 void FillSlots() {
     for (U at = 0x7CC330; at < 0x7CC360; at += 4) PutLong(at, Next());
-    for (U at : {kBackMaterial, kViewport, kDevice, kDirect3D, kClipper, kZBuffer, kStage, kBackBuffer, kPrimary}) {
+    for (U at : {D3d_BackMaterial_addr, D3d_Viewport_addr, D3d_Device_addr, PsxRest_Direct3D_addr, PsxRest_Clipper_addr, PsxRest_ZBuffer_addr, Dd_StageSurface_addr, DDraw_BackBuffer_addr, DDraw_Primary_addr}) {
         PutLong(at, RandomCom(4));
         AddHot(at, kNullable);
     }
-    PutLong(kDirectDraw, RandomCom(5));
-    AddHot(kDirectDraw, kNeverNull);   // read again without a test after SetCooperativeLevel
+    PutLong(Dd_DirectDraw_addr, RandomCom(5));
+    AddHot(Dd_DirectDraw_addr, kNeverNull); // read again without a test after SetCooperativeLevel
     U flags = Next() & ~0x100u;
     if (Next() & 1) flags |= 0x100;
-    PutLong(kRenderFlags, flags);
-    AddHot(kRenderFlags, kFlags);
+    PutLong(Gfx_RenderFlags_addr, flags);
+    AddHot(Gfx_RenderFlags_addr, kFlags);
 }
 void FillSound() {
     for (U at = 0x7DE3B8; at < 0x7DE3C8; at += 4) PutLong(at, Next());
-    for (U at : {kSndDevice, kSndPrimary}) {
+    for (U at : {Snd_Device_addr, Snd_Primary_addr}) {
         PutLong(at, RandomCom(3));
         AddHot(at, kNullable);
     }
@@ -605,14 +605,14 @@ Args Generate(unsigned k, unsigned* coverage) {
         FillSmall();
         FillSlots();
         FillSound();
-        coverage[0] += (Long(kRenderFlags) & 0x100) && Long(kDirectDraw);
+        coverage[0] += (Long(Gfx_RenderFlags_addr) & 0x100) && Long(Dd_DirectDraw_addr);
         x.a[0] = Next();
         break;
     case kTextOut: {
         FillSlots();
-        PutLong(kBackBuffer, FakeAddr(Next()));
+        PutLong(DDraw_BackBuffer_addr, FakeAddr(Next()));
         g_n_hot = 0;
-        AddHot(kBackBuffer, kNeverNull);
+        AddHot(DDraw_BackBuffer_addr, kNeverNull);
         const U end = Next() % (kTextBytes - 1);
         for (U i = 0; i < kTextBytes; ++i) {
             if (i < end) g_text[i] = static_cast<unsigned char>(1 + Next() % 255);

@@ -41,7 +41,7 @@ constexpr std::uint32_t kResultTarget = 0x904B54;   // u8
 constexpr std::uint32_t kStatsCopy = 0x939F80;      // 32 bytes: the actor's +0xA0 (party) / +0xB0 (enemy)
 // The byte FxSize's and FxSizeB's second tables and the formation rows are
 // indexed by (battle_items.cpp's kFxSizeSelect).
-constexpr std::uint32_t kFormation = 0x904B89;
+// kFormation: now BattlePhases_B89 (symbols.toml).
 // The buff roll: 0x44FC10(stat), 1 in al when it was resisted - unnamed, the
 // engine's (in no group: docs/magic_lib.md section 4).
 constexpr std::uint32_t kBuffRoll = bof3::addr::Effect_RollStatStep;   // R3D's (round fourteen, docs/rest_3d.md)
