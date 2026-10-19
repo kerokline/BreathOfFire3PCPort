@@ -484,8 +484,8 @@ extern "C" void __cdecl Field_SwapExchange(void) {
             unsigned char* const s = Sprite_Current;
             g.spot_free(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)), s[8], s[0x70]);
         }
-        SetLong(Sprite_Current + 0x34, Long(At(at::kTargetX)));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Scratch_Swap));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(At(at::kTargetX)));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Scratch_Swap));
         long ground;
         {
             unsigned char* const s = Sprite_Current;

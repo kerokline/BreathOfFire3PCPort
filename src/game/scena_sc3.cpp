@@ -1255,7 +1255,7 @@ extern "C" unsigned char __cdecl Scena03_SpawnAtMember(unsigned char member) {
     const std::uint32_t m = static_cast<unsigned char>(*reinterpret_cast<const volatile unsigned char*>(&member)) * at::kMemberStride;
     auto cur = [] { return Sprite_Current; };
     cur()[0] = 1;
-    SetLong(cur() + 0x34, Long(At(ObjTrio_addr + m + 0x34)) + 0x8000);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur())->x, Long(At(ObjTrio_addr + m + 0x34)) + 0x8000);
     const std::int32_t z = Long(At(ObjTrio_addr + m + 0x38));
     rv::As<records::SpriteObject>(rec)->target_x = rv::As<records::SpriteObject>(cur())->x;
     rv::As<records::SpriteObject>(cur())->z = z;

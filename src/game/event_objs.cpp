@@ -71,7 +71,6 @@ std::int32_t Long(const unsigned char* p) {
     std::memcpy(&v, p, sizeof v);
     return v;
 }
-void SetLong(unsigned char* p, std::int32_t v) { std::memcpy(p, &v, sizeof v); }
 
 // The record views (game/record_views.h): rv::Current<T>() reads
 // Sprite_Current afresh at each use, as the original does.
@@ -210,8 +209,8 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     }
     Sprite_Current[9] = static_cast<unsigned char>(Idiv(Sprite_Current[9], static_cast<std::int32_t>(speed)));
     if (Field_ScriptFlags & 0x1000) Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] << 1);
-    SetLong(Sprite_Current + 0xC, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
-    SetLong(Sprite_Current + 0x10, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
     const unsigned char* const s = Sprite_Current;
     const long x = LandingX(s), z = LandingZ(s);
     long ground = g.slope_at(x, z, s[8]);
@@ -253,8 +252,8 @@ extern "C" void __cdecl Field_JumpCheckHeight(void) {
 // original 0x536670 (PSX 0x801C67AC): one frame of the step - +0x34 / +0x38
 // by +0xC / +0x10, the height word +0x3E by the low word of +0x14.
 extern "C" void __cdecl Sprite_ApplyVelocity(void) {
-    SetLong(Sprite_Current + 0x34, Add(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->step_x));
-    SetLong(Sprite_Current + 0x38, Add(rv::Current<records::SpriteObject>()->z, rv::Current<records::SpriteObject>()->step_z));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Add(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->step_x));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Add(rv::Current<records::SpriteObject>()->z, rv::Current<records::SpriteObject>()->step_z));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, rv::Current<records::SpriteHead>()->height_whole + Word(Sprite_Current + 0x14));
 }
 

@@ -158,10 +158,10 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(Word(At(at::kBank)));
     Sprite_Current[0] = 1;
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
-    SetLong(Object(Count()) + 0x8C, rv::Current<records::SpriteObject>()->x);
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
-    SetLong(Object(Count()) + 0x90, rv::Current<records::SpriteObject>()->z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_x, rv::Current<records::SpriteObject>()->x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(Object(Count()))->target_z, rv::Current<records::SpriteObject>()->z);
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
     const long ground = SH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));

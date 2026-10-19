@@ -366,7 +366,7 @@ extern "C" unsigned char __cdecl Encounter_MemberStands(unsigned member) {
     const u32 m = member & 0xFF;
     const unsigned wide = Member(m)[1];
     const long e = g.elevation(Long(PosX(m)), Long(PosZ(m)));
-    SetLong(Sprite_Current + 0x3C, Shl(static_cast<std::int16_t>(e), 16));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, Shl(static_cast<std::int16_t>(e), 16));
     if (!g.cell_fits(Long(PosX(m)), Long(PosZ(m)), wide)) return 0;
     return g.object_at(Long(PosX(m)), Long(PosZ(m)), wide) == 0xFF;
 }
@@ -776,8 +776,8 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     while (k < 3 && Cond_Flags[0xd5 + k] != id) ++k;
                     fs[0x138] = static_cast<unsigned char>(fs[0x138] & 0xFE);
                     Sprite_Current[0x29] = Draw_OtSlot;
-                    SetLong(Sprite_Current + 0x34, Long(PosX(k)));
-                    SetLong(Sprite_Current + 0x38, Long(PosZ(k)));
+                    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, Long(PosX(k)));
+                    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(PosZ(k)));
                     const long ground = g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
                     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
                     Sprite_Current[0x48] = 0;
@@ -822,7 +822,7 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         Field_State = obj;
         Sprite_Current = obj;
         rv::As<records::PartyMember>(obj)->x = Long(PosX(i));
-        SetLong(Sprite_Current + 0x38, Long(PosZ(i)));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Long(PosZ(i)));
         const long ground = g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
         rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
