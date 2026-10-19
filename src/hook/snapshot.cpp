@@ -21,11 +21,14 @@
 #include "bof3/symbols.gen.h"
 #include "common/sha256.h"
 #include "game/draw_pool.h"
+#include "game/crt_rest.h"
 #include "game/draw_pool_room.h"
+#include "game/msg_pool.h"
 #include "hook/detour.h"
 #include "hook/exe_layout.h"
 #include "hook/host.h"
 #include "hook/log.h"
+#include "input/sigma.h"
 #include "version.gen.h"
 
 namespace bof3 {
@@ -88,6 +91,7 @@ struct Header {
     U span_base, span_bytes;     // the image's span
     U pool_base, pool_bytes;     // the hosted build's draw pool (DIV-0062); 0, 0 when inside the span
     U arena_top, arena_bytes;    // the task stacks: [arena_top - arena_bytes, arena_top)
+    U rdata_fnv;           // FNV-1a of .rdata at the take: not copied, compared at a load (logged)
     U participants;        // records after the arena
 };
 struct RecordHead {
@@ -95,7 +99,7 @@ struct RecordHead {
     U bytes;
 };
 #pragma pack(pop)
-static_assert(sizeof(Header) == 8 + 4 * 4 + 32 + 64 + 4 * 9, "the header's layout is the file's");
+static_assert(sizeof(Header) == 8 + 4 * 4 + 32 + 64 + 4 * 10, "the header's layout is the file's");
 
 struct Participant {
     std::string tag;
@@ -121,24 +125,46 @@ struct BuildId {
     U dll_base = 0;
 };
 
-// The words of the span that belong to the process, not the game: written
-// back with the live values after the span (docs/quicksave-round.md 2, SN).
+// The keep list: bytes of the span that belong to the process, not the game,
+// read live before the span is written and put back after it
+// (docs/quicksave-round.md 2, SN; docs/quicksave-census.md 5).
 // Task_SchedulerEsp is Task_RunAll's own esp, rewritten at its every entry;
 // the window and instance handles are this process's; Frame_Deadline is the
 // original loop's float, unwritten by ours since DIV-0047 (the loop's
-// deadline is its own local), kept as the loop has it.
+// deadline is its own local), kept as the loop has it. The settings the
+// player changes in play (F8's mode, the FPS line, the key table the
+// launcher writes), the input objects, the font's heap block and the
+// display's objects, window rectangle and CLUT row pointers are the live
+// process's; what the display caches hold is SP-G's to clear and reconvert.
 struct Kept {
     U at;
+    U bytes;
     const char* name;
 };
 // symbols.toml's addresses; the names are macros of symbols.gen.h, so the
 // literals are written here and checked against them by Snapshot_Inject.
 constexpr Kept kKept[] = {
-    {0x66C854, "Task_SchedulerEsp"},
-    {0x6BC620, "Game_Hwnd"},
-    {0x6BC624, "Game_HInstance"},
-    {0x6BC628, "Frame_Deadline"},
+    {0x66C854, 4, "Task_SchedulerEsp"},
+    {0x6BC620, 4, "Game_Hwnd"},
+    {0x6BC624, 4, "Game_HInstance"},
+    {0x6BC628, 4, "Frame_Deadline"},
+    {0x6BC634, 4, "Fps_Shown"},
+    {0x6BC63B, 1, "App_Active"},
+    {0x65DA44, 4, "Cfg_Fullscreen"},
+    {0x65DA48, 4, "Cfg_RenderMode"},
+    {0x7DE7A8, 128, "Key_Table"},
+    {0x7DE928, 952, "DInput_Object"},      // and the device records, to Gpu_DispEnv
+    {0x7CC35C, 4, "Font_GlyphData"},
+    {0x6BE1D0, 2096, "Gfx_WindowRect"},    // and the mode list, to Dd_CellBackdrop
+    {0x6C2A40, 0x1000, "Gfx_ClutRows"},
+    {0x7CC238, 0xFC, "D3d_DeviceDesc"},
+    {0x7CC334, 4, "Dd_DirectDraw"},
+    {0x7CC344, 4, "Dd_StageSurface"},
+    {0x7CC350, 4, "D3d_Device"},
 };
+// The toolchain's FILE* table: no file is open between frames (every reader
+// closes in its call), and a take with one open is refused.
+constexpr U kFileSlots = 0x7DE3E4, kFileSlotCount = 16;
 constexpr std::size_t kKeptCount = sizeof kKept / sizeof kKept[0];
 
 unsigned char* At(U va) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(va)); }
@@ -156,12 +182,25 @@ std::string Printf(const char* fmt, ...) {
 
 // --- the span, per host ------------------------------------------------------
 
+// .rdata (0x5C4000..0x5DA000) is not copied: the exe host's start-up writes
+// it whole (constants, the bound import slots, one pointer into our DLL) and
+// no game code is known to write it after (docs/quicksave-census.md 5); a
+// take records its hash and a load logs whether it still matches.
+constexpr Range kRdata{exe_layout::kRdataVa, exe_layout::kDataVa - exe_layout::kRdataVa};
+
+U Fnv(const Range& r) {
+    U h = 0x811C9DC5u;
+    for (U i = 0; i < r.bytes; ++i) h = (h ^ At(r.base)[i]) * 0x01000193u;
+    return h;
+}
+
 Span CurrentSpan() {
-    if (IsExeHost()) return {{exe_layout::kGameVa, exe_layout::kOwnVa - exe_layout::kGameVa}, {}};
-    // Hosted: BOF3.exe's .rdata to .data's last page (.rsrc follows at
-    // 0x93E000, constant), and the draw pool where DrawPool_Reserve put it.
+    // The exe host: .data and .bss to .game's end, then .pool, one run.
+    if (IsExeHost()) return {{exe_layout::kDataVa, exe_layout::kOwnVa - exe_layout::kDataVa}, {}};
+    // Hosted: BOF3.exe's .data to its last page (.rsrc follows at 0x93E000,
+    // constant), and the draw pool where DrawPool_Reserve put it.
     const U end = (exe_layout::kBssEnd + kPage - 1) & ~(kPage - 1);
-    const Range image{exe_layout::kRdataVa, end - exe_layout::kRdataVa};
+    const Range image{exe_layout::kDataVa, end - exe_layout::kDataVa};
     const U items = Va(draw_pool::Items());
     if (items >= image.base && items < image.base + image.bytes) return {image, {}};   // DIV-0062 off: Capcom's array
     return {image, {items, draw_pool_room::kBytes}};
@@ -344,6 +383,7 @@ std::vector<unsigned char> Take(const Registry& registry, const Span& span, U ar
     h->pool_bytes = span.pool.bytes;
     h->arena_top = arena_top;
     h->arena_bytes = arena;
+    h->rdata_fnv = Fnv(kRdata);
     h->participants = static_cast<U>(registry.size());
     return file;
 }
@@ -452,18 +492,18 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
 
 // --- the restore -------------------------------------------------------------
 
-// A parsed file into the process: the span, the arena, the process-owned
-// words back as they are now, then each participant in the file's order.
-// The arena must be ready (ArenaReady) - the caller's check, so a refusal
-// there still leaves everything untouched.
+// A parsed file into the process: the span (the keep list's live bytes put
+// back over it), every participant in the file's order, and the task arena
+// LAST - on a stack of its own (OnOwnStack), so nothing after it writes into
+// the slices it has just restored. The arena must be ready (ArenaReady) - the
+// caller's check, so a refusal there still leaves everything untouched.
 void Restore(const Parsed& p, const Registry& registry) {
     const Header& h = p.header;
-    U live[kKeptCount];
-    for (std::size_t i = 0; i < kKeptCount; ++i) std::memcpy(&live[i], At(kKept[i].at), 4);
+    std::vector<std::vector<unsigned char>> live(kKeptCount);
+    for (std::size_t i = 0; i < kKeptCount; ++i) live[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
     WriteRange(h.span_base, p.image, h.span_bytes);
     if (h.pool_bytes) WriteRange(h.pool_base, p.pool, h.pool_bytes);
-    if (h.arena_bytes) std::memcpy(At(h.arena_top - h.arena_bytes), p.arena, h.arena_bytes);
-    for (std::size_t i = 0; i < kKeptCount; ++i) WriteRange(kKept[i].at, reinterpret_cast<unsigned char*>(&live[i]), 4);
+    for (std::size_t i = 0; i < kKeptCount; ++i) WriteRange(kKept[i].at, live[i].data(), kKept[i].bytes);
     for (const Parsed::Rec& r : p.records) {
         const Participant& who = registry[r.participant];
         SnapshotReader reader(who.tag.c_str(), r.data, r.bytes);
@@ -472,6 +512,7 @@ void Restore(const Parsed& p, const Registry& registry) {
             Fatal("snapshot: participant '%s' restored from %u of its record's %u bytes: a partial restore", who.tag.c_str(),
                   r.bytes - static_cast<U>(reader.Left()), r.bytes);
     }
+    if (h.arena_bytes) std::memcpy(At(h.arena_top - h.arena_bytes), p.arena, h.arena_bytes);
 }
 
 // --- the files ---------------------------------------------------------------
@@ -569,23 +610,50 @@ bool ReadSlot(const std::wstring& dir, unsigned slot, std::vector<unsigned char>
     return true;
 }
 
-// File work on a thread of its own, the main thread waiting: Snapshot_Pending
-// runs below WinMain's frame, 0x4000 above the task arena (task_sched.cpp),
-// and the hash of a 64 MB DLL and the file system's calls are kept off that
-// stack.
-struct WorkerCtx {
-    const std::function<void()>* work;
-};
-DWORD WINAPI WorkerMain(LPVOID arg) {
-    (*static_cast<WorkerCtx*>(arg)->work)();
-    return 0;
+// A stack of its own, as a fiber of the calling thread (the renderer's
+// RunOnFiber and the decoder's DecodeFrame have theirs for the same reason):
+// Snapshot_Pending runs in WinMain's loop, about 0x3E00 bytes above slice 0
+// of the task arena (docs/quicksave-census.md 2.1), and the take, the
+// restore, the file layer, the DLL's hash and every participant's Save and
+// Restore (DirectSound, Direct3D) are kept off that stack - a take must copy
+// slice 0 as the tasks left it, and a restore must not overwrite it after.
+// The x87 control word is carried over: the game's (SetX87), not the new
+// fiber's default.
+void* g_own_fiber = nullptr;
+void* g_return_fiber = nullptr;
+const std::function<void()>* g_own_job = nullptr;
+unsigned short g_own_cw = 0;
+
+void CALLBACK OwnFiber(void*) {
+    for (;;) {
+        asm volatile("fldcw %0" : : "m"(g_own_cw));
+        (*g_own_job)();
+        g_own_job = nullptr;
+        SwitchToFiber(g_return_fiber);
+    }
 }
-void OnWorker(const std::function<void()>& work) {
-    WorkerCtx ctx{&work};
-    HANDLE t = CreateThread(nullptr, 1u << 20, &WorkerMain, &ctx, 0, nullptr);
-    if (!t) Fatal("snapshot: CreateThread failed (%lu)", GetLastError());
-    WaitForSingleObject(t, INFINITE);
-    CloseHandle(t);
+
+void OnOwnStack(const std::function<void()>& job) {
+    bool converted = false;
+    void* caller = nullptr;
+    if (IsThreadAFiber()) {
+        caller = GetCurrentFiber();
+    } else {
+        caller = ConvertThreadToFiberEx(nullptr, FIBER_FLAG_FLOAT_SWITCH);
+        if (!caller) Fatal("snapshot: ConvertThreadToFiberEx failed (%lu)", GetLastError());
+        converted = true;
+    }
+    if (!g_own_fiber) {
+        g_own_fiber = CreateFiberEx(256 * 1024, 1024 * 1024, FIBER_FLAG_FLOAT_SWITCH, &OwnFiber, nullptr);
+        if (!g_own_fiber) Fatal("snapshot: CreateFiberEx failed (%lu)", GetLastError());
+    }
+    asm volatile("fnstcw %0" : "=m"(g_own_cw));
+    g_return_fiber = caller;
+    g_own_job = &job;
+    SwitchToFiber(g_own_fiber);
+    // Back on the caller's own fiber: a thread made a fiber here is given
+    // back as it came (the renderer converts the main thread itself later).
+    if (converted && !ConvertFiberToThread()) Fatal("snapshot: ConvertFiberToThread failed (%lu)", GetLastError());
 }
 
 // --- the keys ------------------------------------------------------------------
@@ -601,61 +669,118 @@ void Show(const std::string& text) {
     Overlay_Frames = kOverlayFrames;
 }
 
+// The toolchain's FILE* slots: all empty between frames, or the take is
+// refused (a file open across a restore would be another process's handle).
+bool FilesClosed() {
+    for (U i = 0; i < kFileSlotCount; ++i) {
+        U v;
+        std::memcpy(&v, At(kFileSlots + 4 * i), 4);
+        if (v != 0) return false;
+    }
+    return true;
+}
+
+// On the own stack (Snapshot_Pending).
 void DoTake() {
+    if (!FilesClosed()) {
+        Log("quicksave   F6 at Frame_Counter %u refused: a file is open in File_Slots (0x%08X) between frames",
+            static_cast<U>(Frame_Counter), kFileSlots);
+        Show("Quicksave refused: a file is open");
+        return;
+    }
     const Span span = CurrentSpan();
     const U top = static_cast<U>(Task_StackTop);
     std::vector<unsigned char> file = Take(g_registry, span, top, &GameSaveHalf);
     const auto* h = reinterpret_cast<const Header*>(file.data() + kSaveHalf);
-    bool ok = false;
     std::string why;
-    OnWorker([&] {
-        Stamp(file, EnsureBuild());
-        ok = WriteNewest(L"", file, why);
-    });
-    if (!ok) {
+    Stamp(file, EnsureBuild());
+    if (!WriteNewest(L"", file, why)) {
         Log("quicksave   F6 at Frame_Counter %u refused: %s", h->frame_counter, why.c_str());
         Show("Quicksave refused: " + why);
         return;
     }
     Log("quicksave   F6 at Frame_Counter %u: BISLPS10.DAT, %u bytes (save half 0x%X, span 0x%08X+0x%X, pool 0x%08X+0x%X, "
-        "task arena 0x%08X-0x%X, %u participants)",
+        "task arena 0x%08X-0x%X, %u participants; .rdata fnv %08X)",
         h->frame_counter, h->file_bytes, kSaveHalf, h->span_base, h->span_bytes, h->pool_base, h->pool_bytes, h->arena_top,
-        h->arena_bytes, h->participants);
+        h->arena_bytes, h->participants, h->rdata_fnv);
     Show("Quicksave OK");
 }
 
+// On the own stack; the arena already probed on the main thread's.
 void DoLoad(unsigned slot) {
     std::vector<unsigned char> file;
     std::string why;
-    bool read = false;
-    const BuildId* build = nullptr;
-    OnWorker([&] {
-        build = &EnsureBuild();
-        read = ReadSlot(L"", slot, file, why);
-    });
-    if (!read) {
+    const BuildId& build = EnsureBuild();
+    if (!ReadSlot(L"", slot, file, why)) {
         Log("quicksave   F7 refused: %s", why.c_str());
         Show("Quickload refused: " + why);
         return;
     }
     const U top = static_cast<U>(Task_StackTop);
-    const Parsed p = Parse(file, *build, CurrentSpan(), top, g_registry);
+    const Parsed p = Parse(file, build, CurrentSpan(), top, g_registry);
     if (!p.ok) {
         Log("quicksave   F7 %s refused: %s - %s", SlotName(slot).c_str(), p.why.c_str(), p.detail.c_str());
         Show("Quickload refused: " + p.why);
         return;
     }
-    if (!ArenaReady(top, p.header.arena_bytes)) {
-        Log("quicksave   F7 %s refused: the task arena 0x%08X-0x%X could not be committed", SlotName(slot).c_str(), top,
+    if (!Committed(top - p.header.arena_bytes, p.header.arena_bytes)) {
+        Log("quicksave   F7 %s refused: the task arena 0x%08X-0x%X is not committed", SlotName(slot).c_str(), top,
             p.header.arena_bytes);
         Show("Quickload refused: the task stacks");
         return;
     }
+    const U rdata = Fnv(kRdata);
+    if (rdata != p.header.rdata_fnv)
+        Log("quicksave   F7 %s: .rdata fnv %08X now, %08X at the take - written in play, and not copied (the census's "
+            "premise for leaving it out does not hold)",
+            SlotName(slot).c_str(), rdata, p.header.rdata_fnv);
     const U from = Frame_Counter;
     Restore(p, g_registry);
-    Log("quicksave   F7 %s restored at Frame_Counter %u: back to Frame_Counter %u (%u bytes; %u participants)",
-        SlotName(slot).c_str(), from, p.header.frame_counter, p.header.file_bytes, p.header.participants);
-    Show("Quickload");
+    Log("quicksave   F7 %s restored at Frame_Counter %u: back to Frame_Counter %u (%u bytes; %u participants; .rdata %s)",
+        SlotName(slot).c_str(), from, p.header.frame_counter, p.header.file_bytes, p.header.participants,
+        rdata == p.header.rdata_fnv ? "unchanged" : "CHANGED");
+    Show("Quickload");   // after the span: Overlay_Text is in it
+}
+
+// --- ST: our statics that are game state -------------------------------------
+//
+// docs/quicksave-census.md 3 ("ST"): the statics of ours that hold game state
+// outside the span and belong to neither audio nor graphics. Rand's seed
+// (crt_rest, MSVC's holdrand: ours since crt-rest 2.1), DIV-0062's free ring
+// (DrawPool_Grow's free_list; the items and DrawItemPool_Top are in the
+// span), DIV-0007's relocated system message pool (MsgPool_Relocate's
+// buffer, under a language overlay), and DIV-0133/0134's "the release's
+// words stand" flag, with sigma's table rebuilt from the restored Config
+// words. A byte copy each; a size that differs at a restore is another
+// build's, which the build check refused already, so it is a Fatal here.
+constexpr U kStVersion = 1;
+
+void StSave(SnapshotWriter& w) {
+    w.Put(kStVersion);
+    w.Put(*crt_rest::RandSeedCell());
+    const U ring = draw_pool::Count();
+    w.Put(ring);
+    w.Put(draw_pool::Free(), ring * sizeof(unsigned short));
+    std::uint32_t pool_bytes = 0;
+    const std::uint8_t* pool = MsgPool_Moved(&pool_bytes);
+    w.Put(pool_bytes);
+    if (pool_bytes) w.Put(pool, pool_bytes);
+    const unsigned char release_words = bof3x::input::sigma::RecipeTranslating() ? 1 : 0;
+    w.Put(release_words);
+}
+
+void StRestore(SnapshotReader& r) {
+    if (r.Get<U>() != kStVersion) Fatal("snapshot: ST's record is another version");
+    *crt_rest::RandSeedCell() = r.Get<std::uint32_t>();
+    const U ring = r.Get<U>();
+    if (ring != draw_pool::Count()) Fatal("snapshot: ST's draw-pool ring has %u entries, this process %u", ring, draw_pool::Count());
+    r.Get(draw_pool::Free(), ring * sizeof(unsigned short));
+    std::uint32_t now_bytes = 0;
+    std::uint8_t* pool = MsgPool_Moved(&now_bytes);
+    const std::uint32_t pool_bytes = r.Get<std::uint32_t>();
+    if (pool_bytes != now_bytes) Fatal("snapshot: ST's message pool is %u bytes, this process's %u", pool_bytes, now_bytes);
+    if (pool_bytes) r.Get(pool, pool_bytes);
+    bof3x::input::sigma::SnapshotRestored(r.Get<unsigned char>() != 0);
 }
 
 // --- the self-test -----------------------------------------------------------
@@ -724,7 +849,8 @@ void SelfTestSpan(const std::wstring& dir) {
     std::memset(build.sha, 'a', sizeof build.sha);
     build.dll_base = 0x10000000;
 
-    std::vector<unsigned char> file = Take(reg, span, top, &FakeSaveHalf);
+    std::vector<unsigned char> file;
+    OnOwnStack([&] { file = Take(reg, span, top, &FakeSaveHalf); });   // the game's path: a fiber of its own
     Stamp(file, build);
     Check(Same(span.image, image1), "a take leaves the span as it found it");
     Check(file.size() == kSaveHalf + sizeof(Header) + span.image.bytes + span.pool.bytes + kArenaBytes + 2 * sizeof(RecordHead) + 300,
@@ -739,8 +865,14 @@ void SelfTestSpan(const std::wstring& dir) {
     Scribble(span.image, 0x1234);
     Scribble(span.pool, 0x5678);
     for (U i = 0; i < kArenaBytes; ++i) At(top - kArenaBytes)[i] = static_cast<unsigned char>(~i);
-    U kept_now[kKeptCount];
-    for (std::size_t i = 0; i < kKeptCount; ++i) std::memcpy(&kept_now[i], At(kKept[i].at), 4);
+    std::vector<std::vector<unsigned char>> kept_now(kKeptCount);
+    std::vector<bool> kept_byte(span.image.bytes, false);
+    for (std::size_t i = 0; i < kKeptCount; ++i) {
+        kept_now[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
+        for (U b = 0; b < kKept[i].bytes; ++b)
+            if (kKept[i].at + b >= span.image.base && kKept[i].at + b < span.image.base + span.image.bytes)
+                kept_byte[kKept[i].at + b - span.image.base] = true;
+    }
     // The scribbled span's Task_StackTop is noise; the restore is checked
     // against the stand-in top, as the game's would be against the live one.
     read = ReadSlot(dir, kFirstSlot, back, why);
@@ -751,26 +883,18 @@ void SelfTestSpan(const std::wstring& dir) {
     if (p.ok) {
         Check(ArenaReady(top, p.header.arena_bytes), "the stand-in arena is ready");
         g_test_restored.clear();
-        Restore(p, reg);
-        bool equal = true;
-        for (U at = 0; at < span.image.bytes && equal; ++at) {
-            bool kept = false;
-            for (std::size_t i = 0; i < kKeptCount; ++i)
-                if (span.image.base + at >= kKept[i].at && span.image.base + at < kKept[i].at + 4) kept = true;
-            if (!kept && At(span.image.base)[at] != image1[at]) {
+        OnOwnStack([&] { Restore(p, reg); });
+        U wrong = 0;
+        for (U at = 0; at < span.image.bytes; ++at) {
+            if (!kept_byte[at] && At(span.image.base)[at] != image1[at] && ++wrong <= 4)
                 Log("shadow      snapshot: span byte 0x%08X is 0x%02X after the restore, 0x%02X at the take", span.image.base + at,
                     At(span.image.base)[at], image1[at]);
-                equal = false;
-            }
         }
-        Check(equal, "the span equals the take's but the process-owned words");
+        Check(wrong == 0, "the span equals the take's but the keep list");
         bool kept_ok = true;
-        for (std::size_t i = 0; i < kKeptCount; ++i) {
-            U v;
-            std::memcpy(&v, At(kKept[i].at), 4);
-            if (v != kept_now[i]) kept_ok = false;
-        }
-        Check(kept_ok, "Task_SchedulerEsp, Game_Hwnd, Game_HInstance and Frame_Deadline keep the live values");
+        for (std::size_t i = 0; i < kKeptCount; ++i)
+            if (std::memcmp(At(kKept[i].at), kept_now[i].data(), kKept[i].bytes) != 0) kept_ok = false;
+        Check(kept_ok, "the keep list's bytes keep their live values (Task_SchedulerEsp, the handles, the settings, the objects)");
         Check(Same(span.pool, pool0), "the pool equals the take's");
         Check(std::memcmp(At(top - kArenaBytes), arena0.data(), kArenaBytes) == 0, "the task arena equals the take's");
         Check(g_test_restored == g_test_record, "the participant's Restore reads back what its Save wrote");
@@ -926,13 +1050,36 @@ void Snapshot_Pending() {
     const Request request = g_request;
     if (request == Request::None) return;
     g_request = Request::None;
+    // BOF3X_GAPWATCH guards .data pages and parks them by the latch's count
+    // (gapwatch.h): a copy of the span would fault through every guard, and a
+    // restore would undo its bookkeeping. Refused while it is armed.
+    if (GetEnvironmentVariableA("BOF3X_GAPWATCH", nullptr, 0) > 0) {
+        Log("quicksave   %s refused: BOF3X_GAPWATCH is armed", request == Request::Take ? "F6" : "F7");
+        Show(request == Request::Take ? "Quicksave refused: the read watch" : "Quickload refused: the read watch");
+        return;
+    }
     g_registry_closed = true;
-    if (request == Request::Take) DoTake();
-    else DoLoad(g_request_slot);
+    if (request == Request::Take) {
+        OnOwnStack([] { DoTake(); });
+        return;
+    }
+    // The arena's pages committed from the top down while still on the main
+    // thread's stack (only its own thread grows a stack through the guard
+    // page), all four slices, whatever the file holds.
+    const U top = static_cast<U>(Task_StackTop);
+    ArenaReady(top, top >= kArenaBytes ? kArenaBytes : 0);
+    const unsigned slot = g_request_slot;
+    OnOwnStack([slot] { DoLoad(slot); });
 }
 
 void Snapshot_Inject() {
-    const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd), Va(&Game_HInstance), Va(&Frame_Deadline)};
+    const U names[] = {Va(&Task_SchedulerEsp), Va(&Game_Hwnd),      Va(&Game_HInstance), Va(&Frame_Deadline),
+                       Va(&Fps_Shown),         Va(&App_Active),     Va(&Cfg_Fullscreen), Va(&Cfg_RenderMode),
+                       Va(Key_Table),          Va(&DInput_Object),  Va(&Font_GlyphData), Va(Gfx_WindowRect),
+                       Va(Gfx_ClutRows),       Va(D3d_DeviceDesc),  Va(&Dd_DirectDraw),  Va(&Dd_StageSurface),
+                       Va(&D3d_Device)};
+    static_assert(sizeof names / sizeof names[0] == kKeptCount, "a symbol for every kept range");
+    if (Va(File_Slots) != kFileSlots) Fatal("snapshot: kFileSlots 0x%08X, symbols.toml's File_Slots 0x%08X", kFileSlots, Va(File_Slots));
     for (std::size_t i = 0; i < kKeptCount; ++i)
         if (names[i] != kKept[i].at)
             Fatal("snapshot: kKept's %s is 0x%08X, symbols.toml's 0x%08X", kKept[i].name, kKept[i].at, names[i]);
@@ -942,6 +1089,7 @@ void Snapshot_Inject() {
     // host's span is the one players have, so there it runs on every
     // BOF3X_SELFTEST_ONLY start, as ExeIcon_SelfTest does.
     if (IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("snapshot")) SelfTest();
+    Snapshot_Register("ST", &StSave, &StRestore);   // after DrawPool_Grow, sigma::Arm and MsgPool_Relocate's inject
 }
 
 }  // namespace bof3

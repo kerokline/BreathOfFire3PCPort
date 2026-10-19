@@ -128,6 +128,13 @@ void Rebound();
 // release read, the two switches.
 void Arm();
 
+// The quicksave's ST participant (src/hook/snapshot.cpp), after a restore
+// wrote the span (the Config words with it): whose words stand, as the take
+// had it, and the table built again from the restored words, as Arm builds
+// it. A Config that is not a permutation while ButtonSigma is on is a Fatal,
+// as for every other writer.
+void SnapshotRestored(bool release_words);
+
 // --- the input script's buttons (docs/input-script.md 2a) ---
 //
 // A recipe is recorded on the PC, a Japan release, so its literal buttons are

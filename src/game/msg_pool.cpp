@@ -91,6 +91,11 @@ extern "C" const unsigned char* __cdecl Msg_SystemPtr(unsigned id) {
     return block + off;
 }
 
+std::uint8_t* MsgPool_Moved(std::uint32_t* bytes) {
+    *bytes = g_pool && g_pool != ArenaPool() ? kMovedRoom : 0;
+    return *bytes ? g_pool : nullptr;
+}
+
 void MsgPool_Relocate() {
     static std::uint8_t pool[kMovedRoom];
     g_pool = pool;
