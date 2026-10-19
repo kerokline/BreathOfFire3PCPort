@@ -23,6 +23,7 @@
 #include "game/area_w2d_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -95,8 +96,8 @@ void Disarm() {
 // the script position + 2.
 void TurnAtCell() {
     unsigned char* const cur = Sprite_Current;
-    if (Word(cur + 0x3A) == 0x3A) {
-        const auto d = static_cast<std::uint16_t>(Word(cur + 0x36) - 0x40);
+    if (rv::As<records::SpriteObject>(cur)->z_whole == 0x3A) {
+        const auto d = static_cast<std::uint16_t>(rv::As<records::SpriteObject>(cur)->x_whole - 0x40);
         if (d == 0 || d == 2) {
             cur[8] = d == 0 ? 3 : 7;
             AH_CALL(Area95_TurnAndMove)();
@@ -153,7 +154,7 @@ extern "C" void __cdecl Area95_WaitEffectAtCell(void) {
     unsigned i = 0;
     for (; i < at::kEffectCount; ++i) {
         const unsigned char* const e = EffectAt(i);
-        if ((e[0] & 1) != 0 && Word(e + 0x36) == 0x41 && Word(e + 0x3A) == 0x3A) break;
+        if ((e[0] & 1) != 0 && rv::As<records::EffectObject>(e)->x_whole == 0x41 && rv::As<records::EffectObject>(e)->z_whole == 0x3A) break;
     }
     if (i != at::kEffectCount) {
         ScriptStep(-2);
@@ -185,7 +186,7 @@ extern "C" void __cdecl Area95_SpawnEffect37(void) {
     tE->x = 0x410000;
     tE->z = 0x3C8000;
     tE->height = 0x2000000;
-    SetWord(e + 0x2C, 0x58);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(e)->column, 0x58);
     e[9] = 1;
     e[6] = 0;
     e[7] = 0x12;
@@ -368,10 +369,10 @@ extern "C" void __cdecl Area98_SpawnEffect37(void) {
     if (cur[0xB] == 0xFF) return;
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 0x37;
-    SetLong(EffectAt(cur[0xB]) + 0x34, tCur->x);
-    SetLong(EffectAt(cur[0xB]) + 0x38, tCur->z);
-    SetLong(EffectAt(cur[0xB]) + 0x3C, tCur->height);
-    SetWord(EffectAt(cur[0xB]) + 0x2C, 0x11D);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->x, tCur->x);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->z, tCur->z);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->height, tCur->height);
+    rv::Store<unsigned>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->column, 0x11D);
     EffectAt(cur[0xB])[6] = 0;
     EffectAt(cur[0xB])[7] = 0;
     EffectAt(cur[0xB])[0x29] = 2;
@@ -829,7 +830,7 @@ extern "C" void __cdecl Area103_Ground(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
 }
 
 // original 0x414640 (area 103 +0x3C[5]; PSX 0x801F5834): Effect_FindFree; a

@@ -17,6 +17,7 @@
 #include "game/area_w1d.h"
 #include "game/area_w1d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w1d {
@@ -224,7 +225,7 @@ std::uint32_t GroundEffect(const std::uint32_t* a, std::uint32_t answer) {
     MovesCurrent(a, answer);
     const std::uint32_t n = ah::Noise();
     if (n % 3 != 0) return answer;
-    const auto height = move_script::Word(Sprite_Current + 0x3E);
+    const auto height = rv::Current<records::SpriteHead>()->height_whole;
     return (answer & 0xFFFF0000u) | static_cast<std::uint16_t>(height + (n >> 8) % 3 - 1);
 }
 // Inventory_Count answers a word its caller tests whole: 0 (garbage above) a
@@ -351,7 +352,7 @@ void Seed56(unsigned k) {
     case k56FallBegin: break;
     case k56FallStep:
         // the height at the signed word's edges, +5 at 0 half the time, the two flags' bit 3 clear half the time
-        if (ah::Half()) move_script::SetWord(Sprite_Current + 0x3E, AH_PICK(0x7FFF, 0x8000, 0xFFFF, 0, 0x7FF, 0x8001));
+        if (ah::Half()) rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, AH_PICK(0x7FFF, 0x8000, 0xFFFF, 0, 0x7FF, 0x8001));
         if (ah::Half()) Sprite_Current[5] = 0;
         if (ah::Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~8u);
         if (ah::Half()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~8u);

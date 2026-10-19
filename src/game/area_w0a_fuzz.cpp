@@ -15,6 +15,7 @@
 #include "game/area_w0a.h"
 #include "game/area_w0a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w0a {
@@ -250,13 +251,13 @@ void Seed(unsigned k) {
         // x around 0x1C8000 (the direction's sign, the steps' 0x8000 edges, the wrap)
         const std::uint32_t d = AH_PICK(0, 1, 0xFFFFFFFFu, 0x7FFF, 0x8000, 0x8001, 0xFFFF8001u, 0xFFFF8000u, 0xFFFF7FFFu,
                                         0x7F8000, 0x800000, 0x80000000u, 0x7FFFFFFFu, 0x80000001u, 0x10000, 0xFFFF0000u);
-        if (ah::Often()) SetLong(cur + 0x34, static_cast<std::int32_t>(0x1C8000u - d));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(0x1C8000u - d));
         break;
     }
     case 0x401940: {
         const std::uint32_t d = AH_PICK(0, 1, 0xFFFFFFFFu, 0x7FFF, 0x8000, 0x8001, 0xFFFF8001u, 0xFFFF8000u, 0xFFFF7FFFu,
                                         0x7F8000, 0x800000, 0x80000000u, 0x7FFFFFFFu, 0x80000001u, 0x10000, 0xFFFF0000u);
-        if (ah::Often()) SetLong(cur + 0x38, static_cast<std::int32_t>(0x20000u - d));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(0x20000u - d));
         break;
     }
     case 0x4019B0:

@@ -23,6 +23,7 @@
 #include "game/area_w1f_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -146,7 +147,7 @@ void PlaceRandomObject(std::uint32_t cells, std::uint32_t weights) {
         tObject->x = x;
         tObject->z = z;
         const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
-        SetWord(object + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
@@ -491,11 +492,11 @@ extern "C" void __cdecl Area75_SpawnFive(void) {
         if (slot == 0xFF) continue;
         AH_CALL(EventOp_0x)(Mem(op));
         const std::int32_t x = tSelf->x;
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(x) + 0x30000u));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(x) + 0x30000u));
         const std::int32_t z = tSelf->z;
-        SetLong(Sprite_Current + 0x38, z);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, z);
         const std::int32_t y = tSelf->height;
-        SetLong(Sprite_Current + 0x3C, y);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, y);
         Sprite_Current[0xB] = i;
     }
     Sprite_Current = self;
@@ -546,7 +547,7 @@ extern "C" void __cdecl Area75_DrainEffects(void) {
     unsigned char* e = EffectAt(B(at::kOtherEffect));
     SetLong(e + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(e + 0xC)) - bit));
     e = EffectAt(B(AreaW1f_PlayerEffect_addr));
-    SetLong(e + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(e + 0xC)) - bit));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(e)->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(e)->step_x) - bit));
     if (B(at::kCounter0) < 0x20) AddWord(MoveScript_Object + 0xA, 0xFFFE);
 }
 
@@ -567,7 +568,7 @@ extern "C" void __cdecl Area75_FollowBegin(void) {
 // object's z = Field_Kind2Z and the script position back by 2; 0: its state 0.
 extern "C" void __cdecl Area75_FollowStep(void) {
     if (Field_Request != 0) {
-        SetLong(Sprite_Current + 0x38, Field_Kind2Z);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Field_Kind2Z);
         AddWord(MoveScript_Object + 0xA, 0xFFFE);
         return;
     }
@@ -582,7 +583,7 @@ extern "C" void __cdecl Area75_FollowKind2Z(void) {
         AH_CALL(Sound_PlayEffect)(0x207);
         return;
     }
-    SetLong(Sprite_Current + 0x38, Field_Kind2Z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Field_Kind2Z);
     AddWord(MoveScript_Object + 0xA, 0xFFFE);
 }
 
@@ -1128,8 +1129,8 @@ extern "C" void __cdecl Area75_DrawWindow(int x, int y, int w, int h, int flag) 
     p[5] = shade;
     p[6] = shade;
     p[0x15] = 2;
-    SetWord(p + 0x16, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     AH_CALL(Gfx_CommitPrim)(1, 0x48);
     // the middle's left half
     const int ww = static_cast<int>(w1 & 0xFFFF);
@@ -1160,8 +1161,8 @@ extern "C" void __cdecl Area75_DrawWindow(int x, int y, int w, int h, int flag) 
     p[4] = shade;
     p[5] = shade;
     p[6] = shade;
-    SetWord(p + 0x16, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     AH_CALL(Gfx_CommitPrim)(1, 0x48);
     // the middle's right half
     p = Gfx_PacketNext;
@@ -1188,8 +1189,8 @@ extern "C" void __cdecl Area75_DrawWindow(int x, int y, int w, int h, int flag) 
     p[4] = shade;
     p[5] = shade;
     p[6] = shade;
-    SetWord(p + 0x16, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     AH_CALL(Gfx_CommitPrim)(1, 0x48);
     // the right edge
     p = Gfx_PacketNext;
@@ -1217,8 +1218,8 @@ extern "C" void __cdecl Area75_DrawWindow(int x, int y, int w, int h, int flag) 
     p[0x25] = 2;
     p[0x35] = static_cast<unsigned char>(hb - 1);
     p[0x45] = static_cast<unsigned char>(hb - 3);
-    SetWord(p + 0x16, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, static_cast<unsigned>(AH_CALL(Gpu_GetClut)(clut_x, 0x1E1)));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     AH_CALL(Gfx_CommitPrim)(1, 0x48);
     // the second draw mode, then the outline
     unsigned char* const rect1 = Gfx_PacketNext;

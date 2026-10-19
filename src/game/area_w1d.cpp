@@ -22,6 +22,7 @@
 #include "game/area_w1d_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -170,7 +171,7 @@ void PlaceOneObject(std::uint32_t positions, std::uint32_t weights) {
         tObject->x = x;
         tObject->z = z;
         const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
-        SetWord(object + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
@@ -307,11 +308,11 @@ extern "C" void __cdecl Area56_FallBegin(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     const long ground = AH_CALL(MapView_GroundAt)(tCur->x, tCur->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground + 0x7D0));
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground + 0x7D0));
     rv::Current<records::SpriteObject>()->step_x = 0;
     rv::Current<records::SpriteObject>()->step_z = 0;
     rv::Current<records::SpriteObject>()->step_y = 0;
-    SetLong(Sprite_Current + 0x20, -8);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_20, -8);
     Sprite_Current[4] = 1;
     FieldStatePace();
 }
@@ -325,21 +326,21 @@ extern "C" void __cdecl Area56_FallBegin(void) {
 extern "C" void __cdecl Area56_FallStep(void) {
     unsigned char* cur = Sprite_Current;
     auto* tCur = rv::As<records::SpriteObject>(cur);
-    tCur->step_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->step_y) + static_cast<std::uint32_t>(Long(cur + 0x20)));
+    tCur->step_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->step_y) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(cur)->work_20));
     AH_CALL(Field_LeaderStepTick)();
     cur = Sprite_Current;
     tCur = rv::As<records::SpriteObject>(cur);
     const long ground = AH_CALL(MapView_GroundAt)(tCur->x, tCur->z);
-    if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(Word(Sprite_Current + 0x3E))) {
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+    if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(rv::Current<records::SpriteObject>()->height_whole)) {
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(ground));
         rv::Current<records::SpriteObject>()->step_y = 0;
-        SetLong(Sprite_Current + 0x20, 0);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->work_20, 0);
         Sprite_Current[4] = 2;
     }
     cur = Sprite_Current;
     tCur = rv::As<records::SpriteObject>(cur);
     if (cur[5] == 0 && ((static_cast<unsigned char>(Field_ScriptFlags2) | static_cast<unsigned char>(Field_ScriptFlags)) & 8) == 0)
-        AH_CALL(MapView_SetElevation)(static_cast<std::int16_t>(Word(cur + 0x3E)));
+        AH_CALL(MapView_SetElevation)(static_cast<std::int16_t>(rv::As<records::SpriteObject>(cur)->height_whole));
     FieldStatePace();
 }
 
@@ -457,7 +458,7 @@ extern "C" void __cdecl Area59_EffectGround(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::EffectObject>(cur);
     const auto ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z));
-    SetLong(Sprite_Current + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(ground)) << 16));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(ground)) << 16));
     ++Sprite_Current[1];
 }
 

@@ -18,6 +18,7 @@
 #include "game/area_w2d.h"
 #include "game/area_w2d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w2d {
@@ -357,8 +358,8 @@ std::uint32_t Around3(std::uint32_t lo) {
 // Handler 4's cell: z word 0x3A, x word 0x40 or 0x42, and their neighbours.
 void SeedTurnCell() {
     unsigned char* const cur = Sprite_Current;
-    if (ah::Often()) move_script::SetWord(cur + 0x3A, ah::Often() ? 0x3A : AH_PICK(0x39, 0x3B, 0x13A));
-    if (ah::Often()) move_script::SetWord(cur + 0x36, AH_PICK(0x40, 0x42, 0x40, 0x42, 0x41, 0x3F, 0x43, 0x44, 0x140, 0x142));
+    if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->z_whole, ah::Often() ? 0x3A : AH_PICK(0x39, 0x3B, 0x13A));
+    if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->x_whole, AH_PICK(0x40, 0x42, 0x40, 0x42, 0x41, 0x3F, 0x43, 0x44, 0x140, 0x142));
 }
 // The twenty effect records: one standing at the cell (x word 0x41, z word
 // 0x3A, live) at a random slot two times in three, others near it (one field
@@ -368,22 +369,22 @@ void SeedEffectsAtCell() {
         unsigned char* const e = EffectRecord(i);
         if (!ah::Half()) continue;
         e[0] = static_cast<unsigned char>(ah::Next() | 1);
-        move_script::SetWord(e + 0x36, ah::Half() ? 0x41 : AH_PICK(0x40, 0x42, 0x141));
-        move_script::SetWord(e + 0x3A, ah::Half() ? 0x3A : AH_PICK(0x39, 0x3B, 0x13A));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(e)->x_whole, ah::Half() ? 0x41 : AH_PICK(0x40, 0x42, 0x141));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(e)->z_whole, ah::Half() ? 0x3A : AH_PICK(0x39, 0x3B, 0x13A));
     }
     for (unsigned i = 0; i < at::kEffectCount; ++i) {
         unsigned char* const e = EffectRecord(i);
-        if ((e[0] & 1) && move_script::Word(e + 0x36) == 0x41 && move_script::Word(e + 0x3A) == 0x3A) e[0] = static_cast<unsigned char>(e[0] & ~1u);
+        if ((e[0] & 1) && rv::As<records::EffectObject>(e)->x_whole == 0x41 && rv::As<records::EffectObject>(e)->z_whole == 0x3A) e[0] = static_cast<unsigned char>(e[0] & ~1u);
     }
     if (ah::Often()) {
         unsigned char* const e = EffectRecord(ah::Next());
         e[0] = static_cast<unsigned char>(ah::Next() | 1);
-        move_script::SetWord(e + 0x36, 0x41);
-        move_script::SetWord(e + 0x3A, 0x3A);
+        rv::Store<unsigned>(rv::As<records::EffectObject>(e)->x_whole, 0x41);
+        rv::Store<unsigned>(rv::As<records::EffectObject>(e)->z_whole, 0x3A);
         switch (ah::Next() % 4) {   // one field off, a quarter of the time
         case 0: e[0] = static_cast<unsigned char>(e[0] & ~1u); break;
-        case 1: move_script::SetWord(e + 0x36, AH_PICK(0x40, 0x42, 0x141)); break;
-        case 2: move_script::SetWord(e + 0x3A, AH_PICK(0x39, 0x3B, 0x13A)); break;
+        case 1: rv::Store<unsigned>(rv::As<records::EffectObject>(e)->x_whole, AH_PICK(0x40, 0x42, 0x141)); break;
+        case 2: rv::Store<unsigned>(rv::As<records::EffectObject>(e)->z_whole, AH_PICK(0x39, 0x3B, 0x13A)); break;
         default: break;
         }
     }
@@ -401,7 +402,7 @@ void Seed95(unsigned k) {
         break;
     case k95Leap:
         if (ah::Often()) Sprite_Current[9] = static_cast<unsigned char>(AH_PICK(1, 2, 0x10, 0xFF, 0x80, 3));
-        if (ah::Half()) move_script::SetWord(Sprite_Current + 0x3E, AH_PICK(0, 0xFF20, 0x7FFF, 0x8000));
+        if (ah::Half()) rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, AH_PICK(0, 0xFF20, 0x7FFF, 0x8000));
         Settle();
         break;
     case k95Move:
@@ -479,7 +480,7 @@ void Seed99(unsigned k) {
         break;
     case k99LeapStep: {
         // the rise on each side of 0 before and after the 0x700 step
-        if (ah::Often()) move_script::SetLong(Sprite_Current + 0x14, AH_PICK(0x700, 0x6FF, 0x701, 1, 0, 0xFFFFFFFFu, 0x4200, 0x80000000u, 0x800006FFu));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, AH_PICK(0x700, 0x6FF, 0x701, 1, 0, 0xFFFFFFFFu, 0x4200, 0x80000000u, 0x800006FFu));
         if (ah::Often()) Sprite_Current[0xA] = static_cast<unsigned char>(AH_PICK(1, 2, 0, 0xE, 0xFF));
         break;
     }

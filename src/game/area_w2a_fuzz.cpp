@@ -17,6 +17,7 @@
 #include "game/area_w2a.h"
 #include "game/area_w2a_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w2a {
@@ -312,7 +313,7 @@ void SeedLeap() {
     } else if (ah::Next() % 8 == 0) {
         position = ah::Next() & 0xFFFF;
     }
-    move_script::SetWord(object + 0xA, position);
+    rv::Store<unsigned>(rv::As<records::ScriptContext>(object)->position, position);
 }
 
 void Seed77(unsigned k) {

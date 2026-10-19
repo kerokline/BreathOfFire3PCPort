@@ -22,6 +22,7 @@
 #include "game/area_w0c_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -79,9 +80,9 @@ void SpawnEffect50(std::int32_t lift, unsigned char timer) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     EffectAt(cur[0xB])[6] = cur[8];
-    SetLong(EffectAt(cur[0xB]) + 0x34, tCur->x);
-    SetLong(EffectAt(cur[0xB]) + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) + static_cast<std::uint32_t>(lift)));
-    SetLong(EffectAt(cur[0xB]) + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->height) + 0x1000000u));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->x, tCur->x);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) + static_cast<std::uint32_t>(lift)));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(cur[0xB]))->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->height) + 0x1000000u));
     EffectAt(cur[0xB])[9] = timer;
 }
 
