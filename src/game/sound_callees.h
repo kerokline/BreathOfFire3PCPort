@@ -18,9 +18,9 @@ namespace sound {
 // --- Addresses without a symbol --------------------------------------------
 // The Win32 import slots the layer calls through (the IAT, by name from the
 // import directory 2026-09-22).
-constexpr std::uint32_t kImportCreateEvent = 0x5C4080;   // KERNEL32 CreateEventA
-constexpr std::uint32_t kImportCloseHandle = 0x5C4084;   // KERNEL32 CloseHandle
-constexpr std::uint32_t kImportMsgWait = 0x5C4164;       // USER32 MsgWaitForMultipleObjects
+// kImportCreateEvent: now Sound_ImportCreateEvent (symbols.toml). KERNEL32 CreateEventA
+// kImportCloseHandle: now Sound_ImportCloseHandle (symbols.toml). KERNEL32 CloseHandle
+// kImportMsgWait: now Sound_ImportMsgWait (symbols.toml). USER32 MsgWaitForMultipleObjects
 // WinMain's frame deadline, a float in milliseconds, advanced once per logic
 // frame at 0x4FCF0F (known-defects D5, DIV-0022). Read by DIV-0028.
 // IID_IDirectSoundNotify {B0210783-89CD-11D0-AF08-00A0C925CD16}, 16 bytes.

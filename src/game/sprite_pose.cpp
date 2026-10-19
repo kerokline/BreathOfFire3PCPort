@@ -88,8 +88,8 @@ extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned 
     if (animation & 0x80) {
         unsigned char* sprite = Sprite_Current;
         if (!(sprite[0x24] & 2)) {
-            const unsigned row = (At(at::kPartySetCurrent)[0] & 0x7Fu) * 3u;
-            SetLong(sprite + 0x64, At(at::kPartySetRows)[row + Word(sprite + 0x2C)]);
+            const unsigned row = (AreaW0b_PartySet & 0x7Fu) * 3u;
+            SetLong(sprite + 0x64, static_cast<unsigned char>(MoveScript_EffectArg[0xc + row + Word(sprite + 0x2C)]));
             sprite = Sprite_Current;
             SetLong(sprite + 0x68, sprite[0x26]);
             sprite = Sprite_Current;
@@ -165,14 +165,14 @@ extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
         const unsigned slot = sprite[0x25];
         const unsigned count = Gfx_UploadQueueCount;
         if (slot > 0x10) {
-            SetWord(At(at::kQueueX + count * 2u), (slot - 0x10u) << 6);
-            SetWord(At(at::kQueueY + count * 2u), sprite[0x26] + 0x100u);
+            SetWord(At(Gfx_UploadQueueX_addr + count * 2u), (slot - 0x10u) << 6);
+            SetWord(At(Gfx_UploadQueueY_addr + count * 2u), sprite[0x26] + 0x100u);
         } else {
-            SetWord(At(at::kQueueX + count * 2u), slot << 6);
-            SetWord(At(at::kQueueY + count * 2u), sprite[0x26]);
+            SetWord(At(Gfx_UploadQueueX_addr + count * 2u), slot << 6);
+            SetWord(At(Gfx_UploadQueueY_addr + count * 2u), sprite[0x26]);
         }
         const unsigned char* const image = Offset(images, static_cast<std::uint32_t>(Long(images + entry[0] * 4u)));
-        SetLong(At(at::kQueueRecord + count * 4u), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(image)));
+        SetLong(At(Gfx_UploadQueueRecord_addr + count * 4u), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(image)));
         Gfx_UploadQueueCount = static_cast<unsigned char>(Gfx_UploadQueueCount + 1);
     }
     sprite[0x2A] = entry[2];

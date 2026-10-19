@@ -12,19 +12,19 @@ constexpr std::uint32_t kSndBufVolume = bof3::addr::SndBuf_SetVolume;     // (bu
                                                       // for a null buffer. The sound module's; nobody's
 
 // Data.
-constexpr std::uint32_t kStoryFlags = 0x904030;       // the story flags (Cond_Flags' row 0x14): flag 0x1C held by
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags' row 0x14): flag 0x1C held by
                                                       // Effect_HoldFlag1C, cleared by effect kind 4 (0x469FB0 EffectKind04_HoldTick)
-constexpr std::uint32_t kLeaderSlot = 0x904060;       // u8: the formation group Party_PlaceInFormation adds to
+// kLeaderSlot: now Cond_Flags[0xd0] (symbols.toml). u8: the formation group Party_PlaceInFormation adds to
 constexpr std::uint32_t kFormation = 0x904AAC;        // u8: the event battle's formation (EventBattle_Records[n] +1)
 constexpr std::uint32_t kKeyItems = 0x904554;         // 32 bytes: the key-item ids (Inventory_IdLists[4])
 constexpr std::uint32_t kWorkingRecords = 0x802DC0;   // ObjTrio + 0x80: each member's working copy of its record
 constexpr std::uint32_t kAbilityType = 0x65C4D9;      // NameTable_Abilities + 1, stride 24: an id's type byte (& 3)
-constexpr std::uint32_t kLightAngle0 = 0x903598;      // Light_Angles, read as a dword
-constexpr std::uint32_t kLightAngle2 = 0x90359C;      // Light_Angles + 4, read as a dword
-constexpr std::uint32_t kLightCopy0 = 0x7E0680;       // Light_AnglesCopy word 0
-constexpr std::uint32_t kLightCopy2 = 0x7E0684;       // Light_AnglesCopy word 2
-constexpr std::uint32_t kAngle0 = 0x929EC8;           // Camera_Angles word 0 (read as a dword, masked 0xFFF)
-constexpr std::uint32_t kAngleFB = 0x929ECC;          // Cond_AngleFB (Camera_Angles word 2), the same
+// kLightAngle0: now Light_Angles (symbols.toml). Light_Angles, read as a dword
+// kLightAngle2: now Light_Angles[2] (symbols.toml). Light_Angles + 4, read as a dword
+// kLightCopy0: now Light_AnglesCopy (symbols.toml). Light_AnglesCopy word 0
+// kLightCopy2: now Light_AnglesCopy[2] (symbols.toml). Light_AnglesCopy word 2
+// kAngle0: now Camera_Angles (symbols.toml). Camera_Angles word 0 (read as a dword, masked 0xFFF)
+// kAngleFB: now Cond_AngleFB (symbols.toml). Cond_AngleFB (Camera_Angles word 2), the same
 constexpr std::uint32_t kChannelsEnd = 0x6BC924;      // one past Sound_Channels' 23 dwords
 constexpr std::uint32_t kBankStride = 0x384;          // Sound_Banks' records, banks 1..6
 constexpr std::uint32_t kBankVoices = 0x184;          // a bank's voice entries (8 bytes: sample, buffer) +4

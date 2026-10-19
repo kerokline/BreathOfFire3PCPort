@@ -86,7 +86,7 @@ int Sound_PauseAllEax(void) {
         const std::uint32_t buffer = Dword(p);
         if (buffer != 0) SoundRest_g.sndbuf_stop(At(buffer));
     }
-    if (Dword(kStreamKind) != 0) SoundRest_g.stream_stop();
+    if (SaveMenu_StreamKind != 0) SoundRest_g.stream_stop();
     return SoundRest_g.halt();
 }
 

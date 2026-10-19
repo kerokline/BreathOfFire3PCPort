@@ -18,19 +18,19 @@ constexpr U kModeRt = 0x65DAE4;       // its mode literal, text read
 constexpr U kPairFormat = 0x65DAD0;   // the two-integer sscanf format of lines 3 on
 constexpr U kModeRb = 0x66BC38;       // Disc_Probe's mode literal, binary read
 constexpr U kRootFormat = 0x66BC30;   // Disc_Probe's two-string sprintf format
-constexpr U kCdRoot = 0x66BC2C;       // File_CdRootBuf, the drive root File_Open prepends
+// kCdRoot: now File_CdRootBuf (symbols.toml). File_CdRootBuf, the drive root File_Open prepends
 // The globals symbols.gen.h binds as typed lvalues (so their bof3::addr
 // constants are hidden behind the macros), by address for the fuzz's regions
 // and the dword copies.
-constexpr U kKeyTable = 0x7DE7A8;          // Key_Table, 32 (scancode, bits) pairs
-constexpr U kKeyTableDefault = 0x66C648;   // Key_TableDefault, the same shape
-constexpr U kGameHwnd = 0x6BC620;          // Game_Hwnd
-constexpr U kGameHInstance = 0x6BC624;     // Game_HInstance
-constexpr U kGameQuitFlag = 0x6BC639;      // Game_QuitFlag, a byte
-constexpr U kGfxBufferIndex = 0x905B89;    // Gfx_BufferIndex, a byte
-constexpr U kGfxCurrentEnv = 0x937F84;     // Gfx_CurrentEnv, the current block
+// kKeyTable: now Key_Table (symbols.toml). Key_Table, 32 (scancode, bits) pairs
+// kKeyTableDefault: now Key_TableDefault (symbols.toml). Key_TableDefault, the same shape
+// kGameHwnd: now Game_Hwnd (symbols.toml). Game_Hwnd
+// kGameHInstance: now Game_HInstance (symbols.toml). Game_HInstance
+// kGameQuitFlag: now Game_QuitFlag (symbols.toml). Game_QuitFlag, a byte
+// kGfxBufferIndex: now Gfx_BufferIndex (symbols.toml). Gfx_BufferIndex, a byte
+// kGfxCurrentEnv: now Gfx_CurrentEnv (symbols.toml). Gfx_CurrentEnv, the current block
 constexpr U kGfxOtPointers = 0x929EA0;     // Gfx_OtPointers, 8 dwords
-constexpr U kGfxOtHeads = 0x9037C0;        // Gfx_OtHeads, 8 list heads per buffer
+// kGfxOtHeads: now Gfx_OtHeads (symbols.toml). Gfx_OtHeads, 8 list heads per buffer
 constexpr U kBlocks = bof3::addr::Gfx_BufferBlocks;  // 0x903880, the two double-buffer blocks
 constexpr U kBlockBytes = 0x90;       // DISPENV +0, DRAWENV +0x14, the ordering table +0x70
 constexpr U kBlockDrawEnv = 0x14;
@@ -47,7 +47,7 @@ constexpr U kCfgTable = 0x14;
 
 // The Win32 import slot Disc_Probe calls through (the IAT, by name from the
 // import directory 2026-10-05): KERNEL32 GetDriveTypeA.
-constexpr U kImportGetDriveType = 0x5C4088;
+// kImportGetDriveType: now Shell_ImportGetDriveType (symbols.toml).
 constexpr U kDriveCdrom = 5;          // DRIVE_CDROM
 
 // The sound set-up Game_Init calls (0x4FD144), not ours and not named

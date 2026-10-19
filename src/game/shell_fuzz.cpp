@@ -111,13 +111,13 @@ char g_disc[kStrBytes];
 struct Region { U at, bytes; };
 const Region kRegions[] = {
     {0x65DA44, 8},                            // Cfg_Fullscreen, Cfg_RenderMode
-    {kCdRoot, 4},                             // File_CdRootBuf
+    {File_CdRootBuf_addr, 4},                 // File_CdRootBuf
     {0x6BC620, 0x1C},                         // Game_Hwnd, Game_HInstance .. Game_QuitFlag 0x6BC639
-    {kKeyTableDefault, 0x80},
-    {kKeyTable, 0x80},
+    {Key_TableDefault_addr, 0x80},
+    {Key_Table_addr, 0x80},
     {0x7E1BE8, 0x10},                         // Input_Held .. Input2_Pressed
     {0x905B88, 4},                            // Gfx_BufferIndex 0x905B89
-    {kGfxOtPointers, 0x20},
+    {Gfx_OtPointers_addr, 0x20},
     {0x937F84, 4},                            // Gfx_CurrentEnv
 };
 constexpr unsigned kRegionBytes = 8 + 4 + 0x1C + 0x80 + 0x80 + 0x10 + 4 + 0x20 + 4;
@@ -221,13 +221,13 @@ void Disturb() {
     const U v = h >> 12;
     switch ((h >> 4) % 9) {
     case 0: std::memcpy(At(0x7E1BE8 + (v % 8) * 2), &v, 2); break;   // a pad word
-    case 1: PutLong(kGameHwnd, v * 0x9E3779B1u); break;
-    case 2: PutLong(kGameHInstance, v * 0x85EBCA6Bu); break;
-    case 3: At(kGfxBufferIndex)[0] = static_cast<unsigned char>(v & 1 ? v >> 1 : v & 2); break;
-    case 4: PutLong(kGfxCurrentEnv, Addr(g_env) + (v % 0x40) * 4); break;
-    case 5: PutLong(kGfxOtPointers + (v % 8) * 4, v * 0x2545F491u); break;
-    case 6: At(kCdRoot + v % 4)[0] = static_cast<unsigned char>(v >> 8); break;
-    case 7: At(kGameQuitFlag)[0] = static_cast<unsigned char>(v); break;
+    case 1: PutLong(Game_Hwnd_addr, v * 0x9E3779B1u); break;
+    case 2: PutLong(Game_HInstance_addr, v * 0x85EBCA6Bu); break;
+    case 3: At(Gfx_BufferIndex_addr)[0] = static_cast<unsigned char>(v & 1 ? v >> 1 : v & 2); break;
+    case 4: PutLong(Gfx_CurrentEnv_addr, Addr(g_env) + (v % 0x40) * 4); break;
+    case 5: PutLong(Gfx_OtPointers_addr + (v % 8) * 4, v * 0x2545F491u); break;
+    case 6: At(File_CdRootBuf_addr + v % 4)[0] = static_cast<unsigned char>(v >> 8); break;
+    case 7: At(Game_QuitFlag_addr)[0] = static_cast<unsigned char>(v); break;
     default: g_env[v % kEnvBytes] = static_cast<unsigned char>(v >> 8); break;
     }
 }
@@ -410,8 +410,8 @@ void CloneAll() {
     auto* const code = static_cast<unsigned char*>(g_clones[kDiscProbe]);
     U disp;
     std::memcpy(&disp, code + 0x25, sizeof disp);
-    if (code[0x23] != 0x8B || code[0x24] != 0x3D || disp != kImportGetDriveType)
-        bof3::Fatal("shell: Disc_Probe +0x23 is not mov edi, [0x%X]", (unsigned)kImportGetDriveType);
+    if (code[0x23] != 0x8B || code[0x24] != 0x3D || disp != Shell_ImportGetDriveType_addr)
+        bof3::Fatal("shell: Disc_Probe +0x23 is not mov edi, [0x%X]", (unsigned)Shell_ImportGetDriveType_addr);
     disp = Addr(&g_slot_drive_type);
     std::memcpy(code + 0x25, &disp, sizeof disp);
 }
@@ -445,7 +445,7 @@ void Generate(unsigned k, U* args, unsigned* coverage) {
     // Key_TableDefault is the engine's rule (Shell_MapDefaultKeys writes it
     // at map time, Cfg_SetDefaultKeys copies the rule): held at it, not
     // randomised, as in every run.
-    bof3x::input::DefaultKeyTable(At(kKeyTableDefault), 0x80);
+    bof3x::input::DefaultKeyTable(At(Key_TableDefault_addr), 0x80);
     for (unsigned i = 0; i < kEnvBytes; ++i) g_env[i] = static_cast<unsigned char>(Next());
     for (U a = g_top - kSeedBelow; a < g_top + kAbove; ++a) At(a)[0] = static_cast<unsigned char>(Next());
     std::memset(args, 0, 5 * sizeof(U));
@@ -473,13 +473,13 @@ void Generate(unsigned k, U* args, unsigned* coverage) {
         args[0] = Addr(g_env) + Next() % 0x100;
         break;
     case kLinkOTags:
-        if (Next() % 2) At(kGfxBufferIndex)[0] = static_cast<unsigned char>(Next() & 1);
+        if (Next() % 2) At(Gfx_BufferIndex_addr)[0] = static_cast<unsigned char>(Next() & 1);
         break;
     case kDiscProbe: {
         g_open_null_odds = 1 + Next() % 3;   // 1: every open fails
         g_cdrom_odds = 1 + Next() % 6;
-        if (Next() % 4) std::memcpy(At(kCdRoot), "C:\\", 4);
-        else At(kCdRoot + 3)[0] = 0;
+        if (Next() % 4) std::memcpy(At(File_CdRootBuf_addr), "C:\\", 4);
+        else At(File_CdRootBuf_addr + 3)[0] = 0;
         RandomLine(g_local);
         RandomLine(g_disc);
         args[0] = Next() % 2 ? 0x65DAB8 : Addr(g_local);   // the image's CAPCOM.AVI, or ours

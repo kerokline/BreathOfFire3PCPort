@@ -89,7 +89,7 @@ void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 int S8(U v) { return static_cast<signed char>(static_cast<unsigned char>(v)); }
 
 // The shop's list (count, then category / item pairs), read afresh.
-unsigned char* List() { return At(Long(at::kShopList)); }
+unsigned char* List() { return At(ShopStates2_ShopList); }
 // The inventory list of a category: ids (0x656B00) or counts (0x656B14).
 unsigned char* Ids(U kind) { return At(Long(at::kIdLists + kind * 4)); }
 unsigned char* Counts(U kind) { return At(Long(at::kCountLists + kind * 4)); }
@@ -99,14 +99,14 @@ unsigned char* Panel(int i) { return At(at::kMembers + static_cast<U>(i) * at::k
 U RecordOf(int member) { return Byte(at::kRecordOf + Byte(at::kPartyList + static_cast<U>(member))); }
 U PartyCount() { return static_cast<U>(g.party_count(0)) & 0xFF; }
 
-bool Confirmed(U pressed) { return (Word(at::kConfirm) & pressed & 0xFFFF) != 0; }
-bool Cancelled(U pressed) { return (Word(at::kCancel) & pressed & 0xFFFF) != 0; }
+bool Confirmed(U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed & 0xFFFF) != 0; }
+bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButtons) & pressed & 0xFFFF) != 0; }
 
-void StepBy(int delta) { PutByte(at::kSub, Byte(at::kSub) + static_cast<U>(delta)); }
+void StepBy(int delta) { FieldS_Step = static_cast<std::uint32_t>(FieldS_Step) + static_cast<U>(delta); }
 
 // The name of the chosen item into text record 0 - TextRecord_Set(0, 0x10,
 // Item_NamePtr(kind, item)) - which five of the states do first.
-void SetItemName() { g.text_set(0, 0x10, g.name_ptr(Byte(at::kKind), Byte(at::kItem))); }
+void SetItemName() { g.text_set(0, 0x10, g.name_ptr(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item))); }
 
 // The yes / no prompt's frame (ShopTrade_BuyConfirm, _BuyAskEquip,
 // _SellConfirm): the name, the help line `help`, the hand at x = 0x803164 -
@@ -115,19 +115,19 @@ void SetItemName() { g.text_set(0, 0x10, g.name_ptr(Byte(at::kKind), Byte(at::kI
 // dword, read again after that sound.
 U YesNoFrame(U help) {
     SetItemName();
-    const int answer = S8(Byte(at::kAnswer));
+    const int answer = FieldS_Answer;
     const U y = Word(0x803166);
-    PutWord(at::kHelp, help);
+    ShopStates2_Help = help;
     if (g_shop_yes_no_hand)   // DIV-0027, amended 2026-10-03: over the line ShopWin_TitleRun draws at x + 7
         PutWord(at::kHandX, static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(Word(0x803164)) + 7, answer)));
     else
         PutWord(at::kHandX, Long(0x803164) - static_cast<U>(answer * 36) + 0xE8);
     U pressed = Long(at::kPressed);
-    PutByte(at::kHand, 1);
-    PutWord(at::kHandY, y + 5);
+    BattleE4_Above = 1;
+    ShopStates2_HandY = y + 5;
     if ((pressed & 0xA000) != 0) {
         g.sound(0x100);
-        PutByte(at::kAnswer, Byte(at::kAnswer) ^ 1);
+        FieldS_Answer = static_cast<std::uint32_t>(static_cast<unsigned char>(FieldS_Answer)) ^ 1;
         pressed = Long(at::kPressed);
     }
     return pressed;
@@ -141,43 +141,43 @@ U YesNoFrame(U help) {
 // comparison is with the starting count too, so a step of one plays the
 // sound twice in the frame; and a most of 0 leaves 0.
 void StepCount(U repeat, unsigned short sound) {
-    const U start = Byte(at::kCount);
+    const U start = ShopStates2_Count;
     U c = start;
     if ((repeat & 0x8000) != 0) {
         c = (c - 1) & 0xFF;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     } else if ((repeat & 0x2000) != 0) {
         c = (c + 1) & 0xFF;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     }
     if (S8(c) < 1) {
         c = 1;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     }
     U most = Byte(at::kMaxCount);
     if (c > most) {
         c = most;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     }
     if (start != c) {
         g.sound(sound);
-        c = Byte(at::kCount);
+        c = ShopStates2_Count;
         most = Byte(at::kMaxCount);
     }
     if ((repeat & 0x4000) != 0) {
         c = (c - 10) & 0xFF;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     } else if ((repeat & 0x1000) != 0) {
         c = (c + 10) & 0xFF;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     }
     if (S8(c) < 1) {
         c = 1;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     }
     if (c > most) {
         c = most;
-        PutByte(at::kCount, c);
+        ShopStates2_Count = c;
     }
     if (start != c) g.sound(sound);
 }
@@ -189,7 +189,7 @@ void MarkPanels(U self, U other) {
     U i = 0;
     if (PartyCount() == 0) return;
     for (;;) {
-        Panel(static_cast<int>(i))[3] = static_cast<unsigned char>(S8(Byte(at::kMember)) == static_cast<int>(i) ? self : other);
+        Panel(static_cast<int>(i))[3] = static_cast<unsigned char>(BattleActorCopies_ItemActor == static_cast<int>(i) ? self : other);
         i = (i + 1) & 0xFF;
         if (i >= PartyCount()) return;
     }
@@ -218,32 +218,32 @@ Handler Entry(U table, U index, const char* who) {
 // the shop proper - ShopTrade_States by 0x929F01: 0 open, 1 buy or sell,
 // 2 buy, 3 sell, 4 close.
 extern "C" void __cdecl ShopTrade_Step(void) {
-    const Handler h = Entry(at::kStates, Byte(at::kState), "ShopTrade_Step");
+    const Handler h = Entry(ShopTrade_States_addr, static_cast<std::uint32_t>(FieldS_State), "ShopTrade_Step");
     [[clang::musttail]] return h();
 }
 
 // original 0x5818C0: state 0's two steps by 0x929F02 (0x66412C).
 extern "C" void __cdecl ShopTrade_OpenStep(void) {
-    const Handler h = Entry(at::kOpenSteps, Byte(at::kSub), "ShopTrade_OpenStep");
+    const Handler h = Entry(ShopTrade_OpenSteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_OpenStep");
     [[clang::musttail]] return h();
 }
 
 // original 0x5819B0: state 1's one step by 0x929F02 (0x664134).
 extern "C" void __cdecl ShopTrade_ChoiceStep(void) {
-    const Handler h = Entry(at::kChoiceSteps, Byte(at::kSub), "ShopTrade_ChoiceStep");
+    const Handler h = Entry(ShopTrade_ChoiceSteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_ChoiceStep");
     [[clang::musttail]] return h();
 }
 
 // original 0x581AE0: state 2's eight steps by 0x929F02 (0x664138).
 extern "C" void __cdecl ShopTrade_BuyStep(void) {
-    const Handler h = Entry(at::kBuySteps, Byte(at::kSub), "ShopTrade_BuyStep");
+    const Handler h = Entry(ShopTrade_BuySteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_BuyStep");
     [[clang::musttail]] return h();
 }
 
 // original 0x582770: state 3's five steps by 0x929F02 (0x664158; 0x66417C
 // holds the same five for the menu kind 0x582EB0 dispatches).
 extern "C" void __cdecl ShopTrade_SellStep(void) {
-    const Handler h = Entry(at::kSellSteps, Byte(at::kSub), "ShopTrade_SellStep");
+    const Handler h = Entry(ShopTrade_SellSteps_addr, static_cast<std::uint32_t>(FieldS_Step), "ShopTrade_SellStep");
     [[clang::musttail]] return h();
 }
 
@@ -264,10 +264,10 @@ extern "C" void __cdecl ShopTrade_SellStep(void) {
 // Shop_PriceRate(0x6BC8B4).
 extern "C" void __cdecl ShopTrade_Open(void) {
     g.init_windows();
-    const U sub = Byte(at::kSub);
+    const U sub = FieldS_Step;
     PutByte(at::kCounter, 6);
-    PutByte(at::kSellsEquipment, 0);
-    PutByte(at::kSub, sub + 1);
+    Rest2c_SellFlag = 0;
+    FieldS_Step = sub + 1;
     unsigned char* list = List();
     if (list[0] != 0) {
         U i = 0;
@@ -277,7 +277,7 @@ extern "C" void __cdecl ShopTrade_Open(void) {
             const U icon = g.icon_kind(kind, item) & 0xFF;
             list = List();
             if (list[i * 2 + 1] != 0 && icon != 0xA && icon != 0xB) {
-                PutByte(at::kSellsEquipment, 1);
+                Rest2c_SellFlag = 1;
                 break;
             }
             i = (i + 1) & 0xFF;
@@ -294,14 +294,14 @@ extern "C" void __cdecl ShopTrade_OpenWait(void) {
     const U c = (Byte(at::kCounter) - 1) & 0xFF;
     PutByte(at::kCounter, c);
     if (c != 0) return;
-    const U state = Byte(at::kState);
-    PutByte(at::kSellFlag, 0);
-    PutByte(at::kByteA8, 0);
-    PutByte(at::kChoice, 0);
+    const U state = FieldS_State;
+    ShopStates2_SellFlag = 0;
+    ShopStates2_ByteA8 = 0;
+    ShopStates2_Choice = 0;
     PutByte(at::kCounter, 0);
-    PutByte(at::kByte05, 0);
-    PutByte(at::kState, state + 1);
-    PutByte(at::kSub, 0);
+    MenuLists_Cursor = 0;
+    FieldS_State = state + 1;
+    FieldS_Step = 0;
 }
 
 // ============================================================================
@@ -316,39 +316,39 @@ extern "C" void __cdecl ShopTrade_OpenWait(void) {
 // sound 0x106, the hands off, the three window bytes 0x803163, 0x8031AB,
 // 0x803187 to 1, the counter 5, the state + 3 (close).
 extern "C" void __cdecl ShopTrade_Choice(void) {
-    const int choice = S8(Byte(at::kChoice));
-    PutWord(at::kHelp, static_cast<U>(choice + 0x46));
-    PutByte(at::kHand, 1);
+    const int choice = ShopStates2_Choice;
+    ShopStates2_Help = static_cast<U>(choice + 0x46);
+    BattleE4_Above = 1;
     const U x = static_cast<U>(choice * 48) + Long(0x8031AC) + 4;
-    const U pressed = Word(at::kPressed) & 0xA000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
     const U y = Word(0x8031AE) + 4;
     PutWord(at::kHandX, x);
     PutWord(at::kHandY, y);
     if ((g.auto_repeat(pressed) & 0xA000) != 0) {
         g.sound(0x101);
-        PutByte(at::kChoice, Byte(at::kChoice) ^ 1);
+        ShopStates2_Choice = static_cast<std::uint32_t>(static_cast<unsigned char>(ShopStates2_Choice)) ^ 1;
     }
-    const U p = Word(at::kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         g.sound(0x104);
         g.sound(0x102);
-        const U sell = Byte(at::kChoice);
-        const U state = Byte(at::kState);
+        const U sell = static_cast<unsigned char>(ShopStates2_Choice);
+        const U state = FieldS_State;
         PutByte(at::kCounter, 5);
-        PutByte(at::kSub, 0);
-        PutByte(at::kState, state + (sell == 0 ? 1 : 2));
+        FieldS_Step = 0;
+        FieldS_State = state + (sell == 0 ? 1 : 2);
         return;
     }
     if (Cancelled(p)) {
         g.sound(0x106);
-        PutByte(at::kHand, 0);
+        BattleE4_Above = 0;
         PutByte(0x803430, 0);
-        const U state = Byte(at::kState);
+        const U state = FieldS_State;
         PutByte(0x803163, 1);
         PutByte(0x8031AB, 1);
         PutByte(0x803187, 1);
         PutByte(at::kCounter, 5);
-        PutByte(at::kState, state + 3);
+        FieldS_State = state + 3;
     }
 }
 
@@ -363,7 +363,7 @@ extern "C" void __cdecl ShopTrade_Choice(void) {
 // +3 2 with equipment and 3 without, +0..+2 1 7 7, +0xA 0, +0xB the rate's
 // low byte, +0x20 the list pointer; the cursor 0, the step on.
 extern "C" void __cdecl ShopTrade_BuySetup(void) {
-    if (Byte(at::kSellsEquipment) != 0) {
+    if (Rest2c_SellFlag != 0) {
         U i = 0;
         if (PartyCount() != 0) {
             for (;;) {
@@ -382,21 +382,21 @@ extern "C" void __cdecl ShopTrade_BuySetup(void) {
             }
         }
     }
-    const U sells = Byte(at::kSellsEquipment);
+    const U sells = Rest2c_SellFlag;
     const U rate = Byte(at::kRate);
-    const U list = Long(at::kShopList);
+    const U list = ShopStates2_ShopList;
     PutWord(0x803284, 0x140);
     PutWord(0x803286, 0x3E);
     PutByte(0x803283, sells == 0 ? 3 : 2);
-    const U sub = Byte(at::kSub);
+    const U sub = FieldS_Step;
     PutByte(0x803280, 1);
     PutByte(0x803281, 7);
     PutByte(0x803282, 7);
     PutByte(0x80328A, 0);
     PutByte(0x80328B, rate);
     PutLong(0x8032A0, list);
-    PutByte(at::kRow, 0);
-    PutByte(at::kSub, sub + 1);
+    ShopStates2_Row = 0;
+    FieldS_Step = sub + 1;
 }
 
 // original 0x581BE0 (PSX 0x801D1634): the buy list. The entry under the
@@ -423,89 +423,89 @@ extern "C" void __cdecl ShopTrade_BuySetup(void) {
 // As the original has it: Shop_ScalePrice never answers 0, so its divide
 // never faults; ours aborts where the original would fault.
 extern "C" void __cdecl ShopTrade_BuyList(void) {
-    const int row = S8(Byte(at::kRow));
+    const int row = ShopStates2_Row;
     unsigned char* list = List();
-    PutByte(at::kKind, list[row * 2 + 1]);
-    PutByte(at::kItem, list[row * 2 + 2]);
+    ShopStates2_Kind = list[row * 2 + 1];
+    ShopStates2_Item = list[row * 2 + 2];
     PutByte(0x80328A, 0);
     U i = 0;
     if (PartyCount() != 0) {
         for (;;) {
             unsigned char* const w = Panel(static_cast<int>(i));
-            const U icon = g.icon_kind(Byte(at::kKind), Byte(at::kItem));
-            const U item = Byte(at::kItem);
+            const U icon = g.icon_kind(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item));
+            const U item = ShopStates2_Item;
             i = (i + 1) & 0xFF;
             w[0xB] = static_cast<unsigned char>(icon);
             w[0xC] = static_cast<unsigned char>(item);
             if (i >= PartyCount()) break;
         }
     }
-    PutWord(at::kHelp, g.help_id(Byte(at::kKind), Byte(at::kItem)));
+    ShopStates2_Help = g.help_id(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item));
     const U open = Byte(0x803283);
     PutByte(0x8032A4, 0);
     if (open == 0) {
-        const int r = S8(Byte(at::kRow));
+        const int r = ShopStates2_Row;
         const U x = Long(0x803284) + 4;
-        PutByte(at::kHand, 1);
+        BattleE4_Above = 1;
         PutWord(at::kHandX, x);
-        PutLong(0x803474, Long(at::kShopList));
-        PutWord(at::kHandY, static_cast<U>(r * 13) + Word(0x803286) + 0xA);
+        PutLong(0x803474, ShopStates2_ShopList);
+        ShopStates2_HandY = static_cast<U>(r * 13) + Word(0x803286) + 0xA;
     }
-    const U repeat = g.auto_repeat(Word(at::kPressed) & 0x5000);
-    U cur = Byte(at::kRow);
+    const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
+    U cur = static_cast<unsigned char>(ShopStates2_Row);
     list = List();
     const U start = cur;
     if ((repeat & 0x1000) != 0) {
         cur = (cur - 1) & 0xFF;
-        PutByte(at::kRow, cur);
+        ShopStates2_Row = cur;
         if ((cur & 0x80) != 0) {
             cur = (list[0] - 1u) & 0xFF;
-            PutByte(at::kRow, cur);
+            ShopStates2_Row = cur;
         }
     } else if ((repeat & 0x4000) != 0) {
         cur = (cur + 1) & 0xFF;
-        PutByte(at::kRow, cur);
+        ShopStates2_Row = cur;
         if (S8(cur) > S8(list[0]) - 1) {
             cur = 0;
-            PutByte(at::kRow, cur);
+            ShopStates2_Row = cur;
         }
     }
     if (start != cur) {
         g.sound(0x100);
         list = List();
-        cur = Byte(at::kRow);
+        cur = static_cast<unsigned char>(ShopStates2_Row);
     }
-    const U p = Word(at::kPressed);
+    const U p = Input_Pressed;
     PutByte(0x80328C, cur);
     if (Confirmed(p)) {
         const int r = S8(cur);
         const U kind = list[r * 2 + 1];
-        PutByte(at::kKind, kind);
+        ShopStates2_Kind = kind;
         const U item = list[r * 2 + 2];
         const U rate = Word(at::kRate);
-        PutByte(at::kItem, item);
-        PutByte(at::kCount, 1);
+        ShopStates2_Item = item;
+        ShopStates2_Count = 1;
         const U base = g.base_price(kind, item) & 0xFFFF;
         const U price = g.scale_price(base, rate);
-        const U money = Long(at::kMoney);
-        PutLong(at::kUnitPrice, price);
+        const U money = Party_Zenny;
+        ShopStates2_UnitPrice = price;
         if (price == 0) bof3::Fatal("ShopTrade_BuyList: Shop_ScalePrice answered 0 - the original divides by it");
         PutLong(at::kMaxCount, money / price);
-        const U n1 = g.inv_count(Byte(at::kKind), Byte(at::kItem), 1);
-        const U n2 = g.inv_count(Byte(at::kKind), Byte(at::kItem), 0);
+        const U n1 = g.inv_count(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item), 1);
+        const U n2 = g.inv_count(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item), 0);
         const U held = (n1 + n2) & 0xFF;
         if (held > 0x63) {
-            PutByte(at::kCount, 0);
+            ShopStates2_Count = 0;
             PutLong(at::kMaxCount, 0);
         } else {
             const U room = (0x63 - held) & 0xFF;
             if (Long(at::kMaxCount) > room) {
                 PutLong(at::kMaxCount, room);
-                PutByte(at::kCount, room != 0 ? 1 : 0);
+                ShopStates2_Count = room != 0 ? 1 : 0;
             }
         }
-        if (Long(at::kMoney) >= Long(at::kUnitPrice)) {
-            PutByte(at::kAnswer, 1);
+        if (Party_Zenny >= ShopStates2_UnitPrice) {
+            FieldS_Answer = 1;
             g.sound(0x103);
             StepBy(1);
         } else {
@@ -524,8 +524,8 @@ extern "C" void __cdecl ShopTrade_BuyList(void) {
             }
         }
         PutByte(0x803283, 1);
-        PutByte(at::kState, 1);
-        PutByte(at::kSub, 0);
+        FieldS_State = 1;
+        FieldS_Step = 0;
     }
 }
 
@@ -541,29 +541,29 @@ extern "C" void __cdecl ShopTrade_BuyCount(void) {
     PutWord(0x8032A8, Word(0x803284));
     const U rate = Byte(at::kRate);
     PutWord(0x8032AA, y + 0x2D);
-    PutByte(0x8032AF, Byte(at::kRow));
-    PutLong(0x8032C4, Long(at::kShopList));
+    PutByte(0x8032AF, static_cast<std::uint32_t>(static_cast<unsigned char>(ShopStates2_Row)));
+    PutLong(0x8032C4, ShopStates2_ShopList);
     PutByte(0x8032AE, rate);
-    const U count = Byte(at::kCount);
+    const U count = ShopStates2_Count;
     PutByte(0x8032B0, count);
     const U x = Long(0x803284) + 4;
     PutByte(0x8032A4, 1);
     PutByte(0x8032A5, 7);
-    PutWord(at::kHelp, count != 0 ? 0x48 : 0x4E);
-    const U pressed = Word(at::kPressed) & 0xF000;
+    ShopStates2_Help = count != 0 ? 0x48 : 0x4E;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xF000;
     PutByte(0x8032A6, 8);
     PutByte(0x80328A, 1);
     PutWord(at::kHandX, x);
-    PutWord(at::kHandY, y + 0x33);
+    ShopStates2_HandY = y + 0x33;
     StepCount(g.auto_repeat(pressed), 0x100);
-    const U c = Byte(at::kCount);
-    const U p = Word(at::kPressed);
+    const U c = ShopStates2_Count;
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         if (c != 0) {
             g.sound(0x103);
-            const U sub = Byte(at::kSub);
-            PutByte(at::kAnswer, 1);
-            PutByte(at::kSub, sub + 1);
+            const U sub = FieldS_Step;
+            FieldS_Answer = 1;
+            FieldS_Step = sub + 1;
         } else {
             g.sound(0x107);
         }
@@ -584,16 +584,16 @@ extern "C" void __cdecl ShopTrade_BuyCount(void) {
 extern "C" void __cdecl ShopTrade_BuyConfirm(void) {
     const U p = YesNoFrame(0x49);
     if (Confirmed(p)) {
-        if (Byte(at::kAnswer) != 0) {
+        if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             g.sound(0x104);
             const U count = Long(at::kCount);
-            PutLong(at::kMoney, Long(at::kMoney) - (count & 0xFF) * Long(at::kUnitPrice));
-            g.inv_add(Byte(at::kKind), Byte(at::kItem), count);
-            const U icon = g.icon_kind(Byte(at::kKind), Byte(at::kItem)) & 0xFF;
-            if (Byte(at::kSellsEquipment) != 0 && Byte(at::kKind) != 0 && icon != 0xA && icon != 0xB) {
-                const U sub = Byte(at::kSub);
-                PutByte(at::kAnswer, 1);
-                PutByte(at::kSub, sub + 1);
+            Party_Zenny = Party_Zenny - (count & 0xFF) * ShopStates2_UnitPrice;
+            g.inv_add(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item), count);
+            const U icon = g.icon_kind(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item)) & 0xFF;
+            if (Rest2c_SellFlag != 0 && ShopStates2_Kind != 0 && icon != 0xA && icon != 0xB) {
+                const U sub = FieldS_Step;
+                FieldS_Answer = 1;
+                FieldS_Step = sub + 1;
                 return;
             }
             StepBy(-2);
@@ -612,11 +612,11 @@ extern "C" void __cdecl ShopTrade_BuyConfirm(void) {
 extern "C" void __cdecl ShopTrade_BuyAskEquip(void) {
     const U p = YesNoFrame(0x4A);
     if (Confirmed(p)) {
-        if (Byte(at::kAnswer) != 0) {
+        if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             g.sound(0x103);
-            const U sub = Byte(at::kSub);
-            PutByte(at::kMember, 0);
-            PutByte(at::kSub, sub + 1);
+            const U sub = FieldS_Step;
+            BattleActorCopies_ItemActor = 0;
+            FieldS_Step = sub + 1;
             return;
         }
     } else if (!Cancelled(p)) {
@@ -642,36 +642,36 @@ extern "C" void __cdecl ShopTrade_BuyAskEquip(void) {
 // signed byte, is below Party_Count's low byte.
 extern "C" void __cdecl ShopTrade_BuyMember(void) {
     SetItemName();
-    const int member = S8(Byte(at::kMember));
-    PutWord(at::kHelp, 0x4B);
-    PutByte(at::kHand, 0);
+    const int member = BattleActorCopies_ItemActor;
+    ShopStates2_Help = 0x4B;
+    BattleE4_Above = 0;
     PutByte(0x803430, 1);
     PutWord(0x803434, Word(0x8031D0 + static_cast<U>(member * 36)));
     PutWord(0x803436, Word(0x8031D2 + static_cast<U>(member * 36)));
     const U n = PartyCount();
-    const U repeat = g.auto_repeat(Word(at::kPressed) & 0x5000);
-    U cur = Byte(at::kMember);
+    const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
+    U cur = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     const U start = cur;
     if ((repeat & 0x1000) != 0) {
         cur = (cur - 1) & 0xFF;
-        PutByte(at::kMember, cur);
+        BattleActorCopies_ItemActor = cur;
         if ((cur & 0x80) != 0) {
             cur = (n - 1) & 0xFF;
             PutByte(at::kMember, cur);
         }
     } else if ((repeat & 0x4000) != 0) {
         cur = (cur + 1) & 0xFF;
-        PutByte(at::kMember, cur);
+        BattleActorCopies_ItemActor = cur;
         if (S8(cur) > S8(n) - 1) {
             cur = 0;
-            PutByte(at::kMember, cur);
+            BattleActorCopies_ItemActor = cur;
         }
     }
     if (start != cur) g.sound(0x101);
-    const U p = Word(at::kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
-        const U mask = g.equip_mask(Byte(at::kKind), Byte(at::kItem));
-        const U record = RecordOf(S8(Byte(at::kMember)));
+        const U mask = g.equip_mask(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item));
+        const U record = RecordOf(BattleActorCopies_ItemActor);
         if (((1u << (record & 31)) & mask & 0xFF) == 0) {
             g.sound(0x107);
             return;
@@ -679,12 +679,12 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
         int i = 0;
         if (PartyCount() != 0) {
             for (;;) {
-                Panel(i)[3] = static_cast<unsigned char>((static_cast<U>(i) & 0xFF) == Byte(at::kMember) ? 3 : 1);
+                Panel(i)[3] = static_cast<unsigned char>((static_cast<U>(i) & 0xFF) == static_cast<unsigned char>(BattleActorCopies_ItemActor) ? 3 : 1);
                 i = S8(static_cast<U>(i + 1));
                 if (i >= static_cast<int>(PartyCount())) break;
             }
         }
-        const U m = Byte(at::kMember);
+        const U m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
         PutByte(0x803238, 1);
         PutByte(0x803239, 7);
         PutByte(0x80323A, 6);
@@ -693,18 +693,18 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
         PutWord(0x80323E, 0x74);
         PutByte(0x803242, m);
         g.sound(0x103);
-        const U sub = Byte(at::kSub);
+        const U sub = FieldS_Step;
         PutByte(0x803430, 0);
-        PutByte(at::kSlotCursor, 0);
+        ShopStates2_SlotCursor = 0;
         PutByte(at::kCounter, 5);
-        PutByte(at::kSub, sub + 1);
+        FieldS_Step = sub + 1;
         return;
     }
     if (Cancelled(p)) {
         g.sound(0x106);
-        const U sub = Byte(at::kSub);
+        const U sub = FieldS_Step;
         PutByte(0x803430, 0);
-        PutByte(at::kSub, sub - 4);
+        FieldS_Step = sub - 4;
     }
 }
 
@@ -717,40 +717,40 @@ extern "C" void __cdecl ShopTrade_BuyMember(void) {
 // re-read); the step on. Cancel: sound 0x106, the panels' +3 4 for the
 // member and 2 for the others, the slot box +3 1, the step back.
 extern "C" void __cdecl ShopTrade_BuySlot(void) {
-    const U kind = g.icon_kind(Byte(at::kKind), Byte(at::kItem)) & 0xFF;
+    const U kind = g.icon_kind(static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item)) & 0xFF;
     const U x = Long(0x80323C) + 6;
-    const U slot = Byte(at::kSlotCursor);
+    const U slot = ShopStates2_SlotCursor;
     PutWord(at::kHandX, x);
-    PutByte(at::kHand, 1);
-    const U pressed = Word(at::kPressed) & 0x5000;
-    PutWord(at::kHandY, (slot + kind + 1) * 13 + Word(0x80323E));
+    BattleE4_Above = 1;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
+    ShopStates2_HandY = (slot + kind + 1) * 13 + Word(0x80323E);
     const U repeat = g.auto_repeat(pressed);
     if (kind == 5) {
-        PutWord(at::kHelp, 0x4C);
+        ShopStates2_Help = 0x4C;
         if ((repeat & 0x5000) != 0) {
-            PutByte(at::kSlotCursor, Byte(at::kSlotCursor) ^ 1);
+            ShopStates2_SlotCursor = static_cast<std::uint32_t>(ShopStates2_SlotCursor) ^ 1;
             g.sound(0x100);
         }
     } else {
         SetItemName();
-        PutWord(at::kHelp, 0x3A);
+        ShopStates2_Help = 0x3A;
     }
-    const U p = Word(at::kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         g.sound(0x104);
-        const U item = Byte(at::kItem);
-        const U to = (Byte(at::kSlotCursor) + kind - 1) & 0xFF;
-        g.equip(RecordOf(S8(Byte(at::kMember))), to, item);
-        g.recalc(At(at::kCharRecords + RecordOf(S8(Byte(at::kMember))) * at::kCharStride));
+        const U item = ShopStates2_Item;
+        const U to = (static_cast<std::uint32_t>(ShopStates2_SlotCursor) + kind - 1) & 0xFF;
+        g.equip(RecordOf(BattleActorCopies_ItemActor), to, item);
+        g.recalc(At(at::kCharRecords + RecordOf(BattleActorCopies_ItemActor) * at::kCharStride));
         StepBy(1);
         return;
     }
     if (Cancelled(p)) {
         g.sound(0x106);
         MarkPanels(4, 2);
-        const U sub = Byte(at::kSub);
+        const U sub = FieldS_Step;
         PutByte(0x80323B, 1);
-        PutByte(at::kSub, sub - 1);
+        FieldS_Step = sub - 1;
     }
 }
 
@@ -761,13 +761,13 @@ extern "C" void __cdecl ShopTrade_BuySlot(void) {
 // step back two (another member), else back six (the list).
 extern "C" void __cdecl ShopTrade_BuyEquipped(void) {
     SetItemName();
-    const U pressed = Word(at::kPressed);
-    PutWord(at::kHelp, 0x4D);
-    PutByte(at::kHand, 0);
+    const U pressed = Input_Pressed;
+    ShopStates2_Help = 0x4D;
+    BattleE4_Above = 0;
     if (pressed == 0) return;
     MarkPanels(4, 2);
-    const U kind = Byte(at::kKind);
-    const U item = Byte(at::kItem);
+    const U kind = ShopStates2_Kind;
+    const U item = ShopStates2_Item;
     PutByte(0x80323B, 1);
     const U held = g.inv_count(kind, item, 0) & 0xFFFF;
     StepBy(held != 0 ? -2 : -6);
@@ -788,7 +788,7 @@ extern "C" void __cdecl ShopTrade_SellSetup(void) {
     PutByte(0x803265, 0);
     PutWord(0x80326C, 0);
     PutWord(0x80326E, 0);
-    const U sub = Byte(at::kSub);
+    const U sub = FieldS_Step;
     PutWord(0x803262, 0x3E);
     PutByte(0x80325C, 1);
     PutByte(0x80325D, 7);
@@ -796,7 +796,7 @@ extern "C" void __cdecl ShopTrade_SellSetup(void) {
     PutByte(0x80325F, 2);
     PutByte(0x803269, 0xFF);
     PutByte(0x803264, 3);
-    PutByte(at::kSub, sub + 1);
+    FieldS_Step = sub + 1;
 }
 
 // original 0x5827F0: the sell list - four category tabs (0x803266, 0..3,
@@ -820,21 +820,21 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
     const U tab = Byte(0x803266);
     const U row = Byte(0x803268);
     const U item = Ids(tab)[row];
-    PutByte(at::kKind, tab);
-    PutByte(at::kItem, item);
-    PutWord(at::kHelp, g.help_id(tab, item));
+    ShopStates2_Kind = tab;
+    ShopStates2_Item = item;
+    ShopStates2_Help = g.help_id(tab, item);
     const U closed = Byte(0x80325F);
     PutByte(0x803265, 0);
     if (closed == 0) {
         const U top = Byte(0x803267);
         const U r = Byte(0x803268);
         const U x = Long(0x803260) + 7;
-        PutByte(at::kHand, 1);
+        BattleE4_Above = 1;
         PutWord(at::kHandX, x);
         PutByte(0x8032C8, 0);
-        PutWord(at::kHandY, (r - top) * 13 + Word(0x803262) + 0x1B);
+        ShopStates2_HandY = (r - top) * 13 + Word(0x803262) + 0x1B;
     }
-    const U repeat = g.auto_repeat(Word(at::kPressed) & Sigma(0xF00C));
+    const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & Sigma(0xF00C));
     if ((repeat & 0x8000) != 0) {
         g.sound(0x101);
         const U t = (Byte(0x803266) - 1) & 0xFF;
@@ -906,42 +906,42 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
         r = Byte(0x803268);
     }
     if (Word(0x80326E) != 0) return;
-    const U p = Word(at::kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         const U t = Byte(0x803266);
         const U row_now = Byte(0x803268);
         const U chosen = Ids(t)[row_now];
-        PutByte(at::kKind, t);
+        ShopStates2_Kind = t;
         const U x = Long(0x803260) + 7;
-        PutByte(at::kItem, chosen);
+        ShopStates2_Item = chosen;
         PutWord(at::kHandX, x);
-        PutWord(at::kHandY, (r - top) * 13 + Word(0x803262) + 0x1B);
+        ShopStates2_HandY = (r - top) * 13 + Word(0x803262) + 0x1B;
         g.sound(0x103);
-        const U ok = g.can_use(Byte(0x803264), 0, Byte(at::kKind), Byte(at::kItem)) & 0xFF;
+        const U ok = g.can_use(Byte(0x803264), 0, static_cast<std::uint32_t>(ShopStates2_Kind), static_cast<std::uint32_t>(ShopStates2_Item)) & 0xFF;
         if (ok == 0) {
             g.sound(0x107);
             return;
         }
         g.sound(0x103);
-        const U kind = Byte(at::kKind);
+        const U kind = ShopStates2_Kind;
         const U sold_row = Byte(0x803268);
-        PutByte(at::kRow, sold_row);
+        ShopStates2_Row = sold_row;
         const U have = Counts(kind)[S8(sold_row)];
-        const U flag = Byte(at::kSellFlag);
-        const U it = Byte(at::kItem);
+        const U flag = ShopStates2_SellFlag;
+        const U it = ShopStates2_Item;
         PutLong(at::kMaxCount, have);
-        const U k = Byte(at::kKind);
-        PutByte(at::kCount, 1);
-        PutLong(at::kUnitPrice, g.sell_price(k, it, flag));
+        const U k = ShopStates2_Kind;
+        ShopStates2_Count = 1;
+        ShopStates2_UnitPrice = g.sell_price(k, it, flag);
         StepBy(1);
         return;
     }
     if (Cancelled(p)) {
         g.sound(0x106);
-        const U sub = Byte(at::kSub);
+        const U sub = FieldS_Step;
         PutByte(0x80325F, 1);
         PutByte(at::kCounter, 7);
-        PutByte(at::kSub, sub + 3);
+        FieldS_Step = sub + 3;
     }
 }
 
@@ -954,29 +954,29 @@ extern "C" void __cdecl ShopTrade_SellList(void) {
 extern "C" void __cdecl ShopTrade_SellCount(void) {
     PutWord(0x8032CC, Word(0x803260));
     const U top = Byte(0x803267);
-    const int row = S8(Byte(at::kRow));
-    PutByte(0x8032D2, Byte(at::kKind));
-    const U flag = Byte(at::kSellFlag);
-    PutWord(at::kHelp, 0x51);
+    const int row = ShopStates2_Row;
+    PutByte(0x8032D2, static_cast<std::uint32_t>(ShopStates2_Kind));
+    const U flag = ShopStates2_SellFlag;
+    ShopStates2_Help = 0x51;
     PutByte(0x803265, 1);
     PutByte(0x8032C8, 1);
-    const U item = Byte(at::kItem);
+    const U item = ShopStates2_Item;
     const U y = static_cast<U>((row - static_cast<int>(top)) * 13) + Word(0x803262) + 0x14;
     PutByte(0x8032D3, item);
-    const U pressed = Word(at::kPressed) & 0xF000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xF000;
     PutByte(0x8032C9, 7);
     PutWord(0x8032CE, y);
-    const U count = Byte(at::kCount);
+    const U count = ShopStates2_Count;
     PutByte(0x8032CA, 0xA);
     PutByte(0x8032D4, count);
     PutByte(0x8032D5, flag);
     StepCount(g.auto_repeat(pressed), 0x101);
-    const U p = Word(at::kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         g.sound(0x103);
-        const U sub = Byte(at::kSub);
-        PutByte(at::kAnswer, 1);
-        PutByte(at::kSub, sub + 1);
+        const U sub = FieldS_Step;
+        FieldS_Answer = 1;
+        FieldS_Step = sub + 1;
         return;
     }
     if (Cancelled(p)) {
@@ -993,17 +993,17 @@ extern "C" void __cdecl ShopTrade_SellCount(void) {
 extern "C" void __cdecl ShopTrade_SellConfirm(void) {
     const U p = YesNoFrame(0x52);
     if (Confirmed(p)) {
-        if (Byte(at::kAnswer) != 0) {
+        if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             g.sound(0x104);
             const U count = Long(at::kCount) & 0xFF;
-            const U money = Long(at::kMoney) + count * Long(at::kUnitPrice);
-            PutLong(at::kMoney, money);
-            if (money > at::kMoneyMax) PutLong(at::kMoney, at::kMoneyMax);
-            unsigned char* const stack = Counts(Byte(at::kKind)) + S8(Byte(at::kRow));
+            const U money = Party_Zenny + count * ShopStates2_UnitPrice;
+            Party_Zenny = money;
+            if (money > at::kMoneyMax) Party_Zenny = at::kMoneyMax;
+            unsigned char* const stack = Counts(static_cast<std::uint32_t>(ShopStates2_Kind)) + ShopStates2_Row;
             *stack = static_cast<unsigned char>(*stack - count);
-            if (Counts(Byte(at::kKind))[S8(Byte(at::kRow))] == 0) {
-                Ids(Byte(at::kKind))[S8(Byte(at::kRow))] = 0;
-                Counts(Byte(at::kKind))[S8(Byte(at::kRow))] = 0;
+            if (Counts(static_cast<std::uint32_t>(ShopStates2_Kind))[ShopStates2_Row] == 0) {
+                Ids(static_cast<std::uint32_t>(ShopStates2_Kind))[ShopStates2_Row] = 0;
+                Counts(static_cast<std::uint32_t>(ShopStates2_Kind))[ShopStates2_Row] = 0;
             }
             StepBy(-2);
             return;
@@ -1019,11 +1019,11 @@ extern "C" void __cdecl ShopTrade_SellConfirm(void) {
 // 1 (buy or sell again) step 0.
 extern "C" void __cdecl ShopTrade_SellClose(void) {
     const U c = (Byte(at::kCounter) - 1) & 0xFF;
-    PutByte(at::kHand, 0);
+    BattleE4_Above = 0;
     PutByte(at::kCounter, c);
     if (c != 0) return;
-    PutByte(at::kState, 1);
-    PutByte(at::kSub, 0);
+    FieldS_State = 1;
+    FieldS_Step = 0;
 }
 
 // ============================================================================
@@ -1038,7 +1038,7 @@ extern "C" void __cdecl ShopTrade_Close(void) {
     PutByte(at::kCounter, c);
     if (c != 0) return;
     g.window_reset();
-    PutByte(at::kMenuDone, 1);
+    BattleE1_Mode = 1;
 }
 
 // ============================================================================
@@ -1053,13 +1053,13 @@ extern "C" void __cdecl ShopTrade_Close(void) {
 // (TitleFlow_EnterGame). As the original has it, the mode is not checked:
 // the table is two long and a 0 follows (ours aborts on a null entry).
 extern "C" void __cdecl TitleTask_Run(void) {
-    PutWord(at::kGameMode, 0);
-    PutWord(at::kGameStep, 0);
+    Game_Mode = 0;
+    Game_Step = 0;
     g.task_clear();
     g.window_reset();
     for (;;) {
         g.task_sleep(1);
-        Entry(at::kModes, Long(at::kGameMode) & 0xFFFF, "TitleTask_Run")();
+        Entry(TitleTask_Modes_addr, Long(at::kGameMode) & 0xFFFF, "TitleTask_Run")();
         g.run_task_records();
     }
 }
@@ -1074,9 +1074,9 @@ extern "C" void __cdecl TitleMode_Load(void) {
         while (g.load_done() == 0);
     }
     g.clut_restore();
-    const U dirty = Byte(at::kClutDirty);
-    PutWord(at::kGameMode, Word(at::kGameMode) + 1);
-    PutByte(at::kClutDirty, dirty + 1);
+    const U dirty = Gfx_ClutStripDirty;
+    Game_Mode = static_cast<std::uint32_t>(Game_Mode) + 1;
+    Gfx_ClutStripDirty = dirty + 1;
 }
 
 #pragma clang attribute pop

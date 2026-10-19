@@ -67,15 +67,15 @@ unsigned char* RecordFlags(unsigned char id) {
 extern "C" void __cdecl Field_StartEventBattle(unsigned id_arg) {
     const unsigned char id = static_cast<unsigned char>(id_arg);
     At(at::kScriptFlags2High)[0] = static_cast<unsigned char>(At(at::kScriptFlags2High)[0] | 0x10);
-    At(at::kEventBattle)[0] = id;
-    unsigned char* const leader = At(at::kLeader);
+    BattleActions_EventBattle = id;
+    unsigned char* const leader = At(ObjTrio_addr);
     leader[1] = 5;
     const unsigned char flags = At(bof3::addr::EventBattle_Records)[id * 4u];
     leader[2] = 0;
     leader[3] = 0;
     leader[4] = 0;
-    At(at::kBattleFlags)[0] = flags;
-    At(at::kBattleIntro)[0] = 0;
+    BattleTurnSteps_MusicFlags = flags;
+    BattlePhases_Initiative = 0;
 }
 
 // original 0x519F70: chapter 8's call table A entry 5, and the tail of entry
@@ -187,7 +187,7 @@ extern "C" unsigned char __cdecl Party_AddToLists(unsigned member_arg) {
     const unsigned char member = static_cast<unsigned char>(member_arg);
     unsigned char* const flags = RecordFlags(member);
     *flags = static_cast<unsigned char>(*flags | 3);
-    unsigned char* const lists = At(at::kPartyLists);
+    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
     const unsigned char n = Field_MemberCount;
     if (n < 3) {
         Field_MemberCount = static_cast<unsigned char>(n + 1);

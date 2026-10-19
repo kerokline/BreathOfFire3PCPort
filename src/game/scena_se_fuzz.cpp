@@ -146,7 +146,7 @@ void Seed(unsigned k) {
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 5);
     // the lists: ids below 24 (a record inside the region), the second list
     // often the first's ids in another order, so the search finds one
-    unsigned char* const lists = Mem(at::kPartyLists);
+    unsigned char* const lists = Mem(Cond_Flags_addr + 0xd2);
     for (unsigned i = 0; i < 6; ++i) lists[i] = static_cast<unsigned char>(sh::Next() % 24);
     if (sh::Often()) {
         const unsigned r = sh::Next() % 3;

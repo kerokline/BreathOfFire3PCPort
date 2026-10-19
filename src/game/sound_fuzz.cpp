@@ -41,9 +41,11 @@ void SetDword(std::uint32_t address, std::uint32_t v) { std::memcpy(At(address),
 // The channels, the six banks, the 0x460 bytes after them (read by a bank past
 // 6) and the music's globals up to Music_FadeStep; the device block from
 // Snd_BufferDesc to Music_Finished.
-constexpr std::uint32_t kTablesAt = 0x6BC8C8, kTablesEnd = 0x6BDE64;
-constexpr std::uint32_t kDeviceAt = 0x7DE378, kDeviceEnd = 0x7DE3E4;
-constexpr unsigned kTables = kTablesEnd - kTablesAt, kDevice = kDeviceEnd - kDeviceAt;
+// kTablesAt: now Sound_Channels (symbols.toml).
+constexpr std::uint32_t kTablesEnd = 0x6BDE64;
+// kDeviceAt: now Snd_BufferDesc (symbols.toml).
+constexpr std::uint32_t kDeviceEnd = 0x7DE3E4;
+constexpr unsigned kTables = kTablesEnd - Sound_Channels_addr, kDevice = kDeviceEnd - Snd_BufferDesc_addr;
 constexpr unsigned kWave = 0x800, kDst = 0x280, kLockMem = 0x600, kHeap = 0x800, kLog = 40;
 
 unsigned char g_wave[kWave];       // a wave, a file, a source to copy
@@ -509,9 +511,9 @@ const Clone kClones[kCount] = {
 // its copy, and the import slot it names.
 struct ImportOperand { Fn fn; std::uint32_t offset, slot; const void* const* ours; };
 const ImportOperand kImports[] = {
-    {kSetNotify, 0x19, kImportCreateEvent, &g_slot_create_event},   // mov esi, [CreateEventA]
-    {kRelease, 0x6B, kImportCloseHandle, &g_slot_close_handle},     // mov esi, [CloseHandle]
-    {kPump, 0x25, kImportMsgWait, &g_slot_msg_wait},                // call [MsgWaitForMultipleObjects]
+    {kSetNotify, 0x19, Sound_ImportCreateEvent_addr, &g_slot_create_event}, // mov esi, [CreateEventA]
+    {kRelease, 0x6B, Sound_ImportCloseHandle_addr, &g_slot_close_handle}, // mov esi, [CloseHandle]
+    {kPump, 0x25, Sound_ImportMsgWait_addr, &g_slot_msg_wait},      // call [MsgWaitForMultipleObjects]
 };
 
 const void* Ours(unsigned k) {
@@ -573,8 +575,8 @@ unsigned short ControlWord() {
 void SetControlWord(unsigned short cw) { __asm__ volatile("fldcw %0" : : "m"(cw)); }
 
 void Capture(State& s) {
-    std::memcpy(s.tables, At(kTablesAt), kTables);
-    std::memcpy(s.device, At(kDeviceAt), kDevice);
+    std::memcpy(s.tables, At(Sound_Channels_addr), kTables);
+    std::memcpy(s.device, At(Snd_BufferDesc_addr), kDevice);
     s.loaded = static_cast<std::uint32_t>(Music_LoadedTrack);
     s.track = Music_Track;
     std::memcpy(s.wave, g_wave, kWave);
@@ -588,8 +590,8 @@ void Capture(State& s) {
     s.log_n = g_log_n;
 }
 void Apply(const State& s) {
-    std::memcpy(At(kTablesAt), s.tables, kTables);
-    std::memcpy(At(kDeviceAt), s.device, kDevice);
+    std::memcpy(At(Sound_Channels_addr), s.tables, kTables);
+    std::memcpy(At(Snd_BufferDesc_addr), s.device, kDevice);
     Music_LoadedTrack = static_cast<int>(s.loaded);
     Music_Track = static_cast<unsigned char>(s.track);
     std::memcpy(g_wave, s.wave, kWave);
@@ -688,7 +690,7 @@ Args Generate(unsigned k, State& input) {
         const std::uint32_t cue = Next() % 4 ? Next() % 24 : Pick({23, 24, 0x2F, 0xFF});
         x.a[0] = Stale((Next() & 0xF000) | bank << 8 | cue, 16);
         const std::uint32_t at = Address(Sound_Banks) + (bank - 1) * kBankBytes + cue * 16;
-        if (at >= kTablesAt && at + 16 <= kTablesEnd) {
+        if (at >= Sound_Channels_addr && at + 16 <= kTablesEnd) {
             g_cue = at;
             for (unsigned i = 0; i < 4; ++i) {
                 std::uint32_t word;
@@ -704,7 +706,7 @@ Args Generate(unsigned k, State& input) {
                 }
                 SetDword(at + 4 * i, word);
                 const std::uint32_t entry = Address(Sound_Banks) + (bank - 1) * kBankBytes + kVoices + (word & 0xFF) * 8;
-                g_entries[i] = entry >= kTablesAt && entry + 8 <= kTablesEnd ? entry : 0;
+                g_entries[i] = entry >= Sound_Channels_addr && entry + 8 <= kTablesEnd ? entry : 0;
             }
         }
         break;

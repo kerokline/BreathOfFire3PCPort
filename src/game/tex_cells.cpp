@@ -114,7 +114,7 @@ struct Rect {
 template <int Bits, bool Flip> void CellUnpack(void* dst, const void* src, const void* palette, int w, int h, int pitch) {
     constexpr U kPerLong = 32 / Bits;
     constexpr U kMask = (1u << Bits) - 1;
-    const bool wide = At(kPixelFormat)[3] == 4;
+    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
     const auto* table = static_cast<const unsigned char*>(palette);
     const U width = static_cast<U>(w);
     U s = Addr(src);
@@ -189,7 +189,7 @@ struct Extent {
 };
 void DrawCells(U first, U count, const void* palette, const Desc& desc, Extent* extent) {
     if (static_cast<std::int32_t>(first) >= static_cast<std::int32_t>(first + count)) return;
-    U record = kCellTable + first * 8;
+    U record = SpriteCell_Table_addr + first * 8;
     U n = count;
     do {
         const unsigned char* r = At(record);
@@ -200,8 +200,8 @@ void DrawCells(U first, U count, const void* palette, const Desc& desc, Extent* 
         const U u = mode != 0 ? r[6] : static_cast<U>(r[6]) >> 1;
         const U w = (r[3] & 0xFu) << 3;
         const U h = (static_cast<U>(r[3]) >> 1) & 0x78;
-        const U src = kVram + (((((tpage & 0x10) << 4) + r[7]) << 11) + u) + ((tpage & 0xF) << 7);
-        const U bpp = At(kPixelFormat)[3];
+        const U src = Gfx_VramShadow_addr + (((((tpage & 0x10) << 4) + r[7]) << 11) + u) + ((tpage & 0xF) << 7);
+        const U bpp = At(Gfx_PixelFormat_addr)[3];
         const U dst = desc.Surface() + static_cast<U>(x + 0xA0) * bpp + static_cast<U>(y + 0x80) * desc.Pitch();
         const bool flip = (Word(r + 4) & 0x200) != 0;
         const Unpack unpack = flip ? (mode != 0 ? g.unpack8_flip : g.unpack4_flip) : (mode != 0 ? g.unpack8 : g.unpack4);
@@ -230,7 +230,7 @@ using namespace tex_cells;
 // entry). The original's four-texel tail (0x5A9EEB, 0x5A9FE7) is dead: its
 // column count starts at 24 and steps 8.
 void Font_UnpackGlyph(void* dst, const void* src, const void* palette, int pitch) {
-    const bool wide = At(kPixelFormat)[3] == 4;
+    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
     const auto* table = static_cast<const unsigned char*>(palette);
     const auto* s = static_cast<const unsigned char*>(src);
     auto* d = static_cast<unsigned char*>(dst);
@@ -273,7 +273,7 @@ void Cell_Unpack8Flip(void* dst, const void* src, const void* palette, int w, in
 // both made the larger (signed). *out_w is written before *out_h. Callers
 // D3d_AfterDraw 0x59F603 and D3d_BuildCellTexture; neither reads eax after.
 void D3d_FitTextureSize(unsigned w, unsigned h, unsigned* out_w, unsigned* out_h) {
-    const U caps = At(kTexCaps)[0];
+    const U caps = D3d_DeviceDesc[0x84];
     U tw = w, th = h;
     if (caps & 2) {
         tw = Long(kMinTexWidth);
@@ -313,7 +313,7 @@ long Dd_ClearSurface(void* surface) {
 // any, then all 0x28 bytes zeroed. No bound on `slot`. Callers
 // D3d_BuildCellTexture and the Direct3D teardown 0x5A6760 (all 128).
 void D3d_FreeCellTexture(int slot) {
-    const U entry = kCellCache + static_cast<U>(slot) * kCellEntryBytes;
+    const U entry = D3d_CellTexCache_addr + static_cast<U>(slot) * kCellEntryBytes;
     const U texture = Long(entry + 0x24);
     if (texture != 0) Com(texture, kRelease);
     const U surface = Long(entry + 0x20);
@@ -342,9 +342,9 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
     const U src = Long(kGlyphData) + glyph * 0x120u;
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
-    const U entry = kFontCache + static_cast<U>(slot) * kFontEntryBytes;
+    const U entry = Font_TexCache_addr + static_cast<U>(slot) * kFontEntryBytes;
     const U surface_slot = entry + 8;
-    if (At(kRenderFlags)[0] & 1) {
+    if (Gfx_RenderFlags & 1) {
         if (Long(surface_slot) == 0) {
             if (!Dd_CreatePlainSurface(0x20, 0x20, reinterpret_cast<void**>(At(surface_slot)), 0)) return;
             Dd_ClearSurface(Ptr(Long(surface_slot)));
@@ -358,7 +358,7 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
             if (!Dd_CreateTextureSurface(0x20, 0x20, reinterpret_cast<void**>(At(surface_slot)),
                                          reinterpret_cast<void**>(At(entry + 0xC)), 0))
                 return;
-            if (At(kRenderFlags)[0] & 0x20) {
+            if (Gfx_RenderFlags & 0x20) {
                 U key[2] = {0, 0};   // DDCOLORKEY {0, 0}
                 Com(Long(surface_slot), kSetColorKey, kSrcBltKey, key);
             }
@@ -406,14 +406,14 @@ void Font_BuildGlyphTexture(int slot, unsigned glyph, unsigned clut) {
 //    tested: a texture shorter than the used height gets a destination taller
 //    than itself.
 void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clut, unsigned backdrop) {
-    const U flags = At(kRenderFlags)[0];
+    const U flags = Gfx_RenderFlags;
     U from_surface = 0;
     if (!(flags & 1) && backdrop != 0 && (from_surface = Long(kBackdrop)) != 0) {
         Rect to = {0, 8, 0x140, 0xF8};
         Rect from = {0, 0, 0x140, 0xF0};
         Com(Long(kStage), kBlt, &to, from_surface, &from, kBltWait, 0u);
     } else {
-        Dd_ClearSurface(Ptr(Long(kStage)));
+        Dd_ClearSurface(Dd_StageSurface);
     }
     Extent extent = {0, 0, 0, 0, 0};
     Desc desc;
@@ -424,7 +424,7 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
     Com(Long(kStage), kUnlock, 0u);
     D3d_FreeCellTexture(slot);
 
-    const U entry = kCellCache + static_cast<U>(slot) * kCellEntryBytes;
+    const U entry = D3d_CellTexCache_addr + static_cast<U>(slot) * kCellEntryBytes;
     PutWord(entry + 8, static_cast<U>(extent.left));
     PutWord(entry + 0xA, static_cast<U>(extent.right));
     PutWord(entry + 0xC, static_cast<U>(extent.top));
@@ -436,7 +436,7 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
     PutLong(entry + 0x18, extent.checksum);
     PutLong(entry + 0x1C, Long(kClutRows + (clut >> 6) * 8));
     Rect from = {extent.left + 0xA0, extent.top + 0x80, extent.right + 0xA0, extent.bottom + 0x80};
-    const U flags_now = At(kRenderFlags)[0];
+    const U flags_now = Gfx_RenderFlags;
     Rect to = {0, 0, static_cast<std::int32_t>(Word(entry + 0)), static_cast<std::int32_t>(Word(entry + 2))};
     if (flags_now & 1) {
         if (!Dd_CreatePlainSurface(static_cast<unsigned>(to.r), static_cast<unsigned>(to.b),
@@ -483,18 +483,18 @@ void D3d_BuildCellTexture(int slot, unsigned first, unsigned count, unsigned clu
 // between device EndScene and BeginScene with the entry's surface read after
 // the EndScene. The surface must exist: nothing tests +0x20 (D31).
 void D3d_RefreshCellTexture(int slot, unsigned first, unsigned count, unsigned clut) {
-    Dd_ClearSurface(Ptr(Long(kStage)));
+    Dd_ClearSurface(Dd_StageSurface);
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
     if (Com(Long(kStage), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
     const void* palette = g.clut_pixels(clut);
     DrawCells(first, count, palette, desc, nullptr);
     Com(Long(kStage), kUnlock, 0u);
-    const U entry = kCellCache + static_cast<U>(slot) * kCellEntryBytes;
+    const U entry = D3d_CellTexCache_addr + static_cast<U>(slot) * kCellEntryBytes;
     PutLong(entry + 0x1C, Long(kClutRows + (clut >> 6) * 8));
     Rect from = {Short(entry + 8) + 0xA0, Short(entry + 0xC) + 0x80, Short(entry + 0xA) + 0xA0,
                  Short(entry + 0xE) + 0x80};
-    const U flags = At(kRenderFlags)[0];
+    const U flags = Gfx_RenderFlags;
     Rect to = {0, 0, static_cast<std::int32_t>(Word(entry + 0)), static_cast<std::int32_t>(Word(entry + 2))};
     if (flags & 1) {
         const U surface = Long(entry + 0x20);

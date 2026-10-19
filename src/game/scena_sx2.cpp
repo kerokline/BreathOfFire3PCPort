@@ -93,7 +93,7 @@ extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
     e[0] = 1;
     e[5] = 4;
     e[9] = static_cast<unsigned char>(frames);
-    SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x1C);
+    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x1C);
 }
 
 // original 0x532FD0: Sprite_Current placed at (x, z) plus the event battle's
@@ -110,7 +110,7 @@ extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {
 // call). No PSX twin paired.
 extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
     const unsigned char count = Field_MemberCount;
-    const unsigned char lead = At(at::kLeaderSlot)[0];
+    const unsigned char lead = Cond_Flags[0xd0];
     unsigned char g = lead;
     if (count == 2)
         g = static_cast<unsigned char>(lead + 1);
@@ -166,7 +166,7 @@ extern "C" void __cdecl Flags_Toggle(unsigned char* bits, unsigned index) {
 // else the word the angle and Light_AnglesCopy[0] = Light_Angles[0] + the
 // angle + 0x2AA, al 0. Camera_TurnToDegrees' one callee. No PSX twin paired.
 extern "C" unsigned char __cdecl Camera_TurnStep(unsigned angle, unsigned step) {
-    return TurnStep(at::kAngle0, at::kLightAngle0, at::kLightCopy0, 0x2AA, angle, step);
+    return TurnStep(Camera_Angles_addr, Light_Angles_addr, Light_AnglesCopy_addr, 0x2AA, angle, step);
 }
 
 // original 0x57C600: Camera_TurnStepFB(the angle (s16 degrees) x 4096 / 360 &
@@ -186,7 +186,7 @@ extern "C" unsigned char __cdecl Camera_TurnFBToDegrees(unsigned angle, unsigned
 // Light_AnglesCopy[2] = Light_Angles[2] (0x90359C) + the angle - 0x200. al
 // 1 while turning. Camera_TurnFBToDegrees' one callee. No PSX twin paired.
 extern "C" unsigned char __cdecl Camera_TurnStepFB(unsigned angle, unsigned step) {
-    return TurnStep(at::kAngleFB, at::kLightAngle2, at::kLightCopy2, -0x200, angle, step);
+    return TurnStep(Cond_AngleFB_addr, Light_Angles_addr + 0x4, Light_AnglesCopy_addr + 0x4, -0x200, angle, step);
 }
 
 // original 0x57C8A0: party member m's field object (ObjTrio + m * 0x14C, m

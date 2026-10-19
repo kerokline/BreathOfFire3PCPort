@@ -121,8 +121,8 @@ std::uint16_t Word(std::uint32_t address) { return static_cast<std::uint16_t>(mo
 
 // The chapter bytes a handler runs with, for a handler's or kPhase's entry.
 std::uint32_t Chapter() {
-    return Byte(at::kState)[0] | static_cast<std::uint32_t>(Byte(at::kRun)[0]) << 8 |
-           static_cast<std::uint32_t>(Byte(at::kStep)[0]) << 16 | static_cast<std::uint32_t>(Byte(at::kChapter)[0]) << 24;
+    return Byte(MoveScript_PartyRecords_addr + 0x62)[0] | static_cast<std::uint32_t>(Byte(MoveScript_Var7_addr)[0]) << 8 |
+           static_cast<std::uint32_t>(Byte(MoveScript_PartyRecords_addr + 0x65)[0]) << 16 | static_cast<std::uint32_t>(Byte(Cond_ByteFA_addr)[0]) << 24;
 }
 
 // Field mode's fourth word of a handler's entry: Sprite_Current's state bytes
@@ -132,7 +132,7 @@ std::uint32_t FieldPhase() {
     const unsigned char* const s = static_cast<const unsigned char*>(Sprite_Current);
     const std::uint32_t bytes = InRegions(s, 8) ? (s[1] | static_cast<std::uint32_t>(s[2]) << 8 | static_cast<std::uint32_t>(s[3]) << 16)
                                                 : 0xFFFFFFu;
-    return bytes | static_cast<std::uint32_t>(Byte(at::kMenuState)[0]) << 24;
+    return bytes | static_cast<std::uint32_t>(Byte(FieldS_State_addr)[0]) << 24;
 }
 
 // The calling thread's stack from just below the caller's frame to its base
@@ -163,7 +163,7 @@ std::uint32_t HashString(const void* p) {
 bool Writable(const void* p, unsigned n) { return InRegions(p, n) || OnStack(p, n); }
 
 bool InFlags(const unsigned char* p) {
-    return p >= Mem(at::kCondFlags) && p + 8 <= Mem(at::kCondFlags + at::kCondFlagsSize);
+    return p >= Mem(Cond_Flags_addr) && p + 8 <= Mem(Cond_Flags_addr + at::kCondFlagsSize);
 }
 
 // Every cell below is one some chapter handler reads again after a call.
@@ -174,9 +174,9 @@ void Disturb() {
     const auto b = static_cast<unsigned char>(h >> 20);
     const unsigned span = g_group ? g_group->phase_span : 0;
     switch ((h >> 4) % 16) {
-    case 0: Byte(at::kStep)[0] = span ? static_cast<unsigned char>(b % span) : b; break;
-    case 1: Byte(at::kRun)[0] = span ? static_cast<unsigned char>(b % span) : b; break;
-    case 2: move_script::SetWord(Mem(at::kWait), b & 1 ? 0u : h >> 16); break;
+    case 0: Byte(MoveScript_PartyRecords_addr + 0x65)[0] = span ? static_cast<unsigned char>(b % span) : b; break;
+    case 1: Byte(MoveScript_Var7_addr)[0] = span ? static_cast<unsigned char>(b % span) : b; break;
+    case 2: move_script::SetWord(Mem(MoveScript_WaitWordDA_addr), b & 1 ? 0u : h >> 16); break;
     case 3: {
         // a flag of the chapter's row (the pointer is the seed's: moved only
         // while it points into the rows)
@@ -188,8 +188,8 @@ void Disturb() {
     case 4: Sprite_Current = g_effect ? EffectRecord(v) : SpriteRecord(v); break;
     case 5: Frame_Counter = h >> 6; break;
     case 6: Byte(at::kCounter)[0] = b; break;
-    case 7: Byte(at::kRequest)[0] = b % 3 ? 2 : b; break;
-    case 8: move_script::SetWord(Mem(at::kTimer), h >> 16); break;
+    case 7: Byte(Field_Request_addr)[0] = b % 3 ? 2 : b; break;
+    case 8: move_script::SetWord(Mem(MoveScript_PartyRecords_addr + 0x66), h >> 16); break;
     case 9: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (1u << (b & 15))); break;
     // 10..13: field mode only (round twelve); without it these stay the
     // scenario round's no-ops, so its groups draw exactly what they drew.
@@ -215,12 +215,12 @@ void Disturb() {
         if (g_field) {
             const unsigned span = g_group ? g_group->menu_span : 0;
             if (v % 3 == 2) Byte(at::kMenuTimer)[0] = b;
-            else Byte(v & 1 ? at::kMenuStep : at::kMenuState)[0] = span ? static_cast<unsigned char>(b % span) : b;
+            else Byte(v & 1 ? FieldS_Step_addr : FieldS_State_addr)[0] = span ? static_cast<unsigned char>(b % span) : b;
         }
         break;
     case 12:
         // the packet cursor, as a callee that drew moves it
-        if (g_field) SetPointer(at::kPacketNext, g_packets + ((h >> 8) & 0x3F0));
+        if (g_field) SetPointer(Gfx_PacketNext_addr, g_packets + ((h >> 8) & 0x3F0));
         break;
     case 13:
         // a bit of Field_ScriptFlags2, or the pad's pressed word
@@ -296,12 +296,12 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
                            std::uint32_t a10, std::uint32_t a11) {
     const Slot& s = g_slots[I];
     if (s.handler) {
-        Log5(kPhaseTag + I, Chapter(), Word(at::kTimer), Key(Sprite_Current), g_field ? FieldPhase() : 0);
+        Log5(kPhaseTag + I, Chapter(), Word(MoveScript_PartyRecords_addr + 0x66), Key(Sprite_Current), g_field ? FieldPhase() : 0);
         Disturb();
         return Hash();
     }
     if (s.answer == Answer::kPhase) {
-        Log5(I, Chapter(), Word(at::kTimer), Key(Sprite_Current),
+        Log5(I, Chapter(), Word(MoveScript_PartyRecords_addr + 0x66), Key(Sprite_Current),
              s.masks[0] ? static_cast<std::uint32_t>(move_script::Long(Mem(s.masks[0]))) : 0);
         Disturb();
         return Hash();
@@ -476,7 +476,7 @@ void FillFloats(std::uint32_t at, unsigned n) {
 std::uint32_t FxText(const std::uint32_t*, std::uint32_t answer) { return Key(g_text + (answer & 0xF0)); }
 std::uint32_t FxArg0(const std::uint32_t* a, std::uint32_t) { return a[0]; }
 std::uint32_t FxArg4(const std::uint32_t* a, std::uint32_t) { return a[4]; }
-std::uint32_t FxPacket(const std::uint32_t*, std::uint32_t) { return Key(Pointer(at::kPacketNext)); }
+std::uint32_t FxPacket(const std::uint32_t*, std::uint32_t) { return Key(Pointer(Gfx_PacketNext_addr)); }
 std::uint32_t FxRotMatrix(const std::uint32_t* a, std::uint32_t) { FillNoise(a[1], 18); return a[1]; }
 std::uint32_t FxMulMatrix0(const std::uint32_t* a, std::uint32_t) { FillNoise(a[2], 18); return a[2]; }
 std::uint32_t FxOut0_12(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 12); return answer; }
@@ -512,16 +512,16 @@ std::uint32_t FxSprintf(const std::uint32_t* a, std::uint32_t answer) {
 }
 std::uint32_t FxCommitPrim(const std::uint32_t* a, std::uint32_t answer) {
     // Gfx_PacketNext += size (a byte) while the packet stays in the buffer
-    unsigned char* const next = Pointer(at::kPacketNext);
+    unsigned char* const next = Pointer(Gfx_PacketNext_addr);
     const unsigned size = a[1] & 0xFF;
-    if (next >= g_packets && next + size + 0x40 <= g_packets + sizeof g_packets) SetPointer(at::kPacketNext, next + size);
+    if (next >= g_packets && next + size + 0x40 <= g_packets + sizeof g_packets) SetPointer(Gfx_PacketNext_addr, next + size);
     return answer;
 }
 std::uint32_t FxZennyAdd(const std::uint32_t* a, std::uint32_t answer) {
     // Party_Zenny += amount (and the tally 0x904138 when the second argument's
     // byte is 0), held at 9,999,999 with al 0 - as Zenny_Add (scena_sx.cpp,
     // docs/scena_sx.md; the test was inverted until 2026-10-01, FE1's finding)
-    unsigned char* const z = Mem(at::kZenny);
+    unsigned char* const z = Mem(Party_Zenny_addr);
     if (!InRegions(z, 4)) return answer;
     std::uint32_t v = static_cast<std::uint32_t>(move_script::Long(z)) + a[0];
     if ((a[1] & 0xFF) == 0 && InRegions(Mem(0x904138), 4))
@@ -835,10 +835,10 @@ const Callee kField[] = {
 // The packet cursor moved by n bytes, the n filled with noise, while the packet
 // stays inside the harness's buffer (0x40 to spare); answers where it was.
 std::uint32_t Drew(unsigned n) {
-    unsigned char* const next = Pointer(at::kPacketNext);
+    unsigned char* const next = Pointer(Gfx_PacketNext_addr);
     if (next >= g_packets && next + n + 0x40 <= g_packets + sizeof g_packets) {
         FillBytes(next, n);
-        SetPointer(at::kPacketNext, next + n);
+        SetPointer(Gfx_PacketNext_addr, next + n);
     }
     return Key(next);
 }
@@ -887,7 +887,7 @@ std::uint32_t FxPanelPrims(const std::uint32_t*, std::uint32_t answer) { Drew(0x
 // MapView_ScreenXY 0x903820 written on the way - both filled here.
 std::uint32_t FxShadow(const std::uint32_t*, std::uint32_t answer) {
     if (!(Byte(0x7E0918)[0] & 4)) return answer;
-    if (InRegions(Mem(at::kVertexScratch), 0x20)) FillBytes(Mem(at::kVertexScratch), 0x20);
+    if (InRegions(Mem(Prim_VertexScratch_addr), 0x20)) FillBytes(Mem(Prim_VertexScratch_addr), 0x20);
     FillFloats(0x903820, 2);
     Drew(16 * 0x54);
     return answer;
@@ -1011,9 +1011,9 @@ std::uint32_t FxLinkAdvance(const std::uint32_t* a, std::uint32_t answer) {
     // MapView_LinkPrimAt: the cursor += size & 0xFF when the row is on the map,
     // two times in three here; nothing filled - the caller wrote the primitive
     if (Noise() % 3 != 0) {
-        unsigned char* const next = Pointer(at::kPacketNext);
+        unsigned char* const next = Pointer(Gfx_PacketNext_addr);
         const unsigned n = a[3] & 0xFF;
-        if (next >= g_packets && next + n + 0x40 <= g_packets + sizeof g_packets) SetPointer(at::kPacketNext, next + n);
+        if (next >= g_packets && next + n + 0x40 <= g_packets + sizeof g_packets) SetPointer(Gfx_PacketNext_addr, next + n);
     }
     return answer;
 }
@@ -1028,7 +1028,7 @@ std::uint32_t FirstFree(std::uint32_t base, unsigned stride, unsigned n, std::ui
 }
 // EffectSpark_FindFree 0x47CF20: 8 records of 0x1C at EffectKind30_Shards;
 // 0x47A130: 64 of 0x20 at 0x92D1DC (E2D's reading of both)
-std::uint32_t FxSparkFindFree(const std::uint32_t*, std::uint32_t answer) { return FirstFree(at::kShards, 0x1C, 8, answer); }
+std::uint32_t FxSparkFindFree(const std::uint32_t*, std::uint32_t answer) { return FirstFree(EffectKind30_Shards_addr, 0x1C, 8, answer); }
 std::uint32_t FxDustFindFree(const std::uint32_t*, std::uint32_t answer) { return FirstFree(0x92D1DC, 0x20, 64, answer); }
 // The round's end fold (docs/scenario_harness.md section 8.10).
 // 0x4FEE70: the three story flags of 0x65DE60 as bits, plus 1 - lea eax,
@@ -1299,10 +1299,10 @@ void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
 // Random bytes put back inside what every chapter dereferences, and the
 // group's chapter where Scenario_Start leaves it.
 void Fix(int chapter) {
-    Byte(at::kChapter)[0] = static_cast<unsigned char>(chapter);
-    SetPointer(at::kFlagRow, Mem(at::kCondFlags + 8u * static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(chapter)))));
+    Byte(Cond_ByteFA_addr)[0] = static_cast<unsigned char>(chapter);
+    SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8u * static_cast<std::uint32_t>(static_cast<int>(static_cast<signed char>(chapter)))));
     Sprite_Current = SpriteRecord(Next());
-    SetPointer(at::kFieldState, ObjectOf(Next()));
+    SetPointer(Field_State_addr, ObjectOf(Next()));
     MapView_CornerPtr = g_own + (Next() & 0x7E);
 }
 
@@ -1313,9 +1313,9 @@ void Fix(int chapter) {
 // the script cursor into the script buffer, MapView_Row / MapView_Column
 // inside the view's 0x38 x 0x1C.
 void FixField() {
-    SetPointer(at::kPacketNext, g_packets + (Next() & 0x1F0));
-    SetPointer(at::kAreaBytes, Mem(at::kAreaBlock + 0x800));
-    unsigned char* const header = Mem(at::kAreaBlock);
+    SetPointer(Gfx_PacketNext_addr, g_packets + (Next() & 0x1F0));
+    SetPointer(AreaMap_Bytes_addr, Mem(AreaMap_Header_addr + 0x800));
+    unsigned char* const header = Mem(AreaMap_Header_addr);
     header[0] &= 0x1F;
     header[1] &= 0x1F;
     header[3] = 0;
@@ -1332,8 +1332,8 @@ void DrawSpans(const Group& g, const Clone& c) {
         for (unsigned i = 1; i <= 4; ++i) s[i] = static_cast<unsigned char>(Next() % g.sprite_span);
     }
     if (c.shape == Shape::kMenu && g.menu_span) {
-        Byte(at::kMenuState)[0] = static_cast<unsigned char>(Next() % g.menu_span);
-        Byte(at::kMenuStep)[0] = static_cast<unsigned char>(Next() % g.menu_span);
+        Byte(FieldS_State_addr)[0] = static_cast<unsigned char>(Next() % g.menu_span);
+        Byte(FieldS_Step_addr)[0] = static_cast<unsigned char>(Next() % g.menu_span);
     }
 }
 bool FieldShape(Shape s) { return s >= Shape::kSprite; }
@@ -1404,10 +1404,10 @@ bool Often() { return Next() % 3 != 0; }
 bool Half() { return (Next() & 1) != 0; }
 std::uint32_t Pick(const std::uint32_t* v, unsigned n) { return v[Next() % n]; }
 unsigned char* Mem(std::uint32_t address) { return move_script::At(address); }
-unsigned char* SpriteRecord(unsigned k) { return Mem(at::kSprites + (k % 4) * at::kSpriteStride); }
-unsigned char* EffectRecord(unsigned k) { return Mem(at::kEffects + (k % at::kEffectCount) * at::kEffectStride); }
-unsigned char* ObjectOf(unsigned k) { return Mem(at::kObjTrio + (k % 3) * at::kObjStride); }
-unsigned char* FlagRow() { return Pointer(at::kFlagRow); }
+unsigned char* SpriteRecord(unsigned k) { return Mem(Sprite_Objects_addr + (k % 4) * at::kSpriteStride); }
+unsigned char* EffectRecord(unsigned k) { return Mem(Effect_Objects_addr + (k % at::kEffectCount) * at::kEffectStride); }
+unsigned char* ObjectOf(unsigned k) { return Mem(ObjTrio_addr + (k % 3) * at::kObjStride); }
+unsigned char* FlagRow() { return Pointer(AreaW0c_FlagRow_addr); }
 unsigned char* TaskAt(unsigned k) { return SpriteRecord(k); }
 unsigned char* EnemyOf(unsigned char target) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
@@ -1531,23 +1531,23 @@ void Run(const Group& group) {
     // the regions: the standard ones (docs/scenario_harness.md section 4), then the group's
     g_region_n = 0;
     const Region standard[] = {
-        {at::kChapter, 0x14},                              // the chapter bytes 0x8034E0..0x8034F3
-        {at::kCondFlags, at::kCondFlagsSize},              // Cond_Flags, the story flags 0x904030, the party lists 0x904061..
+        {Cond_ByteFA_addr, 0x14},                          // the chapter bytes 0x8034E0..0x8034F3
+        {Cond_Flags_addr, at::kCondFlagsSize},             // Cond_Flags, the story flags 0x904030, the party lists 0x904061..
         {0x929EC0, 0x14},                                  // Field_MemberCount, Camera_Angles, Cond_AngleFB, the row pointer 0x929ED0
-        {at::kWait, 4},                                    // MoveScript_WaitWordDA
-        {at::kRequest, 4},                                 // Field_Request
-        {at::kArea, 4},                                    // Game_AreaNumber, MoveScript_FAWord
+        {MoveScript_WaitWordDA_addr, 4},                   // MoveScript_WaitWordDA
+        {Field_Request_addr, 4},                           // Field_Request
+        {Game_AreaNumber_addr, 4},                         // Game_AreaNumber, MoveScript_FAWord
         {0x903840, 0x20},                                  // Camera_Distance, the counters 0x903848..0x90384B, the effect slot 0x903850
         {0x9039A0, 8},                                     // Field_ScriptFlags
         {0x903A04, 0x10},                                  // the pending area change
         {0x937F88, 0x14},                                  // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter, 0x937F98
         {0x7E0918, 4},                                     // Draw_PassFlags
         {0x7E0940, 0xA4},                                  // Sprite_Kind2
-        {at::kObjTrio, 3 * at::kObjStride},                // ObjTrio: the party's field objects
-        {at::kFieldState, 4},                              // Field_State
-        {at::kSprites, at::kSpriteCount * at::kSpriteStride},   // Sprite_Objects
-        {at::kSpritesExtra, 4 * at::kSpriteStride},        // Sprite_ObjectsExtra
-        {at::kEffects, 20 * 0x80},                         // Effect_Objects
+        {ObjTrio_addr, 3 * at::kObjStride},                // ObjTrio: the party's field objects
+        {Field_State_addr, 4},                             // Field_State
+        {Sprite_Objects_addr, at::kSpriteCount * at::kSpriteStride}, // Sprite_Objects
+        {Sprite_ObjectsExtra_addr, 4 * at::kSpriteStride}, // Sprite_ObjectsExtra
+        {Effect_Objects_addr, 20 * 0x80},                  // Effect_Objects
         {0x905E60, 0xC},                                   // Field_Kind2Z / X, MapView_Redraw
         {0x929F14, 0x14},                                  // MapView_FocusX / Z, Elevation, Column, Row
         {0x92A0C0, 4},                                     // MapView_CornerPtr
@@ -1558,14 +1558,14 @@ void Run(const Group& group) {
     if (g_field) {
         // field mode's standard regions (docs/scenario_harness.md section 7.3)
         const Region field[] = {
-            {at::kPacketNext, 4},                          // Gfx_PacketNext, into the packet buffer
-            {at::kCameraTurn, at::kCameraTurnSize},        // CameraTurn_Steps, Field_EdgeBits, Field_InputFlags, Field_ScriptFlags2, Field_InputHeld
-            {at::kMenuBlock, at::kMenuBlockSize},          // MapView_BuildFlags, the menu block 0x929F00.., Field_Kind2Hold
-            {at::kStyle, at::kStyleSize},                  // the window style byte 0x903A5A, the records 0x903A70.., Field_ActorStates
+            {Gfx_PacketNext_addr, 4},                      // Gfx_PacketNext, into the packet buffer
+            {CameraTurn_Steps_addr, at::kCameraTurnSize},  // CameraTurn_Steps, Field_EdgeBits, Field_InputFlags, Field_ScriptFlags2, Field_InputHeld
+            {SaveMenu_ErrorKind_addr, at::kMenuBlockSize}, // MapView_BuildFlags, the menu block 0x929F00.., Field_Kind2Hold
+            {ScenaSc9b_TallyWord_addr, at::kStyleSize},    // the window style byte 0x903A5A, the records 0x903A70.., Field_ActorStates
             {at::kTextBuffer, at::kTextBufferSize},        // the text scratch 0x904BA0
             {at::kSaveFlags, at::kSaveFlagsSize},          // the save block past Cond_Flags, to 0x904160
             {at::kSaveBytes, at::kSaveBytesSize},          // the save block's bytes 0x904560..0x904700
-            {at::kAreaBlock, at::kAreaBlockSize},          // AreaMap_Header and the area block's first 8 KiB
+            {AreaMap_Header_addr, at::kAreaBlockSize},     // AreaMap_Header and the area block's first 8 KiB
             {at::kAreaBytes, 4},                           // AreaMap_Bytes, into the area block
             {Key(g_packets), sizeof g_packets},
             {Key(g_text), sizeof g_text},
@@ -1588,15 +1588,15 @@ void Run(const Group& group) {
         // effect mode's standard regions (docs/scenario_harness.md section 8.4):
         // the cells three or more of round thirteen's groups name
         const Region effect[] = {
-            {at::kVertexScratch, at::kVertexScratchSize},  // Prim_VertexScratch 0x9037A0.. (15 groups write it)
-            {at::kScreenXY, at::kScreenXYSize},            // Camera_ShiftX / Y, MapView_ScreenXY 0x903820 (9)
-            {at::kCameraCells, at::kCameraCellsSize},      // Cond_ByteFE .., Camera_Matrix 0x905E40 (13)
-            {at::kShards, at::kShardsSize},                // EffectKind30_Shards and the sparks (15)
-            {at::kMenuButtons, at::kMenuButtonsSize},      // Field_MenuButton .. (6)
+            {Prim_VertexScratch_addr, at::kVertexScratchSize}, // Prim_VertexScratch 0x9037A0.. (15 groups write it)
+            {Camera_ShiftX_addr, at::kScreenXYSize},       // Camera_ShiftX / Y, MapView_ScreenXY 0x903820 (9)
+            {Cond_ByteFE_addr, at::kCameraCellsSize},      // Cond_ByteFE .., Camera_Matrix 0x905E40 (13)
+            {EffectKind30_Shards_addr, at::kShardsSize},   // EffectKind30_Shards and the sparks (15)
+            {Field_MenuButton_addr, at::kMenuButtonsSize}, // Field_MenuButton .. (6)
             {at::kMessagePools, at::kMessagePoolsSize},    // MessagePools (4)
-            {at::kGameMode, 4},                            // Game_Mode, Game_Step (6)
+            {Game_Mode_addr, 4},                           // Game_Mode, Game_Step (6)
             {at::kPanelCells, at::kPanelCellsSize},        // 0x939A00..0x939A2F (3)
-            {at::kMessageCells, at::kMessageCellsSize},    // MsgBoxState 0x7DEE40.. inside the message cells (3)
+            {EventScript_FlagBank_addr, at::kMessageCellsSize}, // MsgBoxState 0x7DEE40.. inside the message cells (3)
         };
         for (const Region& r : effect) g_regions[g_region_n++] = r;
     }

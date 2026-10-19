@@ -181,7 +181,7 @@ void** Device() { return *reinterpret_cast<void** volatile*>(At(0x7CC350)); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
 
-unsigned char* Vertex(U i) { return At(kVertices + i * 0x20); }
+unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
 
 // The body all three share. `size_at` is 0 for SPRT - the size is the
 // primitive's u16 w +0x18 and h +0x1A, pushed through fild - or the address of
@@ -204,12 +204,12 @@ unsigned char* Vertex(U i) { return At(kVertices + i * 0x20); }
 // bare rets - kept, since a callee could change either.
 long DrawSprite(const unsigned char* prim, U size_at, U extent) {
     unsigned long diffuse, specular;
-    g.prim_color(prim[4], prim[5], prim[6], prim[7], Long(At(kDrawTpage)) & 0xFFFF, &diffuse, &specular);
+    g.prim_color(prim[4], prim[5], prim[6], prim[7], Long(At(Gfx_DrawTpage_addr)) & 0xFFFF, &diffuse, &specular);
 
     const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
     const U u = prim[0x14], v = prim[0x15];
-    const float left = X87Mul(FloatAt(kScaleX), x);
-    const float top = X87Mul(FloatAt(kScaleY), y);
+    const float left = X87Mul(D3d_ScaleX, x);
+    const float top = X87Mul(D3d_ScaleY, y);
     const float near_u = X87Pass(FloatAt(kTexCoords + u * 4)), near_v = X87Pass(FloatAt(kTexCoords + v * 4));
     float right, bottom;
     U far_j_u, far_j_v;
@@ -217,13 +217,13 @@ long DrawSprite(const unsigned char* prim, U size_at, U extent) {
         // u16, zero-extended: a w of 0x8000 or more is a wide sprite, never a
         // negative one.
         const U w = Word(prim + 0x18), h = Word(prim + 0x1A);
-        right = X87IntAddMul(static_cast<std::int32_t>(w), x, FloatAt(kScaleX));
-        bottom = X87IntAddMul(static_cast<std::int32_t>(h), y, FloatAt(kScaleY));
+        right = X87IntAddMul(static_cast<std::int32_t>(w), x, D3d_ScaleX);
+        bottom = X87IntAddMul(static_cast<std::int32_t>(h), y, D3d_ScaleY);
         far_j_u = u + w;
         far_j_v = v + h;
     } else {
-        right = X87AddMul(x, FloatAt(size_at), FloatAt(kScaleX));
-        bottom = X87AddMul(y, FloatAt(size_at), FloatAt(kScaleY));
+        right = X87AddMul(x, FloatAt(size_at), D3d_ScaleX);
+        bottom = X87AddMul(y, FloatAt(size_at), D3d_ScaleY);
         far_j_u = u + extent;
         far_j_v = v + extent;
     }
@@ -250,15 +250,15 @@ long DrawSprite(const unsigned char* prim, U size_at, U extent) {
         PutFloat(out + 0x1C, vs[i]);
     }
 
-    g.bind_texture(Long(At(kDrawTpage)) & 0xFFFF, Word(prim + 0x16));
+    g.bind_texture(Long(At(Gfx_DrawTpage_addr)) & 0xFFFF, Word(prim + 0x16));
     g.ret_only(1);
     g.ret_only(1);
-    g.set_blend(prim[7], Long(At(kDrawTpage)) & 0xFFFF);
+    g.set_blend(prim[7], Long(At(Gfx_DrawTpage_addr)) & 0xFFFF);
     g.set_shade(1);   // flat
     // DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_TLVERTEX, D3d_Vertices, 4, 0);
     // its result is the handler's (the draw 0x59EE50 does not read it).
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, kVertices, 4, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, 5, 0x1C4, D3d_Vertices_addr, 4, 0);
     // Not kept: the original lets the colour helper write the diffuse into
     // the caller's pushed `prim` slot, which the caller pops unread, and uses
     // a local as fild's operand.

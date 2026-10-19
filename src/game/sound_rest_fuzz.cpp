@@ -83,8 +83,10 @@ void SetDword(std::uint32_t address, std::uint32_t v) { std::memcpy(At(address),
 // Sound_Channels; the stream kind; the device block from Snd_BufferDesc to
 // Music_Finished (the description, the format, the device, the primary, the
 // music's and the stream's buffers among them).
-constexpr std::uint32_t kChannelsAt = 0x6BC8C8, kChannels = kChannelsEnd - kChannelsAt;
-constexpr std::uint32_t kDeviceAt = 0x7DE378, kDeviceEnd = 0x7DE3E4, kDevice = kDeviceEnd - kDeviceAt;
+// kChannelsAt: now Sound_Channels (symbols.toml).
+constexpr std::uint32_t kChannels = kChannelsEnd - Sound_Channels_addr;
+// kDeviceAt: now Snd_BufferDesc (symbols.toml).
+constexpr std::uint32_t kDeviceEnd = 0x7DE3E4, kDevice = kDeviceEnd - Snd_BufferDesc_addr;
 constexpr unsigned kLog = 48;
 
 struct Entry { std::uint32_t what, a, b, c, d; };
@@ -129,7 +131,7 @@ void Disturb() {
     case 1: Snd_Primary = AnyBuffer(v); break;
     case 2: if (Music_Buffer) Music_Buffer = AnyBuffer(v); break;
     case 3: SndStream_Buffer = (v & 8) ? AnyBuffer(v) : nullptr; break;
-    case 4: SetDword(kStreamKind, (v & 3) ? 0 : v); break;
+    case 4: SetDword(SaveMenu_StreamKind_addr, (v & 3) ? 0 : v); break;
     default: Sound_Channels[v % 23] = (v & 0x200) ? Address(AnyBuffer(v >> 10)) : (v & 0x400) ? v : 0; break;
     }
 }
@@ -299,17 +301,17 @@ unsigned short ControlWord() {
 void SetControlWord(unsigned short cw) { __asm__ volatile("fldcw %0" : : "m"(cw)); }
 
 void Capture(State& s) {
-    std::memcpy(s.channels, At(kChannelsAt), kChannels);
-    s.kind = Dword(kStreamKind);
-    std::memcpy(s.device, At(kDeviceAt), kDevice);
+    std::memcpy(s.channels, At(Sound_Channels_addr), kChannels);
+    s.kind = Dword(SaveMenu_StreamKind_addr);
+    std::memcpy(s.device, At(Snd_BufferDesc_addr), kDevice);
     s.control = ControlWord();
     std::memcpy(s.log, g_log, sizeof s.log);
     s.log_n = g_log_n;
 }
 void Apply(const State& s) {
-    std::memcpy(At(kChannelsAt), s.channels, kChannels);
-    SetDword(kStreamKind, s.kind);
-    std::memcpy(At(kDeviceAt), s.device, kDevice);
+    std::memcpy(At(Sound_Channels_addr), s.channels, kChannels);
+    SetDword(SaveMenu_StreamKind_addr, s.kind);
+    std::memcpy(At(Snd_BufferDesc_addr), s.device, kDevice);
     std::memset(g_log, 0, sizeof g_log);
     g_log_n = 0;
 }
@@ -334,7 +336,7 @@ Args Generate(unsigned k, State& input) {
     for (unsigned i = 0; i < 23; ++i)
         Sound_Channels[i] = Next() % 2 ? 0 : Next() % 4 ? Address(AnyBuffer(Next())) : Next();
     if (Next() % 6 == 0) for (unsigned i = 0; i < 23; ++i) Sound_Channels[i] = 0;
-    SetDword(kStreamKind, Pick({0, 0, 0, 1, 2, 0x80000000u}));
+    SetDword(SaveMenu_StreamKind_addr, Pick({0, 0, 0, 1, 2, 0x80000000u}));
     // The pointers: fakes or null; Snd_Init runs past its first test only
     // without a device.
     Snd_Device = k == kInit ? (Next() % 5 == 0 ? AnyDevice(Next()) : nullptr) : Maybe(AnyDevice(Next()), 3);

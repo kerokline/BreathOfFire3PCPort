@@ -65,12 +65,12 @@ struct Region {
     U address, bytes;
 };
 const Region kRegions[] = {
-    {kPageCache, 0x6000},       // Gfx_TexCache
-    {kClutRows, 0x1000},        // Gfx_ClutRows
-    {kTexKey, 8},               // Gfx_TexCacheKey
-    {kRenderFlags, 4},          // Gfx_RenderFlags
+    {Gfx_TexCache_addr, 0x6000}, // Gfx_TexCache
+    {Gfx_ClutRows_addr, 0x1000}, // Gfx_ClutRows
+    {Gfx_TexCacheKey_addr, 8},  // Gfx_TexCacheKey
+    {Gfx_RenderFlags_addr, 4},  // Gfx_RenderFlags
     {0x7DED40, 0x120},          // the pixel-format records 0x7DED60.. and what a wrapped format index reaches below
-    {kStage, 4},                // Dd_StageSurface
+    {Dd_StageSurface_addr, 4},  // Dd_StageSurface
 };
 constexpr U kStateBytes = 0x6000 + 0x1000 + 8 + 4 + 0x120 + 4;
 struct State {
@@ -151,10 +151,10 @@ void Disturb(U what) {
     if (h % 4) return;
     const U v = h >> 8;
     switch ((h >> 4) % 10) {
-    case 0: At(kRenderFlags)[0] ^= 1; break;
-    case 1: At(kRenderFlags)[0] ^= 0x20; break;
-    case 2: RandomKey(kTexKey, v); break;
-    case 3: PutLong(kStage, Addr(g_surfaces[v % 2])); break;
+    case 0: At(Gfx_RenderFlags_addr)[0] ^= 1; break;
+    case 1: At(Gfx_RenderFlags_addr)[0] ^= 0x20; break;
+    case 2: RandomKey(Gfx_TexCacheKey_addr, v); break;
+    case 3: PutLong(Dd_StageSurface_addr, Addr(g_surfaces[v % 2])); break;
     case 4: PutLong(g_entry + 0x10, Addr(g_surfaces[v % 4])); break;
     case 5: At(g_entry)[1] = static_cast<unsigned char>(v % 4); break;
     case 6: PutWord(g_entry + 2, v); break;
@@ -165,8 +165,8 @@ void Disturb(U what) {
         // render flags or the page cache, which a write here would wreck.
         std::uint16_t word;
         std::memcpy(&word, At(g_entry + 2), 2);
-        const U row = v & 1 ? g_generation : kClutRows + (word >> 6) * 8u;
-        if (row >= kClutRows && row < kClutRows + 0x1000) PutLong(row, v * 0x10001u);
+        const U row = v & 1 ? g_generation : Gfx_ClutRows_addr + (word >> 6) * 8u;
+        if (row >= Gfx_ClutRows_addr && row < Gfx_ClutRows_addr + 0x1000) PutLong(row, v * 0x10001u);
         break;
     }
     case 8: PutLong(g_entry + 0x14, v); break;
@@ -203,7 +203,7 @@ bool SameAsTheirs() {
 void RecordConvert(U what, const void* dst, const void* src, const void* clut, int w, int h, int pitch) {
     U surface = 0xFFFFFFFFu, offset = Addr(dst);
     ddraw_fuzz::Locate(dst, &surface, &offset);
-    Record(what, surface, offset, Addr(src) - kVram, clut ? Addr(clut) - Addr(g_palettes) : 0xFFFFFFFFu,
+    Record(what, surface, offset, Addr(src) - Gfx_VramShadow_addr, clut ? Addr(clut) - Addr(g_palettes) : 0xFFFFFFFFu,
            static_cast<U>(w), static_cast<U>(h), static_cast<U>(pitch));
 }
 
@@ -308,14 +308,14 @@ void RandomBytes(U address, U bytes) {
 // seeded - the bytes per texel, the three shifts and masks.
 void RandomFormats() {
     RandomBytes(0x7DED40, 0x120);
-    At(kPixelFormat)[3] = static_cast<unsigned char>(Next() % 8 ? Pick(kBytesPerPixel) : Next());
+    At(Gfx_PixelFormat_addr)[3] = static_cast<unsigned char>(Next() % 8 ? Pick(kBytesPerPixel) : Next());
     for (U i = 0; i < 3; ++i) {
-        PutLong(kPixelFormat + 4 + 4 * i, Next() % 4 ? Pick(kShifts) : Next());
-        PutLong(kPixelFormat + 0x10 + 4 * i, Next() % 4 ? Pick(kMasks) : Next());
+        PutLong(Gfx_PixelFormat_addr + 4 + 4 * i, Next() % 4 ? Pick(kShifts) : Next());
+        PutLong(Gfx_PixelFormat_addr + 0x10 + 4 * i, Next() % 4 ? Pick(kMasks) : Next());
     }
 }
 
-U BytesPerPixel() { return At(kPixelFormat)[3] == 4 ? 4 : 2; }
+U BytesPerPixel() { return At(Gfx_PixelFormat_addr)[3] == 4 ? 4 : 2; }
 
 const U kPitches[] = {0, 512, 513, 514, 640, 1024, 1030, 1280, 2048, 4000, 256, 2, 3};
 
@@ -421,7 +421,7 @@ void HelperRounds(unsigned rounds, unsigned* bad, unsigned* failed) {
         const bool texture = r & 1;
         ddraw_fuzz::Reset(Next());
         RandomFormats();
-        At(kRenderFlags)[0] = static_cast<unsigned char>(Next());
+        At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
         if (Next() % 4 == 0) {
             ddraw_fuzz::FailAt(ddraw_fuzz::kDirectDrawCall + ddraw_fuzz::kCreateSurface, 0);
             ++*failed;
@@ -481,12 +481,12 @@ void RandomWorld() {
     g_surfaces[3] = ddraw_fuzz::MakeSurface(256, 256, bpp, Pick(kPitches));
     U pitches[2] = {Pick(kPitches), Pick(kPitches)};
     ddraw_fuzz::SetPitches(pitches, 2);
-    PutLong(kStage, Addr(g_surfaces[0]));
-    At(kRenderFlags)[0] = static_cast<unsigned char>(Next());
+    PutLong(Dd_StageSurface_addr, Addr(g_surfaces[0]));
+    At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
     for (U i = 0; i < kPaletteBytes; i += 4) PutLong(Addr(g_palettes + i), Next());
-    RandomBytes(kPageCache, 0x6000);
-    RandomBytes(kClutRows, 0x1000);
-    RandomKey(kTexKey, Next());
+    RandomBytes(Gfx_TexCache_addr, 0x6000);
+    RandomBytes(Gfx_ClutRows_addr, 0x1000);
+    RandomKey(Gfx_TexCacheKey_addr, Next());
     if (Next() % 3 == 0) ddraw_fuzz::FailAt(ddraw_fuzz::kSurfaceCall + ddraw_fuzz::kLock, 0);
     if (Next() % 6 == 0) ddraw_fuzz::FailAt(ddraw_fuzz::kDirectDrawCall + ddraw_fuzz::kCreateSurface, 0);
     if (Next() % 8 == 0) ddraw_fuzz::FailAt(ddraw_fuzz::kSurfaceCall + ddraw_fuzz::kQueryInterface, 0);
@@ -506,20 +506,20 @@ void BuildRounds(unsigned rounds, unsigned* bad, BuildCoverage* c) {
         // The page's first free entry: 0, 1, somewhere, 31, or none (32).
         U first = Pick(kFirsts);
         if (first == 0xFF) first = Next() % 32;
-        g_generation = kClutRows + static_cast<U>(static_cast<std::int32_t>(clut) >> 6) * 8;
+        g_generation = Gfx_ClutRows_addr + static_cast<U>(static_cast<std::int32_t>(clut) >> 6) * 8;
         for (U s = 0; s < 32; ++s) {
-            const U e = kPageCache + (page * 32 + s) * kEntryBytes;
+            const U e = Gfx_TexCache_addr + (page * 32 + s) * kEntryBytes;
             At(e)[0] = static_cast<unsigned char>(s < first ? Pick(kStates) : s == first ? 0 : Next());
         }
-        g_entry = kPageCache + (page * 32 + (first < 32 ? first : 0)) * kEntryBytes;
+        g_entry = Gfx_TexCache_addr + (page * 32 + (first < 32 ? first : 0)) * kEntryBytes;
         if (first == 32) ++c->full;
-        const bool software = At(kRenderFlags)[0] & 1;
+        const bool software = At(Gfx_RenderFlags_addr)[0] & 1;
         if (first < 32) {
             ++(software ? c->software : c->direct3d);
             if (mode & 2) ++c->direct;
             else if (mode) ++c->bits8;
             else ++c->bits4;
-            if (!software && (At(kRenderFlags)[0] & 0x20)) ++c->keyed;
+            if (!software && (At(Gfx_RenderFlags_addr)[0] & 0x20)) ++c->keyed;
         }
         Capture(g_start);
 
@@ -560,14 +560,14 @@ void RefreshRounds(unsigned rounds, unsigned* bad, RefreshCoverage* c) {
         RandomWorld();
         const U page = Next() % 3 == 0 ? Pick(kPages) : Next() % 32;
         const U slot = Next() % 3 == 0 ? Pick(kEdgeSlots) : Next() % 32;
-        g_entry = kPageCache + (page * 32 + slot) * kEntryBytes;
+        g_entry = Gfx_TexCache_addr + (page * 32 + slot) * kEntryBytes;
         At(g_entry)[0] = static_cast<unsigned char>(Pick(kStates));
         At(g_entry)[1] = static_cast<unsigned char>(Pick(kModeBytes));
         PutWord(g_entry + 2, Next() % 3 ? Next() : Pick(kCluts));
-        g_generation = kClutRows + (static_cast<U>(At(g_entry + 2)[0] | At(g_entry + 2)[1] << 8) >> 6) * 8;
+        g_generation = Gfx_ClutRows_addr + (static_cast<U>(At(g_entry + 2)[0] | At(g_entry + 2)[1] << 8) >> 6) * 8;
         RandomKey(g_entry + 8, Next());
         PutLong(g_entry + 0x10, Addr(g_surfaces[2]));
-        const bool software = At(kRenderFlags)[0] & 1;
+        const bool software = At(Gfx_RenderFlags_addr)[0] & 1;
         ++(software ? c->software : c->direct3d);
         const U mode = At(g_entry)[1];
         if (mode & 2) ++c->direct;
@@ -601,10 +601,10 @@ void RefreshRounds(unsigned rounds, unsigned* bad, RefreshCoverage* c) {
 
 void SelfTest() {
     MakeClones();
-    std::memcpy(g_vram_saved, At(kVram), kVramBytes);
+    std::memcpy(g_vram_saved, At(Gfx_VramShadow_addr), kVramBytes);
     Capture(g_saved);
     g_rand = 0x5A0080u;
-    for (U i = 0; i < kVramBytes; i += 4) PutLong(kVram + i, Next());
+    for (U i = 0; i < kVramBytes; i += 4) PutLong(Gfx_VramShadow_addr + i, Next());
     g_source = static_cast<unsigned char*>(VirtualAlloc(nullptr, kSourceBytes + 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     g_dst[0] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     g_dst[1] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
@@ -626,7 +626,7 @@ void SelfTest() {
     RefreshCoverage rc = {};
     constexpr unsigned kBuildRounds = 4000, kRefreshRounds = 4000;
     {
-        const ddraw_fuzz::GlobalSwap dd(kDirectDraw, ddraw_fuzz::FakeDirectDraw());
+        const ddraw_fuzz::GlobalSwap dd(Dd_DirectDraw_addr, ddraw_fuzz::FakeDirectDraw());
         ddraw_fuzz::SetDisturb(nullptr);
         HelperRounds(kHelperRounds, &bad, &create_failed);
         ddraw_fuzz::SetDisturb(&Disturb);
@@ -635,7 +635,7 @@ void SelfTest() {
         ddraw_fuzz::SetDisturb(nullptr);
     }
     Restore(g_saved);
-    std::memcpy(At(kVram), g_vram_saved, kVramBytes);
+    std::memcpy(At(Gfx_VramShadow_addr), g_vram_saved, kVramBytes);
     VirtualFree(g_source, 0, MEM_RELEASE);
     VirtualFree(g_dst[0], 0, MEM_RELEASE);
     VirtualFree(g_dst[1], 0, MEM_RELEASE);

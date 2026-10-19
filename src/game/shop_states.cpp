@@ -90,7 +90,7 @@ Handler Entry(U table, unsigned index) { return Fn<Handler>(Long(table + index *
 // a register whose upper bytes it never cleared (entry eax, or edx after a
 // call); Menu_DrawTitleBox uses it only through Gpu_GetClut's six-bit field
 // (colour * 32 + 16 >> 4 & 0x3F), so ours zero-extends.
-void TitleBox() { g.title_box(0x14, 0x12, 0x118, 0x13, B(at::kColour)); }
+void TitleBox() { g.title_box(0x14, 0x12, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
 
 // System message `id` at (0x1C, 0x16), colour 0, to its end.
 void Message(unsigned id) {
@@ -99,9 +99,9 @@ void Message(unsigned id) {
 }
 
 // The zenny box at (0x62, 0x28).
-void Zenny() { g.money_box(0x62, 0x28, 0, Long(at::kZenny)); }
+void Zenny() { g.money_box(0x62, 0x28, 0, Party_Zenny); }
 
-bool NoObject() { return B(at::kObject) == 0xFF; }
+bool NoObject() { return ModeStates_ShopObject == 0xFF; }
 
 }  // namespace
 
@@ -112,28 +112,28 @@ bool NoObject() { return B(at::kObject) == 0xFF; }
 // state byte read as the low byte of a dword. Jumped to by Game_Mode 7's step
 // 1 (0x517323) and by 0x56D4D5, so the arguments and the return are Field_Task's.
 extern "C" void __cdecl ShopMode_Dispatch(void) {
-    [[clang::musttail]] return Entry(at::kModeStates, B(at::kState))();
+    [[clang::musttail]] return Entry(ShopMode_States_addr, BattleE1_Mode)();
 }
 
 // original 0x57F650, state 3 (the inn): `jmp [Inn_Steps + 4 * 0x929F01]`.
 extern "C" void __cdecl Inn_Dispatch(void) {
-    [[clang::musttail]] return Entry(at::kInnSteps, B(at::kStep))();
+    [[clang::musttail]] return Entry(Inn_Steps_addr, FieldS_State)();
 }
 
 // original 0x57F6E0, the inn's step 1: `jmp [InnPrompt_States + 4 * 0x929F02]`.
 extern "C" void __cdecl InnPrompt_Dispatch(void) {
-    [[clang::musttail]] return Entry(at::kPromptStates, B(at::kSub))();
+    [[clang::musttail]] return Entry(InnPrompt_States_addr, FieldS_Step)();
 }
 
 // original 0x57FB60, the inn's step 2: `jmp [InnNight_States + 4 * 0x929F02]`.
 extern "C" void __cdecl InnNight_Dispatch(void) {
-    [[clang::musttail]] return Entry(at::kNightStates, B(at::kSub))();
+    [[clang::musttail]] return Entry(InnNight_States_addr, FieldS_Step)();
 }
 
 // original 0x57FDD0, the inn's step 3 (the save point's only one):
 // `jmp [FieldSave_States + 4 * 0x929F02]`.
 extern "C" void __cdecl FieldSave_Dispatch(void) {
-    [[clang::musttail]] return Entry(at::kSaveStates, B(at::kSub))();
+    [[clang::musttail]] return Entry(FieldSave_States_addr, FieldS_Step)();
 }
 
 #pragma clang attribute push(__attribute__((disable_tail_calls)), apply_to = function)
@@ -150,26 +150,26 @@ extern "C" void __cdecl FieldSave_Dispatch(void) {
 // its HP (+8), and loses it otherwise; the step, the sub-state and 0x929F0A
 // cleared, the counter 6, and 0x903844 = 0x658930 + 23 * the shop number.
 extern "C" void __cdecl ShopMode_Begin(void) {
-    const auto object = static_cast<signed char>(B(at::kObject));
+    const auto object = static_cast<signed char>(ModeStates_ShopObject);
     if (object < 0) {
-        B(at::kState) = static_cast<unsigned char>(B(at::kShopKind) + 2);
+        BattleE1_Mode = static_cast<unsigned char>(B(at::kShopKind) + 2);
     } else {
-        unsigned char* const o = At(at::kSpriteObjects + at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
+        unsigned char* const o = At(Sprite_Objects_addr + at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
         PutLong(at::kSpriteCurrent, Addr(o));
-        B(at::kState) = static_cast<unsigned char>(o[0x18] + 2);
-        B(at::kShopNumber) = o[0x1C];
+        BattleE1_Mode = static_cast<unsigned char>(o[0x18] + 2);
+        ScenaSc1_ShopByteB = o[0x1C];
     }
     for (U n = 0; n < at::kActors; ++n) {
-        const U r = at::kActorStates + n * at::kActorStride;
+        const U r = Field_ActorStates_addr + n * at::kActorStride;
         const auto quarter = static_cast<std::uint16_t>(Word(r + 0x10) >> 2);
         if (quarter > Word(r + 8)) B(r + 1) = static_cast<unsigned char>(B(r + 1) | 0x20);
         else PutWord(r, Word(r) & 0xDFFFu);
     }
-    B(at::kStep) = 0;
-    B(at::kSub) = 0;
+    FieldS_State = 0;
+    FieldS_Step = 0;
     B(at::kCount) = 6;
-    B(at::kClear0A) = 0;
-    PutLong(at::kShopRecord, at::kShopRecords + at::kShopRecordBytes * B(at::kShopNumber));
+    ShopStates_Clear0A = 0;
+    ShopStates2_ShopList = at::kShopRecords + at::kShopRecordBytes * ScenaSc1_ShopByteB;
 }
 
 // original 0x57F5D0 (PSX 0x801D0FF8), ShopMode_States 1 and 4: the way out.
@@ -179,20 +179,20 @@ extern "C" void __cdecl ShopMode_Begin(void) {
 // loses bit 5 and Field_ScriptFlags bit 8. Always: Window_ResetAll and
 // Game_Step + 1.
 extern "C" void __cdecl ShopMode_End(void) {
-    const auto object = static_cast<signed char>(B(at::kObject));
+    const auto object = static_cast<signed char>(ModeStates_ShopObject);
     if (object >= 0) {
-        unsigned char* const o = At(at::kSpriteObjects + at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
+        unsigned char* const o = At(Sprite_Objects_addr + at::kSpriteStride * static_cast<U>(static_cast<int>(object)));
         PutLong(at::kSpriteCurrent, Addr(o));
         if ((o[7] & 8) == 0) {
             o[8] = o[0x85];
-            g.face(At(Long(at::kSpriteCurrent))[8]);
+            g.face(Sprite_Current[8]);
             o[0x80] = static_cast<unsigned char>(o[0x80] | 8);
         }
         o[0x80] = static_cast<unsigned char>(o[0x80] & 0xDF);
-        PutWord(at::kScriptFlags, Word(at::kScriptFlags) & 0xFEFFu);
+        Field_ScriptFlags = Field_ScriptFlags & 0xFEFFu;
     }
     g.reset_windows();
-    PutWord(at::kGameStep, Word(at::kGameStep) + 1u);
+    Game_Step = Game_Step + 1u;
 }
 
 // ===========================================================================
@@ -205,27 +205,27 @@ extern "C" void __cdecl ShopMode_End(void) {
 // straight to step 3, the save menu. Otherwise an object of 0xFE goes there
 // too.
 extern "C" void __cdecl Inn_Begin(void) {
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-    B(at::kChoice) = 0;
-    B(at::kStep) = step;
+    const auto step = static_cast<unsigned char>(FieldS_State + 1);
+    ShopStates_Choice = 0;
+    FieldS_State = step;
     B(at::kCount) = 4;
-    B(at::kSub) = 0;
-    bool forced = B(at::kInputFlags) == 0x40;
+    FieldS_Step = 0;
+    bool forced = Field_InputFlags == 0x40;
     if (!forced) {
-        const std::uint16_t area = Word(at::kArea);
+        const std::uint16_t area = Game_AreaNumber;
         forced = area == 0xBC || area == 0x85 || area == 0xC1;
     }
     if (forced) {
-        const unsigned char object = B(at::kObject);
-        B(at::kObject) = 0xFE;
-        B(at::kSavedObject) = object;
-        B(at::kStep) = 3;
-        B(at::kSub) = 0;
+        const unsigned char object = ModeStates_ShopObject;
+        ModeStates_ShopObject = 0xFE;
+        AreaW3c_Load0F = object;
+        FieldS_State = 3;
+        FieldS_Step = 0;
         return;
     }
-    if (B(at::kObject) == 0xFE) {
-        B(at::kStep) = 3;
-        B(at::kSub) = 0;
+    if (ModeStates_ShopObject == 0xFE) {
+        FieldS_State = 3;
+        FieldS_Step = 0;
     }
 }
 
@@ -237,16 +237,16 @@ extern "C" void __cdecl Inn_Begin(void) {
 // counter (the counter read before the call); counter - 1, at 0 the next
 // state, 0x929F0B = 1 and, with an object, Msg_OpenSystem(0xD1).
 extern "C" void __cdecl InnPrompt_TitleIn(void) {
-    const unsigned char colour = B(at::kColour);
+    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
     const int y = 0x12 - 20 * static_cast<int>(B(at::kCount));
     g.title_box(0x14, y, 0x118, 0x13, colour);
     const auto count = static_cast<unsigned char>(B(at::kCount) - 1);
     B(at::kCount) = count;
     if (count != 0) return;
-    const auto sub = static_cast<unsigned char>(B(at::kSub) + 1);
-    const unsigned char object = B(at::kObject);
-    B(at::kAnswer) = 1;
-    B(at::kSub) = sub;
+    const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
+    const unsigned char object = ModeStates_ShopObject;
+    FieldS_Answer = 1;
+    FieldS_Step = sub;
     if (object != 0xFF) g.open_system(0xD1);
 }
 
@@ -259,15 +259,15 @@ extern "C" void __cdecl InnPrompt_Greeting(void) {
     TitleBox();
     if (!NoObject()) {
         g.sprintf_(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kFormatD)),
-                   static_cast<int>(B(at::kShopNumber) * 10u));
+                   static_cast<int>(ScenaSc1_ShopByteB * 10u));
         g.text_record(0, 8, At(at::kText));
         Message(0xA1);
         Zenny();
     }
     if ((B(at::kMsgFlags) & 2) == 0) return;
-    const auto sub = static_cast<unsigned char>(B(at::kSub) + 1);
+    const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
     B(at::kCount) = 6;
-    B(at::kSub) = sub;
+    FieldS_Step = sub;
     g.play(0x102);
 }
 
@@ -283,7 +283,7 @@ extern "C" void __cdecl InnPrompt_ChoicesIn(void) {
     }
     const auto count = static_cast<unsigned char>(B(at::kCount) - 1);
     B(at::kCount) = count;
-    if (count == 0) B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+    if (count == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x57F8A0 (PSX 0x801D3D94), prompt 3, choosing. The same draw with
@@ -308,55 +308,55 @@ extern "C" void __cdecl InnPrompt_Choose(void) {
         Zenny();
     }
     U pad = Long(at::kPressed);
-    unsigned char cursor = B(at::kChoice);
+    unsigned char cursor = ShopStates_Choice;
     const unsigned char was = cursor;
     bool moved = false;
     if (pad & 0x1000) {
         cursor = static_cast<unsigned char>(cursor - 1);
-        B(at::kChoice) = cursor;
+        ShopStates_Choice = cursor;
         if (static_cast<signed char>(cursor) < 0) {
             cursor = 2;
-            B(at::kChoice) = cursor;
+            ShopStates_Choice = cursor;
         }
         moved = true;
     } else if (pad & 0x4000) {
         cursor = static_cast<unsigned char>(cursor + 1);
-        B(at::kChoice) = cursor;
+        ShopStates_Choice = cursor;
         if (cursor > 2) {
             cursor = 0;
-            B(at::kChoice) = cursor;
+            ShopStates_Choice = cursor;
         }
         moved = true;
     }
     if (moved && was != cursor) {
         g.play(0x101);
-        cursor = B(at::kChoice);
+        cursor = ShopStates_Choice;
         pad = Long(at::kPressed);
     }
-    if (Word(at::kConfirm) & pad) {
+    if (Field_ConfirmButtons & pad) {
         B(at::kCount) = 0;
-        B(at::kCancelled) = 0;
+        ShopStates_Cancelled = 0;
         if (cursor != 0) {
             g.play(0x104);
-            B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 2);
+            FieldS_Step = static_cast<unsigned char>(FieldS_Step + 2);
             return;
         }
-        if (Long(at::kZenny) >= B(at::kShopNumber) * 10u) {
+        if (Party_Zenny >= ScenaSc1_ShopByteB * 10u) {
             g.play(0x104);
-            PutLong(at::kZenny, Long(at::kZenny) - B(at::kShopNumber) * 10u);
-            B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 2);
+            Party_Zenny = Party_Zenny - ScenaSc1_ShopByteB * 10u;
+            FieldS_Step = static_cast<unsigned char>(FieldS_Step + 2);
             return;
         }
         g.play(0x107);
-        B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+        FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
     }
-    if (Word(at::kCancel) & pad) {
+    if (Field_CancelButtons & pad) {
         g.play(0x106);
-        const auto sub = static_cast<unsigned char>(B(at::kSub) + 2);
+        const auto sub = static_cast<unsigned char>(FieldS_Step + 2);
         B(at::kCount) = 0;
-        B(at::kSub) = sub;
-        B(at::kCancelled) = 1;
+        FieldS_Step = sub;
+        ShopStates_Cancelled = 1;
     }
 }
 
@@ -372,16 +372,16 @@ extern "C" void __cdecl InnPrompt_ChoicesOut(void) {
     const auto count = static_cast<unsigned char>(B(at::kCount) + 1);
     B(at::kCount) = count;
     if (count != 6) return;
-    if (B(at::kCancelled) != 0) {
-        const unsigned char step = B(at::kStep);
+    if (ShopStates_Cancelled != 0) {
+        const unsigned char step = FieldS_State;
         B(at::kCount) = 0;
-        B(at::kStep) = static_cast<unsigned char>(step + 3);
+        FieldS_State = static_cast<unsigned char>(step + 3);
         return;
     }
-    const unsigned char cursor = B(at::kChoice);
-    B(at::kSub) = 0;
+    const unsigned char cursor = ShopStates_Choice;
+    FieldS_Step = 0;
     B(at::kCount) = cursor != 0 ? 0 : 0x2D;
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + cursor + 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State + cursor + 1);
 }
 
 // ===========================================================================
@@ -396,7 +396,7 @@ extern "C" void __cdecl InnNight_Message(void) {
     const auto count = static_cast<unsigned char>(B(at::kCount) - 1);
     B(at::kCount) = count;
     if (count != 0) return;
-    B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
     g.transition(0);
 }
 
@@ -404,9 +404,9 @@ extern "C" void __cdecl InnNight_Message(void) {
 // Menu_DrawBlackScreen and the next state; until then, with an object, the
 // title box and message 0xA4.
 extern "C" void __cdecl InnNight_FadeOut(void) {
-    if (Word(at::kFade) == 0) {
+    if (MoveScript_WaitWordDA == 0) {
         g.black();
-        B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+        FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
     }
     if (NoObject()) return;
@@ -419,9 +419,9 @@ extern "C" void __cdecl InnNight_FadeOut(void) {
 extern "C" void __cdecl InnNight_Jingle(void) {
     g.black();
     g.stream(0);
-    const auto sub = static_cast<unsigned char>(B(at::kSub) + 1);
+    const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
     B(at::kCount) = 0x96;
-    B(at::kSub) = sub;
+    FieldS_Step = sub;
 }
 
 // original 0x57FC70, night 3: the black screen; the counter down to 0 (not
@@ -436,7 +436,7 @@ extern "C" void __cdecl InnNight_Wait(void) {
         if (count != 0) return;
     }
     if (g.stream_done() == 0) return;
-    B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
     g.transition(1);
 }
 
@@ -446,14 +446,14 @@ extern "C" void __cdecl InnNight_Wait(void) {
 // Msg_OpenSystem(0xD5).
 extern "C" void __cdecl InnNight_Restore(void) {
     TitleBox();
-    if (Word(at::kFade) != 0) return;
+    if (MoveScript_WaitWordDA != 0) return;
     g.restore(1);
-    const auto sub = static_cast<unsigned char>(B(at::kSub) + 1);
-    const unsigned char object = B(at::kObject);
-    B(at::kAnswer) = 1;
-    B(at::kSub) = sub;
+    const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
+    const unsigned char object = ModeStates_ShopObject;
+    FieldS_Answer = 1;
+    FieldS_Step = sub;
     PutWord(at::kRepeatLatch, 0);
-    PutWord(at::kRepeatTimer, 0);
+    ItemUse_RepeatTimer = 0;
     if (object != 0xFF) g.open_system(0xD5);
 }
 
@@ -463,22 +463,22 @@ extern "C" void __cdecl InnNight_Restore(void) {
 extern "C" void __cdecl InnNight_AskSave(void) {
     TitleBox();
     if (!NoObject()) {
-        if (B(at::kMsgFlags) & 2) B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+        if (B(at::kMsgFlags) & 2) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
         return;
     }
     Message(0x1D);
-    if (g.yes_no() != 0) B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+    if (g.yes_no() != 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x57FD80, night 6: the title box; the counter and the sub-state
 // 0; step + 1 (the save menu) on a yes (0x929F0B), + 2 (the way out) on a no.
 extern "C" void __cdecl InnNight_Leave(void) {
     TitleBox();
-    const unsigned char answer = B(at::kAnswer);
-    const unsigned char step = B(at::kStep);
+    const unsigned char answer = static_cast<unsigned char>(FieldS_Answer);
+    const unsigned char step = FieldS_State;
     B(at::kCount) = 0;
-    B(at::kSub) = 0;
-    B(at::kStep) = static_cast<unsigned char>(answer == 0 ? step + 2 : step + 1);
+    FieldS_Step = 0;
+    FieldS_State = static_cast<unsigned char>(answer == 0 ? step + 2 : step + 1);
 }
 
 // ===========================================================================
@@ -491,9 +491,9 @@ extern "C" void __cdecl InnNight_Leave(void) {
 extern "C" void __cdecl FieldSave_Begin(void) {
     g.read_summaries();
     B(at::kCount) = 4;
-    PutLong(at::kSlot, 0);
+    Rest2c_Slot = 0;
     PutLong(at::kSlotTop, 0);
-    B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x57FE00, save 1: Sound_PlayEffect(0x102) on the first frame
@@ -510,7 +510,7 @@ extern "C" void __cdecl FieldSave_SlotsIn(void) {
     g.slots(0x20 - 80 * static_cast<int>(B(at::kCount)), 0x30, 1);
     const auto count = static_cast<unsigned char>(B(at::kCount) - 1);
     B(at::kCount) = count;
-    if (count == 0) B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+    if (count == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x57FE70, save 2, choosing a slot: the title box, message 0x9D,
@@ -526,32 +526,32 @@ extern "C" void __cdecl FieldSave_Choose(void) {
     TitleBox();
     Message(0x9D);
     g.slots(0x20, 0x30, 1);
-    const U repeat = g.auto_repeat(Word(at::kPressed) & 0x5000u);
+    const U repeat = g.auto_repeat(Input_Pressed & 0x5000u);
     U slot = Long(at::kSlot);
     const U old = slot & 0xFF;
     if ((repeat & 0x1000) && slot != 0) {
         const U top = Long(at::kSlotTop);
         --slot;
-        PutLong(at::kSlot, slot);
+        Rest2c_Slot = slot;
         if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(at::kSlotTop, top - 1);
     } else if ((repeat & 0x4000) && static_cast<int>(slot) < 15) {
         const U limit = Long(at::kSlotTop) + 2;
         ++slot;
-        PutLong(at::kSlot, slot);
+        Rest2c_Slot = slot;
         if (static_cast<int>(slot) > static_cast<int>(limit)) PutLong(at::kSlotTop, Long(at::kSlotTop) + 1);
     }
     if (old != slot) g.play(0x101);
-    const std::uint16_t pad = Word(at::kPressed);
-    if (Word(at::kConfirm) & pad) {
+    const std::uint16_t pad = Input_Pressed;
+    if (Field_ConfirmButtons & pad) {
         g.play(0x104);
-        const auto sub = static_cast<unsigned char>(B(at::kSub) + 1);
-        B(at::kAnswer) = 0;
-        B(at::kSub) = sub;
+        const auto sub = static_cast<unsigned char>(FieldS_Step + 1);
+        FieldS_Answer = 0;
+        FieldS_Step = sub;
         return;
     }
-    if (Word(at::kCancel) & pad) {
+    if (Field_CancelButtons & pad) {
         g.play(0x106);
-        B(at::kSub) = 6;
+        FieldS_Step = 6;
     }
 }
 
@@ -563,7 +563,7 @@ extern "C" void __cdecl FieldSave_SlotsOut(void) {
     g.slots(0x20 + 80 * static_cast<int>(B(at::kCount)), 0x30, 0);
     const auto count = static_cast<unsigned char>(B(at::kCount) + 1);
     B(at::kCount) = count;
-    if (count == 4) B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+    if (count == 4) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x5801A0, save 7: the title box; the sub-state 0. An inn (0x929F0C
@@ -574,23 +574,23 @@ extern "C" void __cdecl FieldSave_SlotsOut(void) {
 // way out.
 extern "C" void __cdecl FieldSave_End(void) {
     TitleBox();
-    const unsigned char cursor = B(at::kChoice);
-    B(at::kSub) = 0;
-    if (cursor != 2 && B(at::kObject) != 0xFE) {
-        B(at::kStep) = 1;
-        B(at::kSub) = 1;
+    const unsigned char cursor = ShopStates_Choice;
+    FieldS_Step = 0;
+    if (cursor != 2 && ModeStates_ShopObject != 0xFE) {
+        FieldS_State = 1;
+        FieldS_Step = 1;
         return;
     }
-    if (B(at::kInnFlag) != 0 && B(at::kSaveBack) == 0) {
+    if (ShopStates_InnFlag != 0 && Rest2c_SaveBack == 0) {
         PutWord(at::kRepeatLatch, 0);
-        PutWord(at::kRepeatTimer, 0);
-        B(at::kAnswer) = 0;
-        B(at::kSub) = 8;
+        ItemUse_RepeatTimer = 0;
+        FieldS_Answer = 0;
+        FieldS_Step = 8;
         g.open_system(0xD0);
         return;
     }
     B(at::kCount) = 0;
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 #pragma clang attribute pop
