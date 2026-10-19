@@ -3043,10 +3043,10 @@ evidence = "disasm 2026-09-21: Menu_DrawButtonRow reads byte +0 of the record at
 [[data]]
 pc = 0x6637E4
 name = "Menu_VerbPointers"
-ctype = "unsigned int"
+ctype = "unsigned char *"
 count = 22
 status = "evidence"
-evidence = "disasm 2026-09-21: Menu_DrawButtonRow 0x574965 loads the string for a verb index from here. 22 entries, each 0x66A228 + 8 * i."
+evidence = "disasm 2026-09-21: Menu_DrawButtonRow 0x574965 loads the string for a verb index from here. 22 entries, each 0x66A228 + 8 * i. Retyped 2026-10-19 (typed-data round stage C3) from unsigned int: each element is a pointer to a verb's text (menu_windows.cpp Menu_DrawButtonRow reads it with Ptr as const unsigned char *), as Magic080_TextPointers is typed. No site spelled it as an integer."
 
 [[data]]
 pc = 0x66A228
@@ -132243,9 +132243,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x669E08
 name = "BattleE1_BannerText"
-ctype = "unsigned long"
+ctype = "unsigned char *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x669e08] at 0x42f5f5; mov eax, dword ptr [0x669e08] at 0x44a151. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kBannerText, battle_e4::kFleeText."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x669e08] at 0x42f5f5; mov eax, dword ptr [0x669e08] at 0x44a151. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kBannerText, battle_e4::kFleeText. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer to the banner text (battle_e1.cpp hands it to BattleBanner_Add as const char *; battle_e4_callees.h: Escape_Begin's banner text), a byte pointer as text pointers are typed here. Its one typed use, battle_e4.cpp's reinterpret_cast<const char*>, reads the same pointer."
 
 [[data]]
 pc = 0x669E0C
@@ -134540,9 +134540,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x904B3C
 name = "MagicS23_ActorSprite"
-ctype = "unsigned long"
+ctype = "void *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 45 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b3c], ecx at 0x42f304; mov dword ptr [0x904b3c], ecx at 0x42f38a; mov ecx, dword ptr [0x904b3c] at 0x42f5bb and 42 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kActing, magic_s23::kActorSprite, magic_s24::kActorRecord, magic_s29::kActorSprite."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 45 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b3c], ecx at 0x42f304; mov dword ptr [0x904b3c], ecx at 0x42f38a; mov ecx, dword ptr [0x904b3c] at 0x42f5bb and 42 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kActing, magic_s23::kActorSprite, magic_s24::kActorRecord, magic_s29::kActorSprite. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer, the acting sprite (battle_e1_callees.h: unsigned char *; battle_e1.cpp writes its +1). No single family: the actor is a party member (0x802D40..) or an enemy (0x93B960..), whose shared head no struct names yet. No site spelled it as an integer."
 
 [[data]]
 pc = 0x904B40
@@ -134568,9 +134568,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x904B5C
 name = "BattleE3_HitSprite"
-ctype = "unsigned long"
+ctype = "void *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b5c], eax at 0x43675f; mov dword ptr [0x904b5c], eax at 0x441aaf. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e3::kHitSprite, enemy_ai_ops::kResultSprite."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b5c], eax at 0x43675f; mov dword ptr [0x904b5c], eax at 0x441aaf. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e3::kHitSprite, enemy_ai_ops::kResultSprite. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer, the object being hit (battle_e3.cpp BattleObj_HitReceive and enemy_ai_ops.cpp EnemyOp_ReceiveAction store it with SetPtrAt). No family: both instructions store it and none reads it, and the object is a party member or an enemy. No site spelled it as an integer."
 
 [[data]]
 pc = 0x904B60
@@ -135394,9 +135394,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x93B8C4
 name = "BattleFlow_TaskCurrent"
-ctype = "unsigned long"
+ctype = "records::BattleTask *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 80 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov ecx, dword ptr [0x93b8c4] at 0x432b73; mov eax, dword ptr [0x93b8c4] at 0x432bb5; mov edx, dword ptr [0x93b8c4] at 0x432c41 and 77 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_flow::kTaskCurrent, battle_fx_tasks::kTaskCurrent, rest_3a::kTaskCurrent."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 80 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov ecx, dword ptr [0x93b8c4] at 0x432b73; mov eax, dword ptr [0x93b8c4] at 0x432bb5; mov edx, dword ptr [0x93b8c4] at 0x432c41 and 77 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_flow::kTaskCurrent, battle_fx_tasks::kTaskCurrent, rest_3a::kTaskCurrent. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer to the battle task slot being run. Its family is records::BattleTask (src/game/records.h: the 48 slots at 0x93A000 BattleTask_RunAll runs): battle_flow.cpp stores the slot it runs here (SetPtrAt(at::kTaskCurrent, t)) and its readers (battle_flow.cpp CurrentTask, battle_fx_tasks.cpp Cur, rest_3a.cpp Slot) read the slot's fields through it; rest_3a_callees.h: the slot BattleTask_RunAll runs. No site spelled it as an integer."
 
 [[data]]
 pc = 0x93B940
