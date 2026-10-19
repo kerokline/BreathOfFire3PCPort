@@ -217,7 +217,7 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     long ground = g.slope_at(x, z, s[8]);
     if (ScratchByte() != 0) ground = g.ground_at(x, z);
     unsigned char* const t = Sprite_Current;
-    rv::As<records::SpriteObject>(t)->step_y = Idiv(static_cast<short>(ground) - static_cast<short>(Word(t + 0x3E)), t[9]);
+    rv::As<records::SpriteObject>(t)->step_y = Idiv(static_cast<short>(ground) - static_cast<short>(rv::As<records::SpriteHead>(t)->height_whole), t[9]);
 }
 
 // original 0x534710 (PSX 0x801C3708): what the camera follows during the
@@ -245,7 +245,7 @@ extern "C" void __cdecl Field_JumpCheckHeight(void) {
     g.slope_at(x, z, s[8]);
     if (ScratchByte() != 0) return;
     const long ground = g.ground_at(x, z);
-    if (static_cast<short>(ground) - static_cast<short>(Word(Sprite_Current + 0x3E)) < 0x80) return;
+    if (static_cast<short>(ground) - static_cast<short>(rv::Current<records::SpriteHead>()->height_whole) < 0x80) return;
     Field_State[0x128] = static_cast<unsigned char>(Field_State[0x128] - 1);
     g.jump_start();
 }
@@ -255,7 +255,7 @@ extern "C" void __cdecl Field_JumpCheckHeight(void) {
 extern "C" void __cdecl Sprite_ApplyVelocity(void) {
     SetLong(Sprite_Current + 0x34, Add(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->step_x));
     SetLong(Sprite_Current + 0x38, Add(rv::Current<records::SpriteObject>()->z, rv::Current<records::SpriteObject>()->step_z));
-    SetWord(Sprite_Current + 0x3E, Word(Sprite_Current + 0x3E) + Word(Sprite_Current + 0x14));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, rv::Current<records::SpriteHead>()->height_whole + Word(Sprite_Current + 0x14));
 }
 
 // --- the tiles under the leader -------------------------------------------------
@@ -308,7 +308,7 @@ extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, u
             direction = static_cast<unsigned char>(((s[8] ^ 0xFC) + i) & 7);
             const long x = Add(rv::As<records::SpriteObject>(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
             const long z = Add(rv::As<records::SpriteObject>(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
-            if (!g.turn_probe(x, z, 0, Word(s + 0x3E))) break;
+            if (!g.turn_probe(x, z, 0, rv::As<records::SpriteHead>(s)->height_whole)) break;
             if (++i >= 8) break;
         }
         Sprite_Current[8] = static_cast<unsigned char>(direction ^ 4);
@@ -410,8 +410,8 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     o[0] = 1;
     o[5] = 0x41;
     o[8] = s[8];
-    SetWord(o + 0x36, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(s)->screen_x));
-    SetWord(o + 0x3A, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(s)->screen_y));
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->x_whole, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(s)->screen_x));
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(s)->screen_y));
     o[0x27] = 0;
     o[6] = 1;
     o[0xB] = s[5];

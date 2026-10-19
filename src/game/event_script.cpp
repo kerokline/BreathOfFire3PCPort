@@ -392,7 +392,7 @@ void Place(const unsigned char* op, bool two) {
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
     const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
                                        static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(elevation));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
     if (two) {
@@ -486,11 +486,11 @@ extern "C" void __cdecl EventOp_Bx(const unsigned char* op) {
     SetDword(Sprite_Current + 0x38, Coordinate(op[3], op[4]));
     const long elevation = g.elevation(static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->x)),
                                        static_cast<long>(static_cast<std::uint32_t>(rv::Current<records::SpriteObject>()->z)));
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(elevation));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(elevation));
     Sprite_Current[1] = op[5];
     Sprite_Current[2] = op[7];
     Sprite_Current[6] = static_cast<unsigned char>((op[0] >> 4) - 1);
-    SetDword(Sprite_Current + 0x20, 0);
+    rv::Store<std::uint32_t>(rv::Current<records::SpriteHead>()->work_20, 0);
     rv::Current<records::SpriteObject>()->work_1c = 0;
     rv::Current<records::SpriteObject>()->work_18 = 0;
     {

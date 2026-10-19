@@ -166,7 +166,7 @@ extern "C" void __cdecl Kind2_Script(void) {
             Field_Kind2X = rv::As<records::SpriteObject>(k)->x;
             Field_Kind2Z = rv::As<records::SpriteObject>(k)->z;
             rv::As<records::SpriteObject>(k)->step_y = slope;
-            SetWord(k + 0x3E, static_cast<std::uint16_t>(MapView_Elevation));
+            rv::Store<unsigned>(rv::As<records::SpriteHead>(k)->height_whole, static_cast<std::uint16_t>(MapView_Elevation));
             return;
         }
         // No glide: the view is reset on the object where it stands.
@@ -191,7 +191,7 @@ extern "C" void __cdecl Kind2_Script(void) {
     }
     // A timed move began: its first frame of elevation, then state 1.
     rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->step_y));
-    g.set_elevation(Word(k + 0x3E));
+    g.set_elevation(rv::As<records::SpriteHead>(k)->height_whole);
     k[2] = 1;
 }
 
@@ -208,7 +208,7 @@ extern "C" void __cdecl Kind2_Move(void) {
     unsigned char* const k = Sprite_Kind2;
     if (Field_Kind2Hold != 0) {
         rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->step_y));
-        g.set_elevation(Word(k + 0x3E));
+        g.set_elevation(rv::As<records::SpriteHead>(k)->height_whole);
         return;
     }
     if (!(k[0x80] & 0x40)) g.set_elevation(static_cast<int>(g.elevation(Field_Kind2X, Field_Kind2Z)));
@@ -239,7 +239,7 @@ extern "C" void __cdecl Kind2_Travel(void) {
         const std::int32_t slope = rv::As<records::SpriteObject>(k)->step_y;
         if (slope == 0) return;
         rv::As<records::SpriteObject>(k)->height = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(k)->height) + static_cast<std::uint32_t>(slope));
-        g.set_elevation(Word(k + 0x3E));
+        g.set_elevation(rv::As<records::SpriteHead>(k)->height_whole);
         return;
     }
     g.set_elevation(static_cast<int>(g.elevation(Field_Kind2X, Field_Kind2Z)));
@@ -263,8 +263,8 @@ extern "C" void __cdecl Kind2_Lift(void) {
         k[0x80] = static_cast<unsigned char>(flags & 0x7F);
         return;
     }
-    const auto risen = static_cast<std::uint16_t>(Word(k + 0x3E) + Word(k + 0x14));
-    SetWord(k + 0x3E, risen);
+    const auto risen = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(k)->height_whole + Word(k + 0x14));
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(k)->height_whole, risen);
     g.set_elevation(risen);
     --k[9];
 }

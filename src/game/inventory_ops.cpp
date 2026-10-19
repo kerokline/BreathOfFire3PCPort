@@ -473,7 +473,7 @@ extern "C" unsigned char __cdecl Encounter_EnemyClear(unsigned count, long x, lo
     for (unsigned char k = 0; k < n; ++k) {
         unsigned char* const e = Enemy(k);
         if (e[0] == 0) continue;
-        if (!g.apart(x, z, Long(e + 4), Long(e + 8), size, Kind(e[1])[0x86])) return 0;
+        if (!g.apart(x, z, rv::As<records::EncounterSlot>(e)->x, rv::As<records::EncounterSlot>(e)->z, size, Kind(e[1])[0x86])) return 0;
     }
     return 1;
 }
@@ -507,10 +507,10 @@ extern "C" unsigned char __cdecl Encounter_PlaceEnemies(void) {
         for (;;) {
             const auto* const j = reinterpret_cast<const signed char*>(At(at::kJitter + 2 * static_cast<std::int16_t>(t)));
             const i32 x = Add(Add(Shl(j[0], 15), CentreX()), ox);
-            SetLong(e + 4, x);
+            rv::Store<std::int32_t>(rv::As<records::EncounterSlot>(e)->x, x);
             const i32 z = Add(Add(Shl(j[1], 15), CentreZ()), oz);
-            SetLong(e + 8, z);
-            if (g.cell_fits(x, z, kind[0x86]) && g.enemy_clear(i, Long(e + 4), Long(e + 8), kind[0x86])) {
+            rv::Store<std::int32_t>(rv::As<records::EncounterSlot>(e)->z, z);
+            if (g.cell_fits(x, z, kind[0x86]) && g.enemy_clear(i, rv::As<records::EncounterSlot>(e)->x, rv::As<records::EncounterSlot>(e)->z, kind[0x86])) {
                 ++FieldHidden_Placed;
                 break;
             }
@@ -566,7 +566,7 @@ extern "C" void __cdecl Encounter_AimCamera(unsigned facing) {
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const e = Enemy(k);
         if (e[0] == 0) continue;
-        const long h = g.elevation(Long(e + 4), Long(e + 8));
+        const long h = g.elevation(rv::As<records::EncounterSlot>(e)->x, rv::As<records::EncounterSlot>(e)->z);
         ModeRest_ElevationBase = Add(static_cast<std::int32_t>(ModeRest_ElevationBase), static_cast<std::int16_t>(h));
         ++n;
     }
@@ -779,7 +779,7 @@ extern "C" unsigned char __cdecl Encounter_PartyToPlaces(void) {
                     SetLong(Sprite_Current + 0x34, Long(PosX(k)));
                     SetLong(Sprite_Current + 0x38, Long(PosZ(k)));
                     const long ground = g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-                    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+                    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
                     Sprite_Current[0x48] = 0;
                     Sprite_Current[0xB] = 1;
                 }
@@ -824,7 +824,7 @@ extern "C" void __cdecl Encounter_PartyAtPlaces(void) {
         rv::As<records::PartyMember>(obj)->x = Long(PosX(i));
         SetLong(Sprite_Current + 0x38, Long(PosZ(i)));
         const long ground = g.ground_at(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
         Sprite_Current[0xB] = 0;
         const u32 record = Field_State[0x148];
         if (At(at::kRecords + record * at::kRecordSize + 0x11)[0] & 0x40)
