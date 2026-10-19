@@ -127,7 +127,7 @@ void ProbeSide(unsigned d) {
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = S();
-    if (static_cast<short>(Word(s + 0x3E)) < static_cast<short>(ground)) S()[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) S()[0x2B] = 0;
 }
 
 // 0x51D790 / 0x51DF10 (PartyAction5_Form0Begin's code).
@@ -410,7 +410,7 @@ extern "C" void __cdecl PartyAction4_Form1Begin(void) { Form1Begin("PartyAction4
 // one on, Sprite_Current re-read after the sound.
 extern "C" void __cdecl PartyAction_SpawnKind3A(void) {
     SH_CALL(Sprite_ScriptTick)();
-    if (Word(S() + 0x58) != 0xA) return;
+    if (rv::As<records::PartyMember>(S())->script_pos != 0xA) return;
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     S()[0xB] = slot;
     unsigned char* const s = S();

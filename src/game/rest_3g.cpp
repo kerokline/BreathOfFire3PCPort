@@ -181,8 +181,8 @@ extern "C" void __cdecl EffectKindAD_Start(void) {
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
     unsigned char* const s = S();
     rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
-    SetUL(s + 0xC, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
-    SetUL(s + 0x10, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    rv::As<records::EffectWork>(s)->work_0c = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x);
+    rv::As<records::EffectWork>(s)->work_10 = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z);
     SetUL(s + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     s[0x5D] = 0;
     s[0x5E] = 0x80;
@@ -220,7 +220,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
         rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16;
         rv::As<records::EffectObject>(s)->screen_x = 0x80;
         rv::As<records::EffectObject>(s)->screen_y = 0x180;
-        SetWord(s + 0x32, 0);
+        rv::As<records::EffectObject>(s)->draw_key = 0;
         s[9] = 8;
         s[1] = static_cast<unsigned char>(s[1] + 1);
     }
@@ -239,7 +239,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
     const float dx = static_cast<float>(static_cast<long double>(b[0]) - static_cast<long double>(a[0]));
     const float dy = static_cast<float>(static_cast<long double>(b[1]) - static_cast<long double>(a[1]));
     const int angle = SH_CALL(Math_Ratan2)(dy, dx);
-    SetWord(S() + 0x32, static_cast<U>(angle) + 0x400u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, static_cast<U>(angle) + 0x400u);
     SH_CALL(Sound_PlayEffect)(0x202);
 }
 
@@ -256,21 +256,21 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
 // EffectKindBA_DrawLine(+0x34, +0xC, 0x40); the word +0x2E up; at 0x14A sound
 // 0x216 and +1 up.
 extern "C" void __cdecl EffectKindBA_Line(void) {
-    const int sin1 = SH_CALL(Math_Sin)(Long(S() + 0x6C));
+    const int sin1 = SH_CALL(Math_Sin)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U three_sin = static_cast<U>(sin1) * 3u;
-    const int cos1 = SH_CALL(Math_Cos)(Long(S() + 0x6C));
+    const int cos1 = SH_CALL(Math_Cos)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U d1 = Sar(((three_sin - static_cast<U>(cos1)) * 3u) << 13, 12);
-    const int cos2 = SH_CALL(Math_Cos)(Long(S() + 0x6C));
+    const int cos2 = SH_CALL(Math_Cos)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U three_cos = static_cast<U>(cos2) * 3u;
-    const int sin2 = SH_CALL(Math_Sin)(Long(S() + 0x6C));
+    const int sin2 = SH_CALL(Math_Sin)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U d2 = Sar(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
     {
         unsigned char* const s = S();
         rv::As<records::EffectObject>(s)->x = UL(at::kExtra1X) + d1;
         rv::As<records::EffectObject>(s)->z = UL(at::kExtra1Z) + d2;
         rv::As<records::EffectObject>(s)->height = UL(at::kExtra1Y) + 0x1000000u;
-        SetUL(s + 0xC, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
-        SetUL(s + 0x10, UL(at::kExtra1Z) + d2);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, UL(at::kExtra1Z) + d2);
         SetUL(s + 0x14, UL(at::kExtra1Y) + 0x1000000u);
         SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                        0x40);
@@ -356,12 +356,12 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[2] = 0;
     s[0x29] = 4;
     s[5] = static_cast<unsigned char>(count + 3);
-    SetUL(s + 0x14, 0);
-    SetUL(s + 0x10, 0);
-    SetUL(s + 0xC, 0);
-    SetUL(s + 0x20, 0);
-    SetUL(s + 0x1C, 0);
-    SetUL(s + 0x18, 0);
+    rv::As<records::BattleEnemy>(s)->step_y = 0;
+    rv::As<records::BattleEnemy>(s)->step_z = 0;
+    rv::As<records::BattleEnemy>(s)->step_x = 0;
+    rv::As<records::BattleEnemy>(s)->work_20 = 0;
+    rv::As<records::BattleEnemy>(s)->work_1c = 0;
+    rv::As<records::BattleEnemy>(s)->work_18 = 0;
     s[0x5F] = 0;
     s[0x5E] = 0;
     s[0x5D] = 0;

@@ -189,15 +189,15 @@ extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, un
 // +9 = 0x10.
 extern "C" void __cdecl EffectShards_LoadModel(void) {
     unsigned char* s = S();
-    std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(UL(s + 0x54)))[0]) *
+    std::int32_t n = static_cast<std::int8_t>(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->frames))[0]) *
                      static_cast<std::int32_t>(at::kModelFace);
     unsigned char* to = At(at::kModelCopy);
     for (; n > 0; --n) {
-        *to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(UL(s + 0x50)))[0];
-        SetUL(s + 0x50, UL(s + 0x50) + 1);
+        *to++ = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::EffectObject>(s)->script))[0];
+        rv::As<records::EffectObject>(s)->script = rv::As<records::EffectObject>(s)->script + 1;
         s = S();
     }
-    SetUL(s + 0x50, at::kModelCopy);
+    rv::As<records::EffectObject>(s)->script = at::kModelCopy;
     SH_CALL(EffectKind30_ShardsInit)();
     SH_CALL(EffectKind30_SparksInit)();
     S()[9] = 0x10;
@@ -923,7 +923,7 @@ unsigned Outlines() {
 // +9 = 0, +0xA = 0x1E, +0x29 = 1; Sprite_SetAnimation(+6 - 0x4E); +1 = 1.
 extern "C" void __cdecl EffectKind5D_Start(void) {
     SH_CALL(Sprite_SetAnimationBank)(0x1EA);
-    SetWord(S() + 0x3E, 0x64);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->height_whole, 0x64);
     S()[0x48] = 0;
     S()[0x24] = 0;
     S()[0x2A] = 0;
@@ -1649,7 +1649,7 @@ extern "C" void __cdecl EffectKind5F_Launch(void) {
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     if (S()[9] != 0) return;
     Placed(0x510000, 0x420000, 0x2C00000);
-    SetUL(S() + 0x14, 0x800000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0x800000);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
     TwoSounds(0x202, 0x203);
 }
@@ -1660,13 +1660,13 @@ extern "C" void __cdecl EffectKind5F_Launch(void) {
 // 0x203.
 extern "C" void __cdecl EffectKind5F_Hop(void) {
     Add(0x34, 0xFFFF0000u);
-    Add(0x3C, UL(S() + 0x14));
+    Add(0x3C, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y));
     Add(0x14, 0xFFE00000u);
     Ring(0);
     if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x) != 0x490000) return;
-    SetUL(S() + 0xC, 0x38E3);
-    SetUL(S() + 0x10, 0x10000);
-    SetUL(S() + 0x14, 0x38E38E);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_x, 0x38E3);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_z, 0x10000);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0x38E38E);
     Add(0x14, 0x800000);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
     TwoSounds(0x202, 0x203);
@@ -1675,9 +1675,9 @@ extern "C" void __cdecl EffectKind5F_Hop(void) {
 // original 0x47FEE0 (state 3): the point moved by the velocity, the rise down
 // 0x200000; drawn (Ring, last 0); at z 0x4B0000 +9 = 0x3C and +1 up.
 extern "C" void __cdecl EffectKind5F_Fly(void) {
-    Add(0x34, UL(S() + 0xC));
-    Add(0x38, UL(S() + 0x10));
-    Add(0x3C, UL(S() + 0x14));
+    Add(0x34, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_x));
+    Add(0x38, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_z));
+    Add(0x3C, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y));
     Add(0x14, 0xFFE00000u);
     Ring(0);
     if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z) != 0x4B0000) return;
@@ -1698,9 +1698,9 @@ extern "C" void __cdecl EffectKind5F_Bounce(void) {
                          SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z)))))
                      << 16;
     rv::As<records::EffectObject>(S())->height = ground;
-    SetUL(S() + 0xC, 0xFFFF4925u);
-    SetUL(S() + 0x10, 0xFFFF0000u);
-    SetUL(S() + 0x14, 0xFFCC30C4u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_x, 0xFFFF4925u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_z, 0xFFFF0000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0xFFCC30C4u);
     Add(0x14, 0x800000);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
     TwoSounds(0x202, 0x203);
@@ -1709,9 +1709,9 @@ extern "C" void __cdecl EffectKind5F_Bounce(void) {
 // original 0x480010 (state 5): the point moved by the velocity, the rise down
 // 0x100000; drawn (Ring, last 0); at z 0x360000 a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind5F_FlyAway(void) {
-    Add(0x34, UL(S() + 0xC));
-    Add(0x38, UL(S() + 0x10));
-    Add(0x3C, UL(S() + 0x14));
+    Add(0x34, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_x));
+    Add(0x38, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_z));
+    Add(0x3C, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y));
     Add(0x14, 0xFFF00000u);
     Ring(0);
     if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z) == 0x360000) SH_CALL(Effect_Release)();
@@ -1721,7 +1721,7 @@ extern "C" void __cdecl EffectKind5F_FlyAway(void) {
 // rise 0, +1 up, sounds 0x204 and 0x205.
 extern "C" void __cdecl EffectKind5F_PlaceHigh(void) {
     Placed(0x270000, 0x80000, 0x8000000);
-    SetUL(S() + 0x14, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
     TwoSounds(0x204, 0x205);
 }
@@ -1731,7 +1731,7 @@ extern "C" void __cdecl EffectKind5F_PlaceHigh(void) {
 // Effect_Release.
 extern "C" void __cdecl EffectKind5F_Slide(void) {
     Add(0x38, 0x10000);
-    Add(0x3C, UL(S() + 0x14));
+    Add(0x3C, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y));
     Add(0x14, 0xFFE00000u);
     Ring(0);
     if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x) == 0xF0000) SH_CALL(Effect_Release)();
@@ -1741,7 +1741,7 @@ extern "C" void __cdecl EffectKind5F_Slide(void) {
 // rise 0, +1 up, sound 0x20A.
 extern "C" void __cdecl EffectKind5F_PlaceLow(void) {
     Placed(0x190000, 0xF0000, 0x6000000);
-    SetUL(S() + 0x14, 0);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y, 0);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
     SH_CALL(Sound_PlayEffect)(0x20A);
 }
@@ -1751,7 +1751,7 @@ extern "C" void __cdecl EffectKind5F_PlaceLow(void) {
 // tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind5F_SlideOut(void) {
     Add(0x38, 0x10000);
-    Add(0x3C, UL(S() + 0x14));
+    Add(0x3C, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->step_y));
     Add(0x14, 0xFFE00000u);
     Ring(4);
     if (static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z)) >= 0x190000) SH_CALL(Effect_Release)();

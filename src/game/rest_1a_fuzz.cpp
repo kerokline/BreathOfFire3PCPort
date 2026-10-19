@@ -393,8 +393,8 @@ void SeedJumpAir() {
     unsigned char* const s = AsMember();
     unsigned char* const r = Member(s[6]);
     if (sh::Half()) r[0x137] = 3;
-    SetWord(r + 0x3E, PickOf(0, 0x7FFF, 0x8000, 0xFF80, sh::Next()));
-    if (s != r) SetWord(s + 0x3E, HeightNear(Word(r + 0x3E)));
+    rv::As<records::PartyMember>(r)->height_whole = PickOf(0, 0x7FFF, 0x8000, 0xFF80, sh::Next());
+    if (s != r) rv::As<records::PartyMember>(s)->height_whole = HeightNear(rv::As<records::PartyMember>(r)->height_whole);
 }
 
 // A turning state: +8 at +3 half the time, +3 one of the facings compared,

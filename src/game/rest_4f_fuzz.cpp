@@ -447,15 +447,15 @@ void Seed(unsigned k) {
     case k08Line: break;
     case k08Trace:
     case k08Two: B(at::kChapterByte4A) = static_cast<unsigned char>(PickOf(0x32, 0x34, sh::Next())); break;
-    case k09Open1: SetLong(s + 0x18, static_cast<std::int32_t>(PickOf(0x58, 0x50, 0x60, sh::Next()))); break;
-    case k09Open2: SetLong(s + 0x1C, static_cast<std::int32_t>(PickOf(0x10, 0x90, 0x20, 0xA0, sh::Next()))); break;
+    case k09Open1: rv::As<records::EffectObject>(s)->work_18 = static_cast<std::int32_t>(PickOf(0x58, 0x50, 0x60, sh::Next())); break;
+    case k09Open2: rv::As<records::EffectObject>(s)->work_1c = static_cast<std::int32_t>(PickOf(0x10, 0x90, 0x20, 0xA0, sh::Next())); break;
     case k09Open3: s[0xB] = static_cast<unsigned char>(PickOf(0x50, 0x40, sh::Next())); break;
     case k09Open4: s[8] = static_cast<unsigned char>(PickOf(0x58, 0x50, sh::Next())); break;
     case k09Open5: s[0xA] = static_cast<unsigned char>(PickOf(0x8, 0x58, 0x10, sh::Next())); break;
     case k09Open6: s[6] = static_cast<unsigned char>(PickOf(0x8, 0x58, 0x10, sh::Next())); break;
     case k09Open7: s[7] = static_cast<unsigned char>(PickOf(0x58, 0x50, sh::Next())); break;
     case k09Open8:
-        SetLong(s + 0x20, static_cast<std::int32_t>(PickOf(0x8, 0x58, 0x10, sh::Next())));
+        rv::As<records::EffectObject>(s)->work_20 = static_cast<std::int32_t>(PickOf(0x8, 0x58, 0x10, sh::Next()));
         B(at::kChapterCount) = static_cast<unsigned char>(sh::Next());
         break;
     case k09Spin:

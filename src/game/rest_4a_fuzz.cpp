@@ -514,7 +514,7 @@ void Seed(unsigned k) {
         for (unsigned j = 0; j < 4; ++j) {
             unsigned char* const o = sh::SpriteRecord(j);
             o[5] = static_cast<unsigned char>(sh::Next() % at::kRecordCount);
-            SetUL(o + 0x1C, sh::Next() % 50);
+            rv::As<records::SpriteObject>(o)->work_1c = sh::Next() % 50;
         }
     }
     if (k >= kPlaceLoose && k <= kPoseD) {

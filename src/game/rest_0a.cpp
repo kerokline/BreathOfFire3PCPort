@@ -91,7 +91,7 @@ void SideProbe(unsigned d) {
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = Sprite_Current;
-    if (static_cast<short>(Word(s + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
 
 }  // namespace
@@ -124,7 +124,7 @@ extern "C" unsigned char __cdecl PartyAction_MemberBeyondEffect(unsigned index) 
     const U x = static_cast<U>(rv::As<records::EffectObject>(e)->x) + 2u * StepX(d);
     const U z = static_cast<U>(rv::As<records::EffectObject>(e)->z) + 2u * StepZ(d);
     for (unsigned m = 1; m < Field_MemberCount; ++m)
-        if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z), static_cast<short>(Word(e + 0x3E)), 1,
+        if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z), static_cast<short>(rv::As<records::EffectObject>(e)->height_whole), 1,
                                          Member(m)) != 0)
             return 1;
     return 0;
@@ -136,7 +136,7 @@ extern "C" unsigned char __cdecl PartyAction_MemberBeyondEffect(unsigned index) 
 extern "C" unsigned char __cdecl PartyAction_MemberOnEffect(unsigned index) {
     for (unsigned m = 1; m < Field_MemberCount; ++m) {
         const unsigned char* const e = EffectByArgument(index, "PartyAction_MemberOnEffect (0x51DD70)");
-        const auto height = static_cast<short>(static_cast<std::uint16_t>(Word(e + 0x3E) + 0x200));
+        const auto height = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::EffectObject>(e)->height_whole + 0x200));
         if (SH_CALL(Sprite_PointInReach)(rv::As<records::EffectObject>(e)->x, rv::As<records::EffectObject>(e)->z, height, 1, Member(m)) != 0) return 1;
     }
     return 0;
@@ -160,7 +160,7 @@ extern "C" unsigned char __cdecl PartyAction_Kind30Ahead(void) {
         const unsigned char* const e = Effect_Objects + i * kEffectStride;
         if (e[0] == 0 || e[5] != 0x30) continue;
         if (SH_CALL(Sprite_PointInReach)(static_cast<int>(x), static_cast<int>(z),
-                                         static_cast<short>(Word(Sprite_Current + 0x3E)), 1, e) == 0)
+                                         static_cast<short>(rv::As<records::PartyMember>(Sprite_Current)->height_whole), 1, e) == 0)
             continue;
         if (rv::As<records::EffectObject>(e)->x == rv::Current<records::PartyMember>()->x) return static_cast<unsigned char>(i);
         if (rv::As<records::EffectObject>(e)->z == rv::Current<records::PartyMember>()->z) return static_cast<unsigned char>(i);
@@ -202,7 +202,7 @@ extern "C" void __cdecl Effect_SpawnAtCellHigh(unsigned state, unsigned x, unsig
     const auto zz = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
     rv::As<records::EffectObject>(e)->z = zz;
     const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
-    SetWord(e + 0x3E, static_cast<unsigned>(ground) + 0x200);
+    rv::As<records::EffectObject>(e)->height_whole = static_cast<unsigned>(ground) + 0x200;
     e[0xB] = 1;
 }
 

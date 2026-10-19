@@ -428,8 +428,8 @@ void Seed(unsigned k) {
         // area block (a field region): the copy stays inside its region
         unsigned char* const count = Mem(AreaMap_Header_addr + sh::Next() % 0x100);
         count[0] = static_cast<unsigned char>(static_cast<int>(sh::Next() % 27) - 2);
-        SetLong(s + 0x54, static_cast<std::int32_t>(Key(count)));
-        SetLong(s + 0x50, static_cast<std::int32_t>(AreaMap_Header_addr + 0x100 + sh::Next() % 0x1000));
+        rv::As<records::EffectObject>(s)->frames = static_cast<std::int32_t>(Key(count));
+        rv::As<records::EffectObject>(s)->script = static_cast<std::int32_t>(AreaMap_Header_addr + 0x100 + sh::Next() % 0x1000);
         break;
     }
     case kSparksClear: case kStartRise: case kStartBurst: case kSparksRun: case kSparkDraw: case kSparkGlow: case kSparkRise:

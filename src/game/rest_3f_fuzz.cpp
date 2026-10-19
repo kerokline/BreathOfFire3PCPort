@@ -312,7 +312,7 @@ void Seed(unsigned k) {
     // +9 the countdowns' edges (0..3 for the split, whose row loop needs it)
     for (unsigned r = 0; r < sh::at::kEffectCount; ++r) {
         unsigned char* const e = Rec(r);
-        SetLong(e + 0x4C, static_cast<std::int32_t>(Key(sh::SpriteRecord(r))));
+        rv::As<records::EffectObject>(e)->anim_data = static_cast<std::int32_t>(Key(sh::SpriteRecord(r)));
         e[9] = static_cast<unsigned char>(Splits(k) ? sh::Next() % 4 : PickOf(1, 1, 0, 2, 0x10, 0x11, 0x14, 0xFF, sh::Next()));
     }
     // the sprites' bits the capture's copy tests: +0x24 bit 0, the word +0x2C
@@ -343,7 +343,7 @@ void Seed(unsigned k) {
         // the wall's third word landing on +0x14 half the time; +7 the count
         if (sh::Half())
             SetLong(At(Rest3f_9EWall_addr + 8), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x14)) -
-                                                                      static_cast<U>(Long(s + 0x20) >> 1) +
+                                                                      static_cast<U>(rv::As<records::EffectObject>(s)->work_20 >> 1) +
                                                                       PickOf(0, 0, 1, 0xFFFFFFFFu)));
         if (sh::Half()) s[7] = At(at::kCounter)[0];
         break;

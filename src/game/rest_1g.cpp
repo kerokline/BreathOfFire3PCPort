@@ -800,12 +800,12 @@ extern "C" void __cdecl Fish_Begin(void) {
     SetL(S(), 0x38, zbase - ((r3 & 0xF) << 16));
     const U top = (0u - static_cast<U>(Kind(S()[6], 0x1A))) << 8;
     const unsigned r4 = Rnd();
-    SetWord(S() + 0x3E, top - ((r4 & 7) << 5));
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, top - ((r4 & 7) << 5));
     const short ground = Elevation(static_cast<U>(L(S(), 0x34)), static_cast<U>(L(S(), 0x38)));
     unsigned char* const s = S();
     const short h = Sh(s, 0x3E);
-    if (h == 0) SetWord(s + 0x3E, 0xFFE0);
-    else if (h < ground) SetWord(s + 0x3E, static_cast<U>(ground));
+    if (h == 0) rv::As<records::SpriteObject>(s)->height_whole = 0xFFE0;
+    else if (h < ground) rv::As<records::SpriteObject>(s)->height_whole = static_cast<U>(ground);
     S()[8] = 4;
     SetL(S(), 0x14, 0);
     Animation(0);
@@ -830,7 +830,7 @@ extern "C" void __cdecl Fish_Swim(void) {
             const auto bits = static_cast<unsigned char>(Rnd());
             const unsigned char nibbling = Effect1e_BiteHeld;
             unsigned char* s = S();
-            if (nibbling == 0 && Word(s + 0x3E) == 0 && (bits & 3) == 0 && ObjTrio[2] != 4 && s[6] != 0x16) {
+            if (nibbling == 0 && rv::As<records::SpriteObject>(s)->height_whole == 0 && (bits & 3) == 0 && ObjTrio[2] != 4 && s[6] != 0x16) {
                 Effect1e_BiteHeld = 1;
                 Bank(KindWord(s[6], 0x12));
                 if ((S()[0] & 0x80) == 0) Sound(0x206);
@@ -1061,7 +1061,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
             t = S();
             t[0x2A] = DirByte(t[8]);
             Animation(DirAnim(S()[8]));
-            SetWord(S() + 0x3E, 0xFFE0);
+            rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, 0xFFE0);
             S()[4] = 0;
             S()[0x48] = 2;
             SetL(S(), 0x10, 0);
@@ -1140,7 +1140,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
                 t[0] = static_cast<unsigned char>(t[0] & 0xDF);
                 S()[0x2A] = 0;
                 S()[0x48] = 0;
-                SetWord(S() + 0x3E, 0);
+                rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, 0);
                 Animation(0);
                 SetL(S(), 0x10, 0xFFFFFFFDu);
                 SH_CALL(Fish_AdjustStrength)(static_cast<unsigned>(-5));
@@ -1225,7 +1225,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
         SetL(f, 0x38, static_cast<U>(L(f, 0x38)) - 0x1000);
         unsigned char* e = S();
         if (Sh(e, 0x3E) < 0) {
-            SetWord(e + 0x3E, Word(e + 0x3E) + 8);
+            rv::As<records::SpriteObject>(e)->height_whole = rv::As<records::SpriteObject>(e)->height_whole + 8;
             e = S();
         }
         const std::int32_t z = L(e, 0x38);
@@ -1266,7 +1266,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
         SetL(e, 0x34, static_cast<U>(L(e, 0x34)) + static_cast<U>(L(e, 0xC)));
         e = S();
         if (Sh(e, 0x3E) < 0) {
-            SetWord(e + 0x3E, Word(e + 0x3E) + 8);
+            rv::As<records::SpriteObject>(e)->height_whole = rv::As<records::SpriteObject>(e)->height_whole + 8;
             e = S();
         }
         SetL(e, 0x38, static_cast<U>(L(e, 0x38)) + 0x1000);
@@ -1318,9 +1318,9 @@ extern "C" void __cdecl Fish_S5Move(void) {
         SetL(S(), 0xC, 0);
         SetL(S(), 0x10, 0);
         s = S();
-        SetWord(s + 0x34, Word(s + 0x34) & 0x8000);
+        rv::As<records::SpriteObject>(s)->x_frac = rv::As<records::SpriteObject>(s)->x_frac & 0x8000;
         s = S();
-        SetWord(s + 0x38, Word(s + 0x38) & 0x8000);
+        rv::As<records::SpriteObject>(s)->z_frac = rv::As<records::SpriteObject>(s)->z_frac & 0x8000;
         S()[1] = 1;
         S()[2] = 0;
     }
@@ -1407,7 +1407,7 @@ extern "C" void __cdecl Fish_Step(void) {
     s = S();
     SetL(s, 0x38, static_cast<U>(L(s, 0x38)) + static_cast<U>(L(s, 0x10)));
     s = S();
-    SetWord(s + 0x3E, Word(s + 0x3E) + Word(s + 0x14));
+    rv::As<records::SpriteObject>(s)->height_whole = rv::As<records::SpriteObject>(s)->height_whole + Word(s + 0x14);
 }
 
 // original 0x52CAC0: the steps +0xC / +0x10 from MoveCmd_F9Steps' row +8 (read

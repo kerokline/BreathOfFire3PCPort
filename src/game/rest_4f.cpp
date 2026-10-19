@@ -712,7 +712,7 @@ extern "C" void __cdecl EffectKind08_Start(void) {
     rv::As<records::EffectObject>(s)->z = 0xF8000;
     const long e = SH_CALL(AreaMap_Elevation)(SL(s + 0x34), SL(s + 0x38));
     s = S();
-    SetWord(s + 0x3E, static_cast<U>(e));
+    rv::As<records::EffectObject>(s)->height_whole = static_cast<U>(e);
     s[0x29] = 5;
     s[1] = 1;
 }
@@ -839,17 +839,17 @@ extern "C" void __cdecl EffectKind09_Start(void) {
     unsigned char* s = S();
     rv::As<records::EffectObject>(s)->x = 0x638000;
     rv::As<records::EffectObject>(s)->z = 0xD0000;
-    SetWord(s + 0x3E, 0x300);
-    SetUL(s + 0x64, 0);
-    SetUL(s + 0x68, 0);
-    SetUL(s + 0x6C, 0);
+    rv::As<records::EffectObject>(s)->height_whole = 0x300;
+    rv::As<records::EffectObject>(s)->angle[0] = 0;
+    rv::As<records::EffectObject>(s)->angle[1] = 0;
+    rv::As<records::EffectObject>(s)->angle[2] = 0;
     s[9] = 0x78;
     s[0x5F] = s[0x5E] = s[0x5D] = 0xFF;
-    SetUL(s + 0xC, 1);
-    SetUL(s + 0x10, 0);
-    SetUL(s + 0x20, 0);
-    SetUL(s + 0x1C, 0);
-    SetUL(s + 0x18, 0);
+    rv::As<records::EffectWork>(s)->work_0c = 1;
+    rv::As<records::EffectWork>(s)->work_10 = 0;
+    rv::As<records::EffectObject>(s)->work_20 = 0;
+    rv::As<records::EffectObject>(s)->work_1c = 0;
+    rv::As<records::EffectObject>(s)->work_18 = 0;
     s[0xA] = s[0xB] = s[8] = s[7] = s[6] = 0;
     Sound(0x20E);
     S()[1] = 1;
@@ -893,8 +893,8 @@ void GrowByte(unsigned off, unsigned step, unsigned mid, unsigned char next) {
 extern "C" void __cdecl EffectKind09_Open1(void) {
     Fans(1);
     unsigned char* const s = S();
-    SetUL(s + 0x18, UL(s + 0x18) + 8);
-    if (UL(S() + 0x18) != 0x60) return;
+    rv::As<records::EffectObject>(s)->work_18 = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_18) + 8;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_18) != 0x60) return;
     Sound(0x20E);
     S()[1] = 2;
 }
@@ -904,9 +904,9 @@ extern "C" void __cdecl EffectKind09_Open1(void) {
 extern "C" void __cdecl EffectKind09_Open2(void) {
     Fans(2);
     unsigned char* const s = S();
-    SetUL(s + 0x1C, UL(s + 0x1C) + 0x10);
-    if (UL(S() + 0x1C) == 0x20) Sound(0x20E);
-    if (UL(S() + 0x1C) != 0xA0) return;
+    rv::As<records::EffectObject>(s)->work_1c = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x10;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c) == 0x20) Sound(0x20E);
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_1c) != 0xA0) return;
     Sound(0x20E);
     S()[1] = 3;
 }
@@ -951,9 +951,9 @@ extern "C" void __cdecl EffectKind09_Open7(void) {
 extern "C" void __cdecl EffectKind09_Open8(void) {
     Fans(8);
     unsigned char* const s = S();
-    SetUL(s + 0x20, UL(s + 0x20) + 8);
-    if (UL(S() + 0x20) == 0x10) Sound(0x20E);
-    if (UL(S() + 0x20) != 0x60) return;
+    rv::As<records::EffectObject>(s)->work_20 = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_20) + 8;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20) == 0x10) Sound(0x20E);
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->work_20) != 0x60) return;
     Sound(0x203);
     B(at::kChapterCount) = static_cast<unsigned char>(B(at::kChapterCount) + 1);
     S()[1] = 9;
@@ -970,10 +970,10 @@ extern "C" void __cdecl EffectKind09_Spin(void) {
     SH_CALL(EffectKind09_DrawBlades)();
     unsigned char* const s = S();
     const std::int32_t c = SL(s + 0xC);
-    if (c < 0x80) SetUL(s + 0xC, static_cast<U>(c) + 4);
+    if (c < 0x80) rv::As<records::EffectWork>(s)->work_0c = static_cast<U>(c) + 4;
     const std::int32_t d = SL(s + 0x10);
-    if (d < 0xB6) SetUL(s + 0x10, static_cast<U>(d) + 2);
-    else SetUL(s + 0x10, 0xB6);
+    if (d < 0xB6) rv::As<records::EffectWork>(s)->work_10 = static_cast<U>(d) + 2;
+    else rv::As<records::EffectWork>(s)->work_10 = 0xB6;
     s[9] = static_cast<unsigned char>(s[9] - 1);
 }
 
@@ -1016,13 +1016,13 @@ short Arm(int (__cdecl* f)(int), int angle, U len) {
 extern "C" void __cdecl EffectKind09_DrawBlades(void) {
     unsigned char* const s0 = S();
     const U n = static_cast<U>(s0[9]) << 12;
-    const U len = UL(s0 + 0xC);
-    const U angle = UL(s0 + 0x10);
+    const U len = rv::As<records::EffectWork>(s0)->work_0c;
+    const U angle = rv::As<records::EffectWork>(s0)->work_10;
     const U hi = static_cast<U>((static_cast<std::int64_t>(static_cast<std::int32_t>(n)) *
                                  static_cast<std::int64_t>(static_cast<std::int32_t>(0xB60B60B7u))) >> 32);
     U q = Sar(hi + n, 8);
     q += q >> 31;
-    SetUL(s0 + 0x6C, q);
+    rv::As<records::EffectObject>(s0)->angle[2] = q;
     const short c1 = Arm(SH_CALL(Math_Cos), static_cast<int>(angle), len);
     const short s1 = Arm(SH_CALL(Math_Sin), static_cast<int>(angle), len);
     const short reach = static_cast<short>(len << 4);
@@ -1043,7 +1043,7 @@ extern "C" void __cdecl EffectKind09_DrawBlades(void) {
         if (blade & 1) Triangle(odd0, odd1, odd2, colours);
         else Triangle(even0, even1, even2, colours);
         unsigned char* const s = S();
-        SetUL(s + 0x6C, UL(s + 0x6C) + 0xAA);
+        rv::As<records::EffectObject>(s)->angle[2] = rv::As<records::EffectObject>(s)->angle[2] + 0xAA;
     }
 }
 
@@ -1054,10 +1054,10 @@ extern "C" void __cdecl EffectKind09_DrawBlades(void) {
 // record current afterwards.
 extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
     unsigned char* const s0 = S();
-    const U k64 = UL(s0 + 0x64), k68 = UL(s0 + 0x68), k6C = UL(s0 + 0x6C), k70 = UL(s0 + 0x70);
-    SetUL(s0 + 0x64, static_cast<U>(a1));
-    SetUL(s0 + 0x68, static_cast<U>(a2));
-    SetUL(s0 + 0x6C, static_cast<U>(a3));
+    const U k64 = rv::As<records::EffectObject>(s0)->angle[0], k68 = rv::As<records::EffectObject>(s0)->angle[1], k6C = rv::As<records::EffectObject>(s0)->angle[2], k70 = rv::As<records::EffectObject>(s0)->reach;
+    rv::As<records::EffectObject>(s0)->angle[0] = static_cast<U>(a1);
+    rv::As<records::EffectObject>(s0)->angle[1] = static_cast<U>(a2);
+    rv::As<records::EffectObject>(s0)->angle[2] = static_cast<U>(a3);
     const short c = Arm(SH_CALL(Math_Cos), 0x4F, static_cast<U>(len));
     const short sn = Arm(SH_CALL(Math_Sin), 0x4F, static_cast<U>(len));
     const short v0[4] = {0, 0, 0, 0};
@@ -1069,10 +1069,10 @@ extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
         prim[0x24] = prim[0x25] = prim[0x26] = 0x64;
     });
     unsigned char* const s = S();
-    SetUL(s + 0x64, k64);
-    SetUL(s + 0x68, k68);
-    SetUL(s + 0x6C, k6C);
-    SetUL(s + 0x70, k70);
+    rv::As<records::EffectObject>(s)->angle[0] = k64;
+    rv::As<records::EffectObject>(s)->angle[1] = k68;
+    rv::As<records::EffectObject>(s)->angle[2] = k6C;
+    rv::As<records::EffectObject>(s)->reach = k70;
 }
 
 // ===========================================================================
@@ -1155,15 +1155,15 @@ extern "C" void __cdecl EffectKind0B_Attach(void) {
     rv::As<records::EffectObject>(s)->x = L(at::kExtra0 + 0x34);
     rv::As<records::EffectObject>(s)->z = L(at::kExtra0 + 0x38);
     rv::As<records::EffectObject>(s)->height = L(at::kExtra0 + 0x3C);
-    SetUL(s + 0x64, L(at::kExtra0 + 0x64));
-    SetUL(s + 0x68, L(at::kExtra0 + 0x68));
-    SetUL(s + 0x6C, L(at::kExtra0 + 0x6C));
+    rv::As<records::EffectObject>(s)->angle[0] = L(at::kExtra0 + 0x64);
+    rv::As<records::EffectObject>(s)->angle[1] = L(at::kExtra0 + 0x68);
+    rv::As<records::EffectObject>(s)->angle[2] = L(at::kExtra0 + 0x6C);
     long out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, s[0x1C]);
     s = S();
     rv::As<records::EffectObject>(s)->x = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x) + static_cast<U>(out[0]);
     rv::As<records::EffectObject>(s)->z = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + static_cast<U>(out[1]);
-    SetWord(s + 0x3E, Word(s + 0x3E) + static_cast<U>(out[2]));
+    rv::As<records::EffectObject>(s)->height_whole = rv::As<records::EffectObject>(s)->height_whole + static_cast<U>(out[2]);
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -1173,7 +1173,7 @@ extern "C" void __cdecl EffectKind0B_Attach(void) {
 // quad drawn. PSX twin 0x801F8AB8 (a SCENA overlay).
 extern "C" void __cdecl EffectKind0B_Follow(void) {
     unsigned char* s = S();
-    SetWord(s + 0x3E, Word(s + 0x3E) + 0x20);
+    rv::As<records::EffectObject>(s)->height_whole = rv::As<records::EffectObject>(s)->height_whole + 0x20;
     const long point[3] = {SL(s + 0x34), SL(s + 0x38), SL(s + 0x3C)};
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     if (!Fade0B(4, 7)) {
@@ -1279,7 +1279,7 @@ extern "C" void __cdecl EffectKind02_Start(void) {
     rv::As<records::EffectObject>(s)->screen_x = 0x39;
     rv::As<records::EffectObject>(s)->screen_y = 0xC8;
     s[0x48] = s[0x5C] = s[0x5D] = s[0x5E] = s[0x5F] = 0;
-    SetUL(s + 0x10, 0xF0);
+    rv::As<records::EffectWork>(s)->work_10 = 0xF0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -1287,9 +1287,9 @@ extern "C" void __cdecl EffectKind02_Start(void) {
 // held there and +1 up; EffectHud_Draw(0xC, y).
 extern "C" void __cdecl EffectKind02_SlideIn(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x10, UL(s + 0x10) + 0xFFFFFFF8u);
+    rv::As<records::EffectWork>(s)->work_10 = rv::As<records::EffectWork>(s)->work_10 + 0xFFFFFFF8u;
     if (SL(s + 0x10) < 0xAE) {
-        SetUL(s + 0x10, 0xAE);
+        rv::As<records::EffectWork>(s)->work_10 = 0xAE;
         s[1] = static_cast<unsigned char>(s[1] + 1);
     }
     Panel(Hi(s));
@@ -1306,9 +1306,9 @@ extern "C" void __cdecl EffectKind02_Body(void) {
 // there, +1 = 1, +2 = +3 = 0; the panel drawn.
 extern "C" void __cdecl EffectKind02_SlideOut(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x10, UL(s + 0x10) + 8);
+    rv::As<records::EffectWork>(s)->work_10 = rv::As<records::EffectWork>(s)->work_10 + 8;
     if (SL(s + 0x10) > 0xF0) {
-        SetUL(s + 0x10, 0xF0);
+        rv::As<records::EffectWork>(s)->work_10 = 0xF0;
         s[1] = 1;
         s[2] = s[3] = 0;
     }
@@ -1377,10 +1377,10 @@ extern "C" void __cdecl EffectKind02_CopyLeader(void) {
     s[0x49] = ObjTrio[0x49];
     s[0x4A] = ObjTrio[0x4a];
     s[0x4B] = ObjTrio[0x4b];
-    SetUL(s + 0x50, L(at::kLeader + 0x50));
-    SetUL(s + 0x54, L(at::kLeader + 0x54));
-    SetWord(s + 0x58, W(at::kLeader + 0x58));
-    SetWord(s + 0x5A, W(at::kLeader + 0x5A));
+    rv::As<records::EffectObject>(s)->script = L(at::kLeader + 0x50);
+    rv::As<records::EffectObject>(s)->frames = L(at::kLeader + 0x54);
+    rv::As<records::EffectObject>(s)->script_pos = W(at::kLeader + 0x58);
+    rv::As<records::EffectObject>(s)->frame_word = W(at::kLeader + 0x5A);
     SH_CALL(Sprite_QueueOverlay)();
 }
 

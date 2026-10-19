@@ -139,7 +139,7 @@ void SideProbe(unsigned d) {
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
-    if (static_cast<short>(Word(Sc() + 0x3E)) < static_cast<short>(ground)) Sc()[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(Sc())->height_whole) < static_cast<short>(ground)) Sc()[0x2B] = 0;
 }
 
 // 0x523FF0 / 0x524490 / 0x524E90 (byte-identical): a form's state 0.
@@ -598,17 +598,17 @@ extern "C" unsigned char __cdecl PartyAction18_CellStrike(unsigned x, unsigned z
 // (x, z), (x, zs), (x, zs + 1), (xs, z), (xs + 1, z), (x, zs - 1), (xs - 1, z).
 extern "C" void __cdecl Field_ReadCellsRaised(unsigned x, unsigned z, unsigned x0, unsigned z0) {
     Cell(1) = SH_CALL(Field_CellKind)(x, z, x0, z0);
-    std::uint16_t zs = Word(Sc() + 0x3A);
+    std::uint16_t zs = rv::As<records::PartyMember>(Sc())->z_whole;
     Cell(2) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
-    zs = W16(Word(Sc() + 0x3A) + 1);
+    zs = W16(rv::As<records::PartyMember>(Sc())->z_whole + 1);
     Cell(3) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
-    std::uint16_t xs = Word(Sc() + 0x36);
+    std::uint16_t xs = rv::As<records::PartyMember>(Sc())->x_whole;
     Cell(4) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
-    xs = W16(Word(Sc() + 0x36) + 1);
+    xs = W16(rv::As<records::PartyMember>(Sc())->x_whole + 1);
     Cell(5) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
-    zs = W16(Word(Sc() + 0x3A) - 1);
+    zs = W16(rv::As<records::PartyMember>(Sc())->z_whole - 1);
     Cell(6) = SH_CALL(Field_CellKind)(x, zs, x0, zs);
-    xs = W16(Word(Sc() + 0x36) - 1);
+    xs = W16(rv::As<records::PartyMember>(Sc())->x_whole - 1);
     Cell(7) = SH_CALL(Field_CellKind)(xs, z, xs, z0);
 }
 
@@ -712,7 +712,7 @@ extern "C" unsigned char __cdecl Field_SlopeBetween(unsigned x0, unsigned x1, un
 // turns it (2, 4, 3). xs / zs the sprite's cell words +0x36 / +0x3A.
 extern "C" void __cdecl Field_RaisedEdgeTurns(unsigned x, unsigned z) {
     if ((Sc()[8] & 1) == 0) {
-        const std::uint16_t zs = Word(Sc() + 0x3A);
+        const std::uint16_t zs = rv::As<records::PartyMember>(Sc())->z_whole;
         if (SH_CALL(Field_SlopeBetween)(x, x, zs, W16(zs + 1u), 1) != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
     }
     {
@@ -720,15 +720,15 @@ extern "C" void __cdecl Field_RaisedEdgeTurns(unsigned x, unsigned z) {
         const unsigned char facing = s[8];
         if ((facing & 1) == 0) {
             unsigned char r;
-            if ((facing & 4) == 0) r = SH_CALL(Field_SlopeBetween)(x, x, Word(s + 0x3A), z, 1);
-            else r = SH_CALL(Field_SlopeBetween)(x, x, z, W16(Word(s + 0x3A) + 1u), 1);
+            if ((facing & 4) == 0) r = SH_CALL(Field_SlopeBetween)(x, x, rv::As<records::PartyMember>(s)->z_whole, z, 1);
+            else r = SH_CALL(Field_SlopeBetween)(x, x, z, W16(rv::As<records::PartyMember>(s)->z_whole + 1u), 1);
             if (r != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
         }
     }
     {
         const unsigned char* const s = Sc();
         if ((s[8] & 1) == 0) {
-            const std::uint16_t xs = Word(s + 0x36);
+            const std::uint16_t xs = rv::As<records::PartyMember>(s)->x_whole;
             if (SH_CALL(Field_SlopeBetween)(xs, W16(xs + 1u), z, z, 3) != 0) SH_CALL(Field_TurnUnless)(2, 4, 3);
         }
     }
@@ -736,8 +736,8 @@ extern "C" void __cdecl Field_RaisedEdgeTurns(unsigned x, unsigned z) {
     const unsigned char facing = s[8];
     if (facing & 1) return;
     unsigned char r;
-    if (facing == 0 || facing == 6) r = SH_CALL(Field_SlopeBetween)(Word(s + 0x36), x, z, z, 3);
-    else r = SH_CALL(Field_SlopeBetween)(W16(Word(s + 0x36) + 1u), x, z, z, 3);
+    if (facing == 0 || facing == 6) r = SH_CALL(Field_SlopeBetween)(rv::As<records::PartyMember>(s)->x_whole, x, z, z, 3);
+    else r = SH_CALL(Field_SlopeBetween)(W16(rv::As<records::PartyMember>(s)->x_whole + 1u), x, z, z, 3);
     if (r != 0) SH_CALL(Field_TurnUnless)(2, 4, 3);
 }
 
@@ -782,22 +782,22 @@ unsigned char DiagEdge(const DiagSide& d, bool on_x, std::uint16_t ax, std::uint
     if ((k & 0xF0) == 0xA0) return SH_CALL(Field_CellSlope)(8);
     if (on_x) {
         // the z side: between (ax, ax) and the sprite's zs and zs + 1, then zs - 1, in direction 1
-        std::uint16_t zs = Word(Sc() + 0x3A);
+        std::uint16_t zs = rv::As<records::PartyMember>(Sc())->z_whole;
         if (SH_CALL(Field_SlopeBetween)(ax, ax, zs, W16(zs + 1u), 1) != 0) {
             Sc()[8] = static_cast<unsigned char>(d.to_first);
             return 1;
         }
-        zs = Word(Sc() + 0x3A);
+        zs = rv::As<records::PartyMember>(Sc())->z_whole;
         if (SH_CALL(Field_SlopeBetween)(ax, ax, zs, W16(zs - 1u), 1) == 0) return 3;
         Sc()[8] = static_cast<unsigned char>(d.to_second);
         return 1;
     }
-    std::uint16_t xs = Word(Sc() + 0x36);
+    std::uint16_t xs = rv::As<records::PartyMember>(Sc())->x_whole;
     if (SH_CALL(Field_SlopeBetween)(xs, W16(xs + 1u), az, az, 3) != 0) {
         Sc()[8] = static_cast<unsigned char>(d.to_first);
         return 1;
     }
-    xs = Word(Sc() + 0x36);
+    xs = rv::As<records::PartyMember>(Sc())->x_whole;
     if (SH_CALL(Field_SlopeBetween)(xs, W16(xs - 1u), az, az, 3) == 0) return 3;
     Sc()[8] = static_cast<unsigned char>(d.to_second);
     return 1;
@@ -820,21 +820,21 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
     if (Field_ScriptFlags & 0x400) return 1;
     const unsigned char* c = Sc();
     const unsigned char facing = c[8];
-    if (Word(c + 0x34) == 0 && Word(c + 0x38) == 0) return 1;
+    if (rv::As<records::PartyMember>(c)->x_frac == 0 && rv::As<records::PartyMember>(c)->z_frac == 0) return 1;
     const unsigned char* const offsets = At(kCellOffsets) + static_cast<unsigned>(facing) * 2u;
     const auto ox = static_cast<signed char>(offsets[0]);
     const auto oz = static_cast<signed char>(offsets[1]);
     const std::uint16_t dx = ox == 1 ? 2 : static_cast<std::uint16_t>(static_cast<short>(ox));
     const std::uint16_t dz = oz == 1 ? 2 : static_cast<std::uint16_t>(static_cast<short>(oz));
-    const std::uint16_t xs = Word(c + 0x36), zs = Word(c + 0x3A);
+    const std::uint16_t xs = rv::As<records::PartyMember>(c)->x_whole, zs = rv::As<records::PartyMember>(c)->z_whole;
     const std::uint16_t ax = W16(xs + dx), az = W16(zs + dz);
     SH_CALL(Field_ReadCellsRaised)(ax, az, W16(xs + (ox == 1 ? 1u : 0u)), W16(zs + (oz == 1 ? 1u : 0u)));
     c = Sc();
     const unsigned char dir = c[8];
     if ((dir & 1) == 0) {
         // Straight.
-        if (Word(c + 0x34) != 0) {
-            if (Word(c + 0x38) != 0) {
+        if (rv::As<records::PartyMember>(c)->x_frac != 0) {
+            if (rv::As<records::PartyMember>(c)->z_frac != 0) {
                 // Mid-cell on both axes: ahead and the two sides.
                 Cell(8) = SH_CALL(Field_CellClass5)(1, 2, 3, 4, 5);
                 Cell(9) = SH_CALL(Field_CellClass5)(4, 5, 0, 0, 0);
@@ -881,10 +881,10 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
                 return SH_CALL(Field_CellSlope)(8);
             }
             if (Sc()[8] & 1) return 3;
-            std::uint16_t z0 = Word(Sc() + 0x3A);
+            std::uint16_t z0 = rv::As<records::PartyMember>(Sc())->z_whole;
             if (SH_CALL(Field_SlopeBetween)(ax, ax, z0, W16(z0 + 1u), 1) != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
             if (Sc()[8] & 1) return 3;
-            z0 = Word(Sc() + 0x3A);
+            z0 = rv::As<records::PartyMember>(Sc())->z_whole;
             if (SH_CALL(Field_SlopeBetween)(ax, ax, z0, W16(z0 - 1u), 1) != 0) SH_CALL(Field_TurnUnless)(4, 6, 5);
             return 3;
         }
@@ -902,18 +902,18 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
             return SH_CALL(Field_CellSlope)(8);
         }
         if (now & 1) return 3;
-        std::uint16_t x0 = Word(Sc() + 0x36);
+        std::uint16_t x0 = rv::As<records::PartyMember>(Sc())->x_whole;
         if (SH_CALL(Field_SlopeBetween)(x0, W16(x0 + 1u), az, az, 3) != 0) SH_CALL(Field_TurnUnless)(2, 4, 3);
         if (Sc()[8] & 1) return 3;
-        x0 = Word(Sc() + 0x36);
+        x0 = rv::As<records::PartyMember>(Sc())->x_whole;
         if (SH_CALL(Field_SlopeBetween)(x0, W16(x0 - 1u), az, az, 3) == 0) return 3;
         SH_CALL(Field_TurnUnless)(2, 4, 3);
         return 3;
     }
 
     // Diagonal.
-    if (Word(c + 0x34) != 0) {
-        if (Word(c + 0x38) != 0) {
+    if (rv::As<records::PartyMember>(c)->x_frac != 0) {
+        if (rv::As<records::PartyMember>(c)->z_frac != 0) {
             const unsigned char k = (dir & 2) ? SH_CALL(Field_CellClass5)(2, 3, 0, 0, 0) : SH_CALL(Field_CellClass5)(4, 5, 0, 0, 0);
             Cell(8) = k;
             if (k == 0xB0) return 6;
@@ -923,10 +923,10 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
             const unsigned char* const s = Sc();
             unsigned char r;
             if (s[8] & 2) {
-                const std::uint16_t z0 = Word(s + 0x3A);
+                const std::uint16_t z0 = rv::As<records::PartyMember>(s)->z_whole;
                 r = SH_CALL(Field_SlopeBetween)(ax, ax, z0, W16(z0 + 1u), 1);
             } else {
-                const std::uint16_t x0 = Word(s + 0x36);
+                const std::uint16_t x0 = rv::As<records::PartyMember>(s)->x_whole;
                 r = SH_CALL(Field_SlopeBetween)(x0, W16(x0 + 1u), az, az, 3);
             }
             return r != 0 ? 0 : 3;
@@ -958,7 +958,7 @@ extern "C" void __cdecl LeaderPanel_S0Begin(void) {
     Sc()[0x29] = 5;
     const unsigned char* const s = Sc();
     const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::PartyMember>(s)->x, rv::As<records::PartyMember>(s)->z);
-    SetWord(Sc() + 0x3E, static_cast<unsigned>(height));
+    rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Sc())->height_whole, static_cast<unsigned>(height));
     if (Field_State[0x89] == 0) SH_CALL(Sprite_SetAnimationAt)(0xA, 2);
     else SH_CALL(Sprite_SetAnimation)(0xB);
     ++Sc()[3];

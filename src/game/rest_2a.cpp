@@ -428,9 +428,9 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
     EffectWrite(*index, who)[0] = 1;
     EffectWrite(*index, who)[5] = 0x19;
     EffectWrite(*index, who)[6] = static_cast<unsigned char>(sub);
-    SetLong(EffectWrite(*index, who) + 0xC, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(EffectWrite(*index, who))->work_0c, 0);
     const unsigned char rise = SH_CALL(LinkedObject_EffectRise)();
-    SetLong(EffectWrite(*index, who) + 0x10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(EffectWrite(*index, who))->work_10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
     const unsigned char* const c = Sprite_Current;
     rv::As<records::EffectObject>(EffectWrite(*index, who))->x = rv::As<records::SpriteObject>(c)->x;
     rv::As<records::EffectObject>(EffectWrite(*index, who))->z = rv::As<records::SpriteObject>(c)->z;
