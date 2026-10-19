@@ -803,6 +803,7 @@ class Converter:
     def env(self, f):
         if f.rel not in self.envs:
             e = dict(self.syms.names)
+            e.update({x['name'] + '_addr': x['pc'] for x in self.entries.data if x.get('ctype')})
             e.update(self.genv)
             for g in reversed(dc.include_closure(f, self.by_rel)):
                 e.update({k: v for k, v in g.locals.items() if v is not None})
@@ -836,21 +837,39 @@ class Converter:
         for m in re.finditer(r'(?<![\w.>:])((?:\w+::)*)(k[A-Z0-9_]\w*)\b(?!\s*[\[(.{])', code):
             if dc.is_at_prefix(m.group(1)) or (m.start(), m.end()) in taken:
                 continue
-            if m.group(1) and m.group(1).rstrip(':').split('::')[-1] not in ('', ):
-                # qualified by a module namespace: resolve within it
-                pass
             if f.in_at_namespace(m.start()):
                 continue
             # skip a definition (`kX = ...`, `kA = 1, kB = 2`): a constant is
             # never assigned
             if re.match(r'\s*=(?!=)', code[m.end():]):
                 continue
-            v = dc.local_value(f, m.group(2), self.genv)
+            v = self.module_value(f, m.group(1), m.group(2))
             if not self.syms.in_data(v):
                 continue
             out.append((m.start(), m.end(), v, m.group(0)))
         out.sort()
         return out
+
+    def module_value(self, f, qual, name):
+        """The value of a module constant as f sees it: its own definition or
+        its includes' (no guess from elsewhere in src/, where the same name
+        may be an enumerator or another module's); qualified, only by a
+        namespace that defines the name."""
+        if qual:
+            q = qual.rstrip(':').split('::')[-1]
+            for g in [f] + dc.include_closure(f, self.by_rel):
+                if q in g.aliases:
+                    q = g.aliases[q].split('::')[-1]
+                    break
+            vals = {v for g in self.files for n, v, ns, _ in g.mconsts + g.consts
+                    if n == name and ns.split('::')[-1] == q and v is not None}
+            return vals.pop() if len(vals) == 1 else None
+        if f.locals.get(name) is not None:
+            return f.locals[name]
+        for g in dc.include_closure(f, self.by_rel):
+            if g.locals.get(name) is not None:
+                return g.locals[name]
+        return None
 
     # ---- one site -----------------------------------------------------------
 
@@ -1377,21 +1396,40 @@ class Converter:
                 kept.append(ed)
         raw = f.raw
 
-        def emit(a, b, pool):
+        gap = re.compile(r'^([^\n/]*?)( {2,})//')
+
+        def plain(chunk, state):
+            # a comment aligned after the code keeps its column: the spaces
+            # before it absorb what the edits on its line grew or shrank by
+            if state[0]:
+                nl = chunk.find('\n')
+                head = chunk if nl < 0 else chunk[:nl]
+                m = gap.match(head)
+                if m:
+                    n = max(1, len(m.group(2)) - state[0])
+                    chunk = m.group(1) + ' ' * n + chunk[m.end(2):]
+                    state[0] = 0
+                if nl >= 0:
+                    state[0] = 0
+            return chunk
+
+        def emit(a, b, pool, state):
             inside = [e for e in pool if a <= e[0] and e[1] <= b]
             top = [e for e in inside if not any(o is not e and o[0] <= e[0] and e[1] <= o[1] for o in inside)]
             top.sort(key=lambda x: x[0])
             out, i = [], a
             for ed in top:
-                out.append(raw[i:ed[0]])
+                out.append(plain(raw[i:ed[0]], state))
                 sub = [x for x in inside if x is not ed and ed[0] <= x[0] and x[1] <= ed[1]]
-                for p in ed[2]:
-                    out.append(emit(p[0], p[1], sub) if isinstance(p, tuple) else p)
+                rep = ''.join(emit(p[0], p[1], sub, [0]) if isinstance(p, tuple) else p for p in ed[2])
+                out.append(rep)
+                if '\n' not in rep and '\n' not in raw[ed[0]:ed[1]]:
+                    state[0] += len(rep) - (ed[1] - ed[0])
                 i = ed[1]
-            out.append(raw[i:b])
+            out.append(plain(raw[i:b], state))
             return ''.join(out)
 
-        return emit(0, len(raw), kept)
+        return emit(0, len(raw), kept, [0])
 
 
 # --------------------------------------------------------------------------
@@ -1528,10 +1566,10 @@ def find_bad(ok, base, cand):
 # Retiring module constants
 # --------------------------------------------------------------------------
 
-CONST_STMT = re.compile(r'^([ \t]*)((?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+(?:\s+(?:int|long|short|char))?)\s+'
-                        r'(k\w*\s*=[^;{}]*?)\s*;[ \t]*(?://\s?(.*))?$')
-CONST_BRACE_LINE = re.compile(r'^([ \t]*)((?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+(?:\s+(?:int|long|short|char))?)\s+'
-                              r'(k\w*)\s*\{([^{};,]*)\}\s*;[ \t]*(?://\s?(.*))?$')
+# a constexpr statement of k-constants, possibly over several lines, and the
+# comment after it on its last line
+CONST_STMT = re.compile(r'(?m)^([ \t]*)((?:inline\s+)?(?:static\s+)?constexpr\s+[\w:]+(?:\s+(?:int|long|short|char))?)\s+'
+                        r'(k\w*\s*(?:=[^;{}]*?|\{[^{};,]*\}))\s*;[ \t]*(?://[ \t]?([^\n]*))?$')
 NOTE = re.compile(r'^[ 	]*// (k\w+): now \w+ \(symbols\.toml\)')
 
 
@@ -1571,29 +1609,25 @@ def retire(conv, dry_run=False, since=None):
     for f in files:
         if not (f.rel.endswith('_callees.h') or f.rel.endswith('.cpp')):
             continue
-        lines = f.raw.split('\n')
+        raw = f.raw
         seers = {f.rel} | includers[f.rel]
         stem = re.sub(r'(_callees|_fuzz)?\.\w+$', '', os.path.basename(f.rel))
-        changed = False
         env = None
-        out_lines = []
-        for ln, line in enumerate(lines):
-            m = CONST_STMT.match(line)
-            decls = None
-            if m:
-                decls = dc.split_decls(m.group(3))
-                if len(decls) != len(split_top(m.group(3), ',')):
-                    decls = None
+        edits = []
+        for m in CONST_STMT.finditer(raw):
+            body = m.group(3)
+            if '//' in body or '/*' in body:
+                continue          # a comment inside the statement: left alone
+            brace = re.fullmatch(r'\s*(k\w*)\s*\{([^{};,]*)\}\s*', body)
+            if brace:
+                decls = [(brace.group(1), brace.group(2))]
             else:
-                mb = CONST_BRACE_LINE.match(line)
-                if mb:
-                    m = mb
-                    decls = [(mb.group(3), mb.group(4))]
-            if not decls:
-                out_lines.append(line)
-                continue
+                decls = dc.split_decls(body)
+                if len(decls) != len(split_top(body, ',')):
+                    continue
             if env is None:
                 env = conv.env(f)
+            stmt_text = m.group(0)
             gone = []
             for name, rhs in decls:
                 v = dc.eval_expr(rhs, env)
@@ -1604,7 +1638,7 @@ def retire(conv, dry_run=False, since=None):
                 for r in seers:
                     n = len(pat.findall(plain[r]))
                     if r == f.rel:
-                        n -= len(pat.findall(line))
+                        n -= len(pat.findall(stmt_text))
                     uses += n
                 if uses == 0:
                     for g in files:
@@ -1628,32 +1662,31 @@ def retire(conv, dry_run=False, since=None):
                 if uses == 0:
                     gone.append((name, v))
             if not gone:
-                out_lines.append(line)
                 continue
-            indent, head = m.group(1), m.group(2)
-            comment = m.group(5) if m.re is CONST_BRACE_LINE else m.group(4)
+            indent, head, comment = m.group(1), m.group(2), m.group(4)
             names_gone = {n for n, _ in gone}
             for name, v in gone:
-                ent = typed_pcs[v]['name']
-                removed.append((f.rel, ln + 1, name, v, ent))
+                removed.append((f.rel, dc.line_of(f.starts, m.start()), name, v, typed_pcs[v]['name']))
             keep = [(n, r) for n, r in decls if n not in names_gone]
-            if not keep:
-                for i, (name, v) in enumerate(gone):
-                    note = f'{indent}// {name}: now {typed_pcs[v]["name"]} (symbols.toml).'
-                    if comment and i == len(gone) - 1:
-                        note += ' ' + comment.strip()
-                    out_lines.append(note)
-            else:
-                for name, v in gone:
-                    out_lines.append(f'{indent}// {name}: now {typed_pcs[v]["name"]} (symbols.toml).')
-                stmt = f'{indent}{head} ' + ', '.join(f'{n} = {r}' for n, r in keep) + ';'
+            out = [f'{indent}// {n}: now {typed_pcs[v]["name"]} (symbols.toml).' for n, v in gone]
+            if keep:
+                parts = [f'{n} = {" ".join(r.split())}' for n, r in keep]
+                one = f'{indent}{head} ' + ', '.join(parts) + ';'
+                if len(one) > 110 and len(parts) > 1:
+                    cont = ' ' * (len(indent) + len(head) + 1)
+                    one = f'{indent}{head} ' + (',\n' + cont).join(parts) + ';'
                 if comment:
-                    stmt += '  // ' + comment.strip()
-                out_lines.append(stmt)
-            changed = True
-        if changed and not dry_run:
+                    one += '  // ' + comment.strip()
+                out.append(one)
+            elif comment:
+                out[-1] += ' ' + comment.strip()
+            edits.append((m.start(), m.end(), '\n'.join(out)))
+        if edits and not dry_run:
+            text = raw
+            for a, b, t in reversed(edits):
+                text = text[:a] + t + text[b:]
             with open(os.path.join(ROOT, f.rel), 'w', encoding='utf-8', newline='') as fh:
-                fh.write('\n'.join(out_lines))
+                fh.write(text)
     return removed
 
 
