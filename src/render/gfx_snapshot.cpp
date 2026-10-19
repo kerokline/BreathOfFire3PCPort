@@ -37,11 +37,6 @@ U Long(U address) {
     return v;
 }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, 4); }
-std::uint16_t Word(U address) {
-    std::uint16_t v;
-    std::memcpy(&v, At(address), 2);
-    return v;
-}
 
 constexpr U kVersion = 1;
 
@@ -96,6 +91,46 @@ U FontEntry(U i) { return Va(Font_TexCache) + i * kFontEntry; }
 U CellEntry(U i) { return Va(D3d_CellTexCache) + i * kCellEntry; }
 U RowAt(U y) { return Va(Gfx_ClutRows) + y * 8; }
 
+// The entries, the fields this file touches named (the readers above), the
+// rest padding; each typed where its address is made. Addresses as U: the
+// image is 32-bit.
+struct TexCacheEntry {
+    std::uint8_t state;            // +0 0 free, and the end of the page's list
+    unsigned char pad_01[0xF];     // +1..+0xF: not read here (gfx_texcache.cpp)
+    U surface;                     // +0x10
+    U texture;                     // +0x14
+};
+struct FontCacheEntry {
+    std::uint16_t glyph;           // +0
+    std::uint16_t clut;            // +2
+    U generation;                  // +4
+    U surface;                     // +8
+    U texture;                     // +0xC
+    U used;                        // +0x10 used this frame
+};
+struct CellCacheEntry {
+    unsigned char pad_00[0x20];    // +0..+0x1F: sizes (d3d_draw.cpp), not read here
+    U surface;                     // +0x20
+    U texture;                     // +0x24
+};
+struct ClutRow {
+    U generation;                  // +0 counted up on every conversion (gfx_clut.cpp)
+    U block;                       // +4 the row's 0x1000-byte block (Crt_malloc), 0 until first wanted
+};
+static_assert(sizeof(TexCacheEntry) == kTexEntry && sizeof(FontCacheEntry) == kFontEntry &&
+                  sizeof(CellCacheEntry) == kCellEntry && sizeof(ClutRow) == 8,
+              "the cache entries' sizes");
+
+TexCacheEntry* Tex(U entry) { return reinterpret_cast<TexCacheEntry*>(At(entry)); }
+FontCacheEntry* Font(U entry) { return reinterpret_cast<FontCacheEntry*>(At(entry)); }
+CellCacheEntry* Cell(U entry) { return reinterpret_cast<CellCacheEntry*>(At(entry)); }
+ClutRow* Row(U y) { return reinterpret_cast<ClutRow*>(At(RowAt(y))); }
+// A row's block, as bytes.
+unsigned char* Block(U y) {
+    const U block = Row(y)->block;
+    return At(block);
+}
+
 void* Object(U slot) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(Long(slot))); }
 
 // Every object the live caches hold, in the order the teardown releases them
@@ -112,7 +147,7 @@ U ReleaseLiveCaches() {
     for (U page = 0; page < kPages; ++page)
         for (U i = 0; i < kPageEntries; ++i) {
             const U e = TexEntry(page, i);
-            if (At(e)[0] == 0) break;
+            if (Tex(e)->state == 0) break;
             release(e + 0x14);
             release(e + 0x10);
         }
@@ -144,12 +179,12 @@ void Save(bof3::SnapshotWriter& w) {
     // The palette rows: every generation; each row's block as it stands.
     U n = 0;
     for (U y = 0; y < kRows; ++y) {
-        w.Put(Long(RowAt(y)));
-        n += Long(RowAt(y) + 4) != 0 ? 1u : 0u;
+        w.Put(static_cast<U>(Row(y)->generation));
+        n += Row(y)->block != 0 ? 1u : 0u;
     }
     w.Put(n);
     for (U y = 0; y < kRows; ++y) {
-        const U block = Long(RowAt(y) + 4);
+        const U block = Long(RowAt(y) + 4);   // raw: Row(y)->block compiles otherwise (the typed-data gate)
         if (!block) continue;
         w.Put(static_cast<std::uint16_t>(y));
         w.Put(At(block), kRowBytes);
@@ -185,12 +220,12 @@ Tally RestoreRows(bof3::SnapshotReader& r) {
         last = y;
         r.Get(block, kRowBytes);
         has[y] = true;
-        U live = Long(RowAt(y) + 4);
+        U live = Row(y)->block;
         if (!live) {
             void* made = Crt_malloc(kRowBytes);   // as Gfx_ConvertRow makes a row's block
             if (!made) Fatal("gfx_snapshot: out of memory for palette row %u", y);
             live = Va(made);
-            PutLong(RowAt(y) + 4, live);
+            Row(y)->block = live;
             ++t.rows_made;
         }
         std::memcpy(At(live), block, kRowBytes);
@@ -202,11 +237,11 @@ Tally RestoreRows(bof3::SnapshotReader& r) {
                 // Not wanted yet at the take: Gfx_ClutPixels converts it on
                 // its first use again, as it did then.
                 Crt_free(live);
-                PutLong(RowAt(y) + 4, 0);
+                Row(y)->block = 0;
                 ++t.rows_freed;
             }
         }
-        PutLong(RowAt(y), generation[y]);
+        Row(y)->generation = generation[y];
     }
     return t;
 }
@@ -221,16 +256,17 @@ U RebuildGlyphs() {
         const U e = FontEntry(i);
         unsigned char take[kFontEntry];
         std::memcpy(take, At(e), kFontEntry);
-        PutLong(e + 8, 0);
-        PutLong(e + 0xC, 0);
+        Font(e)->surface = 0;
+        PutLong(e + 0xC, 0);   // raw: Font(e)->texture compiles otherwise (the typed-data gate)
         U surface;
         std::memcpy(&surface, take + 8, 4);
         if (!surface) continue;
-        Font_BuildGlyphTexture(static_cast<int>(i), Word(e), Word(e + 2));
-        if (Long(e + 8) == 0 || Long(e + 0xC) == 0)
-            Fatal("gfx_snapshot: Font_TexCache entry %u (glyph %04X, CLUT %04X) could not be built again", i, Word(e), Word(e + 2));
+        Font_BuildGlyphTexture(static_cast<int>(i), Font(e)->glyph, Font(e)->clut);
+        if (Font(e)->surface == 0 || Font(e)->texture == 0)
+            Fatal("gfx_snapshot: Font_TexCache entry %u (glyph %04X, CLUT %04X) could not be built again", i, Font(e)->glyph,
+                  Font(e)->clut);
         std::memcpy(At(e), take, 8);
-        std::memcpy(At(e + 0x10), take + 0x10, kFontEntry - 0x10);
+        std::memcpy(At(e + 0x10), take + 0x10, kFontEntry - 0x10);   // raw: &Font(e)->used, likewise
         ++n;
     }
     return n;
@@ -280,7 +316,8 @@ void Check(bool ok, const char* what) {
 
 void SelfTest() {
     // The game's words as they are (zero at start-up), put back at the end.
-    std::vector<unsigned char> rows0(At(RowAt(0)), At(RowAt(0) + kRows * 8));
+    std::vector<unsigned char> rows0(reinterpret_cast<unsigned char*>(Gfx_ClutRows),
+                                     reinterpret_cast<unsigned char*>(Gfx_ClutRows + Gfx_ClutRows_count));
     std::vector<unsigned char> tex0(Gfx_TexCache, Gfx_TexCache + Gfx_TexCache_count);
     std::vector<unsigned char> font0(Font_TexCache, Font_TexCache + Font_TexCache_count);
     std::vector<unsigned char> cell0(D3d_CellTexCache, D3d_CellTexCache + D3d_CellTexCache_count);
@@ -291,13 +328,13 @@ void SelfTest() {
     auto make_row = [](U y, U generation, unsigned char fill) {
         void* b = Crt_malloc(kRowBytes);
         std::memset(b, fill, kRowBytes);
-        PutLong(RowAt(y), generation);
-        PutLong(RowAt(y) + 4, Va(b));
+        Row(y)->generation = generation;
+        Row(y)->block = Va(b);
     };
     make_row(3, 7, 0x33);
     make_row(40, 2, 0x40);
     make_row(480, 9, 0xE0);
-    PutLong(RowAt(41), 5);
+    Row(41)->generation = 5;
     std::vector<unsigned char> record;
     bof3::SnapshotWriter w(record);
     Save(w);
@@ -306,25 +343,25 @@ void SelfTest() {
     // the generations moved on; three surfaces in the caches; the kept words
     // other than the take's.
     Crt_free(Object(RowAt(40) + 4));
-    PutLong(RowAt(40) + 4, 0);
+    Row(40)->block = 0;
     make_row(41, 6, 0x41);
-    std::memset(At(Long(RowAt(3) + 4)), 0x99, kRowBytes);
-    std::memset(At(Long(RowAt(480) + 4)), 0x98, kRowBytes);
-    PutLong(RowAt(3), 8);
-    const U block3 = Long(RowAt(3) + 4);
+    std::memset(Block(3), 0x99, kRowBytes);
+    std::memset(Block(480), 0x98, kRowBytes);
+    Row(3)->generation = 8;
+    const U block3 = Row(3)->block;
     render::Surface* page = render::MakeSurface(256, 256, 16, 0x1000, 0, false, false);
     render::Surface* glyph = render::MakeSurface(32, 32, 16, 0x1000, 0, false, false);
     render::Surface* cell = render::MakeSurface(64, 64, 16, 0x1000, 0, false, false);
     Check(page && glyph && cell, "three stand-in surfaces made");
     if (!page || !glyph || !cell) Fatal("gfx_snapshot self-test: no surfaces");
     page->refs = glyph->refs = cell->refs = 2;   // the surface and its texture interface, as a cache holds them
-    At(TexEntry(5, 0))[0] = 1;
-    PutLong(TexEntry(5, 0) + 0x10, Va(page));
-    PutLong(TexEntry(5, 0) + 0x14, Va(page) + 4);
-    PutLong(FontEntry(9) + 8, Va(glyph));
-    PutLong(FontEntry(9) + 0xC, Va(glyph) + 4);
-    PutLong(CellEntry(77) + 0x20, Va(cell));
-    PutLong(CellEntry(77) + 0x24, Va(cell) + 4);
+    Tex(TexEntry(5, 0))->state = 1;
+    Tex(TexEntry(5, 0))->surface = Va(page);
+    Tex(TexEntry(5, 0))->texture = Va(page) + 4;
+    Font(FontEntry(9))->surface = Va(glyph);
+    Font(FontEntry(9))->texture = Va(glyph) + 4;
+    Cell(CellEntry(77))->surface = Va(cell);
+    Cell(CellEntry(77))->texture = Va(cell) + 4;
     for (std::size_t i = 0; i < kKeptCount; ++i) std::memset(At(kKept[i].at), 0x5A, kKept[i].bytes);
     std::vector<std::vector<unsigned char>> kept_live(kKeptCount);
     for (std::size_t i = 0; i < kKeptCount; ++i) kept_live[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
@@ -337,21 +374,21 @@ void SelfTest() {
     Check(render::DeferredReleases() == deferred0 + 6, "the before step defers the six objects the caches hold");
     Check(page->refs == 2 && glyph->refs == 2 && cell->refs == 2, "nothing released before the present");
     for (std::size_t i = 0; i < kKeptCount; ++i) std::memset(At(kKept[i].at), 0xC3, kKept[i].bytes);
-    PutLong(FontEntry(9) + 8, 0);   // the take's font entry: no surface (no glyph table here to build one)
-    PutLong(FontEntry(9) + 0xC, 0);
+    Font(FontEntry(9))->surface = 0;   // the take's font entry: no surface (no glyph table here to build one)
+    Font(FontEntry(9))->texture = 0;
     bof3::SnapshotReader r("GFX", record.data(), record.size());
     Restore(r);
     Check(r.Left() == 0, "the record read to its end");
-    Check(Long(RowAt(3)) == 7 && Long(RowAt(40)) == 2 && Long(RowAt(480)) == 9 && Long(RowAt(41)) == 5,
+    Check(Row(3)->generation == 7 && Row(40)->generation == 2 && Row(480)->generation == 9 && Row(41)->generation == 5,
           "every generation as at the take");
-    Check(Long(RowAt(3) + 4) == block3, "a row with a block then and now keeps the live block");
-    bool pixels = Long(RowAt(3) + 4) && Long(RowAt(40) + 4) && Long(RowAt(480) + 4);
+    Check(Row(3)->block == block3, "a row with a block then and now keeps the live block");
+    bool pixels = Row(3)->block && Row(40)->block && Row(480)->block;
     if (pixels)
         for (U k = 0; k < kRowBytes; ++k)
-            pixels = pixels && At(Long(RowAt(3) + 4))[k] == 0x33 && At(Long(RowAt(40) + 4))[k] == 0x40 &&
-                     At(Long(RowAt(480) + 4))[k] == 0xE0;
+            pixels = pixels && Block(3)[k] == 0x33 && Block(40)[k] == 0x40 &&
+                     Block(480)[k] == 0xE0;
     Check(pixels, "the take's converted pixels in rows 3, 40 (made again) and 480");
-    Check(Long(RowAt(41) + 4) == 0, "a row made since the take is freed: converted on its first use again");
+    Check(Row(41)->block == 0, "a row made since the take is freed: converted on its first use again");
     bool empty = true;
     for (U k = 0; k < Gfx_TexCache_count; ++k) empty = empty && Gfx_TexCache[k] == 0;
     for (U k = 0; k < D3d_CellTexCache_count; ++k) empty = empty && D3d_CellTexCache[k] == 0;
@@ -374,7 +411,7 @@ void SelfTest() {
     // The game's words as they were.
     for (U y = 0; y < kRows; ++y)
         if (void* b = Object(RowAt(y) + 4)) Crt_free(b);
-    std::memcpy(At(RowAt(0)), rows0.data(), rows0.size());
+    std::memcpy(Gfx_ClutRows, rows0.data(), rows0.size());
     std::memcpy(Gfx_TexCache, tex0.data(), tex0.size());
     std::memcpy(Font_TexCache, font0.data(), font0.size());
     std::memcpy(D3d_CellTexCache, cell0.data(), cell0.size());

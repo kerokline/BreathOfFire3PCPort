@@ -17,6 +17,7 @@
 #include <malloc.h>
 
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -1486,8 +1487,6 @@ constexpr unsigned kSnapEntries = 64;             // voice entries a record
 constexpr std::uint32_t kBankData = 0x380;        // the record's sample-data pointer
 constexpr unsigned kSnapChannels = 23;            // Sound_Channels 0x6BC8C8..0x6BC924
 constexpr unsigned kGetFrequency = 0x20;          // IDirectSoundBuffer::GetFrequency
-constexpr std::uint32_t kStreamKindAt = 0x6BDE40;  // save_menu_callees.h at::kStreamKind: id >> 12 of the last stream
-constexpr std::uint32_t kStreamDataAt = 0x6BDE44;  // at::kStreamData: the last stream's file (Crt_malloc)
 constexpr unsigned char kNoEntry = 0xFF;
 enum : unsigned char { kMusicNone = 0, kMusicTrack = 1, kMusicOther = 2 };
 
@@ -1513,13 +1512,34 @@ bool g_discarded = false;
 std::uint32_t BankRecord(unsigned b) { return Address(Sound_Banks) + b * kBankBytes; }
 std::uint32_t EntryAt(unsigned b, unsigned e) { return BankRecord(b) + kVoices + e * 8; }
 
+// A Sound_Banks record (symbols.toml Sound_Banks; Snd_LoadBank): 24 cues of
+// four voice words at +0, 64 voice entries {sample pointer, buffer} at
+// +0x180, the sample data pointer at +0x380; each typed where its address is
+// made. Addresses as std::uint32_t: the image is 32-bit.
+struct SoundVoice {
+    std::uint32_t sample;  // +0 the voice's sample, inside the bank's data; 0 no voice
+    std::uint32_t buffer;  // +4 its IDirectSoundBuffer (SndBuf_FromWave)
+};
+struct SoundBank {
+    std::uint32_t cues[24][4];  // +0 four voice words a cue (Sound_PlayEffect)
+    SoundVoice voices[64];      // +0x180 kVoices
+    std::uint32_t data;         // +0x380 kBankData: the record's sample data (Crt_malloc)
+};
+static_assert(sizeof(SoundBank) == kBankBytes, "a Sound_Banks record");
+static_assert(offsetof(SoundBank, voices) == kVoices, "SoundBank::voices");
+static_assert(offsetof(SoundBank, data) == kBankData, "SoundBank::data");
+static_assert(kSnapBanks * sizeof(SoundBank) == Sound_Banks_count, "Sound_Banks' size");
+
+SoundBank* Bank(std::uint32_t record) { return reinterpret_cast<SoundBank*>(At(record)); }
+SoundVoice* Voice(std::uint32_t entry) { return reinterpret_cast<SoundVoice*>(At(entry)); }
+
 void SnapSave(bof3::SnapshotWriter& w) {
     w.Put(kSnapVersion);
     // The banks: each loaded one's sample data, whole.
     std::uint32_t bank_bytes = 0;
     unsigned banks = 0;
     for (unsigned b = 0; b < kSnapBanks; ++b) {
-        const std::uint32_t data = Dword(BankRecord(b) + kBankData);
+        const std::uint32_t data = Dword(BankRecord(b) + kBankData);   // raw: ->data compiles otherwise (the typed-data gate)
         const std::uint32_t bytes = data ? static_cast<std::uint32_t>(g_snap.block_bytes(At(data))) : 0;
         w.Put(data);
         w.Put(bytes);
@@ -1535,7 +1555,8 @@ void SnapSave(bof3::SnapshotWriter& w) {
         unsigned long frequency = 0, position = 0, write = 0;
         for (unsigned b = 0; buffer && b < kSnapBanks && bank == kNoEntry; ++b)
             for (unsigned e = 0; e < kSnapEntries; ++e)
-                if (Dword(EntryAt(b, e)) != 0 && Dword(EntryAt(b, e) + 4) == buffer) {
+                // the buffer word raw: ->buffer compiles otherwise (the typed-data gate), here and below
+                if (Voice(EntryAt(b, e))->sample != 0 && Dword(EntryAt(b, e) + 4) == buffer) {
                     bank = static_cast<unsigned char>(b);
                     entry = static_cast<unsigned char>(e);
                     break;
@@ -1557,7 +1578,7 @@ void SnapSave(bof3::SnapshotWriter& w) {
         w.Put(static_cast<std::uint32_t>(position));
     }
     // The last stream's file and the voice stream (Sound_LoadStream, kind > 0).
-    const std::uint32_t stream = Dword(kStreamDataAt);
+    const std::uint32_t stream = SaveMenu_StreamData;
     const std::uint32_t stream_bytes = stream ? static_cast<std::uint32_t>(g_snap.block_bytes(At(stream))) : 0;
     w.Put(stream_bytes);
     if (stream_bytes) w.Put(At(stream), stream_bytes);
@@ -1620,17 +1641,17 @@ void SnapDiscard() {
     g_live_device = Snd_Device;
     g_live_primary = Snd_Primary;
     for (unsigned b = 0; b < kSnapBanks; ++b) {
-        const std::uint32_t data = Dword(BankRecord(b) + kBankData);
+        const std::uint32_t data = Bank(BankRecord(b))->data;
         if (!data) continue;
         for (unsigned e = 0; e < kSnapEntries; ++e) {
             const std::uint32_t buffer = Dword(EntryAt(b, e) + 4);
-            if (Dword(EntryAt(b, e)) != 0 && buffer) g_snap.release(At(buffer));  // the ones Snd_LoadBank made
+            if (Voice(EntryAt(b, e))->sample != 0 && buffer) g_snap.release(At(buffer));  // the ones Snd_LoadBank made
         }
         g.free(At(data));
     }
     g_snap.stream_stop();
     g.music_release();
-    if (const std::uint32_t stream = Dword(kStreamDataAt)) g.free(At(stream));
+    if (const std::uint32_t stream = SaveMenu_StreamData) g.free(At(stream));
     if (Music_File) {
         music_seq::Forget(Music_File);
         g.free(Music_File);
@@ -1659,7 +1680,7 @@ void SnapRestore(bof3::SnapshotReader& r) {
     Music_Decoder = nullptr;
     Music_Data = nullptr;
     SndStream_Buffer = nullptr;
-    SetDword(kStreamDataAt, 0);
+    SaveMenu_StreamData = 0;
     Music_File = nullptr;
 
     // The banks.
@@ -1668,23 +1689,23 @@ void SnapRestore(bof3::SnapshotReader& r) {
         const std::uint32_t old = r.Get<std::uint32_t>();
         const std::uint32_t bytes = r.Get<std::uint32_t>();
         const std::uint32_t record = BankRecord(b);
-        if (Dword(record + kBankData) != old)
+        if (Bank(record)->data != old)
             bof3::Fatal("quicksave SOUND: bank %u's data word is %08X in the span, %08X in the record", b + 1,
-                        Dword(record + kBankData), old);
+                        Bank(record)->data, old);
         if (!old) continue;
         if (!bytes) bof3::Fatal("quicksave SOUND: bank %u had sample data at the take and the record holds none", b + 1);
         void* const block = g.malloc(bytes);
         if (!block) bof3::Fatal("quicksave SOUND: no %u bytes for bank %u's samples", bytes, b + 1);
         r.Get(block, bytes);
-        SetDword(record + kBankData, Address(block));
+        Bank(record)->data = Address(block);
         for (unsigned e = 0; e < kSnapEntries; ++e) {
-            const std::uint32_t sample = Dword(EntryAt(b, e));
+            const std::uint32_t sample = Voice(EntryAt(b, e))->sample;
             if (sample == 0) continue;  // no voice: Snd_LoadBank left the entry as the payload had it
             if (sample - old >= bytes)
                 bof3::Fatal("quicksave SOUND: bank %u entry %u's sample %08X lies outside its data %08X+%u", b + 1, e,
                             sample, old, bytes);
             const std::uint32_t moved = Address(block) + (sample - old);
-            SetDword(EntryAt(b, e), moved);
+            Voice(EntryAt(b, e))->sample = moved;
             SetDword(EntryAt(b, e) + 4, Address(g_snap.from_wave(At(moved))));
         }
         ++banks;
@@ -1702,7 +1723,7 @@ void SnapRestore(bof3::SnapshotReader& r) {
             continue;
         }
         if (bank >= kSnapBanks || entry >= kSnapEntries) bof3::Fatal("quicksave SOUND: channel %u names bank %u entry %u", c, bank, entry);
-        const std::uint32_t buffer = Dword(EntryAt(bank, entry) + 4);
+        const std::uint32_t buffer = Voice(EntryAt(bank, entry))->buffer;
         Sound_Channels[c] = buffer;
         if (!buffer || !playing) continue;
         void* const b = At(buffer);
@@ -1717,14 +1738,14 @@ void SnapRestore(bof3::SnapshotReader& r) {
         void* const block = g.malloc(stream_bytes);
         if (!block) bof3::Fatal("quicksave SOUND: no %u bytes for the last stream's file", stream_bytes);
         r.Get(block, stream_bytes);
-        SetDword(kStreamDataAt, Address(block));
+        SaveMenu_StreamData = Address(block);
     }
     {
         const unsigned char has = r.Get<unsigned char>();
         const unsigned char playing = r.Get<unsigned char>();
         const std::uint32_t position = r.Get<std::uint32_t>();
-        if (has && Dword(kStreamKindAt) != 0 && Dword(kStreamDataAt) != 0) {
-            g_snap.stream_play(At(Dword(kStreamDataAt)));
+        if (has && SaveMenu_StreamKind != 0 && SaveMenu_StreamData != 0) {
+            g_snap.stream_play(At(SaveMenu_StreamData));
             if (void* const voice = SndStream_Buffer) {
                 if (playing) Method<ComValue>(voice, kSetCurrentPosition)(voice, position);
                 else Method<ComCall>(voice, kStop)(voice);
@@ -1931,7 +1952,7 @@ struct SpanWords {
         device = Snd_Device, primary = Snd_Primary, voice = SndStream_Buffer, buffer = Music_Buffer;
         notify = Music_Notify, event0 = Music_Events[0], event1 = Music_Events[1], decoder = Music_Decoder;
         data = Music_Data, file = Music_File;
-        stream_kind = Dword(kStreamKindAt), stream_data = Dword(kStreamDataAt);
+        stream_kind = SaveMenu_StreamKind, stream_data = SaveMenu_StreamData;
         file_size = Music_FileSize, file_loops = Music_FileLoops, loaded_track = Music_LoadedTrack;
         loops = Music_Loops, finished = Music_Finished, fade_count = Music_FadeCount, fade_stops = Music_FadeStops;
         track = Music_Track, volume = Music_Volume, fade_step = Music_FadeStep, frame = Frame_Counter;
@@ -1942,7 +1963,7 @@ struct SpanWords {
         Snd_Device = device, Snd_Primary = primary, SndStream_Buffer = voice, Music_Buffer = buffer;
         Music_Notify = notify, Music_Events[0] = event0, Music_Events[1] = event1, Music_Decoder = decoder;
         Music_Data = data, Music_File = file;
-        SetDword(kStreamKindAt, stream_kind), SetDword(kStreamDataAt, stream_data);
+        SaveMenu_StreamKind = stream_kind, SaveMenu_StreamData = stream_data;
         Music_FileSize = file_size, Music_FileLoops = file_loops, Music_LoadedTrack = loaded_track;
         Music_Loops = loops, Music_Finished = finished, Music_FadeCount = fade_count, Music_FadeStops = fade_stops;
         Music_Track = track, Music_Volume = volume, Music_FadeStep = fade_step, Frame_Counter = frame;
@@ -2162,8 +2183,8 @@ void Banks() {
     const std::size_t voice_bytes = voice.size() - 0x380;
     void* const stream = std::malloc(voice_bytes);
     std::memcpy(stream, voice.data() + 0x380, voice_bytes);
-    SetDword(kStreamDataAt, Address(stream));
-    SetDword(kStreamKindAt, 1);
+    SaveMenu_StreamData = Address(stream);
+    SaveMenu_StreamKind = 1;
     FakeBuf* const voice_buffer = static_cast<FakeBuf*>(FakeCreate(static_cast<const unsigned char*>(stream)));
     voice_buffer->playing = true, voice_buffer->position = 0x80;
     SndStream_Buffer = voice_buffer;
@@ -2173,7 +2194,7 @@ void Banks() {
     take.Read();
     std::vector<std::uint32_t> hashes[6];
     for (unsigned b = 0; b < 6; ++b)
-        for (unsigned e = 0; e < 64; ++e) hashes[b].push_back(Dword(EntryAt(b, e)) ? EntryBuffer(b, e)->hash : 0);
+        for (unsigned e = 0; e < 64; ++e) hashes[b].push_back(Voice(EntryAt(b, e))->sample ? EntryBuffer(b, e)->hash : 0);
 
     // after the take: bank 1 reloaded (its buffers released, its data freed), bank 2 loaded
     ::Snd_LoadBank(1, one_again.data(), static_cast<unsigned>(one_again.size()));
@@ -2188,7 +2209,7 @@ void Banks() {
     bool fresh = true, equal = true, heads = true;
     for (unsigned b = 0; b < 6; ++b) {
         heads = heads && std::memcmp(At(BankRecord(b)), take.banks + b * kBankBytes, kVoices) == 0;
-        const std::uint32_t data = Dword(BankRecord(b) + kBankData);
+        const std::uint32_t data = Bank(BankRecord(b))->data;
         std::uint32_t take_data;
         std::memcpy(&take_data, take.banks + b * kBankBytes + kBankData, 4);
         if ((data == 0) != (take_data == 0)) equal = false;
@@ -2199,7 +2220,7 @@ void Banks() {
         for (unsigned e = 0; e < 64; ++e) {
             std::uint32_t take_sample;
             std::memcpy(&take_sample, take.banks + b * kBankBytes + kVoices + e * 8, 4);
-            const std::uint32_t sample = Dword(EntryAt(b, e));
+            const std::uint32_t sample = Voice(EntryAt(b, e))->sample;
             if (!take_sample) {
                 equal = equal && sample == 0;
                 continue;
@@ -2223,7 +2244,7 @@ void Banks() {
     Check(a->playing && a->play_flags == 1 && a->frequency == 22050 && a->position == 0x123 && b->playing &&
               b->play_flags == 1 && b->frequency == 11025 && b->position == 0x40 && !q->playing && q->plays == 0,
           "banks: the looping voices play again at their frequency and position, the stopped one does not");
-    const std::uint32_t stream_now = Dword(kStreamDataAt);
+    const std::uint32_t stream_now = SaveMenu_StreamData;
     FakeBuf* const v = static_cast<FakeBuf*>(SndStream_Buffer);
     Check(stream_now && _msize(At(stream_now)) == voice_bytes &&
               std::memcmp(At(stream_now), voice.data() + 0x380, voice_bytes) == 0 && v && v != voice_buffer &&
@@ -2234,8 +2255,8 @@ void Banks() {
     std::memset(Sound_Banks, 0, sizeof take.banks);
     std::memset(Sound_Channels, 0, sizeof take.channels);
     SndStream_Buffer = nullptr;
-    SetDword(kStreamDataAt, 0);
-    SetDword(kStreamKindAt, 0);
+    SaveMenu_StreamData = 0;
+    SaveMenu_StreamKind = 0;
     g_discarded = false;
 }
 
