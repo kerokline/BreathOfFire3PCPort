@@ -207,10 +207,10 @@ static_assert(kCount == 60, "the cut's 60 rows for R4B");
 // its cell, docs/rest_4b.md section 3).
 struct Dispatch { U base, by; unsigned count; };
 const Dispatch kDispatch[] = {
-    {0x456D50, at::kTailState, 11}, {0x456E70, at::kTailState, 5},  {0x457110, at::kTailState, 2},
-    {0x4572F0, at::kTailState, 21}, {0x457340, at::kTailArg, 16},   {0x457370, at::kTailState, 12},
-    {0x4573B0, at::kTailState, 7},  {0x457510, at::kTailState, 5},  {0x457640, at::kBoardState, 14},
-    {0x457780, at::kSavedMode, 11}, {0x457790, at::kBoardStep, 8},  {0x457AD0, at::kBoardStep, 6},
+    {0x456D50, AreaW0c_TailState_addr, 11}, {0x456E70, AreaW0c_TailState_addr, 5},  {0x457110, AreaW0c_TailState_addr, 2},
+    {0x4572F0, AreaW0c_TailState_addr, 21}, {0x457340, AreaW0c_TailSub_addr, 16},   {0x457370, AreaW0c_TailState_addr, 12},
+    {0x4573B0, AreaW0c_TailState_addr, 7},  {0x457510, AreaW0c_TailState_addr, 5},  {0x457640, Rest4b_BoardState_addr, 14},
+    {0x457780, Rest4b_SavedMode_addr, 11}, {0x457790, Rest4b_BoardStep_addr, 8},  {0x457AD0, Rest4b_BoardStep_addr, 6},
 };
 const Dispatch* DispatchOf(U base) {
     for (const Dispatch& d : kDispatch)
@@ -220,10 +220,10 @@ const Dispatch* DispatchOf(U base) {
 
 // The four runs; the other eight tables are their tails.
 const sh::DataTable kTables[] = {
-    {at::kTail14States, 11},
-    {at::kTail23States, 21},
-    {at::kTail26States, 5},
-    {at::kBoardStates, 14},
+    {CommuTail14_States_addr, 11},
+    {CommuTail23_States_addr, 21},
+    {CommuTail26_States_addr, 5},
+    {CommuBoard_States_addr, 14},
 };
 
 // --- the moves (from a hash: the harness's Noise() or Disturb's) -----------------------
@@ -237,21 +237,21 @@ void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     const unsigned w = h >> 16;
     switch (sh::DisturbCase(h, kCases)) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(v % 22); break;
-    case 1: B(at::kTailArg) = static_cast<unsigned char>(v % 8 + 1); break;
-    case 2: B(at::kBoardState) = static_cast<unsigned char>(v % 14); break;
-    case 3: B(at::kBoardStep) = static_cast<unsigned char>(v % 8); break;
-    case 4: B(at::kListCursor) = static_cast<unsigned char>(v % 10 - 1); break;
-    case 5: B(at::kPick) = static_cast<unsigned char>(v % 13 - 1); break;
-    case 6: B(at::kPickB + w % 2) = static_cast<unsigned char>(v % 5); break;          // 0x675F7E or 0x675F7F
-    case 7: B(w & 1 ? at::kPickD : at::kPickE) = static_cast<unsigned char>(v & 1 ? 0xFF : v % 6); break;
-    case 8: SetW(at::kHelp, v & 1 ? 0x3D : (v & 2 ? 0xFFFF : w & 0x1FF)); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 22); break;
+    case 1: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v % 8 + 1); break;
+    case 2: B(Rest4b_BoardState_addr) = static_cast<unsigned char>(v % 14); break;
+    case 3: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(v % 8); break;
+    case 4: B(Rest4b_ListCursor_addr) = static_cast<unsigned char>(v % 10 - 1); break;
+    case 5: B(Rest4b_Pick_addr) = static_cast<unsigned char>(v % 13 - 1); break;
+    case 6: B(Rest4b_PickB_addr + w % 2) = static_cast<unsigned char>(v % 5); break;   // 0x675F7E or 0x675F7F
+    case 7: B(w & 1 ? Rest4b_PickD_addr : Rest4b_PickE_addr) = static_cast<unsigned char>(v & 1 ? 0xFF : v % 6); break;
+    case 8: SetW(Rest4b_Help_addr, v & 1 ? 0x3D : (v & 2 ? 0xFFFF : w & 0x1FF)); break;
     case 9: B(SlotAt(w % 8 + 1) + (v % 3)) = static_cast<unsigned char>(v % 3 == 1 ? (w >> 3) % 3 : (v & 4 ? 0 : 4 + (w >> 3) % 10)); break;
     case 10: B(Rec(w % 60) + 1 + v % 3) = static_cast<unsigned char>(v % 3 == 0 ? (w >> 6) % 8 + 1 : w >> 6); break;
-    case 11: B(at::kListCount) = static_cast<unsigned char>(v % 7); break;
-    case 12: SetL(at::kClock, h * 0x9E3779B1u); break;
-    case 13: B(at::kToggle + (w % 2 ? 1 : 0)) = static_cast<unsigned char>(v & 1); break;   // the toggle or 0x675F7D
-    case 14: B(at::kCursorMode + w % 3) = static_cast<unsigned char>(v % 5); break;
+    case 11: B(FieldE2_LevelA_addr) = static_cast<unsigned char>(v % 7); break;
+    case 12: SetL(Rest4a_Clock_addr, h * 0x9E3779B1u); break;
+    case 13: B(Rest4b_Toggle_addr + (w % 2 ? 1 : 0)) = static_cast<unsigned char>(v & 1); break; // the toggle or 0x675F7D
+    case 14: B(Rest4b_CursorMode_addr + w % 3) = static_cast<unsigned char>(v % 5); break;
     default: break;
     }
 }
@@ -294,12 +294,12 @@ U XYAnswer(const U* a, U answer) {
 // D20). The values are the moves' own (cases 1, 7 and 9).
 U RandMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 4 == 0) B(at::kTailArg) = static_cast<unsigned char>((n >> 8) % 8 + 1);
+    if (n % 4 == 0) B(AreaW0c_TailSub_addr) = static_cast<unsigned char>((n >> 8) % 8 + 1);
     return answer;
 }
 U ListBoxMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 4 == 0) B(at::kPickD) = static_cast<unsigned char>(n & 4 ? 0xFF : (n >> 8) % 6);
+    if (n % 4 == 0) B(Rest4b_PickD_addr) = static_cast<unsigned char>(n & 4 ? 0xFF : (n >> 8) % 6);
     return answer;
 }
 U SpriteMove(const U*, U answer) {
@@ -409,10 +409,10 @@ void SeedButtons() {
     const U confirm = 1u << (sh::Next() % 16);
     U cancel = 1u << (sh::Next() % 16);
     if (cancel == confirm) cancel = confirm == 0x8000 ? 1 : confirm << 1;
-    SetW(at::kConfirm, confirm | (sh::Half() ? 0 : 1u << (sh::Next() % 16)));
-    SetW(at::kCancel, cancel);
+    SetW(Field_ConfirmButtons_addr, confirm | (sh::Half() ? 0 : 1u << (sh::Next() % 16)));
+    SetW(Field_CancelButtons_addr, cancel);
     const U other = sh::Next() & 0xFFFF & ~(confirm | cancel);
-    SetW(at::kPressed, PickOf(confirm, cancel, confirm | cancel, 0, 0, other, confirm | other, cancel | other));
+    SetW(Input_Pressed_addr, PickOf(confirm, cancel, confirm | cancel, 0, 0, other, confirm | other, cancel | other));
 }
 
 // The 60 records: in use or not, a slot 0..11 mostly, the marks, a start time.
@@ -440,45 +440,45 @@ void SeedSlots() {
 }
 
 void SeedBoard() {
-    B(at::kTailKind) = static_cast<unsigned char>(sh::Next());
-    B(at::kTailState) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 22, sh::Next()));
-    B(at::kTailArg) = static_cast<unsigned char>(PickOf(0, 1, 3, 8, 9, 11, sh::Next() % 12));
-    SetL(at::kTailObject, Key(sh::SpriteRecord(sh::Next())));
-    B(at::kBoardFlag) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
-    B(at::kBoardTrack) = static_cast<unsigned char>(sh::Next());
-    B(at::kBoardState) = static_cast<unsigned char>(sh::Next() % 14);
-    B(at::kBoardStep) = static_cast<unsigned char>(sh::Next() % 8);
-    B(at::kCursorMode) = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
-    B(at::kCursorA) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
-    B(at::kCursorB) = static_cast<unsigned char>(PickOf(1, 2, 4, 0, 5, sh::Next()));
-    SetW(at::kKeptHelp, sh::Next());
-    SetW(at::kHelp, PickOf(0x3D, 0x3D, 0xFFFF, 0xB5, sh::Next() & 0x1FF));
-    B(at::kToggle) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
-    B(at::kPickC) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
-    B(at::kPickB) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));
-    B(at::kPick) = static_cast<unsigned char>(PickOf(0, 1, 8, 9, 11, 0xFF, sh::Next() % 12, sh::Next()));
-    B(at::kListCursor) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next() % 5, sh::Next()));
-    B(at::kKeptStep) = static_cast<unsigned char>(sh::Next());
-    B(at::kPickE) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0, 1, sh::Next() % 6));
-    B(at::kPickD) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0, 1, sh::Next() % 6));
-    B(at::kSavedB) = static_cast<unsigned char>(sh::Next());
-    B(at::kSavedA) = static_cast<unsigned char>(sh::Next());
-    B(at::kSavedMode) = static_cast<unsigned char>(sh::Next() % 11);
-    B(at::kCountA) = static_cast<unsigned char>(sh::Next());
-    B(at::kListCount) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 6, sh::Next() % 9));
-    B(at::kCountC) = static_cast<unsigned char>(sh::Next());
-    SetW(sa::kArea, PickOf(0xAF, 0xB0, 0xB4, 0xB9, sh::Next() % 0x100, sh::Next()));
-    B(at::kRequest) = static_cast<unsigned char>(PickOf(0, 2, 2, 1, sh::Next()));
+    B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(sh::Next());
+    B(AreaW0c_TailState_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 22, sh::Next()));
+    B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(0, 1, 3, 8, 9, 11, sh::Next() % 12));
+    SetL(Rest4d_Pointer_addr, Key(sh::SpriteRecord(sh::Next())));
+    B(Rest4b_BoardFlag_addr) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+    B(Rest4d_Again_addr) = static_cast<unsigned char>(sh::Next());
+    B(Rest4b_BoardState_addr) = static_cast<unsigned char>(sh::Next() % 14);
+    B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % 8);
+    B(Rest4b_CursorMode_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
+    B(Rest4b_CursorA_addr) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+    B(Rest4b_CursorB_addr) = static_cast<unsigned char>(PickOf(1, 2, 4, 0, 5, sh::Next()));
+    SetW(Rest4b_KeptHelp_addr, sh::Next());
+    SetW(Rest4b_Help_addr, PickOf(0x3D, 0x3D, 0xFFFF, 0xB5, sh::Next() & 0x1FF));
+    B(Rest4b_Toggle_addr) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+    B(Rest4b_PickC_addr) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+    B(Rest4b_PickB_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next()));
+    B(Rest4b_Pick_addr) = static_cast<unsigned char>(PickOf(0, 1, 8, 9, 11, 0xFF, sh::Next() % 12, sh::Next()));
+    B(Rest4b_ListCursor_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, sh::Next() % 5, sh::Next()));
+    B(Rest4b_KeptStep_addr) = static_cast<unsigned char>(sh::Next());
+    B(Rest4b_PickE_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0, 1, sh::Next() % 6));
+    B(Rest4b_PickD_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0, 1, sh::Next() % 6));
+    B(Rest4b_SavedB_addr) = static_cast<unsigned char>(sh::Next());
+    B(Rest4b_SavedA_addr) = static_cast<unsigned char>(sh::Next());
+    B(Rest4b_SavedMode_addr) = static_cast<unsigned char>(sh::Next() % 11);
+    B(Rest4b_CountA_addr) = static_cast<unsigned char>(sh::Next());
+    B(FieldE2_LevelA_addr) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 6, sh::Next() % 9));
+    B(Rest4a_LevelLit_addr) = static_cast<unsigned char>(sh::Next());
+    SetW(Game_AreaNumber_addr, PickOf(0xAF, 0xB0, 0xB4, 0xB9, sh::Next() % 0x100, sh::Next()));
+    B(Field_Request_addr) = static_cast<unsigned char>(PickOf(0, 2, 2, 1, sh::Next()));
     SetW(at::kMessageIndex, PickOf(0xF9, 0xF8, sh::Next()));
-    B(at::kScriptFlags) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
-    B(at::kBusyA) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
-    B(at::kBusyB) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
-    B(at::kSoundBankBits) = static_cast<unsigned char>(sh::Next());
+    B(Rest4a_RemovedCount_addr) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
+    B(Rest4b_BusyA_addr) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
+    B(Rest4b_BusyB_addr) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
+    B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(sh::Next());
     // the clock around the bounds of CommuTail_TimedGift's table from the argument's record
     static const U kSteps[] = {0, 1, 2, 3, 4, 7, 8, 0xB, 0x10, 0x15, 0x1A, 0x1F, 0x29, 0x33, 0x3D, 0x47, 0x4D, 0x4E, 0x51, 0x5B, 0xC9, 0x1F4};
-    const U start = move_script::Long(sh::Mem(Rec(B(at::kTailArg) % 60) + 4));
+    const U start = move_script::Long(sh::Mem(Rec(B(AreaW0c_TailSub_addr) % 60) + 4));
     const U step = kSteps[sh::Next() % (sizeof kSteps / sizeof kSteps[0])];
-    SetL(at::kClock, PickOf(start + step, start + step - 1, start + step, sh::Next()));
+    SetL(Rest4a_Clock_addr, PickOf(start + step, start + step - 1, start + step, sh::Next()));
 }
 
 void Seed(unsigned k) {
@@ -491,44 +491,44 @@ void Seed(unsigned k) {
     switch (c.base) {
     case 0x457120: {   // RandomGift: every record's slot 1..8 (their levels below 3: the disturbance moves the
                        // argument), the marks 2 and 3 often
-        const unsigned arg = B(at::kTailArg) % 60;
-        B(at::kTailArg) = static_cast<unsigned char>(arg);
+        const unsigned arg = B(AreaW0c_TailSub_addr) % 60;
+        B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(arg);
         for (unsigned r = 0; r < 60; ++r) B(Rec(r) + 1) = static_cast<unsigned char>(sh::Next() % 8 + 1);
         B(Rec(arg) + 2) = static_cast<unsigned char>(PickOf(2, 2, 3, 3, sh::Next()));
         break;
     }
     case 0x456E80:     // TimedGift, NibbleGift: the argument within the 60
     case 0x4573C0:
-        B(at::kTailArg) = static_cast<unsigned char>(B(at::kTailArg) % 60);
-        if (c.base == 0x4573C0) B(Rec(B(at::kTailArg)) + 3) = static_cast<unsigned char>(PickOf(0, 0x10, 0x23, sh::Next()));
+        B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(B(AreaW0c_TailSub_addr) % 60);
+        if (c.base == 0x4573C0) B(Rec(B(AreaW0c_TailSub_addr)) + 3) = static_cast<unsigned char>(PickOf(0, 0x10, 0x23, sh::Next()));
         break;
     case 0x458410:     // Confirm writes the slot: 1..8; the picks often the slot's own
-        B(at::kTailArg) = static_cast<unsigned char>(sh::Next() % 8 + 1);
+        B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(sh::Next() % 8 + 1);
         if (sh::Half()) {
-            const U p = SlotAt(B(at::kTailArg));
-            B(at::kPick) = static_cast<unsigned char>(B(p) - 4);
-            B(at::kPickB) = B(p + 1);
-            B(at::kPickC) = sh::Often() ? B(p + 2) : static_cast<unsigned char>(sh::Next());
+            const U p = SlotAt(B(AreaW0c_TailSub_addr));
+            B(Rest4b_Pick_addr) = static_cast<unsigned char>(B(p) - 4);
+            B(Rest4b_PickB_addr) = B(p + 1);
+            B(Rest4b_PickC_addr) = sh::Often() ? B(p + 2) : static_cast<unsigned char>(sh::Next());
         }
         break;
     case 0x459D80: {   // SlotHelp: a kind 0 or 4..13 at the argument's slot (others read the frame above)
-        const unsigned arg = B(at::kTailArg);
+        const unsigned arg = B(AreaW0c_TailSub_addr);
         if (arg >= 1 && arg <= 8)
             B(SlotAt(arg)) = static_cast<unsigned char>(PickOf(0, 4, 4 + sh::Next() % 10, 13, 5));
         break;
     }
     case 0x459C80:     // PlaceRecord, PickHelp: the target the source often
     case 0x459E50:
-        if (sh::Half()) B(at::kPick) = B(at::kTailArg);
+        if (sh::Half()) B(Rest4b_Pick_addr) = B(AreaW0c_TailSub_addr);
         break;
     case 0x4594A0:     // MoveGridCursor: the cells at the cursor's boundaries
-        B(at::kTailArg) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 8, 9, 0xA, 0xB, sh::Next()));
-        B(at::kPick) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 8, 9, 0xA, 0xB, sh::Next()));
+        B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 8, 9, 0xA, 0xB, sh::Next()));
+        B(Rest4b_Pick_addr) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 8, 9, 0xA, 0xB, sh::Next()));
         break;
     default: break;
     }
     // the help word on the yes / no message, so DrawPanel's tile is drawn
-    if (c.base == 0x458D70 && sh::Half()) SetW(at::kHelp, 0x3D);
+    if (c.base == 0x458D70 && sh::Half()) SetW(Rest4b_Help_addr, 0x3D);
 }
 
 // The helpers' arguments: coordinates at boundaries or random words; a record
@@ -568,7 +568,7 @@ void Args(unsigned k, U* a) {
         break;
     case 0x4594A0:   // MoveGridCursor(cell), PickHelp(cell)
     case 0x459E50:
-        a[0] = sh::Half() ? at::kTailArg : at::kPick;   // both seeded (Seed)
+        a[0] = sh::Half() ? AreaW0c_TailSub_addr : Rest4b_Pick_addr; // both seeded (Seed)
         break;
     case 0x459720:   // DrawDigits(x, y, n), DrawSprite(x, y, id), DrawListBox(x, y, steady), DrawListFrame(x, y, h)
     case 0x4597E0:

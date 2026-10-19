@@ -119,7 +119,7 @@ const sh::Callee kCallees[] = {
 };
 #undef SH_OURS
 
-const sh::DataTable kTables[] = {{kStates, 3}, {kRuns, 12}};
+const sh::DataTable kTables[] = {{Scena00_States_addr, 3}, {Scena00_Runs_addr, 12}};
 
 // The area Scena00_Steer and Scena00_Run11 read the descriptor of: its
 // Area_Descriptors entry points at a block of the fuzz's own, whose +0xC
@@ -156,14 +156,14 @@ unsigned StepsOf(unsigned k) {
 void Seed(unsigned k) {
     g_k = k;
     // the areas the chapter tests, and Cond_ByteFD's five cases
-    if (sh::Often()) SetW(kArea, SH_PICK(1, 2, 4, 0x18, 0x19, 0x1F));
-    if (sh::Often()) B(kByteFD) = static_cast<unsigned char>(sh::Next() % 5);
+    if (sh::Often()) SetW(Game_AreaNumber_addr, SH_PICK(1, 2, 4, 0x18, 0x19, 0x1F));
+    if (sh::Often()) B(Cond_ByteFD_addr) = static_cast<unsigned char>(sh::Next() % 5);
     // the step: every case of the function's table, and one past it
     if (const unsigned steps = StepsOf(k); steps && sh::Often()) {
         unsigned s = sh::Next() % (steps + 1);
         if (std::strcmp(kClones[k].name, "Scena00_Run6") == 0 && sh::Often())
             s = SH_PICK(0, 0xA, 0xB, 0xD, 0x14, 0x15, 0x17, 0x1E, 0x1F, 0x21, 0x32);
-        B(kStep) = static_cast<unsigned char>(s);
+        B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(s);
     }
     // the counters the steps wait on, each boundary in
     if (sh::Next() % 6)
@@ -172,44 +172,44 @@ void Seed(unsigned k) {
         B(kByte4A) = static_cast<unsigned char>(SH_PICK(0, 1, 3, 9, 0x13, 0x14, 0x15, 0x17, 0x23, 0x30, 0x35, 0x38, 0x71));
     if (sh::Often()) B(kByte4B) = static_cast<unsigned char>(SH_PICK(0, 1, 0x54, 0x60));
     if (sh::Half()) B(kCount2) = static_cast<unsigned char>(SH_PICK(0x1E, 0x1F, 0));
-    if (sh::Half()) SetW(kWait, 0);
-    if (sh::Half()) B(kRequest) = 2;
-    if (sh::Often()) SetW(kTimer, SH_PICK(0, 1, 2, 0x21, 0x7B, 0x7C));
-    if (sh::Half()) SetL(kFocusZ, SH_PICK(0x4400, 0x5000));
+    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) B(Field_Request_addr) = 2;
+    if (sh::Often()) SetW(MoveScript_PartyRecords_addr + 0x66, SH_PICK(0, 1, 2, 0x21, 0x7B, 0x7C));
+    if (sh::Half()) SetL(MapView_FocusZ_addr, SH_PICK(0x4400, 0x5000));
     if (sh::Half()) Frame_Counter = Frame_Counter & ~0x1Fu;
-    if (sh::Half()) B(kInput + 1) = static_cast<unsigned char>(sh::Half() ? 0 : SH_PICK(0x10, 0x20, 0x40, 0x80));
-    if (sh::Half()) B(kObjTrio + 1) = 2;
+    if (sh::Half()) B(Input_Pressed_addr + 1) = static_cast<unsigned char>(sh::Half() ? 0 : SH_PICK(0x10, 0x20, 0x40, 0x80));
+    if (sh::Half()) B(ObjTrio_addr + 1) = 2;
     // area 1's effect, and the counter it reads again after taking the slot
     if (k == kEnterK && sh::Half()) {
-        SetW(kArea, 1);
+        SetW(Game_AreaNumber_addr, 1);
         B(kByte4A) = sh::Half() ? 0 : 3;
     }
     // run 11's step 5 at the counter's last count, no direction pressed
     if (k == kRun11K && sh::Half()) {
-        B(kStep) = 5;
+        B(MoveScript_PartyRecords_addr + 0x65) = 5;
         B(kCounter) = static_cast<unsigned char>(SH_PICK(0x13, 0x14));
-        B(kInput + 1) = 0;
+        B(Input_Pressed_addr + 1) = 0;
     }
     // the message steps that store Field_Request between two calls
     if ((k == kRun2K || k == kRun4K) && sh::Half()) {
-        B(kStep) = k == kRun2K ? 0 : 9;
-        SetW(kWait, 0);
+        B(MoveScript_PartyRecords_addr + 0x65) = k == kRun2K ? 0 : 9;
+        SetW(MoveScript_WaitWordDA_addr, 0);
     }
     // run 5's shaking steps, with something to shake
     if (k == kRun5K && sh::Next() % 3 == 0) {
-        B(kStep) = static_cast<unsigned char>(4 + sh::Next() % 3);
+        B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(4 + sh::Next() % 3);
         B(kByte4A) = static_cast<unsigned char>(1 + sh::Next() % 0x20);
         Frame_Counter = Frame_Counter & ~0xFu;
     }
     // the tables' indices, inside what the original can jump to
     if (k == kFrameK) B(0x8034E2) = static_cast<unsigned char>(sh::Next() % 15);
-    if (k == kRunK) B(kRun) = static_cast<unsigned char>(sh::Next() % 12);
+    if (k == kRunK) B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next() % 12);
     if (k == kObjectK) sh::SpriteRecord(0)[0x86] = 0;
-    SetL(kObjectHooks, Key(reinterpret_cast<const void*>(&ObjectEntry)));
+    SetL(Scena00_ObjectHooks_addr, Key(reinterpret_cast<const void*>(&ObjectEntry)));
     // the area Steer and Run11 read the descriptor of
     if (k == kSteerK || k == kRun11K) {
-        SetW(kArea, kFakeArea);
-        SetL(kDescriptors + 4 * kFakeArea, Key(g_desc));
+        SetW(Game_AreaNumber_addr, kFakeArea);
+        SetL(Area_Descriptors_addr + 4 * kFakeArea, Key(g_desc));
         SetL(Key(g_desc) + 0xC, Key(g_corner));
     }
 }
@@ -229,14 +229,14 @@ void Disturb(std::uint32_t h) {
         return;
     }
     if (g_k == kRun2K || g_k == kRun4K) {   // Field_Request moved off 2 by the call after the store
-        B(kRequest) = static_cast<unsigned char>(h >> 24 == 2 ? 0 : h >> 24);
+        B(Field_Request_addr) = static_cast<unsigned char>(h >> 24 == 2 ? 0 : h >> 24);
         return;
     }
     switch ((h >> 8) % 4) {
     case 0: B(kByte4A) = b; break;
     case 1: B(kByte4B) = b; break;
     case 2: B(kCount2) = b; break;
-    default: B(kObjTrio + 1) = b; break;
+    default: B(ObjTrio_addr + 1) = b; break;
     }
 }
 
@@ -261,10 +261,10 @@ void SelfTest() {
     g_regions[r++] = {0x904EE0, 4};
     g_regions[r++] = {0x904CD0, 4};
     g_regions[r++] = {0x7E0688, 4};                           // MapView_Origin (0x7E068A)
-    g_regions[r++] = {kDescriptors + 4 * kFakeArea, 4};
+    g_regions[r++] = {Area_Descriptors_addr + 4 * kFakeArea, 4};
     g_regions[r++] = {Key(g_desc), sizeof g_desc};
     g_regions[r++] = {Key(g_corner), sizeof g_corner};
-    g_regions[r++] = {kObjectHooks, 4};                       // Scena00_ObjectHooks, the stand-in written by the seed
+    g_regions[r++] = {Scena00_ObjectHooks_addr, 4};           // Scena00_ObjectHooks, the stand-in written by the seed
     sh::Group group = {
         "scena_sc0", kClones, kCount, kCallees, sizeof kCallees / sizeof kCallees[0],
         kTables, sizeof kTables / sizeof kTables[0], g_regions, r, &Seed, &Disturb, 4000,

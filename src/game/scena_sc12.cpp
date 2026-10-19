@@ -46,17 +46,17 @@ std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(sta
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
 std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
-unsigned Area() { return W(at::kArea); }
+unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
 void SetCounter(unsigned k, unsigned char v) { B(at::kCounters + k) = v; }
-void SetStep(unsigned char v) { B(at::kStep) = v; }
-void SetRun(unsigned char v) { B(at::kRun) = v; }
-void SetPass(unsigned char v) { B(at::kPassFlags) = v; }
-unsigned char Request() { return B(at::kRequest); }
-void SetRequest(unsigned char v) { B(at::kRequest) = v; }
-bool WaitClear() { return W(at::kWait) == 0; }
-void ScriptXor(std::uint16_t v) { W(at::kScriptFlags) = static_cast<std::uint16_t>(W(at::kScriptFlags) ^ v); }
-void MusicCurrent(unsigned char v) { B(at::kMusicCurrent) = v; }
+void SetStep(unsigned char v) { MoveScript_PartyRecords[0x65] = v; }
+void SetRun(unsigned char v) { MoveScript_Var7 = v; }
+void SetPass(unsigned char v) { Draw_PassFlags = v; }
+unsigned char Request() { return Field_Request; }
+void SetRequest(unsigned char v) { Field_Request = v; }
+bool WaitClear() { return MoveScript_WaitWordDA == 0; }
+void ScriptXor(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags ^ v); }
+void MusicCurrent(unsigned char v) { AreaW1f_MusicCurrent = v; }
 
 // The four counters 0x903848..B zeroed (a run's end), in that order.
 void ClearCounters() {
@@ -65,7 +65,7 @@ void ClearCounters() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(D(at::kFlagBits))); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
 void Clr(unsigned i) { SH_CALL(Flags_Clear)(Bits(), i); }
@@ -126,14 +126,14 @@ void Place13(unsigned char slot, std::int32_t x, std::int32_t y, std::int32_t z,
     *reinterpret_cast<std::int32_t*>(e + 0x6C) = z;
     e[9] = life;
 }
-std::int32_t AngleX() { return static_cast<std::int16_t>(W(at::kAngleX)); }
-std::int32_t AngleY() { return static_cast<std::int16_t>(W(at::kAngleY)); }
+std::int32_t AngleX() { return Camera_Angles[0]; }
+std::int32_t AngleY() { return Camera_Angles[1]; }
 
 // The selector Cond_Flags +0x19C & 0x7F picks one of ten flags base..base+9:
 // 7..10 the first four, 13..18 the other six; 11, 12 and any other value
 // none (the originals' jump tables of twelve, entries 4 and 5 empty).
 int Pick(unsigned base) {
-    const unsigned v = B(at::kSelector) & 0x7F;
+    const unsigned v = AreaW0b_PartySet & 0x7F;
     if (v >= 7 && v <= 10) return static_cast<int>(base + v - 7);
     if (v >= 13 && v <= 18) return static_cast<int>(base + v - 9);
     return -1;
@@ -168,25 +168,25 @@ std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* 
 // tail jump through Scena12_States on the s8 state 0x8034E2: 0 0x5646B0
 // (group SC13's), 1 Scena12_EnterArea, 2 Scena12_Run.
 SC12_EXPORT void __cdecl Scena12_Frame(void) {
-    const int state = static_cast<signed char>(B(at::kState));
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(at::kStates, state, at::kStateCount, "Scena12_Frame")))();
+    const int state = static_cast<signed char>(MoveScript_PartyRecords[0x62]);
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena12_States_addr, state, at::kStateCount, "Scena12_Frame")))();
 }
 
 // original 0x55EA80: state 2, a tail jump through Scena12_Runs on the s8 run
 // MoveScript_Var7: 0, 3 a bare ret (0x437CC0), 1 Run1, 2 Run2, 4..9 Run4..9.
 SC12_EXPORT void __cdecl Scena12_Run(void) {
-    const int run = static_cast<signed char>(B(at::kRun));
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(at::kRuns, run, at::kRunCount, "Scena12_Run")))();
+    const int run = MoveScript_Var7;
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena12_Runs_addr, run, at::kRunCount, "Scena12_Run")))();
 }
 
 // original 0x561880: slot 1, called by 0x56D6D0 with the object that
 // triggered: Scena12_Objects[object +0x86] (object, the flag bits' pointer).
 // The entry's eax is the original's answer; 0x56D6D0 does not read it.
 SC12_EXPORT void __cdecl Scena12_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = D(at::kFlagBits);
+    const std::uint32_t bits = AreaW0c_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
-        Entry(at::kObjects, static_cast<int>(index), at::kObjectCount, "Scena12_ObjectTrigger")))(object, bits);
+        Entry(Scena12_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena12_ObjectTrigger")))(object, bits);
 }
 
 // original 0x5619E0: slot 3, the arrive hook (Scenario_ArriveHook, x and z
@@ -277,11 +277,11 @@ SC12_EXPORT unsigned char __cdecl Scena12_StepHook(int x, int z) {
 // match, or 0xFF; negative (as a signed byte) answers 0xFF; else a tail jump
 // through Scena12_CellHooks with (a, b), whose al is the answer.
 SC12_EXPORT unsigned char __cdecl Scena12_CellHook(unsigned a, unsigned b) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(at::kCellRecords), 4, a, b);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(Scena12_CellRecords_addr), 4, a, b);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(
-        Entry(at::kCellHooks, index, at::kCellHookCount, "Scena12_CellHook")))(a, b);
+        Entry(Scena12_CellHooks_addr, index, at::kCellHookCount, "Scena12_CellHook")))(a, b);
 }
 
 // original 0x561D10: Scena12_CellHooks entries 0..2: ScriptFlags_Set40, the
@@ -289,7 +289,7 @@ SC12_EXPORT unsigned char __cdecl Scena12_CellHook(unsigned a, unsigned b) {
 // call, is 5), run 5; 1.
 SC12_EXPORT unsigned char __cdecl Scena12_CellTalk(void) {
     Set40();
-    const unsigned char leader = B(at::kLeaderName);
+    const unsigned char leader = ObjTrio[0x89];
     ClearCounters();
     SetStep(0);
     if (leader == 5) SetStep(5);
@@ -420,7 +420,7 @@ void EnterAreaBody() {
         const unsigned c = Counter(2);
         if (c == 1) {
             SH_CALL(MapView_SetElevation)(0x498);
-            B(at::kRedraw) = 2;
+            MapView_Redraw = 2;
         } else if (c == 2) {
             B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | 0x16);
             SetPass(0x1F);
@@ -442,14 +442,14 @@ void EnterAreaBody() {
         return;
     }
     if (area == 0x85) {
-        if (Flag(0x24) && !Flag(0x26) && B(at::kCondFD) == 2) {
+        if (Flag(0x24) && !Flag(0x26) && Cond_ByteFD == 2) {
             Set40();
             SetStep(0x19);
             SetRun(5);
         }
         const unsigned c = Counter(2);
         if (c == 3) {
-            const unsigned v = B(at::kSelector) & 0x7F;
+            const unsigned v = AreaW0b_PartySet & 0x7F;
             B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | 0xE);
             switch (v) {
             case 8: CallB(1); CallA(3); break;
@@ -479,7 +479,7 @@ void EnterAreaBody() {
             CallB(3);
         } else if (c == 2) {
             SH_CALL(MapView_SetElevation)(0x200);
-            B(at::kRedraw) = 2;
+            MapView_Redraw = 2;
         } else if (c == 0xA) {
             Spawn(0, 0x77, 1);
         } else {
@@ -500,11 +500,11 @@ void EnterAreaBody() {
         case 3:
             B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | 8);
             SH_CALL(MapView_SetElevation)(0x290);
-            B(at::kRedraw) = 2;
+            MapView_Redraw = 2;
             break;
         case 4:
             SH_CALL(MapView_SetElevation)(0x100);
-            B(at::kRedraw) = 2;
+            MapView_Redraw = 2;
             break;
         case 5:
             CallB(2);
@@ -544,7 +544,7 @@ void EnterAreaBody() {
 // state 2.
 SC12_EXPORT void __cdecl Scena12_EnterArea(void) {
     EnterAreaBody();
-    B(at::kState) = 2;
+    MoveScript_PartyRecords[0x62] = 2;
 }
 
 // ===========================================================================
@@ -555,7 +555,7 @@ SC12_EXPORT void __cdecl Scena12_EnterArea(void) {
 // = 0x32 and step 0xB. Step 0xB: at counter 1 = 0xA, counter 1 0 and the run
 // ends.
 SC12_EXPORT void __cdecl Scena12_Run1(void) {
-    const unsigned step = B(at::kStep);
+    const unsigned step = MoveScript_PartyRecords[0x65];
     if (step == 0xA) {
         if (Request() == 2) return;
         SetCounter(0, 0x32);
@@ -570,7 +570,7 @@ SC12_EXPORT void __cdecl Scena12_Run1(void) {
 // original 0x55EAE0: run 2. Step 0x32 message 6, step 0x3C message 7, each
 // then step 0x33; step 0x33 ends the run once the request byte is not 2.
 SC12_EXPORT void __cdecl Scena12_Run2(void) {
-    const unsigned step = B(at::kStep);
+    const unsigned step = MoveScript_PartyRecords[0x65];
     if (step == 0x32 || step == 0x3C) {
         Say(step == 0x32 ? 6 : 7);
         SetStep(0x33);
@@ -586,7 +586,7 @@ namespace {
 // mean of the three (the sum over 3, a signed divide of a non-negative sum),
 // bit 15 kept.
 void GreyClut() {
-    std::uint16_t* const c = &W(at::kClut);
+    std::uint16_t* const c = &Gfx_ClutStrip[0];
     for (unsigned i = 0; i < at::kClutWords; ++i) {
         const unsigned v = c[i];
         const unsigned sum = (((v >> 10) & 0x1F) + ((v >> 5) & 0x1F) + (v & 0x1F)) & 0xFFFF;
@@ -608,7 +608,7 @@ void EndCounters() {
 // original 0x55EB30: run 4, steps 0..2, 0xA, 0xB, 0x14..0x1E, 0x27 (a byte
 // table over 0..0x27, then 17 cases). docs/scena_sc12.md section 3.
 SC12_EXPORT void __cdecl Scena12_Run4(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         SetCounter(0, 0);
         SetCounter(2, 0);
@@ -658,7 +658,7 @@ SC12_EXPORT void __cdecl Scena12_Run4(void) {
     case 0x17:
         if (Request() == 2) break;
         GreyClut();
-        B(at::kClutDirty) = 1;
+        Gfx_ClutStripDirty = 1;
         SetPass(0x1F);
         SetCounter(2, 0);
         SetCounter(0, 1);
@@ -700,7 +700,7 @@ SC12_EXPORT void __cdecl Scena12_Run4(void) {
         ChangeArea(0x85, 0x3D0000, 0x2B8000, 0x83);
         break;
     case 0x1E:
-        if (Request() != 0 || B(at::kLoadByte) != 1) break;
+        if (Request() != 0 || AreaW3c_Load0F != 1) break;
         SetStep(0x27);
         SetPicked(0x1A, true);
         ChangeArea(0x85, 0x3D0000, 0x2B8000, 0x83);
@@ -719,7 +719,7 @@ SC12_EXPORT void __cdecl Scena12_Run4(void) {
 // original 0x55F5C0: run 5, steps 0..3, 5..9, 0x14..0x16, 0x19..0x1C,
 // 0x28..0x2D (a byte table over 0..0x2D, then 22 cases).
 SC12_EXPORT void __cdecl Scena12_Run5(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         Say(2);
         SetStep(1);
@@ -810,7 +810,7 @@ SC12_EXPORT void __cdecl Scena12_Run5(void) {
         Clear40();
         SetStep(0);
         SetRun(0);
-        SH_CALL(Flags_Set)(&B(at::kStoryFlags), 0x29);
+        SH_CALL(Flags_Set)(&Cond_Flags[0xa0], 0x29);
         Clr(0x14);
         Spawn(0, 0x77, 0);
         break;
@@ -846,7 +846,7 @@ SC12_EXPORT void __cdecl Scena12_Run5(void) {
         SetCounter(2, 3);
         SetStep(0x29);
         Set(0x26);
-        const unsigned v = B(at::kSelector) & 0x7F;
+        const unsigned v = AreaW0b_PartySet & 0x7F;
         if (v == 8) { SetCounter(1, 0); ChangeArea(0x85, 0x60000, 0x5C0000, 0x86); }
         else if (v == 13) { SetCounter(1, 1); ChangeArea(0x85, 0x60000, 0x5C0000, 0x86); }
         else if (v == 16) { SetCounter(1, 2); ChangeArea(0x85, 0x60000, 0x5C0000, 0x86); }
@@ -876,7 +876,7 @@ SC12_EXPORT void __cdecl Scena12_Run5(void) {
         break;
     case 0x2C: {
         if (!WaitClear()) break;
-        const unsigned v = B(at::kSelector) & 0x7F;
+        const unsigned v = AreaW0b_PartySet & 0x7F;
         ScriptXor(0xE);
         SetCounter(0, 0);
         SetPass(0);
@@ -924,7 +924,7 @@ void Hop(unsigned char c0, unsigned char c2, unsigned char c1, unsigned char ste
 
 // original 0x55FD70: run 6, steps 0..0x16 through a jump table of 23.
 SC12_EXPORT void __cdecl Scena12_Run6(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         ScriptXor(0x20);
         SetCounter(2, 1);
@@ -949,7 +949,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
         MusicCurrent(0xFF);
         break;
     case 3: {
-        B(at::kCondFE) = 1;
+        Cond_ByteFE = 1;
         const unsigned char slot = SH_CALL(Effect_FindFree)();
         B(at::kEffectSlot) = slot;
         if (slot == 0xFF) break;
@@ -1073,7 +1073,7 @@ SC12_EXPORT void __cdecl Scena12_Run6(void) {
 // original 0x560400: run 7, steps 0, 1, 5, 6, 0xA..0x14, 0x1D, 0x1E (a byte
 // table over 0..0x1E, then 17 cases).
 SC12_EXPORT void __cdecl Scena12_Run7(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         SetStep(1);
         ChangeArea(0xBC, 0x158000, 0xB0000, 0x8F);
@@ -1202,9 +1202,9 @@ namespace {
 // Run 8 step 0: by Cond_ByteFD (2 or 3) and the leader's byte 0x802DC9
 // (2..8), a message and the next step; 3 and anything else nothing.
 void Run8Greet() {
-    const unsigned fd = B(at::kCondFD);
+    const unsigned fd = Cond_ByteFD;
     if (fd != 2 && fd != 3) return;
-    const unsigned who = B(at::kLeaderName);
+    const unsigned who = ObjTrio[0x89];
     if (who < 2 || who > 8 || who == 3) return;
     const bool odd = who == 5 || who == 8;
     unsigned short id;
@@ -1226,7 +1226,7 @@ void Run8Greet() {
 // table over 0..0x20, then 12 cases; step 0's two tables of seven by the
 // leader's byte).
 SC12_EXPORT void __cdecl Scena12_Run8(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Request() == 2) break;
         Run8Greet();
@@ -1277,7 +1277,7 @@ SC12_EXPORT void __cdecl Scena12_Run8(void) {
         break;
     case 0x14: {
         if (Request() != 0) break;
-        const unsigned char load = B(at::kLoadByte);
+        const unsigned char load = AreaW3c_Load0F;
         SetPass(0);
         if (load != 1) break;
         SetStep(0x15);
@@ -1331,9 +1331,9 @@ void BattleBytes() { SH_AT(KindFn, at::kBattleBytes)(0x26); }
 // original 0x561170: run 9, steps 0..2, 0xA..0x12, 0x14..0x16, 0x1E..0x22,
 // 0x2B..0x2F (a byte table over 0..0x2F, then 25 cases).
 SC12_EXPORT void __cdecl Scena12_Run9(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (B(at::kMemberState) == 3) break;
+        if (ObjTrio[0x3cf] == 3) break;
         SH_CALL(Party_DropIn)(0);
         SetStep(1);
         break;
@@ -1377,7 +1377,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     }
     case 0xD:
-        if (Effect(Counter(3))[0] != 0 || B(at::kHold) != 0) break;
+        if (Effect(Counter(3))[0] != 0 || Field_Kind2Hold != 0) break;
         SetCounter(0, 7);
         SetStep(0xE);
         break;
@@ -1397,7 +1397,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         SetStep(0x11);
         break;
     case 0x11:
-        if (Counter(0) != 0xE || B(at::kHold) != 0) break;
+        if (Counter(0) != 0xE || Field_Kind2Hold != 0) break;
         Spawn(at::kEffectSlot, 0x82);
         Spawn(at::kEffectSlot, 0x83);
         Spawn(at::kEffectSlot, 0x84);
@@ -1405,9 +1405,9 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     case 0x12: {
         if (Counter(1) == 0xFF) break;
-        const unsigned held = W(at::kInputHeld);
+        const unsigned held = Input_Held;
         if (held == 0x3000 || held == 0x6000 || held == 0x2000) {
-            if (B(at::kHold) != 0) break;
+            if (Field_Kind2Hold != 0) break;
             SH_CALL(Party_DropIn)(7);
             SH_CALL(Kind2_Place)(3);
             SetStep(0x12);
@@ -1420,7 +1420,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         break;
     }
     case 0x14:
-        if (B(at::kHold) != 0) break;
+        if (Field_Kind2Hold != 0) break;
         SH_CALL(Party_DropIn)(4);
         SH_CALL(Kind2_Place)(4);
         SetStep(0x15);
@@ -1437,7 +1437,7 @@ SC12_EXPORT void __cdecl Scena12_Run9(void) {
         BattleBytes();
         break;
     case 0x1E:
-        if (B(at::kHold) != 0) break;
+        if (Field_Kind2Hold != 0) break;
         SH_CALL(Party_DropIn)(3);
         SetStep(0x1F);
         break;

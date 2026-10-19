@@ -349,8 +349,8 @@ unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * at::kSparkSt
 // 0x6761C9 and 0x6761C8 = 0.
 extern "C" void __cdecl EffectGlowSparks_Clear(void) {
     for (unsigned i = 0; i < at::kSparks; ++i) Spark(i)[0] = 0;
-    B(at::kGlowSounded) = 0;
-    B(at::kRiseSounded) = 0;
+    Rest3e_GlowSounded = 0;
+    Rest3e_RiseSounded = 0;
 }
 
 // original 0x4790F0: a spark set going near the record: +0 = 1, +1 = 0, +2 =
@@ -478,9 +478,9 @@ extern "C" void __cdecl EffectGlowSparks_Glow(unsigned char* spark) {
     if (spark[2] != 0) return;
     spark[2] = spark[4];
     spark[1] = static_cast<unsigned char>(spark[1] + 1);
-    if (B(at::kGlowSounded) != 0) return;
+    if (Rest3e_GlowSounded != 0) return;
     SH_CALL(Sound_PlayEffect)(at::kSoundGlow);
-    B(at::kGlowSounded) = 1;
+    Rest3e_GlowSounded = 1;
 }
 
 // original 0x479470 (EffectGlowSparks_States[2]): the first time (the flag
@@ -488,9 +488,9 @@ extern "C" void __cdecl EffectGlowSparks_Glow(unsigned char* spark) {
 // then the rise speed +8 up 0x40000, the height +0x14 up by it, the shade +3
 // up 6, the count +2 down, at 0 the spark freed (+0 = 0).
 extern "C" void __cdecl EffectGlowSparks_Rise(unsigned char* spark) {
-    if (B(at::kRiseSounded) == 0) {
+    if (Rest3e_RiseSounded == 0) {
         if (S()[6] == 0) SH_CALL(Sound_PlayEffect)(at::kSoundRise);
-        B(at::kRiseSounded) = 1;
+        Rest3e_RiseSounded = 1;
     }
     const U speed = UL(spark + 8) + 0x40000u;
     SetUL(spark + 8, speed);
@@ -890,7 +890,7 @@ extern "C" void __cdecl EffectDust_DrawFan(const unsigned char* dust) {
 // ===========================================================================
 
 namespace {
-unsigned char* Window(unsigned j) { return At(at::kWindows + 8 * j); }
+unsigned char* Window(unsigned j) { return At(Rest3e_Windows_addr + 8 * j); }
 
 // The three windows' outlines at the size the step +9 gives (n = +9 * 16, at
 // most each window's w and h); counted: how many of the six sides were at
@@ -954,8 +954,8 @@ extern "C" void __cdecl EffectKind5D_Show(void) {
         if (((S()[7] >> j) & 1) == 0) SH_CALL(Window_DrawFrame)(Word(w), Word(w + 2), w[4], w[6]);
     }
     if ((S()[7] & 1) == 0) {
-        SetWord(S() + 0x2E, B(at::kSpriteDx) + UL(at::kWindows));
-        SetWord(S() + 0x30, B(at::kSpriteDy) + W(at::kWindows + 2));
+        SetWord(S() + 0x2E, Rest3e_SpriteDx + Rest3e_Windows);
+        SetWord(S() + 0x30, Rest3e_SpriteDy + W(at::kWindows + 2));
         SH_CALL(Sprite_ScriptTick)();
         SH_CALL(Sprite_QueueOverlay)();
     }
@@ -1144,17 +1144,17 @@ extern "C" void __cdecl EffectKind5D_DrawMark(int x, int y) {
 // seventeen letters past the original's count of 15), it is drawn whole, to
 // its NUL (Labels_Written's rule).
 extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
-    SH_CALL(Menu_DrawBox)(W(at::kMenuBox), W(at::kMenuBox + 2), W(at::kMenuBox + 4), W(at::kMenuBox + 6), 2, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(W(at::kMenuBox), W(at::kMenuBox + 2), W(at::kMenuBox + 4), W(at::kMenuBox + 6), 2, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kStringFormat)), At(at::kTitle));
     const int count = Labels_Written(20) ? 0xFF : 0xF;
     SH_CALL(Text_DrawAt)(static_cast<int>(UL(at::kMenuBox) + 4), static_cast<int>((W(at::kMenuBox + 2) + 2) & 0xFFFFu), 0, count, At(at::kText));
     SH_CALL(EffectKind5E_DrawList)();
     const unsigned pick = S()[2] & 7u;
-    const unsigned hand = W(at::kHand);
+    const unsigned hand = Rest3e_Hand;
     SH_CALL(Menu_DrawHand)(static_cast<int>(hand & 0xFFu), static_cast<int>(15 * pick + (hand >> 8)), 0);
     SH_CALL(EffectKind5E_DrawPanel)();
-    SetWord(S() + 0x2E, B(at::kSpriteDx) + UL(at::kPanel));
-    SetWord(S() + 0x30, B(at::kSpriteDy) + W(at::kPanel + 2));
+    SetWord(S() + 0x2E, Rest3e_SpriteDx + UL(at::kPanel));
+    SetWord(S() + 0x30, Rest3e_SpriteDy + W(at::kPanel + 2));
     SH_CALL(Window_DrawFrame)(W(at::kPanel), W(at::kPanel + 2), B(at::kPanel + 4), B(at::kPanel + 6));
     SH_CALL(Sprite_ScriptTick)();
     SH_CALL(Sprite_QueueOverlay)();
@@ -1167,7 +1167,7 @@ extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
 // through the format 0x653EC0 at (x + 8 + 0x5A, the line + 3) in the same
 // colour (Text_DrawFont8).
 extern "C" void __cdecl EffectKind5E_DrawList(void) {
-    SH_CALL(Menu_DrawBox)(W(at::kListBox), W(at::kListBox + 2), W(at::kListBox + 4), W(at::kListBox + 6), 0, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(W(at::kListBox), W(at::kListBox + 2), W(at::kListBox + 4), W(at::kListBox + 6), 0, static_cast<unsigned char>(BattleDraw_Colour));
     const U x = UL(at::kListBox) + 8;
     U line = W(at::kListBox + 2) + 0x14;
     for (unsigned item = at::kFirstItem; item < at::kFirstItem + at::kItems; ++item, line += 0xF) {
@@ -1543,7 +1543,7 @@ void SelfTest() {
 // page's icon, the quad in pieces and that row's icon drawn (the section
 // above); else exactly the original's.
 extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
-    SH_CALL(Menu_DrawBox)(W(at::kPanelBox), W(at::kPanelBox + 2), W(at::kPanelBox + 4), W(at::kPanelBox + 6), 0, B(at::kStyle));
+    SH_CALL(Menu_DrawBox)(static_cast<std::uint32_t>(Rest3e_PanelBox), W(at::kPanelBox + 2), W(at::kPanelBox + 4), W(at::kPanelBox + 6), 0, static_cast<unsigned char>(BattleDraw_Colour));
     if (dock::g_on) {
         if (W(at::kPanelBox + 4) != dock::kBoxW || W(at::kPanelBox + 6) != dock::kBoxH)
             bof3::Fatal("DockLegend: the panel box 0x654888 is 0x%X x 0x%X, not the 0x40 x 0x28 its rows were read for", W(at::kPanelBox + 4),
@@ -1560,7 +1560,7 @@ extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
         bool changed = false;
         for (unsigned r = 0; readable && r < dock::kRows; ++r) changed = changed || rows[r].how != dock::kKeep;
         if (changed) {
-            const std::int32_t x0 = static_cast<std::int32_t>(W(at::kPanelBox));
+            const std::int32_t x0 = Rest3e_PanelBox;
             const std::int32_t y0 = static_cast<std::int32_t>(W(at::kPanelBox + 2));
             const unsigned u1 = dock::kU0 + dock::kBoxW - 1;   // 0xFF, as w - 0x41
             // Whole-width runs of texel rows, 1:1 in v as the original's quad;
@@ -1603,7 +1603,7 @@ extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
     }
     unsigned char* const p = Quad(0x20);
     p[4] = p[5] = p[6] = 0x80;
-    const std::int32_t x0 = static_cast<std::int32_t>(W(at::kPanelBox));
+    const std::int32_t x0 = Rest3e_PanelBox;
     const std::int32_t y0 = static_cast<std::int32_t>(W(at::kPanelBox + 2));
     Corners(p, x0, y0, x0 + static_cast<std::int32_t>(W(at::kPanelBox + 4)), y0 + static_cast<std::int32_t>(W(at::kPanelBox + 6)));
     p[0x14] = 0xC0;

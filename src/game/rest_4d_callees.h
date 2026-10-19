@@ -16,17 +16,17 @@ namespace at {
 
 // --- the state tables the group's dispatchers read (in address order) ---------
 // CommuDraw (0x652A70[7], reached by R4B's 0x4572F0 on 0x9039F4 == 7):
-constexpr std::uint32_t kDrawStates = 0x652DC4;        // CommuDraw_States: 3, by 0x939A3E (CommuDraw_Dispatch)
-constexpr std::uint32_t kDrawOpenSteps = 0x652DD0;     // CommuDraw_OpenSteps: 2, by 0x939A40 (state 0)
-constexpr std::uint32_t kDrawShowSteps = 0x652DD8;     // CommuDraw_ShowSteps: 5, by 0x939A40 (state 1)
+// kDrawStates: now CommuDraw_States (symbols.toml). CommuDraw_States: 3, by 0x939A3E (CommuDraw_Dispatch)
+// kDrawOpenSteps: now CommuDraw_OpenSteps (symbols.toml). CommuDraw_OpenSteps: 2, by 0x939A40 (state 0)
+// kDrawShowSteps: now CommuDraw_ShowSteps (symbols.toml). CommuDraw_ShowSteps: 5, by 0x939A40 (state 1)
 // CommuName (0x652A70[8], 0x9039F4 == 8):
-constexpr std::uint32_t kNameStates = 0x652E48;        // CommuName_States: 5, by 0x939A3E (CommuName_Dispatch)
-constexpr std::uint32_t kSlotSteps = 0x652E5C;         // CommuName_SlotSteps: 9, by 0x939A40 (state 1)
-constexpr std::uint32_t kSlotRandomSteps = 0x652E80;   // CommuName_SlotRandomSteps: 3, by 0x939A3F (state 1, step 6)
-constexpr std::uint32_t kSlotEntrySteps = 0x652E8C;    // CommuName_SlotEntrySteps: 5, by 0x939A3F (state 1, step 7)
-constexpr std::uint32_t kMemberSteps = 0x652EA0;       // CommuName_MemberSteps: 9, by 0x939A40 (state 2)
-constexpr std::uint32_t kMemberRandomSteps = 0x652EC4; // CommuName_MemberRandomSteps: 3, by 0x939A3F (state 2, step 6)
-constexpr std::uint32_t kMemberEntrySteps = 0x652ED0;  // CommuName_MemberEntrySteps: 5, by 0x939A3F (state 2, step 7)
+// kNameStates: now CommuName_States (symbols.toml). CommuName_States: 5, by 0x939A3E (CommuName_Dispatch)
+// kSlotSteps: now CommuName_SlotSteps (symbols.toml). CommuName_SlotSteps: 9, by 0x939A40 (state 1)
+// kSlotRandomSteps: now CommuName_SlotRandomSteps (symbols.toml). CommuName_SlotRandomSteps: 3, by 0x939A3F (state 1, step 6)
+// kSlotEntrySteps: now CommuName_SlotEntrySteps (symbols.toml). CommuName_SlotEntrySteps: 5, by 0x939A3F (state 1, step 7)
+// kMemberSteps: now CommuName_MemberSteps (symbols.toml). CommuName_MemberSteps: 9, by 0x939A40 (state 2)
+// kMemberRandomSteps: now CommuName_MemberRandomSteps (symbols.toml). CommuName_MemberRandomSteps: 3, by 0x939A3F (state 2, step 6)
+// kMemberEntrySteps: now CommuName_MemberEntrySteps (symbols.toml). CommuName_MemberEntrySteps: 5, by 0x939A3F (state 2, step 7)
 // The name pointers CommuName_MemberEntryOut reads by a record index: 7.
 constexpr std::uint32_t kRecordNames = 0x669FA4;       // CommuName_RecordNames
 constexpr unsigned kRecordNameCount = 7;
@@ -46,27 +46,27 @@ constexpr std::uint32_t kBoardBlankB = 0x653094;  // a format of no number
 constexpr std::uint32_t kNumberFmt = 0x5E10C0;    // a format of one number (Area08_MessageFormat)
 
 // --- the community's cells ------------------------------------------------------------
-constexpr std::uint32_t kGame = 0x9039F4;         // the community's game (R4B's 0x652A70 index)
-constexpr std::uint32_t kPointer = 0x939A38;      // a record pointer: its +5 is a slot index
-constexpr std::uint32_t kHow = 0x939A3C;          // read once message 0xF2 is closed: 0 step 6, else step 7
-constexpr std::uint32_t kAgain = 0x939A3D;        // read once message 0xF3 / 0xF4 is closed (the two asks take it oppositely)
+// kGame: now AreaW0c_TailState (symbols.toml). the community's game (R4B's 0x652A70 index)
+// kPointer: now Rest4d_Pointer (symbols.toml). a record pointer: its +5 is a slot index
+// kHow: now Rest4b_BoardFlag (symbols.toml). read once message 0xF2 is closed: 0 step 6, else step 7
+// kAgain: now Rest4d_Again (symbols.toml). read once message 0xF3 / 0xF4 is closed (the two asks take it oppositely)
 constexpr std::uint32_t kState = 0x939A3E;        // the game's state
-constexpr std::uint32_t kStep2 = 0x939A3F;        // a step's own step
-constexpr std::uint32_t kStep = 0x939A40;         // the state's step
+// kStep2: now Rest4c_Step (symbols.toml). a step's own step
+// kStep: now Rest4b_BoardStep (symbols.toml). the state's step
 constexpr std::uint32_t kCursor = 0x675F8C;       // s8: a cursor (the draw's row)
-constexpr std::uint32_t kYes = 0x675F8D;          // s8: the yes / no cursor (CommuBoard: the lifted column)
-constexpr std::uint32_t kKeptTrack = 0x675F90;    // the music track kept across the draw
-constexpr std::uint32_t kHeader = 0x675F92;       // u16: the header's message (0xFFFF none)
-constexpr std::uint32_t kEntryColumn = 0x675F94;  // the entry's column
+// kYes: now Rest4c_Cursor (symbols.toml). s8: the yes / no cursor (CommuBoard: the lifted column)
+// kKeptTrack: now Rest4d_KeptTrack (symbols.toml). the music track kept across the draw
+// kHeader: now Rest4d_Header (symbols.toml). u16: the header's message (0xFFFF none)
+// kEntryColumn: now Rest4d_EntryColumn (symbols.toml). the entry's column
 constexpr std::uint32_t kCount = 0x675F95;        // a frame counter (the panels' slide, the reveal)
-constexpr std::uint32_t kEntryDone = 0x675F96;    // BareRetZero's answer
+// kEntryDone: now Rest4d_EntryDone (symbols.toml). BareRetZero's answer
 constexpr std::uint32_t kName = 0x675F98;         // five name bytes; the draw's picks, 10 a category
 constexpr std::uint32_t kPicked = 0x675FC0;       // the draw's four counts
-constexpr std::uint32_t kTitleA = 0x675FC5;       // the title's two messages
-constexpr std::uint32_t kTitleB = 0x675FC6;
-constexpr std::uint32_t kEntryA = 0x675FCA;       // three bytes handed to BareRet
-constexpr std::uint32_t kEntryB = 0x675FCB;
-constexpr std::uint32_t kEntryC = 0x675FCC;
+// kTitleA: now Rest4d_TitleA (symbols.toml). the title's two messages
+// kTitleB: now Rest4d_TitleB (symbols.toml).
+// kEntryA: now Rest4d_EntryA (symbols.toml). three bytes handed to BareRet
+// kEntryB: now Rest4d_EntryB (symbols.toml).
+// kEntryC: now Rest4d_EntryC (symbols.toml).
 constexpr std::uint32_t kSlots = 0x9046D0;        // 60 cells of 8: in use when the first byte is not 0
 constexpr std::uint32_t kSlotsEnd = 0x9048B0;
 constexpr std::uint32_t kSlotNames = 0x9048F0;    // 5 bytes a slot
@@ -74,8 +74,8 @@ constexpr std::uint32_t kRecords = 0x903A70;      // the character records, 0xA4
 constexpr std::uint32_t kRecordStride = 0xA4;
 constexpr std::uint32_t kRecordFlags = 0x903A7B;  // +0xB: bit 0 the record is in the party's list
 constexpr std::uint32_t kRecordFlagsEnd = 0x903EF7;   // 7 records
-constexpr std::uint32_t kColour = 0x903A5A;       // the window style byte
-constexpr std::uint32_t kPressed = 0x7E1BEC;      // Input_Pressed (u16)
+// kColour: now BattleDraw_Colour (symbols.toml). the window style byte
+// kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
 constexpr std::uint32_t kTextScratch = 0x904BA0;  // the text scratch
 constexpr std::uint32_t kTextRecords = 0x904CE0;  // Text_Records, 0x20 each
 constexpr std::uint32_t kTextRecordsEnd = 0x904E00;   // nine

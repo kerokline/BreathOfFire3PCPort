@@ -104,11 +104,11 @@ U Long(U address) {
 }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutFloat(U address, float f) { std::memcpy(At(address), &f, sizeof f); }
-unsigned char* Packet() { return At(Long(at::kPacketNext)); }
+unsigned char* Packet() { return Gfx_PacketNext; }
 
 // The state byte both menus run on, stepped as the originals step it.
-U State() { return Byte(at::kFlowState); }
-void SetState(U v) { PutByte(at::kFlowState, v); }
+U State() { return SaveMenu_FlowState; }
+void SetState(U v) { SaveMenu_FlowState = v; }
 
 // `rep movsd` then `rep movsb`, forward, each byte read just before it is
 // stored.
@@ -122,8 +122,8 @@ void CopyForward(U dst, U src, U n) {
 // through the dispatch's `xor eax, eax`, ecx not); ours zero-extends. Group
 // Y's 0x575690 masks it (`and eax, 0xFF` at 0x575718).
 void LoadWindows() {
-    g.window_back(Byte(at::kWindowStyle));
-    g.window_frame5(0x14, 0x12, 0x118, 0x13, Byte(at::kWindowColor));
+    g.window_back(static_cast<std::uint32_t>(FieldS_Backdrop));
+    g.window_frame5(0x14, 0x12, 0x118, 0x13, static_cast<std::uint32_t>(static_cast<unsigned char>(BattleDraw_Colour)));
 }
 // Text_DrawAt(0x1C, 0x15, 0, 0xFF, system message id).
 void LoadMessage(U id) { g.text_draw(0x1C, 0x15, 0, 0xFF, g.msg_ptr(id)); }
@@ -207,7 +207,7 @@ extern "C" int __cdecl Save_ReadFile(const char* path, unsigned size, int offset
     const int handle = g.file_open(path, 0, 0);
     if (handle == -1) return -1;
     g.file_seek(handle, offset);
-    g.file_read(handle, At(at::kStaging), size);
+    g.file_read(handle, At(Save_Staging_addr), size);
     g.file_close(handle);
     return 0;
 }
@@ -280,9 +280,9 @@ extern "C" void __cdecl Save_ReadSummaries(void) {
 // the strip). Its sibling 0x4549B0 (Gfx_ClutStripRestore) copies the whole
 // strip and does not set the flag.
 extern "C" void __cdecl Gfx_ClutStripCopyRow(unsigned row) {
-    const U base = ((row & 0xFF) << 9) + at::kClutStrip;
+    const U base = ((row & 0xFF) << 9) + Gfx_ClutStrip_addr;
     for (U i = 0; i < 0x100; ++i) PutWord(base + i * 2, Word(base + i * 2 - 0x4000));
-    PutByte(at::kClutDirty, 1);
+    Gfx_ClutStripDirty = 1;
 }
 
 // 0x5A7020. 0 without Music_Buffer; else IDirectSoundBuffer::GetStatus into a
@@ -291,7 +291,7 @@ extern "C" void __cdecl Gfx_ClutStripCopyRow(unsigned row) {
 // writing leaves the caller's ecx to be tested, so the naked entry passes it.
 // Callers Sound_StreamDone and the tail jump at 0x587C20.
 extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx) {
-    void* const buffer = At(Long(at::kMusicBuffer));
+    void* const buffer = static_cast<unsigned char*>(Music_Buffer);
     if (buffer == nullptr) return 0;
     U status = ecx;
     void* const* vtable;
@@ -327,7 +327,7 @@ bool g_stream_missing = false;
 void save_menu::StreamMissingClear() { g_stream_missing = false; }
 extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     const U kind = id >> 12;
-    PutLong(at::kStreamKind, kind);
+    SaveMenu_StreamKind = kind;
     const U table = Long(at::kStreamTables + kind * 4);
     const U name = Long(table + (id & 0xFFF) * 4);
     char path[260];  // MAX_PATH
@@ -341,23 +341,23 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
         return;
     }
     g_stream_missing = false;
-    if (Long(at::kStreamData) != 0) g.free(At(Long(at::kStreamData)));
+    if (SaveMenu_StreamData != 0) g.free(At(SaveMenu_StreamData));
     const int size = g.file_size(handle);
     void* const data = g.malloc(static_cast<unsigned>(size));
-    PutLong(at::kStreamData, Addr(data));
+    SaveMenu_StreamData = Addr(data);
     g.file_read(handle, data, static_cast<unsigned>(size));
     g.file_close(handle);
-    if (Long(at::kStreamKind) != 0) {
-        g.voice_play(At(Long(at::kStreamData)));
+    if (SaveMenu_StreamKind != 0) {
+        g.voice_play(At(SaveMenu_StreamData));
         bof3::RunSpeed_StreamStarted();
         return;
     }
-    if (Long(at::kFadeCount) != 0) {
-        PutLong(at::kFadeCount, 0);
+    if (static_cast<std::uint32_t>(Music_FadeCount) != 0) {
+        Music_FadeCount = 0;
         g.music_stop();
-        PutByte(at::kMusicTrack, 0xFF);
+        Music_Track = 0xFF;
     }
-    g.music_start(At(Long(at::kStreamData)), static_cast<unsigned>(size), 0);
+    g.music_start(At(SaveMenu_StreamData), static_cast<unsigned>(size), 0);
     g.music_volume(at::kStreamVolume);
     bof3::RunSpeed_StreamStarted();
 }
@@ -370,7 +370,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
 // DIVERGENCE DIV-0129: 1 while the last stream's file could not be opened.
 extern "C" int __cdecl Sound_StreamDone(void) {
     if (g_stream_missing) return 1;  // DIV-0129
-    if (Long(at::kStreamKind) != 0) return g.voice_playing() ^ 1;
+    if (SaveMenu_StreamKind != 0) return g.voice_playing() ^ 1;
     return g.music_playing() ^ 1;
 }
 
@@ -420,7 +420,7 @@ extern "C" void __cdecl Party_RestoreAll(unsigned full) {
     }
     if (g.flags_test(At(at::kFlagsA), 4) == 0) return;
     if (g.flags_test(At(at::kFlagsB), 4) != 0) return;
-    if (Byte(at::kInnByte) < 0x1E) PutByte(at::kInnByte, 0);
+    if (static_cast<std::uint32_t>(AreaW1c_Byte9045FB) < 0x1E) AreaW1c_Byte9045FB = 0;
 }
 
 // 0x5808E0 (PSX 0x801D6D7C). The window 0x57CF60(x + 4, y + 4, 0x52, 0x48, 0,
@@ -432,7 +432,7 @@ extern "C" void __cdecl Party_RestoreAll(unsigned full) {
 // the hand's row is `movzx ax, byte`, over the upper half of the last
 // Text_DrawAt's result. Both vanish in a 16-bit y.
 extern "C" void __cdecl SaveMenu_DrawChoices(int x, int y) {
-    g.window_frame(x + 4, y + 4, 0x52, 0x48, 0, Byte(at::kWindowColor));
+    g.window_frame(x + 4, y + 4, 0x52, 0x48, 0, static_cast<std::uint32_t>(static_cast<unsigned char>(BattleDraw_Colour)));
     g.window_box(x, y, 9, 8);
     const U high = static_cast<U>(x) & 0xFFFF0000u;
     U last = 0;
@@ -441,7 +441,7 @@ extern "C" void __cdecl SaveMenu_DrawChoices(int x, int y) {
         last = Addr(g.text_draw(x + 0xC, static_cast<int>(static_cast<U>(y) + row * 20 + 0xB), 0, 0xFF,
                                 g.msg_ptr(row + 0xD2)));
     }
-    const U hand = (last & 0xFFFF0000u) | Byte(at::kChoiceCursor);
+    const U hand = (last & 0xFFFF0000u) | static_cast<std::uint32_t>(ShopStates_Choice);
     g.draw_hand(x + 0xC, static_cast<int>(static_cast<U>(y) + hand * 20 + 0xD), 0);
 }
 
@@ -491,7 +491,7 @@ extern "C" void __cdecl Shop_PriceRate(unsigned short* rate) {
         }
     }
     if (g.shop_flag(1) == 0) return;
-    const U window = Byte(at::kShopWindowByte);
+    const U window = ScenaSc1_ShopByteB;
     if (window == 6 || window == 7) *rate = 0x46;
 }
 
@@ -577,7 +577,7 @@ extern "C" void __cdecl Shop_Equip(unsigned record, unsigned slot, unsigned item
 // 2 at y 0x50, 0x70, 0x90; otherwise rows 0 and 2 at 0x60, 0x80. `glow` is
 // passed through whole.
 extern "C" void __cdecl TitleMenu_DrawRows(unsigned glow) {
-    if (Byte(at::kAnySave) != 0) {
+    if (SaveMenu_AnySave != 0) {
         g.draw_row(0x50, 0, glow);
         g.draw_row(0x70, 1, glow);
         g.draw_row(0x90, 2, glow);
@@ -704,7 +704,7 @@ extern "C" void __cdecl SaveMenu_DrawSlots(int x, int y, unsigned highlight) {
         g.slot_draw(slot, left, static_cast<int>(static_cast<U>(y) + i * 56 + 6), s);
     }
     const U first = Long(at::kSlotTop);
-    const U cursor = Long(at::kSlot);
+    const U cursor = Rest2c_Slot;
     g.slot_cursor(left, static_cast<int>((cursor * 56 - first * 56) + static_cast<U>(y) + 6), 0xD1, 0x34, highlight, 6);
 }
 
@@ -755,11 +755,11 @@ extern "C" void __cdecl NewGame_RollGrowth(unsigned member) {
 // the answer's non-zero into both 0x6BDF8E (three rows) and the cursor - the
 // cursor starts on LOAD GAME when saves exist.
 extern "C" void __cdecl TitleFlow_Begin(void) {
-    PutWord(at::kScriptFlags, 0);
-    PutWord(at::kScriptFlags2, 0);
-    PutByte(at::kPartySet, 0);
-    PutLong(at::kFieldState, at::kObjTrio);
-    PutLong(at::kSpriteCurrent, at::kObjTrio);
+    Field_ScriptFlags = 0;
+    Field_ScriptFlags2 = 0;
+    AreaW0b_PartySet = 0;
+    PutLong(at::kFieldState, ObjTrio_addr);
+    PutLong(at::kSpriteCurrent, ObjTrio_addr);
     g.member_sprite(0, 0);
     PutByte(Long(at::kSpriteCurrent), 1);
     PutByte(Long(at::kFieldState) + 0x89, 0);
@@ -772,13 +772,13 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
     PutByte(Long(at::kSpriteCurrent) + 6, 4);
     PutByte(Long(at::kSpriteCurrent) + 9, 0);
     g.set_animation(static_cast<unsigned char>(Byte(Long(at::kSpriteCurrent) + 6) + 8));
-    PutByte(at::kPartySet, 0xFF);
+    AreaW0b_PartySet = 0xFF;
     const U any = g.list_files() != 0 ? 1 : 0;
-    PutWord(at::kGameStep, Word(at::kGameStep) + 1);
-    PutByte(at::kFlow9039D6, 0);
+    Game_Step = static_cast<std::uint32_t>(Game_Step) + 1;
+    SaveMenu_Flow9039D6 = 0;
     SetState(0);
-    PutByte(at::kAnySave, any);
-    PutByte(at::kCursor, any);
+    SaveMenu_AnySave = any;
+    SaveMenu_Cursor = any;
 }
 
 // 0x587EB0, title menu state 0: the frame, counter 2, state + 1.
@@ -822,7 +822,7 @@ extern "C" void __cdecl TitleMenu_RowsFadeIn(void) {
     g.draw_frame();
     g.draw_rows(1);
     PutByte(at::kCounter, Byte(at::kCounter) + 0x10);
-    const int cursor = static_cast<signed char>(Byte(at::kCursor));
+    const int cursor = SaveMenu_Cursor;
     for (int i = 0; i < 3; ++i) {
         const U b = (Byte(at::kRowBright + i) + 8) & 0xFF;
         PutByte(at::kRowBright + i, cursor != i && b > 0x40 ? 0x40 : b);
@@ -843,21 +843,21 @@ extern "C" void __cdecl TitleMenu_Choose(void) {
     g.draw_rows(0);
     if ((Byte(at::kMenuFlags) & 2) == 0) return;
     const U pressed = Long(at::kPressed);
-    if (Byte(at::kAnySave) != 0) {
+    if (SaveMenu_AnySave != 0) {
         if (pressed & 0x1000) {
-            const signed char c = static_cast<signed char>(Byte(at::kCursor) - 1);
-            PutByte(at::kCursor, static_cast<unsigned char>(c));
-            if (c < 0) PutByte(at::kCursor, 2);
+            const signed char c = static_cast<signed char>(static_cast<std::uint32_t>(static_cast<unsigned char>(SaveMenu_Cursor)) - 1);
+            SaveMenu_Cursor = static_cast<unsigned char>(c);
+            if (c < 0) SaveMenu_Cursor = 2;
         }
         if (pressed & 0x4000) {
-            const signed char c = static_cast<signed char>(Byte(at::kCursor) + 1);
-            PutByte(at::kCursor, static_cast<unsigned char>(c));
-            if (c > 2) PutByte(at::kCursor, 0);
+            const signed char c = static_cast<signed char>(static_cast<std::uint32_t>(static_cast<unsigned char>(SaveMenu_Cursor)) + 1);
+            SaveMenu_Cursor = static_cast<unsigned char>(c);
+            if (c > 2) SaveMenu_Cursor = 0;
         }
     } else if (pressed & 0x5000) {
-        PutByte(at::kCursor, Byte(at::kCursor) ^ 2);
+        SaveMenu_Cursor = static_cast<std::uint32_t>(static_cast<unsigned char>(SaveMenu_Cursor)) ^ 2;
     }
-    const int cursor = static_cast<signed char>(Byte(at::kCursor));
+    const int cursor = SaveMenu_Cursor;
     for (int i = 0; i < 3; ++i) {
         const U a = at::kRowBright + static_cast<U>(i);
         if (cursor == i) {
@@ -868,7 +868,7 @@ extern "C" void __cdecl TitleMenu_Choose(void) {
             if (Byte(a) < 0x40) PutByte(a, 0x40);
         }
     }
-    if ((Word(at::kConfirm) & pressed & 0xFFFF) == 0 && (pressed & 0x800) == 0) return;
+    if ((static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed & 0xFFFF) == 0 && (pressed & 0x800) == 0) return;
     g.transition(0);
     SetState(State() + 1);
     g.play_effect(0x105);
@@ -878,10 +878,10 @@ extern "C" void __cdecl TitleMenu_Choose(void) {
 // cursor + 2 - the new game, the load, or the config screen - and state 0;
 // until then the frame and the rows.
 extern "C" void __cdecl TitleMenu_Leave(void) {
-    if (Word(at::kWaitWord) == 0) {
-        const U step = static_cast<U>(static_cast<int>(static_cast<signed char>(Byte(at::kCursor))) + 2);
+    if (MoveScript_WaitWordDA == 0) {
+        const U step = static_cast<U>(SaveMenu_Cursor + 2);
         SetState(0);
-        PutWord(at::kGameStep, step);
+        Game_Step = step;
         return;
     }
     g.draw_frame();
@@ -894,12 +894,12 @@ extern "C" void __cdecl TitleMenu_Leave(void) {
 // bytes, as the original's stride has it; Transition_Start(0); Game_Step 5.
 extern "C" void __cdecl TitleFlow_NewGame(void) {
     g.init_characters();
-    PutByte(at::kNewGameByte, 0);
-    PutWord(at::kAreaNumber, 0xFFFF);
+    SaveMenu_NewGameByte = 0;
+    Game_AreaNumber = 0xFFFF;
     g.scenario_start(0);
-    for (U a = at::kCondFlags; a < at::kCondFlagsEnd; a += 8) PutLong(a, 0);
+    for (U a = Cond_Flags_addr; a < at::kCondFlagsEnd; a += 8) PutLong(a, 0);
     g.transition(0);
-    PutWord(at::kGameStep, 5);
+    Game_Step = 5;
 }
 
 // 0x588140, load menu state 0: Transition_Start(1); the cursor slot and the
@@ -907,7 +907,7 @@ extern "C" void __cdecl TitleFlow_NewGame(void) {
 // + 1, without Sound_PlayEffect(0x107), error 1 and state 5.
 extern "C" void __cdecl LoadMenu_List(void) {
     g.transition(1);
-    PutLong(at::kSlot, 0);
+    Rest2c_Slot = 0;
     PutLong(at::kSlotTop, 0);
     if (g.list_files() != 0) {
         g.read_summaries();
@@ -915,7 +915,7 @@ extern "C" void __cdecl LoadMenu_List(void) {
         return;
     }
     g.play_effect(0x107);
-    PutLong(at::kErrorKind, 1);
+    SaveMenu_ErrorKind = 1;
     SetState(5);
 }
 
@@ -925,7 +925,7 @@ extern "C" void __cdecl LoadMenu_Open(void) {
     LoadWindows();
     LoadMessage(0xAC);
     g.draw_slots(0x20, 0x30, 1);
-    if (Word(at::kWaitWord) == 0) SetState(State() + 1);
+    if (MoveScript_WaitWordDA == 0) SetState(State() + 1);
 }
 
 // 0x5881F0, state 2, choosing a slot: the same draw; then Input_AutoRepeat
@@ -940,39 +940,39 @@ extern "C" void __cdecl LoadMenu_Choose(void) {
     LoadWindows();
     LoadMessage(0xAC);
     g.draw_slots(0x20, 0x30, 1);
-    const U repeat = g.auto_repeat(Word(at::kPressed) & 0x5000);
+    const U repeat = g.auto_repeat(static_cast<std::uint32_t>(Input_Pressed) & 0x5000);
     U slot = Long(at::kSlot);
     const U old = slot & 0xFF;
     if ((repeat & 0x1000) && slot != 0) {
         --slot;
-        PutLong(at::kSlot, slot);
+        Rest2c_Slot = slot;
         const U top = Long(at::kSlotTop);
         if (static_cast<int>(slot) < static_cast<int>(top)) PutLong(at::kSlotTop, top - 1);
     } else if ((repeat & 0x4000) && static_cast<int>(slot) < 15) {
         ++slot;
-        PutLong(at::kSlot, slot);
+        Rest2c_Slot = slot;
         if (static_cast<int>(slot) > static_cast<int>(Long(at::kSlotTop) + 2)) PutLong(at::kSlotTop, Long(at::kSlotTop) + 1);
     }
     if (old != slot) {
         g.play_effect(0x101);
-        slot = Long(at::kSlot);
+        slot = Rest2c_Slot;
     }
-    const U pressed = Word(at::kPressed);
-    if (Word(at::kConfirm) & pressed) {
+    const U pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         if (Byte(at::kSummaries + slot * at::kSummaryBytes + 0x15) != 0xFF) {
             g.play_effect(0x104);
             const U s = State();
-            PutByte(at::kAnswer, 1);
+            FieldS_Answer = 1;
             SetState(s + 1);
             return;
         }
         g.play_effect(0x107);
         return;
     }
-    if (Word(at::kCancel) & pressed) {
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         g.play_effect(0x106);
         SetState(0);
-        PutWord(at::kGameStep, 1);
+        Game_Step = 1;
     }
 }
 
@@ -983,7 +983,7 @@ extern "C" void __cdecl LoadMenu_Confirm(void) {
     LoadMessage(0xB9);
     g.draw_slots(0x20, 0x30, 0);
     if (g.yes_no() == 0) return;
-    if (Byte(at::kAnswer) != 0) SetState(State() + 1);
+    if (static_cast<unsigned char>(FieldS_Answer) != 0) SetState(State() + 1);
     else SetState(State() - 1);
 }
 
@@ -998,11 +998,11 @@ extern "C" void __cdecl LoadMenu_Confirm(void) {
 extern "C" void __cdecl LoadMenu_Read(void) {
     LoadWindows();
     g.draw_slots(0x20, 0x30, 0);
-    const U slot = Long(at::kSlot);
+    const U slot = Rest2c_Slot;
     for (U i = 0; i < at::kClearBytes; i += 4) PutLong(at::kStaging + i, 0);
     g.sprintf(reinterpret_cast<char*>(At(at::kPath)), reinterpret_cast<const char*>(At(at::kSaveName)), slot);
     if (g.read_file(reinterpret_cast<const char*>(At(at::kPath)), at::kFileBytes, 0) == -1) {
-        PutLong(at::kErrorKind, 2);
+        SaveMenu_ErrorKind = 2;
         SetState(5);
         return;
     }
@@ -1014,7 +1014,7 @@ extern "C" void __cdecl LoadMenu_Read(void) {
         PutByte(at::kGameBlock + i, c);
         sum += c;
     }
-    PutWord(at::kScriptFlags, Byte(at::kScriptFlagsSaved));
+    Field_ScriptFlags = static_cast<std::uint32_t>(SaveMenu_ScriptFlagsSaved);
     if ((sum & 0xFFFF) == (stored & 0xFFFF)) {
         // Instrumentation, not behaviour: tools/input_run.py hands slot 0 back
         // on this line (docs/input-script.md section 1a) - the file is not
@@ -1024,7 +1024,7 @@ extern "C" void __cdecl LoadMenu_Read(void) {
         return;
     }
     g.play_effect(0x107);
-    PutLong(at::kErrorKind, 2);
+    SaveMenu_ErrorKind = 2;
     SetState(5);
 }
 
@@ -1038,20 +1038,20 @@ extern "C" void __cdecl LoadMenu_Read(void) {
 extern "C" void __cdecl SaveMenu_LoadErrorBody(U ecx) {
     U local = ecx >> 24, step;
     LoadWindows();
-    const U kind = Long(at::kErrorKind);
+    const U kind = SaveMenu_ErrorKind;
     if (kind == 1) {
-        PutByte(at::kErrorText, 0x11);
+        SaveMenu_ErrorText = 0x11;
         step = 1;
         local = 0;
     } else if (kind == 2) {
-        PutByte(at::kErrorText, 0x12);
+        SaveMenu_ErrorText = 0x12;
         step = 3;
         local = 2;
     } else {
         step = local;
     }
-    LoadMessage(Byte(at::kErrorText) + 0xA6);
-    if ((Word(at::kConfirm) & Word(at::kPressed)) == 0) return;
+    LoadMessage(static_cast<std::uint32_t>(SaveMenu_ErrorText) + 0xA6);
+    if ((static_cast<std::uint32_t>(Field_ConfirmButtons) & static_cast<std::uint32_t>(Input_Pressed)) == 0) return;
     g.play_effect(0x104);
     SetState(local);
     PutWord(at::kGameStep, step & 0xFF);
@@ -1066,7 +1066,7 @@ extern "C" void __cdecl LoadMenu_Loaded(void) {
     LoadMessage(0xB1);
     g.transition(0);
     const U s = State();
-    PutByte(at::kApplyDelay, 0x1E);
+    SaveMenu_ApplyDelay = 0x1E;
     SetState(s + 1);
 }
 
@@ -1083,10 +1083,10 @@ extern "C" void __cdecl LoadMenu_Loaded(void) {
 // the windows, the slots and message 0xB1 are drawn. The waits are Task_Sleep
 // loops on File_LoadDone, which is always 1 on the PC.
 extern "C" void __cdecl LoadMenu_Apply(void) {
-    const U delay = Byte(at::kApplyDelay);
-    PutByte(at::kApplyDelay, delay - 1);
+    const U delay = SaveMenu_ApplyDelay;
+    SaveMenu_ApplyDelay = delay - 1;
     if (delay == 0) {
-        const U map_4 = Long(at::kSavedButtons + 4), map_0 = Long(at::kSavedButtons), map_8 = Long(at::kSavedButtons + 8);
+        const U map_4 = Long(at::kSavedButtons + 4), map_0 = SaveMenu_SavedButtons, map_8 = Long(at::kSavedButtons + 8);
         PutLong(at::kButtons + 4, map_4);
         const U map_10 = Word(at::kSavedButtons + 0x10);
         PutLong(at::kButtons, map_0);
@@ -1094,7 +1094,7 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         PutWord(at::kButtons + 0x10, map_10);
         PutLong(at::kButtons + 8, map_8);
         PutLong(at::kButtons + 0xC, map_c);
-        const bool reset = Byte(at::kDefaultPad) != 0;
+        const bool reset = SaveMenu_DefaultPad != 0;
         if (reset) {
             PutWord(at::kButtons, 0x20);
             PutWord(at::kButtons + 2, 0x80);
@@ -1111,10 +1111,10 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         // (a save whose six lines are not one button each refused) - nothing
         // until sigma::Arm, after every module's self-test.
         bof3x::input::sigma::LoadApplied(reset);
-        PutByte(at::kMemberCount, static_cast<U>(g.party_count(0)));
-        g.party_select(Byte(at::kPartySet) & 0x7F, 3);
+        Field_MemberCount = static_cast<U>(g.party_count(0));
+        g.party_select(static_cast<std::uint32_t>(AreaW0b_PartySet) & 0x7F, 3);
         WaitLoad();
-        g.party_select(Byte(at::kPartySet) & 0x7F, 0);
+        g.party_select(static_cast<std::uint32_t>(AreaW0b_PartySet) & 0x7F, 0);
         WaitLoad();
         g.party_load(0);
         const U d8 = Long(at::kGameBlock + 8), d0 = Long(at::kGameBlock), d4 = Long(at::kGameBlock + 4);
@@ -1124,9 +1124,9 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         PutLong(at::kPosition, d0);
         PutLong(at::kPosition + 0xC, dc);
         const U c0 = Byte(at::kGameBlock + 0x20);
-        const U cond = at::kCondFlags + static_cast<U>(static_cast<int>(static_cast<signed char>(d0 & 0xFF)) * 8);
+        const U cond = Cond_Flags_addr + static_cast<U>(static_cast<int>(static_cast<signed char>(d0 & 0xFF)) * 8);
         const U c1 = Byte(at::kGameBlock + 0x21);
-        PutLong(at::kCondPointer, cond);
+        AreaW0c_FlagRow = cond;
         const U c2 = Byte(at::kGameBlock + 0x22);
         PutByte(at::kCounters, c0);
         const U c3 = Byte(at::kGameBlock + 0x23);
@@ -1135,11 +1135,11 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
         PutByte(at::kCounters + 3, c3);
         g.scenario_load();
         WaitLoad();
-        PutWord(at::kGameStep, 5);
+        Game_Step = 5;
         SetState(0);
     }
-    if (Word(at::kWaitWord) == 0) return;
-    if (Long(at::kHeld) & 0x800) PutByte(at::kDefaultPad, 1);
+    if (MoveScript_WaitWordDA == 0) return;
+    if (Long(at::kHeld) & 0x800) SaveMenu_DefaultPad = 1;
     LoadWindows();
     g.draw_slots(0x20, 0x30, 0);
     LoadMessage(0xB1);
@@ -1152,14 +1152,14 @@ extern "C" void __cdecl LoadMenu_Apply(void) {
 // of its record - after a load too - and task 0 restarted at 0x495800, the
 // game's body (0x5A9976, which does not return).
 extern "C" void __cdecl TitleFlow_EnterGame(void) {
-    if (Word(at::kWaitWord) != 0) return;
-    const U cursor = Byte(at::kCursor);
-    PutByte(at::kMenuStates, 0);
+    if (MoveScript_WaitWordDA != 0) return;
+    const U cursor = static_cast<unsigned char>(SaveMenu_Cursor);
+    FieldS_Step = 0;
     PutByte(at::kMenuStates + 1, 0);
     PutByte(at::kMenuStates + 3, 0);
     if (cursor == 2) {
         SetState(0);
-        PutWord(at::kGameStep, 1);
+        Game_Step = 1;
         return;
     }
     for (U i = 0; i < 8; ++i) {
@@ -1195,7 +1195,7 @@ extern "C" __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
 // A jump, as the original's: the step's function returns to task 0's loop.
 extern "C" void __cdecl TitleFlow_Step(void) {
     using Step = void (__cdecl*)();
-    const Step step = reinterpret_cast<Step>(At(Long(at::kStepTable + Word(at::kGameStep) * 4)));
+    const Step step = reinterpret_cast<Step>(At(Long(at::kStepTable + static_cast<std::uint32_t>(Game_Step) * 4)));
     [[clang::musttail]] return step();
 }
 
@@ -1257,7 +1257,7 @@ void CacheSoundSelfTest() {
         bof3::Fatal("DIV-0089 self-test: the sound readers' cache refused: %s", error);
 
     const Callees saved = g;
-    const U kind = Long(at::kStreamKind);
+    const U kind = SaveMenu_StreamKind;
     const bool missing = g_stream_missing;  // DIV-0129's flag: the opens below fail
     std::vector<std::string> opens;
     std::vector<U> banks;
@@ -1306,7 +1306,7 @@ void CacheSoundSelfTest() {
     refused += !as_original({cache_wave, "DAT\\" + bank}, {});
 
     g = saved;
-    PutLong(at::kStreamKind, kind);
+    SaveMenu_StreamKind = kind;
     g_stream_missing = missing;
     g_sound_opens = nullptr;
     g_sound_banks = nullptr;
@@ -1332,7 +1332,7 @@ int __cdecl StillPlaying() { return 1; }
 
 void StreamMissingSelfTest() {
     const Callees saved = g;
-    const U kind = Long(at::kStreamKind);
+    const U kind = SaveMenu_StreamKind;
     const bool missing = g_stream_missing;
     g.file_open = FailOpen;
     g.music_playing = StillPlaying;
@@ -1344,7 +1344,7 @@ void StreamMissingSelfTest() {
     g_stream_missing = false;                    // as after an open that succeeded
     const int present = Sound_StreamDone();
     g = saved;
-    PutLong(at::kStreamKind, kind);
+    SaveMenu_StreamKind = kind;
     g_stream_missing = missing;
     if (failed != 1 || original != 0 || present != 0)
         bof3::Fatal("DIV-0129 self-test: a missing stream's wait answers %d (want 1), the original's %d (want 0), a "

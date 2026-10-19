@@ -54,22 +54,34 @@ void SetL(std::uint32_t a, std::uint32_t v) { SetLong(Mem(a), static_cast<std::i
 template <typename T, unsigned N> T PickOf(const T (&v)[N]) { return v[sh::Next() % N]; }
 
 // The cells (scena_sc15.cpp has their meaning).
-constexpr std::uint32_t kState = 0x8034E2, kPart = 0x8034E3, kRun = 0x8034E4, kStep = 0x8034E5, kTimer = 0x8034E6;
-constexpr std::uint32_t kByteFD = 0x8034F1;
+// kPart: now MoveScript_PartyRecords[0x63] (symbols.toml).
+// kRun: now MoveScript_Var7 (symbols.toml).
+// kStep: now MoveScript_PartyRecords[0x65] (symbols.toml).
+// kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml).
+constexpr std::uint32_t kState = 0x8034E2;
+// kByteFD: now Cond_ByteFD (symbols.toml).
 constexpr std::uint32_t kCounter0 = 0x903848, kCounter3 = 0x90384B;
-constexpr std::uint32_t kWait = 0x66C810, kRequest = 0x66C7D8, kArea = 0x904EFC;
-constexpr std::uint32_t kEffects = 0x7E11E0;
-constexpr std::uint32_t kDistance = 0x903840;
-constexpr std::uint32_t kPartyByte = 0x90412C;
-constexpr std::uint32_t kShakeShift = 0x6BC740, kShakeOn = 0x6BC741, kKept = 0x6BC742, kSlot = 0x6BC743;
-constexpr std::uint32_t kRollLine = 0x6BC744, kRollScroll = 0x6BC746, kRollSkip = 0x6BC747;
-constexpr std::uint32_t kInputHeld = 0x7E1BE8, kInputPressed = 0x7E1BEC;
-constexpr std::uint32_t kHold = 0x929F12, kElevation = 0x929F1C;
-constexpr std::uint32_t kGameStep = 0x66C7EA;
-constexpr std::uint32_t kPacketNext = 0x7E0670;
-constexpr std::uint32_t kRecordTable = 0x7E0880;   // the pointer Scena15_RecordWord reads
+// kWait: now MoveScript_WaitWordDA (symbols.toml).
+// kRequest: now Field_Request (symbols.toml).
+// kArea: now Game_AreaNumber (symbols.toml).
+// kEffects: now Effect_Objects (symbols.toml).
+// kDistance: now Camera_Distance (symbols.toml).
+// kPartyByte: now AreaW0b_PartySet (symbols.toml).
+// kShakeOn: now Scena15_Bytes[1] (symbols.toml).
+// kKept: now Scena15_Bytes[2] (symbols.toml).
+constexpr std::uint32_t kShakeShift = 0x6BC740, kSlot = 0x6BC743;
+// kRollLine: now Scena15_Bytes[4] (symbols.toml).
+// kRollScroll: now Scena15_Bytes[6] (symbols.toml).
+// kRollSkip: now Scena15_Bytes[7] (symbols.toml).
+// kInputHeld: now Input_Held (symbols.toml).
+// kInputPressed: now Input_Pressed (symbols.toml).
+// kHold: now Field_Kind2Hold (symbols.toml).
+// kElevation: now MapView_Elevation (symbols.toml).
+// kGameStep: now Game_Step (symbols.toml).
+// kPacketNext: now Gfx_PacketNext (symbols.toml).
+// kRecordTable: now MoveScript_TintRecords[0x180] (symbols.toml). the pointer Scena15_RecordWord reads
 
-unsigned char* Effect(unsigned slot) { return Mem(kEffects + (slot & 0xFFu) * 0x80u); }
+unsigned char* Effect(unsigned slot) { return Mem(Effect_Objects_addr + (slot & 0xFFu) * 0x80u); }
 
 // ================================================================================
 // The copies of the functions the harness cannot clone as they are
@@ -254,7 +266,7 @@ std::uint32_t RecordWordEffect(const std::uint32_t*, std::uint32_t r) { return r
 // and its kept copy 0x6BC742 again after each; half the time one moves.
 std::uint32_t PartySetEffect(const std::uint32_t*, std::uint32_t r) {
     const std::uint32_t n = sh::Noise();
-    if (n & 1) B((n & 2) ? kPartyByte : kKept) = static_cast<unsigned char>((n & 4) ? 0xFF : n >> 8);
+    if (n & 1) B((n & 2) ? AreaW0b_PartySet_addr : (Scena15_Bytes_addr + 0x2)) = static_cast<unsigned char>((n & 4) ? 0xFF : n >> 8);
     return r;
 }
 
@@ -395,7 +407,7 @@ const sh::Region kRegions15[] = {
 // Chapter 17's.
 sh::Region g_regions17[] = {
     {0x6BC740, 8},
-    {kPacketNext, 4},     // Gfx_PacketNext
+    {Gfx_PacketNext_addr, 4}, // Gfx_PacketNext
     {0, kPrimBytes},      // g_prims (filled in at start-up)
     {0, sizeof g_text},   // g_text (likewise)
     {0x9037A0, 0x18},     // Prim_VertexScratch
@@ -406,7 +418,7 @@ sh::Region g_regions17[] = {
     {0x929F00, 1},
     {0x929F0C, 1},
     {0x929F10, 4},        // Field_Kind2Hold at +2
-    {kGameStep, 2},       // Game_Step
+    {Game_Step_addr, 2},  // Game_Step
     {0x66C7DA, 1},
 };
 // Chapters 16's, 18's and 19's: the standard ones and the chapters' bytes.
@@ -504,78 +516,78 @@ unsigned g_k;   // the clone being seeded, for Disturb and Settle
 int g_chapter;
 
 // A timer seeded for a count-down (1 half the time) or a threshold.
-void SeedTimer() { SetW(kTimer, sh::Half() ? 1u : PickOf(kTimers)); }
+void SeedTimer() { SetW(MoveScript_PartyRecords_addr + 0x66, sh::Half() ? 1u : PickOf(kTimers)); }
 
 void Seed15(unsigned k) {
     g_k = k;
     g_chapter = 15;
     SwapObjects(g_objects15, k == k15Object);
-    SetL(kRecordTable, KeyOf(g_records));
-    B(kState) = static_cast<unsigned char>(sh::Next() % 3);
-    B(kRun) = static_cast<unsigned char>(sh::Next() % 7);
-    B(kSlot) = static_cast<unsigned char>(sh::Next() % 20);
-    Effect(B(kSlot))[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : sh::Next());
-    Effect(B(kSlot))[0xB] = static_cast<unsigned char>(sh::Next() % 12);
-    if (sh::Often()) SetW(kArea, PickOf(kAreas15));
-    B(kByteFD) = static_cast<unsigned char>(sh::Next() % 4);
-    if (sh::Half()) B(kRequest) = PickOf<std::uint8_t, 4>({0, 2, 6, 1});
-    if (sh::Half()) SetW(kWait, 0);
-    if (sh::Half()) B(kShakeOn) = 0;
-    B(kShakeShift) = static_cast<unsigned char>(sh::Next() % 8);
-    if (sh::Half()) B(kKept) = sh::Half() ? 0 : 0xFF;
-    if (sh::Half()) B(kPartyByte) = sh::Half() ? B(kKept) : 0xFF;
+    SetL(MoveScript_TintRecords_addr + 0x180, KeyOf(g_records));
+    B(MoveScript_PartyRecords_addr + 0x62) = static_cast<unsigned char>(sh::Next() % 3);
+    B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next() % 7);
+    B(Scena15_Bytes_addr + 0x3) = static_cast<unsigned char>(sh::Next() % 20);
+    Effect(B(Scena15_Bytes_addr + 0x3))[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : sh::Next());
+    Effect(B(Scena15_Bytes_addr + 0x3))[0xB] = static_cast<unsigned char>(sh::Next() % 12);
+    if (sh::Often()) SetW(Game_AreaNumber_addr, PickOf(kAreas15));
+    B(Cond_ByteFD_addr) = static_cast<unsigned char>(sh::Next() % 4);
+    if (sh::Half()) B(Field_Request_addr) = PickOf<std::uint8_t, 4>({0, 2, 6, 1});
+    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) B(Scena15_Bytes_addr + 0x1) = 0;
+    B(Scena15_Bytes_addr) = static_cast<unsigned char>(sh::Next() % 8);
+    if (sh::Half()) B(Scena15_Bytes_addr + 0x2) = sh::Half() ? 0 : 0xFF;
+    if (sh::Half()) B(AreaW0b_PartySet_addr) = sh::Half() ? B(Scena15_Bytes_addr + 0x2) : 0xFF;
     SeedTimer();
     sh::SetRandHint(sh::Next() & 0xFF);
     switch (k) {
     case k15Run1:
-        B(kStep) = PickOf(kSteps1);
+        B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps1);
         if (sh::Half()) B(kCounter0) = 1;
         break;
     case k15Run2:
-        B(kStep) = static_cast<unsigned char>(sh::Next() % 7);
+        B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(sh::Next() % 7);
         if (sh::Half()) B(kCounter0) = 3;
-        if (sh::Half()) SetW(kInputHeld, 0);
+        if (sh::Half()) SetW(Input_Held_addr, 0);
         break;
     case k15Run3:
-        B(kStep) = PickOf(kSteps3);
+        B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps3);
         B(kCounter0) = PickOf(kCounters3);
         break;
     case k15Run4:
-        B(kStep) = static_cast<unsigned char>(sh::Next() % 0x1A);
+        B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(sh::Next() % 0x1A);
         B(kCounter0) = PickOf(kCounters4);
         B(kCounter3) = PickOf<std::uint8_t, 3>({0x10, 0, 5});
         break;
     case k15Run5:
-        B(kStep) = PickOf(kSteps5);
+        B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps5);
         B(kCounter0) = PickOf(kCounters5);
-        if (sh::Half()) B(kRequest) = PickOf<std::uint8_t, 3>({0, 2, 6});
+        if (sh::Half()) B(Field_Request_addr) = PickOf<std::uint8_t, 3>({0, 2, 6});
         break;
     case k15Run6:
-        B(kStep) = static_cast<unsigned char>(sh::Next() % 0x38);
+        B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(sh::Next() % 0x38);
         B(kCounter0) = PickOf(kCounters6);
-        if (sh::Half()) SetW(kDistance, 0x780 + (sh::Next() % 3) - 1);
+        if (sh::Half()) SetW(Camera_Distance_addr, 0x780 + (sh::Next() % 3) - 1);
         break;
     case k15EnterArea:
-        SetW(kArea, PickOf(kAreas15));
-        B(kByteFD) = static_cast<unsigned char>(sh::Next() % 3);
+        SetW(Game_AreaNumber_addr, PickOf(kAreas15));
+        B(Cond_ByteFD_addr) = static_cast<unsigned char>(sh::Next() % 3);
         break;
     case k15Object:
         sh::SpriteRecord(0)[0x86] = static_cast<unsigned char>(sh::Next() % 12);
         break;
     case k15Talk:
         sh::SpriteRecord(0)[0x86] = static_cast<unsigned char>(sh::Next() % 5);
-        if (sh::Half()) SetW(kArea, 0xC0);
+        if (sh::Half()) SetW(Game_AreaNumber_addr, 0xC0);
         break;
     case k15StepHook:
-        SetW(kArea, sh::Half() ? 0xAD : PickOf<std::uint16_t, 3>({0xAE, 0xAE, 0x9E}));
-        B(kByteFD) = static_cast<unsigned char>(sh::Next() % 3);
+        SetW(Game_AreaNumber_addr, sh::Half() ? 0xAD : PickOf<std::uint16_t, 3>({0xAE, 0xAE, 0x9E}));
+        B(Cond_ByteFD_addr) = static_cast<unsigned char>(sh::Next() % 3);
         break;
     case k15ArriveHook:
-        if (sh::Often()) SetW(kArea, 0xAE);
+        if (sh::Often()) SetW(Game_AreaNumber_addr, 0xAE);
         break;
     default: break;
     }
-    if (sh::Next() % 10 == 0) B(kStep) = static_cast<unsigned char>(sh::Next());   // any step, now and then
+    if (sh::Next() % 10 == 0) B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(sh::Next()); // any step, now and then
 }
 
 // The hooks' coordinates: the values their tests name, either side of each,
@@ -649,14 +661,14 @@ void Args15(unsigned k, std::uint32_t* a) {
 // or the recorders' stream only, never the harness's Next.
 void Move15(std::uint32_t h) {
     switch ((h >> 8) % 9) {
-    case 0: SetW(kArea, kAreas15[(h >> 12) % (sizeof kAreas15 / sizeof kAreas15[0])]); break;
-    case 1: B(kByteFD) = static_cast<unsigned char>((h >> 12) % 3); break;
-    case 2: B(kSlot) = static_cast<unsigned char>((h >> 12) % 20); break;
-    case 3: Effect(B(kSlot))[0] = static_cast<unsigned char>(Effect(B(kSlot))[0] ^ 1); break;
-    case 4: B(kPartyByte) = static_cast<unsigned char>(h >> 16); break;
-    case 5: B(kKept) = static_cast<unsigned char>((h >> 12) & 1 ? 0 : h >> 16); break;
-    case 6: B(kShakeShift) = static_cast<unsigned char>((h >> 12) % 8); break;
-    case 7: B(kShakeOn) = static_cast<unsigned char>((h >> 12) & 1); break;
+    case 0: SetW(Game_AreaNumber_addr, kAreas15[(h >> 12) % (sizeof kAreas15 / sizeof kAreas15[0])]); break;
+    case 1: B(Cond_ByteFD_addr) = static_cast<unsigned char>((h >> 12) % 3); break;
+    case 2: B(Scena15_Bytes_addr + 0x3) = static_cast<unsigned char>((h >> 12) % 20); break;
+    case 3: Effect(B(Scena15_Bytes_addr + 0x3))[0] = static_cast<unsigned char>(Effect(B(Scena15_Bytes_addr + 0x3))[0] ^ 1); break;
+    case 4: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(h >> 16); break;
+    case 5: B(Scena15_Bytes_addr + 0x2) = static_cast<unsigned char>((h >> 12) & 1 ? 0 : h >> 16); break;
+    case 6: B(Scena15_Bytes_addr) = static_cast<unsigned char>((h >> 12) % 8); break;
+    case 7: B(Scena15_Bytes_addr + 0x1) = static_cast<unsigned char>((h >> 12) & 1); break;
     default: B(kCounter0) = kCounters6[(h >> 12) % (sizeof kCounters6)]; break;
     }
 }
@@ -667,7 +679,7 @@ void Disturb15(std::uint32_t h) { Move15(h); }
 void Settle15() {
     const std::uint32_t n = sh::Noise();
     if (n & 1) Move15(n >> 1);
-    B(kSlot) = static_cast<unsigned char>(B(kSlot) % 20);
+    B(Scena15_Bytes_addr + 0x3) = static_cast<unsigned char>(B(Scena15_Bytes_addr + 0x3) % 20);
 }
 
 // ================================================================================
@@ -813,29 +825,29 @@ void Seed17(unsigned k) {
     g_chapter = 17;
     SwapObjects(g_objects17, k == k17Object);
     Gfx_PacketNext = g_prims + 4 * (sh::Next() % 16);
-    B(kState) = static_cast<unsigned char>(sh::Next() % 3);
-    B(kPart) = static_cast<unsigned char>(sh::Next() % 4);
-    B(kStep) = PickOf(kCounts);
-    if (sh::Half()) SetW(kWait, 0);
-    if (sh::Half()) B(kRequest) = sh::Half() ? 2 : 0;
-    if (sh::Half()) B(kHold) = 0;
+    B(MoveScript_PartyRecords_addr + 0x62) = static_cast<unsigned char>(sh::Next() % 3);
+    B(MoveScript_PartyRecords_addr + 0x63) = static_cast<unsigned char>(sh::Next() % 4);
+    B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kCounts);
+    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) B(Field_Request_addr) = sh::Half() ? 2 : 0;
+    if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
     B(kCounter3) = PickOf<std::uint8_t, 5>({0x14, 0x64, 1, 2, 0});
-    SetL(kElevation, PickOf(kElevations));
-    if (sh::Half()) B(kInputPressed) = static_cast<unsigned char>(sh::Next() & 0x28);
-    if (sh::Half()) B(kRollSkip) = 0;
-    SetW(kGameStep, sh::Next() % 3);
+    SetL(MapView_Elevation_addr, PickOf(kElevations));
+    if (sh::Half()) B(Input_Pressed_addr) = static_cast<unsigned char>(sh::Next() & 0x28);
+    if (sh::Half()) B(Scena15_Bytes_addr + 0x7) = 0;
+    SetW(Game_Step_addr, sh::Next() % 3);
     g_sleep_limit = 1 + sh::Next() % 3;
-    if (sh::Half()) SetW(kArea, 0xC7);
+    if (sh::Half()) SetW(Game_AreaNumber_addr, 0xC7);
     // the roll: a line near the end half the time, the scroll at its turn
-    SetW(kRollLine, sh::Half() ? 336 + sh::Next() % 16 : sh::Next() % 352);
-    B(kRollScroll) = static_cast<unsigned char>(sh::Half() ? 0x15 : sh::Next() % 0x16);
+    SetW(Scena15_Bytes_addr + 0x4, sh::Half() ? 336 + sh::Next() % 16 : sh::Next() % 352);
+    B(Scena15_Bytes_addr + 0x6) = static_cast<unsigned char>(sh::Half() ? 0x15 : sh::Next() % 0x16);
     SeedText();
     switch (k) {
-    case k17Intro: B(kRun) = static_cast<unsigned char>(sh::Next() % 16); break;
-    case k17Roll: B(kRun) = static_cast<unsigned char>(sh::Next() % 3); break;
-    case k17Outro: B(kRun) = static_cast<unsigned char>(sh::Next() % 13); break;
+    case k17Intro: B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next() % 16); break;
+    case k17Roll: B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next() % 3); break;
+    case k17Outro: B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next() % 13); break;
     case k17Object: sh::SpriteRecord(0)[0x86] = 0; break;
-    default: B(kRun) = static_cast<unsigned char>(sh::Next()); break;
+    default: B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next()); break;
     }
 }
 
@@ -852,21 +864,21 @@ void Args17(unsigned k, std::uint32_t* a) {
 
 void Move17(std::uint32_t h) {
     switch ((h >> 8) % 8) {
-    case 0: B(kHold) = static_cast<unsigned char>((h >> 12) & 1); break;
-    case 1: SetL(kElevation, kElevations[(h >> 12) % (sizeof kElevations / sizeof kElevations[0])]); break;
-    case 2: B(kPart) = static_cast<unsigned char>((h >> 12) % 4); break;
-    case 3: SetW(kRollLine, (h >> 12) % 352); break;
-    case 4: B(kRollScroll) = static_cast<unsigned char>((h >> 12) % 0x17); break;
+    case 0: B(Field_Kind2Hold_addr) = static_cast<unsigned char>((h >> 12) & 1); break;
+    case 1: SetL(MapView_Elevation_addr, kElevations[(h >> 12) % (sizeof kElevations / sizeof kElevations[0])]); break;
+    case 2: B(MoveScript_PartyRecords_addr + 0x63) = static_cast<unsigned char>((h >> 12) % 4); break;
+    case 3: SetW(Scena15_Bytes_addr + 0x4, (h >> 12) % 352); break;
+    case 4: B(Scena15_Bytes_addr + 0x6) = static_cast<unsigned char>((h >> 12) % 0x17); break;
     case 5: B(kCounter3) = static_cast<unsigned char>((h >> 12) & 3); break;
     case 6: SetL(0x905E60, h); break;   // Field_Kind2Z
-    default: B(kRollSkip) = static_cast<unsigned char>((h >> 12) & 1); break;
+    default: B(Scena15_Bytes_addr + 0x7) = static_cast<unsigned char>((h >> 12) & 1); break;
     }
 }
 void Disturb17(std::uint32_t h) { Move17(h); }
 void Settle17() {
     const std::uint32_t n = sh::Noise();
     if (n & 1) Move17(n >> 1);
-    SetW(kGameStep, move_script::Word(Mem(kGameStep)) % 3);   // Scena17_EndTask indexes its table by it again each frame
+    SetW(Game_Step_addr, move_script::Word(Mem(Game_Step_addr)) % 3); // Scena17_EndTask indexes its table by it again each frame
 }
 
 // ================================================================================
@@ -893,10 +905,10 @@ ObjectTable g_objects19 = {0x662C7C, 1, {}, false};
 void SeedSmall(unsigned k, ObjectTable& t, unsigned object_k) {
     g_k = k;
     SwapObjects(t, k == object_k);
-    B(kState) = static_cast<unsigned char>(sh::Next() % 3);
-    B(kRun) = 0;   // one entry
+    B(MoveScript_PartyRecords_addr + 0x62) = static_cast<unsigned char>(sh::Next() % 3);
+    B(MoveScript_Var7_addr) = 0; // one entry
     sh::SpriteRecord(0)[0x86] = 0;
-    if (sh::Half()) B(kInputPressed) = static_cast<unsigned char>(sh::Next() & 8);
+    if (sh::Half()) B(Input_Pressed_addr) = static_cast<unsigned char>(sh::Next() & 8);
 }
 void Seed18(unsigned k) {
     g_chapter = 18;
@@ -916,7 +928,7 @@ void SelfTest() {
     for (unsigned i = 0; i < kCalleesN; ++i) g_callees[i] = kCallees[i];
     g_callees[kCalleesN] = kObjectCallee;
     FillRecords();
-    const std::uint32_t kept_records = static_cast<std::uint32_t>(Long(Mem(kRecordTable)));
+    const std::uint32_t kept_records = static_cast<std::uint32_t>(Long(Mem(MoveScript_TintRecords_addr + 0x180)));
 
     g_sc15_enter_copy = CopyWithTramps("Scena15_EnterArea", 0x567DD0, 0x73B, kCalls567DD0, SH_N(kCalls567DD0), nullptr, 0);
     g_sc15_run6_copy = CopyWithTramps("Scena15_Run6", 0x569F20, 0xE54, kCalls569F20, SH_N(kCalls569F20), kTables569F20,
@@ -961,7 +973,7 @@ void SelfTest() {
     g19.chapter = 19;
     sh::Run(g19);
 
-    SetLong(Mem(kRecordTable), static_cast<std::int32_t>(kept_records));
+    SetLong(Mem(MoveScript_TintRecords_addr + 0x180), static_cast<std::int32_t>(kept_records));
 }
 
 }  // namespace scena_sc15

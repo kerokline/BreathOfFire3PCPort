@@ -76,93 +76,93 @@ std::uint16_t W(const unsigned char* p) { return move_script::Word(p); }
 void SetW(unsigned char* p, unsigned v) { move_script::SetWord(p, v); }
 
 // The chapter bytes (docs/scenario-roots.md section 2).
-constexpr uint32_t kChapter = 0x8034E0;     // Cond_ByteFA
-constexpr uint32_t kStatus = 0x8034E1;      // Field_StatusBits
-constexpr uint32_t kState = 0x8034E2;       // s8, the frame's state
-constexpr uint32_t kPart = 0x8034E3;        // s8, chapter 17's part (Scena17_Parts)
-constexpr uint32_t kRun = 0x8034E4;         // MoveScript_Var7: the run (15, 18, 19), the part's step (17)
-constexpr uint32_t kStep = 0x8034E5;        // u8, the run's step
+// kChapter: now Cond_ByteFA (symbols.toml). Cond_ByteFA
+// kStatus: now Field_StatusBits (symbols.toml). Field_StatusBits
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8, the frame's state
+// kPart: now MoveScript_PartyRecords[0x63] (symbols.toml). s8, chapter 17's part (Scena17_Parts)
+// kRun: now MoveScript_Var7 (symbols.toml). MoveScript_Var7: the run (15, 18, 19), the part's step (17)
+// kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8, the run's step
 constexpr uint32_t kTimer = 0x8034E6;       // u16
-constexpr uint32_t kByteFD = 0x8034F1;      // Cond_ByteFD
+// kByteFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 // The script counters (MoveScript_CounterOps) and the chapters' other cells.
 constexpr uint32_t kCounter0 = 0x903848;
 constexpr uint32_t kCounter1 = 0x903849;
 constexpr uint32_t kCounter2 = 0x90384A;
 constexpr uint32_t kCounter3 = 0x90384B;
 constexpr uint32_t kSlotWord = 0x903850;    // u16: the event object's slot (Scena15_EventObjects)
-constexpr uint32_t kFlagRow = 0x929ED0;     // the flag bits Flags_Test / Flags_Set are given
-constexpr uint32_t kStoryRow = 0x904030;    // Cond_Flags + 0xA0, the story flags
-constexpr uint32_t kRow14 = 0x904000;       // Cond_Flags + 0x70
-constexpr uint32_t kRow3 = 0x904008;        // Cond_Flags + 0x78 (chapter 15's row is 0x904008)
-constexpr uint32_t kWait = 0x66C810;        // MoveScript_WaitWordDA
-constexpr uint32_t kRequest = 0x66C7D8;     // Field_Request
-constexpr uint32_t kArea = 0x904EFC;        // Game_AreaNumber
-constexpr uint32_t kPass = 0x7E0918;        // Draw_PassFlags
-constexpr uint32_t kEffects = 0x7E11E0;     // Effect_Objects, 20 records of 0x80
-constexpr uint32_t kSprites = 0x7DEE80;     // Sprite_Objects, 30 records of 0xA4
-constexpr uint32_t kDistance = 0x903840;    // Camera_Distance (s16)
-constexpr uint32_t kShiftY = 0x903802;      // Camera_ShiftY
-constexpr uint32_t kAngle0 = 0x929EC8;      // Camera_Angles[0]
-constexpr uint32_t kAngle1 = 0x929ECA;      // Camera_Angles[1]
+// kFlagRow: now AreaW0c_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given
+// kStoryRow: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, the story flags
+// kRow14: now Cond_Flags[0x70] (symbols.toml). Cond_Flags + 0x70
+// kRow3: now Cond_Flags[0x78] (symbols.toml). Cond_Flags + 0x78 (chapter 15's row is 0x904008)
+// kWait: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA
+// kRequest: now Field_Request (symbols.toml). Field_Request
+// kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber
+// kPass: now Draw_PassFlags (symbols.toml). Draw_PassFlags
+// kEffects: now Effect_Objects (symbols.toml). Effect_Objects, 20 records of 0x80
+// kSprites: now Sprite_Objects (symbols.toml). Sprite_Objects, 30 records of 0xA4
+// kDistance: now Camera_Distance (symbols.toml). Camera_Distance (s16)
+// kShiftY: now Camera_ShiftY (symbols.toml). Camera_ShiftY
+// kAngle0: now Camera_Angles (symbols.toml). Camera_Angles[0]
+// kAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles[1]
 constexpr uint32_t kAngle2 = 0x929ECC;      // Cond_AngleFB's word
-constexpr uint32_t kRedraw = 0x905E69;      // MapView_Redraw
-constexpr uint32_t kKind2Z = 0x905E60;      // Field_Kind2Z
-constexpr uint32_t kKind2X = 0x905E64;      // Field_Kind2X
-constexpr uint32_t kByteFE = 0x905E20;      // Cond_ByteFE
-constexpr uint32_t kMusicTrack = 0x904131;  // Music_Track
-constexpr uint32_t kAreaMusic = 0x904CD0;   // the byte the area changes set with the track to play
-constexpr uint32_t kByteEE0 = 0x904EE0;     // set with some area changes
-constexpr uint32_t kByte7F98 = 0x937F98;
-constexpr uint32_t kPartyByte = 0x90412C;
+// kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
+// kKind2Z: now Field_Kind2Z (symbols.toml). Field_Kind2Z
+// kKind2X: now Field_Kind2X (symbols.toml). Field_Kind2X
+// kByteFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
+// kMusicTrack: now Music_Track (symbols.toml). Music_Track
+// kAreaMusic: now AreaW1f_MusicCurrent (symbols.toml). the byte the area changes set with the track to play
+// kByteEE0: now ModeFlow_AreaTransition (symbols.toml). set with some area changes
+// kByte7F98: now AreaW0c_PendingKind (symbols.toml).
+// kPartyByte: now AreaW0b_PartySet (symbols.toml).
 constexpr uint32_t kFrame = 0x937F94;       // Frame_Counter
 constexpr uint32_t kInputHeld = 0x7E1BE8;   // Input_Held (u16; read as a dword by run 5 step 0x18)
 constexpr uint32_t kInputPressed = 0x7E1BEC;   // Input_Pressed
-constexpr uint32_t kHold = 0x929F12;        // Field_Kind2Hold
+// kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 constexpr uint32_t kElevation = 0x929F1C;   // MapView_Elevation (long)
-constexpr uint32_t kF3Divisor = 0x937F8C;   // MoveScript_F3Divisor
-constexpr uint32_t kFAWord = 0x904EFE;      // MoveScript_FAWord
-constexpr uint32_t kPacketNext = 0x7E0670;  // Gfx_PacketNext
-constexpr uint32_t kClutStrip = 0x80F580;   // Gfx_ClutStrip: 32 rows of 0x100 colours
-constexpr uint32_t kClutDirty = 0x937F90;   // Gfx_ClutStripDirty
-constexpr uint32_t kGameStep = 0x66C7EA;    // Game_Step
-constexpr uint32_t kVertices = 0x9037A0;    // Prim_VertexScratch
+// kF3Divisor: now MoveScript_F3Divisor (symbols.toml). MoveScript_F3Divisor
+// kFAWord: now MoveScript_FAWord (symbols.toml). MoveScript_FAWord
+// kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
+// kClutStrip: now Gfx_ClutStrip (symbols.toml). Gfx_ClutStrip: 32 rows of 0x100 colours
+// kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
+// kGameStep: now Game_Step (symbols.toml). Game_Step
+// kVertices: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
 
 // Chapter 15's and 17's own bytes (Scena15_Bytes 0x6BC740, read by no other code).
 constexpr uint32_t kShakeShift = 0x6BC740;  // the camera shake's shift (Scena15_Shake's argument)
-constexpr uint32_t kShakeOn = 0x6BC741;     // the camera shakes while set
+// kShakeOn: now Scena15_Bytes[1] (symbols.toml). the camera shakes while set
 constexpr uint32_t kKept = 0x6BC742;        // run 4: the party byte kept; run 6: Scena15_RandomPause's count
-constexpr uint32_t kSlot = 0x6BC743;        // the effect slot a run waits on
+// kSlot: now Scena15_Bytes[3] (symbols.toml). the effect slot a run waits on
 constexpr uint32_t kRollLine = 0x6BC744;    // u16: the roll's first line (Scena17_RollLines)
-constexpr uint32_t kRollScroll = 0x6BC746;  // the roll's scroll within a line, 0..0x15
-constexpr uint32_t kRollSkip = 0x6BC747;    // the roll skipped (Input_Pressed 0x20)
+// kRollScroll: now Scena15_Bytes[6] (symbols.toml). the roll's scroll within a line, 0..0x15
+// kRollSkip: now Scena15_Bytes[7] (symbols.toml). the roll skipped (Input_Pressed 0x20)
 
 // Chapter 15's tables.
-constexpr uint32_t kStates15 = 0x661924;    // Scena15_States, 3
-constexpr uint32_t kRuns15 = 0x661930;      // Scena15_Runs, 7
+// kStates15: now Scena15_States (symbols.toml). Scena15_States, 3
+// kRuns15: now Scena15_Runs (symbols.toml). Scena15_Runs, 7
 constexpr uint32_t kBattles = 0x6618C0;     // Scena15_Battles: 10 records of 10 bytes
-constexpr uint32_t kOpRecords0 = 0x661950;  // Scena15_EventOps: three EventOp_0x records of 0x11
-constexpr uint32_t kOpRecords6 = 0x661988;  // Scena15_EventOps6: two EventOp_6x records of 0x10
+// kOpRecords0: now Scena15_EventOps (symbols.toml). Scena15_EventOps: three EventOp_0x records of 0x11
+// kOpRecords6: now Scena15_EventOps[0x38] (symbols.toml). Scena15_EventOps6: two EventOp_6x records of 0x10
 constexpr uint32_t kShakeSteps = 0x6619A8;  // Scena15_ShakeSteps: four s8
-constexpr uint32_t kObjects15 = 0x6619AC;   // Scena15_Objects, 12
+// kObjects15: now Scena15_Objects (symbols.toml). Scena15_Objects, 12
 constexpr uint32_t kTalkWho = 0x6619DC;     // Scena15_TalkWho: five bytes
-constexpr uint32_t kObjects16 = 0x661A1C;   // Scena16_Objects, 1
+// kObjects16: now Scena16_Objects (symbols.toml). Scena16_Objects, 1
 // Chapter 17's.
 constexpr uint32_t kRollLines = 0x661A20;   // Scena17_RollLines: string pointers, -1 at 351
-constexpr uint32_t kStates17 = 0x661FEC;    // Scena17_States, 3
-constexpr uint32_t kParts17 = 0x661FF8;     // Scena17_Parts, 4
-constexpr uint32_t kPart1Steps = 0x662008;  // Scena17_Part1Steps, 16
-constexpr uint32_t kPart2Steps = 0x662048;  // Scena17_Part2Steps, 3
-constexpr uint32_t kPart3Steps = 0x662054;  // Scena17_Part3Steps, 13
-constexpr uint32_t kObjects17 = 0x662088;   // Scena17_Objects, 1
+// kStates17: now Scena17_States (symbols.toml). Scena17_States, 3
+// kParts17: now Scena17_Parts (symbols.toml). Scena17_Parts, 4
+// kPart1Steps: now Scena17_Part1Steps (symbols.toml). Scena17_Part1Steps, 16
+// kPart2Steps: now Scena17_Part2Steps (symbols.toml). Scena17_Part2Steps, 3
+// kPart3Steps: now Scena17_Part3Steps (symbols.toml). Scena17_Part3Steps, 13
+// kObjects17: now Scena17_Objects (symbols.toml). Scena17_Objects, 1
 constexpr uint32_t kGlyphWidths = 0x66208C; // Scena17_GlyphWidths: 0x40 bytes
-constexpr uint32_t kEndSteps = 0x6620CC;    // Scena17_EndSteps, 3
+// kEndSteps: now Scena17_EndSteps (symbols.toml). Scena17_EndSteps, 3
 // Chapters 18's and 19's.
-constexpr uint32_t kStates18 = 0x662C44;    // Scena18_States, 3
-constexpr uint32_t kRuns18 = 0x662C50;      // Scena18_Runs, 1
-constexpr uint32_t kObjects18 = 0x662C54;   // Scena18_Objects, 1
-constexpr uint32_t kStates19 = 0x662C6C;    // Scena19_States, 3
-constexpr uint32_t kRuns19 = 0x662C78;      // Scena19_Runs, 1
-constexpr uint32_t kObjects19 = 0x662C7C;   // Scena19_Objects, 1
+// kStates18: now Scena18_States (symbols.toml). Scena18_States, 3
+// kRuns18: now Scena18_Runs (symbols.toml). Scena18_Runs, 1
+// kObjects18: now Scena18_Objects (symbols.toml). Scena18_Objects, 1
+// kStates19: now Scena19_States (symbols.toml). Scena19_States, 3
+// kRuns19: now Scena19_Runs (symbols.toml). Scena19_Runs, 1
+// kObjects19: now Scena19_Objects (symbols.toml). Scena19_Objects, 1
 
 constexpr uint32_t kBootTask = bof3::addr::Boot_Task;    // Boot_Task's address, as the original pushes it
 constexpr uint32_t kEndTask = bof3::addr::Scena17_EndTask;     // Scena17_EndTask's, likewise
@@ -187,23 +187,23 @@ VoidFn Handler(uint32_t table, int index, const char* who) {
 // An object hook's handler, called (object, the flag row) as 0x56D6D0's slot 1
 // calls through a chapter's object table.
 void CallObject(uint32_t table, unsigned char* object, const char* who) {
-    unsigned char* const row = At(L(kFlagRow));
+    unsigned char* const row = At(AreaW0c_FlagRow);
     reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(CodeAt(table, object[0x86], who)))(object, row);
 }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
-unsigned char* Row() { return At(L(kFlagRow)); }
+unsigned char* Row() { return At(AreaW0c_FlagRow); }
 bool Test(unsigned n) { return SH_CALL(Flags_Test)(Row(), n) != 0; }
 bool TestAt(uint32_t row, unsigned n) { return SH_CALL(Flags_Test)(At(row), n) != 0; }
 void Set(unsigned n) { SH_CALL(Flags_Set)(Row(), n); }
 void SetAt(uint32_t row, unsigned n) { SH_CALL(Flags_Set)(At(row), n); }
 void ClearAt(uint32_t row, unsigned n) { SH_CALL(Flags_Clear)(At(row), n); }
 
-unsigned char* Effect(unsigned slot) { return At(kEffects + ((slot & 0xFFu) << 7)); }
-unsigned char* Sprite(unsigned k) { return At(kSprites + (k & 0xFFu) * 0xA4u); }
+unsigned char* Effect(unsigned slot) { return At(Effect_Objects_addr + ((slot & 0xFFu) << 7)); }
+unsigned char* Sprite(unsigned k) { return At(Sprite_Objects_addr + (k & 0xFFu) * 0xA4u); }
 
-unsigned Area() { return W(kArea); }
-void Step(unsigned v) { B(kStep) = static_cast<unsigned char>(v); }
+unsigned Area() { return Game_AreaNumber; }
+void Step(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void Timer(unsigned v) { SetW(kTimer, v); }
 // dec word [0x8034E6]: true when it reaches 0.
 bool TimerDone() {
@@ -211,10 +211,10 @@ bool TimerDone() {
     return W(kTimer) == 0;
 }
 void CounterUp() { B(kCounter0) = static_cast<unsigned char>(B(kCounter0) + 1); }
-void RunUp() { B(kRun) = static_cast<unsigned char>(B(kRun) + 1); }
+void RunUp() { MoveScript_Var7 = static_cast<unsigned char>(static_cast<unsigned char>(MoveScript_Var7) + 1); }
 // The runs' common end: MoveScript_Var7 and the step 0 (no run).
 void EndRun() {
-    B(kRun) = 0;
+    MoveScript_Var7 = 0;
     Step(0);
 }
 
@@ -223,7 +223,7 @@ void Msg(unsigned id) { SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(id))
 // A script message opened, the request 2 (a message is open).
 void Say(unsigned id) {
     Msg(id);
-    B(kRequest) = 2;
+    Field_Request = 2;
 }
 void ChangeArea(unsigned area, int32_t x, int32_t z, unsigned flags) { SH_CALL(Field_ChangeArea)(area, x, z, flags); }
 void DropIn(unsigned n) { SH_CALL(Party_DropIn)(n); }
@@ -245,7 +245,7 @@ unsigned char NewEffect(unsigned char kind) {
 // The same with the slot kept in 0x6BC743, where the runs wait on it.
 unsigned char NewEffectKept(unsigned char kind) {
     const unsigned char s = SH_CALL(Effect_FindFree)();
-    B(kSlot) = s;
+    Scena15_Bytes[3] = s;
     if (s != 0xFF) {
         unsigned char* const e = Effect(s);
         e[0] = 1;
@@ -255,7 +255,7 @@ unsigned char NewEffectKept(unsigned char kind) {
 }
 // The kept slot's record still live (+0 bit 0); the slot read as a byte,
 // unchecked (0xFF reads past the 20 records).
-bool KeptLive() { return (Effect(B(kSlot))[0] & 1) != 0; }
+bool KeptLive() { return (Effect(Scena15_Bytes[3])[0] & 1) != 0; }
 
 }  // namespace
 
@@ -275,7 +275,7 @@ SC15_EXPORT unsigned __cdecl Scena15_RecordWord(unsigned index) {
 // through Scena15_States on the s8 0x8034E2 - 0 is 0x5646B0 (state 1, chapter
 // 13/14's), 1 Scena15_EnterArea, 2 Scena15_Run. Unchecked.
 SC15_EXPORT void __cdecl Scena15_Frame(void) {
-    Handler(kStates15, static_cast<signed char>(B(kState)), "Scena15_Frame")();
+    Handler(Scena15_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]), "Scena15_Frame")();
 }
 
 // original 0x567DD0: state 1: the set-up of the area entered, by
@@ -284,24 +284,24 @@ SC15_EXPORT void __cdecl Scena15_Frame(void) {
 // (Scena15_BattleSetup) or set a flag; 0xA4 and 0xA6 with Cond_ByteFD not 0,
 // and 0xAD with it not 2, go straight to state 2.
 SC15_EXPORT void __cdecl Scena15_EnterArea(void) {
-    if (Area() == 2 && Test(7) && !Test(8)) B(kPass) = 0;
+    if (Area() == 2 && Test(7) && !Test(8)) Draw_PassFlags = 0;
     if (Area() == 0x2D && Test(9) && !Test(0xA)) {
-        SetW(kDistance, 0x5DC);
-        B(kRedraw) = 2;
+        Camera_Distance = 0x5DC;
+        MapView_Redraw = 2;
     }
     if (Area() == 0x95 && Test(0x16)) {
-        const unsigned a2 = W(kAngle2), a1 = W(kAngle1), a0 = W(kAngle0);
+        const unsigned a2 = W(kAngle2), a1 = static_cast<std::uint16_t>(Camera_Angles[1]), a0 = static_cast<std::uint16_t>(Camera_Angles[0]);
         B(0x802083) = 2;
         SetW(0x80208A, 0);
         SetL(0x802034, L(0x802034) + 0xC0000u);
-        B(kByteFE) = 2;
-        B(kShakeOn) = 0;
-        SetW(kDistance, 0xD00);
+        Cond_ByteFE = 2;
+        Scena15_Bytes[1] = 0;
+        Camera_Distance = 0xD00;
         SH_CALL(Scena15_PlaceEffect)(0x31, static_cast<int>(a0), static_cast<int>(a1), static_cast<int>(a2), 0xFF, 0);
     }
     if (Area() == 0x98 && Test(0xA) && !Test(0xB)) {
-        SetW(kDistance, 0x5DC);
-        B(kRedraw) = 2;
+        Camera_Distance = 0x5DC;
+        MapView_Redraw = 2;
     }
     // 0x9E..0xA6: on Cond_ByteFD 0 and 1 (read afresh), a battle or a flag
     struct Pair { unsigned short area; unsigned char flag0, battle0, flag1, battle1; };
@@ -312,37 +312,37 @@ SC15_EXPORT void __cdecl Scena15_EnterArea(void) {
     };
     for (const Pair& p : kPairs) {
         if (Area() != p.area) continue;
-        if (B(kByteFD) == 0 && !Test(p.flag0)) {
+        if (Cond_ByteFD == 0 && !Test(p.flag0)) {
             if (p.battle0 == 0xFF) Set(p.flag0);
             else SH_CALL(Scena15_BattleSetup)(p.battle0);
         }
-        if (B(kByteFD) == 1 && !Test(p.flag1)) {
+        if (Cond_ByteFD == 1 && !Test(p.flag1)) {
             if (p.battle1 == 0xFF) Set(p.flag1);
             else SH_CALL(Scena15_BattleSetup)(p.battle1);
         }
     }
     if (Area() == 0xA4) {
-        if (B(kByteFD) != 0) {
-            B(kState) = 2;
+        if (Cond_ByteFD != 0) {
+            MoveScript_PartyRecords[0x62] = 2;
             return;
         }
         if (!Test(0x2C)) SH_CALL(Scena15_BattleSetup)(7);
     }
     if (Area() == 0xA5) {
-        if (B(kByteFD) == 0 && !Test(0x2D)) Set(0x2D);
-        if (B(kByteFD) == 1 && !Test(0x2E)) SH_CALL(Scena15_BattleSetup)(8);
+        if (Cond_ByteFD == 0 && !Test(0x2D)) Set(0x2D);
+        if (Cond_ByteFD == 1 && !Test(0x2E)) SH_CALL(Scena15_BattleSetup)(8);
     }
     if (Area() == 0xA6) {
-        if (B(kByteFD) != 0) {
-            B(kState) = 2;
+        if (Cond_ByteFD != 0) {
+            MoveScript_PartyRecords[0x62] = 2;
             return;
         }
         if (!Test(0x2F)) SH_CALL(Scena15_BattleSetup)(9);
     }
-    if (Area() == 0xAC && Test(0x12)) B(kPass) = 0;
+    if (Area() == 0xAC && Test(0x12)) Draw_PassFlags = 0;
     if (Area() == 0xAD) {
-        if (B(kByteFD) != 2) {
-            B(kState) = 2;
+        if (Cond_ByteFD != 2) {
+            MoveScript_PartyRecords[0x62] = 2;
             return;
         }
         if (!Test(0)) {
@@ -354,40 +354,40 @@ SC15_EXPORT void __cdecl Scena15_EnterArea(void) {
             SH_CALL(Scena15_SpawnMarker)(0x2E8000, 0x6D0000, 2, 3, 3);
             CallA(3);
             DropIn(0xA);
-            B(kPass) = 0x1F;
+            Draw_PassFlags = 0x1F;
         }
     }
     if (Area() == 0xAE) {
         if (Test(2) && !Test(3)) SH_CALL(Scena15_SpawnMarker)(0x440000, 0x20000, 0xC, 6, 1);
         if (Test(0xA) && !Test(0xB)) {
             SH_CALL(Music_LoadFile)(0xA2);
-            B(kPass) = 0;
+            Draw_PassFlags = 0;
         }
         if (Test(0x13)) {
             if (!Test(0x14)) {
-                B(kPass) = 0x1F;
+                Draw_PassFlags = 0x1F;
                 CallA(2);
                 DropIn(0x13);
             } else if (!Test(0x15)) {
-                B(kPass) = 0x1F;
+                Draw_PassFlags = 0x1F;
             }
         }
     }
-    if (Area() == 0xBD && TestAt(kRow14, 1)) B(kEffects) = static_cast<unsigned char>(B(kEffects) | 0x40);
+    if (Area() == 0xBD && TestAt(Cond_Flags_addr + 0x70, 1)) Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] | 0x40);
     if (Area() == 0xC6) {
         if (Test(0x13)) {
             NewEffect(0xAB);
             NewEffect(0xB0);
-            B(kShakeShift) = 4;
-            B(kPass) = 0x1F;
+            Scena15_Bytes[0] = 4;
+            Draw_PassFlags = 0x1F;
         }
-        if (Test(0x14) && !Test(0x15)) B(kPass) = 0x1F;
+        if (Test(0x14) && !Test(0x15)) Draw_PassFlags = 0x1F;
         if (Test(0x15) && !Test(0x16)) {
-            B(kShakeShift) = 4;
-            B(kPass) = 0x1F;
+            Scena15_Bytes[0] = 4;
+            Draw_PassFlags = 0x1F;
         }
     }
-    B(kState) = 2;
+    MoveScript_PartyRecords[0x62] = 2;
 }
 
 // original 0x568510: event battle n's set-up (areas 0x9E..0xA6): the script
@@ -400,16 +400,16 @@ SC15_EXPORT void __cdecl Scena15_BattleSetup(unsigned n) {
     Set40();
     B(kCounter0) = 1;
     const unsigned char s = SH_CALL(Effect_FindFree)();
-    B(kSlot) = s;
+    Scena15_Bytes[3] = s;
     if (s != 0xFF) {
         unsigned char* const e = Effect(s);
         e[0] = 1;
         e[5] = 0x89;
         e[0xB] = static_cast<unsigned char>(n);
     }
-    const uint32_t rec = kBattles + (n & 0xFFu) * 10u;
-    SetL(kKind2X, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(W(rec))) << 8));
-    SetL(kKind2Z, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(W(rec + 2))) << 8));
+    const uint32_t rec = Scena15_Battles_addr + (n & 0xFFu) * 10u;
+    Field_Kind2X = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(W(rec))) << 8);
+    Field_Kind2Z = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(W(rec + 2))) << 8);
     SH_CALL(Field_ViewReset)();
     B(0x904EF0) = 0;
     DropIn(0);
@@ -419,7 +419,7 @@ SC15_EXPORT void __cdecl Scena15_BattleSetup(unsigned n) {
     SetW(0x905BA4, W(0x905BA4) & 0xFFEFu);
     SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace)(x, z, kind);
     B(0x92BF19) = 4;   // Draw_OtSlot
-    B(kRun) = 2;
+    MoveScript_Var7 = 2;
     Step(0);
 }
 
@@ -428,7 +428,7 @@ SC15_EXPORT void __cdecl Scena15_BattleSetup(unsigned n) {
 // the dword, +9 the byte; al 1. No slot: al 0.
 SC15_EXPORT unsigned char __cdecl Scena15_PlaceEffect(unsigned kind, int x, int y, int z, unsigned nine, unsigned long twelve) {
     const unsigned char s = SH_CALL(Effect_FindFree)();
-    B(kSlot) = s;
+    Scena15_Bytes[3] = s;
     if (s == 0xFF) return 0;
     unsigned char* const e = Effect(s);
     e[0] = 1;
@@ -444,7 +444,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_PlaceEffect(unsigned kind, int x, int 
 // original 0x568640: state 2: a tail jump through Scena15_Runs on the s8
 // MoveScript_Var7 - 0 a bare ret (0x437CC0), 1..6 Scena15_Run1..6. Unchecked.
 SC15_EXPORT void __cdecl Scena15_Run(void) {
-    Handler(kRuns15, static_cast<signed char>(B(kRun)), "Scena15_Run")();
+    Handler(Scena15_Runs_addr, MoveScript_Var7, "Scena15_Run")();
 }
 
 // original 0x568650: run 1, steps 0..7, 0x14 and 0x19 (a byte table into a
@@ -455,36 +455,36 @@ SC15_EXPORT void __cdecl Scena15_Run(void) {
 // area 0xC1 (facing 0x82). Steps 0x14 and 0x19 (set by the field scripts)
 // change to area 0xC1 facing 0x83 or 0x84 with their flags.
 SC15_EXPORT void __cdecl Scena15_Run1(void) {
-    const unsigned step = B(kStep);
+    const unsigned step = MoveScript_PartyRecords[0x65];
     switch (step) {
     case 0:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         B(kCounter0) = 0;
         DropIn(1);
         Step(1);
         return;
     case 1:
         if (B(kCounter0) != 1) return;
-        SetAt(kRow14, 1);
+        SetAt(Cond_Flags_addr + 0x70, 1);
         ChangeArea(0xBD, 0x10000000, 0x14000000, 2);
-        B(kAreaMusic) = B(kMusicTrack);
+        AreaW1f_MusicCurrent = Music_Track;
         B(0x904153) = 2;
-        B(kStatus) = static_cast<unsigned char>(B(kStatus) | 1);
+        Field_StatusBits = static_cast<unsigned char>(Field_StatusBits | 1);
         SetW(0x90405C, 0);
         Step(2);
         return;
     case 2:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         Say(0x12);
         Step(3);
         return;
     case 3:
     case 5:
-        if (B(kRequest) == 2) {
+        if (Field_Request == 2) {
             SH_CALL(Menu_DrawHand)(0x98, step == 3 ? 0x28 : 0x38, 0);
             return;
         }
-        SH_CALL(Scena15_PlaceEffect)(0x13, W(kAngle0), W(kAngle1), step == 3 ? -0x200 : 0x400, 0x20, 0);
+        SH_CALL(Scena15_PlaceEffect)(0x13, static_cast<std::uint16_t>(Camera_Angles[0]), static_cast<std::uint16_t>(Camera_Angles[1]), step == 3 ? -0x200 : 0x400, 0x20, 0);
         Step(step + 1);
         return;
     case 4:
@@ -494,33 +494,33 @@ SC15_EXPORT void __cdecl Scena15_Run1(void) {
         Step(step + 1);
         return;
     case 7:
-        if (B(kRequest) == 2) {
+        if (Field_Request == 2) {
             SH_CALL(Menu_DrawHand)(0x98, 0x10, 0);
             return;
         }
         Clear40();
-        ClearAt(kRow14, 1);
+        ClearAt(Cond_Flags_addr + 0x70, 1);
         ChangeArea(0xC1, 0x1A8000, 0x1C0000, 0x82);
-        B(kStatus) = static_cast<unsigned char>(B(kStatus) & 0xFE);
+        Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
         EndRun();
         return;
     case 0x14:
     case 0x19:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         if (step == 0x14) {
-            ClearAt(kStoryRow, 0x77);
+            ClearAt(Cond_Flags_addr + 0xa0, 0x77);
             B(0x904152) = 0;
             ChangeArea(0xC1, 0x1A8000, 0x1C0000, 0x83);
         } else {
-            SetAt(kRow14, 2);
-            SetAt(kRow14, 3);
+            SetAt(Cond_Flags_addr + 0x70, 2);
+            SetAt(Cond_Flags_addr + 0x70, 3);
             ChangeArea(0xC1, 0x1A8000, 0x1C0000, 0x84);
-            B(kByteEE0) = 0xFF;
+            ModeFlow_AreaTransition = 0xFF;
         }
-        SetAt(kStoryRow, 0x8A);
-        B(kStatus) = static_cast<unsigned char>(B(kStatus) & 0xFE);
-        B(kByte7F98) = 0xFF;
-        B(kAreaMusic) = 0xFF;
+        SetAt(Cond_Flags_addr + 0xa0, 0x8A);
+        Field_StatusBits = static_cast<unsigned char>(Field_StatusBits & 0xFE);
+        AreaW0c_PendingKind = 0xFF;
+        AreaW1f_MusicCurrent = 0xFF;
         EndRun();
         return;
     default: return;
@@ -534,21 +534,21 @@ SC15_EXPORT void __cdecl Scena15_Run1(void) {
 // record's flag +8 and ends the run. Steps 2 and 4 wait (the field scripts
 // move them on).
 SC15_EXPORT void __cdecl Scena15_Run2(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (W(kInputHeld) == 0) return;
+        if (Input_Held == 0) return;
         B(kCounter0) = 2;
         Step(1);
         return;
     case 1: {
         if (B(kCounter0) != 3) return;
-        const unsigned s = B(kSlot);
+        const unsigned s = Scena15_Bytes[3];
         Step(2);
         Effect(s)[1] = 2;
         return;
     }
     case 3: {
-        const unsigned idx = Effect(B(kSlot))[0xB];
+        const unsigned idx = Effect(Scena15_Bytes[3])[0xB];
         SH_CALL(Field_StartEventBattle)(B(kBattles + 9 + idx * 10u));
         Timer(0x78);
         Step(4);
@@ -556,7 +556,7 @@ SC15_EXPORT void __cdecl Scena15_Run2(void) {
     }
     case 5: {
         Clear40();
-        const unsigned idx = Effect(B(kSlot))[0xB];
+        const unsigned idx = Effect(Scena15_Bytes[3])[0xB];
         SH_CALL(Flags_Set)(Row(), B(kBattles + 8 + idx * 10u));
         B(kCounter0) = 0;
         EndRun();
@@ -572,7 +572,7 @@ SC15_EXPORT void __cdecl Scena15_Run2(void) {
 // effect, then loads a file, places an effect or a marker, drops the party
 // in, sets a flag or changes the area; see docs/scena_sc15.md section 3.
 SC15_EXPORT void __cdecl Scena15_Run3(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         SH_CALL(LoadDatFile)(0x302);
         DropIn(4);
@@ -580,14 +580,14 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
         return;
     case 1:
         if (B(kCounter0) != 0xB) return;
-        if (SH_CALL(Scena15_PlaceEffect)(0x13, -0x32A, W(kAngle1), 0x80, 0x70, 0) == 0) return;
+        if (SH_CALL(Scena15_PlaceEffect)(0x13, -0x32A, static_cast<std::uint16_t>(Camera_Angles[1]), 0x80, 0x70, 0) == 0) return;
         Step(2);
         return;
     case 2: {
         if (!LoadDone()) return;
         if (B(kCounter0) != 0xC) return;
         const unsigned char s = SH_CALL(Effect_FindFree)();
-        B(kSlot) = s;
+        Scena15_Bytes[3] = s;
         if (s == 0xFF) return;
         Timer(0xF0);
         Step(3);
@@ -598,12 +598,12 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
     }
     case 3:
         if (!TimerDone()) return;
-        B(kByteFE) = 2;
+        Cond_ByteFE = 2;
         Step(4);
         return;
     case 4:
-        if (!TestAt(kStoryRow, 0x81)) return;
-        if (SH_CALL(Scena15_PlaceEffect)(0x13, -0x2AA, W(kAngle1), 0x200, 0x3C, 0) == 0) return;
+        if (!TestAt(Cond_Flags_addr + 0xa0, 0x81)) return;
+        if (SH_CALL(Scena15_PlaceEffect)(0x13, -0x2AA, static_cast<std::uint16_t>(Camera_Angles[1]), 0x200, 0x3C, 0) == 0) return;
         Step(5);
         return;
     case 5:
@@ -637,7 +637,7 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
         Clear40();
         {
             unsigned char* const row = Row();
-            B(kByteFE) = 2;
+            Cond_ByteFE = 2;
             SH_CALL(Flags_Set)(row, 1);
         }
         DropIn(9);
@@ -655,35 +655,35 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
         Step(0x16);
         return;
     case 0x16:
-        if (W(kWait) != 0) return;
-        B(kPass) = 0;
+        if (MoveScript_WaitWordDA != 0) return;
+        Draw_PassFlags = 0;
         Say(3);
         Step(0x17);
         return;
     case 0x17:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         Step(0x18);
         return;
     case 0x18:
         Set(2);
         ChangeArea(0x58, 0x3E0000, 0x210000, 0x82);
-        B(kByteEE0) = 0xFF;
-        B(kByte7F98) = 0xFF;
-        B(kAreaMusic) = 0x8E;
+        ModeFlow_AreaTransition = 0xFF;
+        AreaW0c_PendingKind = 0xFF;
+        AreaW1f_MusicCurrent = 0x8E;
         Step(0x19);
         return;
     case 0x19:
-        if (W(kWait) != 0) return;
-        B(kPass) = 0x1F;
+        if (MoveScript_WaitWordDA != 0) return;
+        Draw_PassFlags = 0x1F;
         Transition(1);
-        SetW(kDistance, 0x5DC);
-        B(kRedraw) = 2;
+        Camera_Distance = 0x5DC;
+        MapView_Redraw = 2;
         Step(0x1A);
         return;
     case 0x1A:
         if (B(kCounter0) != 5) return;
         ChangeArea(0xAE, 0x440000, 0x38000, 0x82);
-        B(kByteEE0) = 0;
+        ModeFlow_AreaTransition = 0;
         Step(0x1B);
         return;
     case 0x1B:
@@ -712,7 +712,7 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
         if (B(kCounter0) != 0xC) return;
         Set(5);
         ChangeArea(0x3A, 0x140000, 0x10000, 0x81);
-        B(kAreaMusic) = B(kMusicTrack);
+        AreaW1f_MusicCurrent = Music_Track;
         Step(0x2A);
         return;
     case 0x2A:
@@ -729,13 +729,13 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
     case 0x32:
         Set(7);
         ChangeArea(2, 0x1A0000, 0x170000, 0x87);
-        B(kByte7F98) = 0xFF;
-        B(kAreaMusic) = 0x8E;
+        AreaW0c_PendingKind = 0xFF;
+        AreaW1f_MusicCurrent = 0x8E;
         Step(0x33);
         return;
     case 0x33:
         if (B(kCounter0) != 1) return;
-        B(kPass) = 0x1F;
+        Draw_PassFlags = 0x1F;
         Transition(1);
         Step(0x34);
         return;
@@ -758,7 +758,7 @@ SC15_EXPORT void __cdecl Scena15_Run3(void) {
 // placed (Scena15_EventObjects) and the music; then four area changes, a
 // message, two effects of kind 0x13, and the flag 0xB.
 SC15_EXPORT void __cdecl Scena15_Run4(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         SH_CALL(LoadDatFile)(0x303);
         DropIn(0);
@@ -803,7 +803,7 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
     case 5: {
         if (B(kCounter0) != 0x11) return;
         const unsigned char s = SH_CALL(Effect_FindFree)();
-        B(kSlot) = s;
+        Scena15_Bytes[3] = s;
         if (s != 0xFF) {
             Step(6);
             unsigned char* const e = Effect(s);
@@ -836,13 +836,13 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
         return;
     case 0xA:
         if (B(kCounter0) != 0x16) return;
-        B(kKept) = B(kPartyByte);
+        Scena15_Bytes[2] = AreaW0b_PartySet;
         SH_CALL(PartySet_LoadSecond)(7, 4, 2, 0);
-        if (B(kKept) != B(kPartyByte)) {
-            B(kKept) = B(kPartyByte);
-            B(kPartyByte) = 0xFF;
+        if (Scena15_Bytes[2] != AreaW0b_PartySet) {
+            Scena15_Bytes[2] = AreaW0b_PartySet;
+            AreaW0b_PartySet = 0xFF;
         } else {
-            B(kKept) = 0xFF;
+            Scena15_Bytes[2] = 0xFF;
         }
         Timer(0x3C);
         Step(0xB);
@@ -853,13 +853,13 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
             return;
         }
         if (!LoadDone()) return;
-        const unsigned char kept = B(kKept);
+        const unsigned char kept = Scena15_Bytes[2];
         if (kept != 0xFF) {
-            B(kPartyByte) = kept;
+            AreaW0b_PartySet = kept;
             CallA(0);
-            B(kPartyByte) = 0xFF;
+            AreaW0b_PartySet = 0xFF;
             SH_CALL(PartySet_LoadFirst)(7, 4, 2);
-            B(kPartyByte) = B(kKept);
+            AreaW0b_PartySet = Scena15_Bytes[2];
         } else {
             CallA(0);
         }
@@ -867,7 +867,7 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
         SH_CALL(Scena15_EventObjects)();
         CounterUp();
         SH_CALL(Music_Play)(0xA2, 8);
-        unsigned char* const e = Effect(B(kSlot));
+        unsigned char* const e = Effect(Scena15_Bytes[3]);
         Step(0xC);
         e[1] = static_cast<unsigned char>(e[1] + 1);
         return;
@@ -877,50 +877,50 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
         if (!LoadDone()) return;
         Set(9);
         ChangeArea(0xC4, 0x120000, 0x140000, 0x81);
-        B(kAreaMusic) = 0x95;
+        AreaW1f_MusicCurrent = 0x95;
         Step(0xD);
         return;
     case 0xD:
         if (B(kCounter0) != 1) return;
         ChangeArea(0x2D, 0xF8000, 0x358000, 0x87);
-        B(kByte7F98) = 1;
-        B(kAreaMusic) = 0xA2;
+        AreaW0c_PendingKind = 1;
+        AreaW1f_MusicCurrent = 0xA2;
         Step(0xE);
         return;
     case 0xE:
         if (B(kCounter0) != 2) return;
         ChangeArea(0xAE, 0x320000, 0x270000, 0x89);
-        B(kByteEE0) = 0;
-        B(kAreaMusic) = 0xA2;
+        ModeFlow_AreaTransition = 0;
+        AreaW1f_MusicCurrent = 0xA2;
         Step(0xF);
         return;
     case 0xF:
         if (B(kCounter0) != 0xD) return;
         Set(0xA);
         ChangeArea(0x98, 0x180000, 0x270000, 0x80);
-        B(kByte7F98) = 1;
-        B(kAreaMusic) = 0xA2;
+        AreaW0c_PendingKind = 1;
+        AreaW1f_MusicCurrent = 0xA2;
         Step(0x10);
         return;
     case 0x10:
         if (B(kCounter0) != 0) return;
         Set(0xA);
         ChangeArea(0xAE, 0x2F8000, 0x278000, 0x8A);
-        B(kByteEE0) = 0;
-        B(kByte7F98) = 0xFF;
-        B(kAreaMusic) = 0xFF;
+        ModeFlow_AreaTransition = 0;
+        AreaW0c_PendingKind = 0xFF;
+        AreaW1f_MusicCurrent = 0xFF;
         Step(0x11);
         return;
     case 0x11:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         Say(0x1E);
         Step(0x12);
         return;
     case 0x12:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         if (!LoadDone()) return;
         SH_CALL(Music_Play)(0xA2, 8);
-        B(kPass) = 0x1F;
+        Draw_PassFlags = 0x1F;
         Transition(1);
         B(kCounter0) = 1;
         Step(0x13);
@@ -934,12 +934,12 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
     case 0x14:
         if (B(kCounter0) != 0x26) return;
         if (!TimerDone()) return;
-        SH_CALL(Scena15_PlaceEffect)(0x13, -0x2AA, W(kAngle1), 0x5E, 0x40, 0);
+        SH_CALL(Scena15_PlaceEffect)(0x13, -0x2AA, static_cast<std::uint16_t>(Camera_Angles[1]), 0x5E, 0x40, 0);
         Step(0x15);
         return;
     case 0x15:
         if (B(kCounter0) != 0x2B) return;
-        SH_CALL(Scena15_PlaceEffect)(0x13, -0x2AA, W(kAngle1), 0x200, 0x28, 0);
+        SH_CALL(Scena15_PlaceEffect)(0x13, -0x2AA, static_cast<std::uint16_t>(Camera_Angles[1]), 0x200, 0x28, 0);
         Step(0x16);
         return;
     case 0x16:
@@ -972,12 +972,12 @@ SC15_EXPORT void __cdecl Scena15_EventObjects(void) {
     for (unsigned i = 0; i < 3; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
         SetW(kSlotWord, s);
-        if (s != 0xFF) SH_CALL(EventOp_0x)(At(kOpRecords0 + 0x11u * i));
+        if (s != 0xFF) SH_CALL(EventOp_0x)(At(Scena15_EventOps_addr + 0x11u * i));
     }
     for (unsigned i = 0; i < 2; ++i) {
         const unsigned char s = SH_AT(unsigned char (__cdecl*)(), kEventSlot)();
         SetW(kSlotWord, s);
-        if (s != 0xFF) SH_CALL(EventOp_6x)(At(kOpRecords6 + 0x10u * i));
+        if (s != 0xFF) SH_CALL(EventOp_6x)(At(Scena15_EventOps_addr + 0x38 + 0x10u * i));
     }
 }
 
@@ -991,7 +991,7 @@ SC15_EXPORT void __cdecl Scena15_EventObjects(void) {
 // Boot_Task. Steps 0x1E.. find the object whose record word is 0x308 and
 // hand it on, then a message, call-table entry 1, the request 6 and area 0xC6.
 SC15_EXPORT void __cdecl Scena15_Run5(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         Clear40();
         DropIn(0xF);
@@ -1004,7 +1004,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
     case 6: {
         if (B(kCounter0) != 1) return;
         const unsigned char s = SH_CALL(Effect_FindFree)();
-        B(kSlot) = s;
+        Scena15_Bytes[3] = s;
         if (s == 0xFF) return;
         Step(7);
         unsigned char* const e = Effect(s);
@@ -1013,7 +1013,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         return;
     }
     case 8:
-        B(kPass) = static_cast<unsigned char>(B(kPass) & 0xFB);
+        Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags & 0xFB);
         CounterUp();
         Step(9);
         return;
@@ -1056,17 +1056,17 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         if (!TimerDone()) return;
         Set(0x12);
         ChangeArea(0xAC, 0x178000, 0x210000, 0x8C);
-        B(kByte7F98) = 0xFF;
+        AreaW0c_PendingKind = 0xFF;
         Step(0xF);
         return;
     case 0xF:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         Say(0x2B);
         Step(0x10);
         return;
     case 0x10:
-        if (B(kRequest) == 2) return;
-        B(kPass) = 0x1F;
+        if (Field_Request == 2) return;
+        Draw_PassFlags = 0x1F;
         Transition(1);
         CounterUp();
         Step(0x11);
@@ -1090,8 +1090,8 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         Step(0x13);
         return;
     case 0x13:
-        if (W(kWait) != 0) return;
-        B(kPass) = 0;
+        if (MoveScript_WaitWordDA != 0) return;
+        Draw_PassFlags = 0;
         Timer(0x3C);
         Step(0x14);
         return;
@@ -1101,7 +1101,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         Step(0x15);
         return;
     case 0x15:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         Timer(0x3C);
         Step(0x16);
         return;
@@ -1116,7 +1116,7 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         Step(0x19);
         return;
     case 0x19:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         SH_AT(VoidFn, kSoundStop)();
         SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kBootTask)));
         return;
@@ -1143,31 +1143,31 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
         Step(0x21);
         return;
     case 0x21:
-        if (W(kWait) != 0) return;
-        B(kPass) = 0;
+        if (MoveScript_WaitWordDA != 0) return;
+        Draw_PassFlags = 0;
         Say(0x65);
         Step(0x22);
         return;
     case 0x22:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         CallA(1);
-        B(kRequest) = 6;
+        Field_Request = 6;
         Step(0x23);
         return;
     case 0x23:
-        if (B(kRequest) != 0) return;
-        B(kRequest) = 1;
+        if (Field_Request != 0) return;
+        Field_Request = 1;
         B(0x929F10) = 1;
         Step(0x24);
         return;
     case 0x24:
-        if (B(kRequest) != 0) return;
+        if (Field_Request != 0) return;
         ChangeArea(0xC6, 0x160000, 0x120000, 0x80);
-        B(kByteEE0) = 0xFF;
-        B(kByte7F98) = 0xFF;
-        B(kAreaMusic) = 0xFF;
-        B(kShakeOn) = 0;
-        B(kRun) = 6;
+        ModeFlow_AreaTransition = 0xFF;
+        AreaW0c_PendingKind = 0xFF;
+        AreaW1f_MusicCurrent = 0xFF;
+        Scena15_Bytes[1] = 0;
+        MoveScript_Var7 = 6;
         Step(0);
         return;
     default: return;
@@ -1194,7 +1194,7 @@ SC15_EXPORT void __cdecl Scena15_ClutToGrey(unsigned snap) {
     const bool to_grey = static_cast<unsigned char>(snap) != 0;
     for (unsigned row = 0; row < 0x20; ++row) {
         if (row == 0xB) continue;
-        unsigned char* p = At(kClutStrip + row * 0x200u);
+        unsigned char* p = At(Gfx_ClutStrip_addr + row * 0x200u);
         for (unsigned i = 0; i < 0x100; ++i, p += 2) {
             const uint32_t c = W(p);
             const uint32_t r = c & 0x1F, g = (c >> 5) & 0x1F, b = (c >> 10) & 0x1F, top = c & 0x8000;
@@ -1207,7 +1207,7 @@ SC15_EXPORT void __cdecl Scena15_ClutToGrey(unsigned snap) {
             SetW(p, (((b2 << 5) | g2) << 5 | top) | r2);
         }
     }
-    B(kClutDirty) = 1;
+    Gfx_ClutStripDirty = 1;
 }
 
 // original 0x569F20: run 6, steps 0..0x36 (a 55-entry jump table; 0xE
@@ -1220,10 +1220,10 @@ SC15_EXPORT void __cdecl Scena15_ClutToGrey(unsigned snap) {
 // the end area 0xC7 at (0xB60000, 0x128000), Field_ScriptFlags bit 0x0800 off,
 // the run ended and Field_StatusBits |= 0x80 (0x56D6F0).
 SC15_EXPORT void __cdecl Scena15_Run6(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (W(kWait) != 0) break;
-        B(kPass) = 0xFB;
+        if (MoveScript_WaitWordDA != 0) break;
+        Draw_PassFlags = 0xFB;
         Transition(1);
         {
             const unsigned char c = static_cast<unsigned char>(B(kCounter0) + 1);
@@ -1256,7 +1256,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
     case 5:
         if (B(kCounter0) != 0xB) break;
         if (!LoadDone()) break;
-        if (SH_CALL(Scena15_PlaceEffect)(0x31, W(kAngle0), W(kAngle1), W(kAngle2), 0x20, 0x380) == 0) break;
+        if (SH_CALL(Scena15_PlaceEffect)(0x31, static_cast<std::uint16_t>(Camera_Angles[0]), static_cast<std::uint16_t>(Camera_Angles[1]), W(kAngle2), 0x20, 0x380) == 0) break;
         SH_CALL(Music_Play)(0x5F, 8);
         Step(6);
         break;
@@ -1268,7 +1268,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
     case 7:
         if (!TimerDone()) break;
         NewEffect(0xA8);
-        B(kPass) = 0x1F;
+        Draw_PassFlags = 0x1F;
         SH_AT(void (__cdecl*)(long, long, unsigned), kPartyPlace)(0x170000, 0x120000, 0x22);
         Step(8);
         break;
@@ -1294,7 +1294,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         break;
     case 0xC:
         if (!TimerDone()) break;
-        if (SH_CALL(Scena15_PlaceEffect)(0x31, W(kAngle0), W(kAngle1), W(kAngle2), 0x20, 0) == 0) break;
+        if (SH_CALL(Scena15_PlaceEffect)(0x31, static_cast<std::uint16_t>(Camera_Angles[0]), static_cast<std::uint16_t>(Camera_Angles[1]), W(kAngle2), 0x20, 0) == 0) break;
         Step(0xD);
         break;
     case 0xD:
@@ -1318,7 +1318,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         break;
     case 0x11:
         if (!TimerDone()) break;
-        B(kKept) = 0;
+        Scena15_Bytes[2] = 0;
         SH_CALL(Scena15_RandomPause)();
         SH_CALL(Sound_PlayEffect)(0x206);
         Timer(0x3C);
@@ -1346,8 +1346,8 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         SH_CALL(Scena15_RandomPause)();
         break;
     case 0x15:
-        if (W(kWait) != 0) break;
-        B(kPass) = 0;
+        if (MoveScript_WaitWordDA != 0) break;
+        Draw_PassFlags = 0;
         SH_CALL(Sound_PlayEffect)(0x206);
         Timer(0x78);
         Step(0x16);
@@ -1356,30 +1356,30 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         if (!TimerDone()) break;
         Set(0x13);
         ChangeArea(0xAE, 0x350000, 0x270000, 0);
-        B(kByteEE0) = 0xFF;
-        B(kAreaMusic) = 0xFF;
+        ModeFlow_AreaTransition = 0xFF;
+        AreaW1f_MusicCurrent = 0xFF;
         Step(0x17);
         break;
     case 0x17:
         if (B(kCounter0) != 3) break;
         SH_CALL(Music_LoadFile)(0x5F);
-        B(kShakeOn) = 1;
-        B(kShakeShift) = 4;
+        Scena15_Bytes[1] = 1;
+        Scena15_Bytes[0] = 4;
         SH_CALL(Sound_PlayEffect)(0x205);
         Timer(8);
         Step(0x18);
         break;
     case 0x18:
         if (!TimerDone()) break;
-        B(kShakeOn) = 0;
+        Scena15_Bytes[1] = 0;
         CounterUp();
         Step(0x19);
         break;
     case 0x19:
         if (B(kCounter0) != 7) break;
         SH_CALL(Music_Play)(0x5F, 8);
-        B(kShakeShift) = 3;
-        B(kShakeOn) = 1;
+        Scena15_Bytes[0] = 3;
+        Scena15_Bytes[1] = 1;
         Step(0x1A);
         break;
     case 0x1A:
@@ -1390,7 +1390,7 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
     case 0x1B:
         if (B(kCounter0) != 0xB) break;
         ChangeArea(0xC6, 0x170000, 0x120000, 0x82);
-        B(kAreaMusic) = 0x5F;
+        AreaW1f_MusicCurrent = 0x5F;
         Step(0x1C);
         break;
     case 0x1C:
@@ -1413,9 +1413,9 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
     case 0x23:
     case 0x27:
     case 0x2C: {
-        if (W(kWait) != 0) break;
-        const unsigned step = B(kStep);
-        B(kPass) = 0;
+        if (MoveScript_WaitWordDA != 0) break;
+        const unsigned step = MoveScript_PartyRecords[0x65];
+        Draw_PassFlags = 0;
         Say(step == 0x1F ? 0xA : step == 0x23 ? 0x6B : 0xC);
         Step(step + 1);
         break;
@@ -1424,14 +1424,14 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
     case 0x24:
     case 0x28:
     case 0x2D:
-        if (B(kRequest) == 2) break;
-        Step(B(kStep) + 1u);
+        if (Field_Request == 2) break;
+        Step(MoveScript_PartyRecords[0x65] + 1u);
         break;
     case 0x21:
         Set(0x14);
         ChangeArea(0xAE, 0x340000, 0x270000, 0x94);
-        B(kByteEE0) = 0xFF;
-        B(kAreaMusic) = 0x5F;
+        ModeFlow_AreaTransition = 0xFF;
+        AreaW1f_MusicCurrent = 0x5F;
         Step(0x22);
         break;
     case 0x22:
@@ -1441,10 +1441,10 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         break;
     case 0x25:
     case 0x2E: {
-        const unsigned next = B(kStep) + 1u;   // a constant in the original, stored after the call
+        const unsigned next = MoveScript_PartyRecords[0x65] + 1u; // a constant in the original, stored after the call
         ChangeArea(0xC6, 0x170000, 0x120000, 0x82);
-        B(kByteEE0) = 0xFF;
-        B(kAreaMusic) = 0x5F;
+        ModeFlow_AreaTransition = 0xFF;
+        AreaW1f_MusicCurrent = 0x5F;
         Step(next);
         break;
     }
@@ -1456,15 +1456,15 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         break;
     case 0x29:
         Set(0x15);
-        SetAt(kStoryRow, 0x58);
+        SetAt(Cond_Flags_addr + 0xa0, 0x58);
         ChangeArea(0xAD, 0x2E0000, 0x610000, 0);
-        B(kByteEE0) = 0xFF;
-        B(kAreaMusic) = 0xA1;
+        ModeFlow_AreaTransition = 0xFF;
+        AreaW1f_MusicCurrent = 0xA1;
         Step(0x2A);
         break;
     case 0x2A:
         if (B(kCounter0) != 1) break;
-        B(kByteFE) = 2;
+        Cond_ByteFE = 2;
         Step(0x2B);
         break;
     case 0x2B:
@@ -1475,25 +1475,25 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         break;
     case 0x2F:
         if (B(kCounter0) != 2) break;
-        B(kShakeShift) = 3;
+        Scena15_Bytes[0] = 3;
         Step(0x30);
         break;
     case 0x30:
         if (B(kCounter0) != 3) break;
-        if (SH_CALL(Scena15_PlaceEffect)(0x31, W(kAngle0), W(kAngle1), W(kAngle2), 0x80, 0xB00) == 0) break;
+        if (SH_CALL(Scena15_PlaceEffect)(0x31, static_cast<std::uint16_t>(Camera_Angles[0]), static_cast<std::uint16_t>(Camera_Angles[1]), W(kAngle2), 0x80, 0xB00) == 0) break;
         Step(0x31);
         break;
     case 0x31:
-        if (static_cast<short>(W(kDistance)) <= 0x780) break;
+        if (Camera_Distance <= 0x780) break;
         Set(0x16);
         ChangeArea(0x95, 0x80000, 0xC0000, 0x82);
-        B(kByteEE0) = 8;
-        B(kByte7F98) = 9;
-        B(kAreaMusic) = 0x5F;
+        ModeFlow_AreaTransition = 8;
+        AreaW0c_PendingKind = 9;
+        AreaW1f_MusicCurrent = 0x5F;
         Step(0x32);
         break;
     case 0x32:
-        if (W(kWait) != 0) break;
+        if (MoveScript_WaitWordDA != 0) break;
         Step(0x33);
         break;
     case 0x33:
@@ -1506,14 +1506,14 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         SH_AT(VoidFn, kViewShift)();
         break;
     case 0x34:
-        if (W(kWait) != 0) break;
+        if (MoveScript_WaitWordDA != 0) break;
         SH_CALL(Music_FadeOutStop)(0xA);
-        B(kPass) = 0;
+        Draw_PassFlags = 0;
         Transition(0x10);
         Step(0x35);
         break;
     case 0x35:
-        if (W(kWait) != 0) break;
+        if (MoveScript_WaitWordDA != 0) break;
         Timer(0x96);
         Step(0x36);
         break;
@@ -1527,15 +1527,15 @@ SC15_EXPORT void __cdecl Scena15_Run6(void) {
         break;
     default: break;
     }
-    SH_CALL(Scena15_Shake)(B(kShakeShift));
+    SH_CALL(Scena15_Shake)(Scena15_Bytes[0]);
 }
 
 // original 0x56AD80: with the byte 0x6BC742 at 0: counter 1 = 1 and the byte
 // set to ((Rand() % 0x26) + 0x2A) / 2 (signed, as idiv and the halving round
 // toward 0); else the byte counted down. Run 6's pause.
 SC15_EXPORT void __cdecl Scena15_RandomPause(void) {
-    if (B(kKept) != 0) {
-        B(kKept) = static_cast<unsigned char>(B(kKept) - 1);
+    if (Scena15_Bytes[2] != 0) {
+        Scena15_Bytes[2] = static_cast<unsigned char>(Scena15_Bytes[2] - 1);
         return;
     }
     B(kCounter1) = 1;
@@ -1547,12 +1547,12 @@ SC15_EXPORT void __cdecl Scena15_RandomPause(void) {
 // MapView_Redraw = 2 and Camera_ShiftY += Scena15_ShakeSteps[Frame_Counter &
 // 3] (an s8) << the byte `shift` (a 16-bit add).
 SC15_EXPORT void __cdecl Scena15_Shake(unsigned shift) {
-    if (B(kShakeOn) == 0) return;
-    const uint32_t i = L(kFrame) & 3u;
-    B(kRedraw) = 2;
+    if (Scena15_Bytes[1] == 0) return;
+    const uint32_t i = Frame_Counter & 3u;
+    MapView_Redraw = 2;
     const uint32_t d = static_cast<uint32_t>(static_cast<int32_t>(static_cast<signed char>(B(kShakeSteps + i))))
                        << (shift & 0x1Fu);
-    SetW(kShiftY, W(kShiftY) + d);
+    Camera_ShiftY = static_cast<std::uint16_t>(Camera_ShiftY) + d;
 }
 
 // original 0x56ADF0: a marker effect of kind 0x9E at (x, z) on the ground:
@@ -1578,7 +1578,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_SpawnMarker(long x, long z, unsigned s
 // 0x801FDD80): Scena15_Objects[object +0x86] (object, the flag row).
 // Unchecked (12 entries).
 SC15_EXPORT void __cdecl Scena15_ObjectTrigger(unsigned char* object) {
-    CallObject(kObjects15, object, "Scena15_ObjectTrigger");
+    CallObject(Scena15_Objects_addr, object, "Scena15_ObjectTrigger");
 }
 
 // original 0x56AEA0: Scena15_Objects entries 0..4: a talk. The byte
@@ -1598,7 +1598,7 @@ SC15_EXPORT void __cdecl Scena15_ObjectTalk(unsigned char* object, unsigned char
 // 3 at step 0x32.
 SC15_EXPORT void __cdecl Scena15_Object05(unsigned char*, unsigned char*) {
     Set40();
-    B(kRun) = 3;
+    MoveScript_Var7 = 3;
     Step(0x32);
 }
 
@@ -1644,21 +1644,21 @@ SC15_EXPORT void __cdecl Scena15_Object11(unsigned char* object, unsigned char*)
 SC15_EXPORT unsigned char __cdecl Scena15_StepHook(long x, long z) {
     const unsigned zcell = static_cast<uint32_t>(z) >> 16;
     if (Area() == 0xAD) {
-        if (B(kByteFD) == 1 && !Test(1) && z > 0x470000) {
+        if (Cond_ByteFD == 1 && !Test(1) && z > 0x470000) {
             Set40();
-            B(kRun) = 3;
+            MoveScript_Var7 = 3;
             Step(0xF);
         }
-        if (B(kByteFD) == 2 && !TestAt(kStoryRow, 0x81) && static_cast<short>(static_cast<uint32_t>(x) >> 16) > 0x2C &&
+        if (Cond_ByteFD == 2 && !TestAt(Cond_Flags_addr + 0xa0, 0x81) && static_cast<short>(static_cast<uint32_t>(x) >> 16) > 0x2C &&
             static_cast<std::uint16_t>(zcell - 0x78) < 8) {
             Set40();
-            B(kRun) = 3;
+            MoveScript_Var7 = 3;
             Step(0);
         }
     }
-    if (Area() == 0xAE && B(kByteFD) == 0 && x == 0x418000 && static_cast<std::uint16_t>(zcell - 0x22) < 3) {
+    if (Area() == 0xAE && Cond_ByteFD == 0 && x == 0x418000 && static_cast<std::uint16_t>(zcell - 0x22) < 3) {
         Set40();
-        B(kRun) = 4;
+        MoveScript_Var7 = 4;
         Step(0);
         return 1;
     }
@@ -1681,7 +1681,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
         if (x < 0x440000) return 0;
         if (static_cast<std::uint16_t>(zcell - 3) >= 2) return 0;
         Set40();
-        B(kRun) = 3;
+        MoveScript_Var7 = 3;
         Step(0x14);
         return 0;
     }
@@ -1689,7 +1689,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
         if (x > 0x530000) return 0;
         if (static_cast<std::uint16_t>(zcell - 0x2E) >= 3) return 0;
         Set40();
-        B(kRun) = 3;
+        MoveScript_Var7 = 3;
         Step(0x1E);
         return 0;
     }
@@ -1697,7 +1697,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
         if (z > 0x3A0000) return 0;
         if (static_cast<std::uint16_t>(xcell - 0x23) >= 4) return 0;
         Set40();
-        B(kRun) = 3;
+        MoveScript_Var7 = 3;
         Step(0x28);
         return 0;
     }
@@ -1705,12 +1705,12 @@ SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
     if (static_cast<std::uint16_t>(zcell - 0x27) >= 2) return 0;
     if (Test(0xC) && Test(0xE) && Test(0xD) && Test(0xF) && Test(0x10)) {
         Set40();
-        B(kRun) = 5;
+        MoveScript_Var7 = 5;
         Step(5);
         return 0;
     }
     Set40();
-    B(kRun) = 5;
+    MoveScript_Var7 = 5;
     Step(0);
     return 0;
 }
@@ -1722,7 +1722,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_ArriveHook(long x, long z) {
 // Scena16_Objects[object +0x86] (object, the flag row). The table holds one
 // entry (0x43C9F0, al 0) and a 0 after it: unchecked.
 SC15_EXPORT void __cdecl Scena16_ObjectTrigger(unsigned char* object) {
-    CallObject(kObjects16, object, "Scena16_ObjectTrigger");
+    CallObject(Scena16_Objects_addr, object, "Scena16_ObjectTrigger");
 }
 
 // ===========================================================================
@@ -1730,7 +1730,7 @@ SC15_EXPORT void __cdecl Scena16_ObjectTrigger(unsigned char* object) {
 
 namespace {
 
-unsigned char* Packet() { return At(L(kPacketNext)); }
+unsigned char* Packet() { return Gfx_PacketNext; }
 void SetF(unsigned char* p, float f) {
     uint32_t v;
     static_assert(sizeof v == sizeof f, "a float is a dword");
@@ -1752,19 +1752,19 @@ void Rays(unsigned radius, unsigned level) { SH_CALL(Scena17_DrawRays)(radius, l
 void Panel(unsigned level) { SH_CALL(Scena17_DrawPanel)(0xE0, 0xBE, level, 1); }
 // The ground elevation under the kind-2 sprite handed to MapView_SetElevation.
 void ElevationToView() {
-    const long z = static_cast<long>(L(kKind2Z));
-    const long x = static_cast<long>(L(kKind2X));
+    const long z = Field_Kind2Z;
+    const long x = Field_Kind2X;
     SH_CALL(MapView_SetElevation)(static_cast<int>(SH_CALL(AreaMap_Elevation)(x, z)));
 }
-bool Held() { return B(kHold) != 0; }
+bool Held() { return Field_Kind2Hold != 0; }
 // imul then sar 12, in 32 bits (wrapping as the original's does).
 unsigned Scaled(int v, int32_t by) {
     return static_cast<unsigned>(static_cast<int32_t>(static_cast<uint32_t>(v) * static_cast<uint32_t>(by)) >> 12);
 }
 // dec byte [0x8034E5]: true when it reaches 0.
 bool StepDone() {
-    Step(B(kStep) - 1u);
-    return B(kStep) == 0;
+    Step(MoveScript_PartyRecords[0x65] - 1u);
+    return MoveScript_PartyRecords[0x65] == 0;
 }
 
 }  // namespace
@@ -1773,7 +1773,7 @@ bool StepDone() {
 // through Scena17_States on the s8 0x8034E2 - 0 Scena17_Start, 1
 // Scena17_EnterArea, 2 Scena17_Run. Unchecked.
 SC15_EXPORT void __cdecl Scena17_Frame(void) {
-    Handler(kStates17, static_cast<signed char>(B(kState)), "Scena17_Frame")();
+    Handler(Scena17_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]), "Scena17_Frame")();
 }
 
 // original 0x56C140: state 0: the CLUT strip restored (Gfx_ClutStripRestore,
@@ -1781,11 +1781,11 @@ SC15_EXPORT void __cdecl Scena17_Frame(void) {
 // the four counters 0, state 1.
 SC15_EXPORT void __cdecl Scena17_Start(void) {
     SH_CALL(Gfx_ClutStripRestore)();
-    B(kClutDirty) = 1;
-    B(kPass) = 0x1F;
+    Gfx_ClutStripDirty = 1;
+    Draw_PassFlags = 0x1F;
     ChangeArea(0xC7, 0xB60000, 0x128000, 7);
     SetL(kCounter0, 0);
-    B(kState) = 1;
+    MoveScript_PartyRecords[0x62] = 1;
 }
 
 // original 0x56C180: state 1: in area 0xC7, the script flags' and the party
@@ -1798,7 +1798,7 @@ SC15_EXPORT void __cdecl Scena17_EnterArea(void) {
     if (Area() == 0xC7) {
         Set40();
         SH_CALL(ObjTrio_SetBit40)();
-        SetW(kAngle0, 0xFD1C);
+        Camera_Angles[0] = 0xFD1C;
         SetW(kAngle2, 0x12C);
         SH_CALL(MapView_SetElevation)(0x300);
         SH_CALL(AreaMap_Frame)();
@@ -1813,23 +1813,23 @@ SC15_EXPORT void __cdecl Scena17_EnterArea(void) {
         SH_CALL(Gpu_SetDrawMove)(Packet(), rect, 0x2C0, 0);
         Commit(5, 0x18);
     }
-    B(kPass) = 0;
+    Draw_PassFlags = 0;
     SH_CALL(Port_DroppedCall)(2);
-    B(kState) = 2;
-    B(kPart) = 1;
+    MoveScript_PartyRecords[0x62] = 2;
+    MoveScript_PartyRecords[0x63] = 1;
 }
 
 // original 0x56C240: state 2: a tail jump through Scena17_Parts on the s8
 // 0x8034E3 - 0 a bare ret, 1 Scena17_Intro, 2 Scena17_Roll, 3 Scena17_Outro.
 // Unchecked.
 SC15_EXPORT void __cdecl Scena17_Run(void) {
-    Handler(kParts17, static_cast<signed char>(B(kPart)), "Scena17_Run")();
+    Handler(Scena17_Parts_addr, static_cast<signed char>(MoveScript_PartyRecords[0x63]), "Scena17_Run")();
 }
 
 // original 0x56C250: part 1: Scena17_Part1Steps[MoveScript_Var7] (s8,
 // unchecked), then the letterbox (a tail jump).
 SC15_EXPORT void __cdecl Scena17_Intro(void) {
-    Handler(kPart1Steps, static_cast<signed char>(B(kRun)), "Scena17_Intro")();
+    Handler(Scena17_Part1Steps_addr, MoveScript_Var7, "Scena17_Intro")();
     SH_CALL(Scena17_DrawLetterbox)();
 }
 
@@ -1837,11 +1837,11 @@ SC15_EXPORT void __cdecl Scena17_Intro(void) {
 // at (0xB00000, 0x138000), Field_ViewReset, Cond_ByteFE 4, track 0x96 loaded,
 // the transition in, the fade drawn (off, 0x80), the next step.
 SC15_EXPORT void __cdecl Scena17_Intro00(void) {
-    if (W(kWait) != 0) return;
-    SetL(kKind2X, 0xB00000);
-    SetL(kKind2Z, 0x138000);
+    if (MoveScript_WaitWordDA != 0) return;
+    Field_Kind2X = 0xB00000;
+    Field_Kind2Z = 0x138000;
     SH_CALL(Field_ViewReset)();
-    B(kByteFE) = 4;
+    Cond_ByteFE = 4;
     SH_CALL(Music_LoadFile)(0x96);
     Transition(1);
     Fade(0, 0x80);
@@ -1851,7 +1851,7 @@ SC15_EXPORT void __cdecl Scena17_Intro00(void) {
 // original 0x56C2D0: step 1: once the wait word is 0 and the file is in, the
 // run's step 0x5A and the next step; the fade drawn every frame.
 SC15_EXPORT void __cdecl Scena17_Intro01(void) {
-    if (W(kWait) == 0 && LoadDone()) {
+    if (MoveScript_WaitWordDA == 0 && LoadDone()) {
         Step(0x5A);
         RunUp();
     }
@@ -1874,14 +1874,14 @@ SC15_EXPORT void __cdecl Scena17_Intro02(void) {
 // (0xFE96, -, 0x200), the pass flags 0x1F, the next step. The fade drawn.
 SC15_EXPORT void __cdecl Scena17_Intro03(void) {
     if (StepDone()) {
-        const unsigned char run = B(kRun);
-        SetL(kKind2X, 0x940000);
-        SetW(kF3Divisor, 0x20);
+        const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+        Field_Kind2X = 0x940000;
+        MoveScript_F3Divisor = 0x20;
         Step(0x80);
-        SetW(kAngle0, 0xFE96);
+        Camera_Angles[0] = 0xFE96;
         SetW(kAngle2, 0x200);
-        B(kPass) = 0x1F;
-        B(kRun) = static_cast<unsigned char>(run + 1);
+        Draw_PassFlags = 0x1F;
+        MoveScript_Var7 = static_cast<unsigned char>(run + 1);
     }
     Fade(0, 0x80);
 }
@@ -1889,19 +1889,19 @@ SC15_EXPORT void __cdecl Scena17_Intro03(void) {
 // original 0x56C3B0: step 4: counted down, the fade drawn on at that level;
 // at 0 (read again after the draw) the next step.
 SC15_EXPORT void __cdecl Scena17_Intro04(void) {
-    const unsigned char v = static_cast<unsigned char>(B(kStep) - 1);
+    const unsigned char v = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] - 1);
     Step(v);
     Fade(1, v);
-    if (B(kStep) == 0) RunUp();
+    if (MoveScript_PartyRecords[0x65] == 0) RunUp();
 }
 
 // original 0x56C3E0: step 5: once Field_Kind2Hold is 0, x 0x8C0000 and the
 // next step.
 SC15_EXPORT void __cdecl Scena17_Intro05(void) {
     if (Held()) return;
-    const unsigned char run = B(kRun);
-    SetL(kKind2X, 0x8C0000);
-    B(kRun) = static_cast<unsigned char>(run + 1);
+    const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+    Field_Kind2X = 0x8C0000;
+    MoveScript_Var7 = static_cast<unsigned char>(run + 1);
 }
 
 // original 0x56C400: step 6: the camera's angle 0 turned by -5 every frame;
@@ -1909,12 +1909,12 @@ SC15_EXPORT void __cdecl Scena17_Intro05(void) {
 // 0xA and the next step.
 SC15_EXPORT void __cdecl Scena17_Intro06(void) {
     const bool held = Held();
-    SetW(kAngle0, W(kAngle0) - 5u);
+    Camera_Angles[0] = static_cast<std::uint16_t>(Camera_Angles[0]) - 5u;
     if (held) return;
-    const unsigned char run = B(kRun);
-    SetL(kKind2X, 0x540000);
+    const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+    Field_Kind2X = 0x540000;
     B(kCounter3) = 0xA;
-    B(kRun) = static_cast<unsigned char>(run + 1);
+    MoveScript_Var7 = static_cast<unsigned char>(run + 1);
 }
 
 // original 0x56C430: step 7: once Field_Kind2Hold is 0 and counter 3 is 0x14,
@@ -1922,10 +1922,10 @@ SC15_EXPORT void __cdecl Scena17_Intro06(void) {
 SC15_EXPORT void __cdecl Scena17_Intro07(void) {
     if (Held()) return;
     if (B(kCounter3) != 0x14) return;
-    const unsigned char run = B(kRun);
-    SetW(kF3Divisor, 0x10);
-    SetL(kKind2X, 0x3C0000);
-    B(kRun) = static_cast<unsigned char>(run + 1);
+    const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+    MoveScript_F3Divisor = 0x10;
+    Field_Kind2X = 0x3C0000;
+    MoveScript_Var7 = static_cast<unsigned char>(run + 1);
 }
 
 // original 0x56C470: step 8: once Field_Kind2Hold is 0, the view to the
@@ -1933,13 +1933,13 @@ SC15_EXPORT void __cdecl Scena17_Intro07(void) {
 // elevation down one every other frame.
 SC15_EXPORT void __cdecl Scena17_Intro08(void) {
     if (Held()) {
-        if (B(kFrame) & 1) SetL(kElevation, L(kElevation) - 1u);
+        if (B(kFrame) & 1) MapView_Elevation = static_cast<std::uint32_t>(MapView_Elevation) - 1u;
         return;
     }
     ElevationToView();
-    const unsigned char run = B(kRun);
-    SetL(kKind2X, 0x2E0000);
-    B(kRun) = static_cast<unsigned char>(run + 1);
+    const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+    Field_Kind2X = 0x2E0000;
+    MoveScript_Var7 = static_cast<unsigned char>(run + 1);
 }
 
 // original 0x56C4C0: step 9: once Field_Kind2Hold is 0, the view to the
@@ -1949,19 +1949,19 @@ SC15_EXPORT void __cdecl Scena17_Intro08(void) {
 // more every fourth.
 SC15_EXPORT void __cdecl Scena17_Intro09(void) {
     if (Held()) {
-        const uint32_t e = L(kElevation) + 2u;
+        const uint32_t e = static_cast<std::uint32_t>(MapView_Elevation) + 2u;
         const unsigned char f = B(kFrame);
-        SetL(kElevation, e);
+        MapView_Elevation = e;
         if ((f & 3) == 0) SetL(kElevation, e + 1u);
         return;
     }
     ElevationToView();
-    const long z = static_cast<long>(L(kKind2Z));
-    SetL(kKind2X, 0x260000);
+    const long z = Field_Kind2Z;
+    Field_Kind2X = 0x260000;
     const long e = SH_CALL(AreaMap_Elevation)(0x260000, z);
-    const int32_t d = static_cast<int32_t>(static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(e))) - L(kElevation));
-    B(kByteFE) = 1;
-    SetW(kFAWord, static_cast<unsigned>(d / 128));
+    const int32_t d = static_cast<int32_t>(static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(e))) - static_cast<std::uint32_t>(MapView_Elevation));
+    Cond_ByteFE = 1;
+    MoveScript_FAWord = static_cast<unsigned>(d / 128);
     RunUp();
 }
 
@@ -1971,16 +1971,16 @@ SC15_EXPORT void __cdecl Scena17_Intro09(void) {
 // a frame.
 SC15_EXPORT void __cdecl Scena17_Intro10(void) {
     if (Held()) {
-        SetW(kAngle0, W(kAngle0) - 1u);
-        SetW(kDistance, W(kDistance) - 6u);
+        Camera_Angles[0] = static_cast<std::uint16_t>(Camera_Angles[0]) - 1u;
+        Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) - 6u;
         return;
     }
     ElevationToView();
-    const unsigned char run = B(kRun);
-    SetW(kF3Divisor, 0x10);
-    SetL(kKind2X, 0x190000);
-    SetW(kFAWord, 0);
-    B(kRun) = static_cast<unsigned char>(run + 1);
+    const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+    MoveScript_F3Divisor = 0x10;
+    Field_Kind2X = 0x190000;
+    MoveScript_FAWord = 0;
+    MoveScript_Var7 = static_cast<unsigned char>(run + 1);
 }
 
 // original 0x56C5B0: step 11: once Field_Kind2Hold is 0, Cond_ByteFE 2 and the
@@ -1988,36 +1988,36 @@ SC15_EXPORT void __cdecl Scena17_Intro10(void) {
 // 0x540 (unsigned).
 SC15_EXPORT void __cdecl Scena17_Intro11(void) {
     if (Held()) {
-        const uint32_t e = L(kElevation) + 2u;
-        SetL(kElevation, e);
-        if (e > 0x540) SetL(kElevation, 0x540);
+        const uint32_t e = static_cast<std::uint32_t>(MapView_Elevation) + 2u;
+        MapView_Elevation = e;
+        if (e > 0x540) MapView_Elevation = 0x540;
         return;
     }
-    const unsigned char run = B(kRun);
-    B(kByteFE) = 2;
-    B(kRun) = static_cast<unsigned char>(run + 1);
+    const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+    Cond_ByteFE = 2;
+    MoveScript_Var7 = static_cast<unsigned char>(run + 1);
 }
 
 // original 0x56C5F0: step 12: on counter 3 0x64, Cond_ByteFE 3 and the next
 // step.
 SC15_EXPORT void __cdecl Scena17_Intro12(void) {
     if (B(kCounter3) != 0x64) return;
-    const unsigned char run = B(kRun);
-    B(kByteFE) = 3;
-    B(kRun) = static_cast<unsigned char>(run + 1);
+    const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
+    Cond_ByteFE = 3;
+    MoveScript_Var7 = static_cast<unsigned char>(run + 1);
 }
 
 // original 0x56C610: step 13: the view's elevation up 0x10 a frame; past
 // 0xCC0 (unsigned) 0x8034E5 = 0xF and the next step. MapView_Redraw 2.
 SC15_EXPORT void __cdecl Scena17_Intro13(void) {
-    const uint32_t e = L(kElevation) + 0x10u;
-    SetL(kElevation, e);
+    const uint32_t e = static_cast<std::uint32_t>(MapView_Elevation) + 0x10u;
+    MapView_Elevation = e;
     if (e > 0xCC0) {
-        const unsigned char run = B(kRun);
+        const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0xF);
-        B(kRun) = static_cast<unsigned char>(run + 1);
+        MoveScript_Var7 = static_cast<unsigned char>(run + 1);
     }
-    B(kRedraw) = 2;
+    MapView_Redraw = 2;
 }
 
 // original 0x56C640: step 14: counted down; at 0 the transition 0xD and the
@@ -2032,20 +2032,20 @@ SC15_EXPORT void __cdecl Scena17_Intro14(void) {
 // 10 frames, Music_Track 0xFF, the pass flags 0, Cond_ByteFE 6, part 2 at
 // step 0.
 SC15_EXPORT void __cdecl Scena17_Intro15(void) {
-    if (W(kWait) != 0) return;
+    if (MoveScript_WaitWordDA != 0) return;
     SH_CALL(Music_FadeOutStop)(0xA);
-    const unsigned char part = static_cast<unsigned char>(B(kPart) + 1);
-    B(kMusicTrack) = 0xFF;
-    B(kPass) = 0;
-    B(kByteFE) = 6;
-    B(kPart) = part;
-    B(kRun) = 0;
+    const unsigned char part = static_cast<unsigned char>(MoveScript_PartyRecords[0x63] + 1);
+    Music_Track = 0xFF;
+    Draw_PassFlags = 0;
+    Cond_ByteFE = 6;
+    MoveScript_PartyRecords[0x63] = part;
+    MoveScript_Var7 = 0;
 }
 
 // original 0x56C6B0: part 2: Scena17_Part2Steps[MoveScript_Var7] (s8,
 // unchecked), then the letterbox (a tail jump).
 SC15_EXPORT void __cdecl Scena17_Roll(void) {
-    Handler(kPart2Steps, static_cast<signed char>(B(kRun)), "Scena17_Roll")();
+    Handler(Scena17_Part2Steps_addr, MoveScript_Var7, "Scena17_Roll")();
     SH_CALL(Scena17_DrawLetterbox)();
 }
 
@@ -2054,7 +2054,7 @@ SC15_EXPORT void __cdecl Scena17_Roll(void) {
 SC15_EXPORT void __cdecl Scena17_Roll0(void) {
     SH_CALL(Sound_LoadStream)(8);
     SetW(kRollLine, 0);
-    B(kRollScroll) = 0;
+    Scena15_Bytes[6] = 0;
     RunUp();
 }
 
@@ -2072,10 +2072,10 @@ SC15_EXPORT void __cdecl Scena17_Roll1(void) {
 // original 0x56C720: step 2: once the wait word is 0, part 3 at step 0; until
 // then the roll drawn (a tail jump to Scena17_ScrollRoll).
 SC15_EXPORT void __cdecl Scena17_Roll2(void) {
-    if (W(kWait) == 0) {
-        const unsigned char part = B(kPart);
-        B(kRun) = 0;
-        B(kPart) = static_cast<unsigned char>(part + 1);
+    if (MoveScript_WaitWordDA == 0) {
+        const unsigned char part = MoveScript_PartyRecords[0x63];
+        MoveScript_Var7 = 0;
+        MoveScript_PartyRecords[0x63] = static_cast<unsigned char>(part + 1);
         return;
     }
     SH_CALL(Scena17_ScrollRoll)();
@@ -2084,19 +2084,19 @@ SC15_EXPORT void __cdecl Scena17_Roll2(void) {
 // original 0x56C750: part 3: a tail jump through Scena17_Part3Steps on the s8
 // MoveScript_Var7. Unchecked.
 SC15_EXPORT void __cdecl Scena17_Outro(void) {
-    Handler(kPart3Steps, static_cast<signed char>(B(kRun)), "Scena17_Outro")();
+    Handler(Scena17_Part3Steps_addr, MoveScript_Var7, "Scena17_Outro")();
 }
 
 // original 0x56C760: part 3 step 0: the kind-2 sprite at (0x258000,
 // 0x1B0000), Field_ViewReset, the transition in, a frame's sleep, the pass
 // flags 0x1F, track 0xA0 played, the next step.
 SC15_EXPORT void __cdecl Scena17_Outro00(void) {
-    SetL(kKind2X, 0x258000);
-    SetL(kKind2Z, 0x1B0000);
+    Field_Kind2X = 0x258000;
+    Field_Kind2Z = 0x1B0000;
     SH_CALL(Field_ViewReset)();
     Transition(1);
     SH_CALL(Task_Sleep)(1);
-    B(kPass) = 0x1F;
+    Draw_PassFlags = 0x1F;
     SH_CALL(Music_Play)(0xA0, 8);
     RunUp();
 }
@@ -2104,10 +2104,10 @@ SC15_EXPORT void __cdecl Scena17_Outro00(void) {
 // original 0x56C7B0: step 1: once the wait word is 0, 0x8034E5 = 0 and the
 // next step; the rays drawn at radius 0, level 0xFF.
 SC15_EXPORT void __cdecl Scena17_Outro01(void) {
-    if (W(kWait) == 0) {
-        const unsigned char run = B(kRun);
+    if (MoveScript_WaitWordDA == 0) {
+        const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
-        B(kRun) = static_cast<unsigned char>(run + 1);
+        MoveScript_Var7 = static_cast<unsigned char>(run + 1);
     }
     Rays(0, 0xFF);
 }
@@ -2117,12 +2117,12 @@ SC15_EXPORT void __cdecl Scena17_Outro01(void) {
 // The low 16 bits of the radius are what the draw reads; the original's
 // upper bits are its eax's.
 SC15_EXPORT void __cdecl Scena17_Outro02(void) {
-    const unsigned char v = static_cast<unsigned char>(B(kStep) + 1);
+    const unsigned char v = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
     Step(v);
     if (v == 0x32) {
-        const unsigned char run = B(kRun);
+        const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0x96);
-        B(kRun) = static_cast<unsigned char>(run + 1);
+        MoveScript_Var7 = static_cast<unsigned char>(run + 1);
         Rays(0x1F4, 0xFF);
         return;
     }
@@ -2133,10 +2133,10 @@ SC15_EXPORT void __cdecl Scena17_Outro02(void) {
 // 0x46 and the next step. The rays at 0x1F4.
 SC15_EXPORT void __cdecl Scena17_Outro03(void) {
     if (StepDone()) {
-        const unsigned char run = B(kRun);
+        const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         B(kCounter3) = 0x6E;
         Step(0x46);
-        B(kRun) = static_cast<unsigned char>(run + 1);
+        MoveScript_Var7 = static_cast<unsigned char>(run + 1);
     }
     Rays(0x1F4, 0xFF);
 }
@@ -2151,12 +2151,12 @@ SC15_EXPORT void __cdecl Scena17_Outro04(void) {
 // the next step, 0x8034E5 = 0 and the rays at 0x4B0; below, at (count + 0x32)
 // times 10.
 SC15_EXPORT void __cdecl Scena17_Outro05(void) {
-    const unsigned char v = static_cast<unsigned char>(B(kStep) + 2);
+    const unsigned char v = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 2);
     Step(v);
     if (v >= 0x46) {
-        const unsigned char run = B(kRun);
+        const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
-        B(kRun) = static_cast<unsigned char>(run + 1);
+        MoveScript_Var7 = static_cast<unsigned char>(run + 1);
         Rays(0x4B0, 0xFF);
         return;
     }
@@ -2167,12 +2167,12 @@ SC15_EXPORT void __cdecl Scena17_Outro05(void) {
 // 0x8034E5 = 0 and the rays at level 0x80; below, at level 0xFF - count (a
 // byte).
 SC15_EXPORT void __cdecl Scena17_Outro06(void) {
-    const unsigned char v = static_cast<unsigned char>(B(kStep) + 2);
+    const unsigned char v = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 2);
     Step(v);
     if (v >= 0x7F) {
-        const unsigned char run = B(kRun);
+        const unsigned char run = static_cast<unsigned char>(MoveScript_Var7);
         Step(0);
-        B(kRun) = static_cast<unsigned char>(run + 1);
+        MoveScript_Var7 = static_cast<unsigned char>(run + 1);
         Rays(0x4B0, 0x80);
         return;
     }
@@ -2184,14 +2184,14 @@ SC15_EXPORT void __cdecl Scena17_Outro06(void) {
 // the panel at level 0x80; below, the panel at the count. The rays at 0x4B0,
 // level 0x80, after the panel.
 SC15_EXPORT void __cdecl Scena17_Outro07(void) {
-    const unsigned char v = static_cast<unsigned char>(B(kStep) + 1);
+    const unsigned char v = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
     Step(v);
     if (v >= 0x80) {
-        const unsigned char run = static_cast<unsigned char>(B(kRun) + 1);
+        const unsigned char run = static_cast<unsigned char>(static_cast<unsigned char>(MoveScript_Var7) + 1);
         B(kCounter3) = 0x3C;
         Step(0x1E);
-        B(kRollSkip) = 0;
-        B(kRun) = run;
+        Scena15_Bytes[7] = 0;
+        MoveScript_Var7 = run;
         SH_CALL(LoadDatFile)(0x15C);
         Panel(0x80);
     } else {
@@ -2205,7 +2205,7 @@ SC15_EXPORT void __cdecl Scena17_Outro07(void) {
 // yet 0, 0x8034E5 = 0x1E again, else the next step. The rays, then the
 // panel.
 SC15_EXPORT void __cdecl Scena17_Outro08(void) {
-    if (B(kInputPressed) & Sigma(0x20)) B(kRollSkip) = 1;
+    if (B(kInputPressed) & Sigma(0x20)) Scena15_Bytes[7] = 1;
     if (LoadDone() && StepDone()) {
         B(kCounter3) = static_cast<unsigned char>(B(kCounter3) - 1);
         if (B(kCounter3) != 0) Step(0x1E);
@@ -2219,7 +2219,7 @@ SC15_EXPORT void __cdecl Scena17_Outro08(void) {
 // music faded over 0x10, the transition 0xD and the next step. The rays and
 // the panel.
 SC15_EXPORT void __cdecl Scena17_Outro09(void) {
-    if ((B(kInputPressed) & Sigma(0x20)) || B(kRollSkip) != 0) {
+    if ((B(kInputPressed) & Sigma(0x20)) || Scena15_Bytes[7] != 0) {
         SH_CALL(Music_FadeOut)(0x10);
         Transition(0xD);
         RunUp();
@@ -2232,15 +2232,15 @@ SC15_EXPORT void __cdecl Scena17_Outro09(void) {
 // Music_Track 0xFF, Port_DroppedCall(0), the pass flags 0, script message 1,
 // the next step, the request 2. The rays and the panel.
 SC15_EXPORT void __cdecl Scena17_Outro10(void) {
-    if (W(kWait) == 0) {
+    if (MoveScript_WaitWordDA == 0) {
         SH_CALL(Music_FadeOutStop)(0xA);
-        B(kMusicTrack) = 0xFF;
+        Music_Track = 0xFF;
         SH_CALL(Port_DroppedCall)(0);
-        B(kPass) = 0;
+        Draw_PassFlags = 0;
         Msg(1);
-        const unsigned char run = static_cast<unsigned char>(B(kRun) + 1);
-        B(kRequest) = 2;
-        B(kRun) = run;
+        const unsigned char run = static_cast<unsigned char>(static_cast<unsigned char>(MoveScript_Var7) + 1);
+        Field_Request = 2;
+        MoveScript_Var7 = run;
     }
     Rays(0x4B0, 0x80);
     Panel(0x80);
@@ -2250,8 +2250,8 @@ SC15_EXPORT void __cdecl Scena17_Outro10(void) {
 // message's answer) the next step; else the sound stopped and the task
 // restarted at Boot_Task.
 SC15_EXPORT void __cdecl Scena17_Outro11(void) {
-    if (B(kRequest) == 2) return;
-    if (B(kStep) == 0) {
+    if (Field_Request == 2) return;
+    if (MoveScript_PartyRecords[0x65] == 0) {
         RunUp();
         return;
     }
@@ -2262,15 +2262,15 @@ SC15_EXPORT void __cdecl Scena17_Outro11(void) {
 // original 0x56CB60: step 12: part 0, step 0, the task restarted at
 // Scena17_EndTask.
 SC15_EXPORT void __cdecl Scena17_Outro12(void) {
-    B(kPart) = 0;
-    B(kRun) = 0;
+    MoveScript_PartyRecords[0x63] = 0;
+    MoveScript_Var7 = 0;
     SH_CALL(Task_Restart)(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kEndTask)));
 }
 
 // original 0x56CB80: chapter 17's vtable slot 1 (PSX 0x801F88C4):
 // Scena17_Objects[object +0x86] (object, the flag row); one entry, 0x43C9F0.
 SC15_EXPORT void __cdecl Scena17_ObjectTrigger(unsigned char* object) {
-    CallObject(kObjects17, object, "Scena17_ObjectTrigger");
+    CallObject(Scena17_Objects_addr, object, "Scena17_ObjectTrigger");
 }
 
 // original 0x56CBA0: a fade over the frame: with `on` (a byte) a TILE of the
@@ -2336,11 +2336,11 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     short angles[4];
     struct { short m[9]; short pad; long t[3]; } mat;
     long flag;
-    const int32_t x = static_cast<int32_t>(L(kKind2X));
+    const int32_t x = Field_Kind2X;
     angles[0] = 0;
     angles[1] = 0;
     vec[0] = static_cast<short>((x >> 9) - 0x4000);
-    const int32_t z = static_cast<int32_t>(L(kKind2Z));
+    const int32_t z = Field_Kind2Z;
     angles[2] = 0;
     vec[1] = static_cast<short>((z >> 9) - 0x4000);
     const long e = SH_CALL(AreaMap_Elevation)(x, z);
@@ -2355,7 +2355,7 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
     Commit(2, 0xC);
     const int32_t r = static_cast<int32_t>(radius & 0xFFFFu);
     const unsigned char c = static_cast<unsigned char>(level);
-    unsigned char* const v = At(kVertices);
+    unsigned char* const v = At(Prim_VertexScratch_addr);
     long depth, flags;
     for (int32_t a = 0; a < 0x1000; a += 0x80) {
         SetW(v, 0);
@@ -2441,7 +2441,7 @@ SC15_EXPORT void __cdecl Scena17_DrawLetterbox(void) {
 // (s16s) from (0, 0) under tpage 0xBD and CLUT 0x7B40, at `level`,
 // semi-transparent by the byte `semi`, to OT slot 2 after its draw mode.
 SC15_EXPORT void __cdecl Scena17_DrawPanel(int x, int y, unsigned level, unsigned semi) {
-    if (B(kPass) == 0) return;
+    if (Draw_PassFlags == 0) return;
     DrawMode(0xBD, 0);
     Commit(2, 0xC);
     unsigned char* const p = Packet();
@@ -2468,15 +2468,15 @@ SC15_EXPORT unsigned char __cdecl Scena17_ScrollRoll(void) {
     for (uint32_t i = 0; i < 0x10; ++i) {
         const uint32_t entry = L(kRollLines + 4u * ((L(kRollLine) & 0xFFFFu) + i));
         if (entry == 0xFFFFFFFFu || entry == 0) continue;
-        const uint32_t y = i * 22u - ((entry & 0xFFFF0000u) | B(kRollScroll));
+        const uint32_t y = i * 22u - ((entry & 0xFFFF0000u) | Scena15_Bytes[6]);
         SH_CALL(Scena17_DrawLine)(0x10, static_cast<int>(y),
                                   reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(entry)));
     }
     if (L(kRollLines + 4u * (L(kRollLine) & 0xFFFFu)) == 0xFFFFFFFFu) return 1;
-    B(kRollScroll) = static_cast<unsigned char>(B(kRollScroll) + 1);
-    if (B(kRollScroll) == 0x16) {
+    Scena15_Bytes[6] = static_cast<unsigned char>(Scena15_Bytes[6] + 1);
+    if (Scena15_Bytes[6] == 0x16) {
         SetW(kRollLine, W(kRollLine) + 1u);
-        B(kRollScroll) = 0;
+        Scena15_Bytes[6] = 0;
     }
     return 0;
 }
@@ -2556,11 +2556,11 @@ SC15_EXPORT void __cdecl Scena17_DrawLogo(int x, int y) {
 // unchecked) and a frame's sleep. Never returns (the task is restarted from
 // its steps).
 SC15_EXPORT void __cdecl Scena17_EndTask(void) {
-    SetW(kGameStep, 0);
+    Game_Step = 0;
     SH_CALL(Task_ClearPrivate)();
     SH_CALL(Window_ResetAll)();
     for (;;) {
-        Handler(kEndSteps, W(kGameStep), "Scena17_EndTask")();
+        Handler(Scena17_EndSteps_addr, Game_Step, "Scena17_EndTask")();
         SH_CALL(Task_Sleep)(1);
     }
 }
@@ -2573,18 +2573,18 @@ SC15_EXPORT void __cdecl Scena17_EndTask(void) {
 // 0x929EC2 1 / C3 0, 0x66C7DA 1; file 0x31B loaded a frame at a time; CLUT
 // strip rows 1 and 2 copied; Game_Step + 1; the strip dirty.
 SC15_EXPORT void __cdecl Scena17_EndReturn(void) {
-    SetAt(kStoryRow, 0x92);
-    for (unsigned i = 9; i <= 0x16; ++i) ClearAt(kRow3, i);
+    SetAt(Cond_Flags_addr + 0xa0, 0x92);
+    for (unsigned i = 9; i <= 0x16; ++i) ClearAt(Cond_Flags_addr + 0x78, i);
     SH_AT(VoidFn, kPartyPass)();
-    SetW(kArea, 0x8F);
+    Game_AreaNumber = 0x8F;
     Clear40();
     SetL(0x802D74, 0xF0000);
     SetL(0x802D78, 0x218000);
     B(0x802D48) = 3;
-    B(kMusicTrack) = 0x6F;
-    B(kChapter) = 0xF;
-    B(kPart) = 0;
-    B(kRun) = 0;
+    Music_Track = 0x6F;
+    Cond_ByteFA = 0xF;
+    MoveScript_PartyRecords[0x63] = 0;
+    MoveScript_Var7 = 0;
     Step(0);
     B(0x929F00) = 0;
     B(0x929F0C) = 0xFE;
@@ -2595,8 +2595,8 @@ SC15_EXPORT void __cdecl Scena17_EndReturn(void) {
     while (!LoadDone()) SH_CALL(Task_Sleep)(1);
     SH_CALL(Gfx_ClutStripCopyRow)(1);
     SH_CALL(Gfx_ClutStripCopyRow)(2);
-    SetW(kGameStep, W(kGameStep) + 1u);
-    B(kClutDirty) = 1;
+    Game_Step = Game_Step + 1u;
+    Gfx_ClutStripDirty = 1;
 }
 
 // original 0x56D4D0: end step 1: the field's task records run, then the menu
@@ -2624,35 +2624,35 @@ SC15_EXPORT void __cdecl Scena17_EndRestart(void) {
 // through Scena18_States - 0 is 0x5646B0 (state 1), 1 Scena18_EnterArea, 2
 // Scena18_Run. Unchecked.
 SC15_EXPORT void __cdecl Scena18_Frame(void) {
-    Handler(kStates18, static_cast<signed char>(B(kState)), "Scena18_Frame")();
+    Handler(Scena18_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]), "Scena18_Frame")();
 }
 
 // original 0x56D520: chapter 18's state 2: a tail jump through Scena18_Runs
 // on the s8 MoveScript_Var7 (one entry, a bare ret). Unchecked.
 SC15_EXPORT void __cdecl Scena18_Run(void) {
-    Handler(kRuns18, static_cast<signed char>(B(kRun)), "Scena18_Run")();
+    Handler(Scena18_Runs_addr, MoveScript_Var7, "Scena18_Run")();
 }
 
 // original 0x56D530: chapter 18's vtable slot 1 (PSX 0x801F6CAC):
 // Scena18_Objects[object +0x86] (object, the flag row); one entry, a bare ret.
 SC15_EXPORT void __cdecl Scena18_ObjectTrigger(unsigned char* object) {
-    CallObject(kObjects18, object, "Scena18_ObjectTrigger");
+    CallObject(Scena18_Objects_addr, object, "Scena18_ObjectTrigger");
 }
 
 // original 0x56D550: chapter 19's vtable slot 0 (PSX 0x801F6C04 in SCENA19):
 // a tail jump through Scena19_States - 0 is 0x5646B0, 1 Scena18_EnterArea, 2
 // Scena19_Run. Unchecked.
 SC15_EXPORT void __cdecl Scena19_Frame(void) {
-    Handler(kStates19, static_cast<signed char>(B(kState)), "Scena19_Frame")();
+    Handler(Scena19_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]), "Scena19_Frame")();
 }
 
 // original 0x56D560: chapters 18's and 19's state 1: state 2.
-SC15_EXPORT void __cdecl Scena18_EnterArea(void) { B(kState) = 2; }
+SC15_EXPORT void __cdecl Scena18_EnterArea(void) { MoveScript_PartyRecords[0x62] = 2; }
 
 // original 0x56D570: chapter 19's state 2: a tail jump through Scena19_Runs on
 // the s8 MoveScript_Var7 (one entry, Scena19_Run0). Unchecked.
 SC15_EXPORT void __cdecl Scena19_Run(void) {
-    Handler(kRuns19, static_cast<signed char>(B(kRun)), "Scena19_Run")();
+    Handler(Scena19_Runs_addr, MoveScript_Var7, "Scena19_Run")();
 }
 
 // original 0x56D580: chapter 19's run 0: on Input_Pressed bit 8, an effect of
@@ -2665,7 +2665,7 @@ SC15_EXPORT void __cdecl Scena19_Run0(void) {
 // original 0x56D5C0: chapter 19's vtable slot 1 (PSX 0x801F6D10):
 // Scena19_Objects[object +0x86] (object, the flag row); one entry, a bare ret.
 SC15_EXPORT void __cdecl Scena19_ObjectTrigger(unsigned char* object) {
-    CallObject(kObjects19, object, "Scena19_ObjectTrigger");
+    CallObject(Scena19_Objects_addr, object, "Scena19_ObjectTrigger");
 }
 
 void ScenaSc15_Inject() {

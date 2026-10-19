@@ -37,8 +37,8 @@ constexpr std::uint32_t kText = 0x904BA0;           // the text scratch Crt_spri
 // --- the glow sparks: 8 records of 0x1C at EffectKind30_Shards -------------------------
 constexpr unsigned kSparks = 8;
 constexpr unsigned kSparkStride = 0x1C;
-constexpr std::uint32_t kRiseSounded = 0x6761C8;    // byte: sound 0x201 played (EffectGlowSparks_Rise)
-constexpr std::uint32_t kGlowSounded = 0x6761C9;    // byte: sound 0x200 played (EffectGlowSparks_Glow)
+// kRiseSounded: now Rest3e_RiseSounded (symbols.toml). byte: sound 0x201 played (EffectGlowSparks_Rise)
+// kGlowSounded: now Rest3e_GlowSounded (symbols.toml). byte: sound 0x200 played (EffectGlowSparks_Glow)
 constexpr unsigned kSoundGlow = 0x200;
 constexpr unsigned kSoundRise = 0x201;
 
@@ -59,9 +59,9 @@ constexpr std::uint32_t kMenuBox = 0x654870;
 constexpr std::uint32_t kListBox = 0x654878;
 constexpr std::uint32_t kPanel = 0x654880;
 constexpr std::uint32_t kPanelBox = 0x654888;
-constexpr std::uint32_t kSpriteDx = 0x654890;
-constexpr std::uint32_t kSpriteDy = 0x654891;
-constexpr std::uint32_t kHand = 0x654894;
+// kSpriteDx: now Rest3e_SpriteDx (symbols.toml).
+// kSpriteDy: now Rest3e_SpriteDy (symbols.toml).
+// kHand: now Rest3e_Hand (symbols.toml).
 constexpr std::uint32_t kRows = 0x6548BC;           // 8 rows of 3 mark indices (0xA none)
 constexpr std::uint32_t kMarks = 0x6548D4;          // the marks' (dx, dy) words, 4 bytes each
 constexpr unsigned kMarkCount = 11;                 // to the format string 0x654900
@@ -72,6 +72,6 @@ constexpr std::uint32_t kTitle = 0x66A098;          // the menu's title text
 constexpr std::uint32_t kCounts = 0x903A10;         // 8 bytes: a count per item, held at 100
 constexpr unsigned kItems = 8;
 constexpr unsigned kFirstItem = 0x4E;               // the items 0x4E..0x55
-constexpr std::uint32_t kStyle = 0x903A5A;          // the window style byte
+// kStyle: now BattleDraw_Colour (symbols.toml). the window style byte
 
 }  // namespace rest_3e::at

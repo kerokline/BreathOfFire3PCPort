@@ -34,50 +34,50 @@ namespace at {
 // The scenario bytes (docs/field-modes.md section 2).
 constexpr std::uint32_t kState = 0x8034E2;      // s8: the chapter's state, 0..2
 constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which scene
-constexpr std::uint32_t kStep = 0x8034E5;       // u8: the scene's step
-constexpr std::uint32_t kCondFD = 0x8034F1;     // Cond_ByteFD
+// kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
+// kCondFD: now Cond_ByteFD (symbols.toml). Cond_ByteFD
 constexpr std::uint32_t kCounters = 0x903848;   // four script counters (MoveScript_CounterOps)
 constexpr std::uint32_t kEffectSlot = 0x903850; // u8: the effect slot just taken
-constexpr std::uint32_t kFlagBits = 0x929ED0;   // unsigned char *: the bits Flags_Test / Set / Clear take
-constexpr std::uint32_t kStoryFlags = 0x904030; // Cond_Flags + 0xA0, handed to Flags_Set once as a literal
+// kFlagBits: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the bits Flags_Test / Set / Clear take
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, handed to Flags_Set once as a literal
 constexpr std::uint32_t kSelector = 0x90412C;   // Cond_Flags + 0x19C: & 0x7F picks a flag of a set of ten
-constexpr std::uint32_t kArea = 0x904EFC;       // u16 Game_AreaNumber
-constexpr std::uint32_t kPassFlags = 0x7E0918;  // Draw_PassFlags
+// kArea: now Game_AreaNumber (symbols.toml). u16 Game_AreaNumber
+// kPassFlags: now Draw_PassFlags (symbols.toml). Draw_PassFlags
 constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
-constexpr std::uint32_t kRequest = 0x66C7D8;    // Field_Request
-constexpr std::uint32_t kWait = 0x66C810;       // u16 MoveScript_WaitWordDA
-constexpr std::uint32_t kRedraw = 0x905E69;     // MapView_Redraw
-constexpr std::uint32_t kMusicCurrent = 0x904CD0;  // u8: Music_Play returns at once while its track equals it
-constexpr std::uint32_t kCondFE = 0x905E20;     // Cond_ByteFE
+// kRequest: now Field_Request (symbols.toml). Field_Request
+// kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
+// kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
+// kMusicCurrent: now AreaW1f_MusicCurrent (symbols.toml). u8: Music_Play returns at once while its track equals it
+// kCondFE: now Cond_ByteFE (symbols.toml). Cond_ByteFE
 constexpr std::uint32_t kEffects = 0x7E11E0;    // Effect_Objects: records of 0x80
 constexpr std::uint32_t kEffectStride = 0x80;
-constexpr std::uint32_t kAngleX = 0x929EC8;     // s16 Camera_Angles +0
-constexpr std::uint32_t kAngleY = 0x929ECA;     // s16 Camera_Angles +2
-constexpr std::uint32_t kClut = 0x80F580;       // 0x2000 16-bit colours, greyed by run 4 step 0x17
+// kAngleX: now Camera_Angles (symbols.toml). s16 Camera_Angles +0
+// kAngleY: now Camera_Angles[1] (symbols.toml). s16 Camera_Angles +2
+// kClut: now Gfx_ClutStrip (symbols.toml). 0x2000 16-bit colours, greyed by run 4 step 0x17
 constexpr unsigned kClutWords = 0x2000;
-constexpr std::uint32_t kClutDirty = 0x937F90;  // Gfx_ClutStripDirty
+// kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
 constexpr std::uint32_t kTile = 0x939A00;       // u16: its low byte tested 0x62..0x66 (run 5 step 0x14)
-constexpr std::uint32_t kHold = 0x929F12;       // Field_Kind2Hold
-constexpr std::uint32_t kLoadByte = 0x929F0F;   // u8: tested for 1 before the ten-flag sets
-constexpr std::uint32_t kLeaderName = 0x802DC9; // u8: ObjTrio record 0 + 0x89
+// kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
+// kLoadByte: now AreaW3c_Load0F (symbols.toml). u8: tested for 1 before the ten-flag sets
+// kLeaderName: now ObjTrio[0x89] (symbols.toml). u8: ObjTrio record 0 + 0x89
 constexpr std::uint32_t kMember1 = 0x80300C;    // s32: a member record's word (Field_Members + 0x184)
-constexpr std::uint32_t kMemberState = 0x80310F; // u8: tested against 3 (run 9 step 0)
+// kMemberState: now ObjTrio[0x3cf] (symbols.toml). u8: tested against 3 (run 9 step 0)
 constexpr std::uint32_t kObjTrioZ = 0x802D74;   // s32 ObjTrio + 0x34
 constexpr std::uint32_t kObjTrioY = 0x802D7C;   // s32 ObjTrio + 0x3C
 constexpr std::uint32_t kPartyBytes = 0x904062; // three bytes, each tested against 2, 8, 5, 4
-constexpr std::uint32_t kInputHeld = 0x7E1BE8;  // u16 Input_Held
+// kInputHeld: now Input_Held (symbols.toml). u16 Input_Held
 
 // Chapter 12's tables (symbols.toml [[data]]), each read in place by its
 // dispatcher. They lie back to back; an index past one reads the next.
-constexpr std::uint32_t kStates = 0x6616F4;     // Scena12_States, 3
+// kStates: now Scena12_States (symbols.toml). Scena12_States, 3
 constexpr unsigned kStateCount = 3;
-constexpr std::uint32_t kRuns = 0x661700;       // Scena12_Runs, 10
+// kRuns: now Scena12_Runs (symbols.toml). Scena12_Runs, 10
 constexpr unsigned kRunCount = 10;
-constexpr std::uint32_t kObjects = 0x661728;    // Scena12_Objects, 15
+// kObjects: now Scena12_Objects (symbols.toml). Scena12_Objects, 15
 constexpr unsigned kObjectCount = 15;
-constexpr std::uint32_t kCellRecords = 0x661764;   // Scena12_CellRecords, 4 x 5 bytes
+// kCellRecords: now Scena12_CellRecords (symbols.toml). Scena12_CellRecords, 4 x 5 bytes
 constexpr unsigned kCellRecordCount = 4;
-constexpr std::uint32_t kCellHooks = 0x661778;  // Scena12_CellHooks, 4
+// kCellHooks: now Scena12_CellHooks (symbols.toml). Scena12_CellHooks, 4
 constexpr unsigned kCellHookCount = 4;
 
 // Callees nobody owns (above).

@@ -55,7 +55,7 @@ S32 S16(U v) { return static_cast<std::int16_t>(static_cast<std::uint16_t>(v)); 
 // 32 bits, unbounded either way (an index past the records reads or writes
 // whatever lies there, on both sides).
 bool IsMember(U actor) { return (actor & 0xFF) <= 2; }
-U PartyAt(U actor) { return at::kParty + (actor & 0xFF) * at::kPartyStride; }
+U PartyAt(U actor) { return ObjTrio_addr + (actor & 0xFF) * at::kPartyStride; }
 U EnemyAt(U actor) { return at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStride; }
 unsigned char* Party(U actor) { return At(PartyAt(actor)); }
 unsigned char* Enemy(U actor) { return At(EnemyAt(actor)); }
@@ -80,7 +80,7 @@ unsigned char* Flags2(U actor) { return IsMember(actor) ? Party(actor) + 0x134 :
 void OrLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32>(static_cast<U>(Long(p)) | bits)); }
 void AndLong(unsigned char* p, U bits) { SetLong(p, static_cast<S32>(static_cast<U>(Long(p)) & bits)); }
 
-unsigned char* Result() { return At(L(at::kResult)); }
+unsigned char* Result() { return At(BattleDamage_Result); }
 unsigned Actor() { return B(at::kActor); }
 unsigned Target() { return B(at::kTarget); }
 U Ability() { return L(at::kAbility) & 0xFFFF; }
@@ -93,11 +93,11 @@ unsigned char AbilityStep() { return B(bof3::addr::NameTable_Abilities + 3 + Abi
 // a = min(u16 0x939FEA * 100 / 500 + 50, 100) and
 // d = max(125 - u16 0x939F8A * 100 / 500, 50) (signed 32-bit, as there).
 S32 RollAttack() {
-    const S32 a = static_cast<S32>(W(at::kAttackerInt)) * 100 / 500 + 50;
+    const S32 a = BattleDamage_AttackerInt * 100 / 500 + 50;
     return a > 100 ? 100 : a;
 }
 S32 RollDefence() {
-    const S32 d = 125 - static_cast<S32>(W(at::kTargetInt)) * 100 / 500;
+    const S32 d = 125 - BattleDamage_TargetInt * 100 / 500;
     return d < 50 ? 50 : d;
 }
 
@@ -137,14 +137,14 @@ using Void0 = void (__cdecl*)();
 // for the last of the mask's bits 0x40 / 0x80 / 0x100 set (+0xB5..+0xB7 of a
 // member, +0xC5..+0xC7 of an enemy), 0 when none is.
 extern "C" int __cdecl Battle_PsiStatusDeathAffinity(unsigned target, unsigned mask) {
-    return ClassLookup(at::kPsiRates, target, mask);
+    return ClassLookup(Battle_PsiAffinityRates_addr, target, mask);
 }
 
 // original 0x44F770: the status rate - as Battle_PsiStatusDeathAffinity with
 // the table 0x64E96C, and 0xFFFF (the rolls' "cannot be resisted") when the
 // mask has none of 0x1C0.
 extern "C" int __cdecl Battle_StatusResistRate(unsigned actor, unsigned mask) {
-    const S32 v = ClassLookup(at::kResistRates, actor, mask);
+    const S32 v = ClassLookup(Battle_StatusResistRates_addr, actor, mask);
     return (mask & 0x1C0) == 0 ? 0xFFFF : v;
 }
 
@@ -248,7 +248,7 @@ extern "C" unsigned char __cdecl Battle_LacksArmour(unsigned actor, unsigned ite
 extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
     const bool member = IsMember(target);
     const U offset = member ? (target & 0xFF) * at::kPartyStride : ((target & 0xFF) - 3u) * at::kEnemyStride;
-    const U record = (member ? at::kParty : at::kEnemies) + offset;
+    const U record = (member ? ObjTrio_addr : at::kEnemies) + offset;
     const U word_at = record + (member ? 0x90u : 0x92u);
     const U cur = W(word_at);
     const U s = status & 0xFF;
@@ -333,7 +333,7 @@ extern "C" void __cdecl Effect_NoHitReaction(void) {
 // moved by the signed word `step`: above 50 made 50, below -25 made -25, else
 // the byte plus the step's byte.
 extern "C" void __cdecl Effect_StepStatByte(unsigned step, unsigned stat) {
-    unsigned char* const p = At(L(at::kResult) + (stat & 0xFF) + 0x14);
+    unsigned char* const p = At(BattleDamage_Result + (stat & 0xFF) + 0x14);
     const S32 v = static_cast<signed char>(*p) + S16(step);
     if (v > 50) *p = 50;
     else if (v < -25) *p = 0xE7;
@@ -648,7 +648,7 @@ extern "C" void __cdecl Effect129_TargetSoleFlag40000(void) {
 // The jmp leaves the caller's word and the part's eax in place: ours hands
 // the word on and answers the part's eax.
 extern "C" unsigned long __cdecl DragonCmd_PartDispatch(unsigned long through) {
-    const unsigned part = B(at::kDragonPart);
+    const unsigned part = BattleE4_Step3;
     if (part >= DragonCmd_Parts_count)
         bof3::Fatal("DragonCmd_PartDispatch: 0x904AA3 is %u, past the %u parts of DragonCmd_Parts - the original jumps "
                     "through the dword after (docs/rest_3d.md section 7)",

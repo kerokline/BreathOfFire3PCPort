@@ -238,7 +238,7 @@ U FxApplyLV(const U* a, U answer) {
 U FxSoundFlags(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 4 == 0)
-        Mem((n & 4) ? at::kGlowSounded : at::kRiseSounded)[0] = static_cast<unsigned char>((n & 8) ? 0 : 2 + (n >> 8) % 0xFE);
+        Mem((n & 4) ? Rest3e_GlowSounded_addr : Rest3e_RiseSounded_addr)[0] = static_cast<unsigned char>((n & 8) ? 0 : 2 + (n >> 8) % 0xFE);
     return answer;
 }
 
@@ -328,7 +328,7 @@ const std::uint8_t kKinds[] = {0x17, 0x1B, 0x1D, 0x21, 0x24, 0x30, 0x37, 0x41, 0
 // shards' model copy (24 faces of 0x28).
 const sh::Region kRegions[] = {
     {0x6761C4, 0x10},
-    {sh::at::kShards + sh::at::kShardsSize, at::kDust + at::kDustCount * at::kDustStride - (sh::at::kShards + sh::at::kShardsSize)},
+    {EffectKind30_Shards_addr + sh::at::kShardsSize, at::kDust + at::kDustCount * at::kDustStride - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
     {at::kModelCopy, 24 * at::kModelFace},
 };
 
@@ -356,12 +356,12 @@ void SeedSparks() {
         k[1] = static_cast<unsigned char>(sh::Next() % EffectGlowSparks_States_count);
         if (sh::Half()) k[2] = static_cast<unsigned char>(PickOf(0, 1, 2));
     }
-    Mem(at::kGlowSounded)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-    Mem(at::kRiseSounded)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    Mem(Rest3e_GlowSounded_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    Mem(Rest3e_RiseSounded_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
 }
 // The trail at 0x92C060: its screen floats, half the pairs equal or near.
 void SeedTrail() {
-    unsigned char* const t = Mem(kTrail);
+    unsigned char* const t = Mem(EffectKind30_Shards_addr + 0xe0);
     for (unsigned k = 0; k < 0x20; ++k) {
         unsigned char* const p = t + 0x20 * k + 0x10;
         SeedFloat(p);
@@ -399,7 +399,7 @@ void SeedDust() {
 // window's sides, read from the layout words in place.
 void SeedWindowStep(unsigned char* s) {
     const unsigned j = sh::Next() % 3;
-    const unsigned side = Word(Mem(at::kWindows + 8 * j + 4 + 2 * (sh::Next() % 2)));
+    const unsigned side = Word(Mem(Rest3e_Windows_addr + 8 * j + 4 + 2 * (sh::Next() % 2)));
     const unsigned step = side >> 4;
     s[9] = static_cast<unsigned char>(PickOf(step, step + 1, step == 0 ? 0 : step - 1, 0, 1, 0x20, sh::Next()));
     if (sh::Half()) s[7] = static_cast<unsigned char>(sh::Next() & 7);
@@ -423,10 +423,10 @@ void Seed(unsigned k) {
     case kLoadModel: {
         // +0x54 at a count byte (-2..24 faces), +0x50 at the source, both in the
         // area block (a field region): the copy stays inside its region
-        unsigned char* const count = Mem(sh::at::kAreaBlock + sh::Next() % 0x100);
+        unsigned char* const count = Mem(AreaMap_Header_addr + sh::Next() % 0x100);
         count[0] = static_cast<unsigned char>(static_cast<int>(sh::Next() % 27) - 2);
         SetLong(s + 0x54, static_cast<std::int32_t>(Key(count)));
-        SetLong(s + 0x50, static_cast<std::int32_t>(sh::at::kAreaBlock + 0x100 + sh::Next() % 0x1000));
+        SetLong(s + 0x50, static_cast<std::int32_t>(AreaMap_Header_addr + 0x100 + sh::Next() % 0x1000));
         break;
     }
     case kSparksClear: case kStartRise: case kStartBurst: case kSparksRun: case kSparkDraw: case kSparkGlow: case kSparkRise:
@@ -485,7 +485,7 @@ void Disturb(U h) {
     case 0: if (sh::InRegions(s, 0x80)) s[9] = static_cast<unsigned char>((v & 1) ? 1 : v >> 1); break;
     case 1: if (sh::InRegions(s, 0x80)) s[0xA] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
     case 2: if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
-    case 3: Mem((v & 1) ? at::kGlowSounded : at::kRiseSounded)[0] = static_cast<unsigned char>((v & 2) ? 0 : v >> 2); break;
+    case 3: Mem((v & 1) ? Rest3e_GlowSounded_addr : Rest3e_RiseSounded_addr)[0] = static_cast<unsigned char>((v & 2) ? 0 : v >> 2); break;
     case 4: SetWord(Mem(0x7E1BEC), v & 0x5070u); break;
     case 5: if (sh::InRegions(s, 0x80)) s[2] = static_cast<unsigned char>(v); break;
     default: break;

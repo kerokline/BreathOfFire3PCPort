@@ -172,15 +172,28 @@ unsigned char* Mem(U a) { return sh::Mem(a); }
 unsigned char& B(U a) { return Mem(a)[0]; }
 
 // The cells (rest_4e.cpp's).
-constexpr U kMode = 0x939A3E, kStep = 0x939A40, kStyle = 0x903A5A;
-constexpr U kCursor = 0x675F8C, kEdit = 0x675F98, kSavedTrack = 0x675FD0, kSlide = 0x675FD1, kTrack = 0x675FD2,
-            kItemSlide = 0x675FD4, kPages = 0x675FD8, kPage = 0x675FDB;
-constexpr U kEntries = 0x9046D0, kEntry = 0x9039F5, kTrackCounts = 0x9048AB;
+// kMode: now Rest4b_BoardState (symbols.toml).
+// kStep: now Rest4b_BoardStep (symbols.toml).
+// kStyle: now BattleDraw_Colour (symbols.toml).
+// kCursor: now Rest4c_Count (symbols.toml).
+constexpr U kEdit = 0x675F98,
+            kSavedTrack = 0x675FD0,
+            kSlide = 0x675FD1,
+            kTrack = 0x675FD2,
+            kItemSlide = 0x675FD4,
+            kPages = 0x675FD8,
+            kPage = 0x675FDB;
+// kEntry: now AreaW0c_TailSub (symbols.toml).
+constexpr U kEntries = 0x9046D0, kTrackCounts = 0x9048AB;
 constexpr U kMembers = 0x903A70;
-constexpr U kListA = 0x9039A0, kListAEntries = 0x9039C0, kListB = 0x904A90, kListBEntries = 0x904F00,
-            kListC = 0x937F80, kListCPairs = 0x904CA0;
+// kListA: now Rest4a_RemovedCount (symbols.toml).
+// kListB: now Rest4b_BusyA (symbols.toml).
+// kListC: now Rest4b_BusyB (symbols.toml).
+constexpr U kListAEntries = 0x9039C0, kListBEntries = 0x904F00, kListCPairs = 0x904CA0;
 constexpr U kWin0 = 0x803160;
-constexpr U kWinOff = kWin0 + 3, kTab = kWin0 + 0xA, kTop = kWin0 + 0xB, kRow = kWin0 + 0xC, kScroll = kWin0 + 0x12;
+// kTab: now BattleOdds_Win0Index (symbols.toml).
+// kRow: now Rest3a_Win0Cursor (symbols.toml).
+constexpr U kWinOff = kWin0 + 3, kTop = kWin0 + 0xB, kScroll = kWin0 + 0x12;
 constexpr U kPool = 0x803580;          // the script pool's offsets and, from +0x600, the seeded strings
 constexpr U kStrings = 0x600;          // 0x60 slots of 16 bytes
 constexpr U kPairMessages = 0x653180;
@@ -287,10 +300,10 @@ const sh::Region kRegions[] = {
     {0x903A94, 0x460},
     {0x904160, 0x400},
     {0x904700, 0x330},
-    {kListB, 4},
+    {Rest4b_BusyA_addr, 4},
     {kListCPairs, 0x140},
     {kListBEntries, 0x100},
-    {kListC, 8},
+    {Rest4b_BusyB_addr, 8},
     {0x9039A8, 0x58},
     {kPool, 0xC00},
     {0x903584, 0x10},
@@ -302,7 +315,7 @@ const sh::Region kRegions[] = {
 void PointMessage(unsigned id) { SetWord(Mem(kPool + 2 * id), kStrings + 16 * (sh::Next() % 0x60)); }
 
 void Seed(unsigned k) {
-    B(kStyle) = static_cast<unsigned char>(sh::Next() % 8);
+    B(BattleDraw_Colour_addr) = static_cast<unsigned char>(sh::Next() % 8);
     // the strings: 0x60 slots of up to 12 bytes (an early NUL often), so the two
     // halves of a random name fit the 32 bytes
     for (unsigned s = 0; s < 0x60; ++s) {
@@ -317,16 +330,16 @@ void Seed(unsigned k) {
     PointMessage(0xEC);
     for (unsigned kind = 0; kind < 8; ++kind) PointMessage(Word(Mem(kPairMessages + 4 * kind)));
     // the facility bytes near their bounds, then each dispatcher's below its table
-    B(kMode) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
-    B(kStep) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
+    B(Rest4b_BoardState_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
+    B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
     switch (k) {
-    case kMusicDispatch: B(kMode) = static_cast<unsigned char>(sh::Next() % CommuMusic_Modes_count); break;
-    case kOpenDispatch: B(kStep) = static_cast<unsigned char>(sh::Next() % CommuMusic_OpenSteps_count); break;
-    case kBrowseDispatch: B(kStep) = static_cast<unsigned char>(sh::Next() % CommuMusic_BrowseSteps_count); break;
-    case kCloseDispatch: B(kStep) = static_cast<unsigned char>(sh::Next() % CommuMusic_CloseSteps_count); break;
-    case kItemFrame: B(kMode) = static_cast<unsigned char>(sh::Next() % CommuItem_Modes_count); break;
-    case kStepDispatch: B(kStep) = static_cast<unsigned char>(sh::Next() % CommuItem_Steps_count); break;
-    case kRankDispatch: B(kMode) = static_cast<unsigned char>(sh::Next() % CommuRank_Modes_count); break;
+    case kMusicDispatch: B(Rest4b_BoardState_addr) = static_cast<unsigned char>(sh::Next() % CommuMusic_Modes_count); break;
+    case kOpenDispatch: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuMusic_OpenSteps_count); break;
+    case kBrowseDispatch: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuMusic_BrowseSteps_count); break;
+    case kCloseDispatch: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuMusic_CloseSteps_count); break;
+    case kItemFrame: B(Rest4b_BoardState_addr) = static_cast<unsigned char>(sh::Next() % CommuItem_Modes_count); break;
+    case kStepDispatch: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuItem_Steps_count); break;
+    case kRankDispatch: B(Rest4b_BoardState_addr) = static_cast<unsigned char>(sh::Next() % CommuRank_Modes_count); break;
     default: break;
     }
     // the members: present or not (bit 0 of +0xB) - all, none, or random
@@ -337,9 +350,9 @@ void Seed(unsigned k) {
     }
     // the entry (below the 60: two functions write through it), its kind and
     // that kind's track count (the 40 tracks), the row near the count
-    B(kEntry) = static_cast<unsigned char>(PickOf(0, 59, sh::Next() % 60, sh::Next() % 60));
+    B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(0, 59, sh::Next() % 60, sh::Next() % 60));
     const unsigned kind = PickOf(0, 1, 8, sh::Next() % 9, sh::Next() % 9);
-    unsigned char* const entry = Mem(kEntries + 8 * B(kEntry));
+    unsigned char* const entry = Mem(kEntries + 8 * B(AreaW0c_TailSub_addr));
     entry[1] = static_cast<unsigned char>(kind);
     entry[2] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
     entry[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x13, 0x18, 0xF, sh::Next()));
@@ -354,19 +367,19 @@ void Seed(unsigned k) {
     // the item window: shut or not, tab 0..4, top and row at the paging bounds,
     // the scroll word 0 most of the time, the row's item empty or not
     B(kWinOff) = static_cast<unsigned char>(PickOf(0, 0, 0, 1, 2));
-    B(kTab) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0, 3));
+    B(BattleOdds_Win0Index_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0, 3));
     const unsigned top = PickOf(0, 1, 8, 9, 0x6E, 0x6F, 0x76, 0x77, sh::Next() % 0x78);
     B(kTop) = static_cast<unsigned char>(top);
-    B(kRow) = static_cast<unsigned char>(PickOf(0, top, top - 1, top + 8, top + 9, 0x7E, 0x7F, sh::Next() % 0x80));
+    B(Rest3a_Win0Cursor_addr) = static_cast<unsigned char>(PickOf(0, top, top - 1, top + 8, top + 9, 0x7E, 0x7F, sh::Next() % 0x80));
     SetWord(Mem(kScroll), PickOf(0, 0, 0, 0x10, sh::Next()));
     B(kItemSlide) = static_cast<unsigned char>(PickOf(0, 1, 3, 4, 5, sh::Next()));
-    const U list = Long(Mem(bof3::addr::Inventory_IdLists + 4 * B(kTab)));
-    if (sh::Half()) Mem(list + B(kRow))[0] = 0;
+    const U list = Long(Mem(bof3::addr::Inventory_IdLists + 4 * B(BattleOdds_Win0Index_addr)));
+    if (sh::Half()) Mem(list + B(Rest3a_Win0Cursor_addr))[0] = 0;
     // the three lists: counts at their page bounds, the pairs' kinds below 8 and
     // entries below 60 for the four pages the counts reach
-    B(kListA) = static_cast<unsigned char>(PickOf(0, 1, 7, 8, 14, 15, 0x20, sh::Next()));
-    B(kListB) = static_cast<unsigned char>(PickOf(0, 1, 20, 21, 40, 0x3C, sh::Next()));
-    B(kListC) = static_cast<unsigned char>(PickOf(0, 1, 8, 9, 16, 0x20, sh::Next() % 0x21));
+    B(Rest4a_RemovedCount_addr) = static_cast<unsigned char>(PickOf(0, 1, 7, 8, 14, 15, 0x20, sh::Next()));
+    B(Rest4b_BusyA_addr) = static_cast<unsigned char>(PickOf(0, 1, 20, 21, 40, 0x3C, sh::Next()));
+    B(Rest4b_BusyB_addr) = static_cast<unsigned char>(PickOf(0, 1, 8, 9, 16, 0x20, sh::Next() % 0x21));
     for (unsigned i = 0; i < 32; ++i) {
         B(kListCPairs + 2 * i) = static_cast<unsigned char>(sh::Next() % 8);
         B(kListCPairs + 2 * i + 1) = static_cast<unsigned char>(sh::Next() % 60);
@@ -425,27 +438,27 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     const U v = h >> 8;
     switch (sh::DisturbCase(h, 19)) {
-    case 0: B(kStep) = b; break;
-    case 1: B(kMode) = b; break;
+    case 0: B(Rest4b_BoardStep_addr) = b; break;
+    case 1: B(Rest4b_BoardState_addr) = b; break;
     case 2: B(kSlide) = static_cast<unsigned char>(b % 6); break;
     case 3: B(kItemSlide) = static_cast<unsigned char>(b % 6); break;
     case 4: B(kWinOff) = static_cast<unsigned char>(b & 1); break;
-    case 5: B(kTab) = static_cast<unsigned char>(b % 5); break;
-    case 6: B(kRow) = static_cast<unsigned char>(b & 0x7F); break;
+    case 5: B(BattleOdds_Win0Index_addr) = static_cast<unsigned char>(b % 5); break;
+    case 6: B(Rest3a_Win0Cursor_addr) = static_cast<unsigned char>(b & 0x7F); break;
     case 7: SetWord(Mem(kScroll), b & 1 ? 0 : v | 1); break;
-    case 8: B(kEntry) = static_cast<unsigned char>(b % 60); break;
+    case 8: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(b % 60); break;
     case 9: Music_Track = static_cast<unsigned char>(b & 1 ? 0xFF : b); break;
     case 10: B(kEdit + (b & 7)) = static_cast<unsigned char>(v); break;
-    case 11: B(b % 3 == 0 ? kListA : b % 3 == 1 ? kListB : kListC) = static_cast<unsigned char>(v % 0x21); break;
+    case 11: B(b % 3 == 0 ? Rest4a_RemovedCount_addr : b % 3 == 1 ? Rest4b_BusyA_addr : Rest4b_BusyB_addr) = static_cast<unsigned char>(v % 0x21); break;
     case 12:   // every row of the first list, so the row being drawn moves
         for (unsigned i = 0; i < 0x20; ++i) B(kListAEntries + i) ^= static_cast<unsigned char>(0x80 | (b & 0x7F));
         break;
-    case 13: B(kStyle) = static_cast<unsigned char>(b % 8); break;
+    case 13: B(BattleDraw_Colour_addr) = static_cast<unsigned char>(b % 8); break;
     case 14: sh::Scratch(3)[b % 0x3F] = static_cast<unsigned char>(v); break;
     case 15: SetWord(Mem(kTrack), (v % 44) - 2); break;
-    case 16: B(kEntries + 8 * B(kEntry) + 2 + (b & 1)) = static_cast<unsigned char>(v); break;
+    case 16: B(kEntries + 8 * B(AreaW0c_TailSub_addr) + 2 + (b & 1)) = static_cast<unsigned char>(v); break;
     case 17: if (b & 1) B(kSavedTrack) = static_cast<unsigned char>(v); else B(kPage) = static_cast<unsigned char>(v); break;
-    case 18: B(kCursor) = b; break;
+    case 18: B(Rest4c_Count_addr) = b; break;
     default: break;
     }
 }

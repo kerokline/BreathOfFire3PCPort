@@ -122,11 +122,11 @@ bool CountDown() {
 
 // The capture record kPixIndex names, checked against the table's three.
 U PixRecord(const char* who) {
-    const unsigned k = At(at::kPixIndex)[0];
+    const unsigned k = Rest3f_PixIndex;
     if (k >= at::kPixRecords)
         bof3::Fatal("%s: the capture record 0x%X is %u, past the %u of 0x%X - the original reads EffectKindA1_States' "
                     "code pointers as a rectangle (docs/rest_3f.md section 7)",
-                    who, (unsigned)at::kPixIndex, k, at::kPixRecords, (unsigned)at::kPixTable);
+                    who, (unsigned)Rest3f_PixIndex_addr, k, at::kPixRecords, (unsigned)at::kPixTable);
     return at::kPixTable + 8 * k;
 }
 unsigned char* Particle(unsigned i) { return P(at::kParticles + i * at::kPartStride); }
@@ -151,7 +151,7 @@ void CaptureSprite(const char* who, bool a3) {
                     "Effect_Objects (docs/rest_3f.md section 7)",
                     who, (unsigned)k);
     unsigned char* const e = Effect_Objects + 0x80u * k;
-    At(at::kPixIndex)[0] = 1;
+    Rest3f_PixIndex = 1;
     SH_CALL(Gfx_ClearRect)(at::kCaptureX, at::kCaptureY, 0x80, 0x100);
     {
         const unsigned char* const from = P(UL(S() + 0x4C));
@@ -199,9 +199,9 @@ void ReadBack(const char* who) {
                                 static_cast<short>(Word(P(rec + 4))), static_cast<short>(Word(P(rec + 6)))};
     SH_AT(void (__cdecl*)(const short*, unsigned char*), at::kStoreImage)(rect, EffectKind30_Shards);
     unsigned char* const s = S();
-    SetUL(At(at::kPixCursor), static_cast<U>(reinterpret_cast<std::uintptr_t>(EffectKind30_Shards)));
-    SetUL(At(at::kPartCursor), at::kParticles);
-    SetWord(At(at::kPartCount), 0);
+    Rest3f_PixCursor = static_cast<U>(reinterpret_cast<std::uintptr_t>(EffectKind30_Shards));
+    Rest3f_PartCursor = at::kParticles;
+    Rest3f_PartCount = 0;
     s[9] = 0;
     NextState();
 }
@@ -238,17 +238,17 @@ void SplitPixels(const char* who) {
         if (SW(P(rec + 4)) > 0) {
             unsigned column = 0;
             do {
-                unsigned char* const pixel = P(UL(At(at::kPixCursor)));
+                unsigned char* const pixel = P(Rest3f_PixCursor);
                 const U v = Word(pixel);
                 if (v != 0) {
-                    SetWord(P(UL(At(at::kPartCursor))) + 2, v);
-                    StF(P(UL(At(at::kPartCursor))) + 4, F(o) - I(static_cast<U>(SW(P(rec)))) + I(column));
-                    StF(P(UL(At(at::kPartCursor))) + 8, F(o + 4) - I(static_cast<U>(SW(P(rec + 2)))) + I(row));
-                    StF(P(UL(At(at::kPartCursor))) + 0xC, F(o + 8));
-                    SetWord(At(at::kPartCount), Word(At(at::kPartCount)) + 1u);
-                    SetUL(At(at::kPartCursor), UL(At(at::kPartCursor)) + at::kPartStride);
+                    SetWord(P(Rest3f_PartCursor) + 2, v);
+                    StF(P(Rest3f_PartCursor) + 4, F(o) - I(static_cast<U>(SW(P(rec)))) + I(column));
+                    StF(P(Rest3f_PartCursor) + 8, F(o + 4) - I(static_cast<U>(SW(P(rec + 2)))) + I(row));
+                    StF(P(Rest3f_PartCursor) + 0xC, F(o + 8));
+                    Rest3f_PartCount = Rest3f_PartCount + 1u;
+                    Rest3f_PartCursor = Rest3f_PartCursor + at::kPartStride;
                 }
-                SetUL(At(at::kPixCursor), UL(At(at::kPixCursor)) + 2);
+                Rest3f_PixCursor = Rest3f_PixCursor + 2;
                 column = (column + 1) & 0xFFu;
             } while (static_cast<std::int32_t>(column) < SW(P(rec + 4)));
         }
@@ -711,7 +711,7 @@ extern "C" void __cdecl EffectKind9E_Flash(void) {
     s = S();
     SH_CALL(EffectKind9E_DrawPlate)(Point(s + 0x34), Point(s + 0xC));
     s = S();
-    unsigned char* const w = At(at::k9EWall);
+    unsigned char* const w = At(Rest3f_9EWall_addr);
     SetUL(w, 0u - UL(s + 0xC));
     SetUL(w + 4, 0u - UL(s + 0x10));
     SetUL(w + 8, 0u - UL(s + 0x14));
@@ -727,7 +727,7 @@ extern "C" void __cdecl EffectKind9E_Flash(void) {
 extern "C" void __cdecl EffectKind9E_Hold(void) {
     {
         unsigned char* const s = S();
-        unsigned char* const w = At(at::k9EWall);
+        unsigned char* const w = At(Rest3f_9EWall_addr);
         const U v = UL(w + 8) + Sar(UL(s + 0x20), 1);
         SetUL(w + 8, v);
         if (v == UL(s + 0x14)) SetUL(w + 8, 0u - v);
@@ -750,7 +750,7 @@ extern "C" void __cdecl EffectKind9E_Hold(void) {
             SetUL(s + 0x38, UL(s + 0x38) + 0xFFFFC000u);
     } else {
         unsigned char* const s = S();
-        SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(at::k9EWall)));
+        SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(Rest3f_9EWall_addr)));
     }
     unsigned char* const s = S();
     if (At(at::kCounter)[0] == s[7]) s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -799,7 +799,7 @@ extern "C" void __cdecl EffectKindA1_AimPixels(void) {
     unsigned char order[16];
     for (unsigned n = 0; n < 16; ++n) order[n] = static_cast<unsigned char>(n & 1);
     unsigned j = 0;
-    for (U i = 0; (i & 0xFFFFu) < Word(At(at::kPartCount)); ++i) {
+    for (U i = 0; (i & 0xFFFFu) < Rest3f_PartCount; ++i) {
         unsigned char* const part = Particle(i & 0xFFFFu);
         if ((i & 0xF) == 0) {
             Shuffle(order);
@@ -834,7 +834,7 @@ extern "C" void __cdecl EffectKindA1_AimPixels(void) {
 extern "C" void __cdecl EffectKindA1_MovePixels(void) {
     unsigned char* const sprite = P(UL(S() + 0x4C));
     sprite[0] = static_cast<unsigned char>(sprite[0] | 0x40);
-    for (U i = 0; (i & 0xFFFFu) < Word(At(at::kPartCount)); ++i) {
+    for (U i = 0; (i & 0xFFFFu) < Rest3f_PartCount; ++i) {
         unsigned char* const part = Particle(i & 0xFFFFu);
         if (part[0] != 0) {
             if (S()[6] == 0) {
@@ -877,7 +877,7 @@ extern "C" void __cdecl EffectKindA3_AimPixels(void) {
     unsigned char order[16];
     for (unsigned n = 0; n < 16; ++n) order[n] = static_cast<unsigned char>(n & 1);
     unsigned j = 0;
-    for (U i = 0; (i & 0xFFFFu) < Word(At(at::kPartCount)); ++i) {
+    for (U i = 0; (i & 0xFFFFu) < Rest3f_PartCount; ++i) {
         unsigned char* const part = Particle(i & 0xFFFFu);
         if ((i & 0xF) == 0) {
             Shuffle(order);
@@ -900,7 +900,7 @@ extern "C" void __cdecl EffectKindA3_AimPixels(void) {
 extern "C" void __cdecl EffectKindA3_MovePixels(void) {
     unsigned char* const sprite = P(UL(S() + 0x4C));
     sprite[0] = static_cast<unsigned char>(sprite[0] | 0x40);
-    for (U i = 0; (i & 0xFFFFu) < Word(At(at::kPartCount)); ++i) {
+    for (U i = 0; (i & 0xFFFFu) < Rest3f_PartCount; ++i) {
         unsigned char* const part = Particle(i & 0xFFFFu);
         if (part[0] != 0) {
             if (part[1] != 0) {

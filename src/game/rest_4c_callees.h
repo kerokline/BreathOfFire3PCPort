@@ -38,31 +38,31 @@ constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
 //
 // The message-choice bytes 0x939A3E.. (area_w4c's kChoiceByte3E is the first):
 // the games' phase, step and state; a message script's choice lands in them.
-constexpr std::uint32_t kPhase = 0x939A3E;   // u8: the game's phase (its Phases table)
+// kPhase: now Rest4b_BoardState (symbols.toml). u8: the game's phase (its Phases table)
 constexpr std::uint32_t kStep = 0x939A3F;    // u8: a state's step (the Bet / Deal / Start tables)
 constexpr std::uint32_t kState = 0x939A40;   // u8: the phase's state (the Open / Play tables)
-constexpr std::uint32_t kAgain = 0x939A41;   // u8: the second game's "again" choice (0: a new game)
+// kAgain: now Rest4c_Again (symbols.toml). u8: the second game's "again" choice (0: a new game)
 // The field hook's tail state (area_w*'s kTailState) and the game's index R4B
 // dispatches by (CommuGame table 0x652A84, R4B's).
 constexpr std::uint32_t kTailState = 0x9039F4;
 // The community block 0x675F78.. (R4B's screen cells before 0x675F88).
-constexpr std::uint32_t kSavedSub = 0x675F78;   // u16: 0x675F7A kept by Commu_PushSubscreen
-constexpr std::uint32_t kSub = 0x675F7A;        // u16: R4B's sub-screen
-constexpr std::uint32_t kSub7C = 0x675F7C;      // u8
-constexpr std::uint32_t kSavedState = 0x675F81; // u8: 0x939A40 kept by Commu_PushSubscreen
+// kSavedSub: now Rest4b_KeptHelp (symbols.toml). u16: 0x675F7A kept by Commu_PushSubscreen
+// kSub: now Rest4b_Help (symbols.toml). u16: R4B's sub-screen
+// kSub7C: now Rest4b_Toggle (symbols.toml). u8
+// kSavedState: now Rest4b_KeptStep (symbols.toml). u8: 0x939A40 kept by Commu_PushSubscreen
 constexpr std::uint32_t kBet = 0x675F88;        // s32: the stake, then the winnings (the first game); 500 (the second)
 constexpr std::uint32_t kCount = 0x675F8C;      // s8: the first game's digit cursor, then its picks; the second's guess row
-constexpr std::uint32_t kCursor = 0x675F8D;     // s8: a cursor; the first game's shown-card bits; the second's prize rank
-constexpr std::uint32_t kTurn = 0x675F8E;       // s8: the first game's card being turned (1..8)
-constexpr std::uint32_t kLost = 0x675F8F;       // u8: the first game's lost flag
+// kCursor: now Rest4c_Cursor (symbols.toml). s8: a cursor; the first game's shown-card bits; the second's prize rank
+// kTurn: now Rest4c_Turn (symbols.toml). s8: the first game's card being turned (1..8)
+// kLost: now Rest4c_Lost (symbols.toml). u8: the first game's lost flag
 constexpr std::uint32_t kMusic = 0x675F90;      // u8 (read as a dword & 0xFF): Music_Track kept
-constexpr std::uint32_t kSlide = 0x675F95;      // u8: a slide's or a wait's counter
+// kSlide: now Rest4d_Count (symbols.toml). u8: a slide's or a wait's counter
 constexpr std::uint32_t kCards = 0x675F98;      // u8 x 9: the first game's nine values; the second's three digits
 constexpr std::uint32_t kPicks = 0x675FA1;      // u8 x 9: the first game's picks at +1..+8 (0 / 1)
 constexpr std::uint32_t kRecords = 0x675F9B;    // 8 x 5 bytes: the second game's guesses (3 digits, hits, blows)
 // The bet's three digits (DamageScratch's block, docs: hundreds, tens, ones).
 constexpr std::uint32_t kDigits = 0x903850;     // s8 x 3: ones +0, tens +1, hundreds +2
-constexpr std::uint32_t kStyle = 0x903A5A;      // u8: the window style Menu_DrawBox is handed
+// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is handed
 constexpr std::uint32_t kTextB = 0x904D00;      // Text_Records' second record (sprintf and the prize name)
 
 // --- image tables read in place (.data / .rdata; their bytes are not copied here) --

@@ -56,7 +56,7 @@ void Palettes() { SH_AT(void (__cdecl*)(), at::kPalettes)(); }
 
 // Field member i (ObjTrio + 0x14C i, unchecked) and its character id +0x89.
 unsigned char* Member(unsigned i) { return ObjTrio + i * at::kMemberStride; }
-unsigned char MemberId(unsigned i) { return At(at::kMemberIds + i * at::kMemberStride)[0]; }
+unsigned char MemberId(unsigned i) { return At(ObjTrio_addr + 0x89 + i * at::kMemberStride)[0]; }
 
 // The character record of MoveScript_EffectState[k] (CharacterRecords, 0xA4
 // each; the byte found unchecked), the index read at the call.
@@ -66,7 +66,7 @@ unsigned char* RecordOf(unsigned k) {
 
 // Both 3-byte party lists 0x904062..0x904067 to 0xFF.
 void EmptyLists() {
-    unsigned char* const lists = At(at::kPartyLists);
+    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
     for (unsigned i = 0; i < 6; ++i) lists[i] = 0xFF;
 }
 
@@ -717,7 +717,7 @@ extern "C" void __cdecl Scena13_Party765(void) {
 // 0x533E00.
 extern "C" void __cdecl Scena13_SaveParty7(void) {
     unsigned char* const saved = At(at::kSaved);
-    const unsigned char* const lists = At(at::kPartyLists);
+    const unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
     for (unsigned i = 0; i < 3; ++i) {
         saved[i] = lists[i];
         saved[3 + i] = lists[3 + i];
@@ -750,7 +750,7 @@ extern "C" void __cdecl Scena13_RestoreSaved(void) {
     Join(s[0]);
     Join(s[1]);
     Join(s[2]);
-    unsigned char* const lists = At(at::kPartyLists);
+    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
     for (unsigned i = 0; i < 3; ++i) lists[3 + i] = saved[3 + i];
 }
 
@@ -854,7 +854,7 @@ extern "C" void __cdecl Scena14_Party015Lists785(void) {
     Join(1);
     Join(5);
     Palettes();
-    unsigned char* const lists = At(at::kPartyLists);
+    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
     lists[3] = 7;
     lists[4] = 8;
     lists[5] = 5;

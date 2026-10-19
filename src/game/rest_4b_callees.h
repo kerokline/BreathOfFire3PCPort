@@ -16,76 +16,76 @@ namespace at {
 
 // --- the state tables the group's dispatchers read (one run of code words,
 // read from several starting cells; each count runs to the end of its run) ---
-constexpr std::uint32_t kTail14States = 0x6529E4;   // CommuTail14_States: 11, by the s8 0x9039F4 (CommuTail14_Dispatch)
-constexpr std::uint32_t kTail21States = 0x6529FC;   // CommuTail21_States: 5 (= CommuTail14_States[6..10]), by 0x9039F4
-constexpr std::uint32_t kTail22States = 0x652A08;   // CommuTail22_States: 2 (= CommuTail14_States[9..10]), by 0x9039F4
-constexpr std::uint32_t kTail23States = 0x652A70;   // CommuTail23_States: 21, by 0x9039F4 (CommuTail23_Dispatch)
-constexpr std::uint32_t kTailGames = 0x652A84;      // CommuTail_GameStates: 16 (= CommuTail23_States[5..20]), by the u8 0x9039F5
-constexpr std::uint32_t kTail24States = 0x652A94;   // CommuTail24_States: 12 (= CommuTail23_States[9..20]), by 0x9039F4
-constexpr std::uint32_t kTail25States = 0x652AA8;   // CommuTail25_States: 7 (= CommuTail23_States[14..20]), by 0x9039F4
-constexpr std::uint32_t kTail26States = 0x652AE4;   // CommuTail26_States: 5, by 0x9039F4 (CommuTail26_Dispatch)
-constexpr std::uint32_t kBoardStates = 0x652B0C;    // CommuBoard_States: 14, by the u8 0x939A3E (CommuBoard_Dispatch)
-constexpr std::uint32_t kBoardModes = 0x652B18;     // CommuBoard_ModeStates: 11 (= CommuBoard_States[3..13]), by the u8 0x675F86
-constexpr std::uint32_t kBoardSteps = 0x652B24;     // CommuBoard_Steps: 8 (= CommuBoard_States[6..13]), by the u8 0x939A40
-constexpr std::uint32_t kBoardStepsB = 0x652B2C;    // CommuBoard_StepsB: 6 (= CommuBoard_States[8..13]), by the u8 0x939A40
+// kTail14States: now CommuTail14_States (symbols.toml). CommuTail14_States: 11, by the s8 0x9039F4 (CommuTail14_Dispatch)
+// kTail21States: now CommuTail21_States (symbols.toml). CommuTail21_States: 5 (= CommuTail14_States[6..10]), by 0x9039F4
+// kTail22States: now CommuTail22_States (symbols.toml). CommuTail22_States: 2 (= CommuTail14_States[9..10]), by 0x9039F4
+// kTail23States: now CommuTail23_States (symbols.toml). CommuTail23_States: 21, by 0x9039F4 (CommuTail23_Dispatch)
+// kTailGames: now CommuTail_GameStates (symbols.toml). CommuTail_GameStates: 16 (= CommuTail23_States[5..20]), by the u8 0x9039F5
+// kTail24States: now CommuTail24_States (symbols.toml). CommuTail24_States: 12 (= CommuTail23_States[9..20]), by 0x9039F4
+// kTail25States: now CommuTail25_States (symbols.toml). CommuTail25_States: 7 (= CommuTail23_States[14..20]), by 0x9039F4
+// kTail26States: now CommuTail26_States (symbols.toml). CommuTail26_States: 5, by 0x9039F4 (CommuTail26_Dispatch)
+// kBoardStates: now CommuBoard_States (symbols.toml). CommuBoard_States: 14, by the u8 0x939A3E (CommuBoard_Dispatch)
+// kBoardModes: now CommuBoard_ModeStates (symbols.toml). CommuBoard_ModeStates: 11 (= CommuBoard_States[3..13]), by the u8 0x675F86
+// kBoardSteps: now CommuBoard_Steps (symbols.toml). CommuBoard_Steps: 8 (= CommuBoard_States[6..13]), by the u8 0x939A40
+// kBoardStepsB: now CommuBoard_StepsB (symbols.toml). CommuBoard_StepsB: 6 (= CommuBoard_States[8..13]), by the u8 0x939A40
 
 // --- the field tail's cells (Field_ModeTailKinds' kind, its state, its argument) ---
-constexpr std::uint32_t kTailKind = 0x9039F3;       // Field_ModeTailKinds' index (s8)
-constexpr std::uint32_t kTailState = 0x9039F4;      // s8: the armed kind's state
-constexpr std::uint32_t kTailArg = 0x9039F5;        // u8: the kind's argument (a record or building index)
-constexpr std::uint32_t kTailObject = 0x939A38;     // the field object the arming handler kept (its +0x85, +8, +0x88)
+// kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed kind's state
+// kTailArg: now AreaW0c_TailSub (symbols.toml). u8: the kind's argument (a record or building index)
+// kTailObject: now Rest4d_Pointer (symbols.toml). the field object the arming handler kept (its +0x85, +8, +0x88)
 
 // --- the board's cells -------------------------------------------------------------
-constexpr std::uint32_t kBoardFlag = 0x939A3C;      // picks the stream (8 when 0, else 0xA)
+// kBoardFlag: now Rest4b_BoardFlag (symbols.toml). picks the stream (8 when 0, else 0xA)
 constexpr std::uint32_t kBoardTrack = 0x939A3D;     // the music track kept across the stream
-constexpr std::uint32_t kBoardState = 0x939A3E;     // CommuBoard_States' index
-constexpr std::uint32_t kBoardStep = 0x939A40;      // CommuBoard_Steps' / _StepsB' index
-constexpr std::uint32_t kCursorMode = 0x675F74;     // the grid cursor's mode: 0, 1, 2
-constexpr std::uint32_t kCursorA = 0x675F75;
-constexpr std::uint32_t kCursorB = 0x675F76;
-constexpr std::uint32_t kKeptHelp = 0x675F78;       // u16: the help line kept by R4C's 0x459EE0
-constexpr std::uint32_t kHelp = 0x675F7A;           // u16: the help line's message (0xFFFF none)
-constexpr std::uint32_t kToggle = 0x675F7C;         // a 0 / 1 toggle (the yes / no row)
-constexpr std::uint32_t kPickC = 0x675F7D;
-constexpr std::uint32_t kPickB = 0x675F7E;
+// kBoardState: now Rest4b_BoardState (symbols.toml). CommuBoard_States' index
+// kBoardStep: now Rest4b_BoardStep (symbols.toml). CommuBoard_Steps' / _StepsB' index
+// kCursorMode: now Rest4b_CursorMode (symbols.toml). the grid cursor's mode: 0, 1, 2
+// kCursorA: now Rest4b_CursorA (symbols.toml).
+// kCursorB: now Rest4b_CursorB (symbols.toml).
+// kKeptHelp: now Rest4b_KeptHelp (symbols.toml). u16: the help line kept by R4C's 0x459EE0
+// kHelp: now Rest4b_Help (symbols.toml). u16: the help line's message (0xFFFF none)
+// kToggle: now Rest4b_Toggle (symbols.toml). a 0 / 1 toggle (the yes / no row)
+// kPickC: now Rest4b_PickC (symbols.toml).
+// kPickB: now Rest4b_PickB (symbols.toml).
 constexpr std::uint32_t kPick = 0x675F7F;           // s8: the picked slot
-constexpr std::uint32_t kListCursor = 0x675F80;     // s8: the list cursor
-constexpr std::uint32_t kKeptStep = 0x675F81;       // the step kept by R4C's 0x459EE0
-constexpr std::uint32_t kPickE = 0x675F82;
-constexpr std::uint32_t kPickD = 0x675F83;
-constexpr std::uint32_t kSavedB = 0x675F84;         // the grid cursor kept on confirm (0x675F76, 0x675F75, 0x675F74)
-constexpr std::uint32_t kSavedA = 0x675F85;
-constexpr std::uint32_t kSavedMode = 0x675F86;
+// kListCursor: now Rest4b_ListCursor (symbols.toml). s8: the list cursor
+// kKeptStep: now Rest4b_KeptStep (symbols.toml). the step kept by R4C's 0x459EE0
+// kPickE: now Rest4b_PickE (symbols.toml).
+// kPickD: now Rest4b_PickD (symbols.toml).
+// kSavedB: now Rest4b_SavedB (symbols.toml). the grid cursor kept on confirm (0x675F76, 0x675F75, 0x675F74)
+// kSavedA: now Rest4b_SavedA (symbols.toml).
+// kSavedMode: now Rest4b_SavedMode (symbols.toml).
 
 // --- the community records (the save block) ------------------------------------------
-constexpr std::uint32_t kCountA = 0x9046CA;         // s8, printed by the panel
+// kCountA: now Rest4b_CountA (symbols.toml). s8, printed by the panel
 constexpr std::uint32_t kListCount = 0x9046CB;      // the lists' length
-constexpr std::uint32_t kCountC = 0x9046CC;         // printed by the panel
+// kCountC: now Rest4a_LevelLit (symbols.toml). printed by the panel
 constexpr std::uint32_t kMembers = 0x9046D0;        // 60 records of 8: +0 used, +1 slot, +2 item, +3 two nibbles, +4 a time
 constexpr std::uint32_t kMemberStride = 8;
 constexpr std::uint32_t kMembersEnd = 0x9048B0;
 constexpr std::uint32_t kSlots = 0x9048A8;          // by a slot 1..8: 0x9048B0 + 8 * (slot - 1); +0 kind, +1, +2, +3, +4 a time
 constexpr std::uint32_t kNames = 0x9048F0;          // 5 bytes a record
-constexpr std::uint32_t kClock = 0x904134;          // u32: the time the records' +4 are taken from
-constexpr std::uint32_t kSoundBankBits = 0x90412C;  // bit 7 set, the low seven pick the sound bank
-constexpr std::uint32_t kMusicTrack = 0x904131;     // Music_Track
+// kClock: now Rest4a_Clock (symbols.toml). u32: the time the records' +4 are taken from
+// kSoundBankBits: now AreaW0b_PartySet (symbols.toml). bit 7 set, the low seven pick the sound bank
+// kMusicTrack: now Music_Track (symbols.toml). Music_Track
 
 // --- cells read by the game's other code -----------------------------------------------
-constexpr std::uint32_t kRequest = 0x66C7D8;        // Field_Request
+// kRequest: now Field_Request (symbols.toml). Field_Request
 constexpr std::uint32_t kMessageIndex = 0x7DEE48;   // MsgBoxState's message index (u16)
-constexpr std::uint32_t kScriptFlags = 0x9039A0;    // Field_ScriptFlags
+// kScriptFlags: now Rest4a_RemovedCount (symbols.toml). Field_ScriptFlags
 constexpr std::uint32_t kScriptFlags2 = 0x905BA4;   // Field_ScriptFlags2 (u16)
-constexpr std::uint32_t kBusyA = 0x904A90;
-constexpr std::uint32_t kBusyB = 0x937F80;
+// kBusyA: now Rest4b_BusyA (symbols.toml).
+// kBusyB: now Rest4b_BusyB (symbols.toml).
 constexpr std::uint32_t kSpriteCurrent = 0x937F88;  // Sprite_Current
-constexpr std::uint32_t kClutDirty = 0x937F90;      // Gfx_ClutStripDirty
+// kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
 constexpr std::uint32_t kFrame = 0x937F94;          // Frame_Counter
-constexpr std::uint32_t kPacketNext = 0x7E0670;     // Gfx_PacketNext
-constexpr std::uint32_t kPressed = 0x7E1BEC;        // Input_Pressed (u16)
-constexpr std::uint32_t kConfirm = 0x90358E;        // Field_ConfirmButtons (u16)
-constexpr std::uint32_t kCancel = 0x903590;         // Field_CancelButtons (u16)
-constexpr std::uint32_t kColour = 0x903A5A;         // the window style byte
-constexpr std::uint32_t kArea = 0x904EFC;           // Game_AreaNumber (u16)
+// kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
+// kPressed: now Input_Pressed (symbols.toml). Input_Pressed (u16)
+// kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
+// kColour: now BattleDraw_Colour (symbols.toml). the window style byte
+// kArea: now Game_AreaNumber (symbols.toml). Game_AreaNumber (u16)
 constexpr std::uint32_t kTextRecords = 0x904CE0;    // Text_Records' first 16 bytes
 constexpr std::uint32_t kTextBuffer = 0x904BA0;     // the text scratch sprintf writes
 constexpr std::uint32_t kMessagePools = 0x803580;   // MessagePools
@@ -111,7 +111,7 @@ constexpr std::uint32_t kAreaLimits = 0x653601;     // a byte by Game_AreaNumber
 constexpr std::uint32_t kPanelLabel = 0x669E10;     // the panel's label text
 constexpr std::uint32_t kListTextA = 0x669E68;      // pointers: the record list's lines
 constexpr std::uint32_t kListTexts = 0x669EE0;      // pointers: the lists' lines
-constexpr std::uint32_t kCountFormat = 0x64D3EC;    // Boss26Fx_CountFormat
+// kCountFormat: now Boss26Fx_CountFormat (symbols.toml). Boss26Fx_CountFormat
 constexpr std::uint32_t kNumberFormat = 0x5E10C0;   // Area08_MessageFormat
 
 // --- other groups' functions of this wave, by address --------------------------------

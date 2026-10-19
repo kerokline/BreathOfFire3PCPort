@@ -316,9 +316,9 @@ void Move(std::uint32_t n) {
     const std::uint32_t v = n >> 8;
     switch (n % 8) {
     case 0: Field_MemberCount = static_cast<unsigned char>(v % 5); break;
-    case 1: sh::Mem(at::kMemberIds + (v % 3) * at::kMemberStride)[0] = Pick4(v >> 4); break;
+    case 1: sh::Mem(ObjTrio_addr + 0x89 + (v % 3) * at::kMemberStride)[0] = Pick4(v >> 4); break;
     case 2: sh::Mem(at::kSaved + v % 6)[0] = Pick4(v >> 4); break;
-    case 3: sh::Mem(at::kPartyLists + v % 6)[0] = Pick4(v >> 4); break;
+    case 3: sh::Mem(Cond_Flags_addr + 0xd2 + v % 6)[0] = Pick4(v >> 4); break;
     case 4: MoveScript_EffectState[v % 24] = static_cast<unsigned char>((v >> 5) % 8); break;
     case 5: {
         unsigned char* const r = sh::Mem(bof3::addr::CharacterRecords + (v % 8) * at::kRecordStride);
@@ -371,10 +371,10 @@ void Seed(unsigned k) {
     // 0x51AB50's return address: those two cannot be run past 4)
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 5);
     // the ids the entries compare with 7, 2 and 4, and others
-    for (unsigned i = 0; i < 3; ++i) sh::Mem(at::kMemberIds + i * at::kMemberStride)[0] = Pick4(sh::Next());
+    for (unsigned i = 0; i < 3; ++i) sh::Mem(ObjTrio_addr + 0x89 + i * at::kMemberStride)[0] = Pick4(sh::Next());
     for (unsigned i = 0; i < 6; ++i) sh::Mem(at::kSaved + i)[0] = Pick4(sh::Next());
     if (sh::Half())
-        for (unsigned i = 0; i < 6; ++i) sh::Mem(at::kPartyLists + i)[0] = Pick4(sh::Next());
+        for (unsigned i = 0; i < 6; ++i) sh::Mem(Cond_Flags_addr + 0xd2 + i)[0] = Pick4(sh::Next());
     // every index names one of the eight records in the region
     for (unsigned i = 0; i < 24; ++i) MoveScript_EffectState[i] = static_cast<unsigned char>(sh::Next() % 8);
     // the caller's ecx: the entry's index in the tables that hold it (Scenario_CallA

@@ -49,7 +49,7 @@ short S16(U address) { return static_cast<short>(Word(At(address))); }
 void PutF(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 void PutFBits(unsigned char* p, U bits) { std::memcpy(p, &bits, sizeof bits); }
 void PutW(unsigned char* p, unsigned v) { SetWord(p, v); }
-unsigned char* Packet() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(L(at::kPacketNext))); }
+unsigned char* Packet() { return Gfx_PacketNext; }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
 // A state table's handler, jumped to as the original's `jmp [table + 4 *
@@ -88,7 +88,7 @@ U SlotToWrite(unsigned slot, const char* who) {
 }
 
 // The field tail's state byte, moved by one as the original's inc / dec do.
-void StateBy(int d) { B(at::kTailState) = static_cast<unsigned char>(B(at::kTailState) + d); }
+void StateBy(int d) { AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + d); }
 
 // The flashing intensity three draws share: from Frame_Counter's bits 1..2,
 // counted up while bit 3 is set and down while it is clear, +0x3F.
@@ -125,20 +125,20 @@ void R4EHand(int x, int y, unsigned flash) {
 // original 0x456D50: Field_ModeTailKinds[14]: jmp [CommuTail14_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 11).
 extern "C" void __cdecl CommuTail14_Dispatch(void) {
-    Jump(at::kTail14States, 11, SB(at::kTailState), "CommuTail14_Dispatch");
+    Jump(CommuTail14_States_addr, 11, AreaW0c_TailState, "CommuTail14_Dispatch");
 }
 
 // original 0x456D60: CommuTail14_States[0]: while a message is open
 // (Field_Request 2) nothing; once the message box shows message 0xF9 the next
 // state; else message 0xF8 opened and Field_Request 2.
 extern "C" void __cdecl CommuTail14_OpenF8(void) {
-    if (B(at::kRequest) == 2) return;
+    if (Field_Request == 2) return;
     if (W(at::kMessageIndex) == 0xF9) {
         StateBy(1);
         return;
     }
     SH_CALL(Msg_OpenScript)(0xF8);
-    B(at::kRequest) = 2;
+    Field_Request = 2;
 }
 
 // original 0x456D90: CommuTail14_States[1]: LoadDatFile(0x12B), the next state.
@@ -154,13 +154,13 @@ extern "C" void __cdecl CommuTail14_LoadDat(void) {
 extern "C" void __cdecl CommuTail_WaitLoad(void) {
     if (SH_CALL(File_LoadDone)() == 0) return;
     SH_CALL(Gfx_ClutStripRestore)();
-    B(at::kClutDirty) = 1;
+    Gfx_ClutStripDirty = 1;
     B(at::kBoardTrack + 1) = 0;   // 0x939A3E, CommuBoard_States' index
     B(at::kBoardTrack + 3) = 0;   // 0x939A40
     B(at::kBoardTrack + 2) = 0;   // 0x939A3F
     B(at::kBoardTrack + 4) = 0;   // 0x939A41
-    B(at::kBoardFlag) = 0;        // 0x939A3C
-    B(at::kBoardTrack) = 0;       // 0x939A3D
+    Rest4b_BoardFlag = 0;         // 0x939A3C
+    Rest4d_Again = 0;             // 0x939A3D
     StateBy(1);
 }
 
@@ -168,8 +168,8 @@ extern "C" void __cdecl CommuTail_WaitLoad(void) {
 // [19], CommuTail26_States[3]): bit 7 of 0x90412C set, the sound bank its low
 // seven bits name + 0x2C2 loaded (Snd_LoadBankFile), the next state.
 extern "C" void __cdecl CommuTail_LoadSoundBank(void) {
-    const unsigned char bits = static_cast<unsigned char>(B(at::kSoundBankBits) | 0x80);
-    B(at::kSoundBankBits) = bits;
+    const unsigned char bits = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
+    AreaW0b_PartySet = bits;
     SH_CALL(Snd_LoadBankFile)((bits & 0x7Fu) + 0x2C2);
     StateBy(1);
 }
@@ -189,18 +189,18 @@ extern "C" void __cdecl CommuTail14_End(void) {
 // original 0x456E40: Sprite_Current = the object 0x939A38 holds; its +8 (the
 // facing) = its +0x85, and Sprite_FaceDirection(+8 read back).
 extern "C" void __cdecl CommuTail_RestoreFacing(void) {
-    const U object = L(at::kTailObject);
+    const U object = Rest4d_Pointer;
     PutL(at::kSpriteCurrent, object);
     unsigned char* const o = At(object);
     o[8] = o[0x85];
-    const unsigned char facing = At(L(at::kSpriteCurrent))[8];
+    const unsigned char facing = Sprite_Current[8];
     SH_CALL(Sprite_FaceDirection)(facing);
 }
 
 // original 0x456E70: Field_ModeTailKinds[21]: jmp [CommuTail21_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 5).
 extern "C" void __cdecl CommuTail21_Dispatch(void) {
-    Jump(at::kTail21States, 5, SB(at::kTailState), "CommuTail21_Dispatch");
+    Jump(CommuTail21_States_addr, 5, AreaW0c_TailState, "CommuTail21_Dispatch");
 }
 
 // original 0x456E80: CommuTail14_States[6], CommuTail21_States[0]: the time
@@ -218,8 +218,8 @@ extern "C" void __cdecl CommuTail_TimedGift(void) {
         {0x29, 0x1A, 0}, {0x33, 0x1B, 0}, {0x3D, 0x1C, 0}, {0x47, 0x1D, 0}, {0x4D, 0x1B, 3},
         {0x4E, 0x1D, 0}, {0x51, 0x1E, 0}, {0x5B, 8, 0},    {0xC9, 0x19, 3}, {0x1F4, 0x1A, 3},
     };
-    const unsigned arg = B(at::kTailArg);
-    const U elapsed = L(at::kClock) - L(at::kMembers + 4 + 8 * arg);
+    const unsigned arg = AreaW0c_TailSub;
+    const U elapsed = Rest4a_Clock - L(at::kMembers + 4 + 8 * arg);
     int k = 0;
     while (k < 20 && elapsed >= kRows[k].bound) ++k;
     --k;
@@ -233,21 +233,21 @@ extern "C" void __cdecl CommuTail_TimedGift(void) {
         const unsigned char added = SH_CALL(Inventory_Add)(category, item, 1);
         if (added == 0) {
             StateBy(2);
-            B(at::kRequest) = 2;
+            Field_Request = 2;
             return;
         }
-        const U clock = L(at::kClock);
-        PutL(Member(B(at::kTailArg), "CommuTail_TimedGift") + 4, clock);
+        const U clock = Rest4a_Clock;
+        PutL(Member(AreaW0c_TailSub, "CommuTail_TimedGift") + 4, clock);
     }
     StateBy(1);
-    B(at::kRequest) = 2;
+    Field_Request = 2;
 }
 
 // original 0x4570C0: CommuTail14_States[7], [10], CommuTail23_States[15]: once
 // no message is open (Field_Request 0), the tail disarmed and a tail jump to
 // CommuTail_RestoreFacing.
 extern "C" void __cdecl CommuTail_EndAfterMessage(void) {
-    if (B(at::kRequest) != 0) return;
+    if (Field_Request != 0) return;
     SH_CALL(Area131_DisarmTail)();
     SH_CALL(CommuTail_RestoreFacing)();
 }
@@ -255,16 +255,16 @@ extern "C" void __cdecl CommuTail_EndAfterMessage(void) {
 // original 0x4570E0: CommuTail14_States[8]: once no message is open, message
 // 0x97, the state before, Field_Request 2.
 extern "C" void __cdecl CommuTail_Open97(void) {
-    if (B(at::kRequest) != 0) return;
+    if (Field_Request != 0) return;
     SH_CALL(Msg_OpenScript)(0x97);
     StateBy(-1);
-    B(at::kRequest) = 2;
+    Field_Request = 2;
 }
 
 // original 0x457110: Field_ModeTailKinds[22]: jmp [CommuTail22_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 2).
 extern "C" void __cdecl CommuTail22_Dispatch(void) {
-    Jump(at::kTail22States, 2, SB(at::kTailState), "CommuTail22_Dispatch");
+    Jump(CommuTail22_States_addr, 2, AreaW0c_TailState, "CommuTail22_Dispatch");
 }
 
 // original 0x457120: CommuTail14_States[9], CommuTail22_States[0]: by the
@@ -280,18 +280,18 @@ extern "C" void __cdecl CommuTail22_Dispatch(void) {
 // (the return address); ours aborts (section 5).
 extern "C" void __cdecl CommuTail_RandomGift(void) {
     static const unsigned char kTiers[3][4] = {{0x41, 0x1E, 5, 0x64}, {0x37, 0x19, 0x14, 0x64}, {0x19, 0x1E, 0x1E, 0xF}};
-    const unsigned arg = B(at::kTailArg);
+    const unsigned arg = AreaW0c_TailSub;
     const unsigned char mark = B(at::kMembers + 2 + 8 * arg);
     if (mark == 3) {
         SH_CALL(Msg_OpenScript)(0x52);
-        const unsigned a = B(at::kTailArg);
-        PutL(Member(a, "CommuTail_RandomGift") + 4, L(at::kClock));
-        B(Member(B(at::kTailArg), "CommuTail_RandomGift") + 2) = 0;
-        PutW(L(at::kTailObject) + 0x88, 0x51);
+        const unsigned a = AreaW0c_TailSub;
+        PutL(Member(a, "CommuTail_RandomGift") + 4, Rest4a_Clock);
+        B(Member(AreaW0c_TailSub, "CommuTail_RandomGift") + 2) = 0;
+        PutW(Rest4d_Pointer + 0x88, 0x51);
     } else if (mark == 2) {
         unsigned char r = static_cast<unsigned char>(SH_CALL(Rand)() & 0x7F);
         if (r > 0x64) r = 0x64;
-        const unsigned char slot = B(at::kMembers + 1 + 8 * B(at::kTailArg));
+        const unsigned char slot = B(at::kMembers + 1 + 8 * AreaW0c_TailSub);
         const unsigned level = B(Slot(slot) + 1);
         if (level >= 3)
             bof3::Fatal("CommuTail_RandomGift: slot %u's level %u is past the three rows of its stack table; the original "
@@ -315,26 +315,26 @@ extern "C" void __cdecl CommuTail_RandomGift(void) {
             const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
             CopyName(name);
             SH_CALL(Msg_OpenScript)(0x4F);
-            const U clock = L(at::kClock);
-            PutL(Member(B(at::kTailArg), "CommuTail_RandomGift") + 4, clock);
-            B(Member(B(at::kTailArg), "CommuTail_RandomGift") + 2) = 0;
-            PutW(L(at::kTailObject) + 0x88, 0x51);
+            const U clock = Rest4a_Clock;
+            PutL(Member(AreaW0c_TailSub, "CommuTail_RandomGift") + 4, clock);
+            B(Member(AreaW0c_TailSub, "CommuTail_RandomGift") + 2) = 0;
+            PutW(Rest4d_Pointer + 0x88, 0x51);
         }
     }
     StateBy(1);
-    B(at::kRequest) = 2;
+    Field_Request = 2;
 }
 
 // original 0x4572F0: Field_ModeTailKinds[23]: jmp [CommuTail23_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 21).
 extern "C" void __cdecl CommuTail23_Dispatch(void) {
-    Jump(at::kTail23States, 21, SB(at::kTailState), "CommuTail23_Dispatch");
+    Jump(CommuTail23_States_addr, 21, AreaW0c_TailState, "CommuTail23_Dispatch");
 }
 
 // original 0x457300: CommuTail23_States[0]: Field_ScriptFlags2's low byte |= 7,
 // LoadDatFile(0x12D when 0x9039F5 is 3, else 0x12C), the next state.
 extern "C" void __cdecl CommuTail23_LoadDat(void) {
-    const unsigned char arg = B(at::kTailArg);
+    const unsigned char arg = AreaW0c_TailSub;
     B(at::kScriptFlags2) |= 7;
     SH_CALL(LoadDatFile)(arg == 3 ? 0x12D : 0x12C);
     StateBy(1);
@@ -343,7 +343,7 @@ extern "C" void __cdecl CommuTail23_LoadDat(void) {
 // original 0x457340: CommuTail23_States[2]: jmp [CommuTail_GameStates + 4 * the
 // u8 0x9039F5], unchecked (ours aborts past 16).
 extern "C" void __cdecl CommuTail_GameDispatch(void) {
-    Jump(at::kTailGames, 16, B(at::kTailArg), "CommuTail_GameDispatch");
+    Jump(CommuTail_GameStates_addr, 16, AreaW0c_TailSub, "CommuTail_GameDispatch");
 }
 
 // original 0x457350: CommuTail23_States[4], [13], [20]: once File_LoadDone
@@ -351,7 +351,7 @@ extern "C" void __cdecl CommuTail_GameDispatch(void) {
 // CommuTail_RestoreFacing.
 extern "C" void __cdecl CommuTail_EndAfterLoad(void) {
     if (SH_CALL(File_LoadDone)() == 0) return;
-    PutW(at::kScriptFlags2, W(at::kScriptFlags2) & 0xFFF8);
+    Field_ScriptFlags2 = static_cast<std::uint32_t>(Field_ScriptFlags2) & 0xFFF8;
     SH_CALL(Area131_DisarmTail)();
     SH_CALL(CommuTail_RestoreFacing)();
 }
@@ -359,7 +359,7 @@ extern "C" void __cdecl CommuTail_EndAfterLoad(void) {
 // original 0x457370: Field_ModeTailKinds[24]: jmp [CommuTail24_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 12).
 extern "C" void __cdecl CommuTail24_Dispatch(void) {
-    Jump(at::kTail24States, 12, SB(at::kTailState), "CommuTail24_Dispatch");
+    Jump(CommuTail24_States_addr, 12, AreaW0c_TailState, "CommuTail24_Dispatch");
 }
 
 // original 0x457380: CommuTail23_States[9]: Field_ScriptFlags2 |= 7,
@@ -373,7 +373,7 @@ extern "C" void __cdecl CommuTail24_LoadDat(void) {
 // original 0x4573B0: Field_ModeTailKinds[25]: jmp [CommuTail25_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 7).
 extern "C" void __cdecl CommuTail25_Dispatch(void) {
-    Jump(at::kTail25States, 7, SB(at::kTailState), "CommuTail25_Dispatch");
+    Jump(CommuTail25_States_addr, 7, AreaW0c_TailState, "CommuTail25_Dispatch");
 }
 
 // original 0x4573C0: CommuTail23_States[14]: the record 0x9039F5's +3 (high
@@ -384,7 +384,7 @@ extern "C" void __cdecl CommuTail25_Dispatch(void) {
 // item, count): added, the record's +2 and +3 cleared and the row's first
 // message, else its second; the next state. Field_Request 2.
 extern "C" void __cdecl CommuTail_NibbleGift(void) {
-    const unsigned arg = B(at::kTailArg);
+    const unsigned arg = AreaW0c_TailSub;
     const unsigned char bits = B(at::kMembers + 3 + 8 * arg);
     const unsigned n = bits >> 4;
     const U row = at::kGiftLines + 6 * n;
@@ -392,35 +392,35 @@ extern "C" void __cdecl CommuTail_NibbleGift(void) {
     if (W(row + 4) == 0) {
         message = W(row);
         if (n == 0) {
-            B(at::kTailState) = 2;
+            AreaW0c_TailState = 2;
             SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(message));
-            B(at::kRequest) = 2;
+            Field_Request = 2;
             return;
         }
     } else {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(bits & 0xFu, B(at::kMembers + 2 + 8 * arg));
         CopyName(name);
-        const unsigned a = B(at::kTailArg);
+        const unsigned a = AreaW0c_TailSub;
         const unsigned char item = B(at::kMembers + 2 + 8 * a);
         const unsigned char category = static_cast<unsigned char>(B(at::kMembers + 3 + 8 * a) & 0xF);
         const unsigned char added = SH_CALL(Inventory_Add)(category, item, B(row + 4));
         if (added != 0) {
             message = W(row);
-            B(Member(B(at::kTailArg), "CommuTail_NibbleGift") + 2) = 0;
-            B(Member(B(at::kTailArg), "CommuTail_NibbleGift") + 3) = 0;
+            B(Member(AreaW0c_TailSub, "CommuTail_NibbleGift") + 2) = 0;
+            B(Member(AreaW0c_TailSub, "CommuTail_NibbleGift") + 3) = 0;
         } else {
             message = W(row + 2);
         }
     }
     StateBy(1);
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(message));
-    B(at::kRequest) = 2;
+    Field_Request = 2;
 }
 
 // original 0x4574E0: CommuTail23_States[16]: while a message is open nothing;
 // else Field_ScriptFlags2 |= 7, LoadDatFile(0x12F), the next state.
 extern "C" void __cdecl CommuTail25_LoadDat(void) {
-    if (B(at::kRequest) == 2) return;
+    if (Field_Request == 2) return;
     B(at::kScriptFlags2) |= 7;
     SH_CALL(LoadDatFile)(0x12F);
     StateBy(1);
@@ -429,15 +429,15 @@ extern "C" void __cdecl CommuTail25_LoadDat(void) {
 // original 0x457510: Field_ModeTailKinds[26]: jmp [CommuTail26_States + 4 *
 // the s8 0x9039F4], unchecked (ours aborts outside 5).
 extern "C" void __cdecl CommuTail26_Dispatch(void) {
-    Jump(at::kTail26States, 5, SB(at::kTailState), "CommuTail26_Dispatch");
+    Jump(CommuTail26_States_addr, 5, AreaW0c_TailState, "CommuTail26_Dispatch");
 }
 
 // original 0x457520: CommuTail26_States[0]: with Field_ScriptFlags, 0x904A90
 // and 0x937F80 all 0, the tail kind becomes 6 and nothing else; otherwise
 // Field_ScriptFlags2 |= 7, LoadDatFile(0x130), the next state.
 extern "C" void __cdecl CommuTail26_LoadDat(void) {
-    if (B(at::kScriptFlags) == 0 && B(at::kBusyA) == 0 && B(at::kBusyB) == 0) {
-        B(at::kTailKind) = 6;
+    if (Rest4a_RemovedCount == 0 && Rest4b_BusyA == 0 && Rest4b_BusyB == 0) {
+        AreaW0a_TailKind = 6;
         return;
     }
     B(at::kScriptFlags2) |= 7;
@@ -449,7 +449,7 @@ extern "C" void __cdecl CommuTail26_LoadDat(void) {
 // Field_ScriptFlags2 &= 0xFFF8 and a tail jump to Area131_DisarmTail.
 extern "C" void __cdecl CommuTail26_End(void) {
     if (SH_CALL(File_LoadDone)() == 0) return;
-    PutW(at::kScriptFlags2, W(at::kScriptFlags2) & 0xFFF8);
+    Field_ScriptFlags2 = static_cast<std::uint32_t>(Field_ScriptFlags2) & 0xFFF8;
     SH_CALL(Area131_DisarmTail)();
 }
 
@@ -461,11 +461,11 @@ extern "C" void __cdecl CommuTail26_End(void) {
 // 0xFFF8, the tail disarmed, a tail jump to CommuTail_RestoreFacing. Any other
 // state: nothing.
 extern "C" void __cdecl CommuTail60_Stream(void) {
-    switch (SB(at::kTailState)) {
+    switch (AreaW0c_TailState) {
     case 0: {
-        B(at::kBoardTrack) = B(at::kMusicTrack);
+        Rest4d_Again = Music_Track;
         SH_CALL(Music_FadeOutStop)(10);
-        SH_CALL(Sound_LoadStream)(B(at::kBoardFlag) == 0 ? 8u : 0xAu);
+        SH_CALL(Sound_LoadStream)(Rest4b_BoardFlag == 0 ? 8u : 0xAu);
         StateBy(1);
         return;
     }
@@ -473,12 +473,12 @@ extern "C" void __cdecl CommuTail60_Stream(void) {
         if (SH_CALL(Sound_StreamDone)() == 0) return;
         SH_CALL(Msg_OpenScript)(0x2A1);
         StateBy(1);
-        B(at::kRequest) = 2;
+        Field_Request = 2;
         return;
     case 2:
-        if (B(at::kRequest) == 2) return;
-        SH_CALL(Music_Play)(B(at::kBoardTrack), 8);
-        PutW(at::kScriptFlags2, W(at::kScriptFlags2) & 0xFFF8);
+        if (Field_Request == 2) return;
+        SH_CALL(Music_Play)(Rest4d_Again, 8);
+        Field_ScriptFlags2 = static_cast<std::uint32_t>(Field_ScriptFlags2) & 0xFFF8;
         SH_CALL(Area131_DisarmTail)();
         SH_CALL(CommuTail_RestoreFacing)();
         return;
@@ -494,17 +494,17 @@ extern "C" void __cdecl CommuTail60_Stream(void) {
 // original 0x457640: CommuTail14_States[3]: jmp [CommuBoard_States + 4 * the u8
 // 0x939A3E], unchecked (ours aborts past 14).
 extern "C" void __cdecl CommuBoard_Dispatch(void) {
-    Jump(at::kBoardStates, 14, B(at::kBoardState), "CommuBoard_Dispatch");
+    Jump(CommuBoard_States_addr, 14, Rest4b_BoardState, "CommuBoard_Dispatch");
 }
 
 // original 0x457650: CommuBoard_States[0]: the grid cursor at mode 0 with its
 // bytes 0, 1; the help line 0xB5; the next board state.
 extern "C" void __cdecl CommuBoard_Init(void) {
-    B(at::kCursorB) = 1;
-    B(at::kCursorA) = 0;
-    B(at::kCursorMode) = 0;
-    PutW(at::kHelp, 0xB5);
-    B(at::kBoardState) = static_cast<unsigned char>(B(at::kBoardState) + 1);
+    Rest4b_CursorB = 1;
+    Rest4b_CursorA = 0;
+    Rest4b_CursorMode = 0;
+    Rest4b_Help = 0xB5;
+    Rest4b_BoardState = static_cast<unsigned char>(Rest4b_BoardState + 1);
 }
 
 // original 0x457680: CommuBoard_States[1]: the grid. Cancel: the help line
@@ -516,56 +516,56 @@ extern "C" void __cdecl CommuBoard_Init(void) {
 // sound 0x107 (any other mode too). Neither: the grid cursor moved on
 // 0x9039F5. Then the panel and the slot's lines, flashing.
 extern "C" void __cdecl CommuBoard_Grid(void) {
-    const unsigned pressed = W(at::kPressed);
-    if (W(at::kCancel) & pressed) {
-        PutW(at::kHelp, 0xFFFF);
+    const unsigned pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
+        Rest4b_Help = 0xFFFF;
         StateBy(1);
-    } else if (W(at::kConfirm) & pressed) {
-        B(at::kSavedB) = B(at::kCursorB);
-        const unsigned char a = B(at::kCursorA);
-        const unsigned char mode = B(at::kCursorMode);
-        B(at::kSavedMode) = mode;
-        B(at::kSavedA) = a;
-        B(at::kBoardStep) = 0;
-        B(at::kListCursor) = 0;
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
+        Rest4b_SavedB = Rest4b_CursorB;
+        const unsigned char a = Rest4b_CursorA;
+        const unsigned char mode = Rest4b_CursorMode;
+        Rest4b_SavedMode = mode;
+        Rest4b_SavedA = a;
+        Rest4b_BoardStep = 0;
+        Rest4b_ListCursor = 0;
         int allowed = -1;
         if (mode == 0 || mode == 2) {
-            const unsigned char count = SH_CALL(Commu_CountInSlot)(B(at::kTailArg));
+            const unsigned char count = SH_CALL(Commu_CountInSlot)(AreaW0c_TailSub);
             allowed = count != 0;
         } else if (mode == 1) {
-            const unsigned char arg = B(at::kTailArg);
-            allowed = arg <= B(at::kAreaLimits + W(at::kArea));
+            const unsigned char arg = AreaW0c_TailSub;
+            allowed = arg <= B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber));
         }
         if (allowed == 1) {
             SH_CALL(Sound_PlayEffect)(0x104);
             SH_CALL(CommuBoard_SlotHelp)();
-            B(at::kBoardState) = static_cast<unsigned char>(B(at::kBoardState) + 1);
+            Rest4b_BoardState = static_cast<unsigned char>(Rest4b_BoardState + 1);
         } else {
             SH_CALL(Sound_PlayEffect)(0x107);
         }
     } else {
-        SH_CALL(CommuBoard_MoveGridCursor)(At(at::kTailArg));
+        SH_CALL(CommuBoard_MoveGridCursor)(At(AreaW0c_TailSub_addr));
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 0);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 0);
 }
 
 // original 0x457780: CommuBoard_States[2]: jmp [CommuBoard_ModeStates + 4 * the
 // u8 0x675F86] (the kept cursor mode), unchecked (ours aborts past 11).
 extern "C" void __cdecl CommuBoard_ModeDispatch(void) {
-    Jump(at::kBoardModes, 11, B(at::kSavedMode), "CommuBoard_ModeDispatch");
+    Jump(CommuBoard_ModeStates_addr, 11, Rest4b_SavedMode, "CommuBoard_ModeDispatch");
 }
 
 // original 0x457790: CommuBoard_States[3], [5] (ModeStates[0], [2]): jmp
 // [CommuBoard_Steps + 4 * the u8 0x939A40], unchecked (ours aborts past 8).
 extern "C" void __cdecl CommuBoard_StepDispatch(void) {
-    Jump(at::kBoardSteps, 8, B(at::kBoardStep), "CommuBoard_StepDispatch");
+    Jump(CommuBoard_Steps_addr, 8, Rest4b_BoardStep, "CommuBoard_StepDispatch");
 }
 
 // original 0x457AD0: CommuBoard_States[4] (ModeStates[1]): jmp
 // [CommuBoard_StepsB + 4 * the u8 0x939A40], unchecked (ours aborts past 6).
 extern "C" void __cdecl CommuBoard_StepDispatchB(void) {
-    Jump(at::kBoardStepsB, 6, B(at::kBoardStep), "CommuBoard_StepDispatchB");
+    Jump(CommuBoard_StepsB_addr, 6, Rest4b_BoardStep, "CommuBoard_StepDispatchB");
 }
 
 namespace {
@@ -575,7 +575,7 @@ namespace {
 // 0x45ECC0 and the card of the cursor's record - beside the hand when steady
 // (flash 0), at (0xA0, 0x3E) when flashing.
 void CursorAndCard(unsigned char slot, unsigned flash) {
-    const int c = SB(at::kListCursor);
+    const int c = Rest4b_ListCursor;
     int x, y, cx, cy;
     if (slot == 0) {
         x = static_cast<short>(c) * 8 + 0x28;
@@ -590,8 +590,8 @@ void CursorAndCard(unsigned char slot, unsigned flash) {
         cy = row + 0x4C;
     }
     R4EHand(x, y, flash);
-    const unsigned char cursor = B(at::kListCursor);
-    const unsigned char arg = B(at::kTailArg);
+    const unsigned char cursor = static_cast<unsigned char>(Rest4b_ListCursor);
+    const unsigned char arg = AreaW0c_TailSub;
     const unsigned idx = SH_CALL(Commu_NthInSlot)(arg, cursor);
     if (flash == 0)
         SH_CALL(CommuBoard_DrawRecordCard)(cx, cy, idx, 0);
@@ -608,41 +608,41 @@ void CursorAndCard(unsigned char slot, unsigned flash) {
 // back to 0 at the count; 0x8000 down, to count - 1 below 0; sound 0x100 when
 // it moved). Then the panel, the slot's lines (steady), the hand and the card.
 extern "C" void __cdecl CommuBoard_PickRecord(void) {
-    const unsigned pressed = W(at::kPressed);
-    if (W(at::kCancel) & pressed) {
+    const unsigned pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kBoardState) = static_cast<unsigned char>(B(at::kBoardState) - 1);
-        PutW(at::kHelp, 0xB5);
-    } else if (W(at::kConfirm) & pressed) {
+        Rest4b_BoardState = static_cast<unsigned char>(Rest4b_BoardState - 1);
+        Rest4b_Help = 0xB5;
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x104);
-        B(at::kPick) = B(at::kTailArg);
-        B(at::kBoardStep) = static_cast<unsigned char>(B(at::kBoardStep) + 1);
-        PutW(at::kHelp, 0x44);
+        Rest4b_Pick = AreaW0c_TailSub;
+        Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+        Rest4b_Help = 0x44;
     } else {
-        const unsigned char count = SH_CALL(Commu_CountInSlot)(B(at::kTailArg));
-        const unsigned keys = SH_CALL(Input_AutoRepeat)(W(at::kPressed) & 0xA000);
-        const unsigned char old = B(at::kListCursor);
+        const unsigned char count = SH_CALL(Commu_CountInSlot)(AreaW0c_TailSub);
+        const unsigned keys = SH_CALL(Input_AutoRepeat)(static_cast<std::uint32_t>(Input_Pressed) & 0xA000);
+        const unsigned char old = static_cast<unsigned char>(Rest4b_ListCursor);
         unsigned char c = old;
         if (keys & 0x2000) {
             ++c;
-            B(at::kListCursor) = c;
+            Rest4b_ListCursor = c;
             if (static_cast<signed char>(c) == static_cast<int>(count)) {
                 c = 0;
-                B(at::kListCursor) = c;
+                Rest4b_ListCursor = c;
             }
         } else if (keys & 0x8000) {
             --c;
-            B(at::kListCursor) = c;
+            Rest4b_ListCursor = c;
             if (static_cast<signed char>(c) < 0) {
                 c = static_cast<unsigned char>(count - 1);
-                B(at::kListCursor) = c;
+                Rest4b_ListCursor = c;
             }
         }
         if (static_cast<signed char>(c) != static_cast<int>(old)) SH_CALL(Sound_PlayEffect)(0x100);
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
-    CursorAndCard(B(at::kTailArg), 0);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
+    CursorAndCard(AreaW0c_TailSub, 0);
 }
 
 // original 0x457990: CommuBoard_Steps[1]: the slot the record moves to. Cancel:
@@ -651,24 +651,24 @@ extern "C" void __cdecl CommuBoard_PickRecord(void) {
 // on 0x675F7F and its help line. Then the panel, both slots' lines, and unless
 // placed the hand (flashing) and the card.
 extern "C" void __cdecl CommuBoard_MoveRecord(void) {
-    const unsigned pressed = W(at::kPressed);
+    const unsigned pressed = Input_Pressed;
     unsigned char placed = 0;
-    if (W(at::kCancel) & pressed) {
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
         SH_CALL(CommuBoard_SlotHelp)();
         SH_CALL(CommuBoard_CancelStep)();
-    } else if (W(at::kConfirm) & pressed) {
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         placed = SH_CALL(CommuBoard_PlaceRecord)(0);
-        if (placed) PutW(at::kHelp, 0xB5);
+        if (placed) Rest4b_Help = 0xB5;
     } else {
-        SH_CALL(CommuBoard_MoveGridCursor)(At(at::kPick));
-        SH_CALL(CommuBoard_PickHelp)(At(at::kPick));
+        SH_CALL(CommuBoard_MoveGridCursor)(At(Rest4b_Pick_addr));
+        SH_CALL(CommuBoard_PickHelp)(At(Rest4b_Pick_addr));
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
     SH_CALL(CommuBoard_DrawSlotLines)(B(at::kPick), 0);
     if (placed) return;
-    CursorAndCard(B(at::kTailArg), 1);
+    CursorAndCard(AreaW0c_TailSub, 1);
 }
 
 // original 0x457AE0: CommuBoard_StepsB[0]: the slot's records and its kind.
@@ -681,56 +681,56 @@ extern "C" void __cdecl CommuBoard_MoveRecord(void) {
 // at the record position (CommuBoard_SlotRecordXY): at 0 alone, else beside it
 // with the card of the record before it.
 extern "C" void __cdecl CommuBoard_PickRecordB(void) {
-    const unsigned pressed = W(at::kPressed);
-    if (W(at::kCancel) & pressed) {
+    const unsigned pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kBoardState) = static_cast<unsigned char>(B(at::kBoardState) - 1);
-        PutW(at::kHelp, 0xB5);
-    } else if (W(at::kConfirm) & pressed) {
+        Rest4b_BoardState = static_cast<unsigned char>(Rest4b_BoardState - 1);
+        Rest4b_Help = 0xB5;
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x103);
-        if (B(at::kListCursor) != 0) {
-            PutW(at::kHelp, 0x44);
-            B(at::kPick) = B(at::kTailArg);
-            B(at::kBoardStep) = static_cast<unsigned char>(B(at::kBoardStep) + 1);
+        if (static_cast<unsigned char>(Rest4b_ListCursor) != 0) {
+            Rest4b_Help = 0x44;
+            Rest4b_Pick = AreaW0c_TailSub;
+            Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
         } else {
-            const unsigned char kind = B(Slot(B(at::kTailArg)));
-            B(at::kPick) = kind == 0 ? 0 : static_cast<unsigned char>(kind - 4);
-            B(at::kPickB) = 0;
-            B(at::kPickC) = 0;
-            B(at::kPickD) = 0xFF;
-            B(at::kPickE) = 0xFF;
-            B(at::kBoardStep) = 2;
+            const unsigned char kind = B(Slot(AreaW0c_TailSub));
+            Rest4b_Pick = kind == 0 ? 0 : static_cast<unsigned char>(kind - 4);
+            Rest4b_PickB = 0;
+            Rest4b_PickC = 0;
+            Rest4b_PickD = 0xFF;
+            Rest4b_PickE = 0xFF;
+            Rest4b_BoardStep = 2;
         }
     } else {
         const unsigned keys = SH_CALL(Input_AutoRepeat)(pressed & 0xA000);
-        const unsigned char old = B(at::kListCursor);
-        const unsigned char count = SH_CALL(Commu_CountInSlot)(B(at::kTailArg));
+        const unsigned char old = static_cast<unsigned char>(Rest4b_ListCursor);
+        const unsigned char count = SH_CALL(Commu_CountInSlot)(AreaW0c_TailSub);
         if (keys & 0x8000) {
-            const unsigned char c = static_cast<unsigned char>(B(at::kListCursor) - 1);
-            B(at::kListCursor) = c;
-            if (static_cast<signed char>(c) < 0) B(at::kListCursor) = count;
+            const unsigned char c = static_cast<unsigned char>(static_cast<unsigned char>(Rest4b_ListCursor) - 1);
+            Rest4b_ListCursor = c;
+            if (static_cast<signed char>(c) < 0) Rest4b_ListCursor = count;
         } else if (keys & 0x2000) {
-            const unsigned char c = static_cast<unsigned char>(B(at::kListCursor) + 1);
-            B(at::kListCursor) = c;
-            if (static_cast<signed char>(c) > static_cast<int>(count)) B(at::kListCursor) = 0;
+            const unsigned char c = static_cast<unsigned char>(static_cast<unsigned char>(Rest4b_ListCursor) + 1);
+            Rest4b_ListCursor = c;
+            if (static_cast<signed char>(c) > static_cast<int>(count)) Rest4b_ListCursor = 0;
         }
-        if (SB(at::kListCursor) != static_cast<int>(old)) SH_CALL(Sound_PlayEffect)(0x100);
+        if (Rest4b_ListCursor != static_cast<int>(old)) SH_CALL(Sound_PlayEffect)(0x100);
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
     short x = 0, y = 0;
     {
-        const unsigned char cursor = B(at::kListCursor);
-        const unsigned char arg = B(at::kTailArg);
+        const unsigned char cursor = static_cast<unsigned char>(Rest4b_ListCursor);
+        const unsigned char arg = AreaW0c_TailSub;
         SH_CALL(CommuBoard_SlotRecordXY)(&x, &y, arg, cursor);
     }
-    if (B(at::kListCursor) == 0) {
+    if (static_cast<unsigned char>(Rest4b_ListCursor) == 0) {
         R4EHand(x, y, 0);
         return;
     }
     R4EHand(x + 4, y, 0);
-    const unsigned char before = static_cast<unsigned char>(B(at::kListCursor) - 1);
-    const unsigned char arg = B(at::kTailArg);
+    const unsigned char before = static_cast<unsigned char>(static_cast<unsigned char>(Rest4b_ListCursor) - 1);
+    const unsigned char arg = AreaW0c_TailSub;
     const unsigned idx = SH_CALL(Commu_NthInSlot)(arg, before);
     SH_CALL(CommuBoard_DrawRecordCard)(x + 0x10, y - 8, idx, 0);
 }
@@ -739,31 +739,31 @@ extern "C" void __cdecl CommuBoard_PickRecordB(void) {
 // CommuBoard_PlaceRecord(1), no sound of its own on cancel (CancelStep first,
 // then the slot's help), and the hand beside the record position.
 extern "C" void __cdecl CommuBoard_MoveRecordB(void) {
-    const unsigned pressed = W(at::kPressed);
+    const unsigned pressed = Input_Pressed;
     unsigned char placed = 0;
-    if (W(at::kCancel) & pressed) {
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(CommuBoard_CancelStep)();
         SH_CALL(CommuBoard_SlotHelp)();
-    } else if (W(at::kConfirm) & pressed) {
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         placed = SH_CALL(CommuBoard_PlaceRecord)(1);
-        if (placed) PutW(at::kHelp, 0xB5);
+        if (placed) Rest4b_Help = 0xB5;
     } else {
-        SH_CALL(CommuBoard_MoveGridCursor)(At(at::kPick));
-        SH_CALL(CommuBoard_PickHelp)(At(at::kPick));
+        SH_CALL(CommuBoard_MoveGridCursor)(At(Rest4b_Pick_addr));
+        SH_CALL(CommuBoard_PickHelp)(At(Rest4b_Pick_addr));
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
     SH_CALL(CommuBoard_DrawSlotLines)(B(at::kPick), 0);
     if (placed) return;
     short x = 0, y = 0;
     {
-        const unsigned char cursor = B(at::kListCursor);
-        const unsigned char arg = B(at::kTailArg);
+        const unsigned char cursor = static_cast<unsigned char>(Rest4b_ListCursor);
+        const unsigned char arg = AreaW0c_TailSub;
         SH_CALL(CommuBoard_SlotRecordXY)(&x, &y, arg, cursor);
     }
     R4EHand(x + 4, y, 1);
-    const unsigned char before = static_cast<unsigned char>(B(at::kListCursor) - 1);
-    const unsigned char arg = B(at::kTailArg);
+    const unsigned char before = static_cast<unsigned char>(static_cast<unsigned char>(Rest4b_ListCursor) - 1);
+    const unsigned char arg = AreaW0c_TailSub;
     const unsigned idx = SH_CALL(Commu_NthInSlot)(arg, before);
     SH_CALL(CommuBoard_DrawRecordCard)(0xA0, 0x3E, idx, 1);
 }
@@ -774,7 +774,7 @@ namespace {
 // list steps and the confirm step draw it first).
 void HandAtSlot() {
     short x = 0, y = 0;
-    const unsigned char arg = B(at::kTailArg);
+    const unsigned char arg = AreaW0c_TailSub;
     SH_CALL(CommuBoard_SlotRecordXY)(&x, &y, arg, 0);
     R4EHand(x, y, 1);
 }
@@ -791,56 +791,56 @@ void HandAtSlot() {
 // moved, help 0x652AF8[row]. Then the panel, the slot's lines, the hand, the
 // list box (CommuBoard_ListY's y) and the hand at the row.
 extern "C" void __cdecl CommuBoard_PickList(void) {
-    const unsigned pressed = W(at::kPressed);
-    if (W(at::kCancel) & pressed) {
+    const unsigned pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
         SH_CALL(CommuBoard_SlotHelp)();
-        B(at::kBoardStep) = 0;
-    } else if (W(at::kConfirm) & pressed) {
-        const int row = SB(at::kPick);
+        Rest4b_BoardStep = 0;
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
+        const int row = Rest4b_Pick;
         const unsigned char next = B(at::kPickNext + static_cast<U>(row));
         if (next == 0xFF) {
             SH_AT(void (__cdecl*)(), at::kR4CAsk)();
         } else {
-            const U slot = Slot(B(at::kTailArg));
-            B(at::kPickB) = row == static_cast<int>(B(slot)) - 4 ? B(slot + 1) : 0;
-            B(at::kPickD) = next;
+            const U slot = Slot(AreaW0c_TailSub);
+            Rest4b_PickB = row == static_cast<int>(B(slot)) - 4 ? B(slot + 1) : 0;
+            Rest4b_PickD = next;
             SH_CALL(Sound_PlayEffect)(0x103);
-            B(at::kBoardStep) = static_cast<unsigned char>(B(at::kBoardStep) + 1);
-            PutW(at::kHelp, W(at::kPickNextHelp + 2 * B(at::kPickD)));
+            Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+            Rest4b_Help = W(at::kPickNextHelp + 2 * Rest4b_PickD);
         }
     } else {
         const unsigned keys = SH_CALL(Input_AutoRepeat)(pressed & 0x5000);
-        const unsigned char old = B(at::kPick);
+        const unsigned char old = static_cast<unsigned char>(Rest4b_Pick);
         unsigned char c = old;
         if (keys & 0x1000) {
             --c;
-            B(at::kPick) = c;
+            Rest4b_Pick = c;
             if (static_cast<signed char>(c) < 0) {
-                c = static_cast<unsigned char>(B(at::kListCount) - 1);
-                B(at::kPick) = c;
+                c = static_cast<unsigned char>(FieldE2_LevelA - 1);
+                Rest4b_Pick = c;
             }
         } else if (keys & 0x4000) {
             ++c;
-            B(at::kPick) = c;
-            if (static_cast<signed char>(c) >= static_cast<int>(B(at::kListCount))) {
+            Rest4b_Pick = c;
+            if (static_cast<signed char>(c) >= FieldE2_LevelA) {
                 c = 0;
-                B(at::kPick) = c;
+                Rest4b_Pick = c;
             }
         }
         if (static_cast<signed char>(c) != static_cast<int>(old)) {
             SH_CALL(Sound_PlayEffect)(0x100);
-            c = B(at::kPick);
+            c = static_cast<unsigned char>(Rest4b_Pick);
         }
-        PutW(at::kHelp, W(at::kPickHelpB + 2 * static_cast<U>(static_cast<signed char>(c))));
+        Rest4b_Help = W(at::kPickHelpB + 2 * static_cast<U>(static_cast<signed char>(c)));
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
     HandAtSlot();
     const int y = static_cast<short>(SH_CALL(CommuBoard_ListY)());   // its callers read the low word only
-    SH_CALL(CommuBoard_DrawListBox)(Column(B(at::kTailArg)) + 0x42, y, 0);
-    const int hy = static_cast<short>(SB(at::kPick)) * 16 + y + 4;
-    SH_CALL(Menu_DrawHand)(Column(B(at::kTailArg)) + 0x44, hy, 0);
+    SH_CALL(CommuBoard_DrawListBox)(Column(AreaW0c_TailSub) + 0x42, y, 0);
+    const int hy = Rest4b_Pick * 16 + y + 4;
+    SH_CALL(Menu_DrawHand)(Column(AreaW0c_TailSub) + 0x44, hy, 0);
 }
 
 // original 0x457FE0: CommuBoard_Steps[5], StepsB[3]: the second list
@@ -853,55 +853,55 @@ extern "C" void __cdecl CommuBoard_PickList(void) {
 // first list (steady); unless 0x675F83 is 0xFF the second list
 // (CommuBoard_DrawListBoxB) and the hand at its row.
 extern "C" void __cdecl CommuBoard_PickListB(void) {
-    const unsigned pressed = W(at::kPressed);
-    if (W(at::kCancel) & pressed) {
+    const unsigned pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kBoardStep) = static_cast<unsigned char>(B(at::kBoardStep) - 1);
-        B(at::kPickD) = 0xFF;
-    } else if (W(at::kConfirm) & pressed) {
-        const unsigned char next = B(at::kPickPairs + 1 + 2 * B(at::kPickD));
+        Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep - 1);
+        Rest4b_PickD = 0xFF;
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
+        const unsigned char next = B(at::kPickPairs + 1 + 2 * Rest4b_PickD);
         if (next == 0xFF) {
             SH_AT(void (__cdecl*)(), at::kR4CAsk)();
         } else {
-            const U slot = Slot(B(at::kTailArg));
-            B(at::kPickC) = SB(at::kPick) == static_cast<int>(B(slot)) - 4 ? B(slot + 2) : 0;
-            B(at::kPickE) = next;
+            const U slot = Slot(AreaW0c_TailSub);
+            Rest4b_PickC = Rest4b_Pick == static_cast<int>(B(slot)) - 4 ? B(slot + 2) : 0;
+            Rest4b_PickE = next;
             SH_CALL(Sound_PlayEffect)(0x103);
-            B(at::kBoardStep) = static_cast<unsigned char>(B(at::kBoardStep) + 1);
-            PutW(at::kHelp, 0x46);
+            Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+            Rest4b_Help = 0x46;
         }
     } else {
         const unsigned keys = SH_CALL(Input_AutoRepeat)(pressed & 0x5000);
-        const unsigned char old = B(at::kPickB);
+        const unsigned char old = static_cast<unsigned char>(Rest4b_PickB);
         unsigned char c = old;
         if (keys & 0x1000) {
             --c;
-            B(at::kPickB) = c;
+            Rest4b_PickB = c;
             if (static_cast<signed char>(c) < 0) {
-                c = static_cast<unsigned char>(B(at::kPickPairs + 2 * B(at::kPickD)) - 1);
-                B(at::kPickB) = c;
+                c = static_cast<unsigned char>(B(at::kPickPairs + 2 * Rest4b_PickD) - 1);
+                Rest4b_PickB = c;
             }
         } else if (keys & 0x4000) {
             ++c;
-            B(at::kPickB) = c;
-            if (static_cast<signed char>(c) >= static_cast<int>(B(at::kPickPairs + 2 * B(at::kPickD)))) {
+            Rest4b_PickB = c;
+            if (static_cast<signed char>(c) >= static_cast<int>(B(at::kPickPairs + 2 * Rest4b_PickD))) {
                 c = 0;
-                B(at::kPickB) = c;
+                Rest4b_PickB = c;
             }
         }
         if (static_cast<signed char>(c) != static_cast<int>(old)) SH_CALL(Sound_PlayEffect)(0x100);
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
     HandAtSlot();
     const int y = static_cast<short>(SH_CALL(CommuBoard_ListY)());   // its callers read the low word only
-    SH_CALL(CommuBoard_DrawListBox)(Column(B(at::kTailArg)) + 0x42, y, 1);
-    const unsigned char list = B(at::kPickD);
+    SH_CALL(CommuBoard_DrawListBox)(Column(AreaW0c_TailSub) + 0x42, y, 1);
+    const unsigned char list = Rest4b_PickD;
     if (list == 0xFF) return;
-    const int y2 = y + static_cast<short>(SB(at::kPick)) * 16 + 0xC;
-    const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(B(at::kTailArg)) + 0x4A, y2, list, 0));
-    const int hy = static_cast<short>(SB(at::kPickB)) * 16 + yb + 4;
-    SH_CALL(Menu_DrawHand)(Column(B(at::kTailArg)) + 0x4C, hy, 0);
+    const int y2 = y + Rest4b_Pick * 16 + 0xC;
+    const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(AreaW0c_TailSub) + 0x4A, y2, list, 0));
+    const int hy = Rest4b_PickB * 16 + yb + 4;
+    SH_CALL(Menu_DrawHand)(Column(AreaW0c_TailSub) + 0x4C, hy, 0);
 }
 
 // original 0x458240: CommuBoard_Steps[6], StepsB[4]: the toggle 0x675F7D.
@@ -910,35 +910,35 @@ extern "C" void __cdecl CommuBoard_PickListB(void) {
 // 0x100. Then the panel, the slot's lines, the hand, both lists (steady) and,
 // unless 0x675F82 is 0xFF, the third list and the hand at the toggle.
 extern "C" void __cdecl CommuBoard_PickListC(void) {
-    const unsigned pressed = W(at::kPressed);
-    if (W(at::kCancel) & pressed) {
+    const unsigned pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kBoardStep) = static_cast<unsigned char>(B(at::kBoardStep) - 1);
-        PutW(at::kHelp, 0x45);
-        B(at::kPickE) = 0xFF;
-    } else if (W(at::kConfirm) & pressed) {
+        Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep - 1);
+        Rest4b_Help = 0x45;
+        Rest4b_PickE = 0xFF;
+    } else if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
         SH_AT(void (__cdecl*)(), at::kR4CAsk)();
     } else {
         const unsigned keys = SH_CALL(Input_AutoRepeat)(pressed & 0x5000);
         if (keys & 0x5000) {
             SH_CALL(Sound_PlayEffect)(0x100);
-            B(at::kPickC) ^= 1;
+            Rest4b_PickC ^= 1;
         }
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
     HandAtSlot();
     const int y = static_cast<short>(SH_CALL(CommuBoard_ListY)());   // its callers read the low word only
-    SH_CALL(CommuBoard_DrawListBox)(Column(B(at::kTailArg)) + 0x42, y, 1);
-    const int y2 = y + static_cast<short>(SB(at::kPick)) * 16 + 0xC;
-    const unsigned char list = B(at::kPickD);
-    const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(B(at::kTailArg)) + 0x4A, y2, list, 1));
-    const unsigned char list2 = B(at::kPickE);
+    SH_CALL(CommuBoard_DrawListBox)(Column(AreaW0c_TailSub) + 0x42, y, 1);
+    const int y2 = y + Rest4b_Pick * 16 + 0xC;
+    const unsigned char list = Rest4b_PickD;
+    const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(AreaW0c_TailSub) + 0x4A, y2, list, 1));
+    const unsigned char list2 = Rest4b_PickE;
     if (list2 == 0xFF) return;
-    const int y3 = yb + static_cast<short>(SB(at::kPickB)) * 16 + 0xC;
-    const int yc = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(B(at::kTailArg)) + 0x52, y3, list2, 0));
-    const int hy = static_cast<short>(SB(at::kPickC)) * 16 + yc + 4;
-    SH_CALL(Menu_DrawHand)(Column(B(at::kTailArg)) + 0x54, hy, 0);
+    const int y3 = yb + Rest4b_PickB * 16 + 0xC;
+    const int yc = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(AreaW0c_TailSub) + 0x52, y3, list2, 0));
+    const int hy = Rest4b_PickC * 16 + yc + 4;
+    SH_CALL(Menu_DrawHand)(Column(AreaW0c_TailSub) + 0x54, hy, 0);
 }
 
 // original 0x458410: CommuBoard_Steps[7], StepsB[5]: the yes / no row
@@ -953,80 +953,80 @@ extern "C" void __cdecl CommuBoard_PickListC(void) {
 // Then the panel, the slot's lines, the hand, the lists open and the hand at
 // the deepest one. The slot written is 1..8; past them ours aborts (section 5).
 extern "C" void __cdecl CommuBoard_Confirm(void) {
-    const unsigned pressed = W(at::kPressed);
-    if (W(at::kConfirm) & pressed) {
-        if (B(at::kToggle) != 0) {
+    const unsigned pressed = Input_Pressed;
+    if (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed) {
+        if (Rest4b_Toggle != 0) {
             SH_CALL(Sound_PlayEffect)(0x106);
-            PutW(at::kHelp, W(at::kKeptHelp));
-            B(at::kBoardStep) = B(at::kKeptStep);
+            Rest4b_Help = static_cast<std::uint32_t>(Rest4b_KeptHelp);
+            Rest4b_BoardStep = Rest4b_KeptStep;
         } else {
-            unsigned char arg = B(at::kTailArg);
-            const unsigned char first = B(at::kPickB);
+            unsigned char arg = AreaW0c_TailSub;
+            const unsigned char first = static_cast<unsigned char>(Rest4b_PickB);
             const U slot = Slot(arg);
-            const bool same = static_cast<int>(B(slot)) == SB(at::kPick) + 4 && static_cast<int>(B(slot + 1)) == SB(at::kPickB) &&
-                              static_cast<int>(B(slot + 2)) == SB(at::kPickC);
+            const bool same = static_cast<int>(B(slot)) == Rest4b_Pick + 4 && static_cast<int>(B(slot + 1)) == Rest4b_PickB &&
+                              static_cast<int>(B(slot + 2)) == Rest4b_PickC;
             if (!same) {
                 for (U r = at::kMembers; r < at::kMembersEnd; r += at::kMemberStride) {
                     if (B(r + 1) != arg) continue;
-                    PutL(r + 4, L(at::kClock));
+                    PutL(r + 4, Rest4a_Clock);
                     B(r + 2) = 0;
                     B(r + 3) = 0;
-                    arg = B(at::kTailArg);
+                    arg = AreaW0c_TailSub;
                 }
                 B(SlotToWrite(arg, "CommuBoard_Confirm") + 3) = 0;
-                PutL(SlotToWrite(B(at::kTailArg), "CommuBoard_Confirm") + 4, L(at::kClock));
-                arg = B(at::kTailArg);
+                PutL(SlotToWrite(AreaW0c_TailSub, "CommuBoard_Confirm") + 4, Rest4a_Clock);
+                arg = AreaW0c_TailSub;
             }
-            B(SlotToWrite(arg, "CommuBoard_Confirm")) = static_cast<unsigned char>(B(at::kPick) + 4);
-            B(SlotToWrite(B(at::kTailArg), "CommuBoard_Confirm") + 1) = first;
-            const unsigned char toggle = B(at::kPickC);
-            B(at::kCursorB) = B(at::kSavedB);
-            B(SlotToWrite(B(at::kTailArg), "CommuBoard_Confirm") + 2) = toggle;
-            const unsigned char a = B(at::kSavedA);
-            const unsigned char mode = B(at::kSavedMode);
-            B(at::kCursorA) = a;
-            B(at::kCursorMode) = mode;
+            B(SlotToWrite(arg, "CommuBoard_Confirm")) = static_cast<unsigned char>(static_cast<unsigned char>(Rest4b_Pick) + 4);
+            B(SlotToWrite(AreaW0c_TailSub, "CommuBoard_Confirm") + 1) = first;
+            const unsigned char toggle = static_cast<unsigned char>(Rest4b_PickC);
+            Rest4b_CursorB = Rest4b_SavedB;
+            B(SlotToWrite(AreaW0c_TailSub, "CommuBoard_Confirm") + 2) = toggle;
+            const unsigned char a = Rest4b_SavedA;
+            const unsigned char mode = Rest4b_SavedMode;
+            Rest4b_CursorA = a;
+            Rest4b_CursorMode = mode;
             SH_CALL(Sound_PlayEffect)(0x104);
-            B(at::kBoardState) = static_cast<unsigned char>(B(at::kBoardState) - 1);
-            PutW(at::kHelp, 0xB5);
+            Rest4b_BoardState = static_cast<unsigned char>(Rest4b_BoardState - 1);
+            Rest4b_Help = 0xB5;
         }
-    } else if (W(at::kCancel) & pressed) {
+    } else if (static_cast<std::uint32_t>(Field_CancelButtons) & pressed) {
         SH_CALL(Sound_PlayEffect)(0x106);
-        PutW(at::kHelp, W(at::kKeptHelp));
-        B(at::kBoardStep) = B(at::kKeptStep);
+        Rest4b_Help = static_cast<std::uint32_t>(Rest4b_KeptHelp);
+        Rest4b_BoardStep = Rest4b_KeptStep;
     } else {
         const unsigned keys = SH_CALL(Input_AutoRepeat)(pressed & 0xA000);
         if (keys & 0xA000) {
             SH_CALL(Sound_PlayEffect)(0x100);
-            B(at::kToggle) ^= 1;
+            Rest4b_Toggle ^= 1;
         }
     }
     SH_CALL(CommuBoard_DrawPanel)();
-    SH_CALL(CommuBoard_DrawSlotLines)(B(at::kTailArg), 1);
+    SH_CALL(CommuBoard_DrawSlotLines)(AreaW0c_TailSub, 1);
     HandAtSlot();
     const int y = static_cast<short>(SH_CALL(CommuBoard_ListY)());   // its callers read the low word only
-    if (B(at::kPickD) == 0xFF) {
-        SH_CALL(CommuBoard_DrawListBox)(Column(B(at::kTailArg)) + 0x42, y, 0);
-        const int hy = static_cast<short>(SB(at::kPick)) * 16 + y + 4;
-        SH_CALL(Menu_DrawHand)(Column(B(at::kTailArg)) + 0x44, hy, 0);
+    if (Rest4b_PickD == 0xFF) {
+        SH_CALL(CommuBoard_DrawListBox)(Column(AreaW0c_TailSub) + 0x42, y, 0);
+        const int hy = Rest4b_Pick * 16 + y + 4;
+        SH_CALL(Menu_DrawHand)(Column(AreaW0c_TailSub) + 0x44, hy, 0);
         return;
     }
-    SH_CALL(CommuBoard_DrawListBox)(Column(B(at::kTailArg)) + 0x42, y, 1);
-    const int y2 = y + static_cast<short>(SB(at::kPick)) * 16 + 0xC;
-    if (B(at::kPickE) == 0xFF) {
-        const unsigned char list = B(at::kPickD);
-        const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(B(at::kTailArg)) + 0x4A, y2, list, 0));
-        const int hy = static_cast<short>(SB(at::kPickB)) * 16 + yb + 4;
-        SH_CALL(Menu_DrawHand)(Column(B(at::kTailArg)) + 0x4C, hy, 0);
+    SH_CALL(CommuBoard_DrawListBox)(Column(AreaW0c_TailSub) + 0x42, y, 1);
+    const int y2 = y + Rest4b_Pick * 16 + 0xC;
+    if (Rest4b_PickE == 0xFF) {
+        const unsigned char list = Rest4b_PickD;
+        const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(AreaW0c_TailSub) + 0x4A, y2, list, 0));
+        const int hy = Rest4b_PickB * 16 + yb + 4;
+        SH_CALL(Menu_DrawHand)(Column(AreaW0c_TailSub) + 0x4C, hy, 0);
         return;
     }
-    const unsigned char list = B(at::kPickD);
-    const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(B(at::kTailArg)) + 0x4A, y2, list, 1));
-    const int y3 = yb + static_cast<short>(SB(at::kPickB)) * 16 + 0xC;
-    const unsigned char list2 = B(at::kPickE);
-    const int yc = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(B(at::kTailArg)) + 0x52, y3, list2, 0));
-    const int hy = static_cast<short>(SB(at::kPickC)) * 16 + yc + 4;
-    SH_CALL(Menu_DrawHand)(Column(B(at::kTailArg)) + 0x54, hy, 0);
+    const unsigned char list = Rest4b_PickD;
+    const int yb = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(AreaW0c_TailSub) + 0x4A, y2, list, 1));
+    const int y3 = yb + Rest4b_PickB * 16 + 0xC;
+    const unsigned char list2 = Rest4b_PickE;
+    const int yc = static_cast<short>(SH_CALL(CommuBoard_DrawListBoxB)(Column(AreaW0c_TailSub) + 0x52, y3, list2, 0));
+    const int hy = Rest4b_PickC * 16 + yc + 4;
+    SH_CALL(Menu_DrawHand)(Column(AreaW0c_TailSub) + 0x54, hy, 0);
 }
 
 // ===========================================================================
@@ -1043,8 +1043,8 @@ extern "C" void __cdecl CommuBoard_Confirm(void) {
 // picks: 0 for slot 0, the slot - 8 from 9, else the slot's kind (s8 slot, the
 // slot's bytes read in place).
 extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record, unsigned highlight) {
-    SH_CALL(Menu_DrawBox)(x + 4, y + 4, 0x48, 0x28, 0x81, B(at::kColour));
-    SH_CALL(Menu_DrawBox)(x, y, 0x48, 0x26, 0x80, B(at::kColour));
+    SH_CALL(Menu_DrawBox)(x + 4, y + 4, 0x48, 0x28, 0x81, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y, 0x48, 0x26, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(CommuBoard_DrawCardFrame)(x, y);
     const unsigned r = record & 0xFF;
     SH_CALL(Text_DrawAt)(x + 6, y + 4, 0, 5, At(at::kNames + 5 * r));
@@ -1067,7 +1067,7 @@ extern "C" void __cdecl CommuBoard_DrawRecordCard(int x, int y, unsigned record,
         SH_CALL(CommuBoard_DrawBar)(bx, y + 0x1E, B(bars + 3) * 12, 3, 0);
         return;
     }
-    const signed char pick = SB(at::kPick);
+    const signed char pick = Rest4b_Pick;
     unsigned char k;
     if (pick == 0)
         k = 0;
@@ -1189,13 +1189,13 @@ extern "C" void __cdecl CommuBoard_DrawBar(int x, int y, int w, unsigned row, un
 // (CommuBoard_SlotRecordXY). Then the counters: sprite 2, the s8 0x9046CA and
 // 0x9046CC printed (Crt_sprintf, Text_DrawFont12) beside the label 0x669E10.
 extern "C" void __cdecl CommuBoard_DrawPanel(void) {
-    SH_CALL(Menu_DrawBox)(0x14, 0x12, 0x118, 0x13, 0xF2, B(at::kColour));
+    SH_CALL(Menu_DrawBox)(0x14, 0x12, 0x118, 0x13, 0xF2, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(Menu_DrawOutlineNotched)(0x16, 0x14, 0x113, 0xF, 0);
-    const unsigned help = W(at::kHelp);
+    const unsigned help = Rest4b_Help;
     if (help != 0xFFFF) {
         const unsigned char* const text = At(at::kMessagePools + W(at::kMessagePools + 2 * help));
         SH_CALL(Text_DrawAt)(0x1D, 0x15, 0, 0xFF, text);
-        if (W(at::kHelp) == 0x3D) {
+        if (Rest4b_Help == 0x3D) {
             SH_CALL(Gpu_SetDrawMode)(Packet(), 0, 0, 0, 0);
             SH_CALL(Gfx_CommitPrim)(1, 0xC);
             const unsigned char intensity = Flash();
@@ -1203,18 +1203,18 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
             SH_CALL(Gpu_SetTile)(q);
             SH_CALL(Gpu_SetSemiTrans)(q, 1);
             PutFBits(q + 0xC, 0x41B00000u);   // 22.0
-            const unsigned t = B(at::kToggle);
+            const unsigned t = Rest4b_Toggle;
             PutF(q + 8, static_cast<float>(static_cast<int>(t * 36 + 0xD0)));
             PutFBits(q + 0x18, 0x41400000u);   // 12.0
             q[4] = intensity;
             q[5] = intensity;
             q[6] = 0;
-            const unsigned t2 = B(at::kToggle);
+            const unsigned t2 = Rest4b_Toggle;
             PutF(q + 0x14, static_cast<float>(static_cast<int>(t2 * 12 + 0x19)));
             SH_CALL(Gfx_CommitPrim)(1, 0x1C);
         }
     }
-    SH_CALL(Menu_DrawBox)(0x15, 0x2E, 0x114, 0xAA, 0x80, B(at::kColour));
+    SH_CALL(Menu_DrawBox)(0x15, 0x2E, 0x114, 0xAA, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(CommuBoard_DrawPanelFrame)(0x14, 0x2D);
     SH_CALL(Menu_DrawOutlineNotched)(0x20, 0x38, 0xA8, 0x10, 1);
     const unsigned char top = SH_CALL(Commu_CountInSlot)(0);
@@ -1232,8 +1232,8 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
         const int sy = (i >> 2) * 61;
         const int sx = static_cast<int>(i % 4) * 52;
         SH_CALL(Menu_DrawOutlineNotched)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1);
-        if (i >= B(at::kAreaLimits + W(at::kArea))) {
-            SH_CALL(Menu_DrawBox)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1, B(at::kColour));
+        if (i >= B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber))) {
+            SH_CALL(Menu_DrawBox)(sx + 0x20, sy + 0x6B, 0x28, 0x28, 1, static_cast<unsigned char>(BattleDraw_Colour));
             continue;
         }
         SH_CALL(CommuBoard_DrawSprite)(sx + 0x1A, sy + 0x5B, 0);
@@ -1253,7 +1253,7 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
     }
     SH_CALL(CommuBoard_DrawSprite)(0x30, 0x4C, 2);
     char* const out = reinterpret_cast<char*>(At(at::kTextBuffer));
-    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(at::kCountFormat)), static_cast<int>(SB(at::kCountA)));
+    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)), Rest4b_CountA);
     SH_CALL(Text_DrawFont12)(0x50, 0x4C, 0, At(at::kTextBuffer));
     // DIV-0064 group 14: the label from the overlay's buffer, its count 2 the
     // Chinese word's (the overlay's is longer); the number after it then
@@ -1261,7 +1261,7 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
     // the US screen has it (the owner's web reference, 2026-10-10).
     const bool words = Labels_Written(14);
     SH_CALL(Text_DrawAt)(0x78, 0x4C, 0, words ? 0xFF : 2, words ? Labels_Slot(14, 0) : At(at::kPanelLabel));
-    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(at::kNumberFormat)), static_cast<unsigned>(B(at::kCountC)));
+    SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(at::kNumberFormat)), static_cast<std::uint32_t>(Rest4a_LevelLit));
     SH_CALL(Text_DrawFont12)(words ? 0xBE : 0x98, 0x4C, 0, At(at::kTextBuffer));
 }
 
@@ -1298,7 +1298,7 @@ extern "C" void __cdecl CommuBoard_DrawSlotLines(unsigned slot, unsigned steady)
     unsigned char* p = Packet();
     SH_CALL(Gpu_SetLineF3)(p);
     const U row = at::kSlotLines + 12 * s;
-    const auto locked = [s] { return s != 0 && s < 9 && s > B(at::kAreaLimits + W(at::kArea)); };
+    const auto locked = [s] { return s != 0 && s < 9 && s > B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber)); };
     PutF(p + 8, static_cast<float>(locked() ? S16(row + 4) : S16(row)));
     PutF(p + 0xC, static_cast<float>(S16(row + 2)));
     PutF(p + 0x14, static_cast<float>(S16(row + 8)));
@@ -1363,10 +1363,10 @@ extern "C" unsigned __cdecl Commu_NthInSlot(unsigned slot, unsigned nth) {
 //           row = cell - 0xA, cell = cell * 4 - 0x27.
 // Any of the four keys: sound 0x100. All byte arithmetic.
 extern "C" void __cdecl CommuBoard_MoveGridCursor(unsigned char* cell) {
-    const unsigned keys = SH_CALL(Input_AutoRepeat)(W(at::kPressed) & 0xF000);
-    unsigned char& mode = B(at::kCursorMode);
-    unsigned char& row = B(at::kCursorA);
-    unsigned char& col = B(at::kCursorB);
+    const unsigned keys = SH_CALL(Input_AutoRepeat)(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
+    unsigned char& mode = Rest4b_CursorMode;
+    unsigned char& row = Rest4b_CursorA;
+    unsigned char& col = Rest4b_CursorB;
     const auto toRight = [&] {
         mode = 2;
         *cell = 9;
@@ -1540,13 +1540,13 @@ int ListBoxWidth() {
 // (the pointers at 0x669E68) at (x + 6, y + 2 + 16 * i), colour 7 * steady.
 extern "C" void __cdecl CommuBoard_DrawListBox(int x, int y, unsigned steady) {
     const unsigned char flag = static_cast<unsigned char>(steady);
-    const int h = B(at::kListCount) * 16;
-    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 5, ListBoxWidth(), h, 0x81, B(at::kColour));
-    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, B(at::kColour));
+    const int h = FieldE2_LevelA * 16;
+    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 5, ListBoxWidth(), h, 0x81, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(CommuBoard_DrawListFrame)(x, y - 1, static_cast<unsigned>(h));
-    if (B(at::kListCount) == 0) return;
+    if (FieldE2_LevelA == 0) return;
     const unsigned char colour = static_cast<unsigned char>(flag * 7);
-    for (unsigned i = 0; i < B(at::kListCount); ++i) {
+    for (unsigned i = 0; i < FieldE2_LevelA; ++i) {
         const unsigned char* const line = At(L(at::kListTextA + 4 * i));
         SH_CALL(Text_DrawAt)(x + 6, static_cast<int>(i * 16) + y + 2, colour, Labels_Written(13) ? 0xFF : 3, line);   // DIV-0064 group 13
     }
@@ -1578,11 +1578,11 @@ extern "C" void __cdecl CommuBoard_DrawListFrame(int x, int y, unsigned h) {
 // original 0x459A30: the first list's y: with 0x675F75 0, 0x6A less 9 per row
 // past four of 0x9046CB; else 0xAC - 12 * 0x9046CB.
 extern "C" int __cdecl CommuBoard_ListY(void) {
-    if (B(at::kCursorA) == 0) {
-        const unsigned n = B(at::kListCount);
+    if (Rest4b_CursorA == 0) {
+        const unsigned n = FieldE2_LevelA;
         return n > 4 ? 0x6A - static_cast<int>((n - 4) * 9) : 0x6A;
     }
-    return 0xAC - static_cast<int>(B(at::kListCount)) * 12;
+    return 0xAC - FieldE2_LevelA * 12;
 }
 
 // original 0x459A80: list `list`'s box at (x, y): its 2-byte row 0x652C6C + 2 *
@@ -1595,8 +1595,8 @@ extern "C" unsigned short __cdecl CommuBoard_DrawListBoxB(int x, int y, unsigned
     const int h = B(row + 1) * 16;
     if (h + static_cast<short>(y) + 4 > 0xD8) y = 0xD4 - h;
     const unsigned char flag = static_cast<unsigned char>(steady);
-    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 6, ListBoxWidth(), h, 0x81, B(at::kColour));
-    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, B(at::kColour));
+    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 6, ListBoxWidth(), h, 0x81, static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, static_cast<unsigned char>(BattleDraw_Colour));
     SH_CALL(CommuBoard_DrawListFrame)(x, y - 1, static_cast<unsigned>(h));
     if (B(row + 1) != 0) {
         const unsigned char colour = static_cast<unsigned char>(flag * 7);
@@ -1633,12 +1633,12 @@ extern "C" void __cdecl CommuBoard_SlotRecordXY(short* x, short* y, unsigned slo
 // original 0x459C40: the step back: the grid cursor put back from 0x675F84..86,
 // sound 0x106, 0x939A40 - 1.
 extern "C" void __cdecl CommuBoard_CancelStep(void) {
-    const unsigned char b = B(at::kSavedB), a = B(at::kSavedA), mode = B(at::kSavedMode);
-    B(at::kCursorB) = b;
-    B(at::kCursorA) = a;
-    B(at::kCursorMode) = mode;
+    const unsigned char b = Rest4b_SavedB, a = Rest4b_SavedA, mode = Rest4b_SavedMode;
+    Rest4b_CursorB = b;
+    Rest4b_CursorA = a;
+    Rest4b_CursorMode = mode;
     SH_CALL(Sound_PlayEffect)(0x106);
-    B(at::kBoardStep) = static_cast<unsigned char>(B(at::kBoardStep) - 1);
+    Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep - 1);
 }
 
 // original 0x459C80: the record at the list cursor (less `back`) of the slot
@@ -1650,35 +1650,35 @@ extern "C" void __cdecl CommuBoard_CancelStep(void) {
 // A cursor past the slot's records (0xFF) writes record 255 in the original;
 // ours aborts (section 5).
 extern "C" unsigned char __cdecl CommuBoard_PlaceRecord(unsigned back) {
-    const unsigned char mode = B(at::kCursorMode);
+    const unsigned char mode = Rest4b_CursorMode;
     bool refused;
     if (mode == 0 || mode == 2) {
         refused = false;
     } else if (mode == 1) {
-        const unsigned char n = SH_CALL(Commu_CountInSlot)(B(at::kPick));
-        refused = n == 3 || static_cast<int>(SB(at::kPick)) > static_cast<int>(B(at::kAreaLimits + W(at::kArea)));
+        const unsigned char n = SH_CALL(Commu_CountInSlot)(static_cast<unsigned char>(Rest4b_Pick));
+        refused = n == 3 || Rest4b_Pick > static_cast<int>(B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber)));
     } else {
         refused = true;
     }
-    const unsigned char arg = B(at::kTailArg);
-    if (!refused && static_cast<int>(SB(at::kPick)) == static_cast<int>(arg)) refused = true;
+    const unsigned char arg = AreaW0c_TailSub;
+    if (!refused && Rest4b_Pick == static_cast<int>(arg)) refused = true;
     if (refused) {
         SH_CALL(Sound_PlayEffect)(0x107);
         return 0;
     }
-    const unsigned char b = B(at::kSavedB), a = B(at::kSavedA), m = B(at::kSavedMode);
-    B(at::kCursorB) = b;
-    B(at::kCursorA) = a;
-    B(at::kCursorMode) = m;
-    const unsigned char nth = static_cast<unsigned char>(B(at::kListCursor) - static_cast<unsigned char>(back));
+    const unsigned char b = Rest4b_SavedB, a = Rest4b_SavedA, m = Rest4b_SavedMode;
+    Rest4b_CursorB = b;
+    Rest4b_CursorA = a;
+    Rest4b_CursorMode = m;
+    const unsigned char nth = static_cast<unsigned char>(static_cast<unsigned char>(Rest4b_ListCursor) - static_cast<unsigned char>(back));
     const unsigned idx = SH_CALL(Commu_NthInSlot)(arg, nth);
     const U r = Member(idx & 0xFF, "CommuBoard_PlaceRecord");
-    B(r + 1) = B(at::kPick);
-    PutL(r + 4, L(at::kClock));
-    const unsigned char state = B(at::kBoardState);
+    B(r + 1) = static_cast<unsigned char>(Rest4b_Pick);
+    PutL(r + 4, Rest4a_Clock);
+    const unsigned char state = Rest4b_BoardState;
     B(r + 2) = 0;
     B(r + 3) = 0;
-    B(at::kBoardState) = static_cast<unsigned char>(state - 1);
+    Rest4b_BoardState = static_cast<unsigned char>(state - 1);
     SH_CALL(Sound_PlayEffect)(0x103);
     return 1;
 }
@@ -1690,31 +1690,31 @@ extern "C" unsigned char __cdecl CommuBoard_PlaceRecord(unsigned back) {
 // it); ours aborts (section 5).
 extern "C" void __cdecl CommuBoard_SlotHelp(void) {
     static const unsigned short kHelps[9] = {0x47, 0x54, 0x95, 0x9A, 0x4E, 0x93, 0x58, 0x6C, 0x5D};
-    const unsigned char arg = B(at::kTailArg);
+    const unsigned char arg = AreaW0c_TailSub;
     if (arg == 0) {
-        PutW(at::kHelp, 0x6A);
+        Rest4b_Help = 0x6A;
         return;
     }
     if (arg >= 9) {
-        PutW(at::kHelp, (arg * 2u + 0x2C) & 0xFFFF);
+        Rest4b_Help = (arg * 2u + 0x2C) & 0xFFFF;
         return;
     }
     const U slot = Slot(arg);
     const unsigned char kind = B(slot);
     if (kind == 0) {
-        PutW(at::kHelp, 0x6A);
+        Rest4b_Help = 0x6A;
         return;
     }
     const unsigned char k = static_cast<unsigned char>(kind - 4);
     if (k == 0) {
-        PutW(at::kHelp, B(slot + 1) + 0x4Au);
+        Rest4b_Help = B(slot + 1) + 0x4Au;
         return;
     }
     if (k > 9)
         bof3::Fatal("CommuBoard_SlotHelp: slot %u's kind %u is past the nine of its stack table; the original reads the "
                     "frame above it",
                     static_cast<unsigned>(arg), static_cast<unsigned>(kind));
-    PutW(at::kHelp, kHelps[k - 1]);
+    Rest4b_Help = kHelps[k - 1];
 }
 
 // original 0x459E50: the help line for the slot at `cell`: 0x44 on 0x9039F5's
@@ -1723,24 +1723,24 @@ extern "C" void __cdecl CommuBoard_SlotHelp(void) {
 // (each read in place).
 extern "C" void __cdecl CommuBoard_PickHelp(unsigned char* cell) {
     const unsigned char v = *cell;
-    if (v == B(at::kTailArg)) {
-        PutW(at::kHelp, 0x44);
+    if (v == AreaW0c_TailSub) {
+        Rest4b_Help = 0x44;
         return;
     }
     if (v == 0) {
-        PutW(at::kHelp, 0x69);
+        Rest4b_Help = 0x69;
         return;
     }
     if (v >= 9) {
-        PutW(at::kHelp, W(at::kSlotHelp + 2 * v));
+        Rest4b_Help = W(at::kSlotHelp + 2 * v);
         return;
     }
-    if (v > B(at::kAreaLimits + W(at::kArea))) {
-        PutW(at::kHelp, 0x44);
+    if (v > B(at::kAreaLimits + static_cast<std::uint32_t>(Game_AreaNumber))) {
+        Rest4b_Help = 0x44;
         return;
     }
     const unsigned char kind = B(Slot(v));
-    PutW(at::kHelp, kind == 0 ? 0x69 : W(at::kPickHelp + 2 * kind));
+    Rest4b_Help = kind == 0 ? 0x69 : W(at::kPickHelp + 2 * kind);
 }
 
 #pragma clang attribute pop

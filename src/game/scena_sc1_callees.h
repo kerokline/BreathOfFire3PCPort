@@ -19,22 +19,22 @@ namespace at {
 
 // The scenario bytes (docs/field-modes.md section 2).
 constexpr std::uint32_t kState = 0x8034E2;         // s8: the chapter's state (Scena01_States)
-constexpr std::uint32_t kStep = 0x8034E5;          // u8: the scene's step
-constexpr std::uint32_t kTimer = 0x8034E6;         // u16: the scene's timer
+// kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
+// kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: the scene's timer
 constexpr std::uint32_t kCounters = 0x903848;      // u8 x4: the script counters (MoveScript_CounterOps)
 constexpr std::uint32_t kEffectSlot = 0x903850;    // u8: the effect slot just taken
-constexpr std::uint32_t kFlagBank = 0x929ED0;      // unsigned char *: the chapter's flag bits
-constexpr std::uint32_t kStartWord = 0x903F98;     // dword Scena01_Start clears; the object hook's second argument
+// kFlagBank: now AreaW0c_FlagRow (symbols.toml). unsigned char *: the chapter's flag bits
+// kStartWord: now Cond_Flags[8] (symbols.toml). dword Scena01_Start clears; the object hook's second argument
 constexpr std::uint32_t kStoryFlags = 0x90410C;    // the story flag bits Scena01_Scene06 step 0 tests (bit 4)
-constexpr std::uint32_t kAreaByte = 0x904CD0;      // u8 some scenes store after an area change (0xB, 1, 0xFF)
+// kAreaByte: now AreaW1f_MusicCurrent (symbols.toml). u8 some scenes store after an area change (0xB, 1, 0xFF)
 
 // The chapter's tables (symbols.toml [[data]]).
-constexpr std::uint32_t kRuns = 0x660D88;          // Scena01_Runs: 24 scene handlers on MoveScript_Var7
+// kRuns: now Scena01_Runs (symbols.toml). Scena01_Runs: 24 scene handlers on MoveScript_Var7
 constexpr unsigned kRunCount = 24;
-constexpr std::uint32_t kObjects = 0x660DE8;       // Scena01_ObjectHandlers: 18, on the object's +0x86
+// kObjects: now Scena01_ObjectHandlers (symbols.toml). Scena01_ObjectHandlers: 18, on the object's +0x86
 constexpr unsigned kObjectCount = 18;
-constexpr std::uint32_t kCells = 0x660E30;         // Scena01_Cells: 2 records of 5 bytes for 0x56D800
-constexpr std::uint32_t kCellHandlers = 0x660E3C;  // Scena01_CellHandlers: 2, on 0x56D800's answer
+// kCells: now Scena01_Cells (symbols.toml). Scena01_Cells: 2 records of 5 bytes for 0x56D800
+// kCellHandlers: now Scena01_CellHandlers (symbols.toml). Scena01_CellHandlers: 2, on 0x56D800's answer
 constexpr unsigned kCellCount = 2;
 constexpr std::uint32_t kEffectX = 0x660D60;       // s8 by the byte 0x904062: Scena01_PlaceEffect's +0x10
 
@@ -43,15 +43,15 @@ constexpr std::uint32_t kChoiceWord = 0x7DEE48;    // u16
 constexpr std::uint32_t kChoiceBits = 0x7DEE44;    // u8, bit 1
 
 // Bytes of the party records beyond ObjTrio's first member, and elsewhere.
-constexpr std::uint32_t kMemberOrder = 0x904062;   // u8: Scena01_PlaceEffect's index into kEffectX
-constexpr std::uint32_t kScene08A = 0x803157;      // u8 set 0x7F by Scena01_Scene08 step 0
-constexpr std::uint32_t kScene08B = 0x92BF17;      // u8 cleared by Scena01_Scene08 step 0
-constexpr std::uint32_t kScene06Member = 0x669730; // u8: the member record Scena01_Scene06 step 0xF clears bit 0 of
+// kMemberOrder: now Cond_Flags[0xd2] (symbols.toml). u8: Scena01_PlaceEffect's index into kEffectX
+// kScene08A: now ScenaSc1_Scene08A (symbols.toml). u8 set 0x7F by Scena01_Scene08 step 0
+// kScene08B: now ScenaSc1_Scene08B (symbols.toml). u8 cleared by Scena01_Scene08 step 0
+// kScene06Member: now MoveScript_EffectState[4] (symbols.toml). u8: the member record Scena01_Scene06 step 0xF clears bit 0 of
 constexpr std::uint32_t kMemberRecords = 0x903A7B; // + 0xA4 * index: the byte whose bit 0 goes
 // Game_Mode 7 (the shop, docs/mode_states.md) as Scena01_Scene11 / 17 set it.
-constexpr std::uint32_t kShopObject = 0x929F0C;    // u8: 0xFE
-constexpr std::uint32_t kShopByteA = 0x929F00;     // u8: 0
-constexpr std::uint32_t kShopByteB = 0x929EC3;     // u8: 0
+// kShopObject: now ModeStates_ShopObject (symbols.toml). u8: 0xFE
+// kShopByteA: now BattleE1_Mode (symbols.toml). u8: 0
+// kShopByteB: now ScenaSc1_ShopByteB (symbols.toml). u8: 0
 constexpr std::uint32_t kShopByteC = 0x929EC2;     // u8: 1
 
 }  // namespace at

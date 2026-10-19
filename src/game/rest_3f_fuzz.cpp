@@ -265,12 +265,12 @@ const std::uint8_t kKinds[] = {0x5F, 0x60, 0x69, 0x9C, 0x9E, 0xA1, 0xA2, 0xA3, 0
 // EffectKind30_Shards region (to 0x3000 bytes from its start: the largest
 // capture record's half window, 0x2D00, from a cursor up to 0x300 in), and the
 // first 64 particles.
-constexpr U kShardsEnd = sh::at::kShards + sh::at::kShardsSize;
-constexpr U kPixelsEnd = sh::at::kShards + 0x3000;
+constexpr U kShardsEnd = EffectKind30_Shards_addr + sh::at::kShardsSize;
+constexpr U kPixelsEnd = EffectKind30_Shards_addr + 0x3000;
 constexpr unsigned kPartRoom = 64;
 const sh::Region kRegions[] = {
-    {at::k9EWall, 0x10},
-    {at::kPixCursor, at::kPixCellsSize},
+    {Rest3f_9EWall_addr, 0x10},
+    {Rest3f_PixCursor_addr, at::kPixCellsSize},
     {kShardsEnd, kPixelsEnd - kShardsEnd},
     {at::kParticles, kPartRoom * at::kPartStride},
 };
@@ -289,9 +289,9 @@ bool Moves(unsigned k) { return k == kA1Aim || k == kA1Move || k == kA3Aim || k 
 // and up to 24 pixels planted, the particle cursor so that every particle the
 // split can make stays inside the first 64.
 void SeedSplit() {
-    At(at::kPixIndex)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2));
-    const U cursor = sh::at::kShards + 2 * (sh::Next() % 0x180);
-    SetLong(At(at::kPixCursor), static_cast<std::int32_t>(cursor));
+    At(Rest3f_PixIndex_addr)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2));
+    const U cursor = EffectKind30_Shards_addr + 2 * (sh::Next() % 0x180);
+    SetLong(At(Rest3f_PixCursor_addr), static_cast<std::int32_t>(cursor));
     std::memset(P(cursor), 0, 0x2D00);
     const unsigned planted = sh::Next() % 25;
     for (unsigned n = 0; n < planted; ++n) {
@@ -300,7 +300,7 @@ void SeedSplit() {
         SetWord(P(cursor + 2 * at), (sh::Next() | 1) & 0xFFFF);
     }
     const U first = sh::Next() % (kPartRoom - 24);
-    SetLong(At(at::kPartCursor), static_cast<std::int32_t>(at::kParticles + first * at::kPartStride));
+    SetLong(At(Rest3f_PartCursor_addr), static_cast<std::int32_t>(at::kParticles + first * at::kPartStride));
 }
 
 void Seed(unsigned k) {
@@ -339,7 +339,7 @@ void Seed(unsigned k) {
     case k9EHold:
         // the wall's third word landing on +0x14 half the time; +7 the count
         if (sh::Half())
-            SetLong(At(at::k9EWall + 8), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x14)) -
+            SetLong(At(Rest3f_9EWall_addr + 8), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x14)) -
                                                                       static_cast<U>(Long(s + 0x20) >> 1) +
                                                                       PickOf(0, 0, 1, 0xFFFFFFFFu)));
         if (sh::Half()) s[7] = At(at::kCounter)[0];
@@ -349,14 +349,14 @@ void Seed(unsigned k) {
         if (sh::Half()) At(at::kCounter)[0] = 0x29;
         break;
     case kA1ReadBack:
-    case kA3ReadBack: At(at::kPixIndex)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2)); break;
+    case kA3ReadBack: At(Rest3f_PixIndex_addr)[0] = static_cast<unsigned char>(PickOf(1, 1, 0, 2)); break;
     case kA1Split:
     case kA3Split: SeedSplit(); break;
     case kA1Aim:
     case kA1Move:
     case kA3Aim:
     case kA3Move:
-        SetWord(At(at::kPartCount), PickOf(0, 1, 15, 16, 17, 33, kPartRoom, sh::Next() % (kPartRoom + 1)));
+        SetWord(At(Rest3f_PartCount_addr), PickOf(0, 1, 15, 16, 17, 33, kPartRoom, sh::Next() % (kPartRoom + 1)));
         break;
     case kA9Wait:
         if (sh::Half()) At(at::kCounter)[0] = 9;
@@ -398,7 +398,7 @@ void Args(unsigned k, U* a) {
         break;
     case k9EOutline:
         a[0] = s + 0x34;
-        a[1] = sh::Half() ? s + 0xC : at::k9EWall;
+        a[1] = sh::Half() ? s + 0xC : Rest3f_9EWall_addr;
         break;
     case kA2Ring:
         a[0] = s + 0x34;
@@ -447,9 +447,9 @@ void Disturb(U h) {
     }
     case 4: Draw_PassFlags = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
     case 5:
-        if (Moves(g_current)) SetWord(At(at::kPartCount), v % (kPartRoom + 1));
+        if (Moves(g_current)) SetWord(At(Rest3f_PartCount_addr), v % (kPartRoom + 1));
         break;
-    case 6: At(at::kPixIndex)[0] = static_cast<unsigned char>(v % at::kPixRecords); break;
+    case 6: At(Rest3f_PixIndex_addr)[0] = static_cast<unsigned char>(v % at::kPixRecords); break;
     default: break;
     }
 }

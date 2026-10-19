@@ -176,7 +176,7 @@ void* Ptr(U a) { return reinterpret_cast<void*>(static_cast<std::uintptr_t>(a));
 U BossFindEffect(const U*, U) {
     const U n = sh::Noise();
     if (n % 4 == 0) return 0;
-    return sh::at::kSprites + sh::at::kSpriteStride * ((n >> 2) % sh::at::kSpriteCount);
+    return Sprite_Objects_addr + sh::at::kSpriteStride * ((n >> 2) % sh::at::kSpriteCount);
 }
 // Area109_SwitchPattern (ours, Area109_SwitchHook's callee): 1..8 whole, as
 // the real one answers (lea eax, [edi + 1]); the caller divides all of it.
@@ -264,12 +264,12 @@ constexpr U kItemsRegion = 48;   // draw items compared (0x90 each); AreaMapBD_B
 const sh::Region kRegions[] = {
     {0x904AA0, 0x20},                       // the battle bytes: the event battle 0x904AAA, the formation 0x904AAC, 0x904AB2 / B3
     {at::kEnemies, at::kEnemyStride * at::kEnemyCount},   // the eight enemy records
-    {at::kEncounterRowsAt, 0x48},     // Encounter_Rows (8 rows of 9)
+    {Encounter_Rows_addr, 0x48},      // Encounter_Rows (8 rows of 9)
     {0x695990, 0x2A4},                      // Quake's .bss: the facing, the lift tables, the block's corner (magic_s23's region)
-    {at::kMusicPlaying, 4},                 // the byte compared with Music_Track
-    {at::kReturnX, 8},                      // mode 8's return x, z (after Draw_PassFlags)
-    {at::kReturnArea, 0xA90},               // mode 8's return area word and DrawLayers 0x8022A0..0x802D20
-    {at::kAnglesDrawn, 8},                  // Camera_AnglesDrawn
+    {AreaW1f_MusicCurrent_addr, 4},         // the byte compared with Music_Track
+    {MoveScript_TintRecords_addr + 0x21c, 8}, // mode 8's return x, z (after Draw_PassFlags)
+    {AreaW2c_LastArea_addr, 0xA90},         // mode 8's return area word and DrawLayers 0x8022A0..0x802D20
+    {Camera_AnglesDrawn_addr, 8},           // Camera_AnglesDrawn
     {0x7E0688, 4},                          // MapView_Origin
     {0x9039D4, 4},                          // DrawItemPool_Top
     {0x905E80, kItemsRegion * 0x90},        // DrawItems' first items
@@ -301,8 +301,8 @@ void Seed(unsigned k) {
         break;
     case kPlaceAll: {
         // an event battle below the battle side's 24 (each names a row below 8)
-        Mem(at::kEventBattle)[0] = static_cast<unsigned char>(sh::Next() % 24);
-        unsigned char* const rows = Mem(at::kEncounterRowsAt);
+        Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(sh::Next() % 24);
+        unsigned char* const rows = Mem(Encounter_Rows_addr);
         for (unsigned i = 0; i < 0x48; ++i)
             if (sh::Half()) rows[i] = 0xFF;
         break;
@@ -319,8 +319,8 @@ void Seed(unsigned k) {
     case kMode9Leave: {
         if (sh::Often()) MoveScript_WaitWordDA = 0;
         const U t = PickOf(0xFF, 3, sh::Next());
-        Mem(at::kMusicTrack)[0] = static_cast<unsigned char>(t);
-        Mem(at::kMusicPlaying)[0] = static_cast<unsigned char>(sh::Half() ? t : sh::Next());
+        Mem(Music_Track_addr)[0] = static_cast<unsigned char>(t);
+        Mem(AreaW1f_MusicCurrent_addr)[0] = static_cast<unsigned char>(sh::Half() ? t : sh::Next());
         break;
     }
     case kMode9Enter:
@@ -329,16 +329,16 @@ void Seed(unsigned k) {
         break;
     case kMode11Frame: Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next())); break;
     case kMode11LookEnd:
-        if (sh::Often()) SetWord(Mem(at::kYaw), 0xFD56);
-        if (sh::Often()) SetWord(Mem(at::kPitch), PickOf(0x200, 0x200, 0x1FF, 0x201));
+        if (sh::Often()) SetWord(Mem(Camera_Angles_addr), 0xFD56);
+        if (sh::Often()) SetWord(Mem(Cond_AngleFB_addr), PickOf(0x200, 0x200, 0x1FF, 0x201));
         break;
     case kQuake: {
-        SetWord(Mem(at::kQuakeX), sh::Next() % 0x40);
-        SetWord(Mem(at::kQuakeY), sh::Next() % 0x40);
+        SetWord(Mem(MagicS23_QuakeX_addr), sh::Next() % 0x40);
+        SetWord(Mem(MagicS23_QuakeY_addr), sh::Next() % 0x40);
         break;
     }
     case kSwitch:
-        Mem(at::kLeaderFacing)[0] = static_cast<unsigned char>(PickOf(3, 3, 3, 3, 2, sh::Next()));
+        Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(PickOf(3, 3, 3, 3, 2, sh::Next()));
         break;
     case kCharCount: {
         // a string: Latin and two-byte characters, its NUL anywhere, two NULs
@@ -358,7 +358,7 @@ void Seed(unsigned k) {
     }
     if (k == kFrameBD) {
         // the angles the view was drawn at: the same half the time, one word off otherwise
-        unsigned char* const drawn = Mem(at::kAnglesDrawn);
+        unsigned char* const drawn = Mem(Camera_AnglesDrawn_addr);
         std::memcpy(drawn, Mem(0x929EC8), 8);
         if (!sh::Half()) drawn[(sh::Next() % 3) * 2] ^= static_cast<unsigned char>(1 + sh::Next() % 0xFF);
         if (sh::Half()) MapView_Redraw = 0;
@@ -374,8 +374,8 @@ void Args(unsigned k, U* a) {
             const U cell = (v >> 8) % 0x25 - 2u + 2u * corner;
             return (cell << 6) - 0x4000u + (v & 0x3F);
         };
-        a[0] = coord(a[0], static_cast<U>(static_cast<std::int16_t>(Word(Mem(at::kQuakeX)))));
-        a[1] = coord(a[1], static_cast<U>(static_cast<std::int16_t>(Word(Mem(at::kQuakeY)))));
+        a[0] = coord(a[0], static_cast<U>(static_cast<std::int16_t>(Word(Mem(MagicS23_QuakeX_addr)))));
+        a[1] = coord(a[1], static_cast<U>(static_cast<std::int16_t>(Word(Mem(MagicS23_QuakeY_addr)))));
         if (sh::Next() % 8 == 0) a[sh::Next() & 1] = sh::Next();
         break;
     }
@@ -405,14 +405,14 @@ void Disturb(U h) {
         if (sh::InRegions(s, 0x80)) SetWord(s + 0x2E, (v & 1) ? 0x149u : v >> 1);
         break;
     case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xB : v >> 1); break;
-    case 3: Mem(at::kMusicTrack)[0] = static_cast<unsigned char>((v & 1) ? Mem(at::kMusicPlaying)[0] : v >> 1); break;
+    case 3: Mem(Music_Track_addr)[0] = static_cast<unsigned char>((v & 1) ? Mem(AreaW1f_MusicCurrent_addr)[0] : v >> 1); break;
     case 4: MapView_Redraw = static_cast<unsigned char>(v % 4); break;
-    case 5: SetWord(Mem((v & 1) ? at::kYaw : at::kPitch), (v & 2) ? ((v & 1) ? 0xFD56u : 0x200u) : v >> 2); break;
+    case 5: SetWord(Mem((v & 1) ? Camera_Angles_addr : Cond_AngleFB_addr), (v & 2) ? ((v & 1) ? 0xFD56u : 0x200u) : v >> 2); break;
     case 6: SetLong(Mem((v & 1) ? at::kRows : at::kColumns), static_cast<std::int32_t>((v >> 1) % 6)); break;   // a walk cut short
     case 7: DrawItemPool_Top = static_cast<unsigned short>((v & 1) ? 0x3FE + (v >> 1) % 4 : (v >> 1) % kItemsRegion); break;
     case 8: SetWord(Mem((v & 1) ? at::kOriginX : at::kOriginZ), v >> 1); break;
-    case 9: Mem(at::kPlaced)[0] = static_cast<unsigned char>(v); break;
-    case 10: SetWord(Mem(sh::at::kVertexScratch + 2 * ((v & 3) % 3)), v >> 2); break;
+    case 9: Mem(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(v); break;
+    case 10: SetWord(Mem(Prim_VertexScratch_addr + 2 * ((v & 3) % 3)), v >> 2); break;
     case 11: PutFloat(Mem(0x903820 + 4 * (v & 1)), static_cast<float>(static_cast<int>((v >> 1) % 1000) - 500)); break;
     default: break;
     }
@@ -487,11 +487,11 @@ void CheckPspMyriaItem() {
             o[0x9E] = static_cast<unsigned char>(slot);
         }
         SetWord(move_script::At(0x904EFC), (next() & 1) ? psp_code::kMyriaArea : (next() & 1) ? 197 + next() % 3 : next());
-        move_script::At(at::kEventBattle)[0] =
+        move_script::At(BattleActions_EventBattle_addr)[0] =
             static_cast<unsigned char>((next() & 1) ? psp_code::kMyriaEvent : (next() & 1) ? 0x36 + next() % 3 : next());
         capture(input);
         const bool cond = Word(move_script::At(0x904EFC)) == psp_code::kMyriaArea &&
-                          move_script::At(at::kEventBattle)[0] == psp_code::kMyriaEvent;
+                          move_script::At(BattleActions_EventBattle_addr)[0] == psp_code::kMyriaEvent;
 
         apply(input);
         original(slot, count, kind);
