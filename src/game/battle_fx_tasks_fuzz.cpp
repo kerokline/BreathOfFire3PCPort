@@ -19,6 +19,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_fx_tasks_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -75,14 +76,14 @@ void Disturb() {
     case 0: Sprite_Current = AnySlot(w); break;
     case 1: SetPtr(BattleFlow_TaskCurrent_addr, AnySlot(w)); break;
     case 2: SetPtr(BattleE2_Owner_addr, AnyOwner(w)); break;
-    case 3: CurSlot()[1] = static_cast<unsigned char>(v % 6); break;
-    case 4: CurSlot()[7] = static_cast<unsigned char>(v % 5); break;
+    case 3: reinterpret_cast<records::BattleTask*>(CurSlot())->state = static_cast<unsigned char>(v % 6); break;
+    case 4: reinterpret_cast<records::BattleTask*>(CurSlot())->mode = static_cast<unsigned char>(v % 5); break;
     case 5: Sprite_Current[0] = static_cast<unsigned char>(v); break;
     case 6: At(at::kPhase)[0] = static_cast<unsigned char>(v % 7); break;
     case 7: At(at::kRoundCount)[0] = static_cast<unsigned char>(v); break;
     case 8: Owner()[0] = static_cast<unsigned char>(v); break;
     case 9: Owner()[5] = static_cast<unsigned char>(v % 11); break;
-    case 10: CurSlot()[0x27] = static_cast<unsigned char>(v); break;
+    case 10: reinterpret_cast<records::BattleTask*>(CurSlot())->clut = static_cast<unsigned char>(v); break;
     case 11: SetWord(CurSlot() + 0x36 + 4 * (w % 2), h >> 16); break;
     case 12: SetLong(At(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     default: SetWord(CurSlot() + 0x60, h >> 16); break;
@@ -350,10 +351,11 @@ void Fix() {
     SetPtr(BattleE2_Owner_addr, AnyOwner(Next()));
     for (unsigned i = 0; i < at::kTaskCount; ++i) {
         unsigned char* const t = Slot(i);
+        auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
         SetPtr(Address(t + 0x80), AnyOwner(Next()));
-        t[5] = static_cast<unsigned char>(Next() % 11);
+        task_rec->param = static_cast<unsigned char>(Next() % 11);
         SetWord(t + 0x2C, Next() % 8);
-        t[1] = static_cast<unsigned char>(Next() % 5);
+        task_rec->state = static_cast<unsigned char>(Next() % 5);
     }
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const e = EnemyObj(i);
@@ -367,19 +369,20 @@ struct Args { std::uint32_t a[4]; };
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
     unsigned char* const t = CurSlot();
+    auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const o = Owner();
     switch (k) {
-    case kDispatch: t[5] = static_cast<unsigned char>(Next() % 19); break;
-    case kMagicDispatch: t[5] = static_cast<unsigned char>(Next() % 110); break;
+    case kDispatch: task_rec->param = static_cast<unsigned char>(Next() % 19); break;
+    case kMagicDispatch: task_rec->param = static_cast<unsigned char>(Next() % 110); break;
     case kMagicRow:
         sc[5] = static_cast<unsigned char>(Often() ? Next() % at::kMagicRowCount : Next() % 2 ? 0 : 150);
         if (Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ 8);
         break;
     case kPopup:
-        t[1] = static_cast<unsigned char>(Often() ? 2 + Next() % 2 : Next() % 5);
+        task_rec->state = static_cast<unsigned char>(Often() ? 2 + Next() % 2 : Next() % 5);
         if (Half()) sc[0] = static_cast<unsigned char>(sc[0] | 1);
-        t[7] = static_cast<unsigned char>(Half() ? 0 : Often() ? Next() % 4 : Next() % 2 ? 4 : Next());
+        task_rec->mode = static_cast<unsigned char>(Half() ? 0 : Often() ? Next() % 4 : Next() % 2 ? 4 : Next());
         break;
     case kPopupStart: {
         unsigned char* const owner = OwnerOf(t);
@@ -387,20 +390,20 @@ void Seed(unsigned k) {
         if (Half()) t[0xB] = 1;
         static const std::int32_t kValues[] = {-1, 0, 1, 9, 10, 11, 99, 100, 101, 999, 9999, -100, -10,
                                                static_cast<std::int32_t>(0x80000000u), 0x7FFFFFFF};
-        if (Often()) SetLong(t + 0x60, kValues[Next() % (sizeof kValues / sizeof kValues[0])]);
+        if (Often()) task_rec->value = kValues[Next() % (sizeof kValues / sizeof kValues[0])];
         break;
     }
     case kPopupHold:
     case kPopupRise:
     case kPopupEnd: {
         static const unsigned char kTimers[] = {0, 0, 1, 0xFF, 2};
-        if (Often()) t[9] = kTimers[Next() % 5];
+        if (Often()) task_rec->timer = kTimers[Next() % 5];
         break;
     }
     case kPopupBounce: {
         const int y = static_cast<short>(Word(t + 0x3A)), x = static_cast<short>(Word(t + 0x36));
-        if (Often()) SetLong(t + 0x1C, y + static_cast<int>(Next() % 3) - 1);
-        if (Often()) SetLong(t + 0x18, x + static_cast<int>(Next() % 2));
+        if (Often()) task_rec->start_y = y + static_cast<int>(Next() % 3) - 1;
+        if (Often()) task_rec->start_x = x + static_cast<int>(Next() % 2);
         break;
     }
     case kPoseTask: sc[1] = static_cast<unsigned char>(Next() % 2); break;

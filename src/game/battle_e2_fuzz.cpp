@@ -18,6 +18,7 @@
 #include "game/battle_e2_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace battle_e2 {
@@ -382,11 +383,11 @@ void SeedMarkers() {
 // velocity and the destination at their meeting point half the time.
 void SeedOp(U base) {
     unsigned char* const s = Sprite_Current;
-    unsigned char* const e = Enemy();
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy());
     s[8] = Byte({0, 1, 2, 3, 4});
     s[0xA] = Byte({1, 1, 2, 0, 4});
     s[9] = Byte({1, 1, 2, 0});
-    e[0xF0] = static_cast<unsigned char>(bh::Next() % 8);
+    enemy_rec->data_id = static_cast<unsigned char>(bh::Next() % 8);
     if (bh::Half()) Mem(BattleActions_EventBattle_addr)[0] = 0;
     // a dispatcher's other state bytes inside its table (the harness drew its
     // own): a plant reading the wrong byte lands on another entry, a count
@@ -403,11 +404,11 @@ void SeedOp(U base) {
     }
     if (base == 0x436F20) {
         const unsigned hp = bh::Often() ? BH_PICK(0, 1, 2, 0x10, 0x7FFF, 0x8000, 0xFFFF) : bh::Next() & 0xFFFF;
-        SetWord(e + 0xA4, hp);
+        enemy_rec->hp = hp;
         const U changes[] = {0, 1, 0xFFFF, hp, hp - 1, hp + 1, 0x7FFF, 0x8000, 0xFFF0};
-        SetWord(e + 0x108, bh::Often() ? changes[bh::Next() % 9] : bh::Next());
-        const unsigned after = (hp - Word(e + 0x108)) & 0xFFFF;
-        SetWord(e + 0xB0, bh::Often() ? (after + (bh::Next() % 3) - 1) & 0xFFFF : bh::Next());
+        enemy_rec->hp_change = bh::Often() ? changes[bh::Next() % 9] : bh::Next();
+        const unsigned after = (hp - static_cast<std::uint16_t>(enemy_rec->hp_change)) & 0xFFFF;
+        enemy_rec->max_hp = bh::Often() ? (after + (bh::Next() % 3) - 1) & 0xFFFF : bh::Next();
     }
 }
 
@@ -471,7 +472,8 @@ void Seed(unsigned k) {
         // every enemy's fields: the argument picks one
         for (unsigned i = 0; i < 8; ++i) {
             unsigned char* const x = bh::EnemyAt(i);
-            SetWord(x + 0xBA, Byte({0, 1, 2, 0xFF}));
+            auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(x);
+            enemy_rec->intel = Byte({0, 1, 2, 0xFF});
             x[0x92] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x92] | 0x20 : x[0x92] & 0xDF);
             x[0x115] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x115] | 0x40 : x[0x115] & 0xBF);
         }
