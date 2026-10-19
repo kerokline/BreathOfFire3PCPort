@@ -445,8 +445,8 @@ void Seed(unsigned k) {
         if (ah::Often()) {
             const U i = ah::Next() % 4;
             rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->x, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2)) << 16 | 0x8000));
-            SetLong(cur + 0x38, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2 + 1)) << 16 |
-                                                          (ah::Often() ? 0x8000 : 0)));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(static_cast<U>(B(Area135_JumpCells_addr + i * 2 + 1)) << 16 |
+                                                                                                   (ah::Often() ? 0x8000 : 0)));
         }
         break;
     case kQueueRun: SeedState(at::kArea135QueueReach); break;

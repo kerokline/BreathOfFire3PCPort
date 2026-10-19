@@ -526,7 +526,7 @@ void Seed141(unsigned k) {
     case k141Move:
         if (ah::Half()) Sprite_Current = ah::Mem(Sprite_Kind2_addr);
         if (ah::Often())
-            SetLong(Sprite_Current + 0x34,
+            rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x,
                     static_cast<std::int32_t>(0x450000u + AH_PICK(0, 0, 0x7FFF, 0x8000, 0xFFFF8000u, 0xFFFF7FFFu, 0xFFFFFFFFu, 0x10000)));
         break;
     case k141RunDown: cur[4] = static_cast<unsigned char>(ah::Next() % at::kArea141ShadeDownReach); break;

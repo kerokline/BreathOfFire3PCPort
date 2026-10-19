@@ -979,7 +979,7 @@ extern "C" void __cdecl Area198_EffectA6Follow(void) {
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, static_cast<std::uint16_t>(tO->screen_x));
     rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, static_cast<std::uint16_t>(tO->screen_y));
     rv::Store<unsigned>(rv::Current<records::EffectObject>()->draw_key, tO->draw_key);
-    SetLong(Sprite_Current + 0x60, tO->depth);
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->depth, tO->depth);
     Sprite_Current[0x29] = 6;
     unsigned char* c = Sprite_Current;
     if (c[0x48] != 0) {
