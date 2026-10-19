@@ -8645,6 +8645,8 @@ designed in rather than bolted on.
   - With `σ(slot)` the slot's own button on a page with the art, the piece
     is drawn by the original's code: nothing changes on a PC or PSX install
     at the identity.
+- **Rationale:** an icon that follows the Config tells the truth once
+  DIV-0139 routes the lists' L1 / R1 tests through `σ`.
 - **Amended 2026-10-18 (D321): L1 / R1 on a PSP base under `ja-JP` are the
   font's capital `L` and `R`.**
   - *Original:* the PSP's own page draws `L` / `R`; this entry as first
