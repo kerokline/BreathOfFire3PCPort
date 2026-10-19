@@ -1,8 +1,11 @@
 # The typed-data round: staging (IDEAS I44, stages 1 and 2)
 
-**Status:** DRAFT (staged 2026-10-17 against `origin/main`; nothing built. The
-idea is [`IDEAS.md`](IDEAS.md) I44; this stages its first two stages, which
-change no behaviour. Stage 3, the relocatable image, is not staged here.)
+**Status:** IN PROGRESS (staged 2026-10-17; stages A and B run 2026-10-19 on
+`typed/b1`, 50,943 raw data sites down to 27,394 with the machine code
+identical to `origin/main`; stage C staged in
+[`typed-data-stage-c.md`](typed-data-stage-c.md). The idea is
+[`IDEAS.md`](IDEAS.md) I44; this round is its first two stages, which change
+no behaviour. Stage 3, the relocatable image, is not staged here.)
 
 The game's code is ours; what our code still reads through numbers is
 Capcom's data image. This round makes every such read a named, typed access
@@ -99,6 +102,33 @@ entries sat inside MsgBoxState, WindowRecords, EnemyWorkingRecords and
 CharacterRecords at the first SG commit (counted by the SG verification,
 2026-10-19; 74 after its fixes, over the same address ranges). They become
 fields of SD's record types in stage C, not before.
+
+### Stage A as run (2026-10-19)
+
+CS, SD and SG ran in parallel worktrees from `origin/main` `19180e63`, with
+the pairing pass of [`install-gap-pairs.md`](install-gap-pairs.md) 8 beside
+them. Each was then **re-derived independently** by an agent that did not see
+the branch first (reports in `C:\Users\kerok\v_typed\`). All four agreed on
+the core and each had missed a class of cases:
+
+- **SG** (`[[data]]` entries): 31 of 485 entries wrong. Its scanner did not
+  count `lea` or `add reg, addr` as indexing, read dword loads masked to 16 bits
+  as dwords, and missed wider stores from a neighbour. The fix moved them to
+  `analysis/typed_globals_unsettled.tsv` and committed the corrected scanner as
+  `tools/data_widths.py`; 488 entries stand.
+- **SD** (`records.h`): no offset or width wrong; four fields of the wrong
+  signedness, and about 79 bytes that readers use left as "unread" padding.
+  The fix named them: 263 fields (from 206), five of the eight open questions
+  settled ([`typed-records.md`](typed-records.md) 3).
+- **CS** (the census): it missed whole classes of sites (module constants
+  outside `namespace at`, helper-based records, seven accessor names), so its
+  baseline rose from 39,503 to 50,943 and the ratchet now sees them.
+- **The pairs:** all 385 pairs reproduced; five errors in the doc, corrected.
+
+The merged tree did not build: SG had typed `Party_Zenny`, whose macro then
+rewrote every `bof3::addr::Party_Zenny`. Fixed on `typed/integration`
+(`29e8ea61`) with `<Name>_addr` emitted beside each typed entry, and
+`tools/codegen_same.py` added, which became the round's proof (section 3).
 
 ## 3. Stage B (after SD and SG merge; file groups in parallel)
 
@@ -293,17 +323,47 @@ Retired: 4,455 constant definitions became notes. The CI ratchet is now
   `BattleE4_MenuActor` and `BattleFlow_TaskCurrent`. Retyping them as
   `unsigned char *` is an SG follow-up that would let them convert.
 
-## 4. Stage C: the layout as one struct (one group, after stage B)
+### B1 as run (2026-10-19)
 
-`tools/gen_symbols.py` grows a second output: `GameData`, one struct
-spanning `.rdata` and `.data` from the typed entries in address order, with
-named padding between them, `static_assert`ed on every member's offset
-(`pc` less the image base) and on the total size. The engine takes a
-`GameData*` at the image base; the macros of today become members, by a
-mechanical rewrite the census drives. The padding members are the census
-of what in `.data` is still unknown, by address and size, in
-`docs/typed-data-census.md`'s last section. Still no behaviour change;
-the same proofs.
+The record sites, by seven file groups (magic, effect, rest, area, battle,
+field, and scenario with the menus and platform), each in its own worktree
+from `typed/b0-globals`, each owning a disjoint list of files. The brief and
+the lists are outside the tree (`C:\Users\kerok\b1\`); stage C reuses them.
+
+- **The proof:** `tools/codegen_same.py` against the `origin/main` build after
+  every batch, `637 objects compared, 0 differ`, and again after each of the
+  seven merges and on a clean build of the result. The state-hash runs this
+  section first planned were not needed: identical instructions cannot
+  behave differently. No game was run for this round.
+- **Converted:** 4,884 census sites (magic 1,347, battle 876, effect 641,
+  field 604, area 535, scenario/UI 505, rest 376), on all nine structs.
+  Record sites 20,079 -> 15,219; all raw sites 32,265 -> 27,394.
+- **Left raw:** every site with a reason, in
+  `analysis/typed_b1_<group>_left.tsv` (15,228 rows; the totals by reason
+  are in [`typed-data-stage-c.md`](typed-data-stage-c.md) 0).
+- **The family audit.** The gate cannot catch a pointer typed as the wrong
+  struct when the offsets agree. Three read-only audits checked about 1,500
+  typed pointers and found 13 wrong (one in magic, nine in battle's fuzz
+  harnesses where a party index ran past the three records, one each in
+  rest, area and field). All 13 were put back to raw (`b78726f8`), each listed
+  with reason `audit-family`. The audits also confirmed magic's central call
+  (`Sprite_Current` in BMAGIC code is a 0x84 task slot, from
+  `BattleTask_RunAll` 0x435110) and area's handler typing.
+- **What the groups had in common** (stage C's input): each wrote its own view
+  helpers and its own answer to the assignment-order trap (C++17 evaluates
+  `p->f = expr`'s right side first; the setter read the pointer first); the
+  sprite head's bytes are padding in four structs; several struct field names
+  mislead (`WindowRecord::centre_x` is the top-left corner; `BattleTask::y` is
+  world z).
+
+## 4. Stage C
+
+Staged in [`typed-data-stage-c.md`](typed-data-stage-c.md): C0 the
+consolidation, C1 the types (the shared sprite head, the renames, the views,
+the new structs), C2 the sites they unlock with a family audit after, C3 the
+globals' follow-ups and a naming pass, and C4, this section's old content:
+the data image as one `GameData` struct generated by `tools/gen_symbols.py`,
+and the census's strict rule.
 
 ## 5. Ownership, merge order, numbering
 
