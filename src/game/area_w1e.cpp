@@ -34,6 +34,7 @@
 #include "game/area_harness.h"
 #include "game/area_w1e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/world_map.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -50,6 +51,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
@@ -317,7 +320,7 @@ extern "C" void __cdecl Area65_FrameStep(void) { StateEntry("Area65_FrameStep", 
 // +0x2E += 0x10; at 0x10 and above (s16) +2 + 1; then a tail jump to
 // Area65_FrameHold.
 extern "C" void __cdecl Area65_FrameSlideIn(void) {
-    SetWord(Cur() + 0x2E, Word(Cur() + 0x2E) + 0x10u);
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(kFrameHold65)();
@@ -336,7 +339,7 @@ extern "C" void __cdecl Area65_FrameHold(void) {
 // +0x2E -= 0x10; at -0x30 and below +2 = 0; unless the mode byte is 2, +2 = 1
 // (over the 0); Area65_DrawFrame(0x10, y).
 extern "C" void __cdecl Area65_FrameSlideOut(void) {
-    SetWord(Cur() + 0x2E, Word(Cur() + 0x2E) - 0x10u);
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -358,7 +361,7 @@ extern "C" void __cdecl Area65_BoxStep(void) { StateEntry("Area65_BoxStep", Area
 // Area65_DrawHud(0x5C, y) - the y pushed with the object pointer's high half
 // above the word, which the drawing never reads.
 extern "C" void __cdecl Area65_BoxSlideIn(void) {
-    SetWord(Cur() + 0x30, Word(Cur() + 0x30) - 10u);
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -396,7 +399,7 @@ extern "C" void __cdecl Area65_BoxHold(void) {
 // +0xB), Field_Request is 2 or Field_ScriptFlags bit 8, +3 = 1;
 // Area65_DrawHud(0x5C, y).
 extern "C" void __cdecl Area65_BoxSlideOut(void) {
-    SetWord(Cur() + 0x30, Word(Cur() + 0x30) + 10u);
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
@@ -517,24 +520,30 @@ extern "C" void __cdecl Area65_Record8Place(void) {
     SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
     SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
+    auto* tO = reinterpret_cast<records::EffectObject*>(o);
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
         o = Cur();
+        tO = reinterpret_cast<records::EffectObject*>(o);
         SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 13));
         o = Cur();
-        const bool along_x = Long(o + 0xC) == 0;
+        tO = reinterpret_cast<records::EffectObject*>(o);
+        const bool along_x = tO->step_x == 0;
         const unsigned step = o[6] == 1 ? 2u : 0xFFFEu;
         if (along_x) SetWord(o + 0x36, Word(o + 0x36) + step);
         else SetWord(o + 0x3A, Word(o + 0x3A) + step);
         o = Cur();
+        tO = reinterpret_cast<records::EffectObject*>(o);
     }
     SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 9));
     o = Cur();
+    tO = reinterpret_cast<records::EffectObject*>(o);
     SetWord(o + 0x3A, Word(o + 0x3A) - static_cast<unsigned>(dir(o, 2) >> 9));
     Cur()[0xB] = 0;
     Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
     AH_CALL(Sprite_SetAnimation)(At(Area65_Record8Anims_addr + Cur()[8] * 2u)[0]);
     o = Cur();
+    tO = reinterpret_cast<records::EffectObject*>(o);
     o[0x2A] = At(Area65_Record8Anims_addr + 1 + o[8] * 2u)[0];
     AH_CALL(Sprite_UpdateScreen)();
 }
@@ -763,10 +772,11 @@ extern "C" void __cdecl Area67_SpawnEffect2D(void) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x2D;
-    SetLong(e + 0x34, Long(Cur() + 0x34));
-    SetLong(e + 0x38, Long(Cur() + 0x38));
+    tE->x = CurSprite()->x;
+    tE->z = CurSprite()->z;
 }
 
 namespace {
@@ -776,7 +786,8 @@ namespace {
 // answer other than 0xFF goes to Sprite_Current +0xB (read again).
 void MemberSpawnAt(unsigned k) {
     unsigned char* const member = At(ObjTrio_addr + k * at::kPartyStride);
-    const std::int32_t x = Long(member + 0x34), y = Long(member + 0x38), z = Long(member + 0x3C);
+    auto* const tMember = reinterpret_cast<records::PartyMember*>(member);
+    const std::int32_t x = tMember->x, y = tMember->z, z = tMember->height;
     const unsigned id = B(at::kPartyList + k);
     Sprite_Current = member;
     const auto arg = static_cast<signed char>(B(at::kA67SpawnAtArg + id));
@@ -787,8 +798,9 @@ void MemberSpawnAt(unsigned k) {
 // member's words +0x2E / +0x30).
 void MemberSpawn(unsigned k, unsigned char kind, U table) {
     unsigned char* const member = At(ObjTrio_addr + k * at::kPartyStride);
-    const auto x = static_cast<short>(Word(member + 0x2E));
-    const auto z = static_cast<short>(Word(member + 0x30));
+    auto* const tMember = reinterpret_cast<records::PartyMember*>(member);
+    const auto x = static_cast<short>(static_cast<std::uint16_t>(tMember->screen_x));
+    const auto z = static_cast<short>(static_cast<std::uint16_t>(tMember->screen_y));
     const unsigned id = B(at::kPartyList + k);
     Sprite_Current = member;
     const auto arg = static_cast<signed char>(B(table + id));
