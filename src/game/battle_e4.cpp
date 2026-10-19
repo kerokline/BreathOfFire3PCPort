@@ -244,13 +244,12 @@ const unsigned char* OptionMessage(unsigned base) { return BH_CALL(Msg_SystemPtr
 // past the right edge); 0 while the fills are unarmed, as the fuzz compares.
 extern "C" void __cdecl BattleWin_DimScreen(void) {
     unsigned char* const p = TileHead();
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
     SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));
-    member_rec->step_x = 0;
+    SetLong(p + 0xC, 0);
     SetLong(p + 0x14, 0x44700000);   // 960.0f
     SetLong(p + 0x18, 0x43700000);   // 240.0f
-    member_rec->state[3] = 0x28;
-    member_rec->member = 0x28;
+    p[4] = 0x28;
+    p[5] = 0x28;
     p[6] = 0x28;
     BH_CALL(Gpu_SetSemiTrans)(p, 1);
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);
@@ -262,7 +261,6 @@ extern "C" void __cdecl BattleWin_DimScreen(void) {
 // 11 as BattleWin_DrawTile (Widescreen_BattleTile).
 extern "C" void __cdecl BattleWin_DrawTileTint(int x, int y, int size) {
     unsigned char* const p = TileHead();
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
     const unsigned char* const t = At(at::kTileSizes + (Low(static_cast<U>(size)) << 2));
     int sx = S16(static_cast<U>(x)), w = static_cast<int>(Word(t));
     Widescreen_BattleTile(Low(static_cast<U>(size)), sx, w);
@@ -270,8 +268,8 @@ extern "C" void __cdecl BattleWin_DrawTileTint(int x, int y, int size) {
     PutFloat(p + 0xC, S16(static_cast<U>(y)));
     PutFloat(p + 0x14, w);
     PutFloat(p + 0x18, Word(t + 2));
-    member_rec->state[3] = B(at::kTint);
-    member_rec->member = B(at::kTint + 1);
+    p[4] = B(at::kTint);
+    p[5] = B(at::kTint + 1);
     p[6] = B(at::kTint + 2);
     BH_CALL(Gpu_SetSemiTrans)(p, 1);
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);

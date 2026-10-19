@@ -194,14 +194,15 @@ extern "C" void __cdecl Battle_TickCounters() {
     for (unsigned i = 0; i <= 2; ++i) {
         if (Yes(g.skipped(i))) continue;
         unsigned char* const o = P(i);
-        if ((o[at::kPFlags] & 1) && o[at::kPCount4000] <= 5) ++o[at::kPCount4000];
-        if ((o[at::kPStatus + 1] & 8) && o[at::kPCount800] <= 5) ++o[at::kPCount800];
-        if ((Long(o + at::kPFlags) & 0x4000) && o[at::kPCount4000] <= 2) ++o[at::kPCount4000];
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        if ((o[at::kPFlags] & 1) && member_rec->count_4000 <= 5) ++member_rec->count_4000;
+        if ((o[at::kPStatus + 1] & 8) && member_rec->count_800 <= 5) ++member_rec->count_800;
+        if ((static_cast<std::int32_t>(member_rec->flags_134) & 0x4000) && member_rec->count_4000 <= 2) ++member_rec->count_4000;
     }
     for (unsigned i = 3; i <= 10; ++i) {
         if (Yes(g.skipped(i))) continue;
-        unsigned char* const o = E(i);
-        if ((Long(o + at::kEFlags) & 0x4000) && o[at::kECount4000] <= 2) ++o[at::kECount4000];
+        auto* const enemy_rec = EnemyRec(i);
+        if ((static_cast<std::int32_t>(enemy_rec->flags_114) & 0x4000) && enemy_rec->count_4000 <= 2) ++enemy_rec->count_4000;
     }
     unsigned char* const timer = At(BattleFlow_AnimGate_addr);
     if (*timer == 0) return;

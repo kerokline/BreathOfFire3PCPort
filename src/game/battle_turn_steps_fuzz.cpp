@@ -116,7 +116,6 @@ void Disturb() {
     const auto v = static_cast<unsigned char>(h >> 12);
     const unsigned w = h >> 20;
     unsigned char* const m = Member((h >> 8) % 5);
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
     switch ((h >> 4) % 19) {
     case 0: B(BattleActions_Step_addr) = static_cast<unsigned char>(v % 4); break;
     case 1: B(BattleE4_Step2_addr) = static_cast<unsigned char>(v % 15); break;
@@ -127,14 +126,14 @@ void Disturb() {
     case 6: B(BattleActions_EventBattle_addr) = (w & 1) ? 0 : v; break;
     case 7: m[at::kStatus + (w & 1)] = v; break;
     case 8: m[at::kFlags] = v; break;
-    case 9: member_rec->char_id = (w & 1) ? 4 : v; break;
+    case 9: m[at::kCharId] = (w & 1) ? 4 : v; break;
     case 10: B(Music_Track_addr) = (w & 1) ? 0xFF : v; break;
     case 11: B(BattleTurnSteps_MusicFlags_addr) = v; break;
     case 12: SetWord(At(Input_Pressed_addr), (w & 1) ? 0 : v); break;
     case 13: m[at::kFlags2 + 1] = v; break;
     case 14: SetWord(At(BattleActions_Pending_addr), (w & 1) ? 0 : v); break;
     case 15: B(BattlePhases_Initiative_addr) = (w & 1) ? 2 : v; break;
-    case 16: member_rec->flags = v; break;
+    case 16: m[0] = v; break;
     case 17: Sprite_Current = At(0x10000u + (h & 0xFFFF0u)); break;
     default: B(BattlePhases_B7A_addr) = v; break;
     }
