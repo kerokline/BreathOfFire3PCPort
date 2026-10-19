@@ -12,6 +12,7 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+- **D321, PSP-JP-only item lists stop at start** ([`known-defects.md`](known-defects.md) D321): the L1 / R1 corner has no Japanese source - blank, the Latin icons, or part of the ja-JP layer (D280)?
 
 ## 2026-10-18, the install-gap round
 

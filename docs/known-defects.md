@@ -8586,3 +8586,29 @@ bundle's sub 2 under `BGMBAT00`'s bank, as it writes 165 from sub 1
 entry either way: what the PC asks for, what the disc plays, which an install
 gets. It is a song, not a row of the exe image, so not a `TWINS` row; whether
 it plays through the fight's own bank is the same open choice as 165's.
+
+## D321 — On a PSP-JP-only install the first item list stops the game: `ShoulderGlyphs` finds `0x66A2FC[4]` empty (ours, DIV-0138 meeting D280; open, the owner's call)
+
+**Found:** the read watch's re-run on the merged install-gap round, 2026-10-18
+([`install-gap-reads.md`](install-gap-reads.md) 9). Five of psp-jp's eleven
+routes end in `FATAL: ShoulderGlyphs: 0x66A2FC[4] is not a one-byte glyph
+string` at the first item list (combat frame 515, shop 935, cutsceneAndNue
+4,443, dragonTransform 849, menu_screens 1,159); the same with the watch off.
+RW's first runs (2026-10-18 morning) ended the same way, unreported there.
+
+**Established:** `GlyphCode` (`src/game/shoulder_glyphs.cpp`, DIV-0138), from
+`Menu_DrawPiece`, draws the item lists' L1 / R1 corner. A PSP base has no L1 /
+R1 page art, so without a Latin layer it falls back to the port's one-byte
+stand-in strings through `0x66A2FC`, which sit in `Menu_Verbs`' tail
+(`0x66A2E0..`): zero under `ja-JP`, since no Japanese layer writes kind 8
+(D280). The module refuses the empty string loudly, as rule 4 wants. psx-jp
+is not affected (its base has the art), nor psp-eu (a Latin layer). D279's
+fix (DIV-0144) built the circle / cross / triangle labels for `ja-JP` from the
+Japan disc's fishing module; **L1 and R1 exist in no module** there, so there
+is no disc source for these two.
+
+**The owner's call:** what a Japanese PSP-only install draws in the item
+lists' corner - (a) nothing (the corner left blank, a code DIV-0138 line),
+(b) the Latin icons DIV-0051 already builds (`ICONS_AT`), drawn under `ja-JP`
+too, or (c) part of the `ja-JP` layer D280 decides. Until then a PSP-JP-only
+install cannot open an item list.
