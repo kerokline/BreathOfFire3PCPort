@@ -20,6 +20,7 @@
 #include "game/area_w3b_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -391,14 +392,14 @@ void SeedWm(unsigned k) {
     case kPlateGrow:
     case kPlateShrink:
         if (ah::Often()) o[9] = static_cast<unsigned char>(AH_PICK(1, 1, 2, 0, 0xFF, 0x80));
-        if (ah::Half()) SetLong(o + 0x40, static_cast<std::int32_t>(AH_PICK(0, 0xE000, 0x10000, 0xFFFFE000u, 0x7FFFF000)));
+        if (ah::Half()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->scale_x, static_cast<std::int32_t>(AH_PICK(0, 0xE000, 0x10000, 0xFFFFE000u, 0x7FFFF000)));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(5, 5, 2, 0));
         break;
     case kPlateHold:
         Game_Mode = static_cast<unsigned short>(ah::Often() ? AH_PICK(0, 2, 1, 0x101) : ah::Next());
         if (ah::Often()) o[7] = static_cast<unsigned char>(ah::Half() ? 1 : AH_PICK(0, 2, 3, 4));
         if (ah::Often()) o[0xB] = o[7];
-        if (ah::Often()) SetLong(o + 0x18, static_cast<std::int32_t>(Word(Mem(AreaW0b_Place_addr)) | (ah::Half() ? 0 : 0x10000u)));
+        if (ah::Often()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->work_18, static_cast<std::int32_t>(Word(Mem(AreaW0b_Place_addr)) | (ah::Half() ? 0 : 0x10000u)));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 5, 2));
         break;
     case kHudRun: o[1] = static_cast<unsigned char>(ah::Next() % 2); break;
@@ -407,18 +408,18 @@ void SeedWm(unsigned k) {
     case kRecord8Run: o[1] = static_cast<unsigned char>(ah::Next() % 3); break;
     case kRecord4Run: o[1] = static_cast<unsigned char>(ah::Next() % 2); break;
     case kFrameSlideIn:
-        if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0, 0xFFFF, 1, 0xFFF0, 0x7FF0, 0x7FFF, 0xFFD0));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_x, AH_PICK(0, 0xFFFF, 1, 0xFFF0, 0x7FF0, 0x7FFF, 0xFFD0));
         Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1) : ah::Next());
         break;
     case kFrameHold:
         Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kFrameSlideOut:
-        if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0xFFE0, 0xFFE1, 0xFFDF, 0x8000, 0x800F, 0x8010, 0x10));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_x, AH_PICK(0xFFE0, 0xFFE1, 0xFFDF, 0x8000, 0x800F, 0x8010, 0x10));
         Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kBoxSlideIn:
-        if (ah::Often()) SetWord(o + 0x30, AH_PICK(0xD1, 0xD2, 0xD3, 0xF0, 0x800A, 0x8009, 0));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_y, AH_PICK(0xD1, 0xD2, 0xD3, 0xF0, 0x800A, 0x8009, 0));
         leave();
         break;
     case kBoxHold:
@@ -427,7 +428,7 @@ void SeedWm(unsigned k) {
         leave();
         break;
     case kBoxSlideOut:
-        if (ah::Often()) SetWord(o + 0x30, AH_PICK(0xE5, 0xE6, 0xE7, 0xC8, 0x7FF6, 0x7FF5));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->screen_y, AH_PICK(0xE5, 0xE6, 0xE7, 0xC8, 0x7FF6, 0x7FF5));
         leave();
         break;
     case kDrawFrame:
@@ -464,12 +465,12 @@ void SeedWm(unsigned k) {
         if (ah::Often()) Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags | 4);
         o[0xB] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 3, 2, 3, 0, 1, 4, 5) : ah::Next());
         const unsigned height = Mem(AreaMap_Header_addr + 0x1)[0];
-        if (ah::Half()) SetWord(o + 0x3A, height + AH_PICK(8, 9, 7, 0, 0x7FFF));
+        if (ah::Half()) rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->z_whole, height + AH_PICK(8, 9, 7, 0, 0x7FFF));
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));
         };
-        if (ah::Often()) near(Mem(at::kLeaderCellX), Word(o + 0x36));
-        if (ah::Often()) near(Mem(at::kLeaderCellZ), Word(o + 0x3A));
+        if (ah::Often()) near(Mem(at::kLeaderCellX), rv::As<records::SpriteHead>(o)->x_whole);
+        if (ah::Often()) near(Mem(at::kLeaderCellZ), rv::As<records::SpriteHead>(o)->z_whole);
         if (ah::Half()) Frame_Counter = AH_PICK(0, 15, 16, 31, 0x2F, 0xFFFFFFFFu);
         break;
     }
@@ -801,22 +802,22 @@ void SeedFx(unsigned k) {
     case kFTurnStep:
     case kFTurn:
         if (ah::Often()) o[9] = static_cast<unsigned char>(AH_PICK(1, 1, 2, 0, 8, 0xFF));
-        if (ah::Half()) SetLong(o + 0x14, AH_PICK(0x40, 0xFFFFFFC0u, 0, 0x1000));
-        if (ah::Half()) SetLong(o + 0x6C, static_cast<std::int32_t>(AH_PICK(0, 0xFC0, 0xFFF, 0x1000, 0xFFFFFFFFu)));
+        if (ah::Half()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_y, AH_PICK(0x40, 0xFFFFFFC0u, 0, 0x1000));
+        if (ah::Half()) rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->angle[2], static_cast<std::int32_t>(AH_PICK(0, 0xFC0, 0xFFF, 0x1000, 0xFFFFFFFFu)));
         break;
     case kFRingWait:
         o[0xA] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 8, 0xFF) : ah::Next());
         break;
     case kFRingRise:
-        SetWord(o + 0x3E, ah::Often() ? AH_PICK(0x270, 0x271, 0x26F, 0x280, 0, 0xFFF0, 0x7FF0, 0x8000, 0x100, 0xFFE1, 0x8001, 0xFFFF, 0xFF01) : ah::Next());
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(o)->height_whole, ah::Often() ? AH_PICK(0x270, 0x271, 0x26F, 0x280, 0, 0xFFF0, 0x7FF0, 0x8000, 0x100, 0xFFE1, 0x8001, 0xFFFF, 0xFF01) : ah::Next());
         // the GTE and the camera at identity half the time (a translation
         // off the ring so the depth is sane), else the random fill
         if (ah::Half()) SetIdentity(Gte_Matrix_addr, 0, 0, 0);
         if (ah::Half()) SetIdentity(Camera_Matrix_addr, static_cast<std::int32_t>(ah::Next() % 0x100), static_cast<std::int32_t>(ah::Next() % 0x100), 0x400 + static_cast<std::int32_t>(ah::Next() % 0x400));
         if (ah::Half()) {
             // positions the GTE maps near the screen, and anything
-            SetLong(o + 0x34, static_cast<std::int32_t>(0x800000 + (ah::Next() & 0xFFFFF)));
-            SetLong(o + 0x38, static_cast<std::int32_t>(0x800000 + (ah::Next() & 0xFFFFF)));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->x, static_cast<std::int32_t>(0x800000 + (ah::Next() & 0xFFFFF)));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->z, static_cast<std::int32_t>(0x800000 + (ah::Next() & 0xFFFFF)));
         }
         break;
     case kFBand:
