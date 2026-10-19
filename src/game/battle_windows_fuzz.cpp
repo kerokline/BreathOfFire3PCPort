@@ -29,6 +29,8 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_windows_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include <windows.h>
@@ -582,7 +584,7 @@ Args Seed(unsigned k) {
         f[0x125] = static_cast<unsigned char>(Often() ? (Half() ? 4 : Next() % 8) : Next());
         f[0x134] = static_cast<unsigned char>(Next());
         // a skill whose flag byte tells bit 3 from its neighbours half the time
-        SetWord(f + 0x126, g_skills_n && Half() ? g_skills[Next() % g_skills_n] : Often() ? Next() % 0x140 : Next());
+        rv::Store<unsigned>(rv::As<records::PartyMember>(f)->queued_id, g_skills_n && Half() ? g_skills[Next() % g_skills_n] : Often() ? Next() % 0x140 : Next());
         break;
     }
     case kPartyStatus:

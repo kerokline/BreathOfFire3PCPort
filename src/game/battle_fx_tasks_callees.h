@@ -31,7 +31,7 @@ namespace at {
 constexpr std::uint32_t kTasks = 0x93A000;
 constexpr std::uint32_t kTaskSize = 0x84;
 constexpr unsigned kTaskCount = 0x30;
-constexpr std::uint32_t kTaskCurrent = 0x93B8C4;  // unsigned char*: the slot being run
+// kTaskCurrent: now BattleFlow_TaskCurrent (symbols.toml). unsigned char*: the slot being run
 constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80, copied there by BattleTask_RunAll
 // The party's working records (ObjTrio, 0x14C each) and the eight enemy
 // objects (0x128 each): an actor 0..2 is a member, 3.. an enemy.

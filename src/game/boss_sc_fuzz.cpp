@@ -20,6 +20,8 @@
 #include "game/boss_sc.h"
 #include "game/boss_sc_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 
 namespace boss_sc {
 namespace {
@@ -276,13 +278,13 @@ void Seed(unsigned k) {
         break;
     // --- the hit hooks: HP 0 and neighbours; Sunder's +0x108 and actor 8
     case 0x439C40:
-        SetWord(E() + 0xA4, Hp());
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp, Hp());
         break;
     case 0x439DB0:
         Mem(BattleActions_EventBattle_addr)[0] = Byte({0x10, 0x10, 0xD, 0x11, 0x90});
         Mem(at::kActor)[0] = Byte({8, 8, 7, 9, 0x88});
-        SetWord(E() + 0xA4, Hp());
-        SetWord(E() + 0x108, Hp());
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp, Hp());
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(E())->hp_change, Hp());
         break;
     // --- Nina's hooks: the fight's bit 0, the wait count at its ends
     case 0x439EF0:

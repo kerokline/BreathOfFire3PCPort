@@ -17,6 +17,8 @@
 #include "game/battle_actions_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/psp_code.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -492,7 +494,7 @@ bool Half() { return (Next() & 1) != 0; }
 void Fix() {
     for (unsigned a = 0; a < 11; ++a) {
         unsigned char* const o = ActorObj(a);
-        SetWord(ActionOf(a) + 2, ActionId(Next()));
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(ActionOf(a))->action_id, ActionId(Next()));
         if (a < 3) {
             o[8] = static_cast<unsigned char>(Next() % 4);
             o[0x89] = static_cast<unsigned char>(Next() % 8);
@@ -559,11 +561,11 @@ void Seed(unsigned k) {
         const unsigned status = a < 3 ? 0x90 : 0x92;
         if (Half()) o[status] = static_cast<unsigned char>(o[status] & ~0x10u);
         if (Half()) {
-            const unsigned id = Word(ActionOf(a) + 2);   // may be the one read, or not
+            const unsigned id = rv::As<records::ActionRecord>(ActionOf(a))->action_id;   // may be the one read, or not
             At(at::kAbilityRecords + id * 24 + 0x15)[0] = static_cast<unsigned char>(At(at::kAbilityRecords + id * 24 + 0x15)[0] | 4);
         }
         SetPtr(at::kActor + at::kBAction, ActionOf(Half() ? a : Actor(Next())));
-        if (Half()) SetWord(ActionOf(a) + 2, 0x97);
+        if (Half()) rv::Store<unsigned>(rv::As<records::ActionRecord>(ActionOf(a))->action_id, 0x97);
         if (Often()) SetWord(o + (a < 3 ? 0x9A : 0xA6), Next() % 0x120);
         break;
     }

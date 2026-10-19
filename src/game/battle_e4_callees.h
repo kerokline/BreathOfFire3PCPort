@@ -34,8 +34,8 @@ constexpr U kEnemyWork = 0x93B9E0;        // an enemy's working record (+0x80): 
 // --- the character records (8 of 0xA4; +0x12..+0x17 the six equipment bytes)
 constexpr U kCharRecords = 0x903A70;
 constexpr U kCharStride = 0xA4;
-constexpr U kMemberChar = 0x904065;       // u8[3]: the members' character bytes (0x66972C's index)
-constexpr U kCharOf = 0x66972C;           // u8[]: MoveScript_EffectState - a character record's index by that byte
+// kMemberChar: now Cond_Flags[0xd5] (symbols.toml). u8[3]: the members' character bytes (0x66972C's index)
+// kCharOf: now MoveScript_EffectState (symbols.toml). u8[]: MoveScript_EffectState - a character record's index by that byte
 
 // --- the battle bytes (0x904AA0..0x904BA0) ------------------------------------
 constexpr U kPhase = 0x904AA0;

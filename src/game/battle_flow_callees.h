@@ -36,7 +36,7 @@ namespace at {
 constexpr std::uint32_t kTasks = 0x93A000;
 constexpr std::uint32_t kTaskSize = 0x84;
 constexpr unsigned kTaskCount = 0x30;
-constexpr std::uint32_t kTaskCurrent = 0x93B8C4;  // unsigned char*: the slot being run (PSX 0x801EC250)
+// kTaskCurrent: now BattleFlow_TaskCurrent (symbols.toml). unsigned char*: the slot being run (PSX 0x801EC250)
 constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80
 // The eight enemy objects, 0x128 bytes each (the working record, PSX
 // 0x801EB620, is +0x80 of each; kinship-probe-battle-engine.md).

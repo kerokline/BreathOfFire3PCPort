@@ -281,7 +281,7 @@ void SeedK30(unsigned k) {
         break;
     case 6:
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next());
-        SetWord(Mem(0x66C810), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
+        SetWord(Mem(MoveScript_WaitWordDA_addr), bh::Often() ? BH_PICK(0, 0, 1, 0x100, 0x8000) : bh::Next());
         break;
     default: break;
     }

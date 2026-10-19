@@ -35,6 +35,8 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_actor_copies_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -85,6 +87,8 @@ namespace {
 unsigned char& B(U address) { return At(address)[0]; }
 // A pointer the original keeps in a dword of .bss, read afresh.
 unsigned char* PtrAt(U address) { return At(static_cast<U>(Long(At(address)))); }
+// 0x939FA0 points at the menu member's +0x124, its action record
+// (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(at::kCommand); }
 unsigned char* Acting() { return PtrAt(at::kActing); }
 unsigned char ItemFlags(unsigned id) { return B(at::kItemRecords + id * at::kItemRecordSize); }
@@ -251,7 +255,7 @@ extern "C" void __cdecl BattleItem_OpenDispatch(void) { Dispatch(BattleItem_Open
 extern "C" void __cdecl BattleItem_OpenWindow(void) {
     Command()[1] = 4;
     g.setup_for_actor();
-    const U flags = static_cast<U>(Long(Command() + 0x10));
+    const U flags = static_cast<U>(rv::As<records::ActionRecord>(Command())->flags2);
     if ((flags & 2) && !(flags & 0x20000)) BattleActorCopies_ItemPage = 2;
     const unsigned char actor = Acting()[5];
     BattleE4_Step4 = 0;
@@ -290,7 +294,7 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     BattleActorCopies_ItemCursorY = y;
     const U held = g.auto_repeat(pressed & Sigma(0xF00C));
 
-    const U flags = static_cast<U>(Long(Command() + 0x10));
+    const U flags = static_cast<U>(rv::As<records::ActionRecord>(Command())->flags2);
     if (!(flags & 2) || (flags & 0x20000)) {
         if (held & 0x8000) {
             g.play_effect(0x101);
@@ -381,11 +385,11 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     KeepPage(page, scroll, owner);
     const unsigned actor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     const unsigned char* const list = At(g.ability_list(actor, page, 1));
-    SetWord(Command() + 2, list[B(at::kItemCursor)]);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(Command())->action_id, list[B(at::kItemCursor)]);
     unsigned char* const c = Command();
     BattleActorCopies_ItemState = 1;
     BattleE4_Hand = 0;
-    if (Word(c + 2) == 0x97) {
+    if (rv::As<records::ActionRecord>(c)->action_id == 0x97) {
         unsigned char* const a = Acting();
         B(at::kWindow4State) = 2;
         c[0] = a[5];
@@ -429,7 +433,7 @@ extern "C" void __cdecl BattleItem_TargetDispatch(void) { Dispatch(BattleItem_Ta
 // does), else Battle_DefaultTarget(0), and sub 2. Then the repeat latch
 // 0x7E01B8 = 0 and 0x904AAF = 1.
 extern "C" void __cdecl BattleItem_TargetBegin(void) {
-    const unsigned id = Word(Command() + 2);
+    const unsigned id = rv::As<records::ActionRecord>(Command())->action_id;
     if (ItemFlags(id) & 0x20) {
         const unsigned char t = Low(g.default_target(3));
         Command()[0] = t;

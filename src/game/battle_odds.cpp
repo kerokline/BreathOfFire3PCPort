@@ -26,6 +26,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_odds_callees.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -140,7 +142,7 @@ extern "C" unsigned long __cdecl BattleBanner_TickKind2(void) {
 // Effect_ApplyResult). eax the record pointer.
 extern "C" unsigned long __cdecl Effect_Heal20(void) {
     const U result = BattleDamage_Result;
-    PutWord(At(result + 4), 0xFFEC);
+    rv::Store<U>(rv::As<records::ActionRecord>(At(result))->hp_change, 0xFFEC);  // the result record (records::ActionRecord)
     return result;
 }
 
@@ -156,7 +158,7 @@ extern "C" unsigned long __cdecl Effect_HalfAttack(void) {
     const U actor = At(kActing)[0];
     const U amount = g.calc_damage(actor, target, 0xFFFF);
     const U half = static_cast<std::uint16_t>(static_cast<std::int16_t>(amount) >> 1);
-    PutWord(At(BattleDamage_Result + 4), half);
+    rv::Store<U>(rv::As<records::ActionRecord>(At(BattleDamage_Result))->hp_change, half);
     return (amount & 0xFFFF0000u) | half;
 }
 

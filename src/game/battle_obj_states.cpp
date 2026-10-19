@@ -86,7 +86,7 @@ extern "C" void __cdecl BattleObj_StateInit(void) {
     S()[0x48] = 0;
     auto* const member_s = rv::As<records::PartyMember>(S());
     const long h = g.elevation(member_s->x, member_s->z);
-    SetWord(S() + 0x3E, static_cast<unsigned>(h));
+    rv::Store<unsigned>(rv::As<records::PartyMember>(S())->height_whole, static_cast<unsigned>(h));
     S()[0x2B] = 0;
     rv::As<records::PartyMember>(S())->state = 2;
     rv::As<records::PartyMember>(S())->step = 0;
@@ -147,11 +147,11 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
     auto* const member_f = rv::As<records::PartyMember>(f);
     if (phase5) {
         if ((Long(At(at::kRoundFlags)) & 0x8000) != 0 && (F()[0x134] & 2) != 0) {
-            SetLong(S() + 0x34, static_cast<std::int32_t>(BossSi_CentreX));
-            SetLong(S() + 0x38, static_cast<std::int32_t>(BossSi_CentreZ));
+            rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->x, static_cast<std::int32_t>(BossSi_CentreX));
+            rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->z, static_cast<std::int32_t>(BossSi_CentreZ));
         } else {
             rv::As<records::PartyMember>(S())->x = rv::As<records::BattleTask>(Task(rv::As<records::PartyMember>(S())->actor))->x;
-            SetLong(S() + 0x38, Long(Task(rv::As<records::PartyMember>(S())->actor) + 0x38));
+            rv::Store<std::int32_t>(rv::As<records::PartyMember>(S())->z, rv::As<records::BattleTask>(Task(rv::As<records::PartyMember>(S())->actor))->z);
         }
     } else if ((f[0x90] & 0x20) != 0) {
         unsigned char* const s = S();
@@ -174,7 +174,7 @@ extern "C" void __cdecl BattleObj_StateIdle(void) {
         auto* const task_rec = rv::As<records::BattleTask>(t);
         const std::int32_t step = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<signed char>(t[9])) << 9);
         if (pose == 1 || pose == 3) member_p->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(step) + static_cast<std::uint32_t>(task_rec->x));
-        else member_p->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(step) + static_cast<std::uint32_t>(Long(t + 0x38)));
+        else member_p->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(step) + static_cast<std::uint32_t>(task_rec->z));
     } else {
         if ((static_cast<std::int32_t>(member_f->flags_130) & 0x1000) == 0) g.tick();
         return;

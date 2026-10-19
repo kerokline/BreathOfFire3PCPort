@@ -377,9 +377,9 @@ extern "C" void __cdecl BattleWin_EnemyGaugeOpen() {
         w[0xB] = 1;
         w = Current();
     }
-    SetWord(w + 0x14, rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80)->hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_shown, rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80)->hp);
     w = Current();
-    SetWord(w + 0x1C, rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80)->max_hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_top_shown, rv::As<records::BattleEnemy>(Enemy(w[0xA]) - 0x80)->max_hp);
     Current()[0xD] = 0;
     ++rv::As<records::WindowRecord>(Current())->state;
 }
@@ -445,9 +445,9 @@ extern "C" void __cdecl BattleWin_MemberGaugeOpen() {
         w[0xB] = 1;
         w = Current();
     }
-    SetWord(w + 0x14, rv::As<records::PartyMember>(Member(w[0xA]))->hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_shown, rv::As<records::PartyMember>(Member(w[0xA]))->hp);
     w = Current();
-    SetWord(w + 0x1C, rv::As<records::PartyMember>(Member(w[0xA]))->max_hp);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->hp_top_shown, rv::As<records::PartyMember>(Member(w[0xA]))->max_hp);
     Current()[0xD] = 0;
     unsigned char* const v = Current();
     member_rec = rv::As<records::PartyMember>(Member(v[0xA]));
@@ -463,9 +463,9 @@ extern "C" void __cdecl BattleWin_MemberGaugeOpen() {
             w = Current();
         }
     }
-    SetWord(w + 0x16, rv::As<records::PartyMember>(Member(w[0xA]))->ap);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_shown, rv::As<records::PartyMember>(Member(w[0xA]))->ap);
     w = Current();
-    SetWord(w + 0x1E, rv::As<records::PartyMember>(Member(w[0xA]))->max_ap);
+    rv::Store<unsigned>(rv::As<records::BattleWindow>(w)->ap_top_shown, rv::As<records::PartyMember>(Member(w[0xA]))->max_ap);
     Current()[0xE] = 0;
     ++rv::As<records::WindowRecord>(Current())->state;
 }

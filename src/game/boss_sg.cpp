@@ -411,7 +411,7 @@ extern "C" void __cdecl BossWeretigrFx_Main(void) { TaskSteps("BossWeretigrFx_Ma
 // and +2 up by one.
 extern "C" void __cdecl BossWeretigrFx_Begin(void) {
     unsigned char* const s = Sprite_Current;
-    SetLong(s + 0x20, S(L(s + 0x3C) + 0x4000000u));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(s)->work_20, S(static_cast<U>(rv::As<records::BattleTask>(s)->height) + 0x4000000u));
     BH_CALL(Sprite_SetAnimation)(2);
     Sprite_Current[0xB] = 0x10;
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
@@ -434,9 +434,9 @@ extern "C" void __cdecl BossWeretigrFx_AwaitPose(void) {
 extern "C" unsigned char __cdecl BossWeretigrFx_Rise(void) {
     unsigned char* const s = Sprite_Current;
     auto* const cur_task = rv::As<records::BattleTask>(s);
-    const U y = L(s + 0x3C);
-    if (S(y) < Long(s + 0x20)) {
-        SetLong(s + 0x3C, S(y + 0x1000000u));
+    const U y = static_cast<U>(cur_task->height);
+    if (S(y) < cur_task->work_20) {
+        rv::Store<std::int32_t>(cur_task->height, S(y + 0x1000000u));
         return BH_CALL(Sprite_ScriptTickOnce)();
     }
     U f;
@@ -452,7 +452,7 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Rise(void) {
                             static_cast<U>(Field_Kind2X));
         f = (L(At(at::kFacing)) & 0xFF) ^ 2;
     }
-    SetLong(s + 0x38, S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFacingOffsets + 2 * f + 1)))) +
+    rv::Store<std::int32_t>(cur_task->z, S(static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kFacingOffsets + 2 * f + 1)))) +
                         static_cast<U>(Field_Kind2Z)));
     BH_CALL(Sprite_SetAnimation)(4);
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
@@ -517,15 +517,15 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Leap(void) {
     auto sixteenth = [](U to, U from) { return S(static_cast<U>(S(to - from) / 16)); };
     unsigned char* s = Sprite_Current;
     records::BattleTask* cur_task = rv::As<records::BattleTask>(s);
-    SetLong(s + 0xC, sixteenth(L(EnemyByIndex(B(at::kActor)) + 0x34), static_cast<U>(cur_task->x)));
+    rv::Store<std::int32_t>(cur_task->step_x, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->x), static_cast<U>(cur_task->x)));
     s = Sprite_Current;
     cur_task = rv::As<records::BattleTask>(s);
-    SetLong(s + 0x10, sixteenth(L(EnemyByIndex(B(at::kActor)) + 0x38), L(s + 0x38)));
-    SetLong(Sprite_Current + 0x14, 0x40);
-    SetLong(Sprite_Current + 0x20, -8);
+    rv::Store<std::int32_t>(cur_task->step_z, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->z), static_cast<U>(cur_task->z)));
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->step_y, 0x40);
+    rv::Store<std::int32_t>(rv::Current<records::BattleTask>()->work_20, -8);
     s = Sprite_Current;
     cur_task = rv::As<records::BattleTask>(s);
-    SetLong(s + 0x18, sixteenth(L(EnemyByIndex(B(at::kActor)) + 0x3C), L(s + 0x3C)));
+    rv::Store<std::int32_t>(cur_task->work_18, sixteenth(static_cast<U>(rv::As<records::BattleEnemy>(EnemyByIndex(B(at::kActor)))->height), static_cast<U>(cur_task->height)));
     Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
     return BH_CALL(Sprite_ScriptTickOnce)();
 }
@@ -537,12 +537,12 @@ extern "C" unsigned char __cdecl BossWeretigrFx_Leap(void) {
 extern "C" unsigned char __cdecl BossWeretigrFx_Fly(void) {
     unsigned char* const s = Sprite_Current;
     auto* const cur_task = rv::As<records::BattleTask>(s);
-    SetLong(s + 0x34, S(static_cast<U>(cur_task->x) + L(s + 0xC)));
-    SetLong(s + 0x38, S(L(s + 0x38) + L(s + 0x10)));
-    SetWord(s + 0x3E, Word(s + 0x3E) + Word(s + 0x14));
-    SetLong(s + 0x3C, S(L(s + 0x3C) + L(s + 0x18)));
-    SetLong(s + 0x14, S(L(s + 0x14) + L(s + 0x20)));
-    if (Long(s + 0x14) == -0x40) s[2] = static_cast<unsigned char>(s[2] + 1);
+    rv::Store<std::int32_t>(cur_task->x, S(static_cast<U>(cur_task->x) + static_cast<U>(cur_task->step_x)));
+    rv::Store<std::int32_t>(cur_task->z, S(static_cast<U>(cur_task->z) + static_cast<U>(cur_task->step_z)));
+    rv::Store<unsigned>(cur_task->height_whole, cur_task->height_whole + Word(s + 0x14));
+    rv::Store<std::int32_t>(cur_task->height, S(static_cast<U>(cur_task->height) + static_cast<U>(cur_task->work_18)));
+    rv::Store<std::int32_t>(cur_task->step_y, S(static_cast<U>(cur_task->step_y) + static_cast<U>(cur_task->work_20)));
+    if (cur_task->step_y == -0x40) s[2] = static_cast<unsigned char>(s[2] + 1);
     return BH_CALL(Sprite_ScriptTickOnce)();
 }
 
@@ -663,11 +663,11 @@ extern "C" void __cdecl BossMikba_DeathOpen(void) {
     BH_CALL(Gfx_ClearRect)(0x340, 0x100, 0xC0, 0x100);
     unsigned char* const s = Sprite_Current;
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
-    SetLong(s + 0x18, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_x)));
-    SetLong(s + 0x1C, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_y)));
-    SetLong(s + 0x20, 0);
-    SetLong(s + 0xC, 0xBE);
-    SetLong(s + 0x10, 0x68);
+    rv::Store<std::int32_t>(cur_enemy->work_18, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_x)));
+    rv::Store<std::int32_t>(cur_enemy->work_1c, static_cast<std::int16_t>(static_cast<std::uint16_t>(cur_enemy->screen_y)));
+    rv::Store<std::int32_t>(cur_enemy->work_20, 0);
+    rv::Store<std::int32_t>(cur_enemy->step_x, 0xBE);
+    rv::Store<std::int32_t>(cur_enemy->step_z, 0x68);
     cur_enemy->screen_x = 0x64;
     cur_enemy->screen_y = 0x50;
     s[0xA] = 1;
@@ -684,15 +684,16 @@ extern "C" void __cdecl BossMikba_DeathOpen(void) {
 // +0xA 0x40 or above (a byte), +3 up by one.
 extern "C" void __cdecl BossMikba_DeathSpread(void) {
     unsigned char* const s = Sprite_Current;
-    SetLong(s + 0x20, S(L(s + 0x20) + s[0xA]));
-    const std::int32_t w = Long(s + 0xC);
+    auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
+    rv::Store<std::int32_t>(cur_enemy->work_20, S(static_cast<U>(cur_enemy->work_20) + s[0xA]));
+    const std::int32_t w = cur_enemy->step_x;
     if (w > 0x28) {
-        SetLong(s + 0xC, w - 1);
-        if (Frame_Counter & 1) SetLong(s + 0x1C, S(L(s + 0x1C) + 1u));
+        rv::Store<std::int32_t>(cur_enemy->step_x, w - 1);
+        if (Frame_Counter & 1) rv::Store<std::int32_t>(cur_enemy->work_1c, S(static_cast<U>(cur_enemy->work_1c) + 1u));
     }
-    const std::int32_t h = Long(s + 0x10);
-    if (h > 0x28) SetLong(s + 0x10, h - 1);
-    BH_CALL(BossMikba_DrawQuad)(L(s + 0x20));
+    const std::int32_t h = cur_enemy->step_z;
+    if (h > 0x28) rv::Store<std::int32_t>(cur_enemy->step_z, h - 1);
+    BH_CALL(BossMikba_DrawQuad)(static_cast<U>(cur_enemy->work_20));
     if (Frame_Counter & 7) Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] + 1);
     if (Sprite_Current[0xA] >= 0x40) rv::Current<records::BattleEnemy>()->state3 = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state3 + 1);
 }
@@ -758,7 +759,7 @@ extern "C" void __cdecl BossMikba_DrawQuad(unsigned turn) {
     BH_CALL(Gte_TransMatrix)(reinterpret_cast<unsigned long*>(matrix), reinterpret_cast<const unsigned long*>(out));
     BH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(matrix));
     unsigned char* const prim = Gfx_PacketNext;
-    SetWord(prim + 0x26, BH_CALL(Gpu_GetTPage)(2, 0, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(prim)->tpage, BH_CALL(Gpu_GetTPage)(2, 0, 0x340, 0x100));  // a POLY_FT4: Gpu_SetPolyFT4 below
     prim[4] = 0x80;
     prim[5] = 0x80;
     prim[6] = 0x80;
@@ -770,8 +771,8 @@ extern "C" void __cdecl BossMikba_DrawQuad(unsigned turn) {
         vector[0] = static_cast<short>(kSign[i][0] * half(s + 0xC));
         vector[1] = static_cast<short>(kSign[i][1] * half(s + 0x10));
         BH_CALL(Gte_RotTrans)(vector, out);
-        const float x = static_cast<float>(S(L(Sprite_Current + 0x18) + static_cast<U>(out[0])));
-        const float y = static_cast<float>(S(L(Sprite_Current + 0x1C) + static_cast<U>(out[1]) - 0x28u));
+        const float x = static_cast<float>(S(static_cast<U>(rv::Current<records::BattleEnemy>()->work_18) + static_cast<U>(out[0])));
+        const float y = static_cast<float>(S(static_cast<U>(rv::Current<records::BattleEnemy>()->work_1c) + static_cast<U>(out[1]) - 0x28u));
         std::memcpy(prim + kVertex[i], &x, 4);
         std::memcpy(prim + kVertex[i] + 4, &y, 4);
     }

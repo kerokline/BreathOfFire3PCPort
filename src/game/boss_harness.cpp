@@ -380,7 +380,7 @@ std::uint32_t EndWinEffect(const std::uint32_t*, std::uint32_t answer) {
 // Msg_OpenScript: set-up 27's hooks read the script bits 0x904AAD again after
 // it (BSC's BitsEffect). In the battle frame, so every group's.
 std::uint32_t ScriptBitsEffect(const std::uint32_t*, std::uint32_t answer) {
-    if (Noise() & 1) Mem(0x904AAD)[0] = static_cast<unsigned char>(Noise());
+    if (Noise() & 1) Mem(BossSe_Script_addr)[0] = static_cast<unsigned char>(Noise());
     return answer;
 }
 // Scenario_CallA: the move counter 0x903848, half the time only - the end
@@ -396,8 +396,8 @@ std::uint32_t MoveCounterEffect(const std::uint32_t*, std::uint32_t answer) {
 // Battle_OpenMsgWindow: the banner's character 0x66972D, read after by the
 // event hooks (BSC's CharEffect). A group region, as above.
 std::uint32_t BannerCharEffect(const std::uint32_t*, std::uint32_t answer) {
-    if (!InRegions(Mem(0x66972D), 1)) return answer;
-    Mem(0x66972D)[0] = static_cast<unsigned char>(Noise());
+    if (!InRegions(Mem(MoveScript_EffectState_addr + 0x1), 1)) return answer;
+    Mem(MoveScript_EffectState_addr + 0x1)[0] = static_cast<unsigned char>(Noise());
     return answer;
 }
 // BattleTask_Create answering none (BSG's CreateEffect): F6's strike tests for
@@ -557,7 +557,7 @@ std::uint32_t RandRangeEffect(const std::uint32_t*, std::uint32_t answer) { retu
 // it (| 4 or | 8 past a stat's maximum) and clear it after the pop-up, so the
 // mark is compared, not wiped (BE5).
 std::uint32_t PopupEffect(const std::uint32_t*, std::uint32_t answer) {
-    const unsigned char* const actor = Pointer(0x904B40);   // the acting sprite
+    const unsigned char* const actor = Pointer(BattleSprites_Action_addr);   // the acting sprite
     Note(InRegions(actor + 8, 1) ? actor[8] : 0x100u);
     return answer;
 }
@@ -566,9 +566,9 @@ std::uint32_t PopupEffect(const std::uint32_t*, std::uint32_t answer) {
 // cursors read it again after a refusal's sound (BE5).
 std::uint32_t SoundInputEffect(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = Noise();
-    if ((n & 1) && InRegions(Mem(0x7E1BEC), 2)) {
-        Note(move_script::Word(Mem(0x7E1BEC)));
-        move_script::SetWord(Mem(0x7E1BEC), n >> 8);
+    if ((n & 1) && InRegions(Mem(Input_Pressed_addr), 2)) {
+        Note(move_script::Word(Mem(Input_Pressed_addr)));
+        move_script::SetWord(Mem(Input_Pressed_addr), n >> 8);
     }
     return answer;
 }

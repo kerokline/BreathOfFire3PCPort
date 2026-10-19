@@ -482,10 +482,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_Finish() {
             auto* const member_rec = rv::AsConst<records::PartyMember>(m);
             if (m[at::kStatus + 1] & 0x40) {
                 unsigned char* const r = At(at::kRecords + member_rec->char_index * at::kRecordStride);
-                SetWord(r + 0x18, 1);
+                auto* const char_rec = rv::As<records::CharRecord>(r);  // 0x903A70 + 0xA4 n
+                static_assert(at::kRecordStride == sizeof(records::CharRecord));
+                rv::Store<unsigned>(char_rec->hp, 1);
                 r[0x1C] = 1;
                 if (r[0x1E] < 5) ++r[0x1E];
-                SetWord(r + 0x10, Word(r + 0x10) & 0xBFFF);
+                rv::Store<unsigned>(char_rec->status, char_rec->status & 0xBFFF);
                 r[0xB] &= 0xFB;
                 g.recalc_stats(r);
             }

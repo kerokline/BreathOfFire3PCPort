@@ -235,7 +235,7 @@ extern "C" unsigned __cdecl BattleObj_PickPose() {
     case 2: return pose(0x14);
     case 4: {
         if (f[0x134] & 4) return pose(0x38);
-        const unsigned skill = Word(f + 0x126);
+        const unsigned skill = rv::As<records::PartyMember>(f)->queued_id;  // f: Field_State, the member
         return pose((At(at::kSkillFlags + skill * 24)[0] & 8) ? 8 : 0x28);
     }
     case 5: return pose(4);
@@ -395,6 +395,7 @@ extern "C" __attribute__((disable_tail_calls, noinline)) void __cdecl BattleWin_
     g.commit(1, 0xC);
     unsigned char* const p = Gfx_PacketNext;
     g.set_poly_ft4(p);
+    auto* const ft4 = rv::As<records::GpuPolyFT4>(p);  // a POLY_FT4: g.set_poly_ft4 just started it
     const auto s = static_cast<unsigned char>(shade);
     p[4] = s;
     p[5] = s;
@@ -421,9 +422,9 @@ extern "C" __attribute__((disable_tail_calls, noinline)) void __cdecl BattleWin_
     p[0x44] = u1;
     p[0x45] = 0xF8;
     const unsigned tpage = g.get_tpage(0, 0, 0x100, 0x100);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(ft4->tpage, tpage);
     const unsigned char clut = i < sizeof kCommandClut ? kCommandClut[i] : CommandClutPastTable(i, frame, x1, y1);
-    SetWord(p + 0x16, 0x7800u | (clut & 0x3Fu));
+    rv::Store<unsigned>(ft4->clut, 0x7800u | (clut & 0x3Fu));
     g.commit(1, 0x48);
 }
 
@@ -599,10 +600,10 @@ extern "C" void __cdecl Window_FlagAndAdvance() {
 extern "C" void __cdecl Window_RestoreAndBack() {
     unsigned char* w = Current();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
-    win->x = Word(w + 0x10);
+    win->x = rv::As<records::BattleWindow>(w)->home_x;
     w = Current();
     win = rv::As<records::WindowRecord>(w);
-    win->y = Word(w + 0x12);
+    win->y = rv::As<records::BattleWindow>(w)->home_y;
     Current()[0xF] = 0;
     --rv::As<records::WindowRecord>(Current())->state;
 }

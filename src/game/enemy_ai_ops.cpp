@@ -147,10 +147,10 @@ extern "C" void __cdecl EnemyOp_ScaleInStart(void) {
     rv::As<records::BattleEnemy>(Sc())->flags = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->flags & 0xBF);
     g.set_animation(0);
     Sc()[0x48] = 2;
-    SetULong(Sc() + 0x44, 0);
-    SetULong(Sc() + 0x40, 0);
-    SetULong(Sc() + 0xC, 0);
-    SetULong(Sc() + 0x18, 0x666);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y, 0);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_x, 0);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x, 0);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->work_18, 0x666);
     rv::As<records::BattleEnemy>(Sc())->state3 = 1;
 }
 
@@ -160,11 +160,11 @@ extern "C" void __cdecl EnemyOp_ScaleInStart(void) {
 // Either way a tail jump to BattleEnemy_ScriptTick.
 extern "C" void __cdecl EnemyOp_ScaleInStep(void) {
     unsigned char* const s = Sc();
-    const std::uint32_t scale = ULong(s + 0x40);
+    const std::uint32_t scale = static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(s)->scale_x);
     if (static_cast<std::int32_t>(scale) < 0x10000) {
-        SetULong(s + 0x40, ULong(s + 0xC) + scale);
-        SetULong(Sc() + 0x44, ULong(Sc() + 0x44) + ULong(Sc() + 0xC));
-        SetULong(Sc() + 0xC, ULong(Sc() + 0xC) + ULong(Sc() + 0x18));
+        rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(s)->scale_x, static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(s)->step_x) + scale);
+        rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y, static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y) + static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x));
+        rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x, static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x) + static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->work_18));
     } else {
         s[0x48] = 0;
         rv::As<records::BattleEnemy>(Sc())->state = 3;
@@ -312,11 +312,11 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
     SetWord(At(at::kStatusAdd2), 0);
     SetWord(At(at::kStatusAdd), 0);
     const unsigned char actor = enemy_s->actor;
-    SetPtrAt(at::kResultSprite, s);
+    BattleE3_HitSprite = s;
     At(at::kResultTarget)[0] = actor;
     SetPtrAt(at::kResult, e + 0x104);
-    SetWord(PtrAt(at::kResult) + 4, 0);
-    SetWord(PtrAt(at::kResult) + 6, 0);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->hp_change, 0);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->ap_change, 0);
     PtrAt(at::kResult)[8] = 0;
     e = Enemy();
     enemy_rec = rv::As<records::BattleEnemy>(e);
@@ -326,7 +326,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         const unsigned target = At(at::kTarget)[0];
         const unsigned attacker = At(at::kActor)[0];
         const short delta = g.apply_damage(attacker, target);
-        SetWord(PtrAt(at::kResult) + 4, static_cast<std::uint16_t>(delta));
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(PtrAt(at::kResult))->hp_change, static_cast<std::uint16_t>(delta));
         e = Enemy();
         enemy_rec = rv::As<records::BattleEnemy>(e);
     } else if (kind > 3 && kind <= 5) {
@@ -465,10 +465,10 @@ extern "C" void __cdecl EnemyOp_HitEnd(void) {
 // 0x666; +3 = 1.
 extern "C" void __cdecl EnemyOp_DeathSwellStart(void) {
     Sc()[0x48] = 2;
-    SetULong(Sc() + 0x44, 0x10000);
-    SetULong(Sc() + 0x40, 0x10000);
-    SetULong(Sc() + 0xC, 0);
-    SetULong(Sc() + 0x18, 0x666);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y, 0x10000);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_x, 0x10000);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x, 0);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->work_18, 0x666);
     rv::As<records::BattleEnemy>(Sc())->state3 = 1;
 }
 
@@ -477,11 +477,11 @@ extern "C" void __cdecl EnemyOp_DeathSwellStart(void) {
 extern "C" void __cdecl EnemyOp_DeathSwell(void) {
     unsigned char* const s = Sc();
     auto* const enemy_s = rv::As<records::BattleEnemy>(s);
-    const std::uint32_t scale = ULong(s + 0x40);
+    const std::uint32_t scale = static_cast<std::uint32_t>(enemy_s->scale_x);
     if (static_cast<std::int32_t>(scale) < 0x14000) {
-        SetULong(s + 0x40, ULong(s + 0xC) + scale);
-        SetULong(Sc() + 0x44, ULong(Sc() + 0x44) + ULong(Sc() + 0xC));
-        SetULong(Sc() + 0xC, ULong(Sc() + 0xC) + ULong(Sc() + 0x18));
+        rv::Store<std::uint32_t>(enemy_s->scale_x, static_cast<std::uint32_t>(enemy_s->step_x) + scale);
+        rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y, static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y) + static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x));
+        rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x, static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_x) + static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->work_18));
     } else {
         enemy_s->state3 = 2;
     }
@@ -496,8 +496,8 @@ extern "C" void __cdecl EnemyOp_DeathFlash(void) {
     if (BattleActions_EventBattle != 0) g.play_cue(Word(PtrIn(Enemy() + 0xF8) + 6));
     g.release_tint(Sc());
     g.set_tint(Sc(), 0xFF, 0xFF, 0xFF, 0);
-    SetULong(Sc() + 0x10, 0);
-    SetULong(Sc() + 0x1C, 0xFFFFE000u);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_z, 0);
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->work_1c, 0xFFFFE000u);
     rv::As<records::BattleEnemy>(Sc())->state3 = 3;
 }
 
@@ -505,9 +505,9 @@ extern "C" void __cdecl EnemyOp_DeathFlash(void) {
 // += the speed +0x10, the speed += +0x1C; once the s32 scale is below 0, a
 // tail jump to Battle_EnemyDefeated.
 extern "C" void __cdecl EnemyOp_DeathSquash(void) {
-    SetULong(Sc() + 0x44, ULong(Sc() + 0x44) + ULong(Sc() + 0x10));
-    SetULong(Sc() + 0x10, ULong(Sc() + 0x10) + ULong(Sc() + 0x1C));
-    if (Long(Sc() + 0x44) < 0) g.defeated();
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y, static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->scale_y) + static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_z));
+    rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_z, static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->step_z) + static_cast<std::uint32_t>(rv::As<records::BattleEnemy>(Sc())->work_1c));
+    if (rv::As<records::BattleEnemy>(Sc())->scale_y < 0) g.defeated();
 }
 
 // ===========================================================================

@@ -177,7 +177,7 @@ void Disturb(U h) {
     }
     case 4: bh::PartyOf(static_cast<unsigned char>(v % 3))[v & 0x100 ? 0 : 8] ^= static_cast<unsigned char>(1 + (v >> 9) % 0x7F); break;
     case 5: B(at::kFacing) = static_cast<unsigned char>(v); break;
-    default: Mem(0x905E60 + v % 8)[0] = static_cast<unsigned char>(v >> 3); break;
+    default: Mem(Field_Kind2Z_addr + v % 8)[0] = static_cast<unsigned char>(v >> 3); break;
     }
 }
 

@@ -402,7 +402,7 @@ Args Seed(unsigned k) {
                 const unsigned n = (member_rec->max_hp + 10) / 20;
                 member_rec->hp = n + (Next() % 5) - 2;
             } else if (Half()) {
-                SetWord(o + at::kPHp, Next() % 3);
+                rv::Store<unsigned>(member_rec->hp, Next() % 3);
             }
         }
         for (unsigned i = 3; i <= 10; ++i)
@@ -481,7 +481,7 @@ Args Seed(unsigned k) {
         const unsigned actor = Next() % 3;
         x.a[0] = Byte(actor);
         const unsigned agility = Half() ? 2 * (Next() % 0x100) : Next() % 0x200;   // even: twice the average meets it
-        SetWord(P(actor) + at::kPAgi, Half() ? agility : Next());
+        rv::Store<unsigned>(rv::As<records::PartyMember>(P(actor))->agi, Half() ? agility : Next());
         const unsigned half = agility / 2;
         x.a[1] = Garbage(0xFFFF, Half() ? half + Next() % 3 - 1 : Next() & 0xFFFF);
         x.a[2] = Garbage(0xFFFF, Half() ? agility + Next() % 3 - 1 : Next() & 0xFFFF);

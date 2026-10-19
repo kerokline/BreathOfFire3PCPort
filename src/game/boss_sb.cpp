@@ -292,7 +292,7 @@ extern "C" unsigned char __cdecl BossEngineer_HitStep(void) {
         SetLong(axis, static_cast<std::int32_t>(static_cast<U>(Long(axis)) + 0x18000u));
         auto* const cur_enemy = rv::Current<records::BattleEnemy>();
         const long ground = BH_CALL(AreaMap_Elevation)(cur_enemy->x, cur_enemy->z);
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground) & 0xFFFF);
+        rv::Store<unsigned>(rv::Current<records::BattleEnemy>()->height_whole, static_cast<unsigned>(ground) & 0xFFFF);
         rv::As<records::BattleEnemy>(Enemy())->anim_table = static_cast<std::int32_t>(AddressOf(BossEngineer_AnimsHit));
         BH_CALL(Sprite_SetAnimation)(1);
         BattleActions_BattleEnd |= 4;

@@ -73,6 +73,8 @@ unsigned char* PtrAt(std::uint32_t address) {
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 // The command being built and the acting member's record, each re-read
 // wherever the original re-reads it.
+// 0x939FA0 points at the menu member's +0x124, its action record
+// (records::ActionRecord; BattleInput_NextMember stores it, battle_phases.cpp).
 unsigned char* Command() { return PtrAt(at::kCommandRecord); }
 unsigned char* Acting() { return PtrAt(at::kActing); }
 unsigned char* List() { return At(BattleE4_List_addr); }
@@ -177,7 +179,7 @@ extern "C" void __cdecl BattleAttackCmd_Confirm(void) {
     BattleE4_Picking = 0;
     command[1] = 0;
     command = Command();
-    SetLong(command + 0xC, Long(command + 0xC) | 1);
+    rv::Store<std::int32_t>(rv::As<records::ActionRecord>(command)->flags, static_cast<std::int32_t>(rv::As<records::ActionRecord>(command)->flags) | 1);
     Acting()[1] = 2;
     const unsigned char chosen = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     BattleActions_Step = 1;
@@ -375,7 +377,7 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
 
     const unsigned chosen_category = list[0xA];
     const unsigned chosen_item = ListItem();
-    SetWord(Command() + 2, (chosen_category << 8) + chosen_item);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(Command())->action_id, (chosen_category << 8) + chosen_item);
     const unsigned use_category = list[0xA];
     const unsigned use_item = Command()[2];
     const unsigned mode = list[8];

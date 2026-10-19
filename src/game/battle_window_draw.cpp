@@ -177,16 +177,16 @@ extern "C" void __cdecl BattleWin_DrawNumber(int x, int y, int colour, int value
     unsigned char* c = reinterpret_cast<unsigned char*>(PrintBuf());
     do {
         if (*c != 0x20) {
-            unsigned char* const p = Next();
+            unsigned char* const p = Next();  // a SPRT: g.set_sprt below
             *c = static_cast<unsigned char>(*c - 0x30);
-            SetWord(p + 0x16, g.get_clut(static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 4), 0x1E0));
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, g.get_clut(static_cast<int>((static_cast<unsigned>(colour) & 0xFF) << 4), 0x1E0));
             Put(p + 8, F(S16(static_cast<std::uint32_t>(px))));
             Put(p + 0xC, F(S16(static_cast<std::uint32_t>(y))));
             p[4] = p[5] = p[6] = 0x80;
             p[0x15] = 0xD8;
             p[0x14] = static_cast<unsigned char>(*c * 6 - 0x50);
-            SetWord(p + 0x18, 6);
-            SetWord(p + 0x1A, 5);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 6);
+            rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 5);
             g.set_sprt(p);
             g.commit(1, 0x1C);
         }
@@ -272,9 +272,9 @@ extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour
 extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit) {
     unsigned char* p = Next();
     g.set_poly_ft4(p);
-    SetWord(p + 0x26, g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
     const bool on = (static_cast<unsigned>(lit) & 0xFF) != 0;
-    SetWord(p + 0x16, g.get_clut(on ? 0xB0 : 0xE0, 0x1E0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(on ? 0xB0 : 0xE0, 0x1E0));
     const std::int32_t left = S16(static_cast<std::uint32_t>(x)), top = S16(static_cast<std::uint32_t>(y));
     const std::int32_t mid = left + static_cast<std::int32_t>(static_cast<unsigned>(w) & 0xFF);
     const std::int32_t bottom = top + 7;
@@ -300,8 +300,8 @@ extern "C" void __cdecl BattleWin_DrawBar(int x, int y, int w, int cap, int lit)
 
     p = Next();
     g.set_poly_ft4(p);
-    SetWord(p + 0x26, g.get_tpage(0, 0, 0x3C0, 0));
-    SetWord(p + 0x16, g.get_clut(0xB0, 0x1E0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, g.get_tpage(0, 0, 0x3C0, 0));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, g.get_clut(0xB0, 0x1E0));
     const std::int32_t right = mid + static_cast<std::int32_t>(static_cast<unsigned>(cap) & 0xFF);
     Put(p + 0x08, F(mid));
     Put(p + 0x0C, F(top));
@@ -335,14 +335,14 @@ extern "C" void __cdecl BattleWin_DrawCell16(int x, int y, int cell) {
     const unsigned page = g.get_tpage(0, 1, 0x3C0, 0);
     g.draw_mode(Next(), 0, 0, page & 0xFFFF, 0);
     g.commit(1, 0xC);
-    unsigned char* const p = Next();
+    unsigned char* const p = Next();  // a SPRT: g.set_sprt below
     p[4] = p[5] = p[6] = 0x80;
     p[0x14] = static_cast<unsigned char>(static_cast<unsigned>(cell) << 4);
-    SetWord(p + 0x18, 0x10);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x10);
     Put(p + 0x08, F(static_cast<std::int32_t>(static_cast<std::uint32_t>(x) & 0xFFFF)));
-    SetWord(p + 0x1A, 8);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 8);
     Put(p + 0x0C, F(static_cast<std::int32_t>(static_cast<std::uint32_t>(y) & 0xFFFF)));
-    SetWord(p + 0x16, 0x7800);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, 0x7800);
     p[0x15] = 0xD8;
     g.set_sprt(p);
     g.commit(1, 0x1C);

@@ -186,7 +186,7 @@ extern "C" void __cdecl BossBully_Dispatch(void) { Dispatch("BossBully_Dispatch"
 // BossBully_Hook; Sprite_Current +1 = 2; a tail jump to Sprite_ScriptTick,
 // whose al is the answer.
 extern "C" unsigned char __cdecl BossBully_Enter(void) {
-    SetLong(Enemy() + 0xFC, S(rv::Current<records::BattleEnemy>()->actor == 3 ? AddressOf(BossBully_AnimsB) : AddressOf(BossBully_AnimsA)));
+    rv::Store<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->anim_table, S(rv::Current<records::BattleEnemy>()->actor == 3 ? AddressOf(BossBully_AnimsB) : AddressOf(BossBully_AnimsA)));
     const unsigned char slot = rv::Current<records::BattleEnemy>()->actor;
     const U sounds = slot == 3   ? AddressOf(BossBully_SoundsA)
                      : slot == 4 ? AddressOf(BossBully_SoundsB)

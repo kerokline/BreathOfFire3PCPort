@@ -67,7 +67,7 @@ constexpr std::uint32_t kEquipCategories = 0x66B5BC; // u8 x 6: the equipment sl
 constexpr std::uint32_t kEquipIcons = 0x66B5B4;      // u8 x 6
 // kFieldMember: now BattleActorCopies_ItemActor (symbols.toml). s8: BATE's member (0x904065's index)
 constexpr std::uint32_t kPartyOrder = 0x904065;      // u8 x n: the party's members
-constexpr std::uint32_t kMemberIds = 0x66972C;       // MoveScript_EffectState: a member byte by slot
+// kMemberIds: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState: a member byte by slot
 
 // --- .data strings and piece lists (addresses only) -------------------------
 constexpr std::uint32_t kFmtNumber = 0x5E10C0;       // Area08_MessageFormat

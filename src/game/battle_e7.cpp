@@ -440,14 +440,15 @@ extern "C" void __cdecl GeneWin_DrawListFrame(U x, U y, U, U, U title) {
 extern "C" void __cdecl GeneWin_DrawFormIcon(U x, U y, U form) {
     OpenPage(1, 0x340, 0x100);
     unsigned char* const p = Gfx_PacketNext;
+    auto* const sprt = rv::As<records::GpuSprt>(p);  // a SPRT: Gpu_SetSprt below starts it
     const unsigned v = B(at::kFormCells + (form & 0xFF));
-    SetWord(p + 0x16, BH_CALL(Gpu_GetClut)(static_cast<int>(v << 4), 0x1FA));
+    rv::Store<unsigned>(sprt->clut, BH_CALL(Gpu_GetClut)(static_cast<int>(v << 4), 0x1FA));
     p[4] = p[5] = p[6] = 0x80;
     PutFloat(p + 8, S16(x));
     PutFloat(p + 0xC, S16(y));
     p[0x14] = static_cast<unsigned char>((v % 6) * 40);
-    SetWord(p + 0x18, 0x28);
-    SetWord(p + 0x1A, 0x18);
+    rv::Store<unsigned>(sprt->w, 0x28);
+    rv::Store<unsigned>(sprt->h, 0x18);
     p[0x15] = static_cast<unsigned char>((v / 6) * 24);
     BH_CALL(Gpu_SetSprt)(p);
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);
@@ -841,7 +842,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
         if (r == rec[0xB]) colour = 2;
         if (rec[0xD] & 2) {
             const unsigned slot = B(at::kPartyOrder + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
-            const unsigned who = B(at::kMemberIds + slot);
+            const unsigned who = MoveScript_EffectState[slot];
             if (BH_CALL(Item_CanUse)(2, who, category, items[r]) == 0) {
                 colour = 7;
             } else if (r == rec[0xA]) {

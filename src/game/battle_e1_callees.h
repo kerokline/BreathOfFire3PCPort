@@ -94,7 +94,7 @@ constexpr U kCrossGrow = 0x904ABC;   // u8 per member: the command cross's size
 // kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). s8: the entries in the order
 constexpr U kBattleEnd = 0x904AE8;
 constexpr U kActor = 0x904B34;
-constexpr U kActing = 0x904B3C;      // unsigned char *: the acting sprite
+// kActing: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting sprite
 constexpr U kActing2 = 0x904B40;     // unsigned char *: the action record (+2 the ability id)
 // kLossBar: now BattleResult_TickStep (symbols.toml). u16: the loss screen's bar width
 constexpr U kOldLevel = 0x904B72;    // u16
@@ -103,7 +103,7 @@ constexpr U kActionId = 0x904B80;    // u16
 // kEffectBits: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect still running
 // kAutoTest: now BattleFlow_AnimGate (symbols.toml). u8
 // kMessageUp: now BattleE1_MessageUp (symbols.toml). u8
-constexpr U kBannerText = 0x669E08;  // .data: the banner string pointer kind 3's first step shows
+// kBannerText: now BattleE1_BannerText (symbols.toml). .data: the banner string pointer kind 3's first step shows
 constexpr U kHoldIcons = 0x64E2AC;   // .data: 7 byte pairs, the command icons' offsets
 constexpr U kLevelMsgPtr = 0x93B8E4; // const char *: the level-up line (Msg_SystemPtr(7))
 // kPartySetByte: now AreaW0b_PartySet (symbols.toml). u8: & 0x7F the party set PartySet_Select loads
@@ -132,7 +132,7 @@ constexpr U kCharSize = 0xA4;
 // --- the .data tables the dispatchers jump through ---
 // kEquipSteps: now BattleExtra_EquipSteps (symbols.toml). by 0x929F01: 3 (0x42DC10, 0x42DCD0, 0x42E040)
 // kEquipOpenSteps: now BattleExtra_EquipOpenSteps (symbols.toml). by 0x929F02: 3 (BattleExtra_OpenTransition 0x42D780, 0x42DC20, 0x42DC80)
-constexpr U kEquipRunSteps = 0x64ADF8;   // by 0x929F02: 2, called (0x42DCF0, 0x42DE50)
+// kEquipRunSteps: now BattleExtra_EquipRunSteps (symbols.toml). by 0x929F02: 2, called (0x42DCF0, 0x42DE50)
 // kEquipLeaveSteps: now BattleExtra_EquipLeaveSteps (symbols.toml). by 0x929F02: 2 (0x42E050, 0x42E090)
 // kHoldSteps: now BattleHold_Steps (symbols.toml). by 0x904AA2: 3 (0x42EDA0, 0x42EE00, 0x42EEA0)
 // kKind3Steps: now BattleAction_Kind3Steps (symbols.toml). by 0x904AA3: 5 (0x42F5F0, 0x42F640, the three ability steps)

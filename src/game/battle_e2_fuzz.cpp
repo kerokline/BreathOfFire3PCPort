@@ -492,15 +492,15 @@ void Seed(unsigned k) {
         break;
     case 0x435CF0:
         Mem(at::kActKind)[0] = Byte({1, 1, 4, 4, 4, 0, 2, 3, 5});
-        for (unsigned i = 0; i < 8; ++i) SetWord(bh::EnemyAt(i) + 0x106, bh::Often() ? AbilityId() : bh::Next());
+        for (unsigned i = 0; i < 8; ++i) rv::Store<unsigned>(rv::As<records::BattleEnemy>(bh::EnemyAt(i))->ability, bh::Often() ? AbilityId() : bh::Next());
         break;
     case 0x435E10:
         for (unsigned i = 0; i < 8; ++i)
-            SetWord(bh::EnemyAt(i) + 0xA4, bh::Often() ? BH_PICK(0, 1, 2, 0xFFFE, 0xFFFF, 0x10) : bh::Next());
+            rv::Store<unsigned>(rv::As<records::BattleEnemy>(bh::EnemyAt(i))->hp, bh::Often() ? BH_PICK(0, 1, 2, 0xFFFE, 0xFFFF, 0x10) : bh::Next());
         break;
     case 0x435E90:
         for (unsigned i = 0; i < 3; ++i)
-            SetWord(bh::PartyOf(static_cast<unsigned char>(i)) + 0x98,
+            rv::Store<unsigned>(rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(i)))->hp,
                     bh::Often() ? BH_PICK(0, 1, 0x270F, 0x2710, 0x2711, 0x10) : bh::Next());
         break;
     case 0x435E70: case 0x436070:

@@ -239,9 +239,9 @@ extern "C" void __cdecl BossAmalgam_DeathStart(void) {
     BH_CALL(Sound_PlayById)(0x601);
     unsigned char* const s = Sprite_Current;
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
-    SetLong(s + 0x18, static_cast<std::int32_t>(cur_enemy->screen_x));
-    SetLong(s + 0x1C, static_cast<std::int32_t>(cur_enemy->screen_y));
-    SetLong(s + 0x20, 0);
+    rv::Store<std::int32_t>(cur_enemy->work_18, static_cast<std::int32_t>(cur_enemy->screen_x));
+    rv::Store<std::int32_t>(cur_enemy->work_1c, static_cast<std::int32_t>(cur_enemy->screen_y));
+    rv::Store<std::int32_t>(cur_enemy->work_20, 0);
     cur_enemy->screen_x = 0x32;
     cur_enemy->screen_y = 0x41;
     s[0x24] |= 0x88;
@@ -257,8 +257,8 @@ extern "C" void __cdecl BossAmalgam_DeathMelt(void) {
     BH_CALL(BossAmalgam_DrawStreak)(Word(Sprite_Current + 0x20));
     unsigned char* const s = Sprite_Current;
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
-    SetLong(s + 0x20, static_cast<std::int32_t>(L(s + 0x20) + 2));
-    if (L(s + 0x20) == 0x56) cur_enemy->state3 = 3;
+    rv::Store<std::int32_t>(cur_enemy->work_20, static_cast<std::int32_t>(static_cast<U>(cur_enemy->work_20) + 2));
+    if (static_cast<U>(cur_enemy->work_20) == 0x56) cur_enemy->state3 = 3;
 }
 
 // original 0x439870: death step 3: 0x454A80(Sprite_Current) - its field slots
@@ -295,12 +295,12 @@ extern "C" void __cdecl BossAmalgam_DrawSprite(unsigned v) {
     unsigned char* const p = Packet();
     p[4] = p[5] = p[6] = 0x80;
     const unsigned char* const s = Sprite_Current;
-    PutFloat(p + 8, L(s + 0x18) - 0x28);
-    PutFloat(p + 0xC, L(s + 0x20) + L(s + 0x1C) - 0x3C);
+    PutFloat(p + 8, static_cast<U>(rv::As<records::BattleEnemy>(s)->work_18) - 0x28);
+    PutFloat(p + 0xC, static_cast<U>(rv::As<records::BattleEnemy>(s)->work_20) + static_cast<U>(rv::As<records::BattleEnemy>(s)->work_1c) - 0x3C);
     p[0x14] = 0;
-    SetWord(p + 0x18, 0x68);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x68);  // a SPRT: Gpu_SetSprt below
     p[0x15] = static_cast<unsigned char>(v);
-    SetWord(p + 0x1A, 0x56);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0x56);
     BH_CALL(Gpu_SetSprt)(p);
     BH_CALL(Gfx_CommitPrim)(1, 0x1C);
 }
@@ -319,13 +319,13 @@ extern "C" void __cdecl BossAmalgam_DrawStreak(unsigned v) {
     BH_CALL(Gfx_CommitPrim)(1, 0xC);
     unsigned char* const p = Packet();
     const U tpage = BH_CALL(Gpu_GetTPage)(2, 0, 0x340, 0x100);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);  // a POLY_FT4: Gpu_SetPolyFT4 below
     p[4] = p[5] = p[6] = 0x80;
     const unsigned char* const s = Sprite_Current;
-    const U left = L(s + 0x18) - 0x28, right = L(s + 0x18) + 0x40, bottom = L(s + 0x20) + L(s + 0x1C) - 0x3C;
-    SetLong(p + 0xC, 0);
+    const U left = static_cast<U>(rv::As<records::BattleEnemy>(s)->work_18) - 0x28, right = static_cast<U>(rv::As<records::BattleEnemy>(s)->work_18) + 0x40, bottom = static_cast<U>(rv::As<records::BattleEnemy>(s)->work_20) + static_cast<U>(rv::As<records::BattleEnemy>(s)->work_1c) - 0x3C;
+    rv::Store<float>(rv::As<records::GpuPolyFT4>(p)->y0, 0.0f);
     PutFloat(p + 8, left);
-    SetLong(p + 0x1C, 0);
+    rv::Store<float>(rv::As<records::GpuPolyFT4>(p)->y1, 0.0f);
     PutFloat(p + 0x18, right);
     PutFloat(p + 0x28, left);
     PutFloat(p + 0x2C, bottom);
@@ -378,7 +378,7 @@ void BalioSunderEnter(U fc, U f4, U f8, unsigned short bank) {
     StoreKindTables(fc, f4, f8);
     Sprite_Current[1] = 2;
     if (BattleActions_EventBattle == 0xD) {
-        SetWord(Enemy() + 0xD0, 0xFFFF);
+        rv::Store<unsigned>(rv::As<records::BattleEnemy>(Enemy())->base_max_hp, 0xFFFF);
         rv::As<records::BattleEnemy>(Enemy())->max_hp = 0xFFFF;
         rv::As<records::BattleEnemy>(Enemy())->hp = 0xFFFF;
     }
