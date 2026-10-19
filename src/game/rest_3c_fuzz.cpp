@@ -308,7 +308,7 @@ void Seed(unsigned k) {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
         p[0x148] = static_cast<unsigned char>(bh::Next() % 10);
-        SetWord(p + 0x98, Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100}));
+        rv::Store<std::uint32_t>(rv::As<records::PartyMember>(p)->hp, Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100}));
         p[0x134] = static_cast<unsigned char>(bh::Half() ? p[0x134] & 0xFC : p[0x134]);
         p[0x144] = static_cast<unsigned char>(bh::Next() % 4);
         p[0x145] = static_cast<unsigned char>(bh::Next() % 4);
@@ -354,8 +354,8 @@ void Disturb(U h) {
     case 3: Mem(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(v % 12); break;
     case 4: Mem(at::kTurnOrder + v % 12)[0] = static_cast<unsigned char>(v & 0x100 ? 0xFF : (v >> 4) % 11); break;
     case 5: Mem(Rest3c_Hits_addr)[0] = static_cast<unsigned char>(v % 10); break;
-    case 6: SetWord(Member(v) + 0x98, v >> 2); break;
-    case 7: SetWord(EnemyObj(v) + 0xA4, v >> 3); break;
+    case 6: rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Member(v))->hp, v >> 2); break;
+    case 7: rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(EnemyObj(v))->hp, v >> 3); break;
     case 8: {
         unsigned char* const s = v & 1 ? Member(v >> 1) + 0x90 : EnemyObj(v >> 1) + 0x92;
         s[0] = static_cast<unsigned char>(s[0] ^ 8);

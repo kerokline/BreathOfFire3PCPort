@@ -89,13 +89,13 @@ constexpr U kEff6Shown = 0x7E151E;     // record 6 +0x3E (u16)
 // kItemB: now CharStats_ExtraItem (symbols.toml). u8 (save data)
 constexpr U kItemA = 0x904130;         // u8 (save data)
 // kWarned: now Effect1e_Choice (symbols.toml). u8: set once by LeaderPanel_S1Buttons
-constexpr U kPressNow = 0x6BC717;      // u8: Input_Pressed & 0xE020 non-zero (LeaderPanel_PressLatch)
-constexpr U kPressWas = 0x6BC708;      // u8: kPressNow's previous value
+// kPressNow: now Effect1e_PressNow (symbols.toml). u8: Input_Pressed & 0xE020 non-zero (LeaderPanel_PressLatch)
+// kPressWas: now Effect1e_PressWas (symbols.toml). u8: Effect1e_PressNow's previous value
 constexpr U kComboStep = 0x6BC70C;     // u8 x 4: each sequence's position
 constexpr U kComboTimer = 0x6BC710;    // u8 x 4: each sequence's frames left
 // kPoseWas: now Effect1e_PoseWas (symbols.toml). u8 (E1E's)
 // kPose: now Effect1e_Pose (symbols.toml). u8 (E1E's)
-constexpr U kBiteHeld = 0x6BC716;      // u8: a fish is nibbling (Fish_Swim sets, Fish_Settle clears)
+// kBiteHeld: now Effect1e_BiteHeld (symbols.toml). u8: a fish is nibbling (Fish_Swim sets, Fish_Settle clears)
 constexpr U kHoldFlag = 0x903850;      // u8 (E1E reads it after LeaderPanel_HoldTest)
 constexpr U kPoolWordData = 0x803642;  // u16: MessagePools offset of the data page's title
 constexpr U kPoolWordRule = 0x803660;  // u16: the rule page's (read as a dword & 0xFFFF)
@@ -604,7 +604,7 @@ extern "C" unsigned char __cdecl LeaderPanel_LeaveOnPress(unsigned buttons) {
 // are (bar the count-down).
 extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
     SH_CALL(LeaderPanel_PressLatch)();
-    unsigned char now = B(kPressNow);
+    unsigned char now = Effect1e_PressNow;
     unsigned char depth = Effect_Objects[7];
     for (unsigned i = 0; i < 4; ++i) {
         const U row = kComboTable + 8 * i;
@@ -645,7 +645,7 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
             Effect_Objects[7] = depth;
             Effect_Objects[0xa] = RecordB()[0x10];
         }
-        now = B(kPressNow);
+        now = Effect1e_PressNow;
         B(kComboStep + i) = 0;
         B(kComboTimer + i) = 0;
     }
@@ -654,8 +654,8 @@ extern "C" void __cdecl LeaderPanel_EffectsStep(void) {
 // original 0x52B460: 0x6BC708 = 0x6BC717; 0x6BC717 = 1 when Input_Pressed has
 // any of 0xE020, else 0.
 extern "C" void __cdecl LeaderPanel_PressLatch(void) {
-    B(kPressWas) = B(kPressNow);
-    B(kPressNow) = (Input_Pressed & Sigma(0xE020)) != 0 ? 1 : 0;
+    Effect1e_PressWas = Effect1e_PressNow;
+    Effect1e_PressNow = (Input_Pressed & Sigma(0xE020)) != 0 ? 1 : 0;
 }
 
 // ===========================================================================
@@ -800,12 +800,12 @@ extern "C" void __cdecl Fish_Begin(void) {
     SetL(S(), 0x38, zbase - ((r3 & 0xF) << 16));
     const U top = (0u - static_cast<U>(Kind(S()[6], 0x1A))) << 8;
     const unsigned r4 = Rnd();
-    SetWord(S() + 0x3E, top - ((r4 & 7) << 5));
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, top - ((r4 & 7) << 5));
     const short ground = Elevation(static_cast<U>(L(S(), 0x34)), static_cast<U>(L(S(), 0x38)));
     unsigned char* const s = S();
     const short h = Sh(s, 0x3E);
-    if (h == 0) SetWord(s + 0x3E, 0xFFE0);
-    else if (h < ground) SetWord(s + 0x3E, static_cast<U>(ground));
+    if (h == 0) rv::As<records::SpriteObject>(s)->height_whole = 0xFFE0;
+    else if (h < ground) rv::As<records::SpriteObject>(s)->height_whole = static_cast<U>(ground);
     S()[8] = 4;
     SetL(S(), 0x14, 0);
     Animation(0);
@@ -828,10 +828,10 @@ extern "C" void __cdecl Fish_Swim(void) {
             S()[1] = 3;
         } else {
             const auto bits = static_cast<unsigned char>(Rnd());
-            const unsigned char nibbling = B(kBiteHeld);
+            const unsigned char nibbling = Effect1e_BiteHeld;
             unsigned char* s = S();
-            if (nibbling == 0 && Word(s + 0x3E) == 0 && (bits & 3) == 0 && ObjTrio[2] != 4 && s[6] != 0x16) {
-                B(kBiteHeld) = 1;
+            if (nibbling == 0 && rv::As<records::SpriteObject>(s)->height_whole == 0 && (bits & 3) == 0 && ObjTrio[2] != 4 && s[6] != 0x16) {
+                Effect1e_BiteHeld = 1;
                 Bank(KindWord(s[6], 0x12));
                 if ((S()[0] & 0x80) == 0) Sound(0x206);
                 s = S();
@@ -888,7 +888,7 @@ extern "C" void __cdecl Fish_Swim(void) {
 extern "C" void __cdecl Fish_Settle(void) {
     if (Tick() == 0) return;
     const unsigned kind = S()[6];
-    B(kBiteHeld) = 0;
+    Effect1e_BiteHeld = 0;
     Bank(KindWord(kind, 0x10));
     unsigned char* s = S();
     s[0] = static_cast<unsigned char>(s[0] | 0x20);
@@ -1061,7 +1061,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
             t = S();
             t[0x2A] = DirByte(t[8]);
             Animation(DirAnim(S()[8]));
-            SetWord(S() + 0x3E, 0xFFE0);
+            rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, 0xFFE0);
             S()[4] = 0;
             S()[0x48] = 2;
             SetL(S(), 0x10, 0);
@@ -1140,7 +1140,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
                 t[0] = static_cast<unsigned char>(t[0] & 0xDF);
                 S()[0x2A] = 0;
                 S()[0x48] = 0;
-                SetWord(S() + 0x3E, 0);
+                rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(S())->height_whole, 0);
                 Animation(0);
                 SetL(S(), 0x10, 0xFFFFFFFDu);
                 SH_CALL(Fish_AdjustStrength)(static_cast<unsigned>(-5));
@@ -1225,7 +1225,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
         SetL(f, 0x38, static_cast<U>(L(f, 0x38)) - 0x1000);
         unsigned char* e = S();
         if (Sh(e, 0x3E) < 0) {
-            SetWord(e + 0x3E, Word(e + 0x3E) + 8);
+            rv::As<records::SpriteObject>(e)->height_whole = rv::As<records::SpriteObject>(e)->height_whole + 8;
             e = S();
         }
         const std::int32_t z = L(e, 0x38);
@@ -1266,7 +1266,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
         SetL(e, 0x34, static_cast<U>(L(e, 0x34)) + static_cast<U>(L(e, 0xC)));
         e = S();
         if (Sh(e, 0x3E) < 0) {
-            SetWord(e + 0x3E, Word(e + 0x3E) + 8);
+            rv::As<records::SpriteObject>(e)->height_whole = rv::As<records::SpriteObject>(e)->height_whole + 8;
             e = S();
         }
         SetL(e, 0x38, static_cast<U>(L(e, 0x38)) + 0x1000);
@@ -1318,9 +1318,9 @@ extern "C" void __cdecl Fish_S5Move(void) {
         SetL(S(), 0xC, 0);
         SetL(S(), 0x10, 0);
         s = S();
-        SetWord(s + 0x34, Word(s + 0x34) & 0x8000);
+        rv::As<records::SpriteObject>(s)->x_frac = rv::As<records::SpriteObject>(s)->x_frac & 0x8000;
         s = S();
-        SetWord(s + 0x38, Word(s + 0x38) & 0x8000);
+        rv::As<records::SpriteObject>(s)->z_frac = rv::As<records::SpriteObject>(s)->z_frac & 0x8000;
         S()[1] = 1;
         S()[2] = 0;
     }
@@ -1407,7 +1407,7 @@ extern "C" void __cdecl Fish_Step(void) {
     s = S();
     SetL(s, 0x38, static_cast<U>(L(s, 0x38)) + static_cast<U>(L(s, 0x10)));
     s = S();
-    SetWord(s + 0x3E, Word(s + 0x3E) + Word(s + 0x14));
+    rv::As<records::SpriteObject>(s)->height_whole = rv::As<records::SpriteObject>(s)->height_whole + Word(s + 0x14);
 }
 
 // original 0x52CAC0: the steps +0xC / +0x10 from MoveCmd_F9Steps' row +8 (read

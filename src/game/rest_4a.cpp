@@ -578,7 +578,7 @@ extern "C" void __cdecl CommuSim_TickKind9(void) {
             if (r[0] == 0) continue;
             if (r[1] != b + 1) continue;
             const unsigned char level = Bld(b)[1];
-            if (Rest4a_Clock - UL(r + 4) < (level + 1u) * 6u) {
+            if (Rest4a_Clock - rv::As<records::CommunityRecord>(r)->stamp < (level + 1u) * 6u) {
                 r[2] = 1;
                 continue;
             }
@@ -655,7 +655,7 @@ extern "C" void __cdecl CommuSim_TickKindD(void) {
                 ++tier;
                 if (p >= at::kPriceTiersEnd) break;
             }
-            const U stamp = UL(r + 4);
+            const U stamp = rv::As<records::CommunityRecord>(r)->stamp;
             if (Rest4a_Clock - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
             r[3] = static_cast<unsigned char>(status & 0xF);
             if (flags & 8) {
@@ -744,7 +744,7 @@ extern "C" void __cdecl CommuSim_AddRecord(void) {
     unsigned char* const rec = Rec(r);
     rec[0] = 1;
     rec[1] = 0;
-    SetUL(rec + 4, Rest4a_Clock);
+    rv::As<records::CommunityRecord>(rec)->stamp = Rest4a_Clock;
     rec[2] = 0;
     unsigned char* const copy = At(at::kRecordCopies + 5u * r);
     SetUL(copy, UL(at::kRecordTraits + at::kTraitStride * r));
@@ -904,12 +904,12 @@ extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
         base[0x84] = 0;
         Sprite_Current[2] = 0;
     }
-    SetWord(Sprite_Current + 0x36, At(at::kObjectPlaces + 3 * o)[0]);
-    SetWord(Sprite_Current + 0x34, 0);
-    SetWord(Sprite_Current + 0x3A, At(at::kObjectPlaces + 3 * o + 1)[0]);
-    SetWord(Sprite_Current + 0x38, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_whole, At(at::kObjectPlaces + 3 * o)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_frac, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(at::kObjectPlaces + 3 * o + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_frac, 0);
     const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(base)->x, rv::As<records::SpriteObject>(base)->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(height));
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->height_whole, static_cast<unsigned>(height));
     Sprite_Current[5] = static_cast<unsigned char>(record);
     BankAndFace();
 }
@@ -933,13 +933,13 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     Sprite_Current[1] = 6;
     base[0x84] = 0;
     Sprite_Current[2] = 0;
-    SetWord(Sprite_Current + 0x36, At(at::kResidentPlaces + 3 * (Count(building) + row))[0]);
-    SetWord(Sprite_Current + 0x34, 0);
-    SetWord(Sprite_Current + 0x3A, At(at::kResidentPlaces + 3 * (Count(building) + row) + 1)[0]);
-    SetWord(Sprite_Current + 0x38, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_whole, At(at::kResidentPlaces + 3 * (Count(building) + row))[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->x_frac, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_whole, At(at::kResidentPlaces + 3 * (Count(building) + row) + 1)[0]);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->z_frac, 0);
     unsigned char* const s = Sprite_Current;
     const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(height));
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->height_whole, static_cast<unsigned>(height));
     const unsigned char facing = At(at::kResidentPlaces + 3 * (Count(building) + row) + 2)[0];
     Sprite_Current[8] = facing;
     Sprite_Current[0x48] = 0;
@@ -999,9 +999,9 @@ extern "C" void __cdecl CommuPose_Kind5(unsigned object, unsigned building) {
     }
     Sprite_Current[6] = 5;
     SetWord(Pose(o), 0xC008);
-    SetUL(Sprite_Current + 0x18, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->work_18, 0);
     const U v = Bld(b)[2] + 2u * Bld(b)[1] + 0x11;
-    SetUL(Sprite_Current + 0x1C, v);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->work_1c, v);
 }
 
 // original 0x4567F0 (no PSX twin paired): the first resident: +6 = 5, +0x18 =
@@ -1013,8 +1013,8 @@ extern "C" void __cdecl CommuPose_Kind6(unsigned object, unsigned building) {
     unsigned char* const s = Sprite_Current;
     if (count == 0) {
         s[6] = 5;
-        SetUL(Sprite_Current + 0x18, 1);
-        SetUL(Sprite_Current + 0x1C, 1);
+        rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->work_18, 1);
+        rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->work_1c, 1);
         SetWord(Pose(o), 0xCA);
         return;
     }
@@ -1034,7 +1034,7 @@ extern "C" void __cdecl CommuPose_Kind7(unsigned object) {
 extern "C" void __cdecl CommuPose_Kind8(unsigned record, unsigned object, unsigned building) {
     const U r = record & 0xFFu;
     Sprite_Current[6] = 1;
-    const U age = Rest4a_Clock - UL(Rec(r) + 4);
+    const U age = Rest4a_Clock - rv::As<records::CommunityRecord>(Rec(r))->stamp;
     const U row = age < 0x14 ? 0 : (age < 0x28 ? 1 : 2);
     const U index = Count(building & 0xFFu) + 3 * row;
     SetWord(Pose(object & 0xFFu), Word(At(at::kOfferWords + 2 * index)));
@@ -1070,8 +1070,8 @@ extern "C" void __cdecl CommuPose_KindA(unsigned object, unsigned building) {
         return;
     }
     s[6] = 5;
-    SetUL(Sprite_Current + 0x18, 6);
-    SetUL(Sprite_Current + 0x1C, 0);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->work_18, 6);
+    rv::Store<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Current)->work_1c, 0);
     SetWord(Pose(o), 0xCB);
 }
 

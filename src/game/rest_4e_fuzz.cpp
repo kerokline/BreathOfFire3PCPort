@@ -176,13 +176,12 @@ unsigned char& B(U a) { return Mem(a)[0]; }
 // kStep: now Rest4b_BoardStep (symbols.toml).
 // kStyle: now BattleDraw_Colour (symbols.toml).
 // kCursor: now Rest4c_Count (symbols.toml).
-constexpr U kEdit = 0x675F98,
-            kSavedTrack = 0x675FD0,
-            kSlide = 0x675FD1,
-            kTrack = 0x675FD2,
-            kItemSlide = 0x675FD4,
-            kPages = 0x675FD8,
-            kPage = 0x675FDB;
+// kSavedTrack: now CommuMusic_SavedTrack (symbols.toml).
+// kSlide: now CommuMusic_Slide (symbols.toml).
+// kTrack: now CommuMusic_Track (symbols.toml).
+// kItemSlide: now CommuItem_Slide (symbols.toml).
+// kPage: now CommuList_Page (symbols.toml).
+constexpr U kEdit = 0x675F98, kPages = 0x675FD8;
 // kEntry: now AreaW0c_TailSub (symbols.toml).
 constexpr U kEntries = 0x9046D0, kTrackCounts = 0x9048AB;
 constexpr U kMembers = 0x903A70;
@@ -358,12 +357,12 @@ void Seed(unsigned k) {
     entry[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x13, 0x18, 0xF, sh::Next()));
     for (unsigned c = 0; c < 9; ++c) B(kTrackCounts + 8 * c) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x26, 0x27, sh::Next() % 40));
     const unsigned count = B(kTrackCounts + 8 * kind);
-    SetWord(Mem(kTrack), PickOf(0, 1, count, count - 1, count + 1, 39, 0xFFFF, 0xFFFE, sh::Next() % 40));
-    B(kSlide) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xFF, sh::Next()));
-    const auto row = static_cast<short>(Word(Mem(kTrack)));
+    SetWord(Mem(CommuMusic_Track_addr), PickOf(0, 1, count, count - 1, count + 1, 39, 0xFFFF, 0xFFFE, sh::Next() % 40));
+    B(CommuMusic_Slide_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xFF, sh::Next()));
+    const auto row = static_cast<short>(Word(Mem(CommuMusic_Track_addr)));
     const unsigned char playing = Mem(kTracks + row)[0];
     Music_Track = static_cast<unsigned char>(PickOf(0xFF, playing, playing, sh::Next()));
-    B(kSavedTrack) = static_cast<unsigned char>(PickOf(0xFF, Music_Track, sh::Next()));
+    B(CommuMusic_SavedTrack_addr) = static_cast<unsigned char>(PickOf(0xFF, Music_Track, sh::Next()));
     // the item window: shut or not, tab 0..4, top and row at the paging bounds,
     // the scroll word 0 most of the time, the row's item empty or not
     B(kWinOff) = static_cast<unsigned char>(PickOf(0, 0, 0, 1, 2));
@@ -372,7 +371,7 @@ void Seed(unsigned k) {
     B(kTop) = static_cast<unsigned char>(top);
     B(Rest3a_Win0Cursor_addr) = static_cast<unsigned char>(PickOf(0, top, top - 1, top + 8, top + 9, 0x7E, 0x7F, sh::Next() % 0x80));
     SetWord(Mem(kScroll), PickOf(0, 0, 0, 0x10, sh::Next()));
-    B(kItemSlide) = static_cast<unsigned char>(PickOf(0, 1, 3, 4, 5, sh::Next()));
+    B(CommuItem_Slide_addr) = static_cast<unsigned char>(PickOf(0, 1, 3, 4, 5, sh::Next()));
     const U list = Long(Mem(bof3::addr::Inventory_IdLists + 4 * B(BattleOdds_Win0Index_addr)));
     if (sh::Half()) Mem(list + B(Rest3a_Win0Cursor_addr))[0] = 0;
     // the three lists: counts at their page bounds, the pairs' kinds below 8 and
@@ -389,8 +388,8 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 3; ++i) B(kPages + i) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, sh::Next() % 14));
     if (B(kPages) + B(kPages + 1) + B(kPages + 2) == 0) B(kPages + PickOf(0, 1, 2)) = 1;
     const unsigned sum = B(kPages) + B(kPages + 1) + B(kPages + 2);
-    B(kPage) = static_cast<unsigned char>(PickOf(0, sum - 1, sh::Next() % sum, sh::Next() % sum, B(kPages), B(kPages) - 1));
-    if (B(kPage) >= sum) B(kPage) = 0;
+    B(CommuList_Page_addr) = static_cast<unsigned char>(PickOf(0, sum - 1, sh::Next() % sum, sh::Next() % sum, B(kPages), B(kPages) - 1));
+    if (B(CommuList_Page_addr) >= sum) B(CommuList_Page_addr) = 0;
     // the pad and the buttons
     Input_Pressed = static_cast<unsigned short>(PickOf(0, 0, 0x20, 0x40, 0x60, 0x2000, 0x8000, 0xA000, 0x1000, 0x4000,
                                                        4, 8, 0x2020, 0x8040, sh::Next()));
@@ -440,8 +439,8 @@ void Disturb(U h) {
     switch (sh::DisturbCase(h, 19)) {
     case 0: B(Rest4b_BoardStep_addr) = b; break;
     case 1: B(Rest4b_BoardState_addr) = b; break;
-    case 2: B(kSlide) = static_cast<unsigned char>(b % 6); break;
-    case 3: B(kItemSlide) = static_cast<unsigned char>(b % 6); break;
+    case 2: B(CommuMusic_Slide_addr) = static_cast<unsigned char>(b % 6); break;
+    case 3: B(CommuItem_Slide_addr) = static_cast<unsigned char>(b % 6); break;
     case 4: B(kWinOff) = static_cast<unsigned char>(b & 1); break;
     case 5: B(BattleOdds_Win0Index_addr) = static_cast<unsigned char>(b % 5); break;
     case 6: B(Rest3a_Win0Cursor_addr) = static_cast<unsigned char>(b & 0x7F); break;
@@ -455,9 +454,9 @@ void Disturb(U h) {
         break;
     case 13: B(BattleDraw_Colour_addr) = static_cast<unsigned char>(b % 8); break;
     case 14: sh::Scratch(3)[b % 0x3F] = static_cast<unsigned char>(v); break;
-    case 15: SetWord(Mem(kTrack), (v % 44) - 2); break;
+    case 15: SetWord(Mem(CommuMusic_Track_addr), (v % 44) - 2); break;
     case 16: B(kEntries + 8 * B(AreaW0c_TailSub_addr) + 2 + (b & 1)) = static_cast<unsigned char>(v); break;
-    case 17: if (b & 1) B(kSavedTrack) = static_cast<unsigned char>(v); else B(kPage) = static_cast<unsigned char>(v); break;
+    case 17: if (b & 1) B(CommuMusic_SavedTrack_addr) = static_cast<unsigned char>(v); else B(CommuList_Page_addr) = static_cast<unsigned char>(v); break;
     case 18: B(Rest4c_Count_addr) = b; break;
     default: break;
     }

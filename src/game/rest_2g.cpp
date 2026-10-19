@@ -160,7 +160,7 @@ extern "C" unsigned __cdecl BattleResultWin_ExpToNext(unsigned slot) {
     const unsigned rows = rec[0xA] + 1u;
     U sum = 0;
     for (unsigned k = 0; k < rows; ++k) sum += Word(At(at::kExpTable + 0x318 * r + 8 * k));
-    const U exp = static_cast<U>(Long(rec + 0xC));
+    const U exp = static_cast<U>(rv::As<records::CharRecord>(rec)->exp);
     return sum >= exp ? sum - exp : 0;
 }
 

@@ -154,7 +154,7 @@ void ProbeSide(U row, unsigned d) {
     if (Sloped() == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = Sprite_Current;
-    if (static_cast<short>(Word(s + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
 
 // The first turn of the Begin shapes: an even direction +8 is turned one

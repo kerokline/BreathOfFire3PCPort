@@ -118,7 +118,7 @@ void SideProbe(U row, unsigned d) {
     if (B(at::kScratchFlag) == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = Sc();
-    if (static_cast<short>(Word(c + 0x3E)) < static_cast<short>(ground)) c[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
 }
 
 void Form0Begin() {
@@ -313,14 +313,14 @@ extern "C" void __cdecl Member_JumpState(void) { CodeAt(Member_JumpSteps_addr, M
 extern "C" void __cdecl Member_JumpAir(void) {
     const unsigned char* const s = Sc();
     const unsigned char* const r = Member(s[6]);
-    const auto theirs = static_cast<short>(Word(r + 0x3E));
+    const auto theirs = static_cast<short>(rv::As<records::PartyMember>(r)->height_whole);
     unsigned char how;
     if (r[0x137] == 3) {
-        const auto mine = static_cast<short>(Word(s + 0x3E));
+        const auto mine = static_cast<short>(rv::As<records::PartyMember>(s)->height_whole);
         if (Abs32(static_cast<std::int32_t>(mine) - static_cast<std::int32_t>(theirs)) > 0x80) how = mine > theirs ? 1 : 0;
         else how = 3;
     } else {
-        how = static_cast<short>(Word(s + 0x3E)) <= theirs ? 0 : 2;
+        how = static_cast<short>(rv::As<records::PartyMember>(s)->height_whole) <= theirs ? 0 : 2;
     }
     switch (how) {
     case 0: SH_CALL(Leader_Rise)(); break;

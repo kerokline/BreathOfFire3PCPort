@@ -366,15 +366,15 @@ void SeedRecords() {
         r[0xB] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
         r[0x10] = static_cast<unsigned char>(PickOf(0, 0x20, 0x80, 0xA0, sh::Next()));
         r[0x11] = static_cast<unsigned char>(PickOf(0, 0x20, sh::Next()));
-        SetWord(r + 0x18, PickOf(0, 1, 2, 0x100, sh::Next()));
+        rv::As<records::CharRecord>(r)->hp = PickOf(0, 1, 2, 0x100, sh::Next());
         r[0x1E] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
         r[0x1F] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 17, sh::Next()));
         const U ap_max = PickOf(0, 4, 8, 0x40, 0x41, 0x3F, sh::Next() & 0xFFFF);
-        SetWord(r + 0x22, ap_max);
-        SetWord(r + 0x1A, PickOf(0, 1, ap_max >> 2, (ap_max >> 2) + 1, (ap_max >> 2) - 1u, sh::Next()));
+        rv::As<records::CharRecord>(r)->stats.max_ap = ap_max;
+        rv::As<records::CharRecord>(r)->ap = PickOf(0, 1, ap_max >> 2, (ap_max >> 2) + 1, (ap_max >> 2) - 1u, sh::Next());
     }
     Mem(Rest2h_Window1Master_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 17, sh::Next()));
-    for (unsigned i = 0; i < 6; ++i) Mem(0x904062 + i)[0] = static_cast<unsigned char>(sh::Often() ? GoodId() : sh::Next());
+    for (unsigned i = 0; i < 6; ++i) Mem(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(sh::Often() ? GoodId() : sh::Next());
 }
 
 // A master's requirement list's skills placed (or not) in the slots and the shared list.

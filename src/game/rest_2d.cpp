@@ -699,10 +699,10 @@ extern "C" void __cdecl FieldMenuStatus_SlideIn(void) {
 extern "C" void __cdecl FieldMenuStatus_Choose(void) {
     SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop);
     const auto c = BattleActorCopies_ItemActor;
-    B(0x80340C) = 1;
+    BattleE4_Hand = 1;
     const U member_window = at::kWindows + at::kWindowStride * static_cast<U>(4 + c);
     SetWord(At(0x803410), rv::As<records::WindowRecord>(At(member_window))->x);
-    SetWord(At(0x803412), rv::As<records::WindowRecord>(At(member_window))->y);
+    BattleActorCopies_ItemCursorY = rv::As<records::WindowRecord>(At(member_window))->y;
     SH_CALL(TextRecord_Set)(0, 8, At(RecordOf(MoveScript_EffectState[Cond_Flags[0xd2 + c]])));
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x8032FC), 0x12);
@@ -731,7 +731,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         SH_CALL(Sound_PlayEffect)(0x102);
         SH_CALL(FieldMenuStatus_DetailWindows)();
         const unsigned char state = FieldS_State;
-        B(0x80340C) = 0;
+        BattleE4_Hand = 0;
         B(at::kMenuTimer) = 8;
         FieldS_State = static_cast<unsigned char>(state + 1);
     }
@@ -747,7 +747,7 @@ extern "C" void __cdecl FieldMenuStatus_Choose(void) {
         }
         const unsigned char state = FieldS_State;
         B(0x8032EF) = 1;
-        B(0x80340C) = 0;
+        BattleE4_Hand = 0;
         B(at::kMenuTimer) = 8;
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
@@ -825,7 +825,7 @@ extern "C" void __cdecl FieldMenuStatus_PlaceWindows(void) {
     SetWord(At(0x8032FC), 0);
     B(0x80340D) = 6;
     B(0x80340E) = 0xA;
-    B(0x80340C) = 0;
+    BattleE4_Hand = 0;
     B(0x803416) = 0;
     B(0x803417) = 1;
 }
@@ -853,7 +853,7 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
     MemberWindowStates(5, 3, 7, 5, "FieldMenuStatus_DetailWindows");
     const unsigned char cursor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     B(0x80337F) = 2;
-    B(0x8033A3) = 2;
+    BattleActorCopies_ItemState = 2;
     B(0x8033C7) = 2;
     B(0x80337D) = 6;
     B(0x80337E) = 6;
@@ -863,13 +863,13 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
     B(0x803386) = cursor;
     B(0x8033A1) = 6;
     B(0x8033A2) = 7;
-    B(0x8033A0) = 1;
+    BattleE4_List = 1;
     SetWord(At(0x8033A4), 0xFF9C);
-    SetWord(At(0x8033A6), 0x78);
-    B(0x8033AA) = cursor;
+    BattleActorCopies_ItemBaseY = 0x78;
+    BattleActorCopies_ItemOwner = cursor;
     B(0x8033C5) = 6;
     B(0x8033C6) = 8;
-    B(0x8033C4) = 1;
+    BattleE4_Cands = 1;
     SetWord(At(0x8033C8), 0xFF9C);
     SetWord(At(0x8033CA), 0xA8);
     B(0x8033CE) = cursor;
@@ -880,7 +880,7 @@ extern "C" void __cdecl FieldMenuStatus_DetailWindows(void) {
 extern "C" void __cdecl FieldMenuStatus_ListWindows(void) {
     MemberWindowStates(6, 4, 8, 6, "FieldMenuStatus_ListWindows");
     B(0x80337F) = 1;
-    B(0x8033A3) = 1;
+    BattleActorCopies_ItemState = 1;
     B(0x8033C7) = 1;
 }
 
@@ -890,8 +890,8 @@ extern "C" void __cdecl FieldMenuStatus_ClearWindows(void) {
     B(0x803334) = 0;
     B(0x803358) = 0;
     B(0x80337C) = 0;
-    B(0x8033A0) = 0;
-    B(0x8033C4) = 0;
+    BattleE4_List = 0;
+    BattleE4_Cands = 0;
 }
 
 // --- the Items screen: FieldMenu_States[2] -------------------------------------------------------
@@ -946,9 +946,9 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
     const unsigned pressed = Input_Pressed;
     B(0x803340) = 0xFF;
     const unsigned short y = static_cast<unsigned short>(Word(At(0x803316)) + 4);
-    B(0x803454) = 1;
+    BattleE4_Above = 1;
     SetWord(At(0x803458), static_cast<unsigned>(48 * category) + window_x);
-    SetWord(At(0x80345A), y);
+    ShopStates2_HandY = y;
     B(0x80331B) = 0xFF;
     const U held = SH_CALL(Input_AutoRepeat)(pressed & 0xA000);
     unsigned char c = static_cast<unsigned char>(Rest2d_ItemsCategory);
@@ -1011,7 +1011,7 @@ extern "C" void __cdecl FieldMenuItems_Category(void) {
         B(0x8032EF) = 1;
         B(0x803313) = 1;
         B(0x803337) = 1;
-        B(0x803454) = 0;
+        BattleE4_Above = 0;
         B(at::kMenuTimer) = static_cast<unsigned char>(t + 5);
         FieldS_State = static_cast<unsigned char>(state + 2);
     }
@@ -1060,8 +1060,8 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
     const int row = static_cast<int>(B(0x803340)) - static_cast<int>(top) + 2;
     const unsigned pressed = Input_Pressed;
     SetWord(At(0x803458), window_x + 7);
-    B(0x803454) = 1;
-    SetWord(At(0x80345A), static_cast<unsigned>(row * 13) + Word(At(0x80333A)));
+    BattleE4_Above = 1;
+    ShopStates2_HandY = static_cast<unsigned>(row * 13) + Word(At(0x80333A));
     const U held = SH_CALL(Input_AutoRepeat)(pressed & Sigma(0xF00C));
     if (held & 0x8000) {
         SH_CALL(Sound_PlayEffect)(0x101);
@@ -1188,7 +1188,7 @@ extern "C" void __cdecl FieldMenuItems_List(void) {
             const unsigned char p = B(0x803340);
             BattleActorCopies_ItemActor = 0;
             B(0x803341) = p;
-            B(0x803454) = 0;
+            BattleE4_Above = 0;
             FieldS_State = static_cast<unsigned char>(state + 4);
             return;
         }

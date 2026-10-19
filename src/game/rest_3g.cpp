@@ -176,13 +176,13 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
 // record 2), +0x3C the ground there (AreaMap_Elevation's s16 << 16); the copy
 // +0xC..+0x14; +0x5D 0, +0x5E 0x80, +9 0x20, +1 up.
 extern "C" void __cdecl EffectKindAD_Start(void) {
-    SetUL(S() + 0x34, UL(at::kMember2X));
-    SetUL(S() + 0x38, UL(at::kMember2Z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x, UL(at::kMember2X));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->z, UL(at::kMember2Z));
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
     unsigned char* const s = S();
     rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
-    SetUL(s + 0xC, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
-    SetUL(s + 0x10, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    rv::As<records::EffectWork>(s)->work_0c = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x);
+    rv::As<records::EffectWork>(s)->work_10 = static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z);
     SetUL(s + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
     s[0x5D] = 0;
     s[0x5E] = 0x80;
@@ -220,7 +220,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
         rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16;
         rv::As<records::EffectObject>(s)->screen_x = 0x80;
         rv::As<records::EffectObject>(s)->screen_y = 0x180;
-        SetWord(s + 0x32, 0);
+        rv::As<records::EffectObject>(s)->draw_key = 0;
         s[9] = 8;
         s[1] = static_cast<unsigned char>(s[1] + 1);
     }
@@ -239,7 +239,7 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
     const float dx = static_cast<float>(static_cast<long double>(b[0]) - static_cast<long double>(a[0]));
     const float dy = static_cast<float>(static_cast<long double>(b[1]) - static_cast<long double>(a[1]));
     const int angle = SH_CALL(Math_Ratan2)(dy, dx);
-    SetWord(S() + 0x32, static_cast<U>(angle) + 0x400u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, static_cast<U>(angle) + 0x400u);
     SH_CALL(Sound_PlayEffect)(0x202);
 }
 
@@ -256,21 +256,21 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
 // EffectKindBA_DrawLine(+0x34, +0xC, 0x40); the word +0x2E up; at 0x14A sound
 // 0x216 and +1 up.
 extern "C" void __cdecl EffectKindBA_Line(void) {
-    const int sin1 = SH_CALL(Math_Sin)(Long(S() + 0x6C));
+    const int sin1 = SH_CALL(Math_Sin)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U three_sin = static_cast<U>(sin1) * 3u;
-    const int cos1 = SH_CALL(Math_Cos)(Long(S() + 0x6C));
+    const int cos1 = SH_CALL(Math_Cos)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U d1 = Sar(((three_sin - static_cast<U>(cos1)) * 3u) << 13, 12);
-    const int cos2 = SH_CALL(Math_Cos)(Long(S() + 0x6C));
+    const int cos2 = SH_CALL(Math_Cos)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U three_cos = static_cast<U>(cos2) * 3u;
-    const int sin2 = SH_CALL(Math_Sin)(Long(S() + 0x6C));
+    const int sin2 = SH_CALL(Math_Sin)(static_cast<std::int32_t>(rv::As<records::EffectObject>(S())->angle[2]));
     const U d2 = Sar(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
     {
         unsigned char* const s = S();
         rv::As<records::EffectObject>(s)->x = UL(at::kExtra1X) + d1;
         rv::As<records::EffectObject>(s)->z = UL(at::kExtra1Z) + d2;
         rv::As<records::EffectObject>(s)->height = UL(at::kExtra1Y) + 0x1000000u;
-        SetUL(s + 0xC, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
-        SetUL(s + 0x10, UL(at::kExtra1Z) + d2);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_0c, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
+        rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_10, UL(at::kExtra1Z) + d2);
         SetUL(s + 0x14, UL(at::kExtra1Y) + 0x1000000u);
         SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                        0x40);
@@ -356,12 +356,12 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[2] = 0;
     s[0x29] = 4;
     s[5] = static_cast<unsigned char>(count + 3);
-    SetUL(s + 0x14, 0);
-    SetUL(s + 0x10, 0);
-    SetUL(s + 0xC, 0);
-    SetUL(s + 0x20, 0);
-    SetUL(s + 0x1C, 0);
-    SetUL(s + 0x18, 0);
+    rv::As<records::BattleEnemy>(s)->step_y = 0;
+    rv::As<records::BattleEnemy>(s)->step_z = 0;
+    rv::As<records::BattleEnemy>(s)->step_x = 0;
+    rv::As<records::BattleEnemy>(s)->work_20 = 0;
+    rv::As<records::BattleEnemy>(s)->work_1c = 0;
+    rv::As<records::BattleEnemy>(s)->work_18 = 0;
     s[0x5F] = 0;
     s[0x5E] = 0;
     s[0x5D] = 0;
@@ -635,9 +635,9 @@ extern "C" void __cdecl EffectKind18Sub41_DrawPanels(unsigned lift, unsigned tex
         unsigned char* const v = Vertices();
         for (unsigned k = 0; k < 4; ++k) {
             const unsigned char* const b = At(from + 3 * k);
-            SetWord(v + 8 * k, (static_cast<U>(b[0]) << 7) - 0x37C0u);
-            SetWord(v + 8 * k + 2, (static_cast<U>(b[1]) << 7) - 0x2DC0u);
-            SetWord(v + 8 * k + 4, 0xFFFFFC08u - static_cast<U>(b[2]) * lift);
+            rv::As<records::SVector>(v)[k].x = (static_cast<U>(b[0]) << 7) - 0x37C0u;
+            rv::As<records::SVector>(v)[k].y = (static_cast<U>(b[1]) << 7) - 0x2DC0u;
+            rv::As<records::SVector>(v)[k].z = 0xFFFFFC08u - static_cast<U>(b[2]) * lift;
         }
         long depth;
         const short* const vs = Prim_VertexScratch;
@@ -666,7 +666,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
     SH_CALL(Gfx_CommitPrim)(5, 0xC);
     unsigned char* const v = Vertices();
     const short* const v0 = Prim_VertexScratch;
-    SetWord(v + 4, 0xFC08);
+    rv::As<records::SVector>(v)->z = 0xFC08;
     U radius_arg = static_cast<U>(size);
     U colour = (0x28u - static_cast<U>(size)) * 5u;
     long p_out;
@@ -690,11 +690,11 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
             p[6] = static_cast<unsigned char>(c8);
             p[4] = half;
             p[5] = half;
-            SetWord(v, 0xC840);
+            rv::As<records::SVector>(v)->x = 0xC840;
             SetWord(v + 2, big - 0x2CC0u);
             end(p, 8, 0x10);
-            SetWord(v, 0xC9C0);
-            SetWord(v + 2, big - 0x2CC0u);
+            rv::As<records::SVector>(v)->x = 0xC9C0;
+            rv::As<records::SVector>(v)->y = big - 0x2CC0u;
             end(p, 0x14, 0x1C);
             SH_CALL(Gfx_CommitPrim)(5, 0x20);
         }
@@ -733,10 +733,10 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
             p[4] = half;
             p[5] = half;
             SetWord(v, big - 0x3640u);
-            SetWord(v + 2, 0xD240);
+            rv::As<records::SVector>(v)->y = 0xD240;
             end(p, 8, 0x10);
-            SetWord(v, big - 0x3640u);
-            SetWord(v + 2, 0xD340);
+            rv::As<records::SVector>(v)->x = big - 0x3640u;
+            rv::As<records::SVector>(v)->y = 0xD340;
             end(p, 0x14, 0x1C);
             SH_CALL(Gfx_CommitPrim)(5, 0x20);
         }
@@ -800,8 +800,8 @@ constexpr U kWideYFloat = 0x5C4244, kNarrowYFloat = 0x5C4238;
 // The float an `fcomp dword ptr [mem]` operand names: the two above, or
 // DIV-0041's four as widescreen.cpp holds them.
 float Bound(U operand_at) {
-    if (operand_at == at::kWideYAt) return Fl(kWideYFloat);
-    if (operand_at == at::kNarrowYAt) return Fl(kNarrowYFloat);
+    if (operand_at == at::kWideYAt) return AreaMapBD_WideYBound;
+    if (operand_at == at::kNarrowYAt) return AreaMapBD_NarrowYBound;
     return Fl(Widescreen_RangeOperand(operand_at));
 }
 }  // namespace
@@ -864,11 +864,11 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             const U map_col = ((block & 0xFu) << 4) | (x & 0xFu);
             const U cell = map_row * at::kMapWidth + map_col;
             unsigned char* const v = Vertices();
-            SetWord(v + 2, (z << 7) - 0x4040u);
-            SetWord(v, (x << 7) - 0x4040u);
+            rv::As<records::SVector>(v)->y = (z << 7) - 0x4040u;
+            rv::As<records::SVector>(v)->x = (x << 7) - 0x4040u;
             unsigned char* corner = reinterpret_cast<unsigned char*>(&AreaMap_Corners) + cell * 4;
             MapView_CornerPtr = corner;
-            SetWord(v + 4, (0u - static_cast<U>(S8(corner[0]))) << 4);
+            rv::As<records::SVector>(v)->z = (0u - static_cast<U>(S8(corner[0]))) << 4;
             SH_CALL(Gte_LoadVertex)(reinterpret_cast<const unsigned long*>(Prim_VertexScratch));
             SH_CALL(Gte_Rtps)();
             SH_CALL(Gte_StoreScreenXY)(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
@@ -898,19 +898,19 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             FpuCopy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY + 1);
             {
                 const U xy = UL(v);
-                const U y = Word(v + 2);
+                const U y = static_cast<std::uint16_t>(rv::As<records::SVector>(v)->y);
                 corner = MapView_CornerPtr;
                 const U x1 = xy + 0x80u;
-                SetWord(v + 8, x1);
-                SetWord(v + 0xA, y);
-                SetWord(v + 0xC, (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 8))) ) << 4);
+                rv::As<records::SVector>(v)[1].x = x1;
+                rv::As<records::SVector>(v)[1].y = y;
+                rv::As<records::SVector>(v)[1].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 8))) ) << 4;
                 const U y1 = y + 0x80u;
-                SetWord(v + 0x10, Word(v));
-                SetWord(v + 0x12, y1);
-                SetWord(v + 0x18, x1);
-                SetWord(v + 0x14, (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 16))) ) << 4);
-                SetWord(v + 0x1A, y1);
-                SetWord(v + 0x1C, (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 24))) ) << 4);
+                rv::As<records::SVector>(v)[2].x = static_cast<std::uint16_t>(rv::As<records::SVector>(v)->x);
+                rv::As<records::SVector>(v)[2].y = y1;
+                rv::As<records::SVector>(v)[3].x = x1;
+                rv::As<records::SVector>(v)[2].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 16))) ) << 4;
+                rv::As<records::SVector>(v)[3].y = y1;
+                rv::As<records::SVector>(v)[3].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 24))) ) << 4;
             }
             SH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v + 8));
             SH_CALL(Gte_Rtpt)();

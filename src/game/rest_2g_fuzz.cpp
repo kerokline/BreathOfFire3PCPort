@@ -274,7 +274,7 @@ U RosterMoving(const U*, U answer) {
     const U n = sh::Noise();
     unsigned char* const rec = Mem(at::kCharRecords + at::kCharStride * (answer & 7));
     if (n & 1) rec[0xA] = static_cast<unsigned char>(n >> 8);
-    if (n & 2) SetLong(rec + 0xC, static_cast<std::int32_t>(n >> 4) & 0xFFFFF);
+    if (n & 2) rv::As<records::CharRecord>(rec)->exp = static_cast<std::int32_t>(n >> 4) & 0xFFFFF;
     return answer;
 }
 
@@ -379,7 +379,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const c = Mem(at::kCharRecords + at::kCharStride * i);
         c[0xA] = static_cast<unsigned char>(PickOf({1, 10, 50, 98, 99, 0, 0xFF, sh::Next() % 99}));
-        SetLong(c + 0xC, static_cast<std::int32_t>(PickOf({0, 1, 100, sh::Next() % 1000000, sh::Next()})));
+        rv::As<records::CharRecord>(c)->exp = static_cast<std::int32_t>(PickOf({0, 1, 100, sh::Next() % 1000000, sh::Next()}));
     }
     // a slide's word around its bound: one step before it, within two of the frame that reaches it
     // (the grid's slides compare before they move: around the bound itself)

@@ -22,6 +22,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "game/rest_2d.h"
 #include "game/rest_2d_callees.h"
 #include "game/scenario_harness.h"
@@ -311,8 +313,8 @@ void SeedRecords(unsigned char master) {
         rec[0x1F] = static_cast<unsigned char>(PickOf(master, master, 0xFF, master ^ 1, sh::Next()));
         rec[0x88] = static_cast<unsigned char>(PickOf(1, 10, 30, 99, sh::Next()));
         rec[0xA] = static_cast<unsigned char>(rec[0x88] + PickOf(0, 1, 2, 3, 4, 9, 0xFF, sh::Next()));
-        SetWord(rec + 0x1A, PickOf(0, 1, 0x10, 0x20, 0x30, sh::Next() % 0x40, sh::Next()));
-        SetWord(rec + 0x2A, PickOf(0, 1, 50, 99, 255, 999, 0xFFFF, sh::Next()));
+        rv::As<records::CharRecord>(rec)->ap = PickOf(0, 1, 0x10, 0x20, 0x30, sh::Next() % 0x40, sh::Next());
+        rv::As<records::CharRecord>(rec)->stats.intel = PickOf(0, 1, 50, 99, 255, 999, 0xFFFF, sh::Next());
     }
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const obj = ObjTrio + i * at::kObjStride;

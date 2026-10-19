@@ -164,12 +164,9 @@ unsigned char* Sc() { return Sprite_Current; }
 // kPose: now Effect1e_Pose (symbols.toml).
 // kSpot: now AreaEntry_PendingFlags (symbols.toml).
 // kActive: now Field_ActiveMember (symbols.toml).
-constexpr U kItemA = 0x904130,
-            kPressNow = 0x6BC717,
-            kComboStep = 0x6BC70C,
-            kComboTimer = 0x6BC710,
-            kBiteHeld = 0x6BC716,
-            kSpotCounts = 0x66A9CC;
+// kPressNow: now Effect1e_PressNow (symbols.toml).
+// kBiteHeld: now Effect1e_BiteHeld (symbols.toml).
+constexpr U kItemA = 0x904130, kComboStep = 0x6BC70C, kComboTimer = 0x6BC710, kSpotCounts = 0x66A9CC;
 
 unsigned char* Active() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(Field_ActiveMember_addr))))); }
 unsigned char* RecordA() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(Effect1a_PanelScript_addr))))); }
@@ -202,7 +199,7 @@ U HeadingEffect(const U*, U answer) {
 }
 // LeaderPanel_PressLatch: 0x6BC717, which LeaderPanel_EffectsStep reads after it.
 U PressLatchEffect(const U*, U answer) {
-    Mem(kPressNow)[0] = static_cast<unsigned char>(sh::Noise() % 3);
+    Mem(Effect1e_PressNow_addr)[0] = static_cast<unsigned char>(sh::Noise() % 3);
     return answer;
 }
 // Louder on Fish_Hooked's and Fish_Swim's paths (2026-10-05, debt 18): their
@@ -405,7 +402,7 @@ unsigned Entries(unsigned k) {
     }
 }
 
-unsigned char KindByte(unsigned kind, unsigned at) { return Mem(0x66A690 + 36 * kind + at)[0]; }
+unsigned char KindByte(unsigned kind, unsigned at) { return Mem(Fish_Kinds_addr + 36 * kind + at)[0]; }
 
 // Fish_AdjustStrength's delta, drawn by the seed (so that the strength word can
 // be planted at its negation) and handed over by Args.
@@ -430,7 +427,7 @@ void SeedFor(unsigned k, unsigned char* s) {
             SetWord(s + 0x3E, sh::Half() ? (0u - level) * 0x100 - 0x20 : (0xFFFFFFFFu - level) * 0x100 + 0x20);
             sh::SetRandHint(PickOf(0x31, 0x35, 0x11, 0x15));
         }
-        Mem(kBiteHeld)[0] = 0;
+        Mem(Effect1e_BiteHeld_addr)[0] = 0;
         break;
     case kApproach:
     case kInReach:
@@ -506,14 +503,14 @@ void Seed(unsigned k) {
     Mem(CharStats_ExtraItem_addr)[0] = static_cast<unsigned char>(PickOf(0, 0x1C, 0x1D, 0x20, sh::Next()));
     Mem(kItemA)[0] = static_cast<unsigned char>(PickOf(0, 0x2E, 0x2F, 0x31, sh::Next()));
     Mem(Effect1e_Choice_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
-    Mem(kPressNow)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
+    Mem(Effect1e_PressNow_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next()));
     for (unsigned i = 0; i < 4; ++i) {
         Mem(kComboStep + i)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, sh::Next() % 8));
         Mem(kComboTimer + i)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 3, 4, 5, 0xC, sh::Next()));
     }
     Mem(Effect1e_PoseWas_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
     Mem(Effect1e_Pose_addr)[0] = static_cast<unsigned char>(sh::Half() ? Mem(Effect1e_PoseWas_addr)[0] : PickOf(0, 1, 2, 3, sh::Next()));
-    Mem(kBiteHeld)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    Mem(Effect1e_BiteHeld_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     // the effect records' cells, at their boundaries; record 0 near the fish
     Mem(Effect_Objects_addr)[0] = static_cast<unsigned char>(sh::Next());
     Mem(Effect_Objects_addr + 0x1)[0] = static_cast<unsigned char>(PickOf(4, 4, 5, 0, sh::Next()));
@@ -581,8 +578,8 @@ void Disturb(U h) {
     case 7: Mem(Effect_Objects_addr + 0x1)[0] = static_cast<unsigned char>(b & 1 ? 4 : b); break;
     case 8: Mem(Effect1a_PanelObject_addr)[0] = static_cast<unsigned char>(b & 1 ? 0xFF : b % 30); break;
     case 9: Mem(ObjTrio_addr + 0x2)[0] = static_cast<unsigned char>(b & 1 ? 3 : b % 8); break;
-    case 10: Mem(kBiteHeld)[0] = static_cast<unsigned char>(b & 1); break;
-    case 11: Mem(kPressNow)[0] = static_cast<unsigned char>(b % 3); break;
+    case 10: Mem(Effect1e_BiteHeld_addr)[0] = static_cast<unsigned char>(b & 1); break;
+    case 11: Mem(Effect1e_PressNow_addr)[0] = static_cast<unsigned char>(b % 3); break;
     case 12: SetLong(Mem(Effect_Objects_addr + 0x290), b & 1 ? -7 : static_cast<std::int32_t>(b >> 1)); break;
     case 13: Mem(Effect_Objects_addr + 0x201)[0] = static_cast<unsigned char>(b & 1 ? 0 : b); break;
     case 14: Field_Kind2Hold = static_cast<unsigned char>(b & 1 ? 0 : b); break;

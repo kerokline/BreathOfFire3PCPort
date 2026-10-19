@@ -104,7 +104,7 @@ void SideProbe(unsigned d, U row) {
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     unsigned char* const c = S();
-    if (static_cast<short>(Word(c + 0x3E)) < static_cast<short>(ground)) c[0x2B] = 0;
+    if (static_cast<short>(rv::As<records::PartyMember>(c)->height_whole) < static_cast<short>(ground)) c[0x2B] = 0;
 }
 void SideProbes() {
     S()[0x2B] = 1;

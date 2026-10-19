@@ -236,15 +236,15 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
 extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
     const unsigned slot = MoveScript_EffectState[member & 0xFF];
     unsigned char* const rec = Record(slot);
-    const unsigned max = Word(rec + 0x20);
-    const unsigned hp = Word(rec + 0x18);
+    const unsigned max = rv::As<records::CharRecord>(rec)->stats.max_hp;
+    const unsigned hp = rv::As<records::CharRecord>(rec)->hp;
     if (hp >= max) return;
     const unsigned sum = (hp + amount) & 0xFFFF;
-    SetWord(rec + 0x18, sum > max ? max : sum);
+    rv::As<records::CharRecord>(rec)->hp = sum > max ? max : sum;
     unsigned char* const fs = Field_State;
     unsigned char* const actor = Record(fs[0x148]);
-    if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) return;
-    SetWord(actor + 0x10, Word(actor + 0x10) & 0xDFFF);
+    if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) return;
+    rv::As<records::CharRecord>(actor)->status = rv::As<records::CharRecord>(actor)->status & 0xDFFF;
     rv::As<records::PartyMember>(fs)->status = rv::As<records::PartyMember>(fs)->status & 0xDFFF;
 }
 
@@ -256,10 +256,10 @@ extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
 extern "C" unsigned __cdecl Char_LoseAp(unsigned amount, unsigned member) {
     const unsigned slot = MoveScript_EffectState[member & 0xFF];
     unsigned char* const rec = Record(slot);
-    const unsigned ap = Word(rec + 0x1A);
+    const unsigned ap = rv::As<records::CharRecord>(rec)->ap;
     unsigned took = amount;
     if (ap <= (amount & 0xFFFF)) took = ap - 1;
-    SetWord(rec + 0x1A, ap - took);
+    rv::As<records::CharRecord>(rec)->ap = ap - took;
     return took;
 }
 
@@ -428,9 +428,9 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
     EffectWrite(*index, who)[0] = 1;
     EffectWrite(*index, who)[5] = 0x19;
     EffectWrite(*index, who)[6] = static_cast<unsigned char>(sub);
-    SetLong(EffectWrite(*index, who) + 0xC, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(EffectWrite(*index, who))->work_0c, 0);
     const unsigned char rise = SH_CALL(LinkedObject_EffectRise)();
-    SetLong(EffectWrite(*index, who) + 0x10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
+    rv::Store<std::int32_t>(rv::As<records::EffectWork>(EffectWrite(*index, who))->work_10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
     const unsigned char* const c = Sprite_Current;
     rv::As<records::EffectObject>(EffectWrite(*index, who))->x = rv::As<records::SpriteObject>(c)->x;
     rv::As<records::EffectObject>(EffectWrite(*index, who))->z = rv::As<records::SpriteObject>(c)->z;

@@ -184,7 +184,7 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtLevel), static_cast<unsigned>(rec[0xA]));
         const int pen = x7 + 0x18;
         SH_CALL(Text_DrawFont8)(pen, text_y, colour, Text(at::kPrintBuf));
-        const unsigned flags = Word(rec + 0x10);
+        const unsigned flags = rv::As<records::CharRecord>(rec)->status;
         U status = 0;
         if (flags & 0x80) {
             if (flags & 0x20) status = (Frame_Counter & 0x20) ? at::kStatusA : at::kStatusB;
@@ -199,12 +199,12 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         int c = colour;
         if (!dim) {
             if (rec[0x11] & 0x20) c = 4;
-            if (Word(rec + 0x18) <= 1) c = 2;
+            if (rv::As<records::CharRecord>(rec)->hp <= 1) c = 2;
         }
         SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureA), static_cast<unsigned>(Word(rec + 0x18)));
         SH_CALL(Text_DrawFont8)(pen, hp_y, c, Text(at::kPrintBuf));
         c = dim ? 7 : (rec[0x1E] != 0 ? 4 : 0);
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(Word(rec + 0x20)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_hp));
         SH_CALL(Text_DrawFont8)(pen, hp_y, c, Text(at::kPrintBuf));
         const int ap_y = text_y + 0x10;
         SH_CALL(Menu_DrawTile16)(x7 + 2, ap_y, 1, dim);
@@ -212,14 +212,14 @@ extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
         if (dim) {
             c = 7;
         } else {
-            const unsigned quarter = (Word(rec + 0x22) >> 2) & 0xFFFF;
-            const unsigned ap = Word(rec + 0x1A);
+            const unsigned quarter = (rv::As<records::CharRecord>(rec)->stats.max_ap >> 2) & 0xFFFF;
+            const unsigned ap = rv::As<records::CharRecord>(rec)->ap;
             if (ap <= quarter) c = 4;
             if (ap == 0) c = 2;
         }
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureA), static_cast<unsigned>(Word(rec + 0x1A)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureA), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->ap));
         SH_CALL(Text_DrawFont8)(pen, ap_y, c, Text(at::kPrintBuf));
-        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(Word(rec + 0x22)));
+        SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtFigureB), static_cast<unsigned>(rv::As<records::CharRecord>(rec)->stats.max_ap));
         SH_CALL(Text_DrawFont8)(pen, ap_y, dim ? 7 : 0, Text(at::kPrintBuf));
         y += 0x34;
         text_y += 0x34;
