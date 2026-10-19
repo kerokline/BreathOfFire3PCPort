@@ -168,7 +168,7 @@ unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr 
 // record.
 unsigned char* ScriptRecord(U v) { return v & 1 ? ah::Object(v >> 1) : ah::PartyOf(static_cast<unsigned char>(v >> 1)); }
 // The focus object: a field object, or one of Sprite_ObjectsExtra's four.
-unsigned char* FocusRecord(U v) { return v % 5 == 0 ? ah::Mem(0x802000 + (v >> 3) % 4 * at::kObjectStride) : ah::Object(v >> 3); }
+unsigned char* FocusRecord(U v) { return v % 5 == 0 ? ah::Mem(Sprite_ObjectsExtra_addr + (v >> 3) % 4 * at::kObjectStride) : ah::Object(v >> 3); }
 // A value of Field_ActiveMember: on a field object's record (0..6) two times in
 // three, else between two or just below the first (its distance from
 // Sprite_Objects is a signed quotient; its +0x80 and +0x8A, which some

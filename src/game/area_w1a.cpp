@@ -253,7 +253,7 @@ extern "C" void __cdecl Area39_PlayMusicA3(void) { AH_CALL(Music_Play)(0xA3, 8);
 
 // original 0x405710 (Area39_Handlers[11]; PSX 0x801F2EEC): Field_ScriptFlags'
 // low byte |= 8.
-extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(0x9039A2) = static_cast<unsigned char>(B(0x9039A2) | 8); }
+extern "C" void __cdecl Area39_SetScriptFlag8(void) { B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 8); }
 
 // original 0x405720 (Area39_Handlers[12]; PSX 0x801F2F0C): the first key-item
 // byte of 0xE becomes 4; none: 0x591900(4), the key item 4 added.
@@ -375,7 +375,7 @@ extern "C" void __cdecl Area40_TailPuzzle(void) {
         break;
     case 1:
         if (B(at::kCounter0) != 0x63) break;
-        B(0x9039A2) = static_cast<unsigned char>(B(0x9039A2) | 6);
+        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) | 6);
         B(at::kCounter0) = 0;
         B(AreaW0c_TailState_addr) = 2;
         break;

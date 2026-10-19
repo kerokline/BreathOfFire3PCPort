@@ -327,7 +327,7 @@ extern "C" void __cdecl Area108_ScriptByFlags1E(void) {
 // MoveCmd_TestFB(1, 0xB), the running object's +0 = 0.
 extern "C" void __cdecl Area108_FlagIfEffectState5(void) {
     Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
-    if (B(0x66972C + B(ObjTrio_addr + 0x89)) != 5) return; // MoveScript_EffectState
+    if (B(MoveScript_EffectState_addr + B(ObjTrio_addr + 0x89)) != 5) return;
     Set(0x30);
     AH_CALL(MoveCmd_TestFB)(1, 0xB);
     Sprite_Current[0] = 0;

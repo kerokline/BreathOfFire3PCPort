@@ -60,13 +60,13 @@ void Scribble(U at, unsigned n) {
 // object itself.
 unsigned char* MemberRecord(U v) {
     switch (v % 4) {
-    case 0: return Mem(0x802000 + (v >> 2) % 4 * 0xA4);
+    case 0: return Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4);
     case 1: return ah::Object(v >> 2);
     case 2: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return Sprite_Current;
     }
 }
-unsigned char* FlagRowAt(U v) { return Mem(0x903F90 + 8 * (v % 0x3A)); }
+unsigned char* FlagRowAt(U v) { return Mem(Cond_Flags_addr + 8 * (v % 0x3A)); }
 
 // ===========================================================================
 // The effects: the callees whose callers read a cell again after the call

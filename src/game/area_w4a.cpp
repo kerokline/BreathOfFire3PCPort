@@ -1166,7 +1166,7 @@ extern "C" void __cdecl Area167_Tail32(void) {
         AH_CALL(ScriptFlags_Clear40)();
         Set(0x90);
         AH_CALL(Field_ChangeArea)(0xA8, 0x150000, 0x40000, 7);
-        B(0x905BA4) = static_cast<unsigned char>(B(0x905BA4) | 0x40);   // Field_ScriptFlags2's low byte
+        B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(B(Field_ScriptFlags2_addr) | 0x40);   // Field_ScriptFlags2's low byte
         ArmTail(0, 0);
         return;
     case 13:

@@ -429,7 +429,7 @@ void Seed108(unsigned k) {
     case k108Effect5: {
         const auto index = static_cast<unsigned char>(ah::Often() ? ah::Next() % 0x18 : ah::Next());
         B(ObjTrio_addr + 0x89) = index;
-        if (index < 0x18 && ah::Half()) B(0x66972C + index) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
+        if (index < 0x18 && ah::Half()) B(MoveScript_EffectState_addr + index) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
         break;
     }
     case k108FadeRun: Sprite_Current[4] = static_cast<unsigned char>(ah::Next() % at::kArea108FadeStateCount); break;
