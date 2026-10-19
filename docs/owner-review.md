@@ -56,7 +56,11 @@ the doc that has the reading.
   A/B/C caches, the attract gate, the hash routes, the captures) has not run.
   This is a machine setting only you can make:
   [`install-gap-round.md`](install-gap-round.md) 5, [`install-gap-reads.md`](install-gap-reads.md) 8.
-- **D321, PSP-JP-only item lists stop at start** ([`known-defects.md`](known-defects.md) D321): the L1 / R1 corner has no Japanese source - blank, the Latin icons, or part of the ja-JP layer (D280)?
+- ~~**D321, PSP-JP-only item lists stop at start** ([`known-defects.md`](known-defects.md) D321): the L1 / R1 corner has no Japanese source - blank, the Latin icons, or part of the ja-JP layer (D280)?~~
+  **Decided 2026-10-18 and built:** a capital `L` and `R` from the `ja-JP`
+  font (DIV-0138 amended, `install-gap/d321`); psp-jp's five item-list
+  routes now run to the end. Owed: your eye on the corner
+  (`C:\Users\kerok\g_d321\shots\pspjp_*_corner_*`).
 
 ## 2026-10-17, the button unification round
 

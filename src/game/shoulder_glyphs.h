@@ -18,7 +18,10 @@
 //   - a face button, or L1 / R1 on a PSP-based install (whose page has only
 //     `L` / `R`, and no L1 / R1 art anywhere on the PSP disc), the glyph the
 //     install's Config panel draws for that button: DIV-0051's icon under a
-//     Latin layer, else the port's stand-in (0x66A2FC's codes and colours).
+//     Latin layer, else the port's stand-in (0x66A2FC's codes and colours);
+//   - L1 / R1 on a PSP-based install under `ja-JP` (no art, no Latin layer,
+//     and no stand-in: no Japanese layer writes 0x66A2FC's strings, D321),
+//     the `ja-JP` font's capital `L` / `R` (the owner, 2026-10-18).
 // With σ(slot) the slot's own button and the page's own art, the piece is
 // drawn exactly as the original draws it: nothing changes at the identity.
 #pragma once
@@ -59,9 +62,21 @@ Plan Make(unsigned id, int x, int y, const Rect& own, const Rect& r15, const Rec
           std::uint16_t shown, bool page_art, bool force);
 
 // The font glyph of `button` as the install's Config panel draws it: the
-// code bytes (NUL-ended) and the colour.
+// code bytes (NUL-ended) and the colour. `latin`: a Latin layer (DIV-0051's
+// icons). `ja_letters`: a PSP base under `ja-JP`, where L1 / R1 are the
+// `ja-JP` font's capital letters (D321) - the face buttons keep the stand-ins.
 struct Code { unsigned char text[3]; int colour; };
-Code GlyphCode(std::uint16_t button, bool latin);
+Code GlyphCode(std::uint16_t button, bool latin, bool ja_letters);
+
+// The `ja-JP` font's glyph for one of the capitals the Japanese script
+// shares with ASCII (tools/loc_build.py JA_SHARED: its codes 0x41..0x5A are
+// the capitals): the single-byte sheet's cell `letter`, at JA_AT + letter.
+unsigned JaLetterGlyph(char letter);
+
+// GlyphCode for the live draw: the layer and the page read from the
+// install, and a `ja-JP` letter checked against the table loaded (a font
+// without the `ja-JP` sheet stops the game: rule 4).
+Code DrawCode(std::uint16_t button);
 
 // The live switch (BOF3X_ORIGINAL=ShoulderGlyphs) and the install's page.
 bool On();

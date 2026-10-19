@@ -8645,8 +8645,32 @@ designed in rather than bolted on.
   - With `σ(slot)` the slot's own button on a page with the art, the piece
     is drawn by the original's code: nothing changes on a PC or PSX install
     at the identity.
-- **Rationale:** an icon that follows the Config tells the truth once
-  DIV-0139 routes the lists' L1 / R1 tests through `σ`.
+- **Amended 2026-10-18 (D321): L1 / R1 on a PSP base under `ja-JP` are the
+  font's capital `L` and `R`.**
+  - *Original:* the PSP's own page draws `L` / `R`; this entry as first
+    built blanked those tiles and drew the stand-in strings behind
+    `0x66A2FC[4]` / `[5]`. No Japanese layer writes them (D280), so on a
+    PSP-JP-only install they were empty and `GlyphCode` stopped the game at
+    the first item list (rule 4).
+  - *New:* on a base without the L1 / R1 art and under `ja-JP` (no Latin
+    layer), L1 and R1 draw the `ja-JP` font's capital `L` (glyph `0x9DF`)
+    and `R` (`0x9E5`) in their colour 0, and never read the two stand-ins.
+    The codes are a rule, not a table: the `ja-JP` layer puts the Japan
+    disc's single-byte sheet whole from `JA_AT` = `0x993`, cell `b` at
+    `JA_AT + b` (`loc_build.py` `ja_cell_of`), and the script's capitals are
+    ASCII's codes `0x41..0x5A` (`JA_SHARED`; the sibling's
+    `docs/TEXT_ENGINE.md`). The draw stops loudly if the font loaded is too
+    short to hold them. Circle, cross, triangle and square keep their paths;
+    psx-jp (the art) and every Latin install (DIV-0051's icons) are
+    unchanged; any other empty stand-in still stops the game.
+  - *Why:* the owner, 2026-10-18: on a Japanese-only install, draw just a
+    capital L and R in the corner; the Japanese font has capital Latin
+    letters that fit. The Japan disc has no L1 / R1 glyph to take
+    (D280's notes), and the letters are what the PSP itself printed there.
+  - *Measured* ([`known-defects.md`](known-defects.md) D321): in the
+    psp-jp and psx-jp caches' `ja-JP` font, glyphs `0x9DF` / `0x9E5` are a
+    capital L and R, ink 14 and 16 of 24 columns (about 5 of the 8 pixels
+    the corner draws a glyph in); DIV-0051's Latin icons fill all 24.
 - **Also in the PSX version?** Yes - the PlayStation's labels are baked the
   same way on every release; this changes Capcom's design, not a port
   defect.
@@ -8656,7 +8680,12 @@ designed in rather than bolted on.
   `sigma_items` 32 / 32 equal at the identity on `psx-us`, its corner
   unchanged on `pc` and `pc-enus`; on `psp-eu` the tiles `L` / `R` become
   `L1` / `R1` in every list frame, as intended; swapped, the tiles trade on
-  all four (`161,72-174,220`).
+  all four (`161,72-174,220`). D321's amendment: the self-test plants
+  stand-ins of its own in `0x66A2FC`'s six entries, then L1's and R1's
+  empty, and checks the `ja-JP` branch (24 glyph codes, 0 mismatches);
+  live, psp-jp's five item-list routes run to `recipe done`, and psx-jp's
+  and psp-eu's `menu_screens` are pixel-equal to the base build's in all 60
+  frames.
 - **Reversible?** `BOF3X_ORIGINAL=ShoulderGlyphs`.
 
 ### The hard-coded button tests ask the Config

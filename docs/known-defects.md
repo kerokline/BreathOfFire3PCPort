@@ -8587,7 +8587,7 @@ entry either way: what the PC asks for, what the disc plays, which an install
 gets. It is a song, not a row of the exe image, so not a `TWINS` row; whether
 it plays through the fight's own bank is the same open choice as 165's.
 
-## D321 — On a PSP-JP-only install the first item list stops the game: `ShoulderGlyphs` finds `0x66A2FC[4]` empty (ours, DIV-0138 meeting D280; open, the owner's call)
+## D321 — On a PSP-JP-only install the first item list stops the game: `ShoulderGlyphs` finds `0x66A2FC[4]` empty (ours, DIV-0138 meeting D280; fixed 2026-10-18 by DIV-0138's amendment, the owner's call)
 
 **Found:** the read watch's re-run on the merged install-gap round, 2026-10-18
 ([`install-gap-reads.md`](install-gap-reads.md) 9). Five of psp-jp's eleven
@@ -8612,3 +8612,81 @@ lists' corner - (a) nothing (the corner left blank, a code DIV-0138 line),
 (b) the Latin icons DIV-0051 already builds (`ICONS_AT`), drawn under `ja-JP`
 too, or (c) part of the `ja-JP` layer D280 decides. Until then a PSP-JP-only
 install cannot open an item list.
+
+**Decided 2026-10-18 (the owner):** on a Japanese-only install, draw just a
+capital L and R in the corner; the Japanese font has capital Latin letters
+that fit the space.
+
+**Fixed 2026-10-18 (branch `install-gap/d321`), DIV-0138 amended.** On a base
+without the L1 / R1 art and under `ja-JP`, `GlyphCode` draws L1 and R1 as the
+`ja-JP` font's capital `L` and `R` and no longer reads `0x66A2FC[4]` / `[5]`.
+The face buttons keep their paths. psx-jp keeps the art, the Latin installs
+keep DIV-0051's icons, and any other empty stand-in still stops the game.
+
+- **The codes, by rule.** The `ja-JP` layer's font puts the Japan disc's
+  single-byte sheet whole from `JA_AT` = `0x993`, cell `b` at `JA_AT + b`
+  (`loc_build.py` `ja_cell_of`), and the Japanese script's `0x41..0x5A` are
+  `A..Z` (`JA_SHARED`; the sibling's `docs/TEXT_ENGINE.md`, settled
+  2026-09-09). So `L` is glyph `0x993 + 0x4C` = `0x9DF` and `R` is
+  `0x993 + 0x52` = `0x9E5`, two-byte codes as every `ja-JP` string encodes
+  them. `JaLetterGlyph` computes them; no table is copied.
+- **The glyphs, measured** from the player's caches (`g_d321\scripts\letters.py`
+  over `c_pspjp` and `c_psxjp`, the kind-3 table in `loc\ja-JP\dat\FIRST.DAT`,
+  3,570 glyphs). Both glyphs are a capital L and R. They are half-width in
+  the 24 x 24 cell: ink columns 4..17 (L) and 2..17 (R), rows 2..23 with the
+  drop shadow. `Text_DrawSmall` draws a glyph into 8 x 8, so they take
+  columns 1..6 and 0..6 of the corner box's 8 (`kBoxW`), and rows 0..7. For
+  comparison, DIV-0051's Latin `L1` / `R1` icons on psp-eu (`0xA69` /
+  `0xA6A`) fill all 24 x 24. The one-byte slots `0x26` / `0x2C` hold the same
+  pixels on these disc-only tables (`JA_SHARED`), but the two-byte codes are
+  the `ja-JP` sheet's on every install, the PC's too.
+- **A guard.** The draw checks the glyph against the table loaded
+  (`TextDraw_GlyphCount`, new) and stops loudly if the font has no `ja-JP`
+  sheet.
+
+**Checks** (root `C:\Users\kerok\g_d321`; caches and installs built by
+`abc_run.py prepare` with this branch's tools; the fix in a fresh build
+directory `lb2\`, the base `9f9edccd` in `lb0\`):
+
+- The build: `cmake --build build`, no error.
+- `BOF3X_SHADOW=shoulder_glyphs`, hosted from `lb2\` against a PC copy, under
+  `original` and under `ja-JP` with `c_pspjp` as the cache: `720 plans
+  rastered ... 24 glyph codes (6 under ja-JP letters, D321) ... 0
+  MISMATCHES`, `self-test only: done`. The second logs `a PSP base under
+  ja-JP ... L1 / R1 the font's capital L / R (D321)`.
+- The exe host's self-test on the psp-jp disc-only install (`g_pspjp`,
+  `BOF3X_EXEIMAGE` and `BOF3X_CACHE` `c_pspjp`, `ja-JP`): `self-test only:
+  done`, no `FATAL`.
+- `BOF3X_SHADOW='*'` hosted from an ini-less `lb3\` against the PC copy,
+  under `original`: `inject: 10087 ours`, 1,086 `MISMATCHES` lines, every
+  count 0, no `FATAL`, `self-test only: done`.
+- Defender logged no 1116 / 1117 event during the work; no launcher copy was
+  taken.
+
+**Live** (`abc_run.py run`, one game at a time; every result read from the
+run's `_run.txt` and `bof3x.log`):
+
+| Install | Route | Before (RW2, 9.4) | Now |
+|---|---|---|---|
+| psp-jp | combat | `FATAL` at 515 | `recipe done` at 2,620, no `FATAL` |
+| psp-jp | shop | `FATAL` at 935 | `recipe done` at 3,157, no `FATAL` |
+| psp-jp | cutsceneAndNue | `FATAL` at 4,443 | `recipe done` at 7,421, no `FATAL` |
+| psp-jp | dragonTransform | `FATAL` at 849 | `recipe done` at 4,329, no `FATAL` |
+| psp-jp | menu_screens | `FATAL` at 1,159 | `recipe done` at 1,770, no `FATAL` |
+| psx-jp | menu_screens, fix against base | - | both `recipe done`; 60 of 60 timed frames and the four named shots pixel-equal |
+| psp-eu | menu_screens, fix against base | - | both `recipe done`; 60 of 60 timed frames and the four named shots pixel-equal |
+
+Captures in `C:\Users\kerok\g_d321\shots`: each psp-jp route's first item
+list with the corner enlarged four times (`pspjp_combat_*_t000540`,
+`pspjp_shop_*_t000960`, `pspjp_cutsceneAndNue_*_t004470`,
+`pspjp_dragonTransform_*_t000870`, `pspjp_menu_items*`), and the controls'
+`items` shot from both builds (`psxjp_menu_*`, `psxjpbase_menu_*`,
+`pspeu_menu_*`, `pspeubase_menu_*`). The psp-jp lists show `L` above the
+scroll bar and `R` below it. psp-eu shows DIV-0051's `L1` / `R1`, as before.
+
+**Left open:** the face buttons on psp-jp still read the stand-ins
+`0x66A2FC[0..3]`, which are empty there too. They reach the corner only when
+the Config moves a face button onto L1 or R1, and then the list stops the game
+the same way. That case was not run. D280's `ja-JP` layer, or a ledger line
+drawing the Japanese icons `0x9F6..0x9F9` (`button_text.h`) there, would close
+it.

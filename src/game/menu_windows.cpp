@@ -526,7 +526,7 @@ bool ShoulderPiece(int x, int y, unsigned id, unsigned char f, std::uint16_t slo
         if (s.kind == shoulder_glyphs::Step::kSprite) {
             PieceSprite(s.x, s.y, s.u, s.v, s.w, s.h, f);
         } else if (s.kind == shoulder_glyphs::Step::kGlyph) {
-            const shoulder_glyphs::Code c = shoulder_glyphs::GlyphCode(s.button, Lang_Latin());
+            const shoulder_glyphs::Code c = shoulder_glyphs::DrawCode(s.button);
             Text_DrawSmall(s.x, s.y, static_cast<unsigned>(c.colour), 1, c.text);
         } else {
             // The text's primitives name a glyph where a SPRT's page would

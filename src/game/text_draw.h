@@ -18,6 +18,10 @@ void TextDraw_Inject();
 // for ours. Called by Font_SetGlyphData with the table it has just taken.
 void TextDraw_SetGlyphCount(unsigned glyphs);
 
+// The glyphs of the table last loaded (0 before any): what a draw of a
+// glyph of ours checks its index against (DIV-0138's ja-JP letters, D321).
+unsigned TextDraw_GlyphCount();
+
 // The button unification round's DT-2, DIV-0140 (docs/button-dialogue.md
 // section 4; the decision is game/button_text.h's). Each reader of the area
 // text - Text_DrawString here, MsgBox_Step in msgbox.cpp - asks these at every
