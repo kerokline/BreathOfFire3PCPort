@@ -38,6 +38,7 @@
 #include "game/boss_harness.h"
 #include "game/labels.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -63,6 +64,7 @@ U L(U address) { return static_cast<U>(Long(At(address))); }
 unsigned char* PtrAt(U address) { return At(L(address)); }
 unsigned char* Packet() { return Gfx_PacketNext; }
 unsigned char* Member(U index) { return At(ObjTrio_addr + index * at::kMemberSize); }
+records::PartyMember* MemberRec(U index) { return reinterpret_cast<records::PartyMember*>(Member(index)); }
 unsigned short* Stat(U address) { return reinterpret_cast<unsigned short*>(At(address)); }
 unsigned Pressed() { return Input_Pressed; }
 // fild dword / fstp dword: the int to a float, nearest.
@@ -133,7 +135,7 @@ void GreyClut(U at_) {
 }
 
 // The party's +0x130 dword (the loss steps' and the notices' flag bits).
-U MemberFlags(U index) { return static_cast<U>(Long(Member(index) + 0x130)); }
+U MemberFlags(U index) { return static_cast<U>(static_cast<std::int32_t>(MemberRec(index)->flags_130)); }
 
 }  // namespace
 
@@ -617,7 +619,7 @@ extern "C" void __cdecl Cmd_AutoBattle(void) {
         unsigned char i = 0;
         do {
             if (!BH_CALL(Battle_ActorIsOut)(i)) {
-                if (BattleFlow_AnimGate == 0 || (Member(i)[0x134] & 0x10)) Member(i)[1] = 2;
+                if (BattleFlow_AnimGate == 0 || (Member(i)[0x134] & 0x10)) MemberRec(i)->state[0] = 2;
             }
             ++i;
         } while (i < B(at::kPartyCount));
@@ -761,16 +763,18 @@ extern "C" void __cdecl BattleEnd_AwaitRestore(void) {
     unsigned char count = B(at::kPartyCount);
     for (unsigned char i = 0; i < count;) {
         unsigned char* const m = Member(i);
-        BH_CALL(Battle_ClearStatus)(i, Word(m + 0x90) & 0xBF5Fu);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+        BH_CALL(Battle_ClearStatus)(i, member_rec->status & 0xBF5Fu);
         BH_CALL(Sprite_ReleaseTint)(m);
         count = B(at::kPartyCount);
         ++i;
     }
     for (unsigned char i = 0; i < count;) {
         unsigned char* const m = Member(i);
-        if (m[0] & 1) {
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
+        if (member_rec->flags & 1) {
             Sprite_Current = m;
-            BH_CALL(Sprite_AnimFromSet)(m[0x4B], static_cast<std::uint16_t>(Word(m + 0x58) - 2), At(at::kAnimBuffer), 0x1800);
+            BH_CALL(Sprite_AnimFromSet)(member_rec->animation, static_cast<std::uint16_t>(Word(m + 0x58) - 2), At(at::kAnimBuffer), 0x1800);
             count = B(at::kPartyCount);
         }
         ++i;
@@ -787,7 +791,7 @@ extern "C" unsigned char __cdecl BattleResult_CountExpShares(void) {
     if (B(at::kPartyCount) == 0) return 0;
     unsigned char i = 0;
     do {
-        if (!BH_CALL(Battle_ActorIsOut)(i) && !(Long(Member(i) + 0x134) & 0x400)) ++count;
+        if (!BH_CALL(Battle_ActorIsOut)(i) && !(static_cast<std::int32_t>(MemberRec(i)->flags_134) & 0x400)) ++count;
         ++i;
     } while (i < B(at::kPartyCount));
     return count;
@@ -838,8 +842,8 @@ extern "C" unsigned char __cdecl BattleResult_ZennyBonus(void) {
     unsigned char i = 0;
     do {
         if (!BH_CALL(Battle_ActorIsOut)(i)) {
-            const unsigned char* const m = Member(i);
-            if (m[0x96] == 7 || m[0x97] == 7) return 1;
+            auto* const member_rec = MemberRec(i);
+            if (member_rec->accessory[0] == 7 || member_rec->accessory[1] == 7) return 1;
         }
         ++i;
     } while (i < B(at::kPartyCount));
@@ -916,14 +920,15 @@ extern "C" void __cdecl BattleLoss_FadeOut(void) {
 namespace {
 void LossMember(U index) {
     unsigned char* const m = Member(index);
+    auto* const member_rec = reinterpret_cast<records::PartyMember*>(m);
     Sprite_Current = m;
-    BH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(m[8] + 0x1C));
+    BH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(member_rec->direction + 0x1C));
     const auto flags = static_cast<unsigned char>(m[0x24] | 0x80);
-    m[0x29] = 1;
+    member_rec->ot_slot = 1;
     m[0x24] = flags;
     const U row = BattleLoss_Steps_addr + 24 * static_cast<U>(B(at::kPartyCount)) + 8 * index;
-    SetWord(m + 0x2E, Word(At(row)));
-    SetWord(m + 0x30, Word(At(row + 4)));
+    member_rec->screen_x = Word(At(row));
+    member_rec->screen_y = Word(At(row + 4));
     BH_CALL(Sprite_ReleaseTint)(m);
 }
 }  // namespace
