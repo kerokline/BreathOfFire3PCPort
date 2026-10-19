@@ -24,7 +24,7 @@
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* TCur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w1c::at;
 using area_harness::Mem;
@@ -87,7 +87,7 @@ void MoveScriptObject(unsigned char dir) {
             MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] | 0x80);
         }
     }
-    TCur()->step_y = 0;
+    CurSprite()->step_y = 0;
     SetWord(Sprite_Current + 0x3E, 0x480);
 }
 
@@ -191,14 +191,14 @@ void MoveBlock(std::int32_t stop) {
     if (!AH_CALL(Area52_BlockCell)(&x, &z)) return;
     const unsigned char counter = B(at::kCounter3);
     if (counter == 0xA) {
-        if (TCur()->x == stop) return;
+        if (CurSprite()->x == stop) return;
         AH_CALL(Area52_DropColumn)(x, z);
         AddWord(MoveScript_Object + 0xA, 6);
         return;
     }
     if (counter != 0x14) return;
     AH_CALL(Area52_ShiftBlockX)(x, z);
-    if (TCur()->x != 0x858000) return;
+    if (CurSprite()->x != 0x858000) return;
     AddWord(MoveScript_Object + 0xA, 3);
     B(AreaW0c_TailState_addr) = 0x2D;
 }
@@ -746,7 +746,7 @@ extern "C" void __cdecl Area52_StashBlock(void) {
     const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->z) - 0x8000u));
     const std::uint16_t x = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(tCur->x) - 0x8000u));
     tCur->accel_x = 0;
-    TCur()->accel_z = 0;
+    CurSprite()->accel_z = 0;
     for (unsigned i = 0; i < 2; ++i) StashColumn(static_cast<std::uint16_t>(x + i), z, i * 8);
 }
 
@@ -762,11 +762,11 @@ extern "C" void __cdecl Area52_ShiftBlockZ(void) {
     SetLayer(x, z, 0);
     SetByte(x, z, Sprite_Current[0x18]);
     SetLayer(static_cast<std::uint16_t>(x + 1), z, 0);
-    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(TCur()->accel_x, 8));
+    SetByte(static_cast<std::uint16_t>(x + 1), z, Sar(CurSprite()->accel_x, 8));
     unsigned char* const cur = Sprite_Current;
     auto* const tCur = reinterpret_cast<records::SpriteObject*>(cur);
     tCur->accel_x = tCur->accel_z;
-    TCur()->accel_z = 0;
+    CurSprite()->accel_z = 0;
     z = static_cast<std::uint16_t>(z + 2);
     SetLayer(x, z, 0x10);
     unsigned char* p = Sprite_Current + 0x1C;
@@ -794,10 +794,10 @@ extern "C" void __cdecl Area52_ResetBlock(void) {
     const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     if (tCur->x != 0x118000 || tCur->z != 0x298000) return;
     for (unsigned i = 0; i < 2; ++i) RestoreColumn(0x11 + i, 0x29, i * 8);
-    TCur()->accel_x = 0;
-    TCur()->accel_z = 0;
-    TCur()->z = 0x78000;
-    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(TCur()->z) - 0x8000u));
+    CurSprite()->accel_x = 0;
+    CurSprite()->accel_z = 0;
+    CurSprite()->z = 0x78000;
+    const std::uint16_t z = High(static_cast<std::int32_t>(static_cast<std::uint32_t>(CurSprite()->z) - 0x8000u));
     for (unsigned i = 0; i < 2; ++i) StashColumn(0x11 + i, z, i * 8);
 }
 

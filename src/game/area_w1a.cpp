@@ -27,7 +27,7 @@
 #include "hook/log.h"
 
 namespace {
-records::SpriteObject* TCur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w1a::at;
 using area_harness::Mem;
@@ -657,7 +657,7 @@ extern "C" void __cdecl Area41_Run(void) {
 // up (Area41_TintUp), then +0xA = 7 and state 1 (Sprite_Current read again
 // for each); the leader's word +0x12E less 2.
 extern "C" void __cdecl Area41_TintStart(void) {
-    TCur()->step_x = 0x4000;
+    CurSprite()->step_x = 0x4000;
     AH_CALL(Area41_TintUp)();
     Sprite_Current[0xA] = 7;
     Sprite_Current[4] = 1;

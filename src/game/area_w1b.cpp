@@ -52,7 +52,8 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-records::SpriteObject* TCur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
 unsigned char& B(U address) { return At(address)[0]; }
@@ -477,8 +478,8 @@ extern "C" void __cdecl Area43_SetUpObject(void) {
     AH_CALL(Sprite_SetAnimationBank)(0x1BD);
     AH_CALL(Sprite_SetAnimation)(0);
     Cur()[0x2A] = 0;
-    TCur()->scale_x = 0xE000;
-    TCur()->scale_y = 0xE000;
+    CurSprite()->scale_x = 0xE000;
+    CurSprite()->scale_y = 0xE000;
     const unsigned char tint = AH_CALL(Sprite_SetTint)(Cur(), 0, 0, 0, 1);
     ActiveMember()[0x9F] = tint;
     Cur()[0x5C] = 1;
@@ -1077,7 +1078,7 @@ extern "C" void __cdecl Area45_FrameStep(void) { StateEntry("Area45_FrameStep", 
 // original 0x408090 (Area45_FrameStates 1): the word +0x2E += 0x10; at 0x10
 // and above (s16) +2 + 1; then a tail jump to Area45_FrameHold.
 extern "C" void __cdecl Area45_FrameSlideIn(void) {
-    TCur()->screen_x = static_cast<std::uint16_t>(TCur()->screen_x) + 0x10u;
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(kFrameHold45)();
@@ -1095,7 +1096,7 @@ extern "C" void __cdecl Area45_FrameHold(void) {
 // and below +2 = 0; unless the mode byte is 2, +2 = 1 (over the 0);
 // Area45_DrawFrame(0x10, y).
 extern "C" void __cdecl Area45_FrameSlideOut(void) {
-    TCur()->screen_x = static_cast<std::uint16_t>(TCur()->screen_x) - 0x10u;
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -1118,7 +1119,7 @@ extern "C" void __cdecl Area45_BoxStep(void) { StateEntry("Area45_BoxStep", Area
 // Area45_DrawHud(0x5C, y) - the y pushed with the object pointer's high half
 // above the word, which the drawing never reads.
 extern "C" void __cdecl Area45_BoxSlideIn(void) {
-    TCur()->screen_y = static_cast<std::uint16_t>(TCur()->screen_y) - 10u;
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -1156,7 +1157,7 @@ extern "C" void __cdecl Area45_BoxHold(void) {
 // +0xB), Field_Request is 2 or Field_ScriptFlags bit 8, +3 = 1;
 // Area45_DrawHud(0x5C, y).
 extern "C" void __cdecl Area45_BoxSlideOut(void) {
-    TCur()->screen_y = static_cast<std::uint16_t>(TCur()->screen_y) + 10u;
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
@@ -1537,9 +1538,9 @@ extern "C" unsigned char __cdecl Area46_Trigger54(void) {
 // edx above it, which MapView_SetElevation never reads: ours passes the word
 // sign-extended); Camera_Angles[0] = 0xFB76, Camera_Angles[2] = 0xF8.
 extern "C" void __cdecl Area47_PlaceAtStart(void) {
-    TCur()->x = 0x120000;
+    CurSprite()->x = 0x120000;
     Field_Kind2X = 0x120000;
-    TCur()->z = 0x240000;
+    CurSprite()->z = 0x240000;
     Field_Kind2Z = 0x240000;
     AH_CALL(Field_ViewReset)();
     SetWord(Cur() + 0x3E, 0x1220);

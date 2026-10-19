@@ -45,7 +45,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
-records::EffectObject* TCur() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char* Pointer(U cell) { return At(static_cast<U>(Long(At(cell)))); }
 // A handler read from a .data table in place, as the originals' `call` /
@@ -302,7 +302,7 @@ extern "C" void __cdecl Area16_FrameStep(void) { Entry(Area16_FrameStates_addr +
 // original 0x4020D0 (Area16_FrameStates 1): the word +0x2E += 0x10; at 0x10
 // and above (s16) +2 + 1; then a tail jump to Area16_FrameHold.
 extern "C" void __cdecl Area16_FrameSlideIn(void) {
-    TCur()->screen_x = static_cast<std::uint16_t>(TCur()->screen_x) + 0x10u;
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) + 0x10u;
     unsigned char* const o = Cur();
     if (S16(o + 0x2E) >= 0x10) o[2] = static_cast<unsigned char>(o[2] + 1);
     area_harness::Phase(kFrameHold16)();
@@ -320,7 +320,7 @@ extern "C" void __cdecl Area16_FrameHold(void) {
 // and below +2 = 0; unless the mode byte is 2, +2 = 1 (over the 0);
 // Area16_DrawFrame(0x10, y).
 extern "C" void __cdecl Area16_FrameSlideOut(void) {
-    TCur()->screen_x = static_cast<std::uint16_t>(TCur()->screen_x) - 0x10u;
+    CurEffect()->screen_x = static_cast<std::uint16_t>(CurEffect()->screen_x) - 0x10u;
     unsigned char* o = Cur();
     if (S16(o + 0x2E) <= -0x30) {
         o[2] = 0;
@@ -343,7 +343,7 @@ extern "C" void __cdecl Area16_BoxStep(void) { Entry(Area16_BoxStates_addr + Cur
 // Area16_DrawHud(0x5C, y) - the y pushed with the object pointer's high half
 // above the word, which the drawing never reads.
 extern "C" void __cdecl Area16_BoxSlideIn(void) {
-    TCur()->screen_y = static_cast<std::uint16_t>(TCur()->screen_y) - 10u;
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) - 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) <= 0xC8) {
         o[3] = static_cast<unsigned char>(o[3] + 1);
@@ -381,7 +381,7 @@ extern "C" void __cdecl Area16_BoxHold(void) {
 // +0xB), Field_Request is 2 or Field_ScriptFlags bit 8, +3 = 1;
 // Area16_DrawHud(0x5C, y).
 extern "C" void __cdecl Area16_BoxSlideOut(void) {
-    TCur()->screen_y = static_cast<std::uint16_t>(TCur()->screen_y) + 10u;
+    CurEffect()->screen_y = static_cast<std::uint16_t>(CurEffect()->screen_y) + 10u;
     unsigned char* o = Cur();
     if (S16(o + 0x30) >= 0xF0) {
         o[3] = 0;
