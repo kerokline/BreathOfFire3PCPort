@@ -624,14 +624,14 @@ unsigned char AlongZ() {
 // two to either side. al 1 found, 0 not. Called by Field_CellAround (a tail).
 extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     const unsigned char* const sc = Sc();
-    const std::uint16_t fx = Word(sc + 0x34);
-    if (fx == 0 && Word(sc + 0x38) == 0) return 0;
+    const std::uint16_t fx = rv::As<records::SpriteHead>(sc)->x_frac;
+    if (fx == 0 && rv::As<records::SpriteHead>(sc)->z_frac == 0) return 0;
     const unsigned facing = sc[8];
-    const std::uint16_t x = Word(sc + 0x36);
+    const std::uint16_t x = rv::As<records::SpriteHead>(sc)->x_whole;
     const auto ahead_x = static_cast<std::uint16_t>(x + DirStep(facing, 0));
-    const auto ahead_z = static_cast<std::uint16_t>(Word(sc + 0x3A) + DirStep(facing, 1));
+    const auto ahead_z = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole + DirStep(facing, 1));
     const auto c = static_cast<unsigned char>(code);
-    if (fx != 0 && Word(sc + 0x38) != 0) {
+    if (fx != 0 && rv::As<records::SpriteHead>(sc)->z_frac != 0) {
         // both fractions: x .. x + 1 at the row ahead, then the column ahead
         SetW(at::kCellX, x);
         SetW(at::kCellZ, ahead_z);
@@ -644,7 +644,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
             SetW(at::kCellX, CellX() + 1);
         }
         SetW(at::kCellX, ahead_x);
-        SetW(at::kCellZ, Word(Sc() + 0x3A));
+        SetW(at::kCellZ, rv::As<records::SpriteHead>(Sc())->z_whole);
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
                 const unsigned char f = Sc()[8];
@@ -660,7 +660,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     if (fx != 0) {
         // x's fraction only: the column ahead, z - 1 .. z + 1
         SetW(at::kCellX, ahead_x);
-        SetW(at::kCellZ, static_cast<std::uint16_t>(Word(sc + 0x3A) - 1));
+        SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole - 1));
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 const unsigned char f = Sc()[8];
@@ -671,8 +671,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
         }
         const unsigned char f = Sc()[8];
         if (f != 1 && f != 5) return 0;
-        SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) - 1));
-        SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) - 1));
+        SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1));
+        SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1));
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 Sc()[8] = 7;
@@ -680,8 +680,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
             }
             SetW(at::kCellZ, CellZ() + 1);
         }
-        SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) + 2));
-        SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) - 1));
+        SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole + 2));
+        SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1));
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 Sc()[8] = 3;
@@ -704,8 +704,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     }
     const unsigned char f = Sc()[8];
     if (f != 7 && f != 3) return 0;
-    SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) - 1));
-    SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) - 1));
+    SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1));
+    SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1));
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 1;
@@ -713,8 +713,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
         }
         SetW(at::kCellX, CellX() + 1);
     }
-    SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) - 1));
-    SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) + 2));
+    SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1));
+    SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole + 2));
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 5;
@@ -733,8 +733,8 @@ extern "C" unsigned char __cdecl Field_CellAroundSide(unsigned direction, unsign
     const auto d = static_cast<unsigned char>(direction);
     const auto c = static_cast<unsigned char>(code);
     const unsigned char* const sc = Sc();
-    SetW(at::kCellX, static_cast<std::uint16_t>(Word(sc + 0x36) + DirStep(d, 0)));
-    SetW(at::kCellZ, static_cast<std::uint16_t>(Word(sc + 0x3A) + DirStep(d, 1)));
+    SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->x_whole + DirStep(d, 0)));
+    SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole + DirStep(d, 1)));
     if (d == 1 || d == 5) {
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {

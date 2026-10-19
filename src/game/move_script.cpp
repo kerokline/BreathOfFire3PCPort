@@ -171,7 +171,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
         case 0x0D: {   // 0D x xh z zh: place at (x.xh, z.zh) and take the ground's elevation
             if (g.kind() == 2) {
                 PlaceAndGround(Sprite_Kind2, script + Pos(object));
-                SetWord(Sprite_Kind2 + 0x3E, static_cast<unsigned>(g.elevation(Long(Sprite_Kind2 + 0x34), Long(Sprite_Kind2 + 0x38))));
+                rv::Store<unsigned>(rv::As<records::SpriteHead>(Sprite_Kind2)->height_whole, static_cast<unsigned>(g.elevation(rv::As<records::SpriteHead>(Sprite_Kind2)->x, rv::As<records::SpriteHead>(Sprite_Kind2)->z)));
                 result = 0xFF;
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
@@ -272,7 +272,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                 g.move_kind2(value);
                 const std::int32_t frames = 0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor) * Sprite_Kind2[0x87];
                 const std::int32_t rise = static_cast<std::int16_t>(Word(scratch + 2)) - static_cast<std::int16_t>(Word(scratch));
-                SetLong(Sprite_Kind2 + 0x14, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
+                rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
                 object[0] |= 0x40;
                 SetPos(object, Pos(object) + 4u);
             }

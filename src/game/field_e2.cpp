@@ -101,7 +101,7 @@ void Ahead(const unsigned char* s, std::int32_t& x, std::int32_t& z) {
 // low bytes is clear; then every fourth frame one tick of its script.
 void FollowAndTick(unsigned char* s) {
     if (s[5] == 0 && ((B(at::kScriptFlags2) | B(at::kScriptFlagsLow)) & 8) == 0)
-        SH_CALL(MapView_SetElevation)(static_cast<short>(W(Key(s) + 0x3E)));
+        SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::SpriteHead>(s)->height_whole));
     if ((Frame_Counter & 3) == 0) SH_CALL(Sprite_ScriptTickOnce)();
 }
 
@@ -412,10 +412,10 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
     if (d < 0) d = -d;
     if (d > 0xC0) return 1;
     unsigned char* const s = Sprite_Current;
-    const std::uint16_t kept = W(Key(s) + 0x3E);
-    SetW(Key(s) + 0x3E, ground);
+    const std::uint16_t kept = rv::As<records::SpriteHead>(s)->height_whole;
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(s)->height_whole, ground);
     const unsigned char hit = SH_CALL(Sprite_ObjectAt)(x, z, 1);
-    SetW(Key(Sprite_Current) + 0x3E, kept);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, kept);
     return hit != 0xFF ? 1 : 0;
 }
 
@@ -699,9 +699,9 @@ extern "C" void __cdecl Mode11_ObjectStart(void) {
     Sprite_Current[5] = 0;
     Sprite_Current[0xB] = ObjTrio[0x138];
     Field_State[0x128] = 3;
-    SetL(Key(Sprite_Current) + 0x34, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
-    SetL(Key(Sprite_Current) + 0x38, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
-    SetL(Key(Sprite_Current) + 0x3C, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->height));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->x, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->z, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->height, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->height));
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
 }
 
@@ -709,9 +709,9 @@ namespace {
 // The object stops: its velocity +0xC / +0x10 / +0x14 zero, with `steps` +9
 // too, and the two script words 0 (MoveScript_F3Divisor, MoveScript_FAWord).
 void ObjectStill(unsigned char* s, bool steps) {
-    SetL(Key(s) + 0xC, 0);
-    SetL(Key(Sprite_Current) + 0x10, 0);
-    SetL(Key(Sprite_Current) + 0x14, 0);
+    rv::Store<U>(rv::As<records::SpriteHead>(s)->step_x, 0);
+    rv::Store<U>(rv::Current<records::SpriteHead>()->step_z, 0);
+    rv::Store<U>(rv::Current<records::SpriteHead>()->step_y, 0);
     if (steps) Sprite_Current[9] = 0;
     MoveScript_F3Divisor = 0;
     MoveScript_FAWord = 0;
@@ -937,18 +937,18 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     const long z = SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<unsigned long*>(screen), &depth);
     static_cast<void>(flag);
     SetL(Key(Sprite_Current) + 0x60, static_cast<U>(z));
-    SetW(Key(Sprite_Current) + 0x2E, Ftol(screen));
-    SetW(Key(Sprite_Current) + 0x30, Ftol(screen + 4));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol(screen));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, Ftol(screen + 4));
     unsigned char* prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gte_PrimDepthFlat4_10)(prim);
-    FildFstFadd(S16(W(Key(Sprite_Current) + 0x2E)) - 6, prim + 8, At(at::kQuadLift), prim + 0x18);
+    FildFstFadd(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_x)) - 6, prim + 8, At(at::kQuadLift), prim + 0x18);
     std::memcpy(prim + 0x28, prim + 8, 4);
     std::memcpy(prim + 0x38, prim + 0x18, 4);
     U counter = Frame_Counter;
     const U bob = (counter >> 1) & 3;
-    const U y = (counter & 8) ? bob + static_cast<U>(S16(W(Key(Sprite_Current) + 0x30))) - 0x1Bu
-                              : static_cast<U>(S16(W(Key(Sprite_Current) + 0x30))) - bob - 0x18u;
+    const U y = (counter & 8) ? bob + static_cast<U>(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - 0x1Bu
+                              : static_cast<U>(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - bob - 0x18u;
     Fild64Fstp(y, prim + 0xC);
     std::memcpy(prim + 0x1C, prim + 0xC, 4);
     FldFaddFstFstp(prim + 0xC, At(at::kQuadWidth), prim + 0x2C, prim + 0x3C);
@@ -972,7 +972,7 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     alignas(4) short move[4];
     move[0] = Place(LongAt(s + 0x34));
     move[1] = Place(LongAt(s + 0x38));
-    move[2] = static_cast<short>(-(S16(W(Key(s) + 0x3E)) / 2));
+    move[2] = static_cast<short>(-(S16(rv::As<records::SpriteHead>(s)->height_whole) / 2));
     move[3] = 0;
     alignas(4) unsigned char matrix[0x20];
     SH_CALL(Gte_RotTrans)(move, reinterpret_cast<long*>(matrix + 0x14));

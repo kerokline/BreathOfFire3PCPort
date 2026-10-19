@@ -305,9 +305,9 @@ extern "C" unsigned char __cdecl MoveScript_GroupD(unsigned char* object, const 
     switch (p[0]) {
     case 0xD0: {   // place Sprite_Kind2 at Field_Kind2X / Z and ground it
         const long z = Field_Kind2Z, x = Field_Kind2X;
-        SetLong(Sprite_Kind2 + 0x34, x);
-        SetLong(Sprite_Kind2 + 0x38, z);
-        SetWord(Sprite_Kind2 + 0x3E, static_cast<unsigned>(g.elevation(x, z)));
+        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->x, x);
+        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->z, z);
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(Sprite_Kind2)->height_whole, static_cast<unsigned>(g.elevation(x, z)));
         return value;
     }
     case 0xD1:   // D1 hi lo x s: sound hi:lo when the sprite's script reaches x
