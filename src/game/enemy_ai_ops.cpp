@@ -312,7 +312,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
     SetWord(At(at::kStatusAdd2), 0);
     SetWord(At(at::kStatusAdd), 0);
     const unsigned char actor = enemy_s->actor;
-    SetPtrAt(at::kResultSprite, s);
+    BattleE3_HitSprite = s;
     At(at::kResultTarget)[0] = actor;
     SetPtrAt(at::kResult, e + 0x104);
     SetWord(PtrAt(at::kResult) + 4, 0);

@@ -79,7 +79,7 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
 // The enemy being run (0x939AD8) and the battle-task slot being run (0x93B8C4),
 // each re-read wherever the original re-reads it.
 unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
-unsigned char* CurrentTask() { return PtrAt(at::kTaskCurrent); }
+unsigned char* CurrentTask() { return PtrAt(BattleFlow_TaskCurrent_addr); }
 unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskSize); }
 unsigned char* EnemyObject(unsigned index) { return At(at::kEnemies + index * at::kEnemySize); }
 
@@ -158,7 +158,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleTask_RunAll(vo
         auto* const task_rec = rv::As<records::BattleTask>(t);
         if (task_rec->flags == 0) continue;
         const std::int32_t owner = static_cast<std::int32_t>(task_rec->owner);
-        SetPtrAt(at::kTaskCurrent, t);
+        BattleFlow_TaskCurrent = task_rec;
         Sprite_Current = t;
         BattleE2_Owner = owner;
         const unsigned kind = task_rec->runner;

@@ -85,7 +85,7 @@ std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinter
 // A pointer the original keeps in a dword, read afresh.
 unsigned char* PtrAt(std::uint32_t address) { return At(static_cast<std::uint32_t>(Long(At(address)))); }
 // The battle-task slot being run (0x93B8C4), and a slot's owner (+0x80).
-unsigned char* Cur() { return PtrAt(at::kTaskCurrent); }
+unsigned char* Cur() { return rv::Bytes(BattleFlow_TaskCurrent); }
 unsigned char* OwnerOf(const unsigned char* slot) { return At(static_cast<std::uint32_t>(Long(slot + 0x80))); }
 // Sprite_Current, read afresh at every use.
 unsigned char* Sc() { return Sprite_Current; }

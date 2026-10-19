@@ -54,7 +54,7 @@ constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the action's kind (1, 4, 5 read here)
 constexpr U kTarget = 0x904B44;           // u8: the target (bits 6, 7 read)
 constexpr U kHitActor = 0x904B54;         // u8: the object being hit's actor (+5), stored here
-constexpr U kHitSprite = 0x904B5C;        // unsigned char *: the object being hit, stored here
+// kHitSprite: now BattleE3_HitSprite (symbols.toml). unsigned char *: the object being hit, stored here
 constexpr U kResult = 0x904B60;           // unsigned char *: the result record (Field_State + 0x124 here)
 constexpr U kAbility = 0x904B80;          // u16: the ability id (24-byte records at 0x65C4D8)
 constexpr U kItemCategory = 0x904B81;     // u8: its high byte, 0x591810's first argument

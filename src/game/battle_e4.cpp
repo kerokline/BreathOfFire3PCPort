@@ -151,7 +151,7 @@ void RefreshMembers() {
 // through 0x904065 and 0x66972C.
 unsigned char* SlotsCharacter() {
     const unsigned member = static_cast<U>(Long(At(BattleE4_Slots_addr + 0xC))) & 0xFF;
-    return CharRecord(B(at::kCharOf + B(at::kMemberChar + member)));
+    return CharRecord(MoveScript_EffectState[Cond_Flags[0xd5 + member]]);
 }
 
 // Up (0x1000) and down (0x4000) on the six slots: record 18's cursor +0xA
@@ -1199,7 +1199,7 @@ extern "C" void __cdecl BattleEquip_Apply(void) {
 extern "C" void __cdecl BattleEquip_Preview(void) {
     const unsigned member = static_cast<U>(Long(At(BattleE4_Slots_addr + 0xC))) & 0xFF;
     const unsigned char item = B(at::kCands + 0xD);
-    const unsigned char c = B(at::kCharOf + B(at::kMemberChar + member));
+    const unsigned char c = MoveScript_EffectState[Cond_Flags[0xd5 + member]];
     const unsigned mask = BH_CALL(Item_EquipMask)(B(at::kCands + 8), item);
     const auto bit = static_cast<unsigned char>((1u << (c & 0x1F)) & 0xFF);
     B(at::kSlots + 0xD) = (bit & mask & 0xFF) == 0 ? 1 : 0;
@@ -1528,7 +1528,7 @@ extern "C" unsigned char __cdecl Escape_Chance(int diff) {
 // original 0x44A910 (PSX 0x801DE964): the member's name (its character record
 // by 0x66972C of its +0x89) into Text_Records[0], 8 bytes (Str_CopyN).
 extern "C" void __cdecl Battle_MemberNameToText(unsigned member) {
-    const unsigned char c = B(at::kCharOf + rv::As<records::PartyMember>(Party(member))->char_id);
+    const unsigned char c = MoveScript_EffectState[rv::As<records::PartyMember>(Party(member))->char_id];
     BH_CALL(Str_CopyN)(reinterpret_cast<char*>(At(at::kTextRecord0)), reinterpret_cast<const char*>(CharRecord(c)), 8);
 }
 

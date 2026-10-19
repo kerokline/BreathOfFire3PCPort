@@ -431,7 +431,7 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
     SetWord(At(at::kStatusOr2), 0);
     SetWord(At(at::kStatusOr), 0);
     const unsigned char actor = member_s->actor;
-    SetPtrAt(at::kHitSprite, s);
+    BattleE3_HitSprite = s;
     B(at::kHitActor) = actor;
     SetPtrAt(at::kResult, f + 0x124);
     SetWord(f + 0x124 + 4, 0);

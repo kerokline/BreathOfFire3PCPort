@@ -52,7 +52,7 @@ constexpr std::uint32_t kActor = 0x904B34;         // u8: the acting actor
 constexpr std::uint32_t kActionKind = 0x904B35;    // u8: 1 attack, 4 ability, 5 item (sibling's command bytes)
 constexpr std::uint32_t kTarget = 0x904B44;        // u8: the target actor, or 0x40 / 0x80 / 0xC0 a side
 constexpr std::uint32_t kResultTarget = 0x904B54;  // u8 (PSX 0x80146390)
-constexpr std::uint32_t kResultSprite = 0x904B5C;  // pointer: the target's sprite
+// kResultSprite: now BattleE3_HitSprite (symbols.toml). pointer: the target's sprite
 constexpr std::uint32_t kResult = 0x904B60;        // pointer: the result record, +4 HP and +6 AP delta, +8 flags
 // kHookA: now BattleHook_End (symbols.toml). code pointers stored by EnemyOp_Begin
 // kHookB: now BattleHook_Exit (symbols.toml).

@@ -841,7 +841,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
         if (r == rec[0xB]) colour = 2;
         if (rec[0xD] & 2) {
             const unsigned slot = B(at::kPartyOrder + static_cast<std::uint32_t>(BattleActorCopies_ItemActor));
-            const unsigned who = B(at::kMemberIds + slot);
+            const unsigned who = MoveScript_EffectState[slot];
             if (BH_CALL(Item_CanUse)(2, who, category, items[r]) == 0) {
                 colour = 7;
             } else if (r == rec[0xA]) {

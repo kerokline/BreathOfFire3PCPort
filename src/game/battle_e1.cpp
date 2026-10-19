@@ -353,7 +353,7 @@ extern "C" void __cdecl BattleExtra_EquipRun(void) {
         bof3::Fatal("BattleExtra_EquipRun: 0x929F02 is %u, past the 2 entries of 0x64ADF8 - the original calls through "
                     "the dword after (docs/battle_e1.md section 7)",
                     sub);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(L(at::kEquipRunSteps + 4 * sub)))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(BattleExtra_EquipRunSteps[sub]))();
     Backdrop();
 }
 
@@ -647,11 +647,11 @@ extern "C" unsigned long __cdecl BattleAction_Kind3Dispatch(unsigned long throug
 // 0x904AA3 + 1.
 extern "C" void __cdecl BattleAction_Kind3Banner(void) {
     BH_CALL(Battle_ClearActingFlags)();
-    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(PtrAt(at::kBannerText)));
+    BH_CALL(BattleBanner_Add)(1, 0, 0, 0x1E, reinterpret_cast<const char*>(BattleE1_BannerText));
     const unsigned char actor = B(at::kActor);
     B(at::kWin4 + 3) = 1;
     BH_CALL(Battle_SetActorBit)(actor);
-    PtrAt(at::kActing)[1] = 9;
+    static_cast<unsigned char*>(MagicS23_ActorSprite)[1] = 9;
     BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
 }
 
