@@ -255,7 +255,7 @@ void TagOne(std::uint32_t prim, Kind kind, unsigned layer, unsigned slot, unsign
 // set aside (battle_flow.cpp's way).
 #pragma push_macro("Gfx_PacketPools")
 #undef Gfx_PacketPools
-constexpr std::uint32_t kPacketPools = bof3::addr::Gfx_PacketPools;
+// kPacketPools: now Gfx_PacketPools (symbols.toml).
 #pragma pop_macro("Gfx_PacketPools")
 
 void LogWalk(const unsigned long* ot) {
@@ -265,7 +265,7 @@ void LogWalk(const unsigned long* ot) {
     {
         // The packet pool's fill at the walk: Gfx_PacketNext against this
         // buffer's 64 KB (Gfx_PacketPools + (buffer << 16), draw_emit.cpp's limit).
-        const std::uint32_t base = kPacketPools + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16);
+        const std::uint32_t base = Gfx_PacketPools_addr + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16);
         const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
         bof3::Log("draworder   frame %u: packet pool at %u of 65536 bytes (buffer %u)", f, next - base,
                   static_cast<unsigned>(Gfx_BufferIndex));
@@ -290,12 +290,12 @@ void LogWalk(const unsigned long* ot) {
         // eight list heads per buffer that Gfx_OtPointers start the frame at
         // (0x9037C0 + (buffer << 5) + 4 * slot, Gfx_BeginFrame) - whichever
         // the splice of Gfx_LinkOTags leaves on the path.
-        constexpr std::uint32_t kListHeads = 0x9037C0;
+        // kListHeads: now Gfx_OtHeads (symbols.toml).
         const bool env_head = p >= env && p < env + 0x20u;
-        const bool list_head = p >= kListHeads && p < kListHeads + 0x40u;
+        const bool list_head = p >= Gfx_OtHeads_addr && p < Gfx_OtHeads_addr + 0x40u;
         const bool head = env_head || list_head;
         if (env_head) slot = static_cast<int>((p - env) / 4u);
-        if (list_head) slot = static_cast<int>((p - kListHeads) % 0x20u / 4u);
+        if (list_head) slot = static_cast<int>((p - Gfx_OtHeads_addr) % 0x20u / 4u);
         if (!skipped && !head) {
             ++index;
             const unsigned code = Get<std::uint8_t>(p + 7);

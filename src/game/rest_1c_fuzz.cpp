@@ -177,9 +177,9 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-constexpr U kSteps = 0x6697B0;        // Field_DirectionSteps: 8 rows of two longs
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
 constexpr U kTextRecords = 0x904CE0;  // Text_Records: the item name copies
-unsigned char* Steps() { return sh::Mem(kSteps); }
+unsigned char* Steps() { return sh::Mem(Field_DirectionSteps_addr); }
 
 // --- the stand-ins' answers (Noise() and the state only: both passes the same) -----
 
@@ -298,7 +298,7 @@ const sh::Callee kCallees[] = {
 // the seed can put every row's boundaries in (.data, restored after the run as
 // every region is); Text_Records, where the item names are copied.
 const sh::Region kRegions[] = {
-    {kSteps, 0x40},
+    {Field_DirectionSteps_addr, 0x40},
     {kTextRecords, 0x20},
 };
 

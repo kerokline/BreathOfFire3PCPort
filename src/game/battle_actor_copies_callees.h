@@ -31,18 +31,18 @@ namespace at {
 // entry; phase 1 (0x42E990) dispatches on 0x904AA1 through the table 0x64AE28,
 // whose entries 11 and 12 are this group's two stubs; each of those dispatches
 // on 0x904AA3, and the step handlers below them on 0x904AA4.
-constexpr U kPhase1 = 0x904AA1;      // u8: 0x64AE28's index
-constexpr U kPhase2 = 0x904AA2;      // u8: set to 7 by the item window on item 0x97, else 0
+// kPhase1: now BattleActions_Step (symbols.toml). u8: 0x64AE28's index
+// kPhase2: now BattleE4_Step2 (symbols.toml). u8: set to 7 by the item window on item 0x97, else 0
 constexpr U kStep = 0x904AA3;        // u8: BattleTarget_Steps' / BattleItem_Steps' index
-constexpr U kSub = 0x904AA4;         // u8: the pick states' index (read as a dword & 0xFF by two stubs)
-constexpr U kTargetCursor = 0x904AAF;  // u8: 1 while a target is being picked, 0 on confirm / cancel (a guess)
+// kSub: now BattleE4_Step4 (symbols.toml). u8: the pick states' index (read as a dword & 0xFF by two stubs)
+// kTargetCursor: now BattleE4_Picking (symbols.toml). u8: 1 while a target is being picked, 0 on confirm / cancel (a guess)
 constexpr U kPartyCount = 0x904AB0;  // u8 (read as a dword & 0xFF): members in the party row
-constexpr U kEnemyCount = 0x904AB2;  // u8: enemies in the battle (actors 3 .. count + 2)
-constexpr U kEntryCount = 0x904AC3;  // u8: counted up by each committed command (PSX 0x801462FF)
+// kEnemyCount: now BattleActorCopies_EnemyCount (symbols.toml). u8: enemies in the battle (actors 3 .. count + 2)
+// kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). u8: counted up by each committed command (PSX 0x801462FF)
 // Input.
-constexpr U kPressed = 0x7E1BEC;     // Input_Pressed, u16
+// kPressed: now Input_Pressed (symbols.toml). Input_Pressed, u16
 constexpr U kConfirm = 0x90358E;     // Field_ConfirmButtons, u16
-constexpr U kCancel = 0x903590;      // Field_CancelButtons, u16
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons, u16
 constexpr U kRepeatLatch = 0x7E01B8; // u16, zeroed when a pick starts (Input_AutoRepeat's)
 // The command being built and the acting actor.
 constexpr U kCommand = 0x939FA0;     // pointer: +0 the target byte, +1 a kind byte, +2 the item id (u16), +0x10 flags
@@ -51,19 +51,19 @@ constexpr U kActing = 0x939EC4;      // pointer: the acting actor's context, +1 
 // 0x97 is chosen; battle_damage names the same byte kInstantKill.
 constexpr U kWindow4State = 0x8031F3;
 // The item window: record 16 (0x8033A0) and its neighbours.
-constexpr U kItemState = 0x8033A3;   // u8: record 16's byte +3, set to 1 when the window closes
+// kItemState: now BattleActorCopies_ItemState (symbols.toml). u8: record 16's byte +3, set to 1 when the window closes
 constexpr U kItemBaseX = 0x8033A4;   // u16: the window's x; +7 is the cursor's
-constexpr U kItemBaseY = 0x8033A6;   // u16: the window's y
-constexpr U kItemPageCue = 0x8033A9; // u8: 0x32 on a page left, 0x31 on a page right
-constexpr U kItemOwner = 0x8033AA;   // u8: the actor whose page / scroll / cursor are kept
-constexpr U kItemPage = 0x8033AB;    // u8: the inventory page 0..3
+// kItemBaseY: now BattleActorCopies_ItemBaseY (symbols.toml). u16: the window's y
+// kItemPageCue: now BattleActorCopies_ItemPageCue (symbols.toml). u8: 0x32 on a page left, 0x31 on a page right
+// kItemOwner: now BattleActorCopies_ItemOwner (symbols.toml). u8: the actor whose page / scroll / cursor are kept
+// kItemPage: now BattleActorCopies_ItemPage (symbols.toml). u8: the inventory page 0..3
 constexpr U kItemCursor = 0x8033AC;  // u8: the cursor's item index 0..9
 constexpr U kItemScroll = 0x8033B0;  // s16: the first row shown
-constexpr U kItemScrollMotion = 0x8033B2;  // u16: 0xF0 / 0x10 while the list scrolls
-constexpr U kItemCursorOn = 0x80340C;      // u8
+// kItemScrollMotion: now BattleActorCopies_ItemScrollMotion (symbols.toml). u16: 0xF0 / 0x10 while the list scrolls
+// kItemCursorOn: now BattleE4_Hand (symbols.toml). u8
 constexpr U kItemCursorX = 0x803410;       // u16
-constexpr U kItemCursorY = 0x803412;       // u16
-constexpr U kItemActor = 0x929F06;   // u8: the actor the item window is for
+// kItemCursorY: now BattleActorCopies_ItemCursorY (symbols.toml). u16
+// kItemActor: now BattleActorCopies_ItemActor (symbols.toml). u8: the actor the item window is for
 constexpr U kActorPages = 0x9045FC;  // 3 bytes per actor: page, scroll, cursor
 // The item records: 24 bytes each, byte +0 the target flags (0x10 a side,
 // 0x20 the party / the enemies, 0x40 a choice, 0x80 all), u16 +6 the
@@ -72,7 +72,7 @@ constexpr U kItemRecords = 0x65C4D8;
 constexpr U kItemRecordSize = 0x18;
 // The message queue (battle_misc's): its write index and 16 entries of 8
 // bytes, +1 a byte, +4 the text pointer.
-constexpr U kQueueWrite = 0x93C2A1;
+// kQueueWrite: now BattleActorCopies_QueueWrite (symbols.toml).
 constexpr U kQueueByte = 0x93C2C1;
 constexpr U kQueueText = 0x93C2C4;
 

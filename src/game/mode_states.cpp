@@ -98,10 +98,10 @@ void WaitLoadFramed() {
 unsigned Area() { return Game_AreaNumber; }
 unsigned char& Counter(unsigned i) { return At(at::kCounters + i)[0]; }
 void ClearCounters() { for (unsigned i = 0; i < 4; ++i) Counter(i) = 0; }
-void SetStep5(unsigned v) { At(at::kStep5)[0] = static_cast<unsigned char>(v); }
+void SetStep5(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void SetRun(int v) { MoveScript_Var7 = static_cast<signed char>(v); }
 // The flag bits, the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(at::kFlagBank))))); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
 bool Flag(unsigned n) { return g.flags_test(Bank(), n) != 0; }
 void SetFlag(unsigned n) { g.flags_set(Bank(), n); }
 // Takes an effect slot and, when there is one, marks its record live as kind
@@ -136,22 +136,22 @@ bool PlaceEffect(unsigned char kind) {
 // to 21 past it); the held word is read once.
 extern "C" void __cdecl Look_PadControl(void) {
     const unsigned held = Input_Held;
-    if ((Word(At(at::kLookButton)) & held & 0xFFFF) == 0) {
+    if ((Word(At(Gfx_UnpackScratch_addr + 0x1f006)) & held & 0xFFFF) == 0) {
         const short pitch = Signed16(kPitch);
         if (pitch > 0x200) {
-            At(at::kLookTurn)[0] = 0;
+            ModeStates_LookTurn = 0;
         } else if (pitch < 0x200) {
-            At(at::kLookTurn)[0] = 1;
+            ModeStates_LookTurn = 1;
         }
         Game_Step = static_cast<unsigned short>(Game_Step + 1);
         return;
     }
     const unsigned buttons = (held >> 8) & 0xFF;
-    if ((buttons & 0x40) != 0 && Signed16(kYaw) > static_cast<short>(0xFD56)) {
+    if ((buttons & 0x40) != 0 && Camera_Angles[0] > static_cast<short>(0xFD56)) {
         AddWord(kYaw, -0x16);
         AddWord(kYawCopy, -0x16);
     }
-    if ((buttons & 0x10) != 0 && Signed16(kYaw) < static_cast<short>(0xFE39)) {
+    if ((buttons & 0x10) != 0 && Camera_Angles[0] < static_cast<short>(0xFE39)) {
         AddWord(kYaw, 0x16);
         AddWord(kYawCopy, 0x16);
     }
@@ -175,32 +175,32 @@ extern "C" void __cdecl Look_PadControl(void) {
 // the yaw, never compared; the pitch is read once and its copy stepped where
 // it lies.
 extern "C" void __cdecl Look_Return(void) {
-    if (Signed16(kYaw) > static_cast<short>(0xFD56)) {
+    if (Camera_Angles[0] > static_cast<short>(0xFD56)) {
         AddWord(kYaw, -0x16);
         AddWord(kYawCopy, -0x16);
     } else {
-        SetWord(At(kYaw), 0xFD56);
-        SetWord(At(kYawCopy), 0xFD56);
+        Camera_Angles[0] = 0xFD56;
+        Light_AnglesCopy[0] = 0xFD56;
     }
     const short pitch = Signed16(kPitch);
     if (pitch == 0x200) return;
-    if (At(at::kLookTurn)[0] == 0) {
+    if (ModeStates_LookTurn == 0) {
         if (pitch <= 0x200) {
-            SetWord(At(kPitch), 0x200);
-            SetWord(At(kPitchCopy), 0x200);
+            SetWord(At(Cond_AngleFB_addr), 0x200);
+            Light_AnglesCopy[2] = 0x200;
             return;
         }
         AddWord(kPitchCopy, -0x16);
-        SetWord(At(kPitch), static_cast<unsigned>(pitch - 0x16));
+        SetWord(At(Cond_AngleFB_addr), static_cast<unsigned>(pitch - 0x16));
         return;
     }
     if (pitch >= 0x200) {
-        SetWord(At(kPitch), 0x200);
-        SetWord(At(kPitchCopy), 0x200);
+        SetWord(At(Cond_AngleFB_addr), 0x200);
+        Light_AnglesCopy[2] = 0x200;
         return;
     }
     AddWord(kPitchCopy, 0x16);
-    SetWord(At(kPitch), static_cast<unsigned>(pitch + 0x16));
+    SetWord(At(Cond_AngleFB_addr), static_cast<unsigned>(pitch + 0x16));
 }
 
 // original 0x496250 (no PSX twin paired): mode 6's step 1 - Look_Return, and
@@ -208,7 +208,7 @@ extern "C" void __cdecl Look_Return(void) {
 // with Field_Request and Game_Step 0.
 extern "C" void __cdecl GameMode_LookEnd(void) {
     g.look_return();
-    if (Word(At(kYaw)) == 0xFD56 && Word(At(kPitch)) == 0x200) {
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(Cond_AngleFB_addr)) == 0x200) {
         Game_Mode = 2;
         Field_Request = 0;
         Game_Step = 0;
@@ -223,7 +223,7 @@ extern "C" void __cdecl GameMode_LookEnd(void) {
 // entry 7) - a tail jump through GameMode_ShopSteps 0x656AAC on Game_Step:
 // 0 Shop_Open, 1 Shop_Frame, 2 Shop_Close. Unchecked: step 3 would run mode
 // 8's first step, GameMode8_Enter 0x496440, the word after the table.
-extern "C" void __cdecl GameMode_Shop(void) { Entry(at::kShopSteps, Game_Step)(); }
+extern "C" void __cdecl GameMode_Shop(void) { Entry(GameMode_ShopSteps_addr, Game_Step)(); }
 
 // original 0x4962A0 (no PSX twin paired): the shop's step 0. The object the
 // shop was opened on is the s8 0x929F0C (Field_ObjectIdle sets it with
@@ -238,7 +238,7 @@ extern "C" void __cdecl GameMode_Shop(void) { Entry(at::kShopSteps, Game_Step)()
 // +0x18 test either way; the facing is read through Sprite_Current, the rest
 // through the object; Game_Step goes up after the field frame, read afresh.
 extern "C" void __cdecl Shop_Open(void) {
-    const signed char index = static_cast<signed char>(At(at::kShopObject)[0]);
+    const signed char index = static_cast<signed char>(ModeStates_ShopObject);
     if (index >= 0) {
         unsigned char* const o = Sprite_Objects + static_cast<std::uint32_t>(static_cast<int>(index)) * 0xA4u;
         Sprite_Current = o;
@@ -289,8 +289,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
 // and CommuSim_RollOffers 0x4560D0 (R4A's); then mode 2 with Game_Step and Field_Request 0
 // and a tail jump to Field_Frame.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Close(void) {
-    const unsigned char combo = static_cast<unsigned char>(At(at::kPartyCombo)[0] | 0x80);
-    At(at::kPartyCombo)[0] = combo;
+    const unsigned char combo = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
+    AreaW0b_PartySet = combo;
     g.bank_file((combo & 0x7Fu) + 0x2C2);
     WaitLoadFramed();
     if ((Field_InputFlags & 0x10) != 0) {
@@ -375,7 +375,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_WaitTransition(
 // of ours) abort (CLAUDE.md rule 4): there is no original frame left to
 // reproduce. docs/mode_states.md section 2.
 extern "C" __attribute__((noinline, disable_tail_calls)) void __cdecl MsgBox_SystemChoice(void) {
-    const unsigned id = At(at::kChoiceId)[0];
+    const unsigned id = ItemUse_ChoiceId;
     if (id - 0x80u < 16u) {
         g.choice[id - 0x80u]();
         return;
@@ -462,13 +462,13 @@ extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned co
 // FieldCore_State2Steps 0x66011C on Sprite_Current +2 (9 entries:
 // 0x525390, 0x5257A0, FieldCore_Fade, 0x525960, 0x525CA0, 0x5261E0,
 // 0x526490, 0x526A90, 0x526B80). Unchecked, the byte read afresh.
-extern "C" void __cdecl FieldCore_State2(void) { Entry(at::kState2Steps, Sprite_Current[2])(); }
+extern "C" void __cdecl FieldCore_State2(void) { Entry(FieldCore_State2Steps_addr, Sprite_Current[2])(); }
 
 // original 0x5258B0 (PSX 0x801B8264): sub-state 2 of state 2 - a tail jump
 // through FieldCore_FadeSteps 0x660158 on Sprite_Current +3 (0
 // FieldCore_FadeBegin, 1 FieldCore_FadeStep). Unchecked: 2 would run
 // 0x525960's table, the words after.
-extern "C" void __cdecl FieldCore_Fade(void) { Entry(at::kFadeSteps, Sprite_Current[3])(); }
+extern "C" void __cdecl FieldCore_Fade(void) { Entry(FieldCore_FadeSteps_addr, Sprite_Current[3])(); }
 
 // original 0x5258D0 (PSX 0x801B82A8): the fade's first frame -
 // Sprite_ShadeFadeBegin, then the shade bytes +0x5D..+0x5F 0x80 and +0x5C 1,
@@ -505,7 +505,7 @@ extern "C" void __cdecl FieldCore_FadeStep(void) {
 // Scena01_States 0x660D7C on the s8 0x8034E2: 0 0x539AE0 (the start), 1
 // Scena01_EnterArea, 2 0x53A2B0 (the run). Unchecked, as Scena16_Frame.
 extern "C" void __cdecl Scena01_Frame(void) {
-    Entry(at::kScena01States, static_cast<signed char>(At(at::kScena01State)[0]))();
+    Entry(Scena01_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]))();
 }
 
 namespace {
@@ -588,7 +588,7 @@ void Scena01_EnterAreaBody() {
             }
         } else if (c == 4) {
             ClearCounters();
-            SetWord(At(at::kTimer), 0);
+            SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
             g.music_stop(0xA);
             Draw_PassFlags = 0x1F;
         } else {
@@ -736,7 +736,7 @@ void Scena01_EnterAreaBody() {
         ClearCounters();
         SetRun(0);
         SetStep5(0);
-        SetWord(At(at::kTimer), 0);
+        SetWord(At(MoveScript_PartyRecords_addr + 0x66), 0);
     }
 }
 
@@ -760,7 +760,7 @@ void Scena01_EnterAreaBody() {
 // state 2.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Scena01_EnterArea(void) {
     Scena01_EnterAreaBody();
-    At(at::kScena01State)[0] = 2;
+    MoveScript_PartyRecords[0x62] = 2;
 }
 
 // original 0x53D830: slot 2 of chapter 1's vtable, the step hook
@@ -876,10 +876,10 @@ extern "C" unsigned char __cdecl Scena01_StepHook(int x, int z) {
 // are the registers' leftovers in the original, and Menu_DrawHand reads the
 // low words only, so ours passes them zero-extended.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_DrawCursor(void) {
-    const unsigned set = At(at::kCursorSet)[0];
+    const unsigned set = MenuWindows_ListSet;
     const unsigned char* const rows = At(at::kCursorRows + set * 6);
-    const short row = static_cast<signed char>(At(at::kCursorRow)[0]);
-    const unsigned char* const w = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(at::kWindow)))));
+    const short row = AreaW0c_ChoiceAnswer;
+    const unsigned char* const w = reinterpret_cast<const unsigned char*>(BattleWinStates_Current);
     const unsigned y = (Word(rows + 4) * static_cast<unsigned>(row) + static_cast<unsigned>(static_cast<short>(Word(w + 6)) >> 4) +
                         Word(rows + 2)) & 0xFFFF;
     const unsigned x = (static_cast<unsigned>(static_cast<short>(Word(w + 4)) >> 4) + 4) & 0xFFFF;

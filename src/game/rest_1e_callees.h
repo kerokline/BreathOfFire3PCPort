@@ -14,16 +14,16 @@ namespace rest_1e::at {
 // Field_DirectionSteps: 8 rows of two longs (x, z), read in place with the
 // direction byte unmasked (shl eax, 3 on the zero-extended byte); the side
 // probes read rows 3 and 5 by address.
-constexpr std::uint32_t kSteps = 0x6697B0;
-constexpr std::uint32_t kStepRow3 = 0x6697C8;
-constexpr std::uint32_t kStepRow5 = 0x6697D8;
+// kSteps: now Field_DirectionSteps (symbols.toml).
+// kStepRow3: now Field_DirectionSteps[6] (symbols.toml).
+// kStepRow5: now Field_DirectionSteps[0xa] (symbols.toml).
 
 // The objects Sprite_ObjectAt answers: 0..0x1D Sprite_Objects, 0x1E..0x21
 // Sprite_ObjectsExtra, 0xA4 bytes each; the states set bit 0 of the found
 // one's +0x80 (or byte [index * 0xA4 + 0x7DEF00] / [(index - 0x1E) * 0xA4 +
 // 0x802080] as the originals address them).
-constexpr std::uint32_t kObjectFlag = 0x7DEF00;     // Sprite_Objects + 0x80
-constexpr std::uint32_t kExtraFlag = 0x802080;      // Sprite_ObjectsExtra + 0x80
+// kObjectFlag: now Sprite_Objects[0x80] (symbols.toml). Sprite_Objects + 0x80
+// kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml). Sprite_ObjectsExtra + 0x80
 constexpr std::uint32_t kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;
 constexpr unsigned kExtraCount = 4;

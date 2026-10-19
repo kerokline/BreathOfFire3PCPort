@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -52,6 +53,9 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+const records::EffectObject* AsFx(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<I>(v)); }
 // movsx word
@@ -62,11 +66,11 @@ U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr
 using Handler = scenario_harness::Handler;
 
 // Prim_VertexScratch's four SVECTORs (0x9037A0, A8, B0, B8): word k of vertex v.
-constexpr U kScratch = 0x9037A0;
-U VW(unsigned v, unsigned k) { return Word(At(kScratch + 8 * v + 2 * k)); }
+// kScratch: now Prim_VertexScratch (symbols.toml).
+U VW(unsigned v, unsigned k) { return Word(At(Prim_VertexScratch_addr + 8 * v + 2 * k)); }
 I VS(unsigned v, unsigned k) { return static_cast<std::int16_t>(VW(v, k)); }
-void SetV(unsigned v, unsigned k, U value) { SetWord(At(kScratch + 8 * v + 2 * k), value); }
-const short* Vertex(unsigned v) { return reinterpret_cast<const short*>(At(kScratch + 8 * v)); }
+void SetV(unsigned v, unsigned k, U value) { SetWord(At(Prim_VertexScratch_addr + 8 * v + 2 * k), value); }
+const short* Vertex(unsigned v) { return reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 8 * v)); }
 
 // cdq; xor eax, edx; sub eax, edx (INT_MIN stays itself)
 I Abs(I v) {
@@ -189,8 +193,8 @@ float F(U a) {
 }
 
 unsigned char* Prim() { return Gfx_PacketNext; }
-unsigned char* Flags() { return At(at::kStoryFlags); }
-unsigned char* Row9() { return At(at::kCondRow9); }
+unsigned char* Flags() { return At(Cond_Flags_addr + 0xa0); }
+unsigned char* Row9() { return At(Cond_Flags_addr + 0x48); }
 
 // The four-vertex projection every quad here makes of Prim_VertexScratch into a
 // primitive whose vertices are `stride` apart from +8 (0x10 textured, 0xC flat).
@@ -215,13 +219,13 @@ unsigned char* Cell(I x, I z) {
 bool GateNearXZ(I x, I z, bool along_x, I across, I along) {
     if (along_x) {
         const U row = (static_cast<U>(z + 1) << 16) | 0x8000u;
-        if (Abs(static_cast<I>(UL(At(at::kLeaderZ)) - row)) > across) return false;
-        const I d = static_cast<I>(UL(At(at::kLeaderX)) - (static_cast<U>(x) << 16));
+        if (Abs(static_cast<I>(UL(At(ObjTrio_addr + 0x38)) - row)) > across) return false;
+        const I d = static_cast<I>(UL(At(ObjTrio_addr + 0x34)) - (static_cast<U>(x) << 16));
         return Abs(d) <= along || Abs(static_cast<I>(static_cast<U>(d) - 0x10000u)) <= along;
     }
     const U column = (static_cast<U>(x + 1) << 16) | 0x8000u;
-    if (Abs(static_cast<I>(UL(At(at::kLeaderX)) - column)) > across) return false;
-    const I d = static_cast<I>(UL(At(at::kLeaderZ)) - (static_cast<U>(z) << 16));
+    if (Abs(static_cast<I>(UL(At(ObjTrio_addr + 0x34)) - column)) > across) return false;
+    const I d = static_cast<I>(UL(At(ObjTrio_addr + 0x38)) - (static_cast<U>(z) << 16));
     return Abs(d) <= along || Abs(static_cast<I>(static_cast<U>(d) - 0x10000u)) <= along;
 }
 bool GateNear(const unsigned char* s, I across, I along) {
@@ -231,7 +235,7 @@ bool GateNear(const unsigned char* s, I across, I along) {
 // Sub-kind 0x0E's fixed gate: the leader within `x` of 0x28000 and within `z`
 // of 0x150000 or 0x160000.
 bool Sub0ENear(I x, I z) {
-    const U lx = UL(At(at::kLeaderX)), lz = UL(At(at::kLeaderZ));
+    const U lx = UL(At(ObjTrio_addr + 0x34)), lz = UL(At(ObjTrio_addr + 0x38));
     if (Abs(static_cast<I>(lx - 0x28000u)) > x) return false;
     return Abs(static_cast<I>(lz - 0x150000u)) <= z || Abs(static_cast<I>(lz - 0x160000u)) <= z;
 }
@@ -315,7 +319,7 @@ extern "C" void __cdecl EffectKind18Sub0D_Start(void) {
 extern "C" void __cdecl EffectKind18Sub0D_Wait(void) {
     // +0x36 read again after the test, as the original reads Sprite_Current again
     const bool lit = (Word(S() + 0x36) == 0 && SH_CALL(Flags_Test)(Flags(), 0xD) != 0) ||
-                     (Word(S() + 0x36) != 0 && B(at::kCount48) != 0);
+                     (Word(S() + 0x36) != 0 && AreaW1c_Count48 != 0);
     if (!lit) return;
     SH_CALL(Sound_PlayEffect)(0x20D);
     S()[9] = 0;
@@ -341,9 +345,9 @@ extern "C" void __cdecl EffectKind18Sub0D_Idle(void) {
         const unsigned char set = SH_CALL(Flags_Test)(Flags(), 0xD);
         if (set == 0) off = true;
         else if (Word(S() + 0x36) == 0) off = false;
-        else off = B(at::kCount48) == 0;
+        else off = AreaW1c_Count48 == 0;
     } else {
-        off = B(at::kCount48) == 0;
+        off = AreaW1c_Count48 == 0;
     }
     if (off) {
         S()[9] = 0;
@@ -460,10 +464,10 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
         StoreFloat(prim + 0x1C, VS(from, 1));
         StoreFloat(prim + 0x28, VS(to, 0));
         StoreFloat(prim + 0x2C, VS(to, 1));
-        const auto green = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(B(at::kCount48) + 1) * static_cast<unsigned char>(i)) << 4);
+        const auto green = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(AreaW1c_Count48 + 1) * static_cast<unsigned char>(i)) << 4);
         prim[4] = static_cast<unsigned char>(green | centre);
         prim[6] = centre;
-        prim[5] = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(B(at::kCount48) + 1) * static_cast<unsigned char>(i)) << 4);
+        prim[5] = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(AreaW1c_Count48 + 1) * static_cast<unsigned char>(i)) << 4);
         prim[0x26] = 0;
         prim[0x25] = 0;
         prim[0x24] = 0;
@@ -491,7 +495,7 @@ extern "C" void __cdecl EffectKind18Sub0B_Run(void) {
 extern "C" void __cdecl EffectKind18Sub0B_Start(void) {
     if (!SH_CALL(Flags_Test)(Flags(), 0x11)) return;
     SH_CALL(Sound_PlayEffect)(0x202);
-    SetUL(S() + 0x3C, 0xFFFFFE80u);
+    CurFx()->height = 0xFFFFFE80u;
     S()[0xB] = 0x80;
     S()[9] = 0;
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -501,10 +505,11 @@ extern "C" void __cdecl EffectKind18Sub0B_Start(void) {
 // original 0x4FF9F0 (state 1): the tiles at +0x3C (colour 0x80); +0x3C up 4;
 // above -0x100: +2 up.
 extern "C" void __cdecl EffectKind18Sub0B_Rise(void) {
-    SH_CALL(EffectKind18Sub0B_DrawTiles)(Long(S() + 0x3C), 0x800000);
+    SH_CALL(EffectKind18Sub0B_DrawTiles)(CurFx()->height, 0x800000);
     unsigned char* const s = S();
-    SetUL(s + 0x3C, UL(s + 0x3C) + 4);
-    if (Long(S() + 0x3C) > -0x100) S()[2] = static_cast<unsigned char>(S()[2] + 1);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->height = static_cast<std::uint32_t>(so->height) + 4;
+    if (CurFx()->height > -0x100) S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
 // original 0x4FFA30 (state 2): the tiles at +0x3C, colour (+0xB & 0xF8) << 16;
@@ -513,12 +518,12 @@ extern "C" void __cdecl EffectKind18Sub0B_Rise(void) {
 extern "C" void __cdecl EffectKind18Sub0B_Fade(void) {
     unsigned char* s = S();
     const U colour = static_cast<U>(s[0xB] & 0xF8u) << 16;
-    SH_CALL(EffectKind18Sub0B_DrawTiles)(Long(s + 0x3C), colour);
+    SH_CALL(EffectKind18Sub0B_DrawTiles)(AsFx(s)->height, colour);
     s = S();
-    SetUL(s + 0x3C, UL(s + 0x3C) + 4);
+    AsFx(s)->height = static_cast<std::uint32_t>(AsFx(s)->height) + 4;
     S()[0xB] = static_cast<unsigned char>(S()[0xB] - 4);
-    if (Long(S() + 0x3C) <= -0x80) return;
-    B(at::kTailState) = 4;
+    if (CurFx()->height <= -0x80) return;
+    AreaW0c_TailState = 4;
     SH_CALL(Effect_Release)();
 }
 
@@ -790,9 +795,9 @@ extern "C" void __cdecl EffectKind18Sub13_Start(void) {
     unsigned char* s = S();
     s[0xB] = s[0x36];
     s = S();
-    SetUL(s + 0x34, static_cast<U>(Byte(who, at::kSub13Cells, 2 * at::kSub13Count, 2u * s[0xB])) << 16);
+    AsFx(s)->x = static_cast<U>(Byte(who, at::kSub13Cells, 2 * at::kSub13Count, 2u * s[0xB])) << 16;
     s = S();
-    SetUL(s + 0x38, static_cast<U>(B(at::kSub13Cells + 1 + 2u * s[0xB])) << 16);
+    AsFx(s)->z = static_cast<U>(B(at::kSub13Cells + 1 + 2u * s[0xB])) << 16;
     if (SH_CALL(Flags_Test)(Row9(), Sub13(who, at::kSub13Flags))) {
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
         SH_CALL(EffectKind18Sub13_Shown)();
@@ -850,7 +855,7 @@ extern "C" void __cdecl EffectKind18Sub13_Rise(void) {
     if (S()[9] == 0) S()[2] = 1;
     SH_CALL(Gpu_SetDrawMode)(Prim(), 0, 0, 0xB5, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
     const U face = SH_CALL(Flags_Test)(Row9(), Sub13("EffectKind18Sub13_Rise", at::kSub13Faces)) & 0xFFu;
     SH_CALL(EffectKind18Sub13_DrawPanel)(S()[0xB] + face * 4 + 1, 0x40);
     unsigned char* const prim = Prim();
@@ -863,7 +868,7 @@ extern "C" void __cdecl EffectKind18Sub13_Rise(void) {
     Project4(prim, 0xC);
     SH_CALL(Gte_PrimDepths4_0C)(prim);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0x38);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x38);
     SH_CALL(EffectKind18Sub13_DrawLine)();
 }
 
@@ -905,7 +910,8 @@ extern "C" void __cdecl EffectKind18Sub13_DrawPanel(unsigned long texture, int h
     SH_CALL(Gte_PrimDepths4_10)(prim);
     SH_CALL(Prim_SetTexture)(static_cast<U>(texture) + 0x275000F3u, prim, 1);
     const unsigned char* const r = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(r + 0x34), UL(r + 0x38), 1, 0x48);
+    auto* const ro = reinterpret_cast<const records::EffectObject*>(r);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(ro->x), static_cast<std::uint32_t>(ro->z), 1, 0x48);
 }
 
 // original 0x5007B0: a draw mode (tpage 0x95, dtd 1) linked at the point; a
@@ -916,7 +922,7 @@ extern "C" void __cdecl EffectKind18Sub13_DrawPanel(unsigned long texture, int h
 extern "C" void __cdecl EffectKind18Sub13_DrawLine(void) {
     SH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x95, 0);
     const unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
     unsigned char* const prim = Prim();
     SH_CALL(Gpu_SetLineF2)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
@@ -942,10 +948,10 @@ extern "C" void __cdecl EffectKind18Sub13_DrawLine(void) {
     float depth;
     SH_CALL(Gte_StoreDepthF3)(reinterpret_cast<float*>(prim + 0x10), reinterpret_cast<float*>(prim + 0x1C), &depth);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0x20);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x20);
     SH_CALL(Gpu_SetDrawMode)(Prim(), 0, 0, 0x95, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
 }
 
 // ===========================================================================

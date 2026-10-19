@@ -31,6 +31,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -52,11 +53,15 @@ using move_script::Word;
 // Prim_VertexScratch (0x9037A0..0x9037BF), read again after every call as the
 // originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
@@ -65,10 +70,10 @@ std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -90,7 +95,7 @@ std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpre
 // (i - 3) * 0x128 from 0x93B960 when the target byte has 0x40, else a party
 // member i * 0x14C from 0x802D40 - unchecked, 32-bit arithmetic.
 unsigned char* ActorRecord(bool enemies, unsigned i) {
-    return enemies ? Mem(at::kEnemies + (i - 3u) * at::kEnemyStride) : Mem(at::kParty + i * at::kPartyStride);
+    return enemies ? Mem(at::kEnemies + (i - 3u) * at::kEnemyStride) : Mem(ObjTrio_addr + i * at::kPartyStride);
 }
 
 std::uint32_t RandCall() { return static_cast<std::uint32_t>(MH_CALL(Rand)()); }
@@ -112,7 +117,7 @@ constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;  // engine
 
 // The sprite frame-offset table pointer the sprite draws read (0x8B3580 the
 // battle's, 0x8E3580 the effects').
-constexpr std::uint32_t kFrameSet = 0x9039D8;
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
@@ -218,10 +223,11 @@ C1_EXPORT void __cdecl Magic080_Task(void) {
 // original 0x4FC360: the task at (Field_Kind2X, Field_Kind2Z) and the map's
 // elevation there; +0xB Rand & 0x3F (0 picks the text); +9 0x30; +1 on.
 C1_EXPORT void __cdecl Magic080_Start(void) {
-    SetLong(Sc() + 0x34, static_cast<std::int32_t>(Field_Kind2X));
-    SetLong(Sc() + 0x38, static_cast<std::int32_t>(Field_Kind2Z));
+    Store(ScTask()->x, static_cast<std::int32_t>(Field_Kind2X));
+    Store(ScTask()->y, static_cast<std::int32_t>(Field_Kind2Z));
     const unsigned char* const s = Sc();
-    const long h = MH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const long h = MH_CALL(AreaMap_Elevation)(ts->x, ts->y);
     SetWord(Sc() + 0x3E, static_cast<unsigned>(h));
     const std::uint32_t r = RandCall();
     Sc()[0xB] = static_cast<unsigned char>(r & 0x3F);
@@ -349,8 +355,8 @@ C1_EXPORT void __cdecl Pentagram_Start(void) {
         return;
     }
     const unsigned char* const src = Source();
-    SetLong(Sc() + 0x34, Long(src + 0x34));
-    SetLong(Sc() + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     ClutCopy(0x1A00, 0x1A10, 0x8000);
     Gfx_ClutStripDirty = 1;
@@ -369,15 +375,17 @@ namespace {
 unsigned char* NewChild(unsigned kind) {
     const unsigned slot = NewTask(3);
     unsigned char* const self = Sc();
+    records::BattleTask* const tself = reinterpret_cast<records::BattleTask*>(self);
     const unsigned char* const owner = Owner();
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, static_cast<std::int32_t>(Addr(self)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = static_cast<std::int32_t>(Addr(self));
     child[1] = static_cast<unsigned char>(kind);
     child[8] = static_cast<unsigned char>((owner[8] - 2) & 3);
     child[9] = 0;
     child[0xA] = 0;
-    SetLong(child + 0x34, Long(self + 0x34));
-    SetLong(child + 0x38, Long(self + 0x38));
+    tchild->x = tself->x;
+    tchild->y = tself->y;
     SetWord(child + 0x3E, Word(self + 0x3E));
     return child;
 }
@@ -426,15 +434,16 @@ C1_EXPORT void __cdecl Pentagram_Sprites(void) {
         const unsigned slot = NewTask(3);
         self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Addr(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Addr(self));
         child[1] = 3;
         child[4] = static_cast<unsigned char>(i & 1);
         child[8] = static_cast<unsigned char>((Owner()[8] - 2) & 3);
         child[9] = static_cast<unsigned char>(((i >> 1) << 3) + 1);
         child[0xA] = 0;
         child[0xB] = static_cast<unsigned char>(i >> 1);
-        SetLong(child + 0x34, Long(self + 0x34));
-        SetLong(child + 0x38, Long(self + 0x38));
+        tchild->x = Long(self + 0x34);
+        tchild->y = Long(self + 0x38);
         SetWord(child + 0x3E, Word(self + 0x3E));
     }
     // the task as Sprite_Current was read after the last create
@@ -739,8 +748,9 @@ C1_EXPORT void __cdecl PentagramBand_Draw(void) {
         const short zr = static_cast<short>(Mul12(v, 304));
         SetVW(0x1A, static_cast<unsigned short>(zr));
         const unsigned char* const s = Sc();
-        const std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(VS(0x18))) << 9) + static_cast<std::uint32_t>(Long(s + 0x34));
-        const std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(zr)) << 9) + static_cast<std::uint32_t>(Long(s + 0x38));
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const std::uint32_t x = (static_cast<std::uint32_t>(static_cast<int>(VS(0x18))) << 9) + static_cast<std::uint32_t>(ts->x);
+        const std::uint32_t z = (static_cast<std::uint32_t>(static_cast<int>(zr)) << 9) + static_cast<std::uint32_t>(ts->y);
         DrawMode(0x35);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -774,9 +784,9 @@ C1_EXPORT void __cdecl PentagramBand_Draw(void) {
 C1_EXPORT void __cdecl PentagramSprite_Run(void) {
     DrawMode(0xB5);
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
-    SetLong(Mem(kFrameSet), 0x8E3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     CellCall(Addr(PentagramSprite_Phases), 3, Sc()[2], "PentagramSprite_Run");
-    SetLong(Mem(kFrameSet), 0x8B3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8B3580);
     DrawMode(0x95);
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
 }
@@ -863,7 +873,8 @@ C1_EXPORT void __cdecl Ink_Start(void) {
         const unsigned slot = NewTask(0x6C);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Addr(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Addr(self));
         child[1] = 0;
         child[0xB] = static_cast<unsigned char>(i);
         child[9] = static_cast<unsigned char>(delay);
@@ -897,12 +908,12 @@ namespace {
 // dx / dz turned by the direction (0x446770); the screen point; +9 and +0xA 0;
 // +2 on. The base is read once; what it holds is read after the turn.
 void PuffPlace(const unsigned char* base, std::uint32_t offsets) {
-    SetLong(Sc() + 0xC, Long(Mem(offsets + 12u * Sc()[0xB])));
-    SetLong(Sc() + 0x10, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
+    Store(ScTask()->vel_x, Long(Mem(offsets + 12u * Sc()[0xB])));
+    Store(ScTask()->vel_y, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
-    SetLong(Sc() + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0xC)) +
+    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->vel_x) +
                                                    static_cast<std::uint32_t>(Long(base + 0x34))));
-    SetLong(Sc() + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0x10)) +
+    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->vel_y) +
                                                    static_cast<std::uint32_t>(Long(base + 0x38))));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(offsets + 8 + 12u * Sc()[0xB]))) +
                                                    static_cast<std::uint32_t>(Long(base + 0x3C))));
@@ -932,7 +943,7 @@ C1_EXPORT void __cdecl InkPuff_Start(void) {
 // position (dy 2).
 C1_EXPORT void __cdecl Ink_DrawPuff(void) {
     DrawMode(0x55);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(Sc() + 0x34)), static_cast<unsigned long>(Long(Sc() + 0x38)), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ScTask()->x), static_cast<unsigned long>(ScTask()->y), 2,
                                 0xC);
     unsigned char* const p = Gfx_PacketNext;
     SetSW(0, Sc()[9] * 2u);
@@ -959,7 +970,7 @@ C1_EXPORT void __cdecl Ink_DrawPuff(void) {
     p[4] = SB(4);
     p[5] = SB(4);
     p[6] = SB(4);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(Sc() + 0x34)), static_cast<unsigned long>(Long(Sc() + 0x38)), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ScTask()->x), static_cast<unsigned long>(ScTask()->y), 2,
                                 0x48);
 }
 
@@ -971,15 +982,15 @@ namespace {
 // phase call that precedes the walk.
 void WalkPool(std::uint32_t pool, std::uint32_t run) {
     unsigned char* const self = Sprite_Current;
-    const std::uint32_t owner = static_cast<std::uint32_t>(Long(Mem(at::kOwner)));
+    const std::uint32_t owner = static_cast<std::uint32_t>(Long(Mem(BattleE2_Owner_addr)));
     for (unsigned i = 0; i < 64; ++i) {
         unsigned char* const rec = Mem(pool + i * 0x84u);
         if ((rec[0] & 1) == 0) continue;
         const std::int32_t rec_owner = Long(rec + 0x80);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), rec_owner);
+        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(run);
-        SetLong(Mem(at::kOwner), static_cast<std::int32_t>(owner));
+        SetLong(Mem(BattleE2_Owner_addr), static_cast<std::int32_t>(owner));
         Sprite_Current = self;
     }
 }
@@ -1006,7 +1017,8 @@ void SpawnOnActors(unsigned parameter, bool index) {
         const unsigned slot = NewTask(parameter);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Addr(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Addr(self));
         child[1] = 0;
         child[4] = static_cast<unsigned char>(a);
         if (index) child[0xB] = self[0xB];
@@ -1045,8 +1057,8 @@ unsigned char PoolAlloc(std::uint32_t pool) {
     return 0xFF;
 }
 
-constexpr std::uint32_t kInkPool = 0x6A6F40;   // InkInkPuff_Pool
-constexpr std::uint32_t kMotePool = 0x6B2958;  // Magic213Mote_Pool
+// kInkPool: now InkInkPuff_Pool (symbols.toml). InkInkPuff_Pool
+// kMotePool: now Magic213Mote_Pool (symbols.toml). Magic213Mote_Pool
 
 }  // namespace
 
@@ -1057,14 +1069,14 @@ C1_EXPORT void __cdecl InkInk_Task(void) {
     static constexpr std::uint32_t kPhases[3] = {bof3::addr::InkInk_Start, bof3::addr::Chlorine_WaitChildren,
                                                  bof3::addr::MagicFx_FlagTargetEnd};
     StackCall(kPhases, 3, Sc()[1], "InkInk_Task");
-    WalkPool(kInkPool, bof3::addr::InkInkPuff_Dispatch);
+    WalkPool(InkInkPuff_Pool_addr, bof3::addr::InkInkPuff_Dispatch);
 }
 
 // original 0x4E9F70: the puff pool cleared; +0xB 0, +9 8, +1 on; a child
 // (kind 1, parameter 0x6D) on each living actor of the target's side; row 26
 // as Ink_Start's (entries 1..15 with STP, entry 0 cleared), Gfx_ClutStripDirty.
 C1_EXPORT void __cdecl InkInk_Start(void) {
-    ClearPool(kInkPool);
+    ClearPool(InkInkPuff_Pool_addr);
     Sc()[0xB] = 0;
     Sc()[9] = 8;
     Inc(Sc()[1]);
@@ -1097,12 +1109,12 @@ C1_EXPORT void __cdecl InkInkActor_Start(void) {
     const unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[8] = rec[8];
-    SetLong(Sc() + 0x34, Long(rec + 0x34));
-    SetLong(Sc() + 0x38, Long(rec + 0x38));
+    Store(ScTask()->x, Long(rec + 0x34));
+    Store(ScTask()->y, Long(rec + 0x38));
     SetLong(Sc() + 0x3C, Long(rec + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[2]);
-    SpawnRecords(bof3::addr::InkInkPuff_Alloc, kInkPool, 1, 2, 7);
+    SpawnRecords(bof3::addr::InkInkPuff_Alloc, InkInkPuff_Pool_addr, 1, 2, 7);
     MH_CALL(Battle_SetTargetFlags)(Sc()[4], 0x10);
 }
 
@@ -1127,16 +1139,16 @@ C1_EXPORT void __cdecl InkInkPuff_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
-    SetLong(Sc() + 0xC, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
-    SetLong(Sc() + 0x10, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
+    Store(ScTask()->vel_x, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
+    Store(ScTask()->vel_y, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
-    SetLong(Sc() + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0x34)) +
-                                                   static_cast<std::uint32_t>(Long(Sc() + 0xC))));
-    SetLong(Sc() + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0x38)) +
-                                                   static_cast<std::uint32_t>(Long(Sc() + 0x10))));
+    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->x) +
+                                                   static_cast<std::uint32_t>(ScTask()->vel_x)));
+    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->y) +
+                                                   static_cast<std::uint32_t>(ScTask()->vel_y)));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0x3C)) +
                                                    static_cast<std::uint32_t>(Long(Mem(Addr(InkInkPuff_Offsets) + 8 + 12u * Sc()[0xB])))));
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1156,7 +1168,7 @@ C1_EXPORT void __cdecl InkInkPuff_Fade(void) {
 }
 
 // original 0x4EA3F0: the puff pool's alloc (0x6A6F40, 64 records).
-C1_EXPORT unsigned char __cdecl InkInkPuff_Alloc(void) { return PoolAlloc(kInkPool); }
+C1_EXPORT unsigned char __cdecl InkInkPuff_Alloc(void) { return PoolAlloc(InkInkPuff_Pool_addr); }
 
 // ===========================================================================
 // MAGIC213 (row 148)
@@ -1167,7 +1179,7 @@ C1_EXPORT unsigned char __cdecl InkInkPuff_Alloc(void) { return PoolAlloc(kInkPo
 C1_EXPORT void __cdecl Magic213_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::Magic213_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     StackCall(kPhases, 2, Sc()[1], "Magic213_Task");
-    WalkPool(kMotePool, bof3::addr::Magic213Mote_Dispatch);
+    WalkPool(Magic213Mote_Pool_addr, bof3::addr::Magic213Mote_Dispatch);
 }
 
 // original 0x4F4AE0: the mote pool cleared; +0xB 0, +1 on; a child (kind 1,
@@ -1175,7 +1187,7 @@ C1_EXPORT void __cdecl Magic213_Task(void) {
 // written); row 26's first sixteen CLUT entries from their source, as they
 // are; Gfx_ClutStripDirty; sound 0x100.
 C1_EXPORT void __cdecl Magic213_Start(void) {
-    ClearPool(kMotePool);
+    ClearPool(Magic213Mote_Pool_addr);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     SpawnOnActors(0x6B, false);
@@ -1204,16 +1216,17 @@ C1_EXPORT void __cdecl Magic213Actor_Run(void) {
 C1_EXPORT void __cdecl Magic213Actor_Start(void) {
     Dec(Sc()[9]);
     unsigned char* const s = Sc();
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
     if (s[9] != 0) return;
     unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
-    SetLong(s + 0x34, Long(rec + 0x34));
-    SetLong(Sc() + 0x38, Long(rec + 0x38));
+    ts->x = Long(rec + 0x34);
+    Store(ScTask()->y, Long(rec + 0x38));
     SetLong(Sc() + 0x3C, Long(rec + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
     Sc()[0xA] = 0;
     Inc(Sc()[2]);
-    SpawnRecords(bof3::addr::Magic213Mote_Alloc, kMotePool, 1, 4, 0x1D);
+    SpawnRecords(bof3::addr::Magic213Mote_Alloc, Magic213Mote_Pool_addr, 1, 4, 0x1D);
     MH_CALL(Sprite_ReleaseTint)(rec);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(rec, 0, 0, 0, 1);
     Sc()[0xA] = tint;
@@ -1253,11 +1266,11 @@ C1_EXPORT void __cdecl Magic213Mote_Dispatch(void) {
 // and +2 are set, Sprite_UpdateScreen; the table back (0x8B3580).
 C1_EXPORT void __cdecl Magic213Mote_Run(void) {
     const unsigned phase = Sc()[2];
-    SetLong(Mem(kFrameSet), 0x8E3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     CellCall(Addr(Magic213Mote_Phases), 2, phase, "Magic213Mote_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), 0x8B3580);
+    SetLong(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 // original 0x4F4F00: +9 down; at 0 the mote on a circle of radius 12 round
@@ -1270,10 +1283,10 @@ C1_EXPORT void __cdecl Magic213Mote_Start(void) {
     if (Sc()[9] != 0) return;
     SetSW(0, static_cast<unsigned>(Sc()[0xB] & 7) << 9);
     int v = MH_CALL(Math_Sin)(static_cast<short>(SW(0)));
-    SetLong(Sc() + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
+    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
                                                    static_cast<std::uint32_t>(v) * 12u));
     v = MH_CALL(Math_Cos)(static_cast<short>(SW(0)));
-    SetLong(Sc() + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
                                                    static_cast<std::uint32_t>(v) * 12u));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1800000u));
     Sc()[0x25] = 0x1D;
@@ -1302,7 +1315,7 @@ C1_EXPORT void __cdecl Magic213Mote_End(void) {
 }
 
 // original 0x4F5050: the mote pool's alloc (0x6B2958, 64 records).
-C1_EXPORT unsigned char __cdecl Magic213Mote_Alloc(void) { return PoolAlloc(kMotePool); }
+C1_EXPORT unsigned char __cdecl Magic213Mote_Alloc(void) { return PoolAlloc(Magic213Mote_Pool_addr); }
 
 void MagicC1_Inject() {
     if (bof3::WantsShadow("magic_c1")) magic_c1::SelfTest();

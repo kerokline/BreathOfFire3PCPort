@@ -73,14 +73,14 @@ U Picked(const U* values, unsigned n) { return bh::Often() ? bh::Pick(values, n)
 // member 0's +0x34 / +0x38, which set-up 33's end hook reads after it.
 std::uint32_t ClearEffect(const std::uint32_t*, std::uint32_t answer) {
     const U n = bh::Noise();
-    if (n % 2) Mem(n & 2 ? at::kMember0X : at::kMember0Z)[(n >> 2) % 4] ^= static_cast<unsigned char>(1 + (n >> 8) % 0xFF);
+    if (n % 2) Mem(n & 2 ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38))[(n >> 2) % 4] ^= static_cast<unsigned char>(1 + (n >> 8) % 0xFF);
     return answer;
 }
 // Sound_PlayEffect louder than the real one: it also flips a bit of 0x904AAD
 // half the time, which kind 40's flash reads again after it.
 std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
     const U n = bh::Noise();
-    if (n % 2) Mem(at::kScript)[0] ^= static_cast<unsigned char>(1u << ((n >> 1) % 8));
+    if (n % 2) Mem(BossSe_Script_addr)[0] ^= static_cast<unsigned char>(1u << ((n >> 1) % 8));
     return answer;
 }
 // The GTE stand-ins of kind 40's quad: a result from the inputs and the noise,
@@ -167,8 +167,8 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 7) {
-    case 0: B(at::kScript) = static_cast<unsigned char>(v); break;
-    case 1: Mem(v & 1 ? at::kMember0X : at::kMember0Z)[(v >> 1) % 4] = static_cast<unsigned char>(v >> 4); break;
+    case 0: B(BossSe_Script_addr) = static_cast<unsigned char>(v); break;
+    case 1: Mem(v & 1 ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38))[(v >> 1) % 4] = static_cast<unsigned char>(v >> 4); break;
     case 2: bh::PartyOf(static_cast<unsigned char>(v % 3))[0x91] ^= 0x40; break;
     case 3: {
         static const unsigned kFields[] = {0xC, 0xD, 0x10, 0x13, 0x18, 0x1B, 0x1C, 0x1F};
@@ -279,8 +279,8 @@ const bh::Clone kClonesB29[] = {
 };
 void SeedEnd(unsigned k) {
     if (k != 1) return;
-    B(at::kBattleEnd) = EndByte();
-    B(at::kMusicFlags) = static_cast<unsigned char>(BSG_PICK(0x40, 0, 0xFF, 0xBF));
+    B(BattleActions_BattleEnd_addr) = EndByte();
+    B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(BSG_PICK(0x40, 0, 0xFF, 0xBF));
 }
 
 constexpr bh::CallSite kCalls43D0E0[] = {{0x10, 0x446DE0}, {0x1C, 0x446E00}};
@@ -301,7 +301,7 @@ const bh::Clone kClonesB32[] = {
 };
 void SeedB32(unsigned k) {
     if (k != 1) return;
-    B(at::kBattleEnd) = static_cast<unsigned char>(bh::Often() ? B(at::kBattleEnd) | 2 : EndByte());
+    B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(bh::Often() ? B(BattleActions_BattleEnd_addr) | 2 : EndByte());
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
         p[0] = static_cast<unsigned char>(bh::Often() ? p[0] | 1 : p[0] & ~1u);
@@ -315,7 +315,7 @@ const bh::Clone kClonesB33[] = {
     Row("Boss33_End", 0x43D690, 0x3A, kCalls43D690, BSG_N(kCalls43D690), BSG_FN(Boss33_End), 0, S::kEnd),
 };
 void SeedB33(unsigned k) {
-    if (k == 1) B(at::kBattleEnd) = EndByte();
+    if (k == 1) B(BattleActions_BattleEnd_addr) = EndByte();
 }
 
 // ===========================================================================
@@ -447,7 +447,7 @@ void SeedK40(unsigned k) {
         const auto count = static_cast<unsigned char>(BSG_PICK(1, 0, 2, 0x40, 0x20, 0x80, 0xFF));
         s[9] = count;
         s[0xA] = static_cast<unsigned char>(bh::Half() ? count : BSG_PICK(1, 0, 2, 0x20, 0x40));
-        B(at::kScript) = static_cast<unsigned char>(bh::Half() ? B(at::kScript) | 4 : B(at::kScript) & ~4u);
+        B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Half() ? B(BossSe_Script_addr) | 4 : B(BossSe_Script_addr) & ~4u);
         break;
     }
     case 7:

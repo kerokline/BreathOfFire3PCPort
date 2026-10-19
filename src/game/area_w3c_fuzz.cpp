@@ -17,6 +17,7 @@
 #include "game/area_w3c.h"
 #include "game/area_w3c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace area_w3c {
@@ -202,15 +203,15 @@ U MovesCurrent(const U*, U answer) {
 // choices read it again after the call) and the tail state now and then.
 U MovesFocus(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kFocusObject, SomeRecord(n >> 8));
-    if ((n & 6) == 2) B(at::kTailState) = static_cast<unsigned char>(n >> 16);
+    if (n & 1) ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(n >> 8));
+    if ((n & 6) == 2) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n >> 16);
     return answer;
 }
 // Msg_OpenScript moves the tail state half the time (area 131's tail kind 34
 // reads it again after the call to count it on).
 U MovesTailState(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(at::kTailState) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 // AreaMap_Elevation moves the effect records' x now and then (area 132's pair
@@ -218,8 +219,9 @@ U MovesTailState(const U*, U answer) {
 U ElevationEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n % 3 == 0) {
-        unsigned char* const e = ah::Mem(at::kEffectObjects + ((n >> 4) % 4) * at::kEffectStride);
-        SetLong(e + 0x34, static_cast<std::int32_t>(n));
+        unsigned char* const e = ah::Mem(Effect_Objects_addr + ((n >> 4) % 4) * at::kEffectStride);
+        auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+        tE->x = static_cast<std::int32_t>(n);
     }
     static const U kEdges[] = {0x7FFF, 0x8000, 0xFFFF, 0, 0xFE00, 0x7E00};
     if (n % 5 == 0) return (answer & 0xFFFF0000u) | kEdges[(n >> 24) % 6];
@@ -232,7 +234,7 @@ U FindFreeEffect(const U* a, U answer) { return MovesCurrent(a, answer); }
 // A choice answer: each value a choice tests, its neighbours, a negative byte
 // (read signed), anything.
 void SeedAnswer() {
-    B(at::kChoiceAnswer) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 0xFF, 0x80, 0x81, 0x7F) : ah::Next());
+    B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 0, 1, 1, 2, 2, 3, 4, 5, 0xFF, 0x80, 0x81, 0x7F) : ah::Next());
 }
 // A party list byte: inside the tables mostly, anything else now and then (the
 // tables are read unchecked; .data either side).
@@ -244,7 +246,7 @@ void SeedRequest() { Field_Request = static_cast<unsigned char>(ah::Next() % 3 =
 // The object triggers' arguments: (a field object, the story flags).
 void ArgsTrigger(std::uint32_t* a) {
     a[0] = Key(ah::Object(a[0]));
-    a[1] = at::kStoryFlags;
+    a[1] = Cond_Flags_addr + 0xa0;
 }
 
 #define W3C_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
@@ -258,7 +260,7 @@ void ArgsTrigger(std::uint32_t* a) {
 
 // Every effect record a slot byte can name (the stand-in answers 0..3 or none;
 // a disturbed byte reaches past).
-constexpr ah::Region kEffectRegion = {at::kEffectObjects, at::kEffectCount * at::kEffectStride};
+constexpr ah::Region kEffectRegion = {Effect_Objects_addr, at::kEffectCount * at::kEffectStride};
 
 // ===========================================================================
 // Areas 124, 125
@@ -271,7 +273,7 @@ void SeedPlace(unsigned) {
     // Rand's first answer near each cumulative weight edge a third of the time
     // (the hint), the leader's +0x134 around 5
     ah::SetRandHint(AH_PICK(0, 1, 7, 8, 15, 16, 31, 32, 47, 48, 62, 63, 64));
-    if (ah::Often()) SetLong(ah::Mem(at::kLeaderZone), static_cast<std::int32_t>(AH_PICK(5, 4, 6, 0, 0x10005, 0xFFFF)));
+    if (ah::Often()) SetLong(ah::Mem(ObjTrio_addr + 0x134), static_cast<std::int32_t>(AH_PICK(5, 4, 6, 0, 0x10005, 0xFFFF)));
 }
 
 // ===========================================================================
@@ -282,12 +284,12 @@ const ah::Callee kCallees127[] = {
     {W3C_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W3C_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent},
 };
-const ah::Region kRegions127[] = {{at::kActiveMember, 4}};
+const ah::Region kRegions127[] = {{Field_ActiveMember_addr, 4}};
 void Seed127(unsigned) {
-    ah::SetPointer(at::kActiveMember, SomeRecord(ah::Next()));
-    B(at::kLeader89) = static_cast<unsigned char>(ah::Often() ? AH_PICK(5, 5, 4, 6, 0x85, 0) : ah::Next());
+    ah::SetPointer(Field_ActiveMember_addr, SomeRecord(ah::Next()));
+    B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(ah::Often() ? AH_PICK(5, 5, 4, 6, 0x85, 0) : ah::Next());
 }
-void Disturb127(U h) { ah::SetPointer(at::kActiveMember, SomeRecord(h >> 8)); }
+void Disturb127(U h) { ah::SetPointer(Field_ActiveMember_addr, SomeRecord(h >> 8)); }
 
 // ===========================================================================
 // Area 128
@@ -299,7 +301,7 @@ void Disturb127(U h) { ah::SetPointer(at::kActiveMember, SomeRecord(h >> 8)); }
 U PatchEffect(const U* a, U answer) {
     const U n = ah::Noise();
     const U entry = a[0];
-    if ((n & 1) && entry >= at::kMapHeader && entry + 4 <= at::kMapHeader + 0x2000) SetWord(ah::Mem(entry) + 2, (n >> 8) % 4);
+    if ((n & 1) && entry >= AreaMap_Header_addr && entry + 4 <= AreaMap_Header_addr + 0x2000) SetWord(ah::Mem(entry) + 2, (n >> 8) % 4);
     return answer;
 }
 // Flags_Set / Flags_Clear move the chapter byte now and then (the init reads
@@ -322,8 +324,8 @@ const ah::Callee kCallees128[] = {
     {W3C_OURS(AreaMap_ApplyPatch), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {4}, &PatchEffect},
 };
 const ah::Region kRegions128[] = {
-    {at::kCameraShiftX, 8},   // the focus object pointer at +4
-    {at::kLastArea, 4},
+    {Camera_ShiftX_addr, 8},  // the focus object pointer at +4
+    {AreaW2c_LastArea_addr, 4},
 };
 // The patch chain: AreaMap_PatchBase at a dword of the block's first 7 KiB,
 // then n (0..24) dwords not 0 with steps 0..3 in their high words (a zero now
@@ -331,9 +333,9 @@ const ah::Region kRegions128[] = {
 // lands inside the chain or on a zero.
 void SeedChain() {
     const U base = 0x20 + ah::Next() % 0x6C0;
-    SetWord(ah::Mem(at::kPatchBase), base);
+    SetWord(ah::Mem(AreaMap_PatchBase_addr), base);
     const unsigned n = ah::Next() % 25;
-    unsigned char* const p = ah::Mem(at::kMapHeader + base * 4);
+    unsigned char* const p = ah::Mem(AreaMap_Header_addr + base * 4);
     for (unsigned i = 0; i < n; ++i) {
         const U low = 1 + ah::Next() % 0xFFFF;
         const U step = ah::Next() % 4;
@@ -342,18 +344,18 @@ void SeedChain() {
     for (unsigned i = 0; i < 4; ++i) SetLong(p + (n + i) * 4, 0);
 }
 void Seed128(unsigned k) {
-    ah::SetPointer(at::kFocusObject, SomeRecord(ah::Next()));
+    ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(ah::Next()));
     switch (k) {
     case k128Step3: case k128Arm: SeedAnswer(); break;
     case k128Place:
         Field_State[0x89] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 2, 1, 3, 0x82, 0) : ah::Next());
         break;
     case k128Tail:
-        B(at::kTailState) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 0xA, 0xA, 1, 9, 0xB, 0x8A, 0xFF) : ah::Next());
+        B(AreaW0c_TailState_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 0xA, 0xA, 1, 9, 0xB, 0x8A, 0xFF) : ah::Next());
         SeedRequest();
         break;
     case k128Init:
-        SetWord(ah::Mem(at::kLastArea), ah::Often() ? 0x79 : AH_PICK(0x78, 0x7A, 0x179, 0x7900, 0));
+        SetWord(ah::Mem(AreaW2c_LastArea_addr), ah::Often() ? 0x79 : AH_PICK(0x78, 0x7A, 0x179, 0x7900, 0));
         SeedChain();
         Cond_ByteFA = static_cast<signed char>(ah::Often() ? AH_PICK(10, 11, 11, 12, 9, 0x7F, 0x80, 0) : ah::Next());
         break;
@@ -363,8 +365,8 @@ void Seed128(unsigned k) {
 void Disturb128(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 3) {
-    case 0: ah::SetPointer(at::kFocusObject, SomeRecord(h >> 12)); break;
-    case 1: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 3); break;
+    case 0: ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(h >> 12)); break;
+    case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 3); break;
     default: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v); break;
     }
 }
@@ -389,18 +391,18 @@ const ah::Callee kCallees130[] = {
 };
 const ah::Region kRegions130[] = {
     kEffectRegion,
-    {at::kItemPick, 1},
+    {AreaW3c_ItemPick_addr, 1},
     {at::kTextRecords, 0x30},
 };
 void Seed130(unsigned k) {
     switch (k) {
     case k130Choice: case k130State2: SeedAnswer(); break;
-    case k130S4M0: case k130S3M0: SeedList(at::kPartyList0); break;
-    case k130S3M1: case k130S1M1: case k130S4M1: case k130S5M1: SeedList(at::kPartyList1); break;
-    case k130S3M2: case k130S1M2: case k130S4M2: case k130S5M2: SeedList(at::kPartyList2); break;
+    case k130S4M0: case k130S3M0: SeedList(Cond_Flags_addr + 0xd2); break;
+    case k130S3M1: case k130S1M1: case k130S4M1: case k130S5M1: SeedList(Cond_Flags_addr + 0xd3); break;
+    case k130S3M2: case k130S1M2: case k130S4M2: case k130S5M2: SeedList(Cond_Flags_addr + 0xd4); break;
     case k130Tail:
-        B(at::kVar7Step) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 1, 2, 0xFF, 0x80) : ah::Next());
-        B(at::kItemPick) = static_cast<unsigned char>(ah::Often() ? ah::Next() % 6 : AH_PICK(6, 7, 0xFF, 0x80, 0x100 - 6));
+        B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 1, 2, 0xFF, 0x80) : ah::Next());
+        B(AreaW3c_ItemPick_addr) = static_cast<unsigned char>(ah::Often() ? ah::Next() % 6 : AH_PICK(6, 7, 0xFF, 0x80, 0x100 - 6));
         SeedRequest();
         break;
     default: break;
@@ -412,8 +414,8 @@ void Args130(unsigned k, std::uint32_t* a) {
 void Disturb130(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 3) {
-    case 0: B(at::kPartyList0 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
-    case 1: B(at::kVar7Step) = static_cast<unsigned char>(v % 3); break;
+    case 0: B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
+    case 1: B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(v % 3); break;
     default: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v); break;
     }
 }
@@ -438,13 +440,13 @@ const ah::Callee kCallees131[] = {
     // the group's own, called by the tail (a call and a tail jmp)
     {W3C_OURS(Area131_DisarmTail), 0, {}, ah::Answer::kPhase, 0, 0},
 };
-const ah::Region kRegions131[] = {{at::kCameraShiftX, 8}};
+const ah::Region kRegions131[] = {{Camera_ShiftX_addr, 8}};
 void Seed131(unsigned k) {
-    ah::SetPointer(at::kFocusObject, SomeRecord(ah::Next()));
+    ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(ah::Next()));
     switch (k) {
     case k131StepA: case k131Step0: SeedAnswer(); break;
     case k131Tail:
-        B(at::kTailState) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 1, 2, 3, 0, 1, 2, 3, 4, 0xFF, 0x80, 0x7F) : ah::Next());
+        B(AreaW0c_TailState_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 1, 2, 3, 0, 1, 2, 3, 4, 0xFF, 0x80, 0x7F) : ah::Next());
         SeedRequest();
         break;
     default: break;
@@ -456,9 +458,9 @@ void Args131(unsigned k, std::uint32_t* a) {
 void Disturb131(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 4) {
-    case 0: ah::SetPointer(at::kFocusObject, SomeRecord(h >> 12)); break;
-    case 1: B(at::kTailState) = static_cast<unsigned char>(v % 5); break;
-    case 2: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 3); break;
+    case 0: ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(h >> 12)); break;
+    case 1: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(v % 5); break;
+    case 2: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 3); break;
     default: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v); break;
     }
 }
@@ -515,10 +517,10 @@ const ah::Callee kCallees132[] = {
 };
 ah::Region g_regions132[] = {
     kEffectRegion,
-    {at::kPacketNext, 4},
+    {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},   // g_packets, filled in at Run
-    {at::kPassFlags, 1},
-    {at::kCondByteFE, 1},
+    {Draw_PassFlags_addr, 1},
+    {Cond_ByteFE_addr, 1},
 };
 void Seed132(unsigned k) {
     Gfx_PacketNext = g_packets + (ah::Next() % 8) * 4;
@@ -551,24 +553,24 @@ const ah::Callee kCallees133[] = {
     {W3C_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
 };
 const ah::Region kRegions133[] = {
-    {at::kCameraShiftX, 8},
-    {at::kLoad0F, 1},
-    {at::kPassFlags, 1},
+    {Camera_ShiftX_addr, 8},
+    {AreaW3c_Load0F_addr, 1},
+    {Draw_PassFlags_addr, 1},
 };
 void Seed133(unsigned k) {
-    ah::SetPointer(at::kFocusObject, SomeRecord(ah::Next()));
+    ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(ah::Next()));
     if (k == k133Choice) {
-        B(at::kChoiceAnswer) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 1, 2, 2, 2, 3, 4, 5, 0xFF, 0x82) : ah::Next() % 6);
+        B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 1, 2, 2, 2, 3, 4, 5, 0xFF, 0x82) : ah::Next() % 6);
     } else {
-        SeedList(at::kPartyList0);
+        SeedList(Cond_Flags_addr + 0xd2);
     }
 }
 void Disturb133(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 3) {
-    case 0: ah::SetPointer(at::kFocusObject, SomeRecord(h >> 12)); break;
-    case 1: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 6); break;
-    default: B(at::kPartyList0) = static_cast<unsigned char>(v % 8); break;
+    case 0: ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(h >> 12)); break;
+    case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 6); break;
+    default: B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(v % 8); break;
     }
 }
 
@@ -577,18 +579,18 @@ void Disturb133(U h) {
 // ===========================================================================
 
 const ah::Callee kCallees134[] = {W3C_SPAWN};
-const ah::Region kRegions134[] = {kEffectRegion, {at::kCameraShiftX, 8}};
+const ah::Region kRegions134[] = {kEffectRegion, {Camera_ShiftX_addr, 8}};
 void Seed134(unsigned k) {
     switch (k) {
-    case k134S4M0: case k134S1M0: SeedList(at::kPartyList0); break;
-    case k134S3M1: case k134S1M1: SeedList(at::kPartyList1); break;
-    case k134S3M2: case k134S1M2: SeedList(at::kPartyList2); break;
+    case k134S4M0: case k134S1M0: SeedList(Cond_Flags_addr + 0xd2); break;
+    case k134S3M1: case k134S1M1: SeedList(Cond_Flags_addr + 0xd3); break;
+    case k134S3M2: case k134S1M2: SeedList(Cond_Flags_addr + 0xd4); break;
     default: break;
     }
 }
 void Disturb134(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
-    B(at::kPartyList0 + (v % 3)) = static_cast<unsigned char>(v % 8);
+    B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8);
 }
 #undef W3C_SPAWN
 #undef W3C_OURS

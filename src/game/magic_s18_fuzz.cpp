@@ -177,13 +177,14 @@ const mh::DataTable kTables[] = {{0x65B240, 4}, {0x65B250, 5}, {0x65B264, 5}, {0
 
 // --- the state ---------------------------------------------------------------------
 
-constexpr std::uint32_t kPacketCursor = 0x7E0670;   // Gfx_PacketNext
-constexpr std::uint32_t kActorObject = 0x904B3C, kCommandKind = 0x904B35, kActionId = 0x904B80;
+// kPacketCursor: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
+// kActorObject: now MagicS23_ActorSprite (symbols.toml).
+constexpr std::uint32_t kCommandKind = 0x904B35, kActionId = 0x904B80;
 alignas(16) unsigned char g_prims[0x400];
 unsigned char* PrimAt(std::uint32_t k) { return g_prims + 4 * (k % 32); }
 
 const mh::Region kRegions[] = {
-    {kPacketCursor, 4},
+    {Gfx_PacketNext_addr, 4},
     {static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(g_prims)), sizeof g_prims},
     {bof3::addr::DamageScratch, 0x10},          // the scratch words 0x903850..0x90385F
     {0x9037A0, 0x20},                           // Prim_VertexScratch: four SVECTORs
@@ -205,11 +206,11 @@ void Near(unsigned char& b, unsigned v) {
 
 void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     // every function: the acting block's object a sprite record, the packet
     // cursor inside the fuzz's buffer
-    mh::SetPointer(kActorObject, mh::SpriteRecord(mh::Next()));
-    mh::SetPointer(kPacketCursor, PrimAt(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(Gfx_PacketNext_addr, PrimAt(mh::Next()));
     if (mh::Often()) sc[4] = static_cast<unsigned char>(mh::Next() % 4);   // a kind Buff_Kind gives
     switch (k) {
     case kDrainTask: sc[1] = static_cast<unsigned char>(mh::Next() % 2); break;
@@ -279,8 +280,8 @@ void Seed(unsigned k) {
 // acting block's object, the action id and the command kind.
 void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 4) {
-    case 0: mh::SetPointer(kPacketCursor, PrimAt(h >> 12)); break;
-    case 1: mh::SetPointer(kActorObject, mh::SpriteRecord(h >> 12)); break;
+    case 0: mh::SetPointer(Gfx_PacketNext_addr, PrimAt(h >> 12)); break;
+    case 1: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(h >> 12)); break;
     case 2: move_script::SetWord(mh::Mem(kActionId), h >> 16); break;
     default: mh::Mem(kCommandKind)[0] = static_cast<unsigned char>((h >> 16) & 1 ? 4 : h >> 20); break;
     }

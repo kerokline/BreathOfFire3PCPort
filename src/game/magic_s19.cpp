@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -42,6 +43,10 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void);
 MS19_EXPORT void __cdecl BarrierLine_Draw(void);
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -57,34 +62,38 @@ constexpr std::uint32_t kPoolStride = 0x84;
 constexpr unsigned kPoolCount = 0x18;
 
 // MoveScript_TintRecords: 12 bytes each, +2..+4 the three levels.
-constexpr std::uint32_t kTints = 0x7E0700;
+// kTints: now MoveScript_TintRecords (symbols.toml).
 
 constexpr std::uint32_t kActorKind = 0x904B35;   // u8: 4 is the one kind Shield_Kind leaves alone
 constexpr std::uint32_t kAbility = 0x904B80;     // u16: the id of the action being cast
 
 // The GTE's input vectors (four SVECTORs) and the effects' scratch words.
-constexpr std::uint32_t kV0 = 0x9037A0, kV1 = 0x9037A8, kV2 = 0x9037B0, kV3 = 0x9037B8;
+// kV0: now Prim_VertexScratch (symbols.toml).
+// kV1: now Prim_VertexScratch[4] (symbols.toml).
+// kV2: now Prim_VertexScratch[8] (symbols.toml).
+// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
 constexpr std::uint32_t kRadius = 0x903850;   // s16 (dword for MAGIC086's draws)
 constexpr std::uint32_t kHeight = 0x903852;   // s16
 constexpr std::uint32_t kAngle = 0x903854;    // s16 (dword: MAGIC086's inner radius)
 constexpr std::uint32_t kShade = 0x903856;    // u16
-constexpr std::uint32_t kRed = 0x903858, kGreen = 0x90385A, kBlue = 0x90385C;   // u16 (0x90385C a dword: MAGIC086's lift)
+// kBlue: now Scratch_Swap (symbols.toml).
+constexpr std::uint32_t kRed = 0x903858, kGreen = 0x90385A;  // u16 (0x90385C a dword: MAGIC086's lift)
 constexpr std::uint32_t kFace = 0x90385E;     // u16
 
 // .data (MAGIC083's; the colour tables by kind, 0..3, and face).
-constexpr std::uint32_t kTopColours = 0x65B404;      // ShieldSpark_TopColours: 4 kinds x 4 faces x rgb
-constexpr std::uint32_t kBottomColours = 0x65B434;   // ShieldSpark_BottomColours
-constexpr std::uint32_t kDiscColours = 0x65B464;     // ShieldAura_DiscColours: 4 kinds x rgb
-constexpr std::uint32_t kHaloColours = 0x65B470;     // ShieldAura_HaloColours
+// kTopColours: now ShieldSpark_TopColours (symbols.toml). ShieldSpark_TopColours: 4 kinds x 4 faces x rgb
+// kBottomColours: now ShieldSpark_BottomColours (symbols.toml). ShieldSpark_BottomColours
+// kDiscColours: now ShieldAura_DiscColours (symbols.toml). ShieldAura_DiscColours: 4 kinds x rgb
+// kHaloColours: now ShieldAura_HaloColours (symbols.toml). ShieldAura_HaloColours
 // The handler tables, read in place by the dispatchers (index unchecked).
-constexpr std::uint32_t kAuraTypes = 0x65B47C;       // ShieldAura_Types, by +1
-constexpr std::uint32_t kAuraPhases = 0x65B480;      // ShieldAura_Phases, by +2
-constexpr std::uint32_t kSparkTypes = 0x65B494;      // ShieldSpark_Types, by +1
-constexpr std::uint32_t kSparkPhases = 0x65B498;     // ShieldSpark_Phases, by +2
-constexpr std::uint32_t kPartTypes = 0x65B4AC;       // BarrierPart_Types, by +1
-constexpr std::uint32_t kDiscPhases = 0x65B4B8;      // BarrierDisc_Phases, by +2
-constexpr std::uint32_t kRingPhases = 0x65B4C4;      // BarrierRing_Phases, by +2
-constexpr std::uint32_t kLinePhases = 0x65B4DC;      // BarrierLine_Phases, by +2
+// kAuraTypes: now ShieldAura_Types (symbols.toml). ShieldAura_Types, by +1
+// kAuraPhases: now ShieldAura_Phases (symbols.toml). ShieldAura_Phases, by +2
+// kSparkTypes: now ShieldSpark_Types (symbols.toml). ShieldSpark_Types, by +1
+// kSparkPhases: now ShieldSpark_Phases (symbols.toml). ShieldSpark_Phases, by +2
+// kPartTypes: now BarrierPart_Types (symbols.toml). BarrierPart_Types, by +1
+// kDiscPhases: now BarrierDisc_Phases (symbols.toml). BarrierDisc_Phases, by +2
+// kRingPhases: now BarrierRing_Phases (symbols.toml). BarrierRing_Phases, by +2
+// kLinePhases: now BarrierLine_Phases (symbols.toml). BarrierLine_Phases, by +2
 
 // Callees in other groups' units, ours now, by name: S18's
 // MagicFx_DrawDiscRadius, S37's MagicFx_FreeCurrentRecord, the effect
@@ -100,10 +109,10 @@ void Drop(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
 
 unsigned char* Pool(unsigned i) { return Mem(kPool + i * kPoolStride); }
 unsigned char* Task(unsigned slot) { return Mem(at::kTasks + (slot & 0xFF) * at::kTaskStride); }
-unsigned char* Tint(unsigned i) { return Mem(kTints + 12 * i); }
+unsigned char* Tint(unsigned i) { return Mem(MoveScript_TintRecords_addr + 12 * i); }
 unsigned char* Enemy(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
-unsigned char* Member(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 
 // A .data handler table's cell, read in place.
 Handler Cell(std::uint32_t table, unsigned index) {
@@ -153,14 +162,15 @@ MS19_EXPORT void __cdecl Shield_Task(void) {
     if (phase >= 2) bof3::Fatal("Shield_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const cur = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const slot = Pool(i);
+        records::BattleTask* const tslot = reinterpret_cast<records::BattleTask*>(slot);
         if (!(slot[0] & 1)) continue;
         Sprite_Current = slot;
-        SetLong(Mem(at::kOwner), Long(slot + 0x80));
+        SetLong(Mem(BattleE2_Owner_addr), static_cast<std::int32_t>(tslot->owner));
         MH_CALL(ShieldSpark_Dispatch)();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = cur;
     }
 }
@@ -174,15 +184,16 @@ void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order
     const unsigned char slot = MH_CALL(BattleTask_Create)(1, 0x22);
     const std::int32_t x = Long(record + 0x34);
     unsigned char* const t = Task(slot);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     unsigned char* const cur = Sprite_Current;
-    SetLong(t + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur)));
+    tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
     t[1] = 0;
     t[3] = static_cast<unsigned char>(index);
     t[4] = cur[4];
     t[0xB] = order;
     t[9] = delay;
-    SetLong(t + 0x34, x);
-    SetLong(t + 0x38, Long(record + 0x38));
+    tt->x = x;
+    tt->y = Long(record + 0x38);
     SetLong(t + 0x3C, Long(record + 0x3C));
     Bump(order);
     delay = static_cast<unsigned char>(delay + 0x10);
@@ -235,13 +246,13 @@ MS19_EXPORT unsigned char __cdecl Shield_Kind(void) {
 }
 
 // original 0x4C1730: kind 1 parameter 0x22 - jmp [ShieldAura_Types + 4 * +1].
-MS19_EXPORT void __cdecl ShieldAura_Dispatch(void) { Cell(kAuraTypes, Sprite_Current[1])(); }
+MS19_EXPORT void __cdecl ShieldAura_Dispatch(void) { Cell(ShieldAura_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4C1750: ShieldAura_Types[0]. The phase +2 through
 // ShieldAura_Phases; then, while the slot is live (byte 0) and past its first
 // phase, the halo and the disc under the actor's matrix.
 MS19_EXPORT void __cdecl ShieldAura_Task(void) {
-    Cell(kAuraPhases, Sprite_Current[2])();
+    Cell(ShieldAura_Phases_addr, Sprite_Current[2])();
     const unsigned char* const cur = Sprite_Current;
     if (cur[0] == 0 || cur[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -294,8 +305,9 @@ MS19_EXPORT void __cdecl ShieldAura_Rise(void) {
         const unsigned char slot = MH_CALL(ShieldSpark_Alloc)();
         if (slot != 0xFF) {
             unsigned char* const e = Pool(slot);
+            records::BattleTask* const te = reinterpret_cast<records::BattleTask*>(e);
             unsigned char* const aura = Sprite_Current;
-            SetLong(e + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(aura)));
+            te->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(aura));
             e[1] = 0;
             e[2] = 0;
             e[3] = angle;
@@ -346,36 +358,36 @@ MS19_EXPORT void __cdecl ShieldAura_DrawDisc(void) {
     DrawModeAndCommit(0x35);
     const unsigned char* const cur = Sprite_Current;
     Put16(kShade, cur[9] * 5u);
-    Put16(kRed, Mem(kDiscColours)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kGreen, Mem(kDiscColours + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kBlue, Mem(kDiscColours + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kV2, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
-    Put16(kV2 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
+    Put16(kRed, Mem(ShieldAura_DiscColours_addr)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(kGreen, Mem(ShieldAura_DiscColours_addr + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(Scratch_Swap_addr, Mem(ShieldAura_DiscColours_addr + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
+    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
     for (std::int32_t a = 0x100; a < 0x1100; a += 0x100) {
-        Put16(kV0, 0);
-        Put16(kV0 + 2, 0);
-        Put16(kV1, Word(Mem(kV2)));
-        Put16(kV1 + 2, Word(Mem(kV2 + 2)));
-        Put16(kV2, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
-        Put16(kV2 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
+        Put16(Prim_VertexScratch_addr, 0);
+        Put16(Prim_VertexScratch_addr + 2, 0);
+        Put16(Prim_VertexScratch_addr + 0x8, Word(Mem(Prim_VertexScratch_addr + 0x10)));
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, Word(Mem(Prim_VertexScratch_addr + 0x10 + 2)));
+        Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
+        Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
         unsigned char* const prim = Prim();
-        Put16(kV2 + 4, 0);
-        Put16(kV1 + 4, 0);
-        Put16(kV0 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 4, 0);
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers3)(Vec(kV0), Vec(kV1), Vec(kV2), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
+        MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
         prim[4] = Mem(kShade)[0];
         prim[5] = Mem(kShade)[0];
         prim[6] = Mem(kShade)[0];
         prim[0x14] = Mem(kRed)[0];
         prim[0x15] = Mem(kGreen)[0];
-        prim[0x16] = Mem(kBlue)[0];
+        prim[0x16] = Mem(Scratch_Swap_addr)[0];
         prim[0x24] = Mem(kRed)[0];
         prim[0x25] = Mem(kGreen)[0];
-        prim[0x26] = Mem(kBlue)[0];
+        prim[0x26] = Mem(Scratch_Swap_addr)[0];
         MH_CALL(Gfx_CommitPrim)(5, 0x34);
     }
     DrawModeAndCommit(0x15);
@@ -387,39 +399,39 @@ MS19_EXPORT void __cdecl ShieldAura_DrawDisc(void) {
 MS19_EXPORT void __cdecl ShieldAura_DrawHalo(void) {
     DrawModeAndCommit(0x35);
     const unsigned char* const cur = Sprite_Current;
-    Put16(kRed, Mem(kHaloColours)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kGreen, Mem(kHaloColours + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kBlue, Mem(kHaloColours + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
-    Put16(kV1, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
-    Put16(kV1 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
-    Put16(kV3, static_cast<std::uint32_t>(ShlSar(Sin(0), 8, 12)));
-    Put16(kV3 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 8, 12)));
+    Put16(kRed, Mem(ShieldAura_HaloColours_addr)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(kGreen, Mem(ShieldAura_HaloColours_addr + 1)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(Scratch_Swap_addr, Mem(ShieldAura_HaloColours_addr + 2)[cur[4] * 3u] * static_cast<std::uint32_t>(cur[9]));
+    Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(ShlSar(Sin(0), 7, 12)));
+    Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 7, 12)));
+    Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(ShlSar(Sin(0), 8, 12)));
+    Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(ShlSar(Cos(0), 8, 12)));
     for (std::int32_t a = 0x100; a < 0x1100; a += 0x100) {
-        Put16(kV0, Word(Mem(kV1)));
-        Put16(kV0 + 2, Word(Mem(kV1 + 2)));
-        Put16(kV2, Word(Mem(kV3)));
-        Put16(kV2 + 2, Word(Mem(kV3 + 2)));
-        Put16(kV1, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
-        Put16(kV1 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
-        Put16(kV3, static_cast<std::uint32_t>(ShlSar(Sin(a), 8, 12)));
-        Put16(kV3 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 8, 12)));
+        Put16(Prim_VertexScratch_addr, Word(Mem(Prim_VertexScratch_addr + 0x8)));
+        Put16(Prim_VertexScratch_addr + 2, Word(Mem(Prim_VertexScratch_addr + 0x8 + 2)));
+        Put16(Prim_VertexScratch_addr + 0x10, Word(Mem(Prim_VertexScratch_addr + 0x18)));
+        Put16(Prim_VertexScratch_addr + 0x10 + 2, Word(Mem(Prim_VertexScratch_addr + 0x18 + 2)));
+        Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(ShlSar(Sin(a), 7, 12)));
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 7, 12)));
+        Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(ShlSar(Sin(a), 8, 12)));
+        Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(ShlSar(Cos(a), 8, 12)));
         unsigned char* const prim = Prim();
-        Put16(kV3 + 4, 0);
-        Put16(kV2 + 4, 0);
-        Put16(kV1 + 4, 0);
-        Put16(kV0 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 4, 0);
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers4)(Vec(kV0), Vec(kV1), Vec(kV2), Vec(kV3), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
+        MH_CALL(Gte_RotTransPers4)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Vec(Prim_VertexScratch_addr + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                    At(prim, 0x38), &depth);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         prim[4] = Mem(kRed)[0];
         prim[5] = Mem(kGreen)[0];
-        prim[6] = Mem(kBlue)[0];
+        prim[6] = Mem(Scratch_Swap_addr)[0];
         prim[0x14] = Mem(kRed)[0];
         prim[0x15] = Mem(kGreen)[0];
-        prim[0x16] = Mem(kBlue)[0];
+        prim[0x16] = Mem(Scratch_Swap_addr)[0];
         prim[0x24] = 1;
         prim[0x25] = 1;
         prim[0x26] = 1;
@@ -432,10 +444,10 @@ MS19_EXPORT void __cdecl ShieldAura_DrawHalo(void) {
 }
 
 // original 0x4C1E70: a crystal - jmp [ShieldSpark_Types + 4 * +1].
-MS19_EXPORT void __cdecl ShieldSpark_Dispatch(void) { Cell(kSparkTypes, Sprite_Current[1])(); }
+MS19_EXPORT void __cdecl ShieldSpark_Dispatch(void) { Cell(ShieldSpark_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4C1E90: ShieldSpark_Types[0] - jmp [ShieldSpark_Phases + 4 * +2].
-MS19_EXPORT void __cdecl ShieldSpark_Task(void) { Cell(kSparkPhases, Sprite_Current[2])(); }
+MS19_EXPORT void __cdecl ShieldSpark_Task(void) { Cell(ShieldSpark_Phases_addr, Sprite_Current[2])(); }
 
 // original 0x4C1EB0: ShieldSpark_Phases[0]. +9 down; at 0 the crystal placed
 // on the aura's circle - the angle (+0xB & 0x1F) << 7 (kept in 0x903854), x
@@ -449,16 +461,16 @@ MS19_EXPORT void __cdecl ShieldSpark_Place(void) {
     const std::uint32_t angle = (cur[0xB] & 0x1Fu) << 7;
     Put16(kAngle, angle);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    SetLong(Sprite_Current + 0x34, Add(MulSar(s, 176, 3), Long(Owner() + 0x34)));
+    Store(ScTask()->x, Add(MulSar(s, 176, 3), Long(Owner() + 0x34)));
     const std::int32_t c = Cos(S16(kAngle));
-    SetLong(Sprite_Current + 0x38, Add(MulSar(c, 176, 3), Long(Owner() + 0x38)));
+    Store(ScTask()->y, Add(MulSar(c, 176, 3), Long(Owner() + 0x38)));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     SetLong(Sprite_Current + 0x14, 0x40);
     SetLong(Sprite_Current + 0x20, -4);
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0xC;
-    SetLong(Sprite_Current + 0xC, 1);
-    SetLong(Sprite_Current + 0x10, 0);
+    ScTask()->vel_x = 1;
+    ScTask()->vel_y = 0;
     Bump(Sprite_Current[2]);
 }
 
@@ -521,7 +533,8 @@ MS19_EXPORT void __cdecl ShieldSpark_Fall(void) {
 MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     const unsigned char* const cur = Sprite_Current;
-    const bool wide = Long(cur + 0xC) == 4 && cur[0xA] < 5;
+    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    const bool wide = tcur->vel_x == 4 && cur[0xA] < 5;
     const std::uint32_t r = static_cast<std::uint32_t>(MH_CALL(Rand)());
     CrystalFrame((r & 3) + (wide ? 0x40u : 0x18u));
     unsigned char* now = Sprite_Current;
@@ -541,7 +554,7 @@ MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
     if (now[0xA] != 0) return;
     const unsigned char side = now[3];
     if (!(side & 0xF0)) MH_CALL(Sound_PlayById)(side & 1 ? 0x101 : 0x102);
-    SetLong(Sprite_Current + 0x10, 8);
+    ScTask()->vel_y = 8;
     SetLong(Sprite_Current + 0x14, 8);
     SetLong(Sprite_Current + 0x20, 8);
     Bump(Sprite_Current[2]);
@@ -556,7 +569,7 @@ MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
 MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     CrystalFrame((static_cast<std::uint32_t>(MH_CALL(Rand)()) & 3) + 0x20);
-    SetLong(Sprite_Current + 0x10, Add(Long(Sprite_Current + 0x10), 4));
+    Store(ScTask()->vel_y, Add(ScTask()->vel_y, 4));
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] + Sprite_Current[0xC]);
     Sprite_Current[0xB] = static_cast<unsigned char>(Sprite_Current[0xB] + 2);
     const unsigned char* const cur = Sprite_Current;
@@ -564,9 +577,9 @@ MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     Put16(kAngle, angle);
     Put16(kRadius, static_cast<std::uint32_t>(cur[0xA]) * Word(cur + 0x10) + 0xB0);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    SetLong(Sprite_Current + 0x34, Add(MulSar(s, S16(kRadius), 3), Long(Owner() + 0x34)));
+    Store(ScTask()->x, Add(MulSar(s, S16(kRadius), 3), Long(Owner() + 0x34)));
     const std::int32_t c = Cos(S16(kAngle));
-    SetLong(Sprite_Current + 0x38, Add(MulSar(c, S16(kRadius), 3), Long(Owner() + 0x38)));
+    Store(ScTask()->y, Add(MulSar(c, S16(kRadius), 3), Long(Owner() + 0x38)));
     Bump(Sprite_Current[0xA]);
     if (Sprite_Current[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -584,26 +597,26 @@ unsigned char* CrystalFace(std::uint32_t colours, std::int32_t step, unsigned ch
     const std::int32_t row = (face + static_cast<std::int32_t>(cur[4]) * 4) * 3;
     Put16(kRed, Mem(colours + row)[0]);
     Put16(kGreen, Mem(colours + row + 1)[0]);
-    Put16(kV0, 0);
-    Put16(kV0 + 2, 0);
-    Put16(kBlue, Mem(colours + row + 2)[0]);
+    Put16(Prim_VertexScratch_addr, 0);
+    Put16(Prim_VertexScratch_addr + 2, 0);
+    Put16(Scratch_Swap_addr, Mem(colours + row + 2)[0]);
     const std::uint32_t a0 = (static_cast<std::uint32_t>(step) & 0x1F) << 7;
     Put16(kAngle, a0);
-    Put16(kV0 + 4, static_cast<std::uint16_t>(height));
-    Put16(kV1, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a0)), S16(kRadius), 12)));
-    Put16(kV1 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(kAngle)), S16(kRadius), 12)));
-    Put16(kV1 + 4, 0);
+    Put16(Prim_VertexScratch_addr + 4, static_cast<std::uint16_t>(height));
+    Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a0)), S16(kRadius), 12)));
+    Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(kAngle)), S16(kRadius), 12)));
+    Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
     const std::uint32_t a1 = (static_cast<std::uint32_t>(step + 8) & 0x1F) << 7;
     Put16(kAngle, a1);
-    Put16(kV2, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a1)), S16(kRadius), 12)));
-    Put16(kV2 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(kAngle)), S16(kRadius), 12)));
+    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(MulSar(Sin(static_cast<std::int16_t>(a1)), S16(kRadius), 12)));
+    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(S16(kAngle)), S16(kRadius), 12)));
     unsigned char* const prim = Prim();
-    Put16(kV2 + 4, 0);
+    Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
     MH_CALL(Gpu_SetPolyG3)(prim);
     MH_CALL(Gpu_SetSemiTrans)(prim, 0);
     long p;
     const long depth =
-        MH_CALL(Gte_RotAverage3)(Vec(kV0), Vec(kV1), Vec(kV2), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &p);
+        MH_CALL(Gte_RotAverage3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &p);
     const std::int32_t slot = (step - static_cast<std::int32_t>(Sprite_Current[9])) / 8;
     if (slot < 0 || slot > 3)
         bof3::Fatal("ShieldSpark_DrawCrystal: face %d, past the four-entry depth array", static_cast<int>(slot));
@@ -611,7 +624,7 @@ unsigned char* CrystalFace(std::uint32_t colours, std::int32_t step, unsigned ch
     for (unsigned v = 0; v < 3; ++v) {
         prim[4 + 0x10 * v] = Mem(kRed)[0];
         prim[5 + 0x10 * v] = Mem(kGreen)[0];
-        prim[6 + 0x10 * v] = Mem(kBlue)[0];
+        prim[6 + 0x10 * v] = Mem(Scratch_Swap_addr)[0];
     }
     Gfx_PacketNext = Gfx_PacketNext + 0x34;
     return Sprite_Current;
@@ -629,8 +642,9 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     MH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x15, 0);
     {
         const unsigned char* const cur = Sprite_Current;
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                    static_cast<unsigned long>(Long(cur + 0x38)), 0, 0xC);
+        const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
+                                    static_cast<unsigned long>(tcur->y), 0, 0xC);
     }
     unsigned char* cur = Sprite_Current;
     unsigned char* const first = Prim();
@@ -638,7 +652,7 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     for (std::int32_t step = cur[9]; step < static_cast<std::int32_t>(cur[9]) + 0x20; step += 8) {
         Put16(kHeight, 0x50);
         Put16(kRadius, 0x30);
-        cur = CrystalFace(kTopColours, step, cur, 0x50, depths);
+        cur = CrystalFace(ShieldSpark_TopColours_addr, step, cur, 0x50, depths);
     }
     MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
                                                          static_cast<unsigned long>(Long(cur + 0x38)), depths, first, 4,
@@ -646,7 +660,7 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     cur = Sprite_Current;
     unsigned char* const second = Prim();
     for (std::int32_t step = cur[9]; step < static_cast<std::int32_t>(cur[9]) + 0x20; step += 8)
-        cur = CrystalFace(kBottomColours, step, cur, static_cast<std::int16_t>(-S16(kHeight)), depths);
+        cur = CrystalFace(ShieldSpark_BottomColours_addr, step, cur, static_cast<std::int16_t>(-S16(kHeight)), depths);
     MH_AT(LinkSortedFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(cur + 0x34)),
                                                          static_cast<unsigned long>(Long(cur + 0x38)), depths, second,
                                                          4, 0x34, 0);
@@ -689,14 +703,16 @@ namespace {
 void SpawnPart(unsigned char type) {
     const unsigned char slot = MH_CALL(BattleTask_Create)(1, 0x1D);
     unsigned char* const t = Task(slot);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     const unsigned char* const cur = Sprite_Current;
-    SetLong(t + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur)));
+    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
     t[1] = type;
     if (type == 1) t[0xB] = 0x30;
     t[9] = 0;
     t[0xA] = 0;
-    SetLong(t + 0x34, Long(cur + 0x34));
-    SetLong(t + 0x38, Long(cur + 0x38));
+    tt->x = tcur->x;
+    tt->y = tcur->y;
     SetWord(t + 0x3E, Word(cur + 0x3E));
 }
 }  // namespace
@@ -706,9 +722,9 @@ void SpawnPart(unsigned char type) {
 // ring (+1 1, +0xB 0x30) - with +9 and +0xA 0; sound 0x100; +0xB and +9 0;
 // the phase on.
 MS19_EXPORT void __cdecl Barrier_Start(void) {
-    const unsigned char* const source = Pointer(at::kSource);
-    SetLong(Sprite_Current + 0x34, Long(source + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(source + 0x38));
+    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
+    Store(ScTask()->x, Long(source + 0x34));
+    Store(ScTask()->y, Long(source + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(source + 0x3C));
     SpawnPart(0);
     SpawnPart(1);
@@ -723,7 +739,7 @@ MS19_EXPORT void __cdecl Barrier_Start(void) {
 // +9 0x10; the phase on (to BattleFx_Brighten, which raises it).
 MS19_EXPORT void __cdecl Barrier_Tint(void) {
     const unsigned char* const cur = Sprite_Current;
-    unsigned char* const source = Pointer(at::kSource);
+    unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     if (cur[0xB] != 1) return;
     MH_CALL(Sprite_ReleaseTint)(source);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(source, 1, 1, 1, 0);
@@ -747,18 +763,18 @@ MS19_EXPORT void __cdecl Barrier_Fade(void) {
     Drop(Tint(cur[0xA])[3]);
     Drop(Tint(cur[0xA])[4]);
     if (Tint(cur[0xA])[2] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(at::kSource));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
     MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
     Bump(Sprite_Current[1]);
 }
 
 // original 0x4C2A50: kind 1 parameter 0x1D - jmp [BarrierPart_Types + 4 * +1].
-MS19_EXPORT void __cdecl BarrierPart_Dispatch(void) { Cell(kPartTypes, Sprite_Current[1])(); }
+MS19_EXPORT void __cdecl BarrierPart_Dispatch(void) { Cell(BarrierPart_Types_addr, Sprite_Current[1])(); }
 
 // original 0x4C2A70: BarrierPart_Types[0], the disc. Its phase +2 through
 // BarrierDisc_Phases; while live, the disc under the actor's matrix.
 MS19_EXPORT void __cdecl BarrierDisc_Task(void) {
-    Cell(kDiscPhases, Sprite_Current[2])();
+    Cell(BarrierDisc_Phases_addr, Sprite_Current[2])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(BarrierDisc_Draw)();
@@ -794,23 +810,23 @@ MS19_EXPORT void __cdecl BarrierDisc_Shrink(void) {
 MS19_EXPORT void __cdecl BarrierDisc_Draw(void) {
     DrawModeAndCommit(0x35);
     SetLong(Mem(kRadius), static_cast<std::int32_t>(Sprite_Current[0xA] * 12u));
-    Put16(kV2, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(kRadius)), 12)));
-    Put16(kV2 + 2, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(kRadius)), 12)));
+    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(kRadius)), 12)));
+    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(kRadius)), 12)));
     for (std::int32_t a = 0x80; a < 0x1080; a += 0x80) {
-        Put16(kV0, 0);
-        Put16(kV0 + 2, 0);
-        Put16(kV1, Word(Mem(kV2)));
-        Put16(kV1 + 2, Word(Mem(kV2 + 2)));
-        Put16(kV2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
-        Put16(kV2 + 2, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
+        Put16(Prim_VertexScratch_addr, 0);
+        Put16(Prim_VertexScratch_addr + 2, 0);
+        Put16(Prim_VertexScratch_addr + 0x8, Word(Mem(Prim_VertexScratch_addr + 0x10)));
+        Put16(Prim_VertexScratch_addr + 0x8 + 2, Word(Mem(Prim_VertexScratch_addr + 0x10 + 2)));
+        Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
+        Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
         unsigned char* const prim = Prim();
-        Put16(kV2 + 4, 0);
-        Put16(kV1 + 4, 0);
-        Put16(kV0 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
+        Put16(Prim_VertexScratch_addr + 4, 0);
         MH_CALL(Gpu_SetPolyG3)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers3)(Vec(kV0), Vec(kV1), Vec(kV2), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
+        MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
         MH_CALL(Gte_PrimDepths3_10B)(prim);
         prim[4] = static_cast<unsigned char>(Sprite_Current[9] * 6);
         prim[5] = static_cast<unsigned char>(Sprite_Current[9] * 6);
@@ -832,7 +848,7 @@ MS19_EXPORT void __cdecl BarrierDisc_Draw(void) {
 // original 0x4C2CE0: BarrierPart_Types[1], the ring. Its phase +2 through
 // BarrierRing_Phases; while live, the ring under the actor's matrix.
 MS19_EXPORT void __cdecl BarrierRing_Task(void) {
-    Cell(kRingPhases, Sprite_Current[2])();
+    Cell(BarrierRing_Phases_addr, Sprite_Current[2])();
     if (Sprite_Current[0] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(BarrierRing_Draw)();
@@ -912,12 +928,12 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
     const unsigned char* const cur = Sprite_Current;
     SetLong(Mem(kRadius), cur[2] != 0 ? 0xC0 : static_cast<std::int32_t>(cur[9] * 12u));
     SetLong(Mem(kAngle), static_cast<std::int32_t>(cur[9] * 14u));
-    SetLong(Mem(kBlue), static_cast<std::int32_t>(static_cast<std::uint32_t>(cur[0xA]) << 4));
+    SetLong(Mem(Scratch_Swap_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(cur[0xA]) << 4));
     const std::uint32_t frame = Frame_Counter;
     const std::uint32_t gap0 = frame & 7, gap1 = (frame + 1) & 7;
-    Put16(kV3, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(kRadius)), 12)));
-    Put16(kV3 + 2, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(kRadius)), 12)));
-    Put16(kV3 + 4, 0);
+    Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(MulSar(Cos(0), Long(Mem(kRadius)), 12)));
+    Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(MulSar(Sin(0), Long(Mem(kRadius)), 12)));
+    Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
     // The wall's link point: the original keeps it in registers across
     // segments, and before the first wall segment they hold an uninitialised
     // stack cell - reached only if Sprite_Current[2] changed between the two
@@ -930,52 +946,53 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
         if (seg != gap0 && seg != gap1 && Sprite_Current[2] != 0) {
             const std::int32_t b = a - 0x40;
             const std::uint32_t wave = ((Frame_Counter + i) & 0x1F) << 7;
-            Put16(kV0, static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(kRadius)), 12)));
-            Put16(kV0 + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(kRadius)), 12)));
+            Put16(Prim_VertexScratch_addr, static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(kRadius)), 12)));
+            Put16(Prim_VertexScratch_addr + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(kRadius)), 12)));
             const std::int32_t w0 = Sin(static_cast<std::int32_t>(wave));
-            Put16(kV0 + 4, static_cast<std::uint32_t>(-Add(ShlSar(w0, 5, 12), Long(Mem(kBlue)))));
-            Put16(kV1, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
-            Put16(kV1 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
+            Put16(Prim_VertexScratch_addr + 4, static_cast<std::uint32_t>(-Add(ShlSar(w0, 5, 12), Long(Mem(Scratch_Swap_addr)))));
+            Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
+            Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
             const std::int32_t w1 = Sin(static_cast<std::int32_t>(wave));
-            const std::uint16_t old_y = Word(Mem(kV3 + 2));
-            Put16(kV2 + 2, old_y);
-            const std::uint16_t y1 = Word(Mem(kV1 + 2));
-            Put16(kV1 + 4, static_cast<std::uint32_t>(-Add(ShlSar(w1, 5, 12), Long(Mem(kBlue)))));
-            Put16(kV2, Word(Mem(kV3)));
-            const std::uint16_t x1 = Word(Mem(kV1));
-            Put16(kV3, x1);
-            Put16(kV2 + 4, 0);
-            Put16(kV3 + 2, y1);
-            Put16(kV3 + 4, 0);
+            const std::uint16_t old_y = Word(Mem(Prim_VertexScratch_addr + 0x18 + 2));
+            Put16(Prim_VertexScratch_addr + 0x10 + 2, old_y);
+            const std::uint16_t y1 = Word(Mem(Prim_VertexScratch_addr + 0x8 + 2));
+            Put16(Prim_VertexScratch_addr + 0x8 + 4, static_cast<std::uint32_t>(-Add(ShlSar(w1, 5, 12), Long(Mem(Scratch_Swap_addr)))));
+            Put16(Prim_VertexScratch_addr + 0x10, Word(Mem(Prim_VertexScratch_addr + 0x18)));
+            const std::uint16_t x1 = Word(Mem(Prim_VertexScratch_addr + 0x8));
+            Put16(Prim_VertexScratch_addr + 0x18, x1);
+            Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
+            Put16(Prim_VertexScratch_addr + 0x18 + 2, y1);
+            Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
             const unsigned char* const now = Sprite_Current;
+            const records::BattleTask* const tnow = reinterpret_cast<const records::BattleTask*>(now);
             x = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(x1))) << 9),
-                    Long(now + 0x34));
+                    tnow->x);
             z = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(y1))) << 9),
-                    Long(now + 0x38));
+                    tnow->y);
             placed = true;
             MH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
         } else {
             const std::int32_t b = a - 0x40;
-            Put16(kV0, static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(kAngle)), 12)));
-            Put16(kV0 + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(kAngle)), 12)));
-            Put16(kV0 + 4, 0);
-            Put16(kV1, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kAngle)), 12)));
-            Put16(kV1 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kAngle)), 12)));
-            const std::uint16_t old_y = Word(Mem(kV3 + 2));
-            Put16(kV1 + 4, 0);
-            Put16(kV2, Word(Mem(kV3)));
-            Put16(kV2 + 2, old_y);
-            Put16(kV2 + 4, 0);
-            Put16(kV3, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
-            Put16(kV3 + 4, 0);
-            Put16(kV3 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
+            Put16(Prim_VertexScratch_addr, static_cast<std::uint32_t>(MulSar(Cos(b), Long(Mem(kAngle)), 12)));
+            Put16(Prim_VertexScratch_addr + 2, static_cast<std::uint32_t>(MulSar(Sin(b), Long(Mem(kAngle)), 12)));
+            Put16(Prim_VertexScratch_addr + 4, 0);
+            Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kAngle)), 12)));
+            Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kAngle)), 12)));
+            const std::uint16_t old_y = Word(Mem(Prim_VertexScratch_addr + 0x18 + 2));
+            Put16(Prim_VertexScratch_addr + 0x8 + 4, 0);
+            Put16(Prim_VertexScratch_addr + 0x10, Word(Mem(Prim_VertexScratch_addr + 0x18)));
+            Put16(Prim_VertexScratch_addr + 0x10 + 2, old_y);
+            Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
+            Put16(Prim_VertexScratch_addr + 0x18, static_cast<std::uint32_t>(MulSar(Cos(a), Long(Mem(kRadius)), 12)));
+            Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
+            Put16(Prim_VertexScratch_addr + 0x18 + 2, static_cast<std::uint32_t>(MulSar(Sin(a), Long(Mem(kRadius)), 12)));
         }
         unsigned char* const prim = Prim();
         MH_CALL(Gpu_SetPolyG4)(prim);
         MH_CALL(Gpu_SetSemiTrans)(prim, 1);
         long depth;
-        MH_CALL(Gte_RotTransPers4)(Vec(kV0), Vec(kV1), Vec(kV2), Vec(kV3), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
+        MH_CALL(Gte_RotTransPers4)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), Vec(Prim_VertexScratch_addr + 0x18), At(prim, 8), At(prim, 0x18), At(prim, 0x28),
                                    At(prim, 0x38), &depth);
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         if (seg != gap0 && seg != gap1 && Sprite_Current[2] != 0) {
@@ -1016,7 +1033,7 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
 // BarrierLine_Phases; while live and past its first phase, the line under the
 // actor's matrix. Nothing read here creates one (a part with +1 2).
 MS19_EXPORT void __cdecl BarrierLine_Task(void) {
-    Cell(kLinePhases, Sprite_Current[2])();
+    Cell(BarrierLine_Phases_addr, Sprite_Current[2])();
     const unsigned char* const cur = Sprite_Current;
     if (cur[0] == 0 || cur[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -1058,29 +1075,30 @@ MS19_EXPORT void __cdecl BarrierLine_Fly(void) {
 // 0x35; both linked at the line's map cell, one row up (dy 2).
 MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     const std::int32_t s = ShlSar(Sin(static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Current[0xB]) << 9)), 7, 12);
-    Put16(kV2, static_cast<std::uint32_t>(s));
-    Put16(kV1, static_cast<std::uint32_t>(s));
-    Put16(kV0, static_cast<std::uint32_t>(s));
+    Put16(Prim_VertexScratch_addr + 0x10, static_cast<std::uint32_t>(s));
+    Put16(Prim_VertexScratch_addr + 0x8, static_cast<std::uint32_t>(s));
+    Put16(Prim_VertexScratch_addr, static_cast<std::uint32_t>(s));
     const std::int32_t cosine = Cos(static_cast<std::int32_t>(static_cast<std::uint32_t>(Sprite_Current[0xB]) << 9));
     unsigned char* const mode = Prim();
     const std::int32_t c = ShlSar(cosine, 7, 12);
-    Put16(kV2 + 2, static_cast<std::uint32_t>(c));
-    Put16(kV1 + 2, static_cast<std::uint32_t>(c));
-    Put16(kV0 + 2, static_cast<std::uint32_t>(c));
-    Put16(kV0 + 4, 0x20);
-    Put16(kV1 + 4, 0x18);
-    Put16(kV2 + 4, 0);
+    Put16(Prim_VertexScratch_addr + 0x10 + 2, static_cast<std::uint32_t>(c));
+    Put16(Prim_VertexScratch_addr + 0x8 + 2, static_cast<std::uint32_t>(c));
+    Put16(Prim_VertexScratch_addr + 2, static_cast<std::uint32_t>(c));
+    Put16(Prim_VertexScratch_addr + 4, 0x20);
+    Put16(Prim_VertexScratch_addr + 0x8 + 4, 0x18);
+    Put16(Prim_VertexScratch_addr + 0x10 + 4, 0);
     MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
     {
         const unsigned char* const cur = Sprite_Current;
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                    static_cast<unsigned long>(Long(cur + 0x38)), 2, 0xC);
+        const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
+                                    static_cast<unsigned long>(tcur->y), 2, 0xC);
     }
     unsigned char* const prim = Prim();
     MH_CALL(Gpu_SetLineG3)(prim);
     MH_CALL(Gpu_SetSemiTrans)(prim, 1);
     long depth;
-    MH_CALL(Gte_RotTransPers3)(Vec(kV0), Vec(kV1), Vec(kV2), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
+    MH_CALL(Gte_RotTransPers3)(Vec(Prim_VertexScratch_addr), Vec(Prim_VertexScratch_addr + 0x8), Vec(Prim_VertexScratch_addr + 0x10), At(prim, 8), At(prim, 0x18), At(prim, 0x28), &depth);
     MH_CALL(Gte_PrimDepths3_10C)(prim);
     prim[0x14] = 0xC0;
     prim[4] = 0x40;
@@ -1092,8 +1110,9 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     prim[0x25] = 1;
     prim[0x26] = 1;
     const unsigned char* const cur = Sprite_Current;
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                static_cast<unsigned long>(Long(cur + 0x38)), 2, 0x34);
+    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
+                                static_cast<unsigned long>(tcur->y), 2, 0x34);
 }
 
 void MagicS19_Inject() {

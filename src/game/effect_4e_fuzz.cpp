@@ -289,14 +289,14 @@ const std::uint8_t kKinds[] = {0x9B, 0x9C, 0x9E, 0xA0, 0xA1, 0xA2, 0xA3, 0xA7, 0
 
 // Beyond the standard effect regions: kind 0xA0's two pools.
 const sh::Region kRegions[] = {
-    {at::kSparks, at::kPoolsSize},
+    {EffectKindA0_Sparks_addr, at::kPoolsSize},
 };
 
 // --- the seed ------------------------------------------------------------------------
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
-unsigned char* SparkAt(unsigned i) { return P(at::kSparks + i * at::kSparkStride); }
-unsigned char* ShardAt(unsigned i) { return P(at::kShards + i * at::kShardStride); }
+unsigned char* SparkAt(unsigned i) { return P(EffectKindA0_Sparks_addr + i * at::kSparkStride); }
+unsigned char* ShardAt(unsigned i) { return P(EffectKindA0_Shards_addr + i * at::kShardStride); }
 
 // The sparks: half in use, lives at 1.
 void SeedSparks() {

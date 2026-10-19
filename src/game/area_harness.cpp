@@ -113,7 +113,7 @@ void Disturb() {
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 4) % 16) {
     case 0: Sprite_Current = ObjectOrMember(v); break;
-    case 1: SetPointer(at::kFieldState, PartyOf(static_cast<unsigned char>(v))); break;
+    case 1: SetPointer(Field_State_addr, PartyOf(static_cast<unsigned char>(v))); break;
     case 2: case 3: {
         static const unsigned kFields[] = {0, 1, 2, 4, 8, 9, 0xA, 0xB, 0xC, 0x2E, 0x30, 0x34, 0x36, 0x38, 0x3A};
         const unsigned f = kFields[v % 15];
@@ -123,15 +123,15 @@ void Disturb() {
         break;
     }
     case 4: {
-        unsigned char* const leader = Pointer(at::kFieldState) + (h >> 20) % at::kPartyStride;
+        unsigned char* const leader = Pointer(Field_State_addr) + (h >> 20) % at::kPartyStride;
         if (InRegions(leader, 1)) *leader = static_cast<unsigned char>(v);
         break;
     }
     case 5: Frame_Counter = h >> 6; break;
     case 6: move_script::SetWord(Mem(at::kMessage), h & 0x100 ? 0xFFFFu : h >> 16); break;
-    case 7: Mem(at::kFieldRequest)[0] = b; break;
-    case 8: Mem(at::kCondFlags + (h >> 20) % 0x1D0)[0] = static_cast<unsigned char>(v); break;
-    case 9: Mem(at::kMemberCount)[0] = static_cast<unsigned char>(1 + v % 3); break;
+    case 7: Mem(Field_Request_addr)[0] = b; break;
+    case 8: Mem(Cond_Flags_addr + (h >> 20) % 0x1D0)[0] = static_cast<unsigned char>(v); break;
+    case 9: Mem(Field_MemberCount_addr)[0] = static_cast<unsigned char>(1 + v % 3); break;
     case 10: Object(v & 3)[(h >> 20) % at::kObjectStride] = b; break;
     case 11: Mem(0x903840 + (h >> 20) % 0x40)[0] = static_cast<unsigned char>(v); break;
     case 12:
@@ -163,7 +163,7 @@ Slot g_slots[kSlots];
 unsigned g_slot_n;
 
 std::uint32_t Cur() { return Key(Sprite_Current); }
-std::uint32_t Leader() { return static_cast<std::uint32_t>(move_script::Long(Mem(at::kFieldState))); }
+std::uint32_t Leader() { return static_cast<std::uint32_t>(move_script::Long(Mem(Field_State_addr))); }
 std::uint32_t Phases() {
     return ByteAt(Sprite_Current, 1) | ByteAt(Sprite_Current, 2) << 9;
 }
@@ -470,9 +470,9 @@ void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
 // of 1..3, the message word "none" two times in three.
 void Fix() {
     Sprite_Current = ObjectOrMember(Next());
-    SetPointer(at::kFieldState, PartyOf(static_cast<unsigned char>(Half() ? 0 : Next())));
-    SetPointer(at::kMapBytes, Mem(at::kMapHeader + 0x800));
-    Mem(at::kMemberCount)[0] = static_cast<unsigned char>(1 + Next() % 3);
+    SetPointer(Field_State_addr, PartyOf(static_cast<unsigned char>(Half() ? 0 : Next())));
+    SetPointer(AreaMap_Bytes_addr, Mem(AreaMap_Header_addr + 0x800));
+    Mem(Field_MemberCount_addr)[0] = static_cast<unsigned char>(1 + Next() % 3);
     if (Often()) move_script::SetWord(Mem(at::kMessage), 0xFFFF);
 }
 
@@ -507,16 +507,16 @@ bool Often() { return Next() % 3 != 0; }
 bool Half() { return (Next() & 1) != 0; }
 std::uint32_t Pick(const std::uint32_t* v, unsigned n) { return v[Next() % n]; }
 unsigned char* Mem(std::uint32_t address) { return move_script::At(address); }
-unsigned char* Object(unsigned k) { return Mem(at::kObjects + (k % at::kObjectCount) * at::kObjectStride); }
+unsigned char* Object(unsigned k) { return Mem(Sprite_Objects_addr + (k % at::kObjectCount) * at::kObjectStride); }
 unsigned char* TaskAt(unsigned k) { return Object(k % 4); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* EnemyOf(unsigned char target) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
-unsigned char* PartyOf(unsigned char member) { return Mem(at::kParty + (member % at::kPartyCount) * at::kPartyStride); }
+unsigned char* PartyOf(unsigned char member) { return Mem(ObjTrio_addr + (member % at::kPartyCount) * at::kPartyStride); }
 const unsigned char* Descriptor(unsigned area) {
     return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(
-        static_cast<std::uint32_t>(move_script::Long(Mem(at::kDescriptors + 4 * area)))));
+        static_cast<std::uint32_t>(move_script::Long(Mem(Area_Descriptors_addr + 4 * area)))));
 }
 void SetPointer(std::uint32_t cell, const void* p) { move_script::SetLong(Mem(cell), static_cast<std::int32_t>(Key(p))); }
 unsigned char* Pointer(std::uint32_t cell) {
@@ -594,14 +594,14 @@ void Run(const Group& group) {
     g_region_n = 0;
     const Region standard[] = {
         {0x7DEE40, 0x40},                                   // the message word 0x7DEE48 and the message box's cells
-        {at::kObjects, at::kObjectCount * at::kObjectStride},   // Sprite_Objects
-        {at::kObjectsExtra, 4 * at::kObjectStride},         // Sprite_ObjectsExtra
-        {at::kParty, at::kPartyCount * at::kPartyStride},   // ObjTrio: the leader and the party
+        {Sprite_Objects_addr, at::kObjectCount * at::kObjectStride}, // Sprite_Objects
+        {Sprite_ObjectsExtra_addr, 4 * at::kObjectStride},  // Sprite_ObjectsExtra
+        {ObjTrio_addr, at::kPartyCount * at::kPartyStride}, // ObjTrio: the leader and the party
         {0x8034E0, 0x14},                                   // Cond_ByteFA .. MoveScript_Var7 ..
         {0x903840, 0x40},                                   // Camera_Distance, the pending cells, the scratch words
         {0x9039A0, 0x58},                                   // Field_ScriptFlags .. 0x9039F7 (the mode bytes)
-        {at::kCondFlags, 0x1D0},                            // Cond_Flags, the story flags, the party lists
-        {at::kAreaNumber, 4},                               // Game_AreaNumber
+        {Cond_Flags_addr, 0x1D0},                           // Cond_Flags, the story flags, the party lists
+        {Game_AreaNumber_addr, 4},                          // Game_AreaNumber
         {0x905B80, 0x30},                                   // Field_EdgeBits .. Field_ScriptFlags2 ..
         {at::kMapBytes, 8},                                 // AreaMap_Bytes, Field_State
         {0x905E60, 0x10},                                   // MapView_Redraw ..
@@ -610,8 +610,8 @@ void Run(const Group& group) {
         {0x92BEE2, 2},                                      // MapView_ElevationOffset
         {0x937F80, 4},                                      // the pending area word 0x937F82
         {0x937F88, 0x10},                                   // Sprite_Current, MoveScript_F3Divisor, Gfx_ClutStripDirty, Frame_Counter
-        {at::kFieldRequest, 1},                             // Field_Request
-        {at::kMapHeader, at::kMapHeaderBytes},              // AreaMap_Header: the area block, its header cells
+        {Field_Request_addr, 1},                            // Field_Request
+        {AreaMap_Header_addr, at::kMapHeaderBytes},         // AreaMap_Header: the area block, its header cells
         {Key(g_records), sizeof g_records},
     };
     for (const Region& r : standard) g_regions[g_region_n++] = r;

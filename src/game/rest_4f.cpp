@@ -34,6 +34,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_4f_callees.h"
 #include "game/scenario_harness.h"
 #include "game/config_text.h"
@@ -44,6 +45,12 @@
 #include "input/sigma.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
+[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_4f::at;
 using U = std::uint32_t;
@@ -104,16 +111,16 @@ void Dispatch(const char* who, U table, unsigned entries, unsigned index, const 
 // ===========================================================================
 
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(B(at::kBackdrop)); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
 // The banner box: (0x14, y, 0x118, 0x13) in the window style.
-void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, B(at::kStyle)); }
+void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
 // The banner's text, system message 0xBC + the cursor (s8), at (0x1C, 0x13).
 void TitleText(U id) {
     const unsigned char* const text = SH_CALL(Msg_SystemPtr)(id);
     SH_CALL(Text_DrawAt)(0x1C, 0x13, 0, 0xFF, text);
 }
-U CursorId() { return static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(B(at::kCursor)))) + 0xBC; }
-int CursorS() { return static_cast<signed char>(B(at::kCursor)); }
+U CursorId() { return static_cast<std::uint32_t>(MenuLists_Cursor) + 0xBC; }
+int CursorS() { return MenuLists_Cursor; }
 // The top bar's hand: x = cursor * 48 + 0x76.
 void TopHand() { SH_CALL(Menu_DrawHand)(CursorS() * 48 + 0x76, 0x2A, 0); }
 U Repeat() { return SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF000u); }
@@ -125,13 +132,13 @@ U RowState(unsigned row) {
     return cursor == static_cast<int>(row) ? (d & 0xFF) : 0;
 }
 void SetDefaults() {
-    B(at::kStyle) = 0;
-    B(at::kBackdrop) = 0;
-    B(at::kSetting3) = 0;
-    B(at::kSetting5C) = 0;
-    B(at::kSetting5D) = 0;
-    B(at::kSetting4) = 0;
-    B(at::kSetting0) = 1;
+    BattleDraw_Colour = 0;
+    FieldS_Backdrop = 0;
+    Rest4f_Setting3 = 0;
+    Rest4f_Setting5C = 0;
+    BattleWinStates_LabelGate = 0;
+    FieldE2_RunDefault = 0;
+    ModeFlow_ConfigBytes = 1;
     SetW(at::kButtons, 0x23);
     SetW(at::kButtons + 2, 0x80);
     SetW(at::kButtons + 0xC, 0x40);
@@ -146,14 +153,14 @@ void SetDefaults() {
 // [ConfigScreen_States + 0x929F02 * 4] - 0 the opening, 1 the top bar, 2 the
 // rows, 3 the controller panel, 4 the closing. Unbounded: ours aborts past 5.
 extern "C" void __cdecl ConfigScreen_Run(void) {
-    Dispatch("ConfigScreen_Run", at::kConfigStates, at::kConfigStateCount, B(at::kState), "the state byte 0x929F02");
+    Dispatch("ConfigScreen_Run", ConfigScreen_States_addr, at::kConfigStateCount, FieldS_Step, "the state byte 0x929F02");
 }
 
 // original 0x460CC0 (ConfigScreen_States[0]): jmp [ConfigScreen_OpenStates +
 // 0x929F03 * 4] - 0 a fade started, 1 its wait, 2 the slide in
 // (ConfigMenu_Open sets 2). Unbounded: ours aborts past 3.
 extern "C" void __cdecl ConfigScreen_OpenRun(void) {
-    Dispatch("ConfigScreen_OpenRun", at::kConfigOpenStates, at::kConfigOpenCount, B(at::kOpenState),
+    Dispatch("ConfigScreen_OpenRun", ConfigScreen_OpenStates_addr, at::kConfigOpenCount, Rest2d_MenuSub,
              "the opening byte 0x929F03");
 }
 
@@ -161,9 +168,9 @@ extern "C" void __cdecl ConfigScreen_OpenRun(void) {
 // cursor 0; 0x929F03 up one (read after the call).
 extern "C" void __cdecl ConfigScreen_OpenFade(void) {
     SH_CALL(Transition_Start)(1);
-    const unsigned char n = B(at::kOpenState);
-    B(at::kCursor) = 0;
-    B(at::kOpenState) = static_cast<unsigned char>(n + 1);
+    const unsigned char n = Rest2d_MenuSub;
+    MenuLists_Cursor = 0;
+    Rest2d_MenuSub = static_cast<unsigned char>(n + 1);
 }
 
 // original 0x460CF0 (ConfigScreen_OpenStates[1]): the screen drawn at rest
@@ -176,10 +183,10 @@ extern "C" void __cdecl ConfigScreen_OpenWait(void) {
     SH_CALL(Config_DrawPanel)(0x1C, 0x40);
     SH_CALL(ConfigScreen_DrawButtons)(0xFF, 0x70, 0x26);
     if (MoveScript_WaitWordDA != 0) return;
-    const unsigned char st = B(at::kState);
+    const unsigned char st = FieldS_Step;
     B(at::kCounter) = 0;
-    B(at::kOpenState) = 0;
-    B(at::kState) = static_cast<unsigned char>(st + 1);
+    Rest2d_MenuSub = 0;
+    FieldS_Step = static_cast<unsigned char>(st + 1);
 }
 
 // original 0x460D50 (ConfigScreen_OpenStates[2]): the cursor 0; sound 0x102 when
@@ -188,7 +195,7 @@ extern "C" void __cdecl ConfigScreen_OpenWait(void) {
 // bar at y 0x26 - 16c; the counter down one, at 0 the state on (0x929F03 0).
 extern "C" void __cdecl ConfigScreen_SlideIn(void) {
     const unsigned char c0 = B(at::kCounter);
-    B(at::kCursor) = 0;
+    MenuLists_Cursor = 0;
     if (c0 == 5) Sound(0x102);
     Backdrop();
     TitleBox(0x10 - static_cast<int>(B(at::kCounter)) * 16);
@@ -197,10 +204,10 @@ extern "C" void __cdecl ConfigScreen_SlideIn(void) {
     const unsigned char n = static_cast<unsigned char>(B(at::kCounter) - 1);
     B(at::kCounter) = n;
     if (n != 0) return;
-    const unsigned char st = B(at::kState);
+    const unsigned char st = FieldS_Step;
     B(at::kCounter) = 0;
-    B(at::kOpenState) = 0;
-    B(at::kState) = static_cast<unsigned char>(st + 1);
+    Rest2d_MenuSub = 0;
+    FieldS_Step = static_cast<unsigned char>(st + 1);
 }
 
 // original 0x460E10 (ConfigScreen_States[1], and the cell 0x63F298): the top
@@ -215,7 +222,7 @@ extern "C" void __cdecl ConfigScreen_SlideIn(void) {
 // 4, bit 0x800 leaves without a sound; elsewhere a cancel button leaves with the
 // two sounds.
 extern "C" void __cdecl ConfigScreen_TopBar(void) {
-    const unsigned char bd = B(at::kBackdrop);
+    const unsigned char bd = FieldS_Backdrop;
     B(at::kCounter) = 0;
     SH_CALL(Menu_DrawBackdrop)(bd);
     TitleBox(0x10);
@@ -226,37 +233,37 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
     const U rep = Repeat();
     if (rep & 0xA000) {
         Sound(0x101);
-        B(at::kCursor) = B(at::kCursor) == 0 ? 1 : 0;
+        MenuLists_Cursor = static_cast<unsigned char>(MenuLists_Cursor) == 0 ? 1 : 0;
     }
     if (rep & 0x1000) {
         Sound(0x100);
-        const unsigned char st = B(at::kState);
-        B(at::kCursor) = 7;
-        B(at::kState) = static_cast<unsigned char>(st + 1);
+        const unsigned char st = FieldS_Step;
+        MenuLists_Cursor = 7;
+        FieldS_Step = static_cast<unsigned char>(st + 1);
         return;
     }
     if (rep & 0x4000) {
         Sound(0x100);
-        const unsigned char st = B(at::kState);
-        B(at::kCursor) = 2;
-        B(at::kState) = static_cast<unsigned char>(st + 1);
+        const unsigned char st = FieldS_Step;
+        MenuLists_Cursor = 2;
+        FieldS_Step = static_cast<unsigned char>(st + 1);
         return;
     }
     const U pressed = L(at::kPressedDword);
     if (Field_ConfirmButtons & pressed & 0xFFFFu) {
-        if (B(at::kCursor) == 0) {
+        if (static_cast<unsigned char>(MenuLists_Cursor) == 0) {
             if (Game_Step != 4) {
                 Sound(0x106);
                 Sound(0x102);
             }
-            const unsigned char st = B(at::kState);
-            B(at::kOpenState) = 0;
+            const unsigned char st = FieldS_Step;
+            Rest2d_MenuSub = 0;
             B(at::kCounter) = 0;
-            B(at::kState) = static_cast<unsigned char>(st + 3);
+            FieldS_Step = static_cast<unsigned char>(st + 3);
             return;
         }
         Sound(0x104);
-        SH_CALL(ConfigScreen_DrawButtons)(B(at::kCursor), 0x70, 0x26);
+        SH_CALL(ConfigScreen_DrawButtons)(static_cast<unsigned char>(MenuLists_Cursor), 0x70, 0x26);
         TopHand();
         SetDefaults();
         return;
@@ -268,10 +275,10 @@ extern "C" void __cdecl ConfigScreen_TopBar(void) {
         Sound(0x106);
         Sound(0x102);
     }
-    const unsigned char st = B(at::kState);
+    const unsigned char st = FieldS_Step;
     B(at::kCounter) = 0;
-    B(at::kOpenState) = 0;
-    B(at::kState) = static_cast<unsigned char>(st + 3);
+    Rest2d_MenuSub = 0;
+    FieldS_Step = static_cast<unsigned char>(st + 3);
 }
 
 namespace {
@@ -319,33 +326,33 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
     TitleBox(0x10);
     TitleText(CursorId());
     SH_CALL(Config_DrawPanel)(0x1C, 0x40);
-    SH_CALL(ConfigScreen_DrawButtons)(B(at::kCursor), 0x70, 0x26);
+    SH_CALL(ConfigScreen_DrawButtons)(static_cast<unsigned char>(MenuLists_Cursor), 0x70, 0x26);
     const U row = static_cast<U>(CursorS() - 2);
     if (row <= 5) {
         const U held = L(at::kPressedDword);
         switch (row) {
-        case 0: StepSetting(at::kSetting0, 2, false); break;
-        case 1: StepSetting(at::kStyle, 3, false); break;
-        case 2: StepSetting(at::kBackdrop, 3, true); break;
+        case 0: StepSetting(ModeFlow_ConfigBytes_addr, 2, false); break;
+        case 1: StepSetting(BattleDraw_Colour_addr, 3, false); break;
+        case 2: StepSetting(FieldS_Backdrop_addr, 3, true); break;
         case 3:
             if (held & 0xA000) {
                 Sound(0x101);
-                B(at::kSetting3) = static_cast<unsigned char>(B(at::kSetting3) ^ 1);
+                Rest4f_Setting3 = static_cast<unsigned char>(Rest4f_Setting3 ^ 1);
             }
             break;
         case 4:
             if (held & 0xA000) {
                 Sound(0x101);
-                B(at::kSetting4) = static_cast<unsigned char>(B(at::kSetting4) ^ 1);
+                FieldE2_RunDefault = static_cast<unsigned char>(FieldE2_RunDefault ^ 1);
             }
             break;
         default: {
             const U buttons = Field_ConfirmButtons | 0xA000u;
             if (Input_Pressed & buttons) {
                 Sound(0x101);
-                const unsigned char st = B(at::kState);
-                B(at::kCursor) = 8;
-                B(at::kState) = static_cast<unsigned char>(st + 1);
+                const unsigned char st = FieldS_Step;
+                MenuLists_Cursor = 8;
+                FieldS_Step = static_cast<unsigned char>(st + 1);
                 return;
             }
             break;
@@ -355,24 +362,24 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
     const U rep = Repeat();
     if (rep & 0x1000) {
         Sound(0x100);
-        const unsigned char c = static_cast<unsigned char>(B(at::kCursor) - 1);
-        B(at::kCursor) = c;
+        const unsigned char c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) - 1);
+        MenuLists_Cursor = c;
         if (static_cast<signed char>(c) < 2) {
-            const unsigned char st = B(at::kState);
-            B(at::kCursor) = 0;
-            B(at::kState) = static_cast<unsigned char>(st - 1);
+            const unsigned char st = FieldS_Step;
+            MenuLists_Cursor = 0;
+            FieldS_Step = static_cast<unsigned char>(st - 1);
         }
         B(at::kCounter) = 1;
         return;
     }
     if (rep & 0x4000) {
         Sound(0x100);
-        const unsigned char c = static_cast<unsigned char>(B(at::kCursor) + 1);
-        B(at::kCursor) = c;
+        const unsigned char c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) + 1);
+        MenuLists_Cursor = c;
         if (static_cast<signed char>(c) > 7) {
-            const unsigned char st = B(at::kState);
-            B(at::kCursor) = 0;
-            B(at::kState) = static_cast<unsigned char>(st - 1);
+            const unsigned char st = FieldS_Step;
+            MenuLists_Cursor = 0;
+            FieldS_Step = static_cast<unsigned char>(st - 1);
         }
         B(at::kCounter) = 1;
         return;
@@ -380,9 +387,9 @@ extern "C" void __cdecl ConfigScreen_Rows(void) {
     const U cancel = Field_CancelButtons | 0x800u;
     if (Input_Pressed & cancel) {
         Sound(0x106);
-        const unsigned char st = B(at::kState);
-        B(at::kCursor) = 0;
-        B(at::kState) = static_cast<unsigned char>(st - 1);
+        const unsigned char st = FieldS_Step;
+        MenuLists_Cursor = 0;
+        FieldS_Step = static_cast<unsigned char>(st - 1);
     }
     const unsigned char n = B(at::kCounter);
     if (n < 3) B(at::kCounter) = static_cast<unsigned char>(n + 1);
@@ -403,9 +410,9 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
     Backdrop();
     TitleBox(0x10);
     SH_CALL(Config_DrawPanel)(0x1C, 0x40);
-    SH_CALL(ConfigScreen_DrawButtons)(B(at::kCursor), 0x70, 0x26);
-    const unsigned char cur = B(at::kCursor);
-    const U id = cur == 9 ? (B(at::kSetting4) != 0 ? 0xCAu : 0xC5u)
+    SH_CALL(ConfigScreen_DrawButtons)(static_cast<unsigned char>(MenuLists_Cursor), 0x70, 0x26);
+    const unsigned char cur = static_cast<unsigned char>(MenuLists_Cursor);
+    const U id = cur == 9 ? (FieldE2_RunDefault != 0 ? 0xCAu : 0xC5u)
                           : static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(cur))) + 0xBC;
     TitleText(id);
     SH_CALL(Config_DrawControllerPanel)(0xA8, 0x62);
@@ -423,11 +430,11 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
         unsigned r = 0;
         for (; r < at::kPadRowCount; ++r)
             if (W(at::kButtons + 2u * B(at::kPadRows + r)) & bits) break;
-        const unsigned char c = B(at::kCursor);
+        const unsigned char c = static_cast<unsigned char>(MenuLists_Cursor);
         const U by_cursor = at::kPadRowsByCursor + static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(c)));
         if (r != at::kPadRowCount) {
-            const U from = at::kButtons + 2u * B(by_cursor);
-            const U to = at::kButtons + 2u * B(at::kPadRows + r);
+            const U from = Gfx_UnpackScratch_addr + 0x1f000 + 2u * B(by_cursor);
+            const U to = Gfx_UnpackScratch_addr + 0x1f000 + 2u * B(at::kPadRows + r);
             SetW(to, W(from));
         }
         SetW(at::kButtons + 2u * B(by_cursor), bits);
@@ -441,35 +448,35 @@ extern "C" void __cdecl ConfigScreen_Controller(void) {
     const U rep = Repeat();
     if (rep & 0x1000) {
         Sound(0x100);
-        const unsigned char c = static_cast<unsigned char>(B(at::kCursor) - 1);
-        B(at::kCursor) = c;
+        const unsigned char c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) - 1);
+        MenuLists_Cursor = c;
         if (static_cast<signed char>(c) >= 8) return;
         Sound(0x100);
-        B(at::kCursor) = 0xD;
+        MenuLists_Cursor = 0xD;
         return;
     }
     if (rep & 0x4000) {
         Sound(0x100);
-        const unsigned char c = static_cast<unsigned char>(B(at::kCursor) + 1);
-        B(at::kCursor) = c;
+        const unsigned char c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) + 1);
+        MenuLists_Cursor = c;
         if (static_cast<signed char>(c) <= 0xD) return;
         Sound(0x100);
-        B(at::kCursor) = 8;
+        MenuLists_Cursor = 8;
         return;
     }
     const U p = L(at::kPressedDword);
     if (p & 0xA000) {
         Sound(0x101);
-        const unsigned char st = B(at::kState);
-        B(at::kCursor) = 7;
-        B(at::kState) = static_cast<unsigned char>(st - 1);
+        const unsigned char st = FieldS_Step;
+        MenuLists_Cursor = 7;
+        FieldS_Step = static_cast<unsigned char>(st - 1);
         return;
     }
     if (p & 0x800) {
         Sound(0x106);
-        const unsigned char st = B(at::kState);
-        B(at::kCursor) = 0;
-        B(at::kState) = static_cast<unsigned char>(st + 0xFE);
+        const unsigned char st = FieldS_Step;
+        MenuLists_Cursor = 0;
+        FieldS_Step = static_cast<unsigned char>(st + 0xFE);
     }
 }
 
@@ -493,13 +500,13 @@ extern "C" void __cdecl ConfigScreen_SlideOut(void) {
     SH_CALL(ConfigScreen_DrawButtons)(0, 0x70, 0x26 - static_cast<int>(B(at::kCounter)) * 16);
     const unsigned char n = static_cast<unsigned char>(B(at::kCounter) + 1);
     B(at::kCounter) = n;
-    if (n == 5) B(at::kScreenStep) = static_cast<unsigned char>(B(at::kScreenStep) + 1);
+    if (n == 5) FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 // original 0x4616F0 (cdecl (sel, x, y)): Menu_DrawButtonRow(x, y, set 6, sel,
 // the style byte - the callee's unused fifth).
 extern "C" void __cdecl ConfigScreen_DrawButtons(int sel, int x, int y) {
-    SH_CALL(Menu_DrawButtonRow)(x, y, 6, sel, B(at::kStyle));
+    SH_CALL(Menu_DrawButtonRow)(x, y, 6, sel, static_cast<unsigned char>(BattleDraw_Colour));
 }
 
 // original 0x461710 (cdecl (x, y)): the panel. The five settings read first (rows
@@ -508,7 +515,7 @@ extern "C" void __cdecl ConfigScreen_DrawButtons(int sel, int x, int y) {
 // menu_frame.cpp holds it); then for each row at (x + 5, y + 9 + 15 * row): Config_DrawRowLabel
 // and Config_DrawRowOptions, each with the row's state (RowState, read afresh).
 extern "C" void __cdecl Config_DrawPanel(int x, int y) {
-    const unsigned char settings[6] = {B(at::kSetting0), B(at::kStyle), B(at::kBackdrop), B(at::kSetting3), B(at::kSetting4), 0};
+    const unsigned char settings[6] = {static_cast<unsigned char>(ModeFlow_ConfigBytes), static_cast<unsigned char>(BattleDraw_Colour), FieldS_Backdrop, Rest4f_Setting3, FieldE2_RunDefault, 0};
     SH_AT(Frame, MenuFrame_Draw())(x, y, 0x21, 0xD);
     const int x5 = x + 5;
     int row_y = y + 9;
@@ -585,7 +592,7 @@ extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
 // (1, 0x20); unless DIV-0051's jump stands at 0x461BAC, a second at x16 + 0x53
 // with the first's two y floats copied as dwords.
 extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
-    const unsigned char style = B(at::kStyle);
+    const unsigned char style = static_cast<unsigned char>(BattleDraw_Colour);
     const ConfigTextOperands& ops = ConfigText_Operands();   // at::kPadBoxWidth .. kPadSecondCell
     SH_CALL(Menu_DrawBox)(x, y, ops.box_width, 0x10, 0, style);
     const U r = static_cast<U>(row) & 0xFF;
@@ -705,8 +712,8 @@ extern "C" void __cdecl EffectKind07_FadeOut(void) {
 // 5, +1 = 1.
 extern "C" void __cdecl EffectKind08_Start(void) {
     unsigned char* s = S();
-    SetUL(s + 0x34, 0xB0000);
-    SetUL(s + 0x38, 0xF8000);
+    EffectRec(s)->x = 0xB0000;
+    EffectRec(s)->z = 0xF8000;
     const long e = SH_CALL(AreaMap_Elevation)(SL(s + 0x34), SL(s + 0x38));
     s = S();
     SetWord(s + 0x3E, static_cast<U>(e));
@@ -800,8 +807,8 @@ void Run(Trace& t, std::int32_t target, U oh, int dir, bool back, U colour) {
 extern "C" void __cdecl EffectKind08_TraceLine(void) {
     const unsigned char* const s = S();
     const unsigned char* const o = TraceObject("EffectKind08_TraceLine");
-    Trace t{UL(s + 0x34), UL(s + 0x38), UL(s + 0x3C), UL(s + 0x3C)};
-    Run(t, SL(o + 0x38), UL(o + 0x3C), +1, false, 0xC0C0C0);
+    Trace t{static_cast<std::uint32_t>(EffectRec(s)->x), static_cast<std::uint32_t>(EffectRec(s)->z), static_cast<std::uint32_t>(EffectRec(s)->height), static_cast<std::uint32_t>(EffectRec(s)->height)};
+    Run(t, SL(o + 0x38), static_cast<std::uint32_t>(SpriteRec(o)->height), +1, false, 0xC0C0C0);
     if (B(at::kChapterByte4A) == 0x32) S()[1] = 2;
 }
 
@@ -814,8 +821,8 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
     const unsigned char* const s = S();
     const unsigned char* const o = TraceObject("EffectKind08_TraceTwo");
     const std::int32_t target = SL(o + 0x38);
-    const U oh = UL(o + 0x3C);
-    Trace t{UL(s + 0x34), UL(s + 0x38), UL(s + 0x3C), 0};
+    const U oh = static_cast<std::uint32_t>(SpriteRec(o)->height);
+    Trace t{static_cast<std::uint32_t>(EffectRec(s)->x), static_cast<std::uint32_t>(EffectRec(s)->z), static_cast<std::uint32_t>(EffectRec(s)->height), 0};
     Run(t, target, oh, +1, false, 0xC0C0C0);
     t.x = 0xB0000;
     t.z = 0x138000;
@@ -834,8 +841,8 @@ extern "C" void __cdecl EffectKind08_TraceTwo(void) {
 // +0x20, +0x1C, +0x18 0; +0xA, +0xB, +8, +7, +6 0; sound 0x20E; +1 = 1.
 extern "C" void __cdecl EffectKind09_Start(void) {
     unsigned char* s = S();
-    SetUL(s + 0x34, 0x638000);
-    SetUL(s + 0x38, 0xD0000);
+    EffectRec(s)->x = 0x638000;
+    EffectRec(s)->z = 0xD0000;
     SetWord(s + 0x3E, 0x300);
     SetUL(s + 0x64, 0);
     SetUL(s + 0x68, 0);
@@ -1081,11 +1088,11 @@ extern "C" void __cdecl EffectKind09_DrawFan(int len, int a1, int a2, int a3) {
 // 0x653AAC; +0x7C 0.01f; +9 0; +6 0x20; the colour 0x80; the quad drawn; +1 = +7.
 extern "C" void __cdecl EffectKind0B_Start(void) {
     unsigned char* s = S();
-    StF(s + 0x74, I(static_cast<U>(static_cast<signed char>(B(at::kKind0BOffset)) +
+    StF(s + 0x74, I(static_cast<U>(Rest4f_Kind0BOffset +
                                    static_cast<std::int16_t>(W(at::kExtra0 + 0x2E)))));
     StF(s + 0x78, I(static_cast<U>(static_cast<signed char>(B(at::kKind0BOffset + 1)) +
                                    static_cast<std::int16_t>(W(at::kExtra0 + 0x30)))));
-    SetUL(s + 0x7C, 0x3C23D70Au);
+    EffectRec(s)->depth_f = 0x3C23D70Au;
     s[9] = 0;
     s[6] = 0x20;
     s[0x5F] = s[0x5E] = s[0x5D] = 0x80;
@@ -1149,17 +1156,17 @@ extern "C" void __cdecl EffectKind0B_Drop(void) {
 // byte +0x1C (x, z, and the height word +0x3E); +1 up.
 extern "C" void __cdecl EffectKind0B_Attach(void) {
     unsigned char* s = S();
-    SetUL(s + 0x34, L(at::kExtra0 + 0x34));
-    SetUL(s + 0x38, L(at::kExtra0 + 0x38));
-    SetUL(s + 0x3C, L(at::kExtra0 + 0x3C));
+    EffectRec(s)->x = L(at::kExtra0 + 0x34);
+    EffectRec(s)->z = L(at::kExtra0 + 0x38);
+    EffectRec(s)->height = L(at::kExtra0 + 0x3C);
     SetUL(s + 0x64, L(at::kExtra0 + 0x64));
     SetUL(s + 0x68, L(at::kExtra0 + 0x68));
     SetUL(s + 0x6C, L(at::kExtra0 + 0x6C));
     long out[3];
     SH_CALL(MoveCmd_AttachOffset)(out, s[0x1C]);
     s = S();
-    SetUL(s + 0x34, UL(s + 0x34) + static_cast<U>(out[0]));
-    SetUL(s + 0x38, UL(s + 0x38) + static_cast<U>(out[1]));
+    EffectRec(s)->x = static_cast<std::uint32_t>(EffectRec(s)->x) + static_cast<U>(out[0]);
+    EffectRec(s)->z = static_cast<std::uint32_t>(EffectRec(s)->z) + static_cast<U>(out[1]);
     SetWord(s + 0x3E, Word(s + 0x3E) + static_cast<U>(out[2]));
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -1241,10 +1248,10 @@ U Hi(const void* p) { return Key(p) & 0xFFFF0000u; }
 // Palette 0x7B: entries 1..30 the leader's palette (ObjTrio 0's +0x27) with bit
 // 15 set, entries 0 and 31 zero; Gfx_ClutStripDirty is set by the callers.
 void TintPalette() {
-    const U from = at::kClutShadow + 2 + static_cast<U>(B(at::kLeader + 0x27)) * at::kClutBytes;
+    const U from = Gfx_ClutStrip_addr + 2 + static_cast<std::uint32_t>(ObjTrio[0x27]) * at::kClutBytes;
     for (U i = 0; i < 30; ++i) SetW(at::kClut7B + 2 + 2 * i, W(from + 2 * i) | 0x8000);
-    SetW(at::kClut7B, 0);
-    SetW(at::kClut7B + 0x3E, 0);
+    Gfx_ClutStrip[0xf60] = 0;
+    Gfx_ClutStrip[0xf7f] = 0;
 }
 // The record shows palette 0x7B: +0xB the palette it had, +0 bit 5 set, +0x27 0x7B.
 void UseTint(unsigned char* s) {
@@ -1267,14 +1274,14 @@ bool Above38() { return static_cast<std::int16_t>(W(at::kKind02Word)) > 0x38; }
 // the colour 0; the panel's y +0x10 0xF0; +1 up.
 extern "C" void __cdecl EffectKind02_Start(void) {
     unsigned char* const s = S();
-    s[0x25] = B(at::kLeader + 0x25);
-    s[0x26] = B(at::kLeader + 0x26);
-    s[0x27] = B(at::kLeader + 0x27);
-    s[0x28] = B(at::kLeader + 0x28);
+    s[0x25] = ObjTrio[0x25];
+    s[0x26] = ObjTrio[0x26];
+    s[0x27] = ObjTrio[0x27];
+    s[0x28] = ObjTrio[0x28];
     s[0x29] = 2;
     s[0x24] = 0x80;
-    SetWord(s + 0x2E, 0x39);
-    SetWord(s + 0x30, 0xC8);
+    EffectRec(s)->screen_x = 0x39;
+    EffectRec(s)->screen_y = 0xC8;
     s[0x48] = s[0x5C] = s[0x5D] = s[0x5E] = s[0x5F] = 0;
     SetUL(s + 0x10, 0xF0);
     s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -1295,7 +1302,7 @@ extern "C" void __cdecl EffectKind02_SlideIn(void) {
 // original 0x464780 (EffectKind02_States[3]): call [EffectKind02_Modes + +2 * 4]
 // (unbounded: ours aborts past 4), then the panel at y +0x10.
 extern "C" void __cdecl EffectKind02_Body(void) {
-    Dispatch("EffectKind02_Body", at::kKind02Modes, at::kKind02ModeCount, S()[2], "the sub-state +2");
+    Dispatch("EffectKind02_Body", EffectKind02_Modes_addr, at::kKind02ModeCount, S()[2], "the sub-state +2");
     Panel(0);
 }
 
@@ -1315,13 +1322,13 @@ extern "C" void __cdecl EffectKind02_SlideOut(void) {
 // original 0x464810 (EffectKind02_Modes[1]): jmp [EffectKind02_Mode1Steps + +3 *
 // 4] (unbounded: ours aborts past 2).
 extern "C" void __cdecl EffectKind02_RunMode1(void) {
-    Dispatch("EffectKind02_RunMode1", at::kKind02Mode1, at::kKind02Mode1Count, S()[3], "the step +3");
+    Dispatch("EffectKind02_RunMode1", EffectKind02_Mode1Steps_addr, at::kKind02Mode1Count, S()[3], "the step +3");
 }
 
 // original 0x464A20 (EffectKind02_Modes[3]): jmp [EffectKind02_Mode3Steps + +3 *
 // 4] (unbounded: ours aborts past 3).
 extern "C" void __cdecl EffectKind02_RunMode3(void) {
-    Dispatch("EffectKind02_RunMode3", at::kKind02Mode3, at::kKind02Mode3Count, S()[3], "the step +3");
+    Dispatch("EffectKind02_RunMode3", EffectKind02_Mode3Steps_addr, at::kKind02Mode3Count, S()[3], "the step +3");
 }
 
 // original 0x464830 (EffectKind02_Mode1Steps[0]): palette 0x7B tinted from the
@@ -1365,15 +1372,15 @@ extern "C" void __cdecl EffectKind02_Mode1Brighten(void) {
 // +0x5A copied; Sprite_QueueOverlay (a tail jmp).
 extern "C" void __cdecl EffectKind02_CopyLeader(void) {
     unsigned char* const s = S();
-    if (B(at::kLeader + 2) == 1) {
+    if (ObjTrio[2] == 1) {
         s[2] = 0;
         return;
     }
     if (Above38()) s[2] = 3;
-    s[0x2A] = B(at::kLeader + 0x2A);
-    s[0x49] = B(at::kLeader + 0x49);
-    s[0x4A] = B(at::kLeader + 0x4A);
-    s[0x4B] = B(at::kLeader + 0x4B);
+    s[0x2A] = ObjTrio[0x2a];
+    s[0x49] = ObjTrio[0x49];
+    s[0x4A] = ObjTrio[0x4a];
+    s[0x4B] = ObjTrio[0x4b];
     SetUL(s + 0x50, L(at::kLeader + 0x50));
     SetUL(s + 0x54, L(at::kLeader + 0x54));
     SetWord(s + 0x58, W(at::kLeader + 0x58));
@@ -1415,7 +1422,7 @@ extern "C" void __cdecl EffectKind02_Mode3Darken(void) {
 // +3 = 0; else while the word 0x905E62 is below 0x38 (s16), +2 = 1 and +3 = 0.
 extern "C" void __cdecl EffectKind02_Mode3Wait(void) {
     unsigned char* const s = S();
-    if (B(at::kLeader + 2) == 1) {
+    if (ObjTrio[2] == 1) {
         s[2] = 0;
         s[3] = 0;
         return;

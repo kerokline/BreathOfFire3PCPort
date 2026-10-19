@@ -359,7 +359,7 @@ void SeedRecord(unsigned char* o) {
 // planted as 0 or as not 0.
 void PlantCell(short cx, short cz, bool empty) {
     const int width = static_cast<int>(AreaMap_Header[0]);
-    const int index = width * cz + static_cast<int>(Word(Mem(at::kAreaCells))) * 2 + cx;
+    const int index = width * cz + static_cast<int>(Word(Mem(AreaMap_Header_addr + 0x2))) * 2 + cx;
     unsigned char* const w = Mem(Key(AreaMap_Header) + static_cast<U>(index) * 2u);
     if (!sh::InRegions(w, 2)) return;
     SetWord(w, empty ? 0u : 1u + sh::Next() % 0xFFFF);

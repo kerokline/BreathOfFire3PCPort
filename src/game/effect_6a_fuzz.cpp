@@ -258,8 +258,8 @@ void Seed(unsigned k) {
     // or cell - 2 for 0x3E) on either axis, or the edge
     const std::int32_t delta = Is3E(k) ? -2 : 1;
     if (sh::Next() % 8 != 0) {
-        SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(Around(cx + (sh::Half() ? delta : 0))));
-        SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(Around(cz + (sh::Half() ? delta : 0))));
+        SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(Around(cx + (sh::Half() ? delta : 0))));
+        SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(Around(cz + (sh::Half() ? delta : 0))));
     }
     Field_Request = static_cast<unsigned char>(PickOf(0, 0, 2, sh::Next()));
     // sub-kind 0x4A's flag: +0xB against Cond_ByteFE, often sharing a bit
@@ -280,8 +280,8 @@ void Disturb(U h) {
     switch (h % 7) {
     case 0: SetWord(s + 0x30, (v & 1) ? 0x100u - ((v >> 1) & 0x20) : v >> 1); break;
     case 1: s[8] = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 2: SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(v)); break;
-    case 3: SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(v)); break;
+    case 2: SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(v)); break;
+    case 3: SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(v)); break;
     case 4: SetWord(s + ((v & 1) ? 0x36 : 0x3A), v >> 1); break;
     case 5: s[0xA] = static_cast<unsigned char>(v % at::kSidesRoom); break;
     case 6: Field_Request = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;

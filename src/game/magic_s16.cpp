@@ -34,10 +34,15 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Handler;
@@ -50,9 +55,9 @@ using move_script::Word;
 
 constexpr std::uint32_t kSparkleStride = 0x2C;
 constexpr std::uint32_t kScratch = 0x903850;       // s16 words +0 .. +0xE (DamageScratch's neighbourhood)
-constexpr std::uint32_t kTints = 0x7E0700;         // MoveScript_TintRecords, 12-byte records
+// kTints: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords, 12-byte records
 constexpr std::uint32_t kEnemyState = 0x93BCD9;    // what 0x4BBCE0 reads: 0x93B961 + 0x128 * 3 (docs/magic_s16.md section 6)
-constexpr std::uint32_t kPartyState = 0x802D41;    // a member's +1
+// kPartyState: now ObjTrio[1] (symbols.toml). a member's +1
 
 // A sparkle's fields (battle_items_callees.h names them for MAGIC070's pool).
 constexpr unsigned kFlags = 0, kType = 1, kPhase = 2, kShade = 3, kKind = 4, kTimer = 5, kCount = 6, kLimit = 7;
@@ -101,7 +106,7 @@ void Bump(unsigned char& b, int by = 1) { b = static_cast<unsigned char>(b + by)
 std::int32_t PtrValue(const void* p) { return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p))); }
 unsigned char* Record(const Pool& p, unsigned index) { return Mem(p.pool + index * kSparkleStride); }
 unsigned char* Cur(const Pool& p) { return Pointer(p.current); }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
 short S16(const unsigned char* a) { return static_cast<short>(Word(a)); }
 
@@ -117,7 +122,7 @@ void PutFloat(unsigned char* a, int v) {
 // (0x802D40, stride 0x14C) below 3, else the enemy index - 3 (0x93B960,
 // stride 0x128), unchecked.
 unsigned char* ActorRecord(unsigned char actor) {
-    if (actor < 3) return Mem(at::kParty + actor * at::kPartyStride);
+    if (actor < 3) return Mem(ObjTrio_addr + actor * at::kPartyStride);
     return Mem(at::kEnemies + (static_cast<std::uint32_t>(actor) - 3) * at::kEnemyStride);
 }
 
@@ -407,14 +412,14 @@ void Free(const Pool& p) {
 // becomes the current sparkle, its +0x28 the owner 0x93B940 for the dispatch,
 // and the owner is put back after each (saved once, after the phase).
 void Walk(const Pool& p, Fn0 dispatch) {
-    const std::int32_t saved = Long(Mem(at::kOwner));
+    const std::int32_t saved = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < p.count; ++i) {
         unsigned char* const s = Record(p, i);
         if ((s[kFlags] & 1) == 0) continue;
         SetLong(Mem(p.current), PtrValue(s));
-        SetLong(Mem(at::kOwner), Long(s + kOwnerOf));
+        SetLong(Mem(BattleE2_Owner_addr), Long(s + kOwnerOf));
         MH_CALL(dispatch)();
-        SetLong(Mem(at::kOwner), saved);
+        SetLong(Mem(BattleE2_Owner_addr), saved);
     }
 }
 
@@ -476,10 +481,10 @@ void ClearPool(const Pool& p) {
 void Spawn(const Pool& p, unsigned char kind) {
     ClearPool(p);
     Sprite_Current[4] = kind;
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sprite_Current[8] = src[8];
-    SetLong(Sprite_Current + 0x34, Long(src + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
@@ -531,8 +536,8 @@ void ActorStart(const Pool& p) {
     if (sc[9] != 0) return;
     const unsigned char* const rec = ActorRecord(sc[4]);
     sc[8] = rec[8];
-    SetLong(Sprite_Current + 0x34, Long(rec + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(rec + 0x38));
+    Store(ScTask()->x, Long(rec + 0x34));
+    Store(ScTask()->y, Long(rec + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(rec + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
@@ -587,8 +592,8 @@ constexpr std::uint32_t kTask074[2] = {0x4BBDD0, bof3::addr::MagicFx_EndWhenChil
 // the end.
 constexpr std::uint32_t kActor073[6] = {bof3::addr::Magic073_ActorStart, bof3::addr::ActorFx_Tint, bof3::addr::ActorFx_TintUp, bof3::addr::ActorFx_WaitStep4, bof3::addr::ActorFx_Untint, bof3::addr::ActorFx_End};
 constexpr std::uint32_t kActor074[6] = {bof3::addr::Magic074_ActorStart, bof3::addr::ActorFx_Tint, bof3::addr::ActorFx_TintUp, bof3::addr::ActorFx_WaitStep4, bof3::addr::ActorFx_Untint, bof3::addr::ActorFx_End};
-constexpr std::uint32_t kActorPhases073 = 0x65B0E0;   // the child's dispatch table, read in place by +1
-constexpr std::uint32_t kActorPhases074 = 0x65B1AC;
+// kActorPhases073: now Magic073_ActorPhases (symbols.toml). the child's dispatch table, read in place by +1
+// kActorPhases074: now Magic074_ActorPhases (symbols.toml).
 
 void CallCell(std::uint32_t table, unsigned index) {
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(Mem(table + 4 * index)))))();
@@ -617,7 +622,7 @@ MS16_EXPORT void __cdecl Magic073_Wait(void) {
 // original 0x4BB1A0: the child (kind 1, parameter 0x26): a jmp through
 // 0x65B0E0 by +1, read in place, unchecked (+1 is 0 as the spawn sets it;
 // entry 1 is the sparkle table's).
-MS16_EXPORT void __cdecl Magic073_ActorDispatch(void) { CallCell(kActorPhases073, Sprite_Current[1]); }
+MS16_EXPORT void __cdecl Magic073_ActorDispatch(void) { CallCell(Magic073_ActorPhases_addr, Sprite_Current[1]); }
 
 // original 0x4BB1C0: the child's phase +2 through a six-entry stack table.
 MS16_EXPORT void __cdecl Magic073_ActorTask(void) { Step2(kActor073, "Magic073_ActorTask"); }
@@ -644,7 +649,7 @@ MS16_EXPORT unsigned char __cdecl Magic073_CountReacting(void) {
         if (MH_CALL(Battle_ActorIsOut)(static_cast<unsigned char>(i + 3)) == 0 && Mem(kEnemyState + i * at::kEnemyStride)[0] == 6)
             ++n;
     for (unsigned char i = 0; i < 3; ++i)
-        if (MH_CALL(Battle_ActorIsOut)(i) == 0 && Mem(kPartyState + i * at::kPartyStride)[0] == 6) ++n;
+        if (MH_CALL(Battle_ActorIsOut)(i) == 0 && Mem(ObjTrio_addr + 0x1 + i * at::kPartyStride)[0] == 6) ++n;
     return n;
 }
 
@@ -657,7 +662,7 @@ MS16_EXPORT void __cdecl Magic074_Task(void) {
 // original 0x4BBDD0: a child (kind 1, parameter 0x24) per actor, kind 1.
 MS16_EXPORT void __cdecl Magic074_Spawn(void) { SpawnOnActors(k074, 1, 0x24); }
 // original 0x4BBF40: the child (parameter 0x24): a jmp through 0x65B1AC by +1.
-MS16_EXPORT void __cdecl Magic074_ActorDispatch(void) { CallCell(kActorPhases074, Sprite_Current[1]); }
+MS16_EXPORT void __cdecl Magic074_ActorDispatch(void) { CallCell(Magic074_ActorPhases_addr, Sprite_Current[1]); }
 // original 0x4BBF60: the child's phase +2 through a six-entry stack table.
 MS16_EXPORT void __cdecl Magic074_ActorTask(void) { Step2(kActor074, "Magic074_ActorTask"); }
 // original 0x4BBFB0: the child's start (sparkles from 0x68A530's pool).
@@ -685,7 +690,7 @@ MS16_EXPORT void __cdecl ActorFx_Tint(void) {
 MS16_EXPORT void __cdecl ActorFx_Untint(void) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const rec = ActorRecord(sc[4]);
-    for (unsigned k = 2; k <= 4; ++k) Bump(Mem(kTints + sc[0xA] * 12u + k)[0], -1);
+    for (unsigned k = 2; k <= 4; ++k) Bump(Mem(MoveScript_TintRecords_addr + sc[0xA] * 12u + k)[0], -1);
     Bump(sc[9], -1);
     if (Sprite_Current[9] != 0) return;
     MH_CALL(Sprite_ReleaseTint)(rec);

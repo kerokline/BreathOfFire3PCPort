@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_2g.h"
 #include "game/rest_2g_callees.h"
 #include "game/scenario_harness.h"
@@ -26,6 +27,10 @@
 
 namespace rest_2g {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -39,7 +44,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char* Mem(U address) { return sh::Mem(address); }
 unsigned char* Rec(unsigned k) { return Mem(at::kWindows + at::kWindowStride * (k % at::kWindowCount)); }
-unsigned char* Current() { return sh::Pointer(at::kCurrent); }
+unsigned char* Current() { return sh::Pointer(BattleWinStates_Current_addr); }
 U PickOf(std::initializer_list<U> v) { return *(v.begin() + sh::Next() % v.size()); }
 
 // --- the clones -------------------------------------------------------------------------
@@ -199,9 +204,9 @@ const Spec kSpecs[kCount] = {
 // --- the .data tables the kinds call through (swapped for recorders) -------------------
 // Each table's own length (its count in symbols.toml): the seed draws +3 below it.
 const sh::DataTable kTables[] = {
-    {at::kStatsStates, 7},  {at::kEquipStates, 3},    {at::kExpStates, 3},         {at::kNextLevelStates, 3},
-    {at::kWideTitleStates, 3}, {at::kIconWheelStates, 3}, {at::kItemListStates, 5}, {at::kButtonRowStates, 3},
-    {at::kEquipCompareStates, 5}, {at::kAbilityStates, 5}, {at::kItemPanelStates, 5}, {at::kReserveStates, 3},
+    {MenuList_StatsStates_addr, 7},  {MenuList_EquipStates_addr, 3},    {MenuList_ExpStates_addr, 3},         {MenuList_NextLevelStates_addr, 3},
+    {MenuList_WideTitleStates_addr, 3}, {MenuList_IconWheelStates_addr, 3}, {MenuList_ItemListStates_addr, 5}, {MenuList_ButtonRowStates_addr, 3},
+    {MenuList_EquipCompareStates_addr, 5}, {MenuList_AbilityStates_addr, 5}, {MenuList_ItemPanelStates_addr, 5}, {MenuList_ReserveStates_addr, 3},
 };
 
 // --- the regions beyond the harness's field ones ----------------------------------------
@@ -223,9 +228,9 @@ void Move(U h) {
     const bool in = sh::InRegions(r, at::kWindowStride);
     switch (h % 14) {
     case 0:
-    case 1: sh::SetPointer(at::kCurrent, Rec(b)); break;
-    case 2: if (in) SetWord(r + 4, b & 1 ? v & 0x1FF : v); break;
-    case 3: if (in) SetWord(r + 6, b & 1 ? v & 0xFF : v); break;
+    case 1: sh::SetPointer(BattleWinStates_Current_addr, Rec(b)); break;
+    case 2: if (in) WindowRec(r)->centre_x = b & 1 ? v & 0x1FF : v; break;
+    case 3: if (in) WindowRec(r)->centre_y = b & 1 ? v & 0xFF : v; break;
     case 4: if (in) r[0xA] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 5: if (in) r[0xB] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 6: if (in) r[0xC] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
@@ -236,8 +241,8 @@ void Move(U h) {
         break;
     }
     case 9: if (in) SetLong(r + 0x20, static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
-    case 10: Mem(at::kParty + b % 6)[0] = static_cast<unsigned char>(v % 9); break;
-    case 11: Mem(at::kColour)[0] = b; break;
+    case 10: Mem(Cond_Flags_addr + 0xd2 + b % 6)[0] = static_cast<unsigned char>(v % 9); break;
+    case 11: Mem(BattleDraw_Colour_addr)[0] = b; break;
     case 12: Mem(at::kGridCells + b % 0x12)[0] ^= static_cast<unsigned char>(v | 1); break;
     case 13: if (in) r[3] = b; break;
     default: break;
@@ -355,7 +360,7 @@ int BoundOf(const Spec& s, const unsigned char* r) {
 void Seed(unsigned k) {
     const Spec& s = kSpecs[k];
     unsigned char* const r = Rec(sh::Next());
-    sh::SetPointer(at::kCurrent, r);
+    sh::SetPointer(BattleWinStates_Current_addr, r);
     // the record's bytes against their compares
     r[0xA] = static_cast<unsigned char>(PickOf({0, 1, 2, 3, 0, 1, sh::Next()}));
     r[0xB] = static_cast<unsigned char>(PickOf({0, 1, 2, 3, 4, 0xFF, sh::Next()}));
@@ -368,10 +373,10 @@ void Seed(unsigned k) {
     SetWord(Mem(at::kRecord4X), PickOf({0x62, 0x10, 0x7F80, 0x8000, sh::Next()}));
     // the party, the grid cells, the battle party's ids
     for (unsigned i = 0; i < 6; ++i)
-        Mem(at::kParty + i)[0] = static_cast<unsigned char>(sh::Next() % 5 ? sh::Next() % 9 : sh::Next());
+        Mem(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(sh::Next() % 5 ? sh::Next() % 9 : sh::Next());
     for (unsigned i = 0; i < 0x12; ++i) Mem(at::kGridCells + i)[0] = static_cast<unsigned char>(sh::Next() % 3 ? 0 : sh::Next() | 1);
     for (unsigned i = 0; i < 3; ++i)
-        Mem(at::kObjTrio + 0x89 + at::kObjStride * i)[0] = static_cast<unsigned char>(sh::Next() % 4 ? sh::Next() % 9 : sh::Next());
+        Mem(ObjTrio_addr + 0x89 + at::kObjStride * i)[0] = static_cast<unsigned char>(sh::Next() % 4 ? sh::Next() % 9 : sh::Next());
     // the levels and the EXP the next level is compared with
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const c = Mem(at::kCharRecords + at::kCharStride * i);

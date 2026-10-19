@@ -266,32 +266,32 @@ const sh::Callee kCallees[] = {
 // The tables the dispatchers go through, read in place: each its own length
 // (to the next table a dispatcher names; none bounded).
 const sh::DataTable kTables[] = {
-    {at::kKind2FStates, 2},       // EffectKind2F_States
-    {at::kKind33States, 4},       // EffectKind33_States
-    {at::kKind35States, 3},       // EffectKind35_States
-    {at::kKind35ShardStates, 2},  // EffectKind35_ShardStates
-    {at::kKind38States, 5},       // EffectKind38_States
-    {at::kKind39States, 4},       // EffectKind39_States
-    {at::kKind3BStates, 4},       // EffectKind3B_States
-    {at::kKind3DStates, 4},       // EffectKind3D_States
+    {EffectKind2F_States_addr, 2}, // EffectKind2F_States
+    {EffectKind33_States_addr, 4}, // EffectKind33_States
+    {EffectKind35_States_addr, 3}, // EffectKind35_States
+    {EffectKind35_ShardStates_addr, 2}, // EffectKind35_ShardStates
+    {EffectKind38_States_addr, 5}, // EffectKind38_States
+    {EffectKind39_States_addr, 4}, // EffectKind39_States
+    {EffectKind3B_States_addr, 4}, // EffectKind3B_States
+    {EffectKind3D_States_addr, 4}, // EffectKind3D_States
 };
 
 // Beyond effect mode's standard regions: the rest of EffectKind30_Shards past
 // the standard 0x644 to the end of kind 0x35's face copies (0x92CFC0; kind
 // 0x3B's spirals end at 0x92CDB4), the shard cursor, the fuzz's model.
 const sh::Region kRegions[] = {
-    {at::kPool + 0x644, at::kPool35End - (at::kPool + 0x644)},
-    {at::kShardCursor35, 4},
+    {EffectKind30_Shards_addr + 0x644, at::kPool35End - (EffectKind30_Shards_addr + 0x644)},
+    {EffectKind35_ShardCursor_addr, 4},
     {0, sizeof g_model},
 };
 sh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
 
 // --- the seed ------------------------------------------------------------------------
 
-unsigned char* Shard(unsigned i) { return P(at::kShards35 + 0x28 * (i % at::kShard35Count)); }
-unsigned char* Ring(unsigned i) { return P(at::kRings + at::kRingStride * (i % at::kRingCount)); }
-unsigned char* Spiral(unsigned i) { return P(at::kSpirals + at::kSpiralStride * (i % at::kSpiralCount)); }
-unsigned char* Trail(unsigned i) { return P(at::kTrails + at::kTrailStride * (i % at::kTrailCount)); }
+unsigned char* Shard(unsigned i) { return P(EffectKind30_Shards_addr + 0x28 * (i % at::kShard35Count)); }
+unsigned char* Ring(unsigned i) { return P(EffectKind30_Shards_addr + at::kRingStride * (i % at::kRingCount)); }
+unsigned char* Spiral(unsigned i) { return P(EffectKind30_Shards_addr + at::kSpiralStride * (i % at::kSpiralCount)); }
+unsigned char* Trail(unsigned i) { return P(EffectKind30_Shards_addr + at::kTrailStride * (i % at::kTrailCount)); }
 
 // Kind 0x35's sixteen shards: in use half the time, their state +1 inside
 // EffectKind35_ShardStates' two, their count +2 at 1 or 2 (the steps' zero) or any.
@@ -302,7 +302,7 @@ void Shards() {
         k[1] = static_cast<unsigned char>(sh::Next() % 2);
         k[2] = static_cast<unsigned char>(PickOf(1, 1, 2, 0, sh::Next()));
     }
-    SetLong(Mem(at::kShardCursor35), static_cast<std::int32_t>(Key(Shard(sh::Next()))));
+    SetLong(Mem(EffectKind35_ShardCursor_addr), static_cast<std::int32_t>(Key(Shard(sh::Next()))));
 }
 
 // Kind 0x3D's sixteen rings: a third free, the rest in state 0, 1 or another,
@@ -325,8 +325,8 @@ void Spirals() {
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // what every kind may read: the model, the shard cursor
-    SetLong(Mem(at::kExtra1Model), static_cast<std::int32_t>(Key(g_model)));
-    SetLong(Mem(at::kShardCursor35), static_cast<std::int32_t>(Key(Shard(sh::Next()))));
+    SetLong(Mem(Sprite_ObjectsExtra_addr + 0xf4), static_cast<std::int32_t>(Key(g_model)));
+    SetLong(Mem(EffectKind35_ShardCursor_addr), static_cast<std::int32_t>(Key(Shard(sh::Next()))));
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 0x1D, 0x1E, 0x1F, 0x10, 0x40, 0x80, 0xFF, sh::Next()));
     if (sh::Half()) Frame_Counter = (Frame_Counter & ~7u) | (sh::Next() % 2);   // Frame_Counter & 7 == 0, & 1
     switch (k) {
@@ -374,7 +374,7 @@ void Args(unsigned k, U* a) {
         const U n = i % at::kPiece35Count;
         a[0] = at::kCopies35 + 0x28 * n;
         a[1] = Key(g_model) + 0x28 * n;
-        a[2] = at::kPieces35 + 0x18 * n;
+        a[2] = EffectKind30_Shards_addr + 0x280 + 0x18 * n;
         break;
     }
     case k3BSpiral: a[0] = Key(Spiral(i)); break;

@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc0_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -37,10 +38,9 @@ void SetW(uint32_t a, unsigned v) { move_script::SetWord(At(a), v); }
 uint32_t L(uint32_t a) { return static_cast<uint32_t>(move_script::Long(At(a))); }
 void SetL(uint32_t a, uint32_t v) { move_script::SetLong(At(a), static_cast<int32_t>(v)); }
 void SetL(unsigned char* p, uint32_t v) { move_script::SetLong(p, static_cast<int32_t>(v)); }
-uint32_t L(const unsigned char* p) { return static_cast<uint32_t>(move_script::Long(p)); }
 
 // The chapter's flag row, as the original reads it: the pointer afresh.
-unsigned char* Row() { return At(L(kFlagRow)); }
+unsigned char* Row() { return At(AreaW0c_FlagRow); }
 
 constexpr uint32_t kTextLo = 0x401000, kTextHi = 0x5C3000;
 
@@ -66,7 +66,11 @@ bool TakeSlot() {
     B(kSlot) = slot;
     return slot != 0xFF;
 }
-unsigned char* SlotRecord() { return At(kEffects + (static_cast<uint32_t>(B(kSlot)) << 7)); }
+unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<uint32_t>(B(kSlot)) << 7)); }
+
+// The typed views of the record pointers (docs/typed-records.md). Fx() is an
+// effect object (Effect_Objects).
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 // A kind-0x13 effect at (x, y, z) with +9 = mode: the shape every run of this
 // chapter places after TakeSlot.
@@ -85,14 +89,14 @@ void WaitLoad() {
 }
 
 void Timer(unsigned v) { SetW(kTimer, v); }
-void Step(unsigned v) { B(kStep) = static_cast<unsigned char>(v); }
-void Run(unsigned v) { B(kRun) = static_cast<unsigned char>(v); }
+void Step(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
+void Run(unsigned v) { MoveScript_Var7 = static_cast<unsigned char>(v); }
 
 // The corner words of the current area's descriptor block (+0xC, then
 // +0x12): MapView_CornerPtr set to them and returned. The index is
 // Game_AreaNumber, unchecked in the original against Area_Descriptors' 200.
 unsigned char* Corner(const char* who) {
-    const unsigned area = W(kArea);
+    const unsigned area = Game_AreaNumber;
     if (area >= Area_Descriptors_count)
         bof3::Fatal("%s: Game_AreaNumber 0x%X past Area_Descriptors' %u", who, area, Area_Descriptors_count);
     const uint32_t desc = L(kDescriptors + 4 * area);
@@ -115,7 +119,7 @@ void EnsureAnimation(uint32_t eax) {
 // 1 Scena00_EnterArea, 2 Scena00_Run; 3..14 are Scena00_Runs' entries (the
 // tables are one run of words), as Scena16_Frame's.
 extern "C" void __cdecl Scena00_Frame(void) {
-    reinterpret_cast<void (__cdecl*)()>(CodeAt(kStates, static_cast<signed char>(B(kState)), "Scena00_Frame"))();
+    reinterpret_cast<void (__cdecl*)()>(CodeAt(Scena00_States_addr, static_cast<signed char>(MoveScript_PartyRecords[0x62]), "Scena00_Frame"))();
 }
 
 // original 0x537F30: state 0, the chapter's start: call-table entry 0
@@ -127,7 +131,7 @@ extern "C" void __cdecl Scena00_Start(void) {
     SH_CALL(Scenario_CallA)(0);
     SH_CALL(Field_ChangeArea)(0x18, 0x630000, 0xC0000, 3);
     B(kScriptFlags) = static_cast<unsigned char>(B(kScriptFlags) | 0x40);
-    SetW(kPending, 0x18);
+    FieldModes_Pending = 0x18;
     SetL(kPending + 4, 0x630000);
     SetL(kPending + 8, 0xC0000);
     B(kPending + 3) = 3;
@@ -136,7 +140,7 @@ extern "C" void __cdecl Scena00_Start(void) {
     Step(0);
     WaitLoad();
     SetL(kCounter, 0);
-    B(kState) = 1;
+    MoveScript_PartyRecords[0x62] = 1;
 }
 
 // original 0x537FE0: state 1, the set-up of the area just entered, then state
@@ -151,7 +155,7 @@ extern "C" void __cdecl Scena00_Start(void) {
 // 1) the pass flags 0, the flag, state 2 and run 3 and return; else
 // Party_DropIn(0) and run 9.
 extern "C" void __cdecl Scena00_EnterArea(void) {
-    if (W(kArea) == 1) {
+    if (Game_AreaNumber == 1) {
         SH_CALL(Party_DropIn)(0);
         const unsigned char n = B(kByte4A);
         bool clear;
@@ -162,14 +166,14 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
                 e[5] = 0x10;
                 SetL(e + 0x18, 2);
                 SetL(e + 0x1C, 2);
-                SetL(e + 0xC, 3);
-                SetL(e + 0x10, 1);
+                Fx(e)->step_x = 3;
+                Fx(e)->step_z = 1;
             }
             const unsigned char again = B(kByte4A);
-            SetW(kAngles + 4, W(kAngles + 4) + 0xFEABu);
+            Camera_Angles[2] = static_cast<std::uint16_t>(Camera_Angles[2]) + 0xFEABu;
             clear = again != 3;
         } else if (n == 3) {
-            SetW(kAngles + 4, W(kAngles + 4) + 0x155u);
+            Camera_Angles[2] = static_cast<std::uint16_t>(Camera_Angles[2]) + 0x155u;
             SetL(0x802204, 1);
             SetL(0x802208, 4);
             B(0x8021ED) = 7;
@@ -184,21 +188,21 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
         Run(0xA);
     }
     SH_CALL(Scena00_Area02)();
-    if (W(kArea) == 4) {
+    if (Game_AreaNumber == 4) {
         const unsigned char t = SH_CALL(Flags_Test)(Row(), 0);
         if (t == 0) {
-            B(kPassFlags) = t;
+            Draw_PassFlags = t;
             SH_CALL(Flags_Set)(Row(), 0);
             SH_CALL(ScriptFlags_Set40)();
             Run(2);
         }
-        if (B(kByteFD) == 2) {
-            B(kPassFlags) = 0x1F;
+        if (Cond_ByteFD == 2) {
+            Draw_PassFlags = 0x1F;
             SH_CALL(ObjTrio_SetBit40)();
         }
     }
     SH_CALL(Scena00_Area18)();
-    if (W(kArea) == 0x19) {
+    if (Game_AreaNumber == 0x19) {
         SetL(0x7DEE98, 2);
         SetL(0x7DEE9C, 2);
         SetL(0x802160, 1);
@@ -206,26 +210,26 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
         SH_CALL(Sound_PlayEffect)(0x200);
         Run(0xB);
         Timer(0x14);
-        B(kPassFlags) = 0;
+        Draw_PassFlags = 0;
     }
-    if (W(kArea) == 0x1F) {
+    if (Game_AreaNumber == 0x1F) {
         unsigned char* const row = Row();
-        SetW(kAngles, 0x100);
-        SetW(kAngles + 4, 0);
-        SetW(kAngles + 2, 0);
-        SetW(kDistance, 0x100);
+        Camera_Angles[0] = 0x100;
+        Camera_Angles[2] = 0;
+        Camera_Angles[1] = 0;
+        Camera_Distance = 0x100;
         const unsigned char t = SH_CALL(Flags_Test)(row, 1);
         if (t == 0) {
-            B(kPassFlags) = t;
+            Draw_PassFlags = t;
             SH_CALL(Flags_Set)(Row(), 1);
-            B(kState) = 2;
+            MoveScript_PartyRecords[0x62] = 2;
             Run(3);
             return;
         }
         SH_CALL(Party_DropIn)(0);
         Run(9);
     }
-    B(kState) = 2;
+    MoveScript_PartyRecords[0x62] = 2;
 }
 
 // original 0x5381E0: area 2's set-up. Once (flag 2): the counter dword 0,
@@ -235,13 +239,13 @@ extern "C" void __cdecl Scena00_EnterArea(void) {
 // flag. Else once (flag 10): the flag, Party_DropIn(0), the kind-2 object to
 // (0x260000, 0x1B8000).
 extern "C" void __cdecl Scena00_Area02(void) {
-    if (W(kArea) != 2) return;
+    if (Game_AreaNumber != 2) return;
     if (SH_CALL(Flags_Test)(Row(), 2) == 0) {
         SetL(kCounter, 0);
         SH_CALL(MapView_SetElevation)(0x300);
         SH_CALL(Kind2_Place)(0);
-        SetW(kAngles, W(kAngles) + 0xAAu);
-        if (TakeSlot()) Kind13(S(kAngles) - 0xAA, S(kAngles + 2), S(kAngles + 4), 0x40);
+        Camera_Angles[0] = static_cast<std::uint16_t>(Camera_Angles[0]) + 0xAAu;
+        if (TakeSlot()) Kind13(Camera_Angles[0] - 0xAA, Camera_Angles[1], Camera_Angles[2], 0x40);
         SH_CALL(ObjTrio_SetBit40)();
         unsigned char* const row = Row();
         SetL(0x802D74, 0x330000);
@@ -252,8 +256,8 @@ extern "C" void __cdecl Scena00_Area02(void) {
     if (SH_CALL(Flags_Test)(Row(), 0xA) != 0) return;
     SH_CALL(Flags_Set)(Row(), 0xA);
     SH_CALL(Party_DropIn)(0);
-    SetL(kKind2X, 0x260000);
-    SetL(kKind2Z, 0x1B8000);
+    Field_Kind2X = 0x260000;
+    Field_Kind2Z = 0x1B8000;
 }
 
 // original 0x538300: area 0x18's set-up by Cond_ByteFD (a five-entry jump
@@ -265,8 +269,8 @@ extern "C" void __cdecl Scena00_Area02(void) {
 // angle 0x350, Party_DropIn(0), Kind2_Place(0), a kind-0x13 effect mode 0x90;
 // 2 - unless flag 8, run 6; 3 - nothing; 4 - unless flag 9, run 6.
 extern "C" void __cdecl Scena00_Area18(void) {
-    if (W(kArea) != 0x18) return;
-    switch (B(kByteFD)) {
+    if (Game_AreaNumber != 0x18) return;
+    switch (Cond_ByteFD) {
     case 0: {
         unsigned char* const row = Row();
         SetL(kCounter, 0);
@@ -280,16 +284,16 @@ extern "C" void __cdecl Scena00_Area18(void) {
             SH_CALL(Music_LoadFile)(3);
             WaitLoad();
             unsigned char* const row = Row();
-            B(kPassFlags) = 0x1F;
+            Draw_PassFlags = 0x1F;
             SetL(kCounter, 0);
             SH_CALL(Flags_Set)(row, 3);
             SH_CALL(MapView_SetElevation)(0x480);
-            SetW(kDistance, 0x480);
-            SetW(kAngles + 4, 0x350);
+            Camera_Distance = 0x480;
+            Camera_Angles[2] = 0x350;
             SH_CALL(Party_DropIn)(0);
             SH_CALL(Kind2_Place)(0);
             if (!TakeSlot()) return;
-            Kind13(S(kAngles), S(kAngles + 2), 0x200, 0x90);
+            Kind13(Camera_Angles[0], Camera_Angles[1], 0x200, 0x90);
             return;
         }
         // the two 16-word CLUT rows 0x80BC00 and 0x80FC00 each from 0x20 on
@@ -301,7 +305,7 @@ extern "C" void __cdecl Scena00_Area18(void) {
             unsigned char* const row = Row();
             Gfx_ClutStripDirty = 1;
             if (SH_CALL(Flags_Test)(row, 5) == 0) {
-                B(kPassFlags) = 0x1F;
+                Draw_PassFlags = 0x1F;
                 SetL(kCounter, 0);
                 SH_CALL(Party_DropIn)(1);
                 return;
@@ -326,16 +330,16 @@ extern "C" void __cdecl Scena00_Area18(void) {
 // original 0x5384F0: state 2, a tail jump through Scena00_Runs on the s8
 // MoveScript_Var7 - 0 and 1 a bare ret (0x437CC0), 2..11 the runs below.
 extern "C" void __cdecl Scena00_Run(void) {
-    reinterpret_cast<void (__cdecl*)()>(CodeAt(kRuns, static_cast<signed char>(B(kRun)), "Scena00_Run"))();
+    reinterpret_cast<void (__cdecl*)()>(CodeAt(Scena00_Runs_addr, MoveScript_Var7, "Scena00_Run"))();
 }
 
 // original 0x538500: run 2, steps 0..7 (a jump table; past 7 nothing).
 extern "C" void __cdecl Scena00_Run2(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         SH_CALL(Msg_OpenScript)(0x10);
-        B(kRequest) = 2;
+        Field_Request = 2;
         SH_CALL(Music_Play)(6, 8);
         B(kScriptFlags) = static_cast<unsigned char>(B(kScriptFlags) | 0x80);
         Timer(0);
@@ -343,8 +347,8 @@ extern "C" void __cdecl Scena00_Run2(void) {
         return;
     case 1:
         if (W(kTimer) < 0x7C) Timer(W(kTimer) + 1u);
-        if (B(kRequest) == 2) return;
-        B(kPassFlags) = 0x1F;
+        if (Field_Request == 2) return;
+        Draw_PassFlags = 0x1F;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(ObjTrio_SetBit40)();
         SH_CALL(Transition_Start)(1);
@@ -358,25 +362,25 @@ extern "C" void __cdecl Scena00_Run2(void) {
         Step(3);
         return;
     case 3:
-        if (W(kWait) != 0) return;
-        B(kPassFlags) = 0;
+        if (MoveScript_WaitWordDA != 0) return;
+        Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(0x11);
-        B(kRequest) = 2;
+        Field_Request = 2;
         Step(4);
         return;
     case 4:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         SH_CALL(Field_ChangeArea)(4, 0x440000, 0x80000, 5);
         Step(5);
         return;
     case 5:
-        if (B(kByteFD) != 2) return;
-        B(kPassFlags) = 0x1F;
+        if (Cond_ByteFD != 2) return;
+        Draw_PassFlags = 0x1F;
         Step(6);
         return;
     case 6:
         if (B(kByte4A) != 0x23) return;
-        if (TakeSlot()) Kind13(S(kAngles) + 0x180, S(kAngles + 2), S(kAngles + 4), 0x60);
+        if (TakeSlot()) Kind13(Camera_Angles[0] + 0x180, Camera_Angles[1], Camera_Angles[2], 0x60);
         Step(7);
         return;
     case 7:
@@ -397,12 +401,12 @@ extern "C" void __cdecl Scena00_Run2(void) {
 // sprite and the kind-2 sprite 0x1E0000 back, 0x7E068A back 0x1E, the focus
 // to 0x6200, then the view shift (a tail jump in the original).
 extern "C" void __cdecl Scena00_Run3(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (B(kByte4A) != 0x30) return;
-        B(kPassFlags) = 0x1F;
+        Draw_PassFlags = 0x1F;
         SH_CALL(Transition_Start)(1);
-        if (TakeSlot()) Kind13(S(kAngles) + 0x1C0, S(kAngles + 2), S(kAngles + 4), 0xFF);
+        if (TakeSlot()) Kind13(Camera_Angles[0] + 0x1C0, Camera_Angles[1], Camera_Angles[2], 0xFF);
         Step(1);
         return;
     case 1: {
@@ -410,12 +414,12 @@ extern "C" void __cdecl Scena00_Run3(void) {
             Step(2);
             return;
         }
-        if (L(kFocusZ) != 0x4400) return;
-        const uint32_t z = L(kKind2Z), s = L(0x802038);
+        if (static_cast<std::uint32_t>(MapView_FocusZ) != 0x4400) return;
+        const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = L(0x802038);
         SetW(0x7E068A, W(0x7E068A) - 0x1Eu);
-        SetL(kKind2Z, z - 0x1E0000);
+        Field_Kind2Z = z - 0x1E0000;
         const uint32_t k = L(0x7E0978);
-        SetL(kFocusZ, 0x6200);
+        MapView_FocusZ = 0x6200;
         SetL(0x802038, s - 0x1E0000);
         SetL(0x7E0978, k - 0x1E0000);
         ViewShift();
@@ -443,27 +447,27 @@ extern "C" void __cdecl Scena00_Run3(void) {
 // (13 * frames << 14, high word), the transition, message 4 and a fade, then
 // area 0x18 and run 5.
 extern "C" void __cdecl Scena00_Run4(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         SH_CALL(Msg_OpenScript)(1);
-        B(kRequest) = 2;
+        Field_Request = 2;
         Step(1);
         return;
     case 1:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         Step(2);
         return;
     case 2:
         if (B(kCounter) != 3) return;
         SH_CALL(Msg_OpenScript)(2);
-        B(kRequest) = 2;
+        Field_Request = 2;
         Step(3);
         return;
     case 3:
         if (B(kCounter) != 4) return;
         SH_CALL(Msg_OpenScript)(3);
-        B(kRequest) = 2;
+        Field_Request = 2;
         Timer(0x130);
         Step(4);
         return;
@@ -476,17 +480,17 @@ extern "C" void __cdecl Scena00_Run4(void) {
         const std::uint16_t left = static_cast<std::uint16_t>(t - 1);
         const uint32_t d = 0x67FFF90u - static_cast<uint32_t>(left) * 0x57943u;
         Timer(left);
-        SetW(kDistance, d >> 16);
+        Camera_Distance = d >> 16;
         return;
     }
     case 5:
         if (B(kCounter) != 5) return;
-        if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFCB6u), S(kAngles + 2), S(kAngles + 4), 0x60);
+        if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFCB6u), Camera_Angles[1], Camera_Angles[2], 0x60);
         Step(6);
         return;
     case 6:
         if (B(kCounter) != 8) return;
-        if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFD54u), S(kAngles + 2), S(kAngles + 4), 0x20);
+        if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFD54u), Camera_Angles[1], Camera_Angles[2], 0x20);
         Timer(0x200);
         Step(7);
         return;
@@ -497,7 +501,7 @@ extern "C" void __cdecl Scena00_Run4(void) {
             return;
         }
         const uint32_t d = ((static_cast<uint32_t>(t) * 13u) << 14) >> 16;
-        SetW(kDistance, d);
+        Camera_Distance = d;
         Timer(static_cast<std::uint16_t>(t - 1));
         return;
     }
@@ -507,15 +511,15 @@ extern "C" void __cdecl Scena00_Run4(void) {
         Step(9);
         return;
     case 9:
-        if (W(kWait) != 0) return;
-        B(kPassFlags) = 0;
+        if (MoveScript_WaitWordDA != 0) return;
+        Draw_PassFlags = 0;
         SH_CALL(Msg_OpenScript)(4);
-        B(kRequest) = 2;
+        Field_Request = 2;
         SH_CALL(Music_FadeOutStop)(0x20);
         Step(0xA);
         return;
     case 0xA:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         SH_CALL(Field_ChangeArea)(0x18, 0x630000, 0xC0000, 3);
         Run(5);
         Step(0);
@@ -533,7 +537,7 @@ extern "C" void __cdecl Scena00_Run4(void) {
 // sprite records' +0x34 / +0x38 by the table's value << 11.
 extern "C" void __cdecl Scena00_Run5(void) {
     uint32_t frame = Frame_Counter;
-    if (static_cast<unsigned char>(B(kStep) - 4) < 3 && (frame & 0xF) == 0) {
+    if (static_cast<unsigned char>(MoveScript_PartyRecords[0x65] - 4) < 3 && (frame & 0xF) == 0) {
         const int r = SH_CALL(Rand)();
         const unsigned count = static_cast<unsigned>(r % 3) & 0x1F;   // cl, as shl masks it
         const unsigned char bit = count < 8 ? static_cast<unsigned char>(1u << count) : 0;
@@ -541,7 +545,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
         if (bit > 1) B(kByte4A) = static_cast<unsigned char>(B(kByte4A) + 0x10);
         frame = Frame_Counter;
     }
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         B(kScriptFlags) = static_cast<unsigned char>(B(kScriptFlags) | 0x80);
         SH_CALL(Flags_Set)(Row(), 0);
@@ -555,12 +559,12 @@ extern "C" void __cdecl Scena00_Run5(void) {
     case 2: {
         const std::uint16_t t = W(kTimer);
         if (t == 0) {
-            SetW(kDistance, 0);
+            Camera_Distance = 0;
             B(0x905E69) = 2;   // MapView_Redraw
             Step(3);
             return;
         }
-        SetW(kDistance, ((static_cast<uint32_t>(t) << 19) >> 16));
+        Camera_Distance = ((static_cast<uint32_t>(t) << 19) >> 16);
         Timer(static_cast<std::uint16_t>(t - 1));
         return;
     }
@@ -606,10 +610,10 @@ extern "C" void __cdecl Scena00_Run5(void) {
             unsigned char* const e = SlotRecord();
             e[0] = 1;
             e[5] = 0x1E;
-            SetL(e + 0x34, L(0x802D74));
-            SetL(e + 0x38, L(0x802D78));
-            const long y = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(e + 0x34)), static_cast<long>(L(e + 0x38)));
-            SetL(e + 0x3C, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16);
+            Fx(e)->x = L(0x802D74);
+            Fx(e)->z = L(0x802D78);
+            const long y = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(Fx(e)->x)), static_cast<long>(static_cast<uint32_t>(Fx(e)->z)));
+            Fx(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))) << 16;
             e[0x29] = 0;
         }
         const unsigned char c = B(kCounter);
@@ -629,8 +633,8 @@ extern "C" void __cdecl Scena00_Run5(void) {
     case 8:
         if (W(kTimer) != 0) {
             Timer(W(kTimer) - 1u);
-            if (W(kWait) != 0) return;
-            B(kPassFlags) = 0;
+            if (MoveScript_WaitWordDA != 0) return;
+            Draw_PassFlags = 0;
             return;
         }
         B(kCounter) = 0x14;
@@ -654,7 +658,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
         Step(0xB);
         return;
     case 0xB:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         B(kCounter) = 1;
         Step(0xC);
         return;
@@ -674,7 +678,7 @@ extern "C" void __cdecl Scena00_Run5(void) {
             Step(0xF);
             return;
         }
-        const uint32_t k = B(kTimer) & 0xF;
+        const uint32_t k = MoveScript_PartyRecords[0x66] & 0xF;
         const uint32_t z = L(0x7DF000);
         const uint32_t d = static_cast<uint32_t>(static_cast<int32_t>(static_cast<signed char>(B(kShake + k)))) << 11;
         const uint32_t x = L(0x7DEFFC) + d;
@@ -714,11 +718,11 @@ extern "C" void __cdecl Scena00_Run5(void) {
 // and step 0 - 0xD counts before the call, 0x17 / 0x21 after); 0x32 goes to
 // area 0x1F. Every other step to 0x32 nothing.
 extern "C" void __cdecl Scena00_Run6(void) {
-    const unsigned step = B(kStep);
+    const unsigned step = MoveScript_PartyRecords[0x65];
     if (step > 0x32) return;
     switch (step) {
     case 0:
-        Step(B(kStartSteps + B(kByteFD)));
+        Step(B(kStartSteps + Cond_ByteFD));
         return;
     case 0xA:
         SH_CALL(ScriptFlags_Set40)();
@@ -741,7 +745,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         Run(0);
         return;
     case 0x14:
-        if (B(kObjTrio + 1) == 2) return;
+        if (ObjTrio[1] == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(4);
         SH_CALL(Flags_Set)(Row(), 8);
@@ -764,7 +768,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
         return;
     }
     case 0x1E:
-        if (B(kObjTrio + 1) == 2) return;
+        if (ObjTrio[1] == 2) return;
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Party_DropIn)(5);
         SH_CALL(Flags_Set)(Row(), 9);
@@ -797,7 +801,7 @@ extern "C" void __cdecl Scena00_Run6(void) {
 // 0x20-frame pull (distance - 0x24 a frame); music 4 on the counter 0x24;
 // area 0x1F on 0x25.
 extern "C" void __cdecl Scena00_Run7(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         B(kCounter) = 0xA;
         SH_CALL(Party_DropIn)(1);
@@ -813,44 +817,44 @@ extern "C" void __cdecl Scena00_Run7(void) {
         return;
     }
     case 3:
-        SetW(kScriptFlags, W(kScriptFlags) | 0x180u);
+        Field_ScriptFlags = Field_ScriptFlags | 0x180u;
         SH_CALL(Msg_OpenScript)(0xE);
-        B(kRequest) = 2;
+        Field_Request = 2;
         Step(4);
         return;
     case 4:
-        if (B(kRequest) == 2) return;
+        if (Field_Request == 2) return;
         B(kCounter) = 0x1E;
-        B(kPassFlags) = 0x1F;
+        Draw_PassFlags = 0x1F;
         SH_CALL(Transition_Start)(3);
         SetL(0x7E0974, 0x2F0000);
-        SetL(kKind2X, 0x2F0000);
+        Field_Kind2X = 0x2F0000;
         SetL(0x7E0978, 0x1D0000);
-        SetL(kKind2Z, 0x1D0000);
+        Field_Kind2Z = 0x1D0000;
         SH_CALL(Field_ViewReset)();
         SetL(0x7E097C, 0x5800000);
         SH_CALL(MapView_SetElevation)(0x580);
-        SetW(kAngles, 0xFCF6);
-        SetW(kAngles + 4, 0x180);
-        SetW(kDistance, 0x480);
+        Camera_Angles[0] = 0xFCF6;
+        Camera_Angles[2] = 0x180;
+        Camera_Distance = 0x480;
         Timer(0x1E);
         Step(5);
         return;
     case 5:
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         Timer(W(kTimer) - 1u);
         if (W(kTimer) != 0) return;
         SH_CALL(Kind2_Place)(2);
         SetL(0x7E097C, 0x5800000);
         SH_CALL(MapView_SetElevation)(0x580);
-        if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFD56u), S(kAngles + 2), 0x200, 0x20);
+        if (TakeSlot()) Kind13(static_cast<int32_t>(0xFFFFFD56u), Camera_Angles[1], 0x200, 0x20);
         Timer(0x20);
         Step(6);
         return;
     case 6: {
         if (W(kTimer) != 0) {
             Timer(W(kTimer) - 1u);
-            SetW(kDistance, W(kDistance) - 0x24u);
+            Camera_Distance = static_cast<std::uint16_t>(Camera_Distance) - 0x24u;
             return;
         }
         const unsigned char c = B(kCounter);
@@ -876,7 +880,7 @@ extern "C" void __cdecl Scena00_Run7(void) {
 
 // original 0x539400: run 8: at step 0, flag 6, Party_DropIn(2), run and step 0.
 extern "C" void __cdecl Scena00_Run8(void) {
-    if (B(kStep) != 0) return;
+    if (MoveScript_PartyRecords[0x65] != 0) return;
     SH_CALL(Flags_Set)(Row(), 6);
     SH_CALL(Party_DropIn)(2);
     Run(0);
@@ -887,7 +891,7 @@ extern "C" void __cdecl Scena00_Run8(void) {
 // 2); step 2 counts the timer down, then area 1 at (0xF0000, 0x210000), sound
 // 0x206, the counter 0, run 10.
 extern "C" void __cdecl Scena00_Run9(void) {
-    const unsigned step = B(kStep);
+    const unsigned step = MoveScript_PartyRecords[0x65];
     if (step == 0) {
         if (B(kByte4A) != 0x71) return;
         Timer(0x3C);
@@ -911,7 +915,7 @@ extern "C" void __cdecl Scena00_Run9(void) {
 // coordinates, and at 0x90384A 3 after the timer area 1; the camera turned to
 // 0xF, then 0x90384A 4; at 9 script flag bit 7 cleared, area 0x19 and run 11.
 extern "C" void __cdecl Scena00_Run10(void) {
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (TurnCamera(0x2D, 0xA) != 0) return;
         Timer(0x32);
@@ -937,7 +941,7 @@ extern "C" void __cdecl Scena00_Run10(void) {
         return;
     case 3:
         if (B(kByte4A) != 9) return;
-        SetW(kScriptFlags, W(kScriptFlags) & 0xFF7Fu);
+        Field_ScriptFlags = Field_ScriptFlags & 0xFF7Fu;
         SH_CALL(Field_ChangeArea)(0x19, 0xB8000, 0x5A0000, 1);
         Run(0xB);
         Timer(0x258);
@@ -983,24 +987,24 @@ extern "C" void __cdecl Scena00_Steer(void) {
 // corner words, and at the end area 9 with ObjTrio 0's +0x24 bit 5 cleared.
 extern "C" void __cdecl Scena00_Run11(void) {
     if ((B(0x937F94) & 0x1F) == 0) B(kByte4B) = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
-    if (B(kByte4A) < 0x14 && L(kFocusZ) == 0x5000) {
-        const uint32_t z = L(kKind2Z), s = L(0x802038);
+    if (B(kByte4A) < 0x14 && static_cast<std::uint32_t>(MapView_FocusZ) == 0x5000) {
+        const uint32_t z = static_cast<std::uint32_t>(Field_Kind2Z), s = L(0x802038);
         SetW(0x7E068A, W(0x7E068A) + 0x20u);
-        SetL(kKind2Z, z + 0x200000);
+        Field_Kind2Z = z + 0x200000;
         const uint32_t s2 = L(0x8020DC);
         SetL(0x802038, s + 0x200000);
         const uint32_t k = L(0x7E0978);
-        SetL(kFocusZ, 0x3000);
+        MapView_FocusZ = 0x3000;
         SetL(0x8020DC, s2 + 0x200000);
         SetL(0x7E0978, k + 0x200000);
         ViewShift();
     }
-    switch (B(kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         Timer(W(kTimer) - 1u);
         if (W(kTimer) != 0) return;
         B(kByte4A) = 0x10;
-        B(kPassFlags) = 0x1F;
+        Draw_PassFlags = 0x1F;
         SH_CALL(Transition_Start)(1);
         SH_CALL(Sound_PlayEffect)(0x203);
         Timer(0x3C);
@@ -1038,7 +1042,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
             B(kCounter) = 0;
             B(kCount2) = static_cast<unsigned char>(n + 1);
             SH_CALL(Scena00_Steer)();
-            const uint32_t i = (static_cast<uint32_t>(W(kInput)) >> 12) << 1;
+            const uint32_t i = (static_cast<std::uint32_t>(Input_Pressed) >> 12) << 1;
             if (B(kInputAnims + i) != 0) {
                 const unsigned char animation = B(kInputAnims + i + 1);
                 Sprite_Current = Sprite_Objects;
@@ -1100,10 +1104,10 @@ extern "C" void __cdecl Scena00_Run11(void) {
         Step(9);
         return;
     case 9: {
-        if (W(kWait) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         const auto bits = static_cast<unsigned char>(B(0x802D64) & 0xDF);
-        SetW(kScriptFlags, W(kScriptFlags) & 0xFFB7u);
-        B(kPassFlags) = 0;
+        Field_ScriptFlags = Field_ScriptFlags & 0xFFB7u;
+        Draw_PassFlags = 0;
         B(0x802D64) = bits;
         SH_CALL(Field_ChangeArea)(9, 0x570000, 0x40000, 7);
         Status80();
@@ -1121,7 +1125,7 @@ extern "C" void __cdecl Scena00_Run11(void) {
 extern "C" void __cdecl Scena00_ObjectHook(unsigned char* object) {
     unsigned char* const row = Row();
     const auto fn = reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(
-        CodeAt(kObjectHooks, object[0x86], "Scena00_ObjectHook"));
+        CodeAt(Scena00_ObjectHooks_addr, object[0x86], "Scena00_ObjectHook"));
     fn(object, row);
 }
 
@@ -1134,15 +1138,15 @@ extern "C" void __cdecl Scena00_ObjectHook(unsigned char* object) {
 extern "C" unsigned char __cdecl Scena00_StepHook(long x, long z) {
     (void)z;
     const auto cell = static_cast<short>(static_cast<std::uint32_t>(x) >> 16);
-    if (W(kArea) == 2) {
+    if (Game_AreaNumber == 2) {
         if (cell != 0x2B) return 0;
         if (SH_CALL(Flags_Test)(Row(), 6) != 0) {
             Run(7);
             Step(0);
         }
     }
-    if (W(kArea) != 0x18) return 0;
-    if (B(kByteFD) != 0) return 0;
+    if (Game_AreaNumber != 0x18) return 0;
+    if (Cond_ByteFD != 0) return 0;
     if (cell != 0x14) return 0;
     if (SH_CALL(Flags_Test)(Row(), 7) != 0) return 0;
     SH_CALL(ScriptFlags_Set40)();

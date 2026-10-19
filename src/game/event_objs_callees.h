@@ -15,16 +15,16 @@ namespace event_objs {
 // --- Addresses without a name --------------------------------------------
 // Row 15 of Gfx_ClutStrip (0x80F580 + 15 * 256 * 2): 64 bytes of CLUT per
 // Sprite_Current +5. Sprite_ShadeFadeBegin sets bit 15 of its words.
-constexpr std::uint32_t kShadeClut = 0x811380;
+// kShadeClut: now Gfx_ClutStrip[0xf00] (symbols.toml).
 // Row 15 of Gfx_ClutStripSource: where Sprite_ShadeFadeStep reloads a
 // palette from (Sprite_LoadPalette's dst; docs/field-event.md section 3).
-constexpr std::uint32_t kShadeSource = 0x80D380;
+// kShadeSource: now Gfx_ClutStripSource[0xf00] (symbols.toml).
 // The per-direction step, two dwords (x, z) per direction - symbols.toml's
 // MoveCmd_F9Steps: (-2048, -2048), (0, -2048), (1024, -1024), (2048, 0), ... The
 // half steps of directions 2 and 6 are why their jumps take twice the frames.
-constexpr std::uint32_t kJumpSteps = 0x6696DC;
+// kJumpSteps: now MoveCmd_F9Steps (symbols.toml).
 // The party list Party_Count counts (field_event.cpp; move_cmds' kPartyLists).
-constexpr std::uint32_t kPartyList = 0x904062;
+// kPartyList: now Cond_Flags[0xd2] (symbols.toml).
 // The actor records, 0xA4 bytes each (docs/field-event.md section 2):
 // Field_ActorStates is +0x10 of the first, the equipment bytes +0x12..+0x17.
 constexpr unsigned kRecordSize = 0xA4;

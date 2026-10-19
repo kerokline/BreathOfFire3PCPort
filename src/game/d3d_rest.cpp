@@ -75,10 +75,6 @@ float Float(const unsigned char* p) {
     return v;
 }
 float FloatAt(U address) { return Float(At(address)); }
-void PutWord(unsigned char* p, U v) {
-    const std::uint16_t w = static_cast<std::uint16_t>(v);
-    std::memcpy(p, &w, sizeof w);
-}
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
@@ -163,7 +159,7 @@ inline U X87FimulFtol(std::int32_t c, float k, std::int32_t chan) {
 // --- the COM objects ---------------------------------------------------------
 
 // D3d_Device, read afresh before every call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(kDevice)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
 void* Method(void** object, U offset) { return (*reinterpret_cast<void***>(object))[offset / 4]; }
 using Com2 = long(__stdcall*)(void*, U);
 using Com3 = long(__stdcall*)(void*, U, U);
@@ -183,7 +179,7 @@ long SetStageState(U stage, U type, U value) {
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVertices(U type, U count) {
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, kVertices, count, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
 }
 // A surface pointer read from its global at the moment of the call.
 void** SurfaceAt(U address) { return *reinterpret_cast<void** volatile*>(At(address)); }
@@ -193,14 +189,14 @@ long Lock(void** surface, void* desc) {
 }
 long Unlock(void** surface) { return reinterpret_cast<Com2>(Method(surface, 0x80))(surface, 0); }
 
-unsigned char* Vertex(U i) { return At(kVertices + i * 0x20); }
-U DrawMode() { return Long(At(kDrawTpage)) & 0xFFFF; }
+unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
+U DrawMode() { return Long(At(Gfx_DrawTpage_addr)) & 0xFFFF; }
 
 // sx, sy = scale times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z.
 void PutPosition(unsigned char* out, const unsigned char* xyz) {
-    PutFloat(out + 0x00, X87Mul(FloatAt(kScaleX), Float(xyz)));
-    PutFloat(out + 0x04, X87Mul(FloatAt(kScaleY), Float(xyz + 4)));
+    PutFloat(out + 0x00, X87Mul(D3d_ScaleX, Float(xyz)));
+    PutFloat(out + 0x04, X87Mul(D3d_ScaleY, Float(xyz + 4)));
     PutLong(out + 0x08, Long(xyz + 8));
     PutFloat(out + 0x0C, X87Div(FloatAt(kRhwNumerator), Float(xyz + 8)));
 }
@@ -257,11 +253,11 @@ U D3d_PageTexel4(U clut, U page, U uv) {
     U row = ((page & 0x10) << 4) + static_cast<U>(static_cast<std::int32_t>(uv) >> 8);
     const U offset = ((row << 4) + (page & 0xF)) << 7;
     const U column = static_cast<U>(static_cast<std::int32_t>(uv) >> 1) & 0x7F;
-    const U texels = At(kVram + offset + column)[0];
+    const U texels = At(Gfx_VramShadow_addr + offset + column)[0];
     const U shift = (static_cast<U>(~uv) & 1) << 2;
     const U index = (texels >> shift) & 0xF;
     const unsigned char* palette = static_cast<const unsigned char*>(g.clut_pixels(clut));
-    if (At(kPixelFormat + 3)[0] == 2) return Word(palette + index * 2);
+    if (At(Gfx_PixelFormat_addr + 3)[0] == 2) return Word(palette + index * 2);
     return Long(palette + index * 4);
 }
 
@@ -279,7 +275,7 @@ U D3d_PageTexel4(U clut, U page, U uv) {
 // is a POLY_F3 (code 0x20) of the modulated colour.
 void D3d_FlattenFT3(unsigned char* prim, U uv) {
     const U pixel = D3d_PageTexel4(Word(prim + 0xE), Word(prim + 0x16), uv & 0xFFFF);
-    const unsigned char* format = At(kPixelFormat);
+    const unsigned char* format = At(Gfx_PixelFormat_addr);
     const U green = ((Long(format + 0x14) & pixel) << (Long(format + 0x8) & 31)) >> 16;
     const U blue = ((Long(format + 0x18) & pixel) << (Long(format + 0xC) & 31)) >> 16;
     const U red = ((Long(format + 0x10) & pixel) << (Long(format + 0x4) & 31)) >> 16;
@@ -409,10 +405,10 @@ long D3d_DrawTile1(const unsigned char* prim) {
     g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawMode(), &diffuse, nullptr);
     if (g_tile1_quad != 0) {
         const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
-        const float left = X87Mul(FloatAt(kScaleX), x);
-        const float top = X87Mul(FloatAt(kScaleY), y);
-        const float right = X87Mul(FloatAt(kScaleX), x + 1.0f);
-        const float bottom = X87Mul(FloatAt(kScaleY), y + 1.0f);
+        const float left = X87Mul(D3d_ScaleX, x);
+        const float top = X87Mul(D3d_ScaleY, y);
+        const float right = X87Mul(D3d_ScaleX, x + 1.0f);
+        const float bottom = X87Mul(D3d_ScaleY, y + 1.0f);
         const float rhw = X87Div(FloatAt(kRhwNumerator), z);
         const float xs[4] = {left, right, left, right}, ys[4] = {top, top, bottom, bottom};
         for (U i = 0; i < 4; ++i) {
@@ -450,15 +446,15 @@ long D3d_DrawTile1(const unsigned char* prim) {
 // alpha alone - and the cache 0. The cache is read once, before the call, and
 // written after it. Nothing reads what it returns.
 void D3d_SetAlphaModulate(unsigned on) {
-    const U cache = Long(At(kAlphaOpCache));
+    const U cache = D3d_AlphaOpCache;
     if (on != 0) {
         if (cache != 0) return;
         SetStageState(0, 4, 4);
-        PutLong(At(kAlphaOpCache), 1);
+        D3d_AlphaOpCache = 1;
     } else {
         if (cache == 0) return;
         SetStageState(0, 4, 3);
-        PutLong(At(kAlphaOpCache), 0);
+        D3d_AlphaOpCache = 0;
     }
 }
 
@@ -486,34 +482,34 @@ void D3d_SetAlphaModulate(unsigned on) {
 // the ready word 0x7CADE8 set to 1, whatever Blt answered. Nothing in .text but
 // Display_Setup and the teardown reads the ready word or the texture.
 void D3d_AfterDraw() {
-    if (At(kRenderFlags)[0] & 1) return;
-    if (Long(At(kCaptureSurface)) == 0) {
-        PutLong(At(kCaptureScale), 0x3F800000);   // 1.0
-        PutWord(At(kCaptureW), 0x140);
-        PutWord(At(kCaptureH), 0xF0);
-        if (!g.create_plain(0x140, 0x140, reinterpret_cast<void**>(At(kCaptureSurface)), 2)) return;
-        g.fit_size(Long(At(kCaptureW)) & 0xFFFF, Word(At(kCaptureH)), reinterpret_cast<unsigned*>(At(kCaptureTexW)),
+    if (Gfx_RenderFlags & 1) return;
+    if (Long(At(D3d_CaptureSurface_addr)) == 0) {
+        PutLong(At(D3dRest_CaptureScale_addr), 0x3F800000); // 1.0
+        D3dRest_CaptureW = 0x140;
+        D3dRest_CaptureH = 0xF0;
+        if (!g.create_plain(0x140, 0x140, reinterpret_cast<void**>(At(D3d_CaptureSurface_addr)), 2)) return;
+        g.fit_size(Long(At(D3dRest_CaptureW_addr)) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH), reinterpret_cast<unsigned*>(At(kCaptureTexW)),
                    reinterpret_cast<unsigned*>(At(kCaptureTexH)));
         if (!g.create_texture(Long(At(kCaptureTexW)) & 0xFFFF, Word(At(kCaptureTexH)),
-                              reinterpret_cast<void**>(At(kCaptureTexSurface)),
-                              reinterpret_cast<void**>(At(kCaptureTexture)), 2))
+                              reinterpret_cast<void**>(At(D3d_CaptureTexSurface_addr)),
+                              reinterpret_cast<void**>(At(D3d_CaptureTexture_addr)), 2))
             return;
         const U width = Word(At(kCaptureTexW));
         if (width < 0x140) {
-            const U height = Word(At(kCaptureH));
-            PutWord(At(kCaptureW), width);
-            PutFloat(At(kCaptureScale), X87IntMul(static_cast<std::int32_t>(width), FloatAt(kPerColumn)));
-            PutWord(At(kCaptureH), X87IntMulFtol(static_cast<std::int32_t>(height), FloatAt(kCaptureScale)));
+            const U height = D3dRest_CaptureH;
+            D3dRest_CaptureW = width;
+            PutFloat(At(D3dRest_CaptureScale_addr), X87IntMul(static_cast<std::int32_t>(width), FloatAt(kPerColumn)));
+            D3dRest_CaptureH = X87IntMulFtol(static_cast<std::int32_t>(height), D3dRest_CaptureScale);
         }
     }
-    const U step_x = X87MulFtol(FloatAt(kScaleX), FloatAt(kFixedOne));
-    const U step_y = X87MulFtol(FloatAt(kScaleY), FloatAt(kFixedOne));
+    const U step_x = X87MulFtol(D3d_ScaleX, FloatAt(kFixedOne));
+    const U step_y = X87MulFtol(D3d_ScaleY, FloatAt(kFixedOne));
     alignas(4) unsigned char desc[0x7C];
     g.init_desc(desc);
-    if (Lock(SurfaceAt(kCaptureSurface), desc) != 0) return;
+    if (Lock(SurfaceAt(D3d_CaptureSurface_addr), desc) != 0) return;
     U out = Long(desc + 0x24);
-    if (Lock(SurfaceAt(kBackBuffer), desc) != 0) return;
-    const bool narrow = At(kScreenBpp)[0] == 2;
+    if (Lock(SurfaceAt(DDraw_BackBuffer_addr), desc) != 0) return;
+    const bool narrow = D3dRest_ScreenBpp == 2;
     const U from = Long(desc + 0x24);
     U y = 0;
     for (U row = 0; row < 0xF0; ++row) {
@@ -534,14 +530,14 @@ void D3d_AfterDraw() {
         }
         y += step_y;
     }
-    Unlock(SurfaceAt(kBackBuffer));
-    Unlock(SurfaceAt(kCaptureSurface));
-    const U dst_rect[4] = {0, 0, Long(At(kCaptureW)) & 0xFFFF, Word(At(kCaptureH))};
+    Unlock(SurfaceAt(DDraw_BackBuffer_addr));
+    Unlock(SurfaceAt(D3d_CaptureSurface_addr));
+    const U dst_rect[4] = {0, 0, Long(At(D3dRest_CaptureW_addr)) & 0xFFFF, static_cast<std::uint32_t>(D3dRest_CaptureH)};
     const U src_rect[4] = {0, 0, 0x140, 0xF0};
-    void** source = SurfaceAt(kCaptureSurface);
-    void** texture = SurfaceAt(kCaptureTexSurface);
+    void** source = SurfaceAt(D3d_CaptureSurface_addr);
+    void** texture = SurfaceAt(D3d_CaptureTexSurface_addr);
     reinterpret_cast<Com6>(Method(texture, 0x14))(texture, Addr(dst_rect), Addr(source), Addr(src_rect), 0x1000000, 0);
-    PutWord(At(kCaptureReady), 1);
+    D3d_CaptureReady = 1;
 }
 
 // --- the VRAM shadow's read-back -------------------------------------------------
@@ -560,7 +556,7 @@ void D3d_AfterDraw() {
 int Gfx_StoreImage(const short* rect, void* to) {
     const unsigned char* r = reinterpret_cast<const unsigned char*>(rect);
     const U x = static_cast<U>(Short(r)), y = static_cast<U>(Short(r + 2));
-    U from = kVram + ((y << 10) + x) * 2;
+    U from = Gfx_VramShadow_addr + ((y << 10) + x) * 2;
     const U bytes = static_cast<U>(Short(r + 4)) << 1;
     if (Short(r + 6) <= 0) return static_cast<int>(bytes);
     U dest = Addr(to);

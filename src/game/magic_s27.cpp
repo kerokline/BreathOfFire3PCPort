@@ -31,6 +31,7 @@
 #include "game/magic_harness.h"
 #include "game/magic_s27_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -50,11 +51,15 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
@@ -63,10 +68,10 @@ unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, std::uint32_t v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 void AddSW(unsigned k, std::uint32_t v) { SetSW(k, SW(k) + v); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, std::uint32_t v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, std::uint32_t v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -184,8 +189,8 @@ void LightClutRow(unsigned runs, const bool* stp) {
 
 // The task at its owner: +0x34 / +0x38 / +0x3C from the owner's.
 void AtOwner() {
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -221,8 +226,8 @@ S27_EXPORT void __cdecl Burn_Task(void) {
 // 0x100; +9 0, +1 on.
 S27_EXPORT void __cdecl Burn_Start(void) {
     const unsigned char* const src = Source();
-    SetLong(Sc() + 0x34, Long(src + 0x34));
-    SetLong(Sc() + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 8; ++i) {
@@ -769,11 +774,11 @@ S27_EXPORT void __cdecl WhelpBreathSprite_Run(void) {
         bof3::addr::WhelpBreathFlames_Grow,  bof3::addr::WhelpBreathFlames_End, bof3::addr::WhelpBreathGlow_Grow,
         bof3::addr::WhelpBreathGlow_Hold,    bof3::addr::WhelpBreathGlow_End};
     ModeCommit(3, 0x15);
-    SetLong(Mem(raw::kSpriteBank), static_cast<std::int32_t>(raw::kBankEffects));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(raw::kBankEffects));
     const unsigned phase = Sc()[2];
     if (phase >= 8) PastTable("WhelpBreathSprite_Run", phase, 8);
     magic_harness::Phase(kPhases[phase])();
-    SetLong(Mem(raw::kSpriteBank), static_cast<std::int32_t>(raw::kBankDefault));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(raw::kBankDefault));
 }
 
 // original 0x4DB7F0: the sprite at its owner (direction byte, position);
@@ -894,6 +899,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
         for (unsigned e = 0; e < 8; ++e) {
             if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
             const unsigned char* const r = EnemyRecord(e);
+            const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
             unsigned char* s = Sc();
             s[0xB] = static_cast<unsigned char>(i);
             s[0xA] = static_cast<unsigned char>(e);
@@ -901,12 +907,12 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
             SetLong(s + 0x10, Long(offset + 4));
             MH_AT(PrimFn, raw::kTurnOffset)(s);
             s = Sc();
-            SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(r + 0x34)) +
+            SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(tr->x) +
                                                         static_cast<std::uint32_t>(Long(s + 0xC))));
             SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x10)) +
-                                                        static_cast<std::uint32_t>(Long(r + 0x38))));
+                                                        static_cast<std::uint32_t>(tr->z)));
             SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(offset + 8)) +
-                                                        static_cast<std::uint32_t>(Long(r + 0x3C))));
+                                                        static_cast<std::uint32_t>(tr->height)));
             s[8] = r[8];
             Call0(bof3::addr::WhelpBreathFlames_PushMatrix);
             Call0(bof3::addr::WhelpBreathFlames_DrawColumn);
@@ -969,6 +975,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     short rot[4] = {0, 0, 0, 0};
     const unsigned char* const s = Sc();
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
     switch (s[8]) {
     case 0: rot[1] = 0xC00; break;
     case 1: rot[0] = 0x400; break;
@@ -977,8 +984,8 @@ S27_EXPORT void __cdecl WhelpBreathFlames_PushMatrix(void) {
     default: break;
     }
     short v[4];
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {
@@ -1003,10 +1010,12 @@ S27_EXPORT void __cdecl WhelpBreathGlow_Draw(void) {
     for (unsigned e = 0; e < 8; ++e) {
         if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
         const unsigned char* const r = EnemyRecord(e);
+        const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
         unsigned char* const s = Sc();
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         s[8] = r[8];
-        SetLong(s + 0x34, Long(r + 0x34));
-        SetLong(s + 0x38, Long(r + 0x38));
+        ts->x = tr->x;
+        ts->y = tr->z;
         SetWord(s + 0x3E, Word(r + 0x3E));
         MH_CALL(MagicFx_PushActorMatrix)();
         Call0(bof3::addr::WhelpBreathGlow_DrawFan);
@@ -1132,7 +1141,7 @@ S27_EXPORT void __cdecl DragonBreathBeam_Aim(void) {
     Sc()[0x5D] = static_cast<unsigned char>(RandCall() & 1);
     Sc()[0x5E] = static_cast<unsigned char>(RandCall() & 3);
     Sc()[0x5F] = static_cast<unsigned char>(RandCall() & 3);
-    SetLong(Sc() + 0xC, 0);
+    ScTask()->vel_x = 0;
     Sc()[4] = 0;
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
@@ -1165,8 +1174,9 @@ S27_EXPORT void __cdecl DragonBreathBeam_Brighten(void) {
 // original 0x4DC550: dword +0xC up; at 0x2E +2 on.
 S27_EXPORT void __cdecl DragonBreathBeam_Hold(void) {
     unsigned char* const s = Sc();
-    SetLong(s + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0xC)) + 1));
-    if (Long(Sc() + 0xC) == 0x2E) Inc(Sc()[2]);
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    ts->vel_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->vel_x) + 1);
+    if (ScTask()->vel_x == 0x2E) Inc(Sc()[2]);
 }
 
 // original 0x4DC570: +4 down by two; at 0 +2 on.

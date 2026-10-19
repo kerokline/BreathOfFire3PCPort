@@ -152,7 +152,8 @@ std::uint8_t g_slide_switch = 0;
 bool g_slide_armed = false;
 
 // The window records (symbols.toml block WindowRecords) and the current one.
-constexpr U kRecords = 0x803160, kRecordSize = 0x24, kRecordCount = 22, kCurrent = 0x905B84;
+// kCurrent: now BattleWinStates_Current (symbols.toml).
+constexpr U kRecords = 0x803160, kRecordSize = 0x24, kRecordCount = 22;
 
 // One record's split: Capcom's x (`L`) and the drawn one (`D`) as this file
 // last left them, and the leg the drawn x is on - from (aL, aD), where it
@@ -495,7 +496,7 @@ void Widescreen_CheckSlides() {
     static const unsigned kWidths[] = {0, kColumns16x9, kColumns21x9};
     constexpr int kMaxFrames = 0x10000 / 0x20 + 8;
 
-    volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(kCurrent));
+    volatile U* const current = reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr));
     const U current_was = *current;
     alignas(4) unsigned char rec[kRecordSize];
     Split split;

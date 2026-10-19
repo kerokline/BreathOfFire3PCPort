@@ -30,6 +30,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/labels.h"
+#include "game/records.h"
 #include "game/world_map_callees.h"
 #include "hook/detour.h"
 #include "input/sigma.h"
@@ -92,6 +93,10 @@ void PutWord(unsigned char* p, U v) {
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 unsigned char* Object() { return At(Long(At(at::Sprite_CurrentAt()))); }
+
+// The map task's object typed (src/game/records.h): its frame runs from
+// WorldMapHud_Frame, effect kind 0x58's handler, on the effect record.
+records::EffectObject* Fx() { return reinterpret_cast<records::EffectObject*>(Object()); }
 unsigned char* PacketNext() { return At(Long(At(at::Gfx_PacketNextAt()))); }
 
 // The needle's corner arithmetic, as the original's x87 executes it: the
@@ -139,39 +144,39 @@ float Float(const unsigned char* p) {
 // y takes its low word (docs/world-map.md section 7.1), so ours passes the
 // word sign-extended.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_FrameStep() {
-    unsigned char* object = Object();
-    switch (object[2]) {
+    records::EffectObject* object = Fx();
+    switch (object->step) {
     case 0:
         g.state0();
         return;
     case 1:
-        PutWord(object + 0x2E, Word(object + 0x2E) + 0x10);
-        object = Object();
-        if (Short(object + 0x2E) >= 0x10) object[2] = static_cast<unsigned char>(object[2] + 1);
+        object->screen_x = static_cast<U>(static_cast<std::uint16_t>(object->screen_x)) + 0x10;
+        object = Fx();
+        if (static_cast<std::int32_t>(object->screen_x) >= 0x10) object->step = static_cast<unsigned char>(object->step + 1);
         [[fallthrough]];
     case 2:
-        if (At(kMapMode)[0] == 2) {
-            object = Object();
-            object[2] = 3;
+        if (AreaW0b_MapMode == 2) {
+            object = Fx();
+            object->step = 3;
         }
-        object = Object();
-        g.draw_frame(0x10, Short(object + 0x2E));
+        object = Fx();
+        g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
         return;
     case 3:
-        PutWord(object + 0x2E, Word(object + 0x2E) - 0x10);
-        object = Object();
-        if (Short(object + 0x2E) <= -0x30) {
-            object[2] = 0;
-            object = Object();
+        object->screen_x = static_cast<U>(static_cast<std::uint16_t>(object->screen_x)) - 0x10;
+        object = Fx();
+        if (static_cast<std::int32_t>(object->screen_x) <= -0x30) {
+            object->step = 0;
+            object = Fx();
         }
-        if (At(kMapMode)[0] != 2) {
-            object[2] = 1;
-            object = Object();
+        if (AreaW0b_MapMode != 2) {
+            object->step = 1;
+            object = Fx();
         }
-        g.draw_frame(0x10, Short(object + 0x2E));
+        g.draw_frame(0x10, static_cast<std::int32_t>(object->screen_x));
         return;
     default:
-        bof3::Fatal("WorldMap_FrameStep: the map task's state byte is %u, past its four-entry table", object[2]);
+        bof3::Fatal("WorldMap_FrameStep: the map task's state byte is %u, past its four-entry table", object->step);
     }
 }
 
@@ -209,15 +214,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl WorldMap_DrawFrame(i
     const bool withheld1 =
         cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
     if (!withheld1) g.draw_sprite(x + 0x30, y, 1);
-    world_map_legend::Key(g.draw_sprite, kButtonTable, 6, Long(At(kButtonMap0)), x + 0x38, y + 8, withheld1);
+    world_map_legend::Key(g.draw_sprite, kButtonTable, 6, Long(At(Gfx_UnpackScratch_addr + 0x1f000)), x + 0x38, y + 8, withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) g.draw_sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(g.draw_sprite, kButtonTable, 8, Long(At(kButtonMap6)), x + 0x38, y + 0x10, withheld2);
+    world_map_legend::Key(g.draw_sprite, kButtonTable, 8, Long(At(Gfx_UnpackScratch_addr + 0x1f00c)), x + 0x38, y + 0x10, withheld2);
     const unsigned char event =
         g.cell_event(static_cast<short>(Word(At(kLeaderCellX))), static_cast<short>(Word(At(kLeaderCellZ))));
     bool third = event != 0;
     if (!third) third = (Word(At(at::Field_ScriptFlags2At())) & 0x1000) != 0;
-    if (!third) third = (At(kPartySet)[0] & 0x7F) == 0xC;
+    if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Word(At(at::Field_ScriptFlagsAt())) & 0x4000) != 0;
     if (third) g.draw_sprite(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
@@ -370,10 +375,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
         return;
     }
     const U slot_index = static_cast<U>(row) * 6u;
-    unsigned char* const slot = At(kRowTails + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
+    unsigned char* const slot = At(DrawLayers_addr + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
     g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(Long(slot))), prim);
     const U next = Long(At(at::Gfx_PacketNextAt()));
-    PutLong(At(kRowTails + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
+    PutLong(At(DrawLayers_addr + 0x24 + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u), next);
     PutLong(At(at::Gfx_PacketNextAt()), next + bytes);
 }
 

@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -51,14 +52,14 @@ using move_script::Word;
 // BattleEnemy_RunAll ran last, not the caster. Its +0xF8 is a pointer to a
 // table of u16 sound cues that only the event-battle set-ups write
 // (0x437A55, 0x437BB5, ... : 0x64C7A0 and on).
-constexpr std::uint32_t kCurrentEnemy = 0x939AD8;
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
 constexpr unsigned kEnemyCues = 0xF8;
 // Sound_PlayEffect(id) unless id is 0xFFFF - unnamed, no group's
 // (battle_items_callees.h, enemy_ai_ops_callees.h).
 constexpr std::uint32_t kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
 using PlayCueFn = void (__cdecl*)(unsigned);
 // A bit per actor with a reaction to show (docs/battle_actions.md).
-constexpr std::uint32_t kPending = 0x904B82;
+// kPending: now BattleActions_Pending (symbols.toml).
 // The task slots' owner cells: slot i's +0x80.
 constexpr std::uint32_t kSlotOwners = at::kTasks + 0x80;
 
@@ -73,7 +74,7 @@ void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void SetDone() { Mem(at::kFlags)[0] = static_cast<unsigned char>(Mem(at::kFlags)[0] | 4); }
 
 // The task slot's owner (0x93B8C4's +0x80), read at the point of the call.
-unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(at::kCurrentSlot))) + 0x80); }
+unsigned char* SlotOwner() { return Pointer(static_cast<std::uint32_t>(Long(Mem(BattleFlow_TaskCurrent_addr))) + 0x80); }
 
 // A stack-table dispatcher: the phase byte through the table the original
 // builds on its stack, unchecked there; past the table ours aborts.
@@ -148,7 +149,7 @@ MENGINE_EXPORT void __cdecl RestoreForm_Start(void) {
 // original 0x452660: nothing while any actor is pending (the word 0x904B82);
 // then the effect-done bit and the slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl RestoreForm_Wait(void) {
-    if (Word(Mem(kPending)) != 0) return;
+    if (Word(Mem(BattleActions_Pending_addr)) != 0) return;
     SetDone();
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -179,7 +180,7 @@ MENGINE_EXPORT void __cdecl Paralyzer_Task(void) {
 MENGINE_EXPORT void __cdecl Paralyzer_Start(void) {
     unsigned char* const slot = Sprite_Current;
     unsigned char* const owner = SlotOwner();
-    const unsigned char* const enemy = Pointer(kCurrentEnemy);
+    const unsigned char* const enemy = Pointer(BattleE3_CurrentEnemy_addr);
     Sprite_Current = owner;
     const unsigned char* const cues = Pointer(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(enemy)) + kEnemyCues);
     const unsigned cue = static_cast<unsigned>(Word(cues) + 4) & 0xFFFF;
@@ -233,10 +234,11 @@ MENGINE_EXPORT void __cdecl HeadCracker_Task(void) {
 MENGINE_EXPORT void __cdecl HeadCracker_Start(void) {
     unsigned char* const owner = SlotOwner();
     unsigned char* const slot = Sprite_Current;
+    records::BattleTask* const tslot = reinterpret_cast<records::BattleTask*>(slot);
     Sprite_Current = owner;
     MH_CALL(Sprite_SetAnimation)(2);
     Sprite_Current = slot;
-    SetLong(slot + 0xC, 8);
+    tslot->vel_x = 8;
     Bump(Sprite_Current[1]);
 }
 
@@ -352,12 +354,13 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
     MH_CALL(Sprite_SetAnimationBank)(0x1D3);
     const unsigned char t = Mem(at::kTarget)[0];
     unsigned char* const sc = Sprite_Current;
+    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
     if (t <= 2) {
-        SetLong(sc + 0x34, Long(PartyOf(t) + 0x34));
-        SetLong(sc + 0x38, Long(PartyOf(Mem(at::kTarget)[0]) + 0x38));
+        tsc->x = Long(PartyOf(t) + 0x34);
+        tsc->y = Long(PartyOf(Mem(at::kTarget)[0]) + 0x38);
     } else {
-        SetLong(sc + 0x34, Long(EnemyOf(t) + 0x34));
-        SetLong(sc + 0x38, Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38));
+        tsc->x = Long(EnemyOf(t) + 0x34);
+        tsc->y = Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38);
     }
     SetWord(sc + 0x3E, Word(sc + 0x3E) + 0x800);
     SetLong(sc + 0x14, 0);
@@ -380,9 +383,10 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
 // Sprite_Current read again) is below that, the sub-phase +2 on.
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
     unsigned char* const sc = Sprite_Current;
+    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
     SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
     SetLong(sc + 0x14, Long(sc + 0x14) + Long(sc + 0x20));
-    const long ground = MH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
+    const long ground = MH_CALL(AreaMap_Elevation)(tsc->x, tsc->y);
     const int limit = static_cast<short>(static_cast<std::uint32_t>(ground) & 0xFFFF) + 0x180;
     unsigned char* const now = Sprite_Current;
     if (static_cast<short>(Word(now + 0x3E)) < limit) Bump(now[2]);
@@ -393,7 +397,7 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
 // slot freed (a tail jmp).
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Land(void) {
     MH_CALL(Battle_SetTargetFlag40)(Mem(at::kTarget)[0]);
-    unsigned char* const owner = Pointer(at::kOwner);
+    unsigned char* const owner = Pointer(BattleE2_Owner_addr);
     owner[0xA] = static_cast<unsigned char>(owner[0xA] - 1);
     MH_CALL(BattleTask_FreeCurrent)();
 }

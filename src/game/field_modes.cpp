@@ -12,6 +12,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_modes_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -61,17 +62,19 @@ namespace {
 using namespace field_modes;
 using VoidFn = void (__cdecl*)();
 
+// The typed views of these records (src/game/records.h).
+unsigned char* Bytes(records::EffectObject* p) { return reinterpret_cast<unsigned char*>(p); }
+
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.
 VoidFn Entry(std::uint32_t table, int index) {
     return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
-signed char Signed(std::uint32_t address) { return static_cast<signed char>(At(address)[0]); }
 
-unsigned char& Step() { return At(kStep)[0]; }
-std::uint16_t Timer() { return Word(At(kTimer)); }
-void SetTimer(unsigned v) { SetWord(At(kTimer), v); }
-unsigned char* FlagBits() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(kFlagsPtr))))); }
+unsigned char& Step() { return MoveScript_PartyRecords[0x65]; }
+std::uint16_t Timer() { return Word(At(MoveScript_PartyRecords_addr + 0x66)); }
+void SetTimer(unsigned v) { SetWord(At(MoveScript_PartyRecords_addr + 0x66), v); }
+unsigned char* FlagBits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
 // The three camera angles, Camera_Angles[0..2].
 unsigned char* AngleAt(unsigned i) { return reinterpret_cast<unsigned char*>(Camera_Angles) + 2 * i; }
 short Angle(unsigned i) { return static_cast<short>(Word(AngleAt(i))); }
@@ -92,15 +95,15 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
     const unsigned char slot = g.effect_alloc();
     At(kSlot)[0] = slot;
     if (slot == 0xFF) return;
-    unsigned char* const e = Effect_Objects + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7);
+    records::EffectObject* const e = reinterpret_cast<records::EffectObject*>(Effect_Objects + (static_cast<std::uint32_t>(At(kSlot)[0]) << 7));
     const int ex = x();
     const int ey = Angle(1);
-    e[0] = 1;
-    e[5] = 0x13;
-    SetLong(e + 0x64, ex);
-    SetLong(e + 0x68, ey);
-    SetLong(e + 0x6C, Angle(2));
-    e[9] = mode;
+    e->in_use = 1;
+    e->kind = 0x13;
+    SetLong(Bytes(e) + 0x64, ex);
+    SetLong(Bytes(e) + 0x68, ey);
+    SetLong(Bytes(e) + 0x6C, Angle(2));
+    e->timer = mode;
 }
 
 }  // namespace
@@ -110,7 +113,7 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
 // As the original has it: the chapter Cond_ByteFA is signed and unchecked;
 // the table is read afresh; the tail is a jump, here a call.
 extern "C" void __cdecl Field_ModeDispatch(void) {
-    const auto vtable = static_cast<std::uint32_t>(Long(At(kScenarioTables + 4u * static_cast<std::uint32_t>(static_cast<int>(Cond_ByteFA)))));
+    const auto vtable = static_cast<std::uint32_t>(Long(At(Scenario_Hooks_addr + 4u * static_cast<std::uint32_t>(static_cast<int>(Cond_ByteFA)))));
     Entry(vtable, 0)();
     g.mode_tail();
 }
@@ -118,11 +121,11 @@ extern "C" void __cdecl Field_ModeDispatch(void) {
 // original 0x56D8B0: a tail jump through the two-entry table 0x662CD0 on the
 // s8 at 0x9039F2 (PSX 0x801A8BF8 on 0x801448E6): 0 is the set-up 0x56D8C0,
 // which sets it to 1; 1 is Field_ModeTailRun. Unchecked.
-extern "C" void __cdecl Field_ModeTail(void) { Entry(kTailTable, Signed(kTailPhase))(); }
+extern "C" void __cdecl Field_ModeTail(void) { Entry(kTailTable, SaveMenu_NewGameByte)(); }
 
 // original 0x56D920: a tail jump through 0x662CE8 on the s8 at 0x9039F3 (PSX
 // 0x801A8CB4 on 0x801448E7); entry 0 is a bare ret. Unchecked.
-extern "C" void __cdecl Field_ModeTailRun(void) { Entry(kTailRunTable, Signed(kTailKind))(); }
+extern "C" void __cdecl Field_ModeTailRun(void) { Entry(Field_ModeTailKinds_addr, AreaW0a_TailKind)(); }
 
 // original 0x5341A0: entry (n & 0xFF) of the current chapter's call table
 // (0x660B84[chapter], PSX Scenario_CallA 0x801C2DE8 through 0x801CDC4C).
@@ -143,7 +146,7 @@ extern "C" __attribute__((naked)) void __cdecl Scenario_CallA(unsigned) {
 // jump through 0x6619FC on its state, the s8 0x8034E2 - 0 Scena16_Start,
 // 1 Scena16_EnterArea, 2 Scena16_Run. Unchecked; entries 3.. of the same
 // words are Scena16_Run's table.
-extern "C" void __cdecl Scena16_Frame(void) { Entry(kStateTable, Signed(kState))(); }
+extern "C" void __cdecl Scena16_Frame(void) { Entry(kStateTable, static_cast<signed char>(MoveScript_PartyRecords[0x62]))(); }
 
 // original 0x56B2B0: the demo's first frame (PSX 0x801F6CCC): the chapter's
 // call-table entry 0, the pass flags 0x1F, the area change to area 4 at
@@ -157,14 +160,14 @@ extern "C" void __cdecl Scena16_Start(void) {
     Draw_PassFlags = 0x1F;
     g.change_area(4, 0x1A0000, 0x88000, 5);
     Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags | 0x240);
-    SetWord(At(kPending), 4);
-    SetLong(At(kPending + 4), 0x1A0000);
-    SetLong(At(kPending + 8), 0x88000);
-    At(kPending + 3)[0] = 5;
+    FieldModes_Pending = 4;
+    SetLong(At(FieldModes_Pending_addr + 4), 0x1A0000);
+    SetLong(At(FieldModes_Pending_addr + 8), 0x88000);
+    At(FieldModes_Pending_addr + 3)[0] = 5;
     g.start_music(6);
     while (g.load_done() == 0) g.sleep(1);
     SetLong(At(kCounters), 0);
-    At(kState)[0] = 1;
+    MoveScript_PartyRecords[0x62] = 1;
 }
 
 // original 0x56B340: scenario 16's state 1 (PSX 0x801F6D90): the set-up of
@@ -174,21 +177,21 @@ extern "C" void __cdecl Scena16_EnterArea(void) {
     switch (Game_AreaNumber) {
     case 0x1F:
         g.area_1f();
-        At(kState)[0] = 2;
-        At(kBadge)[0] = 0;
+        MoveScript_PartyRecords[0x62] = 2;
+        Title_BadgeOn = 0;
         return;
     case 4:
         g.area_04();
-        At(kState)[0] = 2;
-        At(kBadge)[0] = 1;
+        MoveScript_PartyRecords[0x62] = 2;
+        Title_BadgeOn = 1;
         return;
     case 2:
         g.area_02();
-        At(kBadge)[0] = 1;
-        At(kState)[0] = 2;
+        Title_BadgeOn = 1;
+        MoveScript_PartyRecords[0x62] = 2;
         return;
     default:
-        At(kState)[0] = 2;
+        MoveScript_PartyRecords[0x62] = 2;
         return;
     }
 }
@@ -268,14 +271,14 @@ extern "C" void __cdecl Scena16_Run(void) { Entry(kRunTable, MoveScript_Var7)();
 // and sets the volume where the port stops it (docs/field-modes.md 3.4).
 extern "C" void __cdecl Scena16_End(void) {
     if (MoveScript_WaitWordDA != 0) return;
-    At(kBadge)[0] = 0;
+    Title_BadgeOn = 0;
     Draw_PassFlags = 0;
     g.clut_restore();
     g.sound(0x213);
     g.sound(0x214);
-    if (At(kMusicTrack)[0] != 0xFF) {
+    if (Music_Track != 0xFF) {
         g.music_stop(0xA);
-        At(kMusicTrack)[0] = 0xFF;
+        Music_Track = 0xFF;
     }
     g.task_end();
 }
@@ -459,7 +462,7 @@ extern "C" void __cdecl Scena16_Scene3(void) {
             ++Step();
             SetTimer(0x7F);
         } else {
-            g.clut_fade(At(kTimer)[0]);
+            g.clut_fade(MoveScript_PartyRecords[0x66]);
         }
         break;
     }
@@ -479,7 +482,7 @@ extern "C" void __cdecl Scena16_Scene3(void) {
             break;
         }
         Line(0x4C, 0x50, 0x03);
-        g.clut_fade(At(kTimer)[0]);
+        g.clut_fade(MoveScript_PartyRecords[0x66]);
         break;
     case 8:
         SetTimer(Timer() - 1u);

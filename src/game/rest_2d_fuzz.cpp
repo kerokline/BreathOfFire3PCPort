@@ -165,9 +165,9 @@ static_assert(kCount == 51, "the cut's 51 rows for R2D");
 
 // The five state tables, each to its reader's count (docs/rest_2d.md section 3).
 const sh::DataTable kTables[] = {
-    {at::kQuitSteps, at::kQuitStepCount},     {at::kGrantSteps, at::kGrantStepCount},
-    {at::kStatusStates, at::kStatusStateCount}, {at::kItemsStates, at::kItemsStateCount},
-    {at::kItemsState5Steps, at::kItemsState5StepCount},
+    {MasterQuit_Steps_addr, at::kQuitStepCount},     {MasterGrant_Steps_addr, at::kGrantStepCount},
+    {FieldMenuStatus_States_addr, at::kStatusStateCount}, {FieldMenuItems_States_addr, at::kItemsStateCount},
+    {FieldMenuItems_State5Steps_addr, at::kItemsState5StepCount},
 };
 
 // --- FieldAbility_Effects' typed stand-ins ------------------------------------------------
@@ -282,7 +282,7 @@ const sh::Region kRegions[] = {
     {0x939880, 0x60},                                       // the per-category picks / tops, the masters' cells
     {bof3::addr::Text_Records, 0x30},                       // the name and the ability's record
     {0x9039F0, 8},                                          // the field mode tail's step and argument (the master)
-    {at::kItemsCategory, 4},
+    {Rest2d_ItemsCategory_addr, 4},
     {0x904160, 0x400},                                      // the inventory's id and count lists, to 0x904560
     {0x903584, 0x10},                                       // Field_ConfirmButtons / Field_CancelButtons
 };
@@ -323,27 +323,27 @@ void SeedRecords(unsigned char master) {
 
 void SeedMaster() {
     const auto master = static_cast<unsigned char>(PickOf(0xB, 0xC, 0xD, 0xE, 3, 5, 9, sh::Next() % 0x14, sh::Next()));
-    B(at::kMaster) = master;
+    B(AreaW0c_TailSub_addr) = master;
     SeedRecords(master);
-    B(at::kCursor) = static_cast<unsigned char>(sh::Next() % 3);
-    B(at::kAnswer) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
-    B(at::kStep) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 8, sh::Next()));
-    B(at::kState) = static_cast<unsigned char>(PickOf(0, 1, 2, 5, 6, sh::Next()));
+    B(Rest2d_Cursor_addr) = static_cast<unsigned char>(sh::Next() % 3);
+    B(Rest2d_Answer_addr) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
+    B(AreaW3f_AnswerMarkD1_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 8, sh::Next()));
+    B(AreaW0c_AnswerMark_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 5, 6, sh::Next()));
     Field_MemberCount = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 3, 3));
     Field_Request = static_cast<unsigned char>(PickOf(2, 0, 0, 1, 5, sh::Next()));
-    B(at::kMasterBits) = static_cast<unsigned char>(PickOf(0, 8, 0x10, 0x20, 0x38, sh::Next()));
+    B(Cond_Flags_addr + 0xd1) = static_cast<unsigned char>(PickOf(0, 8, 0x10, 0x20, 0x38, sh::Next()));
     B(at::kScriptObject) = static_cast<unsigned char>(sh::Next() % 30);
     // the ability bits: none, all, or random words
-    for (unsigned i = 0; i < 8; ++i) SetLong(sh::Mem(at::kAbilityBits + 4 * i), static_cast<std::int32_t>(PickOf(0, 0, kW, sh::Next())));
+    for (unsigned i = 0; i < 8; ++i) SetLong(sh::Mem(Cond_Flags_addr + 0xf8 + 4 * i), static_cast<std::int32_t>(PickOf(0, 0, kW, sh::Next())));
     Frame_Counter = PickOf(0, 6, 8, 0xE, 0xF0, sh::Next());
 }
 
 void SeedMenu() {
     B(at::kMenuTimer) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 5, 8, sh::Next()));
-    B(at::kTopCursor) = static_cast<unsigned char>(PickOf(0, 1, 4, 6, sh::Next()));
-    B(at::kStatusCursor) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, 3, 0x80, sh::Next() % 3));
-    for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 5, 0xFF, sh::Next() % 24));
-    B(at::kItemsCategory) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, 4, sh::Next()));
+    B(MenuLists_Cursor_addr) = static_cast<unsigned char>(PickOf(0, 1, 4, 6, sh::Next()));
+    B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, 3, 0x80, sh::Next() % 3));
+    for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(PickOf(0, 1, 2, 5, 0xFF, sh::Next() % 24));
+    B(Rest2d_ItemsCategory_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, 4, sh::Next()));
     // window 13: its list (category) 0..3, pick, top, the scroll words
     B(0x80333E) = static_cast<unsigned char>(sh::Next() % 4);
     B(0x803340) = static_cast<unsigned char>(PickOf(0, 1, 8, 9, 0x10, 0x7E, 0x7F, sh::Next() & 0x7F, sh::Next()));
@@ -372,15 +372,15 @@ void Seed(unsigned k) {
     SeedMenu();
     const U base = BaseOf(k);
     switch (base) {
-    case 0x587120: B(at::kStep) = static_cast<unsigned char>(sh::Next() % at::kQuitStepCount); break;
-    case 0x587370: B(at::kStep) = static_cast<unsigned char>(sh::Next() % at::kGrantStepCount); break;
-    case 0x58A4C0: B(at::kMenuState) = static_cast<unsigned char>(sh::Next() % at::kStatusStateCount); break;
-    case 0x58AAE0: B(at::kMenuState) = static_cast<unsigned char>(sh::Next() % at::kItemsStateCount); break;
-    case 0x58B1C0: B(at::kMenuStep) = static_cast<unsigned char>(sh::Next() % at::kItemsState5StepCount); break;
+    case 0x587120: B(AreaW3f_AnswerMarkD1_addr) = static_cast<unsigned char>(sh::Next() % at::kQuitStepCount); break;
+    case 0x587370: B(AreaW3f_AnswerMarkD1_addr) = static_cast<unsigned char>(sh::Next() % at::kGrantStepCount); break;
+    case 0x58A4C0: B(FieldS_State_addr) = static_cast<unsigned char>(sh::Next() % at::kStatusStateCount); break;
+    case 0x58AAE0: B(FieldS_State_addr) = static_cast<unsigned char>(sh::Next() % at::kItemsStateCount); break;
+    case 0x58B1C0: B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % at::kItemsState5StepCount); break;
     case 0x5873C0:   // a member gaining: the cursor's record this master's half the time, around g = 3
         if (sh::Half()) {
-            unsigned char* const rec = sh::Mem(at::kRecords + ObjTrio[B(at::kCursor) * at::kObjStride + 0x148] * at::kRecordStride);
-            rec[0x1F] = B(at::kMaster);
+            unsigned char* const rec = sh::Mem(at::kRecords + ObjTrio[B(Rest2d_Cursor_addr) * at::kObjStride + 0x148] * at::kRecordStride);
+            rec[0x1F] = B(AreaW0c_TailSub_addr);
             rec[0xA] = static_cast<unsigned char>(rec[0x88] + PickOf(2, 3, 4, 6, 9, 0x80));
             if (sh::Half()) Field_Request = 0;
         }
@@ -392,7 +392,7 @@ void Seed(unsigned k) {
             if (sh::Half()) B(0x80333E) = 0;
             const U list = static_cast<U>(Long(sh::Mem(at::kItemIdLists + 4u * B(0x80333E))));
             B(list + B(0x803340)) = static_cast<unsigned char>(1 + sh::Next() % 92);
-            B(at::kItemsCategory) = static_cast<unsigned char>(PickOf(0, 0, 1, 3));
+            B(Rest2d_ItemsCategory_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, 3));
         }
         break;
     case 0x589FB0: {   // the leader's position words
@@ -444,22 +444,22 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     switch (h % 16) {
-    case 0: B(at::kStep) = static_cast<unsigned char>(v); break;
-    case 1: B(at::kAnswer) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) & 1); break;
-    case 2: B(at::kCursor) = static_cast<unsigned char>(v % 3); break;
-    case 3: B(at::kMaster) = static_cast<unsigned char>(v & 1 ? 0xB + (v >> 1) % 4 : v >> 1); break;
-    case 4: sh::Mem(at::kRecords + ((v >> 2) % 8) * at::kRecordStride)[0x1F] = static_cast<unsigned char>(v & 1 ? B(at::kMaster) : v >> 2); break;
+    case 0: B(AreaW3f_AnswerMarkD1_addr) = static_cast<unsigned char>(v); break;
+    case 1: B(Rest2d_Answer_addr) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) & 1); break;
+    case 2: B(Rest2d_Cursor_addr) = static_cast<unsigned char>(v % 3); break;
+    case 3: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v & 1 ? 0xB + (v >> 1) % 4 : v >> 1); break;
+    case 4: sh::Mem(at::kRecords + ((v >> 2) % 8) * at::kRecordStride)[0x1F] = static_cast<unsigned char>(v & 1 ? B(AreaW0c_TailSub_addr) : v >> 2); break;
     case 5: Field_Request = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
     case 6: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
     case 7: B(at::kMenuTimer) = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
-    case 8: B(at::kStatusCursor) = static_cast<unsigned char>(v & 1 ? (v >> 1) % 3 : v >> 1); break;
-    case 9: B(at::kItemsCategory) = static_cast<unsigned char>(v & 1 ? (v >> 1) % 4 : v >> 1); break;
+    case 8: B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(v & 1 ? (v >> 1) % 3 : v >> 1); break;
+    case 9: B(Rest2d_ItemsCategory_addr) = static_cast<unsigned char>(v & 1 ? (v >> 1) % 4 : v >> 1); break;
     case 10: B(0x80333E) = static_cast<unsigned char>(v % 4); break;
     case 11: B(0x803340) = static_cast<unsigned char>(v); break;
     case 12: B(0x80333F) = static_cast<unsigned char>(v & 0x7F); break;
     case 13: SetWord(sh::Mem(0x803346), v & 1 ? 0 : v >> 1); break;
-    case 14: B(at::kState) = static_cast<unsigned char>(v); break;
-    case 15: B(at::kMasterBits) = static_cast<unsigned char>(B(at::kMasterBits) ^ (8u << (v % 3))); break;
+    case 14: B(AreaW0c_AnswerMark_addr) = static_cast<unsigned char>(v); break;
+    case 15: B(Cond_Flags_addr + 0xd1) = static_cast<unsigned char>(B(Cond_Flags_addr + 0xd1) ^ (8u << (v % 3))); break;
     default: break;
     }
 }
@@ -495,7 +495,7 @@ void SelfTest() {
 
     // FieldAbility_Effects holds the typed stand-ins while the fuzz runs.
     unsigned char saved[4 * at::kAbilityEffectCount];
-    unsigned char* const table = move_script::At(at::kAbilityEffects);
+    unsigned char* const table = move_script::At(FieldAbility_Effects_addr);
     std::memcpy(saved, table, sizeof saved);
     for (unsigned i = 0; i < at::kAbilityEffectCount; ++i) SetLong(table + 4 * i, static_cast<std::int32_t>(KeyOf(kEffectEntries[i])));
 

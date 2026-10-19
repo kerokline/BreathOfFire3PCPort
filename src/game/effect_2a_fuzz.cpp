@@ -218,7 +218,7 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-unsigned char* Pool(U stride, unsigned i) { return P(at::kPool + stride * (i % at::kPoolCount)); }
+unsigned char* Pool(U stride, unsigned i) { return P(EffectKind30_Shards_addr + stride * (i % at::kPoolCount)); }
 
 // --- the effects -----------------------------------------------------------------------
 
@@ -356,8 +356,8 @@ const sh::DataTable kTables[] = {
 // kind 0x2D's link cell (0x675FE0..0x676108), and the pool past the standard
 // 0x644 bytes of EffectKind30_Shards to the spark centre and points (0x92D410).
 const sh::Region kRegions[] = {
-    {at::kSegments, at::kLinkZ + 4 - at::kSegments},
-    {at::kPool + 0x644, at::kPoolEnd - (at::kPool + 0x644)},
+    {Effect2a_Segments_addr, Effect2a_LinkZ_addr + 4 - Effect2a_Segments_addr},
+    {EffectKind30_Shards_addr + 0x644, at::kPoolEnd - (EffectKind30_Shards_addr + 0x644)},
 };
 
 const std::uint8_t kKinds[] = {0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E};

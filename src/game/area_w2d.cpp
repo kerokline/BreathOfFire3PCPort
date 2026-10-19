@@ -22,10 +22,12 @@
 #include "game/area_harness.h"
 #include "game/area_w2d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w2d::at;
 using area_harness::Handler;
@@ -47,9 +49,9 @@ unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEff
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
-unsigned char* StoryFlags() { return Mem(at::kStoryFlags); }
+unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(at::kFlagRow); }
+unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
 
 // A state handler read from an area's .data table in place, as the
 // originals' `jmp [index * 4 + table]`: the index is not checked there. Ours
@@ -77,14 +79,14 @@ void LeaderStep() { AddWord(Field_State + 0x12E, -2); }
 // The tail armed: ScriptFlags_Set40, kind `kind`, state 0.
 void ArmTail(unsigned char kind) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = kind;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = kind;
+    B(AreaW0c_TailState_addr) = 0;
 }
 // The tail disarmed: ScriptFlags_Clear40, kind and state 0.
 void Disarm() {
     AH_CALL(ScriptFlags_Clear40)();
-    B(at::kTailKind) = 0;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = 0;
+    B(AreaW0c_TailState_addr) = 0;
 }
 
 // Areas 95 and 96's handler 4 (0x4135B0, 0x413860, byte for byte the same):
@@ -110,10 +112,11 @@ void SpawnAt46(unsigned char kind) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = kind;
-    SetLong(e + 0x34, 0x460000);
-    SetLong(e + 0x38, 0x340000);
+    tE->x = 0x460000;
+    tE->z = 0x340000;
 }
 // Area 100's handlers 6 and 7: Cond_ByteFE 1, MoveCmd_TestFB(0x4A, 0x2F),
 // then the effect.
@@ -156,7 +159,7 @@ extern "C" void __cdecl Area95_WaitEffectAtCell(void) {
         ScriptStep(-2);
         return;
     }
-    if (B(at::kLeader137) != 0) {
+    if (B(ObjTrio_addr + 0x137) != 0) {
         ScriptStep(-2);
         AH_CALL(ScriptFlags_Set40)();
         return;
@@ -176,11 +179,12 @@ extern "C" void __cdecl Area95_SpawnEffect37(void) {
         return;
     }
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x37;
-    SetLong(e + 0x34, 0x410000);
-    SetLong(e + 0x38, 0x3C8000);
-    SetLong(e + 0x3C, 0x2000000);
+    tE->x = 0x410000;
+    tE->z = 0x3C8000;
+    tE->height = 0x2000000;
     SetWord(e + 0x2C, 0x58);
     e[9] = 1;
     e[6] = 0;
@@ -204,17 +208,19 @@ extern "C" void __cdecl Area95_LeapArc(void) {
     MoveScript_Object[7] = 1;
     AH_CALL(MoveCmd_Move)(MoveScript_Object, 5);
     const unsigned char* cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     const U n = cur[9];
-    const U x = static_cast<U>(Long(cur + 0xC)) * n + static_cast<U>(Long(cur + 0x34));
-    const U z = static_cast<U>(Long(cur + 0x10)) * n + static_cast<U>(Long(cur + 0x38));
+    const U x = static_cast<U>(tCur->step_x) * n + static_cast<U>(tCur->x);
+    const U z = static_cast<U>(tCur->step_z) * n + static_cast<U>(tCur->z);
     const auto ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z)));
     unsigned char* const obj = Sprite_Current;
+    auto* const tObj = reinterpret_cast<records::SpriteObject*>(obj);
     const std::int32_t rise = static_cast<std::int32_t>(ground) - static_cast<std::int16_t>(Word(obj + 0x3E)) + 0xE0;
     const unsigned frames = obj[9];
     if (frames == 0) bof3::Fatal("Area95_LeapArc: +9 is 0, the original's idiv faults");
-    SetLong(obj + 0x14, rise / static_cast<std::int32_t>(frames));
-    SetLong(Mem(at::kPartyRecord0 + 4), 0x40);
-    B(at::kPartyRecord0 + 1) = Sprite_Current[9];
+    tObj->step_y = rise / static_cast<std::int32_t>(frames);
+    SetLong(Mem(MoveScript_PartyRecords_addr + 4), 0x40);
+    B(MoveScript_PartyRecords_addr + 1) = Sprite_Current[9];
 }
 
 // original 0x4137D0 (areas 95 and 96 +0x3C[3]; PSX 0x801F3450 / 0x801F33E0;
@@ -259,7 +265,7 @@ extern "C" void __cdecl Area96_FaceBack(void) {
 // the ground at the leader's (x, z), sign-extended; MapView_Elevation already
 // there: 0x20 lower, else set to it; MapView_Redraw + 2 either way.
 extern "C" void __cdecl Area96_SnapElevation(void) {
-    const long ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(Long(Mem(at::kLeaderX)), Long(Mem(at::kLeaderZ))));
+    const long ground = static_cast<std::int16_t>(AH_CALL(AreaMap_Elevation)(Long(Mem(ObjTrio_addr + 0x34)), Long(Mem(ObjTrio_addr + 0x38))));
     const long now = MapView_Elevation;
     MapView_Elevation = now == ground ? now - 0x20 : ground;
     MapView_Redraw = static_cast<unsigned char>(MapView_Redraw + 2);
@@ -274,17 +280,17 @@ extern "C" void __cdecl Area96_SnapElevation(void) {
 // ScriptFlags_Set40 and state 1; 1 - once counter 3 is 2, ScriptFlags_Clear40,
 // counter 3 0 and the tail disarmed.
 extern "C" void __cdecl Area97_TailWaitCounter3(void) {
-    const auto state = static_cast<signed char>(B(at::kTailState));
+    const auto state = static_cast<signed char>(B(AreaW0c_TailState_addr));
     if (state == 0) {
         AH_CALL(ScriptFlags_Set40)();
-        B(at::kTailState) = 1;
+        B(AreaW0c_TailState_addr) = 1;
         return;
     }
     if (state != 1 || B(at::kCounter3) != 2) return;
     AH_CALL(ScriptFlags_Clear40)();
     B(at::kCounter3) = 0;
-    B(at::kTailKind) = 0;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = 0;
+    B(AreaW0c_TailState_addr) = 0;
 }
 
 // original 0x413980 (Area_StepHook's case for area 97): z at most 0x3A0000
@@ -292,14 +298,14 @@ extern "C" void __cdecl Area97_TailWaitCounter3(void) {
 // 1 or 2, and key item 5 not held: tail kind 13 armed (state 0, counter 3 =
 // 1), al 1. Else al 0.
 extern "C" unsigned char __cdecl Area97_StepHook(long x, long z) {
-    const unsigned char pose = B(at::kLeaderPose);
+    const unsigned char pose = B(ObjTrio_addr + 0x8);
     if (z > 0x3A0000) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x30) >= 3) return 0;
     if (pose != 0 && pose != 1 && pose != 2) return 0;
     if (AH_CALL(KeyItem_Has)(5) != 0) return 0;
-    B(at::kTailState) = 0;
+    B(AreaW0c_TailState_addr) = 0;
     B(at::kCounter3) = 1;
-    B(at::kTailKind) = 0xD;
+    B(AreaW0a_TailKind_addr) = 0xD;
     return 1;
 }
 
@@ -323,7 +329,7 @@ extern "C" unsigned char __cdecl Area97_FlagIfKeyItem5(void) {
 extern "C" void __cdecl Area98_ChoiceFlag9(void) {
     SetMessage(0xFFFF);
     AH_CALL(Flags_Set)(Mem(at::kFlags904654), 9);
-    if (B(at::kChoiceAnswer) == 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) == 0) {
         B(at::kCounter1) = 0;
         return;
     }
@@ -335,9 +341,9 @@ extern "C" void __cdecl Area98_ChoiceFlag9(void) {
 // 0x801F5B0C): an answer: message 0x2F and the mark 0x9398CF 6; 0: message
 // 0xFFFF.
 extern "C" void __cdecl Area98_ChoiceAsk2F(void) {
-    if (B(at::kChoiceAnswer) != 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
         SetMessage(0x2F);
-        B(at::kAnswerMark) = 6;
+        B(AreaW0c_AnswerMark_addr) = 6;
         return;
     }
     SetMessage(0xFFFF);
@@ -346,7 +352,7 @@ extern "C" void __cdecl Area98_ChoiceAsk2F(void) {
 // original 0x413A80 (area 98 +0x34[5] = +0x3C[6]; PSX 0x801F5B50): message
 // 0xFFFF; answer 0: tail kind 45 armed.
 extern "C" void __cdecl Area98_ChoiceArmTail45(void) {
-    const unsigned char answer = B(at::kChoiceAnswer);
+    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
     if (answer == 0) ArmTail(0x2D);
 }
@@ -358,12 +364,13 @@ extern "C" void __cdecl Area98_ChoiceArmTail45(void) {
 extern "C" void __cdecl Area98_SpawnEffect37(void) {
     Sprite_Current[0xB] = AH_CALL(Effect_FindFree)();
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     if (cur[0xB] == 0xFF) return;
     EffectAt(cur[0xB])[0] = 1;
     EffectAt(cur[0xB])[5] = 0x37;
-    SetLong(EffectAt(cur[0xB]) + 0x34, Long(cur + 0x34));
-    SetLong(EffectAt(cur[0xB]) + 0x38, Long(cur + 0x38));
-    SetLong(EffectAt(cur[0xB]) + 0x3C, Long(cur + 0x3C));
+    SetLong(EffectAt(cur[0xB]) + 0x34, tCur->x);
+    SetLong(EffectAt(cur[0xB]) + 0x38, tCur->z);
+    SetLong(EffectAt(cur[0xB]) + 0x3C, tCur->height);
     SetWord(EffectAt(cur[0xB]) + 0x2C, 0x11D);
     EffectAt(cur[0xB])[6] = 0;
     EffectAt(cur[0xB])[7] = 0;
@@ -382,13 +389,13 @@ extern "C" void __cdecl Area98_InitCells(void) {
 // 2: the return point = the leader's x, z and the area number;
 // Field_ChangeArea(0x62, 0x380000, 0x2C0000, 1); the tail disarmed.
 extern "C" void __cdecl Area98_TailChangeArea62(void) {
-    if (B(at::kTailState) != 0 || Field_Request == 2) return;
-    const std::int32_t x = Long(Mem(at::kLeaderX));
-    const std::int32_t z = Long(Mem(at::kLeaderZ));
+    if (B(AreaW0c_TailState_addr) != 0 || Field_Request == 2) return;
+    const std::int32_t x = Long(Mem(ObjTrio_addr + 0x34));
+    const std::int32_t z = Long(Mem(ObjTrio_addr + 0x38));
     const unsigned short area = Game_AreaNumber;
-    SetLong(Mem(at::kReturnPoint), x);
-    SetLong(Mem(at::kReturnPoint + 4), z);
-    SetWord(Mem(at::kReturnPoint + 8), area);
+    SetLong(Mem(AreaW2d_ReturnPoint_addr), x);
+    SetLong(Mem(AreaW2d_ReturnPoint_addr + 4), z);
+    SetWord(Mem(AreaW2d_ReturnPoint_addr + 8), area);
     AH_CALL(Field_ChangeArea)(0x62, 0x380000, 0x2C0000, 1);
     Disarm();
 }
@@ -400,12 +407,12 @@ extern "C" void __cdecl Area98_TailChangeArea62(void) {
 // signed division by 0xA4). al 0.
 extern "C" unsigned char __cdecl Area98_Trigger44(unsigned char*, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    Ptr(at::kFocusObject)[1] = 4;
-    Ptr(at::kFocusObject)[0x83] = 0;
-    SetWord(Ptr(at::kFocusObject) + 0x8A, 0);
-    const auto offset = static_cast<std::int32_t>(static_cast<U>(Long(Mem(at::kFocusObject))) - at::kSpriteObjects);
-    B(at::kTailKind) = 4;
-    B(at::kTailSub) = 9;
+    Ptr(AreaW1a_FocusObject_addr)[1] = 4;
+    Ptr(AreaW1a_FocusObject_addr)[0x83] = 0;
+    SetWord(Ptr(AreaW1a_FocusObject_addr) + 0x8A, 0);
+    const auto offset = static_cast<std::int32_t>(static_cast<U>(Long(Mem(AreaW1a_FocusObject_addr))) - Sprite_Objects_addr);
+    B(AreaW0a_TailKind_addr) = 4;
+    B(AreaW0c_TailSub_addr) = 9;
     B(at::kCounter3) = static_cast<unsigned char>(offset / 0xA4);
     return 0;
 }
@@ -456,7 +463,7 @@ extern "C" void __cdecl Area99_TurnSoundEffect1B(void) {
 // original 0x413D50 (area 99 +0x3C[3]; PSX 0x801F2D68): Area99_DriftStates
 // by Sprite_Current[4].
 extern "C" void __cdecl Area99_RunDrift(void) {
-    StateEntry("Area99_RunDrift", at::kArea99DriftStates, at::kArea99StateCount, Sprite_Current[4])();
+    StateEntry("Area99_RunDrift", Area99_DriftStates_addr, at::kArea99StateCount, Sprite_Current[4])();
 }
 
 // original 0x413D70 (Area99_DriftStates[0]): +0xA = 0x48, state 1 (the object
@@ -476,7 +483,7 @@ extern "C" void __cdecl Area99_DriftStep(void) {
         cur[4] = 0;
         return;
     }
-    const auto step = static_cast<std::int32_t>(static_cast<signed char>(B(at::kArea99DriftSteps + (cur[0xA] & 0xF))));
+    const auto step = static_cast<std::int32_t>(static_cast<signed char>(B(Area99_DriftSteps_addr + (cur[0xA] & 0xF))));
     AddLong(cur + 0x38, (0u - static_cast<U>(step)) << 11);
     unsigned char* const obj = Sprite_Current;
     obj[0xA] = static_cast<unsigned char>(obj[0xA] - 1);
@@ -486,7 +493,7 @@ extern "C" void __cdecl Area99_DriftStep(void) {
 // original 0x413DF0 (area 99 +0x3C[4]; PSX 0x801F2E58): Area99_LeapStates by
 // Sprite_Current[4].
 extern "C" void __cdecl Area99_RunLeap(void) {
-    StateEntry("Area99_RunLeap", at::kArea99LeapStates, at::kArea99StateCount, Sprite_Current[4])();
+    StateEntry("Area99_RunLeap", Area99_LeapStates_addr, at::kArea99StateCount, Sprite_Current[4])();
 }
 
 // original 0x413E10 (Area99_LeapStates[0]): speed Field_MoveSpeeds[3]; +9 =
@@ -495,20 +502,22 @@ extern "C" void __cdecl Area99_RunLeap(void) {
 // above 16, faults; ours aborts); then +0xA = 0xE, state 1; Field_State's
 // word +0x12E - 2. Sprite_Current read again for every store.
 extern "C" void __cdecl Area99_LeapStart(void) {
-    const unsigned speed = B(at::kMoveSpeed3);
+    const unsigned speed = B(Field_MoveSpeeds_addr + 0x3);
     Sprite_Current[9] = 0;
     Sprite_Current[0xB] = 3;
     if (speed == 0) bof3::Fatal("Area99_LeapStart: Field_MoveSpeeds[3] is 0, the original's idiv faults");
     Sprite_Current[0xA] = static_cast<unsigned char>(16 / static_cast<int>(speed));
-    SetLong(Sprite_Current + 0x14, 0x4200);
+    CurSprite()->step_y = 0x4200;
     unsigned char* cur = Sprite_Current;
+    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
     std::int32_t d = static_cast<std::int32_t>(cur[0xA]) * 4;
     if (d == 0) bof3::Fatal("Area99_LeapStart: 16 / Field_MoveSpeeds[3] is 0, the original's idiv faults");
-    SetLong(cur + 0xC, 0x20000 / d);
+    tCur->step_x = 0x20000 / d;
     cur = Sprite_Current;
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
     d = static_cast<std::int32_t>(cur[0xA]) * 4;
     if (d == 0) bof3::Fatal("Area99_LeapStart: 16 / Field_MoveSpeeds[3] is 0, the original's idiv faults");
-    SetLong(cur + 0x10, -0x18000 / d);
+    tCur->step_z = -0x18000 / d;
     Sprite_Current[0xA] = 0xE;
     Sprite_Current[4] = 1;
     LeaderStep();
@@ -520,18 +529,24 @@ extern "C" void __cdecl Area99_LeapStart(void) {
 // else Field_State's word +0x12E - 2. Sprite_Current read again for each.
 extern "C" void __cdecl Area99_LeapStep(void) {
     unsigned char* cur = Sprite_Current;
-    AddLong(cur + 0x34, static_cast<U>(Long(cur + 0xC)));
+    auto* tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    AddLong(cur + 0x34, static_cast<U>(tCur->step_x));
     cur = Sprite_Current;
-    AddLong(cur + 0x38, static_cast<U>(Long(cur + 0x10)));
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    AddLong(cur + 0x38, static_cast<U>(tCur->step_z));
     cur = Sprite_Current;
-    AddWord(cur + 0x3E, static_cast<int>(static_cast<std::uint16_t>(static_cast<U>(Long(cur + 0x14) >> 8))));
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    AddWord(cur + 0x3E, static_cast<int>(static_cast<std::uint16_t>(static_cast<U>(tCur->step_y >> 8))));
     cur = Sprite_Current;
-    const std::int32_t rise = Long(cur + 0x14);
-    SetLong(cur + 0x14, static_cast<std::int32_t>(static_cast<U>(rise) - 0x700u));
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
+    const std::int32_t rise = tCur->step_y;
+    tCur->step_y = static_cast<std::int32_t>(static_cast<U>(rise) - 0x700u);
     cur = Sprite_Current;
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
     cur[0xA] = static_cast<unsigned char>(cur[0xA] - 1);
-    if (rise > 0 && Long(Sprite_Current + 0x14) < 0) AH_CALL(Sprite_EnsureAnimation)(0x51);
+    if (rise > 0 && CurSprite()->step_y < 0) AH_CALL(Sprite_EnsureAnimation)(0x51);
     cur = Sprite_Current;
+    tCur = reinterpret_cast<records::SpriteObject*>(cur);
     if (cur[0xA] < 1) {
         cur[4] = 0;
         return;
@@ -548,7 +563,7 @@ extern "C" void __cdecl Area99_ToggleRowFlag1F(void) { FlagsToggle(FlagRow(), 0x
 // 0x50.
 extern "C" void __cdecl Area99_InitCell(void) {
     if (Cond_ByteFD != 1) return;
-    unsigned char* const row = Mem(at::kCondRow3);
+    unsigned char* const row = Mem(Cond_Flags_addr + 0x18);
     if (AH_CALL(Flags_Test)(row, 0x1C) != 0 && AH_CALL(Flags_Test)(row, 0x1D) == 0) {
         SetByte(0x23, 0x4F, 0x51);
         return;
@@ -608,8 +623,8 @@ extern "C" void __cdecl Area100_SpawnEffectB7(void) { TestAndSpawn(0xB7); }
 // 0x33 set, else message 9 and 0x33 cleared; 4 - nothing; any other - 0x93
 // set, 0x94 cleared, 0x33 set.
 extern "C" void __cdecl Area100_ChoiceFlags93(void) {
-    const auto answer = static_cast<signed char>(B(at::kChoiceAnswer));
-    SetMessage(Word(Mem(at::kArea100ChoiceMessages + static_cast<U>(static_cast<std::int32_t>(answer) * 2))));
+    const auto answer = static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr));
+    SetMessage(Word(Mem(Area100_ChoiceMessages_addr + static_cast<U>(static_cast<std::int32_t>(answer) * 2))));
     unsigned char* const flags = StoryFlags();
     switch (answer) {
     case 1:
@@ -649,23 +664,23 @@ extern "C" void __cdecl Area100_ChoiceFlags93(void) {
 // - once Field_Request is not 2, the tail disarmed. The table is 0x41431C (5
 // entries, in .text).
 extern "C" void __cdecl Area100_TailEffect9B(void) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
     case 0:
         AH_CALL(Kind2_Place)(0);
-        B(at::kTailState) = 1;
+        B(AreaW0c_TailState_addr) = 1;
         return;
     case 1:
         if (B(at::kCounter0) != 1) return;
         SpawnAt46(0x9B);
         SetWord(Mem(at::kTailTimer), 0x1E);
-        B(at::kTailState) = 2;
+        B(AreaW0c_TailState_addr) = 2;
         return;
     case 2: {
         const auto left = static_cast<std::uint16_t>(Word(Mem(at::kTailTimer)) - 1);
         SetWord(Mem(at::kTailTimer), left);
         if (left != 0) return;
         const unsigned char count = B(at::kCounter0);
-        B(at::kTailState) = 3;
+        B(AreaW0c_TailState_addr) = 3;
         B(at::kCounter0) = static_cast<unsigned char>(count + 1);
         return;
     }
@@ -673,7 +688,7 @@ extern "C" void __cdecl Area100_TailEffect9B(void) {
         if (B(at::kCounter0) != 0) return;
         AH_CALL(Msg_OpenScript)(3);
         Field_Request = 2;
-        B(at::kTailState) = 4;
+        B(AreaW0c_TailState_addr) = 4;
         return;
     case 4:
         if (Field_Request == 2) return;
@@ -692,7 +707,7 @@ extern "C" unsigned char __cdecl Area100_StepHook(long x, long z) {
     if (AH_CALL(Flags_Test)(StoryFlags(), 0x33) == 0) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x45) >= 3) return 0;
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 3) return 0;
-    const unsigned char pose = B(at::kLeaderPose);
+    const unsigned char pose = B(ObjTrio_addr + 0x8);
     if (pose != 0 && pose != 7 && pose != 6) return 0;
     B(at::kCounter0) = 0;
     AH_CALL(Party_DropIn)(0);
@@ -723,7 +738,7 @@ extern "C" unsigned char __cdecl Area100_Trigger13(unsigned char*, unsigned char
 // 44 (engine, 0x56DE50) armed with sub-kind 2. al 0.
 extern "C" unsigned char __cdecl Area100_Trigger30(unsigned char*, unsigned char*) {
     ArmTail(0x2C);
-    B(at::kTailSub) = 2;
+    B(AreaW0c_TailSub_addr) = 2;
     return 0;
 }
 
@@ -737,7 +752,7 @@ extern "C" void __cdecl Area100_InitCells(void) {
 // original 0x414490 (Effect_KindHandlers[0xB7], 0x65562C; a gap of the tool):
 // Area100_EffectStates by Sprite_Current[1] (the running effect record).
 extern "C" void __cdecl Area100_EffectB7Run(void) {
-    StateEntry("Area100_EffectB7Run", at::kArea100EffectStates, at::kArea100EffectStateCount, Sprite_Current[1])();
+    StateEntry("Area100_EffectB7Run", Area100_EffectStates_addr, at::kArea100EffectStateCount, Sprite_Current[1])();
 }
 
 // original 0x4144B0 (Area100_EffectStates[1]): the point (x +0x34, z +0x38,
@@ -745,10 +760,11 @@ extern "C" void __cdecl Area100_EffectB7Run(void) {
 // (area_w2d_callees.h).
 extern "C" void __cdecl Area100_EffectB7Ring(void) {
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::EffectObject*>(cur);
     long point[4];
-    point[0] = Long(cur + 0x34);
-    point[1] = Long(cur + 0x38);
-    point[2] = Long(cur + 0x3C);
+    point[0] = tCur->x;
+    point[1] = tCur->z;
+    point[2] = tCur->height;
     point[3] = 0;
     AH_AT(void (__cdecl*)(const long*), at::kRingAt)(point);
 }
@@ -778,9 +794,9 @@ extern "C" void __cdecl Area103_TalkByMember(void) {
 extern "C" unsigned char __cdecl Area103_FirstListedMember(void) {
     const unsigned char count = Field_MemberCount;
     for (unsigned i = 0; i < at::kArea103MemberKeyCount; ++i) {
-        const unsigned char key = B(at::kArea103MemberKeys + i);
+        const unsigned char key = B(Area103_MemberKeys_addr + i);
         for (unsigned m = 0; m < count; ++m)
-            if (key == B(at::kLeader + m * at::kPartyStride + 0x89)) return static_cast<unsigned char>(i);
+            if (key == B(ObjTrio_addr + m * at::kPartyStride + 0x89)) return static_cast<unsigned char>(i);
     }
     return 0xFF;
 }
@@ -803,7 +819,7 @@ extern "C" void __cdecl Area103_ShakeElevation(void) {
     const unsigned f = Frame_Counter & 3;
     const long now = MapView_Elevation;
     MapView_Redraw = 2;
-    const auto step = static_cast<std::int32_t>(static_cast<signed char>(B(at::kArea103Shake + f)));
+    const auto step = static_cast<std::int32_t>(static_cast<signed char>(B(Area103_Shake_addr + f)));
     MapView_Elevation = static_cast<long>(static_cast<U>(now) + static_cast<U>(step) * 8u);
 }
 
@@ -811,7 +827,8 @@ extern "C" void __cdecl Area103_ShakeElevation(void) {
 // word +0x3E = the ground at its (x, z) (the object read again).
 extern "C" void __cdecl Area103_Ground(void) {
     const unsigned char* const cur = Sprite_Current;
-    const long ground = AH_CALL(AreaMap_Elevation)(Long(cur + 0x34), Long(cur + 0x38));
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
+    const long ground = AH_CALL(AreaMap_Elevation)(tCur->x, tCur->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
 }
 
@@ -825,19 +842,21 @@ extern "C" void __cdecl Area103_SpawnEffect4D(void) {
         return;
     }
     const unsigned char* const cur = Sprite_Current;
+    const auto* const tCur = reinterpret_cast<const records::SpriteObject*>(cur);
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = 0x4D;
-    SetLong(e + 0x34, Long(cur + 0x34));
-    SetLong(e + 0x38, Long(cur + 0x38));
-    SetLong(e + 0x3C, Long(cur + 0x3C));
+    tE->x = tCur->x;
+    tE->z = tCur->z;
+    tE->height = tCur->height;
 }
 
 // original 0x4146A0 (Field_ObjectTriggers id 35; a gap of the tool, area
 // 103's block): tail kind 44 (engine) armed with sub-kind 8. al 0.
 extern "C" unsigned char __cdecl Area103_Trigger35(unsigned char*, unsigned char*) {
     ArmTail(0x2C);
-    B(at::kTailSub) = 8;
+    B(AreaW0c_TailSub_addr) = 8;
     return 0;
 }
 

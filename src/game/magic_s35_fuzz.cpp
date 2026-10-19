@@ -202,16 +202,20 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kPartyCount = 0x904AB0;
-constexpr std::uint32_t kCurePool = 0x6AE910, kCureStride = 0x2C, kCureCurrent = 0x6AFF10;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kPartyCount = 0x904AB0;
+// kCurePool: now CureMote_Pool (symbols.toml).
+// kCureCurrent: now CureMote_Current (symbols.toml).
+constexpr std::uint32_t kCureStride = 0x2C;
 constexpr unsigned kCureCount = 0x80;
-constexpr std::uint32_t kBlessPool = 0x6AFF18, kBlessStride = 0x84;
+// kBlessPool: now BenedictionMote_Pool (symbols.toml).
+constexpr std::uint32_t kBlessStride = 0x84;
 constexpr unsigned kBlessCount = 0x50;
-constexpr std::uint32_t kPoolsEnd = kBlessPool + kBlessCount * kBlessStride;
+constexpr std::uint32_t kPoolsEnd = BenedictionMote_Pool_addr + kBlessCount * kBlessStride;
 
-unsigned char* CureRecord(unsigned n) { return mh::Mem(kCurePool + (n % kCureCount) * kCureStride); }
-unsigned char* BlessRecord(unsigned n) { return mh::Mem(kBlessPool + (n % kBlessCount) * kBlessStride); }
-unsigned char* Cur() { return mh::Pointer(kCureCurrent); }
+unsigned char* CureRecord(unsigned n) { return mh::Mem(CureMote_Pool_addr + (n % kCureCount) * kCureStride); }
+unsigned char* BlessRecord(unsigned n) { return mh::Mem(BenedictionMote_Pool_addr + (n % kBlessCount) * kBlessStride); }
+unsigned char* Cur() { return mh::Pointer(CureMote_Current_addr); }
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 
@@ -282,13 +286,13 @@ const mh::Callee kCallees[] = {
     {S35_RAW(0x4F1120), 0, {}, mh::Answer::kByte, 0xFF, kCureCount - 1},
     // MAGIC168's motes, run through CureMote_Current: called directly or held
     // by its tables; each also logs the current mote
-    {S35_RAW(0x4F0850), 0, {kCureCurrent}, kP, 0, 0},
-    {S35_RAW(0x4F0870), 0, {kCureCurrent}, kP, 0, 0},
-    {S35_RAW(0x4F0900), 0, {kCureCurrent}, kP, 0, 0},
-    {S35_RAW(0x4F0A70), 0, {kCureCurrent}, kP, 0, 0},
-    {S35_RAW(0x4F0AE0), 0, {kCureCurrent}, kP, 0, 0},
-    {S35_RAW(0x4F0EF0), 0, {kCureCurrent}, kP, 0, 0},
-    {S35_RAW(0x4F1170), 0, {kCureCurrent}, kP, 0, 0},
+    {S35_RAW(0x4F0850), 0, {CureMote_Current_addr}, kP, 0, 0},
+    {S35_RAW(0x4F0870), 0, {CureMote_Current_addr}, kP, 0, 0},
+    {S35_RAW(0x4F0900), 0, {CureMote_Current_addr}, kP, 0, 0},
+    {S35_RAW(0x4F0A70), 0, {CureMote_Current_addr}, kP, 0, 0},
+    {S35_RAW(0x4F0AE0), 0, {CureMote_Current_addr}, kP, 0, 0},
+    {S35_RAW(0x4F0EF0), 0, {CureMote_Current_addr}, kP, 0, 0},
+    {S35_RAW(0x4F1170), 0, {CureMote_Current_addr}, kP, 0, 0},
     {S35_RAW(0x4F0B70), 2, {kU16, kU16}, kG, 0, 0},
     {S35_RAW(0x4F0D00), 2, {kU16, kU16}, kG, 0, 0},
 };
@@ -304,12 +308,12 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850.., Scratch_Swap at +0xC
     {0x7E0700, 0xC00},                    // MoveScript_TintRecords
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
-    {kCurePool, kPoolsEnd - kCurePool},   // CureMote_Pool, CureMote_Current, BenedictionMote_Pool
+    {CureMote_Pool_addr, kPoolsEnd - CureMote_Pool_addr}, // CureMote_Pool, CureMote_Current, BenedictionMote_Pool
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
@@ -327,9 +331,9 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: mh::Mem(kScratch + v % 16)[0] = Byte(h >> 24); break;
-    case 3: mh::SetPointer(kCureCurrent, CureRecord(v)); break;
+    case 3: mh::SetPointer(CureMote_Current_addr, CureRecord(v)); break;
     case 4: CureRecord(v >> 4)[v % 0x28] = Byte(h >> 24); break;
     case 5: BlessRecord(v >> 4)[v % 0x80] = Byte(h >> 24); break;
     case 6: mh::Mem(0x7E0700 + v % 0xC00)[0] = Byte(h >> 24); break;
@@ -346,9 +350,9 @@ void Near(unsigned char& b, unsigned before) {
 void Seed(unsigned k) {
     // the pools: every owner pointer at a slot or record, the current mote at
     // a record; a full pool one round in eight
-    for (unsigned n = 0; n < kCureCount; ++n) mh::SetPointer(kCurePool + n * kCureStride + 0x28, AnOwner(mh::Next()));
-    for (unsigned n = 0; n < kBlessCount; ++n) mh::SetPointer(kBlessPool + n * kBlessStride + 0x80, AnOwner(mh::Next()));
-    mh::SetPointer(kCureCurrent, CureRecord(mh::Next()));
+    for (unsigned n = 0; n < kCureCount; ++n) mh::SetPointer(CureMote_Pool_addr + n * kCureStride + 0x28, AnOwner(mh::Next()));
+    for (unsigned n = 0; n < kBlessCount; ++n) mh::SetPointer(BenedictionMote_Pool_addr + n * kBlessStride + 0x80, AnOwner(mh::Next()));
+    mh::SetPointer(CureMote_Current_addr, CureRecord(mh::Next()));
     if (mh::Next() % 8 == 0) {
         for (unsigned n = 0; n < kCureCount; ++n) CureRecord(n)[0] |= 1;
         for (unsigned n = 0; n < kBlessCount; ++n) BlessRecord(n)[0] |= 1;
@@ -388,7 +392,7 @@ void Seed(unsigned k) {
         break;
     // the counters: at their thresholds
     case kLastResort_WaitChildren: sc[0xB] = Byte(mh::Next() % 3); break;
-    case kMagicFx_WaitOwnerChildren: mh::Pointer(mh::at::kOwner)[0xB] = Byte(mh::Next() % 3); break;
+    case kMagicFx_WaitOwnerChildren: mh::Pointer(BattleE2_Owner_addr)[0xB] = Byte(mh::Next() % 3); break;
     case kLastResortBeam_Wait: Near(sc[9], 1); break;
     case kLastResortBeam_Rise:
         Near(sc[9], 0x17);

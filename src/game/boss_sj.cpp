@@ -33,6 +33,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_sj_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -53,8 +54,11 @@ using Forward = U (__cdecl*)(U);
 using RoundHighFn = U (__cdecl*)(U, U);
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(at::kCurrentEnemy)))); }
-unsigned char* Owner() { return At(static_cast<U>(Long(At(at::kOwner)))); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
+unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -111,9 +115,9 @@ void Steps(const char* who, const U* handlers, unsigned n) {
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
 void StoreHooks(U end, U exit, U event) {
-    SetLong(At(at::kHookEnd), S(end));
-    SetLong(At(at::kHookExit), S(exit));
-    SetLong(At(at::kHookEvent), S(event));
+    BattleHook_End = S(end);
+    BattleHook_Exit = S(exit);
+    BattleHook_Event = S(event);
 }
 
 // A kind's entry state (kinds 59 and 61 alike): 0x939AD8's +0xFC (its
@@ -121,11 +125,11 @@ void StoreHooks(U end, U exit, U event) {
 // +0x114 |= 8 - 0x939AD8 read for each; Sprite_Current +1 = 2; a tail jump to
 // Sprite_ScriptTick, whose al is the answer.
 unsigned char Enter(U fc, U f4, U f8) {
-    SetLong(Enemy() + 0xFC, S(fc));
-    SetLong(Enemy() + 0xF4, S(f4));
-    SetLong(Enemy() + 0xF8, S(f8));
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x114, S(static_cast<U>(Long(e + 0x114)) | 8));
+    EnemyRec()->anim_table = S(fc);
+    EnemyRec()->event_hook = S(f4);
+    EnemyRec()->cue_table = S(f8);
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -136,12 +140,13 @@ unsigned char Enter(U fc, U f4, U f8) {
 // +0x90 bit 14, else + 4 - a byte, 0x8C5D80, 0x1800).
 void PoseParty() {
     for (unsigned m = 0; m < 3; ++m) {
-        unsigned char* const p = At(at::kParty + m * at::kPartyStride);
-        if ((p[0] & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(p[5]);
+        unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        if ((member_rec->flags & 1) == 0) continue;
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
-        const unsigned pose = static_cast<unsigned char>(p[8] + ((flags & 0x4000) != 0 ? 0x1C : 4));
+        const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
 }
@@ -150,7 +155,7 @@ void PoseParty() {
 // word 0x904B7E: 10 and above read the frame's two unset bytes and then its
 // caller's stack.
 unsigned char Pose(const char* who, const unsigned char (&poses)[10]) {
-    const unsigned i = Word(At(at::kPoseIndex));
+    const unsigned i = BossSa_EndCount;
     if (i >= 10)
         bof3::Fatal("%s: the pose index 0x904B7E is %u, past its ten-byte stack table - the original reads its own frame "
                     "and its caller's (docs/boss_sj.md section 6)",
@@ -263,13 +268,13 @@ extern "C" void __cdecl BossDLord_Death(void) {
     BH_CALL(Sprite_EnsureAnimation)(3);
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x110, S(static_cast<U>(Long(e + 0x110)) | 0x1000));
-    unsigned char* const s = Sprite_Current;
-    s[0] &= 0xBF;
-    s[1] = 3;
-    s[2] = 0;
-    s[3] = 0;
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_110 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
+    auto* const cur_enemy = ScEnemy();
+    cur_enemy->flags &= 0xBF;
+    cur_enemy->state[0] = 3;
+    cur_enemy->state[1] = 0;
+    cur_enemy->state[2] = 0;
 }
 
 // original 0x43F8A0: the +0xF4 hook: by the word's low byte through
@@ -313,12 +318,12 @@ extern "C" void __cdecl Boss52_Setup(void) {
 // to 0x446E00 (the end phase, step 2). Won: the party posed (PoseParty), the
 // chapter step 0x8034E5 = 0x1A, a tail jump to 0x446DE0 (step 1).
 extern "C" void __cdecl Boss52_End(void) {
-    if ((B(at::kBattleEnd) & 2) == 0) {
+    if ((BattleActions_BattleEnd & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     PoseParty();
-    B(at::kChapterStep) = 0x1A;
+    MoveScript_PartyRecords[0x65] = 0x1A;
     BH_AT(Handler, at::kEndWin)();
 }
 
@@ -409,7 +414,7 @@ extern "C" void __cdecl Boss54_Setup(void) {
 // original 0x43FC60: the end hook. Won: movement-script variable 3 (0x903848)
 // = 0x32, a tail jump to 0x446DE0; else to 0x446E00.
 extern "C" void __cdecl Boss54_End(void) {
-    if (B(at::kBattleEnd) & 2) {
+    if (BattleActions_BattleEnd & 2) {
         B(at::kScriptVar3) = 0x32;
         BH_AT(Handler, at::kEndWin)();
     } else {
@@ -431,12 +436,12 @@ extern "C" void __cdecl Boss55_Setup(void) {
 // party posed (PoseParty), the chapter step 0x8034E5 = 0xF, 0x446E20 called
 // (the end phase's step 3), then Music_Track = 0xFF.
 extern "C" void __cdecl Boss55_End(void) {
-    if ((B(at::kBattleEnd) & 2) == 0) {
+    if ((BattleActions_BattleEnd & 2) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
     PoseParty();
-    B(at::kChapterStep) = 0xF;
+    MoveScript_PartyRecords[0x65] = 0xF;
     BH_AT(Handler, at::kEndThird)();
     Music_Track = 0xFF;
 }
@@ -448,7 +453,7 @@ extern "C" void __cdecl Boss55_End(void) {
 // original 0x440830: slot 5: 0x939AD8 = enemy 0's object, then jmp
 // [BossMyriaFx_States + 4 * Sprite_Current +1] (7: states 0..6).
 extern "C" void __cdecl BossMyriaFx_Dispatch(void) {
-    SetLong(At(at::kCurrentEnemy), S(at::kEnemies));
+    BattleE3_CurrentEnemy = S(at::kEnemies);
     DispatchTask("BossMyriaFx_Dispatch", AddressOf(BossMyriaFx_States), 7);
 }
 
@@ -599,11 +604,12 @@ extern "C" void __cdecl BossMyriaFx_Follow(void) {
     {
         const unsigned char* const o = Owner();
         unsigned char* const s = Sprite_Current;
-        s[0] = o[0];
+        auto* const cur_task = reinterpret_cast<records::BattleTask*>(s);
+        cur_task->flags = o[0];
         s[0x48] = o[0x48];
         SetLong(s + 0x40, Long(o + 0x40));
         SetLong(s + 0x44, Long(o + 0x44));
-        s[0x27] = o[0x27];
+        cur_task->clut = o[0x27];
         s[0x28] = o[0x28];
         s[0x2A] = o[0x2A];
         SetWord(s + 0x2E, Word(o + 0x2E));

@@ -434,11 +434,11 @@ void SelfTestTextureCycle(void (__cdecl* theirs)(const unsigned char*)) {
 
 // --- AreaMap_SlotZones ----------------------------------------------------------------------
 
-constexpr std::uint32_t kFourthObject = 0x905DA0;
+// kFourthObject: now FieldEvent_Object905DA0 (symbols.toml).
 
 void SelfTestSlotZones(void (__cdecl* theirs)(const unsigned char*)) {
     constexpr unsigned kRounds = 40000;
-    const Region r[] = {R(Draw_OtSlot), R(ObjTrio, 0x3E4), R(At(kFourthObject), 0x3C), R(g_entry)};
+    const Region r[] = {R(Draw_OtSlot), R(ObjTrio, 0x3E4), R(At(FieldEvent_Object905DA0_addr), 0x3C), R(g_entry)};
     constexpr unsigned n = sizeof r / sizeof r[0];
     Capture(r, n, g_saved);
     g_rng = 0x571E2001u;
@@ -481,8 +481,8 @@ void SelfTestSlotZones(void (__cdecl* theirs)(const unsigned char*)) {
             SetDword(position + 4, pack(cell(z0, z0 + d)));
         };
         for (unsigned k = 0; k < 3; ++k) place(ObjTrio + k * 0x14C + 0x34);
-        place(At(kFourthObject) + 0x34);
-        const unsigned char fourth_before = At(kFourthObject)[0xB];
+        place(At(FieldEvent_Object905DA0_addr) + 0x34);
+        const unsigned char fourth_before = At(FieldEvent_Object905DA0_addr)[0xB];
         Pair("AreaMap_SlotZones", round, r, n, [&] { theirs(g_entry); }, [&] { AreaMap_SlotZones(g_entry); }, bad);
         if (Draw_OtSlot == 4) { ++off; continue; }
         if (g_entry[2] <= 1) { ++empty; continue; }
@@ -493,7 +493,7 @@ void SelfTestSlotZones(void (__cdecl* theirs)(const unsigned char*)) {
             if (g_out[0][at] == 4) ++set;
             else ++cleared;
         }
-        fourth += At(kFourthObject)[0xB] != fourth_before;
+        fourth += At(FieldEvent_Object905DA0_addr)[0xB] != fourth_before;
     }
     Apply(r, n, g_saved);
     char detail[256];

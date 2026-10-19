@@ -239,7 +239,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 
 constexpr std::uint32_t kPool = 0x68FA78, kPoolStride = 0x84;
 constexpr unsigned kPoolCount = 0x18;
-constexpr std::uint32_t kTints = 0x7E0700;
+// kTints: now MoveScript_TintRecords (symbols.toml).
 unsigned char* Pool(unsigned i) { return mh::Mem(kPool + (i % kPoolCount) * kPoolStride); }
 
 // The primitives' buffer: Gfx_PacketNext is put inside it every round.
@@ -381,7 +381,7 @@ unsigned char __cdecl StubAlloc() {
 // phase may free or take another slot of the pool.
 template <std::uint32_t A> void __cdecl StubOnSlot() {
     const unsigned char* const cur = Sprite_Current;
-    mh::Record(A, Key(cur), static_cast<std::uint32_t>(move_script::Long(mh::Mem(mh::at::kOwner))), cur[1] | (cur[2] << 8));
+    mh::Record(A, Key(cur), static_cast<std::uint32_t>(move_script::Long(mh::Mem(BattleE2_Owner_addr))), cur[1] | (cur[2] << 8));
     if (A == bof3::addr::ShieldSpark_Dispatch) {
         const std::uint32_t h = mh::Noise();
         if (h % 3 == 0) Pool((h >> 8) % kPoolCount)[0] ^= 1;
@@ -441,7 +441,7 @@ const mh::DataTable kTables[] = {
 
 const mh::Region kRegions[] = {
     {kPool, kPoolCount * kPoolStride},   // the crystals' pool
-    {kTints, 0xC00},                     // MoveScript_TintRecords, all 256 (the index is a byte)
+    {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords, all 256 (the index is a byte)
     {0x904B80, 4},                       // the action id Shield_Kind rewrites
     {0x9037A0, 0x20},                    // the four GTE input vectors
     {0x903850, 0x10},                    // the effects' scratch words
@@ -502,14 +502,14 @@ void Seed(unsigned k) {
         break;
     case kShieldAuraRise:
         sc[9] = Near(0xF);
-        if (mh::Half()) mh::Mem(kTints + 12 * sc[0xA] + 2)[0] = 8;
+        if (mh::Half()) mh::Mem(MoveScript_TintRecords_addr + 12 * sc[0xA] + 2)[0] = 8;
         break;
     case kShieldAuraFade:
         sc[9] = Near(1);
         sc[3] = static_cast<unsigned char>(mh::Next() % 8);
         mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Half() ? 0x40 | (mh::Next() & 0x87) : mh::Next() & 0x87);
         if (!(mh::Mem(mh::at::kTarget)[0] & 0x40)) sc[3] = static_cast<unsigned char>(mh::Next() % 3);
-        if (mh::Half()) mh::Mem(kTints + 12 * sc[0xA] + 2)[0] = 0;
+        if (mh::Half()) mh::Mem(MoveScript_TintRecords_addr + 12 * sc[0xA] + 2)[0] = 0;
         break;
     case kShieldAuraDrawDisc:
     case kShieldAuraDrawHalo:
@@ -554,7 +554,7 @@ void Seed(unsigned k) {
         sc[0xB] = Near(2);
         break;
     case kBarrierFade:
-        if (mh::Often()) mh::Mem(kTints + 12 * sc[0xA] + 2)[0] = 1;
+        if (mh::Often()) mh::Mem(MoveScript_TintRecords_addr + 12 * sc[0xA] + 2)[0] = 1;
         break;
     case kBarrierPartDispatch:
         sc[1] = static_cast<unsigned char>(mh::Next() % 3);
@@ -573,10 +573,10 @@ void Seed(unsigned k) {
         sc[9] = Near(0xF);
         break;
     case kBarrierDiscWait:
-        mh::Pointer(mh::at::kOwner)[0xB] = Near(2);
+        mh::Pointer(BattleE2_Owner_addr)[0xB] = Near(2);
         break;
     case kBarrierLineWait:
-        mh::Pointer(mh::at::kOwner)[0xB] = Near(1);
+        mh::Pointer(BattleE2_Owner_addr)[0xB] = Near(1);
         break;
     case kBarrierDiscShrink:
     case kBarrierLineDelay:
@@ -615,7 +615,7 @@ void Seed(unsigned k) {
 void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 3) {
     case 0: Pool(h >> 12)[0] = static_cast<unsigned char>(Pool(h >> 12)[0] ^ 1); break;
-    case 1: mh::Mem(kTints + 12 * Sprite_Current[0xA] + 2 + (h >> 12) % 3)[0] = static_cast<unsigned char>(h >> 16); break;
+    case 1: mh::Mem(MoveScript_TintRecords_addr + 12 * Sprite_Current[0xA] + 2 + (h >> 12) % 3)[0] = static_cast<unsigned char>(h >> 16); break;
     default: mh::Mem(0x904B80)[0] = static_cast<unsigned char>(h >> 16); break;
     }
 }

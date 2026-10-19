@@ -27,27 +27,27 @@ constexpr U kStepTable = 0x6671F4;      // six code pointers, indexed by Game_St
 constexpr U kMenuTable = 0x66720C;      // fifteen, indexed by kFlowState unchecked (title menu)
 constexpr U kLoadTable = 0x667228;      // = kMenuTable + 7 entries: the load menu's eight
 constexpr U kFlowState = 0x6BDF86;      // u8: both menus' state
-constexpr U kCursor = 0x6BDF85;         // s8: the title menu's row
-constexpr U kAnySave = 0x6BDF8E;        // u8: Save_ListFiles found something (three rows, not two)
+// kCursor: now SaveMenu_Cursor (symbols.toml). s8: the title menu's row
+// kAnySave: now SaveMenu_AnySave (symbols.toml). u8: Save_ListFiles found something (three rows, not two)
 constexpr U kRowBright = 0x6BDF90;      // u8[3]: each row's brightness
-constexpr U kErrorText = 0x6BDF84;      // u8: the load error's message, 0x11 or 0x12 (+0xA6)
-constexpr U kApplyDelay = 0x6BDF94;     // u8: frames before the loaded game is applied
-constexpr U kDefaultPad = 0x6BDF96;     // u8: Start held during the load - the default buttons
-constexpr U kErrorKind = 0x929ED4;      // u32: 1 no save found, 2 a read or checksum failure
+// kErrorText: now SaveMenu_ErrorText (symbols.toml). u8: the load error's message, 0x11 or 0x12 (+0xA6)
+// kApplyDelay: now SaveMenu_ApplyDelay (symbols.toml). u8: frames before the loaded game is applied
+// kDefaultPad: now SaveMenu_DefaultPad (symbols.toml). u8: Start held during the load - the default buttons
+// kErrorKind: now SaveMenu_ErrorKind (symbols.toml). u32: 1 no save found, 2 a read or checksum failure
 constexpr U kCounter = 0x929F04;        // u8: the menus' frame counter
 constexpr U kMenuFlags = 0x7DEE44;      // u8: bit 1 set once the title frame is up
-constexpr U kWaitWord = 0x66C810;       // MoveScript_WaitWordDA, u16: a transition is running
+// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA, u16: a transition is running
 constexpr U kPressed = 0x7E1BEC;        // Input_Pressed (read as a dword by 0x587FA0)
 constexpr U kHeld = 0x7E1BE8;           // Input_Held (read as a dword)
 constexpr U kButtons = 0x903580;        // the pad map, 0x12 bytes: menu +4, confirm +0xE, cancel +0x10
 constexpr U kConfirm = 0x90358E;        // Field_ConfirmButtons, u16
-constexpr U kCancel = 0x903590;         // Field_CancelButtons, u16
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons, u16
 constexpr U kSavedButtons = 0x90469C;   // the pad map in the game block (block +0xCBC)
 constexpr U kSlot = 0x9036D4;           // u32: the load / save cursor, 0..15
 constexpr U kSlotTop = 0x8034D0;        // u32: the first of the three slots shown
-constexpr U kAnswer = 0x929F0B;         // u8: Menu_YesNo's answer
-constexpr U kWindowStyle = 0x903A5B;    // u8, 0x575690's argument (block +0x7B)
-constexpr U kWindowColor = 0x903A5A;    // u8, the window frames' last argument (block +0x7A)
+// kAnswer: now FieldS_Answer (symbols.toml). u8: Menu_YesNo's answer
+// kWindowStyle: now FieldS_Backdrop (symbols.toml). u8, 0x575690's argument (block +0x7B)
+// kWindowColor: now BattleDraw_Colour (symbols.toml). u8, the window frames' last argument (block +0x7A)
 constexpr U kPath = 0x904BA0;           // char[]: the save file name built with 0x664068
 constexpr U kSaveName = 0x664068;       // "BISLPS%02X.DAT"
 constexpr U kGameBlock = 0x9039E0;      // the live game block, 0x10B0 bytes (save-interchange.md)
@@ -56,23 +56,23 @@ constexpr U kStaging = 0x92A0E0;        // Save_Staging
 constexpr U kChecksum = 0x92A150;       // Save_Staging + 0x70, u16
 constexpr U kFileBytes = 0x12B0;
 constexpr U kClearBytes = 0x1C00;       // what 0x5883C0 zeroes from Save_Staging
-constexpr U kScriptFlags = 0x9039A2;    // Field_ScriptFlags, u16
-constexpr U kScriptFlagsSaved = 0x90412D;   // u8, block +0x74D
+// kScriptFlags: now Field_ScriptFlags (symbols.toml). Field_ScriptFlags, u16
+// kScriptFlagsSaved: now SaveMenu_ScriptFlagsSaved (symbols.toml). u8, block +0x74D
 // 0x587DC0's field set-up.
-constexpr U kScriptFlags2 = 0x905BA4;   // Field_ScriptFlags2
-constexpr U kPartySet = 0x90412C;       // u8, PartySet_Select's current set
+// kScriptFlags2: now Field_ScriptFlags2 (symbols.toml). Field_ScriptFlags2
+// kPartySet: now AreaW0b_PartySet (symbols.toml). u8, PartySet_Select's current set
 constexpr U kFieldState = 0x905D98;     // Field_State
 constexpr U kSpriteCurrent = 0x937F88;  // Sprite_Current
-constexpr U kObjTrio = 0x802D40;        // ObjTrio
-constexpr U kFlow9039D6 = 0x9039D6;     // u8, cleared
+// kObjTrio: now ObjTrio (symbols.toml). ObjTrio
+// kFlow9039D6: now SaveMenu_Flow9039D6 (symbols.toml). u8, cleared
 // 0x5880E0, the new game.
-constexpr U kNewGameByte = 0x9039F2;    // u8, cleared
-constexpr U kAreaNumber = 0x904EFC;     // Game_AreaNumber, u16
-constexpr U kCondFlags = 0x903F90;      // Cond_Flags: its first dword of every 8 bytes cleared
+// kNewGameByte: now SaveMenu_NewGameByte (symbols.toml). u8, cleared
+// kAreaNumber: now Game_AreaNumber (symbols.toml). Game_AreaNumber, u16
+// kCondFlags: now Cond_Flags (symbols.toml). Cond_Flags: its first dword of every 8 bytes cleared
 constexpr U kCondFlagsEnd = 0x904030;
 // 0x5885D0, the loaded game applied.
-constexpr U kMemberCount = 0x929EC0;    // Field_MemberCount, u8
-constexpr U kCondPointer = 0x929ED0;    // u32
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount, u8
+// kCondPointer: now AreaW0c_FlagRow (symbols.toml). u32
 constexpr U kCounters = 0x903848;       // four MoveScript counters, u8
 constexpr U kPosition = 0x8034E0;       // four dwords from the block's first 16 bytes
 // 0x588800 and the growth rolls.
@@ -84,7 +84,7 @@ constexpr U kGrowth = 0x903640;         // 8 x 5 bytes, written then cleared
 constexpr U kGameTask = bof3::addr::Field_Task;       // task 0's body for a game
 constexpr U kMenuStates = 0x929F02;     // 0x929F02, 0x929F03, 0x929F05 cleared
 // The title menu's pieces.
-constexpr U kPacketNext = 0x7E0670;     // Gfx_PacketNext
+// kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
 constexpr U kPieces = 0x66726C;         // 10-byte records: u16 u, v, w, h, clut
 constexpr U kRowWidths[3] = {0x5888E8, 0x5888ED, 0x5888F2};   // the imm8 of 0x5888D0's three movs (DIV-0014)
 // The save menu's slots.
@@ -98,26 +98,26 @@ constexpr U kSummaryAt = 0xCA0;         // the summary's offset in a save file
 constexpr U kDatNames = 0x64F368;       // Dat_FileNames
 constexpr U kDatFormat = 0x652894;      // "DAT\%s"
 constexpr U kStreamKind = 0x6BDE40;     // u32: id >> 12 of the last stream
-constexpr U kStreamData = 0x6BDE44;     // void *: the last stream's file
+// kStreamData: now SaveMenu_StreamData (symbols.toml). void *: the last stream's file
 constexpr U kStreamTables = 0x6653B0;   // name tables per kind
 constexpr U kStreamFormat = 0x666F9C;   // "SND\%s.DAT"
-constexpr U kFadeCount = 0x6BDE54;      // Music_FadeCount
-constexpr U kMusicTrack = 0x904131;     // Music_Track, u8
-constexpr U kMusicBuffer = 0x7DE3C4;    // Music_Buffer, an IDirectSoundBuffer *
+// kFadeCount: now Music_FadeCount (symbols.toml). Music_FadeCount
+// kMusicTrack: now Music_Track (symbols.toml). Music_Track, u8
+// kMusicBuffer: now Music_Buffer (symbols.toml). Music_Buffer, an IDirectSoundBuffer *
 constexpr float kStreamVolume = 127.0f; // 0x42FE0000, pushed by 0x5879E0
 // The CLUT strip.
-constexpr U kClutStrip = 0x80F580;      // Gfx_ClutStrip
-constexpr U kClutSource = 0x80B580;     // Gfx_ClutStrip - 0x4000
-constexpr U kClutDirty = 0x937F90;      // Gfx_ClutStripDirty
+// kClutStrip: now Gfx_ClutStrip (symbols.toml). Gfx_ClutStrip
+// kClutSource: now Gfx_ClutStripSource (symbols.toml). Gfx_ClutStrip - 0x4000
+// kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty
 // The inn.
 constexpr U kFlagsA = 0x904654, kFlagsB = 0x904657;   // Flags_Test bit arrays
-constexpr U kInnByte = 0x9045FB;        // u8, cleared below 0x1E
+// kInnByte: now AreaW1c_Byte9045FB (symbols.toml). u8, cleared below 0x1E
 // The shop.
-constexpr U kShopWindowByte = 0x929EC3; // u8 (the high byte of the word 0x929EC2)
+// kShopWindowByte: now ScenaSc1_ShopByteB (symbols.toml). u8 (the high byte of the word 0x929EC2)
 constexpr U kMembers = 0x802E88;        // Field_Members: +0xC8 of each 0x14C working record
 constexpr U kMemberStride = 0x14C;
 constexpr U kDiscountItem = 0x1B;
-constexpr U kChoiceCursor = 0x6BC881;   // u8: the save menu's three-way cursor
+// kChoiceCursor: now ShopStates_Choice (symbols.toml). u8: the save menu's three-way cursor
 }  // namespace at
 
 // --- Other groups' functions and Capcom's own, by address ---------------------

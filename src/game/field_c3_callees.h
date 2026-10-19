@@ -31,19 +31,19 @@ constexpr std::uint32_t kMenuDispatchA = bof3::addr::BattleExtra_Dispatch;      
 constexpr std::uint32_t kMenuDispatchB = bof3::addr::Shisu_ModeDispatch;      // void(void): jmp through 0x663DD0 by the menu byte 0x929F00
 
 // Data.
-constexpr std::uint32_t kActiveMember = 0x9035A4;       // Field_ActiveMember (unsigned char *): its cell, a region of the fuzz's
-constexpr std::uint32_t kExtraPositions = 0x802034;     // Sprite_ObjectsExtra +0x34: the attached object's x, z, y, +0x64.. (stride 0xA4)
-constexpr std::uint32_t kLeaderX = 0x802D74;            // ObjTrio +0x34: the leader's x (16.16)
-constexpr std::uint32_t kLeaderZ = 0x802D78;            // ObjTrio +0x38
-constexpr std::uint32_t kLeaderPace = 0x802D49;         // ObjTrio +9: the leader's frames left in a step
-constexpr std::uint32_t kLeaderStepX = 0x802D4C;        // ObjTrio +0xC: the leader's step a frame, x
-constexpr std::uint32_t kLeaderStepZ = 0x802D50;        // ObjTrio +0x10
-constexpr std::uint32_t kJumpSteps = 0x6696DC;          // per direction (8 bytes): x, z steps, the jumps' table (Field_JumpSetUp's)
+// kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember (unsigned char *): its cell, a region of the fuzz's
+// kExtraPositions: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra +0x34: the attached object's x, z, y, +0x64.. (stride 0xA4)
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34: the leader's x (16.16)
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio +0x38
+// kLeaderPace: now ObjTrio[9] (symbols.toml). ObjTrio +9: the leader's frames left in a step
+// kLeaderStepX: now ObjTrio[0xc] (symbols.toml). ObjTrio +0xC: the leader's step a frame, x
+// kLeaderStepZ: now ObjTrio[0x10] (symbols.toml). ObjTrio +0x10
+// kJumpSteps: now MoveCmd_F9Steps (symbols.toml). per direction (8 bytes): x, z steps, the jumps' table (Field_JumpSetUp's)
 constexpr std::uint32_t kTargetOffsets = 0x66978C;      // s16 by Field_State +0x89: taken off the ground at (kTargetX, kTargetZ)
 constexpr std::uint32_t kTargetX = 0x904EF4;            // s32 (16.16): the x the vertical moves test the ground at
 constexpr std::uint32_t kTargetZ = 0x904EF8;            // s32: its z
 constexpr std::uint32_t kSloped = 0x903850;             // u8: AreaMap_Slope's "sloped" answer (DamageScratch's first byte)
 constexpr std::uint32_t kScriptFlags2High = 0x905BA5;   // Field_ScriptFlags2's high byte: bit 1 set by the fall's area change
-constexpr std::uint32_t kPalettes = 0x80D380;           // 0x40 bytes a CLUT slot: Sprite_LoadPalette's source by Sprite_Current +5
+// kPalettes: now Gfx_ClutStripSource[0xf00] (symbols.toml). 0x40 bytes a CLUT slot: Sprite_LoadPalette's source by Sprite_Current +5
 
 }  // namespace field_c3::at

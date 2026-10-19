@@ -147,15 +147,15 @@ const Dispatch* DispatchOf(U base) {
 
 // The 27 tables, each to its reader's count (docs/rest_1d.md section 3).
 const sh::DataTable kTables[] = {
-    {at::kAction9Form1State1Steps, 3},  {at::kFormAction9Form2States, 3},  {at::kAction9Form2States, 3},
-    {at::kFormAction9Forms, 3},         {at::kAction9Forms, 3},            {at::kFormAction10Form0States, 3},
-    {at::kAction10Form0States, 2},      {at::kFormAction10Form1States, 3}, {at::kAction10Form1States, 3},
-    {at::kFormAction10Form2States, 3},  {at::kAction10Form2States, 2},     {at::kFormAction10Forms, 3},
-    {at::kAction10Forms, 3},            {at::kFormAction11Form0States, 3}, {at::kAction11Form0States, 2},
-    {at::kFormAction11Form1States, 3},  {at::kAction11Form1States, 3},     {at::kFormAction11Forms, 3},
-    {at::kAction11Forms, 3},            {at::kFormAction12Form0States, 3}, {at::kAction12Form0States, 2},
-    {at::kAction12Form0State0Steps, 5}, {at::kAction12Form0State1Steps, 3}, {at::kFormAction12Form1States, 3},
-    {at::kFormAction12Forms, 3},        {at::kAction12Forms, 3},           {at::kFormAction13Form0States, 3},
+    {PartyAction9_Form1State1Steps_addr, 3},  {PartyFormAction9_Form2States_addr, 3},  {PartyAction9_Form2States_addr, 3},
+    {PartyFormAction9_Forms_addr, 3},         {PartyAction9_Forms_addr, 3},            {PartyFormAction10_Form0States_addr, 3},
+    {PartyAction10_Form0States_addr, 2},      {PartyFormAction10_Form1States_addr, 3}, {PartyAction10_Form1States_addr, 3},
+    {PartyFormAction10_Form2States_addr, 3},  {PartyAction10_Form2States_addr, 2},     {PartyFormAction10_Forms_addr, 3},
+    {PartyAction10_Forms_addr, 3},            {PartyFormAction11_Form0States_addr, 3}, {PartyAction11_Form0States_addr, 2},
+    {PartyFormAction11_Form1States_addr, 3},  {PartyAction11_Form1States_addr, 3},     {PartyFormAction11_Forms_addr, 3},
+    {PartyAction11_Forms_addr, 3},            {PartyFormAction12_Form0States_addr, 3}, {PartyAction12_Form0States_addr, 2},
+    {PartyAction12_Form0State0Steps_addr, 5}, {PartyAction12_Form0State1Steps_addr, 3}, {PartyFormAction12_Form1States_addr, 3},
+    {PartyFormAction12_Forms_addr, 3},        {PartyAction12_Forms_addr, 3},           {PartyFormAction13_Form0States_addr, 3},
 };
 
 // --- the stand-ins' answers (Noise() and the state only: both passes the same) ----------
@@ -269,7 +269,7 @@ const sh::Callee kCallees[] = {
 // the turns, the point ahead and the side probes) and Text_Records' first 16
 // bytes (the item name the pickups copy).
 const sh::Region kRegions[] = {
-    {at::kSteps, 0x40},
+    {Field_DirectionSteps_addr, 0x40},
     {bof3::addr::Text_Records, 0x10},
 };
 
@@ -283,7 +283,7 @@ U Coordinate() {
 U Height() { return PickOf(0, 1, 0xFFFF, 0x7FFF, 0x8000, 0x7FC0, 0x8040, 0x40, sh::Next() % 0x400u, sh::Next()); }
 
 void SeedSteps() {
-    unsigned char* const t = sh::Mem(at::kSteps);
+    unsigned char* const t = sh::Mem(Field_DirectionSteps_addr);
     for (unsigned i = 0; i < 16; ++i) {
         const U v = sh::Half() ? PickOf(0, 0x8000, 0xFFFF8000u)
                                : PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, 0xFFFF0000u, 1, 0xFFFFFFFFu, 0x80000000u, sh::Next());
@@ -390,7 +390,7 @@ void Disturb(U h) {
     case 13:
     case 8: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (2u << (v % 2))); break;
     case 9: sh::Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 10: SetLong(sh::Mem(at::kSteps) + 4 * (v % 16), static_cast<std::int32_t>(v << 6)); break;
+    case 10: SetLong(sh::Mem(Field_DirectionSteps_addr) + 4 * (v % 16), static_cast<std::int32_t>(v << 6)); break;
     case 11: Effect_Objects[((v >> 1) % 20) * 0x80] = static_cast<unsigned char>(v & 1); break;
     default: break;
     }

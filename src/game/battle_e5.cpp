@@ -34,6 +34,7 @@
 #include "game/battle_e5_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -59,8 +60,9 @@ void SetW(U address, unsigned v) { SetWord(At(address), v); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 S32 S16(std::uint16_t v) { return static_cast<std::int16_t>(v); }
 unsigned char* Ptr(U cell) { return At(L(cell)); }
-unsigned char* Party(unsigned member) { return At(at::kParty + member * at::kPartyStride); }
+unsigned char* Party(unsigned member) { return At(ObjTrio_addr + member * at::kPartyStride); }
 unsigned char* EnemyObj(unsigned n) { return At(at::kEnemies + n * at::kEnemyStride); }
+records::PartyMember* PartyRec(unsigned member) { return reinterpret_cast<records::PartyMember*>(Party(member)); }
 
 // The callees nobody owns yet, by address (battle_e5_callees.h).
 using Void0 = void (__cdecl*)();
@@ -107,10 +109,11 @@ extern "C" unsigned char __cdecl EnemyAI_OtherRowsDone(unsigned row, unsigned en
 // `shl al, cl` on a byte, so rows 8..31 name no bit) set when `on`'s byte is
 // not 0, else cleared.
 extern "C" void __cdecl EnemyAI_SetRowDone(unsigned char* enemy, unsigned row, unsigned on) {
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(enemy);
     const unsigned shift = row & 31;
     const unsigned char bit = static_cast<unsigned char>(shift < 8 ? 1u << shift : 0u);
-    if (on & 0xFF) enemy[0xF1] = static_cast<unsigned char>(enemy[0xF1] | bit);
-    else enemy[0xF1] = static_cast<unsigned char>(enemy[0xF1] & ~bit);
+    if (on & 0xFF) enemy_rec->ai_rows_done = static_cast<unsigned char>(enemy_rec->ai_rows_done | bit);
+    else enemy_rec->ai_rows_done = static_cast<unsigned char>(enemy_rec->ai_rows_done & ~bit);
 }
 
 // original 0x44B320: whether the action that just hit carries one of `mask`'s
@@ -121,7 +124,7 @@ extern "C" void __cdecl EnemyAI_SetRowDone(unsigned char* enemy, unsigned row, u
 // weapon +0x92 and its element byte (0x657463, 28 bytes a weapon) against
 // the mask's low byte. Anything else 0. al out.
 extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
-    if (Word(Ptr(at::kCurrentEnemy) + 0x108) == 0) return 0;
+    if (static_cast<std::uint16_t>(reinterpret_cast<records::BattleEnemy*>(Ptr(at::kCurrentEnemy))->hp_change) == 0) return 0;
     const unsigned actor = B(at::kActor);
     const unsigned kind = B(at::kActingKind);
     if (kind == 4) {
@@ -129,7 +132,7 @@ extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
         return (W(at::kAbilityRows + ability * 24) & mask & 0xFFFF) != 0;
     }
     if (kind != 1 || actor > 2 || (mask & 0x100) != 0) return 0;
-    const unsigned weapon = Party(actor)[0x92];
+    const unsigned weapon = PartyRec(actor)->weapon;
     return (B(at::kWeaponElement + weapon * 28) & mask & 0xFF) != 0;
 }
 
@@ -139,15 +142,16 @@ extern "C" unsigned char __cdecl EnemyAI_CondElement(unsigned mask) {
 // capped at 999, 6 +0x98 by the factor squared, capped at 999; others
 // nothing.
 extern "C" void __cdecl EnemyAI_ScaleStat(unsigned char* enemy, unsigned which, unsigned factor) {
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(enemy);
     const U f = factor & 0xFF;
     switch (which & 0xFF) {
-    case 0: ScaleCapped(enemy + 0xA4, Word(enemy + 0xA4) * f, Word(enemy + 0xD0)); break;
-    case 1: ScaleCapped(enemy + 0xA6, Word(enemy + 0xA6) * f, Word(enemy + 0xD2)); break;
+    case 0: ScaleCapped(enemy + 0xA4, enemy_rec->hp * f, Word(enemy + 0xD0)); break;
+    case 1: ScaleCapped(enemy + 0xA6, enemy_rec->ap * f, Word(enemy + 0xD2)); break;
     case 2: ScaleCapped(enemy + 0xD4, Word(enemy + 0xD4) * f, 999); break;
     case 3: ScaleCapped(enemy + 0xD6, Word(enemy + 0xD6) * f, 999); break;
     case 4: ScaleCapped(enemy + 0xD8, Word(enemy + 0xD8) * f, 999); break;
     case 5: ScaleCapped(enemy + 0xDA, Word(enemy + 0xDA) * f, 999); break;
-    case 6: ScaleCapped(enemy + 0x98, Word(enemy + 0x98) * f * f, 999); break;
+    case 6: ScaleCapped(enemy + 0x98, enemy_rec->level * f * f, 999); break;
     default: break;
     }
 }
@@ -181,14 +185,15 @@ extern "C" void __cdecl EnemyAI_SetAttrByte(unsigned char* enemy, unsigned which
 // count 0x93C2A2 below 8 - an enemy message: enemy +5 minus 3, the word (a
 // system message BattleAction_EnemyMessages / BattleCommit_QueueMessages show).
 extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned char* row) {
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(enemy);
     switch (row[1]) {
     case 1:
-        SetWord(enemy + 0x90, row[2]);
+        enemy_rec->flags_90 = row[2];
         break;
     case 2: {
         unsigned char* const saved = Sprite_Current;
         Sprite_Current = enemy;
-        const U cleared = BH_CALL(Battle_ClearStatus)(enemy[5], 0xFFFF);
+        const U cleared = BH_CALL(Battle_ClearStatus)(enemy_rec->actor, 0xFFFF);
         const U status = enemy[0x92];
         const unsigned char* const current = Sprite_Current;
         const U word = (cleared & 0xFFFF0000u) | status | row[2];
@@ -209,29 +214,29 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
         break;
     }
     case 5:
-        if (row[2] & 2) enemy[0xAA] = row[3];
+        if (row[2] & 2) enemy_rec->steal_row = row[3];
         if (row[2] & 1) enemy[0xAE] = row[3];
         break;
     case 6:
-        if (row[2] & 2) ScaleCapped(enemy + 0x96, static_cast<U>(row[3]) * Word(enemy + 0x96), 0xFFFF);
-        if (row[2] & 1) ScaleCapped(enemy + 0x94, static_cast<U>(row[3]) * Word(enemy + 0x94), 0xFFFF);
+        if (row[2] & 2) ScaleCapped(enemy + 0x96, static_cast<U>(row[3]) * enemy_rec->exp, 0xFFFF);
+        if (row[2] & 1) ScaleCapped(enemy + 0x94, static_cast<U>(row[3]) * enemy_rec->zenny, 0xFFFF);
         break;
     case 7:
-        B(at::kAiFlag) = row[2];
+        BattleDamage_AiByteB97 = row[2];
         break;
     default:
         break;
     }
-    enemy[0x8E] = row[4];
+    enemy_rec->odds_index = row[4];
     for (unsigned i = 0; i < 8; ++i) enemy[0x9C + i] = row[8 + i];
     const U tail = static_cast<U>(reinterpret_cast<std::uintptr_t>(row + 16));
-    BH_AT(U1, at::kStatusPick)((tail & 0xFFFFFF00u) | enemy[5]);
-    if (Word(enemy + 0xA4) != 0 && Word(row + 6) != 0) {
-        const unsigned n = B(at::kEnemyMessageCount);
+    BH_AT(U1, at::kStatusPick)((tail & 0xFFFFFF00u) | enemy_rec->actor);
+    if (enemy_rec->hp != 0 && Word(row + 6) != 0) {
+        const unsigned n = BattleE5_EnemyMessageCount;
         if (n < 8) {
-            B(at::kEnemyMessages + n * 4) = static_cast<unsigned char>(enemy[5] - 3);
+            B(at::kEnemyMessages + n * 4) = static_cast<unsigned char>(enemy_rec->actor - 3);
             SetW(at::kEnemyMessages + n * 4 + 2, Word(row + 6));
-            B(at::kEnemyMessageCount) = static_cast<unsigned char>(n + 1);
+            BattleE5_EnemyMessageCount = static_cast<unsigned char>(n + 1);
         }
     }
 }
@@ -244,7 +249,7 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
 // aborts there. Its eax is not read (the one caller of EnemyAI_TurnCheck,
 // 0x436908, loads eax again at once).
 extern "C" void __cdecl EnemyAI_DedupMessages(void) {
-    const unsigned n = B(at::kEnemyMessageCount);
+    const unsigned n = BattleE5_EnemyMessageCount;
     U kept[8];
     unsigned k = 0;
     for (unsigned i = 0; i < n; ++i) {
@@ -262,7 +267,7 @@ extern "C" void __cdecl EnemyAI_DedupMessages(void) {
                         n);
         kept[k++] = L(entry);
     }
-    B(at::kEnemyMessageCount) = static_cast<unsigned char>(k);
+    BattleE5_EnemyMessageCount = static_cast<unsigned char>(k);
     for (unsigned i = 0; i < k; ++i) SetLong(At(at::kEnemyMessages + 4 * i), static_cast<S32>(kept[i]));
 }
 
@@ -320,7 +325,7 @@ void DrainActor(const Drain& d) {
     }
     if (static_cast<S32>(Word(stat)) + S16(Word(Result() + d.at)) > static_cast<S32>(W(max_at)))
         Ptr(at::kActingSprite2)[8] = static_cast<unsigned char>(Ptr(at::kActingSprite2)[8] | d.flag);
-    const U result = L(at::kResult);
+    const U result = BattleDamage_Result;
     const U change = BH_AT(U3, at::kStatAdd)(Key(stat), (result & 0xFFFF0000u) | W(max_at), Word(At(result) + d.at));
     if (d.ap) BH_AT(U2, at::kApPopup)(0u - change, B(at::kActor));
     else BH_CALL(Battle_SetDamagePopup)(0u - change, B(at::kActor));
@@ -399,19 +404,20 @@ extern "C" void __cdecl BattleForm_ApplyStats(void) {
     const std::uint16_t ee4 = W(0x939EE4);
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const c = Party(m) + 0x9E;
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(c - 0x9E);
         if ((c[0x96] & 2) == 0) continue;
         const S32 product = static_cast<S32>(static_cast<U>(c[0]) * static_cast<U>(S16(ee0)) + 5u);
         const std::uint16_t hp = static_cast<std::uint16_t>(S16(ee0) - product / 10);
         SetWord(c + 0x22, hp);
-        SetWord(c + 2, hp);
+        member_rec->max_hp = hp;
         SetWord(c + 0x26, Word(c + 0x26) + W(0x939EE2));
-        SetWord(c + 6, Word(c + 0x26));
+        member_rec->atk = Word(c + 0x26);
         SetWord(c + 0x28, Word(c + 0x28) + ee4);
-        SetWord(c + 8, Word(c + 0x28));
+        member_rec->def = Word(c + 0x28);
         SetWord(c + 0x2A, Word(c + 0x2A) + W(0x939EE6));
-        SetWord(c + 0xA, Word(c + 0x2A));
+        member_rec->agi = Word(c + 0x2A);
         SetWord(c + 0x2C, Word(c + 0x2C) + ee8);
-        SetWord(c + 0xC, Word(c + 0x2C));
+        member_rec->intel = Word(c + 0x2C);
         for (unsigned i = 0; i < 6; ++i) {
             c[0x31 + i] = B(0x939EEA + i);
             c[0x11 + i] = c[0x31 + i];
@@ -441,7 +447,7 @@ Entry EntryAt(U table, unsigned index) { return reinterpret_cast<Entry>(static_c
 // and the step's eax as they were: ours hands the word on and answers the
 // step's eax.
 U Dispatch(const char* who, U table, unsigned entries, U through) {
-    const unsigned step = B(at::kStep4);
+    const unsigned step = BattleE4_Step4;
     if (step >= entries)
         bof3::Fatal("%s: 0x904AA4 is %u, past the %u steps of 0x%X - the original jumps through the dword after "
                     "(docs/battle_e5.md section 7)",
@@ -450,17 +456,18 @@ U Dispatch(const char* who, U table, unsigned entries, U through) {
 }
 
 void Sound(unsigned id) { BH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-void NextStep() { B(at::kStep4) = static_cast<unsigned char>(B(at::kStep4) + 1); }
+void NextStep() { BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 + 1); }
 const unsigned char* Line(unsigned id) { return BH_CALL(Msg_SystemPtr)(id); }
 // The message window's last line (0x93C2C4 + ((0x93C2A1 - 1) & 15) * 8),
 // the count read after the Msg_SystemPtr call that made the text.
 void ShowLine(const unsigned char* text) {
-    SetLong(At(at::kMsgText + ((B(at::kMsgCount) - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
+    SetLong(At(at::kMsgText + ((BattleActorCopies_QueueWrite - 1u) & 0xF) * 8), static_cast<S32>(Key(text)));
 }
 unsigned char* Member() { return Ptr(at::kMenuActor); }
+records::PartyMember* MemberRec() { return reinterpret_cast<records::PartyMember*>(Member()); }
 void MarkMember() {
-    unsigned char* const m = Member();
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    auto* const member_rec = MemberRec();
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
 }
 U Pressed() { return Input_Pressed; }
 bool Cancel(U pressed) { return (Field_CancelButtons & pressed & 0xFFFF) != 0; }
@@ -518,27 +525,27 @@ unsigned char Affordable(U slot) {
     unsigned char cost = B(at::kGeneCostTable + B(slot));
     if (B(slot + 1) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 1)));
     if (B(slot + 2) != 0xFF) cost = static_cast<unsigned char>(cost + B(at::kGeneCostTable + B(slot + 2)));
-    return cost <= W(0x802DDA + Member()[5] * at::kPartyStride);
+    return cost <= W(0x802DDA + MemberRec()->member * at::kPartyStride);
 }
 
 // A slot's genes into 0x904B84..86 (0x450610, 0x450E70): the count 0x904B87
 // zeroed, then each of the slot's three bytes not 0xFF stored at its own
 // place and counted.
 void TakeSlot(U slot) {
-    B(at::kGeneCount) = 0;
+    BattleE5_GeneCount = 0;
     for (unsigned j = 0; j < 3; ++j) {
         const unsigned char g = B(slot + j);
         if (g == 0xFF) continue;
         B(at::kGenes + j) = g;
-        B(at::kGeneCount) = static_cast<unsigned char>(B(at::kGeneCount) + 1);
+        BattleE5_GeneCount = static_cast<unsigned char>(BattleE5_GeneCount + 1);
     }
 }
 
 // The list windows' opening and closing (0x4502C0 / 0x450B60, 0x450680 /
 // 0x450EF0, 0x4505A0 / 0x450DF0): see each.
 void OpenList(U slot, U window, unsigned char kind, unsigned x, unsigned line) {
-    if (B(at::kWin21) & 1) return;
-    B(at::kWin21) = 0;
+    if (BattleE4_Above & 1) return;
+    BattleE4_Above = 0;
     BH_CALL(Window_Alloc)(slot, 5);
     B(window + 2) = kind;
     B(window + 3) = 0;
@@ -547,7 +554,7 @@ void OpenList(U slot, U window, unsigned char kind, unsigned x, unsigned line) {
     SetW(window + 0x10, 0);
     SetW(window + 0x12, 0);
     ShowLine(Line(line));
-    B(at::kPick) = static_cast<unsigned char>(B(at::kPick) | 0x80);
+    BossSb_Countdown = static_cast<unsigned char>(BossSb_Countdown | 0x80);
     NextStep();
 }
 
@@ -561,10 +568,10 @@ void ReopenMenu(unsigned x) {
 
 void BackToMenu(U window) {
     if (B(window) & 1) return;
-    const unsigned char pick = B(at::kPick);
-    B(at::kStep3) = 2;
-    B(at::kStep4) = 0;
-    B(at::kPick) = static_cast<unsigned char>(pick & 0x7F);
+    const unsigned char pick = BossSb_Countdown;
+    BattleE4_Step3 = 2;
+    BattleE4_Step4 = 0;
+    BossSb_Countdown = static_cast<unsigned char>(pick & 0x7F);
 }
 
 }  // namespace
@@ -573,7 +580,7 @@ void BackToMenu(U window) {
 
 // original 0x44FF10 (0x64ECCC[0]): jmp [0x64ECE8 + 4 * 0x904AA4], two steps.
 extern "C" unsigned long __cdecl DragonCmd_LoadDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_LoadDispatch", at::kLoadSteps, 2, through);
+    return Dispatch("DragonCmd_LoadDispatch", DragonCmd_LoadSteps_addr, 2, through);
 }
 
 // original 0x44FF30 (0x64ECE8[0]): window 16's +3 zero: LoadDatFile(0xCC) and
@@ -592,10 +599,10 @@ extern "C" void __cdecl DragonCmd_LoadWait(void) {
     BH_CALL(Gfx_ClutStripCopyRow)(0x1A);
     BH_CALL(Gfx_ClutStripCopyRow)(0x1B);
     const unsigned char dirty = static_cast<unsigned char>(Gfx_ClutStripDirty + 1);
-    const unsigned char part = static_cast<unsigned char>(B(at::kStep3) + 1);
+    const unsigned char part = static_cast<unsigned char>(BattleE4_Step3 + 1);
     Gfx_ClutStripDirty = dirty;
-    B(at::kStep3) = part;
-    B(at::kStep4) = 0;
+    BattleE4_Step3 = part;
+    BattleE4_Step4 = 0;
 }
 
 // --- part 1: the opening ---------------------------------------------------------
@@ -616,27 +623,27 @@ extern "C" void __cdecl DragonCmd_Open(void) {
     B(at::kWin17 + 2) = 1;
     B(at::kWin17 + 3) = 0;
     Sound(0x102);
-    const U genes = L(at::kGeneBits);
+    const U genes = ScenaSc7_EventFlags;
     for (unsigned i = 0; i < 18; ++i) B(at::kGeneFlags + i) = static_cast<unsigned char>((genes >> i) & 1);
     SetW(at::kRepeatLatch, 0);
-    B(at::kPick) = 1;
-    B(at::kGeneRow) = 0;
-    B(at::kGeneCol) = 0;
+    BossSb_Countdown = 1;
+    BattleE5_GeneRow = 0;
+    BattleE1_Roster = 0;
     SetW(at::kWord72, 0);
     SetW(at::kAsk, 0);
-    B(at::kGeneCount) = 0;
-    B(at::kGeneCost) = 0;
+    BattleE5_GeneCount = 0;
+    BattleActions_ApCost = 0;
     BH_AT(Void0, at::kDragonTask)();
-    const unsigned char part = static_cast<unsigned char>(B(at::kStep3) + 1);
-    B(at::kStep4) = 0;
-    B(at::kStep3) = part;
+    const unsigned char part = static_cast<unsigned char>(BattleE4_Step3 + 1);
+    BattleE4_Step4 = 0;
+    BattleE4_Step3 = part;
 }
 
 // --- part 2: the menu --------------------------------------------------------------
 
 // original 0x450070 (0x64ECCC[2]): jmp [0x64ECF0 + 4 * 0x904AA4], five steps.
 extern "C" unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_MenuDispatch", at::kMenuSteps, 5, through);
+    return Dispatch("DragonCmd_MenuDispatch", DragonCmd_MenuSteps_addr, 5, through);
 }
 
 // original 0x450090 (0x64ECF0[0]): the menu's line 0x42 + 0x904AA5 shown;
@@ -645,12 +652,12 @@ extern "C" unsigned long __cdecl DragonCmd_MenuDispatch(unsigned long through) {
 // the line down / up (sound 0x101 each), 0x4000 picks line 1 at once (sound
 // 0x104, the next step); the line wrapped: below 0 (signed) 2, above 2 0.
 extern "C" void __cdecl DragonCmd_MenuInput(void) {
-    ShowLine(Line(static_cast<std::uint16_t>(B(at::kPick) + 0x42)));
+    ShowLine(Line(static_cast<std::uint16_t>(BossSb_Countdown + 0x42)));
     const U keys = Repeat(0xE000);
     const U pressed = Pressed();
     if (Cancel(pressed)) {
         Sound(0x106);
-        B(at::kStep4) = static_cast<unsigned char>(B(at::kStep4) + 2);
+        BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 + 2);
         return;
     }
     if (Confirm(pressed)) {
@@ -660,37 +667,37 @@ extern "C" void __cdecl DragonCmd_MenuInput(void) {
     }
     if (keys & 0x2000) {
         Sound(0x101);
-        B(at::kPick) = static_cast<unsigned char>(B(at::kPick) + 1);
+        BossSb_Countdown = static_cast<unsigned char>(BossSb_Countdown + 1);
     }
     if (keys & 0x8000) {
         Sound(0x101);
-        B(at::kPick) = static_cast<unsigned char>(B(at::kPick) - 1);
+        BossSb_Countdown = static_cast<unsigned char>(BossSb_Countdown - 1);
     }
     if (keys & 0x4000) {
         Sound(0x104);
-        const unsigned char step = static_cast<unsigned char>(B(at::kStep4) + 1);
-        B(at::kPick) = 1;
-        B(at::kStep4) = step;
+        const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
+        BossSb_Countdown = 1;
+        BattleE4_Step4 = step;
         return;
     }
-    const unsigned char pick = B(at::kPick);
-    if (static_cast<signed char>(pick) < 0) B(at::kPick) = 2;
-    else if (pick > 2) B(at::kPick) = 0;
+    const unsigned char pick = BossSb_Countdown;
+    if (static_cast<signed char>(pick) < 0) BossSb_Countdown = 2;
+    else if (pick > 2) BossSb_Countdown = 0;
 }
 
 // original 0x4501B0 (0x64ECF0[1]): the line picked - 0x904AA5 |= 0x80, the
 // part 3 + the line (0x904AA3), 0x904AA4 and 0x904AA6 zeroed.
 extern "C" void __cdecl DragonCmd_MenuPick(void) {
-    const unsigned char pick = B(at::kPick);
-    B(at::kPick) = static_cast<unsigned char>(pick | 0x80);
-    B(at::kStep3) = static_cast<unsigned char>(pick + 3);
-    B(at::kStep4) = 0;
-    B(at::kGeneRow) = 0;
+    const unsigned char pick = BossSb_Countdown;
+    BossSb_Countdown = static_cast<unsigned char>(pick | 0x80);
+    BattleE4_Step3 = static_cast<unsigned char>(pick + 3);
+    BattleE4_Step4 = 0;
+    BattleE5_GeneRow = 0;
 }
 
 // original 0x4501E0 (0x64ECF0[2]): window 21's +3 = 2 (closing), the next step.
 extern "C" void __cdecl DragonCmd_MenuClose(void) {
-    CloseList(at::kWin21);
+    CloseList(BattleE4_Above_addr);
     NextStep();
 }
 
@@ -698,10 +705,10 @@ extern "C" void __cdecl DragonCmd_MenuClose(void) {
 // windows 17 and 21's +0 zeroed, BattleBanner_ShowName(the menu actor),
 // window 4's +3 = 1, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_MenuCancel(void) {
-    if (B(at::kWin21) & 1) return;
+    if (BattleE4_Above & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    B(at::kWin17) = 0;
-    B(at::kWin21) = 0;
+    BattleE4_Cands = 0;
+    BattleE4_Above = 0;
     BH_CALL(BattleBanner_ShowName)(Member());
     B(at::kWin4 + 3) = 1;
     BH_CALL(LoadDatFile)(0xCF);
@@ -715,30 +722,30 @@ extern "C" void __cdecl DragonCmd_MenuCancelLoad(void) {
     if (BH_CALL(File_LoadDone)() == 0) return;
     BH_CALL(Gfx_ClutStripCopyRow)(0x1B);
     Gfx_ClutStripDirty = 1;
-    B(at::kStep2) = 1;
-    B(at::kStep3) = 1;
-    B(at::kStep4) = 0;
+    BattleE4_Step2 = 1;
+    BattleE4_Step3 = 1;
+    BattleE4_Step4 = 0;
 }
 
 // --- part 3: the first list (0x904608, window 18) --------------------------------------
 
 // original 0x450280 (0x64ECCC[3]): jmp [0x64ED04 + 4 * 0x904AA4], seven steps.
 extern "C" unsigned long __cdecl DragonCmd_SlotsDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_SlotsDispatch", at::kSlotsSteps, 7, through);
+    return Dispatch("DragonCmd_SlotsDispatch", DragonCmd_SlotsSteps_addr, 7, through);
 }
 
 // original 0x4502A0 (0x64ED04[0]): window 21's +3 = 2, +0xA = 0; the next step.
 extern "C" void __cdecl DragonCmd_SlotsCloseMenu(void) {
-    const unsigned char step = static_cast<unsigned char>(B(at::kStep4) + 1);
+    const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin21 + 3) = 2;
     B(at::kWin21 + 0xA) = 0;
-    B(at::kStep4) = step;
+    BattleE4_Step4 = step;
 }
 
 // original 0x4502C0 (0x64ED04[1]): window 21 closed: its +0 zeroed, window 18
 // claimed (kind 5; +2 2, +3 0, at 0xFF5B, 0x3F, its cursor 0, 0), line 0x59,
 // 0x904AA5 |= 0x80, the next step.
-extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, at::kWin18, 2, 0xFF5B, 0x59); }
+extern "C" void __cdecl DragonCmd_SlotsOpen(void) { OpenList(0x12, BattleE4_Slots_addr, 2, 0xFF5B, 0x59); }
 
 // original 0x450340 (0x64ED04[2]): the first list's cursor, once window 18's
 // x is 0x5B. The repeat keys of 0x500C; cancel: sound 0x106, the next step
@@ -759,49 +766,49 @@ extern "C" void __cdecl DragonCmd_SlotsCursor(void) {
     if (Confirm(pressed)) {
         if (BH_CALL(DragonCmd_SlotAffordable)() & 0xFF) {
             Sound(0x104);
-            B(at::kStep4) = 5;
+            BattleE4_Step4 = 5;
             return;
         }
         Sound(0x107);
         pressed = Pressed();
     }
     if (pressed & Sigma(0x10)) {
-        if (B(SlotOf(at::kSlots, at::kWin18) + 3) != 0xFF) {
+        if (B(SlotOf(at::kSlots, BattleE4_Slots_addr) + 3) != 0xFF) {
             Sound(0x104);
-            B(at::kStep3) = 6;
-            B(at::kStep4) = 0;
+            BattleE4_Step3 = 6;
+            BattleE4_Step4 = 0;
             return;
         }
         Sound(0x107);
     }
-    MoveCursor(at::kWin18, keys, 5, 3);
+    MoveCursor(BattleE4_Slots_addr, keys, 5, 3);
 }
 
 // original 0x450510 (called by DragonCmd_SlotsCursor): the first list's slot
 // at the cursor priced against the member's AP (Affordable). al out.
-extern "C" unsigned char __cdecl DragonCmd_SlotAffordable(void) { return Affordable(SlotOf(at::kSlots, at::kWin18)); }
+extern "C" unsigned char __cdecl DragonCmd_SlotAffordable(void) { return Affordable(SlotOf(at::kSlots, BattleE4_Slots_addr)); }
 
 // original 0x4505A0 (0x64ED04[3]): window 21 claimed again (+2 / +3 0, at
 // 0x142, 0x3F), window 18's +3 = 2, the next step.
 extern "C" void __cdecl DragonCmd_SlotsCancel(void) {
     ReopenMenu(0x142);
-    const unsigned char step = static_cast<unsigned char>(B(at::kStep4) + 1);
+    const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin18 + 3) = 2;
-    B(at::kStep4) = step;
+    BattleE4_Step4 = step;
 }
 
 // original 0x4505E0 (0x64ED04[4]): window 18 closed: back to the menu (part 2,
 // step 0, 0x904AA5's bit 7 cleared).
-extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(at::kWin18); }
+extern "C" void __cdecl DragonCmd_SlotsBack(void) { BackToMenu(BattleE4_Slots_addr); }
 
 // original 0x450610 (0x64ED04[5]): the slot at the cursor taken (TakeSlot),
 // 0x4525B0, window 18's +3 = 2, the member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
-    TakeSlot(SlotOf(at::kSlots, at::kWin18));
+    TakeSlot(SlotOf(at::kSlots, BattleE4_Slots_addr));
     BH_AT(Void0, at::kDragonTask)();
-    unsigned char* const m = Member();
+    auto* const member_rec = MemberRec();
     B(at::kWin18 + 3) = 2;
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
@@ -809,31 +816,31 @@ extern "C" void __cdecl DragonCmd_SlotsConfirm(void) {
 // 18, 16, 19's +0 zeroed, LoadDatFile(0xCF), then part 4's step 3 (the
 // gene grid's close and commit).
 extern "C" void __cdecl DragonCmd_SlotsClose(void) {
-    if (B(at::kWin18) & 1) return;
+    if (BattleE4_Slots & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    B(at::kWin17) = 0;
-    B(at::kWin18) = 0;
-    B(at::kWin16) = 0;
-    B(at::kWin19) = 0;
+    BattleE4_Cands = 0;
+    BattleE4_Slots = 0;
+    BattleE4_List = 0;
+    BattleE4_Hand = 0;
     BH_CALL(LoadDatFile)(0xCF);
-    B(at::kStep3) = 4;
-    B(at::kStep4) = 3;
+    BattleE4_Step3 = 4;
+    BattleE4_Step4 = 3;
 }
 
 // --- part 4: the gene grid ------------------------------------------------------------
 
 // original 0x4506C0 (0x64ECCC[4]): jmp [0x64ED20 + 4 * 0x904AA4], five steps.
 extern "C" unsigned long __cdecl DragonCmd_GenesDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_GenesDispatch", at::kGenesSteps, 5, through);
+    return Dispatch("DragonCmd_GenesDispatch", DragonCmd_GenesSteps_addr, 5, through);
 }
 
 // original 0x4506E0 (0x64ED20[0]): window 17's +3 = 2, window 4's +3 = 1, the
 // next step.
 extern "C" void __cdecl DragonCmd_GenesOpen(void) {
-    const unsigned char step = static_cast<unsigned char>(B(at::kStep4) + 1);
+    const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin17 + 3) = 2;
     B(at::kWin4 + 3) = 1;
-    B(at::kStep4) = step;
+    BattleE4_Step4 = step;
 }
 
 // original 0x450700 (0x64ED20[1]): the gene grid, three rows of six (0x904AA6,
@@ -857,9 +864,9 @@ extern "C" void __cdecl DragonCmd_GenesOpen(void) {
 extern "C" void __cdecl DragonCmd_GenesPick(void) {
     {
         unsigned id = 0x4000;
-        const unsigned char row = B(at::kGeneRow);
+        const unsigned char row = BattleE5_GeneRow;
         if (row != 0xFF) {
-            const unsigned col = B(at::kGeneCol);
+            const unsigned col = BattleE1_Roster;
             if (B(at::kGeneFlags + col + 6u * row) != 0) id = (col + 6u * row + 0x4172) & 0xFFFF;
         }
         const unsigned char* const text = Line(id);
@@ -868,50 +875,50 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
     const U pressed = Pressed();
     bool shown = false;
     if (Cancel(pressed)) {
-        const unsigned char n = B(at::kGeneCount);
+        const unsigned char n = BattleE5_GeneCount;
         if (n != 0) {
             const unsigned char last = static_cast<unsigned char>(n - 1);
-            B(at::kGeneCount) = last;
+            BattleE5_GeneCount = last;
             B(at::kGeneFlags + B(at::kGenes + last)) = 1;
             BH_AT(Void0, at::kDragonTask)();
             Sound(0x106);
             return;
         }
-        const unsigned char pick = static_cast<unsigned char>(B(at::kPick) & 0x7F);
+        const unsigned char pick = static_cast<unsigned char>(BossSb_Countdown & 0x7F);
         B(at::kWin17 + 3) = 1;
         B(at::kWin4 + 3) = 2;
-        B(at::kPick) = pick;
-        B(at::kStep3) = 2;
-        B(at::kStep4) = 0;
+        BossSb_Countdown = pick;
+        BattleE4_Step3 = 2;
+        BattleE4_Step4 = 0;
         Sound(0x106);
         return;
     }
     if (Confirm(pressed)) {
-        const unsigned char row = B(at::kGeneRow);
+        const unsigned char row = BattleE5_GeneRow;
         if (row == 0xFF) {
-            if (B(at::kGeneCount) != 0 && Word(Member() + 0x9A) >= B(at::kGeneCost)) {
+            if (BattleE5_GeneCount != 0 && MemberRec()->ap >= BattleActions_ApCost) {
                 NextStep();
                 return;
             }
             Sound(0x107);
         } else {
-            const unsigned char col = B(at::kGeneCol);
+            const unsigned char col = BattleE1_Roster;
             unsigned char* const flag = At(at::kGeneFlags + col + 6u * row);
             if (*flag == 0) {
                 Sound(0x107);
                 return;
             }
-            const unsigned char n = B(at::kGeneCount);
+            const unsigned char n = BattleE5_GeneCount;
             if (n >= 3) {
                 Sound(0x106);
             } else {
                 *flag = 0;
                 B(at::kGenes + n) = static_cast<unsigned char>(row * 6 + col);
-                B(at::kGeneCount) = static_cast<unsigned char>(B(at::kGeneCount) + 1);
+                BattleE5_GeneCount = static_cast<unsigned char>(BattleE5_GeneCount + 1);
                 BH_AT(Void0, at::kDragonTask)();
                 Sound(0x103);
-                if (B(at::kGeneCount) == 3) {
-                    B(at::kGeneRow) = 0xFF;
+                if (BattleE5_GeneCount == 3) {
+                    BattleE5_GeneRow = 0xFF;
                     ShowLine(Line(0x57));
                     shown = true;
                 }
@@ -919,33 +926,33 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
         }
     }
     if (!shown) {
-        const unsigned char row = B(at::kGeneRow);
+        const unsigned char row = BattleE5_GeneRow;
         unsigned id;
         if (row == 0xFF) {
-            id = B(at::kGeneCount) != 0 ? 0x57 : 0x58;
+            id = BattleE5_GeneCount != 0 ? 0x57 : 0x58;
         } else {
-            const unsigned char col = B(at::kGeneCol);
+            const unsigned char col = BattleE1_Roster;
             id = B(at::kGeneFlags + col + 6u * row) != 0 ? (col + 6u * row + 0x45) & 0xFFFF : 0x4000;
         }
         ShowLine(Line(id));
     }
     const U keys = Repeat(0xF000);
-    if ((keys & 0x1000) && static_cast<signed char>(B(at::kGeneRow)) > -1) {
+    if ((keys & 0x1000) && static_cast<signed char>(BattleE5_GeneRow) > -1) {
         Sound(0x101);
-        B(at::kGeneRow) = static_cast<unsigned char>(B(at::kGeneRow) - 1);
+        BattleE5_GeneRow = static_cast<unsigned char>(BattleE5_GeneRow - 1);
     }
-    if ((keys & 0x4000) && static_cast<signed char>(B(at::kGeneRow)) < 2) {
+    if ((keys & 0x4000) && static_cast<signed char>(BattleE5_GeneRow) < 2) {
         Sound(0x101);
-        B(at::kGeneRow) = static_cast<unsigned char>(B(at::kGeneRow) + 1);
+        BattleE5_GeneRow = static_cast<unsigned char>(BattleE5_GeneRow + 1);
     }
-    if (B(at::kGeneRow) == 0xFF) return;
-    if ((keys & 0x2000) && B(at::kGeneCol) < 5) {
+    if (BattleE5_GeneRow == 0xFF) return;
+    if ((keys & 0x2000) && BattleE1_Roster < 5) {
         Sound(0x101);
-        B(at::kGeneCol) = static_cast<unsigned char>(B(at::kGeneCol) + 1);
+        BattleE1_Roster = static_cast<unsigned char>(BattleE1_Roster + 1);
     }
-    if ((keys & 0x8000) && B(at::kGeneCol) != 0) {
+    if ((keys & 0x8000) && BattleE1_Roster != 0) {
         Sound(0x101);
-        B(at::kGeneCol) = static_cast<unsigned char>(B(at::kGeneCol) - 1);
+        BattleE1_Roster = static_cast<unsigned char>(BattleE1_Roster - 1);
     }
 }
 
@@ -953,21 +960,21 @@ extern "C" void __cdecl DragonCmd_GenesPick(void) {
 // member's +0x134 |= 4, the next step.
 extern "C" void __cdecl DragonCmd_GenesConfirm(void) {
     Sound(0x104);
-    unsigned char* const m = Member();
+    auto* const member_rec = MemberRec();
     B(at::kWin21 + 3) = 2;
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
 // original 0x450A70 (0x64ED20[3]): window 21 closed: 0x447F40, windows 17, 21,
 // 16, 19's +0 zeroed, LoadDatFile(0xCF), the next step.
 extern "C" void __cdecl DragonCmd_GenesClose(void) {
-    if (B(at::kWin21) & 1) return;
+    if (BattleE4_Above & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    B(at::kWin17) = 0;
-    B(at::kWin21) = 0;
-    B(at::kWin16) = 0;
-    B(at::kWin19) = 0;
+    BattleE4_Cands = 0;
+    BattleE4_Above = 0;
+    BattleE4_List = 0;
+    BattleE4_Hand = 0;
     BH_CALL(LoadDatFile)(0xCF);
     NextStep();
 }
@@ -981,16 +988,16 @@ extern "C" void __cdecl DragonCmd_Commit(void) {
     BH_CALL(Gfx_ClutStripCopyRow)(0x1B);
     unsigned char* const command = Ptr(at::kCommandRecord);
     Gfx_ClutStripDirty = 1;
-    B(at::kCommitClear) = 0;
+    BattleE4_Picking = 0;
     command[1] = 4;
-    Member()[1] = 2;
-    const unsigned char count = static_cast<unsigned char>(B(at::kCommitCount) + 1);
-    B(at::kStep1) = 1;
-    B(at::kCommitCount) = count;
-    const unsigned line = (B(at::kMsgCount) - 1u) & 0xF;
-    B(at::kStep2) = 0;
-    B(at::kStep3) = 0;
-    B(at::kStep4) = 0;
+    MemberRec()->state[0] = 2;
+    const unsigned char count = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
+    BattleActions_Step = 1;
+    BattleActorCopies_EntryCount = count;
+    const unsigned line = (BattleActorCopies_QueueWrite - 1u) & 0xF;
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
+    BattleE4_Step4 = 0;
     B(at::kMsgFlag + line * 8) = 1;
 }
 
@@ -998,20 +1005,20 @@ extern "C" void __cdecl DragonCmd_Commit(void) {
 
 // original 0x450B20 (0x64ECCC[5]): jmp [0x64ED34 + 4 * 0x904AA4], seven steps.
 extern "C" unsigned long __cdecl DragonCmd_Slots2Dispatch(unsigned long through) {
-    return Dispatch("DragonCmd_Slots2Dispatch", at::kSlots2Steps, 7, through);
+    return Dispatch("DragonCmd_Slots2Dispatch", DragonCmd_Slots2Steps_addr, 7, through);
 }
 
 // original 0x450B40 (0x64ED34[0]): window 21's +3 = 2, +0xA = 1; the next step.
 extern "C" void __cdecl DragonCmd_Slots2CloseMenu(void) {
-    const unsigned char step = static_cast<unsigned char>(B(at::kStep4) + 1);
+    const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin21 + 3) = 2;
     B(at::kWin21 + 0xA) = 1;
-    B(at::kStep4) = step;
+    BattleE4_Step4 = step;
 }
 
 // original 0x450B60 (0x64ED34[1]): as DragonCmd_SlotsOpen for window 19 (slot
 // 0x13; +2 3, at 0x15B) and line 0x63.
-extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, at::kWin19, 3, 0x15B, 0x63); }
+extern "C" void __cdecl DragonCmd_Slots2Open(void) { OpenList(0x13, BattleE4_Hand_addr, 3, 0x15B, 0x63); }
 
 // original 0x450BE0 (0x64ED34[2]): the second list's cursor, once window 19's
 // x is 0x5B: as DragonCmd_SlotsCursor without the bit-0x10 branch - cancel:
@@ -1030,41 +1037,41 @@ extern "C" void __cdecl DragonCmd_Slots2Cursor(void) {
     if (Confirm(pressed)) {
         if (BH_CALL(DragonCmd_Slot2Affordable)() & 0xFF) {
             Sound(0x104);
-            B(at::kStep4) = 5;
+            BattleE4_Step4 = 5;
             return;
         }
         Sound(0x107);
     }
-    MoveCursor(at::kWin19, keys, 0xB, 9);
+    MoveCursor(BattleE4_Hand_addr, keys, 0xB, 9);
 }
 
 // original 0x450D60 (called by DragonCmd_Slots2Cursor): the second list's
 // slot at the cursor priced against the member's AP. al out.
-extern "C" unsigned char __cdecl DragonCmd_Slot2Affordable(void) { return Affordable(SlotOf(at::kSlots2, at::kWin19)); }
+extern "C" unsigned char __cdecl DragonCmd_Slot2Affordable(void) { return Affordable(SlotOf(at::kSlots2, BattleE4_Hand_addr)); }
 
 // original 0x450DF0 (0x64ED34[3]): window 21 claimed again (at 0xFF42, 0x3F,
 // +0xA 1), window 19's +3 = 2, the next step.
 extern "C" void __cdecl DragonCmd_Slots2Cancel(void) {
     ReopenMenu(0xFF42);
-    const unsigned char step = static_cast<unsigned char>(B(at::kStep4) + 1);
+    const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin21 + 0xA) = 1;
     B(at::kWin19 + 3) = 2;
-    B(at::kStep4) = step;
+    BattleE4_Step4 = step;
 }
 
 // original 0x450E40 (0x64ED34[4]): window 19 closed: back to the menu.
-extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(at::kWin19); }
+extern "C" void __cdecl DragonCmd_Slots2Back(void) { BackToMenu(BattleE4_Hand_addr); }
 
 // original 0x450E70 (0x64ED34[5]): the second list's slot taken (TakeSlot),
 // 0x4525B0, sound 0x104, window 19's +3 = 2, the member's +0x134 |= 4, the
 // next step.
 extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
-    TakeSlot(SlotOf(at::kSlots2, at::kWin19));
+    TakeSlot(SlotOf(at::kSlots2, BattleE4_Hand_addr));
     BH_AT(Void0, at::kDragonTask)();
     Sound(0x104);
-    unsigned char* const m = Member();
+    auto* const member_rec = MemberRec();
     B(at::kWin19 + 3) = 2;
-    SetLong(m + 0x134, static_cast<S32>(static_cast<U>(Long(m + 0x134)) | 4u));
+    member_rec->flags_134 = static_cast<S32>(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_134)) | 4u);
     NextStep();
 }
 
@@ -1072,14 +1079,14 @@ extern "C" void __cdecl DragonCmd_Slots2Confirm(void) {
 // record is the one tested): 0x447F40, windows 17, 16, 19's +0 zeroed,
 // LoadDatFile(0xCF), part 4's step 3.
 extern "C" void __cdecl DragonCmd_Slots2Close(void) {
-    if (B(at::kWin18) & 1) return;
+    if (BattleE4_Slots & 1) return;
     BH_AT(Void0, at::kTargetPrompt)();
-    B(at::kWin17) = 0;
-    B(at::kWin16) = 0;
-    B(at::kWin19) = 0;
+    BattleE4_Cands = 0;
+    BattleE4_List = 0;
+    BattleE4_Hand = 0;
     BH_CALL(LoadDatFile)(0xCF);
-    B(at::kStep3) = 4;
-    B(at::kStep4) = 3;
+    BattleE4_Step3 = 4;
+    BattleE4_Step4 = 3;
 }
 
 // --- part 6: the store (a first-list slot into the second list) --------------------------
@@ -1087,7 +1094,7 @@ extern "C" void __cdecl DragonCmd_Slots2Close(void) {
 // original 0x450F30 (0x64ECCC[6]): jmp [0x64ED50 + 4 * 0x904AA4], seven steps
 // (the last, 0x451480, BE6's).
 extern "C" unsigned long __cdecl DragonCmd_StoreDispatch(unsigned long through) {
-    return Dispatch("DragonCmd_StoreDispatch", at::kStoreSteps, 7, through);
+    return Dispatch("DragonCmd_StoreDispatch", DragonCmd_StoreSteps_addr, 7, through);
 }
 
 // original 0x450F50 (0x64ED50[0]): window 18's +3 = 3, window 19 claimed
@@ -1098,11 +1105,11 @@ extern "C" void __cdecl DragonCmd_StoreOpen(void) {
     B(at::kWin19 + 3) = 0;
     SetW(at::kWin19 + 0x10, 0);
     SetW(at::kWin19 + 0x12, 0);
-    const unsigned char step = static_cast<unsigned char>(B(at::kStep4) + 1);
+    const unsigned char step = static_cast<unsigned char>(BattleE4_Step4 + 1);
     B(at::kWin19 + 2) = 4;
     SetW(at::kWin19 + 4, 0x15B);
     SetW(at::kWin19 + 6, 0x3F);
-    B(at::kStep4) = step;
+    BattleE4_Step4 = step;
 }
 
 // original 0x450FA0 (0x64ED50[1]): window 19's x 0xA3: the next step.
@@ -1120,19 +1127,19 @@ extern "C" void __cdecl DragonCmd_StoreCursor(void) {
     const U pressed = Pressed();
     if (Cancel(pressed)) {
         Sound(0x106);
-        B(at::kStep4) = 5;
+        BattleE4_Step4 = 5;
         return;
     }
     if (Confirm(pressed)) {
-        if (B(SlotOf(at::kSlots2, at::kWin19) + 3) == 0xFF) {
-            B(at::kStep4) = 4;
+        if (B(SlotOf(at::kSlots2, BattleE4_Hand_addr) + 3) == 0xFF) {
+            BattleE4_Step4 = 4;
         } else {
             SetW(at::kAsk, 0);
-            B(at::kStep4) = 3;
+            BattleE4_Step4 = 3;
         }
         Sound(0x104);
     }
-    MoveCursor(at::kWin19, keys, 0xB, 9);
+    MoveCursor(BattleE4_Hand_addr, keys, 0xB, 9);
 }
 
 // original 0x451160 (0x64ED50[3]): the overwrite prompt: line 0x62; the
@@ -1145,7 +1152,7 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
     const U pressed = Pressed();
     if (Cancel(pressed) || (Confirm(pressed) && W(at::kAsk) != 0)) {
         Sound(0x106);
-        B(at::kStep4) = static_cast<unsigned char>(B(at::kStep4) - 1);
+        BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 - 1);
         return;
     }
     if (Confirm(pressed)) {
@@ -1162,8 +1169,8 @@ extern "C" void __cdecl DragonCmd_StoreAsk(void) {
 // into the second list's at its cursor, byte by byte (each read before its
 // write, as the original), the next step.
 extern "C" void __cdecl DragonCmd_StoreCopy(void) {
-    const U from = SlotOf(at::kSlots, at::kWin18);
-    const U to = SlotOf(at::kSlots2, at::kWin19);
+    const U from = SlotOf(at::kSlots, BattleE4_Slots_addr);
+    const U to = SlotOf(at::kSlots2, BattleE4_Hand_addr);
     for (unsigned j = 0; j < 4; ++j) B(to + j) = B(from + j);
     NextStep();
 }
@@ -1184,23 +1191,23 @@ extern "C" void __cdecl DragonCmd_StoreSource(void) {
         return;
     }
     if (((Field_ConfirmButtons | 0x10u) & pressed & 0xFFFF) != 0) {
-        if (B(SlotOf(at::kSlots, at::kWin18) + 3) != 0xFF) {
+        if (B(SlotOf(at::kSlots, BattleE4_Slots_addr) + 3) != 0xFF) {
             Sound(0x104);
-            B(at::kStep4) = 2;
+            BattleE4_Step4 = 2;
             return;
         }
         Sound(0x107);
         pressed = Pressed();
     }
     if (pressed & Sigma(0x10)) {
-        if (B(SlotOf(at::kSlots, at::kWin18) + 3) != 0xFF) {
+        if (B(SlotOf(at::kSlots, BattleE4_Slots_addr) + 3) != 0xFF) {
             Sound(0x104);
-            B(at::kStep4) = 2;
+            BattleE4_Step4 = 2;
             return;
         }
         Sound(0x107);
     }
-    MoveCursor(at::kWin18, keys, 5, 3);
+    MoveCursor(BattleE4_Slots_addr, keys, 5, 3);
 }
 
 // ============================================================================

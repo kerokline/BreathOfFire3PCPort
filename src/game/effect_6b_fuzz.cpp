@@ -286,15 +286,15 @@ void Seed(unsigned k) {
     }
     // the leader about the cell seven times in eight
     if (sh::Next() % 8 != 0) {
-        SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(Around(cx)));
-        SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(Around(cz)));
+        SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(Around(cx)));
+        SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(Around(cz)));
     }
     if (sh::Half()) Field_Request = 0;
     if (sh::Half()) Frame_Counter &= ~7u;
     // the cue bytes: Cond_ByteFE 0..3 mostly, the chapter's run 0xC and step 2
     if (sh::Often()) Cond_ByteFE = static_cast<unsigned char>(sh::Next() % 4);
-    if (sh::Half()) Mem(sh::at::kRun)[0] = 0xC;
-    if (sh::Half()) Mem(sh::at::kStep)[0] = 2;
+    if (sh::Half()) Mem(MoveScript_Var7_addr)[0] = 0xC;
+    if (sh::Half()) Mem(MoveScript_PartyRecords_addr + 0x65)[0] = 2;
     switch (k) {
     case k37Hold: s[9] = static_cast<unsigned char>(PickOf(0, 6, 7, 8, 9, 0xFF, sh::Next())); break;
     case k41Turn: s[9] = static_cast<unsigned char>(PickOf(0, 0xA, 0xB, 0xC, 0xE, 0xF, 0x10, sh::Next() % 0x1C)); break;
@@ -306,7 +306,7 @@ void Seed(unsigned k) {
         // a map of 1..31 cells each way (the harness keeps the area block's
         // first 8 KiB compared) and the leader's cell about it, so the 35 x
         // 35 rows and columns about the leader cross its edges
-        unsigned char* const header = Mem(sh::at::kAreaBlock);
+        unsigned char* const header = Mem(AreaMap_Header_addr);
         header[0] = static_cast<unsigned char>(1 + sh::Next() % 0x1F);
         header[1] = static_cast<unsigned char>(1 + sh::Next() % 0x1F);
         SetWord(Mem(at::kLeaderCellX), PickOf(0, 0x14, 0x20, 0x30, 0x40, 0xFFF0, sh::Next() % 0x40));
@@ -343,8 +343,8 @@ void Disturb(U h) {
     switch (h % 8) {
     case 0: SetWord(s + 0x30, (v & 1) ? 0x100u - ((v >> 1) & 0x30) : v >> 1); break;
     case 1: s[8] = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 2: SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(v)); break;
-    case 3: SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(v)); break;
+    case 2: SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(v)); break;
+    case 3: SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(v)); break;
     case 4: SetWord(s + ((v & 1) ? 0x36 : 0x3A), v >> 1); break;
     case 5: s[9] = static_cast<unsigned char>(v % 0x18); break;
     case 6: s[0xA] = static_cast<unsigned char>(v); break;

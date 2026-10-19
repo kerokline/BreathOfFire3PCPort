@@ -105,7 +105,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 12) {
     case 0: At(at::kPartyCount)[0] = static_cast<unsigned char>(v); break;
-    case 1: At(at::kColour)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 17) - 8); break;
+    case 1: At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(v % 17) - 8); break;
     case 2: {
         // a character of the print buffer, never its tail (Fix keeps 0x30.. 0)
         unsigned char* const b = At(at::kPrintBuf);
@@ -130,9 +130,9 @@ void Disturb() {
         a[kFields[(h >> 28) % 4]] = static_cast<unsigned char>(v);
         break;
     }
-    case 6: At(at::kFlags15 + (v & 3))[0] = static_cast<unsigned char>(v & 4 ? h >> 24 : 0); break;
-    case 7: At(at::kFlags3E + (v & 3))[0] = static_cast<unsigned char>(v & 4 ? h >> 24 : 0); break;
-    case 8: At(at::kBattle97)[0] = static_cast<unsigned char>(0x24 + v % 3); break;
+    case 6: At(Rest3c_Byte660_addr + (v & 3))[0] = static_cast<unsigned char>(v & 4 ? h >> 24 : 0); break;
+    case 7: At(ModeFlow_CountdownA_addr + (v & 3))[0] = static_cast<unsigned char>(v & 4 ? h >> 24 : 0); break;
+    case 8: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(0x24 + v % 3); break;
     default: break;
     }
 }
@@ -388,9 +388,9 @@ const Region kRegions[] = {
     {0x904650, 0x20},                                       // the flag words 0x90465C, 0x904660
     {0x904AA0, 0x20},                                       // 0x904AAA, the party size 0x904AB0
     {at::kPrintBuf, 0x40},                                  // the sprintf buffer
-    {at::kMemberRecord, 0x18},                              // character -> record
+    {MoveScript_EffectState_addr, 0x18},                    // character -> record
     {at::kAbilities, 0x100 * at::kAbilityStride},           // the ability table
-    {at::kClutShadow - 0x200, 0x500},                       // the CLUT shadow around the rows seeded
+    {Gfx_ClutStripSource_addr + 0x208 - 0x200, 0x500},      // the CLUT shadow around the rows seeded
     {at::kEnemies - 3 * at::kEnemyStride, 11 * at::kEnemyStride},  // enemies -3 .. 7
     // the shapes, the tile sizes, window 1's x table - around the ":" format
     // at 0x64E320, which a random byte could turn into a conversion that
@@ -444,11 +444,11 @@ void Fix() {
     Gfx_PacketNext = g_buf.pool + Next() % 0x40;
     unsigned char* const buf = At(at::kPrintBuf);
     std::memset(buf + 0x20, 0, 0x20);
-    if (Often()) At(at::kColour)[0] = static_cast<unsigned char>(static_cast<signed char>(Next() % 17) - 8);
+    if (Often()) At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(static_cast<signed char>(Next() % 17) - 8);
     for (unsigned k = 0; k < 8; ++k)
-        if (Often()) At(at::kPartyLists + k)[0] = static_cast<unsigned char>(Next() % 0x18);
+        if (Often()) At(Cond_Flags_addr + 0xd2 + k)[0] = static_cast<unsigned char>(Next() % 0x18);
     for (unsigned k = 0; k < 0x18; ++k)
-        if (Often()) At(at::kMemberRecord + k)[0] = static_cast<unsigned char>(Next() % 10);
+        if (Often()) At(MoveScript_EffectState_addr + k)[0] = static_cast<unsigned char>(Next() % 10);
     for (unsigned k = 0; k < kNames; ++k) {
         const unsigned len = Next() % (kNameBytes - 1);
         for (unsigned i = 0; i < len; ++i) g_buf.names[k][i] = static_cast<unsigned char>(0x21 + Next() % 0xDE);
@@ -469,10 +469,10 @@ void Fix() {
             if (Often()) w[s] = static_cast<unsigned char>(0x18 + Next() % 4);
     }
     for (unsigned k = 0; k < 4; ++k) {
-        if (Often()) At(at::kFlags15 + k)[0] = 0;
-        if (Often()) At(at::kFlags3E + k)[0] = 0;
+        if (Often()) At(Rest3c_Byte660_addr + k)[0] = 0;
+        if (Often()) At(ModeFlow_CountdownA_addr + k)[0] = 0;
     }
-    if (Half()) At(at::kBattle97)[0] = static_cast<unsigned char>(0x24 + Next() % 3);
+    if (Half()) At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(0x24 + Next() % 3);
     // windows 5..12: actors 0..10, a state of 0..4, kinds of 0..2
     for (unsigned k = 5; k <= 12; ++k) {
         Window(k)[0xA] = static_cast<unsigned char>(Next() % 11);

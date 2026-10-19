@@ -39,17 +39,17 @@ constexpr std::uint32_t kW4 = 0x903854;   // s16: an angle, or a shade
 constexpr std::uint32_t kW6 = 0x903856;   // u16: red (its low byte is used)
 constexpr std::uint32_t kW8 = 0x903858;   // u16: green
 constexpr std::uint32_t kWA = 0x90385A;   // u16: blue
-constexpr std::uint32_t kX = 0x90385C;    // s16: a screen x (Scratch_Swap)
+// kX: now Scratch_Swap (symbols.toml). s16: a screen x (Scratch_Swap)
 constexpr std::uint32_t kY = 0x90385E;    // s16: a screen y
 // Prim_VertexScratch: four SVECTORs, 8 bytes apart.
-constexpr std::uint32_t kVertices = 0x9037A0;
-constexpr std::uint32_t kV0 = 0x9037A0;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+// kV0: now Prim_VertexScratch (symbols.toml).
 constexpr std::uint32_t kV1 = 0x9037A8;
-constexpr std::uint32_t kV2 = 0x9037B0;
-constexpr std::uint32_t kV3 = 0x9037B8;
+// kV2: now Prim_VertexScratch[8] (symbols.toml).
+// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
 
-constexpr std::uint32_t kPacketNext = 0x7E0670;   // Gfx_PacketNext
-constexpr std::uint32_t kActorSprite = 0x904B3C;  // unsigned char *: the acting actor's sprite
+// kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
+// kActorSprite: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite
 
 // MAGIC125's pool (DivineMote_Pool): 64 task-shaped records of 0x84 (+0 bit 0
 // in use, +0x80 the owner), run by DivineBreath_Task with Sprite_Current each.
@@ -58,10 +58,10 @@ constexpr unsigned kMotes = 64;
 constexpr std::uint32_t kMoteStride = 0x84;
 // MAGIC126's pool (ShadowMote_Pool): 128 records of 0x20 (+0 bit 0 in use,
 // +0x1C the owner), run by ShadowBreath_Task with ShadowMote_Current each.
-constexpr std::uint32_t kShadePool = 0x6A1D30;
+// kShadePool: now ShadowMote_Pool (symbols.toml).
 constexpr unsigned kShades = 128;
 constexpr std::uint32_t kShadeStride = 0x20;
-constexpr std::uint32_t kShadeCurrent = 0x6A2D30;   // unsigned char *
+// kShadeCurrent: now ShadowMote_Current (symbols.toml). unsigned char *
 
 // The CLUT strip row ShadowBreath_Start rewrites (row 26) and its source.
 constexpr std::uint32_t kClutRow = 0x812980;
@@ -72,18 +72,18 @@ constexpr std::uint32_t kClutSource = 0x80E980;
 namespace tbl {
 
 // The .data dispatch tables, read in place (symbols.toml [[data]]).
-constexpr std::uint32_t kDivineKinds = 0x65BBA4;    // DivineBreathFx_Kinds, 2
-constexpr std::uint32_t kBeamSteps = 0x65BBAC;      // DivineBeam_Steps, 3
-constexpr std::uint32_t kBurstSteps = 0x65BBB8;     // DivineBurst_Steps, 3
-constexpr std::uint32_t kMoteTask = 0x65BBC4;       // DivineMote_TaskTable, 1
-constexpr std::uint32_t kMoteSteps = 0x65BBC8;      // DivineMote_Steps, 2
-constexpr std::uint32_t kShadowKinds = 0x65BBD0;    // ShadowBreathFx_Kinds, 3
-constexpr std::uint32_t kOrbSteps = 0x65BBDC;       // ShadowOrb_Steps, 4
-constexpr std::uint32_t kGlowSteps = 0x65BBEC;      // ShadowGlow_Steps, 4
-constexpr std::uint32_t kSeekerSteps = 0x65BBFC;    // ShadowSeeker_Steps, 4
-constexpr std::uint32_t kSeekerColours = 0x65BC0C;  // ShadowSeeker_Colours, 8 pairs of bytes
-constexpr std::uint32_t kShadeTask = 0x65BC1C;      // ShadowMote_TaskTable, 1
-constexpr std::uint32_t kShadeSteps = 0x65BC20;     // ShadowMote_Steps, 4
+// kDivineKinds: now DivineBreathFx_Kinds (symbols.toml). DivineBreathFx_Kinds, 2
+// kBeamSteps: now DivineBeam_Steps (symbols.toml). DivineBeam_Steps, 3
+// kBurstSteps: now DivineBurst_Steps (symbols.toml). DivineBurst_Steps, 3
+// kMoteTask: now DivineMote_TaskTable (symbols.toml). DivineMote_TaskTable, 1
+// kMoteSteps: now DivineMote_Steps (symbols.toml). DivineMote_Steps, 2
+// kShadowKinds: now ShadowBreathFx_Kinds (symbols.toml). ShadowBreathFx_Kinds, 3
+// kOrbSteps: now ShadowOrb_Steps (symbols.toml). ShadowOrb_Steps, 4
+// kGlowSteps: now ShadowGlow_Steps (symbols.toml). ShadowGlow_Steps, 4
+// kSeekerSteps: now ShadowSeeker_Steps (symbols.toml). ShadowSeeker_Steps, 4
+// kSeekerColours: now ShadowSeeker_Colours (symbols.toml). ShadowSeeker_Colours, 8 pairs of bytes
+// kShadeTask: now ShadowMote_TaskTable (symbols.toml). ShadowMote_TaskTable, 1
+// kShadeSteps: now ShadowMote_Steps (symbols.toml). ShadowMote_Steps, 4
 
 }  // namespace tbl
 

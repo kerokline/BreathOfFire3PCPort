@@ -136,8 +136,8 @@ void Seed(unsigned k) {
             for (unsigned i = 0; i < 4; ++i) leader[0x34 + i] = static_cast<unsigned char>(x >> (8 * i));
             for (unsigned i = 0; i < 4; ++i) leader[0x38 + i] = static_cast<unsigned char>(z >> (8 * i));
         }
-        if (sh::Next() % 3 == 0) sh::Mem(at::kByteFD)[0] = 0;
-        if (sh::Next() % 3 == 0) sh::Mem(at::kCameraCells)[0] = s[0xA];
+        if (sh::Next() % 3 == 0) sh::Mem(Cond_ByteFD_addr)[0] = 0;
+        if (sh::Next() % 3 == 0) sh::Mem(Cond_ByteFE_addr)[0] = s[0xA];
         if (sh::Half()) s[8] = 0;
         break;
     }

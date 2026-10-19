@@ -108,17 +108,17 @@ void Disturb() {
         Cur()[f] = f == 1 ? b % 2 : f == 3 ? b % 4 : f == 6 ? b % 6 : b;
         break;
     }
-    case 4: At(at::kMapMode)[0] = static_cast<unsigned char>(v % 4 == 0 ? b : v % 3); break;
+    case 4: At(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(v % 4 == 0 ? b : v % 3); break;
     case 5: Field_Request = static_cast<unsigned char>(v % 3 == 0 ? 2 : v % 3 == 1 ? 5 : b); break;
     case 6: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ 0x100); break;
     case 7: Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ 0x1000); break;
-    case 8: SetWord(At(at::kPlace), b); break;
-    case 9: At(at::kMsgState)[0] = static_cast<unsigned char>(v % 3); break;
+    case 8: SetWord(At(AreaW0b_Place_addr), b); break;
+    case 9: At(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 10: Frame_Counter = h >> 6; break;
     case 11: Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags ^ 4); break;
     case 12: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 13: Cond_ByteFA = static_cast<signed char>(v % 16); break;
-    case 14: SetLong(At(at::kLeaderEdge), static_cast<std::int32_t>(h)); break;
+    case 14: SetLong(At(ObjTrio_addr + 0x134), static_cast<std::int32_t>(h)); break;
     default: break;
     }
 }
@@ -425,17 +425,17 @@ U g_slot_at[kSlots];
 U g_slot_kept[kSlots];
 void FillSlots() {
     unsigned n = 0;
-    for (U k = 0; k < 5; ++k) g_slot_at[n++] = at::kPlateStates + 4 * k;
-    for (U k = 0; k < 2; ++k) g_slot_at[n++] = at::kHudStates + 4 * k;
-    for (U k = 0; k < 4; ++k) g_slot_at[n++] = at::kBoxStates + 4 * k;
+    for (U k = 0; k < 5; ++k) g_slot_at[n++] = WorldMap33_PlateStates_addr + 4 * k;
+    for (U k = 0; k < 2; ++k) g_slot_at[n++] = WorldMapHud_States_addr + 4 * k;
+    for (U k = 0; k < 4; ++k) g_slot_at[n++] = WorldMapHud_BoxStates_addr + 4 * k;
     for (U r = 0; r < 12; ++r) {
-        g_slot_at[n++] = at::kRecords + r * at::kRecordSize;
-        g_slot_at[n++] = at::kRecords + r * at::kRecordSize + 0xC;
-        g_slot_at[n++] = at::kRecords + r * at::kRecordSize + 0x10;
+        g_slot_at[n++] = WorldMap_Records_addr + r * at::kRecordSize;
+        g_slot_at[n++] = WorldMap_Records_addr + r * at::kRecordSize + 0xC;
+        g_slot_at[n++] = WorldMap_Records_addr + r * at::kRecordSize + 0x10;
     }
-    for (U k = 0; k < 3; ++k) g_slot_at[n++] = at::kKind06States + 4 * k;
-    for (U k = 0; k < 6; ++k) g_slot_at[n++] = at::kKind06Ticks + 4 * k;
-    for (U k = 0; k < 5; ++k) g_slot_at[n++] = at::kKind18States + 4 * k;
+    for (U k = 0; k < 3; ++k) g_slot_at[n++] = EffectKind06_States_addr + 4 * k;
+    for (U k = 0; k < 6; ++k) g_slot_at[n++] = EffectKind06_Ticks_addr + 4 * k;
+    for (U k = 0; k < 5; ++k) g_slot_at[n++] = EffectKind18_States_addr + 4 * k;
     if (n != kSlots) bof3::Fatal("worldmap_area: %u table slots, not %u", n, kSlots);
 }
 
@@ -445,17 +445,17 @@ struct Region { U at, size; };
 Region g_regions[] = {
     {0x937F80, 0x18},                                         // the place word 0x937F82, Sprite_Current, Frame_Counter
     {0, 2 * kObjectBytes},                                    // g_objects (filled in at start-up)
-    {at::kFieldObjects, at::kFieldObjectsEnd - at::kFieldObjects},   // the first eight Sprite_Objects
-    {at::kLeader, 0x138},                                     // the leader's record to +0x137
+    {Sprite_Objects_addr, at::kFieldObjectsEnd - Sprite_Objects_addr}, // the first eight Sprite_Objects
+    {ObjTrio_addr, 0x138},                                    // the leader's record to +0x137
     {0x905B80, 4},                                            // Field_EdgeBits
-    {at::kArea29Cells, 0x18},                                 // Area29_Cells, Area29_Weights
+    {Area29_Cells_addr, 0x18},                                // Area29_Cells, Area29_Weights
     {0x9039A0, 4},                                            // Field_ScriptFlags
     {0x9039F0, 8},                                            // the place message's bytes 0x9039F3..0x9039F5
     {0x8034E0, 4},                                            // Cond_ByteFA, Field_StatusBits
     {0x66C7D8, 4},                                            // Field_Request
     {0x66C7E8, 2},                                            // Game_Mode
     {0x905BA4, 2},                                            // Field_ScriptFlags2
-    {at::kMapMode, 1},
+    {AreaW0b_MapMode_addr, 1},
     {0x904EFC, 2},                                            // Game_AreaNumber
     {0x7E0918, 1},                                            // Draw_PassFlags
     {0x7E0670, 4},                                            // Gfx_PacketNext
@@ -464,7 +464,7 @@ Region g_regions[] = {
     {0x8CB580, 4},                                            // AreaMap_Header
     {0x905E60, 8},                                            // Field_Kind2Z, Field_Kind2X
     {0x5EF6B0, 0x10},                                         // WorldMap33_DriftUV and the dwords either side
-    {at::kPlateAnims, 0x18},                                  // WorldMap33_PlateAnims
+    {WorldMap33_PlateAnims_addr, 0x18},                       // WorldMap33_PlateAnims
     {0, 4 * kItemBytes},                                      // g_items
 };
 constexpr unsigned kMaxRegionBytes = 0x1000;
@@ -510,15 +510,15 @@ void Fix() {
         o[6] = static_cast<unsigned char>(Next() % 6);
     }
     Gfx_PacketNext = g_packets + (Next() % 4) * 4;
-    if (Often()) std::memcpy(At(at::kArea29Cells), g_area29_exe, sizeof g_area29_exe);
-    if (Often()) std::memcpy(At(at::kPlateAnims), g_plates_exe, sizeof g_plates_exe);
+    if (Often()) std::memcpy(At(Area29_Cells_addr), g_area29_exe, sizeof g_area29_exe);
+    if (Often()) std::memcpy(At(WorldMap33_PlateAnims_addr), g_plates_exe, sizeof g_plates_exe);
     if (Often()) std::memcpy(At(0x5EF6B0), g_drift_exe, sizeof g_drift_exe);
-    if (Often()) SetWord(At(at::kPlace), DA_PICK(8, 0xD, 0x60, 0x17, 0xE, 0x13, 7, 0));
+    if (Often()) SetWord(At(AreaW0b_Place_addr), DA_PICK(8, 0xD, 0x60, 0x17, 0xE, 0x13, 7, 0));
 }
 
 // The box's leave test's inputs, at their edges.
 void SeedLeave(unsigned char* o) {
-    At(at::kMapMode)[0] = static_cast<unsigned char>(Often() ? DA_PICK(0, 0, 1, 2) : Next());
+    At(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(Often() ? DA_PICK(0, 0, 1, 2) : Next());
     if (Often()) o[0xB] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
     if (Often()) Field_Request = static_cast<unsigned char>(DA_PICK(0, 2, 5, 1, 3));
     Field_ScriptFlags = static_cast<unsigned short>(Often() ? Field_ScriptFlags & ~0x100u : Field_ScriptFlags | 0x100u);
@@ -533,25 +533,25 @@ void Seed(unsigned k) {
         // The first roll at a chance's edge (the running sum, or one below),
         // with bits above the 0x3F mask set now and then.
         if (Half()) {
-            const unsigned char* const w = At(at::kArea29Weights);
+            const unsigned char* const w = At(Area29_Weights_addr);
             const unsigned upto = Next() % 9;
             unsigned sum = 0;
             for (unsigned i = 0; i < upto; ++i) sum += w[i];
             const unsigned roll = (sum - (Half() ? 1u : 0u)) & 0x3F;
             g_rand_first = static_cast<int>(roll | (Next() & 0xC0));
         }
-        if (Half()) std::memset(At(at::kArea29Weights), Half() ? 0 : 7, 8);   // "none kept" (8) reached
+        if (Half()) std::memset(At(Area29_Weights_addr), Half() ? 0 : 7, 8);  // "none kept" (8) reached
         break;
     }
     case kMessage:
-        At(at::kMsgState)[0] = static_cast<unsigned char>(Often() ? DA_PICK(0, 0, 1, 1, 2, 0xFF, 0x80) : Next());
+        At(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(Often() ? DA_PICK(0, 0, 1, 1, 2, 0xFF, 0x80) : Next());
         Cond_ByteFA = static_cast<signed char>(Often() ? DA_PICK(1, 2, 15, 0, 0xFF, 0x80, 0x7F, 8) : Next());
         if (Often()) Field_Request = static_cast<unsigned char>(DA_PICK(2, 2, 0, 5, 3));
         break;
     case kPlateRun:
         o[1] = static_cast<unsigned char>(Next() % 5);
         if (Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ 0x1000);
-        if (Half()) At(at::kLeaderSteps)[0] = static_cast<unsigned char>(DA_PICK(0, 1, 0xFF, 0x80));
+        if (Half()) At(ObjTrio_addr + 0x9)[0] = static_cast<unsigned char>(DA_PICK(0, 1, 0xFF, 0x80));
         if (Half()) g_cell_first = static_cast<int>(DA_PICK(0xA1, 0xA0, 0xAE));
         break;
     case kPlateShow: {
@@ -559,8 +559,8 @@ void Seed(unsigned k) {
         // The place the search looks for, planted in one of the six entries:
         // the search has no bound, so it must find it there.
         const unsigned entry = Next() % 6;
-        const unsigned place = Word(At(at::kPlace));
-        SetWord(At(at::kPlateAnims + entry * 4), place);
+        const unsigned place = Word(At(AreaW0b_Place_addr));
+        SetWord(At(WorldMap33_PlateAnims_addr + entry * 4), place);
         break;
     }
     case kGrow:
@@ -573,7 +573,7 @@ void Seed(unsigned k) {
         Game_Mode = static_cast<unsigned short>(Often() ? DA_PICK(0, 2, 1, 0x101) : Next());
         if (Often()) o[7] = static_cast<unsigned char>(Half() ? 1 : DA_PICK(0, 2, 3, 4));
         if (Often()) o[0xB] = o[7];
-        if (Often()) SetLong(o + 0x18, static_cast<std::int32_t>(Word(At(at::kPlace)) | (Half() ? 0 : 0x10000u)));
+        if (Often()) SetLong(o + 0x18, static_cast<std::int32_t>(Word(At(AreaW0b_Place_addr)) | (Half() ? 0 : 0x10000u)));
         if (Often()) Field_Request = static_cast<unsigned char>(DA_PICK(0, 5, 2));
         break;
     case kHudRun:
@@ -596,7 +596,7 @@ void Seed(unsigned k) {
         SeedLeave(o);
         break;
     case kFrameWait:
-        At(at::kMapMode)[0] = static_cast<unsigned char>(Often() ? DA_PICK(2, 0, 1, 3, 0x82) : Next());
+        At(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(Often() ? DA_PICK(2, 0, 1, 3, 0x82) : Next());
         if (Half()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ 0x100);
         break;
     case kBoxWait:
@@ -606,7 +606,7 @@ void Seed(unsigned k) {
         if (Half()) o[2] = 0;
         if (Often()) Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags | 4);
         o[0xB] = static_cast<unsigned char>(Often() ? DA_PICK(2, 3, 2, 3, 0, 1, 4, 5) : Next());
-        const unsigned height = At(at::kMapHeight)[0];
+        const unsigned height = At(AreaMap_Header_addr + 0x1)[0];
         if (Half()) SetWord(o + 0x3A, height + DA_PICK(8, 9, 7, 0, 0x7FFF));
         // The leader within 25 cells, or just out, in x and in z.
         const auto near = [](unsigned char* cell, unsigned centre) {
@@ -701,8 +701,8 @@ void SelfTest() {
     for (const Region& r : g_regions) g_region_bytes += r.size;
     if (g_region_bytes > kMaxRegionBytes)
         bof3::Fatal("worldmap_area: the regions are %u bytes, the state holds %u", g_region_bytes, kMaxRegionBytes);
-    std::memcpy(g_area29_exe, At(at::kArea29Cells), sizeof g_area29_exe);
-    std::memcpy(g_plates_exe, At(at::kPlateAnims), sizeof g_plates_exe);
+    std::memcpy(g_area29_exe, At(Area29_Cells_addr), sizeof g_area29_exe);
+    std::memcpy(g_plates_exe, At(WorldMap33_PlateAnims_addr), sizeof g_plates_exe);
     std::memcpy(g_drift_exe, At(0x5EF6B0), sizeof g_drift_exe);
 
     void* clones[kCount];

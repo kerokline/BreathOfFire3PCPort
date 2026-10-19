@@ -222,7 +222,7 @@ U FxSparkFree(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 3 == 0) return 0;
     (void)answer;
-    return at::kSparks + 0x1C * ((n >> 2) % 8);
+    return EffectKind30_Shards_addr + 0x1C * ((n >> 2) % 8);
 }
 // 0x5A7A90 (a square root): half the time a root about the sphere's clamp
 // (0..0x10FF, the edges 0xFFE..0x1000 among them), else any eax - negative ones
@@ -315,8 +315,8 @@ const std::uint8_t kKinds[] = {0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E};
 // 0x92D204, the spiral record 0x92C4A4..0x92D1C4, the ring 0x92D1C8, the sphere
 // 0x92D9DC..0x931174 - and the pointers 0x6761CC / 0x6761D0 and the byte 0x6761D8.
 const sh::Region kRegions[] = {
-    {sh::at::kShards + sh::at::kShardsSize, at::kSphereLight + 12 - (sh::at::kShards + sh::at::kShardsSize)},
-    {at::kSpiralPtr, 0x10},
+    {EffectKind30_Shards_addr + sh::at::kShardsSize, Effect2e_SphereLight_addr + 12 - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
+    {Effect2e_SpiralPtr_addr, 0x10},
 };
 
 // The pointer a cell holds.
@@ -348,8 +348,8 @@ void Columns() {
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // the pointers the states write through: at their records, now and then another place in the regions
-    SetLong(P(at::kRingPtr), static_cast<std::int32_t>(sh::Often() ? at::kRingRecord : PickOf(0x92D1E0, 0x92C600, 0x92E000)));
-    SetLong(P(at::kSpiralPtr), static_cast<std::int32_t>(sh::Often() ? at::kSpiral : PickOf(0x92C5C4, 0x92C700)));
+    SetLong(P(Effect2d_DustAnchor_addr), static_cast<std::int32_t>(sh::Often() ? Effect2e_RingRecord_addr : PickOf(0x92D1E0, 0x92C600, 0x92E000)));
+    SetLong(P(Effect2e_SpiralPtr_addr), static_cast<std::int32_t>(sh::Often() ? (EffectKind30_Shards_addr + 0x524) : PickOf(0x92C5C4, 0x92C700)));
     SetLong(s + 0xC, static_cast<std::int32_t>(CountC()));
     s[9] = static_cast<unsigned char>(Count9());
     s[6] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
@@ -360,7 +360,7 @@ void Seed(unsigned k) {
         SetLong(s + 0xC, static_cast<std::int32_t>(PickOf(1, 0x10, 0x11, 0x20, 0x5F, 0x50, 3, sh::Next() % 0x60)));
         break;
     case k7Lift:
-        SetLong(Pointer(at::kRingPtr) + 8, static_cast<std::int32_t>(PickOf(0xEFFFFFF, 0xF000000, 0xF000001, 0x7F000000, 0xFF000000, 0, sh::Next())));
+        SetLong(Pointer(Effect2d_DustAnchor_addr) + 8, static_cast<std::int32_t>(PickOf(0xEFFFFFF, 0xF000000, 0xF000001, 0x7F000000, 0xFF000000, 0, sh::Next())));
         break;
     case k12Travel:
         // the point one step from its goal on both axes, one, or neither
@@ -370,8 +370,8 @@ void Seed(unsigned k) {
         }
         break;
     case k4ATrailStep:
-        SetWord(P(at::kTrailTurn), PickOf(0, 0xFFC0, 0xFF80, sh::Next()));
-        P(at::kTrailSpin)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
+        SetWord(P(Effect2e_TrailTurn_addr), PickOf(0, 0xFFC0, 0xFF80, sh::Next()));
+        P(Effect2e_TrailSpin_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
         break;
     case kSphereDraw:
     case k11Draw:
@@ -401,7 +401,7 @@ void Args(unsigned k, U* a) {
         a[1] = (sh::Next() & 0xFFFFF000u) | ((i + (sh::Half() ? d : 0u - d)) & 0xFFFu);
         break;
     }
-    case k4AGlow: a[0] = at::kTrail + at::kTrailStride * (i % at::kTrailCount); break;
+    case k4AGlow: a[0] = EffectKind30_Shards_addr + at::kTrailStride * (i % at::kTrailCount); break;
     case k4BDebris: a[0] = at::kDebris + at::kDebrisStride * (i % at::kDebrisCount); break;
     default: break;
     }
@@ -425,10 +425,10 @@ void Disturb(U h) {
         break;
     }
     case 2: s[6] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 3: P(at::kTrailSpin)[0] = static_cast<unsigned char>(v & 1); break;
+    case 3: P(Effect2e_TrailSpin_addr)[0] = static_cast<unsigned char>(v & 1); break;
     case 4: SetWord(P(at::kBurstSize), v); break;
     case 5: {
-        unsigned char* const ring = P(static_cast<U>(Long(P(at::kRingPtr))));
+        unsigned char* const ring = P(static_cast<U>(Long(P(Effect2d_DustAnchor_addr))));
         if (sh::InRegions(ring + 8, 4)) SetLong(ring + 8, static_cast<std::int32_t>((v & 1) ? 0xF000000u : v));
         break;
     }

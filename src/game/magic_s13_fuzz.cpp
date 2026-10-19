@@ -137,17 +137,20 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850;
-constexpr std::uint32_t kPool = 0x682680, kCell = 0x683280;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
+// kPool: now SuddenDeath_Motes (symbols.toml).
+// kCell: now SuddenDeath_CurrentMote (symbols.toml).
 constexpr unsigned kMotes = 0x60, kStride = 0x20;
 // SuddenDeathMote_Shape and _Turns, the exe's .data the draw reads.
-constexpr std::uint32_t kShape = 0x65ABC0, kShapeBytes = 0x24;
+// kShape: now SuddenDeathMote_Shape (symbols.toml).
+constexpr std::uint32_t kShapeBytes = 0x24;
 
 // The .data as the exe holds it, read at start-up (not written down here).
 unsigned char g_exe_shape[kShapeBytes];
 
-unsigned char* Mote(unsigned i) { return mh::Mem(kPool + (i % kMotes) * kStride); }
-unsigned char* Cur() { return mh::Pointer(kCell); }
+unsigned char* Mote(unsigned i) { return mh::Mem(SuddenDeath_Motes_addr + (i % kMotes) * kStride); }
+unsigned char* Cur() { return mh::Pointer(SuddenDeath_CurrentMote_addr); }
 unsigned char* ValidOwner(std::uint32_t v) { return v & 4 ? mh::SpriteRecord(v) : mh::TaskAt(v); }
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
@@ -231,10 +234,10 @@ const mh::Callee kCallees[] = {
     {S13_OURS(Gte_RotTransPers3), 8, {kAll, kAll, kAll, kAll, kAll, kAll, 0, 0}, kG, 0, 0, {6, 6, 6}, &Rtp3Effect},
     {S13_OURS(Gte_PrimDepths3_10B), 1, {kAll}, kG, 0, 0},
     // this group's own, called directly: the task and the current mote logged
-    {S13_RAW(0x4B3350), 0, {kCell}, mh::Answer::kPhase, 0, 0},
-    {S13_RAW(0x4B3780), 0, {kCell}, mh::Answer::kPhase, 0, 0},
-    {S13_RAW(0x4B3840), 0, {kCell}, mh::Answer::kPhase, 0, 0},
-    {S13_RAW(0x4B3ED0), 0, {kCell}, mh::Answer::kPhase, 0, 0},
+    {S13_RAW(0x4B3350), 0, {SuddenDeath_CurrentMote_addr}, mh::Answer::kPhase, 0, 0},
+    {S13_RAW(0x4B3780), 0, {SuddenDeath_CurrentMote_addr}, mh::Answer::kPhase, 0, 0},
+    {S13_RAW(0x4B3840), 0, {SuddenDeath_CurrentMote_addr}, mh::Answer::kPhase, 0, 0},
+    {S13_RAW(0x4B3ED0), 0, {SuddenDeath_CurrentMote_addr}, mh::Answer::kPhase, 0, 0},
     // the pool's allocator: 0xFF (full) or an index inside the pool
     {S13_RAW(0x4B3E80), 0, {}, mh::Answer::kByte, 0xFF, kMotes - 1},
 };
@@ -247,11 +250,11 @@ const mh::Callee kCallees[] = {
 const mh::DataTable kTables[] = {{0x65ABA4, 1}, {0x65ABA8, 2}, {0x65ABB0, 4}, {0x65ABE4, 5}};
 
 mh::Region g_regions[] = {
-    {kPool, kMotes * kStride + 4},   // SuddenDeath_Motes and SuddenDeath_CurrentMote
-    {kShape, kShapeBytes},           // SuddenDeathMote_Shape, _Turns
+    {SuddenDeath_Motes_addr, kMotes * kStride + 4}, // SuddenDeath_Motes and SuddenDeath_CurrentMote
+    {SuddenDeathMote_Shape_addr, kShapeBytes}, // SuddenDeathMote_Shape, _Turns
     {0x7E0670, 4},                   // Gfx_PacketNext
     {0, kPrimBytes},                 // g_prims (filled in at start-up)
-    {kVertex, 0x18},                 // Prim_VertexScratch, three SVECTORs
+    {Prim_VertexScratch_addr, 0x18}, // Prim_VertexScratch, three SVECTORs
     {kScratch, 0x10},                // DamageScratch's words
 };
 
@@ -267,15 +270,15 @@ unsigned char* Sc() { return Sprite_Current; }
 void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
-    case 0: mh::SetPointer(kCell, Mote(v)); break;
+    case 0: mh::SetPointer(SuddenDeath_CurrentMote_addr, Mote(v)); break;
     case 1: Gfx_PacketNext = PrimAt(v); break;
     case 2: case 5: case 6: case 7:
         SetWord(mh::Mem(kScratch + (v & 0x100 ? 4 * (v & 1) : 2 * (v % 8))), h >> 16);
         break;
-    case 3: SetWord(mh::Mem(kVertex + 2 * (v % 12)), h >> 16); break;
+    case 3: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 12)), h >> 16); break;
     case 4: {
-        const std::uint32_t c = static_cast<std::uint32_t>(Long(mh::Mem(kCell)));
-        if (c >= kPool && c < kPool + kMotes * kStride) Cur()[v % 0x1C] = Byte(h >> 24);
+        const std::uint32_t c = static_cast<std::uint32_t>(Long(mh::Mem(SuddenDeath_CurrentMote_addr)));
+        if (c >= SuddenDeath_Motes_addr && c < SuddenDeath_Motes_addr + kMotes * kStride) Cur()[v % 0x1C] = Byte(h >> 24);
         break;
     }
     default: break;
@@ -294,11 +297,11 @@ void Seed(unsigned k) {
     // by a real slot or record (the walk makes it the owner a recorder may
     // write through); the current cell a mote; the exe's .data two in three.
     Gfx_PacketNext = PrimAt(mh::Next());
-    for (unsigned i = 0; i < kMotes; ++i) mh::SetPointer(kPool + i * kStride + 0x1C, ValidOwner(mh::Next()));
-    mh::SetPointer(kCell, Mote(mh::Next()));
-    if (mh::Often()) std::memcpy(mh::Mem(kShape), g_exe_shape, kShapeBytes);
+    for (unsigned i = 0; i < kMotes; ++i) mh::SetPointer(SuddenDeath_Motes_addr + i * kStride + 0x1C, ValidOwner(mh::Next()));
+    mh::SetPointer(SuddenDeath_CurrentMote_addr, Mote(mh::Next()));
+    if (mh::Often()) std::memcpy(mh::Mem(SuddenDeathMote_Shape_addr), g_exe_shape, kShapeBytes);
     unsigned char* const m = Cur();
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     switch (k) {
     // the dispatchers: inside their tables
     case kTask: sc[1] = Byte(mh::Next() % 2); break;
@@ -373,7 +376,7 @@ void Seed(unsigned k) {
 }  // namespace
 
 void SelfTest() {
-    std::memcpy(g_exe_shape, mh::Mem(kShape), kShapeBytes);
+    std::memcpy(g_exe_shape, mh::Mem(SuddenDeathMote_Shape_addr), kShapeBytes);
     g_regions[3].at = Key(g_prims);
     const mh::Group group = {
         "magic_s13", kClones, sizeof kClones / sizeof kClones[0], kCallees, sizeof kCallees / sizeof kCallees[0],

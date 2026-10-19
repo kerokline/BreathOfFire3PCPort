@@ -21,6 +21,7 @@
 #include "game/battle_flow_callees.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -80,6 +81,8 @@ unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
 unsigned char* CurrentTask() { return PtrAt(at::kTaskCurrent); }
 unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskSize); }
 unsigned char* EnemyObject(unsigned index) { return At(at::kEnemies + index * at::kEnemySize); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+records::BattleTask* TaskRec(unsigned index) { return reinterpret_cast<records::BattleTask*>(Task(index)); }
 
 // A float's bits for a primitive's corner: the original's fild of a sign-
 // extended 16-bit value, then fstp.
@@ -97,7 +100,7 @@ unsigned ItemRow(unsigned id) {
 // The magic file of a row: the u16 at the head of its 8-byte record; 0xFFFF
 // is none. A file asked for sets bit 2 of 0x904AA9 (the round flags' 0x400).
 void LoadMagicRow(unsigned row) {
-    const unsigned file = Word(At(at::kMagicFiles + row * 8));
+    const unsigned file = Word(At(Magic_Rows_addr + row * 8));
     if (file == 0xFFFF) return;
     g.load_dat(static_cast<int>(file));
     At(at::kLoadFlags)[0] = static_cast<unsigned char>(At(at::kLoadFlags)[0] | 4);
@@ -128,7 +131,7 @@ using HookFn = void (__cdecl*)(int);
 // on the original's stack, its own return address first; ours aborts
 // instead (CLAUDE.md rule 4, as mode_flow's Transition_Task).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch(void) {
-    const unsigned char event = At(at::kEventBattle)[0];
+    const unsigned char event = BattleActions_EventBattle;
     std::uint32_t phase = static_cast<std::uint32_t>(Long(At(at::kPhase)));
     if (event != 0 && (phase & 0xFF) != 0) {
         reinterpret_cast<HookFn>(PtrAt(at::kEventHook))(3);
@@ -153,12 +156,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_PhaseDispatch
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleTask_RunAll(void) {
     for (unsigned i = 0; i < at::kTaskCount; ++i) {
         unsigned char* const t = Task(i);
-        if (t[0] == 0) continue;
-        const std::int32_t owner = Long(t + 0x80);
+        auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+        if (task_rec->flags == 0) continue;
+        const std::int32_t owner = static_cast<std::int32_t>(task_rec->owner);
         SetPtrAt(at::kTaskCurrent, t);
         Sprite_Current = t;
-        SetLong(At(at::kTaskOwner), owner);
-        const unsigned kind = t[6];
+        BattleE2_Owner = owner;
+        const unsigned kind = task_rec->kind;
         if (kind >= 4) bof3::Fatal("BattleTask_RunAll: slot %u has kind %u, past the four-entry table", i, kind);
         g.tasks[kind]();
     }
@@ -172,11 +176,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleTask_RunAll(vo
 // the other bits of byte +0 are kept. The callers do not test for 0xFF.
 extern "C" unsigned char __cdecl BattleTask_Create(unsigned kind, unsigned parameter) {
     for (unsigned i = 0; i < at::kTaskCount; ++i) {
-        unsigned char* const t = Task(i);
-        if ((t[0] & 1) != 0) continue;
-        t[0] = static_cast<unsigned char>(t[0] | 1);
-        t[6] = static_cast<unsigned char>(kind);
-        t[5] = static_cast<unsigned char>(parameter);
+        auto* const task_rec = TaskRec(i);
+        if ((task_rec->flags & 1) != 0) continue;
+        task_rec->flags = static_cast<unsigned char>(task_rec->flags | 1);
+        task_rec->kind = static_cast<unsigned char>(kind);
+        task_rec->param = static_cast<unsigned char>(parameter);
         return static_cast<unsigned char>(i);
     }
     return 0xFF;
@@ -215,17 +219,18 @@ extern "C" void __cdecl BattleTask_ClearAll(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObject(i);
-        if (e[0] == 0) continue;
-        const unsigned char event = At(at::kEventBattle)[0];
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        if (enemy_rec->flags == 0) continue;
+        const unsigned char event = BattleActions_EventBattle;
         Sprite_Current = e;
         SetPtrAt(at::kEnemyCurrent, e);
         if (event != 0) {
-            if (e[1] != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(e + 0xF4))))(2);
-            const unsigned state = Enemy()[0x100];
-            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(at::kEnemyStates + 4))[state]();
+            if (enemy_rec->state[0] != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(enemy_rec->event_hook))))(2);
+            const unsigned state = EnemyRec()->run_state;
+            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(BattleEnemy_States_addr + 4))[state]();
         } else {
-            const unsigned state = e[0x100];
-            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(at::kEnemyStates))[state]();
+            const unsigned state = enemy_rec->run_state;
+            reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(BattleEnemy_States_addr))[state]();
         }
     }
 }
@@ -236,7 +241,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(v
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_UpdateScreenAll(void) {
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObject(i);
-        if (e[0] == 0) continue;
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        if (enemy_rec->flags == 0) continue;
         Sprite_Current = e;
         SetPtrAt(at::kEnemyCurrent, e);
         g.update_screen();
@@ -271,7 +277,7 @@ extern "C" void __cdecl BattleEnemy_SetAnimation(unsigned animation) {
 extern "C" unsigned char __cdecl BattleEnemy_ScriptTick(void) {
     const unsigned char* const e = Enemy();
     if ((e[0x92] & 0x44) != 0) return 1;
-    if (At(at::kAnimGate)[0] != 0 && (e[0x114] & 0x10) == 0) return 1;
+    if (BattleFlow_AnimGate != 0 && (e[0x114] & 0x10) == 0) return 1;
     return g.script_tick();
 }
 
@@ -280,7 +286,7 @@ extern "C" unsigned char __cdecl BattleEnemy_ScriptTick(void) {
 extern "C" unsigned char __cdecl BattleEnemy_ScriptTickOnce(void) {
     const unsigned char* const e = Enemy();
     if ((e[0x92] & 0x44) != 0) return 1;
-    if (At(at::kAnimGate)[0] != 0 && (e[0x114] & 0x10) == 0) return 1;
+    if (BattleFlow_AnimGate != 0 && (e[0x114] & 0x10) == 0) return 1;
     return g.script_tick_once();
 }
 
@@ -293,12 +299,13 @@ extern "C" unsigned char __cdecl BattleEnemy_ScriptTickOnce(void) {
 // 0x436AD1) do with it is unread.
 extern "C" unsigned char __cdecl BattleEnemy_Chance70(void) {
     const unsigned char* const e = Enemy();
-    if ((Word(e + 0x92) & 0x4064) != 0) return 0;
+    auto* const enemy_rec = reinterpret_cast<const records::BattleEnemy*>(e);
+    if ((enemy_rec->status & 0x4064) != 0) return 0;
     if (At(at::kTurnGate)[0] >= 3) return 0;
     if (At(at::kFormation)[0] == 4 && Word(At(at::kMagicId)) == 0xA1) return 0;
-    if (At(at::kAnimGate)[0] != 0 && (e[0x114] & 0x10) == 0) return 0;
+    if (BattleFlow_AnimGate != 0 && (e[0x114] & 0x10) == 0) return 0;
     if ((e[0x90] & 2) == 0) return 0;
-    if ((Long(e + 0x110) & 0x8000) != 0) return 1;
+    if ((static_cast<std::int32_t>(enemy_rec->flags_110) & 0x8000) != 0) return 1;
     return g.crt_rand() % 100 < 70 ? 1 : 0;
 }
 
@@ -323,24 +330,27 @@ extern "C" unsigned char __cdecl BattleEnemy_Chance70(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_EnemyDefeated(void) {
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x40);
     unsigned char* e = Enemy();
+    records::BattleEnemy* enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
     // DIV-0045: the yields times the launcher's multipliers, 1 unless set
     // (src/game/cheats.cpp); the enemy's record keeps its own numbers.
-    SetLong(At(at::kExpTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kExpTotal))) + Word(e + 0x96) * Cheats_ExpMultiplier()));
-    SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kZennyTotal))) + Word(e + 0x94) * Cheats_ZennyMultiplier()));
-    SetWord(e + 0x94, 0);
+    BattleFlow_ExpTotal = static_cast<std::int32_t>(BattleFlow_ExpTotal + enemy_rec->exp * Cheats_ExpMultiplier());
+    BattleFlow_ZennyTotal = static_cast<std::int32_t>(BattleFlow_ZennyTotal + enemy_rec->zenny * Cheats_ZennyMultiplier());
+    enemy_rec->zenny = 0;
     e = Enemy();
+    enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
     e[0x93] = static_cast<unsigned char>(e[0x93] | 0x40);
     g.remove_from_turn_order(Sprite_Current[5]);
     g.roll_drops();
-    const auto left = static_cast<unsigned char>(At(at::kEnemiesLeft)[0] - 1);
-    At(at::kEnemiesLeft)[0] = left;
-    if (left == 0) At(at::kBattleEnd)[0] = static_cast<unsigned char>(At(at::kBattleEnd)[0] | 2);
-    if ((Long(At(at::kRoundFlags)) & 0x4000) != 0 && At(at::kActorAt)[0] == Sprite_Current[5])
+    const auto left = static_cast<unsigned char>(BattleE2_EnemiesLeft - 1);
+    BattleE2_EnemiesLeft = left;
+    if (left == 0) BattleActions_BattleEnd = static_cast<unsigned char>(BattleActions_BattleEnd | 2);
+    if ((Long(At(at::kRoundFlags)) & 0x4000) != 0 && BattleFlow_ActorAt == Sprite_Current[5])
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xBFFF);
-    g.set_flag_bit(Enemy()[0x8C]);
+    g.set_flag_bit(EnemyRec()->kind);
     g.release_tint(Sprite_Current);
     e = Enemy();
-    SetLong(e + 0x110, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(e + 0x110)) & 0xFFFFFF8Fu));
+    enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    enemy_rec->flags_110 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(enemy_rec->flags_110)) & 0xFFFFFF8Fu);
     g.clear_turn_bit(Sprite_Current[5]);
     Sprite_Current[1] = 2;
     Sprite_Current[2] = 0;
@@ -378,7 +388,7 @@ extern "C" void __cdecl Battle_RollDrops(void) {
         const unsigned cls = e[slot + 2];
         if (cls >= 8) bof3::Fatal("Battle_RollDrops: drop class %u, past the eight-entry table", cls);
         if (kChance[cls] < roll) continue;
-        unsigned count = At(at::kDropCount)[0];
+        unsigned count = BattleE7_DropCount;
         if (count != 0) {
             unsigned i = 0;
             do {
@@ -386,15 +396,15 @@ extern "C" void __cdecl Battle_RollDrops(void) {
                     At(at::kDropCounts)[i] = static_cast<unsigned char>(At(at::kDropCounts)[i] + 1);
                     SetWord(e + slot, 0);
                     e = Enemy();
-                    count = At(at::kDropCount)[0];
+                    count = BattleE7_DropCount;
                 }
                 i = (i + 1) & 0xFF;
             } while (i < count);
         }
         SetWord(At(at::kDropItems + count * 2), Word(e + slot));
-        At(at::kDropCounts)[At(at::kDropCount)[0]] = 1;
-        const unsigned char entries = At(at::kDropCount)[0];
-        if (entries < 0xF) At(at::kDropCount)[0] = static_cast<unsigned char>(entries + 1);
+        At(at::kDropCounts)[BattleE7_DropCount] = 1;
+        const unsigned char entries = BattleE7_DropCount;
+        if (entries < 0xF) BattleE7_DropCount = static_cast<unsigned char>(entries + 1);
         SetWord(e + slot, 0);
         e = Enemy();
     }
@@ -414,7 +424,7 @@ extern "C" void __cdecl Battle_RollDrops(void) {
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_StartItemMagic(unsigned id, unsigned owner) {
     SetWord(At(at::kMagicId), id);
     const unsigned index = g.task_create(2, ItemRow(id)) & 0xFF;
-    SetLong(Task(index) + 0x80, static_cast<std::int32_t>(owner));
+    TaskRec(index)->owner = static_cast<std::int32_t>(owner);
 }
 
 // original 0x4377D0 (PSX Magic_LoadForItem 0x800AB1FC): the item's magic
@@ -434,7 +444,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_StartAbilityM
     const unsigned a = ability & 0xFF;
     SetWord(At(at::kMagicId), a);
     const unsigned first = g.task_create(2, At(at::kAbilityRows)[a]) & 0xFF;
-    SetLong(Task(first) + 0x80, static_cast<std::int32_t>(owner));
+    TaskRec(first)->owner = static_cast<std::int32_t>(owner);
     const unsigned id = Word(At(at::kMagicId));
     if ((At(at::kAbilityFlags + id * 24)[0] & 0x10) == 0) return;
     const unsigned second = g.task_create(1, 0x43) & 0xFF;
@@ -464,17 +474,21 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Magic_LoadForAbility
 // 16 bits above them; Battle_DrawNumber reads their low words only.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_RollingDigits(unsigned clut) {
     unsigned char* s = CurrentTask();
-    SetWord(s + 0x32, Word(s + 0x32) + 1u);
+    records::BattleTask* task_rec = reinterpret_cast<records::BattleTask*>(s);
+    task_rec->digit_phase = task_rec->digit_phase + 1u;
     s = CurrentTask();
-    SetWord(s + 0x32, static_cast<unsigned>(static_cast<short>(Word(s + 0x32)) % 10));
+    task_rec = reinterpret_cast<records::BattleTask*>(s);
+    task_rec->digit_phase = static_cast<unsigned>(static_cast<short>(task_rec->digit_phase) % 10);
     s = CurrentTask();
-    auto n = static_cast<signed char>(s[0xA]);
+    task_rec = reinterpret_cast<records::BattleTask*>(s);
+    auto n = static_cast<signed char>(task_rec->digits);
     while (n >= 0) {
-        const int digit = (static_cast<short>(Word(s + 0x32)) + n) % 10;
+        const int digit = (static_cast<short>(task_rec->digit_phase) + n) % 10;
         const int x = static_cast<short>(static_cast<std::uint16_t>(Word(s + 0x36) - n * 8 - 0xC));
         g.draw_number(x, static_cast<short>(Word(s + 0x3A)), clut, static_cast<unsigned>(digit));
         n = static_cast<signed char>(n - 1);
         s = CurrentTask();
+        task_rec = reinterpret_cast<records::BattleTask*>(s);
     }
 }
 
@@ -560,12 +574,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_DrawLabel(int
 extern "C" unsigned char __cdecl Battle_ActorIsOut(unsigned actor) {
     const unsigned a = actor & 0xFF;
     if (a < 3) {
-        const unsigned char* const m = At(at::kMembers + a * at::kMemberSize);
-        if ((m[0] & 1) == 0) return 1;
+        const unsigned char* const m = At(ObjTrio_addr + a * at::kMemberSize);
+        auto* const member = reinterpret_cast<const records::PartyMember*>(m);
+        if ((member->flags & 1) == 0) return 1;
         return (m[0x91] & 0x40) != 0 ? 1 : 0;
     }
     const unsigned char* const e = EnemyObject((a - 3) & 0xFF);
-    if ((e[0] & 1) == 0) return 1;
+    auto* const enemy_rec = reinterpret_cast<const records::BattleEnemy*>(e);
+    if ((enemy_rec->flags & 1) == 0) return 1;
     return (e[0x93] & 0x40) != 0 ? 1 : 0;
 }
 

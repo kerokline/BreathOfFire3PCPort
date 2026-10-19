@@ -23,6 +23,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/menu_draw_helpers_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -34,6 +35,11 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160). Only +0..+7 are typed: +8..+0x1F mean something else in each
+// handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
 
 U Address(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U XY(int x, int y) { return static_cast<std::uint16_t>(x) | static_cast<U>(static_cast<std::uint16_t>(y)) << 16; }
@@ -64,17 +70,17 @@ void Disturb() {
     const U h = Hash();
     if (h % 3 == 0) return;
     if (h % 23 == 0) {
-        SetLong(At(at::kCurrent), static_cast<std::int32_t>(at::kRecords + ((h >> 8) % 22u) * 0x24u));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + ((h >> 8) % 22u) * 0x24u));
         return;
     }
     static const unsigned kField[] = {3, 4, 5, 6, 7, 0xA, 0xB, 0xC, 0x10, 0x11};
-    unsigned char* const w = At(static_cast<U>(Long(At(at::kCurrent))));
+    unsigned char* const w = At(static_cast<U>(Long(At(BattleWinStates_Current_addr))));
     const auto v = static_cast<unsigned char>(h >> 12);
     switch ((h >> 4) % 8) {
-    case 0: At(at::kColour)[0] = v; break;
-    case 1: At(at::kZenny + ((h >> 20) & 3))[0] = v; break;
-    case 2: At(at::kPartyList + ((h >> 20) % 3))[0] = v; break;
-    case 3: At(at::kMemberRecord + ((h >> 20) & 0xFF))[0] = v; break;
+    case 0: At(BattleDraw_Colour_addr)[0] = v; break;
+    case 1: At(Party_Zenny_addr + ((h >> 20) & 3))[0] = v; break;
+    case 2: At(Cond_Flags_addr + 0xd2 + ((h >> 20) % 3))[0] = v; break;
+    case 3: At(MoveScript_EffectState_addr + ((h >> 20) & 0xFF))[0] = v; break;
     default: w[kField[(h >> 20) % 10]] = v; break;
     }
 }
@@ -167,19 +173,19 @@ Callees Stubs() {
 constexpr U kRet = 0x437CC0;
 struct Table { U at; unsigned n; U had[19]; };
 const Table kTables[] = {
-    {table::kHandler7Kinds, 19, {0x59B240, 0x59B350, 0x59B310, 0x59CB20, 0x59B3C0, 0x59B3F0, 0x59B4F0, 0x59B560, 0x59B810,
+    {Window_Handler7KindTable_addr, 19, {0x59B240, 0x59B350, 0x59B310, 0x59CB20, 0x59B3C0, 0x59B3F0, 0x59B4F0, 0x59B560, 0x59B810,
                                  0x59BB60, 0x59BBB0, bof3::addr::ShopWin_SharedListRun, bof3::addr::ShopWin_SharedMemberRun, bof3::addr::ShopWin_MemberStatusRun, bof3::addr::ShopWin_RowMenuRun, bof3::addr::ShopWin_MasterListRun, bof3::addr::ShopWin_MasterCaptionRun, bof3::addr::ShopWin_PupilsRun,
                                  bof3::addr::ShopWin_ItemCountRun}},
-    {table::kTitleSteps, 3, {kRet, 0x59A3A0, 0x59A3D0}},
-    {table::kButtonsSteps, 3, {kRet, 0x59A3A0, 0x59A680}},
-    {table::kMoneySteps, 3, {kRet, 0x59B390, 0x59A680}},
-    {table::kMemberSteps, 5, {kRet, 0x59B440, 0x59A5B0, 0x59B470, 0x59B4A0}},
-    {table::kEquipSteps, 3, {kRet, 0x59B440, 0x59B530}},
-    {table::kBuyListSteps, 4, {kRet, 0x59A5E0, 0x59B7B0, 0x59B7E0}},
-    {table::kItemListSteps, 3, {kRet, 0x59A5E0, 0x59BB80}},
-    {table::kHandler8Kinds, 6, {0x59CB20, 0x59CB40, 0x59CBC0, bof3::addr::BattleMenuWin_EquipRun, bof3::addr::BattleMenuWin_EquipItemsRun, bof3::addr::BattleMenuWin_VerbPairRun}},
-    {table::kBattleItemSteps, 5, {kRet, 0x59A580, 0x59CB60, bof3::addr::BattleMenuWin_ItemListSlideLeft, 0x59A5E0}},
-    {table::kBattleSkillSteps, 3, {kRet, 0x59A5E0, 0x59CBE0}},
+    {ShopWin_TitleSteps_addr, 3, {kRet, 0x59A3A0, 0x59A3D0}},
+    {ShopWin_ButtonsSteps_addr, 3, {kRet, 0x59A3A0, 0x59A680}},
+    {ShopWin_MoneySteps_addr, 3, {kRet, 0x59B390, 0x59A680}},
+    {ShopWin_MemberStatsSteps_addr, 5, {kRet, 0x59B440, 0x59A5B0, 0x59B470, 0x59B4A0}},
+    {ShopWin_EquipSteps_addr, 3, {kRet, 0x59B440, 0x59B530}},
+    {ShopWin_BuyListSteps_addr, 4, {kRet, 0x59A5E0, 0x59B7B0, 0x59B7E0}},
+    {ShopWin_ItemListSteps_addr, 3, {kRet, 0x59A5E0, 0x59BB80}},
+    {Window_Handler8KindTable_addr, 6, {0x59CB20, 0x59CB40, 0x59CBC0, bof3::addr::BattleMenuWin_EquipRun, bof3::addr::BattleMenuWin_EquipItemsRun, bof3::addr::BattleMenuWin_VerbPairRun}},
+    {BattleMenuWin_ItemListSteps_addr, 5, {kRet, 0x59A580, 0x59CB60, bof3::addr::BattleMenuWin_ItemListSlideLeft, 0x59A5E0}},
+    {BattleMenuWin_SkillListSteps_addr, 3, {kRet, 0x59A5E0, 0x59CBE0}},
 };
 constexpr unsigned kTableCount = sizeof kTables / sizeof kTables[0];
 
@@ -283,10 +289,10 @@ const Clone kClones[kCount] = {
 struct Region { U at, size; };
 const Region kRegions[] = {
     {at::kRecords, 0x318},       // the 22 window records
-    {at::kCurrent, 4},           // the record running (Fix puts it on one of the 22)
-    {at::kColour, 1},
-    {at::kZenny, 0x10A},         // the zenny, and the party list with every byte +0xA can reach
-    {at::kMemberRecord, 0x100},  // the member map, every byte a party-list byte can reach
+    {BattleWinStates_Current_addr, 4}, // the record running (Fix puts it on one of the 22)
+    {BattleDraw_Colour_addr, 1},
+    {Party_Zenny_addr, 0x10A},   // the zenny, and the party list with every byte +0xA can reach
+    {MoveScript_EffectState_addr, 0x100}, // the member map, every byte a party-list byte can reach
 };
 constexpr unsigned kRegionBytes = 0x318 + 4 + 1 + 0x10A + 0x100;
 
@@ -327,7 +333,7 @@ U Next() {
 }
 bool Often() { return Next() % 3 != 0; }
 
-unsigned char* Current() { return At(static_cast<U>(Long(At(at::kCurrent)))); }
+unsigned char* Current() { return At(static_cast<U>(Long(At(BattleWinStates_Current_addr)))); }
 
 // A word at or around a slide's arrival: `bound - by` lands exactly on it.
 std::uint16_t Around(int bound, int by) {
@@ -359,7 +365,7 @@ void Seed(unsigned k) {
     case kCursor: r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next()); break;
     case kMoneyUp: {
         static const int kY[] = {-4, -3, -5, -20, -19, -21, -36, 0, 0x10, 0x7FF0};
-        SetWord(r + 6, Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next()));
+        Win(r)->centre_y = Often() ? static_cast<std::uint16_t>(kY[Next() % 10]) : static_cast<std::uint16_t>(Next());
         break;
     }
     case kLeft: {
@@ -367,21 +373,21 @@ void Seed(unsigned k) {
         const int bound = Often() ? kBound[Next() % 7] : static_cast<short>(Next());
         const U imm = (Next() % 2 ? 0xFFFF0000u : Next() & 0xFFFF0000u) | static_cast<std::uint16_t>(bound);
         std::memcpy(g_bound, &imm, 4);
-        SetWord(r + 4, Around(bound, -0x20));
+        Win(r)->centre_x = Around(bound, -0x20);
         break;
     }
-    case kMemberUp: SetWord(r + 6, Around(0x3E, -0x10)); break;
+    case kMemberUp: Win(r)->centre_y = Around(0x3E, -0x10); break;
     case kMemberDown: {
         r[0xA] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
-        SetWord(r + 6, Around(r[0xA] * 0x36 + 0x3E, 0x10));
+        Win(r)->centre_y = Around(r[0xA] * 0x36 + 0x3E, 0x10);
         break;
     }
-    case kEquipIn: SetWord(r + 4, Around(0xF, 0x20)); break;
-    case kBuy84: SetWord(r + 4, Around(0x84, -0x20)); break;
-    case kBuy46: SetWord(r + 4, Around(0x46, -0x20)); break;
-    case kItemIn: SetWord(r + 4, Around(0x4B, -0x20)); break;
-    case kBattleRight: SetWord(r + 4, Around(0x53, 0x20)); break;
-    case kBattleSkillIn: SetWord(r + 4, Around(0x53, -0x20)); break;
+    case kEquipIn: Win(r)->centre_x = Around(0xF, 0x20); break;
+    case kBuy84: Win(r)->centre_x = Around(0x84, -0x20); break;
+    case kBuy46: Win(r)->centre_x = Around(0x46, -0x20); break;
+    case kItemIn: Win(r)->centre_x = Around(0x4B, -0x20); break;
+    case kBattleRight: Win(r)->centre_x = Around(0x53, 0x20); break;
+    case kBattleSkillIn: Win(r)->centre_x = Around(0x53, -0x20); break;
     default: break;
     }
 }
@@ -446,7 +452,7 @@ void SelfTest() {
         std::memset(input.log, 0, sizeof input.log);
         input.log_n = 0;
         Apply(input);
-        SetLong(At(at::kCurrent), static_cast<std::int32_t>(at::kRecords + (Next() % 22u) * 0x24u));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(at::kRecords + (Next() % 22u) * 0x24u));
         Seed(k);
         g_seed = Next();
         Capture(input);

@@ -255,7 +255,7 @@ const sh::Callee kCallees[] = {
 #undef SC6_RAW
 
 // The state and run tables take no arguments: swapped for recorders.
-const sh::DataTable kTables[] = {{at::kStates, at::kStateCount}, {at::kRuns, at::kRunCount}};
+const sh::DataTable kTables[] = {{Scena06_States_addr, at::kStateCount}, {Scena06_Runs_addr, at::kRunCount}};
 
 // The leap's movement-script object: its +4 the speed index.
 unsigned char g_leap_object[8];
@@ -267,18 +267,18 @@ unsigned char g_leap_object[8];
 // three tables the seed writes stand-ins into, and the leap's object.
 const sh::Region kRegions[] = {
     {at::kCharRecords, 8 * at::kCharStride},
-    {at::kEffectState, 0x18},
-    {at::kSelector, 4},
-    {at::kByte904C9F, 1},
-    {at::kMusicByte, 0x40},
-    {at::kCondFE, 1},
+    {MoveScript_EffectState_addr, 0x18},
+    {AreaW0b_PartySet_addr, 4},
+    {ScenaSc6_Byte904C9F_addr, 1},
+    {AreaW1f_MusicCurrent_addr, 0x40},
+    {Cond_ByteFE_addr, 1},
     {0x929F0C, 8},
     {at::kBank7DEE44, 4},
     {0x939A00, 0x110},
-    {at::kObjects, 4 * at::kObjectCount},
-    {at::kLeapPhases, 4 * at::kLeapPhaseCount},
-    {at::kCellHandlers, 4 * at::kCellHandlerCount},
-    {at::kGuestStats, 8},        // Capcom's constant bytes, random here so that each byte's use is seen
+    {Scena06_Objects_addr, 4 * at::kObjectCount},
+    {Scena06_LeapPhases_addr, 4 * at::kLeapPhaseCount},
+    {Scena06_CellHandlers_addr, 4 * at::kCellHandlerCount},
+    {Scena06_GuestStats_addr, 8}, // Capcom's constant bytes, random here so that each byte's use is seen
     {at::kMemberBytes, 8},       // likewise
     {0, sizeof g_leap_object},   // the leap's object (its address set at start-up)
 };
@@ -355,45 +355,45 @@ unsigned g_k;
 void Seed(unsigned k) {
     g_k = k;
     // the typed stand-ins (the three tables are regions: put back afterwards)
-    for (unsigned i = 0; i < at::kObjectCount; ++i) SetD(at::kObjects + 4 * i, KeyOf(kObjectEntries[i]));
-    for (unsigned i = 0; i < at::kLeapPhaseCount; ++i) SetD(at::kLeapPhases + 4 * i, KeyOf(kLeapEntries[i]));
-    for (unsigned i = 0; i < at::kCellHandlerCount; ++i) SetD(at::kCellHandlers + 4 * i, KeyOf(kCellEntries[i]));
-    if (sh::Half()) SetD(at::kCellHandlers + 4, at::kBareRet);
+    for (unsigned i = 0; i < at::kObjectCount; ++i) SetD(Scena06_Objects_addr + 4 * i, KeyOf(kObjectEntries[i]));
+    for (unsigned i = 0; i < at::kLeapPhaseCount; ++i) SetD(Scena06_LeapPhases_addr + 4 * i, KeyOf(kLeapEntries[i]));
+    for (unsigned i = 0; i < at::kCellHandlerCount; ++i) SetD(Scena06_CellHandlers_addr + 4 * i, KeyOf(kCellEntries[i]));
+    if (sh::Half()) SetD(Scena06_CellHandlers_addr + 4, at::kBareRet);
     // every member's record byte inside the eight records
-    for (unsigned i = 0; i < 0x18; ++i) B(at::kEffectState + i) = static_cast<unsigned char>(sh::Next() & 7);
+    for (unsigned i = 0; i < 0x18; ++i) B(MoveScript_EffectState_addr + i) = static_cast<unsigned char>(sh::Next() & 7);
     // the cells the chapter compares, each most of the time at a value a
     // branch tests
-    if (sh::Often()) SetW(at::kArea, AnArea());
+    if (sh::Often()) SetW(Game_AreaNumber_addr, AnArea());
     if (sh::Often()) B(at::kCounters) = static_cast<unsigned char>(ACount());
     if (sh::Half()) B(at::kCounters + 1) = static_cast<unsigned char>(sh::Next() % 20);
     if (sh::Often()) B(at::kCounters + 2) = static_cast<unsigned char>(sh::Next() % 6);
     B(at::kCounters + 3) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 20 : SH_PICK(0x10, 0x11, 0x12));
-    if (sh::Half()) B(at::kEffects + B(at::kCounters + 3) * at::kEffectStride) = 0;
-    if (sh::Half()) B(at::kEffects + (B(at::kCounters + 1) % 20) * at::kEffectStride) = 0;
-    if (sh::Often()) B(at::kRequest) = static_cast<unsigned char>(SH_PICK(0, 2, 7, 6));
-    if (sh::Half()) SetW(at::kWait, 0);
-    if (sh::Half()) B(at::kHold) = 0;
-    if (sh::Often()) B(at::kSelector) = static_cast<unsigned char>((sh::Next() % 8) | (sh::Half() ? 0x80 : 0));
+    if (sh::Half()) B(Effect_Objects_addr + B(at::kCounters + 3) * at::kEffectStride) = 0;
+    if (sh::Half()) B(Effect_Objects_addr + (B(at::kCounters + 1) % 20) * at::kEffectStride) = 0;
+    if (sh::Often()) B(Field_Request_addr) = static_cast<unsigned char>(SH_PICK(0, 2, 7, 6));
+    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
+    if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((sh::Next() % 8) | (sh::Half() ? 0x80 : 0));
     for (unsigned i = 0; i < 3; ++i)
         if (sh::Often()) B(at::kPartyBytes + i) = static_cast<unsigned char>(APartyByte());
     if (sh::Half()) B(at::kRecord7 + 0x12) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
     if (sh::Half()) B(at::kRecord7 + 0x15) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
-    if (sh::Half()) B(at::kObjTrio + 8) = static_cast<unsigned char>(SH_PICK(2, 3, 4, 5));
-    if (sh::Half()) B(at::kLoad0F) = 0;
-    if (sh::Half()) B(at::kLoad10) = 0;
-    if (sh::Half()) SetW(at::kTimer, SH_PICK(0, 1, 2));
+    if (sh::Half()) B(ObjTrio_addr + 8) = static_cast<unsigned char>(SH_PICK(2, 3, 4, 5));
+    if (sh::Half()) B(AreaW3c_Load0F_addr) = 0;
+    if (sh::Half()) B(ScenaSc6_Load10_addr) = 0;
+    if (sh::Half()) SetW(MoveScript_PartyRecords_addr + 0x66, SH_PICK(0, 1, 2));
     switch (k) {
-    case kFrame: B(at::kState) = static_cast<unsigned char>(sh::Next() % at::kStateCount); break;
-    case kRun: B(at::kRun) = static_cast<unsigned char>(sh::Next() % at::kRunCount); break;
+    case kFrame: B(MoveScript_PartyRecords_addr + 0x62) = static_cast<unsigned char>(sh::Next() % at::kStateCount); break;
+    case kRun: B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next() % at::kRunCount); break;
     case kEnterArea:   // the areas and counter 2's cases, together
-        if (sh::Often()) SetW(at::kArea, SH_PICK(0x27, 0x2E, 0x35, 0x4C, 0x57, 0x5C, 0x5E));
+        if (sh::Often()) SetW(Game_AreaNumber_addr, SH_PICK(0x27, 0x2E, 0x35, 0x4C, 0x57, 0x5C, 0x5E));
         if (sh::Often()) B(at::kCounters + 2) = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3, 4, 5));
         break;
-    case kPartyCalls: B(at::kSelector) = static_cast<unsigned char>((sh::Next() % 8) | (sh::Half() ? 0x80 : 0)); break;
+    case kPartyCalls: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((sh::Next() % 8) | (sh::Half() ? 0x80 : 0)); break;
     case kObjectTrigger: sh::SpriteRecord(0)[0x86] = static_cast<unsigned char>(sh::Next() % at::kObjectCount); break;
     case kStepHook:
     case kCellHook:
-        if (sh::Often()) SetW(at::kArea, SH_PICK(0x27, 0x39, 0x43, 0x4D, 0x5E));
+        if (sh::Often()) SetW(Game_AreaNumber_addr, SH_PICK(0x27, 0x39, 0x43, 0x4D, 0x5E));
         break;
     case kLeap:
         g_leap_object[4] = static_cast<unsigned char>(sh::Next() % 8);
@@ -420,21 +420,21 @@ void Seed(unsigned k) {
         break;
     default:
         if (const unsigned run = RunOf(k)) {
-            B(at::kStep) = static_cast<unsigned char>(AStep(run));
+            B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(AStep(run));
             if (sh::Often())
                 for (const Wait& w : kWaits)
-                    if (w.run == run && w.step == B(at::kStep)) B(at::kCounters) = w.count;
+                    if (w.run == run && w.step == B(MoveScript_PartyRecords_addr + 0x65)) B(at::kCounters) = w.count;
             if (run == 7 && sh::Half()) {   // record 7's two equipment bytes, both set or not
                 B(at::kRecord7 + 0x12) = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFE);
                 B(at::kRecord7 + 0x15) = static_cast<unsigned char>(sh::Half() ? 0 : 1 + sh::Next() % 0xFE);
             }
             if (run == 12 && sh::Half()) B(at::kBank7DEE44) = static_cast<unsigned char>(sh::Next() & 2);
             if (run == 8 && sh::Often())   // step 0's sort: the three +0x89 among a few values (ties too)
-                for (unsigned m = 0; m < 3; ++m) B(at::kObjTrio + at::kObjStride * m + 0x89) = static_cast<unsigned char>(sh::Next() % 4);
+                for (unsigned m = 0; m < 3; ++m) B(ObjTrio_addr + at::kObjStride * m + 0x89) = static_cast<unsigned char>(sh::Next() % 4);
         }
         break;
     }
-    if (sh::Next() % 8 == 0 && RunOf(k)) B(at::kStep) = static_cast<unsigned char>(sh::Next());   // any step, now and then
+    if (sh::Next() % 8 == 0 && RunOf(k)) B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(sh::Next()); // any step, now and then
 }
 
 // A coordinate at one of the step hook's bounds, one either side, or anything.
@@ -481,17 +481,17 @@ void Disturb(std::uint32_t h) {
     const unsigned char v = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 10) {
     case 0: B(at::kCounters) = kWaits[(h >> 12) % (sizeof kWaits / sizeof kWaits[0])].count; break;
-    case 1: B(at::kRequest) = static_cast<unsigned char>((h >> 12) % 3 == 0 ? 2 : (h >> 14) & 1 ? 0 : 7); break;
+    case 1: B(Field_Request_addr) = static_cast<unsigned char>((h >> 12) % 3 == 0 ? 2 : (h >> 14) & 1 ? 0 : 7); break;
     case 2: {
         static const std::uint16_t kMoved[] = {0x27, 0x2E, 0x35, 0x4C, 0x57, 0x5C, 0x5E, 0x39, 0x43, 0x4D};
-        SetW(at::kArea, kMoved[(h >> 12) % 10]);
+        SetW(Game_AreaNumber_addr, kMoved[(h >> 12) % 10]);
         break;
     }
-    case 3: B(at::kSelector) = static_cast<unsigned char>((h >> 12) % 8); break;
+    case 3: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((h >> 12) % 8); break;
     case 4: B(at::kPartyBytes + (h >> 12) % 3) = static_cast<unsigned char>((h >> 14) % 6); break;
     case 5: B(at::kRecord7 + ((h >> 12) & 1 ? 0x12 : 0x15)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    case 6: B(((h >> 12) & 1) ? at::kHold : ((h >> 13) & 1) ? at::kLoad0F : at::kLoad10) = static_cast<unsigned char>(v & 1); break;
-    case 7: B(at::kEffects + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
+    case 6: B(((h >> 12) & 1) ? Field_Kind2Hold_addr : ((h >> 13) & 1) ? AreaW3c_Load0F_addr : ScenaSc6_Load10_addr) = static_cast<unsigned char>(v & 1); break;
+    case 7: B(Effect_Objects_addr + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
     case 8: B(at::kBank7DEE44) = static_cast<unsigned char>(v & 2); break;
     default: B(at::kCounters + 3) = static_cast<unsigned char>((h >> 12) % 20); break;
     }
@@ -514,7 +514,7 @@ void Settle() {
     if (!(n & 1)) return;
     static const std::uint16_t kEnter[] = {0x27, 0x2E, 0x35, 0x4C, 0x57, 0x5C, 0x5E, 0x2D};
     static const std::uint16_t kStep[] = {0x27, 0x39, 0x43, 0x4D, 0x5E};
-    SetW(at::kArea, g_k == kEnterArea ? kEnter[(n >> 8) % 8] : kStep[(n >> 8) % 5]);
+    SetW(Game_AreaNumber_addr, g_k == kEnterArea ? kEnter[(n >> 8) % 8] : kStep[(n >> 8) % 5]);
 }
 
 }  // namespace

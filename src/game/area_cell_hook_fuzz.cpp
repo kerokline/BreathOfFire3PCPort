@@ -13,7 +13,7 @@ namespace {
 
 namespace ah = area_harness;
 
-constexpr std::uint32_t kPairs = 0x662F28;
+// kPairs: now Area_CellHooks (symbols.toml).
 constexpr unsigned kPairCount = 28;
 
 // 0x56E670: 0x44 bytes; no call out but the one through the table (+0x36)
@@ -22,13 +22,13 @@ const ah::Clone kClones[] = {
      reinterpret_cast<const void*>(&::Area_CellHook), 0xFFFFFFFFu, false, ah::Shape::kHook},
 };
 // the handlers: the second dword of each pair
-const ah::DataTable kTables[] = {{kPairs + 4, kPairCount, 8, 2}};
+const ah::DataTable kTables[] = {{Area_CellHooks_addr + 4, kPairCount, 8, 2}};
 
 // Game_AreaNumber: an area the table lists (its byte read from the image),
 // that byte with a high byte (matches none), the areas beside, or any.
 void Seed(unsigned) {
     const unsigned pick = ah::Next() % 8;
-    const unsigned listed = ah::Mem(kPairs + 8 * (ah::Next() % kPairCount))[0];
+    const unsigned listed = ah::Mem(Area_CellHooks_addr + 8 * (ah::Next() % kPairCount))[0];
     unsigned area;
     if (pick < 4) area = listed;
     else if (pick == 4) area = listed | (1 + ah::Next() % 0xFF) << 8;

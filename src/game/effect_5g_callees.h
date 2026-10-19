@@ -10,8 +10,8 @@
 namespace effect_5g::at {
 
 // --- the leader (ObjTrio record 0) and the party records ---------------------------
-constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio +0x34: the leader's x, 16.16
-constexpr std::uint32_t kLeaderZ = 0x802D78;        // ObjTrio +0x38: its z, 16.16
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34: the leader's x, 16.16
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio +0x38: its z, 16.16
 constexpr std::uint32_t kTrioStride = 0x14C;        // ObjTrio's records (sub-kind 0x3A walks all three)
 constexpr unsigned kTrioCount = 3;
 

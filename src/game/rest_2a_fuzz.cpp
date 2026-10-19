@@ -21,6 +21,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_2a.h"
 #include "game/rest_2a_callees.h"
 #include "game/scenario_harness.h"
@@ -29,6 +30,10 @@
 
 namespace rest_2a {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -181,7 +186,7 @@ const sh::Callee kCallees[] = {
 const sh::Region kRegions[] = {  // (dynamic initialisation: the first is a symbol's address)
     {Key(&Field_ActiveMember), 4},
     {at::kBankCount, 4 + 17 * 8},
-    {at::kBankRecords, 4},
+    {MoveScript_TintRecords_addr + 0x180, 4},
     {0x92BF18, 4},
     {bof3::addr::Text_Records, 0x10},
     {0x903A94, 0x903F90 - 0x903A94},
@@ -195,7 +200,7 @@ unsigned char* Records() { return sh::Mem(at::kBankRecordsAt); }
 // Mode11_ScreenBanks (read in place) and a +7 byte.
 void SeedBanks() {
     sh::Mem(at::kBankCount)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 8, 16, sh::Next() % 17));
-    sh::SetPointer(at::kBankRecords, Records());
+    sh::SetPointer(MoveScript_TintRecords_addr + 0x180, Records());
     unsigned char* const r = Records();
     for (unsigned i = 0; i < 17; ++i) {
         const U bank = sh::Often() ? Mode11_ScreenBanks[sh::Next() % (Mode11_ScreenBanks_count - 1)] : PickOf(0xFFFF, 0, sh::Next());
@@ -216,7 +221,7 @@ void SeedSprite(unsigned char* s) {
     s[8] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 8 : sh::Next());
     s[0xB] = static_cast<unsigned char>(sh::Next() % 6 == 0 ? 0xFF : sh::Next() % 20);
     s[0x24] = static_cast<unsigned char>(PickOf(0, 0x10, sh::Next()));
-    SetWord(s + 0x2C, sh::Often() ? Records()[(sh::Next() % 17) * 8 + 7] : PickOf(0x100, sh::Next()));
+    SpriteRec(s)->column = sh::Often() ? Records()[(sh::Next() % 17) * 8 + 7] : PickOf(0x100, sh::Next());
     s[0x5D] = static_cast<unsigned char>(PickOf(0, 0xB0, 0xF0, 0x10, sh::Next()));
     s[0xA0] = static_cast<unsigned char>((sh::Half() ? 0x7F : sh::Next() % 7) | (sh::Half() ? 0x80 : 0));
 }

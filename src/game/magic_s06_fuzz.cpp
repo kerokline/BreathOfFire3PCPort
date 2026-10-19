@@ -242,7 +242,9 @@ constexpr unsigned kPrimBytes = 0x1000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kAbility = 0x904B80, kFrameSet = 0x9039D8, kKind2 = 0x905E60, kQueueCount = 0x9035A0;
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kKind2: now Field_Kind2Z (symbols.toml).
+constexpr std::uint32_t kAbility = 0x904B80, kQueueCount = 0x9035A0;
 
 unsigned g_k = kCount;   // the function being fuzzed (the seed sets it)
 
@@ -265,7 +267,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
 }
 // Sprite_QueueOverlay: which sprite and the frame-offset table.
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -330,8 +332,8 @@ mh::Region g_regions[] = {
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
     {0x80E980, 0x40},                     // Gfx_ClutStripSource words 0x1A00..0x1A1F
     {0x812980, 0x40},                     // Gfx_ClutStrip words 0x1A00..0x1A1F
-    {kKind2, 8},                          // Field_Kind2Z, Field_Kind2X
-    {kFrameSet, 4},                       // the frame-offset table pointer the slashes swap
+    {Field_Kind2Z_addr, 8},               // Field_Kind2Z, Field_Kind2X
+    {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the slashes swap
     {kAbility, 2},                        // the ability being cast
     {kQueueCount, 1},                     // Gfx_UploadQueueCount
     {0x903680, 0x228},                    // Gfx_UploadQueueX / _Y by any count; 0x903852 inside
@@ -340,7 +342,7 @@ mh::Region g_regions[] = {
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(mh::at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 
 // The group's cells a recorder may move (the harness's case 14), from the
 // hash only.
@@ -348,14 +350,14 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 6) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetLong(mh::Mem(kKind2 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 2: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 1: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 2: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 3: {
         static const unsigned kIds[] = {7, 0xA4, 0xB};
         SetWord(mh::Mem(kAbility), (v & 3) < 3 ? kIds[v & 3] : h >> 16);
         break;
     }
-    case 4: mh::Mem(kQueueCount)[0] = Byte(h >> 24); break;
+    case 4: mh::Mem(Gfx_UploadQueueCount_addr)[0] = Byte(h >> 24); break;
     case 5: SetWord(mh::Mem(0x903852), h >> 16); break;
     default: break;
     }
@@ -380,7 +382,7 @@ void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     g_k = k;
     Gfx_PacketNext = PrimAt(mh::Next());
-    if (mh::Often()) mh::Mem(kQueueCount)[0] = Byte(1 + mh::Next() % 20);
+    if (mh::Often()) mh::Mem(Gfx_UploadQueueCount_addr)[0] = Byte(1 + mh::Next() % 20);
     if (mh::Half()) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables

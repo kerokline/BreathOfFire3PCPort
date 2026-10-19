@@ -21,12 +21,12 @@ constexpr std::uint32_t kFtol = 0x5B9550;           // the CRT's _ftol: pops st(
                                                     // for real on both sides, kThrough)
 
 // Data the functions read or write in place.
-constexpr std::uint32_t kStoryFlags = 0x904030;     // the story flags (Cond_Flags + 0xA0): Flags_Test's bank
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags + 0xA0): Flags_Test's bank
 constexpr std::uint32_t kCounter0 = 0x903848;       // the chapters' counter byte (scenario_harness at::kCounter)
 constexpr std::uint32_t kMessageBits = 0x7DEE44;    // a byte of the message cells (kind 0x2D's end ORs 2 into it)
-constexpr std::uint32_t kObject0Point = 0x7DEEB4;   // Sprite_Objects[0] +0x34..+0x3C: x, z, height (16.16)
-constexpr std::uint32_t kObject1Point = 0x7DEF58;   // Sprite_Objects[1] +0x34..+0x3C
-constexpr std::uint32_t kExtra0Point = 0x802034;    // Sprite_ObjectsExtra[0] +0x34..+0x3C
+// kObject0Point: now Sprite_Objects[0x34] (symbols.toml). Sprite_Objects[0] +0x34..+0x3C: x, z, height (16.16)
+// kObject1Point: now Sprite_Objects[0xd8] (symbols.toml). Sprite_Objects[1] +0x34..+0x3C
+// kExtra0Point: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra[0] +0x34..+0x3C
 constexpr std::uint32_t kBeamColours28 = 0x6542EC;  // kind 0x28's colours: three bytes (r, g, b) a +6 value, read in place
 constexpr std::uint32_t kPushCells28 = 0x654308;    // kind 0x28's eight x cells (bytes) of the row it pushes the party from
 constexpr std::uint32_t kBeamColours2A = 0x654328;  // kind 0x2A's colours, as kind 0x28's
@@ -36,19 +36,19 @@ constexpr std::uint32_t kSparkOffsetX = 0x65436C;   // kind 0x2C's eight x offse
 constexpr std::uint32_t kSparkOffsetZ = 0x65438C;   // and the eight z offsets
 constexpr rdata::Const kDropWidth{0x5C41C0};      // a float: the kind-0x2D drop quad's width
 constexpr rdata::Const kScreenScale{0x5C41D8};    // a float: kind 0x2D's start scales its screen point by it
-constexpr std::uint32_t kSegments = 0x675FE0;       // kind 0x29's five segments of 0x20: two points (x, z, height) at
+// kSegments: now Effect2a_Segments (symbols.toml). kind 0x29's five segments of 0x20: two points (x, z, height) at
                                                     // +0 and +0x10, the dwords +0xC / +0x1C never written
 constexpr std::uint32_t kSegmentStride = 0x20;
 constexpr unsigned kSegmentCount = 5;
 constexpr std::uint32_t kBoxPoints = 0x676080;      // kind 0x29's eight box corners of 0x10 (x, z, height, one unused)
 constexpr unsigned kBoxPointCount = 8;
-constexpr std::uint32_t kLinkX = 0x676100;          // kind 0x2D's link cell: the x and z MapView_LinkPrimAt sorts its
-constexpr std::uint32_t kLinkZ = 0x676104;          // primitives at (its start writes both)
+// kLinkX: now Effect2a_LinkX (symbols.toml). kind 0x2D's link cell: the x and z MapView_LinkPrimAt sorts its
+// kLinkZ: now Effect2a_LinkZ (symbols.toml). primitives at (its start writes both)
 constexpr std::uint32_t kSparkCentre = 0x92D380;    // kinds 0x2C / 0x2E: the centre (x, z, height >> 8, one more dword)
 constexpr std::uint32_t kSparkPoints = 0x92D390;    // kind 0x2C: eight ground points of 0x10 round the centre
 
 // The particle pool at EffectKind30_Shards (0x92BF80), read with three strides.
-constexpr std::uint32_t kPool = 0x92BF80;
+// kPool: now EffectKind30_Shards (symbols.toml).
 constexpr unsigned kPoolCount = 0x80;
 constexpr std::uint32_t kSpeckStride = 0x14;        // EffectSpecks_*: +0 in use, +1 a count, +2 a fall speed word,
                                                     // +4 / +8 / +0xC x, z, height
@@ -62,7 +62,7 @@ constexpr std::uint32_t kPoolEnd = 0x92D410;        // the pool (0x80 of 0x28), 
 constexpr std::uint32_t kEffectStride = 0x80;
 constexpr unsigned kEffects = 20;
 // Party objects (ObjTrio), for kind 0x2A's push.
-constexpr std::uint32_t kObjTrio = 0x802D40;
+// kObjTrio: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kObjStride = 0x14C;
 constexpr unsigned kMembers = 3;
 

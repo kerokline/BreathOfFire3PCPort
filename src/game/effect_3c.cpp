@@ -44,6 +44,7 @@
 #include "game/effect_3c_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -62,6 +63,13 @@ using RecordFn = void (__cdecl*)(unsigned char*);
 using VoidFn = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -74,9 +82,7 @@ U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n
 U Half(U v) { return Sar(v + (S32(v) < 0 ? 1u : 0u), 1); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
-const unsigned char* Story() { return At(at::kStoryFlags); }
-U Cell(U cell) { return UL(At(cell)); }
-void SetCell(U cell, U v) { SetUL(At(cell), v); }
+const unsigned char* Story() { return At(Cond_Flags_addr + 0xa0); }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
 // bits); every value goes through the FPU as Capcom's does.
@@ -239,10 +245,10 @@ extern "C" void __cdecl EffectKind6E_Start(void) {
 extern "C" void __cdecl EffectKind6E_Emit(void) {
     if ((Frame_Counter & 3u) == 0) {
         unsigned char* const r = SH_CALL(EffectKind6E_FindShard)();
-        SetCell(at::kShardCursor, AddressOf(r));
+        Effect3c_ShardCursor = AddressOf(r);
         if (r != nullptr) {
             SH_CALL(EffectKind6E_ShardInit)(r);
-            SetUL(At(Cell(at::kShardCursor)) + 0x1C, 0x200000);
+            SetUL(At(Effect3c_ShardCursor) + 0x1C, 0x200000);
         }
     }
     if (CountDown()) {
@@ -258,13 +264,13 @@ extern "C" void __cdecl EffectKind6E_Emit(void) {
 extern "C" void __cdecl EffectKind6E_EmitSlower(void) {
     if ((Frame_Counter & 3u) == 0) {
         unsigned char* const r = SH_CALL(EffectKind6E_FindShard)();
-        SetCell(at::kShardCursor, AddressOf(r));
+        Effect3c_ShardCursor = AddressOf(r);
         if (r != nullptr) {
             SH_CALL(EffectKind6E_ShardInit)(r);
             unsigned char* s = S();
             SetUL(s + 0xC, UL(s + 0xC) + 0xFFFF0000u);
             s = S();
-            SetUL(At(Cell(at::kShardCursor)) + 0x1C, UL(s + 0xC));
+            SetUL(At(Effect3c_ShardCursor) + 0x1C, UL(s + 0xC));
         }
     }
     if (CountDown()) Step(1);
@@ -284,9 +290,9 @@ extern "C" void __cdecl EffectKind6E_Fade(void) {
 // +0x34 / +0x38 / +0x3C; +0 1, +0x1C 0, +1 0, +0x24 (s16) 0x80, +3 0xC0,
 // +0x26 2, +2 0x20 (the life).
 extern "C" void __cdecl EffectKind6E_ShardInit(unsigned char* shard) {
-    SetUL(shard + 4, UL(S() + 0x34));
-    SetUL(shard + 8, UL(S() + 0x38));
-    const U y = UL(S() + 0x3C);
+    SetUL(shard + 4, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(shard + 8, static_cast<std::uint32_t>(CurFx()->z));
+    const U y = static_cast<std::uint32_t>(CurFx()->height);
     shard[0] = 1;
     SetUL(shard + 0xC, y);
     SetUL(shard + 0x1C, 0);
@@ -316,29 +322,29 @@ extern "C" unsigned char __cdecl EffectKind6E_DrawShards(void) {
     DrawMode(1, 0x3C0, 0, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     U c = Shards();
-    SetCell(at::kShardCursor, c);
+    Effect3c_ShardCursor = c;
     unsigned char any = 0;
     for (unsigned n = at::kShardCount; n != 0; --n) {
         unsigned char* const r = At(c);
         if (r[0] != 0) {
             SetUL(r + 0xC, UL(r + 0xC) + UL(r + 0x1C));
-            unsigned char* cur = At(Cell(at::kShardCursor));
+            unsigned char* cur = At(Effect3c_ShardCursor);
             SetWord(cur + 0x24, Word(cur + 0x24) + 8u);
-            cur = At(Cell(at::kShardCursor));
+            cur = At(Effect3c_ShardCursor);
             cur[3] = static_cast<unsigned char>(cur[3] + 0xFA);
-            cur = At(Cell(at::kShardCursor));
+            cur = At(Effect3c_ShardCursor);
             cur[2] = static_cast<unsigned char>(cur[2] - 1);
-            cur = At(Cell(at::kShardCursor));
+            cur = At(Effect3c_ShardCursor);
             if (cur[2] == 0) {
                 cur[0] = 0;
-                cur = At(Cell(at::kShardCursor));
+                cur = At(Effect3c_ShardCursor);
             }
             SH_AT(RecordFn, at::kShardQuad)(cur);
-            c = Cell(at::kShardCursor);
+            c = Effect3c_ShardCursor;
             any = 1;
         }
         c += at::kShardStride;
-        SetCell(at::kShardCursor, c);
+        Effect3c_ShardCursor = c;
     }
     return any;
 }
@@ -532,9 +538,9 @@ extern "C" void __cdecl EffectKind6F_AlongZ(void) {
         s = S();
         SetUL(s + 0x1C, UL(s + 0x10) + 0x20000u);
         s = S();
-        SetUL(s + 0x34, UL(s + 0xC));
+        AsFx(s)->x = UL(s + 0xC);
         s = S();
-        SetUL(s + 0x38, Half(UL(s + 0x1C) + UL(s + 0x10)));
+        AsFx(s)->z = Half(UL(s + 0x1C) + UL(s + 0x10));
         Kind6FSegments();
         s = S();
         SetUL(s + 0x10, UL(s + 0x1C));
@@ -564,9 +570,9 @@ extern "C" void __cdecl EffectKind6F_AlongX(void) {
         s = S();
         SetUL(s + 0x18, UL(s + 0xC) + 0x20000u);
         s = S();
-        SetUL(s + 0x34, Half(UL(s + 0x18) + UL(s + 0xC)));
+        AsFx(s)->x = Half(UL(s + 0x18) + UL(s + 0xC));
         s = S();
-        SetUL(s + 0x38, UL(s + 0x10));
+        AsFx(s)->z = UL(s + 0x10);
         Kind6FSegments();
         s = S();
         SetUL(s + 0xC, UL(s + 0x18));
@@ -608,23 +614,25 @@ extern "C" void __cdecl EffectKind6F_PushParty(unsigned which) {
     for (unsigned i = 0; i < 4; ++i) {
         const U cell = At(cells + i)[0];
         if (sel == 0) {
-            SetUL(S() + 0x34, 0x5C0000);
-            SetUL(S() + 0x38, cell << 16);
+            CurFx()->x = 0x5C0000;
+            Store<U>(CurFx()->z, cell << 16);
         } else {
-            SetUL(S() + 0x34, cell << 16);
-            SetUL(S() + 0x38, 0x440000);
+            Store<U>(CurFx()->x, cell << 16);
+            CurFx()->z = 0x440000;
         }
         unsigned char* const s = S();
-        const unsigned char m = SH_CALL(Party_MemberAt)(static_cast<long>(UL(s + 0x34)), static_cast<long>(UL(s + 0x38)), 0);
+        auto* const so = reinterpret_cast<records::EffectObject*>(s);
+        const unsigned char m = SH_CALL(Party_MemberAt)(so->x, so->z, 0);
         slot = (slot & 0xFFFFFF00u) | m;
         if (m == 0xFF) continue;
         if ((Field_ScriptFlags2 & 0x1400u) != 0) continue;
         if (Field_Request != 0) continue;
         unsigned char* const rec = Member(slot & 0xFFu, "EffectKind6F_PushParty");
+        auto* const reco = reinterpret_cast<records::PartyMember*>(rec);
         if (sel == 0)
-            rec[8] = S32(UL(S() + 0x34) - UL(rec + 0x34)) <= 0 ? 7 : 3;
+            rec[8] = S32(static_cast<std::uint32_t>(CurFx()->x) - static_cast<std::uint32_t>(reco->x)) <= 0 ? 7 : 3;
         else
-            rec[8] = S32(UL(S() + 0x38) - UL(rec + 0x38)) <= 0 ? 1 : 5;
+            rec[8] = S32(static_cast<std::uint32_t>(CurFx()->z) - static_cast<std::uint32_t>(reco->z)) <= 0 ? 1 : 5;
         SH_CALL(Member_SetState2_8)(slot, 2);
     }
 }
@@ -641,7 +649,7 @@ extern "C" void __cdecl EffectKind6F_PushParty(unsigned which) {
 extern "C" void __cdecl EffectKind6F_DrawSegment(const long* a, const long* b) {
     DrawMode(1, 0x3C0, 0, 1);
     unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);
@@ -652,7 +660,7 @@ extern "C" void __cdecl EffectKind6F_DrawSegment(const long* a, const long* b) {
     prim[5] = Kind6FColour(1, "EffectKind6F_DrawSegment");
     prim[6] = Kind6FColour(2, "EffectKind6F_DrawSegment");
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0x20);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x20);
     const U dx = FldSubFtol(prim + 0x14, prim + 8);
     float fx, fy;
     Fild(S32(dx), &fx);
@@ -677,7 +685,7 @@ extern "C" void __cdecl EffectKind6F_DrawSegment(const long* a, const long* b) {
                                      S32(angle + 0xC00u));
     DrawMode(1, 0x3C0, 0, 0);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0xC);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0xC);
 }
 
 // original 0x484D00 (ax, ay, wa, ta, bx, by, wb, tb - every one read as its low
@@ -718,7 +726,7 @@ extern "C" void __cdecl EffectKind6F_DrawRibbon(int ax, int ay, int wa, int ta, 
     q[0x24] = q[0x25] = q[0x26] = 0;
     q[0x34] = q[0x35] = q[0x36] = 0;
     unsigned char* s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0x44);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x44);
     unsigned char* const q2 = q + 0x44;
     std::memcpy(q2, q, 0x44);
     const U t3 = t1 + 0x800u;
@@ -727,7 +735,7 @@ extern "C" void __cdecl EffectKind6F_DrawRibbon(int ax, int ay, int wa, int ta, 
     Fild(corner(SH_CALL(Math_Cos)(static_cast<int>(t2)), r2, x1), q2 + 0x38);
     Fild(corner(SH_CALL(Math_Sin)(static_cast<int>(t2)), r2, y1), q2 + 0x3C);
     s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, 0x44);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), 1, 0x44);
 }
 
 // ===========================================================================
@@ -922,9 +930,9 @@ extern "C" void __cdecl EffectKind73B_Burst(void) {
 // +0xC its +0x34 / +0x38 / +0x3C); +0 1, +1 0, +0x14 (s16) 0x80, +3 0x40,
 // +0x16 7 (all three colour bits), +2 0x20 (the life).
 extern "C" void __cdecl EffectKind73_SparkInit(unsigned char* r) {
-    SetUL(r + 4, UL(S() + 0x34));
-    SetUL(r + 8, UL(S() + 0x38));
-    const U y = UL(S() + 0x3C);
+    SetUL(r + 4, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(r + 8, static_cast<std::uint32_t>(CurFx()->z));
+    const U y = static_cast<std::uint32_t>(CurFx()->height);
     r[0] = 1;
     SetUL(r + 0xC, y);
     r[1] = 0;
@@ -939,21 +947,21 @@ extern "C" void __cdecl EffectKind73_SparkInit(unsigned char* r) {
 // last).
 extern "C" unsigned char* __cdecl EffectKind73_FindSpark(void) {
     U p = Shards();
-    SetCell(at::kSparkCursor, p);
+    Effect3c_SparkCursor = p;
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
         if (At(p)[0] == 0) return At(p);
         p += at::kSparkStride;
-        SetCell(at::kSparkCursor, p);
+        Effect3c_SparkCursor = p;
     }
     return nullptr;
 }
 
 // original 0x485840: +0 = 0 in the 32 sparks, through the cursor.
 extern "C" void __cdecl EffectKind73_ClearSparks(void) {
-    SetCell(at::kSparkCursor, Shards());
+    Effect3c_SparkCursor = Shards();
     for (unsigned n = at::kSparkCount; n != 0; --n) {
-        At(Cell(at::kSparkCursor))[0] = 0;
-        SetCell(at::kSparkCursor, Cell(at::kSparkCursor) + at::kSparkStride);
+        At(Effect3c_SparkCursor)[0] = 0;
+        Effect3c_SparkCursor = Effect3c_SparkCursor + at::kSparkStride;
     }
 }
 
@@ -965,40 +973,40 @@ extern "C" void __cdecl EffectKind73_ClearSparks(void) {
 extern "C" unsigned char __cdecl EffectKind73_MoveSparks(void) {
     SH_CALL(EffectGte_LoadMapCamera)();
     U c = Shards();
-    SetCell(at::kSparkCursor, c);
+    Effect3c_SparkCursor = c;
     unsigned char any = 0;
     for (unsigned n = at::kSparkCount; n != 0; --n) {
         unsigned char* const r = At(c);
         if (r[0] != 0) {
             SetUL(r + 4, UL(r + 4) + 0x2000u);
             if (S()[1] == 0) {
-                unsigned char* const cur = At(Cell(at::kSparkCursor));
+                unsigned char* const cur = At(Effect3c_SparkCursor);
                 SetWord(cur + 0x14, Word(cur + 0x14) + 8u);
             } else {
-                unsigned char* cur = At(Cell(at::kSparkCursor));
+                unsigned char* cur = At(Effect3c_SparkCursor);
                 unsigned char* p = cur + 4;
                 U v = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<U>(cur[0x17]) << 8)));
                 SetUL(p, UL(p) + v);
-                cur = At(Cell(at::kSparkCursor));
+                cur = At(Effect3c_SparkCursor);
                 p = cur + 0xC;
                 v = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(static_cast<U>(cur[0x17]) << 8)));
                 SetUL(p, UL(p) + (v << 8));
             }
-            unsigned char* cur = At(Cell(at::kSparkCursor));
+            unsigned char* cur = At(Effect3c_SparkCursor);
             cur[3] = static_cast<unsigned char>(cur[3] + 0xFE);
-            cur = At(Cell(at::kSparkCursor));
+            cur = At(Effect3c_SparkCursor);
             cur[2] = static_cast<unsigned char>(cur[2] - 1);
-            cur = At(Cell(at::kSparkCursor));
+            cur = At(Effect3c_SparkCursor);
             if (cur[2] == 0) {
                 cur[0] = 0;
-                cur = At(Cell(at::kSparkCursor));
+                cur = At(Effect3c_SparkCursor);
             }
             SH_CALL(EffectKind73_DrawSpark)(cur);
-            c = Cell(at::kSparkCursor);
+            c = Effect3c_SparkCursor;
             any = 1;
         }
         c += at::kSparkStride;
-        SetCell(at::kSparkCursor, c);
+        Effect3c_SparkCursor = c;
     }
     return any;
 }
@@ -1074,11 +1082,11 @@ extern "C" void __cdecl EffectKind74_Run(void) {
 // +0x20 (s16) 0, its width +0x24 0x1000000; +9 = 0x40, +1 up, sound 0x207.
 extern "C" void __cdecl EffectKind74_Start(void) {
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0x34));
+    SetUL(s + 0xC, static_cast<std::uint32_t>(AsFx(s)->x));
     s = S();
-    SetUL(s + 0x10, UL(s + 0x38));
+    SetUL(s + 0x10, static_cast<std::uint32_t>(AsFx(s)->z));
     s = S();
-    SetUL(s + 0x14, UL(s + 0x3C));
+    SetUL(s + 0x14, static_cast<std::uint32_t>(AsFx(s)->height));
     s = S();
     SetUL(s + 0x1C, UL(s + 0x14));
     SetWord(S() + 0x20, 0);

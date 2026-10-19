@@ -10,12 +10,19 @@
 #include "game/band_census.h"
 #include "game/layering.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
 
 using namespace move_script;
+
+// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// record or another family whose first 0x80 bytes are a sprite object's (an
+// ObjTrio member, the kind-2 object), so only that part is named.
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -55,7 +62,7 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
     if (n >= 30) return;
     Sprite_OverlayListCount = static_cast<unsigned char>(n + 1);
     Sprite_OverlayList[n] = Sprite_Current;
-    if (Sprite_Current[0] & 8) g.dropped(0);
+    if (Cur()->flags & 8) g.dropped(0);
 }
 
 // original 0x588F20: Sprite_Current's draw key, screen position and depth,
@@ -67,46 +74,46 @@ extern "C" void __cdecl Sprite_QueueOverlay(void) {
 // truncated as the CRT's _ftol does (see Ftol16); the PSX's call for a sprite
 // with flag bit 8 is Port_DroppedCall, a bare ret, on the PC.
 extern "C" void __cdecl Sprite_UpdateScreen(void) {
-    unsigned char* sprite = Sprite_Current;
-    if (sprite[0x24] & 0x80) {
+    records::SpriteObject* sprite = Cur();
+    if (sprite->draw_flags & 0x80) {
         g.overlay();
         return;
     }
-    const unsigned x_whole = Word(sprite + 0x34) == 0, z_whole = Word(sprite + 0x38) == 0;
-    const signed char adjust = Sprite_KeyAdjust[sprite[0x2B] * 3u + x_whole + z_whole];
-    const auto key = static_cast<std::uint16_t>(adjust - x_whole - z_whole + Word(sprite + 0x3A) + Word(sprite + 0x36) -
+    const unsigned x_whole = Word(Bytes(sprite) + 0x34) == 0, z_whole = Word(Bytes(sprite) + 0x38) == 0;
+    const signed char adjust = Sprite_KeyAdjust[sprite->key_class * 3u + x_whole + z_whole];
+    const auto key = static_cast<std::uint16_t>(adjust - x_whole - z_whole + Word(Bytes(sprite) + 0x3A) + Word(Bytes(sprite) + 0x36) -
                                                 static_cast<std::uint16_t>(MapView_Origin[1]) -
                                                 static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
-    SetWord(sprite + 0x32, key);
-    sprite = Sprite_Current;
-    const auto layer = static_cast<std::int16_t>(Word(sprite + 0x32));
+    sprite->draw_key = key;
+    sprite = Cur();
+    const auto layer = static_cast<std::int16_t>(sprite->draw_key);
     if (layer < 0 || layer > 0x36) {   // off the map's layers: hidden
-        sprite[0] |= 0x80;
+        sprite->flags |= 0x80;
         return;
     }
     // DIV-0071's comparison mode (BOF3X_LAYERING=2, off during every fuzz): the key one layer later.
     const int later = layering::g_mode == layering::kLayerLater && Draw_OtSlot == 6 && layer < 0x36;
-    SetWord(sprite + 0x32, static_cast<unsigned>((layer + later) & 0xFF) << 8);
+    sprite->draw_key = static_cast<unsigned>((layer + later) & 0xFF) << 8;
     unsigned low;
     if (Draw_OtSlot == 4) {
-        sprite = Sprite_Current;
-        low = static_cast<unsigned>(Long(sprite + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
+        sprite = Cur();
+        low = static_cast<unsigned>(Long(Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
     } else {
-        sprite = Sprite_Current;
-        low = ((Word(sprite + 0x3E) ^ 0xF01Fu) >> 5) & 0xFF;
+        sprite = Cur();
+        low = ((Word(Bytes(sprite) + 0x3E) ^ 0xF01Fu) >> 5) & 0xFF;
     }
-    SetWord(sprite + 0x32, Word(sprite + 0x32) | low);
+    sprite->draw_key = sprite->draw_key | low;
     g.inherit_key();
 
-    sprite = Sprite_Current;
+    sprite = Cur();
     short vertex[4];
-    vertex[0] = static_cast<short>((Long(sprite + 0x34) >> 9) - 0x4000);
-    vertex[1] = static_cast<short>((Long(sprite + 0x38) >> 9) - 0x4000);
-    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(sprite + 0x3E)) / 2));
+    vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
+    vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
+    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(Bytes(sprite) + 0x3E)) / 2));
     unsigned long screen[2];
     long depth_cue;
     const long depth = g.project(vertex, screen, &depth_cue);
-    SetLong(Sprite_Current + 0x60, depth);
+    Cur()->depth = depth;
     SetLong(Sprite_Current + 0x74, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
     SetWord(Sprite_Current + 0x2E, Ftol16(static_cast<std::uint32_t>(screen[0])));
     SetLong(Sprite_Current + 0x78, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));

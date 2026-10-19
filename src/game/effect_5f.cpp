@@ -42,6 +42,7 @@
 #include "game/draw_pool.h"
 #include "game/effect_5f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -57,6 +58,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -146,8 +148,8 @@ void Closed() {
 // local, which Gte_RotTransPers4 does not read).
 void Project(unsigned char* p) {
     long depth;
-    SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(Vertex(at::kV0)), reinterpret_cast<const short*>(Vertex(at::kV1)),
-                               reinterpret_cast<const short*>(Vertex(at::kV2)), reinterpret_cast<const short*>(Vertex(at::kV3)),
+    SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr)), reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr + 0x8)),
+                               reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr + 0x10)), reinterpret_cast<const short*>(Vertex(Prim_VertexScratch_addr + 0x18)),
                                reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                reinterpret_cast<float*>(p + 0x28), reinterpret_cast<float*>(p + 0x38), &depth);
     SH_CALL(Gte_PrimDepths4_10)(p);
@@ -161,38 +163,38 @@ U GroundOf(U word) { return static_cast<U>(S16(word) + 0x4000) << 9; }
 // point read after the second call: v0 and v1 `low` less half the ground's
 // height, v2 and v3 `high` less it (sub-kinds 0x27 and 0x28: 0x40 and 0x180).
 void GroundFixed(U low, U high) {
-    unsigned char* const v0 = Vertex(at::kV0);
-    unsigned char* const v1 = Vertex(at::kV1);
+    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
+    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
     U gx = GroundOf(Word(v0)), gz = GroundOf(Word(v0 + 2));
     long e = Elevation(gx, gz);
     SetWord(v0 + 4, low - Half(e));
     e = Elevation(gx, gz);
     gz = GroundOf(Word(v1 + 2));
     gx = GroundOf(Word(v1));
-    SetWord(Vertex(at::kV2) + 4, high - Half(e));
+    Prim_VertexScratch[0xa] = high - Half(e);
     e = Elevation(gx, gz);
     SetWord(v1 + 4, low - Half(e));
     e = Elevation(gx, gz);
-    SetWord(Vertex(at::kV3) + 4, high - Half(e));
+    Prim_VertexScratch[0xe] = high - Half(e);
 }
 
 // The same for the lifted panels (sub-kinds 0x29 and 0x2A): every height less
 // half the ground's and less +0x3E (Sprite_Current read after each call), v0
 // and v1 0x180 lower.
 void GroundLifted() {
-    unsigned char* const v0 = Vertex(at::kV0);
-    unsigned char* const v1 = Vertex(at::kV1);
+    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
+    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
     U gz = GroundOf(Word(v0 + 2)), gx = GroundOf(Word(v0));
     long e = Elevation(gx, gz);
     SetWord(v0 + 4, 0u - Half(e) - Word(S() + 0x3E) - 0x180u);
     e = Elevation(gx, gz);
     gz = GroundOf(Word(v1 + 2));
     gx = GroundOf(Word(v1));
-    SetWord(Vertex(at::kV2) + 4, 0u - Half(e) - Word(S() + 0x3E));
+    Prim_VertexScratch[0xa] = 0u - Half(e) - Word(S() + 0x3E);
     e = Elevation(gx, gz);
     SetWord(v1 + 4, 0u - Half(e) - Word(S() + 0x3E) - 0x180u);
     e = Elevation(gx, gz);
-    SetWord(Vertex(at::kV3) + 4, 0u - Half(e) - Word(S() + 0x3E));
+    Prim_VertexScratch[0xe] = 0u - Half(e) - Word(S() + 0x3E);
 }
 
 // Gpu_SetDrawMode(cursor, 0, 0, 0x95, 0): every draw here opens with it.
@@ -206,16 +208,17 @@ unsigned char* Quad() {
 }
 void LinkAtRecord(int dy, unsigned size) {
     unsigned char* const s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), dy, size);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), dy, size);
 }
 
 // The panel's four corners on the axis +8 does not pick: c = (w << 7) - 0x3FC0
 // of the record's other cell word, into the four vertices' word `off`.
 void Across(unsigned off, U c) {
-    SetWord(Vertex(at::kV3) + off, c);
-    SetWord(Vertex(at::kV2) + off, c);
-    SetWord(Vertex(at::kV1) + off, c);
-    SetWord(Vertex(at::kV0) + off, c);
+    SetWord(Vertex(Prim_VertexScratch_addr + 0x18) + off, c);
+    SetWord(Vertex(Prim_VertexScratch_addr + 0x10) + off, c);
+    SetWord(Vertex(Prim_VertexScratch_addr + 0x8) + off, c);
+    SetWord(Vertex(Prim_VertexScratch_addr) + off, c);
 }
 
 }  // namespace
@@ -242,19 +245,19 @@ extern "C" void __cdecl EffectKind18Sub27_Draw(void) {
     if (s[8] != 0) {
         Across(2, (Word(s + 0x3A) << 7) - 0x3FC0u);
         const U a = (Word(s + 0x36) << 7) - Word(s + 0x30) - 0x3F40u;
-        SetWord(Vertex(at::kV2), a);
-        SetWord(Vertex(at::kV0), a);
+        Prim_VertexScratch[8] = a;
+        Prim_VertexScratch[0] = a;
         const U b = (Word(s + 0x36) << 7) - Word(s + 0x30) - 0x4040u;
-        SetWord(Vertex(at::kV3), b);
-        SetWord(Vertex(at::kV1), b);
+        Prim_VertexScratch[0xc] = b;
+        Prim_VertexScratch[4] = b;
     } else {
         Across(0, (Word(s + 0x36) << 7) - 0x3FC0u);
         const U a = (Word(s + 0x3A) << 7) + Word(s + 0x30) - 0x3F40u;
-        SetWord(Vertex(at::kV2) + 2, a);
-        SetWord(Vertex(at::kV0) + 2, a);
+        Prim_VertexScratch[9] = a;
+        Prim_VertexScratch[1] = a;
         const U b = (Word(s + 0x3A) << 7) + Word(s + 0x30) - 0x4040u;
-        SetWord(Vertex(at::kV3) + 2, b);
-        SetWord(Vertex(at::kV1) + 2, b);
+        Prim_VertexScratch[0xd] = b;
+        Prim_VertexScratch[5] = b;
     }
     GroundFixed(0x40, 0x180);
     Project(p);
@@ -334,11 +337,11 @@ extern "C" void __cdecl EffectKind18Sub28_Draw(void) {
     unsigned char* const s = S();
     Across(0, (Word(s + 0x36) << 7) - 0x3FC0u);
     const U a = (Word(s + 0x3A) << 7) + Word(s + 0x30) - 0x3F40u;
-    SetWord(Vertex(at::kV2) + 2, a);
-    SetWord(Vertex(at::kV0) + 2, a);
+    Prim_VertexScratch[9] = a;
+    Prim_VertexScratch[1] = a;
     const U b = (Word(s + 0x3A) << 7) + Word(s + 0x30) - 0x4040u;
-    SetWord(Vertex(at::kV3) + 2, b);
-    SetWord(Vertex(at::kV1) + 2, b);
+    Prim_VertexScratch[0xd] = b;
+    Prim_VertexScratch[5] = b;
     GroundFixed(0x40, 0x180);
     Project(p);
     SH_CALL(Prim_SetTexture)(0x1780119, p, 1);
@@ -352,7 +355,7 @@ extern "C" void __cdecl EffectKind18Sub28_Start(void) {
     SetWord(S() + 0x3E, 0xFA40);
     SetWord(S() + 0x30, 0);
     ++S()[2];
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x54);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x54);
     if (set == 0) {
         S()[2] = 5;
         SH_CALL(EffectKind18Sub28_Draw)();
@@ -398,7 +401,7 @@ extern "C" void __cdecl EffectKind18Sub28_Close(void) {
 // original 0x5094A0 (state 5): story flag 0x54 set: the sound 0x200 unless
 // Field_Request, +2 = 2. The draw.
 extern "C" void __cdecl EffectKind18Sub28_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x54) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x54) != 0) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x200);
         S()[2] = 2;
     }
@@ -444,7 +447,7 @@ extern "C" void __cdecl EffectKind18Sub42_Draw(unsigned variant, int height) {
         U point = at::kSub42Shapes + 12 * shape;
         for (unsigned j = 0; j < 4; ++j, point += 3) {
             s = S();
-            unsigned char* const v = Vertex(at::kV0 + 8 * j);
+            unsigned char* const v = Vertex(Prim_VertexScratch_addr + 8 * j);
             SetWord(v, ((static_cast<U>(S8(B(point))) + dx + Word(s + 0x36)) << 7) - 0x4040u);
             SetWord(v + 2, ((static_cast<U>(S8(B(point + 1))) + Word(s + 0x3A) + dz) << 7) - 0x4040u);
             SetWord(v + 4, (static_cast<U>(S8(B(point + 2))) << 7) - static_cast<U>(height) + lift);
@@ -474,12 +477,13 @@ extern "C" unsigned char __cdecl EffectKind18Sub42_MemberNear(long x, long z) {
                         "original reads what follows them (docs/effect_5f.md section 6)",
                         (unsigned)count);
         const unsigned char* const o = ObjTrio + at::kObjTrioStride * i;
+        auto* const oo = reinterpret_cast<const records::PartyMember*>(o);
         if (o[0] == 0) continue;
         const U t = o[9];
         const std::int32_t reach = static_cast<std::int32_t>((static_cast<U>(o[0x70]) + 3) << 15);
-        const U px = UL(o + 0xC) * t + UL(o + 0x34);
+        const U px = static_cast<std::uint32_t>(oo->step_x) * t + static_cast<std::uint32_t>(oo->x);
         if (Abs(px - static_cast<U>(x)) >= reach) continue;
-        const U pz = UL(o + 0x10) * t + UL(o + 0x38);
+        const U pz = static_cast<std::uint32_t>(oo->step_z) * t + static_cast<std::uint32_t>(oo->z);
         if (Abs(pz - static_cast<U>(z)) < reach) return static_cast<unsigned char>(i);
     }
     return 0xFF;
@@ -512,11 +516,11 @@ extern "C" void __cdecl EffectKind18Sub42_Start(void) {
 // draw. Otherwise nothing, not even the draw.
 extern "C" void __cdecl EffectKind18Sub42_WaitFlag(void) {
     unsigned char* s = S();
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kStoryFlags), s[0xB]);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), s[0xB]);
     s = S();
     if (static_cast<unsigned char>(set ^ s[8]) == 0) return;
-    const unsigned char who = SH_CALL(EffectKind18Sub42_MemberNear)(static_cast<long>(UL(s + 0x34) | 0x8000u),
-                                                                    static_cast<long>(UL(s + 0x38) | 0x8000u));
+    const unsigned char who = SH_CALL(EffectKind18Sub42_MemberNear)(static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->x) | 0x8000u),
+                                                                    static_cast<long>(static_cast<std::uint32_t>(AsFx(s)->z) | 0x8000u));
     if (static_cast<signed char>(who) >= 0) return;
     s = S();
     SH_CALL(MoveCmd_TestFB)(static_cast<short>(Word(s + 0x36) + 1), static_cast<short>(Word(s + 0x3A) + 1));
@@ -555,10 +559,10 @@ extern "C" void __cdecl EffectKind18Sub42_Mark(void) {
         const U flat = b == 0 ? 1u : 0u;
         const U x = static_cast<U>(S16(Word(s + 0x36))) + b + flat * i;
         const U z = static_cast<U>(S16(Word(s + 0x3A))) + flat + b * i;
-        const U width = B(at::kMapWidth);
+        const U width = AreaMap_Header[0];
         const U cell = x + width * z + W(at::kMapCellBase) * 2;
         const U word = Word(AreaMap_Header + cell * 2);
-        const U half = static_cast<U>(static_cast<std::int32_t>(B(at::kMapDepth) * width + 1) / 2);
+        const U half = static_cast<U>(static_cast<std::int32_t>(static_cast<std::uint32_t>(AreaMap_Header[1]) * width + 1) / 2);
         const U texture = at::kMapTextures + 4 * (half + W(at::kMapCellBase) + word);
         const U item = static_cast<U>(SH_CALL(MapView_ItemAt)(static_cast<long>(x), static_cast<long>(z)));
         s = S();
@@ -589,7 +593,7 @@ extern "C" void __cdecl EffectKind18Sub42_Mark(void) {
 // Otherwise nothing.
 extern "C" void __cdecl EffectKind18Sub42_WaitFlagBack(void) {
     unsigned char* s = S();
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kStoryFlags), s[0xB]);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), s[0xB]);
     s = S();
     const U clear = set == 0 ? 1u : 0u;
     if (clear == s[8]) return;
@@ -645,18 +649,18 @@ extern "C" void __cdecl EffectKind18Sub29_Draw(void) {
         const U d = static_cast<U>(S8(B(at::kSub29Slide + k)));
         if (s[8] != 0) {
             const U a = ((k + Word(s + 0x36)) << 7) - Word(s + 0x30) * d - 0x4040u;
-            SetWord(Vertex(at::kV2), a);
-            SetWord(Vertex(at::kV0), a);
+            Prim_VertexScratch[8] = a;
+            Prim_VertexScratch[0] = a;
             const U b = ((k + Word(s + 0x36)) << 7) - Word(s + 0x30) * d - 0x3FC0u;
-            SetWord(Vertex(at::kV3), b);
-            SetWord(Vertex(at::kV1), b);
+            Prim_VertexScratch[0xc] = b;
+            Prim_VertexScratch[4] = b;
         } else {
             const U a = ((Word(s + 0x3A) - k) << 7) + Word(s + 0x30) * d - 0x3F40u;
-            SetWord(Vertex(at::kV2) + 2, a);
-            SetWord(Vertex(at::kV0) + 2, a);
+            Prim_VertexScratch[9] = a;
+            Prim_VertexScratch[1] = a;
             const U b = ((Word(s + 0x3A) - k) << 7) + Word(s + 0x30) * d - 0x3FC0u;
-            SetWord(Vertex(at::kV3) + 2, b);
-            SetWord(Vertex(at::kV1) + 2, b);
+            Prim_VertexScratch[0xd] = b;
+            Prim_VertexScratch[5] = b;
         }
         GroundLifted();
         Project(p);
@@ -678,7 +682,7 @@ void Start29(const char* who) {
     SetWord(s + 0x36, B(at::kSub29Cell + 2 * i));
     SetWord(s + 0x3A, B(at::kSub29Cell + 2 * i + 1));
     s = S();
-    const long e = Elevation(UL(s + 0x34), UL(s + 0x38));
+    const long e = Elevation(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z));
     s = S();
     SetWord(s + 0x3E, 0u - Half(e) - W(at::kSub29Height + 2 * i));
     SetUL(s + 0x20, UL(at::kSub29Texture + 4 * i));
@@ -764,7 +768,7 @@ extern "C" void __cdecl EffectKind18Sub49_WaitCue(void) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x200);
         ++S()[2];
     }
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x8F) != 0) StepIfNear(false);
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x8F) != 0) StepIfNear(false);
     SH_CALL(EffectKind18Sub29_Draw)();
 }
 
@@ -813,19 +817,19 @@ extern "C" void __cdecl EffectKind18Sub4B_Run(void) {
         ++s[2];
     }
     if ((Draw_PassFlags & 4) == 0) return;
-    SetUL(s + 0x38, UL(s + 0x38) + UL(s + 0x10));
+    AsFx(s)->z = static_cast<std::uint32_t>(AsFx(s)->z) + UL(s + 0x10);
     if (S16(Word(s + 0x3A)) > S16(Word(s + 0x30))) SetWord(s + 0x3A, Word(s + 0x2E));
     const U pulse = Frame_Counter & 0x1F;
-    const U z0 = static_cast<U>(static_cast<std::int32_t>(UL(s + 0x38)) >> 9) - 0x3FC0u;
+    const U z0 = static_cast<U>(AsFx(s)->z >> 9) - 0x3FC0u;
     const U b = static_cast<U>(Abs(0xFu - pulse)) + ((2u - v) << 8);
-    const U x0 = static_cast<U>(static_cast<std::int32_t>(UL(s + 0x34)) >> 9) - 0x4EC0u;
+    const U x0 = static_cast<U>(AsFx(s)->x >> 9) - 0x4EC0u;
     DrawMode();
     SH_CALL(Gfx_CommitPrim)(6, 0xC);
     const U texture = v | 0xBB509100u;
-    unsigned char* const v0 = Vertex(at::kV0);
-    unsigned char* const v1 = Vertex(at::kV1);
-    unsigned char* const v2 = Vertex(at::kV2);
-    unsigned char* const v3 = Vertex(at::kV3);
+    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
+    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
+    unsigned char* const v2 = Vertex(Prim_VertexScratch_addr + 0x10);
+    unsigned char* const v3 = Vertex(Prim_VertexScratch_addr + 0x18);
     for (U k = 0; k < 3; ++k) {
         unsigned char* const p = Quad();
         const U a = k * 0xA00, c = k * 0x180;
@@ -876,18 +880,18 @@ extern "C" void __cdecl EffectKind18Sub2A_Draw(void) {
         const U d = static_cast<U>(S8(B(at::kSub2ASlide + k)));
         if (s[8] != 0) {
             const U a = Word(s + 0x30) * d + (Word(s + 0x36) << 7) - 0x3F40u;
-            SetWord(Vertex(at::kV2), a);
-            SetWord(Vertex(at::kV0), a);
+            Prim_VertexScratch[8] = a;
+            Prim_VertexScratch[0] = a;
             const U b = Word(s + 0x30) * d + (Word(s + 0x36) << 7) - 0x4040u;
-            SetWord(Vertex(at::kV3), b);
-            SetWord(Vertex(at::kV1), b);
+            Prim_VertexScratch[0xc] = b;
+            Prim_VertexScratch[4] = b;
         } else {
             const U a = Word(s + 0x30) * d + (Word(s + 0x3A) << 7) - 0x3F40u;
-            SetWord(Vertex(at::kV2) + 2, a);
-            SetWord(Vertex(at::kV0) + 2, a);
+            Prim_VertexScratch[9] = a;
+            Prim_VertexScratch[1] = a;
             const U b = Word(s + 0x30) * d + (Word(s + 0x3A) << 7) - 0x4040u;
-            SetWord(Vertex(at::kV3) + 2, b);
-            SetWord(Vertex(at::kV1) + 2, b);
+            Prim_VertexScratch[0xd] = b;
+            Prim_VertexScratch[5] = b;
         }
         GroundLifted();
         Project(p);
@@ -908,7 +912,7 @@ extern "C" void __cdecl EffectKind18Sub2A_Start(void) {
     SetWord(s + 0x36, B(at::kSub2ACell + 2 * i));
     SetWord(s + 0x3A, B(at::kSub2ACell + 2 * i + 1));
     s = S();
-    const long e = Elevation(UL(s + 0x34), UL(s + 0x38));
+    const long e = Elevation(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z));
     s = S();
     SetWord(s + 0x3E, 0u - Half(e) - W(at::kSub2AHeight + 2 * i));
     SetWord(s + 0x30, 0);
@@ -963,10 +967,10 @@ extern "C" void __cdecl EffectKind18Sub3C_Run(void) {
 // of 0x65E9E4; each linked at the point with 0x48 bytes.
 extern "C" void __cdecl EffectKind18Sub3C_Draw(int edge) {
     unsigned char* s = S();
-    unsigned char* const v0 = Vertex(at::kV0);
-    unsigned char* const v1 = Vertex(at::kV1);
-    unsigned char* const v2 = Vertex(at::kV2);
-    unsigned char* const v3 = Vertex(at::kV3);
+    unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
+    unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
+    unsigned char* const v2 = Vertex(Prim_VertexScratch_addr + 0x10);
+    unsigned char* const v3 = Vertex(Prim_VertexScratch_addr + 0x18);
     SetWord(v2, Word(s + 0x30) - 0x3BC0u);
     SetWord(v0, Word(s + 0x30) - 0x3BC0u);
     SetWord(v3, Word(s + 0x30) - 0x3AC0u);
@@ -1016,7 +1020,7 @@ extern "C" void __cdecl EffectKind18Sub3C_Start(void) {
 // original 0x50ACF0 (state 1): story flag 0x67 set: the sound 0x200 unless
 // Field_Request, +2 up; the draw on the ground.
 extern "C" void __cdecl EffectKind18Sub3C_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x67) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x67) != 0) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x200);
         ++S()[2];
     }

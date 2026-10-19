@@ -20,39 +20,39 @@ constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;        // (long): a
 
 // The pools. EffectKind30_Shards 0x92BF80 is shared by every kind that keeps
 // parts: each of this group's kinds lays its own records over it.
-constexpr std::uint32_t kPool = 0x92BF80;          // EffectKind30_Shards
-constexpr std::uint32_t kTrails = 0x92BF80;        // kind 0x2F: three trail records of 0x198 - the head (+0 x, +4 z,
+// kPool: now EffectKind30_Shards (symbols.toml). EffectKind30_Shards
+// kTrails: now EffectKind30_Shards (symbols.toml). kind 0x2F: three trail records of 0x198 - the head (+0 x, +4 z,
 constexpr std::uint32_t kTrailStride = 0x198;      // +8 height, +0x10 radius, +0x14 an angle word) and 32 projected
 constexpr std::uint32_t kTrailCount = 3;           // points of three floats from +0x18
-constexpr std::uint32_t kShards35 = 0x92BF80;      // kind 0x35: sixteen shards of 0x28 (kind 0x1E's shape)
+// kShards35: now EffectKind30_Shards (symbols.toml). kind 0x35: sixteen shards of 0x28 (kind 0x1E's shape)
 constexpr std::uint32_t kShard35Count = 16;
-constexpr std::uint32_t kPieces35 = 0x92C200;      // kind 0x35: 55 piece records of 0x18 (the centre, its direction,
+// kPieces35: now EffectKind30_Shards[0x280] (symbols.toml). kind 0x35: 55 piece records of 0x18 (the centre, its direction,
 constexpr std::uint32_t kPiece35Count = 55;        // the velocity), after the shards
 constexpr std::uint32_t kCopies35 = 0x92C728;      // kind 0x35: 55 face copies of 0x28, after the pieces, to 0x92CFC0
 constexpr std::uint32_t kPool35End = 0x92CFC0;
-constexpr std::uint32_t kSpirals = 0x92BF80;       // kind 0x3B: three spiral records of 0x4BC (+0 x, +4 z, +8 height,
+// kSpirals: now EffectKind30_Shards (symbols.toml). kind 0x3B: three spiral records of 0x4BC (+0 x, +4 z, +8 height,
 constexpr std::uint32_t kSpiralStride = 0x4BC;     // +0x10 angle, +0x12 radius, +0x14 shade - words), to 0x92CDB4
 constexpr std::uint32_t kSpiralCount = 3;
-constexpr std::uint32_t kRings = 0x92BF80;         // kind 0x3D: sixteen ring records of 0x18 (+0 x, +4 z, +8 height,
+// kRings: now EffectKind30_Shards (symbols.toml). kind 0x3D: sixteen ring records of 0x18 (+0 x, +4 z, +8 height,
 constexpr std::uint32_t kRingStride = 0x18;        // +0x10 width, +0x12 half-thickness - words -, +0x14 in use, +0x15
 constexpr std::uint32_t kRingCount = 16;           // state, +0x16 count, +0x17 shade)
 
 // Cells.
-constexpr std::uint32_t kExtra1Use = 0x8020A4;     // Sprite_ObjectsExtra[1] +0: kind 0x35's model record in use
-constexpr std::uint32_t kExtra1Model = 0x8020F4;   // Sprite_ObjectsExtra[1] +0x50: kind 0x35's model (55 faces of 0x28)
-constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio +0x34: the leader's x, z, height (kind 0x3D's glow and rings)
+// kExtra1Use: now Sprite_ObjectsExtra[0xa4] (symbols.toml). Sprite_ObjectsExtra[1] +0: kind 0x35's model record in use
+// kExtra1Model: now Sprite_ObjectsExtra[0xf4] (symbols.toml). Sprite_ObjectsExtra[1] +0x50: kind 0x35's model (55 faces of 0x28)
+// kLeaderPoint: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34: the leader's x, z, height (kind 0x3D's glow and rings)
 
 // The state tables (named in symbols.toml; the fuzz lists them by address).
-constexpr std::uint32_t kKind2FStates = 0x6543D8;   // EffectKind2F_States, 2 (then kind 0x33's)
-constexpr std::uint32_t kKind33States = 0x6543E0;   // EffectKind33_States, 4 (then EffectKind33_SignX)
+// kKind2FStates: now EffectKind2F_States (symbols.toml). EffectKind2F_States, 2 (then kind 0x33's)
+// kKind33States: now EffectKind33_States (symbols.toml). EffectKind33_States, 4 (then EffectKind33_SignX)
 constexpr std::uint32_t kKind33SignX = 0x6543F0;    // EffectKind33_SignX: four longs, 1 / -1
 constexpr std::uint32_t kKind33SignZ = 0x654400;    // EffectKind33_SignZ: four longs, 1 / -1
-constexpr std::uint32_t kKind35States = 0x654410;   // EffectKind35_States, 3 (then the shard states)
-constexpr std::uint32_t kKind35ShardStates = 0x65441C;   // EffectKind35_ShardStates, 2, by a shard's +1
-constexpr std::uint32_t kKind38States = 0x654424;   // EffectKind38_States, 5
-constexpr std::uint32_t kKind39States = 0x654438;   // EffectKind39_States, 4
-constexpr std::uint32_t kKind3BStates = 0x654448;   // EffectKind3B_States, 4
-constexpr std::uint32_t kKind3DStates = 0x654458;   // EffectKind3D_States, 4 (then kind 0x3E's, 0x654468)
-constexpr std::uint32_t kShardCursor35 = 0x676108;  // EffectKind35_ShardCursor
+// kKind35States: now EffectKind35_States (symbols.toml). EffectKind35_States, 3 (then the shard states)
+// kKind35ShardStates: now EffectKind35_ShardStates (symbols.toml). EffectKind35_ShardStates, 2, by a shard's +1
+// kKind38States: now EffectKind38_States (symbols.toml). EffectKind38_States, 5
+// kKind39States: now EffectKind39_States (symbols.toml). EffectKind39_States, 4
+// kKind3BStates: now EffectKind3B_States (symbols.toml). EffectKind3B_States, 4
+// kKind3DStates: now EffectKind3D_States (symbols.toml). EffectKind3D_States, 4 (then kind 0x3E's, 0x654468)
+// kShardCursor35: now EffectKind35_ShardCursor (symbols.toml). EffectKind35_ShardCursor
 
 }  // namespace effect_2b::at

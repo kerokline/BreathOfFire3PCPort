@@ -98,7 +98,7 @@ unsigned char Byte(std::initializer_list<U> often) {
     const U* v = often.begin();
     return static_cast<unsigned char>(v[bh::Next() % often.size()]);
 }
-unsigned char* Owner() { return bh::Pointer(at::kOwner); }
+unsigned char* Owner() { return bh::Pointer(BattleE2_Owner_addr); }
 
 // The words: an enemy hook's 0..2 (the three callers') with garbage above the
 // byte half the time - the hook tables index by the low byte and hand the
@@ -110,7 +110,7 @@ void Args(unsigned k, U* a) {
 // The end hooks: the win bit (and garbage), each member's +0 bit 0 two times
 // in three, its +8 where the byte add wraps.
 void SeedEnd() {
-    B(at::kBattleEnd) = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
+    B(BattleActions_BattleEnd_addr) = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = bh::PartyOf(static_cast<unsigned char>(m));
         p[0] = static_cast<unsigned char>(bh::Often() ? p[0] | 1 : p[0] & ~1u);
@@ -163,7 +163,7 @@ void SeedTask(unsigned k) {
     // the four slots the harness picks a task among (Sprite_Current is one of
     // them, and the owner may be another or the same: its state bytes last)
     for (unsigned t = 0; t < 4; ++t) bh::TaskAt(t)[1] = static_cast<unsigned char>(bh::Next() % 7);
-    SetWord(Mem(at::kPoseIndex), static_cast<unsigned>(bh::Often() ? BH_PICK(0, 9, 7, 8, 1, 2, 4, 5) : bh::Next() % 10));
+    SetWord(Mem(BossSa_EndCount_addr), static_cast<unsigned>(bh::Often() ? BH_PICK(0, 9, 7, 8, 1, 2, 4, 5) : bh::Next() % 10));
     unsigned char* const o = Owner();
     o[0xB] = static_cast<unsigned char>(bh::Half() ? 0 : Byte({1, 0x80, 0xFF}));
     o[1] = static_cast<unsigned char>(bh::Often() ? 2 : bh::Next() % 7);
@@ -192,7 +192,7 @@ void DisturbTask(U h) {
     // Sprite_Current among, and BossMyriaFx_Follow indexes by +1 after a call
     case 0: Owner()[1] = static_cast<unsigned char>(v & 1 ? 2 : (v >> 1) % 7); break;
     case 1: Owner()[0xB] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 2: SetWord(Mem(at::kPoseIndex), v % 10); break;
+    case 2: SetWord(Mem(BossSa_EndCount_addr), v % 10); break;
     default: B(at::kFlags) = static_cast<unsigned char>(B(at::kFlags) ^ 4); break;
     }
 }

@@ -47,7 +47,7 @@ bh::Clone Row(const char* name, U base, U size, const bh::CallSite* calls, int n
 
 // The cells outside the standard regions the group's functions write.
 const bh::Region kRegions[] = {
-    {at::kLeaderPick, 1}, {at::kScriptVar3, 1}, {at::kWindow4Flag, 1}, {at::kDrawPassFlags, 1}, {at::kMusicTrack, 1},
+    {BossH_LeaderPick_addr, 1}, {at::kScriptVar3, 1}, {at::kWindow4Flag, 1}, {Draw_PassFlags_addr, 1}, {Music_Track_addr, 1},
 };
 
 // ===========================================================================
@@ -58,7 +58,7 @@ unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 
 // The battle-end byte: its bits 0, 1, 2 and 3 each way.
 void SeedBattleEnd() {
-    Mem(at::kBattleEnd)[0] = Byte(bh::Often() ? BH_PICK(0, 1, 2, 3, 4, 5, 8, 9, 0xFC, 0xFD, 0xFE, 0xFF) : bh::Next());
+    Mem(BattleActions_BattleEnd_addr)[0] = Byte(bh::Often() ? BH_PICK(0, 1, 2, 3, 4, 5, 8, 9, 0xFC, 0xFD, 0xFE, 0xFF) : bh::Next());
 }
 
 // The event hooks' reads: the actor, the command kind, the command's id (the
@@ -69,14 +69,14 @@ void SeedEvent() {
     Mem(at::kActor)[0] = Byte(bh::Often() ? 0 : BH_PICK(1, 2, 3, 0x80, 0x100));
     Mem(at::kCommandKind)[0] = Byte(bh::Often() ? 4 : BH_PICK(3, 5, 0x84, 0, 0x44));
     unsigned char* const command = bh::SpriteRecord(bh::Next()) + 4 * (bh::Next() % 16);
-    bh::SetPointer(at::kCommand, command);
+    bh::SetPointer(BattleSprites_Action_addr, command);
     SetWord(command + 2, bh::Often() ? 0x78 : bh::Half() ? BH_PICK(0x77, 0x79, 0x178, 0xF8, 0x7078, 0x178, 0x7078, 0) : bh::Next() & 0xFFFF);
     Mem(0x904AA8)[0] = Byte(bh::Half() ? bh::Next() | 0x40 : bh::Next() & ~0x40u);
     Mem(at::kTarget)[0] = Byte(bh::Half() ? 0 : BH_PICK(1, 3, 0x40, 0x80, 0xFF));
-    Mem(at::kPoseBits)[0] = Byte(bh::Half() ? bh::Next() | 1 : bh::Next() & ~1u);
-    SetWord(Mem(at::kLeaderHp), bh::Half() ? 0 : BH_PICK(1, 0x100, 0x8000, 0xFFFF));
-    Mem(at::kBattleEnd)[0] = Byte(bh::Half() ? bh::Next() | 4 : bh::Next() & ~4u);
-    Mem(at::kCountdown)[0] = Byte(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x3C, 0x80, 0xFF) : bh::Next());
+    Mem(BossSe_Script_addr)[0] = Byte(bh::Half() ? bh::Next() | 1 : bh::Next() & ~1u);
+    SetWord(Mem(ObjTrio_addr + 0x98), bh::Half() ? 0 : BH_PICK(1, 0x100, 0x8000, 0xFFFF));
+    Mem(BattleActions_BattleEnd_addr)[0] = Byte(bh::Half() ? bh::Next() | 4 : bh::Next() & ~4u);
+    Mem(BossSb_Countdown_addr)[0] = Byte(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x3C, 0x80, 0xFF) : bh::Next());
 }
 
 // An event hook's phase code: 0..6 two times in three (past 6 otherwise),
@@ -94,10 +94,10 @@ void HookArgs(U* a) { a[0] = (bh::Half() ? bh::Next() & 0xFFFFFF00u : 0) | (bh::
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 4) {
-    case 0: Mem(at::kEnemy0Pose + (h >> 24) % 4)[0] = b; break;
-    case 1: Mem(at::kEnemy1Pose + (h >> 24) % 4)[0] = b; break;
-    case 2: Mem(at::kEnemy1Place + (h >> 24) % 12)[0] = b; break;
-    default: Mem(at::kFight)[0] = h & 0x1000000 ? 5 : Byte(4 + (h >> 25) % 3); break;
+    case 0: Mem(BossSb_Enemy0Pose_addr + (h >> 24) % 4)[0] = b; break;
+    case 1: Mem(BossSb_Enemy1Pose_addr + (h >> 24) % 4)[0] = b; break;
+    case 2: Mem(BossSb_Enemy1Place_addr + (h >> 24) % 12)[0] = b; break;
+    default: Mem(BattleActions_EventBattle_addr)[0] = h & 0x1000000 ? 5 : Byte(4 + (h >> 25) % 3); break;
     }
 }
 
@@ -128,7 +128,7 @@ void SeedK03(unsigned k) {
     if (k != kK03HitStep) return;
     // the count at 1 (it reaches 0), at 0 (it wraps), and beside
     s[9] = Byte(bh::Often() ? BH_PICK(1, 1, 1, 0, 2, 0x3D) : bh::Next());
-    Mem(at::kFight)[0] = Byte(bh::Half() ? 5 : BH_PICK(4, 6, 0x85, 0x15));
+    Mem(BattleActions_EventBattle_addr)[0] = Byte(bh::Half() ? 5 : BH_PICK(4, 6, 0x85, 0x15));
     // the shift count +5: the byte's bits 0..7, 8 and past, and the 5-bit mask
     s[5] = Byte(bh::Often() ? bh::Next() % 9 : BH_PICK(0x1F, 0x20, 0x21, 0x27, 0xFF, 0xE3));
 }
@@ -157,7 +157,7 @@ const bh::DataTable kTablesK05[] = {{0x64CA48, 12}, {0x64CA78, 3, 4, 1}};
 
 void SeedK05(unsigned k) {
     // the target block: one of the harness's records, anywhere in it
-    if (k == kK05Hit) bh::SetPointer(at::kTargetBlock, bh::SpriteRecord(bh::Next()) + 2 * (bh::Next() % 0x40));
+    if (k == kK05Hit) bh::SetPointer(BattleSprites_HitBlock_addr, bh::SpriteRecord(bh::Next()) + 2 * (bh::Next() % 0x40));
 }
 // The kinds 4, 5 and 8..11 runs: every hook clone's word with garbage above it
 // (the other clones take no argument, so the word is theirs to ignore).
@@ -201,7 +201,7 @@ void SeedSetup(unsigned k) {
     case S::kEnd:
         SeedBattleEnd();
         // the chapter's step at the wrap and beside
-        Mem(at::kChapterStep)[0] = Byte(bh::Often() ? BH_PICK(0xFF, 0, 1, 0x31, 0x32) : bh::Next());
+        Mem(MoveScript_PartyRecords_addr + 0x65)[0] = Byte(bh::Often() ? BH_PICK(0xFF, 0, 1, 0x31, 0x32) : bh::Next());
         break;
     case S::kExit: SeedBattleEnd(); break;
     default: break;

@@ -56,14 +56,13 @@ U Word(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);
 }
 
 void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read each time
-    void** device = *reinterpret_cast<void** volatile*>(At(kDevice));
+    void** device = *reinterpret_cast<void** volatile*>(At(D3d_Device_addr));
     reinterpret_cast<long(__stdcall*)(void*)>((*reinterpret_cast<void***>(device))[offset / 4])(device);
 }
 
@@ -72,21 +71,21 @@ void Scene(U offset) {   // 0x24 BeginScene, 0x28 EndScene; the device re-read e
 // the tpage word +4 to Gfx_DrawTpage, and the 8 bytes a non-null +8 points at to
 // Gfx_TexCacheKey.
 void DrawMode(U p) {
-    At(kDrawEnable)[0] = At(p + 6)[0] & 1;
-    At(kDrawEnable - 1)[0] = (At(p + 6)[0] >> 1) & 1;
-    PutWord(kDrawTpage, Word(p + 4));
+    Gfx_DrawEnable = At(p + 6)[0] & 1;
+    At(Gfx_DrawEnable_addr - 1)[0] = (At(p + 6)[0] >> 1) & 1;
+    Gfx_DrawTpage = Word(p + 4);
     const U key = Long(p + 8);
     if (key != 0) {
-        PutLong(kTexKey, Long(key));
-        PutLong(kTexKey + 4, Long(key + 4));
+        Gfx_TexCacheKey[0] = Long(key);
+        Gfx_TexCacheKey[1] = Long(key + 4);
     }
 }
 // Codes 0xF0..0xF3: Gfx_TexCacheKey from the 8 bytes +8 points at - not
 // checked for null, as the original does not.
 void TexKey(U p) {
     const U key = Long(p + 8);
-    PutLong(kTexKey, Long(key));
-    PutLong(kTexKey + 4, Long(key + 4));
+    Gfx_TexCacheKey[0] = Long(key);
+    Gfx_TexCacheKey[1] = Long(key + 4);
 }
 // Codes 0xEC..0xEF: a VRAM move, the rect at +8, the destination +0x10, +0x14.
 // DIV-0125 (render/fb_grab.h), after the original's move and not in
@@ -188,18 +187,18 @@ using namespace d3d_list;
 // D3d_AfterDraw 0x59F580 runs (a tail jump in the original; it reads no
 // argument).
 void Gfx_DrawOTag(unsigned long* ot) {
-    if (At(kDrawEnable)[0] == 0) return;
+    if (Gfx_DrawEnable == 0) return;
     if (draw_order::g_on) draw_order::LogWalk(ot);   // BOF3X_DRAWORDER, diagnostic only: reads the table, draws nothing
-    if (Word(kAfterDrawFlag) != 0) {
+    if (D3d_AfterDrawRequest != 0) {
         // Whether D3d_AfterDraw's request ever fires is unmeasured (display-setup.md section 7): say so once.
         static bool seen;
         if (!seen) {
             seen = true;
             bof3::Log("Gfx_DrawOTag: D3d_AfterDrawRequest was set on entry (first time)");
         }
-        PutWord(kAfterDrawFlag, 0);
+        D3d_AfterDrawRequest = 0;
     }
-    const bool software = (At(kRenderFlags)[0] & 1) != 0;
+    const bool software = (Gfx_RenderFlags & 1) != 0;
     if (!software) Scene(0x24);
     U node = static_cast<U>(reinterpret_cast<std::uintptr_t>(ot));
     while (Long(node) != 0xFFFFFFFFu) {
@@ -211,5 +210,5 @@ void Gfx_DrawOTag(unsigned long* ot) {
     if (!software) Scene(0x28);
     for (U a = kFontInUse; a < kFontInUseEnd; a += 0x14) PutWord(a, 0);
     for (U a = kCellInUse; a < kCellInUseEnd; a += 0x28) PutWord(a, 0);
-    if (Word(kAfterDrawFlag) != 0) g.after_draw();
+    if (D3d_AfterDrawRequest != 0) g.after_draw();
 }

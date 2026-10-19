@@ -114,24 +114,24 @@ void HitBlowBoxes() {
 
 // The phases' music: the field's track kept and faded (10 frames).
 void KeepMusicAndFade() {
-    B(at::kMusic) = Music_Track;
+    Rest4d_KeptTrack = Music_Track;
     SH_CALL(Music_FadeOutStop)(10);
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+    Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
 }
 
 // The two games' close phase (0x45AF00, 0x45C3A0): state 0 fades the music
 // once no message is up; then, once the load is done, the kept track plays (8
 // frames) and the field hook's tail state moves on.
 void ClosePhase() {
-    if (B(at::kState) == 0) {
+    if (Rest4b_BoardStep == 0) {
         if (Request() == 2) return;
         SH_CALL(Music_FadeOutStop)(10);
-        B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+        Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
         return;
     }
     if (SH_CALL(File_LoadDone)() == 0) return;
     SH_CALL(Music_Play)(L(at::kMusic) & 0xFF, 8);
-    B(at::kTailState) = static_cast<unsigned char>(B(at::kTailState) + 1);
+    AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
 }
 
 }  // namespace
@@ -143,14 +143,14 @@ void ClosePhase() {
 // read first); Sound_PlayEffect(0x103); the word 0x675F7A = 0x3D, 0x675F7C =
 // 0, 0x939A40 = 5.
 extern "C" void __cdecl Commu_PushSubscreen(void) {
-    const unsigned char state = B(at::kState);
-    const U sub = Word(At(at::kSub));
-    B(at::kSavedState) = state;
-    SetWord(At(at::kSavedSub), sub);
+    const unsigned char state = Rest4b_BoardStep;
+    const U sub = Rest4b_Help;
+    Rest4b_KeptStep = state;
+    Rest4b_KeptHelp = sub;
     Sound(0x103);
-    SetWord(At(at::kSub), 0x3D);
-    B(at::kSub7C) = 0;
-    B(at::kState) = 5;
+    Rest4b_Help = 0x3D;
+    Rest4b_Toggle = 0;
+    Rest4b_BoardStep = 5;
 }
 
 // original 0x45B0D0 (0x2B bytes): Rand & 0xF drawn until it is 1..top (top =
@@ -263,12 +263,12 @@ extern "C" void __cdecl Commu_DrawFrame(int x, int y) {
 // (x + 6, y + 0x18), the unit (Text_DrawAt(x + 0x5A, y + 0x18, 0, 1,
 // 0x66A31C)).
 extern "C" void __cdecl Commu_DrawZennyBox(int x, int y) {
-    const unsigned style = B(at::kStyle);
+    const unsigned style = static_cast<unsigned char>(BattleDraw_Colour);
     SH_CALL(Menu_DrawBox)(x + 1, y + 1, 0x6A, 0x28, 0x80, static_cast<int>(style));
     SH_CALL(Commu_DrawFrame)(x, y);
     SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
                          Labels_Written(14) ? Labels_Slot(14, 3) : Text(at::kZennyTitle));   // DIV-0064 group 14
-    SH_CALL(Crt_sprintf)(Buffer(), reinterpret_cast<const char*>(At(at::kFmtWide)), L(bof3::addr::Party_Zenny));
+    SH_CALL(Crt_sprintf)(Buffer(), reinterpret_cast<const char*>(At(at::kFmtWide)), Party_Zenny);
     SH_CALL(Text_DrawFont12)(x + 6, y + 0x18, 0, reinterpret_cast<const unsigned char*>(Buffer()));
     SH_CALL(Text_DrawAt)(x + 0x5A, y + 0x18, 0, 1, Text(at::kZennyUnit));
 }
@@ -280,7 +280,7 @@ extern "C" void __cdecl Commu_DrawZennyBox(int x, int y) {
 // + 0x36, + 0x2A; otherwise the wide format 0x64ADDC at x + 6. The unit as the
 // money box's.
 extern "C" void __cdecl Commu_DrawStakeBox(int x, int y, unsigned digits) {
-    const unsigned style = B(at::kStyle);
+    const unsigned style = static_cast<unsigned char>(BattleDraw_Colour);
     SH_CALL(Menu_DrawBox)(x + 1, y + 1, 0x6A, 0x28, 0x80, static_cast<int>(style));
     SH_CALL(Commu_DrawFrame)(x, y);
     SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
@@ -388,7 +388,7 @@ extern "C" void __cdecl CommuHiLo_Shuffle(void) {
 // puts a four-letter word at x + 6 and a three-letter one at x + 0xA, the
 // box's middle for 8-px letters, here (0x2C - its pen width) / 2.
 extern "C" void __cdecl CommuHiLo_DrawChoice(int x, int y, unsigned label, unsigned mode) {
-    const unsigned style = B(at::kStyle);
+    const unsigned style = static_cast<unsigned char>(BattleDraw_Colour);
     SH_CALL(Menu_DrawBox)(x, y, 0x2A, 0x14, 0, static_cast<int>(style));
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x1D, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
@@ -429,13 +429,13 @@ extern "C" void __cdecl CommuHiLo_DrawChoices(int x, int y, unsigned selected) {
 // original 0x459F20 (0xE bytes): CommuGame[0] (R4B's 0x652A84) - jmp
 // [CommuHiLo_Phases + 0x939A3E * 4], unchecked (ours aborts past its 3).
 extern "C" void __cdecl CommuHiLo_Run(void) {
-    Dispatch("CommuHiLo_Run (0x459F20)", CommuHiLo_Phases, CommuHiLo_Phases_count, at::kPhase);
+    Dispatch("CommuHiLo_Run (0x459F20)", CommuHiLo_Phases, CommuHiLo_Phases_count, Rest4b_BoardState_addr);
 }
 
 // original 0x459F30 (0xE bytes): CommuHiLo_Phases[0] - jmp
 // [CommuHiLo_OpenStates + 0x939A40 * 4] (2).
 extern "C" void __cdecl CommuHiLo_OpenDispatch(void) {
-    Dispatch("CommuHiLo_OpenDispatch (0x459F30)", CommuHiLo_OpenStates, CommuHiLo_OpenStates_count, at::kState);
+    Dispatch("CommuHiLo_OpenDispatch (0x459F30)", CommuHiLo_OpenStates, CommuHiLo_OpenStates_count, Rest4b_BoardStep_addr);
 }
 
 // original 0x459F40 (0x36 bytes): CommuHiLo_OpenStates[0] - the dwords
@@ -446,10 +446,10 @@ extern "C" void __cdecl CommuHiLo_OpenFade(void) {
     const unsigned char track = Music_Track;
     SetL(at::kCards, 0xFFFFFFFFu);
     SetL(at::kCards + 4, 0xFFFFFFFFu);
-    B(at::kMusic) = track;
+    Rest4d_KeptTrack = track;
     SetWord(At(at::kCards + 8), 0xFFFF);
     SH_CALL(Music_FadeOutStop)(10);
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+    Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
 }
 
 // original 0x459F80 (0x2C bytes): CommuHiLo_OpenStates[1] - once
@@ -457,15 +457,15 @@ extern "C" void __cdecl CommuHiLo_OpenFade(void) {
 extern "C" void __cdecl CommuHiLo_OpenMusic(void) {
     if (SH_CALL(File_LoadDone)() == 0) return;
     SH_CALL(Music_Play)(0x94, 8);
-    const auto phase = static_cast<unsigned char>(B(at::kPhase) + 1);
-    B(at::kState) = 0;
-    B(at::kPhase) = phase;
+    const auto phase = static_cast<unsigned char>(Rest4b_BoardState + 1);
+    Rest4b_BoardStep = 0;
+    Rest4b_BoardState = phase;
 }
 
 // original 0x459FB0 (0xE bytes): CommuHiLo_Phases[1] - jmp
 // [CommuHiLo_PlayStates + 0x939A40 * 4] (13).
 extern "C" void __cdecl CommuHiLo_PlayDispatch(void) {
-    Dispatch("CommuHiLo_PlayDispatch (0x459FB0)", CommuHiLo_PlayStates, CommuHiLo_PlayStates_count, at::kState);
+    Dispatch("CommuHiLo_PlayDispatch (0x459FB0)", CommuHiLo_PlayStates, CommuHiLo_PlayStates_count, Rest4b_BoardStep_addr);
 }
 
 // original 0x459FC0 (0xB0 bytes): CommuHiLo_PlayStates[0] - step 0: 0x675F95
@@ -474,24 +474,24 @@ extern "C" void __cdecl CommuHiLo_PlayDispatch(void) {
 // 0x74, 1) for n the counter (re-read); at 0 the message 0x71, Field_Request
 // = 2, the stake 0, 0x675F8C 0, 0x939A40 + 1, 0x939A3F 0.
 extern "C" void __cdecl CommuHiLo_Intro(void) {
-    if (B(at::kStep) == 0) {
-        B(at::kSlide) = 4;
+    if (Rest4c_Step == 0) {
+        Rest4d_Count = 4;
         Sound(0x102);
-        B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+        Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);
         return;
     }
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    Rest4d_Count = n;
     ZennyBox(0x6E - 0x28 * n, 0x48);
-    StakeBox(0x6E - 0x28 * B(at::kSlide), 0x74, 1);
-    if (B(at::kSlide) != 0) return;
+    StakeBox(0x6E - 0x28 * Rest4d_Count, 0x74, 1);
+    if (Rest4d_Count != 0) return;
     Message(0x71);
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
     Field_Request = 2;
     SetL(at::kBet, 0);
-    B(at::kCount) = 0;
-    B(at::kState) = state;
-    B(at::kStep) = 0;
+    Rest4c_Count = 0;
+    Rest4b_BoardStep = state;
+    Rest4c_Step = 0;
 }
 
 // original 0x45A070 (0x27 bytes): CommuHiLo_PlayStates[1] - the money box at
@@ -500,13 +500,13 @@ extern "C" void __cdecl CommuHiLo_Intro(void) {
 extern "C" void __cdecl CommuHiLo_WaitIntro(void) {
     ZennyBox(0x6E, 0x48);
     StakeBox(0x6E, 0x74, 1);
-    if (Request() != 2) B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+    if (Request() != 2) Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
 }
 
 // original 0x45A0A0 (0xE bytes): CommuHiLo_PlayStates[2] - jmp
 // [CommuHiLo_BetSteps + 0x939A3F * 4] (3).
 extern "C" void __cdecl CommuHiLo_BetDispatch(void) {
-    Dispatch("CommuHiLo_BetDispatch (0x45A0A0)", CommuHiLo_BetSteps, CommuHiLo_BetSteps_count, at::kStep);
+    Dispatch("CommuHiLo_BetDispatch (0x45A0A0)", CommuHiLo_BetSteps, CommuHiLo_BetSteps_count, Rest4c_Step_addr);
 }
 
 // original 0x45A0B0 (0x242 bytes): CommuHiLo_BetSteps[0] - the stake's three
@@ -534,21 +534,21 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
     if ((pressed & 0xFFFF) != 0) {
         Sound(0x100);
         if (pressed & 0x8000) {
-            const auto c = static_cast<unsigned char>(B(at::kCount) + 1);
-            B(at::kCount) = c;
-            if (static_cast<signed char>(c) >= 3) B(at::kCount) = 0;
+            const auto c = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) + 1);
+            Rest4c_Count = c;
+            if (static_cast<signed char>(c) >= 3) Rest4c_Count = 0;
         } else if (pressed & 0x2000) {
-            const auto c = static_cast<unsigned char>(B(at::kCount) - 1);
-            B(at::kCount) = c;
-            if (static_cast<signed char>(c) < 0) B(at::kCount) = 2;
+            const auto c = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) - 1);
+            Rest4c_Count = c;
+            if (static_cast<signed char>(c) < 0) Rest4c_Count = 2;
         } else if (pressed & 0x4000) {
-            const int i = S8(at::kCount);
+            const int i = Rest4c_Count;
             Room("CommuHiLo_BetInput (0x45A0B0)", "the digit cursor 0x675F8C", i, 0, 2);
             const auto d = static_cast<unsigned char>(B(at::kDigits + i) - 1);
             B(at::kDigits + i) = d;
             if (static_cast<signed char>(d) < 0) B(at::kDigits + i) = 9;
         } else if (pressed & 0x1000) {
-            const int i = S8(at::kCount);
+            const int i = Rest4c_Count;
             Room("CommuHiLo_BetInput (0x45A0B0)", "the digit cursor 0x675F8C", i, 0, 2);
             const auto d = static_cast<unsigned char>(B(at::kDigits + i) + 1);
             B(at::kDigits + i) = d;
@@ -564,7 +564,7 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
                 v = 100;
                 SetL(at::kBet, 100);
             }
-            const U zenny = L(bof3::addr::Party_Zenny);
+            const U zenny = Party_Zenny;
             if (static_cast<U>(v) > zenny) SetL(at::kBet, static_cast<U>(static_cast<int>(static_cast<std::int16_t>(zenny))));
         }
     } else {
@@ -575,28 +575,28 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
             if (L(at::kBet) == 0) {
                 back = true;
             } else {
-                B(at::kSlide) = 4;
+                Rest4d_Count = 4;
                 Sound(0x104);
                 const U stake = L(at::kBet);
-                const U zenny = L(bof3::addr::Party_Zenny);
-                const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-                SetL(bof3::addr::Party_Zenny, zenny - stake);
-                B(at::kStep) = step;
+                const U zenny = Party_Zenny;
+                const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
+                Party_Zenny = zenny - stake;
+                Rest4c_Step = step;
             }
         } else if (Field_CancelButtons & buttons) {
             Sound(0x102);
             back = true;
         }
         if (back) {
-            const auto step = static_cast<unsigned char>(B(at::kStep) + 2);
-            B(at::kSlide) = 0;
-            B(at::kStep) = step;
+            const auto step = static_cast<unsigned char>(Rest4c_Step + 2);
+            Rest4d_Count = 0;
+            Rest4c_Step = step;
         }
     }
-    if (B(at::kPhase) != 1 || B(at::kState) != 2) return;
+    if (Rest4b_BoardState != 1 || Rest4b_BoardStep != 2) return;
     ZennyBox(0x6E, 0x48);
-    StakeBox(0x6E, 0x74, static_cast<unsigned char>(B(at::kCount) + 1));
-    SH_CALL(Commu_DrawUnderline)(0xBA - 12 * S8(at::kCount), 0x99);
+    StakeBox(0x6E, 0x74, static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) + 1));
+    SH_CALL(Commu_DrawUnderline)(0xBA - 12 * Rest4c_Count, 0x99);
 }
 
 // original 0x45A300 (0x75 bytes): CommuHiLo_BetSteps[1] - 0x675F95 down one;
@@ -604,15 +604,15 @@ extern "C" void __cdecl CommuHiLo_BetInput(void) {
 // (0xC - n), 0x19 n + 0x10, 0), n the counter (re-read); at 0 0x939A3F = 0,
 // 0x939A40 + 1.
 extern "C" void __cdecl CommuHiLo_BetSlide(void) {
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    Rest4d_Count = n;
     ZennyBox(0x12 * n + 0x26, 0xE * n + 0x10);
-    const int m = B(at::kSlide);
+    const int m = Rest4d_Count;
     StakeBox(0xE * (0xC - m), 0x19 * m + 0x10, 0);
-    if (B(at::kSlide) != 0) return;
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-    B(at::kStep) = 0;
-    B(at::kState) = state;
+    if (Rest4d_Count != 0) return;
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+    Rest4c_Step = 0;
+    Rest4b_BoardStep = state;
 }
 
 // original 0x45B370 (0x2F bytes): the first game's quit - Sound_PlayEffect(0x106),
@@ -621,27 +621,27 @@ extern "C" void __cdecl CommuHiLo_BetSlide(void) {
 extern "C" void __cdecl CommuHiLo_Quit(void) {
     Sound(0x106);
     Message(0x72);
-    const auto phase = static_cast<unsigned char>(B(at::kPhase) + 1);
+    const auto phase = static_cast<unsigned char>(Rest4b_BoardState + 1);
     Field_Request = 2;
-    B(at::kPhase) = phase;
-    B(at::kState) = 0;
+    Rest4b_BoardState = phase;
+    Rest4b_BoardStep = 0;
 }
 
 // original 0x45A380 (0x56 bytes): CommuHiLo_BetSteps[2] - 0x675F95 up one; the
 // boxes at (0x6E - 0x28 n, 0x48) and (0x6E - 0x28 n, 0x74, 1); at 4 a tail jmp
 // to CommuHiLo_Quit.
 extern "C" void __cdecl CommuHiLo_BetBack(void) {
-    const auto n = static_cast<unsigned char>(B(at::kSlide) + 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count + 1);
+    Rest4d_Count = n;
     ZennyBox(0x6E - 0x28 * n, 0x48);
-    StakeBox(0x6E - 0x28 * B(at::kSlide), 0x74, 1);
-    if (B(at::kSlide) == 4) SH_CALL(CommuHiLo_Quit)();
+    StakeBox(0x6E - 0x28 * Rest4d_Count, 0x74, 1);
+    if (Rest4d_Count == 4) SH_CALL(CommuHiLo_Quit)();
 }
 
 // original 0x45A3E0 (0xE bytes): CommuHiLo_PlayStates[3] - jmp
 // [CommuHiLo_DealSteps + 0x939A3F * 4] (5).
 extern "C" void __cdecl CommuHiLo_DealDispatch(void) {
-    Dispatch("CommuHiLo_DealDispatch (0x45A3E0)", CommuHiLo_DealSteps, CommuHiLo_DealSteps_count, at::kStep);
+    Dispatch("CommuHiLo_DealDispatch (0x45A3E0)", CommuHiLo_DealSteps, CommuHiLo_DealSteps_count, Rest4c_Step_addr);
 }
 
 // original 0x45A3F0 (0x62 bytes): CommuHiLo_DealSteps[0] - the two boxes; once
@@ -655,10 +655,10 @@ extern "C" void __cdecl CommuHiLo_DealStart(void) {
     SetWord(At(at::kPicks + 9), 0);
     SH_CALL(CommuHiLo_Shuffle)();
     Sound(0x102);
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-    B(at::kSlide) = 3;
-    B(at::kCount) = 0;
-    B(at::kStep) = step;
+    const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
+    Rest4d_Count = 3;
+    Rest4c_Count = 0;
+    Rest4c_Step = step;
 }
 
 // original 0x45A460 (0x121 bytes): CommuHiLo_DealSteps[1] - the two boxes;
@@ -670,47 +670,47 @@ extern "C" void __cdecl CommuHiLo_DealStart(void) {
 // then 0x939A3F + 1.
 extern "C" void __cdecl CommuHiLo_DealCards(void) {
     HiLoBoxes();
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    unsigned char count = B(at::kCount);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    unsigned char count = static_cast<unsigned char>(Rest4c_Count);
+    Rest4d_Count = n;
     if (static_cast<signed char>(count) > 0) {
         int i = 0;
         do {
             Card(32 * i + 0x10, 0x6C, 0xFF);
-            count = B(at::kCount);
+            count = static_cast<unsigned char>(Rest4c_Count);
             ++i;
         } while (i < static_cast<signed char>(count));
     }
     const int c = static_cast<signed char>(count);
-    Card((2 * c - B(at::kSlide) + 1) * 16, 0x6C, 0xFF);
-    if (B(at::kSlide) != 0) return;
-    const auto dealt = static_cast<unsigned char>(B(at::kCount) + 1);
-    B(at::kCount) = dealt;
+    Card((2 * c - Rest4d_Count + 1) * 16, 0x6C, 0xFF);
+    if (Rest4d_Count != 0) return;
+    const auto dealt = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) + 1);
+    Rest4c_Count = dealt;
     if (dealt != 9) {
         Sound(0x102);
-        B(at::kSlide) = 2;
+        Rest4d_Count = 2;
         return;
     }
-    B(at::kCursor) = 0;
+    Rest4c_Cursor = 0;
     if ((Rnd() & 3) == 0) {
         const unsigned r = Rnd() & 0xF;
         unsigned char left = r < 8 ? 1 : (r < 0xE ? 2 : 3);
         do {
             const unsigned bit = Rnd() & 7;
-            if ((static_cast<int>(S8(at::kCursor)) & (1 << bit)) == 0) {
-                B(at::kCursor) = static_cast<unsigned char>(B(at::kCursor) | (1u << bit));
+            if ((Rest4c_Cursor & (1 << bit)) == 0) {
+                Rest4c_Cursor = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Cursor) | (1u << bit));
                 --left;
             }
         } while (left != 0);
     }
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);
 }
 
 // The shown values (0x675F8D's bits 0..7, re-read each time) at (0x30 + 32 i,
 // 0x6C): value i + 1.
 static void ShownValues() {
     for (int i = 0; i < 8; ++i)
-        if (static_cast<int>(S8(at::kCursor)) & (1 << i)) Card(32 * i + 0x30, 0x6C, B(at::kCards + 1 + i));
+        if (Rest4c_Cursor & (1 << i)) Card(32 * i + 0x30, 0x6C, B(at::kCards + 1 + i));
 }
 
 // original 0x45A590 (0x7B bytes): CommuHiLo_DealSteps[2] - the row (9, 1, 0),
@@ -721,9 +721,9 @@ extern "C" void __cdecl CommuHiLo_DealHints(void) {
     ShownValues();
     HiLoBoxes();
     Message(0x73);
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
+    const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
     Field_Request = 2;
-    B(at::kStep) = step;
+    Rest4c_Step = step;
 }
 
 // original 0x45A610 (0x8A bytes): CommuHiLo_DealSteps[3] - the row (9, 1, 0),
@@ -735,9 +735,9 @@ extern "C" void __cdecl CommuHiLo_DealWait(void) {
     HiLoBoxes();
     if (Request() == 2) return;
     Sound(0x102);
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-    B(at::kSlide) = 4;
-    B(at::kStep) = step;
+    const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
+    Rest4d_Count = 4;
+    Rest4c_Step = step;
 }
 
 // original 0x45A6A0 (0xCA bytes): CommuHiLo_DealSteps[4] - the row (9, 1, 0);
@@ -746,18 +746,18 @@ extern "C" void __cdecl CommuHiLo_DealWait(void) {
 // 0x675F8D = 0, 0x939A40 + 1, 0x939A3F = 0.
 extern "C" void __cdecl CommuHiLo_DealChoices(void) {
     Row(9, 1, 0);
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    Rest4d_Count = n;
     Choice(0x58, 0x44 - 0x1E * n, 0, 0);
-    Choice(0x88, 0x44 - 0x1E * B(at::kSlide), 1, 0);
-    Choice(0xB8, 0x44 - 0x1E * B(at::kSlide), 2, 0);
+    Choice(0x88, 0x44 - 0x1E * Rest4d_Count, 1, 0);
+    Choice(0xB8, 0x44 - 0x1E * Rest4d_Count, 2, 0);
     HiLoBoxes();
-    if (B(at::kSlide) != 0) return;
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-    B(at::kCount) = 0;
-    B(at::kCursor) = 0;
-    B(at::kState) = state;
-    B(at::kStep) = 0;
+    if (Rest4d_Count != 0) return;
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+    Rest4c_Count = 0;
+    Rest4c_Cursor = 0;
+    Rest4b_BoardStep = state;
+    Rest4c_Step = 0;
 }
 
 // original 0x45A770 (0x201 bytes): CommuHiLo_PlayStates[4] - the picks.
@@ -777,67 +777,67 @@ extern "C" void __cdecl CommuHiLo_Pick(void) {
     enum { kByCount, kSelect } how = kByCount;
     unsigned selected = 0;
     if ((pressed & 0xFFFF) != 0) {
-        if (S8(at::kCount) < 8) {
+        if (Rest4c_Count < 8) {
             Sound(0x100);
-            if (B(at::kCount) == 0) {
-                B(at::kCursor) = static_cast<unsigned char>(B(at::kCursor) ^ 1);
+            if (static_cast<unsigned char>(Rest4c_Count) == 0) {
+                Rest4c_Cursor = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Cursor) ^ 1);
                 how = kSelect, selected = 2;
             } else if (pressed & 0x8000) {
-                const auto c = static_cast<unsigned char>(B(at::kCursor) - 1);
-                B(at::kCursor) = c;
-                if (static_cast<signed char>(c) < 0) B(at::kCursor) = 2;
+                const auto c = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Cursor) - 1);
+                Rest4c_Cursor = c;
+                if (static_cast<signed char>(c) < 0) Rest4c_Cursor = 2;
             } else if (pressed & 0x2000) {
-                const auto c = static_cast<unsigned char>(B(at::kCursor) + 1);
-                B(at::kCursor) = c;
-                if (static_cast<signed char>(c) > 2) B(at::kCursor) = 0;
+                const auto c = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Cursor) + 1);
+                Rest4c_Cursor = c;
+                if (static_cast<signed char>(c) > 2) Rest4c_Cursor = 0;
             }
         }
     } else {
         const unsigned buttons = Input_Pressed;
         if (Field_ConfirmButtons & buttons) {
-            const unsigned char cursor = B(at::kCursor);
+            const unsigned char cursor = static_cast<unsigned char>(Rest4c_Cursor);
             if (cursor == 2) {
                 Sound(0x104);
                 Sound(0x102);
-                const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-                B(at::kSlide) = 0;
-                B(at::kState) = state;
+                const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+                Rest4d_Count = 0;
+                Rest4b_BoardStep = state;
             } else {
-                const unsigned char n = B(at::kCount);
+                const unsigned char n = static_cast<unsigned char>(Rest4c_Count);
                 if (static_cast<signed char>(n) < 8) {
                     const int i = static_cast<signed char>(n);
                     Room("CommuHiLo_Pick (0x45A770)", "the pick count 0x675F8C", i, 0, 7);
                     B(at::kPicks + 1 + i) = cursor;
-                    B(at::kCount) = static_cast<unsigned char>(n + 1);
+                    Rest4c_Count = static_cast<unsigned char>(n + 1);
                     Sound(0x103);
-                    if (B(at::kCount) == 8) {
-                        B(at::kCursor) = 2;
+                    if (static_cast<unsigned char>(Rest4c_Count) == 8) {
+                        Rest4c_Cursor = 2;
                         how = kSelect, selected = 3;
                     }
                 }
             }
         } else if (Field_CancelButtons & buttons) {
-            if (B(at::kCount) != 0) {
+            if (static_cast<unsigned char>(Rest4c_Count) != 0) {
                 Sound(0x106);
-                const auto n = static_cast<unsigned char>(B(at::kCount) - 1);
-                B(at::kCount) = n;
+                const auto n = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) - 1);
+                Rest4c_Count = n;
                 if (n == 0) {
-                    if (B(at::kCursor) == 2) B(at::kCursor) = 0;
+                    if (static_cast<unsigned char>(Rest4c_Cursor) == 2) Rest4c_Cursor = 0;
                     how = kSelect, selected = 2;
                 }
             }
         }
     }
     if (how == kByCount) {
-        const signed char n = S8(at::kCount);
+        const signed char n = Rest4c_Count;
         selected = n < 1 ? 2 : (n >= 8 ? 3 : 0xFF);
     }
     Choices(0x58, 0x44, selected);
     HiLoBoxes();
-    Row(9, 1, B(at::kCount));
-    const signed char n = S8(at::kCount);
+    Row(9, 1, static_cast<unsigned char>(Rest4c_Count));
+    const signed char n = Rest4c_Count;
     if (n < 8) SH_CALL(CommuHiLo_DrawMarker)((n + 2) * 32, 0x6E);
-    SH_CALL(Menu_DrawHand)(S8(at::kCursor) * 48 + 0x5E, 0x4A, 0);
+    SH_CALL(Menu_DrawHand)(Rest4c_Cursor * 48 + 0x5E, 0x4A, 0);
 }
 
 // original 0x45A980 (0xBE bytes): CommuHiLo_PlayStates[5] - the two boxes, the
@@ -847,17 +847,17 @@ extern "C" void __cdecl CommuHiLo_Pick(void) {
 // 0x939A40 + 1.
 extern "C" void __cdecl CommuHiLo_PickClose(void) {
     HiLoBoxes();
-    const unsigned char count = B(at::kCount);
+    const unsigned char count = static_cast<unsigned char>(Rest4c_Count);
     Row(static_cast<unsigned char>(count + 1), 1, count);
-    int i = S8(at::kCount);
-    B(at::kSlide) = static_cast<unsigned char>(B(at::kSlide) + 1);
-    for (++i; i < 9; ++i) Card(32 * i + 0x10, 0x28 * B(at::kSlide) + 0x6C, 0xFF);
-    Choices(0x58, 0x44 - 0x28 * B(at::kSlide), 2);
-    if (B(at::kSlide) != 4) return;
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-    B(at::kSlide) = 0x1E;
-    B(at::kTurn) = 1;
-    B(at::kState) = state;
+    int i = Rest4c_Count;
+    Rest4d_Count = static_cast<unsigned char>(Rest4d_Count + 1);
+    for (++i; i < 9; ++i) Card(32 * i + 0x10, 0x28 * Rest4d_Count + 0x6C, 0xFF);
+    Choices(0x58, 0x44 - 0x28 * Rest4d_Count, 2);
+    if (Rest4d_Count != 4) return;
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+    Rest4d_Count = 0x1E;
+    Rest4c_Turn = 1;
+    Rest4b_BoardStep = state;
 }
 
 // original 0x45AA40 (0xF0 bytes): CommuHiLo_PlayStates[6] - the two boxes;
@@ -869,37 +869,37 @@ extern "C" void __cdecl CommuHiLo_PickClose(void) {
 // and turn read after the sound. Ours aborts on a turn outside 1..8.
 extern "C" void __cdecl CommuHiLo_Reveal(void) {
     HiLoBoxes();
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    Rest4d_Count = n;
     if (n == 0) {
-        const int t = S8(at::kTurn);
+        const int t = Rest4c_Turn;
         Room("CommuHiLo_Reveal (0x45AA40)", "the turn 0x675F8E", t, 1, 8);
         const unsigned char higher = B(at::kCards + t - 1) >= B(at::kCards + t) ? 1 : 0;
         if (B(at::kPicks + t) == higher) {
             Sound(0x104);
-            const auto turn = static_cast<unsigned char>(B(at::kTurn) + 1);
-            const unsigned char count = B(at::kCount);
-            B(at::kTurn) = turn;
+            const auto turn = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Turn) + 1);
+            const unsigned char count = static_cast<unsigned char>(Rest4c_Count);
+            Rest4c_Turn = turn;
             if (static_cast<signed char>(turn) == static_cast<signed char>(count) + 1) {
-                const auto back = static_cast<unsigned char>(B(at::kTurn) - 1);
-                const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-                B(at::kTurn) = back;
-                B(at::kLost) = 0;
-                B(at::kSlide) = 0x3C;
-                B(at::kState) = state;
+                const auto back = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Turn) - 1);
+                const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+                Rest4c_Turn = back;
+                Rest4c_Lost = 0;
+                Rest4d_Count = 0x3C;
+                Rest4b_BoardStep = state;
             } else {
-                B(at::kSlide) = 0x1E;
+                Rest4d_Count = 0x1E;
             }
         } else {
             Sound(0x107);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-            B(at::kLost) = 1;
-            B(at::kSlide) = 0x3C;
-            B(at::kState) = state;
+            const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+            Rest4c_Lost = 1;
+            Rest4d_Count = 0x3C;
+            Rest4b_BoardStep = state;
         }
     }
-    const unsigned char count = B(at::kCount);
-    Row(static_cast<unsigned char>(count + 1), B(at::kTurn), count);
+    const unsigned char count = static_cast<unsigned char>(Rest4c_Count);
+    Row(static_cast<unsigned char>(count + 1), static_cast<unsigned char>(Rest4c_Turn), count);
 }
 
 // original 0x45AB30 (0x54 bytes): CommuHiLo_PlayStates[7] - the two boxes, the
@@ -907,14 +907,14 @@ extern "C" void __cdecl CommuHiLo_Reveal(void) {
 // 0x939A40 + 1.
 extern "C" void __cdecl CommuHiLo_RevealPause(void) {
     HiLoBoxes();
-    const unsigned char count = B(at::kCount);
+    const unsigned char count = static_cast<unsigned char>(Rest4c_Count);
     const auto all = static_cast<unsigned char>(count + 1);
     Row(all, all, count);
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    Rest4d_Count = n;
     if (n != 0) return;
     Sound(0x102);
-    B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+    Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
 }
 
 // original 0x45AB90 (0xDC bytes): CommuHiLo_PlayStates[8] - 0x675F95 up one;
@@ -924,25 +924,25 @@ extern "C" void __cdecl CommuHiLo_RevealPause(void) {
 // 0x76; Field_Request = 2, 0x939A40 + 1. Last the two boxes. Ours aborts on a
 // value index past 8 or a turn outside 1..8.
 extern "C" void __cdecl CommuHiLo_Payout(void) {
-    const auto n = static_cast<unsigned char>(B(at::kSlide) + 1);
-    const unsigned char count = B(at::kCount);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count + 1);
+    const unsigned char count = static_cast<unsigned char>(Rest4c_Count);
+    Rest4d_Count = n;
     if (static_cast<signed char>(count) >= 0) {
         int i = 0;
         do {
             Room("CommuHiLo_Payout (0x45AB90)", "the value", i, 0, 8);
             const unsigned char v = B(at::kCards + i);
-            Card(32 * i + 0x10, 0x28 * B(at::kSlide) + 0x6C, v);
+            Card(32 * i + 0x10, 0x28 * Rest4d_Count + 0x6C, v);
             ++i;
-        } while (i <= S8(at::kCount));
+        } while (i <= Rest4c_Count);
     }
-    if (B(at::kSlide) == 4) {
+    if (Rest4d_Count == 4) {
         unsigned message;
-        if (B(at::kLost) != 0) {
+        if (Rest4c_Lost != 0) {
             SetL(at::kBet, 0);
             message = 0x74;
         } else {
-            const int t = S8(at::kTurn);
+            const int t = Rest4c_Turn;
             Room("CommuHiLo_Payout (0x45AB90)", "the turn 0x675F8E", t, 1, 8);
             const U factor = Word(At(at::kPayouts + 2 * t));
             const auto product = static_cast<std::int32_t>(factor * L(at::kBet) + 0x32u);
@@ -950,9 +950,9 @@ extern "C" void __cdecl CommuHiLo_Payout(void) {
             message = 0x76;
         }
         Message(message);
-        const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+        const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
         Field_Request = 2;
-        B(at::kState) = state;
+        Rest4b_BoardStep = state;
     }
     HiLoBoxes();
 }
@@ -965,13 +965,13 @@ extern "C" void __cdecl CommuHiLo_CheckWinnings(void) {
     if (Request() != 2) {
         if (static_cast<std::int32_t>(L(at::kBet)) >= 10000) {
             Message(0x79);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+            const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
             Field_Request = 2;
-            B(at::kState) = state;
+            Rest4b_BoardStep = state;
         } else {
             Message(0x78);
             Field_Request = 2;
-            B(at::kState) = 3;
+            Rest4b_BoardStep = 3;
         }
     }
     HiLoBoxes();
@@ -1001,26 +1001,26 @@ extern "C" void __cdecl CommuHiLo_Restart(void) {
         HiLoBoxes();
         return;
     }
-    if (B(at::kStep) == 0) {
+    if (Rest4c_Step == 0) {
         HiLoBoxes();
         Sound(0x102);
-        const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-        B(at::kSlide) = 4;
-        B(at::kStep) = step;
+        const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
+        Rest4d_Count = 4;
+        Rest4c_Step = step;
         return;
     }
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    Rest4d_Count = n;
     ZennyBox(0x6E - 0x12 * n, 0x48 - 0xE * n);
-    const int m = B(at::kSlide);
+    const int m = Rest4d_Count;
     StakeBox(0xF * m + 0x6E, 0x74 - 0x19 * m, 0);
-    if (B(at::kSlide) != 0) return;
+    if (Rest4d_Count != 0) return;
     Message(0x71);
     Field_Request = 2;
     SetL(at::kBet, 0);
-    B(at::kCount) = 0;
-    B(at::kState) = 1;
-    B(at::kStep) = 0;
+    Rest4c_Count = 0;
+    Rest4b_BoardStep = 1;
+    Rest4c_Step = 0;
 }
 
 // original 0x45AE30 (0xCB bytes): CommuHiLo_PlayStates[12] - a message up: the
@@ -1032,21 +1032,21 @@ extern "C" void __cdecl CommuHiLo_Leave(void) {
         HiLoBoxes();
         return;
     }
-    if (B(at::kStep) == 0) {
+    if (Rest4c_Step == 0) {
         HiLoBoxes();
         Sound(0x102);
-        const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
-        B(at::kSlide) = 0;
-        B(at::kStep) = step;
+        const auto step = static_cast<unsigned char>(Rest4c_Step + 1);
+        Rest4d_Count = 0;
+        Rest4c_Step = step;
         return;
     }
-    const auto n = static_cast<unsigned char>(B(at::kSlide) + 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count + 1);
+    Rest4d_Count = n;
     ZennyBox(0x26, 0x10 - 0x14 * n);
-    StakeBox(0xA8, 0x10 - 0x14 * B(at::kSlide), 0);
-    if (B(at::kSlide) != 4) return;
-    B(at::kPhase) = 2;
-    B(at::kState) = 0;
+    StakeBox(0xA8, 0x10 - 0x14 * Rest4d_Count, 0);
+    if (Rest4d_Count != 4) return;
+    Rest4b_BoardState = 2;
+    Rest4b_BoardStep = 0;
 }
 
 // original 0x45AF00 (0x54 bytes): CommuHiLo_Phases[2] - the close phase
@@ -1060,7 +1060,7 @@ namespace {
 void HitBlowPanels(unsigned panel, unsigned show, unsigned row_flag) {
     GuessPanel(0x10, 0x18, panel);
     Secret(0x68, 0x40, show);
-    GuessRow(0x68, 0x78, B(at::kCount), row_flag);
+    GuessRow(0x68, 0x78, static_cast<unsigned char>(Rest4c_Count), row_flag);
     HitBlowBoxes();
 }
 }  // namespace
@@ -1068,14 +1068,14 @@ void HitBlowPanels(unsigned panel, unsigned show, unsigned row_flag) {
 // original 0x45B770 (0xE bytes): CommuGame[1] (R4B's 0x652A84) - jmp
 // [CommuHitBlow_Phases + 0x939A3E * 4] (3).
 extern "C" void __cdecl CommuHitBlow_Run(void) {
-    Dispatch("CommuHitBlow_Run (0x45B770)", CommuHitBlow_Phases, CommuHitBlow_Phases_count, at::kPhase);
+    Dispatch("CommuHitBlow_Run (0x45B770)", CommuHitBlow_Phases, CommuHitBlow_Phases_count, Rest4b_BoardState_addr);
 }
 
 // original 0x45B780 (0xE bytes): CommuHitBlow_Phases[0] - jmp
 // [CommuHitBlow_OpenStates + 0x939A40 * 4] (4).
 extern "C" void __cdecl CommuHitBlow_OpenDispatch(void) {
     Dispatch("CommuHitBlow_OpenDispatch (0x45B780)", CommuHitBlow_OpenStates, CommuHitBlow_OpenStates_count,
-             at::kState);
+             Rest4b_BoardStep_addr);
 }
 
 // original 0x45B790 (0x21 bytes): CommuHitBlow_OpenStates[0] - Music_Track kept
@@ -1089,9 +1089,9 @@ extern "C" void __cdecl CommuHitBlow_OpenMusic(void) {
     if (SH_CALL(File_LoadDone)() == 0) return;
     SH_CALL(Music_Play)(0x94, 8);
     Message(0x7F);
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
     Field_Request = 2;
-    B(at::kState) = state;
+    Rest4b_BoardStep = state;
 }
 
 // original 0x45B800 (0x34 bytes): CommuHitBlow_OpenStates[2] - once
@@ -1099,10 +1099,10 @@ extern "C" void __cdecl CommuHitBlow_OpenMusic(void) {
 extern "C" void __cdecl CommuHitBlow_OpenWait(void) {
     if (Request() == 2) return;
     Sound(0x102);
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-    B(at::kSlide) = 4;
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+    Rest4d_Count = 4;
     SetL(at::kBet, 0);
-    B(at::kState) = state;
+    Rest4b_BoardStep = state;
 }
 
 // original 0x45B840 (0xA9 bytes): CommuHitBlow_OpenStates[3] - 0x675F95 down
@@ -1110,30 +1110,30 @@ extern "C" void __cdecl CommuHitBlow_OpenWait(void) {
 // + 0xCC, 0x10), the stake box at (0x1E n + 0xCC, 0x3C, 0), a back at (0x68,
 // 0x40 - 0x1E n), n re-read for each; at 0 0x939A40 = 0, 0x939A3E + 1.
 extern "C" void __cdecl CommuHitBlow_OpenSlide(void) {
-    const auto n = static_cast<unsigned char>(B(at::kSlide) - 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count - 1);
+    Rest4d_Count = n;
     GuessPanel(0x10 - 0x1E * n, 0x18, 0);
-    ZennyBox(0x1E * B(at::kSlide) + 0xCC, 0x10);
-    StakeBox(0x1E * B(at::kSlide) + 0xCC, 0x3C, 0);
-    Card(0x68, 0x40 - 0x1E * B(at::kSlide), 0xFF);
-    if (B(at::kSlide) != 0) return;
-    const auto phase = static_cast<unsigned char>(B(at::kPhase) + 1);
-    B(at::kState) = 0;
-    B(at::kPhase) = phase;
+    ZennyBox(0x1E * Rest4d_Count + 0xCC, 0x10);
+    StakeBox(0x1E * Rest4d_Count + 0xCC, 0x3C, 0);
+    Card(0x68, 0x40 - 0x1E * Rest4d_Count, 0xFF);
+    if (Rest4d_Count != 0) return;
+    const auto phase = static_cast<unsigned char>(Rest4b_BoardState + 1);
+    Rest4b_BoardStep = 0;
+    Rest4b_BoardState = phase;
 }
 
 // original 0x45B8F0 (0xE bytes): CommuHitBlow_Phases[1] - jmp
 // [CommuHitBlow_PlayStates + 0x939A40 * 4] (9).
 extern "C" void __cdecl CommuHitBlow_PlayDispatch(void) {
     Dispatch("CommuHitBlow_PlayDispatch (0x45B8F0)", CommuHitBlow_PlayStates, CommuHitBlow_PlayStates_count,
-             at::kState);
+             Rest4b_BoardStep_addr);
 }
 
 // original 0x45B900 (0xE bytes): CommuHitBlow_PlayStates[0] - jmp
 // [CommuHitBlow_StartSteps + 0x939A3F * 4] (2).
 extern "C" void __cdecl CommuHitBlow_StartDispatch(void) {
     Dispatch("CommuHitBlow_StartDispatch (0x45B900)", CommuHitBlow_StartSteps, CommuHitBlow_StartSteps_count,
-             at::kStep);
+             Rest4c_Step_addr);
 }
 
 // original 0x45B910 (0xBB bytes): CommuHitBlow_StartSteps[0] - the stake 500 and
@@ -1144,9 +1144,9 @@ extern "C" void __cdecl CommuHitBlow_StartDispatch(void) {
 // 0x10), the stake box (0xCC, 0x3C, 0); 0x675F95 = 4, Sound 0x102, 0x939A3F
 // (read after) + 1.
 extern "C" void __cdecl CommuHitBlow_Start(void) {
-    const U zenny = L(bof3::addr::Party_Zenny);
+    const U zenny = Party_Zenny;
     SetL(at::kBet, 500);
-    SetL(bof3::addr::Party_Zenny, zenny - 500u);
+    Party_Zenny = zenny - 500u;
     for (int i = 0; i < 3;) {
         const auto v = static_cast<unsigned char>(SH_CALL(Commu_RandDigit)(9));
         B(at::kCards + i) = v;
@@ -1158,14 +1158,14 @@ extern "C" void __cdecl CommuHitBlow_Start(void) {
         ++i;
     }
     std::memset(At(at::kRecords), 1, 40);
-    B(at::kCount) = 0;
+    Rest4c_Count = 0;
     GuessPanel(0x10, 0x18, 0);
     Card(0x68, 0x40, 0xFF);
     ZennyBox(0xCC, 0x10);
     StakeBox(0xCC, 0x3C, 0);
-    B(at::kSlide) = 4;
+    Rest4d_Count = 4;
     Sound(0x102);
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);
 }
 
 // original 0x45B9D0 (0x120 bytes): CommuHitBlow_StartSteps[1] - 0x675F95 down
@@ -1174,31 +1174,31 @@ extern "C" void __cdecl CommuHitBlow_Start(void) {
 // backs at (8 (0x15 - n), 8 (0x11 - n), 0x68; 0x40), n re-read for each; at 0
 // 0x939A3F = 0, 0x939A40 + 1.
 extern "C" void __cdecl CommuHitBlow_StartSlide(void) {
-    B(at::kSlide) = static_cast<unsigned char>(B(at::kSlide) - 1);
+    Rest4d_Count = static_cast<unsigned char>(Rest4d_Count - 1);
     GuessPanel(0x10, 0x18, 0);
     HitBlowBoxes();
-    int n = B(at::kSlide);
+    int n = Rest4d_Count;
     Card(8 * (0x15 - n), 0x78 - 0xE * n, 1);
-    n = B(at::kSlide);
+    n = Rest4d_Count;
     Card(8 * (0x11 - n), 0x78 - 0xE * n, 1);
-    n = B(at::kSlide);
+    n = Rest4d_Count;
     Card(0x68, 0x78 - 0xE * n, 1);
-    Card(8 * (0x15 - B(at::kSlide)), 0x40, 0xFF);
-    Card(8 * (0x11 - B(at::kSlide)), 0x40, 0xFF);
+    Card(8 * (0x15 - Rest4d_Count), 0x40, 0xFF);
+    Card(8 * (0x11 - Rest4d_Count), 0x40, 0xFF);
     Card(0x68, 0x40, 0xFF);
-    if (B(at::kSlide) != 0) return;
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-    B(at::kStep) = 0;
-    B(at::kState) = state;
+    if (Rest4d_Count != 0) return;
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+    Rest4c_Step = 0;
+    Rest4b_BoardStep = state;
 }
 
 // original 0x45BAF0 (0x64 bytes): CommuHitBlow_PlayStates[1] - the message 0x80,
 // Field_Request = 2, 0x939A40 (read after) + 1; the panels (0, 0, row 0).
 extern "C" void __cdecl CommuHitBlow_Prompt(void) {
     Message(0x80);
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+    const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
     Field_Request = 2;
-    B(at::kState) = state;
+    Rest4b_BoardStep = state;
     HitBlowPanels(0, 0, 0);
 }
 
@@ -1207,9 +1207,9 @@ extern "C" void __cdecl CommuHitBlow_Prompt(void) {
 // 0, row 0).
 extern "C" void __cdecl CommuHitBlow_WaitPrompt(void) {
     if (Request() != 2) {
-        const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-        B(at::kCursor) = 0;
-        B(at::kState) = state;
+        const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
+        Rest4c_Cursor = 0;
+        Rest4b_BoardStep = state;
     }
     HitBlowPanels(0, 0, 0);
 }
@@ -1226,8 +1226,8 @@ extern "C" void __cdecl CommuHitBlow_Input(void) {
     const unsigned pressed = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xF000u);
     if ((pressed & 0xFFFF) != 0) {
         Sound(0x100);
-        const unsigned char row = B(at::kCount);
-        const unsigned char cursor = B(at::kCursor);
+        const unsigned char row = static_cast<unsigned char>(Rest4c_Count);
+        const unsigned char cursor = static_cast<unsigned char>(Rest4c_Cursor);
         const auto index = static_cast<unsigned char>(row * 5 + cursor + 3);
         if (pressed & (0x4000 | 0x1000)) {
             Room("CommuHitBlow_Input (0x45BBD0)", "the row 0x675F8C", static_cast<signed char>(row), 0, 7);
@@ -1243,16 +1243,16 @@ extern "C" void __cdecl CommuHitBlow_Input(void) {
             if (d > 9) B(at::kCards + index) = 1;
         } else if (pressed & 0x2000) {
             const auto c = static_cast<unsigned char>(cursor + 1);
-            B(at::kCursor) = c;
-            if (static_cast<signed char>(c) > 2) B(at::kCursor) = 0;
+            Rest4c_Cursor = c;
+            if (static_cast<signed char>(c) > 2) Rest4c_Cursor = 0;
         } else if (pressed & 0x8000) {
             const auto c = static_cast<unsigned char>(cursor - 1);
-            B(at::kCursor) = c;
-            if (static_cast<signed char>(c) < 0) B(at::kCursor) = 2;
+            Rest4c_Cursor = c;
+            if (static_cast<signed char>(c) < 0) Rest4c_Cursor = 2;
         }
     } else if (Field_ConfirmButtons & Input_Pressed) {
         Sound(0x104);
-        B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+        Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
     }
     HitBlowPanels(0, 0, 1);
 }
@@ -1269,7 +1269,7 @@ extern "C" void __cdecl CommuHitBlow_Input(void) {
 // and the panels (0, 0, row 0). Ours aborts on a row outside 0..7 or a prize
 // past the table's 24.
 extern "C" void __cdecl CommuHitBlow_Score(void) {
-    const int r = S8(at::kCount);
+    const int r = Rest4c_Count;
     Room("CommuHitBlow_Score (0x45BD20)", "the row 0x675F8C", r, 0, 7);
     unsigned char* const rec = At(at::kRecords + 5 * r);
     unsigned char hits = 0, blows = 0;
@@ -1286,27 +1286,27 @@ extern "C" void __cdecl CommuHitBlow_Score(void) {
         SH_CALL(Crt_sprintf)(text_a, format, static_cast<unsigned>(hits));
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextB)), format, static_cast<unsigned>(blows));
         Message(0x81);
-        B(at::kState) = static_cast<unsigned char>(B(at::kState) + 1);
+        Rest4b_BoardStep = static_cast<unsigned char>(Rest4b_BoardStep + 1);
     } else {
         SH_CALL(Crt_sprintf)(text_a, format, r + 1);
         unsigned char rank = static_cast<unsigned char>(Rnd() & 3);
-        B(at::kCursor) = rank;
+        Rest4c_Cursor = rank;
         if (static_cast<signed char>(rank) > 2) {
             const unsigned second = Rnd();
-            auto v = static_cast<unsigned char>(B(at::kCursor) - (second & 3));
+            auto v = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Cursor) - (second & 3));
             if (static_cast<signed char>(v) < 0) v = 0;
             else if (static_cast<signed char>(v) > 2) v = 2;
-            B(at::kCursor) = v;
+            Rest4c_Cursor = v;
             rank = v;
         }
-        const int prize = S8(at::kCount) * 3 + static_cast<signed char>(rank);
+        const int prize = Rest4c_Count * 3 + static_cast<signed char>(rank);
         Room("CommuHitBlow_Score (0x45BD20)", "the prize", prize, 0, at::kPrizesCount - 1);
         const unsigned item = B(at::kPrizes + 2 * prize);
         const unsigned category = B(at::kPrizes + 2 * prize + 1);
         const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
         std::memcpy(At(at::kTextB), name, 16);
         Message(0x82);
-        B(at::kState) = 7;
+        Rest4b_BoardStep = 7;
     }
     Field_Request = 2;
     HitBlowPanels(0, 0, 0);
@@ -1322,24 +1322,24 @@ extern "C" void __cdecl CommuHitBlow_Score(void) {
 extern "C" void __cdecl CommuHitBlow_NextGuess(void) {
     if (Request() == 2) {
         GuessPanel(0x10, 0x18, 1);
-        GuessRow(0x68, 0x78, B(at::kCount), 0);
+        GuessRow(0x68, 0x78, static_cast<unsigned char>(Rest4c_Count), 0);
     } else {
-        const auto row = static_cast<unsigned char>(B(at::kCount) + 1);
-        B(at::kCount) = row;
+        const auto row = static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) + 1);
+        Rest4c_Count = row;
         if (static_cast<signed char>(row) < 8) {
             const int r = static_cast<signed char>(row);
             Room("CommuHitBlow_NextGuess (0x45BEE0)", "the new row 0x675F8C", r, 1, 7);
             unsigned char* const rec = At(at::kRecords + 5 * r);
             for (int j = 0; j < 3; ++j) rec[j] = rec[j - 5];
-            B(at::kState) = 1;
+            Rest4b_BoardStep = 1;
         } else {
             Message(0x85);
-            const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+            const auto state = static_cast<unsigned char>(Rest4b_BoardStep + 1);
             Field_Request = 2;
-            B(at::kState) = state;
+            Rest4b_BoardStep = state;
         }
         GuessPanel(0x10, 0x18, 0);
-        GuessRow(0x68, 0x78, static_cast<unsigned char>(B(at::kCount) - 1), 0);
+        GuessRow(0x68, 0x78, static_cast<unsigned char>(static_cast<unsigned char>(Rest4c_Count) - 1), 0);
     }
     Secret(0x68, 0x40, 0);
     HitBlowBoxes();
@@ -1353,11 +1353,11 @@ extern "C" void __cdecl CommuHitBlow_Lost(void) {
     if (Request() != 2) {
         Message(0x86);
         Field_Request = 2;
-        B(at::kState) = 8;
+        Rest4b_BoardStep = 8;
     }
     GuessPanel(0x10, 0x18, 1);
     Secret(0x68, 0x40, 1);
-    const unsigned char row = B(at::kCount);
+    const unsigned char row = static_cast<unsigned char>(Rest4c_Count);
     GuessRow(0x68, 0x78, row == 8 ? 7 : row, 0);
     HitBlowBoxes();
 }
@@ -1370,7 +1370,7 @@ extern "C" void __cdecl CommuHitBlow_Lost(void) {
 // the table's 24.
 extern "C" void __cdecl CommuHitBlow_Prize(void) {
     if (Request() != 2) {
-        const int prize = S8(at::kCount) * 3 + S8(at::kCursor);
+        const int prize = Rest4c_Count * 3 + Rest4c_Cursor;
         Room("CommuHitBlow_Prize (0x45C020)", "the prize", prize, 0, at::kPrizesCount - 1);
         const unsigned item = B(at::kPrizes + 2 * prize);
         const unsigned category = B(at::kPrizes + 2 * prize + 1);
@@ -1379,11 +1379,11 @@ extern "C" void __cdecl CommuHitBlow_Prize(void) {
             Message(0x83);
             Field_Request = 2;
         }
-        B(at::kState) = 6;
+        Rest4b_BoardStep = 6;
     }
     GuessPanel(0x10, 0x18, 1);
     Secret(0x68, 0x40, 1);
-    GuessRow(0x68, 0x78, B(at::kCount), 0);
+    GuessRow(0x68, 0x78, static_cast<unsigned char>(Rest4c_Count), 0);
     HitBlowBoxes();
 }
 
@@ -1400,7 +1400,7 @@ extern "C" void __cdecl CommuHitBlow_Prize(void) {
 // 0x939A41 0 and 0x939A3E = 2. Ours aborts on a row outside 0..7 where it
 // indexes the records.
 extern "C" void __cdecl CommuHitBlow_End(void) {
-    const unsigned char count = B(at::kCount);
+    const unsigned char count = static_cast<unsigned char>(Rest4c_Count);
     const unsigned char r = count == 8 ? 7 : count;
     if (Request() == 2) {
         Secret(0x68, 0x40, 1);
@@ -1409,54 +1409,54 @@ extern "C" void __cdecl CommuHitBlow_End(void) {
         HitBlowBoxes();
         return;
     }
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = Rest4c_Step;
     if (step == 0) {
-        B(at::kSlide) = 0;
+        Rest4d_Count = 0;
         Secret(0x68, 0x40, 1);
         GuessRow(0x68, 0x78, r, 0);
         GuessPanel(0x10, 0x18, 1);
         HitBlowBoxes();
-        B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+        Rest4c_Step = static_cast<unsigned char>(Rest4c_Step + 1);
         return;
     }
     if (step == 1) {
-        const auto n = static_cast<unsigned char>(B(at::kSlide) + 1);
-        B(at::kSlide) = n;
+        const auto n = static_cast<unsigned char>(Rest4d_Count + 1);
+        Rest4d_Count = n;
         Room("CommuHitBlow_End (0x45C0C0)", "the row", r, 0, 7);
         const U rec = at::kRecords + 5 * r;
         Card(0xA8 - 16 * n, 0x78 - 0xE * n, B(rec + 2));
-        int m = B(at::kSlide);
+        int m = Rest4d_Count;
         Card(8 * (0x11 - m), 0x78 - 0xE * m, B(rec + 1));
         const unsigned char first = B(rec);
-        m = B(at::kSlide);
+        m = Rest4d_Count;
         Card(0x68, 0x78 - 0xE * m, first);
-        Card(0xA8 - 16 * B(at::kSlide), 0x40, B(at::kCards + 2));
-        Card(8 * (0x11 - B(at::kSlide)), 0x40, B(at::kCards + 1));
+        Card(0xA8 - 16 * Rest4d_Count, 0x40, B(at::kCards + 2));
+        Card(8 * (0x11 - Rest4d_Count), 0x40, B(at::kCards + 1));
         Card(0x68, 0x40, B(at::kCards));
         GuessPanel(0x10, 0x18, 1);
         HitBlowBoxes();
-        if (B(at::kSlide) != 4) return;
-        if (B(at::kAgain) == 0) {
-            B(at::kState) = 0;
-            B(at::kStep) = 0;
+        if (Rest4d_Count != 4) return;
+        if (Rest4c_Again == 0) {
+            Rest4b_BoardStep = 0;
+            Rest4c_Step = 0;
         } else {
             Sound(0x102);
-            B(at::kSlide) = 0;
+            Rest4d_Count = 0;
             B(at::kStep) = 2;
         }
         return;
     }
-    const auto n = static_cast<unsigned char>(B(at::kSlide) + 1);
-    B(at::kSlide) = n;
+    const auto n = static_cast<unsigned char>(Rest4d_Count + 1);
+    Rest4d_Count = n;
     GuessPanel(0x10 - 0x1E * n, 0x18, 0);
-    ZennyBox(0x1E * B(at::kSlide) + 0xCC, 0x10);
-    StakeBox(0x1E * B(at::kSlide) + 0xCC, 0x3C, 0);
-    Card(0x68, 0x40 - 0x1E * B(at::kSlide), 0xFF);
-    if (B(at::kSlide) != 5) return;
-    B(at::kState) = 0;
-    B(at::kStep) = 0;
-    B(at::kAgain) = 0;
-    B(at::kPhase) = 2;
+    ZennyBox(0x1E * Rest4d_Count + 0xCC, 0x10);
+    StakeBox(0x1E * Rest4d_Count + 0xCC, 0x3C, 0);
+    Card(0x68, 0x40 - 0x1E * Rest4d_Count, 0xFF);
+    if (Rest4d_Count != 5) return;
+    Rest4b_BoardStep = 0;
+    Rest4c_Step = 0;
+    Rest4c_Again = 0;
+    Rest4b_BoardState = 2;
 }
 
 // original 0x45C3A0 (0x54 bytes): CommuHitBlow_Phases[2] - the close phase, as

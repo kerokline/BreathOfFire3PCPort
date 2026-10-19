@@ -38,19 +38,19 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the battle's cells -----------------------------------------------------
-constexpr U kCurrentEnemy = 0x939AD8;     // the enemy EnemyRunAll is running (its object)
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy EnemyRunAll is running (its object)
 constexpr U kRoundFlags = 0x904AA8;       // u8: the round flags' low byte
-constexpr U kEventFlags = 0x904AAD;       // u8: bit 0 set by the hooks of kinds 1 and 39 at a quarter of HP, and by Boss01_Event
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 0 the loss, bit 1 the win, bit 2 set by Gary's end (tested with 6 by set-ups 2, 3)
-constexpr U kExp = 0x904AEC;              // u32: the experience the battle pays (Battle_EnemyDefeated adds +0x96)
+// kEventFlags: now BossSe_Script (symbols.toml). u8: bit 0 set by the hooks of kinds 1 and 39 at a quarter of HP, and by Boss01_Event
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win, bit 2 set by Gary's end (tested with 6 by set-ups 2, 3)
+// kExp: now BattleFlow_ExpTotal (symbols.toml). u32: the experience the battle pays (Battle_EnemyDefeated adds +0x96)
 constexpr U kActor = 0x904B34;            // u8: the acting actor, 3.. an enemy
 constexpr U kActionKind = 0x904B35;       // u8: the action's kind (4 an ability)
-constexpr U kAction = 0x904B40;           // pointer: the action's record, +2 the action's id (u16)
+// kAction: now BattleSprites_Action (symbols.toml). pointer: the action's record, +2 the action's id (u16)
 constexpr U kTarget = 0x904B44;           // u8: the battle's target
-constexpr U kEndCount = 0x904B7E;         // u16: Mogu's end count (0x3C), Gary's end waits for it to be 0
-constexpr U kChapterRun = 0x8034E4;       // u8: the chapter's run
-constexpr U kChapterStep = 0x8034E5;      // u8: the chapter run's step
-constexpr U kWindowPass = 0x802D20;       // u8: the window records' pass byte (symbols.toml, the 0x59E230 evidence)
+// kEndCount: now BossSa_EndCount (symbols.toml). u16: Mogu's end count (0x3C), Gary's end waits for it to be 0
+// kChapterRun: now MoveScript_Var7 (symbols.toml). u8: the chapter's run
+// kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
+// kWindowPass: now BossSa_WindowPass (symbols.toml). u8: the window records' pass byte (symbols.toml, the 0x59E230 evidence)
 constexpr U kMoveVar3 = 0x903848;         // u8: MoveScript counter 0 (op A0's; the message choices' "variable 3")
 constexpr U kTaskSlots = 0x93A000;        // BattleTask_Create's slots, 0x84 bytes each
 constexpr U kTaskStride = 0x84;
@@ -61,10 +61,10 @@ constexpr U kFieldActors = 0x7DEF00;      // Sprite_Objects + 0x80: MoveCmd_OpE9
 constexpr U kObjectStride = 0xA4;
 
 // --- the party's leader (ObjTrio + 0) ---------------------------------------
-constexpr U kLeaderTarget = 0x802E64;     // +0x124 the member's target
-constexpr U kLeaderAction = 0x802E65;     // +0x125 its action's kind
-constexpr U kLeaderActionId = 0x802E66;   // +0x126 (u16) its action's id
-constexpr U kLeaderFlags = 0x802E74;      // +0x134 (u32): bit 1
+// kLeaderTarget: now ObjTrio[0x124] (symbols.toml). +0x124 the member's target
+// kLeaderAction: now ObjTrio[0x125] (symbols.toml). +0x125 its action's kind
+// kLeaderActionId: now ObjTrio[0x126] (symbols.toml). +0x126 (u16) its action's id
+// kLeaderFlags: now ObjTrio[0x134] (symbols.toml). +0x134 (u32): bit 1
 
 // --- the literals the functions store ---------------------------------------
 // The hooks the set-ups store (BattleHook_End / _Exit / _Event), and the

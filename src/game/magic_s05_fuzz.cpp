@@ -195,7 +195,7 @@ const mh::DataTable kTables[] = {{0x65A69C, 1}};
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(mh::at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 
 // Half the time the byte one step before a threshold, or at it; else as the
 // random fill left it.

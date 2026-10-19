@@ -29,33 +29,33 @@ using U = std::uint32_t;
 // --- the battle's cells (0x904AA0..0x904BA0) ---------------------------------
 constexpr U kFight = 0x904AAA;            // u8: the event battle (Boss_SetupTable's index)
 constexpr U kFacing = 0x904AAC;           // u8: the battle's facing (inventory_ops.md; read as a dword, & 0xFF)
-constexpr U kScript = 0x904AAD;           // u8: the fights' script bits (bit 2 set by kind 40's death flash)
-constexpr U kMusicFlags = 0x904AE5;       // u8: bit 0x40 keeps the battle's music
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 1 the win; bit 2 read by set-up 33; bit 3 set by set-up 32
+// kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (bit 2 set by kind 40's death flash)
+// kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 2 read by set-up 33; bit 3 set by set-up 32
 constexpr U kActor = 0x904B34;            // u8: the acting actor (3..10 an enemy)
 constexpr U kTarget = 0x904B44;           // u8: the target (0..2 a member, 3..10 an enemy)
 
 // --- the hooks -----------------------------------------------------------------
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
-constexpr U kHookExit = 0x904B68;         // BattleHook_Exit
-constexpr U kHookEvent = 0x904B6C;        // BattleHook_Event
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
+// kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
+// kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 
 // --- the enemies and the task slots ---------------------------------------------
-constexpr U kCurrentEnemy = 0x939AD8;     // the enemy BattleEnemy_RunAll is running
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running
 constexpr U kEnemies = 0x93B960;          // enemy objects, stride 0x128
 constexpr U kEnemyStride = 0x128;
 constexpr U kTasks = 0x93A000;            // BattleTask_Create's 48 slots of 0x84
 constexpr U kTaskStride = 0x84;
-constexpr U kOwner = 0x93B940;            // the running task's owner (BattleTask_RunAll sets it from the slot's +0x80)
+// kOwner: now BattleE2_Owner (symbols.toml). the running task's owner (BattleTask_RunAll sets it from the slot's +0x80)
 
 // --- the party (ObjTrio, stride 0x14C) -----------------------------------------
-constexpr U kParty = 0x802D40;
+// kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-constexpr U kMember0X = 0x802D74;         // member 0's +0x34 (x), read by set-up 33's end hook
-constexpr U kMember0Z = 0x802D78;         // member 0's +0x38 (z)
+// kMember0X: now ObjTrio[0x34] (symbols.toml). member 0's +0x34 (x), read by set-up 33's end hook
+// kMember0Z: now ObjTrio[0x38] (symbols.toml). member 0's +0x38 (z)
 
 // --- other cells ------------------------------------------------------------
-constexpr U kChapterStep = 0x8034E5;      // u8: the chapter run's step
+// kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
 constexpr U kPoseSet = 0x8C5D80;          // the frame set set-up 32's end hook poses the party from
 // Signed byte pairs (x, z) indexed by the facing 0x904AAC (four pairs; the
 // facing is read whole, & 0xFF, unchecked). Shared with engine code outside the

@@ -106,10 +106,10 @@ constexpr Site kSites[] = {
 
 // The command cross's six masks, read from Battle_CommandPadMasks in place
 // (the table is Capcom's and stays as it is; ours asks each through sigma).
-constexpr U kPadMasks = 0x64AE3C;
+// kPadMasks: now Battle_CommandPadMasks (symbols.toml).
 constexpr unsigned kNPadMasks = 6;
 U16 PadMask(unsigned k) {
-    return *reinterpret_cast<const U16*>(static_cast<std::uintptr_t>(kPadMasks + 2 * k));
+    return *reinterpret_cast<const U16*>(static_cast<std::uintptr_t>(Battle_CommandPadMasks_addr + 2 * k));
 }
 
 unsigned g_bad = 0;

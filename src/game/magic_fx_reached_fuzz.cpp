@@ -96,12 +96,12 @@ void Disturb() {
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 4) % 16) {
     case 0: Sprite_Current = TaskAt(v); break;
-    case 1: SetPointer(at::kOwner, OwnerFor(v)); break;
-    case 2: SetPointer(at::kSource, g_records[v & 1]); break;
-    case 3: SetPointer(at::kSparkleCurrent, SparkleAt(v)); break;
+    case 1: SetPointer(BattleE2_Owner_addr, OwnerFor(v)); break;
+    case 2: SetPointer(BattleOdds_ActorObject_addr, g_records[v & 1]); break;
+    case 3: SetPointer(BattleItems_SparkleCurrent_addr, SparkleAt(v)); break;
     case 4: At(at::kTarget)[0] = static_cast<unsigned char>(v % 11); break;
     case 5: At(at::kActor)[0] = static_cast<unsigned char>(v % 5); break;
-    case 6: At(at::kMessageUp)[0] = b; break;
+    case 6: At(BattleE1_MessageUp_addr)[0] = b; break;
     case 7: At(at::kFlags)[0] = b; break;
     case 8: Frame_Counter = h >> 6; break;
     case 9: case 10: {
@@ -111,12 +111,12 @@ void Disturb() {
     }
     case 11: {
         static const unsigned kFields[] = {0, 0xB, 8, 0x34, 0x38, 0x3C};
-        Pointer(at::kOwner)[kFields[v % 6]] = b;
+        Pointer(BattleE2_Owner_addr)[kFields[v % 6]] = b;
         break;
     }
     case 12: {
         static const unsigned kFields[] = {0, 2, 6, 0xC};
-        Pointer(at::kSparkleCurrent)[kFields[v % 4]] = b;
+        Pointer(BattleItems_SparkleCurrent_addr)[kFields[v % 4]] = b;
         break;
     }
     case 13: {
@@ -137,7 +137,7 @@ template <unsigned N> void __cdecl StubHandler() {
     Disturb();
 }
 template <unsigned N> void __cdecl StubSparklePhase() {
-    Record(140 + N, Address(Pointer(at::kSparkleCurrent)), Pointer(at::kSparkleCurrent)[2]);
+    Record(140 + N, Address(Pointer(BattleItems_SparkleCurrent_addr)), Pointer(BattleItems_SparkleCurrent_addr)[2]);
     Disturb();
 }
 template <unsigned N> void __cdecl StubVoid() {
@@ -218,7 +218,7 @@ void __cdecl StubPlaySound(unsigned first, unsigned second) {
     Disturb();
 }
 void __cdecl StubSparkleDispatch() {
-    Record(33, Address(Pointer(at::kSparkleCurrent)), static_cast<std::uint32_t>(Long(At(at::kOwner))));
+    Record(33, Address(Pointer(BattleItems_SparkleCurrent_addr)), static_cast<std::uint32_t>(Long(At(BattleE2_Owner_addr))));
     Disturb();
 }
 // Sparkle_Alloc: a record index 0..127 in al, or 0xFF a quarter of the time.
@@ -238,11 +238,11 @@ void __cdecl StubFlash(unsigned index) {
 }
 // The rays' callees read their arguments' low words.
 void __cdecl StubRaysG2(unsigned start, unsigned radius) {
-    Record(37, start & 0xFFFF, radius & 0xFFFF, Address(Pointer(at::kSparkleCurrent)));
+    Record(37, start & 0xFFFF, radius & 0xFFFF, Address(Pointer(BattleItems_SparkleCurrent_addr)));
     Disturb();
 }
 void __cdecl StubRaysG3(unsigned start, unsigned radius) {
-    Record(38, start & 0xFFFF, radius & 0xFFFF, Address(Pointer(at::kSparkleCurrent)));
+    Record(38, start & 0xFFFF, radius & 0xFFFF, Address(Pointer(BattleItems_SparkleCurrent_addr)));
     Disturb();
 }
 void __cdecl StubTintClut(int level) {
@@ -424,9 +424,9 @@ const Handler kRingStubs[4] = {&StubDataEntry<0>, &StubDataEntry<1>, &StubDataEn
 const Handler kCloneStubs[2] = {&StubDataEntry<10>, &StubDataEntry<11>};
 const Handler kDimStubs[4] = {&StubDataEntry<20>, &StubDataEntry<21>, &StubDataEntry<22>, &StubDataEntry<23>};
 const DataTable kDataTables[] = {
-    {at::kRingPhases, 4, kRingStubs},
-    {at::kCloneTypes, 2, kCloneStubs},
-    {at::kDimPhases, 4, kDimStubs},
+    {FxRing_Phases_addr, 4, kRingStubs},
+    {StealClone_Types_addr, 2, kCloneStubs},
+    {FxDim_Phases_addr, 4, kDimStubs},
 };
 
 // --- the state both passes start from --------------------------------------
@@ -438,15 +438,15 @@ Region g_regions[] = {
                                                                 // the fields an enemy index of 2 reads (0x93B8E0..)
     {0x937F88, 0x10},                                           // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter
     {at::kFlags, 0xA8},                                         // 0x904AA8..0x904B50: flags, actor, target, source
-    {at::kMessageUp, 4},
-    {at::kParty, 5 * at::kPartyStride},                         // actors 0..4
+    {BattleE1_MessageUp_addr, 4},
+    {ObjTrio_addr, 5 * at::kPartyStride},                       // actors 0..4
     {at::kEnemies, 8 * at::kEnemyStride},                       // targets 3..10
-    {at::kStealRates, 8},
-    {at::kSparkleCounts, 0x10},                                 // counts and delays
+    {Steal_RateTable_addr, 8},
+    {Sparkle_CountByKind_addr, 0x10},                           // counts and delays
     {at::kSparklePool, at::kSparkles * at::kSparkleStride + 4}, // the pool and the current pointer
-    {at::kTints, 0xC00},
-    {at::kClutRow, 0x20},
-    {at::kClutSource, 0x20},
+    {MoveScript_TintRecords_addr, 0xC00},
+    {Gfx_ClutStrip_addr + 0x3400, 0x20},
+    {Gfx_ClutStripSource_addr + 0x3400, 0x20},
     {0, 2 * kRecordBytes},                                      // g_records (filled in at start-up)
 };
 constexpr unsigned kRegionBytes = at::kTaskCount * at::kTaskStride + 0xA0 + 0x10 + 0xA8 + 4 + 5 * at::kPartyStride +
@@ -477,9 +477,9 @@ unsigned char g_rates_exe[8];   // Steal_RateTable as the exe has it, taken befo
 // Random bytes put back inside what the functions dereference.
 void Fix() {
     Sprite_Current = TaskAt(Next());
-    SetPointer(at::kOwner, OwnerFor(Next()));
-    SetPointer(at::kSource, g_records[Next() & 1]);
-    SetPointer(at::kSparkleCurrent, SparkleAt(Next()));
+    SetPointer(BattleE2_Owner_addr, OwnerFor(Next()));
+    SetPointer(BattleOdds_ActorObject_addr, g_records[Next() & 1]);
+    SetPointer(BattleItems_SparkleCurrent_addr, SparkleAt(Next()));
     At(at::kTarget)[0] = static_cast<unsigned char>(Next() % 11);
     At(at::kActor)[0] = static_cast<unsigned char>(Next() % 5);
     // Phases inside the tables (the seeding picks its function's own).
@@ -500,7 +500,7 @@ std::uint32_t Pick(const std::uint32_t* v, unsigned n) { return v[Next() % n]; }
 
 void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
-    unsigned char* const cur = Pointer(at::kSparkleCurrent);
+    unsigned char* const cur = Pointer(BattleItems_SparkleCurrent_addr);
     g_rand_hint = Next();
     g_rand_first = -1;
     switch (k) {
@@ -534,7 +534,7 @@ void Seed(unsigned k) {
         unsigned char* const e = TargetEnemy();
         if (Often()) e[at::kStealRate] = static_cast<unsigned char>(Half() ? 1 + Next() % 7 : Next() % 8);
         if (Often())   // the table as the exe has it (random bytes the rest of the time)
-            std::memcpy(At(at::kStealRates), g_rates_exe, sizeof g_rates_exe);
+            std::memcpy(At(Steal_RateTable_addr), g_rates_exe, sizeof g_rates_exe);
         if (Half()) SetWord(e + at::kStealItem, Half() ? 0 : Next() % 0x100);
         const int d = static_cast<int>(MF_PICK(49, 48, 29, 28, 19, 18, 9, 8, static_cast<std::uint32_t>(-10),
                                                static_cast<std::uint32_t>(-11), static_cast<std::uint32_t>(-20),
@@ -548,11 +548,11 @@ void Seed(unsigned k) {
             // at the rate times the multiplier the original takes for it: a
             // threshold moved by one changes the answer at exactly that Rand.
             SetWord(e + at::kEnemySpeed, speed + 0x4000u);
-            SetWord(At(at::kParty + At(at::kActor)[0] * at::kPartyStride + at::kThiefSpeed),
+            SetWord(At(ObjTrio_addr + At(at::kActor)[0] * at::kPartyStride + at::kThiefSpeed),
                     static_cast<unsigned>(static_cast<int>(speed + 0x4000u) + d));
             m = d >= 49 ? 12 : d >= 29 ? 11 : d >= 19 ? 10 : d >= 9 ? 9 : d >= -10 ? 8 : d >= -20 ? 7 : d >= -30 ? 6 : d >= -50 ? 5 : 4;
         }
-        const unsigned rate = e[at::kStealRate] < 8 ? static_cast<unsigned>(static_cast<signed char>(At(at::kStealRates)[e[at::kStealRate]])) : 0;
+        const unsigned rate = e[at::kStealRate] < 8 ? static_cast<unsigned>(static_cast<signed char>(At(Steal_RateTable_addr)[e[at::kStealRate]])) : 0;
         g_rand_hint = rate * m;
         // Half the time the roll lands on the compare exactly, or one below.
         if (Half() && g_rand_hint <= 0xFF) g_rand_first = static_cast<int>((g_rand_hint - (Half() ? 1u : 0u)) & 0xFF);
@@ -563,11 +563,11 @@ void Seed(unsigned k) {
         if (Often()) sc[9] = static_cast<unsigned char>(MF_PICK(0x1E, 0x1F, 1, 0, 2));
         break;
     case kReport:
-        At(at::kMessageUp)[0] = static_cast<unsigned char>(Often() ? 0 : Next() | 1);
+        At(BattleE1_MessageUp_addr)[0] = static_cast<unsigned char>(Often() ? 0 : Next() | 1);
         if (Often()) sc[0xA] = static_cast<unsigned char>(MF_PICK(0x38, 0x39, 0x3A));
         break;
     case kIdle:
-        At(at::kMessageUp)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(BattleE1_MessageUp_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     case kCloneDispatch:
         sc[1] = static_cast<unsigned char>(Next() % 2);
@@ -581,7 +581,7 @@ void Seed(unsigned k) {
         break;
     case kSpawn:
         for (unsigned i = 0; i < 8; ++i)
-            if (Often()) At(at::kSparkleCounts)[i] = static_cast<unsigned char>(MF_PICK(0, 1, 2, 5, 0x1E, 0x3C, 0xFF));
+            if (Often()) At(Sparkle_CountByKind_addr)[i] = static_cast<unsigned char>(MF_PICK(0, 1, 2, 5, 0x1E, 0x3C, 0xFF));
         break;
     case kUpdate:
         cur[2] = static_cast<unsigned char>(Next() % 3);
@@ -652,7 +652,7 @@ void SelfTest() {
     for (const Region& r : g_regions) region_bytes += r.size;
     if (region_bytes != kRegionBytes)
         bof3::Fatal("magic_fx_reached: the regions are %u bytes, the state holds %u", region_bytes, kRegionBytes);
-    std::memcpy(g_rates_exe, At(at::kStealRates), sizeof g_rates_exe);
+    std::memcpy(g_rates_exe, At(Steal_RateTable_addr), sizeof g_rates_exe);
 
     void* clones[kCount];
     for (unsigned k = 0; k < kCount; ++k) {

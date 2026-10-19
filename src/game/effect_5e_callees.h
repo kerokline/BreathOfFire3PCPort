@@ -14,13 +14,13 @@ namespace effect_5e::at {
 // --- cells ------------------------------------------------------------------------
 constexpr std::uint32_t kCounter = 0x903848;        // the chapter counter byte the sub-kinds wait on and raise
                                                     // (scenario_harness kCounter)
-constexpr std::uint32_t kStoryFlags = 0x904030;     // Cond_Flags + 0xA0: the story flags Flags_Test reads
-constexpr std::uint32_t kFlagRow50 = 0x903FE0;      // Cond_Flags + 0x50: the row sub-kind 0x24 sets bit 4 of
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0: the story flags Flags_Test reads
+// kFlagRow50: now Cond_Flags[0x50] (symbols.toml). Cond_Flags + 0x50: the row sub-kind 0x24 sets bit 4 of
 constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio record 0's +0x34 (the leader's x, 16.16)
 constexpr std::uint32_t kLeaderZ = 0x802D78;        // ObjTrio record 0's +0x38 (z)
-constexpr std::uint32_t kLeaderShade = 0x802D9D;    // ObjTrio record 0's +0x5D..+0x5F (sub-kind 0x3F dims them)
-constexpr std::uint32_t kClutRow4 = 0x80BD80;       // Gfx_ClutStripSource + 0x800: CLUT row 4 as loaded (0x100 words)
-constexpr std::uint32_t kClutRow4Live = 0x80FD80;   // Gfx_ClutStrip + 0x800: the row the game uploads
+// kLeaderShade: now ObjTrio[0x5d] (symbols.toml). ObjTrio record 0's +0x5D..+0x5F (sub-kind 0x3F dims them)
+// kClutRow4: now Gfx_ClutStripSource[0x400] (symbols.toml). Gfx_ClutStripSource + 0x800: CLUT row 4 as loaded (0x100 words)
+// kClutRow4Live: now Gfx_ClutStrip[0x400] (symbols.toml). Gfx_ClutStrip + 0x800: the row the game uploads
 constexpr unsigned kClutRowWords = 0x100;
 constexpr rdata::Const kShadeConst{0x5C41B8};     // a float the trails add to a projected x and y (read in place)
 

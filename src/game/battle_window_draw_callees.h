@@ -24,9 +24,9 @@ constexpr std::uint32_t kStatusX = 0x64E307;        // u8 by party size: window 
 constexpr std::uint32_t kPrintBuf = 0x904BA0;       // the sprintf buffer
 constexpr std::uint32_t kFmtNumber = 0x64ADD8;      // "%4d"
 constexpr std::uint32_t kFmtNone = 0x64E320;        // ":" (the digit strip's cell 10), for a value of 0xFFFF
-constexpr std::uint32_t kFmtCost = 0x64D3EC;        // "%2d"
-constexpr std::uint32_t kColour = 0x903A5A;         // s8: the window colour (Config), a CLUT row pair
-constexpr std::uint32_t kClutShadow = 0x80B788;     // 32 bytes a CLUT row: entry 0 of row (colour * 2 + shade)
+// kFmtCost: now Boss26Fx_CountFormat (symbols.toml). "%2d"
+// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour (Config), a CLUT row pair
+// kClutShadow: now Gfx_ClutStripSource[0x104] (symbols.toml). 32 bytes a CLUT row: entry 0 of row (colour * 2 + shade)
 constexpr std::uint32_t kQuadShapes = 0x64E148;     // 16 bytes a shape: four (u16 dx, u16 dy) corners
 constexpr std::uint32_t kTileSizes = 0x64E268;      // 4 bytes a size: u16 w, u16 h
 constexpr std::uint32_t kEnemies = 0x93B9E0;        // EnemyWorkingRecords, stride 0x128
@@ -39,11 +39,11 @@ constexpr std::uint32_t kCharRecords = 0x903A70;    // CharacterRecords, stride 
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kWorking = 0x802DC0;        // the party's working records inside ObjTrio, stride 0x14C
 constexpr std::uint32_t kWorkingStride = 0x14C;
-constexpr std::uint32_t kPartyLists = 0x904062;     // u8 per party slot: its character
-constexpr std::uint32_t kMemberRecord = 0x66972C;   // u8 per character: its record (MoveScript_EffectState)
-constexpr std::uint32_t kFlags15 = 0x904660;        // four bytes Skill_CanUse tests for ability 0x15
-constexpr std::uint32_t kFlags3E = 0x90465C;        // four bytes it tests for ability 0x3E
-constexpr std::uint32_t kBattle97 = 0x904AAA;       // a byte it compares with 0x25 for ability 0x97 (PSX 0x801462E6)
+// kPartyLists: now Cond_Flags[0xd2] (symbols.toml). u8 per party slot: its character
+// kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per character: its record (MoveScript_EffectState)
+// kFlags15: now Rest3c_Byte660 (symbols.toml). four bytes Skill_CanUse tests for ability 0x15
+// kFlags3E: now ModeFlow_CountdownA (symbols.toml). four bytes it tests for ability 0x3E
+// kBattle97: now BattleActions_EventBattle (symbols.toml). a byte it compares with 0x25 for ability 0x97 (PSX 0x801462E6)
 
 }  // namespace at
 

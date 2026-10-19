@@ -48,6 +48,7 @@
 #include "game/menu_draw_helpers_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
@@ -76,11 +77,17 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char* Rec() {
-    return At(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(at::kCurrent)));
+    return At(*reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr)));
 }
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
+// typed: +8..+0x1F mean something else in each handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
-unsigned X(const unsigned char* w) { return Word(w + 4); }
-unsigned Y(const unsigned char* w) { return Word(w + 6); }
+unsigned X(const unsigned char* w) { return Win(w)->centre_x; }
+unsigned Y(const unsigned char* w) { return Win(w)->centre_y; }
 
 // `call / jmp [table + index * 4]`: the .data dword read at the call, the
 // index unbounded as in the original (a byte, zero-extended).
@@ -92,25 +99,25 @@ void Step(U table) { Dispatch(table, Rec()[3]); }
 
 // A party slot's character record: 0x66972C[0x904062[slot]], both bytes, the
 // slot unbounded.
-unsigned Member(unsigned slot) { return At(at::kMemberRecord + At(at::kPartyList + slot)[0])[0]; }
+unsigned Member(unsigned slot) { return At(MoveScript_EffectState_addr + At(Cond_Flags_addr + 0xd2 + slot)[0])[0]; }
 
 // The slides: x (+4) or y (+6) stepped by `by`; past `bound` (signed 16-bit;
 // `below` says which side) it is set to `to` and the step +3 goes to 0.
 void SlideX(int by, short bound, bool below, short to) {
     unsigned char* const w = Rec();
-    SetWord(w + 4, static_cast<unsigned>(Word(w + 4) + by));
+    Win(w)->centre_x = static_cast<unsigned>(Win(w)->centre_x + by);
     const short x = S(w + 4);
     if (below ? x < bound : x > bound) {
-        SetWord(w + 4, static_cast<std::uint16_t>(to));
+        Win(w)->centre_x = static_cast<std::uint16_t>(to);
         w[3] = 0;
     }
 }
 void SlideY(int by, short bound, bool below, short to) {
     unsigned char* const w = Rec();
-    SetWord(w + 6, static_cast<unsigned>(Word(w + 6) + by));
+    Win(w)->centre_y = static_cast<unsigned>(Win(w)->centre_y + by);
     const short y = S(w + 6);
     if (below ? y < bound : y > bound) {
-        SetWord(w + 6, static_cast<std::uint16_t>(to));
+        Win(w)->centre_y = static_cast<std::uint16_t>(to);
         w[3] = 0;
     }
 }
@@ -127,7 +134,7 @@ void SlideY(int by, short bound, bool below, short to) {
 // return nothing; ecx (the record) and eax (the kind) on entry are reloaded
 // by every kind (read 2026-09-25), so a call is the jump.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds(void) {
-    Dispatch(table::kHandler7Kinds, Rec()[2]);
+    Dispatch(Window_Handler7KindTable_addr, Rec()[2]);
 }
 
 // original 0x59B240, kind 0: the step (ShopWin_TitleSteps by +3: a bare ret,
@@ -153,8 +160,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds
 unsigned char g_shop_yes_no_line = 0;
 
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(void) {
-    Step(table::kTitleSteps);
-    const unsigned colour = At(at::kColour)[0];
+    Step(ShopWin_TitleSteps_addr);
+    const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned char* w = Rec();
     g.title_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), 0x118, 0x13, static_cast<int>(colour));
     const unsigned id = Word(Rec() + 0x10);
@@ -174,7 +181,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(voi
 // 0x59A3A0, 0x59A680 - DH's), then Menu_DrawButtonRow(+4, +6, set +0xA,
 // selected +0xB, 0). The record is re-read after the step.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_ButtonsRun(void) {
-    Step(table::kButtonsSteps);
+    Step(ShopWin_ButtonsSteps_addr);
     const unsigned char* const w = Rec();
     g.button_row(static_cast<int>(X(w)), static_cast<int>(Y(w)), w[0xA], w[0xB], 0);
 }
@@ -183,9 +190,9 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_ButtonsRun(v
 // ShopWin_MoneySlideUp, 0x59A680 - DH's), then Menu_DrawMoneyBox(+4, +6, 0,
 // the zenny 0x904058). Record and zenny read after the step.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MoneyRun(void) {
-    Step(table::kMoneySteps);
+    Step(ShopWin_MoneySteps_addr);
     const unsigned char* const w = Rec();
-    const auto zenny = static_cast<unsigned>(Long(At(at::kZenny)));
+    const auto zenny = Party_Zenny;
     g.money_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), 0, zenny);
 }
 
@@ -205,7 +212,7 @@ extern "C" void __cdecl ShopWin_MoneySlideUp(void) { SlideY(-0x10, -0x14, false,
 // No step.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_CursorBoxDraw(void) {
     const unsigned char* const w = Rec();
-    const unsigned width = Word(At(table::kCursorWidths + w[0xA] * 2u));
+    const unsigned width = Word(At(ShopWin_CursorBoxWidths_addr + w[0xA] * 2u));
     g.cursor_box(static_cast<int>(X(w)), static_cast<int>(Y(w)), static_cast<int>(width), 0x34, w[0xB], 6);
 }
 
@@ -215,7 +222,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_CursorBoxDra
 // record of party slot +0xA, slot +0xB, item +0xC). Record re-read after the
 // step.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsRun(void) {
-    Step(table::kMemberSteps);
+    Step(ShopWin_MemberStatsSteps_addr);
     const unsigned char* const w = Rec();
     const unsigned item = w[0xC], slot = w[0xB];
     const unsigned member = Member(w[0xA]);
@@ -251,10 +258,10 @@ extern "C" void __cdecl ShopWin_MemberSlideUp(void) { SlideY(-0x10, 0x3E, true, 
 // low word and step 0 - the panel for party slot +0xA, 0x36 below the last.
 extern "C" void __cdecl ShopWin_MemberSlideDown(void) {
     unsigned char* const w = Rec();
-    SetWord(w + 6, static_cast<unsigned>(Word(w + 6) + 0x10));
+    Win(w)->centre_y = static_cast<unsigned>(Win(w)->centre_y + 0x10);
     const int bound = static_cast<int>(w[0xA]) * 0x36 + 0x3E;
     if (static_cast<int>(S(w + 6)) > bound) {
-        SetWord(w + 6, static_cast<unsigned>(bound));
+        Win(w)->centre_y = static_cast<unsigned>(bound);
         w[3] = 0;
     }
 }
@@ -263,7 +270,7 @@ extern "C" void __cdecl ShopWin_MemberSlideDown(void) {
 // MenuWin_SlideOutLeft, ShopWin_EquipSlideIn), then Menu_DrawEquipPanel(+4,
 // +6, the character record of party slot +0xA). Record re-read after the step.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_EquipRun(void) {
-    Step(table::kEquipSteps);
+    Step(ShopWin_EquipSteps_addr);
     const unsigned char* const w = Rec();
     const unsigned member = Member(w[0xA]);
     g.equip_panel(static_cast<int>(X(w)), static_cast<int>(Y(w)), member);
@@ -276,7 +283,7 @@ extern "C" void __cdecl ShopWin_EquipSlideIn(void) { SlideX(0x20, 0xF, false, 0x
 // 0x59A5E0 - DH's, ShopWin_BuyListSlideTo84, ShopWin_BuyListSlideTo46), then
 // Shop_DrawBuyList(the record, re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_BuyListRun(void) {
-    Step(table::kBuyListSteps);
+    Step(ShopWin_BuyListSteps_addr);
     g.buy_list(Rec());
 }
 
@@ -293,7 +300,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_BuyDetailRun
 // 0x59A5E0 - DH's, ShopWin_ItemListSlideIn), then Menu_DrawItemList(the
 // record, re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_ItemListRun(void) {
-    Step(table::kItemListSteps);
+    Step(ShopWin_ItemListSteps_addr);
     g.item_list(Rec());
 }
 
@@ -311,7 +318,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_SellDetailRu
 // 0x59E284) - `jmp [0x66B534 + byte +2 * 4]`, unbounded, into the six kinds
 // of Window_Handler8KindTable, which reload ecx and eax as handler 7's do.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler8Kinds(void) {
-    Dispatch(table::kHandler8Kinds, Rec()[2]);
+    Dispatch(Window_Handler8KindTable_addr, Rec()[2]);
 }
 
 // original 0x59CB20: the pointing hand at the record's +4, +6
@@ -328,7 +335,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuWin_Hand(void) {
 // in no group, 0x59A5E0 - DH's), then BattleMenu_DrawItemList(the record,
 // re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_ItemListRun(void) {
-    Step(table::kBattleItemSteps);
+    Step(BattleMenuWin_ItemListSteps_addr);
     g.battle_items(Rec());
 }
 
@@ -342,7 +349,7 @@ extern "C" void __cdecl BattleMenuWin_ItemListSlideRight(void) { SlideX(0x20, 0x
 // a bare ret, 0x59A5E0 - DH's, BattleMenuWin_SkillListSlideIn), then
 // BattleMenu_DrawSkillList(the record, re-read after the step).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleMenuWin_SkillListRun(void) {
-    Step(table::kBattleSkillSteps);
+    Step(BattleMenuWin_SkillListSteps_addr);
     g.battle_skills(Rec());
 }
 

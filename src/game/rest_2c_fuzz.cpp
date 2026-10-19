@@ -170,11 +170,11 @@ static_assert(kCount == 61, "the cut's 60 rows for R2C and 0x583350");
 // docs/rest_2c.md section 3).
 struct Dispatch { U base, by; unsigned count; };
 const Dispatch kDispatch[] = {
-    {0x580300, at::kState, 7},     {0x580A40, at::kState, 4},     {0x582EB0, at::kState, 4},
-    {0x582FF0, at::kStep, 5},      {0x583350, at::kState, 3},     {0x583360, at::kStep, 2},
-    {0x5833D0, at::kStep, 3},      {0x5836A0, at::kStep, 3},      {0x5837E0, at::kState, 8},
-    {0x584180, at::kState, 5},     {0x586670, at::kTalkMode, 7},  {0x5866D0, at::kTalkStep, 2},
-    {0x586750, at::kTalkStep, 6},  {0x586970, at::kTalkStep, 9},
+    {0x580300, FieldS_State_addr, 7},     {0x580A40, FieldS_State_addr, 4},     {0x582EB0, FieldS_State_addr, 4},
+    {0x582FF0, FieldS_Step_addr, 5},      {0x583350, FieldS_State_addr, 3},     {0x583360, FieldS_Step_addr, 2},
+    {0x5833D0, FieldS_Step_addr, 3},      {0x5836A0, FieldS_Step_addr, 3},      {0x5837E0, FieldS_State_addr, 8},
+    {0x584180, FieldS_State_addr, 5},     {0x586670, AreaW0c_AnswerMark_addr, 7},  {0x5866D0, AreaW3f_AnswerMarkD1_addr, 2},
+    {0x586750, AreaW3f_AnswerMarkD1_addr, 6},  {0x586970, AreaW3f_AnswerMarkD1_addr, 9},
 };
 const Dispatch* DispatchOf(U base) {
     for (const Dispatch& d : kDispatch)
@@ -183,10 +183,10 @@ const Dispatch* DispatchOf(U base) {
 }
 
 const sh::DataTable kTables[] = {
-    {at::kRestStates, 7},        {at::kPartyFormStates, 4},  {at::kShopSellStates, 4},  {at::kShopSellSellSteps, 5},
-    {at::kBrowseStates, 3},      {at::kBrowseOpenSteps, 2},  {at::kBrowseChooseSteps, 3}, {at::kBrowseCloseSteps, 3},
-    {at::kResistStates, 8},      {at::kSharedListStates, 5}, {at::kTalkStates, 7},      {at::kTalkIntroSteps, 2},
-    {at::kTalkAskSteps, 6},      {at::kTalkPickSteps, 9},
+    {Rest_States_addr, 7},        {PartyForm_States_addr, 4},  {ShopSell_States_addr, 4},  {ShopSell_SellSteps_addr, 5},
+    {ShopBrowse_States_addr, 3},      {ShopBrowse_OpenSteps_addr, 2},  {ShopBrowse_ChooseSteps_addr, 3}, {ShopBrowse_CloseSteps_addr, 3},
+    {ShopResist_States_addr, 8},      {SharedList_States_addr, 5}, {MasterTalk_States_addr, 7},      {MasterTalk_IntroSteps_addr, 2},
+    {MasterTalk_AskSteps_addr, 6},      {MasterTalk_PickSteps_addr, 9},
 };
 
 // --- the moves (from a hash: the harness's Noise() or Disturb's) -----------------------
@@ -201,22 +201,22 @@ void Move(U h) {
     switch (h % 18) {
     case 16: B(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xA) = static_cast<unsigned char>(v); break;
     case 17: SetL(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xC, h * 0x9E3779B1u); break;
-    case 0: B(at::kState) = static_cast<unsigned char>(v); break;
-    case 1: B(at::kStep) = static_cast<unsigned char>(v); break;
+    case 0: B(FieldS_State_addr) = static_cast<unsigned char>(v); break;
+    case 1: B(FieldS_Step_addr) = static_cast<unsigned char>(v); break;
     case 2: B(at::kTimer) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) % 3); break;
-    case 3: SetL(at::kSlot, v % at::kSlotCount); break;
+    case 3: SetL(Rest2c_Slot_addr, v % at::kSlotCount); break;
     case 4: B(Win(1, 0xB)) = static_cast<unsigned char>(v % 0x12); break;
     case 5: B(Win(1, 0xA)) = static_cast<unsigned char>(v % 10); break;
-    case 6: SetW(at::kPressed, h >> 16); break;
-    case 7: B(at::kTalkStep) = static_cast<unsigned char>(v); break;
-    case 8: B(at::kTalkSlide) = static_cast<unsigned char>(v % 6); break;
-    case 9: B(at::kMemberCount) = static_cast<unsigned char>(v % 4); break;
-    case 10: B(at::kMembers + (v % 3) * at::kObjStride) = static_cast<unsigned char>((v >> 2) % 8); break;
-    case 11: B(at::kRequest) = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
-    case 12: B(at::kFigureRgb + v % 3) = static_cast<unsigned char>(h >> 16); break;
-    case 13: B(at::kMaster) = static_cast<unsigned char>(v % 18); break;
+    case 6: SetW(Input_Pressed_addr, h >> 16); break;
+    case 7: B(AreaW3f_AnswerMarkD1_addr) = static_cast<unsigned char>(v); break;
+    case 8: B(Rest2c_TalkSlide_addr) = static_cast<unsigned char>(v % 6); break;
+    case 9: B(Field_MemberCount_addr) = static_cast<unsigned char>(v % 4); break;
+    case 10: B(Field_Members_addr + (v % 3) * at::kObjStride) = static_cast<unsigned char>((v >> 2) % 8); break;
+    case 11: B(Field_Request_addr) = static_cast<unsigned char>(v & 1 ? 2 : v >> 1); break;
+    case 12: B(Rest2c_FigureRgb_addr + v % 3) = static_cast<unsigned char>(h >> 16); break;
+    case 13: B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(v % 18); break;
     case 14: B(Win(1, 0xD)) = static_cast<unsigned char>(v & 1 ? 0xFF : v); break;
-    case 15: SetL(at::kFigureY, h); break;
+    case 15: SetL(Rest2c_FigureY_addr, h); break;
     default: break;
     }
 }
@@ -331,9 +331,9 @@ const sh::Region kRegions[] = {
     {0x903A94, 0x903F90 - 0x903A94},              // the records past the style region
     {0x904160, 0x400},                            // the save block 0x904160..0x904560
     {0x904700, 0x390},                            // and 0x904700..0x904A90
-    {at::kStaging, at::kBlockBytes + at::kStagingClear},   // the staging copy and what it clears
+    {Save_Staging_addr, at::kBlockBytes + at::kStagingClear}, // the staging copy and what it clears
     {at::kSummaries, at::kSlotCount * at::kSummaryBytes},  // the slots' summaries
-    {at::kSlot, 4},                               // the save cursor
+    {Rest2c_Slot_addr, 4},                        // the save cursor
     {0x939880, 0x180},                            // the master's bytes 0x9398CD..0x9398D3, the figure record 0x9398E0..0x9399EC
     {0x7DEE40, 8},                                // the message box's flags 0x7DEE44
 };
@@ -347,21 +347,21 @@ void SeedButtons() {
     const U confirm = 1u << (sh::Next() % 16);
     U cancel = 1u << (sh::Next() % 16);
     if (cancel == confirm) cancel = confirm == 0x8000 ? 1 : confirm << 1;
-    SetW(at::kConfirm, confirm | (sh::Half() ? 0 : 1u << (sh::Next() % 16)));
-    SetW(at::kCancel, cancel);
+    SetW(Field_ConfirmButtons_addr, confirm | (sh::Half() ? 0 : 1u << (sh::Next() % 16)));
+    SetW(Field_CancelButtons_addr, cancel);
     const U other = sh::Next() & 0xFFFF & ~(confirm | cancel);
-    SetW(at::kPressed, PickOf(confirm, cancel, confirm | cancel, 0, 0, other, confirm | other, cancel | other));
+    SetW(Input_Pressed_addr, PickOf(confirm, cancel, confirm | cancel, 0, 0, other, confirm | other, cancel | other));
 }
 
 void SeedMenu() {
     B(at::kTimer) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 4, 4, 5, 6, 0x1E, sh::Next()));
-    B(at::kAnswer) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-    B(at::kObject) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0xFE, sh::Next()));
+    B(FieldS_Answer_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(ModeStates_ShopObject_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0xFE, sh::Next()));
     B(at::kMsgFlags) = static_cast<unsigned char>(sh::Half() ? sh::Next() | 2 : sh::Next() & ~2u);
-    B(at::kInputFlags) = static_cast<unsigned char>(PickOf(0x40, 0x40, 0, 0x41, sh::Next()));
-    SetW(at::kArea, PickOf(0xBC, 0x85, 0xC1, 0xBB, 0xBD, 0x84, 0x86, 0xC0, 0xC2, sh::Next()));
-    SetW(at::kWait, PickOf(0, 0, sh::Next()));
-    SetL(at::kSlot, sh::Next() % at::kSlotCount);
+    B(Field_InputFlags_addr) = static_cast<unsigned char>(PickOf(0x40, 0x40, 0, 0x41, sh::Next()));
+    SetW(Game_AreaNumber_addr, PickOf(0xBC, 0x85, 0xC1, 0xBB, 0xBD, 0x84, 0x86, 0xC0, 0xC2, sh::Next()));
+    SetW(MoveScript_WaitWordDA_addr, PickOf(0, 0, sh::Next()));
+    SetL(Rest2c_Slot_addr, sh::Next() % at::kSlotCount);
 }
 
 void SeedWindows() {
@@ -373,15 +373,15 @@ void SeedWindows() {
 }
 
 void SeedMaster() {
-    B(at::kMaster) = static_cast<unsigned char>(PickOf(9, 9, 0, 1, 17, sh::Next() % 18, sh::Next() % 18));
-    B(at::kRequest) = static_cast<unsigned char>(PickOf(2, 2, 0, 1, sh::Next()));
-    B(at::kTalkSlide) = static_cast<unsigned char>(PickOf(0, 1, 1, 3, 4, 5, sh::Next()));
-    B(at::kMemberCount) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 3));
-    const unsigned char master = B(at::kMaster);
+    B(AreaW0c_TailSub_addr) = static_cast<unsigned char>(PickOf(9, 9, 0, 1, 17, sh::Next() % 18, sh::Next() % 18));
+    B(Field_Request_addr) = static_cast<unsigned char>(PickOf(2, 2, 0, 1, sh::Next()));
+    B(Rest2c_TalkSlide_addr) = static_cast<unsigned char>(PickOf(0, 1, 1, 3, 4, 5, sh::Next()));
+    B(Field_MemberCount_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 3));
+    const unsigned char master = B(AreaW0c_TailSub_addr);
     const bool all = sh::Half();
     for (unsigned i = 0; i < 3; ++i) {
         const auto record = static_cast<unsigned char>(sh::Next() % 8);
-        B(at::kMembers + i * at::kObjStride) = record;
+        B(Field_Members_addr + i * at::kObjStride) = record;
         B(at::kRecords + 0x1F + record * at::kRecordStride) =
             static_cast<unsigned char>(all || sh::Half() ? master : PickOf(0xFF, master + 1u, sh::Next()));
     }
@@ -391,21 +391,21 @@ void SeedMaster() {
 
 void SeedFigure() {
     const unsigned char step = static_cast<unsigned char>(PickOf(0, 1, 2, 0x2A, 0x55, sh::Next()));
-    B(at::kFigureFade) = step;
+    B(Rest2c_FigureFade_addr) = step;
     const U t = 3u * step;
     for (unsigned i = 0; i < 3; ++i)
-        B(at::kFigureRgb + i) = static_cast<unsigned char>(PickOf(t, t + 1, t - 1, 0xFF - t, 0xFE - t, 0, 0xFF, sh::Next()));
-    B(at::kFigureScaleIndex) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 21 : sh::Next());
-    SetL(at::kFigureAngle, PickOf(0, 0x1000, 0x40, 0xFC0, 0x1040, 0x20, sh::Next()));
-    SetL(at::kFigureLift, PickOf(0, 1, 2, sh::Next() % 8, sh::Next()));
+        B(Rest2c_FigureRgb_addr + i) = static_cast<unsigned char>(PickOf(t, t + 1, t - 1, 0xFF - t, 0xFE - t, 0, 0xFF, sh::Next()));
+    B(Rest2c_FigureScaleIndex_addr) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 21 : sh::Next());
+    SetL(Rest2c_FigureAngle_addr, PickOf(0, 0x1000, 0x40, 0xFC0, 0x1040, 0x20, sh::Next()));
+    SetL(Rest2c_FigureLift_addr, PickOf(0, 1, 2, sh::Next() % 8, sh::Next()));
     // the height around the target for one of the elevation stand-in's heights
     g_height = sh::Next() % (sizeof kHeights / sizeof kHeights[0]);
     const U e = kHeights[g_height];
-    const U lift = static_cast<U>(move_script::Long(sh::Mem(at::kFigureLift)));
+    const U lift = static_cast<U>(move_script::Long(sh::Mem(Rest2c_FigureLift_addr)));
     const U target = (static_cast<U>(static_cast<int>(static_cast<short>(e))) << 16) + lift * 0xA00u;
     const U fall = static_cast<U>(static_cast<int>(((static_cast<U>(static_cast<int>(static_cast<short>(e))) + 0x200u) << 16) - target) / 16);
     // y - fall lands on the target, one either side, or far
-    SetL(at::kFigureY, PickOf(target + fall, target + fall, target + fall + 1, target + fall - 1, target + 0x100000,
+    SetL(Rest2c_FigureY_addr, PickOf(target + fall, target + fall, target + fall + 1, target + fall - 1, target + 0x100000,
                               target - 0x100000, sh::Next()));
 }
 
@@ -432,10 +432,10 @@ void Seed(unsigned k) {
     SeedWindows();
     SeedMaster();
     SeedFigure();
-    B(at::kStoryByte) = static_cast<unsigned char>(PickOf(5, 0x85, 0xC, 0x8C, 0, sh::Next()));
-    B(at::kPartyList) = static_cast<unsigned char>(PickOf(4, 4, 0, 1, 2, sh::Next() % 24));
-    B(at::kPartyList + 1) = static_cast<unsigned char>(PickOf(4, 0, sh::Next() % 24));
-    B(at::kPartyList + 2) = static_cast<unsigned char>(PickOf(4, 3, sh::Next() % 24));
+    B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(PickOf(5, 0x85, 0xC, 0x8C, 0, sh::Next()));
+    B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(PickOf(4, 4, 0, 1, 2, sh::Next() % 24));
+    B(Cond_Flags_addr + 0xd2 + 1) = static_cast<unsigned char>(PickOf(4, 0, sh::Next() % 24));
+    B(Cond_Flags_addr + 0xd2 + 2) = static_cast<unsigned char>(PickOf(4, 3, sh::Next() % 24));
     if (const Dispatch* d = DispatchOf(c.base)) B(d->by) = static_cast<unsigned char>(sh::Next() % d->count);
 }
 

@@ -22,10 +22,10 @@ constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;         // (unsigne
 // --- cells ------------------------------------------------------------------------
 constexpr std::uint32_t kVar7Step = 0x8034E5;       // the byte after MoveScript_Var7: kind 0x8D's last state steps it
                                                     // (area_w1a_callees.h's kVar7Step)
-constexpr std::uint32_t kLeaderLift = 0x802D88;     // ObjTrio + 0x48 of each of the three party records (0x14C apart):
+// kLeaderLift: now ObjTrio[0x48] (symbols.toml). ObjTrio + 0x48 of each of the three party records (0x14C apart):
 constexpr std::uint32_t kObjStride = 0x14C;         // kind 0x8D's start sets each byte 1 (area_w3e_callees.h's kLeader48)
-constexpr std::uint32_t kStage = 0x676290;          // kind 0x8F: the byte its state 7 keeps (0..4, by the frame word +0x2E)
-constexpr std::uint32_t kTag = 0x676294;            // kind 0x90: the dword its state 0 counts up; each record's +6 is its low
+// kStage: now Effect4c_Stage (symbols.toml). kind 0x8F: the byte its state 7 keeps (0..4, by the frame word +0x2E)
+// kTag: now Effect4c_Tag (symbols.toml). kind 0x90: the dword its state 0 counts up; each record's +6 is its low
                                                     // byte, and the shards it emits carry it in +0
 constexpr std::uint32_t kShardEnd = 0x92E580;       // the end of kind 0x8E's two pools (below)
 

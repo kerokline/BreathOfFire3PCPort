@@ -17,23 +17,23 @@ namespace field_modes {
 // Unnamed addresses, each read in docs/field-modes.md. The PSX twin of each
 // scenario byte is in the scenario block at 0x8014686C (the sibling's
 // docs/LOADER_RECORDS.md).
-constexpr std::uint32_t kScenarioTables = 0x662C80;   // 20 pointers, one per chapter, to a vtable (PSX 0x801C944C)
-constexpr std::uint32_t kCallATables = 0x660B84;      // 20 pointers, one per chapter, to Scenario_CallA's table (PSX 0x801CDC4C)
+// kScenarioTables: now Scenario_Hooks (symbols.toml). 20 pointers, one per chapter, to a vtable (PSX 0x801C944C)
+// kCallATables: now Scenario_CallATables (symbols.toml). 20 pointers, one per chapter, to Scenario_CallA's table (PSX 0x801CDC4C)
 constexpr std::uint32_t kTailTable = 0x662CD0;        // Field_ModeTail's two entries (PSX 0x801D949C)
-constexpr std::uint32_t kTailRunTable = 0x662CE8;     // Field_ModeTailRun's entries
+// kTailRunTable: now Field_ModeTailKinds (symbols.toml). Field_ModeTailRun's entries
 constexpr std::uint32_t kStateTable = 0x6619FC;       // scenario 16's states (PSX 0x801F8538); its +0xC is
 constexpr std::uint32_t kRunTable = 0x661A08;         // the run table Scena16_Run reads (PSX 0x801F8544)
-constexpr std::uint32_t kTailPhase = 0x9039F2;        // s8, Field_ModeTail's index (PSX 0x801448E6)
-constexpr std::uint32_t kTailKind = 0x9039F3;         // s8, Field_ModeTailRun's index (PSX 0x801448E7)
-constexpr std::uint32_t kState = 0x8034E2;            // s8, scenario 16's state (PSX 0x8014686E)
+// kTailPhase: now SaveMenu_NewGameByte (symbols.toml). s8, Field_ModeTail's index (PSX 0x801448E6)
+// kTailKind: now AreaW0a_TailKind (symbols.toml). s8, Field_ModeTailRun's index (PSX 0x801448E7)
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8, scenario 16's state (PSX 0x8014686E)
 constexpr std::uint32_t kStep = 0x8034E5;             // u8, the scene's step (PSX 0x80146871)
-constexpr std::uint32_t kTimer = 0x8034E6;            // u16, the scene's timer (PSX 0x80146872)
-constexpr std::uint32_t kBadge = 0x66C7F8;            // the demo's corner badge (docs/mode-tasks.md section 1)
+// kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml). u16, the scene's timer (PSX 0x80146872)
+// kBadge: now Title_BadgeOn (symbols.toml). the demo's corner badge (docs/mode-tasks.md section 1)
 constexpr std::uint32_t kCounters = 0x903848;         // four script counter bytes (PSX 0x80146860; MoveScript_CounterOps)
 constexpr std::uint32_t kSlot = 0x903850;             // the effect slot just taken; also a word (PSX 0x1F800000)
-constexpr std::uint32_t kFlagsPtr = 0x929ED0;         // the flag bits Flags_Test / Flags_Set are given (PSX 0x80146868)
-constexpr std::uint32_t kPending = 0x903A04;          // the pending area change, as Field_ChangeArea's arguments
-constexpr std::uint32_t kMusicTrack = 0x904131;       // the track last started, 0xFF none
+// kFlagsPtr: now AreaW0c_FlagRow (symbols.toml). the flag bits Flags_Test / Flags_Set are given (PSX 0x80146868)
+// kPending: now FieldModes_Pending (symbols.toml). the pending area change, as Field_ChangeArea's arguments
+// kMusicTrack: now Music_Track (symbols.toml). the track last started, 0xFF none
 
 // The callees without a name in symbols.toml (docs/field-modes.md section 6
 // has what each is): called by address.

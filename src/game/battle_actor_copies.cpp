@@ -102,13 +102,13 @@ void Dispatch(const unsigned long* table, unsigned index) { reinterpret_cast<Han
 // d-pad bits. Input_Pressed is read once, each mask at its test. Returns
 // false when the head has set sub.
 bool PickHead(U& held) {
-    const unsigned pressed = Word(At(at::kPressed));
-    if (pressed & Word(At(at::kCancel))) {
-        B(at::kSub) = 4;
+    const unsigned pressed = Input_Pressed;
+    if (pressed & Field_CancelButtons) {
+        BattleE4_Step4 = 4;
         return false;
     }
-    if (pressed & Word(At(at::kConfirm))) {
-        B(at::kSub) = 3;
+    if (pressed & Field_ConfirmButtons) {
+        BattleE4_Step4 = 3;
         return false;
     }
     held = g.auto_repeat(pressed & 0xF000);
@@ -128,13 +128,13 @@ U Stepped(U high, U low, int delta) {
 // 3 .. enemy count + 2; each with cue 0x101. Both may run in one frame.
 void PickAmongEnemies(U held) {
     if (held & 0x2000) {
-        const U high = static_cast<U>(B(at::kEnemyCount)) + 2;
+        const U high = static_cast<std::uint32_t>(BattleActorCopies_EnemyCount) + 2;
         const unsigned char t = Low(g.default_target(Stepped(high, 3, +1)));
         Command()[0] = t;
         g.play_effect(0x101);
     }
     if (held & 0x8000) {
-        const U high = static_cast<U>(B(at::kEnemyCount)) + 2;
+        const U high = static_cast<std::uint32_t>(BattleActorCopies_EnemyCount) + 2;
         const unsigned char t = Low(g.prev_target(Stepped(high, 3, -1)));
         Command()[0] = t;
         g.play_effect(0x101);
@@ -145,8 +145,8 @@ void PickAmongEnemies(U held) {
 // actor, its page, 1) - the actor's inventory page - read at the cursor.
 // The actor and the page are read before the call, the cursor after.
 unsigned ItemUnderCursor() {
-    const unsigned page = B(at::kItemPage);
-    const unsigned actor = B(at::kItemActor);
+    const unsigned page = BattleActorCopies_ItemPage;
+    const unsigned actor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     const unsigned char* const list = At(g.ability_list(actor, page, 1));
     return list[B(at::kItemCursor)];
 }
@@ -169,19 +169,19 @@ void KeepPage(unsigned char page, unsigned char scroll, unsigned owner) {
 
 // original 0x447110 (the catalogue pairs it with PSX 0x80093A74, not read):
 // entry 0x904AA3 of BattleTarget_Steps 0x64E3EC - 0x447120, 0x447140.
-extern "C" void __cdecl BattleTarget_Dispatch(void) { Dispatch(BattleTarget_Steps, B(at::kStep)); }
+extern "C" void __cdecl BattleTarget_Dispatch(void) { Dispatch(BattleTarget_Steps, BattleE4_Step3); }
 
 // original 0x447120: BattleBanner_SetMessage(0, 0) - message 0, the prompt -
 // then the step counted on (read after the call).
 extern "C" void __cdecl BattleTarget_ShowPrompt(void) {
     g.set_message(0, 0);
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
 }
 
 // original 0x447140: entry (dword 0x904AA4 & 0xFF) of BattleTarget_Picks
 // 0x64E3F4 - 0x447160, 0x447190, 0x447290 (the party's side, R3B's BattleTarget_PickParty),
 // 0x447390, 0x4473E0 (the cancel, R3B's BattleTarget_Cancel).
-extern "C" void __cdecl BattleTarget_PickDispatch(void) { Dispatch(BattleTarget_Picks, B(at::kSub)); }
+extern "C" void __cdecl BattleTarget_PickDispatch(void) { Dispatch(BattleTarget_Picks, BattleE4_Step4); }
 
 // original 0x447160: the target starts on Battle_DefaultTarget(3) - the first
 // enemy able to be targeted - stored at the command's +0 (the pointer read
@@ -190,10 +190,10 @@ extern "C" void __cdecl BattleTarget_PickDispatch(void) { Dispatch(BattleTarget_
 extern "C" void __cdecl BattleTarget_Begin(void) {
     const unsigned char t = Low(g.default_target(3));
     Command()[0] = t;
-    const unsigned char sub = B(at::kSub);
-    B(at::kTargetCursor) = 1;
+    const unsigned char sub = BattleE4_Step4;
+    BattleE4_Picking = 1;
     SetWord(At(at::kRepeatLatch), 0);
-    B(at::kSub) = static_cast<unsigned char>(sub + 1);
+    BattleE4_Step4 = static_cast<unsigned char>(sub + 1);
 }
 
 // original 0x447190: the pick among the enemies. The common head (cancel:
@@ -206,7 +206,7 @@ extern "C" void __cdecl BattleTarget_PickEnemy(void) {
     if (held & 0x5000) {
         const unsigned char t = Low(g.default_target(0));
         Command()[0] = t;
-        B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+        BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 + 1);
         g.play_effect(0x101);
         return;
     }
@@ -220,15 +220,15 @@ extern "C" void __cdecl BattleTarget_PickEnemy(void) {
 extern "C" void __cdecl BattleTarget_Confirm(void) {
     g.play_effect(0x104);
     unsigned char* const c = Command();
-    B(at::kTargetCursor) = 0;
+    BattleE4_Picking = 0;
     c[1] = 1;
     Acting()[1] = 2;
-    const unsigned char n = B(at::kEntryCount);
-    B(at::kPhase1) = 1;
-    B(at::kEntryCount) = static_cast<unsigned char>(n + 1);
-    B(at::kPhase2) = 0;
-    B(at::kStep) = 0;
-    B(at::kSub) = 0;
+    const unsigned char n = static_cast<unsigned char>(BattleActorCopies_EntryCount);
+    BattleActions_Step = 1;
+    BattleActorCopies_EntryCount = static_cast<unsigned char>(n + 1);
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
+    BattleE4_Step4 = 0;
 }
 
 // ===========================================================================
@@ -238,11 +238,11 @@ extern "C" void __cdecl BattleTarget_Confirm(void) {
 // original 0x447430 (the catalogue pairs it with PSX 0x80093F00, not read):
 // entry 0x904AA3 of BattleItem_Steps 0x64E408 - 0x447440, 0x4474B0, 0x447880
 // (the closing window, R3B's BattleItem_CloseWait), 0x4478B0, 0x447940, 0x447D70 (R3B's BattleItem_SideDispatch).
-extern "C" void __cdecl BattleItem_Dispatch(void) { Dispatch(BattleItem_Steps, B(at::kStep)); }
+extern "C" void __cdecl BattleItem_Dispatch(void) { Dispatch(BattleItem_Steps, BattleE4_Step3); }
 
 // original 0x447440: entry (dword 0x904AA4 & 0xFF) of BattleItem_OpenSteps
 // 0x64E420 - 0x4481B0 (group CI's: a queued system message 0x4000), 0x447460.
-extern "C" void __cdecl BattleItem_OpenDispatch(void) { Dispatch(BattleItem_OpenSteps, B(at::kSub)); }
+extern "C" void __cdecl BattleItem_OpenDispatch(void) { Dispatch(BattleItem_OpenSteps, BattleE4_Step4); }
 
 // original 0x447460: the command's +1 = 4, then ItemMenu_SetupForActor; with
 // the command's flags (+0x10, the pointer read after the call) bit 1 and not
@@ -252,11 +252,11 @@ extern "C" void __cdecl BattleItem_OpenWindow(void) {
     Command()[1] = 4;
     g.setup_for_actor();
     const U flags = static_cast<U>(Long(Command() + 0x10));
-    if ((flags & 2) && !(flags & 0x20000)) B(at::kItemPage) = 2;
+    if ((flags & 2) && !(flags & 0x20000)) BattleActorCopies_ItemPage = 2;
     const unsigned char actor = Acting()[5];
-    B(at::kSub) = 0;
-    B(at::kItemActor) = actor;
-    B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+    BattleE4_Step4 = 0;
+    BattleActorCopies_ItemActor = actor;
+    BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
 }
 
 // original 0x4474B0: the item window's frame, until 0x8033A3 is set.
@@ -281,29 +281,29 @@ extern "C" void __cdecl BattleItem_OpenWindow(void) {
 //      closed, and step 3 - or for item 0x97 the acting actor as the target,
 //      window record 4's +3 = 2, phase 2 = 7 and step 0.
 extern "C" void __cdecl BattleItem_Browse(void) {
-    if (B(at::kItemState) != 0) return;
+    if (BattleActorCopies_ItemState != 0) return;
     SetWord(At(at::kItemCursorX), static_cast<unsigned>(Long(At(at::kItemBaseX))) + 7);
-    B(at::kItemCursorOn) = 1;
+    BattleE4_Hand = 1;
     const unsigned rows = static_cast<unsigned>(B(at::kItemCursor)) - static_cast<unsigned>(Long(At(at::kItemScroll))) + 2;
-    const unsigned y = rows * 13 + Word(At(at::kItemBaseY));
-    const unsigned pressed = Word(At(at::kPressed));
-    SetWord(At(at::kItemCursorY), y);
+    const unsigned y = rows * 13 + BattleActorCopies_ItemBaseY;
+    const unsigned pressed = Input_Pressed;
+    BattleActorCopies_ItemCursorY = y;
     const U held = g.auto_repeat(pressed & Sigma(0xF00C));
 
     const U flags = static_cast<U>(Long(Command() + 0x10));
     if (!(flags & 2) || (flags & 0x20000)) {
         if (held & 0x8000) {
             g.play_effect(0x101);
-            const unsigned char page = static_cast<unsigned char>(B(at::kItemPage) - 1);
-            B(at::kItemPageCue) = 0x32;
-            B(at::kItemPage) = page;
-            if (static_cast<signed char>(page) < 0) B(at::kItemPage) = 3;
+            const unsigned char page = static_cast<unsigned char>(BattleActorCopies_ItemPage - 1);
+            BattleActorCopies_ItemPageCue = 0x32;
+            BattleActorCopies_ItemPage = page;
+            if (static_cast<signed char>(page) < 0) BattleActorCopies_ItemPage = 3;
         } else if (held & 0x2000) {
             g.play_effect(0x101);
-            const unsigned char page = static_cast<unsigned char>(B(at::kItemPage) + 1);
-            B(at::kItemPageCue) = 0x31;
-            B(at::kItemPage) = page;
-            if (page > 3) B(at::kItemPage) = 0;
+            const unsigned char page = static_cast<unsigned char>(BattleActorCopies_ItemPage + 1);
+            BattleActorCopies_ItemPageCue = 0x31;
+            BattleActorCopies_ItemPage = page;
+            if (page > 3) BattleActorCopies_ItemPage = 0;
         }
     }
 
@@ -311,11 +311,11 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     const unsigned char was = cursor;
     if (held & 0x1000) {
         if (cursor != 0) B(at::kItemCursor) = --cursor;
-        if (static_cast<short>(cursor) < static_cast<short>(Word(At(at::kItemScroll)))) SetWord(At(at::kItemScrollMotion), 0xF0);
+        if (static_cast<short>(cursor) < static_cast<short>(Word(At(at::kItemScroll)))) BattleActorCopies_ItemScrollMotion = 0xF0;
     } else if (held & 0x4000) {
         if (cursor < 9) B(at::kItemCursor) = ++cursor;
         const int last = static_cast<short>(Word(At(at::kItemScroll))) + 7;
-        if (!(static_cast<int>(B(at::kItemCursor)) < last)) SetWord(At(at::kItemScrollMotion), 0x10);
+        if (!(static_cast<int>(B(at::kItemCursor)) < last)) BattleActorCopies_ItemScrollMotion = 0x10;
     } else if (held & Sigma(4)) {
         const short scroll = static_cast<short>(Word(At(at::kItemScroll)));
         if (scroll == 0) {
@@ -349,48 +349,48 @@ extern "C" void __cdecl BattleItem_Browse(void) {
     }
     if (was != cursor) g.play_effect(0x100);
 
-    const U entry = ((static_cast<U>(B(at::kQueueWrite)) - 1) & 0xF) * 8;
+    const U entry = ((static_cast<std::uint32_t>(BattleActorCopies_QueueWrite) - 1) & 0xF) * 8;
     const unsigned id = ItemUnderCursor();
     const U text = g.msg_system(Word(At(at::kItemRecords + id * at::kItemRecordSize + 6)));
-    const bool scrolling = Word(At(at::kItemScrollMotion)) != 0;
+    const bool scrolling = BattleActorCopies_ItemScrollMotion != 0;
     SetLong(At(at::kQueueText + entry), static_cast<std::int32_t>(text));
     if (scrolling) return;
 
-    const unsigned buttons = Word(At(at::kPressed));
-    if (buttons & Word(At(at::kCancel))) {
-        const unsigned char page = B(at::kItemPage);
+    const unsigned buttons = Input_Pressed;
+    if (buttons & Field_CancelButtons) {
+        const unsigned char page = BattleActorCopies_ItemPage;
         const unsigned char scroll = B(at::kItemScroll);
-        const unsigned owner = B(at::kItemOwner);
-        B(at::kItemState) = 1;
-        B(at::kItemCursorOn) = 0;
+        const unsigned owner = BattleActorCopies_ItemOwner;
+        BattleActorCopies_ItemState = 1;
+        BattleE4_Hand = 0;
         B(at::kQueueByte + entry) = 1;
         KeepPage(page, scroll, owner);
         g.play_effect(0x106);
-        B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1);
+        BattleE4_Step3 = static_cast<unsigned char>(BattleE4_Step3 + 1);
         return;
     }
-    if (!(buttons & Word(At(at::kConfirm)))) return;
+    if (!(buttons & Field_ConfirmButtons)) return;
     if (Low(g.can_use()) != 0) {
         g.play_effect(0x107);
         return;
     }
     g.play_effect(0x103);
-    const unsigned char page = B(at::kItemPage);
+    const unsigned char page = BattleActorCopies_ItemPage;
     const unsigned char scroll = B(at::kItemScroll);
-    const unsigned owner = B(at::kItemOwner);
+    const unsigned owner = BattleActorCopies_ItemOwner;
     KeepPage(page, scroll, owner);
-    const unsigned actor = B(at::kItemActor);
+    const unsigned actor = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     const unsigned char* const list = At(g.ability_list(actor, page, 1));
     SetWord(Command() + 2, list[B(at::kItemCursor)]);
     unsigned char* const c = Command();
-    B(at::kItemState) = 1;
-    B(at::kItemCursorOn) = 0;
+    BattleActorCopies_ItemState = 1;
+    BattleE4_Hand = 0;
     if (Word(c + 2) == 0x97) {
         unsigned char* const a = Acting();
         B(at::kWindow4State) = 2;
         c[0] = a[5];
-        B(at::kPhase2) = 7;
-        B(at::kStep) = 0;
+        BattleE4_Step2 = 7;
+        BattleE4_Step3 = 0;
         return;
     }
     B(at::kStep) = 3;
@@ -403,25 +403,25 @@ extern "C" void __cdecl BattleItem_Browse(void) {
 extern "C" void __cdecl BattleItem_Choose(void) {
     const unsigned char f = ItemFlags(ItemUnderCursor());
     if (f & 0x40) {
-        B(at::kStep) = static_cast<unsigned char>(((f & 0x10) | 0x40) >> 4);
+        BattleE4_Step3 = static_cast<unsigned char>(((f & 0x10) | 0x40) >> 4);
         return;
     }
     if (f & 0x80) {
         Command()[0] = 0xC0;
-        B(at::kStep) = 4;
-        B(at::kSub) = 3;
+        BattleE4_Step3 = 4;
+        BattleE4_Step4 = 3;
         return;
     }
     const unsigned char t = (f & 0x10) ? static_cast<unsigned char>((f & 0x20) ? 0x40 : 0x80) : Acting()[5];
     Command()[0] = t;
-    B(at::kStep) = 4;
-    B(at::kSub) = 3;
+    BattleE4_Step3 = 4;
+    BattleE4_Step4 = 3;
 }
 
 // original 0x447940: entry (dword 0x904AA4 & 0xFF) of BattleItem_TargetSteps
 // 0x64E428 - 0x447960, 0x4479E0, 0x447B10, 0x447CC0, 0x447D30 (the cancel,
 // R3B's BattleItem_TargetCancel).
-extern "C" void __cdecl BattleItem_TargetDispatch(void) { Dispatch(BattleItem_TargetSteps, B(at::kSub)); }
+extern "C" void __cdecl BattleItem_TargetDispatch(void) { Dispatch(BattleItem_TargetSteps, BattleE4_Step4); }
 
 // original 0x447960: the item's target starts. The record of the command's
 // item (+2) has 0x20: Battle_DefaultTarget(3) and sub 1 (the enemies); else
@@ -433,9 +433,9 @@ extern "C" void __cdecl BattleItem_TargetBegin(void) {
     if (ItemFlags(id) & 0x20) {
         const unsigned char t = Low(g.default_target(3));
         Command()[0] = t;
-        B(at::kSub) = 1;
+        BattleE4_Step4 = 1;
         SetWord(At(at::kRepeatLatch), 0);
-        B(at::kTargetCursor) = 1;
+        BattleE4_Picking = 1;
         return;
     }
     if (Low(g.return_true()) != 0) {
@@ -444,9 +444,9 @@ extern "C" void __cdecl BattleItem_TargetBegin(void) {
         const unsigned char t = Low(g.default_target(0));
         Command()[0] = t;
     }
-    B(at::kSub) = 2;
+    BattleE4_Step4 = 2;
     SetWord(At(at::kRepeatLatch), 0);
-    B(at::kTargetCursor) = 1;
+    BattleE4_Picking = 1;
 }
 
 // original 0x4479E0: the item's pick among the enemies. The common head;
@@ -460,7 +460,7 @@ extern "C" void __cdecl BattleItem_PickEnemy(void) {
     if ((f & 0x80) && (held & 0x5000)) {
         const unsigned char t = Low(g.default_target(0));
         Command()[0] = t;
-        B(at::kSub) = static_cast<unsigned char>(B(at::kSub) + 1);
+        BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 + 1);
         g.play_effect(0x101);
         return;
     }
@@ -481,7 +481,7 @@ extern "C" void __cdecl BattleItem_PickParty(void) {
     if ((f & 0x80) && (held & 0x5000)) {
         const unsigned char t = Low(g.default_target(3));
         Command()[0] = t;
-        B(at::kSub) = static_cast<unsigned char>(B(at::kSub) - 1);
+        BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 - 1);
         g.play_effect(0x101);
         return;
     }
@@ -520,17 +520,17 @@ extern "C" void __cdecl BattleItem_PickParty(void) {
 extern "C" void __cdecl BattleItem_Confirm(void) {
     g.play_effect(0x104);
     unsigned char* const c = Command();
-    B(at::kTargetCursor) = 0;
+    BattleE4_Picking = 0;
     c[1] = 4;
     Acting()[1] = 2;
-    B(at::kEntryCount) = static_cast<unsigned char>(B(at::kEntryCount) + 1);
-    const U entry = (static_cast<U>(B(at::kQueueWrite)) - 1) & 0xF;
+    BattleActorCopies_EntryCount = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
+    const U entry = (static_cast<std::uint32_t>(BattleActorCopies_QueueWrite) - 1) & 0xF;
     B(at::kQueueByte + entry * 8) = 1;
     g.free_windows();
-    B(at::kPhase2) = 0;
-    B(at::kStep) = 0;
-    B(at::kSub) = 0;
-    B(at::kPhase1) = 1;
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
+    BattleE4_Step4 = 0;
+    BattleActions_Step = 1;
 }
 
 void BattleActorCopies_Inject() {

@@ -22,10 +22,12 @@
 #include "game/area_harness.h"
 #include "game/area_w2c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::EffectObject* CurEffect() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 
 namespace at = area_w2c::at;
 using area_harness::Mem;
@@ -39,12 +41,12 @@ unsigned char& B(U address) { return *Mem(address); }
 // The dword at `cell` as a pointer.
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
 // The chapter's flag row (a pointer the chapters keep at 0x929ED0).
-unsigned char* FlagRow() { return Ptr(at::kFlagRow); }
-unsigned char* StoryFlags() { return Mem(at::kStoryFlags); }
+unsigned char* FlagRow() { return Ptr(AreaW0c_FlagRow_addr); }
+unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // Effect_Objects record `slot` (0x80 bytes).
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
 // The choice's answer as the choices read it with movsx.
-int Answer() { return static_cast<signed char>(B(at::kChoiceAnswer)); }
+int Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
 // A message word of a table indexed by the signed answer (unchecked).
 unsigned MessageAt(U table, int answer) { return Word(Mem(table + static_cast<U>(answer) * 2u)); }
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
@@ -58,8 +60,8 @@ void RunStep(unsigned char var7, unsigned char step) {
     B(at::kCounter1) = 0;
     B(at::kCounter2) = 0;
     B(at::kCounter3) = 0;
-    B(at::kVar7Step) = step;
-    B(at::kVar7) = var7;
+    B(MoveScript_PartyRecords_addr + 0x65) = step;
+    B(MoveScript_Var7_addr) = var7;
 }
 
 // A dword of `v` shifted right as the originals' `sar` after an `imul`: the
@@ -95,14 +97,15 @@ void SpawnInline(U record, unsigned char kind, U args, U list) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     Sprite_Current[0xB] = slot;
     unsigned char* const r = Sprite_Current;
+    auto* const tR = reinterpret_cast<records::SpriteObject*>(r);
     if (r[0xB] == 0xFF) return;
     EffectAt(r[0xB])[0] = 1;
     EffectAt(r[0xB])[5] = 6;
     EffectAt(r[0xB])[6] = kind;
     SetLong(EffectAt(r[0xB]) + 0xC, 0);
     SetLong(EffectAt(r[0xB]) + 0x10, static_cast<signed char>(B(args + B(list))));
-    SetWord(EffectAt(r[0xB]) + 0x2E, Word(r + 0x2E));
-    SetWord(EffectAt(r[0xB]) + 0x30, Word(r + 0x30));
+    SetWord(EffectAt(r[0xB]) + 0x2E, static_cast<std::uint16_t>(tR->screen_x));
+    SetWord(EffectAt(r[0xB]) + 0x30, static_cast<std::uint16_t>(tR->screen_y));
 }
 
 // Area 94's spawns: Effect_Spawn(kind, 0, `args`[the list byte], the record's
@@ -118,8 +121,8 @@ void SpawnAt(U record, unsigned char kind, U args, U list) {
 }
 
 // Area 91's CLUT strips as words, by an index that may run before a row.
-unsigned SourceAt(std::int32_t i) { return Word(Mem(at::kClutStripSource + static_cast<U>(i) * 2u)); }
-void SetStripAt(std::int32_t i, unsigned v) { SetWord(Mem(at::kClutStrip + static_cast<U>(i) * 2u), v); }
+unsigned SourceAt(std::int32_t i) { return Word(Mem(Gfx_ClutStripSource_addr + static_cast<U>(i) * 2u)); }
+void SetStripAt(std::int32_t i, unsigned v) { SetWord(Mem(Gfx_ClutStrip_addr + static_cast<U>(i) * 2u), v); }
 
 }  // namespace
 
@@ -132,12 +135,12 @@ void SetStripAt(std::int32_t i, unsigned v) { SetWord(Mem(at::kClutStrip + stati
 // from the byte pair of Area90_FocusPairs by the s8 answer, unchecked - the
 // pointer and the answer read again for the second.
 extern "C" void __cdecl Area90_ChoiceFocusPair(void) {
-    unsigned char* focus = Ptr(at::kFocusObject);
-    const unsigned first = B(at::kArea90FocusPairs + static_cast<U>(Answer()) * 2u);
+    unsigned char* focus = Ptr(AreaW1a_FocusObject_addr);
+    const unsigned first = B(Area90_FocusPairs_addr + static_cast<U>(Answer()) * 2u);
     SetMessage(0xFFFF);
     SetLong(focus + 0x18, static_cast<std::int32_t>(first));
-    focus = Ptr(at::kFocusObject);
-    SetLong(focus + 0x1C, B(at::kArea90FocusPairs + 1u + static_cast<U>(Answer()) * 2u));
+    focus = Ptr(AreaW1a_FocusObject_addr);
+    SetLong(focus + 0x1C, B(Area90_FocusPairs_addr + 1u + static_cast<U>(Answer()) * 2u));
 }
 
 // ===========================================================================
@@ -148,9 +151,9 @@ extern "C" void __cdecl Area90_ChoiceFocusPair(void) {
 // mark 6. 0: Inventory_Count(0, 0x59, 0) as a word not 0: Inventory_Remove(0,
 // 0x59, 1) and message 5; else message 6 and the mark 6.
 extern "C" void __cdecl Area91_ChoiceTakeItem59(void) {
-    if (B(at::kChoiceAnswer) != 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
         SetMessage(7);
-        B(at::kAnswerMark) = 6;
+        B(AreaW0c_AnswerMark_addr) = 6;
         return;
     }
     if (AH_CALL(Inventory_Count)(0, 0x59, 0) != 0) {
@@ -159,15 +162,15 @@ extern "C" void __cdecl Area91_ChoiceTakeItem59(void) {
         return;
     }
     SetMessage(6);
-    B(at::kAnswerMark) = 6;
+    B(AreaW0c_AnswerMark_addr) = 6;
 }
 
 // original 0x411FB0 (area 91 +0x34[3] and [4]): answer not 0: message 7 and
 // the mark 6; 0: message 0xFFFF.
 extern "C" void __cdecl Area91_ChoiceMessage7(void) {
-    if (B(at::kChoiceAnswer) != 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
         SetMessage(7);
-        B(at::kAnswerMark) = 6;
+        B(AreaW0c_AnswerMark_addr) = 6;
         return;
     }
     SetMessage(0xFFFF);
@@ -178,7 +181,7 @@ extern "C" void __cdecl Area91_ChoiceMessage7(void) {
 // descriptor's +0x3C array, whose one entry is this handler (the original
 // loops forever), 7 and above the descriptor's other words: ours aborts.
 extern "C" void __cdecl Area91_ObjectRun(void) {
-    StateEntry("Area91_ObjectRun", at::kArea91States, at::kArea91StateCount, Sprite_Current[4])();
+    StateEntry("Area91_ObjectRun", Area91_States_addr, at::kArea91StateCount, Sprite_Current[4])();
 }
 
 // original 0x412000 (Area91_States 0): the party list's first byte not 6 or 3:
@@ -187,7 +190,7 @@ extern "C" void __cdecl Area91_ObjectRun(void) {
 // that store), Sound_PlayEffect(0x201); not 0: ScriptFlags_Set40 and
 // Sprite_Current +4 (the state) + 1.
 extern "C" void __cdecl Area91_State0CheckItem57(void) {
-    const unsigned char list = B(at::kPartyList0);
+    const unsigned char list = B(Cond_Flags_addr + 0xd2);
     if (list != 6 && list != 3) {
         Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
         return;
@@ -207,7 +210,7 @@ extern "C" void __cdecl Area91_State0CheckItem57(void) {
 // Sound_PlayEffect(0x200), then Sprite_Current (read again for each) +0xA = 0,
 // +0xB = 0, +4 + 1.
 extern "C" void __cdecl Area91_State1Arm(void) {
-    if (B(at::kLeader137) != 0) return;
+    if (B(ObjTrio_addr + 0x137) != 0) return;
     AH_CALL(Sound_PlayEffect)(0x200);
     Sprite_Current[0xA] = 0;
     Sprite_Current[0xB] = 0;
@@ -366,7 +369,8 @@ extern "C" void __cdecl Area91_State5Shrink(void) {
         object[4] = 0;
         Field_ActiveMember[0x80] = static_cast<unsigned char>(Field_ActiveMember[0x80] & 0xFE);
         unsigned char* const member = Field_ActiveMember;
-        SetWord(member + 0x8A, Word(member + 0x8A) + 1u);
+        auto* const tMember = reinterpret_cast<records::SpriteObject*>(member);
+        tMember->script_position = tMember->script_position + 1u;
         AH_CALL(ScriptFlags_Clear40)();
         object = Sprite_Current;
     }
@@ -377,8 +381,8 @@ extern "C" void __cdecl Area91_State5Shrink(void) {
 // 4 with sub-kind 0x10; al 0.
 extern "C" unsigned char __cdecl Area91_Trigger49(unsigned char*, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 4;
-    B(at::kTailSub) = 0x10;
+    B(AreaW0a_TailKind_addr) = 4;
+    B(AreaW0c_TailSub_addr) = 0x10;
     return 0;
 }
 
@@ -401,14 +405,15 @@ extern "C" void __cdecl Area91_EffectRings(void) {
     if (Cond_ByteFE == 0) return;
     {
         unsigned char* const object = Sprite_Current;
-        Prim_VertexScratch[0] = static_cast<short>((Long(object + 0x34) >> 9) - 0x4000);
-        Prim_VertexScratch[1] = static_cast<short>((Long(object + 0x38) >> 9) - 0x4000);
+        auto* const tObject = reinterpret_cast<records::EffectObject*>(object);
+        Prim_VertexScratch[0] = static_cast<short>((tObject->x >> 9) - 0x4000);
+        Prim_VertexScratch[1] = static_cast<short>((tObject->z >> 9) - 0x4000);
         Prim_VertexScratch[2] = 0x80;
     }
     long depth = 0;
     AH_CALL(Gte_RotTransPers)(Prim_VertexScratch, reinterpret_cast<unsigned long*>(MapView_ScreenXY), &depth);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 2, 0xC);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0xC);
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] + 4);
     std::int32_t ring = 0, inner = 0, fade = 0, colour = 0;
     do {
@@ -437,7 +442,7 @@ extern "C" void __cdecl Area91_EffectRings(void) {
             StoreFloat(prim + 0x14, AddFloat(x1, MapView_ScreenXY[0]));
             const std::int32_t y1 = MulSar(AH_CALL(Math_Cos)(angle), static_cast<U>(radius), 15);
             StoreFloat(prim + 0x18, AddFloat(y1, MapView_ScreenXY[1]));
-            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 2, 0x20);
+            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0x20);
         }
         const std::int32_t half_radius = radius / 2;
         const float lift = static_cast<float>(half_radius);
@@ -449,23 +454,23 @@ extern "C" void __cdecl Area91_EffectRings(void) {
             prim[5] = static_cast<unsigned char>(colour);
             prim[6] = static_cast<unsigned char>(colour);
             AH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(prim + 0x10));
-            const std::int32_t turn_x = static_cast<signed char>(B(at::kArea91RingTurns + static_cast<U>(ring)));
+            const std::int32_t turn_x = static_cast<signed char>(B(Area91_RingTurns_addr + static_cast<U>(ring)));
             const std::int32_t t_x = static_cast<std::int32_t>(((Frame_Counter & 0xFu) << 4) * static_cast<U>(turn_x) + static_cast<U>(angle));
             const std::int32_t x = MulSar(AH_CALL(Math_Sin)(t_x), static_cast<U>(radius), 13);
             StoreFloat(prim + 8, AddFloat(x, MapView_ScreenXY[0]));
-            const std::int32_t turn_y = static_cast<signed char>(B(at::kArea91RingTurns + static_cast<U>(ring)));
+            const std::int32_t turn_y = static_cast<signed char>(B(Area91_RingTurns_addr + static_cast<U>(ring)));
             const std::int32_t t_y = static_cast<std::int32_t>(((Frame_Counter & 0xFu) << 4) * static_cast<U>(turn_y) + static_cast<U>(angle));
             const std::int32_t y = MulSar(AH_CALL(Math_Cos)(t_y), static_cast<U>(radius), 14);
             const double raised = static_cast<double>(y) + static_cast<double>(MapView_ScreenXY[1]);
             StoreFloat(prim + 0xC, static_cast<float>(raised - static_cast<double>(lift)));
-            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 2, 0x14);
+            AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0x14);
         }
         inner += 0x20;
         ++ring;
         fade += 0x10;
     } while (inner < 0x60);
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
-    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 2, 0xC);
+    AH_CALL(MapView_LinkPrimAt)(static_cast<U>(CurEffect()->x), static_cast<U>(CurEffect()->z), 2, 0xC);
     if (colour == 0) Cond_ByteFE = 0;
 }
 
@@ -478,7 +483,7 @@ extern "C" void __cdecl Area91_EffectRings(void) {
 // MoveScript_Var7 8 and step 0xA, 0x1E, 0x14.
 extern "C" void __cdecl Area92_ChoiceRunStep(void) {
     const int answer = Answer();
-    SetMessage(MessageAt(at::kArea92Messages0, answer));
+    SetMessage(MessageAt(Area92_ChoiceMessages_addr, answer));
     switch (answer) {
     case 2: RunStep(8, 0xA); break;
     case 3: RunStep(8, 0x1E); break;
@@ -490,14 +495,14 @@ extern "C" void __cdecl Area92_ChoiceRunStep(void) {
 // original 0x412940 (area 92 +0x34[1]): the message word by the s8 answer;
 // answer (byte) 0: the scene start with MoveScript_Var7 8 and step 0.
 extern "C" void __cdecl Area92_ChoiceRun0(void) {
-    SetMessage(MessageAt(at::kArea92Messages1, Answer()));
-    if (B(at::kChoiceAnswer) == 0) RunStep(8, 0);
+    SetMessage(MessageAt(Area92_ChoiceMessages_addr + 0xc, Answer()));
+    if (B(AreaW0c_ChoiceAnswer_addr) == 0) RunStep(8, 0);
 }
 
 // original 0x412990 (area 92 +0x34[2]): the same with step 0x28.
 extern "C" void __cdecl Area92_ChoiceRun28(void) {
-    SetMessage(MessageAt(at::kArea92Messages2, Answer()));
-    if (B(at::kChoiceAnswer) == 0) RunStep(8, 0x28);
+    SetMessage(MessageAt(Area92_ChoiceMessages_addr + 0x10, Answer()));
+    if (B(AreaW0c_ChoiceAnswer_addr) == 0) RunStep(8, 0x28);
 }
 
 // original 0x4129E0 (area 92 +0x34[3]): the message word by the s8 answer;
@@ -505,7 +510,7 @@ extern "C" void __cdecl Area92_ChoiceRun28(void) {
 // chapter row's flag 0x1B clear - step 0x12, set - step 0x23.
 extern "C" void __cdecl Area92_ChoiceRunByFlag1B(void) {
     const int answer = Answer();
-    SetMessage(MessageAt(at::kArea92Messages3, answer));
+    SetMessage(MessageAt(Area92_ChoiceMessages_addr + 0x14, answer));
     if (answer == 0) {
         RunStep(7, 0x3C);
     } else if (answer == 1) {
@@ -519,35 +524,35 @@ extern "C" void __cdecl Area92_ChoiceRunByFlag1B(void) {
 // original 0x412AA0 (area 92 +0x3C[0] = +0x34[4], PSX 0x801F2E9C): an effect
 // of kind 4 at party record 0, its third byte Area92_EffectArgs4 by the first
 // party list byte.
-extern "C" void __cdecl Area92_SpawnKind4AtMember0(void) { SpawnInline(at::kParty, 4, at::kArea92EffectArgs4, at::kPartyList0); }
+extern "C" void __cdecl Area92_SpawnKind4AtMember0(void) { SpawnInline(ObjTrio_addr, 4, Area92_EffectArgs4_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x412B50 (+0x3C[1], PSX 0x801F304C): kind 3 at record 0 by list 0,
 // Area92_EffectArgs3.
-extern "C" void __cdecl Area92_SpawnKind3AtMember0(void) { SpawnInline(at::kParty, 3, at::kArea92EffectArgs3, at::kPartyList0); }
+extern "C" void __cdecl Area92_SpawnKind3AtMember0(void) { SpawnInline(ObjTrio_addr, 3, Area92_EffectArgs3_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x412C00 (+0x3C[2], PSX 0x801F31FC): kind 3 at record 1 by list 1.
 extern "C" void __cdecl Area92_SpawnKind3AtMember1(void) {
-    SpawnInline(at::kParty + at::kPartyStride, 3, at::kArea92EffectArgs3, at::kPartyList1);
+    SpawnInline(ObjTrio_addr + at::kPartyStride, 3, Area92_EffectArgs3_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x412CB0 (+0x3C[3], PSX 0x801F33AC): kind 3 at record 2 by list 2
 // (read as a dword, masked to its byte).
 extern "C" void __cdecl Area92_SpawnKind3AtMember2(void) {
-    SpawnInline(at::kParty + 2 * at::kPartyStride, 3, at::kArea92EffectArgs3, at::kPartyList2);
+    SpawnInline(ObjTrio_addr + 2 * at::kPartyStride, 3, Area92_EffectArgs3_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x412D70 (+0x3C[4], PSX 0x801F355C): kind 1 at record 0 by list 0,
 // Area92_EffectArgs1.
-extern "C" void __cdecl Area92_SpawnKind1AtMember0(void) { SpawnInline(at::kParty, 1, at::kArea92EffectArgs1, at::kPartyList0); }
+extern "C" void __cdecl Area92_SpawnKind1AtMember0(void) { SpawnInline(ObjTrio_addr, 1, Area92_EffectArgs1_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x412E20 (+0x3C[5], PSX 0x801F3708): kind 1 at record 1 by list 1.
 extern "C" void __cdecl Area92_SpawnKind1AtMember1(void) {
-    SpawnInline(at::kParty + at::kPartyStride, 1, at::kArea92EffectArgs1, at::kPartyList1);
+    SpawnInline(ObjTrio_addr + at::kPartyStride, 1, Area92_EffectArgs1_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x412ED0 (+0x3C[6], PSX 0x801F38B4): kind 1 at record 2 by list 2.
 extern "C" void __cdecl Area92_SpawnKind1AtMember2(void) {
-    SpawnInline(at::kParty + 2 * at::kPartyStride, 1, at::kArea92EffectArgs1, at::kPartyList2);
+    SpawnInline(ObjTrio_addr + 2 * at::kPartyStride, 1, Area92_EffectArgs1_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x412F90 (+0x3C[7] = +0x34[11], PSX 0x801F3A60): Music_Play(0x3D, 8).
@@ -557,9 +562,9 @@ extern "C" void __cdecl Area92_PlayMusic3D(void) { AH_CALL(Music_Play)(0x3D, 8);
 // 0x2C with state 0 and sub-kind 0xB; al 0.
 extern "C" unsigned char __cdecl Area92_Trigger37(unsigned char*, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 0x2C;
-    B(at::kTailState) = 0;
-    B(at::kTailSub) = 0xB;
+    B(AreaW0a_TailKind_addr) = 0x2C;
+    B(AreaW0c_TailState_addr) = 0;
+    B(AreaW0c_TailSub_addr) = 0xB;
     return 0;
 }
 
@@ -569,17 +574,17 @@ extern "C" unsigned char __cdecl Area92_Trigger37(unsigned char*, unsigned char*
 
 // original 0x412FC0 (area 94 +0x34[0] = +0x3C[13], PSX 0x801F2C04): the
 // message word of Area94_ChoiceMessages by the s8 answer.
-extern "C" void __cdecl Area94_ChoiceMessage0(void) { SetMessage(MessageAt(at::kArea94Messages0, Answer())); }
+extern "C" void __cdecl Area94_ChoiceMessage0(void) { SetMessage(MessageAt(Area94_ChoiceMessages_addr, Answer())); }
 
 // original 0x412FE0 (+0x34[1] = +0x3C[14], PSX 0x801F2C30): the same, its
 // second list.
-extern "C" void __cdecl Area94_ChoiceMessage1(void) { SetMessage(MessageAt(at::kArea94Messages1, Answer())); }
+extern "C" void __cdecl Area94_ChoiceMessage1(void) { SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0xc, Answer())); }
 
 // original 0x413000 (+0x34[2] = +0x3C[15], PSX 0x801F2C5C): the message word;
 // answer 1: the chapter row's flag 0x15 set.
 extern "C" void __cdecl Area94_ChoiceSetFlag15(void) {
     const int answer = Answer();
-    SetMessage(MessageAt(at::kArea94Messages2, answer));
+    SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0x18, answer));
     if (answer == 1) AH_CALL(Flags_Set)(FlagRow(), 0x15);
 }
 
@@ -589,7 +594,7 @@ extern "C" void __cdecl Area94_ChoiceSetFlag15(void) {
 // step 0x32.
 extern "C" void __cdecl Area94_ChoiceRunByFlags16(void) {
     const int answer = Answer();
-    SetMessage(MessageAt(at::kArea94Messages3, answer));
+    SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0x1c, answer));
     if (answer != 1) return;
     if (AH_CALL(Flags_Test)(FlagRow(), 0x16) == 0) {
         AH_CALL(Flags_Set)(FlagRow(), 0x16);
@@ -606,7 +611,7 @@ extern "C" void __cdecl Area94_ChoiceRunByFlags16(void) {
 // flag 0x20 clear - MoveScript_Var7 9, step 0; set - step 2.
 extern "C" void __cdecl Area94_ChoiceRunByFlag20(void) {
     const int answer = Answer();
-    SetMessage(MessageAt(at::kArea94Messages4, answer));
+    SetMessage(MessageAt(Area94_ChoiceMessages_addr + 0x20, answer));
     if (answer == 1) {
         RunStep(7, 0x32);
     } else if (answer == 2) {
@@ -619,20 +624,20 @@ extern "C" void __cdecl Area94_ChoiceRunByFlag20(void) {
 
 // original 0x4131D0 (+0x3C[0], PSX 0x801F2ED0): Effect_Spawn kind 2 at party
 // record 0 by list 0, Area94_EffectArgsA.
-extern "C" void __cdecl Area94_SpawnKind2AtMember0(void) { SpawnAt(at::kParty, 2, at::kArea94EffectArgsA, at::kPartyList0); }
+extern "C" void __cdecl Area94_SpawnKind2AtMember0(void) { SpawnAt(ObjTrio_addr, 2, Area94_EffectArgsA_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413220 (+0x3C[1], PSX 0x801F2F50): kind 3 at record 1, args A.
 extern "C" void __cdecl Area94_SpawnKind3AtMember1(void) {
-    SpawnAt(at::kParty + at::kPartyStride, 3, at::kArea94EffectArgsA, at::kPartyList1);
+    SpawnAt(ObjTrio_addr + at::kPartyStride, 3, Area94_EffectArgsA_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x413270 (+0x3C[2], PSX 0x801F2FD0): kind 3 at record 2, args A.
 extern "C" void __cdecl Area94_SpawnKind3AtMember2(void) {
-    SpawnAt(at::kParty + 2 * at::kPartyStride, 3, at::kArea94EffectArgsA, at::kPartyList2);
+    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 3, Area94_EffectArgsA_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x4132C0 (+0x3C[3], PSX 0x801F3050): kind 4 at record 0, args B.
-extern "C" void __cdecl Area94_SpawnKind4AtMember0(void) { SpawnAt(at::kParty, 4, at::kArea94EffectArgsB, at::kPartyList0); }
+extern "C" void __cdecl Area94_SpawnKind4AtMember0(void) { SpawnAt(ObjTrio_addr, 4, Area94_EffectArgsB_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413310 (+0x3C[4], PSX 0x801F30D0): the map cells (0x52, 0x32..0x34)
 // zeroed.
@@ -644,29 +649,29 @@ extern "C" void __cdecl Area94_ClearCells(void) {
 
 // original 0x413340 (+0x3C[5], PSX 0x801F3118): kind 1 at record 1, args C.
 extern "C" void __cdecl Area94_SpawnKind1AtMember1(void) {
-    SpawnAt(at::kParty + at::kPartyStride, 1, at::kArea94EffectArgsC, at::kPartyList1);
+    SpawnAt(ObjTrio_addr + at::kPartyStride, 1, Area94_EffectArgsC_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x413390 (+0x3C[6], PSX 0x801F3198): kind 1 at record 2, args C.
 extern "C" void __cdecl Area94_SpawnKind1AtMember2(void) {
-    SpawnAt(at::kParty + 2 * at::kPartyStride, 1, at::kArea94EffectArgsC, at::kPartyList2);
+    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 1, Area94_EffectArgsC_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x4133E0 (+0x3C[7], PSX 0x801F3218; also area 131 +0x3C[8] and area
 // 133 +0x3C[3]): counter 1 = the leader's byte +8.
-extern "C" void __cdecl Area94_Counter1FromLeaderPose(void) { B(at::kCounter1) = B(at::kLeaderPose); }
+extern "C" void __cdecl Area94_Counter1FromLeaderPose(void) { B(at::kCounter1) = B(ObjTrio_addr + 0x8); }
 
 // original 0x4133F0 (+0x3C[8], PSX 0x801F3230): kind 3 at record 0, args D.
-extern "C" void __cdecl Area94_SpawnKind3AtMember0(void) { SpawnAt(at::kParty, 3, at::kArea94EffectArgsD, at::kPartyList0); }
+extern "C" void __cdecl Area94_SpawnKind3AtMember0(void) { SpawnAt(ObjTrio_addr, 3, Area94_EffectArgsD_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413440 (+0x3C[9], PSX 0x801F32B0): kind 4 at record 1, args B.
 extern "C" void __cdecl Area94_SpawnKind4AtMember1(void) {
-    SpawnAt(at::kParty + at::kPartyStride, 4, at::kArea94EffectArgsB, at::kPartyList1);
+    SpawnAt(ObjTrio_addr + at::kPartyStride, 4, Area94_EffectArgsB_addr, Cond_Flags_addr + 0xd3);
 }
 
 // original 0x413490 (+0x3C[10], PSX 0x801F3330): kind 4 at record 2, args B.
 extern "C" void __cdecl Area94_SpawnKind4AtMember2(void) {
-    SpawnAt(at::kParty + 2 * at::kPartyStride, 4, at::kArea94EffectArgsB, at::kPartyList2);
+    SpawnAt(ObjTrio_addr + 2 * at::kPartyStride, 4, Area94_EffectArgsB_addr, Cond_Flags_addr + 0xd4);
 }
 
 // original 0x4134E0 (+0x3C[11], PSX 0x801F33B0): KeyItem_Add(7), then the
@@ -677,7 +682,7 @@ extern "C" void __cdecl Area94_GiveKeyItem7(void) {
 }
 
 // original 0x413500 (+0x3C[12], PSX 0x801F33E0): kind 4 at record 0, args E.
-extern "C" void __cdecl Area94_SpawnKind4AtMember0E(void) { SpawnAt(at::kParty, 4, at::kArea94EffectArgsE, at::kPartyList0); }
+extern "C" void __cdecl Area94_SpawnKind4AtMember0E(void) { SpawnAt(ObjTrio_addr, 4, Area94_EffectArgsE_addr, Cond_Flags_addr + 0xd2); }
 
 // original 0x413550 (+0x40, PSX 0x801F3460): the previous area (u16 0x802290)
 // 0x79: story flag 0x42 set, 0x43 cleared, then the patch chain applied - from
@@ -685,10 +690,10 @@ extern "C" void __cdecl Area94_SpawnKind4AtMember0E(void) { SpawnAt(at::kParty, 
 // word), each entry not 0: AreaMap_ApplyPatch(entry), then on by (its dword,
 // read again, >> 16) + 1 dwords; a zero dword ends it (none: the walk runs on).
 extern "C" void __cdecl Area94_InitPatches(void) {
-    if (Word(Mem(at::kLastArea)) != 0x79) return;
+    if (Word(Mem(AreaW2c_LastArea_addr)) != 0x79) return;
     AH_CALL(Flags_Set)(StoryFlags(), 0x42);
     AH_CALL(Flags_Clear)(StoryFlags(), 0x43);
-    U entry = at::kMapHeader + (static_cast<U>(Long(Mem(at::kPatchBase))) & 0xFFFF) * 4u;
+    U entry = AreaMap_Header_addr + (static_cast<U>(Long(Mem(AreaMap_PatchBase_addr))) & 0xFFFF) * 4u;
     while (Long(Mem(entry)) != 0) {
         AH_CALL(AreaMap_ApplyPatch)(Mem(entry));
         entry += (static_cast<U>(Long(Mem(entry))) >> 16) * 4u + 4u;

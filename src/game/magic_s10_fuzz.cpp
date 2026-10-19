@@ -261,9 +261,14 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kActorRecord = 0x904B3C, kEventBattle = 0x904AAA,
-                        kFrameSet = 0x9039D8, kCamera = 0x929EC8, kFieldState = 0x905D98, kPool = 0x67F700,
-                        kPoolBytes = 32 * 0x84;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml).
+// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kCamera: now Camera_Angles (symbols.toml).
+// kFieldState: now Field_State (symbols.toml).
+// kPool: now Lavaburst_Pool (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kPoolBytes = 32 * 0x84;
 
 // The function being fuzzed, for the settle.
 unsigned g_k = 0;
@@ -294,12 +299,12 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // Battle_PlayActorCue reads its sound table through Field_State.
 std::uint32_t NoteFieldState(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(kFieldState))));
+    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(Field_State_addr))));
     return answer;
 }
 // Rand, Math_Sin and Math_Cos: the callers keep their angles, radii and
@@ -396,12 +401,12 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850..
-    {kFrameSet, 4},                       // the frame-offset table pointer the children swap
-    {kCamera, 2},                         // Camera_Angles[0]
-    {kFieldState, 4},                     // Field_State
-    {kPool, kPoolBytes},                  // Lavaburst_Pool
+    {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the children swap
+    {Camera_Angles_addr, 2},              // Camera_Angles[0]
+    {Field_State_addr, 4},                // Field_State
+    {Lavaburst_Pool_addr, kPoolBytes},    // Lavaburst_Pool
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
     {0x80F980, 0x200},                    // Gfx_ClutStrip row 2 (Lavaburst writes its first 16 words)
@@ -410,7 +415,7 @@ mh::Region g_regions[] = {
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* PoolRecord(unsigned i) { return mh::Mem(kPool + (i & 31) * 0x84u); }
+unsigned char* PoolRecord(unsigned i) { return mh::Mem(Lavaburst_Pool_addr + (i & 31) * 0x84u); }
 
 // A real slot or record for a pool record's owner (the walk makes it the
 // owner cell, which the recorders write through).
@@ -426,13 +431,13 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
-    case 3: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
-    case 4: SetWord(mh::Mem(kCamera), h >> 16); break;
+    case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
+    case 4: SetWord(mh::Mem(Camera_Angles_addr), h >> 16); break;
     case 5: PoolRecord(v)[0] ^= 1; break;
-    case 6: mh::SetPointer(kActorRecord, mh::SpriteRecord(v)); break;
-    case 7: mh::Mem(kEventBattle)[0] = Byte(h >> 24); break;
+    case 6: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
+    case 7: mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(h >> 24); break;
     default: break;
     }
 }
@@ -458,7 +463,7 @@ void FillPool() {
         unsigned char* const rec = PoolRecord(i);
         if (mode == 0) rec[0] = Byte(rec[0] | 1);                                   // full
         else if (mode == 1) rec[0] = Byte(i < taken ? rec[0] | 1 : rec[0] & ~1u);   // the first `taken`
-        mh::SetPointer(kPool + i * 0x84u + 0x80, SomeOwner(mh::Next()));
+        mh::SetPointer(Lavaburst_Pool_addr + i * 0x84u + 0x80, SomeOwner(mh::Next()));
     }
 }
 
@@ -466,7 +471,7 @@ void Seed(unsigned k) {
     g_k = k;
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kActorRecord, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     FillPool();
     if (mh::Half()) mh::Mem(mh::at::kTarget)[0] = Byte(mh::Mem(mh::at::kTarget)[0] | 0x40);
     if (mh::Often()) mh::Mem(mh::at::kActor)[0] = Byte(mh::Next() % 11);
@@ -521,11 +526,11 @@ void Seed(unsigned k) {
         break;
     case kSacrificeActor_Lighten: case kSacrificeActor_End:
         if (mh::Often()) sc[0x5D] = Byte(0xF0 - (mh::Half() ? 0x10 : 0));
-        if (k == kSacrificeActor_End && mh::Often()) mh::Pointer(mh::at::kOwner)[0xB] = 1;
+        if (k == kSacrificeActor_End && mh::Often()) mh::Pointer(BattleE2_Owner_addr)[0xB] = 1;
         break;
     // Howling: the event battle of kind 0x37; the record number inside the
     // side; the scale step one frame from its end
-    case kHowling_Start: if (mh::Half()) mh::Mem(kEventBattle)[0] = mh::Half() ? 0x37 : 0x36; break;
+    case kHowling_Start: if (mh::Half()) mh::Mem(BattleActions_EventBattle_addr)[0] = mh::Half() ? 0x37 : 0x36; break;
     case kHowlingChild_Start: case kHowlingChild_End: sc[0xB] = Byte(mh::Next() % (enemies ? 8 : 3)); break;
     case kHowlingChild_Out: case kHowlingChild_Back:
         if (mh::Often()) {

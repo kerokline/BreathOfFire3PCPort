@@ -56,7 +56,7 @@ const sh::DataTable kTables[] = {
 // the trade bytes 0x93985C..0x93985F.
 const sh::Region kRegions[] = {
     {at::kConsumableFlags, at::kFlagsReachEnd - at::kConsumableFlags},
-    {at::kTradeState, 4},
+    {Effect1g_TradeState_addr, 4},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -64,7 +64,7 @@ const sh::Region kRegions[] = {
 // ItemTrade_Dispatch: every state inside the table, each a third of the time.
 // Past the table ours aborts by design (section 4's control, not a seed).
 void Seed(unsigned k) {
-    if (k == kDispatch) sh::Mem(at::kTradeState)[0] = static_cast<unsigned char>(sh::Next() % ItemTrade_States_count);
+    if (k == kDispatch) sh::Mem(Effect1g_TradeState_addr)[0] = static_cast<unsigned char>(sh::Next() % ItemTrade_States_count);
 }
 
 // Item_UseFlags' two words: every category value 0..5 and around the low byte's

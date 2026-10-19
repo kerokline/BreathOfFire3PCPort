@@ -28,6 +28,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_hidden_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -95,11 +96,23 @@ Handler Entry(std::uint32_t table, unsigned index) {
 }
 // Field_DirectionSteps' row for a direction (two longs, x then z), the
 // direction unchecked: the table has 8 rows.
-long StepX(unsigned d) { return Long(At(at::kDirSteps + d * 8)); }
-long StepZ(unsigned d) { return Long(At(at::kDirSteps + d * 8 + 4)); }
+long StepX(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8)); }
+long StepZ(unsigned d) { return Long(At(Field_DirectionSteps_addr + d * 8 + 4)); }
 long Add(long a, long b) { return static_cast<long>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b)); }
 // An effect object by its index: Effect_Objects + index * 0x80, unchecked.
 unsigned char* Effect(unsigned index) { return Effect_Objects + (index << 7); }
+
+// The typed views (src/game/records.h): the member states and party actions
+// run on an ObjTrio record, Field_State is one; the Sprite_* helpers run on
+// any object whose first 0x80 bytes are a sprite object's.
+records::PartyMember* Member() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
+records::PartyMember* State() { return reinterpret_cast<records::PartyMember*>(Field_State); }
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+unsigned char* Bytes(records::EffectObject* p) { return reinterpret_cast<unsigned char*>(p); }
+unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
+const unsigned char* Bytes(const records::PartyMember* p) { return reinterpret_cast<const unsigned char*>(p); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
+records::EffectObject* EffectRec(unsigned index) { return reinterpret_cast<records::EffectObject*>(Effect(index)); }
 // A pointer the original keeps in a dword, read afresh.
 unsigned char* PtrIn(const unsigned char* at) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(at))));
@@ -119,7 +132,7 @@ unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((sta
 // original 0x51BA60, state 3: back to state 1 (Member_Control) unless bit 10
 // of Field_ScriptFlags2 holds the member.
 FH_EXPORT void __cdecl Member_ResumeUnlessHeld(void) {
-    if ((Field_ScriptFlags2 & 0x400) == 0) Sprite_Current[1] = 1;
+    if ((Field_ScriptFlags2 & 0x400) == 0) Member()->state[0] = 1;
 }
 
 // original 0x51BBD0, state 7, by its sub-state +2:
@@ -134,35 +147,35 @@ FH_EXPORT void __cdecl Member_ResumeUnlessHeld(void) {
 // As the original has it: the sub-state and the effect index are not
 // checked; in sub-state 1 the index is re-read from +0xB for every store.
 FH_EXPORT void __cdecl Member_EffectState(void) {
-    unsigned char* const s = Sprite_Current;
-    switch (s[2]) {
+    records::PartyMember* const s = Member();
+    switch (s->state[1]) {
     case 0:
-        if (Byte(at::kLeader137) != 8) {
-            s[1] = 1;
-            Sprite_Current[2] = 0;
+        if (ObjTrio[0x137] != 8) {
+            s->state[0] = 1;
+            Member()->state[1] = 0;
         }
         break;
     case 1: {
         const unsigned char i = Al(g.effect_free());
         Sprite_Current[0xB] = i;
-        unsigned char* const c = Sprite_Current;
-        if (c[0xB] == 0xFF) {
-            c[2] = 0;
+        records::PartyMember* const c = Member();
+        if (Bytes(c)[0xB] == 0xFF) {
+            c->state[1] = 0;
             break;
         }
-        Effect(c[0xB])[0] = 1;
-        Effect(c[0xB])[5] = 6;
-        Effect(c[0xB])[6] = 1;
-        SetLong(Effect(c[0xB]) + 0xC, 0);
-        const unsigned arg = static_cast<unsigned char>(MoveScript_EffectArg[Field_State[0x89]]);
-        SetLong(Effect(c[0xB]) + 0x10, static_cast<std::int32_t>(arg));
-        SetWord(Effect(c[0xB]) + 0x2E, Word(c + 0x2E));
-        SetWord(Effect(c[0xB]) + 0x30, Word(c + 0x30));
-        c[2] = 2;
+        EffectRec(Bytes(c)[0xB])->in_use = 1;
+        EffectRec(Bytes(c)[0xB])->kind = 6;
+        EffectRec(Bytes(c)[0xB])->param = 1;
+        EffectRec(Bytes(c)[0xB])->step_x = 0;
+        const unsigned arg = static_cast<unsigned char>(MoveScript_EffectArg[State()->char_id]);
+        EffectRec(Bytes(c)[0xB])->step_z = static_cast<std::int32_t>(arg);
+        SetWord(Effect(Bytes(c)[0xB]) + 0x2E, static_cast<std::uint16_t>(c->screen_x));
+        SetWord(Effect(Bytes(c)[0xB]) + 0x30, static_cast<std::uint16_t>(c->screen_y));
+        c->state[1] = 2;
         break;
     }
     case 2:
-        if (Effect(s[0xB])[0] == 0) s[2] = 0;
+        if (EffectRec(Bytes(s)[0xB])->in_use == 0) s->state[1] = 0;
         break;
     default:
         break;
@@ -188,7 +201,7 @@ FH_EXPORT void __cdecl PartyAction_Finish(void) {
         if (Al(g.script_tick_once()) == 0) return;
     } else if (b == 1) {
         if (Al(g.script_tick_once()) == 0) return;
-        g.set_animation(Sprite_Current[8]);
+        g.set_animation(Member()->direction);
         Sprite_Current[0xB] = 2;
         return;
     } else {
@@ -202,12 +215,12 @@ FH_EXPORT void __cdecl PartyAction_Finish(void) {
 // original 0x51F1B0: party set 5's action - the entry of PartyAction5_Forms
 // 0x65FC18 that the u16 +0x2C picks (0x51E910, PartyAction5_Form1, PartyAction_NoAction), jumped
 // to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(at::kForms, Word(Sprite_Current + 0x2C))(); }
+FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(PartyAction5_Forms_addr, Member()->column)(); }
 
 // original 0x51E910: party set 5's form 0 - the entry of
 // PartyAction5_Form0States 0x65FBC0 that +2 picks (0x51E930, 0x51EAF0,
 // 0x51DA30), jumped to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(at::kForm0States, Sprite_Current[2])(); }
+FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(PartyAction5_Form0States_addr, Member()->state[1])(); }
 
 namespace {
 // PartyAction5_Form0Begin's side probe: the point one step in direction `d`
@@ -215,14 +228,14 @@ namespace {
 // scratch flag set and more than 0x40 as a short) is steep and the ground
 // there (MapView_GroundAt) is above the sprite's +0x3E, +0x2B = 0.
 void ProbeSide(unsigned d) {
-    const unsigned char* s = Sprite_Current;
-    const long x = Add(Long(s + 0x34), StepX(d));
-    const long z = Add(Long(s + 0x38), StepZ(d));
+    const records::PartyMember* s = Member();
+    const long x = Add(s->x, StepX(d));
+    const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
     if (Byte(at::kScratch) == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = g.ground_at(x, z);
-    s = Sprite_Current;
-    if (static_cast<short>(Word(s + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
+    s = Member();
+    if (static_cast<short>(Word(Bytes(s) + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
 }  // namespace
 
@@ -240,32 +253,32 @@ void ProbeSide(unsigned d) {
 // As the original has it: an odd +8 is kept and not masked, and the steps
 // table is read with it unchecked; Sprite_Current is re-read after each call.
 FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
-    const unsigned char* s = Sprite_Current;
-    if ((s[8] & 1) == 0) {
-        Sprite_Current[8] = static_cast<unsigned char>((s[8] - 1) & 7);
+    const records::PartyMember* s = Member();
+    if ((s->direction & 1) == 0) {
+        Member()->direction = static_cast<unsigned char>((s->direction - 1) & 7);
         if (Al(g.target_ahead()) == 0) {
-            Sprite_Current[8] = static_cast<unsigned char>((Sprite_Current[8] + 2) & 7);
-            if (Al(g.target_ahead()) == 0) Sprite_Current[8] = static_cast<unsigned char>((Sprite_Current[8] - 2) & 7);
+            Member()->direction = static_cast<unsigned char>((Member()->direction + 2) & 7);
+            if (Al(g.target_ahead()) == 0) Member()->direction = static_cast<unsigned char>((Member()->direction - 2) & 7);
         }
-        s = Sprite_Current;
+        s = Member();
     }
-    const unsigned d = s[8];
-    const long x = Add(Long(s + 0x34), StepX(d));
-    const long z = Add(Long(s + 0x38), StepZ(d));
+    const unsigned d = s->direction;
+    const long x = Add(s->x, StepX(d));
+    const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
     if (Byte(at::kScratch) != 0 && static_cast<short>(slope) > 0x40) {
-        g.ensure_animation(static_cast<unsigned char>(HalfTurn(Sprite_Current[8]) + 0x46));
-        ++Sprite_Current[2];
+        g.ensure_animation(static_cast<unsigned char>(HalfTurn(Member()->direction) + 0x46));
+        ++Member()->state[1];
     } else {
         Sprite_Current[0x2B] = 1;
         ProbeSide(3);
         ProbeSide(5);
         g.play_effect(static_cast<std::uint16_t>(Word(Sprite_Current + 0x2C) + 0x100));
-        g.ensure_animation(static_cast<unsigned char>(HalfTurn(Sprite_Current[8]) + 0x42));
+        g.ensure_animation(static_cast<unsigned char>(HalfTurn(Member()->direction) + 0x42));
         Sprite_Current[0xA] = 5;
     }
     Sprite_Current[0xB] = 0;
-    ++Sprite_Current[2];
+    ++Member()->state[1];
 }
 
 // original 0x51EAF0, form 0's state 1. +0xA counted down; at 0: the point two
@@ -282,17 +295,17 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
 FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
     --Sprite_Current[0xA];
     if (Sprite_Current[0xA] == 0) {
-        const unsigned char* const s = Sprite_Current;
-        const unsigned d = s[8];
-        const std::uint32_t x = static_cast<std::uint32_t>(Long(s + 0x34)) + 2u * static_cast<std::uint32_t>(StepX(d));
-        const std::uint32_t z = static_cast<std::uint32_t>(Long(s + 0x38)) + 2u * static_cast<std::uint32_t>(StepZ(d));
+        const records::PartyMember* const s = Member();
+        const unsigned d = s->direction;
+        const std::uint32_t x = static_cast<std::uint32_t>(s->x) + 2u * static_cast<std::uint32_t>(StepX(d));
+        const std::uint32_t z = static_cast<std::uint32_t>(s->z) + 2u * static_cast<std::uint32_t>(StepZ(d));
         const unsigned char found = Al(g.object_at(static_cast<long>(x), static_cast<long>(z), 0));
         if (found != 0xFF) {
             const int i = static_cast<signed char>(found);
             if (i < 0x1E)
-                At(at::kObjectFlag + static_cast<std::uint32_t>(i * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(Sprite_Objects_addr + 0x80 + static_cast<std::uint32_t>(i * static_cast<int>(at::kObjectStride)))[0] |= 1;
             else
-                At(at::kExtraFlag + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(at::kObjectStride)))[0] |= 1;
+                At(Sprite_ObjectsExtra_addr + 0x80 + static_cast<std::uint32_t>((i - 0x1E) * static_cast<int>(at::kObjectStride)))[0] |= 1;
         }
         const unsigned cx = x >> 16, cz = z >> 16;
         if (Al(g.cell_pickup(cx, cz)) == 0) {
@@ -300,7 +313,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
             if ((x & 0xFFFF) != 0) done = Al(g.cell_pickup(cx + 1, cz)) != 0;
             if (!done && (z & 0xFFFF) != 0) g.cell_pickup(cx, cz + 1);
         }
-        ++Sprite_Current[2];
+        ++Member()->state[1];
     }
     g.script_tick_once();
 }
@@ -370,7 +383,7 @@ FH_EXPORT void __cdecl Sprite_CopyFrames(unsigned frame, unsigned char* buffer, 
     const unsigned n = size & 0xFFFF;
     unsigned char* const to = buffer + static_cast<std::uint32_t>(Sprite_Current[5]) * n;
     for (unsigned i = 0; i < n; ++i) to[i] = PtrIn(Sprite_Current + 0x50)[i];
-    SetLong(Sprite_Current + 0x50, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(to)));
+    Cur()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(to));
 }
 
 // original 0x589110: Sprite_CopyFrames(animation, set, size); when +0x4B is
@@ -379,12 +392,12 @@ FH_EXPORT void __cdecl Sprite_CopyFrames(unsigned frame, unsigned char* buffer, 
 // Sprite_ScriptStart(0).
 FH_EXPORT void __cdecl Sprite_PoseFromSet(unsigned animation, unsigned char* set, unsigned size) {
     g.copy_frames(animation, set, size);
-    unsigned char* const s = Sprite_Current;
-    if (s[0x4B] == static_cast<unsigned char>(animation)) {
-        g.script_start(static_cast<std::uint16_t>(Word(s + 0x58) - 2));
+    records::SpriteObject* const s = Cur();
+    if (s->animation == static_cast<unsigned char>(animation)) {
+        g.script_start(static_cast<std::uint16_t>(Word(Bytes(s) + 0x58) - 2));
         return;
     }
-    s[0x4B] = static_cast<unsigned char>(animation);
+    s->animation = static_cast<unsigned char>(animation);
     g.script_start(0);
 }
 
@@ -392,7 +405,7 @@ FH_EXPORT void __cdecl Sprite_PoseFromSet(unsigned animation, unsigned char* set
 // animation, Sprite_ScriptStart(position) - the dword as given.
 FH_EXPORT void __cdecl Sprite_AnimFromSet(unsigned animation, unsigned position, unsigned char* buffer, unsigned size) {
     g.copy_frames(animation, buffer, size);
-    Sprite_Current[0x4B] = static_cast<unsigned char>(animation);
+    Cur()->animation = static_cast<unsigned char>(animation);
     g.script_start(position);
 }
 
@@ -411,16 +424,16 @@ FH_EXPORT void __cdecl Sprite_AnimFromSet(unsigned animation, unsigned position,
 FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
     const unsigned char i = Al(g.effect_free());
     if (i == 0xFF) return;
-    unsigned char* const e = Effect(i);
-    e[0] = 1;
-    e[5] = op[1];
-    SetWord(e + 0x36, op[3]);
-    SetWord(e + 0x34, op[2] != 0 ? 0x8000 : 0);
-    SetWord(e + 0x3A, op[5]);
-    SetWord(e + 0x38, op[4] != 0 ? 0x8000 : 0);
-    const long h = g.elevation(Long(e + 0x34), Long(e + 0x38));
-    SetWord(e + 0x3E, static_cast<std::uint16_t>(h));
-    e[0xB] = op[6];
+    records::EffectObject* const e = reinterpret_cast<records::EffectObject*>(Effect(i));
+    e->in_use = 1;
+    e->kind = op[1];
+    SetWord(Bytes(e) + 0x36, op[3]);
+    SetWord(Bytes(e) + 0x34, op[2] != 0 ? 0x8000 : 0);
+    SetWord(Bytes(e) + 0x3A, op[5]);
+    SetWord(Bytes(e) + 0x38, op[4] != 0 ? 0x8000 : 0);
+    const long h = g.elevation(e->x, e->z);
+    SetWord(Bytes(e) + 0x3E, static_cast<std::uint16_t>(h));
+    Bytes(e)[0xB] = op[6];
 }
 
 // ===========================================================================
@@ -492,22 +505,22 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
     unsigned char answer = 1;
     Sprite_Current = At(at::kScratchSprite);
     unsigned char f = static_cast<unsigned char>(facing);
-    if (f >= 4) f = static_cast<unsigned char>((Byte(at::kFacing) + 1) & 3);
-    At(at::kFacing)[0] = f;
+    if (f >= 4) f = static_cast<unsigned char>((FieldHidden_Facing + 1) & 3);
+    FieldHidden_Facing = f;
     if (static_cast<unsigned char>(keep_centre) == 0) {
-        SetLong(At(at::kCentreX), static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) & 0xFFFF8000u));
-        SetLong(At(at::kCentreZ), static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) & 0xFFFF8000u));
+        BossSi_CentreX = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) & 0xFFFF8000u);
+        BossSi_CentreZ = static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) & 0xFFFF8000u);
     }
     const unsigned row = Al(g.pick_row());
-    const unsigned char* const picked = At(at::kRows + row * 9);
-    SetLong(At(at::kRowUsed), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(picked)));
+    const unsigned char* const picked = At(Encounter_Rows_addr + row * 9);
+    FieldHidden_RowUsed = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(picked));
     const unsigned char count = Al(g.fill_slots(picked));
-    At(at::kEnemyCount)[0] = count;
+    FieldHidden_EnemyCount = count;
     if (count == 0) return 0;
-    At(at::kBattleFacing)[0] = Byte(at::kFacing);
+    At(at::kBattleFacing)[0] = FieldHidden_Facing;
     if (Al(g.place_party()) == 0 || Al(g.place_enemies()) == 0 || Al(g.reachable()) == 0) answer = 0;
     g.push_matrix();
-    g.aim_camera(Byte(at::kFacing));
+    g.aim_camera(FieldHidden_Facing);
     for (unsigned char m = 0; m < Al(g.party_count(1)); ++m) {
         const long x = Long(At(at::kMemberPos + m * 8u));
         const long z = Long(At(at::kMemberPos + m * 8u + 4));
@@ -524,10 +537,10 @@ FH_EXPORT unsigned char __cdecl Encounter_Place(unsigned facing, unsigned keep_c
         if (slot[0] == 0) continue;
         if (Al(g.on_screen(Long(slot + 4), Long(slot + 8), kind[0x86], kind[0x87])) == 0) {
             slot[0] = 0;
-            At(at::kPlaced)[0] = static_cast<unsigned char>(Byte(at::kPlaced) - 1);
+            FieldHidden_Placed = static_cast<unsigned char>(FieldHidden_Placed - 1);
         }
     }
-    const unsigned char placed = Byte(at::kPlaced);
+    const unsigned char placed = FieldHidden_Placed;
     g.pop_matrix();
     return placed != 0 ? answer : 0;
 }

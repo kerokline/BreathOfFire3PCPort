@@ -118,28 +118,28 @@ extern "C" void __cdecl MsgBox_Reset(void) {
     const unsigned char* at = Ptr(kAt);
     SetW(kFlags, W(kFlags) & 0x40u);
     SetB(kState, 0);
-    SetB(kSubState, 0);
-    SetB(kEffectKind, 0);
-    SetB(kEffectPhase, 0);
-    SetB(kOffsetX, 0);
-    SetB(kOffsetY, 0);
-    SetW(kEffectTimer, 0);
+    ItemUse_SubState = 0;
+    Msgbox_EffectKind = 0;
+    Msgbox_EffectPhase = 0;
+    Msgbox_OffsetX = 0;
+    Msgbox_OffsetY = 0;
+    Msgbox_EffectTimer = 0;
     if (at[0] == 0x0C) {
         ++at;
         SetPtr(kAt, at);
         const unsigned char placement = at[0];
         ++at;
-        SetB(kPlacement, placement);
+        Msgbox_Placement = placement;
         SetPtr(kAt, at);
     } else {
-        SetB(kPlacement, 0);
+        Msgbox_Placement = 0;
     }
-    SetB(kDelay, 0);
-    SetB(kStepCount, 0);
+    Msgbox_Delay = 0;
+    Msgbox_StepCount = 0;
     SetW(kEffectOff, 0);
-    SetB(kColorHigh, 0);
+    ItemUse_ColorHigh = 0;
     g.window_alloc(0, 0);
-    SetB(kWindow0Kind, 2);
+    Msgbox_Window0Kind = 2;
 }
 
 // original 0x4977F0 (PSX 0x80150508). The box's frame: the box origin from
@@ -159,7 +159,7 @@ extern "C" unsigned char __cdecl MsgBox_FrameTask(void) {
     const int x = static_cast<short>(W(kWindow0X)) >> 4;
     const int y = static_cast<short>(W(kWindow0Y)) >> 4;
     MsgBox_LineX = static_cast<short>(x + 10);
-    SetW(kOriginY, static_cast<unsigned>(y + 6));
+    Msgbox_OriginY = static_cast<unsigned>(y + 6);
     g.dispatch();
     g.effect_task();
     if ((B(kFlags) & 4) == 0) g.step();
@@ -225,10 +225,10 @@ extern "C" void __cdecl MsgBox_Step(void) {
     int button = 0;
     button_text::Icon icon;
     short pen_x = MsgBox_LineX;
-    auto pen_y = static_cast<std::uint16_t>(W(kOriginY));
+    auto pen_y = Msgbox_OriginY;
     MsgBox_PenX = pen_x;
-    SetW(kPenY, pen_y);
-    if (B(kStepCount) == 0) return;
+    Msgbox_PenY = pen_y;
+    if (Msgbox_StepCount == 0) return;
     for (;;) {
         if (flags & 1) {
             sub_count = static_cast<unsigned char>(sub_count - 1);
@@ -252,12 +252,12 @@ extern "C" void __cdecl MsgBox_Step(void) {
                 pen_x = MsgBox_LineX;
                 pen_y = static_cast<std::uint16_t>(pen_y + 0x0E);
                 MsgBox_PenX = pen_x;
-                SetW(kPenY, pen_y);
+                Msgbox_PenY = pen_y;
                 break;
             case 0x03: {
                 flags = static_cast<unsigned char>(flags | 1u);
                 resume = at;
-                const unsigned member = B(kNameMap + B(kNameIndex));
+                const unsigned member = B(kNameMap + ObjTrio[0x89]);
                 sub_count = 9;
                 at = At(kCharRecords + 164u * member);
                 break;
@@ -349,24 +349,24 @@ extern "C" void __cdecl MsgBox_Step(void) {
                     // byte can reach it.
                     g.effect_draw(color, shown);
                 } else {
-                    const auto clut = static_cast<unsigned char>((B(kColorHigh) << 4) + color);
-                    const int x = static_cast<short>(MsgBox_PenX + static_cast<signed char>(B(kOffsetX)));
-                    const int y = static_cast<short>(pen_y + static_cast<signed char>(B(kOffsetY)));
+                    const auto clut = static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color);
+                    const int x = static_cast<short>(MsgBox_PenX + Msgbox_OffsetX);
+                    const int y = static_cast<short>(pen_y + Msgbox_OffsetY);
                     g.draw_char(x, y, clut, 1, shown);
                 }
             } else {
-                const auto clut = static_cast<unsigned char>((B(kColorHigh) << 4) + color);
+                const auto clut = static_cast<unsigned char>((ItemUse_ColorHigh << 4) + color);
                 g.draw_char(pen_x, pen_y, clut, 1, shown);
             }
             if (at[0] & 0x80) ++at;
             drawn = static_cast<unsigned char>(drawn + 1);
             pen_x = MsgBox_PenX;
-            pen_y = W(kPenY);
+            pen_y = Msgbox_PenY;
             pen_x = static_cast<short>(pen_x + 12);
             MsgBox_PenX = pen_x;
         }
         ++at;
-        if (B(kStepCount) == drawn) return;
+        if (Msgbox_StepCount == drawn) return;
     }
 }
 
@@ -413,8 +413,8 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
     bool again = true;
     do {
         if (B(kFlags) & 1) {
-            const auto left = static_cast<unsigned char>(B(kSubCount) - 1);
-            SetB(kSubCount, left);
+            const auto left = static_cast<unsigned char>(Msgbox_SubCount - 1);
+            Msgbox_SubCount = left;
             if (left == 0) {
                 SetW(kFlags, W(kFlags) & 0xFFFEu);
                 at = resume + 1;
@@ -443,8 +443,8 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 resume = at;
                 again = false;
                 SetPtr(kResume, resume);
-                const unsigned member = B(kNameMap + B(kNameIndex));
-                SetB(kSubCount, 9);
+                const unsigned member = B(kNameMap + ObjTrio[0x89]);
+                Msgbox_SubCount = 9;
                 at = At(kCharRecords + 164u * member);
                 break;
             }
@@ -456,7 +456,7 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 SetPtr(kAt, at);
                 SetPtr(kResume, resume);
                 const unsigned member = at[0];
-                SetB(kSubCount, 9);
+                Msgbox_SubCount = 9;
                 at = At(kCharRecords + 164u * member);
                 break;
             }
@@ -472,7 +472,7 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 SetPtr(kAt, at);
                 SetPtr(kResume, resume);
                 const unsigned record = at[0];
-                SetB(kSubCount, 0x21);
+                Msgbox_SubCount = 0x21;
                 at = At(kTextRecords + (record << 5));
                 break;
             }
@@ -487,7 +487,7 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 SetPtr(kAt, pool);
                 std::uint16_t off;
                 std::memcpy(&off, pool + 2 * entry, sizeof off);
-                SetB(kSubCount, 0x11);
+                Msgbox_SubCount = 0x11;
                 at = pool + off;
                 break;
             }
@@ -501,19 +501,19 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 break;
             }
             case 0x0B: {
-                const auto delay = static_cast<unsigned char>(B(kDelay) + 8);
+                const auto delay = static_cast<unsigned char>(Msgbox_Delay + 8);
                 SetB(kState, 1);
                 again = false;
-                SetB(kDelay, delay);
+                Msgbox_Delay = delay;
                 break;
             }
             case 0x0F: {
                 ++at;
                 SetPtr(kAt, at);
-                SetB(kEffectPhase, 0);
-                SetB(kSubState, 0);
-                SetB(kEffectKind, B(kEffectTable + 4u * at[0]));
-                SetW(kEffectTimer, W(kEffectTable + 2 + 4u * at[0]));
+                Msgbox_EffectPhase = 0;
+                ItemUse_SubState = 0;
+                Msgbox_EffectKind = B(kEffectTable + 4u * at[0]);
+                Msgbox_EffectTimer = W(kEffectTable + 2 + 4u * at[0]);
                 SetW(kEffectOff, static_cast<unsigned>(static_cast<signed char>(B(kEffectTable + 1 + 4u * at[0]))));
                 break;
             }
@@ -525,12 +525,12 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 again = false;
                 ++at;
                 SetPtr(kAt, at);
-                SetB(kChoiceId, at[0]);
+                ItemUse_ChoiceId = at[0];
                 at += 2;
                 SetPtr(kAt, at);
-                SetB(kChoiceLast, static_cast<unsigned char>((at[0] & 0x0F) - 1));
+                MenuWindows_ListCount = static_cast<unsigned char>((at[0] & 0x0F) - 1);
                 const auto column = static_cast<unsigned char>(at[0] >> 4);
-                SetB(kChoiceKind, column);
+                MenuWindows_ListSet = column;
                 SetB(kState, column == 0 ? 5 : 4);
                 break;
             }
@@ -539,7 +539,7 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 again = false;
                 SetPtr(kAt, at);
                 SetB(kState, 7);
-                SetB(kDelay, at[0]);
+                Msgbox_Delay = at[0];
                 break;
             }
             case 0x12:
@@ -561,18 +561,18 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
                 // L2 / R2 (docs/button-tests.md 3, DIV-0139).
                 const unsigned speed =
                     (static_cast<unsigned char>(Input_Held) & bof3x::input::sigma::Sigma(0x20)) ? 0 : 1;
-                const auto row = static_cast<signed char>(B(kTextSpeed));
-                SetB(kDelay, B(static_cast<std::uint32_t>(kSpeedTable + speed + row)));
+                const auto row = ModeFlow_ConfigBytes;
+                Msgbox_Delay = B(static_cast<std::uint32_t>(kSpeedTable + speed + row));
                 if (L(kFlags) & 0x100u) {
-                    SetB(kDelay, 3);
+                    Msgbox_Delay = 3;
                     SetB(kState, 1);
                 } else {
                     SetB(kState, 0);
-                    if (B(kDelay) != 0) SetB(kState, 1);
+                    if (Msgbox_Delay != 0) SetB(kState, 1);
                 }
                 again = false;
             }
-            SetB(kStepCount, B(kStepCount) + 1);
+            Msgbox_StepCount = Msgbox_StepCount + 1;
         }
         if (B(kFlags) & 0x10) again = true;
         ++at;
@@ -584,23 +584,23 @@ extern "C" void __cdecl MsgBox_StatePrint(void) {
 // back to state 0 for the next character. As the original has it, the byte is
 // decremented first, so a delay of 0 wraps to 0xFF and waits 255 frames more.
 extern "C" void __cdecl MsgBox_StateDelay(void) {
-    const auto left = static_cast<unsigned char>(B(kDelay) - 1);
-    SetB(kDelay, left);
+    const auto left = static_cast<unsigned char>(Msgbox_Delay - 1);
+    Msgbox_Delay = left;
     if (left == 0) SetB(kState, 0);
 }
 
 // original 0x497EB0. State 2, the wait at the end of a message: two entries
 // on 0x7DEE41, built on the stack.
-extern "C" void __cdecl MsgBox_State2(void) { Call(g.sub2, 2, B(kSubState), "MsgBox_State2"); }
+extern "C" void __cdecl MsgBox_State2(void) { Call(g.sub2, 2, ItemUse_SubState, "MsgBox_State2"); }
 
 // original 0x497EE0. Any button pressed - or either kept flag 0x40 / 0x80
 // still set - closes window 0 and holds the printer (flag 4).
 extern "C" void __cdecl MsgBox_State2Press(void) {
     if (Input_Pressed == 0 && (B(kFlags) & 0xC0) == 0) return;
     SetB(kWindow0State, B(kWindow0State) + 1);
-    const auto next = static_cast<unsigned char>(B(kSubState) + 1);
+    const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
-    SetB(kSubState, next);
+    ItemUse_SubState = next;
 }
 
 // original 0x497F20, shared by state 2 and state 7: once window 0 reports 4
@@ -610,7 +610,7 @@ extern "C" void __cdecl MsgBox_State2Closed(void) {
 }
 
 // original 0x497F40. State 3, a page break: two entries on 0x7DEE41.
-extern "C" void __cdecl MsgBox_State3(void) { Call(g.sub3, 2, B(kSubState), "MsgBox_State3"); }
+extern "C" void __cdecl MsgBox_State3(void) { Call(g.sub3, 2, ItemUse_SubState, "MsgBox_State3"); }
 
 // original 0x497F70, shared by state 3 and state 4: draws the "there is more"
 // arrow under the box every frame (0x498D20 shows it only while bit 5 of the
@@ -624,12 +624,12 @@ extern "C" void __cdecl MsgBox_State3(void) { Call(g.sub3, 2, B(kSubState), "Msg
 // registers carry there cannot be observed.
 extern "C" void __cdecl MsgBox_State3Arrow(void) {
     if (Input_Pressed != 0 || (B(kFlags) & 0x40) != 0) {
-        const auto next = static_cast<unsigned char>(B(kSubState) + 1);
-        SetB(kColorHigh, 0);
-        SetB(kSubState, next);
+        const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
+        ItemUse_ColorHigh = 0;
+        ItemUse_SubState = next;
     }
-    const int y = static_cast<std::uint16_t>(W(kEffectOff) + W(kPenY)) + 0x0C;
-    const int x = (B(kWindow0Rows) >> 1) + MsgBox_LineX - 0x0E;
+    const int y = static_cast<std::uint16_t>(W(kEffectOff) + Msgbox_PenY) + 0x0C;
+    const int x = (BattleOdds_Win0Index >> 1) + MsgBox_LineX - 0x0E;
     g.page_arrow(x, y);
 }
 
@@ -643,48 +643,48 @@ extern "C" void __cdecl MsgBox_State3Arrow(void) {
 // stored whatever it reached; the restart takes the message base from the
 // read position, so the rest of the message becomes the whole message.
 extern "C" void __cdecl MsgBox_State3Step(void) {
-    const unsigned char was = B(kDelay);
-    SetB(kDelay, static_cast<unsigned char>(was - 1));
+    const unsigned char was = Msgbox_Delay;
+    Msgbox_Delay = static_cast<unsigned char>(was - 1);
     if (was != 0) return;
-    const auto row = static_cast<unsigned char>(B(kColorHigh) + 1);
-    SetB(kDelay, 1);
-    SetB(kColorHigh, row);
+    const auto row = static_cast<unsigned char>(ItemUse_ColorHigh + 1);
+    Msgbox_Delay = 1;
+    ItemUse_ColorHigh = row;
     if (row != 7) return;
     if (B(kState) == 4 || B(kState) == 5) {
         g.reopen();
         return;
     }
-    const std::uint32_t at = L(kAt);
+    const std::uint32_t at = MenuWindows_ListText;
     SetW(kFlags, W(kFlags) & 0xFFF3u);
-    SetB(kSubState, 0);
+    ItemUse_SubState = 0;
     SetB(kState, 1);
-    SetB(kDelay, 8);
-    SetL(kBase, at);
+    Msgbox_Delay = 8;
+    Msgbox_Base = at;
     SetW(kEffectOff, 0);
-    SetB(kStepCount, 0);
-    SetB(kColorHigh, 0);
+    Msgbox_StepCount = 0;
+    ItemUse_ColorHigh = 0;
 }
 
 // original 0x498050. State 4, a choice list in its own window: eight entries
 // on 0x7DEE41, the first of them state 3's arrow.
-extern "C" void __cdecl MsgBox_State4(void) { Call(g.sub4, 8, B(kSubState), "MsgBox_State4"); }
+extern "C" void __cdecl MsgBox_State4(void) { Call(g.sub4, 8, ItemUse_SubState, "MsgBox_State4"); }
 
 // original 0x4980B0. Claims window 1 as kind 1 (a choice list), tells window
 // 0 to go to state 3, and holds the printer.
 extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
-    SetB(kCursor, 0);
+    AreaW0c_ChoiceAnswer = 0;
     g.window_alloc(1, 0);
-    const auto next = static_cast<unsigned char>(B(kSubState) + 1);
+    const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
-    SetB(kWindow1Kind, 1);
+    Msgbox_Window1Kind = 1;
     SetB(kWindow0State, 3);
-    SetB(kSubState, next);
+    ItemUse_SubState = next;
 }
 
 // original 0x4980F0. Waits until window 1 is open and window 0 has finished
 // its own move.
 extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
-    if (B(kWindow1State) == 2 && B(kWindow0State) == 4) SetB(kSubState, B(kSubState) + 1);
+    if (ItemUse_Window1State == 2 && B(kWindow0State) == 4) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
 // original 0x498110. The choice list's input: cancel closes it, confirm
@@ -698,27 +698,27 @@ extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
 extern "C" void __cdecl MsgBox_ChoiceInput(void) {
     const unsigned pressed = Input_Pressed;
     if ((Field_CancelButtons & pressed) != 0) {
-        const auto next = static_cast<unsigned char>(B(kSubState) + 1);
-        SetB(kWindow1State, 3);
+        const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
+        ItemUse_Window1State = 3;
         SetB(kWindow0State, 1);
-        SetB(kSubState, next);
+        ItemUse_SubState = next;
         return;
     }
     if ((Field_ConfirmButtons & pressed) != 0) {
-        SetB(kSubState, B(kSubState) + 2);
+        ItemUse_SubState = ItemUse_SubState + 2;
         return;
     }
     const unsigned repeat = g.repeat(pressed);
-    const unsigned char last = B(kChoiceLast);
+    const unsigned char last = static_cast<unsigned char>(MenuWindows_ListCount);
     if ((repeat >> 8) & 0x10) {
-        const auto up = static_cast<unsigned char>(B(kCursor) - 1);
-        SetB(kCursor, up);
-        if (static_cast<signed char>(up) < 0) SetB(kCursor, last);
+        const auto up = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_ChoiceAnswer) - 1);
+        AreaW0c_ChoiceAnswer = up;
+        if (static_cast<signed char>(up) < 0) AreaW0c_ChoiceAnswer = last;
     }
     if ((repeat >> 8) & 0x40) {
-        const auto down = static_cast<unsigned char>(B(kCursor) + 1);
-        SetB(kCursor, down);
-        if (static_cast<signed char>(down) > static_cast<signed char>(last)) SetB(kCursor, 0);
+        const auto down = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_ChoiceAnswer) + 1);
+        AreaW0c_ChoiceAnswer = down;
+        if (static_cast<signed char>(down) > static_cast<signed char>(last)) AreaW0c_ChoiceAnswer = 0;
     }
 }
 
@@ -727,14 +727,14 @@ extern "C" void __cdecl MsgBox_ChoiceInput(void) {
 extern "C" void __cdecl MsgBox_ChoiceWaitShut(void) {
     if (B(kWindow0State) != 2) return;
     SetW(kFlags, W(kFlags) ^ 4u);
-    SetB(kSubState, 0);
+    ItemUse_SubState = 0;
 }
 
 // original 0x498230. Re-opens the message at the answer's own text and
 // releases the hold.
 extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
     if (B(kWindow0State) != 2) return;
-    SetB(kDelay, 0x10);
+    Msgbox_Delay = 0x10;
     g.reopen();
     SetW(kFlags, W(kFlags) ^ 4u);
 }
@@ -743,11 +743,11 @@ extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
 // set (which MsgBox_Reset keeps only 0x40 of, so it is cleared on the next
 // message), window 0 to state 4, and state 2 sub 1 - the wait for it to shut.
 extern "C" void __cdecl MsgBox_ChoiceDone(void) {
-    if (B(kWindow1State) != 4) return;
+    if (ItemUse_Window1State != 4) return;
     SetB(kFlags, B(kFlags) | 0x80u);
     SetB(kWindow0State, 4);
     SetB(kState, 2);
-    SetB(kSubState, 1);
+    ItemUse_SubState = 1;
 }
 
 // original 0x498280. Re-opens the message the box is on, from the top: the
@@ -755,34 +755,34 @@ extern "C" void __cdecl MsgBox_ChoiceDone(void) {
 // MsgBox_Reset - only the delay, the state and the two counters are set.
 extern "C" void __cdecl MsgBox_Reopen(void) {
     const unsigned id = W(kMessage);
-    SetB(kDelay, 8);
+    Msgbox_Delay = 8;
     SetB(kState, 1);
     const std::uint32_t off = W(kScriptPool + 2u * id);
     const unsigned char* const at = At(kScriptPool) + off;
     SetPtr(kBase, at);
     SetPtr(kAt, at);
-    SetB(kStepCount, 0);
-    SetB(kSubState, 0);
+    Msgbox_StepCount = 0;
+    ItemUse_SubState = 0;
 }
 
 // original 0x4982C0. State 5, the same list drawn as a menu (code 0x14 with a
 // zero high nibble): six entries on 0x7DEE41, the last of them state 3's
 // scroll.
-extern "C" void __cdecl MsgBox_State5(void) { Call(g.sub5, 6, B(kSubState), "MsgBox_State5"); }
+extern "C" void __cdecl MsgBox_State5(void) { Call(g.sub5, 6, ItemUse_SubState, "MsgBox_State5"); }
 
 // original 0x498310. Claims window 1 as kind 2 (a menu). Unlike the choice
 // list's opener it does not touch window 0 or the hold flag.
 extern "C" void __cdecl MsgBox_MenuOpen(void) {
-    SetB(kCursor, 0);
+    AreaW0c_ChoiceAnswer = 0;
     g.window_alloc(1, 0);
-    const auto next = static_cast<unsigned char>(B(kSubState) + 1);
-    SetB(kWindow1Kind, 2);
-    SetB(kSubState, next);
+    const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
+    Msgbox_Window1Kind = 2;
+    ItemUse_SubState = next;
 }
 
 // original 0x498340. Waits until window 1 reports 2.
 extern "C" void __cdecl MsgBox_MenuWaitOpen(void) {
-    if (B(kWindow1State) == 2) SetB(kSubState, B(kSubState) + 1);
+    if (ItemUse_Window1State == 2) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
 // original 0x498350. The menu's input: confirm moves on, and the cursor moves
@@ -790,18 +790,18 @@ extern "C" void __cdecl MsgBox_MenuWaitOpen(void) {
 // left or right press cannot restart the repeat timer here.
 extern "C" void __cdecl MsgBox_MenuInput(void) {
     const unsigned pressed = Input_Pressed;
-    if ((Field_ConfirmButtons & pressed) != 0) SetB(kSubState, B(kSubState) + 1);
+    if ((Field_ConfirmButtons & pressed) != 0) ItemUse_SubState = ItemUse_SubState + 1;
     const unsigned repeat = g.repeat(pressed & 0x5000u);
-    const unsigned char last = B(kChoiceLast);
+    const unsigned char last = static_cast<unsigned char>(MenuWindows_ListCount);
     if ((repeat >> 8) & 0x10) {
-        const auto up = static_cast<unsigned char>(B(kCursor) - 1);
-        SetB(kCursor, up);
-        if (static_cast<signed char>(up) < 0) SetB(kCursor, last);
+        const auto up = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_ChoiceAnswer) - 1);
+        AreaW0c_ChoiceAnswer = up;
+        if (static_cast<signed char>(up) < 0) AreaW0c_ChoiceAnswer = last;
     }
     if ((repeat >> 8) & 0x40) {
-        const auto down = static_cast<unsigned char>(B(kCursor) + 1);
-        SetB(kCursor, down);
-        if (static_cast<signed char>(down) > static_cast<signed char>(last)) SetB(kCursor, 0);
+        const auto down = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_ChoiceAnswer) + 1);
+        AreaW0c_ChoiceAnswer = down;
+        if (static_cast<signed char>(down) > static_cast<signed char>(last)) AreaW0c_ChoiceAnswer = 0;
     }
 }
 
@@ -809,14 +809,14 @@ extern "C" void __cdecl MsgBox_MenuInput(void) {
 // there is nothing left to say and the box is finished; otherwise on to the
 // next entry.
 extern "C" void __cdecl MsgBox_MenuDone(void) {
-    if (B(kWindow1State) != 4) return;
+    if (ItemUse_Window1State != 4) return;
     if (W(kMessage) != 0xFFFF) {
-        SetB(kSubState, B(kSubState) + 1);
+        ItemUse_SubState = ItemUse_SubState + 1;
         return;
     }
     SetB(kFlags, B(kFlags) | 0x80u);
     SetB(kState, 2);
-    SetB(kSubState, 0);
+    ItemUse_SubState = 0;
 }
 
 // original 0x498450. State 6: back to state 0 once window 0 reports 2. No
@@ -827,7 +827,7 @@ extern "C" void __cdecl MsgBox_State6(void) {
 
 // original 0x498470. State 7, the wait code 0x16 asks for: two entries on
 // 0x7DEE41, the second of them state 2's "window closed" test.
-extern "C" void __cdecl MsgBox_State7(void) { Call(g.sub7, 2, B(kSubState), "MsgBox_State7"); }
+extern "C" void __cdecl MsgBox_State7(void) { Call(g.sub7, 2, ItemUse_SubState, "MsgBox_State7"); }
 
 // original 0x4984A0. Counts code 0x16's argument down; at zero window 0 is
 // told to move on, the printer is held, and the state's index advances.
@@ -835,14 +835,14 @@ extern "C" void __cdecl MsgBox_State7(void) { Call(g.sub7, 2, B(kSubState), "Msg
 // As the original has it: the delay is tested BEFORE the decrement, so a 0
 // does the work and leaves 0xFF.
 extern "C" void __cdecl MsgBox_State7Delay(void) {
-    const unsigned char was = B(kDelay);
-    SetB(kDelay, static_cast<unsigned char>(was - 1));
+    const unsigned char was = Msgbox_Delay;
+    Msgbox_Delay = static_cast<unsigned char>(was - 1);
     if (was != 0) return;
     const auto window = static_cast<unsigned char>(B(kWindow0State) + 1);
-    const auto next = static_cast<unsigned char>(B(kSubState) + 1);
+    const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
     SetB(kWindow0State, window);
-    SetB(kSubState, next);
+    ItemUse_SubState = next;
 }
 
 // original 0x4984E0 (PSX 0x80151A1C). The box's effect, one frame: six
@@ -850,7 +850,7 @@ extern "C" void __cdecl MsgBox_State7Delay(void) {
 // Kind 0 is a bare `ret` at 0x437CC0 - the only entry the attract sequence
 // ever reaches - and kinds 2 and 3 share one handler.
 extern "C" void __cdecl MsgBox_EffectTask(void) {
-    Call(g.effect, 6, B(kEffectKind), "MsgBox_EffectTask");
+    Call(g.effect, 6, Msgbox_EffectKind, "MsgBox_EffectTask");
 }
 
 // original 0x498520. Effect 1: the pen x offset rocks between -2 and +2, two
@@ -860,47 +860,47 @@ extern "C" void __cdecl MsgBox_EffectTask(void) {
 // 0xFFFF (which means forever), and the kind is cleared when the timer READS
 // zero - including the 0xFFFF case's zero, which it cannot be.
 extern "C" void __cdecl MsgBox_EffectShake(void) {
-    Call(g.shake, 2, B(kEffectPhase), "MsgBox_EffectShake");
-    std::uint16_t left = W(kEffectTimer);
+    Call(g.shake, 2, Msgbox_EffectPhase, "MsgBox_EffectShake");
+    std::uint16_t left = Msgbox_EffectTimer;
     if (left != 0xFFFF) {
         left = static_cast<std::uint16_t>(left - 1);
-        SetW(kEffectTimer, left);
+        Msgbox_EffectTimer = left;
     }
-    if (left == 0) SetB(kEffectKind, 0);
+    if (left == 0) Msgbox_EffectKind = 0;
 }
 
 // original 0x498560 / 0x498580: out to -2, then back to +2, then out again.
 extern "C" void __cdecl MsgBox_ShakeOut(void) {
-    if (B(kOffsetX) == 0xFE) {
-        SetB(kEffectPhase, B(kEffectPhase) + 1);
+    if (static_cast<unsigned char>(Msgbox_OffsetX) == 0xFE) {
+        Msgbox_EffectPhase = Msgbox_EffectPhase + 1;
         return;
     }
-    SetB(kOffsetX, B(kOffsetX) + 0xFE);
+    Msgbox_OffsetX = static_cast<unsigned char>(Msgbox_OffsetX) + 0xFE;
 }
 extern "C" void __cdecl MsgBox_ShakeBack(void) {
-    if (B(kOffsetX) == 2) {
-        SetB(kEffectPhase, B(kEffectPhase) - 1);
+    if (static_cast<unsigned char>(Msgbox_OffsetX) == 2) {
+        Msgbox_EffectPhase = Msgbox_EffectPhase - 1;
         return;
     }
-    SetB(kOffsetX, B(kOffsetX) + 2);
+    Msgbox_OffsetX = static_cast<unsigned char>(Msgbox_OffsetX) + 2;
 }
 
 // original 0x4985A0, effects 2 and 3: the effect draw's own offset 0x7DEE68
 // walks to its limit and back. Two entries on 0x7DEE43, then the timer down
 // unless it is 0xFFFF.
 extern "C" void __cdecl MsgBox_EffectGrow(void) {
-    Call(g.grow, 2, B(kEffectPhase), "MsgBox_EffectGrow");
-    if (W(kEffectTimer) != 0xFFFF) SetW(kEffectTimer, W(kEffectTimer) - 1);
+    Call(g.grow, 2, Msgbox_EffectPhase, "MsgBox_EffectGrow");
+    if (Msgbox_EffectTimer != 0xFFFF) Msgbox_EffectTimer = Msgbox_EffectTimer - 1;
 }
 
 // original 0x4985E0. Turns the effect draw on (flag 8) and, once the timer
 // has reached zero, sets it to 1 and moves to the second phase.
 extern "C" void __cdecl MsgBox_GrowStart(void) {
     SetB(kFlags, B(kFlags) | 8u);
-    if (W(kEffectTimer) != 0) return;
-    const auto next = static_cast<unsigned char>(B(kEffectPhase) + 1);
-    SetW(kEffectTimer, 1);
-    SetB(kEffectPhase, next);
+    if (Msgbox_EffectTimer != 0) return;
+    const auto next = static_cast<unsigned char>(Msgbox_EffectPhase + 1);
+    Msgbox_EffectTimer = 1;
+    Msgbox_EffectPhase = next;
 }
 
 // original 0x498610. Kind 2 walks the offset down by 2 and stops when it goes
@@ -908,9 +908,9 @@ extern "C" void __cdecl MsgBox_GrowStart(void) {
 // positive. Stopping clears flag 8, the offset and the kind. Either way the
 // timer is put back to 1, so this runs every frame.
 extern "C" void __cdecl MsgBox_GrowStep(void) {
-    if (W(kEffectTimer) != 0) return;
+    if (Msgbox_EffectTimer != 0) return;
     bool stop;
-    if (B(kEffectKind) == 2) {
+    if (Msgbox_EffectKind == 2) {
         const auto v = static_cast<std::int16_t>(W(kEffectOff) - 2);
         SetW(kEffectOff, static_cast<std::uint16_t>(v));
         stop = v < 0;
@@ -922,9 +922,9 @@ extern "C" void __cdecl MsgBox_GrowStep(void) {
     if (stop) {
         SetW(kFlags, W(kFlags) & 0xFFF7u);
         SetW(kEffectOff, 0);
-        SetB(kEffectKind, 0);
+        Msgbox_EffectKind = 0;
     }
-    SetW(kEffectTimer, 1);
+    Msgbox_EffectTimer = 1;
 }
 
 // original 0x498670. Effect 4: the pen x offset wanders between -3 and +3 one
@@ -938,58 +938,58 @@ extern "C" void __cdecl MsgBox_GrowStep(void) {
 // is 3 between steps and 15 at each turn; a timer of 0xFFFF never ends.
 extern "C" void __cdecl MsgBox_EffectWander(void) {
     unsigned char x;
-    if (B(kEffectPhase) == 0) {
-        if (B(kOffsetX) == 0xFD) {
-            SetB(kEffectPhase, 1);
+    if (Msgbox_EffectPhase == 0) {
+        if (static_cast<unsigned char>(Msgbox_OffsetX) == 0xFD) {
+            Msgbox_EffectPhase = 1;
             return;
         }
-        x = static_cast<unsigned char>(B(kOffsetX) - 1);
+        x = static_cast<unsigned char>(static_cast<unsigned char>(Msgbox_OffsetX) - 1);
     } else {
-        if (B(kOffsetX) == 3) {
-            SetB(kEffectPhase, B(kEffectPhase) - 1);
+        if (static_cast<unsigned char>(Msgbox_OffsetX) == 3) {
+            Msgbox_EffectPhase = Msgbox_EffectPhase - 1;
             return;
         }
-        x = static_cast<unsigned char>(B(kOffsetX) + 1);
+        x = static_cast<unsigned char>(static_cast<unsigned char>(Msgbox_OffsetX) + 1);
     }
-    const bool waiting = W(kEffectWait) != 0;
-    SetB(kOffsetX, x);
+    const bool waiting = Msgbox_EffectWait != 0;
+    Msgbox_OffsetX = x;
     if (waiting) {
-        SetW(kEffectWait, W(kEffectWait) - 1);
+        Msgbox_EffectWait = Msgbox_EffectWait - 1;
         return;
     }
-    const auto y = static_cast<unsigned char>(B(kOffsetY) + static_cast<unsigned char>(W(kEffectOff)));
-    SetB(kOffsetY, y);
+    const auto y = static_cast<unsigned char>(static_cast<unsigned char>(Msgbox_OffsetY) + static_cast<unsigned char>(W(kEffectOff)));
+    Msgbox_OffsetY = y;
     if (y == 0xF6) {
-        SetW(kEffectWait, 0x0F);
+        Msgbox_EffectWait = 0x0F;
         SetW(kEffectOff, 1);
         return;
     }
     if (y != 0) {
-        SetW(kEffectWait, 3);
+        Msgbox_EffectWait = 3;
         return;
     }
-    const std::uint16_t left = W(kEffectTimer);
-    SetW(kEffectWait, 0x0F);
+    const std::uint16_t left = Msgbox_EffectTimer;
+    Msgbox_EffectWait = 0x0F;
     SetW(kEffectOff, 0xFFFF);
     if (left == 0xFFFF) return;
-    SetW(kEffectTimer, static_cast<std::uint16_t>(left - 1));
+    Msgbox_EffectTimer = static_cast<std::uint16_t>(left - 1);
     if (left != 0) return;
-    SetB(kEffectKind, 0);
-    SetB(kOffsetY, 0);
-    SetB(kOffsetX, 0);
+    Msgbox_EffectKind = 0;
+    Msgbox_OffsetY = 0;
+    Msgbox_OffsetX = 0;
 }
 
 // original 0x498740. Effect 5: two entries on 0x7DEE43 - a set-up, then a
 // per-frame integration of 0x7DEE68 into the y offset.
-extern "C" void __cdecl MsgBox_EffectRise(void) { Call(g.rise, 2, B(kEffectPhase), "MsgBox_EffectRise"); }
+extern "C" void __cdecl MsgBox_EffectRise(void) { Call(g.rise, 2, Msgbox_EffectPhase, "MsgBox_EffectRise"); }
 
 // original 0x498770. The record's frame count becomes the accumulator's
 // starting value and its offset is scaled by 16 - an 8.8 fixed-point speed.
 extern "C" void __cdecl MsgBox_RiseStart(void) {
-    const std::uint16_t frames = W(kEffectTimer);
+    const std::uint16_t frames = Msgbox_EffectTimer;
     SetW(kEffectOff, W(kEffectOff) << 4);
-    SetW(kEffectWait, frames);
-    SetB(kEffectPhase, B(kEffectPhase) + 1);
+    Msgbox_EffectWait = frames;
+    Msgbox_EffectPhase = Msgbox_EffectPhase + 1;
 }
 
 // original 0x4987A0. Adds the speed to the accumulator every frame and the
@@ -998,13 +998,13 @@ extern "C" void __cdecl MsgBox_RiseStart(void) {
 // effect. As the original has it, the high byte is taken with `sar edx, 8`
 // on a register whose upper half is stale, which cannot reach dl.
 extern "C" void __cdecl MsgBox_RiseStep(void) {
-    const std::uint16_t was = W(kEffectWait);
-    const auto y = static_cast<unsigned char>(B(kOffsetY) + static_cast<unsigned char>(was >> 8));
-    SetW(kEffectWait, static_cast<std::uint16_t>(was + W(kEffectOff)));
-    SetB(kOffsetY, y);
+    const std::uint16_t was = Msgbox_EffectWait;
+    const auto y = static_cast<unsigned char>(static_cast<unsigned char>(Msgbox_OffsetY) + static_cast<unsigned char>(was >> 8));
+    Msgbox_EffectWait = static_cast<std::uint16_t>(was + W(kEffectOff));
+    Msgbox_OffsetY = y;
     if (static_cast<signed char>(y) < 0) return;
-    SetB(kOffsetY, 0);
-    SetB(kEffectKind, 0);
+    Msgbox_OffsetY = 0;
+    Msgbox_EffectKind = 0;
 }
 
 // original 0x4987E0 (PSX 0x80151F4C), 0x4987E0..0x498A2A. MsgBox_Step's draw
@@ -1060,9 +1060,9 @@ extern "C" void __cdecl MsgBox_EffectDraw(unsigned color, const unsigned char* t
         p[0x14] = extent;
         p[0x15] = 0;
         p[0x1C] = 0;
-        p[0x1D] = static_cast<unsigned char>(extent - B(kClipTable + B(kColorHigh)));
+        p[0x1D] = static_cast<unsigned char>(extent - B(kClipTable + ItemUse_ColorHigh));
         p[0x24] = extent;
-        p[0x25] = static_cast<unsigned char>(extent - B(kClipTable + B(kColorHigh)));
+        p[0x25] = static_cast<unsigned char>(extent - B(kClipTable + ItemUse_ColorHigh));
     } else if (g_effect_space_skips) {
         MsgBox_PenX = static_cast<short>(MsgBox_PenX + W(kEffectOff));   // DIV-0070
         return;
@@ -1072,11 +1072,11 @@ extern "C" void __cdecl MsgBox_EffectDraw(unsigned color, const unsigned char* t
     p[5] = 0x80;
     p[6] = 0x80;
     const auto x = static_cast<std::uint16_t>(MsgBox_PenX);
-    const std::uint16_t y = W(kPenY);
+    const std::uint16_t y = Msgbox_PenY;
     const auto off = static_cast<std::int16_t>(W(kEffectOff));
     const auto right = static_cast<unsigned>(x + static_cast<std::uint16_t>(off) + 0x0C);
     const int scale = ((off + 0x0C) << 4) / 0x0C;
-    const int cut = static_cast<int>(B(kClipTable + B(kColorHigh))) * scale >> 4;
+    const int cut = static_cast<int>(B(kClipTable + ItemUse_ColorHigh)) * scale >> 4;
     const auto bottom = static_cast<unsigned>(y - static_cast<unsigned>(cut) + static_cast<std::uint16_t>(off) + 0x0C);
     put(p + 0x08, x);
     put(p + 0x0A, y);
@@ -1186,27 +1186,27 @@ const unsigned char* __cdecl RecordDrawChar(int x, int y, int color, int, const 
 unsigned MsgBox_StepRecord(const unsigned char* msg, unsigned glyphs, MsgBoxDraw* out, unsigned max) {
     const auto saved_draw = g.draw_char;
     const unsigned char* const saved_base = Ptr(kBase);
-    const unsigned saved_count = B(kStepCount), saved_flags = W(kFlags), saved_high = B(kColorHigh);
-    const unsigned saved_origin = W(kOriginY), saved_pen_y = W(kPenY);
+    const unsigned saved_count = Msgbox_StepCount, saved_flags = W(kFlags), saved_high = ItemUse_ColorHigh;
+    const unsigned saved_origin = Msgbox_OriginY, saved_pen_y = Msgbox_PenY;
     const short saved_line = MsgBox_LineX, saved_pen_x = MsgBox_PenX;
     g_record = out;
     g_record_max = max;
     g_record_n = 0;
     g.draw_char = &RecordDrawChar;
     SetPtr(kBase, msg);
-    SetB(kStepCount, glyphs);
+    Msgbox_StepCount = glyphs;
     SetW(kFlags, 0);
-    SetB(kColorHigh, 0);
-    SetW(kOriginY, 0x20);
+    ItemUse_ColorHigh = 0;
+    Msgbox_OriginY = 0x20;
     MsgBox_LineX = 0x10;
     MsgBox_Step();
     g.draw_char = saved_draw;
     SetPtr(kBase, saved_base);
-    SetB(kStepCount, saved_count);
+    Msgbox_StepCount = saved_count;
     SetW(kFlags, saved_flags);
-    SetB(kColorHigh, saved_high);
-    SetW(kOriginY, saved_origin);
-    SetW(kPenY, saved_pen_y);
+    ItemUse_ColorHigh = saved_high;
+    Msgbox_OriginY = saved_origin;
+    Msgbox_PenY = saved_pen_y;
     MsgBox_LineX = saved_line;
     MsgBox_PenX = saved_pen_x;
     return g_record_n;

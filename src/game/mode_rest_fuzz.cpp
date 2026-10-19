@@ -104,11 +104,11 @@ static_assert(kCount == sizeof kAll14 / sizeof kAll14[0], "one enum entry a clon
 U RandEffect(const U*, U answer) {
     const U n = sh::Noise();
     switch (n % 5) {
-    case 0: Mem(at::kLeaderFacing)[0] = static_cast<unsigned char>(n >> 8); break;
-    case 1: Mem(at::kPendingFlags)[0] = static_cast<unsigned char>(n >> 8); break;
-    case 2: SetWord(Mem(at::kPendingPlace), n >> 8); break;
+    case 0: Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(n >> 8); break;
+    case 1: Mem(AreaEntry_PendingFlags_addr)[0] = static_cast<unsigned char>(n >> 8); break;
+    case 2: SetWord(Mem(AreaW0b_Place_addr), n >> 8); break;
     case 3: SetLong(Mem(at::kPendingX), static_cast<std::int32_t>(n)); break;
-    default: SetLong(Mem(at::kPendingZ), static_cast<std::int32_t>(n)); break;
+    default: SetLong(Mem(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(n)); break;
     }
     return answer;
 }
@@ -116,9 +116,9 @@ U RandEffect(const U*, U answer) {
 U TripEffect(const U*, U answer) {
     const U n = sh::Noise();
     switch (n % 3) {
-    case 0: SetWord(Mem(at::kTripArea), n >> 8); break;
-    case 1: SetLong(Mem(at::kTripX), static_cast<std::int32_t>(n)); break;
-    default: SetLong(Mem(at::kTripZ), static_cast<std::int32_t>(n)); break;
+    case 0: SetWord(Mem(AreaW4d_ReturnArea_addr), n >> 8); break;
+    case 1: SetLong(Mem(AreaW2d_ReturnPoint_addr), static_cast<std::int32_t>(n)); break;
+    default: SetLong(Mem(AreaW4d_ReturnZ_addr), static_cast<std::int32_t>(n)); break;
     }
     return answer;
 }
@@ -126,8 +126,8 @@ U TripEffect(const U*, U answer) {
 // track, read after it.
 U ElevationEffect(const U*, U answer) {
     const U n = sh::Noise();
-    if (n & 1) Mem(at::kBattleFlags)[0] ^= 0x40;
-    if (n & 2) Mem(at::kBattleFlags2)[0] ^= 8;
+    if (n & 1) Mem(BattleTurnSteps_MusicFlags_addr)[0] ^= 0x40;
+    if (n & 2) Mem(BattleActions_BattleEnd_addr)[0] ^= 8;
     if ((n & 0xC) == 0) Music_Track = 0xFF;
     return answer;
 }
@@ -141,7 +141,7 @@ U FormationEffect(const U*, U answer) {
 // after it.
 U LoadEffect(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 3 == 0) Mem(at::kEventBattle)[0] = static_cast<unsigned char>((n >> 8) % 56);
+    if (n % 3 == 0) Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>((n >> 8) % 56);
     return answer;
 }
 
@@ -193,14 +193,14 @@ const sh::DataTable kTables[] = {
 const sh::Region kRegions[] = {
     {0x66C7E8, 4},          // Game_Mode, Game_Step (effect mode's; not field mode's)
     {at::kMessageBits, 4},  // the message cells' 0x7DEE44
-    {at::kMusicWord, 2},    // the word 0x7E0678
+    {ModeRest_MusicWord_addr, 2}, // the word 0x7E0678
     {at::kPendingX, 4},     // the trip's destination x 0x903860
-    {at::kTripAsked, 4},    // 0x905B60, 0x905B61
+    {MenuLists_CampChosen_addr, 4}, // 0x905B60, 0x905B61
     {0x905BA8, 1},          // Draw_SortOnX
     {0x92BF19, 1},          // Draw_OtSlot
     {at::kBattleBytes, 0x50},   // the battle bytes 0x904AA0..0x904AEF
-    {at::kElevationBase, 4},    // 0x939860
-    {at::kPendingPlace, 2},     // 0x937F82
+    {ModeRest_ElevationBase_addr, 4}, // 0x939860
+    {AreaW0b_Place_addr, 2},    // 0x937F82
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -211,14 +211,14 @@ void Seed(unsigned k) {
     case kRun5: Game_Step = static_cast<unsigned short>(sh::Next() % 8); break;
     case kRun6: Game_Step = static_cast<unsigned short>(sh::Half() ? 0 : PickOf(1, 2, 0x100, sh::Next())); break;
     case kRun4: Mem(at::kMessageBits)[0] = static_cast<unsigned char>(sh::Next()); break;
-    case kEnter3: SetWord(Mem(at::kMusicWord), PickOf(0x6E, 0x6E, 0x6F, 0x6D, 0x16E, sh::Next())); break;
+    case kEnter3: SetWord(Mem(ModeRest_MusicWord_addr), PickOf(0x6E, 0x6E, 0x6F, 0x6D, 0x16E, sh::Next())); break;
     case kLeave3:
-        Mem(at::kPartyChanged)[0] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
-        SetWord(Mem(at::kMusicWord), PickOf(0x6E, 0x6E, 0x6F, sh::Next()));
-        Mem(at::kTripAsked)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-        Mem(at::kAreaAsked)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-        Mem(at::kTripOut)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-        SetWord(Mem(at::kAreaWord), PickOf(0xBD, 0xBD, 0xBC, 0xBE, 0x1BD, sh::Next()));
+        Mem(MenuLists_PartyChanged_addr)[0] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
+        SetWord(Mem(ModeRest_MusicWord_addr), PickOf(0x6E, 0x6E, 0x6F, sh::Next()));
+        Mem(MenuLists_CampChosen_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+        Mem(ModeRest_AreaAsked_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+        Mem(AreaW3c_CampFlag_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+        SetWord(Mem(Game_AreaNumber_addr), PickOf(0xBD, 0xBD, 0xBC, 0xBE, 0x1BD, sh::Next()));
         break;
     case kTurn: {
         SetLong(Mem(at::kFormation), static_cast<std::int32_t>(
@@ -228,7 +228,7 @@ void Seed(unsigned k) {
     case kToPlaces: Field_Kind2Hold = static_cast<unsigned char>(sh::Often() ? 0 : sh::Next()); break;
     case kLoad:
         Music_Track = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0xFE, sh::Next()));
-        Mem(at::kEventBattle)[0] = static_cast<unsigned char>(PickOf(0, 0, sh::Next() % 56, sh::Next()));
+        Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, sh::Next() % 56, sh::Next()));
         Cond_ByteFA = static_cast<signed char>(PickOf(7, 8, 9, 0, 0xFF, 0x7F, 0x80, sh::Next()));
         break;
     case kLeave5:
@@ -245,20 +245,20 @@ void Disturb(U h) {
     const U v = h >> 3;
     switch (sh::DisturbCase(h, 15)) {
     case 0: Game_Step = static_cast<unsigned short>(v % 8); break;
-    case 1: Mem(at::kBattleFlags)[0] = static_cast<unsigned char>(v); break;
+    case 1: Mem(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(v); break;
     case 2: Mem(at::kFormation)[0] = static_cast<unsigned char>((v & 1) ? (v >> 1) % 4 : v >> 1); break;
-    case 3: Mem(at::kEventBattle)[0] = static_cast<unsigned char>((v & 1) ? (v >> 1) % 56 : 0); break;
+    case 3: Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>((v & 1) ? (v >> 1) % 56 : 0); break;
     case 4: Music_Track = static_cast<unsigned char>((v & 1) ? 0xFF : v >> 1); break;
     case 5: Field_Kind2Hold = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
-    case 6: Mem((v & 1) ? at::kTripAsked : at::kAreaAsked)[0] = static_cast<unsigned char>((v & 2) ? 0 : v >> 2); break;
-    case 7: Mem(at::kTripOut)[0] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
-    case 8: SetWord(Mem(at::kMusicWord), (v & 1) ? 0x6Eu : v >> 1); break;
-    case 9: Mem(at::kPartySet)[0] = static_cast<unsigned char>(v); break;
-    case 10: Mem((v & 1) ? at::kLeaderFacing : at::kPendingFlags)[0] = static_cast<unsigned char>(v >> 1); break;
-    case 11: SetWord(Mem(at::kTripX + 4 * ((v & 3) % 3)), v >> 2); break;
+    case 6: Mem((v & 1) ? MenuLists_CampChosen_addr : ModeRest_AreaAsked_addr)[0] = static_cast<unsigned char>((v & 2) ? 0 : v >> 2); break;
+    case 7: Mem(AreaW3c_CampFlag_addr)[0] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
+    case 8: SetWord(Mem(ModeRest_MusicWord_addr), (v & 1) ? 0x6Eu : v >> 1); break;
+    case 9: Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v); break;
+    case 10: Mem((v & 1) ? (ObjTrio_addr + 0x8) : AreaEntry_PendingFlags_addr)[0] = static_cast<unsigned char>(v >> 1); break;
+    case 11: SetWord(Mem(AreaW2d_ReturnPoint_addr + 4 * ((v & 3) % 3)), v >> 2); break;
     case 12: Field_InputFlags = static_cast<unsigned char>(v); break;
-    case 13: Mem(at::kPartyChanged)[0] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
-    case 14: Mem(at::kPartyList + (v & 3) % 3)[0] = static_cast<unsigned char>(v >> 2); break;
+    case 13: Mem(MenuLists_PartyChanged_addr)[0] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
+    case 14: Mem(Cond_Flags_addr + 0xd2 + (v & 3) % 3)[0] = static_cast<unsigned char>(v >> 2); break;
     default: break;
     }
 }

@@ -25,6 +25,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -41,6 +42,12 @@ Callees g = kOriginals;
 namespace {
 
 constexpr unsigned kEffects = 20, kEffectBytes = 0x80;
+
+// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// record or another family whose first 0x80 bytes are a sprite object's (an
+// ObjTrio member, the kind-2 object), so only that part is named.
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 // A pointer held in a dword of the game's memory, and pointer arithmetic done
 // in 32 bits as the original's `add` / `lea` do it.
@@ -86,43 +93,43 @@ extern "C" void __cdecl Sprite_SetAnimation(unsigned char animation) {
 // is what Sprite_ScriptStart reads of the dword the original pushes.
 extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned short start) {
     if (animation & 0x80) {
-        unsigned char* sprite = Sprite_Current;
-        if (!(sprite[0x24] & 2)) {
-            const unsigned row = (At(at::kPartySetCurrent)[0] & 0x7Fu) * 3u;
-            SetLong(sprite + 0x64, At(at::kPartySetRows)[row + Word(sprite + 0x2C)]);
-            sprite = Sprite_Current;
-            SetLong(sprite + 0x68, sprite[0x26]);
-            sprite = Sprite_Current;
-            sprite[0x24] = static_cast<unsigned char>(sprite[0x24] ^ 3);
-            sprite = Sprite_Current;
+        records::SpriteObject* sprite = Cur();
+        if (!(sprite->draw_flags & 2)) {
+            const unsigned row = (AreaW0b_PartySet & 0x7Fu) * 3u;
+            sprite->angle[0] = static_cast<unsigned char>(MoveScript_EffectArg[0xc + row + sprite->column]);
+            sprite = Cur();
+            sprite->angle[1] = sprite->tex_row;
+            sprite = Cur();
+            sprite->draw_flags = static_cast<unsigned char>(sprite->draw_flags ^ 3);
+            sprite = Cur();
         }
-        const std::uint32_t member = static_cast<std::uint32_t>(Long(sprite + 0x64));
+        const std::uint32_t member = static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->angle[0]));
         const unsigned char* const record = Offset(Ptr(at::kMemberAnimations + member * 4u), (animation & 0x7Fu) * 4u);
         g.set_bank(Word(record));
-        Sprite_Current[0x4B] = record[2];
-        Sprite_Current[0x2A] = record[3];
+        Cur()->animation = record[2];
+        Cur()->pose = record[3];
     } else {
-        unsigned char* sprite = Sprite_Current;
-        const unsigned char flags = sprite[0x24];
+        records::SpriteObject* sprite = Cur();
+        const unsigned char flags = sprite->draw_flags;
         if (flags & 2) {
             const unsigned char kept = static_cast<unsigned char>(flags & 0xFC);
-            const std::int32_t slot = Long(sprite + 0x68) / 80;
-            g.member_sprite(sprite[0x64], static_cast<std::uint32_t>(slot));
-            sprite = Sprite_Current;
-            sprite[0x24] = static_cast<unsigned char>(sprite[0x24] | kept);
-            sprite = Sprite_Current;
+            const std::int32_t slot = static_cast<std::int32_t>(sprite->angle[1]) / 80;
+            g.member_sprite(Bytes(sprite)[0x64], static_cast<std::uint32_t>(slot));
+            sprite = Cur();
+            sprite->draw_flags = static_cast<unsigned char>(sprite->draw_flags | kept);
+            sprite = Cur();
         }
-        sprite[0x4B] = animation;
+        sprite->animation = animation;
     }
-    unsigned char* const sprite = Sprite_Current;
-    if (sprite[0x24] & 1) {
-        g.queue_upload(sprite[0x4B]);
+    records::SpriteObject* const sprite = Cur();
+    if (sprite->draw_flags & 1) {
+        g.queue_upload(sprite->animation);
         g.script_start(start);
         return;
     }
     const unsigned char* const offsets = Ptr(at::kFrameOffsets);
-    const unsigned char* const table = Offset(offsets, static_cast<std::uint32_t>(Long(offsets + Word(sprite + 0x2C) * 4u)));
-    SetLong(sprite + 0x50, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Offset(table, Word(table + sprite[0x4B] * 2u)))));
+    const unsigned char* const table = Offset(offsets, static_cast<std::uint32_t>(Long(offsets + sprite->column * 4u)));
+    sprite->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(Offset(table, Word(table + sprite->animation * 2u))));
     g.script_start(start);
 }
 
@@ -132,7 +139,7 @@ extern "C" void __cdecl Sprite_SetAnimationAt(unsigned char animation, unsigned 
 // upper bytes, or the callee's), which no caller reads as a number
 // (docs/sprite-pose.md §2).
 extern "C" unsigned char __cdecl Sprite_EnsureAnimation(unsigned char animation) {
-    if (Sprite_Current[0x4B] == animation) return 1;
+    if (Cur()->animation == animation) return 1;
     g.set_animation(animation);
     return 0;
 }
@@ -156,28 +163,28 @@ extern "C" unsigned char __cdecl Sprite_EnsureAnimation(unsigned char animation)
 // picks - which is also the return value. Both entry bytes are read after the
 // queue's stores, in the original's order.
 extern "C" unsigned char* __cdecl Sprite_SetFrameQueueUpload(unsigned frame) {
-    unsigned char* const sprite = Sprite_Current;
-    const unsigned char* const data = At(static_cast<std::uint32_t>(Long(sprite + 0x4C)));
+    records::SpriteObject* const sprite = Cur();
+    const unsigned char* const data = At(static_cast<std::uint32_t>(static_cast<std::int32_t>(sprite->anim_data)));
     const unsigned char* const entry = Offset(data, static_cast<std::uint32_t>(Long(data + 0xC)) + (frame & 0xFFu) * 3u);
     const unsigned char* const images = Offset(data, static_cast<std::uint32_t>(Long(data)));
     const unsigned char* const words = Offset(data, static_cast<std::uint32_t>(Long(data + 8)));
-    if (!(sprite[0] & 2)) {
-        const unsigned slot = sprite[0x25];
+    if (!(sprite->flags & 2)) {
+        const unsigned slot = sprite->tex_slot;
         const unsigned count = Gfx_UploadQueueCount;
         if (slot > 0x10) {
-            SetWord(At(at::kQueueX + count * 2u), (slot - 0x10u) << 6);
-            SetWord(At(at::kQueueY + count * 2u), sprite[0x26] + 0x100u);
+            SetWord(At(Gfx_UploadQueueX_addr + count * 2u), (slot - 0x10u) << 6);
+            SetWord(At(Gfx_UploadQueueY_addr + count * 2u), sprite->tex_row + 0x100u);
         } else {
-            SetWord(At(at::kQueueX + count * 2u), slot << 6);
-            SetWord(At(at::kQueueY + count * 2u), sprite[0x26]);
+            SetWord(At(Gfx_UploadQueueX_addr + count * 2u), slot << 6);
+            SetWord(At(Gfx_UploadQueueY_addr + count * 2u), sprite->tex_row);
         }
         const unsigned char* const image = Offset(images, static_cast<std::uint32_t>(Long(images + entry[0] * 4u)));
-        SetLong(At(at::kQueueRecord + count * 4u), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(image)));
+        SetLong(At(Gfx_UploadQueueRecord_addr + count * 4u), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(image)));
         Gfx_UploadQueueCount = static_cast<unsigned char>(Gfx_UploadQueueCount + 1);
     }
-    sprite[0x2A] = entry[2];
+    sprite->pose = entry[2];
     unsigned char* const script = Offset(words, Word(words + entry[1] * 2u));
-    SetLong(Sprite_Current + 0x50, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(script)));
+    Cur()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(script));
     return script;
 }
 
@@ -201,17 +208,17 @@ extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
         if (i >= count) return 1;
         if (Word(table + i * 8u) == bank) break;
     }
-    Sprite_Current[0x25] = table[i * 8u + 4];
-    Sprite_Current[0x26] = Ptr(at::kBankTable)[i * 8u + 5];
-    Sprite_Current[0x27] = Ptr(at::kBankTable)[i * 8u + 2];
-    Sprite_Current[0x28] = Ptr(at::kBankTable)[i * 8u + 6];
+    Cur()->tex_slot = table[i * 8u + 4];
+    Cur()->tex_row = Ptr(at::kBankTable)[i * 8u + 5];
+    Cur()->clut = Ptr(at::kBankTable)[i * 8u + 2];
+    Cur()->clut_mode = Ptr(at::kBankTable)[i * 8u + 6];
     const unsigned column = Ptr(at::kBankTable)[i * 8u + 7];
-    SetWord(Sprite_Current + 0x2C, column);
-    SetLong(Sprite_Current + 0x70, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sprite_Current + 0x70)) & 0xFFFFFF00u));
+    Cur()->column = column;
+    Cur()->reach = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(Cur()->reach)) & 0xFFFFFF00u);
     unsigned char* sprite = Sprite_Current;
     sprite[0x70] = static_cast<unsigned char>(sprite[0x70] | At(at::kBankBytes)[bank * 2u]);
     const unsigned char second = At(at::kBankBytes)[bank * 2u + 1];
-    Sprite_Current[0x2B] = second;
+    Cur()->key_class = second;
     return 0;
 }
 
@@ -228,21 +235,21 @@ extern "C" unsigned char __cdecl Sprite_SetAnimationBank(unsigned short bank) {
 // As the original has it: the direction indexes the pair table unchecked,
 // and Field_ActiveMember is not checked for null.
 extern "C" void __cdecl Sprite_FaceDirection(unsigned char direction) {
-    const unsigned char type = Sprite_Current[6];
+    const unsigned char type = Cur()->type;
     if (type >= 8) return;
     if (type == 6) {
         g.ensure_animation(direction);
         return;
     }
     const unsigned pair = direction * 2u;
-    Sprite_Current[0x2A] = At(at::kDirectionAnimations)[pair + 1];
+    Cur()->pose = At(at::kDirectionAnimations)[pair + 1];
     const unsigned char start = Field_ActiveMember[0xA1];
     const unsigned char animation = At(at::kDirectionAnimations)[pair];
     if (start == 0xFF) {
         g.ensure_animation(animation);
         return;
     }
-    if (Sprite_Current[0x4B] == animation) return;
+    if (Cur()->animation == animation) return;
     if (animation == 5 || animation == 6) {
         g.set_animation_at(animation, start);
         return;

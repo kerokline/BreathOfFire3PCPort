@@ -219,7 +219,7 @@ void FillFraction(unsigned char* at) {
 // so the trail's "no direction" (0x1000) and its fills run.
 U FxProjectPoint(const U* a, U answer) {
     if (!Writable(a[1], 12)) return answer;
-    const U trail = at::kTrail + 0x10;
+    const U trail = EffectKind30_Shards_addr + 0x10;
     if (a[1] >= trail + at::kTrailStride && a[1] < trail + at::kTrailStride * at::kTrailPoints &&
         (a[1] - trail) % at::kTrailStride == 0 && a[0] == a[1] - 0x10 &&
         (std::memcmp(P(a[0]), P(a[0] - at::kTrailStride), 12) == 0 || sh::Noise() % 3 == 0)) {
@@ -245,7 +245,7 @@ U FxProjectSize(const U* a, U answer) {
 U FxFindFreeDrop(const U*, U answer) {
     if (answer % 4 == 0) return 0;
     for (U i = 0; i < at::kDropCount; ++i)
-        if (Mem(at::kDrops + at::kDropStride * i)[0] == 0) return at::kDrops + at::kDropStride * i;
+        if (Mem(EffectKind30_Shards_addr + at::kDropStride * i)[0] == 0) return EffectKind30_Shards_addr + at::kDropStride * i;
     return 0;
 }
 
@@ -323,7 +323,7 @@ void Records() {
 // The area header and the cell words EffectKind7D_SetMap reads, small enough
 // that its dword stays inside the area block's first 8 KiB (the region).
 void SeedAreaHeader() {
-    unsigned char* const h = Mem(at::kAreaHeader);
+    unsigned char* const h = Mem(AreaMap_Header_addr);
     h[0] = static_cast<unsigned char>(sh::Next() % 5);
     h[1] = static_cast<unsigned char>(sh::Next() % 9);
     SetWord(h + 2, sh::Next() % 0x40);
@@ -340,7 +340,7 @@ void Seed(unsigned k) {
     // the dials 0..8 (past 8 ours aborts where the original reads the next rows)
     for (U i = 0; i < at::kDialCount; ++i) Mem(at::kDials + i)[0] = static_cast<unsigned char>(sh::Next() % 9);
     // the pulse's index 0 or 1 (only these functions write it)
-    Mem(at::kPulseIndex)[0] = static_cast<unsigned char>(sh::Next() % 2);
+    Mem(Effect3d_PulseIndex_addr)[0] = static_cast<unsigned char>(sh::Next() % 2);
     // the counter the kinds end on, and the frame counts
     Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(1, 4, 0xC, 0, 2, sh::Next()));
     s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 0xF, 0x10, 0x11, 0xFF, sh::Next()));
@@ -354,14 +354,14 @@ void Seed(unsigned k) {
     }
     case k77End:
     case k77Show:
-        Mem(at::kStep)[0] = static_cast<unsigned char>(sh::Next());
+        Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(sh::Next());
         Field_Request = static_cast<unsigned char>(PickOf(2, 0, 1, 5, sh::Next()));
         Game_Mode = static_cast<unsigned short>(PickOf(4, 2, 0x104, sh::Next()));
         break;
     case k7DInput:
-        SetWord(Mem(at::kInputPressed), PickOf(0x8000, 0x2000, 0xA000, 0, sh::Next()) | (sh::Half() ? 0u : sh::Next() & 0x5FFFu));
-        SetWord(Mem(at::kConfirmButtons), PickOf(0x20, 0x40, 0, sh::Next()));
-        SetWord(Mem(at::kCancelButtons), PickOf(0x40, 0x10, 0, sh::Next()));
+        SetWord(Mem(Input_Pressed_addr), PickOf(0x8000, 0x2000, 0xA000, 0, sh::Next()) | (sh::Half() ? 0u : sh::Next() & 0x5FFFu));
+        SetWord(Mem(Field_ConfirmButtons_addr), PickOf(0x20, 0x40, 0, sh::Next()));
+        SetWord(Mem(Field_CancelButtons_addr), PickOf(0x40, 0x10, 0, sh::Next()));
         break;
     case k7DSetMap: SeedAreaHeader(); break;
     case k80Rise: SetLong(s + 0x34, static_cast<std::int32_t>(PickOf(0x160000, 0x170000 - 0x10000, 0x16FFFF, 0x170000, sh::Next()))); break;
@@ -369,12 +369,12 @@ void Seed(unsigned k) {
         // a quarter of the time every point at the record's point (as the
         // start leaves the trail): no pair has a direction
         if (sh::Next() % 4 == 0)
-            for (U i = 0; i < at::kTrailPoints; ++i) std::memcpy(Mem(at::kTrail + at::kTrailStride * i), s + 0x34, 12);
+            for (U i = 0; i < at::kTrailPoints; ++i) std::memcpy(Mem(EffectKind30_Shards_addr + at::kTrailStride * i), s + 0x34, 12);
         break;
     case k80Draw: {
         // some pairs on the same screen point (the skip), whole or one axis
         for (U i = 1; i < at::kTrailPoints; ++i) {
-            unsigned char* const p = Mem(at::kTrail + at::kTrailStride * i + 0x10);
+            unsigned char* const p = Mem(EffectKind30_Shards_addr + at::kTrailStride * i + 0x10);
             if (sh::Next() % 3 == 0) std::memcpy(p, p - at::kTrailStride, sh::Half() ? 8 : 4);
         }
         break;
@@ -383,13 +383,13 @@ void Seed(unsigned k) {
     case k81Drain:
     case k81Pour:
         for (U i = 0; i < at::kDropCount; ++i) {
-            unsigned char* const d = Mem(at::kDrops + at::kDropStride * i);
+            unsigned char* const d = Mem(EffectKind30_Shards_addr + at::kDropStride * i);
             d[0] = static_cast<unsigned char>(sh::Next() % 4 == 0 ? 0 : sh::Next());
             d[2] = static_cast<unsigned char>(PickOf(1, 2, 0, sh::Next()));
             d[3] = static_cast<unsigned char>(sh::Next() % 2);
         }
         if (k == k81Move && sh::Next() % 4 == 0)
-            for (U i = 0; i < at::kDropCount; ++i) Mem(at::kDrops + at::kDropStride * i)[0] = 0;
+            for (U i = 0; i < at::kDropCount; ++i) Mem(EffectKind30_Shards_addr + at::kDropStride * i)[0] = 0;
         break;
     case k81Emit:
         for (U i = 0; i < at::kSourceCount; ++i) {
@@ -404,8 +404,8 @@ void Seed(unsigned k) {
     case k82Check7:
     case k82Check9: {
         const U leader = sh::Next();
-        SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(leader));
-        SetLong(Mem(at::kObject0X), static_cast<std::int32_t>(leader + PickOf(0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, sh::Next())));
+        SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(leader));
+        SetLong(Mem(Sprite_Objects_addr + 0x34), static_cast<std::int32_t>(leader + PickOf(0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, sh::Next())));
         Mem(at::kCounterB)[0] = static_cast<unsigned char>(PickOf(3, 4, 5, 0xFF, 6, 2, 7, 0xFE, sh::Next()));
         Mem(at::kCounterC)[0] = static_cast<unsigned char>(PickOf(0x80, 0, 0x81, sh::Next()));
         break;
@@ -427,8 +427,8 @@ void Args(unsigned k, U* a) {
     case k7DF4: a[11] = sh::Next(); break;
     case k7FCone: a[0] = Key(Rec(sh::Next() % 20) + 0x34); break;
     case k80Step:
-    case k80Draw: a[0] = at::kTrail; break;
-    case k81DrawDrop: a[0] = at::kDrops + at::kDropStride * (sh::Next() % at::kDropCount); break;
+    case k80Draw: a[0] = EffectKind30_Shards_addr; break;
+    case k81DrawDrop: a[0] = EffectKind30_Shards_addr + at::kDropStride * (sh::Next() % at::kDropCount); break;
     default: break;
     }
 }
@@ -446,10 +446,10 @@ void Disturb(U h) {
     case 1: SetWord(s + 0x2E + 2 * (v & 1), v >> 1); break;
     case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xCu : v >> 1); break;
     case 3: SetWord(Mem(at::kTally), v); break;
-    case 4: SetWord(Mem(at::kInputPressed), v); break;
-    case 5: SetWord(Mem(at::kTrail + 0x1C + at::kTrailStride * (v % at::kTrailPoints)), v >> 5); break;
-    case 6: Mem(at::kDrops + 2 + at::kDropStride * (v % at::kDropCount))[0] = static_cast<unsigned char>(v >> 8); break;
-    case 7: SetLong(Mem(at::kObject0X), static_cast<std::int32_t>(v)); break;
+    case 4: SetWord(Mem(Input_Pressed_addr), v); break;
+    case 5: SetWord(Mem(EffectKind30_Shards_addr + 0x1C + at::kTrailStride * (v % at::kTrailPoints)), v >> 5); break;
+    case 6: Mem(EffectKind30_Shards_addr + 2 + at::kDropStride * (v % at::kDropCount))[0] = static_cast<unsigned char>(v >> 8); break;
+    case 7: SetLong(Mem(Sprite_Objects_addr + 0x34), static_cast<std::int32_t>(v)); break;
     case 8: SetLong(s + 0x34 + 4 * (v % 3), static_cast<std::int32_t>(v)); break;
     default: break;
     }

@@ -21,11 +21,51 @@ emits, for every named function and data item:
 The output contains addresses and names only — our work product, not game data.
 It is still generated into the build tree rather than committed, so it cannot
 drift from symbols.toml.
+
+    python tools/gen_symbols.py --toml symbols.toml --out ... --retirable analysis/retirable_constants.tsv
+
+`--retirable` adds the address-to-name check (docs/typed-data-round.md 2,
+group SG): every module constant (`constexpr ... kName = 0x...` in a
+src/**/*_callees.h) whose value is the address of a [[data]] entry is written
+as one row: address, header, constant, the entry's name. Those constants are
+retirable, the typed global already naming their address. Addresses and names
+only. Nothing is removed here; stage B retires them at the sites.
 """
-import argparse, os, re, sys, tomllib
+import argparse, glob, os, re, sys, tomllib
 
 IDENT = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 CCS = {'__cdecl', '__stdcall', '__fastcall', '__thiscall'}
+CONSTEXPR = re.compile(r'constexpr\b[^;]*?;', re.S)
+CONST_ITEM = re.compile(r'\b(k[A-Za-z0-9_]*)\s*=\s*(0x[0-9A-Fa-f]+)[uUlL]*\b')
+
+
+def module_constants(root):
+    """(header, line, name, value) for every hex `kName = 0x...` inside a
+    constexpr statement of a *_callees.h under root/src, path then line order."""
+    out = []
+    for path in sorted(glob.glob(os.path.join(root, 'src', '**', '*_callees.h'), recursive=True)):
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+        rel = os.path.relpath(path, root).replace(os.sep, '/')
+        for m in CONSTEXPR.finditer(text):
+            stmt, line = m.group(0), text.count('\n', 0, m.start()) + 1
+            for it in CONST_ITEM.finditer(stmt):
+                out.append((rel, line + stmt.count('\n', 0, it.start()),
+                            it.group(1), int(it.group(2), 16)))
+    return out
+
+
+def write_retirable(path, root, datas):
+    """The address-to-name check: module constants a [[data]] entry names."""
+    names = {e['pc']: e['name'] for e in datas}
+    rows = sorted({(v, h, k, names[v]) for h, _, k, v in module_constants(root) if v in names})
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write('address\theader\tconstant\tdata\n')
+        for v, h, k, n in rows:
+            f.write(f'0x{v:X}\t{h}\t{k}\t{n}\n')
+    print(f'gen_symbols: {len(rows)} retirable module constants '
+          f'({len({r[0] for r in rows})} addresses) -> {path}')
 
 
 def fail(msg):
@@ -36,6 +76,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--toml', required=True)
     ap.add_argument('--out', required=True)
+    ap.add_argument('--retirable', metavar='TSV',
+                    help='also write the module constants whose address a [[data]] entry names')
     a = ap.parse_args()
 
     with open(a.toml, 'rb') as f:
@@ -131,7 +173,14 @@ def main():
             w(f'inline constexpr unsigned {e["name"]}_count = {e["count"]};')
         else:
             w(f'#define {e["name"]} (*reinterpret_cast<{ty} *>({e["pc"]:#x}))')
+        # The macro above rewrites `bof3::addr::<name>` wherever it is spelled,
+        # so a typed entry's address is reached as <name>_addr instead (a
+        # harness's Mem(<name>_addr), a pointer form At(<name>_addr)).
+        w(f'inline constexpr std::uint32_t {e["name"]}_addr = {e["pc"]:#x};')
     w('')
+
+    if a.retirable:
+        write_retirable(a.retirable, os.path.dirname(os.path.abspath(a.toml)), datas)
 
     text = '\n'.join(out)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)

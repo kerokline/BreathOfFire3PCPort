@@ -44,12 +44,12 @@ constexpr U kItemClass = bof3::addr::Item_UseFlags;        // (byte, byte) -> al
 
 // --- the battle bytes (0x904AA0..0x904BA0, the harness's battle frame) ---
 constexpr U kRoundFlags = 0x904AA8;       // u16: bit 2 an action's end, 6, 7 (a roll), 11 (a cast's end), 13, 14
-constexpr U kFight = 0x904AAA;            // u8: the event battle (0 none)
+// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (0 none)
 constexpr U kPartyCount = 0x904AB0;       // u8: the members the party loops walk (ObjTrio holds three)
-constexpr U kMembersUp = 0x904AB1;        // u8: counted down as a member falls; 0 is the loss
-constexpr U kEnemiesLeft = 0x904AB3;      // u8: counted down as an enemy leaves; 0 is the win
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 0 the loss, bit 1 the win
-constexpr U kKindsSeen = 0x904AE9;        // u8: the message kinds seen this frame (battle_windows.md)
+// kMembersUp: now BattleSprites_PartyPick (symbols.toml). u8: counted down as a member falls; 0 is the loss
+// kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8: counted down as an enemy leaves; 0 is the win
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
+// kKindsSeen: now BattleMisc_BannerKinds (symbols.toml). u8: the message kinds seen this frame (battle_windows.md)
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the action's kind (1, 4, 5 read here)
 constexpr U kTarget = 0x904B44;           // u8: the target (bits 6, 7 read)
@@ -58,17 +58,17 @@ constexpr U kHitSprite = 0x904B5C;        // unsigned char *: the object being h
 constexpr U kResult = 0x904B60;           // unsigned char *: the result record (Field_State + 0x124 here)
 constexpr U kAbility = 0x904B80;          // u16: the ability id (24-byte records at 0x65C4D8)
 constexpr U kItemCategory = 0x904B81;     // u8: its high byte, 0x591810's first argument
-constexpr U kCost = 0x904B88;             // u8: the cost taken from an enemy's +0xA6
-constexpr U kSoundSet = 0x904B8D;         // u8: Battle_LoadSoundByKey's set
-constexpr U kFormActor = 0x904B8A;        // u8: an actor 0x904AA8 bit 14 belongs to
+// kCost: now BattleE3_Cost (symbols.toml). u8: the cost taken from an enemy's +0xA6
+// kSoundSet: now BattleE3_SoundSet (symbols.toml). u8: Battle_LoadSoundByKey's set
+// kFormActor: now BattleFlow_ActorAt (symbols.toml). u8: an actor 0x904AA8 bit 14 belongs to
 constexpr U kStatusOr = 0x904B98;         // u16: or-ed into the hit member's +0x90, then zeroed
 constexpr U kStatusOr2 = 0x904B9A;        // u16: zeroed at the hit
 
 // --- the rest ---
 constexpr U kCurrentEnemy = 0x939AD8;     // unsigned char *: the enemy BattleEnemy_RunAll runs
 constexpr U kStatCopy = 0x939F80;         // 32 bytes: the hit member's +0xA0.. copied here
-constexpr U kStatFlag = 0x939F86;         // u16: set to 1 under the member's +0x90 bit 11
-constexpr U kEvadeBoost = 0x939F9B;       // u8: += 25 to 100 under +0x130 bit 0
+// kStatFlag: now BattleDamage_TargetDef (symbols.toml). u16: set to 1 under the member's +0x90 bit 11
+// kEvadeBoost: now BattleE3_EvadeBoost (symbols.toml). u8: += 25 to 100 under +0x130 bit 0
 constexpr U kWindow4State = 0x8031F3;     // u8: window record 4's +3 (= 2 as an enemy leaves)
 constexpr U kAbilityFlags0 = 0x65C4D8;    // the ability record's byte +0 (NameTable_Abilities; bits 2, 4)
 constexpr U kAbilityWord4 = 0x65C4DC;     // its word +4 (bit 11)
@@ -78,7 +78,7 @@ constexpr U kEnemyData8B = 0x8C5653;      // the area's enemy data record +0x8B 
 constexpr U kEnemyDataStride = 0x8C;
 constexpr U kCharRecords = 0x903A70;      // CharacterRecords, 0xA4 each, by a member's +0x148
 constexpr U kCharStride = 0xA4;
-constexpr U kParty = 0x802D40;            // ObjTrio: three members of 0x14C
+// kParty: now ObjTrio (symbols.toml). ObjTrio: three members of 0x14C
 constexpr U kPartyStride = 0x14C;
 constexpr unsigned kPartyMax = 3;
 constexpr U kTasks = 0x93A000;            // BattleTask_Create's 48 slots of 0x84

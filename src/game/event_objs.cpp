@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/event_objs_callees.h"
+#include "game/records.h"
 #include "hook/detour.h"
 
 namespace event_objs {
@@ -70,6 +71,15 @@ std::int32_t Long(const unsigned char* p) {
     return v;
 }
 void SetLong(unsigned char* p, std::int32_t v) { std::memcpy(p, &v, sizeof v); }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use, as the original does. Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record.
+static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static const records::SpriteObject* Spr(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 std::int32_t Add(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b));
 }
@@ -88,14 +98,14 @@ unsigned char ScratchByte() { return At(bof3::addr::DamageScratch)[0]; }
 // n a whole byte as the original's.
 unsigned char& ActorState(unsigned n) { return At(0x903A80u + n * kRecordSize)[0]; }
 // The landing point of a jump: the step times the frames, from the position.
-long LandingX(const unsigned char* s) { return Add(Mul(Long(s + 0xC), s[9]), Long(s + 0x34)); }
-long LandingZ(const unsigned char* s) { return Add(Mul(Long(s + 0x10), s[9]), Long(s + 0x38)); }
+long LandingX(const unsigned char* s) { return Add(Mul(Spr(s)->step_x, s[9]), Spr(s)->x); }
+long LandingZ(const unsigned char* s) { return Add(Mul(Spr(s)->step_z, s[9]), Spr(s)->z); }
 
 // Field_TileD0 and Field_TileA4.
 unsigned char TileState(unsigned code, unsigned char state) {
     if (Field_ScriptFlags & 0x400) return 0;
     const unsigned char* const s = Sprite_Current;
-    if (!g.cells_all(Long(s + 0x34), Long(s + 0x38), static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
+    if (!g.cells_all(Spr(s)->x, Spr(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
         return 0;
     Sprite_Current[1] = 2;
     Sprite_Current[2] = state;
@@ -133,11 +143,11 @@ void Cells(long x, long z, unsigned char c[4]) {
 // each word; the last store reads SC and +5 afresh.
 extern "C" void __cdecl Sprite_ShadeFadeBegin(void) {
     unsigned char* const s = Sprite_Current;
-    for (unsigned i = 0; i < 31; ++i) At(kShadeClut + (s[5] * 32u + i) * 2 + 1)[0] |= 0x80;
+    for (unsigned i = 0; i < 31; ++i) At(Gfx_ClutStrip_addr + 0x1e00 + (s[5] * 32u + i) * 2 + 1)[0] |= 0x80;
     s[0] = static_cast<unsigned char>(s[0] | 0x20);
     const unsigned clut = Sprite_Current[5];
     Gfx_ClutStripDirty = 1;
-    SetWord(At(kShadeClut + 0x3E + clut * 64), 0);
+    SetWord(At(Gfx_ClutStrip_addr + 0x1e00 + 0x3E + clut * 64), 0);
 }
 
 // original 0x534790 (PSX 0x801C37D8): one step of the fade; at its end the
@@ -145,7 +155,7 @@ extern "C" void __cdecl Sprite_ShadeFadeBegin(void) {
 // and the semi-transparency go. al only (callers test al).
 extern "C" unsigned char __cdecl Sprite_ShadeFadeStep(unsigned step) {
     if (!g.shade_raise(step)) return 0;
-    g.load_palette(reinterpret_cast<unsigned short*>(At(kShadeSource + Sprite_Current[5] * 64u)), 0);
+    g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + Sprite_Current[5] * 64u)), 0);
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xDF);
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
@@ -201,14 +211,14 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     }
     Sprite_Current[9] = static_cast<unsigned char>(Idiv(Sprite_Current[9], static_cast<std::int32_t>(speed)));
     if (Field_ScriptFlags & 0x1000) Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] << 1);
-    SetLong(Sprite_Current + 0xC, Mul(Long(At(kJumpSteps + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
-    SetLong(Sprite_Current + 0x10, Mul(Long(At(kJumpSteps + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
+    SetLong(Sprite_Current + 0xC, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
+    SetLong(Sprite_Current + 0x10, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
     const unsigned char* const s = Sprite_Current;
     const long x = LandingX(s), z = LandingZ(s);
     long ground = g.slope_at(x, z, s[8]);
     if (ScratchByte() != 0) ground = g.ground_at(x, z);
     unsigned char* const t = Sprite_Current;
-    SetLong(t + 0x14, Idiv(static_cast<short>(ground) - static_cast<short>(Word(t + 0x3E)), t[9]));
+    Spr(t)->step_y = Idiv(static_cast<short>(ground) - static_cast<short>(Word(t + 0x3E)), t[9]);
 }
 
 // original 0x534710 (PSX 0x801C3708): what the camera follows during the
@@ -244,8 +254,8 @@ extern "C" void __cdecl Field_JumpCheckHeight(void) {
 // original 0x536670 (PSX 0x801C67AC): one frame of the step - +0x34 / +0x38
 // by +0xC / +0x10, the height word +0x3E by the low word of +0x14.
 extern "C" void __cdecl Sprite_ApplyVelocity(void) {
-    SetLong(Sprite_Current + 0x34, Add(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0xC)));
-    SetLong(Sprite_Current + 0x38, Add(Long(Sprite_Current + 0x38), Long(Sprite_Current + 0x10)));
+    SetLong(Sprite_Current + 0x34, Add(SC()->x, SC()->step_x));
+    SetLong(Sprite_Current + 0x38, Add(SC()->z, SC()->step_z));
     SetWord(Sprite_Current + 0x3E, Word(Sprite_Current + 0x3E) + Word(Sprite_Current + 0x14));
 }
 
@@ -268,7 +278,7 @@ extern "C" void __cdecl Field_FloorDamage(void) {
     for (;; ++n) {
         if (n == 9) return;
         const unsigned char* const s = Sprite_Current;
-        if (g.cells_all(Long(s + 0x34), Long(s + 0x38), static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, 0x80 + n, 0))
+        if (g.cells_all(Spr(s)->x, Spr(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, 0x80 + n, 0))
             break;
     }
     g.floor_hurt(n);
@@ -289,7 +299,7 @@ extern "C" unsigned char __cdecl Field_Tile8A(unsigned turn) { return TileTurn(0
 extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, unsigned turn) {
     {
         const unsigned char* const s = Sprite_Current;
-        if (g.cells_none(Long(s + 0x34), Long(s + 0x38), static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
+        if (g.cells_none(Spr(s)->x, Spr(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
             return 0;
     }
     if (static_cast<unsigned char>(turn) != 0) {
@@ -297,8 +307,8 @@ extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, u
         for (unsigned i = 0;;) {
             const unsigned char* const s = Sprite_Current;
             direction = static_cast<unsigned char>(((s[8] ^ 0xFC) + i) & 7);
-            const long x = Add(Long(s + 0x34), Mul(Field_DirectionSteps[direction * 2], 2));
-            const long z = Add(Long(s + 0x38), Mul(Field_DirectionSteps[direction * 2 + 1], 2));
+            const long x = Add(Spr(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
+            const long z = Add(Spr(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
             if (!g.turn_probe(x, z, 0, Word(s + 0x3E))) break;
             if (++i >= 8) break;
         }
@@ -375,7 +385,7 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     unsigned char hit = 0;
     if (Field_InputFlags & 1) {
         for (unsigned i = 0; i < count; ++i)
-            if (ActorState(MoveScript_EffectState[At(kPartyList)[i]]) & 0x80) hit = 1;
+            if (ActorState(MoveScript_EffectState[Cond_Flags[0xd2 + i]]) & 0x80) hit = 1;
         if (!hit) return;
     } else if (!(ActorState(f[0x148]) & 0x80)) {
         return;
@@ -387,7 +397,7 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     g.flash(1);
     if (Field_InputFlags & 1) {
         for (unsigned i = 0; i < count; ++i) {
-            const unsigned char member = At(kPartyList)[i];
+            const unsigned char member = Cond_Flags[0xd2 + i];
             if ((ActorState(MoveScript_EffectState[member]) & 0x80) && (g.hp_lose(1, member) & 0xFFFF) != 0) hit = 1;
         }
         if (!hit) return;
@@ -401,8 +411,8 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     o[0] = 1;
     o[5] = 0x41;
     o[8] = s[8];
-    SetWord(o + 0x36, Word(s + 0x2E));
-    SetWord(o + 0x3A, Word(s + 0x30));
+    SetWord(o + 0x36, static_cast<std::uint16_t>(Spr(s)->screen_x));
+    SetWord(o + 0x3A, static_cast<std::uint16_t>(Spr(s)->screen_y));
     o[0x27] = 0;
     o[6] = 1;
     o[0xB] = s[5];

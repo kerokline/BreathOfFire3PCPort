@@ -212,13 +212,17 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850;
-constexpr std::uint32_t kCharmPool = 0x6A9108, kTransferPool = 0x6AB208, kTransferCurrent = 0x6AC808,
-                        kMonopolizePool = 0x6AC810, kPoolsEnd = 0x6AE910;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
+// kCharmPool: now Charm_Pool (symbols.toml).
+// kTransferPool: now Transfer_Pool (symbols.toml).
+// kTransferCurrent: now TransferMote_Current (symbols.toml).
+// kMonopolizePool: now Monopolize_Pool (symbols.toml).
+constexpr std::uint32_t kPoolsEnd = 0x6AE910;
 
 unsigned char* MoteRecord(std::uint32_t pool, unsigned i) { return mh::Mem(pool + (i % 64) * 0x84u); }
-unsigned char* TransferRecord(unsigned i) { return mh::Mem(kTransferPool + (i % 128) * 0x2Cu); }
-unsigned char* Cur() { return mh::Pointer(kTransferCurrent); }
+unsigned char* TransferRecord(unsigned i) { return mh::Mem(Transfer_Pool_addr + (i % 128) * 0x2Cu); }
+unsigned char* Cur() { return mh::Pointer(TransferMote_Current_addr); }
 
 // --- the callees' effects (after the recorder's log and disturbance) ------------
 
@@ -254,7 +258,7 @@ std::uint32_t TickEffect(const std::uint32_t*, std::uint32_t answer) {
 }
 // MAGIC162's line draws: the current record they draw.
 std::uint32_t NoteCurrent(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(kTransferCurrent))));
+    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(TransferMote_Current_addr))));
     return answer;
 }
 // The GTE stand-ins of the matrix push: a result from the inputs, written
@@ -335,9 +339,9 @@ const mh::Callee kCallees[] = {
     {S34_RAW(0x4EDB30), 0, {}, kP, 0, 0},
     {S34_RAW(0x4EE030), 0, {}, kP, 0, 0},
     {S34_RAW(0x4EE580), 0, {}, kP, 0, 0},
-    {S34_RAW(0x4EE8C0), 0, {kTransferCurrent}, kP, 0, 0},
-    {S34_RAW(0x4EEF60), 0, {kTransferCurrent}, kP, 0, 0},
-    {S34_RAW(0x4EF1E0), 0, {kTransferCurrent}, kP, 0, 0},
+    {S34_RAW(0x4EE8C0), 0, {TransferMote_Current_addr}, kP, 0, 0},
+    {S34_RAW(0x4EEF60), 0, {TransferMote_Current_addr}, kP, 0, 0},
+    {S34_RAW(0x4EF1E0), 0, {TransferMote_Current_addr}, kP, 0, 0},
     {S34_RAW(0x4EEBE0), 2, {kU16, kU16}, kG, 0, 0, {}, &NoteCurrent},
     {S34_RAW(0x4EED70), 2, {kU16, kU16}, kG, 0, 0, {}, &NoteCurrent},
 };
@@ -354,9 +358,9 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                          // Gfx_PacketNext
     {0, kPrimBytes},                        // g_prims (filled in at start-up)
-    {kVertex, 0x20},                        // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},        // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                       // 0x903850..0x90385F
-    {kCharmPool, kPoolsEnd - kCharmPool},   // Charm_Pool, Transfer_Pool, TransferMote_Current, Monopolize_Pool
+    {Charm_Pool_addr, kPoolsEnd - Charm_Pool_addr}, // Charm_Pool, Transfer_Pool, TransferMote_Current, Monopolize_Pool
     {0x80E980, 0x200},                      // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                      // Gfx_ClutStrip row 26
 };
@@ -369,16 +373,16 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: mh::Mem(kScratch + v % 16)[0] = Byte(h >> 24); break;
-    case 3: mh::SetPointer(kTransferCurrent, TransferRecord(v)); break;
+    case 3: mh::SetPointer(TransferMote_Current_addr, TransferRecord(v)); break;
     case 4: {
         static const unsigned kFields[] = {0, 2, 5, 6, 7, 0xC};
         Cur()[kFields[v % 6]] = Byte(h >> 24);
         break;
     }
     case 5: {
-        unsigned char* const rec = (v & 0x100) ? TransferRecord(v) : MoteRecord((v & 0x80) ? kMonopolizePool : kCharmPool, v);
+        unsigned char* const rec = (v & 0x100) ? TransferRecord(v) : MoteRecord((v & 0x80) ? Monopolize_Pool_addr : Charm_Pool_addr, v);
         rec[0] = Byte(rec[0] ^ 1);
         break;
     }
@@ -419,21 +423,21 @@ void FixOwners(std::uint32_t pool, unsigned count, unsigned stride, unsigned own
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kTransferCurrent, TransferRecord(mh::Next()));
+    mh::SetPointer(TransferMote_Current_addr, TransferRecord(mh::Next()));
     unsigned char* const cur = Cur();
     if (mh::Half()) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables
     case kCharm_Task: case kMonopolize_Task:
         sc[1] = Byte(mh::Next() % 2);
-        FixOwners(kCharmPool, 64, 0x84, 0x80);
-        FixOwners(kMonopolizePool, 64, 0x84, 0x80);
+        FixOwners(Charm_Pool_addr, 64, 0x84, 0x80);
+        FixOwners(Monopolize_Pool_addr, 64, 0x84, 0x80);
         break;
     case kMagic159_Task: sc[1] = Byte(mh::Next() % 2); break;
     case kTimedBlow_Task: sc[1] = Byte(mh::Next() % 3); break;
     case kTransfer_Task:
         sc[1] = Byte(mh::Next() % 6);
-        FixOwners(kTransferPool, 128, 0x2C, 0x28);
+        FixOwners(Transfer_Pool_addr, 128, 0x2C, 0x28);
         break;
     case kCharmMote_Task: case kMagic159Child_Task: case kTimedBlowCopy_Task: case kMonopolizeMote_Task: sc[1] = 0; break;
     case kTransferMote_Task: cur[1] = 0; break;
@@ -452,7 +456,7 @@ void Seed(unsigned k) {
     case kCharmMote_ToOwner:
         Near(sc[9], 0xF);
         Near(sc[0xA], 0xF);
-        if (mh::Often()) SetWord(sc + 0x3E, (Word(mh::Pointer(mh::at::kOwner) + 0x3E) + 0x60 + (mh::Half() ? 1u : 0u)) & 0xFFFF);
+        if (mh::Often()) SetWord(sc + 0x3E, (Word(mh::Pointer(BattleE2_Owner_addr) + 0x3E) + 0x60 + (mh::Half() ? 1u : 0u)) & 0xFFFF);
         break;
     case kCharmMote_Fall: Near(sc[0xA], 1); break;
     case kMonopolizeMote_Fall:
@@ -471,9 +475,9 @@ void Seed(unsigned k) {
         Near(cur[5], 1);
         break;
     // the allocators: a full pool, one free, or random
-    case kCharm_PoolAlloc: FillPool(kCharmPool, 64, 0x84); break;
-    case kMonopolize_PoolAlloc: FillPool(kMonopolizePool, 64, 0x84); break;
-    case kTransfer_PoolAlloc: FillPool(kTransferPool, 128, 0x2C); break;
+    case kCharm_PoolAlloc: FillPool(Charm_Pool_addr, 64, 0x84); break;
+    case kMonopolize_PoolAlloc: FillPool(Monopolize_Pool_addr, 64, 0x84); break;
+    case kTransfer_PoolAlloc: FillPool(Transfer_Pool_addr, 128, 0x2C); break;
     default: break;
     }
 }

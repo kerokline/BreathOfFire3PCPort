@@ -14,20 +14,20 @@ constexpr std::uint32_t kPieceMode = bof3::addr::UiSprite_SetMode;       // E1F:
 constexpr std::uint32_t kPiece = bof3::addr::UiSprite_Draw;           // E1F: (id, slot, x, y) - a sprite primitive, committed
 
 // --- the trade screen's cells (field_e2_callees.h names the same ones) --------
-constexpr std::uint32_t kTradeState = 0x93985C;      // u8: ItemTrade_States' index (0x593950 dispatches)
-constexpr std::uint32_t kTradeStep = 0x93985E;       // u8: the open, run and leave steps' index
-constexpr std::uint32_t kLeaveSteps = 0x66A494;      // ItemTrade_LeaveSteps, 2 (its symbols.gen.h name is a typed-pointer macro)
-constexpr std::uint32_t kTradePick = 0x6BE08C;       // u8: the entry picked, bit 7 and bit 6 marks
-constexpr std::uint32_t kTradeRowCount = 0x6BE08D;   // u8: the entries on the screen
-constexpr std::uint32_t kTradeQuantity = 0x6BE08E;   // s8: 1..99
-constexpr std::uint32_t kTradeAnswer = 0x6BE08F;     // u8: the yes / no hand
-constexpr std::uint32_t kTradeRow = 0x905B88;        // u8: which ten-byte row of kTradeIndex the screen shows
+// kTradeState: now Effect1g_TradeState (symbols.toml). u8: ItemTrade_States' index (0x593950 dispatches)
+// kTradeStep: now Effect1g_TradeStep (symbols.toml). u8: the open, run and leave steps' index
+// kLeaveSteps: now ItemTrade_LeaveSteps (symbols.toml). ItemTrade_LeaveSteps, 2 (its symbols.gen.h name is a typed-pointer macro)
+// kTradePick: now Effect1g_TradePick (symbols.toml). u8: the entry picked, bit 7 and bit 6 marks
+// kTradeRowCount: now Effect1g_TradeRowCount (symbols.toml). u8: the entries on the screen
+// kTradeQuantity: now Effect1g_TradeQuantity (symbols.toml). s8: 1..99
+// kTradeAnswer: now Effect1g_TradeAnswer (symbols.toml). u8: the yes / no hand
+// kTradeRow: now AreaEntry_PendingFlags (symbols.toml). u8: which ten-byte row of kTradeIndex the screen shows
 constexpr std::uint32_t kTradeIndex = 0x66AD10;      // 10 bytes a row: the entries' record numbers, 0xFF ends a row
 constexpr std::uint32_t kTradeRecords = 0x66AB58;    // 8 bytes a record: +0 item, +1 category, +2..+4 ingredients, +5..+7 their counts
-constexpr std::uint32_t kWaitWord = 0x66C810;        // MoveScript_WaitWordDA (u16)
-constexpr std::uint32_t kConfirm = 0x90358E;         // Field_ConfirmButtons (u16)
-constexpr std::uint32_t kCancel = 0x903590;          // Field_CancelButtons (u16)
-constexpr std::uint32_t kStyle = 0x903A5A;           // u8: the window style Menu_DrawBox is handed
+// kWaitWord: now MoveScript_WaitWordDA (symbols.toml). MoveScript_WaitWordDA (u16)
+// kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons (u16)
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons (u16)
+// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is handed
 constexpr std::uint32_t kPoolWordAsk = 0x80360A;     // MessagePools' offsets of the prompts (u16 each)
 constexpr std::uint32_t kPoolWordList = 0x80360E;
 constexpr std::uint32_t kPoolWordNeeds = 0x803610;

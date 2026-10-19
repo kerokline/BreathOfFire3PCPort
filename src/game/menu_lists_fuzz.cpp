@@ -35,7 +35,7 @@ std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinter
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
 unsigned char& B(std::uint32_t address) { return At(address)[0]; }
 unsigned char* Record_(unsigned i) { return At(at::kRecords + i * at::kRecordSize); }
-unsigned char* Cur() { return At(static_cast<std::uint32_t>(Long(At(at::kCurrent)))); }
+unsigned char* Cur() { return At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr)))); }
 
 // --- the stand-ins' log ----------------------------------------------------
 
@@ -68,7 +68,7 @@ std::uint32_t Id(const void* p) {
     if (at >= text && at < text + sizeof g_text) return 0x20000u + (at - text);
     return at;
 }
-std::uint32_t Current() { return static_cast<std::uint32_t>(Long(At(at::kCurrent))); }
+std::uint32_t Current() { return static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr))); }
 // MenuList_DrawMemberPanel's argument: its stand-ins move the record's fields,
 // which it reads again after them.
 unsigned char* g_arg_rec;
@@ -102,7 +102,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
     switch ((h >> 4) % 24) {
-    case 0: SetPtr(at::kCurrent, Record_(v % 22)); break;
+    case 0: SetPtr(BattleWinStates_Current_addr, Record_(v % 22)); break;
     case 1: Cur()[3] = static_cast<unsigned char>(v % 3); break;
     case 2: SetWord(Cur() + 4, Coordinate(h * 0x9E3779B1u)); break;
     case 3: SetWord(Cur() + 6, Coordinate(h * 0x85EBCA6Bu)); break;
@@ -110,46 +110,46 @@ void Disturb() {
     case 5: Cur()[0xB] = static_cast<unsigned char>(v % 8); break;
     case 6: Cur()[0xC] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 7: SetWord(Cur() + 0x10, static_cast<std::uint16_t>(static_cast<int>(v % 7) - 2)); break;
-    case 8: B(at::kMenu) = static_cast<unsigned char>(v % 9); break;
-    case 9: B(at::kStep) = static_cast<unsigned char>(v % 3); break;
-    case 10: B(at::kCursor) = static_cast<unsigned char>(v % 3 == 0 ? v : v % 8); break;
-    case 11: B(at::kCampFlag) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 12: SetWord(At(at::kPressed), h >> 16); break;
+    case 8: B(BattleE1_Mode_addr) = static_cast<unsigned char>(v % 9); break;
+    case 9: B(FieldS_State_addr) = static_cast<unsigned char>(v % 3); break;
+    case 10: B(MenuLists_Cursor_addr) = static_cast<unsigned char>(v % 3 == 0 ? v : v % 8); break;
+    case 11: B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 12: SetWord(At(Input_Pressed_addr), h >> 16); break;
     case 13: Sprite_Current = Record_(v % 22); break;
-    case 14: At(at::kParty)[w % 6] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : v % 4); break;
-    case 15: B(at::kMemberCount) = static_cast<unsigned char>(v % 5); break;
+    case 14: At(Cond_Flags_addr + 0xd2)[w % 6] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : v % 4); break;
+    case 15: B(Field_MemberCount_addr) = static_cast<unsigned char>(v % 5); break;
     case 16: At(at::kSavedParty)[w % 6] = static_cast<unsigned char>(v % 3 == 0 ? 0xFF : v % 4); break;
     case 17: At(at::kReserveData)[w % 9] = static_cast<unsigned char>(v); break;
-    case 18: B(at::kColour) = static_cast<unsigned char>(v); break;
-    case 19: B(at::kBackground) = static_cast<unsigned char>(v); break;
+    case 18: B(BattleDraw_Colour_addr) = static_cast<unsigned char>(v); break;
+    case 19: B(FieldS_Backdrop_addr) = static_cast<unsigned char>(v); break;
     case 20: Gfx_PacketNext = g_prim + v; break;
-    case 21: B(at::kIconWindow + 0xC) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 21: B(MenuLists_IconWindow_addr + 0xC) = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 22: At(at::kCharRecords + 0x10 + (w % 8) * at::kCharRecordSize)[v % 0x20] = static_cast<unsigned char>(h); break;
-    default: SetLong(At(at::kMoney), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
+    default: SetLong(At(Party_Zenny_addr), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     }
 }
 // Half the time, the current record repointed: what every handler-6 function
 // re-reads after a call.
 void Repoint() {
-    if (Hash() % 2) SetPtr(at::kCurrent, Record_((Hash() >> 8) % 22));
+    if (Hash() % 2) SetPtr(BattleWinStates_Current_addr, Record_((Hash() >> 8) % 22));
 }
 
 // --- the stand-ins ---------------------------------------------------------
 
 // The dispatch tables' entries.
 template <unsigned N> void __cdecl StubHandler() {
-    Record(N, Current(), B(at::kMenu), B(at::kStep), Id(Sprite_Current));
+    Record(N, Current(), B(BattleE1_Mode_addr), B(FieldS_State_addr), Id(Sprite_Current));
     Repoint();
     Disturb();
 }
 void __cdecl StubPlace() {
-    Record(40, B(at::kMenu), B(at::kStep));
-    if (Hash() % 2) B(at::kMenu) = static_cast<unsigned char>(Hash() >> 8);
+    Record(40, B(BattleE1_Mode_addr), B(FieldS_State_addr));
+    if (Hash() % 2) B(BattleE1_Mode_addr) = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 void __cdecl StubReconcile() {
-    Record(41, B(at::kStep), Word(At(at::kGameStep)));
-    if (Hash() % 2) B(at::kStep) = static_cast<unsigned char>(Hash() >> 8);
+    Record(41, B(FieldS_State_addr), Word(At(Game_Step_addr)));
+    if (Hash() % 2) B(FieldS_State_addr) = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 void __cdecl StubDrawMember(unsigned char* rec) {
@@ -158,11 +158,11 @@ void __cdecl StubDrawMember(unsigned char* rec) {
 }
 void __cdecl StubBackdrop(unsigned kind) {
     Record(43, kind & 0xFF, Id(Sprite_Current));
-    if (Hash() % 2) B(at::kCursor) = static_cast<unsigned char>(Hash() % 3 ? (Hash() >> 8) % 7 : Hash() >> 8);
+    if (Hash() % 2) B(MenuLists_Cursor_addr) = static_cast<unsigned char>(Hash() % 3 ? (Hash() >> 8) % 7 : Hash() >> 8);
     Disturb();
 }
 void __cdecl StubRecalc(unsigned char* rec) {
-    Record(44, Id(rec), B(at::kMemberCount));
+    Record(44, Id(rec), B(Field_MemberCount_addr));
     Disturb();
 }
 // The count's low byte is what every caller reads; the bits above it are
@@ -175,8 +175,8 @@ int __cdecl StubPartyCount(unsigned slot) {
     return static_cast<int>((h & 0xFFFFFF00u) | n);
 }
 unsigned char __cdecl StubGateway() {
-    Record(46, Id(Sprite_Current), B(at::kCampFlag));
-    if (Hash() % 2) B(at::kCampFlag) = static_cast<unsigned char>(B(at::kCampFlag) ? 0 : 1 + (Hash() >> 8) % 0xFF);
+    Record(46, Id(Sprite_Current), B(AreaW3c_CampFlag_addr));
+    if (Hash() % 2) B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(B(AreaW3c_CampFlag_addr) ? 0 : 1 + (Hash() >> 8) % 0xFF);
     Disturb();
     return static_cast<unsigned char>(Hash() % 2 ? 0 : Hash() >> 8);
 }
@@ -187,14 +187,14 @@ unsigned char __cdecl StubCampCell() {
 }
 unsigned __cdecl StubAutoRepeat(unsigned pressed) {
     Record(48, pressed, Id(Sprite_Current));
-    if (Hash() % 4 == 0) SetWord(At(at::kPressed), Word(At(at::kPressed)) ^ (1u << (Hash() >> 8) % 16));
+    if (Hash() % 4 == 0) SetWord(At(Input_Pressed_addr), Word(At(Input_Pressed_addr)) ^ (1u << (Hash() >> 8) % 16));
     Disturb();
     const std::uint32_t h = Hash();
     return (h & ~0xA000u) | (h % 4 == 0 ? 0x8000u : 0) | ((h >> 2) % 4 == 0 ? 0x2000u : 0);
 }
 void __cdecl StubSound(unsigned short id) {
-    Record(49, id, B(at::kCursor));
-    if (Hash() % 2) B(at::kCursor) = static_cast<unsigned char>(Hash() % 3 ? (Hash() >> 8) % 8 : Hash() >> 8);
+    Record(49, id, B(MenuLists_Cursor_addr));
+    if (Hash() % 2) B(MenuLists_Cursor_addr) = static_cast<unsigned char>(Hash() % 3 ? (Hash() >> 8) % 8 : Hash() >> 8);
     Disturb();
 }
 void __cdecl StubWindowReset() {
@@ -312,9 +312,9 @@ const void* StubFor(std::uint32_t target) {
 }
 
 // The two dispatch blocks: every entry a recorder of its own.
-constexpr std::uint32_t kMenuBlock = at::kStates;   // 0x6672B4: 9 states, then 3 top-bar steps
+// kMenuBlock: now FieldMenu_States (symbols.toml). 0x6672B4: 9 states, then 3 top-bar steps
 constexpr unsigned kMenuEntries = 12;
-constexpr std::uint32_t kListBlock = at::kKinds;    // 0x66AF94: 21 kinds, then 11 + 3 + 3 + 3 + 3 states
+// kListBlock: now MenuList_Kinds (symbols.toml). 0x66AF94: 21 kinds, then 11 + 3 + 3 + 3 + 3 states
 constexpr unsigned kListEntries = 44;
 using Handler = void (__cdecl*)();
 template <unsigned Base, unsigned... I> constexpr auto Stubs(std::integer_sequence<unsigned, I...>) {
@@ -349,7 +349,7 @@ constexpr Call kIconCalls[] = {{0x9B, 0x5903F0}, {0xFF, 0x5903F0}};
 constexpr Call kTitleCalls[] = {{0x2D, 0x574AB0}, {0x3C, 0x497740}, {0x48, 0x57D800}, {0x63, 0x57D800}, {0x85, 0x516B30}};
 
 enum : unsigned {
-    kRun, kOpen, kTopBar, kInput, kBackdrop, kPlace, kReconcile, kListRun, kPanel, kMember, kMoney, kTime, kIcons,
+    kRun, kOpen, kTopBar, kInput, kBackdrop, kPlace, kReconcile, kListRun, kPanel, kMember, Party_Zenny_addr, kTime, kIcons,
     kTitle, kUpOff, kDown16, kLeftOff, kRight17, kRightOff, kDown38, kCount
 };
 
@@ -384,18 +384,18 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kIconIds, 8},           // constant data - random here, put back after: the icon ids
-    {at::kTitleIds, 8},          // the title ids
-    {at::kMemberRecord, 0x20},   // the character-to-record bytes
+    {FieldMenu_IconIds_addr, 8}, // constant data - random here, put back after: the icon ids
+    {FieldMenu_TitleIds_addr, 8}, // the title ids
+    {MoveScript_EffectState_addr, 0x20}, // the character-to-record bytes
     {0x66C7E8, 4},               // Game_Mode, Game_Step
     {at::kSavedParty, 0x10},     // the party as the menu opened on it (a Party_Count of 8 copies past the six)
     {0x7E0670, 8},               // Gfx_PacketNext, 0x7E0674..0x7E0677
-    {at::kPressed, 4},
+    {Input_Pressed_addr, 4},
     {at::kRecords, 0x318},       // the 22 window records
     {0x90358C, 8},               // the confirm and cancel words
     {0x903A50, 0x560},           // Config's colour and background, the eight character records
     {0x904040, 0x5D0},           // money, the party lists, 0x904152, the reserve's bytes
-    {at::kArea, 4},
+    {Game_AreaNumber_addr, 4},
     {0x905B60, 0x48},            // 0x905B60, 0x905B84, 0x905BA1, Field_InputFlags
     {0x905D90, 4},
     {0x929EC0, 0x60},            // Field_MemberCount, the menu's state block
@@ -450,12 +450,12 @@ bool Half() { return (Next() & 1) != 0; }
 // in both), the menu's state and step inside their tables, every record's
 // kind and state inside handler 6's.
 void Fix() {
-    SetPtr(at::kCurrent, Record_(Next() % 22));
+    SetPtr(BattleWinStates_Current_addr, Record_(Next() % 22));
     Sprite_Current = Record_(Next() % 22);
     Gfx_PacketNext = g_prim + Next() % 0x100;
-    B(at::kMemberCount) = static_cast<unsigned char>(Next() % 5);
-    B(at::kMenu) = static_cast<unsigned char>(Next() % 9);
-    B(at::kStep) = static_cast<unsigned char>(Next() % 3);
+    B(Field_MemberCount_addr) = static_cast<unsigned char>(Next() % 5);
+    B(BattleE1_Mode_addr) = static_cast<unsigned char>(Next() % 9);
+    B(FieldS_State_addr) = static_cast<unsigned char>(Next() % 3);
     for (unsigned i = 0; i < 22; ++i) {
         unsigned char* const r = Record_(i);
         r[2] = static_cast<unsigned char>(Next() % 5);
@@ -472,49 +472,49 @@ Args Seed(unsigned k) {
     g_arg_rec = nullptr;
     switch (k) {
     case kRun:
-        B(at::kMenu) = static_cast<unsigned char>(Next() % 9);
+        B(BattleE1_Mode_addr) = static_cast<unsigned char>(Next() % 9);
         break;
     case kOpen:
-        B(at::kMemberCount) = static_cast<unsigned char>(Next() % 5);
-        B(at::kOpenedAt) = static_cast<unsigned char>(Half() ? 1 : Half() ? 0 : Next());
+        B(Field_MemberCount_addr) = static_cast<unsigned char>(Next() % 5);
+        B(ScenaSc6_Load10_addr) = static_cast<unsigned char>(Half() ? 1 : Half() ? 0 : Next());
         for (unsigned i = 0; i < 8; ++i) {
             unsigned char* const r = At(at::kCharRecords + 0x10 + i * at::kCharRecordSize);
             if (Often()) SetWord(r + 8, (Word(r + 0x10) >> 2) + Next() % 3 - 1);
         }
         break;
     case kTopBar:
-        B(at::kStep) = static_cast<unsigned char>(Next() % 3);
+        B(FieldS_State_addr) = static_cast<unsigned char>(Next() % 3);
         break;
     case kInput: {
         static const unsigned char kCursors[] = {0, 1, 2, 3, 4, 5, 5, 5, 6, 6, 6, 6, 6, 7, 0x7F, 0x80, 0x81, 0xFF};
-        B(at::kCursor) = kCursors[Next() % sizeof kCursors];
-        B(at::kCampFlag) = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
-        B(at::kInputFlags) = static_cast<unsigned char>(Half() ? Next() & ~1u : Next() | 1);
-        SetWord(At(at::kArea), Half() ? 0xBD : Half() ? 0xBC : Next());
+        B(MenuLists_Cursor_addr) = kCursors[Next() % sizeof kCursors];
+        B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        B(Field_InputFlags_addr) = static_cast<unsigned char>(Half() ? Next() & ~1u : Next() | 1);
+        SetWord(At(Game_AreaNumber_addr), Half() ? 0xBD : Half() ? 0xBC : Next());
         const unsigned cancel = 1u << (Next() % 16), confirm = 1u << (Next() % 16);
-        SetWord(At(at::kCancel), cancel | (Half() ? Next() & 0xFFFF : 0));
-        SetWord(At(at::kConfirm), confirm | (Half() ? Next() & 0xFFFF : 0));
-        const unsigned c = Word(At(at::kCancel)), f = Word(At(at::kConfirm));
+        SetWord(At(Field_CancelButtons_addr), cancel | (Half() ? Next() & 0xFFFF : 0));
+        SetWord(At(Field_ConfirmButtons_addr), confirm | (Half() ? Next() & 0xFFFF : 0));
+        const unsigned c = Word(At(Field_CancelButtons_addr)), f = Word(At(Field_ConfirmButtons_addr));
         unsigned pressed = Next() & 0xFFFF;
         switch (Next() % 3) {
         case 0: pressed |= c; break;
         case 1:
             pressed = f & ~c;
             if (pressed == 0) {
-                SetWord(At(at::kCancel), 1);
-                SetWord(At(at::kConfirm), 2);
+                SetWord(At(Field_CancelButtons_addr), 1);
+                SetWord(At(Field_ConfirmButtons_addr), 2);
                 pressed = 2;
             }
             break;
         default: pressed &= ~(c | f); break;
         }
-        SetWord(At(at::kPressed), pressed);
+        SetWord(At(Input_Pressed_addr), pressed);
         break;
     }
     case kReconcile:
         for (unsigned i = 0; i < 6; ++i) {
             At(at::kSavedParty)[i] = static_cast<unsigned char>(Next() % 4 == 0 ? 0xFF : Next() % 5);
-            At(at::kParty)[i] = static_cast<unsigned char>(Next() % 4 == 0 ? 0xFF : Next() % 5);
+            At(Cond_Flags_addr + 0xd2)[i] = static_cast<unsigned char>(Next() % 4 == 0 ? 0xFF : Next() % 5);
         }
         break;
     case kListRun:
@@ -570,7 +570,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         if (out.log[i].what < 170) ++g_cover.logged[out.log[i].what];
     switch (k) {
     case kOpen:
-        if (Byte(out, at::kStep) == 5 && Byte(out, at::kMenu) == 5) ++g_cover.opened_at_5;
+        if (Byte(out, FieldS_State_addr) == 5 && Byte(out, BattleE1_Mode_addr) == 5) ++g_cover.opened_at_5;
         else ++g_cover.stepped;
         break;
     case kInput: {
@@ -580,7 +580,7 @@ void Cover(unsigned k, const State& in, const State& out) {
             if (out.log[i].what == 49 && out.log[i].a == 0x107) refused = true;
             if (out.log[i].what == 49 && out.log[i].a == 0x104) chose = true;
         }
-        if (reconciled && Byte(out, at::kCampChosen) == 1 && Byte(in, at::kCampChosen) != 1) ++g_cover.camped;
+        if (reconciled && Byte(out, MenuLists_CampChosen_addr) == 1 && Byte(in, MenuLists_CampChosen_addr) != 1) ++g_cover.camped;
         else if (reconciled) ++g_cover.cancelled;
         if (refused) ++g_cover.camp_refused;
         if (chose) ++g_cover.chosen;
@@ -643,13 +643,13 @@ void SelfTest() {
     static State saved, input, their_out, our_out;
     unsigned char* const saved_packet = Gfx_PacketNext;
     std::uint32_t saved_menu[kMenuEntries], saved_list[kListEntries];
-    std::memcpy(saved_menu, At(kMenuBlock), sizeof saved_menu);
-    std::memcpy(saved_list, At(kListBlock), sizeof saved_list);
+    std::memcpy(saved_menu, At(FieldMenu_States_addr), sizeof saved_menu);
+    std::memcpy(saved_list, At(MenuList_Kinds_addr), sizeof saved_list);
     Gfx_PacketNext = g_prim;
     Capture(saved);
     g = kStubs;
-    for (unsigned i = 0; i < kMenuEntries; ++i) SetPtr(kMenuBlock + 4 * i, reinterpret_cast<const void*>(kMenuStubs.h[i]));
-    for (unsigned i = 0; i < kListEntries; ++i) SetPtr(kListBlock + 4 * i, reinterpret_cast<const void*>(kListStubs.h[i]));
+    for (unsigned i = 0; i < kMenuEntries; ++i) SetPtr(FieldMenu_States_addr + 4 * i, reinterpret_cast<const void*>(kMenuStubs.h[i]));
+    for (unsigned i = 0; i < kListEntries; ++i) SetPtr(MenuList_Kinds_addr + 4 * i, reinterpret_cast<const void*>(kListStubs.h[i]));
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
     for (unsigned round = 0; round < kPerFunction * kCount; ++round) {
@@ -692,8 +692,8 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    std::memcpy(At(kMenuBlock), saved_menu, sizeof saved_menu);
-    std::memcpy(At(kListBlock), saved_list, sizeof saved_list);
+    std::memcpy(At(FieldMenu_States_addr), saved_menu, sizeof saved_menu);
+    std::memcpy(At(MenuList_Kinds_addr), saved_list, sizeof saved_list);
     Apply(saved);
     Gfx_PacketNext = saved_packet;
 

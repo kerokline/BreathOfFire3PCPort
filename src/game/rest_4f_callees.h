@@ -17,22 +17,22 @@ namespace rest_4f::at {
 // step, +2 the Config screen's own state (ConfigScreen_Run's index), +3 its
 // opening sub-state, +4 a frame counter, +5 the cursor (0, 1 the top bar's two
 // buttons; 2..7 the six rows; 8..13 the controller panel's six rows).
-constexpr std::uint32_t kScreenStep = 0x929F01;
-constexpr std::uint32_t kState = 0x929F02;
-constexpr std::uint32_t kOpenState = 0x929F03;
+// kScreenStep: now FieldS_State (symbols.toml).
+// kState: now FieldS_Step (symbols.toml).
+// kOpenState: now Rest2d_MenuSub (symbols.toml).
 constexpr std::uint32_t kCounter = 0x929F04;
-constexpr std::uint32_t kCursor = 0x929F05;
+// kCursor: now MenuLists_Cursor (symbols.toml).
 // The settings (docs/config-screen.md section 2 has the rows): row 0 0x903A58
 // (0..2), row 1 the window style 0x903A5A (0..3), row 2 the backdrop 0x903A5B
 // (0..3), row 3 0x903A59 and row 4 0x903A5E (0 / 1); 0x903A5C, 0x903A5D are
 // cleared with them by the defaults.
-constexpr std::uint32_t kSetting0 = 0x903A58;
-constexpr std::uint32_t kSetting3 = 0x903A59;
-constexpr std::uint32_t kStyle = 0x903A5A;
-constexpr std::uint32_t kBackdrop = 0x903A5B;
-constexpr std::uint32_t kSetting5C = 0x903A5C;
-constexpr std::uint32_t kSetting5D = 0x903A5D;
-constexpr std::uint32_t kSetting4 = 0x903A5E;
+// kSetting0: now ModeFlow_ConfigBytes (symbols.toml).
+// kSetting3: now Rest4f_Setting3 (symbols.toml).
+// kStyle: now BattleDraw_Colour (symbols.toml).
+// kBackdrop: now FieldS_Backdrop (symbols.toml).
+// kSetting5C: now Rest4f_Setting5C (symbols.toml).
+// kSetting5D: now BattleWinStates_LabelGate (symbols.toml).
+// kSetting4: now FieldE2_RunDefault (symbols.toml).
 // The button words: 0x903580 + 2 * n (n = the controller table's byte; 2 is
 // Field_MenuButton, 7 Field_ConfirmButtons, 8 Field_CancelButtons).
 constexpr std::uint32_t kButtons = 0x903580;
@@ -87,20 +87,20 @@ constexpr rdata::Const kKind0BStepY{0x5C41C0};      // 2.0f
 // (0x811440) the record's own.
 constexpr std::uint32_t kLeader = 0x802D40;
 constexpr std::uint32_t kKind02Word = 0x905E62;
-constexpr std::uint32_t kClutShadow = 0x80F580;
+// kClutShadow: now Gfx_ClutStrip (symbols.toml).
 constexpr std::uint32_t kClut7B = 0x811440;
 constexpr unsigned kClutBytes = 0x40;
 
 // --- the state tables this group's dispatchers read (symbols.toml [[data]]) ----------------
-constexpr std::uint32_t kConfigStates = 0x6536C0;     // ConfigScreen_States, 5
+// kConfigStates: now ConfigScreen_States (symbols.toml). ConfigScreen_States, 5
 constexpr unsigned kConfigStateCount = 5;
-constexpr std::uint32_t kConfigOpenStates = 0x6536D4; // ConfigScreen_OpenStates, 3
+// kConfigOpenStates: now ConfigScreen_OpenStates (symbols.toml). ConfigScreen_OpenStates, 3
 constexpr unsigned kConfigOpenCount = 3;
-constexpr std::uint32_t kKind02Modes = 0x653AD4;      // EffectKind02_Modes, 4 (by +2)
+// kKind02Modes: now EffectKind02_Modes (symbols.toml). EffectKind02_Modes, 4 (by +2)
 constexpr unsigned kKind02ModeCount = 4;
-constexpr std::uint32_t kKind02Mode1 = 0x653AE4;      // EffectKind02_Mode1Steps, 2 (by +3)
+// kKind02Mode1: now EffectKind02_Mode1Steps (symbols.toml). EffectKind02_Mode1Steps, 2 (by +3)
 constexpr unsigned kKind02Mode1Count = 2;
-constexpr std::uint32_t kKind02Mode3 = 0x653AEC;      // EffectKind02_Mode3Steps, 3 (by +3)
+// kKind02Mode3: now EffectKind02_Mode3Steps (symbols.toml). EffectKind02_Mode3Steps, 3 (by +3)
 constexpr unsigned kKind02Mode3Count = 3;
 
 }  // namespace rest_4f::at

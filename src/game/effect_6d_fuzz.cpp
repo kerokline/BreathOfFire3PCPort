@@ -233,8 +233,8 @@ const sh::Region kRegions[] = {
     {at::kTrackRing, at::kTrackEntries * at::kTrackStride + 4},   // the tracks' ring and the two heads
     {at::kBattleWord, 4},                                         // the battle dword sub-kind 0x64 scales
     {at::kEnemyRecords, at::kEnemyStride * 2},                    // the two enemy records +0xC may point at
-    {at::kClutRows, 2 * at::kClutWords},                          // CLUT rows 4 and 5 as loaded
-    {at::kClutRowsLive, 2 * at::kClutWords},                      // ... and live
+    {Gfx_ClutStripSource_addr + 0x800, 2 * at::kClutWords},       // CLUT rows 4 and 5 as loaded
+    {Gfx_ClutStrip_addr + 0x800, 2 * at::kClutWords},             // ... and live
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -306,8 +306,8 @@ void Seed(unsigned k) {
     }
     // the leader about the cell seven times in eight
     if (sh::Next() % 8 != 0) {
-        SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(Around(cx)));
-        SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(Around(cz)));
+        SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(Around(cx)));
+        SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(Around(cz)));
     }
     if (sh::Half()) Field_Request = 0;
     if (sh::Half()) Frame_Counter &= ~3u;
@@ -321,7 +321,7 @@ void Seed(unsigned k) {
     // followers' x cells
     for (unsigned r = 0; r < at::kFollowerCount; ++r) {
         Mem(at::kTrackHeads)[r] = static_cast<unsigned char>(sh::Next() % at::kTrackEntries);
-        unsigned char* const f = Mem(at::kFollowers + at::kFollowerStride * r);
+        unsigned char* const f = Mem(Sprite_Objects_addr + 0xd8 + at::kFollowerStride * r);
         const U fx = Long(f);
         const std::int32_t cell = static_cast<std::int32_t>(fx + 0x4000u) >> 16;
         const unsigned h = Mem(at::kTrackHeads)[r];
@@ -397,8 +397,8 @@ void Disturb(U h) {
     switch (h % 8) {
     case 0: SetWord(s + 0x30, (v & 1) ? 0xC0u - ((v >> 1) & 0x10) : v >> 1); break;
     case 1: s[8] = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 2: SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(v)); break;
-    case 3: SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(v)); break;
+    case 2: SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(v)); break;
+    case 3: SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(v)); break;
     case 4: SetWord(s + ((v & 1) ? 0x36 : 0x3A), v >> 1); break;
     case 5: s[9] = static_cast<unsigned char>(v); break;
     case 6: s[0xA] = static_cast<unsigned char>(v); break;

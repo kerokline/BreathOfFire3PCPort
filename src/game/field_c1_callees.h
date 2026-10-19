@@ -22,10 +22,10 @@ constexpr std::uint32_t kFc2Place = bof3::addr::EffectKind30_ClaimCells;        
 // EffectKind14_Op, EffectKind3C_Op.
 
 // Data read in place (the image's tables: never written by the field code).
-constexpr std::uint32_t kWalkDelta = 0x6696DC;       // s32 x, z per direction, 8 bytes apart (event_ops_callees.h's kWalkDelta)
-constexpr std::uint32_t kStoryFlags = 0x904030;      // Cond_Flags + 0xA0: the story flags Flags_Clear is handed
-constexpr std::uint32_t kKind1BPalette = 0x80D440;   // EffectKind1B_Start's Sprite_LoadPalette destination (Gfx_ClutStrip's)
-constexpr std::uint32_t kAreaCells = 0x8CB582;       // AreaMap_Header's word +2: the cell words' offset, in pairs of words
+// kWalkDelta: now MoveCmd_F9Steps (symbols.toml). s32 x, z per direction, 8 bytes apart (event_ops_callees.h's kWalkDelta)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0: the story flags Flags_Clear is handed
+// kKind1BPalette: now Gfx_ClutStripSource[0xf60] (symbols.toml). EffectKind1B_Start's Sprite_LoadPalette destination (Gfx_ClutStrip's)
+// kAreaCells: now AreaMap_Header[2] (symbols.toml). AreaMap_Header's word +2: the cell words' offset, in pairs of words
 constexpr std::uint32_t kKind2ZHigh = 0x905E62;      // Field_Kind2Z's whole part (a word add; the name is a macro here)
 constexpr std::uint32_t kKind2XHigh = 0x905E66;      // Field_Kind2X's whole part
 constexpr std::uint32_t kRecordStride = 0xA4;        // Sprite_Objects' and Sprite_ObjectsExtra's

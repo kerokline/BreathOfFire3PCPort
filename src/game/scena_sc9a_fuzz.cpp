@@ -228,20 +228,20 @@ const sh::Callee kCallees[] = {
 #undef SC9A_RAW
 
 // The state and run tables take no arguments: swapped for recorders.
-const sh::DataTable kTables[] = {{at::kStates, at::kStateCount}, {at::kRuns, at::kRunCount}};
+const sh::DataTable kTables[] = {{Scena09_States_addr, at::kStateCount}, {Scena09_Runs_addr, at::kRunCount}};
 
 // Beyond the standard regions: the selector, Cond_ByteFE, the music byte,
 // Field_ScriptFlags2, Field_MenuButton, Field_Kind2Hold, run 11's slot cell,
 // and the object table the seed writes stand-ins into.
 const sh::Region kRegions[] = {
-    {at::kSelector, 4},
-    {at::kCondFE, 1},
-    {at::kMusicCurrent, 1},
-    {at::kScriptFlags2, 2},
-    {at::kMenuButton, 2},
-    {at::kHold, 1},
-    {at::kSlot11, 4},
-    {at::kObjects, 4 * at::kObjectCount},
+    {AreaW0b_PartySet_addr, 4},
+    {Cond_ByteFE_addr, 1},
+    {AreaW1f_MusicCurrent_addr, 1},
+    {Field_ScriptFlags2_addr, 2},
+    {Field_MenuButton_addr, 2},
+    {Field_Kind2Hold_addr, 1},
+    {Scena09_Slot11_addr, 4},
+    {Scena09_Objects_addr, 4 * at::kObjectCount},
 };
 
 unsigned char& B(std::uint32_t a) { return *sh::Mem(a); }
@@ -344,44 +344,44 @@ unsigned g_k;
 void Seed(unsigned k) {
     g_k = k;
     // The stand-ins into the object table.
-    for (unsigned i = 0; i < at::kObjectCount; ++i) SetD(at::kObjects + 4 * i, KeyOf(kObjectEntries[i]));
+    for (unsigned i = 0; i < at::kObjectCount; ++i) SetD(Scena09_Objects_addr + 4 * i, KeyOf(kObjectEntries[i]));
     // The cells the chapter compares, each most of the time at a value a
     // branch tests.
-    if (sh::Often()) SetW(at::kArea, AnArea());
+    if (sh::Often()) SetW(Game_AreaNumber_addr, AnArea());
     if (sh::Often()) B(at::kCounters + 1) = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3));
     if (sh::Often()) B(at::kCounters + 2) = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3));
     B(at::kCounters + 3) = static_cast<unsigned char>(ACount3());
-    if (sh::Often()) B(at::kRequest) = static_cast<unsigned char>(SH_PICK(0, 2, 6));
-    if (sh::Half()) SetW(at::kWait, 0);
-    if (sh::Often()) B(at::kSelector) = static_cast<unsigned char>(ASelector());
-    if (sh::Often()) B(at::kCondFD) = static_cast<unsigned char>(AnFD());
-    if (sh::Half()) B(at::kHold) = 0;
-    if (sh::Half()) B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) & 0xF8);
-    if (sh::Often()) B(at::kMember1Byte) = static_cast<unsigned char>(SH_PICK(3, 2, 0));
-    if (sh::Often()) B(at::kMember2Byte) = static_cast<unsigned char>(SH_PICK(3, 2, 0));
-    if (sh::Half()) SetW(at::kInputPressed, 0);
-    if (sh::Half()) SetW(at::kMenuButton, sh::Half() ? 0 : 1u << (sh::Next() % 16));
+    if (sh::Often()) B(Field_Request_addr) = static_cast<unsigned char>(SH_PICK(0, 2, 6));
+    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
+    if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(ASelector());
+    if (sh::Often()) B(Cond_ByteFD_addr) = static_cast<unsigned char>(AnFD());
+    if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
+    if (sh::Half()) B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(B(Field_ScriptFlags2_addr) & 0xF8);
+    if (sh::Often()) B(Field_Members_addr + 0x13b) = static_cast<unsigned char>(SH_PICK(3, 2, 0));
+    if (sh::Often()) B(ObjTrio_addr + 0x3cf) = static_cast<unsigned char>(SH_PICK(3, 2, 0));
+    if (sh::Half()) SetW(Input_Pressed_addr, 0);
+    if (sh::Half()) SetW(Field_MenuButton_addr, sh::Half() ? 0 : 1u << (sh::Next() % 16));
     for (unsigned i = 0; i < 3; ++i)
-        if (sh::Often()) B(at::kPartyList + i) = static_cast<unsigned char>(SH_PICK(7, 2, 4, 8, 5, 1));
-    if (sh::Often()) SetD(at::kObjTrioY, AnY());
-    if (sh::Often()) SetW(at::kTimer, SH_PICK(0, 1, 2, 0x5F));
-    if (sh::Often()) B(at::kSlot11) = static_cast<unsigned char>(sh::Next() % 20);
-    if (B(at::kCounters + 3) < 20 && sh::Half()) B(at::kEffects + B(at::kCounters + 3) * at::kEffectStride) = 0;
-    if (B(at::kSlot11) < 20 && sh::Half())
-        B(at::kEffects + B(at::kSlot11) * at::kEffectStride) = static_cast<unsigned char>(sh::Next() & 0xFE);
+        if (sh::Often()) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(SH_PICK(7, 2, 4, 8, 5, 1));
+    if (sh::Often()) SetD(ObjTrio_addr + 0x3c, AnY());
+    if (sh::Often()) SetW(MoveScript_PartyRecords_addr + 0x66, SH_PICK(0, 1, 2, 0x5F));
+    if (sh::Often()) B(Scena09_Slot11_addr) = static_cast<unsigned char>(sh::Next() % 20);
+    if (B(at::kCounters + 3) < 20 && sh::Half()) B(Effect_Objects_addr + B(at::kCounters + 3) * at::kEffectStride) = 0;
+    if (B(Scena09_Slot11_addr) < 20 && sh::Half())
+        B(Effect_Objects_addr + B(Scena09_Slot11_addr) * at::kEffectStride) = static_cast<unsigned char>(sh::Next() & 0xFE);
     switch (k) {
     case kEnterArea:
-        if (sh::Often()) SetW(at::kArea, SH_PICK(0x25, 0x27, 0x29, 0x35, 0x37, 0x45, 0x31, 0x64, 0x76, 0x77));
+        if (sh::Often()) SetW(Game_AreaNumber_addr, SH_PICK(0x25, 0x27, 0x29, 0x35, 0x37, 0x45, 0x31, 0x64, 0x76, 0x77));
         if (sh::Often()) B(at::kCounters + 2) = static_cast<unsigned char>(SH_PICK(1, 2));
         break;
-    case kFrame: B(at::kState) = static_cast<unsigned char>(sh::Next() % 3); break;
-    case kRun: B(at::kRun) = static_cast<unsigned char>(sh::Next() % 17); break;
+    case kFrame: B(MoveScript_PartyRecords_addr + 0x62) = static_cast<unsigned char>(sh::Next() % 3); break;
+    case kRun: B(MoveScript_Var7_addr) = static_cast<unsigned char>(sh::Next() % 17); break;
     case kObjectTrigger: sh::SpriteRecord(0)[0x86] = static_cast<unsigned char>(sh::Next() % 16); break;
     case kObject01: case kObject02: case kObject03: case kObject04: break;
     default:
         if (RunOf(k)) {
-            B(at::kStep) = static_cast<unsigned char>(AStep(k));
-            PairCount(RunOf(k), B(at::kStep));
+            B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(AStep(k));
+            PairCount(RunOf(k), B(MoveScript_PartyRecords_addr + 0x65));
         }
         break;
     }
@@ -402,34 +402,34 @@ void Disturb(std::uint32_t h) {
     case 0: B(at::kCounters + 1 + (h >> 12) % 3) = static_cast<unsigned char>((h >> 24) & 1 ? v % 20 : v); break;
     case 1: {
         static const std::uint16_t kAreas[] = {0x25, 0x27, 0x29, 0x35, 0x37, 0x45, 0x31, 0x64, 0x76, 0x77, 0x2D, 0x10};
-        SetW(at::kArea, kAreas[(h >> 16) % 12]);
+        SetW(Game_AreaNumber_addr, kAreas[(h >> 16) % 12]);
         break;
     }
-    case 2: B(at::kSelector) = static_cast<unsigned char>(7 + (h >> 16) % 12); break;
-    case 3: B(at::kEffects + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
-    case 4: B(at::kHold) = static_cast<unsigned char>(v & 1); break;
+    case 2: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(7 + (h >> 16) % 12); break;
+    case 3: B(Effect_Objects_addr + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;
+    case 4: B(Field_Kind2Hold_addr) = static_cast<unsigned char>(v & 1); break;
     case 5: {
         static const unsigned char kFD[] = {0, 1, 2, 4};
-        B(at::kCondFD) = kFD[(h >> 16) % 4];
+        B(Cond_ByteFD_addr) = kFD[(h >> 16) % 4];
         break;
     }
     case 6: {
         static const unsigned char kBits[] = {8, 0x80, 0x40, 2, 4};
-        B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) ^ kBits[(h >> 16) % 5]);
+        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) ^ kBits[(h >> 16) % 5]);
         break;
     }
-    case 7: B(at::kSlot11) = static_cast<unsigned char>(v % 20); break;
-    case 8: B((h >> 24) & 1 ? at::kMember1Byte : at::kMember2Byte) = static_cast<unsigned char>(2 + (v % 3)); break;
+    case 7: B(Scena09_Slot11_addr) = static_cast<unsigned char>(v % 20); break;
+    case 8: B((h >> 24) & 1 ? (Field_Members_addr + 0x13b) : (ObjTrio_addr + 0x3cf)) = static_cast<unsigned char>(2 + (v % 3)); break;
     case 9: {
         static const unsigned char kKinds[] = {7, 2, 4, 8, 5};
-        B(at::kPartyList + (h >> 12) % 3) = kKinds[(h >> 16) % 5];
+        B(Cond_Flags_addr + 0xd2 + (h >> 12) % 3) = kKinds[(h >> 16) % 5];
         break;
     }
-    case 10: B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) ^ (1u << ((h >> 16) % 3))); break;
-    case 11: SetW((h >> 24) & 1 ? at::kInputPressed : at::kMenuButton, (h >> 16) & 1 ? 0 : 1u << ((h >> 17) % 16)); break;
+    case 10: B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(B(Field_ScriptFlags2_addr) ^ (1u << ((h >> 16) % 3))); break;
+    case 11: SetW((h >> 24) & 1 ? Input_Pressed_addr : Field_MenuButton_addr, (h >> 16) & 1 ? 0 : 1u << ((h >> 17) % 16)); break;
     case 12: {
         static const std::uint32_t kY[] = {0x1FFFFFF, 0x2000000, 0x2000001, 0x7FFFFFF, 0x8000000};
-        SetD(at::kObjTrioY, kY[(h >> 16) % 5]);
+        SetD(ObjTrio_addr + 0x3c, kY[(h >> 16) % 5]);
         break;
     }
     default: B(at::kCounters + 3) = static_cast<unsigned char>(v % 20); break;
@@ -455,14 +455,14 @@ void Settle() {
     const std::uint32_t n = sh::Noise();
     if (n & 1) {
         static const std::uint16_t kAreas[] = {0x25, 0x27, 0x29, 0x35, 0x37, 0x45, 0x31, 0x64, 0x76, 0x77, 0x57, 0x73};
-        SetW(at::kArea, kAreas[(n >> 8) % 12]);
+        SetW(Game_AreaNumber_addr, kAreas[(n >> 8) % 12]);
     }
     if (n & 2) B(at::kCounters + 2) = static_cast<unsigned char>(1 + (n >> 16) % 2);
     if (n & 4) {
         static const unsigned char kFD[] = {0, 1, 2, 4};
-        B(at::kCondFD) = kFD[(n >> 20) % 4];
+        B(Cond_ByteFD_addr) = kFD[(n >> 20) % 4];
     }
-    if (n & 8) SetD(at::kObjTrioY, (n >> 24) & 1 ? 0x2000000 : 0x2000001);
+    if (n & 8) SetD(ObjTrio_addr + 0x3c, (n >> 24) & 1 ? 0x2000000 : 0x2000001);
 }
 
 }  // namespace

@@ -61,7 +61,7 @@ void SetLong(U a, U v) { std::memcpy(At(a), &v, 4); }
 
 // Effect record 6's cells, the menu's state.
 unsigned char& R6(unsigned offset) { return B(at::kRecord6 + offset); }
-U R6Address(unsigned offset) { return at::kRecord6 + offset; }
+U R6Address(unsigned offset) { return Effect_Objects_addr + 0x300 + offset; }
 
 // jmp [table + 4 * index], unchecked in the original: the table's words read in
 // place (the fuzz swaps them for recorders), a Fatal past its entries, where
@@ -169,7 +169,7 @@ extern "C" void __cdecl ExtraSlots_PickSlot(void) {
     Label((R6(7) & 1) ? at::kLabelB : at::kLabelA);
     const unsigned char b = R6(7);
     if (!(b & 0x80)) {
-        const unsigned char held = (b & 1) ? B(at::kExtraItem) : B(at::kExtraAccessory);
+        const unsigned char held = (b & 1) ? CharStats_ExtraItem : B(at::kExtraAccessory);
         SetWord(R6Address(0x2C), held ? held + 4u : 0xFFFFu);
     }
     Hand(0x1C, static_cast<int>(((b & 1u) << 4) + 0x58));
@@ -241,12 +241,12 @@ extern "C" void __cdecl ExtraSlots_PickItem(void) {
         const unsigned short pressed = Input_Pressed;
         if (Field_ConfirmButtons & pressed) {
             const unsigned char id = IdAt(R6Address(0x3A));
-            if (KindOf(id) == 0xA && B(at::kExtraItem) != id) {
+            if (KindOf(id) == 0xA && CharStats_ExtraItem != id) {
                 SH_CALL(Inventory_Remove)(3, id, 1);
-                const unsigned char old = B(at::kExtraItem);
+                const unsigned char old = CharStats_ExtraItem;
                 if (old) SH_CALL(Inventory_Add)(3, old, 1);
-                B(at::kExtraItem) = id;
-                B(at::kExtraCount) = 1;
+                CharStats_ExtraItem = id;
+                CharStats_ExtraCount = 1;
                 S count = 0;
                 for (U i = 0; i < 0x80; ++i)
                     if (KindOf(B(at::kAccessoryIds + i)) == 0xA) ++count;
@@ -401,7 +401,7 @@ extern "C" void __cdecl Effect_ResetFirstSeven(void) {
         r[4] = 0;
     }
     for (unsigned i = 7; i < 0x14; ++i) SH_CALL(Effect_ReleaseAt)(static_cast<unsigned char>(i));
-    B(at::kRecord2State) = 2;
+    Effect_Objects[0x81] = 2;
 }
 
 // original 0x52CE60: the 36-byte record of kind & 0xFF from 0x66A6A0. The
@@ -411,7 +411,7 @@ extern "C" void __cdecl Effect_ResetFirstSeven(void) {
 // idiv threshold) * points, divided by 10 (signed; every value is small and
 // not negative), in eax whole.
 extern "C" unsigned long __cdecl FieldPanel_KindPoints(unsigned kind, unsigned count) {
-    const U record = at::kKindRecords + 36u * (kind & 0xFF);
+    const U record = Fish_Kinds_addr + 0x10 + 36u * (kind & 0xFF);
     const unsigned threshold = B(record + 0xF);
     const unsigned low = count & 0xFFFF;
     if (low >= threshold) return (count & 0xFFFF0000u) | Word(record + 0x12);

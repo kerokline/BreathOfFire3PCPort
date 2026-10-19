@@ -21,13 +21,13 @@ constexpr std::uint32_t kWaveMark = bof3::addr::EffectKind18Sub41_DrawPanels;   
 constexpr std::uint32_t kWaveStep = bof3::addr::EffectKind18Sub41_DrawRings;    // R3G's: (byte +0xA) - the same state
 
 // --- the leader (ObjTrio record 0) and the map cells --------------------------------
-constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio +0x34: the leader's x, 16.16
-constexpr std::uint32_t kLeaderZ = 0x802D78;        // ObjTrio +0x38: its z, 16.16
-constexpr std::uint32_t kLeaderHeight = 0x802D7E;   // ObjTrio +0x3E: the word sub-kind 0x3D sets from the ground
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio +0x34: the leader's x, 16.16
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio +0x38: its z, 16.16
+// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). ObjTrio +0x3E: the word sub-kind 0x3D sets from the ground
 constexpr std::uint32_t kLeaderCellZ = 0x905E62;    // the high word of Field_Kind2Z (s16): sub-kind 0x3D's row
 constexpr std::uint32_t kLeaderCellX = 0x905E66;    // the high word of Field_Kind2X (s16): its column
-constexpr std::uint32_t kStoryFlags = 0x904030;     // the story flag row Flags_Test / Flags_Set are handed
-constexpr std::uint32_t kStep = 0x8034E5;           // the chapter's step byte (beside MoveScript_Var7 0x8034E4)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flag row Flags_Test / Flags_Set are handed
+// kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). the chapter's step byte (beside MoveScript_Var7 0x8034E4)
 
 // --- the panels' variant tables, indexed by the spawn's x cell (+0x36, movsx) -------
 // Two bytes a variant (the cell x, z put into +0x36, +0x3A). The room is the

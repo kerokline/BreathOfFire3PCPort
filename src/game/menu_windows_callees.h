@@ -21,34 +21,34 @@ namespace menu_windows {
 
 namespace at {
 
-constexpr std::uint32_t kColour = 0x903A5A;       // s8: the window colour (Config), a CLUT row
+// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour (Config), a CLUT row
 constexpr std::uint32_t kCharRecords = 0x903A70;  // CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kPrintBuf = 0x904BA0;     // the sprintf buffer every number goes through
-constexpr std::uint32_t kGold = 0x904058;         // u32: the party's money
-constexpr std::uint32_t kPartyLists = 0x904062;   // the party's 3-byte lists (item_use_callees.h)
-constexpr std::uint32_t kMemberRecord = 0x66972C; // u8 per party entry: its record (MoveScript_EffectState)
-constexpr std::uint32_t kMenuMember = 0x929F06;   // s8: the member the field menu is on
+// kGold: now Party_Zenny (symbols.toml). u32: the party's money
+// kPartyLists: now Cond_Flags[0xd2] (symbols.toml). the party's 3-byte lists (item_use_callees.h)
+// kMemberRecord: now MoveScript_EffectState (symbols.toml). u8 per party entry: its record (MoveScript_EffectState)
+// kMenuMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the member the field menu is on
 constexpr std::uint32_t kYesNo = 0x929F0B;        // u8: Menu_YesNo's selection, 1 Yes
-constexpr std::uint32_t kLeaderX = 0x802D76;      // u16: the leader's map x (ObjTrio +0x36)
-constexpr std::uint32_t kLeaderZ = 0x802D7A;      // u16: the leader's map z (+0x3A)
-constexpr std::uint32_t kClutShadow = 0x80B7A8;   // 64 bytes a CLUT row: entry 0 is the window's line colour
+// kLeaderX: now ObjTrio[0x36] (symbols.toml). u16: the leader's map x (ObjTrio +0x36)
+// kLeaderZ: now ObjTrio[0x3a] (symbols.toml). u16: the leader's map z (+0x3A)
+// kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 64 bytes a CLUT row: entry 0 is the window's line colour
 // Named in symbols.toml, whose names are macros here (by address).
-constexpr std::uint32_t kFrameCounter = 0x937F94;   // Frame_Counter
-constexpr std::uint32_t kInputPressed = 0x7E1BEC;   // Input_Pressed
-constexpr std::uint32_t kConfirmButtons = 0x90358E; // Field_ConfirmButtons
-constexpr std::uint32_t kCancelButtons = 0x903590;  // Field_CancelButtons
-constexpr std::uint32_t kInputFlags = 0x905BA2;     // Field_InputFlags
-constexpr std::uint32_t kCondFA = 0x8034E0;         // Cond_ByteFA
-constexpr std::uint32_t kButtonSets = 0x66383C;     // Menu_ButtonSets
+// kFrameCounter: now Frame_Counter (symbols.toml). Frame_Counter
+// kInputPressed: now Input_Pressed (symbols.toml). Input_Pressed
+// kConfirmButtons: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons
+// kCancelButtons: now Field_CancelButtons (symbols.toml). Field_CancelButtons
+// kInputFlags: now Field_InputFlags (symbols.toml). Field_InputFlags
+// kCondFA: now Cond_ByteFA (symbols.toml). Cond_ByteFA
+// kButtonSets: now Menu_ButtonSets (symbols.toml). Menu_ButtonSets
 constexpr std::uint32_t kVerbPointers = 0x6637E4;   // Menu_VerbPointers
 
 // MsgBoxState (symbols.toml block MsgBoxState, window_task_callees.h).
 constexpr std::uint32_t kMessage = 0x7DEE48;      // u16: the message index
-constexpr std::uint32_t kBoxText = 0x7DEE4C;      // the box string base
+// kBoxText: now Msgbox_Base (symbols.toml). the box string base
 constexpr std::uint32_t kListText = 0x7DEE50;     // the stepper pointer, the list's text
-constexpr std::uint32_t kListSet = 0x7DEE65;      // u8: the list's geometry set
-constexpr std::uint32_t kListCount = 0x7DEE66;    // s8: the last item's index
+// kListSet: now MenuWindows_ListSet (symbols.toml). u8: the list's geometry set
+// kListCount: now MenuWindows_ListCount (symbols.toml). s8: the last item's index
 constexpr std::uint32_t kCurrent = 0x905B84;      // the window record Field_RunTaskRecords is running
 constexpr std::uint32_t kSetXY = 0x66AE2C;        // 6-byte records by set: s16 x, s16 y, s16 y stride
 

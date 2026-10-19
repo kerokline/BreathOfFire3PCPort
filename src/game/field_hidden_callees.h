@@ -36,28 +36,28 @@ namespace field_hidden {
 namespace at {
 
 // .data
-constexpr std::uint32_t kForm0States = 0x65FBC0;    // PartyAction5_Form0States: 3 entries by +2
-constexpr std::uint32_t kForms = 0x65FC18;          // PartyAction5_Forms: 3 entries by u16 +0x2C
+// kForm0States: now PartyAction5_Form0States (symbols.toml). PartyAction5_Form0States: 3 entries by +2
+// kForms: now PartyAction5_Forms (symbols.toml). PartyAction5_Forms: 3 entries by u16 +0x2C
 constexpr std::uint32_t kSlotChance = 0x669CB0;     // Encounter_SlotChance: u8 x 8
-constexpr std::uint32_t kDirSteps = 0x6697B0;       // Field_DirectionSteps: two longs a direction, 8 rows, read unchecked
+// kDirSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: two longs a direction, 8 rows, read unchecked
 // ObjTrio's first member, +0x137 (the leader's); Member_EffectState waits while it is 8.
 constexpr std::uint32_t kLeader137 = 0x802E77;
 // The scratch bytes (DamageScratch, PSX 0x1F800000): byte 0 is AreaMap_Slope's
 // "sloped" flag, left there by MapView_SlopeAt.
 constexpr std::uint32_t kScratch = 0x903850;
 // Sprite_Objects' / Sprite_ObjectsExtra's byte +0x80 (bit 0 "touched").
-constexpr std::uint32_t kObjectFlag = 0x7DEF00;
-constexpr std::uint32_t kExtraFlag = 0x802080;
+// kObjectFlag: now Sprite_Objects[0x80] (symbols.toml).
+// kExtraFlag: now Sprite_ObjectsExtra[0x80] (symbols.toml).
 constexpr unsigned kObjectStride = 0xA4;
 
 // --- The encounter placement (inventory_ops_callees.h names the same) ------
 constexpr std::uint32_t kScratchSprite = 0x6BDFF0;  // the sprite Encounter_Place makes Sprite_Current
 constexpr std::uint32_t kFacing = 0x6BE070;         // u8: the formation's facing 0..3
-constexpr std::uint32_t kPlaced = 0x6BE071;         // u8: enemies placed / reachable
-constexpr std::uint32_t kEnemyCount = 0x6BE084;     // u8: Encounter_FillSlots' answer
-constexpr std::uint32_t kRowUsed = 0x6BE088;        // unsigned char *: the row Encounter_PickRow chose
-constexpr std::uint32_t kCentreX = 0x903780;        // i32 16.16: the fight's centre
-constexpr std::uint32_t kCentreZ = 0x903784;
+// kPlaced: now FieldHidden_Placed (symbols.toml). u8: enemies placed / reachable
+// kEnemyCount: now FieldHidden_EnemyCount (symbols.toml). u8: Encounter_FillSlots' answer
+// kRowUsed: now FieldHidden_RowUsed (symbols.toml). unsigned char *: the row Encounter_PickRow chose
+// kCentreX: now BossSi_CentreX (symbols.toml). i32 16.16: the fight's centre
+// kCentreZ: now BossSi_CentreZ (symbols.toml).
 constexpr std::uint32_t kMemberPos = 0x7E06E0;      // i32 x, z per member
 constexpr std::uint32_t kPartyList2 = 0x904065;     // u8 x 3: the members' ids the placement reads
 constexpr std::uint32_t kBattleFacing = 0x904AAC;   // u8: kFacing, copied

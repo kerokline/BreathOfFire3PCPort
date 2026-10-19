@@ -245,9 +245,9 @@ const sh::Callee kCallees[] = {
 
 // The chapter's tables, read in place.
 const sh::DataTable kTables[] = {
-    {at::kRuns, at::kRunCount},             // Scena01_Runs
-    {at::kObjects, at::kObjectCount},       // Scena01_ObjectHandlers
-    {at::kCellHandlers, at::kCellCount},    // Scena01_CellHandlers
+    {Scena01_Runs_addr, at::kRunCount},     // Scena01_Runs
+    {Scena01_ObjectHandlers_addr, at::kObjectCount}, // Scena01_ObjectHandlers
+    {Scena01_CellHandlers_addr, at::kCellCount}, // Scena01_CellHandlers
 };
 
 // What the bank reads and writes beyond the harness's 22 standard regions.
@@ -319,7 +319,7 @@ void Seed(unsigned k) {
     // Every round: the effect slot a real one, the member index 0..7, the
     // object hook's index in each object the kObject shape may pass.
     M(at::kEffectSlot)[0] = static_cast<unsigned char>(EffectSlot(sh::Next()));
-    M(at::kScene06Member)[0] = static_cast<unsigned char>(sh::Next() % 8);
+    M(MoveScript_EffectState_addr + 0x4)[0] = static_cast<unsigned char>(sh::Next() % 8);
     for (unsigned i = 0; i < 4; ++i) sh::SpriteRecord(i)[0x86] = static_cast<unsigned char>(sh::Next() % at::kObjectCount);
     if (sh::Half()) sh::SetPointer(0x937F88, sh::ObjectOf(sh::Next()));   // Sprite_Current at a party object
     // The waits, each on its boundary two in three.
@@ -332,7 +332,7 @@ void Seed(unsigned k) {
     if (sh::Often()) M(0x929F12)[0] = 0;
     if (sh::Half()) SetWordAt(0x7E1BEC, SH_PICK(0, 0x40, 0x41));
     if (sh::Often()) M(0x929EC0)[0] = static_cast<unsigned char>(SH_PICK(2, 3, 1, 4));
-    if (sh::Half()) SetWordAt(at::kTimer, SH_PICK(0, 1, 0x6C, 0x6D, 0xB2, 0xB3, 0xFFFF));
+    if (sh::Half()) SetWordAt(MoveScript_PartyRecords_addr + 0x66, SH_PICK(0, 1, 0x6C, 0x6D, 0xB2, 0xB3, 0xFFFF));
     if (sh::Half()) M(0x8034F1)[0] = 4;    // Cond_ByteFD
     if (sh::Half()) SetWordAt(at::kChoiceWord, 2);
     if (sh::Half()) M(at::kChoiceBits)[0] |= 2;
@@ -352,25 +352,25 @@ void Seed(unsigned k) {
         const unsigned r = sh::Next() % 3;
         if (r == 0 && s.n_pairs) {
             const unsigned i = sh::Next() % s.n_pairs;
-            M(at::kStep)[0] = s.pairs[i][0];
+            M(MoveScript_PartyRecords_addr + 0x65)[0] = s.pairs[i][0];
             M(at::kCounters)[0] = s.pairs[i][1];
         } else {
-            M(at::kStep)[0] = r != 2 ? s.steps[sh::Next() % s.n] : static_cast<unsigned char>(sh::Next());
+            M(MoveScript_PartyRecords_addr + 0x65)[0] = r != 2 ? s.steps[sh::Next() % s.n] : static_cast<unsigned char>(sh::Next());
         }
     }
     // The places Scena01_Scene08 step 0 and Scena01_Scene09 steps 3, 0x1A, 0x2D test.
     if (std::strcmp(kClones[k].name, "Scena01_Scene08") == 0 && sh::Half()) {
-        M(at::kStep)[0] = 0;
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = 0;
         move_script::SetWord(lead + 0x36, SH_PICK(0x1A, 0x1B, 0x1C, 0x1D));
         move_script::SetWord(lead + 0x3A, SH_PICK(0x22, 0x23, 0x24, 0x8000));
     }
     if (std::strcmp(kClones[k].name, "Scena01_Scene09") == 0 && sh::Half()) {
-        M(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(3, 0x1A, 0x2D));
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(SH_PICK(3, 0x1A, 0x2D));
         move_script::SetWord(lead + 0x36, SH_PICK(0x3C, 0x3D, 0x3E, 0x3F, 0x40, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F));
         move_script::SetWord(lead + 0x3A, SH_PICK(0xC, 0xD, 0xE, 0x2A, 0x2B));
     }
     if (std::strcmp(kClones[k].name, "Scena01_Scene0D") == 0 && sh::Half()) {
-        M(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(0xC, 0xF, 0x12));
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(SH_PICK(0xC, 0xF, 0x12));
         M(at::kCounters + 3)[0] = static_cast<unsigned char>(SH_PICK(0x14, 0x19, 0x13));
         if (sh::Often()) M(at::kChoiceBits)[0] |= 2;
     }
@@ -384,7 +384,7 @@ void Args(unsigned k, std::uint32_t* a) {
     const char* const n = kClones[k].name;
     if (std::strncmp(n, "Scena01_Object", 14) == 0 && std::strcmp(n, "Scena01_ObjectHook") != 0) {
         a[0] = Key(sh::SpriteRecord(a[0]));
-        a[1] = at::kStartWord;
+        a[1] = Cond_Flags_addr + 0x8;
     } else if (std::strcmp(n, "Scena01_PlaceEffect") == 0 && (a[1] & 1)) {
         a[0] = (a[1] & 2) ? 0x93 : 0x92;
     }
@@ -415,7 +415,7 @@ void Disturb(std::uint32_t h) {
         break;
     case 7: M(0x905E20)[0] = static_cast<unsigned char>(b); break;          // Cond_ByteFE
     case 8: M(0x904CD0)[0] = static_cast<unsigned char>(b); break;
-    default: M(at::kStep)[0] = static_cast<unsigned char>(b); break;
+    default: M(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(b); break;
     }
 }
 
@@ -423,7 +423,7 @@ void Disturb(std::uint32_t h) {
 void Settle() {
     const unsigned char s = M(at::kEffectSlot)[0];
     if (s != 0xFF && s >= 20) M(at::kEffectSlot)[0] = static_cast<unsigned char>(s % 20);
-    M(at::kScene06Member)[0] &= 7;
+    M(MoveScript_EffectState_addr + 0x4)[0] &= 7;
 }
 
 }  // namespace

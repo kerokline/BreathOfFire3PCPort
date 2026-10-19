@@ -1,0 +1,1477 @@
+# B1 area: record sites left raw (typed-data round stage B1, group area). Addresses, names and reasons only.
+#file	line	offset	reason	evidence
+src/game/area_011.cpp	74	0xC	family	SetLong(entry + 12): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
+src/game/area_011.cpp	75	0x8	family	SetLong(entry + 8): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
+src/game/area_backdrop.cpp	100	0x4	family	Dword(entry + 4): entry: no local declaration with a known family
+src/game/area_backdrop.cpp	116	0xC	family	SetDword(quad + 0xC): quad = Gfx_PacketNext: family not established
+src/game/area_backdrop.cpp	118	0x1C	family	SetDword(quad + 0x1C): quad = Gfx_PacketNext: family not established
+src/game/area_backdrop.cpp	123	-	computed	Dword(entry + (Cond_ByteFF != 0 ? 12 : 8)): offset not a constant
+src/game/area_backdrop.cpp	157	0xC	family	SetDword(quad + 0xC): quad = Gfx_PacketNext: family not established
+src/game/area_backdrop.cpp	159	0x1C	family	SetDword(quad + 0x1C): quad = Gfx_PacketNext: family not established
+src/game/area_backdrop.cpp	187	0xC	family	SetDword(quad + 0xC): quad = Gfx_PacketNext: family not established
+src/game/area_backdrop.cpp	189	0x18	family	SetDword(quad + 0x18): quad = Gfx_PacketNext: family not established
+src/game/area_backdrop.cpp	217	0x4	family	Word(entry + 4): entry: no local declaration with a known family
+src/game/area_backdrop.cpp	221	0x4	family	Dword(pair + 4): pair = entry + 8: family not established
+src/game/area_backdrop.cpp	224	0x2	family	SetWord(rect + 2): rect: no local declaration with a known family
+src/game/area_backdrop.cpp	225	0x4	family	SetWord(rect + 4): rect: no local declaration with a known family
+src/game/area_backdrop.cpp	226	0x6	family	SetWord(rect + 6): rect: no local declaration with a known family
+src/game/area_backdrop.cpp	284	0x2E	family	SetWord(Sprite_Current + 0x2E): Sprite_Current: WorldMap_PinSprite has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_backdrop.cpp	285	0x30	family	SetWord(Sprite_Current + 0x30): Sprite_Current: WorldMap_PinSprite has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_backdrop_fuzz.cpp	98	0x4	family	SetDword(prim + 4): prim: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	101	0x8	family	SetDword(prim + 8): prim: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	117	-	computed	SetDword(prim + z): offset not a constant
+src/game/area_backdrop_fuzz.cpp	134	0x4	family	Dword(rect + 4): rect: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	136	0x4	family	SetDword(prim + 4): prim: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	137	0x8	family	SetDword(prim + 8): prim: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	138	0xC	family	SetDword(prim + 0xC): prim: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	138	0x4	family	Dword(rect + 4): rect: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	139	0x10	family	SetDword(prim + 0x10): prim: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	140	0x14	family	SetDword(prim + 0x14): prim: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	149	-	computed	SetDword(prim + z): offset not a constant
+src/game/area_backdrop_fuzz.cpp	290	0x4	family	SetDword(g_entry + 4): g_entry: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	369	0x2C	family	SetDword(g_glow_record + 0x2C): g_glow_record: no local declaration with a known family
+src/game/area_backdrop_fuzz.cpp	457	-	computed	SetDword(g_entry + 4 + k * 4): offset not a constant
+src/game/area_backdrop_fuzz.cpp	462	-	computed	Dword(g_entry + 4 + (Next() % 8) * 4): offset not a constant
+src/game/area_backdrop_fuzz.cpp	481	0x4	family	SetDword(position + 4): position: no local declaration with a known family
+src/game/area_entry.cpp	66	0x20	family	Ptr(descriptor + 0x20): descriptor = Descriptor(): family not established
+src/game/area_entry.cpp	79	0x2	family	Word(link + 2): link = Ptr(descriptor + 0x20) + n * 12: family not established
+src/game/area_entry.cpp	80	0x2	family	Word(link + 2): link = Ptr(descriptor + 0x20) + n * 12: family not established
+src/game/area_entry.cpp	81	0x4	family	Word(link + 4): link = Ptr(descriptor + 0x20) + n * 12: family not established
+src/game/area_entry.cpp	82	0x6	family	Word(link + 6): link = Ptr(descriptor + 0x20) + n * 12: family not established
+src/game/area_entry.cpp	85	0x4	family	Word(link + 4): link = Ptr(descriptor + 0x20) + n * 12: family not established
+src/game/area_entry.cpp	86	0x28	family	Ptr(descriptor + 0x28): descriptor = Descriptor(): family not established
+src/game/area_entry.cpp	87	-	computed	Ptr(Ptr(descriptor + 0x24) + index * 4): offset not a constant
+src/game/area_entry.cpp	87	0x24	family	Ptr(descriptor + 0x24): descriptor = Descriptor(): family not established
+src/game/area_entry.cpp	91	0x2	family	Word(choice + 2): choice = Ptr(Ptr(descriptor + 0x24) + index * 4): family not established
+src/game/area_entry.cpp	92	0x4	family	Word(choice + 4): choice = Ptr(Ptr(descriptor + 0x24) + index * 4): family not established
+src/game/area_entry.cpp	134	0x14	family	Long(Descriptor() + 0x14): Descriptor(): family not established
+src/game/area_entry.cpp	135	-	computed	Ptr(At(table) + entry * 4): offset not a constant
+src/game/area_entry.cpp	179	0x1	family	At(Address(&Field_ScriptFlags) + 1): Address(&Field_ScriptFlags): family not established
+src/game/area_entry.cpp	180	0x1	family	At(Address(&Field_ScriptFlags2) + 1): Address(&Field_ScriptFlags2): family not established
+src/game/area_entry.cpp	210	0x18	family	Ptr(Descriptor() + 0x18): Descriptor(): family not established
+src/game/area_entry.cpp	210	-	computed	Long(Ptr(Descriptor() + 0x18) + list[i] * 4u): offset not a constant
+src/game/area_entry.cpp	210	-	computed	SetLong(record + kRecScript): offset not a constant
+src/game/area_entry.cpp	240	-	computed	Long(from + k): offset not a constant
+src/game/area_entry.cpp	240	-	computed	SetLong(state + kRecCharacter + k): offset not a constant
+src/game/area_entry.cpp	264	-	computed	Long(ra + at): offset not a constant
+src/game/area_entry.cpp	264	-	computed	Long(rb + at): offset not a constant
+src/game/area_entry.cpp	265	-	computed	SetLong(ra + at): offset not a constant
+src/game/area_entry.cpp	266	-	computed	SetLong(rb + at): offset not a constant
+src/game/area_entry_fuzz.cpp	96	0xA	family	SetWord(context + 0xA): context: no local declaration with a known family
+src/game/area_entry_fuzz.cpp	263	0x14	family	SetPtr(desc + 0x14): desc = g_fake.desc[d]: family not established
+src/game/area_entry_fuzz.cpp	264	0x18	family	SetPtr(desc + 0x18): desc = g_fake.desc[d]: family not established
+src/game/area_entry_fuzz.cpp	265	0x20	family	SetPtr(desc + 0x20): desc = g_fake.desc[d]: family not established
+src/game/area_entry_fuzz.cpp	266	0x24	family	SetPtr(desc + 0x24): desc = g_fake.desc[d]: family not established
+src/game/area_entry_fuzz.cpp	267	0x28	family	SetPtr(desc + 0x28): desc = g_fake.desc[d]: family not established
+src/game/area_entry_fuzz.cpp	300	0x2	family	SetWord(l + 2): l = g_fake.links + i * 12: family not established
+src/game/area_entry_fuzz.cpp	301	0x4	family	SetWord(l + 4): l = g_fake.links + i * 12: family not established
+src/game/area_entry_fuzz.cpp	303	0x2	family	SetWord(l + 2): l = g_fake.links + i * 12: family not established
+src/game/area_harness.cpp	590	-	computed	Mem(d.at + d.stride * i): offset not a constant
+src/game/area_harness.cpp	733	-	computed	Mem(d.at + d.stride * i): offset not a constant
+src/game/area_w0a.cpp	60	0xA	family	SetWord(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w0a.cpp	60	0xA	family	Word(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w0a.cpp	83	-	computed	Mem(table + 4 * state): offset not a constant
+src/game/area_w0a.cpp	92	-	computed	Mem(poses + parity * 2): offset not a constant
+src/game/area_w0a.cpp	93	0x1	family	Mem(poses + parity * 2 + 1): poses + parity * 2: family not established
+src/game/area_w0a.cpp	162	0x1C	field-missing	SetLong(e + 0x1C): EffectObject +0x1C width 4
+src/game/area_w0a.cpp	398	0x34	family	Long(Sprite_Current + 0x34): Sprite_Current: Area10_SpawnEffect1C has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0a.cpp	399	0x38	family	Long(Sprite_Current + 0x38): Sprite_Current: Area10_SpawnEffect1C has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0a.cpp	445	0x34	family	Long(object + 0x34): object = Sprite_Current: Area13_WalkToX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0a.cpp	459	0x38	family	Long(object + 0x38): object = Sprite_Current: Area13_WalkToZ has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0a_fuzz.cpp	253	0x34	family	SetLong(cur + 0x34): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0a_fuzz.cpp	259	0x38	family	SetLong(cur + 0x38): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0a_fuzz.cpp	295	-	computed	Mem(g_zones15 + (v >> 4) % 0x18): offset not a constant
+src/game/area_w0b.cpp	133	0x4	family	SetLong(out + 4): out = At(row): family not established
+src/game/area_w0b.cpp	164	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w0b.cpp	165	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w0b.cpp	204	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w0b.cpp	205	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w0b.cpp	215	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w0b.cpp	216	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w0b.cpp	228	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w0b.cpp	228	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w0b.cpp	248	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w0b.cpp	264	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w0b.cpp	264	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w0b.cpp	452	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w0b.cpp	454	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w0b.cpp	455	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w0b.cpp	497	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w0b.cpp	498	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w0b.cpp	499	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w0b.cpp	500	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w0b.cpp	503	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w0b.cpp	503	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w0b.cpp	505	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w0b.cpp	505	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w0b.cpp	509	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w0b.cpp	509	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w0b.cpp	510	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w0b.cpp	510	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w0b.cpp	513	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w0b.cpp	513	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w0b.cpp	515	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w0b.cpp	515	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w0b.cpp	551	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w0b.cpp	574	0x3A	family	SetWord(o + 0x3A): o = Cur(): Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	574	0x3A	family	Word(o + 0x3A): o = Cur(): Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	581	0x38	family	SetLong(o + 0x38): o = Cur(): Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	581	0x38	family	Long(o + 0x38): o = Cur(): Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	584	0x3A	family	SetWord(o + 0x3A): o = Cur(): Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	603	0x34	family	Long(o + 0x34): o = Cur(): Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	604	0x38	family	Long(o + 0x38): o = Cur(): Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	606	0x4	family	SetWord(v + 4): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	607	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	608	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	609	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	610	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	611	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	612	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	613	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	614	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	615	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	616	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	617	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w0b.cpp	644	0x16	family	SetWord(q + 0x16): q = Gfx_PacketNext: family not established
+src/game/area_w0b.cpp	645	0x26	family	SetWord(q + 0x26): q = Gfx_PacketNext: family not established
+src/game/area_w0b.cpp	650	0x38	family	Word(Cur() + 0x38): Sprite_Current: Area16_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b.cpp	686	0xA	family	SetWord(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w0b.cpp	686	0xA	family	Word(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w0b.cpp	752	0x3E	width	SetWord(o + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w0b.cpp	914	0x1C	field-missing	SetLong(record + 0x1C): EffectObject +0x1C width 4
+src/game/area_w0b_fuzz.cpp	65	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w0b_fuzz.cpp	335	0x40	family	SetLong(o + 0x40): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	342	0x18	family	SetLong(o + 0x18): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	351	0x2E	family	SetWord(o + 0x2E): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	358	0x2E	family	SetWord(o + 0x2E): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	362	0x30	family	SetWord(o + 0x30): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	371	0x30	family	SetWord(o + 0x30): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	408	0x3A	family	SetWord(o + 0x3A): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	412	0x36	family	Word(o + 0x36): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0b_fuzz.cpp	413	0x3A	family	Word(o + 0x3A): o = Obj(): Seed16 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w0c.cpp	51	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w0c.cpp	79	0x34	gate	SetLong(EffectAt(cur[0xB]) + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w0c.cpp	80	0x38	gate	SetLong(EffectAt(cur[0xB]) + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w0c.cpp	81	0x3C	gate	SetLong(EffectAt(cur[0xB]) + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w0c.cpp	498	0x1	family	B(cell + 1): cell: no local declaration with a known family
+src/game/area_w1a.cpp	53	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w1a.cpp	86	0xC	gate	SetLong(EffectAt(cur[0xB]) + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w1a.cpp	88	0x10	gate	SetLong(EffectAt(cur[0xB]) + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w1a.cpp	89	0x2E	gate	SetWord(EffectAt(cur[0xB]) + 0x2E): typed, but the object changed (codegen_same)
+src/game/area_w1a.cpp	90	0x30	gate	SetWord(EffectAt(cur[0xB]) + 0x30): typed, but the object changed (codegen_same)
+src/game/area_w1a.cpp	132	0xC	family	Long(cur + 0xC): cur = Sprite_Current: TintBy has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1a.cpp	445	-	computed	Mem(walk - 4): offset not a constant
+src/game/area_w1a_fuzz.cpp	55	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w1a_fuzz.cpp	422	-	computed	SetLong(AreaMap_Header + (run + at_) * 4): offset not a constant
+src/game/area_w1b.cpp	68	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w1b.cpp	147	0x8A	family	SetWord(m + 0x8A): m = ActiveMember(): family not established
+src/game/area_w1b.cpp	147	0x8A	family	Word(m + 0x8A): m = ActiveMember(): family not established
+src/game/area_w1b.cpp	228	0x64	field-missing	SetLong(e + 0x64): EffectObject +0x64 width 4
+src/game/area_w1b.cpp	229	0x68	field-missing	SetLong(e + 0x68): EffectObject +0x68 width 4
+src/game/area_w1b.cpp	230	0x6C	field-missing	SetLong(e + 0x6C): EffectObject +0x6C width 4
+src/game/area_w1b.cpp	391	0x18	field-missing	SetLong(e + 0x18): EffectObject +0x18 width 4
+src/game/area_w1b.cpp	392	0x1C	field-missing	SetLong(e + 0x1C): EffectObject +0x1C width 4
+src/game/area_w1b.cpp	421	0x8A	family	SetWord(m + 0x8A): m = ActiveMember(): family not established
+src/game/area_w1b.cpp	421	0x8A	family	Word(m + 0x8A): m = ActiveMember(): family not established
+src/game/area_w1b.cpp	443	0x8A	family	SetWord(m + 0x8A): m = ActiveMember(): family not established
+src/game/area_w1b.cpp	443	0x8A	family	Word(m + 0x8A): m = ActiveMember(): family not established
+src/game/area_w1b.cpp	457	0x2C	field-missing	SetWord(e + 0x2C): EffectObject +0x2C width 2
+src/game/area_w1b.cpp	526	0x34	width	SetWord(e0 + 0x34): SpriteObject +0x34 width 2
+src/game/area_w1b.cpp	527	0x38	width	SetWord(e0 + 0x38): SpriteObject +0x38 width 2
+src/game/area_w1b.cpp	528	0x34	width	SetWord(e1 + 0x34): SpriteObject +0x34 width 2
+src/game/area_w1b.cpp	529	0x36	width	SetWord(e0 + 0x36): SpriteObject +0x36 width 2
+src/game/area_w1b.cpp	530	0x3A	width	SetWord(e0 + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w1b.cpp	531	0x3E	width	SetWord(e0 + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1b.cpp	533	0x38	width	SetWord(e1 + 0x38): SpriteObject +0x38 width 2
+src/game/area_w1b.cpp	534	0x3E	width	SetWord(e1 + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1b.cpp	535	0x36	width	SetWord(e1 + 0x36): SpriteObject +0x36 width 2
+src/game/area_w1b.cpp	536	0x3A	width	SetWord(e1 + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w1b.cpp	740	0xC	family	Long(o + 0xC): o = Cur(): Area44_PushParty has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	742	0x10	family	Long(o + 0x10): o = Cur(): Area44_PushParty has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	744	0x14	family	Long(o + 0x14): o = Cur(): Area44_PushParty has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	746	0xC	family	SetLong(Cur() + 0xC): Sprite_Current: Area44_PushParty has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	747	0x10	family	SetLong(Cur() + 0x10): Sprite_Current: Area44_PushParty has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	748	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area44_PushParty has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	904	0x4	family	SetLong(out + 4): out = At(row): family not established
+src/game/area_w1b.cpp	935	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w1b.cpp	936	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w1b.cpp	975	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w1b.cpp	976	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w1b.cpp	986	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1b.cpp	987	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w1b.cpp	999	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1b.cpp	999	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1b.cpp	1019	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w1b.cpp	1035	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1b.cpp	1035	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1b.cpp	1223	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w1b.cpp	1225	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w1b.cpp	1226	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w1b.cpp	1268	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w1b.cpp	1269	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w1b.cpp	1270	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w1b.cpp	1271	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w1b.cpp	1274	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1b.cpp	1274	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1b.cpp	1276	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1b.cpp	1276	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1b.cpp	1280	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1b.cpp	1280	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1b.cpp	1281	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1b.cpp	1281	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1b.cpp	1284	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1b.cpp	1284	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1b.cpp	1286	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1b.cpp	1286	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1b.cpp	1322	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w1b.cpp	1354	0x3A	family	SetWord(o + 0x3A): o = Cur(): Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1354	0x3A	family	Word(o + 0x3A): o = Cur(): Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1361	0x38	family	SetLong(o + 0x38): o = Cur(): Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1361	0x38	family	Long(o + 0x38): o = Cur(): Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1364	0x3A	family	SetWord(o + 0x3A): o = Cur(): Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1383	0x34	family	Long(o + 0x34): o = Cur(): Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1384	0x38	family	Long(o + 0x38): o = Cur(): Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1386	0x4	family	SetWord(v + 4): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1387	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1388	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1389	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1390	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1391	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1392	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1393	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1394	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1395	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1396	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1397	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1b.cpp	1424	0x16	family	SetWord(q + 0x16): q = Gfx_PacketNext: family not established
+src/game/area_w1b.cpp	1425	0x26	family	SetWord(q + 0x26): q = Gfx_PacketNext: family not established
+src/game/area_w1b.cpp	1430	0x38	family	Word(Cur() + 0x38): Sprite_Current: Area45_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b.cpp	1533	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1b_fuzz.cpp	386	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w1b_fuzz.cpp	652	0x40	family	SetLong(o + 0x40): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	659	0x18	family	SetLong(o + 0x18): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	668	0x2E	family	SetWord(o + 0x2E): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	675	0x2E	family	SetWord(o + 0x2E): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	679	0x30	family	SetWord(o + 0x30): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	688	0x30	family	SetWord(o + 0x30): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	725	0x3A	family	SetWord(o + 0x3A): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	729	0x36	family	Word(o + 0x36): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1b_fuzz.cpp	730	0x3A	family	Word(o + 0x3A): o = Obj(): Seed45 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	89	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1c.cpp	177	0x18	family	Long(Sprite_Current + 0x18): Sprite_Current: RestoreColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	179	0x1C	family	Long(Sprite_Current + 0x1C): Sprite_Current: RestoreColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	474	0xC	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject
+src/game/area_w1c.cpp	475	0x10	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject
+src/game/area_w1c.cpp	476	0x14	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject (+0x14 beside the two reverted sites; the row said 472 before)
+src/game/area_w1c.cpp	476	0x14	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md area: cur is the party record PartyAt(m) here, not an EffectObject (+0x14 beside the two reverted sites; the row said 472 before)
+src/game/area_w1c.cpp	689	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w1c.cpp	689	0x34	family	Long(from + 0x34): from = Field_ActiveMember - 0x668: family not established
+src/game/area_w1c.cpp	690	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w1c.cpp	690	0x38	family	Long(from + 0x38): from = Field_ActiveMember - 0x668: family not established
+src/game/area_w1c.cpp	693	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1c.cpp	713	0xC	family	SetLong(entry + 12): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
+src/game/area_w1c.cpp	714	0x8	family	SetLong(entry + 8): entry = AreaMap_Header + static_cast<std::uint32_t>(AreaMap_EntryBase) * 4u: family not established
+src/game/area_w1c.cpp	803	0x34	family	Long(Sprite_Current + 0x34): Sprite_Current: Area52_BlockCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	804	0x38	family	Long(Sprite_Current + 0x38): Sprite_Current: Area52_BlockCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	825	0x18	family	SetLong(cur + 0x18): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	825	0x18	family	Long(cur + 0x18): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	827	0x1C	family	SetLong(cur + 0x1C): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	827	0x1C	family	Long(cur + 0x1C): cur = Sprite_Current: Area52_ShiftBlockX has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	849	0x18	family	SetLong(Sprite_Current + 0x18): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	849	0x18	family	Long(Sprite_Current + 0x18): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	850	0x1C	family	SetLong(Sprite_Current + 0x1C): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	850	0x1C	family	Long(Sprite_Current + 0x1C): Sprite_Current: Area52_DropColumn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c.cpp	900	0x36	width	Word(record + 0x36): PartyMember +0x36 width 2
+src/game/area_w1c.cpp	901	0x3A	width	Word(record + 0x3A): PartyMember +0x3A width 2
+src/game/area_w1c_fuzz.cpp	228	0x34	family	Long(Sprite_Current + 0x34): Sprite_Current: BlockCellEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	230	0x38	family	Long(Sprite_Current + 0x38): Sprite_Current: BlockCellEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	240	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: ShiftXEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	408	0x34	layout	SetLong(record + 0x34): call spans lines
+src/game/area_w1c_fuzz.cpp	409	0x38	layout	SetLong(record + 0x38): call spans lines
+src/game/area_w1c_fuzz.cpp	422	-	computed	Mem(table + (ah::Next() % count) * stride): offset not a constant
+src/game/area_w1c_fuzz.cpp	565	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: Seed52 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	566	0x38	family	SetLong(Sprite_Current + 0x38): Sprite_Current: Seed52 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	568	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: Seed52 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	569	0x38	family	SetLong(Sprite_Current + 0x38): Sprite_Current: Seed52 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	576	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: Seed52 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1c_fuzz.cpp	589	0x36	width	SetWord(record + 0x36): PartyMember +0x36 width 2
+src/game/area_w1c_fuzz.cpp	590	0x3A	width	SetWord(record + 0x3A): PartyMember +0x3A width 2
+src/game/area_w1d.cpp	48	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w1d.cpp	132	-	computed	B(kinds + list): offset not a constant
+src/game/area_w1d.cpp	156	-	computed	B(weights + pick): offset not a constant
+src/game/area_w1d.cpp	165	0x1	family	B(positions + r * 2 + 1): positions + r * 2: family not established
+src/game/area_w1d.cpp	166	-	computed	B(positions + r * 2): offset not a constant
+src/game/area_w1d.cpp	170	0x3E	width	SetWord(object + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1d.cpp	189	0x18	family	SetLong(focus + 0x18): focus = Focus(): family not established
+src/game/area_w1d.cpp	191	0x1C	family	SetLong(focus + 0x1C): focus = Focus(): family not established
+src/game/area_w1d.cpp	306	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1d.cpp	310	0x20	field-missing	SetLong(Sprite_Current + 0x20): SpriteObject +0x20 width 4
+src/game/area_w1d.cpp	323	0x20	field-missing	Long(cur + 0x20): SpriteObject +0x20 width 4
+src/game/area_w1d.cpp	327	0x3E	width	Word(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1d.cpp	328	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1d.cpp	330	0x20	field-missing	SetLong(Sprite_Current + 0x20): SpriteObject +0x20 width 4
+src/game/area_w1d.cpp	335	0x3E	width	Word(cur + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1d.cpp	430	0x8A	family	SetWord(Focus() + 0x8A): Focus(): family not established
+src/game/area_w1d.cpp	452	0x3C	gate	SetLong(Sprite_Current + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w1d.cpp	544	-	computed	Long(name + i): offset not a constant
+src/game/area_w1d_fuzz.cpp	227	0x3E	family	Word(Sprite_Current + 0x3E): Sprite_Current: GroundEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1d_fuzz.cpp	354	0x3E	family	SetWord(Sprite_Current + 0x3E): Sprite_Current: Seed56 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	64	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w1e.cpp	149	0x4	family	SetLong(out + 4): out = At(row): family not established
+src/game/area_w1e.cpp	180	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w1e.cpp	181	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w1e.cpp	220	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w1e.cpp	221	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w1e.cpp	231	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1e.cpp	232	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w1e.cpp	244	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1e.cpp	244	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1e.cpp	264	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w1e.cpp	280	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1e.cpp	280	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w1e.cpp	469	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w1e.cpp	471	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w1e.cpp	472	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w1e.cpp	515	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w1e.cpp	516	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w1e.cpp	517	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w1e.cpp	518	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w1e.cpp	521	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1e.cpp	521	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1e.cpp	523	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1e.cpp	523	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1e.cpp	527	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1e.cpp	527	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1e.cpp	528	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1e.cpp	528	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1e.cpp	531	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1e.cpp	531	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w1e.cpp	533	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1e.cpp	533	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w1e.cpp	563	0xC	family	Long(o + 0xC): o = Cur(): Area65_Record8Move has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	565	0x10	family	Long(o + 0x10): o = Cur(): Area65_Record8Move has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	597	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w1e.cpp	620	0x3A	family	SetWord(o + 0x3A): o = Cur(): Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	620	0x3A	family	Word(o + 0x3A): o = Cur(): Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	627	0x38	family	SetLong(o + 0x38): o = Cur(): Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	627	0x38	family	Long(o + 0x38): o = Cur(): Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	630	0x3A	family	SetWord(o + 0x3A): o = Cur(): Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	649	0x34	family	Long(o + 0x34): o = Cur(): Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	650	0x38	family	Long(o + 0x38): o = Cur(): Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	652	0x4	family	SetWord(v + 4): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	653	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	654	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	655	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	656	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	657	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	658	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	659	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	660	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	661	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	662	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	663	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w1e.cpp	690	0x16	family	SetWord(q + 0x16): q = Gfx_PacketNext: family not established
+src/game/area_w1e.cpp	691	0x26	family	SetWord(q + 0x26): q = Gfx_PacketNext: family not established
+src/game/area_w1e.cpp	696	0x38	family	Word(Cur() + 0x38): Sprite_Current: Area65_DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e.cpp	721	-	computed	At(table + static_cast<U>(choice * 2)): offset not a constant
+src/game/area_w1e.cpp	794	-	computed	B(table + id): offset not a constant
+src/game/area_w1e_fuzz.cpp	92	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w1e_fuzz.cpp	357	0x40	family	SetLong(o + 0x40): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	364	0x18	family	SetLong(o + 0x18): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	373	0x2E	family	SetWord(o + 0x2E): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	380	0x2E	family	SetWord(o + 0x2E): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	384	0x30	family	SetWord(o + 0x30): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	393	0x30	family	SetWord(o + 0x30): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	437	0x3A	family	SetWord(o + 0x3A): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	441	0x36	family	Word(o + 0x36): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1e_fuzz.cpp	442	0x3A	family	Word(o + 0x3A): o = Obj(): Seed65 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w1f.cpp	71	-	computed	Mem(table + state * 4): offset not a constant
+src/game/area_w1f.cpp	85	-	computed	B(kinds + B(Cond_Flags_addr + 0xd2 + member)): offset not a constant
+src/game/area_w1f.cpp	110	-	computed	B(steps + (count & 0xF)): offset not a constant
+src/game/area_w1f.cpp	112	-	computed	B(steps + (cur[0xA] & 0xF)): offset not a constant
+src/game/area_w1f.cpp	130	-	computed	B(weights + chosen): offset not a constant
+src/game/area_w1f.cpp	139	-	computed	B(cells + pick * 2): offset not a constant
+src/game/area_w1f.cpp	140	0x1	family	B(cells + pick * 2 + 1): cells + pick * 2: family not established
+src/game/area_w1f.cpp	144	0x3E	width	SetWord(object + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w1f.cpp	284	0x8A	family	SetWord(area_harness::Pointer(AreaW1a_FocusObject_addr) + 0x8A): area_harness::Pointer(AreaW1a_FocusObject_addr): family not established
+src/game/area_w1f.cpp	486	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w1f.cpp	488	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w1f.cpp	490	0x3C	gate	SetLong(Sprite_Current + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w1f.cpp	527	0x14	width	Word(cur + 0x14): SpriteObject +0x14 width 2
+src/game/area_w1f.cpp	537	0xC	family	SetLong(e + 0xC): e reassigned in its scope to another value
+src/game/area_w1f.cpp	537	0xC	family	Long(e + 0xC): e reassigned in its scope to another value
+src/game/area_w1f.cpp	539	0xC	family	SetLong(e + 0xC): e reassigned in its scope to another value
+src/game/area_w1f.cpp	539	0xC	family	Long(e + 0xC): e reassigned in its scope to another value
+src/game/area_w1f.cpp	560	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w1f.cpp	575	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w1f.cpp	1078	0x2	family	SetWord(rect0 + 2): rect0 = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1079	0x4	family	SetWord(rect0 + 4): rect0 = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1080	0x6	family	SetWord(rect0 + 6): rect0 = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1119	0x16	family	SetWord(p + 0x16): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1120	0x26	family	SetWord(p + 0x26): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1151	0x16	family	SetWord(p + 0x16): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1152	0x26	family	SetWord(p + 0x26): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1179	0x16	family	SetWord(p + 0x16): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1180	0x26	family	SetWord(p + 0x26): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1208	0x16	family	SetWord(p + 0x16): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1209	0x26	family	SetWord(p + 0x26): p = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1215	0x2	family	SetWord(rect1 + 2): rect1 = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1216	0x4	family	SetWord(rect1 + 4): rect1 = Gfx_PacketNext: family not established
+src/game/area_w1f.cpp	1217	0x6	family	SetWord(rect1 + 6): rect1 = Gfx_PacketNext: family not established
+src/game/area_w1f_fuzz.cpp	192	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w2a.cpp	54	-	computed	Mem(table + static_cast<std::uint32_t>(static_cast<int>(answer) ): offset not a constant
+src/game/area_w2a.cpp	90	-	computed	B(kinds + B(Cond_Flags_addr + 0xd2 + member)): offset not a constant
+src/game/area_w2a.cpp	254	0xA	family	Word(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w2a.cpp	255	0x10	family	Mem(descriptor + 0x10): descriptor: no local declaration with a known family
+src/game/area_w2a.cpp	256	-	computed	Mem(scripts + object[3] * 4u): offset not a constant
+src/game/area_w2a.cpp	257	0x2	family	B(script + position + 2): script + position: family not established
+src/game/area_w2a.cpp	268	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2a.cpp	432	0x34	family	SetLong(e + 0x34): e = SpawnEffectRecord(0x27): family not established
+src/game/area_w2a.cpp	433	0x38	family	SetLong(e + 0x38): e = SpawnEffectRecord(0x27): family not established
+src/game/area_w2a_fuzz.cpp	300	0x10	family	Mem(descriptor + 0x10): descriptor: no local declaration with a known family
+src/game/area_w2a_fuzz.cpp	301	-	computed	Mem(scripts + index * 4): offset not a constant
+src/game/area_w2a_fuzz.cpp	307	0x2	family	Mem(script + p + 2): script + p: family not established
+src/game/area_w2a_fuzz.cpp	315	0xA	family	SetWord(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w2b.cpp	72	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w2b.cpp	130	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	131	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	132	0x3C	gate	SetLong(Cur() + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	204	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2b.cpp	204	0x3E	width	Word(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2b.cpp	256	0x1	family	At(a + 1): a: no local declaration with a known family
+src/game/area_w2b.cpp	256	-	computed	At(a - 1): offset not a constant
+src/game/area_w2b.cpp	367	-	computed	At(t.place_messages + static_cast<U>(index * 2)): offset not a constant
+src/game/area_w2b.cpp	377	-	computed	At(t.name_sets + 1 + set * t.set_stride): offset not a constant
+src/game/area_w2b.cpp	384	0x4	family	SetLong(out + 4): out = At(row): family not established
+src/game/area_w2b.cpp	411	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	412	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	450	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w2b.cpp	451	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w2b.cpp	461	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2b.cpp	462	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w2b.cpp	473	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2b.cpp	473	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2b.cpp	493	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w2b.cpp	508	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2b.cpp	508	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2b.cpp	668	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w2b.cpp	669	-	computed	At(t.sprites + (index & 0xFF) * 4u): offset not a constant
+src/game/area_w2b.cpp	670	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w2b.cpp	671	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w2b.cpp	701	-	computed	At(t.directions + half + o[8] * 4u): offset not a constant
+src/game/area_w2b.cpp	706	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	707	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	708	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	709	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w2b.cpp	712	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w2b.cpp	712	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w2b.cpp	714	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2b.cpp	714	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2b.cpp	718	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w2b.cpp	718	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w2b.cpp	719	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2b.cpp	719	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2b.cpp	722	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w2b.cpp	722	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w2b.cpp	724	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2b.cpp	724	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2b.cpp	727	-	computed	At(t.record8_anims + Cur()[8] * 2u): offset not a constant
+src/game/area_w2b.cpp	729	-	computed	At(t.record8_anims + 1 + o[8] * 2u): offset not a constant
+src/game/area_w2b.cpp	754	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w2b.cpp	773	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b.cpp	773	0x3A	family	Word(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b.cpp	780	0x38	family	SetLong(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b.cpp	780	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b.cpp	783	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b.cpp	802	0x34	family	Long(o + 0x34): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b.cpp	803	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b.cpp	805	0x4	family	SetWord(v + 4): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	806	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	807	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	808	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	809	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	810	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	811	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	812	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	813	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	814	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	815	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	816	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w2b.cpp	843	0x16	family	SetWord(q + 0x16): q = Gfx_PacketNext: family not established
+src/game/area_w2b.cpp	844	0x26	family	SetWord(q + 0x26): q = Gfx_PacketNext: family not established
+src/game/area_w2b.cpp	846	-	computed	At(t.drift_size + static_cast<U>(e)): offset not a constant
+src/game/area_w2b.cpp	847	-	computed	At(t.drift_u + static_cast<U>(e)): offset not a constant
+src/game/area_w2b.cpp	848	-	computed	At(t.drift_v + static_cast<U>(e)): offset not a constant
+src/game/area_w2b.cpp	849	0x38	family	Word(Cur() + 0x38): Sprite_Current: DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	115	0x34	family	SetLong(o + 0x34): o = Sprite_Current: Seed85 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	202	0x2	family	Mem(r + 2): r: no local declaration with a known family
+src/game/area_w2b_fuzz.cpp	249	0x1	family	Mem(r + 1): r: no local declaration with a known family
+src/game/area_w2b_fuzz.cpp	288	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w2b_fuzz.cpp	555	-	computed	Mem(t.cells + (n - 1) * 4): offset not a constant
+src/game/area_w2b_fuzz.cpp	560	-	computed	Mem(t.name_sets + ((cx[0] ^ cz[0]) % 3) * t.set_stride): offset not a constant
+src/game/area_w2b_fuzz.cpp	562	-	computed	Mem(t.cells + (ah::Next() % n) * 4): offset not a constant
+src/game/area_w2b_fuzz.cpp	597	-	computed	Mem(t.cells + (CellRecords() - 1) * 4): offset not a constant
+src/game/area_w2b_fuzz.cpp	599	-	computed	Mem(t.name_sets + (k % 3) * t.set_stride): offset not a constant
+src/game/area_w2b_fuzz.cpp	600	-	computed	Mem(t.name_sets + ((k + 1) % 3) * t.set_stride): offset not a constant
+src/game/area_w2b_fuzz.cpp	611	0x4	family	Mem(t.cells + 4): t.cells: family not established
+src/game/area_w2b_fuzz.cpp	647	-	computed	Mem(t.place_messages + (ah::Next() % rows) * 0x20): offset not a constant
+src/game/area_w2b_fuzz.cpp	651	-	computed	Mem(t.name_sets + (ah::Next() % 3) * t.set_stride): offset not a constant
+src/game/area_w2b_fuzz.cpp	656	-	computed	Mem(t.name_sets + 1 + (ah::Next() % 3) * t.set_stride + ah::Next): offset not a constant
+src/game/area_w2b_fuzz.cpp	665	-	computed	Mem(t.plate_anims + (ah::Next() % anims) * 4): offset not a constant
+src/game/area_w2b_fuzz.cpp	670	0x40	family	SetLong(o + 0x40): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	677	0x18	family	SetLong(o + 0x18): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	686	0x2E	family	SetWord(o + 0x2E): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	693	0x2E	family	SetWord(o + 0x2E): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	697	0x30	family	SetWord(o + 0x30): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	706	0x30	family	SetWord(o + 0x30): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	714	-	computed	Mem(t.buttons + (ah::Next() % 6) * 4): offset not a constant
+src/game/area_w2b_fuzz.cpp	718	-	computed	Mem(t.buttons + e * 4): offset not a constant
+src/game/area_w2b_fuzz.cpp	719	-	computed	Mem(t.buttons + 7 * 4): offset not a constant
+src/game/area_w2b_fuzz.cpp	721	-	computed	Mem(t.buttons + (ah::Half() ? 6 + ah::Next() % 2 : ah::Next() % ): offset not a constant
+src/game/area_w2b_fuzz.cpp	743	0x3A	family	SetWord(o + 0x3A): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	747	0x36	family	Word(o + 0x36): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2b_fuzz.cpp	748	0x3A	family	Word(o + 0x3A): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2c.cpp	49	-	computed	Mem(table + static_cast<U>(answer) * 2u): offset not a constant
+src/game/area_w2c.cpp	85	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w2c.cpp	102	0xC	gate	SetLong(EffectAt(r[0xB]) + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w2c.cpp	103	0x10	gate	SetLong(EffectAt(r[0xB]) + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w2c.cpp	103	-	computed	B(args + B(list)): offset not a constant
+src/game/area_w2c.cpp	104	0x2E	gate	SetWord(EffectAt(r[0xB]) + 0x2E): typed, but the object changed (codegen_same)
+src/game/area_w2c.cpp	105	0x30	gate	SetWord(EffectAt(r[0xB]) + 0x30): typed, but the object changed (codegen_same)
+src/game/area_w2c.cpp	112	0x30	family	Mem(record + 0x30): record: no local declaration with a known family
+src/game/area_w2c.cpp	113	0x2E	family	Mem(record + 0x2E): record: no local declaration with a known family
+src/game/area_w2c.cpp	115	-	computed	B(args + B(list)): offset not a constant
+src/game/area_w2c.cpp	138	0x18	family	SetLong(focus + 0x18): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w2c.cpp	140	0x1C	family	SetLong(focus + 0x1C): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w2c.cpp	311	0x70	family	SetLong(Sprite_Current + 0x70): Sprite_Current: Area91_State3Place has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2c.cpp	312	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: Area91_State3Place has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2c.cpp	313	0x38	family	SetLong(Sprite_Current + 0x38): Sprite_Current: Area91_State3Place has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2c.cpp	314	0x3E	family	SetWord(Sprite_Current + 0x3E): Sprite_Current: Area91_State3Place has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2c.cpp	430	0x10	family	Long(prim + 0x10): prim = Gfx_PacketNext: family not established
+src/game/area_w2c.cpp	430	0x1C	family	SetLong(prim + 0x1C): prim = Gfx_PacketNext: family not established
+src/game/area_w2c_fuzz.cpp	224	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w2c_fuzz.cpp	348	-	computed	SetWord(m + i * 2): offset not a constant
+src/game/area_w2c_fuzz.cpp	483	0x2	family	SetWord(p + 2): p = ah::Mem(entry): family not established
+src/game/area_w2c_fuzz.cpp	514	-	computed	SetLong(p + i * 4): offset not a constant
+src/game/area_w2c_fuzz.cpp	516	-	computed	SetLong(p + (n + i) * 4): offset not a constant
+src/game/area_w2d.cpp	60	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w2d.cpp	96	0x3A	width	Word(cur + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w2d.cpp	97	0x36	width	Word(cur + 0x36): SpriteObject +0x36 width 2
+src/game/area_w2d.cpp	153	0x36	width	Word(e + 0x36): EffectObject +0x36 width 2
+src/game/area_w2d.cpp	153	0x3A	width	Word(e + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2d.cpp	184	0x2C	field-missing	SetWord(e + 0x2C): EffectObject +0x2C width 2
+src/game/area_w2d.cpp	212	0x3E	width	Word(obj + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2d.cpp	364	0x34	gate	SetLong(EffectAt(cur[0xB]) + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w2d.cpp	365	0x38	gate	SetLong(EffectAt(cur[0xB]) + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w2d.cpp	366	0x3C	gate	SetLong(EffectAt(cur[0xB]) + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w2d.cpp	367	0x2C	field-missing	SetWord(EffectAt(cur[0xB]) + 0x2C): EffectObject +0x2C width 2
+src/game/area_w2d.cpp	405	0x8A	family	SetWord(Ptr(AreaW1a_FocusObject_addr) + 0x8A): Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w2d.cpp	445	0x2C	gate	Word(cur + 0x2C): typed, but the object changed (codegen_same)
+src/game/area_w2d.cpp	767	0x8	family	SetWord(MoveScript_Object + 8): MoveScript_Object: no local declaration with a known family
+src/game/area_w2d.cpp	815	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2d_fuzz.cpp	360	0x3A	family	SetWord(cur + 0x3A): cur = Sprite_Current: SeedTurnCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2d_fuzz.cpp	361	0x36	family	SetWord(cur + 0x36): cur = Sprite_Current: SeedTurnCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2d_fuzz.cpp	371	0x36	width	SetWord(e + 0x36): EffectObject +0x36 width 2
+src/game/area_w2d_fuzz.cpp	372	0x3A	width	SetWord(e + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2d_fuzz.cpp	376	0x36	width	Word(e + 0x36): EffectObject +0x36 width 2
+src/game/area_w2d_fuzz.cpp	376	0x3A	width	Word(e + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2d_fuzz.cpp	381	0x36	width	SetWord(e + 0x36): EffectObject +0x36 width 2
+src/game/area_w2d_fuzz.cpp	382	0x3A	width	SetWord(e + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2d_fuzz.cpp	385	0x36	width	SetWord(e + 0x36): EffectObject +0x36 width 2
+src/game/area_w2d_fuzz.cpp	386	0x3A	width	SetWord(e + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2d_fuzz.cpp	404	0x3E	family	SetWord(Sprite_Current + 0x3E): Sprite_Current: Seed95 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2d_fuzz.cpp	482	0x14	family	SetLong(Sprite_Current + 0x14): Sprite_Current: Seed99 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	79	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w2e.cpp	197	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w2e.cpp	198	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w2e.cpp	222	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w2e.cpp	223	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w2e.cpp	233	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2e.cpp	234	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w2e.cpp	245	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2e.cpp	245	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2e.cpp	265	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w2e.cpp	280	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2e.cpp	280	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w2e.cpp	435	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w2e.cpp	436	-	computed	At(t.sprites + (index & 0xFF) * 4u): offset not a constant
+src/game/area_w2e.cpp	437	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w2e.cpp	438	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w2e.cpp	657	0x34	family	Long(o + 0x34): o = Cur(): Area104_ObjectAhead121 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	658	0x38	family	Long(o + 0x38): o = Cur(): Area104_ObjectAhead121 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	704	0x34	family	Long(Cur() + 0x34): Sprite_Current: Area104_StartOnObject121 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	704	0x38	family	Long(Cur() + 0x38): Sprite_Current: Area104_StartOnObject121 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	706	0x34	family	Long(o + 0x34): o = Cur(): Area104_StartOnObject121 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	706	0x38	family	Long(o + 0x38): o = Cur(): Area104_StartOnObject121 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	738	0x36	family	Word(Cur() + 0x36): Sprite_Current: Area104_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	738	0x3A	family	Word(Cur() + 0x3A): Sprite_Current: Area104_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	745	0x36	family	Word(Cur() + 0x36): Sprite_Current: Area104_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	745	0x3A	family	Word(Cur() + 0x3A): Sprite_Current: Area104_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	751	0x34	family	Long(Cur() + 0x34): Sprite_Current: Area104_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	751	0x38	family	Long(Cur() + 0x38): Sprite_Current: Area104_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	773	0xC	family	SetLong(Cur() + 0xC): Sprite_Current: Area104_StopMotion has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	774	0x10	family	SetLong(Cur() + 0x10): Sprite_Current: Area104_StopMotion has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	775	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area104_StopMotion has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	853	0x8	family	At(descriptor + 8): descriptor: no local declaration with a known family
+src/game/area_w2e.cpp	880	0x34	family	SetLong(Cur() + 0x34): Sprite_Current: Area104_Kind5CFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	881	0x38	family	SetLong(Cur() + 0x38): Sprite_Current: Area104_Kind5CFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	882	0x3E	family	SetWord(Cur() + 0x3E): Sprite_Current: Area104_Kind5CFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	919	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w2e.cpp	936	0x26	family	SetWord(prim + 0x26): prim = Gfx_PacketNext: family not established
+src/game/area_w2e.cpp	977	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area104_Kind5CTurnStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	980	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area104_Kind5CTurnStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	997	0x14	family	Long(Cur() + 0x14): Sprite_Current: Area104_Kind5CSpin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	997	0x6C	family	SetLong(Cur() + 0x6C): Sprite_Current: Area104_Kind5CSpin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	997	0x6C	family	Long(Cur() + 0x6C): Sprite_Current: Area104_Kind5CSpin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	998	0x6C	family	SetLong(Cur() + 0x6C): Sprite_Current: Area104_Kind5CSpin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	998	0x6C	family	Long(Cur() + 0x6C): Sprite_Current: Area104_Kind5CSpin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	1018	0x34	family	SetLong(c + 0x34): c = Cur(): Area104_Kind5CRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	1019	0x38	family	SetLong(Cur() + 0x38): Sprite_Current: Area104_Kind5CRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	1021	0x3C	family	SetLong(Cur() + 0x3C): Sprite_Current: Area104_Kind5CRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e.cpp	1085	0x36	width	SetWord(e + 0x36): EffectObject +0x36 width 2
+src/game/area_w2e.cpp	1086	0x3A	width	SetWord(e + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2e.cpp	1219	0x26	family	SetWord(quad + 0x26): quad = Gfx_PacketNext: family not established
+src/game/area_w2e.cpp	1220	0x16	family	SetWord(quad + 0x16): quad = Gfx_PacketNext: family not established
+src/game/area_w2e.cpp	1235	-	computed	At(row + w * 2): offset not a constant
+src/game/area_w2e.cpp	1388	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2e.cpp	1391	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2e.cpp	1399	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2e.cpp	1404	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2e.cpp	1418	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w2e.cpp	1419	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w2e.cpp	1421	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2e.cpp	1425	0x3E	width	SetWord(Cur() + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2e_fuzz.cpp	124	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w2e_fuzz.cpp	442	0x40	family	SetLong(o + 0x40): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e_fuzz.cpp	449	0x18	family	SetLong(o + 0x18): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e_fuzz.cpp	456	0x2E	family	SetWord(o + 0x2E): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e_fuzz.cpp	463	0x2E	family	SetWord(o + 0x2E): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e_fuzz.cpp	467	0x30	family	SetWord(o + 0x30): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e_fuzz.cpp	476	0x30	family	SetWord(o + 0x30): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2e_fuzz.cpp	685	0x14	family	SetLong(o + 0x14): o = Sprite_Current: Seed104 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2f.cpp	76	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w2f.cpp	131	0x36	width	Word(r + 0x36): PartyMember +0x36 width 2
+src/game/area_w2f.cpp	131	0x3A	width	Word(r + 0x3A): PartyMember +0x3A width 2
+src/game/area_w2f.cpp	151	-	computed	Mem(table + index * 4): offset not a constant
+src/game/area_w2f.cpp	152	0x36	width	SetWord(Sprite_Current + 0x36): SpriteObject +0x36 width 2
+src/game/area_w2f.cpp	153	0x34	width	SetWord(Sprite_Current + 0x34): SpriteObject +0x34 width 2
+src/game/area_w2f.cpp	154	0x3A	width	SetWord(Sprite_Current + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w2f.cpp	155	0x38	width	SetWord(Sprite_Current + 0x38): SpriteObject +0x38 width 2
+src/game/area_w2f.cpp	170	-	computed	B(weights + chosen): offset not a constant
+src/game/area_w2f.cpp	179	-	computed	B(cells + pick * 2): offset not a constant
+src/game/area_w2f.cpp	180	0x1	family	B(cells + pick * 2 + 1): cells + pick * 2: family not established
+src/game/area_w2f.cpp	184	0x3E	width	SetWord(object + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2f.cpp	254	0x36	width	Word(Extra(1) + 0x36): SpriteObject +0x36 width 2
+src/game/area_w2f.cpp	255	0x3A	width	Word(Extra(1) + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w2f.cpp	443	0x36	width	SetWord(r + 0x36): EffectObject +0x36 width 2
+src/game/area_w2f.cpp	444	0x3A	width	SetWord(r + 0x3A): EffectObject +0x3A width 2
+src/game/area_w2f.cpp	539	0x18	family	Word(p + 0x18): p = Ptr(Area108_Model_addr + 0x4) + 2: family not established
+src/game/area_w2f.cpp	540	0x1A	family	Word(p + 0x1A): p = Ptr(Area108_Model_addr + 0x4) + 2: family not established
+src/game/area_w2f.cpp	541	0x1C	family	Word(p + 0x1C): p = Ptr(Area108_Model_addr + 0x4) + 2: family not established
+src/game/area_w2f.cpp	542	-	computed	SetWord(p + c * 6): offset not a constant
+src/game/area_w2f.cpp	542	-	computed	Word(p + c * 6): offset not a constant
+src/game/area_w2f.cpp	543	0x2	family	SetWord(p + c * 6 + 2): p + c * 6: family not established
+src/game/area_w2f.cpp	543	0x2	family	Word(p + c * 6 + 2): p + c * 6: family not established
+src/game/area_w2f.cpp	544	0x4	family	SetWord(p + c * 6 + 4): p + c * 6: family not established
+src/game/area_w2f.cpp	544	0x4	family	Word(p + c * 6 + 4): p + c * 6: family not established
+src/game/area_w2f.cpp	574	0x2	family	Word(c + 2): c = Mem(Area108_CellWords_addr + i * 4): family not established
+src/game/area_w2f.cpp	613	0x6C	gate	SetLong(Extra(0) + 0x6C): typed, but the object changed (codegen_same)
+src/game/area_w2f.cpp	655	0xA	family	Word(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w2f.cpp	657	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w2f.cpp	728	0xA	family	Word(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w2f.cpp	730	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w2f.cpp	744	0x36	width	Word(cur + 0x36): SpriteObject +0x36 width 2
+src/game/area_w2f.cpp	745	0x3A	width	Word(cur + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w2f.cpp	763	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2f.cpp	775	0x18	gate	Long(cur + 0x18): typed, but the object changed (codegen_same)
+src/game/area_w2f.cpp	780	0x38	gate	Long(cur + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w2f.cpp	781	0x34	family	Long(extra + 0x34): extra = Mem(record): family not established
+src/game/area_w2f.cpp	782	0x38	family	Long(extra + 0x38): extra = Mem(record): family not established
+src/game/area_w2f.cpp	788	0x34	gate	Long(cur + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w2f.cpp	791	0x3E	width	Word(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w2f.cpp	794	0xC	gate	SetLong(Sprite_Current + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w2f.cpp	795	0x10	gate	SetLong(Sprite_Current + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w2f.cpp	796	0x14	gate	SetLong(Sprite_Current + 0x14): typed, but the object changed (codegen_same)
+src/game/area_w2f.cpp	1253	0x88	family	SetWord(object + 0x88): object: no local declaration with a known family
+src/game/area_w2f.cpp	1300	0x88	family	SetWord(focus + 0x88): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w2f_fuzz.cpp	243	0xA	family	SetWord(ah::Pointer(MoveScript_Object_addr) + 0xA): ah::Pointer(MoveScript_Object_addr): family not established
+src/game/area_w2f_fuzz.cpp	393	0x36	width	SetWord(r + 0x36): PartyMember +0x36 width 2
+src/game/area_w2f_fuzz.cpp	395	0x3A	width	SetWord(r + 0x3A): PartyMember +0x3A width 2
+src/game/area_w2f_fuzz.cpp	416	0x36	width	SetWord(ExtraRecord(1) + 0x36): SpriteObject +0x36 width 2
+src/game/area_w2f_fuzz.cpp	417	0x3A	width	SetWord(ExtraRecord(1) + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w2f_fuzz.cpp	512	0x36	family	SetWord(Sprite_Current + 0x36): Sprite_Current: SeedCurrentCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2f_fuzz.cpp	513	0x3A	family	SetWord(Sprite_Current + 0x3A): Sprite_Current: SeedCurrentCell has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2f_fuzz.cpp	542	0x18	family	SetLong(Sprite_Current + 0x18): Sprite_Current: Seed111 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2f_fuzz.cpp	553	0x36	family	SetWord(Sprite_Current + 0x36): Sprite_Current: Seed111 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2f_fuzz.cpp	554	0x3A	family	SetWord(Sprite_Current + 0x3A): Sprite_Current: Seed111 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w2f_fuzz.cpp	563	0x36	width	SetWord(e + 0x36): SpriteObject +0x36 width 2
+src/game/area_w2f_fuzz.cpp	564	0x3A	width	SetWord(e + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w2f_fuzz.cpp	574	0x18	family	SetLong(Sprite_Current + 0x18): Sprite_Current: Seed111 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	82	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w3a.cpp	148	-	computed	At(t.place_messages + static_cast<U>(index * 2)): offset not a constant
+src/game/area_w3a.cpp	158	-	computed	At(t.name_sets + 1 + set * t.set_stride): offset not a constant
+src/game/area_w3a.cpp	165	0x4	family	SetLong(out + 4): out = At(row): family not established
+src/game/area_w3a.cpp	192	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w3a.cpp	193	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w3a.cpp	231	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w3a.cpp	232	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w3a.cpp	242	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3a.cpp	243	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w3a.cpp	254	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3a.cpp	254	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3a.cpp	274	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w3a.cpp	289	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3a.cpp	289	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3a.cpp	449	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w3a.cpp	450	-	computed	At(t.sprites + (index & 0xFF) * 4u): offset not a constant
+src/game/area_w3a.cpp	451	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w3a.cpp	452	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w3a.cpp	482	-	computed	At(t.directions + half + o[8] * 4u): offset not a constant
+src/game/area_w3a.cpp	487	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w3a.cpp	488	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w3a.cpp	489	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w3a.cpp	490	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w3a.cpp	493	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3a.cpp	493	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3a.cpp	495	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3a.cpp	495	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3a.cpp	499	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3a.cpp	499	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3a.cpp	500	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3a.cpp	500	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3a.cpp	503	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3a.cpp	503	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3a.cpp	505	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3a.cpp	505	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3a.cpp	508	-	computed	At(t.record8_anims + Cur()[8] * 2u): offset not a constant
+src/game/area_w3a.cpp	510	-	computed	At(t.record8_anims + 1 + o[8] * 2u): offset not a constant
+src/game/area_w3a.cpp	535	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w3a.cpp	554	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	554	0x3A	family	Word(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	561	0x38	family	SetLong(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	561	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	564	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	583	0x34	family	Long(o + 0x34): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	584	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	586	0x4	family	SetWord(v + 4): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	587	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	588	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	589	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	590	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	591	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	592	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	593	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	594	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	595	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	596	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	597	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3a.cpp	624	0x16	family	SetWord(q + 0x16): q = Gfx_PacketNext: family not established
+src/game/area_w3a.cpp	625	0x26	family	SetWord(q + 0x26): q = Gfx_PacketNext: family not established
+src/game/area_w3a.cpp	627	-	computed	At(t.drift_size + static_cast<U>(e)): offset not a constant
+src/game/area_w3a.cpp	628	-	computed	At(t.drift_u + static_cast<U>(e)): offset not a constant
+src/game/area_w3a.cpp	629	-	computed	At(t.drift_v + static_cast<U>(e)): offset not a constant
+src/game/area_w3a.cpp	630	0x38	family	Word(Cur() + 0x38): Sprite_Current: DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	775	0x34	family	Long(cur + 0x34): cur = Sprite_Current: Area116_EffectB8Ring has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	776	0x38	family	Long(cur + 0x38): cur = Sprite_Current: Area116_EffectB8Ring has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	777	0x3C	family	Long(cur + 0x3C): cur = Sprite_Current: Area116_EffectB8Ring has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	799	-	computed	At(table + id): offset not a constant
+src/game/area_w3a.cpp	946	0x1	family	At(e + 1): e: no local declaration with a known family
+src/game/area_w3a.cpp	956	0x1	family	At(e + 1): e: no local declaration with a known family
+src/game/area_w3a.cpp	961	0xC	family	SetLong(o + 0xC): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	961	0xC	family	Long(o + 0xC): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	963	0x10	family	SetLong(o + 0x10): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	963	0x10	family	Long(o + 0x10): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	965	0x14	family	SetLong(o + 0x14): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	965	0x14	family	Long(o + 0x14): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a.cpp	999	0x3	family	At(t.switches + index * 4u + 3): t.switches + index * 4u: family not established
+src/game/area_w3a_fuzz.cpp	106	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w3a_fuzz.cpp	318	-	computed	Mem(t.cells + (n - 1) * 4): offset not a constant
+src/game/area_w3a_fuzz.cpp	323	-	computed	Mem(t.name_sets + ((cx[0] ^ cz[0]) % t.sets) * t.set_stride): offset not a constant
+src/game/area_w3a_fuzz.cpp	325	-	computed	Mem(t.cells + (ah::Next() % n) * 4): offset not a constant
+src/game/area_w3a_fuzz.cpp	360	-	computed	Mem(t.cells + (CellRecords() - 1) * 4): offset not a constant
+src/game/area_w3a_fuzz.cpp	362	-	computed	Mem(t.name_sets + (k % t.sets) * t.set_stride): offset not a constant
+src/game/area_w3a_fuzz.cpp	363	-	computed	Mem(t.name_sets + ((k + 1) % t.sets) * t.set_stride): offset not a constant
+src/game/area_w3a_fuzz.cpp	374	0x4	family	Mem(t.cells + 4): t.cells: family not established
+src/game/area_w3a_fuzz.cpp	410	-	computed	Mem(t.place_messages + (ah::Next() % rows) * 0x20): offset not a constant
+src/game/area_w3a_fuzz.cpp	414	-	computed	Mem(t.name_sets + (ah::Next() % t.sets) * t.set_stride): offset not a constant
+src/game/area_w3a_fuzz.cpp	419	-	computed	Mem(t.name_sets + 1 + (ah::Next() % t.sets) * t.set_stride + ah:): offset not a constant
+src/game/area_w3a_fuzz.cpp	428	-	computed	Mem(t.plate_anims + (ah::Next() % anims) * 4): offset not a constant
+src/game/area_w3a_fuzz.cpp	433	0x40	family	SetLong(o + 0x40): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	440	0x18	family	SetLong(o + 0x18): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	449	0x2E	family	SetWord(o + 0x2E): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	456	0x2E	family	SetWord(o + 0x2E): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	460	0x30	family	SetWord(o + 0x30): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	469	0x30	family	SetWord(o + 0x30): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	477	-	computed	Mem(t.buttons + (ah::Next() % 6) * 4): offset not a constant
+src/game/area_w3a_fuzz.cpp	481	-	computed	Mem(t.buttons + e * 4): offset not a constant
+src/game/area_w3a_fuzz.cpp	482	-	computed	Mem(t.buttons + 7 * 4): offset not a constant
+src/game/area_w3a_fuzz.cpp	484	-	computed	Mem(t.buttons + (ah::Half() ? 6 + ah::Next() % 2 : ah::Next() % ): offset not a constant
+src/game/area_w3a_fuzz.cpp	506	0x3A	family	SetWord(o + 0x3A): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	510	0x36	family	Word(o + 0x36): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	511	0x3A	family	Word(o + 0x3A): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3a_fuzz.cpp	690	-	computed	Mem(g_tw->rect): offset not a constant
+src/game/area_w3a_fuzz.cpp	709	-	computed	Mem(g_tw->rect): offset not a constant
+src/game/area_w3a_fuzz.cpp	721	-	computed	Mem(g_tw->sw): offset not a constant
+src/game/area_w3a_fuzz.cpp	749	-	computed	Mem(g_tw->sw): offset not a constant
+src/game/area_w3b.cpp	71	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w3b.cpp	133	0x8A	family	SetWord(record + 0x8A): record = reinterpret_cast<unsigned char*>(AreaW1a_FocusObject): family not established
+src/game/area_w3b.cpp	133	0x8A	family	Word(record + 0x8A): record = reinterpret_cast<unsigned char*>(AreaW1a_FocusObject): family not established
+src/game/area_w3b.cpp	257	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w3b.cpp	258	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w3b.cpp	296	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w3b.cpp	297	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w3b.cpp	307	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3b.cpp	308	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w3b.cpp	319	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3b.cpp	319	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3b.cpp	339	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w3b.cpp	354	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3b.cpp	354	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3b.cpp	512	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	513	-	computed	At(t.sprites + (index & 0xFF) * 4u): offset not a constant
+src/game/area_w3b.cpp	514	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	515	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	545	-	computed	At(t.directions + half + o[8] * 4u): offset not a constant
+src/game/area_w3b.cpp	550	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w3b.cpp	551	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w3b.cpp	552	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w3b.cpp	553	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w3b.cpp	556	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3b.cpp	556	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3b.cpp	558	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3b.cpp	558	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3b.cpp	562	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3b.cpp	562	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3b.cpp	563	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3b.cpp	563	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3b.cpp	566	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3b.cpp	566	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3b.cpp	568	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3b.cpp	568	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3b.cpp	571	-	computed	At(t.record8_anims + Cur()[8] * 2u): offset not a constant
+src/game/area_w3b.cpp	573	-	computed	At(t.record8_anims + 1 + o[8] * 2u): offset not a constant
+src/game/area_w3b.cpp	598	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w3b.cpp	619	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	619	0x3A	family	Word(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	626	0x38	family	SetLong(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	626	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	629	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	639	0x34	family	Long(o + 0x34): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	640	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	644	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	645	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	646	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	647	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	648	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	649	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	650	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	651	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	652	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	653	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	654	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	655	0x4	family	SetWord(v + 0x04): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	888	0x34	family	Long(o + 0x34): o = Cur(): Area121_PushObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	889	0x38	family	Long(o + 0x38): o = Cur(): Area121_PushObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	946	0x34	family	Long(o + 0x34): o = Cur(): Area121_StepOffObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	946	0x38	family	Long(o + 0x38): o = Cur(): Area121_StepOffObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	948	0x34	family	Long(o + 0x34): o = Cur(): Area121_StepOffObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	948	0x38	family	Long(o + 0x38): o = Cur(): Area121_StepOffObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	981	0x36	family	Word(o + 0x36): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	981	0x3A	family	Word(o + 0x3A): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	988	0x36	family	Word(o + 0x36): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	988	0x3A	family	Word(o + 0x3A): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	990	0x36	family	Word(o + 0x36): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	990	0x3A	family	Word(o + 0x3A): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	998	0x34	family	Long(o + 0x34): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	998	0x38	family	Long(o + 0x38): o = Cur(): Area121_LeaderStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1077	0x8	family	Long(descriptor + 8): descriptor = Area_Descriptors[area]: family not established
+src/game/area_w3b.cpp	1104	0x34	family	SetLong(Cur() + 0x34): Sprite_Current: Area121_Kind5CFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1105	0x38	family	SetLong(Cur() + 0x38): Sprite_Current: Area121_Kind5CFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1106	0x3E	family	SetWord(Cur() + 0x3E): Sprite_Current: Area121_Kind5CFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1146	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	1147	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	1148	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	1186	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area121_Kind5CTurnStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1189	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area121_Kind5CTurnStep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1205	0x14	family	Long(Cur() + 0x14): Sprite_Current: Area121_Kind5CTurn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1205	0x6C	family	SetLong(Cur() + 0x6C): Sprite_Current: Area121_Kind5CTurn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1205	0x6C	family	Long(Cur() + 0x6C): Sprite_Current: Area121_Kind5CTurn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1206	0x6C	family	SetLong(Cur() + 0x6C): Sprite_Current: Area121_Kind5CTurn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1206	0x6C	family	Long(Cur() + 0x6C): Sprite_Current: Area121_Kind5CTurn has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1226	0x34	family	SetLong(o + 0x34): o = Cur(): Area121_RingWait has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1227	0x38	family	SetLong(Cur() + 0x38): Sprite_Current: Area121_RingWait has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1228	0x3C	family	SetLong(Cur() + 0x3C): Sprite_Current: Area121_RingWait has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1244	0x3E	family	SetWord(Cur() + 0x3E): Sprite_Current: Area121_RingRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1244	0x3E	family	Word(Cur() + 0x3E): Sprite_Current: Area121_RingRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1252	0x34	family	Long(o + 0x34): o = Cur(): Area121_RingRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1253	0x38	family	Long(o + 0x38): o = Cur(): Area121_RingRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1264	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1265	0x4	family	SetWord(v + 0x04): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1266	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1267	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1268	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1269	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1270	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1271	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1272	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1273	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1274	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1275	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3b.cpp	1281	0x26	family	SetWord(prim + 0x26): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	1282	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	1297	0x34	family	Long(o + 0x34): o = Cur(): Area121_RingRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1297	0x38	family	Long(o + 0x38): o = Cur(): Area121_RingRise has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b.cpp	1324	0xC	family	SetLong(prim + 0xC): prim = Gfx_PacketNext: family not established
+src/game/area_w3b.cpp	1326	0x1C	family	SetLong(prim + 0x1C): prim = Gfx_PacketNext: family not established
+src/game/area_w3b_fuzz.cpp	70	0x0	family	SetWord(m + 0): m = Mem(at): family not established
+src/game/area_w3b_fuzz.cpp	71	0x8	family	SetWord(m + 8): m = Mem(at): family not established
+src/game/area_w3b_fuzz.cpp	72	0x10	family	SetWord(m + 0x10): m = Mem(at): family not established
+src/game/area_w3b_fuzz.cpp	73	0x14	family	SetLong(m + 0x14): m = Mem(at): family not established
+src/game/area_w3b_fuzz.cpp	74	0x18	family	SetLong(m + 0x18): m = Mem(at): family not established
+src/game/area_w3b_fuzz.cpp	75	0x1C	family	SetLong(m + 0x1C): m = Mem(at): family not established
+src/game/area_w3b_fuzz.cpp	101	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w3b_fuzz.cpp	161	0x8A	family	SetWord(ah::Pointer(AreaW1a_FocusObject_addr) + 0x8A): ah::Pointer(AreaW1a_FocusObject_addr): family not established
+src/game/area_w3b_fuzz.cpp	392	0x40	family	SetLong(o + 0x40): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	399	0x18	family	SetLong(o + 0x18): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	408	0x2E	family	SetWord(o + 0x2E): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	415	0x2E	family	SetWord(o + 0x2E): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	419	0x30	family	SetWord(o + 0x30): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	428	0x30	family	SetWord(o + 0x30): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	465	0x3A	family	SetWord(o + 0x3A): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	469	0x36	family	Word(o + 0x36): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	470	0x3A	family	Word(o + 0x3A): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	801	0x14	family	SetLong(o + 0x14): o = Sprite_Current: SeedFx has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	802	0x6C	family	SetLong(o + 0x6C): o = Sprite_Current: SeedFx has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	808	0x3E	family	SetWord(o + 0x3E): o = Sprite_Current: SeedFx has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	815	0x34	family	SetLong(o + 0x34): o = Sprite_Current: SeedFx has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3b_fuzz.cpp	816	0x38	family	SetLong(o + 0x38): o = Sprite_Current: SeedFx has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3c.cpp	68	-	computed	B(weights + chosen): offset not a constant
+src/game/area_w3c.cpp	77	-	computed	B(cells + pick * 2): offset not a constant
+src/game/area_w3c.cpp	78	0x1	family	B(cells + pick * 2 + 1): cells + pick * 2: family not established
+src/game/area_w3c.cpp	82	0x3E	width	SetWord(object + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w3c.cpp	98	-	computed	B(args + B(Cond_Flags_addr + 0xd2 + member)): offset not a constant
+src/game/area_w3c.cpp	115	0x34	family	Long(Sprite_Current + 0x34): Sprite_Current: EffectAtObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3c.cpp	116	0x38	family	Long(Sprite_Current + 0x38): Sprite_Current: EffectAtObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3c.cpp	117	0x3C	family	Long(Sprite_Current + 0x3C): Sprite_Current: EffectAtObject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3c.cpp	205	0x8A	family	SetWord(Focus() + 0x8A): Focus(): family not established
+src/game/area_w3c.cpp	418	0x8A	family	SetWord(Focus() + 0x8A): Focus(): family not established
+src/game/area_w3c.cpp	556	0xC	family	SetLong(p + 0x0C): p = Gfx_PacketNext: family not established
+src/game/area_w3c.cpp	558	0x1C	family	SetLong(p + 0x1C): p = Gfx_PacketNext: family not established
+src/game/area_w3c.cpp	585	0x18	family	SetLong(focus + 0x18): focus = Focus(): family not established
+src/game/area_w3c.cpp	587	0x1C	family	SetLong(again + 0x1C): again = Focus(): family not established
+src/game/area_w3c_fuzz.cpp	302	0x2	family	SetWord(ah::Mem(entry) + 2): ah::Mem(entry): family not established
+src/game/area_w3c_fuzz.cpp	340	-	computed	SetLong(p + i * 4): offset not a constant
+src/game/area_w3c_fuzz.cpp	342	-	computed	SetLong(p + (n + i) * 4): offset not a constant
+src/game/area_w3c_fuzz.cpp	479	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w3d.cpp	86	-	computed	D(table + state * 4): offset not a constant
+src/game/area_w3d.cpp	94	0x14	width	Word(cur + 0x14): SpriteObject +0x14 width 2
+src/game/area_w3d.cpp	104	-	computed	Word(cur + word): offset not a constant
+src/game/area_w3d.cpp	219	0x1	family	B(table + exit * 2u + 1): table + exit * 2u: family not established
+src/game/area_w3d.cpp	220	-	computed	B(table + exit * 2u): offset not a constant
+src/game/area_w3d.cpp	273	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w3d.cpp	274	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w3d.cpp	275	0x3C	gate	SetLong(Sprite_Current + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w3d.cpp	487	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w3d.cpp	488	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w3d.cpp	489	0x3C	gate	SetLong(Sprite_Current + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w3d.cpp	760	0x18	field-missing	SetLong(e + 0x18): EffectObject +0x18 width 4
+src/game/area_w3d.cpp	761	0x1C	field-missing	SetLong(e + 0x1C): EffectObject +0x1C width 4
+src/game/area_w3d.cpp	777	0x3E	family	Word(cur + 0x3E): cur = Sprite_Current: Area135_FallTo has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	786	0x3E	family	Word(cur + 0x3E): cur = Sprite_Current: Area135_FallTo has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	787	0x14	family	SetLong(cur + 0x14): cur = Sprite_Current: Area135_FallTo has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	788	0x10	family	SetLong(Sprite_Current + 0x10): Sprite_Current: Area135_FallTo has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	789	0xC	family	SetLong(Sprite_Current + 0xC): Sprite_Current: Area135_FallTo has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	833	0x20	field-missing	SetLong(cur + 0x20): SpriteObject +0x20 width 4
+src/game/area_w3d.cpp	857	0x34	family	Long(cur + 0x34): cur = Sprite_Current: Area135_RestoreCells has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	858	0x38	family	Long(cur + 0x38): cur = Sprite_Current: Area135_RestoreCells has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	864	0x20	family	Long(Sprite_Current + 0x20): Sprite_Current: Area135_RestoreCells has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	867	0x20	family	Long(Sprite_Current + 0x20): Sprite_Current: Area135_RestoreCells has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d.cpp	877	0x70	family	Long(Sprite_Current + 0x70): Sprite_Current: Area135_NearMarker has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	170	0x20	family	SetLong(Sprite_Current + 0x20): Sprite_Current: ByteAtEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	427	-	computed	SetWord(cur + (k == kHeld1 ? 0x3A : 0x36)): offset not a constant
+src/game/area_w3d_fuzz.cpp	439	0x34	family	SetLong(o + 0x34): o = m < 3 ? ah::PartyOf(static_cast<unsigned char>(m)) : ah::Object(m - 3): family not established
+src/game/area_w3d_fuzz.cpp	440	0x38	family	SetLong(o + 0x38): o = m < 3 ? ah::PartyOf(static_cast<unsigned char>(m)) : ah::Object(m - 3): family not established
+src/game/area_w3d_fuzz.cpp	445	0x34	family	SetLong(cur + 0x34): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	446	0x38	family	SetLong(cur + 0x38): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	455	0x38	family	SetLong(cur + 0x38): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	458	0x34	family	SetLong(cur + 0x34): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	460	0x34	family	SetLong(cur + 0x34): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	461	0x38	family	SetLong(cur + 0x38): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	463	0x34	family	SetLong(cur + 0x34): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	464	0x38	family	SetLong(cur + 0x38): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3d_fuzz.cpp	560	0x3E	family	Word(Sprite_Current + 0x3E): Sprite_Current: Args has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3e.cpp	59	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w3e.cpp	76	-	computed	Mem(table + i * stride): offset not a constant
+src/game/area_w3e.cpp	87	0x2E	family	Word(r + 0x2E): r = Mem(record): family not established
+src/game/area_w3e.cpp	88	0x30	family	Word(r + 0x30): r = Mem(record): family not established
+src/game/area_w3e.cpp	91	-	computed	B(table + who): offset not a constant
+src/game/area_w3e.cpp	386	0x36	width	Word(cur + 0x36): SpriteObject +0x36 width 2
+src/game/area_w3e.cpp	387	0x3A	width	Word(cur + 0x3A): SpriteObject +0x3A width 2
+src/game/area_w3e.cpp	531	0x2	family	Word(r + 2): r = Mem(Area140_CellRects_addr + rect * 4): family not established
+src/game/area_w3e.cpp	595	0x36	width	Word(cur + 0x36): EffectObject +0x36 width 2
+src/game/area_w3e.cpp	595	0x3A	width	Word(cur + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3e.cpp	903	0x88	family	Word(object + 0x88): object: no local declaration with a known family
+src/game/area_w3e_fuzz.cpp	354	-	computed	Mem(table + g_pick * stride): offset not a constant
+src/game/area_w3e_fuzz.cpp	361	-	computed	Mem(table + g_pick * stride): offset not a constant
+src/game/area_w3e_fuzz.cpp	385	0x38	family	SetLong(cur + 0x38): cur = Sprite_Current: Seed136 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3e_fuzz.cpp	437	0x36	family	SetWord(cur + 0x36): cur = Sprite_Current: SeedFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3e_fuzz.cpp	438	0x3A	family	SetWord(cur + 0x3A): cur = Sprite_Current: SeedFollow has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3e_fuzz.cpp	455	0x2	family	Word(r + 2): r = ah::Mem(Area140_CellRects_addr + rect * 4): family not established
+src/game/area_w3e_fuzz.cpp	526	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: Seed141 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3e_fuzz.cpp	558	0x88	gate	SetWord(ah::Object(g_pick) + 0x88): typed, but the object changed (codegen_same)
+src/game/area_w3f.cpp	63	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w3f.cpp	98	-	computed	B(keys + i): offset not a constant
+src/game/area_w3f.cpp	99	-	computed	Mem(messages + i * 2): offset not a constant
+src/game/area_w3f.cpp	169	-	computed	SetLong(prim + 8 + k * 4): offset not a constant
+src/game/area_w3f.cpp	170	-	computed	SetLong(prim + 0x18 + k * 4): offset not a constant
+src/game/area_w3f.cpp	171	-	computed	SetLong(prim + 0x28 + k * 4): offset not a constant
+src/game/area_w3f.cpp	172	-	computed	SetLong(prim + 0x38 + k * 4): offset not a constant
+src/game/area_w3f.cpp	225	0x1	family	B(rec + 1): rec: no local declaration with a known family
+src/game/area_w3f.cpp	231	0x1	family	B(rec + 1): rec: no local declaration with a known family
+src/game/area_w3f.cpp	233	0x2	family	B(rec + 2): rec: no local declaration with a known family
+src/game/area_w3f.cpp	234	0x2	family	B(rec + 2): rec: no local declaration with a known family
+src/game/area_w3f.cpp	253	0x64	family	SetLong(e + 0x64): e: no local declaration with a known family
+src/game/area_w3f.cpp	254	0x68	family	SetLong(e + 0x68): e: no local declaration with a known family
+src/game/area_w3f.cpp	255	0x6C	family	SetLong(e + 0x6C): e: no local declaration with a known family
+src/game/area_w3f.cpp	408	-	computed	Mem(at + at::kClutToLive): offset not a constant
+src/game/area_w3f.cpp	441	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w3f.cpp	544	0x34	family	SetLong(k2 + 0x34): k2 = Mem(Sprite_Kind2_addr): family not established
+src/game/area_w3f.cpp	547	0x38	family	SetLong(k2 + 0x38): k2 = Mem(Sprite_Kind2_addr): family not established
+src/game/area_w3f.cpp	548	0x3C	family	SetLong(k2 + 0x3C): k2 = Mem(Sprite_Kind2_addr): family not established
+src/game/area_w3f.cpp	611	0xC	family	SetLong(rec + 0xC): rec = Mem(MoveScript_PartyRecords_addr + index * 16u): family not established
+src/game/area_w3f.cpp	628	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w3f.cpp	632	0x20	field-missing	SetLong(Sprite_Current + 0x20): SpriteObject +0x20 width 4
+src/game/area_w3f.cpp	647	0x20	field-missing	Long(Sprite_Current + 0x20): SpriteObject +0x20 width 4
+src/game/area_w3f.cpp	651	0x3E	width	Word(cur + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w3f.cpp	655	0x3E	width	SetWord(cur + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w3f.cpp	657	0x20	field-missing	SetLong(Sprite_Current + 0x20): SpriteObject +0x20 width 4
+src/game/area_w3f.cpp	681	-	computed	Long(name + i): offset not a constant
+src/game/area_w3f.cpp	681	-	computed	SetLong(text + i): offset not a constant
+src/game/area_w3f.cpp	734	0x1	family	B(rec + 1): rec: no local declaration with a known family
+src/game/area_w3f.cpp	734	0x2	family	B(rec + 2): rec: no local declaration with a known family
+src/game/area_w3f.cpp	908	0x1	family	B(rec + 1): rec: no local declaration with a known family
+src/game/area_w3f.cpp	912	0x1	family	B(rec + 1): rec: no local declaration with a known family
+src/game/area_w3f.cpp	914	0x2	family	B(rec + 2): rec: no local declaration with a known family
+src/game/area_w3f.cpp	946	0x18	field-missing	SetLong(e + 0x18): EffectObject +0x18 width 4
+src/game/area_w3f.cpp	947	0x1C	field-missing	SetLong(e + 0x1C): EffectObject +0x1C width 4
+src/game/area_w3f.cpp	948	0x20	field-missing	SetLong(e + 0x20): EffectObject +0x20 width 4
+src/game/area_w3f.cpp	949	0x14	field-missing	SetLong(e + 0x14): EffectObject +0x14 width 4
+src/game/area_w3f.cpp	966	0x2C	family	SetLong(prim + 0x2C): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	967	0x3C	family	SetLong(prim + 0x3C): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	974	0x8	family	SetLong(prim + 8): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	975	0xC	family	SetLong(prim + 0xC): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	976	0x18	family	SetLong(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	977	0x1C	family	SetLong(prim + 0x1C): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	978	0x28	family	SetLong(prim + 0x28): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	979	0x38	family	SetLong(prim + 0x38): prim = Gfx_PacketNext: family not established
+src/game/area_w3f.cpp	1053	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w3f.cpp	1054	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w3f.cpp	1055	0x3C	gate	SetLong(Sprite_Current + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w3f_fuzz.cpp	246	0x3E	family	Word(Sprite_Current + 0x3E): Sprite_Current: GroundEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3f_fuzz.cpp	443	-	computed	B(keys + ah::Next() % 4): offset not a constant
+src/game/area_w3f_fuzz.cpp	502	0x38	family	SetLong(Sprite_Current + 0x38): Sprite_Current: SeedZ has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3f_fuzz.cpp	535	0x20	family	SetLong(Sprite_Current + 0x20): Sprite_Current: Seed145 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3f_fuzz.cpp	596	0x1	family	B(rec + 1): rec: no local declaration with a known family
+src/game/area_w3f_fuzz.cpp	597	0x2	family	B(rec + 2): rec: no local declaration with a known family
+src/game/area_w3g.cpp	86	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w3g.cpp	161	-	computed	B(ids + i): offset not a constant
+src/game/area_w3g.cpp	164	-	computed	At(messages + i * 2): offset not a constant
+src/game/area_w3g.cpp	180	0x64	field-missing	SetLong(e + 0x64): EffectObject +0x64 width 4
+src/game/area_w3g.cpp	181	0x68	field-missing	SetLong(e + 0x68): EffectObject +0x68 width 4
+src/game/area_w3g.cpp	182	0x6C	field-missing	SetLong(e + 0x6C): EffectObject +0x6C width 4
+src/game/area_w3g.cpp	199	0x18	family	Long(o + 0x18): o = Cur(): DrawModeLink has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	199	0x1C	family	Long(o + 0x1C): o = Cur(): DrawModeLink has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	204	0x18	family	Long(o + 0x18): o = Cur(): LinkHere has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	204	0x1C	family	Long(o + 0x1C): o = Cur(): LinkHere has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	349	0x1	family	B(rec + 1): rec: no local declaration with a known family
+src/game/area_w3g.cpp	349	0x2	family	B(rec + 2): rec: no local declaration with a known family
+src/game/area_w3g.cpp	369	0x3E	family	SetWord(Cur() + 0x3E): Sprite_Current: Area148_BeamStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	369	0x3E	family	Word(Cur() + 0x3E): Sprite_Current: Area148_BeamStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	388	0x18	family	SetLong(o + 0x18): o = Cur(): Area148_BeamSweep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	388	0x18	family	Long(o + 0x18): o = Cur(): Area148_BeamSweep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	388	0xC	family	Long(o + 0xC): o = Cur(): Area148_BeamSweep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	390	0x10	family	Long(o + 0x10): o = Cur(): Area148_BeamSweep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	390	0x1C	family	SetLong(o + 0x1C): o = Cur(): Area148_BeamSweep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	390	0x1C	family	Long(o + 0x1C): o = Cur(): Area148_BeamSweep has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	427	0x18	family	SetLong(o + 0x18): o = Cur(): Area148_BeamAhead has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	427	0x34	family	Long(o + 0x34): o = Cur(): Area148_BeamAhead has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	429	0x1C	family	SetLong(o + 0x1C): o = Cur(): Area148_BeamAhead has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	429	0x38	family	Long(o + 0x38): o = Cur(): Area148_BeamAhead has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	431	0x18	family	Long(o + 0x18): o = Cur(): Area148_BeamAhead has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	431	0x1C	family	Long(o + 0x1C): o = Cur(): Area148_BeamAhead has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	432	0x20	family	SetLong(Cur() + 0x20): Sprite_Current: Area148_BeamAhead has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	439	0xC	family	SetLong(o + 0xC): o = Cur(): Area148_BeamVelocity has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	441	0x10	family	SetLong(o + 0x10): o = Cur(): Area148_BeamVelocity has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	454	0x3C	family	Long(o + 0x3C): o = Cur(): Area148_BeamTurnMembers has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	455	0x20	family	Long(o + 0x20): o = Cur(): Area148_BeamTurnMembers has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	455	0x3C	family	SetLong(o + 0x3C): o = Cur(): Area148_BeamTurnMembers has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	461	0x38	family	Long(c + 0x38): c = Cur(): Area148_BeamTurnMembers has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	462	0x34	family	Long(c + 0x34): c = Cur(): Area148_BeamTurnMembers has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	474	0x3C	family	SetLong(Cur() + 0x3C): Sprite_Current: Area148_BeamTurnMembers has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	603	0xA	family	SetWord(script + 0xA): script = MoveScript_Object: family not established
+src/game/area_w3g.cpp	603	0xA	family	Word(script + 0xA): script = MoveScript_Object: family not established
+src/game/area_w3g.cpp	636	0x3E	width	SetWord(e + 0x3E): EffectObject +0x3E width 2
+src/game/area_w3g.cpp	709	0x2C	field-missing	SetWord(e + 0x2C): EffectObject +0x2C width 2
+src/game/area_w3g.cpp	713	0x3E	width	SetWord(e + 0x3E): EffectObject +0x3E width 2
+src/game/area_w3g.cpp	714	0x2C	field-missing	SetWord(e + 0x2C): EffectObject +0x2C width 2
+src/game/area_w3g.cpp	772	0x36	width	SetWord(x0 + 0x36): SpriteObject +0x36 width 2
+src/game/area_w3g.cpp	772	0x36	width	Word(x0 + 0x36): SpriteObject +0x36 width 2
+src/game/area_w3g.cpp	777	0x3E	width	SetWord(x0 + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w3g.cpp	965	-	computed	At(t.place_messages + static_cast<U>(index * 2)): offset not a constant
+src/game/area_w3g.cpp	974	0x4	family	SetLong(out + 4): out = At(row): family not established
+src/game/area_w3g.cpp	1001	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w3g.cpp	1002	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w3g.cpp	1026	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w3g.cpp	1027	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w3g.cpp	1037	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3g.cpp	1038	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w3g.cpp	1049	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3g.cpp	1049	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3g.cpp	1069	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w3g.cpp	1084	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3g.cpp	1084	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w3g.cpp	1244	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w3g.cpp	1245	-	computed	At(t.sprites + (index & 0xFF) * 4u): offset not a constant
+src/game/area_w3g.cpp	1246	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w3g.cpp	1247	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w3g.cpp	1277	-	computed	At(t.directions + half + o[8] * 4u): offset not a constant
+src/game/area_w3g.cpp	1282	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w3g.cpp	1283	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w3g.cpp	1284	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w3g.cpp	1285	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w3g.cpp	1288	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3g.cpp	1288	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3g.cpp	1290	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3g.cpp	1290	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3g.cpp	1294	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3g.cpp	1294	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3g.cpp	1295	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3g.cpp	1295	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3g.cpp	1298	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3g.cpp	1298	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w3g.cpp	1300	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3g.cpp	1300	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w3g.cpp	1303	-	computed	At(t.record8_anims + Cur()[8] * 2u): offset not a constant
+src/game/area_w3g.cpp	1305	-	computed	At(t.record8_anims + 1 + o[8] * 2u): offset not a constant
+src/game/area_w3g.cpp	1330	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w3g.cpp	1349	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	1349	0x3A	family	Word(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	1356	0x38	family	SetLong(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	1356	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	1359	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	1378	0x34	family	Long(o + 0x34): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	1379	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g.cpp	1381	0x4	family	SetWord(v + 4): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1382	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1383	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1384	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1385	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1386	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1387	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1388	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1389	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1390	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1391	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1392	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w3g.cpp	1419	0x16	family	SetWord(q + 0x16): q = Gfx_PacketNext: family not established
+src/game/area_w3g.cpp	1420	0x26	family	SetWord(q + 0x26): q = Gfx_PacketNext: family not established
+src/game/area_w3g.cpp	1422	-	computed	At(t.drift_size + static_cast<U>(e)): offset not a constant
+src/game/area_w3g.cpp	1423	-	computed	At(t.drift_u + static_cast<U>(e)): offset not a constant
+src/game/area_w3g.cpp	1424	-	computed	At(t.drift_v + static_cast<U>(e)): offset not a constant
+src/game/area_w3g.cpp	1425	0x38	family	Word(Cur() + 0x38): Sprite_Current: DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	207	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w3g_fuzz.cpp	260	0x2	family	SetWord(out + 2): out = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[2])): family not established
+src/game/area_w3g_fuzz.cpp	266	0x3C	family	Long(Sprite_Current + 0x3C): Sprite_Current: MemberAtEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	822	0x40	family	SetLong(o + 0x40): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	829	0x18	family	SetLong(o + 0x18): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	838	0x2E	family	SetWord(o + 0x2E): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	845	0x2E	family	SetWord(o + 0x2E): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	849	0x30	family	SetWord(o + 0x30): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	858	0x30	family	SetWord(o + 0x30): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	896	0x3A	family	SetWord(o + 0x3A): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	900	0x36	family	Word(o + 0x36): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w3g_fuzz.cpp	901	0x3A	family	Word(o + 0x3A): o = Sprite_Current: SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	70	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4a.cpp	70	0xA	family	Word(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4a.cpp	82	-	computed	At(table + index * 4u): offset not a constant
+src/game/area_w4a.cpp	149	-	computed	At(t.place_rows + static_cast<U>(index * 2)): offset not a constant
+src/game/area_w4a.cpp	167	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w4a.cpp	168	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w4a.cpp	206	0x18	field-missing	SetLong(Cur() + 0x18): EffectObject +0x18 width 4
+src/game/area_w4a.cpp	207	0x2	family	At(entry + 2): entry: no local declaration with a known family
+src/game/area_w4a.cpp	217	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w4a.cpp	218	0x44	field-missing	SetLong(Cur() + 0x44): EffectObject +0x44 width 4
+src/game/area_w4a.cpp	229	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w4a.cpp	229	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w4a.cpp	249	0x18	field-missing	Long(o + 0x18): EffectObject +0x18 width 4
+src/game/area_w4a.cpp	264	0x40	field-missing	SetLong(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w4a.cpp	264	0x40	field-missing	Long(Cur() + 0x40): EffectObject +0x40 width 4
+src/game/area_w4a.cpp	424	0x16	family	SetWord(prim + 0x16): prim = Gfx_PacketNext: family not established
+src/game/area_w4a.cpp	425	-	computed	At(t.sprites + (index & 0xFF) * 4u): offset not a constant
+src/game/area_w4a.cpp	426	0x18	family	SetWord(prim + 0x18): prim = Gfx_PacketNext: family not established
+src/game/area_w4a.cpp	427	0x1A	family	SetWord(prim + 0x1A): prim = Gfx_PacketNext: family not established
+src/game/area_w4a.cpp	457	-	computed	At(t.directions + half + o[8] * 4u): offset not a constant
+src/game/area_w4a.cpp	462	0xC	gate	SetLong(Cur() + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w4a.cpp	463	0x10	gate	SetLong(Cur() + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w4a.cpp	464	0x34	gate	SetLong(Cur() + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w4a.cpp	465	0x38	gate	SetLong(Cur() + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w4a.cpp	468	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w4a.cpp	468	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w4a.cpp	470	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w4a.cpp	470	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w4a.cpp	474	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w4a.cpp	474	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w4a.cpp	475	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w4a.cpp	475	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w4a.cpp	478	0x36	width	SetWord(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w4a.cpp	478	0x36	width	Word(o + 0x36): EffectObject +0x36 width 2
+src/game/area_w4a.cpp	480	0x3A	width	SetWord(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w4a.cpp	480	0x3A	width	Word(o + 0x3A): EffectObject +0x3A width 2
+src/game/area_w4a.cpp	483	-	computed	At(t.record8_anims + Cur()[8] * 2u): offset not a constant
+src/game/area_w4a.cpp	485	-	computed	At(t.record8_anims + 1 + o[8] * 2u): offset not a constant
+src/game/area_w4a.cpp	510	0x1	family	At(record + 1): record: no local declaration with a known family
+src/game/area_w4a.cpp	529	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	529	0x3A	family	Word(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	536	0x38	family	SetLong(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	536	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	539	0x3A	family	SetWord(o + 0x3A): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	558	0x34	family	Long(o + 0x34): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	559	0x38	family	Long(o + 0x38): o = Cur(): DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	561	0x4	family	SetWord(v + 4): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	562	0x12	family	SetWord(v + 0x12): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	563	0x1A	family	SetWord(v + 0x1A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	564	0x8	family	SetWord(v + 0x08): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	565	0x18	family	SetWord(v + 0x18): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	566	0x0	family	SetWord(v + 0x00): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	567	0x10	family	SetWord(v + 0x10): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	568	0x2	family	SetWord(v + 0x02): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	569	0xA	family	SetWord(v + 0x0A): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	570	0xC	family	SetWord(v + 0x0C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	571	0x14	family	SetWord(v + 0x14): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	572	0x1C	family	SetWord(v + 0x1C): v = reinterpret_cast<unsigned char*>(Prim_VertexScratch): family not established
+src/game/area_w4a.cpp	599	0x16	family	SetWord(q + 0x16): q = Gfx_PacketNext: family not established
+src/game/area_w4a.cpp	600	0x26	family	SetWord(q + 0x26): q = Gfx_PacketNext: family not established
+src/game/area_w4a.cpp	602	-	computed	At(t.drift_size + static_cast<U>(e)): offset not a constant
+src/game/area_w4a.cpp	603	-	computed	At(t.drift_u + static_cast<U>(e)): offset not a constant
+src/game/area_w4a.cpp	604	-	computed	At(t.drift_v + static_cast<U>(e)): offset not a constant
+src/game/area_w4a.cpp	605	0x38	family	Word(Cur() + 0x38): Sprite_Current: DrawDrift has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a.cpp	719	0x3E	width	SetWord(e + 0x3E): EffectObject +0x3E width 2
+src/game/area_w4a.cpp	747	-	computed	B(pairs + static_cast<U>(Answer()) * 2u): offset not a constant
+src/game/area_w4a.cpp	749	0x18	family	SetLong(focus + 0x18): focus = Focus(): family not established
+src/game/area_w4a.cpp	751	0x1C	family	SetLong(focus + 0x1C): focus = Focus(): family not established
+src/game/area_w4a.cpp	751	0x1	family	B(pairs + static_cast<U>(Answer()) * 2u + 1): pairs + static_cast<U>(Answer()) * 2u: family not established
+src/game/area_w4a.cpp	775	-	computed	Long(name + k): offset not a constant
+src/game/area_w4a.cpp	775	-	computed	SetLong(row + k): offset not a constant
+src/game/area_w4a.cpp	816	0x18	family	SetLong(focus + 0x18): focus = Focus(): family not established
+src/game/area_w4a.cpp	818	0x1C	family	SetLong(focus + 0x1C): focus = Focus(): family not established
+src/game/area_w4a.cpp	890	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4a.cpp	894	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a.cpp	903	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4a.cpp	907	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a.cpp	912	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a.cpp	920	0x3E	width	Word(o + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a.cpp	944	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4a.cpp	951	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a.cpp	960	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4a.cpp	964	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a.cpp	969	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a.cpp	978	0x3E	width	Word(o + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4a_fuzz.cpp	86	-	computed	SetLong(p + i): offset not a constant
+src/game/area_w4a_fuzz.cpp	354	0x40	family	SetLong(o + 0x40): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	361	0x18	family	SetLong(o + 0x18): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	370	0x2E	family	SetWord(o + 0x2E): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	377	0x2E	family	SetWord(o + 0x2E): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	381	0x30	family	SetWord(o + 0x30): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	390	0x30	family	SetWord(o + 0x30): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	427	0x3A	family	SetWord(o + 0x3A): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	431	0x36	family	Word(o + 0x36): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	432	0x3A	family	Word(o + 0x3A): o = Obj(): SeedWm has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	601	0x3E	family	SetWord(o + 0x3E): o = Sprite_Current: Seed167 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4a_fuzz.cpp	667	0x3E	family	SetWord(Sprite_Current + 0x3E): Sprite_Current: Disturb167 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b.cpp	64	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w4b.cpp	125	-	computed	Mem(t.rects + i * at::kRectStride): offset not a constant
+src/game/area_w4b.cpp	180	-	computed	Mem(t.rects + 4 + found * at::kRectStride): offset not a constant
+src/game/area_w4b.cpp	189	-	computed	Mem(t.rects + 4 + found * at::kRectStride): offset not a constant
+src/game/area_w4b.cpp	193	0xC	family	SetLong(o + 0xC): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b.cpp	193	0xC	family	Long(o + 0xC): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b.cpp	195	0x10	family	SetLong(o + 0x10): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b.cpp	195	0x10	family	Long(o + 0x10): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b.cpp	197	0x14	family	SetLong(o + 0x14): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b.cpp	197	0x14	family	Long(o + 0x14): o = Sprite_Current: MembersFrame has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b.cpp	286	0x64	field-missing	SetLong(e + 0x64): EffectObject +0x64 width 4
+src/game/area_w4b.cpp	287	0x68	field-missing	SetLong(e + 0x68): EffectObject +0x68 width 4
+src/game/area_w4b.cpp	288	0x6C	field-missing	SetLong(e + 0x6C): EffectObject +0x6C width 4
+src/game/area_w4b.cpp	315	0x18	family	SetLong(focus + 0x18): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4b.cpp	318	0x1C	family	SetLong(focus + 0x1C): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4b.cpp	868	0x20	field-missing	SetLong(o + 0x20): SpriteObject +0x20 width 4
+src/game/area_w4b.cpp	883	0x20	field-missing	Long(o + 0x20): SpriteObject +0x20 width 4
+src/game/area_w4b.cpp	888	0x3E	width	Word(o + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4b.cpp	894	0x3E	width	SetWord(o + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4b.cpp	896	0x20	field-missing	SetLong(o + 0x20): SpriteObject +0x20 width 4
+src/game/area_w4b.cpp	915	0x3E	width	Word(o + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4b.cpp	1140	0x16	family	SetWord(p + 0x16): p = Gfx_PacketNext: family not established
+src/game/area_w4b.cpp	1141	0x26	family	SetWord(p + 0x26): p = Gfx_PacketNext: family not established
+src/game/area_w4b.cpp	1166	0x38	family	SetLong(p + 0x38): p = Gfx_PacketNext: family not established
+src/game/area_w4b.cpp	1167	0x18	family	SetLong(p + 0x18): p = Gfx_PacketNext: family not established
+src/game/area_w4b_fuzz.cpp	349	0x3E	family	Word(Sprite_Current + 0x3E): Sprite_Current: GroundEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4b_fuzz.cpp	567	-	computed	Mem(rects + (ah::Next() % 2) * at::kRectStride): offset not a constant
+src/game/area_w4b_fuzz.cpp	786	0x2E	family	SetWord(Sprite_Current + 0x2E): Sprite_Current: Seed172 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4c.cpp	96	-	computed	B(members + i): offset not a constant
+src/game/area_w4c.cpp	99	-	computed	Mem(messages + i * 2): offset not a constant
+src/game/area_w4c.cpp	120	0x34	gate	SetLong(EffectAt(who, cur[0xB]) + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w4c.cpp	121	0x38	gate	SetLong(EffectAt(who, cur[0xB]) + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w4c.cpp	122	0x3C	gate	SetLong(EffectAt(who, cur[0xB]) + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w4c.cpp	143	0x4C	field-missing	SetLong(EffectAt(who, cur[0xB]) + 0x4C): EffectObject +0x4C width 4
+src/game/area_w4c.cpp	151	-	computed	Long(desc + at::kDescScripts): offset not a constant
+src/game/area_w4c.cpp	153	-	computed	Mem(table + MoveScript_Object[3] * 4u): offset not a constant
+src/game/area_w4c.cpp	167	0xA	family	Word(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w4c.cpp	171	0xA	family	SetWord(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w4c.cpp	176	0xA	family	Word(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4c.cpp	205	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w4c.cpp	206	0x3C	gate	SetLong(Sprite_Current + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w4c.cpp	207	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w4c.cpp	379	0x3E	width	Word(cur + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4c.cpp	397	0xA	family	Word(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4c.cpp	416	0xA	family	Word(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4c.cpp	438	0xA	family	Word(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4c.cpp	440	0x130	family	Long(Field_State + 0x130): Field_State: no local declaration with a known family
+src/game/area_w4c.cpp	477	0xA	family	Word(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4c_fuzz.cpp	253	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4c_fuzz.cpp	258	-	computed	Long(desc + at::kDescScripts): offset not a constant
+src/game/area_w4c_fuzz.cpp	259	-	computed	Mem(table + MoveScript_Object[3] * 4u): offset not a constant
+src/game/area_w4c_fuzz.cpp	323	0x3E	family	SetWord(cur + 0x3E): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4c_fuzz.cpp	330	0x58	family	SetWord(cur + 0x58): cur = Sprite_Current: Seed has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4c_fuzz.cpp	336	0xA	family	SetWord(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4c_fuzz.cpp	338	0x130	family	SetLong(Field_State + 0x130): Field_State: no local declaration with a known family
+src/game/area_w4c_fuzz.cpp	341	0x2	family	B(script + offset + 2): script + offset: family not established
+src/game/area_w4c_fuzz.cpp	349	0xA	family	Word(MoveScript_Object + 0xA): MoveScript_Object: no local declaration with a known family
+src/game/area_w4d.cpp	75	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w4d.cpp	107	-	computed	B(steps + (index & 0xF)): offset not a constant
+src/game/area_w4d.cpp	111	-	computed	B(steps + (index & 0xF)): offset not a constant
+src/game/area_w4d.cpp	562	0x10	family	Mem(descriptor + 0x10): descriptor: no local declaration with a known family
+src/game/area_w4d.cpp	563	-	computed	Mem(scripts + object[3] * 4u): offset not a constant
+src/game/area_w4d.cpp	564	0xA	family	Word(object + 0xA): object = MoveScript_Object: family not established
+src/game/area_w4d.cpp	564	0x2	family	B(script + Word(object + 0xA) + 2): script + Word(object + 0xA): family not established
+src/game/area_w4d.cpp	589	0x8A	family	SetWord(object + 0x8A): object: no local declaration with a known family
+src/game/area_w4d.cpp	668	0x18	family	SetLong(focus + 0x18): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4d.cpp	671	0x1C	family	SetLong(again + 0x1C): again = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4d_fuzz.cpp	456	0xA	family	SetWord(object + 0xA): object = ah::Pointer(MoveScript_Object_addr): family not established
+src/game/area_w4e.cpp	61	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w4e.cpp	92	-	computed	B(pairs + static_cast<U>(a * 2)): offset not a constant
+src/game/area_w4e.cpp	94	0x18	family	SetLong(focus + 0x18): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4e.cpp	97	0x1C	family	SetLong(focus + 0x1C): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4e.cpp	97	-	computed	B(pairs + 1 + static_cast<U>(a2 * 2)): offset not a constant
+src/game/area_w4e.cpp	406	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_LeaderStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	407	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_LeaderStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	408	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_LeaderStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	408	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_LeaderStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	409	0x3C	family	SetLong(Cur() + 0x3C): Sprite_Current: Area189_LeaderStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	451	0x3E	family	Word(Cur() + 0x3E): Sprite_Current: Area189_LeaderProject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	457	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area189_LeaderProject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	462	0x10	family	SetLong(cur + 0x10): cur = Cur(): Area189_LeaderProject has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	506	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_LeaderControl has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	506	0xC	family	Long(cur + 0xC): cur = Cur(): Area189_LeaderControl has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	507	0x10	family	Long(cur + 0x10): cur = Cur(): Area189_LeaderControl has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	507	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_LeaderControl has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	561	0xC	family	SetLong(cur + 0xC): cur = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	563	0x10	family	SetLong(cur + 0x10): cur = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	566	0x10	family	Long(cur + 0x10): cur = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	566	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	567	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	567	0xC	family	Long(cur + 0xC): cur = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	570	0x3C	family	Long(s + 0x3C): s = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	573	0x14	family	SetLong(s + 0x14): s = Cur(): Area189_StepBegin has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	581	0x34	family	SetLong(cur + 0x34): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	581	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	581	0xC	family	Long(cur + 0xC): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	582	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	583	0x10	family	Long(cur + 0x10): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	583	0x38	family	SetLong(cur + 0x38): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	583	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	584	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	585	0x14	family	Long(cur + 0x14): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	585	0x3C	family	SetLong(cur + 0x3C): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	585	0x3C	family	Long(cur + 0x3C): cur = Cur(): Area189_StepMove has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	677	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_StepArrive has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	677	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_StepArrive has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	689	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_StepArrive has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	691	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_StepArrive has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	746	0x1	family	B(place + 1): place: no local declaration with a known family
+src/game/area_w4e.cpp	747	0x2	family	B(place + 2): place: no local declaration with a known family
+src/game/area_w4e.cpp	749	0x34	family	Long(cur + 0x34): cur = Cur(): Area189_ExitButton has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	750	0x38	family	Long(cur + 0x38): cur = Cur(): Area189_ExitButton has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	776	0xC	family	SetLong(Cur() + 0xC): Sprite_Current: Area189_ZeroSpeeds has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	777	0x10	family	SetLong(Cur() + 0x10): Sprite_Current: Area189_ZeroSpeeds has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	778	0x14	family	SetLong(Cur() + 0x14): Sprite_Current: Area189_ZeroSpeeds has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	822	0x28	family	Word(w + 0x28): w = Mem(Field_ActorStates_addr + 0x8 + r * at::kCharStride): family not established
+src/game/area_w4e.cpp	891	0x40	family	SetLong(cur + 0x40): cur = Cur(): Area191_ScaleStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	892	0x44	family	SetLong(cur + 0x44): cur = Cur(): Area191_ScaleStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	894	0x70	family	SetLong(cur + 0x70): cur = Cur(): Area191_ScaleStart has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	907	0x34	family	SetLong(cur + 0x34): cur = Cur(): ScaleTick has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	907	0x34	family	Long(cur + 0x34): cur = Cur(): ScaleTick has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	907	0xC	family	Long(cur + 0xC): cur = Cur(): ScaleTick has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	908	0x40	family	SetLong(cur + 0x40): cur = Cur(): ScaleTick has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	908	0x40	family	Long(cur + 0x40): cur = Cur(): ScaleTick has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	909	0x44	family	SetLong(cur + 0x44): cur = Cur(): ScaleTick has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	909	0x44	family	Long(cur + 0x44): cur = Cur(): ScaleTick has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e.cpp	1089	-	computed	Mem(list + n * at::kEventOpRecord): offset not a constant
+src/game/area_w4e_fuzz.cpp	247	0x36	family	SetWord(Sprite_Current + 0x36): Sprite_Current: FlagsSetEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	248	0x3A	family	SetWord(Sprite_Current + 0x3A): Sprite_Current: FlagsSetEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	322	0xC	family	SetLong(Sprite_Current + 0xC): Sprite_Current: StepBeginEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	323	0x10	family	SetLong(Sprite_Current + 0x10): Sprite_Current: StepBeginEffect has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	490	0x2	family	SetWord(p + 2): p: no local declaration with a known family
+src/game/area_w4e_fuzz.cpp	506	0x38	family	SetLong(Sprite_Current + 0x38): Sprite_Current: Seed188 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	546	0x3E	family	SetWord(Sprite_Current + 0x3E): Sprite_Current: Seed189 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	558	0xC	family	SetLong(cur + 0xC): cur = Sprite_Current: Seed189 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	559	0x10	family	SetLong(cur + 0x10): cur = Sprite_Current: Seed189 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	594	0x36	family	SetWord(cur + 0x36): cur = Sprite_Current: Seed189 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	595	0x3A	family	SetWord(cur + 0x3A): cur = Sprite_Current: Seed189 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	596	0x36	family	SetWord(cur + 0x36): cur = Sprite_Current: Seed189 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	596	0x36	family	Word(cur + 0x36): cur = Sprite_Current: Seed189 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4e_fuzz.cpp	643	0x28	family	Word(w + 0x28): w = ah::Mem(Field_ActorStates_addr + 0x8 + r * at::kCharStride): family not established
+src/game/area_w4f.cpp	70	-	computed	Mem(table + index * 4u): offset not a constant
+src/game/area_w4f.cpp	102	-	computed	B(table + static_cast<U>(a * 2)): offset not a constant
+src/game/area_w4f.cpp	104	0x18	family	SetLong(focus + 0x18): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4f.cpp	107	0x1C	family	SetLong(focus + 0x1C): focus = Ptr(AreaW1a_FocusObject_addr): family not established
+src/game/area_w4f.cpp	107	-	computed	B(table + 1 + static_cast<U>(a * 2)): offset not a constant
+src/game/area_w4f.cpp	111	-	computed	Mem(table + static_cast<U>(AnswerS8() * 2)): offset not a constant
+src/game/area_w4f.cpp	124	-	computed	B(keys + i): offset not a constant
+src/game/area_w4f.cpp	127	-	computed	Mem(messages + i * 2): offset not a constant
+src/game/area_w4f.cpp	164	-	computed	B(table + (Sprite_Current[0xA] & 0xFu)): offset not a constant
+src/game/area_w4f.cpp	389	-	computed	Mem(ops + k * at::kPlaceOpStride): offset not a constant
+src/game/area_w4f.cpp	403	0x18	family	SetWord(r + 0x18): r = Mem(at::kCharRecords + k * at::kCharStride): family not established
+src/game/area_w4f.cpp	403	0x20	family	Word(r + 0x20): r = Mem(at::kCharRecords + k * at::kCharStride): family not established
+src/game/area_w4f.cpp	404	0x1A	family	SetWord(r + 0x1A): r = Mem(at::kCharRecords + k * at::kCharStride): family not established
+src/game/area_w4f.cpp	404	0x22	family	Word(r + 0x22): r = Mem(at::kCharRecords + k * at::kCharStride): family not established
+src/game/area_w4f.cpp	405	0x10	family	SetWord(r + 0x10): r = Mem(at::kCharRecords + k * at::kCharStride): family not established
+src/game/area_w4f.cpp	744	0x58	gate	Word(c + 0x58): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	749	0x3E	width	Word(c + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4f.cpp	756	0x3E	width	Word(c + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4f.cpp	757	0x3E	width	Word(c + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4f.cpp	793	0x3E	width	SetWord(c + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4f.cpp	793	0x3E	width	Word(c + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4f.cpp	872	0x10	gate	SetLong(Sprite_Current + 0x10): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	873	0xC	gate	SetLong(Sprite_Current + 0xC): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	874	0x14	gate	SetLong(Sprite_Current + 0x14): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	877	0x3E	width	SetWord(Sprite_Current + 0x3E): SpriteObject +0x3E width 2
+src/game/area_w4f.cpp	884	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	885	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	908	0x38	gate	SetLong(EffectAt(c[0xB]) + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	910	0x3C	gate	SetLong(EffectAt(c[0xB]) + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	938	0x34	gate	SetLong(Sprite_Current + 0x34): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	939	0x38	gate	SetLong(Sprite_Current + 0x38): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	940	0x3C	gate	SetLong(Sprite_Current + 0x3C): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	941	0x4	family	Word(A6Record(Sprite_Current[6]) + 4): A6Record(Sprite_Current[6]): family not established
+src/game/area_w4f.cpp	969	0x40	field-missing	SetLong(Sprite_Current + 0x40): EffectObject +0x40 width 4
+src/game/area_w4f.cpp	970	0x44	field-missing	SetLong(Sprite_Current + 0x44): EffectObject +0x44 width 4
+src/game/area_w4f.cpp	971	0x2E	gate	SetWord(Sprite_Current + 0x2E): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	972	0x30	gate	SetWord(Sprite_Current + 0x30): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	973	0x32	field-missing	SetWord(Sprite_Current + 0x32): EffectObject +0x32 width 2
+src/game/area_w4f.cpp	974	0x60	gate	SetLong(Sprite_Current + 0x60): typed, but the object changed (codegen_same)
+src/game/area_w4f.cpp	978	0x40	field-missing	Long(c + 0x40): EffectObject +0x40 width 4
+src/game/area_w4f.cpp	984	0x44	field-missing	Long(c + 0x44): EffectObject +0x44 width 4
+src/game/area_w4f.cpp	986	0x2	family	Word(A6Record(c[6]) + 2): A6Record(c[6]): family not established
+src/game/area_w4f.cpp	996	0x2	family	Word(A6Record(c[6]) + 2): A6Record(c[6]): family not established
+src/game/area_w4f_fuzz.cpp	408	-	computed	B(keys + ah::Next() % 4): offset not a constant
+src/game/area_w4f_fuzz.cpp	544	0x3E	family	SetWord(Sprite_Current + 0x3E): Sprite_Current: Seed198 has no documented root that fixes its family (a choice, hook, tail, init or helper)
+src/game/area_w4f_fuzz.cpp	556	0x34	family	SetLong(Sprite_Current + 0x34): Sprite_Current: Seed198 has no documented root that fixes its family (a choice, hook, tail, init or helper)

@@ -87,9 +87,9 @@ void Disturb() {
     case 5: Field_Request = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 6: At(at::kScratch)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 7: Field_State = Member(v); break;
-    case 8: At(at::kLeader137)[0] = static_cast<unsigned char>(v % 2 ? 8 : v); break;
-    case 9: At(at::kFacing)[0] = static_cast<unsigned char>(v % 3 ? v % 4 : v); break;
-    case 10: At(at::kPlaced)[0] = static_cast<unsigned char>(v % 3); break;
+    case 8: At(ObjTrio_addr + 0x137)[0] = static_cast<unsigned char>(v % 2 ? 8 : v); break;
+    case 9: At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(v % 3 ? v % 4 : v); break;
+    case 10: At(FieldHidden_Placed_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 11: SetPtr(s + 0x50, g_src + w % 0x100); break;
     case 12: s[5] = static_cast<unsigned char>(v % 4); break;
     case 13: s[0x4B] = static_cast<unsigned char>(v); break;
@@ -101,7 +101,7 @@ void Disturb() {
     case 19: SetLong(At(at::kMemberPos + (w % 6) * 4), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 20: At(at::kEnemies + (w % 8) * at::kEnemyStride)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 21: SetLong(s + (v % 2 ? 0x34 : 0x38), static_cast<std::int32_t>(h * 0x2545F491u)); break;
-    case 22: At(v % 2 ? at::kRows + 8 + (w % 8) * 9 : at::kSlotChance + w % 8)[0] = static_cast<unsigned char>(v % 17); break;
+    case 22: At(v % 2 ? Encounter_Rows_addr + 8 + (w % 8) * 9 : Encounter_SlotChance_addr + w % 8)[0] = static_cast<unsigned char>(v % 17); break;
     default: g_src[w % kSrc] = static_cast<unsigned char>(v); break;
     }
 }
@@ -463,7 +463,7 @@ Args Seed(unsigned k) {
     case kEffectState: {
         static const unsigned char kSub[] = {0, 0, 1, 1, 1, 2, 2, 3, 0xFF};
         s[2] = kSub[Next() % 9];
-        if (Half()) At(at::kLeader137)[0] = 8;
+        if (Half()) At(ObjTrio_addr + 0x137)[0] = 8;
         if (Half()) Effect_Objects[s[0xB] * 0x80u] = 0;
         break;
     }
@@ -487,8 +487,8 @@ Args Seed(unsigned k) {
         s[8] = static_cast<unsigned char>(Often() ? Next() % 8 : Next() % 16);
         const unsigned d = s[8];
         // the point's x and z with no fraction, each half the time
-        if (Half()) SetLong(s + 0x34, static_cast<std::int32_t>((Next() << 16) - 2u * static_cast<std::uint32_t>(Long(At(at::kDirSteps + d * 8)))));
-        if (Half()) SetLong(s + 0x38, static_cast<std::int32_t>((Next() << 16) - 2u * static_cast<std::uint32_t>(Long(At(at::kDirSteps + d * 8 + 4)))));
+        if (Half()) SetLong(s + 0x34, static_cast<std::int32_t>((Next() << 16) - 2u * static_cast<std::uint32_t>(Long(At(Field_DirectionSteps_addr + d * 8)))));
+        if (Half()) SetLong(s + 0x38, static_cast<std::int32_t>((Next() << 16) - 2u * static_cast<std::uint32_t>(Long(At(Field_DirectionSteps_addr + d * 8 + 4)))));
         break;
     }
     case kPickup:
@@ -529,24 +529,24 @@ Args Seed(unsigned k) {
         static const unsigned char kFacings[] = {0, 1, 2, 3, 4, 5, 0xFF, 0x80};
         args.a[0] = Garbage(0xFF, kFacings[Next() % 8]);
         args.a[1] = Garbage(0xFF, Half() ? 0 : 1 + Next() % 0xFF);
-        At(at::kPlaced)[0] = static_cast<unsigned char>(Next() % 4);
+        At(FieldHidden_Placed_addr)[0] = static_cast<unsigned char>(Next() % 4);
         for (unsigned m = 0; m < 3; ++m) {
             static const unsigned char kIds[] = {2, 6, 0, 1, 3, 5, 7};
-            At(at::kPartyList2 + m)[0] = kIds[Next() % 7];
+            At(Cond_Flags_addr + 0xd5 + m)[0] = kIds[Next() % 7];
         }
         for (unsigned e = 0; e < 8; ++e) At(at::kEnemies + e * at::kEnemyStride)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     }
     case kPickRow:
         for (unsigned r = 0; r < 8; ++r)
-            At(at::kRows + 8 + r * 9)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next());
+            At(Encounter_Rows_addr + 8 + r * 9)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next());
         break;
     case kFillSlots: {
-        unsigned char* const row = Half() ? At(at::kRows + (Next() % 8) * 9) : g_row;
+        unsigned char* const row = Half() ? At(Encounter_Rows_addr + (Next() % 8) * 9) : g_row;
         for (unsigned i = 0; i < 8; ++i)
             if (Next() % 4 == 0) row[i] = 0xFF;
         for (unsigned i = 0; i < 8; ++i)
-            if (Often()) At(at::kSlotChance + i)[0] = static_cast<unsigned char>(Next() % 17);
+            if (Often()) At(Encounter_SlotChance_addr + i)[0] = static_cast<unsigned char>(Next() % 17);
         args.a[0] = Address(row);
         break;
     }
@@ -609,7 +609,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         }
         if (pops) ++g_cover.sub[k][0];
         if (screens) ++g_cover.sub[k][1];
-        if (Byte(out, at::kPlaced) != Byte(in, at::kPlaced)) ++g_cover.sub[k][2];
+        if (Byte(out, FieldHidden_Placed_addr) != Byte(in, FieldHidden_Placed_addr)) ++g_cover.sub[k][2];
         break;
     }
     default:
@@ -645,13 +645,13 @@ void SelfTest() {
 
     static State saved, input, their_out, our_out;
     std::uint32_t saved_form0[3], saved_forms[3];
-    std::memcpy(saved_form0, At(at::kForm0States), sizeof saved_form0);
-    std::memcpy(saved_forms, At(at::kForms), sizeof saved_forms);
+    std::memcpy(saved_form0, At(PartyAction5_Form0States_addr), sizeof saved_form0);
+    std::memcpy(saved_forms, At(PartyAction5_Forms_addr), sizeof saved_forms);
     Capture(saved);
     g = kStubs;
     for (unsigned i = 0; i < 3; ++i) {
-        SetPtr(At(at::kForm0States + 4 * i), reinterpret_cast<const void*>(kForm0Stubs[i]));
-        SetPtr(At(at::kForms + 4 * i), reinterpret_cast<const void*>(kFormStubs[i]));
+        SetPtr(At(PartyAction5_Form0States_addr + 4 * i), reinterpret_cast<const void*>(kForm0Stubs[i]));
+        SetPtr(At(PartyAction5_Forms_addr + 4 * i), reinterpret_cast<const void*>(kFormStubs[i]));
     }
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
@@ -700,8 +700,8 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    std::memcpy(At(at::kForm0States), saved_form0, sizeof saved_form0);
-    std::memcpy(At(at::kForms), saved_forms, sizeof saved_forms);
+    std::memcpy(At(PartyAction5_Form0States_addr), saved_form0, sizeof saved_form0);
+    std::memcpy(At(PartyAction5_Forms_addr), saved_forms, sizeof saved_forms);
     Apply(saved);
 
     bof3::Log("shadow      field_hidden self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

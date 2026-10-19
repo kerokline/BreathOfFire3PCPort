@@ -22,6 +22,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_4a.h"
 #include "game/rest_4a_callees.h"
 #include "game/scenario_harness.h"
@@ -30,6 +31,10 @@
 
 namespace rest_4a {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
+[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -148,7 +153,7 @@ const sh::Clone kEnemy[] = {
 
 enum : unsigned {
     kAutoCheck, kLiveMember, kActionIs0E, kAutoFixed, kOtherMember, kRunSlot, kClutCopy, kAreaEnter, kQueueAreas,
-    kPopulation, kMood, kLevelLit, kLevelDark, kTick5, kTick9, kTickD, kTickB, kAddRecord, kRemoveRecord, kSumsAB,
+    kPopulation, kMood, Rest4a_LevelLit_addr, FieldE2_LevelA_addr, kTick5, kTick9, kTickD, kTickB, kAddRecord, kRemoveRecord, kSumsAB,
     kRollOffers, kPlaceObjects, kPlaceLoose, kPlaceResident, kPose0, kPose4, kPose5, kPose6, kPose7, kPose8, kPose9,
     kPoseA, kPoseB, kPoseC, kPoseD, kTrig01, kTrig09, kTrig02, kTrig03, kTrig04, kTrig05, kTrig06, kTrig07, kTrig08,
     kTrig10, kTrig61, kTrig11, kCount
@@ -171,7 +176,7 @@ unsigned char* Bld(U b);
 // otherwise; the controls of section 6 that miss a re-read were 0 without
 // these): each moves the cell its callers read again, from its answer only.
 U IsOutEffect(const U* a, U answer) {
-    if ((answer >> 9) % 4 == 0) Mem(at::kForcedActor)[0] = static_cast<unsigned char>((answer >> 12) % 11);   // read again after it
+    if ((answer >> 9) % 4 == 0) Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>((answer >> 12) % 11); // read again after it
     return (a[0] & 0xFF) == g_standing ? answer & 0xFFFFFF00u : answer;
 }
 // Rand: the CRT's is 0..0x7FFF; the harness's garbage answers would take the
@@ -192,7 +197,7 @@ U RandEffect(const U*, U answer) {
 // group's case 1 reached the shrink's 4 times in 4,000 rounds: control C21).
 U ClockEffect(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 4 == 0) SetUL(Mem(at::kClock), UL(Mem(at::kClock)) + 1 + (n >> 8) % 64);
+    if (n % 4 == 0) SetUL(Mem(Rest4a_Clock_addr), UL(Mem(Rest4a_Clock_addr)) + 1 + (n >> 8) % 64);
     // and one in four the area moved (CommuSim_AreaEnter reads it again after its
     // three adds; the group's case 2 reached that 9 times: C16, round-14-cleanup.md
     // section 7)
@@ -210,7 +215,7 @@ U SlotCopyEffect(const U* a, U answer) {
 }
 // R4D's 0x45E6B0: the removed count (CommuSim_TickKind9 reads it after) half the time.
 U CountEffect(const U*, U answer) {
-    if ((answer >> 10) & 1) Mem(at::kRemovedCount)[0] = static_cast<unsigned char>((answer >> 12) % 0x20);
+    if ((answer >> 10) & 1) Mem(Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((answer >> 12) % 0x20);
     return answer;
 }
 // AreaMap_Elevation: a resident count (CommuSim_PlaceResident reads it after) half the time.
@@ -300,9 +305,9 @@ const sh::Region kRegions[] = {
     {0x9039A8, 0x5C},               // the removed list, the tail kind and sub-kind, to 0x903A04
     {at::kEventCount, 8},           // the event count
     {at::kResidentCounts, 0x1C},    // the resident counts and the offer words (.data)
-    {at::kTriggerObject, 4},        // the trigger's object
+    {Rest4d_Pointer_addr, 4},       // the trigger's object
     {at::kShopRecords, 0x480},      // Shop_Records' first 50 (.data)
-    {at::kPrevArea, 4},             // the area the field came from
+    {AreaW2c_LastArea_addr, 4},     // the area the field came from
 };
 
 // --- the seed ------------------------------------------------------------------
@@ -317,9 +322,9 @@ unsigned char* Bld(U b) { return Mem(at::kBuildings + 8 * b); }
 // clock; the counts small.
 void SeedCommunity() {
     const U clock = sh::Next() % 3 == 0 ? sh::Next() : sh::Next() % 0x400;
-    SetUL(Mem(at::kClock), clock);
+    SetUL(Mem(Rest4a_Clock_addr), clock);
     const auto nearClock = [clock]() { return clock - PickOf(0, 1, 4, 5, 9, 10, 11, 19, 20, 21, 39, 40, 60, 120, sh::Next() % 0x80, sh::Next()); };
-    for (U s = at::kStampGrow; s <= at::kStampLevelDark; s += 4) SetUL(Mem(s), nearClock());
+    for (U s = Rest4a_StampGrow_addr; s <= Rest4a_StampLevelDark_addr; s += 4) SetUL(Mem(s), nearClock());
     unsigned used = 0;
     for (U i = 0; i < at::kRecordCount; ++i) {
         unsigned char* const r = Rec(i);
@@ -350,16 +355,16 @@ void SeedCommunity() {
                 --n;
             }
     }
-    Mem(at::kMood)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 10, 0x30, 0x63, 0x64, 0x80, 0xFF, sh::Next()));
+    Mem(Rest4b_CountA_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 10, 0x30, 0x63, 0x64, 0x80, 0xFF, sh::Next()));
     Mem(at::kLevelLit)[0] = static_cast<unsigned char>(PickOf(0, 1, 6, 7, sh::Next() % 8));
     Mem(at::kLevelDark)[0] = static_cast<unsigned char>(PickOf(0, 1, 9, 0xA, sh::Next() % 0xB));
     Mem(at::kEventCount)[0] = static_cast<unsigned char>(sh::Next() % 0x20);
-    Mem(at::kRemovedCount)[0] = static_cast<unsigned char>(sh::Next() % 0x10);
+    Mem(Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>(sh::Next() % 0x10);
     Mem(at::kSpawnCount)[0] = static_cast<unsigned char>(sh::Next() % 0x10);
     const unsigned short area = static_cast<unsigned short>(PickOf(0xAF, 0xB0, 0xB2, 0xB5, 0xB6, 0xB7, 0xB9, 0xBA, 0x10, sh::Next() % 0x100));
     Game_AreaNumber = area;
-    SetWord(Mem(at::kPrevArea), sh::Half() ? area : PickOf(0xAF, 0xB0, sh::Next() % 0x100));
-    SetWord(Mem(at::kAreaSeen), area - PickOf(0, 1, 2, 5, 0x10, 0x40, 0xFFFF, sh::Next() % 0x80));
+    SetWord(Mem(AreaW2c_LastArea_addr), sh::Half() ? area : PickOf(0xAF, 0xB0, sh::Next() % 0x100));
+    SetWord(Mem(Rest4a_AreaSeen_addr), area - PickOf(0, 1, 2, 5, 0x10, 0x40, 0xFFFF, sh::Next() % 0x80));
     for (unsigned k = 0; k < 8; ++k) Mem(at::kResidentCounts)[k] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3));
 }
 
@@ -397,19 +402,19 @@ void SeedSlot(unsigned char* r) {
 
 void SeedBattle() {
     SetUL(Mem(at::kBattleFlags), sh::Next() | (sh::Often() ? 0x4000u : 0));
-    Mem(at::kForcedActor)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 10, sh::Next() % 11));
+    Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 10, sh::Next() % 11));
     Mem(at::kAutoMode)[0] = static_cast<unsigned char>(PickOf(4, 4, 3, 5, sh::Next()));
-    Mem(at::kPartyPick)[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, sh::Next()));
+    Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, sh::Next()));
     for (U e = 0; e < 8; ++e) {
         unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * e);
-        SetWord(rec + 0xBA, PickOf(0, 1, 2, sh::Next()));
+        EnemyRec(rec)->intel = PickOf(0, 1, 2, sh::Next());
         rec[0x92] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
-        SetUL(rec + 0x114, sh::Half() ? 0 : sh::Next());
-        SetWord(rec + 0x106, sh::Next() % 0x100);
+        EnemyRec(rec)->flags_114 = sh::Half() ? 0 : sh::Next();
+        EnemyRec(rec)->ability = sh::Next() % 0x100;
     }
     for (U m = 0; m < 3; ++m) {
-        SetWord(Mem(at::kMemberAction + at::kMemberStride * m), PickOf(0xE, 0x128, 0xF, 0x127, 0, sh::Next()));
-        Mem(at::kMemberOdds + at::kMemberStride * m)[0] = static_cast<unsigned char>(PickOf(0, 1, 5, 6, 0x14, 0x80, 0xFF, sh::Next()));
+        SetWord(Mem(ObjTrio_addr + 0x126 + at::kMemberStride * m), PickOf(0xE, 0x128, 0xF, 0x127, 0, sh::Next()));
+        Mem(ObjTrio_addr + 0x142 + at::kMemberStride * m)[0] = static_cast<unsigned char>(PickOf(0, 1, 5, 6, 0x14, 0x80, 0xFF, sh::Next()));
     }
 }
 
@@ -434,12 +439,12 @@ U AbilityBit4(U r) {
 }
 void SeedAutoTarget() {
     SetUL(Mem(at::kBattleFlags), UL(Mem(at::kBattleFlags)) | 0x4000u);
-    Mem(at::kForcedActor)[0] = static_cast<unsigned char>(PickOf(3, 3, 2, 4));
+    Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>(PickOf(3, 3, 2, 4));
     Mem(at::kAutoMode)[0] = 4;
     g_actor = 5 + sh::Next() % 6;   // an enemy 5..10, never the forced actor
     unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * (g_actor - 3));
-    SetWord(rec + 0xBA, PickOf(0, 1));
-    SetWord(rec + 0x106, AbilityBit4(sh::Next()));
+    EnemyRec(rec)->intel = PickOf(0, 1);
+    EnemyRec(rec)->ability = AbilityBit4(sh::Next());
 }
 
 // CommuSim_TickKindD's boundaries, half its rounds: building 0 of kind 0xD
@@ -470,7 +475,7 @@ void SeedTickD() {
     Bld(0)[0] = 0xD;
     unsigned used = 0;
     for (U i = 0; i < at::kRecordCount; ++i) used += Rec(i)[0] != 0;
-    const U clock = UL(Mem(at::kClock));
+    const U clock = UL(Mem(Rest4a_Clock_addr));
     for (U i = 0; i < at::kRecordCount; ++i) {
         unsigned char* const r = Rec(i);
         if (r[0] == 0) {
@@ -527,9 +532,9 @@ void Args(unsigned k, U* a) {
     case kAutoCheck:
         if (g_actor != 0x100) {
             byte(0, g_actor);
-            g_standing = Mem(at::kForcedActor)[0];
+            g_standing = Mem(BattlePhases_B8B_addr)[0];
         } else {
-            byte(0, PickOf(0, 1, 2, 3, 4, 7, 10, Mem(at::kForcedActor)[0], sh::Next() % 11));
+            byte(0, PickOf(0, 1, 2, 3, 4, 7, 10, Mem(BattlePhases_B8B_addr)[0], sh::Next() % 11));
         }
         break;
     case kLiveMember: g_standing = 2; break;
@@ -563,7 +568,7 @@ void Args(unsigned k, U* a) {
     case kPoseB:
     case kPoseC: byte(0, sh::Next() % 30); byte(1, sh::Next() % 8); break;
     default:
-        if (k >= kTrig01 && k <= kTrig11) a[1] = at::kStoryFlags;
+        if (k >= kTrig01 && k <= kTrig11) a[1] = Cond_Flags_addr + 0xa0;
         break;
     }
 }
@@ -574,7 +579,7 @@ void Disturb(U h) {
     const U v = h >> 3;
     switch (sh::DisturbCase(h, 10)) {
     case 0: Field_Slots[16 * (v % 8) + 1] = static_cast<unsigned char>(v >> 3); break;   // Field_RunSlot's +1 after its copy
-    case 1: SetUL(Mem(at::kClock), UL(Mem(at::kClock)) + (v % 64)); break;                // the clock
+    case 1: SetUL(Mem(Rest4a_Clock_addr), UL(Mem(Rest4a_Clock_addr)) + (v % 64)); break;  // the clock
     case 2: Game_AreaNumber = static_cast<unsigned short>((v & 1) ? 0xAF + (v >> 1) % 12 : v >> 1); break;
     case 3:   // a record's +2 / +3; half the time the +3 of the first in use with a clear high nibble (TickKindD's current)
         if (v & 0x100) {
@@ -588,10 +593,10 @@ void Disturb(U h) {
         }
         break;
     case 4: Bld((v >> 2) % 8)[1] = static_cast<unsigned char>((v >> 5) % 3); break;      // a building's level (0..2: kind 9's odds)
-    case 5: Mem((v & 1) ? at::kEventCount : at::kRemovedCount)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
+    case 5: Mem((v & 1) ? at::kEventCount : Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
     case 6:
-        Mem(at::kForcedActor)[0] = static_cast<unsigned char>((v >> 1) % 11);
-        Mem(at::kPartyPick)[0] = static_cast<unsigned char>(v & 1);
+        Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>((v >> 1) % 11);
+        Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(v & 1);
         break;
     case 7: Mem(at::kResidentCounts + (v % 8))[0] = static_cast<unsigned char>((v >> 3) % 4); break;
     case 8: SetWord(Mem(at::kOfferWords + 2 * (v % 9)), 0x9Bu + (v >> 4) % 26); break;

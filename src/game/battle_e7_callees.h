@@ -29,26 +29,26 @@ constexpr std::uint32_t kList2OutBound = 0x599451;   // 0x15B in GeneWin_List2Sl
 constexpr std::uint32_t kList3OutBound = 0x599551;   // 0x143 in GeneWin_List3SlideOut 0x599540
 
 // --- the cells (every one an address in BOF3.exe) ---------------------------
-constexpr std::uint32_t kWindowCurrent = 0x905B84;   // the window record a handler runs for
-constexpr std::uint32_t kColour = 0x903A5A;          // s8: the window colour, a CLUT row
-constexpr std::uint32_t kClutShadow = 0x80B7A8;      // the CLUT shadow rows (64 bytes each)
+// kWindowCurrent: now BattleWinStates_Current (symbols.toml). the window record a handler runs for
+// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour, a CLUT row
+// kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). the CLUT shadow rows (64 bytes each)
 constexpr std::uint32_t kTasks = 0x93A000;           // BattleTask_Create's 48 slots of 0x84
 constexpr std::uint32_t kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
-constexpr std::uint32_t kMenuActor = 0x939EC4;       // the command menu's member (an ObjTrio record)
-constexpr std::uint32_t kPartyAp = 0x802DDA;         // ObjTrio +0x9A (AP), stride 0x14C
+// kMenuActor: now BattleE4_MenuActor (symbols.toml). the command menu's member (an ObjTrio record)
+// kPartyAp: now ObjTrio[0x9a] (symbols.toml). ObjTrio +0x9A (AP), stride 0x14C
 constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr std::uint32_t kCharRecords = 0x903A70;     // CharacterRecords, stride 0xA4
 constexpr std::uint32_t kCharStride = 0xA4;
 constexpr std::uint32_t kPrintBuf = 0x904BA0;        // the battle windows' sprintf buffer
 constexpr std::uint32_t kLevelBufs = 0x904D20;       // the level-up window's eight buffers of 0x20
-constexpr std::uint32_t kStep2 = 0x904AA3;           // the battle's step bytes
-constexpr std::uint32_t kStep3 = 0x904AA4;
-constexpr std::uint32_t kGeneChoice = 0x904AA5;      // bit 7 fixed, bits 0..6 the choice (0..2)
-constexpr std::uint32_t kGeneRow = 0x904AA6;         // 0xFF: the hand on the first box
-constexpr std::uint32_t kGeneColumn = 0x904AA7;
-constexpr std::uint32_t kApCost = 0x904B78;          // u8: the AP cost (battle_actions.md)
-constexpr std::uint32_t kDropCount = 0x904AE7;       // u8: the drops listed
+// kStep2: now BattleE4_Step3 (symbols.toml). the battle's step bytes
+// kStep3: now BattleE4_Step4 (symbols.toml).
+// kGeneChoice: now BossSb_Countdown (symbols.toml). bit 7 fixed, bits 0..6 the choice (0..2)
+// kGeneRow: now BattleE5_GeneRow (symbols.toml). 0xFF: the hand on the first box
+// kGeneColumn: now BattleE1_Roster (symbols.toml).
+// kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost (battle_actions.md)
+// kDropCount: now BattleE7_DropCount (symbols.toml). u8: the drops listed
 constexpr std::uint32_t kDropItems = 0x904AF4;       // u16 x n: category << 8 | item
 constexpr std::uint32_t kDropCounts = 0x904B14;      // u8 x n
 constexpr std::uint32_t kGeneList = 0x904608;        // 4-byte rows: three cost indices (0xFF none), a form byte
@@ -65,7 +65,7 @@ constexpr std::uint32_t kLevelTable = 0x658F48;      // Char_ExpTable: 99 rows o
 constexpr std::uint32_t kAbilityRecords = 0x65C4C8;  // Ability_Records, stride 24
 constexpr std::uint32_t kEquipCategories = 0x66B5BC; // u8 x 6: the equipment slots' item categories
 constexpr std::uint32_t kEquipIcons = 0x66B5B4;      // u8 x 6
-constexpr std::uint32_t kFieldMember = 0x929F06;     // s8: BATE's member (0x904065's index)
+// kFieldMember: now BattleActorCopies_ItemActor (symbols.toml). s8: BATE's member (0x904065's index)
 constexpr std::uint32_t kPartyOrder = 0x904065;      // u8 x n: the party's members
 constexpr std::uint32_t kMemberIds = 0x66972C;       // MoveScript_EffectState: a member byte by slot
 
@@ -73,7 +73,7 @@ constexpr std::uint32_t kMemberIds = 0x66972C;       // MoveScript_EffectState: 
 constexpr std::uint32_t kFmtNumber = 0x5E10C0;       // Area08_MessageFormat
 constexpr std::uint32_t kFmtAbility = 0x654900;
 constexpr std::uint32_t kFmtCount = 0x653EC0;
-constexpr std::uint32_t kFmtAp = 0x64D3EC;           // Boss26Fx_CountFormat
+// kFmtAp: now Boss26Fx_CountFormat (symbols.toml). Boss26Fx_CountFormat
 constexpr std::uint32_t kFmtCost = 0x66AF8C;
 constexpr std::uint32_t kFmtStat = 0x64E324;
 constexpr std::uint32_t kApLabel = 0x66AF38;

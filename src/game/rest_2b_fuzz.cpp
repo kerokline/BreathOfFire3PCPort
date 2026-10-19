@@ -142,14 +142,27 @@ unsigned char& B(U a) { return Mem(a)[0]; }
 std::int32_t Signed(U v) { return static_cast<std::int32_t>(v); }
 
 // The cells (rest_2b.cpp's).
-constexpr U kMode = 0x929F00, kState = 0x929F01, kStep = 0x929F02, kTimer = 0x929F04;
-constexpr U kOwned = 0x9399E0, kGiven = 0x9399E4, kRounds = 0x9399E8, kSide = 0x9399E9, kCursor = 0x9399EA,
-            kLevel = 0x9399EB, kScoreCell = 0x9399FC;
+// kMode: now BattleE1_Mode (symbols.toml).
+// kStep: now FieldS_Step (symbols.toml).
+constexpr U kState = 0x929F01, kTimer = 0x929F04;
+// kLevel: now Rest2c_FigureScaleIndex (symbols.toml).
+constexpr U kOwned = 0x9399E0,
+            kGiven = 0x9399E4,
+            kRounds = 0x9399E8,
+            kSide = 0x9399E9,
+            kCursor = 0x9399EA,
+            kScoreCell = 0x9399FC;
 constexpr U kModelA = 0x9398E0, kModelB = 0x939960;
-constexpr U kAState = kModelA + 1, kADone = kModelA + 6, kBState = kModelB + 1, kBDone = kModelB + 6,
-            kBY = kModelB + 0x3C, kBColour = kModelB + 0x5D, kBAngle = kModelB + 0x6C;
+// kADone: now Rest2c_FigureDone (symbols.toml).
+constexpr U kAState = kModelA + 1,
+            kBState = kModelB + 1,
+            kBDone = kModelB + 6,
+            kBY = kModelB + 0x3C,
+            kBColour = kModelB + 0x5D,
+            kBAngle = kModelB + 0x6C;
 constexpr U kSaved = 0x6BC878;
-constexpr U kModelFile = 0x628C88, kLevelByte = 0x904101, kStyle = 0x903A5A;
+// kStyle: now BattleDraw_Colour (symbols.toml).
+constexpr U kModelFile = 0x628C88, kLevelByte = 0x904101;
 
 // The scratch the models' headers and quads point into (the harness's ten
 // argument slots, 0x40 bytes each, one region): headers at slot 0 (A +0, B
@@ -198,9 +211,9 @@ U WindingEffect(const U*, U answer) {
 }
 // Gfx_CommitPrim: the packet cursor on by the size, as the real one moves it.
 U CommitEffect(const U* a, U answer) {
-    unsigned char* const p = sh::Pointer(sh::at::kPacketNext);
+    unsigned char* const p = sh::Pointer(Gfx_PacketNext_addr);
     const U size = a[1] & 0xFF;
-    if (sh::InRegions(p + size, 0x48)) sh::SetPointer(sh::at::kPacketNext, p + size);
+    if (sh::InRegions(p + size, 0x48)) sh::SetPointer(Gfx_PacketNext_addr, p + size);
     return answer;
 }
 // Sprite_ObjectMatrix: the whole MATRIX (on the caller's stack) filled - the
@@ -345,24 +358,24 @@ void SeedModel(unsigned char* record, unsigned char* header, unsigned char* quad
 
 void Seed(unsigned k) {
     // the style row inside the region; the screen's menu cells near their bounds
-    B(kStyle) = static_cast<unsigned char>(sh::Next() % 8);
-    B(kMode) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
-    B(kState) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
-    B(kStep) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
+    B(BattleDraw_Colour_addr) = static_cast<unsigned char>(sh::Next() % 8);
+    B(BattleE1_Mode_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
+    B(FieldS_State_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next()));
+    B(FieldS_Step_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 0xFF, sh::Next()));
     B(kTimer) = static_cast<unsigned char>(PickOf(0, 8, 0x10, 0x78, 0x80, 0x88, 0xF0, 0xF8, sh::Next()));
     // the dispatchers' indexes below their tables' lengths (each reads its
     // byte before any call)
     switch (k) {
-    case kModeDispatch: B(kMode) = static_cast<unsigned char>(sh::Next() % Shisu_Modes_count); break;
-    case kOpenDispatch: B(kState) = static_cast<unsigned char>(sh::Next() % Shisu_OpenStates_count); break;
-    case kCloseDispatch: B(kState) = static_cast<unsigned char>(sh::Next() % Shisu_CloseStates_count); break;
-    case kPickDispatch: B(kState) = static_cast<unsigned char>(sh::Next() % Shisu_PickStates_count); break;
-    case kPickShow: B(kStep) = static_cast<unsigned char>(sh::Next() % Shisu_ShowSteps_count); break;
+    case kModeDispatch: B(BattleE1_Mode_addr) = static_cast<unsigned char>(sh::Next() % Shisu_Modes_count); break;
+    case kOpenDispatch: B(FieldS_State_addr) = static_cast<unsigned char>(sh::Next() % Shisu_OpenStates_count); break;
+    case kCloseDispatch: B(FieldS_State_addr) = static_cast<unsigned char>(sh::Next() % Shisu_CloseStates_count); break;
+    case kPickDispatch: B(FieldS_State_addr) = static_cast<unsigned char>(sh::Next() % Shisu_PickStates_count); break;
+    case kPickShow: B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % Shisu_ShowSteps_count); break;
     default: break;
     }
     B(kBState) = static_cast<unsigned char>(sh::Next() % Shisu_ModelBStates_count);
     B(kAState) = static_cast<unsigned char>(sh::Next() % MasterFigure_States_count);
-    B(kADone) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
+    B(Rest2c_FigureDone_addr) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
     B(kBDone) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
     // the counts, the rounds, the side and the row at their compares
     for (unsigned i = 0; i < 4; ++i) B(kOwned + i) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 0x63, sh::Next()));
@@ -372,7 +385,7 @@ void Seed(unsigned k) {
     B(kRounds) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, 7, 8, 9, sh::Next()));
     B(kSide) = static_cast<unsigned char>(PickOf(0, 0, 1, 1, 2, 0xFF));
     B(kCursor) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0, 1, 2, 3, 0xFF, 4, sh::Next()));
-    B(kLevel) = static_cast<unsigned char>(PickOf(0, 9, 0xA, 0xC, 0x10, 1, sh::Next()));
+    B(Rest2c_FigureScaleIndex_addr) = static_cast<unsigned char>(PickOf(0, 9, 0xA, 0xC, 0x10, 1, sh::Next()));
     B(kLevelByte) = static_cast<unsigned char>(PickOf(0x25, 0x26, 0x27, 0x28, 0x2C, 0x2D, 0x31, 0x32, 0x3B, 0x3C, 0x40,
                                                       0x41, 0x43, 0x44, 0, 0xFF, sh::Next()));
     // model B's colour against 0xFF - 3 g2 and 3 g2 (Shisu_ModelBDraw)
@@ -415,9 +428,9 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     const U v = h >> 8;
     switch (h % 13) {
-    case 0: B(kMode) = static_cast<unsigned char>(b % 5); break;
-    case 1: B(kState) = static_cast<unsigned char>(b % 3); break;
-    case 2: B(kStep) = static_cast<unsigned char>(b % 5); break;
+    case 0: B(BattleE1_Mode_addr) = static_cast<unsigned char>(b % 5); break;
+    case 1: B(FieldS_State_addr) = static_cast<unsigned char>(b % 3); break;
+    case 2: B(FieldS_Step_addr) = static_cast<unsigned char>(b % 5); break;
     case 3: B(kTimer) = static_cast<unsigned char>(b & 1 ? 0x80 : b); break;
     case 4: B(kRounds) = static_cast<unsigned char>(b % 10); break;
     case 5: B(kSide) = static_cast<unsigned char>(b & 1 ? b >> 1 & 1 : b); break;

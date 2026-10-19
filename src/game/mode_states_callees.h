@@ -27,23 +27,23 @@ namespace mode_states {
 
 namespace at {
 
-constexpr std::uint32_t kShopSteps = 0x656AAC;      // GameMode_ShopSteps, 3 entries (0x656AB8 is mode 8's)
-constexpr std::uint32_t kState2Steps = 0x66011C;    // FieldCore_State2Steps, 9 entries (0x660140 is 0x525390's)
-constexpr std::uint32_t kFadeSteps = 0x660158;      // FieldCore_FadeSteps, 2 entries (0x660160 is 0x525960's)
-constexpr std::uint32_t kScena01States = 0x660D7C;  // Scena01_States, 3 entries (0x660D88 is state 2's run table)
-constexpr std::uint32_t kScena01State = 0x8034E2;   // s8, chapter 1's state (docs/field-modes.md section 2)
-constexpr std::uint32_t kShopObject = 0x929F0C;     // s8: the menu block 0x929F00's +0xC, the object the shop was opened on
-constexpr std::uint32_t kPartyCombo = 0x90412C;     // u8: the party combination; bit 7 set by Shop_Close
-constexpr std::uint32_t kLookTurn = 0x66C7D9;       // u8: task 0's private +9, which way Look_Return turns the pitch
-constexpr std::uint32_t kLookButton = 0x903586;     // u16: the button map's word after Field_MenuButton
-constexpr std::uint32_t kFlagBank = 0x929ED0;       // dword: the flag bits Flags_Test / Flags_Set are given
+// kShopSteps: now GameMode_ShopSteps (symbols.toml). GameMode_ShopSteps, 3 entries (0x656AB8 is mode 8's)
+// kState2Steps: now FieldCore_State2Steps (symbols.toml). FieldCore_State2Steps, 9 entries (0x660140 is 0x525390's)
+// kFadeSteps: now FieldCore_FadeSteps (symbols.toml). FieldCore_FadeSteps, 2 entries (0x660160 is 0x525960's)
+// kScena01States: now Scena01_States (symbols.toml). Scena01_States, 3 entries (0x660D88 is state 2's run table)
+// kScena01State: now MoveScript_PartyRecords[0x62] (symbols.toml). s8, chapter 1's state (docs/field-modes.md section 2)
+// kShopObject: now ModeStates_ShopObject (symbols.toml). s8: the menu block 0x929F00's +0xC, the object the shop was opened on
+// kPartyCombo: now AreaW0b_PartySet (symbols.toml). u8: the party combination; bit 7 set by Shop_Close
+// kLookTurn: now ModeStates_LookTurn (symbols.toml). u8: task 0's private +9, which way Look_Return turns the pitch
+// kLookButton: now Gfx_UnpackScratch[0x1f006] (symbols.toml). u16: the button map's word after Field_MenuButton
+// kFlagBank: now AreaW0c_FlagRow (symbols.toml). dword: the flag bits Flags_Test / Flags_Set are given
 constexpr std::uint32_t kCounters = 0x903848;       // u8 x 4: the script counters (MoveScript_CounterOps)
 constexpr std::uint32_t kEffectSlot = 0x903850;     // u8 (read back as a dword's low byte): the effect slot just taken
-constexpr std::uint32_t kStep5 = 0x8034E5;          // u8: the scene's step
-constexpr std::uint32_t kTimer = 0x8034E6;          // u16: the scene's timer
-constexpr std::uint32_t kChoiceId = 0x7DEE64;       // u8: the message box's choice id
-constexpr std::uint32_t kCursorSet = 0x7DEE65;      // u8: the list set 0x66AE2C is indexed by
-constexpr std::uint32_t kCursorRow = 0x7DEE67;      // s8: the cursor's row
+// kStep5: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
+// kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: the scene's timer
+// kChoiceId: now ItemUse_ChoiceId (symbols.toml). u8: the message box's choice id
+// kCursorSet: now MenuWindows_ListSet (symbols.toml). u8: the list set 0x66AE2C is indexed by
+// kCursorRow: now AreaW0c_ChoiceAnswer (symbols.toml). s8: the cursor's row
 constexpr std::uint32_t kCursorRows = 0x66AE2C;     // 6-byte records: +2 the first row's y, +4 the row stride
 constexpr std::uint32_t kWindow = 0x905B84;         // dword: the window record the cursor is drawn in (+4 x, +6 y, 12.4)
 constexpr std::uint32_t kSmallUV = 0x65F5A8;        // u8 pairs by colour >> 4: the 8 px draw's texture u and v

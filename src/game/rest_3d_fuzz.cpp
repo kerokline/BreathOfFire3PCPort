@@ -21,12 +21,19 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3d.h"
 #include "game/rest_3d_callees.h"
 #include "hook/log.h"
 
 namespace rest_3d {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
+[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace bh = boss_harness;
 using U = std::uint32_t;
@@ -88,7 +95,7 @@ bh::Clone Dispatch() {
     bh::Clone c{"DragonCmd_PartDispatch", 0x44FF00, 0xE, nullptr, 0, nullptr, 0, nullptr, 0, BH_FN(DragonCmd_PartDispatch), 0, false,
                 S::kDispatch};
     c.states = DragonCmd_Parts_count;
-    c.state_cell = at::kDragonPart;
+    c.state_cell = BattleE4_Step3_addr;
     return c;
 }
 
@@ -180,7 +187,7 @@ U HpDamageEffect(const U*, U answer) {
     MoveTarget(n);
     if ((n & 2) == 0) return answer;
     const unsigned t = Mem(at::kTarget)[0];
-    const U def = t <= 2 ? move_script::Word(Mem(at::kParty + t * at::kPartyStride + 0xA6))
+    const U def = t <= 2 ? move_script::Word(Mem(ObjTrio_addr + t * at::kPartyStride + 0xA6))
                          : move_script::Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xB6));
     return (answer & 0xFFFF0000u) | ((def + (n >> 16) % 5 - 2) & 0xFFFF);
 }
@@ -258,7 +265,7 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     const U* v = often.begin();
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
-unsigned char* Member(unsigned n) { return Mem(at::kParty + (n % 3) * at::kPartyStride); }
+unsigned char* Member(unsigned n) { return Mem(ObjTrio_addr + (n % 3) * at::kPartyStride); }
 unsigned char* EnemyN(unsigned n) { return Mem(at::kEnemies + (n % 8) * at::kEnemyStride); }
 U Upper() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 // An actor 0..10: past 10 the enemy objects run off the image's end 0x93F000
@@ -282,26 +289,26 @@ void Frame() {
     Mem(at::kActor)[0] = static_cast<unsigned char>(ActorByte());
     Mem(at::kTarget)[0] = static_cast<unsigned char>(ActorByte());
     SetWord(Mem(at::kAbility), bh::Often() ? bh::Next() % 0x200 : BH_PICK(0x4E, 0x6A, 0, 1));
-    SetWord(Mem(at::kAttackerInt), Word16({0, 1, 249, 250, 254, 255, 499, 500, 1000}));
-    SetWord(Mem(at::kTargetInt), Word16({0, 1, 374, 375, 379, 380, 500, 1000}));
+    SetWord(Mem(BattleDamage_AttackerInt_addr), Word16({0, 1, 249, 250, 254, 255, 499, 500, 1000}));
+    SetWord(Mem(BattleDamage_TargetInt_addr), Word16({0, 1, 374, 375, 379, 380, 500, 1000}));
     SetWord(Mem(at::kNewStatus), Word16({0, 0, 0x80, 0x840}));
     Mem(at::kPartySize)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 2, 3, 3) : bh::Next() % 4);   // past 3 ours aborts
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
         for (unsigned i = 0; i < 4; ++i) p[0xB4 + i] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         SetLong(p + 0x130, static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u));
-        SetWord(p + 0x90, Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80}));
+        MemberRec(p)->status = Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80});
         p[0x148] = static_cast<unsigned char>(bh::Next() % 8);
         Mem(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride + 0x1E)[0] = Byte({0, 7, 8, 9, 10});
     }
     for (unsigned n = 0; n < 8; ++n) {
         unsigned char* const e = EnemyN(n);
         for (unsigned i = 0; i < 4; ++i) e[0xC4 + i] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
-        SetLong(e + 0x110, static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u));
-        SetWord(e + 0x92, Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80}));
+        EnemyRec(e)->flags_110 = static_cast<std::int32_t>(bh::Half() ? bh::Next() | 0x10000 : bh::Next() & ~0x10000u);
+        EnemyRec(e)->status = Word16({0, 0x40, 0x800, 4, 0x64, 0xC, 0x14, 0x80});
         e[0x8D] = Byte({4, 4, 3, 5});
     }
-    unsigned char* const fs = bh::Pointer(bh::at::kMemberCurrent);
+    unsigned char* const fs = bh::Pointer(Field_State_addr);
     fs[0x94] = Byte({0x2B, 0x2B, 0x2A, 0});
     fs[0x96] = Byte({6, 8, 9, 0});
     fs[0x97] = Byte({6, 8, 9, 0});

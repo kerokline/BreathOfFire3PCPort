@@ -67,13 +67,13 @@ const bh::Clone kOutside[] = {
     C("WorldMap33_FrameShown", 0x4041B0, 0x28, kCalls4041B0, BH_N(kCalls4041B0), nullptr, 0, BH_FN(WorldMap33_FrameShown), S::kState),
     C("WorldMap33_FrameSlideOut", 0x4041E0, 0x41, kCalls4041E0, BH_N(kCalls4041E0), nullptr, 0, BH_FN(WorldMap33_FrameSlideOut),
       S::kState),
-    C("BattleExtra_Dispatch", 0x42D710, 0x11, nullptr, 0, nullptr, 0, BH_FN(BattleExtra_Dispatch), S::kDispatch, 0, 1, 4, at::kMode),
+    C("BattleExtra_Dispatch", 0x42D710, 0x11, nullptr, 0, nullptr, 0, BH_FN(BattleExtra_Dispatch), S::kDispatch, 0, 1, 4, BattleE1_Mode_addr),
     C("BattleExtra_Start", 0x42D730, 0x19, nullptr, 0, nullptr, 0, BH_FN(BattleExtra_Start), S::kState),
     C("BattleExtra_Leave", 0x42D750, 0xD, kCalls42D750, BH_N(kCalls42D750), nullptr, 0, BH_FN(BattleExtra_Leave), S::kState),
     C("BattleExtra_TallyDispatch", 0x42D760, 0xE, nullptr, 0, nullptr, 0, BH_FN(BattleExtra_TallyDispatch), S::kDispatch, 0, 1, 3,
-      at::kModeStep),
+      FieldS_State_addr),
     C("BattleExtra_TallyOpenDispatch", 0x42D770, 0xE, nullptr, 0, nullptr, 0, BH_FN(BattleExtra_TallyOpenDispatch), S::kDispatch, 0, 1,
-      2, at::kModeSub),
+      2, FieldS_Step_addr),
     C("BattleExtra_OpenTransition", 0x42D780, 0x17, kCalls42D780, BH_N(kCalls42D780), nullptr, 0, BH_FN(BattleExtra_OpenTransition),
       S::kState),
 };
@@ -121,11 +121,11 @@ const bh::Clone kEngine[] = {
       S::kHelper, 0xFF, 1, 0, 0, true),
     // the battle's end
     C("BattleEnd_LossDispatch", 0x431540, 0xE, nullptr, 0, nullptr, 0, BH_FN(BattleEnd_LossDispatch), S::kDispatch, 0, 1, 3,
-      at::kSubStep),
+      BattleE4_Step2_addr),
     C("BattleEnd_LossBanner", 0x431550, 0x4E, kCalls431550, BH_N(kCalls431550), nullptr, 0, BH_FN(BattleEnd_LossBanner), S::kStep),
     C("BattleEnd_LossAwaitLoad", 0x4315A0, 0x10, kCalls4315A0, BH_N(kCalls4315A0), nullptr, 0, BH_FN(BattleEnd_LossAwaitLoad), S::kStep),
     C("BattleEnd_RestoreDispatch", 0x4315B0, 0xE, nullptr, 0, nullptr, 0, BH_FN(BattleEnd_RestoreDispatch), S::kDispatch, 0, 1, 5,
-      at::kSubStep),
+      BattleE4_Step2_addr),
     C("BattleEnd_RestoreLoadBank", 0x431710, 0x2A, kCalls431710, BH_N(kCalls431710), nullptr, 0, BH_FN(BattleEnd_RestoreLoadBank),
       S::kStep),
     C("BattleEnd_RestoreAwaitBank", 0x431740, 0x18, kCalls431740, BH_N(kCalls431740), nullptr, 0, BH_FN(BattleEnd_RestoreAwaitBank),
@@ -222,26 +222,26 @@ const bh::Callee kEngineCallees[] = {
 // One argument each: the dispatchers hand the caller's word on to the entry,
 // and a recorder that logged no word could not see it dropped (round
 // fourteen's review, item 6; R3D's {0x64ECCC, 7, 4, 1} is the same repair).
-const bh::DataTable kOutsideTables[] = {{at::kStates, 4, 4, 1}, {at::kTallySteps, 3, 4, 1}, {at::kTallyOpenSteps, 2, 4, 1}};
-const bh::DataTable kEngineTables[] = {{at::kLossSteps, 3, 4, 1}, {at::kRestoreSteps, 5, 4, 1}};
+const bh::DataTable kOutsideTables[] = {{BattleExtra_States_addr, 4, 4, 1}, {BattleExtra_TallySteps_addr, 3, 4, 1}, {BattleExtra_TallyOpenSteps_addr, 2, 4, 1}};
+const bh::DataTable kEngineTables[] = {{BattleEnd_LossSteps_addr, 3, 4, 1}, {BattleEnd_RestoreSteps_addr, 5, 4, 1}};
 
 const bh::Region kOutsideRegions[] = {
-    {at::kMode, 0x10},        // BATE's mode bytes
-    {at::kModeRequest, 1},
-    {at::kGameStep, 2},
-    {at::kMapMode, 1},
+    {BattleE1_Mode_addr, 0x10}, // BATE's mode bytes
+    {ScenaSc6_Byte904C9F_addr, 1},
+    {Game_Step_addr, 2},
+    {AreaW0b_MapMode_addr, 1},
 };
 const bh::Region kEngineRegions[] = {
     {at::kChosen, 0x10},          // the six chosen bytes and what follows them
     {0x903B24, 0x46C},            // character records 1..7 past the engine frame's 0x903A50..0x903B24
     {0x904060, 8},                // the party list
-    {at::kAreaNumber, 2},
-    {at::kWaitWord, 2},
-    {at::kPassFlags, 1},
-    {at::kCameraDistance, 0x14},  // Camera_Distance .. the tint's three bytes 0x903850
-    {at::kRedraw, 1},
-    {at::kPartySet, 1},
-    {at::kWhelpSlot, 1},
+    {Game_AreaNumber_addr, 2},
+    {MoveScript_WaitWordDA_addr, 2},
+    {Draw_PassFlags_addr, 1},
+    {Camera_Distance_addr, 0x14}, // Camera_Distance .. the tint's three bytes 0x903850
+    {MapView_Redraw_addr, 1},
+    {AreaW0b_PartySet_addr, 1},
+    {Char_WhelpSlot_addr, 1},
 };
 
 // ===========================================================================
@@ -259,14 +259,14 @@ std::uint16_t Word16(std::initializer_list<U> often) {
     const U* v = often.begin();
     return static_cast<std::uint16_t>(v[bh::Next() % often.size()]);
 }
-unsigned char* Slot() { return bh::Pointer(at::kTaskCurrent); }
-unsigned char* Owner() { return bh::Pointer(at::kTaskOwner); }
+unsigned char* Slot() { return bh::Pointer(BattleFlow_TaskCurrent_addr); }
+unsigned char* Owner() { return bh::Pointer(BattleE2_Owner_addr); }
 // The owner as a party member: a member's record with its own index at +5,
 // half the time; else the harness's owner with +5 a member index.
 void OwnerMember() {
     if (bh::Half()) {
         const unsigned m = bh::Next() % 3;
-        bh::SetPointer(at::kTaskOwner, bh::PartyOf(static_cast<unsigned char>(m)));
+        bh::SetPointer(BattleE2_Owner_addr, bh::PartyOf(static_cast<unsigned char>(m)));
         Owner()[5] = static_cast<unsigned char>(m);
     } else {
         Owner()[5] = static_cast<unsigned char>(bh::Next() % 3);
@@ -278,14 +278,14 @@ void SeedOutside(unsigned k) {
     switch (g_base[k].base) {
     case 0x404180:   // around the bound 0x10 after the add, and the wrap at 0x8000
         SetWord(s + 0x2E, Word16({0xFFFF, 0, 1, 0xFFFE, 0x7FF0, 0x7FEF, 0xFFD0}));
-        B(at::kMapMode) = Byte({2, 0, 1});
+        B(AreaW0b_MapMode_addr) = Byte({2, 0, 1});
         break;
     case 0x4041B0:
-        B(at::kMapMode) = Byte({2, 0, 1, 3});
+        B(AreaW0b_MapMode_addr) = Byte({2, 0, 1, 3});
         break;
     case 0x4041E0:   // around -0x30 after the subtract
         SetWord(s + 0x2E, Word16({0xFFE0, 0xFFDF, 0xFFE1, 0xFFD0, 0x800F, 0x8010, 0x10}));
-        B(at::kMapMode) = Byte({2, 0, 1});
+        B(AreaW0b_MapMode_addr) = Byte({2, 0, 1});
         break;
     default:
         break;
@@ -294,25 +294,25 @@ void SeedOutside(unsigned k) {
 
 void SeedEngine(unsigned k) {
     // every round: the party set inside the 20 entries the file tables have
-    Mem(at::kPartySet)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(7, 0xD, 0xE, 0xF) : bh::Next() % at::kPartySetCount);
+    Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(7, 0xD, 0xE, 0xF) : bh::Next() % at::kPartySetCount);
     switch (g_base[k].base) {
     case 0x42E0E0:   // the party list: 0, 7 or another member at each place
-        for (U i = 0; i < 3; ++i) Mem(at::kPartyList + i)[0] = Byte({0, 7, 1, 2, 3, 6});
+        for (U i = 0; i < 3; ++i) Mem(Cond_Flags_addr + 0xd2 + i)[0] = Byte({0, 7, 1, 2, 3, 6});
         break;
     case 0x42E250:   // each chosen byte 0, the one held, or another
         for (U i = 0; i < at::kChosenCount; ++i) {
             const unsigned pick = bh::Next() % 3;
-            Mem(at::kChosen + i)[0] = pick == 0 ? 0 : pick == 1 ? Mem(at::kGuestEquip + i)[0] : static_cast<unsigned char>(bh::Next());
+            Mem(at::kChosen + i)[0] = pick == 0 ? 0 : pick == 1 ? Mem(Rest3a_GuestEquip_addr + i)[0] : static_cast<unsigned char>(bh::Next());
         }
         break;
     case 0x42E2F0:   // window 1's slot cursor inside the six bytes (0 and 3 the screen's two slots)
-        Mem(at::kWin1Slot)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 3) : bh::Next() % at::kChosenCount);
+        Mem(Rest3a_Win1Slot_addr)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 3) : bh::Next() % at::kChosenCount);
         break;
     case 0x431550:
-        Mem(at::kMusicFlags)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kMusicFlags)[0] | 0x40 : Mem(at::kMusicFlags)[0] & ~0x40);
+        Mem(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(bh::Half() ? Mem(BattleTurnSteps_MusicFlags_addr)[0] | 0x40 : Mem(BattleTurnSteps_MusicFlags_addr)[0] & ~0x40);
         break;
     case 0x4318F0:
-        if (bh::Half()) SetWord(Mem(at::kWaitWord), 0);
+        if (bh::Half()) SetWord(Mem(MoveScript_WaitWordDA_addr), 0);
         break;
     case 0x432F90: case 0x4332B0:   // the running slot's +1 inside the stack table
         Slot()[1] = static_cast<unsigned char>(bh::Next() % 3);
@@ -325,7 +325,7 @@ void SeedEngine(unsigned k) {
         Sprite_Current[9] = Byte({0xFE, 0xFF, 0, 0xFD});
         break;
     case 0x4333C0: {   // the action's ability id inside Ability_Records' 228 (unchecked, a read)
-        unsigned char* const action = bh::Pointer(at::kAction);
+        unsigned char* const action = bh::Pointer(BattleSprites_Action_addr);
         SetWord(action + 2, bh::Next() % 228);
         break;
     }
@@ -359,7 +359,7 @@ void SeedEngine(unsigned k) {
         Slot()[5] = static_cast<unsigned char>(bh::Next() % 8);
         break;
     case 0x437820:
-        Mem(at::kWhelpSlot)[0] = static_cast<unsigned char>(bh::Often() ? 7 : bh::Next() % at::kCharCount);
+        Mem(Char_WhelpSlot_addr)[0] = static_cast<unsigned char>(bh::Often() ? 7 : bh::Next() % at::kCharCount);
         break;
     default:
         break;
@@ -383,8 +383,8 @@ void ArgsEngine(unsigned k, U* a) {
 void DisturbOutside(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 4) {
-    case 0: B(at::kModeSub) = b; break;
-    case 1: B(at::kMapMode) = static_cast<unsigned char>(b & 3); break;
+    case 0: B(FieldS_Step_addr) = b; break;
+    case 1: B(AreaW0b_MapMode_addr) = static_cast<unsigned char>(b & 3); break;
     case 2: SetWord(Sprite_Current + 0x2E, static_cast<unsigned>(h >> 16)); break;
     default: Sprite_Current[2] = static_cast<unsigned char>(b & 3); break;
     }
@@ -393,15 +393,15 @@ void DisturbOutside(U h) {
 void DisturbEngine(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 10) {
-    case 0: B(at::kSubStep) = b; break;
+    case 0: B(BattleE4_Step2_addr) = b; break;
     case 1: B(at::kChosen + (h >> 24) % at::kChosenCount) = b; break;
-    case 2: B(at::kGuestEquip + (h >> 24) % at::kChosenCount) = b; break;
-    case 3: B(at::kPartySet) = static_cast<unsigned char>(b % at::kPartySetCount); break;
+    case 2: B(Rest3a_GuestEquip_addr + (h >> 24) % at::kChosenCount) = b; break;
+    case 3: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(b % at::kPartySetCount); break;
     case 4: Slot()[9 + (h >> 24) % 2] = b; break;
     case 5: SetWord(Slot() + 0x10, h >> 16); break;
     case 6: Owner()[8] = b; break;
-    case 7: B(at::kMusicFlags) = b; break;
-    case 8: SetWord(Mem(at::kAreaNumber), h >> 16); break;
+    case 7: B(BattleTurnSteps_MusicFlags_addr) = b; break;
+    case 8: SetWord(Mem(Game_AreaNumber_addr), h >> 16); break;
     default: Sprite_Current[9] = b; break;
     }
 }

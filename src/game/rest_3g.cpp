@@ -34,6 +34,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3g_callees.h"
 #include "game/scenario_harness.h"
 #include "game/draw_pool.h"
@@ -44,6 +45,10 @@
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace at = rest_3g::at;
 using U = std::uint32_t;
@@ -175,12 +180,12 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
 extern "C" void __cdecl EffectKindAD_Start(void) {
     SetUL(S() + 0x34, UL(at::kMember2X));
     SetUL(S() + 0x38, UL(at::kMember2Z));
-    const long h = SH_CALL(AreaMap_Elevation)(Long(S() + 0x34), Long(S() + 0x38));
+    const long h = SH_CALL(AreaMap_Elevation)(EffectRec(S())->x, EffectRec(S())->z);
     unsigned char* const s = S();
-    SetUL(s + 0x3C, static_cast<U>(static_cast<std::int16_t>(h)) << 16);
-    SetUL(s + 0xC, UL(s + 0x34));
-    SetUL(s + 0x10, UL(s + 0x38));
-    SetUL(s + 0x14, UL(s + 0x3C));
+    EffectRec(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
+    SetUL(s + 0xC, static_cast<std::uint32_t>(EffectRec(s)->x));
+    SetUL(s + 0x10, static_cast<std::uint32_t>(EffectRec(s)->z));
+    SetUL(s + 0x14, static_cast<std::uint32_t>(EffectRec(s)->height));
     s[0x5D] = 0;
     s[0x5E] = 0x80;
     s[9] = 0x20;
@@ -192,7 +197,7 @@ extern "C" void __cdecl EffectKindAD_Start(void) {
 extern "C" void __cdecl EffectKindAD_Rise(void) {
     {
         unsigned char* const s = S();
-        SetUL(s + 0x3C, UL(s + 0x3C) + 0x800000u);
+        EffectRec(s)->height = static_cast<std::uint32_t>(EffectRec(s)->height) + 0x800000u;
         SH_CALL(EffectKindAD_DrawArc)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                       s[0x5D], s[0x5E]);
     }
@@ -209,14 +214,14 @@ extern "C" void __cdecl EffectKindAD_Rise(void) {
 // +0x32 the angle Math_Ratan2(b.y - a.y, b.x - a.x) + 0x400 (each difference
 // rounded to a float, as fstp leaves it); sound 0x202.
 extern "C" void __cdecl EffectKindAE_Start(void) {
-    SetUL(S() + 0x34, 0x188000u);
-    SetUL(S() + 0x38, 0x120000u);
-    const long h = SH_CALL(AreaMap_Elevation)(Long(S() + 0x34), Long(S() + 0x38));
+    EffectRec(S())->x = 0x188000u;
+    EffectRec(S())->z = 0x120000u;
+    const long h = SH_CALL(AreaMap_Elevation)(EffectRec(S())->x, EffectRec(S())->z);
     {
         unsigned char* const s = S();
-        SetUL(s + 0x3C, static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16);
-        SetWord(s + 0x2E, 0x80);
-        SetWord(s + 0x30, 0x180);
+        EffectRec(s)->height = static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16;
+        EffectRec(s)->screen_x = 0x80;
+        EffectRec(s)->screen_y = 0x180;
         SetWord(s + 0x32, 0);
         s[9] = 8;
         s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -225,9 +230,9 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
     long point[3];
     {
         const unsigned char* const s = S();
-        point[0] = Long(s + 0x34);
-        point[1] = Long(s + 0x38);
-        point[2] = Long(s + 0x3C);
+        point[0] = EffectRec(s)->x;
+        point[1] = EffectRec(s)->z;
+        point[2] = EffectRec(s)->height;
     }
     float a[3], b[3];
     SH_CALL(EffectGte_ProjectPoint)(point, a);
@@ -263,17 +268,17 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
     const U d2 = Sar(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
     {
         unsigned char* const s = S();
-        SetUL(s + 0x34, UL(at::kExtra1X) + d1);
-        SetUL(s + 0x38, UL(at::kExtra1Z) + d2);
-        SetUL(s + 0x3C, UL(at::kExtra1Y) + 0x1000000u);
+        EffectRec(s)->x = UL(at::kExtra1X) + d1;
+        EffectRec(s)->z = UL(at::kExtra1Z) + d2;
+        EffectRec(s)->height = UL(at::kExtra1Y) + 0x1000000u;
         SetUL(s + 0xC, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
         SetUL(s + 0x10, UL(at::kExtra1Z) + d2);
         SetUL(s + 0x14, UL(at::kExtra1Y) + 0x1000000u);
         SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                        0x40);
     }
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 1u);
-    if (Word(S() + 0x2E) != 0x14A) return;
+    EffectRec(S())->screen_x = static_cast<std::uint16_t>(EffectRec(S())->screen_x) + 1u;
+    if (static_cast<std::uint16_t>(EffectRec(S())->screen_x) != 0x14A) return;
     SH_CALL(Sound_PlayEffect)(0x216);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
@@ -305,21 +310,21 @@ extern "C" int __cdecl Screen_TriangleWinding(const float* a, const float* b, co
 // The original passes the slot and the count from stack bytes whose upper
 // three bytes it never wrote; its callee reads their low bytes only.
 extern "C" void __cdecl Battle_PlaceBossActors(void) {
-    const unsigned event = At(at::kEventBattle)[0];
+    const unsigned event = BattleActions_EventBattle;
     const unsigned row = At(at::kEventRows + 4 * event)[0];
-    At(at::kPlaced)[0] = 0;
+    BattleActorCopies_EnemyCount = 0;
     if (row >= at::kEncounterRows)
         bof3::Fatal("Battle_PlaceBossActors: event battle %u names encounter row %u, past Encounter_Rows' %u - the original "
                     "reads on into the enemy kinds' records (docs/rest_3g.md section 7)",
                     event, row, at::kEncounterRows);
     unsigned char count = 0;
     for (unsigned slot = 0; slot < 8; ++slot) {
-        const unsigned kind = At(at::kEncounterRowsAt + 9 * row + slot)[0];
+        const unsigned kind = At(Encounter_Rows_addr + 9 * row + slot)[0];
         if (kind == 0xFF) continue;
         SH_CALL(Battle_PlaceBossActor)(slot, count, kind);
         count = static_cast<unsigned char>(count + 1);
     }
-    At(at::kPlacedTotal)[0] = At(at::kPlaced)[0];
+    BattleE2_EnemiesLeft = BattleActorCopies_EnemyCount;
 }
 
 // original 0x494570 (cdecl, by Battle_PlaceBossActors): the field actor tagged
@@ -369,11 +374,11 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[8] = static_cast<unsigned char>(At(at::kFormation)[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
-    psp_code::MyriaItem(At(at::kEnemies + at::kEnemyStride * n), Game_AreaNumber, At(at::kEventBattle)[0]);
+    psp_code::MyriaItem(At(at::kEnemies + at::kEnemyStride * n), Game_AreaNumber, BattleActions_EventBattle);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
     At(at::kEnemies + at::kEnemyStride * n + 0x8F)[0] = 0;
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);
-    At(at::kPlaced)[0] = static_cast<unsigned char>(At(at::kPlaced)[0] + 1);
+    BattleActorCopies_EnemyCount = static_cast<unsigned char>(BattleActorCopies_EnemyCount + 1);
 }
 
 // original 0x494E70 (BattleEnd_Finish, BattleLoss_ResetParty, BattleLoss_Restart,
@@ -401,7 +406,7 @@ extern "C" void __cdecl GameMode8_Run(void) {
 // at slot 5 (0x18); GameMode8_Frame; Field_ScriptFlags2 bit 6 clear, Game_Step
 // up, Field_EdgeBits 0, Field_Request 0.
 extern "C" void __cdecl GameMode8_Enter(void) {
-    SetUL(at::kModeCounter, UL(at::kModeCounter) + 1u);
+    Rest4a_CountF = Rest4a_CountF + 1u;
     SH_CALL(Fish_Spawn)();
     SH_CALL(Transition_Start)(1);
     SH_CALL(AreaMap_Frame)();
@@ -414,22 +419,22 @@ extern "C" void __cdecl GameMode8_Enter(void) {
     SH_CALL(Gpu_SetDrawMove)(Gfx_PacketNext, rect, 0x340, 0x100);
     SH_CALL(Gfx_CommitPrim)(5, 0x18);
     SH_CALL(GameMode8_Frame)();
-    SetWord(At(at::kFlags2), Word(At(at::kFlags2)) & 0xFFBFu);
+    Field_ScriptFlags2 = Field_ScriptFlags2 & 0xFFBFu;
     Game_Step = static_cast<unsigned short>(Game_Step + 1);
-    SetWord(At(at::kEdgeBits), 0);
+    Field_EdgeBits = 0;
     Field_Request = 0;
 }
 
 namespace {
 // Music_Track not 0xFF and not the byte 0x904CD0: the fade.
 bool MusicChanges() {
-    const unsigned char track = At(at::kMusicTrack)[0];
-    return track != 0xFF && At(at::kMusicPlaying)[0] != track;
+    const unsigned char track = Music_Track;
+    return track != 0xFF && AreaW1f_MusicCurrent != track;
 }
 // 0x90412C |= 0x80 and the sound bank of its low seven bits + 0x2C2 loaded.
 void LoadBank() {
-    const unsigned char b = static_cast<unsigned char>(At(at::kBankByte)[0] | 0x80);
-    At(at::kBankByte)[0] = b;
+    const unsigned char b = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
+    AreaW0b_PartySet = b;
     SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C2u);
 }
 }  // namespace
@@ -442,10 +447,10 @@ void LoadBank() {
 // 1, Game_Step 0.
 extern "C" void __cdecl GameMode8_Leave(void) {
     {
-        const unsigned char was = At(at::kBankByte)[0];
-        At(at::kFlags2)[0] = static_cast<unsigned char>(At(at::kFlags2)[0] | 0x40);
+        const unsigned char was = AreaW0b_PartySet;
+        At(Field_ScriptFlags2_addr)[0] = static_cast<unsigned char>(At(Field_ScriptFlags2_addr)[0] | 0x40);
         const unsigned char b = static_cast<unsigned char>(was | 0x80);
-        At(at::kBankByte)[0] = b;
+        AreaW0b_PartySet = b;
         SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C2u);
     }
     WaitLoad(&Mode8Frame);
@@ -455,7 +460,7 @@ extern "C" void __cdecl GameMode8_Leave(void) {
     {
         const U z = UL(at::kReturnZ);
         const U x = UL(at::kReturnX);
-        const unsigned area = Word(At(at::kReturnArea));
+        const unsigned area = AreaW2c_LastArea;
         SH_CALL(Field_ChangeArea)(area, I(x), I(z), 4);
     }
     if (MusicChanges()) SH_CALL(Music_FadeOutStop)(0xA);
@@ -542,7 +547,7 @@ extern "C" void __cdecl GameMode11_Look(void) {
 extern "C" void __cdecl GameMode11_LookEnd(void) {
     SH_CALL(Look_Return)();
     SH_CALL(Mode11_FieldFrame)();
-    if (Word(At(at::kYaw)) == 0xFD56 && Word(At(at::kPitch)) == 0x200) Game_Step = 0;
+    if (static_cast<std::uint16_t>(Camera_Angles[0]) == 0xFD56 && Word(At(Cond_AngleFB_addr)) == 0x200) Game_Step = 0;
 }
 
 // ===========================================================================
@@ -558,10 +563,10 @@ extern "C" void __cdecl GameMode11_LookEnd(void) {
 // b odd a even -(s8 [i+0x10] + s8 [i+1]) << 3; b even a odd -(s8 [i+0x10] + s8
 // [i+0xF]) << 3; both odd -s8 [i+0x10] << 4.
 extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
-    const U fx = Sar(static_cast<U>(x) + 0x4000u, 6) - (static_cast<U>(S16(At(at::kQuakeX))) << 1);
-    const U fz = Sar(static_cast<U>(z) + 0x4000u, 6) - (static_cast<U>(S16(At(at::kQuakeY))) << 1);
+    const U fx = Sar(static_cast<U>(x) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeX) << 1);
+    const U fz = Sar(static_cast<U>(z) + 0x4000u, 6) - (static_cast<std::uint32_t>(MagicS23_QuakeY) << 1);
     U a, b;   // eax and esi
-    if (At(at::kQuakeFacing)[0] & 1) {
+    if (MagicS23_QuakeFacing & 1) {
         b = fz;
         a = fx;
     } else {
@@ -586,7 +591,7 @@ extern "C" unsigned __cdecl Quake_VertexLift(long x, long z) {
 extern "C" int __cdecl Area109_SwitchPattern(void) {
     U bits = 0;
     for (unsigned i = 0; i < 3; ++i) {
-        const unsigned char set = SH_CALL(Flags_Test)(At(at::kStoryFlags), At(at::kPatternFlags + i)[0]);
+        const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
         if (set != 0) bits |= 1u << i;
     }
     return static_cast<int>(bits + 1);
@@ -598,13 +603,13 @@ extern "C" int __cdecl Area109_SwitchPattern(void) {
 // each cleared, then set by its bit; Effect_HoldFlag1C(0xF); sounds 0x206,
 // 0x202; al 1. Otherwise al 0 (the rest of eax the caller's).
 extern "C" unsigned char __cdecl Area109_SwitchHook(long x, long z) {
-    if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || At(at::kLeaderFacing)[0] != 3) return 0;
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x1C) != 0) return 0;
+    if ((static_cast<U>(x) & 0xFF) != 0x1C || (static_cast<U>(z) & 0xFF) != 6 || ObjTrio[8] != 3) return 0;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x1C) != 0) return 0;
     const int pattern = SH_CALL(Area109_SwitchPattern)();
     int bits = pattern % 6;
     for (unsigned i = 0; i < 3; ++i) {
-        SH_CALL(Flags_Clear)(At(at::kStoryFlags), At(at::kPatternFlags + i)[0]);
-        if (bits & 1) SH_CALL(Flags_Set)(At(at::kStoryFlags), At(at::kPatternFlags + i)[0]);
+        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
+        if (bits & 1) SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), At(at::kPatternFlags + i)[0]);
         bits >>= 1;
     }
     SH_CALL(Effect_HoldFlag1C)(0xF);

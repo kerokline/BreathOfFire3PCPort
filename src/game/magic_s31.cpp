@@ -38,6 +38,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -60,18 +61,22 @@ using move_script::Word;
 // function) and the four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF).
 // Both are read again after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kActorRecord = 0x904B3C;   // unsigned char *: the acting actor's sprite record
-constexpr std::uint32_t kEventBattle = 0x904AAA;   // u8: not 0 in an event battle
-constexpr std::uint32_t kFrameSet = 0x9039D8;      // the sprite frame-offset table pointer (sprite_pose.h)
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml). unsigned char *: the acting actor's sprite record
+// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: not 0 in an event battle
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
 constexpr std::uint32_t kFrameSetBlast = 0x8C5D80;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 
@@ -82,11 +87,11 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
 void AddVW(unsigned k, unsigned v) { SetVW(k, VW(k) + v); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -113,7 +118,7 @@ void PutFloat(unsigned char* at, int v) {
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3 (a party index lands below the enemy records).
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -166,7 +171,8 @@ void Rtp4(unsigned char* prim, unsigned step) {
 }
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), 2,
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
                                 size);
 }
 // A draw-mode packet (tpage `tpage`, dithered) committed to layer 2.
@@ -241,12 +247,13 @@ S31_EXPORT void __cdecl DoomBreath_Start(void) {
     MH_CALL(MagicFx_CenterOnSide)();
     const unsigned slot = NewTask(0x64);
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(Sc())));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = static_cast<std::int32_t>(Key(Sc()));
     child[1] = 0;
     child[9] = 0x18;
     RestoreRow26Stp();
-    MH_CALL(Sprite_ReleaseTint)(Pointer(kActorRecord));
-    const unsigned char tint = MH_CALL(Sprite_SetTint)(Pointer(kActorRecord), 0, 0, 0, 1);
+    MH_CALL(Sprite_ReleaseTint)(Pointer(MagicS23_ActorSprite_addr));
+    const unsigned char tint = MH_CALL(Sprite_SetTint)(Pointer(MagicS23_ActorSprite_addr), 0, 0, 0, 1);
     Sc()[0xA] = tint;
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[0xB] = 0;
@@ -262,7 +269,7 @@ S31_EXPORT void __cdecl DoomBreath_Brighten(void) {
     for (unsigned c = 2; c < 5; ++c) Inc(MoveScript_TintRecords[s[0xA] * 12u + c]);
     Inc(s[9]);
     if (Sc()[9] != 0x10) return;
-    Pointer(kActorRecord)[0x29] = 2;
+    Pointer(MagicS23_ActorSprite_addr)[0x29] = 2;
     Inc(Sc()[1]);
 }
 
@@ -274,7 +281,7 @@ S31_EXPORT void __cdecl DoomBreath_Fade(void) {
     for (unsigned c = 2; c < 5; ++c) Dec(MoveScript_TintRecords[s[0xA] * 12u + c]);
     Dec(s[9]);
     if (Sc()[9] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(kActorRecord));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(MagicS23_ActorSprite_addr));
     MH_CALL(BattleActor_Flash)(Mem(at::kActor)[0]);
     Sc()[9] = 0x10;
     Inc(Sc()[1]);
@@ -284,7 +291,7 @@ S31_EXPORT void __cdecl DoomBreath_Fade(void) {
 // +0x29 4, the target flagged 0x40, the effect's done flag, the task freed.
 S31_EXPORT void __cdecl DoomBreath_End(void) {
     if (Sc()[0xB] != 0xFF) return;
-    Pointer(kActorRecord)[0x29] = 4;
+    Pointer(MagicS23_ActorSprite_addr)[0x29] = 4;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
     Mem(at::kFlags)[0] |= 4;
     MH_CALL(BattleTask_FreeCurrent)();
@@ -326,30 +333,32 @@ S31_EXPORT void __cdecl DoomBreathOrb_Launch(void) {
     unsigned char* const s = Sc();
     if (s[9] != 0) return;
     s[8] = Owner()[8];
-    SetLong(Sc() + 0xC, static_cast<std::int32_t>(0xFFF80000u));
-    SetLong(Sc() + 0x10, static_cast<std::int32_t>(0xFFF10000u));
+    Store(ScTask()->vel_x, static_cast<std::int32_t>(0xFFF80000u));
+    Store(ScTask()->vel_y, static_cast<std::int32_t>(0xFFF10000u));
     Turn(Sc());
     {
         unsigned char* const t = Sc();
-        SetLong(t + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(t + 0xC)) +
-                                                    static_cast<std::uint32_t>(Field_Kind2X)));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        tt->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_x) +
+                                                    static_cast<std::uint32_t>(Field_Kind2X));
     }
     {
         unsigned char* const t = Sc();
-        SetLong(t + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(t + 0x10)) +
-                                                    static_cast<std::uint32_t>(Field_Kind2Z)));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        tt->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_y) +
+                                                    static_cast<std::uint32_t>(Field_Kind2Z));
     }
     {
         const std::uint32_t height = static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x800000u;
         SetLong(Sc() + 0x3C, static_cast<std::int32_t>(height));
     }
-    SetLong(Sc() + 0xC, 0x8000);
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_x = 0x8000;
+    ScTask()->vel_y = 0;
     Turn(Sc());
     Sc()[0xB] = 0x1A;
     Sc()[9] = 0x2C;
     Sc()[0xA] = 0;
-    SetLong(Sc() + 0x1C, 0);
+    ScTask()->start_y = 0;
     SetLong(Sc() + 0x20, 0x80);
     Inc(Sc()[2]);
 }
@@ -358,10 +367,11 @@ S31_EXPORT void __cdecl DoomBreathOrb_Launch(void) {
 // +9 down; at 0 +2 on.
 S31_EXPORT void __cdecl DoomBreathOrb_Move(void) {
     unsigned char* const s = Sc();
-    SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x34)) +
-                                                static_cast<std::uint32_t>(Long(s + 0xC))));
-    SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x38)) +
-                                                static_cast<std::uint32_t>(Long(s + 0x10))));
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->x) +
+                                                static_cast<std::uint32_t>(ts->vel_x));
+    ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->y) +
+                                                static_cast<std::uint32_t>(ts->vel_y));
     Dec(s[9]);
     if (s[9] == 0) Inc(s[2]);
 }
@@ -370,28 +380,31 @@ S31_EXPORT void __cdecl DoomBreathOrb_Move(void) {
 // at 0x80 +2 on.
 S31_EXPORT void __cdecl DoomBreathOrb_Grow(void) {
     unsigned char* const s = Sc();
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
     s[0xB] = static_cast<unsigned char>((s[0xB] - 1) & 0x3F);
-    SetLong(s + 0x1C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x1C)) + 2));
-    if (Long(s + 0x1C) == 0x80) Inc(s[2]);
+    ts->start_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->start_y) + 2);
+    if (ts->start_y == 0x80) Inc(s[2]);
 }
 
 // original 0x4E6D70: the angle down (mod 0x40), the width +0x1C and the radius
 // +0x20 down by 2; at a width of 0x20 +2 on.
 S31_EXPORT void __cdecl DoomBreathOrb_Shrink(void) {
     unsigned char* const s = Sc();
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
     s[0xB] = static_cast<unsigned char>((s[0xB] - 1) & 0x3F);
-    SetLong(s + 0x1C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x1C)) - 2));
+    ts->start_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->start_y) - 2);
     SetLong(s + 0x20, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x20)) - 2));
-    if (Long(s + 0x1C) == 0x20) Inc(s[2]);
+    if (ts->start_y == 0x20) Inc(s[2]);
 }
 
 // original 0x4E6DB0: the width down by 1, the radius by 2; at a width of 0
 // the owner's +0xB 0xFF (DoomBreath_End's signal) and the task freed.
 S31_EXPORT void __cdecl DoomBreathOrb_End(void) {
     unsigned char* const s = Sc();
-    SetLong(s + 0x1C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x1C)) - 1));
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    ts->start_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->start_y) - 1);
     SetLong(s + 0x20, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x20)) - 2));
-    if (Long(s + 0x1C) != 0) return;
+    if (ts->start_y != 0) return;
     Owner()[0xB] = 0xFF;
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -415,10 +428,11 @@ S31_EXPORT void __cdecl DoomBreathOrb_DrawStream(void) {
     DrawModeCommit(0xB5);
     {
         const unsigned char* const s = Sc();
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
         SetSW(0, Word(s + 0x20));
         const unsigned angle = (s[0xB] & 0x3Fu) << 7;
         SetSW(2, angle);
-        if (s[2] == 4) SetSW(4, static_cast<unsigned>(Shl(DivPow2(Long(s + 0x1C), 1), 3)));
+        if (s[2] == 4) SetSW(4, static_cast<unsigned>(Shl(DivPow2(ts->start_y, 1), 3)));
         else SetSW(4, 0x80);
         SetVW(0x10, 0);
         SetVW(0x12, 0);
@@ -478,7 +492,8 @@ namespace {
 // DoomBreathOrb_DrawGlow's shade: 0xC0, or at step 4 the width +0x1C / 2 x 12.
 void GlowShade() {
     const unsigned char* const s = Sc();
-    if (s[2] == 4) SetSW(4, (static_cast<std::uint32_t>(DivPow2(Long(s + 0x1C), 1)) * 3u) << 2);
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    if (s[2] == 4) SetSW(4, (static_cast<std::uint32_t>(DivPow2(ts->start_y, 1)) * 3u) << 2);
     else SetSW(4, 0xC0);
 }
 // A quarter of the shade word, toward zero, as a byte.
@@ -494,7 +509,8 @@ S31_EXPORT void __cdecl DoomBreathOrb_DrawGlow(void) {
     DrawModeCommit(0xB5);
     {
         const unsigned char* const s = Sc();
-        if (s[2] == 4) SetSW(4, static_cast<unsigned>(Shl(DivPow2(Long(s + 0x1C), 1), 3)));
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        if (s[2] == 4) SetSW(4, static_cast<unsigned>(Shl(DivPow2(ts->start_y, 1), 3)));
         else SetSW(4, 0x80);
         SetSW(0, Word(s + 0x20));
         const unsigned angle = (s[0xB] & 0x3Fu) << 7;
@@ -582,7 +598,8 @@ S31_EXPORT void __cdecl Corona_Start(void) {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 0;
         child[8] = owner[8];
         Inc(s[0xB]);
@@ -591,12 +608,13 @@ S31_EXPORT void __cdecl Corona_Start(void) {
         const unsigned slot = NewTask(0x4B);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 1;
         Inc(s[0xB]);
     }
     RestoreRow26Stp();
-    if (Mem(kEventBattle)[0] == 0) return;
+    if (Mem(BattleActions_EventBattle_addr)[0] == 0) return;
     if (EnemyRecord(ActorIndex())[0x100] != 0x29) return;
     const unsigned slot = NewTask(0x4B);
     unsigned char* const child = TaskSlot(slot);
@@ -660,18 +678,20 @@ S31_EXPORT void __cdecl CoronaRay_Run(void) {
 // the field's kind-2 point; the height the ground there + 0x200; sound effect
 // 0x100; +0x14 0x2FFF, +0xB 0x34, +9 0, +0xA 0x10, +2 on.
 S31_EXPORT void __cdecl CoronaRay_Start(void) {
-    SetLong(Sc() + 0xC, static_cast<std::int32_t>(0xFFFD8000u));
-    SetLong(Sc() + 0x10, 0);
+    Store(ScTask()->vel_x, static_cast<std::int32_t>(0xFFFD8000u));
+    ScTask()->vel_y = 0;
     Turn(Sc());
     {
         unsigned char* const t = Sc();
-        SetLong(t + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(t + 0xC)) +
-                                                    static_cast<std::uint32_t>(Field_Kind2X)));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        tt->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_x) +
+                                                    static_cast<std::uint32_t>(Field_Kind2X));
     }
     {
         unsigned char* const t = Sc();
-        SetLong(t + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(t + 0x10)) +
-                                                    static_cast<std::uint32_t>(Field_Kind2Z)));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        tt->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_y) +
+                                                    static_cast<std::uint32_t>(Field_Kind2Z));
     }
     const long ground = MH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     SetWord(Sc() + 0x3E, static_cast<unsigned>(static_cast<std::uint32_t>(ground) + 0x200u) & 0xFFFF);
@@ -693,18 +713,20 @@ S31_EXPORT void __cdecl CoronaRay_Advance(void) {
         AddB(s[0xB], static_cast<unsigned>(s[9] >> 6) + 1);
     }
     if (static_cast<unsigned char>(Frame_Counter) & 1) Dec(Sc()[0xA]);
-    SetLong(Sc() + 0xC, 0x2000);
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_x = 0x2000;
+    ScTask()->vel_y = 0;
     Turn(Sc());
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x34)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0xC))));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->x) +
+                                                    static_cast<std::uint32_t>(ts->vel_x));
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x38)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x10))));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->y) +
+                                                    static_cast<std::uint32_t>(ts->vel_y));
     }
     AddB(Sc()[9], 0xFE);
     if (Sc()[9] != 0x30) return;
@@ -974,6 +996,7 @@ S31_EXPORT void __cdecl MainCannon_Fire(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x56) & 0xFFu;
     if (slot != 0xFF) {
         unsigned char* const t = TaskSlot(slot);
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
         t[1] = 0;
         t[2] = 0;
         unsigned char* const s = Sc();
@@ -981,7 +1004,7 @@ S31_EXPORT void __cdecl MainCannon_Fire(void) {
         SetWord(t + 0x30, 0xFA);
         if (s[9] & 1) SetWord(t + 0x2E, Word(t + 0x2E) + 0x14u);
         t[0xA] = s[9];
-        SetLong(t + 0x80, static_cast<std::int32_t>(Key(s)));
+        tt->owner = static_cast<std::int32_t>(Key(s));
         Inc(s[9]);
         Inc(Sc()[0xB]);
     }
@@ -1017,12 +1040,12 @@ S31_EXPORT void __cdecl MainCannonChild_Task(void) {
 S31_EXPORT void __cdecl MainCannonShell_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::MainCannonShell_Aim, bof3::addr::MainCannonShell_Fly,
                                                 bof3::addr::BattleFx_FreeTask};
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("MainCannonShell_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
     if (Sc()[0] & 1) MH_CALL(Sprite_QueueOverlay)();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 namespace {
@@ -1045,20 +1068,23 @@ S31_EXPORT void __cdecl MainCannonShell_Aim(void) {
     if (actor <= 2) {
         const int ax = S16(PartyRecord(actor) + 0x2E);
         unsigned char* const s = Sc();
-        SetLong(s + 0xC, Step8(ax - S16(s + 0x2E) + (odd ? 0x28 : 0x14)));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_x = Step8(ax - S16(s + 0x2E) + (odd ? 0x28 : 0x14));
         ay = S16(PartyRecord(ActorIndex()) + 0x30);
     } else {
         unsigned char* const s = Sc();
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         const int ax = S16(EnemyRecord(actor) + 0x2E);
-        SetLong(s + 0xC, Step8(ax - S16(s + 0x2E) + (odd ? 0x28 : 0x14)));
+        ts->vel_x = Step8(ax - S16(s + 0x2E) + (odd ? 0x28 : 0x14));
         ay = S16(EnemyRecord(ActorIndex()) + 0x30);
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x10, Step8(ay - S16(s + 0x30)));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_y = Step8(ay - S16(s + 0x30));
     }
-    SetLong(Sc() + 0x18, Shl(S16(Sc() + 0x2E), 4));
-    SetLong(Sc() + 0x1C, Shl(S16(Sc() + 0x30), 4));
+    Store(ScTask()->start_x, Shl(S16(Sc() + 0x2E), 4));
+    Store(ScTask()->start_y, Shl(S16(Sc() + 0x30), 4));
     Sc()[0x25] = 0x1E;
     Sc()[0x26] = 0;
     Sc()[0x48] = 1;
@@ -1084,30 +1110,33 @@ S31_EXPORT void __cdecl MainCannonShell_Aim(void) {
 // at the shell's point with its +0xA and the owner as its +0x80, the shell's
 // +2 on. Then the shell's script ticked.
 S31_EXPORT void __cdecl MainCannonShell_Fly(void) {
-    SetWord(Sc() + 0x2E, static_cast<unsigned>(Long(Sc() + 0x18) >> 4) & 0xFFFF);
-    SetWord(Sc() + 0x30, static_cast<unsigned>(Long(Sc() + 0x1C) >> 4) & 0xFFFF);
+    SetWord(Sc() + 0x2E, static_cast<unsigned>(ScTask()->start_x >> 4) & 0xFFFF);
+    SetWord(Sc() + 0x30, static_cast<unsigned>(ScTask()->start_y >> 4) & 0xFFFF);
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x18, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x18)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0xC))));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->start_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->start_x) +
+                                                    static_cast<std::uint32_t>(ts->vel_x));
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x1C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x1C)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x10))));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->start_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->start_y) +
+                                                    static_cast<std::uint32_t>(ts->vel_y));
     }
     const unsigned char actor = static_cast<unsigned char>(Long(Mem(at::kActor)));
     const int limit = actor <= 2 ? S16(PartyRecord(actor) + 0x30) - 0x14 : S16(EnemyRecord(actor) + 0x30) - 0x28;
     if (S16(Sc() + 0x30) < limit) {
         const unsigned slot = NewTask(0x56);
         unsigned char* const t = TaskSlot(slot);
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
         unsigned char* const s = Sc();
         t[1] = 1;
         t[2] = 0;
         SetWord(t + 0x2E, Word(s + 0x2E));
         SetWord(t + 0x30, Word(s + 0x30));
         t[0xA] = s[0xA];
-        SetLong(t + 0x80, static_cast<std::int32_t>(Key(Owner())));
+        tt->owner = static_cast<std::int32_t>(Key(Owner()));
         Inc(s[2]);
     }
     MH_CALL(Sprite_ScriptTick)();
@@ -1120,12 +1149,12 @@ S31_EXPORT void __cdecl MainCannonShell_Fly(void) {
 S31_EXPORT void __cdecl MainCannonBlast_Run(void) {
     static constexpr std::uint32_t kSteps[3] = {bof3::addr::MainCannonBlast_Start, bof3::addr::MainCannonBlast_Play,
                                                 bof3::addr::MagicFx_UncountAndFree};
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBlast));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBlast));
     const unsigned phase = Sc()[2];
     if (phase >= 3) PastTable("MainCannonBlast_Run", phase, 3);
     magic_harness::Phase(kSteps[phase])();
     if (Sc()[0] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4E85B0: the blast's sprite fields (+0x24..+0x2D), animation 5,
@@ -1172,14 +1201,15 @@ S31_EXPORT void __cdecl ThunderClap_Task(void) {
 // (0x904B4C, read before the task is made), +0x80 this task, +1 0; +0xB 1;
 // sound 0x100; +1 on.
 S31_EXPORT void __cdecl ThunderClap_Start(void) {
-    const unsigned char* const source = Pointer(at::kSource);
+    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     const unsigned slot = NewTask(0x35);
     unsigned char* const t = TaskSlot(slot);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     unsigned char* const s = Sc();
-    SetLong(t + 0x80, static_cast<std::int32_t>(Key(s)));
+    tt->owner = static_cast<std::int32_t>(Key(s));
     t[1] = 0;
-    SetLong(t + 0x34, Long(source + 0x34));
-    SetLong(t + 0x38, Long(source + 0x38));
+    tt->x = Long(source + 0x34);
+    tt->y = Long(source + 0x38);
     SetLong(t + 0x3C, Long(source + 0x3C));
     s[0xB] = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -1239,8 +1269,8 @@ S31_EXPORT void __cdecl ThunderClapBolt_Rise(void) {
     AddB(Sc()[0xA], 4);
     Inc(Sc()[0xB]);
     if (Sc()[0xA] != 0x10) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(at::kSource));
-    MH_CALL(Sprite_SetTint)(Pointer(at::kSource), 0xF8, 0xF8, 0xF8, 1);
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
+    MH_CALL(Sprite_SetTint)(Pointer(BattleOdds_ActorObject_addr), 0xF8, 0xF8, 0xF8, 1);
     MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
     Sc()[9] = 0x20;
     Inc(Sc()[2]);
@@ -1253,7 +1283,7 @@ S31_EXPORT void __cdecl ThunderClapBolt_Fade(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
-    MH_CALL(Sprite_ReleaseTint)(Pointer(at::kSource));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
     MH_CALL(BattleActor_Flash)(TargetByte());
     Inc(Sc()[2]);
 }
@@ -1403,8 +1433,9 @@ S31_EXPORT void __cdecl ThunderClapBolt_DrawArcs(void) {
     if (SD(0xC) <= 1) return;
     for (int i = 1;;) {
         const unsigned char* const s = Sc();
-        const std::uint32_t x = static_cast<std::uint32_t>(VS(0) >> 3) + static_cast<std::uint32_t>(Long(s + 0x34));
-        const std::uint32_t z = static_cast<std::uint32_t>(VS(2) >> 3) + static_cast<std::uint32_t>(Long(s + 0x38));
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const std::uint32_t x = static_cast<std::uint32_t>(VS(0) >> 3) + static_cast<std::uint32_t>(ts->x);
+        const std::uint32_t z = static_cast<std::uint32_t>(VS(2) >> 3) + static_cast<std::uint32_t>(ts->y);
         unsigned char* p = Gfx_PacketNext;
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0xB5, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);

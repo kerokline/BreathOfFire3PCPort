@@ -21,10 +21,15 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -37,11 +42,11 @@ using move_script::Word;
 // The ability path's target and result record (docs/battle_odds.md), which
 // MagicFx_ApplyBuff points at the actor for one call and puts back.
 constexpr std::uint32_t kResultTarget = 0x904B54;   // u8
-constexpr std::uint32_t kResultRecord = 0x904B60;   // unsigned char *
+// kResultRecord: now BattleDamage_Result (symbols.toml). unsigned char *
 constexpr std::uint32_t kStatsCopy = 0x939F80;      // 32 bytes: the actor's +0xA0 (party) / +0xB0 (enemy)
 // The byte FxSize's and FxSizeB's second tables and the formation rows are
 // indexed by (battle_items.cpp's kFxSizeSelect).
-constexpr std::uint32_t kFormation = 0x904B89;
+// kFormation: now BattlePhases_B89 (symbols.toml).
 // The buff roll: 0x44FC10(stat), 1 in al when it was resisted - unnamed, the
 // engine's (in no group: docs/magic_lib.md section 4).
 constexpr std::uint32_t kBuffRoll = bof3::addr::Effect_RollStatStep;   // R3D's (round fourteen, docs/rest_3d.md)
@@ -50,12 +55,12 @@ using BuffRollFn = unsigned char (__cdecl*)(unsigned);
 // The packet pools' end (Gfx_PacketPools + 0x10000 - 0x54, symbols.toml), per
 // buffer, and the frame's depth nodes (Gfx_FrameNodes + 4): 0x38 of 0x30 bytes.
 constexpr std::uint32_t kPoolEnd = 0x7F1BAC;
-constexpr std::uint32_t kDepthCells = 0x8022C4;
+// kDepthCells: now DrawLayers[9] (symbols.toml).
 constexpr int kDepths = 0x38;
 // The strip's row 2 (Gfx_ClutStrip + 0x400) the CLUT helpers borrow, and the
 // same row of the strip as loaded.
-constexpr std::uint32_t kFxRow = 0x80F980;
-constexpr std::uint32_t kFxRowSource = 0x80B980;
+// kFxRow: now Gfx_ClutStrip[0x200] (symbols.toml).
+// kFxRowSource: now Gfx_ClutStripSource[0x200] (symbols.toml).
 constexpr std::uint32_t kEnemyFxSizeB = 0x8C5653;   // + 0x8C * the enemy's type: FxSize's byte + 1
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -68,7 +73,7 @@ void PutFloat(unsigned char* p, int v) {
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned i) { return Mem(at::kEnemies + (i - 3u) * at::kEnemyStride); }
 // An actor's record by the battle index, as the originals index it (0..2 the
 // party, 3.. an enemy; unchecked above).
@@ -89,15 +94,15 @@ void PopupSettle() {
     MH_CALL(BattleActor_UpdateScreenXY)();
     SetWord(Sprite_Current + 0x2E, Word(Sprite_Current + 0x2E) - 0x18u);
     SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) - Sprite_Current[0xA]);
-    SetLong(Sprite_Current + 0x10, -14);
+    ScTask()->vel_y = -14;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 1;
     Bump(Sprite_Current[1]);
 }
 
 void CopyPosition(const unsigned char* from) {
-    SetLong(Sprite_Current + 0x34, Long(from + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(from + 0x38));
+    Store(ScTask()->x, Long(from + 0x34));
+    Store(ScTask()->y, Long(from + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(from + 0x3C));
 }
 
@@ -156,9 +161,9 @@ void StepAlong(const long* in, int speed) {
     short out[4] = {};
     MH_CALL(Gte_VectorNormalS)(in, out);
     const auto s = static_cast<std::uint32_t>(static_cast<short>(speed));
-    SetLong(Sprite_Current + 0x34, I32(U32(Sprite_Current + 0x34) + static_cast<std::uint32_t>(
+    Store(ScTask()->x, I32(U32(Sprite_Current + 0x34) + static_cast<std::uint32_t>(
                                                                           I32(static_cast<std::uint32_t>(out[0]) * s) >> 3)));
-    SetLong(Sprite_Current + 0x38, I32(U32(Sprite_Current + 0x38) + static_cast<std::uint32_t>(
+    Store(ScTask()->y, I32(U32(Sprite_Current + 0x38) + static_cast<std::uint32_t>(
                                                                           I32(static_cast<std::uint32_t>(out[1]) * s) >> 3)));
     SetWord(Sprite_Current + 0x3E,
             Word(Sprite_Current + 0x3E) + static_cast<unsigned>(I32(static_cast<std::uint32_t>(out[2]) * s) >> 11));
@@ -197,9 +202,9 @@ MLIB_EXPORT void __cdecl BuffPopup_Task(void) {
 MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    SetLong(Sprite_Current + 0x34, Long(Pointer(at::kOwner) + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Pointer(at::kOwner) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(at::kOwner) + 0x3C));
+    Store(ScTask()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
+    Store(ScTask()->y, Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     PopupSettle();
 }
 
@@ -208,12 +213,13 @@ MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
 // -6 and the phase on.
 MLIB_EXPORT void __cdecl BuffPopup_Rise(void) {
     unsigned char* const t = Sprite_Current;
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     if (t[0xA] < 8) Bump(t[0xA]);
-    SetLong(t + 0x10, Long(t + 0x10) + 2);
+    tt->vel_y = tt->vel_y + 2;
     SetWord(t + 0x30, Word(t + 0x30) + Word(t + 0x10));
     Bump(t[9]);
     if (t[9] == 0xC) {
-        SetLong(t + 0x10, -6);
+        tt->vel_y = -6;
         Bump(t[1]);
     }
 }
@@ -222,7 +228,8 @@ MLIB_EXPORT void __cdecl BuffPopup_Rise(void) {
 // low word; +9 up, at 16 the phase on.
 MLIB_EXPORT void __cdecl BuffPopup_Fall(void) {
     unsigned char* const t = Sprite_Current;
-    SetLong(t + 0x10, Long(t + 0x10) + 2);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    tt->vel_y = tt->vel_y + 2;
     SetWord(t + 0x30, Word(t + 0x30) + Word(t + 0x10));
     Bump(t[9]);
     if (t[9] == 0x10) Bump(t[1]);
@@ -233,7 +240,7 @@ MLIB_EXPORT void __cdecl BuffPopup_Fall(void) {
 MLIB_EXPORT void __cdecl BuffPopup_End(void) {
     Bump(Sprite_Current[9]);
     if (Sprite_Current[9] != 0x1C) return;
-    unsigned char* const owner = Pointer(at::kOwner);
+    unsigned char* const owner = Pointer(BattleE2_Owner_addr);
     owner[0xB] = static_cast<unsigned char>(owner[0xB] - 1);
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -280,21 +287,21 @@ MLIB_EXPORT void __cdecl BuffPopup_Draw(unsigned icon) {
 // roll answered 0 (not resisted), else 0. The actor unchecked above 2.
 MLIB_EXPORT unsigned char __cdecl MagicFx_ApplyBuff(unsigned stat, unsigned actor) {
     const unsigned char kept_target = Mem(kResultTarget)[0];
-    const std::int32_t kept_record = Long(Mem(kResultRecord));
+    const std::int32_t kept_record = Long(Mem(BattleDamage_Result_addr));
     const unsigned a = actor & 0xFF;
     Mem(kResultTarget)[0] = static_cast<unsigned char>(a);
     const unsigned char* stats;
     if (a < 3) {
-        SetLong(Mem(kResultRecord), I32(Addr(PartyRecord(a) + 0x124)));
+        SetLong(Mem(BattleDamage_Result_addr), I32(Addr(PartyRecord(a) + 0x124)));
         stats = PartyRecord(a) + 0xA0;
     } else {
-        SetLong(Mem(kResultRecord), I32(Addr(EnemyRecord(a) + 0x104)));
+        SetLong(Mem(BattleDamage_Result_addr), I32(Addr(EnemyRecord(a) + 0x104)));
         stats = EnemyRecord(a) + 0xB0;
     }
     for (unsigned i = 0; i < 32; i += 4) SetLong(Mem(kStatsCopy + i), Long(stats + i));
     const unsigned char resisted = MH_AT(BuffRollFn, kBuffRoll)(stat);
     Mem(kResultTarget)[0] = kept_target;
-    SetLong(Mem(kResultRecord), kept_record);
+    SetLong(Mem(BattleDamage_Result_addr), kept_record);
     return resisted == 0 ? 1 : 0;
 }
 
@@ -350,9 +357,9 @@ MLIB_EXPORT void __cdecl MagicFx_LinkByDepth(unsigned x, unsigned z, int* keys, 
         if (keys[best] == 0) continue;
         const std::uint32_t prim = prims + sz * best;
         keys[best] = 0;
-        unsigned char* const head = Mem(kDepthCells + (Gfx_BufferIndex + row) * 8);
+        unsigned char* const head = Mem(DrawLayers_addr + 0x24 + (Gfx_BufferIndex + row) * 8);
         MH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(U32(head))), prim);
-        SetLong(Mem(kDepthCells + (Gfx_BufferIndex + row) * 8), I32(prim));
+        SetLong(Mem(DrawLayers_addr + 0x24 + (Gfx_BufferIndex + row) * 8), I32(prim));
     }
 }
 
@@ -373,8 +380,9 @@ MLIB_EXPORT void __cdecl MagicFx_StepToward(const unsigned char* to, int speed) 
 MLIB_EXPORT void __cdecl MagicFx_StepTowardPoint(unsigned x, unsigned z, unsigned y, unsigned pad, int speed) {
     (void)pad;
     const unsigned char* const sc = Sprite_Current;
-    const long in[3] = {I32(x - static_cast<std::uint32_t>((Long(sc + 0x34) >> 9) - 0x4000)),
-                        I32(z - static_cast<std::uint32_t>((Long(sc + 0x38) >> 9) - 0x4000)),
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const long in[3] = {I32(x - static_cast<std::uint32_t>((tsc->x >> 9) - 0x4000)),
+                        I32(z - static_cast<std::uint32_t>((tsc->y >> 9) - 0x4000)),
                         I32(y - static_cast<std::uint32_t>(S16(sc + 0x3E) >> 1))};
     StepAlong(in, speed);
 }
@@ -453,7 +461,7 @@ MLIB_EXPORT void __cdecl SpriteClut_ClearEntry31(const unsigned char* s) {
 MLIB_EXPORT unsigned __cdecl SpriteClut_CopyToFxRow(const unsigned char* s) {
     const unsigned cell = ClutCell(s, "SpriteClut_CopyToFxRow");
     for (unsigned i = 0; i < SpriteClut_Counts[s[0x28]] * 16u; ++i)
-        SetWord(Mem(kFxRow + 2 * i), Word(StripWord(cell + i)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x400 + 2 * i), Word(StripWord(cell + i)));
     Gfx_ClutStripDirty = 1;
     return SpriteClut_Divisors[s[0x28]] * 2u;
 }
@@ -461,7 +469,7 @@ MLIB_EXPORT unsigned __cdecl SpriteClut_CopyToFxRow(const unsigned char* s) {
 // original 0x4FC000: the strip's row 2 (256 entries) put back from the strip
 // as loaded (Gfx_ClutStripSource); Gfx_ClutStripDirty 1.
 MLIB_EXPORT void __cdecl SpriteClut_RestoreFxRow(void) {
-    for (unsigned i = 0; i < 0x200; i += 2) SetWord(Mem(kFxRow + i), Word(Mem(kFxRowSource + i)));
+    for (unsigned i = 0; i < 0x200; i += 2) SetWord(Mem(Gfx_ClutStrip_addr + 0x400 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x400 + i)));
     Gfx_ClutStripDirty = 1;
 }
 
@@ -501,7 +509,7 @@ MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
     const unsigned char i = Mem(at::kActor)[0];
     if (i < 3) {
         const unsigned char* const r = PartyRecord(i);
-        if (r[0x134] & 2) return FxSizeB_AltTable[Mem(kFormation)[0]];
+        if (r[0x134] & 2) return FxSizeB_AltTable[Mem(BattlePhases_B89_addr)[0]];
         return FxSizeB_Table[r[0x89]];
     }
     return Mem(kEnemyFxSizeB + EnemyRecord(i)[0xF0] * 0x8Cu)[0];
@@ -511,9 +519,9 @@ MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
 // of shorts MagicFx_FormationOffsets[(MagicFx_FormationRows[byte 0x904B89] *
 // 4 + (+8 & 3)) * 2 ..], both indices unchecked.
 MLIB_EXPORT void __cdecl MagicFx_FormationOffset(void) {
-    const unsigned row = MagicFx_FormationRows[Mem(kFormation)[0]] * 4u;
-    SetLong(Sprite_Current + 0xC, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2]);
-    SetLong(Sprite_Current + 0x10, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2 + 1]);
+    const unsigned row = MagicFx_FormationRows[Mem(BattlePhases_B89_addr)[0]] * 4u;
+    Store(ScTask()->vel_x, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2]);
+    Store(ScTask()->vel_y, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2 + 1]);
 }
 
 void MagicLib_Inject() {

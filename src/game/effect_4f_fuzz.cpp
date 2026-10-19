@@ -193,7 +193,7 @@ U FxProjectSize(const U* a, U answer) {
 U FxFindFreeDrop(const U*, U answer) {
     if (answer % 4 == 0) return 0;
     for (U i = 0; i < at::kDropCount; ++i)
-        if (sh::Mem(at::kDrops + at::kDropStride * i)[0] == 0) return at::kDrops + at::kDropStride * i;
+        if (sh::Mem(EffectKind30_Shards_addr + at::kDropStride * i)[0] == 0) return EffectKind30_Shards_addr + at::kDropStride * i;
     return 0;
 }
 
@@ -259,11 +259,11 @@ const sh::Region kRegions[] = {
 // --- the seed ------------------------------------------------------------------------
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
-unsigned char* DropAt(U i) { return P(at::kDrops + i * at::kDropStride); }
+unsigned char* DropAt(U i) { return P(EffectKind30_Shards_addr + i * at::kDropStride); }
 unsigned char* SourceAt(U i) { return P(at::kSources + i * at::kSourceStride); }
 unsigned char* BarAt(U i) { return P(at::kBars + i * at::kBarStride); }
-unsigned char* SparkAt(U i) { return P(at::kSparks + i * at::kSparkStride); }
-unsigned char* ShardAt(U i) { return P(at::kShards + i * at::kShardStride); }
+unsigned char* SparkAt(U i) { return P(EffectKind30_Shards_addr + i * at::kSparkStride); }
+unsigned char* ShardAt(U i) { return P(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride); }
 
 void SeedDrops() {
     for (U i = 0; i < at::kDropCount; ++i) {
@@ -319,7 +319,7 @@ void Seed(unsigned k) {
     case kB0Clear: SeedBars(); break;
     case kB1Sway:
     case kB1Back:
-        SetWord(sh::Mem(at::kTilt), PickOf(0xEC, 0xED, 0xEE, 0xEF, 0xF0, 0xF1, 0xFF10, 0xFF11, 0xFF13, 0xFF14, 0xFF0F, sh::Next()));
+        SetWord(sh::Mem(Camera_Angles_addr + 0x2), PickOf(0xEC, 0xED, 0xEE, 0xEF, 0xF0, 0xF1, 0xFF10, 0xFF11, 0xFF13, 0xFF14, 0xFF0F, sh::Next()));
         Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
         break;
     case kAFIn: s[9] = static_cast<unsigned char>(PickOf(0xF0, 0xF0, 0xE0, 0, 0xEF, sh::Next())); break;
@@ -388,7 +388,7 @@ void Disturb(U h) {
         break;
     case 2: Draw_PassFlags = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
     case 3: sh::Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 3u : v >> 1); break;
-    case 4: SetWord(sh::Mem(at::kTilt), (v & 1) ? 0xF1u : v >> 1); break;
+    case 4: SetWord(sh::Mem(Camera_Angles_addr + 0x2), (v & 1) ? 0xF1u : v >> 1); break;
     case 5:
         if (sh::InRegions(s, 0x80)) s[3] = static_cast<unsigned char>(v);
         break;

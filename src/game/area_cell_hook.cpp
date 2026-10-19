@@ -34,10 +34,10 @@ extern "C" int __cdecl Area_CellHook(unsigned x, unsigned z) {
     namespace at = area_cell_hook::at;
     const unsigned area = Game_AreaNumber;
     unsigned i = 0;
-    while (i < at::kPairCount && area_harness::Mem(at::kPairs + at::kPairStride * i)[0] != area) ++i;
+    while (i < at::kPairCount && area_harness::Mem(Area_CellHooks_addr + at::kPairStride * i)[0] != area) ++i;
     if (i == at::kPairCount) return 0;
     const auto handler = reinterpret_cast<area_harness::Hook>(static_cast<std::uintptr_t>(
-        static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(at::kPairs + at::kPairStride * i + 4)))));
+        static_cast<std::uint32_t>(move_script::Long(area_harness::Mem(Area_CellHooks_addr + at::kPairStride * i + 4)))));
     return static_cast<signed char>(handler(x, z));
 }
 

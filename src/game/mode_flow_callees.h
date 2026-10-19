@@ -22,62 +22,62 @@ namespace mode_flow {
 
 namespace at {
 
-constexpr std::uint32_t kTransitionKind = 0x66C828;   // u16: Transition_Start's kind, Transition_Task's index (PSX 0x80143C90)
+// kTransitionKind: now ModeFlow_TransitionKind (symbols.toml). u16: Transition_Start's kind, Transition_Task's index (PSX 0x80143C90)
 constexpr std::uint32_t kGameModeHandlers = 0x656A44; // 12 code pointers, Field_Task's table (PSX 0x801C8B0C, FUN_80198068's s0)
 // The six bytes a fade leaves behind: 0 after a fade to black, 0xFF after one
 // to white (0x495620, 0x4956A0, 0x4955A0). Three at 0x90393D and three at
 // 0x9038AD; what reads them is unread.
-constexpr std::uint32_t kFadeHoldA = 0x90393D;
-constexpr std::uint32_t kFadeHoldB = 0x9038AD;
+// kFadeHoldA: now ModeFlow_FadeHoldA (symbols.toml).
+// kFadeHoldB: now ModeFlow_FadeHoldB (symbols.toml).
 // The play clock: hours, minutes, seconds, frames (PSX 0x80144FBC..BF).
 constexpr std::uint32_t kClock = 0x9040C8;
 // Two countdowns of the same shape, hours / minutes / seconds / frames, each
 // counting down to 0:00:00 (0x90465C and 0x904660; readers unread).
-constexpr std::uint32_t kCountdownA = 0x90465C;
-constexpr std::uint32_t kCountdownB = 0x904660;
+// kCountdownA: now ModeFlow_CountdownA (symbols.toml).
+// kCountdownB: now Rest3c_Byte660 (symbols.toml).
 // The area-change cells Field_ChangeArea stashes (window_task_callees.h).
-constexpr std::uint32_t kPendingArea = 0x937F82;
+// kPendingArea: now AreaW0b_Place (symbols.toml).
 constexpr std::uint32_t kPendingX = 0x903860;
-constexpr std::uint32_t kPendingZ = 0x90384C;
-constexpr std::uint32_t kPendingFlags = 0x905B88;
-constexpr std::uint32_t kPendingKind = 0x937F98;
-constexpr std::uint32_t kAreaTrack = 0x904CD0;
-constexpr std::uint32_t kMusicTrack = 0x904131;
-constexpr std::uint32_t kAreaTransition = 0x904EE0;  // GameMode_Field's Transition_Start kind for the area change
+// kPendingZ: now AreaEntry_PendingZ (symbols.toml).
+// kPendingFlags: now AreaEntry_PendingFlags (symbols.toml).
+// kPendingKind: now AreaW0c_PendingKind (symbols.toml).
+// kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml).
+// kMusicTrack: now Music_Track (symbols.toml).
+// kAreaTransition: now ModeFlow_AreaTransition (symbols.toml). GameMode_Field's Transition_Start kind for the area change
 // The saved position a new or loaded game starts from (GameMode_Start):
 // area u16 at +0, flags byte at +3, x and z dwords at +4 and +8.
-constexpr std::uint32_t kStartArea = 0x903A04;
+// kStartArea: now FieldModes_Pending (symbols.toml).
 // The entry walk (Area_EntryWalk): on, direction, a zero, and x / z.
-constexpr std::uint32_t kWalk = 0x904EF0;
-constexpr std::uint32_t kWalkX = 0x904EF4;
-constexpr std::uint32_t kWalkZ = 0x904EF8;
+// kWalk: now EventLeader_PendingFlag (symbols.toml).
+// kWalkX: now EventLeader_PendingX (symbols.toml).
+// kWalkZ: now EventLeader_PendingZ (symbols.toml).
 constexpr std::uint32_t kWalkPoses = 0x66ADBC;       // a byte per direction
 constexpr std::uint32_t kMemberWalk = 0x802E77;      // two bytes in each 0x14C-byte member record
 // Area_Enter's copies of the entry state.
 constexpr std::uint32_t kLastArea = 0x802290;        // u16 (PSX unread)
 constexpr std::uint32_t kLastZone = 0x905E68;        // u8, Cond_ByteFD's value on entry
-constexpr std::uint32_t kLastKind2X = 0x7E091C;      // s32
-constexpr std::uint32_t kLastKind2Z = 0x7E0920;      // s32
+// kLastKind2X: now MoveScript_TintRecords[0x21c] (symbols.toml). s32
+// kLastKind2Z: now MoveScript_TintRecords[0x220] (symbols.toml). s32
 constexpr std::uint32_t kKind2XHigh = 0x905E66;      // Field_Kind2X's integer part
 constexpr std::uint32_t kKind2ZHigh = 0x905E62;      // Field_Kind2Z's integer part
 constexpr std::uint32_t kDefaultColour = 0x6BE090;   // the colour matrix an area without its own gets
-constexpr std::uint32_t kDefaultLight = 0x663B20;    // two dwords for Light_Angles
-constexpr std::uint32_t kStoryFlags = 0x904030;      // Cond_Flags + 0xA0, the story flags (title-states.md section 3)
+// kDefaultLight: now ModeFlow_DefaultLight (symbols.toml). two dwords for Light_Angles
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0, the story flags (title-states.md section 3)
 // Boot_Task's cells.
 constexpr std::uint32_t kBootClear = 0x9039E0;       // 0x42C dwords zeroed
 constexpr std::uint32_t kBootClearBytes = 0x42C * 4;
-constexpr std::uint32_t kButtons = 0x903580;         // the field's button map (input-script.md section 4)
-constexpr std::uint32_t kButtonDefaults = 0x656AEC;  // its 18 bytes of defaults
-constexpr std::uint32_t kPartyCombination = 0x90412C;
-constexpr std::uint32_t kConfigBytes = 0x903A58;     // 1, then six zeros; +2 is the window colour 0x903A5A
-constexpr std::uint32_t kPoolA = 0x9039D8;           // dword, 0x8B3580
-constexpr std::uint32_t kPoolB = 0x7E0880;           // dword, 0x8C3584
+// kButtons: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map (input-script.md section 4)
+// kButtonDefaults: now ModeFlow_ButtonDefaults (symbols.toml). its 18 bytes of defaults
+// kPartyCombination: now AreaW0b_PartySet (symbols.toml).
+// kConfigBytes: now ModeFlow_ConfigBytes (symbols.toml). 1, then six zeros; +2 is the window colour 0x903A5A
+// kPoolA: now BattleE2_AnimSet (symbols.toml). dword, 0x8B3580
+// kPoolB: now MoveScript_TintRecords[0x180] (symbols.toml). dword, 0x8C3584
 // The tint and slot resets.
 constexpr std::uint32_t kTintMarks = 0x7E06A0;       // 16 dwords set to -1 by MoveScript_TintReset
-constexpr std::uint32_t kClutStripZero = 0x80ED80;   // the source's last 0x800 bytes, zeroed before the copy
+// kClutStripZero: now Gfx_ClutStripSource[0x1c00] (symbols.toml). the source's last 0x800 bytes, zeroed before the copy
 // Window_ResetAll's range.
 constexpr std::uint32_t kWindowRecords = 0x803160;
-constexpr std::uint32_t kWindowPass = 0x802D20;
+// kWindowPass: now BossSa_WindowPass (symbols.toml).
 
 }  // namespace at
 

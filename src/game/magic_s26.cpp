@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -46,22 +47,26 @@ using move_script::Word;
 // and Prim_VertexScratch's four SVECTORs (0x9037A0..0x9037BF): read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 // The sprite frame-offset table pointer (sprite_pose.h): the effects' bank
 // 0x8E3580 around a sprite child's phase, the engine's 0x8B3580 after.
-constexpr std::uint32_t kFrameSet = 0x9039D8;
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
-unsigned char* Source() { return Pointer(at::kSource); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 unsigned char* TintRecord(unsigned i) { return MoveScript_TintRecords + 12 * i; }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
@@ -188,8 +193,8 @@ S26_EXPORT void __cdecl Magic114_Start(void) {
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xA] = 0;
     Inc(Sc()[1]);
@@ -444,26 +449,29 @@ S26_EXPORT void __cdecl Magic114_TrailSpawn(void) {
         const unsigned slot = NewTask(7);
         const std::int32_t kx = Field_Kind2X;
         unsigned char* const child = TaskSlot(slot);
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
         unsigned char* const owner = Owner();
         SetL(child + 0x80, Key(owner));
         child[1] = 2;
         child[8] = owner[8];
         const unsigned char* const s = Sc();
-        SetLong(child + 0x34, AddL(Long(s + 0xC), kx));
-        SetLong(child + 0x38, AddL(Long(s + 0x10), Field_Kind2Z));
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        tchild->x = AddL(ts->vel_x, kx);
+        tchild->y = AddL(ts->vel_y, Field_Kind2Z);
         SetWord(child + 0x3E, Word(s + 0x14));
     }
     unsigned char* s = Sc();
     if (s[9] == 0) {
         const unsigned slot = NewTask(7);
         unsigned char* const child = TaskSlot(slot);
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
         unsigned char* const owner = Owner();
         child[1] = 1;
         SetL(child + 0x80, Key(owner));
         s = Sc();
         child[8] = s[8];
-        SetLong(child + 0xC, Long(s + 0xC));
-        SetLong(child + 0x10, Long(s + 0x10));
+        tchild->vel_x = Long(s + 0xC);
+        tchild->vel_y = Long(s + 0x10);
         SetWord(child + 0x3E, Word(s + 0x14));
         child[9] = 0x10;
         child[0xB] = 0;
@@ -626,7 +634,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
             const std::int32_t d = SubL(Long(s + 0x14), i);
             SetLong(s + 0xC, d < 0x20 ? Shl(d, 0xE) : 0x80000);
         }
-        SetLong(Sc() + 0x10, y);
+        ScTask()->vel_y = y;
         Turn();
         s = Sc();
         VertexOffset(0x10, s);
@@ -634,7 +642,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
-        SetLong(Sc() + 0x10, y);
+        ScTask()->vel_y = y;
         Turn();
         s = Sc();
         VertexOffset(0x18, s);
@@ -705,7 +713,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
             const std::int32_t d = SubL(Long(s + 0x14), i);
             SetLong(s + 0xC, d < 0x20 ? Shl(d, 0xE) : 0x80000);
         }
-        SetLong(Sc() + 0x10, y);
+        ScTask()->vel_y = y;
         Turn();
         s = Sc();
         VertexOffset(0x10, s);
@@ -713,7 +721,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
-        SetLong(Sc() + 0x10, y);
+        ScTask()->vel_y = y;
         Turn();
         s = Sc();
         VertexOffset(0x18, s);
@@ -783,7 +791,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
-        SetLong(Sc() + 0x10, y);
+        ScTask()->vel_y = y;
         Turn();
         s = Sc();
         SetVW(8, Pos9(AddL(Long(s + 0x34), Long(s + 0xC))));
@@ -792,7 +800,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 5), 0xD)) : 0xFFFB0000u);
         }
-        SetLong(Sc() + 0x10, y);
+        ScTask()->vel_y = y;
         Turn();
         s = Sc();
         SetVW(0x1A, Pos9(AddL(Long(s + 0x38), Long(s + 0x10))));
@@ -822,11 +830,11 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
 // a call through Magic114_SpritePhases (two entries) by +2, unchecked.
 S26_EXPORT void __cdecl Magic114_SpriteRun(void) {
     static constexpr std::uint32_t kPhases[2] = {addr::Magic114_SpriteStart, addr::Magic114_SpriteTick};
-    SetL(Mem(kFrameSet), 0x8E3580);
+    SetL(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     const unsigned phase = Sc()[2];
     if (phase >= 2) PastTable("Magic114_SpriteRun", phase, 2);
     magic_harness::Phase(kPhases[phase])();
-    SetL(Mem(kFrameSet), 0x8B3580);
+    SetL(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 // original 0x4D9100: the sprite set up (texture slot 0x1D, CLUT row 0x1A,
@@ -869,10 +877,11 @@ S26_EXPORT void __cdecl Magic114_DrawRays(void) {
     if (Sc()[9] <= 0x18) return;
     Call0(addr::Magic114_PushRayMatrix);
     const unsigned char* const s = Sc();
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
     const unsigned radius = static_cast<unsigned char>(~s[9]) & 0x1Fu;
     const int dy = s[8] > 1 ? 0xFE : 0;   // a byte: the callee reads it signed
-    const unsigned long x = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x34)));
-    const unsigned long z = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x38)));
+    const unsigned long x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x));
+    const unsigned long z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->y));
     const auto grey = static_cast<unsigned char>(0x80 - (radius << 4));
     const auto scaled = [radius](int v) { return (static_cast<std::uint32_t>(v) * radius) << 4 >> 0xC; };
     for (unsigned angle = 0; angle < 0x1000;) {
@@ -949,8 +958,8 @@ S26_EXPORT void __cdecl Magic115_Task(void) {
 // 1, +9 0, +1 on.
 S26_EXPORT void __cdecl Magic115_Start(void) {
     unsigned char* const source = Source();
-    SetLong(Sc() + 0x34, Long(source + 0x34));
-    SetLong(Sc() + 0x38, Long(source + 0x38));
+    Store(ScTask()->x, Long(source + 0x34));
+    Store(ScTask()->y, Long(source + 0x38));
     SetLong(Sc() + 0x3C, Long(source + 0x3C));
     const unsigned slot = NewTask(0x30);
     unsigned char* const child = TaskSlot(slot);
@@ -1009,13 +1018,13 @@ S26_EXPORT void __cdecl Magic115_ChildTask(void) {
 S26_EXPORT void __cdecl Magic115_OrbitRun(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::Magic115_OrbitStart, addr::Magic115_Orbit,
                                                  addr::Magic115_OrbitFade, addr::MagicFx_UncountAndFree};
-    SetL(Mem(kFrameSet), 0x8E3580);
+    SetL(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("Magic115_OrbitRun", phase, 4);
     magic_harness::Phase(kPhases[phase])();
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetL(Mem(kFrameSet), 0x8B3580);
+    SetL(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 // The sprite set-up both MAGIC115 children share (texture slot 0x1D, CLUT row
@@ -1042,8 +1051,8 @@ static void Magic115_SpriteSetUp() {
 // original 0x4D9690: at the owner (height + 0x2C0), the sprite set up,
 // animation 0, +9 0xFF, +2 on.
 S26_EXPORT void __cdecl Magic115_OrbitStart(void) {
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetWord(Sc() + 0x3E, (Word(Owner() + 0x3E) + 0x2C0) & 0xFFFF);
     Magic115_SpriteSetUp();
     MH_CALL(Sprite_SetAnimation)(0);
@@ -1061,13 +1070,14 @@ static void Magic115_Circle() {
     {
         const int sn = MH_CALL(Math_Sin)(static_cast<int>(angle));
         const unsigned char* const owner = Owner();
-        SetLong(Sc() + 0x34, AddL(Shl(MulL(sn, 3), 0xE) >> 0xC, Long(owner + 0x34)));
+        Store(ScTask()->x, AddL(Shl(MulL(sn, 3), 0xE) >> 0xC, Long(owner + 0x34)));
     }
     {
         const int c = MH_CALL(Math_Cos)(Long(Mem(kS)));
         unsigned char* const s = Sc();
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         const unsigned char* const owner = Owner();
-        SetLong(s + 0x38, AddL(Shl(MulL(c, 3), 0xE) >> 0xC, Long(owner + 0x38)));
+        ts->y = AddL(Shl(MulL(c, 3), 0xE) >> 0xC, Long(owner + 0x38));
     }
 }
 
@@ -1083,12 +1093,13 @@ S26_EXPORT void __cdecl Magic115_Orbit(void) {
         const unsigned slot = NewTask(0x30);
         unsigned char* const owner = Owner();
         unsigned char* const child = TaskSlot(slot);
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
         s = Sc();
         SetL(child + 0x80, Key(owner));
         child[1] = 1;
         child[9] = static_cast<unsigned char>(((s[9] >> 2) + 2) << 2);
-        SetLong(child + 0x34, Long(s + 0x34));
-        SetLong(child + 0x38, Long(s + 0x38));
+        tchild->x = Long(s + 0x34);
+        tchild->y = Long(s + 0x38);
         SetLong(child + 0x3C, Long(s + 0x3C));
         Inc(owner[9]);
         Inc(Owner()[0xB]);
@@ -1121,13 +1132,13 @@ S26_EXPORT void __cdecl Magic115_OrbitFade(void) {
 S26_EXPORT void __cdecl Magic115_MoteRun(void) {
     static constexpr std::uint32_t kPhases[4] = {addr::Magic115_MoteStart, addr::Magic115_MoteTick,
                                                  addr::Magic115_MoteFade, addr::MagicFx_UncountAndFree};
-    SetL(Mem(kFrameSet), 0x8E3580);
+    SetL(Mem(BattleE2_AnimSet_addr), 0x8E3580);
     const unsigned phase = Sc()[2];
     if (phase >= 4) PastTable("Magic115_MoteRun", phase, 4);
     magic_harness::Phase(kPhases[phase])();
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetL(Mem(kFrameSet), 0x8B3580);
+    SetL(Mem(BattleE2_AnimSet_addr), 0x8B3580);
 }
 
 // original 0x4D99D0: the sprite set up, animation 1, +2 on.

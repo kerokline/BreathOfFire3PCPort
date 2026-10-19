@@ -22,11 +22,11 @@ constexpr std::uint32_t kRetOnly = bof3::addr::BareRet;
 // (Font_TexCache): u16 glyph +0, u16 clut +2, u32 the CLUT row's generation
 // +4, the DirectDraw surface +8, the Direct3D texture +0xC, u16 in use this
 // frame +0x10. The draw 0x59EE50 clears every +0x10 after EndScene.
-constexpr std::uint32_t kCache = 0x7C9F50;
+// kCache: now Font_TexCache (symbols.toml).
 constexpr std::uint32_t kEntry = 0x14;
 constexpr std::uint32_t kEntries = 0x80;
-constexpr std::uint32_t kClutRows = 0x6C2A40;     // Gfx_ClutRows: u32 generation, u32 pointer, per row
-constexpr std::uint32_t kRenderFlags = 0x6C3A4C;  // Gfx_RenderFlags: bit 0 the software surfaces
+// kClutRows: now Gfx_ClutRows (symbols.toml). Gfx_ClutRows: u32 generation, u32 pointer, per row
+// kRenderFlags: now Gfx_RenderFlags (symbols.toml). Gfx_RenderFlags: bit 0 the software surfaces
 constexpr rdata::Const kInv32{0x5C4618};        // a double, 1/32 - the glyph texture's 32 texels
 
 struct Callees {

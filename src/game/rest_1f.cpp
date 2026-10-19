@@ -19,12 +19,17 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 using U = std::uint32_t;
 using move_script::At;
@@ -35,27 +40,27 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 using Pickup = unsigned char (__cdecl*)(unsigned, unsigned);
 
-constexpr U kSteps = 0x6697B0;         // Field_DirectionSteps: 8 rows of two longs (x, z)
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs (x, z)
 constexpr U kCellOffsets = 0x66971C;   // two signed bytes a direction: the cell ahead
 constexpr U kCells = 0x903850;         // DamageScratch: cell 0 the sloped flag, 1..7 the kinds, 8..0xB the classes
 constexpr U kObjectStride = 0xA4;
 constexpr unsigned kObjectCount = 0x1E;   // Sprite_Objects; 0x1E.. Sprite_ObjectsExtra's four
 constexpr unsigned kEffectCount = 20;
-constexpr U kEffectsAt = 0x7E11E0;     // Effect_Objects (its name is a macro here)
-constexpr U kObjectsAt = 0x7DEE80;     // Sprite_Objects
-constexpr U kExtraAt = 0x802000;       // Sprite_ObjectsExtra
+// kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects (its name is a macro here)
+// kObjectsAt: now Sprite_Objects (symbols.toml). Sprite_Objects
+// kExtraAt: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra
 constexpr U kEffectStride = 0x80;
 constexpr U kPanelPose = 0x6BC716;     // the leader panel's cells (docs/effect_1e.md section 1)
-constexpr U kPanelCounter = 0x6BC709;
-constexpr U kPanelBlink = 0x939A28;    // FieldPanel_DrawBlink's switch
+// kPanelCounter: now Effect1e_Choice (symbols.toml).
+// kPanelBlink: now Effect1e_Blink (symbols.toml). FieldPanel_DrawBlink's switch
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char& Cell(unsigned i) { return At(kCells)[i & 0xFF]; }
 // A Field_DirectionSteps row, read in place with the direction unmasked (the
 // originals' `shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as they do.
-U StepX(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 // The pose offset of a direction: (d - 1) / 2 as the originals compute it
 // (`dec eax; cdq; sub eax, edx; sar eax, 1`), so direction 0 gives 0.
 unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((static_cast<int>(d) - 1) / 2); }
@@ -83,7 +88,7 @@ void ByStep(const char* who, const unsigned long* table, unsigned count) {
     Dispatch(who, "Sprite_Current +3", table, count, Sc()[3]);
 }
 void ByForm(const char* who, const unsigned long* table, unsigned count) {
-    Dispatch(who, "Sprite_Current's word +0x2C", table, count, Word(Sc() + 0x2C));
+    Dispatch(who, "Sprite_Current's word +0x2C", table, count, MemberRec(Sc())->column);
 }
 
 // An Effect_Objects record by an index byte the original uses unchecked
@@ -92,7 +97,7 @@ unsigned char* EffectAt(unsigned index, const char* who) {
     if (index >= kEffectCount)
         bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original writes 0x%X "
                     "(docs/rest_1f.md section 7)",
-                    who, index, static_cast<unsigned>(kEffectsAt + index * kEffectStride));
+                    who, index, static_cast<unsigned>(Effect_Objects_addr + index * kEffectStride));
     return Effect_Objects + index * kEffectStride;
 }
 
@@ -112,8 +117,8 @@ void MarkObject(unsigned char found, const char* who) {
                     "original sets a bit at 0x%X (docs/rest_1f.md section 7)",
                     who, found,
                     static_cast<unsigned>(i < static_cast<int>(kObjectCount)
-                                              ? kObjectsAt + 0x80u + static_cast<U>(i * static_cast<int>(kObjectStride))
-                                              : kExtraAt + 0x80u +
+                                              ? Sprite_Objects_addr + 0x80u + static_cast<U>(i * static_cast<int>(kObjectStride))
+                                              : Sprite_ObjectsExtra_addr + 0x80u +
                                                     static_cast<U>((i - static_cast<int>(kObjectCount)) * static_cast<int>(kObjectStride))));
 }
 
@@ -131,8 +136,8 @@ void CopyName(const unsigned char* name) {
 // above Sprite_Current's height word (s16 against s16): +0x2B = 0.
 void SideProbe(unsigned d) {
     const unsigned char* const s = Sc();
-    const U x = static_cast<U>(Long(s + 0x34)) + StepX(d);
-    const U z = static_cast<U>(Long(s + 0x38)) + StepZ(d);
+    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
+    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -152,8 +157,8 @@ void BeginShape() {
         s = Sc();
     }
     const unsigned d = s[8];
-    const U x = static_cast<U>(Long(s + 0x34)) + StepX(d);
-    const U z = static_cast<U>(Long(s + 0x38)) + StepZ(d);
+    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
+    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sc() + 0x3E)));
     SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), Sc()[8]);
@@ -180,7 +185,7 @@ void ResolveShape(Pickup pickup, const char* who) {
     if (Sc()[0xA] == 0) {
         const unsigned char* const s = Sc();
         const unsigned d = s[8];
-        const U x = static_cast<U>(Long(s + 0x34)) + 2u * StepX(d);
+        const U x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
         const U z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
         const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
         if (found != 0xFF) MarkObject(found, who);
@@ -510,7 +515,7 @@ extern "C" void __cdecl PartyAction18_Form0Sub0Strike(void) {
             } else {
                 const unsigned char* const c = Sc();
                 const unsigned d = c[8];
-                const U x = static_cast<U>(Long(c + 0x34)) + 2u * StepX(d);
+                const U x = static_cast<U>(MemberRec(c)->x) + 2u * StepX(d);
                 const U z = static_cast<U>(Long(c + 0x38)) + 2u * StepZ(d);
                 const unsigned char found = SH_CALL(Sprite_ObjectAt)(static_cast<long>(x), static_cast<long>(z), 0);
                 if (found != 0xFF) {
@@ -950,11 +955,11 @@ extern "C" unsigned char __cdecl Field_CellAheadRaised(void) {
 // Sprite_SetAnimation(0xB); +3 one on.
 extern "C" void __cdecl LeaderPanel_S0Begin(void) {
     At(kPanelPose)[0] = 0;
-    At(kPanelCounter)[0] = 0;
-    At(kPanelBlink)[0] = 0;
+    Effect1e_Choice = 0;
+    Effect1e_Blink = 0;
     Sc()[0x29] = 5;
     const unsigned char* const s = Sc();
-    const long height = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const long height = SH_CALL(AreaMap_Elevation)(MemberRec(s)->x, MemberRec(s)->z);
     SetWord(Sc() + 0x3E, static_cast<unsigned>(height));
     if (Field_State[0x89] == 0) SH_CALL(Sprite_SetAnimationAt)(0xA, 2);
     else SH_CALL(Sprite_SetAnimation)(0xB);

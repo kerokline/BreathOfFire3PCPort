@@ -122,7 +122,7 @@ static_assert(kCount == 47, "the cut's 47 rows");
 
 // What each clone is, for the seed: a dispatcher by the word +0x2C, the byte +2
 // or the byte +3 with its table's count; or one of the state shapes.
-enum Role : std::uint8_t { kByWord, kByState, kByStep, kBegin, kResolve, kPickup, kPush, kSpawn3A, kAim, kHit, kCellHit, kAgain, kWait };
+enum Role : std::uint8_t { kByWord, kByState, kByStep, kBegin, kResolve, kPickup, kPush, kSpawn3A, kAim, kHit, kCellHit, kAgain, MoveScript_WaitWordDA_addr };
 struct Spec { Role role; std::uint8_t count; };
 constexpr Spec kSpecs[kCount] = {
     {kByWord, 3}, {kByWord, 3}, {kByState, 3}, {kByState, 3}, {kBegin, 0}, {kResolve, 0}, {kPickup, 0}, {kByState, 3},
@@ -130,7 +130,7 @@ constexpr Spec kSpecs[kCount] = {
     {kByState, 3}, {kBegin, 0}, {kResolve, 0}, {kPickup, 0}, {kByState, 3}, {kByState, 2}, {kPush, 0}, {kByState, 3},
     {kByState, 2}, {kByStep, 5}, {kAim, 0}, {kHit, 0}, {kCellHit, 0}, {kByStep, 3}, {kAgain, 0}, {kByWord, 3},
     {kByWord, 3}, {kByState, 3}, {kByState, 3}, {kByState, 2}, {kByStep, 5}, {kAim, 0}, {kHit, 0}, {kCellHit, 0},
-    {kByStep, 3}, {kAgain, 0}, {kWait, 0}, {kByState, 3}, {kByWord, 3}, {kByState, 3}, {kByState, 3},
+    {kByStep, 3}, {kAgain, 0}, {MoveScript_WaitWordDA_addr, 0}, {kByState, 3}, {kByWord, 3}, {kByState, 3}, {kByState, 3},
 };
 
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -162,9 +162,9 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-constexpr U kSteps = 0x6697B0;   // Field_DirectionSteps: 8 rows of two longs
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
 constexpr U kTextRecords = bof3::addr::Text_Records;     // the 16 bytes the item names are copied into
-unsigned char* Steps() { return sh::Mem(kSteps); }
+unsigned char* Steps() { return sh::Mem(Field_DirectionSteps_addr); }
 unsigned char* Effect(unsigned i) { return sh::EffectRecord(i); }
 unsigned char* S() { return Sprite_Current; }
 
@@ -294,7 +294,7 @@ const sh::Callee kCallees[] = {
 // states read in place (seeded at its boundaries; .data, restored after the
 // run), and Text_Records' 16 bytes the item names are copied into.
 const sh::Region kRegions[] = {
-    {kSteps, 0x40},
+    {Field_DirectionSteps_addr, 0x40},
     {kTextRecords, 0x10},
 };
 

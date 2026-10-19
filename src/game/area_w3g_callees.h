@@ -33,82 +33,84 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
-constexpr U kStoryFlags = 0x904030;       // the flag bank most Flags_* calls here are handed
-constexpr U kFlags904000 = 0x904000;      // the bank areas 149 and 150 test (flags 0x11, 3)
-constexpr U kTailKind = 0x9039F3;         // Field_ModeTailKinds' index (s8)
-constexpr U kTailState = 0x9039F4;        // s8: the armed tail kind's (or the place hook's) state
-constexpr U kTailArg = 0x9039F5;          // the tail's byte: area 148 keeps an effect slot in it
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the flag bank most Flags_* calls here are handed
+// kFlags904000: now Cond_Flags[0x70] (symbols.toml). the bank areas 149 and 150 test (flags 0x11, 3)
+// kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the place hook's) state
+// kTailArg: now AreaW0c_TailSub (symbols.toml). the tail's byte: area 148 keeps an effect slot in it
 constexpr U kTailTimer = 0x9039F6;        // u16: the tails' frame counter
-constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
-constexpr U kLeaderDir = 0x802D48;        // the leader's +8, its facing
-constexpr U kLeaderX = 0x802D74;          // the leader's +0x34 / +0x38, 16.16
-constexpr U kLeaderZ = 0x802D78;
+// kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
+// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
 constexpr U kPartyStride = 0x14C;
 constexpr U kMemberId = 0x802DC9;         // party record 0's +0x89: the member's id
-constexpr U kCursor = 0x7DEE67;           // the message box's cursor (s8): a choice's answer
+// kCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the message box's cursor (s8): a choice's answer
 constexpr U kMessage = 0x7DEE48;          // u16: the message a choice opened, 0xFFFF none
 constexpr U kCounter0 = 0x903848;         // MoveScript counter 0 (flow ops A0..AC)
 constexpr U kScriptVar = 0x90384B;        // the movement script's byte the tails wait on
-constexpr U kCameraAngle1 = 0x929ECA;     // s16 Camera_Angles[1]
-constexpr U kCameFrom = 0x802290;         // u16: the area the party came from (docs/mode-flow.md)
-constexpr U kEffects = 0x7E11E0;          // Effect_Objects: records of 0x80
+// kCameraAngle1: now Camera_Angles[1] (symbols.toml). s16 Camera_Angles[1]
+// kCameFrom: now AreaW2c_LastArea (symbols.toml). u16: the area the party came from (docs/mode-flow.md)
+// kEffects: now Effect_Objects (symbols.toml). Effect_Objects: records of 0x80
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
-constexpr U kExtra0 = 0x802000;           // Sprite_ObjectsExtra record 0
-constexpr U kKind2X = 0x7E0974;           // Sprite_Kind2 + 0x34 (s32)
-constexpr U kKind2Height = 0x7E097E;      // Sprite_Kind2 + 0x3E (u16)
-constexpr U kFocusX = 0x929F14;           // MapView_FocusX (dword)
-constexpr U kOrigin = 0x7E0688;           // MapView_Origin (its first word)
-constexpr U kDirSteps = 0x6697B0;         // Field_DirectionSteps: (x, z) s32 a direction
-constexpr U kWalkDelta = 0x6696DC;        // s32 x, z per direction, 8 bytes apart (event_ops_callees.h's)
-constexpr U kHealByte = 0x904153;         // area 150's tail stores (docs/area_w3g.md section 4)
-constexpr U kWord90405C = 0x90405C;
-constexpr U kByte90405E = 0x90405E;
-constexpr U kByte90405F = 0x90405F;
-constexpr U kByte929EC1 = 0x929EC1;
-constexpr U kByte9036D0 = 0x9036D0;
+// kExtra0: now Sprite_ObjectsExtra (symbols.toml). Sprite_ObjectsExtra record 0
+// kKind2X: now Sprite_Kind2[0x34] (symbols.toml). Sprite_Kind2 + 0x34 (s32)
+// kKind2Height: now Sprite_Kind2[0x3e] (symbols.toml). Sprite_Kind2 + 0x3E (u16)
+// kFocusX: now MapView_FocusX (symbols.toml). MapView_FocusX (dword)
+// kOrigin: now MapView_Origin (symbols.toml). MapView_Origin (its first word)
+// kDirSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: (x, z) s32 a direction
+// kWalkDelta: now MoveCmd_F9Steps (symbols.toml). s32 x, z per direction, 8 bytes apart (event_ops_callees.h's)
+// kHealByte: now AreaW3g_HealByte (symbols.toml). area 150's tail stores (docs/area_w3g.md section 4)
+// kWord90405C: now Cond_Flags[0xcc] (symbols.toml).
+// kByte90405E: now Cond_Flags[0xce] (symbols.toml).
+// kByte90405F: now Cond_Flags[0xcf] (symbols.toml).
+// kByte929EC1: now AreaW3g_Byte929EC1 (symbols.toml).
+// kByte9036D0: now AreaW3g_Byte9036D0 (symbols.toml).
 
 // --- area 148 (descriptor 0x635388) -----------------------------------------
-constexpr U kA148BeamColours = 0x6353CC;  // (r, g, b) by the effect's +6
-constexpr U kA148MemberIdsA = 0x6353D8;   // 4 member ids, then 4 u16 messages at 0x6353DC
-constexpr U kA148MessagesA = 0x6353DC;
-constexpr U kA148MemberIdsB = 0x6353E4;   // the same for handler 5
-constexpr U kA148MessagesB = 0x6353E8;
+// kA148BeamColours: now Area148_BeamColours (symbols.toml). (r, g, b) by the effect's +6
+// kA148MemberIdsA: now Area148_MemberIdsA (symbols.toml). 4 member ids, then 4 u16 messages at 0x6353DC
+// kA148MessagesA: now Area148_MessagesA (symbols.toml).
+// kA148MemberIdsB: now Area148_MemberIdsB (symbols.toml). the same for handler 5
+// kA148MessagesB: now Area148_MessagesB (symbols.toml).
 constexpr U kA148Switch = 0x6353F0;       // one (x, z, facing, tail state) record: the cell hook's
 constexpr U kA148SwitchEnd = 0x6353F4;
-constexpr U kA148BeamStates = 0x6353F4;   // effect kind 0x7E's three states
+// kA148BeamStates: now Area148_BeamStates (symbols.toml). effect kind 0x7E's three states
 constexpr unsigned kA148BeamStateCount = 3;
-constexpr U kA148TurnSteps = 0x635400;    // 10 pairs of s8 indexes by +9 >> 3
+// kA148TurnSteps: now Area148_TurnSteps (symbols.toml). 10 pairs of s8 indexes by +9 >> 3
 constexpr U kA148TurnCells = 0x635414;    // (dx, dz) s8 pairs
 
 // --- area 149 (descriptor 0x6361B8) -----------------------------------------
-constexpr U kA149DustStates = 0x6361FC;   // handler 1's four states by Sprite_Current[4]
+// kA149DustStates: now Area149_DustStates (symbols.toml). handler 1's four states by Sprite_Current[4]
 constexpr unsigned kA149DustStateCount = 4;
 
 // --- area 150 (descriptor 0x636A18) -----------------------------------------
-constexpr U kA150MessagesA = 0x636A5C;    // u16 by the s8 cursor (choice 0), unchecked
-constexpr U kA150MessagesB = 0x636A60;    // u16 by the s8 cursor (choice 1), unchecked
+// kA150MessagesA: now Area150_MessagesA (symbols.toml). u16 by the s8 cursor (choice 0), unchecked
+// kA150MessagesB: now Area150_MessagesB (symbols.toml). u16 by the s8 cursor (choice 1), unchecked
 
 // --- the world maps' cells (area 16's, docs/area_w0b.md; as area_w3a's) --------
-constexpr U kLeaderSteps = 0x802D49;      // u8 step count
-constexpr U kLeaderDirX = 0x802D4C;       // dword direction
-constexpr U kLeaderDirZ = 0x802D50;
-constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
-constexpr U kLeaderCellWordZ = 0x802D7A;  // the high word of +0x38
-constexpr U kPlace = 0x937F82;            // u16: the place the party stands on (world map)
-constexpr U kMapMode = 0x9045FA;          // the world map's mode byte
+// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
+// kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
+// kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
-constexpr U kMapHeight = 0x8CB581;        // AreaMap_Header's second byte
-constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0, the first legend's button
-constexpr U kButtonMap6 = 0x90358C;       // word 6, the second's
-constexpr U kPartySet = 0x90412C;         // & 0x7F: the party set (0xC shows the third legend)
+// kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
+// kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
+// kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
+// kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr U kAreaText = 0x803580;         // the area's text section; area 151 reads its label offset from its first dword
 constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen
-constexpr U kItemNameKey = 0x669CD8;      // the 16-byte name the hook copies for item 0x16
+// kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
 constexpr U kTextRecords = 0x904CE0;      // Text_Records: the place hook fills rows of 0x20 from here
 constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
-constexpr U kMsgMode = kTailKind, kMsgState = kTailState, kMsgArg = kTailArg;
+// kMsgMode: now AreaW0a_TailKind (symbols.toml).
+// kMsgState: now AreaW0c_TailState (symbols.toml).
+// kMsgArg: now AreaW0c_TailSub (symbols.toml).
 
 // --- a world-map copy's tables (area 45's layout, docs/area_w1b.md section 5;
 // area_w3a_callees.h's struct less what area 151 has not: no cell search, no

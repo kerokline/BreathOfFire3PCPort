@@ -36,14 +36,14 @@ constexpr U kOverlayColours = 0x8CB59A;
 constexpr U kRunHeads = 0x8CB57C;
 // The area header's word +2: the offset MapView_CellToMap adds (the texture
 // words' base, in words, doubled).
-constexpr U kHeaderOffset = 0x8CB582;
+// kHeaderOffset: now AreaMap_Header[2] (symbols.toml).
 // The two D3D constants the draw handlers read (d3d_draw_callees.h has them too).
-constexpr U kScaleX = 0x7C9F4C;        // D3d_ScaleX, float
-constexpr U kScaleY = 0x7C9F48;        // D3d_ScaleY, float
-constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
-constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, the low word read
+// kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float
+// kScaleY: now D3d_ScaleY (symbols.toml). D3d_ScaleY, float
+// kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices, 4 x D3DTLVERTEX
+// kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, the low word read
 constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1
-constexpr U kDevice = 0x7CC350;        // D3d_Device
+// kDevice: now D3d_Device (symbols.toml). D3d_Device
 constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
 
 // The named data, by the address its symbols.gen.h macro names (the macros are

@@ -27,7 +27,7 @@ constexpr std::uint32_t kPartyFlags = 0x904061;
 constexpr std::uint32_t kPartyLists = 0x904062;
 // MoveScript_Variable's sources that have no name of their own.
 constexpr std::uint32_t kCounters = 0x903848;    // the A ops' four counter bytes (variables 3..6)
-constexpr std::uint32_t kFlagsPtr = 0x929ED0;    // the chapter's flag dword's address (variable 2)
+// kFlagsPtr: now AreaW0c_FlagRow (symbols.toml). the chapter's flag dword's address (variable 2)
 constexpr std::uint32_t kNameIndex = 0x802DC9;   // ObjTrio +0x89 (variable 11)
 constexpr std::uint32_t kStoryFlags = 0x904030;  // Cond_Flags + 0xA0's first dword (variable 12)
 // Math_Ratan2's two doubles.

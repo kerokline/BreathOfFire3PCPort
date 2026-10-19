@@ -65,7 +65,8 @@ constexpr std::uint32_t kTrioStride = 0x14C, kTrioPosition = 0x34, kTrioSlot = 0
 // reads its position +0x34 / +0x38 and sets or clears that bit; it has no
 // slot byte in the zone's sense (the PSX twin does the same for its record
 // at 0x8014629C / byte 0x80146273).
-constexpr std::uint32_t kFourthObject = 0x905DA0, kFourthFlags = 0xB;
+// kFourthObject: now FieldEvent_Object905DA0 (symbols.toml).
+constexpr std::uint32_t kFourthFlags = 0xB;
 
 // The rounded cell of a 16.16 position: the high word of (p + 0x8000), signed.
 int Cell(const unsigned char* position) {
@@ -264,7 +265,7 @@ extern "C" void __cdecl AreaMap_SlotZones(const unsigned char* entry) {
                 object[kTrioSlot] = Draw_OtSlot;
             }
         }
-        unsigned char* const fourth = At(kFourthObject);
+        unsigned char* const fourth = At(FieldEvent_Object905DA0_addr);
         if (!inside(fourth + kTrioPosition)) continue;
         if (zone[0] & 1) fourth[kFourthFlags] |= 1;
         else fourth[kFourthFlags] &= 0xFE;

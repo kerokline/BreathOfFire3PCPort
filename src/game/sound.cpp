@@ -51,11 +51,11 @@ Fn Import(std::uint32_t slot) {
     return fn;
 }
 void* __stdcall ImportCreateEvent(void* security, int manual, int initial, const char* name) {
-    return Import<void* (__stdcall*)(void*, int, int, const char*)>(kImportCreateEvent)(security, manual, initial, name);
+    return Import<void* (__stdcall*)(void*, int, int, const char*)>(Sound_ImportCreateEvent_addr)(security, manual, initial, name);
 }
-int __stdcall ImportCloseHandle(void* handle) { return Import<int (__stdcall*)(void*)>(kImportCloseHandle)(handle); }
+int __stdcall ImportCloseHandle(void* handle) { return Import<int (__stdcall*)(void*)>(Sound_ImportCloseHandle_addr)(handle); }
 unsigned __stdcall ImportMsgWait(unsigned count, const void* handles, int all, unsigned ms, unsigned mask) {
-    return Import<unsigned (__stdcall*)(unsigned, const void*, int, unsigned, unsigned)>(kImportMsgWait)(count, handles, all,
+    return Import<unsigned (__stdcall*)(unsigned, const void*, int, unsigned, unsigned)>(Sound_ImportMsgWait_addr)(count, handles, all,
                                                                                                          ms, mask);
 }
 

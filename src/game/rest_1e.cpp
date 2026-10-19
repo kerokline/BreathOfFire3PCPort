@@ -23,6 +23,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1e_callees.h"
 #include "game/scenario_harness.h"
@@ -30,6 +31,10 @@
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_1e::at;
 using U = std::uint32_t;
@@ -62,12 +67,12 @@ void Dispatch(const char* who, const char* by, U table, unsigned index, unsigned
 U Table(const unsigned long* t) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(t)); }
 void ByState2(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +2", table, S()[2], entries); }
 void ByState3(const char* who, U table, unsigned entries) { Dispatch(who, "the state byte +3", table, S()[3], entries); }
-void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", table, Word(S() + 0x2C), 3); }
+void ByForm(const char* who, U table) { Dispatch(who, "the form word +0x2C", table, MemberRec(S())->column, 3); }
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked, as the originals index it.
-U StepX(unsigned d) { return static_cast<U>(Long(At(at::kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(at::kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: dec eax;
 // cdq; sub eax, edx; sar eax, 1 on the zero-extended byte - (d - 1) / 2
@@ -95,8 +100,8 @@ void TurnWhileClear(unsigned char (__cdecl* probe)(void)) {
 // (s16 against s16), +0x2B = 0. PartyAction_SideProbes' probe, inline.
 void SideProbe(unsigned d, U row) {
     const unsigned char* const s = S();
-    const U x = static_cast<U>(Long(s + 0x34)) + static_cast<U>(Long(At(row)));
-    const U z = static_cast<U>(Long(s + 0x38)) + static_cast<U>(Long(At(row + 4)));
+    const U x = static_cast<U>(MemberRec(s)->x) + static_cast<U>(Long(At(row)));
+    const U z = static_cast<U>(MemberRec(s)->z) + static_cast<U>(Long(At(row + 4)));
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -105,8 +110,8 @@ void SideProbe(unsigned d, U row) {
 }
 void SideProbes() {
     S()[0x2B] = 1;
-    SideProbe(3, at::kStepRow3);
-    SideProbe(5, at::kStepRow5);
+    SideProbe(3, Field_DirectionSteps_addr + 0x18);
+    SideProbe(5, Field_DirectionSteps_addr + 0x28);
 }
 
 // Sprite_ObjectAt's index, as the originals use it: bit 0 of the object's
@@ -121,9 +126,9 @@ void FlagObject(const char* who, unsigned char found) {
                     "byte outside them (docs/rest_1e.md section 5)",
                     who, static_cast<unsigned>(found));
     if (i < static_cast<int>(at::kObjectCount))
-        At(at::kObjectFlag + static_cast<U>(i) * at::kObjectStride)[0] |= 1;
+        At(Sprite_Objects_addr + 0x80 + static_cast<U>(i) * at::kObjectStride)[0] |= 1;
     else
-        At(at::kExtraFlag + static_cast<U>(i - static_cast<int>(at::kObjectCount)) * at::kObjectStride)[0] |= 1;
+        At(Sprite_ObjectsExtra_addr + 0x80 + static_cast<U>(i - static_cast<int>(at::kObjectCount)) * at::kObjectStride)[0] |= 1;
 }
 
 // An Effect_Objects record by an index the original uses unchecked; ours aborts
@@ -141,8 +146,8 @@ unsigned char* EffectAt(const char* who, int index, const char* what) {
 void TwoAhead(U& x, U& z) {
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    x = static_cast<U>(Long(s + 0x34)) + 2u * StepX(d);
-    z = static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d);
+    x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
+    z = static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d);
 }
 
 // The cell calls after a probe two steps ahead: on the point's cell; when that
@@ -164,8 +169,8 @@ void Form2Begin() {
     TurnWhileClear(&PartyAction_TargetAhead);
     const unsigned char* s = S();
     const unsigned d = s[8];
-    const U x = static_cast<U>(Long(s + 0x34)) + StepX(d);
-    const U z = static_cast<U>(Long(s + 0x38)) + StepZ(d);
+    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
+    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     s = S();
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(s + 0x3E)));

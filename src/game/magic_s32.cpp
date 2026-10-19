@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -50,36 +51,36 @@ using move_script::Word;
 // (0x9037A0..). Both are read again after every call, as the originals read
 // them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // MAGIC144's pool: 48 task-like records of 0x84 bytes (+0 bit 0 in use, +1
 // kind, +2 step, +0x80 owner), walked by WallOfFire_Task.
-constexpr std::uint32_t kPool = 0x6A5680;
+// kPool: now WallOfFire_Pool (symbols.toml).
 constexpr unsigned kPoolCount = 0x30;
 constexpr std::uint32_t kRecord = 0x84;
 
 // MAGIC144's .data dispatch tables (symbols.toml, read in place).
-constexpr std::uint32_t kChildTaskTable = 0x65BDC4;   // by +1: one entry
-constexpr std::uint32_t kChildSteps = 0x65BDC8;       // by +2: four
-constexpr std::uint32_t kMoteKinds = 0x65BDD8;        // by +1: flame, spark
-constexpr std::uint32_t kFlameSteps = 0x65BDE0;       // by +2: four
-constexpr std::uint32_t kSparkSteps = 0x65BDF0;       // by +2: four
+// kChildTaskTable: now WallOfFireChild_TaskTable (symbols.toml). by +1: one entry
+// kChildSteps: now WallOfFireChild_Steps (symbols.toml). by +2: four
+// kMoteKinds: now WallOfFireMote_Kinds (symbols.toml). by +1: flame, spark
+// kFlameSteps: now WallOfFireFlame_Steps (symbols.toml). by +2: four
+// kSparkSteps: now WallOfFireSpark_Steps (symbols.toml). by +2: four
 
 // MAGIC150's state block (EyeBeam_State): the beam's origin x, z, height
 // (dwords), the cylinder's radius, the spiral's radius and the spiral's angle
 // (words); the eight sparks (EyeBeam_Sparks, 8 bytes each: +0 live, +2
 // radius, +4 angle, +6 disc radius), the spark pointer cell, and two spiral
 // points of 0x34 bytes (the previous one, the new one).
-constexpr std::uint32_t kBeamX = 0x6A9040;
-constexpr std::uint32_t kBeamZ = 0x6A9044;
-constexpr std::uint32_t kBeamH = 0x6A9048;
-constexpr std::uint32_t kBeamR1 = 0x6A9050;
-constexpr std::uint32_t kBeamR2 = 0x6A9052;
-constexpr std::uint32_t kBeamAngle = 0x6A9054;
-constexpr std::uint32_t kSparks = 0x6A9058;
-constexpr std::uint32_t kSparkCell = 0x6A9098;
+// kBeamX: now EyeBeam_State (symbols.toml).
+// kBeamZ: now EyeBeam_State[4] (symbols.toml).
+// kBeamH: now EyeBeam_State[8] (symbols.toml).
+// kBeamR1: now EyeBeam_State[0x10] (symbols.toml).
+// kBeamR2: now EyeBeam_State[0x12] (symbols.toml).
+// kBeamAngle: now EyeBeam_State[0x14] (symbols.toml).
+// kSparks: now EyeBeam_Sparks (symbols.toml).
+// kSparkCell: now EyeBeam_SparkCurrent (symbols.toml).
 constexpr std::uint32_t kSpiralLast = 0x6A90A0;
-constexpr std::uint32_t kSpiralNew = 0x6A90D4;
+// kSpiralNew: now EyeBeam_SpiralPoints[0x34] (symbols.toml).
 constexpr unsigned kSpiralPoint = 0x34;
 
 // Capcom's, unnamed, outside the band and in no group: the map camera's
@@ -92,18 +93,18 @@ constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
 constexpr std::uint32_t kFacing = bof3::addr::Screen_TriangleWinding;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char* PoolRecord(unsigned i) { return Mem(kPool + i * kRecord); }
+unsigned char* PoolRecord(unsigned i) { return Mem(WallOfFire_Pool_addr + i * kRecord); }
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 int SS(unsigned k) { return static_cast<short>(SW(k)); }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 int S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -220,15 +221,16 @@ S32_EXPORT void __cdecl WallOfFire_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::WallOfFire_Start, bof3::addr::MagicFx_EndWhenChildrenDone};
     StackCall(kPhases, 2, Sc()[1], "WallOfFire_Task");
     unsigned char* const sc = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const m = PoolRecord(i);
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
         if ((m[0] & 1) == 0) continue;
-        const std::int32_t its = Long(m + 0x80);
+        const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         Call0(bof3::addr::WallOfFireMote_Run);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = sc;
     }
 }
@@ -246,11 +248,12 @@ S32_EXPORT void __cdecl WallOfFire_Start(void) {
         m[1] = 0;
         m[2] = 0;
     }
-    const unsigned char* const source = Pointer(at::kSource);
+    const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x36) & 0xFFu;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(sc)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = static_cast<std::int32_t>(Key(sc));
     child[1] = 0;
     CopyPosition(child, source);
     sc[0xB] = 1;
@@ -262,14 +265,14 @@ S32_EXPORT void __cdecl WallOfFire_Start(void) {
 
 // original 0x4E9270: the child (kind 1, parameter 0x36): a jmp through
 // WallOfFireChild_TaskTable (one entry, WallOfFireChild_Run) by +1.
-S32_EXPORT void __cdecl WallOfFireChild_Task(void) { CellCall(kChildTaskTable, 1, Sc()[1], "WallOfFireChild_Task"); }
+S32_EXPORT void __cdecl WallOfFireChild_Task(void) { CellCall(WallOfFireChild_TaskTable_addr, 1, Sc()[1], "WallOfFireChild_Task"); }
 
 // original 0x4E9290: a call through WallOfFireChild_Steps (four: _Spawn,
 // _Tint, _WaitFlame, _End) by +2; then while +0 and +2 are set the actor's
 // matrix (MagicFx_PushActorMatrix), the disc (WallOfFire_DrawDisc), the
 // matrix popped (a tail jmp).
 S32_EXPORT void __cdecl WallOfFireChild_Run(void) {
-    CellCall(kChildSteps, 4, Sc()[2], "WallOfFireChild_Run");
+    CellCall(WallOfFireChild_Steps_addr, 4, Sc()[2], "WallOfFireChild_Run");
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -289,7 +292,8 @@ S32_EXPORT void __cdecl WallOfFireChild_Spawn(void) {
         if (index == 0xFF) continue;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolRecord(index);
-        SetLong(m + 0x80, static_cast<std::int32_t>(Key(sc)));
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        tm->owner = static_cast<std::int32_t>(Key(sc));
         m[0] = static_cast<unsigned char>(m[0] | 0x41);
         m[1] = n != 0 ? 1 : 0;
         m[2] = 0;
@@ -305,8 +309,8 @@ S32_EXPORT void __cdecl WallOfFireChild_Spawn(void) {
 S32_EXPORT void __cdecl WallOfFireChild_Tint(void) {
     AddB(Sc()[9], 2);
     if (Sc()[9] != 0x10) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(at::kSource));
-    MH_CALL(Sprite_SetTint)(Pointer(at::kSource), 0xF8, 0xF8, 0xF8, 1);
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
+    MH_CALL(Sprite_SetTint)(Pointer(BattleOdds_ActorObject_addr), 0xF8, 0xF8, 0xF8, 1);
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
     Inc(Sprite_Current[2]);
 }
@@ -328,7 +332,7 @@ S32_EXPORT void __cdecl WallOfFireChild_End(void) {
         s = Sc();
     }
     if (s[0xB] != 0x80) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(at::kSource));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
     MH_CALL(BattleActor_Flash)(TargetByte());
     Dec(Owner()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
@@ -387,14 +391,14 @@ S32_EXPORT void __cdecl WallOfFire_DrawDisc(void) {
 
 // original 0x4E95E0: a pool record: a jmp through WallOfFireMote_Kinds (two:
 // the flame, the spark) by +1.
-S32_EXPORT void __cdecl WallOfFireMote_Run(void) { CellCall(kMoteKinds, 2, Sc()[1], "WallOfFireMote_Run"); }
+S32_EXPORT void __cdecl WallOfFireMote_Run(void) { CellCall(WallOfFireMote_Kinds_addr, 2, Sc()[1], "WallOfFireMote_Run"); }
 
 // original 0x4E9600: the flame. A call through WallOfFireFlame_Steps (four:
 // _Start, _Rise, Magic092_FlameGrow, _Fade) by +2; then while +0 and +2 are
 // set the screen point (BattleActor_UpdateScreenXY) and MAGIC092's flame
 // (Magic092_DrawFlame, a tail jmp).
 S32_EXPORT void __cdecl WallOfFireFlame_Run(void) {
-    CellCall(kFlameSteps, 4, Sc()[2], "WallOfFireFlame_Run");
+    CellCall(WallOfFireFlame_Steps_addr, 4, Sc()[2], "WallOfFireFlame_Run");
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -432,7 +436,7 @@ S32_EXPORT void __cdecl WallOfFireFlame_Fade(void) {
 // set the screen point, moved 16 left (+0xB 1) or right and 12 up, and the
 // spark (WallOfFireSpark_Draw, a tail jmp).
 S32_EXPORT void __cdecl WallOfFireSpark_Run(void) {
-    CellCall(kSparkSteps, 4, Sc()[2], "WallOfFireSpark_Run");
+    CellCall(WallOfFireSpark_Steps_addr, 4, Sc()[2], "WallOfFireSpark_Run");
     const unsigned char* const sc = Sprite_Current;
     if (sc[0] == 0 || sc[2] == 0) return;
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -475,7 +479,8 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         {
             const unsigned char* const s = Sc();
-            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)),
+            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y),
                                         2, 0xC);
         }
         unsigned char* const p = Gfx_PacketNext;
@@ -503,7 +508,8 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         p[0x25] = 1;
         p[0x26] = 1;
         const unsigned char* const s = Sc();
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), 2,
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
                                     0x34);
     }
 }
@@ -525,10 +531,10 @@ S32_EXPORT unsigned char __cdecl WallOfFire_PoolAlloc(void) {
 // MAGIC150 (row 72, Eye Beam read one id down)
 
 namespace {
-std::int32_t BeamX() { return Long(Mem(kBeamX)); }
-std::int32_t BeamZ() { return Long(Mem(kBeamZ)); }
-std::int32_t BeamH() { return Long(Mem(kBeamH)); }
-unsigned char* SparkCurrent() { return Pointer(kSparkCell); }
+std::int32_t BeamX() { return Long(Mem(EyeBeam_State_addr)); }
+std::int32_t BeamZ() { return Long(Mem(EyeBeam_State_addr + 0x4)); }
+std::int32_t BeamH() { return Long(Mem(EyeBeam_State_addr + 0x8)); }
+unsigned char* SparkCurrent() { return Pointer(EyeBeam_SparkCurrent_addr); }
 // A point of the beam at angle `a` round the x axis, radius `r` (a word read
 // after the call): z = Z + cos x r >> 4, height = H + sin x r << 4, each
 // origin read after its call.
@@ -551,14 +557,14 @@ S32_EXPORT void __cdecl EyeBeam_Task(void) {
 // owner: x + 0x14000, z, height + 0x2C00000; the two radii and the angle 0;
 // the sparks cleared; +9 0x3C, +1 on; sound effect 0x100.
 S32_EXPORT void __cdecl EyeBeam_Start(void) {
-    const unsigned char* const slot = Pointer(at::kCurrentSlot);
+    const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
     const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
-    SetLong(Mem(kBeamX), Add(Long(caster + 0x34), 0x14000));
-    SetLong(Mem(kBeamZ), Long(caster + 0x38));
-    SetLong(Mem(kBeamH), Add(Long(caster + 0x3C), 0x2C00000));
-    SetWord(Mem(kBeamR1), 0);
-    SetWord(Mem(kBeamR2), 0);
-    SetWord(Mem(kBeamAngle), 0);
+    SetLong(Mem(EyeBeam_State_addr), Add(Long(caster + 0x34), 0x14000));
+    SetLong(Mem(EyeBeam_State_addr + 0x4), Long(caster + 0x38));
+    SetLong(Mem(EyeBeam_State_addr + 0x8), Add(Long(caster + 0x3C), 0x2C00000));
+    SetWord(Mem(EyeBeam_State_addr + 0x10), 0);
+    SetWord(Mem(EyeBeam_State_addr + 0x12), 0);
+    SetWord(Mem(EyeBeam_State_addr + 0x14), 0);
     Call0(bof3::addr::EyeBeamSparks_Clear);
     Sc()[9] = 0x3C;
     Inc(Sc()[1]);
@@ -584,8 +590,8 @@ S32_EXPORT void __cdecl EyeBeam_WaitSparks(void) {
 // original 0x4EA570: the cylinder's radius up by 0x40, the spiral's by 0x60;
 // the beam drawn; +9 down; at 0 +9 0x78, +1 on, sound effect 0x101.
 S32_EXPORT void __cdecl EyeBeam_Widen(void) {
-    AddWord(Mem(kBeamR1), 0x40);
-    AddWord(Mem(kBeamR2), 0x60);
+    AddWord(Mem(EyeBeam_State_addr + 0x10), 0x40);
+    AddWord(Mem(EyeBeam_State_addr + 0x12), 0x60);
     Call0(bof3::addr::EyeBeam_Draw);
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
@@ -599,8 +605,8 @@ S32_EXPORT void __cdecl EyeBeam_Widen(void) {
 // the target flagged 0x40, sound effect 0x102.
 S32_EXPORT void __cdecl EyeBeam_Fire(void) {
     const unsigned frame = static_cast<unsigned char>(Frame_Counter);
-    AddWord(Mem(kBeamAngle), 0xFE00);
-    SetWord(Mem(kBeamR1), ((frame & 1u) + 0x10u) << 4);
+    AddWord(Mem(EyeBeam_State_addr + 0x14), 0xFE00);
+    SetWord(Mem(EyeBeam_State_addr + 0x10), ((frame & 1u) + 0x10u) << 4);
     Call0(bof3::addr::EyeBeam_Draw);
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
@@ -613,8 +619,8 @@ S32_EXPORT void __cdecl EyeBeam_Fire(void) {
 // original 0x4EA630: the radii down by 0x40 and 0x60; the beam drawn; +9 down;
 // at 0 +1 on.
 S32_EXPORT void __cdecl EyeBeam_Narrow(void) {
-    AddWord(Mem(kBeamR1), 0xFFC0);
-    AddWord(Mem(kBeamR2), 0xFFA0);
+    AddWord(Mem(EyeBeam_State_addr + 0x10), 0xFFC0);
+    AddWord(Mem(EyeBeam_State_addr + 0x12), 0xFFA0);
     Call0(bof3::addr::EyeBeam_Draw);
     Dec(Sc()[9]);
     if (Sc()[9] == 0) Inc(Sc()[1]);
@@ -646,9 +652,9 @@ S32_EXPORT void __cdecl EyeBeam_DrawCylinder(void) {
         unsigned char out[12];
         v[0] = BeamX();
         int c = Cos(static_cast<int>(angle));
-        v[1] = RingZ(c, S16(Mem(kBeamR1)));
+        v[1] = RingZ(c, S16(Mem(EyeBeam_State_addr + 0x10)));
         int s = Sin(static_cast<int>(angle));
-        v[2] = RingH(s, S16(Mem(kBeamR1)));
+        v[2] = RingH(s, S16(Mem(EyeBeam_State_addr + 0x10)));
         Project(v, out);
         std::memcpy(p + 8, out, 12);
         v[0] = Add(BeamX(), 0x100000);
@@ -658,9 +664,9 @@ S32_EXPORT void __cdecl EyeBeam_DrawCylinder(void) {
         std::memcpy(p + 0x14, out, 12);
         v[0] = BeamX();
         c = Cos(static_cast<int>(angle));
-        v[1] = RingZ(c, S16(Mem(kBeamR1)));
+        v[1] = RingZ(c, S16(Mem(EyeBeam_State_addr + 0x10)));
         s = Sin(static_cast<int>(angle));
-        v[2] = RingH(s, S16(Mem(kBeamR1)));
+        v[2] = RingH(s, S16(Mem(EyeBeam_State_addr + 0x10)));
         Project(v, out);
         std::memcpy(p + 0x20, out, 12);
         v[0] = Add(BeamX(), 0x100000);
@@ -684,29 +690,29 @@ S32_EXPORT void __cdecl EyeBeam_DrawCylinder(void) {
 S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
     using PointFn = void (__cdecl*)(unsigned char*);
     Call0(kSetMapCamera);
-    std::uint32_t angle = static_cast<std::uint32_t>(Long(Mem(kBeamAngle)));
+    std::uint32_t angle = static_cast<std::uint32_t>(Long(Mem(EyeBeam_State_addr + 0x14)));
     std::int32_t x = BeamX();
     std::int32_t step = 0x1000;
-    unsigned char* const point = Mem(kSpiralNew);
+    unsigned char* const point = Mem(EyeBeam_SpiralPoints_addr + 0x34);
     SetLong(point, x);
     unsigned a = angle & 0xFFFF;
     int c = Cos(static_cast<int>(a));
-    SetLong(point + 4, RingZ(c, S16(Mem(kBeamR2))));
+    SetLong(point + 4, RingZ(c, S16(Mem(EyeBeam_State_addr + 0x12))));
     int s = Sin(static_cast<int>(a));
-    SetLong(point + 8, RingH(s, S16(Mem(kBeamR2))));
+    SetLong(point + 8, RingH(s, S16(Mem(EyeBeam_State_addr + 0x12))));
     MH_AT(PointFn, bof3::addr::EyeBeam_ProjectSpiralPoint)(point);
     for (unsigned n = 0x80; n != 0; --n) {
         x = Add(x, step);
         step += 0x40;
-        for (unsigned k = 0; k < kSpiralPoint; k += 4) SetLong(Mem(kSpiralLast + k), Long(Mem(kSpiralNew + k)));
+        for (unsigned k = 0; k < kSpiralPoint; k += 4) SetLong(Mem(kSpiralLast + k), Long(Mem(EyeBeam_SpiralPoints_addr + 0x34 + k)));
         angle += 0x80;
         const int r = RandCall();
         SetLong(point, Add(static_cast<std::int32_t>((static_cast<std::uint32_t>(r & 0xFFF) - 0x800u) << 4), x));
         a = angle & 0xFFFF;
         c = Cos(static_cast<int>(a));
-        SetLong(point + 4, RingZ(c, S16(Mem(kBeamR2))));
+        SetLong(point + 4, RingZ(c, S16(Mem(EyeBeam_State_addr + 0x12))));
         s = Sin(static_cast<int>(a));
-        SetLong(point + 8, RingH(s, S16(Mem(kBeamR2))));
+        SetLong(point + 8, RingH(s, S16(Mem(EyeBeam_State_addr + 0x12))));
         MH_AT(PointFn, bof3::addr::EyeBeam_ProjectSpiralPoint)(point);
         MH_AT(PointFn, bof3::addr::EyeBeam_DrawSpiralSegment)(Mem(kSpiralLast));
     }
@@ -772,10 +778,10 @@ S32_EXPORT void __cdecl EyeBeam_DrawSpiralSegment(unsigned char* point) {
 // original 0x4EAB70: the eight sparks' +0 words cleared through the pointer
 // cell 0x6A9098 (left one past the last).
 S32_EXPORT void __cdecl EyeBeamSparks_Clear(void) {
-    SetLong(Mem(kSparkCell), static_cast<std::int32_t>(kSparks));
+    SetLong(Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(EyeBeam_Sparks_addr));
     for (unsigned n = 8; n != 0; --n) {
         SetWord(SparkCurrent(), 0);
-        SetLong(Mem(kSparkCell), Add(Long(Mem(kSparkCell)), 8));
+        SetLong(Mem(EyeBeam_SparkCurrent_addr), Add(Long(Mem(EyeBeam_SparkCurrent_addr)), 8));
     }
 }
 
@@ -784,13 +790,13 @@ S32_EXPORT void __cdecl EyeBeamSparks_Clear(void) {
 // & 0xFF) << 4, disc radius +6 8 - each written through the cell, read again
 // after Rand.
 S32_EXPORT void __cdecl EyeBeamSparks_Spawn(void) {
-    std::uint32_t e = kSparks;
-    SetLong(Mem(kSparkCell), static_cast<std::int32_t>(e));
+    std::uint32_t e = EyeBeam_Sparks_addr;
+    SetLong(Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(e));
     for (unsigned n = 0;; ) {
         if (Word(Mem(e)) == 0) break;
         e += 8;
         ++n;
-        SetLong(Mem(kSparkCell), static_cast<std::int32_t>(e));
+        SetLong(Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(e));
         if (n >= 8) return;
     }
     SetWord(Mem(e), 1);
@@ -809,9 +815,9 @@ S32_EXPORT void __cdecl EyeBeamSparks_Spawn(void) {
 S32_EXPORT unsigned char __cdecl EyeBeamSparks_Draw(void) {
     BeamDrawMode();
     Call0(kSetMapCamera);
-    std::uint32_t e = kSparks;
+    std::uint32_t e = EyeBeam_Sparks_addr;
     unsigned char any = 0;
-    SetLong(Mem(kSparkCell), static_cast<std::int32_t>(e));
+    SetLong(Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(e));
     for (unsigned n = 8; n != 0; --n) {
         if (Word(Mem(e)) != 0) {
             std::int32_t v[3];
@@ -829,15 +835,15 @@ S32_EXPORT unsigned char __cdecl EyeBeamSparks_Draw(void) {
             AddWord(SparkCurrent() + 4, 0x80);
             AddWord(SparkCurrent() + 2, 0xFFA0);
             AddWord(SparkCurrent() + 6, 0xFFFF);
-            e = static_cast<std::uint32_t>(Long(Mem(kSparkCell)));
+            e = static_cast<std::uint32_t>(Long(Mem(EyeBeam_SparkCurrent_addr)));
             any = 1;
             if (Word(Mem(e) + 2) == 0) {
                 SetWord(Mem(e), 0);
-                e = static_cast<std::uint32_t>(Long(Mem(kSparkCell)));
+                e = static_cast<std::uint32_t>(Long(Mem(EyeBeam_SparkCurrent_addr)));
             }
         }
         e += 8;
-        SetLong(Mem(kSparkCell), static_cast<std::int32_t>(e));
+        SetLong(Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(e));
     }
     return any;
 }

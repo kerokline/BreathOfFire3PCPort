@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_damage_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -68,8 +69,11 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
     ++g_log_n;
 }
 
-unsigned char* PartyAt(unsigned a) { return At(at::kParty + (a & 0xFF) * at::kPartyStride); }
+unsigned char* PartyAt(unsigned a) { return At(ObjTrio_addr + 0x10 + (a & 0xFF) * at::kPartyStride); }
 unsigned char* EnemyAt(unsigned a) { return At(at::kEnemy + ((a & 0xFF) - 3) * at::kEnemyStride); }
+// PartyAt / EnemyAt point +0x10 / +0x80 into their records; these start at them.
+records::PartyMember* PartyRec(unsigned a) { return reinterpret_cast<records::PartyMember*>(PartyAt(a) - 0x10); }
+records::BattleEnemy* EnemyRec(unsigned a) { return reinterpret_cast<records::BattleEnemy*>(EnemyAt(a) + at::kEObject); }
 
 // The round's two actors: the stand-ins scribble on their fields.
 unsigned g_actor[2];
@@ -92,20 +96,20 @@ void Disturb() {
     case 5: r[party ? at::kPFlags2 : at::kEFlags2] ^= static_cast<unsigned char>(bit); break;
     case 6: r[party ? at::kPStatus : at::kEStatus] ^= static_cast<unsigned char>(bit); break;
     case 7: if (party) r[at::kPWeapon] = static_cast<unsigned char>("JLO\x13\x16"[(h >> 26) % 5]); break;
-    case 8: if (party) r[at::kPWeaponKind] = static_cast<unsigned char>(v & 1 ? 5 : v); else r[at::kEFamily] = v & 1 ? 4 : 1; break;
+    case 8: if (party) r[at::kPCharIndex] = static_cast<unsigned char>(v & 1 ? 5 : v); else r[at::kEFamily] = v & 1 ? 4 : 1; break;
     case 9: r[party ? at::kPSurvive : at::kEHoly] = v; break;
     case 10: At(bof3::addr::DamageScratch)[0] ^= static_cast<unsigned char>(bit); break;
     case 11: At(at::kBattleFlags)[0] ^= 0x80; break;
-    case 12: At(at::kPartyCut)[0] = v & 1 ? 2 : v; break;
+    case 12: At(Cond_Flags_addr + 0xd0)[0] = v & 1 ? 2 : v; break;
     case 13: At(at::kCuredBits + (v & 1))[0] = v; break;
     case 14: At(at::kAttackerAtk + (v & 1))[0] = static_cast<unsigned char>(h >> 24); break;
-    case 15: At(at::kAttackerInt + (v & 1))[0] = static_cast<unsigned char>(h >> 24); break;
+    case 15: At(BattleDamage_AttackerInt_addr + (v & 1))[0] = static_cast<unsigned char>(h >> 24); break;
     case 16: At(at::kTurnWork + (h >> 24) % 44)[0] = v; break;
-    case 17: At(at::kEntryCount)[0] = static_cast<unsigned char>(v % 3); break;
+    case 17: At(BattleActorCopies_EntryCount_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 18: r[party ? at::kPAgi : at::kEAgi] = v; break;
     case 19: if (!party) r[at::kEObject + 0xF0] = static_cast<unsigned char>(v % 16); break;
     case 20: At(at::kTurnCounter)[0] = static_cast<unsigned char>(v % 12); break;
-    case 21: At(at::kAiByteB1 + v % 3)[0] = static_cast<unsigned char>(h >> 26); break;
+    case 21: At(BattleSprites_PartyPick_addr + v % 3)[0] = static_cast<unsigned char>(h >> 26); break;
     case 22: At(at::kAiScripts + (h >> 16) % 0x900)[0] = static_cast<unsigned char>(0xB + v % 0x1D); break;
     default: r[party ? at::kPCommand : at::kECommand] = v; break;
     }
@@ -139,7 +143,7 @@ unsigned char __cdecl StubLevelClass(unsigned level, unsigned row) {
 }
 int TargetHp() {
     const unsigned t = g_actor[1] & 0xFF;
-    return t <= 2 ? Word(PartyAt(t) + at::kPHp) : Word(EnemyAt(t) + at::kEHp);
+    return t <= 2 ? PartyRec(t)->hp : EnemyRec(t)->hp;
 }
 short __cdecl StubCalcDamage(unsigned attacker, unsigned target, unsigned element) {
     Record(4, attacker, target, element);
@@ -271,8 +275,8 @@ template <unsigned N> void __cdecl StubHandler() {
     Record(100 + N);
     std::uint32_t h = Hash();
     const unsigned t = g_actor[1] & 0xFF;
-    const int hp = t <= 2 ? Word(PartyAt(t) + at::kPHp) : Word(EnemyAt(t) + at::kEHp);
-    const int ap = t <= 2 ? Word(PartyAt(t) + at::kPAp) : Word(EnemyAt(t) + at::kEAp);
+    const int hp = t <= 2 ? PartyRec(t)->hp : EnemyRec(t)->hp;
+    const int ap = t <= 2 ? PartyRec(t)->ap : EnemyRec(t)->ap;
     static const short kValues[] = {0, 1, -1, 9999, 10000, -9999, -10000, 0x7FFF, -0x8000, 9998, -9998};
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned base = k ? static_cast<unsigned>(ap) : static_cast<unsigned>(hp);
@@ -285,10 +289,10 @@ template <unsigned N> void __cdecl StubHandler() {
         case 3: v = 0; break;
         default: v = static_cast<short>(h >> (14 + k)); break;
         }
-        SetWord(At(static_cast<std::uint32_t>(Long(At(at::kResult)))) + 4 + 2 * k, static_cast<unsigned short>(v));
+        SetWord(At(static_cast<std::uint32_t>(Long(At(BattleDamage_Result_addr)))) + 4 + 2 * k, static_cast<unsigned short>(v));
     }
     h = Hash() ^ 0x77777777u;
-    if (h % 5 == 0) SetLong(At(at::kResult), static_cast<std::int32_t>(Address(g_bufs + (h & 0x100 ? 0x10 : 0x20))));
+    if (h % 5 == 0) SetLong(At(BattleDamage_Result_addr), static_cast<std::int32_t>(Address(g_bufs + (h & 0x100 ? 0x10 : 0x20))));
     if (h % 7 == 0) {
         g_actor[1] = (h >> 8) % 12;
         At(at::kTarget)[0] = static_cast<unsigned char>(g_actor[1]);
@@ -407,7 +411,7 @@ Region g_regions[kRegionCount];
 constexpr unsigned kRegionBytes = 0x4C0 + 4 + 0xC00 + 0x580 + 0xBA0 + 0x900 + sizeof g_bufs;
 
 void MakeRegions() {
-    g_regions[0] = {at::kParty - 0x10, 0x4C0};         // ObjTrio: the three party objects, to 0x8031FF (0x8031F3)
+    g_regions[0] = {ObjTrio_addr + 0x10 - 0x10, 0x4C0}; // ObjTrio: the three party objects, to 0x8031FF (0x8031F3)
     g_regions[1] = {bof3::addr::DamageScratch, 4};
     g_regions[2] = {0x904000, 0xC00};                  // 0x904060, the battle state 0x904AA8..0x904B9B
     g_regions[3] = {at::kTurnWork, 0x580};             // the turn work, the damage scratch stats 0x939F86..0x939FEB
@@ -460,7 +464,7 @@ void SeedActor(unsigned a) {
     if (Half()) SetWord(r + (party ? at::kPStatus : at::kEStatus), Half() ? 0 : Next() & Next());
     if (Often()) (party ? r[at::kPPresent] : r[at::kEPresent]) |= 1;
     if (party) {
-        if (Half()) r[at::kPWeaponKind] = 5;
+        if (Half()) r[at::kPCharIndex] = 5;
         if (Half()) r[at::kPWeapon] = static_cast<unsigned char>("JLO\x13\x17\x33\x16\x35\x40"[Next() % 9]);
         if (Half()) r[at::kPSurvive] = static_cast<unsigned char>(Next() % 8);
         if (Half()) r[at::kPHoly] = static_cast<unsigned char>(Next() % 8);
@@ -473,8 +477,8 @@ void SeedActor(unsigned a) {
 
 // Every round: the pointers valid, the target and the actor in range.
 void SeedCommon() {
-    SetLong(At(at::kItemCommand), static_cast<std::int32_t>(Address(g_bufs)));
-    SetLong(At(at::kResult), static_cast<std::int32_t>(Address(g_bufs + (Half() ? 0x10 : 0x20))));
+    SetLong(At(BattleSprites_Action_addr), static_cast<std::int32_t>(Address(g_bufs)));
+    SetLong(At(BattleDamage_Result_addr), static_cast<std::int32_t>(Address(g_bufs + (Half() ? 0x10 : 0x20))));
     At(at::kTarget)[0] = static_cast<unsigned char>(Actor());
     At(at::kActing)[0] = static_cast<unsigned char>(Actor());
     g_bufs[3] = static_cast<unsigned char>(Next() % 4);   // the item command's category
@@ -490,10 +494,10 @@ Args Seed(unsigned k) {
     x.actor[1] = Actor();
     if (Half()) x.actor[1] = x.actor[0] <= 2 ? 3 + Next() % 8 : Next() % 3;
     if (Half()) At(at::kBattleFlags)[0] = static_cast<unsigned char>(Half() ? 0x80 : 0);
-    if (Half()) At(at::kPartyCut)[0] = static_cast<unsigned char>(Half() ? 2 : Next() % 4);
-    if (Half()) At(at::kGate)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
-    if (Half()) At(at::kGate2)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
-    if (Half()) At(at::kSideOut)[0] = static_cast<unsigned char>(Next() % 5);
+    if (Half()) At(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(Half() ? 2 : Next() % 4);
+    if (Half()) At(BattlePhases_B7A_addr)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
+    if (Half()) At(BattleFlow_AnimGate_addr)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
+    if (Half()) At(BattlePhases_Initiative_addr)[0] = static_cast<unsigned char>(Next() % 5);
     switch (k) {
     case kEntryK:
     case kTurnK:
@@ -533,13 +537,13 @@ Args Seed(unsigned k) {
             SetWord(r + (party ? at::kPStatus : at::kEStatus), Half() ? 0 : 1u << kStatusBits[Next() % 8]);
             SetLong(r + (party ? at::kPFlags2 : at::kEFlags2),
                     static_cast<std::int32_t>(0x10 | (Half() ? 0 : 1u << kFlagBits[Next() % 6])));
-            At(at::kSideOut)[0] = static_cast<unsigned char>(Half() ? 0 : Next() % 5);
+            At(BattlePhases_Initiative_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() % 5);
         }
         break;
     }
     case kRemoveK: {
         x.a[0] = ActorArg(x.actor[0]);
-        At(at::kTurnCount)[0] = static_cast<unsigned char>(Often() ? Next() % 12 : Next());
+        At(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 12 : Next());
         for (unsigned i = 0; i < 11; ++i)
             if (Half()) At(at::kTurnOrder + i)[0] = static_cast<unsigned char>(x.actor[0]);
         break;
@@ -550,7 +554,7 @@ Args Seed(unsigned k) {
         if (k == kApplyK && Half()) {
             // a party attacker whose weapon's element rolls apply
             x.actor[0] = Next() % 3;
-            PartyAt(x.actor[0])[at::kPWeaponKind] = 5;
+            PartyAt(x.actor[0])[at::kPCharIndex] = 5;
             PartyAt(x.actor[0])[at::kPWeapon] = static_cast<unsigned char>("JLO"[Next() % 3]);
         }
         if (k == kCalcK && Half()) {
@@ -580,7 +584,7 @@ Args Seed(unsigned k) {
             // the attack against the defence: equal, one either side
             const unsigned atk = Next() % 400;
             SetWord(At(at::kAttackerAtk), atk);
-            SetWord(At(at::kTargetDef), atk + Next() % 3 - 1);
+            SetWord(At(BattleDamage_TargetDef_addr), atk + Next() % 3 - 1);
         }
         break;
     }
@@ -594,18 +598,18 @@ Args Seed(unsigned k) {
     }
     case kAiK:
         for (unsigned e = 0; e < 8; ++e) {
-            unsigned char* const obj = EnemyAt(e + 3) + at::kEObject;
-            if (Often()) obj[0xF0] = static_cast<unsigned char>(Next() % 16);
-            if (Half()) SetWord(obj + 0xA4, Word(obj + 0xB0) / (Half() ? 4 : 2) + Next() % 3 - 1);
-            if (Half()) SetWord(obj + 0xA6, Word(obj + 0xB2) / (Half() ? 5 : 2) + Next() % 3 - 1);
-            if (Half()) SetWord(obj + 0x98, PartyAt(0)[at::kPLevel] - 5 + Next() % 3 - 1);
+            auto* const enemy_rec = EnemyRec(e + 3);
+            if (Often()) enemy_rec->data_id = static_cast<unsigned char>(Next() % 16);
+            if (Half()) enemy_rec->hp = enemy_rec->max_hp / (Half() ? 4 : 2) + Next() % 3 - 1;
+            if (Half()) enemy_rec->ap = enemy_rec->max_ap / (Half() ? 5 : 2) + Next() % 3 - 1;
+            if (Half()) enemy_rec->level = PartyRec(0)->level - 5 + Next() % 3 - 1;
         }
         for (unsigned i = 0; i < 0x900; i += 16)
             if (Often()) At(at::kAiScripts + i)[0] = static_cast<unsigned char>(0xB + Next() % 0x1D);
         if (Half()) SetLong(At(at::kTurnCounter), static_cast<std::int32_t>(Next() % 13 + (Half() ? 0 : (Next() % 4) << 8)));
         for (unsigned i = 0; i < 3; ++i)
-            if (Half()) At(at::kAiByteB1 + i)[0] = static_cast<unsigned char>(Next() % 3);
-        if (Half()) At(at::kAiByteB97)[0] = static_cast<unsigned char>(Next() % 2);
+            if (Half()) At(BattleSprites_PartyPick_addr + i)[0] = static_cast<unsigned char>(Next() % 3);
+        if (Half()) At(BattleDamage_AiByteB97_addr)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kRowDoneK: {
         x.a[0] = Often() ? Address(EnemyAt(3 + Next() % 8) + at::kEObject) : at::kEnemy - 0x80 + Next() % 0xA00;
@@ -634,8 +638,8 @@ Args Seed(unsigned k) {
         if (k == kSkillK) {
             x.a[2] = Often() ? Next() % 300 : Next();
             x.a[3] = Byte(Next() % 2);
-            if (Half()) SetWord(At(at::kTargetInt), 245 + Next() % 12);   // 100 - INT / 5 around 50
-            if (Half()) SetWord(At(at::kAttackerInt), Next() % 300);
+            if (Half()) SetWord(At(BattleDamage_TargetInt_addr), 245 + Next() % 12); // 100 - INT / 5 around 50
+            if (Half()) SetWord(At(BattleDamage_AttackerInt_addr), Next() % 300);
             if (Half()) At(at::kTarget)[0] = static_cast<unsigned char>(Next() % 4);
         }
         break;
@@ -694,8 +698,8 @@ void SelfTest() {
         SetLong(At(at::kItemHandlers + 4 * i), static_cast<std::int32_t>(Address(g_categories[i])));
     }
     for (unsigned i = 0; i < at::kHandlerCount; ++i) {
-        g_saved_handlers[i] = static_cast<std::uint32_t>(Long(At(at::kHandlers + 4 * i)));
-        SetLong(At(at::kHandlers + 4 * i), static_cast<std::int32_t>(Address(reinterpret_cast<const void*>(kHandlerStubs[i]))));
+        g_saved_handlers[i] = static_cast<std::uint32_t>(Long(At(Effect_Handlers_addr + 4 * i)));
+        SetLong(At(Effect_Handlers_addr + 4 * i), static_cast<std::int32_t>(Address(reinterpret_cast<const void*>(kHandlerStubs[i]))));
     }
     g = kStubs;
 
@@ -744,7 +748,7 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    for (unsigned i = 0; i < at::kHandlerCount; ++i) SetLong(At(at::kHandlers + 4 * i), static_cast<std::int32_t>(g_saved_handlers[i]));
+    for (unsigned i = 0; i < at::kHandlerCount; ++i) SetLong(At(Effect_Handlers_addr + 4 * i), static_cast<std::int32_t>(g_saved_handlers[i]));
     for (unsigned i = 0; i < 4; ++i) SetLong(At(at::kItemHandlers + 4 * i), static_cast<std::int32_t>(g_saved_categories[i]));
     Apply(saved);
 

@@ -706,8 +706,9 @@ void Record(unsigned short word) {
     // key bytes to 0x7DE828 each latch (symbols.toml Pad_Read), and DIK_F12 is
     // 0x58. GetAsyncKeyState saw nothing on the first recording, 2026-09-23 -
     // the game's DirectInput keyboard keeps the key from it.
-    constexpr std::uint32_t kKeyState = 0x7DE828, kDikF12 = 0x58;
-    const bool f12 = (Read(kKeyState + kDikF12, 1) & 0x80) != 0;
+    // kKeyState: now Key_State (symbols.toml).
+    constexpr std::uint32_t kDikF12 = 0x58;
+    const bool f12 = (Read(Key_State_addr + kDikF12, 1) & 0x80) != 0;
     const bool shot = f12 && !g_f12;
     g_f12 = f12;
     if (shot) {

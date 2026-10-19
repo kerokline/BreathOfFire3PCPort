@@ -43,6 +43,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5g_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -60,6 +61,7 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -109,8 +111,8 @@ bool Within(U a, std::int32_t first, U b, std::int32_t second) {
     if (Abs(b) <= second) return true;
     return Abs(b - 0x10000u) <= second;
 }
-U LeaderX() { return UL(At(at::kLeaderX)); }
-U LeaderZ() { return UL(At(at::kLeaderZ)); }
+U LeaderX() { return UL(At(ObjTrio_addr + 0x34)); }
+U LeaderZ() { return UL(At(ObjTrio_addr + 0x38)); }
 // The leader at the record's cell: across the x axis first (the centre), then
 // z - or, for +8 set (sub-kinds 0x2C / 0x4A), z first, then x.
 bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int32_t second) {
@@ -125,8 +127,9 @@ bool PartyAt(const unsigned char* s, std::int32_t first, std::int32_t second) {
     bool any = false;
     for (unsigned m = 0; m < at::kTrioCount; ++m) {
         const unsigned char* const r = ObjTrio + at::kTrioStride * m;
+        auto* const ro = reinterpret_cast<const records::PartyMember*>(r);
         if (r[0] == 0) continue;
-        if (Within(FromEdge(UL(r + 0x38), S16(s + 0x3A)), first, FromEdge(UL(r + 0x34), S16(s + 0x36)), second))
+        if (Within(FromEdge(static_cast<std::uint32_t>(ro->z), S16(s + 0x3A)), first, FromEdge(static_cast<std::uint32_t>(ro->x), S16(s + 0x36)), second))
             any = true;
     }
     return any;
@@ -178,7 +181,7 @@ U Place2C(const char* who) {
     const U v = Variant(who, s, at::kSub2CVariants);
     SetWord(s + 0x36, At(at::kSub2CCells + 2 * v)[0]);
     SetWord(s + 0x3A, At(at::kSub2CCells + 2 * v + 1)[0]);
-    const long h = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const long h = SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z);
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFFu) / 2;
     s = S();
     SetWord(s + 0x3E, (0u - static_cast<U>(half)) - Word(At(at::kSub2CHeights + 2 * v)));
@@ -291,7 +294,7 @@ extern "C" void __cdecl EffectKind18Sub2C_Draw(void) {
         PanelMode(Gfx_PacketNext);
         {
             unsigned char* const s = S();
-            SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), -1, 0xC);
+            SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), -1, 0xC);
         }
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
@@ -319,7 +322,7 @@ extern "C" void __cdecl EffectKind18Sub2C_Draw(void) {
             SH_CALL(Prim_SetTexture)((UL(r + 0x20) + side) | (static_cast<U>(r[8]) << 21), p, 1);
         }
         unsigned char* const r = S();
-        SH_CALL(MapView_LinkPrimAt)(UL(r + 0x34), UL(r + 0x38), -1, 0x48);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(r)->x), static_cast<std::uint32_t>(AsFx(r)->z), -1, 0x48);
     }
 }
 
@@ -353,7 +356,7 @@ extern "C" void __cdecl EffectKind18Sub3A_DrawPanel(unsigned side, int dy) {
     PanelMode(Gfx_PacketNext);
     {
         unsigned char* const s = S();
-        SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), dy, 0xC);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), dy, 0xC);
     }
     Grounded();
     unsigned char* const p = Gfx_PacketNext;
@@ -362,7 +365,7 @@ extern "C" void __cdecl EffectKind18Sub3A_DrawPanel(unsigned side, int dy) {
     Project(p);
     SH_CALL(Prim_SetTexture)(UL(S() + 0x20) + side, p, 1);
     unsigned char* const s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), dy, 0x48);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(AsFx(s)->x), static_cast<std::uint32_t>(AsFx(s)->z), dy, 0x48);
 }
 
 // ===========================================================================
@@ -387,7 +390,7 @@ extern "C" void __cdecl EffectKind18Sub2B_Place(void) {
     const U v = Variant("EffectKind18Sub2B_Place", s, at::kSub2BVariants);
     SetWord(s + 0x36, At(at::kSub2BCells + 2 * v)[0]);
     SetWord(s + 0x3A, At(at::kSub2BCells + 2 * v + 1)[0]);
-    const long h = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const long h = SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z);
     const U height = Word(At(at::kSub2BHeights + 2 * v));
     const std::int32_t half = static_cast<std::int16_t>(static_cast<U>(h) & 0xFFFFu) / 2;
     s = S();

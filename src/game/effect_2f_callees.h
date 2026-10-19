@@ -26,12 +26,12 @@ constexpr std::uint32_t kPrimRect = bof3::addr::Gpu_SetTexWindow;
 // Data.
 constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter)
 constexpr std::uint32_t kCounter3 = 0x90384B;      // the counter byte three after it: kind 0x56 waits on 0xA and 0xE
-constexpr std::uint32_t kTrail = 0x92C060;         // kind 0x52's trail: 32 points of 0x20 (+0 x, z, height; +0x10
+// kTrail: now EffectKind30_Shards[0xe0] (symbols.toml). kind 0x52's trail: 32 points of 0x20 (+0 x, z, height; +0x10
                                                    // the screen x, y, depth floats; +0x1C an angle, +0x1E a width),
                                                    // then 31 angle words at +0x400 and the width word +0x43E - 0x440
                                                    // bytes inside EffectKind30_Shards' extent (not named: it overlaps)
 constexpr std::uint32_t kTrailSize = 0x92C49E;     // the trail's width word (+0x43E)
-constexpr std::uint32_t kExtra0Point = 0x802034;   // Sprite_ObjectsExtra[0] +0x34: x, z, height (three dwords)
+// kExtra0Point: now Sprite_ObjectsExtra[0x34] (symbols.toml). Sprite_ObjectsExtra[0] +0x34: x, z, height (three dwords)
 constexpr std::uint32_t kEffectStride = 0x80;      // Effect_Objects' records
 constexpr unsigned kEffects = 20;                  // Effect_Objects' twenty
 constexpr std::uint32_t kSpriteStride = 0xA4;      // Sprite_Objects' and Sprite_ObjectsExtra's records

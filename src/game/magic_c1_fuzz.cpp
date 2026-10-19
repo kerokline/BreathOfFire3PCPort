@@ -290,11 +290,14 @@ const mh::DataTable kTables[] = {
     {0x65C1E4, 1}, {0x65C1E8, 4}, {0x65C1F8, 1}, {0x65C1FC, 2},
 };
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0;
-constexpr std::uint32_t kInkPool = 0x6A6F40, kMotePool = 0x6B2958, kPoolBytes = 64 * 0x84;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
+// kInkPool: now InkInkPuff_Pool (symbols.toml).
+// kMotePool: now Magic213Mote_Pool (symbols.toml).
+constexpr std::uint32_t kPoolBytes = 64 * 0x84;
 const mh::Region kRegions[] = {
     {kScratch, 0x10},
-    {kVertices, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
     {Key(MoveScript_TintRecords), 0xC00},
@@ -304,8 +307,8 @@ const mh::Region kRegions[] = {
     {0x9039D8, 4},                               // the frame-offset table pointer
     {0x803154, 1},
     {0x92BF14, 1},
-    {kInkPool, kPoolBytes},
-    {kMotePool, kPoolBytes},
+    {InkInkPuff_Pool_addr, kPoolBytes},
+    {Magic213Mote_Pool_addr, kPoolBytes},
     // the overlays' .data the functions read, less the handler cells
     {0x65BA00, 8},                               // PentagramRing_Radii
     {0x65BA14, 6},                               // PentagramStar_Points
@@ -332,13 +335,13 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 7) {
     case 0: mh::SetPointer(0x7E0670, PacketAt(v)); break;
     case 1: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
-    case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: {
         static const unsigned char kCounts[] = {3, 4, 5, 6, 0x80, 0x84};
-        mh::Pointer(mh::at::kOwner)[0xB] = kCounts[v % 6];
+        mh::Pointer(BattleE2_Owner_addr)[0xB] = kCounts[v % 6];
         break;
     }
-    case 4: PoolRecord(v & 0x80 ? kMotePool : kInkPool, v)[0] ^= 1; break;
+    case 4: PoolRecord(v & 0x80 ? Magic213Mote_Pool_addr : InkInkPuff_Pool_addr, v)[0] ^= 1; break;
     case 5: mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Mem(mh::at::kTarget)[0] ^ 0x40); break;
     default: break;
     }
@@ -370,11 +373,11 @@ void FillPool(std::uint32_t pool) {
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     mh::SetPointer(0x7E0670, PacketAt(mh::Next()));
-    FillPool(kInkPool);
-    FillPool(kMotePool);
+    FillPool(InkInkPuff_Pool_addr);
+    FillPool(Magic213Mote_Pool_addr);
     if (mh::Half()) mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Mem(mh::at::kTarget)[0] | 0x40);
     const bool enemies = (mh::Mem(mh::at::kTarget)[0] & 0x40) != 0;
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     switch (k) {
     // the dispatchers: an index inside the table (a phase past it aborts ours)
     case kWhiteFlag_Task: sc[1] = static_cast<unsigned char>(mh::Next() % 4); break;

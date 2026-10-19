@@ -146,7 +146,9 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu;
 constexpr mh::Answer kG = mh::Answer::kGarbage;
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0, kFrameSet = 0x9039D8, kTurn = 0x446770;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kTurn = 0x446770;
 
 // --- the group's memory ----------------------------------------------------------
 
@@ -195,13 +197,13 @@ void __cdecl RecTriangle(int* keys) {
     mh::Stir();
 }
 void __cdecl RecUpdateScreen() {
-    mh::Record(bof3::addr::Sprite_UpdateScreen, Key(Sc()), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Record(bof3::addr::Sprite_UpdateScreen, Key(Sc()), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     mh::Stir();
 }
 // A sprite child's phase, run with the effects' frame-offset table.
 template <std::uint32_t A> void __cdecl RecSpritePhase() {
     mh::Record(A, Key(Sc()), Sc()[1] | static_cast<std::uint32_t>(Sc()[2]) << 8,
-               static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))), static_cast<std::uint32_t>(Long(mh::Mem(mh::at::kOwner))));
+               static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_Owner_addr))));
     mh::Stir();
 }
 
@@ -298,9 +300,9 @@ const mh::Region kRegions[] = {
     {0x7E0670, 4},                                   // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
     {Key(g_keys), sizeof g_keys},
-    {kVertices, 0x20},                               // Prim_VertexScratch
+    {Prim_VertexScratch_addr, 0x20},                 // Prim_VertexScratch
     {kScratch, 0x10},                                // DamageScratch
-    {kFrameSet, 4},
+    {BattleE2_AnimSet_addr, 4},
     {0x905E60, 8},                                   // Field_Kind2Z, Field_Kind2X
     {Key(MoveScript_TintRecords), 0xC00},            // an unchecked byte index of 12-byte records
     {Key(Gfx_ClutStrip + 0x200), 0x200},             // row 2, Magic114_Start's
@@ -317,9 +319,9 @@ void Disturb(std::uint32_t h) {
     unsigned char* const s = Sc();
     switch ((h >> 8) % 9) {
     case 0: Gfx_PacketNext = PacketAt(v); break;
-    case 1: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 2: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
-    case 3: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 4: {
         static const unsigned kFields[] = {0xC, 0x10, 0x14, 0x20};
         SetLong(s + kFields[v % 4], static_cast<std::int32_t>(static_cast<std::int16_t>(word)));
@@ -334,7 +336,7 @@ void Disturb(std::uint32_t h) {
     case 7: TintOf(v & 1 ? s[0xA] : s[0xB])[2 + (v >> 1) % 3] = static_cast<unsigned char>(word); break;
     case 8: {
         static const unsigned kFields[] = {0x3E, 0x3F, 0x9};
-        mh::Pointer(mh::at::kOwner)[kFields[v % 3]] = static_cast<unsigned char>(word);
+        mh::Pointer(BattleE2_Owner_addr)[kFields[v % 3]] = static_cast<unsigned char>(word);
         break;
     }
     default: break;

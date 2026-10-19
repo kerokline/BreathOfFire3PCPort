@@ -124,8 +124,8 @@ bool Within(U a, std::int32_t first, U b, std::int32_t second) {
     if (Abs(b) <= second) return true;
     return Abs(b - 0x10000u) <= second;
 }
-U LeaderX() { return UL(At(at::kLeaderX)); }
-U LeaderZ() { return UL(At(at::kLeaderZ)); }
+U LeaderX() { return UL(At(ObjTrio_addr + 0x34)); }
+U LeaderZ() { return UL(At(ObjTrio_addr + 0x38)); }
 // The leader at the record's cell: across the x axis first (the centre), then
 // z - or, z_first, z first, then x.
 bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int32_t second) {
@@ -622,8 +622,8 @@ extern "C" void __cdecl EffectKind18Sub3D_Ripple(void) {
             c[3] = static_cast<unsigned char>(c[3] + b);
         }
     }
-    const long h = SH_CALL(AreaMap_Elevation)(Long(At(at::kLeaderX)), Long(At(at::kLeaderZ)));
-    SetWord(At(at::kLeaderHeight), static_cast<U>(h));
+    const long h = SH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
+    SetWord(At(ObjTrio_addr + 0x3e), static_cast<U>(h));
     MapView_Redraw = 2;
 }
 
@@ -640,7 +640,7 @@ extern "C" void __cdecl EffectKind18Sub40_Run(void) {
 // is 0xC and its step byte 0x8034E5 is 2: sound 0x202 and +2 up (read after the
 // sound). Nothing drawn.
 extern "C" void __cdecl EffectKind18Sub40_WaitCue(void) {
-    if (static_cast<unsigned char>(MoveScript_Var7) != 0xC || At(at::kStep)[0] != 2) return;
+    if (static_cast<unsigned char>(MoveScript_Var7) != 0xC || MoveScript_PartyRecords[0x65] != 2) return;
     SH_CALL(Sound_PlayEffect)(at::kSoundCue);
     S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
@@ -760,7 +760,7 @@ U Curve(const char* who, unsigned c) {
     return static_cast<U>(static_cast<std::int32_t>(static_cast<U>(At(at::kSub41Curve)[c]) << 12) / 256);
 }
 bool FlagSet(unsigned index) {
-    return (SH_CALL(Flags_Test)(At(at::kStoryFlags), index) & 0xFFu) != 0;
+    return (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), index) & 0xFFu) != 0;
 }
 }  // namespace
 
@@ -809,7 +809,7 @@ extern "C" void __cdecl EffectKind18Sub41_Hold(void) {
         S()[9] = static_cast<unsigned char>(S()[9] + 1);
     }
     if (S()[9] == 0x17) {
-        SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x50);
+        SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x50);
         SH_CALL(MoveCmd_TestFB)(0x13, 0x25);
         S()[9] = 0;
     }

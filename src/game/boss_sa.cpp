@@ -41,6 +41,7 @@
 #include "game/boss_sa_callees.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -58,7 +59,10 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(at::kCurrentEnemy)))); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void AddLong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(static_cast<U>(Long(p)) + v)); }
@@ -92,9 +96,9 @@ U HookDispatch(const char* who, U table, unsigned entries, unsigned word) {
 // before each store -, Sprite_Current +1 = 2 (the idle step), and a tail jump
 // to Sprite_ScriptTick (its al the answer).
 void Install(U anims, U hook, U cues) {
-    SetLong(Enemy() + 0xFC, static_cast<std::int32_t>(anims));
-    SetLong(Enemy() + 0xF4, static_cast<std::int32_t>(hook));
-    SetLong(Enemy() + 0xF8, static_cast<std::int32_t>(cues));
+    EnemyRec()->anim_table = static_cast<std::int32_t>(anims);
+    EnemyRec()->event_hook = static_cast<std::int32_t>(hook);
+    EnemyRec()->cue_table = static_cast<std::int32_t>(cues);
 }
 unsigned char EnterTick() {
     Sprite_Current[1] = 2;
@@ -111,7 +115,7 @@ void EndStep(U anims, unsigned animation) {
     const long ground = BH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground) & 0xFFFF);
     BH_CALL(Sprite_SetAnimationBank)(0x5F);
-    SetLong(Enemy() + 0xFC, static_cast<std::int32_t>(anims));
+    EnemyRec()->anim_table = static_cast<std::int32_t>(anims);
     Sprite_Current[0x2A] = 0;
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(animation));
 }
@@ -124,7 +128,7 @@ void EndStep(U anims, unsigned animation) {
 bool EndWalk() {
     BH_CALL(Sprite_ScriptTickOnce)();
     const unsigned index = BH_CALL(BossActor_Index)(0);
-    unsigned char* const actor = At(at::kFieldActors + index * at::kObjectStride);
+    unsigned char* const actor = At(Sprite_Objects_addr + 0x80 + index * at::kObjectStride);
     if (BH_CALL(MoveCmd_OpE9)(actor, 0, -0xE, 0x40, 0xFC00, 0xFF, 0) != 0) return false;
     BH_CALL(Battle_ClearActorBit)(Sprite_Current[5]);
     return true;
@@ -133,7 +137,7 @@ bool EndWalk() {
 // The hooks' action-pick entry of kinds 1 and 39: an HP of 0xFFFF (the mark
 // the hit entry leaves) makes the action's kind 3 and Sprite_Current +4 0.
 bool PickSpent() {
-    if (Word(Enemy() + 0xA4) != 0xFFFF) return false;
+    if (EnemyRec()->hp != 0xFFFF) return false;
     unsigned char* const s = Sprite_Current;
     B(at::kActionKind) = 3;
     s[4] = 0;
@@ -144,7 +148,7 @@ bool PickSpent() {
 // step 2 (0x446E00); with either, what `with` does, MoveScript counter 0 and
 // the music track, and step 1 (0x446DE0).
 template <typename F> void EndByBits(F with, unsigned counter, unsigned track) {
-    if ((B(at::kBattleEnd) & 6) == 0) {
+    if ((BattleActions_BattleEnd & 6) == 0) {
         BH_AT(Handler, at::kEndOther)();
         return;
     }
@@ -155,9 +159,9 @@ template <typename F> void EndByBits(F with, unsigned counter, unsigned track) {
 }
 
 void SetHooks(U end, U exit, U event) {
-    SetLong(At(boss_harness::at::kHookEnd), static_cast<std::int32_t>(end));
-    SetLong(At(boss_harness::at::kHookExit), static_cast<std::int32_t>(exit));
-    SetLong(At(boss_harness::at::kHookEvent), static_cast<std::int32_t>(event));
+    BattleHook_End = static_cast<std::int32_t>(end);
+    BattleHook_Exit = static_cast<std::int32_t>(exit);
+    BattleHook_Event = static_cast<std::int32_t>(event);
 }
 
 }  // namespace
@@ -188,7 +192,7 @@ extern "C" U __cdecl BossGary_EndDispatch(void) { return Dispatch("BossGary_EndD
 extern "C" void __cdecl BossGary_EndStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(4);
     BH_CALL(MoveCmd_TestFB)(0x63, 0x14);
-    Sprite_Current[2] += 1;
+    ScEnemy()->state[1] += 1;
 }
 
 // original 0x437AD0: BossGary_EndSteps 1 - once Mogu's count 0x904B7E is 0:
@@ -196,11 +200,11 @@ extern "C" void __cdecl BossGary_EndStart(void) {
 // the call), MoveCmd_TestFB(0x64, 0x14), +2 up by one. Every frame a tail
 // jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGary_EndAwait(void) {
-    if (Word(At(at::kEndCount)) == 0) {
+    if (BossSa_EndCount == 0) {
         EndStep(AddressOf(BossGary_AnimsEnd), 1);
-        B(at::kBattleEnd) |= 4;
+        BattleActions_BattleEnd |= 4;
         BH_CALL(MoveCmd_TestFB)(0x64, 0x14);
-        Sprite_Current[2] += 1;
+        ScEnemy()->state[1] += 1;
     }
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -233,20 +237,20 @@ extern "C" U __cdecl BossMogu_EndDispatch(void) { return Dispatch("BossMogu_EndD
 // count 0x904B7E = 0x3C, Sprite_Current (read after the call) +2 up by one.
 extern "C" void __cdecl BossMogu_EndStart(void) {
     BH_CALL(BattleEnemy_SetAnimation)(4);
-    unsigned char* const s = Sprite_Current;
-    SetWord(At(at::kEndCount), 0x3C);
-    s[2] += 1;
+    auto* const cur_enemy = ScEnemy();
+    BossSa_EndCount = 0x3C;
+    cur_enemy->state[1] += 1;
 }
 
 // original 0x437C30: BossMogu_EndSteps 1 - the count 0x904B7E down by one;
 // at 0 the end step (BossMogu_AnimsEnd, animation 0) and +2 up by one. Every
 // frame a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossMogu_EndCount(void) {
-    const unsigned count = (Word(At(at::kEndCount)) - 1u) & 0xFFFF;
-    SetWord(At(at::kEndCount), count);
+    const unsigned count = (BossSa_EndCount - 1u) & 0xFFFF;
+    BossSa_EndCount = count;
     if (count == 0) {
         EndStep(AddressOf(BossMogu_AnimsEnd), 0);
-        Sprite_Current[2] += 1;
+        ScEnemy()->state[1] += 1;
     }
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -277,28 +281,28 @@ extern "C" void __cdecl Boss01_Setup(void) { SetHooks(at::kBoss01End, at::kBoss0
 extern "C" unsigned char __cdecl Boss01_Event(unsigned phase) {
     switch (phase & 0xFF) {
     case 0:
-        if ((B(at::kRoundFlags) & 0x40) && B(at::kTarget) == 0) B(at::kEventFlags) |= 1;
+        if ((B(at::kRoundFlags) & 0x40) && B(at::kTarget) == 0) BossSe_Script |= 1;
         break;
     case 1:
-        if (B(at::kActor) == 0 && B(at::kActionKind) == 4 && Word(At(static_cast<U>(Long(At(at::kAction)))) + 2) == 0x78) {
+        if (B(at::kActor) == 0 && B(at::kActionKind) == 4 && Word(At(BattleSprites_Action) + 2) == 0x78) {
             for (const U enemy : {at::kEnemies, at::kEnemy1}) {
                 SetWord(At(enemy + 0xA4), 1);
                 SetWord(At(enemy + 0xB0), 1);
             }
-            SetLong(At(at::kLeaderFlags), static_cast<std::int32_t>(static_cast<U>(Long(At(at::kLeaderFlags))) & ~2u));
+            SetLong(At(ObjTrio_addr + 0x134), static_cast<std::int32_t>(static_cast<U>(Long(At(ObjTrio_addr + 0x134))) & ~2u));
         }
         break;
     case 5:
-        if (B(at::kEventFlags) & 1) {
-            SetWord(At(at::kLeaderActionId), 0x78);
-            B(at::kLeaderAction) = 4;
+        if (BossSe_Script & 1) {
+            SetWord(At(ObjTrio_addr + 0x126), 0x78);
+            ObjTrio[0x125] = 4;
             B(at::kActionKind) = 4;
-            B(at::kLeaderTarget) = 0x40;
+            ObjTrio[0x124] = 0x40;
             B(at::kTarget) = 0x40;
         }
         break;
     case 6:
-        SetLong(At(at::kLeaderFlags), static_cast<std::int32_t>(static_cast<U>(Long(At(at::kLeaderFlags))) | 2u));
+        SetLong(At(ObjTrio_addr + 0x134), static_cast<std::int32_t>(static_cast<U>(Long(At(ObjTrio_addr + 0x134))) | 2u));
         break;
     default:
         break;
@@ -310,11 +314,11 @@ extern "C" unsigned char __cdecl Boss01_Event(unsigned phase) {
 // chapter's run 0x8034E4 = 6 and step 0x8034E5 = 0x32; otherwise the step up
 // by one. Then a tail jump to 0x446E20 (the end phase, step 3) either way.
 extern "C" void __cdecl Boss01_End(void) {
-    if (B(at::kBattleEnd) & 1) {
-        B(at::kChapterRun) = 6;
-        B(at::kChapterStep) = 0x32;
+    if (BattleActions_BattleEnd & 1) {
+        MoveScript_Var7 = 6;
+        MoveScript_PartyRecords[0x65] = 0x32;
     } else {
-        B(at::kChapterStep) += 1;
+        MoveScript_PartyRecords[0x65] += 1;
     }
     BH_AT(Handler, at::kEndThird)();
 }
@@ -361,7 +365,7 @@ extern "C" U __cdecl BossNue_EndDispatch(void) { return Dispatch("BossNue_EndDis
 // Sprite_Current (read after the call) +2 up by one.
 extern "C" void __cdecl BossNue_EndPose(void) {
     BH_CALL(Sprite_SetAnimation)(6);
-    Sprite_Current[2] += 1;
+    ScEnemy()->state[1] += 1;
 }
 
 // original 0x437F80: BossNue_EndSteps 1 - the walk (EndWalk); when it is over,
@@ -369,7 +373,7 @@ extern "C" void __cdecl BossNue_EndPose(void) {
 // Effect_Release.
 extern "C" void __cdecl BossNue_EndMove(void) {
     if (!EndWalk()) return;
-    B(at::kBattleEnd) |= 2;
+    BattleActions_BattleEnd |= 2;
     BH_CALL(Effect_Release)();
 }
 
@@ -390,12 +394,12 @@ extern "C" void __cdecl BossNue_HookPick(unsigned) {
 // right twice; a signed compare): 0x904AAD |= 1 and HP = 0xFFFF. The word is
 // not read.
 extern "C" void __cdecl BossNue_HookHit(unsigned) {
-    unsigned char* const e = Enemy();
-    const std::int32_t left = static_cast<std::int32_t>(Word(e + 0xA4)) - static_cast<std::int16_t>(Word(e + 0x108));
-    const std::int32_t quarter = static_cast<std::int32_t>(Word(e + 0xB0) >> 2);
+    auto* const enemy_rec = EnemyRec();
+    const std::int32_t left = static_cast<std::int32_t>(enemy_rec->hp) - static_cast<std::int16_t>(static_cast<std::uint16_t>(enemy_rec->hp_change));
+    const std::int32_t quarter = static_cast<std::int32_t>(enemy_rec->max_hp >> 2);
     if (left > quarter) return;
-    B(at::kEventFlags) |= 1;
-    SetWord(e + 0xA4, 0xFFFF);
+    BossSe_Script |= 1;
+    enemy_rec->hp = 0xFFFF;
 }
 
 // ============================================================================
@@ -434,8 +438,8 @@ extern "C" U __cdecl BossSample1_Dispatch(void) {
 // +1 = 2, Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample1_Enter(void) {
     Install(AddressOf(BossNue_Anims), at::kSample1Hook, AddressOf(BossSample1_Cues));
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x114, static_cast<std::int32_t>(static_cast<U>(Long(e + 0x114)) | 8u));
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_114 = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8u);
     return EnterTick();
 }
 
@@ -457,8 +461,8 @@ extern "C" void __cdecl Boss02_Setup(void) { SetHooks(at::kBoss02End, at::kBareR
 // with 0x904AE8 bit 1 (the win), the window records' pass 0x802D20 = 2 and
 // Msg_OpenScript(0x19). al 0.
 extern "C" unsigned char __cdecl Boss02_Event(unsigned phase) {
-    if ((phase & 0xFF) == 0 && (B(at::kBattleEnd) & 2)) {
-        B(at::kWindowPass) = 2;
+    if ((phase & 0xFF) == 0 && (BattleActions_BattleEnd & 2)) {
+        BossSa_WindowPass = 2;
         BH_CALL(Msg_OpenScript)(0x19);
     }
     return 0;
@@ -545,9 +549,9 @@ extern "C" void __cdecl BossWeretigr_State4Cue(void) {
     Sprite_Current[0xA] -= 1;
     if (Sprite_Current[0xA] != 0) return;
     using Cue = void (__cdecl*)(unsigned);
-    BH_AT(Cue, at::kPlayCue)(Word(At(static_cast<U>(Long(Enemy() + 0xF8)))));
-    BH_AT(Cue, at::kPlayCue)((Word(At(static_cast<U>(Long(Enemy() + 0xF8)))) + 4u) & 0xFFFF);
-    Sprite_Current[2] += 1;
+    BH_AT(Cue, at::kPlayCue)(Word(At(static_cast<U>(static_cast<std::int32_t>(EnemyRec()->cue_table)))));
+    BH_AT(Cue, at::kPlayCue)((Word(At(static_cast<U>(static_cast<std::int32_t>(EnemyRec()->cue_table)))) + 4u) & 0xFFFF);
+    ScEnemy()->state[1] += 1;
 }
 
 // original 0x43D560: BossWeretigr_State4Steps 2 - once Sprite_Current +0 has
@@ -555,7 +559,7 @@ extern "C" void __cdecl BossWeretigr_State4Cue(void) {
 // 0x904AA8 |= 4, 0x4376F0 (a chance of 0x904AA8 bit 7 and a task), and a tail
 // jump to 0x4376A0 (the turn closed: +1 = 2, +2 = 0).
 extern "C" void __cdecl BossWeretigr_State4End(void) {
-    if (Sprite_Current[0] & 0x40) return;
+    if (ScEnemy()->flags & 0x40) return;
     B(at::kRoundFlags) |= 4;
     BH_AT(Handler, at::kTurnChance)();
     BH_AT(Handler, at::kTurnClose)();
@@ -565,7 +569,7 @@ extern "C" void __cdecl BossWeretigr_State4End(void) {
 // Sprite_Current (read after the call) +2 up by one.
 extern "C" void __cdecl BossWeretigr_EndPose(void) {
     BH_CALL(Sprite_SetAnimation)(0);
-    Sprite_Current[2] += 1;
+    ScEnemy()->state[1] += 1;
 }
 
 // original 0x43D5A0: BossWeretigr_State4Steps 4 - the walk (EndWalk); when it
@@ -576,9 +580,9 @@ extern "C" void __cdecl BossWeretigr_EndPose(void) {
 // unless BOF3X_EXP is set), as Battle_EnemyDefeated scales a fallen enemy's.
 extern "C" void __cdecl BossWeretigr_EndMove(void) {
     if (!EndWalk()) return;
-    const unsigned exp = Word(Enemy() + 0x96) * Cheats_ExpMultiplier();
-    B(at::kBattleEnd) |= 2;
-    AddLong(At(at::kExp), exp);
+    const unsigned exp = EnemyRec()->exp * Cheats_ExpMultiplier();
+    BattleActions_BattleEnd |= 2;
+    AddLong(At(BattleFlow_ExpTotal_addr), exp);
     BH_CALL(Effect_Release)();
 }
 

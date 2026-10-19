@@ -30,6 +30,7 @@
 #include "game/battle_turn_steps_callees.h"
 #include "game/psp_code.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -68,7 +69,7 @@ std::uint32_t Hash() {
     return h;
 }
 
-unsigned char* Member(unsigned i) { return At(at::kParty + i * at::kPartyStride); }
+unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char& B(std::uint32_t address) { return *At(address); }
 
 // The cells whose value at a call the log keeps: the state bytes, the counts,
@@ -86,7 +87,7 @@ std::uint32_t Watch() {
     }
     for (unsigned k = 0; k < 3; ++k) mix(B(at::kCopies + k * at::kPartyStride + at::kFlags));
     for (unsigned i = 0; i < 8; ++i) mix(B(at::kEnemy + i * at::kEnemyStride + at::kEFlags + 1));
-    for (unsigned k = 0; k < 12; ++k) mix(B(at::kWindows + k * at::kWindowStride));
+    for (unsigned k = 0; k < 12; ++k) mix(B(BattleE1_Win1_addr + k * at::kWindowStride));
     mix(Address(Sprite_Current));
     return h;
 }
@@ -101,7 +102,7 @@ unsigned char g_psp_end;
 unsigned g_psp_fired;
 void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0) {
     if (g_psp_pending) {
-        B(at::kBattleEnd) = g_psp_end;
+        B(BattleActions_BattleEnd_addr) = g_psp_end;
         g_psp_pending = false;
     }
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, Watch()};
@@ -116,25 +117,25 @@ void Disturb() {
     const unsigned w = h >> 20;
     unsigned char* const m = Member((h >> 8) % 5);
     switch ((h >> 4) % 19) {
-    case 0: B(at::kState1) = static_cast<unsigned char>(v % 4); break;
-    case 1: B(at::kState2) = static_cast<unsigned char>(v % 15); break;
-    case 2: B(at::kCursor) = static_cast<unsigned char>(v % 6); break;
+    case 0: B(BattleActions_Step_addr) = static_cast<unsigned char>(v % 4); break;
+    case 1: B(BattleE4_Step2_addr) = static_cast<unsigned char>(v % 15); break;
+    case 2: B(BossSb_Countdown_addr) = static_cast<unsigned char>(v % 6); break;
     case 3: B(at::kMembers) = static_cast<unsigned char>(v % 5); break;
-    case 4: B(at::kBattleEnd) = v; break;
+    case 4: B(BattleActions_BattleEnd_addr) = v; break;
     case 5: B(at::kRoundFlags) = v; break;
-    case 6: B(at::kEventBattle) = (w & 1) ? 0 : v; break;
+    case 6: B(BattleActions_EventBattle_addr) = (w & 1) ? 0 : v; break;
     case 7: m[at::kStatus + (w & 1)] = v; break;
     case 8: m[at::kFlags] = v; break;
     case 9: m[at::kCharId] = (w & 1) ? 4 : v; break;
-    case 10: B(at::kMusicTrack) = (w & 1) ? 0xFF : v; break;
-    case 11: B(at::kMusicFlags) = v; break;
-    case 12: SetWord(At(at::kInput), (w & 1) ? 0 : v); break;
+    case 10: B(Music_Track_addr) = (w & 1) ? 0xFF : v; break;
+    case 11: B(BattleTurnSteps_MusicFlags_addr) = v; break;
+    case 12: SetWord(At(Input_Pressed_addr), (w & 1) ? 0 : v); break;
     case 13: m[at::kFlags2 + 1] = v; break;
-    case 14: SetWord(At(at::kPending), (w & 1) ? 0 : v); break;
-    case 15: B(at::kSideMode) = (w & 1) ? 2 : v; break;
+    case 14: SetWord(At(BattleActions_Pending_addr), (w & 1) ? 0 : v); break;
+    case 15: B(BattlePhases_Initiative_addr) = (w & 1) ? 2 : v; break;
     case 16: m[0] = v; break;
     case 17: Sprite_Current = At(0x10000u + (h & 0xFFFF0u)); break;
-    default: B(at::kExtraRound) = v; break;
+    default: B(BattlePhases_B7A_addr) = v; break;
     }
 }
 
@@ -152,26 +153,26 @@ unsigned __cdecl StubMarkFaster() {
 void __cdecl StubTick() { Record(2); Disturb(); }
 template <unsigned N> unsigned __cdecl StubStep() {
     Record(3 + N);
-    if (Hash() % 3 == 0) B(at::kState2) = static_cast<unsigned char>((Hash() >> 8) % 15);
+    if (Hash() % 3 == 0) B(BattleE4_Step2_addr) = static_cast<unsigned char>((Hash() >> 8) % 15);
     Disturb();
     return Answer(3);
 }
 void __cdecl StubLoadDat(int file) {
     Record(12, static_cast<std::uint32_t>(file));
-    if (Hash() % 3 == 0) B(at::kState1) = static_cast<unsigned char>((Hash() >> 8) % 4);
+    if (Hash() % 3 == 0) B(BattleActions_Step_addr) = static_cast<unsigned char>((Hash() >> 8) % 4);
     Disturb();
 }
 void __cdecl StubClearCommands() { Record(13); Disturb(); }
 unsigned __cdecl StubActorIsOut(unsigned a) {
     Record(14, a & 0xFF);
-    if (Hash() % 4 == 0) B(at::kCursor) = static_cast<unsigned char>((Hash() >> 8) % 5);
+    if (Hash() % 4 == 0) B(BossSb_Countdown_addr) = static_cast<unsigned char>((Hash() >> 8) % 5);
     if (Hash() % 5 == 0) B(at::kMembers) = static_cast<unsigned char>((Hash() >> 12) % 5);
     Disturb();
     return Answer(4);
 }
 unsigned __cdecl StubTaskCreate(unsigned kind, unsigned parameter) {
     Record(15, kind, parameter);
-    if (Hash() % 3 == 0) B(at::kCursor) = static_cast<unsigned char>((Hash() >> 8) % 5);
+    if (Hash() % 3 == 0) B(BossSb_Countdown_addr) = static_cast<unsigned char>((Hash() >> 8) % 5);
     Disturb();
     return (Hash() & ~0xFFu) | (g_slot_ff && (Hash() >> 9) % 8 == 0 ? 0xFFu : (Hash() >> 11) % 0x30);
 }
@@ -185,7 +186,7 @@ unsigned __cdecl StubClearStatus(unsigned a, unsigned mask) {
 void __cdecl StubReleaseTint(unsigned char* object) { Record(17, Address(object)); Disturb(); }
 void __cdecl StubReturnItem(unsigned a) {
     Record(18, a & 0xFF);
-    if (Hash() % 3 == 0) B(at::kBattleEnd) = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 3 == 0) B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(Hash() >> 8);
     if (Hash() % 4 == 0) B(at::kMembers) = static_cast<unsigned char>((Hash() >> 12) % 5);
     Disturb();
 }
@@ -193,7 +194,7 @@ void __cdecl StubDroppedCall(unsigned b) { Record(19, b & 0xFF); Disturb(); }
 // Moves Music_Track, which BattleEnd_ExitHook reads after it.
 void __cdecl StubFadeOut(int frames) {
     Record(20, static_cast<std::uint32_t>(frames));
-    if (Hash() % 3 == 0) B(at::kMusicTrack) = (Hash() & 0x10) ? 0xFF : static_cast<unsigned char>(Hash() >> 3);
+    if (Hash() % 3 == 0) B(Music_Track_addr) = (Hash() & 0x10) ? 0xFF : static_cast<unsigned char>(Hash() >> 3);
     Disturb();
 }
 void __cdecl StubMusicPlay(unsigned track, int frames) { Record(21, track, static_cast<std::uint32_t>(frames)); Disturb(); }
@@ -229,10 +230,10 @@ unsigned __cdecl StubHookEvent(int n) {
 // DIV-0108: the hook as the original sees it with the PSP's duel-loss.
 unsigned __cdecl StubHookEventPsp(int n) {
     const unsigned r = StubHookEvent(n);
-    if (n == 2 && (r & 0xFF) != 0xFF && psp_code::DuelLossGoesOn(B(at::kEventBattle), B(at::kBattleEnd))) {
-        g_psp_end = B(at::kBattleEnd);
+    if (n == 2 && (r & 0xFF) != 0xFF && psp_code::DuelLossGoesOn(B(BattleActions_EventBattle_addr), B(BattleActions_BattleEnd_addr))) {
+        g_psp_end = B(BattleActions_BattleEnd_addr);
         g_psp_pending = true;
-        B(at::kBattleEnd) = 0;
+        B(BattleActions_BattleEnd_addr) = 0;
         ++g_psp_fired;
     }
     return r;
@@ -311,14 +312,14 @@ struct DataTable { std::uint32_t at; unsigned entries; std::uint32_t state; cons
                      reinterpret_cast<const void*>(&StubSlot<t, 2>), reinterpret_cast<const void*>(&StubSlot<t, 3>), \
                      reinterpret_cast<const void*>(&StubSlot<t, 4>)}
 const DataTable kTables[] = {
-    {at::kRoundEndSteps, 3, at::kState1, CC_SLOTS(0)},
-    {at::kRoundEndFaster, 3, at::kState2, CC_SLOTS(1)},
-    {at::kEndSteps, 5, at::kState1, CC_SLOTS(2)},
-    {at::kEndTaskSteps, 3, at::kState2, CC_SLOTS(3)},
-    {at::kEndWinSteps, 3, at::kState2, CC_SLOTS(4)},
-    {at::kEndExitSteps, 4, at::kState2, CC_SLOTS(5)},
-    {at::kEndResultSteps, 3, at::kState3, CC_SLOTS(6)},
-    {at::kEndResultPages, 5, at::kState4, CC_SLOTS(7)},
+    {BattleRoundEnd_Steps_addr, 3, BattleActions_Step_addr, CC_SLOTS(0)},
+    {BattleRoundEnd_FasterSteps_addr, 3, BattleE4_Step2_addr, CC_SLOTS(1)},
+    {BattleEnd_Steps_addr, 5, BattleActions_Step_addr, CC_SLOTS(2)},
+    {BattleEnd_TaskSteps_addr, 3, BattleE4_Step2_addr, CC_SLOTS(3)},
+    {BattleEnd_WinSteps_addr, 3, BattleE4_Step2_addr, CC_SLOTS(4)},
+    {BattleEnd_ExitSteps_addr, 4, BattleE4_Step2_addr, CC_SLOTS(5)},
+    {BattleEnd_ResultSteps_addr, 3, BattleE4_Step3_addr, CC_SLOTS(6)},
+    {BattleResult_ExpSteps_addr, 5, BattleE4_Step4_addr, CC_SLOTS(7)},
 };
 #undef CC_SLOTS
 constexpr unsigned kTableCount = sizeof kTables / sizeof kTables[0];
@@ -450,9 +451,9 @@ void SetPtr(std::uint32_t at, const void* p) { SetLong(At(at), static_cast<std::
 void Fix() {
     B(at::kMembers) = static_cast<unsigned char>(Next() % 5);
     for (unsigned i = 0; i < 5; ++i) Member(i)[at::kRecord] = static_cast<unsigned char>(Next() % 10);
-    SetPtr(at::kHookEnd, reinterpret_cast<const void*>(&StubHookEnd));
-    SetPtr(at::kHookExit, reinterpret_cast<const void*>(&StubHookExit));
-    SetPtr(at::kHookEvent, reinterpret_cast<const void*>(&StubHookEvent));
+    SetPtr(BattleHook_End_addr, reinterpret_cast<const void*>(&StubHookEnd));
+    SetPtr(BattleHook_Exit_addr, reinterpret_cast<const void*>(&StubHookExit));
+    SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHookEvent));
 }
 
 unsigned Pick(const unsigned* values, unsigned n) { return values[Next() % n]; }
@@ -468,16 +469,16 @@ void Seed(unsigned k) {
     const unsigned count = B(at::kMembers);
     switch (k) {
     case kCheckK: {
-        if (Often()) B(at::kExtraRound) = 0;
-        if (Often()) B(at::kTimer) = 0;
-        if (Half()) B(at::kSideMode) = 2;
+        if (Often()) B(BattlePhases_B7A_addr) = 0;
+        if (Often()) B(BattleFlow_AnimGate_addr) = 0;
+        if (Half()) B(BattlePhases_Initiative_addr) = 2;
         break;
     }
     case kChainK: {
         static const unsigned kStates[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0xFF};
-        B(at::kState2) = static_cast<unsigned char>(Pick(kStates, 16));
-        if (Half()) SetWord(At(at::kPending), 0);
-        else if (Half()) SetWord(At(at::kPending), 0x100u << (Next() % 8));
+        B(BattleE4_Step2_addr) = static_cast<unsigned char>(Pick(kStates, 16));
+        if (Half()) SetWord(At(BattleActions_Pending_addr), 0);
+        else if (Half()) SetWord(At(BattleActions_Pending_addr), 0x100u << (Next() % 8));
         if (Half()) B(at::kRoundFlags) |= 4;
         break;
     }
@@ -487,14 +488,14 @@ void Seed(unsigned k) {
             const unsigned i = Next() % 8;
             SetLong(At(at::kBusy + i * 4), static_cast<std::int32_t>(Half() ? 1u << (Next() % 32) : Next()));
         }
-        if (Half()) B(at::kEventBattle) = 0;
-        if (Half()) B(at::kBattleEnd) = 0;
+        if (Half()) B(BattleActions_EventBattle_addr) = 0;
+        if (Half()) B(BattleActions_BattleEnd_addr) = 0;
         if (Half()) B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) ^ 0x10);
         break;
     }
     case kStartK: {
         static const unsigned kCursorAt[] = {0, 0, 1, 2, 3, 4, 5};
-        B(at::kCursor) = static_cast<unsigned char>(Half() ? Next() % (count + 1) : Pick(kCursorAt, 7));
+        B(BossSb_Countdown_addr) = static_cast<unsigned char>(Half() ? Next() % (count + 1) : Pick(kCursorAt, 7));
         for (unsigned i = 0; i < 5; ++i) {
             unsigned char* const m = Member(i);
             if (Often()) m[at::kFlags] = static_cast<unsigned char>((m[at::kFlags] & ~3u) | (Half() ? 0 : Next() % 4));
@@ -510,24 +511,24 @@ void Seed(unsigned k) {
             if (Often()) m[at::kFlags2 + 1] &= 0xDF;
             if (Half()) m[at::kStatus + 1] ^= 8;
         }
-        if (Often()) B(at::kCursor) = static_cast<unsigned char>(Half() ? count : Next() % 6);
+        if (Often()) B(BossSb_Countdown_addr) = static_cast<unsigned char>(Half() ? count : Next() % 6);
         static const unsigned kEnd[] = {0, 1, 2, 3, 0xFC, 0xFE, 0xFD, 0xFF};
-        if (Often()) B(at::kBattleEnd) = static_cast<unsigned char>(Pick(kEnd, 8));
-        if (Half()) B(at::kEventBattle) = 0;
+        if (Often()) B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(Pick(kEnd, 8));
+        if (Half()) B(BattleActions_EventBattle_addr) = 0;
         static const unsigned kStep[] = {0, 1, 2, 3};
-        if (Half()) B(at::kState1) = static_cast<unsigned char>(Pick(kStep, 4));
+        if (Half()) B(BattleActions_Step_addr) = static_cast<unsigned char>(Pick(kStep, 4));
         break;
     }
     case kWinK:
-        for (unsigned i = 0; i < 3; ++i) Member(i)[0] = static_cast<unsigned char>(Member(i)[0] ^ (Half() ? 1 : 0));
-        if (Half()) B(at::kMusicFlags) ^= 0x40;
+        for (unsigned i = 0; i < 3; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->flags = static_cast<unsigned char>(reinterpret_cast<records::PartyMember*>(Member(i))->flags ^ (Half() ? 1 : 0));
+        if (Half()) B(BattleTurnSteps_MusicFlags_addr) ^= 0x40;
         break;
     case kInputK:
     case kExitHookK:
-        if (Half()) SetWord(At(at::kInput), 0);
-        else if (Half()) SetWord(At(at::kInput), 0x100u << (Next() % 8));
-        if (Half()) B(at::kMusicFlags) ^= 0x40;
-        if (Half()) B(at::kMusicTrack) = 0xFF;
+        if (Half()) SetWord(At(Input_Pressed_addr), 0);
+        else if (Half()) SetWord(At(Input_Pressed_addr), 0x100u << (Next() % 8));
+        if (Half()) B(BattleTurnSteps_MusicFlags_addr) ^= 0x40;
+        if (Half()) B(Music_Track_addr) = 0xFF;
         break;
     case kFinishK:
         for (unsigned i = 0; i < 5; ++i) {
@@ -562,10 +563,10 @@ void Cover(unsigned k, const State& in, const State& out) {
         return 0;
     };
     switch (k) {
-    case kCheckK: ++g_cover.extra[byte(out, at::kExtraRound) & 3]; break;
+    case kCheckK: ++g_cover.extra[byte(out, BattlePhases_B7A_addr) & 3]; break;
     case kChainK:
-        if (byte(out, at::kState1) != byte(in, at::kState1)) ++g_cover.chain_done;
-        if (out.log_n == 0 && byte(out, at::kState2) != byte(in, at::kState2)) ++g_cover.chain_waits;
+        if (byte(out, BattleActions_Step_addr) != byte(in, BattleActions_Step_addr)) ++g_cover.chain_done;
+        if (out.log_n == 0 && byte(out, BattleE4_Step2_addr) != byte(in, BattleE4_Step2_addr)) ++g_cover.chain_waits;
         break;
     case kNextK:
         if (byte(out, at::kPhase) == 5 && byte(in, at::kPhase) != 5) ++g_cover.next_end;
@@ -577,10 +578,10 @@ void Cover(unsigned k, const State& in, const State& out) {
             if (out.log[i].what == 15) ++g_cover.started;
         break;
     case kAwaitK:
-        if (byte(out, at::kState2) + 1 == byte(in, at::kState2)) ++g_cover.await_back;
-        if (byte(out, at::kState2) == 0 && byte(in, at::kState2) != 0) ++g_cover.await_go;
-        if (out.log_n && byte(out, at::kState1) == 1) ++g_cover.await_win;
-        if (out.log_n && byte(out, at::kState1) == 2) ++g_cover.await_other;
+        if (byte(out, BattleE4_Step2_addr) + 1 == byte(in, BattleE4_Step2_addr)) ++g_cover.await_back;
+        if (byte(out, BattleE4_Step2_addr) == 0 && byte(in, BattleE4_Step2_addr) != 0) ++g_cover.await_go;
+        if (out.log_n && byte(out, BattleActions_Step_addr) == 1) ++g_cover.await_win;
+        if (out.log_n && byte(out, BattleActions_Step_addr) == 2) ++g_cover.await_other;
         break;
     case kFinishK:
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
@@ -708,14 +709,14 @@ void SelfTest() {
         Fix();
         g_seed = Next();
         Seed(kNextK);
-        if (Half()) B(at::kEventBattle) = psp_code::kDuelEvent;
-        B(at::kBattleEnd) = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
+        if (Half()) B(BattleActions_EventBattle_addr) = psp_code::kDuelEvent;
+        B(BattleActions_BattleEnd_addr) = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
         Capture(input);
 
         static State plain_out;
         for (int pass = 0; pass < 3; ++pass) {
             Apply(input);
-            if (pass == 0) SetPtr(at::kHookEvent, reinterpret_cast<const void*>(&StubHookEventPsp));
+            if (pass == 0) SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHookEventPsp));
             if (pass == 2) psp_code::Force(0);
             const void* const fn = pass == 1 ? kClones[kNextK].ours : clones[kNextK];
             reinterpret_cast<Fn>(const_cast<void*>(fn))(0, 0, 0, 0);
@@ -723,7 +724,7 @@ void SelfTest() {
                 ++psp_bad;
                 g_psp_pending = false;
             }
-            SetPtr(at::kHookEvent, reinterpret_cast<const void*>(&StubHookEvent));
+            SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHookEvent));
             psp_code::Force(psp_code::kAll);
             Capture(pass == 0 ? their_out : pass == 1 ? our_out : plain_out);
         }

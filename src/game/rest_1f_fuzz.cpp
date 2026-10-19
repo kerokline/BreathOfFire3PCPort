@@ -136,7 +136,7 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-constexpr U kSteps = 0x6697B0;         // Field_DirectionSteps
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps
 constexpr U kCellOffsets = 0x66971C;   // the cell-ahead offsets, two signed bytes a direction
 constexpr U kCells = 0x903850;         // the sloped flag and the cells 1..0xF
 unsigned char* Mem(U a) { return sh::Mem(a); }
@@ -319,7 +319,7 @@ const sh::DataTable kTables[] = {
 // (the pickups' and the strike's name copy), and the leader panel's cells
 // 0x6BC700.. and 0x939A00.. (effect_1e's regions).
 const sh::Region kRegions[] = {
-    {kSteps, 0x40},
+    {Field_DirectionSteps_addr, 0x40},
     {kCellOffsets, 0x10},
     {bof3::addr::Text_Records, 0x10},
     {0x6BC700, 0x20},
@@ -341,7 +341,7 @@ U Coordinate(bool rare_whole) {
 U Height() { return PickOf(0, 1, 0xFFFF, 0x7FFF, 0x8000, 0x7FC0, 0xFFC0, 0x40, sh::Next() % 0x400u, sh::Next()); }
 
 void SeedSteps() {
-    unsigned char* const t = Mem(kSteps);
+    unsigned char* const t = Mem(Field_DirectionSteps_addr);
     for (unsigned i = 0; i < 16; ++i) {
         const U v = sh::Half() ? PickOf(0, 0x8000, 0xFFFF8000u)
                                : PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, 0xFFFF0000u, 0x4000, 1, 0xFFFFFFFFu, 0x7FFFFFFFu,

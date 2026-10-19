@@ -24,6 +24,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_se_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -42,6 +43,17 @@ using move_script::Word;
 // original reads the word [0x903850]) and the bank word after it.
 short Count() { return static_cast<short>(Word(At(at::kCount))); }
 unsigned char* Object(int n) { return Sprite_Objects + n * static_cast<int>(at::kObjectStride); }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use, as the original does. Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Obj() is a Sprite_Objects record. Fx() is an effect
+// object (Effect_Objects).
+static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::SpriteObject* Obj(int n) { return Spr(Object(n)); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 // A placement's x or z: the whole part from `whole`, the half (0x8000) when
 // `half` is not 0 - `neg / sbb / and 0x8000`, then `or` the whole << 16.
@@ -67,15 +79,15 @@ unsigned char* RecordFlags(unsigned char id) {
 extern "C" void __cdecl Field_StartEventBattle(unsigned id_arg) {
     const unsigned char id = static_cast<unsigned char>(id_arg);
     At(at::kScriptFlags2High)[0] = static_cast<unsigned char>(At(at::kScriptFlags2High)[0] | 0x10);
-    At(at::kEventBattle)[0] = id;
-    unsigned char* const leader = At(at::kLeader);
+    BattleActions_EventBattle = id;
+    unsigned char* const leader = At(ObjTrio_addr);
     leader[1] = 5;
     const unsigned char flags = At(bof3::addr::EventBattle_Records)[id * 4u];
     leader[2] = 0;
     leader[3] = 0;
     leader[4] = 0;
-    At(at::kBattleFlags)[0] = flags;
-    At(at::kBattleIntro)[0] = 0;
+    BattleTurnSteps_MusicFlags = flags;
+    BattlePhases_Initiative = 0;
 }
 
 // original 0x519F70: chapter 8's call table A entry 5, and the tail of entry
@@ -105,10 +117,10 @@ extern "C" void __cdecl Effect_SpawnAtCell(unsigned state, unsigned x, unsigned 
     e[0] = 1;
     e[5] = at::kCellFxKind;
     e[1] = static_cast<unsigned char>(state);
-    SetLong(e + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16));
+    Fx(e)->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(x))) << 16);
     const auto zz = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
-    SetLong(e + 0x38, zz);
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(e + 0x34), zz);
+    Fx(e)->z = zz;
+    const long ground = SH_CALL(AreaMap_Elevation)(Fx(e)->x, zz);
     SetWord(e + 0x3E, static_cast<unsigned>(ground) + 0x100);
     e[0xB] = 0;
 }
@@ -149,20 +161,20 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     SH_CALL(Sprite_SetAnimationBank)(Word(At(at::kBank)));
     Sprite_Current[0] = 1;
     SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(Coordinate(op[6], op[7])));
-    SetLong(Object(Count()) + 0x8C, Long(Sprite_Current + 0x34));
+    SetLong(Object(Count()) + 0x8C, SC()->x);
     SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Coordinate(op[8], op[9])));
-    SetLong(Object(Count()) + 0x90, Long(Sprite_Current + 0x38));
-    SetLong(Object(Count()) + 0x94, 0);
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
+    SetLong(Object(Count()) + 0x90, SC()->z);
+    Obj(Count())->best_score = 0;
+    const long ground = SH_CALL(AreaMap_Elevation)(SC()->x, SC()->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
     Sprite_Current[8] = static_cast<unsigned char>(op[0] & 0xF);
     Sprite_Current[6] = static_cast<unsigned char>(op[0] >> 4);
     unsigned char* const n = Object(Count());
-    SetWord(n + 0x98, op[4]);
-    SetWord(n + 0x9A, op[5]);
-    SetWord(n + 0x88, static_cast<unsigned>(op[0xE]) << 8 | op[0xF]);
+    Spr(n)->half_w = op[4];
+    Spr(n)->half_d = op[5];
+    Spr(n)->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
     n[0x83] = op[0x10];
     n[0x84] = op[0xB];
     n[0xA0] = 0x7F;
@@ -187,7 +199,7 @@ extern "C" unsigned char __cdecl Party_AddToLists(unsigned member_arg) {
     const unsigned char member = static_cast<unsigned char>(member_arg);
     unsigned char* const flags = RecordFlags(member);
     *flags = static_cast<unsigned char>(*flags | 3);
-    unsigned char* const lists = At(at::kPartyLists);
+    unsigned char* const lists = At(Cond_Flags_addr + 0xd2);
     const unsigned char n = Field_MemberCount;
     if (n < 3) {
         Field_MemberCount = static_cast<unsigned char>(n + 1);

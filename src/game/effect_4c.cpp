@@ -48,6 +48,7 @@
 #include "game/effect_4c_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -66,6 +67,8 @@ using RecordFn = void (__cdecl*)(unsigned char*);
 using VoidFn = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -297,7 +300,7 @@ extern "C" void __cdecl EffectKind8D_Start(void) {
     unsigned char* const s = S();
     Camera_Distance = 0x1C80;
     MapView_Redraw = 2;
-    for (unsigned i = 0; i < 3; ++i) At(at::kLeaderLift + at::kObjStride * i)[0] = 1;
+    for (unsigned i = 0; i < 3; ++i) At(ObjTrio_addr + 0x48 + at::kObjStride * i)[0] = 1;
     s[0x5F] = 0x7F;
     S()[0x5E] = 0x7F;
     S()[0x5D] = 0x7F;
@@ -338,7 +341,7 @@ extern "C" void __cdecl EffectKind8D_Pull(void) {
 // original 0x48B2F0 (state 3): the byte after MoveScript_Var7 (0x8034E5) up;
 // a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind8D_End(void) {
-    unsigned char* const step = At(at::kVar7Step);
+    unsigned char* const step = At(MoveScript_PartyRecords_addr + 0x65);
     step[0] = static_cast<unsigned char>(step[0] + 1);
     SH_CALL(Effect_Release)();
 }
@@ -640,20 +643,20 @@ extern "C" void __cdecl EffectKind8F_Sequence(void) {
             stage = 2;
         else
             stage = frame >= 0x168 ? 4 : 3;
-        At(at::kStage)[0] = stage;
+        Effect4c_Stage = stage;
         const unsigned wait = Word(s + 0x30);
         if (wait == 0) {
-            const unsigned a = At(at::kStage)[0];
+            const unsigned a = Effect4c_Stage;
             if (a >= at::kStageCount)
                 bof3::Fatal("EffectKind8F_Sequence: the stage byte 0x%X is %u, past the five rows of 0x%X - the "
                             "original reads on (docs/effect_4c.md section 6)",
-                            (unsigned)at::kStage, a, (unsigned)at::kStageCounts);
+                            (unsigned)Effect4c_Stage_addr, a, (unsigned)at::kStageCounts);
             SH_CALL(EffectKind8F_SpawnShuffled)(At(at::kStageCounts + a)[0]);
-            const unsigned b = At(at::kStage)[0];
+            const unsigned b = Effect4c_Stage;
             if (b >= at::kStageCount)
                 bof3::Fatal("EffectKind8F_Sequence: the stage byte 0x%X is %u, past the five rows of 0x%X - the "
                             "original reads on (docs/effect_4c.md section 6)",
-                            (unsigned)at::kStage, b, (unsigned)at::kStageWaits);
+                            (unsigned)Effect4c_Stage_addr, b, (unsigned)at::kStageWaits);
             SetWord(S() + 0x30, At(at::kStageWaits + b)[0]);
         } else {
             SetWord(s + 0x30, wait - 1);
@@ -781,11 +784,11 @@ extern "C" void __cdecl EffectKind90_Run(void) {
 // the 32 shards cleared. +9 = 0x80; the tag up, its low byte the record's +6;
 // +1 up.
 extern "C" void __cdecl EffectKind90_Start(void) {
-    if (Long(At(at::kTag)) == 0) SH_CALL(EffectKind90_ClearShards)();
+    if (static_cast<std::int32_t>(Effect4c_Tag) == 0) SH_CALL(EffectKind90_ClearShards)();
     S()[9] = 0x80;
-    const U tag = static_cast<U>(Long(At(at::kTag))) + 1;
+    const U tag = Effect4c_Tag + 1;
     unsigned char* const s = S();
-    SetUL(At(at::kTag), tag);
+    Effect4c_Tag = tag;
     s[6] = static_cast<unsigned char>(tag);
     Step();
 }
@@ -824,8 +827,8 @@ extern "C" void __cdecl EffectKind90_EmitOne(void) {
     r[2] = 0;
     r[3] = 0x80;
     SetWord(r + 4, 0x80);
-    SetUL(r + 8, UL(S() + 0x34));
-    const U z = UL(S() + 0x38);
+    SetUL(r + 8, static_cast<std::uint32_t>(CurFx()->x));
+    const U z = static_cast<std::uint32_t>(CurFx()->z);
     SetUL(r + 0x10, 0);
     SetUL(r + 0xC, z);
     SetUL(r + 0x18, 0x1800);
@@ -928,11 +931,11 @@ extern "C" void __cdecl EffectKind93_Run(void) {
 extern "C" void __cdecl EffectKind93_Start(void) {
     SH_CALL(EffectKind90_ClearShards)();
     unsigned char* s = S();
-    SetUL(s + 0xC, UL(s + 0x34));
+    SetUL(s + 0xC, static_cast<std::uint32_t>(AsFx(s)->x));
     s = S();
-    SetUL(s + 0x10, UL(s + 0x38));
+    SetUL(s + 0x10, static_cast<std::uint32_t>(AsFx(s)->z));
     s = S();
-    SetUL(s + 0x14, UL(s + 0x3C));
+    SetUL(s + 0x14, static_cast<std::uint32_t>(AsFx(s)->height));
     s = S();
     SetUL(s + 0x1C, UL(s + 0x14));
     SetWord(S() + 0x20, 0);
@@ -997,10 +1000,11 @@ extern "C" void __cdecl EffectKind99_Run(void) {
 // +0x10) << 16, its radius +0x1C 0; +9 = 0xA, +1 up.
 extern "C" void __cdecl EffectKind99_Start(void) {
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     unsigned char* const c = s + 0xC;
-    SetUL(c, UL(s + 0x34) - 0x10000u);
+    SetUL(c, static_cast<std::uint32_t>(so->x) - 0x10000u);
     const U x = UL(c);
-    const U z = UL(S() + 0x38) + 0xFFFF0000u;
+    const U z = static_cast<std::uint32_t>(CurFx()->z) + 0xFFFF0000u;
     SetUL(c + 4, z);
     const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(x), static_cast<long>(z));
     SetUL(c + 8, High(h));

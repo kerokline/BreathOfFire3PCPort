@@ -245,10 +245,10 @@ const mh::Callee kCallees[] = {
     {S29_RAW("ShadowOrb_DrawBand", 0x4E1FB0), 0, {}, mh::Answer::kPhase, 0, 0},
     {S29_RAW("ShadowGlow_Draw", 0x4E22E0), 0, {}, mh::Answer::kPhase, 0, 0},
     {S29_RAW("ShadowSeeker_Draw", 0x4E2A10), 0, {}, mh::Answer::kPhase, 0, 0},
-    {S29_RAW("ShadowMote_Task", 0x4E2BF0), 0, {cell::kShadeCurrent}, mh::Answer::kPhase, 0, 0},
-    {S29_RAW("ShadowMote_Draw", 0x4E2F60), 0, {cell::kShadeCurrent}, mh::Answer::kPhase, 0, 0},
-    {S29_RAW("ShadowMote_Free", 0x4E3190), 0, {cell::kShadeCurrent}, mh::Answer::kPhase, 0, 0},
-    {S29_RAW("ShadowMote_Project", 0x4E31C0), 0, {cell::kShadeCurrent}, mh::Answer::kPhase, 0, 0},
+    {S29_RAW("ShadowMote_Task", 0x4E2BF0), 0, {ShadowMote_Current_addr}, mh::Answer::kPhase, 0, 0},
+    {S29_RAW("ShadowMote_Draw", 0x4E2F60), 0, {ShadowMote_Current_addr}, mh::Answer::kPhase, 0, 0},
+    {S29_RAW("ShadowMote_Free", 0x4E3190), 0, {ShadowMote_Current_addr}, mh::Answer::kPhase, 0, 0},
+    {S29_RAW("ShadowMote_Project", 0x4E31C0), 0, {ShadowMote_Current_addr}, mh::Answer::kPhase, 0, 0},
     // The allocators: a record's index inside the pool (neither caller tests
     // for 0xFF, so the recorders never answer past the pool).
     {S29_RAW("DivineMote_Alloc", 0x4E1940), 0, {}, mh::Answer::kByte, 0, cell::kMotes - 1},
@@ -262,7 +262,7 @@ const mh::Callee kCallees[] = {
 // and DivineMote_Steps (2) end to end; 0x65BBD0 ShadowBreathFx_Kinds (3),
 // ShadowOrb_Steps (4), ShadowGlow_Steps (4), ShadowSeeker_Steps (4); 0x65BC1C
 // ShadowMote_TaskTable (1) and ShadowMote_Steps (4).
-const mh::DataTable kTables[] = {{tbl::kDivineKinds, 11}, {tbl::kShadowKinds, 15}, {tbl::kShadeTask, 5}};
+const mh::DataTable kTables[] = {{DivineBreathFx_Kinds_addr, 11}, {ShadowBreathFx_Kinds_addr, 15}, {ShadowMote_TaskTable_addr, 5}};
 
 // --- the state ---------------------------------------------------------------
 
@@ -271,20 +271,20 @@ alignas(16) unsigned char g_prims[kPrimBytes];   // what Gfx_PacketNext points i
 
 mh::Region g_regions[] = {
     {cell::kScratch, 0x10},
-    {cell::kVertices, 0x20},
-    {cell::kPacketNext, 4},
+    {Prim_VertexScratch_addr, 0x20},
+    {Gfx_PacketNext_addr, 4},
     {0, kPrimBytes},   // g_prims (filled in at start-up)
     {cell::kMotePool, cell::kMotes * cell::kMoteStride},
-    {cell::kShadePool, cell::kShades * cell::kShadeStride},
-    {cell::kShadeCurrent, 4},
+    {ShadowMote_Pool_addr, cell::kShades * cell::kShadeStride},
+    {ShadowMote_Current_addr, 4},
     {cell::kClutRow, 0x200},
     {cell::kClutSource, 0x200},
 };
 
 unsigned char* PrimAt(std::uint32_t v) { return g_prims + 4 * (v % 16); }
 unsigned char* MoteAt(std::uint32_t v) { return mh::Mem(cell::kMotePool + (v % cell::kMotes) * cell::kMoteStride); }
-unsigned char* ShadeAt(std::uint32_t v) { return mh::Mem(cell::kShadePool + (v % cell::kShades) * cell::kShadeStride); }
-unsigned char* Cur() { return mh::Pointer(cell::kShadeCurrent); }
+unsigned char* ShadeAt(std::uint32_t v) { return mh::Mem(ShadowMote_Pool_addr + (v % cell::kShades) * cell::kShadeStride); }
+unsigned char* Cur() { return mh::Pointer(ShadowMote_Current_addr); }
 unsigned char* AnOwner(std::uint32_t v) { return v & 4 ? mh::SpriteRecord(v) : mh::TaskAt(v); }
 
 // A byte at one of the values, or one either side, half the time.
@@ -296,12 +296,12 @@ unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 void Seed(unsigned k) {
     // Everything any function dereferences, put back inside.
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(cell::kActorSprite, mh::SpriteRecord(mh::Next()));
-    mh::SetPointer(cell::kShadeCurrent, ShadeAt(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(ShadowMote_Current_addr, ShadeAt(mh::Next()));
     for (unsigned i = 0; i < cell::kMotes; ++i)
         mh::SetPointer(cell::kMotePool + i * cell::kMoteStride + 0x80, AnOwner(mh::Next()));
     for (unsigned i = 0; i < cell::kShades; ++i)
-        mh::SetPointer(cell::kShadePool + i * cell::kShadeStride + 0x1C, AnOwner(mh::Next()));
+        mh::SetPointer(ShadowMote_Pool_addr + i * cell::kShadeStride + 0x1C, AnOwner(mh::Next()));
     unsigned char* const sc = Sprite_Current;
     unsigned char* const cur = Cur();
     switch (k) {
@@ -347,7 +347,7 @@ void Seed(unsigned k) {
         if (mh::Half()) SetLong(sc + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0x18)) + mh::Next() % 3 - 1));
         break;
     case kShadowOrb_Grow: Near(sc[9], 0xE); break;
-    case kShadowOrb_WaitChildren: mh::Pointer(mh::at::kOwner)[0xB] = Byte(MH_PICK(0, 1, 2, 3, 0x80)); break;
+    case kShadowOrb_WaitChildren: mh::Pointer(BattleE2_Owner_addr)[0xB] = Byte(MH_PICK(0, 1, 2, 3, 0x80)); break;
     case kShadowGlow_Grow: Near(sc[9], 0x94); break;
     case kShadowSeeker_Home: sc[9] = Byte(MH_PICK(0xB, 0xC, 0xF, 0x10, 0x11, 0x40)); break;
     case kShadowSeeker_Burst: if (mh::Half()) sc[0xB] = 0; break;
@@ -379,9 +379,9 @@ void Disturb(std::uint32_t h) {
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(h >> 12); break;
-    case 1: mh::SetPointer(cell::kShadeCurrent, ShadeAt(h >> 12)); break;
+    case 1: mh::SetPointer(ShadowMote_Current_addr, ShadeAt(h >> 12)); break;
     case 2: mh::Mem(cell::kScratch + (h >> 12) % 0x10)[0] = b; break;
-    case 3: mh::Mem(cell::kVertices + (h >> 12) % 0x20)[0] = b; break;
+    case 3: mh::Mem(Prim_VertexScratch_addr + (h >> 12) % 0x20)[0] = b; break;
     case 4: Cur()[(h >> 12) % 0x1C] = b; break;
     case 5: MoteAt(h >> 12)[0] ^= 1; break;
     default: ShadeAt(h >> 12)[0] ^= 1; break;

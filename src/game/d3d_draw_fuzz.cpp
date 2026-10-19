@@ -73,9 +73,9 @@ struct Region {
     U address, bytes;
 };
 const Region kRegions[] = {
-    {kVertices, 0x80},        {kScaleY, 8},        {kTexCoords, 0x400}, {kDrawTpage, 4},
-    {kShadeCache, 4},         {kRenderFlags, 1},   {kPageCache, kPageCacheBytes},
-    {kClutRows, 512 * 8},     {kCells, kCellsBytes}, {kCellCache, kCellRegionBytes},
+    {D3d_Vertices_addr, 0x80},        {D3d_ScaleY_addr, 8},        {D3d_TexCoords_addr, 0x400}, {Gfx_DrawTpage_addr, 4},
+    {D3d_ShadeModeCache_addr, 4},         {Gfx_RenderFlags_addr, 1},   {Gfx_TexCache_addr, kPageCacheBytes},
+    {Gfx_ClutRows_addr, 512 * 8},     {SpriteCell_Table_addr, kCellsBytes}, {D3d_CellTexCache_addr, kCellRegionBytes},
 };
 constexpr U kStateBytes = 0x80 + 8 + 0x400 + 4 + 4 + 1 + kPageCacheBytes + 512 * 8 + kCellsBytes + kCellRegionBytes;
 
@@ -139,11 +139,11 @@ void Disturb(U salt) {
     case 1:
         if (g_prim) g_prim[(h >> 8) % g_prim_bytes] = value;
         break;
-    case 2: At(kVertices)[(h >> 8) % 0x80] = value; break;
-    case 3: At(kScaleY)[(h >> 8) % 8] = value; break;
-    case 4: At(kDrawTpage)[(h >> 8) % 2] = value; break;
-    case 5: At(kTexCoords + kTexels[(h >> 8) % 6] * 4u)[(h >> 16) % 4] = value; break;
-    default: At(kRenderFlags)[0] ^= 1; break;
+    case 2: At(D3d_Vertices_addr)[(h >> 8) % 0x80] = value; break;
+    case 3: At(D3d_ScaleY_addr)[(h >> 8) % 8] = value; break;
+    case 4: At(Gfx_DrawTpage_addr)[(h >> 8) % 2] = value; break;
+    case 5: At(D3d_TexCoords_addr + kTexels[(h >> 8) % 6] * 4u)[(h >> 16) % 4] = value; break;
+    default: At(Gfx_RenderFlags_addr)[0] ^= 1; break;
     }
 }
 
@@ -184,7 +184,7 @@ int __cdecl StubFind(int page, int clut, int mode) {
     const U h = Mix(11);
     const int slot = h % 3 == 0 ? 0x20 : static_cast<int>((h >> 4) % 32);
     if (slot < 0x20 && page >= 0 && page < 32 && (h >> 12) % 4 == 0) {
-        unsigned char* e = At(kPageCache + static_cast<U>(page * 32 + slot) * 0x18);
+        unsigned char* e = At(Gfx_TexCache_addr + static_cast<U>(page * 32 + slot) * 0x18);
         e[0] = static_cast<unsigned char>((h >> 16) % 4);
         PutLong(e + 0x14, Mix(12));
     }
@@ -198,7 +198,7 @@ unsigned long __cdecl StubBuild(int page, int clut, int mode) {
 void __cdecl StubRefresh(int page, int slot) {
     Record(9, static_cast<U>(page), static_cast<U>(slot));
     if (page >= 0 && page < 32 && slot >= 0 && slot < 32) {
-        unsigned char* e = At(kPageCache + static_cast<U>(page * 32 + slot) * 0x18);
+        unsigned char* e = At(Gfx_TexCache_addr + static_cast<U>(page * 32 + slot) * 0x18);
         PutLong(e + 0x14, Mix(14));
         e[0] = 1;
     }
@@ -209,20 +209,20 @@ void __cdecl StubRefresh(int page, int slot) {
 // which the caller reads after them.
 void FillCellEntry(int slot, unsigned first, unsigned count, unsigned clut, bool whole) {
     if (slot < 0 || static_cast<U>(slot) > kCellCountMax) return;
-    unsigned char* e = At(kCellCache + static_cast<U>(slot) * kCellEntry);
+    unsigned char* e = At(D3d_CellTexCache_addr + static_cast<U>(slot) * kCellEntry);
     if (whole) {
         for (U k = 0; k < 0x10; k += 4) PutLong(e + k, Mix(20 + k));
         PutWord(e + 0x10, clut);
         PutWord(e + 0x12, count);
         U sum = 0;
-        for (U k = 0; k < count * 8; k += 4) sum += GetLong(At(kCells + first * 8 + k));
+        for (U k = 0; k < count * 8; k += 4) sum += GetLong(At(SpriteCell_Table_addr + first * 8 + k));
         PutLong(e + 0x18, sum);
-        PutLong(e + 0x1C, GetLong(At(kClutRows + ((clut & 0xFFFF) >> 6) * 8)));
+        PutLong(e + 0x1C, GetLong(At(Gfx_ClutRows_addr + ((clut & 0xFFFF) >> 6) * 8)));
         PutLong(e + 0x20, Mix(15));
         if (Mix(16) % 2) PutWord(e + 0x16, Mix(17) % 4);
     }
     PutLong(e + 0x24, Mix(18));
-    if (Mix(19) % 4 == 0) At(kRenderFlags)[0] ^= 1;
+    if (Mix(19) % 4 == 0) At(Gfx_RenderFlags_addr)[0] ^= 1;
 }
 void __cdecl StubCellBuild(int slot, unsigned first, unsigned count, unsigned clut, unsigned flip) {
     Record(10, static_cast<U>(slot), first, count, clut, flip);
@@ -361,7 +361,7 @@ void RandomFloat(unsigned char* p) {
 }
 
 void RandomCommon() {
-    for (U a : {kScaleX, kScaleY}) {
+    for (U a : {D3d_ScaleX_addr, D3d_ScaleY_addr}) {
         U v;
         switch (Next() % 5) {
         case 0: v = Next(); break;
@@ -370,7 +370,7 @@ void RandomCommon() {
         }
         PutLong(At(a), v);
     }
-    for (U i = 0; i < 0x80; ++i) At(kVertices)[i] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < 0x80; ++i) At(D3d_Vertices_addr)[i] = static_cast<unsigned char>(Next());
     for (U i = 0; i < 256; ++i) {
         U v;
         if (Next() % 8) {
@@ -379,11 +379,11 @@ void RandomCommon() {
         } else {
             v = Next() % 2 ? Next() : Pick(kFloats, sizeof kFloats / 4);
         }
-        PutLong(At(kTexCoords + i * 4), v);
+        PutLong(At(D3d_TexCoords_addr + i * 4), v);
     }
-    PutLong(At(kDrawTpage), Next() % 2 ? Next() : Pick(kWords, 16) | (Next() & 0xFFFF0000u));
-    PutLong(At(kShadeCache), Next() % 4);
-    At(kRenderFlags)[0] = static_cast<unsigned char>(Next());
+    PutLong(At(Gfx_DrawTpage_addr), Next() % 2 ? Next() : Pick(kWords, 16) | (Next() & 0xFFFF0000u));
+    PutLong(At(D3d_ShadeModeCache_addr), Next() % 4);
+    At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
 }
 
 void RandomPrim(const Handler& h, unsigned char* p) {
@@ -405,11 +405,11 @@ void RandomPrim(const Handler& h, unsigned char* p) {
 // The cell cache for the cell sprite: the entry the stand-in will name gets
 // seeded sizes (0 among them: a division by zero) and extents.
 void RandomCellCache() {
-    for (U i = 0; i < kCellRegionBytes; ++i) At(kCellCache)[i] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < kCellRegionBytes; ++i) At(D3d_CellTexCache_addr)[i] = static_cast<unsigned char>(Next());
     const U sizes[] = {0, 1, 2, 8, 16, 24, 32, 64, 256, 0x8000, 0xFFFF};
     const U extents[] = {0, 1, 0xFFFF, 0x7FFF, 0x8000, 8, 0xFFF8, 16};
     for (U k = 0; k <= kCellEntries; ++k) {
-        unsigned char* e = At(kCellCache + k * kCellEntry);
+        unsigned char* e = At(D3d_CellTexCache_addr + k * kCellEntry);
         for (U f = 0; f < 8; f += 2)
             if (Next() % 2) PutWord(e + f, Pick(sizes, 11));
         for (U f = 8; f < 0x10; f += 2)
@@ -530,7 +530,7 @@ unsigned FuzzBlendShade(BlendFn blend, ShadeFn shade, unsigned rounds) {
         const U mode = ModeArg();
         const U cache = Next() % 2 ? mode : Next() % 2 ? Next() : mode ^ (1u << (Next() % 32));
         RandomCommon();
-        PutLong(At(kShadeCache), cache);
+        PutLong(At(D3d_ShadeModeCache_addr), cache);
         Capture(g_start);
 
         g_theirs.Clear();
@@ -573,7 +573,7 @@ unsigned FuzzBind(BindFn theirs, unsigned rounds, BindCover& cover) {
         // Every entry of the tpage's page: states 0..3, random textures.
         const U page = tpage & 0x1F;
         for (U s = 0; s < 32; ++s) {
-            unsigned char* e = At(kPageCache + (page * 32 + s) * 0x18);
+            unsigned char* e = At(Gfx_TexCache_addr + (page * 32 + s) * 0x18);
             for (U k = 0; k < 0x18; ++k) e[k] = static_cast<unsigned char>(Next());
             e[0] = static_cast<unsigned char>(Next() % 2 ? 2 : Next() % 4);
         }
@@ -624,18 +624,18 @@ unsigned FuzzCell(CellFn theirs, unsigned rounds, CellCover& cover) {
         if (Next() % 16 == 0) clut |= 0x10000u << (Next() % 4);
         const U flags = Next() % 2 ? Next() & 0xFFFF : Next();
 
-        for (U i = 0; i < kCellsBytes; ++i) At(kCells)[i] = static_cast<unsigned char>(Next());
-        for (U i = 0; i < kCellRegionBytes; ++i) At(kCellCache)[i] = static_cast<unsigned char>(Next());
+        for (U i = 0; i < kCellsBytes; ++i) At(SpriteCell_Table_addr)[i] = static_cast<unsigned char>(Next());
+        for (U i = 0; i < kCellRegionBytes; ++i) At(D3d_CellTexCache_addr)[i] = static_cast<unsigned char>(Next());
         U sum = 0;
-        for (U k = 0; k < count * 8; k += 4) sum += GetLong(At(kCells + first * 8 + k));
+        for (U k = 0; k < count * 8; k += 4) sum += GetLong(At(SpriteCell_Table_addr + first * 8 + k));
         const U row = (clut >> 6) < 512 ? (clut >> 6) : 0;
-        PutLong(At(kClutRows + row * 8), Next() % 2 ? Next() : Next() % 4);
-        const U generation = GetLong(At(kClutRows + ((clut >> 6) & 0x1FF) * 8));
+        PutLong(At(Gfx_ClutRows_addr + row * 8), Next() % 2 ? Next() : Next() % 4);
+        const U generation = GetLong(At(Gfx_ClutRows_addr + ((clut >> 6) & 0x1FF) * 8));
         // 0: all in use (D27); 1: none empty; 2: none empty, no key (a victim); 3: as 2 with every
         // free entry at the counter ceiling 0xFFFF (D27 again); else mixed
         const U pattern = Next() % 7;
         for (U i = 0; i < kCellEntries; ++i) {
-            unsigned char* e = At(kCellCache + i * kCellEntry);
+            unsigned char* e = At(D3d_CellTexCache_addr + i * kCellEntry);
             if (pattern > 3 && Next() % 24 == 0) PutLong(e, 0);
             else if (GetLong(e) == 0) PutLong(e, 1);
             U in_use = pattern == 0 ? (Next() % 2 ? 1 : Next() | 1) : (Next() % 3 == 0 ? 0 : Next() & 0xFFFF);
@@ -649,7 +649,7 @@ unsigned FuzzCell(CellFn theirs, unsigned rounds, CellCover& cover) {
                 PutLong(e + 0x1C, Next() % 2 ? generation : generation ^ 0x10);
             }
         }
-        At(kRenderFlags)[0] = static_cast<unsigned char>(Next());
+        At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
         Capture(g_start);
 
         g_theirs.Clear();

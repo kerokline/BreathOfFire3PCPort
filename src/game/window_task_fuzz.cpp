@@ -85,15 +85,15 @@ std::uint32_t Id(const void* p) {
 // after every call out.
 struct Watch { std::uint32_t at; unsigned char lo, hi; };   // a value in lo..hi, or any when lo > hi
 const Watch kWatch[] = {
-    {window_task::at::kPlacement, 1, 0},
-    {window_task::at::kListSet, 0, 11},
-    {window_task::at::kPass, 0, 4},
-    {window_task::at::kAreaTrack, 1, 0},
-    {window_task::at::kMusicTrack, 1, 0},
-    {window_task::at::kPendingKind, 1, 0},
-    {window_task::at::kPendingFlags, 1, 0},
-    {window_task::at::kPendingArea, 1, 0},
-    {window_task::at::kPendingArea + 1, 1, 0},
+    {Msgbox_Placement_addr, 1, 0},
+    {MenuWindows_ListSet_addr, 0, 11},
+    {BossSa_WindowPass_addr, 0, 4},
+    {AreaW1f_MusicCurrent_addr, 1, 0},
+    {Music_Track_addr, 1, 0},
+    {AreaW0c_PendingKind_addr, 1, 0},
+    {AreaEntry_PendingFlags_addr, 1, 0},
+    {AreaW0b_Place_addr, 1, 0},
+    {AreaW0b_Place_addr + 1, 1, 0},
 };
 void Disturb() {
     const std::uint32_t h = Hash();
@@ -101,7 +101,7 @@ void Disturb() {
     if (h % 23 == 0) {
         // the current record: a different one of the twenty-two
         const std::uint32_t record = window_task::at::kRecords + ((h >> 8) % 22u) * 0x24u;
-        SetLong(At(window_task::at::kCurrent), static_cast<std::int32_t>(record));
+        SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(record));
         return;
     }
     const Watch& w = kWatch[(h >> 4) % (sizeof kWatch / sizeof kWatch[0])];
@@ -119,7 +119,7 @@ void Disturb() {
 void __cdecl StubClassify() { Record(1); Disturb(); }
 void __cdecl StubPickMusic(unsigned x, unsigned z, unsigned area) {
     Record(2, x & 0xFF, z & 0xFF, area & 0xFFFF);
-    At(window_task::at::kAreaTrack)[0] = static_cast<unsigned char>(Hash() >> 8);
+    At(AreaW1f_MusicCurrent_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 const unsigned char* __cdecl StubZoneAt(unsigned x, unsigned z, unsigned area) {
@@ -411,19 +411,19 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {window_task::at::kRecords, 0x318},     // the 22 window records
-    {window_task::at::kCurrent, 4},         // the record the layer is running (a pointer: Fix sets it)
-    {window_task::at::kPass, 1},
+    {BattleWinStates_Current_addr, 4},      // the record the layer is running (a pointer: Fix sets it)
+    {BossSa_WindowPass_addr, 1},
     {0x7DEE40, 0x40},                       // MsgBoxState: the list dword, set, count, cursor, placement and rows
-    {window_task::at::kPendingArea, 2},
-    {window_task::at::kPendingKind, 1},
+    {AreaW0b_Place_addr, 2},
+    {AreaW0c_PendingKind_addr, 1},
     {window_task::at::kPendingX, 4},
-    {window_task::at::kPendingZ, 4},
-    {window_task::at::kPendingFlags, 1},    // Gfx_BufferIndex is the byte after it: one byte, exactly
-    {window_task::at::kAreaTrack, 1},
-    {window_task::at::kMusicTrack, 1},
+    {AreaEntry_PendingZ_addr, 4},
+    {AreaEntry_PendingFlags_addr, 1},       // Gfx_BufferIndex is the byte after it: one byte, exactly
+    {AreaW1f_MusicCurrent_addr, 1},
+    {Music_Track_addr, 1},
     {0x66C7D8, 1},                          // Field_Request
     {0x9039A2, 2},                          // Field_ScriptFlags
-    {window_task::at::kClutRow, 1},
+    {BattleDraw_Colour_addr, 1},
     {0x904EFC, 2},                          // Game_AreaNumber
     {0x903F90, 0x108},                      // Cond_Flags
 };
@@ -478,9 +478,9 @@ void Fix() {
         r[3] = static_cast<unsigned char>(Next() % 5);
         r[0xF] = static_cast<unsigned char>(Next() % 2 ? Next() % 3 : Next() % 5);
     }
-    SetLong(At(window_task::at::kCurrent),
+    SetLong(At(BattleWinStates_Current_addr),
             static_cast<std::int32_t>(window_task::at::kRecords + (Next() % 22u) * 0x24u));
-    At(window_task::at::kPass)[0] = static_cast<unsigned char>(Next() % 4 ? Next() % 3 : Next() % 6);
+    At(BossSa_WindowPass_addr)[0] = static_cast<unsigned char>(Next() % 4 ? Next() % 3 : Next() % 6);
     Game_AreaNumber = static_cast<std::uint16_t>(Next() % kAreas);
     // the zone lists: eight records, the last one matching everything
     for (unsigned a = 0; a < kAreas; ++a) {
@@ -492,7 +492,7 @@ void Fix() {
             rec[6] = static_cast<unsigned char>(Next() % kSets);
             rec[7] = static_cast<unsigned char>(Often() ? 0 : 1 + Next() % 0xFF);
         }
-        SetLong(At(window_task::at::kZoneLists + a * 4u), static_cast<std::int32_t>(Address(g_zones[a])));
+        SetLong(At(Area_StateRecords_addr + a * 4u), static_cast<std::int32_t>(Address(g_zones[a])));
     }
     // the music sets: a pointer and a count each, then count 3-byte entries
     // and the default byte after them
@@ -510,7 +510,7 @@ struct Args { std::uint32_t a[5]; };
 Args Seed(unsigned k) {
     Args args;
     for (std::uint32_t& v : args.a) v = Next();
-    unsigned char* const r = At(static_cast<std::uint32_t>(Long(At(window_task::at::kCurrent))));
+    unsigned char* const r = At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr))));
     static const std::uint16_t kAreaKindValues[] = {0x10, 0x21, 0x2D, 0x41, 0x57, 0x58, 0x68, 0x73, 0x79, 0x97, 0x98};
     static const unsigned char kHalves[] = {0, 1, 2, 0x20, 0x36, 0x47, 0x78, 0xC8, 0xFF};
     static const std::uint16_t kSteps[] = {0, 1, 2, 0x10, 0x66, 0xE3, 0x7FFF, 0x8000, 0xFFFF};
@@ -524,8 +524,8 @@ Args Seed(unsigned k) {
         if (Half()) Field_ScriptFlags = static_cast<std::uint16_t>(Next() % 2 ? Field_ScriptFlags | 0x80 : Field_ScriptFlags & ~0x80);
         break;
     case kClassify:
-        if (Often()) SetWord(At(window_task::at::kPendingArea), kAreaKindValues[Next() % 11]);
-        else if (Half()) SetWord(At(window_task::at::kPendingArea), Next() % 0x100);
+        if (Often()) SetWord(At(AreaW0b_Place_addr), kAreaKindValues[Next() % 11]);
+        else if (Half()) SetWord(At(AreaW0b_Place_addr), Next() % 0x100);
         break;
     case kZoneId:
         args.a[0] = Often() ? Next() % 0x100 : Next();
@@ -544,11 +544,11 @@ Args Seed(unsigned k) {
         break;
     case kKind0Open:
         // the two high bits of the placement code, and an index inside the tables
-        At(window_task::at::kPlacement)[0] =
+        At(Msgbox_Placement_addr)[0] =
             static_cast<unsigned char>((Next() % 8u) | (Half() ? 0x80 : 0) | (Half() ? 0x40 : 0));
         break;
     case kKind2Open:
-        At(window_task::at::kPlacement)[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
+        At(Msgbox_Placement_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
         break;
     case kGrow:
     case kShrink: {
@@ -566,8 +566,8 @@ Args Seed(unsigned k) {
             if (Often()) SetWord(r + 0x12, kSmall[Next() % 8]);
         }
         r[0xD] = static_cast<unsigned char>(Next() % 4);
-        At(window_task::at::kPlacement)[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
-        At(window_task::at::kListSet)[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
+        At(Msgbox_Placement_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
+        At(MenuWindows_ListSet_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 8 : Next());
         break;
     }
     case kKind0Frame:
@@ -620,7 +620,7 @@ unsigned Byte(const State& s, std::uint32_t address) {
 void Cover(unsigned k, const State& in, const State& out) {
     switch (k) {
     case kClassify:
-        if (Byte(out, window_task::at::kPendingKind) == 0xB) ++g_cover.area_kind;
+        if (Byte(out, AreaW0c_PendingKind_addr) == 0xB) ++g_cover.area_kind;
         else ++g_cover.area_other;
         break;
     case kPickMusic: {
@@ -643,7 +643,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         break;
     case kRunRecords:
         g_cover.records_run += LogCount(out, 30);
-        if (Byte(in, window_task::at::kPass) > 2) ++g_cover.pass_skipped;
+        if (Byte(in, BossSa_WindowPass_addr) > 2) ++g_cover.pass_skipped;
         break;
     case kKind0Close:
         if (Logged(out, 8)) ++g_cover.freed;
@@ -712,7 +712,7 @@ void SelfTest() {
     const unsigned short saved_cw = GetControlWord();
     std::uint32_t saved_zone[kAreas], saved_sets[kSets * 2];
     for (unsigned a = 0; a < kAreas; ++a)
-        saved_zone[a] = static_cast<std::uint32_t>(Long(At(window_task::at::kZoneLists + a * 4u)));
+        saved_zone[a] = static_cast<std::uint32_t>(Long(At(Area_StateRecords_addr + a * 4u)));
     for (unsigned s = 0; s < kSets * 2; ++s)
         saved_sets[s] = static_cast<std::uint32_t>(Long(At(window_task::at::kMusicSets + s * 4u)));
     Gfx_PacketNext = g_prim;
@@ -764,7 +764,7 @@ void SelfTest() {
     Gfx_PacketNext = saved_packet;
     SetControlWord(saved_cw);
     for (unsigned a = 0; a < kAreas; ++a)
-        SetLong(At(window_task::at::kZoneLists + a * 4u), static_cast<std::int32_t>(saved_zone[a]));
+        SetLong(At(Area_StateRecords_addr + a * 4u), static_cast<std::int32_t>(saved_zone[a]));
     for (unsigned s = 0; s < kSets * 2; ++s)
         SetLong(At(window_task::at::kMusicSets + s * 4u), static_cast<std::int32_t>(saved_sets[s]));
 

@@ -13,24 +13,37 @@ namespace psx_rest {
 using U = std::uint32_t;
 
 // --- Data, all Capcom's addresses (docs/psx-rest.md section 1) ---------------
-constexpr U kClutRows = 0x6C2A40, kClutRowsEnd = 0x6C3A40;    // Gfx_ClutRows: 512 pairs (counter, row buffer)
-constexpr U kTexCache = 0x6C3F40, kTexCacheEnd = 0x6C9F40;    // Gfx_TexCache: 32 pages of 32 entries of 0x18
+// kClutRows: now Gfx_ClutRows (symbols.toml).
+constexpr U kClutRowsEnd = 0x6C3A40;  // Gfx_ClutRows: 512 pairs (counter, row buffer)
+// kTexCache: now Gfx_TexCache (symbols.toml).
+constexpr U kTexCacheEnd = 0x6C9F40;  // Gfx_TexCache: 32 pages of 32 entries of 0x18
 constexpr U kTexPageBytes = 0x300, kTexEntryBytes = 0x18;
-constexpr U kFontCache = 0x7C9F50, kFontCacheEnd = 0x7CA950;  // Font_TexCache: 128 entries of 0x14
+// kFontCache: now Font_TexCache (symbols.toml).
+constexpr U kFontCacheEnd = 0x7CA950;  // Font_TexCache: 128 entries of 0x14
 constexpr U kFontEntryBytes = 0x14;
-constexpr U kAfterDraw = 0x7CADE8;                            // D3d_AfterDraw's block, 7 dwords (display-setup.md section 7)
-constexpr U kAfterDrawSurface = 0x7CADF8, kAfterDrawTexSurface = 0x7CADFC, kAfterDrawTexture = 0x7CAE00;
-constexpr U kOrphans = 0x7CAE20;                              // six COM pointers only the teardown names (section 2)
+// kAfterDraw: now D3d_CaptureReady (symbols.toml). D3d_AfterDraw's block, 7 dwords (display-setup.md section 7)
+// kAfterDrawSurface: now D3d_CaptureSurface (symbols.toml).
+// kAfterDrawTexSurface: now D3d_CaptureTexSurface (symbols.toml).
+// kAfterDrawTexture: now D3d_CaptureTexture (symbols.toml).
+// kOrphans: now PsxRest_Orphans (symbols.toml). six COM pointers only the teardown names (section 2)
 constexpr U kBackdropBlock = 0x6BE9F8;                        // 7 dwords; Dd_CellBackdrop 0x6BEA00 is its third
-constexpr U kBackdropMagic = 0x6BE9FC;                        // set to 0x12345678 after the block is zeroed
-constexpr U kBackdrop = 0x6BEA00;                             // Dd_CellBackdrop
+// kBackdropMagic: now PsxRest_BackdropMagic (symbols.toml). set to 0x12345678 after the block is zeroed
+// kBackdrop: now Dd_CellBackdrop (symbols.toml). Dd_CellBackdrop
 constexpr U kBackdropPairs = 0x6BEA04;                        // two pairs (+0, +8), released, not zeroed by name
 constexpr U kRenderFlags = 0x6C3A4C;                          // Gfx_RenderFlags: bit 0x100 (a dword test) fullscreen
 // The teardown's ten slots, in the order it releases them.
-constexpr U kBackMaterial = 0x7CC358, kViewport = 0x7CC354, kDevice = 0x7CC350, kDirect3D = 0x7CC34C;
-constexpr U kClipper = 0x7CC348, kZBuffer = 0x7CC340, kStage = 0x7CC344, kBackBuffer = 0x7CC33C;
-constexpr U kPrimary = 0x7CC338, kDirectDraw = 0x7CC334;
-constexpr U kSndDevice = 0x7DE3BC, kSndPrimary = 0x7DE3C0;    // Snd_Device, Snd_Primary
+// kBackMaterial: now D3d_BackMaterial (symbols.toml).
+// kViewport: now D3d_Viewport (symbols.toml).
+// kDevice: now D3d_Device (symbols.toml).
+// kDirect3D: now PsxRest_Direct3D (symbols.toml).
+// kClipper: now PsxRest_Clipper (symbols.toml).
+// kZBuffer: now PsxRest_ZBuffer (symbols.toml).
+// kStage: now Dd_StageSurface (symbols.toml).
+// kBackBuffer: now DDraw_BackBuffer (symbols.toml).
+// kPrimary: now DDraw_Primary (symbols.toml).
+constexpr U kDirectDraw = 0x7CC334;
+// kSndDevice: now Snd_Device (symbols.toml).
+// kSndPrimary: now Snd_Primary (symbols.toml). Snd_Device, Snd_Primary
 constexpr U kErrorText = 0x66B6A8;                            // Display_ErrorBox's table: codes below 100
 constexpr U kErrorTextHigh = 0x66B568;                        // ... and 100 on, indexed by the code itself
 constexpr U kErrorCaption = 0x66BC1C;                         // the box's caption, a string in the image
@@ -64,10 +77,10 @@ inline Fn Method(void* object, unsigned offset) {
 
 // The Win32 import slots (the IAT, by name from the import directory
 // 2026-10-05).
-constexpr U kImportSetTextColor = 0x5C4020;   // GDI32 SetTextColor
-constexpr U kImportSetBkMode = 0x5C4024;      // GDI32 SetBkMode
-constexpr U kImportTextOutA = 0x5C4028;       // GDI32 TextOutA
-constexpr U kImportMessageBoxA = 0x5C4174;    // USER32 MessageBoxA
+// kImportSetTextColor: now PsxRest_ImportSetTextColor (symbols.toml). GDI32 SetTextColor
+// kImportSetBkMode: now PsxRest_ImportSetBkMode (symbols.toml). GDI32 SetBkMode
+// kImportTextOutA: now PsxRest_ImportTextOutA (symbols.toml). GDI32 TextOutA
+// kImportMessageBoxA: now PsxRest_ImportMessageBoxA (symbols.toml). USER32 MessageBoxA
 constexpr U kWhite = 0xFFFFFF, kTransparent = 1, kIconHand = 0x10;
 
 struct Callees {

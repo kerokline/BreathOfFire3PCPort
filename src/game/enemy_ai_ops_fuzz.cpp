@@ -22,6 +22,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/enemy_ai_ops_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -37,7 +38,7 @@ using move_script::Word;
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* EnemyObj(unsigned i) { return At(at::kEnemies + (i % at::kEnemyCount) * at::kEnemySize); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
-unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(at::kEnemyCurrent)))); }
+unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleE3_CurrentEnemy_addr)))); }
 
 // --- the stand-ins' log and our buffers --------------------------------------
 
@@ -64,13 +65,14 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 }
 // Where the callee is: which object Sprite_Current and 0x939AD8 hold.
 std::uint32_t Sc() { return Address(Sprite_Current); }
-std::uint32_t En() { return static_cast<std::uint32_t>(Long(At(at::kEnemyCurrent))); }
+std::uint32_t En() { return static_cast<std::uint32_t>(Long(At(BattleE3_CurrentEnemy_addr))); }
 
 // The step bytes inside the swapped block: +1 below 12, +2 below 6, +3 below 9.
 void SmallSteps(unsigned char* e, std::uint32_t h) {
-    e[1] = static_cast<unsigned char>(h % 12);
-    e[2] = static_cast<unsigned char>((h >> 4) % 6);
-    e[3] = static_cast<unsigned char>((h >> 8) % 9);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    enemy_rec->state[0] = static_cast<unsigned char>(h % 12);
+    enemy_rec->state[1] = static_cast<unsigned char>((h >> 4) % 6);
+    enemy_rec->state[2] = static_cast<unsigned char>((h >> 8) % 9);
 }
 unsigned Actor(std::uint32_t h) { return h % 4 == 0 ? (h >> 2) % 64 : 3 + (h >> 2) % 8; }
 
@@ -84,12 +86,12 @@ void Disturb() {
     const unsigned w = h >> 20;
     switch ((h >> 4) % 24) {
     case 0: Sprite_Current = EnemyObj(v); break;
-    case 1: SetPtr(at::kEnemyCurrent, EnemyObj(v)); break;
+    case 1: SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(v)); break;
     case 2: SmallSteps(Sprite_Current, h >> 9); break;
     case 3: Sprite_Current[5] = static_cast<unsigned char>(Actor(h >> 9)); break;
     case 4: Sprite_Current[7] = static_cast<unsigned char>(v % 0x40); break;
     case 5: Current()[0x92 + w % 2] = static_cast<unsigned char>(v); break;
-    case 6: Current()[0x10C] = static_cast<unsigned char>(v); break;
+    case 6: reinterpret_cast<records::BattleEnemy*>(Current())->shown = static_cast<unsigned char>(v); break;
     case 7: SetWord(Current() + 0x108, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
     case 8: SetWord(Current() + 0x10A, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
     case 9: SetWord(Current() + 0xA4, v % 3 == 0 ? 0 : w); break;
@@ -99,13 +101,13 @@ void Disturb() {
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) ^ kBits[v % 4]);
         break;
     }
-    case 12: At(at::kEventBattle)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
-    case 13: At(at::kTargeting)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
+    case 12: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
+    case 13: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
     case 14: At(at::kActionKind)[0] = static_cast<unsigned char>(v % 7); break;
     case 15: SetWord(At(at::kMagicId), (w % 4) << 8 | v); break;
     case 16: At(at::kTarget)[0] = static_cast<unsigned char>(v); break;
     case 17: SetWord(At(at::kStatusAdd), w); break;
-    case 18: SetPtr(at::kResult, EnemyObj(v) + 0x104); break;
+    case 18: SetPtr(BattleDamage_Result_addr, EnemyObj(v) + 0x104); break;
     case 19: g_target[w % kTargets] = static_cast<unsigned char>(v); break;
     case 20: Sprite_Current[8] = static_cast<unsigned char>(v % 5); break;
     case 21: At(at::kTasks + Sprite_Current[5] * at::kTaskSize)[9] = static_cast<unsigned char>(v); break;
@@ -121,7 +123,7 @@ void Disturb() {
 // --- the stand-ins ---------------------------------------------------------
 
 // The 46 op-table slots 0x64B1A0..0x64B254.
-constexpr std::uint32_t kBlock = at::kSteps;
+// kBlock: now EnemyOp_Steps (symbols.toml).
 constexpr unsigned kBlockEntries = 46;
 template <unsigned N> void __cdecl StubSlot() { Record(200 + N, Sc(), En()); Disturb(); }
 template <std::size_t... I> constexpr std::array<Handler, sizeof...(I)> SlotStubs(std::index_sequence<I...>) {
@@ -134,7 +136,7 @@ template <std::size_t... I> constexpr std::array<Handler, sizeof...(I)> SlotStub
 void __cdecl StubSetAnimation(unsigned a) {
     Record(1, a & 0xFF, Sc(), En());
     const std::uint32_t h = Hash();
-    if (h % 2) SetPtr(at::kEnemyCurrent, EnemyObj(h >> 8));
+    if (h % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 8));
     if ((h >> 1) % 2) Sprite_Current = EnemyObj(h >> 12);
     Disturb();
 }
@@ -155,7 +157,7 @@ unsigned char __cdecl StubChance70() {
 void __cdecl StubDefeated() { Record(5, Sc(), En()); Disturb(); }
 unsigned char __cdecl StubSpriteTickOnce() {
     Record(6, Sc(), En());
-    if (Hash() % 2) SetPtr(at::kEnemyCurrent, EnemyObj(Hash() >> 8));
+    if (Hash() % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(Hash() >> 8));
     Disturb();
     return static_cast<unsigned char>(Hash() >> 5);
 }
@@ -177,8 +179,8 @@ void __cdecl StubReleaseTint(unsigned char* sprite) {
 short __cdecl StubApplyDamage(unsigned attacker, unsigned target) {
     Record(11, attacker & 0xFF, target & 0xFF, Sc(), En());
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) SetPtr(at::kResult, EnemyObj(h >> 8) + 0x104);
-    if ((h >> 2) % 2) SetPtr(at::kEnemyCurrent, EnemyObj(h >> 12));
+    if (h % 3 == 0) SetPtr(BattleDamage_Result_addr, EnemyObj(h >> 8) + 0x104);
+    if ((h >> 2) % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 12));
     Disturb();
     static const short kDeltas[] = {0, 1, -1, 0x7FFF, -0x8000, 100, -100};
     const std::uint32_t k = Hash();
@@ -186,30 +188,30 @@ short __cdecl StubApplyDamage(unsigned attacker, unsigned target) {
 }
 void __cdecl StubEffectApply() {
     Record(12, Sc(), En());
-    if (Hash() % 2) SetPtr(at::kEnemyCurrent, EnemyObj(Hash() >> 8));
+    if (Hash() % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(Hash() >> 8));
     Disturb();
 }
 unsigned __cdecl StubItemClass(unsigned category, unsigned id) {
     Record(13, category & 0xFF, id & 0xFF);
-    if (Hash() % 2) SetPtr(at::kEnemyCurrent, EnemyObj(Hash() >> 8));
+    if (Hash() % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(Hash() >> 8));
     Disturb();
     return Hash() >> 3;
 }
 void __cdecl StubDamagePopup(unsigned amount, unsigned actor) {
     Record(14, amount & 0xFFFF, actor & 0xFF);
-    if (Hash() % 2) SetPtr(at::kEnemyCurrent, EnemyObj(Hash() >> 8));
+    if (Hash() % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(Hash() >> 8));
     Disturb();
 }
 void __cdecl StubApPopup(unsigned amount, unsigned actor) {
     Record(15, amount & 0xFFFF, actor & 0xFF);
-    if (Hash() % 2) SetPtr(at::kEnemyCurrent, EnemyObj(Hash() >> 8));
+    if (Hash() % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(Hash() >> 8));
     Disturb();
 }
 // The turn check may change what the op tests next: the deltas, the HP.
 unsigned long __cdecl StubTurnCheck() {
     Record(16, Sc(), En());
     const std::uint32_t h = Hash();
-    if (h % 2) SetPtr(at::kEnemyCurrent, EnemyObj(h >> 8));
+    if (h % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 8));
     if ((h >> 1) % 3 == 0) SetWord(Current() + 0xA4, (h >> 3) % 2 ? 0 : h >> 16);
     Disturb();
     return Hash();
@@ -221,14 +223,14 @@ void __cdecl StubHitPopup() { Record(20, Sc(), En()); Disturb(); }
 unsigned long __cdecl StubClearActorBit(unsigned actor) {
     Record(21, actor & 0xFF, Sc());
     const std::uint32_t h = Hash();
-    if (h % 2) SetPtr(at::kEnemyCurrent, EnemyObj(h >> 8));
+    if (h % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(h >> 8));
     if ((h >> 1) % 2) Sprite_Current = EnemyObj(h >> 12);
     Disturb();
     return Hash();
 }
 void __cdecl StubHook(int n) {
     Record(22, static_cast<std::uint32_t>(n), Sc(), En());
-    if (Hash() % 2) SetPtr(at::kEnemyCurrent, EnemyObj(Hash() >> 8));
+    if (Hash() % 2) SetPtr(BattleE3_CurrentEnemy_addr, EnemyObj(Hash() >> 8));
     Disturb();
 }
 
@@ -336,10 +338,10 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {at::kTasks, 0x22A0},        // the 48 slots (an actor's slot up to 63 runs into the enemy objects), the objects
     {0x937F88, 4},               // Sprite_Current
-    {at::kEnemyCurrent, 4},
+    {BattleE3_CurrentEnemy_addr, 4},
     {at::kStatBlock, 0x24},      // the 32 bytes copied in, the pointer 0x939FA0
     {at::kRoundFlags - 8, 0x260},  // the battle's globals 0x904AA0..0x904D00
-    {at::kTints, 0x300},         // tint records 0..63
+    {MoveScript_TintRecords_addr, 0x300}, // tint records 0..63
     {0x65C4D0, 0x1800},          // the ability records 0..255 (constant data - random here, put back after)
 };
 constexpr unsigned kRegionBytes = 0x22A0 + 4 + 4 + 0x24 + 0x260 + 0x300 + 0x1800;
@@ -376,28 +378,30 @@ bool Half() { return (Next() & 1) != 0; }
 // Random bytes put back inside what the tables and buffers hold.
 void Fix() {
     Sprite_Current = EnemyObj(Next());
-    SetPtr(at::kEnemyCurrent, Often() ? Sprite_Current : EnemyObj(Next()));
+    SetPtr(BattleE3_CurrentEnemy_addr, Often() ? Sprite_Current : EnemyObj(Next()));
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObj(i);
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
         SmallSteps(e, Next());
-        e[5] = static_cast<unsigned char>(Actor(Next()));
+        enemy_rec->actor = static_cast<unsigned char>(Actor(Next()));
         e[7] = static_cast<unsigned char>(Next() % 0x40);
-        e[8] = static_cast<unsigned char>(Next() % 5);
+        enemy_rec->layout = static_cast<unsigned char>(Next() % 5);
         SetPtr(Address(e + 0xF4), reinterpret_cast<const void*>(&StubHook));
         SetPtr(Address(e + 0xF8), g_cue + i * 2);   // each its own offset: a cue read through the wrong enemy shows
     }
-    SetPtr(at::kCommandSource, g_target + Next() % kTargets);
-    SetPtr(at::kResult, EnemyObj(Next()) + 0x104);
+    SetPtr(BattleActorCopies_Command_addr, g_target + Next() % kTargets);
+    SetPtr(BattleDamage_Result_addr, EnemyObj(Next()) + 0x104);
     SetWord(At(at::kMagicId), (Half() ? (Next() % 4) << 8 : 0) | (Next() & 0xFF));
     At(at::kActionKind)[0] = static_cast<unsigned char>(Next() % 7);
-    if (Half()) At(at::kEventBattle)[0] = 0;
-    if (Half()) At(at::kTargeting)[0] = 0;
+    if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
+    if (Half()) At(BattleE4_Picking_addr)[0] = 0;
 }
 
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     unsigned char* const e = Current();
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
     switch (k) {
     case kStepDispatch: s[1] = static_cast<unsigned char>(Often() ? Next() % 12 : Next() % kBlockEntries); break;
     case kEnterDispatch: s[2] = static_cast<unsigned char>(Often() ? Next() % 2 : Next() % 33); break;
@@ -423,8 +427,8 @@ void Seed(unsigned k) {
     }
     case kHighlightOn:
     case kHighlightPulse: {
-        if (Often()) At(at::kTargeting)[0] = static_cast<unsigned char>(Next() | 1);
-        unsigned char* const t = move_script::At(static_cast<std::uint32_t>(Long(At(at::kCommandSource))));
+        if (Often()) At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(Next() | 1);
+        unsigned char* const t = move_script::At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr))));
         const unsigned pick = Next() % 3;
         t[0] = static_cast<unsigned char>(pick == 0 ? s[5] : pick == 1 ? (Next() | 0x40) : Next() & ~0x40u);
         break;
@@ -432,15 +436,15 @@ void Seed(unsigned k) {
     case kReceive: {
         static const unsigned char kKinds[] = {0, 1, 1, 2, 3, 4, 4, 5, 5, 6};
         At(at::kActionKind)[0] = kKinds[Next() % 10];
-        if (Often()) e[0x10C] = static_cast<unsigned char>(Next() % 4);
+        if (Often()) enemy_rec->shown = static_cast<unsigned char>(Next() % 4);
         static const std::uint16_t kDelta[] = {0, 0, 1, 0xFFFF, 0x7FFF, 0x8000, 100};
-        SetWord(e + 0x108, kDelta[Next() % 7]);
-        SetWord(e + 0x10A, Often() ? kDelta[Next() % 7] : Next());
-        if (Half()) SetWord(e + 0xA4, 0);
+        enemy_rec->hp_change = kDelta[Next() % 7];
+        enemy_rec->ap_change = Often() ? kDelta[Next() % 7] : Next();
+        if (Half()) enemy_rec->hp = 0;
         if (Often()) e[0x111] = static_cast<unsigned char>(e[0x111] & ~2u);
         if (Half()) SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & ~0x2000u);
         if (Half()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x80);
-        if (Half()) At(at::kEventBattle)[0] = 0;
+        if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
         if (Half()) SetWord(At(at::kMagicId), Next() & 0xFF);
         break;
     }
@@ -521,10 +525,10 @@ void SelfTest() {
     static State saved, input, their_out, our_out;
     static constexpr auto kSlotStubs = SlotStubs(std::make_index_sequence<kBlockEntries>{});
     std::uint32_t saved_block[kBlockEntries];
-    std::memcpy(saved_block, At(kBlock), sizeof saved_block);
+    std::memcpy(saved_block, At(EnemyOp_Steps_addr), sizeof saved_block);
     Capture(saved);
     g = kStubs;
-    for (unsigned i = 0; i < kBlockEntries; ++i) SetPtr(kBlock + 4 * i, reinterpret_cast<const void*>(kSlotStubs[i]));
+    for (unsigned i = 0; i < kBlockEntries; ++i) SetPtr(EnemyOp_Steps_addr + 4 * i, reinterpret_cast<const void*>(kSlotStubs[i]));
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
     for (unsigned round = 0; round < kPerFunction * kCount; ++round) {
@@ -566,7 +570,7 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    std::memcpy(At(kBlock), saved_block, sizeof saved_block);
+    std::memcpy(At(EnemyOp_Steps_addr), saved_block, sizeof saved_block);
     Apply(saved);
 
     bof3::Log("shadow      enemy_ai_ops self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

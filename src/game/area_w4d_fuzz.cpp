@@ -150,12 +150,12 @@ enum : unsigned { k187Choice, k187Trigger, k187Tail };
 #undef AH_N
 #undef OURS
 
-const ah::DataTable kTables175[] = {{at::kArea175GlideStates, at::kArea175GlideStateCount}};
+const ah::DataTable kTables175[] = {{Area175_GlideStates_addr, at::kArea175GlideStateCount}};
 
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 unsigned char& B(U address) { return *ah::Mem(address); }
-unsigned char* EffectRecord(unsigned slot) { return ah::Mem(at::kEffectObjects + slot % at::kEffectCount * at::kEffectStride); }
+unsigned char* EffectRecord(unsigned slot) { return ah::Mem(Effect_Objects_addr + slot % at::kEffectCount * at::kEffectStride); }
 
 // ---- the fuzz's own memory (its region placed at SelfTest) ----
 
@@ -179,7 +179,7 @@ bool Running(int area, unsigned k) { return g_area == area && g_k == k; }
 // object itself.
 unsigned char* MemberRecord(U v) {
     switch (v % 4) {
-    case 0: return ah::Mem(at::kSpriteObjectsExtra + (v >> 2) % 4 * 0xA4);
+    case 0: return ah::Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4);
     case 1: return ah::Object(v >> 2);
     case 2: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return Sprite_Current;
@@ -187,14 +187,14 @@ unsigned char* MemberRecord(U v) {
 }
 unsigned char* ScriptRecord(U v) { return v & 1 ? ah::Object(v >> 1) : ah::PartyOf(static_cast<unsigned char>(v >> 1)); }
 // The focus object: a field object, or one of Sprite_ObjectsExtra's four.
-unsigned char* FocusRecord(U v) { return v % 5 == 0 ? ah::Mem(at::kSpriteObjectsExtra + (v >> 3) % 4 * 0xA4) : ah::Object(v >> 3); }
+unsigned char* FocusRecord(U v) { return v % 5 == 0 ? ah::Mem(Sprite_ObjectsExtra_addr + (v >> 3) % 4 * 0xA4) : ah::Object(v >> 3); }
 
 // Area 175's script message indexes the descriptor's +0x10 table by the
 // script object's +3 unchecked, as the engine does: the fuzz keeps it inside
 // the fourteen scripts after every move of the pointer or the byte.
 void Settle() {
     if (!Running(175, k175Script)) return;
-    unsigned char* const object = ah::Pointer(at::kScriptObject);
+    unsigned char* const object = ah::Pointer(MoveScript_Object_addr);
     object[3] = static_cast<unsigned char>(object[3] % at::kArea175ScriptCount);
 }
 
@@ -211,7 +211,7 @@ void MoveCurrent(U n) { Sprite_Current = n & 0x100 ? ah::PartyOf(static_cast<uns
 U FindFreeEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) MoveCurrent(n);
-    if (n & 2) ah::SetPointer(at::kActiveMember, MemberRecord(n >> 12));
+    if (n & 2) ah::SetPointer(Field_ActiveMember_addr, MemberRecord(n >> 12));
     return answer;
 }
 // Msg_OpenScript: area 175's script message reads the script object again
@@ -219,10 +219,10 @@ U FindFreeEffect(const U*, U answer) {
 U OpenScriptEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) {
-        ah::SetPointer(at::kScriptObject, ScriptRecord(n >> 8));
+        ah::SetPointer(MoveScript_Object_addr, ScriptRecord(n >> 8));
         Settle();
     }
-    if (n & 2) B(at::kTailState) = static_cast<unsigned char>(n & 4 ? (n >> 16) % 3 : n >> 16);
+    if (n & 2) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n & 4 ? (n >> 16) % 3 : n >> 16);
     if (n & 8) Field_Request = static_cast<unsigned char>(n & 0x10 ? 2 : n >> 24);
     return answer;
 }
@@ -230,7 +230,7 @@ U OpenScriptEffect(const U*, U answer) {
 // the message).
 U Set40Effect(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) B(at::kTailState) = static_cast<unsigned char>(n >> 8);
+    if (n & 1) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 // The sound, the disarm and the flag clear: the step hook and area 187's tail
@@ -238,7 +238,7 @@ U Set40Effect(const U*, U answer) {
 U MovesReturnPoint(const U*, U answer) {
     const U n = ah::Noise();
     if (n % 3 == 0) {
-        static const U kCells[] = {at::kReturnX, at::kReturnZ, at::kReturnArea};
+        static const U kCells[] = {AreaW2d_ReturnPoint_addr, AreaW4d_ReturnZ_addr, AreaW4d_ReturnArea_addr};
         move_script::SetWord(ah::Mem(kCells[(n >> 4) % 3] + ((n >> 6) & 2)), n >> 16);
     }
     return answer;
@@ -299,7 +299,7 @@ U SinEffect(const U*, U answer) {
 U CosEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n % 4 == 0) Frame_Counter = n >> 8;
-    if (n % 5 == 1) SomeFloat(at::kScreenXY + ((n >> 3) & 4), n >> 5);
+    if (n % 5 == 1) SomeFloat(MapView_ScreenXY_addr + ((n >> 3) & 4), n >> 5);
     return answer;
 }
 // Gte_RotTransPers writes the screen point into the tile (two words of x, y
@@ -357,32 +357,32 @@ const ah::Callee kCallees[] = {
 // fuzz's buffer, the map focus and origin, Sprite_Kind2's z, the camera
 // angles.
 ah::Region g_regions[] = {
-    {at::kEffectObjects, at::kEffectCount * at::kEffectStride},
+    {Effect_Objects_addr, at::kEffectCount * at::kEffectStride},
     // effect "record" 0xFF, where a spawn that took the miss for a slot
     // would write (control A37 stood until this was compared)
-    {at::kEffectObjects + 0xFF * at::kEffectStride, at::kEffectStride},
-    {at::kActiveMember, 4},
-    {at::kScriptObject, 4},
-    {at::kFocusObject, 4},
-    {at::kFacility, at::kFacilityBytes},
-    {at::kHookArmed, 1},
-    {at::kVertex, 6},
-    {at::kScreenXY, 8},
-    {at::kPacketNext, 4},
+    {Effect_Objects_addr + 0xFF * at::kEffectStride, at::kEffectStride},
+    {Field_ActiveMember_addr, 4},
+    {MoveScript_Object_addr, 4},
+    {AreaW1a_FocusObject_addr, 4},
+    {Rest4b_BoardFlag_addr, at::kFacilityBytes},
+    {AreaW4d_HookArmed_addr, 1},
+    {Prim_VertexScratch_addr, 6},
+    {MapView_ScreenXY_addr, 8},
+    {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},   // g_packets, placed at SelfTest
-    {at::kFocusZ, 4},
-    {at::kOriginY - 2, 4},
-    {at::kKind2Z, 4},
-    {at::kCameraAngles, 6},
+    {MapView_FocusZ_addr, 4},
+    {MapView_Origin_addr + 0x2 - 2, 4},
+    {Sprite_Kind2_addr + 0x38, 4},
+    {Camera_Angles_addr, 6},
 };
 
 // Every round: the pointers the areas follow put back inside the regions.
 void Common(int area, unsigned k) {
     g_area = area;
     g_k = k;
-    ah::SetPointer(at::kActiveMember, MemberRecord(ah::Next()));
-    ah::SetPointer(at::kScriptObject, ScriptRecord(ah::Next()));
-    ah::SetPointer(at::kFocusObject, FocusRecord(ah::Next()));
+    ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
+    ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(ah::Next()));
     SetPacketNext(ah::Next());
 }
 
@@ -391,21 +391,21 @@ void Common(int area, unsigned k) {
 void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 11) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
     case 1: move_script::SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? v % 3 : v); break;
     case 2: B(at::kCounter0) = v; break;
-    case 3: ah::SetPointer(at::kActiveMember, MemberRecord(h >> 16)); break;
-    case 4: ah::SetPointer(at::kScriptObject, ScriptRecord(h >> 16)); break;
-    case 5: ah::SetPointer(at::kFocusObject, FocusRecord(h >> 16)); break;
-    case 6: B(at::kFacility + (h >> 12) % at::kFacilityBytes) = v; break;
-    case 7: B(at::kHookArmed) = static_cast<unsigned char>(h & 0x100 ? v & 1 : v); break;
+    case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
+    case 4: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
+    case 5: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
+    case 6: B(Rest4b_BoardFlag_addr + (h >> 12) % at::kFacilityBytes) = v; break;
+    case 7: B(AreaW4d_HookArmed_addr) = static_cast<unsigned char>(h & 0x100 ? v & 1 : v); break;
     case 8: {
         static const U kFocus[] = {0x4400, 0x6C00, 0x6200, 0x4E00};
-        move_script::SetLong(ah::Mem(at::kFocusZ), static_cast<std::int32_t>(h & 0x100 ? kFocus[(h >> 12) % 4] : h >> 12));
+        move_script::SetLong(ah::Mem(MapView_FocusZ_addr), static_cast<std::int32_t>(h & 0x100 ? kFocus[(h >> 12) % 4] : h >> 12));
         break;
     }
     case 9: Field_Request = static_cast<unsigned char>(h & 0x100 ? 2 : v); break;
-    default: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 6); break;
+    default: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 6); break;
     }
     Settle();
 }
@@ -413,11 +413,11 @@ void Disturb(U h) {
 // A choice answer: each value a handler tests, its neighbours, a negative
 // byte (read signed by choice 27 and area 187's), anything.
 void SeedAnswer() {
-    if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5, 0, 1, 0xFF, 0x80, 0x81, 0x7F));
+    if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5, 0, 1, 0xFF, 0x80, 0x81, 0x7F));
 }
 // Party_Zenny at 500 and beside, and far off.
 void SeedZenny() {
-    if (ah::Often()) move_script::SetLong(ah::Mem(at::kZenny), static_cast<std::int32_t>(AH_PICK(0x1F4, 0x1F3, 0x1F5, 0, 0xFFFFFFFFu, 0x800001F3u, 0x100001F3u)));
+    if (ah::Often()) move_script::SetLong(ah::Mem(Party_Zenny_addr), static_cast<std::int32_t>(AH_PICK(0x1F4, 0x1F3, 0x1F5, 0, 0xFFFFFFFFu, 0x800001F3u, 0x100001F3u)));
 }
 // A 16.16 word with the high word `high` and any low word.
 U At16(U high, U low) { return (high & 0xFFFF) << 16 | (low & 0xFFFF); }
@@ -451,7 +451,7 @@ void Seed175(unsigned k) {
     case k175Script: {
         // the script [object +3] one of the fourteen, its position inside the
         // script half the time (any word one time in sixteen)
-        unsigned char* const object = ah::Pointer(at::kScriptObject);
+        unsigned char* const object = ah::Pointer(MoveScript_Object_addr);
         object[3] = static_cast<unsigned char>(ah::Next() % at::kArea175ScriptCount);
         if (ah::Next() % 16 != 0) move_script::SetWord(object + 0xA, ah::Half() ? ah::Next() % 0x30 : ah::Next() % 0x100);
         break;
@@ -462,7 +462,7 @@ void Seed175(unsigned k) {
 // An object trigger is called (a field object, 0x904030).
 void ArgsTrigger(unsigned, U* a) {
     a[0] = Key(ah::Object(a[0]));
-    a[1] = at::kStoryFlags;
+    a[1] = Cond_Flags_addr + 0xa0;
 }
 void Args175(unsigned k, U* a) {
     if (k == k175Trigger) ArgsTrigger(k, a);
@@ -493,7 +493,7 @@ void Seed179(unsigned k) {
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(0, 0, 1, 0x80));
         break;
     case k179Cell:
-        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81, 0x11));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81, 0x11));
         if (ah::Often()) Cond_ByteFA = static_cast<signed char>(AH_PICK(7, 8, 0x7F, 0x80, 0xFF));
         break;
     default: break;
@@ -513,7 +513,7 @@ void Seed185(unsigned k) {
     switch (k) {
     case k185Choice27: case k185Facility: SeedAnswer(); break;
     case k185Step:
-        if (ah::Often()) B(at::kHookArmed) = static_cast<unsigned char>(AH_PICK(0, 1, 1, 0x80, 2));
+        if (ah::Often()) B(AreaW4d_HookArmed_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 1, 0x80, 2));
         break;
     case k185Draw:
         Sprite_Current = EffectRecord(ah::Next() % 4);
@@ -533,13 +533,13 @@ void Seed186(unsigned k) {
     switch (k) {
     case k186Tail: {
         static const U kStates[] = {0, 1, 0xA, 0xB, 0, 1, 0xA, 0xB, 2, 5, 9, 0xC, 0xFF, 0x80, 0x7F};
-        B(at::kTailState) = static_cast<unsigned char>(ah::Pick(kStates, sizeof kStates / sizeof kStates[0]));
-        if (ah::Often()) move_script::SetLong(ah::Mem(at::kFocusZ), static_cast<std::int32_t>(AH_PICK(0x4400, 0x6C00, 0x4400, 0x6C00, 0x4401, 0x6BFF, 0x10004400, 0x6200)));
+        B(AreaW0c_TailState_addr) = static_cast<unsigned char>(ah::Pick(kStates, sizeof kStates / sizeof kStates[0]));
+        if (ah::Often()) move_script::SetLong(ah::Mem(MapView_FocusZ_addr), static_cast<std::int32_t>(AH_PICK(0x4400, 0x6C00, 0x4400, 0x6C00, 0x4401, 0x6BFF, 0x10004400, 0x6200)));
         if (ah::Often()) move_script::SetWord(ah::Mem(at::kTailTimer), AH_PICK(1, 1, 2, 0, 0x101, 0xFFFF));
         break;
     }
     case k186Init:
-        if (ah::Often()) B(at::kKind2Mode) = static_cast<unsigned char>(AH_PICK(1, 2, 1, 2, 0, 3, 0x81, 0x82));
+        if (ah::Often()) B(AreaW1a_EntryZone_addr) = static_cast<unsigned char>(AH_PICK(1, 2, 1, 2, 0, 3, 0x81, 0x82));
         break;
     default: break;
     }
@@ -554,7 +554,7 @@ void Seed187(unsigned k) {
     switch (k) {
     case k187Choice: SeedAnswer(); break;
     case k187Tail:
-        if (ah::Often()) B(at::kTailState) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 2, 3, 0xFF, 0x80));
+        if (ah::Often()) B(AreaW0c_TailState_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 2, 3, 0xFF, 0x80));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 2, 0, 1, 3, 0x82));
         break;
     default: break;

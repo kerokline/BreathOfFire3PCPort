@@ -499,7 +499,7 @@ Args Seed(unsigned k) {
             }
             break;
         case 1:
-            x.a[1] = Byte(Half() ? At(at::kExtraAccessory)[0] : At(at::kExtraItem)[0]);
+            x.a[1] = Byte(Half() ? At(at::kExtraAccessory)[0] : At(CharStats_ExtraItem_addr)[0]);
             break;
         default: break;
         }
