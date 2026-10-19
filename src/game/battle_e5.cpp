@@ -145,12 +145,12 @@ extern "C" void __cdecl EnemyAI_ScaleStat(unsigned char* enemy, unsigned which, 
     auto* const enemy_rec = rv::As<records::BattleEnemy>(enemy);
     const U f = factor & 0xFF;
     switch (which & 0xFF) {
-    case 0: ScaleCapped(enemy + 0xA4, enemy_rec->hp * f, Word(enemy + 0xD0)); break;
-    case 1: ScaleCapped(enemy + 0xA6, enemy_rec->ap * f, Word(enemy + 0xD2)); break;
-    case 2: ScaleCapped(enemy + 0xD4, Word(enemy + 0xD4) * f, 999); break;
-    case 3: ScaleCapped(enemy + 0xD6, Word(enemy + 0xD6) * f, 999); break;
-    case 4: ScaleCapped(enemy + 0xD8, Word(enemy + 0xD8) * f, 999); break;
-    case 5: ScaleCapped(enemy + 0xDA, Word(enemy + 0xDA) * f, 999); break;
+    case 0: ScaleCapped(enemy + 0xA4, enemy_rec->hp * f, enemy_rec->base_max_hp); break;
+    case 1: ScaleCapped(enemy + 0xA6, enemy_rec->ap * f, enemy_rec->base_max_ap); break;
+    case 2: ScaleCapped(enemy + 0xD4, enemy_rec->base_atk * f, 999); break;
+    case 3: ScaleCapped(enemy + 0xD6, enemy_rec->base_def * f, 999); break;
+    case 4: ScaleCapped(enemy + 0xD8, enemy_rec->base_agi * f, 999); break;
+    case 5: ScaleCapped(enemy + 0xDA, enemy_rec->base_intel * f, 999); break;
     case 6: ScaleCapped(enemy + 0x98, enemy_rec->level * f * f, 999); break;
     default: break;
     }
@@ -375,7 +375,7 @@ extern "C" void __cdecl Effect_QuarterAttack(void) {
         const unsigned actor = B(at::kActor);
         B(at::kFlags) = static_cast<unsigned char>(B(at::kFlags) | 0x80);
         const short delta = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
-        SetWord(Result() + 4, static_cast<std::uint16_t>(delta));
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(Result())->hp_change, static_cast<std::uint16_t>(delta));
         return;
     }
     Result()[8] = 1;
@@ -408,16 +408,16 @@ extern "C" void __cdecl BattleForm_ApplyStats(void) {
         if ((c[0x96] & 2) == 0) continue;
         const S32 product = static_cast<S32>(static_cast<U>(c[0]) * static_cast<U>(S16(ee0)) + 5u);
         const std::uint16_t hp = static_cast<std::uint16_t>(S16(ee0) - product / 10);
-        SetWord(c + 0x22, hp);
+        rv::Store<unsigned>(member_rec->base_max_hp, hp);
         member_rec->max_hp = hp;
-        SetWord(c + 0x26, Word(c + 0x26) + W(0x939EE2));
-        member_rec->atk = Word(c + 0x26);
-        SetWord(c + 0x28, Word(c + 0x28) + ee4);
-        member_rec->def = Word(c + 0x28);
-        SetWord(c + 0x2A, Word(c + 0x2A) + W(0x939EE6));
-        member_rec->agi = Word(c + 0x2A);
-        SetWord(c + 0x2C, Word(c + 0x2C) + ee8);
-        member_rec->intel = Word(c + 0x2C);
+        rv::Store<unsigned>(member_rec->base_atk, member_rec->base_atk + W(0x939EE2));
+        member_rec->atk = member_rec->base_atk;
+        rv::Store<unsigned>(member_rec->base_def, member_rec->base_def + ee4);
+        member_rec->def = member_rec->base_def;
+        rv::Store<unsigned>(member_rec->base_agi, member_rec->base_agi + W(0x939EE6));
+        member_rec->agi = member_rec->base_agi;
+        rv::Store<unsigned>(member_rec->base_intel, member_rec->base_intel + ee8);
+        member_rec->intel = member_rec->base_intel;
         for (unsigned i = 0; i < 6; ++i) {
             c[0x31 + i] = B(0x939EEA + i);
             c[0x11 + i] = c[0x31 + i];

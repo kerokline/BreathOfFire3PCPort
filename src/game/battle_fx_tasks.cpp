@@ -185,14 +185,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_DamagePopup
             g.rolling_digits((ta & 0xFFFFFF00u) | task_rec->clut);
             return;
         }
-        g.draw_number(static_cast<int>((sc & 0xFFFF0000u) | ((Word(t + 0x36) - 0xCu) & 0xFFFFu)),
-                      static_cast<int>(Word(t + 0x3A)), (sc & 0xFFFFFF00u) | task_rec->clut, Word(t + 0x60));
+        g.draw_number(static_cast<int>((sc & 0xFFFF0000u) | ((task_rec->x_whole - 0xCu) & 0xFFFFu)),
+                      static_cast<int>(task_rec->z_whole), (sc & 0xFFFFFF00u) | task_rec->clut, Word(t + 0x60));
         return;
     case 1:
     case 2:
     case 3:
-        g.draw_label(static_cast<int>((ta & 0xFFFF0000u) | Word(t + 0x36)),
-                     static_cast<int>((sc & 0xFFFF0000u) | Word(t + 0x3A)), task_rec->clut, 3u - task_rec->mode);
+        g.draw_label(static_cast<int>((ta & 0xFFFF0000u) | task_rec->x_whole),
+                     static_cast<int>((sc & 0xFFFF0000u) | task_rec->z_whole), task_rec->clut, 3u - task_rec->mode);
         return;
     default:
         return;
@@ -220,24 +220,24 @@ extern "C" void __cdecl BattleFx_PopupStart(void) {
     unsigned actor = o[5];
     if (actor <= 2) {
         std::uint32_t k = Word(o + 0x2C) * 4u + o[8];
-        SetWord(s + 0x36, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + k * 2)[0])) + Word(o + 0x2E));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + k * 2)[0])) + Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         k = Word(o + 0x2C) * 4u + o[8];
-        SetWord(s + 0x3A, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + 1 + k * 2)[0])) + Word(o + 0x30));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(BattleWin_MemberTargetOffsets_addr + 1 + k * 2)[0])) + Word(o + 0x30));
     } else {
-        SetWord(s + 0x36, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->x_whole, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF2 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x2E));
         s = Cur();
         o = OwnerOf(s);
         actor = o[5];
-        SetWord(s + 0x3A, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->z_whole, static_cast<unsigned>(static_cast<signed char>(At(at::kEnemies + 0xF3 + (actor - 3u) * at::kEnemySize)[0])) +
                               Word(o + 0x30));
     }
     unsigned char* d = Cur();
     records::BattleTask* task_d = rv::As<records::BattleTask>(d);
     if (d[0xB] == 1) {
-        SetWord(d + 0x3A, Word(d + 0x3A) - 9u);
+        rv::Store<unsigned>(task_d->z_whole, task_d->z_whole - 9u);
         d = Cur();
         task_d = rv::As<records::BattleTask>(d);
     }
@@ -280,10 +280,10 @@ extern "C" void __cdecl BattleFx_PopupRise(void) {
     rv::As<records::BattleTask>(Cur())->step_z = static_cast<std::int32_t>(0xFFFA0000u);
     s = Cur();
     task_rec = rv::As<records::BattleTask>(s);
-    task_rec->work_1c = static_cast<short>(Word(s + 0x3A));
+    task_rec->work_1c = static_cast<short>(task_rec->z_whole);
     s = Cur();
     task_rec = rv::As<records::BattleTask>(s);
-    task_rec->work_18 = static_cast<short>(Word(s + 0x36));
+    task_rec->work_18 = static_cast<short>(task_rec->x_whole);
 }
 
 // original 0x432E50 (state 3): the bounce. It ends - timer 10, state + 1 -
@@ -296,7 +296,7 @@ extern "C" void __cdecl BattleFx_PopupRise(void) {
 extern "C" void __cdecl BattleFx_PopupBounce(void) {
     unsigned char* s = Cur();
     records::BattleTask* task_rec = rv::As<records::BattleTask>(s);
-    if (!(task_rec->work_1c > static_cast<short>(Word(s + 0x3A))) && task_rec->work_18 != static_cast<short>(Word(s + 0x36))) {
+    if (!(task_rec->work_1c > static_cast<short>(task_rec->z_whole)) && task_rec->work_18 != static_cast<short>(task_rec->x_whole)) {
         task_rec->timer = 0xA;
         rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
         return;
@@ -360,7 +360,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_PoseStart(v
         task_rec->clut = static_cast<unsigned char>(At(at::kPoseClut + sc[7])[0] - 0x50);
     }
     Sc()[0x28] = 0;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     {
         unsigned char* const sc = Sc();

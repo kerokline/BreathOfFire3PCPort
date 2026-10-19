@@ -309,7 +309,7 @@ extern "C" void __cdecl Battle_ReturnQueuedItem(unsigned actor) {
     unsigned char* const o = P(a);
     if (o[at::kPQueuedKind] != 5) return;
     if (o[at::kPQueuedItem + 1] != 0) return;
-    g.return_item(o[at::kPItemSlot], Word(o + at::kPQueuedItem));
+    g.return_item(o[at::kPItemSlot], rv::As<records::PartyMember>(o)->queued_id);
 }
 
 // original 0x44AA00 (PSX 0x801DEA9C, the same): one of two system lines at
@@ -347,7 +347,7 @@ extern "C" unsigned __cdecl BattleStep_Expire4000() {
         if ((Long(flags) & 0x4000) == 0 || member_rec->count_4000 != 3) continue;
         member_rec->count_4000 = 0;
         SetLong(flags, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(flags)) & ~0x4000u));
-        SetWord(o + at::kPHpChange, member_rec->hp);
+        rv::Store<unsigned>(member_rec->hp_change, member_rec->hp);
         MarkEffect(o);
         o[at::kPEffect] = 0x11;
         count = (count + 1) & 0xFF;
@@ -509,7 +509,7 @@ extern "C" unsigned __cdecl BattleStep_HpDrift() {
         unsigned char* const o = P(i);
         auto* const member_rec = rv::As<records::PartyMember>(o);
         std::uint16_t w = 0;
-        SetWord(o + at::kPApChange, 0);
+        rv::Store<unsigned>(member_rec->ap_change, 0);
         if (Cond_Flags[0xd0] == 5) --w;
         const int n = static_cast<int>(member_rec->max_hp) + 10;
         if (member_rec->char_id == 6) w = static_cast<std::uint16_t>(w + n / -20);
@@ -527,7 +527,7 @@ extern "C" unsigned __cdecl BattleStep_HpDrift() {
         if (member_rec->accessory[0] == 0x17) --w;
         if (member_rec->accessory[1] == 0x17) --w;
         if (o[at::kPStatus] & 1) w = static_cast<std::uint16_t>(w - (member_rec->max_hp >> 1));
-        SetWord(o + at::kPHpChange, w);
+        rv::Store<unsigned>(member_rec->hp_change, w);
         if (w == 0) continue;
         MarkEffect(o);
         o[at::kPEffect] = 0x11;
@@ -571,10 +571,10 @@ extern "C" unsigned __cdecl BattleStep_ApUpkeep() {
             g.set_pending(i);
             continue;
         }
-        SetWord(o + at::kPHpChange, 0);
-        SetWord(o + at::kPApChange, 0);
+        rv::Store<unsigned>(member_rec->hp_change, 0);
+        rv::Store<unsigned>(member_rec->ap_change, 0);
         member_rec->ap = member_rec->ap - static_cast<unsigned>(cost);
-        SetWord(o + at::kPApChange, static_cast<unsigned>(cost));
+        rv::Store<unsigned>(member_rec->ap_change, static_cast<unsigned>(cost));
         if ((cost & 0xFFFF) == 0) continue;
         MarkEffect(o);
         o[at::kPEffect] = 2;

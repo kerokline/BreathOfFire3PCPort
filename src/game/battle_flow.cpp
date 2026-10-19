@@ -483,8 +483,8 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_RollingDigi
     auto n = static_cast<signed char>(task_rec->digits);
     while (n >= 0) {
         const int digit = (static_cast<short>(task_rec->digit_phase) + n) % 10;
-        const int x = static_cast<short>(static_cast<std::uint16_t>(Word(s + 0x36) - n * 8 - 0xC));
-        g.draw_number(x, static_cast<short>(Word(s + 0x3A)), clut, static_cast<unsigned>(digit));
+        const int x = static_cast<short>(static_cast<std::uint16_t>(task_rec->x_whole - n * 8 - 0xC));
+        g.draw_number(x, static_cast<short>(task_rec->z_whole), clut, static_cast<unsigned>(digit));
         n = static_cast<signed char>(n - 1);
         s = CurrentTask();
         task_rec = rv::As<records::BattleTask>(s);
@@ -516,18 +516,19 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_DrawNumber(in
     do {
         if (c[0] != ' ') {
             unsigned char* const p = Gfx_PacketNext;
+            auto* const sprt = rv::As<records::GpuSprt>(p);  // a SPRT: g.set_sprt (Gpu_SetSprt) below starts it
             c[0] = static_cast<unsigned char>(c[0] - 0x30);
             const unsigned clut_word = g.get_clut(static_cast<int>((clut & 0xFF) << 4), 0x1E0);
-            SetWord(p + 0x16, clut_word);
+            rv::Store<unsigned>(sprt->clut, clut_word);
             p[4] = 0x80;
             p[5] = 0x80;
             p[6] = 0x80;
-            SetLong(p + 8, FloatOfShort(pen));
-            SetLong(p + 0xC, FloatOfShort(y));
+            rv::Store<float>(sprt->x, std::bit_cast<float>(FloatOfShort(pen)));
+            rv::Store<float>(sprt->y, std::bit_cast<float>(FloatOfShort(y)));
             p[0x15] = 0xD0;
-            SetWord(p + 0x18, 8);
+            rv::Store<unsigned>(sprt->w, 8);
             p[0x14] = static_cast<unsigned char>((c[0] + 0x16) << 3);
-            SetWord(p + 0x1A, 8);
+            rv::Store<unsigned>(sprt->h, 8);
             g.set_sprt(p);
             g.commit(1, 0x1C);
         }
@@ -546,17 +547,18 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Battle_DrawLabel(int
     g.draw_mode(Gfx_PacketNext, 0, 0, tpage, 0);
     g.commit(1, 0xC);
     unsigned char* const p = Gfx_PacketNext;
+    auto* const sprt = rv::As<records::GpuSprt>(p);  // a SPRT: g.set_sprt (Gpu_SetSprt) below starts it
     const unsigned clut_word = g.get_clut(static_cast<int>((clut & 0xFF) << 4), 0x1E0);
-    SetWord(p + 0x16, clut_word);
+    rv::Store<unsigned>(sprt->clut, clut_word);
     p[4] = 0x80;
     p[5] = 0x80;
     p[6] = 0x80;
-    SetLong(p + 8, FloatOfShort(x));
-    SetLong(p + 0xC, FloatOfShort(y));
+    rv::Store<float>(sprt->x, std::bit_cast<float>(FloatOfShort(x)));
+    rv::Store<float>(sprt->y, std::bit_cast<float>(FloatOfShort(y)));
     p[0x15] = 0xD0;
     p[0x14] = static_cast<unsigned char>(cell * 0x18 + 0x68);
-    SetWord(p + 0x18, 0x18);
-    SetWord(p + 0x1A, 8);
+    rv::Store<unsigned>(sprt->w, 0x18);
+    rv::Store<unsigned>(sprt->h, 8);
     g.set_sprt(p);
     g.commit(1, 0x1C);
 }

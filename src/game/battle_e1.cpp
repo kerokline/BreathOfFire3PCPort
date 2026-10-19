@@ -686,7 +686,7 @@ extern "C" unsigned char __cdecl BattleAction_PickRandomAbility(void) {
     unsigned char* const record = PtrAt(at::kActing2);
     SetWord(At(at::kActionId), id);
     const unsigned char flags = B(bof3::addr::NameTable_Abilities + 24u * id);
-    SetWord(record + 2, id);
+    rv::Store<unsigned>(rv::As<records::ActionRecord>(record)->action_id, id);  // 0x904B40: the acting block's action record
     const bool party = B(at::kActor) <= 2;
     if (flags & 0x10) {
         if ((flags & 0x80) && !(flags & 0x40)) return 0xC0;
@@ -715,7 +715,7 @@ extern "C" void __cdecl BattleAction_AbilityNotice(void) {
         do {
             ++slot;
             BossSb_Countdown = slot;
-            const U id = Word(record + 2);
+            const U id = rv::As<records::ActionRecord>(record)->action_id;  // 0x904B40: the acting block's action record
             const bool learns = (Word(At(0x65C4DC + 24 * id)) & 0x200) != 0;
             unsigned char* const flags = At(0x802D24 + slot * at::kMemberSize);
             if (!(flags[0] & 8)) continue;

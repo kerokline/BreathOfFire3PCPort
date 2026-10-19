@@ -474,7 +474,7 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         member_rec = rv::As<records::PartyMember>(p);
         if (p[0x125] == 5) {
             const std::uint32_t flags = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130));
-            if ((flags & 0x4000) == 0) g.return_item(p[0x12E], Word(p + 0x126));
+            if ((flags & 0x4000) == 0) g.return_item(p[0x12E], member_rec->queued_id);
             else member_rec->flags_130 = static_cast<std::int32_t>(flags & ~0x4000u);
             p = MenuActor();
             member_rec = rv::As<records::PartyMember>(p);
@@ -569,7 +569,8 @@ extern "C" void __cdecl Cmd_ConfirmDefend(void) {
     const unsigned char target = rv::As<records::PartyMember>(MenuActor())->actor;
     MenuRecord()[0] = target;
     unsigned char* const r = MenuRecord();
-    SetLong(r + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(r + 0xC)) | 2u));
+    auto* const action = rv::As<records::ActionRecord>(r);  // 0x939FA0: the member's +0x124 (BattleInput_NextMember)
+    rv::Store<std::int32_t>(action->flags, static_cast<std::int32_t>(action->flags | 2u));
     rv::As<records::PartyMember>(MenuActor())->state = 2;
     const unsigned char index = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     BattleActions_Step = 1;
@@ -605,7 +606,7 @@ extern "C" void __cdecl Battle_CommitRound(void) {
         unsigned char* const p = Member(m);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if (p[0x125] != 5) continue;
-        const unsigned item = Word(p + 0x126);
+        const unsigned item = member_rec->queued_id;
         if ((item & 0xFF00) == 0) continue;
         const std::uint32_t flags = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130));
         if ((flags & 0x4000) == 0) g.return_item(p[0x12E], item);

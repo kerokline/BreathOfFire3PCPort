@@ -265,7 +265,7 @@ extern "C" void __cdecl Battle_BuildTurnOrder() {
         SetWord(slot + 2, a);
         SetWord(slot, 0);
         if (command == 4) {
-            const unsigned kind = At(bof3::addr::NameTable_Abilities + Word(p + at::kPCommandId) * at::kAbilityStride)[1];
+            const unsigned kind = At(bof3::addr::NameTable_Abilities + pr->queued_id * at::kAbilityStride)[1];
             if (kind == 0) SetWord(slot, 4);
             else if (kind == 1 || kind == 3) SetWord(slot, 2);
         }
@@ -617,7 +617,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
             }
             const std::int32_t hp = er->hp;
             if (v > 0) {
-                SetWord(e + at::kEHp, hp > v ? U32(hp - v) : 0);
+                rv::Store<unsigned>(er->hp, hp > v ? U32(hp - v) : 0);
             } else {
                 const std::int32_t max = er->max_hp;
                 if (hp - v < max) {
@@ -723,19 +723,19 @@ extern "C" void __cdecl Effect_ApplyResult() {
 
     const unsigned t = Byte(at::kTarget);
     if (t <= 2 ? (static_cast<std::int32_t>(rv::As<records::PartyMember>(Party(t) - 0x10)->flags_130) & 0x10000) : (static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->flags_110) & 0x10000)) {
-        SetWord(Result() + 4, 0);
-        SetWord(Result() + 6, 0);
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(Result())->hp_change, 0);
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(Result())->ap_change, 0);
     }
     unsigned char* r = Result();
-    if (S16(Word(r + 4)) > 9999) {
-        SetWord(r + 4, 9999);
+    if (rv::As<records::ActionRecord>(r)->hp_change > 9999) {
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(r)->hp_change, 9999);
         r = Result();
     }
-    if (S16(Word(r + 4)) < -9999) {
-        SetWord(r + 4, static_cast<unsigned>(-9999));
+    if (rv::As<records::ActionRecord>(r)->hp_change < -9999) {
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(r)->hp_change, static_cast<unsigned>(-9999));
         r = Result();
     }
-    const std::int32_t hp_delta = S16(Word(r + 4));
+    const std::int32_t hp_delta = rv::As<records::ActionRecord>(r)->hp_change;
     if (hp_delta != 0) {
         if (t <= 2) {
             unsigned char* const p = Party(t);
@@ -752,9 +752,9 @@ extern "C" void __cdecl Effect_ApplyResult() {
             } else {
                 const std::int32_t max = pr->max_hp;
                 if (hp - hp_delta < max) {
-                    SetWord(p + at::kPHp, U32(hp - hp_delta));
+                    rv::Store<unsigned>(pr->hp, U32(hp - hp_delta));
                 } else {
-                    SetWord(p + at::kPHp, U32(max));
+                    rv::Store<unsigned>(pr->hp, U32(max));
                     p[at::kPShown] = static_cast<unsigned char>((p[at::kPShown] & 0xEF) | 5);
                 }
                 r = Result();
@@ -765,13 +765,13 @@ extern "C" void __cdecl Effect_ApplyResult() {
             const std::int32_t hp = er->hp;
             if (hp != 0xFFFF) {
                 if (hp_delta > 0) {
-                    SetWord(e + at::kEHp, hp > hp_delta ? U32(hp - hp_delta) : 0);
+                    rv::Store<unsigned>(er->hp, hp > hp_delta ? U32(hp - hp_delta) : 0);
                 } else {
                     const std::int32_t max = er->max_hp;
                     if (hp - hp_delta < max) {
-                        SetWord(e + at::kEHp, U32(hp - hp_delta));
+                        rv::Store<unsigned>(er->hp, U32(hp - hp_delta));
                     } else {
-                        SetWord(e + at::kEHp, U32(max));
+                        rv::Store<unsigned>(er->hp, U32(max));
                         er->shown = static_cast<unsigned char>((er->shown & 0xEF) | 5);
                     }
                     r = Result();
@@ -779,22 +779,22 @@ extern "C" void __cdecl Effect_ApplyResult() {
             }
         }
     }
-    if (S16(Word(r + 6)) > 9999) {
-        SetWord(r + 6, 9999);
+    if (rv::As<records::ActionRecord>(r)->ap_change > 9999) {
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(r)->ap_change, 9999);
         r = Result();
     }
-    if (S16(Word(r + 6)) < -9999) {
-        SetWord(r + 6, static_cast<unsigned>(-9999));
+    if (rv::As<records::ActionRecord>(r)->ap_change < -9999) {
+        rv::Store<unsigned>(rv::As<records::ActionRecord>(r)->ap_change, static_cast<unsigned>(-9999));
         r = Result();
     }
-    const std::int32_t ap_delta = S16(Word(r + 6));
+    const std::int32_t ap_delta = rv::As<records::ActionRecord>(r)->ap_change;
     if (ap_delta == 0) return;
     if (t <= 2) {
         unsigned char* const p = Party(t);
         auto* const pr = rv::As<records::PartyMember>(p - 0x10);
         const std::int32_t ap = pr->ap;
         if (ap_delta > 0) {
-            SetWord(p + at::kPAp, ap > ap_delta ? U32(ap - ap_delta) : 0);
+            rv::Store<unsigned>(pr->ap, ap > ap_delta ? U32(ap - ap_delta) : 0);
         } else {
             const std::int32_t max = pr->max_ap;
             if (ap - ap_delta < max) {
@@ -811,7 +811,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
     const std::int32_t ap = er->ap;
     if (ap == 0xFFFF) return;
     if (ap_delta > 0) {
-        SetWord(e + at::kEAp, ap > ap_delta ? U32(ap - ap_delta) : 0);
+        rv::Store<unsigned>(er->ap, ap > ap_delta ? U32(ap - ap_delta) : 0);
     } else if (ap - ap_delta < er->max_hp) {
         er->ap = U32(ap - ap_delta);
     } else {
