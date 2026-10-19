@@ -532,3 +532,164 @@ unwritten). The search handle's leak is not fixed.
   the menu is open, and a cue would write `Sound_Channels` in the span.
 - After a menu load, `Sound_ResumeAll` runs after the participants'
   restores: SP-A's participant decides what is playing then.
+
+## SP-G: the graphics participant (`GFX`)
+
+Stage B's group SP-G, branch `quicksave/spg` (2026-10-19):
+`src/render/gfx_snapshot.{h,cpp}`, with small accessors in `render_shim`,
+`layering`, `map_layers`, `widescreen` and `wide_rand`; the census rows are
+[`quicksave-census.md`](quicksave-census.md) 3.1, 4 and 5. Registered at
+start-up as `GFX` (InjectAll, beside `Snapshot_Inject`), with a **discard
+step** - SP-A's fourth argument of `Snapshot_Register`, adopted as SP-A wrote
+it so the two branches merge without a conflict in `snapshot.{h,cpp}`: it
+runs once the file is accepted and before the span is written, the one moment
+the span still holds the live process's words.
+
+### What is saved, what is kept, what is rebuilt
+
+| State | At F6 (the record) | At F7 |
+|---|---|---|
+| **The palette rows** `Gfx_ClutRows` (`0x6C2A40`, 512 x {generation, `0x1000`-byte block}) | every generation, and each block's `0x1000` bytes - **carried, not reconverted**: `Gfx_LoadImage` writes the shadow without converting the row (`gfx_image.cpp`), so a row can lag its shadow, and a reconversion would draw what the live game did not | the take's bytes into the live block (the pointer stays the process's - RC's `+4` words); a row with a block then and none now gets one (`Crt_malloc`, as `Gfx_ConvertRow` makes it); a row made since is freed and nulled, so `Gfx_ClutPixels` converts it on first use again, as then; the take's generations |
+| `Gfx_TexCache` (`0x6C3F40`), `D3d_CellTexCache` (`0x7CAE38`) | nothing | discard: every texture and surface the live tables hold, in the teardown's order, **released after the next present** (below); then both tables emptied - page and cell textures are built again on demand from the restored shadow and rows. Both tables are skip-listed: the hash sees neither their slots nor their use counters |
+| `Font_TexCache` (`0x7C9F50`, 128 x 0x14) | nothing (its words are in the span) | discard: the live surfaces released after the next present; then **every entry the take had built is built again** - `Font_BuildGlyphTexture(slot, glyph, CLUT)` from the take's words and rows - and the take's glyph, CLUT, generation and used words written back, so the cache's lookups and its choice of a free slot go on as they would have (the glyph words are not skip-listed: the hash sees them) |
+| the device's pipe state (`render_shim` `g_state`) and the clear colour | `PipeState` without its texture and grab, the colour | as at the take; consistent with `D3d_ShadeModeCache` (`0x6C3A44`), which comes back with the span |
+| DIV-0125's frame-buffer grabs | nothing | all forgotten (`render::ForgetGrabs`): the pictures they hold are the live moment's |
+| DIV-0071's last pass (`layering` `g_runs`, `g_runs_now`) | the runs the last pass stamped, each with its table index | both tables emptied; the runs written back at their indices **restamped with this process's `g_pass`**, so the next pass's `Defer` judges by what the take's last pass drew |
+| DIV-0085's `g_file_sides` (64 KB) | up to its last non-zero byte | as at the take (the rest zero) |
+| DIV-0041's `g_split` (22 records), `wide_rand`'s seed and last inset | copied | as at the take |
+
+**The display words kept live** (read by the discard step, written back over
+the span by the restore; checked against `symbols.toml` at start-up where it
+names them) - what `Display_Setup`, DIV-0042's resize and F8's teardown and
+set-up write, beyond SN's keep list: `Gfx_ScreenRect`'s right and bottom and
+the device count (`0x66B710`, 12 bytes), `Dd_CellBackdrop` and its pairs
+(`0x6BEA00`, 20), `D3d_BackMaterialHandle` (`0x6C3A40`), `0x6C3A48`,
+`Gfx_RenderFlags` and the device records (`0x6C3A48`, `0x4F8`), the desktop's
+height (`0x6C9F40`), its width with `D3d_ScaleY` / `D3d_ScaleX` (`0x7C9F44`,
+12), `D3d_AfterDraw`'s three surfaces (`0x7CADF8`, 12),
+`Display_ReleaseOrphans`' six objects (`0x7CAE20`, 24), `DDraw_Primary`,
+`DDraw_BackBuffer` and the Z-buffer (`0x7CC338`, 12), the clipper and the
+IDirect3D (`0x7CC348`, 8), `D3d_Viewport` and `D3d_BackMaterial` (`0x7CC354`,
+8), the back buffer's pitch and `Gfx_PixelFormat`'s three records
+(`0x7DED5C`, `0xC4`). Equal to the take's in one process that was not
+resized; a quicksave made in a window of another size, or before an F8, must
+not bring that moment's objects or scale back. `D3d_ShadeModeCache` is not
+kept: it goes with the pipe state.
+
+**Released after the next present** (`render::ReleaseAfterPresent`). The draw
+recorded before the load is presented by the next `Gpu_PutDispEnv`, and its
+commands name the live surfaces' versions; released at once, each would copy
+its pixels into the 8 MB frame arena (`BeforeWrite`; a page texture is
+128 KB, and 228..352 objects were released per load in the runs below). They
+go right after that present instead. Capcom's DirectX 6 objects
+(`BOF3X_ORIGINAL`) are released at once.
+
+**Not touched, by class** (census 3.1): `field_frame.cpp`'s band (per-frame);
+SatPixie's accumulation (DIV-0043: the pre-load picture's ghost fades over the
+next frames, under that look only; not measured); the Direct3D 11 backend's
+per-surface textures follow the surfaces (released ones are swept at the next
+present, new ones get new GPU textures).
+
+**SC's `g_pass += 2`, verified by reading and not taken:** with the history
+moved two passes on, the next `Defer` finds no run stamped `g_pass - 1`, and
+`RunsClear` answers false for a layer whose cells hold a record run ("was not
+drawn last pass") - the sprite is kept in its layer there, not judged by the
+proximity test the census expected (that is `g_runs_before == 0`'s path).
+Carrying the runs is exact and costs a few KB.
+
+The record: 15,067 bytes in the self-test (no palette rows); 17 rows, about
+80 KB, in the town and the house; 25, about 116 KB, on the world map.
+
+### The checks
+
+**Self-test** (`BOF3X_SELFTEST_ONLY` in the exe host, `BOF3X_SHADOW=gfx_snapshot`
+hosted): a take with rows 3, 40, 480 holding blocks and 41 none; then the
+live moment - row 40 freed, 41 made, 3 and 480 rewritten, generations moved,
+three stand-in surfaces in the three caches, the kept words scribbled; the
+discard and the restore as the core runs them. Checked: every generation and
+block as at the take (40's made again, 41's freed, 3's live block kept); the
+six cache objects deferred and **not** released before the present, released
+once each after it; the page and cell tables empty; the kept words the live
+ones; the record read to its end, and a take after the restore writing the
+same record. Passes (2026-10-19, `q_spg\launcher` and the combined build
+below). Not covered headless: the glyph rebuild (no glyph table before the
+game runs) - the live check covers it.
+
+**`BOF3X_FRAMEHASH=1`** (instrumentation, `render_shim.cpp`): at each present,
+one log line per **walk of the lists** - the commands appended under one
+`Frame_Counter` - with a 64-bit FNV-1a over them in order: the pipe state but
+its pointers, the vertices, and for a textured draw the **content** of the
+texture version sampled (size, format, colour key, the pixels within the
+width) - never an address, so a walk drawn with rebuilt textures hashes as the
+live one when the pixels agree. Per walk, not per present: a present carries
+two walks when two logic frames passed between draws (`Gpu_PutDispEnv`
+presents only when the display buffer changed). The clears are left out: they
+follow a present, whose timing is not the lists'. `tools/quicksave_frames.py
+LOG` pairs the walks tagged C + k after the F7 with those after the F6 (the
+walks drawn before the load and presented after it are passed over) and
+reports the first frame and the first difference.
+
+**The measurement.** `tools/quicksave_check.py run` on RC's proof recipes
+from ini-less launcher copies in `C:\Users\kerok\q_spg`, the exe host, the PC
+install hard-linked into `q_spg\game`, `--lang en-US`, `BOF3X_FRAMEHASH=1`,
+`BOF3X_SHOT_EVERY` (100, or 75) into `BOF3X_SHOT_DIR`, under the machine lock.
+Builds: **before** = `quicksave/round` `a8002f6f` (no `GFX`); **after** = this
+branch; **with SP-A** = this branch merged with `quicksave/spa` `5c6c82b3` in
+a scratch tree (nothing committed) - after alone, the missing sound
+participant ends every town run 36 ticks after the load (`SndBuf_Play` on a
+stale `Sound_Banks` buffer) and the world map's after 175 (`Music_SetVolume`
+.. `FinishStoppingFade`, in ntdll's heap). Conditions: **id** =
+`BOF3X_OPT=none BOF3X_LAYERING=0`; **def** = the player's defaults (layering
+on); **wide** = defaults with `BOF3X_WIDE=1`. "k" is ticks after the F7.
+
+| Route (F6 / F7) | Build, condition | State hash after F7 | Frames after F7: the first; equal / compared | Captures, after F6 against after F7 |
+|---|---|---|---|---|
+| worldMapAndAreaTransition (595 / 895) | before, id | equal for the 36 ticks before the sound crash | - (no frame hash) | - |
+| | before, def | from k=12: `0x6BC000`, `0x7DE000` (sound), the VRAM shadow 1 tick; crash at k=43 | - | t000600 / t000900: 0 pixels differ (the load stays in area 7, and the stale caches happen to hold the right textures) |
+| | after, id / def / wide | id from k=4 (`0x6BC000`, `0x7DE000`), def and wide equal - to the sound crash at k=36 | equal; 33 / 33, 35 / 35, 35 / 35 | 0 pixels |
+| | with SP-A, id / def | from k=0, `0x7DE000` only (SP-A's page) | equal; **299 / 299** both | 0 pixels |
+| worldMap (1270 / 1570) | before, id / def | **crash at k=0..1 in `render_shim`'s `WriteRaw`** (writing through a null pixel pointer: a build into a texture the restored `Gfx_TexCache` named, released since) | - | - |
+| | after, id / def | equal, 175 ticks to the sound crash | equal; 174 / 174 both | t001275 / t001575: 0 pixels (t001500, before the load: 307,200) |
+| | with SP-A, id / def | from k=0, `0x7DE000` only | equal; **299 / 299** both | 0 pixels |
+| cutsceneAndNue (2165 / 2465) | before, id / def | from k=1: `0x6BC000` (k 1..120, the overlay line and sound), `0x7DE000` | - | **674 pixels: the typing line reads "Ihat the lonstei / thatb" for "That the monster / that'"** - the restored `Font_TexCache` words over the live glyph surfaces |
+| | after, id / def | from k=1, the same two pages | equal (per present, before the walk split: 4 / 290 and 3 / 291 differed, each a present carrying two walks) | 0 pixels |
+| | with SP-A, id / def / wide | from k=1: `0x6BC000` (k 1..120), `0x7DE000` (k=1 only) | equal; **298 / 298** in all three (a first run per walk with the clears hashed differed by one command in 14 / 281 and 1 / 298 walks: the clear after a present, hence the clears left out) | 0 pixels |
+| worldMap, wide | with SP-A, wide (`BOF3X_WIDE=1`, 852 x 480) | **equal, all 300 ticks** | equal; **299 / 299** | t001275 / t001575: 0 pixels (t001500: 408,959) |
+
+Every "after" page is SN's (`Overlay_Text` / `Overlay_Frames`: the
+"Quickload" line is written after the span, 120 frames) or SP-A's
+(`0x6BC000`'s sound words, `0x7DE000`), or noise RC's references show between
+two plain runs (quicksave-routes 5: a VRAM-shadow page and `0x937000` for a
+tick, an upload landing a frame apart; `Font_TexCache`'s page `0x7C9000` for
+two ticks, in a run with 18 late frames). No page of SP-G's differs.
+
+Captures (game-written frames: game data, outside the tree, never for the
+repository): `C:\Users\kerok\q_spg\runs\<build>_<cond>_<route>\shots\t<FRAME>.bmp`,
+`.png` copies beside the compared ones; the before pair of the typing line
+cropped together, `runs\before_id_cutsceneAndNue\shots\pair_text.png`. Logs and
+hashes beside them: `bof3x.log`, `quick_<route>.sh`, `check.txt`, `frames.txt`.
+
+### What still differs, and whose
+
+- **The first presented frame after F7 is the pre-load picture**: the draw
+  made before the load, presented by the next `Gpu_PutDispEnv`. One frame,
+  inherent to the point (the core restores after the logic, before the next
+  draw); the restored lists are presented the frame after.
+- **Frame-buffer grabs** (DIV-0125) are forgotten: a quicksave taken while a
+  grab is live (Depress's swirl, the fishing strip) draws Capcom's port's
+  picture - the shadow under the grab - until the effect grabs again. Not on
+  a route; carrying a grab means reading its GPU texture back at the take.
+  SP-G's, open.
+- **Cache quirks rebuilt fresh:** a cell texture whose CLUT changed while it
+  was used that frame keeps stale pixels in the live game (`D3d_CellTexture`
+  does not refresh it), and a page texture over cells that
+  `Gfx_LoadImageIfChanged` rewrote is never invalidated; after a load both are
+  built from the current data. Not seen on the three routes.
+- **SatPixie's ghost** of the pre-load picture under DIV-0043's look: a few
+  frames, that look only; not measured.
+- Not run: the cross-process forms, the hosted build, the combat, shop and
+  music routes, a load across an F8 or a window resize (the kept words are
+  designed for it; unmeasured).
+
+No ledger draft: the picture after a load is part of draft A's quick-load;
+`BOF3X_FRAMEHASH` is instrumentation.

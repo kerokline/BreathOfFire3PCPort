@@ -105,6 +105,7 @@ struct Participant {
     std::string tag;
     SnapshotSaveFn save;
     SnapshotRestoreFn restore;
+    SnapshotDiscardFn discard = nullptr;   // before the span is written (SP-A)
 };
 using Registry = std::vector<Participant>;
 
@@ -499,6 +500,8 @@ Parsed Parse(const std::vector<unsigned char>& file, const BuildId& build, const
 // caller's check, so a refusal there still leaves everything untouched.
 void Restore(const Parsed& p, const Registry& registry) {
     const Header& h = p.header;
+    for (const Parsed::Rec& r : p.records)   // the live process's resources let go while its words still name them
+        if (registry[r.participant].discard) registry[r.participant].discard();
     std::vector<std::vector<unsigned char>> live(kKeptCount);
     for (std::size_t i = 0; i < kKeptCount; ++i) live[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
     WriteRange(h.span_base, p.image, h.span_bytes);
@@ -1022,7 +1025,7 @@ void SelfTest() {
 
 }  // namespace
 
-void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore) {
+void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn restore, SnapshotDiscardFn discard) {
     if (g_registry_closed) Fatal("snapshot: participant '%s' registered after the first quicksave or quickload", tag);
     const std::size_t n = tag ? std::strlen(tag) : 0;
     if (n == 0 || n >= kTagBytes) Fatal("snapshot: a participant's tag must be 1..%u characters", (unsigned)kTagBytes - 1);
@@ -1031,7 +1034,7 @@ void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn r
     if (!save || !restore) Fatal("snapshot: participant '%s' registered without both Save and Restore", tag);
     for (const Participant& p : g_registry)
         if (p.tag == tag) Fatal("snapshot: participant '%s' registered twice", tag);
-    g_registry.push_back({tag, save, restore});
+    g_registry.push_back({tag, save, restore, discard});
     Log("quicksave   participant '%s' registered", tag);
 }
 

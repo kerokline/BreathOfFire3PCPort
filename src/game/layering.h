@@ -53,3 +53,17 @@ void RunPrim(const unsigned char* prim, unsigned size);
 void RunEnd();
 
 }  // namespace layering
+
+namespace bof3 {
+class SnapshotWriter;
+class SnapshotReader;
+}  // namespace bof3
+
+namespace layering {
+
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): the last pass's record
+// runs, which the next pass's Defer reads. In the graphics participant's record.
+void SnapshotSave(bof3::SnapshotWriter& w);
+void SnapshotRestore(bof3::SnapshotReader& r);
+
+}  // namespace layering
