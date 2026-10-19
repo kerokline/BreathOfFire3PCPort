@@ -142,6 +142,14 @@ void WaitLoad() {
 
 }  // namespace
 
+// The load menu's look for the quick menu (QM): the backdrop, the title box
+// and a system message, as every load-menu state draws them first. Reads the
+// Config's two bytes; writes only what the draws write.
+void save_menu::DrawLoadWindows(unsigned message) {
+    LoadWindows();
+    LoadMessage(message);
+}
+
 // Every function below keeps its calls as calls: a tail jump to a function
 // still Capcom's would hand it our caller's return address, which the frame
 // hash records (docs/HANDOFF.md, Traps). The three dispatchers after the pop
