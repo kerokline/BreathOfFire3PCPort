@@ -21,6 +21,7 @@
 #include "game/area_w2f.h"
 #include "game/area_w2f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/log.h"
 
 namespace area_w2f {
@@ -642,15 +643,16 @@ void Args111(unsigned k, U* a) {
 void SeedNearBoxes() {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const r = ah::PartyOf(static_cast<unsigned char>(m));
+        auto* const tR = reinterpret_cast<records::PartyMember*>(r);
         if (!ah::Often()) continue;
         const unsigned char* const box = ah::Mem(Area112_Boxes_addr + (ah::Next() % at::kArea112BoxCount) * 4);
         r[9] = static_cast<unsigned char>(ah::Next() % 3);
-        SetLong(r + 0xC, static_cast<std::int32_t>(ah::Next() % 5 == 0 ? ah::Next() : (ah::Next() & 0x1FFFF) - 0x10000));
-        SetLong(r + 0x10, static_cast<std::int32_t>(ah::Next() % 5 == 0 ? ah::Next() : (ah::Next() & 0x1FFFF) - 0x10000));
+        tR->step_x = static_cast<std::int32_t>(ah::Next() % 5 == 0 ? ah::Next() : (ah::Next() & 0x1FFFF) - 0x10000);
+        tR->step_z = static_cast<std::int32_t>(ah::Next() % 5 == 0 ? ah::Next() : (ah::Next() & 0x1FFFF) - 0x10000);
         const int dx = static_cast<int>(AH_PICK(0, 1, 2, 0xFF, 0xFE)) - (ah::Half() ? box[2] : 0);
         const int dz = static_cast<int>(AH_PICK(0, 1, 2, 0xFF, 0xFE)) - (ah::Half() ? box[3] : 0);
-        SetLong(r + 0x34, static_cast<std::int32_t>(At16(static_cast<U>(box[0] + static_cast<signed char>(dx)), ah::Next())));
-        SetLong(r + 0x38, static_cast<std::int32_t>(At16(static_cast<U>(box[1] + static_cast<signed char>(dz)), ah::Next())));
+        tR->x = static_cast<std::int32_t>(At16(static_cast<U>(box[0] + static_cast<signed char>(dx)), ah::Next()));
+        tR->z = static_cast<std::int32_t>(At16(static_cast<U>(box[1] + static_cast<signed char>(dz)), ah::Next()));
     }
 }
 void Seed112(unsigned k) {
