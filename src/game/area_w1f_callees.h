@@ -37,19 +37,19 @@ constexpr std::uint32_t kScratch = 0x903850;
 constexpr std::uint32_t kFocusObject = 0x903804;
 // MoveScript_Var7 and the byte after it (the run step).
 constexpr std::uint32_t kVar7 = 0x8034E4;
-constexpr std::uint32_t kVar7Step = 0x8034E5;
+// kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set's bank) and the Cond_Flags row 10 (0x903F90 +
 // 8 * 10) area 75 sets, clears and tests.
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kCondRow10 = 0x903FE0;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kCondRow10: now Cond_Flags[0x50] (symbols.toml).
 // Cond_Flags row 7 (0x903F90 + 8 * 7): area 74's handler 0 toggles its flags
 // 5 and 6.
-constexpr std::uint32_t kCondRow7 = 0x903FC8;
+// kCondRow7: now Cond_Flags[0x38] (symbols.toml).
 // The story-flag byte 0x90409C (flags 0x360..0x367): area 74's choice tests
 // its bit 0x20 (flag 0x365).
 // kFlagByte9C: now AreaW1f_FlagByte9C (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
-constexpr std::uint32_t kPartyList0 = 0x904062;
+// kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // The current music track (a byte Music_Play returns at once on; the
 // chapters' kMusicCurrent / kAreaTrack).
 constexpr std::uint32_t kMusicCurrent = 0x904CD0;
@@ -57,12 +57,12 @@ constexpr std::uint32_t kMusicCurrent = 0x904CD0;
 // push toggle plays a sound by), +0x4A, +0x89, the zone counter +0x134 (areas
 // 72 / 73 set Field_EdgeBits to it less 5), the word +0x12E.
 // kLeader: now ObjTrio (symbols.toml).
-constexpr std::uint32_t kLeaderDir = 0x802D48;
-constexpr std::uint32_t kLeaderSound = 0x802D6C;
-constexpr std::uint32_t kLeader4A = 0x802D8A;
-constexpr std::uint32_t kLeaderByte89 = 0x802DC9;
+// kLeaderDir: now ObjTrio[8] (symbols.toml).
+// kLeaderSound: now ObjTrio[0x2c] (symbols.toml).
+// kLeader4A: now ObjTrio[0x4a] (symbols.toml).
+// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
 constexpr std::uint32_t kLeaderZone = 0x802E74;
-constexpr std::uint32_t kLeaderWord12E = 0x802E6E;
+// kLeaderWord12E: now ObjTrio[0x12e] (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Field objects (Sprite_Objects, 30 of 0xA4 bytes) and effect records
 // (Effect_Objects, 0x80 bytes).

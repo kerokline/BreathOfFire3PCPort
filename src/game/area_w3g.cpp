@@ -58,17 +58,17 @@ using move_script::Word;
 
 unsigned char* Cur() { return Sprite_Current; }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
-unsigned char* Bank() { return At(at::kStoryFlags); }
-unsigned char* Bank904000() { return At(at::kFlags904000); }
-unsigned char* PartyRecord(U index) { return At(at::kLeader + index * at::kPartyStride); }
-unsigned char* EffectAt(U slot) { return At(at::kEffects + slot * at::kEffectStride); }
+unsigned char* Bank() { return At(Cond_Flags_addr + 0xa0); }
+unsigned char* Bank904000() { return At(Cond_Flags_addr + 0x70); }
+unsigned char* PartyRecord(U index) { return At(ObjTrio_addr + index * at::kPartyStride); }
+unsigned char* EffectAt(U slot) { return At(Effect_Objects_addr + slot * at::kEffectStride); }
 // The high word of a 16.16 position, as the hooks read it (a word at +2).
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 void SetMessage(unsigned id) { SetWord(At(at::kMessage), id); }
 unsigned char& B(U address) { return At(address)[0]; }
 void Disarm() {
-    B(at::kTailKind) = 0;
-    B(at::kTailState) = 0;
+    AreaW0a_TailKind = 0;
+    AreaW0c_TailState = 0;
 }
 // The tails' u16 frame counter less one: true when it reached 0.
 bool TimerDone() {
@@ -173,7 +173,7 @@ void MessageByMember(U ids, U messages) {
 // +9 `life`. The slot is Effect_FindFree's, not 0xFF (records past the
 // twentieth are written as the original writes them).
 void Kind13(U slot, U x, U y, unsigned char life) {
-    const std::int32_t angle = static_cast<std::int16_t>(Word(At(at::kCameraAngle1)));
+    const std::int32_t angle = Camera_Angles[1];
     unsigned char* const e = EffectAt(slot);
     e[0] = 1;
     e[5] = 0x13;
@@ -185,7 +185,7 @@ void Kind13(U slot, U x, U y, unsigned char life) {
 
 // The beam's colour byte k of entry Sprite_Current[6] (three bytes an entry,
 // unchecked; the pointer read again for each byte, as the originals do).
-unsigned char BeamColour(unsigned k) { return B(at::kA148BeamColours + Cur()[6] * 3u + k); }
+unsigned char BeamColour(unsigned k) { return B(Area148_BeamColours_addr + Cur()[6] * 3u + k); }
 
 using ProjectFn = void (__cdecl*)(const long*, unsigned char*);
 using ScreenSizeFn = void (__cdecl*)(const long*, const short*, void*);
@@ -212,18 +212,18 @@ std::int32_t Scaled(int trig, std::int32_t r) {
 
 // original 0x4223A0 (handler 4 / choice 6; PSX 0x801F3A20): members 5, 2, 8, 4
 // in that order - messages 0xB..0xE (Area148 tables 0x6353D8 / 0x6353DC).
-extern "C" void __cdecl Area148_MemberMessageA(void) { MessageByMember(at::kA148MemberIdsA, at::kA148MessagesA); }
+extern "C" void __cdecl Area148_MemberMessageA(void) { MessageByMember(Area148_MemberIdsA_addr, Area148_MessagesA_addr); }
 // original 0x422430 (handler 5 / choice 7; PSX 0x801F3AE4): members 4, 8, 2, 5
 // - messages 0xF..0x12 (0x6353E4 / 0x6353E8).
-extern "C" void __cdecl Area148_MemberMessageB(void) { MessageByMember(at::kA148MemberIdsB, at::kA148MessagesB); }
+extern "C" void __cdecl Area148_MemberMessageB(void) { MessageByMember(Area148_MemberIdsB_addr, Area148_MessagesB_addr); }
 
 // original 0x4224C0 (choice 0): message 6 when the cursor byte is not 0, else 4.
-extern "C" void __cdecl Area148_ChoiceMessage(void) { SetMessage(B(at::kCursor) != 0 ? 6u : 4u); }
+extern "C" void __cdecl Area148_ChoiceMessage(void) { SetMessage(static_cast<unsigned char>(AreaW0c_ChoiceAnswer) != 0 ? 6u : 4u); }
 
 // original 0x4224E0 (choice 1): the cursor 0: message 5 (stored before the
 // call), Flags_Set(0x904030, 0x59); else no message (0xFFFF).
 extern "C" void __cdecl Area148_ChoiceSetFlag59(void) {
-    if (B(at::kCursor) != 0) {
+    if (static_cast<unsigned char>(AreaW0c_ChoiceAnswer) != 0) {
         SetMessage(0xFFFF);
         return;
     }
@@ -252,10 +252,10 @@ extern "C" void __cdecl Area148_ChoiceSetFlag59(void) {
 //   0x15: the timer's end: Draw_PassFlags 0x1F, ScriptFlags_Clear40, the
 //      tail disarmed.
 extern "C" void __cdecl Area148_Tail31(void) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (AreaW0c_TailState) {
     case 0:
         AH_CALL(Party_DropIn)(0);
-        B(at::kTailState) = 1;
+        AreaW0c_TailState = 1;
         return;
     case 1:
         if (B(at::kScriptVar) != 0x18) return;
@@ -265,29 +265,29 @@ extern "C" void __cdecl Area148_Tail31(void) {
         return;
     case 0xA: {
         const unsigned char slot = AH_CALL(Effect_FindFree)();
-        B(at::kTailArg) = slot;
+        AreaW0c_TailSub = slot;
         if (slot == 0xFF) return;
-        B(at::kTailState) = 0xB;
+        AreaW0c_TailState = 0xB;
         Kind13(slot, 0xFFFFFC66u, 0x190, 0x30);
         return;
     }
     case 0xB:
-        if ((EffectAt(B(at::kTailArg))[0] & 1) != 0) return;
+        if ((EffectAt(AreaW0c_TailSub)[0] & 1) != 0) return;
         AH_CALL(Kind2_Place)(2);
-        B(at::kTailState) = 0xC;
+        AreaW0c_TailState = 0xC;
         return;
     case 0xC:
         if (B(at::kScriptVar) != 0x20) return;
         AH_CALL(Flags_Set)(Bank(), 0x5A);
         SetWord(At(at::kTailTimer), 0x20);
-        B(at::kTailState) = 0xD;
+        AreaW0c_TailState = 0xD;
         return;
     case 0xD: {
         if (!TimerDone()) return;
         const unsigned char slot = AH_CALL(Effect_FindFree)();
-        B(at::kTailArg) = slot;
+        AreaW0c_TailSub = slot;
         if (slot == 0xFF) return;
-        B(at::kTailState) = 0xE;
+        AreaW0c_TailState = 0xE;
         Kind13(slot, 0xFFFFFD56u, 0x200, 0x20);
         return;
     }
@@ -303,7 +303,7 @@ extern "C" void __cdecl Area148_Tail31(void) {
         else AH_CALL(Gfx_ClutAdjust)(0, 0x180, 0, 0, 0);
         Draw_PassFlags = 0;
         SetWord(At(at::kTailTimer), 0xF);
-        B(at::kTailState) = 0x15;
+        AreaW0c_TailState = 0x15;
         return;
     case 0x15:
         if (!TimerDone()) return;
@@ -323,8 +323,8 @@ extern "C" unsigned char __cdecl Area148_ArriveHook(long x, long z) {
     if (High(z) != 0x1C) return 0;
     if (static_cast<std::uint16_t>(High(x) - 0x12) >= 3) return 0;
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 0x1F;
-    B(at::kTailState) = 0;
+    AreaW0a_TailKind = 0x1F;
+    AreaW0c_TailState = 0;
     return 1;
 }
 
@@ -332,8 +332,8 @@ extern "C" unsigned char __cdecl Area148_ArriveHook(long x, long z) {
 // tail kind 31 at state 0xA. al 0.
 extern "C" unsigned char __cdecl Area148_Trigger17(unsigned char*, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 0x1F;
-    B(at::kTailState) = 0xA;
+    AreaW0a_TailKind = 0x1F;
+    AreaW0c_TailState = 0xA;
     return 0;
 }
 
@@ -342,23 +342,23 @@ extern "C" unsigned char __cdecl Area148_Trigger17(unsigned char*, unsigned char
 // are the argument bytes and facing the leader's +8 (the whole byte): none al
 // 0; found: ScriptFlags_Set40, tail kind 31 at the record's state (0x14), al 1.
 extern "C" unsigned char __cdecl Area148_SwitchHook(long x, long z) {
-    const unsigned char facing = B(at::kLeaderDir);
+    const unsigned char facing = ObjTrio[8];
     const auto bx = static_cast<unsigned char>(x), bz = static_cast<unsigned char>(z);
     U found = 0;
-    for (U rec = at::kA148Switch; rec < at::kA148SwitchEnd; rec += 4, ++found) {
+    for (U rec = Area148_Switch_addr; rec < at::kA148SwitchEnd; rec += 4, ++found) {
         if (B(rec) == bx && B(rec + 1) == bz && (B(rec + 2) & 0xF) == facing) break;
     }
     if (found == 1) return 0;
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailState) = B(at::kA148Switch + found * 4 + 3);
-    B(at::kTailKind) = 0x1F;
+    AreaW0c_TailState = B(at::kA148Switch + found * 4 + 3);
+    AreaW0a_TailKind = 0x1F;
     return 1;
 }
 
 // original 0x422840 (Effect_KindHandlers[0x7E], 0x655548): Area148_BeamStates
 // 0x6353F4 by Sprite_Current[1] (3; ours aborts past).
 extern "C" void __cdecl Area148_BeamRun(void) {
-    StateEntry("Area148", "BeamRun", at::kA148BeamStates, at::kA148BeamStateCount, Cur()[1])();
+    StateEntry("Area148", "BeamRun", Area148_BeamStates_addr, at::kA148BeamStateCount, Cur()[1])();
 }
 
 // original 0x422860 (beam state 0): +8 = +0xB; the word +0x3E += 0xC0;
@@ -424,9 +424,9 @@ extern "C" void __cdecl Area148_BeamPause(void) {
 // elevation there (AreaMap_Elevation's low word, sign-extended) << 16.
 extern "C" void __cdecl Area148_BeamAhead(void) {
     unsigned char* o = Cur();
-    SetLong(o + 0x18, static_cast<std::int32_t>(static_cast<U>(Long(At(at::kDirSteps + o[8] * 8u))) * 5u + static_cast<U>(Long(o + 0x34))));
+    SetLong(o + 0x18, static_cast<std::int32_t>(static_cast<U>(Long(At(Field_DirectionSteps_addr + o[8] * 8u))) * 5u + static_cast<U>(Long(o + 0x34))));
     o = Cur();
-    SetLong(o + 0x1C, static_cast<std::int32_t>(static_cast<U>(Long(At(at::kDirSteps + 4 + o[8] * 8u))) * 5u + static_cast<U>(Long(o + 0x38))));
+    SetLong(o + 0x1C, static_cast<std::int32_t>(static_cast<U>(Long(At(Field_DirectionSteps_addr + 4 + o[8] * 8u))) * 5u + static_cast<U>(Long(o + 0x38))));
     o = Cur();
     const long h = AH_CALL(AreaMap_Elevation)(Long(o + 0x18), Long(o + 0x1C));
     SetLong(Cur() + 0x20, static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(h))) << 16));
@@ -436,9 +436,9 @@ extern "C" void __cdecl Area148_BeamAhead(void) {
 // the facing +8 (unchecked), each << 1.
 extern "C" void __cdecl Area148_BeamVelocity(void) {
     unsigned char* o = Cur();
-    SetLong(o + 0xC, static_cast<std::int32_t>(static_cast<U>(Long(At(at::kWalkDelta + o[8] * 8u))) << 1));
+    SetLong(o + 0xC, static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + o[8] * 8u))) << 1));
     o = Cur();
-    SetLong(o + 0x10, static_cast<std::int32_t>(static_cast<U>(Long(At(at::kWalkDelta + 4 + o[8] * 8u))) << 1));
+    SetLong(o + 0x10, static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 4 + o[8] * 8u))) << 1));
 }
 
 // original 0x422A50: with +0x3C set to +0x20 for the two asks (then put back,
@@ -454,7 +454,7 @@ extern "C" void __cdecl Area148_BeamTurnMembers(void) {
     const std::int32_t saved = Long(o + 0x3C);
     SetLong(o + 0x3C, Long(o + 0x20));
     for (U k = 0; k < 2; ++k) {
-        const std::int32_t index = (static_cast<std::int32_t>(static_cast<signed char>(B(at::kA148TurnSteps + s * 2 + k))) + static_cast<std::int32_t>(q)) * 2;
+        const std::int32_t index = (static_cast<std::int32_t>(static_cast<signed char>(B(Area148_TurnSteps_addr + s * 2 + k))) + static_cast<std::int32_t>(q)) * 2;
         const std::int32_t dx = static_cast<signed char>(B(at::kA148TurnCells + static_cast<U>(index)));
         const std::int32_t dz = static_cast<signed char>(B(at::kA148TurnCells + 1 + static_cast<U>(index)));
         unsigned char* const c = Cur();
@@ -605,8 +605,8 @@ void DustThenAgain(int dx) {
 // Extra record 0's x (s32 +0x34) below the kind-2 x + 0x20000 (signed): its
 // +0x84 = 3.
 void MarkIfBehind() {
-    if (Long(At(at::kExtra0 + 0x34)) < static_cast<std::int32_t>(static_cast<U>(Field_Kind2X) + 0x20000u))
-        B(at::kExtra0 + 0x84) = 3;
+    if (Long(At(Sprite_ObjectsExtra_addr + 0x34)) < static_cast<std::int32_t>(static_cast<U>(Field_Kind2X) + 0x20000u))
+        Sprite_ObjectsExtra[0x84] = 3;
 }
 // The map moved 0x14 cells in x (`sign` +1 or -1): Sprite_Kind2 +0x34 and
 // Field_Kind2X by 0x140000, MapView_Origin's word by 0x14, MapView_FocusX to
@@ -617,14 +617,14 @@ void MarkIfBehind() {
 void ShiftMap(int sign, U focus, bool effects) {
     const U step = sign > 0 ? 0x140000u : 0xFFEC0000u;
     const U kind2x = static_cast<U>(Field_Kind2X);
-    SetWord(At(at::kOrigin), Word(At(at::kOrigin)) + (sign > 0 ? 0x14u : 0xFFECu));
-    SetLong(At(at::kKind2X), static_cast<std::int32_t>(static_cast<U>(Long(At(at::kKind2X))) + step));
+    MapView_Origin[0] = static_cast<std::uint16_t>(MapView_Origin[0]) + (sign > 0 ? 0x14u : 0xFFECu);
+    SetLong(At(Sprite_Kind2_addr + 0x34), static_cast<std::int32_t>(static_cast<U>(Long(At(Sprite_Kind2_addr + 0x34))) + step));
     const std::int32_t x = static_cast<std::int32_t>(kind2x + step);
     const std::int32_t z = Field_Kind2Z;
-    SetLong(At(at::kFocusX), static_cast<std::int32_t>(focus));
+    MapView_FocusX = static_cast<std::int32_t>(focus);
     Field_Kind2X = x;
     const long h = AH_CALL(AreaMap_Elevation)(x, z);
-    SetWord(At(at::kKind2Height), static_cast<U>(h));
+    SetWord(At(Sprite_Kind2_addr + 0x3e), static_cast<U>(h));
     AH_CALL(MapView_SetElevation)(static_cast<int>(h));
     AH_AT(void (__cdecl*)(), area_w3g::kViewShift)();
     if (effects) {
@@ -636,10 +636,10 @@ void ShiftMap(int sign, U focus, bool effects) {
             SetWord(e + 0x3E, static_cast<U>(eh));
         }
     }
-    const std::int32_t ex = static_cast<std::int32_t>(static_cast<U>(Long(At(at::kExtra0 + 0x34))) + step);
-    SetLong(At(at::kExtra0 + 0x34), ex);
-    const long xh = AH_CALL(AreaMap_Elevation)(ex, Long(At(at::kExtra0 + 0x38)));
-    SetWord(At(at::kExtra0 + 0x3E), static_cast<U>(xh));
+    const std::int32_t ex = static_cast<std::int32_t>(static_cast<U>(Long(At(Sprite_ObjectsExtra_addr + 0x34))) + step);
+    SetLong(At(Sprite_ObjectsExtra_addr + 0x34), ex);
+    const long xh = AH_CALL(AreaMap_Elevation)(ex, Long(At(Sprite_ObjectsExtra_addr + 0x38)));
+    SetWord(At(Sprite_ObjectsExtra_addr + 0x3E), static_cast<U>(xh));
 }
 
 }  // namespace
@@ -647,7 +647,7 @@ void ShiftMap(int sign, U focus, bool effects) {
 // original 0x423160 (handler 1; PSX 0x801F2EFC): Area149_DustStates 0x6361FC
 // by Sprite_Current[4] (4; ours aborts past).
 extern "C" void __cdecl Area149_DustRun(void) {
-    StateEntry("Area149", "DustRun", at::kA149DustStates, at::kA149DustStateCount, Cur()[4])();
+    StateEntry("Area149", "DustRun", Area149_DustStates_addr, at::kA149DustStateCount, Cur()[4])();
 }
 
 // original 0x423180 (dust state 0): Camera_Distance (s16) below 0x880: extra
@@ -655,7 +655,7 @@ extern "C" void __cdecl Area149_DustRun(void) {
 // the dust at -4 and the op again.
 extern "C" void __cdecl Area149_DustNear880(void) {
     if (Camera_Distance < 0x880) {
-        B(at::kExtra0 + 0x84) = 1;
+        Sprite_ObjectsExtra[0x84] = 1;
         B(at::kCounter0) = 0xA;
         AH_CALL(Sound_PlayEffect)(1);
         Cur()[4] = static_cast<unsigned char>(Cur()[4] + 1);
@@ -723,7 +723,7 @@ extern "C" void __cdecl Area149_SpawnDust(signed char dx) {
 // MapView_FocusX at 0x63FF the map moved 0x14 cells back in x (focus 0x77FF),
 // the dust records with it.
 extern "C" void __cdecl Area149_ViewShiftBack(void) {
-    if (static_cast<U>(Long(At(at::kFocusX))) != 0x63FF) return;
+    if (static_cast<std::uint32_t>(MapView_FocusX) != 0x63FF) return;
     ShiftMap(-1, 0x77FF, true);
 }
 
@@ -737,10 +737,10 @@ extern "C" void __cdecl Area149_ViewShiftBack(void) {
 //      timer - 1, at 0 state 0xC.
 //   0xC: as 2 to area 0x94 (0xA0000, 0x190000, 0x81).
 extern "C" void __cdecl Area149_Tail33(void) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (AreaW0c_TailState) {
     case 0:
-        if (static_cast<U>(Long(At(at::kFocusX))) == 0x77FF) ShiftMap(1, 0x63FF, false);
-        if (TimerDone()) B(at::kTailState) = 2;
+        if (static_cast<std::uint32_t>(MapView_FocusX) == 0x77FF) ShiftMap(1, 0x63FF, false);
+        if (TimerDone()) AreaW0c_TailState = 2;
         return;
     case 2:
         B(at::kScriptVar) = 0x20;
@@ -748,8 +748,8 @@ extern "C" void __cdecl Area149_Tail33(void) {
         AH_CALL(Field_ChangeArea)(0xA7, 0x280000, 0x630000, 0x81);
         return;
     case 0xA:
-        if (static_cast<U>(Long(At(at::kFocusX))) == 0x63FF) ShiftMap(-1, 0x77FF, false);
-        if (TimerDone()) B(at::kTailState) = 0xC;
+        if (static_cast<std::uint32_t>(MapView_FocusX) == 0x63FF) ShiftMap(-1, 0x77FF, false);
+        if (TimerDone()) AreaW0c_TailState = 0xC;
         return;
     case 0xC:
         B(at::kScriptVar) = 0x20;
@@ -767,8 +767,8 @@ extern "C" void __cdecl Area149_Tail33(void) {
 // kind 33 at state 0 and the timer 0x5A. Come from area 0xA7: +0x8A = 0, +0x83
 // and Cond_ByteFE 2, tail kind 33 at state 0xA, the timer 0x5A.
 extern "C" void __cdecl Area149_Init(void) {
-    unsigned char* const x0 = At(at::kExtra0);
-    if (Word(At(at::kCameFrom)) == 0x94) {
+    unsigned char* const x0 = At(Sprite_ObjectsExtra_addr);
+    if (AreaW2c_LastArea == 0x94) {
         SetWord(x0 + 0x36, Word(x0 + 0x36) + 0x16u);
         const std::int32_t z = Long(x0 + 0x38), x = Long(x0 + 0x34);
         x0[0x83] = 1;
@@ -777,17 +777,17 @@ extern "C" void __cdecl Area149_Init(void) {
         SetWord(x0 + 0x3E, static_cast<U>(h));
         Cond_ByteFE = 1;
         if (AH_CALL(Flags_Test)(Bank904000(), 0x11) != 0) {
-            B(at::kTailKind) = 0x21;
-            B(at::kTailState) = 0;
+            AreaW0a_TailKind = 0x21;
+            AreaW0c_TailState = 0;
             SetWord(At(at::kTailTimer), 0x5A);
         }
     }
-    if (Word(At(at::kCameFrom)) == 0xA7) {
+    if (AreaW2c_LastArea == 0xA7) {
         SetWord(x0 + 0x8A, 0);
         x0[0x83] = 2;
         Cond_ByteFE = 2;
-        B(at::kTailKind) = 0x21;
-        B(at::kTailState) = 0xA;
+        AreaW0a_TailKind = 0x21;
+        AreaW0c_TailState = 0xA;
         SetWord(At(at::kTailTimer), 0x5A);
     }
 }
@@ -801,8 +801,8 @@ extern "C" void __cdecl Area149_Init(void) {
 // 16 - Inventory_Count(0, 0x5B, 0) as a byte, 0) - and Sound_PlayEffect(0x106)
 // when it answers (al) not 0.
 extern "C" void __cdecl Area150_ChoiceFill5B(void) {
-    const auto cursor = static_cast<signed char>(B(at::kCursor));
-    SetMessage(Word(At(at::kA150MessagesA + static_cast<U>(static_cast<std::int32_t>(cursor) * 2))));
+    const auto cursor = AreaW0c_ChoiceAnswer;
+    SetMessage(Word(At(Area150_MessagesA_addr + static_cast<U>(static_cast<std::int32_t>(cursor) * 2))));
     if (cursor != 0) return;
     const unsigned short have = AH_CALL(Inventory_Count)(0, 0x5B, 0);
     const unsigned count = static_cast<unsigned char>(0x10 - static_cast<unsigned char>(have));
@@ -812,16 +812,16 @@ extern "C" void __cdecl Area150_ChoiceFill5B(void) {
 
 // original 0x423720 (choice 1): the message from 0x636A60 by the s8 cursor.
 extern "C" void __cdecl Area150_ChoiceMessage(void) {
-    const auto cursor = static_cast<signed char>(B(at::kCursor));
-    SetMessage(Word(At(at::kA150MessagesB + static_cast<U>(static_cast<std::int32_t>(cursor) * 2))));
+    const auto cursor = AreaW0c_ChoiceAnswer;
+    SetMessage(Word(At(Area150_MessagesB_addr + static_cast<U>(static_cast<std::int32_t>(cursor) * 2))));
 }
 
 // original 0x423740 (choice 2): no message; the tail's state 0xE when the
 // cursor byte is not 0, else 0xC.
 extern "C" void __cdecl Area150_ChoiceTailState(void) {
-    const unsigned char cursor = B(at::kCursor);
+    const unsigned char cursor = static_cast<unsigned char>(AreaW0c_ChoiceAnswer);
     SetMessage(0xFFFF);
-    B(at::kTailState) = cursor != 0 ? 0xE : 0xC;
+    AreaW0c_TailState = cursor != 0 ? 0xE : 0xC;
 }
 
 // original 0x423760 (Field_ModeTailKinds[58]): by the s8 0x9039F4 - 0xA
@@ -843,11 +843,11 @@ extern "C" void __cdecl Area150_ChoiceTailState(void) {
 //        Music_Play(0x95, 0x10), Transition_Start(1), Draw_PassFlags 0x1F,
 //        flag 3 of 0x904000 and flag 0x8A of 0x904030 cleared, disarmed.
 extern "C" void __cdecl Area150_Tail58(void) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (AreaW0c_TailState) {
     case 0xA:
         AH_CALL(Msg_OpenScript)(0x2D);
         Field_Request = 2;
-        B(at::kTailState) = 0xB;
+        AreaW0c_TailState = 0xB;
         return;
     case 0xC:
         if (Field_Request == 2) return;
@@ -856,12 +856,12 @@ extern "C" void __cdecl Area150_Tail58(void) {
         {
             const unsigned char status = Field_StatusBits;
             Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 | 0x40);   // `or byte`, its low byte
-            B(at::kHealByte) = 0xA;
-            SetWord(At(at::kWord90405C), 0);
-            B(at::kByte90405F) = 0xF0;
-            B(at::kByte90405E) = 0;
-            B(at::kByte929EC1) = 0;
-            B(at::kByte9036D0) = 0;
+            AreaW3g_HealByte = 0xA;
+            SetWord(At(Cond_Flags_addr + 0xcc), 0);
+            Cond_Flags[0xcf] = 0xF0;
+            Cond_Flags[0xce] = 0;
+            AreaW3g_Byte929EC1 = 0;
+            AreaW3g_Byte9036D0 = 0;
             Field_StatusBits = static_cast<unsigned char>(status | 1);
         }
         Disarm();
@@ -875,13 +875,13 @@ extern "C" void __cdecl Area150_Tail58(void) {
         if (Field_Request != 0) return;
         AH_CALL(Msg_OpenScript)(AH_CALL(Flags_Test)(Bank904000(), 3) != 0 ? 0x25 : 0x20);
         Field_Request = 2;
-        B(at::kTailState) = 0x15;
+        AreaW0c_TailState = 0x15;
         return;
     case 0x15:
         if (Field_Request == 2) return;
         AH_CALL(Party_HealJoined)();
         AH_CALL(Sound_LoadStream)(0);
-        B(at::kTailState) = 0x16;
+        AreaW0c_TailState = 0x16;
         return;
     case 0x16:
         if (AH_CALL(Sound_StreamDone)() == 0) return;
@@ -905,8 +905,8 @@ extern "C" unsigned char __cdecl Area150_StepHook(long x, long z) {
     if (static_cast<std::uint16_t>(High(x) - 0x17) >= 6) return 0;
     if (static_cast<std::uint16_t>(High(z) - 0x33) >= 6) return 0;
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 0x3A;
-    B(at::kTailState) = 0xA;
+    AreaW0a_TailKind = 0x3A;
+    AreaW0c_TailState = 0xA;
     return 1;
 }
 
@@ -922,7 +922,7 @@ namespace {
 // The region box's leave test the HUD machine's states share: the map's mode
 // byte set while +0xB is, or Field_Request 2, or bit 8 of Field_ScriptFlags.
 bool BoxLeaves(const unsigned char* o) {
-    if (At(at::kMapMode)[0] != 0 && o[0xB] != 0) return true;
+    if (AreaW0b_MapMode != 0 && o[0xB] != 0) return true;
     if (Field_Request == 2) return true;
     return (Field_ScriptFlags & 0x100) != 0;
 }
@@ -943,21 +943,21 @@ bool BoxLeaves(const unsigned char* o) {
 //      0x9039F3..0x9039F5 zeroed.
 // Any other state does nothing. As the original: the row is not checked.
 void PlaceMessage151(const WorldMapTables& t) {
-    const auto state = static_cast<signed char>(At(at::kMsgState)[0]);
+    const auto state = AreaW0c_TailState;
     if (state == 1) {
         if (Field_Request == 2) return;
         AH_CALL(ScriptFlags_Clear40)();
-        At(at::kMsgMode)[0] = 0;
-        At(at::kMsgState)[0] = 0;
-        At(at::kMsgArg)[0] = 0;
+        AreaW0a_TailKind = 0;
+        AreaW0c_TailState = 0;
+        AreaW0c_TailSub = 0;
         return;
     }
     if (state != 0) return;
     AH_CALL(ScriptFlags_Set40)();
-    const auto z = static_cast<short>(Word(At(at::kLeaderCellWordZ)));
-    const auto x = static_cast<short>(Word(At(at::kLeaderCellWordX)));
+    const auto z = static_cast<short>(Word(At(ObjTrio_addr + 0x3a)));
+    const auto x = static_cast<short>(Word(At(ObjTrio_addr + 0x36)));
     if (AH_CALL(AreaMap_ByteAt)(x, z) == 0xA1) {
-        const unsigned place = Word(At(at::kPlace));
+        const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
         for (U a = t.place_messages; a < t.place_messages_end; a += 0x20, ++row)
             if (Word(At(a)) == place) break;
@@ -975,15 +975,15 @@ void PlaceMessage151(const WorldMapTables& t) {
                 out[8] = 0;
             } else {
                 const unsigned char* const name =
-                    item == 0x16 ? At(at::kItemNameKey) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
+                    item == 0x16 ? At(AreaW0b_ItemNameKey_addr) : AH_CALL(Item_NamePtr)(0, (item + 0x38) & 0xFF);
                 std::memcpy(out, name, 16);
             }
         }
         AH_CALL(Msg_OpenScript)(0x16);
     }
-    const auto next = static_cast<unsigned char>(At(at::kMsgState)[0] + 1);
+    const auto next = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
     Field_Request = 2;
-    At(at::kMsgState)[0] = next;
+    AreaW0c_TailState = next;
 }
 
 // The place plate (the record's +0: effect kind 0). The cell ahead of the
@@ -993,9 +993,9 @@ void PlaceMessage151(const WorldMapTables& t) {
 // Field_ScriptFlags2 bit 12 4, else 0; then the plate state table by +1
 // (read after the calls; ours aborts past its five entries).
 void PlateRun(const WorldMapTables& t) {
-    const U steps = At(at::kLeaderSteps)[0];
-    const U zs = steps * static_cast<U>(Long(At(at::kLeaderDirZ))) + static_cast<U>(Long(At(at::kLeaderZ)));
-    const U xs = steps * static_cast<U>(Long(At(at::kLeaderDirX))) + static_cast<U>(Long(At(at::kLeaderX)));
+    const U steps = ObjTrio[9];
+    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
+    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     SetLong(Cur() + 0xC, x);
@@ -1020,7 +1020,7 @@ void PlateShow(const WorldMapTables& t) {
     const unsigned kind = Cur()[0xB];
     unsigned animation;
     if (kind == 1) {
-        const unsigned place = Word(At(at::kPlace));
+        const unsigned place = AreaW0b_Place;
         U entry = t.plate_anims;
         while (Word(At(entry)) != place) entry += 4;
         SetLong(Cur() + 0x18, static_cast<std::int32_t>(place));
@@ -1066,7 +1066,7 @@ void PlateHold() {
         unsigned char* const o = Cur();
         const unsigned shown = o[7];
         const bool leaves = o[0xB] != shown || Field_Request == 5 ||
-                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != Word(At(at::kPlace)));
+                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != AreaW0b_Place);
         if (leaves) {
             o[0x48] = 2;
             Cur()[9] = 8;
@@ -1109,7 +1109,7 @@ void FrameSlideIn(const WorldMapTables& t) {
 // +0x2E). The y pushed carries a stale high half the drawing never reads:
 // ours passes the word sign-extended.
 void FrameHold(const WorldMapTables& t) {
-    if (At(at::kMapMode)[0] == 2) Cur()[2] = 3;
+    if (AreaW0b_MapMode == 2) Cur()[2] = 3;
     AH_AT(DrawAt, t.fn_draw_frame)(0x10, S16(Cur() + 0x2E));
 }
 
@@ -1122,7 +1122,7 @@ void FrameSlideOut(const WorldMapTables& t) {
         o[2] = 0;
         o = Cur();
     }
-    if (At(at::kMapMode)[0] != 2) {
+    if (AreaW0b_MapMode != 2) {
         o[2] = 1;
         o = Cur();
     }
@@ -1176,7 +1176,7 @@ void BoxSlideOut(const WorldMapTables& t) {
         o[3] = 0;
         o = Cur();
     }
-    if (At(at::kMapMode)[0] == 0 && Field_Request != 2 && (Field_ScriptFlags & 0x100) == 0) {
+    if (AreaW0b_MapMode == 0 && Field_Request != 2 && (Field_ScriptFlags & 0x100) == 0) {
         o[3] = 1;
         o = Cur();
     }
@@ -1208,16 +1208,16 @@ void DrawFrame(const WorldMapTables& t, int x, int y) {
                                                        static_cast<short>(Word(At(at::kLeaderCellZ))));
     const bool withheld1 = cell == 0xA0 || cell == 0xA1 || cell == 0xAE || (Field_ScriptFlags2 & 0x1000) != 0;
     if (!withheld1) sprite(x + 0x30, y, 1);
-    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(at::kButtonMap0))), x + 0x38, y + 8,
+    world_map_legend::Key(sprite, t.buttons, 6, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f000))), x + 0x38, y + 8,
                           withheld1);
     const bool withheld2 = cell == 0xA1 || cell == 0xA0;
     if (!withheld2) sprite(x + 0x30, y + 0x10, 2);
-    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(at::kButtonMap6))), x + 0x38, y + 0x10,
+    world_map_legend::Key(sprite, t.buttons, 8, static_cast<U>(Long(At(Gfx_UnpackScratch_addr + 0x1f00c))), x + 0x38, y + 0x10,
                           withheld2);
     bool third = AH_CALL(Field_CellHasEvent)(static_cast<short>(Word(At(at::kLeaderCellX))),
                                             static_cast<short>(Word(At(at::kLeaderCellZ)))) != 0;
     if (!third) third = (Field_ScriptFlags2 & 0x1000) != 0;
-    if (!third) third = (At(at::kPartySet)[0] & 0x7F) == 0xC;
+    if (!third) third = (AreaW0b_PartySet & 0x7F) == 0xC;
     if (!third) third = (Field_ScriptFlags & 0x4000) != 0;
     if (third) sprite(x + 0x30, y + 0x18, 3);
     world_map_legend::Start(x + 0x30, y + 0x18, !third);
@@ -1281,8 +1281,8 @@ void Record8Place(const WorldMapTables& t) {
     Cur()[0x29] = 5;
     SetLong(Cur() + 0xC, dir(Cur(), 0));
     SetLong(Cur() + 0x10, dir(Cur(), 2));
-    SetLong(Cur() + 0x34, Long(At(at::kLeaderX)));
-    SetLong(Cur() + 0x38, Long(At(at::kLeaderZ)));
+    SetLong(Cur() + 0x34, Long(At(ObjTrio_addr + 0x34)));
+    SetLong(Cur() + 0x38, Long(At(ObjTrio_addr + 0x38)));
     unsigned char* o = Cur();
     if (o[6] != 0) {
         SetWord(o + 0x36, Word(o + 0x36) - static_cast<unsigned>(dir(o, 0) >> 13));
@@ -1355,7 +1355,7 @@ void DrawDrift(const WorldMapTables& t) {
     const std::int32_t e = b - 2;
     SetLong(o + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(o + 0x38)) + (static_cast<U>(b) << 10)));
     o = Cur();
-    if (S16(o + 0x3A) > static_cast<std::int32_t>(At(at::kMapHeight)[0]) + 8) {
+    if (S16(o + 0x3A) > AreaMap_Header[1] + 8) {
         SetWord(o + 0x3A, 0xFFF8);
         o = Cur();
     }

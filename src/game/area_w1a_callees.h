@@ -43,14 +43,14 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank), the lever flags' row
 // (Cond_Flags + 0x20, flags 8..0xB are the low nibble of 0x903FB1), and the
 // row pointer the chapters' flag tests take (docs/field-modes.md).
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kLeverRow = 0x903FB0;
-constexpr std::uint32_t kLeverNibble = 0x903FB1;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kLeverRow: now Cond_Flags[0x20] (symbols.toml).
+// kLeverNibble: now Cond_Flags[0x21] (symbols.toml).
 // kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 // The party lists' first bytes (Cond_Flags' tail): the members in the party.
-constexpr std::uint32_t kPartyList0 = 0x904062;
-constexpr std::uint32_t kPartyList1 = 0x904063;
-constexpr std::uint32_t kPartyList2 = 0x904064;
+// kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
+// kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
+// kPartyList2: now Cond_Flags[0xd4] (symbols.toml).
 // The 32 key-item bytes (the key-item list, docs/char-stats.md).
 constexpr std::uint32_t kKeyItems = 0x904554;
 constexpr unsigned kKeyItemCount = 0x20;
@@ -60,10 +60,10 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 constexpr std::uint32_t kEntryZone = 0x905E68;
 // The leader's record (ObjTrio): its +8 (direction), +0x89; records 1, 2.
 constexpr std::uint32_t kLeader = 0x802D40;
-constexpr std::uint32_t kLeaderByte8 = 0x802D48;
-constexpr std::uint32_t kLeaderByte89 = 0x802DC9;
-constexpr std::uint32_t kPartyRecord1 = 0x802E8C;
-constexpr std::uint32_t kPartyRecord2 = 0x802FD8;
+// kLeaderByte8: now ObjTrio[8] (symbols.toml).
+// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kPartyRecord1: now Field_Members[4] (symbols.toml).
+// kPartyRecord2: now ObjTrio[0x298] (symbols.toml).
 // The cell step per direction: two signed bytes (x, z), 2 bytes apart
 // (event_ops_callees.h's kCellDelta).
 constexpr std::uint32_t kCellDelta = 0x66971C;

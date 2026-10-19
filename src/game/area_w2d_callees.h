@@ -38,8 +38,8 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 // flag calls take (Cond_Flags + 8 * chapter; docs/field-modes.md), and a
 // second bit array area 98's choice sets a flag in (the save menu's
 // kFlagsA, save_menu_callees.h).
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kCondRow3 = 0x903FA8;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kCondRow3: now Cond_Flags[0x18] (symbols.toml).
 // kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 constexpr std::uint32_t kFlags904654 = 0x904654;
 // The return point Field_ChangeArea's callers keep (x, z dwords, the area
@@ -55,9 +55,9 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 // hooks compare), byte +0x137 (area 95's handler 0 tests it;
 // field_hidden_callees.h's kLeader137).
 // kLeader: now ObjTrio (symbols.toml).
-constexpr std::uint32_t kLeaderX = 0x802D74;
-constexpr std::uint32_t kLeaderZ = 0x802D78;
-constexpr std::uint32_t kLeaderPose = 0x802D48;
+// kLeaderX: now ObjTrio[0x34] (symbols.toml).
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderPose: now ObjTrio[8] (symbols.toml).
 constexpr std::uint32_t kLeader137 = 0x802E77;
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Field_MoveSpeeds + 3 (a byte): area 99's leap divides 16 by it.

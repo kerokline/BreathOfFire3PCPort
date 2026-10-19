@@ -18,7 +18,7 @@ namespace at {
 // The party: ObjTrio 0x802D40, three objects 0x14C apart, the working record
 // (PartyWorkingRecords 0x802D50) at +0x10 of each. Offsets below are the
 // working record's, so the object's first byte is -0x10.
-constexpr std::uint32_t kParty = 0x802D50;
+// kParty: now ObjTrio[0x10] (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr int kPPresent = -0x10;     // u8, bit 0: in the battle
 constexpr int kPCureId = -0x0B;      // u8, what 0x44F4B0 is handed when a status is cured
@@ -70,28 +70,28 @@ constexpr std::uint32_t kTurnWork = 0x939A80;      // 11 x (s16 value, u16 actor
 // The battle state (PSX 0x801462E4.., the same order).
 constexpr std::uint32_t kBattleFlags = 0x904AA8;   // u8, bit 7 (PSX 0x801462E4)
 constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8 (PSX 0x801462EC)
-constexpr std::uint32_t kAiByteB1 = 0x904AB1;      // u8, AI opcodes 0x1D / 0x1E
-constexpr std::uint32_t kAiByteB2 = 0x904AB2;      // u8, AI opcodes 0xF / 0x1F
-constexpr std::uint32_t kAiByteB3 = 0x904AB3;      // u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
+// kAiByteB1: now BattleSprites_PartyPick (symbols.toml). u8, AI opcodes 0x1D / 0x1E
+// kAiByteB2: now BattleActorCopies_EnemyCount (symbols.toml). u8, AI opcodes 0xF / 0x1F
+// kAiByteB3: now BattleE2_EnemiesLeft (symbols.toml). u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
 constexpr std::uint32_t kEntryOrder = 0x904AB6;    // 3 actor bytes, 0xFF-ended (PSX 0x801462F2)
 constexpr std::uint32_t kEntryCount = 0x904AC3;    // u8 (PSX 0x801462FF)
 constexpr std::uint32_t kTurnOrder = 0x904ACC;     // 11 actor bytes (PSX 0x80146308)
-constexpr std::uint32_t kTurnCursor = 0x904AE2;    // u8 (PSX 0x8014631E)
+// kTurnCursor: now BossSe_RoundSlot (symbols.toml). u8 (PSX 0x8014631E)
 constexpr std::uint32_t kTurnCount = 0x904AE3;     // u8 (PSX 0x8014631F)
-constexpr std::uint32_t kSideOut = 0x904AE4;       // u8: 1 the enemies may not act, 2 the party, 3 neither
+// kSideOut: now BattlePhases_Initiative (symbols.toml). u8: 1 the enemies may not act, 2 the party, 3 neither
 constexpr std::uint32_t kActing = 0x904B34;        // u8 the acting actor, then u8 its kind (4 an ability)
-constexpr std::uint32_t kItemCommand = 0x904B40;   // pointer: +2 a u16 (category << 8 | item)
+// kItemCommand: now BattleSprites_Action (symbols.toml). pointer: +2 a u16 (category << 8 | item)
 constexpr std::uint32_t kTarget = 0x904B54;        // u8 the target of the result (PSX 0x80146390)
-constexpr std::uint32_t kResult = 0x904B60;        // pointer: the result record, +4 HP and +6 AP delta
-constexpr std::uint32_t kGate = 0x904B7A;          // u8: when set, an actor takes part only with flag 0x8000
+// kResult: now BattleDamage_Result (symbols.toml). pointer: the result record, +4 HP and +6 AP delta
+// kGate: now BattlePhases_B7A (symbols.toml). u8: when set, an actor takes part only with flag 0x8000
 constexpr std::uint32_t kAbility = 0x904B80;       // u16 the ability id (PSX 0x801463BC)
-constexpr std::uint32_t kGate2 = 0x904B8E;         // u8: when set, an actor acts only with flag 0x10 (PSX 0x801463CA)
+// kGate2: now BattleFlow_AnimGate (symbols.toml). u8: when set, an actor acts only with flag 0x10 (PSX 0x801463CA)
 constexpr std::uint32_t kTurnCounter = 0x904B90;   // u32 (PSX 0x801463CC)
-constexpr std::uint32_t kAiByteB97 = 0x904B97;     // u8, AI opcode 0x27
+// kAiByteB97: now BattleDamage_AiByteB97 (symbols.toml). u8, AI opcode 0x27
 constexpr std::uint32_t kCuredBits = 0x904B9A;     // u16, |0x40 / |0x20 when a hit cures a status
-constexpr std::uint32_t kPartyCut = 0x904060;      // u8, 2: a quarter off damage to the party (PSX 0x80144F54)
+// kPartyCut: now Cond_Flags[0xd0] (symbols.toml). u8, 2: a quarter off damage to the party (PSX 0x80144F54)
 constexpr std::uint32_t kInstantKill = 0x8031F3;   // u8, set with the flag-0x100 kill (PSX 0x801483BF)
-constexpr std::uint32_t kKillMessage = 0x669E04;   // u32 handed to 0x44A650 (PSX &0x801EAFF8)
+// kKillMessage: now BattleDamage_KillMessage (symbols.toml). u32 handed to 0x44A650 (PSX &0x801EAFF8)
 
 // The AI scripts: 0x8C bytes a script, 16-byte rows, byte 0 the condition.
 constexpr std::uint32_t kAiScripts = 0x8C5600;
@@ -104,7 +104,7 @@ constexpr std::uint32_t kLevelRows = 0x64E374;      // u8 x 6 per row: 0 the ene
 constexpr std::uint32_t kBonusDivisor = 0x64E380;   // u8, by an index that is always 0 (Battle_BaseDamage)
 constexpr std::uint32_t kSkillHandler = 0x64E540;   // u8 per ability id: the handler
 constexpr std::uint32_t kItemHandlers = 0x64E72C;   // 4 pointers to u8 per item id, by category
-constexpr std::uint32_t kHandlers = 0x64E73C;       // 130 effect handlers
+// kHandlers: now Effect_Handlers (symbols.toml). 130 effect handlers
 constexpr unsigned kHandlerCount = 130;
 constexpr std::uint32_t kPowerVariance = 0x64E94C;  // u16 x 8: 85..120 percent (Effect_SkillDamage)
 constexpr std::uint32_t kElementTable = 0x64E95C;   // s16 per affinity class (Battle_ElementAffinity)

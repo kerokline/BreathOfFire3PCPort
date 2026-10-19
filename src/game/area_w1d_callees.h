@@ -44,10 +44,10 @@ constexpr std::uint32_t kCounter3 = 0x90384B;
 constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
 // The story flags (Flags_Set / Flags_Test's bank) and Cond_Flags row 3
 // (0x903F90 + 8 * 3), whose flags 8..0xE area 56's choices set.
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kCondRow3 = 0x903FA8;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kCondRow3: now Cond_Flags[0x18] (symbols.toml).
 // The first party list's first byte (0x904062): area 57's effect kind index.
-constexpr std::uint32_t kPartyList0 = 0x904062;
+// kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // Party_Zenny (a u32 symbols.toml names without a type): area 61's choice
 // zeroes it.
 // kZenny: now Party_Zenny (symbols.toml).
@@ -61,9 +61,9 @@ constexpr std::uint32_t kTextRecords = 0x904CE0;
 // +0x89 (MoveScript_EffectState's index), the dword +0x134 (areas 63 / 64
 // store it less 5 to Field_EdgeBits).
 // kLeader: now ObjTrio (symbols.toml).
-constexpr std::uint32_t kLeaderPose = 0x802D48;
-constexpr std::uint32_t kLeaderByte89 = 0x802DC9;
-constexpr std::uint32_t kLeaderDword134 = 0x802E74;
+// kLeaderPose: now ObjTrio[8] (symbols.toml).
+// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kLeaderDword134: now ObjTrio[0x134] (symbols.toml).
 // Named cells, by address for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
 // kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects, records of 0x80

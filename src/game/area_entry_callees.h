@@ -30,7 +30,7 @@ constexpr std::uint32_t kPickColumn = 0x903850;
 constexpr std::uint32_t kPickSlot = 0x903854;
 constexpr std::uint32_t kPickFree = 0x903858;
 // The 3-byte party list (Party_Join's, move_cmds_callees.h kPartyLists).
-constexpr std::uint32_t kPartyList = 0x904062;
+// kPartyList: now Cond_Flags[0xd2] (symbols.toml).
 // The eight 0xA4-byte character records MoveScript_EffectState indexes by
 // member (its values are 0..7), copied to a party record's +0x80 (PSX
 // 0x80144964); symbols.toml line 84's save-record block.

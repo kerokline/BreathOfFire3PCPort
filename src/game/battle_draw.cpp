@@ -123,7 +123,7 @@ inline float X87Div(float a, float b) {
 }
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(kDevice)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
@@ -134,15 +134,15 @@ long SetTexture(U stage, U texture) {
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVertices(U type, U count) {
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, kVertices, count, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
 }
-unsigned char* Vertex(U i) { return At(kVertices + i * 0x20); }
-U DrawMode() { return Long(At(kDrawTpage)) & 0xFFFF; }
+unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
+U DrawMode() { return Long(At(Gfx_DrawTpage_addr)) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z; the diffuse as given. Specular, tu and tv are not written.
 void PutCorner(unsigned char* out, const unsigned char* xyz, U diffuse) {
-    PutFloat(out + 0x00, X87Mul(Float(At(kScaleX)), Float(xyz)));
-    PutFloat(out + 0x04, X87Mul(Float(At(kScaleY)), Float(xyz + 4)));
+    PutFloat(out + 0x00, X87Mul(D3d_ScaleX, Float(xyz)));
+    PutFloat(out + 0x04, X87Mul(D3d_ScaleY, Float(xyz + 4)));
     PutLong(out + 0x08, Long(xyz + 8));
     PutFloat(out + 0x0C, X87Div(Float(At(kRhwNumerator)), Float(xyz + 8)));
     PutLong(out + 0x10, diffuse);
@@ -278,7 +278,7 @@ std::uint32_t ListTitle_SiteDraw() { return g_title_site_draw; }
 bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
-    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, w[9], Byte(kColour));
+    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
     const U category = w[0xA];
@@ -291,7 +291,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         if (item != 0) {
             unsigned char dim = 1;
             if (w[9] == 0) {
-                const unsigned member = Byte(kMemberRecord + Byte(kBattleParty + S8(Byte(kMenuMember))));
+                const unsigned member = Byte(kMemberRecord + Byte(kBattleParty + BattleActorCopies_ItemActor));
                 dim = g.can_use(w[8], member, w[0xA], item) ? 0 : 1;
             }
             unsigned char colour = dim ? 7 : 0;
@@ -314,8 +314,8 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
         row += 0xD;
     }
 
-    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x14, w[9], Byte(kColour));
-    g.box(Word(w + 4) + 3, Word(w + 6) + 0x7A, 0x99, 8, w[9], Byte(kColour));
+    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x14, w[9], static_cast<unsigned char>(BattleDraw_Colour));
+    g.box(Word(w + 4) + 3, Word(w + 6) + 0x7A, 0x99, 8, w[9], static_cast<unsigned char>(BattleDraw_Colour));
     {
         const unsigned char grey = w[9] ? 7 : 0;
         const unsigned char* const label = At(Long(At(kItemLabels + w[0xA] * 4u)));
@@ -374,7 +374,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
 // countdown in +9 stepped down, the frame's pieces (two more with word +0x14)
 // and the scroll bar over the list's 10 entries.
 extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
-    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, 0, Byte(kColour));
+    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0x10, &offset, &moving, w + 0x12);
     U ids = Addr(g.skill_list(w[0xA], w[0xB], 1)) + top;
@@ -383,11 +383,11 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
     for (unsigned char i = 0; i < rows; ++i) {
         const unsigned char id = At(ids)[0];
         if (id != 0) {
-            const unsigned char usable = static_cast<unsigned char>(g.skill_usable(w[8], Byte(kMenuMember), id));
+            const unsigned char usable = static_cast<unsigned char>(g.skill_usable(w[8], static_cast<unsigned char>(BattleActorCopies_ItemActor), id));
             const unsigned char dim = usable == 0 ? 1 : 0;
             unsigned char colour = dim ? 7 : 0;
             if (i == w[0xD]) colour = 2;
-            const unsigned cost = g.skill_cost(Byte(kMenuMember), At(ids)[0], 1) & 0xFFu;
+            const unsigned cost = g.skill_cost(static_cast<unsigned char>(BattleActorCopies_ItemActor), At(ids)[0], 1) & 0xFFu;
             const unsigned icon = g.skill_icon(At(ids)[0]) & 0xFFu;
             const std::int32_t here = static_cast<std::int32_t>(i) + S16(Word(w + 0x10));
             const unsigned char* const record = At(kSkillRecords + At(ids)[0] * 0x18u);
@@ -403,10 +403,10 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
         row += 0xD;
     }
 
-    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x14, 0, Byte(kColour));
+    g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x14, 0, static_cast<unsigned char>(BattleDraw_Colour));
     {
         const unsigned char* const label =
-            At(Word(w + 0x14) != 0 ? Long(At(kSkillLabelAlt)) : Long(At(kSkillLabels + w[0xB] * 4u)));
+            At(Word(w + 0x14) != 0 ? BattleDraw_SkillLabelAlt : Long(At(kSkillLabels + w[0xB] * 4u)));
         const int y = static_cast<int>(Word(w + 6)) + 7;
         const U length = static_cast<U>(std::strlen(reinterpret_cast<const char*>(label)));
         g.text_draw_at(static_cast<int>(ListTitleX(label, static_cast<int>(length)) + Word(w + 4)), y, 0, 0x10, label);
@@ -449,7 +449,7 @@ extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
 // on the early exit and AreaMap_ClutCycleStart's (ours, void) on the other,
 // so nothing can rely on it: ours is void.
 extern "C" void __cdecl AreaMap_TintClut(int level) {
-    if (Byte(kStatusBits) & 1) return;
+    if (Field_StatusBits & 1) return;
     g.clut_adjust(0xFFFF, 0xFFF, level, level, level);
     g.clut_cycle();
 }

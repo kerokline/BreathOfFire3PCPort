@@ -31,7 +31,7 @@ using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
-unsigned char* PartyObj(unsigned i) { return At(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyObj(unsigned i) { return At(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyObj(unsigned i) { return At(at::kEnemy + i * at::kEnemyStride); }
 // The object of actor 0..10.
 unsigned char* ActorObj(unsigned a) { return a < 3 ? PartyObj(a) : EnemyObj(a - 3); }
@@ -66,7 +66,7 @@ unsigned char g_psp_end;
 unsigned g_psp_fired;
 void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0) {
     if (g_psp_pending) {
-        At(at::kBattleEnd)[0] = g_psp_end;
+        At(BattleActions_BattleEnd_addr)[0] = g_psp_end;
         g_psp_pending = false;
     }
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, d};
@@ -103,23 +103,23 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
     switch ((h >> 4) % 22) {
-    case 0: At(at::kSub)[0] = static_cast<unsigned char>(v % 6); break;
-    case 1: At(at::kSub2)[0] = static_cast<unsigned char>(v % 3); break;
-    case 2: At(at::kQueueAt)[0] = static_cast<unsigned char>(v % 0x17); break;
+    case 0: At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(v % 6); break;
+    case 1: At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(v % 3); break;
+    case 2: At(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(v % 0x17); break;
     case 3: At(at::kActor)[0] = static_cast<unsigned char>(Actor(v)); break;
     case 4: At(at::kActor + at::kBKind)[0] = static_cast<unsigned char>(v % 7); break;
     case 5: SetPtr(at::kActor + at::kBObject, ActorObj(Actor(w))); break;
     case 6: SetPtr(at::kActor + at::kBAction, ActionOf(Actor(w))); break;
     case 7: At(at::kTarget)[0] = static_cast<unsigned char>(Actor(v)); break;
     case 8: SetWord(At(at::kAbility), ActionId(h >> 6)); break;
-    case 9: SetWord(At(at::kPending), v % 3 == 0 ? w : 0); break;
+    case 9: SetWord(At(BattleActions_Pending_addr), v % 3 == 0 ? w : 0); break;
     case 10: At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] ^ (1u << (v % 8))); break;
     case 11: At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ (1u << (v % 8))); break;
-    case 12: At(at::kEventBattle)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
-    case 13: At(at::kBattleEnd)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 14: At(at::kMsgCount)[0] = static_cast<unsigned char>(v % 9); break;
-    case 15: SetWord(At(at::kCancelButtons), h >> 16); break;
-    case 16: SetWord(At(at::kInputHeld), h >> 16); break;
+    case 12: At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v | 1); break;
+    case 13: At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 14: At(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
+    case 15: SetWord(At(Field_CancelButtons_addr), h >> 16); break;
+    case 16: SetWord(At(Input_Held_addr), h >> 16); break;
     case 17: {
         unsigned char* const o = ActorObj(Actor(w));
         const unsigned flags = Actor(w) < 3 ? 0x130 : 0x110;
@@ -134,8 +134,8 @@ void Disturb() {
         else SetWord(o + (a < 3 ? 0x9A : 0xA6), v);
         break;
     }
-    case 19: At(at::kStep)[0] = static_cast<unsigned char>(v % 5); break;
-    case 20: At(at::kCounter)[0] = static_cast<unsigned char>(v); break;
+    case 19: At(BattleActions_Step_addr)[0] = static_cast<unsigned char>(v % 5); break;
+    case 20: At(BossSb_Countdown_addr)[0] = static_cast<unsigned char>(v); break;
     default: At(at::kActor + at::kBKind)[0] = static_cast<unsigned char>(v % 2 ? 4 : 5); break;
     }
 }
@@ -144,9 +144,9 @@ void Disturb() {
 
 // The step tables' entries.
 template <unsigned N> void __cdecl StubStep() {
-    Record(N, At(at::kSub)[0], At(at::kSub2)[0]);
+    Record(N, At(BattleE4_Step2_addr)[0], At(BattleE4_Step3_addr)[0]);
     // Battle_ActionPhase reads both input words after the step
-    if (Hash() % 3 == 0) SetWord(At(at::kInputHeld), Word(At(at::kInputHeld)) ^ (1u << (Hash() % 16)));
+    if (Hash() % 3 == 0) SetWord(At(Input_Held_addr), Word(At(Input_Held_addr)) ^ (1u << (Hash() % 16)));
     Disturb();
 }
 void __cdecl StubHook(int n) {
@@ -155,19 +155,19 @@ void __cdecl StubHook(int n) {
     // the battle end and the event byte
     const std::uint32_t h = Hash();
     if (h % 2) At(at::kActor + at::kBKind)[0] = static_cast<unsigned char>((h >> 8) % 7);
-    if ((h >> 1) % 3 == 0) At(at::kBattleEnd)[0] = static_cast<unsigned char>((h >> 3) % 2);
-    if ((h >> 2) % 3 == 0) At(at::kEventBattle)[0] = static_cast<unsigned char>((h >> 5) % 2);
+    if ((h >> 1) % 3 == 0) At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>((h >> 3) % 2);
+    if ((h >> 2) % 3 == 0) At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>((h >> 5) % 2);
     Disturb();
 }
 // DIV-0108: the hook as the original sees it with the PSP's duel-loss: after the
 // hook with 0 (BattleAction_End's first), the PSP's test on the bytes it left.
 void __cdecl StubHookPsp(int n) {
     StubHook(n);
-    const unsigned char end = At(at::kBattleEnd)[0];
-    if (n == 0 && psp_code::DuelLossGoesOn(At(at::kEventBattle)[0], end)) {
+    const unsigned char end = At(BattleActions_BattleEnd_addr)[0];
+    if (n == 0 && psp_code::DuelLossGoesOn(At(BattleActions_EventBattle_addr)[0], end)) {
         g_psp_end = end;
         g_psp_pending = true;
-        At(at::kBattleEnd)[0] = 0;
+        At(BattleActions_BattleEnd_addr)[0] = 0;
         ++g_psp_fired;
     }
 }
@@ -185,12 +185,12 @@ void __cdecl StubEnemyPick(unsigned e) {
     if (Hash() % 2) At(at::kActor)[0] = static_cast<unsigned char>(Hash());
     static const unsigned char kTargets[] = {0, 2, 3, 9, 10, 11, 0x40, 0xC0};
     if (Hash() % 2) At(at::kTarget)[0] = kTargets[(Hash() >> 8) % sizeof kTargets];
-    if (Hash() % 3 == 0) At(at::kQueueAt)[0] = static_cast<unsigned char>((Hash() >> 5) % 0x17);
+    if (Hash() % 3 == 0) At(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>((Hash() >> 5) % 0x17);
     Disturb();
 }
 void __cdecl StubClearActing() {
     Record(43);
-    if (Hash() % 2) At(at::kSub)[0] = static_cast<unsigned char>(Hash() % 2 ? 2 : (Hash() >> 7) % 6);
+    if (Hash() % 2) At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Hash() % 2 ? 2 : (Hash() >> 7) % 6);
     if (Hash() % 3 == 0) At(at::kActor)[0] = static_cast<unsigned char>(Actor(Hash() >> 9));
     // BattleAction_End tests bit 6 after it
     if (Hash() % 2) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] ^ 0x40);
@@ -264,7 +264,7 @@ unsigned char __cdecl StubPickTarget() {
 void __cdecl StubLoadAbility(unsigned a) { Record(54, a & 0xFF); Disturb(); }
 int __cdecl StubLoadDone() {
     Record(55);
-    if (Hash() % 2) At(at::kEventBattle)[0] = static_cast<unsigned char>(Hash() % 2);
+    if (Hash() % 2) At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Hash() % 2);
     Disturb();
     const std::uint32_t h = Hash();
     return h % 2 ? 0 : static_cast<int>(h | 0x100);
@@ -288,21 +288,21 @@ void __cdecl StubLoadItem(unsigned id) { Record(60, id & 0xFFFF); Disturb(); }
 void __cdecl StubStartItem(unsigned id, unsigned owner) { Record(61, id & 0xFFFF, owner); Disturb(); }
 unsigned char __cdecl StubAnyF0() {
     Record(62);
-    if (Hash() % 3 == 0) SetWord(At(at::kPending), Hash() % 2 ? 0 : Hash() >> 16);
+    if (Hash() % 3 == 0) SetWord(At(BattleActions_Pending_addr), Hash() % 2 ? 0 : Hash() >> 16);
     Disturb();
     return static_cast<unsigned char>(Hash() % 3 == 0 ? Hash() >> 8 : 0);
 }
 void __cdecl StubLoadDat(int file) { Record(63, static_cast<std::uint32_t>(file)); Disturb(); }
-void __cdecl StubClutRow(unsigned row) { Record(64, row & 0xFF, At(at::kStep)[0], At(at::kSub)[0]); Disturb(); }
+void __cdecl StubClutRow(unsigned row) { Record(64, row & 0xFF, At(BattleActions_Step_addr)[0], At(BattleE4_Step2_addr)[0]); Disturb(); }
 unsigned char __cdecl StubSettle() {
     Record(65);
-    if (Hash() % 2) At(at::kSub)[0] = static_cast<unsigned char>(Hash() >> 9);
+    if (Hash() % 2) At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Hash() >> 9);
     Disturb();
     return static_cast<unsigned char>(Hash() % 2 ? 0 : Hash() >> 8);
 }
 unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value) {
     Record(66, a & 0xFF, b & 0xFF, Id(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(value))));
-    if (Hash() % 2) At(at::kMsgCount)[0] = static_cast<unsigned char>((Hash() >> 8) % 9);
+    if (Hash() % 2) At(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>((Hash() >> 8) % 9);
     Disturb();
     return Hash();
 }
@@ -351,13 +351,13 @@ const Callees kStubs = {
 using Handler = void (__cdecl*)();
 struct StepTable { std::uint32_t at; unsigned n; Handler stubs[6]; };
 const StepTable kTables[] = {
-    {at::kSteps, 5, {&StubStep<100>, &StubStep<101>, &StubStep<102>, &StubStep<103>, &StubStep<104>}},
-    {at::kBeginSteps, 2, {&StubStep<105>, &StubStep<106>}},
-    {at::kKindSteps, 6, {&StubStep<107>, &StubStep<108>, &StubStep<109>, &StubStep<110>, &StubStep<111>, &StubStep<112>}},
-    {at::kAbilitySteps, 3, {&StubStep<113>, &StubStep<114>, &StubStep<115>}},
-    {at::kItemSteps, 3, {&StubStep<116>, &StubStep<117>, &StubStep<118>}},
-    {at::kEffectSteps, 3, {&StubStep<119>, &StubStep<120>, &StubStep<121>}},
-    {at::kAfterSteps, 3, {&StubStep<122>, &StubStep<123>, &StubStep<124>}},
+    {BattleAction_Steps_addr, 5, {&StubStep<100>, &StubStep<101>, &StubStep<102>, &StubStep<103>, &StubStep<104>}},
+    {BattleAction_BeginSteps_addr, 2, {&StubStep<105>, &StubStep<106>}},
+    {BattleAction_KindSteps_addr, 6, {&StubStep<107>, &StubStep<108>, &StubStep<109>, &StubStep<110>, &StubStep<111>, &StubStep<112>}},
+    {BattleAction_AbilitySteps_addr, 3, {&StubStep<113>, &StubStep<114>, &StubStep<115>}},
+    {BattleAction_ItemSteps_addr, 3, {&StubStep<116>, &StubStep<117>, &StubStep<118>}},
+    {BattleAction_EffectSteps_addr, 3, {&StubStep<119>, &StubStep<120>, &StubStep<121>}},
+    {BattleAction_AfterSteps_addr, 3, {&StubStep<122>, &StubStep<123>, &StubStep<124>}},
 };
 constexpr unsigned kTableCount = sizeof kTables / sizeof kTables[0];
 
@@ -402,26 +402,26 @@ enum : unsigned {
 #define BA_P(name, base, size) {name, base, size, nullptr, 0, -1, 0}
 #define BA_T(name, base, table, index) {name, base, 0xE, nullptr, 0, table, index}
 const Clone kClones[kCount] = {
-    {"Battle_ActionPhase", 0x42F220, 0x2C, nullptr, 0, 0, at::kStep},
-    BA_T("BattleAction_BeginStep", 0x42F250, 1, at::kSub),
+    {"Battle_ActionPhase", 0x42F220, 0x2C, nullptr, 0, 0, BattleActions_Step_addr},
+    BA_T("BattleAction_BeginStep", 0x42F250, 1, BattleE4_Step2_addr),
     BA_C("Battle_BeginAction", 0x42F260, 0x257, kBeginCalls),
     BA_P("BattleAction_EnterKind", 0x42F4C0, 0x3A),
-    BA_T("BattleAction_KindStep", 0x42F500, 2, at::kSub),
+    BA_T("BattleAction_KindStep", 0x42F500, 2, BattleE4_Step2_addr),
     BA_C("BattleAction_KindPlain", 0x42F510, 0x96, kPlainCalls),
     BA_C("BattleAction_KindOne", 0x42F5B0, 0x2E, kOneCalls),
-    BA_T("BattleAction_AbilityStep", 0x42F670, 3, at::kSub2),
+    BA_T("BattleAction_AbilityStep", 0x42F670, 3, BattleE4_Step3_addr),
     BA_C("BattleAction_AbilityCheck", 0x42F680, 0x1F6, kAbilityCheckCalls),
     BA_C("BattleAction_AbilityCommit", 0x42F880, 0x149, kAbilityCommitCalls),
     BA_C("BattleAction_AbilityStart", 0x42FAB0, 0x3C, kAbilityStartCalls),
-    BA_T("BattleAction_ItemStep", 0x42FAF0, 4, at::kSub2),
+    BA_T("BattleAction_ItemStep", 0x42FAF0, 4, BattleE4_Step3_addr),
     BA_C("BattleAction_ItemCheck", 0x42FB00, 0xC1, kItemCheckCalls),
     BA_C("BattleAction_ItemCommit", 0x42FBD0, 0x35, kItemCommitCalls),
     BA_C("BattleAction_ItemStart", 0x42FC10, 0x3D, kItemStartCalls),
-    BA_T("BattleAction_EffectStep", 0x42FC50, 5, at::kSub),
+    BA_T("BattleAction_EffectStep", 0x42FC50, 5, BattleE4_Step2_addr),
     BA_C("BattleAction_EffectWait", 0x42FC60, 0xB5, kWaitCalls),
     BA_C("BattleAction_EffectPreload", 0x42FD20, 0x6F, kPreloadCalls),
     BA_C("BattleAction_EffectLoaded", 0x42FD90, 0x3D, kLoadedCalls),
-    BA_T("BattleAction_AfterStep", 0x42FDD0, 6, at::kSub),
+    BA_T("BattleAction_AfterStep", 0x42FDD0, 6, BattleE4_Step2_addr),
     BA_C("BattleAction_AfterSettle", 0x42FDE0, 0x38, kSettleCalls),
     BA_C("BattleAction_EnemyMessages", 0x42FF70, 0x9A, kMessagesCalls),
     BA_C("BattleAction_End", 0x430010, 0x195, kEndCalls),
@@ -434,19 +434,19 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kParty, 0xE50},          // ObjTrio and on: the member formula reaches actor 10's +2, 0x8031F3 inside
+    {ObjTrio_addr, 0xE50},        // ObjTrio and on: the member formula reaches actor 10's +2, 0x8031F3 inside
     {at::kPhase, 0x160},          // the battle's globals 0x904AA0..0x904C00: the queue, both blocks, the hook
     {at::kText0, 0x40},           // Text_Records[0] and [1]
     {at::kNameBuf, 0x20},
-    {at::kMsgBusy, 0x2350},       // 0x939F60..0x93C2B0: the message list, the stat copy, the enemies, 0x93C2A2
-    {at::kCancelButtons, 2},
-    {at::kInputHeld, 2},
-    {at::kStandOffsets, 0x80},    // constant data from here on - random here, put back after
+    {BattleE1_MessageUp_addr, 0x2350}, // 0x939F60..0x93C2B0: the message list, the stat copy, the enemies, 0x93C2A2
+    {Field_CancelButtons_addr, 2},
+    {Input_Held_addr, 2},
+    {BattleWin_MemberTargetOffsets_addr, 0x80}, // constant data from here on - random here, put back after
     {at::kAbilityRecords, 0x6000},// the action records, ids below 0x400
     {at::kAbilityRows, 0x8E8},    // the ability rows and the magic files
     {0x64B284, 0x1C0},            // the item rows 0..2
     {0x675ED8, 0x100},            // the item rows 3
-    {at::kTextMiss, 0x18},        // the two banner texts' pointers
+    {BattleActions_TextMiss_addr, 0x18}, // the two banner texts' pointers
 };
 constexpr unsigned kRegionBytes = 0xE50 + 0x160 + 0x40 + 0x20 + 0x2350 + 2 + 2 + 0x80 + 0x6000 + 0x8E8 + 0x1C0 + 0x100 + 0x18;
 
@@ -507,18 +507,18 @@ void Fix() {
     SetWord(At(at::kAbility), ActionId(Next()));
     for (unsigned i = 0; i < 0x16; ++i)
         At(at::kQueue + i)[0] = static_cast<unsigned char>(Half() ? 0xFF : Actor(Next()));
-    At(at::kQueueEnd)[0] = static_cast<unsigned char>(Next() % 0x17);
-    At(at::kQueueAt)[0] = static_cast<unsigned char>(Next() % 0x17);
-    At(at::kStep)[0] = static_cast<unsigned char>(Next() % 5);
-    At(at::kSub)[0] = static_cast<unsigned char>(Next() % 6);
-    At(at::kSub2)[0] = static_cast<unsigned char>(Next() % 3);
-    At(at::kMsgCount)[0] = static_cast<unsigned char>(Next() % 9);
+    At(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(Next() % 0x17);
+    At(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(Next() % 0x17);
+    At(BattleActions_Step_addr)[0] = static_cast<unsigned char>(Next() % 5);
+    At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Next() % 6);
+    At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Next() % 3);
+    At(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(Next() % 9);
     for (unsigned n = 0; n <= 8; ++n) At(at::kMsgList + n * 4)[0] = static_cast<unsigned char>(Next() % 8);
-    SetPtr(at::kEventHook, reinterpret_cast<const void*>(&StubHook));
-    if (Half()) At(at::kEventBattle)[0] = 0;
-    if (Half()) At(at::kBattleEnd)[0] = 0;
-    if (Half()) At(at::kMsgBusy)[0] = 0;
-    if (Half()) SetWord(At(at::kPending), 0);
+    SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHook));
+    if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
+    if (Half()) At(BattleActions_BattleEnd_addr)[0] = 0;
+    if (Half()) At(BattleE1_MessageUp_addr)[0] = 0;
+    if (Half()) SetWord(At(BattleActions_Pending_addr), 0);
 }
 
 // Each branch's boundaries, on top of the random bytes.
@@ -533,24 +533,24 @@ void Seed(unsigned k) {
     case kAfterStep: {
         const Clone& c = kClones[k];
         At(c.index_at)[0] = static_cast<unsigned char>(Next() % kTables[c.table].n);
-        if (k == kActionPhase && Half()) SetWord(At(at::kInputHeld), 0);
-        if (k == kActionPhase && Half()) SetWord(At(at::kCancelButtons), 1u << (Next() % 16));
+        if (k == kActionPhase && Half()) SetWord(At(Input_Held_addr), 0);
+        if (k == kActionPhase && Half()) SetWord(At(Field_CancelButtons_addr), 1u << (Next() % 16));
         break;
     }
     case kBeginAction: {
         const unsigned end = Next() % 0x17;
-        At(at::kQueueEnd)[0] = static_cast<unsigned char>(end);
-        At(at::kQueueAt)[0] = static_cast<unsigned char>(Often() && end ? Next() % end : Next() % 0x17);
+        At(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(end);
+        At(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(Often() && end ? Next() % end : Next() % 0x17);
         static const unsigned char kTargets[] = {0, 1, 2, 3, 5, 10, 11, 0x40, 0x80, 0xC0, 0xFF};
         At(at::kTarget)[0] = kTargets[Next() % sizeof kTargets];
         if (Half()) for (unsigned i = 0; i < 0x16; ++i) if (Often()) At(at::kQueue + i)[0] = 0xFF;
         break;
     }
     case kEnterKind:
-        At(at::kEventBattle)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     case kKindPlain:
-        At(at::kSub)[0] = static_cast<unsigned char>(Half() ? 2 : Next() % 6);
+        At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Half() ? 2 : Next() % 6);
         At(at::kActor)[0] = static_cast<unsigned char>(Half() ? 3 + Next() % 8 : Next() % 3);
         break;
     case kAbilityCheck: {
@@ -594,23 +594,23 @@ void Seed(unsigned k) {
                 const auto* const tables = reinterpret_cast<const unsigned char* const*>(static_cast<std::uintptr_t>(at::kItemRows));
                 row = tables[w >> 8][w & 0xFF];
             }
-            SetWord(At(at::kMagicFiles + row * 8), 0xFFFF);
+            SetWord(At(Magic_Rows_addr + row * 8), 0xFFFF);
         }
         break;
     }
     case kEffectLoaded:
-        At(at::kEventBattle)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         break;
     case kAfterSettle:
     case kEnd:
         if (Often()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 4);
-        if (Often()) SetWord(At(at::kPending), 0);
+        if (Often()) SetWord(At(BattleActions_Pending_addr), 0);
         if (k == kEnd && Half()) At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x40);
         if (k == kEnd && Half()) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] | 0x10);
         break;
     case kEnemyMessages:
-        if (Often()) At(at::kMsgBusy)[0] = 0;
-        if (Half()) At(at::kMsgCount)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
+        if (Often()) At(BattleE1_MessageUp_addr)[0] = 0;
+        if (Half()) At(BattleE5_EnemyMessageCount_addr)[0] = static_cast<unsigned char>(Half() ? 0 : 1);
         break;
     default:
         break;
@@ -646,8 +646,8 @@ void Cover(unsigned k, const State& in, const State& out) {
         if (out.log_n) ++g_cover.commit;
         break;
     case kEnd:
-        if (Byte(out, at::kSub) == 1) ++g_cover.swaps;
-        if (Byte(out, at::kPhase) == 4 && Byte(out, at::kStep) == 2) ++g_cover.battle_end;
+        if (Byte(out, BattleE4_Step2_addr) == 1) ++g_cover.swaps;
+        if (Byte(out, at::kPhase) == 4 && Byte(out, BattleActions_Step_addr) == 2) ++g_cover.battle_end;
         break;
     case kEnemyMessages:
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i) if (out.log[i].what == 66) ++g_cover.messages;
@@ -779,14 +779,14 @@ void SelfTest() {
         Fix();
         g_seed = Next();
         Seed(kEnd);
-        if (Half()) At(at::kEventBattle)[0] = psp_code::kDuelEvent;
-        At(at::kBattleEnd)[0] = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
+        if (Half()) At(BattleActions_EventBattle_addr)[0] = psp_code::kDuelEvent;
+        At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
         Capture(input);
 
         static State plain_out;
         for (int pass = 0; pass < 3; ++pass) {
             Apply(input);
-            if (pass == 0) SetPtr(at::kEventHook, reinterpret_cast<const void*>(&StubHookPsp));
+            if (pass == 0) SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHookPsp));
             if (pass == 2) psp_code::Force(0);
             const void* const fn = pass == 1 ? ours[kEnd] : clones[kEnd];
             reinterpret_cast<Fn0>(const_cast<void*>(fn))();
@@ -794,7 +794,7 @@ void SelfTest() {
                 ++psp_bad;
                 g_psp_pending = false;
             }
-            SetPtr(at::kEventHook, reinterpret_cast<const void*>(&StubHook));
+            SetPtr(BattleHook_Event_addr, reinterpret_cast<const void*>(&StubHook));
             psp_code::Force(psp_code::kAll);
             Capture(pass == 0 ? their_out : pass == 1 ? our_out : plain_out);
         }

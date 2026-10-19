@@ -36,10 +36,10 @@ constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // The byte after MoveScript_Var7 (the run step the scenes set beside it).
-constexpr std::uint32_t kVar7Step = 0x8034E5;
+// kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank) and the row pointer the
 // chapters' flag tests take (Cond_Flags + 8 * chapter; docs/field-modes.md).
-constexpr std::uint32_t kStoryFlags = 0x904030;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 // The pending area kind (docs/mode-flow.md: 0xFE only Draw_PassFlags 0).
 // kPendingKind: now AreaW0c_PendingKind (symbols.toml).
@@ -53,9 +53,9 @@ constexpr std::uint32_t kRecord0Byte9 = 0x903A79;
 // The leader's record (ObjTrio): byte +8, the step words +0x34 / +0x38, the
 // dword +0x134.
 constexpr std::uint32_t kLeader = 0x802D40;
-constexpr std::uint32_t kLeaderByte8 = 0x802D48;
-constexpr std::uint32_t kLeaderX = 0x802D74;
-constexpr std::uint32_t kLeaderZ = 0x802D78;
+// kLeaderByte8: now ObjTrio[8] (symbols.toml).
+// kLeaderX: now ObjTrio[0x34] (symbols.toml).
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;
 // Named cells, by address for the fuzz's regions and the one subtraction

@@ -55,8 +55,8 @@ bh::Clone Row(const char* name, U base, U size, const bh::CallSite* calls, int n
 }
 
 unsigned char& B(U address) { return Mem(address)[0]; }
-unsigned char* Enemy() { return bh::Pointer(at::kCurrentEnemy); }
-unsigned char* F() { return bh::Pointer(bh::at::kMemberCurrent); }
+unsigned char* Enemy() { return bh::Pointer(BattleE3_CurrentEnemy_addr); }
+unsigned char* F() { return bh::Pointer(Field_State_addr); }
 bool Flip() { return bh::Half(); }
 // bit `mask` of *p set or clear as a coin says
 void Bit(unsigned char* p, unsigned char mask) { *p = static_cast<unsigned char>(Flip() ? *p | mask : *p & ~mask); }
@@ -84,7 +84,7 @@ unsigned short Change(U n) {
     }
 }
 void FillResult(bool first_word) {
-    unsigned char* const r = bh::Pointer(at::kResult);
+    unsigned char* const r = bh::Pointer(BattleDamage_Result_addr);
     bh::Note(Word(r + 4), Word(r + 6), r[8]);
     const U n = bh::Noise();
     if (first_word) SetWord(r + 4, Change(n));
@@ -96,7 +96,7 @@ U DamageEffect(const U*, U answer) {
     // BattleObj_HitReceive reads Field_State again after the call: moved to
     // another member half the time (louder than the disturbance's 1 in 96)
     const U n = bh::Noise();
-    if (n & 1) bh::SetPointer(bh::at::kMemberCurrent, bh::PartyOf(static_cast<unsigned char>((n >> 1) % 3)));
+    if (n & 1) bh::SetPointer(Field_State_addr, bh::PartyOf(static_cast<unsigned char>((n >> 1) % 3)));
     return (answer & 0xFFFF0000u) | Change(bh::Noise());
 }
 U ResultEffect(const U*, U answer) {
@@ -213,14 +213,14 @@ void SeedEO(unsigned k) {
     e[0xF0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 8);
     e[0x105] = static_cast<unsigned char>(Flip() ? 4 : BH_PICK(0, 3, 5, 0x84, 0xFF));
     Bit(e + 0x90, 8);
-    if (bh::Next() % 3 == 0) B(at::kFight) = 0;
+    if (bh::Next() % 3 == 0) B(BattleActions_EventBattle_addr) = 0;
     Sprite_Current[9] = Counter();
     Sprite_Current[0xA] = Counter();
     Bit(Mem(at::kRoundFlags), 4);
     Bit(Mem(at::kRoundFlags), 0x40);
     if (k == kCastCue && Flip()) Sprite_Current[9] = 0;
-    if (k == kLeaveEnd) B(at::kEnemiesLeft) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
-    if (k == kCastDoneCost) B(at::kCost) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0xFF, 0x80) : bh::Next());
+    if (k == kLeaveEnd) B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 0, 0xFF) : bh::Next());
+    if (k == kCastDoneCost) B(BattleE3_Cost_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 0xFF, 0x80) : bh::Next());
 }
 
 // A cue word 0xFFFF half the time (the one 0x437450 skips), its upper half
@@ -246,9 +246,9 @@ void DisturbEO(U h) {
     case 0: SetWord(Mem(at::kAbility), v % 256); break;
     case 1: Enemy()[0x105] = static_cast<unsigned char>(v & 1 ? 4 : v >> 1); break;
     case 2: Enemy()[0x90] ^= 8; break;
-    case 3: B(at::kFight) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 4: B(at::kEnemiesLeft) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
-    case 5: B(at::kCost) = static_cast<unsigned char>(v); break;
+    case 3: B(BattleActions_EventBattle_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 4: B(BattleE2_EnemiesLeft_addr) = static_cast<unsigned char>(v & 1 ? 1 : v >> 1); break;
+    case 5: B(BattleE3_Cost_addr) = static_cast<unsigned char>(v); break;
     default: B(at::kRoundFlags) ^= static_cast<unsigned char>(v & 1 ? 4 : 0x40); break;
     }
 }
@@ -408,7 +408,7 @@ void SeedOBJ(unsigned k) {
         MemberBit(0x130, 1);
         MemberBit(0x131, 2);
         MemberBit(0x91, 8);
-        B(at::kEvadeBoost) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x4A, 0x4B, 0x4C, 0, 0x64, 0xFF) : bh::Next());
+        B(BattleE3_EvadeBoost_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x4A, 0x4B, 0x4C, 0, 0x64, 0xFF) : bh::Next());
         Bit(Mem(at::kRoundFlags + 1), 0x20);
         break;
     case kHitWaitPose:
@@ -440,16 +440,16 @@ void SeedOBJ(unsigned k) {
         MemberByte(0x97, path == 3 || bh::Next() % 8 == 0 ? 0x18 : 0x19);
         MemberByte(0x95, path == 4 || bh::Next() % 8 == 0 ? 0x43 : 0x42);
         MemberBit(0x134, 1);
-        B(at::kMembersUp) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 3, 0) : bh::Next());
+        B(BattleSprites_PartyPick_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 2, 3, 0) : bh::Next());
         Bit(Mem(at::kRoundFlags + 1), 0x40);
-        if (Flip()) B(at::kFormActor) = Sprite_Current[5];
+        if (Flip()) B(BattleFlow_ActorAt_addr) = Sprite_Current[5];
         break;
     }
     case kRevive:
     case kReviveByEquip:
         if (bh::Often()) Sprite_Current[9] = 1;
         if (k == kReviveByEquip) Sprite_Current[3] = static_cast<unsigned char>(BH_PICK(3, 5, 6, 3, 5, 6, 4, 0));
-        B(at::kKindsSeen) = static_cast<unsigned char>(Flip() ? 0 : bh::Next());
+        B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(Flip() ? 0 : bh::Next());
         break;
     case kFallTaskStart:
         for (unsigned i = 0; i < at::kPartyMax; ++i) {
@@ -517,8 +517,8 @@ void DisturbOBJ(U h) {
     case 5: f[0x95 + (v % 3)] = static_cast<unsigned char>(v & 0x10 ? 0x18 : 0x43); break;
     case 6: B(at::kActKind) = static_cast<unsigned char>(v & 1 ? 1 + (v >> 1) % 5 : v >> 1); break;
     case 7: B(at::kRoundFlags + (v & 1)) ^= static_cast<unsigned char>(1u << ((v >> 1) % 8)); break;
-    case 8: B(at::kKindsSeen) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
-    case 9: B(v & 1 ? at::kMembersUp : at::kFormActor) = static_cast<unsigned char>(v & 2 ? (v >> 2) % 3 : v >> 2); break;
+    case 8: B(BattleMisc_BannerKinds_addr) = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
+    case 9: B(v & 1 ? BattleSprites_PartyPick_addr : BattleFlow_ActorAt_addr) = static_cast<unsigned char>(v & 2 ? (v >> 2) % 3 : v >> 2); break;
     case 10: SetWord(Mem(at::kAbility), v % 256); break;
     default: B(at::kPartyCount) = static_cast<unsigned char>(v % 4); break;
     }

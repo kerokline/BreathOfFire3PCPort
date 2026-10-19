@@ -35,20 +35,20 @@ constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // The byte after MoveScript_Var7 (the run step the scenes set beside it).
-constexpr std::uint32_t kVar7Step = 0x8034E5;
+// kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The high byte of Field_ScriptFlags (0x9039A2): Area49_EffectFrame ors 0x20
 // into it as a byte.
 constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
 // The story flags (Flags_Set / Flags_Test's bank), two rows of Cond_Flags
 // the areas test (rows 5, 9 and 14: 0x903F90 + 8 * row), and the row pointer
 // the chapters' flag calls take (Cond_Flags + 8 * chapter; docs/field-modes.md).
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kCondRow5 = 0x903FB8;
-constexpr std::uint32_t kCondRow9 = 0x903FD8;
-constexpr std::uint32_t kCondRow14 = 0x904000;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kCondRow5: now Cond_Flags[0x28] (symbols.toml).
+// kCondRow9: now Cond_Flags[0x48] (symbols.toml).
+// kCondRow14: now Cond_Flags[0x70] (symbols.toml).
 // kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
-constexpr std::uint32_t kPartyList0 = 0x904062;
+// kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // A byte area 50's choice compares with 0x1E; no other reader read this round.
 // kByte9045FB: now AreaW1c_Byte9045FB (symbols.toml).
 // A byte area 50's choice sets to 6 beside the message it opens (area 37's
@@ -59,8 +59,8 @@ constexpr std::uint32_t kPartyList0 = 0x904062;
 // The leader's record (ObjTrio): byte +8 (the pose the hooks compare), byte
 // +0x89 (MoveScript_EffectState's index, op 8C).
 constexpr std::uint32_t kLeader = 0x802D40;
-constexpr std::uint32_t kLeaderPose = 0x802D48;
-constexpr std::uint32_t kLeaderByte89 = 0x802DC9;
+// kLeaderPose: now ObjTrio[8] (symbols.toml).
+// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Area 48's own cells: a count 0..8 its handlers step and read
 // (0x92BEE7; MapView_ElevationOffset is 0x92BEE2, five bytes before), and a

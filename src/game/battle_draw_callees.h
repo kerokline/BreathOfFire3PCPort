@@ -24,24 +24,24 @@ namespace battle_draw {
 using U = std::uint32_t;
 
 // --- the Direct3D handlers (docs/d3d-draw.md section 3) ------------------------
-constexpr U kScaleX = 0x7C9F4C;        // D3d_ScaleX, float
-constexpr U kScaleY = 0x7C9F48;        // D3d_ScaleY, float
-constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
-constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, the low word read
+// kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float
+// kScaleY: now D3d_ScaleY (symbols.toml). D3d_ScaleY, float
+// kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices, 4 x D3DTLVERTEX
+// kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, the low word read
 constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1: rhw = 0.1 / z
-constexpr U kDevice = 0x7CC350;        // D3d_Device, an IDirect3DDevice3 *
+// kDevice: now D3d_Device (symbols.toml). D3d_Device, an IDirect3DDevice3 *
 constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
 
 // --- the battle menu's lists ---------------------------------------------------
-constexpr U kColour = 0x903A5A;        // s8: the window colour (Config), a CLUT row
-constexpr U kMenuMember = 0x929F06;    // s8: the member the menu is on
+// kColour: now BattleDraw_Colour (symbols.toml). s8: the window colour (Config), a CLUT row
+// kMenuMember: now BattleActorCopies_ItemActor (symbols.toml). s8: the member the menu is on
 constexpr U kBattleParty = 0x904065;   // the second of the two 3-byte party lists (0x904062 the first)
 constexpr U kMemberRecord = 0x66972C;  // u8 per party entry: its character record (MoveScript_EffectState)
 constexpr U kInventory = 0x656B00;     // 5 pointers: each category's item ids
 constexpr U kCounts = 0x656B14;        // 5 pointers: each category's counts (the fifth, key items, 0)
 constexpr U kItemLabels = 0x66B58C;    // 5 pointers: the item list's title by category
 constexpr U kSkillLabels = 0x66B5A0;   // 4 pointers: the skill list's title by kind (+0xB)
-constexpr U kSkillLabelAlt = 0x66B5B0; // a pointer: the title while word +0x14 is set (0x66A220)
+// kSkillLabelAlt: now BattleDraw_SkillLabelAlt (symbols.toml). a pointer: the title while word +0x14 is set (0x66A220)
 constexpr U kSkillRecords = 0x65C4C8;  // 0x18-byte records by skill id, the name first
 constexpr U kPrintBuf = 0x904BA0;      // the sprintf buffer every number goes through
 constexpr U kFmt3d3d = 0x6639C8;       // "%3d/%3d"
@@ -52,7 +52,7 @@ constexpr U kTitleBit1Off = 0x66B4B0, kTitleBit1On = 0x66B4C8;   // by bit 1 of 
 constexpr U kTitleBit0Off = 0x66B4BC, kTitleBit0On = 0x66B4D4;   // by bit 0
 
 // --- the area tint ---------------------------------------------------------------
-constexpr U kStatusBits = 0x8034E1;    // Field_StatusBits: bit 0 holds the tint off
+// kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits: bit 0 holds the tint off
 
 // Group BD's (round 7), by address: never bound here.
 constexpr U kSkillUsable = bof3::addr::Skill_CanUse;   // (mode, member, id) -> al: whether the row is usable

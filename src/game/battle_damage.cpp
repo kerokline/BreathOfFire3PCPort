@@ -90,7 +90,7 @@ using move_script::Word;
 
 // An actor byte: 0..2 the party, 3 and up the enemies. Both address the
 // working record by the byte alone, as the original does (`and eax, 0xFF`).
-unsigned char* Party(unsigned actor) { return At(at::kParty + (actor & 0xFF) * at::kPartyStride); }
+unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + 0x10 + (actor & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3) * at::kEnemyStride); }
 unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 std::int32_t S32(std::uint32_t v) { return static_cast<std::int32_t>(v); }
@@ -119,7 +119,7 @@ void SortDescending(unsigned char* entries, unsigned n) {
 
 // The gate both order builders apply: with the byte 0x904B7A set, an actor
 // takes part only with bit 15 of its second flag dword.
-bool Gated(const unsigned char* flags2) { return Byte(at::kGate) != 0 && (Long(flags2) & 0x8000) == 0; }
+bool Gated(const unsigned char* flags2) { return BattlePhases_B7A != 0 && (Long(flags2) & 0x8000) == 0; }
 
 }  // namespace
 
@@ -148,15 +148,15 @@ extern "C" unsigned char __cdecl Battle_ActorCanAct(unsigned actor) {
         const unsigned char* const p = Party(actor);
         if ((p[at::kPPresent] & 1) == 0) return 0;
         if (Word(p + at::kPStatus) & 0x4944) return 0;
-        if (Byte(at::kGate2) != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
-        const unsigned char side = Byte(at::kSideOut);
+        if (BattleFlow_AnimGate != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
+        const unsigned char side = BattlePhases_Initiative;
         return side == 2 || side == 3 ? 0 : 1;
     }
     const unsigned char* const e = Enemy(actor);
     if ((e[at::kEPresent] & 1) == 0) return 0;
     if (Word(e + at::kEStatus) & 0x4144) return 0;
-    if (Byte(at::kGate2) != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
-    const unsigned char side = Byte(at::kSideOut);
+    if (BattleFlow_AnimGate != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
+    const unsigned char side = BattlePhases_Initiative;
     return side == 1 || side == 3 ? 0 : 1;
 }
 
@@ -169,17 +169,17 @@ extern "C" unsigned char __cdecl Battle_ActorCanCommand(unsigned actor) {
         const unsigned char* const p = Party(actor);
         if ((p[at::kPPresent] & 1) == 0) return 0;
         if (Word(p + at::kPStatus) & 0x4964) return 0;
-        if (Byte(at::kGate2) != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
+        if (BattleFlow_AnimGate != 0 && (p[at::kPFlags2] & 0x10) == 0) return 0;
         if (Long(p + at::kPFlags2) & 0x14001) return 0;
-        const unsigned char side = Byte(at::kSideOut);
+        const unsigned char side = BattlePhases_Initiative;
         return side == 2 || side == 3 ? 0 : 1;
     }
     const unsigned char* const e = Enemy(actor);
     if ((e[at::kEPresent] & 1) == 0) return 0;
     if (Word(e + at::kEStatus) & 0x4164) return 0;
-    if (Byte(at::kGate2) != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
+    if (BattleFlow_AnimGate != 0 && (e[at::kEFlags2] & 0x10) == 0) return 0;
     if (Long(e + at::kEFlags2) & 0x4000) return 0;
-    const unsigned char side = Byte(at::kSideOut);
+    const unsigned char side = BattlePhases_Initiative;
     return side == 1 || side == 3 ? 0 : 1;
 }
 
@@ -208,15 +208,15 @@ extern "C" void __cdecl Battle_BuildEntryOrder() {
         ++n;
     }
     SortDescending(list, n);
-    At(at::kEntryCount)[0] = 0;
+    BattleActorCopies_EntryCount = 0;
     SetWord(At(at::kEntryOrder), 0xFFFF);
     At(at::kEntryOrder + 2)[0] = 0xFF;
     for (unsigned k = 0; k < n; ++k) {
         const unsigned char actor = list[4 * k + 2];
         if (!g.can_command(actor)) continue;
-        const int index = static_cast<signed char>(Byte(at::kEntryCount));
+        const int index = BattleActorCopies_EntryCount;
         At(at::kEntryOrder + index)[0] = actor;
-        At(at::kEntryCount)[0] = static_cast<unsigned char>(Byte(at::kEntryCount) + 1);
+        BattleActorCopies_EntryCount = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     }
 }
 
@@ -276,14 +276,14 @@ extern "C" void __cdecl Battle_BuildTurnOrder() {
         SetWord(slot + 2, a);
         ++n;
     }
-    At(at::kTurnCount)[0] = static_cast<unsigned char>(n);
+    BattleDamage_TurnCount = static_cast<unsigned char>(n);
     SortDescending(At(at::kTurnWork), n);
     SetLong(At(at::kTurnOrder), -1);
     SetLong(At(at::kTurnOrder + 4), -1);
     SetWord(At(at::kTurnOrder + 8), 0xFFFF);
     At(at::kTurnOrder + 10)[0] = 0xFF;
-    for (unsigned k = 0; k < Byte(at::kTurnCount); ++k) At(at::kTurnOrder + k)[0] = Byte(at::kTurnWork + 4 * k + 2);
-    At(at::kTurnCursor)[0] = 0;
+    for (unsigned k = 0; k < BattleDamage_TurnCount; ++k) At(at::kTurnOrder + k)[0] = Byte(at::kTurnWork + 4 * k + 2);
+    BossSe_RoundSlot = 0;
 }
 
 // original 0x445680 (PSX Battle_ClearCommands 0x801DB45C): the command byte
@@ -342,7 +342,7 @@ extern "C" void __cdecl Battle_RemoveFromTurnOrder(unsigned actor) {
         e[at::kECommand] = 0;
         SetLong(e + at::kEFlags, S32(U32(Long(e + at::kEFlags)) & ~2u));
     }
-    for (unsigned k = 0; k < Byte(at::kTurnCount); ++k)
+    for (unsigned k = 0; k < BattleDamage_TurnCount; ++k)
         if (Byte(at::kTurnOrder + k) == b) At(at::kTurnOrder + k)[0] = 0xFF;
 }
 
@@ -398,7 +398,7 @@ extern "C" int __cdecl Battle_BaseDamage(unsigned attacker, unsigned target, uns
     const bool plain = (mode & 0xFF) != 0;
     std::int32_t v;
     if (a <= 2 || (target & 0xFF) > 2) {
-        const std::int32_t def = plain ? 0 : Word(At(at::kTargetDef));
+        const std::int32_t def = plain ? 0 : BattleDamage_TargetDef;
         v = static_cast<std::int32_t>(U32(Long(At(at::kAttackerAtk))) & 0xFFFF) - def;
         if (v < 0) v = 0;
     } else {
@@ -531,7 +531,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
         v = S32(U32((plain + (plain < 0 ? 3 : 0)) >> 2) + U32(v) * 2);
     }
     unsigned short d = static_cast<unsigned short>(v);
-    if (t <= 2 && Byte(at::kPartyCut) == 2) d = static_cast<unsigned short>(d - static_cast<unsigned short>(S16(d) >> 2));
+    if (t <= 2 && Cond_Flags[0xd0] == 2) d = static_cast<unsigned short>(d - static_cast<unsigned short>(S16(d) >> 2));
     if (status & 0x80) d = static_cast<unsigned short>(d - static_cast<unsigned short>(S16(d) >> 2));
     if ((status & 0x60) && d == 0) d = 1;
     if ((Byte(at::kBattleFlags) & 0x80) && d == 0) d = 1;
@@ -563,7 +563,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
         unsigned char* const p = Party(t);
         if (Long(p + at::kPFlags) & 0x100) {
             v = Word(p + at::kPHp);
-            g.show_message(1, 0, 0, 0x1E, U32(Long(At(at::kKillMessage))));
+            g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
             const std::uint32_t f = U32(Long(p + at::kPFlags)) & ~0x100u;
             At(at::kInstantKill)[0] = 1;
             SetLong(p + at::kPFlags, S32(f));
@@ -591,7 +591,7 @@ extern "C" short __cdecl Battle_ApplyDamage(unsigned attacker, unsigned target) 
         if (Word(e + at::kEHp) != 0xFFFF) {
             if ((Long(e + at::kEFlags) & 0x100) && Word(e + at::kEHp) <= 0x7FFF) {
                 v = Word(e + at::kEHp);
-                g.show_message(1, 0, 0, 0x1E, U32(Long(At(at::kKillMessage))));
+                g.show_message(1, 0, 0, 0x1E, BattleDamage_KillMessage);
                 const std::uint32_t f = U32(Long(e + at::kEFlags)) & ~0x100u;
                 At(at::kInstantKill)[0] = 1;
                 SetLong(e + at::kEFlags, S32(f));
@@ -639,7 +639,7 @@ extern "C" int __cdecl Battle_ElementAffinity(unsigned target, unsigned mask) {
 // The effects
 
 namespace {
-unsigned char* Result() { return At(U32(Long(At(at::kResult)))); }
+unsigned char* Result() { return At(BattleDamage_Result); }
 }  // namespace
 
 // original 0x44B9F0 (PSX Effect_ApplyResult 0x8009A160): an ability or item
@@ -672,7 +672,7 @@ extern "C" void __cdecl Effect_ApplyResult() {
     const unsigned actor = acting & 0xFF;
     const unsigned kind = (acting >> 8) & 0xFF;
     if (!(kind == 4 && (ability & 0xFFFF) == 0xA3)) {
-        unsigned char* const power = At(at::kAttackerInt);
+        unsigned char* const power = At(BattleDamage_AttackerInt_addr);
         if (actor <= 2) {
             unsigned char* const p = Party(actor);
             if (p[at::kPFlags2] & 0x80) {
@@ -695,10 +695,10 @@ extern "C" void __cdecl Effect_ApplyResult() {
     if (kind == 4) {
         handler = Byte(at::kSkillHandler + (ability & 0xFFFF));
     } else {
-        const unsigned item = Word(At(U32(Long(At(at::kItemCommand)))) + 2);
+        const unsigned item = Word(At(BattleSprites_Action) + 2);
         handler = At(U32(Long(At(at::kItemHandlers + 4 * (item >> 8)))))[item & 0xFF];
     }
-    reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(U32(Long(At(at::kHandlers + 4 * handler)))))();
+    reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(U32(Long(At(Effect_Handlers_addr + 4 * handler)))))();
 
     const unsigned t = Byte(at::kTarget);
     if (t <= 2 ? (Long(Party(t) + at::kPFlags) & 0x10000) : (Long(Enemy(t) + at::kEFlags) & 0x10000)) {
@@ -807,9 +807,9 @@ extern "C" void __cdecl Effect_ApplyResult() {
 // has second flags bit 9; 0 when it has flag 0x10000. `caster` is not read.
 extern "C" int __cdecl Effect_SkillDamage(unsigned caster, unsigned target, unsigned power, unsigned psi) {
     (void)caster;
-    const std::uint32_t scaled = (Word(At(at::kAttackerInt)) + 100u) * (power & 0xFFFF);
+    const std::uint32_t scaled = (BattleDamage_AttackerInt + 100u) * (power & 0xFFFF);
     std::uint32_t v = scaled * 100u / 100u;
-    std::int32_t resist = 100 - static_cast<std::int32_t>(Word(At(at::kTargetInt)) / 5u);
+    std::int32_t resist = 100 - static_cast<std::int32_t>(BattleDamage_TargetInt / 5u);
     if (resist < 50) resist = 50;
     v = U32(resist) * v / 100u;
     const unsigned mask =
@@ -820,7 +820,7 @@ extern "C" int __cdecl Effect_SkillDamage(unsigned caster, unsigned target, unsi
     }
     const unsigned roll = U32(g.rand()) & 7;
     std::int32_t amount = Mul(Word(At(at::kPowerVariance + 2 * roll)), S32(v)) / 10000;
-    if (Byte(at::kTarget) <= 2 && Byte(at::kPartyCut) == 2 && amount > 0) amount -= amount >> 2;
+    if (Byte(at::kTarget) <= 2 && Cond_Flags[0xd0] == 2 && amount > 0) amount -= amount >> 2;
     if ((target & 0xFF) <= 2) {
         const unsigned char* const p = Party(target);
         if (Long(p + at::kPFlags2) & 0x200) amount /= 2;
@@ -844,7 +844,7 @@ extern "C" int __cdecl Effect_HealAmount(unsigned caster, unsigned target) {
     (void)caster;
     const std::uint32_t id = U32(Long(At(at::kAbility))) & 0xFFFF;
     const std::uint32_t power = Byte(bof3::addr::NameTable_Abilities + id * at::kAbilityStride + 3);
-    const std::uint32_t base = power * (Word(At(at::kAttackerInt)) + 100u) * 100u / 100u;
+    const std::uint32_t base = power * (BattleDamage_AttackerInt + 100u) * 100u / 100u;
     const unsigned holy = (target & 0xFF) <= 2 ? Party(target)[at::kPHoly] : Enemy(target)[at::kEHoly];
     return Mul(S16(Word(At(at::kHealTable + 2 * holy))), S32(base)) / -10000;
 }
@@ -900,8 +900,8 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
                 holds = count != 0;
                 break;
             }
-            case 0x0F: holds = Byte(at::kAiByteB2) > Byte(at::kAiByteB3); break;
-            case 0x10: holds = Byte(at::kAiByteB3) == 1; break;
+            case 0x0F: holds = BattleActorCopies_EnemyCount > BattleE2_EnemiesLeft; break;
+            case 0x10: holds = BattleE2_EnemiesLeft == 1; break;
             case 0x11: holds = hp > (max_hp >> 1); break;
             case 0x12: holds = ap > (max_ap >> 1); break;
             case 0x13: holds = counter == 2; break;
@@ -911,12 +911,12 @@ extern "C" void __cdecl EnemyAI_ChooseActions() {
             case 0x1A: holds = (counter & 1) != 0; break;
             case 0x1B: holds = counter % 3 == 0; break;
             case 0x1C: holds = counter % 3 != 0; break;
-            case 0x1D: holds = Byte(at::kAiByteB1) == 1; break;
-            case 0x1E: holds = Byte(at::kAiByteB1) != 1; break;
-            case 0x1F: holds = Byte(at::kAiByteB3) == Byte(at::kAiByteB2); break;
-            case 0x20: holds = Byte(at::kAiByteB3) != 1; break;
+            case 0x1D: holds = BattleSprites_PartyPick == 1; break;
+            case 0x1E: holds = BattleSprites_PartyPick != 1; break;
+            case 0x1F: holds = BattleE2_EnemiesLeft == BattleActorCopies_EnemyCount; break;
+            case 0x20: holds = BattleE2_EnemiesLeft != 1; break;
             case 0x26: holds = g.ai_rows_left(r, e) != 0; break;
-            case 0x27: holds = Byte(at::kAiByteB97) == 1; break;
+            case 0x27: holds = BattleDamage_AiByteB97 == 1; break;
             default: continue;
             }
             if (holds) {

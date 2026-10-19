@@ -16,22 +16,22 @@ using U = std::uint32_t;
 // --- the field frame's cells ------------------------------------------------
 constexpr U kChoice = 0x7DEE67;           // s8: the choice the message box committed
 constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
-constexpr U kTailKind = 0x9039F3;         // Field_ModeTailKinds' index (s8)
-constexpr U kTailState = 0x9039F4;        // s8: the armed tail kind's state
-constexpr U kTailArg = 0x9039F5;          // the tail's argument byte
+// kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's state
+// kTailArg: now AreaW0c_TailSub (symbols.toml). the tail's argument byte
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
 constexpr U kMember1 = 0x802E8C;          // ObjTrio + 0x14C
 constexpr U kMember2 = 0x802FD8;          // ObjTrio + 0x298
 constexpr U kPartyStride = 0x14C;
-constexpr U kLeaderX = 0x802D74;          // the leader's +0x34 / +0x38, 16.16
-constexpr U kLeaderZ = 0x802D78;
-constexpr U kLeaderEffect = 0x802DC9;     // the leader's +0x89: MoveScript_EffectState's index
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderEffect: now ObjTrio[0x89] (symbols.toml). the leader's +0x89: MoveScript_EffectState's index
 constexpr U kPartyList = 0x904062;        // three bytes: the members' character ids, in order
 constexpr U kScratch48 = 0x903848;        // u8 scratch cells 0x903848..0x90384B (the script's)
 // kVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7
-constexpr U kVar8 = 0x8034E5;             // the byte after it
-constexpr U kObject0X = 0x7DEEB4;         // Sprite_Objects[0] +0x34
-constexpr U kObject1X = 0x7DEF58;         // Sprite_Objects[1] +0x34
+// kVar8: now MoveScript_PartyRecords[0x65] (symbols.toml). the byte after it
+// kObject0X: now Sprite_Objects[0x34] (symbols.toml). Sprite_Objects[0] +0x34
+// kObject1X: now Sprite_Objects[0xd8] (symbols.toml). Sprite_Objects[1] +0x34
 constexpr U kEffectStride = 0x80;
 
 // --- area 65's tables (the world-map copy's, in its own data block
@@ -56,22 +56,22 @@ constexpr U kA65NameSetStride = 6;
 // kA65Record8Anims: now Area65_Record8Anims (symbols.toml). (u8 animation, u8 +0x2A) x 4 by +8, unchecked
 // kA65Record4States: now Area65_Record4States (symbols.toml). 2: Area65_Record4MarkCell, Area45_Record4Tick (shared)
 // kA65DriftUBase: now Area65_DriftUV (symbols.toml). u8 by +0xB - 2; v base +4, cell size +8
-constexpr U kA65DriftVBase = 0x60495C;
+// kA65DriftVBase: now Area65_DriftUV[4] (symbols.toml).
 constexpr U kA65DriftSize = 0x604960;
 
 // --- area 65's world-map cells (area 16's and 45's, docs/area_w0b.md) ---------
-constexpr U kLeaderSteps = 0x802D49;      // u8 step count
-constexpr U kLeaderDirX = 0x802D4C;       // dword direction
-constexpr U kLeaderDirZ = 0x802D50;
-constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
-constexpr U kLeaderCellWordZ = 0x802D7A;  // the high word of +0x38
+// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
-constexpr U kMapHeight = 0x8CB581;        // AreaMap_Header's second byte
-constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0, the first legend's button
-constexpr U kButtonMap6 = 0x90358C;       // word 6, the second's
+// kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
+// kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
+// kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr U kAreaText = 0x803580;         // the area's text section
 constexpr U kAreaTextOffset = 0x803584;   // the region label at +[this] & 0xFFFF (area 45's cell; area 16's is 0x803588)

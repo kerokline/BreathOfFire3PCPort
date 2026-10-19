@@ -31,7 +31,7 @@ constexpr std::uint32_t kEffectSlot = 0x903850;
 // kTailKind: now AreaW0a_TailKind (symbols.toml).
 // kTailArg: now AreaW0c_TailSub (symbols.toml).
 // The story flags (Cond_Flags + 0xA0): Flags_Set's bits.
-constexpr std::uint32_t kStoryFlags = 0x904030;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // The dword holding the flag bits the chapter's Flags_Test calls are given.
 // kFlagBank: now AreaW0c_FlagRow (symbols.toml).
 // A byte area 3's choice handlers set to 6 with the message 0x44.
@@ -39,7 +39,7 @@ constexpr std::uint32_t kByte9398CF = 0x9398CF;
 // The scene's timer (u16, docs/field-modes.md).
 constexpr std::uint32_t kTimer = 0x8034E6;
 // Field object 6's x (Sprite_Objects + 6 * 0xA4 + 0x34), a dword.
-constexpr std::uint32_t kObject6X = 0x7DF28C;
+// kObject6X: now Sprite_Objects[0x40c] (symbols.toml).
 // Text_Records, where Crt_sprintf writes the message's parameter, and the
 // format area 8's handlers 1 and 2 give it (Area08_MessageFormat).
 constexpr std::uint32_t kTextRecords = 0x904CE0;

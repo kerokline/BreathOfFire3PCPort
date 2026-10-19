@@ -52,28 +52,29 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 
 // The fuzz's own literal addresses (read off the exe, docs/area_w3g.md): never
 // the constants ours reads, so a wrong one in ours shows.
-constexpr U kFzCursor = 0x7DEE67;
-constexpr U kFzLeaderDir = 0x802D48;
+// kFzCursor: now AreaW0c_ChoiceAnswer (symbols.toml).
+// kFzLeaderDir: now ObjTrio[8] (symbols.toml).
 constexpr U kFzTailKind = 0x9039F3;
-constexpr U kFzTailState = 0x9039F4;
-constexpr U kFzTailArg = 0x9039F5;
+// kFzTailState: now AreaW0c_TailState (symbols.toml).
+// kFzTailArg: now AreaW0c_TailSub (symbols.toml).
 constexpr U kFzTailTimer = 0x9039F6;
 constexpr U kFzScriptVar = 0x90384B;
-constexpr U kFzEffects = 0x7E11E0;
-constexpr U kFzDrawPass = 0x7E0918;
-constexpr U kFzPacketNext = 0x7E0670;
+// kFzEffects: now Effect_Objects (symbols.toml).
+// kFzDrawPass: now Draw_PassFlags (symbols.toml).
+// kFzPacketNext: now Gfx_PacketNext (symbols.toml).
 constexpr U kFzAngle1 = 0x929ECA;
-constexpr U kFzCameFrom = 0x802290;
-constexpr U kFzExtra0 = 0x802000;
+// kFzCameFrom: now AreaW2c_LastArea (symbols.toml).
+// kFzExtra0: now Sprite_ObjectsExtra (symbols.toml).
 constexpr U kFzKind2Sprite = 0x7E0974;   // Sprite_Kind2 + 0x34 .. + 0x3F
-constexpr U kFzFocusX = 0x929F14;
-constexpr U kFzOrigin = 0x7E0688;
-constexpr U kFzScriptObject = 0x929E80;  // MoveScript_Object
-constexpr U kFzCondFE = 0x905E20;
-constexpr U kFzCameraDistance = 0x903840;
-constexpr U kFzKind2X = 0x905E64, kFzKind2Z = 0x905E60;
-constexpr U kFzMemberId = 0x802DC9;
-constexpr U kFzSwitch = 0x6353F0;
+// kFzFocusX: now MapView_FocusX (symbols.toml).
+// kFzOrigin: now MapView_Origin (symbols.toml).
+// kFzScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
+// kFzCondFE: now Cond_ByteFE (symbols.toml).
+// kFzCameraDistance: now Camera_Distance (symbols.toml).
+// kFzKind2X: now Field_Kind2X (symbols.toml).
+constexpr U kFzKind2Z = 0x905E60;
+// kFzMemberId: now ObjTrio[0x89] (symbols.toml).
+// kFzSwitch: now Area148_Switch (symbols.toml).
 
 // BOF3X_AR3G_GROUP=n runs one group alone (the controls script's shortcut):
 // 1480 area 148's hooks and tails, 1481 its beam, 149, 150, 151; unset, all.
@@ -138,33 +139,33 @@ const ah::Callee kCallees1480[] = {
     {"Kind2_Place", bof3::addr::Kind2_Place, KeyOf(&::Kind2_Place), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {"Gfx_ClutAdjust", bof3::addr::Gfx_ClutAdjust, KeyOf(&::Gfx_ClutAdjust), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
 };
-const ah::Region kRegions1480[] = {{kFzEffects, 20 * 0x80}, {kFzDrawPass, 1}, {kFzAngle1, 2}};
+const ah::Region kRegions1480[] = {{Effect_Objects_addr, 20 * 0x80}, {Draw_PassFlags_addr, 1}, {kFzAngle1, 2}};
 
 void SeedMembers() {
     static const U kIds[] = {5, 2, 8, 4, 0, 1, 3, 6, 7, 9, 0xFF};
     for (U m = 0; m < 3; ++m)
-        if (ah::Often()) Mem(kFzMemberId + m * 0x14C)[0] = static_cast<unsigned char>(kIds[ah::Next() % AH_COUNT(kIds)]);
+        if (ah::Often()) Mem(ObjTrio_addr + 0x89 + m * 0x14C)[0] = static_cast<unsigned char>(kIds[ah::Next() % AH_COUNT(kIds)]);
     if (ah::Half()) Field_MemberCount = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 3, 4));
 }
 
 void Seed1480(unsigned k) {
     switch (k) {
     case k148MsgA: case k148MsgB: SeedMembers(); break;
-    case k148Choice0: case k148Choice1: Mem(kFzCursor)[0] = SomeCursor(); break;
+    case k148Choice0: case k148Choice1: Mem(AreaW0c_ChoiceAnswer_addr)[0] = SomeCursor(); break;
     case k148Tail: {
-        Mem(kFzTailState)[0] = static_cast<unsigned char>(
+        Mem(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(
             ah::Often() ? AH_PICK(0, 1, 1, 0xA, 0xB, 0xC, 0xD, 0xE, 0x14, 0x15, 0xD, 0x15, 2, 9, 0xF, 0x13, 0x16, 0x80, 0xFF, 0x7F)
                         : ah::Next());
         Mem(kFzScriptVar)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0x18, 0x20, 0, 0x19, 0x1F, 0x21, 0x17, 1) : ah::Next());
         SetWord(Mem(kFzTailTimer), ah::Often() ? AH_PICK(1, 1, 2, 0, 0x100, 0x101, 0xFFFF) : ah::Next());
         // the slot the flash is kept in: one of the twenty (its +0 bit 0 either way), or any byte
         const U slot = ah::Often() ? ah::Next() % 20 : ah::Next() & 0xFF;
-        Mem(kFzTailArg)[0] = static_cast<unsigned char>(slot);
-        if (slot < 20) Mem(kFzEffects + slot * 0x80)[0] = static_cast<unsigned char>(ah::Half() ? ah::Next() & 0xFE : ah::Next() | 1);
+        Mem(AreaW0c_TailSub_addr)[0] = static_cast<unsigned char>(slot);
+        if (slot < 20) Mem(Effect_Objects_addr + slot * 0x80)[0] = static_cast<unsigned char>(ah::Half() ? ah::Next() & 0xFE : ah::Next() | 1);
         break;
     }
     case k148Switch:
-        Mem(kFzLeaderDir)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 1, 1, 0x11, 0x81, 0, 2, 9) : ah::Next());
+        Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 1, 1, 0x11, 0x81, 0, 2, 9) : ah::Next());
         break;
     default: break;
     }
@@ -177,7 +178,7 @@ void Args1480(unsigned k, U* a) {
         ArgsTrigger(a);
     } else if (k == k148Switch) {
         // the record's bytes (x 0x4A, z 0x37) with bits above, one off, or anything
-        const unsigned char* const r = Mem(kFzSwitch);
+        const unsigned char* const r = Mem(Area148_Switch_addr);
         if (ah::Often()) {
             a[0] = r[0] | (ah::Half() ? 0 : ah::Next() & 0xFFFFFF00u);
             a[1] = r[1] | (ah::Half() ? 0 : ah::Next() & 0xFFFFFF00u);
@@ -326,7 +327,7 @@ const ah::Callee kCallees1481[] = {
 };
 const ah::DataTable kTables1481[] = {{0x6353F4, 3}};   // Area148_BeamStates
 enum : unsigned { kRegBeamPackets = 2 };
-ah::Region g_regions1481[] = {{kFzDrawPass, 1}, {kFzPacketNext, 4}, {0, kPacketBytes}};
+ah::Region g_regions1481[] = {{Draw_PassFlags_addr, 1}, {Gfx_PacketNext_addr, 4}, {0, kPacketBytes}};
 
 // Beam arguments the args hook hands the draws: planted by the seed.
 U g_beam_args[8];
@@ -446,43 +447,43 @@ const ah::Callee kCallees149[] = {
     {"ViewShift_56FCA0", kViewShift, kViewShift, 0, {}, ah::Answer::kGarbage, 0, 0},
 };
 const ah::DataTable kTables149[] = {{0x6361FC, 4}};   // Area149_DustStates
-const ah::Region kRegions149[] = {{kFzEffects, 20 * 0x80}, {kFzFocusX, 4}, {kFzOrigin, 2}, {kFzKind2Sprite, 0xC},
-                                  {kFzCameFrom, 2}, {kFzScriptObject, 4}, {kFzCondFE, 1}};
+const ah::Region kRegions149[] = {{Effect_Objects_addr, 20 * 0x80}, {MapView_FocusX_addr, 4}, {MapView_Origin_addr, 2}, {kFzKind2Sprite, 0xC},
+                                  {AreaW2c_LastArea_addr, 2}, {MoveScript_Object_addr, 4}, {Cond_ByteFE_addr, 1}};
 
 // A 16.16 x at and about a cell edge.
 std::int32_t Edge(U v) { return static_cast<std::int32_t>(v + AH_PICK(0, 0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, 0x8000)); }
 
 void Seed149(unsigned k) {
     // the running script's pointer a field object (the states move its +0xA)
-    ah::SetPointer(kFzScriptObject, ah::Object(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ah::Object(ah::Next()));
     switch (k) {
     case k149Run: Sprite_Current[4] = static_cast<unsigned char>(ah::Next() % 4); break;
     case k149S0: case k149S1: case k149S2: case k149S3:
-        SetWord(Mem(kFzCameraDistance),
+        SetWord(Mem(Camera_Distance_addr),
                 ah::Often() ? AH_PICK(0x87F, 0x880, 0x881, 0x67F, 0x680, 0x681, 0, 0, 1, 0xFFFF, 0x8000, 0x7FFF) : ah::Next());
         // extra record 0's x about the kind-2 x + 2 cells
-        if (ah::Often()) SetLong(Mem(kFzExtra0 + 0x34), Edge(static_cast<U>(Long(Mem(kFzKind2X))) + 0x20000u));
+        if (ah::Often()) SetLong(Mem(Sprite_ObjectsExtra_addr + 0x34), Edge(static_cast<U>(Long(Mem(Field_Kind2X_addr))) + 0x20000u));
         break;
     case k149Spawn:
         if (ah::Often()) Frame_Counter = Frame_Counter & ~3u;
         break;
     case k149Shift:
     case k149Tail: {
-        SetLong(Mem(kFzFocusX), static_cast<std::int32_t>(ah::Often() ? AH_PICK(0x63FF, 0x77FF, 0x63FF, 0x77FF, 0x63FE, 0x7800, 0x163FF) : ah::Next()));
-        Mem(kFzTailState)[0] = static_cast<unsigned char>(
+        SetLong(Mem(MapView_FocusX_addr), static_cast<std::int32_t>(ah::Often() ? AH_PICK(0x63FF, 0x77FF, 0x63FF, 0x77FF, 0x63FE, 0x7800, 0x163FF) : ah::Next()));
+        Mem(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(
             ah::Often() ? AH_PICK(0, 0, 2, 0xA, 0xA, 0xC, 1, 3, 9, 0xB, 0xD, 0x80, 0xFF) : ah::Next());
         SetWord(Mem(kFzTailTimer), ah::Often() ? AH_PICK(1, 1, 2, 0, 0x5A) : ah::Next());
         // the dust records: live kind 0x37 ones, and near misses
         for (U e = 0; e < 20; ++e) {
             if (!ah::Half()) continue;
-            unsigned char* const r = Mem(kFzEffects + e * 0x80);
+            unsigned char* const r = Mem(Effect_Objects_addr + e * 0x80);
             r[0] = static_cast<unsigned char>(ah::Often() ? ah::Next() | 1 : ah::Next() & 0xFE);
             r[5] = static_cast<unsigned char>(ah::Often() ? 0x37 : AH_PICK(0x36, 0x38, 0x137 & 0xFF, 0));
         }
         break;
     }
     case k149Init:
-        SetWord(Mem(kFzCameFrom), ah::Often() ? AH_PICK(0x94, 0x94, 0xA7, 0xA7, 0x95, 0xA6, 0x194, 0x1A7) : ah::Next());
+        SetWord(Mem(AreaW2c_LastArea_addr), ah::Often() ? AH_PICK(0x94, 0x94, 0xA7, 0xA7, 0x95, 0xA6, 0x194, 0x1A7) : ah::Next());
         break;
     default: break;
     }
@@ -494,18 +495,18 @@ void Args149(unsigned k, U* a) {
 void Disturb149(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch ((h >> 16) % 5) {
-    case 0: SetLong(Mem(kFzFocusX), v & 1 ? 0x63FF : 0x77FF); break;
+    case 0: SetLong(Mem(MapView_FocusX_addr), v & 1 ? 0x63FF : 0x77FF); break;
     case 1: SetWord(Mem(kFzTailTimer), v % 3); break;
-    case 2: SetWord(Mem(kFzCameFrom), v & 1 ? 0x94 : 0xA7); break;
-    case 3: Mem(kFzEffects + (v % 20) * 0x80)[0] ^= 1; break;
+    case 2: SetWord(Mem(AreaW2c_LastArea_addr), v & 1 ? 0x94 : 0xA7); break;
+    case 3: Mem(Effect_Objects_addr + (v % 20) * 0x80)[0] ^= 1; break;
     case 4: Frame_Counter = Frame_Counter ^ (v & 3); break;
     default: break;
     }
 }
 // MoveScript_Object kept a field object (the disturbance may move pointers).
 void Settle149() {
-    const U p = static_cast<U>(Long(Mem(kFzScriptObject)));
-    if (p < Key(ah::Object(0)) || p >= Key(ah::Object(0)) + 30 * 0xA4) ah::SetPointer(kFzScriptObject, ah::Object(0));
+    const U p = static_cast<U>(Long(Mem(MoveScript_Object_addr)));
+    if (p < Key(ah::Object(0)) || p >= Key(ah::Object(0)) + 30 * 0xA4) ah::SetPointer(MoveScript_Object_addr, ah::Object(0));
 }
 
 // ===========================================================================
@@ -539,13 +540,13 @@ const ah::Callee kCallees150[] = {
     // the count's byte is what the caller subtracts from 16
     {"Inventory_Count", bof3::addr::Inventory_Count, KeyOf(&::Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kByte, 0x00, 0x12},
 };
-const ah::Region kRegions150[] = {{kFzDrawPass, 1}, {0x929EC1, 1}, {0x9036D0, 1}};
+const ah::Region kRegions150[] = {{Draw_PassFlags_addr, 1}, {0x929EC1, 1}, {0x9036D0, 1}};
 
 void Seed150(unsigned k) {
     switch (k) {
-    case k150Fill: case k150Message: case k150TailState: Mem(kFzCursor)[0] = SomeCursor(); break;
+    case k150Fill: case k150Message: case k150TailState: Mem(AreaW0c_ChoiceAnswer_addr)[0] = SomeCursor(); break;
     case k150Tail:
-        Mem(kFzTailState)[0] = static_cast<unsigned char>(
+        Mem(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(
             ah::Often() ? AH_PICK(0xA, 0xC, 0xE, 0x14, 0x15, 0x16, 0x16, 0xC, 0xB, 0xD, 0xF, 0x13, 9, 0x17, 0x80, 0xFF) : ah::Next());
         Field_Request = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 2, 0, 2, 1, 3, 0x82) : ah::Next());
         break;
@@ -704,22 +705,36 @@ const ah::DataTable kTables151[] = {
 // The fuzz's own literal table addresses (read off the exe, docs/area_w3g.md
 // section 5): the seed plants and the regions are built from these, never
 // from the kWm151 ours reads, so a wrong constant in ours shows.
-constexpr U kFzAnims = 0x636A68, kFzAnimsEnd = 0x636A84, kFzCells = 0x636A84;
-constexpr U kFzRows = 0x6370BC, kFzRowsEnd = 0x63719C, kFzNameSet = 0x63719C;
-constexpr U kFzDirections = 0x63725C, kFzDriftU = 0x63727C, kFzButtons = 0x637238;
+// kFzAnims: now Area151_PlateAnims (symbols.toml).
+// kFzCells: now Area151_Cells (symbols.toml).
+constexpr U kFzAnimsEnd = 0x636A84;
+// kFzRows: now Area151_PlaceMessages (symbols.toml).
+// kFzNameSet: now Area151_NameSet (symbols.toml).
+constexpr U kFzRowsEnd = 0x63719C;
+// kFzDirections: now Area151_Directions (symbols.toml).
+// kFzDriftU: now Area151_DriftUV (symbols.toml).
+// kFzButtons: now Area151_Buttons (symbols.toml).
 constexpr unsigned kFzAnimCount = 7, kFzRowCount = 7;
-constexpr U kFzPlace = 0x937F82, kFzMapMode = 0x9045FA, kFzItemsHeld = 0x9040EC, kFzTextRecords = 0x904CE0;
-constexpr U kFzCellWordX = 0x802D76, kFzCellWordZ = 0x802D7A, kFzCellX = 0x905E66, kFzCellZ = 0x905E62;
-constexpr U kFzButtonMap0 = 0x903580, kFzButtonMap6 = 0x90358C, kFzPartySet = 0x90412C, kFzMapHeight = 0x8CB581;
-constexpr U kFzFlag3A79 = 0x903A79, kFzLeaderSteps = 0x802D49, kFzAreaText = 0x803580;
+// kFzPlace: now AreaW0b_Place (symbols.toml).
+// kFzMapMode: now AreaW0b_MapMode (symbols.toml).
+constexpr U kFzItemsHeld = 0x9040EC, kFzTextRecords = 0x904CE0;
+// kFzCellWordX: now ObjTrio[0x36] (symbols.toml).
+// kFzCellWordZ: now ObjTrio[0x3a] (symbols.toml).
+constexpr U kFzCellX = 0x905E66, kFzCellZ = 0x905E62;
+// kFzButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml).
+// kFzPartySet: now AreaW0b_PartySet (symbols.toml).
+// kFzMapHeight: now AreaMap_Header[1] (symbols.toml).
+constexpr U kFzButtonMap0 = 0x903580;
+// kFzLeaderSteps: now ObjTrio[9] (symbols.toml).
+constexpr U kFzFlag3A79 = 0x903A79, kFzAreaText = 0x803580;
 
 enum : unsigned { kRegPackets151 = 3, kRegItems = 7, kRegNames = 8 };
 ah::Region g_regions151[] = {
-    {kFzMapMode, 1}, {kFzDrawPass, 1}, {kFzPacketNext, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2},
+    {AreaW0b_MapMode_addr, 1}, {Draw_PassFlags_addr, 1}, {Gfx_PacketNext_addr, 4}, {0, kPacketBytes}, {0x9037A0, 0x20}, {0x66C7E8, 2},
     {kFzButtonMap0, 0x10}, {0, 4 * kItemBytes}, {0, sizeof g_names}, {kFzTextRecords, 0xA0},
     {kFzAreaText, 4}, {kFzFlag3A79, 1},
-    {kFzAnims, kFzAnimsEnd - kFzAnims}, {kFzCells, 4}, {kFzRows, kFzRowsEnd - kFzRows}, {kFzNameSet, 6},
-    {kFzDirections, 0x18}, {kFzDriftU, 0xC},
+    {Area151_PlateAnims_addr, kFzAnimsEnd - Area151_PlateAnims_addr}, {Area151_Cells_addr, 4}, {Area151_PlaceMessages_addr, kFzRowsEnd - Area151_PlaceMessages_addr}, {Area151_NameSet_addr, 6},
+    {Area151_Directions_addr, 0x18}, {Area151_DriftUV_addr, 0xC},
 };
 
 // The exe's own bytes of the tables the fuzz randomises, put back two rounds
@@ -730,28 +745,28 @@ struct Saved {
 Saved g_saved;
 
 void SaveTables() {
-    std::memcpy(g_saved.anims, Mem(kFzAnims), sizeof g_saved.anims);
-    std::memcpy(g_saved.cells, Mem(kFzCells), sizeof g_saved.cells);
-    std::memcpy(g_saved.rows, Mem(kFzRows), sizeof g_saved.rows);
-    std::memcpy(g_saved.names, Mem(kFzNameSet), sizeof g_saved.names);
-    std::memcpy(g_saved.dirs, Mem(kFzDirections), sizeof g_saved.dirs);
-    std::memcpy(g_saved.drift, Mem(kFzDriftU), sizeof g_saved.drift);
+    std::memcpy(g_saved.anims, Mem(Area151_PlateAnims_addr), sizeof g_saved.anims);
+    std::memcpy(g_saved.cells, Mem(Area151_Cells_addr), sizeof g_saved.cells);
+    std::memcpy(g_saved.rows, Mem(Area151_PlaceMessages_addr), sizeof g_saved.rows);
+    std::memcpy(g_saved.names, Mem(Area151_NameSet_addr), sizeof g_saved.names);
+    std::memcpy(g_saved.dirs, Mem(Area151_Directions_addr), sizeof g_saved.dirs);
+    std::memcpy(g_saved.drift, Mem(Area151_DriftUV_addr), sizeof g_saved.drift);
 }
 
 void DisturbWm(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     switch ((h >> 16) % 12) {
-    case 0: Mem(kFzMapMode)[0] = static_cast<unsigned char>(v % 4 == 0 ? v : v % 3); break;
+    case 0: Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(v % 4 == 0 ? v : v % 3); break;
     case 1: Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags ^ (v & 1 ? 4 : 0x1B)); break;
     case 2: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (v & 1 ? 0x100 : 0x4000)); break;
     case 3: Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ 0x1000); break;
-    case 4: Mem(kFzTailState)[0] = static_cast<unsigned char>(v % 3); break;
+    case 4: Mem(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(v % 3); break;
     case 5: Game_Mode = static_cast<unsigned short>(Game_Mode ^ 1); break;
     case 6: Cond_ByteFA = static_cast<signed char>(v % 16); break;
-    case 7: SetWord(Mem(kFzPlace), v); break;     // the settle plants it in the last plate entry
+    case 7: SetWord(Mem(AreaW0b_Place_addr), v); break; // the settle plants it in the last plate entry
     case 8: Mem(kFzCellX + (v & 1) * 2)[0] = static_cast<unsigned char>(v); break;
-    case 9: Mem(kFzPartySet)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
-    case 10: case 11: Mem(v & 1 ? kFzCellWordX : kFzCellWordZ)[0] = static_cast<unsigned char>(h >> 24); break;
+    case 9: Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v & 1 ? 0xC : v); break;
+    case 10: case 11: Mem(v & 1 ? (ObjTrio_addr + 0x36) : (ObjTrio_addr + 0x3a))[0] = static_cast<unsigned char>(h >> 24); break;
     default: break;
     }
 }
@@ -760,46 +775,46 @@ void DisturbWm(U h) {
 void SettleWm() {
     unsigned char* const o = Sprite_Current;
     if (o[1] >= 5) o[1] = static_cast<unsigned char>(o[1] % 5);
-    SetWord(Mem(kFzAnims + (kFzAnimCount - 1) * 4), Word(Mem(kFzPlace)));
+    SetWord(Mem(Area151_PlateAnims_addr + (kFzAnimCount - 1) * 4), Word(Mem(AreaW0b_Place_addr)));
 }
 
 void SeedWm(unsigned k) {
     unsigned char* const o = Sprite_Current;
     Gfx_PacketNext = g_packets + (ah::Next() % 4) * 4;
-    if (ah::Often()) std::memcpy(Mem(kFzAnims), g_saved.anims, sizeof g_saved.anims);
-    if (ah::Often()) std::memcpy(Mem(kFzCells), g_saved.cells, sizeof g_saved.cells);
-    if (ah::Often()) std::memcpy(Mem(kFzRows), g_saved.rows, sizeof g_saved.rows);
-    if (ah::Often()) std::memcpy(Mem(kFzNameSet), g_saved.names, sizeof g_saved.names);
-    if (ah::Often()) std::memcpy(Mem(kFzDirections), g_saved.dirs, sizeof g_saved.dirs);
-    if (ah::Often()) std::memcpy(Mem(kFzDriftU), g_saved.drift, sizeof g_saved.drift);
+    if (ah::Often()) std::memcpy(Mem(Area151_PlateAnims_addr), g_saved.anims, sizeof g_saved.anims);
+    if (ah::Often()) std::memcpy(Mem(Area151_Cells_addr), g_saved.cells, sizeof g_saved.cells);
+    if (ah::Often()) std::memcpy(Mem(Area151_PlaceMessages_addr), g_saved.rows, sizeof g_saved.rows);
+    if (ah::Often()) std::memcpy(Mem(Area151_NameSet_addr), g_saved.names, sizeof g_saved.names);
+    if (ah::Often()) std::memcpy(Mem(Area151_Directions_addr), g_saved.dirs, sizeof g_saved.dirs);
+    if (ah::Often()) std::memcpy(Mem(Area151_DriftUV_addr), g_saved.drift, sizeof g_saved.drift);
     o[1] = static_cast<unsigned char>(o[1] % 5);
-    SetWord(Mem(kFzAnims + (kFzAnimCount - 1) * 4), Word(Mem(kFzPlace)));
+    SetWord(Mem(Area151_PlateAnims_addr + (kFzAnimCount - 1) * 4), Word(Mem(AreaW0b_Place_addr)));
     const auto leave = [o] {
-        Mem(kFzMapMode)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 2) : ah::Next());
+        Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 2) : ah::Next());
         if (ah::Often()) o[0xB] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 2, 5, 1, 3));
         Field_ScriptFlags = static_cast<unsigned short>(ah::Often() ? Field_ScriptFlags & ~0x100u : Field_ScriptFlags | 0x100u);
     };
     switch (k) {
     case kPlaceMessage: {
-        Mem(kFzTailState)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 0, 1, 1, 2, 0xFF, 0x80) : ah::Next());
+        Mem(AreaW0c_TailState_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 0, 1, 1, 2, 0xFF, 0x80) : ah::Next());
         Cond_ByteFA = static_cast<signed char>(ah::Often() ? AH_PICK(1, 2, 15, 0, 0xFF, 0x80, 0x7F, 8) : ah::Next());
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(2, 2, 0, 5, 3));
         // the place in one of the rows, or in none
-        if (ah::Often()) SetWord(Mem(kFzRows + (ah::Next() % kFzRowCount) * 0x20), Word(Mem(kFzPlace)));
+        if (ah::Often()) SetWord(Mem(Area151_PlaceMessages_addr + (ah::Next() % kFzRowCount) * 0x20), Word(Mem(AreaW0b_Place_addr)));
         // items held or not, now and then a list ended early
         for (unsigned i = 0; i < 0x74; ++i)
             if (ah::Half()) Mem(kFzItemsHeld + i)[0] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);
-        if (ah::Half()) Mem(kFzNameSet + 1 + ah::Next() % 5)[0] = static_cast<unsigned char>(AH_PICK(0xFF, 0x16, 0x5E, 0xFF));
+        if (ah::Half()) Mem(Area151_NameSet_addr + 1 + ah::Next() % 5)[0] = static_cast<unsigned char>(AH_PICK(0xFF, 0x16, 0x5E, 0xFF));
         break;
     }
     case kPlateRun:
         if (ah::Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 ^ 0x1000);
-        if (ah::Half()) Mem(kFzLeaderSteps)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0xFF, 0x80));
+        if (ah::Half()) Mem(ObjTrio_addr + 0x9)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0xFF, 0x80));
         break;
     case kPlateShow:
         o[0xB] = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 1, 1, 2, 3, 4, 0, 5) : ah::Next());
-        SetWord(Mem(kFzAnims + (ah::Next() % kFzAnimCount) * 4), Word(Mem(kFzPlace)));
+        SetWord(Mem(Area151_PlateAnims_addr + (ah::Next() % kFzAnimCount) * 4), Word(Mem(AreaW0b_Place_addr)));
         break;
     case kPlateGrow:
     case kPlateShrink:
@@ -811,7 +826,7 @@ void SeedWm(unsigned k) {
         Game_Mode = static_cast<unsigned short>(ah::Often() ? AH_PICK(0, 2, 1, 0x101) : ah::Next());
         if (ah::Often()) o[7] = static_cast<unsigned char>(ah::Half() ? 1 : AH_PICK(0, 2, 3, 4));
         if (ah::Often()) o[0xB] = o[7];
-        if (ah::Often()) SetLong(o + 0x18, static_cast<std::int32_t>(Word(Mem(kFzPlace)) | (ah::Half() ? 0 : 0x10000u)));
+        if (ah::Often()) SetLong(o + 0x18, static_cast<std::int32_t>(Word(Mem(AreaW0b_Place_addr)) | (ah::Half() ? 0 : 0x10000u)));
         if (ah::Often()) Field_Request = static_cast<unsigned char>(AH_PICK(0, 5, 2));
         break;
     case kHudRun: o[1] = static_cast<unsigned char>(ah::Next() % 2); break;
@@ -821,14 +836,14 @@ void SeedWm(unsigned k) {
     case kRecord4Run: o[1] = static_cast<unsigned char>(ah::Next() % 2); break;
     case kFrameSlideIn:
         if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0, 0xFFFF, 1, 0xFFF0, 0x7FF0, 0x7FFF, 0xFFD0));
-        Mem(kFzMapMode)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1) : ah::Next());
+        Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1) : ah::Next());
         break;
     case kFrameHold:
-        Mem(kFzMapMode)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
+        Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kFrameSlideOut:
         if (ah::Often()) SetWord(o + 0x2E, AH_PICK(0xFFE0, 0xFFE1, 0xFFDF, 0x8000, 0x800F, 0x8010, 0x10));
-        Mem(kFzMapMode)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
+        Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 0, 1, 0x82) : ah::Next());
         break;
     case kBoxSlideIn:
         if (ah::Often()) SetWord(o + 0x30, AH_PICK(0xD1, 0xD2, 0xD3, 0xF0, 0x800A, 0x8009, 0));
@@ -848,18 +863,18 @@ void SeedWm(unsigned k) {
     case kDrawSprite:
         Draw_PassFlags = static_cast<unsigned char>(ah::Often() ? AH_PICK(1, 2, 8, 0x10, 0x1B, 4, 0x20, 0xE4) : ah::Next());
         // the button words with a bit of one entry's mask, or none
-        if (ah::Often()) SetLong(Mem(kFzButtonMap0), static_cast<std::int32_t>(Word(Mem(kFzButtons + (ah::Next() % 6) * 4)) | (ah::Next() & 0xFFFF0000u)));
+        if (ah::Often()) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f000), static_cast<std::int32_t>(Word(Mem(Area151_Buttons_addr + (ah::Next() % 6) * 4)) | (ah::Next() & 0xFFFF0000u)));
         if (ah::Half()) {
             // a word only the eighth entry answers, when it has such bits
             U others = 0;
-            for (U e = 0; e < 7; ++e) others |= Word(Mem(kFzButtons + e * 4));
-            const U only = Word(Mem(kFzButtons + 7 * 4)) & ~others;
-            if (only != 0) SetLong(Mem(kFzButtonMap6), static_cast<std::int32_t>(only | (ah::Next() & 0xFFFF0000u)));
-        } else if (ah::Often()) SetLong(Mem(kFzButtonMap6), static_cast<std::int32_t>(Word(Mem(kFzButtons + (ah::Half() ? 6 + ah::Next() % 2 : ah::Next() % 8) * 4)) | (ah::Next() & 0xFFFF0000u)));
-        if (ah::Half()) SetLong(Mem(kFzButtonMap0), 0);
+            for (U e = 0; e < 7; ++e) others |= Word(Mem(Area151_Buttons_addr + e * 4));
+            const U only = Word(Mem(Area151_Buttons_addr + 7 * 4)) & ~others;
+            if (only != 0) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f00c), static_cast<std::int32_t>(only | (ah::Next() & 0xFFFF0000u)));
+        } else if (ah::Often()) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f00c), static_cast<std::int32_t>(Word(Mem(Area151_Buttons_addr + (ah::Half() ? 6 + ah::Next() % 2 : ah::Next() % 8) * 4)) | (ah::Next() & 0xFFFF0000u)));
+        if (ah::Half()) SetLong(Mem(Gfx_UnpackScratch_addr + 0x1f000), 0);
         if (ah::Half()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x1000u);
         if (ah::Half()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x4000u);
-        if (ah::Half()) Mem(kFzPartySet)[0] = static_cast<unsigned char>(AH_PICK(0xC, 0x8C, 0xB, 0xFF));
+        if (ah::Half()) Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(AH_PICK(0xC, 0x8C, 0xB, 0xFF));
         break;
     case kRecord8Place:
         if (ah::Often()) o[8] = static_cast<unsigned char>(ah::Next() % 4);
@@ -877,7 +892,7 @@ void SeedWm(unsigned k) {
         if (ah::Half()) o[2] = 0;
         if (ah::Often()) Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags | 4);
         o[0xB] = static_cast<unsigned char>(ah::Often() ? AH_PICK(2, 3, 2, 3, 0, 1, 4, 5) : ah::Next());
-        const unsigned height = Mem(kFzMapHeight)[0];
+        const unsigned height = Mem(AreaMap_Header_addr + 0x1)[0];
         if (ah::Half()) SetWord(o + 0x3A, height + AH_PICK(8, 9, 7, 0, 0x7FFF));
         const auto near = [](unsigned char* cell, unsigned centre) {
             SetWord(cell, centre + AH_PICK(0, 25, 26, static_cast<U>(-25), static_cast<U>(-26), 1, 100));

@@ -29,14 +29,14 @@ using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
 // kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
-constexpr U kLeaderSteps = 0x802D49;      // u8 step count
-constexpr U kLeaderDirX = 0x802D4C;       // dword direction
-constexpr U kLeaderDirZ = 0x802D50;
-constexpr U kLeaderX = 0x802D74;          // 16.16 position; its high words are the cell
-constexpr U kLeaderZ = 0x802D78;
-constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
-constexpr U kLeaderCellWordZ = 0x802D7A;  // the high word of +0x38
-constexpr U kLeaderEdge = 0x802E74;       // the leader's dword +0x134 (Field_EdgeBits = it - 5)
+// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). 16.16 position; its high words are the cell
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
+// kLeaderEdge: now ObjTrio[0x134] (symbols.toml). the leader's dword +0x134 (Field_EdgeBits = it - 5)
 // kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 // kMsgMode: now AreaW0a_TailKind (symbols.toml). the tail kind byte (Field_ModeTailKinds' index)
 // kMsgState: now AreaW0c_TailState (symbols.toml). s8: the field hook's state
@@ -44,9 +44,9 @@ constexpr U kLeaderEdge = 0x802E74;       // the leader's dword +0x134 (Field_Ed
 // kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
-constexpr U kMapHeight = 0x8CB581;        // AreaMap_Header's second byte: the map's height in cells
-constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0, the first legend's button
-constexpr U kButtonMap6 = 0x90358C;       // word 6, the second's
+// kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte: the map's height in cells
+// kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
+// kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
 // kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr U kAreaText = 0x803580;         // the area's text section: the region label at +[0x803588] & 0xFFFF
 constexpr U kAreaTextOffset = 0x803588;
@@ -65,7 +65,7 @@ constexpr U kTextRecordsEnd = 0x904D60;
 constexpr U kTextRow1 = 0x904D00;         // Text_Records + 0x20: area 21's number, by Crt_sprintf
 constexpr U kFormat = 0x5E10C0;           // the "%d"-shaped format it uses (read-only)
 constexpr U kFlag3A79 = 0x903A79;         // area 16's record +4 state: 9 releases the effect
-constexpr U kPartyFirst = 0x904062;       // the first party list's first member id
+// kPartyFirst: now Cond_Flags[0xd2] (symbols.toml). the first party list's first member id
 constexpr U kAreaRecords = 0x668D80;      // a pointer per area; area 18's init writes the byte +4 of its own
 
 // --- area 16's tables (the world-map copy's, in its data block after area
@@ -90,7 +90,7 @@ constexpr U kA16Buttons8End = 0x5E6010;
 // kA16Record8Anims: now Area16_Record8Anims (symbols.toml). (u8 animation, u8 +0x2A) x 4 by +8, unchecked
 // kA16Record4States: now Area16_Record4States (symbols.toml). 2 (0x408990 another area's shared one)
 // kA16DriftUBase: now Area16_DriftUV (symbols.toml). u8 by +0xB - 2; v base +4, cell size +8
-constexpr U kA16DriftVBase = 0x5E6038;
+// kA16DriftVBase: now Area16_DriftUV[4] (symbols.toml).
 constexpr U kA16DriftSize = 0x5E603C;
 
 // --- the other areas' tables --------------------------------------------------

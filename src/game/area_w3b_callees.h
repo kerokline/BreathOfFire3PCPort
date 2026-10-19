@@ -38,20 +38,22 @@ constexpr U kStoryFlags = 0x904030;
 constexpr U kTailKind = 0x9039F3;         // Field_ModeTailKinds' index (s8)
 constexpr U kTailState = 0x9039F4;        // s8: the armed tail kind's (or the field hook's) state
 constexpr U kTailArg = 0x9039F5;
-constexpr U kMsgMode = kTailKind, kMsgState = kTailState, kMsgArg = kTailArg;
+// kMsgMode: now AreaW0a_TailKind (symbols.toml).
+// kMsgState: now AreaW0c_TailState (symbols.toml).
+// kMsgArg: now AreaW0c_TailSub (symbols.toml).
 constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
-constexpr U kLeaderDir = 0x802D48;        // the leader's +8, its facing
-constexpr U kLeaderSteps = 0x802D49;      // +9
-constexpr U kLeaderA = 0x802D4A;          // +0xA: effect kind 0x5C's gauge draws the blink while it is not 0
-constexpr U kLeaderB = 0x802D4B;          // +0xB: the charge the gauge's second row shows (0x40 - it)
-constexpr U kLeaderDirX = 0x802D4C;       // +0xC / +0x10: the step direction (dwords)
-constexpr U kLeaderDirZ = 0x802D50;
-constexpr U kLeaderX = 0x802D74;          // +0x34 / +0x38 / +0x3C, 16.16
-constexpr U kLeaderZ = 0x802D78;
-constexpr U kLeaderY = 0x802D7C;
+// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
+// kLeaderSteps: now ObjTrio[9] (symbols.toml). +9
+// kLeaderA: now ObjTrio[0xa] (symbols.toml). +0xA: effect kind 0x5C's gauge draws the blink while it is not 0
+// kLeaderB: now ObjTrio[0xb] (symbols.toml). +0xB: the charge the gauge's second row shows (0x40 - it)
+// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). +0xC / +0x10: the step direction (dwords)
+// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). +0x34 / +0x38 / +0x3C, 16.16
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderY: now ObjTrio[0x3c] (symbols.toml).
 constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
 constexpr U kLeaderCellWordZ = 0x802D7A;
-constexpr U kLeaderHeight = 0x802D7E;     // the word +0x3E
+// kLeaderHeight: now ObjTrio[0x3e] (symbols.toml). the word +0x3E
 constexpr U kPartyStride = 0x14C;
 constexpr U kObjectStride = 0xA4;         // Sprite_Objects / Sprite_ObjectsExtra / Field_ActorStates records
 constexpr U kEffectStride = 0x80;
@@ -59,27 +61,27 @@ constexpr U kScriptVar3 = 0x903848;       // MoveScript variables 3..6 (docs/are
 constexpr U kScriptVar4 = 0x903849;
 constexpr U kScriptVar5 = 0x90384A;
 constexpr U kScriptVar6 = 0x90384B;
-constexpr U kScriptVar7 = 0x8034E4;       // MoveScript_Var7 (s8): the running scene's run
-constexpr U kScriptStep = 0x8034E5;       // the run's step
+// kScriptVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7 (s8): the running scene's run
+// kScriptStep: now MoveScript_PartyRecords[0x65] (symbols.toml). the run's step
 constexpr U kChoice = 0x7DEE67;           // the choice box's answer (s8)
-constexpr U kRowPointer = 0x903804;       // a record pointer whose word +0x8A a choice counts (docs/area_w1a.md)
-constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0 (the dial's first legend)
-constexpr U kButtonMap1 = 0x903582;       // word 1: the push / charge button
-constexpr U kButtonMap3 = 0x903586;       // word 3: Field_Request 4's button
-constexpr U kButtonMap6 = 0x90358C;       // word 6 (the dial's second legend)
+// kRowPointer: now AreaW1a_FocusObject (symbols.toml). a record pointer whose word +0x8A a choice counts (docs/area_w1a.md)
+// kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0 (the dial's first legend)
+// kButtonMap1: now Gfx_UnpackScratch[0x1f002] (symbols.toml). word 1: the push / charge button
+// kButtonMap3: now Gfx_UnpackScratch[0x1f006] (symbols.toml). word 3: Field_Request 4's button
+// kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6 (the dial's second legend)
 constexpr U kPlace = 0x937F82;            // u16: the place the party stands on (world map)
-constexpr U kMapMode = 0x9045FA;          // the world map's mode byte
+// kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
-constexpr U kMapHeight = 0x8CB581;        // AreaMap_Header's second byte
-constexpr U kPartySet = 0x90412C;         // & 0x7F: the party set (0xC shows the dial's third legend)
+// kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
+// kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the dial's third legend)
 constexpr U kAreaText = 0x803580;         // the area's text section; the label's offset is its first dword's low word
 constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
-constexpr U kChangeFlags = 0x905B88;      // byte: Field_ChangeArea's fourth argument on a 0xAF cell
+// kChangeFlags: now AreaEntry_PendingFlags (symbols.toml). byte: Field_ChangeArea's fourth argument on a 0xAF cell
 constexpr U kPendingX = 0x903860;         // dword: Field_ChangeArea's x (the pending area cells, docs/area_harness.md)
-constexpr U kPendingZ = 0x90384C;         // dword: its z
-constexpr U k904EE0 = 0x904EE0;           // byte zeroed on the 0xAF cell's change of area
-constexpr U k937F98 = 0x937F98;           // byte set to 0xC on it
+// kPendingZ: now AreaEntry_PendingZ (symbols.toml). dword: its z
+// k904EE0: now ModeFlow_AreaTransition (symbols.toml). byte zeroed on the 0xAF cell's change of area
+// k937F98: now AreaW0c_PendingKind (symbols.toml). byte set to 0xC on it
 constexpr U kFieldStateNow = 0x905D98;    // Field_State
 
 // --- area 120's (its descriptor 0x623648: only a choice table) ------------------
@@ -87,10 +89,10 @@ constexpr U kA120Choices = 0x62363C;      // 3: its descriptor's +0x34
 
 // --- area 121's own (its descriptor 0x6245D8) ------------------------------------
 constexpr U kA121Handlers = 0x6245C8;     // 3: its descriptor's +0x3C
-constexpr U kA121CameraStates = 0x62461C; // 2: handler 0's by Sprite_Current +4
-constexpr U kLeaderStates = 0x624704;     // 2: leader state 12's (Area121_LeaderRun) by Sprite_Current +2
-constexpr U kKind5CStates = 0x62470C;     // 5: effect kind 0x5C's (Area121_Kind5CRun) by Sprite_Current +1
-constexpr U kBandHeights = 0x624720;      // bytes by Cond_ByteFE (1..2): the top band's bottom edge
+// kA121CameraStates: now Area121_CameraStates (symbols.toml). 2: handler 0's by Sprite_Current +4
+// kLeaderStates: now Area121_LeaderStates (symbols.toml). 2: leader state 12's (Area121_LeaderRun) by Sprite_Current +2
+// kKind5CStates: now Area121_Kind5CStates (symbols.toml). 5: effect kind 0x5C's (Area121_Kind5CRun) by Sprite_Current +1
+// kBandHeights: now Area121_BandHeights (symbols.toml). bytes by Cond_ByteFE (1..2): the top band's bottom edge
 
 // --- area 121's world-map tables (area 87's layout, docs/area_w2b.md section 4;
 // the field hook's place list replaces area 87's place rows, cells and names) ---

@@ -54,12 +54,12 @@ unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEff
 std::uint16_t High(long v) { return static_cast<std::uint16_t>(static_cast<U>(v) >> 16); }
 
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
-unsigned char Answer() { return B(at::kChoiceAnswer); }
-unsigned char* StoryFlags() { return Mem(at::kStoryFlags); }
+unsigned char Answer() { return B(AreaW0c_ChoiceAnswer_addr); }
+unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
 // The focus object's trigger id cleared (0xFF): the focus read before the
 // message store, as the originals do.
 void DropFocusTrigger(unsigned message) {
-    unsigned char* const focus = Ptr(at::kFocusObject);
+    unsigned char* const focus = Ptr(AreaW1a_FocusObject_addr);
     SetMessage(message);
     focus[0x86] = 0xFF;
 }
@@ -97,7 +97,7 @@ void ChoiceMessageByAnswer() {
 
 // Areas 175 and 184's Zenny question (choices 10 and 14): the answer and
 // Party_Zenny at 500 or more (unsigned) pick a message and a byte.
-bool HasZenny500() { return static_cast<U>(Long(Mem(at::kZenny))) >= 0x1F4; }
+bool HasZenny500() { return static_cast<U>(Long(Mem(Party_Zenny_addr))) >= 0x1F4; }
 
 // Area 175's handler 2 and its glide step: x += step << 11, z -= step << 11
 // (the step a signed byte of `steps` by `index & 0xF`), each through
@@ -118,19 +118,19 @@ void SlideZBy(unsigned char* object, U steps, unsigned index) {
 // `to`, and MapView_FillCells; then the timer down, and at 0 counter 3 0x1C,
 // the timer 0xF and the next state.
 void Area186Shift(std::int32_t focus, U dz, int dy, std::int32_t to, unsigned char next) {
-    if (Long(Mem(at::kFocusZ)) == focus) {
-        AddWord(Mem(at::kOriginY), dy);
-        AddLong(Mem(at::kKind2ZField), dz);
-        AddLong(Mem(at::kExtra0 + 0x38), dz);
-        AddLong(Mem(at::kKind2Z), dz);
-        SetLong(Mem(at::kFocusZ), to);
+    if (Long(Mem(MapView_FocusZ_addr)) == focus) {
+        AddWord(Mem(MapView_Origin_addr + 0x2), dy);
+        AddLong(Mem(Field_Kind2Z_addr), dz);
+        AddLong(Mem(Sprite_ObjectsExtra_addr + 0x38), dz);
+        AddLong(Mem(Sprite_Kind2_addr + 0x38), dz);
+        SetLong(Mem(MapView_FocusZ_addr), to);
         AH_CALL(MapView_FillCells)();
     }
     AddWord(Mem(at::kTailTimer), -1);
     if (Word(Mem(at::kTailTimer)) != 0) return;
     B(at::kCounter3) = 0x1C;
     SetWord(Mem(at::kTailTimer), 0xF);
-    B(at::kTailState) = next;
+    B(AreaW0c_TailState_addr) = next;
 }
 // Tail kind 39's states 1 and 0xB: the timer down, and at 0 area 0xAD at
 // (x, z) with `flags`, the tail kind and state 0.
@@ -138,13 +138,13 @@ void Area186Leave(std::int32_t x, std::int32_t z, unsigned flags) {
     AddWord(Mem(at::kTailTimer), -1);
     if (Word(Mem(at::kTailTimer)) != 0) return;
     AH_CALL(Field_ChangeArea)(0xAD, x, z, flags);
-    B(at::kTailKind) = 0;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = 0;
+    B(AreaW0c_TailState_addr) = 0;
 }
 
 // Field_ChangeArea to the return point (its area word, x, z) with flags 4.
 void ChangeToReturnPoint() {
-    AH_CALL(Field_ChangeArea)(Word(Mem(at::kReturnArea)), Long(Mem(at::kReturnX)), Long(Mem(at::kReturnZ)), 4);
+    AH_CALL(Field_ChangeArea)(Word(Mem(AreaW4d_ReturnArea_addr)), Long(Mem(AreaW2d_ReturnPoint_addr)), Long(Mem(AreaW4d_ReturnZ_addr)), 4);
 }
 
 }  // namespace
@@ -185,12 +185,12 @@ extern "C" void __cdecl Area175_ClampXToKind2(void) {
 extern "C" void __cdecl Area175_ChoiceAskZenny6F(void) {
     if (Answer() == 0) {
         SetMessage(0x6F);
-        B(at::kTailSub) = 0;
+        B(AreaW0c_TailSub_addr) = 0;
         return;
     }
     if (HasZenny500()) {
         SetMessage(0x7D);
-        B(at::kTailSub) = 1;
+        B(AreaW0c_TailSub_addr) = 1;
         return;
     }
     DropFocusTrigger(0x7C);
@@ -206,12 +206,12 @@ extern "C" void __cdecl Area175_ChoiceMessage9F(void) { SetMessage(0x9F + (Answe
 extern "C" void __cdecl Area176_ChoiceCount3E(void) {
     if (Answer() == 0) {
         SetMessage(0xFFFF);
-        B(at::kFacility + 4) = 0;
+        B(Rest4b_BoardFlag_addr + 4) = 0;
         return;
     }
-    const unsigned char count = B(at::kFacility + 2);
+    const unsigned char count = B(Rest4b_BoardFlag_addr + 2);
     SetMessage(0x5F);
-    B(at::kFacility + 2) = static_cast<unsigned char>(count + 1);
+    B(Rest4b_BoardFlag_addr + 2) = static_cast<unsigned char>(count + 1);
 }
 
 // original 0x429790 (choice 26 of all eleven): message 0xF9, or 0xF8 for an
@@ -227,7 +227,7 @@ extern "C" void __cdecl Area178_PlaySound201(void) { AH_CALL(Sound_PlayById)(0x2
 extern "C" void __cdecl Area178_ChoiceMessageEF(void) {
     const unsigned char answer = Answer();
     SetMessage(0xEF);
-    B(at::kFacility + 2) = static_cast<unsigned char>((answer != 0 ? 1 : 0) + 1);
+    B(Rest4b_BoardFlag_addr + 2) = static_cast<unsigned char>((answer != 0 ? 1 : 0) + 1);
 }
 
 // original 0x4298A0 (the init of all eleven; PSX 0x801F32D8 / area 175's
@@ -237,7 +237,7 @@ extern "C" void __cdecl Area178_ChoiceMessageEF(void) {
 extern "C" void __cdecl Area179_Init(void) {
     if (Cond_ByteFA > 7) AH_AT(void (__cdecl*)(void), at::kFieldReset)();
     const unsigned char fd = Cond_ByteFD;
-    B(at::kHookArmed) = 0;
+    B(AreaW4d_HookArmed_addr) = 0;
     if (fd != 0) AH_CALL(Sound_PlayEffect)(0x20C);
 }
 
@@ -247,8 +247,8 @@ extern "C" void __cdecl Area179_Init(void) {
 extern "C" unsigned char __cdecl Area179_CellHook(unsigned x, unsigned z) {
     if (static_cast<std::uint16_t>(x) != 0x3F) return 0;
     if (static_cast<std::uint16_t>(z) != 0xE) return 0;
-    if (B(at::kLeaderPose) != 1) return 0;
-    B(at::kTailKind) = Cond_ByteFA > 7 ? 0x1A : 6;
+    if (B(ObjTrio_addr + 0x8) != 1) return 0;
+    B(AreaW0a_TailKind_addr) = Cond_ByteFA > 7 ? 0x1A : 6;
     return 1;
 }
 
@@ -257,7 +257,7 @@ extern "C" unsigned char __cdecl Area179_CellHook(unsigned x, unsigned z) {
 extern "C" void __cdecl Area179_ChoiceVar8(void) {
     const unsigned char answer = Answer();
     SetMessage(0xFFFF);
-    B(at::kVar8) = static_cast<unsigned char>((answer == 0 ? 1 : 0) + 2);
+    B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>((answer == 0 ? 1 : 0) + 2);
 }
 
 // original 0x429990 (choice 24 of all eleven): message 0xFFFF; the facility
@@ -265,7 +265,7 @@ extern "C" void __cdecl Area179_ChoiceVar8(void) {
 extern "C" void __cdecl Area180_ChoiceStoreAnswer(void) {
     const unsigned char answer = Answer();
     SetMessage(0xFFFF);
-    B(at::kFacility + 1) = answer;
+    B(Rest4b_BoardFlag_addr + 1) = answer;
 }
 
 // original 0x429A10 (choice 1 of all eleven): message 0xFFFF; answer 0:
@@ -276,10 +276,10 @@ extern "C" void __cdecl Area181_ChoiceCounter0(void) {
     SetMessage(0xFFFF);
     if (answer == 0) {
         B(at::kCounter0) = 0x28;
-        B(at::kVar8) = 0x15;
+        B(MoveScript_PartyRecords_addr + 0x65) = 0x15;
     } else {
         B(at::kCounter0) = 0x32;
-        B(at::kVar8) = 0x19;
+        B(MoveScript_PartyRecords_addr + 0x65) = 0x19;
     }
 }
 
@@ -289,12 +289,12 @@ extern "C" void __cdecl Area181_ChoiceCounter0(void) {
 extern "C" void __cdecl Area183_ChoiceMessage78(void) {
     if (Answer() == 0) {
         SetMessage(0x78);
-        B(at::kFacility + 4) = 0xB;
+        B(Rest4b_BoardFlag_addr + 4) = 0xB;
     } else {
         SetMessage(0x72);
-        B(at::kFacility + 4) = 0xC;
+        B(Rest4b_BoardFlag_addr + 4) = 0xC;
     }
-    B(at::kFacility + 3) = 0;
+    B(Rest4b_BoardFlag_addr + 3) = 0;
 }
 
 // original 0x429BA0 (choice 2 of all eleven): answer 1: message 0x5A and the
@@ -312,7 +312,7 @@ extern "C" void __cdecl Area184_ChoiceMessage5A(void) {
 extern "C" void __cdecl Area184_ChoiceTailState1(void) {
     if (Answer() == 1) {
         SetMessage(0x5F);
-        B(at::kTailState) = 1;
+        B(AreaW0c_TailState_addr) = 1;
         return;
     }
     SetMessage(0xFFFF);
@@ -336,7 +336,7 @@ extern "C" void __cdecl Area184_ChoiceMessage77(void) {
         return;
     }
     SetMessage(0x77);
-    B(at::kFacility + 4) = 0xA;
+    B(Rest4b_BoardFlag_addr + 4) = 0xA;
 }
 
 // original 0x429C60 (choice 14 of all eleven): answer not 0: message 0x7B,
@@ -345,16 +345,16 @@ extern "C" void __cdecl Area184_ChoiceMessage77(void) {
 extern "C" void __cdecl Area184_ChoiceAskZenny7F(void) {
     if (Answer() != 0) {
         SetMessage(0x7B);
-        B(at::kFacility + 5) = 1;
+        B(Rest4b_BoardFlag_addr + 5) = 1;
         return;
     }
     if (HasZenny500()) {
         SetMessage(0x7F);
-        B(at::kFacility + 5) = 0;
+        B(Rest4b_BoardFlag_addr + 5) = 0;
         return;
     }
     SetMessage(0x7C);
-    B(at::kFacility + 5) = 1;
+    B(Rest4b_BoardFlag_addr + 5) = 1;
 }
 
 // original 0x429CB0 (choice 15 of all eleven): answer 0: message 0x89; else
@@ -365,7 +365,7 @@ extern "C" void __cdecl Area184_ChoiceMessage89(void) {
         return;
     }
     SetMessage(0x88);
-    B(at::kFacility + 2) = 2;
+    B(Rest4b_BoardFlag_addr + 2) = 2;
 }
 
 // original 0x429CE0 (choice 21 of all eleven): answer 0: message 0xFFFF;
@@ -385,7 +385,7 @@ extern "C" void __cdecl Area185_ChoiceSetFacility0(void) {
     const unsigned char answer = Answer();
     if (answer == 0 || answer == 1) {
         SetMessage(0xFFFF);
-        B(at::kFacility) = answer;
+        B(Rest4b_BoardFlag_addr) = answer;
         return;
     }
     DropFocusTrigger(0x2A1);
@@ -397,11 +397,11 @@ extern "C" void __cdecl Area185_ChoiceSetFacility0(void) {
 // point with flags 4; off the square the byte set. al 0 always.
 extern "C" unsigned char __cdecl Area185_StepHook(long x, long z) {
     if (static_cast<std::uint16_t>(High(x) - 0x41) > 3 || static_cast<std::uint16_t>(High(z) - 0x14) > 3) {
-        B(at::kHookArmed) = 1;
+        B(AreaW4d_HookArmed_addr) = 1;
         return 0;
     }
-    if (B(at::kHookArmed) == 0) return 0;
-    B(at::kHookArmed) = 0;
+    if (B(AreaW4d_HookArmed_addr) == 0) return 0;
+    B(AreaW4d_HookArmed_addr) = 0;
     AH_CALL(Sound_PlayEffect)(0x20C);
     ChangeToReturnPoint();
     return 0;
@@ -422,8 +422,8 @@ extern "C" unsigned char __cdecl Area185_StepHook(long x, long z) {
 // last.
 extern "C" void __cdecl Area185_DrawTileField(void) {
     unsigned char* const first = Gfx_PacketNext;
-    SetLong(Mem(at::kScreenXY), static_cast<std::int32_t>(0xC6440000u));
-    SetLong(Mem(at::kScreenXY + 4), static_cast<std::int32_t>(0xC6680000u));
+    SetLong(Mem(MapView_ScreenXY_addr), static_cast<std::int32_t>(0xC6440000u));
+    SetLong(Mem(MapView_ScreenXY_addr + 4), static_cast<std::int32_t>(0xC6680000u));
     AH_CALL(Gpu_SetDrawMode)(first, 0, 1, 0xB5, 0);
     AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 1, 0xC);
     U u = 0;
@@ -442,12 +442,12 @@ extern "C" void __cdecl Area185_DrawTileField(void) {
             const std::int32_t angle = k / 8 + 0x100;
             const int sine = AH_CALL(Math_Sin)(angle);
             const U m = (static_cast<U>(Frame_Counter) & 0xF) + u;
-            SetWord(Mem(at::kVertex), FtolLow((static_cast<U>(sine) * m * 5u) >> 16, at::kScreenXY));
+            SetWord(Mem(Prim_VertexScratch_addr), FtolLow((static_cast<U>(sine) * m * 5u) >> 16, MapView_ScreenXY_addr));
             const int cosine = AH_CALL(Math_Cos)(angle);
-            SetWord(Mem(at::kVertex + 2), FtolLow((static_cast<U>(cosine) * m * 5u) >> 16, at::kScreenXY + 4));
+            SetWord(Mem(Prim_VertexScratch_addr + 2), FtolLow((static_cast<U>(cosine) * m * 5u) >> 16, MapView_ScreenXY_addr + 4));
             const int lift = AH_CALL(Math_Sin)(static_cast<int>(m * 5u));
-            SetWord(Mem(at::kVertex + 4), static_cast<U>(-0x340 - (lift >> 5)));
-            AH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(Mem(at::kVertex)), reinterpret_cast<unsigned long*>(tile + 8), &depth);
+            SetWord(Mem(Prim_VertexScratch_addr + 4), static_cast<U>(-0x340 - (lift >> 5)));
+            AH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr)), reinterpret_cast<unsigned long*>(tile + 8), &depth);
             AH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(tile + 0x10));
             AH_CALL(MapView_LinkPrimAt)(static_cast<U>(Long(Sprite_Current + 0x34)), static_cast<U>(Long(Sprite_Current + 0x38)), 1, 0x14);
         }
@@ -472,8 +472,8 @@ extern "C" void __cdecl Area175_SlideOrPlace(void) {
     const unsigned char request = Field_Request;
     unsigned char* const cur = Sprite_Current;
     if (request == 2) {
-        SlideBy(cur, at::kArea175SlideSteps, static_cast<U>(Frame_Counter));
-        SlideZBy(Sprite_Current, at::kArea175SlideSteps, static_cast<U>(Frame_Counter));
+        SlideBy(cur, Area175_SlideSteps_addr, static_cast<U>(Frame_Counter));
+        SlideZBy(Sprite_Current, Area175_SlideSteps_addr, static_cast<U>(Frame_Counter));
         MemberStep();
         return;
     }
@@ -505,7 +505,7 @@ extern "C" void __cdecl Area175_SpawnEffect1F(void) {
 // original 0x429440 (handler 4; PSX 0x801F4204): jmp [Sprite_Current[4] * 4
 // + Area175_GlideStates] (unchecked; ours aborts past its two entries).
 extern "C" void __cdecl Area175_GlideRun(void) {
-    StateEntry("Area175_GlideRun", at::kArea175GlideStates, at::kArea175GlideStateCount, Sprite_Current[4])();
+    StateEntry("Area175_GlideRun", Area175_GlideStates_addr, at::kArea175GlideStateCount, Sprite_Current[4])();
 }
 
 // original 0x429460 (Area175_GlideStates[0]): the count +0xA 0x20, state +4
@@ -526,9 +526,9 @@ extern "C" void __cdecl Area175_GlideStep(void) {
         cur[4] = 0;
         return;
     }
-    SlideBy(cur, at::kArea175GlideSteps, cur[0xA]);
+    SlideBy(cur, Area175_GlideSteps_addr, cur[0xA]);
     unsigned char* const again = Sprite_Current;
-    SlideZBy(again, at::kArea175GlideSteps, again[0xA]);
+    SlideZBy(again, Area175_GlideSteps_addr, again[0xA]);
     MemberStep();
 }
 
@@ -557,12 +557,12 @@ extern "C" void __cdecl Area175_OpenScriptMessage(void) {
     const unsigned area = Game_AreaNumber;
     if (area >= at::kDescriptorCount)
         bof3::Fatal("Area175_OpenScriptMessage: Game_AreaNumber %u past Area_Descriptors' %u", area, at::kDescriptorCount);
-    const U descriptor = static_cast<U>(Long(Mem(at::kDescriptors + area * 4)));
+    const U descriptor = static_cast<U>(Long(Mem(Area_Descriptors_addr + area * 4)));
     unsigned char* const object = MoveScript_Object;
     const U scripts = static_cast<U>(Long(Mem(descriptor + 0x10)));
     const U script = static_cast<U>(Long(Mem(scripts + object[3] * 4u)));
     const unsigned char operand = B(script + Word(object + 0xA) + 2);
-    AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(Mem(at::kArea175ScriptMessages + operand * 2u))));
+    AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(Mem(Area175_ScriptMessages_addr + operand * 2u))));
     Field_Request = 2;
     MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] & 0xEF);
     MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] | 0x20);
@@ -607,7 +607,7 @@ extern "C" unsigned char __cdecl Area175_Trigger64(unsigned char* object, unsign
 // 0x600000) flags 0x82; 2..9 and anything else (negative, above 0xB)
 // nothing.
 extern "C" void __cdecl Area186_TailShift(void) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
     case 0: Area186Shift(0x4400, static_cast<U>(-0x1E0000), -0x1E, 0x6200, 1); break;
     case 1: Area186Leave(0x120000, 0x460000, 0x81); break;
     case 0xA: Area186Shift(0x6C00, 0x1E0000, 0x1E, 0x4E00, 0xB); break;
@@ -620,7 +620,7 @@ extern "C" void __cdecl Area186_TailShift(void) {
 // after Field_Kind2X 1: Area186_Start(0xA); 2: Area186_Start(0).
 extern "C" void __cdecl Area186_Init(void) {
     if (AH_CALL(Flags_Test)(StoryFlags(), 0x58) == 0) return;
-    const unsigned char mode = B(at::kKind2Mode);
+    const unsigned char mode = B(AreaW1a_EntryZone_addr);
     if (mode == 1) AH_CALL(Area186_Start)(0xA);
     else if (mode == 2) AH_CALL(Area186_Start)(0);
 }
@@ -631,23 +631,23 @@ extern "C" void __cdecl Area186_Init(void) {
 // +0x83 2, Kind2_Place(1). Then the tail's state the argument, its timer
 // 0x96, kind 39.
 extern "C" void __cdecl Area186_Start(unsigned char state) {
-    SetWord(Mem(at::kCameraAngles), 0x100);
-    SetWord(Mem(at::kCameraAngles + 4), 0);
-    SetWord(Mem(at::kCameraAngles + 2), 0);
-    SetWord(Mem(at::kCameraDistance), 0x100);
-    SetLong(Mem(at::kExtra0 + 0x34), 0x48000);
+    SetWord(Mem(Camera_Angles_addr), 0x100);
+    SetWord(Mem(Camera_Angles_addr + 4), 0);
+    SetWord(Mem(Camera_Angles_addr + 2), 0);
+    SetWord(Mem(Camera_Distance_addr), 0x100);
+    SetLong(Mem(Sprite_ObjectsExtra_addr + 0x34), 0x48000);
     if (state == 0) {
-        SetLong(Mem(at::kExtra0 + 0x38), 0xA0000);
-        B(at::kExtra0 + 0x83) = 1;
+        SetLong(Mem(Sprite_ObjectsExtra_addr + 0x38), 0xA0000);
+        B(Sprite_ObjectsExtra_addr + 0x83) = 1;
         AH_CALL(Kind2_Place)(0);
     } else {
-        SetLong(Mem(at::kExtra0 + 0x38), 0x640000);
-        B(at::kExtra0 + 0x83) = 2;
+        SetLong(Mem(Sprite_ObjectsExtra_addr + 0x38), 0x640000);
+        B(Sprite_ObjectsExtra_addr + 0x83) = 2;
         AH_CALL(Kind2_Place)(1);
     }
-    B(at::kTailState) = state;
+    B(AreaW0c_TailState_addr) = state;
     SetWord(Mem(at::kTailTimer), 0x96);
-    B(at::kTailKind) = 0x27;
+    B(AreaW0a_TailKind_addr) = 0x27;
 }
 
 // ===========================================================================
@@ -662,19 +662,19 @@ extern "C" void __cdecl Area186_Start(unsigned char state) {
 // again for the second); message 0xFFFF between.
 extern "C" void __cdecl Area187_ChoiceFocusPair(void) {
     const std::int32_t first = static_cast<signed char>(Answer());
-    unsigned char* const focus = Ptr(at::kFocusObject);
-    const unsigned char x = B(at::kArea187FocusPairs + static_cast<U>(first * 2));
+    unsigned char* const focus = Ptr(AreaW1a_FocusObject_addr);
+    const unsigned char x = B(Area187_FocusPairs_addr + static_cast<U>(first * 2));
     SetMessage(0xFFFF);
     SetLong(focus + 0x18, x);
-    unsigned char* const again = Ptr(at::kFocusObject);
+    unsigned char* const again = Ptr(AreaW1a_FocusObject_addr);
     const std::int32_t second = static_cast<signed char>(Answer());
-    SetLong(again + 0x1C, B(at::kArea187FocusPairs + static_cast<U>(second * 2) + 1));
+    SetLong(again + 0x1C, B(Area187_FocusPairs_addr + static_cast<U>(second * 2) + 1));
 }
 
 // original 0x42A280 (Field_ObjectTriggers id 14; a gap of the tool): tail
 // kind 0x1D; al 0.
 extern "C" unsigned char __cdecl Area187_Trigger14(unsigned char*, unsigned char*) {
-    B(at::kTailKind) = 0x1D;
+    B(AreaW0a_TailKind_addr) = 0x1D;
     return 0;
 }
 
@@ -685,13 +685,13 @@ extern "C" unsigned char __cdecl Area187_Trigger14(unsigned char*, unsigned char
 // Area131_DisarmTail, the byte 0x904152 cleared, story flag 0x77 cleared,
 // Field_ChangeArea to the return point with flags 4.
 extern "C" void __cdecl Area187_TailMessage2(void) {
-    switch (static_cast<signed char>(B(at::kTailState))) {
+    switch (static_cast<signed char>(B(AreaW0c_TailState_addr))) {
     case 0: {
         AH_CALL(ScriptFlags_Set40)();
         AH_CALL(Msg_OpenScript)(2);
-        const unsigned char state = B(at::kTailState);
+        const unsigned char state = B(AreaW0c_TailState_addr);
         Field_Request = 2;
-        B(at::kTailState) = static_cast<unsigned char>(state + 1);
+        B(AreaW0c_TailState_addr) = static_cast<unsigned char>(state + 1);
         break;
     }
     case 1:
@@ -700,7 +700,7 @@ extern "C" void __cdecl Area187_TailMessage2(void) {
     case 2:
         if (Field_Request == 2) break;
         AH_CALL(Area131_DisarmTail)();
-        B(at::kReturnByte) = 0;
+        B(AreaW3c_CampFlag_addr) = 0;
         AH_CALL(Flags_Clear)(StoryFlags(), 0x77);
         ChangeToReturnPoint();
         break;

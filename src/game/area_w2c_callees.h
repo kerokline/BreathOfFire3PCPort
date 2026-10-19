@@ -37,19 +37,19 @@ constexpr std::uint32_t kVar7 = 0x8034E4;
 constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank) and the pointer to the
 // chapter's flag row the chapters' flag calls take (docs/field-modes.md).
-constexpr std::uint32_t kStoryFlags = 0x904030;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 // kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
-constexpr std::uint32_t kPartyList0 = 0x904062;
-constexpr std::uint32_t kPartyList1 = 0x904063;
-constexpr std::uint32_t kPartyList2 = 0x904064;
+// kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
+// kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
+// kPartyList2: now Cond_Flags[0xd4] (symbols.toml).
 // The party's records (ObjTrio, 0x14C bytes each): record 0 the leader.
 // kParty: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The leader's byte +8 (the pose the hooks compare) and +0x137 (a byte of
 // each member record; mode_flow_callees.h's kMemberWalk).
-constexpr std::uint32_t kLeaderPose = 0x802D48;
-constexpr std::uint32_t kLeader137 = 0x802E77;
+// kLeaderPose: now ObjTrio[8] (symbols.toml).
+// kLeader137: now ObjTrio[0x137] (symbols.toml).
 // The previous area (u16; mode_flow_callees.h's kLastArea): area 94's init
 // compares it with 0x79.
 constexpr std::uint32_t kLastArea = 0x802290;
@@ -58,7 +58,7 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // The glow and the rings build their primitives from MapView_ScreenXY's two
 // floats (x, then y at +4) and Prim_VertexScratch's words.
 // kScreenX: now MapView_ScreenXY (symbols.toml).
-constexpr std::uint32_t kScreenY = 0x903824;
+// kScreenY: now MapView_ScreenXY[1] (symbols.toml).
 // kVertex0: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
 constexpr std::uint32_t kVertex1 = 0x9037A8;
 constexpr std::uint32_t kVertex2 = 0x9037B0;
@@ -100,19 +100,19 @@ constexpr unsigned kArea91StateCount = 6;
 // words, choices 1..3 two each), and its effect records' third bytes by a
 // party list byte (eight bytes each): handler 0's, handlers 1..3', 4..6'.
 // kArea92Messages0: now Area92_ChoiceMessages (symbols.toml).
-constexpr std::uint32_t kArea92Messages1 = 0x614EC8;
-constexpr std::uint32_t kArea92Messages2 = 0x614ECC;
-constexpr std::uint32_t kArea92Messages3 = 0x614ED0;
+// kArea92Messages1: now Area92_ChoiceMessages[6] (symbols.toml).
+// kArea92Messages2: now Area92_ChoiceMessages[8] (symbols.toml).
+// kArea92Messages3: now Area92_ChoiceMessages[0xa] (symbols.toml).
 // kArea92EffectArgs4: now Area92_EffectArgs4 (symbols.toml).
 // kArea92EffectArgs3: now Area92_EffectArgs3 (symbols.toml).
 // kArea92EffectArgs1: now Area92_EffectArgs1 (symbols.toml).
 // Area 94: the five choices' message words, by the s8 answer, and the five
 // tables of its Effect_Spawn third bytes, by a party list byte.
 // kArea94Messages0: now Area94_ChoiceMessages (symbols.toml).
-constexpr std::uint32_t kArea94Messages1 = 0x616DC0;
-constexpr std::uint32_t kArea94Messages2 = 0x616DCC;
-constexpr std::uint32_t kArea94Messages3 = 0x616DD0;
-constexpr std::uint32_t kArea94Messages4 = 0x616DD4;
+// kArea94Messages1: now Area94_ChoiceMessages[6] (symbols.toml).
+// kArea94Messages2: now Area94_ChoiceMessages[0xc] (symbols.toml).
+// kArea94Messages3: now Area94_ChoiceMessages[0xe] (symbols.toml).
+// kArea94Messages4: now Area94_ChoiceMessages[0x10] (symbols.toml).
 // kArea94EffectArgsA: now Area94_EffectArgsA (symbols.toml).
 // kArea94EffectArgsB: now Area94_EffectArgsB (symbols.toml).
 // kArea94EffectArgsC: now Area94_EffectArgsC (symbols.toml).

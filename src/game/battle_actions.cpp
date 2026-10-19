@@ -86,7 +86,7 @@ std::int32_t L(std::uint32_t address) { return Long(At(address)); }
 // The actor objects, by the actor byte: a member's (0..2), or an enemy's
 // (actor - 3, as a 32-bit difference - the originals' `sub eax, 3` after
 // `and eax, 0xFF`).
-unsigned char* Party(unsigned actor) { return At(at::kParty + (actor & 0xFF) * at::kPartyStride); }
+unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + (actor & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3u) * at::kEnemyStride); }
 
 // One entry of a step table in .data, read afresh; the byte picks it and is
@@ -110,7 +110,7 @@ void SetMemberBlock(std::uint32_t block, unsigned actor) {
     SetPtrAt(block + at::kBAction, o + 0x124);
     SetPtrAt(block + at::kBObject, o);
     const unsigned stand = o[8] + o[0x89] * 4u;
-    const unsigned char* const pair = At(at::kStandOffsets + stand * 2);
+    const unsigned char* const pair = At(BattleWin_MemberTargetOffsets_addr + stand * 2);
     SetWord(At(block + at::kBX), static_cast<unsigned>(static_cast<signed char>(pair[0])) + Word(o + 0x2E));
     SetWord(At(block + at::kBY), static_cast<unsigned>(static_cast<signed char>(pair[1])) + Word(o + 0x30));
     SetWord(At(block + at::kBZ), Word(o + 0x32));
@@ -168,39 +168,39 @@ Standing ActorStanding(unsigned actor) {
 // As the original has it: both words are read after the step; the step byte
 // is not checked.
 extern "C" void __cdecl Battle_ActionPhase(void) {
-    Step(at::kSteps, B(at::kStep))();
-    if ((Word(At(at::kCancelButtons)) & Word(At(at::kInputHeld))) != 0)
+    Step(BattleAction_Steps_addr, BattleActions_Step)();
+    if ((Field_CancelButtons & Input_Held) != 0)
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xFFEFu);
 }
 
 // original 0x42F250 (PSX 0x801D2B14): step 0, a tail jump through
 // BattleAction_BeginSteps (0x64AE94) by 0x904AA2: 0 Battle_BeginAction, 1
 // BattleAction_EnterKind.
-extern "C" void __cdecl BattleAction_BeginStep(void) { Step(at::kBeginSteps, B(at::kSub))(); }
+extern "C" void __cdecl BattleAction_BeginStep(void) { Step(BattleAction_BeginSteps_addr, BattleE4_Step2)(); }
 
 // original 0x42F500 (PSX 0x801D300C): step 1, a tail jump through
 // BattleAction_KindSteps (0x64AE9C) by 0x904AA2, which BattleAction_EnterKind
 // set to the command kind: 0 and 2 BattleAction_KindPlain, 1
 // BattleAction_KindOne, 3 BattleAction_Kind3Dispatch 0x42F5E0 (BE1's), 4 BattleAction_AbilityStep,
 // 5 BattleAction_ItemStep.
-extern "C" void __cdecl BattleAction_KindStep(void) { Step(at::kKindSteps, B(at::kSub))(); }
+extern "C" void __cdecl BattleAction_KindStep(void) { Step(BattleAction_KindSteps_addr, BattleE4_Step2)(); }
 
 // original 0x42F670 (PSX 0x801D32C0): kind 4's, through
 // BattleAction_AbilitySteps (0x64AEBC) by 0x904AA3.
-extern "C" void __cdecl BattleAction_AbilityStep(void) { Step(at::kAbilitySteps, B(at::kSub2))(); }
+extern "C" void __cdecl BattleAction_AbilityStep(void) { Step(BattleAction_AbilitySteps_addr, BattleE4_Step3)(); }
 
 // original 0x42FAF0 (PSX 0x801D3A08): kind 5's, through BattleAction_ItemSteps
 // (0x64AF08) by 0x904AA3.
-extern "C" void __cdecl BattleAction_ItemStep(void) { Step(at::kItemSteps, B(at::kSub2))(); }
+extern "C" void __cdecl BattleAction_ItemStep(void) { Step(BattleAction_ItemSteps_addr, BattleE4_Step3)(); }
 
 // original 0x42FC50 (PSX 0x801D3C68): step 2, through BattleAction_EffectSteps
 // (0x64AF14) by 0x904AA2.
-extern "C" void __cdecl BattleAction_EffectStep(void) { Step(at::kEffectSteps, B(at::kSub))(); }
+extern "C" void __cdecl BattleAction_EffectStep(void) { Step(BattleAction_EffectSteps_addr, BattleE4_Step2)(); }
 
 // original 0x42FDD0 (PSX 0x801D3FCC): step 3, through BattleAction_AfterSteps
 // (0x64AF20) by 0x904AA2: 0 BattleAction_AfterSettle, 1 BattleAction_AbilityNotice 0x42FE20 (BE1's),
 // 2 BattleAction_EnemyMessages.
-extern "C" void __cdecl BattleAction_AfterStep(void) { Step(at::kAfterSteps, B(at::kSub))(); }
+extern "C" void __cdecl BattleAction_AfterStep(void) { Step(BattleAction_AfterSteps_addr, BattleE4_Step2)(); }
 
 // ===========================================================================
 // Step 0: the next actor
@@ -221,17 +221,17 @@ extern "C" void __cdecl BattleAction_AfterStep(void) { Step(at::kAfterSteps, B(a
 // `push ecx` slot; ours passes the byte (0x453FA0 and each of its callees
 // read the low byte - their disassembly, 2026-09-25).
 extern "C" void __cdecl Battle_BeginAction(void) {
-    unsigned char i = B(at::kQueueAt);
-    const unsigned char end = B(at::kQueueEnd);
+    unsigned char i = BossSe_RoundSlot;
+    const unsigned char end = BattleDamage_TurnCount;
     for (;;) {
         if (i >= end) {
             SetB(at::kPhase, 4);
-            SetB(at::kStep, 0);
+            BattleActions_Step = 0;
             return;
         }
         if (B(at::kQueue + i) != 0xFF) break;
         ++i;
-        SetB(at::kQueueAt, i);
+        BossSe_RoundSlot = i;
     }
     const unsigned actor = B(at::kQueue + i);
     if (actor < 3) g.member_auto_target(actor);
@@ -243,18 +243,18 @@ extern "C" void __cdecl Battle_BeginAction(void) {
     const unsigned target = B(at::kTarget);
     if (target < 3) SetMemberBlock(at::kTarget, target);
     else if (target <= 10) SetEnemyBlock(at::kTarget, target);
-    SetB(at::kSub, B(at::kSub) + 1);
-    SetB(at::kQueueAt, B(at::kQueueAt) + 1);
+    BattleE4_Step2 = BattleE4_Step2 + 1;
+    BossSe_RoundSlot = BossSe_RoundSlot + 1;
 }
 
 // original 0x42F4C0 (PSX 0x801D2FB8): step 0's second part. In an event
 // battle (0x904AAA) the hook 0x904B6C is called with 1 first; then the step
 // becomes 1 and 0x904AA2 the command kind 0x904B35, read after the hook.
 extern "C" void __cdecl BattleAction_EnterKind(void) {
-    if (B(at::kEventBattle) != 0) EventHook(1);
+    if (BattleActions_EventBattle != 0) EventHook(1);
     const unsigned kind = B(at::kActor + at::kBKind);
-    SetB(at::kStep, 1);
-    SetB(at::kSub, kind);
+    BattleActions_Step = 1;
+    BattleE4_Step2 = kind;
 }
 
 // ===========================================================================
@@ -269,13 +269,13 @@ extern "C" void __cdecl BattleAction_EnterKind(void) {
 // As the original has it: both bytes are read after Battle_ClearActingFlags.
 extern "C" void __cdecl BattleAction_KindPlain(void) {
     g.clear_acting_flags();
-    if (B(at::kSub) == 2 && B(at::kActor) >= 3) {
+    if (BattleE4_Step2 == 2 && B(at::kActor) >= 3) {
         EnemyNameToText0(Enemy(B(at::kActor)) + 0x80);
         SystemBanner(0x7F);
     }
     SetB(at::kPhase, 3);
-    SetB(at::kStep, 0);
-    SetB(at::kSub, 0);
+    BattleActions_Step = 0;
+    BattleE4_Step2 = 0;
 }
 
 // original 0x42F5B0 (PSX 0x801D3160): kind 1. The actor's pending bit
@@ -287,8 +287,8 @@ extern "C" void __cdecl BattleAction_KindOne(void) {
     g.set_actor_bit(B(at::kActor));
     PtrAt(at::kActor + at::kBObject)[1] = 4;
     SetB(at::kPhase, 3);
-    SetB(at::kStep, 2);
-    SetB(at::kSub, 0);
+    BattleActions_Step = 2;
+    BattleE4_Step2 = 0;
 }
 
 // ===========================================================================
@@ -325,8 +325,8 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         unsigned char* const o = Party(a);
         o[1] = 2;
         o[2] = 0;
-        SetB(at::kStep, 0);
-        SetB(at::kSub, 0);
+        BattleActions_Step = 0;
+        BattleE4_Step2 = 0;
         return;
     }
     if (Word(At(at::kAbility)) != 0x97) {
@@ -339,8 +339,8 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     const Standing s = ActorStanding(a);
     if ((s.status & 0x10) != 0 && (At(at::kAbilityRecords + Word(At(at::kAbility)) * 24u + 0x15)[0] & 4) != 0) {
         SystemBanner(0x37);
-        SetB(at::kStep, 0);
-        SetB(at::kSub, 0);
+        BattleActions_Step = 0;
+        BattleE4_Step2 = 0;
         return;
     }
     unsigned char cost;
@@ -349,18 +349,18 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         const unsigned who = a <= 2 ? Party(a)[5] : Enemy(a)[5];
         cost = g.skill_ap_cost(who, id, 1);
     } else {
-        cost = B(at::kApCost);
+        cost = BattleActions_ApCost;
     }
-    SetB(at::kCostShown, cost);
+    BattleE3_Cost = cost;
     if (cost > (s.ap & 0xFFFF)) {
         SystemBanner(0x36);
-        SetB(at::kStep, 0);
-        SetB(at::kSub, 0);
+        BattleActions_Step = 0;
+        BattleE4_Step2 = 0;
         return;
     }
-    SetB(at::kCounter, 0);
+    BossSb_Countdown = 0;
     if (g.pick_flag8_member() == 0) SetB(at::kRoundFlags, B(at::kRoundFlags) | 0x20);
-    SetB(at::kSub2, B(at::kSub2) + 1);
+    BattleE4_Step3 = BattleE4_Step3 + 1;
 }
 
 // original 0x42F880 (PSX 0x801D360C): waits for 0x904AA8 bit 5. Then clears
@@ -382,7 +382,7 @@ extern "C" void __cdecl BattleAction_AbilityCommit(void) {
     o[1] = 7;
     PtrAt(at::kActor + at::kBObject)[2] = 0;
     g.set_actor_bit(B(at::kActor));
-    SetB(at::kAbilityShown, B(at::kAbility));
+    BattleE3_SoundSet = B(at::kAbility);
     const unsigned id = Word(At(at::kAbility));
     if (id == 0x24 || id == 0x25 || id == 0x8C) {
         const unsigned t = g.pick_target();
@@ -391,7 +391,7 @@ extern "C" void __cdecl BattleAction_AbilityCommit(void) {
         else SetEnemyBlock(at::kTarget, t);
     }
     g.load_for_ability(B(at::kAbility));
-    SetB(at::kSub2, B(at::kSub2) + 1);
+    BattleE4_Step3 = BattleE4_Step3 + 1;
 }
 
 // original 0x42FAB0 (PSX 0x801D399C): once File_LoadDone answers non-zero,
@@ -403,9 +403,9 @@ extern "C" void __cdecl BattleAction_AbilityStart(void) {
     const unsigned owner = static_cast<std::uint32_t>(L(at::kActor + at::kBObject));
     g.start_ability_magic(id, owner);
     SetB(at::kPhase, 3);
-    SetB(at::kStep, 2);
-    SetB(at::kSub, 0);
-    SetB(at::kSub2, 0);
+    BattleActions_Step = 2;
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
 }
 
 // ===========================================================================
@@ -429,8 +429,8 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
         g.remove_from_turn_order(B(at::kActor));
         const unsigned a = B(at::kActor);
         SetB(at::kPhase, 3);
-        SetB(at::kStep, 0);
-        SetB(at::kSub, 0);
+        BattleActions_Step = 0;
+        BattleE4_Step2 = 0;
         unsigned char* const o = Party(a);
         o[1] = 2;
         o[2] = 0;
@@ -441,10 +441,10 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
     const unsigned char* const name = g.item_name(category, item);
     g.str_copy_n(reinterpret_cast<char*>(At(at::kNameBuf)), reinterpret_cast<const char*>(name), 0x10);
     g.banner_add(1, 1, 0, 0x1E, reinterpret_cast<const char*>(At(at::kNameBuf)));
-    const unsigned sub2 = B(at::kSub2);
-    SetB(at::kCounter, 0);
+    const unsigned sub2 = BattleE4_Step3;
+    BossSb_Countdown = 0;
     SetB(at::kBannerShown, 1);
-    SetB(at::kSub2, sub2 + 1);
+    BattleE4_Step3 = sub2 + 1;
 }
 
 // original 0x42FBD0 (PSX 0x801D3B94): the actor object's +1 = 0xC, the
@@ -454,7 +454,7 @@ extern "C" void __cdecl BattleAction_ItemCommit(void) {
     PtrAt(at::kActor + at::kBObject)[1] = 0xC;
     g.set_actor_bit(B(at::kActor));
     g.load_for_item(Word(PtrAt(at::kActor + at::kBAction) + 2));
-    SetB(at::kSub2, B(at::kSub2) + 1);
+    BattleE4_Step3 = BattleE4_Step3 + 1;
 }
 
 // original 0x42FC10 (PSX 0x801D3BFC): once File_LoadDone answers non-zero,
@@ -466,9 +466,9 @@ extern "C" void __cdecl BattleAction_ItemStart(void) {
     const unsigned owner = static_cast<std::uint32_t>(L(at::kActor + at::kBObject));
     g.start_item_magic(id, owner);
     SetB(at::kPhase, 3);
-    SetB(at::kStep, 2);
-    SetB(at::kSub, 0);
-    SetB(at::kSub2, 0);
+    BattleActions_Step = 2;
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
 }
 
 // ===========================================================================
@@ -502,9 +502,9 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
         g.set_actor_bit(a);
     }
     if (g.any_flag_f0() != 0) return;
-    if (Word(At(at::kPending)) != 0) return;
+    if (BattleActions_Pending != 0) return;
     if ((B(at::kRoundFlags) & 4) == 0) return;
-    SetB(at::kSub, B(at::kSub) + 1);
+    BattleE4_Step2 = BattleE4_Step2 + 1;
 }
 
 // original 0x42FD20 (PSX 0x801D3E60): for kind 4, the ability row of the id
@@ -519,15 +519,15 @@ extern "C" void __cdecl BattleAction_EffectPreload(void) {
     bool has_file = false;
     if (kind == 4) {
         const unsigned row = At(at::kAbilityRows + Word(At(at::kAbility)))[0];
-        has_file = Word(At(at::kMagicFiles + row * 8)) != 0xFFFF;
+        has_file = Word(At(Magic_Rows_addr + row * 8)) != 0xFFFF;
     } else if (kind == 5) {
         const unsigned w = Word(PtrAt(at::kActor + at::kBAction) + 2);
         const auto* const tables = reinterpret_cast<const unsigned char* const*>(static_cast<std::uintptr_t>(at::kItemRows));
         const unsigned row = tables[w >> 8][w & 0xFF];
-        has_file = Word(At(at::kMagicFiles + row * 8)) != 0xFFFF;
+        has_file = Word(At(Magic_Rows_addr + row * 8)) != 0xFFFF;
     }
     if (has_file) g.load_dat(0xD0);
-    SetB(at::kSub, B(at::kSub) + 1);
+    BattleE4_Step2 = BattleE4_Step2 + 1;
 }
 
 // original 0x42FD90 (PSX 0x801D3F4C): once File_LoadDone answers non-zero:
@@ -538,10 +538,10 @@ extern "C" void __cdecl BattleAction_EffectPreload(void) {
 // come before the row copy.
 extern "C" void __cdecl BattleAction_EffectLoaded(void) {
     if (g.file_load_done() == 0) return;
-    if (B(at::kEventBattle) != 0) EventHook(4);
+    if (BattleActions_EventBattle != 0) EventHook(4);
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xFBFFu);
-    SetB(at::kStep, 3);
-    SetB(at::kSub, 0);
+    BattleActions_Step = 3;
+    BattleE4_Step2 = 0;
     g.clut_copy_row(0x1A);
 }
 
@@ -554,14 +554,14 @@ extern "C" void __cdecl BattleAction_EffectLoaded(void) {
 // zero gives 0x904AA2 = 2 (past BattleAction_AbilityNotice to the enemy messages).
 extern "C" void __cdecl BattleAction_AfterSettle(void) {
     if ((B(at::kRoundFlags) & 4) == 0) return;
-    if (Word(At(at::kPending)) != 0) return;
+    if (BattleActions_Pending != 0) return;
     if (g.settle_flag8() != 0) {
-        const unsigned sub = B(at::kSub);
-        SetB(at::kCounter, 0);
-        SetB(at::kSub, sub + 1);
+        const unsigned sub = BattleE4_Step2;
+        BossSb_Countdown = 0;
+        BattleE4_Step2 = sub + 1;
         return;
     }
-    SetB(at::kSub, 2);
+    BattleE4_Step2 = 2;
 }
 
 // original 0x42FF70 (PSX 0x801D4284): unless 0x939F60 is set, one of the
@@ -576,11 +576,11 @@ extern "C" void __cdecl BattleAction_AfterSettle(void) {
 // The message argument's upper 16 bits are the next dword's in the original
 // (Msg_SystemPtr reads the word); ours passes the word.
 extern "C" void __cdecl BattleAction_EnemyMessages(void) {
-    if (B(at::kMsgBusy) != 0) return;
-    const unsigned n = B(at::kMsgCount);
+    if (BattleE1_MessageUp != 0) return;
+    const unsigned n = BattleE5_EnemyMessageCount;
     if (n == 0) {
-        SetB(at::kStep, 4);
-        SetB(at::kSub, 0);
+        BattleActions_Step = 4;
+        BattleE4_Step2 = 0;
         return;
     }
     const unsigned e = B(at::kMsgList + n * 4);
@@ -588,7 +588,7 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
     const unsigned id = Word(At(at::kMsgList + n * 4 + 2));
     const unsigned char* const text = g.msg(id);
     g.queue_push(1, 0, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(text)));
-    SetB(at::kMsgCount, B(at::kMsgCount) - 1);
+    BattleE5_EnemyMessageCount = BattleE5_EnemyMessageCount - 1;
 }
 
 // ===========================================================================
@@ -616,15 +616,15 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
 // the hook, as here. Off, the original's test alone.
 extern "C" void __cdecl BattleAction_End(void) {
     if ((B(at::kRoundFlags) & 4) == 0) return;
-    if (Word(At(at::kPending)) != 0) return;
-    const unsigned char event = B(at::kEventBattle);
+    if (BattleActions_Pending != 0) return;
+    const unsigned char event = BattleActions_EventBattle;
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xD7FBu);
-    SetB(at::kStep, 0);
-    SetB(at::kSub, 0);
+    BattleActions_Step = 0;
+    BattleE4_Step2 = 0;
     if (event != 0) EventHook(0);
-    if (B(at::kBattleEnd) != 0 && !psp_code::DuelLossGoesOn(B(at::kEventBattle), B(at::kBattleEnd))) {
+    if (BattleActions_BattleEnd != 0 && !psp_code::DuelLossGoesOn(BattleActions_EventBattle, BattleActions_BattleEnd)) {
         SetB(at::kPhase, 4);
-        SetB(at::kStep, 2);
+        BattleActions_Step = 2;
         return;
     }
     g.clear_acting_flags();
@@ -639,13 +639,13 @@ extern "C" void __cdecl BattleAction_End(void) {
         const unsigned a = B(at::kActor);
         const std::uint32_t flags = static_cast<std::uint32_t>(Long(a <= 2 ? Party(a) + 0x130 : Enemy(a) + 0x110));
         CopyStats(a);
-        const std::uint32_t text = static_cast<std::uint32_t>(L((flags & 0x8000) != 0 ? at::kTextCounter : at::kTextMiss));
+        const std::uint32_t text = static_cast<std::uint32_t>(L((flags & 0x8000) != 0 ? BattleActions_TextCounter_addr : BattleActions_TextMiss_addr));
         g.banner_add(1, 0, 0, 0xF, reinterpret_cast<const char*>(static_cast<std::uintptr_t>(text)));
         SetB(at::kBannerShown, 1);
-        SetB(at::kStep, 0);
-        SetB(at::kSub, 1);
+        BattleActions_Step = 0;
+        BattleE4_Step2 = 1;
     }
-    if (B(at::kEventBattle) != 0) EventHook(5);
+    if (BattleActions_EventBattle != 0) EventHook(5);
 }
 
 // ===========================================================================

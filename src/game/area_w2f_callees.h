@@ -35,11 +35,11 @@ constexpr std::uint32_t kCounter0 = 0x903848;
 constexpr std::uint32_t kCounter1 = 0x903849;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // The byte after MoveScript_Var7: the step of a scene run (field_modes.cpp).
-constexpr std::uint32_t kVar7Step = 0x8034E5;
+// kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank) and Cond_Flags row 13
 // (0x903F90 + 8 * 13), whose flag 0x10 area 112's choice and hook test.
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kCondRow13 = 0x903FF8;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kCondRow13: now Cond_Flags[0x68] (symbols.toml).
 // A byte area 113's choice 0 compares with 6 (the first byte after the
 // inventory block 0x904098..0x9045F4, docs/scena_sx.md; no reader named).
 // kByte9045F4: now FieldE1_Rank (symbols.toml).
@@ -56,12 +56,12 @@ constexpr std::uint32_t kByte803490 = 0x803490;
 // The leader's record (ObjTrio record 0): its pose byte +8, the member id
 // +0x89, x +0x34 (high word +0x36), z +0x38 (high word +0x3A).
 // kLeader: now ObjTrio (symbols.toml).
-constexpr std::uint32_t kLeaderPose = 0x802D48;
-constexpr std::uint32_t kLeaderMember = 0x802DC9;
-constexpr std::uint32_t kLeaderX = 0x802D74;
-constexpr std::uint32_t kLeaderZ = 0x802D78;
-constexpr std::uint32_t kLeaderXHigh = 0x802D76;
-constexpr std::uint32_t kLeaderZHigh = 0x802D7A;
+// kLeaderPose: now ObjTrio[8] (symbols.toml).
+// kLeaderMember: now ObjTrio[0x89] (symbols.toml).
+// kLeaderX: now ObjTrio[0x34] (symbols.toml).
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderXHigh: now ObjTrio[0x36] (symbols.toml).
+// kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // The leader's zone counter (record 0 +0x134; area_w1f_callees.h's
 // kLeaderZone): area 110's init sets Field_EdgeBits from it.
@@ -70,8 +70,8 @@ constexpr std::uint32_t kLeaderZone = 0x802E74;
 constexpr std::uint32_t kExtraStride = 0xA4;
 constexpr unsigned kExtraCount = 4;
 // Field_MoveSpeeds[3] and [4] (bytes): the kind-2 moves' divisors, << 3.
-constexpr std::uint32_t kMoveSpeed3 = 0x6697F3;
-constexpr std::uint32_t kMoveSpeed4 = 0x6697F4;
+// kMoveSpeed3: now Field_MoveSpeeds[3] (symbols.toml).
+// kMoveSpeed4: now Field_MoveSpeeds[4] (symbols.toml).
 // Signed cell steps (x, z) per direction, two bytes apart
 // (event_ops_callees.h's kCellDelta).
 constexpr std::uint32_t kCellDelta = 0x66971C;
@@ -95,8 +95,8 @@ constexpr std::uint32_t kSpriteObjects = 0x7DEE80;       // Sprite_Objects
 // s16 corners (x, y, z) and a velocity (x, y, z) each); the tail's scene
 // moves them.
 // kArea108Model: now Area108_Model (symbols.toml). Area108_Model, 8 bytes
-constexpr std::uint32_t kArea108ModelFlags = 0x61E50B;
-constexpr std::uint32_t kArea108ModelPoints = 0x61E50C;
+// kArea108ModelFlags: now Area108_Model[3] (symbols.toml).
+// kArea108ModelPoints: now Area108_Model[4] (symbols.toml).
 constexpr std::uint32_t kArea108ModelStride = 0x28;
 // Area 108: the five places its handler 4 tests (x high word, z high word,
 // the leader's direction: bytes, three a row), the two place tables handlers

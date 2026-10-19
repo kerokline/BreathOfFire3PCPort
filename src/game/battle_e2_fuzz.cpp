@@ -257,9 +257,9 @@ const bh::Callee kCallees[] = {
 // The cells beyond the engine frame that the group reads or writes.
 const bh::Region kRegions[] = {
     {0x939B20, 0x3A0},       // the backup party records 0x939AE0 past the standard 0x939AD0..0x939B20, to the engine's 0x939EC0
-    {at::kAnimSet, 4},       // the pose pool pointer 0x9039D8
-    {at::kKeptAp, 0xC},      // the kept cells 0x675ECC..0x675ED7
-    {at::kFormation, 4},     // the formation 0x904060
+    {BattleE2_AnimSet_addr, 4}, // the pose pool pointer 0x9039D8
+    {BattleE2_KeptAp_addr, 0xC}, // the kept cells 0x675ECC..0x675ED7
+    {Cond_Flags_addr + 0xd0, 4}, // the formation 0x904060
     {at::kMemberPositions, 0x18},   // the members' spots 0x7E06E0
 };
 
@@ -272,9 +272,9 @@ unsigned char Byte(std::initializer_list<U> often) {
     const U* v = often.begin();
     return static_cast<unsigned char>(v[bh::Next() % often.size()]);
 }
-unsigned char* Owner() { return bh::Pointer(at::kOwner); }
+unsigned char* Owner() { return bh::Pointer(BattleE2_Owner_addr); }
 unsigned char* Backup(unsigned i) { return Mem(at::kBackup + (i % 3) * at::kPartyStride); }
-unsigned char* Enemy() { return bh::Pointer(at::kEnemyCurrent); }
+unsigned char* Enemy() { return bh::Pointer(BattleE3_CurrentEnemy_addr); }
 
 // The formations whose weights (both tables) are all non-zero and sum below
 // 0x100, found at start-up in the loaded image: with one actor ruled in, the
@@ -321,12 +321,12 @@ void SeedOwner(bool member_only) {
     if (member_only || pick < 2) {
         const unsigned m = bh::Next() % 3;
         o = bh::PartyOf(static_cast<unsigned char>(m));
-        bh::SetPointer(at::kOwner, o);
+        bh::SetPointer(BattleE2_Owner_addr, o);
         o[5] = static_cast<unsigned char>(bh::Often() ? m : bh::Next() % 3);
     } else if (pick == 2) {
         const unsigned e = bh::Next() % 8;
         o = bh::EnemyAt(e);
-        bh::SetPointer(at::kOwner, o);
+        bh::SetPointer(BattleE2_Owner_addr, o);
         o[5] = static_cast<unsigned char>(bh::Often() ? 3 + e : 3 + bh::Next() % 8);
     }
     if (member_only) o[5] = static_cast<unsigned char>(o[5] % 3);
@@ -349,7 +349,7 @@ void SeedRestore() {
         // itself in the game): 0..2 there too
         b[5] = static_cast<unsigned char>(bh::Often() ? i : bh::Next() % 3);
     }
-    Mem(at::kSavedCount)[0] = static_cast<unsigned char>(bh::Next() % 5);
+    Mem(BattleE2_SavedCount_addr)[0] = static_cast<unsigned char>(bh::Next() % 5);
     Mem(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kRoundFlags + 1)[0] | 0x80 : Mem(at::kRoundFlags + 1)[0] & 0x7F);
     SeedOwner(true);
     Sprite_Current[5] = static_cast<unsigned char>(Sprite_Current[5] % 3);
@@ -359,7 +359,7 @@ void SeedRestore() {
 // pick list around it; the cursors' row bases and their copies.
 void SeedMarkers() {
     unsigned char* const s = Sprite_Current;
-    for (U w : {at::kWindow18, at::kWindow19, at::kWindow21}) {
+    for (U w : {BattleE4_Slots_addr, BattleE4_Hand_addr, BattleE4_Above_addr}) {
         unsigned char* const r = Mem(w);
         r[0] = static_cast<unsigned char>(bh::Half() ? r[0] | 1 : r[0] & 0xFE);
         SetWord(r + 0x12, static_cast<unsigned>(static_cast<std::int32_t>(bh::Next() % 5) - 1));
@@ -368,10 +368,10 @@ void SeedMarkers() {
     s[0xB] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 18 : bh::Next());
     s[9] = static_cast<unsigned char>(bh::Next() % 4);
     s[0xA] = static_cast<unsigned char>(bh::Next() % 6);
-    Mem(at::kPickCount)[0] = Byte({0, 1, 2, 3});
+    Mem(BattleE5_GeneCount_addr)[0] = Byte({0, 1, 2, 3});
     for (unsigned i = 0; i < 3; ++i)
         Mem(at::kPickList + i)[0] = static_cast<unsigned char>(bh::Half() ? s[0xB] : bh::Next() % 18);
-    Mem(at::kTapCommand)[0] = Byte({0xFF, 0xFF, 0, 1, 4});
+    Mem(BattleE5_GeneRow_addr)[0] = Byte({0xFF, 0xFF, 0, 1, 4});
     for (U g : {at::kGrid18, at::kGrid19})
         for (unsigned i = 0; i < 0x48; ++i)
             if (bh::Next() % 4 == 0) Mem(g + i)[0] = 0xFF;
@@ -387,7 +387,7 @@ void SeedOp(U base) {
     s[0xA] = Byte({1, 1, 2, 0, 4});
     s[9] = Byte({1, 1, 2, 0});
     e[0xF0] = static_cast<unsigned char>(bh::Next() % 8);
-    if (bh::Half()) Mem(at::kFight)[0] = 0;
+    if (bh::Half()) Mem(BattleActions_EventBattle_addr)[0] = 0;
     // a dispatcher's other state bytes inside its table (the harness drew its
     // own): a plant reading the wrong byte lands on another entry, a count
     switch (base) {
@@ -476,12 +476,12 @@ void Seed(unsigned k) {
             x[0x115] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x115] | 0x40 : x[0x115] & 0xBF);
         }
         Mem(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(bh::Half() ? Mem(at::kRoundFlags + 1)[0] | 0x40 : Mem(at::kRoundFlags + 1)[0] & 0xBF);
-        if (bh::Half()) Mem(at::kFight)[0] = 0;
+        if (bh::Half()) Mem(BattleActions_EventBattle_addr)[0] = 0;
         Mem(at::kTarget)[0] = Byte({0xFF, 0xFF, 3, 0});
         break;
     }
     case 0x435C40:
-        Mem(at::kEnemiesLeft)[0] = Byte({1, 1, 2, 3, 0});
+        Mem(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
         bh::SetRandHint(3);
         break;
     case 0x435C80:
@@ -501,11 +501,11 @@ void Seed(unsigned k) {
                     bh::Often() ? BH_PICK(0, 1, 0x270F, 0x2710, 0x2711, 0x10) : bh::Next());
         break;
     case 0x435E70: case 0x436070:
-        Mem(at::kEnemiesLeft)[0] = Byte({1, 1, 2, 3, 0});
+        Mem(BattleE2_EnemiesLeft_addr)[0] = Byte({1, 1, 2, 3, 0});
         break;
     case 0x435EF0:
         SetLong(Mem(at::kPartyCount), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | Byte({3, 3, 2, 2, 1, 0, 4})));
-        SetLong(Mem(at::kFormation), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | g_good[bh::Next() % g_good_n]));
+        SetLong(Mem(Cond_Flags_addr + 0xd0), static_cast<std::int32_t>((bh::Next() & 0xFFFFFF00u) | g_good[bh::Next() % g_good_n]));
         g_in = bh::Next() % (Mem(at::kPartyCount)[0] == 2 ? 2 : 3);
         break;
     default:
@@ -537,9 +537,9 @@ void Disturb(U h) {
     switch ((h >> 8) % 6) {
     case 0: Owner()[5] = b; break;
     case 1: Mem(at::kPartyCount)[0] = static_cast<unsigned char>(b % 4); break;
-    case 2: Mem(at::kWindow21)[0] = b; break;
-    case 3: Mem(at::kTapCommand)[0] = h & 0x1000000 ? 0xFF : b; break;
-    case 4: Mem(at::kEnemiesLeft)[0] = b; break;
+    case 2: Mem(BattleE4_Above_addr)[0] = b; break;
+    case 3: Mem(BattleE5_GeneRow_addr)[0] = h & 0x1000000 ? 0xFF : b; break;
+    case 4: Mem(BattleE2_EnemiesLeft_addr)[0] = b; break;
     default: Mem(at::kRoundFlags + 1)[0] = b; break;
     }
 }

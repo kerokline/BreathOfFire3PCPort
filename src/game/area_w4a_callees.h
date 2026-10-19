@@ -23,41 +23,43 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the field frame's cells --------------------------------------------------
-constexpr U kStoryFlags = 0x904030;       // the flag bank every Flags_* call here is handed
-constexpr U kFlagBankF8 = 0x903FF8;       // Cond_Flags + 0x68: the bank area 155's choice sets bit 1 of
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the flag bank every Flags_* call here is handed
+// kFlagBankF8: now Cond_Flags[0x68] (symbols.toml). Cond_Flags + 0x68: the bank area 155's choice sets bit 1 of
 constexpr U kTailKind = 0x9039F3;         // Field_ModeTailKinds' index (s8)
 constexpr U kTailState = 0x9039F4;        // s8: the armed tail kind's (or the field hook's) state
 constexpr U kTailArg = 0x9039F5;
 constexpr U kTailTimer = 0x9039F6;        // u16: tail kind 32's countdown
-constexpr U kMsgMode = kTailKind, kMsgState = kTailState, kMsgArg = kTailArg;
+// kMsgMode: now AreaW0a_TailKind (symbols.toml).
+// kMsgState: now AreaW0c_TailState (symbols.toml).
+// kMsgArg: now AreaW0c_TailSub (symbols.toml).
 constexpr U kMessage = 0x7DEE48;          // the message word a choice handler leaves (0xFFFF: none)
 constexpr U kChoice = 0x7DEE67;           // the choice box's answer (s8)
-constexpr U kFocusObject = 0x903804;      // the record whose talk opened the box (docs/area_w2c.md)
+// kFocusObject: now AreaW1a_FocusObject (symbols.toml). the record whose talk opened the box (docs/area_w2c.md)
 constexpr U kScriptVar5 = 0x90384A;       // MoveScript variables 5 and 6 (docs/area_w0a.md)
 constexpr U kScriptVar6 = 0x90384B;
-constexpr U kCameraDistance = 0x903840;   // Camera_Distance (u16)
-constexpr U kByte905E68 = 0x905E68;       // a byte area 167's handler 5 tests (the 0x905E60 row)
+// kCameraDistance: now Camera_Distance (symbols.toml). Camera_Distance (u16)
+// kByte905E68: now AreaW1a_EntryZone (symbols.toml). a byte area 167's handler 5 tests (the 0x905E60 row)
 constexpr U kTextRecords = 0x904CE0;      // Text_Records: area 155's choice copies an item name to row 0
-constexpr U kEffects = 0x7E11E0;          // Effect_Objects: twenty records of 0x80
+// kEffects: now Effect_Objects (symbols.toml). Effect_Objects: twenty records of 0x80
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
-constexpr U kLeaderDir = 0x802D48;        // the leader's +8, its facing
+// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
 
 // --- the world maps' cells (area 16's, docs/area_w0b.md) ----------------------
-constexpr U kLeaderSteps = 0x802D49;      // u8 step count
-constexpr U kLeaderDirX = 0x802D4C;       // dword direction
-constexpr U kLeaderDirZ = 0x802D50;
-constexpr U kLeaderX = 0x802D74;          // the leader's +0x34 / +0x38, 16.16
-constexpr U kLeaderZ = 0x802D78;
-constexpr U kPlace = 0x937F82;            // u16: the place the party stands on (world map)
-constexpr U kMapMode = 0x9045FA;          // the world map's mode byte
+// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
+// kMapMode: now AreaW0b_MapMode (symbols.toml). the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
-constexpr U kMapHeight = 0x8CB581;        // AreaMap_Header's second byte
-constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0, the first legend's button
-constexpr U kButtonMap6 = 0x90358C;       // word 6, the second's
-constexpr U kPartySet = 0x90412C;         // & 0x7F: the party set (0xC shows the third legend)
+// kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
+// kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0, the first legend's button
+// kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
+// kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr U kAreaText = 0x803580;         // the area's text section; area 152 reads its label offset from its first dword
 constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
 
@@ -98,8 +100,8 @@ constexpr WorldMapTables kWm152 = {
 };
 
 // --- the other areas' own ---------------------------------------------------------
-constexpr U kA153Pairs = 0x63841C;        // (u8, u8) by the s8 answer: area 153's choice 0
-constexpr U kA154Pairs = 0x638994;        // area 154's choice 0
+// kA153Pairs: now Area153_ChoicePairs (symbols.toml). (u8, u8) by the s8 answer: area 153's choice 0
+// kA154Pairs: now Area154_ChoicePairs (symbols.toml). area 154's choice 0
 constexpr U kA166Pairs = 0x63A79C;        // area 166's choice 1
 constexpr U kA167Choices = 0x63C510;      // 16: area 167's +0x34, running on into its handlers (choice 5 = handler 0)
 constexpr U kA167Handlers = 0x63C524;     // 11: its +0x3C

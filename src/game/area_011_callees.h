@@ -12,10 +12,10 @@ namespace at {
 // The first party list's third byte (the lists: two of three member ids at
 // 0x904062 / 0x904065, docs/field-event.md): read as a dword, masked to its
 // low byte.
-constexpr std::uint32_t kPartyThird = 0x904064;
+// kPartyThird: now Cond_Flags[0xd4] (symbols.toml).
 // Cond_Flags row 14 (Cond_Flags + 0x70): the init tests its bits 0x13 and
 // 0x14 (the byte 0x904002, bits 3 and 4).
-constexpr std::uint32_t kInitFlags = 0x904000;
+// kInitFlags: now Cond_Flags[0x70] (symbols.toml).
 constexpr unsigned kInitFlagOn = 0x13, kInitFlagOff = 0x14;
 // The leader's record (ObjTrio + 0) and its words +0x2E / +0x30, what the
 // movement-script ops 90..95 pass Effect_Spawn as x and z.

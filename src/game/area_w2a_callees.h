@@ -39,21 +39,21 @@ constexpr std::uint32_t kCounter2 = 0x90384A;
 constexpr std::uint32_t kCounter3 = 0x90384B;
 // The byte and the word after MoveScript_Var7 (the run step and its word,
 // which area 78's scene reset clears beside Var7).
-constexpr std::uint32_t kVar7Step = 0x8034E5;
-constexpr std::uint32_t kVar7Word = 0x8034E6;
+// kVar7Step: now MoveScript_PartyRecords[0x65] (symbols.toml).
+// kVar7Word: now MoveScript_PartyRecords[0x66] (symbols.toml).
 // The story flags (Flags_Set / Flags_Test's bank), Cond_Flags row 6 (area
 // 77's cell hook tests its flag 0x2C: 0x903F90 + 8 * 6), and the row pointer
 // the chapters' flag calls take (Cond_Flags + 8 * chapter; docs/field-modes.md).
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kCondRow6 = 0x903FC0;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kCondRow6: now Cond_Flags[0x30] (symbols.toml).
 // kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 // The three party lists' first bytes (0x904062..0x904064).
-constexpr std::uint32_t kPartyList0 = 0x904062;
+// kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
 // The leader's record (ObjTrio): byte +8 (the pose the cell hook compares),
 // byte +0x89 (area 84's handler tests it).
 constexpr std::uint32_t kLeader = 0x802D40;
-constexpr std::uint32_t kLeaderPose = 0x802D48;
-constexpr std::uint32_t kLeaderByte89 = 0x802DC9;
+// kLeaderPose: now ObjTrio[8] (symbols.toml).
+// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 // Effect_Objects' stride (records of 0x80 bytes).
 constexpr std::uint32_t kEffectStride = 0x80;
@@ -83,12 +83,12 @@ constexpr unsigned kArea77CellSwitchCount = 2;
 // kArea77ChoiceMessages: now Area77_ChoiceMessages (symbols.toml). Area77_ChoiceMessages, 6 words
 // kArea77EffectKinds0: now Area77_EffectKinds0 (symbols.toml). Area77_EffectKinds0, 8
 // kArea77EffectKindsA: now Area77_EffectKindsA (symbols.toml). Area77_EffectKindsA..G, 8 each, consecutive
-constexpr std::uint32_t kArea77EffectKindsB = 0x60BBE8;
-constexpr std::uint32_t kArea77EffectKindsC = 0x60BBF0;
-constexpr std::uint32_t kArea77EffectKindsD = 0x60BBF8;
-constexpr std::uint32_t kArea77EffectKindsE = 0x60BC00;
-constexpr std::uint32_t kArea77EffectKindsF = 0x60BC08;
-constexpr std::uint32_t kArea77EffectKindsG = 0x60BC10;
+// kArea77EffectKindsB: now Area77_EffectKindsA[8] (symbols.toml).
+// kArea77EffectKindsC: now Area77_EffectKindsA[0x10] (symbols.toml).
+// kArea77EffectKindsD: now Area77_EffectKindsA[0x18] (symbols.toml).
+// kArea77EffectKindsE: now Area77_EffectKindsA[0x20] (symbols.toml).
+// kArea77EffectKindsF: now Area77_EffectKindsA[0x28] (symbols.toml).
+// kArea77EffectKindsG: now Area77_EffectKindsA[0x30] (symbols.toml).
 // kArea77Leaps: now Area77_Leaps (symbols.toml). Area77_Leaps, (dx, dz) byte pairs
 // Area 78: its choice 7's message words (two, by the answer).
 // kArea78ChoiceMessages: now Area78_ChoiceMessages (symbols.toml). Area78_ChoiceMessages, 2 words

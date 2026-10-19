@@ -79,7 +79,7 @@ unsigned AbilityWord4() { return Word(At(at::kAbilityWord4 + AbilityId() * at::k
 // CharacterRecords' record for a member's character byte +0x148 (unchecked, as
 // the original: a character byte, not a table index of this group's).
 unsigned char* CharRecord(unsigned character) { return At(at::kCharRecords + character * at::kCharStride); }
-unsigned char* Member(unsigned i) { return At(at::kParty + i * at::kPartyStride); }
+unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kPartyStride); }
 
 // A table entry called as the original's jmp enters it: with the word the
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll pushes
@@ -144,7 +144,7 @@ void MoveBy(unsigned char* s, bool back) {
 void ClearFormFlag() {
     const bool bit = (Word(At(at::kRoundFlags)) & 0x4000) != 0;
     unsigned char* const s = S();
-    if (bit && B(at::kFormActor) == s[5]) SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xBFFF);
+    if (bit && BattleFlow_ActorAt == s[5]) SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xBFFF);
 }
 
 }  // namespace
@@ -171,9 +171,9 @@ extern "C" unsigned char __cdecl EnemyOp_CastStart(void) {
     if (BH_CALL(File_LoadDone)() == 0) return 0;
     unsigned char* const e = Enemy();
     if (e[0x105] == 4) {
-        if (B(at::kFight) != 0) {
+        if (BattleActions_EventBattle != 0) {
             const unsigned key = static_cast<unsigned char>(e[0x100] + 0x20);
-            const bool loaded = BH_CALL(Battle_LoadSoundByKey)(key, B(at::kSoundSet)) != 0;
+            const bool loaded = BH_CALL(Battle_LoadSoundByKey)(key, BattleE3_SoundSet) != 0;
             S()[9] = loaded ? 0 : 0x1E;
         }
     } else {
@@ -201,7 +201,7 @@ extern "C" unsigned char __cdecl EnemyOp_CastCue(void) {
         s[9] -= 1;
         return BH_CALL(BattleEnemy_ScriptTickOnce)();
     }
-    const bool fight = B(at::kFight) != 0;
+    const bool fight = BattleActions_EventBattle != 0;
     unsigned char* const e = Enemy();
     if (fight)
         BH_CALL(Sound_PlayEffectUnlessNone)(Word(PtrAt(Key(e + 0xF8)) + 2));
@@ -228,7 +228,7 @@ extern "C" void __cdecl EnemyOp_CastDoneDispatch(void) {
 extern "C" void __cdecl EnemyOp_CastDoneCost(void) {
     unsigned char* e = Enemy();
     if (e[0x105] == 4) {
-        SetWord(e + 0xA6, Word(e + 0xA6) - B(at::kCost));
+        SetWord(e + 0xA6, Word(e + 0xA6) - BattleE3_Cost);
         e = Enemy();
     }
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) | 0x800);
@@ -317,9 +317,9 @@ extern "C" void __cdecl EnemyOp_LeaveStep(void) {
 // the enemy leaves the count without being defeated.
 extern "C" void __cdecl EnemyOp_LeaveEnd(void) {
     BH_CALL(Battle_RemoveFromTurnOrder)(S()[5]);
-    const auto left = static_cast<unsigned char>(B(at::kEnemiesLeft) - 1);
-    B(at::kEnemiesLeft) = left;
-    if (left == 0) B(at::kBattleEnd) |= 2;
+    const auto left = static_cast<unsigned char>(BattleE2_EnemiesLeft - 1);
+    BattleE2_EnemiesLeft = left;
+    if (left == 0) BattleActions_BattleEnd |= 2;
     BH_CALL(Sprite_ReleaseTint)(S());
     BH_CALL(Battle_ClearActorBit)(S()[5]);
     B(at::kWindow4State) = 2;
@@ -430,12 +430,12 @@ extern "C" void __cdecl BattleObj_HitReceive(void) {
     SetWord(PtrAt(at::kResult) + 6, 0);
     PtrAt(at::kResult)[8] = 0;
     std::memcpy(At(at::kStatCopy), f + 0xA0, 32);
-    if (Word(f + 0x90) & 0x800) SetWord(At(at::kStatFlag), 1);
+    if (Word(f + 0x90) & 0x800) BattleDamage_TargetDef = 1;
     if (f[0x130] & 1) {
-        if (B(at::kEvadeBoost) + 0x19u >= 0x64u)
-            B(at::kEvadeBoost) = 0x64;
+        if (BattleE3_EvadeBoost + 0x19u >= 0x64u)
+            BattleE3_EvadeBoost = 0x64;
         else
-            B(at::kEvadeBoost) += 0x19;
+            BattleE3_EvadeBoost += 0x19;
     }
     unsigned kind = B(at::kActKind);
     if (kind == 1) {
@@ -553,7 +553,7 @@ extern "C" void __cdecl BattleObj_HitEnd(void) {
     }
     BH_CALL(Battle_ClearActorBit)(S()[5]);
     SetULong(F() + 0x130, ULong(F() + 0x130) & 0xFFFFFF8Fu);
-    if (BH_CALL(BattleParty_AllDown)() != 0) B(at::kBattleEnd) |= 1;
+    if (BH_CALL(BattleParty_AllDown)() != 0) BattleActions_BattleEnd |= 1;
     SetULong(F() + 0x130, ULong(F() + 0x130) & ~0x200u);
     S()[1] = 2;
     S()[2] = 0;
@@ -687,7 +687,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
         BH_CALL(BattleObj_ScriptTick)();
         return;
     }
-    B(at::kMembersUp) -= 1;
+    BattleSprites_PartyPick -= 1;
     for (unsigned i = 0; i < 8; ++i) F()[0x138 + i] = 0;
     SetULong(F() + 0x134, ULong(F() + 0x134) & 0xFFFB84FFu);
     F()[0x12D] = 0;
@@ -696,7 +696,7 @@ extern "C" void __cdecl BattleObj_Fall(void) {
     F()[0x144] = 0;
     F()[0x145] = 0;
     BH_AT(void (__cdecl*)(unsigned), at::kPass453300)(S()[5]);
-    if (BH_CALL(BattleParty_AllDown)() != 0 || B(at::kMembersUp) == 0) B(at::kBattleEnd) |= 1;
+    if (BH_CALL(BattleParty_AllDown)() != 0 || BattleSprites_PartyPick == 0) BattleActions_BattleEnd |= 1;
     ClearFormFlag();
     unsigned char* const s = S();
     if (F()[0x134] & 1) {
@@ -778,7 +778,7 @@ extern "C" void __cdecl BattleObj_Revive(void) {
     t[0x27] = 6;
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(s[8] + 4));
     BH_CALL(Sound_PlayById)(0x206);
-    if (B(at::kKindsSeen) == 0) {
+    if (BattleMisc_BannerKinds == 0) {
         BH_CALL(Battle_OpenMsgWindow)();
         BH_AT(void (__cdecl*)(unsigned), at::kNameToText)(S()[5]);
         BH_AT(void (__cdecl*)(unsigned, unsigned), at::kBannerByPair)(0, F()[0x89]);
@@ -831,7 +831,7 @@ extern "C" void __cdecl BattleObj_ReviveByEquip(void) {
     t[0x27] = 6;
     BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(s[8] + 4));
     BH_CALL(Sound_PlayById)(0x206);
-    if (B(at::kKindsSeen) == 0) {
+    if (BattleMisc_BannerKinds == 0) {
         BH_CALL(Battle_OpenMsgWindow)();
         const unsigned id = S()[3] == 5 ? 0x2E : 0x3B;
         const unsigned char* const text = BH_CALL(Msg_SystemPtr)(id);
