@@ -23,6 +23,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/item_use_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -65,6 +66,13 @@ unsigned char* CharRecord(unsigned id, unsigned battle) {
     const unsigned i = id & 0xFF;
     return (battle & 0xFF) == 0 ? At(at::kCharRecords + i * at::kCharStride) : At(at::kWorkRecords + i * at::kWorkStride);
 }
+
+// Either answer is a records::CharRecord: the persistent record 0x903A70 + i
+// * 0xA4, or the working copy 0x802DC0 + i * 0x14C, which is PartyMember
+// +0x80, a copy of the character record (records.h CharRecord, PartyMember;
+// docs/item-use.md section 2). The fields here are the record's +0x10,
+// +0x18, +0x1A, +0x1E, +0x20, +0x22 (item_use_callees.h at::kStatus..kMaxAp).
+records::CharRecord* CharRec(unsigned id, unsigned battle) { return rv::As<records::CharRecord>(CharRecord(id, battle)); }
 
 // The handlers' common tail: `neg al; sbb eax, eax; and al, 0xFD; add eax, 3`
 // - 0 when the callee answered anything in al, 3 when it answered 0.
@@ -186,7 +194,7 @@ extern "C" unsigned char __cdecl ItemUse_HealHp5Cure(unsigned id, unsigned battl
 // original has it (and the PSX): the HP is set before the status is tested,
 // so on a member without 0x4000 the HP is 1 and the answer is 3 - D21, kept.
 extern "C" unsigned char __cdecl ItemUse_Revive(unsigned id, unsigned battle) {
-    SetWord(CharRecord(id, battle) + at::kHp, 1);
+    rv::Store<unsigned>(CharRec(id, battle)->hp, 1);
     return UsedOr3(g.clear_status(id, 0x4000, battle));
 }
 
@@ -232,17 +240,18 @@ extern "C" unsigned char __cdecl ItemUse_Stat2EUp(unsigned id, unsigned battle) 
 // if below max, else 3 (HP above max).
 extern "C" unsigned char __cdecl ItemUse_HpScaleUp(unsigned id, unsigned battle) {
     unsigned char* const r = CharRecord(id, battle);
-    const std::uint16_t hp = Word(r + at::kHp), max = Word(r + at::kMaxHp);
+    auto* const c = rv::As<records::CharRecord>(r);
+    const std::uint16_t hp = c->hp, max = c->stats.max_hp;
     if (hp == max) return 3;
-    const unsigned char scale = r[at::kHpScale];
+    const unsigned char scale = c->hp_scale;
     if (scale < 9) {
-        r[at::kHpScale] = static_cast<unsigned char>(scale + 1);
+        c->hp_scale = static_cast<unsigned char>(scale + 1);
         g.recalc(r);
-        SetWord(r + at::kHp, Word(r + at::kMaxHp));
+        rv::Store<unsigned>(c->hp, c->stats.max_hp);
         return 0;
     }
     if (hp < max) {
-        SetWord(r + at::kHp, max);
+        rv::Store<unsigned>(c->hp, max);
         return 0;
     }
     return 3;
@@ -285,22 +294,22 @@ extern "C" unsigned char __cdecl ItemUse_WaterJug(unsigned, unsigned) {
 // 0x10, below max, kept), and Char_ClearStatus gets the id and battle dwords
 // as they were pushed.
 extern "C" unsigned char __cdecl Char_HealHp(unsigned id, unsigned amount, unsigned battle) {
-    unsigned char* const r = CharRecord(id, battle);
-    if (Word(r + at::kHp) == Word(r + at::kMaxHp)) return 0;
-    SetWord(r + at::kHp, Word(r + at::kHp) + amount);
-    if (Word(r + at::kHp) > Word(r + at::kMaxHp) || static_cast<std::uint16_t>(amount) == 0)
-        SetWord(r + at::kHp, Word(r + at::kMaxHp));
-    if (static_cast<std::uint16_t>(Word(r + at::kMaxHp) >> 2) <= Word(r + at::kHp)) g.clear_status(id, 0x2000, battle);
+    auto* const r = CharRec(id, battle);
+    if (r->hp == r->stats.max_hp) return 0;
+    rv::Store<unsigned>(r->hp, r->hp + amount);
+    if (r->hp > r->stats.max_hp || static_cast<std::uint16_t>(amount) == 0)
+        rv::Store<unsigned>(r->hp, r->stats.max_hp);
+    if (static_cast<std::uint16_t>(r->stats.max_hp >> 2) <= r->hp) g.clear_status(id, 0x2000, battle);
     return 1;
 }
 
 // original 0x590D70 (PSX 0x80165D3C): Char_HealHp on AP, without the status.
 extern "C" unsigned char __cdecl Char_HealAp(unsigned id, unsigned amount, unsigned battle) {
-    unsigned char* const r = CharRecord(id, battle);
-    if (Word(r + at::kAp) == Word(r + at::kMaxAp)) return 0;
-    SetWord(r + at::kAp, Word(r + at::kAp) + amount);
-    if (Word(r + at::kAp) > Word(r + at::kMaxAp) || static_cast<std::uint16_t>(amount) == 0)
-        SetWord(r + at::kAp, Word(r + at::kMaxAp));
+    auto* const r = CharRec(id, battle);
+    if (r->ap == r->stats.max_ap) return 0;
+    rv::Store<unsigned>(r->ap, r->ap + amount);
+    if (r->ap > r->stats.max_ap || static_cast<std::uint16_t>(amount) == 0)
+        rv::Store<unsigned>(r->ap, r->stats.max_ap);
     return 1;
 }
 
@@ -355,10 +364,10 @@ extern "C" short __cdecl Stat_AddClamped(unsigned short* stat, unsigned delta) {
 // original 0x590F60 (PSX 0x801660DC): clear the mask's bits from the status
 // word if any is set, and say so. Only the mask's low word reaches the word.
 extern "C" unsigned char __cdecl Char_ClearStatus(unsigned id, unsigned mask, unsigned battle) {
-    unsigned char* const r = CharRecord(id, battle);
-    const std::uint16_t status = Word(r + at::kStatus);
+    auto* const r = CharRec(id, battle);
+    const std::uint16_t status = r->status;
     if ((status & mask & 0xFFFF) == 0) return 0;
-    SetWord(r + at::kStatus, status & ~mask);
+    rv::Store<unsigned>(r->status, status & ~mask);
     return 1;
 }
 
