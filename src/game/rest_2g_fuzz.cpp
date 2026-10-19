@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_2g.h"
 #include "game/rest_2g_callees.h"
 #include "game/scenario_harness.h"
@@ -26,6 +27,10 @@
 
 namespace rest_2g {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -224,8 +229,8 @@ void Move(U h) {
     switch (h % 14) {
     case 0:
     case 1: sh::SetPointer(BattleWinStates_Current_addr, Rec(b)); break;
-    case 2: if (in) SetWord(r + 4, b & 1 ? v & 0x1FF : v); break;
-    case 3: if (in) SetWord(r + 6, b & 1 ? v & 0xFF : v); break;
+    case 2: if (in) WindowRec(r)->centre_x = b & 1 ? v & 0x1FF : v; break;
+    case 3: if (in) WindowRec(r)->centre_y = b & 1 ? v & 0xFF : v; break;
     case 4: if (in) r[0xA] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 5: if (in) r[0xB] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 6: if (in) r[0xC] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;

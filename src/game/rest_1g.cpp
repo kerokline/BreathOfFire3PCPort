@@ -31,6 +31,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -42,6 +43,10 @@ using bof3x::input::sigma::Sigma;
 using bof3x::input::sigma::SigmaInverse;
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 using U = std::uint32_t;
 using move_script::At;
@@ -1065,7 +1070,7 @@ extern "C" void __cdecl Fish_Hooked(void) {
             Effect_Objects[0] = static_cast<unsigned char>(Effect_Objects[0] & 0xBF);
         }
         unsigned char* const t = S();
-        if (Word(t + 0x58) <= 0x14) return;
+        if (SpriteRec(t)->script_pos <= 0x14) return;
         t[0xA] = static_cast<unsigned char>(t[0xA] + t[0x10]);
         unsigned char* const c = S();
         const auto a = static_cast<signed char>(c[0xA]);
@@ -1349,7 +1354,7 @@ extern "C" void __cdecl Fish_S6Begin(void) {
 // of kS6Frames: +2 up; else (a tail jmp) Sprite_ScriptTick.
 extern "C" void __cdecl Fish_S6Wait(void) {
     unsigned char* const s = S();
-    if (Word(s + 0x58) == Word(At(kS6Frames + 2 * s[6]))) {
+    if (SpriteRec(s)->script_pos == Word(At(kS6Frames + 2 * s[6]))) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
         return;
     }

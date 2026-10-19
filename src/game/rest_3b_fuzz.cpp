@@ -22,12 +22,19 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3b.h"
 #include "game/rest_3b_callees.h"
 #include "hook/log.h"
 
 namespace rest_3b {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
+[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace bh = boss_harness;
 using U = std::uint32_t;
@@ -355,17 +362,17 @@ void BattleFrame() {
         unsigned char* const p = Member(m);
         p[0x89] = bh::Half() ? 0x0A : static_cast<unsigned char>(bh::Next() % 24);
         const U max = Word16({1, 2, 4, 5, 99, 999, 9999});
-        SetWord(p + 0xA0, max);
+        MemberRec(p)->max_hp = max;
         SetWord(p + 0x98, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
-        SetWord(p + 0x90, static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u));
+        MemberRec(p)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
         if (bh::Half()) p[0x135] = static_cast<unsigned char>(p[0x135] ^ 0x04);   // the dword +0x134's bit 10
     }
     for (unsigned n = 0; n < 8; ++n) {
         unsigned char* const e = EnemyN(n);
         const U max = Word16({1, 2, 4, 5, 99, 999, 0xFFFF, 0xFFFE});
-        SetWord(e + 0xB0, max);
+        EnemyRec(e)->max_hp = max;
         SetWord(e + 0xA4, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
-        SetWord(e + 0x92, static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u));
+        EnemyRec(e)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
     }
     SetWord(Mem(at::kAbility), Word16({0, 1, 0x55, 0x5D, 0x62, 0x65, 0x66, 0xE2}) % 0xE4);
     SetWord(Mem(Rest3b_PowerAdd2_addr), Word16({0, 1, 139, 140, 141, 142, 0xFFFF}));
