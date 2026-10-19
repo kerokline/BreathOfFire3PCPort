@@ -384,7 +384,7 @@ void Seed136(unsigned k) {
             const std::uint32_t step = static_cast<std::uint32_t>(Long(ah::Mem(Field_DirectionSteps_addr + (cur[8] & 7u) * 8 + 4)));
             const std::uint32_t limit = static_cast<std::uint32_t>(B(Area136_ZLimits_addr + B(AreaW0c_TailSub_addr))) << 16;
             const std::uint32_t d = AH_PICK(0, 0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u);
-            SetLong(cur + 0x38, static_cast<std::int32_t>(limit - step + d));
+            rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->z, static_cast<std::int32_t>(limit - step + d));
         }
         break;
     }
@@ -436,8 +436,8 @@ void SeedFollow() {
     if (ah::Often()) {
         const unsigned x = AH_PICK(0x43, 0x44, 0x4A, 0x50, 0x51, 0x44, 0x50);
         const unsigned z = AH_PICK(5, 6, 0xA, 0x10, 0x11, 6, 0x10);
-        SetWord(cur + 0x36, x - static_cast<unsigned>(static_cast<int>(static_cast<signed char>(delta[0]))));
-        SetWord(cur + 0x3A, z - static_cast<unsigned>(static_cast<int>(static_cast<signed char>(delta[1]))));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->x_whole, x - static_cast<unsigned>(static_cast<int>(static_cast<signed char>(delta[0]))));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(cur)->z_whole, z - static_cast<unsigned>(static_cast<int>(static_cast<signed char>(delta[1]))));
     }
     if (ah::Often()) B(ObjTrio_addr + 0x9) = static_cast<unsigned char>(ah::Half() ? 0 : 1 + ah::Next() % 0x20);
     if (ah::Often()) B(ObjTrio_addr + 0x137) = static_cast<unsigned char>(AH_PICK(1, 1, 0, 2, 0x81));
@@ -558,7 +558,7 @@ void Seed141(unsigned k) {
     case k141Cell: SeedCellPose(Area141_CellEntries_addr, at::kArea141CellCount, 4); break;
     case k141Trig57:
         g_pick = ah::Next() % at::kObjectCount;
-        if (ah::Often()) SetWord(ah::Object(g_pick) + 0x88, AH_PICK(0xC000, 0xC001, 0xC002, 0xC000, 0xC001, 0xC002, 0xC003, 0xBFFF, 0x4000));
+        if (ah::Often()) rv::Store<unsigned>(rv::As<records::SpriteObject>(ah::Object(g_pick))->trigger_word, AH_PICK(0xC000, 0xC001, 0xC002, 0xC000, 0xC001, 0xC002, 0xC003, 0xBFFF, 0x4000));
         break;
     case k141Paint:
         g_pick = ah::Next() % 10;

@@ -272,9 +272,9 @@ extern "C" void __cdecl Area135_ToMarker(void) {
         SetD(Field_Kind2Z_addr, z);
         return;
     }
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x220)));
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x224)));
-    SetLong(Sprite_Current + 0x3C, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x228)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x220)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x224)));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, static_cast<std::int32_t>(D(Sprite_ObjectsExtra_addr + 0x228)));
 }
 
 // original 0x41DE60 (Area135_Handlers[6]; PSX 0x801F44E0): unless Field_State
@@ -491,9 +491,9 @@ extern "C" void __cdecl Area135_SpawnCopy(void) {
     auto* const tSelf = rv::As<records::SpriteObject>(self);
     const unsigned sub = B(AreaW0c_TailSub_addr);
     AH_CALL(EventOp_9x)(Mem(Area135_SpawnOps_addr + sub * at::kArea135SpawnOpStride));
-    SetLong(Sprite_Current + 0x34, tSelf->x);
-    SetLong(Sprite_Current + 0x38, tSelf->z);
-    SetLong(Sprite_Current + 0x3C, tSelf->height);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, tSelf->x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, tSelf->z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, tSelf->height);
     Sprite_Current = self;
     AH_AT(void (__cdecl*)(), area_w3d::kEngine46D710)();
     Sprite_Current[0xA] = Sprite_Current[9];
@@ -765,8 +765,8 @@ extern "C" void __cdecl Area135_Init(void) {
         unsigned char* const e = EffectAt("Area135_Init", slot);
         e[0] = 1;
         e[5] = 0x53;
-        SetLong(e + 0x18, 0);
-        SetLong(e + 0x1C, 6);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_18, 0);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->work_1c, 6);
     }
     B(at::kCounter3) = 0;
 }
@@ -782,7 +782,7 @@ extern "C" void __cdecl Area135_Init(void) {
 // aborts.
 extern "C" void __cdecl Area135_FallTo(unsigned height) {
     unsigned char* cur = Sprite_Current;
-    const auto d = static_cast<std::int32_t>(static_cast<short>(static_cast<unsigned short>(height - Word(cur + 0x3E))));
+    const auto d = static_cast<std::int32_t>(static_cast<short>(static_cast<unsigned short>(height - rv::As<records::SpriteHead>(cur)->height_whole)));
     std::int32_t steps = d / 128;
     if (steps < 0) steps = -steps;
     cur[9] = static_cast<unsigned char>(static_cast<unsigned>(steps) << 4);
@@ -791,10 +791,10 @@ extern "C" void __cdecl Area135_FallTo(unsigned height) {
     if (divisor == 0)
         bof3::Fatal("Area135_FallTo: the fall's frame count +9 is 0 (height %u against +0x3E %u, a difference of %d): "
                     "the original divides by it and faults",
-                    height & 0xFFFF, static_cast<unsigned>(Word(cur + 0x3E)), static_cast<int>(d));
-    SetLong(cur + 0x14, d / divisor);
-    SetLong(Sprite_Current + 0x10, 0);
-    SetLong(Sprite_Current + 0xC, 0);
+                    height & 0xFFFF, static_cast<unsigned>(rv::As<records::SpriteHead>(cur)->height_whole), static_cast<int>(d));
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(cur)->step_y, d / divisor);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, 0);
 }
 
 // original 0x41EC40: the first field object (0..29) in use (+0 bit 0), not
@@ -840,7 +840,7 @@ extern "C" void __cdecl Area135_StampCells(void) {
     const U x = static_cast<U>(tCur->x) - 0x8000;
     const U z = static_cast<U>(tCur->z) - 0x8000;
     const unsigned cx = (x >> 16) & 0xFFFF;
-    SetLong(cur + 0x20, 0);
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(cur)->work_20, 0);
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned cz = ((z >> 16) + k) & 0xFFFF;
         const unsigned shift = k * 8;
@@ -864,17 +864,17 @@ extern "C" void __cdecl Area135_StampCells(void) {
 // arithmetic, the running object read again).
 extern "C" void __cdecl Area135_RestoreCells(void) {
     unsigned char* const cur = Sprite_Current;
-    const auto x = static_cast<U>(Long(cur + 0x34));
-    const auto z = static_cast<U>(Long(cur + 0x38));
+    const auto x = static_cast<U>(rv::As<records::SpriteHead>(cur)->x);
+    const auto z = static_cast<U>(rv::As<records::SpriteHead>(cur)->z);
     const unsigned cx = (x >> 16) & 0xFFFF;
     for (unsigned k = 0; k < 2; ++k) {
         const unsigned cz = ((z >> 16) + k) & 0xFFFF;
         const unsigned shift = k * 8;
         AH_CALL(AreaMap_SetHeight)(cx, cz, 0);
-        AH_CALL(AreaMap_SetByte)(cx, cz, static_cast<unsigned>(Long(Sprite_Current + 0x20) >> shift));
+        AH_CALL(AreaMap_SetByte)(cx, cz, static_cast<unsigned>(rv::Current<records::SpriteHead>()->work_20 >> shift));
         const unsigned cx1 = (cx + 1) & 0xFFFF;
         AH_CALL(AreaMap_SetHeight)(cx1, cz, 0);
-        AH_CALL(AreaMap_SetByte)(cx1, cz, static_cast<unsigned>(Long(Sprite_Current + 0x20) >> (shift + 16)));
+        AH_CALL(AreaMap_SetByte)(cx1, cz, static_cast<unsigned>(rv::Current<records::SpriteHead>()->work_20 >> (shift + 16)));
     }
 }
 
@@ -884,7 +884,7 @@ extern "C" void __cdecl Area135_RestoreCells(void) {
 // al 1, else 0.
 extern "C" unsigned char __cdecl Area135_NearMarker(long x, long z) {
     const U marker = static_cast<U>(Long(Mem(Sprite_ObjectsExtra_addr + 0x25c))) & 0xFF;
-    const U self = static_cast<U>(Long(Sprite_Current + 0x70)) & 0xFF;
+    const U self = static_cast<U>(static_cast<std::int32_t>(rv::Current<records::SpriteHead>()->reach)) & 0xFF;
     const U frames = B(Sprite_ObjectsExtra_addr + 0x1f5);
     const auto reach = static_cast<std::int32_t>((self + marker + 2) << 15);
     auto dx = static_cast<std::int32_t>(static_cast<U>(x) - frames * D(Sprite_ObjectsExtra_addr + 0x1f8) - D(Sprite_ObjectsExtra_addr + 0x220));

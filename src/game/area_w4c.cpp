@@ -121,9 +121,9 @@ void EffectA2(const char* who, unsigned char state) {
     }
     EffectAt(who, cur[0xB])[0] = 1;
     EffectAt(who, cur[0xB])[5] = 0xA2;
-    SetLong(EffectAt(who, cur[0xB]) + 0x34, tCur->x);
-    SetLong(EffectAt(who, cur[0xB]) + 0x38, tCur->z);
-    SetLong(EffectAt(who, cur[0xB]) + 0x3C, static_cast<std::int32_t>(static_cast<U>(tCur->height) + 0x1000000u));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(who, cur[0xB]))->x, tCur->x);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(who, cur[0xB]))->z, tCur->z);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(who, cur[0xB]))->height, static_cast<std::int32_t>(static_cast<U>(tCur->height) + 0x1000000u));
     EffectAt(who, cur[0xB])[1] = state;
 }
 
@@ -144,7 +144,7 @@ void EffectOnObject(const char* who, unsigned char kind) {
     EffectAt(who, cur[0xB])[6] = 1;
     EffectAt(who, cur[0xB])[7] = 0;
     EffectAt(who, cur[0xB])[0xB] = 1;
-    SetLong(EffectAt(who, cur[0xB]) + 0x4C, static_cast<std::int32_t>(Key(cur)));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(who, cur[0xB]))->anim_data, static_cast<std::int32_t>(Key(cur)));
 }
 
 // The running script's bytes as areas 174 and 198's handlers read them: the
@@ -168,16 +168,16 @@ const unsigned char* PoseTable(unsigned char b) {
 // table of the script's byte +3, the new direction), the script back 2.
 void TurnToScript(unsigned char step) {
     unsigned char* const object = MoveScript_Object;
-    const unsigned offset = Word(object + 0xA);
+    const unsigned offset = rv::As<records::ScriptContext>(object)->position;
     const unsigned char* const script = ScriptBase();
     unsigned char* const cur = Sprite_Current;
     if (cur[8] == script[offset + 2]) {
-        SetWord(object + 0xA, offset + 2);
+        rv::Store<unsigned>(rv::As<records::ScriptContext>(object)->position, offset + 2);
         return;
     }
     cur[8] = static_cast<unsigned char>((cur[8] + step) & 7);
     const unsigned char direction = Sprite_Current[8];
-    const unsigned char b = script[Word(MoveScript_Object + 0xA) + 3];
+    const unsigned char b = script[rv::As<records::ScriptContext>(MoveScript_Object)->position + 3];
     AH_CALL(Area174_SetPose)(PoseTable(b), direction);
     ScriptStep(0xFFFE);
 }
@@ -206,9 +206,9 @@ extern "C" void __cdecl Area173_MessageByMemberB(void) { MessageByMember(Area173
 // at x 0x168000, y 0x5000000 and z 0x7A8000 when Field_State's +0x89 is 2,
 // else 0x7A0000; its direction +8 = 1.
 extern "C" void __cdecl Area173_PlaceObject(void) {
-    SetLong(Sprite_Current + 0x34, 0x168000);
-    SetLong(Sprite_Current + 0x3C, 0x5000000);
-    SetLong(Sprite_Current + 0x38, Field_State[0x89] == 2 ? 0x7A8000 : 0x7A0000);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, 0x168000);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, 0x5000000);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, Field_State[0x89] == 2 ? 0x7A8000 : 0x7A0000);
     Sprite_Current[8] = 1;
 }
 
@@ -380,7 +380,7 @@ extern "C" void __cdecl Area174_SinkAndBrighten(void) {
         const unsigned char c = cur[k];
         if (static_cast<signed char>(c) < -0x40) cur[k] = static_cast<unsigned char>(c + 2);
     }
-    if (Word(cur + 0x3E) == 0xA00) {
+    if (rv::As<records::SpriteObject>(cur)->height_whole == 0xA00) {
         cur[0] = static_cast<unsigned char>(cur[0] & 0xDF);
         Sprite_Current[0x5C] = 0;
         Sprite_Current[0x5F] = 0;
@@ -398,7 +398,7 @@ extern "C" void __cdecl Area174_SinkAndBrighten(void) {
 // (its object read again) on 2.
 extern "C" void __cdecl Area174_ScriptAnimationAt(void) {
     const unsigned char* const script = ScriptBase();
-    const unsigned offset = Word(MoveScript_Object + 0xA);
+    const unsigned offset = rv::As<records::ScriptContext>(MoveScript_Object)->position;
     const unsigned char pose = script[offset + 3];
     const unsigned char animation = script[offset + 2];
     const auto start = static_cast<unsigned short>(rv::Current<records::SpriteObject>()->script_pos - 2u);
@@ -417,7 +417,7 @@ extern "C" void __cdecl Area174_ScriptAnimationOn2(void) {
         return;
     }
     const unsigned char* const script = ScriptBase();
-    const unsigned offset = Word(MoveScript_Object + 0xA);
+    const unsigned offset = rv::As<records::ScriptContext>(MoveScript_Object)->position;
     const unsigned char pose = script[offset + 3];
     AH_CALL(Sprite_SetAnimationAt)(script[offset + 2], 0);
     Sprite_Current[0x2A] = pose;
@@ -439,7 +439,7 @@ extern "C" void __cdecl Area174_EffectA1(void) { EffectOnObject("Area174_EffectA
 // again), +0xA less 1, Field_State's word +0x12E less 2. Else x and z masked
 // to 0xFFFF8000, the script on 1.
 extern "C" void __cdecl Area174_StepByScript(void) {
-    const unsigned offset = Word(MoveScript_Object + 0xA);
+    const unsigned offset = rv::As<records::ScriptContext>(MoveScript_Object)->position;
     const unsigned char* const script =
         reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Field_State + 0x130))));
     const unsigned char limit = B(at::kStepLimit);
@@ -479,7 +479,7 @@ extern "C" void __cdecl Area174_TurnLeftToScript(void) { TurnToScript(7); }
 extern "C" void __cdecl Area174_FaceAwayFromLeader(void) {
     const auto direction = static_cast<unsigned char>(B(ObjTrio_addr + 0x8) ^ 4);
     const unsigned char* const script = ScriptBase();
-    const unsigned char b = script[Word(MoveScript_Object + 0xA) + 2];
+    const unsigned char b = script[rv::As<records::ScriptContext>(MoveScript_Object)->position + 2];
     AH_CALL(Area174_SetPose)(PoseTable(b), direction);
     ScriptStep(1);
 }

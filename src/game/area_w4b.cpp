@@ -193,11 +193,11 @@ void MembersFrame(const at::Rects& t) {
                     if (o[8] != facing) {
                         o[8] = facing;
                         o = Sprite_Current;
-                        SetLong(o + 0xC, static_cast<std::int32_t>(0u - static_cast<U>(Long(o + 0xC))));
+                        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_x, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::SpriteHead>(o)->step_x)));
                         o = Sprite_Current;
-                        SetLong(o + 0x10, static_cast<std::int32_t>(0u - static_cast<U>(Long(o + 0x10))));
+                        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_z, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::SpriteHead>(o)->step_z)));
                         o = Sprite_Current;
-                        SetLong(o + 0x14, static_cast<std::int32_t>(0u - static_cast<U>(Long(o + 0x14))));
+                        rv::Store<std::int32_t>(rv::As<records::SpriteHead>(o)->step_y, static_cast<std::int32_t>(0u - static_cast<U>(rv::As<records::SpriteHead>(o)->step_y)));
                         o = Sprite_Current;
                         o[9] = static_cast<unsigned char>(8 - o[9]);
                     }
@@ -287,9 +287,9 @@ void SpawnEffect13(std::int32_t a, std::int32_t c, unsigned char nine) {
     unsigned char* const e = EffectAt(B(at::kScratch));
     e[0] = 1;
     e[5] = 0x13;
-    SetLong(e + 0x64, a);
-    SetLong(e + 0x68, yaw);
-    SetLong(e + 0x6C, c);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], a);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[1], yaw);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[2], c);
     e[9] = nine;
 }
 // MoveScript_F3Divisor = Field_MoveSpeeds byte << 3, 16 bits.
@@ -871,7 +871,7 @@ extern "C" void __cdecl Area172_FallStart(void) {
     tO->step_x = 0;
     tO->step_z = 0;
     tO->step_y = 0;
-    SetLong(o + 0x20, -8);
+    rv::Store<std::int32_t>(rv::As<records::SpriteObject>(o)->work_20, -8);
     o[4] = 1;
     AddWord(MoveScript_Object + 0xA, -2);
 }
@@ -887,22 +887,22 @@ extern "C" void __cdecl Area172_FallStart(void) {
 extern "C" void __cdecl Area172_FallStep(void) {
     unsigned char* o = Sprite_Current;
     auto* tO = rv::As<records::SpriteObject>(o);
-    tO->step_y = static_cast<std::int32_t>(static_cast<U>(tO->step_y) + static_cast<U>(Long(o + 0x20)));
+    tO->step_y = static_cast<std::int32_t>(static_cast<U>(tO->step_y) + static_cast<U>(rv::As<records::SpriteObject>(o)->work_20));
     AH_CALL(Field_LeaderStepTick)();
     o = Sprite_Current;
     tO = rv::As<records::SpriteObject>(o);
     const long ground = AH_CALL(MapView_GroundAt)(tO->x, tO->z);
     o = Sprite_Current;
     tO = rv::As<records::SpriteObject>(o);
-    if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(Word(o + 0x3E))) {
+    if (static_cast<std::int16_t>(ground) > static_cast<std::int16_t>(rv::As<records::SpriteObject>(o)->height_whole)) {
         o[0] = static_cast<unsigned char>(o[0] & 0xDF);
         o[0x5C] = 0;
         o[0x5D] = 0;
         o[0x5E] = 0;
         o[0x5F] = 0;
-        SetWord(o + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(ground));
         tO->step_y = 0;
-        SetLong(o + 0x20, 0);
+        rv::Store<std::int32_t>(rv::As<records::SpriteObject>(o)->work_20, 0);
         o[4] = 2;
         AH_CALL(Sprite_SetAnimation)(0x39);
         MoveScript_Object[1] = 4;
@@ -922,7 +922,7 @@ extern "C" void __cdecl Area172_FallStep(void) {
         o[0x5F] = static_cast<unsigned char>(o[0x5F] + 4);
     }
     SetLong(Mem(Sprite_Kind2_addr + 0x3c), tO->height);
-    AH_CALL(MapView_SetElevation)(static_cast<int>(Word(o + 0x3E)));
+    AH_CALL(MapView_SetElevation)(static_cast<int>(rv::As<records::SpriteObject>(o)->height_whole));
 }
 
 // original 0x427DF0 (area 172 +0x3C[3] = +0x34[4]; PSX 0x801F471C):
@@ -1151,8 +1151,8 @@ extern "C" void __cdecl Area172_DrawPanel(int x, int y) {
     SetFloatInt(p + 0x2C, sy + 0x20);
     SetFloatInt(p + 0x3C, sy + 0x20);
     p[0x34] = 0;
-    SetWord(p + 0x16, AH_CALL(Gpu_GetClut)(0, 0x1EB));
-    SetWord(p + 0x26, AH_CALL(Gpu_GetTPage)(1, 1, 0x300, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, AH_CALL(Gpu_GetClut)(0, 0x1EB));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, AH_CALL(Gpu_GetTPage)(1, 1, 0x300, 0x100));
     p[4] = 0x80;
     p[5] = 0x80;
     p[6] = 0x80;

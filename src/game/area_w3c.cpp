@@ -82,7 +82,7 @@ void PlaceRandomObject(U cells, U weights) {
         tObject->x = x;
         tObject->z = z;
         const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
-        SetWord(object + 0x3E, static_cast<unsigned>(ground));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->height_whole, static_cast<unsigned>(ground));
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
@@ -117,9 +117,9 @@ void EffectAtObject(unsigned char kind, bool clear1) {
     e[0] = 1;
     e[5] = kind;
     if (clear1) e[1] = 0;
-    tE->x = Long(Sprite_Current + 0x34);
-    tE->z = Long(Sprite_Current + 0x38);
-    tE->height = Long(Sprite_Current + 0x3C);
+    tE->x = rv::Current<records::SpriteHead>()->x;
+    tE->z = rv::Current<records::SpriteHead>()->z;
+    tE->height = rv::Current<records::SpriteHead>()->height;
 }
 
 // The patch chain the inits of areas 94 and 128 apply: from AreaMap_Header

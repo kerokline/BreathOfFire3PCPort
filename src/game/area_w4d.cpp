@@ -565,7 +565,7 @@ extern "C" void __cdecl Area175_OpenScriptMessage(void) {
     unsigned char* const object = MoveScript_Object;
     const U scripts = static_cast<U>(Long(Mem(descriptor + 0x10)));
     const U script = static_cast<U>(Long(Mem(scripts + object[3] * 4u)));
-    const unsigned char operand = B(script + Word(object + 0xA) + 2);
+    const unsigned char operand = B(script + rv::As<records::ScriptContext>(object)->position + 2);
     AH_CALL(Msg_OpenScript)(static_cast<unsigned short>(Word(Mem(Area175_ScriptMessages_addr + operand * 2u))));
     Field_Request = 2;
     MoveScript_Object[0] = static_cast<unsigned char>(MoveScript_Object[0] & 0xEF);

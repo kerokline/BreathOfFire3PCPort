@@ -22,6 +22,7 @@
 #include "game/area_w3f.h"
 #include "game/area_w3f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w3f {
@@ -243,7 +244,7 @@ U FindFreeEffect(const U*, U answer) {
 U GroundEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) MoveCurrent(n >> 4);
-    if (n & 2) answer = (answer & 0xFFFF0000u) | ((Word(Sprite_Current + 0x3E) + (n >> 8) % 3 - 1) & 0xFFFFu);
+    if (n & 2) answer = (answer & 0xFFFF0000u) | ((rv::Current<records::SpriteHead>()->height_whole + (n >> 8) % 3 - 1) & 0xFFFFu);
     return answer;
 }
 // Item_NamePtr answers the fuzz's name buffer, filled.
@@ -499,7 +500,7 @@ void Args143(unsigned k, std::uint32_t* a) {
 void SeedZ(U target) {
     if (!ah::Often()) return;
     static const std::int32_t kOff[] = {0, 1, 0x7FFF, 0x8000, -1, -0x8000, -0x8001, 0x10000, -0x10000, 0x7FFFFF};
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(target - static_cast<U>(kOff[ah::Next() % 10])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(target - static_cast<U>(kOff[ah::Next() % 10])));
 }
 void Seed144(unsigned k) {
     Common(144, k);
@@ -532,7 +533,7 @@ void Seed145(unsigned k) {
         }
         break;
     case k145DropFall:
-        if (ah::Half()) SetLong(Sprite_Current + 0x20, static_cast<std::int32_t>(AH_PICK(0, 1, 0xFFFFFFF8u, 0x80000000u, 0x7FFFFFFF)));
+        if (ah::Half()) rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_20, static_cast<std::int32_t>(AH_PICK(0, 1, 0xFFFFFFF8u, 0x80000000u, 0x7FFFFFFF)));
         break;
     case k145ByMember1: SeedMemberKeys(Area145_MemberKeys1_addr); break;
     case k145ByMember5: SeedMemberKeys(Area145_MemberKeys5_addr); break;

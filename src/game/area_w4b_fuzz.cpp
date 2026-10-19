@@ -348,7 +348,7 @@ U TickEffect(const U*, U answer) {
 U GroundEffect(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) MoveCurrent(n >> 4);
-    if (n & 2) answer = (answer & 0xFFFF0000u) | ((Word(Sprite_Current + 0x3E) + (n >> 8) % 3 - 1) & 0xFFFFu);
+    if (n & 2) answer = (answer & 0xFFFF0000u) | ((rv::Current<records::SpriteHead>()->height_whole + (n >> 8) % 3 - 1) & 0xFFFFu);
     return answer;
 }
 // Area172_SlideStep: writes the running object's +0, +4 and tint bytes
@@ -786,7 +786,7 @@ void Seed172(unsigned k) {
     case k172EffStart: case k172EffHold: Sprite_Current = EffectRecord(ah::Next() % 4); break;
     case k172EffGrow:
         Sprite_Current = EffectRecord(ah::Next() % 4);
-        if (ah::Often()) SetWord(Sprite_Current + 0x2E, AH_PICK(0x186, 0x187, 0x188, 0x190, 0x17C, 0x7FF8, 0xFFF6, 0));
+        if (ah::Often()) rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, AH_PICK(0x186, 0x187, 0x188, 0x190, 0x17C, 0x7FF8, 0xFFF6, 0));
         break;
     default: break;
     }

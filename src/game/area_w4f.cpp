@@ -751,15 +751,15 @@ extern "C" void __cdecl Area198_SinkFade(void) {
     }
     object[2] = static_cast<unsigned char>(object[2] + 1);
     unsigned char* c = Sprite_Current;
-    if (static_cast<std::int16_t>(Word(c + 0x3E)) < -0x280) {
+    if (static_cast<std::int16_t>(rv::As<records::SpriteObject>(c)->height_whole) < -0x280) {
         for (unsigned off = 0x5D; off <= 0x5F; ++off) {
             if (c[off] == 0x80) continue;
             c[off] = static_cast<unsigned char>(c[off] - 1);
             c = Sprite_Current;
         }
     }
-    if (Word(c + 0x3E) == 0xF600) B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
-    if (static_cast<std::int16_t>(Word(c + 0x3E)) > static_cast<std::int16_t>(0xF380)) {
+    if (rv::As<records::SpriteObject>(c)->height_whole == 0xF600) B(at::kCounter0) = static_cast<unsigned char>(B(at::kCounter0) + 1);
+    if (static_cast<std::int16_t>(rv::As<records::SpriteObject>(c)->height_whole) > static_cast<std::int16_t>(0xF380)) {
         ScriptStep(-2);
         return;
     }
@@ -795,7 +795,7 @@ extern "C" void __cdecl Area198_Shake(void) {
     {
         unsigned char* const c = Sprite_Current;
         const int s = ShakeStep(Area198_ShakeSteps_addr);
-        SetWord(c + 0x3E, static_cast<unsigned>(Word(c + 0x3E) + (static_cast<unsigned>(s) << 4)));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(c)->height_whole, static_cast<unsigned>(rv::As<records::SpriteObject>(c)->height_whole + (static_cast<unsigned>(s) << 4)));
     }
     Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] - 1);
     ScriptStep(-2);
@@ -874,20 +874,20 @@ extern "C" void __cdecl Area198_SpawnDrop(void) {
     SetWord(Mem(at::kObjectIndex), slot);
     if (slot != 0xFF) {
         AH_CALL(EventOp_0x)(Mem(Area198_DropOp_addr));
-        SetLong(Sprite_Current + 0x10, 0);
-        SetLong(Sprite_Current + 0xC, 0);
-        SetLong(Sprite_Current + 0x14, 8);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_z, 0);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_x, 0);
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->step_y, 8);
         Sprite_Current[9] = 0x10;
         const int r = AH_CALL(Rand)();
-        SetWord(Sprite_Current + 0x3E, static_cast<unsigned>((r % 30 - 6) << 5));
+        rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>((r % 30 - 6) << 5));
         Sprite_Current[0x2B] = 1;
         unsigned char a, b;
         do {
             a = static_cast<unsigned char>(AH_CALL(Rand)() % 14 + 0x10);
             b = static_cast<unsigned char>(AH_CALL(Rand)() % 25 + 0xB);
         } while (static_cast<int>(a) - 0x15 < 5 && static_cast<int>(b) - 0x10 < 5);
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(static_cast<U>(a) << 16));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(static_cast<U>(b) << 16));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, static_cast<std::int32_t>(static_cast<U>(a) << 16));
+        rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, static_cast<std::int32_t>(static_cast<U>(b) << 16));
     }
     Sprite_Current = self;
     self[0xB] = static_cast<unsigned char>(self[0xB] + 1);
@@ -912,9 +912,9 @@ extern "C" void __cdecl Area198_SpawnEffectA7(void) {
     auto* const tR34 = rv::As<records::EffectObject>(r34);
     tR34->x = tC->x;
     const std::int32_t z = tC->z;
-    SetLong(EffectAt(c[0xB]) + 0x38, z);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(c[0xB]))->z, z);
     const std::int32_t y = tC->height;
-    SetLong(EffectAt(c[0xB]) + 0x3C, static_cast<std::int32_t>(static_cast<U>(y) + 0x1000000u));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(EffectAt(c[0xB]))->height, static_cast<std::int32_t>(static_cast<U>(y) + 0x1000000u));
 }
 
 // original 0x42D470 (area 198 +0x3C[11]; PSX 0x801F39B0): the running
@@ -942,9 +942,9 @@ extern "C" void __cdecl Area198_EffectA6Run(void) {
 // +0x24 0, +0x2A 0; Sprite_SetAnimation(the animation of record +6); +1 1;
 // then a tail jmp into state 1 (0x42D580, the next byte).
 extern "C" void __cdecl Area198_EffectA6Start(void) {
-    SetLong(Sprite_Current + 0x34, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->x);
-    SetLong(Sprite_Current + 0x38, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->z);
-    SetLong(Sprite_Current + 0x3C, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->height);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->x, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->x);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->z, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->z);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->height, rv::As<records::SpriteObject>(ObjectAt(Sprite_Current[7]))->height);
     AH_CALL(Sprite_SetAnimationBank)(Word(A6Record(Sprite_Current[6]) + 4));
     Sprite_Current[0x48] = 1;
     Sprite_Current[0x24] = 0;
@@ -974,22 +974,22 @@ extern "C" void __cdecl Area198_EffectA6Follow(void) {
     Sprite_Current[0x5F] = o[0x5F];
     Sprite_Current[0x27] = o[0x27];
     Sprite_Current[0x48] = o[0x48];
-    SetLong(Sprite_Current + 0x40, tO->scale_x);
-    SetLong(Sprite_Current + 0x44, tO->scale_y);
-    SetWord(Sprite_Current + 0x2E, static_cast<std::uint16_t>(tO->screen_x));
-    SetWord(Sprite_Current + 0x30, static_cast<std::uint16_t>(tO->screen_y));
-    SetWord(Sprite_Current + 0x32, tO->draw_key);
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_x, tO->scale_x);
+    rv::Store<std::int32_t>(rv::Current<records::EffectObject>()->scale_y, tO->scale_y);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, static_cast<std::uint16_t>(tO->screen_x));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, static_cast<std::uint16_t>(tO->screen_y));
+    rv::Store<unsigned>(rv::Current<records::EffectObject>()->draw_key, tO->draw_key);
     SetLong(Sprite_Current + 0x60, tO->depth);
     Sprite_Current[0x29] = 6;
     unsigned char* c = Sprite_Current;
     if (c[0x48] != 0) {
-        std::int32_t scale = Long(c + 0x40);
+        std::int32_t scale = rv::As<records::EffectObject>(c)->scale_x;
         unsigned char* w = c + 0x2E;
         std::int32_t v = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int16_t>(Word(A6Record(c[6])))) * static_cast<U>(scale));
         unsigned short r = RoundHigh(v, scale);
         SetWord(w, static_cast<unsigned>(Word(w) + r));
         c = Sprite_Current;
-        scale = Long(c + 0x44);
+        scale = rv::As<records::EffectObject>(c)->scale_y;
         w = c + 0x30;
         v = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int16_t>(Word(A6Record(c[6]) + 2))) * static_cast<U>(scale));
         r = RoundHigh(v, scale);

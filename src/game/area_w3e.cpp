@@ -388,8 +388,8 @@ extern "C" void __cdecl Area140_FollowAndAct(void) {
     const unsigned char* const cur = Sprite_Current;
     const unsigned char d = cur[8];
     const unsigned char* const delta = Mem(at::kCellDelta + d * 2u);
-    const auto x = static_cast<std::uint16_t>(static_cast<signed char>(delta[0]) + Word(cur + 0x36));
-    const auto z = static_cast<std::uint16_t>(static_cast<signed char>(delta[1]) + Word(cur + 0x3A));
+    const auto x = static_cast<std::uint16_t>(static_cast<signed char>(delta[0]) + rv::As<records::SpriteObject>(cur)->x_whole);
+    const auto z = static_cast<std::uint16_t>(static_cast<signed char>(delta[1]) + rv::As<records::SpriteObject>(cur)->z_whole);
     if (B(ObjTrio_addr + 0x9) != 0 && B(ObjTrio_addr + 0x137) == 1) {
         if (AH_CALL(Area140_BlockedAhead)(x, z) == 0 && static_cast<std::uint16_t>(x - 0x44) < 0xD &&
             static_cast<std::uint16_t>(z - 6) < 0xB) {
@@ -599,7 +599,7 @@ extern "C" void __cdecl Area140_Effect71Count(void) {
 extern "C" void __cdecl Area140_Effect71End(void) {
     AH_CALL(Flags_Clear)(StoryFlags(), Sprite_Current[0xB]);
     const unsigned char* const cur = Sprite_Current;
-    AH_CALL(MoveCmd_TestFB)(static_cast<short>(Word(cur + 0x36)), static_cast<short>(Word(cur + 0x3A)));
+    AH_CALL(MoveCmd_TestFB)(static_cast<short>(rv::As<records::EffectObject>(cur)->x_whole), static_cast<short>(rv::As<records::EffectObject>(cur)->z_whole));
     AH_CALL(Effect_Release)();
 }
 
