@@ -30,6 +30,7 @@
 #include "game/battle_turn_steps_callees.h"
 #include "game/psp_code.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -520,7 +521,7 @@ void Seed(unsigned k) {
         break;
     }
     case kWinK:
-        for (unsigned i = 0; i < 3; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->flags = static_cast<unsigned char>(reinterpret_cast<records::PartyMember*>(Member(i))->flags ^ (Half() ? 1 : 0));
+        for (unsigned i = 0; i < 3; ++i) rv::As<records::PartyMember>(Member(i))->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(Member(i))->flags ^ (Half() ? 1 : 0));
         if (Half()) B(BattleTurnSteps_MusicFlags_addr) ^= 0x40;
         break;
     case kInputK:

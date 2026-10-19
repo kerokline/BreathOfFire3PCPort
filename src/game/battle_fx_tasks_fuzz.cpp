@@ -19,6 +19,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_fx_tasks_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -76,14 +77,14 @@ void Disturb() {
     case 0: Sprite_Current = AnySlot(w); break;
     case 1: SetPtr(BattleFlow_TaskCurrent_addr, AnySlot(w)); break;
     case 2: SetPtr(BattleE2_Owner_addr, AnyOwner(w)); break;
-    case 3: reinterpret_cast<records::BattleTask*>(CurSlot())->state = static_cast<unsigned char>(v % 6); break;
-    case 4: reinterpret_cast<records::BattleTask*>(CurSlot())->mode = static_cast<unsigned char>(v % 5); break;
+    case 3: rv::As<records::BattleTask>(CurSlot())->state = static_cast<unsigned char>(v % 6); break;
+    case 4: rv::As<records::BattleTask>(CurSlot())->mode = static_cast<unsigned char>(v % 5); break;
     case 5: Sprite_Current[0] = static_cast<unsigned char>(v); break;
     case 6: At(at::kPhase)[0] = static_cast<unsigned char>(v % 7); break;
     case 7: At(at::kRoundCount)[0] = static_cast<unsigned char>(v); break;
     case 8: Owner()[0] = static_cast<unsigned char>(v); break;
     case 9: Owner()[5] = static_cast<unsigned char>(v % 11); break;
-    case 10: reinterpret_cast<records::BattleTask*>(CurSlot())->clut = static_cast<unsigned char>(v); break;
+    case 10: rv::As<records::BattleTask>(CurSlot())->clut = static_cast<unsigned char>(v); break;
     case 11: SetWord(CurSlot() + 0x36 + 4 * (w % 2), h >> 16); break;
     case 12: SetLong(At(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     default: SetWord(CurSlot() + 0x60, h >> 16); break;
@@ -351,7 +352,7 @@ void Fix() {
     SetPtr(BattleE2_Owner_addr, AnyOwner(Next()));
     for (unsigned i = 0; i < at::kTaskCount; ++i) {
         unsigned char* const t = Slot(i);
-        auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+        auto* const task_rec = rv::As<records::BattleTask>(t);
         SetPtr(Address(t + 0x80), AnyOwner(Next()));
         task_rec->param = static_cast<unsigned char>(Next() % 11);
         SetWord(t + 0x2C, Next() % 8);
@@ -369,7 +370,7 @@ struct Args { std::uint32_t a[4]; };
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
     unsigned char* const t = CurSlot();
-    auto* const task_rec = reinterpret_cast<records::BattleTask*>(t);
+    auto* const task_rec = rv::As<records::BattleTask>(t);
     unsigned char* const sc = Sprite_Current;
     unsigned char* const o = Owner();
     switch (k) {

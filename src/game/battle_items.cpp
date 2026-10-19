@@ -27,6 +27,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_items_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -720,7 +721,7 @@ extern "C" void __cdecl BattleActor_PlaySound(unsigned first, unsigned second) {
         if (static_cast<unsigned char>(second) != 0) g.actor_sound(second);
         return;
     }
-    auto* const enemy_rec = reinterpret_cast<const records::BattleEnemy*>(At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride));
+    auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(At(at::kEnemyRecords + (index - 3u) * at::kEnemyStride));
     if (BattleActions_EventBattle != 0) {
         const auto* const cue = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::int32_t>(enemy_rec->cue_table)));
         g.enemy_sound(Word(cue));

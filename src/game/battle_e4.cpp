@@ -37,6 +37,7 @@
 #include "game/battle_e4_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -69,9 +70,6 @@ unsigned char* Enemy(unsigned actor) { return At(at::kEnemies + ((actor & 0xFF) 
 unsigned char* CharRecord(unsigned index) { return At(at::kCharRecords + (index & 0xFF) * at::kCharStride); }
 unsigned char* MenuActor() { return Ptr(at::kMenuActor); }
 unsigned char* Command() { return Ptr(at::kCommand); }
-records::PartyMember* PartyRec(unsigned member) { return reinterpret_cast<records::PartyMember*>(Party(member)); }
-records::BattleEnemy* EnemyRec(unsigned actor) { return reinterpret_cast<records::BattleEnemy*>(Enemy(actor)); }
-records::PartyMember* MenuActorRec() { return reinterpret_cast<records::PartyMember*>(MenuActor()); }
 std::int32_t S32(U v) { return static_cast<std::int32_t>(v); }
 short S16(unsigned v) { return static_cast<short>(static_cast<unsigned short>(v)); }
 unsigned Low(U v) { return v & 0xFF; }
@@ -127,7 +125,7 @@ void RefreshMembers() {
     const unsigned n = static_cast<U>(Long(At(at::kPartyCount))) & 0xFF;
     for (unsigned k = 0; k < n; ++k) {
         unsigned char* const p = Party(k);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         const unsigned char* const r = CharRecord(member_rec->char_index);
         for (unsigned i = 0; i < 6; ++i) p[0x92 + i] = r[0x12 + i];
         std::memcpy(p + 0xC0, r + 0x20, 0x20);
@@ -135,7 +133,7 @@ void RefreshMembers() {
     BH_CALL(Formation_ApplyStatMods)();
     for (unsigned k = 0; k < 3; ++k) {
         unsigned char* const p = Party(k);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         if (member_rec->flags & 1) std::memcpy(p + 0xA0, p + 0xC0, 0x20);
     }
     BH_AT(VoidFn, at::kAfterEquip)();
@@ -187,7 +185,7 @@ void SlotHand() {
 
 // The equipped item's word (the member's +0x126: category << 8 | item) and its
 // flag byte, for the member choosing.
-unsigned MemberItem() { return Word(Party(MenuActorRec()->member) + 0x126); }
+unsigned MemberItem() { return Word(Party(rv::As<records::PartyMember>(MenuActor())->member) + 0x126); }
 
 // A side's target by the flag byte: bit 0x20 the enemies (0x40), else the
 // party (0x80) - neg / sbb / and 0xC0 / add 0x80.
@@ -283,7 +281,7 @@ extern "C" void __cdecl BattleWin_DrawTileTint(int x, int y, int size) {
 // 1 when the enemy's u16 +0xB8 is at least twice the average's low word
 // (signed compare of the two ints) and at least the highest's low word.
 extern "C" unsigned char __cdecl Battle_EnemyOutpaces(unsigned actor, unsigned average, unsigned highest) {
-    const unsigned pace = EnemyRec(actor)->agi;
+    const unsigned pace = rv::As<records::BattleEnemy>(Enemy(actor))->agi;
     if (S32((average & 0xFFFF) << 1) > S32(pace)) return 0;
     if ((highest & 0xFFFF) > pace) return 0;
     return 1;
@@ -352,12 +350,12 @@ extern "C" int __cdecl Battle_HitOrMissEnemy(int amount, unsigned attacker, unsi
     const unsigned a = Low(attacker);
     const bool dazed = a <= 2 ? (Party(a)[0x90] & 8) != 0 : (Enemy(a)[0x92] & 8) != 0;
     if (dazed && (BH_CALL(Rand)() & 2)) {
-        EnemyRec(target)->shown &= 0xEF;
+        rv::As<records::BattleEnemy>(Enemy(target))->shown &= 0xEF;
         return 0;
     }
-    if (a <= 2 && (static_cast<U>(static_cast<std::int32_t>(PartyRec(a)->flags_134)) & 0x100)) return hit;
+    if (a <= 2 && (static_cast<U>(static_cast<std::int32_t>(rv::As<records::PartyMember>(Party(a))->flags_134)) & 0x100)) return hit;
     unsigned char* const e = Enemy(target);
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     if ((e[0x90] & 4) == 0 || (BH_CALL(Rand)() & 2) == 0) {
         if (a > 2) return hit;
         const int roll = BH_CALL(Rand)() % 100;
@@ -374,7 +372,7 @@ extern "C" int __cdecl Battle_HitOrMissEnemy(int amount, unsigned attacker, unsi
 extern "C" int __cdecl Battle_PartyDefenceMean(void) {
     const unsigned n = static_cast<U>(Long(At(at::kPartyCount))) & 0xFF;
     U sum = 0;
-    for (unsigned i = 0; i < n; ++i) sum += PartyRec(i)->def;
+    for (unsigned i = 0; i < n; ++i) sum += rv::As<records::PartyMember>(Party(i))->def;
     if (n == 0)
         bof3::Fatal("Battle_PartyDefenceMean: the party count 0x904AB0 is 0 - the original divides by it (docs/battle_e4.md "
                     "section 7)");
@@ -394,12 +392,12 @@ extern "C" void __cdecl Battle_SetHpChange(unsigned actor) {
     };
     if (a <= 2) {
         unsigned char* const p = Party(a);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         if (p[0x90] & 0x80) SetWord(p + 0x128, tenth(member_rec->hp));
         return;
     }
     unsigned char* const e = Enemy(a);
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     if (e[0x92] & 0x80) enemy_rec->hp_change = tenth(enemy_rec->hp);
 }
 
@@ -489,7 +487,7 @@ extern "C" unsigned char __cdecl Battle_MemberReactRoll(void) {
         return 0;
     }
     unsigned char* const fs = Field_State;
-    auto* const member_rec = reinterpret_cast<records::PartyMember*>(fs);
+    auto* const member_rec = rv::As<records::PartyMember>(fs);
     const U word = static_cast<U>(static_cast<std::int32_t>(member_rec->flags_130));
     if (word & 1) return 0;
     if (B(at::kActor) < 3) return 0;
@@ -507,7 +505,7 @@ extern "C" unsigned char __cdecl Battle_MemberReactRoll(void) {
 // copied to the record's +0x10. The member byte alone indexes (0..2 by its
 // only caller, Battle_WriteBackParty).
 extern "C" void __cdecl Battle_WriteBackMember(unsigned member) {
-    auto* const member_rec = PartyRec(member);
+    auto* const member_rec = rv::As<records::PartyMember>(Party(member));
     if ((member_rec->flags & 1) == 0) return;
     unsigned char* const r = CharRecord(member_rec->char_index);
     SetWord(r + 0x18, member_rec->hp);
@@ -529,14 +527,14 @@ extern "C" void __cdecl Battle_PickEnemyTarget(void) {
     for (unsigned a = 3; a <= 10; ++a) {
         if (BH_CALL(Battle_ActorIsOut)(a) != 0) continue;
         const unsigned char* const e = Enemy(a);
-        auto* const enemy_rec = reinterpret_cast<const records::BattleEnemy*>(e);
+        auto* const enemy_rec = rv::AsConst<records::BattleEnemy>(e);
         if (top < enemy_rec->level) top = e[0x98];
     }
     unsigned lowest = 0xFFFF;
     unsigned char pick = 0;
     for (unsigned a = 3; a <= 10; ++a) {
         if (BH_CALL(Battle_ActorIsOut)(a) != 0) continue;
-        auto* const enemy_rec = EnemyRec(a);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(a));
         if (top != enemy_rec->level) continue;
         const unsigned hp = enemy_rec->hp;
         if (lowest < hp) continue;
@@ -553,7 +551,7 @@ extern "C" void __cdecl Battle_PickEnemyTarget(void) {
 // 10000.
 extern "C" unsigned char __cdecl Battle_WakeRoll(unsigned actor) {
     const unsigned a = Low(actor);
-    const unsigned char count = a <= 2 ? Party(a)[0x12D] : EnemyRec(a)->counter;
+    const unsigned char count = a <= 2 ? Party(a)[0x12D] : rv::As<records::BattleEnemy>(Enemy(a))->counter;
     if (count == 0) return 0;
     const int chance = count >= 3 ? 0x4B : B(at::kWakeChance + count);
     if (chance >= BH_CALL(Rand)() % 100) return 1;
@@ -913,7 +911,7 @@ extern "C" void __cdecl BattleItemCmd_EquipUsePick(void) {
         if (Word(At(BattleE4_Slots_addr + 0x10)) != 0) {
             BH_CALL(Sound_PlayEffect)(0x103);
             unsigned char* const actor = MenuActor();
-            auto* const member_rec = PartyRec(actor[5]);
+            auto* const member_rec = rv::As<records::PartyMember>(Party(actor[5]));
             member_rec->flags_130 = S32(static_cast<U>(static_cast<std::int32_t>(member_rec->flags_130)) | 0x4000);
             unsigned char* const m2 = Party(actor[5]);
             const unsigned word = Word(At(BattleE4_Slots_addr + 0x10));
@@ -960,7 +958,7 @@ extern "C" void __cdecl BattleItemCmd_EquipUseKind(void) {
         BattleE4_Step4 = 3;
         return;
     }
-    const unsigned char target = (f & 0x10) ? SideTarget(f) : MenuActorRec()->member;
+    const unsigned char target = (f & 0x10) ? SideTarget(f) : rv::As<records::PartyMember>(MenuActor())->member;
     Command()[0] = target;
     BattleE4_Step3 = 8;
     BattleE4_Step4 = 3;
@@ -1104,7 +1102,7 @@ extern "C" void __cdecl BattleItemCmd_EquipCommit(void) {
     unsigned char* const command = Command();
     BattleE4_Picking = 0;
     command[1] = 5;
-    MenuActorRec()->state[0] = 2;
+    rv::As<records::PartyMember>(MenuActor())->state[0] = 2;
     BattleActorCopies_EntryCount = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     B(at::kQueue + 1 + LastQueueEntry()) = 1;
     BH_CALL(ItemMenu_FreeWindows)();
@@ -1335,7 +1333,7 @@ extern "C" void __cdecl Escape_Roll(void) {
     U party = 0;
     if (B(at::kPartyCount) != 0) {
         for (unsigned m = 0;;) {
-            if (BH_CALL(Battle_ActorIsOut)(m) == 0) party += PartyRec(m)->agi;
+            if (BH_CALL(Battle_ActorIsOut)(m) == 0) party += rv::As<records::PartyMember>(Party(m))->agi;
             ++m;
             if (!(static_cast<int>(m) < static_cast<int>(static_cast<U>(Long(At(at::kPartyCount))) & 0xFF))) break;
         }
@@ -1392,7 +1390,7 @@ extern "C" void __cdecl Escape_Begin(void) {
         for (unsigned char m = 0;;) {
             if (BH_CALL(Battle_ActorIsOut)(m) == 0) {
                 unsigned char* const p = Party(m);
-                auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+                auto* const member_rec = rv::As<records::PartyMember>(p);
                 member_rec->direction ^= 2;
                 p[0x125] = 0;
                 member_rec->state[0] = 2;
@@ -1442,7 +1440,7 @@ extern "C" void __cdecl Escape_Failed(void) {
     if (B(at::kPartyCount) != 0) {
         for (unsigned char m = 0;;) {
             if (BH_CALL(Battle_ActorIsOut)(m) == 0) {
-                auto* const member_rec = PartyRec(m);
+                auto* const member_rec = rv::As<records::PartyMember>(Party(m));
                 member_rec->direction ^= 2;
                 member_rec->state[0] = 2;
                 BH_CALL(Battle_ReturnQueuedItem)(m);
@@ -1530,7 +1528,7 @@ extern "C" unsigned char __cdecl Escape_Chance(int diff) {
 // original 0x44A910 (PSX 0x801DE964): the member's name (its character record
 // by 0x66972C of its +0x89) into Text_Records[0], 8 bytes (Str_CopyN).
 extern "C" void __cdecl Battle_MemberNameToText(unsigned member) {
-    const unsigned char c = B(at::kCharOf + PartyRec(member)->char_id);
+    const unsigned char c = B(at::kCharOf + rv::As<records::PartyMember>(Party(member))->char_id);
     BH_CALL(Str_CopyN)(reinterpret_cast<char*>(At(at::kTextRecord0)), reinterpret_cast<const char*>(CharRecord(c)), 8);
 }
 

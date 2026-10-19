@@ -18,6 +18,7 @@
 #include "game/battle_e2_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -383,7 +384,7 @@ void SeedMarkers() {
 // velocity and the destination at their meeting point half the time.
 void SeedOp(U base) {
     unsigned char* const s = Sprite_Current;
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy());
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     s[8] = Byte({0, 1, 2, 3, 4});
     s[0xA] = Byte({1, 1, 2, 0, 4});
     s[9] = Byte({1, 1, 2, 0});
@@ -472,7 +473,7 @@ void Seed(unsigned k) {
         // every enemy's fields: the argument picks one
         for (unsigned i = 0; i < 8; ++i) {
             unsigned char* const x = bh::EnemyAt(i);
-            auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(x);
+            auto* const enemy_rec = rv::As<records::BattleEnemy>(x);
             enemy_rec->intel = Byte({0, 1, 2, 0xFF});
             x[0x92] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x92] | 0x20 : x[0x92] & 0xDF);
             x[0x115] = static_cast<unsigned char>(bh::Next() % 4 == 0 ? x[0x115] | 0x40 : x[0x115] & 0xBF);

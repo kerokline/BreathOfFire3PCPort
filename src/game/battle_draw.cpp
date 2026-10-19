@@ -36,6 +36,7 @@
 #include "game/list_title.h"
 #include "game/text_advance.h"
 #include "game/battle_draw_callees.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
@@ -279,7 +280,7 @@ std::uint32_t ListTitle_SiteDraw() { return g_title_site_draw; }
 bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const window_rec = rv::As<records::WindowRecord>(w);
     g.box(static_cast<U>(window_rec->centre_x) + 3, static_cast<U>(window_rec->centre_y) + 3, 0x99, 0x82, w[9], static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0xB, &offset, &moving, w + 0x12);
@@ -376,7 +377,7 @@ extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
 // countdown in +9 stepped down, the frame's pieces (two more with word +0x14)
 // and the scroll bar over the list's 10 entries.
 extern "C" void __cdecl BattleMenu_DrawSkillList(unsigned char* w) {
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const window_rec = rv::As<records::WindowRecord>(w);
     g.box(static_cast<U>(window_rec->centre_x) + 3, static_cast<U>(window_rec->centre_y) + 3, 0x99, 0x82, 0, static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0, moving = 0;
     const unsigned char top = g.list_scroll(w + 0x10, &offset, &moving, w + 0x12);

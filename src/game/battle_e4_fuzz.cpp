@@ -27,6 +27,7 @@
 #include "game/battle_e4_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/log.h"
 
@@ -245,7 +246,7 @@ unsigned char* Enemy(unsigned actor) { return M(at::kEnemies + ((actor & 0xFF) -
 // and member, record 16's category.
 void Indices() {
     for (unsigned m = 0; m < 3; ++m) {
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(bh::PartyOf(static_cast<unsigned char>(m)));
+        auto* const member_rec = rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(m)));
         member_rec->member = static_cast<unsigned char>(bh::Often() ? m : bh::Next() % 3);
         member_rec->char_index = static_cast<unsigned char>(bh::Next() % 8);
         member_rec->char_id = static_cast<unsigned char>(bh::Next() % 8);
@@ -270,7 +271,7 @@ void Settle() {
     unsigned char* const category = M(BattleE4_List_addr + 0xA);
     if (*category > 4) *category = static_cast<unsigned char>(*category % 5);
     for (unsigned m = 0; m < 3; ++m) {
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(bh::PartyOf(static_cast<unsigned char>(m)));
+        auto* const member_rec = rv::As<records::PartyMember>(bh::PartyOf(static_cast<unsigned char>(m)));
         if (member_rec->member > 2) member_rec->member = static_cast<unsigned char>(member_rec->member % 3);
     }
 }
@@ -326,7 +327,7 @@ void Seed(unsigned k) {
         break;
     case 0x446810: {
         unsigned char* const fs = Field_State;
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(fs);
+        auto* const member_rec = rv::As<records::PartyMember>(fs);
         M(at::kFlags)[0] = static_cast<unsigned char>(bh::Next() % 3 == 0 ? M(at::kFlags)[0] | 0x40 : M(at::kFlags)[0] & 0xBF);
         M(at::kActor)[0] = static_cast<unsigned char>(bh::Next() % 11);
         if (bh::Often()) fs[0x130] &= 0xFE;
@@ -351,14 +352,14 @@ void Seed(unsigned k) {
         break;
     case 0x446B00:   // equal +0x98 words, so the second pass has ties to break
         for (unsigned a = 3; a <= 10; ++a) {
-            auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy(a));
+            auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy(a));
             enemy_rec->level = bh::Often() ? bh::Next() % 4 : bh::Next();
             if (bh::Half()) enemy_rec->hp = bh::Next() % 4;
         }
         break;
     case 0x446CB0:
         for (unsigned m = 0; m < 3; ++m) bh::PartyOf(static_cast<unsigned char>(m))[0x12D] = Byte({0, 1, 2, 3, 4, 0xFF});
-        for (unsigned a = 3; a <= 10; ++a) reinterpret_cast<records::BattleEnemy*>(Enemy(a))->counter = Byte({0, 1, 2, 3, 4, 0xFF});
+        for (unsigned a = 3; a <= 10; ++a) rv::As<records::BattleEnemy>(Enemy(a))->counter = Byte({0, 1, 2, 3, 4, 0xFF});
         break;
     case 0x446D90:   // counts at 99 here and there
         for (unsigned c = 0; c < 4; ++c) {
@@ -421,7 +422,7 @@ void Args(unsigned k, U* a) {
     switch (g_cur[k].base) {
     case 0x445600: {
         a[0] = Garbage(3 + bh::Next() % 8);
-        const U pace = reinterpret_cast<records::BattleEnemy*>(Enemy(a[0]))->agi;
+        const U pace = rv::As<records::BattleEnemy>(Enemy(a[0]))->agi;
         a[1] = (bh::Half() ? bh::Next() & 0xFFFF0000u : 0) | (Word16({pace / 2, pace / 2 + 1, (pace + 1) / 2, bh::Next()}) & 0xFFFF);
         a[2] = (bh::Half() ? bh::Next() & 0xFFFF0000u : 0) | (Word16({pace, pace + 1, pace - 1, bh::Next()}) & 0xFFFF);
         break;

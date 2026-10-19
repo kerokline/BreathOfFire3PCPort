@@ -32,6 +32,7 @@
 #include "game/battle_result_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -80,10 +81,7 @@ unsigned char* Member(unsigned slot) { return At(at::kMembers + (slot & 0xFF) * 
 unsigned char* WindowSlot(unsigned slot) { return At(at::kWindows + slot * at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
 unsigned char* CurrentWindow() { return At(BattleWinStates_Current); }
-records::WindowRecord* WindowSlotRec(unsigned slot) { return reinterpret_cast<records::WindowRecord*>(WindowSlot(slot)); }
-records::WindowRecord* CurrentWindowRec() { return reinterpret_cast<records::WindowRecord*>(CurrentWindow()); }
 // Member() is +0x80 into the member record (0x802DC0); the record starts 0x80 before.
-records::PartyMember* MemberRec(unsigned slot) { return reinterpret_cast<records::PartyMember*>(Member(slot) - 0x80); }
 char* Text(std::uint32_t address) { return reinterpret_cast<char*>(At(address)); }
 const char* Format(std::uint32_t address) { return reinterpret_cast<const char*>(At(address)); }
 
@@ -145,7 +143,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_OpenExp
     const auto height = static_cast<unsigned char>((Byte(at::kPartyCount) << 4) + 4);
     const std::uint32_t exp = BattleFlow_ExpTotal;
     unsigned char* const w = WindowSlot(1);
-    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    auto* const window_rec = rv::As<records::WindowRecord>(w);
     window_rec->kind = 4;
     window_rec->state = 0;
     w[9] = height;
@@ -221,7 +219,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_LevelUp
 // on is 0x4469D0's whole answer (a byte, zero-extended by the callee).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_FindLevelUp(void) {
     while (BossSb_Countdown < Byte(at::kPartyCount)) {
-        const unsigned index = g.roster_index(MemberRec(BossSb_Countdown)->char_id);
+        const unsigned index = g.roster_index(rv::As<records::PartyMember>(Member(BossSb_Countdown) - 0x80)->char_id);
         const auto next = static_cast<unsigned char>(BossSb_Countdown + 1);
         BattleE1_Roster = static_cast<unsigned char>(index);
         BossSb_Countdown = next;
@@ -276,16 +274,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
     if (Input_Held == 0) return;
 
     for (unsigned char slot = 0; slot < Byte(at::kPartyCount); ++slot) {
-        const unsigned index = g.roster_index(MemberRec(slot)->char_id);
-        if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) g.level_up(g.roster_index(MemberRec(slot)->char_id));
+        const unsigned index = g.roster_index(rv::As<records::PartyMember>(Member(slot) - 0x80)->char_id);
+        if ((g.level_up_pending(index, 0) & 0xFFFF) != 0) g.level_up(g.roster_index(rv::As<records::PartyMember>(Member(slot) - 0x80)->char_id));
     }
     if (g.zenny_bonus() != 0) BattleFlow_ZennyTotal = BattleFlow_ZennyTotal + (BattleFlow_ZennyTotal >> 1);
 
-    WindowSlotRec(1)->in_use = 0;
+    rv::As<records::WindowRecord>(WindowSlot(1))->in_use = 0;
     g.window_alloc(1, 4);
     const std::uint32_t zenny = BattleFlow_ZennyTotal;
-    WindowSlotRec(1)->kind = 5;
-    WindowSlotRec(1)->state = 0;
+    rv::As<records::WindowRecord>(WindowSlot(1))->kind = 5;
+    rv::As<records::WindowRecord>(WindowSlot(1))->state = 0;
     g.crt_sprintf(Text(at::kText0), Format(at::kFormatD), zenny);
     const unsigned char* const msg = g.msg_system(6);
     const std::uint32_t total = BattleFlow_ZennyTotal;
@@ -296,7 +294,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_Setup(v
         g.window_alloc(0x15, 4);
         unsigned char n = BattleE7_DropCount;
         unsigned char* const w = WindowSlot(0x15);
-        auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+        auto* const window_rec = rv::As<records::WindowRecord>(w);
         const int last = static_cast<int>(n) - 1;
         window_rec->kind = 1;
         window_rec->centre_x = 0x14;
@@ -396,7 +394,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResult_AwardDr
 // words above the table on the original's stack; ours aborts (CLAUDE.md
 // rule 4, as battle_flow's Battle_PhaseDispatch).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ExpState(void) {
-    const unsigned index = CurrentWindowRec()->state;
+    const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
     if (index >= 2) bof3::Fatal("BattleResultWin_ExpState: step %u, past the two-entry table", index);
     g.exp_window[index]();
 }
@@ -435,7 +433,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
     unsigned char y = 0x2C;
     for (unsigned char slot = 0; slot < Byte(at::kPartyCount); ++slot, y = static_cast<unsigned char>(y + 0x10)) {
         unsigned char* const m = Member(slot);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(m - 0x80);
+        auto* const member_rec = rv::As<records::PartyMember>(m - 0x80);
         g.text_draw_at(0x19, y, 0, 5, m);
         const unsigned level = member_rec->level;
         if (level == 0x63) {
@@ -454,7 +452,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Draw
 // zenny): the same two-entry stack table - 0x5986F0, 0x598700 (the zenny
 // line). Ours aborts past it, as BattleResultWin_ExpState.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_ZennyState(void) {
-    const unsigned index = CurrentWindowRec()->state;
+    const unsigned index = rv::As<records::WindowRecord>(CurrentWindow())->state;
     if (index >= 2) bof3::Fatal("BattleResultWin_ZennyState: step %u, past the two-entry table", index);
     g.zenny_window[index]();
 }
@@ -462,7 +460,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleResultWin_Zenn
 // original 0x5986F0 (no PSX twin paired): the record 0x905B84's step +3 one
 // on - both states' entry 0, the frame the window opens.
 extern "C" void __cdecl BattleResultWin_NextStep(void) {
-    auto* const window_rec = CurrentWindowRec();
+    auto* const window_rec = rv::As<records::WindowRecord>(CurrentWindow());
     window_rec->state = static_cast<unsigned char>(window_rec->state + 1);
 }
 

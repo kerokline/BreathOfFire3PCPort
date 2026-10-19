@@ -31,6 +31,7 @@
 #include "game/battle_sprites.h"
 #include "game/battle_sprites_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -195,7 +196,7 @@ std::uint32_t Handle(unsigned id, std::uint32_t a, std::uint32_t b, std::uint32_
         break;
     case kWindow: {
         unsigned char* const w = At(at::kWindows + (a & 0xFF) * at::kWindowStride);
-        auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+        auto* const window_rec = rv::As<records::WindowRecord>(w);
         window_rec->in_use = 1;
         window_rec->handler = static_cast<unsigned char>(b);
         window_rec->kind = static_cast<unsigned char>(h >> 8);
@@ -509,7 +510,7 @@ void SeedRound(unsigned regions) {
     g_mine.field[0x92] = Often() ? Pick(kKinds) : static_cast<unsigned char>(Next());
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const p = At(ObjTrio_addr + i * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
         p[0xB7] = Half() ? Pick(kClasses) : static_cast<unsigned char>(Next());
         p[0x124] = TargetValue();
@@ -523,7 +524,7 @@ void SeedRound(unsigned regions) {
     }
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const e = At(at::kEnemies + k * at::kEnemyStride);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         SeedSprite(e);
         enemy_rec->kind = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % 8);
         static const unsigned char kClasses[] = {0, 5, 6, 7, 0xFF};
@@ -552,7 +553,7 @@ void SeedRound(unsigned regions) {
 void SeedEightKinds() {
     At(BattleActorCopies_EnemyCount_addr)[0] = 8;
     for (unsigned k = 0; k < 8; ++k) {
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(At(at::kEnemies + k * at::kEnemyStride));
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(At(at::kEnemies + k * at::kEnemyStride));
         enemy_rec->flags |= 1;
         enemy_rec->kind = static_cast<unsigned char>(0x10 + k);
     }
@@ -601,7 +602,7 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
     }
     if (f == fAutoTarget && Often()) {   // the plain path to modes 4 and 5
         unsigned char* const p = At(ObjTrio_addr + (a[0] & 0xFF) * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         p[0x90] &= 0xDF;
         member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~0x14001u);
         At(at::kBattleFlags)[0] &= 0xEF;
@@ -618,7 +619,7 @@ void Arguments(unsigned f, std::uint32_t (&a)[4]) {
         }
     if (f == fAnyF0 && Half()) {   // one present member with bit 7 alone
         unsigned char* const p = At(ObjTrio_addr + (Next() % 3) * at::kPartyStride);
-        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        auto* const member_rec = rv::As<records::PartyMember>(p);
         member_rec->flags |= 1;
         p[0x130] = 0x80;
     }
