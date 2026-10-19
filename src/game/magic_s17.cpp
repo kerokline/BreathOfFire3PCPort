@@ -32,10 +32,15 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -125,7 +130,8 @@ std::int32_t H() { return Long(Mem(kScratchB)); }
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 void LinkAtActor(int dy, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(sc + 0x34)), static_cast<unsigned long>(Long(sc + 0x38)), dy,
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y), dy,
                                 size);
 }
 void ModeCommit4() {
@@ -180,8 +186,8 @@ MS17_EXPORT void __cdecl Purify_Task(void) {
 // sound 0x100.
 MS17_EXPORT void __cdecl Purify_Start(void) {
     unsigned char* const src = Source();
-    SetLong(Sprite_Current + 0x34, Long(src + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
@@ -189,7 +195,8 @@ MS17_EXPORT void __cdecl Purify_Start(void) {
     for (unsigned char delay = 1; delay < 0x24; delay = static_cast<unsigned char>(delay + 5)) {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x25) & 0xFF;
         unsigned char* const t = Task(slot);
-        SetLong(t + 0x80, static_cast<std::int32_t>(Key(Sprite_Current)));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        tt->owner = static_cast<std::int32_t>(Key(Sprite_Current));
         t[1] = 0;
         t[0xB] = number;
         t[9] = delay;
@@ -255,10 +262,10 @@ MS17_EXPORT void __cdecl PurifyMote_Place(void) {
     SetLong(Mem(kScratchA), angle);
     const int s = Sin(angle);
     const int dx = static_cast<int>((static_cast<std::uint32_t>(s) * 5u) << 13) >> 12;
-    SetLong(Sprite_Current + 0x34, Wrap(static_cast<std::uint32_t>(dx) + static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    Store(ScTask()->x, Wrap(static_cast<std::uint32_t>(dx) + static_cast<std::uint32_t>(Long(Owner() + 0x34))));
     const int c = Cos(Long(Mem(kScratchA)));
     const int dz = static_cast<int>((static_cast<std::uint32_t>(c) * 5u) << 13) >> 12;
-    SetLong(Sprite_Current + 0x38, Wrap(static_cast<std::uint32_t>(dz) + static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    Store(ScTask()->y, Wrap(static_cast<std::uint32_t>(dz) + static_cast<std::uint32_t>(Long(Owner() + 0x38))));
     SetWord(Sprite_Current + 0x3E, Word(Owner() + 0x3E) + 0x180u);
     sc = Sprite_Current;
     sc[0x25] = 0x1D;
@@ -307,8 +314,9 @@ MS17_EXPORT void __cdecl Revive_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kMotes; ++i) {
         unsigned char* const m = Mote(i);
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
         if ((m[0] & 1) == 0) continue;
-        const std::int32_t its = Long(m + 0x80);
+        const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
         SetLong(Mem(BattleE2_Owner_addr), its);
         MH_CALL(ReviveMote_Dispatch)();
@@ -334,8 +342,8 @@ MS17_EXPORT void __cdecl Revive_Start(void) {
     Sprite_Current[4] = strong;
     unsigned char* const src = Source();
     Sprite_Current[8] = src[8];
-    SetLong(Sprite_Current + 0x34, Long(src + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0x3C;
@@ -344,7 +352,8 @@ MS17_EXPORT void __cdecl Revive_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x62) & 0xFF;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const t = Task(slot);
-    SetLong(t + 0x80, static_cast<std::int32_t>(Key(sc)));
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    tt->owner = static_cast<std::int32_t>(Key(sc));
     t[1] = 0;
     t[9] = 1;
     Bump(sc[0xB]);
@@ -421,8 +430,8 @@ MS17_EXPORT void __cdecl ReviveHalo_Wait(void) {
     unsigned char* const sc = Sprite_Current;
     if (sc[9] != 0) return;
     sc[4] = Owner()[4];
-    SetLong(Sprite_Current + 0x34, Long(Owner() + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sprite_Current + 0x3C, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0xC00000u));
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0x3C;
@@ -443,7 +452,8 @@ MS17_EXPORT void __cdecl ReviveHalo_Spawn(void) {
             const unsigned char index = MH_CALL(ReviveMote_Alloc)();
             if (index != 0xFF) {
                 unsigned char* const m = Mote(index);
-                SetLong(m + 0x80, Long(Mem(BattleE2_Owner_addr)));
+                records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+                tm->owner = Long(Mem(BattleE2_Owner_addr));
                 m[1] = 0;
                 m[0xB] = number;
                 const int r = MH_CALL(Rand)();
@@ -551,7 +561,7 @@ MS17_EXPORT void __cdecl ReviveMote_Launch(void) {
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
     if (Sprite_Current[0xB] == 0) MH_CALL(Sound_PlayById)(0x101);
-    SetLong(Sprite_Current + 0xC, 8);
+    ScTask()->vel_x = 8;
     MoteAngle();
     Orbit();
     SetLong(Sprite_Current + 0x3C, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x800000u));
@@ -574,7 +584,7 @@ MS17_EXPORT void __cdecl ReviveMote_Launch(void) {
 // the height up by it; on odd frames +9 down, and at 0 the owner's count
 // +0xB down and MAGIC219's 0x4F6290 (a tail jmp).
 MS17_EXPORT void __cdecl ReviveMote_Rise(void) {
-    SetLong(Sprite_Current + 0xC, Wrap(static_cast<std::uint32_t>(Long(Sprite_Current + 0xC)) + 1u));
+    Store(ScTask()->vel_x, Wrap(static_cast<std::uint32_t>(ScTask()->vel_x) + 1u));
     MoteAngle();
     Orbit();
     unsigned char* sc = Sprite_Current;
@@ -674,22 +684,24 @@ MS17_EXPORT void __cdecl Leech_Start(void) {
     unsigned char* const src = Source();
     const unsigned s1 = MH_CALL(BattleTask_Create)(1, 0xD) & 0xFF;
     unsigned char* const shell = Task(s1);
-    SetLong(shell + 0x80, static_cast<std::int32_t>(Key(Sprite_Current)));
+    records::BattleTask* const tshell = reinterpret_cast<records::BattleTask*>(shell);
+    tshell->owner = static_cast<std::int32_t>(Key(Sprite_Current));
     unsigned char* const owner = Owner();
     shell[1] = 0;
     shell[9] = 0;
-    SetLong(shell + 0x34, Long(owner + 0x34));
-    SetLong(shell + 0x38, Long(owner + 0x38));
+    tshell->x = Long(owner + 0x34);
+    tshell->y = Long(owner + 0x38);
     SetLong(shell + 0x3C, Wrap(static_cast<std::uint32_t>(Long(owner + 0x3C)) + 0x2000000u));
     const unsigned s2 = MH_CALL(BattleTask_Create)(1, 0xD) & 0xFF;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const orb = Task(s2);
-    SetLong(orb + 0x80, static_cast<std::int32_t>(Key(shell)));
+    records::BattleTask* const torb = reinterpret_cast<records::BattleTask*>(orb);
+    torb->owner = static_cast<std::int32_t>(Key(shell));
     SetLong(orb + 0x4C, static_cast<std::int32_t>(Key(sc)));
     orb[1] = 1;
     orb[9] = 0;
-    SetLong(orb + 0x34, Long(src + 0x34));
-    SetLong(orb + 0x38, Long(src + 0x38));
+    torb->x = Long(src + 0x34);
+    torb->y = Long(src + 0x38);
     SetLong(orb + 0x3C, Wrap(static_cast<std::uint32_t>(Long(src + 0x3C)) + 0x1000000u));
     MH_CALL(Sound_PlayById)(0x100);
     Sprite_Current[0xB] = 0;
@@ -753,11 +765,13 @@ MS17_EXPORT void __cdecl MagicFx_WaitA(void) {
 MS17_EXPORT void __cdecl LeechShell_Aim(void) {
     const unsigned char* const src = Source();
     const unsigned char* sc = Sprite_Current;
-    const int dx = Wrap(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(Long(sc + 0x34)));
-    const int dz = Wrap(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(Long(sc + 0x38)));
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const int dx = Wrap(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(tsc->x));
+    const int dz = Wrap(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(tsc->y));
     const int r = MH_CALL(Math_Ratan2)(static_cast<float>(dz), static_cast<float>(dx));
     unsigned char* const now = Sprite_Current;
-    if (Long(now + 0xC) / 64 != ((r >> 6) & 0x3F)) return;
+    records::BattleTask* const tnow = reinterpret_cast<records::BattleTask*>(now);
+    if (tnow->vel_x / 64 != ((r >> 6) & 0x3F)) return;
     now[0xA] = 0xF;
     Bump(Sprite_Current[2]);
 }
@@ -961,10 +975,11 @@ MS17_EXPORT void __cdecl LeechShell_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     short rot[4] = {0, 0, 0, 0};
     const unsigned char* const sc = Sprite_Current;
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
     if (sc[5] == 0xD) rot[2] = S16(sc + 0xC);
     short v[4];
-    v[0] = static_cast<short>((Long(sc + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(sc + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((tsc->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((tsc->y >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(sc + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {

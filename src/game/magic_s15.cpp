@@ -38,6 +38,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -79,6 +80,10 @@ constexpr std::uint32_t kEnemyLift = 0x8C564F;
 constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 
 unsigned char* Sc() { return Sprite_Current; }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
@@ -202,14 +207,15 @@ void PushTurnedMatrix(const unsigned char* s, short turn) {
 void MarkAt(const unsigned char* record, unsigned index, unsigned parameter) {
     const unsigned slot = NewTask(parameter);
     unsigned char* const child = TaskSlot(slot);
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
     const std::int32_t x = Long(record + 0x34);
     unsigned char* const s = Sc();
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
+    tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = 2;
     child[3] = static_cast<unsigned char>(index);
     child[4] = 5;
-    SetLong(child + 0x34, x);
-    SetLong(child + 0x38, Long(record + 0x38));
+    tchild->x = x;
+    tchild->y = Long(record + 0x38);
     SetLong(child + 0x3C, Long(record + 0x3C));
     Inc(s[0xB]);
 }
@@ -249,7 +255,8 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 0;
         child[8] = owner[8];
         Inc(s[0xB]);
@@ -258,7 +265,8 @@ S15_EXPORT void __cdecl Chill_Start(void) {
         const unsigned slot = NewTask(0x13);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 1;
         Inc(s[0xB]);
     }
@@ -343,18 +351,20 @@ S15_EXPORT void __cdecl ChillRay_Run(void) {
 // +0x14 0x2FFF, +0xB 0x34, +9 0, +0xA 0x10, +2 on.
 S15_EXPORT void __cdecl ChillRay_Start(void) {
     MH_CALL(MagicFx_CenterOnSide)();
-    SetLong(Sc() + 0xC, static_cast<std::int32_t>(0xFFFC0000u));
-    SetLong(Sc() + 0x10, 0);
+    Store(ScTask()->vel_x, static_cast<std::int32_t>(0xFFFC0000u));
+    ScTask()->vel_y = 0;
     Turn(Sc());
     {
         unsigned char* const t = Sc();
-        SetLong(t + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(t + 0xC)) +
-                                                    static_cast<std::uint32_t>(Field_Kind2X)));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        tt->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_x) +
+                                                    static_cast<std::uint32_t>(Field_Kind2X));
     }
     {
         unsigned char* const t = Sc();
-        SetLong(t + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(t + 0x10)) +
-                                                    static_cast<std::uint32_t>(Field_Kind2Z)));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        tt->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_y) +
+                                                    static_cast<std::uint32_t>(Field_Kind2Z));
     }
     MH_CALL(Sound_PlayEffect)(0x100);
     SetLong(Sc() + 0x14, 0x2FFF);
@@ -611,13 +621,14 @@ S15_EXPORT void __cdecl Foretell_Task(void) {
 // +0x3C); one child (kind 1, 0x1C, +1 0, +0x80 this task); +0xB 1, +1 on.
 S15_EXPORT void __cdecl Foretell_Start(void) {
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     const unsigned slot = NewTask(0x1C);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = 0;
     s[0xB] = 1;
     Inc(Sc()[1]);
@@ -830,8 +841,8 @@ S15_EXPORT void __cdecl ForetellOrb_Run(void) {
 // +0xB 0, +9 0xF, +0xA 3, +2 on.
 S15_EXPORT void __cdecl ForetellOrb_Start(void) {
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x2000000u));
     MH_CALL(BattleActor_UpdateScreenXY)();
     MH_CALL(Sound_PlayById)(0x100);
@@ -944,8 +955,9 @@ S15_EXPORT void __cdecl Influence_Start(void) {
         for (unsigned n = 0; n < 3; ++n) {
             const unsigned slot = NewTask(0x39);
             unsigned char* const child = TaskSlot(slot);
+            records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
             unsigned char* const s = Sc();
-            SetLong(child + 0x80, static_cast<std::int32_t>(Key(s)));
+            tchild->owner = static_cast<std::int32_t>(Key(s));
             child[1] = static_cast<unsigned char>(side);
             child[0xB] = static_cast<unsigned char>(n);
             child[9] = static_cast<unsigned char>(n + 1);
@@ -1001,7 +1013,7 @@ S15_EXPORT void __cdecl InfluenceRight_Run(void) {
 S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    SetLong(Sc() + 0xC, 0xB);
+    ScTask()->vel_x = 0xB;
     SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) + 0x37u);
     SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
@@ -1013,12 +1025,12 @@ S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
 // it; at 0 the first child (+0xB 0) plays sound 0x103 and goes on, the others
 // count the owner's +0xB down and free themselves.
 S15_EXPORT void __cdecl InfluenceRight_Slide(void) {
-    SetLong(Sc() + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0xC)) - 1u));
+    Store(ScTask()->vel_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->vel_x) - 1u));
     {
         unsigned char* const s = Sc();
         SetWord(s + 0x2E, Word(s + 0x2E) - Word(s + 0xC));
     }
-    if (Long(Sc() + 0xC) != 0) return;
+    if (ScTask()->vel_x != 0) return;
     if (Sc()[0xB] == 0) {
         MH_CALL(Sound_PlayById)(0x103);
         Inc(Sc()[2]);
@@ -1086,7 +1098,7 @@ S15_EXPORT void __cdecl InfluenceLeft_Run(void) {
 S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    SetLong(Sc() + 0xC, 0xB);
+    ScTask()->vel_x = 0xB;
     SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) - 0x37u);
     SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
@@ -1097,12 +1109,12 @@ S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
 // original 0x4B8260: the slide +0xC down by 1 and the x right by it; at 0 the
 // owner's +0xB down and the task freed.
 S15_EXPORT void __cdecl InfluenceLeft_Slide(void) {
-    SetLong(Sc() + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0xC)) - 1u));
+    Store(ScTask()->vel_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ScTask()->vel_x) - 1u));
     {
         unsigned char* const s = Sc();
         SetWord(s + 0x2E, Word(s + 0x2E) + Word(s + 0xC));
     }
-    if (Long(Sc() + 0xC) != 0) return;
+    if (ScTask()->vel_x != 0) return;
     Dec(Owner()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -1365,8 +1377,9 @@ namespace {
 void SpawnMark(unsigned index, unsigned& count) {
     const unsigned slot = NewTask(0x39);
     unsigned char* const child = TaskSlot(slot);
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
     unsigned char* const owner = Owner();
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(owner)));
+    tchild->owner = static_cast<std::int32_t>(Key(owner));
     child[1] = 2;
     child[4] = static_cast<unsigned char>(count);
     child[0xB] = static_cast<unsigned char>(index);

@@ -34,10 +34,15 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Handler;
@@ -478,8 +483,8 @@ void Spawn(const Pool& p, unsigned char kind) {
     Sprite_Current[4] = kind;
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sprite_Current[8] = src[8];
-    SetLong(Sprite_Current + 0x34, Long(src + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
@@ -531,8 +536,8 @@ void ActorStart(const Pool& p) {
     if (sc[9] != 0) return;
     const unsigned char* const rec = ActorRecord(sc[4]);
     sc[8] = rec[8];
-    SetLong(Sprite_Current + 0x34, Long(rec + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(rec + 0x38));
+    Store(ScTask()->x, Long(rec + 0x34));
+    Store(ScTask()->y, Long(rec + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(rec + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
