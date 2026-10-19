@@ -103,7 +103,7 @@ extern "C" void __cdecl Field_LeaderFrame(void) {
     unsigned char* const timer = At(EventOps_BlockByte_addr);
     if (*timer != 0) *timer = static_cast<unsigned char>(*timer - 1);
     g.copy_input();
-    Dispatch(g.leader_states, rv::Current<records::PartyMember>()->state[0]);
+    Dispatch(g.leader_states, rv::Current<records::PartyMember>()->state);
 }
 
 // original 0x52D920, the leader's state 0 (PSX 0x801B1164): its counters
@@ -132,19 +132,19 @@ extern "C" void __cdecl Field_LeaderStart(void) {
     rv::Current<records::PartyMember>()->animation = 0xFF;
     if (Field_InputFlags & 0x20) {
         rv::Current<records::PartyMember>()->flags = static_cast<unsigned char>(rv::Current<records::PartyMember>()->flags | 0x40);
-        rv::Current<records::PartyMember>()->state[0] = 0xC;
-        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->state = 0xC;
+        rv::Current<records::PartyMember>()->step = 0;
         return;
     }
     if (Game_AreaNumber == 0xBD) {
         rv::Current<records::PartyMember>()->flags = static_cast<unsigned char>(rv::Current<records::PartyMember>()->flags | 0x40);
-        rv::Current<records::PartyMember>()->state[0] = 0xD;
-        rv::Current<records::PartyMember>()->state[1] = 0;
+        rv::Current<records::PartyMember>()->state = 0xD;
+        rv::Current<records::PartyMember>()->step = 0;
         return;
     }
     g.leader_animation(rv::Current<records::PartyMember>()->direction);
-    rv::Current<records::PartyMember>()->state[0] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->state[0] + 1);
-    rv::Current<records::PartyMember>()->state[1] = 0;
+    rv::Current<records::PartyMember>()->state = static_cast<unsigned char>(rv::Current<records::PartyMember>()->state + 1);
+    rv::Current<records::PartyMember>()->step = 0;
 }
 
 // original 0x52DA50, the leader's state 1 (PSX 0x801B1318): its sub-state
@@ -154,7 +154,7 @@ extern "C" void __cdecl Field_LeaderStart(void) {
 // above reach the .data after the table); Sprite_ScriptTick is a tail jump,
 // whose al the original returns and no caller reads.
 extern "C" void __cdecl Field_LeaderControl(void) {
-    Dispatch(g.control_states, rv::Current<records::PartyMember>()->state[1]);
+    Dispatch(g.control_states, rv::Current<records::PartyMember>()->step);
     g.script_tick();
 }
 
@@ -187,7 +187,7 @@ extern "C" void __cdecl Field_LeaderStand(void) {
     Sprite_Current[0xA] = 2;
     Sprite_Current[0xB] = 0;
     g.leader_animation(rv::Current<records::PartyMember>()->direction);
-    rv::Current<records::PartyMember>()->state[1] = 1;
+    rv::Current<records::PartyMember>()->states[1] = 1;
 }
 
 // original 0x5305B0 (PSX 0x801B6BD4): the leader's animation through 0x589330
@@ -338,10 +338,10 @@ extern "C" void __cdecl Sprite_LoadPalette(unsigned short* dst, unsigned index) 
 // As the original has it: member is unchecked.
 extern "C" void __cdecl Member_ClearState(unsigned member) {
     records::PartyMember* const m = rv::As<records::PartyMember>(Member(member & 0xFF));
-    m->state[0] = 0;
-    m->state[1] = 0;
-    m->state[2] = 0;
-    m->state[3] = 0;
+    m->state = 0;
+    m->step = 0;
+    m->state3 = 0;
+    m->state4 = 0;
 }
 
 // original 0x536760 (PSX 0x801676AC): all three members off, their state cleared.
@@ -471,7 +471,7 @@ extern "C" void __cdecl Field_PartyLoad(unsigned slot_arg) {
         Field_State = rv::Bytes(m);
         Sprite_Current = rv::Bytes(m);
         m->flags = 1;
-        rv::Current<records::PartyMember>()->member = static_cast<unsigned char>(i);
+        rv::Current<records::PartyMember>()->actor = static_cast<unsigned char>(i);
         g.member_sprite(list[i], i);
         Sprite_Current[0x48] = 0;
         SetLong(Sprite_Current + 0x40, 0x10000);
@@ -567,7 +567,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
             }
         }
         const unsigned char input = Field_InputFlags;
-        rv::As<records::PartyMember>(ObjTrio)->member = 0;
+        rv::As<records::PartyMember>(ObjTrio)->actor = 0;
         Sprite_Current = ObjTrio;
         CopyActor(ObjTrio + 0x80, Actor(0));
         const unsigned char bits = ObjTrio[0x138];
@@ -593,7 +593,7 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
             g.member_sprite(Actor(0)[9], 0);
         } else if (Game_AreaNumber == 0xBD) {
             ObjTrio[0x2B] = 0;
-            rv::As<records::PartyMember>(ObjTrio)->raised = 0;
+            rv::As<records::PartyMember>(ObjTrio)->reach = 0;
         }
     } else {
         // The whole party.
@@ -619,8 +619,8 @@ extern "C" void __cdecl Field_PartySetUp(long x, long z, unsigned flags) {
                 } else {
                     g.member_sprite(id, i);
                     g.release_tint(Sprite_Current);
-                    Sprite_Current[0x27] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->member + 0x78);
-                    g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + rv::Current<records::PartyMember>()->member * 64u)), 0);
+                    Sprite_Current[0x27] = static_cast<unsigned char>(rv::Current<records::PartyMember>()->actor + 0x78);
+                    g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + rv::Current<records::PartyMember>()->actor * 64u)), 0);
                 }
                 ++i;
                 if (i >= Field_MemberCount) break;
@@ -667,7 +667,7 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
     const unsigned char input = Field_InputFlags;
     const unsigned char count = Field_MemberCount;
     if (input & 8) {
-        rv::As<records::PartyMember>(ObjTrio)->state[0] = 9;
+        rv::As<records::PartyMember>(ObjTrio)->state = 9;
     } else {
         for (unsigned i = 0; i < count; ++i) Member(i)[0x29] = 6;
     }
@@ -675,7 +675,7 @@ extern "C" void __cdecl Field_PartyFirstFrame(void) {
         for (unsigned i = 0;;) {
             if (!(Field_ScriptFlags & (1u << (i & 31)))) {
                 records::PartyMember* const m = rv::As<records::PartyMember>(Member(i));
-                const unsigned char slot = m->member;
+                const unsigned char slot = m->actor;
                 Field_State = rv::Bytes(m);
                 Sprite_Current = rv::Bytes(m);
                 if (slot == 0)

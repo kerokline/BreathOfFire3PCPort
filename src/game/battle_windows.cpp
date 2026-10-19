@@ -599,10 +599,10 @@ extern "C" void __cdecl Window_FlagAndAdvance() {
 extern "C" void __cdecl Window_RestoreAndBack() {
     unsigned char* w = Current();
     records::WindowRecord* win = rv::As<records::WindowRecord>(w);
-    win->centre_x = Word(w + 0x10);
+    win->x = Word(w + 0x10);
     w = Current();
     win = rv::As<records::WindowRecord>(w);
-    win->centre_y = Word(w + 0x12);
+    win->y = Word(w + 0x12);
     Current()[0xF] = 0;
     --rv::As<records::WindowRecord>(Current())->state;
 }
@@ -636,11 +636,11 @@ extern "C" __attribute__((disable_tail_calls, noinline)) unsigned __cdecl Window
 // index are read after the box.
 extern "C" void __cdecl BattleWin_DrawMessage() {
     const records::WindowRecord* win = rv::As<records::WindowRecord>(Current());
-    g.message_box(win->centre_x, win->centre_y);
+    g.message_box(win->x, win->y);
     const unsigned index = BattleWindows_MsgHead;
     const auto* const text = At(static_cast<std::uint32_t>(Long(At(at::kMsgRing + 8 * index))));
     win = rv::As<records::WindowRecord>(Current());
-    g.text_draw_at(static_cast<std::uint16_t>(win->centre_x + 4), static_cast<std::uint16_t>(win->centre_y + 3), 0, 0xFF,
+    g.text_draw_at(static_cast<std::uint16_t>(win->x + 4), static_cast<std::uint16_t>(win->y + 3), 0, 0xFF,
                    text);
 }
 

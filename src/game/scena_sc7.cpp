@@ -2054,8 +2054,8 @@ extern "C" void __cdecl Scena08_Scene7(void) {
     case 0xF:
         if (C0() != 0) return;
         FocusObject()[6] = 5;
-        rv::As<records::SpriteObject>(FocusObject())->accel_x = 1;
-        rv::As<records::SpriteObject>(FocusObject())->accel_z = 3;
+        rv::As<records::SpriteObject>(FocusObject())->work_18 = 1;
+        rv::As<records::SpriteObject>(FocusObject())->work_1c = 3;
         Clear40();
         SetRun(0);
         SetStep(0);

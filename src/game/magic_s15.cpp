@@ -212,7 +212,7 @@ void MarkAt(const unsigned char* record, unsigned index, unsigned parameter) {
     child[3] = static_cast<unsigned char>(index);
     child[4] = 5;
     tchild->x = x;
-    tchild->y = Long(record + 0x38);
+    tchild->z = Long(record + 0x38);
     SetLong(child + 0x3C, Long(record + 0x3C));
     Inc(s[0xB]);
 }
@@ -348,19 +348,19 @@ S15_EXPORT void __cdecl ChillRay_Run(void) {
 // +0x14 0x2FFF, +0xB 0x34, +9 0, +0xA 0x10, +2 on.
 S15_EXPORT void __cdecl ChillRay_Start(void) {
     MH_CALL(MagicFx_CenterOnSide)();
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0xFFFC0000u));
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFFC0000u));
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     {
         unsigned char* const t = Sc();
         records::BattleTask* const tt = rv::As<records::BattleTask>(t);
-        tt->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_x) +
+        tt->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->step_x) +
                                                     static_cast<std::uint32_t>(Field_Kind2X));
     }
     {
         unsigned char* const t = Sc();
         records::BattleTask* const tt = rv::As<records::BattleTask>(t);
-        tt->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->vel_y) +
+        tt->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(tt->step_z) +
                                                     static_cast<std::uint32_t>(Field_Kind2Z));
     }
     MH_CALL(Sound_PlayEffect)(0x100);
@@ -619,7 +619,7 @@ S15_EXPORT void __cdecl Foretell_Task(void) {
 S15_EXPORT void __cdecl Foretell_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     const unsigned slot = NewTask(0x1C);
     unsigned char* const s = Sc();
@@ -840,7 +840,7 @@ S15_EXPORT void __cdecl ForetellOrb_Run(void) {
 S15_EXPORT void __cdecl ForetellOrb_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x2000000u));
     MH_CALL(BattleActor_UpdateScreenXY)();
     MH_CALL(Sound_PlayById)(0x100);
@@ -1011,7 +1011,7 @@ S15_EXPORT void __cdecl InfluenceRight_Run(void) {
 S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Current<records::BattleTask>()->vel_x = 0xB;
+    rv::Current<records::BattleTask>()->step_x = 0xB;
     SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) + 0x37u);
     SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
@@ -1023,12 +1023,12 @@ S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
 // it; at 0 the first child (+0xB 0) plays sound 0x103 and goes on, the others
 // count the owner's +0xB down and free themselves.
 S15_EXPORT void __cdecl InfluenceRight_Slide(void) {
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x) - 1u));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) - 1u));
     {
         unsigned char* const s = Sc();
         SetWord(s + 0x2E, Word(s + 0x2E) - Word(s + 0xC));
     }
-    if (rv::Current<records::BattleTask>()->vel_x != 0) return;
+    if (rv::Current<records::BattleTask>()->step_x != 0) return;
     if (Sc()[0xB] == 0) {
         MH_CALL(Sound_PlayById)(0x103);
         Inc(Sc()[2]);
@@ -1096,7 +1096,7 @@ S15_EXPORT void __cdecl InfluenceLeft_Run(void) {
 S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Current<records::BattleTask>()->vel_x = 0xB;
+    rv::Current<records::BattleTask>()->step_x = 0xB;
     SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) - 0x37u);
     SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
@@ -1107,12 +1107,12 @@ S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
 // original 0x4B8260: the slide +0xC down by 1 and the x right by it; at 0 the
 // owner's +0xB down and the task freed.
 S15_EXPORT void __cdecl InfluenceLeft_Slide(void) {
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x) - 1u));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) - 1u));
     {
         unsigned char* const s = Sc();
         SetWord(s + 0x2E, Word(s + 0x2E) + Word(s + 0xC));
     }
-    if (rv::Current<records::BattleTask>()->vel_x != 0) return;
+    if (rv::Current<records::BattleTask>()->step_x != 0) return;
     Dec(Owner()[0xB]);
     MH_CALL(BattleTask_FreeCurrent)();
 }

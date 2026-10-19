@@ -116,8 +116,8 @@ extern "C" void __cdecl BattleWin_OpenStatus(unsigned state) {
     const unsigned size = At(at::kPartyCount)[0];
     w[0xA] = static_cast<unsigned char>(size);
     win->kind = 0;
-    win->centre_x = At(at::kStatusX + size)[0];
-    win->centre_y = 0xF0;
+    win->x = At(at::kStatusX + size)[0];
+    win->y = 0xF0;
     w[8] = 0;
     w[9] = 0;
 }
@@ -128,8 +128,8 @@ extern "C" void __cdecl BattleWin_OpenSub1(unsigned state) {
     auto* const win = rv::As<records::WindowRecord>(Window(2));
     win->kind = 1;
     win->state = static_cast<unsigned char>(state);
-    win->centre_x = 0x88;
-    win->centre_y = 0x58;
+    win->x = 0x88;
+    win->y = 0x58;
 }
 
 // original 0x4442C0 (PSX 0x801D93B4): window 3, sub-kind 2; its place is
@@ -147,8 +147,8 @@ extern "C" void __cdecl BattleWin_OpenSub3(unsigned state) {
     auto* const win = rv::As<records::WindowRecord>(Window(4));
     win->kind = 3;
     win->state = static_cast<unsigned char>(state);
-    win->centre_x = 0x7C;
-    win->centre_y = 0x2A;
+    win->x = 0x7C;
+    win->y = 0x2A;
 }
 
 // ===========================================================================

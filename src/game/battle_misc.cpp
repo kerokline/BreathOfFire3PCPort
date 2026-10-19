@@ -337,8 +337,8 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     w[0xC] = At(kActorPages + 2 + actor * 3)[0];
     const U flags = Long(At(BattleActorCopies_Command + 0x10));
     PutWord(w + 0x14, ((flags & 2) && !(flags & 0x20000)) ? 2 : 0);
-    window_rec->centre_x = 0x140;
-    window_rec->centre_y = 0x3F;
+    window_rec->x = 0x140;
+    window_rec->y = 0x3F;
     const unsigned char again = At(acting + 5)[0];
     BattleE4_Hand = 0;
     At(BattleE4_Hand_addr + 2)[0] = 0;
@@ -373,8 +373,8 @@ extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     w[0xD] = 0xFF;
     w[9] = 0;
     PutWord(w + 0x10, 0);
-    window_rec->centre_x = 0xFF56;
-    window_rec->centre_y = 0x3F;
+    window_rec->x = 0xFF56;
+    window_rec->y = 0x3F;
     BattleE4_Hand = 0;
     At(BattleE4_Hand_addr + 1)[0] = 8;
     At(BattleE4_Hand_addr + 2)[0] = 0;

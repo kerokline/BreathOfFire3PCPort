@@ -125,7 +125,7 @@ unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((sta
 // original 0x51BA60, state 3: back to state 1 (Member_Control) unless bit 10
 // of Field_ScriptFlags2 holds the member.
 FH_EXPORT void __cdecl Member_ResumeUnlessHeld(void) {
-    if ((Field_ScriptFlags2 & 0x400) == 0) rv::Current<records::PartyMember>()->state[0] = 1;
+    if ((Field_ScriptFlags2 & 0x400) == 0) rv::Current<records::PartyMember>()->state = 1;
 }
 
 // original 0x51BBD0, state 7, by its sub-state +2:
@@ -141,11 +141,11 @@ FH_EXPORT void __cdecl Member_ResumeUnlessHeld(void) {
 // checked; in sub-state 1 the index is re-read from +0xB for every store.
 FH_EXPORT void __cdecl Member_EffectState(void) {
     records::PartyMember* const s = rv::Current<records::PartyMember>();
-    switch (s->state[1]) {
+    switch (s->step) {
     case 0:
         if (ObjTrio[0x137] != 8) {
-            s->state[0] = 1;
-            rv::Current<records::PartyMember>()->state[1] = 0;
+            s->state = 1;
+            rv::Current<records::PartyMember>()->step = 0;
         }
         break;
     case 1: {
@@ -153,10 +153,10 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
         Sprite_Current[0xB] = i;
         records::PartyMember* const c = rv::Current<records::PartyMember>();
         if (rv::Bytes(c)[0xB] == 0xFF) {
-            c->state[1] = 0;
+            c->step = 0;
             break;
         }
-        rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->in_use = 1;
+        rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->flags = 1;
         rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->kind = 6;
         rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->param = 1;
         rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->step_x = 0;
@@ -164,11 +164,11 @@ FH_EXPORT void __cdecl Member_EffectState(void) {
         rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->step_z = static_cast<std::int32_t>(arg);
         SetWord(Effect(rv::Bytes(c)[0xB]) + 0x2E, static_cast<std::uint16_t>(c->screen_x));
         SetWord(Effect(rv::Bytes(c)[0xB]) + 0x30, static_cast<std::uint16_t>(c->screen_y));
-        c->state[1] = 2;
+        c->step = 2;
         break;
     }
     case 2:
-        if (rv::As<records::EffectObject>(Effect(rv::Bytes(s)[0xB]))->in_use == 0) s->state[1] = 0;
+        if (rv::As<records::EffectObject>(Effect(rv::Bytes(s)[0xB]))->flags == 0) s->step = 0;
         break;
     default:
         break;
@@ -213,7 +213,7 @@ FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(PartyAction5_Forms_addr
 // original 0x51E910: party set 5's form 0 - the entry of
 // PartyAction5_Form0States 0x65FBC0 that +2 picks (0x51E930, 0x51EAF0,
 // 0x51DA30), jumped to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(PartyAction5_Form0States_addr, rv::Current<records::PartyMember>()->state[1])(); }
+FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(PartyAction5_Form0States_addr, rv::Current<records::PartyMember>()->step)(); }
 
 namespace {
 // PartyAction5_Form0Begin's side probe: the point one step in direction `d`
@@ -261,7 +261,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
     const long slope = g.slope_at(x, z, d);
     if (Byte(at::kScratch) != 0 && static_cast<short>(slope) > 0x40) {
         g.ensure_animation(static_cast<unsigned char>(HalfTurn(rv::Current<records::PartyMember>()->direction) + 0x46));
-        ++rv::Current<records::PartyMember>()->state[1];
+        ++rv::Current<records::PartyMember>()->step;
     } else {
         Sprite_Current[0x2B] = 1;
         ProbeSide(3);
@@ -271,7 +271,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
         Sprite_Current[0xA] = 5;
     }
     Sprite_Current[0xB] = 0;
-    ++rv::Current<records::PartyMember>()->state[1];
+    ++rv::Current<records::PartyMember>()->step;
 }
 
 // original 0x51EAF0, form 0's state 1. +0xA counted down; at 0: the point two
@@ -306,7 +306,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
             if ((x & 0xFFFF) != 0) done = Al(g.cell_pickup(cx + 1, cz)) != 0;
             if (!done && (z & 0xFFFF) != 0) g.cell_pickup(cx, cz + 1);
         }
-        ++rv::Current<records::PartyMember>()->state[1];
+        ++rv::Current<records::PartyMember>()->step;
     }
     g.script_tick_once();
 }
@@ -418,7 +418,7 @@ FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
     const unsigned char i = Al(g.effect_free());
     if (i == 0xFF) return;
     records::EffectObject* const e = rv::As<records::EffectObject>(Effect(i));
-    e->in_use = 1;
+    e->flags = 1;
     e->kind = op[1];
     SetWord(rv::Bytes(e) + 0x36, op[3]);
     SetWord(rv::Bytes(e) + 0x34, op[2] != 0 ? 0x8000 : 0);

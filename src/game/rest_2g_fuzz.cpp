@@ -227,8 +227,8 @@ void Move(U h) {
     switch (h % 14) {
     case 0:
     case 1: sh::SetPointer(BattleWinStates_Current_addr, Rec(b)); break;
-    case 2: if (in) rv::As<records::WindowRecord>(r)->centre_x = b & 1 ? v & 0x1FF : v; break;
-    case 3: if (in) rv::As<records::WindowRecord>(r)->centre_y = b & 1 ? v & 0xFF : v; break;
+    case 2: if (in) rv::As<records::WindowRecord>(r)->x = b & 1 ? v & 0x1FF : v; break;
+    case 3: if (in) rv::As<records::WindowRecord>(r)->y = b & 1 ? v & 0xFF : v; break;
     case 4: if (in) r[0xA] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 5: if (in) r[0xB] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;
     case 6: if (in) r[0xC] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 3 : b); break;

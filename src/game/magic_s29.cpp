@@ -126,7 +126,7 @@ void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
 void LinkAtSc(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    Link(ts->x, ts->y, 2, size);
+    Link(ts->x, ts->z, 2, size);
 }
 void LinkAtCur(unsigned size) {
     const unsigned char* const r = Cur();
@@ -254,7 +254,7 @@ S29_EXPORT void __cdecl DivineBeam_Wait(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Add(Long(Owner() + 0x3C), 0x4000000));
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const std::uint32_t r = RandCall();
@@ -386,7 +386,7 @@ S29_EXPORT void __cdecl DivineBeam_DrawWall(void) {
         const std::int32_t lx = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<short>(nx)) << 9),
                                     ts->x);
         const std::int32_t lz = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<short>(ny)) << 9),
-                                    ts->y);
+                                    ts->z);
         DrawMode(0x35);
         Link(lx, lz, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -420,7 +420,7 @@ S29_EXPORT void __cdecl DivineBurst_Wait(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0x5D] = 0xF;
     Sc()[0x5E] = 0xF;
@@ -523,8 +523,8 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->vel_x = 0x5000;
-        ts->start_x = 0x200;
+        ts->step_x = 0x5000;
+        ts->work_18 = 0x200;
         SetLong(s + 0x14, 0x80000);
         SetLong(s + 0x20, 0x40000);
         Put(cell::kR, Word(s + 0xC));
@@ -538,7 +538,7 @@ S29_EXPORT void __cdecl DivineMote_Launch(void) {
     {
         const int c = Cos(SS(cell::kW4));
         const std::int32_t v = Add(Mul12(c, SS(cell::kR)), Long(Owner() + 0x38));
-        rv::Current<records::BattleTask>()->y = v;
+        rv::Current<records::BattleTask>()->z = v;
     }
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
@@ -560,7 +560,7 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->vel_x = Sub(ts->vel_x, ts->start_x);
+        ts->step_x = Sub(ts->step_x, ts->work_18);
     }
     {
         unsigned char* const s = Sc();
@@ -586,7 +586,7 @@ S29_EXPORT void __cdecl DivineMote_Fly(void) {
         unsigned char* const s = Sc();
         SetLong(s + 0x3C, Add(Long(s + 0x3C), Long(s + 0x14)));
     }
-    if (rv::Current<records::BattleTask>()->vel_x != 0) return;
+    if (rv::Current<records::BattleTask>()->step_x != 0) return;
     Dec(Owner()[0xB]);
     MH_AT(Handler, bof3::addr::MagicFx_FreeCurrentRecord)();
 }
@@ -985,7 +985,7 @@ S29_EXPORT void __cdecl ShadowGlow_Wait(void) {
     if (Sc()[9] != 0) return;
     MH_CALL(Sound_PlayById)(0x100);
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0x14;
@@ -1088,7 +1088,7 @@ int HeadingToOwner() {
     const unsigned char* const o = Owner();
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    const std::int32_t dz = Sub(Long(o + 0x38), ts->y);
+    const std::int32_t dz = Sub(Long(o + 0x38), ts->z);
     const std::int32_t dx = Sub(Long(o + 0x34), ts->x);
     return MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
 }
@@ -1104,20 +1104,20 @@ S29_EXPORT void __cdecl ShadowSeeker_Launch(void) {
     if (Sc()[9] != 0) return;
     Sc()[8] = Pointer(MagicS23_ActorSprite_addr)[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(MagicS23_ActorSprite_addr) + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(MagicS23_ActorSprite_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(MagicS23_ActorSprite_addr) + 0x38));
     SetLong(Sc() + 0x3C, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
-    rv::Current<records::BattleTask>()->vel_x = 0x8000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x8000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(TaskFn, magic_s29::kTurnByFacing)(Sc());
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Add(ts->x, ts->vel_x);
-        ts->y = Add(ts->y, ts->vel_y);
+        ts->x = Add(ts->x, ts->step_x);
+        ts->z = Add(ts->z, ts->step_z);
         SetLong(s + 0x3C, Add(Long(s + 0x3C), 0x800000));
     }
     const int heading = HeadingToOwner();
-    rv::Current<records::BattleTask>()->vel_x = heading;
+    rv::Current<records::BattleTask>()->step_x = heading;
     Sc()[9] = 0;
     Inc(Sc()[2]);
 }
@@ -1136,10 +1136,10 @@ S29_EXPORT void __cdecl ShadowSeeker_Home(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->vel_y = ts->vel_x;
+        ts->step_z = ts->step_x;
     }
     const int heading = HeadingToOwner();
-    rv::Current<records::BattleTask>()->vel_x = heading;
+    rv::Current<records::BattleTask>()->step_x = heading;
     const int near = MH_CALL(MagicFx_NearSprite)(Owner(), 0xC000);
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
@@ -1147,9 +1147,9 @@ S29_EXPORT void __cdecl ShadowSeeker_Home(void) {
         Inc(s[2]);
         return;
     }
-    ts->vel_y = Sub(ts->vel_y & 0xFFF, ts->vel_x & 0xFFF);
-    if (ts->vel_y < 0) ts->vel_y = Sub(0, ts->vel_y);
-    const std::int32_t turn = ts->vel_y;
+    ts->step_z = Sub(ts->step_z & 0xFFF, ts->step_x & 0xFFF);
+    if (ts->step_z < 0) ts->step_z = Sub(0, ts->step_z);
+    const std::int32_t turn = ts->step_z;
     if (turn > 0x600 && turn < 0xA00) Inc(s[2]);
 }
 

@@ -163,7 +163,7 @@ void Rtp4(unsigned char* prim, unsigned step) {
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
                                 size);
 }
 // Linked at the current Transfer record's (+0x14, +0x18), layer 2.
@@ -215,7 +215,7 @@ void StartMotes(std::uint32_t pool, unsigned motes, std::uint32_t alloc) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = src[8];
         ts->x = Long(src + 0x34);
-        ts->y = Long(src + 0x38);
+        ts->z = Long(src + 0x38);
         SetLong(s + 0x3C, Long(src + 0x3C));
         s[0xB] = 0;
         Inc(s[1]);
@@ -275,7 +275,7 @@ void LaunchMote(std::uint32_t colours, std::uint32_t lift, std::uint32_t fall, u
     v = Cos(SS(4));
     {
         const std::int32_t z = Long(Owner() + 0x38);
-        rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(v, 15, 12)) + static_cast<std::uint32_t>(z)));
+        rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(v, 15, 12)) + static_cast<std::uint32_t>(z)));
     }
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + lift));
     const unsigned k = RandCall() & 7u;
@@ -448,7 +448,7 @@ S34_EXPORT void __cdecl CharmMote_PushMatrix(void) {
     rot[3] = 0;
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
@@ -535,7 +535,7 @@ S34_EXPORT void __cdecl Magic159_Start(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = Long(src + 0x34);
-        ts->y = Long(src + 0x38);
+        ts->z = Long(src + 0x38);
         SetLong(s + 0x3C, Long(src + 0x3C));
         s[0xB] = 0;
         Inc(s[1]);
@@ -585,7 +585,7 @@ S34_EXPORT void __cdecl Magic159Child_Wait(void) {
     Dec(s[9]);
     if (s[9] != 0) return;
     ts->x = Long(Owner() + 0x34);
-    ts->y = Long(Owner() + 0x38);
+    ts->z = Long(Owner() + 0x38);
     SetLong(s + 0x3C, Long(Owner() + 0x3C));
     s[9] = 0x10;
     s[0xA] = 0;
@@ -682,7 +682,7 @@ S34_EXPORT void __cdecl TimedBlow_Start(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = Owner()[8];
         ts->x = Long(Owner() + 0x34);
-        ts->y = Long(Owner() + 0x38);
+        ts->z = Long(Owner() + 0x38);
         SetLong(s + 0x3C, Long(Owner() + 0x3C));
         s[0xB] = 0;
         Inc(s[1]);
@@ -868,7 +868,7 @@ S34_EXPORT void __cdecl Transfer_Start(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = src[8];
         ts->x = Long(src + 0x34);
-        ts->y = Long(src + 0x38);
+        ts->z = Long(src + 0x38);
         SetLong(s + 0x3C, Long(src + 0x3C));
     }
     MH_CALL(BattleActor_UpdateScreenXY)();

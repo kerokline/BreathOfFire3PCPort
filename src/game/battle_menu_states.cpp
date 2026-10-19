@@ -259,13 +259,13 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     const unsigned actor = Acting()[5];
     auto* const hand_window = rv::As<records::WindowRecord>(At(BattleE4_Hand_addr));
     hand_window->in_use = 1;
-    hand_window->centre_x = static_cast<unsigned>(Long(list + 4)) + 7;
+    hand_window->x = static_cast<unsigned>(Long(list + 4)) + 7;
     const unsigned top_row = list[0xB];
     auto* const member_rec = rv::As<records::PartyMember>(At(ObjTrio_addr + actor * at::kMemberSize));
     member_rec->flags_130 = static_cast<std::int32_t>(member_rec->flags_130) & 0xBFFF;
     const unsigned cursor_row = list[0xC];
     const unsigned pressed = Input_Pressed & Sigma(0xF00C);
-    hand_window->centre_y = (cursor_row - top_row + 2) * 13 + list_window->centre_y;
+    hand_window->y = (cursor_row - top_row + 2) * 13 + list_window->y;
     const unsigned repeat = g.auto_repeat(pressed);
 
     if (repeat & 0x8000) {
@@ -341,14 +341,14 @@ extern "C" void __cdecl BattleItemCmd_List(void) {
     if (up && before == 0) {
         g.sound(0x100);
         const std::uint32_t x = static_cast<std::uint32_t>(Long(list + 4)) + 0x20;
-        const unsigned y = list_window->centre_y - 0x16u;
+        const unsigned y = list_window->y - 0x16u;
         unsigned char* const above = At(BattleE4_Above_addr);
         auto* const above_window = rv::As<records::WindowRecord>(above);
         above_window->handler = 8;
         above_window->kind = 5;
         above_window->in_use = 1;
-        above_window->centre_x = x;
-        above_window->centre_y = y;
+        above_window->x = x;
+        above_window->y = y;
         above[0xA] = 0;
         above[0xB] = 0xFF;
         Byte(at::kRecord4) = 0;

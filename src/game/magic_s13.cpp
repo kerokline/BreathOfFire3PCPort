@@ -264,7 +264,7 @@ S13_EXPORT void __cdecl SuddenDeathChild_Start(void) {
     {
         const unsigned char* const rec = ActorRecord(Sc()[4]);
         rv::Store(rv::Current<records::BattleTask>()->x, Long(rec + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->y, Long(rec + 0x38));
+        rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
         SetLong(Sc() + 0x3C, static_cast<std::int32_t>(U(Long(rec + 0x3C)) + 0x2000000u));
     }
     {

@@ -193,7 +193,7 @@ extern "C" unsigned char __cdecl BossBully_Enter(void) {
                                  : AddressOf(BossBully_SoundsC);
     rv::As<records::BattleEnemy>(Enemy())->cue_table = S(sounds);
     rv::As<records::BattleEnemy>(Enemy())->event_hook = S(bof3::addr::BossBully_Hook);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -256,7 +256,7 @@ extern "C" void __cdecl BossStallion_Dispatch(void) {
 // tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossStallion_Enter(void) {
     StoreKind(AddressOf(BossStallion_Anims), bof3::addr::BossStallion_Hook, AddressOf(BossStallion_Sounds));
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -277,7 +277,7 @@ extern "C" unsigned char __cdecl BossSample10_Enter(void) {
     StoreKind(AddressOf(BossStallion_Anims), bof3::addr::BossSample10_Hook, AddressOf(BossStallion_Sounds));
     auto* const enemy_rec = rv::As<records::BattleEnemy>(Enemy());
     enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -330,7 +330,7 @@ extern "C" void __cdecl BossBeyd_Dispatch(void) { Dispatch("BossBeyd_Dispatch", 
 // 0x939AD8's +0x8F = 1, its kind +0x100 = 0x1E (30) and CarryStats.
 extern "C" void __cdecl BossBeyd_Enter(void) {
     StoreKind(AddressOf(BossBeyd_Anims), bof3::addr::BossBeyd_Hook, AddressOf(BossBeyd_Sounds));
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     BH_CALL(Sprite_ScriptTick)();
     if (BattleActions_EventBattle != 0x1A) return;
     const unsigned char id = BH_CALL(EnemyData_FindByTag)(0x59);
@@ -389,7 +389,7 @@ extern "C" void __cdecl BossBeyd2_Dispatch(void) { Dispatch("BossBeyd2_Dispatch"
 // CarryStats - in every fight.
 extern "C" void __cdecl BossBeyd2_Enter(void) {
     StoreKind(AddressOf(BossBeyd_Anims), bof3::addr::BossBeyd2_Hook, AddressOf(BossBeyd_Sounds));
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     BH_CALL(Sprite_ScriptTick)();
     rv::Current<records::BattleEnemy>()->layout = 1;
     rv::As<records::BattleEnemy>(Enemy())->kind_flag = 1;
@@ -420,7 +420,7 @@ extern "C" void __cdecl BossZig_Dispatch(void) { Dispatch("BossZig_Dispatch", Ad
 extern "C" unsigned char __cdecl BossZig_Enter(void) {
     StoreKind(AddressOf(BossZig_Anims), bof3::addr::BossZig_Hook, AddressOf(BossZig_Sounds));
     rv::Current<records::BattleEnemy>()->layout = 3;
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -437,7 +437,7 @@ extern "C" void __cdecl BossZig_Idle(void) {
         BH_CALL(BattleEnemy_SetAnimation)((Enemy()[0x110] & 2) != 0 ? 8u : 0u);
     }
     BH_CALL(BattleEnemy_ScriptTick)();
-    rv::Current<records::BattleEnemy>()->state[0] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[0] + 1);
+    rv::Current<records::BattleEnemy>()->state = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state + 1);
 }
 
 // original 0x43BD40: state 5: jmp [BossZig_Step5Subs + 4 * +2] (2).
@@ -456,7 +456,7 @@ extern "C" void __cdecl BossZig_Step5Count(void) {
     if (Sprite_Current[9] != 0) return;
     const unsigned char* const sounds = At(static_cast<U>(static_cast<std::int32_t>(rv::As<records::BattleEnemy>(Enemy())->cue_table)));
     BH_AT(SoundFn, at::kEnemySound)(Word(sounds));
-    rv::Current<records::BattleEnemy>()->state[1] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[1] + 1);
+    rv::Current<records::BattleEnemy>()->step = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->step + 1);
 }
 
 // original 0x43BDA0: step 5, +2 = 1: when BattleEnemy_ScriptTick answers al not
@@ -730,7 +730,7 @@ extern "C" void __cdecl Boss26_End(void) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));

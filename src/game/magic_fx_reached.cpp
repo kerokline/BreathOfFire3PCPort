@@ -120,7 +120,7 @@ Handler Entry(std::uint32_t table, unsigned index) {
 void TakePosition(const unsigned char* from) {
     Sprite_Current[8] = from[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(from + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(from + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(from + 0x3C));
 }
 void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
@@ -234,7 +234,7 @@ MFX_EXPORT void __cdecl FxRing_Wait(void) {
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
     tsc->x = Long(Ptr(at::kOwner) + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Ptr(at::kOwner) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Ptr(at::kOwner) + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Ptr(at::kOwner) + 0x3C));
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0;

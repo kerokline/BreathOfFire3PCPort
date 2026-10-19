@@ -671,8 +671,8 @@ extern "C" unsigned char __cdecl BattleFxDash_Advance(void) {
         auto* const task_rec = rv::As<records::BattleTask>(t);
         for (U i = 0; i < 0x80; i += 4) SetL(t + i, L(s + i));
         task_rec->flags &= 0xBF;
-        task_rec->kind = 0;
-        task_rec->param = 0x12;
+        task_rec->runner = 0;
+        task_rec->kind = 0x12;
         task_rec->state = 0;
         t[2] = 0;
         t[3] = 0;

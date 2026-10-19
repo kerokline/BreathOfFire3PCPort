@@ -161,7 +161,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleTask_RunAll(vo
         SetPtrAt(at::kTaskCurrent, t);
         Sprite_Current = t;
         BattleE2_Owner = owner;
-        const unsigned kind = task_rec->kind;
+        const unsigned kind = task_rec->runner;
         if (kind >= 4) bof3::Fatal("BattleTask_RunAll: slot %u has kind %u, past the four-entry table", i, kind);
         g.tasks[kind]();
     }
@@ -178,8 +178,8 @@ extern "C" unsigned char __cdecl BattleTask_Create(unsigned kind, unsigned param
         auto* const task_rec = rv::As<records::BattleTask>(Task(i));
         if ((task_rec->flags & 1) != 0) continue;
         task_rec->flags = static_cast<unsigned char>(task_rec->flags | 1);
-        task_rec->kind = static_cast<unsigned char>(kind);
-        task_rec->param = static_cast<unsigned char>(parameter);
+        task_rec->runner = static_cast<unsigned char>(kind);
+        task_rec->kind = static_cast<unsigned char>(parameter);
         return static_cast<unsigned char>(i);
     }
     return 0xFF;
@@ -224,7 +224,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnemy_RunAll(v
         Sprite_Current = e;
         SetPtrAt(at::kEnemyCurrent, e);
         if (event != 0) {
-            if (enemy_rec->state[0] != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(enemy_rec->event_hook))))(2);
+            if (enemy_rec->state != 0) reinterpret_cast<HookFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(enemy_rec->event_hook))))(2);
             const unsigned state = rv::As<records::BattleEnemy>(Enemy())->run_state;
             reinterpret_cast<const Handler*>(static_cast<std::uintptr_t>(BattleEnemy_States_addr + 4))[state]();
         } else {

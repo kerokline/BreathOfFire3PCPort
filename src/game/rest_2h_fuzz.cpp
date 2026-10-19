@@ -347,8 +347,8 @@ void SeedSlide(unsigned char* w, unsigned at_word, int by, int bound) {
 
 void SeedWindow(unsigned char* w) {
     w[3] = static_cast<unsigned char>(sh::Next() % 3);
-    rv::As<records::WindowRecord>(w)->centre_x = PickOf(0, 0x10, 0x28, 0x8C, 0xFF88, 0x7FFF, 0x8000, sh::Next() % 0x140, sh::Next());
-    rv::As<records::WindowRecord>(w)->centre_y = PickOf(0, 0x10, 0x26, 0x80, 0xF0, 0xFFEC, sh::Next() % 0xF0, sh::Next());
+    rv::As<records::WindowRecord>(w)->x = PickOf(0, 0x10, 0x28, 0x8C, 0xFF88, 0x7FFF, 0x8000, sh::Next() % 0x140, sh::Next());
+    rv::As<records::WindowRecord>(w)->y = PickOf(0, 0x10, 0x26, 0x80, 0xF0, 0xFFEC, sh::Next() % 0xF0, sh::Next());
     w[8] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, 0x10, 0x11, 0x14, 0xF0, 0xF4, 0xF5, sh::Next()));
     w[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, sh::Next()));
     w[0xA] = static_cast<unsigned char>(1 + sh::Next() % 6);   // the lists' top: 1..6 (MasterWin_DrawList's rows stay in its 17)

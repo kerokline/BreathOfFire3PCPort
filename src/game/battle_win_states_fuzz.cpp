@@ -463,7 +463,7 @@ void Seed(unsigned k) {
     switch (k) {
     case kSlideIn: {
         static const unsigned kY[] = {0xC4, 0xC7, 0xC8, 0xC9, 0xCB, 0xCC, 0xCD, 0x100, 0x7FFF, 0x8000, 0xFFFF, 0};
-        window_rec->centre_y = Often() ? kY[Next() % 12] : Next() & 0xFFFF;
+        window_rec->y = Often() ? kY[Next() % 12] : Next() & 0xFFFF;
         break;
     }
     case kCrossGrow:

@@ -517,7 +517,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
         if (status & 0x40) {
             At(at::kCuredBits)[0] = static_cast<unsigned char>(Byte(at::kCuredBits) | 0x40);
             if (t <= 2) {
-                g.cure(rv::As<records::PartyMember>(Party(t) - 0x10)->member, 0x40);
+                g.cure(rv::As<records::PartyMember>(Party(t) - 0x10)->actor, 0x40);
                 Party(t)[at::kPShown2] = 0;
             } else {
                 g.cure(rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->actor, 0x40);
@@ -528,7 +528,7 @@ extern "C" short __cdecl Battle_CalcDamage(unsigned attacker, unsigned target, u
         if (status & 0x20) {
             SetWord(At(at::kCuredBits), Word(At(at::kCuredBits)) | 0x20);
             if (t <= 2) {
-                g.cure(rv::As<records::PartyMember>(Party(t) - 0x10)->member, 0x20);
+                g.cure(rv::As<records::PartyMember>(Party(t) - 0x10)->actor, 0x20);
                 Party(t)[at::kPShown2] = 0;
             } else {
                 g.cure(rv::As<records::BattleEnemy>(Enemy(t) + at::kEObject)->actor, 0x20);

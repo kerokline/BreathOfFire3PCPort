@@ -397,7 +397,7 @@ S14_EXPORT void __cdecl Weretiger_Return(void) {
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         if (s[0xB] & 1) return;
         Field_Kind2X = ts->x;
-        Field_Kind2Z = ts->y;
+        Field_Kind2Z = ts->z;
         MapView_Elevation = S16(s + 0x3E);
     }
     Call0(bof3::addr::Weretiger_ResetMapView);
@@ -810,7 +810,7 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y),
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z),
                                     0, 0xC);
     }
     unsigned char* const p = Gfx_PacketNext;
@@ -828,7 +828,7 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 0,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 0,
                                 0x1C);
 }
 
@@ -936,7 +936,7 @@ S14_EXPORT void __cdecl Tsunami_Task(void) {
 // on.
 S14_EXPORT void __cdecl Tsunami_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     const unsigned slot = NewTask(0x11);
     unsigned char* const child = TaskSlot(slot);
@@ -998,11 +998,11 @@ S14_EXPORT void __cdecl TsunamiWave_Run(void) {
 // amplitude +0x14 0xF0; +2 on.
 S14_EXPORT void __cdecl TsunamiWave_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Field_Kind2X) + 0xFFEE0000u));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(U(Field_Kind2Z) + 0x880000u));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Field_Kind2Z) + 0x880000u));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0x1A;
     Sc()[9] = 0x10;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_z = 0;
     SetLong(Sc() + 0x14, 0xF0);
     Inc(Sc()[2]);
 }
@@ -1012,7 +1012,7 @@ S14_EXPORT void __cdecl TsunamiWave_Advance(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->y = static_cast<std::int32_t>(U(ts->y) + 0xFFFF4000u);
+        ts->z = static_cast<std::int32_t>(U(ts->z) + 0xFFFF4000u);
     }
     Dec(Sc()[9]);
     unsigned char* const s = Sc();
@@ -1025,8 +1025,8 @@ S14_EXPORT void __cdecl TsunamiWave_Grow(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     s[0xB] = static_cast<unsigned char>((s[0xB] - 1) & 0x1F);
-    ts->vel_y = static_cast<std::int32_t>(U(ts->vel_y) + 2);
-    if (ts->vel_y == 0x80) Inc(s[2]);
+    ts->step_z = static_cast<std::int32_t>(U(ts->step_z) + 2);
+    if (ts->step_z == 0x80) Inc(s[2]);
 }
 
 // original 0x4B5C30: the angle down (mod 0x20), the amplitude and the width
@@ -1036,8 +1036,8 @@ S14_EXPORT void __cdecl TsunamiWave_Shrink(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     s[0xB] = static_cast<unsigned char>((s[0xB] - 1) & 0x1F);
     SetLong(s + 0x14, static_cast<std::int32_t>(U(Long(s + 0x14)) - 2));
-    ts->vel_y = static_cast<std::int32_t>(U(ts->vel_y) - 2);
-    if (ts->vel_y == 0x20) Inc(s[2]);
+    ts->step_z = static_cast<std::int32_t>(U(ts->step_z) - 2);
+    if (ts->step_z == 0x20) Inc(s[2]);
 }
 
 // original 0x4B5C70: the amplitude down by 2, the width by 1; at a width of 0
@@ -1046,8 +1046,8 @@ S14_EXPORT void __cdecl TsunamiWave_End(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     SetLong(s + 0x14, static_cast<std::int32_t>(U(Long(s + 0x14)) - 2));
-    ts->vel_y = static_cast<std::int32_t>(U(ts->vel_y) - 1);
-    if (ts->vel_y != 0) return;
+    ts->step_z = static_cast<std::int32_t>(U(ts->step_z) - 1);
+    if (ts->step_z != 0) return;
     Owner()[0xB] = 0xFF;
     MH_CALL(BattleTask_FreeCurrent)();
 }
@@ -1073,7 +1073,7 @@ void WaveEdge(int i, unsigned step4, unsigned shade) {
         const unsigned angle = ((static_cast<unsigned>(s[0xB]) + static_cast<unsigned>(i)) & 0x1Fu) << 7;
         SetVW(0, 0);
         SetSW(6, angle);
-        const int half = ts->vel_y >> 1;
+        const int half = ts->step_z >> 1;
         SetVW(2, static_cast<unsigned>(-0x80 - half) * static_cast<unsigned>(i));
         const int v = MH_CALL(Math_Sin)(static_cast<short>(angle));
         const int w = Mul12(v, SS(0));
@@ -1085,7 +1085,7 @@ void WaveEdge(int i, unsigned step4, unsigned shade) {
     }
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    if (s[2] == 4) SetSW(2, static_cast<unsigned>(DivPow2(ts->vel_y, 1)) * step4);
+    if (s[2] == 4) SetSW(2, static_cast<unsigned>(DivPow2(ts->step_z, 1)) * step4);
     else SetSW(2, shade);
 }
 
@@ -1141,7 +1141,7 @@ S14_EXPORT void __cdecl TsunamiWave_Draw(void) {
         SetVW(0, 0);
         const unsigned angle = ((static_cast<unsigned>(s[0xB]) + static_cast<unsigned>(i)) & 0x1Fu) << 7;
         SetSW(6, angle);
-        const int half = ts->vel_y >> 1;
+        const int half = ts->step_z >> 1;
         SetVW(2, static_cast<unsigned>(-0x80 - half) * static_cast<unsigned>(i));
         const int v = MH_CALL(Math_Sin)(static_cast<short>(angle));
         ++i;
@@ -1209,7 +1209,7 @@ void RingAt(unsigned height, unsigned index, const unsigned char* actor) {
     Sc()[0xB] = static_cast<unsigned char>(height);
     Sc()[0xA] = static_cast<unsigned char>(index);
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(offset)) + U(Long(actor + 0x34))));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(U(Long(actor + 0x38)) + U(Long(offset + 4))));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(actor + 0x38)) + U(Long(offset + 4))));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(U(Long(offset + 8)) + U(Long(actor + 0x3C))));
     Call0(bof3::addr::TsunamiRing_PushMatrix);
     Call0(bof3::addr::TsunamiRing_DrawQuads);
@@ -1316,7 +1316,7 @@ S14_EXPORT void __cdecl TsunamiRing_PushMatrix(void) {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-        v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+        v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
         v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
         v[3] = 0;
     }

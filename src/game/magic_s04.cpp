@@ -164,7 +164,7 @@ void Rtp4(unsigned char* prim, unsigned step) {
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
                                 size);
 }
 
@@ -331,16 +331,16 @@ S04_EXPORT void __cdecl SnapWave_Run(void) {
 // and +0xB 0, +9 0x10, +0xA 4 (the swings), +2 on.
 S04_EXPORT void __cdecl SnapWave_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Current<records::BattleTask>()->vel_x = 0x20000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x20000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
-                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x)));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
-                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_y)));
+                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+                                                   static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1000000u));
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0xFFFFA000u));
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFFFA000u));
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     Sc()[4] = 0;
     Sc()[0xB] = 0;
@@ -357,8 +357,8 @@ S04_EXPORT void __cdecl SnapWave_Burst(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        AddL(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
-        AddL(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
+        AddL(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
+        AddL(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
         AddB(s[9], 0xFC);
     }
     if (Sc()[9] != 0) return;
@@ -375,8 +375,8 @@ S04_EXPORT void __cdecl SnapWave_Burst(void) {
         Inc(Sc()[0xB]);
     }
     if (Sc()[0xA] == 4) MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
-    rv::Current<records::BattleTask>()->vel_x = 0x3000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x3000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     MH_CALL(Sound_PlayById)(0x100);
     Inc(Sc()[2]);
@@ -390,8 +390,8 @@ S04_EXPORT void __cdecl SnapWave_Swing(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        AddL(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
-        AddL(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
+        AddL(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
+        AddL(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
     }
     unsigned char* s = Sc();
     const unsigned limit = s[0xA] == 1 ? 0xCu : 0x10u;
@@ -408,7 +408,7 @@ S04_EXPORT void __cdecl SnapWave_Swing(void) {
         return;
     }
     SetLong(s + 0xC, static_cast<std::int32_t>(0xFFFFA000u));
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     Dec(Sc()[2]);
 }
@@ -563,7 +563,7 @@ S04_EXPORT void __cdecl SnapSpark_Launch(void) {
     }
     {
         const int r = Cos(SD(4));
-        rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
+        rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
                                                        static_cast<std::uint32_t>(Long(src + 0x38))));
     }
     CopyL(Sc() + 0x3C, src + 0x3C);
@@ -831,10 +831,10 @@ void AimAtOwner() {
     const unsigned char* const o = Owner();
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    const int dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(ts->y));
+    const int dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(ts->z));
     const int dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(ts->x));
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-    rv::Current<records::BattleTask>()->vel_x = angle;
+    rv::Current<records::BattleTask>()->step_x = angle;
     SetLong(Sc() + 0x14, 0x40);
     SetLong(Sc() + 0x20, -8);
     Sc()[9] = 0x10;
@@ -909,14 +909,14 @@ S04_EXPORT void __cdecl KickImage_Arc(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         unsigned char* const x = s + 0x34;
-        const int r = Sin(ts->vel_x);
+        const int r = Sin(ts->step_x);
         AddL(x, static_cast<std::uint32_t>(ShlSar(r, 13, 12)));
     }
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         unsigned char* const z = s + 0x38;
-        const int r = Cos(ts->vel_x);
+        const int r = Cos(ts->step_x);
         AddL(z, static_cast<std::uint32_t>(ShlSar(r, 13, 12)));
     }
     RiseAndFall();
@@ -1283,7 +1283,7 @@ S04_EXPORT void __cdecl KickImage_PushMatrixGround(void) {
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     short v[4];
     GroundPoint(s, 0, v);
-    const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->y);
+    const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
     v[2] = static_cast<short>(-Half(static_cast<short>(ground)));
     SetMatrix(angles, v);
 }

@@ -120,7 +120,7 @@ void CallCell(std::uint32_t table, unsigned index) {
 void LinkAtTask(int slot, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
                                 slot, size);
 }
 
@@ -272,7 +272,7 @@ MS21_EXPORT void __cdecl Inferno_TargetCentre(void) {
     }
     if (n == 0) bof3::Fatal("Inferno_TargetCentre: every target is out (the original divides by zero)");
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(x / n + 0x4000) << 9));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(z / n + 0x4000) << 9));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(z / n + 0x4000) << 9));
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(y / n));
 }
 
@@ -357,7 +357,7 @@ static void ColumnPlace() {
     const int s = MH_CALL(Math_Sin)(S16(Scr(0xA)));
     rv::Store(rv::Current<records::BattleTask>()->x, (Mul(s, S16(Scr(0))) >> 3) + Long(Pointer(BattleE2_Owner_addr) + 0x34));
     const int c = MH_CALL(Math_Cos)(S16(Scr(0xA)));
-    rv::Store(rv::Current<records::BattleTask>()->y, (Mul(c, S16(Scr(0))) >> 3) + Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, (Mul(c, S16(Scr(0))) >> 3) + Long(Pointer(BattleE2_Owner_addr) + 0x38));
 }
 
 // original 0x4C6770: +0xA = (Rand & 3) << 4; the radius 0xC0 - +0xA; placed
@@ -517,7 +517,7 @@ MS21_EXPORT void __cdecl FlameSpark_Start(void) {
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
     tsc->x = Long(Pointer(BattleE2_Owner_addr) + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleE2_Owner_addr) + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     SetWord(Scr(0), 0x100);
     const int r = MH_CALL(Rand)();
@@ -654,7 +654,7 @@ MS21_EXPORT void __cdecl Frost_Task(void) {
 MS21_EXPORT void __cdecl Frost_Start(void) {
     unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
     SetWord(Sprite_Current + 0x2E, Word(src + 0x2E));
     SetWord(Sprite_Current + 0x30, Word(src + 0x30) - 0x10u);
@@ -802,7 +802,7 @@ MS21_EXPORT void __cdecl FrostRing_DrawShards(void) {
             const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(ox) << 9) +
                                                                static_cast<std::uint32_t>(ts->x));
             const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(static_cast<short>(oz)) << 9) +
-                                                               static_cast<std::uint32_t>(ts->y));
+                                                               static_cast<std::uint32_t>(ts->z));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
             unsigned char* const p = Gfx_PacketNext;
@@ -862,7 +862,7 @@ MS21_EXPORT void __cdecl FrostRing_PushMatrix(void) {
     rot[3] = 0;
     short v[4];
     v[0] = static_cast<short>((tsc->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((tsc->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((tsc->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(sc + 0x3E) / 2));
     v[3] = 0;
     struct Matrix {
@@ -945,7 +945,7 @@ MS21_EXPORT void __cdecl Iceblast_Start(void) {
     SetWord(Sprite_Current + 0x2E, Word(src + 0x2E));
     SetWord(Sprite_Current + 0x30, Word(src + 0x30));
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
     for (unsigned i = 0; i < 0x38; ++i) {
         unsigned char v;
@@ -963,7 +963,7 @@ MS21_EXPORT void __cdecl Iceblast_Start(void) {
         SetLong(child + 0x80, static_cast<std::int32_t>(Addr(sc)));
         child[8] = src[8];
         SetLong(child + 0x34, tsc->x);
-        SetLong(child + 0x38, tsc->y);
+        SetLong(child + 0x38, tsc->z);
         SetLong(child + 0x3C, Long(sc + 0x3C));
         child[9] = U8(0x30 - U8(i << 2));
         child[0xA] = 0;
@@ -1090,7 +1090,7 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpires(void) {
             const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(0))) << 9) +
                                                                static_cast<std::uint32_t>(tsc->x));
             const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(2))) << 9) +
-                                                               static_cast<std::uint32_t>(tsc->y));
+                                                               static_cast<std::uint32_t>(tsc->z));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
@@ -1168,7 +1168,7 @@ MS21_EXPORT void __cdecl Iceblast_DrawSpiresInner(void) {
             const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(0))) << 9) +
                                                                static_cast<std::uint32_t>(tsc->x));
             const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(S16(Vtx(2))) << 9) +
-                                                               static_cast<std::uint32_t>(tsc->y));
+                                                               static_cast<std::uint32_t>(tsc->z));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
             unsigned char* const p = Gfx_PacketNext;
@@ -1322,7 +1322,7 @@ MS21_EXPORT void __cdecl IceShard_Draw(void) {
         const unsigned long x = static_cast<unsigned long>((static_cast<std::uint32_t>(static_cast<short>(px)) << 9) +
                                                            static_cast<std::uint32_t>(ts2->x));
         const unsigned long z = static_cast<unsigned long>((static_cast<std::uint32_t>(static_cast<short>(pz)) << 9) +
-                                                           static_cast<std::uint32_t>(ts2->y));
+                                                           static_cast<std::uint32_t>(ts2->z));
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;

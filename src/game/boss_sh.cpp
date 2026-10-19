@@ -240,7 +240,7 @@ extern "C" void __cdecl Boss34_End(void) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
         auto* const member_rec = rv::As<records::PartyMember>(p);
         if ((member_rec->flags & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->actor);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
         const auto pose = static_cast<unsigned char>(member_rec->direction + (flags & 0x4000 ? 0x1C : 4));
@@ -408,7 +408,7 @@ extern "C" void __cdecl BossAngler_AdvanceStart(void) {
     auto* const cur_enemy = rv::As<records::BattleEnemy>(s);
     SetLong(s + 0x18, S(static_cast<U>(cur_enemy->x) + 0x30000u));
     SetLong(Sprite_Current + 0xC, 0x4000);
-    rv::Current<records::BattleEnemy>()->state[1] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[1] + 1);
+    rv::Current<records::BattleEnemy>()->step = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->step + 1);
 }
 
 // original 0x43E8C0: state 4 step 1. +9 down; at 0, 0x437450(the first word of
@@ -436,8 +436,8 @@ extern "C" unsigned char __cdecl BossAngler_Advance(void) {
         BH_AT(Handler, at::kEnemyActChance)();
         unsigned char* const t = Sprite_Current;
         SetLong(t + 0x18, S(static_cast<U>(Long(t + 0x18)) + 0xFFFD0000u));
-        rv::Current<records::BattleEnemy>()->state[0] = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state[0] + 1);
-        rv::Current<records::BattleEnemy>()->state[1] = 0;
+        rv::Current<records::BattleEnemy>()->state = static_cast<unsigned char>(rv::Current<records::BattleEnemy>()->state + 1);
+        rv::Current<records::BattleEnemy>()->step = 0;
     }
     return BH_CALL(BattleEnemy_ScriptTick)();
 }
@@ -457,7 +457,7 @@ extern "C" unsigned char __cdecl BossAngler_Retreat(void) {
     cur_enemy->x = S(static_cast<U>(cur_enemy->x) - static_cast<U>(Long(s + 0xC)));
     s = Sprite_Current;
     cur_enemy = rv::As<records::BattleEnemy>(s);
-    if (cur_enemy->x == Long(s + 0x18)) cur_enemy->state[1] = static_cast<unsigned char>(cur_enemy->state[1] + 1);
+    if (cur_enemy->x == Long(s + 0x18)) cur_enemy->step = static_cast<unsigned char>(cur_enemy->step + 1);
     return BH_CALL(BattleEnemy_ScriptTick)();
 }
 

@@ -656,18 +656,18 @@ bool FacingAcross() {
 // One step of the sprite's glide: the velocity +0xC / +0x10 by +0x18 / +0x1C,
 // the screen point by the velocity (as words).
 void Accelerate() {
-    AddL(Sc() + 0xC, rv::Current<records::BattleTask>()->start_x);
-    AddL(Sc() + 0x10, rv::Current<records::BattleTask>()->start_y);
+    AddL(Sc() + 0xC, rv::Current<records::BattleTask>()->work_18);
+    AddL(Sc() + 0x10, rv::Current<records::BattleTask>()->work_1c);
 }
 void Move() {
     AddW(Sc() + 0x2E, Word(Sc() + 0xC));
     AddW(Sc() + 0x30, Word(Sc() + 0x10));
 }
 void SetVelocity(std::int32_t vx, std::int32_t vy, std::int32_t ax, std::int32_t ay) {
-    rv::Current<records::BattleTask>()->vel_x = vx;
-    rv::Current<records::BattleTask>()->vel_y = vy;
-    rv::Current<records::BattleTask>()->start_x = ax;
-    rv::Current<records::BattleTask>()->start_y = ay;
+    rv::Current<records::BattleTask>()->step_x = vx;
+    rv::Current<records::BattleTask>()->step_z = vy;
+    rv::Current<records::BattleTask>()->work_18 = ax;
+    rv::Current<records::BattleTask>()->work_1c = ay;
 }
 
 }  // namespace
@@ -695,8 +695,8 @@ S30_EXPORT void __cdecl KaiserSprite_Start(void) {
         Accelerate();
         Move();
     }
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_x)));
-    rv::Store(rv::Current<records::BattleTask>()->vel_y, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->vel_y)));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
     SpriteFields(5, 2, 0, 0);
     Sc()[0x29] = 2;
     SetWord(Sc() + 0x2C, 0);
@@ -822,7 +822,7 @@ S30_EXPORT void __cdecl KaiserSprite_Leave(void) {
 S30_EXPORT void __cdecl KaiserSprite_Exit(void) {
     if ((Frame_Counter & 1) != 0 && Sc()[9] < 8) {
         Inc(Sc()[9]);
-        AddL(Sc() + 0x10, rv::Current<records::BattleTask>()->start_y);
+        AddL(Sc() + 0x10, rv::Current<records::BattleTask>()->work_1c);
     }
     Move();
     Dec(Sc()[0xA]);

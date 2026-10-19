@@ -216,12 +216,12 @@ extern "C" void __cdecl BattleWin_BannerRun(void) {
     if (state >= 3) bof3::Fatal("a battle banner window's state byte is %u; the original's stack table holds three", state);
     g.banner[state]();
     const unsigned char* w = Rec();
-    g.message_box(rv::As<records::WindowRecord>(w)->centre_x, rv::As<records::WindowRecord>(w)->centre_y);
+    g.message_box(rv::As<records::WindowRecord>(w)->x, rv::As<records::WindowRecord>(w)->y);
     w = Rec();
     const std::uint32_t e = static_cast<std::uint32_t>(w[0xA]) * 0xC;
     const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(at::kBannerText + e))));
     const std::uint32_t colour = (e & ~0xFFu) | At(at::kBannerColour + e)[0];
-    g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->centre_x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->centre_y + 3),
+    g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(w)->y + 3),
                    static_cast<int>(colour), 0xFF, text);
 }
 
@@ -230,12 +230,12 @@ extern "C" void __cdecl BattleWin_BannerRun(void) {
 // never arrives (the word wraps), as in the original.
 extern "C" void __cdecl BattleWin_BannerSlideIn(void) {
     unsigned char* const w = Rec();
-    const std::uint16_t y = rv::As<records::WindowRecord>(w)->centre_y;
+    const std::uint16_t y = rv::As<records::WindowRecord>(w)->y;
     if (y == 0x12) {
         ++w[3];
         return;
     }
-    rv::As<records::WindowRecord>(w)->centre_y = static_cast<std::uint16_t>(y + 8);
+    rv::As<records::WindowRecord>(w)->y = static_cast<std::uint16_t>(y + 8);
 }
 
 // original 0x597D10, banner state 2: the window slides up 8 a frame until its
@@ -247,7 +247,7 @@ extern "C" void __cdecl BattleWin_BannerSlideIn(void) {
 // visited last, not one this record names.
 extern "C" void __cdecl BattleWin_BannerSlideOut(void) {
     unsigned char* const w = Rec();
-    const std::uint16_t y = rv::As<records::WindowRecord>(w)->centre_y;
+    const std::uint16_t y = rv::As<records::WindowRecord>(w)->y;
     if (y == 0xFFEA) {
         const auto* const entry = As<const unsigned char*>(BattleMisc_BannerCurrent);
         const auto keep = static_cast<unsigned char>(~entry[1]);
@@ -255,7 +255,7 @@ extern "C" void __cdecl BattleWin_BannerSlideOut(void) {
         g.free_current();
         return;
     }
-    rv::As<records::WindowRecord>(w)->centre_y = static_cast<std::uint16_t>(y - 8);
+    rv::As<records::WindowRecord>(w)->y = static_cast<std::uint16_t>(y - 8);
 }
 
 // ===========================================================================
@@ -286,11 +286,11 @@ extern "C" void __cdecl BattleWin_MessageWait(void) {
 extern "C" void __cdecl BattleWin_MessageSlideIn(void) {
     unsigned char* const w = Rec();
     BattleE1_MessageUp = 1;
-    const std::uint16_t y = rv::As<records::WindowRecord>(w)->centre_y;
+    const std::uint16_t y = rv::As<records::WindowRecord>(w)->y;
     if (y == 0x12)
         ++w[3];
     else
-        rv::As<records::WindowRecord>(w)->centre_y = static_cast<std::uint16_t>(y + 8);
+        rv::As<records::WindowRecord>(w)->y = static_cast<std::uint16_t>(y + 8);
     g.draw_message();
 }
 
@@ -327,19 +327,19 @@ extern "C" void __cdecl BattleWin_MessageShow(void) {
 // Text_DrawAt at (+4 + 4, +6 + 3), colour 0, to its end.
 extern "C" void __cdecl BattleWin_MessageSlideOut(void) {
     unsigned char* const w = Rec();
-    const std::uint16_t y = rv::As<records::WindowRecord>(w)->centre_y;
+    const std::uint16_t y = rv::As<records::WindowRecord>(w)->y;
     if (y == 0xFFEA) {
         BattleE1_MessageUp = 0;
         w[3] = 0;
     } else {
-        rv::As<records::WindowRecord>(w)->centre_y = static_cast<std::uint16_t>(y - 8);
+        rv::As<records::WindowRecord>(w)->y = static_cast<std::uint16_t>(y - 8);
     }
     const unsigned char* r = Rec();
-    g.message_box(rv::As<records::WindowRecord>(r)->centre_x, rv::As<records::WindowRecord>(r)->centre_y);
+    g.message_box(rv::As<records::WindowRecord>(r)->x, rv::As<records::WindowRecord>(r)->y);
     const unsigned i = (BattleWindows_MsgHead - 1u) & 0xFu;
     const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(at::kMsgRing + 4 + 8 * i))));
     r = Rec();
-    g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->centre_x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->centre_y + 3), 0, 0xFF,
+    g.text_draw_at(static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->x + 4), static_cast<std::uint16_t>(rv::As<records::WindowRecord>(r)->y + 3), 0, 0xFF,
                    text);
 }
 

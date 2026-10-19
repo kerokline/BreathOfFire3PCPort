@@ -185,7 +185,7 @@ void SlotHand() {
 
 // The equipped item's word (the member's +0x126: category << 8 | item) and its
 // flag byte, for the member choosing.
-unsigned MemberItem() { return Word(Party(rv::As<records::PartyMember>(MenuActor())->member) + 0x126); }
+unsigned MemberItem() { return Word(Party(rv::As<records::PartyMember>(MenuActor())->actor) + 0x126); }
 
 // A side's target by the flag byte: bit 0x20 the enemies (0x40), else the
 // party (0x80) - neg / sbb / and 0xC0 / add 0x80.
@@ -958,7 +958,7 @@ extern "C" void __cdecl BattleItemCmd_EquipUseKind(void) {
         BattleE4_Step4 = 3;
         return;
     }
-    const unsigned char target = (f & 0x10) ? SideTarget(f) : rv::As<records::PartyMember>(MenuActor())->member;
+    const unsigned char target = (f & 0x10) ? SideTarget(f) : rv::As<records::PartyMember>(MenuActor())->actor;
     Command()[0] = target;
     BattleE4_Step3 = 8;
     BattleE4_Step4 = 3;
@@ -1102,7 +1102,7 @@ extern "C" void __cdecl BattleItemCmd_EquipCommit(void) {
     unsigned char* const command = Command();
     BattleE4_Picking = 0;
     command[1] = 5;
-    rv::As<records::PartyMember>(MenuActor())->state[0] = 2;
+    rv::As<records::PartyMember>(MenuActor())->state = 2;
     BattleActorCopies_EntryCount = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     B(at::kQueue + 1 + LastQueueEntry()) = 1;
     BH_CALL(ItemMenu_FreeWindows)();
@@ -1393,10 +1393,10 @@ extern "C" void __cdecl Escape_Begin(void) {
                 auto* const member_rec = rv::As<records::PartyMember>(p);
                 member_rec->direction ^= 2;
                 p[0x125] = 0;
-                member_rec->state[0] = 2;
-                member_rec->state[1] = 0;
-                member_rec->state[2] = 0;
-                member_rec->state[3] = 0;
+                member_rec->state = 2;
+                member_rec->step = 0;
+                member_rec->state3 = 0;
+                member_rec->state4 = 0;
             }
             ++m;
             if (m >= B(at::kPartyCount)) break;
@@ -1442,7 +1442,7 @@ extern "C" void __cdecl Escape_Failed(void) {
             if (BH_CALL(Battle_ActorIsOut)(m) == 0) {
                 auto* const member_rec = rv::As<records::PartyMember>(Party(m));
                 member_rec->direction ^= 2;
-                member_rec->state[0] = 2;
+                member_rec->state = 2;
                 BH_CALL(Battle_ReturnQueuedItem)(m);
                 BH_CALL(Battle_RemoveFromTurnOrder)(m);
             }

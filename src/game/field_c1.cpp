@@ -361,7 +361,7 @@ extern "C" void __cdecl EffectKind32_Arc(void) {
     records::EffectObject* o = rv::As<records::EffectObject>(Cur());
     const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(o->x, o->z)));
     o = rv::As<records::EffectObject>(Cur());
-    if (ground >= static_cast<short>(Word(rv::Bytes(o) + 0x3E)) || (o->in_use & 0x80) || o->state == 0) {
+    if (ground >= static_cast<short>(Word(rv::Bytes(o) + 0x3E)) || (o->flags & 0x80) || o->state == 0) {
         SetL(rv::Bytes(o) + 0x14, L(At(AddressOf(EffectKind32_Hops) + 8u * o->step)));
         o = rv::As<records::EffectObject>(Cur());
         SetL(rv::Bytes(o) + 0x20, L(At(AddressOf(EffectKind32_Hops) + 4 + 8u * o->step)));
@@ -389,7 +389,7 @@ extern "C" void __cdecl EffectKind32_Settle(void) {
     const short ground = S16(static_cast<U>(SH_CALL(AreaMap_Elevation)(o->x, o->z)));
     o = rv::As<records::EffectObject>(Cur());
     const short height = static_cast<short>(Word(rv::Bytes(o) + 0x3E));
-    if (ground + 0x80 <= height || ground > height || (o->in_use & 0x80)) {
+    if (ground + 0x80 <= height || ground > height || (o->flags & 0x80)) {
         o->state = static_cast<unsigned char>(o->state + 1);
         SH_CALL(Sound_PlayEffect)(0x106);
         o = rv::As<records::EffectObject>(Cur());
@@ -1018,7 +1018,7 @@ extern "C" void __cdecl EffectKind1B_Start(void) {
     o = rv::As<records::EffectObject>(Cur());
     o->step_z = L(At(MoveCmd_F9Steps_addr + 4 + 8u * rv::Bytes(o)[8])) << 4;
     Cur()[0xA] = rv::As<records::PartyMember>(ObjTrio)->char_id == 1 ? 0xA : 0x12;
-    rv::As<records::EffectObject>(Cur())->in_use = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->in_use | 2);
+    rv::As<records::EffectObject>(Cur())->flags = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->flags | 2);
     rv::As<records::EffectObject>(Cur())->state = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->state + 1);
 }
 
@@ -1042,7 +1042,7 @@ extern "C" void __cdecl EffectKind1B_Fly(void) {
                 const unsigned char slot = SH_CALL(Effect_FindFree)();
                 if (slot != 0xFF) {
                     records::EffectObject* const trail = rv::As<records::EffectObject>(EffectRec(slot, "EffectKind1B_Fly"));
-                    trail->in_use = 1;
+                    trail->flags = 1;
                     trail->kind = 0x1B;
                     trail->state = 3;
                 }
@@ -1071,7 +1071,7 @@ extern "C" void __cdecl EffectKind1B_End(void) {
 // word +0x3E, the tint bytes 0; Sprite_SetAnimation(0x4E); +1 = 2.
 extern "C" void __cdecl EffectKind1B_Trail(void) {
     const records::EffectObject* const src = rv::AsConst<records::EffectObject>(Effect_Objects + static_cast<U>(ObjTrio[0xB]) * at::kEffectStride);
-    rv::As<records::EffectObject>(Cur())->in_use = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->in_use | 2);
+    rv::As<records::EffectObject>(Cur())->flags = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->flags | 2);
     Cur()[0x24] = 1;
     SetWord(Cur() + 0x2C, Word(rv::Bytes(src) + 0x2C));
     Cur()[0x27] = 0x7B;

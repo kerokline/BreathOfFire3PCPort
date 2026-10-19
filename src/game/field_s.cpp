@@ -299,10 +299,10 @@ extern "C" void __cdecl Rest_PlaceParty(void) {
             move_script::SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(L(row)));
             move_script::SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(L(row + 4)));
             move_script::SetLong(Sprite_Current + 0x3C, static_cast<std::int32_t>(L(row + 8)));
-            rv::Current<records::PartyMember>()->state[0] = 0;
-            rv::Current<records::PartyMember>()->state[1] = 0;
-            rv::Current<records::PartyMember>()->state[2] = 0;
-            rv::Current<records::PartyMember>()->state[3] = 0;
+            rv::Current<records::PartyMember>()->state = 0;
+            rv::Current<records::PartyMember>()->step = 0;
+            rv::Current<records::PartyMember>()->state3 = 0;
+            rv::Current<records::PartyMember>()->state4 = 0;
         } while (i < Field_MemberCount);
     }
     Field_Kind2X = static_cast<long>(L(0x802D74));
@@ -555,10 +555,10 @@ extern "C" void __cdecl PartyForm_Reload(void) {
         B(0x802D88) = 0;
         SH_CALL(Field_MemberSprite)(member, 0);
         SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
-        rv::Current<records::PartyMember>()->state[0] = 0;
-        rv::Current<records::PartyMember>()->state[1] = 0;
-        rv::Current<records::PartyMember>()->state[2] = 0;
-        rv::Current<records::PartyMember>()->state[3] = 0;
+        rv::Current<records::PartyMember>()->state = 0;
+        rv::Current<records::PartyMember>()->step = 0;
+        rv::Current<records::PartyMember>()->state3 = 0;
+        rv::Current<records::PartyMember>()->state4 = 0;
     } else {
         Field_MemberCount = static_cast<unsigned char>(SH_CALL(Party_Count)(0));
         SH_CALL(Field_PartyLoad)(0);
@@ -571,10 +571,10 @@ extern "C" void __cdecl PartyForm_Reload(void) {
                 SH_CALL(Field_MemberSprite)(member, i);
                 SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
                 if (AreaW3c_CampFlag != 0) {
-                    rv::Current<records::PartyMember>()->state[0] = 0;
-                    rv::Current<records::PartyMember>()->state[1] = 0;
-                    rv::Current<records::PartyMember>()->state[2] = 0;
-                    rv::Current<records::PartyMember>()->state[3] = 0;
+                    rv::Current<records::PartyMember>()->state = 0;
+                    rv::Current<records::PartyMember>()->step = 0;
+                    rv::Current<records::PartyMember>()->state3 = 0;
+                    rv::Current<records::PartyMember>()->state4 = 0;
                 }
                 ++i;
             } while (i < Field_MemberCount);
@@ -1702,13 +1702,13 @@ extern "C" void __cdecl SharedList_Setup(void) {
 // is pushed before 0x591AC0's three and popped with the next calls'.
 extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
     auto* const w = rv::As<records::WindowRecord>(window);
-    const int wx = static_cast<int>(w->centre_x);
-    const int wy = static_cast<int>(w->centre_y);
+    const int wx = static_cast<int>(w->x);
+    const int wy = static_cast<int>(w->y);
     SH_CALL(Menu_DrawBox)(wx + 3, wy + 3, 0x99, 0x9A, 0, static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = 0;   // both written by Menu_ListScroll on every path
     unsigned char moving = 0;
     const unsigned char top = SH_CALL(Menu_ListScroll)(window + 0xA, &offset, &moving, window + 0xD);
-    const int y0 = S8(offset) + w->centre_y;
+    const int y0 = S8(offset) + w->y;
     const unsigned char* p = At(at::kSharedList + top);
     int y = y0 + 0x1A;
     for (U row = 0; static_cast<int>(row) < static_cast<int>(moving) + 9; ++row, ++p, y += 0xD) {
@@ -1721,35 +1721,35 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
         const U at_row = row + window[0xA];
         const int colour = at_row == cursor ? 2 : 0;
         const U picked = static_cast<U>(window[0xB]) + adjust;
-        const int x = w->centre_x + 7;
+        const int x = w->x + 7;
         if (at_row == picked || at_row == cursor) {
             SH_CALL(Menu_DrawSkillRow)(x, y, 7, kind, At(record), B(record + 0x12), 1);
-            SH_CALL(Menu_DrawSkillRow)(w->centre_x + 7, y - 2, colour, kind, At(record), B(record + 0x12), 0);
+            SH_CALL(Menu_DrawSkillRow)(w->x + 7, y - 2, colour, kind, At(record), B(record + 0x12), 0);
         } else {
             SH_CALL(Menu_DrawSkillRow)(x, y, 0, kind, At(record), B(record + 0x12), 0);
         }
     }
-    SH_CALL(Menu_DrawBox)(w->centre_x + 3, w->centre_y + 3, 0x99, 0x14, window[9], static_cast<unsigned char>(BattleDraw_Colour));
-    SH_CALL(Menu_DrawBox)(w->centre_x + 3, w->centre_y + 0x92, 0x99, 8, window[9], static_cast<unsigned char>(BattleDraw_Colour));
-    const int title_y = w->centre_y + 7;
+    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 3, 0x99, 0x14, window[9], static_cast<unsigned char>(BattleDraw_Colour));
+    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 0x92, 0x99, 8, window[9], static_cast<unsigned char>(BattleDraw_Colour));
+    const int title_y = w->y + 7;
     const unsigned char length = SH_CALL(Text_CharCount)(Text(at::kListTitle));
-    SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + w->centre_x, title_y, 0, 0x10, Text(at::kListTitle));
+    SH_CALL(Text_DrawAt)(6 * (0xD - static_cast<int>(length)) + w->x, title_y, 0, 0x10, Text(at::kListTitle));
     const U count = SH_AT(U (__cdecl*)(unsigned, unsigned, unsigned), at::kAbilityListCount)(0, 0xFF, 0) & 0xFF;
     SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtCount), count);
-    DrawFont8(w->centre_x + 0x55, w->centre_y + 0x92, 0);
-    SH_CALL(Menu_DrawPieces)(w->centre_x, w->centre_y, Text(at::kPiecesA), 1);
-    SH_CALL(Menu_DrawPieces)(w->centre_x, w->centre_y, Text(at::kPiecesB), 1);
-    for (int i = 0; i < 10; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x + 8 * i + 0x28, w->centre_y, 1, 1);
-    for (int i = 0; i < 15; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x, w->centre_y + 8 * i + 0x18, 4, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x + 0x90, w->centre_y + 0x18, 0x16, 1);
-    for (int i = 0; i < 12; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x + 0x90, w->centre_y + 8 * i + 0x28, 0x17, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x + 0x90, w->centre_y + 0x88, 0x18, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x, w->centre_y + 0x90, 0x19, 1);
-    for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x + 8 * i + 8, w->centre_y + 0x90, 0x1A, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x + 0x50, w->centre_y + 0x90, 0x1B, 1);
-    for (int i = 0; i < 6; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x + 8 * i + 0x58, w->centre_y + 0x90, 0x1C, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x + 0x88, w->centre_y + 0x90, 0x1D, 1);
-    SH_CALL(Menu_DrawScrollBar)(At(at::kSharedList), window[0xA], w->centre_x + 0x90, w->centre_y + 0x18, 9, 0x80, 0x74);
+    DrawFont8(w->x + 0x55, w->y + 0x92, 0);
+    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(at::kPiecesA), 1);
+    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text(at::kPiecesB), 1);
+    for (int i = 0; i < 10; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 0x28, w->y, 1, 1);
+    for (int i = 0; i < 15; ++i) SH_CALL(Menu_DrawPiece)(w->x, w->y + 8 * i + 0x18, 4, 1);
+    SH_CALL(Menu_DrawPiece)(w->x + 0x90, w->y + 0x18, 0x16, 1);
+    for (int i = 0; i < 12; ++i) SH_CALL(Menu_DrawPiece)(w->x + 0x90, w->y + 8 * i + 0x28, 0x17, 1);
+    SH_CALL(Menu_DrawPiece)(w->x + 0x90, w->y + 0x88, 0x18, 1);
+    SH_CALL(Menu_DrawPiece)(w->x, w->y + 0x90, 0x19, 1);
+    for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 8, w->y + 0x90, 0x1A, 1);
+    SH_CALL(Menu_DrawPiece)(w->x + 0x50, w->y + 0x90, 0x1B, 1);
+    for (int i = 0; i < 6; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 0x58, w->y + 0x90, 0x1C, 1);
+    SH_CALL(Menu_DrawPiece)(w->x + 0x88, w->y + 0x90, 0x1D, 1);
+    SH_CALL(Menu_DrawScrollBar)(At(at::kSharedList), window[0xA], w->x + 0x90, w->y + 0x18, 9, 0x80, 0x74);
 }
 
 // original 0x585500: window kind handler (called by 0x59BEA0 with the window
@@ -1768,18 +1768,18 @@ extern "C" void __cdecl SharedList_DrawList(unsigned char* window) {
 // the kind's byte and six bits of the colour.
 extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
     auto* const w = rv::As<records::WindowRecord>(window);
-    SH_CALL(Menu_DrawBox)(w->centre_x + 3, w->centre_y + 3, 0x92, 0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
-    int y = w->centre_y + 0x1A;
+    SH_CALL(Menu_DrawBox)(w->x + 3, w->y + 3, 0x92, 0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
+    int y = w->y + 0x1A;
     U slot = RecAddr(window[0xA]) + 0x7E;
     for (unsigned char k = 0; k < 0xA; ++k, y += 0xD, ++slot) {
         if (B(slot) == 0) continue;
         const unsigned char kind = SH_CALL(Skill_FlagIndex)(B(slot));
         const U record = at::kAbilityRecords + 24u * B(slot);
         const int colour = k != window[0xC] ? 0 : 2;
-        const int x = w->centre_x + 7;
+        const int x = w->x + 7;
         if (k == window[0xB] || k == window[0xC]) {
             SH_CALL(Menu_DrawSkillRow)(x, y, 7, kind, At(record), B(record + 0x12), 1);
-            SH_CALL(Menu_DrawSkillRow)(w->centre_x + 7, y - 2, colour, kind, At(record), B(record + 0x12), 0);
+            SH_CALL(Menu_DrawSkillRow)(w->x + 7, y - 2, colour, kind, At(record), B(record + 0x12), 0);
         } else {
             SH_CALL(Menu_DrawSkillRow)(x, y, 0, kind, At(record), B(record + 0x12), 0);
         }
@@ -1787,18 +1787,18 @@ extern "C" void __cdecl SharedList_DrawMember(unsigned char* window) {
     const unsigned char* const name = Rec(window[0xA]);
     unsigned char n = SH_CALL(Text_CharCount)(name);
     if (n > 5) n = 5;
-    SH_CALL(Text_DrawAt)(6 * (0xC - static_cast<int>(n)) + w->centre_x, w->centre_y + 7, 0, 5, name);
-    SH_CALL(Menu_DrawPieces)(w->centre_x, w->centre_y, Text((window[0xD] & 2) ? at::kPiecesC : at::kPiecesA), 1);
-    SH_CALL(Menu_DrawPieces)(w->centre_x - 8, w->centre_y, Text((window[0xD] & 1) ? at::kPiecesE : at::kPiecesD), 1);
+    SH_CALL(Text_DrawAt)(6 * (0xC - static_cast<int>(n)) + w->x, w->y + 7, 0, 5, name);
+    SH_CALL(Menu_DrawPieces)(w->x, w->y, Text((window[0xD] & 2) ? at::kPiecesC : at::kPiecesA), 1);
+    SH_CALL(Menu_DrawPieces)(w->x - 8, w->y, Text((window[0xD] & 1) ? at::kPiecesE : at::kPiecesD), 1);
     const unsigned char state = window[0xD];
     window[0xD] = (state & 0xF0) == 0 ? 0 : static_cast<unsigned char>(state - 0x10);
-    for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x + 8 * i + 0x28, w->centre_y, 1, 1);
-    for (int i = 0; i < 17; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x, w->centre_y + 8 * i + 0x18, 4, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x + 0x88, w->centre_y + 0x18, 0x20, 1);
-    for (int i = 0; i < 15; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x + 0x88, w->centre_y + 8 * i + 0x20, 0x21, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x, w->centre_y + 0xA0, 5, 1);
-    SH_CALL(Menu_DrawPiece)(w->centre_x + 0x88, w->centre_y + 0x98, 0x22, 1);
-    for (int i = 0; i < 16; ++i) SH_CALL(Menu_DrawPiece)(w->centre_x + 8 * i + 8, w->centre_y + 0xA0, 6, 1);
+    for (int i = 0; i < 9; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 0x28, w->y, 1, 1);
+    for (int i = 0; i < 17; ++i) SH_CALL(Menu_DrawPiece)(w->x, w->y + 8 * i + 0x18, 4, 1);
+    SH_CALL(Menu_DrawPiece)(w->x + 0x88, w->y + 0x18, 0x20, 1);
+    for (int i = 0; i < 15; ++i) SH_CALL(Menu_DrawPiece)(w->x + 0x88, w->y + 8 * i + 0x20, 0x21, 1);
+    SH_CALL(Menu_DrawPiece)(w->x, w->y + 0xA0, 5, 1);
+    SH_CALL(Menu_DrawPiece)(w->x + 0x88, w->y + 0x98, 0x22, 1);
+    for (int i = 0; i < 16; ++i) SH_CALL(Menu_DrawPiece)(w->x + 8 * i + 8, w->y + 0xA0, 6, 1);
 }
 
 // original 0x5857E0: a tail jump through SharedList_Sorts 0x664298 by the

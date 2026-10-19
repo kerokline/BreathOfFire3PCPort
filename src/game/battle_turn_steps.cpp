@@ -267,7 +267,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
     }
     g.clear_commands();
     for (unsigned i = 0; i <= 2; ++i)
-        if (!Yes(g.actor_is_out(i))) rv::As<records::PartyMember>(Member(i))->state[0] = 2;
+        if (!Yes(g.actor_is_out(i))) rv::As<records::PartyMember>(Member(i))->state = 2;
     B(at::kRoundFlags) &= 0xF7;
     BattlePhases_Initiative = 0;
     B(at::kPhase) = 1;
@@ -406,7 +406,7 @@ extern "C" void __cdecl BattleEnd_WinStep() {
 // 0x904AA2 on.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleEnd_WinBegin() {
     for (unsigned i = 0; i < 3; ++i)
-        if (rv::As<records::PartyMember>(Member(i))->flags & 1) rv::As<records::PartyMember>(Member(i))->state[0] = 2;
+        if (rv::As<records::PartyMember>(Member(i))->flags & 1) rv::As<records::PartyMember>(Member(i))->state = 2;
     if ((BattleTurnSteps_MusicFlags & 0x40) == 0) {
         g.fade_out(10);
         g.music_play(0xA5, 10);

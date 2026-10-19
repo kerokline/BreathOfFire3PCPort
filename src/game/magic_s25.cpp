@@ -134,7 +134,7 @@ void Rtp4(unsigned char* p, unsigned a, unsigned b, unsigned c, unsigned d) {
 void LinkAtSprite(int dy, unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y),
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z),
                                 dy, size);
 }
 
@@ -217,7 +217,7 @@ S25_EXPORT void __cdecl SpellSleep_Start(void) {
     SetPointer(child + 0x80, sc);
     child[8] = caster[8];
     tchild->x = Field_Kind2X;
-    tchild->y = Field_Kind2Z;
+    tchild->z = Field_Kind2Z;
     SetLong(child + 0x3C, Long(sc + 0x3C) + 0x4000000);
     MH_CALL(Sound_PlayById)(0x100);
     Sprite_Current[0xB] = 0;
@@ -727,7 +727,7 @@ S25_EXPORT void __cdecl SpellConfuse_Start(void) {
     SetPointer(child + 0x80, sc);
     child[8] = source[8];
     tchild->x = Long(source + 0x34);
-    tchild->y = Long(source + 0x38);
+    tchild->z = Long(source + 0x38);
     SetLong(child + 0x3C, Long(source + 0x3C));
     sc[0xB] = 0;
     Bump(Sprite_Current[1]);
@@ -753,21 +753,21 @@ S25_EXPORT void __cdecl SpellConfuse_Child(void) {
 // record 0..2, else enemy - 3) raised 0xC00000; +0xB, +9, +0xA 0; on; sound
 // 0x100.
 S25_EXPORT void __cdecl SpellConfuse_ChildInit(void) {
-    rv::Current<records::BattleTask>()->vel_x = 0x20000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x20000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(void (__cdecl*)(unsigned char*), kTurnByFacing)(Sprite_Current);
     unsigned char* sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-    tsc->x = tsc->x + tsc->vel_x;
-    tsc->y = tsc->y + tsc->vel_y;
+    tsc->x = tsc->x + tsc->step_x;
+    tsc->z = tsc->z + tsc->step_z;
     SetWord(sc + 0x3E, Word(sc + 0x3E) + 0xC0u);
-    tsc->start_x = tsc->x;
-    tsc->start_y = tsc->y;
+    tsc->work_18 = tsc->x;
+    tsc->work_1c = tsc->z;
     SetLong(sc + 0x20, Long(sc + 0x3C));
     const unsigned char actor = Mem(at::kActor)[0];
     const unsigned char* const record = actor <= 2 ? PartyOf(actor) : EnemyOf(actor);
     tsc->x = Long(record + 0x34);
-    tsc->y = Long(record + 0x38);
+    tsc->z = Long(record + 0x38);
     SetLong(sc + 0x3C, Long(record + 0x3C) + 0xC00000);
     sc[0xB] = 0;
     sc[9] = 0;
@@ -1466,10 +1466,10 @@ S25_EXPORT void __cdecl SpellRagnarok_RingChild(void) {
 // original 0x4D59E0 (ring phase 0): the ring at the field's kind-2 point plus
 // (0x60000, 0x60000), the owner's height; radius +0x14 0x100; +9 0x10; on.
 S25_EXPORT void __cdecl SpellRagnarok_RingInit(void) {
-    rv::Current<records::BattleTask>()->vel_x = 0x60000;
-    rv::Current<records::BattleTask>()->vel_y = 0x60000;
-    rv::Store(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->vel_x + Field_Kind2X);
-    rv::Store(rv::Current<records::BattleTask>()->y, rv::Current<records::BattleTask>()->vel_y + Field_Kind2Z);
+    rv::Current<records::BattleTask>()->step_x = 0x60000;
+    rv::Current<records::BattleTask>()->step_z = 0x60000;
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->step_x + Field_Kind2X);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::Current<records::BattleTask>()->step_z + Field_Kind2Z);
     SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     SetLong(Sprite_Current + 0x14, 0x100);
     Sprite_Current[9] = 0x10;
@@ -1592,7 +1592,7 @@ S25_EXPORT void __cdecl SpellRagnarok_SparkChild(void) {
 S25_EXPORT void __cdecl SpellRagnarok_SparkInit(void) {
     const std::uint32_t offsets = bof3::addr::SpellRagnarok_SparkOffsets;
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(offsets + Sprite_Current[0xB] * 8u)) + Field_Kind2X);
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Mem(offsets + 4 + Sprite_Current[0xB] * 8u)) + Field_Kind2Z);
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(offsets + 4 + Sprite_Current[0xB] * 8u)) + Field_Kind2Z);
     SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     Sprite_Current[9] = 0x60;
     Sprite_Current[0xA] = 0x40;

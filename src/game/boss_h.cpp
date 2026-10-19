@@ -133,7 +133,7 @@ extern "C" unsigned char __cdecl BossOp_ScriptTick(void) { return BH_CALL(Sprite
 // 1): Sprite_ScriptTickOnce, and when it answers al not 0, Sprite_Current's
 // +1 (read after the call) = 2.
 extern "C" void __cdecl BossOp_EnterTick(void) {
-    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) rv::Current<records::BattleEnemy>()->state[0] = 2;
+    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) rv::Current<records::BattleEnemy>()->state = 2;
 }
 
 // original 0x43B550: entry 4 (the death) of the +2 tables of kinds 2, 3, 6, 7,
@@ -147,9 +147,9 @@ extern "C" void __cdecl BossOp_Death(void) {
     enemy_rec->flags_110 = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
     auto* const cur_enemy = rv::Current<records::BattleEnemy>();
     cur_enemy->flags &= 0xBF;
-    cur_enemy->state[0] = 3;
-    cur_enemy->state[1] = 0;
-    cur_enemy->state[2] = 0;
+    cur_enemy->state = 3;
+    cur_enemy->step = 0;
+    cur_enemy->state3 = 0;
 }
 
 // --- kinds 8..11's death ---------------------------------------------------------------

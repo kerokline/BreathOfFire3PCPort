@@ -244,7 +244,7 @@ extern "C" void __cdecl BossMutant_Dispatch(unsigned passed) {
 // jmp Sprite_ScriptTick (its al the answer).
 extern "C" unsigned char __cdecl BossMutant_Enter(void) {
     PointEnemy(0x64CE74, bof3::addr::BossMutant_Hook, 0x64CE98);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -279,7 +279,7 @@ extern "C" void __cdecl BossClaw_Dispatch(unsigned passed) {
 // Sprite_Current +1 = 1, Sprite_EnsureAnimation(2), jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossClaw_Enter(void) {
     RestoreOrMark(0x35, 0x64CF04, bof3::addr::BossClaw_Hook, 0x64CF58);
-    rv::Current<records::BattleEnemy>()->state[0] = 1;
+    rv::Current<records::BattleEnemy>()->state = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -296,7 +296,7 @@ extern "C" void __cdecl BossCawer_Dispatch(unsigned passed) {
 // +0xFC = 0x64CF10, +0xF4 = BossCawer_Hook, +0xF8 = 0x64CF60.
 extern "C" unsigned char __cdecl BossCawer_Enter(void) {
     RestoreOrMark(0x36, 0x64CF10, bof3::addr::BossCawer_Hook, 0x64CF60);
-    rv::Current<records::BattleEnemy>()->state[0] = 1;
+    rv::Current<records::BattleEnemy>()->state = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -314,7 +314,7 @@ extern "C" void __cdecl BossPatrio_Dispatch(unsigned passed) {
 // jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossPatrio_Enter(void) {
     RestoreOrMark(0x37, 0x64CF1C, bof3::addr::BossPatrio_Hook, 0x64CF68);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -359,7 +359,7 @@ extern "C" unsigned char __cdecl BossDodai_Enter(void) {
     }
     SetCell(Enemy() + 0xF4, bof3::addr::BossDodai_Hook);
     SetCell(Enemy() + 0xF8, 0x64CF70);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -464,7 +464,7 @@ extern "C" void __cdecl BossEmitai_Dispatch(unsigned passed) {
 // BossEmitai_Hook, +0xF8 = 0x64D0B8; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossEmitai_Enter(void) {
     PointEnemy(0x64D0A0, bof3::addr::BossEmitai_Hook, 0x64D0B8);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -499,7 +499,7 @@ extern "C" void __cdecl BossGolem_Dispatch(unsigned passed) {
 // BossGolem_Hook, +0xF8 = 0x64D0C0; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGolem_Enter(void) {
     PointEnemy(0x64D0AC, bof3::addr::BossGolem_Hook, 0x64D0C0);
-    rv::Current<records::BattleEnemy>()->state[0] = 2;
+    rv::Current<records::BattleEnemy>()->state = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -539,7 +539,7 @@ extern "C" void __cdecl Boss21_Exit(void) {
     if (actor == nullptr)
         bof3::Fatal("Boss21_Exit: no field actor tagged 0 - the original writes +0x2A through the null (docs/boss_sd.md "
                     "section 6)");
-    field_actor->pose = 0;
+    field_actor->flip = 0;
     BH_CALL(Sprite_SetAnimation)(4);
     BH_CALL(BossActor_Clear)(1);
     BH_CALL(BossActor_Clear)(2);
@@ -563,7 +563,7 @@ extern "C" void __cdecl BossGarr_Dispatch(unsigned passed) {
 // Sprite_SetAnimation(0). Its eax is the last call's (no caller reads it).
 extern "C" void __cdecl BossGarr_Enter(void) {
     PointEnemy(0x64D158, bof3::addr::BossGarr_Hook, 0x64D164);
-    rv::Current<records::BattleEnemy>()->state[0] = 1;
+    rv::Current<records::BattleEnemy>()->state = 1;
     BH_CALL(Sprite_SetAnimationBank)(0x153);
     rv::Current<records::BattleEnemy>()->flip = 0;
     BH_CALL(Sprite_SetAnimation)(0);

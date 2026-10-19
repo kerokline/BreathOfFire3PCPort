@@ -691,8 +691,8 @@ extern "C" void __cdecl Area135_Tail18(void) {
         unsigned char* const o = ObjectAt(kWho, sub);
         auto* const tO = rv::As<records::SpriteObject>(o);
         o[1] = 7;
-        tO->accel_x = 0;
-        tO->accel_z = 5;
+        tO->work_18 = 0;
+        tO->work_1c = 5;
         AddWord(o + 0x8A, 3);
         return;
     }

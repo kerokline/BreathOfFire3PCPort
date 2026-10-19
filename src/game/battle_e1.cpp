@@ -619,7 +619,7 @@ extern "C" void __cdecl Cmd_AutoBattle(void) {
         unsigned char i = 0;
         do {
             if (!BH_CALL(Battle_ActorIsOut)(i)) {
-                if (BattleFlow_AnimGate == 0 || (Member(i)[0x134] & 0x10)) rv::As<records::PartyMember>(Member(i))->state[0] = 2;
+                if (BattleFlow_AnimGate == 0 || (Member(i)[0x134] & 0x10)) rv::As<records::PartyMember>(Member(i))->state = 2;
             }
             ++i;
         } while (i < B(at::kPartyCount));

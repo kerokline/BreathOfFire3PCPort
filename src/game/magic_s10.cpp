@@ -420,22 +420,22 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
     v = Cos(SS(4));
     {
         const std::uint32_t z = Mul(v, SS(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x38));
-        rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(z));
+        rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(z));
     }
     Sc()[8] = Owner()[8];
-    rv::Current<records::BattleTask>()->vel_x = 0x20000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x20000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     SetLong(Sc() + 0x14, 0x6000000);
     Turn(Sc());
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        AddLong(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
-        AddLong(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
+        AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
+        AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
         SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
                                                     static_cast<std::uint32_t>(Long(s + 0x14))));
-        ts->vel_x = static_cast<std::int32_t>(0xFFFFE000u);
-        ts->vel_y = 0;
+        ts->step_x = static_cast<std::int32_t>(0xFFFFE000u);
+        ts->step_z = 0;
         SetLong(s + 0x20, 0x600000);
     }
     Turn(Sc());
@@ -475,8 +475,8 @@ S10_EXPORT void __cdecl LavaburstChild_Rise(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        AddLong(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
-        AddLong(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
+        AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
+        AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
         AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(Long(s + 0x20)));
         SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
                                                     static_cast<std::uint32_t>(Long(s + 0x14))));
@@ -603,12 +603,12 @@ void RecordOrbit() {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(Mul(v, ts->vel_x) + static_cast<std::uint32_t>(Long(Owner() + 0x34)));
+        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(Long(Owner() + 0x34)));
     }
     v = Cos(SS(4));
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->y = static_cast<std::int32_t>(Mul(v, ts->vel_x) + static_cast<std::uint32_t>(Long(Owner() + 0x38)));
+    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(Long(Owner() + 0x38)));
 }
 
 }  // namespace
@@ -783,10 +783,10 @@ unsigned char* CopiedRecord() {
 void ScaleStep() {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    AddLong(s + 0xC, static_cast<std::uint32_t>(ts->start_x));
-    AddLong(s + 0x10, static_cast<std::uint32_t>(ts->start_y));
-    AddLong(s + 0x40, static_cast<std::uint32_t>(ts->vel_x));
-    AddLong(s + 0x44, static_cast<std::uint32_t>(ts->vel_y));
+    AddLong(s + 0xC, static_cast<std::uint32_t>(ts->work_18));
+    AddLong(s + 0x10, static_cast<std::uint32_t>(ts->work_1c));
+    AddLong(s + 0x40, static_cast<std::uint32_t>(ts->step_x));
+    AddLong(s + 0x44, static_cast<std::uint32_t>(ts->step_z));
 }
 
 }  // namespace
@@ -798,15 +798,15 @@ S10_EXPORT void __cdecl HowlingChild_Start(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->x = Long(rec + 0x34);
-    ts->y = Long(rec + 0x38);
+    ts->z = Long(rec + 0x38);
     SetLong(s + 0x3C, Long(rec + 0x3C));
     SetLong(s + 0x40, 0x10000);
     SetLong(s + 0x44, 0x10000);
     s[0x48] = 2;
-    ts->vel_x = static_cast<std::int32_t>(0xFFFFF3A0u);
-    ts->vel_y = 0x1080;
-    ts->start_x = 0x60;
-    ts->start_y = static_cast<std::int32_t>(0xFFFFFF80u);
+    ts->step_x = static_cast<std::int32_t>(0xFFFFF3A0u);
+    ts->step_z = 0x1080;
+    ts->work_18 = 0x60;
+    ts->work_1c = static_cast<std::int32_t>(0xFFFFFF80u);
     Inc(s[2]);
 }
 
@@ -817,7 +817,7 @@ S10_EXPORT void __cdecl HowlingChild_Out(void) {
     ScaleStep();
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    if (ts->vel_x != 0) return;
+    if (ts->step_x != 0) return;
     s[9] = 0x10;
     Inc(s[2]);
 }
@@ -830,8 +830,8 @@ S10_EXPORT void __cdecl HowlingChild_Hold(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[9] != 0) return;
-    ts->start_x = 0x60;
-    ts->start_y = static_cast<std::int32_t>(0xFFFFFF80u);
+    ts->work_18 = 0x60;
+    ts->work_1c = static_cast<std::int32_t>(0xFFFFFF80u);
     Inc(s[2]);
 }
 
@@ -841,7 +841,7 @@ S10_EXPORT void __cdecl HowlingChild_Back(void) {
     ScaleStep();
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    if (ts->vel_x == 0xC00) Inc(s[2]);
+    if (ts->step_x == 0xC00) Inc(s[2]);
 }
 
 // original 0x4ACF70: the script ticked once; at its end the record's 0x40
@@ -885,7 +885,7 @@ S10_EXPORT void __cdecl Ebonfire_Start(void) {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
         rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
         SetLong(Sc() + 0x3C, Long(src + 0x3C));
     }
     Sc()[0xB] = 0;
@@ -1127,7 +1127,7 @@ S10_EXPORT void __cdecl SacrificeRing_Run(void) {
 // original 0x4ADB50: the owner's position; +9 and +0xA 0; +2 on.
 S10_EXPORT void __cdecl SacrificeFx_TakeOwnerPos(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -1232,7 +1232,7 @@ S10_EXPORT void __cdecl SacrificeRing_Draw(void) {
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             SetVW(0x1A, static_cast<unsigned>(y));
             const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x) + dx);
-            const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->y) + Shl(y, 9));
+            const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->z) + Shl(y, 9));
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
             unsigned char* const p = Gfx_PacketNext;
@@ -1413,7 +1413,7 @@ S10_EXPORT void __cdecl SacrificeActor_Darken(void) {
     TintBy(s, 0xF0);
     if (s[0x5D] != 0x80) return;
     ts->x = Long(Owner() + 0x34);
-    ts->y = Long(Owner() + 0x38);
+    ts->z = Long(Owner() + 0x38);
     SetLong(s + 0x3C, Long(Owner() + 0x3C));
     Inc(s[2]);
 }
@@ -1489,7 +1489,7 @@ S10_EXPORT void __cdecl SacrificeActor_Return(void) {
         if (s[0x5D] != 0x80) return;
         const unsigned char* const actor_sprite = Pointer(MagicS23_ActorSprite_addr);
         ts->x = Long(actor_sprite + 0x34);
-        ts->y = Long(Pointer(MagicS23_ActorSprite_addr) + 0x38);
+        ts->z = Long(Pointer(MagicS23_ActorSprite_addr) + 0x38);
         SetLong(s + 0x3C, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
     }
     const std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(at::kActor)));

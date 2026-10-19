@@ -231,7 +231,7 @@ S23_EXPORT void __cdecl Cyclone_Task(void) {
 S23_EXPORT void __cdecl Cyclone_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
     Sc()[9] = 0;
     Sc()[0xB] = 0;
@@ -286,44 +286,44 @@ S23_EXPORT void __cdecl FxFunnel_Wait(void) {
     unsigned char* const sc = Sc();
     if (sc[9] != 0) return;
     sc[8] = Owner()[8];
-    rv::Current<records::BattleTask>()->vel_x = 0x60000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x60000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(magic_s23::TurnFn, magic_s23::kTurnByFacing)(Sc());
     {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Long(owner + 0x34) + ts->vel_x;
+        ts->x = Long(owner + 0x34) + ts->step_x;
     }
     {
         const unsigned char* const owner = Owner();
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->y = Long(owner + 0x38) + ts->vel_y;
+        ts->z = Long(owner + 0x38) + ts->step_z;
     }
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     {
         const unsigned char* const owner = Owner();
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const std::int32_t dz = Long(owner + 0x38) - ts->y;
+        const std::int32_t dz = Long(owner + 0x38) - ts->z;
         const std::int32_t dx = Long(owner + 0x34) - ts->x;
         const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
         SetLong(Sc() + 0x20, (heading - 0x800) & 0xFFF);
     }
     if (Sc()[0xB] & 1) {
         const int r = MH_CALL(Rand)();
-        rv::Store(rv::Current<records::BattleTask>()->start_x, -4 - (r & 3));
+        rv::Store(rv::Current<records::BattleTask>()->work_18, -4 - (r & 3));
     } else {
         const int r = MH_CALL(Rand)();
-        rv::Store(rv::Current<records::BattleTask>()->start_x, (r & 3) + 4);
+        rv::Store(rv::Current<records::BattleTask>()->work_18, (r & 3) + 4);
     }
     const int r = MH_CALL(Rand)();
-    rv::Store(rv::Current<records::BattleTask>()->start_y, (r & 0x30) + 0x50);
+    rv::Store(rv::Current<records::BattleTask>()->work_1c, (r & 0x30) + 0x50);
     Sc()[0xA] = 0;
     Bump(Sc()[2]);
 }
@@ -341,7 +341,7 @@ void Spin(unsigned char* sc) {
 S23_EXPORT void __cdecl FxFunnel_Approach(void) {
     unsigned char* const record = TargetRecord();
     Spin(Sc());
-    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(rv::Current<records::BattleTask>()->start_x, 6));
+    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(rv::Current<records::BattleTask>()->work_18, 6));
     SetLong(Sc() + 0x14, angle);
     Bump(Sc()[0xA], 4);
     if (Sc()[0xA] == 0x10) Bump(Sc()[2]);
@@ -357,15 +357,15 @@ S23_EXPORT void __cdecl FxFunnel_Orbit(void) {
     {
         unsigned char* const sc = Sc();
         records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-        tsc->vel_y = Long(sc + 0x14);
+        tsc->step_z = Long(sc + 0x14);
     }
-    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(rv::Current<records::BattleTask>()->start_x, 6));
+    const int angle = MH_CALL(MagicFx_StepAround)(record, 0xC000, Shl(rv::Current<records::BattleTask>()->work_18, 6));
     SetLong(Sc() + 0x14, angle);
     if (MH_CALL(MagicFx_NearSprite)(record, 0xC000) == 0) {
         {
             unsigned char* const sc = Sc();
             records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-            tsc->vel_y = (tsc->vel_y & 0xFFF) - (Long(sc + 0x14) & 0xFFF);
+            tsc->step_z = (tsc->step_z & 0xFFF) - (Long(sc + 0x14) & 0xFFF);
         }
         unsigned char* sc = Sc();
         const std::int32_t d = Long(sc + 0x10);
@@ -384,18 +384,18 @@ S23_EXPORT void __cdecl FxFunnel_Orbit(void) {
 // the facing (0x446770) and added to x / z; the height +0x3E up 0x40; spin;
 // +0xA down, at 0 the owner's count +0xB down and the task freed.
 S23_EXPORT void __cdecl FxFunnel_Rise(void) {
-    rv::Current<records::BattleTask>()->vel_x = 0x1000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x1000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_AT(magic_s23::TurnFn, magic_s23::kTurnByFacing)(Sc());
     {
         unsigned char* const sc = Sc();
         records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-        tsc->x = tsc->x + tsc->vel_x;
+        tsc->x = tsc->x + tsc->step_x;
     }
     {
         unsigned char* const sc = Sc();
         records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-        tsc->y = tsc->y + tsc->vel_y;
+        tsc->z = tsc->z + tsc->step_z;
     }
     SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + 0x40u);
     Spin(Sc());
@@ -427,7 +427,7 @@ S23_EXPORT void __cdecl FxFunnel_Draw(void) {
     {
         const unsigned char* const sc = Sc();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0xC);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0xC);
     }
     {
         const unsigned char* const r = Sc() + 0x1C;
@@ -477,7 +477,7 @@ S23_EXPORT void __cdecl FxFunnel_Draw(void) {
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         const unsigned char* const sc = Sc();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0x44);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0x44);
     }
 }
 
@@ -677,7 +677,7 @@ S23_EXPORT void __cdecl FxSpiral_Wait(void) {
     if (sc[9] != 0) return;
     sc[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C) + 0x1800000);
     {
         unsigned char* const s = Sc();
@@ -686,9 +686,9 @@ S23_EXPORT void __cdecl FxSpiral_Wait(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->vel_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Word(Mem(FxSpiral_Turns_addr + 2u * s[4]))) << 8);
+        ts->step_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Word(Mem(FxSpiral_Turns_addr + 2u * s[4]))) << 8);
     }
-    rv::Current<records::BattleTask>()->vel_y = 0x60;
+    rv::Current<records::BattleTask>()->step_z = 0x60;
     SetLong(Sc() + 0x14, 0x20);
     {
         unsigned char* const s = Sc();
@@ -728,9 +728,9 @@ S23_EXPORT void __cdecl FxSpiral_Hold(void) {
         sc = Sc();
     }
     sc[0xB] = Byte(FxSpiral_Tilts_addr + 2u * sc[8]);
-    rv::Current<records::BattleTask>()->vel_y = 0x80;
+    rv::Current<records::BattleTask>()->step_z = 0x80;
     SetLong(Sc() + 0x14, 0x80);
-    rv::Current<records::BattleTask>()->start_y = 0x18;
+    rv::Current<records::BattleTask>()->work_1c = 0x18;
     Sc()[9] = 0x10;
     Bump(Sc()[2]);
 }
@@ -742,7 +742,7 @@ S23_EXPORT void __cdecl FxSpiral_Spread(void) {
     {
         unsigned char* const sc = Sc();
         records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-        tsc->vel_y = tsc->vel_y + tsc->start_y;
+        tsc->step_z = tsc->step_z + tsc->work_1c;
     }
     Bump(Sc()[9], -1);
     if (Sc()[9] == 0) Bump(Sc()[2]);
@@ -759,12 +759,12 @@ S23_EXPORT void __cdecl FxSpiral_Fade(void) {
     {
         unsigned char* const sc = Sc();
         records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-        tsc->start_y = tsc->start_y - 2;
+        tsc->work_1c = tsc->work_1c - 2;
     }
     {
         unsigned char* const sc = Sc();
         records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-        tsc->vel_y = tsc->vel_y + tsc->start_y;
+        tsc->step_z = tsc->step_z + tsc->work_1c;
     }
     Bump(Sc()[0xA], -1);
     if (Sc()[0xA] != 0) return;
@@ -797,7 +797,7 @@ S23_EXPORT void __cdecl FxSpiral_Draw(void) {
     {
         const unsigned char* const sc = Sc();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0xC);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0xC);
     }
     {
         const unsigned char* const r = Sc() + 0x10;
@@ -849,7 +849,7 @@ S23_EXPORT void __cdecl FxSpiral_Draw(void) {
         MH_CALL(Gte_PrimDepths4_10B)(prim);
         const unsigned char* const sc = Sc();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 2, 0x44);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 2, 0x44);
     }
 }
 
@@ -896,7 +896,7 @@ S23_EXPORT void __cdecl Quake_Start(void) {
         if (MH_CALL(Battle_ActorIsOut)(i + 3) != 0) continue;
         const unsigned char* const slot = Slot(3 + i);
         const records::BattleTask* const tslot = rv::AsConst<records::BattleTask>(slot);
-        const std::int32_t x = tslot->x, z = tslot->y;
+        const std::int32_t x = tslot->x, z = tslot->z;
         const std::uint16_t height = Word(EnemyOf(static_cast<unsigned char>(i + 3)) + 0x3E);
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
         Put(at::kQuakeEnemyZ + 2 * i, height);
@@ -1139,7 +1139,7 @@ S23_EXPORT void __cdecl SimoonDome_Task(void) {
 S23_EXPORT void __cdecl SimoonDome_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetWord(Sc() + 0x3E, Word(src + 0x3E));
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -1228,7 +1228,7 @@ S23_EXPORT void __cdecl SimoonDome_Draw(void) {
             const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
             Put(Prim_VertexScratch_addr + 0x18 + 2, y);
             const std::int32_t x = Shl(Get(Prim_VertexScratch_addr + 0x18), 9) + tsc->x;
-            const std::int32_t z = Shl(static_cast<short>(y), 9) + tsc->y;
+            const std::int32_t z = Shl(static_cast<short>(y), 9) + tsc->z;
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
             unsigned char* const prim = Gfx_PacketNext;
@@ -1344,7 +1344,7 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
     {
         const unsigned char* const sc = Sc();
         const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 0, 0xC);
+        MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 0, 0xC);
     }
     unsigned char* const prim = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyGT4)(prim);
@@ -1385,7 +1385,7 @@ S23_EXPORT void __cdecl SimoonDust_Draw(void) {
     }
     const unsigned char* const sc = Sc();
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->y, 0, 0x54);
+    MH_CALL(MapView_LinkPrimAt)(tsc->x, tsc->z, 0, 0x54);
 }
 
 // original 0x4D0200: SimoonFx_Types[2]. Its phase +2 through
@@ -1406,7 +1406,7 @@ S23_EXPORT void __cdecl SimoonFan_Task(void) {
 S23_EXPORT void __cdecl SimoonFan_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     Sc()[9] = 0;
     Sc()[0xA] = 0;

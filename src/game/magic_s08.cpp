@@ -160,7 +160,7 @@ void OwnerPosition() {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->x = Long(o + 0x34);
-    ts->y = Long(o + 0x38);
+    ts->z = Long(o + 0x38);
     SetLong(s + 0x3C, Long(o + 0x3C));
 }
 
@@ -186,7 +186,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 void LinkAtTask(int dy, unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), dy, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), dy, size);
 }
 int Ratan2(int y, int x) { return MH_CALL(Math_Ratan2)(static_cast<float>(y), static_cast<float>(x)); }
 
@@ -787,7 +787,7 @@ S08_EXPORT void __cdecl Ward_Start(void) {
     const unsigned char* const src = Source();
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 9;
@@ -890,20 +890,20 @@ S08_EXPORT void __cdecl WardMote_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    rv::Current<records::BattleTask>()->vel_x = 0x20000;
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_x = 0x20000;
+    rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
     {
         const unsigned char* const o = Owner();
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) +
-                                                    static_cast<std::uint32_t>(ts->vel_x));
-        ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
-                                                    static_cast<std::uint32_t>(ts->vel_y));
+                                                    static_cast<std::uint32_t>(ts->step_x));
+        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
+                                                    static_cast<std::uint32_t>(ts->step_z));
         SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x3C)) + 0x1000000u));
-        ts->vel_x = static_cast<std::int32_t>(0xFFFFF000u);
-        ts->vel_y = 0;
+        ts->step_x = static_cast<std::int32_t>(0xFFFFF000u);
+        ts->step_z = 0;
     }
     Turn(Sc());
     const unsigned char* const o = Owner();
@@ -922,8 +922,8 @@ namespace {
 void MoteMove() {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    AddLong(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
-    AddLong(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
+    AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
+    AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
     Inc(s[9]);
 }
 }  // namespace
@@ -970,7 +970,7 @@ S08_EXPORT void __cdecl WardMote_PushMatrix(void) {
     const short rot[4] = {0x400, static_cast<short>(Word(Mem(WardMote_Tilts_addr + s[8] * 2u))), 0, 0};
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
@@ -1150,8 +1150,8 @@ S08_EXPORT void __cdecl EvilEyeBeam_Start(void) {
             height = 0x1C00000;
         }
     }
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(dx));
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(dx));
+    rv::Current<records::BattleTask>()->step_z = 0;
     SetLong(Sc() + 0x14, static_cast<std::int32_t>(height));
     Turn(Sc());
     {
@@ -1159,21 +1159,21 @@ S08_EXPORT void __cdecl EvilEyeBeam_Start(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) +
-                                                    static_cast<std::uint32_t>(ts->vel_x));
-        ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
-                                                    static_cast<std::uint32_t>(ts->vel_y));
+                                                    static_cast<std::uint32_t>(ts->step_x));
+        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
+                                                    static_cast<std::uint32_t>(ts->step_z));
         SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x3C)) +
                                                     static_cast<std::uint32_t>(Long(s + 0x14))));
     }
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(ts->y));
+        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(ts->z));
         const int ddx = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(ts->x));
         const int angle = Ratan2(ddx, ddz);
-        rv::Current<records::BattleTask>()->vel_x = angle;
+        rv::Current<records::BattleTask>()->step_x = angle;
     }
-    rv::Current<records::BattleTask>()->vel_y = 0;
+    rv::Current<records::BattleTask>()->step_z = 0;
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
     SetWord(Trail(s[4], 0), Word(s + 0x2E));
@@ -1209,11 +1209,11 @@ S08_EXPORT void __cdecl EvilEyeBeam_Seek(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->vel_y = ts->vel_x;
-        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(ts->y));
+        ts->step_z = ts->step_x;
+        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(ts->z));
         const int ddx = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(ts->x));
         const int angle = Ratan2(ddx, ddz);
-        rv::Current<records::BattleTask>()->vel_x = angle;
+        rv::Current<records::BattleTask>()->step_x = angle;
     }
     bool snap;
     if (MH_CALL(MagicFx_NearSprite)(src, 0x8000) != 0) {
@@ -1221,15 +1221,15 @@ S08_EXPORT void __cdecl EvilEyeBeam_Seek(void) {
     } else {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->vel_y = static_cast<std::int32_t>((static_cast<std::uint32_t>(ts->vel_y) & 0xFFF) -
-                                                    (static_cast<std::uint32_t>(ts->vel_x) & 0xFFF));
-        if (ts->vel_y < 0) ts->vel_y = static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(ts->vel_y));
-        const std::int32_t turn = ts->vel_y;
+        ts->step_z = static_cast<std::int32_t>((static_cast<std::uint32_t>(ts->step_z) & 0xFFF) -
+                                                    (static_cast<std::uint32_t>(ts->step_x) & 0xFFF));
+        if (ts->step_z < 0) ts->step_z = static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(ts->step_z));
+        const std::int32_t turn = ts->step_z;
         snap = turn > 0x600 && turn < 0xA00;
     }
     if (snap) {
         rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
         Inc(Sc()[2]);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1262,7 +1262,7 @@ S08_EXPORT void __cdecl EvilEyeBeam_Trail(void) {
             tchild->owner = static_cast<std::int32_t>(Key(o));
             child[1] = 1;
             tchild->x = ts->x;
-            tchild->y = ts->y;
+            tchild->z = ts->z;
             SetLong(child + 0x3C, Long(s + 0x3C));
             Inc(o[0xB]);
         }

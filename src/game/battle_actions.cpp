@@ -327,8 +327,8 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
         const unsigned a = B(at::kActor);
         SetB(at::kPhase, 3);
         auto* const member_rec = rv::As<records::PartyMember>(Party(a));
-        member_rec->state[0] = 2;
-        member_rec->state[1] = 0;
+        member_rec->state = 2;
+        member_rec->step = 0;
         BattleActions_Step = 0;
         BattleE4_Step2 = 0;
         return;
@@ -350,7 +350,7 @@ extern "C" void __cdecl BattleAction_AbilityCheck(void) {
     unsigned char cost;
     if (Word(At(at::kAbility)) != 0x97) {
         const unsigned id = B(at::kAbility);
-        const unsigned who = a <= 2 ? rv::As<records::PartyMember>(Party(a))->member : rv::As<records::BattleEnemy>(Enemy(a))->actor;
+        const unsigned who = a <= 2 ? rv::As<records::PartyMember>(Party(a))->actor : rv::As<records::BattleEnemy>(Enemy(a))->actor;
         cost = g.skill_ap_cost(who, id, 1);
     } else {
         cost = BattleActions_ApCost;
@@ -436,8 +436,8 @@ extern "C" void __cdecl BattleAction_ItemCheck(void) {
         BattleActions_Step = 0;
         BattleE4_Step2 = 0;
         auto* const member_rec = rv::As<records::PartyMember>(Party(a));
-        member_rec->state[0] = 2;
-        member_rec->state[1] = 0;
+        member_rec->state = 2;
+        member_rec->step = 0;
         return;
     }
     const unsigned char* const r = PtrAt(at::kActor + at::kBAction);
@@ -490,21 +490,21 @@ extern "C" void __cdecl BattleAction_EffectWait(void) {
     for (unsigned a = 0; a <= 2; ++a) {
         unsigned char* const o = Party(a);
         auto* const member_rec = rv::As<records::PartyMember>(o);
-        if ((o[0x130] & 0x40) == 0 || member_rec->state[0] == 6) continue;
-        member_rec->state[0] = 6;
-        member_rec->state[1] = 0;
-        member_rec->state[2] = 0;
-        member_rec->state[3] = 0;
+        if ((o[0x130] & 0x40) == 0 || member_rec->state == 6) continue;
+        member_rec->state = 6;
+        member_rec->step = 0;
+        member_rec->state3 = 0;
+        member_rec->state4 = 0;
         g.set_actor_bit(a);
     }
     for (unsigned a = 3; a <= 10; ++a) {
         unsigned char* const o = Enemy(a);
         auto* const enemy_rec = rv::As<records::BattleEnemy>(o);
-        if ((o[0x110] & 0x40) == 0 || enemy_rec->state[0] == 6) continue;
-        enemy_rec->state[0] = 6;
-        enemy_rec->state[1] = 0;
-        enemy_rec->state[2] = 0;
-        enemy_rec->state[3] = 0;
+        if ((o[0x110] & 0x40) == 0 || enemy_rec->state == 6) continue;
+        enemy_rec->state = 6;
+        enemy_rec->step = 0;
+        enemy_rec->state3 = 0;
+        enemy_rec->state4 = 0;
         g.set_actor_bit(a);
     }
     if (g.any_flag_f0() != 0) return;

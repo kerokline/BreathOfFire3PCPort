@@ -467,7 +467,7 @@ extern "C" void __cdecl FieldCore_Attached(void) {
         static const unsigned kFields[] = {0x34, 0x38, 0x3C, 0x64, 0x68, 0x6C};
         for (const unsigned field : kFields) {
             records::SpriteObject* const s = rv::Current<records::SpriteObject>();
-            SetULong(rv::Bytes(s) + field, ULong(At(Sprite_ObjectsExtra_addr + 0x34 + (field - 0x34) + static_cast<U>(s->accel_x) * 0xA4u)));
+            SetULong(rv::Bytes(s) + field, ULong(At(Sprite_ObjectsExtra_addr + 0x34 + (field - 0x34) + static_cast<U>(s->work_18) * 0xA4u)));
         }
         long offset[3];
         SH_CALL(MoveCmd_AttachOffset)(offset, S()[0x1C]);

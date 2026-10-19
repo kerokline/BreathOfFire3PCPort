@@ -644,7 +644,7 @@ extern "C" void __cdecl EffectKind06_Start(void) {
     Cur()[0x29] = 2;
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     if (o->param == 3) {
-        o->in_use = static_cast<unsigned char>(o->in_use | 0x20);
+        o->flags = static_cast<unsigned char>(o->flags | 0x20);
         Cur()[0x5C] = 1;
         rv::As<records::EffectObject>(Cur())->shade[2] = 0xF8;
         rv::As<records::EffectObject>(Cur())->shade[1] = 0xF8;

@@ -167,7 +167,7 @@ void Rtp4(unsigned char* prim, unsigned step) {
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->z), 2,
                                 size);
 }
 void LoadPaletteOfCurrent() {
@@ -180,7 +180,7 @@ void LoadPaletteOfCurrent() {
 // The owner's position +0x34 / +0x38 / +0x3C to the task's.
 void AtOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -503,11 +503,11 @@ S33_EXPORT void __cdecl AccessionCtl_Run(void) {
 S33_EXPORT void __cdecl AccessionCtl_Start(void) {
     Sc()[8] = Pointer(BattleOdds_ActorObject_addr)[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Mem(BossSi_CentreX_addr)));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Mem(BossSi_CentreZ_addr)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Mem(BossSi_CentreZ_addr)));
     {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->y);
+        const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
         SetWord(Sc() + 0x3E, U(ground) & 0xFFFF);
     }
     Sc()[0xB] = 0;
@@ -711,7 +711,7 @@ S33_EXPORT void __cdecl AccessionOrb_DrawShell(void) {
             const unsigned char* const s = Sc();
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             const std::uint32_t wx = Shl(vx, 9) + U(ts->x);
-            const std::uint32_t wz = Shl(z, 9) + U(ts->y);
+            const std::uint32_t wz = Shl(z, 9) + U(ts->z);
             MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x55, 0);
             MH_CALL(MapView_LinkPrimAt)(wx, wz, 1, 0xC);
             p = Gfx_PacketNext;
@@ -800,7 +800,7 @@ S33_EXPORT void __cdecl AccessionOrb_DrawGlow(void) {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const std::uint32_t wx = Shl(vx, 9) + U(ts->x);
-        const std::uint32_t wz = Shl(z, 9) + U(ts->y);
+        const std::uint32_t wz = Shl(z, 9) + U(ts->z);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(wx, wz, 1, 0xC);
         p = Gfx_PacketNext;
@@ -849,7 +849,7 @@ S33_EXPORT void __cdecl AccessionSpark_Run(void) {
 S33_EXPORT void __cdecl AccessionSpark_Start(void) {
     AtOwner();
     const std::uint32_t r = RandCall();
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(r & 0x1F));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(r & 0x1F));
     Sc()[0x5D] = 0x10;
     Sc()[0xB] = 0;
     Sc()[9] = 0;
@@ -932,7 +932,7 @@ S33_EXPORT void __cdecl AccessionSpark_Draw(unsigned a1, unsigned a2) {
             const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             wx = Shl(vx, 9) + U(ts->x);
             tpage = ((s[0xB] & 3u) << 5) | 0x15u;
-            wz = Shl(z, 9) + U(ts->y);
+            wz = Shl(z, 9) + U(ts->z);
         }
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0);
         MH_CALL(MapView_LinkPrimAt)(wx, wz, 2, 0xC);
@@ -1307,11 +1307,11 @@ S33_EXPORT void __cdecl MightyChop_Throw(void) {
     if (Sc()[0xB] != 0) return;
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = source[8];
-    rv::Current<records::BattleTask>()->vel_x = 0;
-    rv::Store(rv::Current<records::BattleTask>()->vel_y, static_cast<std::int32_t>(0xFFFE8000u));
+    rv::Current<records::BattleTask>()->step_x = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(0xFFFE8000u));
     Turn(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->vel_x) + U(Long(source + 0x34))));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->vel_y) + U(Long(source + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_x) + U(Long(source + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::Current<records::BattleTask>()->step_z) + U(Long(source + 0x38))));
     SetLong(Sc() + 0x3C, Long(source + 0x3C));
     MH_CALL(Sound_PlayById)(0x100);
     for (unsigned i = 0; i < 6; ++i) {
@@ -1377,11 +1377,11 @@ S33_EXPORT void __cdecl MightyChopBlade_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    rv::Current<records::BattleTask>()->vel_x = 0;
-    rv::Store(rv::Current<records::BattleTask>()->vel_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Sc()[0xB]) << 15));
+    rv::Current<records::BattleTask>()->step_x = 0;
+    rv::Store(rv::Current<records::BattleTask>()->step_z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Sc()[0xB]) << 15));
     Turn(Sc());
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(rv::Current<records::BattleTask>()->vel_x)));
-    rv::Store(rv::Current<records::BattleTask>()->y, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(rv::Current<records::BattleTask>()->vel_y)));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(rv::Current<records::BattleTask>()->step_x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(rv::Current<records::BattleTask>()->step_z)));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     SetLong(Sc() + 0x40, 0x8000);
     SetLong(Sc() + 0x44, 0x8000);

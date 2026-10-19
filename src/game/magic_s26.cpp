@@ -191,7 +191,7 @@ S26_EXPORT void __cdecl Magic114_Start(void) {
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xA] = 0;
     Inc(Sc()[1]);
@@ -453,8 +453,8 @@ S26_EXPORT void __cdecl Magic114_TrailSpawn(void) {
         child[8] = owner[8];
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
-        tchild->x = AddL(ts->vel_x, kx);
-        tchild->y = AddL(ts->vel_y, Field_Kind2Z);
+        tchild->x = AddL(ts->step_x, kx);
+        tchild->z = AddL(ts->step_z, Field_Kind2Z);
         SetWord(child + 0x3E, Word(s + 0x14));
     }
     unsigned char* s = Sc();
@@ -467,8 +467,8 @@ S26_EXPORT void __cdecl Magic114_TrailSpawn(void) {
         SetL(child + 0x80, Key(owner));
         s = Sc();
         child[8] = s[8];
-        tchild->vel_x = Long(s + 0xC);
-        tchild->vel_y = Long(s + 0x10);
+        tchild->step_x = Long(s + 0xC);
+        tchild->step_z = Long(s + 0x10);
         SetWord(child + 0x3E, Word(s + 0x14));
         child[9] = 0x10;
         child[0xB] = 0;
@@ -631,7 +631,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
             const std::int32_t d = SubL(Long(s + 0x14), i);
             SetLong(s + 0xC, d < 0x20 ? Shl(d, 0xE) : 0x80000);
         }
-        rv::Current<records::BattleTask>()->vel_y = y;
+        rv::Current<records::BattleTask>()->step_z = y;
         Turn();
         s = Sc();
         VertexOffset(0x10, s);
@@ -639,7 +639,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamCore(void) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
-        rv::Current<records::BattleTask>()->vel_y = y;
+        rv::Current<records::BattleTask>()->step_z = y;
         Turn();
         s = Sc();
         VertexOffset(0x18, s);
@@ -710,7 +710,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
             const std::int32_t d = SubL(Long(s + 0x14), i);
             SetLong(s + 0xC, d < 0x20 ? Shl(d, 0xE) : 0x80000);
         }
-        rv::Current<records::BattleTask>()->vel_y = y;
+        rv::Current<records::BattleTask>()->step_z = y;
         Turn();
         s = Sc();
         VertexOffset(0x10, s);
@@ -718,7 +718,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamStrip(unsigned abr_arg) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
-        rv::Current<records::BattleTask>()->vel_y = y;
+        rv::Current<records::BattleTask>()->step_z = y;
         Turn();
         s = Sc();
         VertexOffset(0x18, s);
@@ -788,7 +788,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 3), 0xD)) : 0xFFFD0000u);
         }
-        rv::Current<records::BattleTask>()->vel_y = y;
+        rv::Current<records::BattleTask>()->step_z = y;
         Turn();
         s = Sc();
         SetVW(8, Pos9(AddL(Long(s + 0x34), Long(s + 0xC))));
@@ -797,7 +797,7 @@ S26_EXPORT void __cdecl Magic114_DrawBeamGlow(void) {
             const std::int32_t length = Long(s + 0x14);
             SetL(s + 0xC, SubL(length, i) < 8 ? static_cast<std::uint32_t>(Shl(MulL(SubL(i, length), 5), 0xD)) : 0xFFFB0000u);
         }
-        rv::Current<records::BattleTask>()->vel_y = y;
+        rv::Current<records::BattleTask>()->step_z = y;
         Turn();
         s = Sc();
         SetVW(0x1A, Pos9(AddL(Long(s + 0x38), Long(s + 0x10))));
@@ -878,7 +878,7 @@ S26_EXPORT void __cdecl Magic114_DrawRays(void) {
     const unsigned radius = static_cast<unsigned char>(~s[9]) & 0x1Fu;
     const int dy = s[8] > 1 ? 0xFE : 0;   // a byte: the callee reads it signed
     const unsigned long x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x));
-    const unsigned long z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->y));
+    const unsigned long z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->z));
     const auto grey = static_cast<unsigned char>(0x80 - (radius << 4));
     const auto scaled = [radius](int v) { return (static_cast<std::uint32_t>(v) * radius) << 4 >> 0xC; };
     for (unsigned angle = 0; angle < 0x1000;) {
@@ -956,7 +956,7 @@ S26_EXPORT void __cdecl Magic115_Task(void) {
 S26_EXPORT void __cdecl Magic115_Start(void) {
     unsigned char* const source = Source();
     rv::Store(rv::Current<records::BattleTask>()->x, Long(source + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(source + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(source + 0x38));
     SetLong(Sc() + 0x3C, Long(source + 0x3C));
     const unsigned slot = NewTask(0x30);
     unsigned char* const child = TaskSlot(slot);
@@ -1049,7 +1049,7 @@ static void Magic115_SpriteSetUp() {
 // animation 0, +9 0xFF, +2 on.
 S26_EXPORT void __cdecl Magic115_OrbitStart(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetWord(Sc() + 0x3E, (Word(Owner() + 0x3E) + 0x2C0) & 0xFFFF);
     Magic115_SpriteSetUp();
     MH_CALL(Sprite_SetAnimation)(0);
@@ -1074,7 +1074,7 @@ static void Magic115_Circle() {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         const unsigned char* const owner = Owner();
-        ts->y = AddL(Shl(MulL(c, 3), 0xE) >> 0xC, Long(owner + 0x38));
+        ts->z = AddL(Shl(MulL(c, 3), 0xE) >> 0xC, Long(owner + 0x38));
     }
 }
 
@@ -1096,7 +1096,7 @@ S26_EXPORT void __cdecl Magic115_Orbit(void) {
         child[1] = 1;
         child[9] = static_cast<unsigned char>(((s[9] >> 2) + 2) << 2);
         tchild->x = Long(s + 0x34);
-        tchild->y = Long(s + 0x38);
+        tchild->z = Long(s + 0x38);
         SetLong(child + 0x3C, Long(s + 0x3C));
         Inc(owner[9]);
         Inc(Owner()[0xB]);

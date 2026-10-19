@@ -176,7 +176,7 @@ void CopyPosition(unsigned char* to, const unsigned char* from) {
 void LinkAtCurrent(unsigned size) {
     const unsigned char* const sc = Sprite_Current;
     const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y), 2, size);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->z), 2, size);
 }
 
 // Bytes +0..+4 of Sprite_Current cleared, the pointer read again for each:
@@ -247,7 +247,7 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             t[4] = sc[0xB];
             t[9] = nine;
             tt->x = te->x;
-            tt->y = te->z;
+            tt->z = te->z;
             SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(te->height) + 0x800000u));
             SetWord(t + 0x3E, Word(t + 0x3E) + Mem(kEnemyLift + e[0xF0] * kEnemyLiftStride)[0]);
             Bump(sc[0xB], 1);
@@ -266,7 +266,7 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             t[4] = sc[0xB];
             t[9] = nine;
             tt->x = m_rec->x;
-            tt->y = m_rec->z;
+            tt->z = m_rec->z;
             SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(m_rec->height) + 0x800000u));
             Bump(sc[0xB], 1);
         }
@@ -470,8 +470,8 @@ S20_EXPORT void __cdecl Magic087_OrbitRun(void) {
 S20_EXPORT void __cdecl Magic087_OrbitStart(void) {
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
-    rv::Current<records::BattleTask>()->vel_x = 0x100;
-    rv::Current<records::BattleTask>()->start_x = 4;
+    rv::Current<records::BattleTask>()->step_x = 0x100;
+    rv::Current<records::BattleTask>()->work_18 = 4;
     if (Sprite_Current[1] != 0) {
         Sprite_Current[0xB] = 0;
         Sprite_Current[9] = 0;
@@ -494,11 +494,11 @@ S20_EXPORT void __cdecl Magic087_OrbitSpin(void) {
     unsigned char* sc = Sprite_Current;
     SetLong(Scr(4), static_cast<std::int32_t>((sc[9] & 0x3Fu) << 6));
     SetLong(sc + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0xC)) - static_cast<std::uint32_t>(Long(sc + 0x18))));
-    SetLong(Scr(0), rv::Current<records::BattleTask>()->vel_x);
+    SetLong(Scr(0), rv::Current<records::BattleTask>()->step_x);
     const int s = MH_CALL(Math_Sin)(Long(Scr(4)));
     rv::Store(rv::Current<records::BattleTask>()->x, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
     const int c = MH_CALL(Math_Cos)(Long(Scr(4)));
-    rv::Store(rv::Current<records::BattleTask>()->y, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->z, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     sc = Sprite_Current;
     if (sc[0xA] < 0x21) Bump(sc[0xA], 1);
@@ -576,7 +576,7 @@ S20_EXPORT void __cdecl Magic087_PushMatrix(void) {
     const short rot[4] = {0, 0, static_cast<short>((sc[0xB] & 0x3F) << 6), 0};
     short v[4];
     v[0] = static_cast<short>((tsc->x >> 9) - 0x4000);
-    v[1] = static_cast<short>((tsc->y >> 9) - 0x4000);
+    v[1] = static_cast<short>((tsc->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-((S16(sc + 0x3E) + 0x200) / 2));
     v[3] = 0;
     struct Matrix {

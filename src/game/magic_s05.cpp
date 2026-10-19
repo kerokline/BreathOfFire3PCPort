@@ -112,7 +112,7 @@ void TakeOwnerAndAnimate(unsigned arg) {
         Sc()[8] = facing;
     }
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0;
@@ -264,8 +264,8 @@ S05_EXPORT void __cdecl Magic017Image_Appear(void) {
     ShowTinted(s);
     s[0x27] = Owner()[0x27];
     const unsigned char number = s[0xB];
-    ts->vel_x = 0;
-    ts->vel_y = (number & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
+    ts->step_x = 0;
+    ts->step_z = (number & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
     Turn(s);
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
@@ -276,8 +276,8 @@ S05_EXPORT void __cdecl Magic017Image_Appear(void) {
 S05_EXPORT void __cdecl Magic017Image_Drift(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    AddLong(s + 0x34, ts->vel_x);
-    AddLong(s + 0x38, ts->vel_y);
+    AddLong(s + 0x34, ts->step_x);
+    AddLong(s + 0x38, ts->step_z);
     Tint(s, 0xFC);
     Dec(s[9]);
     if (s[9] == 0) Inc(s[2]);
@@ -294,20 +294,20 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         if (s[9] != 0x10) return;
-        ts->vel_x = static_cast<std::int32_t>(0xFFFE0000u);
-        ts->vel_y = (s[0xB] & 1) ? static_cast<std::int32_t>(0xFFFF0000u) : 0x10000;
+        ts->step_x = static_cast<std::int32_t>(0xFFFE0000u);
+        ts->step_z = (s[0xB] & 1) ? static_cast<std::int32_t>(0xFFFF0000u) : 0x10000;
         Turn(s);
     }
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x34)) +
-                                                    static_cast<std::uint32_t>(ts->vel_x));
-        ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x38)) +
-                                                    static_cast<std::uint32_t>(ts->vel_y));
+                                                    static_cast<std::uint32_t>(ts->step_x));
+        ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x38)) +
+                                                    static_cast<std::uint32_t>(ts->step_z));
         SetLong(s + 0x3C, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
-        ts->vel_x = 0;
-        ts->vel_y = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
+        ts->step_x = 0;
+        ts->step_z = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
         Turn(s);
     }
     if (Sc()[0xB] == 0) MH_CALL(Sound_PlayById)(0x101);
@@ -324,8 +324,8 @@ S05_EXPORT void __cdecl Magic017Image_Return(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        AddLong(s + 0x34, ts->vel_x);
-        AddLong(s + 0x38, ts->vel_y);
+        AddLong(s + 0x34, ts->step_x);
+        AddLong(s + 0x38, ts->step_z);
         Tint(s, 4);
         Dec(s[9]);
         if (s[9] != 0) return;
@@ -390,7 +390,7 @@ S05_EXPORT void __cdecl Magic017Image_Home(void) {
     Dec(s[9]);
     if (s[9] != 0) return;
     ts->x = Long(Owner() + 0x34);
-    ts->y = Long(Owner() + 0x38);
+    ts->z = Long(Owner() + 0x38);
     SetLong(s + 0x3C, Long(Owner() + 0x3C));
     s[9] = 8;
     Inc(s[2]);

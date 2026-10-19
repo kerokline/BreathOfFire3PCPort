@@ -561,8 +561,8 @@ extern "C" void __cdecl Field_SwapSpinIn(void) {
                 Sprite_Current[0x5C] = 0;
                 Sprite_Current[9] = 0;
                 g.clear_steps();
-                rv::Current<records::SpriteObject>()->accel_x = 0;
-                rv::Current<records::SpriteObject>()->accel_z = 0;
+                rv::Current<records::SpriteObject>()->work_18 = 0;
+                rv::Current<records::SpriteObject>()->work_1c = 0;
                 SetLong(Sprite_Current + 0x20, 0);
                 count = Field_MemberCount;
             }

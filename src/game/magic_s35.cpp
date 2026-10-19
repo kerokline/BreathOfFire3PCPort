@@ -227,7 +227,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
@@ -241,7 +241,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
         c[1] = 0;
         c[9] = 0;
         tc->x = ts->x;
-        tc->y = ts->y;
+        tc->z = ts->z;
         SetWord(c + 0x3E, Word(s + 0x3E));
         Inc(s[0xB]);
     }
@@ -255,7 +255,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
         c[0xB] = static_cast<unsigned char>((i & 3) << 3);
         c[9] = static_cast<unsigned char>((i >> 2) * 0x28 + 0x11);
         tc->x = ts->x;
-        tc->y = ts->y;
+        tc->z = ts->z;
         SetLong(c + 0x3C, Long(s + 0x3C));
         Inc(s[0xB]);
     }
@@ -758,7 +758,7 @@ S35_EXPORT void __cdecl Cure_Start(void) {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
         rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
+        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
         SetLong(Sc() + 0x3C, Long(src + 0x3C));
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1243,7 +1243,7 @@ S35_EXPORT void __cdecl BenedictionChild_Start(void) {
         const records::PartyMember* const tm = rv::AsConst<records::PartyMember>(m);
         Sc()[8] = m[8];
         rv::Store(rv::Current<records::BattleTask>()->x, tm->x);
-        rv::Store(rv::Current<records::BattleTask>()->y, tm->z);
+        rv::Store(rv::Current<records::BattleTask>()->z, tm->z);
         SetLong(Sc() + 0x3C, tm->height);
     }
     Sc()[0xB] = 0;
@@ -1356,13 +1356,13 @@ void BlessMoteOrbit() {
         const int sn = MH_CALL(Math_Sin)(static_cast<short>(angle));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Add32(Mul32(sn, ts->vel_x), Long(Owner() + 0x34));
+        ts->x = Add32(Mul32(sn, ts->step_x), Long(Owner() + 0x34));
     }
     {
         const int cs = MH_CALL(Math_Cos)(SS(4));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->y = Add32(Mul32(cs, ts->vel_x), Long(Owner() + 0x38));
+        ts->z = Add32(Mul32(cs, ts->step_x), Long(Owner() + 0x38));
     }
 }
 // The rise: while dword +0x20 is below +0x14 (signed), +0x14 -= +0x20 and
@@ -1383,7 +1383,7 @@ void BlessMoteRise() {
 S35_EXPORT void __cdecl BenedictionMote_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    rv::Current<records::BattleTask>()->vel_x = 8;
+    rv::Current<records::BattleTask>()->step_x = 8;
     BlessMoteOrbit();
     SetLong(Sc() + 0x3C, Add32(Long(Owner() + 0x3C), 0x800000));
     {
@@ -1403,7 +1403,7 @@ S35_EXPORT void __cdecl BenedictionMote_Launch(void) {
 // original 0x4F1A40: dword +0xC up by 2, the orbit, the rise; +9 up by 2, at
 // 0x10 +2 on. Also MAGIC077's (ReviveMote_Task's entry 1).
 S35_EXPORT void __cdecl BenedictionMote_Spiral(void) {
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, Add32(rv::Current<records::BattleTask>()->vel_x, 2));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Add32(rv::Current<records::BattleTask>()->step_x, 2));
     BlessMoteOrbit();
     BlessMoteRise();
     AddB(Sc()[9], 2);
@@ -1414,7 +1414,7 @@ S35_EXPORT void __cdecl BenedictionMote_Spiral(void) {
 // down, at 0 the owner's +0xB down and a tail jmp to MAGIC219's 0x4F6290 (the
 // pool slot's free).
 S35_EXPORT void __cdecl BenedictionMote_Fade(void) {
-    rv::Store(rv::Current<records::BattleTask>()->vel_x, Add32(rv::Current<records::BattleTask>()->vel_x, 1));
+    rv::Store(rv::Current<records::BattleTask>()->step_x, Add32(rv::Current<records::BattleTask>()->step_x, 1));
     BlessMoteOrbit();
     BlessMoteRise();
     if ((Frame_Counter & 1) == 0) return;

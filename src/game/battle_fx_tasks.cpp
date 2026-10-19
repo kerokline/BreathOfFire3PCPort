@@ -269,21 +269,21 @@ extern "C" void __cdecl BattleFx_PopupHold(void) {
 extern "C" void __cdecl BattleFx_PopupRise(void) {
     unsigned char* s = Cur();
     records::BattleTask* task_rec = rv::As<records::BattleTask>(s);
-    task_rec->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->y) + 0x40000u);
+    task_rec->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->z) + 0x40000u);
     s = Cur();
     task_rec = rv::As<records::BattleTask>(s);
     const unsigned char timer = task_rec->timer;
     task_rec->timer = static_cast<unsigned char>(timer - 1);
     if (timer != 0) return;
     rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
-    rv::As<records::BattleTask>(Cur())->vel_x = 0x8000;
-    rv::As<records::BattleTask>(Cur())->vel_y = static_cast<std::int32_t>(0xFFFA0000u);
+    rv::As<records::BattleTask>(Cur())->step_x = 0x8000;
+    rv::As<records::BattleTask>(Cur())->step_z = static_cast<std::int32_t>(0xFFFA0000u);
     s = Cur();
     task_rec = rv::As<records::BattleTask>(s);
-    task_rec->start_y = static_cast<short>(Word(s + 0x3A));
+    task_rec->work_1c = static_cast<short>(Word(s + 0x3A));
     s = Cur();
     task_rec = rv::As<records::BattleTask>(s);
-    task_rec->start_x = static_cast<short>(Word(s + 0x36));
+    task_rec->work_18 = static_cast<short>(Word(s + 0x36));
 }
 
 // original 0x432E50 (state 3): the bounce. It ends - timer 10, state + 1 -
@@ -296,18 +296,18 @@ extern "C" void __cdecl BattleFx_PopupRise(void) {
 extern "C" void __cdecl BattleFx_PopupBounce(void) {
     unsigned char* s = Cur();
     records::BattleTask* task_rec = rv::As<records::BattleTask>(s);
-    if (!(task_rec->start_y > static_cast<short>(Word(s + 0x3A))) && task_rec->start_x != static_cast<short>(Word(s + 0x36))) {
+    if (!(task_rec->work_1c > static_cast<short>(Word(s + 0x3A))) && task_rec->work_18 != static_cast<short>(Word(s + 0x36))) {
         task_rec->timer = 0xA;
         rv::As<records::BattleTask>(Cur())->state = static_cast<unsigned char>(rv::As<records::BattleTask>(Cur())->state + 1);
         return;
     }
-    task_rec->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->x) + static_cast<std::uint32_t>(task_rec->vel_x));
+    task_rec->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->x) + static_cast<std::uint32_t>(task_rec->step_x));
     s = Cur();
     task_rec = rv::As<records::BattleTask>(s);
-    task_rec->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->y) + static_cast<std::uint32_t>(task_rec->vel_y));
+    task_rec->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->z) + static_cast<std::uint32_t>(task_rec->step_z));
     s = Cur();
     task_rec = rv::As<records::BattleTask>(s);
-    task_rec->vel_y = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->vel_y) + 0x14000u);
+    task_rec->step_z = static_cast<std::int32_t>(static_cast<std::uint32_t>(task_rec->step_z) + 0x14000u);
 }
 
 // original 0x432EA0 (state 4): the timer as the hold's; when it was 0 the

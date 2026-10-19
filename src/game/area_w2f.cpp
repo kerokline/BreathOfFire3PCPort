@@ -668,7 +668,7 @@ extern "C" void __cdecl Area111_AttachAtLeaderCell(void) {
 // the running object's dword +0x18 (a byte shift, the count masked to 5
 // bits).
 extern "C" void __cdecl Area111_Counter3Bit(void) {
-    const unsigned shift = static_cast<U>(rv::Current<records::SpriteObject>()->accel_x) & 31;
+    const unsigned shift = static_cast<U>(rv::Current<records::SpriteObject>()->work_18) & 31;
     B(at::kCounter3) = static_cast<unsigned char>(0x10u << shift);
 }
 
