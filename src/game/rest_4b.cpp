@@ -40,7 +40,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char& B(U address) { return *At(address); }
-signed char SB(U address) { return static_cast<signed char>(*At(address)); }
 unsigned W(U address) { return Word(At(address)); }
 U L(U address) { return static_cast<U>(Long(At(address))); }
 void PutW(U address, unsigned v) { SetWord(At(address), v); }

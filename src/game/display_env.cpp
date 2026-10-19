@@ -46,7 +46,6 @@ void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);
 }
-void* Ptr(U address) { return At(Long(address)); }
 float Float(U address) {
     float v;
     std::memcpy(&v, At(address), sizeof v);

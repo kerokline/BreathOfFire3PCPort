@@ -56,7 +56,6 @@ U Word(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutWord(U address, U v) {
     const std::uint16_t w = static_cast<std::uint16_t>(v);
     std::memcpy(At(address), &w, sizeof w);

@@ -45,7 +45,6 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 U UL(U a) { return static_cast<U>(Long(At(a))); }
-void SetUL(U a, U v) { SetLong(At(a), static_cast<std::int32_t>(v)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void StepUp() { Game_Step = static_cast<unsigned short>(Game_Step + 1); }

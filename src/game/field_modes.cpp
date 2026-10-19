@@ -66,7 +66,6 @@ using VoidFn = void (__cdecl*)();
 VoidFn Entry(std::uint32_t table, int index) {
     return reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(table + 4u * static_cast<std::uint32_t>(index))))));
 }
-signed char Signed(std::uint32_t address) { return static_cast<signed char>(At(address)[0]); }
 
 unsigned char& Step() { return MoveScript_PartyRecords[0x65]; }
 std::uint16_t Timer() { return Word(At(MoveScript_PartyRecords_addr + 0x66)); }

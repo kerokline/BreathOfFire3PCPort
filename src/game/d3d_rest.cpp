@@ -75,10 +75,6 @@ float Float(const unsigned char* p) {
     return v;
 }
 float FloatAt(U address) { return Float(At(address)); }
-void PutWord(unsigned char* p, U v) {
-    const std::uint16_t w = static_cast<std::uint16_t>(v);
-    std::memcpy(p, &w, sizeof w);
-}
 void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 

@@ -75,8 +75,6 @@ U Half(U v) { return Sar(v + (S32(v) < 0 ? 1u : 0u), 1); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
 const unsigned char* Story() { return At(Cond_Flags_addr + 0xa0); }
-U Cell(U cell) { return UL(At(cell)); }
-void SetCell(U cell, U v) { SetUL(At(cell), v); }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
 // bits); every value goes through the FPU as Capcom's does.
