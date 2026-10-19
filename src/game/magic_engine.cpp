@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -233,10 +234,11 @@ MENGINE_EXPORT void __cdecl HeadCracker_Task(void) {
 MENGINE_EXPORT void __cdecl HeadCracker_Start(void) {
     unsigned char* const owner = SlotOwner();
     unsigned char* const slot = Sprite_Current;
+    records::BattleTask* const tslot = reinterpret_cast<records::BattleTask*>(slot);
     Sprite_Current = owner;
     MH_CALL(Sprite_SetAnimation)(2);
     Sprite_Current = slot;
-    SetLong(slot + 0xC, 8);
+    tslot->vel_x = 8;
     Bump(Sprite_Current[1]);
 }
 
@@ -352,12 +354,13 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
     MH_CALL(Sprite_SetAnimationBank)(0x1D3);
     const unsigned char t = Mem(at::kTarget)[0];
     unsigned char* const sc = Sprite_Current;
+    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
     if (t <= 2) {
-        SetLong(sc + 0x34, Long(PartyOf(t) + 0x34));
-        SetLong(sc + 0x38, Long(PartyOf(Mem(at::kTarget)[0]) + 0x38));
+        tsc->x = Long(PartyOf(t) + 0x34);
+        tsc->y = Long(PartyOf(Mem(at::kTarget)[0]) + 0x38);
     } else {
-        SetLong(sc + 0x34, Long(EnemyOf(t) + 0x34));
-        SetLong(sc + 0x38, Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38));
+        tsc->x = Long(EnemyOf(t) + 0x34);
+        tsc->y = Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38);
     }
     SetWord(sc + 0x3E, Word(sc + 0x3E) + 0x800);
     SetLong(sc + 0x14, 0);
@@ -380,9 +383,10 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
 // Sprite_Current read again) is below that, the sub-phase +2 on.
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
     unsigned char* const sc = Sprite_Current;
+    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
     SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
     SetLong(sc + 0x14, Long(sc + 0x14) + Long(sc + 0x20));
-    const long ground = MH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
+    const long ground = MH_CALL(AreaMap_Elevation)(tsc->x, tsc->y);
     const int limit = static_cast<short>(static_cast<std::uint32_t>(ground) & 0xFFFF) + 0x180;
     unsigned char* const now = Sprite_Current;
     if (static_cast<short>(Word(now + 0x3E)) < limit) Bump(now[2]);

@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -42,6 +43,10 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void);
 MS19_EXPORT void __cdecl BarrierLine_Draw(void);
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -160,9 +165,10 @@ MS19_EXPORT void __cdecl Shield_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const slot = Pool(i);
+        records::BattleTask* const tslot = reinterpret_cast<records::BattleTask*>(slot);
         if (!(slot[0] & 1)) continue;
         Sprite_Current = slot;
-        SetLong(Mem(BattleE2_Owner_addr), Long(slot + 0x80));
+        SetLong(Mem(BattleE2_Owner_addr), static_cast<std::int32_t>(tslot->owner));
         MH_CALL(ShieldSpark_Dispatch)();
         SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = cur;
@@ -178,15 +184,16 @@ void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order
     const unsigned char slot = MH_CALL(BattleTask_Create)(1, 0x22);
     const std::int32_t x = Long(record + 0x34);
     unsigned char* const t = Task(slot);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     unsigned char* const cur = Sprite_Current;
-    SetLong(t + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur)));
+    tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
     t[1] = 0;
     t[3] = static_cast<unsigned char>(index);
     t[4] = cur[4];
     t[0xB] = order;
     t[9] = delay;
-    SetLong(t + 0x34, x);
-    SetLong(t + 0x38, Long(record + 0x38));
+    tt->x = x;
+    tt->y = Long(record + 0x38);
     SetLong(t + 0x3C, Long(record + 0x3C));
     Bump(order);
     delay = static_cast<unsigned char>(delay + 0x10);
@@ -298,8 +305,9 @@ MS19_EXPORT void __cdecl ShieldAura_Rise(void) {
         const unsigned char slot = MH_CALL(ShieldSpark_Alloc)();
         if (slot != 0xFF) {
             unsigned char* const e = Pool(slot);
+            records::BattleTask* const te = reinterpret_cast<records::BattleTask*>(e);
             unsigned char* const aura = Sprite_Current;
-            SetLong(e + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(aura)));
+            te->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(aura));
             e[1] = 0;
             e[2] = 0;
             e[3] = angle;
@@ -453,16 +461,16 @@ MS19_EXPORT void __cdecl ShieldSpark_Place(void) {
     const std::uint32_t angle = (cur[0xB] & 0x1Fu) << 7;
     Put16(kAngle, angle);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    SetLong(Sprite_Current + 0x34, Add(MulSar(s, 176, 3), Long(Owner() + 0x34)));
+    Store(ScTask()->x, Add(MulSar(s, 176, 3), Long(Owner() + 0x34)));
     const std::int32_t c = Cos(S16(kAngle));
-    SetLong(Sprite_Current + 0x38, Add(MulSar(c, 176, 3), Long(Owner() + 0x38)));
+    Store(ScTask()->y, Add(MulSar(c, 176, 3), Long(Owner() + 0x38)));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     SetLong(Sprite_Current + 0x14, 0x40);
     SetLong(Sprite_Current + 0x20, -4);
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0xC;
-    SetLong(Sprite_Current + 0xC, 1);
-    SetLong(Sprite_Current + 0x10, 0);
+    ScTask()->vel_x = 1;
+    ScTask()->vel_y = 0;
     Bump(Sprite_Current[2]);
 }
 
@@ -525,7 +533,8 @@ MS19_EXPORT void __cdecl ShieldSpark_Fall(void) {
 MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     const unsigned char* const cur = Sprite_Current;
-    const bool wide = Long(cur + 0xC) == 4 && cur[0xA] < 5;
+    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    const bool wide = tcur->vel_x == 4 && cur[0xA] < 5;
     const std::uint32_t r = static_cast<std::uint32_t>(MH_CALL(Rand)());
     CrystalFrame((r & 3) + (wide ? 0x40u : 0x18u));
     unsigned char* now = Sprite_Current;
@@ -545,7 +554,7 @@ MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
     if (now[0xA] != 0) return;
     const unsigned char side = now[3];
     if (!(side & 0xF0)) MH_CALL(Sound_PlayById)(side & 1 ? 0x101 : 0x102);
-    SetLong(Sprite_Current + 0x10, 8);
+    ScTask()->vel_y = 8;
     SetLong(Sprite_Current + 0x14, 8);
     SetLong(Sprite_Current + 0x20, 8);
     Bump(Sprite_Current[2]);
@@ -560,7 +569,7 @@ MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
 MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     CrystalFrame((static_cast<std::uint32_t>(MH_CALL(Rand)()) & 3) + 0x20);
-    SetLong(Sprite_Current + 0x10, Add(Long(Sprite_Current + 0x10), 4));
+    Store(ScTask()->vel_y, Add(ScTask()->vel_y, 4));
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] + Sprite_Current[0xC]);
     Sprite_Current[0xB] = static_cast<unsigned char>(Sprite_Current[0xB] + 2);
     const unsigned char* const cur = Sprite_Current;
@@ -568,9 +577,9 @@ MS19_EXPORT void __cdecl ShieldSpark_Orbit(void) {
     Put16(kAngle, angle);
     Put16(kRadius, static_cast<std::uint32_t>(cur[0xA]) * Word(cur + 0x10) + 0xB0);
     const std::int32_t s = Sin(static_cast<std::int16_t>(angle));
-    SetLong(Sprite_Current + 0x34, Add(MulSar(s, S16(kRadius), 3), Long(Owner() + 0x34)));
+    Store(ScTask()->x, Add(MulSar(s, S16(kRadius), 3), Long(Owner() + 0x34)));
     const std::int32_t c = Cos(S16(kAngle));
-    SetLong(Sprite_Current + 0x38, Add(MulSar(c, S16(kRadius), 3), Long(Owner() + 0x38)));
+    Store(ScTask()->y, Add(MulSar(c, S16(kRadius), 3), Long(Owner() + 0x38)));
     Bump(Sprite_Current[0xA]);
     if (Sprite_Current[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -633,8 +642,9 @@ MS19_EXPORT void __cdecl ShieldSpark_DrawCrystal(void) {
     MH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x15, 0);
     {
         const unsigned char* const cur = Sprite_Current;
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                    static_cast<unsigned long>(Long(cur + 0x38)), 0, 0xC);
+        const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
+                                    static_cast<unsigned long>(tcur->y), 0, 0xC);
     }
     unsigned char* cur = Sprite_Current;
     unsigned char* const first = Prim();
@@ -693,14 +703,16 @@ namespace {
 void SpawnPart(unsigned char type) {
     const unsigned char slot = MH_CALL(BattleTask_Create)(1, 0x1D);
     unsigned char* const t = Task(slot);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     const unsigned char* const cur = Sprite_Current;
-    SetLong(t + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur)));
+    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    tt->owner = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(cur));
     t[1] = type;
     if (type == 1) t[0xB] = 0x30;
     t[9] = 0;
     t[0xA] = 0;
-    SetLong(t + 0x34, Long(cur + 0x34));
-    SetLong(t + 0x38, Long(cur + 0x38));
+    tt->x = tcur->x;
+    tt->y = tcur->y;
     SetWord(t + 0x3E, Word(cur + 0x3E));
 }
 }  // namespace
@@ -711,8 +723,8 @@ void SpawnPart(unsigned char type) {
 // the phase on.
 MS19_EXPORT void __cdecl Barrier_Start(void) {
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-    SetLong(Sprite_Current + 0x34, Long(source + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(source + 0x38));
+    Store(ScTask()->x, Long(source + 0x34));
+    Store(ScTask()->y, Long(source + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(source + 0x3C));
     SpawnPart(0);
     SpawnPart(1);
@@ -952,10 +964,11 @@ MS19_EXPORT void __cdecl BarrierRing_Draw(void) {
             Put16(Prim_VertexScratch_addr + 0x18 + 2, y1);
             Put16(Prim_VertexScratch_addr + 0x18 + 4, 0);
             const unsigned char* const now = Sprite_Current;
+            const records::BattleTask* const tnow = reinterpret_cast<const records::BattleTask*>(now);
             x = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(x1))) << 9),
-                    Long(now + 0x34));
+                    tnow->x);
             z = Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(y1))) << 9),
-                    Long(now + 0x38));
+                    tnow->y);
             placed = true;
             MH_CALL(Gpu_SetDrawMode)(Prim(), 0, 1, 0x35, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 0, 0xC);
@@ -1077,8 +1090,9 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
     {
         const unsigned char* const cur = Sprite_Current;
-        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                    static_cast<unsigned long>(Long(cur + 0x38)), 2, 0xC);
+        const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+        MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
+                                    static_cast<unsigned long>(tcur->y), 2, 0xC);
     }
     unsigned char* const prim = Prim();
     MH_CALL(Gpu_SetLineG3)(prim);
@@ -1096,8 +1110,9 @@ MS19_EXPORT void __cdecl BarrierLine_Draw(void) {
     prim[0x25] = 1;
     prim[0x26] = 1;
     const unsigned char* const cur = Sprite_Current;
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(cur + 0x34)),
-                                static_cast<unsigned long>(Long(cur + 0x38)), 2, 0x34);
+    const records::BattleTask* const tcur = reinterpret_cast<const records::BattleTask*>(cur);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tcur->x),
+                                static_cast<unsigned long>(tcur->y), 2, 0x34);
 }
 
 void MagicS19_Inject() {

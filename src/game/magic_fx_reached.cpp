@@ -33,6 +33,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_fx_reached_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -45,6 +46,10 @@ using move_script::SetWord;
 using move_script::Word;
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 }  // namespace
@@ -117,8 +122,8 @@ Handler Entry(std::uint32_t table, unsigned index) {
 // three dwords +0x34 / +0x38 / +0x3C, Sprite_Current read again for each.
 void TakePosition(const unsigned char* from) {
     Sprite_Current[8] = from[8];
-    SetLong(Sprite_Current + 0x34, Long(from + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(from + 0x38));
+    Store(ScTask()->x, Long(from + 0x34));
+    Store(ScTask()->y, Long(from + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(from + 0x3C));
 }
 void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
@@ -229,9 +234,10 @@ MFX_EXPORT void __cdecl FxRing_Task(void) {
 MFX_EXPORT void __cdecl FxRing_Wait(void) {
     Bump(Sprite_Current[9], -1);
     unsigned char* const sc = Sprite_Current;
+    records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
     if (sc[9] != 0) return;
-    SetLong(sc + 0x34, Long(Ptr(at::kOwner) + 0x34));
-    SetLong(Sprite_Current + 0x38, Long(Ptr(at::kOwner) + 0x38));
+    tsc->x = Long(Ptr(at::kOwner) + 0x34);
+    Store(ScTask()->y, Long(Ptr(at::kOwner) + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Ptr(at::kOwner) + 0x3C));
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0;

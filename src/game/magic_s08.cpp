@@ -36,6 +36,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -71,6 +72,10 @@ constexpr std::uint32_t kFormBytes = 0x65A8E8;     // CounterMark_FormIndex
 // kWardTilts: now WardMote_Tilts (symbols.toml). WardMote_Tilts
 
 unsigned char* Sc() { return Sprite_Current; }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -156,8 +161,9 @@ void CellCall(std::uint32_t table, unsigned n, unsigned phase, const char* who) 
 void OwnerPosition() {
     const unsigned char* const o = Owner();
     unsigned char* const s = Sc();
-    SetLong(s + 0x34, Long(o + 0x34));
-    SetLong(s + 0x38, Long(o + 0x38));
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    ts->x = Long(o + 0x34);
+    ts->y = Long(o + 0x38);
     SetLong(s + 0x3C, Long(o + 0x3C));
 }
 
@@ -182,7 +188,8 @@ void Rtp3(unsigned char* prim) {
 void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0); }
 void LinkAtTask(int dy, unsigned size) {
     const unsigned char* const s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), dy, size);
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), dy, size);
 }
 int Ratan2(int y, int x) { return MH_CALL(Math_Ratan2)(static_cast<float>(y), static_cast<float>(x)); }
 
@@ -246,7 +253,8 @@ S08_EXPORT void __cdecl Berserk_Start(void) {
         const unsigned slot = NewTask(0x3D);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 0;
         child[9] = static_cast<unsigned char>(delay);
         Inc(self[0xB]);
@@ -254,7 +262,8 @@ S08_EXPORT void __cdecl Berserk_Start(void) {
     const unsigned slot = NewTask(0x3D);
     unsigned char* const self = Sc();
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = static_cast<std::int32_t>(Key(self));
     child[1] = 1;
     Inc(self[0xB]);
     MH_CALL(Sound_PlayById)(0x100);
@@ -516,7 +525,8 @@ S08_EXPORT void __cdecl Counter_Start(void) {
     const unsigned slot = NewTask(0x3E);
     unsigned char* const self = Sc();
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = static_cast<std::int32_t>(Key(self));
     child[1] = 0;
     Inc(self[0xB]);
     MH_CALL(Sound_PlayById)(0x100);
@@ -779,8 +789,8 @@ S08_EXPORT void __cdecl Ward_Start(void) {
     ClearPool(WardMote_Pool_addr);
     const unsigned char* const src = Source();
     Sc()[8] = src[8];
-    SetLong(Sc() + 0x34, Long(src + 0x34));
-    SetLong(Sc() + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 9;
@@ -850,7 +860,8 @@ S08_EXPORT void __cdecl Ward_Fade(void) {
         const unsigned slot = NewTask(0x48);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[4] = took != 0 ? 0 : 8;
         child[9] = 1;
         child[0xA] = 0;
@@ -882,19 +893,20 @@ S08_EXPORT void __cdecl WardMote_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0xC, 0x20000);
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_x = 0x20000;
+    ScTask()->vel_y = 0;
     Turn(Sc());
     {
         const unsigned char* const o = Owner();
         unsigned char* const s = Sc();
-        SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0xC))));
-        SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x10))));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) +
+                                                    static_cast<std::uint32_t>(ts->vel_x));
+        ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
+                                                    static_cast<std::uint32_t>(ts->vel_y));
         SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x3C)) + 0x1000000u));
-        SetLong(s + 0xC, static_cast<std::int32_t>(0xFFFFF000u));
-        SetLong(s + 0x10, 0);
+        ts->vel_x = static_cast<std::int32_t>(0xFFFFF000u);
+        ts->vel_y = 0;
     }
     Turn(Sc());
     const unsigned char* const o = Owner();
@@ -912,8 +924,9 @@ S08_EXPORT void __cdecl WardMote_Launch(void) {
 namespace {
 void MoteMove() {
     unsigned char* const s = Sc();
-    AddLong(s + 0x34, static_cast<std::uint32_t>(Long(s + 0xC)));
-    AddLong(s + 0x38, static_cast<std::uint32_t>(Long(s + 0x10)));
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    AddLong(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
+    AddLong(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
     Inc(s[9]);
 }
 }  // namespace
@@ -956,10 +969,11 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 S08_EXPORT void __cdecl WardMote_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const unsigned char* const s = Sc();
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
     const short rot[4] = {0x400, static_cast<short>(Word(Mem(WardMote_Tilts_addr + s[8] * 2u))), 0, 0};
     short v[4];
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((ts->y >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
@@ -1084,7 +1098,8 @@ S08_EXPORT void __cdecl EvilEye_Start(void) {
         const unsigned slot = NewTask(6);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 0;
         child[4] = static_cast<unsigned char>(beam);
         Inc(self[0xB]);
@@ -1138,28 +1153,30 @@ S08_EXPORT void __cdecl EvilEyeBeam_Start(void) {
             height = 0x1C00000;
         }
     }
-    SetLong(Sc() + 0xC, static_cast<std::int32_t>(dx));
-    SetLong(Sc() + 0x10, 0);
+    Store(ScTask()->vel_x, static_cast<std::int32_t>(dx));
+    ScTask()->vel_y = 0;
     SetLong(Sc() + 0x14, static_cast<std::int32_t>(height));
     Turn(Sc());
     {
         const unsigned char* const o = Owner();
         unsigned char* const s = Sc();
-        SetLong(s + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0xC))));
-        SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x10))));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x34)) +
+                                                    static_cast<std::uint32_t>(ts->vel_x));
+        ts->y = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x38)) +
+                                                    static_cast<std::uint32_t>(ts->vel_y));
         SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(o + 0x3C)) +
                                                     static_cast<std::uint32_t>(Long(s + 0x14))));
     }
     {
         const unsigned char* const s = Sc();
-        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(Long(s + 0x38)));
-        const int ddx = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(Long(s + 0x34)));
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(ts->y));
+        const int ddx = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(ts->x));
         const int angle = Ratan2(ddx, ddz);
-        SetLong(Sc() + 0xC, angle);
+        ScTask()->vel_x = angle;
     }
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_y = 0;
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
     SetWord(Trail(s[4], 0), Word(s + 0x2E));
@@ -1194,26 +1211,28 @@ S08_EXPORT void __cdecl EvilEyeBeam_Seek(void) {
     }
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x10, Long(s + 0xC));
-        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(Long(s + 0x38)));
-        const int ddx = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(Long(s + 0x34)));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_y = ts->vel_x;
+        const int ddz = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x38)) - static_cast<std::uint32_t>(ts->y));
+        const int ddx = static_cast<int>(static_cast<std::uint32_t>(Long(src + 0x34)) - static_cast<std::uint32_t>(ts->x));
         const int angle = Ratan2(ddx, ddz);
-        SetLong(Sc() + 0xC, angle);
+        ScTask()->vel_x = angle;
     }
     bool snap;
     if (MH_CALL(MagicFx_NearSprite)(src, 0x8000) != 0) {
         snap = true;
     } else {
         unsigned char* const s = Sc();
-        SetLong(s + 0x10, static_cast<std::int32_t>((static_cast<std::uint32_t>(Long(s + 0x10)) & 0xFFF) -
-                                                    (static_cast<std::uint32_t>(Long(s + 0xC)) & 0xFFF)));
-        if (Long(s + 0x10) < 0) SetLong(s + 0x10, static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(Long(s + 0x10))));
-        const std::int32_t turn = Long(s + 0x10);
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_y = static_cast<std::int32_t>((static_cast<std::uint32_t>(ts->vel_y) & 0xFFF) -
+                                                    (static_cast<std::uint32_t>(ts->vel_x) & 0xFFF));
+        if (ts->vel_y < 0) ts->vel_y = static_cast<std::int32_t>(0u - static_cast<std::uint32_t>(ts->vel_y));
+        const std::int32_t turn = ts->vel_y;
         snap = turn > 0x600 && turn < 0xA00;
     }
     if (snap) {
-        SetLong(Sc() + 0x34, Long(src + 0x34));
-        SetLong(Sc() + 0x38, Long(src + 0x38));
+        Store(ScTask()->x, Long(src + 0x34));
+        Store(ScTask()->y, Long(src + 0x38));
         Inc(Sc()[2]);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -1239,12 +1258,14 @@ S08_EXPORT void __cdecl EvilEyeBeam_Trail(void) {
         const unsigned slot = NewTask(6);
         if (slot != 0xFF) {
             const unsigned char* const s = Sc();
+            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
             unsigned char* const o = Owner();
             unsigned char* const child = TaskSlot(slot);
-            SetLong(child + 0x80, static_cast<std::int32_t>(Key(o)));
+            records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+            tchild->owner = static_cast<std::int32_t>(Key(o));
             child[1] = 1;
-            SetLong(child + 0x34, Long(s + 0x34));
-            SetLong(child + 0x38, Long(s + 0x38));
+            tchild->x = ts->x;
+            tchild->y = ts->y;
             SetLong(child + 0x3C, Long(s + 0x3C));
             Inc(o[0xB]);
         }

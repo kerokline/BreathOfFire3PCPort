@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -52,6 +53,10 @@ constexpr unsigned kMotes = 0x60;
 constexpr unsigned kMoteStride = 0x20;
 
 unsigned char* Sc() { return Sprite_Current; }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* M() { return SuddenDeath_CurrentMote; }
 unsigned char* MoteAt(unsigned i) { return SuddenDeath_Motes + i * kMoteStride; }
@@ -152,8 +157,9 @@ void RandColours() {
 void SpawnChild(unsigned a) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x68) & 0xFFu;
     unsigned char* const t = TaskSlot(slot);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     unsigned char* const cur = Sc();
-    SetLong(t + 0x80, static_cast<std::int32_t>(Key(cur)));
+    tt->owner = static_cast<std::int32_t>(Key(cur));
     t[1] = 0;
     t[4] = static_cast<unsigned char>(a);
     Inc(cur[0xB]);
@@ -260,8 +266,8 @@ S13_EXPORT void __cdecl SuddenDeathChild_Run(void) {
 S13_EXPORT void __cdecl SuddenDeathChild_Start(void) {
     {
         const unsigned char* const rec = ActorRecord(Sc()[4]);
-        SetLong(Sc() + 0x34, Long(rec + 0x34));
-        SetLong(Sc() + 0x38, Long(rec + 0x38));
+        Store(ScTask()->x, Long(rec + 0x34));
+        Store(ScTask()->y, Long(rec + 0x38));
         SetLong(Sc() + 0x3C, static_cast<std::int32_t>(U(Long(rec + 0x3C)) + 0x2000000u));
     }
     {

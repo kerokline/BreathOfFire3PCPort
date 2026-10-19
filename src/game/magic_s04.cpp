@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -64,6 +65,10 @@ constexpr std::uint32_t kPoolStride = 0x84;
 constexpr unsigned kPoolRecords = 64;
 
 unsigned char* Sc() { return Sprite_Current; }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -161,7 +166,8 @@ void Rtp4(unsigned char* prim, unsigned step) {
 }
 void LinkAtSprite(unsigned size) {
     const unsigned char* const s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), 2,
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
                                 size);
 }
 
@@ -238,8 +244,9 @@ void WalkPool() {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolRecords; ++i) {
         unsigned char* const rec = PoolRecord(i);
+        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
         if ((rec[0] & 1) == 0) continue;
-        const std::int32_t rec_owner = Long(rec + 0x80);
+        const std::int32_t rec_owner = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
         SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(bof3::addr::SnapSpark_Task);
@@ -295,7 +302,8 @@ S04_EXPORT void __cdecl Snap_Buff(void) {
         const unsigned slot = NewTask(0x48);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Addr(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Addr(s));
         child[4] = 4;
         child[9] = 0x18;
         child[0xA] = 4;
@@ -326,16 +334,16 @@ S04_EXPORT void __cdecl SnapWave_Run(void) {
 // and +0xB 0, +9 0x10, +0xA 4 (the swings), +2 on.
 S04_EXPORT void __cdecl SnapWave_Start(void) {
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0xC, 0x20000);
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_x = 0x20000;
+    ScTask()->vel_y = 0;
     Turn(Sc());
-    SetLong(Sc() + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
-                                                   static_cast<std::uint32_t>(Long(Sc() + 0xC))));
-    SetLong(Sc() + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
-                                                   static_cast<std::uint32_t>(Long(Sc() + 0x10))));
+    Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
+                                                   static_cast<std::uint32_t>(ScTask()->vel_x)));
+    Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+                                                   static_cast<std::uint32_t>(ScTask()->vel_y)));
     SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1000000u));
-    SetLong(Sc() + 0xC, static_cast<std::int32_t>(0xFFFFA000u));
-    SetLong(Sc() + 0x10, 0);
+    Store(ScTask()->vel_x, static_cast<std::int32_t>(0xFFFFA000u));
+    ScTask()->vel_y = 0;
     Turn(Sc());
     Sc()[4] = 0;
     Sc()[0xB] = 0;
@@ -351,8 +359,9 @@ S04_EXPORT void __cdecl SnapWave_Start(void) {
 S04_EXPORT void __cdecl SnapWave_Burst(void) {
     {
         unsigned char* const s = Sc();
-        AddL(s + 0x34, static_cast<std::uint32_t>(Long(s + 0xC)));
-        AddL(s + 0x38, static_cast<std::uint32_t>(Long(s + 0x10)));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        AddL(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
+        AddL(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
         AddB(s[9], 0xFC);
     }
     if (Sc()[9] != 0) return;
@@ -360,7 +369,8 @@ S04_EXPORT void __cdecl SnapWave_Burst(void) {
         const unsigned k = MH_AT(ByteFn, bof3::addr::SnapSpark_Alloc)() & 0xFFu;
         if (k == 0xFF) continue;
         unsigned char* const rec = PoolRecord(k);
-        SetLong(rec + 0x80, static_cast<std::int32_t>(Addr(Sc())));
+        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+        trec->owner = static_cast<std::int32_t>(Addr(Sc()));
         rec[0] = static_cast<unsigned char>(rec[0] | 0x41);
         rec[0xB] = static_cast<unsigned char>(i);
         const std::uint32_t r = RandCall();
@@ -368,8 +378,8 @@ S04_EXPORT void __cdecl SnapWave_Burst(void) {
         Inc(Sc()[0xB]);
     }
     if (Sc()[0xA] == 4) MH_CALL(Battle_SetTargetFlags)(TargetByte(), 0x10);
-    SetLong(Sc() + 0xC, 0x3000);
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_x = 0x3000;
+    ScTask()->vel_y = 0;
     Turn(Sc());
     MH_CALL(Sound_PlayById)(0x100);
     Inc(Sc()[2]);
@@ -382,8 +392,9 @@ S04_EXPORT void __cdecl SnapWave_Burst(void) {
 S04_EXPORT void __cdecl SnapWave_Swing(void) {
     {
         unsigned char* const s = Sc();
-        AddL(s + 0x34, static_cast<std::uint32_t>(Long(s + 0xC)));
-        AddL(s + 0x38, static_cast<std::uint32_t>(Long(s + 0x10)));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        AddL(s + 0x34, static_cast<std::uint32_t>(ts->vel_x));
+        AddL(s + 0x38, static_cast<std::uint32_t>(ts->vel_y));
     }
     unsigned char* s = Sc();
     const unsigned limit = s[0xA] == 1 ? 0xCu : 0x10u;
@@ -400,7 +411,7 @@ S04_EXPORT void __cdecl SnapWave_Swing(void) {
         return;
     }
     SetLong(s + 0xC, static_cast<std::int32_t>(0xFFFFA000u));
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_y = 0;
     Turn(Sc());
     Dec(Sc()[2]);
 }
@@ -550,12 +561,12 @@ S04_EXPORT void __cdecl SnapSpark_Launch(void) {
     SetSD(4, a);
     {
         const int r = Sin(static_cast<int>(a));
-        SetLong(Sc() + 0x34, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
+        Store(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
                                                        static_cast<std::uint32_t>(Long(src + 0x34))));
     }
     {
         const int r = Cos(SD(4));
-        SetLong(Sc() + 0x38, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
+        Store(ScTask()->y, static_cast<std::int32_t>(static_cast<std::uint32_t>(ShlSar(r, 8, 9)) +
                                                        static_cast<std::uint32_t>(Long(src + 0x38))));
     }
     CopyL(Sc() + 0x3C, src + 0x3C);
@@ -822,10 +833,11 @@ void StepBySide() {
 void AimAtOwner() {
     const unsigned char* const o = Owner();
     const unsigned char* const s = Sc();
-    const int dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(Long(s + 0x38)));
-    const int dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(Long(s + 0x34)));
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const int dz = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x38)) - static_cast<std::uint32_t>(ts->y));
+    const int dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(ts->x));
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
-    SetLong(Sc() + 0xC, angle);
+    ScTask()->vel_x = angle;
     SetLong(Sc() + 0x14, 0x40);
     SetLong(Sc() + 0x20, -8);
     Sc()[9] = 0x10;
@@ -898,14 +910,16 @@ S04_EXPORT void __cdecl ChargeImage_Dash(void) {
 S04_EXPORT void __cdecl KickImage_Arc(void) {
     {
         unsigned char* const s = Sc();
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         unsigned char* const x = s + 0x34;
-        const int r = Sin(Long(s + 0xC));
+        const int r = Sin(ts->vel_x);
         AddL(x, static_cast<std::uint32_t>(ShlSar(r, 13, 12)));
     }
     {
         unsigned char* const s = Sc();
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
         unsigned char* const z = s + 0x38;
-        const int r = Cos(Long(s + 0xC));
+        const int r = Cos(ts->vel_x);
         AddL(z, static_cast<std::uint32_t>(ShlSar(r, 13, 12)));
     }
     RiseAndFall();
@@ -1269,9 +1283,10 @@ S04_EXPORT void __cdecl KickImage_PushMatrixGround(void) {
     MH_CALL(Gte_PushMatrix)();
     const short angles[4] = {0, 0, 0, 0};
     const unsigned char* const s = Sc();
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
     short v[4];
     GroundPoint(s, 0, v);
-    const long ground = MH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const long ground = MH_CALL(AreaMap_Elevation)(ts->x, ts->y);
     v[2] = static_cast<short>(-Half(static_cast<short>(ground)));
     SetMatrix(angles, v);
 }
