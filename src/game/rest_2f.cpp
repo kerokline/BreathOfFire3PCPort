@@ -27,6 +27,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2f_callees.h"
 #include "game/scenario_harness.h"
@@ -38,8 +39,6 @@
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 using U = std::uint32_t;
 using move_script::At;
@@ -146,8 +145,8 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 U Rec(unsigned n, unsigned at) { return kWindows + kWindowStride * n + at; }
 // The record Field_RunTaskRecords runs, read afresh at each use.
 unsigned char* Cur() { return At(BattleWinStates_Current); }
-int Wx(const unsigned char* r) { return static_cast<int>(WindowRec(r)->centre_x); }
-int Wy(const unsigned char* r) { return static_cast<int>(WindowRec(r)->centre_y); }
+int Wx(const unsigned char* r) { return static_cast<int>(rv::As<records::WindowRecord>(r)->centre_x); }
+int Wy(const unsigned char* r) { return static_cast<int>(rv::As<records::WindowRecord>(r)->centre_y); }
 
 // jmp / call [table + 4 * byte]: the table's `entries` handlers, read in place
 // (the fuzz swaps the cells for recorders); a Fatal past them, where the
@@ -789,12 +788,12 @@ extern "C" void __cdecl Tactics_OpenFormation(void) {
     ForParty([](unsigned char i) {
         const U r = Rec(4u + i, 0);
         B(r + 0xA) = i;
-        WindowRec(At(r))->handler = 6;
-        WindowRec(At(r))->kind = 0;
-        WindowRec(At(r))->state = 0;
-        WindowRec(At(r))->in_use = 1;
-        WindowRec(At(r))->centre_x = 0x11;
-        WindowRec(At(r))->centre_y = 0x36u * i + 0x3E;
+        rv::As<records::WindowRecord>(At(r))->handler = 6;
+        rv::As<records::WindowRecord>(At(r))->kind = 0;
+        rv::As<records::WindowRecord>(At(r))->state = 0;
+        rv::As<records::WindowRecord>(At(r))->in_use = 1;
+        rv::As<records::WindowRecord>(At(r))->centre_x = 0x11;
+        rv::As<records::WindowRecord>(At(r))->centre_y = 0x36u * i + 0x3E;
         B(r + 0xB) = 1;
         B(r + 0xC) = 0;
     });
@@ -840,15 +839,15 @@ extern "C" void __cdecl TacticsFormation_Build(void) {
             if ((Cond_Flags[0xd1] & mask) && n < limit) {
                 *cell = 1;
                 const U r = Rec(12u + n, 0);
-                WindowRec(At(r))->centre_x = 0x4Bu * col + 0xF5;
-                WindowRec(At(r))->handler = 6;
-                WindowRec(At(r))->kind = 0xB;
+                rv::As<records::WindowRecord>(At(r))->centre_x = 0x4Bu * col + 0xF5;
+                rv::As<records::WindowRecord>(At(r))->handler = 6;
+                rv::As<records::WindowRecord>(At(r))->kind = 0xB;
                 B(r + 3) = 2;
-                WindowRec(At(r))->in_use = 1;
+                rv::As<records::WindowRecord>(At(r))->in_use = 1;
                 B(r + 0xB) = n;
                 B(r + 0xC) = 0;
                 SetW(r + 0x10, 0xE00);
-                WindowRec(At(r))->centre_y = 0x36u * row + 0x3E;
+                rv::As<records::WindowRecord>(At(r))->centre_y = 0x36u * row + 0x3E;
                 B(r + 0xA) = static_cast<unsigned char>(n + base);
             } else {
                 *cell = 0;
@@ -1154,7 +1153,7 @@ extern "C" void __cdecl Window_Kind1Cursor(void) {
     const unsigned char* const r = Cur();
     const U y = B(kListRows + static_cast<U>(c));
     const U hi = c < 0 ? 0xFFFF0000u : 0u;
-    const U x = (hi | static_cast<std::uint16_t>(static_cast<short>(WindowRec(r)->centre_x) >> 4)) + 4u;
+    const U x = (hi | static_cast<std::uint16_t>(static_cast<short>(rv::As<records::WindowRecord>(r)->centre_x) >> 4)) + 4u;
     SH_CALL(Menu_DrawHand)(static_cast<int>(x), static_cast<int>(y), 0);
 }
 
@@ -1203,10 +1202,10 @@ extern "C" void __cdecl Window_Kind1Layout(void) {
     r = Cur();
     r[0xB] = static_cast<unsigned char>((static_cast<unsigned char>(MenuWindows_ListCount) + 4) * 2 + static_cast<unsigned char>(lines * 13));
     r = Cur();
-    WindowRec(r)->centre_x = ((r[0xA] >> 1) + 0x30u) << 4;
+    rv::As<records::WindowRecord>(r)->centre_x = ((r[0xA] >> 1) + 0x30u) << 4;
     const U n13 = 13u * lines;
     r = Cur();
-    WindowRec(r)->centre_y = ((r[0xB] >> 1) - (n13 >> 1) + 0x78u) << 4;
+    rv::As<records::WindowRecord>(r)->centre_y = ((r[0xB] >> 1) - (n13 >> 1) + 0x78u) << 4;
     SetWord(Cur() + 0x18, 0x30);
     {
         const int sum = MenuWindows_ListCount + static_cast<int>(n13);
@@ -1257,7 +1256,7 @@ extern "C" void __cdecl Win1_TitleStrip(void) {
     if (v == 0) return;
     const U at = kPools + 2u * static_cast<U>(static_cast<int>(static_cast<short>(v)));
     const unsigned char* const text = At(kPools + W(at));
-    SH_CALL(Text_DrawAt)(static_cast<int>((WindowRec(r)->centre_x + 7u) & 0xFFFF), static_cast<int>((WindowRec(r)->centre_y + 3u) & 0xFFFF), 0, 0xFF,
+    SH_CALL(Text_DrawAt)(static_cast<int>((rv::As<records::WindowRecord>(r)->centre_x + 7u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(r)->centre_y + 3u) & 0xFFFF), 0, 0xFF,
                          text);
 }
 
@@ -1285,25 +1284,25 @@ extern "C" void __cdecl Win1_ShisuPanel(void) {
 // its bytes), y + 7, count 0x10; the two piece lists 0x66AE74 / 0x66AE80; the
 // frame's pieces.
 extern "C" void __cdecl Win1_DrawShisuPanel(unsigned char* rec) {
-    SH_CALL(Menu_DrawBox)(static_cast<int>((WindowRec(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((WindowRec(rec)->centre_y + 3u) & 0xFFFF), 0x95,
+    SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_y + 3u) & 0xFFFF), 0x95,
                           0xA0, 0, static_cast<unsigned char>(BattleDraw_Colour));
     for (unsigned char i = 0; i < 4; ++i) {
         const unsigned char held = At(static_cast<U>(Long(rec + 0x20)))[i];
         const unsigned colour = held != 0 ? 0 : 7;
         const unsigned dim = held != 0 ? 0 : 1;
         if (i != rec[0xA]) {
-            Row(Wx(rec) + 7, (13u * (i + 2u) + WindowRec(rec)->centre_y) & 0xFFFF, colour, 0, B(kShisuIds + i), held, dim);
+            Row(Wx(rec) + 7, (13u * (i + 2u) + rv::As<records::WindowRecord>(rec)->centre_y) & 0xFFFF, colour, 0, B(kShisuIds + i), held, dim);
             continue;
         }
-        if (held != 0) Row(Wx(rec) + 7, (13u * (i + 2u) + WindowRec(rec)->centre_y) & 0xFFFF, 7, 0, B(kShisuIds + i), held, 1);
+        if (held != 0) Row(Wx(rec) + 7, (13u * (i + 2u) + rv::As<records::WindowRecord>(rec)->centre_y) & 0xFFFF, 7, 0, B(kShisuIds + i), held, 1);
         const unsigned char again = At(static_cast<U>(Long(rec + 0x20)))[i];
-        Row(Wx(rec) + 7, ((13u * i + WindowRec(rec)->centre_y) & 0xFFFF) + 0x18u, colour, 0, B(kShisuIds + i), again, dim);
+        Row(Wx(rec) + 7, ((13u * i + rv::As<records::WindowRecord>(rec)->centre_y) & 0xFFFF) + 0x18u, colour, 0, B(kShisuIds + i), again, dim);
     }
     {
         unsigned n = 0;
         while (B(kShisuTitle + n) != 0) ++n;
-        const int x = static_cast<int>((6u * (13u - n) + WindowRec(rec)->centre_x) & 0xFFFF);
-        SH_CALL(Text_DrawAt)(x, static_cast<int>((WindowRec(rec)->centre_y + 7u) & 0xFFFF), 0, 0x10, At(kShisuTitle));
+        const int x = static_cast<int>((6u * (13u - n) + rv::As<records::WindowRecord>(rec)->centre_x) & 0xFFFF);
+        SH_CALL(Text_DrawAt)(x, static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_y + 7u) & 0xFFFF), 0, 0x10, At(kShisuTitle));
     }
     SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(kShisuPiecesA), 1);
     SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(kShisuPiecesB), 1);
@@ -1346,11 +1345,11 @@ extern "C" void __cdecl Win2_ItemList(void) {
 extern "C" void __cdecl MenuSlide_LeftOff170(void) {
     const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(kLeftOff170Bound));
     unsigned char* const moved = Cur();
-    const short x_read = static_cast<short>(WindowRec(moved)->centre_x);
-    WindowRec(moved)->centre_x = WindowRec(moved)->centre_x + 0xFFE0u;
+    const short x_read = static_cast<short>(rv::As<records::WindowRecord>(moved)->centre_x);
+    rv::As<records::WindowRecord>(moved)->centre_x = rv::As<records::WindowRecord>(moved)->centre_x + 0xFFE0u;
     unsigned char* const r = Cur();
-    if (static_cast<short>(WindowRec(r)->centre_x) < bound) {
-        WindowRec(r)->centre_x = static_cast<std::uint16_t>(bound);
+    if (static_cast<short>(rv::As<records::WindowRecord>(r)->centre_x) < bound) {
+        rv::As<records::WindowRecord>(r)->centre_x = static_cast<std::uint16_t>(bound);
         Cur()[3] = 0;
     }
     Widescreen_SlideHeld(Cur(), x_read, bound);
@@ -1360,10 +1359,10 @@ extern "C" void __cdecl MenuSlide_LeftOff170(void) {
 // held there with +3 0.
 extern "C" void __cdecl MenuSlide_RightTo80(void) {
     unsigned char* const moved = Cur();
-    WindowRec(moved)->centre_x = WindowRec(moved)->centre_x + 0x20u;
+    rv::As<records::WindowRecord>(moved)->centre_x = rv::As<records::WindowRecord>(moved)->centre_x + 0x20u;
     unsigned char* const r = Cur();
-    if (static_cast<short>(WindowRec(r)->centre_x) > 0x50) {
-        WindowRec(r)->centre_x = 0x50;
+    if (static_cast<short>(rv::As<records::WindowRecord>(r)->centre_x) > 0x50) {
+        rv::As<records::WindowRecord>(r)->centre_x = 0x50;
         Cur()[3] = 0;
     }
 }
@@ -1399,7 +1398,7 @@ extern "C" void __cdecl Win2_TitleBox(void) {
     if (v == 0) return;
     const unsigned char* const text = SH_CALL(Msg_SystemPtr)(v);
     r = Cur();
-    SH_CALL(Text_DrawAt)(static_cast<int>((WindowRec(r)->centre_x + 7u) & 0xFFFF), static_cast<int>((WindowRec(r)->centre_y + 3u) & 0xFFFF), 0, 0xFF,
+    SH_CALL(Text_DrawAt)(static_cast<int>((rv::As<records::WindowRecord>(r)->centre_x + 7u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(r)->centre_y + 3u) & 0xFFFF), 0, 0xFF,
                          text);
 }
 
@@ -1407,10 +1406,10 @@ extern "C" void __cdecl Win2_TitleBox(void) {
 // held there with +3 0.
 extern "C" void __cdecl MenuSlide_DownTo40(void) {
     unsigned char* const moved = Cur();
-    WindowRec(moved)->centre_y = WindowRec(moved)->centre_y + 0x10u;
+    rv::As<records::WindowRecord>(moved)->centre_y = rv::As<records::WindowRecord>(moved)->centre_y + 0x10u;
     unsigned char* const r = Cur();
-    if (static_cast<short>(WindowRec(r)->centre_y) > 0x28) {
-        WindowRec(r)->centre_y = 0x28;
+    if (static_cast<short>(rv::As<records::WindowRecord>(r)->centre_y) > 0x28) {
+        rv::As<records::WindowRecord>(r)->centre_y = 0x28;
         Cur()[3] = 0;
     }
 }
@@ -1429,7 +1428,7 @@ extern "C" void __cdecl MenuSlide_DownTo40(void) {
 // 8-px font; the arrows by +0x10's bits 1 and 0, its high nibble counted down
 // (or the word cleared); the frame's pieces; the scroll bar over 9 rows.
 extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
-    SH_CALL(Menu_DrawBox)(static_cast<int>((WindowRec(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((WindowRec(rec)->centre_y + 3u) & 0xFFFF), 0x99,
+    SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_y + 3u) & 0xFFFF), 0x99,
                           0x9A, rec[9], static_cast<unsigned char>(BattleDraw_Colour));
     unsigned char offset = static_cast<unsigned char>(Key(rec));
     unsigned char moving = 0;
@@ -1438,7 +1437,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
     const U category = rec[0xA];
     const unsigned char* ids = At(static_cast<U>(Long(At(kIdLists + 4 * category)))) + top;
     const unsigned char* counts = At(static_cast<U>(Long(At(kCountLists + 4 * category)))) + top;
-    U y = static_cast<std::uint16_t>(static_cast<signed char>(offset) + WindowRec(rec)->centre_y) + 0x1Au;
+    U y = static_cast<std::uint16_t>(static_cast<signed char>(offset) + rv::As<records::WindowRecord>(rec)->centre_y) + 0x1Au;
     for (unsigned char i = 0; i < rows; ++i, ++ids, ++counts, y += 0xD) {
         const unsigned char item = *ids;
         if (item == 0) continue;
@@ -1461,21 +1460,21 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         if (colour != 7) Row(Wx(rec) + 7, y, 7, cat, *ids, count, 1);
         Row(Wx(rec) + 7, y - 2, colour, rec[0xA], *ids, count, dim);
     }
-    SH_CALL(Menu_DrawBox)(static_cast<int>((WindowRec(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((WindowRec(rec)->centre_y + 3u) & 0xFFFF), 0x99,
+    SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_y + 3u) & 0xFFFF), 0x99,
                           0x14, rec[9], static_cast<unsigned char>(BattleDraw_Colour));
     {
         const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
         const unsigned char flags = rec[9];
-        SH_CALL(Menu_DrawBox)(static_cast<int>((WindowRec(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((WindowRec(rec)->centre_y + 0x92u) & 0xFFFF),
+        SH_CALL(Menu_DrawBox)(static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_x + 3u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_y + 0x92u) & 0xFFFF),
                               0x99, 8, flags, colour);
     }
     {
         const U cat = rec[0xA];
         const unsigned grey = rec[9] ? 7 : 0;
-        const int y7 = static_cast<int>((WindowRec(rec)->centre_y + 7u) & 0xFFFF);
+        const int y7 = static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_y + 7u) & 0xFFFF);
         const unsigned char* const title = At(static_cast<U>(Long(At(kListTitles + 4 * cat))));
         const unsigned n = SH_CALL(Text_CharCount)(title);
-        const int x = static_cast<int>((6u * (13u - n) + WindowRec(rec)->centre_x) & 0xFFFF);
+        const int x = static_cast<int>((6u * (13u - n) + rv::As<records::WindowRecord>(rec)->centre_x) & 0xFFFF);
         const U site = g_title_call;
         if (site == 0 || site == bof3::addr::Text_DrawAt) SH_CALL(Text_DrawAt)(x, y7, static_cast<int>(grey), 0x10, title);
         else reinterpret_cast<TitleFn>(static_cast<std::uintptr_t>(site))(x, y7, static_cast<int>(grey), 0x10, title);
@@ -1487,7 +1486,7 @@ extern "C" void __cdecl Win2_DrawItemList(unsigned char* rec) {
         SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(kPrint)), reinterpret_cast<const char*>(At(kUsedFormat)),
                              static_cast<U>(used), room);
         const unsigned grey = rec[9] ? 7 : 0;
-        SH_CALL(Text_DrawFont8)(static_cast<int>((WindowRec(rec)->centre_x + 0x55u) & 0xFFFF), static_cast<int>((WindowRec(rec)->centre_y + 0x92u) & 0xFFFF),
+        SH_CALL(Text_DrawFont8)(static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_x + 0x55u) & 0xFFFF), static_cast<int>((rv::As<records::WindowRecord>(rec)->centre_y + 0x92u) & 0xFFFF),
                                 static_cast<int>(grey), At(kPrint));
     }
     SH_CALL(Menu_DrawPieces)(Wx(rec), Wy(rec), At(rec[0x10] & 2 ? kListPieces2 : kListPieces0), 1);

@@ -22,6 +22,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1d_callees.h"
@@ -32,8 +33,6 @@
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_1d::at;
 using U = std::uint32_t;
@@ -102,8 +101,8 @@ void MarkObject(unsigned char found, bool is_signed, const char* who) {
 void TwoAhead(U& x, U& z) {
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    x = static_cast<U>(MemberRec(s)->x) + 2u * StepX(d);
-    z = static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d);
+    x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + 2u * StepX(d);
+    z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + 2u * StepZ(d);
 }
 
 // The cells around a point the resolves try in turn: the point's cell; when
@@ -125,8 +124,8 @@ void TryCells(CellProbe probe, U x, U z) {
 // sprite's height word (both s16): +0x2B = 0. PartyAction_SideProbes' probe.
 void SideProbe(unsigned d) {
     const unsigned char* s = Sprite_Current;
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -159,8 +158,8 @@ void FormBegin() {
     }
     const unsigned char* const s = Sprite_Current;
     const unsigned d = s[8];
-    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
-    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
+    const U x = static_cast<U>(rv::As<records::PartyMember>(s)->x) + StepX(d);
+    const U z = static_cast<U>(rv::As<records::PartyMember>(s)->z) + StepZ(d);
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
     const auto rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<U>(ground) - Word(Sprite_Current + 0x3E)));
     const unsigned direction = Sprite_Current[8];
@@ -293,27 +292,27 @@ void Kind30Begin(const char* who) {
 
 // Field_ActionBySet's and Field_FormActions' entries for sets 9..12: by the u16
 // form word +0x2C.
-extern "C" void __cdecl PartyAction9_ByForm(void) { Jump(PartyAction9_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyAction9_ByForm (0x521340)"); }
+extern "C" void __cdecl PartyAction9_ByForm(void) { Jump(PartyAction9_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction9_ByForm (0x521340)"); }
 extern "C" void __cdecl PartyFormAction9_ByForm(void) {
-    Jump(PartyFormAction9_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyFormAction9_ByForm (0x521320)");
+    Jump(PartyFormAction9_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction9_ByForm (0x521320)");
 }
 extern "C" void __cdecl PartyAction10_ByForm(void) {
-    Jump(PartyAction10_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyAction10_ByForm (0x521A70)");
+    Jump(PartyAction10_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction10_ByForm (0x521A70)");
 }
 extern "C" void __cdecl PartyFormAction10_ByForm(void) {
-    Jump(PartyFormAction10_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyFormAction10_ByForm (0x521A50)");
+    Jump(PartyFormAction10_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction10_ByForm (0x521A50)");
 }
 extern "C" void __cdecl PartyAction11_ByForm(void) {
-    Jump(PartyAction11_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyAction11_ByForm (0x5220C0)");
+    Jump(PartyAction11_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction11_ByForm (0x5220C0)");
 }
 extern "C" void __cdecl PartyFormAction11_ByForm(void) {
-    Jump(PartyFormAction11_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyFormAction11_ByForm (0x5220A0)");
+    Jump(PartyFormAction11_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction11_ByForm (0x5220A0)");
 }
 extern "C" void __cdecl PartyAction12_ByForm(void) {
-    Jump(PartyAction12_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyAction12_ByForm (0x522690)");
+    Jump(PartyAction12_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyAction12_ByForm (0x522690)");
 }
 extern "C" void __cdecl PartyFormAction12_ByForm(void) {
-    Jump(PartyFormAction12_Forms_addr, 3, MemberRec(Sprite_Current)->column, "PartyFormAction12_ByForm (0x522670)");
+    Jump(PartyFormAction12_Forms_addr, 3, rv::Current<records::PartyMember>()->column, "PartyFormAction12_ByForm (0x522670)");
 }
 
 // The forms: by the state byte +2.

@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1a.h"
@@ -30,8 +31,6 @@ namespace rest_1a {
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -374,17 +373,17 @@ void SeedFormAction() {
     if (sh::Often()) Field_Request = 0;
     unsigned char* const r = Member(s[6]);
     r[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, sh::Next()));
-    MemberRec(r)->step_x = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
-    MemberRec(r)->step_z = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
+    rv::As<records::PartyMember>(r)->step_x = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
+    rv::As<records::PartyMember>(r)->step_z = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
     r[0x70] = static_cast<unsigned char>(sh::Half() ? 0 : PickOf(1, 0x80, sh::Next() | 1));
     const U k = r[9];
-    const U ax = static_cast<U>(MemberRec(r)->step_x) * k + static_cast<U>(MemberRec(r)->x);
-    const U az = static_cast<U>(MemberRec(r)->step_z) * k + static_cast<U>(MemberRec(r)->z);
+    const U ax = static_cast<U>(rv::As<records::PartyMember>(r)->step_x) * k + static_cast<U>(rv::As<records::PartyMember>(r)->x);
+    const U az = static_cast<U>(rv::As<records::PartyMember>(r)->step_z) * k + static_cast<U>(rv::As<records::PartyMember>(r)->z);
     static const U kD[] = {0, 1, 0x17FFF, 0x18000, 0x18001, 0x1FFFF, 0x20000, 0x20001, 0xFFFE8000u, 0xFFFE7FFFu, 0xFFFE0000u,
                            0xFFFDFFFFu, 0x80000000u};
     if (s != r) {
-        MemberRec(s)->x = static_cast<std::int32_t>(ax + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
-        MemberRec(s)->z = static_cast<std::int32_t>(az + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
+        rv::As<records::PartyMember>(s)->x = static_cast<std::int32_t>(ax + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
+        rv::As<records::PartyMember>(s)->z = static_cast<std::int32_t>(az + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
     }
     if (sh::Often()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x1C00u);
     sh::Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(sh::Next() % at::kFormActionCount | (sh::Half() ? 0x80 : 0));

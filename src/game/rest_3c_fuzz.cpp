@@ -19,6 +19,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3c.h"
 #include "game/rest_3c_callees.h"
@@ -28,8 +29,6 @@ namespace rest_3c {
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
 
 namespace bh = boss_harness;
 using U = std::uint32_t;
@@ -322,15 +321,15 @@ void Seed(unsigned k) {
     for (unsigned n = 0; n < 8; ++n) {
         unsigned char* const e = EnemyObj(n);
         e[0xF0] = static_cast<unsigned char>(bh::Next() % 8);
-        EnemyRec(e)->hp = Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100});
-        EnemyRec(e)->max_hp = bh::Next() % 4 == 0 ? 0xFFFF : Word16({0, 1, 9, 10, 11, 100, 1000});
+        rv::As<records::BattleEnemy>(e)->hp = Word16({0, 1, 2, 0x7FFF, 0x8000, 0xFFFF, 100});
+        rv::As<records::BattleEnemy>(e)->max_hp = bh::Next() % 4 == 0 ? 0xFFFF : Word16({0, 1, 9, 10, 11, 100, 1000});
         SetWord(Mem(at::kEnemyData + e[0xF0] * at::kEnemyDataStride + 0x24), Word16({0, 9, 10, 99, 100, 1000, 0xFFFF}));
         e[0xAA] = static_cast<unsigned char>(bh::Next() % 10);
         e[0xAE] = static_cast<unsigned char>(bh::Next() % 10);
         e[0xAB] = static_cast<unsigned char>(bh::Half() ? e[0xAB] | 1 : e[0xAB] & 0xFE);
         e[0xAF] = static_cast<unsigned char>(bh::Half() ? e[0xAF] | 1 : e[0xAF] & 0xFE);
-        EnemyRec(e)->zenny = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
-        EnemyRec(e)->exp = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
+        rv::As<records::BattleEnemy>(e)->zenny = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
+        rv::As<records::BattleEnemy>(e)->exp = Word16({0, 1, 0x7FFF, 0x8000, 0xFFFF});
         e[0x124] = static_cast<unsigned char>(bh::Next() % 4);
         e[0x125] = static_cast<unsigned char>(bh::Next() % 4);
         e[0x92] = static_cast<unsigned char>(bh::Half() ? e[0x92] & ~0x48 : e[0x92] | 0x48);

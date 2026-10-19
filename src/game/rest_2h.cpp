@@ -44,6 +44,7 @@
 #include "game/list_title.h"
 #include "game/menu_frame.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2h_callees.h"
 #include "game/scenario_harness.h"
@@ -69,8 +70,6 @@ unsigned char g_pupil_label_off = 0;
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace at = rest_2h::at;
 using U = std::uint32_t;
@@ -88,8 +87,8 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 // The current window record, re-read at every use (the originals reload
 // 0x905B84 after each call).
 unsigned char* Rec() { return At(*reinterpret_cast<volatile U*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))); }
-int X(const unsigned char* w) { return WindowRec(w)->centre_x; }
-int Y(const unsigned char* w) { return WindowRec(w)->centre_y; }
+int X(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->centre_x; }
+int Y(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->centre_y; }
 unsigned char Style() { return static_cast<unsigned char>(BattleDraw_Colour); }
 
 // The step: the current record's +3 through a step table, called through the
@@ -402,7 +401,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MasterListRu
 // out by the columns (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MasterWin_SlideOut(void) {
     const auto bound = Widescreen_SlideLogic(static_cast<short>(Word(At(rest_2h::g_master_bound))));
-    const auto x_read = static_cast<short>(WindowRec(Rec())->centre_x);
+    const auto x_read = static_cast<short>(rv::As<records::WindowRecord>(Rec())->centre_x);
     Slide(4, -0x20, bound, true, bound);
     Widescreen_SlideHeld(Rec(), x_read, bound);
 }

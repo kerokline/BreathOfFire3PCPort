@@ -16,6 +16,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3f.h"
 #include "game/rest_3f_callees.h"
@@ -27,8 +28,6 @@ namespace rest_3f {
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -332,14 +331,14 @@ void Seed(unsigned k) {
     case k60SlideBoth:
     case k60SlideEnd:
         // the ends one step from 0x98000, at it, either side
-        if (sh::Often()) EffectRec(s)->x = static_cast<std::int32_t>(0xB8000u + PickOf(0, 0, 1, 0xFFFFFFFFu, 0x20000));
+        if (sh::Often()) rv::As<records::EffectObject>(s)->x = static_cast<std::int32_t>(0xB8000u + PickOf(0, 0, 1, 0xFFFFFFFFu, 0x20000));
         if (sh::Often()) SetLong(s + 0xC, static_cast<std::int32_t>(0xB8000u + PickOf(0, 0, 1, 0xFFFFFFFFu, 0x20000)));
         break;
     case k69Lines: s[0xA] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5, 0x10, sh::Next() % 0x20)); break;
     case k9CTrail:
         // the far end below the near one (the dots run) half the time
         if (sh::Half())
-            SetLong(s + 0x10, EffectRec(s)->z - static_cast<std::int32_t>(PickOf(0, 0x40, 0x3F, 0x200, 0x1000, 0x10000, sh::Next() % 0x100000)));
+            SetLong(s + 0x10, rv::As<records::EffectObject>(s)->z - static_cast<std::int32_t>(PickOf(0, 0x40, 0x3F, 0x200, 0x1000, 0x10000, sh::Next() % 0x100000)));
         break;
     case k9EHold:
         // the wall's third word landing on +0x14 half the time; +7 the count

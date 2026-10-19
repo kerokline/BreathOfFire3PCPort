@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_3b_callees.h"
 #include "hook/detour.h"
@@ -43,10 +44,6 @@
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
-[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
-[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_3b::at;
 using U = std::uint32_t;
@@ -405,7 +402,7 @@ extern "C" void __cdecl EffectSlot01_VariedHit(void) {
 extern "C" void __cdecl EffectSlot02_HitInflict4(void) {
     Hit(4);
     const unsigned t = B(at::kTarget);
-    const S32 hp = t < 3 ? MemberRec(Party(t))->hp : EnemyRec(Enemy(t))->hp;
+    const S32 hp = t < 3 ? rv::As<records::PartyMember>(Party(t))->hp : rv::As<records::BattleEnemy>(Enemy(t))->hp;
     const std::uint16_t d = Word(Result() + 4);
     if (S16(d) < hp && d != 0) Inflict(4);
 }
@@ -494,10 +491,10 @@ extern "C" void __cdecl EffectSlot10_Heal100(void) { SetWord(Result() + 4, 0xFF9
 extern "C" void __cdecl EffectSlot11_HealFull(void) {
     const unsigned t = B(at::kTarget);
     if (t < 3) {
-        SetWord(Result() + 4, static_cast<std::uint16_t>(0u - MemberRec(Party(t))->max_hp));
+        SetWord(Result() + 4, static_cast<std::uint16_t>(0u - rv::As<records::PartyMember>(Party(t))->max_hp));
         return;
     }
-    const std::uint16_t max = EnemyRec(Enemy(t))->max_hp;
+    const std::uint16_t max = rv::As<records::BattleEnemy>(Enemy(t))->max_hp;
     if (max == 0xFFFF) {
         SetWord(Result() + 4, 0xFFFF);
         unsigned char* const e = Enemy(B(at::kTarget));
@@ -530,7 +527,7 @@ extern "C" void __cdecl EffectSlot16_ClearBFC(void) { ClearThenMiss(0xBFC); }
 // again) 0x904AB1 (a member) or 0x904AB3 (an enemy) one up. Else the delta 0.
 extern "C" void __cdecl EffectSlot17_RaiseDown(void) {
     const unsigned t = B(at::kTarget);
-    const std::uint16_t status = t <= 2 ? MemberRec(Party(t))->status : EnemyRec(Enemy(t))->status;
+    const std::uint16_t status = t <= 2 ? rv::As<records::PartyMember>(Party(t))->status : rv::As<records::BattleEnemy>(Enemy(t))->status;
     if ((status & 0x4000) == 0) {
         SetWord(Result() + 4, 0);
         return;
@@ -582,11 +579,11 @@ extern "C" void __cdecl EffectSlot28_RaiseQuarter(void) {
     }
     const unsigned t = B(at::kTarget);
     if (t <= 2) {
-        const S32 max = MemberRec(Party(t))->max_hp;
+        const S32 max = rv::As<records::PartyMember>(Party(t))->max_hp;
         SetWord(Result() + 4, static_cast<std::uint16_t>((0 - max) >> 2));
         BattleSprites_PartyPick = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
     } else {
-        const S32 max = EnemyRec(Enemy(t))->max_hp;
+        const S32 max = rv::As<records::BattleEnemy>(Enemy(t))->max_hp;
         SetWord(Result() + 4, static_cast<std::uint16_t>((0 - max) >> 2));
         BattleE2_EnemiesLeft = static_cast<unsigned char>(BattleE2_EnemiesLeft + 1);
     }

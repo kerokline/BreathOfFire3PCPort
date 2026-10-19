@@ -33,6 +33,7 @@
 #include "game/lang_layout.h"
 #include "game/rest_3e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -46,8 +47,6 @@ using bof3x::input::sigma::Sigma;
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
-[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace at = rest_3e::at;
 using U = std::uint32_t;
@@ -370,10 +369,10 @@ extern "C" void __cdecl EffectGlowSparks_StartRise(unsigned char* spark) {
     SetUL(spark + 8, 0);
     spark[4] = 0x40;
     U r = static_cast<U>(SH_CALL(Rand)());
-    SetUL(spark + 0xC, (((r & 0xFFu) - 0x80u) << 11) + static_cast<std::uint32_t>(EffectRec(S())->x));
+    SetUL(spark + 0xC, (((r & 0xFFu) - 0x80u) << 11) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x));
     r = static_cast<U>(SH_CALL(Rand)());
-    SetUL(spark + 0x10, (((r & 0xFFu) - 0x80u) << 11) + static_cast<std::uint32_t>(EffectRec(S())->z));
-    SetUL(spark + 0x14, static_cast<std::uint32_t>(EffectRec(S())->height));
+    SetUL(spark + 0x10, (((r & 0xFFu) - 0x80u) << 11) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z));
+    SetUL(spark + 0x14, static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->height));
 }
 
 // original 0x479160: a spark set on a sphere round the record: +0 = 1, +1 =
@@ -397,13 +396,13 @@ extern "C" void __cdecl EffectGlowSparks_StartBurst(unsigned char* spark) {
     const U sa = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a)));
     const U cb = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(b)));
     U v = Sar(Mul(sa, cb), 12);
-    SetUL(spark + 0xC, Sar(Mul(v, r), 8) + static_cast<std::uint32_t>(EffectRec(S())->x));
+    SetUL(spark + 0xC, Sar(Mul(v, r), 8) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x));
     const U sa2 = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(a)));
     const U sb = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(b)));
     v = Sar(Mul(sa2, sb), 12);
-    SetUL(spark + 0x10, Sar(Mul(v, r), 8) + static_cast<std::uint32_t>(EffectRec(S())->z));
+    SetUL(spark + 0x10, Sar(Mul(v, r), 8) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z));
     const U ca = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a)));
-    SetUL(spark + 0x14, Mul(ca, r) + static_cast<std::uint32_t>(EffectRec(S())->height) + 0x2000000u);
+    SetUL(spark + 0x14, Mul(ca, r) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->height) + 0x2000000u);
 }
 
 // original 0x479260 (E2F's EffectKind52_MoveSparks instruction for
@@ -764,9 +763,9 @@ extern "C" void __cdecl EffectDust_Start(unsigned char* dust) {
     const U radius = ((static_cast<U>(half) << 8) | low) << 8;
     const int angle = static_cast<int>(static_cast<U>(SH_CALL(Rand)()) & 0xFC0u);
     const U cos = static_cast<U>(SH_CALL(Math_Cos)(angle));
-    SetUL(dust + 4, Sar(Mul(cos, radius), 12) + static_cast<std::uint32_t>(EffectRec(S())->x));
+    SetUL(dust + 4, Sar(Mul(cos, radius), 12) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x));
     const U sin = static_cast<U>(SH_CALL(Math_Sin)(angle));
-    const U z = Sar(Mul(sin, radius), 12) + static_cast<std::uint32_t>(EffectRec(S())->z);
+    const U z = Sar(Mul(sin, radius), 12) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z);
     SetUL(dust + 8, z);
     const U ground = static_cast<U>(static_cast<std::int16_t>(SH_CALL(AreaMap_Elevation)(static_cast<long>(UL(dust + 4)), static_cast<long>(z)))) << 16;
     SetUL(dust + 0x1C, ground);
@@ -959,7 +958,7 @@ extern "C" void __cdecl EffectKind5D_Show(void) {
         if (((S()[7] >> j) & 1) == 0) SH_CALL(Window_DrawFrame)(Word(w), Word(w + 2), w[4], w[6]);
     }
     if ((S()[7] & 1) == 0) {
-        EffectRec(S())->screen_x = Rest3e_SpriteDx + Rest3e_Windows;
+        rv::As<records::EffectObject>(S())->screen_x = Rest3e_SpriteDx + Rest3e_Windows;
         SetWord(S() + 0x30, Rest3e_SpriteDy + W(at::kWindows + 2));
         SH_CALL(Sprite_ScriptTick)();
         SH_CALL(Sprite_QueueOverlay)();
@@ -1635,9 +1634,9 @@ void Ring(U last) {
 }
 void Add(U offset, U by) { SetUL(S() + offset, UL(S() + offset) + by); }
 void Placed(U x, U z, U y) {
-    EffectRec(S())->x = x;
-    EffectRec(S())->z = z;
-    EffectRec(S())->height = y;
+    rv::As<records::EffectObject>(S())->x = x;
+    rv::As<records::EffectObject>(S())->z = z;
+    rv::As<records::EffectObject>(S())->height = y;
 }
 void TwoSounds(unsigned a, unsigned b) {
     SH_CALL(Sound_PlayEffect)(a);
@@ -1665,7 +1664,7 @@ extern "C" void __cdecl EffectKind5F_Hop(void) {
     Add(0x3C, UL(S() + 0x14));
     Add(0x14, 0xFFE00000u);
     Ring(0);
-    if (static_cast<std::uint32_t>(EffectRec(S())->x) != 0x490000) return;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x) != 0x490000) return;
     SetUL(S() + 0xC, 0x38E3);
     SetUL(S() + 0x10, 0x10000);
     SetUL(S() + 0x14, 0x38E38E);
@@ -1682,7 +1681,7 @@ extern "C" void __cdecl EffectKind5F_Fly(void) {
     Add(0x3C, UL(S() + 0x14));
     Add(0x14, 0xFFE00000u);
     Ring(0);
-    if (static_cast<std::uint32_t>(EffectRec(S())->z) != 0x4B0000) return;
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z) != 0x4B0000) return;
     S()[9] = 0x3C;
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
@@ -1694,12 +1693,12 @@ extern "C" void __cdecl EffectKind5F_Fly(void) {
 extern "C" void __cdecl EffectKind5F_Bounce(void) {
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     if (S()[9] != 0) return;
-    EffectRec(S())->x = 0x4B0000;
-    EffectRec(S())->z = 0x4B0000;
+    rv::As<records::EffectObject>(S())->x = 0x4B0000;
+    rv::As<records::EffectObject>(S())->z = 0x4B0000;
     const U ground = static_cast<U>(static_cast<std::int16_t>(
-                         SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(EffectRec(S())->x)), static_cast<long>(static_cast<std::uint32_t>(EffectRec(S())->z)))))
+                         SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x)), static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z)))))
                      << 16;
-    EffectRec(S())->height = ground;
+    rv::As<records::EffectObject>(S())->height = ground;
     SetUL(S() + 0xC, 0xFFFF4925u);
     SetUL(S() + 0x10, 0xFFFF0000u);
     SetUL(S() + 0x14, 0xFFCC30C4u);
@@ -1716,7 +1715,7 @@ extern "C" void __cdecl EffectKind5F_FlyAway(void) {
     Add(0x3C, UL(S() + 0x14));
     Add(0x14, 0xFFF00000u);
     Ring(0);
-    if (static_cast<std::uint32_t>(EffectRec(S())->z) == 0x360000) SH_CALL(Effect_Release)();
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z) == 0x360000) SH_CALL(Effect_Release)();
 }
 
 // original 0x480080 (state 6): the point (0x270000, 0x80000, 0x8000000), the
@@ -1736,7 +1735,7 @@ extern "C" void __cdecl EffectKind5F_Slide(void) {
     Add(0x3C, UL(S() + 0x14));
     Add(0x14, 0xFFE00000u);
     Ring(0);
-    if (static_cast<std::uint32_t>(EffectRec(S())->x) == 0xF0000) SH_CALL(Effect_Release)();
+    if (static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->x) == 0xF0000) SH_CALL(Effect_Release)();
 }
 
 // original 0x480140 (state 8): the point (0x190000, 0xF0000, 0x6000000), the
@@ -1756,7 +1755,7 @@ extern "C" void __cdecl EffectKind5F_SlideOut(void) {
     Add(0x3C, UL(S() + 0x14));
     Add(0x14, 0xFFE00000u);
     Ring(4);
-    if (static_cast<std::int32_t>(static_cast<std::uint32_t>(EffectRec(S())->z)) >= 0x190000) SH_CALL(Effect_Release)();
+    if (static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(S())->z)) >= 0x190000) SH_CALL(Effect_Release)();
 }
 
 void Rest3E_Inject() {

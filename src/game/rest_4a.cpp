@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_4a_callees.h"
 #include "game/scenario_harness.h"
@@ -37,8 +38,6 @@
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_4a::at;
 using U = std::uint32_t;
@@ -910,7 +909,7 @@ extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
     SetWord(Sprite_Current + 0x34, 0);
     SetWord(Sprite_Current + 0x3A, At(at::kObjectPlaces + 3 * o + 1)[0]);
     SetWord(Sprite_Current + 0x38, 0);
-    const long height = SH_CALL(AreaMap_Elevation)(SpriteRec(base)->x, SpriteRec(base)->z);
+    const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(base)->x, rv::As<records::SpriteObject>(base)->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(height));
     Sprite_Current[5] = static_cast<unsigned char>(record);
     BankAndFace();
@@ -940,7 +939,7 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     SetWord(Sprite_Current + 0x3A, At(at::kResidentPlaces + 3 * (Count(building) + row) + 1)[0]);
     SetWord(Sprite_Current + 0x38, 0);
     unsigned char* const s = Sprite_Current;
-    const long height = SH_CALL(AreaMap_Elevation)(SpriteRec(s)->x, SpriteRec(s)->z);
+    const long height = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(height));
     const unsigned char facing = At(at::kResidentPlaces + 3 * (Count(building) + row) + 2)[0];
     Sprite_Current[8] = facing;

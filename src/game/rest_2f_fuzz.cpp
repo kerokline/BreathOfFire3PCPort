@@ -14,6 +14,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_2f.h"
 #include "game/rest_2f_callees.h"
@@ -25,8 +26,6 @@ namespace rest_2f {
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -360,8 +359,8 @@ void SeedRecord(unsigned char* r) {
     r[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 2, 4, sh::Next()));
     const U x = PickOf(0x50, 0x4F, 0x51, 0x30, 0x31, 0x2F, 0x70, 0xFF56, 0xFF57, 0xFF55, 0xFF76, 0xFF36, 0x11, 0x140, 0x7FF0, 0x8010,
                        sh::Next());
-    WindowRec(r)->centre_x = x;
-    WindowRec(r)->centre_y = PickOf(0x28, 0x27, 0x29, 0x18, 0x38, 0x10, 0xFFEC, 0x7FF8, 0x8008, sh::Next());
+    rv::As<records::WindowRecord>(r)->centre_x = x;
+    rv::As<records::WindowRecord>(r)->centre_y = PickOf(0x28, 0x27, 0x29, 0x18, 0x38, 0x10, 0xFFEC, 0x7FF8, 0x8008, sh::Next());
     r[8] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
     r[9] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     r[0xA] = static_cast<unsigned char>(sh::Next() % 5);

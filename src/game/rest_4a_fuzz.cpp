@@ -22,6 +22,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/rest_4a.h"
 #include "game/rest_4a_callees.h"
@@ -33,8 +34,6 @@ namespace rest_4a {
 namespace {
 
 // Typed views of a record pointer (records.h).
-[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
-[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -407,10 +406,10 @@ void SeedBattle() {
     Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, sh::Next()));
     for (U e = 0; e < 8; ++e) {
         unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * e);
-        EnemyRec(rec)->intel = PickOf(0, 1, 2, sh::Next());
+        rv::As<records::BattleEnemy>(rec)->intel = PickOf(0, 1, 2, sh::Next());
         rec[0x92] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
-        EnemyRec(rec)->flags_114 = sh::Half() ? 0 : sh::Next();
-        EnemyRec(rec)->ability = sh::Next() % 0x100;
+        rv::As<records::BattleEnemy>(rec)->flags_114 = sh::Half() ? 0 : sh::Next();
+        rv::As<records::BattleEnemy>(rec)->ability = sh::Next() % 0x100;
     }
     for (U m = 0; m < 3; ++m) {
         SetWord(Mem(ObjTrio_addr + 0x126 + at::kMemberStride * m), PickOf(0xE, 0x128, 0xF, 0x127, 0, sh::Next()));
@@ -443,8 +442,8 @@ void SeedAutoTarget() {
     Mem(at::kAutoMode)[0] = 4;
     g_actor = 5 + sh::Next() % 6;   // an enemy 5..10, never the forced actor
     unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * (g_actor - 3));
-    EnemyRec(rec)->intel = PickOf(0, 1);
-    EnemyRec(rec)->ability = AbilityBit4(sh::Next());
+    rv::As<records::BattleEnemy>(rec)->intel = PickOf(0, 1);
+    rv::As<records::BattleEnemy>(rec)->ability = AbilityBit4(sh::Next());
 }
 
 // CommuSim_TickKindD's boundaries, half its rounds: building 0 of kind 0xD
