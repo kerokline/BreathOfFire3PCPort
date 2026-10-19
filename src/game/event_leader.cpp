@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/event_leader_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -64,6 +65,11 @@ std::uint32_t g_edge_no_area = 0;
 }  // namespace event_leader
 
 using namespace event_leader;
+
+// The typed views (docs/typed-records.md): Sprite_Current read afresh at each
+// use, and a sprite-family pointer (below +0x80, the head every family shares).
+static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 namespace {
 
@@ -203,8 +209,8 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         if (input & 2) {
             const unsigned char d = sc[8];
             const std::uint32_t n = sc[0x70];
-            const std::uint32_t x = StepX(d) * n + static_cast<std::uint32_t>(Long(sc + 0x34));
-            const std::uint32_t z = StepZ(d) * n + static_cast<std::uint32_t>(Long(sc + 0x38));
+            const std::uint32_t x = StepX(d) * n + static_cast<std::uint32_t>(Spr(sc)->x);
+            const std::uint32_t z = StepZ(d) * n + static_cast<std::uint32_t>(Spr(sc)->z);
             const std::uint32_t edge_x = (static_cast<std::uint32_t>(AreaMap_Header[0]) - 3u) << 16;
             const std::uint32_t edge_z = (static_cast<std::uint32_t>(AreaMap_Header[1]) - 3u) << 16;
             if (x == 0x20000 || z == 0x20000 || x == edge_x || z == edge_z) {
@@ -224,7 +230,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
     }
     if (!stop) {
-        if (g.cells_all(Long(sc + 0x34), Long(sc + 0x38), sc[0x70], 0xA7, 0)) {
+        if (g.cells_all(Spr(sc)->x, Spr(sc)->z, sc[0x70], 0xA7, 0)) {
             {
                 unsigned char* const s = Sprite_Current;
                 g.link_at(Word(s + 0x36), Word(s + 0x3A));
@@ -236,7 +242,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
         {
             unsigned char* const s = Sprite_Current;
-            if (!g.cells_none(Long(s + 0x34), Long(s + 0x38), s[0x70], 0xA6, 0)) {
+            if (!g.cells_none(Spr(s)->x, Spr(s)->z, s[0x70], 0xA6, 0)) {
                 g.ensure_animation(Sprite_Current[8]);
                 const std::int32_t z = Long(At(AreaW2d_ReturnPoint_addr + 4));
                 const std::int32_t x = static_cast<std::int32_t>(AreaW2d_ReturnPoint);
@@ -276,7 +282,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         if (g.effect_test(pace)) return;
         {
             unsigned char* const s = Sprite_Current;
-            stop = g.arrive_hook(Long(s + 0x34), Long(s + 0x38)) != 0;
+            stop = g.arrive_hook(Spr(s)->x, Spr(s)->z) != 0;
         }
         if (!stop) {
             g.bit80_tick();
@@ -480,7 +486,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
         long ground;
         {
             unsigned char* const s = Sprite_Current;
-            ground = g.ground_at(Long(s + 0x34), Long(s + 0x38));
+            ground = g.ground_at(Spr(s)->x, Spr(s)->z);
         }
         SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
         g.set_animation(Sprite_Current[8]);
@@ -552,8 +558,8 @@ extern "C" void __cdecl Field_SwapSpinIn(void) {
                 Sprite_Current[0x5C] = 0;
                 Sprite_Current[9] = 0;
                 g.clear_steps();
-                SetLong(Sprite_Current + 0x18, 0);
-                SetLong(Sprite_Current + 0x1C, 0);
+                SC()->accel_x = 0;
+                SC()->accel_z = 0;
                 SetLong(Sprite_Current + 0x20, 0);
                 count = Field_MemberCount;
             }
