@@ -359,7 +359,7 @@ void BattleFrame() {
         p[0x89] = bh::Half() ? 0x0A : static_cast<unsigned char>(bh::Next() % 24);
         const U max = Word16({1, 2, 4, 5, 99, 999, 9999});
         rv::As<records::PartyMember>(p)->max_hp = max;
-        SetWord(p + 0x98, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
+        rv::Store<std::uint32_t>(rv::As<records::PartyMember>(p)->hp, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
         rv::As<records::PartyMember>(p)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
         if (bh::Half()) p[0x135] = static_cast<unsigned char>(p[0x135] ^ 0x04);   // the dword +0x134's bit 10
     }
@@ -367,7 +367,7 @@ void BattleFrame() {
         unsigned char* const e = EnemyN(n);
         const U max = Word16({1, 2, 4, 5, 99, 999, 0xFFFF, 0xFFFE});
         rv::As<records::BattleEnemy>(e)->max_hp = max;
-        SetWord(e + 0xA4, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
+        rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(e)->hp, bh::Half() ? max - bh::Next() % 3 : Word16({0, 1, 0xFFFF}));
         rv::As<records::BattleEnemy>(e)->status = static_cast<std::uint16_t>(bh::Half() ? bh::Next() | 0x4000 : bh::Next() & ~0x4000u);
     }
     SetWord(Mem(at::kAbility), Word16({0, 1, 0x55, 0x5D, 0x62, 0x65, 0x66, 0xE2}) % 0xE4);

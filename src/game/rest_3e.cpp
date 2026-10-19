@@ -163,7 +163,7 @@ extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, un
             unsigned char* const p = Gfx_PacketNext;
             *c = static_cast<unsigned char>(*c - 0x30);
             const U clut_word = SH_CALL(Gpu_GetClut)(static_cast<int>((clut & 0xFFu) << 4), 0x1E0);
-            SetWord(p + 0x16, clut_word);
+            rv::As<records::GpuSprt>(p)->clut = clut_word;
             p[4] = 0x80;
             p[5] = 0x80;
             p[6] = 0x80;
@@ -171,8 +171,8 @@ extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, un
             StI(p + 0xC, static_cast<std::int16_t>(y));
             p[0x15] = 0xD0;
             p[0x14] = static_cast<unsigned char>((*c + 0x16) << 3);
-            SetWord(p + 0x18, 8);
-            SetWord(p + 0x1A, 8);
+            rv::As<records::GpuSprt>(p)->w = 8;
+            rv::As<records::GpuSprt>(p)->h = 8;
             SH_CALL(Gpu_SetSprt)(p);
             SH_CALL(Gfx_CommitPrim)(S()[0x29], 0x1C);
         }
@@ -958,7 +958,7 @@ extern "C" void __cdecl EffectKind5D_Show(void) {
     }
     if ((S()[7] & 1) == 0) {
         rv::As<records::EffectObject>(S())->screen_x = Rest3e_SpriteDx + Rest3e_Windows;
-        SetWord(S() + 0x30, Rest3e_SpriteDy + W(at::kWindows + 2));
+        rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_y, Rest3e_SpriteDy + W(at::kWindows + 2));
         SH_CALL(Sprite_ScriptTick)();
         SH_CALL(Sprite_QueueOverlay)();
     }
@@ -1061,8 +1061,8 @@ namespace {
 unsigned char* Quad(int clut_x) {
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
-    SetWord(p + 0x26, SH_CALL(Gpu_GetTPage)(0, 0, 0x2C0, 0x100));
-    SetWord(p + 0x16, SH_CALL(Gpu_GetClut)(clut_x, 0x1E3));
+    rv::As<records::GpuPolyFT4>(p)->tpage = SH_CALL(Gpu_GetTPage)(0, 0, 0x2C0, 0x100);
+    rv::As<records::GpuPolyFT4>(p)->clut = SH_CALL(Gpu_GetClut)(clut_x, 0x1E3);
     return p;
 }
 void Corners(unsigned char* p, std::int32_t x0, std::int32_t y0, std::int32_t x1, std::int32_t y1) {
@@ -1156,8 +1156,8 @@ extern "C" void __cdecl EffectKind5E_DrawMenu(void) {
     const unsigned hand = Rest3e_Hand;
     SH_CALL(Menu_DrawHand)(static_cast<int>(hand & 0xFFu), static_cast<int>(15 * pick + (hand >> 8)), 0);
     SH_CALL(EffectKind5E_DrawPanel)();
-    SetWord(S() + 0x2E, Rest3e_SpriteDx + UL(at::kPanel));
-    SetWord(S() + 0x30, Rest3e_SpriteDy + W(at::kPanel + 2));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_x, Rest3e_SpriteDx + UL(at::kPanel));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->screen_y, Rest3e_SpriteDy + W(at::kPanel + 2));
     SH_CALL(Window_DrawFrame)(W(at::kPanel), W(at::kPanel + 2), B(at::kPanel + 4), B(at::kPanel + 6));
     SH_CALL(Sprite_ScriptTick)();
     SH_CALL(Sprite_QueueOverlay)();

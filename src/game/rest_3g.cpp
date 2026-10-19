@@ -176,8 +176,8 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
 // record 2), +0x3C the ground there (AreaMap_Elevation's s16 << 16); the copy
 // +0xC..+0x14; +0x5D 0, +0x5E 0x80, +9 0x20, +1 up.
 extern "C" void __cdecl EffectKindAD_Start(void) {
-    SetUL(S() + 0x34, UL(at::kMember2X));
-    SetUL(S() + 0x38, UL(at::kMember2Z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->x, UL(at::kMember2X));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->z, UL(at::kMember2Z));
     const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(S())->x, rv::As<records::EffectObject>(S())->z);
     unsigned char* const s = S();
     rv::As<records::EffectObject>(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
@@ -635,9 +635,9 @@ extern "C" void __cdecl EffectKind18Sub41_DrawPanels(unsigned lift, unsigned tex
         unsigned char* const v = Vertices();
         for (unsigned k = 0; k < 4; ++k) {
             const unsigned char* const b = At(from + 3 * k);
-            SetWord(v + 8 * k, (static_cast<U>(b[0]) << 7) - 0x37C0u);
-            SetWord(v + 8 * k + 2, (static_cast<U>(b[1]) << 7) - 0x2DC0u);
-            SetWord(v + 8 * k + 4, 0xFFFFFC08u - static_cast<U>(b[2]) * lift);
+            rv::As<records::SVector>(v)[k].x = (static_cast<U>(b[0]) << 7) - 0x37C0u;
+            rv::As<records::SVector>(v)[k].y = (static_cast<U>(b[1]) << 7) - 0x2DC0u;
+            rv::As<records::SVector>(v)[k].z = 0xFFFFFC08u - static_cast<U>(b[2]) * lift;
         }
         long depth;
         const short* const vs = Prim_VertexScratch;
@@ -666,7 +666,7 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
     SH_CALL(Gfx_CommitPrim)(5, 0xC);
     unsigned char* const v = Vertices();
     const short* const v0 = Prim_VertexScratch;
-    SetWord(v + 4, 0xFC08);
+    rv::As<records::SVector>(v)->z = 0xFC08;
     U radius_arg = static_cast<U>(size);
     U colour = (0x28u - static_cast<U>(size)) * 5u;
     long p_out;
@@ -690,11 +690,11 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
             p[6] = static_cast<unsigned char>(c8);
             p[4] = half;
             p[5] = half;
-            SetWord(v, 0xC840);
+            rv::As<records::SVector>(v)->x = 0xC840;
             SetWord(v + 2, big - 0x2CC0u);
             end(p, 8, 0x10);
-            SetWord(v, 0xC9C0);
-            SetWord(v + 2, big - 0x2CC0u);
+            rv::As<records::SVector>(v)->x = 0xC9C0;
+            rv::As<records::SVector>(v)->y = big - 0x2CC0u;
             end(p, 0x14, 0x1C);
             SH_CALL(Gfx_CommitPrim)(5, 0x20);
         }
@@ -733,10 +733,10 @@ extern "C" void __cdecl EffectKind18Sub41_DrawRings(int size) {
             p[4] = half;
             p[5] = half;
             SetWord(v, big - 0x3640u);
-            SetWord(v + 2, 0xD240);
+            rv::As<records::SVector>(v)->y = 0xD240;
             end(p, 8, 0x10);
-            SetWord(v, big - 0x3640u);
-            SetWord(v + 2, 0xD340);
+            rv::As<records::SVector>(v)->x = big - 0x3640u;
+            rv::As<records::SVector>(v)->y = 0xD340;
             end(p, 0x14, 0x1C);
             SH_CALL(Gfx_CommitPrim)(5, 0x20);
         }
@@ -864,11 +864,11 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             const U map_col = ((block & 0xFu) << 4) | (x & 0xFu);
             const U cell = map_row * at::kMapWidth + map_col;
             unsigned char* const v = Vertices();
-            SetWord(v + 2, (z << 7) - 0x4040u);
-            SetWord(v, (x << 7) - 0x4040u);
+            rv::As<records::SVector>(v)->y = (z << 7) - 0x4040u;
+            rv::As<records::SVector>(v)->x = (x << 7) - 0x4040u;
             unsigned char* corner = reinterpret_cast<unsigned char*>(&AreaMap_Corners) + cell * 4;
             MapView_CornerPtr = corner;
-            SetWord(v + 4, (0u - static_cast<U>(S8(corner[0]))) << 4);
+            rv::As<records::SVector>(v)->z = (0u - static_cast<U>(S8(corner[0]))) << 4;
             SH_CALL(Gte_LoadVertex)(reinterpret_cast<const unsigned long*>(Prim_VertexScratch));
             SH_CALL(Gte_Rtps)();
             SH_CALL(Gte_StoreScreenXY)(reinterpret_cast<unsigned long*>(MapView_ScreenXY));
@@ -898,19 +898,19 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             FpuCopy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY + 1);
             {
                 const U xy = UL(v);
-                const U y = Word(v + 2);
+                const U y = static_cast<std::uint16_t>(rv::As<records::SVector>(v)->y);
                 corner = MapView_CornerPtr;
                 const U x1 = xy + 0x80u;
-                SetWord(v + 8, x1);
-                SetWord(v + 0xA, y);
-                SetWord(v + 0xC, (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 8))) ) << 4);
+                rv::As<records::SVector>(v)[1].x = x1;
+                rv::As<records::SVector>(v)[1].y = y;
+                rv::As<records::SVector>(v)[1].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 8))) ) << 4;
                 const U y1 = y + 0x80u;
-                SetWord(v + 0x10, Word(v));
-                SetWord(v + 0x12, y1);
-                SetWord(v + 0x18, x1);
-                SetWord(v + 0x14, (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 16))) ) << 4);
-                SetWord(v + 0x1A, y1);
-                SetWord(v + 0x1C, (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 24))) ) << 4);
+                rv::As<records::SVector>(v)[2].x = static_cast<std::uint16_t>(rv::As<records::SVector>(v)->x);
+                rv::As<records::SVector>(v)[2].y = y1;
+                rv::As<records::SVector>(v)[3].x = x1;
+                rv::As<records::SVector>(v)[2].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 16))) ) << 4;
+                rv::As<records::SVector>(v)[3].y = y1;
+                rv::As<records::SVector>(v)[3].z = (0u - static_cast<U>(S8(static_cast<unsigned char>(UL(corner) >> 24))) ) << 4;
             }
             SH_CALL(Gte_LoadVertices3)(reinterpret_cast<const unsigned long*>(v + 8));
             SH_CALL(Gte_Rtpt)();

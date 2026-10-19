@@ -377,10 +377,10 @@ void Disturb(U h) {
     case 1: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
     case 2: Mem(at::kPartySize)[0] = static_cast<unsigned char>(b % 4); break;
     case 3: SetWord(Mem(at::kNewStatus), h >> 12); break;
-    case 4: SetWord(Member(b) + 0x90, h >> 20); break;
-    case 5: SetWord(EnemyN(b) + 0x92, h >> 20); break;
+    case 4: rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Member(b))->status, h >> 20); break;
+    case 5: rv::Store<std::uint32_t>(rv::As<records::BattleEnemy>(EnemyN(b))->status, h >> 20); break;
     case 6: EnemyN(b)[0x8D] = static_cast<unsigned char>(h & 0x100 ? 4 : h >> 24); break;
-    default: SetWord(Member(b) + 0xA0, h >> 18); break;
+    default: rv::Store<std::uint32_t>(rv::As<records::PartyMember>(Member(b))->max_hp, h >> 18); break;
     }
 }
 

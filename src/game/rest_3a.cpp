@@ -34,6 +34,8 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "game/rest_3a_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -57,7 +59,7 @@ short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 // Sprite_Current, the running task slot (0x93B8C4) and its owner (0x93B940),
 // each read afresh where the original reads it.
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Slot() { return PtrAt(at::kTaskCurrent); }
+unsigned char* Slot() { return rv::Bytes(BattleFlow_TaskCurrent); }
 unsigned char* Owner() { return PtrAt(at::kTaskOwner); }
 
 // jmp [table + 4 * index]: the entry as read (the fuzz swaps the table's
@@ -509,7 +511,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxAnim_Start(v
     BH_CALL(Sprite_SetAnimationBank)(0x18);
     Sc()[0x24] = 0x80;
     Sc()[0x2A] = 0;
-    const unsigned id = Word(PtrAt(at::kAction) + 2);
+    const unsigned id = rv::As<records::ActionRecord>(PtrAt(at::kAction))->action_id;
     const unsigned char animation = (B(at::kAbilityFlags + id * 24) & 2) ? 0 : 2;
     BH_CALL(Sprite_SetAnimation)(animation);
     unsigned char* const s = Sc();
@@ -561,13 +563,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFx_WatchIconSt
     Sc()[0x24] = 0x80;
     Sc()[0x27] = 0xFF;
     Sc()[0x28] = 0;
-    SetWord(Sc() + 0x2C, 1);
+    rv::Store<std::uint32_t>(rv::As<records::BattleTask>(Sc())->column, 1);
     Sc()[0x2B] = 0;
     Sc()[0x48] = 0;
-    SetLong(Sc() + 0x44, 0x10000);
-    SetLong(Sc() + 0x40, 0x10000);
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(Sc())->scale_y, 0x10000);
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(Sc())->scale_x, 0x10000);
     SetLong(Sc() + 0xC, 0);
-    SetLong(Sc() + 0x18, 0x666);
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(Sc())->work_18, 0x666);
     Sc()[0xA] = 0x3C;
     BH_CALL(BattleFx_PlaceOverOwner)();
     BH_CALL(Sprite_SetAnimation)(B(at::kStatusIcons + icon));
@@ -614,9 +616,9 @@ extern "C" void __cdecl BattleFxReform_Begin(void) {
 // 0x2000 a frame while not 0; at 0 its +0 |= 0x40 and +1 up.
 extern "C" void __cdecl BattleFxReform_Shrink(void) {
     unsigned char* const o = Owner();
-    const U scale = L(Addr(o + 0x40));
+    const U scale = static_cast<U>(rv::As<records::SpriteHead>(o)->scale_x);
     if (scale != 0) {
-        SetLong(o + 0x40, static_cast<std::int32_t>(scale - 0x2000));
+        rv::As<records::SpriteHead>(o)->scale_x = static_cast<std::int32_t>(scale - 0x2000);
         return;
     }
     o[0] = static_cast<unsigned char>(o[0] | 0x40);
@@ -629,7 +631,7 @@ extern "C" void __cdecl BattleFxReform_Shrink(void) {
 // 0); +1 up.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_LoadDat(void) {
     const unsigned char* const o = Owner();
-    const bool plain = Word(o + 0x2C) == 0;
+    const bool plain = rv::As<records::SpriteHead>(o)->column == 0;
     const unsigned char form = o[8];
     const bool low = form == 0 || form == 1;
     BH_CALL(LoadDatFile)(plain ? (low ? 0x2E8 : 0x2EA) : (low ? 0x2E9 : 0x2EB));
@@ -660,7 +662,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Reloa
     BH_CALL(Battle_StatusTint)(Word(At(ObjTrio_addr + 0x90 + member * at::kMemberSize)));
     BH_CALL(Sprite_SetClutStp)();
     unsigned char* const field = Field_State;
-    SetLong(field + 0x134, static_cast<std::int32_t>(L(Addr(field + 0x134)) & 0xFFFFFFFEu));
+    rv::As<records::PartyMember>(field)->flags_134 = static_cast<std::int32_t>(rv::As<records::PartyMember>(field)->flags_134 & 0xFFFFFFFEu);
     BH_CALL(BattleParty_RecalcStats)();
     Sprite_Current = kept;
     kept[1] = static_cast<unsigned char>(kept[1] + 1);
@@ -674,14 +676,14 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxReform_Grow(
     unsigned char* o = Owner();
     o[0] = static_cast<unsigned char>(o[0] & 0xBF);
     o = Owner();
-    const U scale = L(Addr(o + 0x40));
+    const U scale = static_cast<U>(rv::As<records::SpriteHead>(o)->scale_x);
     if (scale != 0x10000) {
-        SetLong(o + 0x40, static_cast<std::int32_t>(scale + 0x2000));
+        rv::As<records::SpriteHead>(o)->scale_x = static_cast<std::int32_t>(scale + 0x2000);
         return;
     }
     o[0x48] = 0;
     unsigned char* const m = MemberForWrite(Owner()[5], "BattleFxReform_Grow");
-    SetLong(m + 0x130, static_cast<std::int32_t>(L(Addr(m + 0x130)) & 0xFFFFDFFFu));
+    rv::As<records::PartyMember>(m)->flags_130 = static_cast<std::int32_t>(rv::As<records::PartyMember>(m)->flags_130 & 0xFFFFDFFFu);
     BH_CALL(BattleTask_FreeCurrent)();
 }
 
@@ -699,7 +701,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleFxRestore_Disp
 extern "C" void __cdecl BattleFxRestore_Begin(void) {
     unsigned char* const o = Owner();
     unsigned char* const m = MemberForWrite(o[5], "BattleFxRestore_Begin");
-    SetLong(m + 0x130, static_cast<std::int32_t>(L(Addr(m + 0x130)) | 0x2000));
+    rv::As<records::PartyMember>(m)->flags_130 = static_cast<std::int32_t>(rv::As<records::PartyMember>(m)->flags_130 | 0x2000);
     o[0x48] = 2;
     unsigned char* const s = Sc();
     s[1] = static_cast<unsigned char>(s[1] + 1);

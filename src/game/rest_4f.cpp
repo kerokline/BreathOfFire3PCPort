@@ -63,7 +63,6 @@ using DrawText = const unsigned char* (__cdecl*)(int, int, int, int, const unsig
 unsigned char* S() { return Sprite_Current; }
 unsigned char& B(U a) { return At(a)[0]; }
 U L(U a) { return static_cast<U>(Long(At(a))); }
-U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 std::int32_t SL(const unsigned char* p) { return Long(p); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
@@ -661,9 +660,9 @@ extern "C" void __cdecl EffectKind07_DrawSprite(int semi) {
     SetUL(prim + 8, 0x42000000u);
     SetUL(prim + 0xC, 0x42000000u);
     prim[0x15] = 0x20;
-    SetWord(prim + 0x18, 0x100);
-    SetWord(prim + 0x1A, 0x6E8);
-    SetWord(prim + 0x16, 0x7A80);
+    rv::As<records::GpuSprt>(prim)->w = 0x100;
+    rv::As<records::GpuSprt>(prim)->h = 0x6E8;
+    rv::As<records::GpuSprt>(prim)->clut = 0x7A80;
     const unsigned char* const s = S();
     prim[4] = s[0x5D];
     prim[5] = s[0x5E];
@@ -1221,9 +1220,9 @@ extern "C" void __cdecl EffectKind0B_DrawQuad(void) {
     StF(prim + 0x20, depth);
     StF(prim + 0x10, depth);
     const unsigned clut = SH_CALL(Gpu_GetClut)(0xA0, 0x1E3);
-    SetWord(prim + 0x16, clut);
+    rv::As<records::GpuPolyFT4>(prim)->clut = clut;
     const unsigned page = SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100);
-    SetWord(prim + 0x26, page);
+    rv::As<records::GpuPolyFT4>(prim)->tpage = page;
     SH_CALL(Gpu_SetShadeTex)(prim, 0);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     if (Draw_PassFlags != 0) SH_CALL(Gfx_CommitPrim)(3, 0x48);
