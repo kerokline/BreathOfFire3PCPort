@@ -35,6 +35,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_2g_callees.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -42,6 +43,10 @@
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::WindowRecord* WindowRec(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+[[maybe_unused]] const records::WindowRecord* WindowRec(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 namespace at = rest_2g::at;
 using U = std::uint32_t;
@@ -222,8 +227,8 @@ extern "C" void __cdecl GeneWin_GridSlideIn(void) {
     SH_CALL(GeneWin_DrawGrid)();
     unsigned char* const r = Rec();
     const short x = S(r + 4);
-    if (r[0xA] == 0) SetWord(r + 4, x > 0x42 ? static_cast<unsigned>(x - 0x20) : 0x42u);
-    else SetWord(r + 4, x < 0x42 ? static_cast<unsigned>(x + 0x20) : 0x42u);
+    if (r[0xA] == 0) WindowRec(r)->centre_x = x > 0x42 ? static_cast<unsigned>(x - 0x20) : 0x42u;
+    else WindowRec(r)->centre_x = x < 0x42 ? static_cast<unsigned>(x + 0x20) : 0x42u;
 }
 
 // original 0x5989F0: the grid slides out, after its draw: to the right (+0xA
@@ -250,14 +255,14 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
             SH_CALL(Window_FreeCurrent)();
             return;
         }
-        SetWord(r + 4, static_cast<unsigned>(x + 0x20));
+        WindowRec(r)->centre_x = static_cast<unsigned>(x + 0x20);
         return;
     }
     if (x <= Imm16Bound(at::kGridOutLeft)) {
         SH_CALL(Window_FreeCurrent)();
         return;
     }
-    SetWord(r + 4, static_cast<unsigned>(x - 0x20));
+    WindowRec(r)->centre_x = static_cast<unsigned>(x - 0x20);
 }
 
 // ===========================================================================
@@ -270,7 +275,7 @@ extern "C" void __cdecl GeneWin_GridSlideOut(void) {
 extern "C" void __cdecl MenuList_StatsPanel(void) {
     State("MenuList_StatsPanel", MenuList_StatsStates_addr, 7);
     const unsigned char* const r = Rec();
-    SH_CALL(Menu_DrawStatsPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]));
+    SH_CALL(Menu_DrawStatsPanel)(WindowRec(r)->centre_x, WindowRec(r)->centre_y, PartyRecord(r[0xA]));
 }
 
 // original 0x59A190, kind 6: the state from MenuList_EquipStates, then
@@ -278,7 +283,7 @@ extern "C" void __cdecl MenuList_StatsPanel(void) {
 extern "C" void __cdecl MenuList_EquipPanel(void) {
     State("MenuList_EquipPanel", MenuList_EquipStates_addr, 3);
     const unsigned char* const r = Rec();
-    SH_CALL(Menu_DrawEquipPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]));
+    SH_CALL(Menu_DrawEquipPanel)(WindowRec(r)->centre_x, WindowRec(r)->centre_y, PartyRecord(r[0xA]));
 }
 
 // original 0x59A200, kind 7: the state from MenuList_ExpStates, then
@@ -286,7 +291,7 @@ extern "C" void __cdecl MenuList_EquipPanel(void) {
 extern "C" void __cdecl MenuList_ExpPanel(void) {
     State("MenuList_ExpPanel", MenuList_ExpStates_addr, 3);
     const unsigned char* const r = Rec();
-    SH_CALL(Menu_DrawExpPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]), 0);
+    SH_CALL(Menu_DrawExpPanel)(WindowRec(r)->centre_x, WindowRec(r)->centre_y, PartyRecord(r[0xA]), 0);
 }
 
 // original 0x59A270, kind 8: the state from MenuList_NextLevelStates, then
@@ -294,7 +299,7 @@ extern "C" void __cdecl MenuList_ExpPanel(void) {
 extern "C" void __cdecl MenuList_NextLevelPanel(void) {
     State("MenuList_NextLevelPanel", MenuList_NextLevelStates_addr, 3);
     const unsigned char* const r = Rec();
-    SH_CALL(Menu_DrawExpPanel)(Word(r + 4), Word(r + 6), PartyRecord(r[0xA]), 1);
+    SH_CALL(Menu_DrawExpPanel)(WindowRec(r)->centre_x, WindowRec(r)->centre_y, PartyRecord(r[0xA]), 1);
 }
 
 // original 0x59A2E0, kind 9: the state from MenuList_WideTitleStates; the
@@ -306,19 +311,19 @@ extern "C" void __cdecl MenuList_WideTitleBox(void) {
     State("MenuList_WideTitleBox", MenuList_WideTitleStates_addr, 3);
     const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned char* r = Rec();
-    SH_CALL(Menu_DrawTitleBox)(Word(r + 4), Word(r + 6), 0x118, 0x13, static_cast<int>(colour));
+    SH_CALL(Menu_DrawTitleBox)(WindowRec(r)->centre_x, WindowRec(r)->centre_y, 0x118, 0x13, static_cast<int>(colour));
     r = Rec();
     if (Word(r + 0x10) == 0) return;
     const unsigned char* text = SH_CALL(Msg_SystemPtr)(Word(r + 0x10));
     r = Rec();
-    SH_CALL(Text_DrawAt)(static_cast<int>((Word(r + 4) + 7) & 0xFFFF), static_cast<int>((Word(r + 6) + 3) & 0xFFFF), 0, 0xFF,
+    SH_CALL(Text_DrawAt)(static_cast<int>((WindowRec(r)->centre_x + 7) & 0xFFFF), static_cast<int>((WindowRec(r)->centre_y + 3) & 0xFFFF), 0, 0xFF,
                          text);
     r = Rec();
     const unsigned id = Word(r + 0x10);
     if (id != 0x1A && id != 0x31) return;
     text = SH_CALL(Msg_SystemPtr)(0xF);
     r = Rec();
-    SH_CALL(Text_DrawAt)(static_cast<int>((Word(r + 4) + 7) & 0xFFFF), static_cast<int>((Word(r + 6) + 3) & 0xFFFF), 0, 0xFF,
+    SH_CALL(Text_DrawAt)(static_cast<int>((WindowRec(r)->centre_x + 7) & 0xFFFF), static_cast<int>((WindowRec(r)->centre_y + 3) & 0xFFFF), 0, 0xFF,
                          text);
 }
 
@@ -329,7 +334,7 @@ extern "C" void __cdecl MenuList_WideTitleBox(void) {
 extern "C" void __cdecl MenuList_CursorBox(void) {
     const unsigned char* const r = Rec();
     const U pair = MenuList_CursorBoxSizes_addr + 4u * r[0xA];
-    SH_CALL(Menu_DrawCursorBox)(Word(r + 4), Word(r + 6), Word(At(pair)), Word(At(pair + 2)), r[0xB], 6);
+    SH_CALL(Menu_DrawCursorBox)(WindowRec(r)->centre_x, WindowRec(r)->centre_y, Word(At(pair)), Word(At(pair + 2)), r[0xB], 6);
 }
 
 // original 0x59A440, kind 11: the state from MenuList_IconWheelStates;
@@ -345,13 +350,13 @@ extern "C" void __cdecl MenuList_IconWheel(void) {
     const unsigned char* r = Rec();
     const std::int32_t angle = Sx(r + 0x10);
     const U above = static_cast<U>(angle);
-    SH_CALL(Menu_DrawIconWheel)(static_cast<int>((above & 0xFFFF0000u) | Word(r + 4)), Word(r + 6),
+    SH_CALL(Menu_DrawIconWheel)(static_cast<int>((above & 0xFFFF0000u) | WindowRec(r)->centre_x), WindowRec(r)->centre_y,
                                 (above & 0xFFFFFF00u) | r[0xA], r[0xC], angle);
     unsigned char* const lit = Rec();
     if (lit[0xC] == 0) return;
     SetWord(lit + 0x10, Word(lit + 0x10) + 0x40u);
     r = Rec();
-    SH_CALL(Menu_DrawCursorBox)(static_cast<int>((Word(r + 4) + 4) & 0xFFFF), Word(r + 6), 0x44, 0x34, 0, 6);
+    SH_CALL(Menu_DrawCursorBox)(static_cast<int>((WindowRec(r)->centre_x + 4) & 0xFFFF), WindowRec(r)->centre_y, 0x44, 0x34, 0, 6);
 }
 
 // original 0x59A560, kind 12: the state from MenuList_ItemListStates, then
@@ -368,7 +373,7 @@ extern "C" void __cdecl MenuList_ItemList(void) {
 extern "C" void __cdecl MenuList_ButtonRow(void) {
     State("MenuList_ButtonRow", MenuList_ButtonRowStates_addr, 3);
     const unsigned char* const r = Rec();
-    SH_CALL(Menu_DrawButtonRow)(static_cast<int>((Key(r) & 0xFFFF0000u) | Word(r + 4)), Word(r + 6), r[0xA], r[0xB], 0);
+    SH_CALL(Menu_DrawButtonRow)(static_cast<int>((Key(r) & 0xFFFF0000u) | WindowRec(r)->centre_x), WindowRec(r)->centre_y, r[0xA], r[0xB], 0);
 }
 
 // original 0x59A6B0, kind 15 (no state table): MenuList_DrawLabelList of the
@@ -389,8 +394,8 @@ extern "C" void __cdecl MenuList_LabelList(void) { SH_CALL(MenuList_DrawLabelLis
 // the next index from the row it names then); the row and text indices are
 // unbounded bytes, read in place; the fields are read afresh before each call.
 extern "C" void __cdecl MenuList_DrawLabelList(unsigned char* rec) {
-    auto x = [rec](unsigned d) { return static_cast<int>((Word(rec + 4) + d) & 0xFFFF); };
-    auto y = [rec](unsigned d) { return static_cast<int>((Word(rec + 6) + d) & 0xFFFF); };
+    auto x = [rec](unsigned d) { return static_cast<int>((WindowRec(rec)->centre_x + d) & 0xFFFF); };
+    auto y = [rec](unsigned d) { return static_cast<int>((WindowRec(rec)->centre_y + d) & 0xFFFF); };
     auto text = [](unsigned index) { return At(static_cast<U>(Long(At(at::kLabelTexts + 4 * index)))); };
     const unsigned colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned count = B(at::kLabelRows + 6u * rec[0xA]);
@@ -431,9 +436,9 @@ extern "C" void __cdecl MenuList_EquipCompare(void) {
     State("MenuList_EquipCompare", MenuList_EquipCompareStates_addr, 5);
     unsigned char* const r = Rec();
     const U set = static_cast<U>(Long(r + 0x20));
-    const U x = (set & 0xFFFF0000u) | Word(r + 4);
+    const U x = (set & 0xFFFF0000u) | WindowRec(r)->centre_x;
     const U record = (x & 0xFFFFFF00u) | PartyRecord(r[0xC]);
-    SH_CALL(Menu_DrawEquipCompare)(record, static_cast<int>(x), Word(r + 6), At(set), r[0xD], r);
+    SH_CALL(Menu_DrawEquipCompare)(record, static_cast<int>(x), WindowRec(r)->centre_y, At(set), r[0xD], r);
 }
 
 // original 0x59A9C0, kind 17: the state from MenuList_AbilityStates, then
@@ -496,11 +501,11 @@ extern "C" void __cdecl MenuList_SlideDownTo42(void) { Slide(6, 0x10, 0x2A, Past
 // re-read; the store its low word.
 extern "C" void __cdecl MenuList_SlideLeftBesidePanel(void) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 4, Word(moved + 4) - 0x20u);
+    WindowRec(moved)->centre_x = WindowRec(moved)->centre_x - 0x20u;
     const U panel = Word(At(at::kRecord4X));
     unsigned char* const r = Rec();
     if (Sx(r + 4) >= static_cast<std::int32_t>(static_cast<short>(panel)) + 0x78) return;
-    SetWord(r + 4, panel + 0x78);
+    WindowRec(r)->centre_x = panel + 0x78;
     Rec()[3] = 0;
 }
 
@@ -515,11 +520,11 @@ extern "C" void __cdecl MenuList_SlideUpTo62Le(void) { Slide(6, -0x10, 0x3E, Pas
 // low word.
 extern "C" void __cdecl MenuList_SlideDownToPanelRow(void) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 6, Word(moved + 6) + 0x10u);
+    WindowRec(moved)->centre_y = WindowRec(moved)->centre_y + 0x10u;
     unsigned char* const r = Rec();
     const std::int32_t bound = 0x36 * static_cast<std::int32_t>(r[0xA]) + 0x3E;
     if (Sx(r + 6) < bound) return;
-    SetWord(r + 6, static_cast<unsigned>(bound));
+    WindowRec(r)->centre_y = static_cast<unsigned>(bound);
     Rec()[3] = 0;
 }
 
@@ -542,11 +547,11 @@ extern "C" void __cdecl MenuList_SlideLeftOff110(void) { SlideOff(-0x20, at::kLe
 // +0xB. As the original has it: +0xB from the record re-read after the step.
 extern "C" void __cdecl MenuList_SlideRightOffColumn(void) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 4, Word(moved + 4) + 0x20u);
+    WindowRec(moved)->centre_x = WindowRec(moved)->centre_x + 0x20u;
     unsigned char* const r = Rec();
     const std::int32_t bound = 75 * static_cast<std::int32_t>(r[0xB] & 1) + 0x140;
     if (Sx(r + 4) <= bound) return;
-    SetWord(r + 4, static_cast<unsigned>(bound));
+    WindowRec(r)->centre_x = static_cast<unsigned>(bound);
     Rec()[3] = 0;
 }
 
@@ -554,11 +559,11 @@ extern "C" void __cdecl MenuList_SlideRightOffColumn(void) {
 // below 75 ((+0xB & 1) + 2) - 150 or 225 - where it takes that.
 extern "C" void __cdecl MenuList_SlideLeftToColumn(void) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 4, Word(moved + 4) - 0x20u);
+    WindowRec(moved)->centre_x = WindowRec(moved)->centre_x - 0x20u;
     unsigned char* const r = Rec();
     const std::int32_t bound = 75 * (static_cast<std::int32_t>(r[0xB] & 1) + 2);
     if (Sx(r + 4) >= bound) return;
-    SetWord(r + 4, static_cast<unsigned>(bound));
+    WindowRec(r)->centre_x = static_cast<unsigned>(bound);
     Rec()[3] = 0;
 }
 
