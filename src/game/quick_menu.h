@@ -1,5 +1,5 @@
 // The quick menu: F5's list of the sixteen quicksaves, newest first, three
-// shown at a time as the save menu shows them; Load or Back per slot (the
+// shown at a time, drawn as the title's load menu with its Yes / No (the
 // quicksave round's QM, docs/quicksave.md, section QM; ledger draft D).
 #pragma once
 

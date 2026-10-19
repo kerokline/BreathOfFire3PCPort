@@ -1,9 +1,10 @@
-# The quick menu (the quicksave round's QM, docs/quicksave.md 10): F5, a slot, Load.
+# The quick menu (the quicksave round's QM, docs/quicksave.md section QM): F5, a slot, Yes.
 # worldMapAndAreaTransition.txt's frames 0..594 (the town save loaded, the
 # party standing on a path of area 7, as quick_worldMapAndAreaTransition*.txt
 # take it), then three quicksaves 20 frames apart (F6: slots 10, 11, 12 after
 # the rotation), F5, the cursor down to slot 1 (the second newest, taken at
-# recipe frame 615), confirm, Load - acted on at the confirm's release - and
+# recipe frame 615), confirm (the load menu's "load game?", Yes first), confirm
+# again for Yes - acted on at the confirm's release - and
 # 300 frames of the field after the restore. Confirm is pressed as the
 # loaded save's own word (@0x90358E, Field_ConfirmButtons), so the recipe
 # plays on every release. Pressed while paused, the pad words reach only the
@@ -55,9 +56,9 @@ key f5
 wait 14
 hold down 2
 wait 6
-mark quick menu: confirm on slot 1
+mark quick menu: confirm on slot 1 (load game?)
 hold @0x90358E 2
 wait 14
-mark quick menu: Load
+mark quick menu: Yes
 hold @0x90358E 2
 wait 300

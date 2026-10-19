@@ -1,34 +1,44 @@
 // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5's
 // quick menu - the sixteen quicksaves BISLPS10.DAT..BISLPS1F.DAT listed
-// newest first (slot 0 is 0x10, the one F7 loads), three shown at a time as
-// the save menu shows them, and per slot Load (a quick-load of that slot,
-// asked of the snapshot core) or Back; an empty slot offers Back only. Load
-// only: F6 is the one way to make a quicksave (the owner, 2026-10-17;
-// docs/quicksave-round.md 5). A load the core refuses (another build, no
-// snapshot, ...) leaves the game untouched and the menu open, its reason on a
-// line above the slots - the overlay line the core writes reaches only the
-// log while the back buffer is ours (win_main.cpp, Overlay).
+// newest first (slot 0 is 0x10, the one F7 loads), three shown at a time,
+// drawn as the title's load menu draws its screens: its backdrop and title
+// box with its system messages, the save slots, and on a slot that holds a
+// quicksave its "load this game?" Yes / No with the pointing hand. Yes asks
+// the snapshot core for a quick-load of that slot; No goes back to the slots;
+// an empty slot takes no confirm (as the load menu). Load only: F6 is the one
+// way to make a quicksave (the owner, 2026-10-17; docs/quicksave-round.md 5).
+// A load the core refuses (another build, no snapshot, ...) leaves the game
+// untouched and the menu open: the load menu's own "could not load" message in
+// the title box, and the core's reason on a line of the 8 x 8 font below the
+// slots - the overlay line the core writes reaches only the log while the
+// back buffer is ours (win_main.cpp, Overlay).
 //
 // It runs while Game_Paused is set, in WinMain's paused branch where the
 // pause lines are drawn: no task runs, so the menu reads the pad itself each
 // frame - through Pad_Read, as the game's latch would, or the playing
-// recipe's word (InputScript_PausedWord) - and draws through the save menu's
-// own pieces: Menu_DrawBlackScreen, SaveMenu_DrawSlots' body over the quick
+// recipe's word (InputScript_PausedWord) - and draws with the load menu's
+// draws, not its state: save_menu::DrawLoadWindows (Menu_DrawBackdrop of the
+// Config's background byte, Menu_DrawTitleBox, Text_DrawAt of a system
+// message: LoadWindows / LoadMessage), SaveMenu_DrawSlots' body over the quick
 // list (save_menu::DrawSlotsOver) with the menu's own first-shown and cursor
-// words, and a choice window of SaveMenu_DrawChoices' frame, border and hand
-// with two labels in the 8 x 8 font. Confirm and cancel are the game's words
-// 7 and 8 (Field_ConfirmButtons, Field_CancelButtons), so they follow sigma
-// (DIV-0133) and the release's buttons as every menu of the game does.
+// words, and Menu_YesNo's draw half (its line, system message 0xF, and
+// Menu_DrawHand at its stops, DIV-0027's under a Latin overlay) with the
+// menu's own Yes / No - not Menu_YesNo itself, which reads Input_Pressed,
+// keeps its answer in 0x929F0B and plays sounds. The text is the game's, so a
+// language overlay translates it. Confirm and cancel are the game's words 7
+// and 8 (Field_ConfirmButtons, Field_CancelButtons), left / right flip the
+// answer (0xA000, as Menu_YesNo): they follow sigma (DIV-0133) and the
+// release's buttons as every menu of the game does.
 //
 // What it owns is ours and outside the snapshot span: the two tables (the
 // listing, read fresh at every F5 with a reader of our own - not Save_ReadFile,
 // which reads through Save_Staging and File_Slots, both inside the span), the
-// cursor, the first shown and the choice. The game's save menu words
-// (0x9036D4, 0x8034D0, 0x6BC881, the summaries at 0x905BC0) are never
-// touched. The draws write what any paused frame writes: the packet pool,
-// the ordering table, the text scratch at 0x904BA0.
+// cursor, the first shown and the answer. The game's load-menu state
+// (0x9036D4, 0x8034D0, 0x6BDF86, 0x929F0B, the summaries at 0x905BC0,
+// Save_Staging) is never written. The draws write what any paused frame's
+// draw writes: the packet pool, the ordering table, the text scratch 0x904BA0.
 //
-// A confirm or cancel that ends the menu - Load, or cancel on the slots - is
+// A confirm or cancel that ends the menu - Yes, or cancel on the slots - is
 // acted on at its release, so the button is up when the game's latch runs
 // again: a press kept down would be an edge to the game's next latch (after a
 // load, against the Input_Held the quicksave holds).
@@ -44,8 +54,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/save_menu.h"
-#include "game/save_menu_callees.h"
 #include "game/win_main.h"
+#include "game/yes_no_layout.h"
 #include "hook/host.h"
 #include "hook/detour.h"
 #include "hook/input_script.h"
@@ -57,26 +67,29 @@ namespace {
 using U = std::uint32_t;
 
 // The pad's bits (Pad_Read's layout, input/bindings.h).
-constexpr std::uint16_t kUp = 0x1000, kDown = 0x4000;
+constexpr std::uint16_t kUp = 0x1000, kDown = 0x4000, kLeftRight = 0xA000;
 constexpr unsigned kFirstSlot = 0x10;       // BISLPS10.DAT, the newest
 constexpr const char* kQuickPattern = "BISLPS1?.DAT";
 constexpr unsigned kRepeatDelay = 20, kRepeatEvery = 4;   // frames: a held direction's repeat
+// The load menu's system messages (save_menu.cpp: LoadMenu_Choose, _Confirm, _Error).
+constexpr unsigned kMsgChoose = 0xAC;       // the slots (LoadMenu_Open / LoadMenu_Choose)
+constexpr unsigned kMsgConfirm = 0xB9;      // load this game? (LoadMenu_Confirm)
+constexpr unsigned kMsgCouldNot = 0xB8;     // 0xA6 + 0x12: LoadMenu_Error's error 2, the read or the sum failed
+constexpr unsigned kMsgYesNo = 0xF;         // Menu_YesNo's line
 
 // The menu as a value: the self-test steps it without a window.
 enum class Act { None, Close, Load };
 struct Menu {
     U cursor = 0;              // 0..15: the slot, 0 the newest
     U first = 0;               // the first of the three shown
-    bool choosing = false;     // the choice window is open over the cursor's slot
-    U choice = 0;              // 0 Load, 1 Back; an empty slot's only row, 0, is Back
+    bool asking = false;       // "load this game?" over the cursor's slot
+    U yes = 1;                 // Menu_YesNo's byte: 1 Yes (the left stop), 0 No; LoadMenu_Choose starts it at 1
     Act waiting = Act::None;   // acted on when confirm and cancel are both up
     std::uint16_t prev = 0xFFFF;   // every button down: nothing counts as pressed until released once
     U held = 0;                // frames a direction has been held
 };
 
 bool Present(const unsigned char* summaries, U slot) { return summaries[slot * save_menu::kSummaryBytes + 0x15] != 0xFF; }
-U Rows(const Menu& m, const unsigned char* summaries) { return Present(summaries, m.cursor) ? 2 : 1; }
-bool OnBack(const Menu& m, const unsigned char* summaries) { return !Present(summaries, m.cursor) || m.choice == 1; }
 
 Act Step(Menu& m, std::uint16_t pad, std::uint16_t confirm, std::uint16_t cancel, const unsigned char* summaries) {
     const std::uint16_t pressed = static_cast<std::uint16_t>(pad & ~m.prev);
@@ -87,6 +100,19 @@ Act Step(Menu& m, std::uint16_t pad, std::uint16_t confirm, std::uint16_t cancel
         m.waiting = Act::None;
         return a;
     }
+    if (m.asking) {
+        // Menu_YesNo's order: cancel (No), confirm, then left / right.
+        if (pressed & cancel) {
+            m.asking = false;
+        } else if (pressed & confirm) {
+            if (m.yes != 0) m.waiting = Act::Load;
+            else m.asking = false;
+        } else if (pressed & kLeftRight) {
+            m.yes ^= 1;
+        }
+        m.held = 0;
+        return Act::None;
+    }
     // Up and down: on the press, then every kRepeatEvery frames once held kRepeatDelay.
     std::uint16_t move = pressed & (kUp | kDown);
     if ((pad & (kUp | kDown)) != 0) {
@@ -95,30 +121,20 @@ Act Step(Menu& m, std::uint16_t pad, std::uint16_t confirm, std::uint16_t cancel
     } else {
         m.held = 0;
     }
-    if (!m.choosing) {
-        if ((move & kUp) && m.cursor != 0) {
-            --m.cursor;
-            if (m.cursor < m.first) m.first = m.cursor;
-        } else if ((move & kDown) && m.cursor < 15) {
-            ++m.cursor;
-            if (m.cursor > m.first + 2) m.first = m.cursor - 2;
-        }
-        if (pressed & confirm) {
-            m.choosing = true;
-            m.choice = 0;
-        } else if (pressed & cancel) {
-            m.waiting = Act::Close;
-        }
-        return Act::None;
+    if ((move & kUp) && m.cursor != 0) {
+        --m.cursor;
+        if (m.cursor < m.first) m.first = m.cursor;
+    } else if ((move & kDown) && m.cursor < 15) {
+        ++m.cursor;
+        if (m.cursor > m.first + 2) m.first = m.cursor - 2;
     }
-    const U rows = Rows(m, summaries);
-    if ((move & kUp) && m.choice != 0) --m.choice;
-    else if ((move & kDown) && m.choice + 1 < rows) ++m.choice;
     if (pressed & confirm) {
-        if (OnBack(m, summaries)) m.choosing = false;
-        else m.waiting = Act::Load;
+        if (Present(summaries, m.cursor)) {   // an empty slot: nothing (LoadMenu_Choose buzzes, 0x107)
+            m.asking = true;
+            m.yes = 1;
+        }
     } else if (pressed & cancel) {
-        m.choosing = false;
+        m.waiting = Act::Close;
     }
     return Act::None;
 }
@@ -161,12 +177,9 @@ bool g_open = false;
 bool g_paused_by_us = false;   // the game was not paused (F9) when F5 opened the menu
 bool g_loading = false;        // a Load asked; Snapshot_Pending runs it at this frame's end
 unsigned g_loading_slot = 0;
-char g_refusal[64];            // the last refusal, upper case for the 8 x 8 font; "" for none
+char g_refusal[64];            // the last refusal's reason, upper case for the 8 x 8 font; "" for none
 
-constexpr int kSlotsX = 0x20, kSlotsY = 0x30;
-const unsigned char kTitle[] = "QUICKLOAD";
-const unsigned char kLoad[] = "LOAD";
-const unsigned char kBack[] = "BACK";
+constexpr int kSlotsX = 0x20, kSlotsY = 0x30;   // the load menu's (LoadMenu_Choose's draw_slots)
 
 void Open() {
     const int n = ListQuicksaves("");
@@ -197,31 +210,29 @@ std::uint16_t ReadPad() {
     return WinMain_InputAllowed() ? pad : 0;   // DIV-0033: nothing read while another window is in front
 }
 
-// SaveMenu_DrawChoices' window (Menu_DrawBox inside Menu_DrawBorder, rows 20
-// apart, the hand at x + 0xC) sized for `rows`, its labels in the 8 x 8 font.
-void DrawChoices(int x, int y, U rows, U choice, const unsigned char* const* labels) {
-    using save_menu::g;
-    const int shorter = 20 * static_cast<int>(3 - rows);
-    g.window_frame(x + 4, y + 4, 0x52, 0x48 - shorter, 0, *reinterpret_cast<const unsigned char*>(save_menu::at::kWindowColor));
-    g.window_box(x, y, 9, rows == 3 ? 8 : rows == 2 ? 6 : 4);
-    for (U i = 0; i < rows; ++i) Text_DrawFont8(x + 0x1C, y + 0xF + 20 * static_cast<int>(i), 0, labels[i]);
-    g.draw_hand(x + 0xC, y + 0xD + 20 * static_cast<int>(choice), 0);
+// Menu_YesNo's draw (menu_windows.cpp), without its input, its sound or its
+// byte: the line through the line function DIV-0027 put in (Msg_SystemPtr
+// without one) at (0x1C, 0x16), the hand at 0xFE - 36 * yes, or DIV-0027's
+// 0x112 - 56 * yes, y 0x18.
+void DrawYesNo(U yes) {
+    const YesNoLayout_LineFn line_fn = YesNoLayout_ActiveLine();
+    const unsigned char* const line = line_fn ? line_fn(kMsgYesNo) : Msg_SystemPtr(kMsgYesNo);
+    Text_DrawAt(0x1C, 0x16, 0, 0xFF, line);
+    const U hand = YesNoLayout_StopsMoved() ? 0x112u - 56u * yes : 0xFEu - 36u * yes;
+    Menu_DrawHand(static_cast<int>(hand), 0x18, 0);
 }
 
+// The load menu's screens, in LoadMenu_Choose's and LoadMenu_Confirm's
+// order: the windows and the message, the slots (lit while choosing), the
+// Yes / No. Menu_DrawBlackScreen first, under the backdrop: it covers a wide
+// picture's sides (DIV-0041), which the backdrop's ten columns do not.
 void Draw() {
     Menu_DrawBlackScreen();
-    Text_DrawFont8(kSlotsX + 0x18, kSlotsY - 0x1C, 0, kTitle);
-    if (g_refusal[0] != 0) Text_DrawFont8(kSlotsX - 0x10, kSlotsY - 0xC, 0, reinterpret_cast<const unsigned char*>(g_refusal));
-    save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.choosing ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
-    if (!g_menu.choosing) return;
-    const int y = kSlotsY + 56 * static_cast<int>(g_menu.cursor - g_menu.first) + 6;
-    if (Present(g_summaries, g_menu.cursor)) {
-        const unsigned char* const labels[] = {kLoad, kBack};
-        DrawChoices(0xD8, y, 2, g_menu.choice, labels);
-    } else {
-        const unsigned char* const labels[] = {kBack};
-        DrawChoices(0xD8, y, 1, 0, labels);
-    }
+    const unsigned message = g_menu.asking ? kMsgConfirm : g_refusal[0] != 0 ? kMsgCouldNot : kMsgChoose;
+    save_menu::DrawLoadWindows(message);
+    save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.asking ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
+    if (g_menu.asking) DrawYesNo(g_menu.yes);
+    else if (g_refusal[0] != 0) Text_DrawFont8(0x10, 0xE0, 0, reinterpret_cast<const unsigned char*>(g_refusal));
 }
 
 // --- the self-test ------------------------------------------------------------------
@@ -346,7 +357,7 @@ void CursorSelfTest() {
         if (Step(m, 0, kConfirm, kCancel, sums) != Act::None) Fail("a release acted");
     };
     // Held at open: nothing until released.
-    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None || m.choosing) Fail("a button held at the open counted");
+    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None || m.asking) Fail("a button held at the open counted");
     Step(m, 0, kConfirm, kCancel, sums);
     // Down through every slot, gaps included; the three shown follow.
     for (U i = 1; i <= 15; ++i) {
@@ -368,36 +379,38 @@ void CursorSelfTest() {
     for (U f = 0; f < 30; ++f) Step(m, kDown, kConfirm, kCancel, sums);
     Step(m, 0, kConfirm, kCancel, sums);
     if (m.cursor != 4) Fail("a held down did not repeat as 1 + 3 in 30 frames");
-    // Slot 1 (empty): Back only.
+    // Slot 1 (empty): confirm does nothing, as the load menu.
     while (m.cursor != 1) Tap(kUp);
     Tap(kConfirm);
-    if (!m.choosing || m.choice != 0) Fail("confirm on an empty slot did not open its choice");
-    Tap(kDown);
-    if (m.choice != 0) Fail("an empty slot's choice has a second row");
-    Tap(kConfirm);
-    if (m.choosing) Fail("Back on an empty slot did not return to the slots");
-    // Slot 3 (present): Load, Back.
+    if (m.asking) Fail("confirm on an empty slot asked");
+    // Slot 3 (present): load this game?, Yes first.
     Tap(kDown);
     Tap(kDown);
     Tap(kConfirm);
+    if (!m.asking || m.yes != 1) Fail("confirm on slot 3 did not ask with Yes");
     Tap(kDown);
-    if (m.choice != 1) Fail("down did not reach Back");
+    if (m.cursor != 3 || !m.asking) Fail("down moved the cursor while asking");
+    Tap(kLeftRight & 0x2000);
+    if (m.yes != 0) Fail("right did not flip to No");
     Tap(kConfirm);
-    if (m.choosing) Fail("Back did not return to the slots");
+    if (m.asking) Fail("No did not return to the slots");
     Tap(kConfirm);
     Tap(kCancel);
-    if (m.choosing) Fail("cancel did not leave the choice");
+    if (m.asking) Fail("cancel did not answer No");
     Tap(kConfirm);
-    if (m.choice != 0) Fail("the choice did not open on Load");
-    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Load acted while held");
-    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Load acted while held");
-    if (Step(m, 0, kConfirm, kCancel, sums) != Act::Load || m.cursor != 3) Fail("Load of slot 3 did not act at the release");
+    Tap(0x8000);
+    Tap(0x8000);
+    if (m.yes != 1) Fail("left twice did not come back to Yes");
+    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Yes acted while held");
+    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Yes acted while held");
+    if (Step(m, 0, kConfirm, kCancel, sums) != Act::Load || m.cursor != 3) Fail("Yes on slot 3 did not load at the release");
     // Cancel on the slots closes, at the release.
-    m.choosing = false;
+    m.asking = false;
     if (Step(m, kCancel, kConfirm, kCancel, sums) != Act::None) Fail("cancel acted on the press");
     if (Step(m, 0, kConfirm, kCancel, sums) != Act::Close) Fail("cancel on the slots did not close at the release");
     bof3::Log("shadow      quick menu self-test: the cursor over 0..15 with gaps (slots 0, 3, F present), the three "
-              "shown following it, the held repeat, Back only on an empty slot, Load and close at the release");
+              "shown following it, the held repeat, no question on an empty slot, Yes / No by left and right, No and "
+              "cancel back to the slots, Yes loading and cancel closing at the release");
 }
 
 }  // namespace
@@ -430,10 +443,11 @@ bool QuickMenu_Frame() {
         // it went.
         g_loading_slot = kFirstSlot + g_menu.cursor;
         g_loading = true;
-        g_menu.choosing = false;
+        g_menu.asking = false;
         bof3::Log("quickmenu   Load of BISLPS%02X.DAT asked at Frame_Counter %u", g_loading_slot, static_cast<U>(Frame_Counter));
         Snapshot_RequestLoad(g_loading_slot);
     }
+    if (g_menu.asking) g_refusal[0] = 0;   // a new question: the last refusal is answered
     Draw();
     return true;
 }
