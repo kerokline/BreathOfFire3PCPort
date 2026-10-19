@@ -247,6 +247,7 @@ add_library(bof3x SHARED
   src/game/field_misc_fuzz.cpp
   src/game/save_menu.cpp
   src/game/save_menu_fuzz.cpp
+  src/game/quick_menu.cpp
   src/game/event_ops.cpp
   src/game/event_ops_fuzz.cpp
   src/game/menu_windows.cpp

@@ -1,0 +1,436 @@
+// DIVERGENCE (the quicksave round's draft D, docs/quicksave.md 10): F5's
+// quick menu - the sixteen quicksaves BISLPS10.DAT..BISLPS1F.DAT listed
+// newest first (slot 0 is 0x10, the one F7 loads), three shown at a time as
+// the save menu shows them, and per slot Load (a quick-load of that slot,
+// asked of the snapshot core) or Back; an empty slot offers Back only. Load
+// only: F6 is the one way to make a quicksave (the owner, 2026-10-17;
+// docs/quicksave-round.md 5).
+//
+// It runs while Game_Paused is set, in WinMain's paused branch where the
+// pause lines are drawn: no task runs, so the menu reads the pad itself each
+// frame - through Pad_Read, as the game's latch would, or the playing
+// recipe's word (InputScript_PausedWord) - and draws through the save menu's
+// own pieces: Menu_DrawBlackScreen, SaveMenu_DrawSlots' body over the quick
+// list (save_menu::DrawSlotsOver) with the menu's own first-shown and cursor
+// words, and a choice window of SaveMenu_DrawChoices' frame, border and hand
+// with two labels in the 8 x 8 font. Confirm and cancel are the game's words
+// 7 and 8 (Field_ConfirmButtons, Field_CancelButtons), so they follow sigma
+// (DIV-0133) and the release's buttons as every menu of the game does.
+//
+// What it owns is ours and outside the snapshot span: the two tables (the
+// listing, read fresh at every F5 with a reader of our own - not Save_ReadFile,
+// which reads through Save_Staging and File_Slots, both inside the span), the
+// cursor, the first shown and the choice. The game's save menu words
+// (0x9036D4, 0x8034D0, 0x6BC881, the summaries at 0x905BC0) are never
+// touched. The draws write what any paused frame writes: the packet pool,
+// the ordering table, the text scratch at 0x904BA0.
+//
+// A confirm or cancel that ends the menu - Load, or cancel on the slots - is
+// acted on at its release, so the button is up when the game's latch runs
+// again: a press kept down would be an edge to the game's next latch (after a
+// load, against the Input_Held the quicksave holds).
+#include "game/quick_menu.h"
+
+#include <windows.h>
+
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <vector>
+
+#include "bof3/symbols.gen.h"
+#include "game/save_menu.h"
+#include "game/save_menu_callees.h"
+#include "game/win_main.h"
+#include "hook/host.h"
+#include "hook/detour.h"
+#include "hook/input_script.h"
+#include "hook/log.h"
+#include "hook/snapshot.h"
+
+namespace {
+
+using U = std::uint32_t;
+
+// The pad's bits (Pad_Read's layout, input/bindings.h).
+constexpr std::uint16_t kUp = 0x1000, kDown = 0x4000;
+constexpr unsigned kFirstSlot = 0x10;       // BISLPS10.DAT, the newest
+constexpr const char* kQuickPattern = "BISLPS1?.DAT";
+constexpr unsigned kRepeatDelay = 20, kRepeatEvery = 4;   // frames: a held direction's repeat
+
+// The menu as a value: the self-test steps it without a window.
+enum class Act { None, Close, Load };
+struct Menu {
+    U cursor = 0;              // 0..15: the slot, 0 the newest
+    U first = 0;               // the first of the three shown
+    bool choosing = false;     // the choice window is open over the cursor's slot
+    U choice = 0;              // 0 Load, 1 Back; an empty slot's only row, 0, is Back
+    Act waiting = Act::None;   // acted on when confirm and cancel are both up
+    std::uint16_t prev = 0xFFFF;   // every button down: nothing counts as pressed until released once
+    U held = 0;                // frames a direction has been held
+};
+
+bool Present(const unsigned char* summaries, U slot) { return summaries[slot * save_menu::kSummaryBytes + 0x15] != 0xFF; }
+U Rows(const Menu& m, const unsigned char* summaries) { return Present(summaries, m.cursor) ? 2 : 1; }
+bool OnBack(const Menu& m, const unsigned char* summaries) { return !Present(summaries, m.cursor) || m.choice == 1; }
+
+Act Step(Menu& m, std::uint16_t pad, std::uint16_t confirm, std::uint16_t cancel, const unsigned char* summaries) {
+    const std::uint16_t pressed = static_cast<std::uint16_t>(pad & ~m.prev);
+    m.prev = pad;
+    if (m.waiting != Act::None) {
+        if ((pad & (confirm | cancel)) != 0) return Act::None;
+        const Act a = m.waiting;
+        m.waiting = Act::None;
+        return a;
+    }
+    // Up and down: on the press, then every kRepeatEvery frames once held kRepeatDelay.
+    std::uint16_t move = pressed & (kUp | kDown);
+    if ((pad & (kUp | kDown)) != 0) {
+        ++m.held;
+        if (move == 0 && m.held >= kRepeatDelay && (m.held - kRepeatDelay) % kRepeatEvery == 0) move = pad & (kUp | kDown);
+    } else {
+        m.held = 0;
+    }
+    if (!m.choosing) {
+        if ((move & kUp) && m.cursor != 0) {
+            --m.cursor;
+            if (m.cursor < m.first) m.first = m.cursor;
+        } else if ((move & kDown) && m.cursor < 15) {
+            ++m.cursor;
+            if (m.cursor > m.first + 2) m.first = m.cursor - 2;
+        }
+        if (pressed & confirm) {
+            m.choosing = true;
+            m.choice = 0;
+        } else if (pressed & cancel) {
+            m.waiting = Act::Close;
+        }
+        return Act::None;
+    }
+    const U rows = Rows(m, summaries);
+    if ((move & kUp) && m.choice != 0) --m.choice;
+    else if ((move & kDown) && m.choice + 1 < rows) ++m.choice;
+    if (pressed & confirm) {
+        if (OnBack(m, summaries)) m.choosing = false;
+        else m.waiting = Act::Load;
+    } else if (pressed & cancel) {
+        m.choosing = false;
+    }
+    return Act::None;
+}
+
+// --- the lists -------------------------------------------------------------------
+
+// Ours, outside the span: a listing, not game state.
+unsigned char g_table[save_menu::kListEntries * save_menu::kEntryBytes];
+unsigned char g_summaries[16 * save_menu::kSummaryBytes];
+
+// The summary of a quicksave's save half (0x1C bytes at 0xCA0, where the
+// save menu's reader looks), read with stdio: nothing of the game's file
+// layer or its staging buffer.
+bool ReadSummary(const char* name, unsigned char* into, void* context) {
+    const std::string path = std::string(static_cast<const char*>(context)) + name;
+    FILE* f = std::fopen(path.c_str(), "rb");
+    if (!f) {
+        bof3::Log("quickmenu   %s: cannot open; shown empty", path.c_str());
+        return false;
+    }
+    const bool ok = std::fseek(f, 0xCA0, SEEK_SET) == 0 && std::fread(into, 1, save_menu::kSummaryBytes, f) == save_menu::kSummaryBytes;
+    std::fclose(f);
+    if (!ok) bof3::Log("quickmenu   %s: no summary at 0xCA0 (a short file); shown empty", path.c_str());
+    return ok;
+}
+
+// The quick list of `dir` ("" for the game's directory, else ending in a
+// separator) into g_table and g_summaries; the count listed.
+int ListQuicksaves(const char* dir) {
+    const std::string pattern = std::string(dir) + kQuickPattern;
+    const int n = save_menu::ListFiles(pattern.c_str(), g_table, true, true);
+    save_menu::ReadSummaries(g_table, g_summaries, &ReadSummary, const_cast<char*>(dir));
+    return n;
+}
+
+// --- the menu in the game -----------------------------------------------------------
+
+Menu g_menu;
+bool g_open = false;
+bool g_paused_by_us = false;   // the game was not paused (F9) when F5 opened the menu
+
+constexpr int kSlotsX = 0x20, kSlotsY = 0x30;
+const unsigned char kTitle[] = "QUICKLOAD";
+const unsigned char kLoad[] = "LOAD";
+const unsigned char kBack[] = "BACK";
+
+void Open() {
+    const int n = ListQuicksaves("");
+    g_menu = Menu{};
+    g_open = true;
+    g_paused_by_us = Game_Paused == 0;
+    if (g_paused_by_us) {
+        Game_Paused = 1;
+        Sound_PauseAll();
+    }
+    bof3::Log("quickmenu   F5 at Frame_Counter %u: open, %d quicksave%s listed", static_cast<U>(Frame_Counter), n,
+              n == 1 ? "" : "s");
+}
+
+// Closing ends the pause, as any key ends F9's.
+void Close(const char* why) {
+    g_open = false;
+    Game_Paused = 0;
+    Sound_ResumeAll();
+    bof3::Log("quickmenu   closed at Frame_Counter %u (%s)", static_cast<U>(Frame_Counter), why);
+}
+
+std::uint16_t ReadPad() {
+    unsigned short word = 0;
+    if (bof3::InputScript_PausedWord(&word)) return word;
+    const std::uint16_t pad = static_cast<std::uint16_t>(Pad_Read() & 0xFFFF);
+    return WinMain_InputAllowed() ? pad : 0;   // DIV-0033: nothing read while another window is in front
+}
+
+// SaveMenu_DrawChoices' window (Menu_DrawBox inside Menu_DrawBorder, rows 20
+// apart, the hand at x + 0xC) sized for `rows`, its labels in the 8 x 8 font.
+void DrawChoices(int x, int y, U rows, U choice, const unsigned char* const* labels) {
+    using save_menu::g;
+    const int shorter = 20 * static_cast<int>(3 - rows);
+    g.window_frame(x + 4, y + 4, 0x52, 0x48 - shorter, 0, *reinterpret_cast<const unsigned char*>(save_menu::at::kWindowColor));
+    g.window_box(x, y, 9, rows == 3 ? 8 : rows == 2 ? 6 : 4);
+    for (U i = 0; i < rows; ++i) Text_DrawFont8(x + 0x1C, y + 0xF + 20 * static_cast<int>(i), 0, labels[i]);
+    g.draw_hand(x + 0xC, y + 0xD + 20 * static_cast<int>(choice), 0);
+}
+
+void Draw() {
+    Menu_DrawBlackScreen();
+    Text_DrawFont8(kSlotsX + 0x18, kSlotsY - 0x10, 0, kTitle);
+    save_menu::DrawSlotsOver(kSlotsX, kSlotsY, g_menu.choosing ? 0 : 1, g_summaries, &g_menu.first, &g_menu.cursor);
+    if (!g_menu.choosing) return;
+    const int y = kSlotsY + 56 * static_cast<int>(g_menu.cursor - g_menu.first) + 6;
+    if (Present(g_summaries, g_menu.cursor)) {
+        const unsigned char* const labels[] = {kLoad, kBack};
+        DrawChoices(0xD8, y, 2, g_menu.choice, labels);
+    } else {
+        const unsigned char* const labels[] = {kBack};
+        DrawChoices(0xD8, y, 1, 0, labels);
+    }
+}
+
+// --- the self-test ------------------------------------------------------------------
+
+[[noreturn]] void Fail(const char* what) { bof3::Fatal("quick menu self-test: %s", what); }
+
+void WriteFake(const std::string& path, unsigned char mark) {
+    // Not a save: 0xCBC bytes of a mark, so each listed file's summary says which file it came from.
+    std::string bytes(0xCA0 + save_menu::kSummaryBytes, static_cast<char>(mark));
+    FILE* f = std::fopen(path.c_str(), "wb");
+    if (!f || std::fwrite(bytes.data(), 1, bytes.size(), f) != bytes.size()) Fail("cannot write a test file");
+    std::fclose(f);
+}
+
+void ListsSelfTest() {
+    char tmp[MAX_PATH];
+    if (!GetTempPathA(sizeof tmp, tmp)) Fail("GetTempPath");
+    char dir_a[MAX_PATH], dir_b[MAX_PATH];
+    std::snprintf(dir_a, sizeof dir_a, "%sbof3x_qm_a_%lu\\", tmp, GetCurrentProcessId());
+    std::snprintf(dir_b, sizeof dir_b, "%sbof3x_qm_b_%lu\\", tmp, GetCurrentProcessId());
+    CreateDirectoryA(dir_a, nullptr);
+    CreateDirectoryA(dir_b, nullptr);
+    std::vector<std::string> made;
+    const auto Make = [&](const char* dir, const char* name, unsigned char mark) {
+        made.push_back(std::string(dir) + name);
+        WriteFake(made.back(), mark);
+    };
+    char name[16];
+    // A: the sixteen saves 00..0F, a seventeenth match BISLPS0G.DAT, and three
+    // quicksaves with gaps (10, 13, 1F).
+    for (U s = 0; s < 16; ++s) {
+        std::snprintf(name, sizeof name, "BISLPS0%X.DAT", s);
+        Make(dir_a, name, static_cast<unsigned char>(s));
+    }
+    Make(dir_a, "BISLPS0G.DAT", 0x60);
+    Make(dir_a, "BISLPS10.DAT", 0x80);
+    Make(dir_a, "BISLPS13.DAT", 0x83);
+    Make(dir_a, "BISLPS1F.DAT", 0x8F);
+    // B: all sixteen quicksaves and a seventeenth, BISLPS1G.DAT.
+    for (U s = 0; s < 16; ++s) {
+        std::snprintf(name, sizeof name, "BISLPS1%X.DAT", s);
+        Make(dir_b, name, static_cast<unsigned char>(0x80 + s));
+    }
+    Make(dir_b, "BISLPS1G.DAT", 0xE0);
+
+    unsigned char table[save_menu::kListEntries * save_menu::kEntryBytes + 0x40];
+    unsigned char sums[16 * save_menu::kSummaryBytes];
+    const auto Guard = [&](const char* what) {
+        for (U i = save_menu::kListEntries * save_menu::kEntryBytes; i < sizeof table; ++i)
+            if (table[i] != 0xA5) Fail(what);
+    };
+    const auto Mark = [&](U slot) { return sums[slot * save_menu::kSummaryBytes]; };
+    const auto Shown = [&](U slot) { return sums[slot * save_menu::kSummaryBytes + 0x15] != 0xFF; };
+
+    // The saves of A as the armed Save_ListFiles lists them: sixteen, no quicksave, the seventeenth not stored.
+    std::memset(table, 0xA5, sizeof table);
+    std::string pattern = std::string(dir_a) + "BISLPS0?.DAT";
+    int n = save_menu::ListFiles(pattern.c_str(), table, true, true);
+    Guard("the save list wrote past its sixteen entries");
+    if (n != 16) Fail("the save list of sixteen saves and BISLPS0G.DAT is not 16");
+    for (U i = 0; i < 16; ++i)
+        if (std::memcmp(table + i * save_menu::kEntryBytes, "BISLPS0", 7) != 0) Fail("a save list entry is not BISLPS0?");
+    save_menu::ReadSummaries(table, sums, &ReadSummary, dir_a);
+    for (U s = 0; s < 16; ++s)
+        if (!Shown(s) || Mark(s) != s) Fail("a save slot's summary is not its own file's");
+
+    // The quicksaves of A: three, slots 0, 3 and F, the rest empty.
+    std::memset(table, 0xA5, sizeof table);
+    pattern = std::string(dir_a) + kQuickPattern;
+    n = save_menu::ListFiles(pattern.c_str(), table, true, true);
+    Guard("the quick list wrote past its table");
+    if (n != 3) Fail("the quick list of A is not 3");
+    save_menu::ReadSummaries(table, sums, &ReadSummary, dir_a);
+    for (U s = 0; s < 16; ++s) {
+        const bool want = s == 0 || s == 3 || s == 0xF;
+        if (Shown(s) != want) Fail("the quick list of A shows the wrong slots");
+        if (want && Mark(s) != 0x80 + s) Fail("a quick slot's summary is not its own file's");
+    }
+
+    // B: sixteen quicksaves and BISLPS1G.DAT - sixteen listed, the bound held.
+    std::memset(table, 0xA5, sizeof table);
+    pattern = std::string(dir_b) + kQuickPattern;
+    n = save_menu::ListFiles(pattern.c_str(), table, true, true);
+    Guard("the quick list of seventeen wrote past its table");
+    if (n != 16) Fail("the quick list of seventeen is not 16");
+    save_menu::ReadSummaries(table, sums, &ReadSummary, dir_b);
+    for (U s = 0; s < 16; ++s)
+        if (!Shown(s) || Mark(s) != 0x80 + s) Fail("a quick slot of B is not its own file's");
+
+    // The trap the split removes, measured: B listed as the original lists
+    // (BISLPS??.DAT, here bounded so the table holds) shows quicksaves as
+    // saves - BISLPS10.DAT's summary in save slot 0.
+    std::memset(table, 0xA5, sizeof table);
+    pattern = std::string(dir_b) + "BISLPS??.DAT";
+    n = save_menu::ListFiles(pattern.c_str(), table, true, true);
+    Guard("the ?? list wrote past its table");
+    save_menu::ReadSummaries(table, sums, &ReadSummary, dir_b);
+    if (!Shown(0) || Mark(0) != 0x80) Fail("the original's pattern did not show BISLPS10.DAT as save slot 0");
+    // And A under it: twenty matches, sixteen stored - the original stores all twenty, 0x60 bytes past Save_Directory.
+    std::memset(table, 0xA5, sizeof table);
+    pattern = std::string(dir_a) + "BISLPS??.DAT";
+    const int twenty = save_menu::ListFiles(pattern.c_str(), table, true, true);
+    Guard("the ?? list of A wrote past its table");
+    if (twenty != 16) Fail("the ?? list of A's twenty matches is not 16");
+
+    for (const std::string& f : made) DeleteFileA(f.c_str());
+    RemoveDirectoryA(dir_a);
+    RemoveDirectoryA(dir_b);
+    bof3::Log("shadow      quick menu self-test: the save list 16 of 17 (BISLPS0?.DAT, BISLPS0G.DAT not stored), the quick "
+              "list 3 with gaps (slots 0, 3, F) and 16 of 17, each summary its own file's; BISLPS??.DAT shows "
+              "BISLPS10.DAT as save slot 0 (the trap)");
+}
+
+void CursorSelfTest() {
+    unsigned char sums[16 * save_menu::kSummaryBytes];
+    std::memset(sums, 0, sizeof sums);
+    for (U s = 0; s < 16; ++s) sums[s * save_menu::kSummaryBytes + 0x15] = (s == 0 || s == 3 || s == 15) ? 0 : 0xFF;
+    constexpr std::uint16_t kConfirm = 0x40, kCancel = 0x10;
+    Menu m;
+    const auto Tap = [&](std::uint16_t b) {
+        if (Step(m, b, kConfirm, kCancel, sums) != Act::None) Fail("a tap acted");
+        if (Step(m, 0, kConfirm, kCancel, sums) != Act::None) Fail("a release acted");
+    };
+    // Held at open: nothing until released.
+    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None || m.choosing) Fail("a button held at the open counted");
+    Step(m, 0, kConfirm, kCancel, sums);
+    // Down through every slot, gaps included; the three shown follow.
+    for (U i = 1; i <= 15; ++i) {
+        Tap(kDown);
+        if (m.cursor != i) Fail("down did not step the cursor");
+        if (m.first != (i > 2 ? i - 2 : 0)) Fail("the first shown did not follow the cursor down");
+    }
+    Tap(kDown);
+    if (m.cursor != 15 || m.first != 13) Fail("down moved past slot F");
+    for (U i = 15; i-- > 0;) {
+        Tap(kUp);
+        if (m.cursor != i) Fail("up did not step the cursor");
+        if (m.first > m.cursor || m.cursor > m.first + 2) Fail("the cursor left the three shown");
+    }
+    if (m.first != 0) Fail("the first shown is not 0 at slot 0");
+    Tap(kUp);
+    if (m.cursor != 0) Fail("up moved past slot 0");
+    // A held direction repeats: the press, then frames 20, 24, 28 of the hold.
+    for (U f = 0; f < 30; ++f) Step(m, kDown, kConfirm, kCancel, sums);
+    Step(m, 0, kConfirm, kCancel, sums);
+    if (m.cursor != 4) Fail("a held down did not repeat as 1 + 3 in 30 frames");
+    // Slot 1 (empty): Back only.
+    while (m.cursor != 1) Tap(kUp);
+    Tap(kConfirm);
+    if (!m.choosing || m.choice != 0) Fail("confirm on an empty slot did not open its choice");
+    Tap(kDown);
+    if (m.choice != 0) Fail("an empty slot's choice has a second row");
+    Tap(kConfirm);
+    if (m.choosing) Fail("Back on an empty slot did not return to the slots");
+    // Slot 3 (present): Load, Back.
+    Tap(kDown);
+    Tap(kDown);
+    Tap(kConfirm);
+    Tap(kDown);
+    if (m.choice != 1) Fail("down did not reach Back");
+    Tap(kConfirm);
+    if (m.choosing) Fail("Back did not return to the slots");
+    Tap(kConfirm);
+    Tap(kCancel);
+    if (m.choosing) Fail("cancel did not leave the choice");
+    Tap(kConfirm);
+    if (m.choice != 0) Fail("the choice did not open on Load");
+    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Load acted while held");
+    if (Step(m, kConfirm, kConfirm, kCancel, sums) != Act::None) Fail("Load acted while held");
+    if (Step(m, 0, kConfirm, kCancel, sums) != Act::Load || m.cursor != 3) Fail("Load of slot 3 did not act at the release");
+    // Cancel on the slots closes, at the release.
+    m.choosing = false;
+    if (Step(m, kCancel, kConfirm, kCancel, sums) != Act::None) Fail("cancel acted on the press");
+    if (Step(m, 0, kConfirm, kCancel, sums) != Act::Close) Fail("cancel on the slots did not close at the release");
+    bof3::Log("shadow      quick menu self-test: the cursor over 0..15 with gaps (slots 0, 3, F present), the three "
+              "shown following it, the held repeat, Back only on an empty slot, Load and close at the release");
+}
+
+}  // namespace
+
+namespace bof3 {
+
+bool QuickMenu_Key(unsigned vk, long lparam) {
+    const bool repeat = (lparam & (1L << 30)) != 0;
+    if (g_open) {
+        if (vk == VK_F5 && !repeat) Close("F5");
+        return true;   // every key is the menu's while it is open
+    }
+    if (vk != VK_F5) return false;
+    if (repeat) return true;
+    if (Frame_Counter == 0) return false;   // before the loop's first frame (the intro videos): F5 is nothing, as before
+    Open();
+    return true;
+}
+
+bool QuickMenu_Frame() {
+    if (!g_open) return false;
+    const Act act = Step(g_menu, ReadPad(), Field_ConfirmButtons, Field_CancelButtons, g_summaries);
+    if (act == Act::Close) {
+        Close("cancel");
+    } else if (act == Act::Load) {
+        const unsigned slot = kFirstSlot + g_menu.cursor;
+        bof3::Log("quickmenu   Load of BISLPS%02X.DAT asked at Frame_Counter %u", slot, static_cast<U>(Frame_Counter));
+        Close("Load");
+        Snapshot_RequestLoad(slot);   // run at the loop's point (Snapshot_Pending), its refusal line its own
+    } else {
+        Draw();
+    }
+    return true;
+}
+
+void QuickMenu_Inject() {
+    if (IsExeHost() ? GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0 : WantsShadow("quick_menu")) {
+        ListsSelfTest();
+        CursorSelfTest();
+    }
+    SaveLists_Arm();
+}
+
+}  // namespace bof3
