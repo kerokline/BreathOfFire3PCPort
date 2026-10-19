@@ -38,6 +38,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_sd_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -54,6 +55,10 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
 void SetCell(unsigned char* p, U value) { SetLong(p, static_cast<std::int32_t>(value)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -240,7 +245,7 @@ extern "C" void __cdecl BossMutant_Dispatch(unsigned passed) {
 // jmp Sprite_ScriptTick (its al the answer).
 extern "C" unsigned char __cdecl BossMutant_Enter(void) {
     PointEnemy(0x64CE74, bof3::addr::BossMutant_Hook, 0x64CE98);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -275,7 +280,7 @@ extern "C" void __cdecl BossClaw_Dispatch(unsigned passed) {
 // Sprite_Current +1 = 1, Sprite_EnsureAnimation(2), jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossClaw_Enter(void) {
     RestoreOrMark(0x35, 0x64CF04, bof3::addr::BossClaw_Hook, 0x64CF58);
-    Sprite_Current[1] = 1;
+    ScEnemy()->state[0] = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -292,7 +297,7 @@ extern "C" void __cdecl BossCawer_Dispatch(unsigned passed) {
 // +0xFC = 0x64CF10, +0xF4 = BossCawer_Hook, +0xF8 = 0x64CF60.
 extern "C" unsigned char __cdecl BossCawer_Enter(void) {
     RestoreOrMark(0x36, 0x64CF10, bof3::addr::BossCawer_Hook, 0x64CF60);
-    Sprite_Current[1] = 1;
+    ScEnemy()->state[0] = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -310,7 +315,7 @@ extern "C" void __cdecl BossPatrio_Dispatch(unsigned passed) {
 // jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossPatrio_Enter(void) {
     RestoreOrMark(0x37, 0x64CF1C, bof3::addr::BossPatrio_Hook, 0x64CF68);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -324,7 +329,7 @@ extern "C" void __cdecl BossPatrio_Hook(unsigned code) { HookTable("BossPatrio_H
 // else flag 0x33 ? 0x64CF4C : 0x64CF40 - then (Sprite_Current read again)
 // jmp [BossDodai_Steps + 4 * +1].
 extern "C" void __cdecl BossDodai_Dispatch(unsigned passed) {
-    if (Sprite_Current[5] == 4) {
+    if (ScEnemy()->actor == 4) {
         const bool f = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x34) & 0xFF;
         SetCell(Enemy() + 0xFC, f ? 0x64CF34 : 0x64CF28);
     } else {
@@ -343,19 +348,19 @@ extern "C" unsigned char __cdecl BossDodai_Enter(void) {
     bool back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x1E) & 0xFF;
     if (!back) back = BH_CALL(Flags_Test)(At(AreaW0c_FlagRow), 0x23) & 0xFF;
     if (back) {
-        const unsigned hp = Sprite_Current[5] == 4 ? BossSd_KeptHp1 : BossSd_KeptHp2;
-        SetWord(Enemy() + 0xA4, hp);
+        const unsigned hp = ScEnemy()->actor == 4 ? BossSd_KeptHp1 : BossSd_KeptHp2;
+        EnemyRec()->hp = hp;
     }
-    unsigned char* const s = Sprite_Current;
-    if (s[5] == 5) {
-        s[8] |= 2;
+    auto* const cur_enemy = ScEnemy();
+    if (cur_enemy->actor == 5) {
+        cur_enemy->layout |= 2;
         SetCell(Enemy() + 0xFC, 0x64CF40);
     } else {
         SetCell(Enemy() + 0xFC, 0x64CF28);
     }
     SetCell(Enemy() + 0xF4, bof3::addr::BossDodai_Hook);
     SetCell(Enemy() + 0xF8, 0x64CF70);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -371,7 +376,7 @@ extern "C" void __cdecl BossDodai_ActDispatch(unsigned passed) {
 extern "C" void __cdecl BossDodai_Death(void) {
     BH_CALL(Sprite_SetAnimation)(4);
     BH_CALL(Battle_EnemyDefeated)();
-    BH_CALL(BossMap_SetCorners)(Sprite_Current[5] == 4 ? 1 : 0, 2);
+    BH_CALL(BossMap_SetCorners)(ScEnemy()->actor == 4 ? 1 : 0, 2);
     GroundWords();
     DeathStates();
 }
@@ -386,8 +391,8 @@ extern "C" void __cdecl BossDodai_HitPoseDispatch(unsigned passed) {
 // (Frame_Counter & 1) << 9 - a shake of 0x200 every other frame.
 extern "C" void __cdecl BossDodai_HitShake(void) {
     const U add = (Frame_Counter & 1) << 9;
-    unsigned char* const s = Sprite_Current;
-    SetLong(s + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x38)) + add));
+    auto* const cur_enemy = ScEnemy();
+    cur_enemy->z = static_cast<std::int32_t>(static_cast<U>(cur_enemy->z) + add);
 }
 
 // original 0x43AB40: the +0xF4 hook through BossDodai_Hooks.
@@ -401,7 +406,7 @@ extern "C" void __cdecl BossHook_ActKindNone(unsigned) { B(at::kActKind) = 0; }
 // when 0x939AD8's +0x108 is above 0 (signed word), Sound_PlayById(0x600) or,
 // by Rand's bit 0 clear, 0x601.
 extern "C" void __cdecl BossDodai_HitSound(unsigned) {
-    if (static_cast<std::int16_t>(Word(Enemy() + 0x108)) <= 0) return;
+    if (static_cast<std::int16_t>(static_cast<std::uint16_t>(EnemyRec()->hp_change)) <= 0) return;
     BH_CALL(Sound_PlayById)(BH_CALL(Rand)() & 1 ? 0x600 : 0x601);
 }
 
@@ -460,7 +465,7 @@ extern "C" void __cdecl BossEmitai_Dispatch(unsigned passed) {
 // BossEmitai_Hook, +0xF8 = 0x64D0B8; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossEmitai_Enter(void) {
     PointEnemy(0x64D0A0, bof3::addr::BossEmitai_Hook, 0x64D0B8);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -475,11 +480,11 @@ extern "C" void __cdecl BossEmitai_ActDispatch(unsigned passed) {
 // states 3, 0, 0 with +0 &= 0xBF.
 extern "C" void __cdecl BossEmitai_Death(void) {
     BH_CALL(Sprite_EnsureAnimation)(4);
-    Sprite_Current[0x2A] = 0;
+    ScEnemy()->flip = 0;
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x110, static_cast<std::int32_t>(static_cast<U>(Long(e + 0x110)) | 0x1000));
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_110 = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
     DeathStates();
 }
 
@@ -495,7 +500,7 @@ extern "C" void __cdecl BossGolem_Dispatch(unsigned passed) {
 // BossGolem_Hook, +0xF8 = 0x64D0C0; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGolem_Enter(void) {
     PointEnemy(0x64D0AC, bof3::addr::BossGolem_Hook, 0x64D0C0);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -530,11 +535,12 @@ extern "C" unsigned char __cdecl Boss21_Event(unsigned code) {
 extern "C" void __cdecl Boss21_Exit(void) {
     BH_CALL(BossActor_ClearBit40)(0);
     unsigned char* const actor = BH_CALL(BossActor_Find)(0);
+    auto* const field_actor = reinterpret_cast<records::SpriteObject*>(actor);
     Sprite_Current = actor;
     if (actor == nullptr)
         bof3::Fatal("Boss21_Exit: no field actor tagged 0 - the original writes +0x2A through the null (docs/boss_sd.md "
                     "section 6)");
-    actor[0x2A] = 0;
+    field_actor->pose = 0;
     BH_CALL(Sprite_SetAnimation)(4);
     BH_CALL(BossActor_Clear)(1);
     BH_CALL(BossActor_Clear)(2);
@@ -558,9 +564,9 @@ extern "C" void __cdecl BossGarr_Dispatch(unsigned passed) {
 // Sprite_SetAnimation(0). Its eax is the last call's (no caller reads it).
 extern "C" void __cdecl BossGarr_Enter(void) {
     PointEnemy(0x64D158, bof3::addr::BossGarr_Hook, 0x64D164);
-    Sprite_Current[1] = 1;
+    ScEnemy()->state[0] = 1;
     BH_CALL(Sprite_SetAnimationBank)(0x153);
-    Sprite_Current[0x2A] = 0;
+    ScEnemy()->flip = 0;
     BH_CALL(Sprite_SetAnimation)(0);
 }
 

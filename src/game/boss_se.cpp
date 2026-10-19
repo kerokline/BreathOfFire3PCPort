@@ -30,6 +30,7 @@
 #include "game/boss_harness.h"
 #include "game/boss_se_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -49,6 +50,10 @@ using SoundFn = void (__cdecl*)(unsigned);
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -89,9 +94,9 @@ void StoreHooks(U end, U exit, U event) {
 // hook) and +0xF8 (its sound words), 0x939AD8 read for each store - in the
 // order the kind's code has them.
 void StoreKind(U fc, U f4, U f8) {
-    SetLong(Enemy() + 0xFC, S(fc));
-    SetLong(Enemy() + 0xF4, S(f4));
-    SetLong(Enemy() + 0xF8, S(f8));
+    EnemyRec()->anim_table = S(fc);
+    EnemyRec()->event_hook = S(f4);
+    EnemyRec()->cue_table = S(f8);
 }
 
 // Kinds 30 and 31's entry: 0x939AD8's HP +0xA4 and the stat words +0xD0 and
@@ -182,14 +187,14 @@ extern "C" void __cdecl BossBully_Dispatch(void) { Dispatch("BossBully_Dispatch"
 // BossBully_Hook; Sprite_Current +1 = 2; a tail jump to Sprite_ScriptTick,
 // whose al is the answer.
 extern "C" unsigned char __cdecl BossBully_Enter(void) {
-    SetLong(Enemy() + 0xFC, S(Sprite_Current[5] == 3 ? AddressOf(BossBully_AnimsB) : AddressOf(BossBully_AnimsA)));
-    const unsigned char slot = Sprite_Current[5];
+    SetLong(Enemy() + 0xFC, S(ScEnemy()->actor == 3 ? AddressOf(BossBully_AnimsB) : AddressOf(BossBully_AnimsA)));
+    const unsigned char slot = ScEnemy()->actor;
     const U sounds = slot == 3   ? AddressOf(BossBully_SoundsA)
                      : slot == 4 ? AddressOf(BossBully_SoundsB)
                                  : AddressOf(BossBully_SoundsC);
-    SetLong(Enemy() + 0xF8, S(sounds));
-    SetLong(Enemy() + 0xF4, S(bof3::addr::BossBully_Hook));
-    Sprite_Current[1] = 2;
+    EnemyRec()->cue_table = S(sounds);
+    EnemyRec()->event_hook = S(bof3::addr::BossBully_Hook);
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -252,7 +257,7 @@ extern "C" void __cdecl BossStallion_Dispatch(void) {
 // tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossStallion_Enter(void) {
     StoreKind(AddressOf(BossStallion_Anims), bof3::addr::BossStallion_Hook, AddressOf(BossStallion_Sounds));
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -271,9 +276,9 @@ extern "C" void __cdecl BossSample10_Dispatch(void) {
 // tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample10_Enter(void) {
     StoreKind(AddressOf(BossStallion_Anims), bof3::addr::BossSample10_Hook, AddressOf(BossStallion_Sounds));
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x114, S(static_cast<U>(Long(e + 0x114)) | 8));
-    Sprite_Current[1] = 2;
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_114 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_114)) | 8);
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -326,13 +331,13 @@ extern "C" void __cdecl BossBeyd_Dispatch(void) { Dispatch("BossBeyd_Dispatch", 
 // 0x939AD8's +0x8F = 1, its kind +0x100 = 0x1E (30) and CarryStats.
 extern "C" void __cdecl BossBeyd_Enter(void) {
     StoreKind(AddressOf(BossBeyd_Anims), bof3::addr::BossBeyd_Hook, AddressOf(BossBeyd_Sounds));
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     BH_CALL(Sprite_ScriptTick)();
     if (BattleActions_EventBattle != 0x1A) return;
     const unsigned char id = BH_CALL(EnemyData_FindByTag)(0x59);
     BH_CALL(Battle_CopyEnemyData)(0, id);
-    Enemy()[0x8F] = 1;
-    Enemy()[0x100] = 0x1E;
+    EnemyRec()->kind_flag = 1;
+    EnemyRec()->run_state = 0x1E;
     CarryStats();
 }
 
@@ -359,8 +364,8 @@ extern "C" void __cdecl BossBeyd_Hook(unsigned word) { DispatchHook("BossBeyd_Ho
 extern "C" void __cdecl BossBeyd_HookPick(unsigned) {
     if (BattleActions_EventBattle != 0x19) return;
     if (BossSe_RoundSlot >= 1) {
-        unsigned char* const e = Enemy();
-        SetLong(e + 0x110, S(static_cast<U>(Long(e + 0x110)) & 0xFFFFFFFDu));
+        auto* const enemy_rec = EnemyRec();
+        enemy_rec->flags_110 = S(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) & 0xFFFFFFFDu);
     }
     B(at::kActKind) = 1;
 }
@@ -385,10 +390,10 @@ extern "C" void __cdecl BossBeyd2_Dispatch(void) { Dispatch("BossBeyd2_Dispatch"
 // CarryStats - in every fight.
 extern "C" void __cdecl BossBeyd2_Enter(void) {
     StoreKind(AddressOf(BossBeyd_Anims), bof3::addr::BossBeyd2_Hook, AddressOf(BossBeyd_Sounds));
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     BH_CALL(Sprite_ScriptTick)();
-    Sprite_Current[8] = 1;
-    Enemy()[0x8F] = 1;
+    ScEnemy()->layout = 1;
+    EnemyRec()->kind_flag = 1;
     CarryStats();
 }
 
@@ -415,8 +420,8 @@ extern "C" void __cdecl BossZig_Dispatch(void) { Dispatch("BossZig_Dispatch", Ad
 // tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossZig_Enter(void) {
     StoreKind(AddressOf(BossZig_Anims), bof3::addr::BossZig_Hook, AddressOf(BossZig_Sounds));
-    Sprite_Current[8] = 3;
-    Sprite_Current[1] = 2;
+    ScEnemy()->layout = 3;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -433,7 +438,7 @@ extern "C" void __cdecl BossZig_Idle(void) {
         BH_CALL(BattleEnemy_SetAnimation)((Enemy()[0x110] & 2) != 0 ? 8u : 0u);
     }
     BH_CALL(BattleEnemy_ScriptTick)();
-    Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
+    ScEnemy()->state[0] = static_cast<unsigned char>(ScEnemy()->state[0] + 1);
 }
 
 // original 0x43BD40: state 5: jmp [BossZig_Step5Subs + 4 * +2] (2).
@@ -450,9 +455,9 @@ extern "C" void __cdecl BossZig_Step5Count(void) {
     unsigned char* const s = Sprite_Current;
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    const unsigned char* const sounds = At(static_cast<U>(Long(Enemy() + 0xF8)));
+    const unsigned char* const sounds = At(static_cast<U>(static_cast<std::int32_t>(EnemyRec()->cue_table)));
     BH_AT(SoundFn, at::kEnemySound)(Word(sounds));
-    Sprite_Current[2] = static_cast<unsigned char>(Sprite_Current[2] + 1);
+    ScEnemy()->state[1] = static_cast<unsigned char>(ScEnemy()->state[1] + 1);
 }
 
 // original 0x43BDA0: step 5, +2 = 1: when BattleEnemy_ScriptTick answers al not
@@ -724,11 +729,12 @@ extern "C" unsigned char __cdecl Boss26_Event(unsigned code) {
 extern "C" void __cdecl Boss26_End(void) {
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = At(ObjTrio_addr + m * at::kPartyStride);
-        if ((p[0] & 1) == 0) continue;
-        BH_CALL(Battle_RemoveFromTurnOrder)(p[5]);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        if ((member_rec->flags & 1) == 0) continue;
+        BH_CALL(Battle_RemoveFromTurnOrder)(member_rec->member);
         const U flags = static_cast<U>(Long(p + 0x90));
         Sprite_Current = p;
-        const unsigned pose = static_cast<unsigned char>(p[8] + ((flags & 0x4000) != 0 ? 0x1C : 4));
+        const unsigned pose = static_cast<unsigned char>(member_rec->direction + ((flags & 0x4000) != 0 ? 0x1C : 4));
         BH_CALL(Sprite_PoseFromSet)(pose, At(at::kPoseSet), 0x1800);
     }
     B(at::kScriptVar3) = 4;
