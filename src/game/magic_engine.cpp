@@ -363,9 +363,9 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
         tsc->x = Long(EnemyOf(t) + 0x34);
         tsc->z = Long(EnemyOf(Mem(at::kTarget)[0]) + 0x38);
     }
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + 0x800);
-    SetLong(sc + 0x14, 0);
-    SetLong(sc + 0x20, -16);
+    rv::Store<unsigned>(tsc->height_whole, tsc->height_whole + 0x800);
+    rv::Store(tsc->step_y, 0);
+    rv::Store(tsc->work_20, -16);
     sc[0x5D] = 0;
     sc[0x5E] = 0;
     sc[0x5F] = 0;
@@ -385,12 +385,12 @@ MENGINE_EXPORT void __cdecl HeadCrackerRock_Start(void) {
 MENGINE_EXPORT void __cdecl HeadCrackerRock_Fall(void) {
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
-    SetLong(sc + 0x14, Long(sc + 0x14) + Long(sc + 0x20));
+    rv::Store<unsigned>(tsc->height_whole, tsc->height_whole + Word(sc + 0x14));
+    rv::Store(tsc->step_y, tsc->step_y + tsc->work_20);
     const long ground = MH_CALL(AreaMap_Elevation)(tsc->x, tsc->z);
     const int limit = static_cast<short>(static_cast<std::uint32_t>(ground) & 0xFFFF) + 0x180;
     unsigned char* const now = Sprite_Current;
-    if (static_cast<short>(Word(now + 0x3E)) < limit) Bump(now[2]);
+    if (static_cast<short>(rv::As<records::BattleTask>(now)->height_whole) < limit) Bump(now[2]);
 }
 
 // original 0x440060: flag 0x40 on the target; the owner's (0x93B940, read

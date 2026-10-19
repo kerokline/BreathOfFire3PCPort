@@ -150,15 +150,15 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
     tball->step_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(x0) << 16);
     tball->step_z = static_cast<std::int32_t>(static_cast<std::uint32_t>(y0) << 16);
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-    SetLong(ball + 0x14, 0);
+    rv::Store(tball->step_y, 0);
     tball->work_18 = 0x28;
     ball[9] = 0;
     const int dx = static_cast<short>(Word(source + 0x2E)) - x0;
     tball->work_1c = static_cast<std::int32_t>(static_cast<std::uint32_t>(dx) << 16) / 10;
     const int dy = static_cast<short>(Word(source + 0x30)) - y0;
-    SetLong(ball + 0x20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
+    rv::Store(tball->work_20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
     SetLong(ball + 0x60, 0x100);
-    SetWord(ball + 0x58, 0x100);
+    rv::Store<unsigned>(tball->script_pos, 0x100);
     SetLong(Pointer(BattleFlow_TaskCurrent_addr) + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
     Inc(Sc()[1]);
 }
@@ -191,7 +191,7 @@ void DrawBall() {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     MH_AT(BallDrawFn, bof3::addr::Magic002Ball_Draw)(ts->step_x >> 16, ts->step_z >> 16, ts->work_18 >> 1,
-                                                    Word(s + 0x14), Word(s + 0x60), Word(s + 0x58));
+                                                    static_cast<std::uint16_t>(ts->step_y), Word(s + 0x60), ts->script_pos);
 }
 
 }  // namespace
@@ -202,10 +202,10 @@ void DrawBall() {
 C3_EXPORT void __cdecl Magic002Ball_Fly(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    SetLong(s + 0x14, AddU(Long(s + 0x14), 0x100));
+    rv::Store(ts->step_y, AddU(ts->step_y, 0x100));
     ts->work_18 = AddU(ts->work_18, 4);
     ts->step_x = AddU(ts->step_x, ts->work_1c);
-    ts->step_z = AddU(ts->step_z, Long(s + 0x20));
+    ts->step_z = AddU(ts->step_z, ts->work_20);
     Inc(s[9]);
     DrawBall();
     if (Sc()[9] > 10) Inc(Sc()[1]);
@@ -216,8 +216,8 @@ C3_EXPORT void __cdecl Magic002Ball_Fly(void) {
 C3_EXPORT void __cdecl Magic002Ball_Shatter(void) {
     unsigned char* const s = Sc();
     SetLong(s + 0x60, AddU(Long(s + 0x60), 4));
-    SetWord(s + 0x58, Word(s + 0x58) + 0xFFF8u);
-    SetLong(s + 0x14, AddU(Long(s + 0x14), 0x20));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->script_pos, rv::As<records::BattleTask>(s)->script_pos + 0xFFF8u);
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, AddU(rv::As<records::BattleTask>(s)->step_y, 0x20));
     Inc(s[9]);
     DrawBall();
     if (Sc()[9] > 0x28) MH_CALL(BattleTask_FreeCurrent)();
@@ -368,7 +368,7 @@ C3_EXPORT void __cdecl Magic111_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Inc(Sc()[1]);

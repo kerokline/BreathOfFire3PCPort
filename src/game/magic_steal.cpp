@@ -98,7 +98,7 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Start(void) {
     Sprite_Current[8] = Pointer(BattleE2_Owner_addr)[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleE2_Owner_addr) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
 }
