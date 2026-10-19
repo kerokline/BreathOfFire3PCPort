@@ -21,6 +21,7 @@
 #include "game/boss_h_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 
 namespace boss_h {
 namespace {
@@ -122,9 +123,9 @@ std::int32_t Speed() {
 
 void SeedTorast(unsigned k) {
     unsigned char* const s = Sprite_Current;
-    unsigned char* const e = bh::Pointer(BattleE3_CurrentEnemy_addr);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
     // the kind whose colour is drawn: 8..11 mostly (the table's four), else any
-    if (bh::Often()) e[0x100] = static_cast<unsigned char>(8 + bh::Next() % 4);
+    if (bh::Often()) enemy_rec->run_state = static_cast<unsigned char>(8 + bh::Next() % 4);
     // the dispatchers' other state bytes inside the tables most of the time,
     // so a dispatcher reading the wrong byte lands on another entry (a count)
     // rather than past its table (a Fatal); never the byte the harness drew
@@ -142,7 +143,7 @@ void SeedTorast(unsigned k) {
         // one pass and ours on the other, so the two would read different
         // colours - the plant's artefact, not the function's (docs/boss_harness.md
         // section 6). Any other kind.
-        if (e[0x100] == 46 || e[0x100] == 47) e[0x100] ^= 0x80;
+        if (enemy_rec->run_state == 46 || enemy_rec->run_state == 47) enemy_rec->run_state ^= 0x80;
         s[0xA] = Count();
         s[9] = bh::Half() ? s[0xA] : Count();
         break;
