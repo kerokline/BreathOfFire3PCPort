@@ -86,6 +86,8 @@ def read_route(path):
             frames += [(t[1], None)] * int(t[2])
         elif t[0] == 'shot' and len(t) >= 3 and t[2] == '1':
             frames.append((t[3] if len(t) == 4 else '', t[1]))
+        elif t[0] == 'key' and len(t) == 2:      # a quick form's f6 / f7: one frame, nothing held
+            frames.append(('KEY', t[1]))
         else:
             raise SystemExit(f'{path}: not a recorded recipe line: {line.strip()}')
     return header, frames
@@ -138,7 +140,8 @@ def cmd_make(a):
     if r[f6] != ('', None):
         sys.exit(f'{src}: frame {f6} holds {r[f6][0] or "a shot"}: f6 must replace an idle frame '
                  f'(idle runs near it: {idle_runs(r, max(0, f6 - 60), f6 + 60)})')
-    keys_ok = r[f7] == ('', None)
+    k7 = a.keys_f7 or f7      # the keys form's f7: the window's end unless that frame holds a button
+    keys_ok = f6 < k7 < len(r) and r[k7] == ('', None)
     keep = [h for h in header if h.startswith('#')]
     save = [h for h in keep if re.match(r'#\s*save\s', h)]
     rest = [h for h in keep if h not in save]
@@ -146,10 +149,15 @@ def cmd_make(a):
     d = a.dir
     name = a.name
 
-    def write(fn, lines):
+    def write(fn, lines, want):
         p = os.path.join(d, fn)
         open(p, 'w', newline='\n').write('\n'.join(lines) + '\n')
-        print(f'{p}: {sum(1 for x in lines if not x.startswith("#"))} lines')
+        # read back: the same frames, frame for frame (a shot compared by its buttons, its name aside)
+        got = [(b, None if b != 'KEY' else s) for b, s in read_route(p)[1]]
+        exp = [(b, None if b != 'KEY' else s) for b, s in want]
+        if got != exp:
+            sys.exit(f'{p}: read back, the frames differ from those meant - a bug in make')
+        print(f'{p}: {len(got)} frames, {sum(1 for x in lines if not x.startswith("#"))} lines, read back equal')
 
     # the proof: route to f6, the take, the window, the restore, the route again from f6+1
     q = r[:f6] + [('KEY', 'f6')] + r[f6 + 1:f7] + [('KEY', 'f7')] + r[f6 + 1:]
@@ -163,21 +171,23 @@ def cmd_make(a):
     lines = list(out)
     emit(q[:f7 + 1], lines)
     emit(q[f7 + 1:], lines, '_r')       # replayed shots get their own names
-    write(f'quick_{name}.txt', lines)
+    write(f'quick_{name}.txt', lines, q)
 
     if keys_ok:
         k = list(r)
-        k[f6], k[f7] = ('KEY', 'f6'), ('KEY', 'f7')
-        out = [f'# quick keys f6 {f6} f7 {f7} gap {gap} from {src}',
-               f'# The keys alone on {src}: f6 in place of idle frame {f6}, f7 in place of idle frame {f7},',
+        k[f6], k[k7] = ('KEY', 'f6'), ('KEY', 'f7')
+        out = [f'# quick keys f6 {f6} f7 {k7} gap {k7 - f6} from {src}',
+               f'# The keys alone on {src}: f6 in place of idle frame {f6}, f7 in place of idle frame {k7}'
+               + ('' if k7 == f7 else f' (frame {f7}, the proof\'s f7, holds a button)') + ',',
                f'# nothing replayed - the route\'s length and inputs. Its hash equals the route\'s while the',
                f'# keys do nothing (the identity reference, docs/quicksave-routes.md).'] + why + save + \
               ['# The recorded route\'s header:'] + rest
         lines = list(out)
         emit(k, lines)
-        write(f'quick_{name}_keys.txt', lines)
+        write(f'quick_{name}_keys.txt', lines, k)
     else:
-        print(f'{src}: frame {f7} holds {r[f7][0] or "a shot"}: no _keys form (f7 must replace an idle frame)')
+        print(f'{src}: frame {k7} holds {r[k7][0] or "a shot"}: no _keys form (f7 must replace an idle frame; '
+              f'--keys-f7 names another; idle runs after the window: {idle_runs(r, f7, f7 + 200, 2)[:6]})')
 
     c = [('KEY', 'f7')] + r[f6 + 1:]
     out = [f'# quick cross f6 {f6} f7 0 gap {gap} from {src}',
@@ -187,7 +197,7 @@ def cmd_make(a):
           ['# The recorded route\'s header:'] + [h for h in rest]
     lines = list(out)
     emit(c, lines, '_x')
-    write(f'quick_{name}_cross.txt', lines)
+    write(f'quick_{name}_cross.txt', lines, c)
 
 
 def recipe_meta(path):
@@ -574,6 +584,7 @@ def main():
     p.add_argument('route')
     p.add_argument('--at', type=int, required=True, help='the recipe frame f6 replaces (an idle frame)')
     p.add_argument('--gap', type=int, default=GAP)
+    p.add_argument('--keys-f7', type=int, help='the frame f7 replaces in the _keys form, when the window end holds a button')
     p.add_argument('--name', required=True, help='quick_NAME.txt, quick_NAME_keys.txt, quick_NAME_cross.txt')
     p.add_argument('--why', action='append', default=[], help='a header line saying why this tick')
     p.add_argument('--dir', default=os.path.join(ROOT, 'tools', 'recipes'))

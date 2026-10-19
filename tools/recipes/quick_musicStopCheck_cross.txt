@@ -1,0 +1,74 @@
+# quick cross f6 2808 f7 0 gap 300 from musicStopCheck.txt
+# The cross-process form of quick_musicStopCheck.txt: f7 at recipe frame 0 loads the quicksave a live run
+# took at frame 2808, then the route from frame 2809. No save header: nothing is loaded through
+# slot 0 (run it with --no-save). Compare with `quicksave_check.py cross LIVE.sh LOADED.sh`.
+# Why frame 2808 (a music fade): the fight won, the fanfare (track 165) fading to a stop - Music_FadeOutStop(10)
+# at 2804, Music_Stop at 2814 (the reference run's BOF3X_MUSIC_LOG) - so the take holds a fade-to-stop four
+# steps in (DIV-0028's count and step, DIV-0143's case); the window holds the stop and the field's return,
+# where DIV-0092 resumes track 91 at its remembered sample (2838): the restore must put back a fade in
+# progress and the remembered position. The _keys form's f7 is at 3186, the first idle frame after 3108.
+# The recorded route's header:
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# The owner's route, 2026-10-10 night, for the music that should stop and does not (known-defects.md D241): from the
+# eldritchGene save, the title to the new / load / config screen, areas, a fight and back to the area.
+key f7
+wait 65
+hold right 1
+hold right+down 12
+hold down 7
+hold down+left 3
+hold left 5
+hold up+left 20
+hold up 3
+hold up+right 8
+hold right 4
+hold right+down 20
+hold down 3
+hold down+left 4
+hold left 10
+hold up+left 19
+hold up 3
+hold up+right 8
+hold right 5
+hold right+down 20
+hold down 2
+hold down+left 7
+hold left 4
+hold up+left 13
+hold up 10
+hold up+right 1
+hold right 10
+hold right+down 17
+hold down 5
+hold down+left 4
+hold down 4
+hold right+down 11
+hold right 6
+hold up+right 26
+hold up 2
+hold up+left 2
+hold left 3
+hold down+left 29
+hold down 1
+wait 89
+hold r1 23
+hold r1+circle 5
+hold r1 4
+wait 98
+hold r1 36
+wait 132
+hold r1 28
+hold r1+circle 7
+hold r1 2
+wait 43
+hold circle 5
+wait 78
+hold down 2
+hold down+left 11
+hold left 5
+hold up+left 10
+hold up 17
+hold up+right 50
+wait 144
