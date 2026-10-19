@@ -460,7 +460,7 @@ def main():
             consts[v].append(f'{h}:{line} {k}')
     targets = {v for v in consts if v not in typed}
     if a.census:
-        consts = defaultdict(list)
+        consts, seen = defaultdict(list), set()
         entries = {e['pc'] for e in t['data']}
         for path in a.census:
             rows = []
@@ -474,7 +474,10 @@ def main():
                 v = int(r[2], 16)
                 if r[10] == 'module' and v not in at_named and v not in entries and dlo <= v < dhi:
                     for m in r[5].split(';'):
-                        if f'{m} {r[1]}' not in consts[v]:
+                        # one per file and name: the first census given says the line
+                        k = (v, re.sub(r':\d+', '', m), r[1])
+                        if k not in seen:
+                            seen.add(k)
                             consts[v].append(f'{m} {r[1]}')
         targets = set(consts)
     # an entry SG itself created is re-measured; any other entry is its own

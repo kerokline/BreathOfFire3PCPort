@@ -135596,3 +135596,594 @@ name = "AreaW1f_ListPos"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x93c353], al at 0x40e19b; mov al, byte ptr [0x93c353] at 0x40e26a; mov byte ptr [0x93c353], al at 0x40e27f and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w1f::kListPos."
+
+# ---------------------------------------------------------------------------
+# Typed globals reached only through module constants (typed-data round,
+# stage C3, 2026-10-19; docs/typed-data-stage-c.md 5): the addresses a
+# module constant in a .cpp or a non-`at` namespace names that stage A's
+# scan never read. Measured with tools/data_widths.py --census by the same
+# rule as group SG's entries above, and checked against our C++ readers'
+# width (tools/typed_convert.py --dry-run under a provisional entry of each
+# width); every entry below has both readings agree. The addresses that did
+# not settle are in analysis/typed_globals_unsettled.tsv.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x5C4000
+name = "Imp_DirectDrawEnumerateA"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: jmp dword ptr [0x5c4000] at 0x5acbb6. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 8 address form (bare), 1 address form (ptr); 2 left (no-symbols-header). Module names: exe_layout::kGameVa, exe_layout::kRdataVa."
+note = "The PE import table names the slot: DDRAW.dll DirectDrawEnumerateA. In our C++ the address is only a bound: exe_layout.h kGameVa / kRdataVa, the start of .rdata (where the import address table begins), never read through."
+
+[[data]]
+pc = 0x5C4014
+name = "Imp_DirectSoundCreate"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: jmp dword ptr [0x5c4014] at 0x5acbbc. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 3 address form (bare). Module names: wav_dump::kCreateSlot."
+note = "The PE import table names the slot: DSOUND.dll ordinal 1, DirectSoundCreate (wav_dump.cpp checks the slot and patches it)."
+
+[[data]]
+pc = 0x5C40B8
+name = "Imp_ExitProcess"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: call dword ptr [0x5c40b8] at 0x5ba1a1; call dword ptr [0x5c40b8] at 0x5be83a. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 1 address form (helper). Module names: win_main::kImpExitProcess."
+note = "The PE import table names the slot: KERNEL32.dll ExitProcess (win_main.cpp PatchImport)."
+
+[[data]]
+pc = 0x5C4114
+name = "Imp_TerminateProcess"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: call dword ptr [0x5c4114] at 0x5be7b9. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 1 address form (helper). Module names: win_main::kImpTerminateProcess."
+note = "The PE import table names the slot: KERNEL32.dll TerminateProcess (win_main.cpp PatchImport)."
+
+[[data]]
+pc = 0x5C4158
+name = "Imp_PostQuitMessage"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: call dword ptr [0x5c4158] at 0x4fc7a2; call dword ptr [0x5c4158] at 0x59e5ea. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 1 address form (helper). Module names: win_main::kImpPostQuitMessage."
+note = "The PE import table names the slot: USER32.dll PostQuitMessage (win_main.cpp PatchImport)."
+
+[[data]]
+pc = 0x5C4238
+name = "AreaMapBD_NarrowYBound"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fcomp dword ptr [0x5c4238] at 0x5109a2. No indexed access with this displacement and no wider store over it. FPU: fcomp x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare). Module names: rest_3g::kNarrowYFloat."
+note = "rest_3g.cpp: the float an fcomp operand of AreaMapBD_BuildView names, its narrow y bound."
+
+[[data]]
+pc = 0x5C4244
+name = "AreaMapBD_WideYBound"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fcomp dword ptr [0x5c4244] at 0x510966. No indexed access with this displacement and no wider store over it. FPU: fcomp x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare). Module names: rest_3g::kWideYFloat."
+note = "rest_3g.cpp: the float an fcomp operand of AreaMapBD_BuildView names, its wide y bound."
+
+[[data]]
+pc = 0x5C4274
+name = "Rest2b_ModelOffsetY"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fadd dword ptr [0x5c4274] at 0x57f129; fadd dword ptr [0x5c4274] at 0x57f13f; fadd dword ptr [0x5c4274] at 0x57f157 and 1 more. No indexed access with this displacement and no wider store over it. FPU: fadd x4; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (ptr). Module names: rest_2b::kOffsetY."
+note = "rest_2b.cpp: the screen-space offset the models' projected y is moved by (rdata::Const, read as float)."
+
+[[data]]
+pc = 0x5C4278
+name = "Rest2b_ModelOffsetX"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fadd dword ptr [0x5c4278] at 0x57f11e; fadd dword ptr [0x5c4278] at 0x57f134; fadd dword ptr [0x5c4278] at 0x57f14b and 1 more. No indexed access with this displacement and no wider store over it. FPU: fadd x4; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (ptr). Module names: rest_2b::kOffsetX."
+note = "rest_2b.cpp: the screen-space offset the models' projected x is moved by (rdata::Const, read as float)."
+
+[[data]]
+pc = 0x5C427C
+name = "Sound_FullVolume"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fld dword ptr [0x5c427c] at 0x587ba9. No indexed access with this displacement and no wider store over it. FPU: fld x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (bare), 1 address form (harness). Module names: sound::k127At."
+note = "sound_callees.h: the full music volume the volume is built from (read as a float operand in sound.cpp's inline asm)."
+
+[[data]]
+pc = 0x5C4608
+name = "D3d_FixedOne"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4608] at 0x59f693; fmul dword ptr [0x5c4608] at 0x59f6a4. No indexed access with this displacement and no wider store over it. FPU: fmul x2; the integer moves copy the bit pattern. So a scalar. C++ readers: 2 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: d3d_rest::kFixedOne."
+note = "d3d_rest_callees.h: 1.0 in 16.16 as a float."
+
+[[data]]
+pc = 0x5C460C
+name = "D3d_PerColumn"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c460c] at 0x59f66c. No indexed access with this displacement and no wider store over it. FPU: fmul x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: d3d_rest::kPerColumn."
+note = "d3d_rest_callees.h: one column of 320 as a float."
+
+[[data]]
+pc = 0x5C4610
+name = "D3d_RhwNumerator"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 51 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fld dword ptr [0x5c4610] at 0x59faae; fld dword ptr [0x5c4610] at 0x59faec; fld dword ptr [0x5c4610] at 0x59fb27 and 48 more. No indexed access with this displacement and no wider store over it. FPU: fld x51; the integer moves copy the bit pattern. So a scalar. C++ readers: 7 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: battle_draw::kRhwNumerator, d3d_draw::kRhwNumerator, d3d_rest::kRhwNumerator, field_misc::kRhwNumerator, sprt_draw::kRhwNumerator."
+note = "five modules' kRhwNumerator: rhw = this / z."
+
+[[data]]
+pc = 0x5C4614
+name = "D3d_Modulate"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4614] at 0x5a0998; fmul dword ptr [0x5c4614] at 0x5a09cd; fmul dword ptr [0x5c4614] at 0x5a0a04. No indexed access with this displacement and no wider store over it. FPU: fmul x3; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: d3d_rest::kModulate."
+note = "d3d_rest_callees.h: the PSX texture modulation step, 0x80 = 1.0."
+
+[[data]]
+pc = 0x5C4618
+name = "Glyph_InverseTexels"
+ctype = "double"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 8-byte: fmul qword ptr [0x5c4618] at 0x5a2a8a; fmul qword ptr [0x5c4618] at 0x5a2aa5; fmul qword ptr [0x5c4618] at 0x5a2ac0 and 5 more. No indexed access with this displacement and no wider store over it. FPU: fmul x8; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (ptr). Module names: glyph_draw::kInv32."
+note = "glyph_draw_callees.h: one over the glyph texture's 32 texels (read as a double)."
+
+[[data]]
+pc = 0x5C4620
+name = "DisplayEnv_Inverse255"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4620] at 0x5a50b4; fmul dword ptr [0x5c4620] at 0x5a50de; fmul dword ptr [0x5c4620] at 0x5a50f8. No indexed access with this displacement and no wider store over it. FPU: fmul x3; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (harness). Module names: display_env::kInverse255At."
+note = "display_env_callees.h: one over 255 as a float."
+
+[[data]]
+pc = 0x5C4648
+name = "Sound_VolumeScale"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4648] at 0x5a6c76; fsub dword ptr [0x5c4648] at 0x5a6c7c; fmul dword ptr [0x5c4648] at 0x5a6fc8 and 1 more. No indexed access with this displacement and no wider store over it. FPU: fmul x2, fsub x2; the integer moves copy the bit pattern. So a scalar. C++ readers: 2 address form (bare), 2 address form (harness). Module names: sound::k10000At."
+note = "sound_callees.h: the scale the music volume is built from (inline asm operand)."
+
+[[data]]
+pc = 0x5C464C
+name = "Sound_InverseFullVolume"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c464c] at 0x5a6c70; fmul dword ptr [0x5c464c] at 0x5a6fbf. No indexed access with this displacement and no wider store over it. FPU: fmul x2; the integer moves copy the bit pattern. So a scalar. C++ readers: 2 address form (bare), 2 address form (harness). Module names: sound::kInverse127At."
+note = "sound_callees.h: one over the full music volume (inline asm operand)."
+
+[[data]]
+pc = 0x5C4650
+name = "MoveCmds_InversePi"
+ctype = "double"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 8-byte: fmul qword ptr [0x5c4650] at 0x5a7a80. No indexed access with this displacement and no wider store over it. FPU: fmul x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (harness). Module names: move_cmds::kInversePiAt."
+note = "move_cmds_callees.h: one over pi as the original rounds it (read as a double)."
+
+[[data]]
+pc = 0x5C4658
+name = "MoveCmds_Scale"
+ctype = "double"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 8-byte: fmul qword ptr [0x5c4658] at 0x5a7a7a. No indexed access with this displacement and no wider store over it. FPU: fmul x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (harness). Module names: move_cmds::kScaleAt."
+note = "move_cmds_callees.h: the angle scale (read as a double)."
+
+[[data]]
+pc = 0x628C88
+name = "Rest2b_ModelFile"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x628c88] at 0x57ecc0; mov edx, dword ptr [0x628c88] at 0x57ed2f. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare), 2 address form (harness). Module names: rest_2b::kModelFile."
+note = "rest_2b.cpp: a pointer held as a dword, the two models' headers (+0, +8) and quad pointers (+4, +0xC)."
+
+[[data]]
+pc = 0x6530F0
+name = "CommuMusic_LabelA"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x6530f0] at 0x45fb7a. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_4e::kLabelA."
+note = "rest_4e.cpp: a pointer to a label CommuMusic draws (Rest4f_Setting3 == 0)."
+
+[[data]]
+pc = 0x6530F4
+name = "CommuMusic_LabelB"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov edx, dword ptr [0x6530f4] at 0x45fb88. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_4e::kLabelB."
+note = "rest_4e.cpp: a pointer to the label drawn otherwise."
+
+[[data]]
+pc = 0x6530F8
+name = "CommuMusic_LabelC"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov ecx, dword ptr [0x6530f8] at 0x45fb9e. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_4e::kLabelC."
+note = "rest_4e.cpp: a pointer to the third label (CommuMusic_DrawLabel)."
+
+[[data]]
+pc = 0x662CD8
+name = "Scenario_SubInitTable"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x662cd8] at 0x56d8fa. No indexed access with this displacement and no wider store over it. An array of 4: our readers index it, and each element measures alike (0x662CD8, 0x662CDC, 0x662CE0, 0x662CE4 each 1 dword operand (mov r32, dword ptr at 0x56d8fa, 0x56d8c0, 0x56d8c6, 0x56d904)). C++ readers: 1 address form (ptr), 1 address form (bare). Module names: title_states::kSubInitTable."
+note = "title_states.cpp: the 16 bytes Scenario_SubInit copies into Cond_Flags + 0xA0, read as four dwords."
+
+[[data]]
+pc = 0x66B718
+name = "Display_DeviceCountLess1"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: cmp dword ptr [0x66b718], -1 at 0x5a527f; mov dword ptr [0x66b718], ebx at 0x5a52d1; mov ecx, dword ptr [0x66b718] at 0x5a52f0 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kDeviceCountLess1."
+note = "display_setup.cpp and docs/display-setup.md: the Direct3D device count minus one, -1 in the image."
+
+[[data]]
+pc = 0x675FD0
+name = "CommuMusic_SavedTrack"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fd0], al at 0x45f7a5; cmp al, byte ptr [0x675fd0] at 0x45f9a9; mov eax, dword ptr [0x675fd0] at 0x45f9e9. No indexed access with this displacement and no wider store over it. 1 of them dword loads narrowed before use (and 0xff x1, e.g. at 0x45f9e9). So a scalar. C++ readers: 3 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_4e::kSavedTrack."
+note = "rest_4e.cpp: Music_Track when the list opened."
+
+[[data]]
+pc = 0x675FD1
+name = "CommuMusic_Slide"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fd1], 4 at 0x45f7ba; mov al, byte ptr [0x675fd1] at 0x45f7d0; mov byte ptr [0x675fd1], al at 0x45f7dc and 5 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 8 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_4e::kSlide."
+note = "rest_4e.cpp: the list's slide 4..0."
+
+[[data]]
+pc = 0x675FD2
+name = "CommuMusic_Track"
+ctype = "short"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x675fd2], 0 at 0x45f7b1; mov ax, word ptr [0x675fd2] at 0x45f86a; mov word ptr [0x675fd2], ax at 0x45f87a and 6 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 8 2-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_4e::kTrack."
+note = "rest_4e.cpp: the list's row, the track index."
+
+[[data]]
+pc = 0x675FD4
+name = "CommuItem_Slide"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fd4], 4 at 0x45fe78; mov al, byte ptr [0x675fd4] at 0x45fe91; mov byte ptr [0x675fd4], al at 0x45fe9c and 8 more. No indexed access with this displacement and no wider store over it. Widened with movzx. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_4e::kItemSlide."
+note = "rest_4e.cpp: the item window's slide 0..4."
+
+[[data]]
+pc = 0x675FDB
+name = "CommuList_Page"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fdb], bl at 0x46057e; mov byte ptr [0x675fdb], bl at 0x4605b4; mov cl, byte ptr [0x675fdb] at 0x4605d3 and 7 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 10 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_4e::kPage."
+note = "rest_4e.cpp: the page shown, over the three ranked lists."
+
+[[data]]
+pc = 0x6BC708
+name = "Effect1e_PressWas"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bc708], al at 0x52b465. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_1g::kPressWas."
+note = "rest_1g.cpp: the previous value of Effect1e_PressNow."
+
+[[data]]
+pc = 0x6BC716
+name = "Effect1e_BiteHeld"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bc716], 0 at 0x5288c5; mov al, byte ptr [0x6bc716] at 0x52b927; mov byte ptr [0x6bc716], 1 at 0x52b95e and 1 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 4 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_1f::kPanelPose, rest_1g::kBiteHeld."
+note = "rest_1g.cpp kBiteHeld: a fish is nibbling (Fish_Swim sets, Fish_Settle clears); rest_1f.cpp names the same byte kPanelPose, one of the leader panel's cells."
+
+[[data]]
+pc = 0x6BC717
+name = "Effect1e_PressNow"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov bl, byte ptr [0x6bc717] at 0x52b379; mov bl, byte ptr [0x6bc717] at 0x52b42b; mov al, byte ptr [0x6bc717] at 0x52b460 and 1 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 4 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_1g::kPressNow."
+note = "rest_1g.cpp: Input_Pressed & 0xE020 non-zero (LeaderPanel_PressLatch)."
+
+[[data]]
+pc = 0x6BDFAF
+name = "Rest2e_EquipCursor"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 12 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfaf], 0 at 0x58c2f4; mov al, byte ptr [0x6bdfaf] at 0x58c34c; mov cl, byte ptr [0x6bdfaf] at 0x58c3b5 and 9 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 8 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (helper). Module names: rest_2e::kEquipCursor."
+note = "rest_2e.cpp: FieldEquip_TopMenu's cursor."
+
+[[data]]
+pc = 0x6BDFB6
+name = "Rest2e_AbilityResult"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfb6], al at 0x58def4; mov byte ptr [0x6bdfb6], al at 0x58e20b. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2e::kAbilityResult."
+note = "rest_2e.cpp: the last ability's answer."
+
+[[data]]
+pc = 0x6BDFB7
+name = "Rest2e_AbilityCursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfb7], 0 at 0x58d807; mov al, byte ptr [0x6bdfb7] at 0x58d82c; mov cl, byte ptr [0x6bdfb7] at 0x58d896 and 10 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (helper). Module names: rest_2e::kAbilityCursor."
+note = "rest_2e.cpp: FieldAbility_TopMenu's cursor."
+
+[[data]]
+pc = 0x6BDFC5
+name = "Rest2f_SetCol"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx edi, byte ptr [0x6bdfc5] at 0x58f46a; mov byte ptr [0x6bdfc5], al at 0x58f4cd; mov bl, byte ptr [0x6bdfc5] at 0x58f5d6 and 2 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 5 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2f::kSetCol."
+note = "rest_2f.cpp: the formation set's column 1..2."
+
+[[data]]
+pc = 0x6BDFC6
+name = "Rest2f_PickCol"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x6bdfc6] at 0x58f38b; mov byte ptr [0x6bdfc6], 0x7f at 0x58f4d8; cmp byte ptr [0x6bdfc6], 0x7f at 0x58f4f6 and 6 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kPickCol."
+note = "rest_2f.cpp: the cell picked, 0x7F none."
+
+[[data]]
+pc = 0x6BDFC7
+name = "Rest2f_SetRow"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx edx, byte ptr [0x6bdfc7] at 0x58f462; mov byte ptr [0x6bdfc7], cl at 0x58f4d2; mov dl, byte ptr [0x6bdfc7] at 0x58f5d0 and 2 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 5 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2f::kSetRow."
+note = "rest_2f.cpp: the formation set's row."
+
+[[data]]
+pc = 0x6BDFC8
+name = "Rest2f_PickRow"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx eax, byte ptr [0x6bdfc8] at 0x58f3a0; mov byte ptr [0x6bdfc8], 0x7f at 0x58f4df; mov byte ptr [0x6bdfc8], dl at 0x58f51e and 5 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 8 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kPickRow."
+note = "rest_2f.cpp: the row of the cell picked."
+
+[[data]]
+pc = 0x6BDFC9
+name = "Rest2f_CursorCol"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov bl, byte ptr [0x6bdfc9] at 0x58f3f2; mov al, byte ptr [0x6bdfc9] at 0x58f4bf; mov cl, byte ptr [0x6bdfc9] at 0x58f509 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kCurCol."
+note = "rest_2f.cpp: the grid cursor's column."
+
+[[data]]
+pc = 0x6BDFCA
+name = "Rest2f_CursorRow"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx ecx, byte ptr [0x6bdfca] at 0x58f3ea; mov cl, byte ptr [0x6bdfca] at 0x58f4c4; mov dl, byte ptr [0x6bdfca] at 0x58f50f and 6 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kCurRow."
+note = "rest_2f.cpp: the grid cursor's row."
+
+[[data]]
+pc = 0x6BDFCB
+name = "Rest2f_TopChoice"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfcb], bl at 0x58f143; movzx ax, byte ptr [0x6bdfcb] at 0x58f17c; mov al, byte ptr [0x6bdfcb] at 0x58f1fc and 3 more. No indexed access with this displacement and no wider store over it. Widened with movzx. So a scalar. C++ readers: 5 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kTopChoice."
+note = "rest_2f.cpp: the screen's top, 0 formation, 1 members."
+
+[[data]]
+pc = 0x6BDFD2
+name = "Rest2f_SwappedA"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfd2], al at 0x58f4e6; mov byte ptr [0x6bdfd2], al at 0x58f565. No indexed access with this displacement and no wider store over it. Its address is also an immediate 1 time(s) (cmp eax, 0x6bdfd2 at 0x58ffc0). So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2f::kSwappedA."
+note = "rest_2f.cpp: one of the two rows the last formation swap moved."
+
+[[data]]
+pc = 0x6BDFD3
+name = "Rest2f_SwappedB"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfd3], cl at 0x58f4eb; mov byte ptr [0x6bdfd3], cl at 0x58f56a. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2f::kSwappedB."
+note = "rest_2f.cpp: the other row the last formation swap moved."
+
+[[data]]
+pc = 0x6BDFD7
+name = "Rest2f_Refused"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x6bdfd7] at 0x58f940; mov byte ptr [0x6bdfd7], al at 0x58fad8; mov byte ptr [0x6bdfd7], 0xff at 0x590015. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 3 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2f::kRefused."
+note = "rest_2f.cpp: the member a swap refused, 0xFF none."
+
+[[data]]
+pc = 0x6BDFD8
+name = "Rest2f_ConfigCursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfd8], cl at 0x590325; mov cl, byte ptr [0x6bdfd8] at 0x5903a4. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2f::kConfigSaved."
+note = "rest_2f.cpp: the top bar's cursor kept while Config runs."
+
+[[data]]
+pc = 0x6BE1E0
+name = "Display_DesktopBpp"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x6be1e0], ebp at 0x5a51a4; mov eax, dword ptr [0x6be1e0] at 0x5a51b0; mov edx, dword ptr [0x6be1e0] at 0x5a5431 and 2 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kDesktopBpp."
+note = "docs/display-setup.md: BITSPIXEL x PLANES of the desktop DC."
+
+[[data]]
+pc = 0x6C3A48
+name = "Display_ZeroedUnread"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x6c3a48], ebx at 0x5a523d. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kUnread6C3A48."
+note = "docs/display-setup.md: zeroed by the set-up, read by no instruction."
+
+[[data]]
+pc = 0x7C9F44
+name = "Display_DesktopWidth"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x7c9f44], eax at 0x5a5187; mov edx, dword ptr [0x7c9f44] at 0x5a53ed. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kDesktopW."
+note = "docs/display-setup.md: HORZRES of the desktop DC."
+
+[[data]]
+pc = 0x7CADE0
+name = "Display_ModeBpp"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x7cade0], ecx at 0x5a54e2; mov edx, dword ptr [0x7cade0] at 0x5a5682. No indexed access with this displacement and no wider store over it. Its address is also an immediate 1 time(s) (cmp eax, 0x7cade0 at 0x5a525e). So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kModeBpp."
+note = "docs/display-setup.md: the chosen mode's bits per pixel (SetDisplayMode's bpp)."
+
+[[data]]
+pc = 0x7DED5C
+name = "Display_BackPitch"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 16 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: imul eax, dword ptr [0x7ded5c] at 0x5a4a70; mov edx, dword ptr [0x7ded5c] at 0x5a4afe; mov esi, dword ptr [0x7ded5c] at 0x5a4b82 and 13 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kBackPitch."
+note = "docs/display-setup.md: the back buffer's lPitch, read by the software glyph and cell-sprite handlers."
+
+[[data]]
+pc = 0x904101
+name = "Rest2b_SavedScaleIndex"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x904101] at 0x57eae0. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kLevelByte."
+note = "rest_2b.cpp: the byte of the save data the figure scale index is read from."
+
+[[data]]
+pc = 0x939892
+name = "Rest2e_AbilityViewCursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x939892], dl at 0x589b1f; mov cl, byte ptr [0x939892] at 0x58ea91; mov byte ptr [0x939892], cl at 0x58ec60. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2e::kViewCursor."
+note = "rest_2e.cpp: the ability view's cursor."
+
+[[data]]
+pc = 0x9398CC
+name = "Rest2e_AbilityViewTop"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9398cc], dl at 0x589b25; mov dl, byte ptr [0x9398cc] at 0x58ea97; mov byte ptr [0x9398cc], al at 0x58ec66. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2e::kViewTop."
+note = "rest_2e.cpp: the ability view's top row."
+
+[[data]]
+pc = 0x9398E1
+name = "Rest2b_ModelAState"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9398e1], bl at 0x57e599; mov byte ptr [0x9398e1], al at 0x57e742; mov byte ptr [0x9398e1], al at 0x57e774 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kAState."
+note = "rest_2b.cpp: model A's state, +1 of its 0x80-byte record at 0x9398E0 (Rest2c_Figure* name its other fields)."
+
+[[data]]
+pc = 0x939961
+name = "Rest2b_ModelBState"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x939961], bl at 0x57e5d2; mov byte ptr [0x939961], al at 0x57e747; mov byte ptr [0x939961], al at 0x57e779 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kBState."
+note = "rest_2b.cpp: model B's state, +1 of its 0x80-byte record at 0x939960."
+
+[[data]]
+pc = 0x939966
+name = "Rest2b_ModelBDone"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x939966] at 0x57e769; mov al, byte ptr [0x939966] at 0x57e799; mov byte ptr [0x939966], 0 at 0x57f27f and 3 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 6 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kBDone."
+note = "rest_2b.cpp: model B's done flag the steps wait on, +6."
+
+[[data]]
+pc = 0x93999C
+name = "Rest2b_ModelBY"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x93999c] at 0x57e46e; mov eax, dword ptr [0x93999c] at 0x57e6ef; mov dword ptr [0x93999c], ecx at 0x57ed44 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 6 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_2b::kBY."
+note = "rest_2b.cpp: model B's y in 16.16, +0x3C."
+
+[[data]]
+pc = 0x9399BD
+name = "Rest2b_ModelBRgb"
+ctype = "unsigned char"
+count = 3
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x9399bd] at 0x57e7c4; mov byte ptr [0x9399bd], cl at 0x57e856; mov byte ptr [0x9399bd], al at 0x57e85e and 8 more. No indexed access with this displacement and no wider store over it. An array of 3: our readers index it, and each element measures alike (0x9399BD / BE / BF: 11, 12 and 12 byte operands (e.g. at 0x57e7c4, 0x57e7d9, 0x57e7e5)). C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam); 20 more at a constant offset or an index into it, on its elements. Module names: rest_2b::kBColour."
+note = "rest_2b.cpp: model B's colour, +0x5D..+0x5F, read and written a byte at a time."
+
+[[data]]
+pc = 0x9399CC
+name = "Rest2b_ModelBAngle"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399cc], ebx at 0x57ed04; add dword ptr [0x9399cc], 0x20 at 0x57ede0; mov eax, dword ptr [0x9399cc] at 0x57f270 and 1 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 5 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kBAngle."
+note = "rest_2b.cpp: model B's angle, +0x6C."
+
+[[data]]
+pc = 0x9399E0
+name = "Rest2b_Owned"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x9399e0] at 0x57e575; mov dl, byte ptr [0x9399e0] at 0x57e58f; mov byte ptr [0x9399e0], dl at 0x57e5a4 and 1 more. No indexed access with this displacement and no wider store over it. Its address is also an immediate 1 time(s) (mov dword ptr [0x8031ec], 0x9399e0 at 0x57eaa9). An array of 4: our readers index it, and each element measures alike (0x9399E0..E3: 4 byte operands each (e.g. at 0x57e575, 0x57e5b4, 0x57e600, 0x57e642)). C++ readers: 3 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare), 1 address form (seam); 10 more at a constant offset or an index into it, on its elements. Module names: rest_2b::kOwned."
+note = "rest_2b.cpp: the four items' counts (Inventory_Count)."
+
+[[data]]
+pc = 0x9399E4
+name = "Rest2b_Given"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399e4], bl at 0x57e02a; mov al, byte ptr [0x9399e4] at 0x57e16d; mov al, byte ptr [0x9399e4] at 0x57e389 and 3 more. No indexed access with this displacement and no wider store over it. An array of 4: our readers index it, and each element measures alike (0x9399E4..E7: 6, 8, 6 and 6 byte operands (e.g. at 0x57e02a, 0x57e030, 0x57e036, 0x57e03c)). C++ readers: 4 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 4 address form (seam); 19 more at a constant offset or an index into it, on its elements. Module names: rest_2b::kGiven."
+note = "rest_2b.cpp: how many of each item the player put in. Its element 3 is also Rest2c_FigureFade (rest_2c reads it as the fade's step), an entry nested in this one."
+
+[[data]]
+pc = 0x9399E8
+name = "Rest2b_Rounds"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399e8], bl at 0x57e024; mov al, byte ptr [0x9399e8] at 0x57e160; mov al, byte ptr [0x9399e8] at 0x57e37c and 8 more. No indexed access with this displacement and no wider store over it. 1 of them dword loads narrowed before use (and 0xff x1, e.g. at 0x57eb31). So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kRounds."
+note = "rest_2b.cpp: shows run so far (8 at most)."
+
+[[data]]
+pc = 0x9399E9
+name = "Rest2b_Side"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399e9], bl at 0x57e018; mov al, byte ptr [0x9399e9] at 0x57e2d3; mov byte ptr [0x9399e9], al at 0x57e2e2 and 4 more. No indexed access with this displacement and no wider store over it. Widened with movzx. So a scalar. C++ readers: 6 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kSide."
+note = "rest_2b.cpp: the pick screen's 0 / 1 choice."
+
+[[data]]
+pc = 0x9399EA
+name = "Rest2b_Cursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399ea], bl at 0x57e01e; mov byte ptr [0x9399ea], 3 at 0x57e31d; mov byte ptr [0x9399ea], 0 at 0x57e350 and 7 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 10 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kCursor."
+note = "rest_2b.cpp: the count screen's row 0..3, 0xFF backs out."
+
+[[data]]
+pc = 0x9399EC
+name = "Rest2b_ScoreA"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399ec], eax at 0x57eb69; mov dword ptr [0x9399ec], ecx at 0x57eb7d; cmp dword ptr [0x9399ec], edi at 0x57eb83 and 2 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreA."
+note = "rest_2b.cpp: the score's first term."
+
+[[data]]
+pc = 0x9399F0
+name = "Rest2b_ScoreB"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399f0], eax at 0x57ebb8; mov dword ptr [0x9399f0], edx at 0x57ebcc; cmp dword ptr [0x9399f0], edi at 0x57ebd2 and 2 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreB."
+note = "rest_2b.cpp: the score's second term."
+
+[[data]]
+pc = 0x9399F4
+name = "Rest2b_ScoreC"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399f4], edi at 0x57ec1a; mov dword ptr [0x9399f4], edi at 0x57ec24. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreC."
+note = "rest_2b.cpp: the score's third term."
+
+[[data]]
+pc = 0x9399F8
+name = "Rest2b_ScoreD"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399f8], ecx at 0x57ec62; mov dword ptr [0x9399f8], ecx at 0x57ec6c. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreD."
+note = "rest_2b.cpp: the score's fourth term."
+
+[[data]]
+pc = 0x9399FC
+name = "Rest2b_Score"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x9399fc] at 0x57e1c2; mov dword ptr [0x9399fc], eax at 0x57ecb9. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kScore, rest_2b::kScoreCell."
+note = "rest_2b.cpp: the score."
