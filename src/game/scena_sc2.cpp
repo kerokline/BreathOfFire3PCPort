@@ -35,6 +35,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc2_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -115,6 +116,14 @@ bool TakeEffect() {
 }
 // The record of the slot 0x903850 holds, read back as the original does.
 unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
+// sprite head that every family shares, unless the pointer is an object's.
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static const records::SpriteObject* Spr(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
+static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 // A kind-0x13 effect live at (x, z) with +0x6C `far` and +9 `life`.
 void AimEffect(int x, int z, int far, unsigned life) {
     unsigned char* const e = Effect();
@@ -2105,8 +2114,8 @@ namespace {
 void Near(unsigned char n, int xlo, int xhi, int zlo, int zhi) {
     if (Cond_ByteFD != 0) return;
     const unsigned char* const s = Sprite_Objects + 0xA4u * n;
-    const int sx = Long(s + 0x34), sz = Long(s + 0x38);
-    const int lx = Long(Leader() + 0x34), lz = Long(Leader() + 0x38);
+    const int sx = Spr(s)->x, sz = Spr(s)->z;
+    const int lx = Party(Leader())->x, lz = Party(Leader())->z;
     if (lz > Plus(sz, zhi) || lz < Plus(sz, zlo)) return;
     if (lx < Plus(sx, xlo) || lx > Plus(sx, xhi)) return;
     SH_CALL(Scena02_StartRun07)();
@@ -2274,10 +2283,10 @@ void PlaceEffect(unsigned char kind, unsigned char sub) {
     rec()[0] = 1;
     rec()[5] = kind;
     rec()[6] = sub;
-    SetLong(rec() + 0xC, 0);
+    Fx(rec())->step_x = 0;
     SetLong(rec() + 0x10, static_cast<signed char>(At(Scena02_EffectX_addr + LeadMember())[0]));
-    SetWord(rec() + 0x2E, Word(cur + 0x2E));
-    SetWord(rec() + 0x30, Word(cur + 0x30));
+    SetWord(rec() + 0x2E, static_cast<std::uint16_t>(Spr(cur)->screen_x));
+    SetWord(rec() + 0x30, static_cast<std::uint16_t>(Spr(cur)->screen_y));
 }
 
 }  // namespace

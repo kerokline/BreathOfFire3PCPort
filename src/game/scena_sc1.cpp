@@ -30,6 +30,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc1_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -107,6 +108,12 @@ bool TakeEffect() {
 }
 // The record of the slot 0x903850 holds, read back as the original does.
 unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
+
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
+// sprite head that every family shares, unless the pointer is an object's.
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 // A kind-0x13 effect at (x, the camera's second angle word) with +0x6C `far`
 // and +9 `life`: the record written as the original writes it.
 void AimEffect(int x, int far, unsigned life) {
@@ -1906,10 +1913,10 @@ extern "C" void __cdecl Scena01_PlaceEffect(unsigned char n) {
     const unsigned char kind = static_cast<unsigned char>(n + 0x70);
     rec()[5] = 6;
     rec()[6] = kind;
-    SetLong(rec() + 0xC, 0);
+    Fx(rec())->step_x = 0;
     SetLong(rec() + 0x10, static_cast<signed char>(At(at::kEffectX + Cond_Flags[0xd2])[0]));
-    SetWord(rec() + 0x2E, Word(cur + 0x2E));
-    SetWord(rec() + 0x30, Word(cur + 0x30));
+    SetWord(rec() + 0x2E, static_cast<std::uint16_t>(Spr(cur)->screen_x));
+    SetWord(rec() + 0x30, static_cast<std::uint16_t>(Spr(cur)->screen_y));
 }
 
 // original 0x53D470: slot 1 of chapter 1's vtable, the object hook (0x56D6D0
@@ -1978,7 +1985,7 @@ extern "C" void __cdecl Scena01_Object06(unsigned char* object, unsigned char*) 
     Counter(1) = 0;
     Counter(2) = 0;
     object[1] = 4;
-    SetWord(object + 0x8A, 0);
+    Spr(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xA;
     Turn();
@@ -2005,7 +2012,7 @@ extern "C" void __cdecl Scena01_Object07(unsigned char* object, unsigned char*) 
 extern "C" void __cdecl Scena01_Object08(unsigned char* object, unsigned char*) {
     Set40();
     object[1] = 4;
-    SetWord(object + 0x8A, 0);
+    Spr(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xB;
     Turn();
@@ -2020,7 +2027,7 @@ extern "C" void __cdecl Scena01_Object08(unsigned char* object, unsigned char*) 
 extern "C" void __cdecl Scena01_Object09(unsigned char* object, unsigned char*) {
     Set40();
     object[1] = 4;
-    SetWord(object + 0x8A, 0);
+    Spr(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xB;
     Turn();
