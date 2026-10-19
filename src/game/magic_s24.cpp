@@ -34,6 +34,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -159,7 +160,7 @@ unsigned char* SpawnRingChild(unsigned parameter, unsigned phase, unsigned index
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     tt->x = Add(ts->step_x, Field_Kind2X);
     tt->z = Add(ts->step_z, Field_Kind2Z);
-    SetLong(t + 0x3C, Long(s + 0x3C));
+    rv::Store(tt->height, ts->height);
     return t;
 }
 
@@ -614,7 +615,7 @@ S24_EXPORT void __cdecl Fx104_BurstDelay(void) {
         Drop(sc[0xA]);
         return;
     }
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + 0x200u);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, rv::As<records::BattleTask>(sc)->height_whole + 0x200u);
     Sprite_Current[9] = 8;
     Bump(Sprite_Current[2]);
 }
@@ -626,7 +627,7 @@ S24_EXPORT void __cdecl Fx104_BurstShrink(void) {
     magic_harness::Phase(bof3::addr::Fx104_DrawSphere)();
     MH_CALL(Gte_PopMatrix)();
     unsigned char* sc = Sprite_Current;
-    SetWord(sc + 0x3E, Word(sc + 0x3E) - 0x40u);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, rv::As<records::BattleTask>(sc)->height_whole - 0x40u);
     sc = Sprite_Current;
     Drop(sc[9]);
     sc = Sprite_Current;
@@ -776,12 +777,12 @@ S24_EXPORT void __cdecl Fx105_Start(void) {
     rv::Current<records::BattleTask>()->step_z = 0;
     TurnByFacing(Sprite_Current);
     unsigned char* sc = Sprite_Current;
-    SetLong(sc + 0x34, Add(Long(sc + 0xC), Field_Kind2X));
+    rv::Store(rv::As<records::BattleTask>(sc)->x, Add(rv::As<records::BattleTask>(sc)->step_x, Field_Kind2X));
     sc = Sprite_Current;
-    SetLong(sc + 0x38, Add(Long(sc + 0x10), Field_Kind2Z));
+    rv::Store(rv::As<records::BattleTask>(sc)->z, Add(rv::As<records::BattleTask>(sc)->step_z, Field_Kind2Z));
     sc = Sprite_Current;
-    const std::int32_t dz = Sub(Field_Kind2Z, Long(sc + 0x38));
-    const std::int32_t dx = Sub(Field_Kind2X, Long(sc + 0x34));
+    const std::int32_t dz = Sub(Field_Kind2Z, rv::As<records::BattleTask>(sc)->z);
+    const std::int32_t dx = Sub(Field_Kind2X, rv::As<records::BattleTask>(sc)->x);
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
     rv::Current<records::BattleTask>()->step_x = angle;
     Sprite_Current[0xB] = 0;
@@ -829,13 +830,13 @@ S24_EXPORT void __cdecl Fx105_Orb(void) {
 // the owner's +0xC plus a word of Fx105_OrbAngles by the orb's index +4
 // (0x65B88C + 2i and 0x65B88E + 2i, unbounded); +0xB, +9, +0xA 0; +2 on.
 S24_EXPORT void __cdecl Fx105_OrbStart(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     unsigned char* sc = Sprite_Current;
-    SetLong(sc + 0xC, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), Long(Owner() + 0xC)));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_x, Add(G16(Fx105_OrbAngles_addr + 2u * sc[4]), rv::As<records::SpriteHead>(Owner())->step_x));
     sc = Sprite_Current;
-    SetLong(sc + 0x10, Add(G16(Fx105_OrbAngles_addr + 2 + 2u * sc[4]), Long(Owner() + 0xC)));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, Add(G16(Fx105_OrbAngles_addr + 2 + 2u * sc[4]), rv::As<records::SpriteHead>(Owner())->step_x));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0;
@@ -916,7 +917,7 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
     const unsigned char* s = Sprite_Current;
     Put16(kA + 2, Shl(t, 6) >> 12);
     Put16(kA + 4, 0);
-    t = Sin(Long(s + 0x10));
+    t = Sin(rv::As<records::BattleTask>(s)->step_z);
     Put16(kB, Shl(t, 6) >> 12);
     t = Cos(rv::Current<records::BattleTask>()->step_z);
     Put16(kB + 2, Shl(t, 6) >> 12);
@@ -941,7 +942,7 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         s = Sprite_Current;
         Put16(kD + 2, b2);
         Put16(kD + 4, b4);
-        t = Sin(Long(s + 0xC));
+        t = Sin(rv::As<records::BattleTask>(s)->step_x);
         Put16(kA, Mul(t, G16(kR)) >> 12);
         t = Cos(rv::Current<records::BattleTask>()->step_x);
         t = Mul(t, G16(kR)) >> 12;
@@ -957,8 +958,8 @@ S24_EXPORT void __cdecl Fx105_DrawOrb(void) {
         Put16(kB + 2, t >> 12);
         Put16(kB + 4, G16(kR2));
         s = Sprite_Current;
-        const std::int32_t x = Add(Shl(ax, 9), Long(s + 0x34));
-        const std::int32_t z = Add(Shl(az, 9), Long(s + 0x38));
+        const std::int32_t x = Add(Shl(ax, 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add(Shl(az, 9), rv::As<records::BattleTask>(s)->z);
         MH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), 2, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -1013,16 +1014,16 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     unsigned char* sc = Sprite_Current;
     Put16(kR2, Shl(Mul(t, 3), 7) >> 11);
     Put16(kR, (sc[9] + 1) << 6);
-    t = Sin(Long(sc + 0x10));
+    t = Sin(rv::As<records::BattleTask>(sc)->step_z);
     t = (Mul(t, G16(kR)) >> 3);
-    rv::Store(rv::Current<records::BattleTask>()->x, Add(t, Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(t, rv::As<records::SpriteHead>(Owner())->x));
     t = Cos(rv::Current<records::BattleTask>()->step_z);
     t = (Mul(t, G16(kR)) >> 3);
-    rv::Store(rv::Current<records::BattleTask>()->z, Add(t, Long(Owner() + 0x38)));
-    SetWord(Sprite_Current + 0x3E, Word(Owner() + 0x3E) + Word(Mem(kR2)) - 0x20u);
+    rv::Store(rv::Current<records::BattleTask>()->z, Add(t, rv::As<records::SpriteHead>(Owner())->z));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole + Word(Mem(kR2)) - 0x20u);
     sc = Sprite_Current;
-    const long ground = MH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
-    SetLong(Sprite_Current + 0x14, static_cast<short>(ground));
+    const long ground = MH_CALL(AreaMap_Elevation)(rv::As<records::BattleTask>(sc)->x, rv::As<records::BattleTask>(sc)->z);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<short>(ground));
     Sprite_Current[0x25] = 0x1D;
     Sprite_Current[0x26] = 0;
     Sprite_Current[0x27] = 0xA0;
@@ -1035,7 +1036,7 @@ S24_EXPORT void __cdecl Fx105_MoteStart(void) {
     Sprite_Current[0x2A] = 0;
     Sprite_Current[0x29] = 3;
     Sprite_Current[0x24] = 4;
-    SetWord(Sprite_Current + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sprite_Current[0x2B] = 0;
     const int r = MH_CALL(Rand)();
     MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>((r & 1) + 1));
@@ -1059,10 +1060,10 @@ S24_EXPORT void __cdecl Fx105_MoteDrift(void) {
     t = Cos((sc[0xA] & 0x3F) << 8);
     SetLong(pz, Add(Long(pz), Shl(t, 3) >> 3));
     sc = Sprite_Current;
-    SetWord(sc + 0x3E, Word(sc + 0x3E) - 8u);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, rv::As<records::BattleTask>(sc)->height_whole - 8u);
     if (MH_CALL(Sprite_ScriptTickOnce)() == 0) {
         sc = Sprite_Current;
-        if (S16(sc + 0x3E) >= Long(sc + 0x14)) return;
+        if (S16(sc + 0x3E) >= rv::As<records::BattleTask>(sc)->step_y) return;
     }
     Drop(Owner()[0xB]);
     Sprite_Current[0] = 0;
@@ -1100,7 +1101,7 @@ S24_EXPORT void __cdecl Fx105_MoteDraw(void) {
     if (sx > 0x180 + wide || sx < -0x40 - wide) return;
     const short sy = S16(sc + 0x30);
     if (sy > 0x130 || sy < -0x40) return;
-    const unsigned char* part = Mem(static_cast<std::uint32_t>(Long(sc + 0x54)) + Word(sc + 0x5A));
+    const unsigned char* part = Mem(static_cast<std::uint32_t>(static_cast<std::int32_t>(rv::As<records::BattleTask>(sc)->frames)) + rv::As<records::BattleTask>(sc)->frame_word);
     const unsigned char count = part[0];
     ++part;
     unsigned clut;
@@ -1116,19 +1117,19 @@ S24_EXPORT void __cdecl Fx105_MoteDraw(void) {
         MH_CALL(Gfx_CommitPrim)(Sprite_Current[0x29], 0xC);
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetSprt)(p);
-        SetWord(p + 0x18, Mem(Fx105_MoteSizes_addr)[(part[0] & 0xF) * 2]);
-        SetWord(p + 0x1A, Mem(Fx105_MoteSizes_addr + 1)[(part[0] & 0xF) * 2]);
+        rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, Mem(Fx105_MoteSizes_addr)[(part[0] & 0xF) * 2]);
+        rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, Mem(Fx105_MoteSizes_addr + 1)[(part[0] & 0xF) * 2]);
         p[0x14] = part[3];
         const unsigned char v = part[4];
         const unsigned char row = Sprite_Current[0x26];
-        SetWord(p + 0x16, clut);
+        rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->clut, clut);
         p[0x15] = static_cast<unsigned char>(row + v);
         p[4] = static_cast<unsigned char>(Sprite_Current[0x5D] + 0x80);
         p[5] = static_cast<unsigned char>(Sprite_Current[0x5E] + 0x80);
         p[6] = static_cast<unsigned char>(Sprite_Current[0x5F] + 0x80);
         const unsigned char* const s = Sprite_Current;
         if ((part[0] & 0x80) && s[0x2A] != 0) {
-            PutFloat(p + 8, S16(s + 0x2E) - static_cast<signed char>(part[1]) - static_cast<int>(Word(p + 0x18)));
+            PutFloat(p + 8, S16(s + 0x2E) - static_cast<signed char>(part[1]) - static_cast<int>(rv::As<records::GpuSprt>(p)->w));
         } else {
             PutFloat(p + 8, S16(s + 0x2E) + static_cast<signed char>(part[1]));
         }
@@ -1175,9 +1176,9 @@ S24_EXPORT void __cdecl Fx106_Start(void) {
         k[1] = 0;
         k[2] = 0;
     }
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Add(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C), 0x1000000));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, Add(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->height, 0x1000000));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0;
     Bump(Sprite_Current[1]);
@@ -1234,10 +1235,10 @@ S24_EXPORT void __cdecl Fx106_SparkDelay(void) {
     const int angle = (k[4] & 0x1F) << 7;
     Put16(kW4, angle);
     int t = Sin(static_cast<short>(angle));
-    SetLong(Spark() + 0x10, Add(Mul(t, G16(kR)), Long(Owner() + 0x34)));
+    SetLong(Spark() + 0x10, Add(Mul(t, G16(kR)), rv::As<records::SpriteHead>(Owner())->x));
     t = Cos(G16(kW4));
-    SetLong(Spark() + 0x14, Add(Mul(t, G16(kR)), Long(Owner() + 0x38)));
-    SetLong(Spark() + 0x18, Long(Owner() + 0x3C));
+    SetLong(Spark() + 0x14, Add(Mul(t, G16(kR)), rv::As<records::SpriteHead>(Owner())->z));
+    SetLong(Spark() + 0x18, rv::As<records::SpriteHead>(Owner())->height);
     SetWord(Spark() + 0xE, Word(Mem(kW4)));
     for (unsigned c = 5; c <= 7; ++c) {
         const int r = MH_CALL(Rand)();
@@ -1259,10 +1260,10 @@ namespace {
 void SparkPlace() {
     int t = Sin(S16(Spark() + 0xE));
     unsigned char* k = Spark();
-    SetLong(k + 0x10, Add(Mul(t, S16(k + 0xC)), Long(Owner() + 0x34)));
+    SetLong(k + 0x10, Add(Mul(t, S16(k + 0xC)), rv::As<records::SpriteHead>(Owner())->x));
     t = Cos(S16(Spark() + 0xE));
     k = Spark();
-    SetLong(k + 0x14, Add(Mul(t, S16(k + 0xC)), Long(Owner() + 0x38)));
+    SetLong(k + 0x14, Add(Mul(t, S16(k + 0xC)), rv::As<records::SpriteHead>(Owner())->z));
 }
 void SparkTurn() {
     unsigned char* const k = Spark();

@@ -167,11 +167,11 @@ void Launch(const Pool& p) {
     Bump(c[kTimer], -1);
     c = Cur(p);
     if (c[kTimer] != 0) return;
-    SetLong(c + 0x14, Long(Owner() + 0x34));
-    SetLong(Cur(p) + 0x18, Long(Owner() + 0x38));
-    SetLong(Cur(p) + 0x1C, Long(Owner() + 0x3C));
-    SetWord(Cur(p) + kX, Word(Owner() + 0x2E));
-    SetWord(Cur(p) + kY, Word(Owner() + 0x30));
+    SetLong(c + 0x14, rv::As<records::SpriteHead>(Owner())->x);
+    SetLong(Cur(p) + 0x18, rv::As<records::SpriteHead>(Owner())->z);
+    SetLong(Cur(p) + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
+    SetWord(Cur(p) + kX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+    SetWord(Cur(p) + kY, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     c = Cur(p);
     unsigned char* const x = c + kX;
     if (S16(Mem(p.offsets + (c[kLimit] & 0x1F) * 4)) < 0) {
@@ -480,9 +480,9 @@ void Spawn(const Pool& p, unsigned char kind) {
     Sprite_Current[4] = kind;
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sprite_Current[8] = src[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
@@ -533,9 +533,9 @@ void ActorStart(const Pool& p) {
     if (sc[9] != 0) return;
     const unsigned char* const rec = ActorRecord(sc[4]);
     sc[8] = rec[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(rec + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(rec + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(rec)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(rec)->height);
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;

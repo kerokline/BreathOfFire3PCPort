@@ -36,6 +36,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -228,9 +229,9 @@ S14_EXPORT void __cdecl Weretiger_FocusActor(void) {
         s[9] = static_cast<unsigned char>(was - 1);
         if (was != 0) return;
     }
-    SetLong(Sc() + 0x34, Field_Kind2X);
-    SetLong(Sc() + 0x38, Field_Kind2Z);
-    SetWord(Sc() + 0x3E, U(MapView_Elevation) & 0xFFFF);
+    rv::Store(rv::Current<records::BattleTask>()->x, Field_Kind2X);
+    rv::Store(rv::Current<records::BattleTask>()->z, Field_Kind2Z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, U(MapView_Elevation) & 0xFFFF);
     {
         const unsigned char* const record = PartyRecord(ActorIndex());
         const records::PartyMember* const trecord = rv::AsConst<records::PartyMember>(record);
@@ -339,7 +340,7 @@ S14_EXPORT void __cdecl Weretiger_LoadForm(void) {
     DrawCrossFade(self);
     const unsigned char* const owner = Owner();
     Sprite_Current = self;
-    const bool second = Word(owner + 0x2C) != 0;
+    const bool second = rv::As<records::SpriteHead>(owner)->column != 0;
     const unsigned char facing = owner[8];
     const bool near = facing == 0 || facing == 1;
     MH_CALL(LoadDatFile)(second ? (near ? 0x2ED : 0x2F0) : (near ? 0x2EC : 0x2EF));
@@ -425,7 +426,7 @@ S14_EXPORT void __cdecl Weretiger_End(void) {
     const unsigned actor = ActorIndex();
     Mem(at::kFlags)[0] |= 4;
     unsigned char* const record = PartyRecord(actor);
-    SetLong(record + 0x134, static_cast<std::int32_t>(U(Long(record + 0x134)) | 1u));
+    rv::Store<std::int32_t>(rv::As<records::PartyMember>(record)->flags_134, static_cast<std::int32_t>(U(static_cast<std::int32_t>(rv::As<records::PartyMember>(record)->flags_134)) | 1u));
     record[0x142] = 0;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
     MH_CALL(BattleTask_FreeCurrent)();
@@ -823,8 +824,8 @@ S14_EXPORT void __cdecl Weretiger_DrawSprite(unsigned image, unsigned abr, unsig
     PutFloat(p + 0xC, S16(Sc() + 0x30) - 0x40);
     p[0x14] = Mem(WeretigerImage_UV_addr + 4u * which)[0];
     p[0x15] = Mem(WeretigerImage_UV_addr + 2 + 4u * which)[0];
-    SetWord(p + 0x18, 0x50);
-    SetWord(p + 0x1A, 0x48);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->w, 0x50);
+    rv::Store<unsigned>(rv::As<records::GpuSprt>(p)->h, 0x48);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
@@ -935,9 +936,9 @@ S14_EXPORT void __cdecl Tsunami_Task(void) {
 // then without it; the strip dirty; sound effect 0x100; +0xB 0, +9 0x18, +1
 // on.
 S14_EXPORT void __cdecl Tsunami_Start(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     const unsigned slot = NewTask(0x11);
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
@@ -999,11 +1000,11 @@ S14_EXPORT void __cdecl TsunamiWave_Run(void) {
 S14_EXPORT void __cdecl TsunamiWave_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Field_Kind2X) + 0xFFEE0000u));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Field_Kind2Z) + 0x880000u));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0x1A;
     Sc()[9] = 0x10;
     rv::Current<records::BattleTask>()->step_z = 0;
-    SetLong(Sc() + 0x14, 0xF0);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0xF0);
     Inc(Sc()[2]);
 }
 
@@ -1035,7 +1036,7 @@ S14_EXPORT void __cdecl TsunamiWave_Shrink(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     s[0xB] = static_cast<unsigned char>((s[0xB] - 1) & 0x1F);
-    SetLong(s + 0x14, static_cast<std::int32_t>(U(Long(s + 0x14)) - 2));
+    rv::Store(ts->step_y, static_cast<std::int32_t>(U(ts->step_y) - 2));
     ts->step_z = static_cast<std::int32_t>(U(ts->step_z) - 2);
     if (ts->step_z == 0x20) Inc(s[2]);
 }
@@ -1045,7 +1046,7 @@ S14_EXPORT void __cdecl TsunamiWave_Shrink(void) {
 S14_EXPORT void __cdecl TsunamiWave_End(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    SetLong(s + 0x14, static_cast<std::int32_t>(U(Long(s + 0x14)) - 2));
+    rv::Store(ts->step_y, static_cast<std::int32_t>(U(ts->step_y) - 2));
     ts->step_z = static_cast<std::int32_t>(U(ts->step_z) - 1);
     if (ts->step_z != 0) return;
     Owner()[0xB] = 0xFF;
@@ -1102,7 +1103,7 @@ S14_EXPORT void __cdecl TsunamiWave_Draw(void) {
     DrawModeCommit(0xB5, 2);
     {
         const unsigned char* const s = Sc();
-        SetSW(0, Word(s + 0x14));
+        SetSW(0, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
         const unsigned angle = (s[0xB] & 0x1Fu) << 7;
         SetVW(0, 0);
         SetSW(6, angle);
@@ -1119,8 +1120,8 @@ S14_EXPORT void __cdecl TsunamiWave_Draw(void) {
         p[4] = SB(2);
         p[5] = SB(2);
         p[6] = SB(2);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         SetSW(8, (0xEu - ((static_cast<unsigned>(Sc()[0xB]) + static_cast<unsigned>(i)) & 7u)) << 4);
         p[0x14] = 0;
         p[0x24] = 0xF8;
@@ -1208,9 +1209,9 @@ void RingAt(unsigned height, unsigned index, const unsigned char* actor) {
     const unsigned char* const offset = Mem(TsunamiRing_Offsets_addr + 0xC * height);
     Sc()[0xB] = static_cast<unsigned char>(height);
     Sc()[0xA] = static_cast<unsigned char>(index);
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(offset)) + U(Long(actor + 0x34))));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(actor + 0x38)) + U(Long(offset + 4))));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(U(Long(offset + 8)) + U(Long(actor + 0x3C))));
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(offset)) + U(rv::As<records::SpriteHead>(actor)->x)));
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(actor)->z) + U(Long(offset + 4))));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(U(Long(offset + 8)) + U(rv::As<records::SpriteHead>(actor)->height)));
     Call0(bof3::addr::TsunamiRing_PushMatrix);
     Call0(bof3::addr::TsunamiRing_DrawQuads);
     MH_CALL(Gte_PopMatrix)();
@@ -1271,8 +1272,8 @@ S14_EXPORT void __cdecl TsunamiRing_DrawQuads(void) {
             SetVW(8 * v + 2, static_cast<unsigned>(Mul12(t, SS(0))));
             SetVW(8 * v + 4, static_cast<unsigned>(-static_cast<int>(SW(4))));
         }
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2));
         p[0x14] = 0;
         p[0x15] = 0;
         p[0x24] = 0x20;

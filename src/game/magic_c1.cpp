@@ -33,6 +33,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -225,7 +226,7 @@ C1_EXPORT void __cdecl Magic080_Start(void) {
     const unsigned char* const s = Sc();
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     const long h = MH_CALL(AreaMap_Elevation)(ts->x, ts->z);
-    SetWord(Sc() + 0x3E, static_cast<unsigned>(h));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<unsigned>(h));
     const std::uint32_t r = RandCall();
     Sc()[0xB] = static_cast<unsigned char>(r & 0x3F);
     Sc()[9] = 0x30;
@@ -237,7 +238,7 @@ C1_EXPORT void __cdecl Magic080_Start(void) {
 // done flag, the task freed.
 C1_EXPORT void __cdecl Magic080_Run(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
-    SetWord(Sc() + 0x2E, Word(Sc() + 0x2E) - 0x24u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) - 0x24u);
     if (Sc()[0xB] != 0)
         Call0(bof3::addr::Magic080_DrawGlyphs);
     else
@@ -259,20 +260,20 @@ C1_EXPORT void __cdecl Magic080_DrawText(void) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetCode6C)(p);
         const unsigned x = i * 12;
-        SetWord(p + 8, Word(Sc() + 0x2E) + x);
-        SetWord(p + 0xA, Word(Sc() + 0x30));
-        SetWord(p + 0x10, Word(Sc() + 0x2E) + x + 12);
-        SetWord(p + 0x12, Word(Sc() + 0x30));
-        SetWord(p + 0x18, Word(Sc() + 0x2E) + x);
-        SetWord(p + 0x1A, Word(Sc() + 0x30) + 12u);
-        SetWord(p + 0x20, Word(Sc() + 0x2E) + x + 12);
-        SetWord(p + 0x22, Word(Sc() + 0x30) + 12u);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x0, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y0, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x1, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x + 12);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y1, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x2, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y2, Word(Sc() + 0x30) + 12u);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x3, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x) + x + 12);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y3, Word(Sc() + 0x30) + 12u);
         p[4] = 0x80;
         p[5] = 0x80;
         p[6] = 0x80;
         const unsigned char* const str = Magic080_TextPointers[i];
-        SetWord(p + 0x16, ((str[0] & 0x7Fu) << 8) + str[1]);
-        SetWord(p + 0xE, MH_CALL(Gpu_GetClut)(0, 0x1E0));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->glyph, ((str[0] & 0x7Fu) << 8) + str[1]);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         p[0xC] = 0;
         p[0xD] = 0;
         p[0x14] = 12;
@@ -304,8 +305,8 @@ C1_EXPORT void __cdecl Magic080_DrawGlyphs(void) {
         p[5] = 0x80;
         p[6] = 0x80;
         PutFloat(p + 0x3C, S16(Sc() + 0x30) + 12);
-        SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E0));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x3C0, 0));
+        rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         const unsigned char* const uv = Magic080_GlyphCells + 4 * i;
         p[0x14] = uv[0];
         p[0x15] = uv[2];
@@ -352,9 +353,9 @@ C1_EXPORT void __cdecl Pentagram_Start(void) {
         return;
     }
     const unsigned char* const src = Source();
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     ClutCopy(0x1A00, 0x1A10, 0x8000);
     Gfx_ClutStripDirty = 1;
     Sc()[0xB] = 0;
@@ -383,7 +384,7 @@ unsigned char* NewChild(unsigned kind) {
     child[0xA] = 0;
     tchild->x = tself->x;
     tchild->z = tself->z;
-    SetWord(child + 0x3E, Word(self + 0x3E));
+    rv::Store<unsigned>(tchild->height_whole, tself->height_whole);
     return child;
 }
 
@@ -439,9 +440,9 @@ C1_EXPORT void __cdecl Pentagram_Sprites(void) {
         child[9] = static_cast<unsigned char>(((i >> 1) << 3) + 1);
         child[0xA] = 0;
         child[0xB] = static_cast<unsigned char>(i >> 1);
-        tchild->x = Long(self + 0x34);
-        tchild->z = Long(self + 0x38);
-        SetWord(child + 0x3E, Word(self + 0x3E));
+        tchild->x = rv::As<records::BattleTask>(self)->x;
+        tchild->z = rv::As<records::BattleTask>(self)->z;
+        rv::Store<unsigned>(tchild->height_whole, rv::As<records::BattleTask>(self)->height_whole);
     }
     // the task as Sprite_Current was read after the last create
     self[0xB] = 0;
@@ -796,11 +797,11 @@ C1_EXPORT void __cdecl PentagramSprite_Run(void) {
 C1_EXPORT void __cdecl PentagramSprite_Start(void) {
     unsigned char* s = Sc();
     if (s[0xB] == 2) {
-        SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x3C)) + 0x1800000u));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->height) + 0x1800000u));
         s = Sc();
     }
     if (s[4] != 0) {
-        SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(s + 0x3C)) + 0x2000000u));
+        rv::Store(rv::As<records::BattleTask>(s)->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->height) + 0x2000000u));
         s = Sc();
     }
     s[0x25] = 0x1D;
@@ -815,7 +816,7 @@ C1_EXPORT void __cdecl PentagramSprite_Start(void) {
     Sc()[0x2A] = Sc()[4];
     Sc()[0x29] = 4;
     Sc()[0x24] = 4;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 1;
     Sc()[9] = 0;
     Inc(Sc()[2]);
@@ -909,11 +910,11 @@ void PuffPlace(const unsigned char* base, std::uint32_t offsets) {
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(offsets + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) +
-                                                   static_cast<std::uint32_t>(Long(base + 0x34))));
+                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z) +
-                                                   static_cast<std::uint32_t>(Long(base + 0x38))));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(offsets + 8 + 12u * Sc()[0xB]))) +
-                                                   static_cast<std::uint32_t>(Long(base + 0x3C))));
+                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->z)));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Mem(offsets + 8 + 12u * Sc()[0xB]))) +
+                                                   static_cast<std::uint32_t>(rv::As<records::SpriteHead>(base)->height)));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -954,8 +955,8 @@ C1_EXPORT void __cdecl Ink_DrawPuff(void) {
         v = MH_CALL(Math_Sin)(kAngles[k]);
         PutFloat(p + 0xC + 0x10 * k, Mul12(v, static_cast<short>(SW(0))) + S16(Sc() + 0x30));
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 2, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 2, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0x20, 0x1FA));
     p[0x14] = 0x80;
     p[0x34] = 0x80;
     p[0x15] = 0x20;
@@ -1106,9 +1107,9 @@ C1_EXPORT void __cdecl InkInkActor_Start(void) {
     const unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[8] = rec[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(rec + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
-    SetLong(Sc() + 0x3C, Long(rec + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(rec)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(rec)->height);
     Sc()[0xB] = 0;
     Inc(Sc()[2]);
     SpawnRecords(bof3::addr::InkInkPuff_Alloc, InkInkPuff_Pool_addr, 1, 2, 7);
@@ -1136,9 +1137,9 @@ C1_EXPORT void __cdecl InkInkPuff_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Store(rv::Current<records::BattleTask>()->step_x, Long(Mem(Addr(InkInkPuff_Offsets) + 12u * Sc()[0xB])));
     rv::Store(rv::Current<records::BattleTask>()->step_z, Long(Mem(Addr(InkInkPuff_Offsets) + 4 + 12u * Sc()[0xB])));
     MH_AT(PtrFn, kTurnOffset)(Sc());
@@ -1146,7 +1147,7 @@ C1_EXPORT void __cdecl InkInkPuff_Start(void) {
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->z) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Sc() + 0x3C)) +
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->height) +
                                                    static_cast<std::uint32_t>(Long(Mem(Addr(InkInkPuff_Offsets) + 8 + 12u * Sc()[0xB])))));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sc()[9] = 0;
@@ -1216,9 +1217,9 @@ C1_EXPORT void __cdecl Magic213Actor_Start(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[9] != 0) return;
     unsigned char* const rec = ActorRecord((TargetByte() & 0x40) != 0, s[4]);
-    ts->x = Long(rec + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
-    SetLong(Sc() + 0x3C, Long(rec + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(rec)->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(rec)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(rec)->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
     Sc()[0xA] = 0;
@@ -1280,12 +1281,12 @@ C1_EXPORT void __cdecl Magic213Mote_Start(void) {
     if (Sc()[9] != 0) return;
     SetSW(0, static_cast<unsigned>(Sc()[0xB] & 7) << 9);
     int v = MH_CALL(Math_Sin)(static_cast<short>(SW(0)));
-    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x34)) +
+    rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x) +
                                                    static_cast<std::uint32_t>(v) * 12u));
     v = MH_CALL(Math_Cos)(static_cast<short>(SW(0)));
-    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
+    rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z) +
                                                    static_cast<std::uint32_t>(v) * 12u));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1800000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x1800000u));
     Sc()[0x25] = 0x1D;
     Sc()[0x26] = 0;
     Sc()[0x27] = 0xA0;
@@ -1297,7 +1298,7 @@ C1_EXPORT void __cdecl Magic213Mote_Start(void) {
     Sc()[0x2A] = 0;
     Sc()[0x29] = 4;
     Sc()[0x24] = 4;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 1;
     MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sc()[0xB] % 3));
     Inc(Sc()[2]);

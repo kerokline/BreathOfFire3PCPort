@@ -38,6 +38,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -246,9 +247,9 @@ S11_EXPORT void __cdecl Sanctuary_Start(void) {
     SetWord(Mem(Sanctuary_Reached_addr + 8), 0);
     Mem(Sanctuary_Reached_addr + 10)[0] = 0;
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned slot = NewTask(0x3F);
@@ -302,9 +303,9 @@ S11_EXPORT void __cdecl SanctuaryRing_Task(void) {
 // radius +0xC (dword) 8, +0xA 0x10; +2 on.
 S11_EXPORT void __cdecl SanctuaryRing_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     rv::Current<records::BattleTask>()->step_x = 8;
     Sc()[0xA] = 0x10;
     Inc(Sc()[2]);
@@ -340,7 +341,7 @@ void SendMotes(unsigned char actor) {
 // motes. At +0xC past 0x600 (signed) +2 on.
 S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
     rv::Store(rv::Current<records::BattleTask>()->step_x, Add(rv::Current<records::BattleTask>()->step_x, 0x20));
-    SetSW(0, Word(Sc() + 0xC));
+    SetSW(0, static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->step_x));
     for (unsigned i = 0; i < 8; ++i) {
         const auto actor = static_cast<unsigned char>(3 + i);
         unsigned char* const reached = Mem(Sanctuary_Reached_addr + actor);
@@ -406,7 +407,7 @@ S11_EXPORT void __cdecl SanctuaryMote_Wait(void) {
     const unsigned char* const r = actor < 3 ? PartyRecord(actor) : EnemyRecord(actor);
     ts->x = Long(r + 0x34);
     ts->z = Long(r + 0x38);
-    SetLong(s + 0x3C, Long(r + 0x3C));
+    rv::Store(ts->height, Long(r + 0x3C));
     ts->step_x = 0x10;
     ts->work_18 = 0x10;
     s[0xA] = 0x10;
@@ -492,7 +493,7 @@ void Shade(unsigned char* p, unsigned vertex, unsigned char c) {
 S11_EXPORT void __cdecl SanctuaryRing_Draw(void) {
     const unsigned char* const s = Sc();
     SetSW(0, Word(s + 0xC) + 0x80u);
-    SetSW(2, Word(s + 0xC));
+    SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
     RingFirstEdge();
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(5, 0xC);
@@ -520,7 +521,7 @@ S11_EXPORT void __cdecl SanctuaryMote_Draw(void) {
     const unsigned char* const s = Sc();
     SetSW(4, s[0xA] * 6u);
     SetSW(0, Word(s + 0xC) + 0x40u);
-    SetSW(2, Word(s + 0xC));
+    SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
     RingFirstEdge();
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(5, 0xC);
@@ -702,9 +703,9 @@ S11_EXPORT void __cdecl TornadoFunnel_PushMatrix(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
-    ts->x = Long(o + 0x34);
-    ts->z = Long(o + 0x38);
-    SetWord(s + 0x3E, Word(o + 0x3E));
+    ts->x = rv::As<records::SpriteHead>(o)->x;
+    ts->z = rv::As<records::SpriteHead>(o)->z;
+    rv::Store<unsigned>(ts->height_whole, rv::As<records::SpriteHead>(o)->height_whole);
     short v[4];
     v[0] = static_cast<short>((ts->x >> 9) - 0x4000);
     v[1] = static_cast<short>((ts->z >> 9) - 0x4000);
@@ -877,13 +878,13 @@ S11_EXPORT void __cdecl TornadoMote_Task(void) {
     v = Cos(SS(0xE));
     {
         const int r = SS(0);
-        const std::int32_t ox = Long(Owner() + 0x34);
+        const std::int32_t ox = rv::As<records::SpriteHead>(Owner())->x;
         rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(v, r, 3), ox));
     }
     v = Sin(SS(0xE));
     {
         const int r = SS(0);
-        const std::int32_t oz = Long(Owner() + 0x38);
+        const std::int32_t oz = rv::As<records::SpriteHead>(Owner())->z;
         rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(v, r, 3), oz));
     }
     const std::uint32_t frame = Frame_Counter;
@@ -900,9 +901,9 @@ S11_EXPORT void __cdecl TornadoMote_Place(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
-    ts->x = Long(o + 0x34);
-    ts->z = Long(o + 0x38);
-    SetLong(s + 0x3C, Add(Long(o + 0x3C), Long(s + 0x14)));
+    ts->x = rv::As<records::SpriteHead>(o)->x;
+    ts->z = rv::As<records::SpriteHead>(o)->z;
+    rv::Store(ts->height, Add(rv::As<records::SpriteHead>(o)->height, ts->step_y));
     s[0xA] = 0;
     Inc(s[2]);
 }
@@ -954,8 +955,8 @@ S11_EXPORT void __cdecl TornadoMote_Draw(void) {
         v = Sin(kCorners[k]);
         PutFloat(p + 0xC + k * 0x10, Add(Mul12(v, SS(0)), S16(Sc() + 0x30)));
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100) & 0xFFFF);
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
     p[0x14] = 0;
     p[0x15] = 0;
     p[0x24] = 0x1F;
@@ -1000,7 +1001,7 @@ S11_EXPORT void __cdecl Tornado_AverageHeight(void) {
     }
     unsigned char* const s = Sc();
     if (count == 0) bof3::Fatal("Tornado_AverageHeight: no live actor on the opposite side (the original divides by zero)");
-    SetWord(s + 0x3E, static_cast<unsigned>(sum / count) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, static_cast<unsigned>(sum / count) & 0xFFFF);
 }
 
 #undef S11_EXPORT

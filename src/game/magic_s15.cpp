@@ -40,6 +40,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -182,8 +183,8 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 void PushTurnedMatrix(const unsigned char* s, short turn) {
     const short rot[4] = {0, 0, turn, 0};
     short v[4];
-    v[0] = static_cast<short>((Long(s + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(s + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((rv::As<records::SpriteHead>(s)->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((rv::As<records::SpriteHead>(s)->z >> 9) - 0x4000);
     v[2] = static_cast<short>(-(S16(s + 0x3E) / 2));
     v[3] = 0;
     Matrix m;
@@ -205,15 +206,15 @@ void MarkAt(const unsigned char* record, unsigned index, unsigned parameter) {
     const unsigned slot = NewTask(parameter);
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
-    const std::int32_t x = Long(record + 0x34);
+    const std::int32_t x = rv::As<records::SpriteHead>(record)->x;
     unsigned char* const s = Sc();
     tchild->owner = static_cast<std::int32_t>(Key(s));
     child[1] = 2;
     child[3] = static_cast<unsigned char>(index);
     child[4] = 5;
     tchild->x = x;
-    tchild->z = Long(record + 0x38);
-    SetLong(child + 0x3C, Long(record + 0x3C));
+    tchild->z = rv::As<records::SpriteHead>(record)->z;
+    rv::Store(tchild->height, rv::As<records::SpriteHead>(record)->height);
     Inc(s[0xB]);
 }
 
@@ -364,7 +365,7 @@ S15_EXPORT void __cdecl ChillRay_Start(void) {
                                                     static_cast<std::uint32_t>(Field_Kind2Z));
     }
     MH_CALL(Sound_PlayEffect)(0x100);
-    SetLong(Sc() + 0x14, 0x2FFF);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x2FFF);
     Sc()[0xB] = 0x34;
     Sc()[9] = 0;
     Sc()[0xA] = 0x10;
@@ -491,9 +492,9 @@ S15_EXPORT void __cdecl ChillRay_Draw(void) {
             for (unsigned k : {0x2Du, 0x2Eu, 0x40u, 0x41u, 0x42u}) p[k] = SB(2);
         }
         const unsigned tpage = MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100);
-        SetWord(p + 0x2A, tpage);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, tpage);
         const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1E2);
-        SetWord(p + 0x16, clut);
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, clut);
         {
             const std::uint32_t scroll = ~(static_cast<std::uint32_t>(Frame_Counter) * 2u) + static_cast<std::uint32_t>(i);
             SetSW(0xE, (0x54u - (scroll & 0x3Fu)) * 3u);
@@ -618,9 +619,9 @@ S15_EXPORT void __cdecl Foretell_Task(void) {
 // +0x3C); one child (kind 1, 0x1C, +1 0, +0x80 this task); +0xB 1, +1 on.
 S15_EXPORT void __cdecl Foretell_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     const unsigned slot = NewTask(0x1C);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
@@ -839,9 +840,9 @@ S15_EXPORT void __cdecl ForetellOrb_Run(void) {
 // +0xB 0, +9 0xF, +0xA 3, +2 on.
 S15_EXPORT void __cdecl ForetellOrb_Start(void) {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x2000000u));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) + 0x2000000u));
     MH_CALL(BattleActor_UpdateScreenXY)();
     MH_CALL(Sound_PlayById)(0x100);
     Sc()[0xB] = 0;
@@ -910,9 +911,9 @@ S15_EXPORT void __cdecl ForetellOrb_Draw(void) {
     p[6] = 0x80;
     PutFloat(p + 0x3C, S16(Sc() + 0x30) + 0xC);
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1E0);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x14] = Sc()[0xB];
     p[0x15] = 0x24;
     p[0x25] = 0x24;
@@ -944,8 +945,8 @@ S15_EXPORT void __cdecl Influence_Task(void) {
 S15_EXPORT void __cdecl Influence_Start(void) {
     {
         const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
-        SetWord(Sc() + 0x2E, Word(source + 0x2E));
-        SetWord(Sc() + 0x30, Word(source + 0x30));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_x));
+        rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(source)->screen_y));
     }
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -1012,8 +1013,8 @@ S15_EXPORT void __cdecl InfluenceRight_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 0xB;
-    SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) + 0x37u);
-    SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x) + 0x37u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
     Sc()[0xA] = 0x20;
     Inc(Sc()[2]);
@@ -1026,7 +1027,7 @@ S15_EXPORT void __cdecl InfluenceRight_Slide(void) {
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) - 1u));
     {
         unsigned char* const s = Sc();
-        SetWord(s + 0x2E, Word(s + 0x2E) - Word(s + 0xC));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) - static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
     }
     if (rv::Current<records::BattleTask>()->step_x != 0) return;
     if (Sc()[0xB] == 0) {
@@ -1097,8 +1098,8 @@ S15_EXPORT void __cdecl InfluenceLeft_Launch(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 0xB;
-    SetWord(Sc() + 0x2E, Word(Owner() + 0x2E) - 0x37u);
-    SetWord(Sc() + 0x30, Word(Owner() + 0x30) - 0x10u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x) - 0x37u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(Owner() + 0x30) - 0x10u);
     Sc()[9] = 0;
     Sc()[0xA] = 0x20;
     Inc(Sc()[2]);
@@ -1110,7 +1111,7 @@ S15_EXPORT void __cdecl InfluenceLeft_Slide(void) {
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) - 1u));
     {
         unsigned char* const s = Sc();
-        SetWord(s + 0x2E, Word(s + 0x2E) + Word(s + 0xC));
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) + static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_x));
     }
     if (rv::Current<records::BattleTask>()->step_x != 0) return;
     Dec(Owner()[0xB]);
@@ -1147,8 +1148,8 @@ S15_EXPORT void __cdecl InfluenceMark_Start(void) {
     MH_CALL(Sprite_ReleaseTint)(sprite);
     const unsigned char tint = MH_CALL(Sprite_SetTint)(sprite, 0, 0, 0, 1);
     Sc()[0xA] = tint;
-    SetWord(Sc() + 0x2E, Word(sprite + 0x2E) - 0x20u);
-    SetWord(Sc() + 0x30, Word(sprite + 0x30) - 0xCu);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_x, Word(sprite + 0x2E) - 0x20u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->screen_y, Word(sprite + 0x30) - 0xCu);
     unsigned char* const s = Sc();
     const unsigned index = s[0xB];
     unsigned lift;
@@ -1158,7 +1159,7 @@ S15_EXPORT void __cdecl InfluenceMark_Start(void) {
     } else {
         lift = Mem(kEnemyLift + EnemyRecord(index)[0xF0] * kEnemyLiftStride)[0];
     }
-    SetWord(s + 0x30, Word(s + 0x30) - lift);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y) - lift);
     Sc()[9] = 0;
     Inc(Sc()[2]);
 }
@@ -1214,9 +1215,9 @@ S15_EXPORT void __cdecl InfluenceMark_Draw(void) {
     PutFloat(p + 0x38, S16(Sc() + 0x2E) + 0x30);
     PutFloat(p + 0x3C, S16(Sc() + 0x30) + Sc()[0xA]);
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 0, 0x380, 0x100);
-    SetWord(p + 0x26, tpage);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, tpage);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0x20, 0x1FA);
-    SetWord(p + 0x16, clut);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, clut);
     p[0x14] = 0;
     p[0x15] = 0x20;
     p[0x24] = 0x40;
@@ -1260,9 +1261,9 @@ S15_EXPORT void __cdecl Influence_DrawTriangles(void) {
     const unsigned char* const points = Mem(Influence_TrianglePoints_addr);
     for (int k = 0, angle = 0; angle < 0x1000; ++k, angle += 0x400) {
         int v = MH_CALL(Math_Sin)(angle);
-        SetSW(0xC, static_cast<unsigned>(Mul12(v, SS(0))) + Word(Sc() + 0x2E));
+        SetSW(0xC, static_cast<unsigned>(Mul12(v, SS(0))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x));
         v = MH_CALL(Math_Cos)(angle);
-        SetSW(0xE, static_cast<unsigned>(Mul12(v, SS(0))) + Word(Sc() + 0x30));
+        SetSW(0xE, static_cast<unsigned>(Mul12(v, SS(0))) + static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y));
         const unsigned turn = static_cast<unsigned>(k) << 4;
         for (unsigned j = 0; j < 3; ++j) {
             unsigned char* const p = Gfx_PacketNext;
@@ -1304,8 +1305,8 @@ S15_EXPORT void __cdecl Influence_DrawRing(void) {
     {
         const unsigned char* const s = Sc();
         SetSW(0, s[0xA]);
-        SetSW(0xC, Word(s + 0x2E));
-        SetSW(0xE, Word(s + 0x30));
+        SetSW(0xC, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(0xE, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
         SetSW(6, s[2] < 2 ? FadeShade(s) : 0x80u);
     }
     for (unsigned i = 0; i < 0x40; ++i) {
@@ -1343,8 +1344,8 @@ S15_EXPORT void __cdecl Influence_DrawCross(void) {
     const unsigned char* const s = Sc();
     SetSW(6, 0x80);
     unsigned char* p = Gfx_PacketNext;
-    SetSW(0xC, Word(s + 0x2E));
-    SetSW(0xE, Word(s + 0x30));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(0xE, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     MH_CALL(Gpu_SetLineF2)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     PutFloat(p + 8, SS(0xC) - 4);

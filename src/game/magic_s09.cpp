@@ -43,6 +43,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -184,9 +185,9 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 // The task's +8 and position (+0x34 / +0x38 / +0x3C) the owner's.
 void FacingAndPositionFromOwner() {
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
 }
 
 // Gfx_ClutStrip 0x1A00..0x1A0F (row 26's first sixteen words) back from its
@@ -314,13 +315,13 @@ S09_EXPORT void __cdecl BoneDartShaft_Start(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(ts->step_x));
-        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(ts->step_z));
-        SetWord(s + 0x3E, (Word(Owner() + 0x3E) + 0x100u) & 0xFFFF);
+        ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + U(ts->step_x));
+        ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + U(ts->step_z));
+        rv::Store<unsigned>(ts->height_whole, (rv::As<records::SpriteHead>(Owner())->height_whole + 0x100u) & 0xFFFF);
         s[0x25] = 0x1D;
         s[0x26] = 0;
-        SetLong(s + 0x40, 0x10000);
-        SetLong(s + 0x44, 0x10000);
+        rv::Store(ts->scale_x, 0x10000);
+        rv::Store(ts->scale_y, 0x10000);
         s[0x48] = 1;
         s[0x27] = 0xA0;
         s[0x28] = 0;
@@ -331,7 +332,7 @@ S09_EXPORT void __cdecl BoneDartShaft_Start(void) {
         s[0x5C] = 0;
         s[0x2A] = 0;
         s[0x29] = 4;
-        SetWord(s + 0x2C, 0);
+        rv::Store<unsigned>(ts->column, 0);
         s[0x2B] = 1;
     }
     MH_CALL(Sprite_SetAnimation)(0);
@@ -349,8 +350,8 @@ S09_EXPORT void __cdecl BoneDartShaft_Fly(void) {
     MH_CALL(Sprite_ScriptTick)();
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-        const std::int32_t x = (Long(src + 0x34) >> 9) - 0x4000;
-        const std::int32_t z = (Long(src + 0x38) >> 9) - 0x4000;
+        const std::int32_t x = (rv::As<records::SpriteHead>(src)->x >> 9) - 0x4000;
+        const std::int32_t z = (rv::As<records::SpriteHead>(src)->z >> 9) - 0x4000;
         const std::int32_t y = (S16(src + 0x3E) + 0xC0) >> 1;
         MH_CALL(MagicFx_StepTowardPoint)(U(x), U(z), U(y), 0, 0x30);
     }
@@ -368,14 +369,14 @@ S09_EXPORT void __cdecl BoneDartShaft_Fly(void) {
         s[0x5E] = 0;
         s[0x5F] = 0;
         const unsigned char* const o = Owner();
-        const std::int32_t dz = static_cast<std::int32_t>(U(Long(o + 0x38)) - U(ts->z));
-        const std::int32_t dx = static_cast<std::int32_t>(U(Long(o + 0x34)) - U(ts->x));
+        const std::int32_t dz = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->z) - U(ts->z));
+        const std::int32_t dx = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->x) - U(ts->x));
         const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
         unsigned char* const t = Sc();
         records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         tt->step_x = heading;
-        SetLong(t + 0x14, 0x40);
-        SetLong(t + 0x20, -8);
+        rv::Store(tt->step_y, 0x40);
+        rv::Store(tt->work_20, -8);
         t[9] = 0x10;
         Inc(t[2]);
     }
@@ -404,8 +405,8 @@ S09_EXPORT void __cdecl BoneDartShaft_Bounce(void) {
         AddLong(p, U(ShlSar(v, 13, 12)));
     }
     unsigned char* const s = Sc();
-    AddLong(s + 0x14, U(Long(s + 0x20)));
-    SetWord(s + 0x3E, (Word(s + 0x3E) + Word(s + 0x14)) & 0xFFFF);
+    AddLong(s + 0x14, U(rv::As<records::BattleTask>(s)->work_20));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (rv::As<records::BattleTask>(s)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y)) & 0xFFFF);
     Dec(s[9]);
     if (s[9] == 0) Inc(s[2]);
 }
@@ -425,13 +426,13 @@ S09_EXPORT void __cdecl BoneDartShadow_Start(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Long(Owner() + 0x34);
-        ts->z = Long(Owner() + 0x38);
-        SetWord(s + 0x3E, Word(Owner() + 0x3E));
+        ts->x = rv::As<records::SpriteHead>(Owner())->x;
+        ts->z = rv::As<records::SpriteHead>(Owner())->z;
+        rv::Store<unsigned>(ts->height_whole, rv::As<records::SpriteHead>(Owner())->height_whole);
         s[0x25] = 0x1D;
         s[0x26] = 0;
-        SetLong(s + 0x40, 0x10000);
-        SetLong(s + 0x44, 0x10000);
+        rv::Store(ts->scale_x, 0x10000);
+        rv::Store(ts->scale_y, 0x10000);
         s[0x48] = 1;
         s[0x27] = 0xA0;
         s[0x28] = 0;
@@ -443,7 +444,7 @@ S09_EXPORT void __cdecl BoneDartShadow_Start(void) {
         s[0x5F] = 0xC0;
         s[0x2A] = 0;
         s[0x29] = 4;
-        SetWord(s + 0x2C, 0);
+        rv::Store<unsigned>(ts->column, 0);
         s[0x2B] = 0;
     }
     MH_CALL(Sprite_SetAnimation)(0);
@@ -463,11 +464,11 @@ static void BoneDartShadowFollow(unsigned step) {
         ts->z = Long(TaskSlot(s[0xB]) + 0x38);
     }
     const long ground = MH_CALL(AreaMap_Elevation)(rv::Current<records::BattleTask>()->x, rv::Current<records::BattleTask>()->z);
-    SetWord(Sc() + 0x3E, static_cast<std::uint32_t>(ground) & 0xFFFF);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, static_cast<std::uint32_t>(ground) & 0xFFFF);
     unsigned char* const s = Sc();
     {
         const unsigned char* const dart = TaskSlot(s[0xB]);
-        if (S16(dart + 0x3E) < S16(s + 0x3E)) SetLong(s + 0x3C, Long(dart + 0x3C));
+        if (S16(dart + 0x3E) < S16(s + 0x3E)) rv::Store(rv::As<records::BattleTask>(s)->height, rv::As<records::BattleTask>(dart)->height);
     }
     if (TaskSlot(s[0xB])[2] == step) Inc(s[2]);
 }
@@ -642,8 +643,8 @@ S09_EXPORT void __cdecl ElemBreathMote_Start(void) {
         const unsigned char* const s = Sc();
         const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         const unsigned char* const o = Owner();
-        const std::int32_t dz = static_cast<std::int32_t>(U(ts->z) - U(Long(o + 0x38)));
-        const std::int32_t dx = static_cast<std::int32_t>(U(ts->x) - U(Long(o + 0x34)));
+        const std::int32_t dz = static_cast<std::int32_t>(U(ts->z) - U(rv::As<records::SpriteHead>(o)->z));
+        const std::int32_t dx = static_cast<std::int32_t>(U(ts->x) - U(rv::As<records::SpriteHead>(o)->x));
         angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
     }
     Sc()[8] = Owner()[8];
@@ -664,16 +665,16 @@ S09_EXPORT void __cdecl ElemBreathMote_Start(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         ts->step_x = reach;
         ts->step_z = 0;
-        SetLong(s + 0x14, lift);
+        rv::Store(ts->step_y, lift);
     }
     Turn(Sc());
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
-    ts->x = static_cast<std::int32_t>(U(Long(o + 0x34)) + U(ts->step_x));
-    ts->z = static_cast<std::int32_t>(U(Long(o + 0x38)) + U(ts->step_z));
-    SetLong(s + 0x3C, static_cast<std::int32_t>(U(Long(o + 0x3C)) + U(Long(s + 0x14))));
-    SetLong(s + 0x14, static_cast<std::int32_t>(U(angle) & 0xFFF));
+    ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->x) + U(ts->step_x));
+    ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->z) + U(ts->step_z));
+    rv::Store(ts->height, static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(o)->height) + U(ts->step_y)));
+    rv::Store(ts->step_y, static_cast<std::int32_t>(U(angle) & 0xFFF));
     s[9] = 0;
     Inc(s[2]);
 }
@@ -690,7 +691,7 @@ static void ElemBreathMoteDrift() {
         const int v = Sin(static_cast<short>(angle));
         unsigned char* const t = Sc();
         records::BattleTask* const tt = rv::As<records::BattleTask>(t);
-        tt->step_x = static_cast<std::int32_t>(U(Imul(v, 300) >> 12) + U(Long(t + 0x14)));
+        tt->step_x = static_cast<std::int32_t>(U(Imul(v, 300) >> 12) + U(tt->step_y));
     }
     {
         unsigned char* const p = Sc() + 0x34;
@@ -741,8 +742,8 @@ S09_EXPORT void __cdecl ElemBreathMote_Draw(void) {
         const unsigned age = s[9];
         SetSW(0, age < 8 ? (age + 1) * 6 : age * 2 + 0x20);
         SetSW(8, s[0xA] * 20u);
-        SetSW(4, Word(s + 0x2E));
-        SetSW(6, Word(s + 0x30));
+        SetSW(4, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+        SetSW(6, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     }
     static constexpr struct { int angle; unsigned x, y; } kCorners[4] = {
         {0xC00, 8, 0xC}, {0x800, 0x1C, 0x20}, {0, 0x30, 0x34}, {0x400, 0x44, 0x48}};
@@ -753,9 +754,9 @@ S09_EXPORT void __cdecl ElemBreathMote_Draw(void) {
         PutFloat(p + c.y, Mul12(v, SS(0)) + SS(6));
     }
     const unsigned tpage = MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100);
-    SetWord(p + 0x2A, tpage & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, tpage & 0xFFFF);
     const unsigned clut = MH_CALL(Gpu_GetClut)(0, 0x1FA);
-    SetWord(p + 0x16, clut & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, clut & 0xFFFF);
     p[0x14] = 1;
     p[0x15] = 1;
     p[0x28] = 0x1F;
@@ -912,8 +913,8 @@ S09_EXPORT void __cdecl DreamBreathMote_Start(void) {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(U(Long(Owner() + 0x34)) + U(ts->step_x));
-        ts->z = static_cast<std::int32_t>(U(Long(Owner() + 0x38)) + U(ts->step_z));
+        ts->x = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->x) + U(ts->step_x));
+        ts->z = static_cast<std::int32_t>(U(rv::As<records::SpriteHead>(Owner())->z) + U(ts->step_z));
         ts->step_x = 0x80000;
         ts->step_z = 0;
     }
@@ -921,8 +922,8 @@ S09_EXPORT void __cdecl DreamBreathMote_Start(void) {
     unsigned char* const s = Sc();
     AddLong(s + 0xC, U(Field_Kind2X));
     AddLong(s + 0x10, U(Field_Kind2Z));
-    SetLong(s + 0x14, S16(s + 0x3E) + 0x100);
-    SetWord(s + 0x3E, (Word(Owner() + 0x3E) + 0x100u) & 0xFFFF);
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, S16(s + 0x3E) + 0x100);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, (rv::As<records::SpriteHead>(Owner())->height_whole + 0x100u) & 0xFFFF);
     s[9] = 0;
     s[0xA] = 0;
     Inc(s[2]);
@@ -934,7 +935,7 @@ static void DreamBreathMoteStep() {
     const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     const std::int32_t x = (ts->step_x >> 9) - 0x4000;
     const std::int32_t z = (ts->step_z >> 9) - 0x4000;
-    const std::int32_t y = Long(s + 0x14) >> 1;
+    const std::int32_t y = ts->step_y >> 1;
     MH_CALL(MagicFx_StepTowardPoint)(U(x), U(z), U(y), 0, 0x10);
 }
 
@@ -946,7 +947,7 @@ S09_EXPORT void __cdecl DreamBreathMote_Fly(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[0xA] != 0x10) Inc(s[0xA]);
-    if (MH_CALL(MagicFx_NearPoint3D)(U(ts->step_x), U(ts->step_z), U(Long(s + 0x3C)), 0x60000) != 0) Inc(Sc()[2]);
+    if (MH_CALL(MagicFx_NearPoint3D)(U(ts->step_x), U(ts->step_z), U(ts->height), 0x60000) != 0) Inc(Sc()[2]);
 }
 
 // original 0x4AAF50: a step toward the destination; +9 up, the shade down;
@@ -1086,7 +1087,7 @@ S09_EXPORT void __cdecl DreamBreath_TargetHeight(void) {
     const std::int32_t count = SD(4);
     if (count == 0) bof3::Fatal("DreamBreath_TargetHeight: no actor of the target side in (the original's idiv faults)");
     if (sum == INT_MIN && count == -1) bof3::Fatal("DreamBreath_TargetHeight: the mean overflows (the original's idiv faults)");
-    SetWord(s + 0x3E, static_cast<std::uint32_t>(sum / count) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, static_cast<std::uint32_t>(sum / count) & 0xFFFF);
 }
 
 // ===========================================================================
@@ -1108,8 +1109,8 @@ S09_EXPORT void __cdecl Pollen_Start(void) {
     Sc()[0xB] = 0;
     MH_CALL(MagicFx_CenterOnSide)();
     Sc()[8] = Owner()[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
     Sc()[9] = 0;
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -1127,7 +1128,7 @@ S09_EXPORT void __cdecl Pollen_Start(void) {
         child[8] = s[8];
         tchild->x = ts->x;
         tchild->z = ts->z;
-        SetLong(child + 0x3C, Long(s + 0x3C));
+        rv::Store(tchild->height, ts->height);
         Inc(s[0xB]);
     }
     MH_CALL(Sound_PlayById)(0x100);

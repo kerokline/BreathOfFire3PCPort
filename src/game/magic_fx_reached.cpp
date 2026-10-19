@@ -119,9 +119,9 @@ Handler Entry(std::uint32_t table, unsigned index) {
 // three dwords +0x34 / +0x38 / +0x3C, Sprite_Current read again for each.
 void TakePosition(const unsigned char* from) {
     Sprite_Current[8] = from[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(from + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(from)->height);
 }
 void Bump(unsigned char& b, int by) { b = static_cast<unsigned char>(b + by); }
 
@@ -144,7 +144,7 @@ MFX_EXPORT void __cdecl FxDiscFan_Task(void) {
     if (Sprite_Current[0] == 0) return;
     g.update_screen_xy();
     unsigned char* const sc = Sprite_Current;
-    SetWord(sc + 0x30, Word(sc + 0x30) - 0x10u);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->screen_y) - 0x10u);
     g.draw_disc();
     g.push_matrix();
     g.draw_fan();
@@ -233,9 +233,9 @@ MFX_EXPORT void __cdecl FxRing_Wait(void) {
     unsigned char* const sc = Sprite_Current;
     records::BattleTask* const tsc = rv::As<records::BattleTask>(sc);
     if (sc[9] != 0) return;
-    tsc->x = Long(Ptr(at::kOwner) + 0x34);
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Ptr(at::kOwner) + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(Ptr(at::kOwner) + 0x3C));
+    tsc->x = rv::As<records::SpriteHead>(Ptr(at::kOwner))->x;
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Ptr(at::kOwner))->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Ptr(at::kOwner))->height);
     Sprite_Current[9] = 0x40;
     Sprite_Current[0xA] = 0;
     Sprite_Current[0xB] = 0;
@@ -362,7 +362,7 @@ MFX_EXPORT void __cdecl Steal_Start(void) {
         return;
     }
     Sprite_Current[0xA] = 0x38;
-    SetWord(Sprite_Current + 0x2C, item);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, item);
     unsigned char* const e2 = Enemy(Byte(at::kTarget));
     e2[at::kStealRate] = 0;
     SetWord(e2 + at::kStealItem, 0);

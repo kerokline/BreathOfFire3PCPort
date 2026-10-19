@@ -29,6 +29,7 @@
 #include "game/lang_layout.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "game/text_advance.h"
 #include "game/magic_s12.h"
 
@@ -505,8 +506,8 @@ void DrawElementIcon(int x, int y, int right, unsigned i, unsigned char shade) {
     p[0x24] = u1; p[0x25] = v0;
     p[0x34] = u0; p[0x35] = v1;
     p[0x44] = u1; p[0x45] = v1;
-    SetWord(p + 0x16, (i == 1 || i == 3) ? 0x780Eu : 0x780Cu);
-    SetWord(p + 0x26, 0xF);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, (i == 1 || i == 3) ? 0x780Eu : 0x780Cu);
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, 0xF);
     MH_CALL(Gfx_CommitPrim)(2, 0x48);
 }
 
@@ -524,14 +525,14 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
     for (unsigned i = 0; i < 6; ++i) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetCode6C)(p);
-        SetWord(p + 0xA, static_cast<unsigned>(y));
-        SetWord(p + 0x12, static_cast<unsigned>(y));
-        SetWord(p + 0x1A, static_cast<unsigned>(y + 0xC));
-        SetWord(p + 0x22, static_cast<unsigned>(y + 0xC));
-        SetWord(p + 8, static_cast<unsigned>(x));
-        SetWord(p + 0x10, static_cast<unsigned>(right));
-        SetWord(p + 0x18, static_cast<unsigned>(x));
-        SetWord(p + 0x20, static_cast<unsigned>(right));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y0, static_cast<unsigned>(y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y1, static_cast<unsigned>(y));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y2, static_cast<unsigned>(y + 0xC));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->y3, static_cast<unsigned>(y + 0xC));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x0, static_cast<unsigned>(x));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x1, static_cast<unsigned>(right));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x2, static_cast<unsigned>(x));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->x3, static_cast<unsigned>(right));
         unsigned shade = 0x30;
         SetDd(4, 0x30);
         if (EnemyRec(index)[kResist[i]] <= (i == 5 ? 3 : 1)) {
@@ -548,8 +549,8 @@ MS12_EXPORT void __cdecl Identify_DrawElements(int x, int y) {
         p[5] = DsByte(4);
         p[6] = DsByte(4);
         const unsigned char* const glyph = Pointer(kElementGlyphs + 4 * i);
-        SetWord(p + 0x16, (static_cast<unsigned>(glyph[0] & 0x7F) << 8) + glyph[1]);
-        SetWord(p + 0xE, MH_CALL(Gpu_GetClut)(0, 0x1E0));
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->glyph, (static_cast<unsigned>(glyph[0] & 0x7F) << 8) + glyph[1]);
+        rv::Store<unsigned>(rv::As<records::GpuGlyph>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E0));
         p[0xC] = 0;
         p[0xD] = 0;
         p[0x14] = 0xC;
@@ -753,9 +754,9 @@ MS12_EXPORT void __cdecl Celerity_Task(void) {
 MS12_EXPORT void __cdecl Celerity_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SC()[8] = src[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(SC() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     SC()[0xB] = 0;
     SC()[9] = 0x10;
     Bump(SC()[1]);
@@ -769,7 +770,7 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
         t[9] = 0;
         tt->x = tsc->x;
         tt->z = tsc->z;
-        SetLong(t + 0x3C, Long(sc + 0x3C));
+        rv::Store(tt->height, tsc->height);
         Bump(sc[0xB]);
     }
     unsigned char spark = 0;
@@ -993,9 +994,9 @@ void SparkFrame(unsigned base) {
 bool SparkFly() {
     if (Frame_Counter & 1) Bump(SC()[9]);
     unsigned char* sc = SC();
-    SetLong(sc + 0x14, AddL(Long(sc + 0x14), static_cast<std::uint32_t>(Long(sc + 0x20))));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_y, AddL(rv::As<records::BattleTask>(sc)->step_y, static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_20)));
     sc = SC();
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, rv::As<records::BattleTask>(sc)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->step_y));
     Drop(SC()[0xA]);
     return SC()[0xA] == 0;
 }
@@ -1007,8 +1008,8 @@ bool SparkFly() {
 MS12_EXPORT void __cdecl CeleritySpark_Rise(void) {
     SparkFrame(0x18);
     if (!SparkFly()) return;
-    SetLong(SC() + 0x14, -16);
-    SetLong(SC() + 0x20, 4);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, -16);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 4);
     SC()[0xA] = 8;
     Bump(SC()[2]);
 }
@@ -1031,24 +1032,24 @@ MS12_EXPORT void __cdecl CeleritySpark_Fall(void) {
 MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* sc = SC();
-    const bool wide = Long(sc + 0xC) == 4 && sc[0xA] < 5;
+    const bool wide = rv::As<records::BattleTask>(sc)->step_x == 4 && sc[0xA] < 5;
     const int r = MH_CALL(Rand)();
     DrawDisc(static_cast<unsigned>((r & 3) + (wide ? 0x40 : 0x18)));
     MH_CALL(MagicFx_PushActorMatrix)();
     Call0(bof3::addr::CeleritySpark_Draw);
     MH_CALL(Gte_PopMatrix)();
     sc = SC();
-    if (Long(sc + 0xC) < 4) {
-        SetLong(sc + 0x10, AddL(Long(sc + 0x10), 1));
+    if (rv::As<records::BattleTask>(sc)->step_x < 4) {
+        rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 1));
         sc = SC();
         if ((sc[0x10] & 7) == 0) {
-            SetLong(sc + 0xC, AddL(Long(sc + 0xC), 1));
+            rv::Store(rv::As<records::BattleTask>(sc)->step_x, AddL(rv::As<records::BattleTask>(sc)->step_x, 1));
             sc = SC();
         }
     }
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();
-    if (Long(sc + 0xC) != 4) return;
+    if (rv::As<records::BattleTask>(sc)->step_x != 4) return;
     Drop(sc[0xA]);
     sc = SC();
     if (sc[0xA] != 0) return;
@@ -1056,9 +1057,9 @@ MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
         MH_CALL(Sound_PlayById)(0x101);
         sc = SC();
     }
-    SetLong(sc + 0x10, 8);
-    SetLong(SC() + 0x14, 8);
-    SetLong(SC() + 0x20, 8);
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 8);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Bump(SC()[2]);
 }
 
@@ -1069,7 +1070,7 @@ MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
 MS12_EXPORT void __cdecl CeleritySpark_Orbit(void) {
     SparkFrame(0x20);
     unsigned char* sc = SC();
-    SetLong(sc + 0x10, AddL(Long(sc + 0x10), 4));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 4));
     sc = SC();
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();
@@ -1078,9 +1079,9 @@ MS12_EXPORT void __cdecl CeleritySpark_Orbit(void) {
     SetDs(4, (sc[0xB] & 0x1Fu) << 7);
     SetDs(0, sc[0xA] * static_cast<unsigned>(Word(sc + 0x10)) + 0xB0u);
     int r = Sin(Ds(4));
-    rv::Store(rv::Current<records::BattleTask>()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
     r = Cos(Ds(4));
-    rv::Store(rv::Current<records::BattleTask>()->z, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
     Bump(SC()[0xA]);
     if (SC()[0xA] != 0x10) return;
     Drop(Owner()[0xB]);

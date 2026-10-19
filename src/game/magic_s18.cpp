@@ -169,9 +169,9 @@ template <void (__cdecl* Draw)(void)> void OrbTask(const unsigned long* phases, 
 
 // Place the task at an object's position plus (dx, dz, dy).
 void PlaceAt(const unsigned char* obj, std::uint32_t dx, std::uint32_t dz, std::uint32_t dy) {
-    rv::Store(rv::Current<records::BattleTask>()->x, AddL(Long(obj + 0x34), dx));
-    rv::Store(rv::Current<records::BattleTask>()->z, AddL(Long(obj + 0x38), dz));
-    SetLong(SC() + 0x3C, AddL(Long(obj + 0x3C), dy));
+    rv::Store(rv::Current<records::BattleTask>()->x, AddL(rv::As<records::SpriteHead>(obj)->x, dx));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(rv::As<records::SpriteHead>(obj)->z, dz));
+    rv::Store(rv::Current<records::BattleTask>()->height, AddL(rv::As<records::SpriteHead>(obj)->height, dy));
 }
 
 }  // namespace
@@ -228,7 +228,7 @@ MS18_EXPORT void __cdecl DrainOrbA_Place(void) {
 
 // original 0x4BECD0: the word +0x3E down 0x40; +9 down; on at 0.
 MS18_EXPORT void __cdecl DrainOrbA_Drop(void) {
-    SetWord(SC() + 0x3E, Word(SC() + 0x3E) + 0xFFC0u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::Current<records::BattleTask>()->height_whole + 0xFFC0u);
     Drop(SC()[9]);
     if (SC()[9] == 0) Bump(SC()[2]);
 }
@@ -278,7 +278,7 @@ MS18_EXPORT void __cdecl DrainOrbB_Place(void) {
 
 // original 0x4BEE80: the word +0x3E down 0x40; +9 down; at 0, +9 0x20 and on.
 MS18_EXPORT void __cdecl DrainOrbB_Drop(void) {
-    SetWord(SC() + 0x3E, Word(SC() + 0x3E) + 0xFFC0u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::Current<records::BattleTask>()->height_whole + 0xFFC0u);
     Drop(SC()[9]);
     if (SC()[9] != 0) return;
     SC()[9] = 0x20;
@@ -556,9 +556,9 @@ MS18_EXPORT void __cdecl Buff_Task(void) {
 MS18_EXPORT void __cdecl Buff_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SC()[8] = src[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(SC() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     const unsigned char kind = MH_CALL(Buff_Kind)();
     SC()[4] = kind;
     SC()[0xB] = 0;
@@ -575,7 +575,7 @@ MS18_EXPORT void __cdecl Buff_Start(void) {
         t[9] = 0;
         tt->x = tsc->x;
         tt->z = tsc->z;
-        SetLong(t + 0x3C, Long(sc + 0x3C));
+        rv::Store(tt->height, tsc->height);
         Bump(sc[0xB]);
     }
     for (unsigned b = 0; b < 0x20; b += 8) {
@@ -807,9 +807,9 @@ void SpikeFrame(unsigned base) {
 bool SpikeFly() {
     if (Frame_Counter & 1) Bump(SC()[9]);
     unsigned char* sc = SC();
-    SetLong(sc + 0x14, AddL(Long(sc + 0x14), static_cast<std::uint32_t>(Long(sc + 0x20))));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_y, AddL(rv::As<records::BattleTask>(sc)->step_y, static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_20)));
     sc = SC();
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, rv::As<records::BattleTask>(sc)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->step_y));
     Drop(SC()[0xA]);
     return SC()[0xA] == 0;
 }
@@ -821,8 +821,8 @@ bool SpikeFly() {
 MS18_EXPORT void __cdecl BuffSpike_Arc(void) {
     SpikeFrame(0x18);
     if (!SpikeFly()) return;
-    SetLong(SC() + 0x14, -16);
-    SetLong(SC() + 0x20, 4);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, -16);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 4);
     SC()[0xA] = 8;
     Bump(SC()[2]);
 }
@@ -845,24 +845,24 @@ MS18_EXPORT void __cdecl BuffSpike_Arc2(void) {
 MS18_EXPORT void __cdecl BuffSpike_Spin(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* sc = SC();
-    const bool wide = Long(sc + 0xC) == 4 && sc[0xA] < 5;
+    const bool wide = rv::As<records::BattleTask>(sc)->step_x == 4 && sc[0xA] < 5;
     const int r = MH_CALL(Rand)();
     MH_CALL(MagicFx_DrawDiscRadius)(static_cast<unsigned>((r & 3) + (wide ? 0x40 : 0x18)));
     MH_CALL(MagicFx_PushActorMatrix)();
     MH_CALL(BuffSpike_Draw)();
     MH_CALL(Gte_PopMatrix)();
     sc = SC();
-    if (Long(sc + 0xC) < 4) {
-        SetLong(sc + 0x10, AddL(Long(sc + 0x10), 1));
+    if (rv::As<records::BattleTask>(sc)->step_x < 4) {
+        rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 1));
         sc = SC();
         if ((sc[0x10] & 7) == 0) {
-            SetLong(sc + 0xC, AddL(Long(sc + 0xC), 1));
+            rv::Store(rv::As<records::BattleTask>(sc)->step_x, AddL(rv::As<records::BattleTask>(sc)->step_x, 1));
             sc = SC();
         }
     }
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();
-    if (Long(sc + 0xC) != 4) return;
+    if (rv::As<records::BattleTask>(sc)->step_x != 4) return;
     Drop(sc[0xA]);
     sc = SC();
     if (sc[0xA] != 0) return;
@@ -870,9 +870,9 @@ MS18_EXPORT void __cdecl BuffSpike_Spin(void) {
         MH_CALL(Sound_PlayById)(0x101);
         sc = SC();
     }
-    SetLong(sc + 0x10, 8);
-    SetLong(SC() + 0x14, 8);
-    SetLong(SC() + 0x20, 8);
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 8);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Bump(SC()[2]);
 }
 
@@ -883,7 +883,7 @@ MS18_EXPORT void __cdecl BuffSpike_Spin(void) {
 MS18_EXPORT void __cdecl BuffSpike_Orbit(void) {
     SpikeFrame(0x20);
     unsigned char* sc = SC();
-    SetLong(sc + 0x10, AddL(Long(sc + 0x10), 4));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_z, AddL(rv::As<records::BattleTask>(sc)->step_z, 4));
     sc = SC();
     sc[9] = static_cast<unsigned char>(sc[9] + sc[0xC]);
     sc = SC();
@@ -892,9 +892,9 @@ MS18_EXPORT void __cdecl BuffSpike_Orbit(void) {
     SetDs(4, (sc[0xB] & 0x1Fu) << 7);
     SetDs(0, sc[0xA] * static_cast<unsigned>(Word(sc + 0x10)) + 0xB0u);
     int r = Sin(Ds(4));
-    rv::Store(rv::Current<records::BattleTask>()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    rv::Store(rv::Current<records::BattleTask>()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x)));
     r = Cos(Ds(4));
-    rv::Store(rv::Current<records::BattleTask>()->z, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    rv::Store(rv::Current<records::BattleTask>()->z, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z)));
     Bump(SC()[0xA]);
     if (SC()[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -1003,21 +1003,21 @@ MS18_EXPORT void __cdecl MagicFx_DrawDiscRadius(unsigned radius) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        PutFloat(p + 8, static_cast<short>(Word(SC() + 0x2E)));
-        PutFloat(p + 0xC, static_cast<short>(Word(SC() + 0x30)));
+        PutFloat(p + 8, static_cast<short>(static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x)));
+        PutFloat(p + 0xC, static_cast<short>(static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y)));
         int r = Sin(a);
         PutFloat(p + 0x18, static_cast<int>(static_cast<std::uint32_t>(MulSar(r, Ds(0), 12)) +
-                                            static_cast<std::uint32_t>(static_cast<short>(Word(SC() + 0x2E)))));
+                                            static_cast<std::uint32_t>(static_cast<short>(static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x)))));
         r = Cos(a);
         PutFloat(p + 0x1C, static_cast<int>(static_cast<std::uint32_t>(MulSar(r, Ds(0), 12)) +
-                                            static_cast<std::uint32_t>(static_cast<short>(Word(SC() + 0x30)))));
+                                            static_cast<std::uint32_t>(static_cast<short>(static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y)))));
         a += 0x200;
         r = Sin(a);
         PutFloat(p + 0x28, static_cast<int>(static_cast<std::uint32_t>(MulSar(r, Ds(0), 12)) +
-                                            static_cast<std::uint32_t>(static_cast<short>(Word(SC() + 0x2E)))));
+                                            static_cast<std::uint32_t>(static_cast<short>(static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_x)))));
         r = Cos(a);
         PutFloat(p + 0x2C, static_cast<int>(static_cast<std::uint32_t>(MulSar(r, Ds(0), 12)) +
-                                            static_cast<std::uint32_t>(static_cast<short>(Word(SC() + 0x30)))));
+                                            static_cast<std::uint32_t>(static_cast<short>(static_cast<std::uint16_t>(rv::Current<records::BattleTask>()->screen_y)))));
         p[4] = p[5] = p[6] = 0x80;
         for (unsigned k : {0x14u, 0x15u, 0x16u, 0x24u, 0x25u, 0x26u}) p[k] = 1;
         LinkAt(2, 0x34);

@@ -38,6 +38,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -222,10 +223,10 @@ S10_EXPORT void __cdecl Ovum_Spawn(void) {
     child[2] = 0;
     RandCall();
     const std::uint32_t r1 = RandCall();
-    SetWord(child + 0x2E, (r1 & 0xF) + Word(Pointer(BattleOdds_ActorObject_addr) + 0x2E));
+    rv::Store<unsigned>(tchild->screen_x, (r1 & 0xF) + static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Pointer(BattleOdds_ActorObject_addr))->screen_x));
     const std::uint32_t r2 = RandCall();
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    SetWord(child + 0x30, Word(src + 0x30) - (r2 & 0x1F));
+    rv::Store<unsigned>(tchild->screen_y, Word(src + 0x30) - (r2 & 0x1F));
     SetWord(child + 0x32, Word(src + 0x32));
     unsigned char* const s = Sc();
     child[9] = s[9];
@@ -279,7 +280,7 @@ S10_EXPORT void __cdecl OvumChild_Start(void) {
     Sc()[0x24] = 0x84;
     Sc()[0x27] = 0xB4;
     Sc()[0x28] = 0;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     Sc()[0x2A] = 0;
     const unsigned char n = Sc()[9];
@@ -414,29 +415,29 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
     SetSW(0, (r & 0x10) + 0x18);
     int v = Sin(angle);
     {
-        const std::uint32_t x = Mul(v, SS(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x34));
+        const std::uint32_t x = Mul(v, SS(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x);
         rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(x));
     }
     v = Cos(SS(4));
     {
-        const std::uint32_t z = Mul(v, SS(0)) + static_cast<std::uint32_t>(Long(Owner() + 0x38));
+        const std::uint32_t z = Mul(v, SS(0)) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z);
         rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(z));
     }
     Sc()[8] = Owner()[8];
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    SetLong(Sc() + 0x14, 0x6000000);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x6000000);
     Turn(Sc());
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
-        SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x14))));
+        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) +
+                                                    static_cast<std::uint32_t>(ts->step_y)));
         ts->step_x = static_cast<std::int32_t>(0xFFFFE000u);
         ts->step_z = 0;
-        SetLong(s + 0x20, 0x600000);
+        rv::Store(ts->work_20, 0x600000);
     }
     Turn(Sc());
     {
@@ -445,8 +446,8 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
         s[0x26] = 0;
         s[0x27] = 0x1A;
         s[0x28] = 1;
-        SetLong(s + 0x40, 0x10000);
-        SetLong(s + 0x44, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_x, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_y, 0x10000);
         s[0x48] = 2;
         s[0x5D] = 0;
         s[0x5E] = 0;
@@ -454,7 +455,7 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
         s[0x5C] = 0;
         s[0x2A] = 0;
         s[0x29] = 4;
-        SetWord(s + 0x2C, 0);
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
         s[0x2B] = 1;
         s[0x24] = 0;
     }
@@ -477,9 +478,9 @@ S10_EXPORT void __cdecl LavaburstChild_Rise(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
-        AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(Long(s + 0x20)));
-        SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x14))));
+        AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(ts->work_20));
+        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->height) +
+                                                    static_cast<std::uint32_t>(ts->step_y)));
         AddB(s[0xB], 8);
         Dec(s[9]);
         if (s[9] != 0) return;
@@ -603,12 +604,12 @@ void RecordOrbit() {
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(Long(Owner() + 0x34)));
+        ts->x = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->x));
     }
     v = Cos(SS(4));
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(Long(Owner() + 0x38)));
+    ts->z = static_cast<std::int32_t>(Mul(v, ts->step_x) + static_cast<std::uint32_t>(rv::As<records::SpriteHead>(Owner())->z));
 }
 
 }  // namespace
@@ -653,8 +654,8 @@ S10_EXPORT void __cdecl LavaburstRecord_Draw(void) {
         SetVW(c * 8 + 4, 0);
         SetVW(c * 8 + 2, static_cast<unsigned>(Scaled(v)));
     }
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1E2));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1E2));
     p[0x15] = 0x80;
     p[0x25] = 0x80;
     p[0x14] = 0;
@@ -797,11 +798,11 @@ S10_EXPORT void __cdecl HowlingChild_Start(void) {
     const unsigned char* const rec = CopiedRecord();
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    ts->x = Long(rec + 0x34);
-    ts->z = Long(rec + 0x38);
-    SetLong(s + 0x3C, Long(rec + 0x3C));
-    SetLong(s + 0x40, 0x10000);
-    SetLong(s + 0x44, 0x10000);
+    ts->x = rv::As<records::SpriteHead>(rec)->x;
+    ts->z = rv::As<records::SpriteHead>(rec)->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(rec)->height);
+    rv::Store(ts->scale_x, 0x10000);
+    rv::Store(ts->scale_y, 0x10000);
     s[0x48] = 2;
     ts->step_x = static_cast<std::int32_t>(0xFFFFF3A0u);
     ts->step_z = 0x1080;
@@ -867,7 +868,7 @@ S10_EXPORT void __cdecl Ebonfire_Task(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     {
         unsigned char* const s = Sc();
-        SetWord(s + 0x30, Word(s + 0x30) - 0x10u);
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y) - 0x10u);
     }
     MH_CALL(MagicFx_DrawDisc)();
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -884,9 +885,9 @@ S10_EXPORT void __cdecl Ebonfire_Start(void) {
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
-        rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-        SetLong(Sc() + 0x3C, Long(src + 0x3C));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+        rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     }
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 6; ++i) {
@@ -991,15 +992,15 @@ S10_EXPORT void __cdecl EbonfireRing_Draw(void) {
         SetVW(0x1A, static_cast<unsigned>(Mul12(v, SS(4))));
         const std::uint32_t lean = Shl(VS(8), 9);
         SetVW(0x1C, 0);
-        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x34)) + lean);
-        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x38)) + lean);
+        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->x) + lean);
+        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->z) + lean);
         MH_CALL(Gpu_SetDrawMode)(p, 0, 1, 0x55, 0);
         MH_CALL(MapView_LinkPrimAt)(x, z, 2, 0xC);
         p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyGT4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 2, 0x340, 0x100));
-        SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 2, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
         s = Sc();
         const auto u0 = static_cast<unsigned char>(i << 2);
         const auto u1 = static_cast<unsigned char>((i + 1) << 2);
@@ -1126,9 +1127,9 @@ S10_EXPORT void __cdecl SacrificeRing_Run(void) {
 
 // original 0x4ADB50: the owner's position; +9 and +0xA 0; +2 on.
 S10_EXPORT void __cdecl SacrificeFx_TakeOwnerPos(void) {
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(Owner())->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(Owner())->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(Owner())->height);
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Inc(Sc()[2]);
@@ -1240,8 +1241,8 @@ S10_EXPORT void __cdecl SacrificeRing_Draw(void) {
             MH_CALL(Gpu_SetSemiTrans)(p, 1);
             Rtp4(p, 0x14);
             MH_CALL(Gte_PrimDepths4_14)(p);
-            SetWord(p + 0x2A, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
-            SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(0, 1, 0x340, 0x100));
+            rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
             const auto u0 = static_cast<unsigned char>(k << 3);
             const auto u1 = static_cast<unsigned char>((k + 1) << 3);
             p[0x15] = row0;
@@ -1412,9 +1413,9 @@ S10_EXPORT void __cdecl SacrificeActor_Darken(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     TintBy(s, 0xF0);
     if (s[0x5D] != 0x80) return;
-    ts->x = Long(Owner() + 0x34);
-    ts->z = Long(Owner() + 0x38);
-    SetLong(s + 0x3C, Long(Owner() + 0x3C));
+    ts->x = rv::As<records::SpriteHead>(Owner())->x;
+    ts->z = rv::As<records::SpriteHead>(Owner())->z;
+    rv::Store(ts->height, rv::As<records::SpriteHead>(Owner())->height);
     Inc(s[2]);
 }
 
@@ -1488,9 +1489,9 @@ S10_EXPORT void __cdecl SacrificeActor_Return(void) {
         TintBy(s, 0xF0);
         if (s[0x5D] != 0x80) return;
         const unsigned char* const actor_sprite = Pointer(MagicS23_ActorSprite_addr);
-        ts->x = Long(actor_sprite + 0x34);
-        ts->z = Long(Pointer(MagicS23_ActorSprite_addr) + 0x38);
-        SetLong(s + 0x3C, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
+        ts->x = rv::As<records::SpriteHead>(actor_sprite)->x;
+        ts->z = rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->z;
+        rv::Store(ts->height, rv::As<records::SpriteHead>(Pointer(MagicS23_ActorSprite_addr))->height);
     }
     const std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(at::kActor)));
     if ((actor & 0xFF) < 3) MemberAndCopyAnimation(actor & 0xFF, 0x1C);

@@ -33,6 +33,7 @@
 #include "game/move_script_bytes.h"
 #include "game/record_views.h"
 #include "game/records.h"
+#include "game/records_gpu.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -192,7 +193,7 @@ void Link(std::int32_t x, std::int32_t z, int dy, unsigned size) {
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(x), static_cast<unsigned long>(z), dy, size);
 }
 // Linked at the sprite's +0x34 / +0x38 (the task's or the mote's).
-void LinkAt(const unsigned char* at, int dy, unsigned size) { Link(Long(at + 0x34), Long(at + 0x38), dy, size); }
+void LinkAt(const unsigned char* at, int dy, unsigned size) { Link(rv::As<records::SpriteHead>(at)->x, rv::As<records::SpriteHead>(at)->z, dy, size); }
 // Linked at a MAGIC168 mote's +0x14 / +0x18.
 void LinkCure(int dy, unsigned size) {
     const unsigned char* const r = Cur();
@@ -226,9 +227,9 @@ S35_EXPORT void __cdecl LastResort_Task(void) {
 S35_EXPORT void __cdecl LastResort_Start(void) {
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = src[8];
-    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-    rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+    rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+    rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
     Inc(Sc()[1]);
@@ -242,7 +243,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
         c[9] = 0;
         tc->x = ts->x;
         tc->z = ts->z;
-        SetWord(c + 0x3E, Word(s + 0x3E));
+        rv::Store<unsigned>(tc->height_whole, ts->height_whole);
         Inc(s[0xB]);
     }
     for (unsigned i = 0; i < 8; ++i) {
@@ -256,7 +257,7 @@ S35_EXPORT void __cdecl LastResort_Start(void) {
         c[9] = static_cast<unsigned char>((i >> 2) * 0x28 + 0x11);
         tc->x = ts->x;
         tc->z = ts->z;
-        SetLong(c + 0x3C, Long(s + 0x3C));
+        rv::Store(tc->height, ts->height);
         Inc(s[0xB]);
     }
     MH_CALL(Sound_PlayById)(0x100);
@@ -503,8 +504,8 @@ S35_EXPORT void __cdecl LastResortBeam_DrawColumn(void) {
         }
         const std::int32_t half = DivPow2(top, 1);   // [esp+0x18]
         s = Sc();
-        const std::int32_t x = Add32(Shl(VS(0x18), 9), Long(s + 0x34));
-        const std::int32_t z = Add32(Shl(VS(0x1A), 9), Long(s + 0x38));
+        const std::int32_t x = Add32(Shl(VS(0x18), 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add32(Shl(VS(0x1A), 9), rv::As<records::BattleTask>(s)->z);
         DrawMode(0x35);
         Link(x, z, 0, 0xC);
         unsigned char* p = Gfx_PacketNext;
@@ -694,8 +695,8 @@ S35_EXPORT void __cdecl LastResortBeam_DrawSparks(int k) {
         SetVW(4, static_cast<unsigned>(height));
         if (static_cast<short>(height) > 0) SetVW(4, 0);
         s = Sc();
-        const std::int32_t x = Add32(Shl(VS(0), 9), Long(s + 0x34));
-        const std::int32_t z = Add32(Shl(static_cast<short>(cy), 9), Long(s + 0x38));
+        const std::int32_t x = Add32(Shl(VS(0), 9), rv::As<records::BattleTask>(s)->x);
+        const std::int32_t z = Add32(Shl(static_cast<short>(cy), 9), rv::As<records::BattleTask>(s)->z);
         DrawMode(0x35);
         Link(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -757,9 +758,9 @@ S35_EXPORT void __cdecl Cure_Start(void) {
     {
         const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
         Sc()[8] = src[8];
-        rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
-        rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-        SetLong(Sc() + 0x3C, Long(src + 0x3C));
+        rv::Store(rv::Current<records::BattleTask>()->x, rv::As<records::SpriteHead>(src)->x);
+        rv::Store(rv::Current<records::BattleTask>()->z, rv::As<records::SpriteHead>(src)->z);
+        rv::Store(rv::Current<records::BattleTask>()->height, rv::As<records::SpriteHead>(src)->height);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sc()[0xB] = 0;
@@ -827,11 +828,11 @@ S35_EXPORT void __cdecl CureMote_Run(void) {
 S35_EXPORT void __cdecl CureMote_Wait(void) {
     Dec(Cur()[5]);
     if (Cur()[5] != 0) return;
-    SetLong(Cur() + 0x14, Long(Owner() + 0x34));
-    SetLong(Cur() + 0x18, Long(Owner() + 0x38));
-    SetLong(Cur() + 0x1C, Long(Owner() + 0x3C));
-    SetWord(Cur() + 0x20, Word(Owner() + 0x2E));
-    SetWord(Cur() + 0x22, Word(Owner() + 0x30));
+    SetLong(Cur() + 0x14, rv::As<records::SpriteHead>(Owner())->x);
+    SetLong(Cur() + 0x18, rv::As<records::SpriteHead>(Owner())->z);
+    SetLong(Cur() + 0x1C, rv::As<records::SpriteHead>(Owner())->height);
+    SetWord(Cur() + 0x20, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_x));
+    SetWord(Cur() + 0x22, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Owner())->screen_y));
     {
         unsigned char* const x = Cur() + 0x20;
         const short dx = static_cast<short>(Word(Mem(CureMote_Offsets_addr + (Cur()[7] & 0x1Fu) * 4)));
@@ -1125,7 +1126,7 @@ S35_EXPORT void __cdecl Benediction_Start(void) {
         r[2] = 0;
     }
     MH_CALL(MagicFx_CenterOnSide)();
-    SetLong(Sc() + 0x3C, Add32(Long(Sc() + 0x3C), 0xC00000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::Current<records::BattleTask>()->height, 0xC00000));
     for (unsigned k = 0x1A00; k < 0x1B00; ++k)
         Gfx_ClutStrip[k] = static_cast<unsigned short>(Gfx_ClutStripSource[k] | 0x8000);
     Gfx_ClutStrip[0x1A00] = Gfx_ClutStripSource[0x1A00];
@@ -1195,8 +1196,8 @@ S35_EXPORT void __cdecl Benediction_DrawHalo(void) {
     PutFloat(p + 0x28, x - 0x38);
     PutFloat(p + 0x2C, y);
     PutFloat(p + 0x3C, y);
-    SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
-    SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->tpage, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100));
+    rv::Store<unsigned>(rv::As<records::GpuPolyFT4>(p)->clut, MH_CALL(Gpu_GetClut)(0, 0x1FA));
     p[0x14] = 8;
     p[0x15] = 8;
     p[0x25] = 8;
@@ -1244,7 +1245,7 @@ S35_EXPORT void __cdecl BenedictionChild_Start(void) {
         Sc()[8] = m[8];
         rv::Store(rv::Current<records::BattleTask>()->x, tm->x);
         rv::Store(rv::Current<records::BattleTask>()->z, tm->z);
-        SetLong(Sc() + 0x3C, tm->height);
+        rv::Store(rv::Current<records::BattleTask>()->height, tm->height);
     }
     Sc()[0xB] = 0;
     Sc()[9] = 8;
@@ -1356,24 +1357,24 @@ void BlessMoteOrbit() {
         const int sn = MH_CALL(Math_Sin)(static_cast<short>(angle));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->x = Add32(Mul32(sn, ts->step_x), Long(Owner() + 0x34));
+        ts->x = Add32(Mul32(sn, ts->step_x), rv::As<records::SpriteHead>(Owner())->x);
     }
     {
         const int cs = MH_CALL(Math_Cos)(SS(4));
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-        ts->z = Add32(Mul32(cs, ts->step_x), Long(Owner() + 0x38));
+        ts->z = Add32(Mul32(cs, ts->step_x), rv::As<records::SpriteHead>(Owner())->z);
     }
 }
 // The rise: while dword +0x20 is below +0x14 (signed), +0x14 -= +0x20 and
 // +0x3C += +0x14.
 void BlessMoteRise() {
     unsigned char* const s = Sc();
-    const std::int32_t d = Long(s + 0x20);
-    const std::int32_t h = Long(s + 0x14);
+    const std::int32_t d = rv::As<records::BattleTask>(s)->work_20;
+    const std::int32_t h = rv::As<records::BattleTask>(s)->step_y;
     if (d >= h) return;
-    SetLong(s + 0x14, Add32(h, -d));
-    SetLong(Sc() + 0x3C, Add32(Long(Sc() + 0x3C), Long(Sc() + 0x14)));
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, Add32(h, -d));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::Current<records::BattleTask>()->height, rv::Current<records::BattleTask>()->step_y));
 }
 }  // namespace
 
@@ -1385,12 +1386,12 @@ S35_EXPORT void __cdecl BenedictionMote_Launch(void) {
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 8;
     BlessMoteOrbit();
-    SetLong(Sc() + 0x3C, Add32(Long(Owner() + 0x3C), 0x800000));
+    rv::Store(rv::Current<records::BattleTask>()->height, Add32(rv::As<records::SpriteHead>(Owner())->height, 0x800000));
     {
         const std::uint32_t rnd = RandCall();
-        SetLong(Sc() + 0x14, static_cast<std::int32_t>(((rnd & 3) + 2) << 20));
+        rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<std::int32_t>(((rnd & 3) + 2) << 20));
     }
-    SetLong(Sc() + 0x20, DivPow2(Long(Sc() + 0x14), 4));
+    rv::Store(rv::Current<records::BattleTask>()->work_20, DivPow2(rv::Current<records::BattleTask>()->step_y, 4));
     for (unsigned k = 0x5D; k < 0x60; ++k) {
         const std::uint32_t rnd = RandCall();
         Sc()[k] = static_cast<unsigned char>((rnd & 7) + 6);

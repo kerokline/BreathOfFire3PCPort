@@ -202,9 +202,9 @@ void BeamDrawMode() {
 // A task's position (+0x34, +0x38, +0x3C) from another's, read one dword at a
 // time as the originals read it.
 void CopyPosition(unsigned char* to, const unsigned char* from) {
-    SetLong(to + 0x34, Long(from + 0x34));
-    SetLong(to + 0x38, Long(from + 0x38));
-    SetLong(to + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::As<records::SpriteHead>(to)->x, rv::As<records::SpriteHead>(from)->x);
+    rv::Store(rv::As<records::SpriteHead>(to)->z, rv::As<records::SpriteHead>(from)->z);
+    rv::Store(rv::As<records::SpriteHead>(to)->height, rv::As<records::SpriteHead>(from)->height);
 }
 
 }  // namespace
@@ -559,10 +559,10 @@ S32_EXPORT void __cdecl EyeBeam_Task(void) {
 // the sparks cleared; +9 0x3C, +1 on; sound effect 0x100.
 S32_EXPORT void __cdecl EyeBeam_Start(void) {
     const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
-    const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
-    SetLong(Mem(EyeBeam_State_addr), Add(Long(caster + 0x34), 0x14000));
-    SetLong(Mem(EyeBeam_State_addr + 0x4), Long(caster + 0x38));
-    SetLong(Mem(EyeBeam_State_addr + 0x8), Add(Long(caster + 0x3C), 0x2C00000));
+    const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::BattleTask>(slot)->owner));
+    SetLong(Mem(EyeBeam_State_addr), Add(rv::As<records::SpriteHead>(caster)->x, 0x14000));
+    SetLong(Mem(EyeBeam_State_addr + 0x4), rv::As<records::SpriteHead>(caster)->z);
+    SetLong(Mem(EyeBeam_State_addr + 0x8), Add(rv::As<records::SpriteHead>(caster)->height, 0x2C00000));
     SetWord(Mem(EyeBeam_State_addr + 0x10), 0);
     SetWord(Mem(EyeBeam_State_addr + 0x12), 0);
     SetWord(Mem(EyeBeam_State_addr + 0x14), 0);
