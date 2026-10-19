@@ -14,6 +14,7 @@
 #include "hook/detour.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
+#include "hook/snapshot.h"
 
 // The view's frame, its rebuild and the area header's pass - see
 // docs/map-layers.md for each function, its PSX twin and the fuzz.
@@ -752,6 +753,25 @@ void ArmSideDup() {
     g_side_dup = true;
     bof3::Log("DIV-0085    a cell given a second side face at run time draws it with its one side word "
               "(BOF3X_SIDE_DUP=0 for the original's read)");
+}
+
+// The quicksave (SP-G, docs/quicksave.md section 9): g_file_sides is the area
+// file's heights as loaded, and the arena they came from has been patched
+// since (the sea bridge's sky), so it is carried, not rebuilt: up to its last
+// non-zero byte, the rest zero.
+void QuickSaveSides(bof3::SnapshotWriter& w) {
+    std::uint32_t n = sizeof g_file_sides;
+    while (n > 0 && g_file_sides[n - 1] == 0) --n;
+    w.Put(n);
+    if (n) w.Put(g_file_sides, n);
+}
+
+void QuickRestoreSides(bof3::SnapshotReader& r) {
+    const std::uint32_t n = r.Get<std::uint32_t>();
+    if (n > sizeof g_file_sides) bof3::Fatal("map_layers: a quicksave's side faces run to %u bytes, more than %u", n,
+                                             static_cast<unsigned>(sizeof g_file_sides));
+    std::memset(g_file_sides, 0, sizeof g_file_sides);
+    if (n) r.Get(g_file_sides, n);
 }
 
 }  // namespace map_layers

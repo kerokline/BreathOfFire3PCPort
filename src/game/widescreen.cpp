@@ -34,6 +34,7 @@
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/snapshot.h"
 
 using U = std::uint32_t;
 
@@ -635,4 +636,19 @@ void Widescreen_ArmFills() {
                   : loop_ours         ? "on"
                                       : "off (Field_RunTaskRecords is Capcom's, which would not put Capcom's x back)",
                   g_live);
+}
+
+// The quicksave (SP-G, docs/quicksave.md section 9): the faster slide's split
+// of the 22 window records - where each box is drawn against Capcom's x, and
+// its leg - is the DLL's, not the span's, and changes in play: carried whole.
+void Widescreen_QuickSave(bof3::SnapshotWriter& w) {
+    w.Put(static_cast<std::uint32_t>(sizeof g_split));
+    w.Put(g_split, sizeof g_split);
+}
+
+void Widescreen_QuickRestore(bof3::SnapshotReader& r) {
+    const std::uint32_t n = r.Get<std::uint32_t>();
+    if (n != sizeof g_split)
+        bof3::Fatal("widescreen: a quicksave's slide split is %u bytes, this build's %u", n, static_cast<unsigned>(sizeof g_split));
+    r.Get(g_split, sizeof g_split);
 }

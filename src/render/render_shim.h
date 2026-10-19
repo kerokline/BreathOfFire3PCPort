@@ -196,4 +196,22 @@ void ShadowWritten(int x, int y, int w, int h);
 // page whose texel (0, 0) is VRAM cell (x, y), tiling a w x h window.
 void NoteDirectPage(void* texture, int x, int y, int w, int h);
 
+// --- the quicksave (SP-G, docs/quicksave.md section 9) -----------------------
+// Called at a quick-load, between two logic frames.
+
+// Releases a surface or texture interface (vtable slot 2) right after the next
+// present: the frame drawn before the load still names it. Capcom's DirectX 6
+// objects (BOF3X_ORIGINAL) are released at once.
+void ReleaseAfterPresent(void* object);
+U DeferredReleases();      // still waiting for that present
+void ReleaseDeferredNow(); // the self-test's: no present comes
+// The pipe state as a record holds it: no texture (every textured draw binds
+// its own), no grab (a quick-load forgets the grabs).
+PipeState PipeForSnapshot();
+void RestorePipe(const PipeState& state, U clear_color);
+U ClearColor();
+// DIV-0125: every frame-buffer grab forgotten - the pictures they hold are the
+// live process's, not the quicksave's.
+void ForgetGrabs();
+
 }  // namespace render

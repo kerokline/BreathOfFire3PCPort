@@ -10,7 +10,17 @@
 
 void MapLayers_Inject();
 
+namespace bof3 {
+class SnapshotWriter;
+class SnapshotReader;
+}  // namespace bof3
+
 namespace map_layers {
+
+// The quicksave (SP-G, docs/quicksave.md section 9): DIV-0085's side faces as
+// the area file loaded them, in the graphics participant's record.
+void QuickSaveSides(bof3::SnapshotWriter& w);
+void QuickRestoreSides(bof3::SnapshotReader& r);
 
 // DIV-0085 (docs/known-defects.md D239): a cell whose file heights give it one
 // side face, and which is created with both because something moved the

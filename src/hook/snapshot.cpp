@@ -105,6 +105,7 @@ struct Participant {
     std::string tag;
     SnapshotSaveFn save;
     SnapshotRestoreFn restore;
+    SnapshotBeforeFn before = nullptr;   // Snapshot_RegisterBeforeRestore: before the span is written
 };
 using Registry = std::vector<Participant>;
 
@@ -501,6 +502,8 @@ void Restore(const Parsed& p, const Registry& registry) {
     const Header& h = p.header;
     std::vector<std::vector<unsigned char>> live(kKeptCount);
     for (std::size_t i = 0; i < kKeptCount; ++i) live[i].assign(At(kKept[i].at), At(kKept[i].at + kKept[i].bytes));
+    for (const Parsed::Rec& r : p.records)
+        if (registry[r.participant].before) registry[r.participant].before();
     WriteRange(h.span_base, p.image, h.span_bytes);
     if (h.pool_bytes) WriteRange(h.pool_base, p.pool, h.pool_bytes);
     for (std::size_t i = 0; i < kKeptCount; ++i) WriteRange(kKept[i].at, live[i].data(), kKept[i].bytes);
@@ -1033,6 +1036,18 @@ void Snapshot_Register(const char* tag, SnapshotSaveFn save, SnapshotRestoreFn r
         if (p.tag == tag) Fatal("snapshot: participant '%s' registered twice", tag);
     g_registry.push_back({tag, save, restore});
     Log("quicksave   participant '%s' registered", tag);
+}
+
+void Snapshot_RegisterBeforeRestore(const char* tag, SnapshotBeforeFn before) {
+    if (g_registry_closed) Fatal("snapshot: participant '%s' given a before-restore step after the first quicksave or quickload", tag);
+    if (!before) Fatal("snapshot: participant '%s' given a null before-restore step", tag);
+    for (Participant& p : g_registry) {
+        if (p.tag != tag) continue;
+        if (p.before) Fatal("snapshot: participant '%s' given a before-restore step twice", tag);
+        p.before = before;
+        return;
+    }
+    Fatal("snapshot: a before-restore step for '%s', which is not a registered participant", tag ? tag : "(null)");
 }
 
 void Snapshot_RequestTake() {

@@ -11,6 +11,7 @@
 #include "game/draw_pool.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
+#include "hook/snapshot.h"
 
 namespace layering {
 
@@ -470,6 +471,64 @@ void RunEnd() {
     g_pending_n = 0;
     g_run = nullptr;
     g_in_run = false;
+}
+
+// The quicksave (SP-G, docs/quicksave.md section 9). Between two logic
+// frames the last pass's runs are the table g_pass stamped, and the next
+// pass's Defer reads them: they are what the next frame's layering is judged
+// by, so a quicksave carries them (not the census's g_pass += 2, which would
+// make that pass find no run at all and keep every sprite in its layer where a
+// record run stands). Each run at its own index (the probe chain of FindRun
+// stays as it was), restamped with this process's g_pass: the stamps are a
+// count of this process's passes, and a stale entry of either table whose
+// stamp matched a later pass would be taken for one of its runs - so both
+// tables are emptied first.
+void SnapshotSave(bof3::SnapshotWriter& w) {
+    const Run* const table = g_runs[g_pass & 1];
+    std::uint32_t n = 0;
+    for (unsigned i = 0; i < kRuns; ++i) n += table[i].stamp == g_pass ? 1u : 0u;
+    w.Put(static_cast<std::uint32_t>(g_runs_now));
+    w.Put(n);
+    for (unsigned i = 0; i < kRuns; ++i) {
+        const Run& run = table[i];
+        if (run.stamp != g_pass) continue;
+        w.Put(static_cast<std::uint16_t>(i));
+        w.Put(run.at);
+        w.Put(static_cast<std::uint8_t>(run.n));
+        w.Put(static_cast<std::uint8_t>(run.overflow ? 1 : 0));
+        w.Put(run.box);
+        for (unsigned q = 0; q < run.n; ++q) {
+            w.Put(run.x[q]);
+            w.Put(run.y[q]);
+        }
+    }
+}
+
+void SnapshotRestore(bof3::SnapshotReader& r) {
+    std::memset(g_runs, 0, sizeof g_runs);
+    g_runs_now = r.Get<std::uint32_t>();
+    g_runs_before = 0;
+    const std::uint32_t n = r.Get<std::uint32_t>();
+    if (n > kRuns) bof3::Fatal("layering: a quicksave with %u record runs, more than the table's %u", n, kRuns);
+    Run* const table = g_runs[g_pass & 1];
+    for (std::uint32_t k = 0; k < n; ++k) {
+        const unsigned i = r.Get<std::uint16_t>();
+        if (i >= kRuns || table[i].stamp != 0) bof3::Fatal("layering: a quicksave's record run at index %u, out of the table or twice", i);
+        Run& run = table[i];
+        run.at = r.Get<std::uint32_t>();
+        run.stamp = g_pass;
+        run.n = r.Get<std::uint8_t>();
+        run.overflow = r.Get<std::uint8_t>() != 0;
+        run.box = r.Get<Box>();
+        if (run.n > kQuads) bof3::Fatal("layering: a quicksave's record run with %u quads, more than %u", run.n, kQuads);
+        for (unsigned q = 0; q < run.n; ++q) {
+            r.Get(run.x[q], sizeof run.x[q]);
+            r.Get(run.y[q], sizeof run.y[q]);
+        }
+    }
+    g_run = nullptr;
+    g_in_run = false;
+    g_pending_n = 0;
 }
 
 }  // namespace layering

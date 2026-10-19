@@ -11,6 +11,11 @@
 
 #include <cstdint>
 
+namespace bof3 {
+class SnapshotWriter;
+class SnapshotReader;
+}  // namespace bof3
+
 namespace wide_rand {
 
 // map_layers.cpp Inset(), once per MapView_Build: the inset Capcom's code
@@ -50,6 +55,11 @@ bool Band();
 // seed of its own, 1 at start-up, advanced by band cells alone.
 int __cdecl DrawOnly();
 std::uint32_t* DrawOnlySeed();
+
+// The quicksave (SP-G, docs/quicksave.md section 9): the generator's seed and
+// the last inset noted, in the graphics participant's record.
+void QuickSave(bof3::SnapshotWriter& w);
+void QuickRestore(bof3::SnapshotReader& r);
 
 // The start-up self-test (BOF3X_SHADOW=wide_rand) and the log line. After
 // Widescreen_Inject, which sets the live inset columns.
