@@ -22,15 +22,19 @@ namespace records {
 // stride (kCharStride / kRecordStride) but not the layout.
 struct SpriteObject {
     std::uint8_t flags;  // +0x00 bit 0 in use, 1 no image upload, 5 semi-transparent, 6 not drawn, 7 hidden / culled (sprite-draw-order 5, 14; sprite-pose 3)
-    unsigned char pad_01[0x5];  // +1..+5: the state bytes battle and effect records use; no field-object reader names them here
+    std::uint8_t state;  // +0x01 the object handler's index: Field_ObjectHandlers[+1](object) (field-frame.md 2; movement-script.md F8 stores it)
+    unsigned char pad_02[0x4];  // +2..+5: +2 is a step byte to movement-script.md's F8 and event_ops.cpp's spawn (op[0xB]); +2..+5 are the per-handler state bytes battle and effect records also use; not named for the field object
     std::uint8_t type;  // +0x06 0x0A a party object; 8 and up never turn (sprite-draw-order 5; sprite-pose 3)
-    unsigned char pad_07[0x1];  // +7: bit 7 skips the blocked test (field_objects.cpp); not named
+    std::uint8_t flags2;  // +0x07 bit 3 not turned when talked to, bit 1 keeps its own facing rather than turning to the leader (field_frame.cpp:292-294; field-frame.md 2; shop_states.md ShopMode_End); bit 7 skips the blocked test (field_objects.cpp)
     std::uint8_t direction;  // +0x08 facing, & 7 indexes Field_DirectionSteps (field_e2.cpp, area_w3e.cpp)
     std::uint8_t step_frames;  // +0x09 frames left in a step / a timed move; multiplies the step in Sprite_PointInReach (sprite-draw-order 6; movement-script 1b)
     unsigned char pad_0A[0x2];  // +0xA, +0xB: +0xB holds an Effect_Objects index for ops 9x (symbols.toml Effect_Spawn); +0xA unread
     std::int32_t step_x;  // +0x0C the step, 16.16 a frame (sprite-draw-order 6)
     std::int32_t step_z;  // +0x10 (sprite-draw-order 6)
-    unsigned char pad_14[0x10];  // +0x14..+0x23: dwords cleared by Battle_SetupEnemy and Sprite_ClearSteps; unnamed
+    std::int32_t step_y;  // +0x14 the third step, 16.16: area_w1b.cpp adds +0x14 * +9 to +0x3C; MoveCmd_OpF9 zeroes it (field_o.cpp)
+    std::int32_t accel_x;  // +0x18 MoveCmd_OpF9's acceleration, added to +0xC each frame (field_o.cpp); movement-script.md F8 and event_ops.cpp's spawn store other values here (a handle)
+    std::int32_t accel_z;  // +0x1C added to +0x10 each frame (MoveCmd_OpF9); likewise reused by F8 and the spawn
+    unsigned char pad_20[0x4];  // +0x20..+0x23: a dword cleared by Battle_SetupEnemy and Sprite_ClearSteps; unnamed
     std::uint8_t draw_flags;  // +0x24 bit 0 frames uploaded, 1 member set-up pending, 2 CLUT row 0x1F0, 6 a 3D object, 7 overlay list (sprite-pose 3; sprite-draw-order 5, 14; movement-script 1c)
     std::uint8_t tex_slot;  // +0x25 texture slot (sprite-pose 3)
     std::uint8_t tex_row;  // +0x26 the slot's y row (sprite-pose 3)
@@ -64,17 +68,27 @@ struct SpriteObject {
     std::uint32_t reach;  // +0x70 dword (sprite-pose 3); the low byte is the reach Sprite_PointInReach reads (sprite-draw-order 6)
     std::uint32_t screen_xf;  // +0x74 the float screen point's bits (movement-script 1c; sprite_screen.cpp)
     std::uint32_t screen_yf;  // +0x78
-    unsigned char pad_7C[0x4];  // +0x7C..+0x7F: unread
+    std::uint32_t depth_f;  // +0x7C the float projected depth's bits (rest_4f.cpp:1215 F(s + 0x7C); effect_4d.md EffectKind98_DrawBurst)
     std::uint8_t context;  // +0x80 the script context's first byte: flags (movement-script 1b; field_objects.cpp)
     std::uint8_t pose_wait;  // +0x81 (field_objects.cpp)
     std::uint8_t loop;  // +0x82 the context's loop counter (movement-script 1b)
     std::uint8_t area_script;  // +0x83 which of the area's scripts (movement-script 1b)
     std::uint8_t speed;  // +0x84 index into Field_MoveSpeeds (movement-script 1b)
-    unsigned char pad_85[0x2];  // +0x85, +0x86: unread
+    std::uint8_t saved_facing;  // +0x85 the facing kept while talked to, | 1 for a state-0x0A object (field_frame.cpp:293,300); put back to +8 (mode_states.cpp:250; shop_states.md ShopMode_End; field-frame.md 2)
+    std::uint8_t trigger;  // +0x86 the object-trigger id: Field_ObjectTriggers by object[+0x86] (area-rows.md)
     std::uint8_t move_steps;  // +0x87 steps left in a timed move (movement-script 1b)
-    unsigned char pad_88[0x2];  // +0x88, +0x89: unread
+    std::uint16_t trigger_word;  // +0x88 written op[0xD] << 8 | op[0xE] by the spawn (event_ops.cpp:201); 0xFFFF none (event_ops.cpp:986)
     std::uint16_t script_position;  // +0x8A the context's script position (movement-script 1b)
-    unsigned char pad_8C[0x18];  // +0x8C..+0xA3: +0x9C (a u16 zeroed) and +0xA1 are written by field_objects.cpp, not named
+    std::int32_t target_x;  // +0x8C MoveCmd_OpF9's target on Field_ActiveMember, 16.16 (field_o.cpp); the placement op's home (wide_staging.cpp:572); zeroed by event_script.cpp:494
+    std::int32_t target_z;  // +0x90 (the same readers)
+    std::uint32_t best_score;  // +0x94 Field_ObjectBestDirection's running score, started 0 or 0xFFFFFF (field_c3.md); zeroed by field_o.cpp:1229
+    std::uint16_t half_w;  // +0x98 the object's half-widths, |d| >> 16 against them (field_c3.md Field_ObjectApproachDirection); op[3] (event_ops.cpp:199; event-ops.md)
+    std::uint16_t half_d;  // +0x9A op[4] (event_ops.cpp:200)
+    std::uint16_t counter;  // +0x9C counted up for every object in reach of the point ahead (event-ops.md); a u16 zeroed by field_objects.cpp
+    std::uint8_t tag;  // +0x9E the boss set-ups' tag (boss_spawn.h; field_o.cpp:1157 op[0x10]; psp-battle-changes.md)
+    unsigned char pad_9F[0x1];  // +0x9F: area_w0c.md Area32_TintStart puts a slot in the active member's +0x9F; one reader, meaning not settled
+    std::uint8_t handler;  // +0xA0 & 0x7F the area object handler, 0x7F none (rest_2a.md Area_ObjectHandler); 0x7F at a spawn (event_ops.cpp:204,259; field_o.cpp:1158)
+    unsigned char pad_A1[0x3];  // +0xA1..+0xA3: +0xA1 written by field_objects.cpp, not named
 };
 
 // A party member: ObjTrio 0x802D40, three records (record 0 the leader,
@@ -98,11 +112,15 @@ struct PartyMember {
     std::uint8_t ot_slot;  // +0x29 the draw slot (area_backdrop.cpp kTrioSlot; member-sprites 2)
     unsigned char pad_2A[0x2];  // +0x2A, +0x2B: the sprite's pose / key class; no member reader names them
     std::uint16_t column;  // +0x2C (area_entry_callees.h kRecColumn; sprite-pose 3 gives the u16)
-    unsigned char pad_2E[0x6];  // +0x2E..+0x33: the sprite's screen point and key; no member reader names them
+    std::int16_t screen_x;  // +0x2E the sprite's screen point (battle_actions.cpp SetMemberBlock; battle_actions.md; area_011.cpp:53)
+    std::int16_t screen_y;  // +0x30 (the same; area_011.cpp:52)
+    std::uint16_t draw_key;  // +0x32 (battle_actions.cpp SetMemberBlock; battle_actions.md)
     std::int32_t x;  // +0x34 16.16, +0x36 the cell (area_backdrop.cpp kTrioPosition; member-sprites 2)
     std::int32_t z;  // +0x38 16.16, +0x3A the cell
     std::int32_t height;  // +0x3C third dword of the 12 bytes at +0x34 (battle_setup_callees.h kPos; effect_3a_callees.h kLeaderPoint); its high word +0x3E the ground (member-sprites 2)
-    unsigned char pad_40[0x30];  // +0x40..+0x6F: sprite fields (SpriteObject); +0x5C..+0x5F written on entry (area-entry.md), not named here
+    unsigned char pad_40[0xB];  // +0x40..+0x4A: sprite fields (SpriteObject); not named here
+    std::uint8_t animation;  // +0x4B 0xFF on a member swap (area_entry.cpp:282); saved to +0x12F on a hit (battle_e3.cpp:380)
+    unsigned char pad_4C[0x24];  // +0x4C..+0x6F: sprite fields (SpriteObject); +0x5C..+0x5F written on entry (area_entry.cpp; area-entry.md), not named here
     std::uint32_t raised;  // +0x70 the member readers test its low byte, "raised" (member-sprites 2; member_sprites.cpp); sprite-pose 3 writes the sprite's +0x70 as a dword
     unsigned char pad_74[0x15];  // +0x74..+0x88: the sprite's float screen point; the character record's +0..+8 (name)
     std::uint8_t char_id;  // +0x89 record +0x09 (battle_setup_callees.h kPCharId; area_entry_callees.h kRecMember)
@@ -115,49 +133,58 @@ struct PartyMember {
     std::uint16_t hp;  // +0x98 record +0x18 (battle_setup kPHp; battle_damage kPHp)
     std::uint16_t ap;  // +0x9A record +0x1A
     std::uint8_t survive;  // +0x9C record +0x1C, set from +0xAE (battle_setup kPByte9C); the overkill a kill leaves the flag below (battle_damage kPSurvive)
-    unsigned char pad_9D[0x3];  // +0x9D..+0x9F: unread
+    unsigned char pad_9D[0x3];  // +0x9D..+0x9F: record +0x1D..+0x1F; +0x9E the max-HP scale (battle_e5.cpp:403; char-stats.md 2), not named here
     std::uint16_t max_hp;  // +0xA0 record +0x20 (battle_setup kPMaxHp)
     std::uint16_t max_ap;  // +0xA2 record +0x22
-    unsigned char pad_A4[0x2];  // +0xA4..+0xA5: record +0x24 (ATK per char-stats.md), not read through this record by a cited reader
+    std::uint16_t atk;  // +0xA4 record +0x24 (char-stats.md 2; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4); battle_e5.cpp:408; the stat copy's +4, battle_damage kAttackerAtk)
     std::uint16_t def;  // +0xA6 record +0x26 (battle_damage kPDef)
     std::uint16_t agi;  // +0xA8 record +0x28 (battle_setup kPAgi; battle_damage kPAgi)
-    unsigned char pad_AA[0x4];  // +0xAA..+0xAD: unread here
+    std::uint16_t intel;  // +0xAA record +0x2A (char-stats.md 2; the stat copy's +0xA, battle_damage kAttackerInt / kTargetInt)
+    unsigned char pad_AC[0x2];  // +0xAC, +0xAD: record +0x2C, +0x2D; not named
     std::uint8_t byte_ae;  // +0xAE record +0x2E, copied to +0x9C (battle_setup kPByteAE)
     std::uint8_t elements[5];  // +0xAF affinity classes, fire .. wind (battle_damage kPElements)
     std::uint8_t holy;  // +0xB4 holy affinity class (battle_damage kPHoly)
-    unsigned char pad_B5[0x6F];  // +0xB5..+0x123: the rest of the character record copy (base stats at +0xC0 per battle_e4.md); not named here
+    unsigned char pad_B5[0x6F];  // +0xB5..+0x123: the rest of the character record copy: +0xB5..+0xB7 the rest of the nine resistance bytes, +0xBA a percentage byte (battle_e3.cpp:1040), the base stat block at +0xC0 (battle_e5.cpp:405-425; char-stats.md 2; battle_e4.md); not named here
     std::uint8_t command;  // +0x124 battle: the command auto-battle gives (docs/battle_e4.md); field: the script context's first byte (area_entry_callees.h kRecContext)
     std::uint8_t queued_kind;  // +0x125 5 an item, 4 an ability (battle_setup kPQueuedKind; battle_damage kPCommand)
     std::uint16_t queued_id;  // +0x126 category << 8 | id, or the ability id (battle_setup kPQueuedItem; battle_damage kPCommandId)
-    std::uint16_t hp_change;  // +0x128 battle (battle_setup kPHpChange); field: its low byte the walking speed (member-sprites 2)
-    std::uint16_t ap_change;  // +0x12A battle (battle_setup kPApChange)
+    std::int16_t hp_change;  // +0x128 battle: the result record's +4, read signed (battle_setup kPHpChange; battle_e3.cpp:486,499,898 SWord); field: its low byte the walking speed (member-sprites 2)
+    std::int16_t ap_change;  // +0x12A battle: the result record's +6, read signed (battle_setup kPApChange; battle_e3.cpp:499)
     std::uint8_t shown;  // +0x12C status-shown bits, 0x11 / 2 with an effect (battle_setup kPEffect; battle_damage kPShown)
     std::uint8_t counter;  // +0x12D the 0x40 / 0x20 statuses' counter (battle_setup kPCounter); battle_damage kPShown2 "cleared with a cured status"
     std::uint8_t item_slot;  // +0x12E (battle_setup kPItemSlot)
-    unsigned char pad_12F[0x1];  // +0x12F: unread
+    std::uint8_t saved_animation;  // +0x12F +0x4B saved by BattleObj_HitEnter (battle_e3.cpp:380)
     std::uint32_t flags_130;  // +0x130 battle: flag dword (battle_damage kPFlags; battle_sprites.cpp "the party's flags dword"); field: the script pointer (area_entry_callees.h kRecScript)
     std::uint32_t flags_134;  // +0x134 battle: flag dword (battle_setup kPFlags; battle_damage kPFlags2); field: byte +0x136 the standing counter, +0x137 the action (member-sprites 2) - one dword in battle, two bytes in the field, so the bytes are not separate members
     std::uint8_t field_flags;  // +0x138 field: bit 0, bit 3 CLUT pending (area_backdrop.cpp kTrioFlags; member-sprites 2)
-    unsigned char pad_139[0x9];  // +0x139..+0x141: unread
+    std::uint8_t field_object;  // +0x139 field: a Sprite_Objects index (field_e1.cpp:478); battle zeroes +0x138..+0x13F (battle_e3.cpp:691; battle_e6.cpp:217-218; battle_phases.cpp:222-223)
+    unsigned char pad_13A[0x6];  // +0x13A..+0x13F: zeroed with +0x138 in battle; not named
+    std::uint16_t saved_script_pos;  // +0x140 the sprite's +0x58 saved by BattleObj_HitEnter (battle_e3.cpp:381)
     std::uint8_t count_4000;  // +0x142 (battle_setup kPCount4000)
     std::uint8_t count_800;  // +0x143 (battle_setup kPCount800)
     std::uint8_t count_40;  // +0x144 zeroed with flag 0x40 (battle_setup kPCount40); battle_damage kPCharge, the attack charge
     std::uint8_t count_80;  // +0x145 zeroed with flag 0x80 (battle_setup kPCount80); battle_damage kPCharge2, the ability charge
     unsigned char pad_146[0x2];  // +0x146, +0x147: unread
-    std::uint8_t char_index;  // +0x148 the character record's index (area_entry_callees.h kRecCharacterIndex; effect_3a_callees.h kMemberFlag) - battle_damage_callees.h kPWeaponKind names the same byte "5: the weapon's element rolls apply": unsettled
-    unsigned char pad_149[0x3];  // +0x149..+0x14B: unread
+    std::uint8_t char_index;  // +0x148 the character record's index, in the field and in battle (area_entry_callees.h kRecCharacterIndex; effect_3a_callees.h kMemberFlag; battle_e3.cpp:684,723; battle_e4.cpp:126; battle_e6.cpp:318). battle_damage_callees.h kPWeaponKind (0x138 from 0x802D50) is this byte: Battle_CalcDamage's rule is "character index 5", the name a misnomer (docs/typed-records.md 3)
+    std::uint8_t tint;  // +0x149 field: the running script's tint record, MoveScript_TintRecords by it (area_w1a.cpp:134)
+    unsigned char pad_14A[0x2];  // +0x14A, +0x14B: unread
 };
 
 // An effect object: Effect_Objects 0x7E11E0, 20 records (symbols.toml).
 // Effect_RunObjects makes each in-use record Sprite_Current and calls
-// Effect_KindHandlers[+5], so the sprite readers apply to it as well; only
-// what the effect pool's own readers set is named here.
+// Effect_KindHandlers[+5], so the sprite readers apply to it as well. Named
+// here: what the effect pool's own readers set, and what the kind
+// dispatchers and the effect docs read (effect_1a.md 2, effect_4d.md).
 struct EffectObject {
     std::uint8_t in_use;  // +0x00 non-zero in use (Effect_FindFree / Effect_RunObjects, symbols.toml)
-    unsigned char pad_01[0x4];  // +1..+4: 0x589870 zeroes bytes 0..4 (symbols.toml); not named for this family
+    std::uint8_t state;  // +0x01 every kind dispatcher's jump index: mov al, [ecx + 1]; jmp [eax*4 + table] (effect_1a.md 2.1); 0x589870 zeroes bytes 0..4 (symbols.toml)
+    std::uint8_t step;  // +0x02 the sub-state tables' index (effect_*.md, e.g. EffectKind52_TrailSubStates by +2)
+    unsigned char pad_03[0x2];  // +3, +4: per-kind counters; not named for this family
     std::uint8_t kind;  // +0x05 indexes Effect_KindHandlers (symbols.toml Effect_RunObjects; Effect_Spawn sets 6)
     std::uint8_t param;  // +0x06 Effect_Spawn's first argument (symbols.toml Effect_Spawn)
-    unsigned char pad_07[0x5];  // +7..+0xB: +0xB a spawn argument (0x5898D0), not named
+    unsigned char pad_07[0x2];  // +7, +8: not named for this family
+    std::uint8_t timer;  // +0x09 the kind's frame counter (effect_1a.md 2.3: EffectKind07_Start sets 0xF0, _FadeIn 0xFF)
+    unsigned char pad_0A[0x2];  // +0xA, +0xB: +0xB a spawn argument (0x5898D0) and per-kind a hold; not named
     std::int32_t step_x;  // +0x0C dword, Effect_Spawn's movsx byte (symbols.toml)
     std::int32_t step_z;  // +0x10
     unsigned char pad_14[0x1A];  // +0x14..+0x2D: unread by the pool's readers
@@ -167,7 +194,13 @@ struct EffectObject {
     std::int32_t x;  // +0x34 dword read by AreaMap_Elevation; its u16 halves written apart (symbols.toml, EventScript_Op's spawn 0x5898D0)
     std::int32_t z;  // +0x38
     std::int32_t height;  // +0x3C its high word +0x3E the u16 elevation written by the spawn 0x5898D0 (symbols.toml)
-    unsigned char pad_40[0x40];  // +0x40..+0x7F: the sprite fields, not named for this family
+    unsigned char pad_40[0x1D];  // +0x40..+0x5C: the sprite fields, not named for this family
+    std::uint8_t shade[3];  // +0x5D (effect_1a.md 2.3: EffectKind07 zeroes them and fades them up)
+    std::int32_t depth;  // +0x60 the projection's depth answer (effect_1a.md 2.2)
+    unsigned char pad_64[0x10];  // +0x64..+0x73: the sprite fields (angles, +0x70), not named for this family
+    std::uint32_t screen_xf;  // +0x74 the float projected point's bits (effect_4d.md EffectKind98_DrawBurst)
+    std::uint32_t screen_yf;  // +0x78
+    std::uint32_t depth_f;  // +0x7C the float depth's bits (effect_4d.md EffectKind98_DrawBurst)
 };
 
 // A battle enemy: 0x93B960 + (actor - 3) * 0x128, eight records. +0x00..+0x7F
@@ -183,7 +216,10 @@ struct BattleEnemy {
     unsigned char pad_09[0x20];  // +9..+0x28: +0xC..+0x23 dwords cleared at set-up, +0x24 cleared; not named
     std::uint8_t ot_slot;  // +0x29 4 (Battle_SetupEnemy)
     std::uint8_t flip;  // +0x2A (battle_flow.md BattleEnemy_SetAnimation)
-    unsigned char pad_2B[0x9];  // +0x2B..+0x33: unread here
+    unsigned char pad_2B[0x3];  // +0x2B..+0x2D: the sprite's key class and column (SpriteObject); no enemy reader names them
+    std::int16_t screen_x;  // +0x2E the sprite's screen point (battle_actions.cpp SetEnemyBlock; battle_actions.md)
+    std::int16_t screen_y;  // +0x30
+    std::uint16_t draw_key;  // +0x32 (battle_actions.cpp SetEnemyBlock)
     std::int32_t x;  // +0x34 (Battle_SetupEnemy; battle_setup kPos)
     std::int32_t z;  // +0x38
     std::int32_t height;  // +0x3C its high word +0x3E the ground (Battle_SetupEnemy)
@@ -204,28 +240,34 @@ struct BattleEnemy {
     std::uint8_t abilities[8];  // +0x9C EnemyData +0x1C (Battle_CopyEnemyData)
     std::uint16_t hp;  // +0xA4 (battle_setup kEHp; battle_damage kEHp)
     std::uint16_t ap;  // +0xA6 (battle_damage kEAp)
-    unsigned char pad_A8[0x8];  // +0xA8..+0xAF: EnemyData +0x30 / +0x34 dwords (Battle_CopyEnemyData), unnamed
+    unsigned char pad_A8[0x2];  // +0xA8, +0xA9: EnemyData +0x30 dword copied here (Battle_CopyEnemyData), unnamed
+    std::uint8_t steal_row;  // +0xAA the steal-rate row, SkillSteal_RateTable[+0xAA], unbounded (magic_steal.cpp SkillSteal_Roll; magic_steal.md)
+    unsigned char pad_AB[0x5];  // +0xAB..+0xAF: the rest of the EnemyData +0x30 / +0x34 dwords; +0xAE raised with +0xAA, each once by the marker bits of +0xAB / +0xAF (rest_3c.md Effect_EnemyRaiseAAAE); not named
     std::uint16_t max_hp;  // +0xB0 (battle_setup kEMaxHp)
     std::uint16_t max_ap;  // +0xB2 (battle_damage kEMaxAp)
-    unsigned char pad_B4[0x4];  // +0xB4..+0xB7: the stat block's copy at +0xB0.. (Battle_CopyEnemyData), unnamed
+    std::uint16_t atk;  // +0xB4 the stat copy's +4 (battle_damage kAttackerAtk; rest_3b.cpp ActorWord(actor, 0xA4, 0xB4))
+    std::uint16_t def;  // +0xB6 the stat copy's +6 (battle_damage kTargetDef; rest_3b.cpp:464; rest_3b.md)
     std::uint16_t agi;  // +0xB8 (battle_setup kEAgi)
-    unsigned char pad_BA[0x5];  // +0xBA..+0xBE: likewise; stat names are hypotheses (tools/enemy_ai.py)
+    std::uint16_t intel;  // +0xBA the stat copy's +0xA (battle_damage kAttackerInt / kTargetInt); BattleEnemy_PickAction tests it <= 1 (battle_e2.md). magic_steal.md R22 calls +0xBA the speed, but SkillSteal_Roll reads +0xB8 (magic_steal.cpp): a doc conflict
+    unsigned char pad_BC[0x3];  // +0xBC..+0xBE: the stat copy's +0xC..+0xE; not named
     std::uint8_t elements[5];  // +0xBF (battle_damage kEElements)
     std::uint8_t holy;  // +0xC4 (battle_damage kEHoly)
     unsigned char pad_C5[0x2B];  // +0xC5..+0xEF: copies of the stat block (+0xD0..), unnamed
-    std::uint8_t ai_script;  // +0xF0 the data id (battle_damage kEScript; Battle_CopyEnemyData)
+    std::uint8_t data_id;  // +0xF0 the id's low byte: indexes EnemyData (battle_e3_callees.h kEnemyData8B; battle_e2.md) and the AI scripts (battle_damage kEScript; Battle_CopyEnemyData)
     std::uint8_t ai_rows_done;  // +0xF1 a bit per AI row fired; DIV-0082 (battle_damage kERowsDone)
-    std::int8_t popup_dx;  // +0xF2 (battle_fx_tasks.cpp BattleFx_PopupStart)
-    std::int8_t popup_dy;  // +0xF3
+    std::int8_t screen_dx;  // +0xF2 added to the screen point by the popup and the action block (battle_fx_tasks.cpp BattleFx_PopupStart; battle_actions.cpp SetEnemyBlock); from EnemyData +0x78..+0x7B (Battle_SetEnemyOffset)
+    std::int8_t screen_dy;  // +0xF3
     std::uint32_t event_hook;  // +0xF4 address, called with 2 in an event battle (battle_flow.md)
-    unsigned char pad_F8[0x4];  // +0xF8..+0xFB: unread
+    std::uint32_t cue_table;  // +0xF8 address of the sound cues (battle_items.cpp:724 Long(r + 0xF8); enemy_ai_ops.md; battle_e2.md; boss_sb.md)
     std::uint32_t anim_table;  // +0xFC address of the animation bytes (battle_flow.cpp BattleEnemy_SetAnimation)
     std::uint8_t run_state;  // +0x100 indexes the state table 0x64B084 (battle_flow.md); EnemyData +0x88
-    unsigned char pad_101[0x4];  // +0x101: EnemyData +0x89; +0x102..+0x104 unread
+    std::uint8_t hit_class;  // +0x101 EnemyData +0x89; the hit-sound class (battle_sprites.cpp:534 Battle_PlayHitSound)
+    unsigned char pad_102[0x2];  // +0x102, +0x103: unread
+    std::uint8_t result_head;  // +0x104 the result / action record's first byte: 0x904B60 points here (battle_actions.cpp SetEnemyBlock; battle_actions.md; enemy_ai_ops.md); the party's is +0x124
     std::uint8_t command;  // +0x105 (battle_damage kECommand)
-    unsigned char pad_106[0x2];  // +0x106, +0x107: unread
-    std::uint16_t hp_change;  // +0x108 (battle_setup kEHpChange)
-    std::uint16_t ap_change;  // +0x10A (battle_setup kEApChange)
+    std::uint16_t ability;  // +0x106 the ability id, one of +0x9C by Rand() & 7 (battle_e2.cpp:828,866; battle_e2.md BattleEnemy_PickAction)
+    std::int16_t hp_change;  // +0x108 the result record's +4, signed (battle_setup kEHpChange; battle_e2.cpp:1133; boss_sd.cpp:404; boss_sa.cpp:394; battle_e2.md "the s16 +0x108")
+    std::int16_t ap_change;  // +0x10A the result record's +6, signed like +0x108 (battle_setup kEApChange)
     std::uint8_t shown;  // +0x10C (battle_setup kEEffect; battle_damage kEShown)
     std::uint8_t counter;  // +0x10D (battle_setup kECounter; battle_damage kEShown2)
     unsigned char pad_10E[0x2];  // +0x10E, +0x10F: unread
@@ -260,12 +302,15 @@ struct EnemyData {
     std::uint16_t stats[4];  // +0x28 names hypotheses (enemy_ai.py)
     unsigned char pad_30[0x8];  // +0x30..+0x37: two dwords copied to BattleEnemy +0xA8 / +0xAC, unnamed
     std::uint8_t ai_rows[0x40];  // +0x38 four rows of 16 bytes (enemy_ai_data.md 1; enemy_ai.py)
-    unsigned char pad_78[0x4];  // +0x78..+0x7B: unread
+    std::int8_t place[4];  // +0x78 x / z offsets by side, copied or negated to BattleEnemy +0xF2 / +0xF3 (Battle_SetEnemyOffset, battle_sprites.cpp:997-1007)
     std::uint8_t resist[9];  // +0x7C to BattleEnemy +0xDF.. and +0xBF.. (Battle_CopyEnemyData)
     std::uint8_t status;  // +0x85 to BattleEnemy +0x92 (Battle_CopyEnemyData)
-    unsigned char pad_86[0x2];  // +0x86, +0x87: unread
+    std::uint8_t size;  // +0x86 the on-screen test's size (field_hidden.cpp:525; field_hidden_callees.h kKinds)
+    std::uint8_t margin;  // +0x87 (field_hidden.cpp:525; field_hidden_callees.h kKinds); battle_e2.md BattleFx_PlaceOverOwner uses it as the y
     std::uint8_t run_state;  // +0x88 to BattleEnemy +0x100 (Battle_CopyEnemyData)
-    unsigned char pad_89[0x3];  // +0x89: to BattleEnemy +0x101, unnamed; +0x8A, +0x8B unread
+    std::uint8_t hit_class;  // +0x89 to BattleEnemy +0x101, the hit-sound class (battle_sprites.cpp:534)
+    std::uint8_t fx_size;  // +0x8A (battle_items_callees.h kEnemyFxSize = 0x8C55C8 + 0x8A; boss_sj_callees.h; boss_si_callees.h names the same byte kEnemyDataCount)
+    std::uint8_t cast_fx;  // +0x8B (battle_e3_callees.h kEnemyData8B, by the enemy's +0xF0; battle_e3.md EnemyOp_CastStart)
 };
 
 // A battle task: 0x93A000, 48 slots (battle_flow_callees.h kTasks). Not the
@@ -310,7 +355,7 @@ struct WindowRecord {
     std::uint16_t centre_x;  // +0x04 12.4
     std::uint16_t centre_y;  // +0x06 12.4
     unsigned char pad_08[0x2];  // +8, +9: not in window-task.md 3
-    std::uint8_t half_width;  // +0x0A pixels; battle's kind-3 name windows put the actor here instead (battle_sprites.md 3)
+    std::uint8_t param_a;  // +0x0A per handler: the half-width in pixels for the field windows (window-task.md 3); the actor slot for battle handler 3 (battle_win_states.md 2; battle_sprites.md 3); the item category for the list windows, the greyed / price percent in the buy list (menu-windows.md 2). A per-handler union is stage B's (docs/typed-records.md 3)
     std::uint8_t half_height;  // +0x0B
     unsigned char pad_0C[0x1];  // +0xC: not in window-task.md 3
     std::uint8_t flags;  // +0x0D bit 0 no frame, bit 1 the narrow box
@@ -332,9 +377,13 @@ struct SaveSummary {
     char name[5];  // +0x00 five bytes (save-interchange.md; Menu_DrawSaveSlot)
     std::uint8_t party[3];  // +0x05 icons, 0xFF none; +5 the leader's char_id (save-interchange.md)
     std::uint8_t level;  // +0x08 (Menu_DrawSaveSlot)
-    unsigned char pad_09[0x3];  // +9..+0xB: unread by these readers
-    std::uint8_t time[2];  // +0x0C the two values of the time format (Menu_DrawSaveSlot); which is hours is not read
-    unsigned char pad_0E[0x2];  // +0xE, +0xF: unread
+    std::uint8_t style;  // +0x09 the window style byte 0x903A5A, written by Save_BuildBlock (rest_2c.cpp:397)
+    std::uint8_t style2;  // +0x0A 0x903A5B (rest_2c.cpp:398)
+    unsigned char pad_0B[0x1];  // +0xB: unwritten by Save_BuildBlock, unread
+    std::uint8_t hours;  // +0x0C the play clock 0x9040C8..CB copied whole (rest_2c.cpp:396); drawn first (field_o.cpp Menu_DrawSaveSlot)
+    std::uint8_t minutes;  // +0x0D drawn second (Menu_DrawSaveSlot)
+    std::uint8_t seconds;  // +0x0E (map_field_objects_callees.h: hours, minutes, seconds, frames)
+    std::uint8_t frames;  // +0x0F 30 a second
     std::uint32_t exp;  // +0x10 Menu_DrawExpBar's argument
     std::uint8_t marked;  // +0x14 non-zero: frame flags 2 and piece 0x3D (Menu_DrawSaveSlot)
     std::uint8_t dir_index;  // +0x15 Save_Directory index, 0xFF empty (save-files.md 2)
@@ -350,11 +399,16 @@ struct SaveDirEntry {
 };
 
 static_assert(offsetof(SpriteObject, flags) == 0x0, "SpriteObject::flags");
+static_assert(offsetof(SpriteObject, state) == 0x1, "SpriteObject::state");
 static_assert(offsetof(SpriteObject, type) == 0x6, "SpriteObject::type");
+static_assert(offsetof(SpriteObject, flags2) == 0x7, "SpriteObject::flags2");
 static_assert(offsetof(SpriteObject, direction) == 0x8, "SpriteObject::direction");
 static_assert(offsetof(SpriteObject, step_frames) == 0x9, "SpriteObject::step_frames");
 static_assert(offsetof(SpriteObject, step_x) == 0xC, "SpriteObject::step_x");
 static_assert(offsetof(SpriteObject, step_z) == 0x10, "SpriteObject::step_z");
+static_assert(offsetof(SpriteObject, step_y) == 0x14, "SpriteObject::step_y");
+static_assert(offsetof(SpriteObject, accel_x) == 0x18, "SpriteObject::accel_x");
+static_assert(offsetof(SpriteObject, accel_z) == 0x1C, "SpriteObject::accel_z");
 static_assert(offsetof(SpriteObject, draw_flags) == 0x24, "SpriteObject::draw_flags");
 static_assert(offsetof(SpriteObject, tex_slot) == 0x25, "SpriteObject::tex_slot");
 static_assert(offsetof(SpriteObject, tex_row) == 0x26, "SpriteObject::tex_row");
@@ -388,13 +442,25 @@ static_assert(offsetof(SpriteObject, angle) == 0x64, "SpriteObject::angle");
 static_assert(offsetof(SpriteObject, reach) == 0x70, "SpriteObject::reach");
 static_assert(offsetof(SpriteObject, screen_xf) == 0x74, "SpriteObject::screen_xf");
 static_assert(offsetof(SpriteObject, screen_yf) == 0x78, "SpriteObject::screen_yf");
+static_assert(offsetof(SpriteObject, depth_f) == 0x7C, "SpriteObject::depth_f");
 static_assert(offsetof(SpriteObject, context) == 0x80, "SpriteObject::context");
 static_assert(offsetof(SpriteObject, pose_wait) == 0x81, "SpriteObject::pose_wait");
 static_assert(offsetof(SpriteObject, loop) == 0x82, "SpriteObject::loop");
 static_assert(offsetof(SpriteObject, area_script) == 0x83, "SpriteObject::area_script");
 static_assert(offsetof(SpriteObject, speed) == 0x84, "SpriteObject::speed");
+static_assert(offsetof(SpriteObject, saved_facing) == 0x85, "SpriteObject::saved_facing");
+static_assert(offsetof(SpriteObject, trigger) == 0x86, "SpriteObject::trigger");
 static_assert(offsetof(SpriteObject, move_steps) == 0x87, "SpriteObject::move_steps");
+static_assert(offsetof(SpriteObject, trigger_word) == 0x88, "SpriteObject::trigger_word");
 static_assert(offsetof(SpriteObject, script_position) == 0x8A, "SpriteObject::script_position");
+static_assert(offsetof(SpriteObject, target_x) == 0x8C, "SpriteObject::target_x");
+static_assert(offsetof(SpriteObject, target_z) == 0x90, "SpriteObject::target_z");
+static_assert(offsetof(SpriteObject, best_score) == 0x94, "SpriteObject::best_score");
+static_assert(offsetof(SpriteObject, half_w) == 0x98, "SpriteObject::half_w");
+static_assert(offsetof(SpriteObject, half_d) == 0x9A, "SpriteObject::half_d");
+static_assert(offsetof(SpriteObject, counter) == 0x9C, "SpriteObject::counter");
+static_assert(offsetof(SpriteObject, tag) == 0x9E, "SpriteObject::tag");
+static_assert(offsetof(SpriteObject, handler) == 0xA0, "SpriteObject::handler");
 static_assert(sizeof(SpriteObject) == 0xA4, "SpriteObject stride");
 
 static_assert(offsetof(PartyMember, flags) == 0x0, "PartyMember::flags");
@@ -406,9 +472,13 @@ static_assert(offsetof(PartyMember, step_x) == 0xC, "PartyMember::step_x");
 static_assert(offsetof(PartyMember, step_z) == 0x10, "PartyMember::step_z");
 static_assert(offsetof(PartyMember, ot_slot) == 0x29, "PartyMember::ot_slot");
 static_assert(offsetof(PartyMember, column) == 0x2C, "PartyMember::column");
+static_assert(offsetof(PartyMember, screen_x) == 0x2E, "PartyMember::screen_x");
+static_assert(offsetof(PartyMember, screen_y) == 0x30, "PartyMember::screen_y");
+static_assert(offsetof(PartyMember, draw_key) == 0x32, "PartyMember::draw_key");
 static_assert(offsetof(PartyMember, x) == 0x34, "PartyMember::x");
 static_assert(offsetof(PartyMember, z) == 0x38, "PartyMember::z");
 static_assert(offsetof(PartyMember, height) == 0x3C, "PartyMember::height");
+static_assert(offsetof(PartyMember, animation) == 0x4B, "PartyMember::animation");
 static_assert(offsetof(PartyMember, raised) == 0x70, "PartyMember::raised");
 static_assert(offsetof(PartyMember, char_id) == 0x89, "PartyMember::char_id");
 static_assert(offsetof(PartyMember, level) == 0x8A, "PartyMember::level");
@@ -420,8 +490,10 @@ static_assert(offsetof(PartyMember, ap) == 0x9A, "PartyMember::ap");
 static_assert(offsetof(PartyMember, survive) == 0x9C, "PartyMember::survive");
 static_assert(offsetof(PartyMember, max_hp) == 0xA0, "PartyMember::max_hp");
 static_assert(offsetof(PartyMember, max_ap) == 0xA2, "PartyMember::max_ap");
+static_assert(offsetof(PartyMember, atk) == 0xA4, "PartyMember::atk");
 static_assert(offsetof(PartyMember, def) == 0xA6, "PartyMember::def");
 static_assert(offsetof(PartyMember, agi) == 0xA8, "PartyMember::agi");
+static_assert(offsetof(PartyMember, intel) == 0xAA, "PartyMember::intel");
 static_assert(offsetof(PartyMember, byte_ae) == 0xAE, "PartyMember::byte_ae");
 static_assert(offsetof(PartyMember, elements) == 0xAF, "PartyMember::elements");
 static_assert(offsetof(PartyMember, holy) == 0xB4, "PartyMember::holy");
@@ -433,19 +505,26 @@ static_assert(offsetof(PartyMember, ap_change) == 0x12A, "PartyMember::ap_change
 static_assert(offsetof(PartyMember, shown) == 0x12C, "PartyMember::shown");
 static_assert(offsetof(PartyMember, counter) == 0x12D, "PartyMember::counter");
 static_assert(offsetof(PartyMember, item_slot) == 0x12E, "PartyMember::item_slot");
+static_assert(offsetof(PartyMember, saved_animation) == 0x12F, "PartyMember::saved_animation");
 static_assert(offsetof(PartyMember, flags_130) == 0x130, "PartyMember::flags_130");
 static_assert(offsetof(PartyMember, flags_134) == 0x134, "PartyMember::flags_134");
 static_assert(offsetof(PartyMember, field_flags) == 0x138, "PartyMember::field_flags");
+static_assert(offsetof(PartyMember, field_object) == 0x139, "PartyMember::field_object");
+static_assert(offsetof(PartyMember, saved_script_pos) == 0x140, "PartyMember::saved_script_pos");
 static_assert(offsetof(PartyMember, count_4000) == 0x142, "PartyMember::count_4000");
 static_assert(offsetof(PartyMember, count_800) == 0x143, "PartyMember::count_800");
 static_assert(offsetof(PartyMember, count_40) == 0x144, "PartyMember::count_40");
 static_assert(offsetof(PartyMember, count_80) == 0x145, "PartyMember::count_80");
 static_assert(offsetof(PartyMember, char_index) == 0x148, "PartyMember::char_index");
+static_assert(offsetof(PartyMember, tint) == 0x149, "PartyMember::tint");
 static_assert(sizeof(PartyMember) == 0x14C, "PartyMember stride");
 
 static_assert(offsetof(EffectObject, in_use) == 0x0, "EffectObject::in_use");
+static_assert(offsetof(EffectObject, state) == 0x1, "EffectObject::state");
+static_assert(offsetof(EffectObject, step) == 0x2, "EffectObject::step");
 static_assert(offsetof(EffectObject, kind) == 0x5, "EffectObject::kind");
 static_assert(offsetof(EffectObject, param) == 0x6, "EffectObject::param");
+static_assert(offsetof(EffectObject, timer) == 0x9, "EffectObject::timer");
 static_assert(offsetof(EffectObject, step_x) == 0xC, "EffectObject::step_x");
 static_assert(offsetof(EffectObject, step_z) == 0x10, "EffectObject::step_z");
 static_assert(offsetof(EffectObject, screen_x) == 0x2E, "EffectObject::screen_x");
@@ -453,6 +532,11 @@ static_assert(offsetof(EffectObject, screen_y) == 0x30, "EffectObject::screen_y"
 static_assert(offsetof(EffectObject, x) == 0x34, "EffectObject::x");
 static_assert(offsetof(EffectObject, z) == 0x38, "EffectObject::z");
 static_assert(offsetof(EffectObject, height) == 0x3C, "EffectObject::height");
+static_assert(offsetof(EffectObject, shade) == 0x5D, "EffectObject::shade");
+static_assert(offsetof(EffectObject, depth) == 0x60, "EffectObject::depth");
+static_assert(offsetof(EffectObject, screen_xf) == 0x74, "EffectObject::screen_xf");
+static_assert(offsetof(EffectObject, screen_yf) == 0x78, "EffectObject::screen_yf");
+static_assert(offsetof(EffectObject, depth_f) == 0x7C, "EffectObject::depth_f");
 static_assert(sizeof(EffectObject) == 0x80, "EffectObject stride");
 
 static_assert(offsetof(BattleEnemy, flags) == 0x0, "BattleEnemy::flags");
@@ -461,6 +545,9 @@ static_assert(offsetof(BattleEnemy, actor) == 0x5, "BattleEnemy::actor");
 static_assert(offsetof(BattleEnemy, layout) == 0x8, "BattleEnemy::layout");
 static_assert(offsetof(BattleEnemy, ot_slot) == 0x29, "BattleEnemy::ot_slot");
 static_assert(offsetof(BattleEnemy, flip) == 0x2A, "BattleEnemy::flip");
+static_assert(offsetof(BattleEnemy, screen_x) == 0x2E, "BattleEnemy::screen_x");
+static_assert(offsetof(BattleEnemy, screen_y) == 0x30, "BattleEnemy::screen_y");
+static_assert(offsetof(BattleEnemy, draw_key) == 0x32, "BattleEnemy::draw_key");
 static_assert(offsetof(BattleEnemy, x) == 0x34, "BattleEnemy::x");
 static_assert(offsetof(BattleEnemy, z) == 0x38, "BattleEnemy::z");
 static_assert(offsetof(BattleEnemy, height) == 0x3C, "BattleEnemy::height");
@@ -479,19 +566,27 @@ static_assert(offsetof(BattleEnemy, bank) == 0x9A, "BattleEnemy::bank");
 static_assert(offsetof(BattleEnemy, abilities) == 0x9C, "BattleEnemy::abilities");
 static_assert(offsetof(BattleEnemy, hp) == 0xA4, "BattleEnemy::hp");
 static_assert(offsetof(BattleEnemy, ap) == 0xA6, "BattleEnemy::ap");
+static_assert(offsetof(BattleEnemy, steal_row) == 0xAA, "BattleEnemy::steal_row");
 static_assert(offsetof(BattleEnemy, max_hp) == 0xB0, "BattleEnemy::max_hp");
 static_assert(offsetof(BattleEnemy, max_ap) == 0xB2, "BattleEnemy::max_ap");
+static_assert(offsetof(BattleEnemy, atk) == 0xB4, "BattleEnemy::atk");
+static_assert(offsetof(BattleEnemy, def) == 0xB6, "BattleEnemy::def");
 static_assert(offsetof(BattleEnemy, agi) == 0xB8, "BattleEnemy::agi");
+static_assert(offsetof(BattleEnemy, intel) == 0xBA, "BattleEnemy::intel");
 static_assert(offsetof(BattleEnemy, elements) == 0xBF, "BattleEnemy::elements");
 static_assert(offsetof(BattleEnemy, holy) == 0xC4, "BattleEnemy::holy");
-static_assert(offsetof(BattleEnemy, ai_script) == 0xF0, "BattleEnemy::ai_script");
+static_assert(offsetof(BattleEnemy, data_id) == 0xF0, "BattleEnemy::data_id");
 static_assert(offsetof(BattleEnemy, ai_rows_done) == 0xF1, "BattleEnemy::ai_rows_done");
-static_assert(offsetof(BattleEnemy, popup_dx) == 0xF2, "BattleEnemy::popup_dx");
-static_assert(offsetof(BattleEnemy, popup_dy) == 0xF3, "BattleEnemy::popup_dy");
+static_assert(offsetof(BattleEnemy, screen_dx) == 0xF2, "BattleEnemy::screen_dx");
+static_assert(offsetof(BattleEnemy, screen_dy) == 0xF3, "BattleEnemy::screen_dy");
 static_assert(offsetof(BattleEnemy, event_hook) == 0xF4, "BattleEnemy::event_hook");
+static_assert(offsetof(BattleEnemy, cue_table) == 0xF8, "BattleEnemy::cue_table");
 static_assert(offsetof(BattleEnemy, anim_table) == 0xFC, "BattleEnemy::anim_table");
 static_assert(offsetof(BattleEnemy, run_state) == 0x100, "BattleEnemy::run_state");
+static_assert(offsetof(BattleEnemy, hit_class) == 0x101, "BattleEnemy::hit_class");
+static_assert(offsetof(BattleEnemy, result_head) == 0x104, "BattleEnemy::result_head");
 static_assert(offsetof(BattleEnemy, command) == 0x105, "BattleEnemy::command");
+static_assert(offsetof(BattleEnemy, ability) == 0x106, "BattleEnemy::ability");
 static_assert(offsetof(BattleEnemy, hp_change) == 0x108, "BattleEnemy::hp_change");
 static_assert(offsetof(BattleEnemy, ap_change) == 0x10A, "BattleEnemy::ap_change");
 static_assert(offsetof(BattleEnemy, shown) == 0x10C, "BattleEnemy::shown");
@@ -517,9 +612,15 @@ static_assert(offsetof(EnemyData, hp) == 0x24, "EnemyData::hp");
 static_assert(offsetof(EnemyData, ap) == 0x26, "EnemyData::ap");
 static_assert(offsetof(EnemyData, stats) == 0x28, "EnemyData::stats");
 static_assert(offsetof(EnemyData, ai_rows) == 0x38, "EnemyData::ai_rows");
+static_assert(offsetof(EnemyData, place) == 0x78, "EnemyData::place");
 static_assert(offsetof(EnemyData, resist) == 0x7C, "EnemyData::resist");
 static_assert(offsetof(EnemyData, status) == 0x85, "EnemyData::status");
+static_assert(offsetof(EnemyData, size) == 0x86, "EnemyData::size");
+static_assert(offsetof(EnemyData, margin) == 0x87, "EnemyData::margin");
 static_assert(offsetof(EnemyData, run_state) == 0x88, "EnemyData::run_state");
+static_assert(offsetof(EnemyData, hit_class) == 0x89, "EnemyData::hit_class");
+static_assert(offsetof(EnemyData, fx_size) == 0x8A, "EnemyData::fx_size");
+static_assert(offsetof(EnemyData, cast_fx) == 0x8B, "EnemyData::cast_fx");
 static_assert(sizeof(EnemyData) == 0x8C, "EnemyData stride");
 
 static_assert(offsetof(BattleTask, flags) == 0x0, "BattleTask::flags");
@@ -547,7 +648,7 @@ static_assert(offsetof(WindowRecord, kind) == 0x2, "WindowRecord::kind");
 static_assert(offsetof(WindowRecord, state) == 0x3, "WindowRecord::state");
 static_assert(offsetof(WindowRecord, centre_x) == 0x4, "WindowRecord::centre_x");
 static_assert(offsetof(WindowRecord, centre_y) == 0x6, "WindowRecord::centre_y");
-static_assert(offsetof(WindowRecord, half_width) == 0xA, "WindowRecord::half_width");
+static_assert(offsetof(WindowRecord, param_a) == 0xA, "WindowRecord::param_a");
 static_assert(offsetof(WindowRecord, half_height) == 0xB, "WindowRecord::half_height");
 static_assert(offsetof(WindowRecord, flags) == 0xD, "WindowRecord::flags");
 static_assert(offsetof(WindowRecord, pass) == 0xF, "WindowRecord::pass");
@@ -562,7 +663,12 @@ static_assert(sizeof(WindowRecord) == 0x24, "WindowRecord stride");
 static_assert(offsetof(SaveSummary, name) == 0x0, "SaveSummary::name");
 static_assert(offsetof(SaveSummary, party) == 0x5, "SaveSummary::party");
 static_assert(offsetof(SaveSummary, level) == 0x8, "SaveSummary::level");
-static_assert(offsetof(SaveSummary, time) == 0xC, "SaveSummary::time");
+static_assert(offsetof(SaveSummary, style) == 0x9, "SaveSummary::style");
+static_assert(offsetof(SaveSummary, style2) == 0xA, "SaveSummary::style2");
+static_assert(offsetof(SaveSummary, hours) == 0xC, "SaveSummary::hours");
+static_assert(offsetof(SaveSummary, minutes) == 0xD, "SaveSummary::minutes");
+static_assert(offsetof(SaveSummary, seconds) == 0xE, "SaveSummary::seconds");
+static_assert(offsetof(SaveSummary, frames) == 0xF, "SaveSummary::frames");
 static_assert(offsetof(SaveSummary, exp) == 0x10, "SaveSummary::exp");
 static_assert(offsetof(SaveSummary, marked) == 0x14, "SaveSummary::marked");
 static_assert(offsetof(SaveSummary, dir_index) == 0x15, "SaveSummary::dir_index");
