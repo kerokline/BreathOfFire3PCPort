@@ -60,6 +60,9 @@ sha256 = "15984158e0badb4b2f9471c1e9003bb18b2ab11aff47af2376f9ebcd31dfb8cb"
 [[block]]
 name = "MsgBoxState"
 pc = 0x7DEE40
+# The block is one record of 0x30 bytes: the PSX fields 0x9C..0xCB its evidence lists (typed-data round C3).
+record_stride = 0x30
+record_count = 1
 psx = 0x8014909C
 delta = 0x80695DA4
 status = "evidence"
@@ -68,6 +71,9 @@ evidence = "12 fields verified field-for-field against MsgBox_Reset 0x8015042C's
 [[block]]
 name = "WindowRecords"
 pc = 0x803160
+# 22 records of 0x24 (src/game/records.h WindowRecord; docs/window-task.md 3; boss_harness.h kWindowCount) (typed-data round C3).
+record_stride = 0x24
+record_count = 22
 psx = 0x8014832C
 delta = 0x806BAE34
 status = "evidence"
@@ -86,6 +92,9 @@ note = "Also the base of the DAT arena: LoadDatFile 0x454590 copies every kind-0
 [[block]]
 name = "CharacterRecords"
 pc = 0x903A70
+# Eight records of 0xA4, 0x903A70..0x903F90, where Cond_Flags begins (docs/area-entry.md; typed-data round C3).
+record_stride = 0xA4
+record_count = 8
 psx = 0x80144964
 delta = 0x807BF10C
 status = "evidence"
@@ -463,6 +472,10 @@ evidence = "disasm 2026-09-18: 23-entry jump table for control codes 0x00..0x16,
 [[block]]
 name = "EnemyWorkingRecords"
 pc = 0x93B9E0
+# Eight records at the 0x128 stride, each the +0x80..+0x127 tail of a BattleEnemy (src/game/records.h), so 0xA8 bytes; the stride's other 0x80 is the next enemy's sprite object (typed-data round C3).
+record_stride = 0x128
+record_count = 8
+record_size = 0xA8
 psx = 0x801EB620
 field_shift = 0x10
 pc_stride = 0x128
@@ -3030,10 +3043,10 @@ evidence = "disasm 2026-09-21: Menu_DrawButtonRow reads byte +0 of the record at
 [[data]]
 pc = 0x6637E4
 name = "Menu_VerbPointers"
-ctype = "unsigned int"
+ctype = "unsigned char *"
 count = 22
 status = "evidence"
-evidence = "disasm 2026-09-21: Menu_DrawButtonRow 0x574965 loads the string for a verb index from here. 22 entries, each 0x66A228 + 8 * i."
+evidence = "disasm 2026-09-21: Menu_DrawButtonRow 0x574965 loads the string for a verb index from here. 22 entries, each 0x66A228 + 8 * i. Retyped 2026-10-19 (typed-data round stage C3) from unsigned int: each element is a pointer to a verb's text (menu_windows.cpp Menu_DrawButtonRow reads it with Ptr as const unsigned char *), as Magic080_TextPointers is typed. No site spelled it as an integer."
 
 [[data]]
 pc = 0x66A228
@@ -132230,9 +132243,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x669E08
 name = "BattleE1_BannerText"
-ctype = "unsigned long"
+ctype = "unsigned char *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x669e08] at 0x42f5f5; mov eax, dword ptr [0x669e08] at 0x44a151. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kBannerText, battle_e4::kFleeText."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x669e08] at 0x42f5f5; mov eax, dword ptr [0x669e08] at 0x44a151. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kBannerText, battle_e4::kFleeText. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer to the banner text (battle_e1.cpp hands it to BattleBanner_Add as const char *; battle_e4_callees.h: Escape_Begin's banner text), a byte pointer as text pointers are typed here. Its one typed use, battle_e4.cpp's reinterpret_cast<const char*>, reads the same pointer."
 
 [[data]]
 pc = 0x669E0C
@@ -133204,6 +133217,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE41
 name = "ItemUse_SubState"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x1
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 34 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee41], al at 0x497785; mov byte ptr [0x7dee41], 0 at 0x497d0a; mov al, byte ptr [0x7dee41] at 0x497ebd and 31 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: item_use::kSubState, msgbox::kSubState."
 
@@ -133211,6 +133226,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE42
 name = "Msgbox_EffectKind"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x2
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee42], al at 0x49778a; mov byte ptr [0x7dee42], dl at 0x497d1a; mov al, byte ptr [0x7dee42] at 0x498502 and 5 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kEffectKind."
 
@@ -133218,6 +133235,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE43
 name = "Msgbox_EffectPhase"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 14 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee43], al at 0x49778f; mov byte ptr [0x7dee43], 0 at 0x497d03; mov al, byte ptr [0x7dee43] at 0x49852d and 11 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kEffectPhase."
 
@@ -133225,6 +133244,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE46
 name = "Msgbox_Delay"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x6
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 19 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee46], 0xa at 0x47de30; mov byte ptr [0x7dee46], 0xa at 0x47de3c; mov byte ptr [0x7dee46], al at 0x4977ca and 16 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: effect_2g::kMsgBoxStep, msgbox::kDelay."
 
@@ -133232,6 +133253,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE47
 name = "Msgbox_SubCount"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x7
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x7dee47] at 0x497b55; mov byte ptr [0x7dee47], cl at 0x497b5d; mov byte ptr [0x7dee47], 0x21 at 0x497c8f and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kSubCount."
 
@@ -133239,6 +133262,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE4A
 name = "Msgbox_EffectTimer"
 ctype = "unsigned short"
+field_of = "MsgBoxState"
+field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x7dee4a], ax at 0x49779e; mov word ptr [0x7dee4a], dx at 0x497d2c; mov ax, word ptr [0x7dee4a] at 0x49853e and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kEffectTimer."
 
@@ -133246,6 +133271,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE4C
 name = "Msgbox_Base"
 ctype = "unsigned long"
+field_of = "MsgBoxState"
+field_offset = 0xC
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x7dee4c], eax at 0x4976ea; mov dword ptr [0x7dee4c], eax at 0x49771e; mov esi, dword ptr [0x7dee4c] at 0x497859 and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_windows::kBoxText, msgbox::kBase."
 
@@ -133253,6 +133280,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE50
 name = "MenuWindows_ListText"
 ctype = "unsigned long"
+field_of = "MsgBoxState"
+field_offset = 0x10
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 23 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x7dee50], eax at 0x4976ef; mov dword ptr [0x7dee50], eax at 0x497723; mov ecx, dword ptr [0x7dee50] at 0x497770 and 20 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_windows::kListText, msgbox::kAt, window_task::kListText."
 
@@ -133260,6 +133289,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE54
 name = "Msgbox_Resume"
 ctype = "unsigned long"
+field_of = "MsgBoxState"
+field_offset = 0x14
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov esi, dword ptr [0x7dee54] at 0x497b39; mov esi, dword ptr [0x7dee54] at 0x497bb6; mov dword ptr [0x7dee54], esi at 0x497c84 and 3 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kResume."
 
@@ -133267,6 +133298,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE58
 name = "ItemUse_ColorHigh"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x18
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 14 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee58], al at 0x4977da; mov al, byte ptr [0x7dee58] at 0x4979de; mov al, byte ptr [0x7dee58] at 0x497a0e and 11 more. 4 of them dword loads narrowed before use (and 0xff x4, e.g. at 0x49887c). No indexed access with this displacement and no wider store over it, so a scalar. Module names: item_use::kColorHigh, msgbox::kColorHigh."
 
@@ -133274,6 +133307,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE59
 name = "Msgbox_StepCount"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x19
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee59], al at 0x4977cf; mov al, byte ptr [0x7dee59] at 0x497843; mov al, byte ptr [0x7dee59] at 0x497a57 and 3 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kStepCount."
 
@@ -133281,6 +133316,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE5A
 name = "Msgbox_OffsetX"
 ctype = "signed char"
+field_of = "MsgBoxState"
+field_offset = 0x1A
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee5a], al at 0x497794; movsx dx, byte ptr [0x7dee5a] at 0x4979ff; mov cl, byte ptr [0x7dee5a] at 0x498560 and 8 more. Every widening read is movsx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kOffsetX."
 
@@ -133288,6 +133325,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE5B
 name = "Msgbox_OffsetY"
 ctype = "signed char"
+field_of = "MsgBoxState"
+field_offset = 0x1B
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee5b], al at 0x497799; movsx cx, byte ptr [0x7dee5b] at 0x4979f2; mov al, byte ptr [0x7dee5b] at 0x4986ba and 5 more. Every widening read is movsx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kOffsetY."
 
@@ -133295,6 +133334,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE5E
 name = "Msgbox_PenY"
 ctype = "unsigned short"
+field_of = "MsgBoxState"
+field_offset = 0x1E
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x7dee5e], dx at 0x497877; mov word ptr [0x7dee5e], dx at 0x4978e5; mov dx, word ptr [0x7dee5e] at 0x497a3b and 5 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kPenY."
 
@@ -133302,6 +133343,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE62
 name = "Msgbox_OriginY"
 ctype = "unsigned short"
+field_of = "MsgBoxState"
+field_offset = 0x22
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x7dee62], cx at 0x497811; mov dx, word ptr [0x7dee62] at 0x497848. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kOriginY."
 
@@ -133309,6 +133352,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE64
 name = "ItemUse_ChoiceId"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x24
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee64], dl at 0x497c3d; cmp byte ptr [0x7dee64], 0x80 at 0x4981c0; mov edx, dword ptr [0x7dee64] at 0x4981c9 and 3 more. 3 of them dword loads narrowed before use (and 0xff x3, e.g. at 0x4981c9). No indexed access with this displacement and no wider store over it, so a scalar. Module names: item_use::kChoiceId, mode_states::kChoiceId, msgbox::kChoiceId."
 
@@ -133316,6 +133361,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE65
 name = "MenuWindows_ListSet"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x25
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee65], dl at 0x497c60; mov dl, byte ptr [0x7dee65] at 0x5958c8; mov dl, byte ptr [0x7dee65] at 0x5959a8 and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_windows::kListSet, mode_states::kCursorSet, msgbox::kChoiceKind, window_task::kListSet."
 
@@ -133323,6 +133370,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE66
 name = "MenuWindows_ListCount"
 ctype = "signed char"
+field_of = "MsgBoxState"
+field_offset = 0x26
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee66], cl at 0x497c4f; mov cl, byte ptr [0x7dee66] at 0x498151; mov cl, byte ptr [0x7dee66] at 0x498370 and 10 more. Every widening read is movsx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_windows::kListCount, msgbox::kChoiceLast, window_task::kListCount."
 
@@ -133330,6 +133379,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE67
 name = "AreaW0c_ChoiceAnswer"
 ctype = "signed char"
+field_of = "MsgBoxState"
+field_offset = 0x27
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 312 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx eax, byte ptr [0x7dee67] at 0x401000; movsx eax, byte ptr [0x7dee67] at 0x401040; movsx eax, byte ptr [0x7dee67] at 0x401150 and 309 more. Every widening read is movsx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w0a::kCursor, area_w0b::kChoice, area_w0c::kChoiceAnswer, area_w1a::kChoiceAnswer, area_w1b::kChoice, area_w1c::kChoiceAnswer, area_w1d::kChoiceAnswer, area_w1e::kChoice, area_w1f::kChoiceAnswer, area_w2a::kChoiceAnswer, area_w2c::kChoiceAnswer, area_w2d::kChoiceAnswer, area_w2f::kChoiceAnswer, area_w3a::kCursor, area_w3b::kChoice, area_w3c::kChoiceAnswer, area_w3d::kChoiceAnswer, area_w3e::kChoiceAnswer, area_w3f::kChoiceAnswer, area_w3g::kCursor, area_w4a::kChoice, area_w4b::kChoiceAnswer, area_w4c::kChoiceAnswer, area_w4d::kChoiceAnswer, area_w4e::kChoiceAnswer, area_w4f::kChoiceAnswer, item_use::kCursor, mode_states::kCursorRow, msgbox::kCursor, window_task::kListCursor."
 
@@ -133337,6 +133388,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE6A
 name = "Msgbox_EffectWait"
 ctype = "unsigned short"
+field_of = "MsgBoxState"
+field_offset = 0x2A
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: cmp word ptr [0x7dee6a], cx at 0x4986ac; mov word ptr [0x7dee6a], dx at 0x4986d6; mov word ptr [0x7dee6a], 0xf at 0x4986e4 and 5 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kEffectWait."
 
@@ -133344,6 +133397,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x7DEE6E
 name = "Msgbox_Placement"
 ctype = "unsigned char"
+field_of = "MsgBoxState"
+field_offset = 0x2E
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 24 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x7dee6e], dl at 0x4977b5; mov byte ptr [0x7dee6e], al at 0x4977c3; mov cl, byte ptr [0x7dee6e] at 0x59552b and 21 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kPlacement, window_task::kPlacement."
 
@@ -133393,6 +133448,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803168
 name = "Rest3a_Win0Category"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x8
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov dl, byte ptr [0x803168] at 0x42de88; mov byte ptr [0x803168], al at 0x42e18d; mov cl, byte ptr [0x803168] at 0x42e2f1 and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3a::kWin0Category."
 
@@ -133400,6 +133457,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80316A
 name = "BattleOdds_Win0Index"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 24 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x80316a] at 0x42ddc1; movzx cx, byte ptr [0x80316a] at 0x42de56; cmp al, byte ptr [0x80316a] at 0x42dee2 and 21 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_odds::kWin0Index, msgbox::kWindow0Rows."
 
@@ -133407,6 +133466,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80316C
 name = "Rest3a_Win0Cursor"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xC
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 15 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80316c], bl at 0x42e145; movzx ax, byte ptr [0x80316c] at 0x45ff21; mov al, byte ptr [0x80316c] at 0x45ffbd and 12 more. 3 of them dword loads narrowed before use (and 0xff x3, e.g. at 0x460007). Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3a::kWin0Cursor."
 
@@ -133414,6 +133475,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80316D
 name = "Rest3a_Win0Item"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xD
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x80316d] at 0x42de78; mov al, byte ptr [0x80316d] at 0x42dfd3; mov byte ptr [0x80316d], al at 0x42e192 and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3a::kWin0Item."
 
@@ -133421,6 +133484,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80316F
 name = "Msgbox_Window0Kind"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xF
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80316f], 2 at 0x4977e7. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kWindow0Kind."
 
@@ -133428,6 +133493,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803170
 name = "ShopStates2_Help"
 ctype = "unsigned short"
+field_of = "WindowRecords"
+field_offset = 0x10
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 31 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x803170], 0xf0 at 0x42deee; mov word ptr [0x803170], 0x10 at 0x42df23; cmp word ptr [0x803170], 0 at 0x42dfba and 28 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: shop_states2::kHelp."
 
@@ -133435,6 +133502,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803184
 name = "BattleE1_Win1"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803184], dl at 0x42e1b0; mov byte ptr [0x803184], 0 at 0x4310e8; mov byte ptr [0x803184], 0 at 0x431e1d and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kWin1, battle_turn_steps::kWindows."
 
@@ -133442,6 +133511,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803186
 name = "Msgbox_Window1Kind"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x2
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803186], 3 at 0x42e1a3; mov byte ptr [0x803186], 4 at 0x431a3f; mov byte ptr [0x803186], 0 at 0x431d25 and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: msgbox::kWindow1Kind."
 
@@ -133449,6 +133520,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803187
 name = "ItemUse_Window1State"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 30 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803187], bl at 0x42de19; mov byte ptr [0x803187], cl at 0x42e1aa; cmp byte ptr [0x803187], 1 at 0x42e8c0 and 27 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: item_use::kWindow1State, msgbox::kWindow1State."
 
@@ -133456,6 +133529,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80318E
 name = "Rest3a_Win1Slot"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 21 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movzx ax, byte ptr [0x80318e] at 0x42dd08; mov al, byte ptr [0x80318e] at 0x42dd57; mov byte ptr [0x80318e], al at 0x42dd61 and 18 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e2::kWindow1Count, rest_3a::kWin1Slot."
 
@@ -133463,6 +133538,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803191
 name = "Rest2h_Window1Master"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xD
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803191], bl at 0x42dd45; mov byte ptr [0x803191], 0 at 0x42de61; mov byte ptr [0x803191], dl at 0x42e1db and 5 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_2h::kWindow1Master."
 
@@ -133470,6 +133547,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8031A8
 name = "BattleE1_Win2"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8031a8], dl at 0x42e1ed; mov byte ptr [0x8031a8], 0 at 0x4310f6; mov byte ptr [0x8031a8], al at 0x57e143 and 5 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kWin2."
 
@@ -133477,6 +133556,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8031AB
 name = "Rest3b_Win2State"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 24 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8031ab], bl at 0x42de1f; mov byte ptr [0x8031ab], cl at 0x42e1e7; mov byte ptr [0x8031ab], al at 0x42e8e6 and 21 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: rest_3b::kWin2State."
 
@@ -133484,6 +133565,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8031FA
 name = "BattleOdds_Win4Index"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 19 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8031fa], cl at 0x44a7a6; mov byte ptr [0x8031fa], 0 at 0x5843b5; mov byte ptr [0x8031fa], bl at 0x58474e and 16 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_odds::kWin4Index."
 
@@ -133491,6 +133574,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80325C
 name = "MenuLists_MoneyWindow"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80325c], 0 at 0x431120; mov byte ptr [0x80325c], 1 at 0x5827bb; mov byte ptr [0x80325c], cl at 0x582ed5 and 1 more. Its address is also an immediate 1 time(s) (cmp eax, 0x80325c at 0x571f34). No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kMoneyWindow."
 
@@ -133498,6 +133583,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803280
 name = "MenuLists_TimeWindow"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803280], 0 at 0x431119; mov byte ptr [0x803280], 1 at 0x581ba2; mov byte ptr [0x803280], 1 at 0x589f1a. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kTimeWindow."
 
@@ -133505,6 +133592,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8032A4
 name = "MenuLists_IconWindow"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8032a4], 0 at 0x431112; mov byte ptr [0x8032a4], 0 at 0x581c83; mov byte ptr [0x8032a4], 1 at 0x581f32 and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kIconWindow."
 
@@ -133512,6 +133601,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8032C8
 name = "MenuLists_TitleWindow"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8032c8], 0 at 0x43110b; mov byte ptr [0x8032c8], 0 at 0x582866; mov byte ptr [0x8032c8], 1 at 0x582ba5 and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: menu_lists::kTitleWindow."
 
@@ -133519,6 +133610,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033A0
 name = "BattleE4_List"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033a0], 1 at 0x447e6d; mov byte ptr [0x8033a0], 1 at 0x447f4a; mov byte ptr [0x8033a0], bl at 0x448e96 and 10 more. Its address is also an immediate 1 time(s) (mov esi, 0x8033a0 at 0x449fe2). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e4::kList, battle_menu_states::kList, battle_misc::kItemWindow."
 
@@ -133526,6 +133619,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033A3
 name = "BattleActorCopies_ItemState"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 25 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x8033a3] at 0x4474b0; mov byte ptr [0x8033a3], 1 at 0x447723; mov byte ptr [0x8033a3], 1 at 0x4477f6 and 22 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemState, rest_3b::kWin16Closing."
 
@@ -133533,6 +133628,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033A6
 name = "BattleActorCopies_ItemBaseY"
 ctype = "unsigned short"
+field_of = "WindowRecords"
+field_offset = 0x6
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: add dx, word ptr [0x8033a6] at 0x4474f3; mov word ptr [0x8033a6], 0x3f at 0x447f0c; mov word ptr [0x8033a6], 0x3f at 0x447f9e and 10 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemBaseY."
 
@@ -133540,6 +133637,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033A9
 name = "BattleActorCopies_ItemPageCue"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x9
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 12 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033a9], 0x32 at 0x44753e; mov byte ptr [0x8033a9], 0x31 at 0x44756e; mov byte ptr [0x8033a9], bl at 0x447eb3 and 9 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemPageCue."
 
@@ -133547,6 +133646,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033AA
 name = "BattleActorCopies_ItemOwner"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xA
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 62 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x8033aa] at 0x44771e; mov al, byte ptr [0x8033aa] at 0x4477a8; mov byte ptr [0x8033aa], al at 0x447e8e and 59 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemOwner."
 
@@ -133554,6 +133655,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033AB
 name = "BattleActorCopies_ItemPage"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0xB
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 67 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033ab], 2 at 0x447482; mov al, byte ptr [0x8033ab] at 0x447534; mov byte ptr [0x8033ab], al at 0x447545 and 64 more. Widened with movzx. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemPage, battle_misc::kItemWindowPage, rest_3b::kWin16Page."
 
@@ -133561,6 +133664,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033B2
 name = "BattleActorCopies_ItemScrollMotion"
 ctype = "unsigned short"
+field_of = "WindowRecords"
+field_offset = 0x12
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x8033b2], 0xf0 at 0x4475ae; mov word ptr [0x8033b2], 0x10 at 0x4475ea; cmp word ptr [0x8033b2], 0 at 0x4476e8 and 3 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemScrollMotion."
 
@@ -133568,6 +133673,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033C4
 name = "BattleE4_Cands"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x8033c4], 0 at 0x448ebd; mov byte ptr [0x8033c4], dl at 0x449ecb; mov byte ptr [0x8033c4], al at 0x450210 and 8 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e4::kCands."
 
@@ -133575,6 +133682,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033E8
 name = "BattleE4_Slots"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 12 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: test byte ptr [0x8033e8], 1 at 0x434e81; mov byte ptr [0x8033e8], dl at 0x449e9b; mov byte ptr [0x8033e8], dl at 0x449f6a and 9 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e2::kWindow18, battle_e4::kSlots."
 
@@ -133582,6 +133691,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x8033EB
 name = "BattleE6_Window18State"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 15 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x8033eb] at 0x448de0; mov byte ptr [0x8033eb], bl at 0x448e90; mov al, byte ptr [0x8033eb] at 0x4491d0 and 12 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e6::kWindow18State."
 
@@ -133589,6 +133700,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80340C
 name = "BattleE4_Hand"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 58 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: test byte ptr [0x80340c], 1 at 0x435051; mov byte ptr [0x80340c], 1 at 0x4474d3; mov byte ptr [0x80340c], 0 at 0x44772a and 55 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemCursorOn, battle_e2::kWindow19, battle_e4::kHand, battle_menu_states::kHand, battle_misc::kItemWindowExtra."
 
@@ -133596,6 +133709,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80340F
 name = "BattleE6_Window19State"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x80340f], bl at 0x450b84; mov byte ptr [0x80340f], 2 at 0x450e28; mov byte ptr [0x80340f], 2 at 0x450ec6 and 2 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e6::kWindow19State."
 
@@ -133603,6 +133718,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803412
 name = "BattleActorCopies_ItemCursorY"
 ctype = "unsigned short"
+field_of = "WindowRecords"
+field_offset = 0x6
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 18 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: add cx, word ptr [0x803412] at 0x4350b8; mov word ptr [0x803412], dx at 0x447500; mov word ptr [0x803412], ax at 0x448287 and 15 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_actor_copies::kItemCursorY."
 
@@ -133610,6 +133727,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803433
 name = "BossSf_WindowUp"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x3
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x803433] at 0x43c760; mov al, byte ptr [0x803433] at 0x43c7e3. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sf::kWindowUp."
 
@@ -133617,6 +133736,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x803454
 name = "BattleE4_Above"
 ctype = "unsigned char"
+field_of = "WindowRecords"
+field_offset = 0x0
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 84 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x803454], al at 0x42de30; test byte ptr [0x803454], 1 at 0x434a32; test byte ptr [0x803454], 1 at 0x434cac and 81 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kWin21, battle_e2::kWindow21, battle_e4::kAbove, battle_menu_states::kAbove, shop_states2::kHand."
 
@@ -133624,6 +133745,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x80345A
 name = "ShopStates2_HandY"
 ctype = "unsigned short"
+field_of = "WindowRecords"
+field_offset = 0x6
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 47 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x80345a], 0x46 at 0x431ebc; add dx, word ptr [0x80345a] at 0x4349d5; add dx, word ptr [0x80345a] at 0x434aa8 and 44 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: shop_states2::kHandY."
 
@@ -133848,6 +133971,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903DAF
 name = "ScenaSc5_BitsDAF"
 ctype = "unsigned char"
+field_of = "CharacterRecords"
+field_offset = 0xB
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x903daf] at 0x5466b5; mov byte ptr [0x903daf], al at 0x5466ed; mov al, byte ptr [0x903daf] at 0x546891 and 7 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: scena_sc5::kBitsDAF."
 
@@ -133855,6 +133980,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903DB6
 name = "AreaW4b_GateKey"
 ctype = "unsigned char"
+field_of = "CharacterRecords"
+field_offset = 0x12
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: cmp byte ptr [0x903db6], 0x4b at 0x42758d. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w4b::kGateKey."
 
@@ -133862,6 +133989,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903E53
 name = "ScenaSc5_BitsE53"
 ctype = "unsigned char"
+field_of = "CharacterRecords"
+field_offset = 0xB
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x903e53] at 0x5466af; mov byte ptr [0x903e53], cl at 0x5466e7; mov dl, byte ptr [0x903e53] at 0x546896 and 7 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: scena_sc5::kBitsE53."
 
@@ -133869,6 +133998,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903EFE
 name = "Rest3a_GuestEquip"
 ctype = "unsigned char"
+field_of = "CharacterRecords"
+field_offset = 0x12
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov dl, byte ptr [0x903efe] at 0x42e313; mov cl, byte ptr [0x903efe] at 0x54c01c; mov cl, byte ptr [0x903efe] at 0x54c1e0 and 6 more. Its address is also an immediate 2 time(s) (mov eax, 0x903efe at 0x42dd78). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestEquipA, rest_3a::kGuestEquip."
 
@@ -133876,6 +134007,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F01
 name = "BattleE1_GuestEquipB"
 ctype = "unsigned char"
+field_of = "CharacterRecords"
+field_offset = 0x15
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov dl, byte ptr [0x903f01] at 0x42e33e; cmp byte ptr [0x903f01], al at 0x54c028; cmp byte ptr [0x903f01], al at 0x54c1f0 and 6 more. Its address is also an immediate 2 time(s) (mov eax, 0x903f01 at 0x42dd84). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestEquipB."
 
@@ -133883,6 +134016,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F0C
 name = "BossSe_CarryHp"
 ctype = "unsigned short"
+field_of = "CharacterRecords"
+field_offset = 0x20
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov ax, word ptr [0x903f0c] at 0x43b98c; mov dx, word ptr [0x903f0c] at 0x43b99e; mov dx, word ptr [0x903f0c] at 0x43b9b2 and 4 more. Its address is also an immediate 1 time(s) (push 0x903f0c at 0x42db00). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestHpMax, boss_se::kCarryHp."
 
@@ -133890,6 +134025,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F10
 name = "BossSe_CarryB4"
 ctype = "unsigned short"
+field_of = "CharacterRecords"
+field_offset = 0x24
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov ax, word ptr [0x903f10] at 0x43b9c6; mov ax, word ptr [0x903f10] at 0x43b9d9; mov ax, word ptr [0x903f10] at 0x43bbb4 and 2 more. Its address is also an immediate 1 time(s) (push 0x903f10 at 0x42db24). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestStat24, boss_se::kCarryB4."
 
@@ -133897,6 +134034,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F12
 name = "BossSe_CarryB6"
 ctype = "unsigned short"
+field_of = "CharacterRecords"
+field_offset = 0x26
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov cx, word ptr [0x903f12] at 0x43b9ec; mov cx, word ptr [0x903f12] at 0x43b9ff; mov cx, word ptr [0x903f12] at 0x43bbda and 2 more. Its address is also an immediate 1 time(s) (push 0x903f12 at 0x42dadd). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestStat26, boss_se::kCarryB6."
 
@@ -133904,6 +134043,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F2C
 name = "BattleE1_GuestHpBase"
 ctype = "unsigned short"
+field_of = "CharacterRecords"
+field_offset = 0x40
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x903f2c], ax at 0x54e72d. Its address is also an immediate 1 time(s) (push 0x903f2c at 0x42daef). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestHpBase."
 
@@ -133911,6 +134052,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F30
 name = "BattleE1_GuestStat44"
 ctype = "unsigned short"
+field_of = "CharacterRecords"
+field_offset = 0x44
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x903f30], ax at 0x54e741. Its address is also an immediate 1 time(s) (push 0x903f30 at 0x42db12). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestStat44."
 
@@ -133918,6 +134061,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F32
 name = "BattleE1_GuestStat46"
 ctype = "unsigned short"
+field_of = "CharacterRecords"
+field_offset = 0x46
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x903f32], ax at 0x54e755. Its address is also an immediate 1 time(s) (push 0x903f32 at 0x42dacb). No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kGuestStat46."
 
@@ -133925,6 +134070,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x903F6A
 name = "AreaW3c_ItemPick"
 ctype = "unsigned char"
+field_of = "CharacterRecords"
+field_offset = 0x7E
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x903f6a] at 0x41d13f; mov byte ptr [0x903f6a], 0 at 0x57e1dd; mov byte ptr [0x903f6a], 1 at 0x57e1f6 and 3 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w3c::kItemPick."
 
@@ -134393,9 +134540,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x904B3C
 name = "MagicS23_ActorSprite"
-ctype = "unsigned long"
+ctype = "void *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 45 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b3c], ecx at 0x42f304; mov dword ptr [0x904b3c], ecx at 0x42f38a; mov ecx, dword ptr [0x904b3c] at 0x42f5bb and 42 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kActing, magic_s23::kActorSprite, magic_s24::kActorRecord, magic_s29::kActorSprite."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 45 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b3c], ecx at 0x42f304; mov dword ptr [0x904b3c], ecx at 0x42f38a; mov ecx, dword ptr [0x904b3c] at 0x42f5bb and 42 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e1::kActing, magic_s23::kActorSprite, magic_s24::kActorRecord, magic_s29::kActorSprite. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer, the acting sprite (battle_e1_callees.h: unsigned char *; battle_e1.cpp writes its +1). No single family: the actor is a party member (0x802D40..) or an enemy (0x93B960..), whose shared head no struct names yet. No site spelled it as an integer."
 
 [[data]]
 pc = 0x904B40
@@ -134421,9 +134568,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x904B5C
 name = "BattleE3_HitSprite"
-ctype = "unsigned long"
+ctype = "void *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b5c], eax at 0x43675f; mov dword ptr [0x904b5c], eax at 0x441aaf. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e3::kHitSprite, enemy_ai_ops::kResultSprite."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x904b5c], eax at 0x43675f; mov dword ptr [0x904b5c], eax at 0x441aaf. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_e3::kHitSprite, enemy_ai_ops::kResultSprite. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer, the object being hit (battle_e3.cpp BattleObj_HitReceive and enemy_ai_ops.cpp EnemyOp_ReceiveAction store it with SetPtrAt). No family: both instructions store it and none reads it, and the object is a party member or an enemy. No site spelled it as an integer."
 
 [[data]]
 pc = 0x904B60
@@ -135247,9 +135394,9 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 [[data]]
 pc = 0x93B8C4
 name = "BattleFlow_TaskCurrent"
-ctype = "unsigned long"
+ctype = "records::BattleTask *"
 status = "evidence"
-evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 80 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov ecx, dword ptr [0x93b8c4] at 0x432b73; mov eax, dword ptr [0x93b8c4] at 0x432bb5; mov edx, dword ptr [0x93b8c4] at 0x432c41 and 77 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_flow::kTaskCurrent, battle_fx_tasks::kTaskCurrent, rest_3a::kTaskCurrent."
+evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 80 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov ecx, dword ptr [0x93b8c4] at 0x432b73; mov eax, dword ptr [0x93b8c4] at 0x432bb5; mov edx, dword ptr [0x93b8c4] at 0x432c41 and 77 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: battle_flow::kTaskCurrent, battle_fx_tasks::kTaskCurrent, rest_3a::kTaskCurrent. Retyped 2026-10-19 (typed-data round stage C3) from unsigned long: a pointer to the battle task slot being run. Its family is records::BattleTask (src/game/records.h: the 48 slots at 0x93A000 BattleTask_RunAll runs): battle_flow.cpp stores the slot it runs here (SetPtrAt(at::kTaskCurrent, t)) and its readers (battle_flow.cpp CurrentTask, battle_fx_tasks.cpp Cur, rest_3a.cpp Slot) read the slot's fields through it; rest_3a_callees.h: the slot BattleTask_RunAll runs. No site spelled it as an integer."
 
 [[data]]
 pc = 0x93B940
@@ -135297,6 +135444,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x93BB1A
 name = "BossH_Enemy1Status"
 ctype = "unsigned long"
+field_of = "EnemyWorkingRecords"
+field_offset = 0x12
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: test dword ptr [0x93bb1a], eax at 0x43a176; test dword ptr [0x93bb1a], eax at 0x43abeb; test dword ptr [0x93bb1a], eax at 0x43adab and 4 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_h::kEnemy1Status, boss_sd::kEnemy1Status, boss_sf::kEnemy1Status, effect_5c::kEnemy1Bits."
 
@@ -135304,6 +135453,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x93BB2C
 name = "BossSb_Enemy1Hp"
 ctype = "unsigned short"
+field_of = "EnemyWorkingRecords"
+field_offset = 0x24
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x93bb2c], ax at 0x437d44; mov word ptr [0x93bb2c], ax at 0x4384a4; mov word ptr [0x93bb2c], ax at 0x4386c4 and 4 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sb::kEnemy1Hp, boss_sd::kEnemy1Hp."
 
@@ -135311,6 +135462,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x93BB38
 name = "BossSb_Enemy1B0"
 ctype = "unsigned short"
+field_of = "EnemyWorkingRecords"
+field_offset = 0x30
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x93bb38], ax at 0x437d4a; mov word ptr [0x93bb38], ax at 0x4384aa; mov word ptr [0x93bb38], ax at 0x4386ca and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sb::kEnemy1B0."
 
@@ -135318,6 +135471,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x93BC42
 name = "BossH_Enemy2Status"
 ctype = "unsigned long"
+field_of = "EnemyWorkingRecords"
+field_offset = 0x12
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: test dword ptr [0x93bc42], eax at 0x43ac0f; test dword ptr [0x93bc42], eax at 0x43adcf; test dword ptr [0x93bc42], eax at 0x43af8f and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_h::kEnemy2Status, boss_sd::kEnemy2Status."
 
@@ -135325,6 +135480,8 @@ evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widt
 pc = 0x93BC54
 name = "BossSd_Enemy2Hp"
 ctype = "unsigned short"
+field_of = "EnemyWorkingRecords"
+field_offset = 0x24
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov cx, word ptr [0x93bc54] at 0x43acd3; mov cx, word ptr [0x93bc54] at 0x43ae95; mov cx, word ptr [0x93bc54] at 0x43b050. No indexed access with this displacement and no wider store over it, so a scalar. Module names: boss_sd::kEnemy2Hp."
 
@@ -135439,3 +135596,594 @@ name = "AreaW1f_ListPos"
 ctype = "unsigned char"
 status = "evidence"
 evidence = "measured 2026-10-19 (typed-data round group SG) with tools/data_widths.py: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x93c353], al at 0x40e19b; mov al, byte ptr [0x93c353] at 0x40e26a; mov byte ptr [0x93c353], al at 0x40e27f and 1 more. No indexed access with this displacement and no wider store over it, so a scalar. Module names: area_w1f::kListPos."
+
+# ---------------------------------------------------------------------------
+# Typed globals reached only through module constants (typed-data round,
+# stage C3, 2026-10-19; docs/typed-data-stage-c.md 5): the addresses a
+# module constant in a .cpp or a non-`at` namespace names that stage A's
+# scan never read. Measured with tools/data_widths.py --census by the same
+# rule as group SG's entries above, and checked against our C++ readers'
+# width (tools/typed_convert.py --dry-run under a provisional entry of each
+# width); every entry below has both readings agree. The addresses that did
+# not settle are in analysis/typed_globals_unsettled.tsv.
+# ---------------------------------------------------------------------------
+
+[[data]]
+pc = 0x5C4000
+name = "Imp_DirectDrawEnumerateA"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: jmp dword ptr [0x5c4000] at 0x5acbb6. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 8 address form (bare), 1 address form (ptr); 2 left (no-symbols-header). Module names: exe_layout::kGameVa, exe_layout::kRdataVa."
+note = "The PE import table names the slot: DDRAW.dll DirectDrawEnumerateA. In our C++ the address is only a bound: exe_layout.h kGameVa / kRdataVa, the start of .rdata (where the import address table begins), never read through."
+
+[[data]]
+pc = 0x5C4014
+name = "Imp_DirectSoundCreate"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: jmp dword ptr [0x5c4014] at 0x5acbbc. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 3 address form (bare). Module names: wav_dump::kCreateSlot."
+note = "The PE import table names the slot: DSOUND.dll ordinal 1, DirectSoundCreate (wav_dump.cpp checks the slot and patches it)."
+
+[[data]]
+pc = 0x5C40B8
+name = "Imp_ExitProcess"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: call dword ptr [0x5c40b8] at 0x5ba1a1; call dword ptr [0x5c40b8] at 0x5be83a. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 1 address form (helper). Module names: win_main::kImpExitProcess."
+note = "The PE import table names the slot: KERNEL32.dll ExitProcess (win_main.cpp PatchImport)."
+
+[[data]]
+pc = 0x5C4114
+name = "Imp_TerminateProcess"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: call dword ptr [0x5c4114] at 0x5be7b9. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 1 address form (helper). Module names: win_main::kImpTerminateProcess."
+note = "The PE import table names the slot: KERNEL32.dll TerminateProcess (win_main.cpp PatchImport)."
+
+[[data]]
+pc = 0x5C4158
+name = "Imp_PostQuitMessage"
+ctype = "void *"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: call dword ptr [0x5c4158] at 0x4fc7a2; call dword ptr [0x5c4158] at 0x59e5ea. No indexed access with this displacement and no wider store over it. A slot of the import address table (PE data directory 12, 0x5C4000..0x5C41B4): a pointer the loader fills. So a scalar. C++ readers: 1 address form (helper). Module names: win_main::kImpPostQuitMessage."
+note = "The PE import table names the slot: USER32.dll PostQuitMessage (win_main.cpp PatchImport)."
+
+[[data]]
+pc = 0x5C4238
+name = "AreaMapBD_NarrowYBound"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fcomp dword ptr [0x5c4238] at 0x5109a2. No indexed access with this displacement and no wider store over it. FPU: fcomp x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare). Module names: rest_3g::kNarrowYFloat."
+note = "rest_3g.cpp: the float an fcomp operand of AreaMapBD_BuildView names, its narrow y bound."
+
+[[data]]
+pc = 0x5C4244
+name = "AreaMapBD_WideYBound"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fcomp dword ptr [0x5c4244] at 0x510966. No indexed access with this displacement and no wider store over it. FPU: fcomp x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare). Module names: rest_3g::kWideYFloat."
+note = "rest_3g.cpp: the float an fcomp operand of AreaMapBD_BuildView names, its wide y bound."
+
+[[data]]
+pc = 0x5C4274
+name = "Rest2b_ModelOffsetY"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fadd dword ptr [0x5c4274] at 0x57f129; fadd dword ptr [0x5c4274] at 0x57f13f; fadd dword ptr [0x5c4274] at 0x57f157 and 1 more. No indexed access with this displacement and no wider store over it. FPU: fadd x4; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (ptr). Module names: rest_2b::kOffsetY."
+note = "rest_2b.cpp: the screen-space offset the models' projected y is moved by (rdata::Const, read as float)."
+
+[[data]]
+pc = 0x5C4278
+name = "Rest2b_ModelOffsetX"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fadd dword ptr [0x5c4278] at 0x57f11e; fadd dword ptr [0x5c4278] at 0x57f134; fadd dword ptr [0x5c4278] at 0x57f14b and 1 more. No indexed access with this displacement and no wider store over it. FPU: fadd x4; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (ptr). Module names: rest_2b::kOffsetX."
+note = "rest_2b.cpp: the screen-space offset the models' projected x is moved by (rdata::Const, read as float)."
+
+[[data]]
+pc = 0x5C427C
+name = "Sound_FullVolume"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fld dword ptr [0x5c427c] at 0x587ba9. No indexed access with this displacement and no wider store over it. FPU: fld x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (bare), 1 address form (harness). Module names: sound::k127At."
+note = "sound_callees.h: the full music volume the volume is built from (read as a float operand in sound.cpp's inline asm)."
+
+[[data]]
+pc = 0x5C4608
+name = "D3d_FixedOne"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4608] at 0x59f693; fmul dword ptr [0x5c4608] at 0x59f6a4. No indexed access with this displacement and no wider store over it. FPU: fmul x2; the integer moves copy the bit pattern. So a scalar. C++ readers: 2 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: d3d_rest::kFixedOne."
+note = "d3d_rest_callees.h: 1.0 in 16.16 as a float."
+
+[[data]]
+pc = 0x5C460C
+name = "D3d_PerColumn"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c460c] at 0x59f66c. No indexed access with this displacement and no wider store over it. FPU: fmul x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: d3d_rest::kPerColumn."
+note = "d3d_rest_callees.h: one column of 320 as a float."
+
+[[data]]
+pc = 0x5C4610
+name = "D3d_RhwNumerator"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 51 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fld dword ptr [0x5c4610] at 0x59faae; fld dword ptr [0x5c4610] at 0x59faec; fld dword ptr [0x5c4610] at 0x59fb27 and 48 more. No indexed access with this displacement and no wider store over it. FPU: fld x51; the integer moves copy the bit pattern. So a scalar. C++ readers: 7 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: battle_draw::kRhwNumerator, d3d_draw::kRhwNumerator, d3d_rest::kRhwNumerator, field_misc::kRhwNumerator, sprt_draw::kRhwNumerator."
+note = "five modules' kRhwNumerator: rhw = this / z."
+
+[[data]]
+pc = 0x5C4614
+name = "D3d_Modulate"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4614] at 0x5a0998; fmul dword ptr [0x5c4614] at 0x5a09cd; fmul dword ptr [0x5c4614] at 0x5a0a04. No indexed access with this displacement and no wider store over it. FPU: fmul x3; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: d3d_rest::kModulate."
+note = "d3d_rest_callees.h: the PSX texture modulation step, 0x80 = 1.0."
+
+[[data]]
+pc = 0x5C4618
+name = "Glyph_InverseTexels"
+ctype = "double"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 8-byte: fmul qword ptr [0x5c4618] at 0x5a2a8a; fmul qword ptr [0x5c4618] at 0x5a2aa5; fmul qword ptr [0x5c4618] at 0x5a2ac0 and 5 more. No indexed access with this displacement and no wider store over it. FPU: fmul x8; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (ptr). Module names: glyph_draw::kInv32."
+note = "glyph_draw_callees.h: one over the glyph texture's 32 texels (read as a double)."
+
+[[data]]
+pc = 0x5C4620
+name = "DisplayEnv_Inverse255"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4620] at 0x5a50b4; fmul dword ptr [0x5c4620] at 0x5a50de; fmul dword ptr [0x5c4620] at 0x5a50f8. No indexed access with this displacement and no wider store over it. FPU: fmul x3; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 float site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (harness). Module names: display_env::kInverse255At."
+note = "display_env_callees.h: one over 255 as a float."
+
+[[data]]
+pc = 0x5C4648
+name = "Sound_VolumeScale"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c4648] at 0x5a6c76; fsub dword ptr [0x5c4648] at 0x5a6c7c; fmul dword ptr [0x5c4648] at 0x5a6fc8 and 1 more. No indexed access with this displacement and no wider store over it. FPU: fmul x2, fsub x2; the integer moves copy the bit pattern. So a scalar. C++ readers: 2 address form (bare), 2 address form (harness). Module names: sound::k10000At."
+note = "sound_callees.h: the scale the music volume is built from (inline asm operand)."
+
+[[data]]
+pc = 0x5C464C
+name = "Sound_InverseFullVolume"
+ctype = "float"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: fmul dword ptr [0x5c464c] at 0x5a6c70; fmul dword ptr [0x5c464c] at 0x5a6fbf. No indexed access with this displacement and no wider store over it. FPU: fmul x2; the integer moves copy the bit pattern. So a scalar. C++ readers: 2 address form (bare), 2 address form (harness). Module names: sound::kInverse127At."
+note = "sound_callees.h: one over the full music volume (inline asm operand)."
+
+[[data]]
+pc = 0x5C4650
+name = "MoveCmds_InversePi"
+ctype = "double"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 8-byte: fmul qword ptr [0x5c4650] at 0x5a7a80. No indexed access with this displacement and no wider store over it. FPU: fmul x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (harness). Module names: move_cmds::kInversePiAt."
+note = "move_cmds_callees.h: one over pi as the original rounds it (read as a double)."
+
+[[data]]
+pc = 0x5C4658
+name = "MoveCmds_Scale"
+ctype = "double"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 8-byte: fmul qword ptr [0x5c4658] at 0x5a7a7a. No indexed access with this displacement and no wider store over it. FPU: fmul x1; the integer moves copy the bit pattern. So a scalar. C++ readers: 1 address form (harness). Module names: move_cmds::kScaleAt."
+note = "move_cmds_callees.h: the angle scale (read as a double)."
+
+[[data]]
+pc = 0x628C88
+name = "Rest2b_ModelFile"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x628c88] at 0x57ecc0; mov edx, dword ptr [0x628c88] at 0x57ed2f. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare), 2 address form (harness). Module names: rest_2b::kModelFile."
+note = "rest_2b.cpp: a pointer held as a dword, the two models' headers (+0, +8) and quad pointers (+4, +0xC)."
+
+[[data]]
+pc = 0x6530F0
+name = "CommuMusic_LabelA"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x6530f0] at 0x45fb7a. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_4e::kLabelA."
+note = "rest_4e.cpp: a pointer to a label CommuMusic draws (Rest4f_Setting3 == 0)."
+
+[[data]]
+pc = 0x6530F4
+name = "CommuMusic_LabelB"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov edx, dword ptr [0x6530f4] at 0x45fb88. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_4e::kLabelB."
+note = "rest_4e.cpp: a pointer to the label drawn otherwise."
+
+[[data]]
+pc = 0x6530F8
+name = "CommuMusic_LabelC"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov ecx, dword ptr [0x6530f8] at 0x45fb9e. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_4e::kLabelC."
+note = "rest_4e.cpp: a pointer to the third label (CommuMusic_DrawLabel)."
+
+[[data]]
+pc = 0x662CD8
+name = "Scenario_SubInitTable"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x662cd8] at 0x56d8fa. No indexed access with this displacement and no wider store over it. An array of 4: our readers index it, and each element measures alike (0x662CD8, 0x662CDC, 0x662CE0, 0x662CE4 each 1 dword operand (mov r32, dword ptr at 0x56d8fa, 0x56d8c0, 0x56d8c6, 0x56d904)). C++ readers: 1 address form (ptr), 1 address form (bare). Module names: title_states::kSubInitTable."
+note = "title_states.cpp: the 16 bytes Scenario_SubInit copies into Cond_Flags + 0xA0, read as four dwords."
+
+[[data]]
+pc = 0x66B718
+name = "Display_DeviceCountLess1"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: cmp dword ptr [0x66b718], -1 at 0x5a527f; mov dword ptr [0x66b718], ebx at 0x5a52d1; mov ecx, dword ptr [0x66b718] at 0x5a52f0 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kDeviceCountLess1."
+note = "display_setup.cpp and docs/display-setup.md: the Direct3D device count minus one, -1 in the image."
+
+[[data]]
+pc = 0x675FD0
+name = "CommuMusic_SavedTrack"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fd0], al at 0x45f7a5; cmp al, byte ptr [0x675fd0] at 0x45f9a9; mov eax, dword ptr [0x675fd0] at 0x45f9e9. No indexed access with this displacement and no wider store over it. 1 of them dword loads narrowed before use (and 0xff x1, e.g. at 0x45f9e9). So a scalar. C++ readers: 3 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_4e::kSavedTrack."
+note = "rest_4e.cpp: Music_Track when the list opened."
+
+[[data]]
+pc = 0x675FD1
+name = "CommuMusic_Slide"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fd1], 4 at 0x45f7ba; mov al, byte ptr [0x675fd1] at 0x45f7d0; mov byte ptr [0x675fd1], al at 0x45f7dc and 5 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 8 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_4e::kSlide."
+note = "rest_4e.cpp: the list's slide 4..0."
+
+[[data]]
+pc = 0x675FD2
+name = "CommuMusic_Track"
+ctype = "short"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 2-byte: mov word ptr [0x675fd2], 0 at 0x45f7b1; mov ax, word ptr [0x675fd2] at 0x45f86a; mov word ptr [0x675fd2], ax at 0x45f87a and 6 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 8 2-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_4e::kTrack."
+note = "rest_4e.cpp: the list's row, the track index."
+
+[[data]]
+pc = 0x675FD4
+name = "CommuItem_Slide"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fd4], 4 at 0x45fe78; mov al, byte ptr [0x675fd4] at 0x45fe91; mov byte ptr [0x675fd4], al at 0x45fe9c and 8 more. No indexed access with this displacement and no wider store over it. Widened with movzx. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_4e::kItemSlide."
+note = "rest_4e.cpp: the item window's slide 0..4."
+
+[[data]]
+pc = 0x675FDB
+name = "CommuList_Page"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x675fdb], bl at 0x46057e; mov byte ptr [0x675fdb], bl at 0x4605b4; mov cl, byte ptr [0x675fdb] at 0x4605d3 and 7 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 10 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_4e::kPage."
+note = "rest_4e.cpp: the page shown, over the three ranked lists."
+
+[[data]]
+pc = 0x6BC708
+name = "Effect1e_PressWas"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bc708], al at 0x52b465. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_1g::kPressWas."
+note = "rest_1g.cpp: the previous value of Effect1e_PressNow."
+
+[[data]]
+pc = 0x6BC716
+name = "Effect1e_BiteHeld"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bc716], 0 at 0x5288c5; mov al, byte ptr [0x6bc716] at 0x52b927; mov byte ptr [0x6bc716], 1 at 0x52b95e and 1 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 4 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_1f::kPanelPose, rest_1g::kBiteHeld."
+note = "rest_1g.cpp kBiteHeld: a fish is nibbling (Fish_Swim sets, Fish_Settle clears); rest_1f.cpp names the same byte kPanelPose, one of the leader panel's cells."
+
+[[data]]
+pc = 0x6BC717
+name = "Effect1e_PressNow"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov bl, byte ptr [0x6bc717] at 0x52b379; mov bl, byte ptr [0x6bc717] at 0x52b42b; mov al, byte ptr [0x6bc717] at 0x52b460 and 1 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 4 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_1g::kPressNow."
+note = "rest_1g.cpp: Input_Pressed & 0xE020 non-zero (LeaderPanel_PressLatch)."
+
+[[data]]
+pc = 0x6BDFAF
+name = "Rest2e_EquipCursor"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 12 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfaf], 0 at 0x58c2f4; mov al, byte ptr [0x6bdfaf] at 0x58c34c; mov cl, byte ptr [0x6bdfaf] at 0x58c3b5 and 9 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 8 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (helper). Module names: rest_2e::kEquipCursor."
+note = "rest_2e.cpp: FieldEquip_TopMenu's cursor."
+
+[[data]]
+pc = 0x6BDFB6
+name = "Rest2e_AbilityResult"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfb6], al at 0x58def4; mov byte ptr [0x6bdfb6], al at 0x58e20b. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2e::kAbilityResult."
+note = "rest_2e.cpp: the last ability's answer."
+
+[[data]]
+pc = 0x6BDFB7
+name = "Rest2e_AbilityCursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 13 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfb7], 0 at 0x58d807; mov al, byte ptr [0x6bdfb7] at 0x58d82c; mov cl, byte ptr [0x6bdfb7] at 0x58d896 and 10 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (helper). Module names: rest_2e::kAbilityCursor."
+note = "rest_2e.cpp: FieldAbility_TopMenu's cursor."
+
+[[data]]
+pc = 0x6BDFC5
+name = "Rest2f_SetCol"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx edi, byte ptr [0x6bdfc5] at 0x58f46a; mov byte ptr [0x6bdfc5], al at 0x58f4cd; mov bl, byte ptr [0x6bdfc5] at 0x58f5d6 and 2 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 5 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2f::kSetCol."
+note = "rest_2f.cpp: the formation set's column 1..2."
+
+[[data]]
+pc = 0x6BDFC6
+name = "Rest2f_PickCol"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov cl, byte ptr [0x6bdfc6] at 0x58f38b; mov byte ptr [0x6bdfc6], 0x7f at 0x58f4d8; cmp byte ptr [0x6bdfc6], 0x7f at 0x58f4f6 and 6 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kPickCol."
+note = "rest_2f.cpp: the cell picked, 0x7F none."
+
+[[data]]
+pc = 0x6BDFC7
+name = "Rest2f_SetRow"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx edx, byte ptr [0x6bdfc7] at 0x58f462; mov byte ptr [0x6bdfc7], cl at 0x58f4d2; mov dl, byte ptr [0x6bdfc7] at 0x58f5d0 and 2 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 5 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2f::kSetRow."
+note = "rest_2f.cpp: the formation set's row."
+
+[[data]]
+pc = 0x6BDFC8
+name = "Rest2f_PickRow"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 8 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx eax, byte ptr [0x6bdfc8] at 0x58f3a0; mov byte ptr [0x6bdfc8], 0x7f at 0x58f4df; mov byte ptr [0x6bdfc8], dl at 0x58f51e and 5 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 8 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kPickRow."
+note = "rest_2f.cpp: the row of the cell picked."
+
+[[data]]
+pc = 0x6BDFC9
+name = "Rest2f_CursorCol"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov bl, byte ptr [0x6bdfc9] at 0x58f3f2; mov al, byte ptr [0x6bdfc9] at 0x58f4bf; mov cl, byte ptr [0x6bdfc9] at 0x58f509 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kCurCol."
+note = "rest_2f.cpp: the grid cursor's column."
+
+[[data]]
+pc = 0x6BDFCA
+name = "Rest2f_CursorRow"
+ctype = "signed char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 9 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: movsx ecx, byte ptr [0x6bdfca] at 0x58f3ea; mov cl, byte ptr [0x6bdfca] at 0x58f4c4; mov dl, byte ptr [0x6bdfca] at 0x58f50f and 6 more. No indexed access with this displacement and no wider store over it. Every widening read is movsx. So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kCurRow."
+note = "rest_2f.cpp: the grid cursor's row."
+
+[[data]]
+pc = 0x6BDFCB
+name = "Rest2f_TopChoice"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfcb], bl at 0x58f143; movzx ax, byte ptr [0x6bdfcb] at 0x58f17c; mov al, byte ptr [0x6bdfcb] at 0x58f1fc and 3 more. No indexed access with this displacement and no wider store over it. Widened with movzx. So a scalar. C++ readers: 5 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2f::kTopChoice."
+note = "rest_2f.cpp: the screen's top, 0 formation, 1 members."
+
+[[data]]
+pc = 0x6BDFD2
+name = "Rest2f_SwappedA"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfd2], al at 0x58f4e6; mov byte ptr [0x6bdfd2], al at 0x58f565. No indexed access with this displacement and no wider store over it. Its address is also an immediate 1 time(s) (cmp eax, 0x6bdfd2 at 0x58ffc0). So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2f::kSwappedA."
+note = "rest_2f.cpp: one of the two rows the last formation swap moved."
+
+[[data]]
+pc = 0x6BDFD3
+name = "Rest2f_SwappedB"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfd3], cl at 0x58f4eb; mov byte ptr [0x6bdfd3], cl at 0x58f56a. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2f::kSwappedB."
+note = "rest_2f.cpp: the other row the last formation swap moved."
+
+[[data]]
+pc = 0x6BDFD7
+name = "Rest2f_Refused"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x6bdfd7] at 0x58f940; mov byte ptr [0x6bdfd7], al at 0x58fad8; mov byte ptr [0x6bdfd7], 0xff at 0x590015. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 3 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2f::kRefused."
+note = "rest_2f.cpp: the member a swap refused, 0xFF none."
+
+[[data]]
+pc = 0x6BDFD8
+name = "Rest2f_ConfigCursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x6bdfd8], cl at 0x590325; mov cl, byte ptr [0x6bdfd8] at 0x5903a4. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2f::kConfigSaved."
+note = "rest_2f.cpp: the top bar's cursor kept while Config runs."
+
+[[data]]
+pc = 0x6BE1E0
+name = "Display_DesktopBpp"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x6be1e0], ebp at 0x5a51a4; mov eax, dword ptr [0x6be1e0] at 0x5a51b0; mov edx, dword ptr [0x6be1e0] at 0x5a5431 and 2 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kDesktopBpp."
+note = "docs/display-setup.md: BITSPIXEL x PLANES of the desktop DC."
+
+[[data]]
+pc = 0x6C3A48
+name = "Display_ZeroedUnread"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x6c3a48], ebx at 0x5a523d. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kUnread6C3A48."
+note = "docs/display-setup.md: zeroed by the set-up, read by no instruction."
+
+[[data]]
+pc = 0x7C9F44
+name = "Display_DesktopWidth"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x7c9f44], eax at 0x5a5187; mov edx, dword ptr [0x7c9f44] at 0x5a53ed. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kDesktopW."
+note = "docs/display-setup.md: HORZRES of the desktop DC."
+
+[[data]]
+pc = 0x7CADE0
+name = "Display_ModeBpp"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x7cade0], ecx at 0x5a54e2; mov edx, dword ptr [0x7cade0] at 0x5a5682. No indexed access with this displacement and no wider store over it. Its address is also an immediate 1 time(s) (cmp eax, 0x7cade0 at 0x5a525e). So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kModeBpp."
+note = "docs/display-setup.md: the chosen mode's bits per pixel (SetDisplayMode's bpp)."
+
+[[data]]
+pc = 0x7DED5C
+name = "Display_BackPitch"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 16 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: imul eax, dword ptr [0x7ded5c] at 0x5a4a70; mov edx, dword ptr [0x7ded5c] at 0x5a4afe; mov esi, dword ptr [0x7ded5c] at 0x5a4b82 and 13 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: display_setup::kBackPitch."
+note = "docs/display-setup.md: the back buffer's lPitch, read by the software glyph and cell-sprite handlers."
+
+[[data]]
+pc = 0x904101
+name = "Rest2b_SavedScaleIndex"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 1 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x904101] at 0x57eae0. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kLevelByte."
+note = "rest_2b.cpp: the byte of the save data the figure scale index is read from."
+
+[[data]]
+pc = 0x939892
+name = "Rest2e_AbilityViewCursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x939892], dl at 0x589b1f; mov cl, byte ptr [0x939892] at 0x58ea91; mov byte ptr [0x939892], cl at 0x58ec60. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2e::kViewCursor."
+note = "rest_2e.cpp: the ability view's cursor."
+
+[[data]]
+pc = 0x9398CC
+name = "Rest2e_AbilityViewTop"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 3 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9398cc], dl at 0x589b25; mov dl, byte ptr [0x9398cc] at 0x58ea97; mov byte ptr [0x9398cc], al at 0x58ec66. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2e::kViewTop."
+note = "rest_2e.cpp: the ability view's top row."
+
+[[data]]
+pc = 0x9398E1
+name = "Rest2b_ModelAState"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9398e1], bl at 0x57e599; mov byte ptr [0x9398e1], al at 0x57e742; mov byte ptr [0x9398e1], al at 0x57e774 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kAState."
+note = "rest_2b.cpp: model A's state, +1 of its 0x80-byte record at 0x9398E0 (Rest2c_Figure* name its other fields)."
+
+[[data]]
+pc = 0x939961
+name = "Rest2b_ModelBState"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x939961], bl at 0x57e5d2; mov byte ptr [0x939961], al at 0x57e747; mov byte ptr [0x939961], al at 0x57e779 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 7 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kBState."
+note = "rest_2b.cpp: model B's state, +1 of its 0x80-byte record at 0x939960."
+
+[[data]]
+pc = 0x939966
+name = "Rest2b_ModelBDone"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x939966] at 0x57e769; mov al, byte ptr [0x939966] at 0x57e799; mov byte ptr [0x939966], 0 at 0x57f27f and 3 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 6 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kBDone."
+note = "rest_2b.cpp: model B's done flag the steps wait on, +6."
+
+[[data]]
+pc = 0x93999C
+name = "Rest2b_ModelBY"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x93999c] at 0x57e46e; mov eax, dword ptr [0x93999c] at 0x57e6ef; mov dword ptr [0x93999c], ecx at 0x57ed44 and 4 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 6 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam). Module names: rest_2b::kBY."
+note = "rest_2b.cpp: model B's y in 16.16, +0x3C."
+
+[[data]]
+pc = 0x9399BD
+name = "Rest2b_ModelBRgb"
+ctype = "unsigned char"
+count = 3
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x9399bd] at 0x57e7c4; mov byte ptr [0x9399bd], cl at 0x57e856; mov byte ptr [0x9399bd], al at 0x57e85e and 8 more. No indexed access with this displacement and no wider store over it. An array of 3: our readers index it, and each element measures alike (0x9399BD / BE / BF: 11, 12 and 12 byte operands (e.g. at 0x57e7c4, 0x57e7d9, 0x57e7e5)). C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 3 address form (seam); 20 more at a constant offset or an index into it, on its elements. Module names: rest_2b::kBColour."
+note = "rest_2b.cpp: model B's colour, +0x5D..+0x5F, read and written a byte at a time."
+
+[[data]]
+pc = 0x9399CC
+name = "Rest2b_ModelBAngle"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399cc], ebx at 0x57ed04; add dword ptr [0x9399cc], 0x20 at 0x57ede0; mov eax, dword ptr [0x9399cc] at 0x57f270 and 1 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 5 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kBAngle."
+note = "rest_2b.cpp: model B's angle, +0x6C."
+
+[[data]]
+pc = 0x9399E0
+name = "Rest2b_Owned"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 4 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov al, byte ptr [0x9399e0] at 0x57e575; mov dl, byte ptr [0x9399e0] at 0x57e58f; mov byte ptr [0x9399e0], dl at 0x57e5a4 and 1 more. No indexed access with this displacement and no wider store over it. Its address is also an immediate 1 time(s) (mov dword ptr [0x8031ec], 0x9399e0 at 0x57eaa9). An array of 4: our readers index it, and each element measures alike (0x9399E0..E3: 4 byte operands each (e.g. at 0x57e575, 0x57e5b4, 0x57e600, 0x57e642)). C++ readers: 3 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (bare), 1 address form (seam); 10 more at a constant offset or an index into it, on its elements. Module names: rest_2b::kOwned."
+note = "rest_2b.cpp: the four items' counts (Inventory_Count)."
+
+[[data]]
+pc = 0x9399E4
+name = "Rest2b_Given"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 6 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399e4], bl at 0x57e02a; mov al, byte ptr [0x9399e4] at 0x57e16d; mov al, byte ptr [0x9399e4] at 0x57e389 and 3 more. No indexed access with this displacement and no wider store over it. An array of 4: our readers index it, and each element measures alike (0x9399E4..E7: 6, 8, 6 and 6 byte operands (e.g. at 0x57e02a, 0x57e030, 0x57e036, 0x57e03c)). C++ readers: 4 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 4 address form (seam); 19 more at a constant offset or an index into it, on its elements. Module names: rest_2b::kGiven."
+note = "rest_2b.cpp: how many of each item the player put in. Its element 3 is also Rest2c_FigureFade (rest_2c reads it as the fade's step), an entry nested in this one."
+
+[[data]]
+pc = 0x9399E8
+name = "Rest2b_Rounds"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 11 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399e8], bl at 0x57e024; mov al, byte ptr [0x9399e8] at 0x57e160; mov al, byte ptr [0x9399e8] at 0x57e37c and 8 more. No indexed access with this displacement and no wider store over it. 1 of them dword loads narrowed before use (and 0xff x1, e.g. at 0x57eb31). So a scalar. C++ readers: 9 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kRounds."
+note = "rest_2b.cpp: shows run so far (8 at most)."
+
+[[data]]
+pc = 0x9399E9
+name = "Rest2b_Side"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 7 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399e9], bl at 0x57e018; mov al, byte ptr [0x9399e9] at 0x57e2d3; mov byte ptr [0x9399e9], al at 0x57e2e2 and 4 more. No indexed access with this displacement and no wider store over it. Widened with movzx. So a scalar. C++ readers: 6 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kSide."
+note = "rest_2b.cpp: the pick screen's 0 / 1 choice."
+
+[[data]]
+pc = 0x9399EA
+name = "Rest2b_Cursor"
+ctype = "unsigned char"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 10 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 1-byte: mov byte ptr [0x9399ea], bl at 0x57e01e; mov byte ptr [0x9399ea], 3 at 0x57e31d; mov byte ptr [0x9399ea], 0 at 0x57e350 and 7 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 10 1-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 2 address form (seam). Module names: rest_2b::kCursor."
+note = "rest_2b.cpp: the count screen's row 0..3, 0xFF backs out."
+
+[[data]]
+pc = 0x9399EC
+name = "Rest2b_ScoreA"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399ec], eax at 0x57eb69; mov dword ptr [0x9399ec], ecx at 0x57eb7d; cmp dword ptr [0x9399ec], edi at 0x57eb83 and 2 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreA."
+note = "rest_2b.cpp: the score's first term."
+
+[[data]]
+pc = 0x9399F0
+name = "Rest2b_ScoreB"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 5 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399f0], eax at 0x57ebb8; mov dword ptr [0x9399f0], edx at 0x57ebcc; cmp dword ptr [0x9399f0], edi at 0x57ebd2 and 2 more. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreB."
+note = "rest_2b.cpp: the score's second term."
+
+[[data]]
+pc = 0x9399F4
+name = "Rest2b_ScoreC"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399f4], edi at 0x57ec1a; mov dword ptr [0x9399f4], edi at 0x57ec24. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreC."
+note = "rest_2b.cpp: the score's third term."
+
+[[data]]
+pc = 0x9399F8
+name = "Rest2b_ScoreD"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov dword ptr [0x9399f8], ecx at 0x57ec62; mov dword ptr [0x9399f8], ecx at 0x57ec6c. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 1 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run. Module names: rest_2b::kScoreD."
+note = "rest_2b.cpp: the score's fourth term."
+
+[[data]]
+pc = 0x9399FC
+name = "Rest2b_Score"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "measured 2026-10-19 (typed-data round stage C3) with tools/data_widths.py --census: 2 absolute operand(s) at this address in the 3,004 functions of pc_funcs.json and 0x401000..0x4020B0, every one 4-byte: mov eax, dword ptr [0x9399fc] at 0x57e1c2; mov dword ptr [0x9399fc], eax at 0x57ecb9. No indexed access with this displacement and no wider store over it. So a scalar. C++ readers: 2 4-byte site(s) typed at this width by tools/typed_convert.py --dry-run; 1 address form (seam). Module names: rest_2b::kScore, rest_2b::kScoreCell."
+note = "rest_2b.cpp: the score."
