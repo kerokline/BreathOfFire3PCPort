@@ -19,6 +19,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_phases_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/sigma.h"
@@ -77,6 +78,9 @@ unsigned char* Window(unsigned index) { return At(at::kWindows + index * at::kWi
 // each re-read wherever the original re-reads it.
 unsigned char* MenuActor() { return PtrAt(at::kMenuActor); }
 unsigned char* MenuRecord() { return PtrAt(at::kMenuRecord); }
+records::PartyMember* MemberRec(unsigned index) { return reinterpret_cast<records::PartyMember*>(Member(index)); }
+records::WindowRecord* WindowRec(unsigned index) { return reinterpret_cast<records::WindowRecord*>(Window(index)); }
+records::PartyMember* MenuActorRec() { return reinterpret_cast<records::PartyMember*>(MenuActor()); }
 int S8(std::uint32_t address) { return static_cast<signed char>(B(address)); }
 
 // A tail jump through a .data table, as the three stubs have it: the entry
@@ -206,26 +210,28 @@ extern "C" void __cdecl Battle_Init(void) {
     g.init_actor_contexts();
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
-        if ((p[0] & 1) == 0) continue;
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        if ((member_rec->flags & 1) == 0) continue;
         std::memcpy(p + 0xC0, p + 0xA0, 0x20);
-        const unsigned quarter = static_cast<unsigned>(Word(p + 0xA0)) >> 2;
-        if (Word(p + 0x98) < quarter) p[0x91] = static_cast<unsigned char>(p[0x91] | 0x20);
-        else SetWord(p + 0x90, Word(p + 0x90) & 0xDFFFu);
-        SetLong(p + 0x130, 0);
-        SetLong(p + 0x134, 0);
+        const unsigned quarter = static_cast<unsigned>(member_rec->max_hp) >> 2;
+        if (member_rec->hp < quarter) p[0x91] = static_cast<unsigned char>(p[0x91] | 0x20);
+        else member_rec->status = member_rec->status & 0xDFFFu;
+        member_rec->flags_130 = 0;
+        member_rec->flags_134 = 0;
         p[0x125] = 0;
         p[0x12D] = 0;
-        p[0x142] = 0;
-        p[0x143] = 0;
-        p[0x144] = 0;
-        p[0x145] = 0;
+        member_rec->count_4000 = 0;
+        member_rec->count_800 = 0;
+        member_rec->count_40 = 0;
+        member_rec->count_80 = 0;
         SetLong(p + 0x138, 0);
         SetLong(p + 0x13C, 0);
     }
     g.apply_stat_mods();
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
-        if ((p[0] & 1) != 0) std::memcpy(p + 0xA0, p + 0xC0, 0x20);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+        if ((member_rec->flags & 1) != 0) std::memcpy(p + 0xA0, p + 0xC0, 0x20);
     }
     for (unsigned i = 0; i < 16; ++i) SetWord(At(Gfx_ClutStrip_addr + 0x1fe0 + 2 * i), Word(At(Gfx_ClutStripSource_addr + 0x1fe0 + 2 * i)));
     g.clut_strip_copy_row(0x1A);
@@ -233,7 +239,8 @@ extern "C" void __cdecl Battle_Init(void) {
     for (unsigned a = 0; a <= 10; ++a) {
         if (a <= 2) {
             unsigned char* const p = Member(a);
-            if ((p[0] & 1) == 0) continue;
+            auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
+            if ((member_rec->flags & 1) == 0) continue;
             Sprite_Current = p;
         } else {
             if (g.actor_is_out(a) != 0) continue;
@@ -277,24 +284,25 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleIntro_Dispatch
 extern "C" void __cdecl BattleIntro_OpenWindows(void) {
     BattleWindows_MsgHead = 0;
     B(at::kC2A0 + 1) = 0;
-    unsigned char* const first = Window(g.window_alloc(0x14, 3) & 0xFF);
-    first[2] = 7;
-    first[3] = 0;
-    SetWord(first + 4, 0x14);
-    SetWord(first + 6, 0xFFEA);
+    auto* const window_first = WindowRec(g.window_alloc(0x14, 3) & 0xFF);
+    window_first->kind = 7;
+    window_first->state = 0;
+    window_first->centre_x = 0x14;
+    window_first->centre_y = 0xFFEA;
     if (BattlePhases_Initiative == 1) g.queue_push(2, 0x30, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g.msg_system_ptr(0x16))));
     if (BattlePhases_Initiative == 2) g.queue_push(2, 0x30, static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(g.msg_system_ptr(0x17))));
     for (unsigned m = 0; m < 3; ++m) {
-        const unsigned char* const p = Member(m);
-        if ((p[0] & 1) == 0) continue;
+        auto* const member_rec = MemberRec(m);
+        if ((member_rec->flags & 1) == 0) continue;
         g.window_alloc(0xD + m, 3);
         unsigned char* const w = Window(0xD + m);
-        const unsigned pair = (p[8] + p[0x89] * 4u) * 2u;
-        w[2] = 5;
-        w[3] = 0;
+        auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+        const unsigned pair = (member_rec->direction + member_rec->char_id * 4u) * 2u;
+        window_rec->kind = 5;
+        window_rec->state = 0;
         const unsigned facing = ((B(at::kFacing) ^ 2u) >> 1) * 2u;
-        SetWord(w + 4, static_cast<unsigned>(S8(at::kFacingOffsets + facing) + S8(at::kStatusOffsets + pair) + Word(p + 0x2E)));
-        SetWord(w + 6, static_cast<unsigned>(S8(at::kStatusOffsets + pair + 1) + Word(p + 0x30) + 0xC));
+        window_rec->centre_x = static_cast<unsigned>(S8(at::kFacingOffsets + facing) + S8(at::kStatusOffsets + pair) + static_cast<std::uint16_t>(member_rec->screen_x));
+        window_rec->centre_y = static_cast<unsigned>(S8(at::kStatusOffsets + pair + 1) + static_cast<std::uint16_t>(member_rec->screen_y) + 0xC);
         w[0xA] = static_cast<unsigned char>(m);
         w[8] = 0;
         w[9] = 0;
@@ -307,7 +315,7 @@ extern "C" void __cdecl BattleIntro_OpenWindows(void) {
 // original 0x42E8C0 (PSX 0x801D1AAC): the sub-step on once window 1's +3 is
 // 1.
 extern "C" void __cdecl BattleIntro_WaitWindow(void) {
-    if (Window(1)[3] == 1) BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
+    if (WindowRec(1)->state == 1) BattleE4_Step2 = static_cast<unsigned char>(BattleE4_Step2 + 1);
 }
 
 // original 0x42E8D0 (PSX 0x801D1AE0): the first sub-window opened with 0;
@@ -317,7 +325,7 @@ extern "C" void __cdecl BattleIntro_WaitWindow(void) {
 extern "C" void __cdecl BattleIntro_PrepareCross(void) {
     g.open_sub1(0);
     if (BattlePhases_Initiative >= 2) {
-        Window(2)[3] = 2;
+        WindowRec(2)->state = 2;
         SetLong(At(at::kCrossGrow), 0);
         SetWord(At(at::kCrossGrow + 4), 0);
         B(at::kCrossGrow + 6) = 0;
@@ -334,7 +342,7 @@ extern "C" void __cdecl BattleIntro_PrepareCross(void) {
 // loaded: the second sub-window opened with 2 (1 when the initiative byte,
 // re-read, is below 2), the third with 2; phase on, step and sub-step 0.
 extern "C" void __cdecl BattleIntro_Finish(void) {
-    if (BattlePhases_Initiative < 2 && Window(2)[3] != 1) return;
+    if (BattlePhases_Initiative < 2 && WindowRec(2)->state != 1) return;
     if (g.queue_pending() != 0) return;
     if (g.file_load_done() == 0) return;
     g.open_sub2(BattlePhases_Initiative >= 2 ? 2u : 1u);
@@ -392,14 +400,15 @@ extern "C" void __cdecl BattleInput_NextMember(void) {
             if (c != 0xFF) {
                 BattleE4_AutoMember = static_cast<unsigned char>(c);
                 const unsigned char* const q = Member(c);
-                if ((q[0x90] & 0x20) == 0 && (static_cast<std::uint32_t>(Long(q + 0x134)) & 0x14001u) == 0) {
+                auto* const member_q = reinterpret_cast<const records::PartyMember*>(q);
+                if ((q[0x90] & 0x20) == 0 && (static_cast<std::uint32_t>(static_cast<std::int32_t>(member_q->flags_134)) & 0x14001u) == 0) {
                     unsigned char* const p = Member(c);
                     SetPtrAt(at::kMenuActor, p);
                     SetPtrAt(at::kMenuRecord, p + 0x124);
                     g.banner_show_name(p);
-                    Window(4)[3] = 1;
-                    Window(3)[3] = 1;
-                    Window(2)[3] = 1;
+                    WindowRec(4)->state = 1;
+                    WindowRec(3)->state = 1;
+                    WindowRec(2)->state = 1;
                     BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
                     return;
                 }
@@ -459,17 +468,20 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         BattleActorCopies_EntryCount = index;
         BattleActions_Step = step;
         unsigned char* p = Member(B(static_cast<std::uint32_t>(static_cast<std::int32_t>(at::kEntryOrder) + static_cast<signed char>(index))));
+        records::PartyMember* member_rec = reinterpret_cast<records::PartyMember*>(p);
         SetPtrAt(at::kMenuActor, p);
-        SetLong(p + 0x134, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(p + 0x134)) & ~4u));
-        MenuActor()[1] = 2;
+        member_rec->flags_134 = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_134)) & ~4u);
+        MenuActorRec()->state[0] = 2;
         p = MenuActor();
+        member_rec = reinterpret_cast<records::PartyMember*>(p);
         if (p[0x125] == 5) {
-            const std::uint32_t flags = static_cast<std::uint32_t>(Long(p + 0x130));
+            const std::uint32_t flags = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130));
             if ((flags & 0x4000) == 0) g.return_item(p[0x12E], Word(p + 0x126));
-            else SetLong(p + 0x130, static_cast<std::int32_t>(flags & ~0x4000u));
+            else member_rec->flags_130 = static_cast<std::int32_t>(flags & ~0x4000u);
             p = MenuActor();
+            member_rec = reinterpret_cast<records::PartyMember*>(p);
         }
-        SetLong(p + 0x130, 0);
+        member_rec->flags_130 = 0;
         MenuActor()[0x125] = 0;
         return;
     }
@@ -482,8 +494,8 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
         g.play_effect(0x104);
         const unsigned char step = static_cast<unsigned char>(BattleActions_Step + 2);
         const unsigned char chosen = B(at::kCommand);
-        Window(3)[3] = 2;
-        Window(2)[3] = 2;
+        WindowRec(3)->state = 2;
+        WindowRec(2)->state = 2;
         BattleActions_Step = step;
         BattleE4_Step2 = chosen;
         return;
@@ -491,14 +503,14 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
     unsigned held = Input_Held;
     if ((held & 0x100) != 0) {
         g.play_effect(0x104);
-        const unsigned y = Word(Window(2) + 6);
-        const unsigned x = Word(Window(2) + 4);
-        Window(2)[3] = 2;
-        Window(1)[3] = 2;
-        Window(3)[3] = 2;
+        const unsigned y = WindowRec(2)->centre_y;
+        const unsigned x = WindowRec(2)->centre_x;
+        WindowRec(2)->state = 2;
+        WindowRec(1)->state = 2;
+        WindowRec(3)->state = 2;
         g.draw_command_cross(static_cast<int>(x), static_cast<int>(y));
         g.draw_command_label(B(at::kCommand));
-        g.draw_party_status(static_cast<int>(Word(Window(1) + 4)), static_cast<int>(Word(Window(1) + 6)));
+        g.draw_party_status(static_cast<int>(WindowRec(1)->centre_x), static_cast<int>(WindowRec(1)->centre_y));
         BattleActions_Step = static_cast<unsigned char>(BattleActions_Step + 1);
         return;
     }
@@ -523,8 +535,8 @@ extern "C" void __cdecl BattleMenu_CommandSelect(void) {
                 const unsigned char step = static_cast<unsigned char>(BattleActions_Step + 2);
                 B(at::kCommand) = static_cast<unsigned char>(k + 1);
                 BattleE4_Step2 = static_cast<unsigned char>(k + 1);
-                Window(3)[3] = 2;
-                Window(2)[3] = 2;
+                WindowRec(3)->state = 2;
+                WindowRec(2)->state = 2;
                 BattleActions_Step = step;
                 BossSb_Countdown = 0;
                 BattleE5_GeneRow = 0;
@@ -556,11 +568,11 @@ extern "C" void __cdecl BattleMenu_ConfirmDispatch(void) {
 // each use, as the original.
 extern "C" void __cdecl Cmd_ConfirmDefend(void) {
     MenuRecord()[1] = 2;
-    const unsigned char target = MenuActor()[5];
+    const unsigned char target = MenuActorRec()->member;
     MenuRecord()[0] = target;
     unsigned char* const r = MenuRecord();
     SetLong(r + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(r + 0xC)) | 2u));
-    MenuActor()[1] = 2;
+    MenuActorRec()->state[0] = 2;
     const unsigned char index = static_cast<unsigned char>(static_cast<unsigned char>(BattleActorCopies_EntryCount) + 1);
     BattleActions_Step = 1;
     BattleActorCopies_EntryCount = index;
@@ -586,19 +598,20 @@ extern "C" void __cdecl BattleCommit_Dispatch(void) { JumpThrough(Battle_CommitS
 // (re-read) DAT file 0xD1 is loaded; the step on.
 extern "C" void __cdecl Battle_CommitRound(void) {
     g.build_turn_order();
-    if ((B(at::kRoundFlags) & 0x10) == 0) Window(4)[3] = 2;
-    Window(3)[3] = 2;
-    Window(2)[3] = 2;
+    if ((B(at::kRoundFlags) & 0x10) == 0) WindowRec(4)->state = 2;
+    WindowRec(3)->state = 2;
+    WindowRec(2)->state = 2;
     B(at::kB8E0) = 0;
     for (unsigned m = 0; m <= 2; ++m) {
         if (g.actor_is_out(m) != 0) continue;
         unsigned char* const p = Member(m);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(p);
         if (p[0x125] != 5) continue;
         const unsigned item = Word(p + 0x126);
         if ((item & 0xFF00) == 0) continue;
-        const std::uint32_t flags = static_cast<std::uint32_t>(Long(p + 0x130));
+        const std::uint32_t flags = static_cast<std::uint32_t>(static_cast<std::int32_t>(member_rec->flags_130));
         if ((flags & 0x4000) == 0) g.return_item(p[0x12E], item);
-        else SetLong(p + 0x130, static_cast<std::int32_t>(flags & ~0x4000u));
+        else member_rec->flags_130 = static_cast<std::int32_t>(flags & ~0x4000u);
     }
     B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 8);
     g.choose_actions();
