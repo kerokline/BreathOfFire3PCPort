@@ -77,8 +77,8 @@ void ScriptXor(unsigned bits) { Field_ScriptFlags = static_cast<unsigned short>(
 // The leader's record (ObjTrio's first member): +0x34 x, +0x38 z (16.16),
 // +0x36 / +0x3A the cell words, +0x4B, +8.
 unsigned char* Leader() { return ObjTrio; }
-unsigned LeaderCellX() { return Word(Leader() + 0x36); }
-short LeaderCellZ() { return static_cast<short>(Word(Leader() + 0x3A)); }
+unsigned LeaderCellX() { return rv::As<records::SpriteHead>(Leader())->x_whole; }
+short LeaderCellZ() { return static_cast<short>(rv::As<records::SpriteHead>(Leader())->z_whole); }
 
 // The flag row: the dword 0x929ED0 read afresh at each call.
 unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
@@ -2146,7 +2146,7 @@ namespace {
 
 // The door helpers' cell test: the leader's cell z word, +0x4B and +8.
 bool AtDoor(unsigned z, unsigned b4b, unsigned b8) {
-    return Word(Leader() + 0x3A) == z && Leader()[0x4B] == b4b && Leader()[8] == b8;
+    return rv::As<records::SpriteHead>(Leader())->z_whole == z && Leader()[0x4B] == b4b && Leader()[8] == b8;
 }
 // Scena02_DoorStart's start: ScriptFlags_Set40, counter 0 = 0x23, the others
 // cleared, run 0x1A at step 0.

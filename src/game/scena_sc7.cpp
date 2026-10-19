@@ -559,8 +559,8 @@ extern "C" void __cdecl Scena07_TimedEffects(void) {
         e[0] = 1;
         e[5] = 0x18;
         e[0xB] = 0x18;
-        SetWord(e + 0x36, Word(At(rec)));
-        SetWord(e + 0x3A, Word(At(rec + 2)));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->x_whole, Word(At(rec)));
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->z_whole, Word(At(rec + 2)));
         Sound(0x202 + i % 3);
     }
 }
@@ -738,7 +738,7 @@ extern "C" void __cdecl Scena07_PlaceObjects(void) {
         SetWord(At(at::kSlot), slot);
         if (slot == 0xFF) continue;
         SH_CALL(EventOp_0x)(At(Scena07_PlacedObjects_addr + 0x11 * i));
-        SetWord(SpriteCurrent() + 0x3E, 0xA00);
+        rv::Store<unsigned>(rv::As<records::SpriteHead>(SpriteCurrent())->height_whole, 0xA00);
         const unsigned char seat = Byte(at::kPlacedSeat7 + i);
         if (seat == 0) continue;
         ActiveMember()[0x81] = seat;
@@ -902,10 +902,10 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         rv::As<records::EffectObject>(p)->height = 0x5C00000;
         rv::As<records::EffectObject>(p)->step_x = 0x10000;
         rv::As<records::EffectObject>(p)->step_z = 0;
-        SetLong(p + 0x14, static_cast<std::int32_t>(0xFFE00000u));
-        SetLong(p + 0x18, 0x2D0000);
-        SetLong(p + 0x1C, 0x3F0000);
-        SetLong(p + 0x20, 0x3000000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->step_y, static_cast<std::int32_t>(0xFFE00000u));
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_18, 0x2D0000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_1c, 0x3F0000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_20, 0x3000000);
         Sound(0x203);
         Sound(0x206);
         SetTimer(0x78);
@@ -920,15 +920,15 @@ extern "C" void __cdecl Scena07_Scene6(void) {
         }
         unsigned char* const p = SH_CALL(Scena07_TakeEffect49)(9);
         rv::As<records::EffectObject>(p)->z = 0x410000;
-        SetLong(p + 0x1C, 0x410000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_1c, 0x410000);
         p[6] = 1;
         rv::As<records::EffectObject>(p)->x = 0x2D0000;
         rv::As<records::EffectObject>(p)->height = 0x3000000;
         rv::As<records::EffectObject>(p)->step_x = static_cast<std::int32_t>(0xFFFF0000u);
         rv::As<records::EffectObject>(p)->step_z = 0;
-        SetLong(p + 0x14, 0);
-        SetLong(p + 0x18, 0x270000);
-        SetLong(p + 0x20, 0x3000000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->step_y, 0);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_18, 0x270000);
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(p)->work_20, 0x3000000);
         SetTimer(0xA);
         SetStep(0x18);
         out = kDone;
@@ -2490,7 +2490,7 @@ extern "C" void __cdecl Scena08_Scene11(void) {
         a[0xB] = static_cast<unsigned char>(a[0xB] | 2);
         unsigned char* const b = RecordOfMember4();
         b[0xB] = static_cast<unsigned char>(b[0xB] | 2);
-        SetWord(b + 0x18, 0);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(b)->hp, 0);   // a character record (Record: CharacterRecords + n * 0xA4)
         b[0x11] = static_cast<unsigned char>(b[0x11] | 0x60);
         return;
     }

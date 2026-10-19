@@ -517,7 +517,7 @@ SC11_EXPORT void __cdecl Scena11_EffectAnimate(unsigned slot) {
     Sprite_Current[0x2B] = static_cast<unsigned char>(Sprite_Current[0x2B] + 1);
     Sprite_Current[0x48] = 0;
     rv::Current<records::SpriteObject>()->step_y = 0;
-    SetLong(Sprite_Current + 0x20, -8);
+    rv::Store<std::int32_t>(rv::Current<records::SpriteHead>()->work_20, -8);
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
     Sprite_Current[0x5F] = 0;

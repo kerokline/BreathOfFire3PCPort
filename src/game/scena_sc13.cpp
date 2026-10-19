@@ -26,6 +26,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc13_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -2616,11 +2617,12 @@ static void Farewell(unsigned flag, unsigned member, std::uint32_t setup) {
 static void RestoreRecords() {
     for (unsigned r = 1; r < 8; ++r) {
         const std::uint32_t p = at::kRecords + r * at::kRecordStride;
-        if ((B(p + 0xB) & 1) == 0) continue;
-        B(p + 0x1C) = B(p + 0x2E);
-        W(p + 0x18) = W(p + 0x20);
-        W(p + 0x1A) = W(p + 0x22);
-        W(p + 0x10) = 0;
+        auto* const c = rv::As<records::CharRecord>(&B(p));   // CharacterRecords 0x903A70, stride 0xA4
+        if ((c->flags & 1) == 0) continue;
+        c->survive = c->stats.byte_0e;
+        c->hp = c->stats.max_hp;
+        c->ap = c->stats.max_ap;
+        c->status = 0;
     }
     const unsigned char n = Field_MemberCount;
     B(at::kSlotWord) = 1;

@@ -108,7 +108,7 @@ extern "C" void __cdecl Char_LevelUp(unsigned index_arg) {
     unsigned char* const rec = Record(id);
     const unsigned rows = id * 99;
     const auto* const exp_table = At(bof3::addr::Char_ExpTable);
-    const std::int32_t exp = Long(rec + 0xC);
+    const std::int32_t exp = rv::As<records::CharRecord>(rec)->exp;
     unsigned char level = 1;
     std::int32_t sum = 0;
     for (;;) {
@@ -209,9 +209,9 @@ extern "C" void __cdecl Party_HealJoined(void) {
         rec[0x1E] = 0;
         SH_CALL(Char_RecalcStats)(rec);
         rec[0x1C] = rec[0x2E];
-        SetWord(rec + 0x18, Word(rec + 0x20));
-        SetWord(rec + 0x1A, Word(rec + 0x22));
-        SetWord(rec + 0x10, 0);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->hp, rv::As<records::CharRecord>(rec)->stats.max_hp);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->ap, rv::As<records::CharRecord>(rec)->stats.max_ap);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->status, 0);
     }
     const int n = Field_MemberCount;
     for (int i = 0; i < n; ++i)
@@ -303,13 +303,13 @@ extern "C" void __cdecl Sprite_FlashClut(unsigned colour_arg) {
 // (pairs_propagated "call").
 extern "C" std::uint32_t __cdecl Char_LoseHp(std::uint32_t amount, unsigned member_arg) {
     unsigned char* const rec = MemberRecord(static_cast<unsigned char>(member_arg));
-    const unsigned hp = Word(rec + 0x18);
+    const unsigned hp = rv::As<records::CharRecord>(rec)->hp;
     std::uint32_t took = amount;
     if (hp <= (amount & 0xFFFF)) took = hp - 1;
-    SetWord(rec + 0x18, hp - took);
+    rv::Store<unsigned>(rv::As<records::CharRecord>(rec)->hp, hp - took);
     unsigned char* const actor = Record(Field_State[0x148]);
-    if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) {
-        SetWord(actor + 0x10, Word(actor + 0x10) | 0x2000);
+    if (rv::As<records::CharRecord>(actor)->hp <= (rv::As<records::CharRecord>(actor)->stats.max_hp >> 2)) {
+        rv::Store<unsigned>(rv::As<records::CharRecord>(actor)->status, rv::As<records::CharRecord>(actor)->status | 0x2000);
         SetWord(Field_State + 0x90, rv::As<records::PartyMember>(Field_State)->status | 0x2000);
     }
     return took;

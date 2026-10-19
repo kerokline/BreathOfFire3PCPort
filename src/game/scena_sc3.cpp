@@ -1262,7 +1262,7 @@ extern "C" unsigned char __cdecl Scena03_SpawnAtMember(unsigned char member) {
     rv::As<records::SpriteObject>(rec)->target_z = rv::As<records::SpriteObject>(cur())->z;
     rv::As<records::SpriteObject>(rec)->best_score = 0;
     const long elevation = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(cur())->x, rv::As<records::SpriteObject>(cur())->z);
-    SetWord(cur() + 0x3E, static_cast<unsigned>(elevation));
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(cur())->height_whole, static_cast<unsigned>(elevation));
     cur()[1] = 4;
     cur()[2] = 0;
     cur()[8] = 0;

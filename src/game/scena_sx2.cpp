@@ -143,7 +143,7 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
     SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(zd + U(z)));
     unsigned char* const s = Sprite_Current;
     const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<std::uint32_t>(ground));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<std::uint32_t>(ground));
 }
 
 // original 0x572620: the height layer's byte of cell (x, z) (s16s) set:

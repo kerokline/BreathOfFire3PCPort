@@ -1057,7 +1057,7 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
         // each of the three members listed as 7: an effect of kind 6 at the
         // member's +0x2E / +0x30 words, its slot to the member's +0xB
         if (Counter(0) != 3) break;
-        unsigned char* member = &B(0x802D40);   // ObjTrio
+        unsigned char* member = ObjTrio;
         for (unsigned i = 0; i < 3; ++i, member += 0x14C) {
             if (B(at::kPartyList + i) != 7) continue;
             Sprite_Current = member;

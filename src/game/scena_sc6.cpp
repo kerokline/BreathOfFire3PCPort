@@ -2166,16 +2166,16 @@ SC6_EXPORT unsigned char __cdecl Scena06_LeapAir(unsigned char* object, unsigned
     unsigned char* s = Sprite();
     Put32(s + 0x34, Get32(s + 0x34) + Get32(s + 0xC));
     Put32(s + 0x38, Get32(s + 0x38) + Get32(s + 0x10));
-    W(s + 0x3E) = static_cast<std::uint16_t>(W(s + 0x3E) + (Get32(s + 0x14) >> 8));
+    rv::As<records::SpriteHead>(s)->height_whole = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(s)->height_whole + (Get32(s + 0x14) >> 8));
     const std::int32_t before = Get32(s + 0x14);
     Put32(s + 0x14, before + static_cast<std::int16_t>(gravity));
     s[0xA] = static_cast<unsigned char>(s[0xA] - 1);
     const long ground = SH_CALL(AreaMap_Elevation)(Get32(s + 0x34), Get32(s + 0x38));
     s = Sprite();
     if (Get32(s + 0x14) < 0) {
-        const int top = static_cast<std::int16_t>(W(s + 0x3E)) + 0x240;
+        const int top = static_cast<std::int16_t>(rv::As<records::SpriteHead>(s)->height_whole) + 0x240;
         if (static_cast<std::int16_t>(ground) > top) {
-            W(s + 0x3E) = static_cast<std::uint16_t>(ground + 0x240);
+            rv::As<records::SpriteHead>(s)->height_whole = static_cast<std::uint16_t>(ground + 0x240);
             s = Sprite();
         }
     }
@@ -2206,16 +2206,16 @@ SC6_EXPORT unsigned char __cdecl Scena06_LeapAir(unsigned char* object, unsigned
 SC6_EXPORT unsigned char __cdecl Scena06_LeapLand(unsigned char*, unsigned, unsigned, unsigned, unsigned gravity,
                                                   unsigned, unsigned) {
     unsigned char* const s = Sprite();
-    const std::uint16_t height = W(s + 0x3E);
+    const std::uint16_t height = rv::As<records::SpriteHead>(s)->height_whole;
     const long ground = SH_CALL(AreaMap_Elevation)(Get32(s + 0x34), Get32(s + 0x38));
     if (static_cast<std::int16_t>(ground) < static_cast<std::int16_t>(height) - 0x240) {
-        W(s + 0x3E) = static_cast<std::uint16_t>((Get32(Sprite() + 0x14) >> 8) + height);
+        rv::As<records::SpriteHead>(s)->height_whole = static_cast<std::uint16_t>((Get32(Sprite() + 0x14) >> 8) + height);
         unsigned char* const n = Sprite();
         Put32(n + 0x14, Get32(n + 0x14) + static_cast<std::int16_t>(gravity));
         return 1;
     }
     const long again = SH_CALL(AreaMap_Elevation)(Get32(Sprite() + 0x34), Get32(Sprite() + 0x38));
-    W(Sprite() + 0x3E) = static_cast<std::uint16_t>(again + 0x240);
+    rv::As<records::SpriteHead>(Sprite())->height_whole = static_cast<std::uint16_t>(again + 0x240);
     Sprite()[4] = 0;
     return 0;
 }

@@ -119,7 +119,7 @@ extern "C" void __cdecl Effect_SpawnAtCell(unsigned state, unsigned x, unsigned 
     const auto zz = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<short>(z))) << 16);
     rv::As<records::EffectObject>(e)->z = zz;
     const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(e)->x, zz);
-    SetWord(e + 0x3E, static_cast<unsigned>(ground) + 0x100);
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(e)->height_whole, static_cast<unsigned>(ground) + 0x100);
     e[0xB] = 0;
 }
 
@@ -164,7 +164,7 @@ extern "C" void __cdecl EventOp_0x(const unsigned char* op) {
     SetLong(Object(Count()) + 0x90, rv::Current<records::SpriteObject>()->z);
     rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
     const long ground = SH_CALL(AreaMap_Elevation)(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-    SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(ground));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, static_cast<unsigned>(ground));
     Sprite_Current[1] = op[0xA];
     Sprite_Current[2] = op[0xC];
     Sprite_Current[8] = static_cast<unsigned char>(op[0] & 0xF);
