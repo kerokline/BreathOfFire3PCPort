@@ -18,7 +18,7 @@ namespace field_modes {
 // scenario byte is in the scenario block at 0x8014686C (the sibling's
 // docs/LOADER_RECORDS.md).
 // kScenarioTables: now Scenario_Hooks (symbols.toml). 20 pointers, one per chapter, to a vtable (PSX 0x801C944C)
-constexpr std::uint32_t kCallATables = 0x660B84;      // 20 pointers, one per chapter, to Scenario_CallA's table (PSX 0x801CDC4C)
+// kCallATables: now Scenario_CallATables (symbols.toml). 20 pointers, one per chapter, to Scenario_CallA's table (PSX 0x801CDC4C)
 constexpr std::uint32_t kTailTable = 0x662CD0;        // Field_ModeTail's two entries (PSX 0x801D949C)
 // kTailRunTable: now Field_ModeTailKinds (symbols.toml). Field_ModeTailRun's entries
 constexpr std::uint32_t kStateTable = 0x6619FC;       // scenario 16's states (PSX 0x801F8538); its +0xC is

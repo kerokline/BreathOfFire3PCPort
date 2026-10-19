@@ -24,7 +24,7 @@ using move_script::Word;
 
 // GameMode_Field's bytes, unnamed (docs/mode-tasks.md section 3 has the PSX
 // twin of each).
-constexpr std::uint32_t kBattleCount = 0x904134;     // dword, +1 entering mode 5 (PSX 0x80145028)
+// kBattleCount: now Rest4a_Clock (symbols.toml). dword, +1 entering mode 5 (PSX 0x80145028)
 constexpr std::uint32_t kBattleBytes = 0x904AA0;     // three bytes zeroed entering mode 5 (PSX 0x801462DC)
 constexpr std::uint32_t kMemberByte0 = 0x802D4B;     // one byte in each of three 0x14C-byte records,
 constexpr std::uint32_t kMemberByte1 = 0x802E97;     // zeroed entering mode 5 (PSX 0x80145E97,
@@ -341,10 +341,10 @@ extern "C" void __cdecl GameMode_Field(void) {
         return;
     case 9:
         FieldEvent_Object905DA0 = 1;
-        At(FieldEvent_Object905DA0_addr)[1] = 0;
-        At(FieldEvent_Object905DA0_addr)[2] = 0;
-        At(FieldEvent_Object905DA0_addr)[3] = 0;
-        At(FieldEvent_Object905DA0_addr)[4] = 0;
+        At(kMode11Bytes)[1] = 0;
+        At(kMode11Bytes)[2] = 0;
+        At(kMode11Bytes)[3] = 0;
+        At(kMode11Bytes)[4] = 0;
         Game_Mode = 0xB;
         return;
     default:

@@ -53,7 +53,7 @@ constexpr U kEquipOpenBytes = 0x675EBE;  // u8 x 3 (0x675EBE, BF, C0): set as th
 // What the tally adds up (written by fight 26's event hook, boss_se.md).
 // kSumA: now BattleE1_SumA (symbols.toml). u32
 // kSumB: now BattleE1_SumB (symbols.toml). u32
-constexpr U kCount = 0x939A0C;       // u8
+// kCount: now BattleE1_Count (symbols.toml). u8
 
 // Character record 7 (CharacterRecords 0x903A70 + 7 * 0xA4; char-stats.md's
 // fields): the stat words the tally raises, its two equipment bytes, its
@@ -91,7 +91,7 @@ constexpr U kPartyCount = 0x904AB0;  // u8
 constexpr U kMenuMember = 0x904AB4;  // u8: the member the command menu is for
 constexpr U kEntryFirst = 0x904AB6;  // u8: the entry order's first byte
 constexpr U kCrossGrow = 0x904ABC;   // u8 per member: the command cross's size
-constexpr U kEntryCount = 0x904AC3;  // s8: the entries in the order
+// kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). s8: the entries in the order
 constexpr U kBattleEnd = 0x904AE8;
 constexpr U kActor = 0x904B34;
 constexpr U kActing = 0x904B3C;      // unsigned char *: the acting sprite

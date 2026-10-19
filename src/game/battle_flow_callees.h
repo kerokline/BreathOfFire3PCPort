@@ -52,7 +52,7 @@ constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
 // other battle code (pe_xref.py, 48 references), so a number, not a flag;
 // "event battle" is a guess from what it switches on here (the hook below,
 // the enemies' +0xF4 hooks and the shifted state table)
-constexpr std::uint32_t kEventBattle = 0x904AAA;
+// kEventBattle: now BattleActions_EventBattle (symbols.toml).
 // kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8 (PSX 0x801462EF)
 constexpr std::uint32_t kDropCount = 0x904AE7;     // u8, at most 15 (PSX 0x80146323)
 constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8, |= 2 when the last enemy falls (PSX 0x80146324)

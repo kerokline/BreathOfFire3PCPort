@@ -42,7 +42,7 @@ constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (bit
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 27: bits 0..5)
 constexpr U kOrderBefore = 0x904ACB;      // u8[]: the turn order 0x904ACC one before - indexed by the cursor
 // kCursor: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md)
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 1 the win; bit 2 set by set-up 27's event hook
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 2 set by set-up 27's event hook
 // kBanner: now BattleMisc_BannerKinds (symbols.toml). u8: bit 1 holds the phases until phase 5 (battle_phases_callees.h)
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (4 an ability)
 constexpr U kTarget = 0x904B44;           // u8: the battle's target
@@ -51,7 +51,7 @@ constexpr U kAbility = 0x904B80;          // u16: the action id in hand (24-byte
 // kCost: now BattleE3_Cost (symbols.toml). u8: the AP cost shown (battle_actions_callees.h kCostShown)
 // kSoundSet: now BattleE3_SoundSet (symbols.toml). u8: Battle_LoadSoundByKey's set (battle_obj_states_callees.h)
 constexpr U kTurn = 0x904B90;             // u32: the turn counter (battle_phases.md)
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 

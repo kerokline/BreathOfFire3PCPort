@@ -166,7 +166,7 @@ void DisturbFlow() {
     case 0: PutByte(SaveMenu_FlowState_addr, h >> 8); break;
     case 1: PutByte(FieldS_Answer_addr, (h >> 8) & 1); break;
     case 2: PutLong(Rest2c_Slot_addr, (h >> 8) % 20); break;
-    default: PutLong(MoveScript_PartyRecords_addr + 0x50, (h >> 8) % 20); break;
+    default: PutLong(at::kSlotTop, (h >> 8) % 20); break;
     }
 }
 // Gfx_PacketNext moved within g_prim, as a commit moves it.
@@ -853,7 +853,7 @@ void Sane() {
     PutWord(MoveScript_WaitWordDA_addr, Next() % 2 ? 0 : Next());
     PutLong(Rest2c_Slot_addr, Next() % 4 ? Next() % 17 : Next() % 0x100);
     // The first slot shown: its upper bytes reach 0x576960's slot argument.
-    PutLong(MoveScript_PartyRecords_addr + 0x50, Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
+    PutLong(at::kSlotTop, Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
 }
 
 Args Generate(unsigned k) {
@@ -971,7 +971,7 @@ Args Generate(unsigned k) {
         x.a[2] = Pick({0, 1, Next()});
         if (k == kLChoose) {
             PutLong(Rest2c_Slot_addr, Pick({0, 1, 2, 14, 15, 16, Next() % 17, 0x100, 0xFFFFFFFF}));
-            PutLong(MoveScript_PartyRecords_addr + 0x50, Pick({0, 1, 13, 14, Next() % 17, Long(Rest2c_Slot_addr), Long(Rest2c_Slot_addr) - 2}));
+            PutLong(at::kSlotTop, Pick({0, 1, 13, 14, Next() % 17, Long(Rest2c_Slot_addr), Long(Rest2c_Slot_addr) - 2}));
             const U pad = Next() & 0xFFFF;
             PutWord(Input_Pressed_addr, pad);
             PutWord(Field_ConfirmButtons_addr, Next() % 3 ? (pad & 0x20) | 0x20 : Next());

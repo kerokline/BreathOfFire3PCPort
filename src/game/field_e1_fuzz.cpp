@@ -373,15 +373,15 @@ void Seed(unsigned k) {
     case kJumpOut0:
     case kJumpIn2:
         sc[5] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
-        B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(B(Field_ScriptFlags2_addr) & (sh::Often() ? ~8u : 0xFFu));
-        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) & (sh::Often() ? ~8u : 0xFFu));
+        B(at::kFlags2Lo) = static_cast<unsigned char>(B(at::kFlags2Lo) & (sh::Often() ? ~8u : 0xFFu));
+        B(at::kFlagsLo) = static_cast<unsigned char>(B(at::kFlagsLo) & (sh::Often() ? ~8u : 0xFFu));
         break;
     case kJumpAir: {
         const U held = PickOf(0x1000, 0x4000, 0x5000, 0, 1u << (sh::Next() % 16), sh::Next());
         Field_InputHeld = static_cast<unsigned short>(held);
         SetWord(sh::Mem(Gfx_UnpackScratch_addr + 0x1f000), sh::Half() ? held & 0xAFFF : sh::Next());
-        B(Field_ScriptFlags2_addr) = static_cast<unsigned char>(B(Field_ScriptFlags2_addr) & (sh::Often() ? ~8u : 0xFFu));
-        B(Field_ScriptFlags_addr) = static_cast<unsigned char>(B(Field_ScriptFlags_addr) & (sh::Often() ? ~8u : 0xFFu));
+        B(at::kFlags2Lo) = static_cast<unsigned char>(B(at::kFlags2Lo) & (sh::Often() ? ~8u : 0xFFu));
+        B(at::kFlagsLo) = static_cast<unsigned char>(B(at::kFlagsLo) & (sh::Often() ? ~8u : 0xFFu));
         break;
     }
     case kContentTake:

@@ -79,7 +79,7 @@ void Disturb() {
     case 4: CurSlot()[7] = static_cast<unsigned char>(v % 5); break;
     case 5: Sprite_Current[0] = static_cast<unsigned char>(v); break;
     case 6: At(at::kPhase)[0] = static_cast<unsigned char>(v % 7); break;
-    case 7: At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(v); break;
+    case 7: At(at::kRoundCount)[0] = static_cast<unsigned char>(v); break;
     case 8: Owner()[0] = static_cast<unsigned char>(v); break;
     case 9: Owner()[5] = static_cast<unsigned char>(v % 11); break;
     case 10: CurSlot()[0x27] = static_cast<unsigned char>(v); break;
@@ -159,7 +159,7 @@ void __cdecl StubAfterArea() { Record(11); Disturb(); }
 // The transition moves 0x904AA2 half the time: the hook adds to it after.
 void __cdecl StubTransition(unsigned char k) {
     Record(12, k);
-    if (Hash() % 2) At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 2) At(at::kRoundCount)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 

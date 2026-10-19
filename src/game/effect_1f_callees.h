@@ -24,7 +24,7 @@ constexpr std::uint32_t kListLabelA = 0x803626;    // the kind-0xB list's label
 constexpr std::uint32_t kListLabelB = 0x803628;    // the kind-0xA list's label
 constexpr std::uint32_t kKindCounts = 0x9040EC;    // 32 count bytes, one a kind (FieldPanel_KindTotal's)
 // kExtraItem: now CharStats_ExtraItem (symbols.toml). the extra item slot (char_stats.cpp's name), its count 0x90412F
-constexpr std::uint32_t kExtraCount = 0x90412F;
+// kExtraCount: now CharStats_ExtraCount (symbols.toml).
 constexpr std::uint32_t kExtraAccessory = 0x904130;// the extra accessory slot
 constexpr std::uint32_t kAccessoryIds = 0x9042D4;  // category 3's 128 inventory ids (Inventory_IdLists[3])
 constexpr std::uint32_t kAccessoryKind = 0x658462; // NameTable_Accessories + 0x12: a 24-byte record's kind byte

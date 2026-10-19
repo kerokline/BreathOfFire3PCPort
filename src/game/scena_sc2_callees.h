@@ -19,7 +19,7 @@ namespace scena_sc2 {
 namespace at {
 
 // The scenario bytes (docs/field-modes.md section 2).
-constexpr std::uint32_t kState = 0x8034E2;         // s8: the chapter's state (Scena02_States)
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8: the chapter's state (Scena02_States)
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
 // kTimer: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: cleared by Scena02_EnterArea
 constexpr std::uint32_t kCounters = 0x903848;      // u8 x4: the script counters (MoveScript_CounterOps)
@@ -28,7 +28,7 @@ constexpr std::uint32_t kEffectSlot = 0x903850;    // u8: the effect slot just t
 // kRow2: now Cond_Flags[0x10] (symbols.toml). Cond_Flags + 8 * 2: chapter 2's row; Scena02_Start clears
                                                    // its first dword, the object hook passes it
 // kAreaByte: now AreaW1f_MusicCurrent (symbols.toml). u8 some scenes store after an area change
-// kLeadMember: now Cond_Flags[0xd2] (symbols.toml). u8: the party's first member (0, 3, 4 tested)
+constexpr std::uint32_t kLeadMember = 0x904062;    // u8: the party's first member (0, 3, 4 tested)
 // kFrameByte: now AreaW0c_PendingKind (symbols.toml). u8 Scena02_Scene04 steps 6 and 8 set to 1
 // kExtraWord: now AreaW2c_LastArea (symbols.toml). u16 just past Sprite_ObjectsExtra: area 0x10's test (0x5A)
 // kMemberSeven: now Field_Members[0x13b] (symbols.toml). u8: Scena02_Scene10 step 0xF waits while it is 7

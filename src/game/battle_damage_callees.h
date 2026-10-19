@@ -74,10 +74,10 @@ constexpr std::uint32_t kPartyCount = 0x904AB0;    // u8 (PSX 0x801462EC)
 // kAiByteB2: now BattleActorCopies_EnemyCount (symbols.toml). u8, AI opcodes 0xF / 0x1F
 // kAiByteB3: now BattleE2_EnemiesLeft (symbols.toml). u8, AI opcodes 0xF / 0x10 / 0x1F / 0x20
 constexpr std::uint32_t kEntryOrder = 0x904AB6;    // 3 actor bytes, 0xFF-ended (PSX 0x801462F2)
-constexpr std::uint32_t kEntryCount = 0x904AC3;    // u8 (PSX 0x801462FF)
+// kEntryCount: now BattleActorCopies_EntryCount (symbols.toml). u8 (PSX 0x801462FF)
 constexpr std::uint32_t kTurnOrder = 0x904ACC;     // 11 actor bytes (PSX 0x80146308)
 // kTurnCursor: now BossSe_RoundSlot (symbols.toml). u8 (PSX 0x8014631E)
-constexpr std::uint32_t kTurnCount = 0x904AE3;     // u8 (PSX 0x8014631F)
+// kTurnCount: now BattleDamage_TurnCount (symbols.toml). u8 (PSX 0x8014631F)
 // kSideOut: now BattlePhases_Initiative (symbols.toml). u8: 1 the enemies may not act, 2 the party, 3 neither
 constexpr std::uint32_t kActing = 0x904B34;        // u8 the acting actor, then u8 its kind (4 an ability)
 // kItemCommand: now BattleSprites_Action (symbols.toml). pointer: +2 a u16 (category << 8 | item)

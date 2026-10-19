@@ -458,7 +458,7 @@ void Disturb(U h) {
     case 3: Mem(BattleE5_GeneRow_addr)[0] = static_cast<unsigned char>(b % 4 == 3 ? 0xFF : b % 3); break;
     case 4: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 7); break;
     case 5: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 5); break;
-    case 6: Mem(BattleActorCopies_QueueWrite_addr)[0] = b; break;
+    case 6: Mem(at::kMsgCount)[0] = b; break;
     case 7: SetWord(Mem(at::kAsk), b & 3); break;
     case 8: SetWord(Mem(b & 1 ? BattleE4_Slots_addr + 0x10 : BattleE4_Hand_addr + 0x10), (b >> 1) % 4); break;
     case 9: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;

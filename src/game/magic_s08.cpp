@@ -605,7 +605,7 @@ S08_EXPORT void __cdecl CounterMark_Place(void) {
     unsigned row;
     if (member[0x134] & 2) {
         table = CounterMark_FormOffsets_addr;
-        row = Mem(CounterMark_FormIndex_addr + Mem(BattlePhases_B89_addr)[0])[0];
+        row = Mem(kFormBytes + Mem(BattlePhases_B89_addr)[0])[0];
     } else {
         table = CounterMark_MemberOffsets_addr;
         row = member[0x89];

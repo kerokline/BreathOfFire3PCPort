@@ -55,13 +55,13 @@ constexpr std::uint32_t kArea85Place = 0x6640C8;      // PartyForm_Reload's (x, 
 constexpr std::uint32_t kFacingSteps = 0x6640F8;      // PartyForm_Reload's (dx, dz) s16 pairs by the leader's facing
 constexpr std::uint32_t kPickCells = 0x664078;        // PartyForm_Draw's cursor cells: (x, y) words and a flag, 6 bytes
 constexpr std::uint32_t kReserve = 0x6BC894;          // up to 8 bytes: PartyForm's reserve (records not in the party)
-constexpr std::uint32_t kReserveCount = 0x6BC897;     // u8: its count (inside the flag pairs' reach, docs/field_s.md)
+// kReserveCount: now FieldS_ReserveCount (symbols.toml). u8: its count (inside the flag pairs' reach, docs/field_s.md)
 constexpr std::uint32_t kReserveFlags = 0x6BC88C;     // byte pairs (party, reserve), set by PartyForm_Setup
 // kPartyFormResult: now FieldS_PartyFormResult (symbols.toml). u8: PartyForm_Swap's answer (0xFF: swapped)
 // kPickIndex: now FieldS_PickIndex (symbols.toml). u8: SharedList's member cursor
 constexpr std::uint32_t kJoined = 0x6BC8BC;           // up to 8 bytes: the joined records' indexes
 // kSharedChoice: now FieldS_SharedChoice (symbols.toml). u8: SharedList's first choice (0 or 1)
-constexpr std::uint32_t kJoinedCount = 0x6BC8C5;      // u8: the joined count
+// kJoinedCount: now FieldS_JoinedCount (symbols.toml). u8: the joined count
 constexpr std::uint32_t kEquipBytes = 0x939880;       // FieldMenu's per-member bytes: top at +slot + 6 member
 constexpr std::uint32_t kEquipCursor = 0x9398A0;      // and the cursor at +slot + 6 member
 constexpr std::uint32_t kArea = 0x904EFC;             // Game_AreaNumber (u16)

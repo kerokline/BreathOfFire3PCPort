@@ -375,7 +375,7 @@ void Seed(unsigned k) {
     if (sh::Half()) B(Field_Kind2Hold_addr) = 0;
     if (sh::Often()) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((sh::Next() % 8) | (sh::Half() ? 0x80 : 0));
     for (unsigned i = 0; i < 3; ++i)
-        if (sh::Often()) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(APartyByte());
+        if (sh::Often()) B(at::kPartyBytes + i) = static_cast<unsigned char>(APartyByte());
     if (sh::Half()) B(at::kRecord7 + 0x12) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
     if (sh::Half()) B(at::kRecord7 + 0x15) = static_cast<unsigned char>(SH_PICK(0, 0xFF, 1));
     if (sh::Half()) B(ObjTrio_addr + 8) = static_cast<unsigned char>(SH_PICK(2, 3, 4, 5));
@@ -488,7 +488,7 @@ void Disturb(std::uint32_t h) {
         break;
     }
     case 3: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>((h >> 12) % 8); break;
-    case 4: B(Cond_Flags_addr + 0xd2 + (h >> 12) % 3) = static_cast<unsigned char>((h >> 14) % 6); break;
+    case 4: B(at::kPartyBytes + (h >> 12) % 3) = static_cast<unsigned char>((h >> 14) % 6); break;
     case 5: B(at::kRecord7 + ((h >> 12) & 1 ? 0x12 : 0x15)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 6: B(((h >> 12) & 1) ? Field_Kind2Hold_addr : ((h >> 13) & 1) ? AreaW3c_Load0F_addr : ScenaSc6_Load10_addr) = static_cast<unsigned char>(v & 1); break;
     case 7: B(Effect_Objects_addr + ((h >> 12) % 20) * at::kEffectStride) = static_cast<unsigned char>(v & 1); break;

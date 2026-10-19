@@ -827,7 +827,7 @@ extern "C" void __cdecl EffectKind80_Start(void) {
     SetUL(S() + 0x34, 0x10000);
     SetUL(S() + 0x38, 0x250000);
     SetUL(S() + 0x3C, 0x3800000);
-    SetWord(At(EffectKind30_Shards_addr + 0x43e), 0x60);
+    SetWord(At(at::kTrailSize), 0x60);
     for (int n = 0x20; n != 0; --n) SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
     S()[9] = 0;
     NextState();
@@ -865,7 +865,7 @@ extern "C" void __cdecl EffectKind80_Hold(void) {
 extern "C" void __cdecl EffectKind80_Fade(void) {
     SH_CALL(EffectKind80_TrailStep)(P(EffectKind30_Shards_addr));
     SH_CALL(EffectKind80_DrawTrail)(P(EffectKind30_Shards_addr));
-    SetWord(At(EffectKind30_Shards_addr + 0x43e), W(at::kTrailSize) - 6u);
+    SetWord(At(at::kTrailSize), W(at::kTrailSize) - 6u);
     if (CountDown()) NextState();
 }
 

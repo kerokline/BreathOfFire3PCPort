@@ -353,9 +353,9 @@ void SeedCommunity() {
     Mem(Rest4b_CountA_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 10, 0x30, 0x63, 0x64, 0x80, 0xFF, sh::Next()));
     Mem(at::kLevelLit)[0] = static_cast<unsigned char>(PickOf(0, 1, 6, 7, sh::Next() % 8));
     Mem(at::kLevelDark)[0] = static_cast<unsigned char>(PickOf(0, 1, 9, 0xA, sh::Next() % 0xB));
-    Mem(Rest4b_BusyB_addr)[0] = static_cast<unsigned char>(sh::Next() % 0x20);
+    Mem(at::kEventCount)[0] = static_cast<unsigned char>(sh::Next() % 0x20);
     Mem(Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>(sh::Next() % 0x10);
-    Mem(Rest4b_BusyA_addr)[0] = static_cast<unsigned char>(sh::Next() % 0x10);
+    Mem(at::kSpawnCount)[0] = static_cast<unsigned char>(sh::Next() % 0x10);
     const unsigned short area = static_cast<unsigned short>(PickOf(0xAF, 0xB0, 0xB2, 0xB5, 0xB6, 0xB7, 0xB9, 0xBA, 0x10, sh::Next() % 0x100));
     Game_AreaNumber = area;
     SetWord(Mem(AreaW2c_LastArea_addr), sh::Half() ? area : PickOf(0xAF, 0xB0, sh::Next() % 0x100));
@@ -588,7 +588,7 @@ void Disturb(U h) {
         }
         break;
     case 4: Bld((v >> 2) % 8)[1] = static_cast<unsigned char>((v >> 5) % 3); break;      // a building's level (0..2: kind 9's odds)
-    case 5: Mem((v & 1) ? Rest4b_BusyB_addr : Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
+    case 5: Mem((v & 1) ? at::kEventCount : Rest4a_RemovedCount_addr)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
     case 6:
         Mem(BattlePhases_B8B_addr)[0] = static_cast<unsigned char>((v >> 1) % 11);
         Mem(BattleSprites_PartyPick_addr)[0] = static_cast<unsigned char>(v & 1);

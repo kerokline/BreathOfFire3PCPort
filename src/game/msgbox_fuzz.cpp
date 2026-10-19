@@ -93,7 +93,7 @@ void Disturb() {
     case 18: MsgBox_LineX = static_cast<short>(v); break;
     case 19: SetW(Msgbox_OriginY_addr, v); break;
     case 20: SetB(AreaW0c_ChoiceAnswer_addr, v); break;
-    case 21: SetB(MenuWindows_ListCount_addr, v); break;
+    case 21: SetB(kChoiceLast, v); break;
     case 22: SetB(kWindow0State, v % 6); break;
     case 23: SetB(ItemUse_Window1State_addr, v % 6); break;
     case 24: SetW(kEffectOff, v); break;
@@ -572,7 +572,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
         static const unsigned char kCursors[] = {0, 1, 0x7F, 0x80, 0xFF};
         static const unsigned char kLasts[] = {0, 1, 2, 0x7F, 0x80, 0xFF};
         if (Often()) SetB(AreaW0c_ChoiceAnswer_addr, kCursors[Next() % 5]);
-        if (Often()) SetB(MenuWindows_ListCount_addr, kLasts[Next() % 6]);
+        if (Often()) SetB(kChoiceLast, kLasts[Next() % 6]);
         if (Often()) Input_Pressed = static_cast<unsigned short>(Next() % 2 ? 0 : 1u << (Next() % 16));
         if (Often()) Field_ConfirmButtons = static_cast<unsigned short>(1u << (Next() % 16));
         if (Often()) Field_CancelButtons = static_cast<unsigned short>(1u << (Next() % 16));

@@ -63,7 +63,7 @@ constexpr U kScriptVar5 = 0x90384A;
 constexpr U kScriptVar6 = 0x90384B;
 // kScriptVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7 (s8): the running scene's run
 // kScriptStep: now MoveScript_PartyRecords[0x65] (symbols.toml). the run's step
-constexpr U kChoice = 0x7DEE67;           // the choice box's answer (s8)
+// kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). the choice box's answer (s8)
 // kRowPointer: now AreaW1a_FocusObject (symbols.toml). a record pointer whose word +0x8A a choice counts (docs/area_w1a.md)
 // kButtonMap0: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map: word 0 (the dial's first legend)
 // kButtonMap1: now Gfx_UnpackScratch[0x1f002] (symbols.toml). word 1: the push / charge button

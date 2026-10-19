@@ -29,9 +29,9 @@ using U = std::uint32_t;
 // --- the battle's cells (0x904AA0..0x904BA0) --------------------------------
 constexpr U kFlags = 0x904AA8;            // u8: the round flags' low byte (bit 2 read and set here)
 constexpr U kFight = 0x904AAA;            // u8: the event battle
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 0 the loss, bit 1 the win
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
 constexpr U kTarget = 0x904B44;           // u8: the target (set-up 38 writes 0x40, the enemies' side)
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running (its object)

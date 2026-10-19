@@ -336,7 +336,7 @@ void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     // what every kind may read: the model and its count, the shard cursor, the counter byte
     SetLong(Mem(Sprite_ObjectsExtra_addr + 0x50), static_cast<std::int32_t>(Key(g_model)));
-    SetLong(Mem(Sprite_ObjectsExtra_addr + 0x54), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
+    SetLong(Mem(at::kModelCount), static_cast<std::int32_t>(Key(g_count + sh::Next() % 4)));
     for (unsigned i = 0; i < 4; ++i) g_count[i] = static_cast<unsigned char>(PickOf(0, 1, 2, 27, sh::Next() % 28));
     move_script::SetLong(Mem(EffectKind1E_ShardCursor_addr), static_cast<std::int32_t>(Key(Shard28(sh::Next()))));
     Mem(0x903848)[0] = static_cast<unsigned char>(PickOf(0x1F, 0x1F, 0x1E, 0x20, sh::Next()));

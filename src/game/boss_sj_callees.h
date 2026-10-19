@@ -25,12 +25,12 @@ using U = std::uint32_t;
 
 // --- the battle's cells (0x904AA0..0x904BA0) ---------------------------------
 constexpr U kFlags = 0x904AA8;            // u16: the round flags (bit 2 read by D>Lord's effect)
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 1 the win
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win
 constexpr U kActor = 0x904B34;            // u8: the acting actor (3..10 an enemy)
 // kPoseIndex: now BossSa_EndCount (symbols.toml). u16: kind 62's pose index (0x440630 / 0x4405E0 write it; 0x437C10 uses it as a count)
 
 // --- the hooks ------------------------------------------------------------------
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 

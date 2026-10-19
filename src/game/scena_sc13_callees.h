@@ -38,7 +38,7 @@ namespace at {
 
 // The scenario bytes (docs/field-modes.md section 2).
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits
-constexpr std::uint32_t kState = 0x8034E2;      // s8: the chapter's state, 0..2
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8: the chapter's state, 0..2
 // kRun: now MoveScript_Var7 (symbols.toml). s8: MoveScript_Var7, which scene
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: the scenes' word timer
@@ -95,7 +95,7 @@ constexpr std::uint32_t kInputHeld = 0x7E1BE8;  // Input_Held (dword read)
 constexpr std::uint32_t kInputPressed = 0x7E1BEC;  // Input_Pressed
 constexpr std::uint32_t kCaptionText = 0x803580;   // u16 offsets, then the caption text from 0x803582
 constexpr std::uint32_t kCaptionIndex = 0x7DEE48;  // u16: the caption Scena13_Caption draws
-constexpr std::uint32_t kMemberCount = 0x929EC0;   // Field_MemberCount
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount
 constexpr std::uint32_t kPartyList = 0x904062;  // the party list bytes (Cond_Flags + 0xD2)
 constexpr std::uint32_t kEffectState = 0x66972C;   // MoveScript_EffectState: a record index by member
 constexpr std::uint32_t kRecords = 0x903A70;    // the eight records of 0xA4 (0x533E50's pass)

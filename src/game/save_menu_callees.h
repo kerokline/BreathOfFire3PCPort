@@ -71,7 +71,7 @@ constexpr U kSpriteCurrent = 0x937F88;  // Sprite_Current
 // kCondFlags: now Cond_Flags (symbols.toml). Cond_Flags: its first dword of every 8 bytes cleared
 constexpr U kCondFlagsEnd = 0x904030;
 // 0x5885D0, the loaded game applied.
-constexpr U kMemberCount = 0x929EC0;    // Field_MemberCount, u8
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount, u8
 // kCondPointer: now AreaW0c_FlagRow (symbols.toml). u32
 constexpr U kCounters = 0x903848;       // four MoveScript counters, u8
 constexpr U kPosition = 0x8034E0;       // four dwords from the block's first 16 bytes
@@ -101,7 +101,7 @@ constexpr U kStreamKind = 0x6BDE40;     // u32: id >> 12 of the last stream
 // kStreamData: now SaveMenu_StreamData (symbols.toml). void *: the last stream's file
 constexpr U kStreamTables = 0x6653B0;   // name tables per kind
 constexpr U kStreamFormat = 0x666F9C;   // "SND\%s.DAT"
-constexpr U kFadeCount = 0x6BDE54;      // Music_FadeCount
+// kFadeCount: now Music_FadeCount (symbols.toml). Music_FadeCount
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track, u8
 // kMusicBuffer: now Music_Buffer (symbols.toml). Music_Buffer, an IDirectSoundBuffer *
 constexpr float kStreamVolume = 127.0f; // 0x42FE0000, pushed by 0x5879E0

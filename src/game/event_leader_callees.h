@@ -60,12 +60,12 @@ constexpr std::uint32_t kReturnPoint = 0x904148;     // x, z dwords, the area wo
 // kButtonConfirm: now Gfx_UnpackScratch[0x1f000] (symbols.toml). u16 (input-script.md section 4)
 // The pending walk-in (Area_Enter's 0x904EF0.., symbols.toml 0x533710).
 // kPendingFlag: now EventLeader_PendingFlag (symbols.toml). u8
-constexpr std::uint32_t kPendingCount = 0x904EF2;    // u8: members walked in
+// kPendingCount: now EventLeader_PendingCount (symbols.toml). u8: members walked in
 // kPendingX: now EventLeader_PendingX (symbols.toml). s32 each; +2 the whole parts
 // kPendingZ: now EventLeader_PendingZ (symbols.toml).
 // The passage's content.
 constexpr std::uint32_t kPassageFlags = 0x90410C;    // bits by the entry's +4 (Flags_Test / Flags_Set)
-constexpr std::uint32_t kPassageCount = 0x90413C;    // s32, one more per content taken
+// kPassageCount: now Rest4a_CountD (symbols.toml). s32, one more per content taken
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8, & 0x7F the row (field-event.md)
 // kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow_callees.h)
 // Field_ScriptFlags' high byte and Field_ScriptFlags2's two, tested and set by

@@ -67,7 +67,7 @@ constexpr unsigned kBuildingCount = 8;
 constexpr U kRecordCopies = 0x9048F0;      // 60 x 5 bytes copied from kRecordTraits at a spawn
 constexpr U kSpawnCount = 0x904A90;        // u8: kSpawned's count
 constexpr U kSpawned = 0x904F00;           // u8 list: the records spawned
-constexpr U kRemovedCount = 0x9039A0;      // u8: kRemoved's count
+// kRemovedCount: now Rest4a_RemovedCount (symbols.toml). u8: kRemoved's count
 constexpr U kRemoved = 0x9039C0;           // u8 list: the records removed (bit 7: removed at a kind-9 roll)
 constexpr U kEventCount = 0x937F80;        // u8: kEvents' count
 constexpr U kEvents = 0x904CA0;            // 2-byte events (kind, record)

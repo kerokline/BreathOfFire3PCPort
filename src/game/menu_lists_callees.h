@@ -30,7 +30,7 @@ constexpr std::uint32_t kCountdown = 0x929F04;     // u8 the open / close countd
 // kCursor: now MenuLists_Cursor (symbols.toml). u8 the top bar's cursor, 0..6
 // kOpenedAt: now ScenaSc6_Load10 (symbols.toml). u8: 1 opens the menu straight on state 5, step 5
 // kPartyChanged: now MenuLists_PartyChanged (symbols.toml). u8: set when a member of the party left it
-constexpr std::uint32_t kMemberCount = 0x929EC0;   // Field_MemberCount (u8)
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount (u8)
 // The party (area_entry_callees.h, battle_draw_callees.h): three bytes of
 // characters, then three of the reserve; 0xFF is none.
 // kParty: now Cond_Flags[0xd2] (symbols.toml).

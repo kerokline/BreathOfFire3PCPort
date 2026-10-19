@@ -128,7 +128,7 @@ constexpr uint32_t kElevation = 0x929F1C;   // MapView_Elevation (long)
 // kVertices: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
 
 // Chapter 15's and 17's own bytes (Scena15_Bytes 0x6BC740, read by no other code).
-constexpr uint32_t kShakeShift = 0x6BC740;  // the camera shake's shift (Scena15_Shake's argument)
+// kShakeShift: now Scena15_Bytes (symbols.toml). the camera shake's shift (Scena15_Shake's argument)
 // kShakeOn: now Scena15_Bytes[1] (symbols.toml). the camera shakes while set
 constexpr uint32_t kKept = 0x6BC742;        // run 4: the party byte kept; run 6: Scena15_RandomPause's count
 // kSlot: now Scena15_Bytes[3] (symbols.toml). the effect slot a run waits on

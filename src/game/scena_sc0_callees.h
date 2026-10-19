@@ -25,7 +25,7 @@ constexpr std::uint32_t kStartSteps = 0x660D30;   // Scena00_StartSteps: run 6's
 constexpr std::uint32_t kInputAnims = 0x660D38;   // Scena00_InputAnims: 16 pairs (animate?, animation) by input >> 12
 
 // --- the cells ----------------------------------------------------------------
-constexpr std::uint32_t kState = 0x8034E2;
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml).
 // kRun: now MoveScript_Var7 (symbols.toml). MoveScript_Var7
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml).
 constexpr std::uint32_t kTimer = 0x8034E6;        // u16

@@ -461,7 +461,7 @@ void SeedMenu() {
     B(ShopStates_Clear0A_addr) = static_cast<unsigned char>(PickOf(0x7F, 0x7F, 0, 1));
     B(FieldS_PickRow_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 7, 8, 0xFF, 0x7F, sh::Next() % 8));
     B(FieldS_Answer_addr) = static_cast<unsigned char>(PickOf(0, 1, 0xB, 0xC, 0xE, 0xF, sh::Next()));
-    B(AreaW3c_Load0F_addr) = static_cast<unsigned char>(PickOf(2, 0xC, sh::Next()));
+    B(at::kMessageEnd) = static_cast<unsigned char>(PickOf(2, 0xC, sh::Next()));
     // the reserve's bytes, then its count - which is the reserve's fourth byte
     // (docs/field_s.md section 7, L2): at most 5, so every loop over it stays
     // inside the region

@@ -533,7 +533,7 @@ void Seed15(unsigned k) {
     if (sh::Half()) B(Field_Request_addr) = PickOf<std::uint8_t, 4>({0, 2, 6, 1});
     if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
     if (sh::Half()) B(Scena15_Bytes_addr + 0x1) = 0;
-    B(Scena15_Bytes_addr) = static_cast<unsigned char>(sh::Next() % 8);
+    B(kShakeShift) = static_cast<unsigned char>(sh::Next() % 8);
     if (sh::Half()) B(Scena15_Bytes_addr + 0x2) = sh::Half() ? 0 : 0xFF;
     if (sh::Half()) B(AreaW0b_PartySet_addr) = sh::Half() ? B(Scena15_Bytes_addr + 0x2) : 0xFF;
     SeedTimer();
@@ -667,7 +667,7 @@ void Move15(std::uint32_t h) {
     case 3: Effect(B(Scena15_Bytes_addr + 0x3))[0] = static_cast<unsigned char>(Effect(B(Scena15_Bytes_addr + 0x3))[0] ^ 1); break;
     case 4: B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(h >> 16); break;
     case 5: B(Scena15_Bytes_addr + 0x2) = static_cast<unsigned char>((h >> 12) & 1 ? 0 : h >> 16); break;
-    case 6: B(Scena15_Bytes_addr) = static_cast<unsigned char>((h >> 12) % 8); break;
+    case 6: B(kShakeShift) = static_cast<unsigned char>((h >> 12) % 8); break;
     case 7: B(Scena15_Bytes_addr + 0x1) = static_cast<unsigned char>((h >> 12) & 1); break;
     default: B(kCounter0) = kCounters6[(h >> 12) % (sizeof kCounters6)]; break;
     }

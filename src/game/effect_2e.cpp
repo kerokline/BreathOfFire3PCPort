@@ -362,7 +362,7 @@ extern "C" void __cdecl EffectKind48_State12_Run(void) {
 // original 0x478F10 (step 0): the burst's size word 0x92C49E = 0xC0; the burst
 // stepped 32 times (0x4794D0); when +6 is set Sound_PlayEffect(0x203); +2 up.
 extern "C" void __cdecl EffectKind48_State12_Start(void) {
-    SetWord(At(EffectKind30_Shards_addr + 0x51e), 0xC0);
+    SetWord(At(at::kBurstSize), 0xC0);
     for (int i = 0; i < 0x20; ++i) SH_AT(void (__cdecl*)(unsigned char*), at::kBurstStep)(At(EffectKind30_Shards_addr + 0xe0));
     if (S()[6] != 0) SH_CALL(Sound_PlayEffect)(0x203);
     NextStep();
@@ -401,7 +401,7 @@ extern "C" void __cdecl EffectKind48_State12_Hold(void) {
 // at 0 +9 = 0x20 and +2 up.
 extern "C" void __cdecl EffectKind48_State12_Grow(void) {
     BurstFrame();
-    AddWord(At(EffectKind30_Shards_addr + 0x51e), 6);
+    AddWord(At(at::kBurstSize), 6);
     unsigned char* s;
     if (!CountDown9(&s)) return;
     s[9] = 0x20;
@@ -412,7 +412,7 @@ extern "C" void __cdecl EffectKind48_State12_Grow(void) {
 // down, at 0 +2 up (to WeretigerFx_Next).
 extern "C" void __cdecl EffectKind48_State12_Shrink(void) {
     BurstFrame();
-    AddWord(At(EffectKind30_Shards_addr + 0x51e), 0xFFF4u);
+    AddWord(At(at::kBurstSize), 0xFFF4u);
     unsigned char* s;
     if (!CountDown9(&s)) return;
     s[2] = static_cast<unsigned char>(s[2] + 1);

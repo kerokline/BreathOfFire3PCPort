@@ -312,7 +312,7 @@ void Disturb(std::uint32_t h) {
     case 4: SetWord(mh::Mem(EyeBeam_State_addr + 2 * (v % 12)), h >> 16); break;
     case 5: mh::Mem(EyeBeam_Sparks_addr + v % 0x40)[0] = b; break;
     case 6: SetLong(mh::Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(EyeBeam_Sparks_addr)); break;
-    default: mh::Mem(EyeBeam_SpiralPoints_addr + v % 0x68)[0] = b; break;
+    default: mh::Mem(kSpiralLast + v % 0x68)[0] = b; break;
     }
 }
 

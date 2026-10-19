@@ -51,7 +51,7 @@ constexpr std::uint32_t kGenePiecesB = 0x66B1E4;
 
 // --- the row menu (handler 7 kind 14) ---------------------------------------------------
 constexpr std::uint32_t kRowText = 0x66B36C;       // four text pointers: the title, then the rows' by 0x66B37D
-constexpr std::uint32_t kRowCount = 0x66B37C;      // u8: the rows
+// kRowCount: now Rest2h_RowCount (symbols.toml). u8: the rows
 constexpr std::uint32_t kRowOrder = 0x66B37D;      // u8 each: a row's text index
 constexpr std::uint32_t kRowPiecesA = 0x66B30C;
 constexpr std::uint32_t kRowPiecesB = 0x66B330;

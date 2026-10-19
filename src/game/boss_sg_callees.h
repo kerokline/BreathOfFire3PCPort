@@ -31,12 +31,12 @@ constexpr U kFight = 0x904AAA;            // u8: the event battle (Boss_SetupTab
 constexpr U kFacing = 0x904AAC;           // u8: the battle's facing (inventory_ops.md; read as a dword, & 0xFF)
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (bit 2 set by kind 40's death flash)
 // kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 1 the win; bit 2 read by set-up 33; bit 3 set by set-up 32
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 2 read by set-up 33; bit 3 set by set-up 32
 constexpr U kActor = 0x904B34;            // u8: the acting actor (3..10 an enemy)
 constexpr U kTarget = 0x904B44;           // u8: the target (0..2 a member, 3..10 an enemy)
 
 // --- the hooks -----------------------------------------------------------------
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 

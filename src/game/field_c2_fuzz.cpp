@@ -408,7 +408,7 @@ void Disturb(U h) {
     case 4: SetWord(s + 0x3E, g_ground + (v & 0x1FF)); break;
     case 5:
         Mem(EffectKind30_Sparks_addr)[0] = static_cast<unsigned char>(v);
-        SetWord(Mem(EffectKind30_Sparks_addr + 0x2), v >> 8);
+        SetWord(Mem(at::kSparkSize), v >> 8);
         break;
     case 6: Mem(ObjTrio_addr)[0x27] = static_cast<unsigned char>(v); break;
     case 7: Camera_Distance = static_cast<short>(v); break;

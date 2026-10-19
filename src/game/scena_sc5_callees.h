@@ -32,7 +32,7 @@ namespace scena_sc5 {
 namespace at {
 
 // The scenario bytes (docs/field-modes.md section 2).
-constexpr std::uint32_t kState = 0x8034E2;      // s8: the chapter's state, 0..2
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8: the chapter's state, 0..2
 constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which scene
 constexpr std::uint32_t kStep = 0x8034E5;       // u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: a scene's frame count
@@ -47,7 +47,7 @@ constexpr std::uint32_t kScriptFlags = 0x9039A2;   // u16 Field_ScriptFlags
 // kWait: now MoveScript_WaitWordDA (symbols.toml). u16 MoveScript_WaitWordDA
 // kMusicCurrent: now AreaW1f_MusicCurrent (symbols.toml). u8: Music_Play returns at once while its track equals it
 constexpr std::uint32_t kMsgFlags = 0x7DEE44;   // u8 (MsgBoxState +4): bit 1 set once a message is done
-constexpr std::uint32_t kMemberCount = 0x929EC0;   // Field_MemberCount
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount
 constexpr std::uint32_t kSpriteCurrent = 0x937F88; // unsigned char * Sprite_Current
 // kObjTrio: now ObjTrio (symbols.toml). ObjTrio record 0
 constexpr std::uint32_t kLeaderX = 0x802D74;    // s32 ObjTrio + 0x34

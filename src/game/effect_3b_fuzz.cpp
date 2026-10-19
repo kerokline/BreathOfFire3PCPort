@@ -366,7 +366,7 @@ void Seed(unsigned k) {
     case k65Check:
     case k65Close:
         Field_Request = static_cast<unsigned char>(PickOf(3, 2, 3, 2, 0, sh::Next()));
-        SetLong(Mem(Rest4a_Clock_addr), static_cast<std::int32_t>(sh::Half() ? 5u * (sh::Next() % 0x33333333u) : sh::Next()));
+        SetLong(Mem(at::kKind65Count), static_cast<std::int32_t>(sh::Half() ? 5u * (sh::Next() % 0x33333333u) : sh::Next()));
         break;
     case k65WaitInput: Input_Held = static_cast<unsigned short>(sh::Half() ? 0 : PickOf(1, 0x100, 0x8000, sh::Next())); break;
     case k69Spawn:

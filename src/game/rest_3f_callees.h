@@ -41,7 +41,7 @@ constexpr std::uint32_t kPixTable = 0x655208;
 constexpr unsigned kPixRecords = 3;
 // kPixCursor: now Rest3f_PixCursor (symbols.toml). unsigned short *: the next pixel of the read-back
 // kPartCursor: now Rest3f_PartCursor (symbols.toml). unsigned char *: the next free particle
-constexpr std::uint32_t kPartCount = 0x6769B8;      // unsigned short: the particles made
+// kPartCount: now Rest3f_PartCount (symbols.toml). unsigned short: the particles made
 constexpr std::uint32_t kPixIndex = 0x6769BA;       // unsigned char: the capture record (both captures write 1)
 constexpr std::uint32_t kPixCellsSize = 0xC;
 // The read-back buffer is EffectKind30_Shards (0x92BF80, shared scratch); the

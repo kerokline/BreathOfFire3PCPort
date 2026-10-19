@@ -48,7 +48,7 @@ constexpr std::uint32_t kMessage = 0x7DEE48;      // u16: the message index
 // kBoxText: now Msgbox_Base (symbols.toml). the box string base
 constexpr std::uint32_t kListText = 0x7DEE50;     // the stepper pointer, the list's text
 // kListSet: now MenuWindows_ListSet (symbols.toml). u8: the list's geometry set
-constexpr std::uint32_t kListCount = 0x7DEE66;    // s8: the last item's index
+// kListCount: now MenuWindows_ListCount (symbols.toml). s8: the last item's index
 constexpr std::uint32_t kCurrent = 0x905B84;      // the window record Field_RunTaskRecords is running
 constexpr std::uint32_t kSetXY = 0x66AE2C;        // 6-byte records by set: s16 x, s16 y, s16 y stride
 

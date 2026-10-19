@@ -24,8 +24,8 @@ using U = std::uint32_t;
 
 // --- BATE, game mode 9 (the byte block 0x929F00; battle_e1_callees.h) ---
 constexpr U kMode = 0x929F00;         // u8: BATE's state (BattleExtra_States)
-// kModeStep: now FieldS_State (symbols.toml). u8: the state's step
-// kModeSub: now FieldS_Step (symbols.toml). u8: the step's sub-step
+constexpr U kModeStep = 0x929F01;     // u8: the state's step
+constexpr U kModeSub = 0x929F02;      // u8: the step's sub-step
 // kModeRequest: now ScenaSc6_Byte904C9F (symbols.toml). u8: BattleExtra_Start's state - 2 (scena_sc6.md: set with the request 7)
 // kGameStep: now Game_Step (symbols.toml). u16 Game_Step
 // kStates: now BattleExtra_States (symbols.toml). BattleExtra_States: 4, by kMode
@@ -50,8 +50,8 @@ constexpr U kGuestEquip = 0x903EFE;   // its +0x12..+0x17
 constexpr U kCategories = 0x64AE20;   // .data, u8 x 6: the item category of each equipment slot
 
 // --- the battle engine ---
-constexpr U kStep = 0x904AA1;
-// kSubStep: now BattleE4_Step2 (symbols.toml).
+// kStep: now BattleActions_Step (symbols.toml).
+constexpr U kSubStep = 0x904AA2;
 constexpr U kFlags = 0x904AA8;        // the round flags (a dword is read for bit 15)
 // kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
 constexpr U kActor = 0x904B34;        // u8: the acting actor

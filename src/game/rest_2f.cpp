@@ -109,7 +109,7 @@ constexpr U kPortraitB = 0x9398A0;
 
 // Window kind 1's message cells (the choice list).
 // kListText: now MenuWindows_ListText (symbols.toml). the choices' text (a pointer)
-constexpr U kListLast = 0x7DEE66;    // the last choice's index (s8)
+// kListLast: now MenuWindows_ListCount (symbols.toml). the last choice's index (s8)
 // kListCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the cursor (s8)
 constexpr U kListRows = 0x7DEE6F;    // a byte a choice: its line, then its y
 

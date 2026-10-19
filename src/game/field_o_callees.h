@@ -64,7 +64,7 @@ constexpr U kSlotPieces = 0x663584;
 
 // --- the movement script's tables read in place ---
 // kOp88States: now MoveCmd_Op88States (symbols.toml). 2 handlers (MoveCmd_Op88), then kOp87States' 2
-// kOp87States: now MoveCmd_Op87States (symbols.toml). 2 handlers (MoveCmd_Op87), then EventScript_OpLengths
+constexpr U kOp87States = 0x663B04;      // 2 handlers (MoveCmd_Op87), then EventScript_OpLengths
 // kOpE9States: now MoveCmd_OpE9States (symbols.toml). 4 handlers of seven words (MoveCmd_OpE9)
 // kDirectionVelocity: now MoveCmd_F9Steps (symbols.toml). 8 x (x, z) s32 by direction: MoveCmd_OpF9's step per unit of speed
 

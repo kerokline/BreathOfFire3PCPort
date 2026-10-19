@@ -375,7 +375,7 @@ void Seed(unsigned k) {
         SeedMember();
         if (c.base == 0x451750) {
             if (bh::Half()) Mem(at::kGenes + bh::Next() % 3)[0] = 0x10;
-            Mem(BattleSprites_PartyPick_addr)[0] = bh::Often() ? 3 : static_cast<unsigned char>(bh::Next());
+            Mem(at::kPartySize)[0] = bh::Often() ? 3 : static_cast<unsigned char>(bh::Next());
         }
         if (c.base == 0x452570) g_args[0] = Dirty(bh::Half() ? Mem(at::kGenes + bh::Next() % 3)[0] : bh::Next());
         break;
@@ -540,7 +540,7 @@ void Disturb(U h) {
     case 1: Mem(BattleE6_FormGroupWork_addr)[0] = b; break;
     case 2: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 6); break;
     case 3: Mem(at::kGenes + b % 3)[0] = static_cast<unsigned char>(h >> 24); break;
-    case 4: Mem(BattleSprites_PartyPick_addr)[0] = b; break;
+    case 4: Mem(at::kPartySize)[0] = b; break;
     default: Mem(BattlePhases_B89_addr)[0] = h & 0x1000000 ? 0x16 : b; break;
     }
 }

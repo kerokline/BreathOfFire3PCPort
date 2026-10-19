@@ -28,13 +28,13 @@ constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase
 // kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle
 // kPoseBits: now BossSe_Script (symbols.toml). u8: bit n per enemy slot n (BattleObj_StateInit reads it as a pose base)
 // kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 0 the loss, bit 1 the win, 4 and 8 set here
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win, 4 and 8 set here
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kCommandKind = 0x904B35;      // u8: the command's kind (4 read and written here)
 // kCommand: now BattleSprites_Action (symbols.toml). unsigned char *: the command; its word +2 the id
 constexpr U kTarget = 0x904B44;           // u8: the target
 // kTargetBlock: now BattleSprites_HitBlock (symbols.toml). unsigned char *: the target's block (battle_actions.md)
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running (its object)

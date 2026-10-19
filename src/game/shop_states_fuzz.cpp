@@ -557,7 +557,7 @@ void Seed(unsigned k) {
         const U slot = Often() ? Next() % 16 : kSlots[Next() % 10];
         PutLong(Rest2c_Slot_addr, slot);
         static const int kTops[] = {0, -1, -2, -3, 1};
-        PutLong(MoveScript_PartyRecords_addr + 0x50, Often() ? slot + static_cast<U>(kTops[Next() % 5]) : Next());
+        PutLong(at::kSlotTop, Often() ? slot + static_cast<U>(kTops[Next() % 5]) : Next());
         break;
     }
     case kSaveEnd2:

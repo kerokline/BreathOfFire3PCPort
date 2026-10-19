@@ -54,7 +54,7 @@ constexpr unsigned kObjectStride = 0xA4;
 constexpr std::uint32_t kScratchSprite = 0x6BDFF0;  // the sprite Encounter_Place makes Sprite_Current
 constexpr std::uint32_t kFacing = 0x6BE070;         // u8: the formation's facing 0..3
 // kPlaced: now FieldHidden_Placed (symbols.toml). u8: enemies placed / reachable
-constexpr std::uint32_t kEnemyCount = 0x6BE084;     // u8: Encounter_FillSlots' answer
+// kEnemyCount: now FieldHidden_EnemyCount (symbols.toml). u8: Encounter_FillSlots' answer
 // kRowUsed: now FieldHidden_RowUsed (symbols.toml). unsigned char *: the row Encounter_PickRow chose
 // kCentreX: now BossSi_CentreX (symbols.toml). i32 16.16: the fight's centre
 // kCentreZ: now BossSi_CentreZ (symbols.toml).

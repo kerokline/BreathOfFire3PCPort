@@ -66,7 +66,7 @@ constexpr std::uint32_t kPlaceMessagesEnd = 0x5EF5DC;
 // kBoxStates: now WorldMapHud_BoxStates (symbols.toml). WorldMapHud_BoxStates, 4
 // kDriftUBase: now WorldMap33_DriftUV (symbols.toml). WorldMap33_DriftUV: u8 by +0xB - 2, then v base +4, cell size +8
 // kDriftVBase: now WorldMap33_DriftUV[4] (symbols.toml).
-constexpr std::uint32_t kDriftSize = 0x5EF6BC;
+// kDriftSize: now WorldMap33_DriftUV[8] (symbols.toml).
 // kRecords: now WorldMap_Records (symbols.toml). WorldMap_Records, 0x1C bytes each, the area byte at +0x18
 constexpr std::uint32_t kRecordSize = 0x1C;
 // kRecordAreas: now WorldMap_Records[6] (symbols.toml). the first record's area byte

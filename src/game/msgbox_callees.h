@@ -31,7 +31,7 @@ constexpr std::uint32_t kState = 0x7DEE40;         // u8, MsgBox_StateDispatch's
 constexpr std::uint32_t kFlags = 0x7DEE44;         // u16: 1 substitution, 2 done, 4 hold the stepper,
                                                    // 8 the effect draw, 0x10 instant print, 0x40/0x80 kept
 // kDelay: now Msgbox_Delay (symbols.toml). u8, frames until the next character
-constexpr std::uint32_t kSubCount = 0x7DEE47;      // u8, characters left of a substitution (state 0's)
+// kSubCount: now Msgbox_SubCount (symbols.toml). u8, characters left of a substitution (state 0's)
 constexpr std::uint32_t kMessage = 0x7DEE48;       // u16, the message id last opened
 // kEffectTimer: now Msgbox_EffectTimer (symbols.toml). u16, frames the effect has left, 0xFFFF forever
 constexpr std::uint32_t kBase = 0x7DEE4C;          // const unsigned char *, the message the stepper draws

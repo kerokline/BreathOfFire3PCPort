@@ -48,7 +48,7 @@ constexpr U kFlags2 = 0x904AA9;           // u8: the round flags' second byte (0
 constexpr U kPartyCount = 0x904AB0;       // u8: the members in battle, 0..3 (ObjTrio's)
 constexpr U kTurnOrder = 0x904ACC;        // u8[11]: the actors in turn order, 0xFF a spent slot
 // kTurnCursor: now BossSe_RoundSlot (symbols.toml). u8: the order's front (the loops start one before it)
-constexpr U kTurnCount = 0x904AE3;        // u8: how many of kTurnOrder are filled, 0..11
+// kTurnCount: now BattleDamage_TurnCount (symbols.toml). u8: how many of kTurnOrder are filled, 0..11
 constexpr U kActor = 0x904B34;            // u8: the acting actor 0..10 (read as a dword where noted)
 constexpr U kActingKind = 0x904B35;       // u8: 4 an ability
 constexpr U kOtherActor = 0x904B44;       // u8: the battle's other target cell (copied by slot 74)

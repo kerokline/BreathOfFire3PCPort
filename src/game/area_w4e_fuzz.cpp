@@ -248,7 +248,7 @@ U FlagsSetEffect(const U*, U answer) {
             SetWord(Sprite_Current + 0x3A, kMarks[m][1] | ((n >> 24) & 0xFF));
         }
     }
-    if (n & 2) B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(n >> 16);
+    if (n & 2) B(at::kWalkCount) = static_cast<unsigned char>(n >> 16);
     if (n & 4) Field_StatusBits = static_cast<unsigned char>(n >> 24);
     return answer;
 }
@@ -665,14 +665,14 @@ void Seed191(unsigned k) {
         if (ah::Often()) MoveScript_WaitWordDA = static_cast<unsigned short>(AH_PICK(0, 0, 1, 0x100));
         break;
     case k191Talk:
-        if (ah::Often()) B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(ah::Next() % 11);
+        if (ah::Often()) B(at::kWalkCount) = static_cast<unsigned char>(ah::Next() % 11);
         for (unsigned r = 0; r < 8; ++r)
             if (ah::Often()) B(Field_ActorStates_addr + 0xe + r * at::kCharStride) = static_cast<unsigned char>(AH_PICK(4, 5, 7, 8, 9, 0, 0xFF));
         break;
     case k191Init:
         if (ah::Half()) Cond_ByteFA = static_cast<signed char>(AH_PICK(0xE, 0xE, 0xD, 0xF, 0x8E));
         if (ah::Often()) B(Field_ActorStates_addr + 0xe) = static_cast<unsigned char>(AH_PICK(4, 5, 8, 9, 10, 0, 0xFF));
-        if (ah::Often()) B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(AH_PICK(4, 5, 6, 0, 0xFF));
+        if (ah::Often()) B(at::kWalkCount) = static_cast<unsigned char>(AH_PICK(4, 5, 6, 0, 0xFF));
         break;
     default: break;
     }

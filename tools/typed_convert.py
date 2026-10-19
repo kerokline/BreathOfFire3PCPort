@@ -965,6 +965,9 @@ class Converter:
         seam = any(seam_of(c[2]) for c in chain if c[2])
         if harness or seam:
             site.kind = 'seam' if seam else 'harness'
+            if self.bound_name(cname, entry):
+                site.reason = 'name'
+                return site
             site.tiers = addr_tiers
             if not site.tiers:
                 site.reason = 'inside-entry'
@@ -983,7 +986,7 @@ class Converter:
         pointer_form = sem is not None and sem[0] in ('ptr', 'addr')
         if typed:
             site.span = (typed[0][0], typed[0][1])
-            site.tiers = typed + (addr_tiers if pointer_form else [])
+            site.tiers = typed + (addr_tiers if pointer_form and not self.bound_name(cname, entry) else [])
             return site
         if pointer_form or (sem is None and not vocab):
             # a pointer form nobody loads through here, or the address handed
@@ -999,10 +1002,22 @@ class Converter:
         if site.kind == 'bare' and 'at::' not in cname and off:
             site.reason = 'inside-entry'
             return site
+        if self.bound_name(cname, site.entry):
+            site.reason = 'name'
+            return site
         site.tiers = addr_tiers
         if not site.tiers:
             site.reason = 'inside-entry'
         return site
+
+    @staticmethod
+    def bound_name(cname, entry):
+        """A constant named as a bound or a size (`kCellsEnd`, `kBurstSize`)
+        whose value is another entry's address: renaming it would read as
+        that entry, so its address forms stay raw. A load through it reads
+        the entry whatever its name, so typed forms are not asked this."""
+        m = BAD_BARE_NAME.search(cname.split('::')[-1])
+        return bool(m) and m.group(1).lower() not in entry['name'].lower()
 
     def addr_tiers(self, site, entry, off, esize):
         if off % esize != 0 or (off and 'count' not in entry):
@@ -1627,7 +1642,8 @@ def retire(conv, dry_run=False, since=None):
     removed = []
 
     def strip_notes(text):
-        return '\n'.join(l for l in text.split('\n') if not NOTE.match(l))
+        # a note's own name is not a use; the comment it kept may be one
+        return '\n'.join(NOTE.sub('//', l) for l in text.split('\n'))
 
     plain = {f.rel: strip_notes(f.raw) for f in files}
     for f in files:
@@ -1657,12 +1673,14 @@ def retire(conv, dry_run=False, since=None):
                 v = dc.eval_expr(rhs, env)
                 if v is None or typed_name(v) is None:
                     continue
-                pat = re.compile(r'(?<![\w])' + re.escape(name) + r'(?![\w])')
+                # a use: the bare name, or reached through an `at::`; not
+                # another scope's enumerator (`Shape::kState`)
+                pat = re.compile(r'(?:(?<![\w:])|(?<=\bat::))' + re.escape(name) + r'(?![\w])')
                 uses = 0
                 for r in seers:
                     n = len(pat.findall(plain[r]))
                     if r == f.rel:
-                        n -= len(pat.findall(stmt_text))
+                        n -= 1    # its own declarator; a sibling's initialiser using it counts
                     uses += n
                 if uses == 0:
                     for g in files:
@@ -1671,7 +1689,9 @@ def retire(conv, dry_run=False, since=None):
                         for l2 in plain[g.rel].split('\n'):
                             if pat.search(l2) and stem in l2:
                                 uses += 1
-                if uses == 0 and BAD_BARE_NAME.search(name):
+                if uses == 0 and BAD_BARE_NAME.search(name) and not since:
+                    # (with `since`, a constant this stage left unused had
+                    # only accessor uses, which read it as an address)
                     uses = 1
                 if uses == 0 and since:
                     # used at `since`: in a file that sees this one, beyond its definition

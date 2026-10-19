@@ -36,7 +36,7 @@ constexpr rdata::Const kSixteenth{0x5C41E0};     //   0.0625
 
 // Cells the kinds keep outside their records.
 constexpr std::uint32_t kShardCursor = 0x67610C;    // EffectKind40_ShardCursor: kind 0x40's shard being stepped
-constexpr std::uint32_t kPixelCount = 0x676110;    // EffectKind6B_PixelCount: kind 0x6B's particles (u16)
+// kPixelCount: now EffectKind6B_PixelCount (symbols.toml). EffectKind6B_PixelCount: kind 0x6B's particles (u16)
 constexpr std::uint32_t kHeights = 0x676114;    // EffectKind6B_Heights: 80 s16, the lowest pixel of
 constexpr unsigned kHeightCount = 80;                                           //   each column (the 0xA0 bytes cleared)
 // kSparkSide: now EffectKind43_SparkSide (symbols.toml). EffectKind43_SparkSide: kind 0x43's next side (0 / 1)

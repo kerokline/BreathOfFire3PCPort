@@ -69,7 +69,7 @@ constexpr std::uint32_t kBootClearBytes = 0x42C * 4;
 // kButtons: now Gfx_UnpackScratch[0x1f000] (symbols.toml). the field's button map (input-script.md section 4)
 // kButtonDefaults: now ModeFlow_ButtonDefaults (symbols.toml). its 18 bytes of defaults
 // kPartyCombination: now AreaW0b_PartySet (symbols.toml).
-constexpr std::uint32_t kConfigBytes = 0x903A58;     // 1, then six zeros; +2 is the window colour 0x903A5A
+// kConfigBytes: now ModeFlow_ConfigBytes (symbols.toml). 1, then six zeros; +2 is the window colour 0x903A5A
 // kPoolA: now BattleE2_AnimSet (symbols.toml). dword, 0x8B3580
 // kPoolB: now MoveScript_TintRecords[0x180] (symbols.toml). dword, 0x8C3584
 // The tint and slot resets.

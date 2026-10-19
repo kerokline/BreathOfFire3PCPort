@@ -250,7 +250,7 @@ void PlantCell(bool random_place) {
     cx[1] = 0;
     cz[1] = 0;
     const U n = (at::kA16CellsEnd - Area16_Cells_addr) / 4;
-    unsigned char* const last = Mem(Area16_PlaceMessages_addr - 4);
+    unsigned char* const last = Mem(at::kA16CellsEnd - 4);
     last[0] = cx[0];
     last[1] = cz[0];
     // the sentinel's id follows the words, so a search with stale words (or

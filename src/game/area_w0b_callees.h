@@ -53,7 +53,7 @@ constexpr U kAreaTextOffset = 0x803588;
 constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen (the hook's list shows "????????")
 // kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16 (no Item_NamePtr call)
 // kMoney: now Party_Zenny (symbols.toml). dword
-constexpr U kChoice = 0x7DEE67;           // s8: the choice the message box committed
+// kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). s8: the choice the message box committed
 constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
 constexpr U kCounter = 0x90384B;          // area 21's trade counter, 0..7
 constexpr U kScriptVar = 0x903848;        // a movement-script variable byte (the choices set it)
@@ -91,7 +91,7 @@ constexpr U kA16Buttons8End = 0x5E6010;
 // kA16Record4States: now Area16_Record4States (symbols.toml). 2 (0x408990 another area's shared one)
 // kA16DriftUBase: now Area16_DriftUV (symbols.toml). u8 by +0xB - 2; v base +4, cell size +8
 // kA16DriftVBase: now Area16_DriftUV[4] (symbols.toml).
-constexpr U kA16DriftSize = 0x5E603C;
+// kA16DriftSize: now Area16_DriftUV[8] (symbols.toml).
 
 // --- the other areas' tables --------------------------------------------------
 // kA20Cells: now Area20_Cells (symbols.toml). (u8 x, u8 z) x 8

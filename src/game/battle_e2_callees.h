@@ -54,8 +54,8 @@ constexpr U kActKind = 0x904B35;          // u8: the action's kind (1 attack, 2,
 constexpr U kTarget = 0x904B44;           // u8: the target, 0xFF none
 constexpr U kMagicId = 0x904B80;          // u16: the ability or spell id
 constexpr U kPickList = 0x904B84;         // u8[3]: the list effect 9 compares its +0xB with
-constexpr U kPickCount = 0x904B87;        // u8: entries of that list
-constexpr U kSavedCount = 0x904B8F;       // u8: the party count Accession kept (magic_s33.cpp)
+// kPickCount: now BattleE5_GeneCount (symbols.toml). u8: entries of that list
+// kSavedCount: now BattleE2_SavedCount (symbols.toml). u8: the party count Accession kept (magic_s33.cpp)
 // kPlace94: now BattleE2_Place94 (symbols.toml). u8, u8: copied into 0x9045FD / 0x9045FE
 // kPlace95: now BattleE2_Place95 (symbols.toml).
 
@@ -79,7 +79,7 @@ constexpr U kOwner = 0x93B940;            // the running slot's owner (a pointer
 constexpr U kEnemyCurrent = 0x939AD8;     // the current enemy (a pointer)
 
 // --- the window records (WindowRecords 0x803160, stride 0x24) ------------------
-constexpr U kWindow1Count = 0x80318E;     // record 1 (0x803184) +0xA: the party count
+// kWindow1Count: now Rest3a_Win1Slot (symbols.toml). record 1 (0x803184) +0xA: the party count
 constexpr U kWindow1X = 0x803188;         // record 1 +4 (u16): x by the count
 constexpr U kPartyGauges = 0x80333F;      // record 13 + i (0x803334 + 0x24 i) +0xB / +0xC: HP / AP gauge bytes
 constexpr U kPartyValues = 0x803348;      // the same records +0x14 / +0x16: u16 HP, u16 AP

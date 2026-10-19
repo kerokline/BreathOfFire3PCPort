@@ -48,7 +48,7 @@ constexpr U kRoundFlags = 0x904AA8;       // u16: bit 2 an action's end, 6, 7 (a
 constexpr U kPartyCount = 0x904AB0;       // u8: the members the party loops walk (ObjTrio holds three)
 // kMembersUp: now BattleSprites_PartyPick (symbols.toml). u8: counted down as a member falls; 0 is the loss
 // kEnemiesLeft: now BattleE2_EnemiesLeft (symbols.toml). u8: counted down as an enemy leaves; 0 is the win
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 0 the loss, bit 1 the win
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
 // kKindsSeen: now BattleMisc_BannerKinds (symbols.toml). u8: the message kinds seen this frame (battle_windows.md)
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the action's kind (1, 4, 5 read here)

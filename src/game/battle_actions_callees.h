@@ -42,7 +42,7 @@ constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (0x904AA9 its high byt
 constexpr std::uint32_t kQueue = 0x904ACC;         // u8 per slot: the actors in turn order, 0xFF a spent slot
 // kQueueAt: now BossSe_RoundSlot (symbols.toml).
 constexpr std::uint32_t kQueueEnd = 0x904AE3;  // u8 each
-constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8
 // The acting actor's block and the target's, 0x10 bytes each and the same
 // layout: +0 the actor (0..2 a member, 3..10 an enemy; the target byte may be
 // 0x40 / 0x80 / 0xC0, a side), +1 the command kind (the actor's), +2 / +4 /
@@ -61,7 +61,7 @@ constexpr std::uint32_t kNameBuf = 0x904EA0;       // the banner's 16-byte name 
 constexpr std::uint32_t kBannerShown = 0x8031F3;   // u8, set to 1 with a banner
 constexpr std::uint32_t kStats = 0x939FE0;         // 32 bytes: the actor's effective stat block, copied per action
 // kMsgBusy: now BattleE1_MessageUp (symbols.toml). u8: non-zero, the enemy message step waits
-constexpr std::uint32_t kMsgCount = 0x93C2A2;      // u8: messages left in 0x939FBC..
+// kMsgCount: now BattleE5_EnemyMessageCount (symbols.toml). u8: messages left in 0x939FBC..
 constexpr std::uint32_t kMsgList = 0x939FBC;       // 4 bytes per message (1-based): +0 the enemy, +2 the u16 message id
 // kCancelButtons: now Field_CancelButtons (symbols.toml). u16, Field_CancelButtons
 // kInputHeld: now Input_Held (symbols.toml). u16, Input_Held

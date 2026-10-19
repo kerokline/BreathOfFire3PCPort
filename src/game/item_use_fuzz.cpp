@@ -80,7 +80,7 @@ void Disturb() {
     case 3: At(at::kWindow0State)[0] = static_cast<unsigned char>(v); break;
     case 4: At(ItemUse_ColorHigh_addr)[0] = static_cast<unsigned char>(v); break;
     case 5: Game_Step = static_cast<unsigned short>(h >> 16); break;
-    case 6: At(ModeRest_AreaAsked_addr)[0] = static_cast<unsigned char>(v); break;
+    case 6: At(at::kTiaraCount)[0] = static_cast<unsigned char>(v); break;
     case 7: At(FieldS_State_addr)[0] = static_cast<unsigned char>(v); break;
     case 8: At(ObjTrio_addr + 0x34 + v % 8)[0] = static_cast<unsigned char>(h >> 20); break;
     case 9: Game_AreaNumber = static_cast<unsigned short>(v % 4); break;

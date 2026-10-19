@@ -18,7 +18,7 @@ constexpr std::uint32_t kPiece = bof3::addr::UiSprite_Draw;           // E1F: (i
 // kTradeStep: now Effect1g_TradeStep (symbols.toml). u8: the open, run and leave steps' index
 // kLeaveSteps: now ItemTrade_LeaveSteps (symbols.toml). ItemTrade_LeaveSteps, 2 (its symbols.gen.h name is a typed-pointer macro)
 // kTradePick: now Effect1g_TradePick (symbols.toml). u8: the entry picked, bit 7 and bit 6 marks
-constexpr std::uint32_t kTradeRowCount = 0x6BE08D;   // u8: the entries on the screen
+// kTradeRowCount: now Effect1g_TradeRowCount (symbols.toml). u8: the entries on the screen
 // kTradeQuantity: now Effect1g_TradeQuantity (symbols.toml). s8: 1..99
 // kTradeAnswer: now Effect1g_TradeAnswer (symbols.toml). u8: the yes / no hand
 // kTradeRow: now AreaEntry_PendingFlags (symbols.toml). u8: which ten-byte row of kTradeIndex the screen shows

@@ -21,8 +21,8 @@ using U = std::uint32_t;
 namespace at {
 // The field menus' state block (docs/menu-screens.md): 0x929F00.. bytes.
 // kMenuDone: now BattleE1_Mode (symbols.toml). u8: 1 ends the menu (ShopTrade_Close)
-// kState: now FieldS_State (symbols.toml). u8: the shop's state, 0..4 (ShopTrade_States)
-// kSub: now FieldS_Step (symbols.toml). u8: the state's step
+constexpr U kState = 0x929F01;        // u8: the shop's state, 0..4 (ShopTrade_States)
+constexpr U kSub = 0x929F02;          // u8: the state's step
 constexpr U kCounter = 0x929F04;      // u8: frames before the next step
 // kByte05: now MenuLists_Cursor (symbols.toml). u8, cleared by ShopTrade_OpenWait
 constexpr U kMember = 0x929F06;       // s8: the member the equip steps are on

@@ -248,7 +248,7 @@ void Move(U h) {
     case 8: SetW(Rest4b_Help_addr, v & 1 ? 0x3D : (v & 2 ? 0xFFFF : w & 0x1FF)); break;
     case 9: B(SlotAt(w % 8 + 1) + (v % 3)) = static_cast<unsigned char>(v % 3 == 1 ? (w >> 3) % 3 : (v & 4 ? 0 : 4 + (w >> 3) % 10)); break;
     case 10: B(Rec(w % 60) + 1 + v % 3) = static_cast<unsigned char>(v % 3 == 0 ? (w >> 6) % 8 + 1 : w >> 6); break;
-    case 11: B(FieldE2_LevelA_addr) = static_cast<unsigned char>(v % 7); break;
+    case 11: B(at::kListCount) = static_cast<unsigned char>(v % 7); break;
     case 12: SetL(Rest4a_Clock_addr, h * 0x9E3779B1u); break;
     case 13: B(Rest4b_Toggle_addr + (w % 2 ? 1 : 0)) = static_cast<unsigned char>(v & 1); break; // the toggle or 0x675F7D
     case 14: B(Rest4b_CursorMode_addr + w % 3) = static_cast<unsigned char>(v % 5); break;
@@ -465,7 +465,7 @@ void SeedBoard() {
     B(Rest4b_SavedA_addr) = static_cast<unsigned char>(sh::Next());
     B(Rest4b_SavedMode_addr) = static_cast<unsigned char>(sh::Next() % 11);
     B(Rest4b_CountA_addr) = static_cast<unsigned char>(sh::Next());
-    B(FieldE2_LevelA_addr) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 6, sh::Next() % 9));
+    B(at::kListCount) = static_cast<unsigned char>(PickOf(0, 1, 4, 5, 6, sh::Next() % 9));
     B(Rest4a_LevelLit_addr) = static_cast<unsigned char>(sh::Next());
     SetW(Game_AreaNumber_addr, PickOf(0xAF, 0xB0, 0xB4, 0xB9, sh::Next() % 0x100, sh::Next()));
     B(Field_Request_addr) = static_cast<unsigned char>(PickOf(0, 2, 2, 1, sh::Next()));

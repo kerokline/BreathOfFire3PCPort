@@ -28,7 +28,7 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
-constexpr U kChoice = 0x7DEE67;           // s8: the choice the message box committed
+// kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). s8: the choice the message box committed
 constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
 // kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the flag bank every Flags_* call here is handed
 constexpr U kFlagsCC = 0x9040CC;          // a second bank: area 42 tests its bits 0x5C..0x5E
@@ -45,7 +45,7 @@ constexpr U kFoundSlot = 0x903850;        // a found slot (word or byte, as each
 // kCameraAngle1: now Camera_Angles[1] (symbols.toml). Camera_Angles[1]
 // kCameraAngle2: now Cond_AngleFB (symbols.toml). Camera_Angles[2] (Cond_AngleFB's low half)
 constexpr U kTextBuffer = 0x904BA0;       // area 42's time string, by Crt_sprintf
-// kRank: now Area42_Rank (symbols.toml). u8: area 42's result, 0..2 (its init and its check write it)
+constexpr U kRank = 0x675A00;             // u8: area 42's result, 0..2 (its init and its check write it)
 constexpr U kCells44 = 0x90384B;          // u8: area 44's two gates, bits 0..1 and 4..5
 constexpr U kCount44 = 0x90384A;          // u8: area 44's init zeroes it with kCells44
 constexpr U kDrop46 = 0x903849;           // u8: area 46's party-drop state (1 armed, 2 / 0 done)
@@ -92,7 +92,7 @@ constexpr U kA45NameSetsEnd = 0x5F7653;
 // kA45Record4States: now Area45_Record4States (symbols.toml). 2: Area45_Record4MarkCell, Area45_Record4Tick (shared)
 // kA45DriftUBase: now Area45_DriftUV (symbols.toml). u8 by +0xB - 2; v base +4, cell size +8
 // kA45DriftVBase: now Area45_DriftUV[4] (symbols.toml).
-constexpr U kA45DriftSize = 0x5F7734;
+// kA45DriftSize: now Area45_DriftUV[8] (symbols.toml).
 
 // --- area 45's world-map cells (area 16's, docs/area_w0b.md) -------------------
 // kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count

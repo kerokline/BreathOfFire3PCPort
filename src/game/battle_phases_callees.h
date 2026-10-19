@@ -31,8 +31,8 @@ namespace at {
 
 // The battle's globals (PSX 0x801462DC..): the phase and its two sub-steps.
 constexpr std::uint32_t kPhase = 0x904AA0;         // u8 (read as a dword by Battle_PhaseDispatch)
-// kStep: now BattleActions_Step (symbols.toml). u8: the phase's step
-// kSubStep: now BattleE4_Step2 (symbols.toml). u8: the step's own step; the chosen command in the menu
+constexpr std::uint32_t kStep = 0x904AA1;          // u8: the phase's step
+constexpr std::uint32_t kSubStep = 0x904AA2;       // u8: the step's own step; the chosen command in the menu
 // kSubStep2: now BattleE4_Step3 (symbols.toml). u8: zeroed by Cmd_ConfirmDefend
 // kTapTimer: now BossSb_Countdown (symbols.toml). u8: frames left for a second tap (8)
 // kTapCommand: now BattleE5_GeneRow (symbols.toml). u8: the command + 1 the first tap chose
@@ -50,8 +50,8 @@ constexpr std::uint32_t kCrossGrow = 0x904ABC;     // u8 x 7: the command cross'
 // kMenuIndex: now BattleActorCopies_EntryCount (symbols.toml). s8: the entry of kEntryOrder the menu is at
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: 1 and 2 show messages 0x16 / 0x17 at the start; 2+ no cross
 // kAE6: now BattlePhases_AE6 (symbols.toml).
-constexpr std::uint32_t kDropCount = 0x904AE7;
-constexpr std::uint32_t kBattleEnd = 0x904AE8;
+// kDropCount: now BattleE7_DropCount (symbols.toml).
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml).
 // kAE9: now BattleMisc_BannerKinds (symbols.toml). u8: bit 1 holds the phases until phase 5
 // kExpTotal: now BattleFlow_ExpTotal (symbols.toml).
 // kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml).
@@ -79,7 +79,7 @@ constexpr std::uint32_t kMenuActor = 0x939EC4;     // unsigned char*: the member
 constexpr std::uint32_t kMenuRecord = 0x939FA0;    // unsigned char*: that member's +0x124, its command record
 // kMessageBusy: now BattleE1_MessageUp (symbols.toml). u8
 constexpr std::uint32_t kMessages = 0x939FBC;      // 4-byte records by 1..count: u8 enemy, -, u16 message
-constexpr std::uint32_t kMessageCount = 0x93C2A2;  // u8
+// kMessageCount: now BattleE5_EnemyMessageCount (symbols.toml). u8
 constexpr std::uint32_t kC2A0 = 0x93C2A0;          // u8, zeroed with 0x93C2A1 by BattleIntro_OpenWindows
 constexpr std::uint32_t kB8E0 = 0x93B8E0;          // u8, zeroed by Battle_CommitRound
 // The window records (WindowRecords, 0x24 each).

@@ -31,10 +31,10 @@ namespace at {
 // The battle's state bytes (PSX 0x801462DC..): the phase's low byte, then the
 // sub-states the stubs dispatch on.
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8 here (Battle_PhaseDispatch reads the dword's low byte)
-// kState1: now BattleActions_Step (symbols.toml). u8: the phase's step
-// kState2: now BattleE4_Step2 (symbols.toml). u8: the step's sub-step
-// kState3: now BattleE4_Step3 (symbols.toml). u8: the result's step
-// kState4: now BattleE4_Step4 (symbols.toml). u8 (read as a dword and masked): the result's page
+constexpr std::uint32_t kState1 = 0x904AA1;       // u8: the phase's step
+constexpr std::uint32_t kState2 = 0x904AA2;       // u8: the step's sub-step
+constexpr std::uint32_t kState3 = 0x904AA3;       // u8: the result's step
+constexpr std::uint32_t kState4 = 0x904AA4;       // u8 (read as a dword and masked): the result's page
 // kCursor: now BossSb_Countdown (symbols.toml). u8: the member BattleEnd_StartMemberTask is at
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // u16; bits 2, 3 and 4 cleared here, bit 4 tested
 // kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (battle_flow.md: "event battle" is a guess)
@@ -45,13 +45,13 @@ constexpr std::uint32_t kCmdLong = 0x904ABD;      // u32, zeroed (unaligned)
 constexpr std::uint32_t kCmdWord = 0x904AC1;      // u16, zeroed (unaligned)
 // kSideMode: now BattlePhases_Initiative (symbols.toml). u8: 2 changes what the faster side gets
 // kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
-constexpr std::uint32_t kBattleEnd = 0x904AE8;    // u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 and bit 1 pick the way out (|= 2 when the last enemy falls)
 // kBattleEnd2: now BattleMisc_BannerKinds (symbols.toml). u8, zeroed on the way out
 // kExtraRound: now BattlePhases_B7A (symbols.toml). u8: 1..3, the faster side's extra round; 0 none
 // kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show
 // kTimer: now BattleFlow_AnimGate (symbols.toml). u8 (Battle_ActorSkipped's timer)
 constexpr std::uint32_t kRounds = 0x904B90;       // u32: counted up once a round
-constexpr std::uint32_t kHookEnd = 0x904B64;      // void (*)(): called as the way out is picked (0x904AE8 bit 1 the win)
+// kHookEnd: now BattleHook_End (symbols.toml). void (*)(): called as the way out is picked (0x904AE8 bit 1 the win)
 // kHookExit: now BattleHook_Exit (symbols.toml). void (*)(): called on the way out
 // kHookEvent: now BattleHook_Event (symbols.toml). unsigned (*)(int): called with 2; al 0xFF holds the round
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track, u8

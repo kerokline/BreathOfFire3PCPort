@@ -966,7 +966,7 @@ extern "C" void __cdecl EffectKind52_Trail(void) {
 // width (its last word, 0x92C49E) = 0xC0; the record put at (0x6B, 0x46) on the
 // ground.
 extern "C" void __cdecl EffectKind52_TrailStart(void) {
-    SetWord(At(EffectKind30_Shards_addr + 0x51e), 0xC0);
+    SetWord(At(at::kTrailSize), 0xC0);
     TrailPlace(0x6B0000, 0x460000);
 }
 
@@ -1002,7 +1002,7 @@ extern "C" void __cdecl EffectKind52_TrailHold(void) { SubCountDown(8); }
 // width down 0x18; +9 down, at 0 a tail jmp to Effect_Release.
 extern "C" void __cdecl EffectKind52_TrailFade(void) {
     unsigned char* const s = S();
-    unsigned char* const size = At(EffectKind30_Shards_addr + 0x51e);
+    unsigned char* const size = At(at::kTrailSize);
     SetWord(size, Word(size) - 0x18u);
     s[9] = static_cast<unsigned char>(s[9] - 1);
     if (s[9] == 0) SH_CALL(Effect_Release)();

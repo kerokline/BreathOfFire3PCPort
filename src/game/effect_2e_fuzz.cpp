@@ -426,7 +426,7 @@ void Disturb(U h) {
     }
     case 2: s[6] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 3: P(Effect2e_TrailSpin_addr)[0] = static_cast<unsigned char>(v & 1); break;
-    case 4: SetWord(P(EffectKind30_Shards_addr + 0x51e), v); break;
+    case 4: SetWord(P(at::kBurstSize), v); break;
     case 5: {
         unsigned char* const ring = P(static_cast<U>(Long(P(Effect2d_DustAnchor_addr))));
         if (sh::InRegions(ring + 8, 4)) SetLong(ring + 8, static_cast<std::int32_t>((v & 1) ? 0xF000000u : v));

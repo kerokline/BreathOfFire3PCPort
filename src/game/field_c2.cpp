@@ -431,7 +431,7 @@ extern "C" void __cdecl EffectKind30_ShardTumble(unsigned char* shard, unsigned 
 // EffectKind30_Push's and the engine's 0x46D710. No PSX twin paired.
 extern "C" void __cdecl EffectKind30_SparksInit(void) {
     EffectKind30_Sparks[0] = 0x40;
-    SetWord(At(EffectKind30_Sparks_addr + 0x2), 0);
+    SetWord(At(at::kSparkSize), 0);
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
         unsigned char* const p = At(EffectKind30_Sparks_addr + 0x4 + i * at::kSparkStride);
         const unsigned char* const s = S();
@@ -457,7 +457,7 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
     const unsigned char* s = nullptr;
     for (unsigned i = 0; i < at::kSparkCount; ++i) {
         unsigned char* const p = At(EffectKind30_Sparks_addr + 0x4 + i * at::kSparkStride);
-        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(EffectKind30_Sparks_addr + 0x2)), EffectKind30_Sparks[0]);
+        SH_CALL(EffectKind30_SparkQuad)(reinterpret_cast<const long*>(p), Word(At(at::kSparkSize)), EffectKind30_Sparks[0]);
         s = S();
         const unsigned shift = s[9] >= 0xC ? 1 : 0;
         SetUL(p + 0, UL(p + 0) + (UL(p + 0x10) << shift));
@@ -465,7 +465,7 @@ extern "C" void __cdecl EffectKind30_SparksDraw(void) {
         SetUL(p + 8, UL(p + 8) + (UL(p + 0x18) << shift));
     }
     if (s[9] >= 0xC)
-        SetWord(At(EffectKind30_Sparks_addr + 0x2), Word(At(EffectKind30_Sparks_addr + 0x2)) + 0x80u);
+        SetWord(At(at::kSparkSize), Word(At(at::kSparkSize)) + 0x80u);
     else
         EffectKind30_Sparks[0] = static_cast<unsigned char>(EffectKind30_Sparks[0] + 0xFB);
 }

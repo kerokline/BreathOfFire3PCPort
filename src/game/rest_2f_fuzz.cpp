@@ -407,7 +407,7 @@ void Seed(unsigned k) {
     if (const unsigned e = StateEntries(k)) cur[3] = static_cast<unsigned char>(sh::Next() % e);
     SeedText();
     sh::SetPointer(MenuWindows_ListText_addr, g_text + sh::Next() % 0x40);
-    B(MenuWindows_ListCount_addr) = static_cast<unsigned char>(PickOf(0xFF, 0, 1, 2, 3, 4, 5, 6, 0x80));
+    B(kListLast) = static_cast<unsigned char>(PickOf(0xFF, 0, 1, 2, 3, 4, 5, 6, 0x80));
     B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, sh::Next() % 8));
     // the menu block
     B(FieldS_State_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 0xFF, sh::Next()));
@@ -496,7 +496,7 @@ void Disturb(U h) {
     case 6: if (rec) cur[0xB] = static_cast<unsigned char>(b % 0x80); break;
     case 7: if (rec) SetWord(cur + 0x10, v & 0x1F3); break;
     case 8: sh::SetPointer(BattleWinStates_Current_addr, Mem(Rec(b % 22, 0))); break;
-    case 9: B(MenuWindows_ListCount_addr) = static_cast<unsigned char>(b % 7); break;
+    case 9: B(kListLast) = static_cast<unsigned char>(b % 7); break;
     case 10: B(Cond_Flags_addr + 0xd2 + b % 6) = static_cast<unsigned char>(v % 8); break;
     case 11: if (B(Rec(12, 0xA)) != 4) B(Rec(12, 0xA)) = static_cast<unsigned char>(b % 4); break;   // record 12 may be the list's
     case 12: B(b & 1 ? BattleE1_ModeByte9_addr : FieldS_PickRow_addr) = static_cast<unsigned char>(v % 5); break;

@@ -609,11 +609,11 @@ extern "C" void __cdecl Area189_StepArrive(void) {
         const unsigned char reserve = B(Cond_Flags_addr + 0xcf);
         if (reserve != 0) B(Cond_Flags_addr + 0xcf) = static_cast<unsigned char>(reserve + 8);
         const unsigned char bits = Field_StatusBits;
-        const unsigned char count = B(Cond_Flags_addr + 0xce);
+        const unsigned char count = B(at::kWalkCount);
         Field_StatusBits = static_cast<unsigned char>(bits | 1);
         Cond_ByteFF = 1;
         SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
-        B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(count + 1);
+        B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
         AH_CALL(Msg_OpenScript)(6);
         Field_Request = 2;
     }
@@ -748,9 +748,9 @@ extern "C" unsigned char __cdecl Area189_ExitButton(void) {
     const unsigned char* const cur = Cur();
     SetLong(Mem(AreaW2d_ReturnPoint_addr), Long(cur + 0x34));
     SetLong(Mem(AreaW4d_ReturnZ_addr), Long(cur + 0x38));
-    const unsigned char saved = B(AreaW3c_CampFlag_addr);
+    const unsigned char saved = B(at::kSavedCount);
     SetWord(Mem(AreaW4d_ReturnArea_addr), Game_AreaNumber);
-    B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(saved + 1);
+    B(at::kSavedCount) = static_cast<unsigned char>(saved + 1);
     JitterFacing();
     ChangeToPending();
     return 1;
@@ -960,12 +960,12 @@ extern "C" void __cdecl Area191_Tail53(void) {
     case 4: {
         if (AH_CALL(Sound_StreamDone)() == 0) return;
         AH_CALL(Flags_Set)(StoryFlags(), 0x82);
-        const unsigned char count = B(Cond_Flags_addr + 0xce);
+        const unsigned char count = B(at::kWalkCount);
         const unsigned char bits = Field_StatusBits;
         SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
         B(AreaW3g_Byte929EC1_addr) = 0;
         B(AreaW3g_Byte9036D0_addr) = 0;
-        B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(count + 1);
+        B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
         Field_StatusBits = static_cast<unsigned char>(bits | 1);
         B(AreaW0c_TailState_addr) = 0xA;
         return;
@@ -975,7 +975,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
         AH_CALL(ScriptFlags_Clear40)();
         AH_CALL(Field_ChangeArea)(Word(Mem(AreaW4d_ReturnArea_addr)), Long(Mem(AreaW2d_ReturnPoint_addr)), Long(Mem(AreaW4d_ReturnZ_addr)), 4);
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 | 0x40);
-        B(AreaW3c_CampFlag_addr) = 0;
+        B(at::kSavedCount) = 0;
         AH_CALL(Flags_Clear)(StoryFlags(), 0x77);
         B(AreaW0a_TailKind_addr) = 0;
         B(AreaW0c_TailState_addr) = 0;
@@ -991,7 +991,7 @@ extern "C" void __cdecl Area191_Tail53(void) {
         AH_CALL(ScriptFlags_Clear40)();
         AH_CALL(Field_ChangeArea)(0x96, 0x180000, 0x300000, 1);
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 | 0x40);
-        B(AreaW3c_CampFlag_addr) = 0;
+        B(at::kSavedCount) = 0;
         AH_CALL(Flags_Clear)(StoryFlags(), 0x77);
         const unsigned char bits = Field_StatusBits;
         B(AreaW0a_TailKind_addr) = 0;
@@ -1040,7 +1040,7 @@ extern "C" unsigned short __cdecl Area191_TalkMessage(unsigned who) {
         if (i >= 5) break;
     }
     auto a = static_cast<unsigned char>(i * 9);
-    unsigned char b = B(Cond_Flags_addr + 0xce);
+    unsigned char b = B(at::kWalkCount);
     if (b > 8) b = 8;
     const unsigned char c = B(Field_ActorStates_addr + 0xe + MoveScript_EffectState[key] * at::kCharStride);
     if (Test(Row14(), 0xA)) return AH_CALL(Area191_TalkMessageB)(a, who, b, c);
@@ -1077,9 +1077,9 @@ extern "C" void __cdecl Area191_Init(void) {
     if (Test(StoryFlags(), 0x77)) return;
     unsigned char k;
     if (!Test(Row14(), 0xA)) {
-        k = level >= 9 ? 2 : level >= 5 ? 1 : static_cast<unsigned char>(B(Cond_Flags_addr + 0xce) >= 5);
+        k = level >= 9 ? 2 : level >= 5 ? 1 : static_cast<unsigned char>(B(at::kWalkCount) >= 5);
     } else {
-        k = level >= 5 ? 2 : static_cast<unsigned char>(B(Cond_Flags_addr + 0xce) >= 5);
+        k = level >= 5 ? 2 : static_cast<unsigned char>(B(at::kWalkCount) >= 5);
     }
     for (unsigned n = 0; n < 6; ++n) {
         const unsigned char slot = AH_CALL(Sprite_FindFree)();
@@ -1095,12 +1095,12 @@ extern "C" void __cdecl Area191_Init(void) {
 // Field_StatusBits bit 0; a tail jump to Effect_Release.
 extern "C" void __cdecl Area191_Kind18Flag77(void) {
     if (!Test(StoryFlags(), 0x77)) return;
-    const unsigned char count = B(Cond_Flags_addr + 0xce);
+    const unsigned char count = B(at::kWalkCount);
     SetWord(Mem(Cond_Flags_addr + 0xcc), 0);
     B(AreaW3g_Byte929EC1_addr) = 0;
     B(AreaW3g_Byte9036D0_addr) = 0;
     const unsigned char bits = Field_StatusBits;
-    B(Cond_Flags_addr + 0xce) = static_cast<unsigned char>(count + 1);
+    B(at::kWalkCount) = static_cast<unsigned char>(count + 1);
     Field_StatusBits = static_cast<unsigned char>(bits | 1);
     AH_CALL(Effect_Release)();
 }

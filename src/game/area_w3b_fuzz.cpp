@@ -351,7 +351,7 @@ void SettleWm() {
     unsigned char* const o = Sprite_Current;
     if (o[1] >= 5) o[1] = static_cast<unsigned char>(o[1] % 5);
     // the plate's unbounded search: the place in the last animation entry
-    SetWord(Mem(Area121_Cells_addr - 4), Word(Mem(AreaW0b_Place_addr)));
+    SetWord(Mem(kFzPlateAnimsEnd - 4), Word(Mem(AreaW0b_Place_addr)));
 }
 
 void SeedWm(unsigned k) {
@@ -364,7 +364,7 @@ void SeedWm(unsigned k) {
     o[1] = static_cast<unsigned char>(o[1] % 5);
     // the place one of the four (or of the plate animations'), or none
     if (ah::Often()) SetWord(Mem(AreaW0b_Place_addr), Word(Mem((ah::Half() ? Area121_Places_addr : Area121_PlateAnims_addr) + (ah::Next() % 4) * (ah::Half() ? 2 : 4))));
-    SetWord(Mem(Area121_Cells_addr - 4), Word(Mem(AreaW0b_Place_addr)));
+    SetWord(Mem(kFzPlateAnimsEnd - 4), Word(Mem(AreaW0b_Place_addr)));
     const auto leave = [o] {
         Mem(AreaW0b_MapMode_addr)[0] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 2) : ah::Next());
         if (ah::Often()) o[0xB] = static_cast<unsigned char>(ah::Half() ? 0 : ah::Next() | 1);

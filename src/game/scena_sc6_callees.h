@@ -47,7 +47,7 @@ namespace at {
 
 // The scenario bytes (docs/field-modes.md section 2).
 // kStatusBits: now Field_StatusBits (symbols.toml). Field_StatusBits (bit 0 toggled, bit 0x80 by 0x56D6F0)
-constexpr std::uint32_t kState = 0x8034E2;      // s8: the chapter's state, 0..2
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8: the chapter's state, 0..2
 constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which scene
 constexpr std::uint32_t kStep = 0x8034E5;       // u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: run 1's count-down
@@ -73,7 +73,7 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kAngle0: now Camera_Angles (symbols.toml). s16 Camera_Angles +0
 // kAngle1: now Camera_Angles[1] (symbols.toml). s16 Camera_Angles +2
 constexpr std::uint32_t kAngle2 = 0x929ECC;     // s16 Cond_AngleFB
-constexpr std::uint32_t kMemberCount = 0x929EC0;   // Field_MemberCount
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kLoad0F: now AreaW3c_Load0F (symbols.toml). u8: run 12 waits for it after Party_AddToLists
 // kLoad10: now ScenaSc6_Load10 (symbols.toml). u8: run 12 sets 1 and waits for 0
@@ -91,7 +91,7 @@ constexpr std::uint32_t kEffectState = 0x66972C;   // MoveScript_EffectState: th
 constexpr std::uint32_t kRecord7 = 0x903A70 + 7 * 0xA4;   // character record 7 (0x903EEC)
 constexpr std::uint32_t kTextRecords = 0x904CE0;   // Text_Records: an item's name copied in, 16 bytes
 constexpr std::uint32_t kTempList = 0x939A10;   // run 8 copies the second party list here
-constexpr std::uint32_t kTempCount = 0x939A02;  // u8: and the member count here
+// kTempCount: now BossSe_PartyCopyCount (symbols.toml). u8: and the member count here
 constexpr std::uint32_t kMoveSpeeds = 0x6697F0; // Field_MoveSpeeds: 6 bytes, indexed unchecked
 constexpr std::uint32_t kSpriteCurrent = 0x937F88;   // unsigned char *Sprite_Current
 constexpr std::uint32_t kMoveScriptObject = 0x929E80;   // the movement-script object area 77 hands Scena06_Leap

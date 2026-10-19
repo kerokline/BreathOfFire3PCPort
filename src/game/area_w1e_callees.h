@@ -14,7 +14,7 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
-constexpr U kChoice = 0x7DEE67;           // s8: the choice the message box committed
+// kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). s8: the choice the message box committed
 constexpr U kMessage = 0x7DEE48;          // u16: the message a choice handler opens, 0xFFFF none
 // kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
 // kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's state
@@ -57,7 +57,7 @@ constexpr U kA65NameSetStride = 6;
 // kA65Record4States: now Area65_Record4States (symbols.toml). 2: Area65_Record4MarkCell, Area45_Record4Tick (shared)
 // kA65DriftUBase: now Area65_DriftUV (symbols.toml). u8 by +0xB - 2; v base +4, cell size +8
 // kA65DriftVBase: now Area65_DriftUV[4] (symbols.toml).
-constexpr U kA65DriftSize = 0x604960;
+// kA65DriftSize: now Area65_DriftUV[8] (symbols.toml).
 
 // --- area 65's world-map cells (area 16's and 45's, docs/area_w0b.md) ---------
 // kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count

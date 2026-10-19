@@ -35,7 +35,7 @@ constexpr U kTarget = 0x904B44;           // u8: the target
 // kGeneCost: now BattleActions_ApCost (symbols.toml). u8: the chosen genes' summed cost (battle_actions.md: the cost of ability 0x97)
 // kFormGroup: now BattleE6_FormGroup (symbols.toml). u8: the form's group code (0x675F57) kept
 constexpr U kGenes = 0x904B84;            // u8 x 3: the chosen genes
-constexpr U kGeneCount = 0x904B87;        // u8: how many
+// kGeneCount: now BattleE5_GeneCount (symbols.toml). u8: how many
 constexpr U kForm = 0x904B89;             // u8: the form code (0x675F56) kept; battle_obj_states.md reads it
 
 // --- the gene history: six records of four bytes (three genes and the form

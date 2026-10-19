@@ -507,7 +507,7 @@ void Fix() {
     SetWord(At(at::kAbility), ActionId(Next()));
     for (unsigned i = 0; i < 0x16; ++i)
         At(at::kQueue + i)[0] = static_cast<unsigned char>(Half() ? 0xFF : Actor(Next()));
-    At(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(Next() % 0x17);
+    At(at::kQueueEnd)[0] = static_cast<unsigned char>(Next() % 0x17);
     At(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(Next() % 0x17);
     At(BattleActions_Step_addr)[0] = static_cast<unsigned char>(Next() % 5);
     At(BattleE4_Step2_addr)[0] = static_cast<unsigned char>(Next() % 6);
@@ -539,7 +539,7 @@ void Seed(unsigned k) {
     }
     case kBeginAction: {
         const unsigned end = Next() % 0x17;
-        At(BattleDamage_TurnCount_addr)[0] = static_cast<unsigned char>(end);
+        At(at::kQueueEnd)[0] = static_cast<unsigned char>(end);
         At(BossSe_RoundSlot_addr)[0] = static_cast<unsigned char>(Often() && end ? Next() % end : Next() % 0x17);
         static const unsigned char kTargets[] = {0, 1, 2, 3, 5, 10, 11, 0x40, 0x80, 0xC0, 0xFF};
         At(at::kTarget)[0] = kTargets[Next() % sizeof kTargets];

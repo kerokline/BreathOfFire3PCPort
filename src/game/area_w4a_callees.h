@@ -33,7 +33,7 @@ constexpr U kTailTimer = 0x9039F6;        // u16: tail kind 32's countdown
 // kMsgState: now AreaW0c_TailState (symbols.toml).
 // kMsgArg: now AreaW0c_TailSub (symbols.toml).
 constexpr U kMessage = 0x7DEE48;          // the message word a choice handler leaves (0xFFFF: none)
-constexpr U kChoice = 0x7DEE67;           // the choice box's answer (s8)
+// kChoice: now AreaW0c_ChoiceAnswer (symbols.toml). the choice box's answer (s8)
 // kFocusObject: now AreaW1a_FocusObject (symbols.toml). the record whose talk opened the box (docs/area_w2c.md)
 constexpr U kScriptVar5 = 0x90384A;       // MoveScript variables 5 and 6 (docs/area_w0a.md)
 constexpr U kScriptVar6 = 0x90384B;

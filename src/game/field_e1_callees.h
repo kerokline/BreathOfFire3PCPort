@@ -66,7 +66,7 @@ constexpr std::uint32_t kBlink = 0x939A28;            // u8: FieldPanel_DrawBlin
 constexpr std::uint32_t kItemIds = 0x904154;          // Inventory_IdLists[0]: 128 ids
 constexpr std::uint32_t kItemCounts = 0x904354;       // Inventory_CountLists[0]: 128 counts
 constexpr std::uint32_t kObjectFlags = 0x9040CC;      // the flag bank of the field objects' +5 (event-ops.md)
-constexpr std::uint32_t kContentCount = 0x904140;     // s32: one more per field object's content taken
+// kContentCount: now FieldE1_ContentCount (symbols.toml). s32: one more per field object's content taken
 // kPartySet: now AreaW0b_PartySet (symbols.toml). u8, & 0x7F the loaded party set
 constexpr std::uint32_t kMessageWord = 0x7DEE48;      // u16: the open message's id (Msg_OpenSystem writes it)
 constexpr std::uint32_t kButtonMap = 0x903580;        // u16: a button map word of the save (input-script.md section 4)
@@ -83,7 +83,7 @@ constexpr std::uint32_t kSecondList = 0x904065;       // 3 bytes: the second par
 constexpr std::uint32_t kFormation = 0x904AAC;        // u8: the event battle's formation
 // kDropEntry: now BossH_LeaderPick (symbols.toml). u8: Party_DropIn's entry
 // kPendingFlag: now EventLeader_PendingFlag (symbols.toml). u8: a pending jump runs (Field_PendingJump)
-constexpr std::uint32_t kPendingCount = 0x904EF2;     // u8: the member the pending jump is at
+// kPendingCount: now EventLeader_PendingCount (symbols.toml). u8: the member the pending jump is at
 constexpr std::uint32_t kFlags2Lo = 0x905BA4;         // Field_ScriptFlags2's low byte, tested as a byte
 constexpr std::uint32_t kFlagsLo = 0x9039A2;          // Field_ScriptFlags' low byte, tested as a byte
 constexpr std::uint32_t kPools = 0x803580;            // MessagePools: the script pool, u16 offsets by id

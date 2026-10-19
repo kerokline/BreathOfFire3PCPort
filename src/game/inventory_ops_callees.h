@@ -20,7 +20,7 @@ constexpr std::uint32_t kFacing = 0x6BE070;       // u8: the formation's facing 
 // kPlaced: now FieldHidden_Placed (symbols.toml). u8: enemies placed / reachable, counted in memory
 constexpr std::uint32_t kOrder = 0x6BE074;        // u8 x 3: the members in placing order
 constexpr std::uint32_t kMembers = 0x6BE078;      // 4 bytes per member: +0 placed, +1 wide (its record is 2 or 6)
-constexpr std::uint32_t kEnemyCount = 0x6BE084;   // u8: the enemies 0x5925A0 chose
+// kEnemyCount: now FieldHidden_EnemyCount (symbols.toml). u8: the enemies 0x5925A0 chose
 constexpr std::uint32_t kScratchSprite = 0x6BDFF0;   // the sprite 0x591F30 makes Sprite_Current (+0x3C written)
 // kCentreX: now BossSi_CentreX (symbols.toml). i32 16.16: the fight's centre (PSX 0x80143F24)
 // kCentreZ: now BossSi_CentreZ (symbols.toml).

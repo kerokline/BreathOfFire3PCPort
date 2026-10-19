@@ -698,7 +698,7 @@ S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
     for (unsigned n = 0x80; n != 0; --n) {
         x = Add(x, step);
         step += 0x40;
-        for (unsigned k = 0; k < kSpiralPoint; k += 4) SetLong(Mem(EyeBeam_SpiralPoints_addr + k), Long(Mem(EyeBeam_SpiralPoints_addr + 0x34 + k)));
+        for (unsigned k = 0; k < kSpiralPoint; k += 4) SetLong(Mem(kSpiralLast + k), Long(Mem(EyeBeam_SpiralPoints_addr + 0x34 + k)));
         angle += 0x80;
         const int r = RandCall();
         SetLong(point, Add(static_cast<std::int32_t>((static_cast<std::uint32_t>(r & 0xFFF) - 0x800u) << 4), x));
@@ -708,7 +708,7 @@ S32_EXPORT void __cdecl EyeBeam_DrawSpiral(void) {
         s = Sin(static_cast<int>(a));
         SetLong(point + 8, RingH(s, S16(Mem(EyeBeam_State_addr + 0x12))));
         MH_AT(PointFn, bof3::addr::EyeBeam_ProjectSpiralPoint)(point);
-        MH_AT(PointFn, bof3::addr::EyeBeam_DrawSpiralSegment)(Mem(EyeBeam_SpiralPoints_addr));
+        MH_AT(PointFn, bof3::addr::EyeBeam_DrawSpiralSegment)(Mem(kSpiralLast));
     }
 }
 

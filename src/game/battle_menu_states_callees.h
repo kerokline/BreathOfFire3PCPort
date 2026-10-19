@@ -39,7 +39,7 @@ namespace at {
 // commit; its readers were not read - a hypothesis: the target cursor's)
 // kPicking: now BattleE4_Picking (symbols.toml).
 constexpr std::uint32_t kPartyCount = 0x904AB0;  // read as a dword, its low byte used
-constexpr std::uint32_t kEnemyCount = 0x904AB2;  // u8
+// kEnemyCount: now BattleActorCopies_EnemyCount (symbols.toml). u8
 // kCommandsChosen: now BattleActorCopies_EntryCount (symbols.toml). u8, one up for each command committed
 // The party item list's last page, top row and cursor, kept for its next
 // opening (ItemMenu_SetupForParty reads them back).

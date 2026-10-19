@@ -403,7 +403,7 @@ extern "C" void __cdecl Title_DrawSetB(int x, int y, unsigned flag, unsigned sha
 // never runs.
 extern "C" void __cdecl Scenario_Start(int chapter) {
     const auto c = static_cast<signed char>(chapter);
-    unsigned char* const s = At(Cond_ByteFA_addr);
+    unsigned char* const s = At(kScenarioBytes);
     s[0] = static_cast<unsigned char>(c);
     s[2] = 0;
     s[3] = 0;

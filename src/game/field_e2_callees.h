@@ -118,7 +118,7 @@ constexpr std::uint32_t kTradeStep = 0x93985E;       // u8: the open and run ste
 // kTradeOpenSteps: now ItemTrade_OpenSteps (symbols.toml). ItemTrade_OpenSteps, 2
 // kTradeRunSteps: now ItemTrade_RunSteps (symbols.toml). ItemTrade_RunSteps, 4 (the fourth, 0x594060, nobody's)
 constexpr std::uint32_t kTradePick = 0x6BE08C;       // u8: the row picked (bit 7, bit 6 marks)
-constexpr std::uint32_t kTradeRowCount = 0x6BE08D;   // u8
+// kTradeRowCount: now Effect1g_TradeRowCount (symbols.toml). u8
 // kTradeQuantity: now Effect1g_TradeQuantity (symbols.toml). u8: 1..99
 // kTradeAnswer: now Effect1g_TradeAnswer (symbols.toml). u8: the yes / no hand
 // kTradeRow: now AreaEntry_PendingFlags (symbols.toml). u8: which ten-entry row of 0x66AD10 the screen shows

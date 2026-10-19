@@ -333,7 +333,7 @@ void Seed(unsigned k) {
     if (sh::Often()) SetW(Input_Held_addr, SH_PICK(0x2000, 0x3000, 0x6000, 0x1000));
     if (sh::Often()) B(at::kTile) = static_cast<unsigned char>(0x60 + sh::Next() % 9);
     for (unsigned i = 0; i < 3; ++i)
-        if (sh::Often()) B(Cond_Flags_addr + 0xd2 + i) = static_cast<unsigned char>(SH_PICK(2, 8, 5, 4));
+        if (sh::Often()) B(at::kPartyBytes + i) = static_cast<unsigned char>(SH_PICK(2, 8, 5, 4));
     if (sh::Often()) SetD(ObjTrio_addr + 0x34, SH_PICK(0x2FFFFF, 0x300000, 0x80000000u));
     if (sh::Often()) SetD(ObjTrio_addr + 0x3c, SH_PICK(0x2000000, 0x2000001, 0x80000000u));
     if (sh::Half()) B(Effect_Objects_addr + B(at::kCounters + 3) * at::kEffectStride) = 0;

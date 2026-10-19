@@ -41,7 +41,7 @@ constexpr std::uint32_t kTimer = 0x929F04;       // a frame counter
 // kAnswer: now FieldS_Answer (symbols.toml). a yes / no answer (0 the first)
 // kObject: now ModeStates_ShopObject (symbols.toml). the touched object (0xFF none, 0xFE the save point)
 // kKeptObject: now AreaW3c_Load0F (symbols.toml). the object Inn_Begin kept
-constexpr std::uint32_t kMemberCount = 0x929EC0; // Field_MemberCount
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount
 // kColour: now BattleDraw_Colour (symbols.toml). the window style byte
 // kZenny: now Party_Zenny (symbols.toml). Party_Zenny
 // kPressed: now Input_Pressed (symbols.toml). Input_Pressed's low word

@@ -65,7 +65,7 @@ constexpr std::uint32_t kFocusObject = 0x903804;  // a sprite pointer after Came
 constexpr std::uint32_t kPitch = 0x929ECC;        // Camera_Angles[2] (Cond_AngleFB's low half), s16
 // kRedraw: now MapView_Redraw (symbols.toml). MapView_Redraw
 // kMusicTrack: now Music_Track (symbols.toml). Music_Track
-constexpr std::uint32_t kMemberCount = 0x929EC0;  // Field_MemberCount, u8
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount, u8
 // kFrameCounter: now Frame_Counter (symbols.toml). Frame_Counter
 // kEffectState: now MoveScript_EffectState (symbols.toml). MoveScript_EffectState: bytes [4], [7] and [8] index the character records
 constexpr std::uint32_t kEffectArg = 0x669744;    // MoveScript_EffectArg, s8 by member 0's +0x89

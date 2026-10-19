@@ -40,17 +40,17 @@ constexpr U kFlags = 0x904AA8;            // u16: the round flags (bit 1, 2, 6, 
 // kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (read and set by the hooks below)
 constexpr U kOrder = 0x904ACC;            // u8[]: the turn order (battle_damage.md)
 // kRoundSlot: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md) - the round's count here
-constexpr U kOrderCount = 0x904AE3;       // u8: the turn order's length
+// kOrderCount: now BattleDamage_TurnCount (symbols.toml). u8: the turn order's length
 // kInitiative: now BattlePhases_Initiative (symbols.toml). u8: 1 / 2 the side that moves first (battle_phases.md), 3 here
 // kMusicFlags: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 0x40 keeps the battle's music
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 1 the win; bits 2 and 3 set by hooks here
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bits 2 and 3 set by hooks here
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (battle_actions.md)
 constexpr U kTarget = 0x904B44;           // u8: the target (0..2 a member, 3..10 an enemy)
 constexpr U kTurn = 0x904B90;             // u32: the turn counter (battle_phases.md)
 
 // --- the hooks and the stored literals ----------------------------------------
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
 // kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
 // kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 constexpr U kEnd21 = bof3::addr::Boss21_End;            // set-up 21 / 23's end hook (BSD's)
@@ -97,7 +97,7 @@ constexpr U kPartyStride = 0x14C;
 // kSavedHp: now BossSe_SavedHp (symbols.toml). u8 (.data)
 
 // --- set-up 25's exit copy and set-up 26's counters (0x939A00..) --------------
-constexpr U kPartyCopyCount = 0x939A02;   // u8: bytes to copy
+// kPartyCopyCount: now BossSe_PartyCopyCount (symbols.toml). u8: bytes to copy
 constexpr U kPartyCopyFrom = 0x939A10;    // the bytes
 // kPartyList: now Cond_Flags[0xd5] (symbols.toml). the party list (area_harness.md: Cond_Flags' party lists)
 // kSumEnemy: now BattleE1_SumA (symbols.toml). u32: set-up 26's sum of enemy 0's s16 +0x108 (targeted, not flagged)

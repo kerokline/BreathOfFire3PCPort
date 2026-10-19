@@ -30,7 +30,7 @@ namespace scena_sc9a {
 namespace at {
 
 // The scenario bytes (docs/field-modes.md section 2).
-constexpr std::uint32_t kState = 0x8034E2;      // s8: the chapter's state, 0..2
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8: the chapter's state, 0..2
 constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which scene
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: run 11's countdown

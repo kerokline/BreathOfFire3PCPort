@@ -29,7 +29,7 @@ namespace scena_sc9b {
 namespace at {
 
 // The scenario bytes (docs/field-modes.md section 2).
-constexpr std::uint32_t kState = 0x8034E2;      // s8: the chapter's state, 0..2
+// kState: now MoveScript_PartyRecords[0x62] (symbols.toml). s8: the chapter's state, 0..2
 constexpr std::uint32_t kRun = 0x8034E4;        // s8: MoveScript_Var7, which scene
 // kStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scene's step
 constexpr std::uint32_t kTimer = 0x8034E6;      // u16: a countdown the runs keep
@@ -54,7 +54,7 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kAngleX: now Camera_Angles (symbols.toml). s16 Camera_Angles +0
 // kAngleY: now Camera_Angles[1] (symbols.toml). s16 Camera_Angles +2
 constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
-constexpr std::uint32_t kMemberCount = 0x929EC0;   // u8 Field_MemberCount
+// kMemberCount: now Field_MemberCount (symbols.toml). u8 Field_MemberCount
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kObjTrio: now ObjTrio (symbols.toml). ObjTrio: records of 0x14C
 constexpr std::uint32_t kObjStride = 0x14C;

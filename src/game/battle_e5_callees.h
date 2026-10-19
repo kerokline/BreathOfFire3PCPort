@@ -42,7 +42,7 @@ constexpr U kStep3 = 0x904AA3;            // u8: the Dragon command's part (0x44
 // kGeneCol: now BattleE1_Roster (symbols.toml). u8: the gene grid's column 0..5
 constexpr U kFlags = 0x904AA8;            // u8: the round flags' low byte (bit 7 set by Effect_QuarterAttack)
 // kCommitClear: now BattleE4_Picking (symbols.toml). u8: zeroed by the commit
-constexpr U kCommitCount = 0x904AC3;      // u8: counted up by the commit
+// kCommitCount: now BattleActorCopies_EntryCount (symbols.toml). u8: counted up by the commit
 constexpr U kActor = 0x904B34;            // u8: the acting actor
 constexpr U kActingKind = 0x904B35;       // u8: 4 an ability, 1 an attack
 constexpr U kTarget = 0x904B54;           // u8: the effect's target
@@ -53,7 +53,7 @@ constexpr U kAsk = 0x904B74;              // u16 (read as u32 for the hand): the
 // kGeneCost: now BattleActions_ApCost (symbols.toml). u8: 0x4525B0's (read against the member's AP)
 constexpr U kAbility = 0x904B80;          // u16: the acting ability
 constexpr U kGenes = 0x904B84;            // u8[3]: the genes picked
-constexpr U kGeneCount = 0x904B87;        // u8: how many of kGenes are picked, 0..3
+// kGeneCount: now BattleE5_GeneCount (symbols.toml). u8: how many of kGenes are picked, 0..3
 // kAiFlag: now BattleDamage_AiByteB97 (symbols.toml). u8: set by an AI row of kind 7
 
 // --- the command menu's cells (docs/battle_menu_states.md) ---
@@ -82,7 +82,7 @@ constexpr U kMsgText = 0x93C2C4;          // const unsigned char * of the entry
 // --- the enemy AI's scripts and the enemy messages a turn shows ---
 constexpr U kAiScripts = 0x8C5600;        // the area's AI scripts, 0x8C bytes each: four rows of 16
 constexpr U kEnemyMessages = 0x939FC0;          // 8 entries of 4 bytes: +0 the enemy (actor - 3), +2 a system message (BattleAction_EnemyMessages)
-constexpr U kEnemyMessageCount = 0x93C2A2;     // u8: entries in kEnemyMessages, 8 at most
+// kEnemyMessageCount: now BattleE5_EnemyMessageCount (symbols.toml). u8: entries in kEnemyMessages, 8 at most
 constexpr U kEnemies = 0x93B960;          // the enemies' objects, stride 0x128
 constexpr U kEnemyStride = 0x128;
 constexpr U kCurrentEnemy = 0x939AD8;     // unsigned char *

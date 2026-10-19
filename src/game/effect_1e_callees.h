@@ -59,7 +59,7 @@ constexpr std::uint32_t kEff2Word = 0x7E12F8;       // record 2 +0x18 (u32)
 // kEff4State: now Effect_Objects[0x201] (symbols.toml). record 4 +1
 // kEff4Mode: now Effect_Objects[0x206] (symbols.toml). record 4 +6
 // kEff5State: now Effect_Objects[0x281] (symbols.toml). record 5 +1
-constexpr std::uint32_t kEff5Count = 0x7E146A;      // record 5 +0xA
+// kEff5Count: now Effect_Objects[0x28a] (symbols.toml). record 5 +0xA
 constexpr std::uint32_t kEff5Frame = 0x7E1470;      // record 5 +0x10 (s32)
 // kEff6State: now Effect_Objects[0x301] (symbols.toml). record 6 +1
 // kEff6Choice: now Effect_Objects[0x306] (symbols.toml). record 6 +6

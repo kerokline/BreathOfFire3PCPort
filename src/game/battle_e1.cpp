@@ -258,7 +258,7 @@ extern "C" void __cdecl BattleExtra_ApplyTally(void) {
     BH_CALL(Stat_AddClamped)(Stat(BattleE1_GuestStat46_addr), count);
     BH_CALL(Stat_AddClamped)(Stat(BossSe_CarryB6_addr), Word(At(at::kTallyTarget + 0xC)));
     BH_CALL(Stat_AddCap999)(Stat(BattleE1_GuestHpBase_addr), Word(At(at::kTallyTarget + 0x10)));
-    BH_CALL(Stat_AddCap999)(Stat(BossSe_CarryHp_addr), Word(At(at::kTallyTarget + 0x10)));
+    BH_CALL(Stat_AddCap999)(Stat(at::kGuestHpMax), Word(At(at::kTallyTarget + 0x10)));
     BH_CALL(Stat_AddClamped)(Stat(BattleE1_GuestStat44_addr), Word(At(at::kTallyTarget + 0x14)));
     BH_CALL(Stat_AddClamped)(Stat(BossSe_CarryB4_addr), Word(At(at::kTallyTarget + 0x14)));
 }

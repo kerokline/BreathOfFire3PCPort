@@ -89,7 +89,7 @@ constexpr unsigned kViewCellCount = 56 * 28;
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 
-constexpr std::uint32_t kArea38EffectBytes = 0x5F14E8;  // Area38_EffectBytes: s8 by a party-list byte
+// kArea38EffectBytes: now Area38_EffectBytes (symbols.toml). Area38_EffectBytes: s8 by a party-list byte
 // kArea39States: now Area39_States (symbols.toml). Area39_States, 2
 constexpr unsigned kArea39StateCount = 2;
 // kArea39DriftSteps: now Area39_DriftSteps (symbols.toml). Area39_DriftSteps: 16 s8

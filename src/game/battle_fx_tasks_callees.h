@@ -43,7 +43,7 @@ constexpr std::uint32_t kEnemySize = 0x128;
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8 here: the actor watch waits out phase 5, the follower ends outside 1
 constexpr std::uint32_t kRoundCount = 0x904AA2;   // u8, + 1 by the second round hook
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // dword: 0x400 the actor watch's gate, 0x800 the magic rows'
-constexpr std::uint32_t kBattleEnd = 0x904AE8;    // u8: bit 0 gates the two round hooks
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 gates the two round hooks
 constexpr std::uint32_t kTurnGate = 0x904B34;     // u8, compared with the owner's actor
 // The sprite animation set pointer (docs/sprite-pose.md): the pose task and
 // the actor watch point it at 0x8C5D80 around their state call and back at

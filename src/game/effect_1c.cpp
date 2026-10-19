@@ -849,7 +849,7 @@ extern "C" void __cdecl EffectKind1E_DrawModel(unsigned shade) {
     Sprite_Current = Sprite_ObjectsExtra;
     SH_CALL(Gte_PushMatrix)();
     Matrix m1;
-    const auto count = static_cast<signed char>(At(UL(At(Sprite_ObjectsExtra_addr + 0x54)))[0]);
+    const auto count = static_cast<signed char>(At(UL(At(at::kModelCount)))[0]);
     SH_CALL(Sprite_ObjectMatrix)(m1.m);
     SH_CALL(Gte_SetRotMatrix)(reinterpret_cast<const unsigned long*>(&m1));
     SH_CALL(Gte_SetTransMatrix)(reinterpret_cast<const unsigned long*>(&m1));

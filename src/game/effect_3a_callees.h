@@ -43,7 +43,7 @@ constexpr std::uint32_t kMoteStride = 0x1C;
 // --- the kinds' cells (nothing else in the image reads them) -------------------
 // kMoteFlagB: now Effect3a_MoteFlagB (symbols.toml). u8: set by kind 0x68's mote state 2 (EffectKind68_ClearMotes clears)
 // kMoteFlagA: now Effect3a_MoteFlagA (symbols.toml). u8: set by kind 0x68's mote state 0
-constexpr std::uint32_t kParticleCount = 0x676264; // u16: kind 0x61's particles made
+// kParticleCount: now Effect3a_ParticleCount (symbols.toml). u16: kind 0x61's particles made
 // kVariant: now Effect3a_Variant (symbols.toml). u8: kind 0x61's frame, 0 or 1 (the member's +0x148 not 0)
 constexpr std::uint32_t kCellsSize = 8;            // 0x676260..0x676267
 

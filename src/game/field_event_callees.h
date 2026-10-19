@@ -24,7 +24,7 @@ namespace at {
 // kLeaderXHigh: now ObjTrio[0x36] (symbols.toml). ObjTrio +0x36, the integer x's low byte
 // kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml). ObjTrio +0x3A
 constexpr std::uint32_t kZoneBases = 0x660A24;        // 2 bytes a zone: base, most added
-constexpr std::uint32_t kZoneLists = 0x668D80;        // an 8-byte record list per area
+// kZoneLists: now Area_StateRecords (symbols.toml). an 8-byte record list per area
 constexpr std::uint32_t kAnimationRemap = 0x6608D8;   // 2 bytes an animation
 constexpr std::uint32_t kPartyLists = 0x904062;       // two 3-byte lists of member ids, 0xFF-ended
 // kPartySetCurrent: now AreaW0b_PartySet (symbols.toml). the loaded party set; bit 7 from PartySet_Select mode 0

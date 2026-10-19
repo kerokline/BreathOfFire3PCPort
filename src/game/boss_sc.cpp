@@ -52,7 +52,7 @@ using move_script::Word;
 // kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
 // kHookExit: now BattleHook_Exit (symbols.toml).
 // kHookEvent: now BattleHook_Event (symbols.toml).
-constexpr U kHookEnd = 0x904B64;
+// kHookEnd: now BattleHook_End (symbols.toml).
 // kPacketNext: now Gfx_PacketNext (symbols.toml).
 
 unsigned char& B(U address) { return At(address)[0]; }
