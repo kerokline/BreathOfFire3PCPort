@@ -1644,6 +1644,14 @@ void SnapRestore(bof3::SnapshotReader& r) {
     g_discarded = false;
     Snd_Device = g_live_device;
     Snd_Primary = g_live_primary;
+    // The buffer description and wave format every CreateSoundBuffer call
+    // writes (Snd_BufferDesc .. Snd_WaveFormat, up to Music_Events): the
+    // rebuild below writes them once a buffer, so the take's bytes - the last
+    // buffer made before it - are put back at the end, as the span had them.
+    const std::uint32_t scratch_at = Address(Snd_BufferDesc), scratch_end = Address(Music_Events);
+    unsigned char scratch[0x40];
+    if (scratch_end - scratch_at != 0x3C) bof3::Fatal("quicksave SOUND: Snd_BufferDesc..Music_Events is %u bytes", scratch_end - scratch_at);
+    std::memcpy(scratch, At(scratch_at), scratch_end - scratch_at);
     // The take's words, naming nothing of this process, cleared.
     Music_Buffer = nullptr;
     Music_Notify = nullptr;
@@ -1775,6 +1783,7 @@ void SnapRestore(bof3::SnapshotReader& r) {
     sound::g_stop_unseen = r.Get<std::uint32_t>();
     sound::g_unducked = r.Get<float>();
     save_menu::SetStreamMissing(r.Get<unsigned char>() != 0);
+    std::memcpy(At(scratch_at), scratch, scratch_end - scratch_at);
     bof3::Log("quicksave   SOUND restored: %u banks rebuilt, %u looping voices restarted, music %s%s at sample %u "
               "(asked %u, heard %u%s)",
               banks, restarted, kind == kMusicNone ? "none" : kind == kMusicTrack ? "track" : "stream",
