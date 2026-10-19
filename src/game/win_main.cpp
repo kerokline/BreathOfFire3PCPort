@@ -73,6 +73,7 @@
 #include "hook/exe_image.h"
 #include "hook/input_script.h"
 #include "hook/run_speed.h"
+#include "hook/snapshot.h"
 #include "hook/stallwatch.h"
 #include "hook/log.h"
 #include "render/render_d3d11.h"
@@ -437,6 +438,18 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         // owner, 2026-09-23: not needed as keys. With the backend there is
         // one device, and neither readout could be drawn (DIV-0032). Like
         // any other key they still end a pause, above.
+        // DIVERGENCE (the quicksave round's draft A, docs/quicksave.md 6): F6
+        // quicksaves and F7 quick-loads - asked here, run by the loop between
+        // two logic frames (Snapshot_Pending), never mid-frame. A held key's
+        // repeats ask nothing more.
+        if (wparam == VK_F6) {
+            if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestTake();
+            return 0;
+        }
+        if (wparam == VK_F7) {
+            if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestLoad(0x10);
+            return 0;
+        }
         if (wparam == VK_F12) {
             Save_QuickWrite();
             Overlay_Frames = kOverlayFrames;
@@ -738,6 +751,10 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     logic_ticks += q1.QuadPart - q2.QuadPart;
                 }
                 Frame_Counter += 1;
+                // The quicksave point (docs/quicksave.md 2): every task is
+                // suspended on its slice and this frame's logic and lists are
+                // done; the next iteration draws what the span then holds.
+                bof3::Snapshot_Pending();
             }
         }
     }

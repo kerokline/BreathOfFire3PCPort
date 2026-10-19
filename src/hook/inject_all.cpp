@@ -1,5 +1,7 @@
 #include "hook/inject_all.h"
 
+#include "hook/snapshot.h"
+
 #include "game/band_census.h"
 #include "hook/gapwatch.h"
 #include "game/wide_staging.h"
@@ -1475,6 +1477,8 @@ void InjectAll() {
                                 // every module's self-test, which all compared the MP3 path
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
+    Snapshot_Inject();          // the quicksave round's SN (docs/quicksave.md): the snapshot core's self-test
+                                // (BOF3X_SHADOW=snapshot) - after DrawPool_Grow, which places the hosted pool it copies
     InjectReport();
 }
 
