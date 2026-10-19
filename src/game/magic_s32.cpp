@@ -559,7 +559,7 @@ S32_EXPORT void __cdecl EyeBeam_Task(void) {
 // the sparks cleared; +9 0x3C, +1 on; sound effect 0x100.
 S32_EXPORT void __cdecl EyeBeam_Start(void) {
     const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
-    const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
+    const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::BattleTask>(slot)->owner));
     SetLong(Mem(EyeBeam_State_addr), Add(rv::As<records::SpriteHead>(caster)->x, 0x14000));
     SetLong(Mem(EyeBeam_State_addr + 0x4), rv::As<records::SpriteHead>(caster)->z);
     SetLong(Mem(EyeBeam_State_addr + 0x8), Add(rv::As<records::SpriteHead>(caster)->height, 0x2C00000));

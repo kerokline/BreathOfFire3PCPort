@@ -134,7 +134,7 @@ unsigned char* SpawnImage(unsigned parameter) {
 // The fields each image of MAGIC018/019 gets: +0x80 this task, +1 its type,
 // +2 0, +6 1, +5 the parameter.
 void SetImage008(unsigned char* t, unsigned char type) {
-    SetLong(t + 0x80, static_cast<std::int32_t>(Key(Sc())));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(t)->owner, static_cast<std::int32_t>(Key(Sc())));
     t[1] = type;
     t[2] = 0;
     t[6] = 1;

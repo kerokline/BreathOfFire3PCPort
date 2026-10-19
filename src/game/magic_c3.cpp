@@ -159,7 +159,7 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
     rv::Store(tball->work_20, static_cast<std::int32_t>(static_cast<std::uint32_t>(dy) << 16) / 10);
     SetLong(ball + 0x60, 0x100);
     rv::Store<unsigned>(tball->script_pos, 0x100);
-    SetLong(Pointer(BattleFlow_TaskCurrent_addr) + 0x80, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
+    rv::Store<std::int32_t>(rv::As<records::BattleTask>(Pointer(BattleFlow_TaskCurrent_addr))->owner, static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(ball)));
     Inc(Sc()[1]);
 }
 
@@ -167,7 +167,7 @@ C3_EXPORT void __cdecl Magic002_Start(void) {
 // +0x80) reaches 0x28.
 C3_EXPORT void __cdecl Magic002_Wait(void) {
     const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
-    const auto* const ball = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
+    const auto* const ball = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(rv::As<records::BattleTask>(slot)->owner));
     if (ball[9] < 0x28) return;
     Inc(Sc()[1]);
 }
