@@ -295,8 +295,8 @@ const std::uint8_t kKinds[] = {0x18};
 
 // Beyond effect mode's standard regions: area 48's count, the tail state byte.
 const sh::Region kRegions[] = {
-    {at::kCount48, 1},
-    {at::kTailState, 4},
+    {AreaW1c_Count48_addr, 1},
+    {AreaW0c_TailState_addr, 4},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -366,8 +366,8 @@ void Leader(const unsigned char* s, bool start) {
         lx = 0x28000u + off[sh::Next() % n];
         lz = PickOf(0x150000, 0x160000) + off[sh::Next() % n];
     }
-    SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(lx));
-    SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(lz));
+    SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(lx));
+    SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(lz));
 }
 
 void Seed(unsigned k) {
@@ -378,7 +378,7 @@ void Seed(unsigned k) {
     if (sh::Next() % 3 == 0) Field_Request = 0;
     if (sh::Next() % 3 == 0) Cond_ByteFD = 0;
     if (sh::Next() % 3 == 0) Cond_ByteFE = sh::Half() ? 0 : s[0xA];
-    if (sh::Next() % 3 == 0) Mem(at::kCount48)[0] = 0;
+    if (sh::Next() % 3 == 0) Mem(AreaW1c_Count48_addr)[0] = 0;
     if (sh::Often()) Draw_PassFlags = static_cast<unsigned char>(Draw_PassFlags | 4);
     if (k == k13Start) s[0x36] = static_cast<unsigned char>(sh::Next() % 4);
 }
@@ -419,8 +419,8 @@ void Disturb(U h) {
     case 1: SetWord(s + 0x30, (v & 1) ? 0xFF00u : v >> 1); break;
     case 2: s[0xB] = static_cast<unsigned char>((v >> 1) % 4); break;
     case 3: Cond_ByteFE = static_cast<unsigned char>((v & 1) ? s[0xA] : v >> 1); break;
-    case 4: Mem(at::kCount48)[0] = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 5: SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(Long(Mem(at::kLeaderX)) + static_cast<std::int32_t>((v & 0xFFFF) - 0x8000))); break;
+    case 4: Mem(AreaW1c_Count48_addr)[0] = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
+    case 5: SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(Long(Mem(ObjTrio_addr + 0x34)) + static_cast<std::int32_t>((v & 0xFFFF) - 0x8000))); break;
     default: break;
     }
 }

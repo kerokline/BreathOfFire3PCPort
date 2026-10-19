@@ -389,8 +389,8 @@ std::uint32_t Run(const void* fn, const Clone& c, const Args& x) {
 // 256 CLUTs of row 15 and 256 effect objects (a whole index byte's reach).
 constexpr std::uint32_t kBlockAt = 0x903850, kBlockEnd = 0x903A70 + 255 * kRecordSize + 0x18;
 constexpr unsigned kBlock = kBlockEnd - kBlockAt, kClutBytes = 256 * 64, kEffectBytes = 256 * 0x80;
-constexpr std::uint32_t kGlobalsAt = 0x937F88;
-constexpr std::uint32_t kEffectsAt = 0x7E11E0;   // Effect_Objects
+// kGlobalsAt: now Sprite_Current (symbols.toml).
+// kEffectsAt: now Effect_Objects (symbols.toml). Effect_Objects
 constexpr unsigned kGlobals = 12;
 
 struct State {
@@ -404,18 +404,18 @@ struct State {
 };
 void Capture(State& s, unsigned k) {
     std::memcpy(s.block, At(kBlockAt), kBlock);
-    std::memcpy(s.globals, At(kGlobalsAt), kGlobals);
-    if (k == kShadeBegin) std::memcpy(s.clut, At(kShadeClut), kClutBytes);
-    if (k == kBit80) std::memcpy(s.effects, At(kEffectsAt), kEffectBytes);
+    std::memcpy(s.globals, At(Sprite_Current_addr), kGlobals);
+    if (k == kShadeBegin) std::memcpy(s.clut, At(Gfx_ClutStrip_addr + 0x1e00), kClutBytes);
+    if (k == kBit80) std::memcpy(s.effects, At(Effect_Objects_addr), kEffectBytes);
     std::memcpy(s.sprite, g_sprite, sizeof g_sprite);
     std::memcpy(s.field, g_field, sizeof g_field);
     s.log = g_log;
 }
 void Apply(const State& s, unsigned k) {
     std::memcpy(At(kBlockAt), s.block, kBlock);
-    std::memcpy(At(kGlobalsAt), s.globals, kGlobals);
-    if (k == kShadeBegin) std::memcpy(At(kShadeClut), s.clut, kClutBytes);
-    if (k == kBit80) std::memcpy(At(kEffectsAt), s.effects, kEffectBytes);
+    std::memcpy(At(Sprite_Current_addr), s.globals, kGlobals);
+    if (k == kShadeBegin) std::memcpy(At(Gfx_ClutStrip_addr + 0x1e00), s.clut, kClutBytes);
+    if (k == kBit80) std::memcpy(At(Effect_Objects_addr), s.effects, kEffectBytes);
     std::memcpy(g_sprite, s.sprite, sizeof g_sprite);
     std::memcpy(g_field, s.field, sizeof g_field);
     std::memset(&g_log, 0, sizeof g_log);
@@ -487,10 +487,10 @@ Args Generate(unsigned k, State& input) {
         r[0x11] = static_cast<unsigned char>(h >> 8);
         for (unsigned i = 0x12; i < 0x18; ++i) r[i] = Pick({0x16, 0x17, 0x1F, 0x16, 0x17, 0x1F, 0});
     }
-    for (unsigned i = 0; i < 256; ++i) At(kPartyList)[i] = static_cast<unsigned char>(OneIn(4) ? Next() : Next() % 8);
+    for (unsigned i = 0; i < 256; ++i) At(Cond_Flags_addr + 0xd2)[i] = static_cast<unsigned char>(OneIn(4) ? Next() : Next() % 8);
     if (k == kShadeBegin)
         for (const auto& s : g_sprite)
-            for (unsigned i = 0; i < 64; ++i) At(kShadeClut + s[5] * 64u)[i] = static_cast<unsigned char>(Next());
+            for (unsigned i = 0; i < 64; ++i) At(Gfx_ClutStrip_addr + 0x1e00 + s[5] * 64u)[i] = static_cast<unsigned char>(Next());
 
     Args x{};
     for (auto& a : x.a) a = Next();
@@ -552,7 +552,7 @@ void SelfTest() {
     constexpr unsigned kPer = 5000, kRounds = kPer * kCount;
     static State saved, input, theirs, ours;
     Capture(saved, kShadeBegin);
-    std::memcpy(saved.effects, At(kEffectsAt), kEffectBytes);
+    std::memcpy(saved.effects, At(Effect_Objects_addr), kEffectBytes);
     g = kStubs;
     unsigned bad = 0, bad_per[kCount] = {}, yes[kCount] = {}, calls = 0;
     for (unsigned round = 0; round < kRounds; ++round) {
@@ -576,7 +576,7 @@ void SelfTest() {
     }
     g = kOriginals;
     Apply(saved, kShadeBegin);
-    std::memcpy(At(kEffectsAt), saved.effects, kEffectBytes);
+    std::memcpy(At(Effect_Objects_addr), saved.effects, kEffectBytes);
     bof3::Log("shadow      event_objs self-test: %u rounds (%u per function, 22 functions), %u calls to the stand-ins, "
               "%u MISMATCHES",
               kRounds, kPer, calls, bad);

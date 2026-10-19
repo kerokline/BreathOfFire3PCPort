@@ -85,7 +85,7 @@ float Fl(U a) {
     return f;
 }
 long double SX() { return Fl(AddressOf(MapView_ScreenXY)); }   // fld / fadd dword [0x903820]
-long double SY() { return Fl(at::kScreenY); }
+long double SY() { return MapView_ScreenXY[1]; }
 void StoreFloat(unsigned char* p, long double v) {
     const float f = static_cast<float>(v);   // fstp dword
     std::memcpy(p, &f, sizeof f);
@@ -215,7 +215,7 @@ extern "C" void __cdecl EffectKind18Sub17_DrawPatch(U variant) {
     const std::int32_t x0 = (I(UL(s + 0x34)) >> 9) - 0x4000;
     StoreFloat(reinterpret_cast<unsigned char*>(MapView_ScreenXY), static_cast<long double>(x0));
     const std::int32_t z0 = (I(UL(s + 0x38)) >> 9) - 0x4000;
-    StoreFloat(At(at::kScreenY), static_cast<long double>(z0));
+    StoreFloat(At(MapView_ScreenXY_addr + 0x4), static_cast<long double>(z0));
     if (variant >= at::kPatchVariants)
         bof3::Fatal("EffectKind18Sub17_DrawPatch: variant %u, past the three bytes of each 0x65E1E8 record - the original "
                     "reads the next record's (docs/effect_5d.md section 7)",
@@ -580,7 +580,7 @@ extern "C" void __cdecl EffectKind18Sub68_Draw(void) {
     if (Abs(S16(W(at::kCameraX)) - 0x2D) > 10) return;
     if (Abs(S16(W(at::kCameraZ)) - 0x23) > 10) return;
     SetUL(reinterpret_cast<unsigned char*>(MapView_ScreenXY), 0xC6260000u);
-    SetUL(At(at::kScreenY), 0xC63A0000u);
+    SetUL(At(MapView_ScreenXY_addr + 0x4), 0xC63A0000u);
     U arc = 0;
     for (U a = 0; a < 0x8000; a += 0x1000, ++arc) {
         const U first = (arc & 0xFFFFFFF8u) == 0 ? 1 : 0;
@@ -642,7 +642,7 @@ extern "C" void __cdecl EffectKind18Sub1B_Run(void) {
         s = S();
     }
     if (s[9] == 0xF) {
-        SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x1C);
+        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x1C);
         SH_CALL(Effect_Release)();
     }
 }
@@ -1021,7 +1021,7 @@ extern "C" void __cdecl EffectKind18Sub14_Run(void) {
 // original 0x5059C0 (sub-state 0): area flag 0x3E (0x903FD8) set: the strip at
 // half (0x40) and Effect_Release; +2 up either way.
 extern "C" void __cdecl EffectKind18Sub14_Start(void) {
-    if (SH_CALL(Flags_Test)(At(at::kAreaFlags), 0x3E)) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0x3E)) {
         SH_CALL(EffectKind18Sub14_ScaleClut)(0x40);
         SH_CALL(Effect_Release)();
     }
@@ -1031,7 +1031,7 @@ extern "C" void __cdecl EffectKind18Sub14_Start(void) {
 // original 0x5059F0 (sub-state 1): once area flag 0x3E is set: +9 up one, the
 // strip at 0x80 - (+9 >> 1); at 0x80 or past, a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind18Sub14_Dim(void) {
-    if (!SH_CALL(Flags_Test)(At(at::kAreaFlags), 0x3E)) return;
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0x3E)) return;
     unsigned char* s = S();
     s[9] = static_cast<unsigned char>(s[9] + 1);
     SH_CALL(EffectKind18Sub14_ScaleClut)(0x80u - (S()[9] >> 1));
@@ -1046,7 +1046,7 @@ extern "C" void __cdecl EffectKind18Sub14_ScaleClut(U scale) {
         const U w = W(at::kClutStrip + 2 * k);
         const U blue = static_cast<U>(I(((w >> 10) & 0x1F) * scale) / 128);
         const U red = static_cast<U>(I((w & 0x1F) * scale) / 128);
-        SetWord(At(at::kClutStripOut + 2 * k), (blue << 10) | red | (w & 0x83E0));
+        SetWord(At(Gfx_ClutStrip_addr + 0x740 + 2 * k), (blue << 10) | red | (w & 0x83E0));
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -1066,7 +1066,7 @@ extern "C" void __cdecl EffectKind18Sub1E_Run(void) {
 extern "C" void __cdecl EffectKind18Sub14_WaitFlag(void) {
     static const char kWho[] = "EffectKind18Sub14_WaitFlag";
     const U place = Place(kWho, at::kSub14Count, at::kSub14Flags);
-    if (SH_CALL(Flags_Test)(At(at::kAreaFlags), B(at::kSub14Flags + place))) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), B(at::kSub14Flags + place))) {
         SH_CALL(Sound_PlayEffect)(0x20A);
         const U first = SH_CALL(Effect_FindFree)() & 0xFFu;
         if (first != 0xFF) {
@@ -1366,7 +1366,7 @@ U Sub22Place() { return Place(kSub22, at::kSub22Count, at::kSub22Rect); }
 U Rect(U place, unsigned k) { return B(at::kSub22Rect + 4 * place + k); }
 
 // The record's story flag (+0x34's low byte, which sub-state 0 sets) tested.
-bool Sub22Flag() { return SH_CALL(Flags_Test)(At(at::kStoryFlags), S()[0x34]) != 0; }
+bool Sub22Flag() { return SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), S()[0x34]) != 0; }
 
 // Sub-states 2 and 4's turn: +9 0, +2 `next` (or up one), +0x3A the step;
 // the map written; sounds 0x202 and 0x201.
@@ -1447,7 +1447,7 @@ extern "C" void __cdecl EffectKind18Sub22_WaitClear(void) {
 // (-ground - 2 +0x3E) / 32. Indexes into the area block unchecked, as the
 // original's: the rectangles are the area's own cells.
 extern "C" void __cdecl EffectKind18Sub22_SetMap(void) {
-    const U flag = SH_CALL(Flags_Test)(At(at::kStoryFlags), S()[0x34]) & 0xFFu;
+    const U flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), S()[0x34]) & 0xFFu;
     U count = 0;
     if (W(S() + 0x36) == 0) {
         U off = 0;

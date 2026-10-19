@@ -133,11 +133,11 @@ void Cells(long x, long z, unsigned char c[4]) {
 // each word; the last store reads SC and +5 afresh.
 extern "C" void __cdecl Sprite_ShadeFadeBegin(void) {
     unsigned char* const s = Sprite_Current;
-    for (unsigned i = 0; i < 31; ++i) At(kShadeClut + (s[5] * 32u + i) * 2 + 1)[0] |= 0x80;
+    for (unsigned i = 0; i < 31; ++i) At(Gfx_ClutStrip_addr + 0x1e00 + (s[5] * 32u + i) * 2 + 1)[0] |= 0x80;
     s[0] = static_cast<unsigned char>(s[0] | 0x20);
     const unsigned clut = Sprite_Current[5];
     Gfx_ClutStripDirty = 1;
-    SetWord(At(kShadeClut + 0x3E + clut * 64), 0);
+    SetWord(At(Gfx_ClutStrip_addr + 0x1e00 + 0x3E + clut * 64), 0);
 }
 
 // original 0x534790 (PSX 0x801C37D8): one step of the fade; at its end the
@@ -145,7 +145,7 @@ extern "C" void __cdecl Sprite_ShadeFadeBegin(void) {
 // and the semi-transparency go. al only (callers test al).
 extern "C" unsigned char __cdecl Sprite_ShadeFadeStep(unsigned step) {
     if (!g.shade_raise(step)) return 0;
-    g.load_palette(reinterpret_cast<unsigned short*>(At(kShadeSource + Sprite_Current[5] * 64u)), 0);
+    g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + Sprite_Current[5] * 64u)), 0);
     Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xDF);
     Sprite_Current[0x5D] = 0;
     Sprite_Current[0x5E] = 0;
@@ -201,8 +201,8 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     }
     Sprite_Current[9] = static_cast<unsigned char>(Idiv(Sprite_Current[9], static_cast<std::int32_t>(speed)));
     if (Field_ScriptFlags & 0x1000) Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] << 1);
-    SetLong(Sprite_Current + 0xC, Mul(Long(At(kJumpSteps + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
-    SetLong(Sprite_Current + 0x10, Mul(Long(At(kJumpSteps + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
+    SetLong(Sprite_Current + 0xC, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u)), static_cast<std::int32_t>(speed)));
+    SetLong(Sprite_Current + 0x10, Mul(Long(At(MoveCmd_F9Steps_addr + Sprite_Current[8] * 8u + 4)), static_cast<std::int32_t>(speed)));
     const unsigned char* const s = Sprite_Current;
     const long x = LandingX(s), z = LandingZ(s);
     long ground = g.slope_at(x, z, s[8]);
@@ -375,7 +375,7 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     unsigned char hit = 0;
     if (Field_InputFlags & 1) {
         for (unsigned i = 0; i < count; ++i)
-            if (ActorState(MoveScript_EffectState[At(kPartyList)[i]]) & 0x80) hit = 1;
+            if (ActorState(MoveScript_EffectState[Cond_Flags[0xd2 + i]]) & 0x80) hit = 1;
         if (!hit) return;
     } else if (!(ActorState(f[0x148]) & 0x80)) {
         return;
@@ -387,7 +387,7 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     g.flash(1);
     if (Field_InputFlags & 1) {
         for (unsigned i = 0; i < count; ++i) {
-            const unsigned char member = At(kPartyList)[i];
+            const unsigned char member = Cond_Flags[0xd2 + i];
             if ((ActorState(MoveScript_EffectState[member]) & 0x80) && (g.hp_lose(1, member) & 0xFFFF) != 0) hit = 1;
         }
         if (!hit) return;

@@ -202,8 +202,8 @@ unsigned char* Sprite(unsigned k, const char* who) {
 // ===========================================================================
 
 namespace {
-U PanePoint(unsigned n) { return at::kPanePoints + at::kPanePointStride * n; }
-unsigned char* Pane(unsigned i) { return At(at::kPanes + at::kPaneStride * i); }
+U PanePoint(unsigned n) { return EffectKind30_Shards_addr + 0xa8 + at::kPanePointStride * n; }
+unsigned char* Pane(unsigned i) { return At(EffectKind30_Shards_addr + at::kPaneStride * i); }
 void SetPanePoints(unsigned i, unsigned p0, unsigned p1, unsigned p2, unsigned p3) {
     unsigned char* const r = Pane(i);
     SetUL(r + 0, PanePoint(p0));
@@ -297,17 +297,17 @@ extern "C" unsigned char __cdecl EffectKind87_StepPanes(void) {
                 continue;
             }
             {
-                const unsigned k = Byte(at::kSoundIndex);
+                const unsigned k = Effect4b_SoundIndex;
                 if (k >= at::kKind87SoundCount)
                     bof3::Fatal("EffectKind87_StepPanes: the sound index 0x%X is %u, past kind 0x87's three sounds at 0x%X "
                                 "- the original reads the word after (docs/effect_4b.md section 6)",
-                                (unsigned)at::kSoundIndex, k, (unsigned)at::kKind87Sounds);
+                                (unsigned)Effect4b_SoundIndex_addr, k, (unsigned)at::kKind87Sounds);
                 SH_CALL(Sound_PlayEffect)(Word(At(at::kKind87Sounds + 2 * k)));
             }
             {
-                const unsigned char n = static_cast<unsigned char>(Byte(at::kSoundIndex) + 1);
-                Byte(at::kSoundIndex) = n;
-                if (n > 2) Byte(at::kSoundIndex) = 0;
+                const unsigned char n = static_cast<unsigned char>(Effect4b_SoundIndex + 1);
+                Effect4b_SoundIndex = n;
+                if (n > 2) Effect4b_SoundIndex = 0;
             }
             r[0x19] = 0xF;
             r[0x17] = static_cast<unsigned char>(r[0x17] + 1);
@@ -421,7 +421,7 @@ void Kind88Emit(U goal) {
         SH_CALL(EffectKind88_MoveParticles)();
         s = S();
     }
-    if (UL(At(at::kExtraX)) == goal) s[1] = static_cast<unsigned char>(s[1] + 1);
+    if (UL(At(Sprite_ObjectsExtra_addr + 0x34)) == goal) s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 }  // namespace
 
@@ -439,13 +439,13 @@ extern "C" void __cdecl EffectKind88_Fade(void) {
 
 // original 0x4897A0: the 32 particles' +3 cleared.
 extern "C" void __cdecl EffectKind88_ClearParticles(void) {
-    for (unsigned i = 0; i < at::kParticleCount; ++i) At(at::kParticles + at::kParticleStride * i)[3] = 0;
+    for (unsigned i = 0; i < at::kParticleCount; ++i) At(EffectKind30_Shards_addr + at::kParticleStride * i)[3] = 0;
 }
 
 // original 0x4897C0: the first of the 32 particles whose +3 is 0, or null.
 extern "C" unsigned char* __cdecl EffectKind88_FindParticle(void) {
     for (unsigned i = 0; i < at::kParticleCount; ++i) {
-        unsigned char* const r = At(at::kParticles + at::kParticleStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kParticleStride * i);
         if (r[3] == 0) return r;
     }
     return nullptr;
@@ -461,7 +461,7 @@ extern "C" unsigned char __cdecl EffectKind88_MoveParticles(void) {
     unsigned char any = 0;
     SH_CALL(EffectGte_LoadMapCamera)();
     for (unsigned i = 0; i < at::kParticleCount; ++i) {
-        unsigned char* const r = At(at::kParticles + at::kParticleStride * i);
+        unsigned char* const r = At(EffectKind30_Shards_addr + at::kParticleStride * i);
         if (r[3] == 0) continue;
         SetUL(r + 0xC, UL(r + 0xC) + UL(r + 0x1C));
         SetUL(r + 0x10, UL(r + 0x10) + UL(r + 0x20));
@@ -472,7 +472,7 @@ extern "C" unsigned char __cdecl EffectKind88_MoveParticles(void) {
                                                             reinterpret_cast<const long*>(s + 0xC));
         SetWord(r + 6, static_cast<U>(angle));
         r[5] = static_cast<unsigned char>(r[5] - 1);
-        if (r[5] == 0 || S32(UL(r + 0xC)) >= S32(UL(At(at::kExtraX)) + 0xFFFF0000u)) r[3] = 0;
+        if (r[5] == 0 || S32(UL(r + 0xC)) >= S32(UL(At(Sprite_ObjectsExtra_addr + 0x34)) + 0xFFFF0000u)) r[3] = 0;
         SH_CALL(EffectKind88_DrawBurst)(reinterpret_cast<const long*>(r + 0xC), Word(r + 8), Word(r + 0xA), Word(r + 6), 0x80,
                                         0);
     }
@@ -629,7 +629,7 @@ extern "C" void __cdecl EffectKind89_Fade(void) {
         S()[0x5E] = static_cast<unsigned char>(S()[0x5E] + 0xFE);
         S()[0x5F] = static_cast<unsigned char>(S()[0x5F] + 0xFE);
     } else {
-        Byte(at::kStep) = static_cast<unsigned char>(Byte(at::kStep) + 1);
+        MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
         s[1] = 3;
     }
     SH_CALL(EffectKind89_DrawTint)();
@@ -971,7 +971,7 @@ extern "C" void __cdecl EffectKindA4_Brighten(void) {
         s[0x5F] = 0xFF;
         S()[0x5E] = 0xFF;
         S()[0x5D] = 0xFF;
-        Byte(at::kStep) = static_cast<unsigned char>(Byte(at::kStep) + 1);
+        MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
         S()[1] = 2;
     }
     SH_CALL(EffectKind89_DrawTint)();
@@ -1000,7 +1000,7 @@ extern "C" void __cdecl EffectKindA4_MarkSprites(void) {
             SH_CALL(Sprite_UpdateScreen)();
         }
         if ((SH_CALL(Scena15_RecordWord)(Word(o + 0x2C)) & 0xFFFFu) == 0x308 &&
-            SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(UL(At(at::kFlagRow))), 0x11) != 0) {
+            SH_CALL(Flags_Test)(reinterpret_cast<const unsigned char*>(AreaW0c_FlagRow), 0x11) != 0) {
             Sprite_Current = o;
             o[0x29] = 3;
             SH_CALL(Sprite_UpdateScreen)();
@@ -1046,7 +1046,7 @@ extern "C" void __cdecl EffectKind8A_Lines(void) {
         s = S();
         SH_CALL(EffectKind8A_DrawSegment)(reinterpret_cast<const long*>(s + 0xC), reinterpret_cast<const long*>(s + 0x18));
     }
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x91) != 0) S()[1] = 2;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x91) != 0) S()[1] = 2;
 }
 
 // original 0x48A700 (state 2): the six cells given map byte 0; Effect_Release.
@@ -1232,7 +1232,7 @@ extern "C" void __cdecl EffectKind8B_Again(void) {
 
 namespace {
 unsigned short Pad() { return Input_Pressed; }
-void CountUp() { SetWord(At(at::kCount), Word(At(at::kCount)) + 1u); }
+void CountUp() { Effect4b_Count = Effect4b_Count + 1u; }
 // The leader's x (+0x34) or z (+0x38) moved by `d`, Field_State the leader
 // (made so before the store, as the original).
 void Nudge(unsigned off, U d) {
@@ -1255,13 +1255,13 @@ extern "C" void __cdecl EffectKind8C_Start(void) {
     const unsigned r = static_cast<unsigned>(SH_CALL(Rand)()) & 0xFu;
     unsigned char* const s = S();
     const unsigned char v = At(at::kKind8CCounts + r)[0];
-    Byte(at::kTimerA) = v;
-    Byte(at::kTimerB) = v;
-    Byte(at::kPresses) = 0;
-    Byte(at::kSteps) = 0;
-    SetWord(At(at::kDirection), 0);
-    SetWord(At(at::kCount), 0);
-    SetWord(At(at::kTarget), 0);
+    Effect4b_TimerA = v;
+    Effect4b_TimerB = v;
+    Effect4b_Presses = 0;
+    Effect4b_Steps = 0;
+    Effect4b_Direction = 0;
+    Effect4b_Count = 0;
+    Effect4b_Target = 0;
     s[1] = 1;
 }
 
@@ -1270,21 +1270,21 @@ namespace {
 // as the target, +1 = 0xA; else the pad's 0x40 pressed - counted, the frame
 // count 0, +1 = 3; else +1 = `idle`.
 void Kind8CWait(unsigned short sound, unsigned char pressed, unsigned char idle) {
-    const unsigned char t = static_cast<unsigned char>(Byte(at::kTimerA) - 1);
-    Byte(at::kTimerA) = t;
+    const unsigned char t = static_cast<unsigned char>(Effect4b_TimerA - 1);
+    Effect4b_TimerA = t;
     if (t == 0) {
         SH_CALL(Sound_PlayEffect)(sound);
-        const unsigned short c = Word(At(at::kCount));
+        const unsigned short c = Effect4b_Count;
         unsigned char* const s = S();
-        SetWord(At(at::kTarget), c);
-        Byte(at::kTimerA) = 0;
+        Effect4b_Target = c;
+        Effect4b_TimerA = 0;
         s[1] = 0xA;
         return;
     }
     if (Pad() == Sigma(0x40)) {
         unsigned char* const s = S();
         CountUp();
-        Byte(at::kPresses) = 0;
+        Effect4b_Presses = 0;
         s[1] = pressed;
         return;
     }
@@ -1294,8 +1294,8 @@ void Kind8CWait(unsigned short sound, unsigned char pressed, unsigned char idle)
 // or more +1 = 0x16, else +1 = `next`.
 void Kind8CHold(unsigned short button, unsigned char next) {
     if (Pad() == Sigma(button)) CountUp();
-    const unsigned char n = static_cast<unsigned char>(Byte(at::kPresses) + 1);
-    Byte(at::kPresses) = n;
+    const unsigned char n = static_cast<unsigned char>(Effect4b_Presses + 1);
+    Effect4b_Presses = n;
     S()[1] = n >= 0x1C ? 0x16 : next;
 }
 }  // namespace
@@ -1312,12 +1312,12 @@ extern "C" void __cdecl EffectKind8C_WaitB(void) { Kind8CWait(0x201, 1, 3); }
 // original 0x48ADC0 (state 0xA): the target 0 - +1 = 0x16; else the frame
 // count 0 and +1 = 0xB.
 extern "C" void __cdecl EffectKind8C_Check(void) {
-    if (Word(At(at::kTarget)) == 0) {
+    if (Effect4b_Target == 0) {
         S()[1] = 0x16;
         return;
     }
     unsigned char* const s = S();
-    Byte(at::kPresses) = 0;
+    Effect4b_Presses = 0;
     s[1] = 0xB;
 }
 
@@ -1333,7 +1333,7 @@ extern "C" void __cdecl EffectKind8C_Steer(void) {
     case 0x3000: case 0x6000: case 0x9000: case 0xC000: break;
     default: return;
     }
-    SetWord(At(at::kDirection), w);
+    Effect4b_Direction = w;
     SH_CALL(Sound_PlayEffect)(0x202);
     switch (Pad()) {
     case 0x1000: case 0x3000: Nudge(0x38, 0xFFFFF800u); break;
@@ -1360,8 +1360,8 @@ extern "C" void __cdecl EffectKind8C_SteerWait(void) {
 // else the leader moved back by the direction (0x1000 / 0x3000 z up, 0x2000 /
 // 0x6000 x down, 0x4000 / 0xC000 z down, 0x8000 / 0x9000 x up) and +1 = 0xB.
 extern "C" void __cdecl EffectKind8C_SteerBack(void) {
-    const unsigned char n = static_cast<unsigned char>(Byte(at::kSteps) + 1);
-    Byte(at::kSteps) = n;
+    const unsigned char n = static_cast<unsigned char>(Effect4b_Steps + 1);
+    Effect4b_Steps = n;
     if (n >= 8) {
         const U z = UL(ObjTrio + 0x38) & 0xFFFFF000u;
         Field_State = ObjTrio;
@@ -1370,11 +1370,11 @@ extern "C" void __cdecl EffectKind8C_SteerBack(void) {
         unsigned char* const s = S();
         SetUL(ObjTrio + 0x34, x);
         s[1] = 0xF;
-        SetWord(At(at::kCount), 0);
-        Byte(at::kSteps) = 0;
+        Effect4b_Count = 0;
+        Effect4b_Steps = 0;
         return;
     }
-    switch (Word(At(at::kDirection))) {
+    switch (Effect4b_Direction) {
     case 0x1000: case 0x3000: Nudge(0x38, 0x800u); break;
     case 0x2000: case 0x6000: Nudge(0x34, 0xFFFFF800u); break;
     case 0x4000: case 0xC000: Nudge(0x38, 0xFFFFF800u); break;
@@ -1396,8 +1396,8 @@ extern "C" void __cdecl EffectKind8C_Ready(void) {
 // 0x14; else the pad's 0x20 - counted, the frame count 0, +1 = 0x11 and the
 // counter 0x903849 up; else Kind8CHold's count (0x1C: +1 = 0x16, else 0x10).
 extern "C" void __cdecl EffectKind8C_CountA(void) {
-    const unsigned char t = static_cast<unsigned char>(Byte(at::kTimerB) - 1);
-    Byte(at::kTimerB) = t;
+    const unsigned char t = static_cast<unsigned char>(Effect4b_TimerB - 1);
+    Effect4b_TimerB = t;
     if (t == 0) {
         S()[1] = 0x14;
         return;
@@ -1405,13 +1405,13 @@ extern "C" void __cdecl EffectKind8C_CountA(void) {
     if (Pad() == Sigma(0x20)) {
         unsigned char* const s = S();
         CountUp();
-        Byte(at::kPresses) = 0;
+        Effect4b_Presses = 0;
         s[1] = 0x11;
         Byte(at::kCounter2) = static_cast<unsigned char>(Byte(at::kCounter2) + 1);
         return;
     }
-    const unsigned char n = static_cast<unsigned char>(Byte(at::kPresses) + 1);
-    Byte(at::kPresses) = n;
+    const unsigned char n = static_cast<unsigned char>(Effect4b_Presses + 1);
+    Effect4b_Presses = n;
     S()[1] = n >= 0x1C ? 0x16 : 0x10;
 }
 
@@ -1422,18 +1422,18 @@ extern "C" void __cdecl EffectKind8C_CountPress(void) { Kind8CHold(0x20, 0x12); 
 // 0 again and +1 = 0x14; else the pad's 0x20 - counted, the frame count 0, +1
 // = 0x10; else +1 = 0x11.
 extern "C" void __cdecl EffectKind8C_CountB(void) {
-    const unsigned char t = static_cast<unsigned char>(Byte(at::kTimerB) - 1);
-    Byte(at::kTimerB) = t;
+    const unsigned char t = static_cast<unsigned char>(Effect4b_TimerB - 1);
+    Effect4b_TimerB = t;
     if (t == 0) {
         unsigned char* const s = S();
-        Byte(at::kTimerB) = 0;
+        Effect4b_TimerB = 0;
         s[1] = 0x14;
         return;
     }
     if (Pad() == Sigma(0x20)) {
         unsigned char* const s = S();
         CountUp();
-        Byte(at::kPresses) = 0;
+        Effect4b_Presses = 0;
         s[1] = 0x10;
         return;
     }
@@ -1443,11 +1443,11 @@ extern "C" void __cdecl EffectKind8C_CountB(void) {
 // original 0x48B190 (state 0x14): the count within one of the target - the
 // frame count 0, +1 = 0x15; else +1 = 0x16.
 extern "C" void __cdecl EffectKind8C_Judge(void) {
-    const std::int32_t c = static_cast<std::int32_t>(UL(At(at::kCount)) & 0xFFFFu);
-    const std::int32_t t = Word(At(at::kTarget));
+    const std::int32_t c = static_cast<std::int32_t>(UL(At(Effect4b_Count_addr)) & 0xFFFFu);
+    const std::int32_t t = Effect4b_Target;
     if (c >= t - 1 && c <= t + 1) {
         unsigned char* const s = S();
-        Byte(at::kPresses) = 0;
+        Effect4b_Presses = 0;
         s[1] = 0x15;
         return;
     }
@@ -1458,14 +1458,14 @@ extern "C" void __cdecl EffectKind8C_Judge(void) {
 // byte 0xF; Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind8C_Pass(void) {
     Byte(at::kCounter) = 0;
-    Byte(at::kStep) = 0xF;
+    MoveScript_PartyRecords[0x65] = 0xF;
     SH_CALL(Effect_Release)();
 }
 
 // original 0x48B1F0 (state 0x16): the chapter's step byte 8; Effect_Release (a
 // tail jump).
 extern "C" void __cdecl EffectKind8C_Fail(void) {
-    Byte(at::kStep) = 8;
+    MoveScript_PartyRecords[0x65] = 8;
     SH_CALL(Effect_Release)();
 }
 

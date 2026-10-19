@@ -168,7 +168,7 @@ template <typename... T> U PickOf(T... v) {
     return sh::Pick(values, sizeof...(v));
 }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + at::kSparkStride * i; }
-unsigned char* Debris(unsigned i) { return P(at::kDebris + at::kDebrisStride * i); }
+unsigned char* Debris(unsigned i) { return P(EffectKind30_Shards_addr + 0xc0 + at::kDebrisStride * i); }
 
 // --- the effects ---------------------------------------------------------------------
 
@@ -263,7 +263,7 @@ const std::uint8_t kKinds[] = {0x91, 0x94, 0x95, 0x96, 0x97, 0x98, 0x9A};
 // Beyond effect mode's standard regions: kind 0x96's level and index and kind
 // 0x95's clock word.
 const sh::Region kRegions[] = {
-    {at::kKind96Shade, 4},
+    {Effect4d_Kind96Shade_addr, 4},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -298,7 +298,7 @@ void Seed(unsigned k) {
     // ObjTrio has three records: Field_MemberCount 0..3 (ours aborts past)
     Field_MemberCount = static_cast<unsigned char>(sh::Next() % 4);
     // kind 0x96's index inside its table's eight (ours aborts past)
-    Mem(at::kKind96Index)[0] = static_cast<unsigned char>(PickOf(0, 6, 7, sh::Next() % 8));
+    Mem(Effect4d_Kind96Index_addr)[0] = static_cast<unsigned char>(PickOf(0, 6, 7, sh::Next() % 8));
     if (sh::Half()) Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(at::kKind97Cue, at::kKind9AEnd));
     if (sh::Half()) MoveScript_WaitWordDA = 0;
     switch (k) {
@@ -314,14 +314,14 @@ void Seed(unsigned k) {
         // a third of the time nothing holds it; else one hold at a time
         Field_Request = static_cast<unsigned char>(PickOf(0, 0, 3, 1, 2, sh::Next()));
         Game_Mode = static_cast<unsigned short>(PickOf(0, 0, 5, 3, 4, sh::Next()));
-        Mem(at::kTrio2Mode)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
-        Mem(at::kTrio0Mode)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
+        Mem(ObjTrio_addr + 0x3cf)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
+        Mem(ObjTrio_addr + 0x137)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
         if (sh::Often()) Input_Pressed = static_cast<unsigned short>(Input_Pressed & ~Field_MenuButton);
         // the frames at 0x1D / 0x27 (the next tips over), the ticks at 0xE
         const U mode = sh::Half() ? 0x8000u : 0u;
         const U frames = PickOf(0x1D, 0x27, 0x1E, 0x28, 0x7F, 0, sh::Next() & 0x7F) << 8;
         const U ticks = PickOf(0xE, 0xF, 0xD, 0xFF, 0, sh::Next() & 0xFF);
-        SetWord(Mem(at::kKind95Clock), mode | frames | ticks);
+        SetWord(Mem(Effect4d_Kind95Clock_addr), mode | frames | ticks);
         break;
     }
     case k97Emit:
@@ -374,8 +374,8 @@ void Disturb(U h) {
     case 1: s[6] = static_cast<unsigned char>(v); break;
     case 2: s[0x5D] = static_cast<unsigned char>((v & 1) ? 0x3Fu + ((v >> 1) & 1) : v >> 1); break;
     case 3: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? ((v & 2) ? at::kKind97Cue : at::kKind9AEnd) : v >> 2); break;
-    case 4: Mem(at::kKind96Index)[0] = static_cast<unsigned char>(v % 8); break;
-    case 5: SetWord(Mem(at::kKind95Clock), v); break;
+    case 4: Mem(Effect4d_Kind96Index_addr)[0] = static_cast<unsigned char>(v % 8); break;
+    case 5: SetWord(Mem(Effect4d_Kind95Clock_addr), v); break;
     case 6: SetLong(s + 0x74 + 4 * (v % 3), static_cast<std::int32_t>(v >> 2)); break;
     default: break;
     }

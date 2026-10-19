@@ -15,18 +15,18 @@
 namespace effect_6c::at {
 
 // --- the leader (ObjTrio record 0) ------------------------------------------------------
-constexpr std::uint32_t kLeaderState = 0x802D42;      // ObjTrio +2: 3 runs Sprite_ScriptTick (sub-kind 0x44)
+// kLeaderState: now ObjTrio[2] (symbols.toml). ObjTrio +2: 3 runs Sprite_ScriptTick (sub-kind 0x44)
 constexpr std::uint32_t kLeaderMoving = 0x802D54;     // ObjTrio +0x14, a dword: not 0 - the screen y is taken from the projection
 constexpr std::uint32_t kLeaderDepth = 0x802D70;      // ObjTrio +0x30, a word sub-kind 0x44 reads and writes
 constexpr std::uint32_t kLeaderLift = 0x802D7E;       // ObjTrio +0x3E, an s16 (halved, negated into the vertex)
-constexpr std::uint32_t kLeaderAnimation = 0x802D8B;  // ObjTrio +0x4B: the animation sub-kind 0x44 copies
+// kLeaderAnimation: now ObjTrio[0x4b] (symbols.toml). ObjTrio +0x4B: the animation sub-kind 0x44 copies
 
 // --- the field ------------------------------------------------------------------------
 constexpr std::uint32_t kKind2ZHigh = 0x905E62;       // Field_Kind2Z's high word, an s16 cell
 constexpr std::uint32_t kKind2XHigh = 0x905E66;       // Field_Kind2X's high word
-constexpr std::uint32_t kWalkClock = 0x90405C;        // area 189's frame word (Area189_StepArrive: 0..0x3BF, wraps)
-constexpr std::uint32_t kFlagRow = 0x904000;          // the flag row Flags_Test reads bits 4, 0xE, 0x14 of
-constexpr std::uint32_t kStoryFlags = 0x904030;       // the story flags (bits 0x7A..0x7C, 0x80, 0x81)
+// kWalkClock: now Cond_Flags[0xcc] (symbols.toml). area 189's frame word (Area189_StepArrive: 0..0x3BF, wraps)
+// kFlagRow: now Cond_Flags[0x70] (symbols.toml). the flag row Flags_Test reads bits 4, 0xE, 0x14 of
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (bits 0x7A..0x7C, 0x80, 0x81)
 constexpr std::uint32_t kScreenY = 0x903824;          // MapView_ScreenXY's second float
 constexpr std::uint32_t kScreenZ = 0x903828;          // and the third (a centre's z, sub-kind 0x45)
 constexpr std::uint32_t kOffsetX = 0x903828;          // sub-kind 0x5B's piece offsets: x ...
@@ -42,7 +42,7 @@ constexpr std::uint32_t kLayerTails = 0x802B34;       // DrawLayers + 0x894: the
 
 // --- the area map's cell records (AreaMap_Header's dword runs) ---------------------------
 constexpr std::uint32_t kAreaHeader = 0x8CB580;       // AreaMap_Header: byte 0 the width, byte 1 the height
-constexpr std::uint32_t kAreaCellBase = 0x8CB582;     // its word +2: the cells' offset
+// kAreaCellBase: now AreaMap_Header[2] (symbols.toml). its word +2: the cells' offset
 constexpr std::uint32_t kAreaCorners = 0x8CB5B0;      // AreaMap_Corners: four s8 heights a cell, 0x60 cells a row of blocks
 constexpr std::uint32_t kDrawItemStride = 0x90;       // DrawItems' records (draw_pool::Items(), DIV-0062)
 constexpr std::uint32_t kItemLink = 0x7E;             // a draw item's link word (& 0xFFF: another item)

@@ -322,8 +322,8 @@ const std::uint8_t kKinds[] = {0x18};
 // commit reads.
 const sh::Region kRegions[] = {
     {at::kEnemy0Bits, 4},
-    {at::kEnemy1Bits, 4},
-    {at::kLayer15Tails, 0xC},
+    {BossH_Enemy1Status_addr, 4},
+    {DrawLayers_addr + 0x2f4, 0xC},
     {Key(&Gfx_BufferIndex), 1},
 };
 
@@ -364,15 +364,15 @@ void Seed(unsigned k) {
         Game_Mode = 5;
         Game_Step = static_cast<unsigned short>(PickOf(5, 5, 4, 0x105));
     }
-    for (U bits : {at::kEnemy0Bits, at::kEnemy1Bits})
+    for (U bits : {at::kEnemy0Bits, BossH_Enemy1Status_addr})
         if (sh::Half()) SetLong(Mem(bits), static_cast<std::int32_t>(sh::Next() | (sh::Half() ? 0x4000u : 0u)));
     // Cond_ByteFA (the chapter the harness writes) at sub-kind 0x11's compare
     Cond_ByteFA = static_cast<signed char>(PickOf(7, 8, 6, 0, 0x80, 0x7F, sh::Next()));
     // the leader near and at the edges of sub-kind 0x10's boxes
-    SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(
+    SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(
                                    0x428000u + PickOf(0, 0x8000, 0x8001, 0xFFFF8000u, 0xFFFF7FFFu, 0x18000, 0x18001, 0xFFFE8000u,
                                                       0xFFFE7FFFu, sh::Next() & 0xFFFFF, sh::Next())));
-    SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(
+    SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(
                                    PickOf(0x3E0000u, 0x3F0000u) + PickOf(0, 0x10000, 0x10001, 0xFFFF0000u, 0xFFFEFFFFu, 0x18000,
                                                                          0x18001, 0xFFFE8000u, 0xFFFE7FFFu, sh::Next())));
     // Draw_PassFlags bit 2 (the panel) half the time
@@ -384,7 +384,7 @@ void Seed(unsigned k) {
     // into the scratch buffer (Gpu_LinkPrim's stand-in writes through them)
     Gfx_BufferIndex = static_cast<unsigned char>(sh::Next() % 2);
     for (unsigned b = 0; b < 2; ++b)
-        SetLong(Mem(at::kLayer15Tails + 8 * b), static_cast<std::int32_t>(sh::Half() ? Key(sh::Scratch(b) + (sh::Next() & 0x1C)) : sh::Next()));
+        SetLong(Mem(DrawLayers_addr + 0x2f4 + 8 * b), static_cast<std::int32_t>(sh::Half() ? Key(sh::Scratch(b) + (sh::Next() & 0x1C)) : sh::Next()));
     // sub-kind 0x15's scroll: (Frame_Counter >> 3) & 0xFF at 0x3E..0x42 half the
     // time, where the middle quad's right edge crosses 320
     if (k == k15Draw && sh::Half())

@@ -93,28 +93,28 @@ using HookFn = void (__cdecl*)(int);
 
 // original 0x4360F0 (PSX 0x801E3140): state 0 of the enemy state table
 // 0x64B084 - a tail jump through EnemyOp_Steps 0x64B1A0 by Sprite_Current +1.
-extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(at::kSteps, Sc()[1])(); }
+extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(EnemyOp_Steps_addr, Sc()[1])(); }
 
 // original 0x436170 (PSX 0x801E3224): step 1, the entrance - through
 // EnemyOp_EnterSubs 0x64B1D4 by +2 (0x436190, EnemyOp_SlideDispatch 0x436270).
-extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(at::kEnterSubs, Sc()[2])(); }
+extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(EnemyOp_EnterSubs_addr, Sc()[2])(); }
 
 // original 0x436190 (PSX 0x801E3268): the entrance's first part, the
 // scale-in - through EnemyOp_ScaleInSubs 0x64B1DC by +3 (0x4361B0, 0x436210).
-extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(at::kScaleInSubs, Sc()[3])(); }
+extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(EnemyOp_ScaleInSubs_addr, Sc()[3])(); }
 
 // original 0x4366E0 (PSX 0x801E3AE0): step 6 - through EnemyOp_ActSubs
 // 0x64B1FC by +2 (0x436700, 0x436720, 0x436700, EnemyOp_Act3Dispatch 0x436BC0,
 // 0x436D90, EnemyOp_Act5Dispatch 0x436F00).
-extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(at::kActSubs, Sc()[2])(); }
+extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(EnemyOp_ActSubs_addr, Sc()[2])(); }
 
 // original 0x436720 (PSX 0x801E3B48): the hit taken - through
 // EnemyOp_HitSubs 0x64B214 by +3 (0x436740, 0x436A00, 0x436A20).
-extern "C" void __cdecl EnemyOp_HitDispatch(void) { Entry(at::kHitSubs, Sc()[3])(); }
+extern "C" void __cdecl EnemyOp_HitDispatch(void) { Entry(EnemyOp_HitSubs_addr, Sc()[3])(); }
 
 // original 0x436D90 (PSX 0x801E46B8): the death - through EnemyOp_DeathSubs
 // 0x64B234 by +3 (0x436DB0, 0x436E00, 0x436E40, 0x436EC0).
-extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(at::kDeathSubs, Sc()[3])(); }
+extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(EnemyOp_DeathSubs_addr, Sc()[3])(); }
 
 // ===========================================================================
 // The entrance and the idle loop
@@ -130,8 +130,8 @@ extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(at::kDeathSubs, Sc()
 // upper half of whatever edx held; Battle_StatusTint reads bit 7 alone.
 extern "C" void __cdecl EnemyOp_Begin(void) {
     SetULong(Enemy() + 0xFC, at::kAnimTable);
-    SetULong(At(at::kHookA), at::kHookAValue);
-    SetULong(At(at::kHookB), at::kHookBValue);
+    BattleHook_End = at::kHookAValue;
+    BattleHook_Exit = at::kHookBValue;
     g.set_animation(0);
     Sc()[0] = static_cast<unsigned char>(Sc()[0] | 0x40);
     g.status_tint(Word(Enemy() + 0x92));
@@ -195,7 +195,7 @@ extern "C" void __cdecl EnemyOp_Idle(void) {
 // the call; the actor byte and the slot's byte are re-read at each use (a
 // slot past the 48 is not refused - the actor byte is 3..10 for an enemy).
 extern "C" void __cdecl EnemyOp_Wait(void) {
-    Entry(at::kWaitSubs, Sc()[2])();
+    Entry(EnemyOp_WaitSubs_addr, Sc()[2])();
     unsigned char* const e = Enemy();
     if ((e[0x92] & 0x20) != 0) {
         unsigned char* const s = Sc();
@@ -224,7 +224,7 @@ extern "C" void __cdecl EnemyOp_Wait(void) {
 // tint record: Sprite_SetTint(Sprite_Current, 0, 0, 0, 0), its index to +7;
 // +2 = 1.
 extern "C" void __cdecl EnemyOp_HighlightOn(void) {
-    if (At(at::kTargeting)[0] == 0) return;
+    if (BattleE4_Picking == 0) return;
     const unsigned char target = PtrAt(at::kCommandSource)[0];
     unsigned char* const s = Sc();
     if (target != s[5] && (target & 0x40) == 0) return;
@@ -244,10 +244,10 @@ extern "C" void __cdecl EnemyOp_HighlightOn(void) {
 extern "C" void __cdecl EnemyOp_HighlightPulse(void) {
     unsigned char* const s = Sc();
     const unsigned char pulse = At(at::kPulse)[0];
-    At(at::kTints + s[7] * at::kTintSize + 4)[0] = pulse;
-    At(at::kTints + s[7] * at::kTintSize + 3)[0] = pulse;
-    At(at::kTints + s[7] * at::kTintSize + 2)[0] = pulse;
-    if (At(at::kTargeting)[0] != 0) {
+    At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 4)[0] = pulse;
+    At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 3)[0] = pulse;
+    At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 2)[0] = pulse;
+    if (BattleE4_Picking != 0) {
         const unsigned char target = PtrAt(at::kCommandSource)[0];
         if (target == s[5]) return;
         if ((target & 0x40) != 0) return;
@@ -323,7 +323,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         g.effect_apply();
         e = Enemy();
     }
-    if (At(at::kEventBattle)[0] != 0) {
+    if (BattleActions_EventBattle != 0) {
         reinterpret_cast<HookFn>(PtrIn(e + 0xF4))(1);
         e = Enemy();
     }
@@ -365,7 +365,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
             if ((At(at::kRoundFlags)[0] & 0x80) != 0) g.set_tint(Sc(), 0x10, 0x10, 0x10, 0);
             SetWord(Enemy() + 0x92, 0x4000);
             e = Enemy();
-        } else if (At(at::kEventBattle)[0] != 0) {
+        } else if (BattleActions_EventBattle != 0) {
             g.play_cue(Word(PtrIn(e + 0xF8) + 4));
             e = Enemy();
         }
@@ -472,7 +472,7 @@ extern "C" void __cdecl EnemyOp_DeathSwell(void) {
 // 0xFF, 0xFF, 0); the speed +0x10 = 0 and its step +0x1C = -0x2000; +3 = 3.
 extern "C" void __cdecl EnemyOp_DeathFlash(void) {
     g.play_effect(0x204);
-    if (At(at::kEventBattle)[0] != 0) g.play_cue(Word(PtrIn(Enemy() + 0xF8) + 6));
+    if (BattleActions_EventBattle != 0) g.play_cue(Word(PtrIn(Enemy() + 0xF8) + 6));
     g.release_tint(Sc());
     g.set_tint(Sc(), 0xFF, 0xFF, 0xFF, 0);
     SetULong(Sc() + 0x10, 0);

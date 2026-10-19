@@ -62,11 +62,11 @@ U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr
 using Handler = scenario_harness::Handler;
 
 // Prim_VertexScratch's four SVECTORs (0x9037A0, A8, B0, B8): word k of vertex v.
-constexpr U kScratch = 0x9037A0;
-U VW(unsigned v, unsigned k) { return Word(At(kScratch + 8 * v + 2 * k)); }
+// kScratch: now Prim_VertexScratch (symbols.toml).
+U VW(unsigned v, unsigned k) { return Word(At(Prim_VertexScratch_addr + 8 * v + 2 * k)); }
 I VS(unsigned v, unsigned k) { return static_cast<std::int16_t>(VW(v, k)); }
-void SetV(unsigned v, unsigned k, U value) { SetWord(At(kScratch + 8 * v + 2 * k), value); }
-const short* Vertex(unsigned v) { return reinterpret_cast<const short*>(At(kScratch + 8 * v)); }
+void SetV(unsigned v, unsigned k, U value) { SetWord(At(Prim_VertexScratch_addr + 8 * v + 2 * k), value); }
+const short* Vertex(unsigned v) { return reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 8 * v)); }
 
 // cdq; xor eax, edx; sub eax, edx (INT_MIN stays itself)
 I Abs(I v) {
@@ -189,8 +189,8 @@ float F(U a) {
 }
 
 unsigned char* Prim() { return Gfx_PacketNext; }
-unsigned char* Flags() { return At(at::kStoryFlags); }
-unsigned char* Row9() { return At(at::kCondRow9); }
+unsigned char* Flags() { return At(Cond_Flags_addr + 0xa0); }
+unsigned char* Row9() { return At(Cond_Flags_addr + 0x48); }
 
 // The four-vertex projection every quad here makes of Prim_VertexScratch into a
 // primitive whose vertices are `stride` apart from +8 (0x10 textured, 0xC flat).
@@ -215,13 +215,13 @@ unsigned char* Cell(I x, I z) {
 bool GateNearXZ(I x, I z, bool along_x, I across, I along) {
     if (along_x) {
         const U row = (static_cast<U>(z + 1) << 16) | 0x8000u;
-        if (Abs(static_cast<I>(UL(At(at::kLeaderZ)) - row)) > across) return false;
-        const I d = static_cast<I>(UL(At(at::kLeaderX)) - (static_cast<U>(x) << 16));
+        if (Abs(static_cast<I>(UL(At(ObjTrio_addr + 0x38)) - row)) > across) return false;
+        const I d = static_cast<I>(UL(At(ObjTrio_addr + 0x34)) - (static_cast<U>(x) << 16));
         return Abs(d) <= along || Abs(static_cast<I>(static_cast<U>(d) - 0x10000u)) <= along;
     }
     const U column = (static_cast<U>(x + 1) << 16) | 0x8000u;
-    if (Abs(static_cast<I>(UL(At(at::kLeaderX)) - column)) > across) return false;
-    const I d = static_cast<I>(UL(At(at::kLeaderZ)) - (static_cast<U>(z) << 16));
+    if (Abs(static_cast<I>(UL(At(ObjTrio_addr + 0x34)) - column)) > across) return false;
+    const I d = static_cast<I>(UL(At(ObjTrio_addr + 0x38)) - (static_cast<U>(z) << 16));
     return Abs(d) <= along || Abs(static_cast<I>(static_cast<U>(d) - 0x10000u)) <= along;
 }
 bool GateNear(const unsigned char* s, I across, I along) {
@@ -231,7 +231,7 @@ bool GateNear(const unsigned char* s, I across, I along) {
 // Sub-kind 0x0E's fixed gate: the leader within `x` of 0x28000 and within `z`
 // of 0x150000 or 0x160000.
 bool Sub0ENear(I x, I z) {
-    const U lx = UL(At(at::kLeaderX)), lz = UL(At(at::kLeaderZ));
+    const U lx = UL(At(ObjTrio_addr + 0x34)), lz = UL(At(ObjTrio_addr + 0x38));
     if (Abs(static_cast<I>(lx - 0x28000u)) > x) return false;
     return Abs(static_cast<I>(lz - 0x150000u)) <= z || Abs(static_cast<I>(lz - 0x160000u)) <= z;
 }
@@ -315,7 +315,7 @@ extern "C" void __cdecl EffectKind18Sub0D_Start(void) {
 extern "C" void __cdecl EffectKind18Sub0D_Wait(void) {
     // +0x36 read again after the test, as the original reads Sprite_Current again
     const bool lit = (Word(S() + 0x36) == 0 && SH_CALL(Flags_Test)(Flags(), 0xD) != 0) ||
-                     (Word(S() + 0x36) != 0 && B(at::kCount48) != 0);
+                     (Word(S() + 0x36) != 0 && AreaW1c_Count48 != 0);
     if (!lit) return;
     SH_CALL(Sound_PlayEffect)(0x20D);
     S()[9] = 0;
@@ -341,9 +341,9 @@ extern "C" void __cdecl EffectKind18Sub0D_Idle(void) {
         const unsigned char set = SH_CALL(Flags_Test)(Flags(), 0xD);
         if (set == 0) off = true;
         else if (Word(S() + 0x36) == 0) off = false;
-        else off = B(at::kCount48) == 0;
+        else off = AreaW1c_Count48 == 0;
     } else {
-        off = B(at::kCount48) == 0;
+        off = AreaW1c_Count48 == 0;
     }
     if (off) {
         S()[9] = 0;
@@ -460,10 +460,10 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
         StoreFloat(prim + 0x1C, VS(from, 1));
         StoreFloat(prim + 0x28, VS(to, 0));
         StoreFloat(prim + 0x2C, VS(to, 1));
-        const auto green = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(B(at::kCount48) + 1) * static_cast<unsigned char>(i)) << 4);
+        const auto green = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(AreaW1c_Count48 + 1) * static_cast<unsigned char>(i)) << 4);
         prim[4] = static_cast<unsigned char>(green | centre);
         prim[6] = centre;
-        prim[5] = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(B(at::kCount48) + 1) * static_cast<unsigned char>(i)) << 4);
+        prim[5] = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(AreaW1c_Count48 + 1) * static_cast<unsigned char>(i)) << 4);
         prim[0x26] = 0;
         prim[0x25] = 0;
         prim[0x24] = 0;
@@ -518,7 +518,7 @@ extern "C" void __cdecl EffectKind18Sub0B_Fade(void) {
     SetUL(s + 0x3C, UL(s + 0x3C) + 4);
     S()[0xB] = static_cast<unsigned char>(S()[0xB] - 4);
     if (Long(S() + 0x3C) <= -0x80) return;
-    B(at::kTailState) = 4;
+    AreaW0c_TailState = 4;
     SH_CALL(Effect_Release)();
 }
 

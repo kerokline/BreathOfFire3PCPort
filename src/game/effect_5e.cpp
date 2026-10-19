@@ -185,7 +185,7 @@ extern "C" void __cdecl EffectKind18Sub23_Run(void) {
 // tail jump to Effect_Release; else +2 up and a tail jump to the draw.
 extern "C" void __cdecl EffectKind18Sub23_Start(void) {
     SetWord(S() + 0x30, 0);
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), at::kSub23Flag)) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub23Flag)) {
         SH_CALL(Effect_Release)();
         return;
     }
@@ -195,7 +195,7 @@ extern "C" void __cdecl EffectKind18Sub23_Start(void) {
 
 // original 0x506A60 (sub-state 1): once story flag 0x28 is set, +2 up; the draw.
 extern "C" void __cdecl EffectKind18Sub23_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), at::kSub23Flag)) Step();
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub23Flag)) Step();
     SH_CALL(EffectKind18Sub23_Draw)();
 }
 
@@ -324,7 +324,7 @@ extern "C" void __cdecl EffectKind18Sub24_Run(void) {
 // height 0x3A0, level 0x80), +0xB = 2, +9 = 0, sound 0x204, +2 up, the draw.
 extern "C" void __cdecl EffectKind18Sub24_Start(void) {
     if (!Cue(at::kSub24Cue)) return;
-    SH_CALL(Flags_Set)(At(at::kFlagRow50), 4);
+    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0x50), 4);
     Place(0x4B8000, 0x568000, 0x3A0, 0x80);
     unsigned char* const s = S();
     s[0xB] = 2;
@@ -632,9 +632,9 @@ void HoldUntil(unsigned cue) {
 }
 // The leader's shade bytes (ObjTrio record 0's +0x5F, +0x5E, +0x5D).
 void LeaderShade(unsigned char v) {
-    B(at::kLeaderShade + 2) = v;
-    B(at::kLeaderShade + 1) = v;
-    B(at::kLeaderShade + 0) = v;
+    ObjTrio[0x5f] = v;
+    ObjTrio[0x5e] = v;
+    ObjTrio[0x5d] = v;
 }
 
 }  // namespace
@@ -825,14 +825,14 @@ extern "C" void __cdecl EffectKind18Sub3F_WhiteOut(void) {
 extern "C" void __cdecl EffectKind18Sub3F_ShadeClut(int level) {
     const U l = static_cast<U>(level);
     for (U k = 0; k < at::kClutRowWords; ++k) {
-        const U colour = W(At(at::kClutRow4 + 2 * k));
+        const U colour = W(At(Gfx_ClutStripSource_addr + 0x800 + 2 * k));
         const U blue = ((colour >> 10) & 0x1F) * l, green = ((colour >> 5) & 0x1F) * l, red = (colour & 0x1F) * l;
         U out = Sar(blue, 7) << 5;
         out |= Sar(green, 7);
         out <<= 5;
         out |= Sar(red, 7);
         out |= colour & 0x8000;
-        SetWord(At(at::kClutRow4Live + 2 * k), out);
+        SetWord(At(Gfx_ClutStrip_addr + 0x800 + 2 * k), out);
     }
     Gfx_ClutStripDirty = 1;
 }
@@ -1205,7 +1205,7 @@ extern "C" void __cdecl EffectKind18Sub39_Run(void) {
 // original 0x508AA0 (sub-state 0): story flag 0x5A set: +0x30 0x80, +2 = 3, the
 // draw of the halves (0, -2); clear: +0x30 0, +2 up, the draws (0, 1), (1, 1).
 extern "C" void __cdecl EffectKind18Sub39_Start(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), at::kSub39Flag)) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub39Flag)) {
         SetWord(S() + 0x30, 0x80);
         S()[2] = 3;
         SH_CALL(EffectKind18Sub39_Draw)(0, -2);
@@ -1220,7 +1220,7 @@ extern "C" void __cdecl EffectKind18Sub39_Start(void) {
 // original 0x508B00 (sub-state 1): once story flag 0x5A is set, sound 0x208
 // unless Field_Request is set, +2 up. The draws (0, 1), (1, 1).
 extern "C" void __cdecl EffectKind18Sub39_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), at::kSub39Flag)) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), at::kSub39Flag)) {
         if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x208);
         Step();
     }

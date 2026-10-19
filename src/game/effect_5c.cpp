@@ -273,7 +273,7 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
     SetWord(s + 0x3E, (0u - HalfOf(ground)) - Word(At(AddressOf(EffectKind18Sub50_Heights) + 2 * v)));
     s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
     const unsigned char flag = Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]);
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kFlagRow9), flag);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag);
     s = S();
     if (set) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -290,13 +290,13 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
 extern "C" void __cdecl EffectKind18Sub50_Shine(void) {
     static const char kWho[] = "EffectKind18Sub50_Shine";
     unsigned char* s = S();
-    if (!SH_CALL(Flags_Test)(At(at::kFlagRow9), Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
         s = S();
         s[9] = 9;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
     s = S();
-    const U light = SH_CALL(Flags_Test)(At(at::kFlagRow9), Sub50Byte(kWho, at::kSub50Lights, s[0xB])) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte(kWho, at::kSub50Lights, s[0xB])) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
     SH_CALL(EffectKind18Sub50_DrawLine)();
@@ -314,7 +314,7 @@ extern "C" void __cdecl EffectKind18Sub50_Sink(void) {
     s = S();
     const U height = static_cast<U>(s[9]) << 3;
     const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
-    const U light = SH_CALL(Flags_Test)(At(at::kFlagRow9), flag) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, height);
     SH_CALL(EffectKind18Sub50_DrawLine)();
@@ -325,7 +325,7 @@ extern "C" void __cdecl EffectKind18Sub50_Sink(void) {
 // wall.
 extern "C" void __cdecl EffectKind18Sub50_WaitSet(void) {
     unsigned char* s = S();
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow9), Sub50Byte("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
         s = S();
         s[9] = 9;
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -346,7 +346,7 @@ extern "C" void __cdecl EffectKind18Sub50_Flash(void) {
     LinkAtRecord(0xC);
     s = S();
     const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
-    const U light = SH_CALL(Flags_Test)(At(at::kFlagRow9), flag) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
     unsigned char* const prim = Gfx_PacketNext;
@@ -443,8 +443,8 @@ namespace {
 // 0x428000 and within `zr` of z 0x3E0000 or 0x3F0000 - the originals' order of
 // tests (abs by cdq / xor / sub, signed compares).
 bool LeaderNear(U xr, U zr) {
-    const U x = UL(At(at::kLeaderX));
-    const U z = UL(At(at::kLeaderZ));
+    const U x = UL(At(ObjTrio_addr + 0x34));
+    const U z = UL(At(ObjTrio_addr + 0x38));
     const std::int32_t dx = I(Abs(x - 0x428000u));
     if (dx <= I(xr) && I(Abs(z - 0x3E0000u)) <= I(zr)) return true;
     if (dx > I(xr)) return false;
@@ -471,7 +471,7 @@ extern "C" void __cdecl EffectKind18Sub10_Run(void) {
 // 0xFF00, +2 = 3. The panel either way.
 extern "C" void __cdecl EffectKind18Sub10_Start(void) {
     SetWord(S() + 0x30, 0);
-    if (!SH_CALL(Flags_Test)(At(at::kFlagRow9), 0xF)) {
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0xF)) {
         Sub10Cells(0x52);
         S()[2] = 5;
         SH_CALL(EffectKind18Sub10_DrawPanel)();
@@ -539,7 +539,7 @@ extern "C" void __cdecl EffectKind18Sub10_SlideIn(void) {
 // original 0x501E20 (sub-state 5): row-9 flag 0xF set: the two cells' map bytes
 // 0xA1, +2 = 1. A tail jump to the panel.
 extern "C" void __cdecl EffectKind18Sub10_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow9), 0xF)) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0xF)) {
         Sub10Cells(0xA1);
         S()[2] = 1;
     }
@@ -870,11 +870,11 @@ namespace {
 // Sub-kind 0x11's end: story flag 0x22, or 0x21 with Cond_ByteFA (s8) at most
 // 7 - in the original's order; sub-kind 0x12's: story flag 0x20.
 bool Sub11Done() {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x22)) return true;
-    if (!SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x21)) return false;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x22)) return true;
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x21)) return false;
     return Cond_ByteFA <= 7;
 }
-bool Sub12Done() { return SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x20) != 0; }
+bool Sub12Done() { return SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x20) != 0; }
 // The map bytes of cells (0x45, 0x3C) and (0x46, 0x3C).
 void TileCells(unsigned char v) {
     SetCell(MapWidth() * 60u + 0x45u, v);
@@ -1252,10 +1252,10 @@ extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) {
             bof3::Log("draworder   packet pool full: the sky's %u-byte primitive skipped (EffectKind18Sub15_LinkLayer)", bytes);
         return;
     }
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(at::kLayer15Tails + 8 * buffer)))),
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(DrawLayers_addr + 0x2f4 + 8 * buffer)))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;
-    SetUL(At(at::kLayer15Tails + 8u * Gfx_BufferIndex), AddressOf(now));
+    SetUL(At(DrawLayers_addr + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
     Gfx_PacketNext = now + bytes;
 }
 
@@ -1607,7 +1607,7 @@ extern "C" void __cdecl EffectKind18Sub17_Count12(void) {
 // original 0x503CA0 (sub-state 13): the enemy wait on EnemyWorkingRecords record
 // 1 (0x93BB1A); +9 up.
 extern "C" void __cdecl EffectKind18Sub17_WaitEnemy1(void) {
-    unsigned char* const s = EnemyWait(at::kEnemy1Bits);
+    unsigned char* const s = EnemyWait(BossH_Enemy1Status_addr);
     s[9] = static_cast<unsigned char>(s[9] + 1);
 }
 

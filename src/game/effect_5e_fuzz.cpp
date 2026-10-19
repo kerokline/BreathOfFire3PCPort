@@ -214,8 +214,8 @@ const std::uint8_t kKinds[] = {0x18};
 
 // Beyond effect mode's standard regions: CLUT row 4 as loaded and as live.
 const sh::Region kRegions[] = {
-    {at::kClutRow4, 2 * at::kClutRowWords},
-    {at::kClutRow4Live, 2 * at::kClutRowWords},
+    {Gfx_ClutStripSource_addr + 0x800, 2 * at::kClutRowWords},
+    {Gfx_ClutStrip_addr + 0x800, 2 * at::kClutRowWords},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -280,13 +280,13 @@ void Seed(unsigned k) {
         const U cell = static_cast<U>(static_cast<std::int16_t>(along ? x : z)) << 16;
         const U row = ((static_cast<U>(static_cast<std::int16_t>(along ? z : x)) + 1u) << 16) | 0x8000u;
         const U a = row + Near(), b = cell + PickOf(0, 0x10000, 0x20000) + Near();
-        SetLong(Mem(along ? at::kLeaderZ : at::kLeaderX), static_cast<std::int32_t>(a));
-        SetLong(Mem(along ? at::kLeaderX : at::kLeaderZ), static_cast<std::int32_t>(b));
+        SetLong(Mem(along ? (ObjTrio_addr + 0x38) : (ObjTrio_addr + 0x34)), static_cast<std::int32_t>(a));
+        SetLong(Mem(along ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38)), static_cast<std::int32_t>(b));
     }
     Mem(at::kCounter)[0] = static_cast<unsigned char>(Cue());
     Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
     if (k == k3FShadeClut)
-        for (U i = 0; i < 2 * at::kClutRowWords; i += 4) SetLong(Mem(at::kClutRow4 + i), static_cast<std::int32_t>(sh::Next()));
+        for (U i = 0; i < 2 * at::kClutRowWords; i += 4) SetLong(Mem(Gfx_ClutStripSource_addr + 0x800 + i), static_cast<std::int32_t>(sh::Next()));
 }
 
 // The helpers' arguments: a trail inside the polyline's 34 pairs (from 0..32,
@@ -335,7 +335,7 @@ void Disturb(U h) {
     case 4: s[0xB] = static_cast<unsigned char>(v % 3); break;
     case 5: SetWord(s + 0x32, LidDraw(g_k) ? v % 3 : v); break;
     case 6: SetWord(s + 0x2E, Word(s + 0x2E) ^ 0x800u); break;
-    case 7: SetLong(Mem((v & 1) ? at::kLeaderX : at::kLeaderZ), static_cast<std::int32_t>(Long(Mem((v & 1) ? at::kLeaderX : at::kLeaderZ)) + static_cast<std::int32_t>((v >> 1) & 0x3FFFF) - 0x20000)); break;
+    case 7: SetLong(Mem((v & 1) ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38)), static_cast<std::int32_t>(Long(Mem((v & 1) ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38))) + static_cast<std::int32_t>((v >> 1) & 0x3FFFF) - 0x20000)); break;
     case 8: s[8] = static_cast<unsigned char>(v & 1); break;
     default: break;
     }

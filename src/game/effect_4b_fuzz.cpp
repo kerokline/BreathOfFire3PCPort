@@ -225,7 +225,7 @@ void FillFraction(U at) {
 U FxFindParticle(const U*, U answer) {
     if (answer % 4 == 0) return 0;
     for (unsigned i = 0; i < at::kParticleCount; ++i) {
-        const U r = at::kParticles + at::kParticleStride * i;
+        const U r = EffectKind30_Shards_addr + at::kParticleStride * i;
         if (P(r)[3] == 0) return r;
     }
     return 0;
@@ -315,7 +315,7 @@ const std::uint8_t kKinds[] = {0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x9D, 0x9F, 0
 // Beyond effect mode's standard regions: kind 0x87's and 0x8C's cells, kind
 // 0x87's point rows in the image's .data (rows 8..13 written), Draw_OtSlot.
 const sh::Region kRegions[] = {
-    {at::kKind8CCells, at::kKind8CCellsSize},
+    {Effect4b_SoundIndex_addr, at::kKind8CCellsSize},
     {at::kKind87Points, at::kKind87PointCount * at::kKind87PointStride},
     {0x92BF19, 1},   // Draw_OtSlot
 };
@@ -323,8 +323,8 @@ const sh::Region kRegions[] = {
 // --- the seed ------------------------------------------------------------------------
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
-unsigned char* Pane(unsigned i) { return P(at::kPanes + at::kPaneStride * i); }
-unsigned char* Particle(unsigned i) { return P(at::kParticles + at::kParticleStride * i); }
+unsigned char* Pane(unsigned i) { return P(EffectKind30_Shards_addr + at::kPaneStride * i); }
+unsigned char* Particle(unsigned i) { return P(EffectKind30_Shards_addr + at::kParticleStride * i); }
 
 // Kind 0x87's six panes: their five pointers on the fourteen points, the case
 // 0..4 (4: past the switch), live a third of the time not, the timer at its
@@ -333,17 +333,17 @@ void SeedPanes() {
     for (unsigned i = 0; i < at::kPaneCount; ++i) {
         unsigned char* const r = Pane(i);
         for (unsigned w = 0; w < 0x14; w += 4)
-            SetLong(r + w, static_cast<std::int32_t>(at::kPanePoints + at::kPanePointStride * (sh::Next() % at::kPanePointCount)));
+            SetLong(r + w, static_cast<std::int32_t>(EffectKind30_Shards_addr + 0xa8 + at::kPanePointStride * (sh::Next() % at::kPanePointCount)));
         r[0x17] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0, 1, 2, 3, 4, sh::Next()));
         r[0x18] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : PickOf(1, 1, 0x80, sh::Next() | 1));
         r[0x19] = static_cast<unsigned char>(PickOf(0, 1, 2, 0xA, 0xB, 0xF, 0x1E, sh::Next()));
     }
-    Mem(at::kSoundIndex)[0] = static_cast<unsigned char>(sh::Next() % at::kKind87SoundCount);
+    Mem(Effect4b_SoundIndex_addr)[0] = static_cast<unsigned char>(sh::Next() % at::kKind87SoundCount);
 }
 // Kind 0x88's 32 particles: live a third of the time not, the life at its
 // boundaries, x round extra object 0's x - 0x10000.
 void SeedParticles() {
-    const U goal = static_cast<U>(Long(Mem(at::kExtraX))) + 0xFFFF0000u;
+    const U goal = static_cast<U>(Long(Mem(Sprite_ObjectsExtra_addr + 0x34))) + 0xFFFF0000u;
     for (unsigned i = 0; i < at::kParticleCount; ++i) {
         unsigned char* const r = Particle(i);
         r[3] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : PickOf(1, 1, 0x80, sh::Next() | 1));
@@ -382,7 +382,7 @@ void Seed(unsigned k) {
         break;
     case k88Emit:
     case k88EmitOn:
-        if (sh::Half()) SetLong(Mem(at::kExtraX), static_cast<std::int32_t>(k == k88Emit ? 0x3C8000 : 0x408000));
+        if (sh::Half()) SetLong(Mem(Sprite_ObjectsExtra_addr + 0x34), static_cast<std::int32_t>(k == k88Emit ? 0x3C8000 : 0x408000));
         if (sh::Half()) s[9] = static_cast<unsigned char>(s[9] & ~7u);
         SeedParticles();
         break;
@@ -411,15 +411,15 @@ void Seed(unsigned k) {
     }
     if (k >= k8CRun) {
         // kind 0x8C's cells at their compares
-        Mem(at::kTimerA)[0] = static_cast<unsigned char>(PickOf(1, 2, 0, sh::Next()));
-        Mem(at::kTimerB)[0] = static_cast<unsigned char>(PickOf(1, 2, 0, sh::Next()));
-        Mem(at::kPresses)[0] = static_cast<unsigned char>(PickOf(0x1A, 0x1B, 0x1C, 0, sh::Next()));
-        Mem(at::kSteps)[0] = static_cast<unsigned char>(PickOf(6, 7, 8, 0xFF, sh::Next()));
+        Mem(Effect4b_TimerA_addr)[0] = static_cast<unsigned char>(PickOf(1, 2, 0, sh::Next()));
+        Mem(Effect4b_TimerB_addr)[0] = static_cast<unsigned char>(PickOf(1, 2, 0, sh::Next()));
+        Mem(Effect4b_Presses_addr)[0] = static_cast<unsigned char>(PickOf(0x1A, 0x1B, 0x1C, 0, sh::Next()));
+        Mem(Effect4b_Steps_addr)[0] = static_cast<unsigned char>(PickOf(6, 7, 8, 0xFF, sh::Next()));
         const U dirs[] = {0x1000, 0x4000, 0x2000, 0x8000, 0x3000, 0x6000, 0x9000, 0xC000, 0x5000, 0, sh::Next()};
-        SetWord(Mem(at::kDirection), sh::Pick(dirs, sizeof dirs / sizeof dirs[0]));
+        SetWord(Mem(Effect4b_Direction_addr), sh::Pick(dirs, sizeof dirs / sizeof dirs[0]));
         const U target = PickOf(0, 1, 5, 0xFFFF, sh::Next());
-        SetWord(Mem(at::kTarget), target);
-        SetWord(Mem(at::kCount), target + PickOf(0, 1, 2, 0xFFFF, 0xFFFE, sh::Next()));
+        SetWord(Mem(Effect4b_Target_addr), target);
+        SetWord(Mem(Effect4b_Count_addr), target + PickOf(0, 1, 2, 0xFFFF, 0xFFFE, sh::Next()));
         const U pads[] = {0x40, 0x20, 0x1000, 0x4000, 0x2000, 0x8000, 0x3000, 0x6000, 0x9000, 0xC000, 0, sh::Next()};
         Input_Pressed = static_cast<unsigned short>(sh::Pick(pads, sizeof pads / sizeof pads[0]));
     }
@@ -443,16 +443,16 @@ U FloatArg() {
 // quad's two floats.
 void Args(unsigned k, U* a) {
     switch (k) {
-    case k87Draw: a[0] = at::kPanes + at::kPaneStride * (sh::Next() % at::kPaneCount); break;
+    case k87Draw: a[0] = EffectKind30_Shards_addr + at::kPaneStride * (sh::Next() % at::kPaneCount); break;
     case k87Mid:
         for (unsigned i = 0; i < 3; ++i) a[i] = (sh::Next() & 0xFFFFFF00u) | (sh::Next() % at::kKind87PointCount);
         break;
-    case k88Burst: a[0] = at::kParticles + at::kParticleStride * (sh::Next() % at::kParticleCount) + 0xC; break;
+    case k88Burst: a[0] = EffectKind30_Shards_addr + at::kParticleStride * (sh::Next() % at::kParticleCount) + 0xC; break;
     case k88Angle:
         a[0] = Key(Sprite_Current + 0x34);
         a[1] = Key(Sprite_Current + 0xC);
         break;
-    case k88Init: a[0] = at::kParticles + at::kParticleStride * (sh::Next() % at::kParticleCount); break;
+    case k88Init: a[0] = EffectKind30_Shards_addr + at::kParticleStride * (sh::Next() % at::kParticleCount); break;
     case k9DDrawPulse:
     case k9DDrawGlow:
         a[0] = FloatArg();
@@ -485,7 +485,7 @@ void Disturb(U h) {
         break;
     case 3: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
     case 4: Mem(at::kCounter2)[0] = static_cast<unsigned char>(v >> 1); break;
-    case 5: Mem((v & 1) ? at::kTimerA : at::kTimerB)[0] = static_cast<unsigned char>((v >> 1) % 3); break;
+    case 5: Mem((v & 1) ? Effect4b_TimerA_addr : Effect4b_TimerB_addr)[0] = static_cast<unsigned char>((v >> 1) % 3); break;
     case 6: {
         static const unsigned short kPads[] = {0x40, 0x20, 0x1000, 0x4000, 0x2000, 0x8000, 0x3000, 0x6000, 0x9000, 0xC000, 0};
         Input_Pressed = kPads[v % (sizeof kPads / sizeof kPads[0])];

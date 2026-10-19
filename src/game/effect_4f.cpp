@@ -153,11 +153,11 @@ bool CountDown() {
     return s[9] == 0;
 }
 
-unsigned char* Drop(U i) { return At(at::kDrops + i * at::kDropStride); }
+unsigned char* Drop(U i) { return At(EffectKind30_Shards_addr + i * at::kDropStride); }
 unsigned char* Source(U i) { return At(at::kSources + i * at::kSourceStride); }
 unsigned char* Bar(U i) { return At(at::kBars + i * at::kBarStride); }
-unsigned char* Spark(U i) { return At(at::kSparks + i * at::kSparkStride); }
-unsigned char* Shard(U i) { return At(at::kShards + i * at::kShardStride); }
+unsigned char* Spark(U i) { return At(EffectKind30_Shards_addr + i * at::kSparkStride); }
+unsigned char* Shard(U i) { return At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride); }
 
 // kind 0xB9's glow: group E4E's 0x4901D0 (point, size word, colour byte), raw
 // until it merges.
@@ -775,10 +775,10 @@ extern "C" void __cdecl EffectKindB1_Start(void) {
 // 0xF0, a word); past 0xF0 (an s16, read again): Sound_PlayEffect(0x203) unless
 // Field_Request is set, +1 = 2.
 extern "C" void __cdecl EffectKindB1_Sway(void) {
-    const U tilt = (Word(At(at::kTilt)) + 4u) & 0xFFFFu;
-    SetWord(At(at::kTilt), tilt);
+    const U tilt = (static_cast<std::uint16_t>(Camera_Angles[1]) + 4u) & 0xFFFFu;
+    Camera_Angles[1] = tilt;
     SH_CALL(MapView_SetElevation)(static_cast<int>((tilt + 0xF0u) & 0xFFFFu));
-    if (static_cast<std::int16_t>(Word(At(at::kTilt))) <= 0xF0) return;
+    if (Camera_Angles[1] <= 0xF0) return;
     if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x203);
     S()[1] = 2;
 }
@@ -787,10 +787,10 @@ extern "C" void __cdecl EffectKindB1_Sway(void) {
 // + 0xF0, a word); below -0xF0 (an s16, read again): Sound_PlayEffect(0x203)
 // unless Field_Request is set, +1 = 1.
 extern "C" void __cdecl EffectKindB1_SwayBack(void) {
-    const U tilt = (Word(At(at::kTilt)) + 0xFFFCu) & 0xFFFFu;
-    SetWord(At(at::kTilt), tilt);
+    const U tilt = (static_cast<std::uint16_t>(Camera_Angles[1]) + 0xFFFCu) & 0xFFFFu;
+    Camera_Angles[1] = tilt;
     SH_CALL(MapView_SetElevation)(static_cast<int>((tilt + 0xF0u) & 0xFFFFu));
-    if (static_cast<std::int16_t>(Word(At(at::kTilt))) >= -0xF0) return;
+    if (Camera_Angles[1] >= -0xF0) return;
     if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x203);
     S()[1] = 1;
 }

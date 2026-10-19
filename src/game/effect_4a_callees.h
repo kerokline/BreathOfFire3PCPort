@@ -23,14 +23,14 @@ constexpr std::uint32_t kObjectCount = 0x903850;   // u16: the object EventOp_0x
 
 // --- the chapter's cells (scenario_harness at::kStep) ---------------------
 constexpr std::uint32_t kStep = 0x8034E5;          // u8: the chapter's step (MoveScript_Var7 + 1)
-constexpr std::uint32_t kStepWord = 0x8034E6;      // u16: the chapter's timer word (area_w0a_callees.h kTimer)
+// kStepWord: now MoveScript_PartyRecords[0x66] (symbols.toml). u16: the chapter's timer word (area_w0a_callees.h kTimer)
 
 // --- the objects the kinds move ---------------------------------------------
-constexpr std::uint32_t kObject0X = 0x7DEEB4;      // Sprite_Objects + 0x34: record 0's x
-constexpr std::uint32_t kObject1 = 0x7DEF24;       // Sprite_Objects + 0xA4: record 1
-constexpr std::uint32_t kObject1X = 0x7DEF58;      // record 1's +0x34
+// kObject0X: now Sprite_Objects[0x34] (symbols.toml). Sprite_Objects + 0x34: record 0's x
+// kObject1: now Sprite_Objects[0xa4] (symbols.toml). Sprite_Objects + 0xA4: record 1
+// kObject1X: now Sprite_Objects[0xd8] (symbols.toml). record 1's +0x34
 constexpr std::uint32_t kLeaderX = 0x802D74;       // ObjTrio + 0x34: the leader's x
-constexpr std::uint32_t kObjTrio2 = 0x802FD8;      // ObjTrio + 2 * 0x14C: the third member's field object
+// kObjTrio2: now ObjTrio[0x298] (symbols.toml). ObjTrio + 2 * 0x14C: the third member's field object
 constexpr std::uint32_t kObjTrio2X = 0x80300C;     // its +0x34
 constexpr std::int32_t kTrio2Line = 0x340000;      // the x at which kinds 0x82 / 0x84 end with 0xFF (step 0x14)
 constexpr unsigned kSpriteCount = 30;              // Sprite_Objects' records (symbols.toml)
@@ -45,6 +45,6 @@ constexpr unsigned kHeldA = 0x3000, kHeldB = 0x6000, kHeldC = 0x2000;   // Input
 constexpr std::uint32_t kPlaceOp = 0x654D88;       // the 17-byte EventOp_0x operand both objects are placed by
 
 // --- kind 0x87 ---------------------------------------------------------------
-constexpr std::uint32_t kKind87Flag = 0x676280;    // u8: cleared by kind 0x87's start
+// kKind87Flag: now Effect4b_SoundIndex (symbols.toml). u8: cleared by kind 0x87's start
 
 }  // namespace effect_4a::at

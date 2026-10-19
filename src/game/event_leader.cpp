@@ -92,11 +92,11 @@ std::int32_t Abs(std::uint32_t v) {
 // each << 15, plus the leader's position. The direction is a whole byte.
 std::uint32_t FormationX(int slot, unsigned d) {
     const auto dx = static_cast<signed char>(At(at::kFormation)[(slot + static_cast<int>(d) * 2) * 2]);
-    return (static_cast<std::uint32_t>(static_cast<std::int32_t>(dx)) << 15) + static_cast<std::uint32_t>(Long(At(at::kLeaderX)));
+    return (static_cast<std::uint32_t>(static_cast<std::int32_t>(dx)) << 15) + static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x34)));
 }
 std::uint32_t FormationZ(int slot, unsigned d) {
     const auto dz = static_cast<signed char>(At(at::kFormation)[(slot + static_cast<int>(d) * 2) * 2 + 1]);
-    return (static_cast<std::uint32_t>(static_cast<std::int32_t>(dz)) << 15) + static_cast<std::uint32_t>(Long(At(at::kLeaderZ)));
+    return (static_cast<std::uint32_t>(static_cast<std::int32_t>(dz)) << 15) + static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x38)));
 }
 
 // A member's shade bytes +0x5D..+0x5F: the first set, the other two copied
@@ -179,9 +179,9 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         }
         if (code == 0xAF) {
             g.leader_animation(Sprite_Current[8]);
-            g.change_area(Word(At(at::kExitArea)), Long(At(at::kExitX)), Long(At(at::kExitZ)), Byte(at::kExitKind));
-            Byte(at::kLandByte) = 0;
-            Byte(at::kLandMode) = 0xC;
+            g.change_area(AreaW0b_Place, Long(At(at::kExitX)), static_cast<std::int32_t>(AreaEntry_PendingZ), AreaEntry_PendingFlags);
+            ModeFlow_AreaTransition = 0;
+            AreaW0c_PendingKind = 0xC;
             return;
         }
         if (Byte(at::kFlags2Hi) & 0x20) {
@@ -213,11 +213,11 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
                 // came from, and a game loaded here came from none (0xFFFF,
                 // GameMode_Start's) - Capcom's code asks for area 0xFFFF and
                 // Area_ZoneAtIn reads a null zone list. The edge holds instead.
-                if (g_edge_no_area && Word(At(at::kEdgeArea)) == 0xFFFF) {
+                if (g_edge_no_area && AreaW2c_LastArea == 0xFFFF) {
                     Sprite_Current[2] = 1;
                     return;
                 }
-                g.change_area(Word(At(at::kEdgeArea)), Long(At(at::kEdgeX)), Long(At(at::kEdgeZ)), 4);
+                g.change_area(AreaW2c_LastArea, Long(At(MoveScript_TintRecords_addr + 0x21c)), Long(At(MoveScript_TintRecords_addr + 0x220)), 4);
                 Sprite_Current[2] = 1;
                 return;
             }
@@ -238,9 +238,9 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
             unsigned char* const s = Sprite_Current;
             if (!g.cells_none(Long(s + 0x34), Long(s + 0x38), s[0x70], 0xA6, 0)) {
                 g.ensure_animation(Sprite_Current[8]);
-                const std::int32_t z = Long(At(at::kReturnPoint + 4));
-                const std::int32_t x = Long(At(at::kReturnPoint));
-                const unsigned short area = Word(At(at::kReturnPoint + 8));
+                const std::int32_t z = Long(At(AreaW2d_ReturnPoint_addr + 4));
+                const std::int32_t x = static_cast<std::int32_t>(AreaW2d_ReturnPoint);
+                const unsigned short area = Word(At(AreaW2d_ReturnPoint_addr + 8));
                 Byte(at::kReturnPoint + 0xA) = 0;
                 g.change_area(area, x, z, 4);
                 return;
@@ -281,7 +281,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
         if (!stop) {
             g.bit80_tick();
             if (!(Byte(at::kFlagsHi) & 1) && !(Byte(at::kFlags2Lo) & 0x40) &&
-                (Field_InputHeld & (Word(At(at::kButtonConfirm)) | 0xF000u)) != 0) {
+                (Field_InputHeld & (Word(At(Gfx_UnpackScratch_addr + 0x1f000)) | 0xF000u)) != 0) {
                 g.leader_walk();
                 return;
             }
@@ -299,7 +299,7 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
 
 // original 0x52E9D0: the leader's state 3 (Field_LeaderSwapTest sets it) - a
 // tail jump through the five sub-states at 0x660968 by Sprite_Current +2.
-extern "C" void __cdecl Field_SwapState(void) { Table(at::kSwapSteps)[Sprite_Current[2]](); }
+extern "C" void __cdecl Field_SwapState(void) { Table(Field_SwapSteps_addr)[Sprite_Current[2]](); }
 
 // original 0x52E9F0: sub-state 0 - each member in turn (Sprite_Current set to
 // it) looks for its spot: the leader, and every member while ObjTrio +0x138
@@ -328,17 +328,17 @@ extern "C" void __cdecl Field_SwapGather(void) {
             }
             bool placed;
             if ((ObjTrio[0x138] & 1) || slot == 0) {
-                placed = g.spot_free(Long(At(at::kLeaderX)), Long(At(at::kLeaderZ)), dir, m[0x70]) != 0;
+                placed = g.spot_free(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)), dir, m[0x70]) != 0;
             } else {
                 placed = false;
                 const std::uint32_t x = FormationX(slot, dir), z = FormationZ(slot, dir);
                 if (g.spot_free(static_cast<long>(x), static_cast<long>(z), dir, m[0x70])) {
                     unsigned char* const sc = Sprite_Current;
-                    placed = g.path_clear(Long(At(at::kTargetX)), Long(At(at::kTargetZ)), sc[0x70]) != 0;
+                    placed = g.path_clear(Long(At(at::kTargetX)), static_cast<std::int32_t>(Scratch_Swap), sc[0x70]) != 0;
                 }
                 if (!placed) {
                     unsigned char* const sc = Sprite_Current;
-                    placed = g.spot_free(Long(At(at::kLeaderX)), Long(At(at::kLeaderZ)), dir, sc[0x70]) != 0;
+                    placed = g.spot_free(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)), dir, sc[0x70]) != 0;
                 }
             }
             if (placed && i != 0) {
@@ -374,10 +374,10 @@ extern "C" unsigned char __cdecl Field_SpotFree(long x, long z, unsigned, unsign
     const unsigned char steps = sc[9];
     sc[9] = 0;
     if (g.way_blocked(x, z, raised, ground)) return 0;
-    const int rise = static_cast<short>(Word(At(at::kLeaderHeight))) - static_cast<short>(ground);
+    const int rise = static_cast<short>(Word(At(ObjTrio_addr + 0x3e))) - static_cast<short>(ground);
     if (std::abs(rise) > 0x40) return 0;
     SetLong(At(at::kTargetX), static_cast<std::int32_t>(x));
-    SetLong(At(at::kTargetZ), static_cast<std::int32_t>(z));
+    Scratch_Swap = static_cast<std::int32_t>(z);
     const long at_spot = g.ground_at(x, z);
     unsigned char* const sc2 = Sprite_Current;
     SetWord(At(at::kScratch2), static_cast<unsigned>(at_spot));
@@ -450,7 +450,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
             unsigned char* const fs = Field_State;
             fs[0x148] = MoveScript_EffectState[fs[0x89]];
         }
-        At(at::kPartyList)[i] = Field_State[0x89];
+        Cond_Flags[0xd2 + i] = Field_State[0x89];
         if (i != 0) {
             g.shade_begin();
             Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xBF);
@@ -465,18 +465,18 @@ extern "C" void __cdecl Field_SwapExchange(void) {
             bool found = false;
             if (g.spot_free(static_cast<long>(x), static_cast<long>(z), d, raised)) {
                 unsigned char* const s = Sprite_Current;
-                found = g.path_clear(Long(At(at::kTargetX)), Long(At(at::kTargetZ)), s[0x70]) != 0;
+                found = g.path_clear(Long(At(at::kTargetX)), static_cast<std::int32_t>(Scratch_Swap), s[0x70]) != 0;
             }
             if (!found) {
                 unsigned char* const s = Sprite_Current;
-                g.spot_free(Long(At(at::kLeaderX)), Long(At(at::kLeaderZ)), s[8], s[0x70]);
+                g.spot_free(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)), s[8], s[0x70]);
             }
         } else {
             unsigned char* const s = Sprite_Current;
-            g.spot_free(Long(At(at::kLeaderX)), Long(At(at::kLeaderZ)), s[8], s[0x70]);
+            g.spot_free(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)), s[8], s[0x70]);
         }
         SetLong(Sprite_Current + 0x34, Long(At(at::kTargetX)));
-        SetLong(Sprite_Current + 0x38, Long(At(at::kTargetZ)));
+        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(Scratch_Swap));
         long ground;
         {
             unsigned char* const s = Sprite_Current;
@@ -487,8 +487,8 @@ extern "C" void __cdecl Field_SwapExchange(void) {
     }
     Sprite_Current = ObjTrio;
     Field_State = ObjTrio;
-    const auto lx = static_cast<std::uint32_t>(Long(At(at::kLeaderX)));
-    const auto lz = static_cast<std::uint32_t>(Long(At(at::kLeaderZ)));
+    const auto lx = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x34)));
+    const auto lz = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x38)));
     std::int32_t far = Abs(static_cast<std::uint32_t>(Field_Kind2X) - lx);
     Field_Kind2X = static_cast<long>(lx);
     const std::int32_t far_z = Abs(static_cast<std::uint32_t>(Field_Kind2Z) - lz);
@@ -497,7 +497,7 @@ extern "C" void __cdecl Field_SwapExchange(void) {
     if (far < far_z) far = far_z;
     const auto frames = static_cast<unsigned char>(far >> 13);
     if (frames != 0) {
-        const auto rise = static_cast<short>(Word(At(at::kLeaderHeight)) - static_cast<unsigned short>(MapView_Elevation));
+        const auto rise = static_cast<short>(Word(At(ObjTrio_addr + 0x3e)) - static_cast<unsigned short>(MapView_Elevation));
         MoveScript_FAWord = static_cast<unsigned short>(static_cast<int>(rise) / static_cast<int>(frames));
     } else {
         MoveScript_FAWord = 0;
@@ -544,7 +544,7 @@ extern "C" void __cdecl Field_SwapSpinIn(void) {
             unsigned char* const m = Member(i);
             Sprite_Current = m;
             if (m[1] == 3) {
-                g.load_palette(reinterpret_cast<unsigned short*>(At(at::kPalettes + m[5] * 64u)), 0);
+                g.load_palette(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + m[5] * 64u)), 0);
                 Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] & 0xDF);
                 Sprite_Current[0x5D] = 0;
                 Sprite_Current[0x5E] = 0;
@@ -580,7 +580,7 @@ extern "C" void __cdecl Field_SwapEnd(void) {
 
 // original 0x52F390: state 4 (Field_LeaderMenuTest sets it) - a tail jump
 // through 0x66097C's two sub-states.
-extern "C" void __cdecl Field_MenuState(void) { Table(at::kMenuSteps)[Sprite_Current[2]](); }
+extern "C" void __cdecl Field_MenuState(void) { Table(Field_MenuSteps_addr)[Sprite_Current[2]](); }
 
 // original 0x52F3B0: sub-state 0 - sub-state 1 and Field_Request 1 (the menu).
 extern "C" void __cdecl Field_MenuOpen(void) {
@@ -602,14 +602,14 @@ extern "C" void __cdecl Field_MenuWait(void) {
 
 // original 0x52F400: state 5 (Field_LeaderStepLands sets it when
 // Field_EncounterDue) - a tail jump through 0x660984's two sub-states.
-extern "C" void __cdecl Field_EncounterState(void) { Table(at::kEncounterSteps)[Sprite_Current[2]](); }
+extern "C" void __cdecl Field_EncounterState(void) { Table(Field_EncounterSteps_addr)[Sprite_Current[2]](); }
 
 // original 0x52F420: sub-state 0 - outside an event battle (0x904AAA 0),
 // Encounter_RollInitiative; in one, every member after the leader cleared
 // and put in state 5, and +0xB = 0xFF. Then sub-state 1.
 // As the original has it: the member count is read again after each clear.
 extern "C" void __cdecl Field_EncounterStart(void) {
-    if (Byte(at::kEventBattle) == 0) {
+    if (BattleActions_EventBattle == 0) {
         g.roll_initiative();
         Sprite_Current[2] = 1;
         return;
@@ -656,7 +656,7 @@ extern "C" void __cdecl Field_EncounterWait(void) {
 // original 0x52F5E0: state 7 (Field_LeaderTalkTest sets it on a passage) -
 // one of 0x66098C's four sub-states, then Sprite_ScriptTick (a tail jump).
 extern "C" void __cdecl Field_PassageState(void) {
-    Table(at::kPassageSteps)[Sprite_Current[2]]();
+    Table(Field_PassageSteps_addr)[Sprite_Current[2]]();
     g.script_tick();
 }
 
@@ -732,7 +732,7 @@ extern "C" void __cdecl Field_PassageTake(void) {
     if (g.flags_test(At(at::kPassageFlags), e[4])) {
         g.open_system(1);
     } else if (e[6] == 0xFF) {
-        SetLong(At(at::kPassageCount), Long(At(at::kPassageCount)) + 1);
+        Rest4a_CountD = static_cast<std::int32_t>(Rest4a_CountD) + 1;
         if (e[4] != 0xFF) g.flags_set(At(at::kPassageFlags), e[4]);
         g.play_effect(0x106);
         g.give_zenny(e[5] * 40);
@@ -742,7 +742,7 @@ extern "C" void __cdecl Field_PassageTake(void) {
         if (g.inventory_add(e[6], static_cast<unsigned>(Word(e + 4)) >> 8, 1)) {
             if (e[4] != 0xFF) {
                 g.flags_set(At(at::kPassageFlags), e[4]);
-                SetLong(At(at::kPassageCount), Long(At(at::kPassageCount)) + 1);
+                Rest4a_CountD = static_cast<std::int32_t>(Rest4a_CountD) + 1;
             }
             g.play_effect(0x106);
             g.open_system(2);
@@ -772,7 +772,7 @@ extern "C" void __cdecl Field_PassageEnd(void) {
 // party set (0x90412C & 0x7F); then, when it left Field_State +0x137 at 0,
 // the pose, member 0 cleared and state 1.
 extern "C" void __cdecl Field_ActionState(void) {
-    Table(at::kActionBySet)[Byte(at::kPartySet) & 0x7F]();
+    Table(Field_ActionBySet_addr)[AreaW0b_PartySet & 0x7F]();
     if (Field_State[0x137] != 0) return;
     g.ensure_animation(Sprite_Current[8]);
     g.clear_state(0);
@@ -786,9 +786,9 @@ extern "C" void __cdecl Field_ActionState(void) {
 // Called only by Field_LeaderWalk.
 extern "C" void __cdecl Field_EncounterArea(void) {
     const unsigned short area = Game_AreaNumber;
-    for (std::uint32_t p = at::kEncounterAreas; p < at::kEncounterAreasEnd; p += 4) {
+    for (std::uint32_t p = Field_EncounterAreas_addr; p < at::kEncounterAreasEnd; p += 4) {
         if (Word(At(p)) == area) {
-            SetWord(At(at::kExitArea), Word(At(p + 2)));
+            AreaW0b_Place = Word(At(p + 2));
             return;
         }
     }
@@ -799,7 +799,7 @@ extern "C" void __cdecl Field_EncounterArea(void) {
 // map's frame (eleven sites) and Field_LeaderCellEvent.
 extern "C" unsigned char __cdecl Field_CellHasEvent(long x, long z) {
     const unsigned char code = g.byte_at(static_cast<short>(x), static_cast<short>(z));
-    for (const unsigned char* p = At(at::kEventCells); *p != 0xFF; ++p)
+    for (const unsigned char* p = At(Field_EventCells_addr); *p != 0xFF; ++p)
         if (code == *p) return 1;
     return 0;
 }
@@ -819,10 +819,10 @@ extern "C" void __cdecl Field_ExitFromCell(void) {
     const unsigned char* const sc = Sprite_Current;
     const unsigned short x = Word(sc + 0x36);
     while (!(x == r[0] && Word(sc + 0x3A) == r[1])) r += 4;
-    SetWord(At(at::kExitArea), r[2]);
+    AreaW0b_Place = r[2];
     SetLong(At(at::kExitX), 0xE8000);
-    SetLong(At(at::kExitZ), 0x410000);
-    Byte(at::kExitKind) = r[3];
+    AreaEntry_PendingZ = 0x410000;
+    AreaEntry_PendingFlags = r[3];
 }
 
 // original 0x533780: the pending jump's entry 0 (0x660B60, Field_PendingJump
@@ -839,19 +839,19 @@ extern "C" void __cdecl Field_ExitFromCell(void) {
 // member i's own while the walk-in runs once), shifted mod 32, and cleared in
 // the 16-bit Field_ScriptFlags2 only.
 extern "C" void __cdecl Field_PendingWalkIn(void) {
-    unsigned char n = Byte(at::kPendingCount);
+    unsigned char n = EventLeader_PendingCount;
     if (n == 0) {
         ObjTrio[0] = static_cast<unsigned char>(ObjTrio[0] & 0xBF);
         g.clear_state(0);
         const unsigned char f = ObjTrio[0x138];
-        n = Byte(at::kPendingCount);
+        n = EventLeader_PendingCount;
         ObjTrio[0x138] = static_cast<unsigned char>(f & 0xFD);
         n = static_cast<unsigned char>(n + 1);
-        Byte(at::kPendingCount) = n;
+        EventLeader_PendingCount = n;
     } else {
-        const std::int32_t dx = Abs(static_cast<std::uint32_t>(Long(At(at::kLeaderX))) - static_cast<std::uint32_t>(Long(At(at::kPendingX))));
+        const std::int32_t dx = Abs(static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x34))) - EventLeader_PendingX);
         if (dx < 0x10000) {
-            const std::int32_t dz = Abs(static_cast<std::uint32_t>(Long(At(at::kLeaderZ))) - static_cast<std::uint32_t>(Long(At(at::kPendingZ))));
+            const std::int32_t dz = Abs(static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x38))) - EventLeader_PendingZ);
             if (dz < 0x10000) return;
         }
         const unsigned count = Field_MemberCount;
@@ -875,13 +875,13 @@ extern "C" void __cdecl Field_PendingWalkIn(void) {
                 m += at::kMemberStride;
             } while (--left != 0);
             Field_ScriptFlags2 = flags2;
-            Byte(at::kPendingCount) = n;
+            EventLeader_PendingCount = n;
         }
     }
     if (n == Field_MemberCount) {
-        g.test_fc(static_cast<short>(Word(At(at::kPendingX + 2))), static_cast<short>(Word(At(at::kPendingZ + 2))));
+        g.test_fc(static_cast<short>(Word(At(EventLeader_PendingX_addr + 2))), static_cast<short>(Word(At(EventLeader_PendingZ_addr + 2))));
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFEF);
-        Byte(at::kPendingFlag) = 0;
+        EventLeader_PendingFlag = 0;
     }
 }
 
@@ -923,7 +923,7 @@ extern "C" unsigned char __cdecl Field_WayBlocked4(long x, long z, long ground) 
 // 0x660C24 with the low nibble dropped; 0x10; 0x11 unless Field_State +0x138
 // bit 0; 0x20 and 0x21 both; 0xC0 and 0xA0 (nibble dropped) both; 0xA2.
 extern "C" unsigned char __cdecl Field_CellsBlock(long x, long z, unsigned wide) {
-    for (const unsigned char* p = At(at::kBlockingCells); *p != 0xFF; ++p)
+    for (const unsigned char* p = At(Field_BlockingCells_addr); *p != 0xFF; ++p)
         if (!g.cells_none(x, z, wide, *p, 1)) return 1;
     if (!g.cells_none(x, z, wide, 0x10, 0)) return 1;
     if (!(Field_State[0x138] & 1) && !g.cells_none(x, z, wide, 0x11, 0)) return 1;

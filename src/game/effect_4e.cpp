@@ -778,9 +778,9 @@ extern "C" void __cdecl EffectKindA0_Run(void) {
 // (ObjTrio +0x34..), its height 0x800000 more; the size +0x2E = 0; +9 = 8; +1
 // up; Sound_PlayEffect(0x20B).
 extern "C" void __cdecl EffectKindA0_Start(void) {
-    SetUL(S() + 0x64, UL(At(at::kLeaderPoint)));
-    SetUL(S() + 0x68, UL(At(at::kLeaderPoint + 4)));
-    SetUL(S() + 0x6C, UL(At(at::kLeaderPoint + 8)) + 0x800000u);
+    SetUL(S() + 0x64, UL(At(ObjTrio_addr + 0x34)));
+    SetUL(S() + 0x68, UL(At(ObjTrio_addr + 0x34 + 4)));
+    SetUL(S() + 0x6C, UL(At(ObjTrio_addr + 0x34 + 8)) + 0x800000u);
     SetWord(S() + 0x2E, 0);
     S()[9] = 8;
     NextState();

@@ -165,11 +165,11 @@ unsigned char* Item(const char* who, U item) {
 unsigned char* CellRecord(U x, U z, U run) {
     const U header = UL(at::kAreaHeader);
     const U width = header & 0xFF;
-    const U base = Word(At(at::kAreaCellBase));
-    const U word = Word(At(at::kAreaHeader + 2 * (x + width * z + 2 * base)));
+    const U base = Word(At(AreaMap_Header_addr + 0x2));
+    const U word = Word(At(AreaMap_Header_addr + 2 * (x + width * z + 2 * base)));
     const U height = (header >> 8) & 0xFF;
     const U half = (height * width + 1) / 2;   // cdq; sub eax, edx; sar 1 - never negative here
-    return At(at::kAreaHeader + 4 * (base + word + half + run));
+    return At(AreaMap_Header_addr + 4 * (base + word + half + run));
 }
 
 }  // namespace
@@ -246,11 +246,11 @@ extern "C" void __cdecl EffectKind18Sub44_Commit(unsigned size) {
 // it. The record put on Sprite_DrawList while it has room (40). Cond_ByteFE 2:
 // a red additive tile over the frame - DIV-0041's fill - and Cond_ByteFE 0.
 extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
-    if (S()[0x4B] != *At(at::kLeaderAnimation)) {
-        SH_CALL(Sprite_EnsureAnimation)(*At(at::kLeaderAnimation));
-        S()[0x4B] = *At(at::kLeaderAnimation);
+    if (S()[0x4B] != ObjTrio[0x4b]) {
+        SH_CALL(Sprite_EnsureAnimation)(ObjTrio[0x4b]);
+        S()[0x4B] = ObjTrio[0x4b];
     }
-    if (*At(at::kLeaderState) == 3) SH_CALL(Sprite_ScriptTick)();
+    if (ObjTrio[2] == 3) SH_CALL(Sprite_ScriptTick)();
     if (Cond_ByteFE == 1) {
         S()[0x5D] = 0x7F;
         S()[0x5E] = 0x80;
@@ -270,9 +270,9 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
     SetUL(S() + 0x74, 0x43200000u);   // 160.0f
     SetWord(S() + 0x2E, 0xA0);
     if (UL(at::kLeaderMoving) != 0) {
-        CopyQuiet(S() + 0x78, At(at::kScreenY));
+        CopyQuiet(S() + 0x78, At(MapView_ScreenXY_addr + 0x4));
         SetWord(S() + 0x30, Ftol(D(at::kScreenY)));
-        SetWord(At(at::kLeaderDepth), Ftol(D(at::kScreenY)));
+        SetWord(At(ObjTrio_addr + 0x30), Ftol(D(at::kScreenY)));
     } else {
         SetD(S() + 0x78, Fi(static_cast<U>(S16(at::kLeaderDepth))));
         unsigned char* const s = S();
@@ -585,7 +585,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         p[4] = p[5] = p[6] = 0xFF;
         SH_CALL(EffectKind18Sub44_Commit)(0x1C);
     }
-    const U clock = Word(At(at::kWalkClock));
+    const U clock = Word(At(Cond_Flags_addr + 0xcc));
     if (clock < 0x1B0) {
         SetV(0xC, 0x80);
         SetV(0xA, 0x80);
@@ -716,7 +716,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         if (level != 0)
             SH_CALL(EffectKind18Sub44_DrawGlow)(I(level), I(AngleX(((Cond_AngleFB - 0x800u) & 0xFFF) - 0x400u) - 0x28u));
     }
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow), 4) == 0) return;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 4) == 0) return;
     const std::int32_t x = S16(at::kKind2XHigh), z = S16(at::kKind2ZHigh);
     const U dx = static_cast<U>(x - 0x1780), dz = static_cast<U>(z - 0xE00);
     U level = 0x100u - DivP2(Abs(dz) + Abs(dx), 2);
@@ -907,8 +907,8 @@ extern "C" void __cdecl EffectKind18Sub51_Wait(void) {
         if (Cond_ByteFE == 1) s[2] = static_cast<unsigned char>(s[2] + 1);
         return;
     }
-    const bool set = v == 0 ? SH_CALL(Flags_Test)(At(at::kFlagRow), 0x14) != 0
-                            : SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x7A + (v - 2)) != 0;
+    const bool set = v == 0 ? SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 0x14) != 0
+                            : SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x7A + (v - 2)) != 0;
     if (set) S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
@@ -1061,7 +1061,7 @@ extern "C" void __cdecl EffectKind18Sub55_Run(void) {
 // original 0x5128D0 (sub-state 1): once flag 0xE of 0x904000 is set, +9 0 and
 // +2 up. The squares drawn (0x80, 0).
 extern "C" void __cdecl EffectKind18Sub55_Wait(void) {
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow), 0xE) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x70), 0xE) != 0) {
         S()[9] = 0;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -1193,7 +1193,7 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             SetV(0x12, Ftol(Fi(Sar(cosine, 8) * *At(at::kRadii59 + 8)) + D(at::kScreenY)));
             SetV(0x14, 0u - (static_cast<U>(*At(at::kHeights59 + 8)) << 5));
             long a;
-            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<unsigned long*>(At(at::kGlowXY)), &a);
+            SH_CALL(Gte_RotTransPers)(Vx(2), reinterpret_cast<unsigned long*>(At(Effect6c_GlowXY_addr)), &a);
             const std::int32_t divisor = static_cast<std::int16_t>(Camera_Distance) + 0x1194;
             if (divisor == 0)
                 bof3::Fatal("EffectKind18Sub59_DrawRing: Camera_Distance is -0x1194, the glow's divisor 0 - the original "
@@ -1453,7 +1453,7 @@ extern "C" void __cdecl EffectKind18Sub5A_Run(void) {
 // second cycle); else +2 up.
 extern "C" void __cdecl EffectKind18Sub5A_Start(void) {
     S()[9] = 0;
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x80) != 0)
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x80) != 0)
         S()[2] = 5;
     else
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -1477,7 +1477,7 @@ extern "C" void __cdecl EffectKind18Sub5A_Animate(void) {
 // 0); the first records of cells (0x11, 0x61) and (0x12, 0x61) given 0xE6 and
 // 0xE7 and their items textured (2) - DIV-0062's site 0x5139C2; +2 up.
 extern "C" void __cdecl EffectKind18Sub5A_Set(void) {
-    SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x80);
+    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x80);
     S()[9] = 0;
     SH_CALL(EffectKind18Sub5A_Move)(0xC0, 0);
     for (U e = 0; I(e) < 2; ++e) {
@@ -1572,7 +1572,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Run(void) {
 // original 0x513CF0 (sub-state 0): story flag 0x81 set: +2 = 6 (opened
 // already); else Cond_ByteFE 3 and +2 up.
 extern "C" void __cdecl EffectKind18Sub5B_Start(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x81) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x81) != 0) {
         S()[2] = 6;
         return;
     }
@@ -1646,7 +1646,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Lift(void) {
     Part(2);
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     if (S()[9] <= 0x30) return;
-    SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x81);
+    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0x81);
     SH_CALL(MoveCmd_TestFB)(0x30, 0x71);
     SH_CALL(Effect_Release)();
 }
@@ -1655,7 +1655,7 @@ extern "C" void __cdecl EffectKind18Sub5B_Lift(void) {
 // cleared, sound 0x206, the parts at -384 / 384 / 0 lifted 384, +9 0x60, +2 up.
 extern "C" void __cdecl EffectKind18Sub5B_Reopen(void) {
     if (Cond_ByteFE != 2) return;
-    SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x81);
+    SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x81);
     SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(at::kSoundStep5B));
     SetOffset(0xC3C00000u, 0);   // -384.0f
     Part(0);

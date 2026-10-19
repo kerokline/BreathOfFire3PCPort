@@ -109,8 +109,8 @@ bool Within(U a, std::int32_t first, U b, std::int32_t second) {
     if (Abs(b) <= second) return true;
     return Abs(b - 0x10000u) <= second;
 }
-U LeaderX() { return UL(At(at::kLeaderX)); }
-U LeaderZ() { return UL(At(at::kLeaderZ)); }
+U LeaderX() { return UL(At(ObjTrio_addr + 0x34)); }
+U LeaderZ() { return UL(At(ObjTrio_addr + 0x38)); }
 // The leader at the record's cell: across the x axis first (the centre), then
 // z - or, for +8 set (sub-kinds 0x2C / 0x4A), z first, then x.
 bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int32_t second) {

@@ -99,7 +99,7 @@ void Disturb() {
     case 8: Field_Request = static_cast<unsigned char>(v % 3 == 0 ? 0 : v % 3 == 1 ? 1 : v); break;
     case 9: SetLong(At(at::kTargetX + 4 * (w % 2)), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 10: At(at::kScratch)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 11: At(at::kPendingCount)[0] = static_cast<unsigned char>(v % 5); break;
+    case 11: At(EventLeader_PendingCount_addr)[0] = static_cast<unsigned char>(v % 5); break;
     case 12: g_passage[4 + w % 3] = static_cast<unsigned char>(v % 4 == 0 ? 0xFF : v); break;
     case 13: {
         unsigned char* const fs = Field_State;
@@ -212,7 +212,7 @@ long __cdecl StubGroundAt(long x, long z) {
     const std::uint32_t h = Hash();
     static const int kEdges[] = {0, 0x3F, 0x40, 0x41, -0x40, -0x41, 0xBF, 0xC0, 0xC1, -0xC0, -0xC1, 0x7FFF};
     if (h % 2) return static_cast<long>(h);
-    return static_cast<long>((h & 0xFFFF0000u) | static_cast<std::uint16_t>(Word(At(at::kLeaderHeight)) + kEdges[(h >> 4) % 12]));
+    return static_cast<long>((h & 0xFFFF0000u) | static_cast<std::uint16_t>(Word(At(ObjTrio_addr + 0x3e)) + kEdges[(h >> 4) % 12]));
 }
 void __cdecl StubSetAnimation(unsigned char a) { Record(28, a, Sc()); Disturb(); }
 void __cdecl StubSwapFields(unsigned a, unsigned b, unsigned keep) { Record(29, a & 0xFF, b & 0xFF, keep & 0xFF); Disturb(); }
@@ -238,7 +238,7 @@ void __cdecl StubOpenSystem(unsigned id) { Record(38, id); Disturb(); }
 unsigned char __cdecl StubFlagsTest(const unsigned char* bits, unsigned i) { Record(39, Address(bits), i & 0xFF); Disturb(); return static_cast<unsigned char>(Hash() % 3 == 0); }
 void __cdecl StubFlagsSet(unsigned char* bits, unsigned i) {
     Record(40, Address(bits), i & 0xFF);
-    if (Hash() % 2) SetLong(At(at::kPassageCount), static_cast<std::int32_t>(Hash()));
+    if (Hash() % 2) SetLong(At(Rest4a_CountD_addr), static_cast<std::int32_t>(Hash()));
     Disturb();
 }
 void __cdecl StubPlayEffect(unsigned short id) { Record(41, id); Disturb(); }
@@ -393,9 +393,9 @@ const void* StubFor(std::uint32_t target) {
 // The five .data tables: their entries become numbered recorders.
 struct Swapped { std::uint32_t at; unsigned count, first; };
 constexpr Swapped kTables[] = {
-    {at::kSwapSteps, at::kSwapCount, 100}, {at::kMenuSteps, at::kMenuCount, 110},
-    {at::kEncounterSteps, at::kEncounterCount, 115}, {at::kPassageSteps, at::kPassageStepCount, 120},
-    {at::kActionBySet, at::kActionCount, 130},
+    {Field_SwapSteps_addr, at::kSwapCount, 100}, {Field_MenuSteps_addr, at::kMenuCount, 110},
+    {Field_EncounterSteps_addr, at::kEncounterCount, 115}, {Field_PassageSteps_addr, at::kPassageStepCount, 120},
+    {Field_ActionBySet_addr, at::kActionCount, 130},
 };
 constexpr unsigned kSwappedTotal = 5 + 2 + 2 + 4 + 19;
 template <unsigned... N> struct Handlers { static constexpr Handler list[] = {&StubHandler<N>...}; };
@@ -549,7 +549,7 @@ void Fix() {
         if (Half()) m[8] = static_cast<unsigned char>(m[8] % 8);
     }
     Game_AreaNumber = static_cast<unsigned short>(Next() % kAreas);
-    At(at::kPendingCount)[0] = static_cast<unsigned char>(Next() % 5);
+    At(EventLeader_PendingCount_addr)[0] = static_cast<unsigned char>(Next() % 5);
     if (Half()) Field_Request = 0;
 }
 
@@ -577,12 +577,12 @@ Args Seed(unsigned k) {
         if (Often()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x2060u);
         if (Often()) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & ~0x100u);
         if (Half()) sc[0x70] = 0;
-        if (Often()) SetWord(At(at::kButtonConfirm), Word(At(at::kButtonConfirm)) & 0x0FFFu);
+        if (Often()) SetWord(At(Gfx_UnpackScratch_addr + 0x1f000), Word(At(Gfx_UnpackScratch_addr + 0x1f000)) & 0x0FFFu);
         {
             // held: nothing, a direction bit alone, the confirm button's bits
             const unsigned pick = Next() % 5;
             Field_InputHeld = static_cast<unsigned short>(pick == 0 ? 0 : pick == 1 ? (Half() ? 0x1000u : 0x1000u << (Next() % 4))
-                                                          : pick == 2 ? Word(At(at::kButtonConfirm)) & Next() : Next());
+                                                          : pick == 2 ? Word(At(Gfx_UnpackScratch_addr + 0x1f000)) & Next() : Next());
         }
         if ((Field_InputFlags & 3) == 2 && Often()) {
             // on an edge the step lands on: 0x20000, or the header's size less 3
@@ -610,7 +610,7 @@ Args Seed(unsigned k) {
         sc[2] = static_cast<unsigned char>(Next() % at::kPassageStepCount);
         break;
     case kActionState:
-        At(at::kPartySet)[0] = static_cast<unsigned char>((Next() % at::kActionCount) | (Half() ? 0x80 : 0));
+        At(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>((Next() % at::kActionCount) | (Half() ? 0x80 : 0));
         if (Half()) fs[0x137] = 0;
         break;
     case kSwapGather:
@@ -620,8 +620,8 @@ Args Seed(unsigned k) {
         for (unsigned i = 0; i < 3; ++i) Member(i)[1] = static_cast<unsigned char>(Often() ? 3 : Next() % 12);
         if (k == kExchange) {
             // the frames: the larger distance moved, >> 13, 0 or not
-            const std::uint32_t lx = static_cast<std::uint32_t>(Long(At(at::kLeaderX)));
-            const std::uint32_t lz = static_cast<std::uint32_t>(Long(At(at::kLeaderZ)));
+            const std::uint32_t lx = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x34)));
+            const std::uint32_t lz = static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x38)));
             static const std::int32_t kMoved[] = {0, 0x1FFF, 0x2000, -0x2000, -0x1FFF, 0x1FFFFF, 0x7FFFFFFF, 0};
             if (Often()) Field_Kind2X = static_cast<long>(lx + static_cast<std::uint32_t>(kMoved[Next() % 8]));
             if (Often()) Field_Kind2Z = static_cast<long>(lz + static_cast<std::uint32_t>(kMoved[Next() % 8]));
@@ -656,7 +656,7 @@ Args Seed(unsigned k) {
         if (Half()) Field_Request = 1;
         break;
     case kEncStart:
-        if (Half()) At(at::kEventBattle)[0] = 0;
+        if (Half()) At(BattleActions_EventBattle_addr)[0] = 0;
         break;
     case kEncWait: {
         if (Half()) sc[0xB] = 0xFF;
@@ -679,18 +679,18 @@ Args Seed(unsigned k) {
         if (Often()) Field_Request = 0;
         break;
     case kEncArea:
-        if (Often()) Game_AreaNumber = Word(At(at::kEncounterAreas) + (Next() % 10) * 4);
+        if (Often()) Game_AreaNumber = Word(At(Field_EncounterAreas_addr) + (Next() % 10) * 4);
         else Game_AreaNumber = static_cast<unsigned short>(Next());
         break;
     case kExitCell:
         break;
     case kWalkIn: {
-        if (Half()) At(at::kPendingCount)[0] = 0;
+        if (Half()) At(EventLeader_PendingCount_addr)[0] = 0;
         if (Often()) Field_MemberCount = static_cast<unsigned char>(1 + Next() % 3);
         static const std::int32_t kNear[] = {0, 0xFFFF, 0x10000, -0xFFFF, -0x10000, 0x10001, 0x40000};
-        SetLong(At(at::kPendingX), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kLeaderX))) +
+        SetLong(At(EventLeader_PendingX_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x34))) +
                                                           static_cast<std::uint32_t>(kNear[Next() % 7])));
-        SetLong(At(at::kPendingZ), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kLeaderZ))) +
+        SetLong(At(EventLeader_PendingZ_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(ObjTrio_addr + 0x38))) +
                                                           static_cast<std::uint32_t>(kNear[Next() % 7])));
         break;
     }
@@ -702,7 +702,7 @@ Args Seed(unsigned k) {
         if (Half()) args.a[1] &= 0xFFFF0000u;
         // the ground near what the ground stand-in answers half the time
         static const int kNear[] = {0, 0x10, -0x10, 0x40, -0x40, 0x80};
-        if (Often()) args.a[2] = Garbage(0xFFFF, static_cast<std::uint16_t>(Word(At(at::kLeaderHeight)) + (Half() ? 0 : kNear[Next() % 6])));
+        if (Often()) args.a[2] = Garbage(0xFFFF, static_cast<std::uint16_t>(Word(At(ObjTrio_addr + 0x3e)) + (Half() ? 0 : kNear[Next() % 6])));
         break;
     }
     case kCellsBlock:

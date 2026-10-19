@@ -94,19 +94,19 @@ std::int32_t Index(const char* who, std::int32_t i, unsigned n, U table) {
 
 // Prim_VertexScratch's four SVECTORs (x, y, z words at +0, +2, +4; the pads
 // +6 left as they are).
-constexpr U kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 void Vertex(unsigned k, U x, U y, U z) {
-    SetWord(At(kV + 8 * k), x & 0xFFFF);
-    SetWord(At(kV + 8 * k + 2), y & 0xFFFF);
-    SetWord(At(kV + 8 * k + 4), z & 0xFFFF);
+    SetWord(At(Prim_VertexScratch_addr + 8 * k), x & 0xFFFF);
+    SetWord(At(Prim_VertexScratch_addr + 8 * k + 2), y & 0xFFFF);
+    SetWord(At(Prim_VertexScratch_addr + 8 * k + 4), z & 0xFFFF);
 }
 // Gte_RotTransPers4 of the four into the POLY_FT4's corners (the tenth word
 // Capcom pushes, a second local, is read by no Gte_RotTransPers4 of ours),
 // then Gte_PrimDepths4_10.
 void Project4(unsigned char* p) {
     long depth;
-    SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(kV)), reinterpret_cast<const short*>(At(kV + 8)),
-                               reinterpret_cast<const short*>(At(kV + 0x10)), reinterpret_cast<const short*>(At(kV + 0x18)),
+    SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(Prim_VertexScratch_addr)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 8)),
+                               reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x10)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x18)),
                                reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                reinterpret_cast<float*>(p + 0x28), reinterpret_cast<float*>(p + 0x38), &depth);
     SH_CALL(Gte_PrimDepths4_10)(p);
@@ -154,7 +154,7 @@ U Div256(U v) {
 // dword sar 4)): equal is "on".
 bool On(const unsigned char* s) {
     const std::int32_t v = SW(s + 0x3A);
-    const std::int32_t f = Long(At(at::kStoryFlags));
+    const std::int32_t f = Long(At(Cond_Flags_addr + 0xa0));
     return ((((v >> 4) & (f >> 4)) ^ v) & 0xF) == 0;
 }
 unsigned RowA(const char* who, const unsigned char* s) { return T(at::kRowsA + Index(who, SW(s + 0x36), at::kRows, at::kRowsA)); }
@@ -214,7 +214,7 @@ extern "C" void __cdecl EffectKind18_04_Run(void) {
 // original 0x4FD490 (state 0): flag 0x17 of Cond_Flags row 2 set: +2 3 and the
 // open draw; else +2 up one and the shut draw (tail jumps).
 extern "C" void __cdecl EffectKind18_04_Start(void) {
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kFlagRow2), 0x17);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x10), 0x17);
     unsigned char* const s = S();
     if (set != 0) {
         s[2] = 3;
@@ -228,7 +228,7 @@ extern "C" void __cdecl EffectKind18_04_Start(void) {
 // original 0x4FD4C0 (state 1): the flag set: +2 up one, +0xC 0. The two
 // panels shut (angles 0 and 0x800).
 extern "C" void __cdecl EffectKind18_04_Shut(void) {
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow2), 0x17) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x10), 0x17) != 0) {
         unsigned char* const s = S();
         s[2] = static_cast<unsigned char>(s[2] + 1);
         SetUL(S() + 0xC, 0);
@@ -436,7 +436,7 @@ extern "C" void __cdecl Gfx_ClutStripCopy16(unsigned from_row, unsigned from_slo
         bof3::Fatal("Gfx_ClutStripCopy16: (%d, %d) -> (%d, %d) lies outside the CLUT strip - the original copies "
                     "there unchecked (docs/effect_5a.md section 7)",
                     (int)from_row, (int)from_slot, (int)to_row, (int)to_slot);
-    for (U i = 0; i < 0x20; i += 4) SetLong(At(at::kClutStrip + to + i), Long(At(at::kClutStrip + from + i)));
+    for (U i = 0; i < 0x20; i += 4) SetLong(At(Gfx_ClutStrip_addr + to + i), Long(At(Gfx_ClutStrip_addr + from + i)));
     Gfx_ClutStripDirty = 1;
 }
 
@@ -521,7 +521,7 @@ extern "C" void __cdecl EffectKind18_1F_Run(void) {
 // to (3, 3) and +2 up one.
 extern "C" void __cdecl EffectKind18_1F_Start(void) {
     S()[9] = 0;
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 7) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 7) != 0) {
         S()[2] = 3;
         return;
     }
@@ -531,7 +531,7 @@ extern "C" void __cdecl EffectKind18_1F_Start(void) {
 
 // original 0x4FDE30 (state 1): story flag 7 set: +2 up one.
 extern "C" void __cdecl EffectKind18_1F_Wait(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 7) != 0) S()[2] = static_cast<unsigned char>(S()[2] + 1);
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 7) != 0) S()[2] = static_cast<unsigned char>(S()[2] + 1);
 }
 
 // original 0x4FDE50 (state 2): (3, (+9 >> 1) + 5) to (3, 3), (6, (+9 >> 1) +
@@ -578,7 +578,7 @@ extern "C" void __cdecl EffectKind18_06_Start(void) {
 // original 0x4FDF80 (state 1): the story flag +0x34 set: +9 0, +2 up one, the
 // sounds 0x202 and 0x201; the draw.
 extern "C" void __cdecl EffectKind18_06_Wait(void) {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), S()[0x34]) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), S()[0x34]) != 0) {
         S()[9] = 0;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
         SH_CALL(Sound_PlayEffect)(0x202);
@@ -597,7 +597,7 @@ extern "C" void __cdecl EffectKind18_06_Turn(void) {
     s = S();
     if (s[9] >= 0x10) {
         SetWord(s + 0x3A, (s[0x3A] + 1u) & 3);
-        SH_CALL(Flags_Clear)(At(at::kStoryFlags), S()[0x34]);
+        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), S()[0x34]);
         S()[2] = static_cast<unsigned char>(S()[2] - 1);
     }
     SH_CALL(EffectKind18_06_SetMap)();
@@ -617,8 +617,8 @@ extern "C" void __cdecl EffectKind18_06_SetMap(void) {
     U r = rect(s);
     for (U x = T(r); x < T(r + 2); ++x) {
         for (U z = T(r + 1); z < T(r + 3);) {
-            const U w = T(at::kAreaHeader);
-            unsigned char* const bytes = *reinterpret_cast<unsigned char**>(At(at::kAreaBytes));
+            const U w = AreaMap_Header[0];
+            unsigned char* const bytes = *reinterpret_cast<unsigned char**>(At(AreaMap_Bytes_addr));
             bytes[w * z + x] = value;
             ++z;
             s = S();
@@ -633,9 +633,9 @@ extern "C" void __cdecl EffectKind18_06_SetMap(void) {
             s = S();
             std::int32_t v = -static_cast<std::int32_t>(static_cast<std::int16_t>(h)) - 2 * SW(s + 0x3E);
             v = (v + ((v >> 31) & 0x1F)) >> 5;
-            const U base = Word(At(at::kHeightBase));
-            const U w = T(at::kAreaHeader);
-            *At(at::kAreaHeader + 4 * base + x + w * z) = static_cast<unsigned char>(v);
+            const U base = AreaMap_HeightBase;
+            const U w = AreaMap_Header[0];
+            *At(AreaMap_Header_addr + 4 * base + x + w * z) = static_cast<unsigned char>(v);
             ++z;
             r = rect(s);
         }
@@ -774,7 +774,7 @@ extern "C" void __cdecl EffectKind18_08_Run(void) {
 // original 0x4FE770 (state 0): flag 6 of Cond_Flags row 3 set: +2 6, +0x34
 // -0x2940; else +2 up one, +0x34 -0x2B80; +0x38 -0x31C0, +0x3E -0x80; the draws.
 extern "C" void __cdecl EffectKind18_08_Start(void) {
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow3), 6) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x18), 6) != 0) {
         S()[2] = 6;
         SetUL(S() + 0x34, 0xFFFFD6C0u);
     } else {
@@ -788,7 +788,7 @@ extern "C" void __cdecl EffectKind18_08_Start(void) {
 
 // original 0x4FE7E0 (state 1): flag 5 of row 3 set: +9 0, +2 up one; the draws.
 extern "C" void __cdecl EffectKind18_08_Wait(void) {
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow3), 5) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x18), 5) != 0) {
         S()[9] = 0;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
     }
@@ -813,7 +813,7 @@ extern "C" void __cdecl EffectKind18_08_Shake(void) {
 // original 0x4FE860 (state 3): flag 6 of row 3 set: +0x34 + 0x40, +9 0, +2 up
 // one; the draws.
 extern "C" void __cdecl EffectKind18_08_WaitPush(void) {
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow3), 6) != 0) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x18), 6) != 0) {
         SetUL(S() + 0x34, UL(S() + 0x34) + 0x40);
         S()[9] = 0;
         S()[2] = static_cast<unsigned char>(S()[2] + 1);
@@ -850,11 +850,11 @@ extern "C" void __cdecl EffectKind18_08_Crash(void) {
         const U n = s[9];
         const U vx = ((static_cast<U>(TS(at::kPuffStep + j)) * n + (static_cast<U>(T(at::kPuffBase + j)) << 4)) << 3) + Word(s + 0x34);
         const U vy = ((static_cast<U>(TS(at::kPuffStep + j + 1)) * n + (static_cast<U>(T(at::kPuffBase + j + 1)) << 4)) << 3) + Word(s + 0x38);
-        SetWord(At(kV), vx & 0xFFFF);
-        SetWord(At(kV + 2), vy & 0xFFFF);
-        SetWord(At(kV + 4), Word(s + 0x3E));
+        Prim_VertexScratch[0] = vx & 0xFFFF;
+        Prim_VertexScratch[1] = vy & 0xFFFF;
+        Prim_VertexScratch[2] = Word(s + 0x3E);
         long depth;
-        SH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(At(kV)), reinterpret_cast<unsigned long*>(At(0x903820)), &depth);
+        SH_CALL(Gte_RotTransPers)(reinterpret_cast<const short*>(At(Prim_VertexScratch_addr)), reinterpret_cast<unsigned long*>(At(0x903820)), &depth);
         SH_CALL(Gte_PrimDepthFlat4_10)(p);
         FildSubr2(S()[9], At(0x903820), p + 0x28, p + 8);
         FildSubr2(S()[9], At(0x903824), p + 0x1C, p + 0xC);
@@ -934,8 +934,8 @@ extern "C" void __cdecl EffectKind18_09_Pattern(void) {
         const unsigned char value = Word(S() + 0x3E) != 0xFF80 ? 0x10 : 0;
         for (U z = 3; z < 7; ++z)
             for (U x = 0x42; x < 0x45; ++x) {
-                const U w = T(at::kAreaHeader);
-                unsigned char* const bytes = *reinterpret_cast<unsigned char**>(At(at::kAreaBytes));
+                const U w = AreaMap_Header[0];
+                unsigned char* const bytes = *reinterpret_cast<unsigned char**>(At(AreaMap_Bytes_addr));
                 bytes[w * z + x] = value;
             }
     }

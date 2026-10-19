@@ -13,17 +13,17 @@ namespace effect_5a::at {
 constexpr std::uint32_t kPattern = bof3::addr::Area109_SwitchPattern;      // (void) -> eax: the three story flags 0x65DE60 as bits, plus 1 (1..8)
 
 // --- the flag rows ------------------------------------------------------------
-constexpr std::uint32_t kFlagRow2 = 0x903FA0;     // Cond_Flags + 2 * 8 (sub-kind 4's flag 0x17)
-constexpr std::uint32_t kFlagRow3 = 0x903FA8;     // Cond_Flags + 3 * 8 (sub-kind 8's flags 5, 6)
-constexpr std::uint32_t kStoryFlags = 0x904030;   // Cond_Flags + 0x14 * 8: the story flags (a dword for sub-kind 5)
+// kFlagRow2: now Cond_Flags[0x10] (symbols.toml). Cond_Flags + 2 * 8 (sub-kind 4's flag 0x17)
+// kFlagRow3: now Cond_Flags[0x18] (symbols.toml). Cond_Flags + 3 * 8 (sub-kind 8's flags 5, 6)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0x14 * 8: the story flags (a dword for sub-kind 5)
 
 // --- the map ------------------------------------------------------------------
 constexpr std::uint32_t kAreaHeader = 0x8CB580;   // AreaMap_Header: its low byte the map's width
-constexpr std::uint32_t kHeightBase = 0x8CB5AA;   // AreaMap_HeightBase (u16): the height bytes at kAreaHeader + 4 * it
+// kHeightBase: now AreaMap_HeightBase (symbols.toml). AreaMap_HeightBase (u16): the height bytes at kAreaHeader + 4 * it
 constexpr std::uint32_t kAreaBytes = 0x905D94;    // AreaMap_Bytes (a pointer)
 
 // --- the CLUT strip -------------------------------------------------------------
-constexpr std::uint32_t kClutStrip = 0x80F580;    // Gfx_ClutStrip: 32 rows of 0x200 bytes, a 16-colour slot 0x20
+// kClutStrip: now Gfx_ClutStrip (symbols.toml). Gfx_ClutStrip: 32 rows of 0x200 bytes, a 16-colour slot 0x20
 constexpr std::uint32_t kClutStripSize = 0x4000;
 
 // --- sub-kind 4 (EffectKind18_04_States) ---------------------------------------
