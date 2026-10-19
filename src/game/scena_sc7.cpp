@@ -181,9 +181,10 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 // originals index it after the store.
 unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 

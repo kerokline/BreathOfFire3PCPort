@@ -69,9 +69,8 @@ bool TakeSlot() {
 }
 unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<uint32_t>(B(kSlot)) << 7)); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// The typed views of the record pointers (docs/typed-records.md). Fx() is an
+// effect object (Effect_Objects).
 static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 // A kind-0x13 effect at (x, y, z) with +9 = mode: the shape every run of this

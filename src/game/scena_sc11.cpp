@@ -78,8 +78,10 @@ unsigned char* Flags() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow
 unsigned char* EffectRecord(unsigned slot) { return Effect_Objects + ((slot & 0xFFu) << 7); }
 
 // The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// Sprite_Current afresh at each use, as the original does. Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
 static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }

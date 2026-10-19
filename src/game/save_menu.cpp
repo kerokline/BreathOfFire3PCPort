@@ -114,6 +114,7 @@ static records::SaveSummary* Sum(U address) { return reinterpret_cast<records::S
 static records::SaveDirEntry* Dir(U address) { return reinterpret_cast<records::SaveDirEntry*>(At(address)); }
 static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 static records::PartyMember* FS() { return reinterpret_cast<records::PartyMember*>(Field_State); }
+
 unsigned char* Packet() { return Gfx_PacketNext; }
 
 // The state byte both menus run on, stepped as the originals step it.

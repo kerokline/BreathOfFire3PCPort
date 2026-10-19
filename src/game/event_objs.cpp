@@ -72,8 +72,11 @@ std::int32_t Long(const unsigned char* p) {
 }
 void SetLong(unsigned char* p, std::int32_t v) { std::memcpy(p, &v, sizeof v); }
 
-// The typed views (docs/typed-records.md): Sprite_Current read afresh at each
-// use, and a sprite-family pointer (below +0x80, the head every family shares).
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use, as the original does. Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record.
 static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 static const records::SpriteObject* Spr(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }

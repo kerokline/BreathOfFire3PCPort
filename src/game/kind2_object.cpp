@@ -30,9 +30,10 @@ namespace {
 
 using namespace move_script;
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record.
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }

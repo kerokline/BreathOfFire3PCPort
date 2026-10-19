@@ -95,8 +95,8 @@ unsigned char* Kind(u32 kind) { return At(at::kKinds + at::kKindStride * kind); 
 unsigned char* Obj(u32 i) { return ObjTrio + at::kObjStride * i; }
 
 // The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// Sprite_Current afresh at each use, as the original does. Party() is a party
+// member (ObjTrio, Field_State). Fx() is an effect object (Effect_Objects).
 static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
 static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }

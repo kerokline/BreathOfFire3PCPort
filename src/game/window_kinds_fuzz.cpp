@@ -15,6 +15,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/window_kinds_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -27,6 +28,11 @@ using move_script::Long;
 using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160). Only +0..+7 are typed: +8..+0x1F mean something else in each
+// handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -348,7 +354,7 @@ void Seed(unsigned k) {
     case kBannerOut:
     case kMsgIn:
     case kMsgOut:
-        SetWord(r + 6, SlideY());
+        Win(r)->centre_y = SlideY();
         break;
     case kMsgRun:
         r[3] = static_cast<unsigned char>(Next() % 4);

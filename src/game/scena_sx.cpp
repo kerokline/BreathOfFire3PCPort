@@ -50,9 +50,10 @@ using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Party() is a party member (ObjTrio, Field_State).
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
 using move_script::SetWord;

@@ -45,8 +45,11 @@ short Count() { return static_cast<short>(Word(At(at::kCount))); }
 unsigned char* Object(int n) { return Sprite_Objects + n * static_cast<int>(at::kObjectStride); }
 
 // The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// Sprite_Current afresh at each use, as the original does. Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Obj() is a Sprite_Objects record. Fx() is an effect
+// object (Effect_Objects).
 static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 static records::SpriteObject* Obj(int n) { return Spr(Object(n)); }

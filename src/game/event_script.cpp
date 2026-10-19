@@ -75,9 +75,12 @@ void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
 unsigned char* Extra(unsigned n) { return Sprite_ObjectsExtra + n * 0xA4u; }
 
-// The typed views (docs/typed-records.md): Sprite_Current read afresh at each
-// use; a sprite-family pointer (below +0x80, the head every family shares);
-// a record of Sprite_Objects / Sprite_ObjectsExtra.
+// The typed views of the record pointers (docs/typed-records.md). SC() reads
+// Sprite_Current afresh at each use, as the original does. Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Obj() is a Sprite_Objects record. Ext() is a
+// Sprite_ObjectsExtra record.
 static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 static records::SpriteObject* Obj(int n) { return Spr(Object(n)); }

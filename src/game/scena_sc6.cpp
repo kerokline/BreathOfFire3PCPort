@@ -149,9 +149,10 @@ unsigned char& RecordB(unsigned k) {
 
 unsigned char* Effect(unsigned slot) { return &B(at::kEffects + (slot & 0xFFu) * at::kEffectStride); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use; Spr() is used below +0x80 only, the
-// sprite head that every family shares, unless the pointer is an object's.
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
 static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
 static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 std::int32_t Angle(std::uint32_t a) { return static_cast<std::int16_t>(W(a)); }
