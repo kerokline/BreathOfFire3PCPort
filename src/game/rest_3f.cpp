@@ -47,6 +47,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3f_callees.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -54,6 +55,10 @@
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace at = rest_3f::at;
 using U = std::uint32_t;
@@ -161,8 +166,8 @@ void CaptureSprite(const char* who, bool a3) {
     e[1] = 2;
     e[2] = 0;
     e[5] = 0x3A;
-    SetWord(e + 0x2E, Word(P(PixRecord(who))));
-    SetWord(e + 0x30, Word(P(PixRecord(who) + 2)));
+    EffectRec(e)->screen_x = Word(P(PixRecord(who)));
+    EffectRec(e)->screen_y = Word(P(PixRecord(who) + 2));
     if (a3 || (e[0x24] & 1) != 0) {
         const U tp = SH_CALL(Gpu_GetTPage)(0, 0, at::kCaptureX, at::kCaptureY);
         e[0x25] = static_cast<unsigned char>(tp);
@@ -332,12 +337,12 @@ unsigned char* Bar(unsigned i) { return EffectKind30_Shards + i * at::kBarStride
 // 0x40000 in x; +1 up.
 extern "C" void __cdecl EffectKind60_Start(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x34, 0x198000);
-    SetUL(s + 0x38, 0x198000);
-    SetUL(s + 0x3C, 0x4000000);
-    SetUL(s + 0xC, UL(s + 0x34) + 0x40000u);
-    SetUL(s + 0x10, UL(s + 0x38));
-    SetUL(s + 0x14, UL(s + 0x3C));
+    EffectRec(s)->x = 0x198000;
+    EffectRec(s)->z = 0x198000;
+    EffectRec(s)->height = 0x4000000;
+    SetUL(s + 0xC, static_cast<std::uint32_t>(EffectRec(s)->x) + 0x40000u);
+    SetUL(s + 0x10, static_cast<std::uint32_t>(EffectRec(s)->z));
+    SetUL(s + 0x14, static_cast<std::uint32_t>(EffectRec(s)->height));
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -345,13 +350,13 @@ extern "C" void __cdecl EffectKind60_Start(void) {
 // the line (EffectKind60_DrawLine(+0x34, +0xC)); +1 up once +0x34 is 0x98000.
 extern "C" void __cdecl EffectKind60_SlideBoth(void) {
     unsigned char* s = S();
-    SetUL(s + 0x34, UL(s + 0x34) + 0xFFFE0000u);
+    EffectRec(s)->x = static_cast<std::uint32_t>(EffectRec(s)->x) + 0xFFFE0000u;
     s = S();
     SetUL(s + 0xC, UL(s + 0xC) + 0xFFFE0000u);
     s = S();
     SH_CALL(EffectKind60_DrawLine)(Point(s + 0x34), Point(s + 0xC));
     s = S();
-    if (UL(s + 0x34) == 0x98000u) s[1] = static_cast<unsigned char>(s[1] + 1);
+    if (static_cast<std::uint32_t>(EffectRec(s)->x) == 0x98000u) s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
 // original 0x4802C0 (state 2, hidden in 0x47FBE0): the other end's x down
@@ -738,16 +743,16 @@ extern "C" void __cdecl EffectKind9E_Hold(void) {
         SH_CALL(EffectKind9E_DrawShadePlate)(Point(s + 0x34), Point(s + 0xC));
         s = S();
         if ((s[6] & 1) == 0)
-            SetUL(s + 0x34, UL(s + 0x34) + 0x4000u);
+            EffectRec(s)->x = static_cast<std::uint32_t>(EffectRec(s)->x) + 0x4000u;
         else
-            SetUL(s + 0x38, UL(s + 0x38) + 0x4000u);
+            EffectRec(s)->z = static_cast<std::uint32_t>(EffectRec(s)->z) + 0x4000u;
         s = S();
         SH_CALL(EffectKind9E_DrawTexPlate)(Point(s + 0x34), Point(s + 0xC));
         s = S();
         if ((s[6] & 1) == 0)
-            SetUL(s + 0x34, UL(s + 0x34) + 0xFFFFC000u);
+            EffectRec(s)->x = static_cast<std::uint32_t>(EffectRec(s)->x) + 0xFFFFC000u;
         else
-            SetUL(s + 0x38, UL(s + 0x38) + 0xFFFFC000u);
+            EffectRec(s)->z = static_cast<std::uint32_t>(EffectRec(s)->z) + 0xFFFFC000u;
     } else {
         unsigned char* const s = S();
         SH_CALL(EffectKind9E_DrawWall)(Point(s + 0x34), reinterpret_cast<const long*>(At(Rest3f_9EWall_addr)));
@@ -1264,7 +1269,7 @@ extern "C" unsigned char __cdecl EffectKindA8_StepBars(unsigned length) {
 // +9 = 0; the bars cleared; +1 up.
 extern "C" void __cdecl EffectKindA8_Start(void) {
     unsigned char* s = S();
-    SetWord(s + 0x2E, 0x12C);
+    EffectRec(s)->screen_x = 0x12C;
     s = S();
     s[9] = 0;
     SH_CALL(EffectKindA8_ClearBars)();
@@ -1358,8 +1363,8 @@ extern "C" void __cdecl EffectKindA9_DrawDisc(unsigned rx, unsigned ry, unsigned
 // 0, +9 = 0xA, +1 up.
 extern "C" void __cdecl EffectKindA9_Start(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x2E, 0);
-    SetWord(s + 0x30, 0);
+    EffectRec(s)->screen_x = 0;
+    EffectRec(s)->screen_y = 0;
     s[9] = 0xA;
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
@@ -1368,8 +1373,8 @@ extern "C" void __cdecl EffectKindA9_Start(void) {
 // down, at 0 +9 = 0x5A and +1 up.
 extern "C" void __cdecl EffectKindA9_Grow(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x2E, Word(s + 0x2E) + 0x15u);
-    SetWord(s + 0x30, Word(s + 0x30) + 9u);
+    EffectRec(s)->screen_x = static_cast<std::uint16_t>(EffectRec(s)->screen_x) + 0x15u;
+    EffectRec(s)->screen_y = static_cast<std::uint16_t>(EffectRec(s)->screen_y) + 9u;
     if (CountDown()) {
         S()[9] = 0x5A;
         NextState();
@@ -1388,8 +1393,8 @@ extern "C" void __cdecl EffectKindA9_Wait(void) {
 // down, at 0 Effect_Release (a tail jmp).
 extern "C" void __cdecl EffectKindA9_Shrink(void) {
     unsigned char* const s = S();
-    SetWord(s + 0x2E, Word(s + 0x2E) + 0xFFF9u);
-    SetWord(s + 0x30, Word(s + 0x30) + 0xFFFDu);
+    EffectRec(s)->screen_x = static_cast<std::uint16_t>(EffectRec(s)->screen_x) + 0xFFF9u;
+    EffectRec(s)->screen_y = static_cast<std::uint16_t>(EffectRec(s)->screen_y) + 0xFFFDu;
     if (CountDown()) SH_CALL(Effect_Release)();
 }
 

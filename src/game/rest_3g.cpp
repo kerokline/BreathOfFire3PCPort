@@ -34,6 +34,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3g_callees.h"
 #include "game/scenario_harness.h"
 #include "game/draw_pool.h"
@@ -44,6 +45,10 @@
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace at = rest_3g::at;
 using U = std::uint32_t;
@@ -175,12 +180,12 @@ extern "C" void __cdecl EffectKindAC_FadeOut(void) {
 extern "C" void __cdecl EffectKindAD_Start(void) {
     SetUL(S() + 0x34, UL(at::kMember2X));
     SetUL(S() + 0x38, UL(at::kMember2Z));
-    const long h = SH_CALL(AreaMap_Elevation)(Long(S() + 0x34), Long(S() + 0x38));
+    const long h = SH_CALL(AreaMap_Elevation)(EffectRec(S())->x, EffectRec(S())->z);
     unsigned char* const s = S();
-    SetUL(s + 0x3C, static_cast<U>(static_cast<std::int16_t>(h)) << 16);
-    SetUL(s + 0xC, UL(s + 0x34));
-    SetUL(s + 0x10, UL(s + 0x38));
-    SetUL(s + 0x14, UL(s + 0x3C));
+    EffectRec(s)->height = static_cast<U>(static_cast<std::int16_t>(h)) << 16;
+    SetUL(s + 0xC, static_cast<std::uint32_t>(EffectRec(s)->x));
+    SetUL(s + 0x10, static_cast<std::uint32_t>(EffectRec(s)->z));
+    SetUL(s + 0x14, static_cast<std::uint32_t>(EffectRec(s)->height));
     s[0x5D] = 0;
     s[0x5E] = 0x80;
     s[9] = 0x20;
@@ -192,7 +197,7 @@ extern "C" void __cdecl EffectKindAD_Start(void) {
 extern "C" void __cdecl EffectKindAD_Rise(void) {
     {
         unsigned char* const s = S();
-        SetUL(s + 0x3C, UL(s + 0x3C) + 0x800000u);
+        EffectRec(s)->height = static_cast<std::uint32_t>(EffectRec(s)->height) + 0x800000u;
         SH_CALL(EffectKindAD_DrawArc)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                       s[0x5D], s[0x5E]);
     }
@@ -209,14 +214,14 @@ extern "C" void __cdecl EffectKindAD_Rise(void) {
 // +0x32 the angle Math_Ratan2(b.y - a.y, b.x - a.x) + 0x400 (each difference
 // rounded to a float, as fstp leaves it); sound 0x202.
 extern "C" void __cdecl EffectKindAE_Start(void) {
-    SetUL(S() + 0x34, 0x188000u);
-    SetUL(S() + 0x38, 0x120000u);
-    const long h = SH_CALL(AreaMap_Elevation)(Long(S() + 0x34), Long(S() + 0x38));
+    EffectRec(S())->x = 0x188000u;
+    EffectRec(S())->z = 0x120000u;
+    const long h = SH_CALL(AreaMap_Elevation)(EffectRec(S())->x, EffectRec(S())->z);
     {
         unsigned char* const s = S();
-        SetUL(s + 0x3C, static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16);
-        SetWord(s + 0x2E, 0x80);
-        SetWord(s + 0x30, 0x180);
+        EffectRec(s)->height = static_cast<U>(static_cast<std::int16_t>(h) + 0x800) << 16;
+        EffectRec(s)->screen_x = 0x80;
+        EffectRec(s)->screen_y = 0x180;
         SetWord(s + 0x32, 0);
         s[9] = 8;
         s[1] = static_cast<unsigned char>(s[1] + 1);
@@ -225,9 +230,9 @@ extern "C" void __cdecl EffectKindAE_Start(void) {
     long point[3];
     {
         const unsigned char* const s = S();
-        point[0] = Long(s + 0x34);
-        point[1] = Long(s + 0x38);
-        point[2] = Long(s + 0x3C);
+        point[0] = EffectRec(s)->x;
+        point[1] = EffectRec(s)->z;
+        point[2] = EffectRec(s)->height;
     }
     float a[3], b[3];
     SH_CALL(EffectGte_ProjectPoint)(point, a);
@@ -263,17 +268,17 @@ extern "C" void __cdecl EffectKindBA_Line(void) {
     const U d2 = Sar(((0u - static_cast<U>(sin2) - three_cos) * 3u) << 13, 12);
     {
         unsigned char* const s = S();
-        SetUL(s + 0x34, UL(at::kExtra1X) + d1);
-        SetUL(s + 0x38, UL(at::kExtra1Z) + d2);
-        SetUL(s + 0x3C, UL(at::kExtra1Y) + 0x1000000u);
+        EffectRec(s)->x = UL(at::kExtra1X) + d1;
+        EffectRec(s)->z = UL(at::kExtra1Z) + d2;
+        EffectRec(s)->height = UL(at::kExtra1Y) + 0x1000000u;
         SetUL(s + 0xC, UL(at::kExtra1X) - (static_cast<U>(S16(s + 0x2E)) << 15) + d1);
         SetUL(s + 0x10, UL(at::kExtra1Z) + d2);
         SetUL(s + 0x14, UL(at::kExtra1Y) + 0x1000000u);
         SH_CALL(EffectKindBA_DrawLine)(reinterpret_cast<const long*>(s + 0x34), reinterpret_cast<const long*>(s + 0xC),
                                        0x40);
     }
-    SetWord(S() + 0x2E, Word(S() + 0x2E) + 1u);
-    if (Word(S() + 0x2E) != 0x14A) return;
+    EffectRec(S())->screen_x = static_cast<std::uint16_t>(EffectRec(S())->screen_x) + 1u;
+    if (static_cast<std::uint16_t>(EffectRec(S())->screen_x) != 0x14A) return;
     SH_CALL(Sound_PlayEffect)(0x216);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }

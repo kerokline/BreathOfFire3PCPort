@@ -434,9 +434,9 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
     EffectWrite(*index, who)[0] = 1;
     EffectWrite(*index, who)[5] = 0x19;
     EffectWrite(*index, who)[6] = static_cast<unsigned char>(sub);
-    EffectRec(EffectWrite(*index, who))->step_x = 0;
+    SetLong(EffectWrite(*index, who) + 0xC, 0);
     const unsigned char rise = SH_CALL(LinkedObject_EffectRise)();
-    EffectRec(EffectWrite(*index, who))->step_z = static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28;
+    SetLong(EffectWrite(*index, who) + 0x10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
     const unsigned char* const c = Sprite_Current;
     EffectRec(EffectWrite(*index, who))->x = SpriteRec(c)->x;
     EffectRec(EffectWrite(*index, who))->z = SpriteRec(c)->z;
