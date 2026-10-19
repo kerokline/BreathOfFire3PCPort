@@ -250,8 +250,8 @@ extern "C" void __cdecl EffectKind66_DrawPiece(unsigned piece, unsigned place) {
     p[0x45] = static_cast<unsigned char>(v + dv);
     p[5] = 0x80;
     p[6] = 0x80;
-    SetWord(p + 0x16, SH_CALL(Gpu_GetClut)(0, 0x1E8));
-    SetWord(p + 0x26, SH_CALL(Gpu_GetTPage)(1, 0, 0x240, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E8));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(1, 0, 0x240, 0x100));
     SH_CALL(Gfx_CommitPrim)(1, 0x48);
 }
 
@@ -1005,8 +1005,8 @@ extern "C" void __cdecl EffectKind5B_DrawBeam(unsigned length, unsigned abr) {
     point[1] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z) + 0x8000u);
     point[2] = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height) + 0xE00000u);
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(p + 0x38));
-    SetWord(p + 0x16, SH_CALL(Gpu_GetClut)(0xD0, 0x1E3));
-    SetWord(p + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0xD0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     s = S();
     const auto u = static_cast<unsigned char>(s[0xA] & 7);
     p[0x15] = 0;

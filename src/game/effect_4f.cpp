@@ -1022,10 +1022,10 @@ extern "C" void __cdecl EffectKindB9_SpawnSpark(void) {
         k[0] = 1;
         k[1] = 0;
         k[2] = 0x10;
-        SetUL(k + 4, static_cast<std::uint32_t>(so->x));
-        SetUL(k + 8, static_cast<std::uint32_t>(so->z));
-        SetUL(k + 0xC, static_cast<std::uint32_t>(so->height));
-        SetWord(k + 0x14, 0x100);
+        rv::Store<std::uint32_t>(rv::As<records::EffectGlowSpark>(k)->x, static_cast<std::uint32_t>(so->x));
+        rv::Store<std::uint32_t>(rv::As<records::EffectGlowSpark>(k)->z, static_cast<std::uint32_t>(so->z));
+        rv::Store<std::uint32_t>(rv::As<records::EffectGlowSpark>(k)->height, static_cast<std::uint32_t>(so->height));
+        rv::Store<std::uint32_t>(rv::As<records::EffectGlowSpark>(k)->size, 0x100);
         k[0x16] = 0x40;
         k[0x17] = 0;
         return;
@@ -1042,7 +1042,7 @@ extern "C" unsigned char __cdecl EffectKindB9_StepSparks(void) {
         unsigned char* const k = Spark(i);
         if (k[0] == 0) continue;
         const unsigned char life = k[2];
-        SetWord(k + 0x14, Word(k + 0x14) + 0xFFF0u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectGlowSpark>(k)->size, rv::As<records::EffectGlowSpark>(k)->size + 0xFFF0u);
         any = 1;
         k[2] = static_cast<unsigned char>(life - 1);
         if (k[2] == 0) k[0] = 0;
@@ -1061,7 +1061,7 @@ extern "C" void __cdecl EffectKindB9_DrawShards(void) {
     for (U i = 0; i < at::kShardCount; ++i) {
         unsigned char* const shard = Shard(i);
         SH_CALL(EffectKindB9_DrawShard)(shard);
-        SetWord(shard + 0x24, Word(shard + 0x24) + 0x10u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectShard>(shard)->angle[2], rv::As<records::EffectShard>(shard)->angle[2] + 0x10u);
     }
 }
 
@@ -1071,22 +1071,22 @@ namespace {
 // << 12 scaled likewise, added to the shard's point - each word read where the
 // original reads it, between the calls.
 void ShardCorner(unsigned char* shard, unsigned e, unsigned char* v) {
-    U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(SW(shard + 0x24))));
+    U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<std::uint32_t>(static_cast<std::int16_t>(rv::As<records::EffectShard>(shard)->angle[2])))));
     U e1 = c * SW(shard + e);
-    U s = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(SW(shard + 0x24))));
+    U s = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(static_cast<std::uint32_t>(static_cast<std::int16_t>(rv::As<records::EffectShard>(shard)->angle[2])))));
     U t = s * SW(shard + e + 2);
-    const U dx = Sar(e1 - t, 8) * SW(shard + 0x28);
-    const U angle = SW(shard + 0x24);
-    const U speed = SW(shard + 0x28);
+    const U dx = Sar(e1 - t, 8) * static_cast<std::uint32_t>(static_cast<std::int16_t>(rv::As<records::EffectShard>(shard)->speed));
+    const U angle = static_cast<std::uint32_t>(static_cast<std::int16_t>(rv::As<records::EffectShard>(shard)->angle[2]));
+    const U speed = static_cast<std::uint32_t>(static_cast<std::int16_t>(rv::As<records::EffectShard>(shard)->speed));
     s = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(angle)));
     e1 = s * SW(shard + e);
-    c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(SW(shard + 0x24))));
+    c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(static_cast<std::uint32_t>(static_cast<std::int16_t>(rv::As<records::EffectShard>(shard)->angle[2])))));
     t = c * SW(shard + e + 2);
     const U dy = Sar(e1 + t, 8) * speed;
     const U dz = (SW(shard + e + 4) << 12) * speed;
     SetUL(v, dx + UL(shard));
-    SetUL(v + 8, dz + UL(shard + 8));
-    SetUL(v + 4, dy + UL(shard + 4));
+    SetUL(v + 8, dz + static_cast<std::uint32_t>(rv::As<records::EffectShard>(shard)->height));
+    SetUL(v + 4, dy + static_cast<std::uint32_t>(rv::As<records::EffectShard>(shard)->z));
 }
 }  // namespace
 
@@ -1105,7 +1105,7 @@ extern "C" void __cdecl EffectKindB9_DrawShard(unsigned char* shard) {
     SH_CALL(EffectGte_ProjectPoint)(Point(v), Out(p + 0x18));
     ShardCorner(shard, 0x18, v);
     SH_CALL(EffectGte_ProjectPoint)(Point(v), Out(p + 0x28));
-    const auto w = static_cast<std::int16_t>(Word(shard + 0x2A));
+    const auto w = static_cast<std::int16_t>(rv::As<records::EffectShard>(shard)->shade);
     unsigned char c;
     if (w < 0)
         c = 0;

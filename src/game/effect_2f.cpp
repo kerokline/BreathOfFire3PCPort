@@ -402,8 +402,8 @@ extern "C" void __cdecl EffectKind50_SpeckQuad(unsigned char* speck) {
     std::memcpy(prim + 0x30, screen + 8, 4);
     std::memcpy(prim + 0x20, screen + 8, 4);
     std::memcpy(prim + 0x10, screen + 8, 4);
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     prim[0x14] = 0xE0;
     prim[0x15] = 0x30;
     prim[0x25] = 0x30;
@@ -1290,7 +1290,7 @@ extern "C" void __cdecl EffectKind53_Start(void) {
 extern "C" void __cdecl EffectKind53_Beam(void) {
     unsigned char* const self = S();
     auto* const selfo = rv::As<records::EffectObject>(self);
-    unsigned char* const sprite = Extra(UL(self + 0x18), "EffectKind53_Beam");
+    unsigned char* const sprite = Extra(static_cast<std::uint32_t>(rv::As<records::EffectObject>(self)->work_18), "EffectKind53_Beam");
     auto* const spriteo = rv::As<records::SpriteObject>(sprite);
     Sprite_Current = sprite;
     selfo->x = static_cast<std::uint32_t>(spriteo->x);
@@ -1334,8 +1334,8 @@ extern "C" void __cdecl EffectKind53_Beam(void) {
     }
     SetUL(prim + 0x2C, y);
     Sprite_Current = self;
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     prim[0x14] = 0;
     s = S();
     prim[0x24] = 0x10;

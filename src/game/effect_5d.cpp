@@ -477,8 +477,8 @@ void Sub19Draw() {
         SH_CALL(Gpu_SetPolyGT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         const unsigned char u0 = static_cast<unsigned char>(0x20 - 2 * i), u1 = static_cast<unsigned char>(0x1E - 2 * i);
-        SetWord(p + 0x2A, 0x1B);
-        SetWord(p + 0x16, 0x78CF);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyGT4>(p)->tpage, 0x1B);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyGT4>(p)->clut, 0x78CF);
         p[0x14] = u0;
         p[0x15] = 0xC0;
         p[0x28] = u1;
@@ -1156,8 +1156,8 @@ extern "C" void __cdecl EffectKind18Sub14_DrawTiles(U shade, U unused) {
                     p[0x35] = 0x4F;
                     p[0x44] = 0xFF;
                     p[0x45] = 0x4F;
-                    SetWord(p + 0x26, 0x3B);
-                    SetWord(p + 0x16, 0x78C5);
+                    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, 0x3B);
+                    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x78C5);
                     p[4] = half_shade;
                     p[5] = full_shade;
                     p[6] = half_shade;

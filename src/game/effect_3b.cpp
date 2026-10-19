@@ -1118,8 +1118,8 @@ extern "C" void __cdecl EffectKind6C_DrawSpark(unsigned char* spark) {
     std::memcpy(p + 0x30, screen + 8, 4);
     std::memcpy(p + 0x20, screen + 8, 4);
     std::memcpy(p + 0x10, screen + 8, 4);
-    SetWord(p + 0x16, SH_CALL(Gpu_GetClut)(0x50, 0x1E3));
-    SetWord(p + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0x50, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     const unsigned char bits = spark[0x26];
     p[4] = (bits & 4) ? spark[3] : 0;
     p[5] = (bits & 2) ? spark[3] : 0;

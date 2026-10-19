@@ -871,8 +871,8 @@ extern "C" void __cdecl Panel_DrawEdgeQuad(int x, int y, unsigned height, unsign
         bof3::Fatal("Panel_DrawEdgeQuad: quad %u past the %u records of 0x%X (the original reads past them)", k,
                     at::kEdgeQuadCount, (unsigned)at::kEdgeQuads);
     const unsigned char* const r = At(at::kEdgeQuads + 10 * k);
-    SetWord(p + 0x16, 0x7887);
-    SetWord(p + 0x26, ((Word(r + 8) & 0x3C0u) | 0x400u) >> 6);
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x7887);
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, ((Word(r + 8) & 0x3C0u) | 0x400u) >> 6);
     const int sx = static_cast<short>(x), sy = static_cast<short>(y);
     F(p + 8, sx);
     F(p + 0x18, static_cast<int>(Word(r + 4)) + sx);
@@ -1018,8 +1018,8 @@ extern "C" void __cdecl EffectKind0F_DrawScrollMark(int x, int y, unsigned heigh
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
     const int sx = static_cast<short>(x), sy = static_cast<short>(y);
-    SetWord(p + 0x26, 0x1D);
-    SetWord(p + 0x16, 0x7887);
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, 0x1D);
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x7887);
     F(p + 8, sx);
     F(p + 0x18, sx + 8);   // fadd 8.0f (0x5C41CC): a whole number
     F(p + 0x28, sx);
@@ -1348,7 +1348,7 @@ extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned cha
     SH_CALL(Gpu_SetCode6C)(p);
     const unsigned char c0 = text[0];
     const auto glyph = static_cast<std::uint16_t>((c0 & 0x80) != 0 ? ((c0 & 0x7Fu) << 8) + text[1] : c0 - 0x26u);
-    SetWord(p + 0x16, glyph);
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->glyph, glyph);
     const auto wb = static_cast<unsigned char>(width);
     p[0xC] = 0;
     p[0xD] = 0;
@@ -1357,20 +1357,20 @@ extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned cha
     const auto w7 = static_cast<unsigned char>(wb & 0x7F);
     p[0x1C] = u0;
     p[0x14] = p[0x24] = static_cast<unsigned char>(u0 + w7);
-    SetWord(p + 8, static_cast<unsigned>(x));
-    SetWord(p + 0x18, static_cast<unsigned>(x));
-    SetWord(p + 0x10, static_cast<unsigned>(x) + w7);
-    SetWord(p + 0x20, static_cast<unsigned>(x) + w7);
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->x0, static_cast<unsigned>(x));
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->x2, static_cast<unsigned>(x));
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->x1, static_cast<unsigned>(x) + w7);
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->x3, static_cast<unsigned>(x) + w7);
     p[0x15] = 0;
     p[0x1D] = 0xC;
     p[0x25] = 0xC;
     const U top = static_cast<U>(Long(At(Effect_Objects_addr + 0x1b0))) + 3u;
-    SetWord(p + 0xA, top);
-    SetWord(p + 0x12, top);
-    SetWord(p + 0x1A, top + 0xC);
-    SetWord(p + 0x22, top + 0xC);
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->y0, top);
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->y1, top);
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->y2, top + 0xC);
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->y3, top + 0xC);
     p[4] = p[5] = p[6] = 0x80;
-    SetWord(p + 0xE, 0x7800u | (clut & 0xF));
+    rv::Store<std::uint32_t>(rv::As<records::GpuGlyph>(p)->clut, 0x7800u | (clut & 0xF));
     SH_CALL(Gfx_CommitPrim)(1, 0x28);
 }
 

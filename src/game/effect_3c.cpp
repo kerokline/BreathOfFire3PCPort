@@ -766,8 +766,8 @@ extern "C" void __cdecl EffectKind72_Debris(void) {
         unsigned char* const d = At(Shards() + at::kDebrisStride * i);
         SH_CALL(EffectDebris_Draw)(d);
         last = S();
-        SetWord(d + 0x24, Word(d + 0x24) + 0x10u);
-        SetWord(d + 0x2A, Word(d + 0x2A) + (last[9] < 4 ? 0x20u : 0xFFFEu));
+        rv::Store<std::uint32_t>(rv::As<records::EffectShard>(d)->angle[2], rv::As<records::EffectShard>(d)->angle[2] + 0x10u);
+        rv::Store<std::uint32_t>(rv::As<records::EffectShard>(d)->shade, rv::As<records::EffectShard>(d)->shade + (last[9] < 4 ? 0x20u : 0xFFFEu));
     }
     last[9] = static_cast<unsigned char>(last[9] + 1);
     unsigned char* const s = S();
@@ -1049,8 +1049,8 @@ extern "C" void __cdecl EffectKind73_DrawSpark(unsigned char* r) {
     SetUL(prim + 0x30, depth);
     SetUL(prim + 0x20, depth);
     SetUL(prim + 0x10, depth);
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 2, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 2, 0x2C0, 0x100));
     const unsigned char bits = r[0x16];
     const unsigned char red = (bits & 4) ? r[3] : 0;
     const unsigned char green = (bits & 2) ? r[3] : 0;
@@ -1180,8 +1180,8 @@ extern "C" void __cdecl EffectKind74_Draw(void) {
         prim[0x44] = 0;
         prim[0x45] = 0xE0;
         prim[4] = prim[5] = prim[6] = 0x80;
-        SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(1, 0, 0x1C0, 0x100));
-        SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0, 0x1E5));
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(1, 0, 0x1C0, 0x100));
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E5));
         SH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(pt[0]), static_cast<unsigned long>(pt[1]), 2, 0x48);
         s = S();
     } while (S32(y) < S32(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x1000000u));

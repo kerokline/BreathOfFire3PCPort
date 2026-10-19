@@ -157,9 +157,9 @@ unsigned char MoveShards(U draw) {
     for (U r = 0; r < at::kShardCount; ++r) {
         unsigned char* const shard = At(Shards() + r * at::kShardStride);
         if (!shard[0]) continue;
-        SetUL(shard + 0xC, UL(shard + 0xC) - (static_cast<U>(static_cast<int>(SW(shard + 2))) << 8));
+        rv::Store<std::uint32_t>(rv::As<records::EffectSpeck>(shard)->height, static_cast<std::uint32_t>(rv::As<records::EffectSpeck>(shard)->height) - (static_cast<U>(static_cast<int>(static_cast<std::int16_t>(rv::As<records::EffectSpeck>(shard)->fall))) << 8));
         SH_AT(void (__cdecl*)(unsigned char*), draw)(shard);
-        if (Long(shard + 0xC) < rv::Current<records::EffectObject>()->height) shard[0] = 0;
+        if (rv::As<records::EffectSpeck>(shard)->height < rv::Current<records::EffectObject>()->height) shard[0] = 0;
         any = 1;
     }
     return any;
@@ -629,8 +629,8 @@ extern "C" void __cdecl EffectKind1E_ShardQuad(unsigned char* shard) {
     std::memcpy(prim + 0x30, &screen[2], 4);
     std::memcpy(prim + 0x20, &screen[2], 4);
     std::memcpy(prim + 0x10, &screen[2], 4);
-    SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
-    SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0xA0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(0, 1, 0x2C0, 0x100));
     prim[4] = shard[3];
     prim[5] = shard[3];
     prim[6] = shard[3];

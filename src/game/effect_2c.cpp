@@ -910,8 +910,8 @@ extern "C" void __cdecl EffectKind6B_Capture(void) {
     eo->x = UL(at::kSprite2Point);
     eo->z = UL(at::kSprite2Point + 4);
     eo->height = UL(at::kSprite2Point + 8);
-    SetWord(e + 0x2E, static_cast<std::uint16_t>(EffectKind6B_Frame[0]));
-    SetWord(e + 0x30, static_cast<std::uint16_t>(EffectKind6B_Frame[1]));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_2e, static_cast<std::uint16_t>(EffectKind6B_Frame[0]));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(e)->work_30, static_cast<std::uint16_t>(EffectKind6B_Frame[1]));
     e[0x24] = static_cast<unsigned char>(e[0x24] | 0x88);
     unsigned char* const self = S();
     Sprite_Current = e;

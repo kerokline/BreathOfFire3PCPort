@@ -615,9 +615,9 @@ extern "C" void __cdecl EffectKind4A_TrailInit(void) {
     for (unsigned i = 0; i < at::kTrailCount; ++i) {
         unsigned char* const p = At(EffectKind30_Shards_addr + at::kTrailStride * i);
         SetUL(p, static_cast<std::uint32_t>(so->x));
-        SetUL(p + 4, static_cast<std::uint32_t>(so->z));
-        SetUL(p + 8, static_cast<std::uint32_t>(so->height));
-        SetWord(p + 0x30, 0);
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->z, static_cast<std::uint32_t>(so->z));
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->height, static_cast<std::uint32_t>(so->height));
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->angle, 0);
     }
 }
 
@@ -636,29 +636,29 @@ extern "C" void __cdecl EffectKind4A_TrailStep(void) {
     const unsigned char* s = S();
     unsigned char* const head = At(EffectKind30_Shards_addr);
     SetUL(head, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->x));
-    SetUL(head + 4, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(head)->z, static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->z));
     const U bob = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(~(frame << 7) & 0xFFFFu)));
     s = S();
     const unsigned char spin = Effect2e_TrailSpin;
-    SetUL(head + 8, (bob << 10) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
-    SetWord(head + 0x30, Effect2e_TrailTurn);
+    rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(head)->height, (bob << 10) + static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->height));
+    rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(head)->angle, Effect2e_TrailTurn);
     if (spin != 0) {
         AddWord(At(Effect2e_TrailTurn_addr), 0x40);
         if (Effect2e_TrailTurn == 0) Effect2e_TrailSpin = 0;
     }
     for (unsigned i = 0; i < at::kTrailCount; ++i) {
         unsigned char* const p = At(EffectKind30_Shards_addr + at::kTrailStride * i);
-        const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(Word(p + 0x30)))) << 3;
-        const U n = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(Word(p + 0x30)))) << 3;
+        const U c = static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(rv::As<records::EffectTrailPoint>(p)->angle))) << 3;
+        const U n = static_cast<U>(SH_CALL(Math_Sin)(static_cast<int>(rv::As<records::EffectTrailPoint>(p)->angle))) << 3;
         const U x = UL(p);
-        const U z = UL(p + 4);
-        SetUL(p + 0x14, z + c);
-        const U height = UL(p + 8);
-        SetUL(p + 0x10, x);
-        SetUL(p + 0x18, (n << 8) + height);
-        SetUL(p + 0x20, x);
-        SetUL(p + 0x24, z - c);
-        SetUL(p + 0x28, height - (n << 8));
+        const U z = static_cast<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->z);
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->edge0_z, z + c);
+        const U height = static_cast<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->height);
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->edge0_x, x);
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->edge0_height, (n << 8) + height);
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->edge1_x, x);
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->edge1_z, z - c);
+        rv::Store<std::uint32_t>(rv::As<records::EffectTrailPoint>(p)->edge1_height, height - (n << 8));
     }
 }
 
@@ -1007,8 +1007,8 @@ extern "C" void __cdecl EffectKind4D_DrawColumn(void) {
         prim[0x44] = 0x60;
         prim[0x45] = 0xA0;
         prim[4] = prim[5] = prim[6] = 0x80;
-        SetWord(prim + 0x26, SH_CALL(Gpu_GetTPage)(1, 0, 0x140, 0x100));
-        SetWord(prim + 0x16, SH_CALL(Gpu_GetClut)(0, 0x1E7));
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->tpage, SH_CALL(Gpu_GetTPage)(1, 0, 0x140, 0x100));
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(prim)->clut, SH_CALL(Gpu_GetClut)(0, 0x1E7));
         SH_CALL(Gfx_CommitPrim)(1, 0x48);
         s = S();
     } while (static_cast<std::int32_t>(y) < static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::EffectObject>(s)->work_1c) + 0x1000000u));

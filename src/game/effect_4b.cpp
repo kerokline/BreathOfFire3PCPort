@@ -821,7 +821,7 @@ void Kind9DQuad(U x, U y, int top, int left, int right) {
         q[0x42] = 0;
     }
     const unsigned tpage = SH_CALL(Gpu_GetTPage)(2, 1, 0x340, 0x100);
-    SetWord(q + 0x2A, tpage);
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyGT4>(q)->tpage, tpage);
     SH_CALL(Gpu_SetSemiTrans)(q, 1);
     unsigned char* const s = S();
     auto* const so = rv::As<records::EffectObject>(s);

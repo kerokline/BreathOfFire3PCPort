@@ -165,15 +165,15 @@ U GroundOf(U word) { return static_cast<U>(S16(word) + 0x4000) << 9; }
 void GroundFixed(U low, U high) {
     unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
     unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
-    U gx = GroundOf(Word(v0)), gz = GroundOf(Word(v0 + 2));
+    U gx = GroundOf(Word(v0)), gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v0)->y));
     long e = Elevation(gx, gz);
-    SetWord(v0 + 4, low - Half(e));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, low - Half(e));
     e = Elevation(gx, gz);
-    gz = GroundOf(Word(v1 + 2));
+    gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v1)->y));
     gx = GroundOf(Word(v1));
     Prim_VertexScratch[0xa] = high - Half(e);
     e = Elevation(gx, gz);
-    SetWord(v1 + 4, low - Half(e));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->z, low - Half(e));
     e = Elevation(gx, gz);
     Prim_VertexScratch[0xe] = high - Half(e);
 }
@@ -184,15 +184,15 @@ void GroundFixed(U low, U high) {
 void GroundLifted() {
     unsigned char* const v0 = Vertex(Prim_VertexScratch_addr);
     unsigned char* const v1 = Vertex(Prim_VertexScratch_addr + 0x8);
-    U gz = GroundOf(Word(v0 + 2)), gx = GroundOf(Word(v0));
+    U gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v0)->y)), gx = GroundOf(Word(v0));
     long e = Elevation(gx, gz);
-    SetWord(v0 + 4, 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole - 0x180u);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole - 0x180u);
     e = Elevation(gx, gz);
-    gz = GroundOf(Word(v1 + 2));
+    gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v1)->y));
     gx = GroundOf(Word(v1));
     Prim_VertexScratch[0xa] = 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole;
     e = Elevation(gx, gz);
-    SetWord(v1 + 4, 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole - 0x180u);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->z, 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole - 0x180u);
     e = Elevation(gx, gz);
     Prim_VertexScratch[0xe] = 0u - Half(e) - rv::As<records::EffectObject>(S())->height_whole;
 }
@@ -449,8 +449,8 @@ extern "C" void __cdecl EffectKind18Sub42_Draw(unsigned variant, int height) {
             s = S();
             unsigned char* const v = Vertex(Prim_VertexScratch_addr + 8 * j);
             SetWord(v, ((static_cast<U>(S8(B(point))) + dx + Word(s + 0x36)) << 7) - 0x4040u);
-            SetWord(v + 2, ((static_cast<U>(S8(B(point + 1))) + Word(s + 0x3A) + dz) << 7) - 0x4040u);
-            SetWord(v + 4, (static_cast<U>(S8(B(point + 2))) << 7) - static_cast<U>(height) + lift);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, ((static_cast<U>(S8(B(point + 1))) + Word(s + 0x3A) + dz) << 7) - 0x4040u);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, (static_cast<U>(S8(B(point + 2))) << 7) - static_cast<U>(height) + lift);
         }
         Project(p);
         SH_CALL(Prim_SetTexture)(((B(at::kSub42ShapeTexture + shape) + 0x1200u) << 16) + B(piece + 3), p, 1);
@@ -833,18 +833,18 @@ extern "C" void __cdecl EffectKind18Sub4B_Run(void) {
     for (U k = 0; k < 3; ++k) {
         unsigned char* const p = Quad();
         const U a = k * 0xA00, c = k * 0x180;
-        SetWord(v0 + 4, 0xB00);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, 0xB00);
         SetWord(v0, x0 + a - b);
-        SetWord(v0 + 2, c - b + z0);
-        SetWord(v1 + 2, c - b + z0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->y, c - b + z0);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->y, c - b + z0);
         SetWord(v2, x0 + a - b);
         SetWord(v1, x0 + a + b);
         SetWord(v3, x0 + a + b);
-        SetWord(v2 + 2, c + z0 + b);
-        SetWord(v3 + 2, c + z0 + b);
-        SetWord(v2 + 4, 0xB00);
-        SetWord(v3 + 4, 0xB00);
-        SetWord(v1 + 4, 0xB00);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v2)->y, c + z0 + b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v3)->y, c + z0 + b);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v2)->z, 0xB00);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v3)->z, 0xB00);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->z, 0xB00);
         Project(p);
         SH_CALL(Prim_SetTexture)(texture, p, 1);
         SH_CALL(Gfx_CommitPrim)(6, 0x48);
@@ -979,30 +979,30 @@ extern "C" void __cdecl EffectKind18Sub3C_Draw(int edge) {
         DrawMode();
         LinkAtRecord(2, 0xC);
         unsigned char* const p = Quad();
-        SetWord(v3 + 2, 0xC780);
-        SetWord(v2 + 2, 0xC780);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v3)->y, 0xC780);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v2)->y, 0xC780);
         const U near = (0xFFFFFC78u - k) << 4;
-        SetWord(v1 + 2, near);
-        SetWord(v0 + 2, near);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->y, near);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->y, near);
         if (edge != 0) {
             U gx = GroundOf(Word(v0)), gz = GroundOf(near);
             long e = Elevation(gx, gz);
-            SetWord(v0 + 4, 0u - Half(e));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, 0u - Half(e));
             const U t = k == 0 ? 0x180u : 0u;
             e = Elevation(gx, gz);
-            gz = GroundOf(Word(v1 + 2));
+            gz = GroundOf(static_cast<std::uint16_t>(rv::As<records::SVector>(v1)->y));
             gx = GroundOf(Word(v1));
-            SetWord(v2 + 4, t - Half(e));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v2)->z, t - Half(e));
             e = Elevation(gx, gz);
-            SetWord(v1 + 4, 0u - Half(e));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->z, 0u - Half(e));
             e = Elevation(gx, gz);
-            SetWord(v3 + 4, t - Half(e));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v3)->z, t - Half(e));
         } else {
-            SetWord(v1 + 4, 0xFB80);
-            SetWord(v0 + 4, 0xFB80);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v1)->z, 0xFB80);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v0)->z, 0xFB80);
             const U t = (((k == 0 ? 1u : 0u) - 3u) * 3u) << 7;
-            SetWord(v3 + 4, t);
-            SetWord(v2 + 4, t);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v3)->z, t);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v2)->z, t);
         }
         Project(p);
         SH_CALL(Prim_SetTexture)(UL(at::kSub3CTextures + 4 * k), p, 1);

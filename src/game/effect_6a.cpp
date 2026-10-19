@@ -215,10 +215,10 @@ void GroundDraw(U (*texture)(const unsigned char* s)) {
         const U slide = rv::As<records::EffectWork>(s)->work_30;
         if (s[8] != 0) {
             const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - 0x3FC0u;
-            SetWord(v + 0x1A, y);
-            SetWord(v + 0x12, y);
-            SetWord(v + 0xA, y);
-            SetWord(v + 2, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
             const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - slide;
             SetWord(v + 0x10, x - 0x3F40u);
             SetWord(v, x - 0x3F40u);
@@ -226,9 +226,9 @@ void GroundDraw(U (*texture)(const unsigned char* s)) {
             SetWord(v + 8, x - 0x4040u);
         } else {
             const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - 0x3FC0u;
-            SetWord(v + 0x18, x);
-            SetWord(v + 0x10, x);
-            SetWord(v + 8, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x);
             SetWord(v, x);
             const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) + slide;
             SetWord(v + 0x12, y - 0x3F40u);
@@ -239,14 +239,14 @@ void GroundDraw(U (*texture)(const unsigned char* s)) {
     }
     const long x0 = Ground(v), y0 = Ground(v + 2);
     long h = SH_CALL(AreaMap_Elevation)(x0, y0);
-    SetWord(v + 4, Above(0x40, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, Above(0x40, h));
     h = SH_CALL(AreaMap_Elevation)(x0, y0);
     const long x1 = Ground(v + 8), y1 = Ground(v + 0xA);
-    SetWord(v + 0x14, Above(0x180, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, Above(0x180, h));
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
-    SetWord(v + 0xC, Above(0x40, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, Above(0x40, h));
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
-    SetWord(v + 0x1C, Above(0x180, h));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, Above(0x180, h));
     Project(p);
     const U word = texture(S());
     SH_CALL(Prim_SetTexture)(word, p, 1);
@@ -312,10 +312,10 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
         const U slide = sign * rv::As<records::EffectWork>(s)->work_30;
         if (s[8] != 0) {
             const U y = (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7) - 0x3FC0u;
-            SetWord(v + 0x1A, y);
-            SetWord(v + 0x12, y);
-            SetWord(v + 0xA, y);
-            SetWord(v + 2, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
             const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - slide;
             SetWord(v + 0x10, x - 0x3F40u);
             SetWord(v, x - 0x3F40u);
@@ -323,9 +323,9 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
             SetWord(v + 8, x - 0x4040u);
         } else {
             const U x = (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7) - 0x3FC0u;
-            SetWord(v + 0x18, x);
-            SetWord(v + 0x10, x);
-            SetWord(v + 8, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x);
             SetWord(v, x);
             const U y = slide + (static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7);
             SetWord(v + 0x12, y - 0x3F40u);
@@ -333,10 +333,10 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
             SetWord(v + 0x1A, y - 0x4040u);
             SetWord(v + 0xA, y - 0x4040u);
         }
-        SetWord(v + 0xC, rv::As<records::EffectObject>(s)->height_whole - 0x140u);
-        SetWord(v + 4, rv::As<records::EffectObject>(s)->height_whole - 0x140u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, rv::As<records::EffectObject>(s)->height_whole - 0x140u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, rv::As<records::EffectObject>(s)->height_whole - 0x140u);
         SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_whole);
-        SetWord(v + 0x14, rv::As<records::EffectObject>(s)->height_whole);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectObject>(s)->height_whole);
     }
     Project(p);
     {

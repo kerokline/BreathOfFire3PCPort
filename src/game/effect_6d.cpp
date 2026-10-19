@@ -230,8 +230,8 @@ extern "C" void __cdecl EffectKind18Sub5C_DrawPanel(unsigned side, int dy) {
             const unsigned char* const t = At(at::kSub5CVertices + 6 * (4 * i + v));
             unsigned char* const out = Vertices() + 8 * v;
             SetWord(out, Ftol(static_cast<long double>(S16(t)) + Fl(AddressOf(MapView_ScreenXY))));
-            SetWord(out + 2, Ftol(static_cast<long double>(S16(t + 2)) + Fl(AddressOf(MapView_ScreenXY) + 4)));
-            SetWord(out + 4, Word(t + 4));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(out)->y, Ftol(static_cast<long double>(S16(t + 2)) + Fl(AddressOf(MapView_ScreenXY) + 4)));
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(out)->z, Word(t + 4));
         }
         Project(p);
         const U variant = S()[0xB];
@@ -343,10 +343,10 @@ extern "C" void __cdecl EffectKind18Sub5E_Draw(void) {
     unsigned char* const v = Vertices();
     unsigned char* const mode = Gfx_PacketNext;
     const U y = (static_cast<U>(rv::As<records::EffectObject>(S())->z_whole) << 7) - 0x3FC0u;
-    SetWord(v + 0x1A, y);
-    SetWord(v + 0x12, y);
-    SetWord(v + 0xA, y);
-    SetWord(v + 2, y);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
     SH_CALL(Gpu_SetDrawMode)(mode, 0, 0, 0x95, 0);
     SH_CALL(Gfx_CommitPrim)(6, 0xC);
     for (U i = 0; i < 2; ++i) {
@@ -357,20 +357,20 @@ extern "C" void __cdecl EffectKind18Sub5E_Draw(void) {
         const U sign = S8U(At(at::kSub5ESides)[i]);
         const long y0 = Ground(v + 2);
         const U slid = rv::As<records::EffectWork>(s)->work_30 * sign + (static_cast<U>(rv::As<records::EffectObject>(s)->x_whole) << 7);
-        SetWord(v + 0x10, slid - 0x3F40u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, slid - 0x3F40u);
         SetWord(v, slid - 0x3F40u);
-        SetWord(v + 0x18, slid - 0x4040u);
-        SetWord(v + 8, slid - 0x4040u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, slid - 0x4040u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, slid - 0x4040u);
         const long x0 = Ground(v);
         long h = SH_CALL(AreaMap_Elevation)(x0, y0);
-        SetWord(v + 4, 0u - Half(h));
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, 0u - Half(h));
         h = SH_CALL(AreaMap_Elevation)(x0, y0);
-        SetWord(v + 0x14, 0x180u - Half(h));
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, 0x180u - Half(h));
         const long y1 = Ground(v + 0xA), x1 = Ground(v + 8);
         h = SH_CALL(AreaMap_Elevation)(x1, y1);
-        SetWord(v + 0xC, 0u - Half(h));
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, 0u - Half(h));
         h = SH_CALL(AreaMap_Elevation)(x1, y1);
-        SetWord(v + 0x1C, 0x180u - Half(h));
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, 0x180u - Half(h));
         Project(p);
         SH_CALL(Prim_SetTexture)((0x11Du - i) | 0x1790000u, p, 1);
         SH_CALL(Gfx_CommitPrim)(6, 0x48);
@@ -464,10 +464,10 @@ extern "C" void __cdecl EffectKind18Sub5D_Draw(void) {
             SetWord(v, x);
         }
         const U top = rv::As<records::EffectObject>(s)->height_whole - rv::As<records::EffectWork>(s)->work_2e;
-        SetWord(v + 0xC, top);
-        SetWord(v + 4, top);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, top);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, top);
         SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_whole);
-        SetWord(v + 0x14, rv::As<records::EffectObject>(s)->height_whole);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectObject>(s)->height_whole);
     }
     for (U side = 0; side < 2; ++side) {
         PanelMode();
@@ -1232,28 +1232,28 @@ extern "C" void __cdecl EffectKind18Sub64_Draw(unsigned scale, int width, unsign
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 0);
         const U across = w * i;
-        SetWord(v + 0x10, across + x);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, across + x);
         SetWord(v, across + x);
-        SetWord(v + 0x18, x - across);
-        SetWord(v + 8, x - across);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x - across);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x - across);
         const U along = i == 0 ? w : 0u;
-        SetWord(v + 2, along - l + z);
-        SetWord(v + 0x12, along + z);
-        SetWord(v + 0x1A, z - along);
-        SetWord(v + 0xA, z - along - l);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, along - l + z);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, along + z);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, z - along);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, z - along - l);
         {
             unsigned char* const r = S();
             const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(r)->x, rv::As<records::EffectObject>(r)->z);
             const U top = (0u - (2 * w + 0xC0u)) - Half(h);
-            SetWord(v + 0xC, top);
-            SetWord(v + 4, top);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, top);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, top);
         }
         {
             unsigned char* const r = S();
             const long h = SH_CALL(AreaMap_Elevation)(rv::As<records::EffectObject>(r)->x, rv::As<records::EffectObject>(r)->z);
             const U bottom = 0xFFFFFF40u - Half(h);
-            SetWord(v + 0x1C, bottom);
-            SetWord(v + 0x14, bottom);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, bottom);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, bottom);
         }
         Project(p);
         SH_CALL(Prim_SetTexture)(textures[i], p, 1);

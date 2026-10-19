@@ -149,14 +149,14 @@ void Grounded() {
     unsigned char* const v = Vertices();
     const long x0 = Ground(v), y0 = Ground(v + 2);
     long h = SH_CALL(AreaMap_Elevation)(x0, y0);
-    SetWord(v + 4, Lift(h, S()) - 0x180u);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, Lift(h, S()) - 0x180u);
     h = SH_CALL(AreaMap_Elevation)(x0, y0);
     const long x1 = Ground(v + 8), y1 = Ground(v + 0xA);
-    SetWord(v + 0x14, Lift(h, S()));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, Lift(h, S()));
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
-    SetWord(v + 0xC, Lift(h, S()) - 0x180u);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, Lift(h, S()) - 0x180u);
     h = SH_CALL(AreaMap_Elevation)(x1, y1);
-    SetWord(v + 0x1C, Lift(h, S()));
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].z, Lift(h, S()));
 }
 // The quad's four corners projected into the POLY_FT4 at p, its depths set.
 // The original also pushes a tenth pointer (a flag local) the projection
@@ -227,9 +227,9 @@ extern "C" void __cdecl EffectKind18Sub2B_Draw(int follow) {
     unsigned char* const v = Vertices();
     unsigned char* const mode = Gfx_PacketNext;
     const U x = (static_cast<U>(rv::As<records::EffectObject>(S())->x_whole) << 7) - 0x3FC0u;
-    SetWord(v + 0x18, x);
-    SetWord(v + 0x10, x);
-    SetWord(v + 8, x);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x);
+    rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x);
     SetWord(v, x);
     PanelMode(mode);
     SH_CALL(Gfx_CommitPrim)(6, 0xC);
@@ -242,17 +242,17 @@ extern "C" void __cdecl EffectKind18Sub2B_Draw(int follow) {
         const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub2BSides)[i])));
         const U slide = rv::As<records::EffectWork>(s)->work_30 * sign;
         const U z = static_cast<U>(rv::As<records::EffectObject>(s)->z_whole) << 7;
-        SetWord(v + 0x12, slide + z - 0x3F40u);
-        SetWord(v + 2, slide + z - 0x3F40u);
-        SetWord(v + 0x1A, slide + z - 0x4040u);
-        SetWord(v + 0xA, slide + z - 0x4040u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, slide + z - 0x3F40u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, slide + z - 0x3F40u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, slide + z - 0x4040u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, slide + z - 0x4040u);
         if (follow != 0) {
             Grounded();
         } else {
-            SetWord(v + 0xC, rv::As<records::EffectObject>(s)->draw_key - 0x180u);
-            SetWord(v + 4, rv::As<records::EffectObject>(s)->draw_key - 0x180u);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, rv::As<records::EffectObject>(s)->draw_key - 0x180u);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, rv::As<records::EffectObject>(s)->draw_key - 0x180u);
             SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->draw_key);
-            SetWord(v + 0x14, rv::As<records::EffectObject>(s)->draw_key);
+            rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectObject>(s)->draw_key);
         }
         Project(p);
         SH_CALL(Prim_SetTexture)(rv::As<records::EffectWork>(S())->work_0c | texture | 0x1690000u, p, 1);
@@ -285,10 +285,10 @@ extern "C" void __cdecl EffectKind18Sub2C_Draw(void) {
             SetWord(v + 8, x);
             SetWord(v, x);
         }
-        SetWord(v + 0xC, rv::As<records::EffectObject>(s)->height_whole - 0x180u);
-        SetWord(v + 4, rv::As<records::EffectObject>(s)->height_whole - 0x180u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].z, rv::As<records::EffectObject>(s)->height_whole - 0x180u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->z, rv::As<records::EffectObject>(s)->height_whole - 0x180u);
         SetWord(v + 0x1C, rv::As<records::EffectObject>(s)->height_whole);
-        SetWord(v + 0x14, rv::As<records::EffectObject>(s)->height_whole);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].z, rv::As<records::EffectObject>(s)->height_whole);
     }
     for (U side = 0; side < 2; ++side) {
         PanelMode(Gfx_PacketNext);
@@ -343,15 +343,15 @@ extern "C" void __cdecl EffectKind18Sub3A_DrawPanel(unsigned side, int dy) {
         const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub3ASides)[side])));
         const U slide = sign * Word(s + 0x30);
         const U x = (side + rv::As<records::EffectObject>(s)->x_whole) << 7;
-        SetWord(v + 0x10, x - slide - 0x4040u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].x, x - slide - 0x4040u);
         SetWord(v, x - slide - 0x4040u);
-        SetWord(v + 0x18, x - slide - 0x3FC0u);
-        SetWord(v + 8, x - slide - 0x3FC0u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].x, x - slide - 0x3FC0u);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].x, x - slide - 0x3FC0u);
         const U y = (rv::As<records::EffectObject>(s)->z_whole - 0x80u) << 7;
-        SetWord(v + 0x1A, y);
-        SetWord(v + 0x12, y);
-        SetWord(v + 0xA, y);
-        SetWord(v + 2, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[3].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[2].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)[1].y, y);
+        rv::Store<std::uint32_t>(rv::As<records::SVector>(v)->y, y);
     }
     PanelMode(Gfx_PacketNext);
     {

@@ -381,7 +381,7 @@ extern "C" void __cdecl EffectKind01_Start(void) {
 extern "C" void __cdecl EffectKind01_Draw(void) {
     unsigned char* const e = S();
     auto* const eo = rv::As<records::EffectObject>(e);
-    unsigned char* const x = Extra("EffectKind01_Draw", L(e + 0x18));
+    unsigned char* const x = Extra("EffectKind01_Draw", static_cast<std::uint32_t>(rv::As<records::EffectObject>(e)->work_18));
     Sprite_Current = x;
     eo->x = L(S() + 0x34);
     eo->z = L(S() + 0x38);
@@ -406,8 +406,8 @@ extern "C" void __cdecl EffectKind01_Draw(void) {
     Fld(p + 0xC, p + 0x2C);
     SetL(p + 0xC, 0);
     Sprite_Current = e;
-    SetW(p + 0x16, SH_CALL(Gpu_GetClut)(0xB0, 0x1E3));
-    SetW(p + 0x26, SH_CALL(Gpu_GetTPage)(0, 0, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0xB0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(0, 0, 0x2C0, 0x100));
     p[0x14] = 0;
     p[0x15] = static_cast<unsigned char>((Frame_Counter >> 2) & 0x15);
     p[0x24] = 0x10;
@@ -436,7 +436,7 @@ extern "C" void __cdecl EffectKind01_Draw(void) {
 extern "C" void __cdecl EffectKind10_Run(void) {
     unsigned char* const e = S();
     auto* const eo = rv::As<records::EffectObject>(e);
-    Sprite_Current = Extra("EffectKind10_Run", L(e + 0xC));
+    Sprite_Current = Extra("EffectKind10_Run", rv::As<records::EffectWork>(e)->work_0c);
     eo->x = L(S() + 0x34);
     eo->z = L(S() + 0x38);
     eo->height = L(S() + 0x3C);
@@ -454,7 +454,7 @@ extern "C" void __cdecl EffectKind10_Run(void) {
     CopyDword(p + 0x1C, p + 0xC);
     FldAdd(p + 8, At(at::kQuadEight), p + 0x18);
     FldSub(p + 8, At(at::kQuadEight), p + 8);
-    Sprite_Current = Extra("EffectKind10_Run", L(e + 0x18));
+    Sprite_Current = Extra("EffectKind10_Run", static_cast<std::uint32_t>(rv::As<records::EffectObject>(e)->work_18));
     SH_CALL(MoveCmd_AttachOffset)(out, e[0x1C]);
     AttachVector(S(), out, v);
     eo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 0x28), depth));
@@ -464,8 +464,8 @@ extern "C" void __cdecl EffectKind10_Run(void) {
     FldAdd(p + 0x28, At(at::kQuadEight), p + 0x38);
     FldSub(p + 0x28, At(at::kQuadEight), p + 0x28);
     Sprite_Current = e;
-    SetW(p + 0x16, SH_CALL(Gpu_GetClut)(0xB0, 0x1E3));
-    SetW(p + 0x26, SH_CALL(Gpu_GetTPage)(0, 0, 0x2C0, 0x100));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, SH_CALL(Gpu_GetClut)(0xB0, 0x1E3));
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, SH_CALL(Gpu_GetTPage)(0, 0, 0x2C0, 0x100));
     p[0x14] = 0;
     const U v0 = (Frame_Counter >> 2) & 0x15;
     p[0x15] = static_cast<unsigned char>(v0);
@@ -628,7 +628,7 @@ extern "C" void __cdecl EffectHud_Marker(int x, int y, unsigned slot) {
     DrawMode(0, slot);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetSprt16)(p);
-    SetW(p + 0x16, 0x7A40);
+    rv::Store<std::uint32_t>(rv::As<records::GpuSprt>(p)->clut, 0x7A40);
     p[4] = 0x80;
     p[5] = 0x80;
     p[6] = 0x80;
@@ -647,7 +647,7 @@ extern "C" void __cdecl EffectHud_Sprite8(int x, int y, unsigned slot) {
     p[4] = 0x80;
     p[5] = 0x80;
     p[6] = 0x80;
-    SetW(p + 0x16, 0x7A40);
+    rv::Store<std::uint32_t>(rv::As<records::GpuSprt>(p)->clut, 0x7A40);
     p[0x14] = 0xB8;
     p[0x15] = 0x48;
     Fild(static_cast<std::int16_t>(x), p + 8);
@@ -712,8 +712,8 @@ extern "C" void __cdecl EffectHud_DrawArrow(int x, int y, unsigned flip, unsigne
     p[4] = 0x80;
     p[5] = 0x80;
     p[6] = 0x80;
-    SetW(p + 0x26, 0x99);
-    SetW(p + 0x16, 0x7A40);
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, 0x99);
+    rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x7A40);
     const std::int32_t xs = static_cast<std::int16_t>(x), ys = static_cast<std::int16_t>(y);
     Fild(xs - 8, p + 8);
     Fild(xs + 8, p + 0x18);

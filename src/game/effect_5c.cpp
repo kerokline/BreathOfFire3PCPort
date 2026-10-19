@@ -1321,9 +1321,9 @@ extern "C" void __cdecl EffectKind18Sub16_Run(void) {
         SH_CALL(Gpu_SetShadeTex)(prim, 0);
         const U half = static_cast<U>(I(b) / 2);
         const unsigned char u0 = static_cast<unsigned char>(b * 0xFEu - half + 0x28u);
-        SetWord(prim + 0x2A, 0x1B);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyGT4>(prim)->tpage, 0x1B);
         const unsigned char u1 = static_cast<unsigned char>(0u - half - (b & 1u) - (b << 1) + 0x26u);
-        SetWord(prim + 0x16, 0x78CF);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyGT4>(prim)->clut, 0x78CF);
         prim[0x14] = u0;
         prim[0x15] = 0x70;
         prim[0x28] = u1;

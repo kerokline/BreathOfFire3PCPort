@@ -659,7 +659,7 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
             SH_CALL(EffectKind18Sub44_Commit)(0x48);
         }
     }
-    const U stars = Word(Vertices() + 8);
+    const U stars = static_cast<std::uint16_t>(rv::As<records::SVector>(Vertices())[1].x);
     if (stars != 0) SH_CALL(EffectKind18Sub44_DrawStars)(static_cast<std::int16_t>(stars));
     for (U layer = 0x20, row = 0; I(layer) < 0x60; layer += 0x20, ++row) {
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, (layer & 0x60) | 0x95, 0);
@@ -772,8 +772,8 @@ extern "C" void __cdecl EffectKind18Sub45_DrawRing(int outer_word, int inner_wor
         p[6] = 0x50;
         p[5] = 0x50;
         p[4] = 0x50;
-        SetWord(p + 0x26, (Sar((half << 7) + 0x140u, 6) & 0xF) | 0x90u);
-        SetWord(p + 0x16, 0x7940);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, (Sar((half << 7) + 0x140u, 6) & 0xF) | 0x90u);
+        rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x7940);
         const U q0 = DivP2(angle, 5), q1 = DivP2(angle + 0x1000u, 5);
         const unsigned char* const uv = At(at::kRingUv + 2 * half);
         struct Corner { unsigned at; U q; U radius; };
@@ -1047,8 +1047,8 @@ extern "C" void __cdecl EffectKind18Sub55_Draw(int shade_word, int lift_word) {
             p[0x35] = 0x4F;
             p[0x44] = 0xFF;
             p[0x45] = 0x4F;
-            SetWord(p + 0x26, 0x3B);
-            SetWord(p + 0x16, 0x78CA);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, 0x3B);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x78CA);
             p[5] = static_cast<unsigned char>(DivP2(shade << 7, 7));
             SH_CALL(MapView_LinkPrimAt)(x << 16, z << 16, 1, 0x48);
         }
@@ -1380,8 +1380,8 @@ extern "C" void __cdecl EffectKind18Sub66_Run(void) {
             p[0x44] = 0xFF;
             p[0x45] = 0xFF;
             p[4] = p[5] = p[6] = shade;
-            SetWord(p + 0x26, 0x7B);
-            SetWord(p + 0x16, 0x78C0);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->tpage, 0x7B);
+            rv::Store<std::uint32_t>(rv::As<records::GpuPolyFT4>(p)->clut, 0x78C0);
             SH_CALL(Gfx_CommitPrim)(4, 0x48);
         }
         unsigned char* const whole = Rect(0, 0, 0x100, 0x100);
