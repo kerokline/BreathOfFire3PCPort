@@ -146,7 +146,7 @@ void Touch42(unsigned flag) {
     AH_AT(CheckAllFn, kCheckAll42)();
     if (AH_CALL(Flags_Test)(Bank(), 0xB) != 0) return;
     unsigned char* const m = ActiveMember();
-    SetWord(m + 0x8A, Word(m + 0x8A) + 1u);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(m)->script_position, rv::As<records::SpriteObject>(m)->script_position + 1u);
 }
 }  // namespace
 
@@ -421,7 +421,7 @@ extern "C" void __cdecl Area43_TintStart(void) {
     Cur()[0x48] = 2;
     Cur()[4] = 1;
     unsigned char* const m = ActiveMember();
-    SetWord(m + 0x8A, Word(m + 0x8A) + 0xFFFEu);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(m)->script_position, rv::As<records::SpriteObject>(m)->script_position + 0xFFFEu);
 }
 
 // original 0x407020 (Area43_States 1): each tint byte +0x5D, +0x5E, +0x5F not
@@ -443,7 +443,7 @@ extern "C" void __cdecl Area43_TintSettle(void) {
         return;
     }
     unsigned char* const m = ActiveMember();
-    SetWord(m + 0x8A, Word(m + 0x8A) + 0xFFFEu);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(m)->script_position, rv::As<records::SpriteObject>(m)->script_position + 0xFFFEu);
 }
 
 // original 0x4070D0 (area 43's handler 1): Effect_FindFree to the byte

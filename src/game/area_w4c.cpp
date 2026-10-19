@@ -441,7 +441,7 @@ extern "C" void __cdecl Area174_EffectA1(void) { EffectOnObject("Area174_EffectA
 extern "C" void __cdecl Area174_StepByScript(void) {
     const unsigned offset = rv::As<records::ScriptContext>(MoveScript_Object)->position;
     const unsigned char* const script =
-        reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Field_State + 0x130))));
+        reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(static_cast<std::int32_t>(rv::As<records::PartyMember>(Field_State)->flags_130))));
     const unsigned char limit = B(at::kStepLimit);
     const unsigned char b = script[offset + 2];
     unsigned char* const cur = Sprite_Current;

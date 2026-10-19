@@ -590,7 +590,7 @@ extern "C" unsigned char __cdecl Area175_Trigger64(unsigned char* object, unsign
     object[1] = 4;
     object[0x84] = 2;
     object[0x83] = 0xD;
-    SetWord(object + 0x8A, 0);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->script_position, 0);
     AH_CALL(Flags_Set)(StoryFlags(), 0x95);
     AH_CALL(Party_DropIn)(4);
     B(at::kCounter0) = 0;

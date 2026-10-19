@@ -243,7 +243,7 @@ U MovesScriptObject(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) ah::SetPointer(MoveScript_Object_addr, ScriptRecord(n >> 8));
     if (n & 2) MoveCurrent(n >> 4);
-    if (n & 4) SetWord(ah::Pointer(MoveScript_Object_addr) + 0xA, n >> 16);
+    if (n & 4) rv::Store<unsigned>(rv::As<records::ScriptContext>(ah::Pointer(MoveScript_Object_addr))->position, n >> 16);
     return answer;
 }
 U MovesTail(const U*, U answer) {

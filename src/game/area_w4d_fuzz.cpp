@@ -20,6 +20,7 @@
 #include "game/area_w4d.h"
 #include "game/area_w4d_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "hook/log.h"
 
 namespace area_w4d {
@@ -453,7 +454,7 @@ void Seed175(unsigned k) {
         // script half the time (any word one time in sixteen)
         unsigned char* const object = ah::Pointer(MoveScript_Object_addr);
         object[3] = static_cast<unsigned char>(ah::Next() % at::kArea175ScriptCount);
-        if (ah::Next() % 16 != 0) move_script::SetWord(object + 0xA, ah::Half() ? ah::Next() % 0x30 : ah::Next() % 0x100);
+        if (ah::Next() % 16 != 0) rv::Store<unsigned>(rv::As<records::ScriptContext>(object)->position, ah::Half() ? ah::Next() % 0x30 : ah::Next() % 0x100);
         break;
     }
     default: break;

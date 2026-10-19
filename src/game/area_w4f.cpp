@@ -404,9 +404,9 @@ extern "C" void __cdecl Area192_RestoreCharacters(void) {
     for (unsigned k = 0; k < at::kCharCount; ++k) {
         unsigned char* const r = Mem(at::kCharRecords + k * at::kCharStride);
         if ((r[0xB] & 1) == 0) continue;
-        SetWord(r + 0x18, Word(r + 0x20));
-        SetWord(r + 0x1A, Word(r + 0x22));
-        SetWord(r + 0x10, 0);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(r)->hp, rv::As<records::CharRecord>(r)->stats.max_hp);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(r)->ap, rv::As<records::CharRecord>(r)->stats.max_ap);
+        rv::Store<unsigned>(rv::As<records::CharRecord>(r)->status, 0);
     }
     const int count = Field_MemberCount;
     for (int i = 0; i < count; ++i) {

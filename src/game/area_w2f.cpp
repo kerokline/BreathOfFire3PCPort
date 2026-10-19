@@ -784,8 +784,8 @@ extern "C" void __cdecl Area111_StepToExtra(void) {
         bof3::Fatal("Area111_StepToExtra: extra object %u lies at 0x%X, outside the image's .data", k, record);
     const unsigned char* const extra = Mem(record);
     const U z0 = static_cast<U>(Long(cur + 0x38));
-    U x = static_cast<U>(Long(extra + 0x34));
-    U z = static_cast<U>(Long(extra + 0x38));
+    U x = static_cast<U>(rv::As<records::SpriteObject>(extra)->x);
+    U z = static_cast<U>(rv::As<records::SpriteObject>(extra)->z);
     const unsigned d = (cur[8] & 7u) * 2;
     const auto sx = static_cast<std::uint16_t>(static_cast<signed char>(B(at::kCellDelta + d)) * 2);
     const auto sz = static_cast<std::uint16_t>(static_cast<signed char>(B(at::kCellDelta + d + 1)) * 2);
@@ -1258,7 +1258,7 @@ extern "C" unsigned char __cdecl Area113_Trigger63(unsigned char* object, unsign
     AH_CALL(ScriptFlags_Set40)();
     B(AreaW0a_TailKind_addr) = 0x3E;
     B(AreaW0c_TailState_addr) = 0;
-    SetWord(object + 0x88, 5);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(object)->trigger_word, 5);
     return 0;
 }
 

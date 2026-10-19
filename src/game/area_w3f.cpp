@@ -253,9 +253,9 @@ unsigned char* ScratchRecord() { return EffectAt(static_cast<U>(Long(Mem(at::kSl
 void Kind13(unsigned char* e, U x, std::int32_t angle, U y) {
     e[0] = 1;
     e[5] = 0x13;
-    SetLong(e + 0x64, static_cast<std::int32_t>(x));
-    SetLong(e + 0x68, angle);
-    SetLong(e + 0x6C, static_cast<std::int32_t>(y));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[0], static_cast<std::int32_t>(x));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[1], angle);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(e)->angle[2], static_cast<std::int32_t>(y));
     e[9] = 0x30;
 }
 std::int32_t CameraAngle1() { return static_cast<std::int16_t>(Word(Mem(Camera_Angles_addr + 0x2))); }
@@ -545,11 +545,11 @@ extern "C" void __cdecl Area144_MoveKind2Here(void) {
     const unsigned char* const cur = Sprite_Current;
     const auto* const tCur = rv::AsConst<records::SpriteObject>(cur);
     unsigned char* const k2 = Mem(Sprite_Kind2_addr);
-    SetLong(k2 + 0x34, tCur->x);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(k2)->x, tCur->x);
     const std::int32_t z = tCur->z;
     const unsigned char* const so = MoveScript_Object;
-    SetLong(k2 + 0x38, z);
-    SetLong(k2 + 0x3C, tCur->height);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(k2)->z, z);
+    rv::Store<std::int32_t>(rv::As<records::SpriteHead>(k2)->height, tCur->height);
     k2[0x84] = so[4];
     k2[0x87] = 1;
     AH_CALL(MoveCmd_MoveKind2)(3);

@@ -86,8 +86,8 @@ unsigned FindCell(U table, unsigned count, unsigned stride, long x, long z) {
 // at the record's words +0x2E / +0x30; a slot answered: Sprite_Current's +0xB.
 void SpawnByCharacter(U record, U list, U table, unsigned char kind) {
     unsigned char* const r = Mem(record);
-    const auto x = static_cast<short>(Word(r + 0x2E));
-    const auto z = static_cast<short>(Word(r + 0x30));
+    const auto x = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(r)->screen_x));
+    const auto z = static_cast<short>(static_cast<std::uint16_t>(rv::As<records::SpriteHead>(r)->screen_y));
     const unsigned char who = B(list);
     Sprite_Current = r;
     const auto b = static_cast<signed char>(B(table + who));
@@ -907,7 +907,7 @@ extern "C" unsigned char __cdecl Area141_CellHook(long x, long z) {
 // ScriptFlags_Set40, Party_HealJoined, tail kind 52 at state 0; 0xC002
 // ScriptFlags_Set40, tail kind 52 at state 0xA; any other nothing. al 0.
 extern "C" unsigned char __cdecl Area141_Trigger57(unsigned char* object, unsigned char*) {
-    switch (Word(object + 0x88)) {
+    switch (rv::As<records::SpriteObject>(object)->trigger_word) {
     case 0xC000:
         AH_CALL(Area141_PaintCells)(Mem(at::Run(0)), 0);
         AH_CALL(Area141_PaintCells)(Mem(at::Run(1)), 0);
