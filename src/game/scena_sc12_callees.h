@@ -62,8 +62,8 @@ constexpr std::uint32_t kTile = 0x939A00;       // u16: its low byte tested 0x62
 // kLeaderName: now ObjTrio[0x89] (symbols.toml). u8: ObjTrio record 0 + 0x89
 constexpr std::uint32_t kMember1 = 0x80300C;    // s32: a member record's word (Field_Members + 0x184)
 // kMemberState: now ObjTrio[0x3cf] (symbols.toml). u8: tested against 3 (run 9 step 0)
-constexpr std::uint32_t kObjTrioZ = 0x802D74;   // s32 ObjTrio + 0x34
-constexpr std::uint32_t kObjTrioY = 0x802D7C;   // s32 ObjTrio + 0x3C
+// kObjTrioZ: now ObjTrio record 0 x (records::PartyMember; the name said z, the address is +0x34).
+// kObjTrioY: now ObjTrio record 0 height (records::PartyMember).
 constexpr std::uint32_t kPartyBytes = 0x904062; // three bytes, each tested against 2, 8, 5, 4
 // kInputHeld: now Input_Held (symbols.toml). u16 Input_Held
 

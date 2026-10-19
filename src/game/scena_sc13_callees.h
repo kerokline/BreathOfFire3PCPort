@@ -74,7 +74,7 @@ constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 constexpr std::uint32_t kKind2X = 0x905E64;     // s32 Field_Kind2X
 constexpr std::uint32_t kKind2 = 0x7E0940;      // Sprite_Kind2: +0x34 x, +0x38 z, +0x3E the elevation
 constexpr std::uint32_t kExtra0 = 0x802000;     // Sprite_ObjectsExtra record 0: +0x34 x, +0x38 z, +0x3E
-constexpr std::uint32_t kExtra1Angle = 0x802110;   // s32 Sprite_ObjectsExtra record 1 + 0x6C: run 5's dial
+// kExtra1Angle: now Sprite_ObjectsExtra record 1 angle[2] (records::SpriteObject).
 // kExtraWord: now AreaW2c_LastArea (symbols.toml). u16 just past Sprite_ObjectsExtra: tested 0x70 / 0x91
 // kClut: now Gfx_ClutStrip (symbols.toml). Gfx_ClutStrip: 0x2000 16-bit colours
 constexpr unsigned kClutWords = 0x2000;
@@ -86,9 +86,9 @@ constexpr std::uint32_t kTrio = 0x802D40;       // ObjTrio: three records of 0x1
 constexpr std::uint32_t kTrioStride = 0x14C;
 // kFacing: now ObjTrio[8] (symbols.toml). u8 ObjTrio record 0 + 8: the leader's facing
 constexpr std::uint32_t kLeaderName = 0x802DC9; // u8 ObjTrio record 0 + 0x89: who leads
-constexpr std::uint32_t kTrioX = 0x802D74;      // s32 ObjTrio record 0 + 0x34
-constexpr std::uint32_t kTrioY = 0x802D78;      // s32 ObjTrio record 0 + 0x38
-constexpr std::uint32_t kTrioZ = 0x802D7C;      // s32 ObjTrio record 0 + 0x3C
+// kTrioX: now ObjTrio record 0 x (records::PartyMember).
+// kTrioY: now ObjTrio record 0 z (records::PartyMember).
+// kTrioZ: now ObjTrio record 0 height (records::PartyMember).
 constexpr std::uint32_t kEffectArg = 0x669744;  // MoveScript_EffectArg, by the leader byte
 constexpr std::uint32_t kPendingKind = 0x9039F3;   // three bytes an object handler arms: 0x2C, 0, 0x11
 constexpr std::uint32_t kInputHeld = 0x7E1BE8;  // Input_Held (dword read)

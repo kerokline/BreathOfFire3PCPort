@@ -57,7 +57,7 @@ constexpr std::uint32_t kEffectStride = 0x80;
 // kAngleY: now Camera_Angles[1] (symbols.toml). s16 Camera_Angles +2
 constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
-constexpr std::uint32_t kObjTrioX = 0x802D74;   // s32 ObjTrio + 0x34
+// kObjTrioX: now ObjTrio record 0 x (records::PartyMember).
 constexpr std::uint32_t kObjTrioZ = 0x802D78;   // s32 ObjTrio + 0x38
 constexpr std::uint32_t kObjTrioY = 0x802D7C;   // s32 ObjTrio + 0x3C
 // kMember1Byte: now Field_Members[0x13b] (symbols.toml). u8 ObjTrio record 1 + 0x137, tested against 3

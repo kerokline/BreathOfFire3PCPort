@@ -28,6 +28,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc5_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -45,7 +46,6 @@ using scena_sc5::VoidFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
@@ -128,7 +128,8 @@ void LoadMusic(unsigned track) {
 // An event battle at the leader: 0x532ED0(ObjTrio +0x34, +0x38, kind), then
 // Field_StartEventBattle(kind) (group SE's).
 void Battle(unsigned kind) {
-    SH_AT(PlaceFn, at::kPartyPlace)(S32(at::kLeaderX), S32(at::kLeaderZ), kind);
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
+    SH_AT(PlaceFn, at::kPartyPlace)(member0->x, member0->z, kind);
     SH_CALL(Field_StartEventBattle)(kind);
 }
 

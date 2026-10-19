@@ -28,6 +28,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc9a_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -43,7 +44,6 @@ using scena_sc9a::VoidFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
@@ -177,6 +177,7 @@ std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* 
 
 // Scena09_EnterArea's body; every return leads to its state store.
 void EnterAreaBody() {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     // area 0x25: flag 0x2E without 0x2F - run 0xF step 0xA, the call-table
     // entries by the selector
     if (Area() == 0x25 && Flag(0x2E) && !Flag(0x2F)) {
@@ -321,10 +322,10 @@ void EnterAreaBody() {
             SetStep(0);
             ClearCounters();
             Spawn(at::kEffectSlot, 0x96);
-            if (S32(at::kObjTrioY) <= 0x2000000) Spawn(at::kEffectSlot, 0x95);
-        } else if (S32(at::kObjTrioY) <= 0x2000000) {
+            if (member0->height <= 0x2000000) Spawn(at::kEffectSlot, 0x95);
+        } else if (member0->height <= 0x2000000) {
             Spawn(at::kEffectSlot, 0x96);
-            if (S32(at::kObjTrioY) <= 0x2000000) Spawn(at::kEffectSlot, 0x95);
+            if (member0->height <= 0x2000000) Spawn(at::kEffectSlot, 0x95);
         }
     }
     // area 0x77: nothing more unless Cond_ByteFD is 2; flag 0x3D without 0x16
@@ -564,6 +565,7 @@ SC9A_EXPORT void __cdecl Scena09_Run3(void) {
 
 // original 0x5547F0: run 4.
 SC9A_EXPORT void __cdecl Scena09_Run4(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0:
         SetStep(1);
@@ -583,7 +585,7 @@ SC9A_EXPORT void __cdecl Scena09_Run4(void) {
         // ObjTrio +0x3C at least 0x8000000: set one of flags 0x27 / 0x26 and
         // go on only when the other is set too
         const bool five = Step() == 5;
-        if (S32(at::kObjTrioY) < 0x8000000) {
+        if (member0->height < 0x8000000) {
             EndRun();
             break;
         }
@@ -1003,6 +1005,7 @@ SC9A_EXPORT void __cdecl Scena09_Run7(void) {
 
 // original 0x5556D0: run 8.
 SC9A_EXPORT void __cdecl Scena09_Run8(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0: Say(0x23); SetStep(0xA); break;
     case 1: Say(0x24); SetStep(0xA); break;
@@ -1105,8 +1108,8 @@ SC9A_EXPORT void __cdecl Scena09_Run8(void) {
         SetStep(0x25);
         break;
     case 0x26:
-        Field_Kind2X = D(at::kObjTrioX);
-        Field_Kind2Z = D(at::kObjTrioZ);
+        Field_Kind2X = static_cast<std::uint32_t>(member0->x);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         MoveScript_F3Divisor = 0x20;
         SetStep(0x27);
         break;
@@ -1237,6 +1240,7 @@ unsigned char Take11() {
 
 // original 0x556C40: run 11.
 SC9A_EXPORT void __cdecl Scena09_Run11(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0:
         DropIn(2);
@@ -1324,8 +1328,8 @@ SC9A_EXPORT void __cdecl Scena09_Run11(void) {
         break;
     case 0xD:
         if (Counter(0) != 0x3B) break;
-        Field_Kind2X = D(at::kObjTrioX);
-        Field_Kind2Z = D(at::kObjTrioZ);
+        Field_Kind2X = static_cast<std::uint32_t>(member0->x);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         SH_CALL(Field_ViewReset)();
         SetStep(0xE);
         break;

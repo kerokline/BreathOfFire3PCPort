@@ -53,8 +53,6 @@ using scena_sc6::ZennyFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-std::uint16_t& W(unsigned char* p) { return W(Addr(p)); }
 std::int32_t Get32(const unsigned char* p) {
     std::int32_t v;
     std::memcpy(&v, p, 4);
@@ -258,19 +256,20 @@ SC6_EXPORT void __cdecl Scena06_Start(void) {
 SC6_EXPORT void __cdecl Scena06_GuestRecord(void) {
     const unsigned char* const t = &Scena06_GuestStats[0];
     unsigned char* const r = &B(at::kRecord7);
-    W(r + 0x18) = t[0];
+    auto* const c = rv::As<records::CharRecord>(r);   // character record 7, CharacterRecords 0x903A70 + 7 * 0xA4
+    c->hp = t[0];
     r[0x12] = t[6];
     r[0x15] = t[7];
-    W(r + 0x20) = t[1];
-    W(r + 0x40) = t[1];
-    W(r + 0x24) = t[2];
-    W(r + 0x44) = t[2];
-    W(r + 0x26) = t[3];
-    W(r + 0x46) = t[3];
-    W(r + 0x28) = t[4];
-    W(r + 0x48) = t[4];
-    W(r + 0x2A) = t[5];
-    W(r + 0x4A) = t[5];
+    c->stats.max_hp = t[1];
+    c->base.max_hp = t[1];
+    c->stats.atk = t[2];
+    c->base.atk = t[2];
+    c->stats.def = t[3];
+    c->base.def = t[3];
+    c->stats.agi = t[4];
+    c->base.agi = t[4];
+    c->stats.intel = t[5];
+    c->base.intel = t[5];
 }
 
 // original 0x54E3B0: the call-table entries by the selector Cond_Flags
@@ -686,6 +685,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
 
 // original 0x54B6C0: run 4, steps 0..7, 0xA..0xC, 0x14..0x16, 0x1E, 0x1F.
 SC6_EXPORT void __cdecl Scena06_Run04(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0:
         Say(0xD);
@@ -699,7 +699,7 @@ SC6_EXPORT void __cdecl Scena06_Run04(void) {
     case 2:
         if (Counter(0) != 1) return;
         Field_Kind2X = 0x350000;
-        Field_Kind2Z = D(at::kLead38);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         MoveScript_F3Divisor = 0x20;
         SetStep(3);
         return;
@@ -819,6 +819,7 @@ SC6_EXPORT void __cdecl Scena06_Run05(void) {
 // As the original has it: step 6 moves Camera_Distance by -0x40 a frame for
 // 0x12 frames, counted in counter 3.
 SC6_EXPORT void __cdecl Scena06_Run06(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0:
         DropIn(3);
@@ -901,8 +902,8 @@ SC6_EXPORT void __cdecl Scena06_Run06(void) {
         return;
     case 21:
         if (Counter(0) != 4) return;
-        Field_Kind2X = D(at::kLead34);
-        Field_Kind2Z = D(at::kLead38);
+        Field_Kind2X = static_cast<std::uint32_t>(member0->x);
+        Field_Kind2Z = static_cast<std::uint32_t>(member0->z);
         MoveScript_F3Divisor = 0x20;
         SetStep(0x16);
         return;
@@ -959,7 +960,8 @@ void Run07Leave() {
 }
 // Character record 7's two equipment bytes both set: `yes`, else `no`.
 unsigned char GuestEquipped(unsigned char yes, unsigned char no) {
-    return B(at::kRecord7 + 0x12) != 0 && B(at::kRecord7 + 0x15) != 0 ? yes : no;
+    const auto* const c = rv::AsConst<records::CharRecord>(&B(at::kRecord7));   // character record 7
+    return c->weapon != 0 && c->armour[2] != 0 ? yes : no;
 }
 // The request 7 with the byte 0x904C9F `v`, the pass flags 0, a step.
 void Request7(unsigned char v, bool pass, unsigned char step) {

@@ -67,11 +67,11 @@ constexpr unsigned kMemberState = 0x137;        // ObjTrio record +0x137: tested
 // kKind2Z: now Field_Kind2Z (symbols.toml). s32 Field_Kind2Z
 // kKind2X: now Field_Kind2X (symbols.toml). s32 Field_Kind2X
 constexpr std::uint32_t kKind2ZHigh = 0x905E62; // u16: Field_Kind2Z's whole part, moved by 7
-constexpr std::uint32_t kSpriteKind2X = 0x7E0974;  // s32 Sprite_Kind2 + 0x34
-constexpr std::uint32_t kSpriteKind2Z = 0x7E0978;  // s32 Sprite_Kind2 + 0x38
-constexpr std::uint32_t kSpriteKind2Y = 0x7E097E;  // u16 Sprite_Kind2 + 0x3E
-constexpr std::uint32_t kSprite0X = 0x7DEEB4;   // s32 Sprite_Objects + 0x34
-constexpr std::uint32_t kSprite0Z = 0x7DEEB8;   // s32 Sprite_Objects + 0x38
+// kSpriteKind2X: now Sprite_Kind2 x (records::SpriteHead).
+// kSpriteKind2Z: now Sprite_Kind2 z (records::SpriteHead).
+// kSpriteKind2Y: now Sprite_Kind2 height_whole (records::SpriteHead).
+// kSprite0X: now Sprite_Objects record 0 x (records::SpriteObject).
+// kSprite0Z: now Sprite_Objects record 0 z (records::SpriteObject).
 // kSpriteCurrent: now Sprite_Current (symbols.toml). unsigned char *Sprite_Current
 // kF3Divisor: now MoveScript_F3Divisor (symbols.toml). u16 MoveScript_F3Divisor
 // kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty

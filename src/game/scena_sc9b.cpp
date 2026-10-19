@@ -36,6 +36,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/scena_sc9b_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -55,7 +56,6 @@ using scena_sc9b::VoidFn;
 unsigned char& B(std::uint32_t a) { return *reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(static_cast<std::uintptr_t>(a)); }
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
-std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
 unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
@@ -202,10 +202,11 @@ void Spawn5D() {
 // The kind-2 sprite moved: Field_Kind2X / Z and (with `sprite`) Sprite_Kind2's
 // +0x34 / +0x38.
 void Kind2At(std::int32_t x, std::int32_t z) {
+    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
     Field_Kind2X = static_cast<std::uint32_t>(x);
-    D(at::kSpriteKind2X) = static_cast<std::uint32_t>(x);
+    kind2->x = static_cast<std::uint32_t>(x);
     Field_Kind2Z = static_cast<std::uint32_t>(z);
-    D(at::kSpriteKind2Z) = static_cast<std::uint32_t>(z);
+    kind2->z = static_cast<std::uint32_t>(z);
 }
 
 // A table entry read in place, the index checked against the table and the
@@ -475,6 +476,7 @@ void GreyClut() {
 
 // Run 6's body; the run then calls Scena10_Shake on every way out.
 void Run6Body() {
+    auto* const kind2 = rv::As<records::SpriteHead>(Sprite_Kind2 + 0 * sizeof(records::SpriteHead));
     const unsigned char step = Step();   // the case the jump table picked
     switch (step) {
     case 0:
@@ -551,7 +553,7 @@ void Run6Body() {
         Transition(1);
         Kind2At(0x510000, 0x80000);
         ViewReset();
-        W(at::kSpriteKind2Y) = 0xFAA0;
+        kind2->height_whole = 0xFAA0;
         SetElevation(static_cast<int>(0xFFFFFAA0u));
         SetStep(0xC);
         return;
@@ -579,7 +581,7 @@ void Run6Body() {
             e[5] = 0x18;
             e[1] = 0x63;
         }
-        W(at::kSpriteKind2Y) = 0xF640;
+        kind2->height_whole = 0xF640;
         SetElevation(static_cast<int>(0xFFFFF640u));
         SetStep(0xF);
         return;
@@ -644,7 +646,7 @@ void Run6Body() {
         Scena10_Shaking = 0;
         Kind2At(0x240000, 0x2E0000);
         ViewReset();
-        W(at::kSpriteKind2Y) = static_cast<std::uint16_t>(Elevation(Field_Kind2X, Field_Kind2Z));
+        kind2->height_whole = static_cast<std::uint16_t>(Elevation(Field_Kind2X, Field_Kind2Z));
         SetTimer(4);
         SetStep(step == 0x17 ? 0x18 : 0x1C);
         return;
@@ -665,7 +667,7 @@ void Run6Body() {
         Scena10_Shaking = 1;
         Kind2At(0x50000, 0x460000);
         ViewReset();
-        W(at::kSpriteKind2Y) = static_cast<std::uint16_t>(Elevation(Field_Kind2X, Field_Kind2Z));
+        kind2->height_whole = static_cast<std::uint16_t>(Elevation(Field_Kind2X, Field_Kind2Z));
         SetTimer(4);
         SetStep(static_cast<unsigned char>(step + 1));
         return;
@@ -685,7 +687,7 @@ void Run6Body() {
         Scena10_Shaking = 0;
         Kind2At(0x1A0000, 0x110000);
         ViewReset();
-        W(at::kSpriteKind2Y) = 0x320;
+        kind2->height_whole = 0x320;
         SetElevation(0x320);
         Camera_Angles[0] = 0xFCD2;
         W(at::kAngleFB) = 0x74;
@@ -1198,6 +1200,7 @@ SC9B_EXPORT void __cdecl Scena10_StartRun1(void) {
 // transitions around an area change into 0x42, the palette greyed, an area
 // change into 0x52, a ground effect, flag 6.
 SC9B_EXPORT void __cdecl Scena10_Run1(void) {
+    auto* const obj0 = rv::As<records::SpriteObject>(Sprite_Objects + 0 * sizeof(records::SpriteObject));
     switch (Step()) {
     case 0:
         if (EffectBusy(Scena10_Slot_addr)) return;
@@ -1264,8 +1267,8 @@ SC9B_EXPORT void __cdecl Scena10_Run1(void) {
         if (Counter(0) != 9) return;
         if (Spawn(at::kEffectSlot, 0x20) != 0xFF) {
             unsigned char* const e = Effect(B(at::kEffectSlot));
-            const std::int32_t x = S32(at::kSprite0X);
-            const std::int32_t z = S32(at::kSprite0Z);
+            const std::int32_t x = obj0->x;
+            const std::int32_t z = obj0->z;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = x;
             *reinterpret_cast<std::int32_t*>(e + 0x38) = z;
             const std::int32_t h = static_cast<std::int16_t>(Elevation(x, z));
@@ -1289,6 +1292,7 @@ SC9B_EXPORT void __cdecl Scena10_Run1(void) {
 // party, effects of kinds 0x68 / 0x61 / 0x62 / 0x69 / 0x64 on counts and
 // timers, two area changes into 0x62, music 0x7B, flag 8.
 SC9B_EXPORT void __cdecl Scena10_Run2(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0:
         DropIn(0);
@@ -1379,9 +1383,9 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         if (Counter(0) != 0x13) return;
         if (Spawn(at::kEffectSlot, 0x69) != 0xFF) {
             unsigned char* const e = Effect(B(at::kEffectSlot));
-            const std::int32_t x = S32(at::kObjTrioX);
+            const std::int32_t x = member0->x;
             *reinterpret_cast<std::int32_t*>(e + 0x34) = x;
-            const std::int32_t z = S32(at::kObjTrioZ);
+            const std::int32_t z = member0->z;
             *reinterpret_cast<std::int32_t*>(e + 0x38) = z;
             const std::int32_t h = static_cast<std::int16_t>(Elevation(x, z));
             *reinterpret_cast<std::int32_t*>(e + 0x3C) = static_cast<std::int32_t>(static_cast<std::uint32_t>(h) << 16);
@@ -1426,10 +1430,10 @@ SC9B_EXPORT void __cdecl Scena10_Run2(void) {
         if (Counter(0) != 0x16) return;
         if (Spawn(at::kEffectSlot, 0x64) != 0xFF) {
             unsigned char* const e = Effect(B(at::kEffectSlot));
-            *reinterpret_cast<std::int32_t*>(e + 0x64) = S32(at::kObjTrioX);
-            *reinterpret_cast<std::int32_t*>(e + 0x34) = S32(at::kObjTrioX);
-            *reinterpret_cast<std::int32_t*>(e + 0x68) = S32(at::kObjTrioZ);
-            const std::int32_t z = S32(at::kObjTrioZ);
+            *reinterpret_cast<std::int32_t*>(e + 0x64) = member0->x;
+            *reinterpret_cast<std::int32_t*>(e + 0x34) = member0->x;
+            *reinterpret_cast<std::int32_t*>(e + 0x68) = member0->z;
+            const std::int32_t z = member0->z;
             const std::int32_t x = *reinterpret_cast<std::int32_t*>(e + 0x34);
             *reinterpret_cast<std::int32_t*>(e + 0x38) = z;
             const std::int32_t h = static_cast<std::int16_t>(Elevation(x, z));
@@ -1912,6 +1916,7 @@ SC9B_EXPORT void __cdecl Scena10_Run12(void) {
 // (MSVC's two-level switch): area changes into 0x78, drop-ins, message 0x3A,
 // effects 0x43 / 0x6B, event battle 0x23 at the leader, flags 0x38..0x3D.
 SC9B_EXPORT void __cdecl Scena10_Run13(void) {
+    auto* const member0 = rv::As<records::PartyMember>(ObjTrio + 0 * sizeof(records::PartyMember));
     switch (Step()) {
     case 0:
         if (Counter(0) != 4) return;
@@ -1989,7 +1994,7 @@ SC9B_EXPORT void __cdecl Scena10_Run13(void) {
         return;
     case 0x13:
         if (Counter(0) != 0x13) return;
-        PartyPlace(S32(at::kObjTrioX), S32(at::kObjTrioZ), 0x23);
+        PartyPlace(member0->x, member0->z, 0x23);
         SH_CALL(Field_StartEventBattle)(0x23);
         SetStep(0x14);
         return;
