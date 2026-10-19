@@ -822,6 +822,10 @@ class Converter:
         for m in dc.AT_REF.finditer(code):
             if f.in_at_namespace(m.start()):
                 continue
+            # an array or struct constant (`at::kEnemyStates[0]`,
+            # `at::kWm87.box_states`): its elements hold the addresses
+            if re.match(r'\s*[\[.]', code[m.end():]):
+                continue
             value, cands = dc.resolve_at(f, m.group(1), m.group(2), m.start(), self.by_rel, self.defs_by_name)
             if not cands:
                 continue
@@ -1729,6 +1733,9 @@ def main():
     ap.add_argument('--retire', action='store_true', help='remove module constants nothing uses any more')
     ap.add_argument('--since', help='with --retire: only constants something used at this git revision')
     ap.add_argument('--report', action='store_true', help='print each site and its outcome')
+    ap.add_argument('--remaining', action='store_true',
+                    help='with --dry-run on a converted tree: list what is left, a site the tool would '
+                         'still convert being one the gate refused (reason gate)')
     ap.add_argument('-v', '--verbose', action='store_true')
     a = ap.parse_args()
 
@@ -1758,6 +1765,8 @@ def main():
                     fh.write(text)
         for st in sites:
             ch = st.choice()
+            if a.remaining and st.reason is None:
+                st.reason = 'gate'
             if st.reason is not None or ch is None:
                 reason = st.reason or 'none'
                 stats['left:' + reason] += 1
