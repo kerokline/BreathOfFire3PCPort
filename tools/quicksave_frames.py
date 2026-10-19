@@ -2,12 +2,13 @@
 """The quicksave's frame check (docs/quicksave.md, the graphics participant): what each frame
 DRAWS after a quick-load against what it drew after the quicksave.
 
-A run with BOF3X_FRAMEHASH=1 logs one line a presented frame
-(render_shim.cpp, LogFrameHash):
+A run with BOF3X_FRAMEHASH=1 logs one line a walk of the lists (render_shim.cpp,
+LogWalkHash; a present can carry two walks when two logic frames passed
+between draws):
 
     framehash   drawn at Frame_Counter 731: 412 commands, 1650 vertices, 9 textures, 0123456789ABCDEF
 
-the hash over the frame's commands in order - the pipe state, the vertices,
+the hash over the walk's commands in order - the pipe state, the vertices,
 the CONTENT of each texture sampled - tagged with the Frame_Counter the
 lists were left at. A proof recipe (quick_*.txt, tools/quicksave_check.py)
 presses F6 at a frame and F7 300 frames later and replays the same inputs, so
@@ -17,9 +18,9 @@ after the F7 must hash as the frame tagged C + k after the F6.
     python tools/quicksave_frames.py bof3x.log [--show 8]
 
 Reads the snapshot core's lines (`quicksave   F6 at Frame_Counter C`,
-`F7 ... back to Frame_Counter C`). The first frame presented after the F7
-is the one drawn before the load (Gpu_PutDispEnv presents the last draw
-first), and is left out. Frames a late tick did not draw are missing on one
+`F7 ... back to Frame_Counter C`). The first walks presented after the F7
+were drawn before the load (Gpu_PutDispEnv presents the last draw first)
+and are left out. Frames a late tick did not draw are missing on one
 side or the other and are counted, not compared.
 
 Exit 0: every frame drawn on both sides equal; 1: a difference (the first
@@ -52,10 +53,14 @@ def read(path):
             m = HASH.search(line)
             if not m or side is None:
                 continue
-            if side is b and not skipped_first:
-                skipped_first = True   # the draw made before the load, presented after it
-                continue
             tag = int(m.group(1))
+            if side is b and not skipped_first:
+                # The walks drawn before the load and presented after it carry
+                # the last tags of the window (Frame_Counter L - 1, L - 2):
+                # passed over until the restored game's first walk.
+                if not (load[1] <= tag < load[0] - 2):
+                    continue
+                skipped_first = True
             side.setdefault(tag, (m.group(5), int(m.group(2)), int(m.group(3)), int(m.group(4))))
     return take, load, a, b
 

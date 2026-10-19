@@ -293,17 +293,23 @@ void ReleaseDeferred() {
     g_n_deferred = 0;
 }
 
-// --- BOF3X_FRAMEHASH: what each presented frame draws, as one number --------------
+// --- BOF3X_FRAMEHASH: what each draw of the lists draws, as one number --------------
 // The quicksave's graphics check (docs/quicksave.md, the graphics participant): a restore
 // followed by a frame must draw what the live game drew from the same state.
-// Each present logs a 64-bit FNV-1a over its commands in order: the kind, the
-// pipe state but its pointers, the vertices each draw names, and for a
-// textured draw the CONTENT of the texture version it samples (size, format,
-// colour key, the pixels row by row within the width) - never an address, so
-// two frames drawn with rebuilt textures hash alike when their pixels are
-// alike. Tagged with Frame_Counter as it stood when the frame began recording
-// (ResetFrame): the draw of the lists that logic frame left.
-U g_frame_tag;
+// At each present one line per walk of the lists in the frame: a 64-bit FNV-1a
+// over the walk's commands in order - the kind, the pipe state but its
+// pointers, the vertices each draw names, and for a textured draw the CONTENT
+// of the texture version it samples (size, format, colour key, the pixels row
+// by row within the width) - never an address, so two walks drawn with rebuilt
+// textures hash alike when their pixels are alike. A walk is the commands
+// appended under one Frame_Counter (WinMain draws once a pass of its loop, and
+// the count moves between passes), tagged with it: the lists that logic frame
+// left. A present can carry two walks - Gpu_PutDispEnv presents only when the
+// display buffer changed, and two logic frames between draws flip it back -
+// so the lines are per walk, not per present.
+constexpr U kMaxWalks = 16;
+U g_walk_start[kMaxWalks], g_walk_tag[kMaxWalks];
+U g_n_walks;
 
 bool FrameHashOn() {
     static int on = -1;
@@ -340,15 +346,15 @@ unsigned long long TextureHash(const TexVersion* v) {
     return f.h;
 }
 
-void LogFrameHash() {
-    // Each texture version hashed once a frame: (version, hash) pairs, a
-    // linear search (a frame binds tens of versions).
+void LogWalkHash(U first, U end, U tag) {
+    // Each texture version hashed once a walk: (version, hash) pairs, a
+    // linear search (a walk binds tens of versions).
     constexpr U kSeen = 512;
     static const TexVersion* seen[kSeen];
     static unsigned long long seen_hash[kSeen];
-    U n_seen = 0, n_textures = 0;
+    U n_seen = 0, n_textures = 0, n_vertices = 0;
     Fnv f;
-    for (U i = 0; i < g_frame.n_commands; ++i) {
+    for (U i = first; i < end; ++i) {
         const Command& c = g_frame.commands[i];
         f.Put(c.kind);
         if (c.kind == Cmd::kClear) {
@@ -400,10 +406,16 @@ void LogFrameHash() {
             f.Put(th);
         }
         f.Put(c.count);
+        n_vertices += c.count;
         if (c.first + c.count <= g_frame.n_vertices) f.Bytes(g_frame.vertices + c.first, c.count * sizeof(Vertex));
     }
-    bof3::Log("framehash   drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X", g_frame_tag,
-              g_frame.n_commands, g_frame.n_vertices, n_textures, static_cast<U>(f.h >> 32), static_cast<U>(f.h));
+    bof3::Log("framehash   drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X", tag, end - first,
+              n_vertices, n_textures, static_cast<U>(f.h >> 32), static_cast<U>(f.h));
+}
+
+void LogFrameHash() {
+    for (U w = 0; w < g_n_walks; ++w)
+        LogWalkHash(g_walk_start[w], w + 1 < g_n_walks ? g_walk_start[w + 1] : g_frame.n_commands, g_walk_tag[w]);
 }
 
 void Present() {
@@ -416,6 +428,14 @@ void Present() {
 void AppendCommand(const Command& c) {
     if (g_frame.n_commands >= g_frame.max_commands)
         bof3::Fatal("render: a frame holds more than %u commands", g_frame.max_commands);
+    if (FrameHashOn()) {
+        const U fc = static_cast<U>(Frame_Counter);
+        if (g_n_walks == 0 || g_walk_tag[g_n_walks - 1] != fc) {
+            if (g_n_walks == kMaxWalks) bof3::Fatal("render: BOF3X_FRAMEHASH - more than %u walks in one present", kMaxWalks);
+            g_walk_start[g_n_walks] = g_frame.n_commands;
+            g_walk_tag[g_n_walks++] = fc;
+        }
+    }
     g_frame.commands[g_frame.n_commands++] = c;
 }
 
@@ -1117,7 +1137,7 @@ void SetClearColor(U argb) { g_clear_color = argb; }
 Frame& CurrentFrame() { return g_frame; }
 
 void ResetFrame() {
-    g_frame_tag = static_cast<U>(Frame_Counter);
+    g_n_walks = 0;
     g_frame.n_vertices = 0;
     g_frame.n_commands = 0;
     g_frame.arena_used = 0;
