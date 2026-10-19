@@ -38,6 +38,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/records.h"
 #include "game/battle_misc_callees.h"
 #include "game/battle_text.h"
 #include "hook/detour.h"
@@ -319,10 +320,11 @@ extern "C" unsigned char __cdecl ItemMenu_CanUseSelected(void) {
 extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     const U acting = BattleE4_MenuActor;
     unsigned char* const w = At(BattleE4_List_addr);
-    w[0] = 1;
-    w[1] = 8;
-    w[2] = 2;
-    w[3] = 2;
+    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
+    window_rec->in_use = 1;
+    window_rec->handler = 8;
+    window_rec->kind = 2;
+    window_rec->state = 2;
     const U actor = At(acting + 5)[0];
     w[0xA] = static_cast<unsigned char>(actor);
     w[0xD] = 0xFF;
@@ -334,8 +336,8 @@ extern "C" void __cdecl ItemMenu_SetupForActor(void) {
     w[0xC] = At(kActorPages + 2 + actor * 3)[0];
     const U flags = Long(At(BattleActorCopies_Command + 0x10));
     PutWord(w + 0x14, ((flags & 2) && !(flags & 0x20000)) ? 2 : 0);
-    PutWord(w + 4, 0x140);
-    PutWord(w + 6, 0x3F);
+    window_rec->centre_x = 0x140;
+    window_rec->centre_y = 0x3F;
     const unsigned char again = At(acting + 5)[0];
     BattleE4_Hand = 0;
     At(BattleE4_Hand_addr + 2)[0] = 0;
@@ -355,22 +357,23 @@ extern "C" unsigned char __cdecl Battle_ReturnTrue(void) { return 1; }
 // eax is 0 at the end (xor eax, eax); ours returns it.
 extern "C" unsigned long __cdecl ItemMenu_SetupForParty(void) {
     unsigned char* const w = At(BattleE4_List_addr);
+    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
     const unsigned char a = BattleMisc_PartyPages;
-    w[0] = 1;
-    w[2] = 1;
+    window_rec->in_use = 1;
+    window_rec->kind = 1;
     w[0xA] = a;
     const unsigned char b = At(BattleMisc_PartyPages_addr + 1)[0];
     w[0xB] = b;
     const unsigned char c = At(BattleMisc_PartyPages_addr + 2)[0];
-    w[3] = 2;
+    window_rec->state = 2;
     w[8] = 2;
-    w[1] = 8;
+    window_rec->handler = 8;
     w[0xC] = c;
     w[0xD] = 0xFF;
     w[9] = 0;
     PutWord(w + 0x10, 0);
-    PutWord(w + 4, 0xFF56);
-    PutWord(w + 6, 0x3F);
+    window_rec->centre_x = 0xFF56;
+    window_rec->centre_y = 0x3F;
     BattleE4_Hand = 0;
     At(BattleE4_Hand_addr + 1)[0] = 8;
     At(BattleE4_Hand_addr + 2)[0] = 0;
