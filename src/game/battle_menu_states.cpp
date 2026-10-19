@@ -75,8 +75,6 @@ unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 unsigned char* Command() { return PtrAt(at::kCommandRecord); }
 unsigned char* Acting() { return PtrAt(at::kActing); }
 unsigned char* List() { return At(BattleE4_List_addr); }
-// BattleE4_List is window record 16 (0x803160 + 16 * 0x24).
-records::WindowRecord* ListRec() { return reinterpret_cast<records::WindowRecord*>(List()); }
 // Entry i of a dispatch table in .data, read at the dispatch: no bound, as
 // the original has it - an index past the table reads the next one's.
 Handler Entry(std::uint32_t table, unsigned i) {

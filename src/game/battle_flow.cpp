@@ -82,9 +82,7 @@ unsigned char* CurrentTask() { return PtrAt(at::kTaskCurrent); }
 unsigned char* Task(unsigned index) { return At(at::kTasks + index * at::kTaskSize); }
 unsigned char* EnemyObject(unsigned index) { return At(at::kEnemies + index * at::kEnemySize); }
 records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
-records::BattleEnemy* EnemyObjectRec(unsigned index) { return reinterpret_cast<records::BattleEnemy*>(EnemyObject(index)); }
 records::BattleTask* TaskRec(unsigned index) { return reinterpret_cast<records::BattleTask*>(Task(index)); }
-records::BattleTask* CurrentTaskRec() { return reinterpret_cast<records::BattleTask*>(CurrentTask()); }
 
 // A float's bits for a primitive's corner: the original's fild of a sign-
 // extended 16-bit value, then fstp.

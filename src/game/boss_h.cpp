@@ -56,8 +56,6 @@ unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
 records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
 records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 void PutFloat(unsigned char* p, std::int32_t v) {
     const float f = static_cast<float>(v);   // fild / fstp: nearest, as cvtsi2ss
     std::memcpy(p, &f, sizeof f);

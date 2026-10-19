@@ -109,8 +109,6 @@ unsigned char* EnemyData(std::uint32_t id) { return At(at::kEnemyData + id * at:
 records::PartyMember* PartyRec(std::uint32_t i) { return reinterpret_cast<records::PartyMember*>(Party(i)); }
 records::BattleEnemy* EnemyRec(std::uint32_t i) { return reinterpret_cast<records::BattleEnemy*>(Enemy(i)); }
 records::EnemyData* EnemyDataRec(std::uint32_t id) { return reinterpret_cast<records::EnemyData*>(EnemyData(id)); }
-// The popups are battle task slots (0x93A000, 0x84 apart).
-records::BattleTask* PopupRec(std::uint32_t slot) { return reinterpret_cast<records::BattleTask*>(At(at::kPopups + slot * at::kPopupStride)); }
 
 // The four action ids that want a target that is out (Battle_ActionSuitsTarget,
 // Battle_MemberOutAction): by their shape revivals - unconfirmed.

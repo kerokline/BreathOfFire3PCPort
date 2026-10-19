@@ -53,7 +53,6 @@ unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
 records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
 records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }

@@ -71,7 +71,6 @@ records::PartyMember* PartyRec(unsigned member) { return reinterpret_cast<record
 records::BattleEnemy* EnemyRec(unsigned index) { return reinterpret_cast<records::BattleEnemy*>(Enemy(index)); }
 // Sprite_Current in the effect tasks is the task slot (docs/battle_e6.md 2.3).
 records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-records::BattleTask* TaskRec(unsigned slot) { return reinterpret_cast<records::BattleTask*>(At(at::kTasks + slot * at::kTaskStride)); }
 
 // The three pure percent helpers nobody owns: (value * percent) / 100 clamped.
 using Percent = U (__cdecl*)(U value, std::int32_t percent);

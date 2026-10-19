@@ -87,7 +87,6 @@ records::BattleEnemy* SEnemy() { return reinterpret_cast<records::BattleEnemy*>(
 records::PartyMember* SMember() { return reinterpret_cast<records::PartyMember*>(S()); }
 records::PartyMember* FMember() { return reinterpret_cast<records::PartyMember*>(F()); }
 records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
-records::PartyMember* MemberRec(unsigned i) { return reinterpret_cast<records::PartyMember*>(Member(i)); }
 
 // A table entry called as the original's jmp enters it: with the word the
 // dispatcher's own caller left at [esp + 4] (BattleEnemy_RunAll pushes

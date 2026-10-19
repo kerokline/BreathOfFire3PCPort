@@ -67,7 +67,6 @@ void SetPtrAt(std::uint32_t address, const unsigned char* p) {
 }
 std::uint32_t ULong(const unsigned char* p) { return static_cast<std::uint32_t>(Long(p)); }
 void SetULong(unsigned char* p, std::uint32_t v) { SetLong(p, static_cast<std::int32_t>(v)); }
-short SWord(const unsigned char* p) { return static_cast<short>(Word(p)); }
 
 // 0x939AD8 and Sprite_Current, each re-read wherever the original re-reads it.
 unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }

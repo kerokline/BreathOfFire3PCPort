@@ -60,7 +60,6 @@ unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
 records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
-records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
 unsigned char* Owner() { return At(BattleE2_Owner); }
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }

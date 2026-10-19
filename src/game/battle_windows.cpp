@@ -127,10 +127,7 @@ unsigned Darker(unsigned c) {
 
 // A party member's battle object (ObjTrio, stride 0x14C) and its words.
 unsigned char* Member(unsigned i) { return At(ObjTrio_addr + at::kObjectStride * i); }
-records::PartyMember* MemberRec(unsigned i) { return reinterpret_cast<records::PartyMember*>(Member(i)); }
 records::WindowRecord* CurrentRec() { return reinterpret_cast<records::WindowRecord*>(Current()); }
-// In battle Field_State is the member the party object runs on (BattleObj_*).
-records::PartyMember* FieldStateRec() { return reinterpret_cast<records::PartyMember*>(FieldState()); }
 
 // A status colour from the member's +0x90 flags: 2 when bit 14 (grey),
 // else what the caller derives.

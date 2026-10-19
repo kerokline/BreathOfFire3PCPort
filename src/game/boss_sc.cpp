@@ -61,9 +61,7 @@ unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
 records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
 // Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
 records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
 unsigned char* Packet() { return Gfx_PacketNext; }
-std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void PutFloat(unsigned char* p, U v) {
     const float f = static_cast<float>(static_cast<std::int32_t>(v));   // fild / fstp: nearest
