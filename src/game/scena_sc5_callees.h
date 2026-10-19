@@ -50,8 +50,8 @@ constexpr std::uint32_t kMsgFlags = 0x7DEE44;   // u8 (MsgBoxState +4): bit 1 se
 // kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount
 constexpr std::uint32_t kSpriteCurrent = 0x937F88; // unsigned char * Sprite_Current
 // kObjTrio: now ObjTrio (symbols.toml). ObjTrio record 0
-constexpr std::uint32_t kLeaderX = 0x802D74;    // s32 ObjTrio + 0x34
-constexpr std::uint32_t kLeaderZ = 0x802D78;    // s32 ObjTrio + 0x38
+// kLeaderX: now ObjTrio record 0 x (records::PartyMember).
+// kLeaderZ: now ObjTrio record 0 z (records::PartyMember).
 // The party lists (Cond_Flags + 0xD2..): 0x904062 the first member, read as a
 // case 0..6 and as an index; 0x904065 / 0x904066 read as cases 0, 1, 5, 6.
 constexpr std::uint32_t kParty = 0x904062;

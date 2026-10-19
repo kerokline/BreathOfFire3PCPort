@@ -58,8 +58,8 @@ constexpr std::uint32_t kEffectStride = 0x80;
 constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 // kHold: now Field_Kind2Hold (symbols.toml). Field_Kind2Hold
 // kObjTrioX: now ObjTrio record 0 x (records::PartyMember).
-constexpr std::uint32_t kObjTrioZ = 0x802D78;   // s32 ObjTrio + 0x38
-constexpr std::uint32_t kObjTrioY = 0x802D7C;   // s32 ObjTrio + 0x3C
+// kObjTrioZ: now ObjTrio record 0 z (records::PartyMember).
+// kObjTrioY: now ObjTrio record 0 height (records::PartyMember).
 // kMember1Byte: now Field_Members[0x13b] (symbols.toml). u8 ObjTrio record 1 + 0x137, tested against 3
 // kMember2Byte: now ObjTrio[0x3cf] (symbols.toml). u8 ObjTrio record 2 + 0x137, tested against 2 / 3
 // kKind2Z: now Field_Kind2Z (symbols.toml). s32 Field_Kind2Z

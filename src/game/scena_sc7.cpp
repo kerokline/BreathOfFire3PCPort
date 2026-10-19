@@ -2393,12 +2393,13 @@ extern "C" void __cdecl Scena08_Scene10(void) {
 // += 10000, 0x498DE0(4), its bytes +0x12..+0x15 set, Char_RecalcStats on the
 // record, Char_HealHp(4, 0, 0) and Char_HealAp(4, 0, 0).
 extern "C" void __cdecl Scena08_SetUpRecord4(void) {
-    SetLong(At(at::kRecord4 + 0xC), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kRecord4 + 0xC))) + 0x2710u));
+    auto* const chr4 = rv::As<records::CharRecord>(At(bof3::addr::CharacterRecords) + 4 * sizeof(records::CharRecord));
+    rv::Store<std::int32_t>(chr4->exp, static_cast<std::int32_t>(static_cast<std::uint32_t>(chr4->exp) + 0x2710u));
     Call498DE0(4);
-    Byte(at::kRecord4 + 0x12) = 7;
-    Byte(at::kRecord4 + 0x13) = 0x38;
-    Byte(at::kRecord4 + 0x14) = 0x21;
-    Byte(at::kRecord4 + 0x15) = 0xE;
+    chr4->weapon = 7;
+    chr4->armour[0] = 0x38;
+    chr4->armour[1] = 0x21;
+    chr4->armour[2] = 0xE;
     SH_CALL(Char_RecalcStats)(At(at::kRecord4));
     SH_CALL(Char_HealHp)(4, 0, 0);
     SH_CALL(Char_HealAp)(4, 0, 0);

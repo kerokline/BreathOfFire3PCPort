@@ -54,8 +54,8 @@ constexpr std::uint32_t kEffectOff = 0x7DEE68;     // u16, the effect's own offs
 // --- Outside the block ----------------------------------------------------
 constexpr std::uint32_t kWindows = 0x803160;       // WindowRecords, stride 0x24; slot 1 is 0x803184
 constexpr std::uint32_t kWindow0State = 0x803163;  // u8, window 0's state byte
-constexpr std::uint32_t kWindow0X = 0x803164;      // s16 / s16, window 0's position
-constexpr std::uint32_t kWindow0Y = 0x803166;
+// kWindow0X: now WindowRecords record 0 x (records::WindowRecord).
+// kWindow0Y: now WindowRecords record 0 y (records::WindowRecord).
 // kWindow0Rows: now BattleOdds_Win0Index (symbols.toml). u8, halved into the page-arrow's x
 // kWindow0Kind: now Msgbox_Window0Kind (symbols.toml). u8, set to 2 by MsgBox_Reset
 // kWindow1Kind: now Msgbox_Window1Kind (symbols.toml). u8, window 1's kind (1 a choice list, 2 a menu)

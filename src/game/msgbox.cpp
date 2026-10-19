@@ -23,6 +23,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/record_views.h"
 #include "game/button_text.h"
 #include "game/msgbox_callees.h"
 #include "game/text_advance.h"
@@ -156,8 +157,9 @@ extern "C" void __cdecl MsgBox_Reset(void) {
 // depend on - 0x595A80 tests al, and the two tail jumps at 0x595855 and
 // 0x595A6E hand it to their own callers (docs/msgbox.md section 2).
 extern "C" unsigned char __cdecl MsgBox_FrameTask(void) {
-    const int x = static_cast<short>(W(kWindow0X)) >> 4;
-    const int y = static_cast<short>(W(kWindow0Y)) >> 4;
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    const int x = static_cast<short>(win0->x) >> 4;
+    const int y = static_cast<short>(win0->y) >> 4;
     MsgBox_LineX = static_cast<short>(x + 10);
     Msgbox_OriginY = static_cast<unsigned>(y + 6);
     g.dispatch();
@@ -596,8 +598,9 @@ extern "C" void __cdecl MsgBox_State2(void) { Call(g.sub2, 2, ItemUse_SubState, 
 // original 0x497EE0. Any button pressed - or either kept flag 0x40 / 0x80
 // still set - closes window 0 and holds the printer (flag 4).
 extern "C" void __cdecl MsgBox_State2Press(void) {
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
     if (Input_Pressed == 0 && (B(kFlags) & 0xC0) == 0) return;
-    SetB(kWindow0State, B(kWindow0State) + 1);
+    rv::Store<unsigned>(win0->state, win0->state + 1);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
     ItemUse_SubState = next;
@@ -606,7 +609,8 @@ extern "C" void __cdecl MsgBox_State2Press(void) {
 // original 0x497F20, shared by state 2 and state 7: once window 0 reports 4
 // the box is done (flag 2), which is what MsgBox_FrameTask returns.
 extern "C" void __cdecl MsgBox_State2Closed(void) {
-    if (B(kWindow0State) == 4) SetB(kFlags, B(kFlags) | 2u);
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    if (win0->state == 4) SetB(kFlags, B(kFlags) | 2u);
 }
 
 // original 0x497F40. State 3, a page break: two entries on 0x7DEE41.
@@ -672,19 +676,21 @@ extern "C" void __cdecl MsgBox_State4(void) { Call(g.sub4, 8, ItemUse_SubState, 
 // original 0x4980B0. Claims window 1 as kind 1 (a choice list), tells window
 // 0 to go to state 3, and holds the printer.
 extern "C" void __cdecl MsgBox_ChoiceOpen(void) {
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
     AreaW0c_ChoiceAnswer = 0;
     g.window_alloc(1, 0);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
     Msgbox_Window1Kind = 1;
-    SetB(kWindow0State, 3);
+    rv::Store<unsigned>(win0->state, 3);
     ItemUse_SubState = next;
 }
 
 // original 0x4980F0. Waits until window 1 is open and window 0 has finished
 // its own move.
 extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
-    if (ItemUse_Window1State == 2 && B(kWindow0State) == 4) ItemUse_SubState = ItemUse_SubState + 1;
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    if (ItemUse_Window1State == 2 && win0->state == 4) ItemUse_SubState = ItemUse_SubState + 1;
 }
 
 // original 0x498110. The choice list's input: cancel closes it, confirm
@@ -696,11 +702,12 @@ extern "C" void __cdecl MsgBox_ChoiceWaitOpen(void) {
 // SIGNED against the last row, and the top one on the sign of the decremented
 // byte - so a cursor of 0x80 stays where it is going down.
 extern "C" void __cdecl MsgBox_ChoiceInput(void) {
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
     const unsigned pressed = Input_Pressed;
     if ((Field_CancelButtons & pressed) != 0) {
         const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
         ItemUse_Window1State = 3;
-        SetB(kWindow0State, 1);
+        rv::Store<unsigned>(win0->state, 1);
         ItemUse_SubState = next;
         return;
     }
@@ -725,7 +732,8 @@ extern "C" void __cdecl MsgBox_ChoiceInput(void) {
 // original 0x4981A0. Once window 0 reports 2 the hold flag is toggled off and
 // the state's own index goes back to 0.
 extern "C" void __cdecl MsgBox_ChoiceWaitShut(void) {
-    if (B(kWindow0State) != 2) return;
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    if (win0->state != 2) return;
     SetW(kFlags, W(kFlags) ^ 4u);
     ItemUse_SubState = 0;
 }
@@ -733,7 +741,8 @@ extern "C" void __cdecl MsgBox_ChoiceWaitShut(void) {
 // original 0x498230. Re-opens the message at the answer's own text and
 // releases the hold.
 extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
-    if (B(kWindow0State) != 2) return;
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    if (win0->state != 2) return;
     Msgbox_Delay = 0x10;
     g.reopen();
     SetW(kFlags, W(kFlags) ^ 4u);
@@ -743,9 +752,10 @@ extern "C" void __cdecl MsgBox_ChoiceReopen(void) {
 // set (which MsgBox_Reset keeps only 0x40 of, so it is cleared on the next
 // message), window 0 to state 4, and state 2 sub 1 - the wait for it to shut.
 extern "C" void __cdecl MsgBox_ChoiceDone(void) {
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
     if (ItemUse_Window1State != 4) return;
     SetB(kFlags, B(kFlags) | 0x80u);
-    SetB(kWindow0State, 4);
+    rv::Store<unsigned>(win0->state, 4);
     SetB(kState, 2);
     ItemUse_SubState = 1;
 }
@@ -822,7 +832,8 @@ extern "C" void __cdecl MsgBox_MenuDone(void) {
 // original 0x498450. State 6: back to state 0 once window 0 reports 2. No
 // path in this file reaches it - nothing writes 6 to 0x7DEE40 (section 2).
 extern "C" void __cdecl MsgBox_State6(void) {
-    if (B(kWindow0State) == 2) SetB(kState, 0);
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
+    if (win0->state == 2) SetB(kState, 0);
 }
 
 // original 0x498470. State 7, the wait code 0x16 asks for: two entries on
@@ -835,13 +846,14 @@ extern "C" void __cdecl MsgBox_State7(void) { Call(g.sub7, 2, ItemUse_SubState, 
 // As the original has it: the delay is tested BEFORE the decrement, so a 0
 // does the work and leaves 0xFF.
 extern "C" void __cdecl MsgBox_State7Delay(void) {
+    auto* const win0 = rv::As<records::WindowRecord>(At(bof3::addr::WindowRecords) + 0 * sizeof(records::WindowRecord));
     const unsigned char was = Msgbox_Delay;
     Msgbox_Delay = static_cast<unsigned char>(was - 1);
     if (was != 0) return;
-    const auto window = static_cast<unsigned char>(B(kWindow0State) + 1);
+    const auto window = static_cast<unsigned char>(win0->state + 1);
     const auto next = static_cast<unsigned char>(ItemUse_SubState + 1);
     SetB(kFlags, B(kFlags) | 4u);
-    SetB(kWindow0State, window);
+    rv::Store<unsigned>(win0->state, window);
     ItemUse_SubState = next;
 }
 

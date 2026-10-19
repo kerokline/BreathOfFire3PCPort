@@ -72,8 +72,8 @@ constexpr std::uint32_t kAngleFB = 0x929ECC;    // s16 Cond_AngleFB
 // kOrigin: now MapView_Origin (symbols.toml). u16 MapView_Origin
 // kKind2Z: now Field_Kind2Z (symbols.toml). s32 Field_Kind2Z
 constexpr std::uint32_t kKind2X = 0x905E64;     // s32 Field_Kind2X
-constexpr std::uint32_t kKind2 = 0x7E0940;      // Sprite_Kind2: +0x34 x, +0x38 z, +0x3E the elevation
-constexpr std::uint32_t kExtra0 = 0x802000;     // Sprite_ObjectsExtra record 0: +0x34 x, +0x38 z, +0x3E
+// kKind2: now Sprite_Kind2 on records::SpriteHead.
+// kExtra0: now Sprite_ObjectsExtra record 0 on records::SpriteObject.
 // kExtra1Angle: now Sprite_ObjectsExtra record 1 angle[2] (records::SpriteObject).
 // kExtraWord: now AreaW2c_LastArea (symbols.toml). u16 just past Sprite_ObjectsExtra: tested 0x70 / 0x91
 // kClut: now Gfx_ClutStrip (symbols.toml). Gfx_ClutStrip: 0x2000 16-bit colours

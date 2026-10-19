@@ -64,8 +64,8 @@ constexpr U kPressed = 0x7E1BEC;      // Input_Pressed (read as a word, twice as
 constexpr U kMembers = 0x8031CC;      // 36-byte records, one per party member
 constexpr U kMemberStride = 36;
 // kHand: now BattleE4_Above (symbols.toml). u8 on / off, x at 0x803458, y at 0x80345A (u16)
-constexpr U kHandX = 0x803458;
-constexpr U kHandY = 0x80345A;
+// kHandX: now WindowRecords record 21 x (records::WindowRecord).
+// kHandY: now WindowRecords record 21 y (records::WindowRecord).
 // The dispatch tables (symbols.toml [[data]]).
 // kStates: now ShopTrade_States (symbols.toml). ShopTrade_States: 5, by kState
 // kOpenSteps: now ShopTrade_OpenSteps (symbols.toml). 2, by kSub
