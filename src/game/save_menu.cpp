@@ -31,6 +31,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
+#include "game/records.h"
 #include "game/save_menu_callees.h"
 #include "game/title_menu.h"
 #include "game/widescreen.h"
@@ -104,6 +105,15 @@ U Long(U address) {
 }
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutFloat(U address, float f) { std::memcpy(At(address), &f, sizeof f); }
+
+// The typed views of the record pointers (docs/typed-records.md): a save
+// summary (0x905BC0, 16 of 0x1C), a Save_Directory entry (0x929F40, 16 of
+// 0x18), Sprite_Current read afresh (below +0x80, the sprite head every
+// family shares) and Field_State, the leader's party record.
+static records::SaveSummary* Sum(U address) { return reinterpret_cast<records::SaveSummary*>(At(address)); }
+static records::SaveDirEntry* Dir(U address) { return reinterpret_cast<records::SaveDirEntry*>(At(address)); }
+static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+static records::PartyMember* FS() { return reinterpret_cast<records::PartyMember*>(Field_State); }
 unsigned char* Packet() { return Gfx_PacketNext; }
 
 // The state byte both menus run on, stepped as the originals step it.
@@ -234,7 +244,7 @@ extern "C" int __cdecl Save_ListFiles(void) {
         CopyForward(entry, name, n + 1);
         U size;
         std::memcpy(&size, found + 0x10, sizeof size);
-        PutLong(entry + 0x14, size);
+        Dir(entry)->size = size;
         entry += at::kDirectoryBytes;
         ++count;
     } while (g.find_next(handle, found) == 0);
@@ -264,7 +274,7 @@ extern "C" void __cdecl Save_ReadSummaries(void) {
             g.read_file(reinterpret_cast<const char*>(At(at::kDirectory + n * at::kDirectoryBytes)), at::kSummaryBytes,
                         static_cast<int>(at::kSummaryAt));
             for (U i = 0; i < 7; ++i) PutLong(summary + i * 4, Long(at::kStaging + i * 4));
-            PutByte(summary + 0x15, n);
+            Sum(summary)->dir_index = n;
             break;
         }
     }
@@ -761,17 +771,17 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
     PutLong(at::kFieldState, ObjTrio_addr);
     PutLong(at::kSpriteCurrent, ObjTrio_addr);
     g.member_sprite(0, 0);
-    PutByte(Long(at::kSpriteCurrent), 1);
-    PutByte(Long(at::kFieldState) + 0x89, 0);
-    PutWord(Long(at::kSpriteCurrent) + 0x2E, 0x10A);
-    PutWord(Long(at::kSpriteCurrent) + 0x30, 0x51);
-    PutByte(Long(at::kSpriteCurrent) + 0x29, 0);
-    PutByte(Long(at::kSpriteCurrent) + 0x48, 0);
-    PutByte(Long(at::kSpriteCurrent) + 9, 1);
-    PutByte(Long(at::kSpriteCurrent) + 0x24, 0x81);
-    PutByte(Long(at::kSpriteCurrent) + 6, 4);
-    PutByte(Long(at::kSpriteCurrent) + 9, 0);
-    g.set_animation(static_cast<unsigned char>(Byte(Long(at::kSpriteCurrent) + 6) + 8));
+    SC()->flags = 1;
+    FS()->char_id = 0;
+    SC()->screen_x = 0x10A;
+    SC()->screen_y = 0x51;
+    SC()->ot_slot = 0;
+    SC()->scale_mode = 0;
+    SC()->step_frames = 1;
+    SC()->draw_flags = 0x81;
+    SC()->type = 4;
+    SC()->step_frames = 0;
+    g.set_animation(static_cast<unsigned char>(static_cast<U>(SC()->type) + 8));
     AreaW0b_PartySet = 0xFF;
     const U any = g.list_files() != 0 ? 1 : 0;
     Game_Step = static_cast<std::uint32_t>(Game_Step) + 1;
