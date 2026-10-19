@@ -81,7 +81,8 @@ unsigned char* Member(unsigned slot) { return At(at::kMembers + (slot & 0xFF) * 
 unsigned char* WindowSlot(unsigned slot) { return At(at::kWindows + slot * at::kWindowSize); }
 // The record the window task is running, re-read wherever the original reads it.
 unsigned char* CurrentWindow() { return At(BattleWinStates_Current); }
-// Member() is +0x80 into the member record (0x802DC0); the record starts 0x80 before.
+// Member() is +0x80 into the member record (0x802DC0); the record, and its
+// typed view, starts 0x80 before.
 char* Text(std::uint32_t address) { return reinterpret_cast<char*>(At(address)); }
 const char* Format(std::uint32_t address) { return reinterpret_cast<const char*>(At(address)); }
 

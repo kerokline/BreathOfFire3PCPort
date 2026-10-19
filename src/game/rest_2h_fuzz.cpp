@@ -53,7 +53,6 @@ __attribute__((naked)) void R2hEnumTheirs() {
 namespace rest_2h {
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace sh = scenario_harness;
 using move_script::Long;

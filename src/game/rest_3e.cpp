@@ -46,7 +46,6 @@ using bof3x::input::sigma::Sigma;
 
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace at = rest_3e::at;
 using U = std::uint32_t;

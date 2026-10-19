@@ -118,11 +118,13 @@ bool TakeEffect() {
 // The record of the slot 0x903850 holds, read back as the original does.
 unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Party() is a party member (ObjTrio, Field_State). Fx()
-// is an effect object (Effect_Objects).
+// Sprite_Kind2 record. rv::As<records::PartyMember>(p) is given party members
+// (ObjTrio, Field_State), rv::As<records::EffectObject>(p) effect objects
+// (Effect_Objects).
 // A kind-0x13 effect live at (x, z) with +0x6C `far` and +9 `life`.
 void AimEffect(int x, int z, int far, unsigned life) {
     unsigned char* const e = Effect();

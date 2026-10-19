@@ -95,7 +95,8 @@ int S8(std::uint32_t address) { return static_cast<signed char>(At(address)[0]);
 unsigned char* Enemy(unsigned slot) { return At(at::kEnemies + at::kEnemyStride * (slot - 3u)); }
 // A party member's battle object, ObjTrio 0x802D40 + 0x14C * m.
 unsigned char* Member(unsigned m) { return At(ObjTrio_addr + at::kMemberStride * m); }
-// Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record starts 0x80 before.
+// Enemy() is +0x80 into the enemy object (EnemyWorkingRecords); the record, and
+// its typed view, starts 0x80 before.
 
 using Handler = void (__cdecl*)();
 void Run(std::uint32_t handler) { reinterpret_cast<Handler>(static_cast<std::uintptr_t>(handler))(); }

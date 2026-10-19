@@ -29,7 +29,6 @@
 namespace rest_2g {
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace sh = scenario_harness;
 using move_script::Long;

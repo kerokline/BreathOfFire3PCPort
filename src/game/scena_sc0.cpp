@@ -69,8 +69,8 @@ bool TakeSlot() {
 }
 unsigned char* SlotRecord() { return At(Effect_Objects_addr + (static_cast<uint32_t>(B(kSlot)) << 7)); }
 
-// The typed views of the record pointers (docs/typed-records.md). Fx() is an
-// effect object (Effect_Objects).
+// The record views (game/record_views.h): rv::As<records::EffectObject>(p) is
+// given effect objects (Effect_Objects).
 
 // A kind-0x13 effect at (x, y, z) with +9 = mode: the shape every run of this
 // chapter places after TakeSlot.

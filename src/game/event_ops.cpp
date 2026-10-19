@@ -123,11 +123,12 @@ unsigned short Bank() { return Word(At(at::kScratch2)); }
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
 unsigned char* Extra(int n) { return Sprite_ObjectsExtra + n * 0xA4; }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Obj() is a Sprite_Objects record.
+// Sprite_Kind2 record: Object(n) is a Sprite_Objects record.
 
 // A placement's x or z (event_script.cpp): the whole part from `whole`, the
 // half (0x8000) if `half` is non-zero.

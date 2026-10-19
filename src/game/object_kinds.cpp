@@ -98,8 +98,8 @@ Callees Originals() {
 }
 Callees g = Originals();
 
-// The field object, typed (src/game/records.h): the handlers' argument, which
-// the loops also make Sprite_Current.
+// The field object, rv::Current<records::SpriteObject>(): the handlers'
+// argument, which the loops also make Sprite_Current.
 
 unsigned char Pace(unsigned char* object, unsigned speed, unsigned flags) {
     return g.pace[Sprite_Current[2]](object, speed, flags);

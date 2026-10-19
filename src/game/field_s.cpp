@@ -83,7 +83,6 @@ int S16(U v) { return static_cast<short>(static_cast<unsigned short>(v)); }
 unsigned char* Rec(U n) { return At(at::kRecords + n * at::kRecordStride); }
 U RecAddr(U n) { return at::kRecords + n * at::kRecordStride; }
 
-// The typed views of these records (src/game/records.h).
 // A member id's record index: MoveScript_EffectState[id], unchecked.
 U RecordOf(U id) { return MoveScript_EffectState[id & 0xFF]; }
 // Field_Members of ObjTrio record k (s8, unchecked): the byte +0x148.

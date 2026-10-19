@@ -110,7 +110,6 @@ void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 void BumpCount() { SetWord(At(bof3::addr::DamageScratch), static_cast<unsigned>(Count() + 1)); }
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
 
-// The typed views of these records (src/game/records.h).
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.
 std::int32_t Coordinate(unsigned char half, unsigned char whole) {
     return static_cast<std::int32_t>((half ? 0x8000u : 0u) | static_cast<U>(whole) << 16);

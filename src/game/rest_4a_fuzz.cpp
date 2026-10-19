@@ -33,7 +33,6 @@
 namespace rest_4a {
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;

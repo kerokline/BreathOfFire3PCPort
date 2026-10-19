@@ -28,7 +28,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 using U = std::uint32_t;
 using move_script::At;

@@ -111,7 +111,7 @@ U Long(U address) {
 void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 void PutFloat(U address, float f) { std::memcpy(At(address), &f, sizeof f); }
 
-// The typed views of the record pointers (docs/typed-records.md): a save
+// The record views (game/record_views.h) used here: a save
 // summary (0x905BC0, 16 of 0x1C), a Save_Directory entry (0x929F40, 16 of
 // 0x18), Sprite_Current read afresh (below +0x80, the sprite head every
 // family shares) and Field_State, the leader's party record.

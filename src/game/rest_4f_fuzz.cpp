@@ -52,7 +52,6 @@ __attribute__((naked)) void R4fCellTheirs() { asm("jmp *_g_r4f_cell_copy"); }
 namespace rest_4f {
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace sh = scenario_harness;
 using move_script::Long;

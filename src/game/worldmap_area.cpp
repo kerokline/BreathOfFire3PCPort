@@ -107,8 +107,8 @@ using U = std::uint32_t;
 // The object being run, re-read wherever the original re-reads it.
 unsigned char* Cur() { return Sprite_Current; }
 
-// The effect record being run (every Cur() reader here is an effect kind's
-// handler), typed (src/game/records.h).
+// Cur() is the effect record being run (every Cur() reader here is an effect
+// kind's handler), typed as rv::As<records::EffectObject>(Cur()).
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 // A handler read from a .data table in place, as the originals' `call` /
 // `jmp [index * 4 + table]` do: the index is not checked.

@@ -62,7 +62,7 @@ unsigned char* PtrAt(U cell) { return At(UL(At(cell))); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return PtrAt(at::kOwner); }
 unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
-// Sprite_Current typed by who runs: a battle task slot, or the enemy an
+// rv::Current<T>() is typed by who runs: a battle task slot, or the enemy an
 // enemy op runs on (docs/battle_e2.md 1.1, 1.3).
 // An enemy object and a party member by an actor's index, as the originals
 // address them (32-bit wrap: an index below its base reads below the array).

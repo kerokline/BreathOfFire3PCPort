@@ -59,7 +59,8 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+// Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
+// the slot in an effect task.
 unsigned char* Packet() { return Gfx_PacketNext; }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void PutFloat(unsigned char* p, U v) {

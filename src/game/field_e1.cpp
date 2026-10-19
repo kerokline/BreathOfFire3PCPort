@@ -80,7 +80,7 @@ unsigned char* Fs() { return Field_State; }
 unsigned char* Member(unsigned i) { return ObjTrio + i * at::kObjStride; }
 unsigned char* Object(unsigned i) { return Sprite_Objects + i * at::kSpriteStride; }
 
-// The typed views (src/game/records.h): in the leader states Sprite_Current
+// The record views (game/record_views.h): in the leader states Sprite_Current
 // is an ObjTrio record, and Field_State always is.
 short S16(std::uint32_t v) { return static_cast<short>(v); }
 

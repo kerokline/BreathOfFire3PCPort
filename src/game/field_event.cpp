@@ -76,7 +76,7 @@ constexpr unsigned kMemberBytes = 0x14C, kActorBytes = 0xA4;
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* Member(unsigned i) { return ObjTrio + i * kMemberBytes; }
 
-// The typed views (src/game/records.h). The leader's states and the party's
+// The record views (game/record_views.h). The leader's states and the party's
 // set-up run on an ObjTrio record (Member above, Field_State always); the
 // Sprite_* helpers on any object, whose first 0x80 bytes are a sprite's.
 unsigned char* Actor(unsigned a) { return At(at::kActorRecords) + a * kActorBytes; }

@@ -63,7 +63,6 @@ namespace {
 using namespace field_modes;
 using VoidFn = void (__cdecl*)();
 
-// The typed views of these records (src/game/records.h).
 
 // A table of code pointers in the exe's data, read as the original reads it:
 // afresh, and indexed without a bound.

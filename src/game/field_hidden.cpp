@@ -103,7 +103,7 @@ long Add(long a, long b) { return static_cast<long>(static_cast<std::uint32_t>(a
 // An effect object by its index: Effect_Objects + index * 0x80, unchecked.
 unsigned char* Effect(unsigned index) { return Effect_Objects + (index << 7); }
 
-// The typed views (src/game/records.h): the member states and party actions
+// The record views (game/record_views.h): the member states and party actions
 // run on an ObjTrio record, Field_State is one; the Sprite_* helpers run on
 // any object whose first 0x80 bytes are a sprite object's.
 // A pointer the original keeps in a dword, read afresh.

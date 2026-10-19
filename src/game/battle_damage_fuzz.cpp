@@ -72,7 +72,8 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 
 unsigned char* PartyAt(unsigned a) { return At(ObjTrio_addr + 0x10 + (a & 0xFF) * at::kPartyStride); }
 unsigned char* EnemyAt(unsigned a) { return At(at::kEnemy + ((a & 0xFF) - 3) * at::kEnemyStride); }
-// PartyAt / EnemyAt point +0x10 / +0x80 into their records; these start at them.
+// PartyAt / EnemyAt point +0x10 / +0x80 into their records; their typed views
+// start at the records (PartyAt(a) - 0x10, EnemyAt(a) + at::kEObject).
 
 // The round's two actors: the stand-ins scribble on their fields.
 unsigned g_actor[2];

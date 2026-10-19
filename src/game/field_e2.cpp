@@ -54,7 +54,7 @@ std::uint16_t W(U a) { return Word(At(a)); }
 void SetW(U a, unsigned v) { SetWord(At(a), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
-// The typed views (src/game/records.h): the leader helpers run on the leader,
+// The record views (game/record_views.h): the leader helpers run on the leader,
 // an ObjTrio record, and Field_State is one.
 U LongAt(const unsigned char* p) { return static_cast<U>(Long(p)); }
 int S8(unsigned v) { return static_cast<signed char>(v); }

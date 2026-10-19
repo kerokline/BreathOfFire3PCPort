@@ -122,7 +122,7 @@ U OtSlot() { return Byte(at::OtSlotAt()); }
 U SpriteCurrent() { return Dword(At(Sprite_Current_addr)); }
 unsigned char* Sprite() { return At(SpriteCurrent()); }
 
-// EventOp_8x's object, a Sprite_Objects record, typed (src/game/records.h).
+// EventOp_8x's object, Sprite(), is a Sprite_Objects record.
 
 // The slot a cell handler commits to: 6 when the record's top nibble is set
 // (kinds 0x10 and up), else Draw_OtSlot - zero-extended from its byte.

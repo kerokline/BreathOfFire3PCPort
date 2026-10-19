@@ -182,10 +182,12 @@ void Effect13(unsigned char* e, std::int32_t a, std::int32_t b, std::int32_t c, 
 // originals index it after the store.
 unsigned char* Slot850() { return EffectAt(static_cast<std::uint32_t>(Long(At(at::kSlot))) & 0xFF); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 
 }  // namespace
 

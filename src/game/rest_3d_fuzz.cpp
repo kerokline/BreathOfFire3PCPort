@@ -30,7 +30,6 @@
 namespace rest_3d {
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace bh = boss_harness;
 using U = std::uint32_t;

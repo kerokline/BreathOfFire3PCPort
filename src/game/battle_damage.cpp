@@ -94,8 +94,10 @@ using move_script::Word;
 // working record by the byte alone, as the original does (`and eax, 0xFF`).
 unsigned char* Party(unsigned actor) { return At(ObjTrio_addr + 0x10 + (actor & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned actor) { return At(at::kEnemy + ((actor & 0xFF) - 3) * at::kEnemyStride); }
-// The same records typed from their starts: Party is +0x10 into the member
-// record (0x802D50), Enemy +0x80 into the enemy object (0x93B9E0).
+// Party(a) is +0x10 into the member record (0x802D50), Enemy(a) +0x80 into the
+// enemy object (0x93B9E0): their typed views start at the records'
+// starts, rv::As<records::PartyMember>(Party(a) - 0x10) and
+// rv::As<records::BattleEnemy>(Enemy(a) + at::kEObject).
 unsigned char Byte(std::uint32_t address) { return At(address)[0]; }
 std::int32_t S32(std::uint32_t v) { return static_cast<std::int32_t>(v); }
 std::uint32_t U32(std::int32_t v) { return static_cast<std::uint32_t>(v); }

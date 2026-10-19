@@ -69,7 +69,6 @@ const unsigned char* Member(unsigned m) { return At(Field_Members_addr + 0x4 + (
 bool MapTarget(unsigned char b) { return b == 0xF2; }
 bool MapBlocked(unsigned char b) { return b == 0xF0 || b == 0xF1 || b == 0xF4 || b == 0xF6 || b == 0xF7; }
 
-// Typed views of a record pointer (records.h).
 
 // The two steps ahead of Sprite_Current (x + 2 * step, z + 2 * step), read
 // before any call: 0x51C390's and 0x522560's point.

@@ -27,7 +27,6 @@
 namespace rest_3f {
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace sh = scenario_harness;
 using move_script::Long;

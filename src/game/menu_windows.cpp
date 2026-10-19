@@ -124,7 +124,8 @@ using move_script::Word;
 std::uint32_t Addr(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 unsigned char* Ptr(std::uint32_t at) { return At(static_cast<std::uint32_t>(Long(At(at)))); }
 
-// The typed view of a window record (docs/typed-records.md; WindowRecords
+// rv::As<records::WindowRecord>(p) views a window record
+// (docs/typed-records.md; WindowRecords
 // 0x803160, the record each window handler is given). Only +0..+7 are
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 

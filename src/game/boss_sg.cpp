@@ -49,7 +49,8 @@ using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
 unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
-// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+// Sprite_Current (rv::Current<T>()): the boss enemy in its kind's handlers,
+// the slot in an effect task.
 std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 // A named .data table's address (symbols.gen.h binds the name to a typed pointer).

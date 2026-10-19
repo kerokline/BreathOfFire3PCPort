@@ -95,9 +95,11 @@ unsigned char* Enemy(u32 k) { return At(at::kEnemies + at::kEnemyStride * k); }
 unsigned char* Kind(u32 kind) { return At(at::kKinds + at::kKindStride * kind); }
 unsigned char* Obj(u32 i) { return ObjTrio + at::kObjStride * i; }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Party() is a party
-// member (ObjTrio, Field_State). Fx() is an effect object (Effect_Objects).
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does;
+// rv::As<records::PartyMember>(p) is given party members (ObjTrio,
+// Field_State), rv::As<records::EffectObject>(p) effect objects
+// (Effect_Objects).
 unsigned char& Byte(u32 address) { return *At(address); }
 
 i32 CentreX() { return static_cast<std::int32_t>(BossSi_CentreX); }

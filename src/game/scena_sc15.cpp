@@ -204,10 +204,12 @@ void ClearAt(uint32_t row, unsigned n) { SH_CALL(Flags_Clear)(At(row), n); }
 unsigned char* Effect(unsigned slot) { return At(Effect_Objects_addr + ((slot & 0xFFu) << 7)); }
 unsigned char* Sprite(unsigned k) { return At(Sprite_Objects_addr + (k & 0xFFu) * 0xA4u); }
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 
 unsigned Area() { return Game_AreaNumber; }
 void Step(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }

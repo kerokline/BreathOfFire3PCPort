@@ -104,7 +104,6 @@ unsigned char* Member(int i, const char* who) {
 // in place wherever it lands, as the original reads it.
 unsigned char* SpriteRead(unsigned i) { return Sprite_Objects + i * at::kRecordStride; }
 
-// The typed views of these records (src/game/records.h).
 
 void Tick() {
     SH_CALL(Sprite_ScriptTick)();

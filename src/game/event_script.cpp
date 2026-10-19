@@ -76,12 +76,13 @@ void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
 unsigned char* Extra(unsigned n) { return Sprite_ObjectsExtra + n * 0xA4u; }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Obj() is a Sprite_Objects record. Ext() is a
-// Sprite_ObjectsExtra record.
+// Sprite_Kind2 record: Object(n) is a Sprite_Objects record, Extra(n) a
+// Sprite_ObjectsExtra one.
 
 // A placement's x or z: the whole part from `whole`, and the half (0x8000) if
 // `half` is non-zero - `neg / sbb / and 0x8000`.

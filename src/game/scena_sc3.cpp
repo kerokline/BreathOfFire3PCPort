@@ -45,10 +45,12 @@ using move_script::Word;
 
 using Handler = void (__cdecl*)();
 
-// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// The record views (game/record_views.h): rv::As<records::SpriteObject>(p)
+// views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 using ObjectHandler = std::uint32_t (__cdecl*)(unsigned char* object, unsigned char* bank);
 
 // --- the cells --------------------------------------------------------------

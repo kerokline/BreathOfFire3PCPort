@@ -43,7 +43,8 @@ unsigned char* Rec() {
         *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
 
-// The typed view of a window record (docs/typed-records.md; WindowRecords
+// rv::As<records::WindowRecord>(p) views a window record
+// (docs/typed-records.md; WindowRecords
 // 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
 

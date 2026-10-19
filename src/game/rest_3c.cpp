@@ -40,7 +40,6 @@
 
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace at = rest_3c::at;
 using U = std::uint32_t;

@@ -76,7 +76,7 @@ std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t
 // Member i by address, i unchecked (the original indexes past the three).
 unsigned char* Member(unsigned i) { return At(Address(ObjTrio) + i * kMemberBytes); }
 
-// The typed views of the member records (src/game/records.h): Sprite_Current
+// The member records' views (game/record_views.h): Sprite_Current
 // and Field_State are ObjTrio records here.
 unsigned char& Cell(unsigned i) { return At(at::kCells)[i & 0xFF]; }
 std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(Long(at)); }

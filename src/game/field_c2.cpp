@@ -48,7 +48,6 @@ using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
 
-// The typed views of these records (src/game/records.h).
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SW(const unsigned char* p) { return static_cast<short>(Word(p)); }

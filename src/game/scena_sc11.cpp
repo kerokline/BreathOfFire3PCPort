@@ -78,11 +78,13 @@ VoidFn Entry(std::uint32_t table, int index) {
 unsigned char* Flags() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
 unsigned char* EffectRecord(unsigned slot) { return Effect_Objects + ((slot & 0xFFu) << 7); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
+// Sprite_Kind2 record. rv::As<records::EffectObject>(p) is given effect
+// objects (Effect_Objects).
 
 void CallA(unsigned n) { SH_CALL(Scenario_CallA)(n); }
 void CallB(unsigned n) { SH_CALL(Scenario_CallB)(n); }

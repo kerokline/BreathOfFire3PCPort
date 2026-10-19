@@ -95,7 +95,7 @@ void PutLong(unsigned char* p, U v) { std::memcpy(p, &v, sizeof v); }
 void PutFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 unsigned char* Object() { return At(Long(At(at::Sprite_CurrentAt()))); }
 
-// The map task's object typed (src/game/records.h): its frame runs from
+// The map task's object, Object(), is an effect record: its frame runs from
 // WorldMapHud_Frame, effect kind 0x58's handler, on the effect record.
 unsigned char* PacketNext() { return At(Long(At(at::Gfx_PacketNextAt()))); }
 

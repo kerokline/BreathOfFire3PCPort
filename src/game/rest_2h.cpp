@@ -69,7 +69,6 @@ unsigned char g_pupil_label_off = 0;
 
 namespace {
 
-// Typed views of a record pointer (records.h).
 
 namespace at = rest_2h::at;
 using U = std::uint32_t;

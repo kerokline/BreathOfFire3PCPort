@@ -45,12 +45,13 @@ using move_script::Word;
 short Count() { return static_cast<short>(Word(At(at::kCount))); }
 unsigned char* Object(int n) { return Sprite_Objects + n * static_cast<int>(at::kObjectStride); }
 
-// The typed views of the record pointers (docs/typed-records.md). SC() reads
-// Sprite_Current afresh at each use, as the original does. Spr() views a
+// The record views (game/record_views.h): rv::Current<T>() reads
+// Sprite_Current afresh at each use, as the original does.
+// rv::As<records::SpriteObject>(p) views a
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
-// Sprite_Kind2 record. Obj() is a Sprite_Objects record. Fx() is an effect
-// object (Effect_Objects).
+// Sprite_Kind2 record: Object(n) is a Sprite_Objects record.
+// rv::As<records::EffectObject>(p) is given effect objects (Effect_Objects).
 
 // A placement's x or z: the whole part from `whole`, the half (0x8000) when
 // `half` is not 0 - `neg / sbb / and 0x8000`, then `or` the whole << 16.

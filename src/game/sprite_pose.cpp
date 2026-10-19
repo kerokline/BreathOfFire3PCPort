@@ -44,7 +44,7 @@ namespace {
 
 constexpr unsigned kEffects = 20, kEffectBytes = 0x80;
 
-// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// Sprite_Current, as rv::Current<records::SpriteObject>(), may be a Sprite_Objects
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
 
