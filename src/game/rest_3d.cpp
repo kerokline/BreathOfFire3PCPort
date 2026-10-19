@@ -30,11 +30,18 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3d_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
+[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_3d::at;
 using U = std::uint32_t;
@@ -421,7 +428,7 @@ void HpLessDefence(int divisor) {
     const bool member = IsMember(Target());
     const U v = static_cast<U>(BH_CALL(Effect_HpBasedDamage)(divisor));
     const unsigned t = Target();
-    const U def = member ? Word(Party(t) + 0xA6) : Word(Enemy(t) + 0xB6);
+    const U def = member ? MemberRec(Party(t))->def : EnemyRec(Enemy(t))->def;
     SetWord(Result() + 4, v - def);
     if (S16(Word(Result() + 4)) < 0) SetWord(Result() + 4, 0);
 }
@@ -516,7 +523,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
             m = (m + 1) & 0xFF;
         } while (m < B(at::kPartySize));
     }
-    SetWord(Result() + 4, 0u - Word(Party(Target()) + 0xA0));
+    SetWord(Result() + 4, 0u - MemberRec(Party(Target()))->max_hp);
 }
 
 // original 0x44E8B0 (slot 119): Effect_NoHitReaction; the actor's +0x134 (an
