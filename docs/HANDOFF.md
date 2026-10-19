@@ -30,7 +30,10 @@ sites went from 50,943 to 27,394, and **the machine code is identical to `origin
 (`tools/codegen_same.py`, the round's proof). Stage C is staged in
 [`typed-data-stage-c.md`](typed-data-stage-c.md). The same branch carries the install-gap round's second pairing pass
 ([`install-gap-pairs.md`](install-gap-pairs.md) 8). **The quicksave round** ([`quicksave-round.md`](quicksave-round.md))
-is staged and not built; the owner is taking it in a separate session (2026-10-19).
+is built on `quicksave/round` (2026-10-19, its PR next): F6 / F7 / the F5 menu, DIV-0145..0147, D322, proven by the
+state hash and 22 pixel-equal capture pairs ([`quicksave-routes.md`](quicksave-routes.md) 7). Owed: the owner's play,
+their call on drawing F6 / F7's confirmation (logged only, as F12's is, DIV-0032), and the leftovers in
+[`quicksave.md`](quicksave.md) (a live screen grab at the take, the cross-reboot base, the hosted cross form).
 
 ## Pick up here
 
@@ -228,7 +231,7 @@ is staged and not built; the owner is taking it in a separate session (2026-10-1
 - **The first receipt** ([`STATUS.md`](STATUS.md) open decisions): the evidence exists (`attract_diff.py`,
   `mem_dump.py --compare`, the state hash, the route A/Bs).
 - **IDEAS:** I13 save states (for what no route replays: bosses, event battles); I15's live look toggle key and
-  I19 curvature; I18, F12's `Save_QuickWrite` disabled or made a true quicksave before shipping.
+  I19 curvature; I18 closed by the owner (F12 unchanged; the quicksave is F6, DIV-0145); I45 shrink the quicksave files; I46 what loading one trusts.
 - **The display overhaul's owed checks** ([`display-overhaul.md`](display-overhaul.md) 5,
   [`window-modes.md`](window-modes.md) 6): `rb1`'s edge pixels (`BOF3X_PIXEL_OFFSET`), SatPixie's tuning by hand,
   the title-bar drag under `BOF3X_BACKGROUND=0`, sprite edges at k = 3 / 6. Not built, loud if reached: a `Lock`

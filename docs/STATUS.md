@@ -8,6 +8,15 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
+**The quicksave round, 2026-10-19** (`quicksave/round`, its PR next; [`quicksave-round.md`](quicksave-round.md),
+[`quicksave.md`](quicksave.md)): save states. F6 saves the whole game state between two logic frames - the data span,
+the task stacks and three participants' records (our statics, sound, graphics) - into a rotating set of sixteen
+quicksaves (`BISLPS10..1F.DAT`), F7 restores the newest to the frame, and F5 opens a load-only menu drawn as the title's
+load screen (DIV-0145..0147); the save list is split from the quicksaves and bounded (DIV-0146, fixing D322).
+`bof3x.dll` now links at a fixed base. Proven by the state hash (no page of game state differs after a restore beyond
+two by-design words) and by 22 pixel-equal capture pairs over six routes, two conditions, the PC, US disc-only and
+PSP-EU installs and wide mode, in-process and across processes. Not yet played by the owner.
+
 **The typed-data round, stages A and B, 2026-10-19** (`typed/b1`, its PR next;
 [`typed-data-round.md`](typed-data-round.md), IDEAS I44 stages 1 and 2): our code's reads of Capcom's data image become
 named, typed accesses, with **no behaviour change**. Stage A typed the globals (488 new `symbols.toml` `[[data]]`

@@ -310,7 +310,7 @@ until it exists a quick-load across a sound-bank change is unsafe.
 - Nothing seen in the game's logic: no page outside the skip list differed
   in the town, and the byte dump agrees.
 
-## 9. Ledger draft A (for the coordinator to number)
+## 9. Ledger draft A (numbered DIV-0145, 2026-10-19)
 
 - **What the original did:** F6 did nothing; F7 selected the next renderer
   device and showed its name (nothing since DIV-0040). There were no save
@@ -509,7 +509,7 @@ line `Show` last wrote (`g_overlay`).
   menu's), `sbs_before_after_three`, `sbs_before_after_refused` (the first
   look against this one). The first look's captures: `run1b\`, `run2\`.
 
-### QM.4 Ledger draft B (for the coordinator to number)
+### QM.4 Ledger draft B (numbered DIV-0146, 2026-10-19)
 
 - **Subsystem:** the save list (`Save_ListFiles` `0x4548B0`,
   `Save_ReadSummaries` `0x588DC0`, ours in `src/game/save_menu.cpp`;
@@ -535,7 +535,7 @@ line `Show` last wrote (`g_overlay`).
 - **Reversible?** `BOF3X_ORIGINAL=SaveLists` (the original's pattern and its
   unbounded table, quicksaves included in the list).
 
-### QM.5 Ledger draft D (for the coordinator to number)
+### QM.5 Ledger draft D (numbered DIV-0147, 2026-10-19)
 
 - **Subsystem:** the window procedure's F5 and the loop's paused branch
   (`Game_WndProc` `0x4FC6F0`, `WinMain` `0x4FCB00`, ours in `win_main.cpp`;
@@ -560,7 +560,7 @@ line `Show` last wrote (`g_overlay`).
 - **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
   replaced; without the key nothing changes).
 
-### QM.6 The defect fixed on the way (for the coordinator to number)
+### QM.6 The defect fixed on the way (numbered D322, 2026-10-19)
 
 **`Save_ListFiles` has no bound** (Capcom's, the PC port's code;
 [`save-files.md`](save-files.md) 2): every match of `BISLPS??.DAT` is stored,
@@ -958,7 +958,7 @@ Run folders, logs, dumps and crash dumps: `C:\Users\kerok\q_spa\runs\`
   cache (the synth's `FastForward` path is DIV-0092's, tested there);
   a quick-load during a voice stream (no route holds one).
 
-### 10.7 Ledger: an addendum to draft A (for the coordinator)
+### 10.7 Ledger: an addendum to draft A (taken into DIV-0145)
 
 No behaviour of the game changes outside a quick-load. Inside one, draft A
 should say what sound does, so that "what a restore gives back" is on the
