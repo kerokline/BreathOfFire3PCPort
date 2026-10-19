@@ -222,8 +222,8 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
             prim[0x45] = v23;
             prim[0x35] = v23;
             prim[6] = prim[5] = prim[4] = 0x80;
-            SetWord(prim + 0x16, (Byte(at::UprightClutAt() + e) >> 4) | 0x78C0u);
-            SetWord(prim + 0x26, 0x1B);
+            rv::As<records::GpuPolyFT4>(prim)->clut = (Byte(at::UprightClutAt() + e) >> 4) | 0x78C0u;
+            rv::As<records::GpuPolyFT4>(prim)->tpage = 0x1B;
             g.commit(slot, 0x48);
         }
         const U base = (i + e * 3u) * 2u;
@@ -468,7 +468,7 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormat3d)), record[0xA]);
     g.font8(x + 0x16, y + 0x17, static_cast<int>(colour), text);
-    const U flags = Word(record + 0x10);
+    const U flags = static_cast<U>(rv::As<records::CharRecord>(record)->status);
     U status = 0;
     if (flags & 0x80u) {
         if (flags & 0x20u) status = (Byte(at::FrameCounterAt()) & 0x20u) ? kStatusText0 : kStatusText1;
@@ -477,11 +477,11 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
         status = kStatusText1;
     }
     if (status != 0) g.tiny_font(x + 0x2E, y + 0x17, colour != 0 ? colour : 1u, 0x10, At(status));
-    const U hp = Word(record + 0x18);
-    if (hp < (Word(record + 0x20) >> 2)) SetWord(record + 0x10, Word(record + 0x10) | 0x2000u);
-    else SetWord(record + 0x10, Word(record + 0x10) & 0xDFFFu);
+    const U hp = static_cast<U>(rv::As<records::CharRecord>(record)->hp);
+    if (hp < (static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp) >> 2)) rv::As<records::CharRecord>(record)->status = static_cast<U>(rv::As<records::CharRecord>(record)->status) | 0x2000u;
+    else rv::As<records::CharRecord>(record)->status = static_cast<U>(rv::As<records::CharRecord>(record)->status) & 0xDFFFu;
     if (!lit) {
-        if (Word(record + 0x10) & 0x2000u) colour = 4;
+        if (static_cast<U>(rv::As<records::CharRecord>(record)->status) & 0x2000u) colour = 4;
         if (hp <= 1) colour = 2;
     } else {
         colour = 7;
@@ -489,22 +489,22 @@ extern "C" unsigned long __cdecl Menu_DrawMemberStatus(int x, int y, unsigned me
     g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), hp);
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = lit ? 7u : (record[0x1E] != 0 ? 4u : 0u);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), Word(record + 0x20));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_hp));
     g.font8(x + 0x16, y + 0x1F, static_cast<int>(colour), text);
     colour = bl;
     if (!lit) {
-        const U ap = Word(record + 0x1A);
-        if (ap < (Word(record + 0x22) >> 2)) colour = 4;
+        const U ap = static_cast<U>(rv::As<records::CharRecord>(record)->ap);
+        if (ap < (static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap) >> 2)) colour = 4;
         if (ap == 0) colour = 2;
     } else {
         colour = 7;
     }
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), Word(record + 0x1A));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatLeft)), static_cast<U>(rv::As<records::CharRecord>(record)->ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(colour), text);
-    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), Word(record + 0x22));
+    g.sprintf(buffer, reinterpret_cast<const char*>(At(kFormatRight)), static_cast<U>(rv::As<records::CharRecord>(record)->stats.max_ap));
     g.font8(x + 0x16, y + 0x27, static_cast<int>(bl), text);
     const U eax = g.pieces(x, y, At(Menu_MemberPieces_addr), 0);
-    const U exp = Dword(record + 0xC);
+    const U exp = static_cast<U>(rv::As<records::CharRecord>(record)->exp);
     const U level = (eax & 0xFFFFFF00u) | record[0xA];
     return g.exp_bar(x + 0x14, y + 0x12, member, level, exp);
 }
@@ -523,7 +523,7 @@ extern "C" unsigned long __cdecl Menu_DrawCell8(unsigned x, unsigned y, unsigned
     prim[0x15] = static_cast<unsigned char>(v << 3);
     SetFloat(prim + 0xC, static_cast<float>(static_cast<std::int32_t>(y & 0xFFFFu)));
     prim[0x14] = static_cast<unsigned char>(u << 3);
-    SetWord(prim + 0x16, clut);
+    rv::As<records::GpuSprt>(prim)->clut = clut;
     prim[6] = prim[5] = prim[4] = static_cast<unsigned char>(shade);
     g.set_semi(prim, 0);
     return g.commit(1, 0x18);
@@ -627,16 +627,16 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     g.obj_reset();
     g.set_bank(Word(At(kScratchBank)));
     rv::As<records::SpriteObject>(Sprite())->flags = 1;
-    SetDword(Sprite() + 0x34, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
+    rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->x, (static_cast<U>(op[5]) << 16) | (op[4] != 0 ? 0x8000u : 0u));
     SetDword(At(Sprite_Objects_addr + 0x8c + S16(Word(At(kScratchX))) * kObjectStride), static_cast<U>(rv::As<records::SpriteObject>(Sprite())->x));
-    SetDword(Sprite() + 0x38, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
+    rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->z, (static_cast<U>(op[7]) << 16) | (op[6] != 0 ? 0x8000u : 0u));
     {
         records::SpriteObject* const s = rv::As<records::SpriteObject>(Sprite());
         const U n = S16(Word(At(kScratchX))) * kObjectStride;
         SetDword(At(Sprite_Objects_addr + 0x90 + n), static_cast<U>(s->z));
         SetDword(At(Sprite_Objects_addr + 0x94 + n), 0);
         const long elevation = g.elevation(static_cast<long>(static_cast<U>(s->x)), static_cast<long>(static_cast<U>(s->z)));
-        SetWord(Sprite() + 0x3E, static_cast<U>(elevation));
+        rv::Store<U>(rv::As<records::SpriteObject>(Sprite())->height_whole, static_cast<U>(elevation));
     }
     rv::As<records::SpriteObject>(Sprite())->state = op[8];
     Sprite()[2] = op[0xA];
@@ -661,19 +661,19 @@ extern "C" void __cdecl EventOp_8x(const unsigned char* op) {
     g.set_animation(rv::As<records::SpriteObject>(Sprite())->direction);
     {
         unsigned char* const s = Sprite();
-        g.set_byte(Word(s + 0x36), Word(s + 0x3A), 0x10);
+        g.set_byte(static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole), static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole), 0x10);
     }
     unsigned char* s = Sprite();
-    if (Word(s + 0x34) != 0) {
-        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, Word(s + 0x3A), 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->x_frac) != 0) {
+        g.set_byte((static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole) + 1u) & 0xFFFFu, static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole), 0x10);
         s = Sprite();
     }
-    if (Word(s + 0x38) != 0) {
-        g.set_byte(Word(s + 0x36), (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->z_frac) != 0) {
+        g.set_byte(static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole), (static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole) + 1u) & 0xFFFFu, 0x10);
         s = Sprite();
     }
-    if (Word(s + 0x34) != 0 && Word(s + 0x38) != 0)
-        g.set_byte((Word(s + 0x36) + 1u) & 0xFFFFu, (Word(s + 0x3A) + 1u) & 0xFFFFu, 0x10);
+    if (static_cast<U>(rv::As<records::SpriteObject>(s)->x_frac) != 0 && static_cast<U>(rv::As<records::SpriteObject>(s)->z_frac) != 0)
+        g.set_byte((static_cast<U>(rv::As<records::SpriteObject>(s)->x_whole) + 1u) & 0xFFFFu, (static_cast<U>(rv::As<records::SpriteObject>(s)->z_whole) + 1u) & 0xFFFFu, 0x10);
     SetWord(At(kScratchX), Word(At(kScratchX)) + 1u);
 }
 

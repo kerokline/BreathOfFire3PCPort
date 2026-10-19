@@ -983,7 +983,7 @@ void ObjectKinds_Inject() {
         const std::uint32_t moved = Address(clones[kFadeOut]) - kFadeBase;
         for (unsigned i = 0; i < 4; ++i) {
             std::uint32_t target;
-            std::memcpy(&target, At(0x65F654 + 4 * i), sizeof target);
+            std::memcpy(&target, At(Field_ObjectFadeOutSteps_addr + 4 * i), sizeof target);
             if (target < kFadeBase || target >= kFadeBase + kFadeSize) bof3::Fatal("object_kinds: fade case %u is 0x%X", i, (unsigned)target);
             g_fade_table[i] = target + moved;
         }

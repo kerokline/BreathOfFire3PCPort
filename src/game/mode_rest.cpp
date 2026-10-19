@@ -29,6 +29,8 @@
 #include "game/music_resume.h"
 #include "game/sound_rest.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -164,7 +166,7 @@ extern "C" void __cdecl GameMode3_Leave(void) {
         const unsigned char out = AreaW3c_CampFlag;
         MenuLists_CampChosen = 0;
         if (out == 0 && ((Field_InputFlags & 1) != 0 || Game_AreaNumber == at::kTripAnyArea)) {
-            const U x = UL(at::kLeaderX), z = UL(at::kLeaderZ);
+            const U x = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x), z = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z);
             const unsigned area = Game_AreaNumber;
             AreaW3c_CampFlag = 1;
             AreaW2d_ReturnPoint = x;

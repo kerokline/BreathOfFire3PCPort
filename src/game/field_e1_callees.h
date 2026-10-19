@@ -91,8 +91,8 @@ constexpr std::uint32_t kPools = 0x803580;            // MessagePools: the scrip
 // ObjTrio (the party's records, stride 0x14C) and Sprite_Objects (0xA4).
 constexpr std::uint32_t kObjStride = 0x14C;
 constexpr std::uint32_t kSpriteStride = 0xA4;
-constexpr std::uint32_t kLeaderX = 0x802D74;          // ObjTrio +0x34: the leader's x (16.16); +2 the whole part
-constexpr std::uint32_t kLeaderZ = 0x802D78;          // +0x38: z
-constexpr std::uint32_t kLeaderHeight = 0x802D7E;     // +0x3E: the height (s16)
+// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x / x_whole (records.h). ObjTrio +0x34: the leader's x (16.16); +2 the whole part
+// kLeaderZ: now rv::As<records::PartyMember>(ObjTrio)->z / z_whole (records.h). +0x38: z
+// kLeaderHeight: now rv::As<records::PartyMember>(ObjTrio)->height_whole (records.h). +0x3E: the height (s16)
 
 }  // namespace field_e1::at

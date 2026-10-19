@@ -22,6 +22,8 @@
 #include "game/labels.h"
 #include "game/mode_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -442,7 +444,7 @@ extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned co
                 // overlay, from its 8 x 8 set.
                 if (const unsigned small = Labels_SmallGlyph(p)) glyph = small;
             }
-            SetWord(Gfx_PacketNext + 0x16, glyph);
+            rv::Store<unsigned>(rv::As<records::GpuGlyph>(Gfx_PacketNext)->glyph, glyph);
             g.emit_glyph(pen_x, pen_y, 8, static_cast<int>(8 - v), static_cast<int>(u), static_cast<int>(v), clut);
             pen_x += 8;
         }

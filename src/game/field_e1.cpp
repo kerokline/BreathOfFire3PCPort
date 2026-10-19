@@ -325,26 +325,26 @@ extern "C" void __cdecl FieldPanel_DrawBlink(void) {
 // +0x3E, and not Field_WayBlocked(.., raised, the ground). al 1 open, 0 not.
 // Called by Field_SwapGather and Field_SwapExchange (event_leader.cpp).
 extern "C" unsigned char __cdecl Field_PathClear(long x, long z, unsigned raised) {
-    const std::int32_t leader_z = L(at::kLeaderZ);
-    const std::int32_t along_x = Abs32(static_cast<std::int32_t>(x) - L(at::kLeaderX)) >> 15;
+    const std::int32_t leader_z = rv::As<records::PartyMember>(ObjTrio)->z;
+    const std::int32_t along_x = Abs32(static_cast<std::int32_t>(x) - rv::As<records::PartyMember>(ObjTrio)->x) >> 15;
     const std::int32_t along_z = Abs32(static_cast<std::int32_t>(z) - leader_z) >> 15;
     const short xh = S16(static_cast<std::uint32_t>(x) >> 16), zh = S16(static_cast<std::uint32_t>(z) >> 16);
-    const short lxh = static_cast<short>(W(at::kLeaderX + 2)), lzh = static_cast<short>(W(at::kLeaderZ + 2));
+    const short lxh = static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->x_whole), lzh = static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->z_whole);
     const int sx = xh > lxh ? 1 : xh == lxh ? 0 : -1;
     const int sz = zh > lzh ? 1 : zh == lzh ? 0 : -1;
     std::int32_t offset = 0;
     for (std::int32_t i = 0; i <= along_x; ++i) {
-        const auto px = static_cast<long>(static_cast<std::uint32_t>(L(at::kLeaderX)) + static_cast<std::uint32_t>(offset));
+        const auto px = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x) + static_cast<std::uint32_t>(offset));
         const long ground = SH_CALL(MapView_GroundAt)(px, z);
-        if (Abs32(static_cast<short>(W(at::kLeaderHeight)) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
+        if (Abs32(static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->height_whole) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
         if (SH_CALL(Field_WayBlocked)(px, z, raised, ground)) return 0;
         offset = static_cast<std::int32_t>(static_cast<std::uint32_t>(offset) + (static_cast<std::uint32_t>(sx) << 15));
     }
     offset = 0;
     for (std::int32_t i = 0; i <= along_z; ++i) {
-        const auto pz = static_cast<long>(static_cast<std::uint32_t>(L(at::kLeaderZ)) + static_cast<std::uint32_t>(offset));
+        const auto pz = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z) + static_cast<std::uint32_t>(offset));
         const long ground = SH_CALL(MapView_GroundAt)(x, pz);
-        if (Abs32(static_cast<short>(W(at::kLeaderHeight)) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
+        if (Abs32(static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->height_whole) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
         if (SH_CALL(Field_WayBlocked)(x, pz, raised, ground)) return 0;
         offset = static_cast<std::int32_t>(static_cast<std::uint32_t>(offset) + (static_cast<std::uint32_t>(sz) << 15));
     }
@@ -444,7 +444,7 @@ extern "C" void __cdecl Field_JumpAir(void) {
     else if (held & 0x4000) Fe2(at::kJumpAirB);
     else if (W(at::kButtonMap) & held) Fe2(at::kJumpAirC);
     if (ScriptFlag8()) return;
-    SH_CALL(MapView_SetElevation)(static_cast<short>(Word(Sc() + 0x3E)));
+    SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::PartyMember>(Sc())->height_whole));
     SH_CALL(Field_JumpCamera)();
 }
 
@@ -555,8 +555,8 @@ extern "C" void __cdecl Field_ContentEnd(void) {
         records::SpriteObject* const object = rv::As<records::SpriteObject>(ContentObject());
         if (rv::Bytes(object)[0xB] & 1) {
             object->flags = 0;
-        } else if (Word(rv::Bytes(object) + 0x34) == 0 && Word(rv::Bytes(object) + 0x38) == 0) {
-            SH_CALL(AreaMap_SetByte)(Word(rv::Bytes(object) + 0x36), Word(rv::Bytes(object) + 0x3A), 0x10);
+        } else if (object->x_frac == 0 && object->z_frac == 0) {
+            SH_CALL(AreaMap_SetByte)(object->x_whole, object->z_whole, 0x10);
         }
     }
     if (Field_InputFlags & 0x20) {
@@ -624,14 +624,14 @@ unsigned char AlongZ() {
 // two to either side. al 1 found, 0 not. Called by Field_CellAround (a tail).
 extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     const unsigned char* const sc = Sc();
-    const std::uint16_t fx = Word(sc + 0x34);
-    if (fx == 0 && Word(sc + 0x38) == 0) return 0;
+    const std::uint16_t fx = rv::As<records::SpriteHead>(sc)->x_frac;
+    if (fx == 0 && rv::As<records::SpriteHead>(sc)->z_frac == 0) return 0;
     const unsigned facing = sc[8];
-    const std::uint16_t x = Word(sc + 0x36);
+    const std::uint16_t x = rv::As<records::SpriteHead>(sc)->x_whole;
     const auto ahead_x = static_cast<std::uint16_t>(x + DirStep(facing, 0));
-    const auto ahead_z = static_cast<std::uint16_t>(Word(sc + 0x3A) + DirStep(facing, 1));
+    const auto ahead_z = static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole + DirStep(facing, 1));
     const auto c = static_cast<unsigned char>(code);
-    if (fx != 0 && Word(sc + 0x38) != 0) {
+    if (fx != 0 && rv::As<records::SpriteHead>(sc)->z_frac != 0) {
         // both fractions: x .. x + 1 at the row ahead, then the column ahead
         SetW(at::kCellX, x);
         SetW(at::kCellZ, ahead_z);
@@ -644,7 +644,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
             SetW(at::kCellX, CellX() + 1);
         }
         SetW(at::kCellX, ahead_x);
-        SetW(at::kCellZ, Word(Sc() + 0x3A));
+        SetW(at::kCellZ, rv::As<records::SpriteHead>(Sc())->z_whole);
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
                 const unsigned char f = Sc()[8];
@@ -660,7 +660,7 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     if (fx != 0) {
         // x's fraction only: the column ahead, z - 1 .. z + 1
         SetW(at::kCellX, ahead_x);
-        SetW(at::kCellZ, static_cast<std::uint16_t>(Word(sc + 0x3A) - 1));
+        SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole - 1));
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 const unsigned char f = Sc()[8];
@@ -671,8 +671,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
         }
         const unsigned char f = Sc()[8];
         if (f != 1 && f != 5) return 0;
-        SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) - 1));
-        SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) - 1));
+        SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1));
+        SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1));
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 Sc()[8] = 7;
@@ -680,8 +680,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
             }
             SetW(at::kCellZ, CellZ() + 1);
         }
-        SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) + 2));
-        SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) - 1));
+        SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole + 2));
+        SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1));
         for (int i = 0; i <= 2; ++i) {
             if (CellIs(c)) {
                 Sc()[8] = 3;
@@ -704,8 +704,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
     }
     const unsigned char f = Sc()[8];
     if (f != 7 && f != 3) return 0;
-    SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) - 1));
-    SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) - 1));
+    SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1));
+    SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole - 1));
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 1;
@@ -713,8 +713,8 @@ extern "C" unsigned char __cdecl Field_CellAroundLarge(unsigned code) {
         }
         SetW(at::kCellX, CellX() + 1);
     }
-    SetW(at::kCellX, static_cast<std::uint16_t>(Word(Sc() + 0x36) - 1));
-    SetW(at::kCellZ, static_cast<std::uint16_t>(Word(Sc() + 0x3A) + 2));
+    SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->x_whole - 1));
+    SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(Sc())->z_whole + 2));
     for (int i = 0; i <= 2; ++i) {
         if (CellIs(c)) {
             Sc()[8] = 5;
@@ -733,8 +733,8 @@ extern "C" unsigned char __cdecl Field_CellAroundSide(unsigned direction, unsign
     const auto d = static_cast<unsigned char>(direction);
     const auto c = static_cast<unsigned char>(code);
     const unsigned char* const sc = Sc();
-    SetW(at::kCellX, static_cast<std::uint16_t>(Word(sc + 0x36) + DirStep(d, 0)));
-    SetW(at::kCellZ, static_cast<std::uint16_t>(Word(sc + 0x3A) + DirStep(d, 1)));
+    SetW(at::kCellX, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->x_whole + DirStep(d, 0)));
+    SetW(at::kCellZ, static_cast<std::uint16_t>(rv::As<records::SpriteHead>(sc)->z_whole + DirStep(d, 1)));
     if (d == 1 || d == 5) {
         for (int i = 0; i <= 1; ++i) {
             if (CellIs(c)) {
@@ -776,7 +776,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
         SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 2)) << 16));
         return 1;
     }
-    if (SH_CALL(Field_CellHasEvent)(W(at::kLeaderX + 2), W(at::kLeaderZ + 2))) return 0;
+    if (SH_CALL(Field_CellHasEvent)(rv::As<records::PartyMember>(ObjTrio)->x_whole, rv::As<records::PartyMember>(ObjTrio)->z_whole)) return 0;
     if (Field_ScriptFlags2 & 0x1000) return 0;
     const std::uint16_t area = Game_AreaNumber;
     for (std::uint32_t r = at::kGatewayExits; r < at::kGatewayExitsEnd; r += 8) {
@@ -804,7 +804,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
 extern "C" void __cdecl Party_PlaceAtSlots(void) {
     const unsigned n = Field_MemberCount;
     for (unsigned i = 0; i < n; ++i) {
-        SetLong(Member(i) + 0x34, L(at::kSlotPositions + 8 * i));
+        rv::Store<std::int32_t>(rv::As<records::PartyMember>(Member(i))->x, L(at::kSlotPositions + 8 * i));
         rv::As<records::PartyMember>(Member(i))->z = L(at::kSlotPositions + 8 * i + 4);
     }
     unsigned k = 0;
@@ -872,7 +872,7 @@ extern "C" void __cdecl Party_PlacesByList(void) {
             m->z = z;
             const long ground = SH_CALL(MapView_GroundAt)(m->x, z);
             count = Field_MemberCount;
-            SetWord(rv::Bytes(m) + 0x3E, static_cast<std::uint32_t>(ground));
+            m->height_whole = static_cast<std::uint32_t>(ground);
             members = count;
         }
     }
@@ -951,9 +951,9 @@ extern "C" void __cdecl Field_PendingDrop(void) {
     SH_CALL(Sprite_EnsureAnimation)(rv::As<records::PartyMember>(Sc())->direction == 3 ? 0x3A : 0x3B);
     rv::As<records::PartyMember>(Sc())->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(Sc())->flags & 0xBF);
     const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::PartyMember>(Sc())->x, rv::As<records::PartyMember>(Sc())->z);
-    SetWord(Sc() + 0x3E, static_cast<std::uint32_t>(ground) + 0x7D0);
+    rv::Store<unsigned>(rv::As<records::PartyMember>(Sc())->height_whole, static_cast<std::uint32_t>(ground) + 0x7D0);
     SH_CALL(Sprite_ClearSteps)();
-    SetLong(Sc() + 0x20, -8);
+    rv::Store<std::int32_t>(rv::As<records::PartyMember>(Sc())->work_20, -8);
     rv::As<records::PartyMember>(Sc())->state = 2;
     rv::As<records::PartyMember>(Sc())->step = 3;
     rv::As<records::PartyMember>(Sc())->state3 = 3;

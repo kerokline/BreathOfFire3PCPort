@@ -31,8 +31,8 @@ constexpr U kCommuFile = 0x12A;            // the DAT loaded with Field_InputFla
 // kTripArea: now AreaW4d_ReturnArea (symbols.toml). u16: the area saved going out
 // kAreaWord: now Game_AreaNumber (symbols.toml). u16: Game_AreaNumber (scenario_harness.h's name)
 constexpr U kTripAnyArea = 0xBD;           // the area the trip may start from without Field_InputFlags bit 0
-constexpr U kLeaderX = 0x802D74;           // dword: ObjTrio record 0 +0x34, the leader's x
-constexpr U kLeaderZ = 0x802D78;           // dword: ... +0x38, its z
+// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). dword: ObjTrio record 0 +0x34, the leader's x
+// kLeaderZ: now rv::As<records::PartyMember>(ObjTrio)->z (records.h). dword: ... +0x38, its z
 // kLeaderFacing: now ObjTrio[8] (symbols.toml). u8: ObjTrio +8, the leader's facing
 constexpr U kFacingJitter = 0x656A80;      // s8 x 4: the facing's jitter by Rand & 3 (image .data, after GameMode3_Steps)
 // kPendingPlace: now AreaW0b_Place (symbols.toml). u16: the trip's destination area

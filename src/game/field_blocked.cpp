@@ -19,6 +19,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "hook/code_bytes.h"
@@ -243,7 +245,7 @@ extern "C" unsigned char __cdecl AreaMap_TooSteep(long x, long y) {
 // zero-extended as the original's eax is.
 extern "C" long __cdecl Field_ProbeHeight(long x, long y) {
     const long ground = g.elevation(x, y);
-    const auto own = static_cast<short>(Word(Sprite_Current + 0x3E));
+    const auto own = static_cast<short>(rv::Current<records::SpriteHead>()->height_whole);
     const auto there = static_cast<short>(ground);
     int distance = own - there;
     if (distance < 0) distance = -distance;

@@ -99,9 +99,9 @@ void PlaceEffect(int (*x)(), unsigned char mode) {
     const int ey = Angle(1);
     e->flags = 1;
     e->kind = 0x13;
-    SetLong(rv::Bytes(e) + 0x64, ex);
-    SetLong(rv::Bytes(e) + 0x68, ey);
-    SetLong(rv::Bytes(e) + 0x6C, Angle(2));
+    e->angle[0] = ex;
+    e->angle[1] = ey;
+    e->angle[2] = Angle(2);
     e->timer = mode;
 }
 
@@ -245,8 +245,8 @@ extern "C" void __cdecl Scena16_Area02(void) {
         SetWord(AngleAt(0), static_cast<unsigned>(Word(AngleAt(0))) + 0xAA);
         PlaceEffect([] { return Angle(0) - 0xAA; }, 0x40);
         g.obj_trio();
-        SetLong(At(0x802D74), 0x330000);
-        SetLong(At(0x802D78), 0x400000);
+        rv::As<records::PartyMember>(ObjTrio)->x = 0x330000;
+        rv::As<records::PartyMember>(ObjTrio)->z = 0x400000;
         g.flags_set(FlagBits(), 2);
         return;
     }
@@ -373,7 +373,7 @@ extern "C" void __cdecl Scena16_Scene2(void) {
     case 11:
         if (At(kCounters + 3)[0] != 0x60) return;
         g.change_area(0x1F, 0x70000, 0x140000, 0);
-        At(0x937F98)[0] = 0xFF;
+        AreaW0c_PendingKind = 0xFF;
         g.music_stop(0x40);
         At(kCounters + 2)[0] = 0;
         MoveScript_Var7 = 3;
@@ -393,13 +393,13 @@ namespace {
 void Scene3Tail() {
     if (MapView_FocusZ != 0x4400) return;
     const std::int32_t kind2_z = Field_Kind2Z;
-    const std::int32_t d = Long(At(0x802038));
-    SetWord(At(0x7E068A), static_cast<unsigned>(Word(At(0x7E068A))) - 0x1Eu);
+    const std::int32_t d = rv::As<records::SpriteObject>(Sprite_ObjectsExtra)->z;
+    MapView_Origin[1] = static_cast<short>(static_cast<unsigned>(static_cast<std::uint16_t>(MapView_Origin[1])) - 0x1Eu);
     Field_Kind2Z = static_cast<long>(static_cast<std::uint32_t>(kind2_z) - 0x1E0000u);
-    const std::int32_t e = Long(At(0x7E0978));
+    const std::int32_t e = rv::As<records::SpriteHead>(Sprite_Kind2)->z;
     MapView_FocusZ = 0x6200;
-    SetLong(At(0x802038), static_cast<std::int32_t>(static_cast<std::uint32_t>(d) - 0x1E0000u));
-    SetLong(At(0x7E0978), static_cast<std::int32_t>(static_cast<std::uint32_t>(e) - 0x1E0000u));
+    rv::As<records::SpriteObject>(Sprite_ObjectsExtra)->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(d) - 0x1E0000u);
+    rv::As<records::SpriteHead>(Sprite_Kind2)->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(e) - 0x1E0000u);
     g.view_shift();
 }
 

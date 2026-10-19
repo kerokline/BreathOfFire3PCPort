@@ -29,6 +29,8 @@
 #include "bof3/symbols.gen.h"
 #include "game/char_stats_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -173,9 +175,9 @@ extern "C" __attribute__((disable_tail_calls, noinline)) void __cdecl Menu_DrawI
     p[0x35] = v1;
     p[0x44] = u1;
     p[0x45] = v1;
-    SetWord(p + 0x26, tpage);
+    rv::As<records::GpuPolyFT4>(p)->tpage = tpage;
     const unsigned char clut = i < sizeof kIconClut ? kIconClut[i] : IconClutPastTable(i, frame, x1, y1);
-    SetWord(p + 0x16, 0x7800u | (clut & 0x3Fu));
+    rv::As<records::GpuPolyFT4>(p)->clut = 0x7800u | (clut & 0x3Fu);
     g.commit_prim(1, 0x48);
 }
 
@@ -192,12 +194,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Menu_DrawHand(int x,
     SetFloat(p + 0x0C, static_cast<int>(static_cast<unsigned>(y) & 0xFFFF) + 2);
     p[0x14] = 0xCC;
     p[0x15] = 0x9C;
-    SetWord(p + 0x18, 0x18);
-    SetWord(p + 0x1A, 0xC);
+    rv::As<records::GpuSprt>(p)->w = 0x18;
+    rv::As<records::GpuSprt>(p)->h = 0xC;
     p[4] = 0x80;
     p[5] = 0x80;
     p[6] = 0x80;
-    SetWord(p + 0x16, 0x7802);
+    rv::As<records::GpuSprt>(p)->clut = 0x7802;
     g.commit_prim(0, 0x1C);
 }
 

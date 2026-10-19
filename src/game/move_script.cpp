@@ -69,10 +69,10 @@ Callees g = kOriginals;
 // Ops 0D and F3 place an object: the coordinate words of Sprite_Current, or
 // of Sprite_Kind2 itself on the kind-2 path.
 void PlaceAndGround(unsigned char* sprite, const unsigned char* operands) {
-    SetWord(sprite + 0x36, operands[1]);
-    SetWord(sprite + 0x34, operands[2] ? 0x8000u : 0u);
-    SetWord(sprite + 0x3A, operands[3]);
-    SetWord(sprite + 0x38, operands[4] ? 0x8000u : 0u);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->x_whole, operands[1]);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->x_frac, operands[2] ? 0x8000u : 0u);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->z_whole, operands[3]);
+    rv::Store<unsigned>(rv::As<records::SpriteObject>(sprite)->z_frac, operands[4] ? 0x8000u : 0u);
 }
 
 }  // namespace
@@ -171,13 +171,13 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
         case 0x0D: {   // 0D x xh z zh: place at (x.xh, z.zh) and take the ground's elevation
             if (g.kind() == 2) {
                 PlaceAndGround(Sprite_Kind2, script + Pos(object));
-                SetWord(Sprite_Kind2 + 0x3E, static_cast<unsigned>(g.elevation(Long(Sprite_Kind2 + 0x34), Long(Sprite_Kind2 + 0x38))));
+                rv::Store<unsigned>(rv::As<records::SpriteHead>(Sprite_Kind2)->height_whole, static_cast<unsigned>(g.elevation(rv::As<records::SpriteHead>(Sprite_Kind2)->x, rv::As<records::SpriteHead>(Sprite_Kind2)->z)));
                 result = 0xFF;
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
                 wide_staging::Placed0D(object, script, Pos(object));   // DIV-0122: a site's start moved out (wide only)
                 const long h = g.elevation(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->z);
-                SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(h));
+                rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(h));
             }
             SetPos(object, Pos(object) + 5u);
             break;
@@ -251,7 +251,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
             }
             rv::Current<records::SpriteObject>()->step_y = 0;
             const unsigned at = Pos(object);
-            SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
+            rv::Store<unsigned>(rv::Current<records::SpriteObject>()->height_whole, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
             SetPos(object, Pos(object) + 4u);
         } else if (moves) {   // F3 d m th tl: move toward height th.tl, over the move's frames
             if (g.kind() != 2) {
@@ -259,20 +259,20 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
                 const unsigned at = Pos(object);
                 const auto target = static_cast<std::int16_t>(script[at + 3] << 8 | script[at + 4]);
                 records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
-                const std::int32_t rise = target - static_cast<std::int16_t>(Word(rv::Bytes(sprite) + 0x3E));
+                const std::int32_t rise = target - static_cast<std::int16_t>(sprite->height_whole);
                 const std::int32_t frames = static_cast<std::int32_t>(sprite->step_frames) * object[7];
                 sprite->step_y = rise / frames;
                 object[0] |= 0x80;
                 SetPos(object, Pos(object) + 4u);
             } else {
                 unsigned char* const scratch = Scratch();
-                SetWord(scratch, Word(Sprite_Current + 0x3E));
+                SetWord(scratch, rv::Current<records::SpriteObject>()->height_whole);
                 const unsigned at = Pos(object);
                 SetWord(scratch + 2, static_cast<unsigned>(script[at + 3]) << 8 | script[at + 4]);
                 g.move_kind2(value);
                 const std::int32_t frames = 0x80 / static_cast<std::int32_t>(MoveScript_F3Divisor) * Sprite_Kind2[0x87];
                 const std::int32_t rise = static_cast<std::int16_t>(Word(scratch + 2)) - static_cast<std::int16_t>(Word(scratch));
-                SetLong(Sprite_Kind2 + 0x14, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
+                rv::Store<std::int32_t>(rv::As<records::SpriteHead>(Sprite_Kind2)->step_y, static_cast<std::int32_t>(static_cast<std::uint32_t>(rise) << 16) / frames);
                 object[0] |= 0x40;
                 SetPos(object, Pos(object) + 4u);
             }
@@ -288,7 +288,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
         records::SpriteObject* const sprite = rv::Current<records::SpriteObject>();
         const unsigned at = Pos(object);
         const auto target = static_cast<std::int16_t>(script[at + 1] << 8 | script[at + 2]);
-        const std::int32_t rise = target - static_cast<std::int16_t>(Word(rv::Bytes(sprite) + 0x3E));
+        const std::int32_t rise = target - static_cast<std::int16_t>(sprite->height_whole);
         sprite->step_y = rise / static_cast<std::int32_t>(sprite->step_frames);
         rv::Current<records::SpriteObject>()->step_x = 0;
         rv::Current<records::SpriteObject>()->step_z = 0;
@@ -324,7 +324,7 @@ extern "C" unsigned char __cdecl MoveScript_GroupF(unsigned char* object, const 
         return static_cast<unsigned char>(rv::Current<records::SpriteObject>()->direction & 7);
     case 0xFB: case 0xFC: {
         unsigned char* const sprite = Sprite_Current;
-        const auto x = static_cast<short>(Word(sprite + 0x36)), z = static_cast<short>(Word(sprite + 0x3A));
+        const auto x = static_cast<short>(rv::As<records::SpriteObject>(sprite)->x_whole), z = static_cast<short>(rv::As<records::SpriteObject>(sprite)->z_whole);
         if ((p[0] == 0xFB ? g.test_fb : g.test_fc)(x, z)) g.sound(0x103);
         return value;
     }

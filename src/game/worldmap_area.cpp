@@ -161,7 +161,7 @@ extern "C" void __cdecl Area29_PickFieldObject(void) {
         o->x = static_cast<std::int32_t>(x);
         o->z = static_cast<std::int32_t>(z);
         const long height = g.elevation(o->x, static_cast<long>(z));
-        SetWord(rv::Bytes(o) + 0x3E, static_cast<unsigned>(height));
+        o->height_whole = static_cast<unsigned>(height);
     }
     Field_EdgeBits = static_cast<unsigned short>(Long(At(ObjTrio_addr + 0x134)) - 5);
 }
@@ -241,8 +241,8 @@ extern "C" void __cdecl WorldMap33_PlateRun(void) {
     const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
-    SetLong(Cur() + 0xC, x);
-    SetLong(Cur() + 0x10, z);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->step_x, x);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->step_z, z);
     unsigned char kind;
     if (g.byte_at(x, z) == 0xA1) kind = 1;
     else if (g.byte_at(x, z) == 0xA0) kind = 2;
@@ -269,7 +269,7 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
         const unsigned place = AreaW0b_Place;
         U entry = WorldMap33_PlateAnims_addr;
         while (Word(At(entry)) != place) entry += 4;
-        SetLong(Cur() + 0x18, static_cast<std::int32_t>(place));
+        rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->work_18, static_cast<std::int32_t>(place));
         animation = At(entry + 2)[0];
     } else if (kind == 2) {
         animation = 3;
@@ -280,8 +280,8 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
     } else {
         return;
     }
-    SetLong(Cur() + 0x40, 0);
-    SetLong(Cur() + 0x44, 0x10000);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->scale_x, 0);
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->scale_y, 0x10000);
     Cur()[0x48] = 2;
     rv::As<records::EffectObject>(Cur())->timer = 8;
     g.set_animation(static_cast<unsigned char>(animation));
@@ -293,7 +293,7 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
 // Sprite_QueueOverlay. Eight frames from 0 to 0x10000.
 extern "C" void __cdecl WorldMap33_PlateGrow(void) {
     g.pin_sprite();
-    SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) + 0x2000));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::As<records::EffectObject>(Cur())->scale_x) + 0x2000));
     rv::As<records::EffectObject>(Cur())->timer = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->timer - 1);
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     if (o->timer == 0) {
@@ -314,7 +314,7 @@ extern "C" void __cdecl WorldMap33_PlateHold(void) {
         unsigned char* const o = Cur();
         const unsigned shown = o[7];
         const bool leaves = o[0xB] != shown || Field_Request == 5 ||
-                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != AreaW0b_Place);
+                            (shown == 1 && static_cast<U>(rv::As<records::EffectObject>(o)->work_18) != AreaW0b_Place);
         if (leaves) {
             o[0x48] = 2;
             rv::As<records::EffectObject>(Cur())->timer = 8;
@@ -330,7 +330,7 @@ extern "C" void __cdecl WorldMap33_PlateHold(void) {
 // (the show again), with no overlay that frame.
 extern "C" void __cdecl WorldMap33_PlateShrink(void) {
     g.pin_sprite();
-    SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) - 0x2000));
+    rv::Store<std::int32_t>(rv::As<records::EffectObject>(Cur())->scale_x, static_cast<std::int32_t>(static_cast<U>(rv::As<records::EffectObject>(Cur())->scale_x) - 0x2000));
     rv::As<records::EffectObject>(Cur())->timer = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->timer - 1);
     records::EffectObject* const o = rv::As<records::EffectObject>(Cur());
     if (o->timer != 0) {
@@ -486,7 +486,7 @@ extern "C" void __cdecl WorldMapHud_BoxSlideOut(void) {
 extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     records::EffectObject* o = rv::As<records::EffectObject>(Cur());
     if (o->step == 0) {
-        SetWord(rv::Bytes(o) + 0x3A, Word(rv::Bytes(o) + 0x3A) + (Frame_Counter & 0xF));
+        o->z_whole = o->z_whole + (Frame_Counter & 0xF);
         rv::As<records::EffectObject>(Cur())->step = static_cast<unsigned char>(rv::As<records::EffectObject>(Cur())->step + 1);
         o = rv::As<records::EffectObject>(Cur());
     }
@@ -496,7 +496,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     o->z = static_cast<std::int32_t>(static_cast<U>(o->z) + (static_cast<U>(b) << 10));
     o = rv::As<records::EffectObject>(Cur());
     if (S16(rv::Bytes(o) + 0x3A) > AreaMap_Header[1] + 8) {
-        SetWord(rv::Bytes(o) + 0x3A, 0xFFF8);
+        o->z_whole = 0xFFF8;
         o = rv::As<records::EffectObject>(Cur());
     }
     std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(rv::Bytes(o) + 0x36);
@@ -518,18 +518,18 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     const std::int32_t cx = (o->x >> 9) - 0x3FC0;
     const std::int32_t cz = (o->z >> 9) - 0x3FC0;
     unsigned char* const v = reinterpret_cast<unsigned char*>(Prim_VertexScratch);
-    SetWord(v + 4, 0xFD00);
-    SetWord(v + 0x12, static_cast<unsigned>(cz + r));
-    SetWord(v + 0x1A, static_cast<unsigned>(cz + r));
-    SetWord(v + 0x08, static_cast<unsigned>(cx + r));
-    SetWord(v + 0x18, static_cast<unsigned>(cx + r));
-    SetWord(v + 0x00, static_cast<unsigned>(cx - r));
-    SetWord(v + 0x10, static_cast<unsigned>(cx - r));
-    SetWord(v + 0x02, static_cast<unsigned>(cz - r));
-    SetWord(v + 0x0A, static_cast<unsigned>(cz - r));
-    SetWord(v + 0x0C, 0xFD00);
-    SetWord(v + 0x14, 0xFD00);
-    SetWord(v + 0x1C, 0xFD00);
+    rv::As<records::SVector>(v)[0].z = 0xFD00;
+    rv::As<records::SVector>(v)[2].y = static_cast<unsigned>(cz + r);
+    rv::As<records::SVector>(v)[3].y = static_cast<unsigned>(cz + r);
+    rv::As<records::SVector>(v)[1].x = static_cast<unsigned>(cx + r);
+    rv::As<records::SVector>(v)[3].x = static_cast<unsigned>(cx + r);
+    rv::As<records::SVector>(v)[0].x = static_cast<unsigned>(cx - r);
+    rv::As<records::SVector>(v)[2].x = static_cast<unsigned>(cx - r);
+    rv::As<records::SVector>(v)[0].y = static_cast<unsigned>(cz - r);
+    rv::As<records::SVector>(v)[1].y = static_cast<unsigned>(cz - r);
+    rv::As<records::SVector>(v)[1].z = 0xFD00;
+    rv::As<records::SVector>(v)[2].z = 0xFD00;
+    rv::As<records::SVector>(v)[3].z = 0xFD00;
     long depth = 0, flag = 0;
     const auto* const sv = reinterpret_cast<const short*>(v);
     g.rot_trans_pers4(sv, sv + 4, sv + 8, sv + 12, reinterpret_cast<float*>(prim + 8), reinterpret_cast<float*>(prim + 0x18),
@@ -559,7 +559,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
             const U m = At(WorldMap33_DriftUV_addr + 0x8 + static_cast<U>(e))[0];
             const U ubase = At(WorldMap33_DriftUV_addr + static_cast<U>(e))[0];
             const U vbase = At(WorldMap33_DriftUV_addr + 0x4 + static_cast<U>(e))[0];
-            const U scroll = (Word(Cur() + 0x38) * m) >> 16;
+            const U scroll = (rv::As<records::EffectObject>(Cur())->z_frac * m) >> 16;
             const U ui = static_cast<U>(i), uj = static_cast<U>(j);
             q[0x14] = static_cast<unsigned char>(ui * m + ubase);
             q[0x15] = static_cast<unsigned char>(uj * m - scroll + vbase);

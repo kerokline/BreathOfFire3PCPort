@@ -18,6 +18,8 @@
 #include "game/mode_flow_callees.h"
 #include "game/widescreen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "input/sigma.h"
 #include "hook/log.h"
@@ -331,13 +333,13 @@ extern "C" void __cdecl GameMode_Start(void) {
     Field_ScriptFlags2 = static_cast<std::uint16_t>(Field_ScriptFlags2 | 0x4040);
     const std::uint16_t area = FieldModes_Pending;
     At(0x905B82)[0] = 0;   // Field_EdgeBits + 2
-    At(0x7E0941)[0] = 0;   // Sprite_Kind2 + 1..3
-    At(0x7E0942)[0] = 0;
-    At(0x7E0943)[0] = 0;
-    At(0x904AE5)[0] = 0;
-    At(0x904AAA)[0] = 0;
-    At(0x929EC1)[0] = 0;   // the byte after Field_MemberCount
-    At(0x9036D0)[0] = 0;
+    rv::As<records::SpriteHead>(Sprite_Kind2)->state = 0;   // Sprite_Kind2 + 1..3
+    rv::As<records::SpriteHead>(Sprite_Kind2)->step = 0;
+    rv::As<records::SpriteHead>(Sprite_Kind2)->state3 = 0;
+    BattleTurnSteps_MusicFlags = 0;
+    BattleActions_EventBattle = 0;
+    AreaW3g_Byte929EC1 = 0;   // the byte after Field_MemberCount
+    AreaW3g_Byte9036D0 = 0;
     Game_AreaNumber = 0xFFFF;
     g.change_area(area, x, z, flags);
     const unsigned char* const clock = At(at::kClock);

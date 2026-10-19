@@ -78,9 +78,9 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
         g.overlay();
         return;
     }
-    const unsigned x_whole = Word(rv::Bytes(sprite) + 0x34) == 0, z_whole = Word(rv::Bytes(sprite) + 0x38) == 0;
+    const unsigned x_whole = sprite->x_frac == 0, z_whole = sprite->z_frac == 0;
     const signed char adjust = Sprite_KeyAdjust[sprite->key_class * 3u + x_whole + z_whole];
-    const auto key = static_cast<std::uint16_t>(adjust - x_whole - z_whole + Word(rv::Bytes(sprite) + 0x3A) + Word(rv::Bytes(sprite) + 0x36) -
+    const auto key = static_cast<std::uint16_t>(adjust - x_whole - z_whole + sprite->z_whole + sprite->x_whole -
                                                 static_cast<std::uint16_t>(MapView_Origin[1]) -
                                                 static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
     sprite->draw_key = key;
@@ -99,7 +99,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
         low = static_cast<unsigned>(Long(rv::Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
     } else {
         sprite = rv::Current<records::SpriteObject>();
-        low = ((Word(rv::Bytes(sprite) + 0x3E) ^ 0xF01Fu) >> 5) & 0xFF;
+        low = ((sprite->height_whole ^ 0xF01Fu) >> 5) & 0xFF;
     }
     sprite->draw_key = sprite->draw_key | low;
     g.inherit_key();
@@ -108,15 +108,15 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     short vertex[4];
     vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
     vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
-    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(rv::Bytes(sprite) + 0x3E)) / 2));
+    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(sprite->height_whole) / 2));
     unsigned long screen[2];
     long depth_cue;
     const long depth = g.project(vertex, screen, &depth_cue);
     rv::Current<records::SpriteObject>()->depth = depth;
-    SetLong(Sprite_Current + 0x74, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
-    SetWord(Sprite_Current + 0x2E, Ftol16(static_cast<std::uint32_t>(screen[0])));
-    SetLong(Sprite_Current + 0x78, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
-    SetWord(Sprite_Current + 0x30, Ftol16(static_cast<std::uint32_t>(screen[1])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->screen_xf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[0]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->screen_x, Ftol16(static_cast<std::uint32_t>(screen[0])));
+    rv::Store<std::int32_t>(rv::Current<records::SpriteObject>()->screen_yf, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
+    rv::Store<unsigned>(rv::Current<records::SpriteObject>()->screen_y, Ftol16(static_cast<std::uint32_t>(screen[1])));
 
     const unsigned char n = Sprite_DrawListCount;
     if (n >= 0x28) return;

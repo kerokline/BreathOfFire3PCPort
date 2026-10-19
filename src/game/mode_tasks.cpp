@@ -11,6 +11,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -162,9 +164,9 @@ extern "C" unsigned char* __cdecl Title_Sprite(int x, int y, unsigned index, uns
     const unsigned char* const entry = Title_Sprites + (index & 0xFF) * 10u;
     prim[0x14] = entry[0];
     prim[0x15] = entry[2];
-    SetWord(prim + 0x18, Word(entry + 4));
-    SetWord(prim + 0x1A, Word(entry + 6));
-    SetWord(prim + 0x16, static_cast<unsigned>(Word(entry + 8)) << 6);
+    rv::As<records::GpuSprt>(prim)->w = Word(entry + 4);
+    rv::As<records::GpuSprt>(prim)->h = Word(entry + 6);
+    rv::As<records::GpuSprt>(prim)->clut = static_cast<unsigned>(Word(entry + 8)) << 6;
     g.commit(slot, 0x1C);
     return prim;
 }

@@ -101,7 +101,7 @@ void Ahead(const unsigned char* s, std::int32_t& x, std::int32_t& z) {
 // low bytes is clear; then every fourth frame one tick of its script.
 void FollowAndTick(unsigned char* s) {
     if (s[5] == 0 && ((B(at::kScriptFlags2) | B(at::kScriptFlagsLow)) & 8) == 0)
-        SH_CALL(MapView_SetElevation)(static_cast<short>(W(Key(s) + 0x3E)));
+        SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::SpriteHead>(s)->height_whole));
     if ((Frame_Counter & 3) == 0) SH_CALL(Sprite_ScriptTickOnce)();
 }
 
@@ -257,8 +257,8 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (flags & 0x20) Field_State[0x125] = 0x28;
     records::PartyMember* fs = rv::As<records::PartyMember>(Field_State);
     U actor = at::kCharRecords + fs->char_index * at::kRecordStride;
-    if (W(actor + 0x18) <= (W(actor + 0x20) >> 2)) {
-        SetW(actor + 0x10, W(actor + 0x10) | 0x2000u);
+    if (rv::As<records::CharRecord>(At(actor))->hp <= (rv::As<records::CharRecord>(At(actor))->stats.max_hp >> 2)) {
+        rv::As<records::CharRecord>(At(actor))->status = rv::As<records::CharRecord>(At(actor))->status | 0x2000u;
         fs->status = fs->status | 0x2000u;
         fs = rv::As<records::PartyMember>(Field_State);
     }
@@ -269,7 +269,7 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     if (SH_CALL(Actor_EquipCount)(((id * 5u) & 0xFFFFFF00u) | id, 3, 8) == 0) return;
     unsigned char* const f = Field_State;
     const U a = at::kCharRecords + f[0x148] * at::kRecordStride;
-    SetW(a + 0x10, W(a + 0x10) & 0xFFDFu);
+    rv::As<records::CharRecord>(At(a))->status = rv::As<records::CharRecord>(At(a))->status & 0xFFDFu;
     f[0x125] = 0;
 }
 
@@ -412,10 +412,10 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
     if (d < 0) d = -d;
     if (d > 0xC0) return 1;
     unsigned char* const s = Sprite_Current;
-    const std::uint16_t kept = W(Key(s) + 0x3E);
-    SetW(Key(s) + 0x3E, ground);
+    const std::uint16_t kept = rv::As<records::SpriteHead>(s)->height_whole;
+    rv::Store<unsigned>(rv::As<records::SpriteHead>(s)->height_whole, ground);
     const unsigned char hit = SH_CALL(Sprite_ObjectAt)(x, z, 1);
-    SetW(Key(Sprite_Current) + 0x3E, kept);
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->height_whole, kept);
     return hit != 0xFF ? 1 : 0;
 }
 
@@ -436,7 +436,7 @@ namespace {
 void HopSetUp() {
     Field_State[0x128] = static_cast<unsigned char>(Sprite_Current[0x70] + 2);
     SH_CALL(Field_JumpSetUp)();
-    SetL(Key(Sprite_Current) + 0x14, 0);
+    rv::Store<U>(rv::Current<records::PartyMember>()->step_y, 0);
     records::PartyMember* s = rv::Current<records::PartyMember>();
     s->step_frames = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(rv::Bytes(s)[0x70] + 1) * s->step_frames) << 1);
     s = rv::Current<records::PartyMember>();
@@ -523,16 +523,16 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     unsigned char* const s = Sprite_Current;
     std::int32_t x, z;
     Ahead(s, x, z);
-    const std::uint16_t height = W(Key(s) + 0x3E);
+    const std::uint16_t height = rv::As<records::PartyMember>(s)->height_whole;
     const U actor = rv::As<records::PartyMember>(Field_State)->char_id;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) > S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + actor * 2u))) {
-        SetW(Key(s) + 0x3E, static_cast<unsigned>(height) - B(at::kPaceRises + actor));
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<unsigned>(height) - B(at::kPaceRises + actor));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
         const std::uint16_t offset = W(at::kPaceHeights + rv::As<records::PartyMember>(Field_State)->char_id * 2u);
-        SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again) - offset);
+        rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again) - offset);
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3C : 0x3D);
         result = 1;
     }
@@ -559,14 +559,14 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     unsigned char* const s = Sprite_Current;
     std::int32_t x, z;
     Ahead(s, x, z);
-    const std::uint16_t height = W(Key(s) + 0x3E);
+    const std::uint16_t height = rv::As<records::PartyMember>(s)->height_whole;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) < S16(static_cast<U>(ground))) {
-        SetW(Key(s) + 0x3E, B(at::kPaceRises + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, B(at::kPaceRises + rv::As<records::PartyMember>(Field_State)->char_id) + static_cast<unsigned>(height));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
-        SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again));
+        rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, static_cast<U>(again));
         Ensure(rv::Current<records::PartyMember>()->direction == 7 ? 0x3E : 0x3F);
         result = 1;
     }
@@ -604,13 +604,13 @@ extern "C" unsigned char __cdecl Leader_HopFall(void) {
 // height at or above it (s16), the state +2 = 3. Then a tail jump to
 // Sprite_ScriptTick, whose al it answers.
 extern "C" unsigned char __cdecl Leader_Rise(void) {
-    SetW(Key(Sprite_Current) + 0x3E, W(Key(Sprite_Current) + 0x3E) + 0x10u);
+    rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, rv::Current<records::PartyMember>()->height_whole + 0x10u);
     std::int32_t x, z;
     Ahead(Sprite_Current, x, z);
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     const int floor = S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + rv::As<records::PartyMember>(Field_State)->char_id * 2u));
     records::PartyMember* const s = rv::Current<records::PartyMember>();
-    if (S16(W(Key(rv::Bytes(s)) + 0x3E)) >= floor) s->step = 3;
+    if (S16(s->height_whole) >= floor) s->step = 3;
     return SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -619,12 +619,12 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
 // the member's palette, Field_State +0x137 = 0, the states +1 = 1, +2 = 0.
 // Then a tail jump to Sprite_ScriptTick, whose al it answers.
 extern "C" unsigned char __cdecl Leader_Sink(void) {
-    SetW(Key(Sprite_Current) + 0x3E, W(Key(Sprite_Current) + 0x3E) - 0x10u);
+    rv::Store<unsigned>(rv::Current<records::PartyMember>()->height_whole, rv::Current<records::PartyMember>()->height_whole - 0x10u);
     unsigned char* s = Sprite_Current;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(LongAt(s + 0x34)), static_cast<long>(LongAt(s + 0x38)));
     s = Sprite_Current;
-    if (S16(static_cast<U>(ground)) > S16(W(Key(s) + 0x3E))) {
-        SetW(Key(s) + 0x3E, static_cast<U>(ground));
+    if (S16(static_cast<U>(ground)) > S16(rv::As<records::PartyMember>(s)->height_whole)) {
+        rv::Store<unsigned>(rv::As<records::PartyMember>(s)->height_whole, static_cast<U>(ground));
         SH_CALL(Sprite_SetAnimation)(rv::Current<records::PartyMember>()->direction);
         SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
         Field_State[0x137] = 0;
@@ -642,7 +642,7 @@ extern "C" void __cdecl Leader_TurnBack(void) {
     Ensure(rv::Current<records::PartyMember>()->direction == 3 ? 0x3A : 0x3B);
     SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
     SH_CALL(Sprite_ClearSteps)();
-    SetL(Key(Sprite_Current) + 0x20, 0xFFFFFFF8u);
+    rv::Store<U>(rv::Current<records::PartyMember>()->work_20, 0xFFFFFFF8u);
     rv::Current<records::PartyMember>()->state = 2;
     rv::Current<records::PartyMember>()->step = 3;
     rv::Current<records::PartyMember>()->state3 = 3;
@@ -683,7 +683,7 @@ extern "C" void __cdecl PartySet_ErrorLoop(void) {
 // Called by mode 11's step GameMode11_Frame 0x496790. PSX twin 0x80167CBC (call, a
 // hypothesis).
 extern "C" void __cdecl Mode11_ObjectFrame(void) {
-    const std::uint16_t held = W(0x7E1BE8);
+    const std::uint16_t held = Input_Held;
     const U state = B(at::kObject + 1);
     Sprite_Current = At(FieldEvent_Object905DA0_addr);
     Field_State = ObjTrio;
@@ -699,9 +699,9 @@ extern "C" void __cdecl Mode11_ObjectStart(void) {
     Sprite_Current[5] = 0;
     Sprite_Current[0xB] = ObjTrio[0x138];
     Field_State[0x128] = 3;
-    SetL(Key(Sprite_Current) + 0x34, L(at::kLeaderX));
-    SetL(Key(Sprite_Current) + 0x38, L(at::kLeaderZ));
-    SetL(Key(Sprite_Current) + 0x3C, L(at::kLeaderY));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->x, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->z, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
+    rv::Store<U>(rv::Current<records::SpriteHead>()->height, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->height));
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
 }
 
@@ -709,9 +709,9 @@ namespace {
 // The object stops: its velocity +0xC / +0x10 / +0x14 zero, with `steps` +9
 // too, and the two script words 0 (MoveScript_F3Divisor, MoveScript_FAWord).
 void ObjectStill(unsigned char* s, bool steps) {
-    SetL(Key(s) + 0xC, 0);
-    SetL(Key(Sprite_Current) + 0x10, 0);
-    SetL(Key(Sprite_Current) + 0x14, 0);
+    rv::Store<U>(rv::As<records::SpriteHead>(s)->step_x, 0);
+    rv::Store<U>(rv::Current<records::SpriteHead>()->step_z, 0);
+    rv::Store<U>(rv::Current<records::SpriteHead>()->step_y, 0);
     if (steps) Sprite_Current[9] = 0;
     MoveScript_F3Divisor = 0;
     MoveScript_FAWord = 0;
@@ -750,7 +750,7 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
         const std::int32_t far = dx >= dz ? dx : dz;
         const U n = static_cast<U>(far >> 13) & 0xFF;
         U word = 0;
-        if (n != 0) word = static_cast<U>(S16(static_cast<U>(W(Key(fs) + 0x3E) - W(at::kElevation))) / static_cast<int>(n));
+        if (n != 0) word = static_cast<U>(S16(static_cast<U>(rv::As<records::PartyMember>(fs)->height_whole - W(at::kElevation))) / static_cast<int>(n));
         MoveScript_FAWord = word;
         fs[0x128] = 3;
         Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x40);
@@ -779,9 +779,9 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
     }
     unsigned char* const s = Sprite_Current;
     const U dir = s[8];
-    bool near = AbsDiff(L(at::kLeaderX) - L(at::kDirectionSteps + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
+    bool near = AbsDiff(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x) - L(at::kDirectionSteps + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
     if (near)
-        near = AbsDiff(L(at::kLeaderZ) - L(at::kDirectionSteps + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
+        near = AbsDiff(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z) - L(at::kDirectionSteps + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
     if (!near) {
         ObjectStill(s, true);
         Sprite_Current[1] = 1;
@@ -829,7 +829,7 @@ extern "C" void __cdecl Mode11_ObjectMove(void) {
 // MapView_SetElevation(Field_State's +0x3E) and Field_Request 0.
 extern "C" void __cdecl Mode11_ObjectEnd(void) {
     if (Field_Kind2Hold != 0) return;
-    SH_CALL(MapView_SetElevation)(static_cast<short>(W(Key(Field_State) + 0x3E)));
+    SH_CALL(MapView_SetElevation)(static_cast<short>(rv::As<records::PartyMember>(Field_State)->height_whole));
     Field_Request = 0;
 }
 
@@ -937,18 +937,18 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     const long z = SH_CALL(Gte_RotTransPers)(vertex, reinterpret_cast<unsigned long*>(screen), &depth);
     static_cast<void>(flag);
     SetL(Key(Sprite_Current) + 0x60, static_cast<U>(z));
-    SetW(Key(Sprite_Current) + 0x2E, Ftol(screen));
-    SetW(Key(Sprite_Current) + 0x30, Ftol(screen + 4));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_x, Ftol(screen));
+    rv::Store<unsigned>(rv::Current<records::SpriteHead>()->screen_y, Ftol(screen + 4));
     unsigned char* prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
     SH_CALL(Gte_PrimDepthFlat4_10)(prim);
-    FildFstFadd(S16(W(Key(Sprite_Current) + 0x2E)) - 6, prim + 8, At(at::kQuadLift), prim + 0x18);
+    FildFstFadd(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_x)) - 6, prim + 8, At(at::kQuadLift), prim + 0x18);
     std::memcpy(prim + 0x28, prim + 8, 4);
     std::memcpy(prim + 0x38, prim + 0x18, 4);
     U counter = Frame_Counter;
     const U bob = (counter >> 1) & 3;
-    const U y = (counter & 8) ? bob + static_cast<U>(S16(W(Key(Sprite_Current) + 0x30))) - 0x1Bu
-                              : static_cast<U>(S16(W(Key(Sprite_Current) + 0x30))) - bob - 0x18u;
+    const U y = (counter & 8) ? bob + static_cast<U>(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - 0x1Bu
+                              : static_cast<U>(S16(static_cast<std::uint16_t>(rv::Current<records::SpriteHead>()->screen_y))) - bob - 0x18u;
     Fild64Fstp(y, prim + 0xC);
     std::memcpy(prim + 0x1C, prim + 0xC, 4);
     FldFaddFstFstp(prim + 0xC, At(at::kQuadWidth), prim + 0x2C, prim + 0x3C);
@@ -963,8 +963,8 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     prim[4] = 0x80;
     prim[5] = 0x80;
     prim[6] = 0x80;
-    SetW(Key(prim) + 0x26, 0xF);
-    SetW(Key(prim) + 0x16, 0x7802);
+    rv::As<records::GpuPolyFT4>(prim)->tpage = 0xF;
+    rv::As<records::GpuPolyFT4>(prim)->clut = 0x7802;
     CommitAtObject(0x48);
     SH_CALL(Gte_PushMatrix)();
     const unsigned char* const s = Sprite_Current;
@@ -972,7 +972,7 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
     alignas(4) short move[4];
     move[0] = Place(LongAt(s + 0x34));
     move[1] = Place(LongAt(s + 0x38));
-    move[2] = static_cast<short>(-(S16(W(Key(s) + 0x3E)) / 2));
+    move[2] = static_cast<short>(-(S16(rv::As<records::SpriteHead>(s)->height_whole) / 2));
     move[3] = 0;
     alignas(4) unsigned char matrix[0x20];
     SH_CALL(Gte_RotTrans)(move, reinterpret_cast<long*>(matrix + 0x14));
@@ -1374,8 +1374,8 @@ extern "C" void __cdecl FieldTail_StoryWarp(void) {
             area += 0xFFFF;
             if (static_cast<std::int32_t>(flag) < 0xF6) break;
         }
-        AreaW2d_ReturnPoint = L(at::kLeaderX);
-        AreaW4d_ReturnZ = L(at::kLeaderZ);
+        AreaW2d_ReturnPoint = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x);
+        AreaW4d_ReturnZ = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z);
         AreaW4d_ReturnArea = Game_AreaNumber;
         SH_CALL(Field_ChangeArea)(area, 0x430000, 0x160000, 4);
         B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) | 0x40);
