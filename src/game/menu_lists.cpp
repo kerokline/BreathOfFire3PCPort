@@ -44,6 +44,7 @@
 #include "game/lang_layout.h"
 #include "game/menu_lists_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/text_advance.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -107,6 +108,13 @@ unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
         *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
+// typed: +8..+0x1F mean something else in each handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
+static records::WindowRecord* WinRec() { return Win(Rec()); }
 
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -343,8 +351,8 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
             r[2] = 0;
             r[3] = 0;
             r[0] = 1;
-            SetWord(r + 4, 0x62);
-            SetWord(r + 6, i * 0x36u + 0x3E);
+            Win(r)->centre_x = 0x62;
+            Win(r)->centre_y = i * 0x36u + 0x3E;
             r[0xB] = 0;
             r[0xC] = 0;
             ++i;
@@ -361,8 +369,8 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
         r[2] = p.kind;
         r[3] = 0;
         r[0] = 1;
-        SetWord(r + 4, p.x);
-        SetWord(r + 6, p.y);
+        Win(r)->centre_x = p.x;
+        Win(r)->centre_y = p.y;
     }
     Byte(at::kIconWindow + 0xA) = 0;
     Byte(at::kIconWindow + 0xB) = 0;
@@ -453,11 +461,11 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel
 extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
     const unsigned member = At(Cond_Flags_addr + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
     const unsigned record = At(MoveScript_EffectState_addr + member)[0];
-    g.member_body(Word(rec + 4), Word(rec + 6), record, rec[0xC], 0);
+    g.member_body(Win(rec)->centre_x, Win(rec)->centre_y, record, rec[0xC], 0);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
     g.commit(1, 0xC);
     const unsigned clut = g.get_clut(0x10, 0x1E0);
-    g.member_face(Word(rec + 4) + 9, Word(rec + 6) + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
+    g.member_face(Win(rec)->centre_x + 9, Win(rec)->centre_y + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
 }
 
 // original 0x599D50, kind 1: the state from 0x66B014, then Menu_DrawMoneyBox
@@ -465,7 +473,7 @@ extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
 extern "C" void __cdecl MenuList_MoneyBox(void) {
     Entry(MenuList_MoneyStates_addr, Rec()[3])();
     const unsigned char* const r = Rec();
-    g.money_box(Word(r + 4), Word(r + 6), 0, Party_Zenny);
+    g.money_box(Win(r)->centre_x, Win(r)->centre_y, 0, Party_Zenny);
 }
 
 // original 0x599DC0, kind 2: the state from 0x66B020, then the play-time box
@@ -473,7 +481,7 @@ extern "C" void __cdecl MenuList_MoneyBox(void) {
 extern "C" void __cdecl MenuList_TimeBox(void) {
     Entry(MenuList_TimeStates_addr, Rec()[3])();
     const unsigned char* const r = Rec();
-    g.time_box(Word(r + 4), Word(r + 6));
+    g.time_box(Win(r)->centre_x, Win(r)->centre_y);
 }
 
 // original 0x599E50, kind 3 (the body is the tail jump's target 0x599E70,
@@ -502,8 +510,8 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     for (unsigned i = 0; i < 7; ++i) {
         if (i == r[0xA]) continue;
         const unsigned shade = i == 6 && r[0xC] != 0 ? 0x40 : 0x80;
-        const unsigned y = Word(r + 6);
-        const unsigned x = ((i << 4) + Word(r + 4)) & 0xFFFF;
+        const unsigned y = Win(r)->centre_y;
+        const unsigned x = ((i << 4) + Win(r)->centre_x) & 0xFFFF;
         g.icon(At(FieldMenu_IconIds_addr + i)[0], x, y, 0x10, 0x10, shade);
         r = Rec();
     }
@@ -511,8 +519,8 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     const unsigned shade = sel == 6 && r[0xC] != 0 ? 0x40 : 0x80;
     const unsigned grow = Word(r + 0x10);
     const unsigned size = static_cast<unsigned char>((r[0x10] + 8) << 1);
-    const unsigned y = (Word(r + 6) - grow) & 0xFFFF;
-    const unsigned x = ((((sel << 4) + Word(r + 4)) & 0xFFFF) - grow) & 0xFFFF;
+    const unsigned y = (Win(r)->centre_y - grow) & 0xFFFF;
+    const unsigned x = ((((sel << 4) + Win(r)->centre_x) & 0xFFFF) - grow) & 0xFFFF;
     g.icon(At(FieldMenu_IconIds_addr + sel)[0], x, y, size, size, shade);
     r = Rec();
     r[0xB] = r[0xA];
@@ -542,16 +550,16 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
     Entry(MenuList_TitleStates_addr, Rec()[3])();
     const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned char* r = Rec();
-    g.title_box(Word(r + 4), Word(r + 6), 0x48, 0x13, colour);
+    g.title_box(Win(r)->centre_x, Win(r)->centre_y, 0x48, 0x13, colour);
     r = Rec();
     const unsigned char* const text = g.msg(Word(r + 0x10));
     const unsigned count = g.char_count(text);
     r = Rec();
-    const unsigned y = (Word(r + 6) + 3u) & 0xFFFF;
+    const unsigned y = (Win(r)->centre_y + 3u) & 0xFFFF;
     const unsigned width = g.char_count(text);
     r = Rec();
     const unsigned half = g_title_centre ? TextAdvance_Width(text) / 2 : width * 6;
-    const int x = static_cast<int>((Word(r + 4) - half + 0x25u) & 0xFFFF);
+    const int x = static_cast<int>((Win(r)->centre_x - half + 0x25u) & 0xFFFF);
     g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
 }
 
@@ -567,19 +575,19 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
 namespace {
 void SlideY(int step, short bound, bool down) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 6, Word(moved + 6) + static_cast<unsigned>(step));
+    Win(moved)->centre_y = Win(moved)->centre_y + static_cast<unsigned>(step);
     unsigned char* const r = Rec();
     if (down ? S(r + 6) > bound : S(r + 6) < bound) {
-        SetWord(r + 6, static_cast<std::uint16_t>(bound));
+        Win(r)->centre_y = static_cast<std::uint16_t>(bound);
         Rec()[3] = 0;
     }
 }
 void SlideX(int step, short bound, bool right) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 4, Word(moved + 4) + static_cast<unsigned>(step));
+    Win(moved)->centre_x = Win(moved)->centre_x + static_cast<unsigned>(step);
     unsigned char* const r = Rec();
     if (right ? S(r + 4) > bound : S(r + 4) < bound) {
-        SetWord(r + 4, static_cast<std::uint16_t>(bound));
+        Win(r)->centre_x = static_cast<std::uint16_t>(bound);
         Rec()[3] = 0;
     }
 }
