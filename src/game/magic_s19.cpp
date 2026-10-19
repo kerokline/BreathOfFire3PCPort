@@ -191,7 +191,7 @@ void SpawnAura(unsigned index, const unsigned char* record, unsigned char& order
     t[9] = delay;
     tt->x = x;
     tt->z = Long(record + 0x38);
-    SetLong(t + 0x3C, Long(record + 0x3C));
+    rv::Store(tt->height, Long(record + 0x3C));
     Bump(order);
     delay = static_cast<unsigned char>(delay + 0x10);
     Bump(cur[0xB]);
@@ -461,9 +461,9 @@ MS19_EXPORT void __cdecl ShieldSpark_Place(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(s, 176, 3), Long(Owner() + 0x34)));
     const std::int32_t c = Cos(S16(kAngle));
     rv::Store(rv::Current<records::BattleTask>()->z, Add(MulSar(c, 176, 3), Long(Owner() + 0x38)));
-    SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
-    SetLong(Sprite_Current + 0x14, 0x40);
-    SetLong(Sprite_Current + 0x20, -4);
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -4);
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0xC;
     rv::Current<records::BattleTask>()->step_x = 1;
@@ -483,9 +483,9 @@ void CrystalFrame(unsigned radius) {
 // +0x14 += +0x20, then the word +0x3E (the height) += the word +0x14.
 void Lift() {
     unsigned char* const cur = Sprite_Current;
-    SetLong(cur + 0x14, Add(Long(cur + 0x14), Long(cur + 0x20)));
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, Add(rv::As<records::BattleTask>(cur)->step_y, rv::As<records::BattleTask>(cur)->work_20));
     unsigned char* const now = Sprite_Current;
-    SetWord(now + 0x3E, Word(now + 0x3E) + Word(now + 0x14));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(now)->height_whole, rv::As<records::BattleTask>(now)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(now)->step_y));
 }
 }  // namespace
 
@@ -501,8 +501,8 @@ MS19_EXPORT void __cdecl ShieldSpark_Rise(void) {
     Drop(Sprite_Current[0xA]);
     unsigned char* const cur = Sprite_Current;
     if (cur[0xA] != 0) return;
-    SetLong(cur + 0x14, -16);
-    SetLong(Sprite_Current + 0x20, 4);
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, -16);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 4);
     Sprite_Current[0xA] = 8;
     Bump(Sprite_Current[2]);
 }
@@ -552,8 +552,8 @@ MS19_EXPORT void __cdecl ShieldSpark_Spin(void) {
     const unsigned char side = now[3];
     if (!(side & 0xF0)) MH_CALL(Sound_PlayById)(side & 1 ? 0x101 : 0x102);
     rv::Current<records::BattleTask>()->step_z = 8;
-    SetLong(Sprite_Current + 0x14, 8);
-    SetLong(Sprite_Current + 0x20, 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 8);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Bump(Sprite_Current[2]);
 }
 
@@ -710,7 +710,7 @@ void SpawnPart(unsigned char type) {
     t[0xA] = 0;
     tt->x = tcur->x;
     tt->z = tcur->z;
-    SetWord(t + 0x3E, Word(cur + 0x3E));
+    rv::Store<unsigned>(tt->height_whole, tcur->height_whole);
 }
 }  // namespace
 
@@ -722,7 +722,7 @@ MS19_EXPORT void __cdecl Barrier_Start(void) {
     const unsigned char* const source = Pointer(BattleOdds_ActorObject_addr);
     rv::Store(rv::Current<records::BattleTask>()->x, Long(source + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(source + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(source + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(source + 0x3C));
     SpawnPart(0);
     SpawnPart(1);
     MH_CALL(Sound_PlayById)(0x100);
@@ -1050,8 +1050,8 @@ MS19_EXPORT void __cdecl BarrierLine_Delay(void) {
     Drop(Sprite_Current[9]);
     unsigned char* const cur = Sprite_Current;
     if (cur[9] != 0) return;
-    SetLong(cur + 0x14, 0x20);
-    SetLong(Sprite_Current + 0x20, -1);
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, 0x20);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -1);
     Bump(Sprite_Current[2]);
 }
 
@@ -1059,10 +1059,10 @@ MS19_EXPORT void __cdecl BarrierLine_Delay(void) {
 // (a tail jump) once +0x14 is below -16 (signed).
 MS19_EXPORT void __cdecl BarrierLine_Fly(void) {
     unsigned char* const cur = Sprite_Current;
-    SetLong(cur + 0x14, Add(Long(cur + 0x14), Long(cur + 0x20)));
+    rv::Store(rv::As<records::BattleTask>(cur)->step_y, Add(rv::As<records::BattleTask>(cur)->step_y, rv::As<records::BattleTask>(cur)->work_20));
     unsigned char* const now = Sprite_Current;
-    SetWord(now + 0x3E, Word(now + 0x3E) + Word(now + 0x14));
-    if (Long(Sprite_Current + 0x14) >= -0x10) return;
+    rv::Store<unsigned>(rv::As<records::BattleTask>(now)->height_whole, rv::As<records::BattleTask>(now)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(now)->step_y));
+    if (rv::Current<records::BattleTask>()->step_y >= -0x10) return;
     MH_CALL(BattleTask_FreeCurrent)();
 }
 

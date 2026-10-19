@@ -185,7 +185,7 @@ MS17_EXPORT void __cdecl Purify_Start(void) {
     unsigned char* const src = Source();
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
     unsigned char number = 0;
@@ -263,7 +263,7 @@ MS17_EXPORT void __cdecl PurifyMote_Place(void) {
     const int c = Cos(Long(Mem(kScratchA)));
     const int dz = static_cast<int>((static_cast<std::uint32_t>(c) * 5u) << 13) >> 12;
     rv::Store(rv::Current<records::BattleTask>()->z, Wrap(static_cast<std::uint32_t>(dz) + static_cast<std::uint32_t>(Long(Owner() + 0x38))));
-    SetWord(Sprite_Current + 0x3E, Word(Owner() + 0x3E) + 0x180u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E) + 0x180u);
     sc = Sprite_Current;
     sc[0x25] = 0x1D;
     sc[0x26] = 0;
@@ -276,7 +276,7 @@ MS17_EXPORT void __cdecl PurifyMote_Place(void) {
     sc[0x2A] = 0;
     sc[0x29] = 4;
     sc[0x24] = 4;
-    SetWord(sc + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->column, 0);
     sc[0x2B] = 1;
     MH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(sc[0xB] / 3));
     Bump(Sprite_Current[2]);
@@ -341,7 +341,7 @@ MS17_EXPORT void __cdecl Revive_Start(void) {
     Sprite_Current[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 0x3C;
     Sprite_Current[0xA] = 0;
@@ -429,7 +429,7 @@ MS17_EXPORT void __cdecl ReviveHalo_Wait(void) {
     sc[4] = Owner()[4];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sprite_Current + 0x3C, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0xC00000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0xC00000u));
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 0x3C;
     Bump(Sprite_Current[2]);
@@ -561,11 +561,11 @@ MS17_EXPORT void __cdecl ReviveMote_Launch(void) {
     rv::Current<records::BattleTask>()->step_x = 8;
     MoteAngle();
     Orbit();
-    SetLong(Sprite_Current + 0x3C, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, Wrap(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x800000u));
     const int r = MH_CALL(Rand)();
-    SetLong(Sprite_Current + 0x14, ((r & 3) + 2) << 20);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, ((r & 3) + 2) << 20);
     unsigned char* sc = Sprite_Current;
-    SetLong(sc + 0x20, Long(sc + 0x14) / 16);
+    rv::Store(rv::As<records::BattleTask>(sc)->work_20, rv::As<records::BattleTask>(sc)->step_y / 16);
     for (unsigned k = 0x5D; k <= 0x5F; ++k) {
         const int v = MH_CALL(Rand)();
         Sprite_Current[k] = static_cast<unsigned char>((v & 7) + 6);
@@ -585,11 +585,11 @@ MS17_EXPORT void __cdecl ReviveMote_Rise(void) {
     MoteAngle();
     Orbit();
     unsigned char* sc = Sprite_Current;
-    const std::int32_t step = Long(sc + 0x20), rise = Long(sc + 0x14);
+    const std::int32_t step = rv::As<records::BattleTask>(sc)->work_20, rise = rv::As<records::BattleTask>(sc)->step_y;
     if (step < rise) {
-        SetLong(sc + 0x14, Wrap(static_cast<std::uint32_t>(rise) - static_cast<std::uint32_t>(step)));
+        rv::Store(rv::As<records::BattleTask>(sc)->step_y, Wrap(static_cast<std::uint32_t>(rise) - static_cast<std::uint32_t>(step)));
         sc = Sprite_Current;
-        SetLong(sc + 0x3C, Wrap(static_cast<std::uint32_t>(Long(sc + 0x3C)) + static_cast<std::uint32_t>(Long(sc + 0x14))));
+        rv::Store(rv::As<records::BattleTask>(sc)->height, Wrap(static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->height) + static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->step_y)));
         sc = Sprite_Current;
     }
     if ((Frame_Counter & 1) == 0) return;
@@ -688,18 +688,18 @@ MS17_EXPORT void __cdecl Leech_Start(void) {
     shell[9] = 0;
     tshell->x = Long(owner + 0x34);
     tshell->z = Long(owner + 0x38);
-    SetLong(shell + 0x3C, Wrap(static_cast<std::uint32_t>(Long(owner + 0x3C)) + 0x2000000u));
+    rv::Store(tshell->height, Wrap(static_cast<std::uint32_t>(Long(owner + 0x3C)) + 0x2000000u));
     const unsigned s2 = MH_CALL(BattleTask_Create)(1, 0xD) & 0xFF;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const orb = Task(s2);
     records::BattleTask* const torb = rv::As<records::BattleTask>(orb);
     torb->owner = static_cast<std::int32_t>(Key(shell));
-    SetLong(orb + 0x4C, static_cast<std::int32_t>(Key(sc)));
+    rv::Store<std::int32_t>(torb->anim_data, static_cast<std::int32_t>(Key(sc)));
     orb[1] = 1;
     orb[9] = 0;
     torb->x = Long(src + 0x34);
     torb->z = Long(src + 0x38);
-    SetLong(orb + 0x3C, Wrap(static_cast<std::uint32_t>(Long(src + 0x3C)) + 0x1000000u));
+    rv::Store(torb->height, Wrap(static_cast<std::uint32_t>(Long(src + 0x3C)) + 0x1000000u));
     MH_CALL(Sound_PlayById)(0x100);
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);
@@ -1029,7 +1029,7 @@ MS17_EXPORT void __cdecl LeechOrb_Chime(void) {
 // frame; once within 0x1C000 of it (0x4FBBD0), +0xA 30 and +2 on.
 MS17_EXPORT void __cdecl LeechOrb_Rise(void) {
     MH_CALL(MagicFx_StepToward)(Owner(), 0x30);
-    SetWord(Sprite_Current + 0x3E, Word(Sprite_Current + 0x3E) + 0x10u);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, rv::Current<records::BattleTask>()->height_whole + 0x10u);
     if (MH_CALL(MagicFx_NearSprite3D)(Owner(), 0x1C000) == 0) return;
     Sprite_Current[0xA] = 0x1E;
     Bump(Sprite_Current[2]);

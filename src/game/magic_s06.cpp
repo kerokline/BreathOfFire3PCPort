@@ -124,13 +124,13 @@ unsigned char* MakeDouble(unsigned parameter, unsigned char body) {
 void CopyPosition(const unsigned char* from) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(from + 0x38));
-    SetLong(Sc() + 0x3C, Long(from + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(from + 0x3C));
 }
 // The same from the owner, the owner read again for each word.
 void CopyOwnerPosition() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
 }
 // The sprite's colour +0x5D..+0x5F, each moved by `by` (a byte).
 void AddColour(unsigned by) {
@@ -257,8 +257,8 @@ S06_EXPORT void __cdecl Magic008Grow_Run(void) {
 
 // original 0x4A24E0: the scale +0x40 / +0x44 0x10000, +0x48 2, +9 0x1E, +2 on.
 S06_EXPORT void __cdecl Magic008Grow_Start(void) {
-    SetLong(Sc() + 0x40, 0x10000);
-    SetLong(Sc() + 0x44, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x10000);
     Sc()[0x48] = 2;
     Sc()[9] = 0x1E;
     Inc(Sc()[2]);
@@ -328,11 +328,11 @@ S06_EXPORT void __cdecl Magic008Glow_Start(void) {
     Sc()[0x5D] = 0x80;
     Sc()[0x5E] = 0x80;
     Sc()[0x5F] = 0x80;
-    SetLong(Sc() + 0x34, Field_Kind2X);
-    SetLong(Sc() + 0x38, Field_Kind2Z);
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
-    SetLong(Sc() + 0x40, 0x18000);
-    SetLong(Sc() + 0x44, 0x28000);
+    rv::Store(rv::Current<records::BattleTask>()->x, Field_Kind2X);
+    rv::Store(rv::Current<records::BattleTask>()->z, Field_Kind2Z);
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x18000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x28000);
     Sc()[0x48] = 2;
     Sc()[0x27] = Owner()[0x27];
     MH_CALL(Sound_PlayById)(0x100);
@@ -961,7 +961,7 @@ S06_EXPORT void __cdecl Magic020Slash_Start(void) {
     Sc()[0x25] = 0x1D;
     Sc()[0x26] = 0;
     Sc()[0x24] = 0x84;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     Sc()[0x28] = 0;
     {

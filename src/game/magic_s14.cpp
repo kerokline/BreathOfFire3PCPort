@@ -228,9 +228,9 @@ S14_EXPORT void __cdecl Weretiger_FocusActor(void) {
         s[9] = static_cast<unsigned char>(was - 1);
         if (was != 0) return;
     }
-    SetLong(Sc() + 0x34, Field_Kind2X);
-    SetLong(Sc() + 0x38, Field_Kind2Z);
-    SetWord(Sc() + 0x3E, U(MapView_Elevation) & 0xFFFF);
+    rv::Store(rv::Current<records::BattleTask>()->x, Field_Kind2X);
+    rv::Store(rv::Current<records::BattleTask>()->z, Field_Kind2Z);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, U(MapView_Elevation) & 0xFFFF);
     {
         const unsigned char* const record = PartyRecord(ActorIndex());
         const records::PartyMember* const trecord = rv::AsConst<records::PartyMember>(record);
@@ -937,7 +937,7 @@ S14_EXPORT void __cdecl Tsunami_Task(void) {
 S14_EXPORT void __cdecl Tsunami_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     const unsigned slot = NewTask(0x11);
     unsigned char* const child = TaskSlot(slot);
     records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
@@ -999,11 +999,11 @@ S14_EXPORT void __cdecl TsunamiWave_Run(void) {
 S14_EXPORT void __cdecl TsunamiWave_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Field_Kind2X) + 0xFFEE0000u));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Field_Kind2Z) + 0x880000u));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0x1A;
     Sc()[9] = 0x10;
     rv::Current<records::BattleTask>()->step_z = 0;
-    SetLong(Sc() + 0x14, 0xF0);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0xF0);
     Inc(Sc()[2]);
 }
 
@@ -1035,7 +1035,7 @@ S14_EXPORT void __cdecl TsunamiWave_Shrink(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     s[0xB] = static_cast<unsigned char>((s[0xB] - 1) & 0x1F);
-    SetLong(s + 0x14, static_cast<std::int32_t>(U(Long(s + 0x14)) - 2));
+    rv::Store(ts->step_y, static_cast<std::int32_t>(U(ts->step_y) - 2));
     ts->step_z = static_cast<std::int32_t>(U(ts->step_z) - 2);
     if (ts->step_z == 0x20) Inc(s[2]);
 }
@@ -1045,7 +1045,7 @@ S14_EXPORT void __cdecl TsunamiWave_Shrink(void) {
 S14_EXPORT void __cdecl TsunamiWave_End(void) {
     unsigned char* const s = Sc();
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
-    SetLong(s + 0x14, static_cast<std::int32_t>(U(Long(s + 0x14)) - 2));
+    rv::Store(ts->step_y, static_cast<std::int32_t>(U(ts->step_y) - 2));
     ts->step_z = static_cast<std::int32_t>(U(ts->step_z) - 1);
     if (ts->step_z != 0) return;
     Owner()[0xB] = 0xFF;
@@ -1102,7 +1102,7 @@ S14_EXPORT void __cdecl TsunamiWave_Draw(void) {
     DrawModeCommit(0xB5, 2);
     {
         const unsigned char* const s = Sc();
-        SetSW(0, Word(s + 0x14));
+        SetSW(0, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
         const unsigned angle = (s[0xB] & 0x1Fu) << 7;
         SetVW(0, 0);
         SetSW(6, angle);
@@ -1210,7 +1210,7 @@ void RingAt(unsigned height, unsigned index, const unsigned char* actor) {
     Sc()[0xA] = static_cast<unsigned char>(index);
     rv::Store(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(U(Long(offset)) + U(Long(actor + 0x34))));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(U(Long(actor + 0x38)) + U(Long(offset + 4))));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(U(Long(offset + 8)) + U(Long(actor + 0x3C))));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(U(Long(offset + 8)) + U(Long(actor + 0x3C))));
     Call0(bof3::addr::TsunamiRing_PushMatrix);
     Call0(bof3::addr::TsunamiRing_DrawQuads);
     MH_CALL(Gte_PopMatrix)();

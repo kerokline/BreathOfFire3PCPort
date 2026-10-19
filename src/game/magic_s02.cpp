@@ -221,11 +221,11 @@ void LeapSetUp() {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->work_18 = ts->x;
     ts->work_1c = ts->z;
-    SetLong(s + 0x44, Long(s + 0x3C));
+    rv::Store(ts->scale_y, ts->height);
     ts->step_x = 0x2000;
     ts->step_z = 0;
-    SetLong(s + 0x14, 0x300000);
-    SetLong(s + 0x20, static_cast<std::int32_t>(0xFFF80000u));
+    rv::Store(ts->step_y, 0x300000);
+    rv::Store(ts->work_20, static_cast<std::int32_t>(0xFFF80000u));
     Turn(Sc());
 }
 // x, z and height by the step and the rise, the rise by the fall.
@@ -305,8 +305,8 @@ S02_EXPORT void __cdecl SuperCombo_Start(void) {
         e[2] = 0;
     }
     unsigned char* const s = Sc();
-    SetWord(s + 0x2E, 0xA0);
-    SetWord(s + 0x30, 0x70);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, 0xA0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, 0x70);
     s[0xB] = 0;
     s[9] = 0x1E;
     s[0xA] = 0;
@@ -398,7 +398,7 @@ S02_EXPORT void __cdecl SuperCombo_Strike(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     MH_CALL(BattleActor_SetAnimation)(0xC, 2);
@@ -471,7 +471,7 @@ S02_EXPORT void __cdecl SuperComboDash_Leap(void) {
     LeapMove(Sc());
     Tick();
     const unsigned char* const s = Sc();
-    if (Long(s + 0x3C) == Long(s + 0x44)) Inc(Sc()[2]);
+    if (rv::As<records::BattleTask>(s)->height == rv::As<records::BattleTask>(s)->scale_y) Inc(Sc()[2]);
 }
 
 // original 0x49AD30: the count-down to the hit without moving; the script
@@ -542,7 +542,7 @@ S02_EXPORT void __cdecl SuperComboImage_Leap(void) {
     LeapMove(Sc());
     Tick();
     const unsigned char* const s = Sc();
-    if (Long(s + 0x3C) == Long(s + 0x44)) Inc(Sc()[2]);
+    if (rv::As<records::BattleTask>(s)->height == rv::As<records::BattleTask>(s)->scale_y) Inc(Sc()[2]);
 }
 
 // original 0x49AFE0: the step 0xFFFFE000 turned back; the script ticked; +2 on.
@@ -597,14 +597,14 @@ S02_EXPORT void __cdecl SuperComboHit_Start(void) {
     Sc()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sc() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
     s[0x29] = 0;
     s[0x25] = 0x1D;
     s[0x26] = 0;
     s[0x24] = 0x84;
-    SetWord(s + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 0;
     s[0x28] = 0;
     s[0x27] = static_cast<unsigned char>(Mem(kHitAnims)[s[0xB]] - 0x50);
@@ -696,7 +696,7 @@ S02_EXPORT void __cdecl SuperCombo_DrawText(unsigned which) {
     const unsigned k = which & 0xFF;
     const unsigned length = Mem(kTextLengths)[k];
     const unsigned char* const s = Sc();
-    std::uint16_t x = static_cast<std::uint16_t>(Word(s + 0x2E) - 6 * length);
+    std::uint16_t x = static_cast<std::uint16_t>(static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) - 6 * length);
     const short y = S16(s + 0x30);
     if (Pointer(kTexts + 4 * k)[0] == 0) return;
     unsigned char i = 0;
@@ -743,7 +743,7 @@ S02_EXPORT void __cdecl SuperCombo_DrawButton(unsigned button) {
 S02_EXPORT void __cdecl SuperCombo_DrawCount(unsigned count) {
     DrawModeCommit(0x15, 2);
     const unsigned char* const s = Sc();
-    std::uint16_t x = Word(s + 0x2E);
+    std::uint16_t x = static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x);
     const short y = S16(s + 0x30);
     unsigned char* p = Gfx_PacketNext;
     const unsigned n = count & 0xFF;
@@ -823,7 +823,7 @@ S02_EXPORT void __cdecl ElemStrike_Start(void) {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Inc(Sc()[1]);
@@ -988,8 +988,7 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
 S02_EXPORT void __cdecl ElemStrikeFx_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
-    SetLong(Sc() + 0x3C,
-            static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C)) + 0x800000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C)) + 0x800000u));
     unsigned char* const s = Sc();
     s[0x25] = 0x1D;
     s[0x26] = 0;
@@ -1008,7 +1007,7 @@ S02_EXPORT void __cdecl ElemStrikeFx_Start(void) {
     s[0x5C] = 0;
     s[0x2A] = 0;
     s[0x29] = 4;
-    SetWord(s + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 1;
     MH_CALL(Sprite_SetAnimation)(0);
     Sc()[9] = Mem(kFxDelays)[Sc()[4]];

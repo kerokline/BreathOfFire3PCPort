@@ -113,7 +113,7 @@ void TakeOwnerAndAnimate(unsigned arg) {
     }
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Inc(Sc()[1]);
@@ -305,7 +305,7 @@ S05_EXPORT void __cdecl Magic017Image_Leap(void) {
                                                     static_cast<std::uint32_t>(ts->step_x));
         ts->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x38)) +
                                                     static_cast<std::uint32_t>(ts->step_z));
-        SetLong(s + 0x3C, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
+        rv::Store(ts->height, Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C));
         ts->step_x = 0;
         ts->step_z = (s[0xB] & 1) ? 0x1000 : static_cast<std::int32_t>(0xFFFFF000u);
         Turn(s);
@@ -391,7 +391,7 @@ S05_EXPORT void __cdecl Magic017Image_Home(void) {
     if (s[9] != 0) return;
     ts->x = Long(Owner() + 0x34);
     ts->z = Long(Owner() + 0x38);
-    SetLong(s + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(ts->height, Long(Owner() + 0x3C));
     s[9] = 8;
     Inc(s[2]);
 }

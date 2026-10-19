@@ -175,7 +175,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 void PositionFromOwner() {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
 }
 
 // Row 26 of Gfx_ClutStrip, its 32 words, back from its source.
@@ -349,7 +349,7 @@ S07_EXPORT void __cdecl BonebreakMote_Launch(void) {
     const unsigned char* const src = Source();
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetWord(Sc() + 0x3E, ((k << 5) + Word(src + 0x3E)) & 0xFFFF);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, ((k << 5) + Word(src + 0x3E)) & 0xFFFF);
     SetSW(0, (0xC - k) << 4);
     const unsigned angle = (RandCall() & 7) << 9;
     unsigned char* const x = Sc() + 0x34;
@@ -388,8 +388,8 @@ S07_EXPORT void __cdecl BonebreakMote_DrawFan(void) {
     const auto c0 = static_cast<unsigned char>(a * 12), c1 = static_cast<unsigned char>(a * 11),
                c2 = static_cast<unsigned char>(a << 2), c3 = static_cast<unsigned char>(a << 3);
     SetSW(0, static_cast<unsigned>(s[9]) << 1);
-    SetSW(8, Word(s + 0x2E));
-    SetSW(0xA, Word(s + 0x30));
+    SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     for (int i = 0; i < 0x10; ++i) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
@@ -432,8 +432,8 @@ S07_EXPORT void __cdecl BonebreakMote_DrawRing(void) {
                c2 = static_cast<unsigned char>(a << 2);
     SetSW(0, static_cast<unsigned>(s[9]) << 1);
     SetSW(2, static_cast<unsigned>(s[9]) * 3);
-    SetSW(8, Word(s + 0x2E));
-    SetSW(0xA, Word(s + 0x30));
+    SetSW(8, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     for (int i = 0; i < 0x10; ++i) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG4)(p);
@@ -498,11 +498,11 @@ void OrbitStep() {
     v = MH_CALL(Math_Cos)(SD(0));
     rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(v, 0x11) >> 12, Long(Owner() + 0x38)));
     AddLong(Sc() + 0x14, 1);
-    angle = (static_cast<std::uint32_t>(Long(Sc() + 0x14)) & 0x3F) << 6;
+    angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_y) & 0x3F) << 6;
     SetSD(4, 0x800);
     SetSD(0, angle);
     v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    SetLong(Sc() + 0x3C, Sum(Imul(v, SD(4)), Long(Owner() + 0x3C)));
+    rv::Store(rv::Current<records::BattleTask>()->height, Sum(Imul(v, SD(4)), Long(Owner() + 0x3C)));
 }
 
 }  // namespace
@@ -569,7 +569,7 @@ S07_EXPORT void __cdecl WarShout_Rally(void) {
         child[4] = 2;
         tchild->x = x;
         tchild->z = Long(rec + 0x38);
-        SetLong(child + 0x3C, Long(rec + 0x3C));
+        rv::Store(tchild->height, Long(rec + 0x3C));
         Inc(self[0xB]);
     }
     Inc(Sc()[1]);
@@ -608,17 +608,17 @@ S07_EXPORT void __cdecl WarShoutMote_Appear(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
     rv::Current<records::BattleTask>()->step_x = 0;
-    SetLong(Sc() + 0x14, 0);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0);
     std::uint32_t angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x) & 0x7F) << 5;
     SetSD(0, angle);
     int v = MH_CALL(Math_Sin)(static_cast<int>(angle));
     rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x34)));
     v = MH_CALL(Math_Cos)(SD(0));
     rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x38)));
-    angle = (static_cast<std::uint32_t>(Long(Sc() + 0x14)) & 0x3F) << 6;
+    angle = (static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_y) & 0x3F) << 6;
     SetSD(0, angle);
     v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    SetLong(Sc() + 0x3C, Sum(Shl(v, 0x17) >> 12, Long(Owner() + 0x3C)));
+    rv::Store(rv::Current<records::BattleTask>()->height, Sum(Shl(v, 0x17) >> 12, Long(Owner() + 0x3C)));
     unsigned char* const s = Sc();
     s[0x25] = 0x1D;
     s[0x26] = 0;
@@ -632,7 +632,7 @@ S07_EXPORT void __cdecl WarShoutMote_Appear(void) {
     s[0x5F] = 0x80;
     s[0x2A] = 0;
     s[0x29] = 4;
-    SetWord(s + 0x2C, 0);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
     s[0x2B] = 0;
     MH_CALL(Sprite_SetAnimation)(Mem(WarShoutMote_Animations_addr + s[0xB])[0]);
     Inc(Sc()[2]);
@@ -861,7 +861,7 @@ S07_EXPORT void __cdecl FocusMote_Start(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x34)));
     v = MH_CALL(Math_Sin)(SS(0xA));
     rv::Store(rv::Current<records::BattleTask>()->z, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x38)));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[9] = 0;
     Sc()[0xA] = 4;
     Inc(Sc()[2]);
@@ -892,8 +892,8 @@ S07_EXPORT void __cdecl FocusMote_Draw(void) {
     const unsigned char* const s = Sc();
     SetSW(6, s[9]);
     SetSW(8, s[0xA]);
-    SetSW(0xA, Word(s + 0x2E));
-    SetSW(0xC, Word(s + 0x30));
+    SetSW(0xA, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(0xC, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     const unsigned k = s[4] * 3u;
     SetSW(0, Mem(FocusMote_Shades_addr + k)[0]);
     SetSW(2, Mem(FocusMote_Shades_addr + 1 + k)[0]);
@@ -1245,11 +1245,11 @@ S07_EXPORT void __cdecl Enlighten_AnchorToActor(void) {
     unsigned char* const s = Sc();
     const unsigned facing = s[8];
     const std::uint16_t dx = Word(Mem(table + ((facing >> 1) + index * 2) * 4));
-    if (facing == 0 || facing == 3) SetWord(s + 0x2E, (Word(s + 0x2E) + dx) & 0xFFFF);
-    else SetWord(s + 0x2E, (Word(s + 0x2E) - dx) & 0xFFFF);
+    if (facing == 0 || facing == 3) rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, (static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) + dx) & 0xFFFF);
+    else rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_x, (static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x) - dx) & 0xFFFF);
     unsigned char* const t = Sc();
     const std::uint16_t dy = Word(Mem(table + 2 + ((t[8] >> 1) + index * 2) * 4));
-    SetWord(t + 0x30, (Word(t + 0x30) + dy) & 0xFFFF);
+    rv::Store<unsigned>(rv::As<records::BattleTask>(t)->screen_y, (static_cast<std::uint16_t>(rv::As<records::BattleTask>(t)->screen_y) + dy) & 0xFFFF);
 }
 
 // original 0x4A5FC0: the rays: from the screen point (+0x2E / +0x30, kept in
@@ -1262,8 +1262,8 @@ S07_EXPORT void __cdecl Enlighten_AnchorToActor(void) {
 // between draw modes (tpage 0x35, then 0x15).
 S07_EXPORT void __cdecl EnlightenRays_DrawLines(unsigned first, unsigned length) {
     const unsigned char* const s = Sc();
-    SetSW(0, Word(s + 0x2E));
-    SetSW(2, Word(s + 0x30));
+    SetSW(0, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
     auto step = static_cast<unsigned char>(first);
@@ -1303,8 +1303,8 @@ S07_EXPORT void __cdecl EnlightenRays_DrawDisc(void) {
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
     const unsigned char* const s = Sc();
     SetSW(4, s[0xA]);
-    SetSW(0, Word(s + 0x2E));
-    SetSW(2, Word(s + 0x30));
+    SetSW(0, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     for (int e = 0; e < 0x2000;) {
         unsigned char* const p = Gfx_PacketNext;
         MH_CALL(Gpu_SetPolyG3)(p);
@@ -1338,8 +1338,8 @@ S07_EXPORT void __cdecl EnlightenRing_Draw(void) {
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(3, 0xC);
     const unsigned char* const s = Sc();
-    SetSW(0, Word(s + 0x2E));
-    SetSW(2, Word(s + 0x30));
+    SetSW(0, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_x));
+    SetSW(2, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y));
     SetSW(0xA, s[0xA]);
     SetSW(4, s[9]);
     for (unsigned i = 0; i < 0x20; ++i) {

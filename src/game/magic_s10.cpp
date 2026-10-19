@@ -222,10 +222,10 @@ S10_EXPORT void __cdecl Ovum_Spawn(void) {
     child[2] = 0;
     RandCall();
     const std::uint32_t r1 = RandCall();
-    SetWord(child + 0x2E, (r1 & 0xF) + Word(Pointer(BattleOdds_ActorObject_addr) + 0x2E));
+    rv::Store<unsigned>(tchild->screen_x, (r1 & 0xF) + Word(Pointer(BattleOdds_ActorObject_addr) + 0x2E));
     const std::uint32_t r2 = RandCall();
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
-    SetWord(child + 0x30, Word(src + 0x30) - (r2 & 0x1F));
+    rv::Store<unsigned>(tchild->screen_y, Word(src + 0x30) - (r2 & 0x1F));
     SetWord(child + 0x32, Word(src + 0x32));
     unsigned char* const s = Sc();
     child[9] = s[9];
@@ -279,7 +279,7 @@ S10_EXPORT void __cdecl OvumChild_Start(void) {
     Sc()[0x24] = 0x84;
     Sc()[0x27] = 0xB4;
     Sc()[0x28] = 0;
-    SetWord(Sc() + 0x2C, 0);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->column, 0);
     Sc()[0x2B] = 0;
     Sc()[0x2A] = 0;
     const unsigned char n = Sc()[9];
@@ -425,18 +425,18 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
     Sc()[8] = Owner()[8];
     rv::Current<records::BattleTask>()->step_x = 0x20000;
     rv::Current<records::BattleTask>()->step_z = 0;
-    SetLong(Sc() + 0x14, 0x6000000);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x6000000);
     Turn(Sc());
     {
         unsigned char* const s = Sc();
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
-        SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x14))));
+        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
+                                                    static_cast<std::uint32_t>(ts->step_y)));
         ts->step_x = static_cast<std::int32_t>(0xFFFFE000u);
         ts->step_z = 0;
-        SetLong(s + 0x20, 0x600000);
+        rv::Store(ts->work_20, 0x600000);
     }
     Turn(Sc());
     {
@@ -445,8 +445,8 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
         s[0x26] = 0;
         s[0x27] = 0x1A;
         s[0x28] = 1;
-        SetLong(s + 0x40, 0x10000);
-        SetLong(s + 0x44, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_x, 0x10000);
+        rv::Store(rv::As<records::BattleTask>(s)->scale_y, 0x10000);
         s[0x48] = 2;
         s[0x5D] = 0;
         s[0x5E] = 0;
@@ -454,7 +454,7 @@ S10_EXPORT void __cdecl LavaburstChild_Launch(void) {
         s[0x5C] = 0;
         s[0x2A] = 0;
         s[0x29] = 4;
-        SetWord(s + 0x2C, 0);
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->column, 0);
         s[0x2B] = 1;
         s[0x24] = 0;
     }
@@ -477,9 +477,9 @@ S10_EXPORT void __cdecl LavaburstChild_Rise(void) {
         records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         AddLong(s + 0x34, static_cast<std::uint32_t>(ts->step_x));
         AddLong(s + 0x38, static_cast<std::uint32_t>(ts->step_z));
-        AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(Long(s + 0x20)));
-        SetLong(s + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
-                                                    static_cast<std::uint32_t>(Long(s + 0x14))));
+        AddLong(s + 0x14, 0u - static_cast<std::uint32_t>(ts->work_20));
+        rv::Store(ts->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) +
+                                                    static_cast<std::uint32_t>(ts->step_y)));
         AddB(s[0xB], 8);
         Dec(s[9]);
         if (s[9] != 0) return;
@@ -799,9 +799,9 @@ S10_EXPORT void __cdecl HowlingChild_Start(void) {
     records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->x = Long(rec + 0x34);
     ts->z = Long(rec + 0x38);
-    SetLong(s + 0x3C, Long(rec + 0x3C));
-    SetLong(s + 0x40, 0x10000);
-    SetLong(s + 0x44, 0x10000);
+    rv::Store(ts->height, Long(rec + 0x3C));
+    rv::Store(ts->scale_x, 0x10000);
+    rv::Store(ts->scale_y, 0x10000);
     s[0x48] = 2;
     ts->step_x = static_cast<std::int32_t>(0xFFFFF3A0u);
     ts->step_z = 0x1080;
@@ -867,7 +867,7 @@ S10_EXPORT void __cdecl Ebonfire_Task(void) {
     MH_CALL(BattleActor_UpdateScreenXY)();
     {
         unsigned char* const s = Sc();
-        SetWord(s + 0x30, Word(s + 0x30) - 0x10u);
+        rv::Store<unsigned>(rv::As<records::BattleTask>(s)->screen_y, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->screen_y) - 0x10u);
     }
     MH_CALL(MagicFx_DrawDisc)();
     MH_CALL(MagicFx_PushActorMatrix)();
@@ -886,7 +886,7 @@ S10_EXPORT void __cdecl Ebonfire_Start(void) {
         Sc()[8] = src[8];
         rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
         rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-        SetLong(Sc() + 0x3C, Long(src + 0x3C));
+        rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     }
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 6; ++i) {
@@ -1128,7 +1128,7 @@ S10_EXPORT void __cdecl SacrificeRing_Run(void) {
 S10_EXPORT void __cdecl SacrificeFx_TakeOwnerPos(void) {
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Sc()[9] = 0;
     Sc()[0xA] = 0;
     Inc(Sc()[2]);
@@ -1414,7 +1414,7 @@ S10_EXPORT void __cdecl SacrificeActor_Darken(void) {
     if (s[0x5D] != 0x80) return;
     ts->x = Long(Owner() + 0x34);
     ts->z = Long(Owner() + 0x38);
-    SetLong(s + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(ts->height, Long(Owner() + 0x3C));
     Inc(s[2]);
 }
 
@@ -1490,7 +1490,7 @@ S10_EXPORT void __cdecl SacrificeActor_Return(void) {
         const unsigned char* const actor_sprite = Pointer(MagicS23_ActorSprite_addr);
         ts->x = Long(actor_sprite + 0x34);
         ts->z = Long(Pointer(MagicS23_ActorSprite_addr) + 0x38);
-        SetLong(s + 0x3C, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
+        rv::Store(ts->height, Long(Pointer(MagicS23_ActorSprite_addr) + 0x3C));
     }
     const std::uint32_t actor = static_cast<std::uint32_t>(Long(Mem(at::kActor)));
     if ((actor & 0xFF) < 3) MemberAndCopyAnimation(actor & 0xFF, 0x1C);

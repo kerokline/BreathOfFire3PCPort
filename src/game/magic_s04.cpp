@@ -338,7 +338,7 @@ S04_EXPORT void __cdecl SnapWave_Start(void) {
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_x)));
     rv::Store(rv::Current<records::BattleTask>()->z, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x38)) +
                                                    static_cast<std::uint32_t>(rv::Current<records::BattleTask>()->step_z)));
-    SetLong(Sc() + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1000000u));
+    rv::Store(rv::Current<records::BattleTask>()->height, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Owner() + 0x3C)) + 0x1000000u));
     rv::Store(rv::Current<records::BattleTask>()->step_x, static_cast<std::int32_t>(0xFFFFA000u));
     rv::Current<records::BattleTask>()->step_z = 0;
     Turn(Sc());
@@ -568,8 +568,8 @@ S04_EXPORT void __cdecl SnapSpark_Launch(void) {
     }
     CopyL(Sc() + 0x3C, src + 0x3C);
     const std::uint32_t r = RandCall();
-    SetLong(Sc() + 0x14, static_cast<std::int32_t>((r & 7) + 0x80));
-    SetLong(Sc() + 0x20, -12);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, static_cast<std::int32_t>((r & 7) + 0x80));
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -12);
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
 }
@@ -593,11 +593,11 @@ S04_EXPORT void __cdecl SnapSpark_Fly(void) {
     }
     {
         unsigned char* const s = Sc();
-        AddL(s + 0x14, static_cast<std::uint32_t>(Long(s + 0x20)));
+        AddL(s + 0x14, static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20));
     }
     {
         unsigned char* const s = Sc();
-        AddW(s + 0x3E, Word(s + 0x14));
+        AddW(s + 0x3E, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
     }
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
@@ -768,7 +768,7 @@ S04_EXPORT void __cdecl FlyingKick_Start(void) {
     Sc()[8] = Owner()[8];
     CopyL(Sc() + 0x34, Owner() + 0x34);
     CopyL(Sc() + 0x38, Owner() + 0x38);
-    SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, Word(Owner() + 0x3E));
     Sc()[0xB] = 1;
     MH_CALL(BattleActor_SetAnimation)(8, 0);
     {
@@ -835,8 +835,8 @@ void AimAtOwner() {
     const int dx = static_cast<int>(static_cast<std::uint32_t>(Long(o + 0x34)) - static_cast<std::uint32_t>(ts->x));
     const int angle = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
     rv::Current<records::BattleTask>()->step_x = angle;
-    SetLong(Sc() + 0x14, 0x40);
-    SetLong(Sc() + 0x20, -8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -8);
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
 }
@@ -850,10 +850,10 @@ void Hit() {
 void RiseAndFall() {
     {
         unsigned char* const s = Sc();
-        AddL(s + 0x14, static_cast<std::uint32_t>(Long(s + 0x20)));
+        AddL(s + 0x14, static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20));
     }
     unsigned char* const s = Sc();
-    AddW(s + 0x3E, Word(s + 0x14));
+    AddW(s + 0x3E, static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
 }
 // +0x5D..+0x5F each up by `v` (8 bits).
 void ShadeUp(unsigned v) {
@@ -929,8 +929,8 @@ S04_EXPORT void __cdecl KickImage_Arc(void) {
 // +0x40 / +0x44 0x10000, +0x48 2, +9 8, +2 on.
 S04_EXPORT void __cdecl ChargeImage_Wait(void) {
     if (Owner()[0xB] != 1) return;
-    SetLong(Sc() + 0x40, 0x10000);
-    SetLong(Sc() + 0x44, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x10000);
     Sc()[0x48] = 2;
     Sc()[9] = 8;
     Inc(Sc()[2]);
@@ -1032,10 +1032,10 @@ S04_EXPORT void __cdecl AirRaidImage_Start(void) {
         Sc()[0x5E] = 0xC0;
         Sc()[0x5D] = 0xC0;
     }
-    SetLong(Sc() + 0x14, 0x80);
-    SetLong(Sc() + 0x20, -2);
-    SetLong(Sc() + 0x40, 0x10000);
-    SetLong(Sc() + 0x44, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x80);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -2);
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x10000);
     Sc()[0x48] = 2;
     Sc()[9] = 0x10;
     Inc(Sc()[2]);
@@ -1055,7 +1055,7 @@ S04_EXPORT void __cdecl AirRaidImage_Rise(void) {
     const unsigned char* const src = Source();
     CopyL(s + 0x34, src + 0x34);
     CopyL(Sc() + 0x38, src + 0x38);
-    SetWord(Sc() + 0x3E, (Word(src + 0x3E) + 0xC00) & 0xFFFF);
+    rv::Store<unsigned>(rv::Current<records::BattleTask>()->height_whole, (Word(src + 0x3E) + 0xC00) & 0xFFFF);
     MH_CALL(MagicFx_StepAround)(Owner(), 0x20000, 0);
     Inc(Sc()[2]);
 }
@@ -1067,8 +1067,8 @@ S04_EXPORT void __cdecl AirRaidImage_Turn(void) {
     Inc(Sc()[9]);
     unsigned char* s = Sc();
     if (s[9] != 4) return;
-    SetLong(s + 0x40, 0x8000);
-    SetLong(Sc() + 0x44, 0x18000);
+    rv::Store(rv::As<records::BattleTask>(s)->scale_x, 0x8000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x18000);
     s = Sc();
     const unsigned char b = s[0xB];
     if (b != 0) {
@@ -1097,10 +1097,10 @@ S04_EXPORT void __cdecl AirRaidImage_Dive(void) {
     Inc(Sc()[9]);
     unsigned char* s = Sc();
     if (s[9] != 0x14) return;
-    SetLong(s + 0x14, 0x48);
-    SetLong(Sc() + 0x20, -8);
-    SetLong(Sc() + 0x40, 0x10000);
-    SetLong(Sc() + 0x44, 0x10000);
+    rv::Store(rv::As<records::BattleTask>(s)->step_y, 0x48);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -8);
+    rv::Store(rv::Current<records::BattleTask>()->scale_x, 0x10000);
+    rv::Store(rv::Current<records::BattleTask>()->scale_y, 0x10000);
     Sc()[0x48] = 0;
     s = Sc();
     if (s[0xB] == 0) {
@@ -1144,7 +1144,7 @@ S04_EXPORT void __cdecl AirRaidImage_Bounce(void) {
     MH_CALL(MagicFx_StepAround)(Pointer(MagicS23_ActorSprite_addr), 0x2000, 0);
     RiseAndFall();
     s = Sc();
-    if (Long(s + 0x14) >= 0 || Long(s + 0x3C) >= Long(Source() + 0x3C)) return;
+    if (rv::As<records::BattleTask>(s)->step_y >= 0 || rv::As<records::BattleTask>(s)->height >= Long(Source() + 0x3C)) return;
     if (s[0xB] != 0) {
         Dec(Owner()[0xB]);
         MH_CALL(BattleTask_FreeCurrent)();
@@ -1203,8 +1203,8 @@ S04_EXPORT void __cdecl FlyingKickImage_Run(void) {
 // original 0x4A0C90: +0x14 0x80, +0x20 -16, +0x27 the owner's, +9 0x14, +0xA 7,
 // +2 on.
 S04_EXPORT void __cdecl FlyingKickImage_Start(void) {
-    SetLong(Sc() + 0x14, 0x80);
-    SetLong(Sc() + 0x20, -16);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x80);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -16);
     Sc()[0x27] = Owner()[0x27];
     Sc()[9] = 0x14;
     Sc()[0xA] = 7;
@@ -1231,8 +1231,8 @@ S04_EXPORT void __cdecl FlyingKickImage_Dive(void) {
         if (s[9] < 0x14) Inc(s[9]);
     }
     if (MH_CALL(MagicFx_NearSprite3D)(Source(), 0xC000) == 0) return;
-    SetLong(Sc() + 0x14, 0x48);
-    SetLong(Sc() + 0x20, -8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x48);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -8);
     Hit();
     Inc(Sc()[2]);
 }
@@ -1246,7 +1246,7 @@ S04_EXPORT void __cdecl FlyingKickImage_Bounce(void) {
     MH_CALL(MagicFx_StepAround)(Pointer(MagicS23_ActorSprite_addr), 0x2000, 0);
     RiseAndFall();
     unsigned char* s = Sc();
-    if (Long(s + 0x14) >= 0) {
+    if (rv::As<records::BattleTask>(s)->step_y >= 0) {
         if (Frame_Counter & 1) {
             Dec(s[9]);
             s = Sc();
@@ -1255,7 +1255,7 @@ S04_EXPORT void __cdecl FlyingKickImage_Bounce(void) {
         Inc(s[9]);
         s = Sc();
     }
-    if (Long(s + 0x14) >= 0 || Long(s + 0x3C) >= Long(Source() + 0x3C)) return;
+    if (rv::As<records::BattleTask>(s)->step_y >= 0 || rv::As<records::BattleTask>(s)->height >= Long(Source() + 0x3C)) return;
     s[0] = static_cast<unsigned char>(s[0] | 0x20);
     Sc()[0x5C] = 1;
     Sc()[0x5D] = 0;

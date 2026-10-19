@@ -482,7 +482,7 @@ void Spawn(const Pool& p, unsigned char kind) {
     Sprite_Current[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;
@@ -535,7 +535,7 @@ void ActorStart(const Pool& p) {
     sc[8] = rec[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(rec + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(rec + 0x38));
-    SetLong(Sprite_Current + 0x3C, Long(rec + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(rec + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Sprite_Current[0xB] = 0;
     Sprite_Current[9] = 8;

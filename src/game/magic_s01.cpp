@@ -137,7 +137,7 @@ void TakeOwnerPlace() {
     Sc()[8] = Owner()[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
 }
 
 // The effect CLUT row from the owner's sprite (its answer to +0x27), the
@@ -154,9 +154,9 @@ void TakeOwnerClut() {
 // height word +0x3E by the speed's low word.
 void Rise() {
     unsigned char* s = Sc();
-    AddL(s + 0x14, static_cast<std::uint32_t>(Long(s + 0x20)));
+    AddL(s + 0x14, static_cast<std::uint32_t>(rv::As<records::BattleTask>(s)->work_20));
     s = Sc();
-    SetWord(s + 0x3E, Word(s + 0x3E) + Word(s + 0x14));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(s)->height_whole, rv::As<records::BattleTask>(s)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(s)->step_y));
 }
 
 // At the top of the rise: over the source sprite (+0x34, +0x38), the height
@@ -187,7 +187,7 @@ void FadeHome(bool shrink) {
     if (s[0x5D] != 0x80) return;
     SetLong(s + 0x34, Long(Owner() + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(Owner() + 0x38));
-    SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(Owner() + 0x3C));
     Inc(Sc()[2]);
 }
 
@@ -277,8 +277,8 @@ S01_EXPORT void __cdecl NueStompChild_Leap(void) {
     if (MH_CALL(Sprite_ScriptTickOnce)() == 0) return;
     MH_CALL(BattleActor_PlaySound)(2, 0);
     EnemyAnimation(0xB);
-    SetLong(Sc() + 0x14, 0x100);
-    SetLong(Sc() + 0x20, -8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -8);
     Inc(Sc()[2]);
 }
 
@@ -287,7 +287,7 @@ S01_EXPORT void __cdecl NueStompChild_Leap(void) {
 S01_EXPORT void __cdecl NueStompChild_Rise(void) {
     Rise();
     unsigned char* const s = Sc();
-    if (Long(s + 0x14) != 0) return;
+    if (rv::As<records::BattleTask>(s)->step_y != 0) return;
     OverSource(s);
     Sc()[9] = 0x1F;
     Inc(Sc()[2]);
@@ -320,8 +320,8 @@ S01_EXPORT void __cdecl NueStompChild_Bounce(void) {
     if (TickThrice() == 0) return;
     MH_CALL(BattleActor_PlaySound)(2, 0);
     EnemyAnimation(0xB);
-    SetLong(Sc() + 0x14, 0x140);
-    SetLong(Sc() + 0x20, -0x40);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x140);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -0x40);
     Sc()[0xA] = 9;
     Inc(Sc()[2]);
 }
@@ -434,8 +434,8 @@ S01_EXPORT void __cdecl JumpChild_Run(void) {
 // step -0x10; +9 0, the shadow +0xA 0x10; +2 on.
 S01_EXPORT void __cdecl JumpChild_Begin(void) {
     Sc()[0x27] = Owner()[0x27];
-    SetLong(Sc() + 0x14, 0x100);
-    SetLong(Sc() + 0x20, -0x10);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x100);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -0x10);
     Sc()[9] = 0;
     Sc()[0xA] = 0x10;
     Inc(Sc()[2]);
@@ -450,7 +450,7 @@ S01_EXPORT void __cdecl JumpChild_Rise(void) {
         Dec(s[0xA]);
         s = Sc();
     }
-    if (Long(s + 0x14) != 0) return;
+    if (rv::As<records::BattleTask>(s)->step_y != 0) return;
     OverSource(s);
     Sc()[9] = 0xF;
     Inc(Sc()[2]);
@@ -471,8 +471,8 @@ S01_EXPORT void __cdecl JumpChild_Hover(void) {
     if (Sc()[9] != 0) return;
     MH_CALL(BattleActor_PlaySound)(2, 0);
     MH_CALL(Sound_PlayById)(0x203);
-    SetLong(Sc() + 0x14, 0x40);
-    SetLong(Sc() + 0x20, -8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 0x40);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, -8);
     const unsigned char* const o = Owner();
     const unsigned char* const t = Sc();
     const records::BattleTask* const tt = rv::AsConst<records::BattleTask>(t);

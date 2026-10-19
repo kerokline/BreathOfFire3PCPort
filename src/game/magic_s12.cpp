@@ -755,7 +755,7 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
     SC()[8] = src[8];
     rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
     rv::Store(rv::Current<records::BattleTask>()->z, Long(src + 0x38));
-    SetLong(SC() + 0x3C, Long(src + 0x3C));
+    rv::Store(rv::Current<records::BattleTask>()->height, Long(src + 0x3C));
     SC()[0xB] = 0;
     SC()[9] = 0x10;
     Bump(SC()[1]);
@@ -769,7 +769,7 @@ MS12_EXPORT void __cdecl Celerity_Start(void) {
         t[9] = 0;
         tt->x = tsc->x;
         tt->z = tsc->z;
-        SetLong(t + 0x3C, Long(sc + 0x3C));
+        rv::Store(tt->height, tsc->height);
         Bump(sc[0xB]);
     }
     unsigned char spark = 0;
@@ -993,9 +993,9 @@ void SparkFrame(unsigned base) {
 bool SparkFly() {
     if (Frame_Counter & 1) Bump(SC()[9]);
     unsigned char* sc = SC();
-    SetLong(sc + 0x14, AddL(Long(sc + 0x14), static_cast<std::uint32_t>(Long(sc + 0x20))));
+    rv::Store(rv::As<records::BattleTask>(sc)->step_y, AddL(rv::As<records::BattleTask>(sc)->step_y, static_cast<std::uint32_t>(rv::As<records::BattleTask>(sc)->work_20)));
     sc = SC();
-    SetWord(sc + 0x3E, Word(sc + 0x3E) + Word(sc + 0x14));
+    rv::Store<unsigned>(rv::As<records::BattleTask>(sc)->height_whole, rv::As<records::BattleTask>(sc)->height_whole + static_cast<std::uint16_t>(rv::As<records::BattleTask>(sc)->step_y));
     Drop(SC()[0xA]);
     return SC()[0xA] == 0;
 }
@@ -1007,8 +1007,8 @@ bool SparkFly() {
 MS12_EXPORT void __cdecl CeleritySpark_Rise(void) {
     SparkFrame(0x18);
     if (!SparkFly()) return;
-    SetLong(SC() + 0x14, -16);
-    SetLong(SC() + 0x20, 4);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, -16);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 4);
     SC()[0xA] = 8;
     Bump(SC()[2]);
 }
@@ -1057,8 +1057,8 @@ MS12_EXPORT void __cdecl CeleritySpark_Spin(void) {
         sc = SC();
     }
     SetLong(sc + 0x10, 8);
-    SetLong(SC() + 0x14, 8);
-    SetLong(SC() + 0x20, 8);
+    rv::Store(rv::Current<records::BattleTask>()->step_y, 8);
+    rv::Store(rv::Current<records::BattleTask>()->work_20, 8);
     Bump(SC()[2]);
 }
 
