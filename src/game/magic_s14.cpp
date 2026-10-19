@@ -426,7 +426,7 @@ S14_EXPORT void __cdecl Weretiger_End(void) {
     const unsigned actor = ActorIndex();
     Mem(at::kFlags)[0] |= 4;
     unsigned char* const record = PartyRecord(actor);
-    SetLong(record + 0x134, static_cast<std::int32_t>(U(Long(record + 0x134)) | 1u));
+    rv::Store<std::int32_t>(rv::As<records::PartyMember>(record)->flags_134, static_cast<std::int32_t>(U(static_cast<std::int32_t>(rv::As<records::PartyMember>(record)->flags_134)) | 1u));
     record[0x142] = 0;
     MH_CALL(Battle_SetTargetFlag40)(TargetByte());
     MH_CALL(BattleTask_FreeCurrent)();

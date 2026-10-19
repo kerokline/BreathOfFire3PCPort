@@ -560,9 +560,9 @@ S32_EXPORT void __cdecl EyeBeam_Task(void) {
 S32_EXPORT void __cdecl EyeBeam_Start(void) {
     const unsigned char* const slot = Pointer(BattleFlow_TaskCurrent_addr);
     const auto* caster = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(slot + 0x80))));
-    SetLong(Mem(EyeBeam_State_addr), Add(Long(caster + 0x34), 0x14000));
-    SetLong(Mem(EyeBeam_State_addr + 0x4), Long(caster + 0x38));
-    SetLong(Mem(EyeBeam_State_addr + 0x8), Add(Long(caster + 0x3C), 0x2C00000));
+    SetLong(Mem(EyeBeam_State_addr), Add(rv::As<records::SpriteHead>(caster)->x, 0x14000));
+    SetLong(Mem(EyeBeam_State_addr + 0x4), rv::As<records::SpriteHead>(caster)->z);
+    SetLong(Mem(EyeBeam_State_addr + 0x8), Add(rv::As<records::SpriteHead>(caster)->height, 0x2C00000));
     SetWord(Mem(EyeBeam_State_addr + 0x10), 0);
     SetWord(Mem(EyeBeam_State_addr + 0x12), 0);
     SetWord(Mem(EyeBeam_State_addr + 0x14), 0);

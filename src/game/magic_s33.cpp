@@ -402,7 +402,7 @@ S33_EXPORT void __cdecl Accession_ApplyB(void) {
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
         const std::int32_t z0 = tfirst->z;
         const std::int32_t cz = Long(Mem(BossSi_CentreZ_addr));
-        SetWord(first + 0x3E, U(ground) & 0xFFFF);
+        rv::Store<unsigned>(tfirst->height_whole, U(ground) & 0xFFFF);
         SetLong(Mem(at::kTasks + 0x34), Long(Mem(BossSi_CentreX_addr)));
         const std::int32_t x0 = tfirst->x;
         SetLong(Mem(at::kTasks + 0x38), cz);

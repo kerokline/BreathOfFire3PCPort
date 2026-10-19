@@ -1014,7 +1014,7 @@ S27_EXPORT void __cdecl WhelpBreathGlow_Draw(void) {
         s[8] = r[8];
         ts->x = tr->x;
         ts->z = tr->z;
-        rv::Store<unsigned>(ts->height_whole, Word(r + 0x3E));
+        rv::Store<unsigned>(ts->height_whole, tr->height_whole);
         MH_CALL(MagicFx_PushActorMatrix)();
         Call0(bof3::addr::WhelpBreathGlow_DrawFan);
         MH_CALL(Gte_PopMatrix)();

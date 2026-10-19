@@ -891,14 +891,14 @@ S23_EXPORT void __cdecl Quake_Start(void) {
     for (unsigned i = 0; i < 3; ++i) {
         if (PartyOf(static_cast<unsigned char>(i))[0] == 0) continue;
         const long ground = Ground(Slot(i));
-        Put(at::kQuakePartyZ + 2 * i, Word(PartyOf(static_cast<unsigned char>(i)) + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakePartyZ + 2 * i, rv::As<records::PartyMember>(PartyOf(static_cast<unsigned char>(i)))->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 8; ++i) {
         if (MH_CALL(Battle_ActorIsOut)(i + 3) != 0) continue;
         const unsigned char* const slot = Slot(3 + i);
         const records::BattleTask* const tslot = rv::AsConst<records::BattleTask>(slot);
         const std::int32_t x = tslot->x, z = tslot->z;
-        const std::uint16_t height = Word(EnemyOf(static_cast<unsigned char>(i + 3)) + 0x3E);
+        const std::uint16_t height = rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole;
         const long ground = MH_CALL(AreaMap_Elevation)(x, z);
         Put(at::kQuakeEnemyZ + 2 * i, height);
         Put(at::kQuakeEnemyUp + 2 * i, height - static_cast<short>(ground));
@@ -907,19 +907,19 @@ S23_EXPORT void __cdecl Quake_Start(void) {
         const unsigned char* const o = Mem(Sprite_Objects_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        Put(at::kQuakeSpriteZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakeSpriteZ + 2 * i, rv::As<records::SpriteObject>(o)->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 4; ++i) {
         const unsigned char* const o = Mem(Sprite_ObjectsExtra_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        Put(at::kQuakeExtraZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakeExtraZ + 2 * i, rv::As<records::SpriteObject>(o)->height_whole - static_cast<short>(ground));
     }
     for (unsigned i = 0; i < 20; ++i) {
         const unsigned char* const o = Mem(Effect_Objects_addr + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
         const long ground = Ground(o);
-        Put(at::kQuakeEffectZ + 2 * i, Word(o + 0x3E) - static_cast<short>(ground));
+        Put(at::kQuakeEffectZ + 2 * i, rv::As<records::EffectObject>(o)->height_whole - static_cast<short>(ground));
     }
     Walk(&Semi);
     std::memset(Mem(at::kQuakeLift), 0, 0xFF);
@@ -997,8 +997,8 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
         for (unsigned i = 0; i < 3; ++i) {
             if (PartyOf(static_cast<unsigned char>(i))[0] == 0) continue;
             const long ground = Ground(Slot(i));
-            SetWord(PartyOf(static_cast<unsigned char>(i)) + 0x3E,
-                    static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakePartyZ + 2 * i)));
+            rv::Store<unsigned>(rv::As<records::PartyMember>(PartyOf(static_cast<unsigned char>(i)))->height_whole,
+                                static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakePartyZ + 2 * i)));
         }
     } else {
         for (unsigned i = 0; i < 8; ++i) {
@@ -1008,32 +1008,32 @@ S23_EXPORT void __cdecl Quake_Heave(void) {
                 const short kept = Get(at::kQuakeEnemyZ + 2 * i);
                 const short ground = static_cast<short>(Ground(slot));
                 if (kept > ground) {
-                    SetWord(EnemyOf(static_cast<unsigned char>(i + 3)) + 0x3E, static_cast<std::uint16_t>(kept));
+                    rv::Store<unsigned>(rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole, static_cast<std::uint16_t>(kept));
                     continue;
                 }
             }
             const long ground = Ground(slot);
-            SetWord(EnemyOf(static_cast<unsigned char>(i + 3)) + 0x3E,
-                    static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEnemyUp + 2 * i)));
+            rv::Store<unsigned>(rv::As<records::BattleEnemy>(EnemyOf(static_cast<unsigned char>(i + 3)))->height_whole,
+                                static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEnemyUp + 2 * i)));
         }
     }
     for (unsigned i = 0; i < 30; ++i) {
         unsigned char* const o = Mem(Sprite_Objects_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeSpriteZ + 2 * i)));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeSpriteZ + 2 * i)));
     }
     for (unsigned i = 0; i < 4; ++i) {
         unsigned char* const o = Mem(Sprite_ObjectsExtra_addr + 0xA4 * i);
         if (o[0] == 0) continue;
         const long ground = Ground(o);
-        SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeExtraZ + 2 * i)));
+        rv::Store<unsigned>(rv::As<records::SpriteObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeExtraZ + 2 * i)));
     }
     for (unsigned i = 0; i < 20; ++i) {
         unsigned char* const o = Mem(Effect_Objects_addr + 0x80 * i);
         if (o[0] == 0 || o[5] != 0x17) continue;
         const long ground = Ground(o);
-        SetWord(o + 0x3E, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEffectZ + 2 * i)));
+        rv::Store<unsigned>(rv::As<records::EffectObject>(o)->height_whole, static_cast<unsigned>(static_cast<short>(ground) + Get(at::kQuakeEffectZ + 2 * i)));
     }
     const int odd = static_cast<int>(Frame_Counter & 1);
     unsigned char* const sc = Sc();
