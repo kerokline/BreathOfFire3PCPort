@@ -699,9 +699,9 @@ extern "C" void __cdecl Mode11_ObjectStart(void) {
     Sprite_Current[5] = 0;
     Sprite_Current[0xB] = ObjTrio[0x138];
     Field_State[0x128] = 3;
-    SetL(Key(Sprite_Current) + 0x34, L(at::kLeaderX));
-    SetL(Key(Sprite_Current) + 0x38, L(at::kLeaderZ));
-    SetL(Key(Sprite_Current) + 0x3C, L(at::kLeaderY));
+    SetL(Key(Sprite_Current) + 0x34, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x));
+    SetL(Key(Sprite_Current) + 0x38, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z));
+    SetL(Key(Sprite_Current) + 0x3C, static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->height));
     Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
 }
 
@@ -779,9 +779,9 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
     }
     unsigned char* const s = Sprite_Current;
     const U dir = s[8];
-    bool near = AbsDiff(L(at::kLeaderX) - L(at::kDirectionSteps + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
+    bool near = AbsDiff(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x) - L(at::kDirectionSteps + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
     if (near)
-        near = AbsDiff(L(at::kLeaderZ) - L(at::kDirectionSteps + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
+        near = AbsDiff(static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z) - L(at::kDirectionSteps + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
     if (!near) {
         ObjectStill(s, true);
         Sprite_Current[1] = 1;
@@ -1374,8 +1374,8 @@ extern "C" void __cdecl FieldTail_StoryWarp(void) {
             area += 0xFFFF;
             if (static_cast<std::int32_t>(flag) < 0xF6) break;
         }
-        AreaW2d_ReturnPoint = L(at::kLeaderX);
-        AreaW4d_ReturnZ = L(at::kLeaderZ);
+        AreaW2d_ReturnPoint = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->x);
+        AreaW4d_ReturnZ = static_cast<U>(rv::As<records::PartyMember>(ObjTrio)->z);
         AreaW4d_ReturnArea = Game_AreaNumber;
         SH_CALL(Field_ChangeArea)(area, 0x430000, 0x160000, 4);
         B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) | 0x40);

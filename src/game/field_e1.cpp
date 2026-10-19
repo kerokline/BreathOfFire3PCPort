@@ -325,26 +325,26 @@ extern "C" void __cdecl FieldPanel_DrawBlink(void) {
 // +0x3E, and not Field_WayBlocked(.., raised, the ground). al 1 open, 0 not.
 // Called by Field_SwapGather and Field_SwapExchange (event_leader.cpp).
 extern "C" unsigned char __cdecl Field_PathClear(long x, long z, unsigned raised) {
-    const std::int32_t leader_z = L(at::kLeaderZ);
-    const std::int32_t along_x = Abs32(static_cast<std::int32_t>(x) - L(at::kLeaderX)) >> 15;
+    const std::int32_t leader_z = rv::As<records::PartyMember>(ObjTrio)->z;
+    const std::int32_t along_x = Abs32(static_cast<std::int32_t>(x) - rv::As<records::PartyMember>(ObjTrio)->x) >> 15;
     const std::int32_t along_z = Abs32(static_cast<std::int32_t>(z) - leader_z) >> 15;
     const short xh = S16(static_cast<std::uint32_t>(x) >> 16), zh = S16(static_cast<std::uint32_t>(z) >> 16);
-    const short lxh = static_cast<short>(W(at::kLeaderX + 2)), lzh = static_cast<short>(W(at::kLeaderZ + 2));
+    const short lxh = static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->x_whole), lzh = static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->z_whole);
     const int sx = xh > lxh ? 1 : xh == lxh ? 0 : -1;
     const int sz = zh > lzh ? 1 : zh == lzh ? 0 : -1;
     std::int32_t offset = 0;
     for (std::int32_t i = 0; i <= along_x; ++i) {
-        const auto px = static_cast<long>(static_cast<std::uint32_t>(L(at::kLeaderX)) + static_cast<std::uint32_t>(offset));
+        const auto px = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x) + static_cast<std::uint32_t>(offset));
         const long ground = SH_CALL(MapView_GroundAt)(px, z);
-        if (Abs32(static_cast<short>(W(at::kLeaderHeight)) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
+        if (Abs32(static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->height_whole) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
         if (SH_CALL(Field_WayBlocked)(px, z, raised, ground)) return 0;
         offset = static_cast<std::int32_t>(static_cast<std::uint32_t>(offset) + (static_cast<std::uint32_t>(sx) << 15));
     }
     offset = 0;
     for (std::int32_t i = 0; i <= along_z; ++i) {
-        const auto pz = static_cast<long>(static_cast<std::uint32_t>(L(at::kLeaderZ)) + static_cast<std::uint32_t>(offset));
+        const auto pz = static_cast<long>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z) + static_cast<std::uint32_t>(offset));
         const long ground = SH_CALL(MapView_GroundAt)(x, pz);
-        if (Abs32(static_cast<short>(W(at::kLeaderHeight)) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
+        if (Abs32(static_cast<short>(rv::As<records::PartyMember>(ObjTrio)->height_whole) - S16(static_cast<std::uint32_t>(ground))) > 0x40) return 0;
         if (SH_CALL(Field_WayBlocked)(x, pz, raised, ground)) return 0;
         offset = static_cast<std::int32_t>(static_cast<std::uint32_t>(offset) + (static_cast<std::uint32_t>(sz) << 15));
     }
@@ -776,7 +776,7 @@ extern "C" unsigned char __cdecl Field_GatewayExit(void) {
         SetLong(At(AreaEntry_PendingZ_addr), static_cast<std::int32_t>(static_cast<std::uint32_t>(B(r + 2)) << 16));
         return 1;
     }
-    if (SH_CALL(Field_CellHasEvent)(W(at::kLeaderX + 2), W(at::kLeaderZ + 2))) return 0;
+    if (SH_CALL(Field_CellHasEvent)(rv::As<records::PartyMember>(ObjTrio)->x_whole, rv::As<records::PartyMember>(ObjTrio)->z_whole)) return 0;
     if (Field_ScriptFlags2 & 0x1000) return 0;
     const std::uint16_t area = Game_AreaNumber;
     for (std::uint32_t r = at::kGatewayExits; r < at::kGatewayExitsEnd; r += 8) {

@@ -51,7 +51,6 @@ unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 short SW(const unsigned char* p) { return static_cast<short>(Word(p)); }
-unsigned char* PtrAt(const unsigned char* cell) { return At(UL(cell)); }
 template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void StoreFloat(unsigned char* at, double v) {
@@ -169,11 +168,11 @@ extern "C" void __cdecl EffectKind30_Push(void) {
                 return;
             }
             s = rv::As<records::EffectObject>(S());
-            const int bytes = static_cast<signed char>(PtrAt(rv::Bytes(s) + 0x54)[0]) * 40;
+            const int bytes = static_cast<signed char>(At(s->frames)[0]) * 40;
             unsigned char* dst = At(at::kModelCopy);
             for (int i = bytes; i > 0; --i) {
                 s = rv::As<records::EffectObject>(S());
-                *dst++ = *PtrAt(rv::Bytes(s) + 0x50);
+                *dst++ = *At(s->script);
                 s->script = s->script + 1;
             }
             rv::Store<U>(rv::As<records::EffectObject>(S())->script, at::kModelCopy);
@@ -356,7 +355,7 @@ extern "C" void __cdecl EffectKind30_FreeCells(void) {
 // each, and the angles +0x10 / +0x12 / +0x14 zero. EffectKind30_Push's and
 // the engine's 0x46D710. PSX 0x8019E650 (gap67).
 extern "C" void __cdecl EffectKind30_ShardsInit(void) {
-    const unsigned char* face = PtrAt(S() + 0x50);
+    const unsigned char* face = At(rv::As<records::EffectObject>(S())->script);
     for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
         unsigned char* const r = At(EffectKind30_Shards_addr + i * at::kShardStride);
         SetWord(r + 0, static_cast<U>((SW(face + 8) + SW(face + 0x14) + SW(face + 0xE) + SW(face + 2)) >> 2));
@@ -386,7 +385,7 @@ extern "C" void __cdecl EffectKind30_ShardsInit(void) {
 // *(+0x50), read once). EffectKind30_Shatter's and the engine's 0x46D770.
 // PSX 0x8019E808 (gap67).
 extern "C" void __cdecl EffectKind30_ShardsStep(void) {
-    unsigned char* face = PtrAt(S() + 0x50);
+    unsigned char* face = At(rv::As<records::EffectObject>(S())->script);
     for (unsigned i = 0; i < at::kShardCount; ++i, face += at::kFaceStride) {
         unsigned char* const r = At(EffectKind30_Shards_addr + i * at::kShardStride);
         const unsigned vx = Word(r + 8);
