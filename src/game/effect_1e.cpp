@@ -52,6 +52,7 @@
 #include "game/effect_1e_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/sound.h"
 #include "hook/detour.h"
@@ -74,6 +75,7 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 
 unsigned char* S() { return Sprite_Current; }
+records::PartyMember* CurPm() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
 unsigned char& B(U address) { return At(address)[0]; }
 std::int32_t L(U address) { return Long(At(address)); }
 void SetL(U address, U v) { SetLong(At(address), static_cast<std::int32_t>(v)); }
@@ -98,7 +100,7 @@ void Run(const char* who, const unsigned long* table, unsigned entries) {
 // The Sprite_Objects record 0x939A1C names (0x7DEE80 + 0xA4 * n), unchecked in
 // the original: past the 30 records ours aborts (docs/effect_1e.md section 6).
 unsigned char* Picked(const char* who) {
-    const unsigned n = B(at::kSpriteIndex);
+    const unsigned n = Effect1a_PanelObject;
     if (n >= at::kSpriteCount)
         bof3::Fatal("%s: the sprite index 0x939A1C is %u, past the %u Sprite_Objects records - the original reads 0x%X "
                     "(docs/effect_1e.md section 6)",
@@ -109,8 +111,8 @@ unsigned char PickedKind(const char* who) { return Picked(who)[6]; }
 
 // The two record pointers the stages read through (0x52B250 sets them to image
 // tables; read as they are).
-unsigned char* RecordA() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(L(at::kRecordA)))); }
-unsigned char* RecordB() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(L(at::kRecordB)))); }
+unsigned char* RecordA() { return reinterpret_cast<unsigned char*>(Effect1a_PanelScript); }
+unsigned char* RecordB() { return reinterpret_cast<unsigned char*>(Effect1a_PanelSet); }
 
 // A message of the script pools: MessagePools + the u16 at `cell`.
 const unsigned char* Pool(U cell) { return At(at::kPools + Word(At(cell))); }
@@ -196,7 +198,7 @@ extern "C" void __cdecl LeaderPanel_S1Out(void) {
         if (s[6] == 0) {
             Game_Step = static_cast<unsigned short>(Game_Step + 1);
         } else {
-            B(at::kEff1State) = static_cast<unsigned char>(B(at::kEff1State) + 1);
+            Effect_Objects[0x81] = static_cast<unsigned char>(Effect_Objects[0x81] + 1);
             s[3] = 0;
         }
     }
@@ -261,7 +263,7 @@ extern "C" void __cdecl LeaderPanel_S2(void) {
 // original 0x528F70: LeaderPanel_Stage2Steps[0] - effect record 2's +1 up,
 // animation 1, +3 = 1.
 extern "C" void __cdecl LeaderPanel_S2Begin(void) {
-    B(at::kEff2State) = static_cast<unsigned char>(B(at::kEff2State) + 1);
+    Effect_Objects[0x101] = static_cast<unsigned char>(Effect_Objects[0x101] + 1);
     Animate(1);
     S()[3] = 1;
 }
@@ -275,15 +277,15 @@ extern "C" void __cdecl LeaderPanel_S2Wait(void) {
     if (Field_ConfirmButtons & pressed) {
         SetL(at::kEff2Word, 0);
         Sound(0x200);
-        B(at::kPoseWas) = 0xFF;
-        B(at::kPose) = 0xFF;
+        Effect1e_PoseWas = 0xFF;
+        Effect1e_Pose = 0xFF;
         Animate(2);
-        SetLong(S() + 0x38, 0x410000);
+        CurPm()->z = 0x410000;
         S()[9] = 0;
         S()[3] = 2;
-    } else if ((Field_CancelButtons & pressed) && B(at::kEff3State) == 0) {
+    } else if ((Field_CancelButtons & pressed) && Effect_Objects[0x181] == 0) {
         unsigned char* const s = S();
-        B(at::kEff2State) = 0;
+        Effect_Objects[0x101] = 0;
         s[2] = 1;
         S()[3] = 0;
     }
@@ -296,7 +298,7 @@ extern "C" void __cdecl LeaderPanel_S2Anim(void) {
     Tick();
     unsigned char* const s = S();
     if (Word(s + 0x58) != 6) return;
-    B(at::kEff0State) = static_cast<unsigned char>(B(at::kEff0State) + 1);
+    Effect_Objects[1] = static_cast<unsigned char>(Effect_Objects[1] + 1);
     s[0xB] = 0;
     S()[7] = 0;
     S()[3] = 3;
@@ -309,7 +311,7 @@ extern "C" void __cdecl LeaderPanel_S2Anim(void) {
 // let go or record 0's x out of (0x60000, 0x150000) ends it (+0xC 0, +0xB 1).
 // Then Sprite_ScriptTick.
 extern "C" void __cdecl LeaderPanel_S2Steer(void) {
-    if (B(at::kEff0State) == 3) {
+    if (Effect_Objects[1] == 3) {
         S()[2] = 3;
         S()[3] = 0;
         Tick();
@@ -353,11 +355,11 @@ extern "C" void __cdecl LeaderPanel_S3(void) {
 // record 4's +1 up, record 4's +6 = 1, +6 = 1, 0x6BC70C = 0, +7 = +0xB = 0,
 // animation 3, +3 up.
 extern "C" void __cdecl LeaderPanel_S3Begin(void) {
-    const auto sub = static_cast<unsigned char>(B(at::kEff1Sub) + 1);
-    B(at::kEff4State) = static_cast<unsigned char>(B(at::kEff4State) + 1);
+    const auto sub = static_cast<unsigned char>(Effect_Objects[0x82] + 1);
+    Effect_Objects[0x201] = static_cast<unsigned char>(Effect_Objects[0x201] + 1);
     unsigned char* const s = S();
-    B(at::kEff1Sub) = sub;
-    B(at::kEff4Mode) = 1;
+    Effect_Objects[0x82] = sub;
+    Effect_Objects[0x206] = 1;
     s[6] = 1;
     unsigned char* const t = S();
     SetL(at::kCounter, 0);
@@ -379,32 +381,32 @@ extern "C" void __cdecl LeaderPanel_S3Begin(void) {
 // Sprite_ScriptTick while the step +0x10 is above 0.
 extern "C" void __cdecl LeaderPanel_S3Run(void) {
     unsigned char* const s = S();
-    if (s[6] != 0 && B(at::kEff4State) == 3) {
+    if (s[6] != 0 && Effect_Objects[0x201] == 3) {
         s[6] = 0;
         Effect3Mode(1);
     }
-    if ((Input_Pressed & Sigma(0x40)) && B(at::kEff4State) == 0) {
+    if ((Input_Pressed & Sigma(0x40)) && Effect_Objects[0x201] == 0) {
         Sound(0x203);
         unsigned char* const t = S();
         t[3] = static_cast<unsigned char>(t[3] + 1);
-        B(at::kEff2State) = 0;
-        B(at::kEff0State) = 0;
-        B(at::kEff3State) = 7;
+        Effect_Objects[0x101] = 0;
+        Effect_Objects[1] = 0;
+        Effect_Objects[0x181] = 7;
         return;
     }
     const std::int32_t z = L(at::kEff0Z);
     if (z >= 0x3E8000) {
         Sound(0x203);
         unsigned char* const t = S();
-        B(at::kEff2State) = 0;
-        B(at::kEff0State) = 0;
+        Effect_Objects[0x101] = 0;
+        Effect_Objects[1] = 0;
         t[2] = 1;
         S()[3] = 0;
         return;
     }
     bool pose = true;
     const auto ground = static_cast<short>(SH_CALL(AreaMap_Elevation)(L(at::kEff0X), z));
-    if (static_cast<short>(Word(At(at::kEff0Height))) <= ground) {
+    if (static_cast<short>(Word(At(Effect_Objects_addr + 0x3e))) <= ground) {
         const unsigned r = static_cast<unsigned>(SH_CALL(Rand)()) & 0xF;
         if (static_cast<signed char>(RecordB()[0x11]) > static_cast<signed char>(r) && (Frame_Counter & 0xF) == 0) {
             const std::int32_t z2 = L(at::kEff0Z);
@@ -420,24 +422,24 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             return;
         }
         const long h = SH_CALL(AreaMap_Elevation)(L(at::kEff0X), L(at::kEff0Z));
-        SetWord(At(at::kEff0Height), static_cast<unsigned>(h));
+        SetWord(At(Effect_Objects_addr + 0x3e), static_cast<unsigned>(h));
     }
     SH_AT(void (__cdecl*)(), at::kHoldTest)();
     SH_AT(void (__cdecl*)(), at::kEffectsStep)();
-    B(at::kPoseWas) = B(at::kPose);
-    if (B(at::kEff0Hold) != 0) pose = false;
+    Effect1e_PoseWas = Effect1e_Pose;
+    if (Effect_Objects[0xb] != 0) pose = false;
     if (pose) {
         const unsigned held = Input_Held;
         unsigned animation;
         if (held & 0x8000) {
             unsigned char* const r = RecordB();
-            B(at::kPose) = 1;
+            Effect1e_Pose = 1;
             SetL(at::kEff0StepX, 0xFFFFF000u);
             SetL(at::kEff0StepY, 0x1000);
             SetL(at::kEff0StepZ, static_cast<U>(Long(r + 8)));
             animation = 6;
         } else if (held & 0x2000) {
-            B(at::kPose) = 1;
+            Effect1e_Pose = 1;
             SetL(at::kEff0StepX, 0x1000);
             SetL(at::kEff0StepY, 0x1000);
             SetL(at::kEff0StepZ, static_cast<U>(Long(RecordB() + 8)));
@@ -447,27 +449,27 @@ extern "C" void __cdecl LeaderPanel_S3Run(void) {
             SetL(at::kEff0StepX, 0);
             if (sloped != 0) {
                 unsigned char* const r = RecordB();
-                B(at::kPose) = 2;
+                Effect1e_Pose = 2;
                 SetL(at::kEff0StepY, 0x2000);
                 SetL(at::kEff0StepZ, static_cast<U>(Long(r + 8)));
                 animation = 4;
             } else {
                 unsigned char* const r = RecordB();
-                B(at::kPose) = 1;
+                Effect1e_Pose = 1;
                 SetL(at::kEff0StepY, 0x1000);
                 SetL(at::kEff0StepZ, static_cast<U>(Long(r + 4)));
                 animation = 3;
             }
         } else if (B(0x903850) != 0) {
             unsigned char* const r = RecordB();
-            B(at::kPose) = 2;
+            Effect1e_Pose = 2;
             SetL(at::kEff0StepX, 0);
             SetL(at::kEff0StepY, 0x1000);
             SetL(at::kEff0StepZ, static_cast<U>(Long(r + 8)));
             animation = 4;
         } else {
             unsigned char* const r = RecordB();
-            B(at::kPose) = 0;
+            Effect1e_Pose = 0;
             SetL(at::kEff0StepX, 0);
             SetL(at::kEff0StepY, 0);
             SetL(at::kEff0StepZ, static_cast<U>(Long(r)));
@@ -503,7 +505,7 @@ extern "C" void __cdecl LeaderPanel_S3Hold(void) {
 // original 0x529500: LeaderPanel_Stage3Steps[3] - unless Field_Kind2Hold or
 // effect record 3 busy: +2 = 1, +3 = 0.
 extern "C" void __cdecl LeaderPanel_S3End(void) {
-    if (Field_Kind2Hold != 0 || B(at::kEff3State) != 0) return;
+    if (Field_Kind2Hold != 0 || Effect_Objects[0x181] != 0) return;
     S()[2] = 1;
     S()[3] = 0;
 }
@@ -521,27 +523,28 @@ extern "C" void __cdecl LeaderPanel_S4(void) {
 // record 2's 0, record 4's +6 = 2, the camera's z the picked record's +0x38,
 // Music_FadeOut(8), record 3's +1 = 7, +3 up.
 extern "C" void __cdecl LeaderPanel_S4Begin(void) {
-    const auto state = static_cast<unsigned char>(B(at::kEff4State) + 1);
+    const auto state = static_cast<unsigned char>(Effect_Objects[0x201] + 1);
     unsigned char* const p = Picked("LeaderPanel_S4Begin");
-    B(at::kEff4State) = state;
-    B(at::kEff2State) = 0;
-    B(at::kEff4Mode) = 2;
-    Field_Kind2Z = Long(p + 0x38);
+    auto* const po = reinterpret_cast<records::SpriteObject*>(p);
+    Effect_Objects[0x201] = state;
+    Effect_Objects[0x101] = 0;
+    Effect_Objects[0x206] = 2;
+    Field_Kind2Z = po->z;
     SH_CALL(Music_FadeOut)(8);
     unsigned char* const s = S();
-    B(at::kEff3State) = 7;
+    Effect_Objects[0x181] = 7;
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
 
 // original 0x5295A0: LeaderPanel_Stage4Steps[1] - effect record 4 at 3: track
 // 0x29, record 3 mode 2, record 5's +1 up, +9 = 0, +3 up; Sprite_ScriptTick.
 extern "C" void __cdecl LeaderPanel_S4Music(void) {
-    if (B(at::kEff4State) == 3) {
+    if (Effect_Objects[0x201] == 3) {
         MusicTo(0x29);
         Effect3Mode(2);
-        const auto state = static_cast<unsigned char>(B(at::kEff5State) + 1);
+        const auto state = static_cast<unsigned char>(Effect_Objects[0x281] + 1);
         unsigned char* const s = S();
-        B(at::kEff5State) = state;
+        Effect_Objects[0x281] = state;
         s[9] = 0;
         unsigned char* const t = S();
         t[3] = static_cast<unsigned char>(t[3] + 1);
@@ -566,11 +569,11 @@ void Pull(const char* who) {
 extern "C" void __cdecl LeaderPanel_S4Pose(void) {
     if (S()[9] != 0) {
         unsigned char* const a = RecordA();
-        B(at::kPose) = 2;
+        Effect1e_Pose = 2;
         SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[7]))));
     } else {
         unsigned char* const a = RecordA();
-        B(at::kPose) = 1;
+        Effect1e_Pose = 1;
         SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[4]))));
     }
 }
@@ -592,15 +595,15 @@ extern "C" void __cdecl LeaderPanel_S4Blink(void) {
 // held lets go (the A record's +6, count down); 0x20 alone pulls or blinks,
 // pose 1 by its +4; nothing: the rest pose. Each way ends in 0x52B1B0.
 extern "C" void __cdecl LeaderPanel_S4Run(void) {
-    B(at::kPoseWas) = B(at::kPose);
+    Effect1e_PoseWas = Effect1e_Pose;
     if (L(at::kEff0Z) >= 0x3E8000) {
-        B(at::kEff4Mode) = 4;
-        B(at::kEff1State) = 4;
-        B(at::kEff0State) = 0;
+        Effect_Objects[0x206] = 4;
+        Effect_Objects[0x81] = 4;
+        Effect_Objects[1] = 0;
         unsigned char* const p = Picked("LeaderPanel_S4Run");
-        B(at::kEff5State) = 0;
-        B(at::kEff4State) = 1;
-        B(at::kEff3State) = 7;
+        Effect_Objects[0x281] = 0;
+        Effect_Objects[0x201] = 1;
+        Effect_Objects[0x181] = 7;
         p[1] = 6;
         Sound(0x203);
         MusicTo(0x2A);
@@ -612,20 +615,20 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
     if (held & 0xC000) {
         if (Input_Pressed & 0xC000) {
             unsigned char* const s = S();
-            B(at::kPose) = 2;
+            Effect1e_Pose = 2;
             s[9] = 8;
             SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[5]))));
             Animate(8);
-            B(at::kEff5Count) = static_cast<unsigned char>(B(at::kEff5Count) + 1);
+            Effect_Objects[0x28a] = static_cast<unsigned char>(Effect_Objects[0x28a] + 1);
         } else {
             unsigned char* const s = S();
             if (s[9] != 0) {
                 s[9] = static_cast<unsigned char>(s[9] - 1);
                 Tick();
-                B(at::kEff5Count) = static_cast<unsigned char>(B(at::kEff5Count) + 1);
+                Effect_Objects[0x28a] = static_cast<unsigned char>(Effect_Objects[0x28a] + 1);
             } else {
                 SetL(at::kEff5Frame, 0);
-                B(at::kPose) = 0;
+                Effect1e_Pose = 0;
                 Animate(7);
             }
         }
@@ -633,7 +636,7 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             Pull("LeaderPanel_S4Run");
             Animate(7);
             SH_CALL(LeaderPanel_S4Pose)();
-            B(at::kEff5Count) = static_cast<unsigned char>(B(at::kEff5Count) + 1);
+            Effect_Objects[0x28a] = static_cast<unsigned char>(Effect_Objects[0x28a] + 1);
             PoseSound();
             return;
         }
@@ -641,18 +644,18 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             SH_CALL(LeaderPanel_S4Blink)();
             SH_CALL(LeaderPanel_S4Pose)();
             Tick();
-            B(at::kEff5Count) = static_cast<unsigned char>(B(at::kEff5Count) + 1);
+            Effect_Objects[0x28a] = static_cast<unsigned char>(Effect_Objects[0x28a] + 1);
         }
         PoseSound();
         return;
     }
     if (held & 0x3000) {
         unsigned char* const a = RecordA();
-        B(at::kPose) = 0;
+        Effect1e_Pose = 0;
         SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(a[6]))));
         Picked("LeaderPanel_S4Run")[0x1C] = 0;
         Animate(0);
-        B(at::kEff5Count) = static_cast<unsigned char>(B(at::kEff5Count) - 1);
+        Effect_Objects[0x28a] = static_cast<unsigned char>(Effect_Objects[0x28a] - 1);
         PoseSound();
         return;
     }
@@ -661,16 +664,16 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
             Pull("LeaderPanel_S4Run");
         else
             SH_CALL(LeaderPanel_S4Blink)();
-        B(at::kPose) = 1;
+        Effect1e_Pose = 1;
         SetL(at::kEff5Frame, static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(RecordA()[4]))));
         Animate(7);
         Tick();
-        B(at::kEff5Count) = static_cast<unsigned char>(B(at::kEff5Count) + 1);
+        Effect_Objects[0x28a] = static_cast<unsigned char>(Effect_Objects[0x28a] + 1);
         PoseSound();
         return;
     }
     unsigned char* const p = Picked("LeaderPanel_S4Run");
-    B(at::kPose) = 0;
+    Effect1e_Pose = 0;
     SetL(at::kEff5Frame, 0);
     p[0x1C] = 0;
     Animate(7);
@@ -682,11 +685,12 @@ extern "C" void __cdecl LeaderPanel_S4Run(void) {
 // replaces it and sets the blink; sound 0x102, +9 = 8, +3 up;
 // Sprite_ScriptTick.
 extern "C" void __cdecl LeaderPanel_S4Best(void) {
-    if (B(at::kEff4State) == 4) {
+    if (Effect_Objects[0x201] == 4) {
         unsigned char* const p = Picked("LeaderPanel_S4Best");
+        auto* const po = reinterpret_cast<records::SpriteObject*>(p);
         unsigned char& best = B(at::kBestCounts + p[6]);
-        if (Word(p + 0x9C) > best) {
-            B(at::kBlink) = 1;
+        if (po->counter > best) {
+            Effect1e_Blink = 1;
             best = p[0x9C];
         }
         Sound(0x102);
@@ -769,7 +773,7 @@ extern "C" void __cdecl LeaderPanel_S4Count(void) {
     unsigned char* const p = Picked("LeaderPanel_S4Count");
     unsigned char* const s = S();
     if (static_cast<std::uint16_t>(s[9]) == Word(p + 0x9C)) {
-        if (B(at::kBlink) != 0) Sound(0x20D);
+        if (Effect1e_Blink != 0) Sound(0x20D);
         Sound(0x102);
         S()[9] = 4;
         unsigned char* const t = S();
@@ -804,7 +808,7 @@ extern "C" void __cdecl LeaderPanel_S4Take(void) {
     SH_CALL(FieldPanel_DrawBlink)();
     if (Input_Pressed & Sigma(0x60)) {
         unsigned char* const s = S();
-        B(at::kBlink) = 0;
+        Effect1e_Blink = 0;
         s[0xB] = 0;
         const unsigned char kind = PickedKind("LeaderPanel_S4Take");
         if (kind == 0x16) {
@@ -977,7 +981,7 @@ extern "C" void __cdecl LeaderPanel_S4Out(void) {
     } else {
         t[2] = 1;
         S()[3] = 0;
-        B(at::kEff1State) = static_cast<unsigned char>(B(at::kEff1State) + 1);
+        Effect_Objects[0x81] = static_cast<unsigned char>(Effect_Objects[0x81] + 1);
     }
     MusicTo(0x28);
     Sound(0x203);
@@ -998,9 +1002,9 @@ extern "C" void __cdecl LeaderPanel_S5(void) {
 // LeaderPanel_Stage6Steps[0] - Inventory_Remove(3, 0x90412E, 1); refused: the
 // two bytes 0x90412E / F cleared; then 0x52B200 (a tail jmp).
 extern "C" void __cdecl LeaderPanel_UseItem(void) {
-    if (SH_CALL(Inventory_Remove)(3, B(at::kItemA), 1) == 0) {
-        B(at::kItemA) = 0;
-        B(at::kItemA2) = 0;
+    if (SH_CALL(Inventory_Remove)(3, CharStats_ExtraItem, 1) == 0) {
+        CharStats_ExtraItem = 0;
+        CharStats_ExtraCount = 0;
     }
     SH_AT(void (__cdecl*)(), at::kUseItemEnd)();
 }
@@ -1008,7 +1012,7 @@ extern "C" void __cdecl LeaderPanel_UseItem(void) {
 // original 0x52A260 (PSX twin 0x801DC594): LeaderPanel_Stage5Steps[1] - effect
 // record 4 at 3: record 3 mode 3, +3 up; Sprite_ScriptTick.
 extern "C" void __cdecl LeaderPanel_S5Wait(void) {
-    if (B(at::kEff4State) == 3) {
+    if (Effect_Objects[0x201] == 3) {
         Effect3Mode(3);
         unsigned char* const s = S();
         s[3] = static_cast<unsigned char>(s[3] + 1);
@@ -1034,7 +1038,7 @@ namespace {
 // 0x52A2B0 / 0x52A310: effect record 4 at 3 - track 0x28, sound 0x203, record
 // 3 mode `mode`, +3 up; Sprite_ScriptTick.
 void WaitThenMode(unsigned mode) {
-    if (B(at::kEff4State) == 3) {
+    if (Effect_Objects[0x201] == 3) {
         MusicTo(0x28);
         Sound(0x203);
         Effect3Mode(mode);
@@ -1108,15 +1112,15 @@ unsigned char g_fish_panel_duck = 0;
 // effect record 3 idle: Music_FadeOut(0x10), sound 0x102, record 6's +1 up,
 // +6 = 0, +3 up. DIV-0132: the duck in place of the fade out.
 extern "C" void __cdecl LeaderPanel_S9Begin(void) {
-    if (B(at::kEff3State) != 0) return;
+    if (Effect_Objects[0x181] != 0) return;
     if (g_fish_panel_duck)
         sound::DuckMusic(0x10);
     else
         SH_CALL(Music_FadeOut)(0x10);
     Sound(0x102);
-    const auto state = static_cast<unsigned char>(B(at::kEff6State) + 1);
+    const auto state = static_cast<unsigned char>(Effect_Objects[0x301] + 1);
     unsigned char* const s = S();
-    B(at::kEff6State) = state;
+    Effect_Objects[0x301] = state;
     s[6] = 0;
     unsigned char* const t = S();
     t[3] = static_cast<unsigned char>(t[3] + 1);
@@ -1125,7 +1129,7 @@ extern "C" void __cdecl LeaderPanel_S9Begin(void) {
 // original 0x52A480 (PSX twin 0x801DC984): LeaderPanel_Stage9Steps[1] - effect
 // record 6 at 3: +3 up.
 extern "C" void __cdecl LeaderPanel_S9Wait(void) {
-    if (B(at::kEff6State) != 3) return;
+    if (Effect_Objects[0x301] != 3) return;
     unsigned char* const s = S();
     s[3] = static_cast<unsigned char>(s[3] + 1);
 }
@@ -1141,14 +1145,14 @@ extern "C" void __cdecl LeaderPanel_S9Menu(void) {
     const unsigned repeat = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xA000u);
     if (repeat & 0x8000) {
         Sound(0x100);
-        const auto c = static_cast<unsigned char>(B(at::kEff6Choice) - 1);
-        B(at::kEff6Choice) = c;
-        if (c & 0x80) B(at::kEff6Choice) = 2;
+        const auto c = static_cast<unsigned char>(Effect_Objects[0x306] - 1);
+        Effect_Objects[0x306] = c;
+        if (c & 0x80) Effect_Objects[0x306] = 2;
     } else if (repeat & 0x2000) {
         Sound(0x100);
-        const auto c = static_cast<unsigned char>(B(at::kEff6Choice) + 1);
-        B(at::kEff6Choice) = c;
-        if (c > 2) B(at::kEff6Choice) = 0;
+        const auto c = static_cast<unsigned char>(Effect_Objects[0x306] + 1);
+        Effect_Objects[0x306] = c;
+        if (c > 2) Effect_Objects[0x306] = 0;
     } else {
         const unsigned pressed = Input_Pressed;
         if (Field_CancelButtons & pressed) {
@@ -1157,20 +1161,20 @@ extern "C" void __cdecl LeaderPanel_S9Menu(void) {
             else
                 SH_CALL(Music_FadeIn)(0x10);
             Sound(0x106);
-            const unsigned char state = B(at::kEff6State);
+            const unsigned char state = Effect_Objects[0x301];
             if (state == 3 || state == 4)
-                B(at::kEff6State) = 5;
+                Effect_Objects[0x301] = 5;
             else if (state == 8)
-                B(at::kEff6State) = 0xB;
+                Effect_Objects[0x301] = 0xB;
             else if (state == 0xE)
-                B(at::kEff6State) = 0xF;
+                Effect_Objects[0x301] = 0xF;
             unsigned char* const s = S();
-            B(at::kEff6Hold) = 0;
+            Effect_Objects[0x30b] = 0;
             s[3] = 4;
         } else if (Field_ConfirmButtons & pressed) {
             Sound(0x103);
-            const unsigned char choice = B(at::kEff6Choice);
-            const unsigned char state = B(at::kEff6State);
+            const unsigned char choice = Effect_Objects[0x306];
+            const unsigned char state = Effect_Objects[0x301];
             // choice 0: 8 or 0xE; 1: 3, 4 or 0xE; 2 and above: 3, 4 or 8
             unsigned char to = 0;
             if (choice != 0 && (state == 3 || state == 4))
@@ -1181,20 +1185,20 @@ extern "C" void __cdecl LeaderPanel_S9Menu(void) {
                 to = 0xF;
             if (to != 0) {
                 Sound(0x102);
-                B(at::kEff6State) = to;
+                Effect_Objects[0x301] = to;
             }
             unsigned char* const s = S();
             s[3] = static_cast<unsigned char>(s[3] + 1);
         }
     }
     if (S()[3] != 2) return;
-    switch (B(at::kEff6Choice) & 3) {
+    switch (Effect_Objects[0x306] & 3) {
     case 0: Text(0x1D, 0x14, At(at::kPools + Word(At(at::kPoolWord20)))); break;
     case 1: Text(0x1D, 0x14, At(at::kPools + Word(At(at::kPoolWord40)))); break;
     case 2: Text(0x1D, 0x14, At(at::kPools + Word(At(at::kPoolWord5E)))); break;
     default: break;
     }
-    Hand(48u * B(at::kEff6Choice) + 0x58u, 0x2E);
+    Hand(48u * Effect_Objects[0x306] + 0x58u, 0x2E);
 }
 
 void Effect1E_Inject() {

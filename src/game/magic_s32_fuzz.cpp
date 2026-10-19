@@ -168,11 +168,15 @@ std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
 // The group's cells (magic_s32.cpp).
-constexpr std::uint32_t kS = 0x903850, kV = 0x9037A0;
-constexpr std::uint32_t kPool = 0x6A5680, kRecord = 0x84;
+// kV: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kS = 0x903850;
+// kPool: now WallOfFire_Pool (symbols.toml).
+constexpr std::uint32_t kRecord = 0x84;
 constexpr unsigned kPoolCount = 48;
-constexpr std::uint32_t kBeam = 0x6A9040, kBeamBytes = 0xC8;   // EyeBeam_State to the end of EyeBeam_SpiralPoints
-constexpr std::uint32_t kSparks = 0x6A9058, kSparkCell = 0x6A9098;
+// kBeam: now EyeBeam_State (symbols.toml).
+constexpr std::uint32_t kBeamBytes = 0xC8;  // EyeBeam_State to the end of EyeBeam_SpiralPoints
+// kSparks: now EyeBeam_Sparks (symbols.toml).
+// kSparkCell: now EyeBeam_SparkCurrent (symbols.toml).
 constexpr std::uint32_t kSpiralLast = 0x6A90A0, kSpiralNew = 0x6A90D4;
 
 // --- the fuzz's own memory ------------------------------------------------------
@@ -210,7 +214,7 @@ std::uint32_t LinkEffect(const std::uint32_t* a, std::uint32_t answer) {
 }
 // The calls that act on Sprite_Current: which task.
 std::uint32_t NoteCurrent(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(mh::at::kOwner))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_Owner_addr))));
     return answer;
 }
 // 0x494110 writes the projected vertex (two floats and a depth) at its second
@@ -282,18 +286,18 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},                  // Gfx_PacketNext
     {0, kPrimBytes},                // g_prims (filled in at start-up)
     {0, sizeof g_centre},           // g_centre (filled in at start-up)
-    {kV, 0x20},                     // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
     {kS, 0x10},                     // 0x903850..
-    {kPool, kPoolCount * kRecord},  // WallOfFire_Pool
-    {kBeam, kBeamBytes},            // EyeBeam_State, _Sparks, _SparkCurrent, _SpiralPoints
+    {WallOfFire_Pool_addr, kPoolCount * kRecord}, // WallOfFire_Pool
+    {EyeBeam_State_addr, kBeamBytes}, // EyeBeam_State, _Sparks, _SparkCurrent, _SpiralPoints
     {0x80E980, 0x20},               // Gfx_ClutStripSource row 26, the first sixteen
     {0x812980, 0x20},               // Gfx_ClutStrip row 26, the first sixteen
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Record(unsigned i) { return mh::Mem(kPool + i * kRecord); }
-unsigned char* Spark(unsigned i) { return mh::Mem(kSparks + 8 * i); }
+unsigned char* Record(unsigned i) { return mh::Mem(WallOfFire_Pool_addr + i * kRecord); }
+unsigned char* Spark(unsigned i) { return mh::Mem(EyeBeam_Sparks_addr + 8 * i); }
 unsigned char* ValidOwner(std::uint32_t v) { return v & 4 ? mh::SpriteRecord(v) : mh::TaskAt(v); }
 
 // The group's cells a recorder may move (the harness's case 14).
@@ -302,12 +306,12 @@ void Disturb(std::uint32_t h) {
     const unsigned char b = Byte(h >> 24);
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kV + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kS + 2 * (v % 8)), h >> 16); break;
     case 3: Record(v % kPoolCount)[(h >> 20) % 0x80] = b; break;   // never the owner at +0x80
-    case 4: SetWord(mh::Mem(kBeam + 2 * (v % 12)), h >> 16); break;
-    case 5: mh::Mem(kSparks + v % 0x40)[0] = b; break;
-    case 6: SetLong(mh::Mem(kSparkCell), static_cast<std::int32_t>(kSparks)); break;
+    case 4: SetWord(mh::Mem(EyeBeam_State_addr + 2 * (v % 12)), h >> 16); break;
+    case 5: mh::Mem(EyeBeam_Sparks_addr + v % 0x40)[0] = b; break;
+    case 6: SetLong(mh::Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(EyeBeam_Sparks_addr)); break;
     default: mh::Mem(kSpiralLast + v % 0x68)[0] = b; break;
     }
 }
@@ -323,13 +327,13 @@ void Seed(unsigned k) {
     Gfx_PacketNext = PrimAt(mh::Next());
     // The walk makes each live record the task and its +0x80 the owner a
     // recorder writes through: every record's owner a real slot or record.
-    for (unsigned i = 0; i < kPoolCount; ++i) mh::SetPointer(kPool + i * kRecord + 0x80, ValidOwner(mh::Next()));
+    for (unsigned i = 0; i < kPoolCount; ++i) mh::SetPointer(WallOfFire_Pool_addr + i * kRecord + 0x80, ValidOwner(mh::Next()));
     // Half the sparks dead; some at their last frame (radius 0x60).
     for (unsigned i = 0; i < 8; ++i) {
         if (mh::Half()) SetWord(Spark(i), 0);
         if (mh::Next() % 4 == 0) SetWord(Spark(i) + 2, 0x60);
     }
-    SetLong(mh::Mem(kSparkCell), static_cast<std::int32_t>(kSparks + 8 * (mh::Next() % 8)));
+    SetLong(mh::Mem(EyeBeam_SparkCurrent_addr), static_cast<std::int32_t>(EyeBeam_Sparks_addr + 8 * (mh::Next() % 8)));
     if (mh::Next() % 4 == 0) sc[0] = 0;
     switch (k) {
     // the dispatchers: inside their tables
@@ -351,7 +355,7 @@ void Seed(unsigned k) {
         Near(sc[9], 2);
         if (mh::Half()) Frame_Counter ^= 1u;
         break;
-    case kWallOfFireSpark_Wait: if (mh::Half()) mh::Pointer(mh::at::kOwner)[0xB] = Byte(mh::Half() ? 0x80 : 0x7F); break;
+    case kWallOfFireSpark_Wait: if (mh::Half()) mh::Pointer(BattleE2_Owner_addr)[0xB] = Byte(mh::Half() ? 0x80 : 0x7F); break;
     case kWallOfFireSpark_End: Near(sc[9], 0); break;
     case kWallOfFire_PoolAlloc:
         // all taken a quarter of the time, else the first free anywhere

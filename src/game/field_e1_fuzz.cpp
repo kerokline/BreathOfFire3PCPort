@@ -140,7 +140,7 @@ const sh::Clone kClones[] = {
 #undef FE1_ROW
 #undef FE1_LEAF
 enum : unsigned {
-    kHeader, kKindIcon, kKindRow, kTotal, kMessage, kShade, kBox3, kBox2, kHolds, kBlink, kPath, kFormAction, kScriptEnd,
+    kHeader, kKindIcon, kKindRow, kTotal, kMessage, kShade, kBox3, kBox2, kHolds, Effect1e_Blink_addr, kPath, kFormAction, kScriptEnd,
     kPassage, kJumpState, kJumpBegin, kJumpOut, kJumpOut0, kJumpOut1, kJumpOut2, kJumpOut3, kJumpOut4, kJumpAir, kJumpIn,
     kJumpIn0, kJumpIn1, kJumpIn2, kJumpIn3, kContentState, kContentTake, kContentEnd, kAreaRun, kGiveZenny, kAroundLarge,
     kAroundSide, kGateway, kPlaceSlots, kScriptTicks, kPlacesByList, kPlaceOffset, kPendingTurn, kPendingKind4, kPendingDrop,
@@ -150,7 +150,7 @@ static_assert(kCount == sizeof kClones / sizeof kClones[0], "one enum entry a cl
 
 // The .data tables the dispatchers read in place: to the next table's start.
 const sh::DataTable kTables[] = {
-    {at::kJumpSteps, 4}, {at::kJumpOutSteps, 5}, {at::kJumpInSteps, 4}, {at::kContentSteps, 2}, {at::kFormActions, 19},
+    {Field_JumpSteps_addr, 4}, {Field_JumpOutSteps_addr, 5}, {Field_JumpInSteps_addr, 4}, {Field_ContentSteps_addr, 2}, {Field_FormActions_addr, 19},
 };
 
 // --- the stand-ins ------------------------------------------------------------------
@@ -163,8 +163,8 @@ U g_code;
 // 0x1C bytes while the buffer has room (the real one commits it) - its callers
 // write through the answer.
 U FxSprite(const U*, U) {
-    unsigned char* const p = sh::Pointer(sh::at::kPacketNext);
-    if (p >= sh::Packets() && p + 0x1C + 0x40 <= sh::Packets() + 0x800) sh::SetPointer(sh::at::kPacketNext, p + 0x1C);
+    unsigned char* const p = sh::Pointer(Gfx_PacketNext_addr);
+    if (p >= sh::Packets() && p + 0x1C + 0x40 <= sh::Packets() + 0x800) sh::SetPointer(Gfx_PacketNext_addr, p + 0x1C);
     return Key(p);
 }
 // 0x52CED0: the total, drawn near the thresholds FieldPanel_DrawTotal
@@ -209,7 +209,7 @@ U FxTrigger(const U* a, U answer) {
 U FxGround(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 3 == 0) return answer;
-    const auto h = static_cast<std::uint16_t>(Word(sh::Mem(at::kLeaderHeight)) + (n >> 4) % 0x91 - 0x48);
+    const auto h = static_cast<std::uint16_t>(Word(sh::Mem(ObjTrio_addr + 0x3e)) + (n >> 4) % 0x91 - 0x48);
     return (answer & 0xFFFF0000u) | h;
 }
 // Field_WayBlocked: open (al 0) seven times in eight.
@@ -301,9 +301,9 @@ void Disturb(U h) {
     case 1: if (sh::InRegions(fs, 0x14C)) fs[0x139] = static_cast<unsigned char>(v % 30); break;
     case 2: if (sh::InRegions(fs, 0x14C)) { unsigned char* const o = Object(fs[0x139] % 30); o[5] = static_cast<unsigned char>(v); o[0xB] ^= 1; } break;
     case 3: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
-    case 4: B(at::kPendingCount) = static_cast<unsigned char>(v % 3); break;
-    case 5: SetLong(sh::Mem(at::kLeaderX + (v & 1) * 4), Long(sh::Mem(at::kLeaderX + (v & 1) * 4)) + static_cast<std::int32_t>(h >> 24) * 0x800 - 0x40000); break;
-    case 6: SetWord(sh::Mem(at::kLeaderHeight), Word(sh::Mem(at::kLeaderHeight)) + (v & 0x3F) - 0x20); break;
+    case 4: B(EventLeader_PendingCount_addr) = static_cast<unsigned char>(v % 3); break;
+    case 5: SetLong(sh::Mem(ObjTrio_addr + 0x34 + (v & 1) * 4), Long(sh::Mem(ObjTrio_addr + 0x34 + (v & 1) * 4)) + static_cast<std::int32_t>(h >> 24) * 0x800 - 0x40000); break;
+    case 6: SetWord(sh::Mem(ObjTrio_addr + 0x3e), Word(sh::Mem(ObjTrio_addr + 0x3e)) + (v & 0x3F) - 0x20); break;
     case 7: Sprite_Current = Member(v); break;
     case 8: Field_State = Member(v); break;
     case 9: if (sh::InRegions(sc, 0x10)) sc[8] = static_cast<unsigned char>(v & 7); break;
@@ -321,7 +321,7 @@ bool IsLeaderState(unsigned k) {
 
 void Seed(unsigned k) {
     Field_MemberCount = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 3 : sh::Next() % 4);
-    B(at::kPendingCount) = static_cast<unsigned char>(sh::Next() % 3);
+    B(EventLeader_PendingCount_addr) = static_cast<unsigned char>(sh::Next() % 3);
     if (IsLeaderState(k) || sh::Half()) {
         unsigned char* const m = sh::Often() ? ObjTrio : Member(sh::Next());
         Sprite_Current = m;
@@ -330,7 +330,7 @@ void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
     unsigned char* const fs = Field_State;
     sc[8] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 8 : sh::Next() % 12);
-    B(at::kPartySet) = static_cast<unsigned char>(sh::Next() % 19 | (sh::Half() ? 0x80 : 0));
+    B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(sh::Next() % 19 | (sh::Half() ? 0x80 : 0));
     fs[0x139] = static_cast<unsigned char>(sh::Next() % 30);
     switch (k) {
     case kTotal: break;
@@ -352,7 +352,7 @@ void Seed(unsigned k) {
         }
         break;
     }
-    case kBlink:
+    case Effect1e_Blink_addr:
         B(at::kBlink) = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
         break;
     case kPath:
@@ -379,7 +379,7 @@ void Seed(unsigned k) {
     case kJumpAir: {
         const U held = PickOf(0x1000, 0x4000, 0x5000, 0, 1u << (sh::Next() % 16), sh::Next());
         Field_InputHeld = static_cast<unsigned short>(held);
-        SetWord(sh::Mem(at::kButtonMap), sh::Half() ? held & 0xAFFF : sh::Next());
+        SetWord(sh::Mem(Gfx_UnpackScratch_addr + 0x1f000), sh::Half() ? held & 0xAFFF : sh::Next());
         B(at::kFlags2Lo) = static_cast<unsigned char>(B(at::kFlags2Lo) & (sh::Often() ? ~8u : 0xFFu));
         B(at::kFlagsLo) = static_cast<unsigned char>(B(at::kFlagsLo) & (sh::Often() ? ~8u : 0xFFu));
         break;
@@ -406,7 +406,7 @@ void Seed(unsigned k) {
     case kGateway: {
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & (sh::Often() ? 0xBFFF : 0xFFFF));
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & (sh::Often() ? 0xEFFF : 0xFFFF));
-        if (sh::Next() % 6 == 0) B(at::kPartySet) = static_cast<unsigned char>(0xC | (sh::Half() ? 0x80 : 0));
+        if (sh::Next() % 6 == 0) B(AreaW0b_PartySet_addr) = static_cast<unsigned char>(0xC | (sh::Half() ? 0x80 : 0));
         const U pick = sh::Next() % 4;
         if (pick == 0) Game_AreaNumber = 0xBD;
         else if (pick != 3) Game_AreaNumber = Word(sh::Mem(at::kGatewayExits + 8 * (sh::Next() % 10)));
@@ -414,8 +414,8 @@ void Seed(unsigned k) {
         break;
     }
     case kPlaceSlots: {
-        B(at::kLeaderList) = Member(sh::Next())[0x89];
-        B(at::kBattleBits) = static_cast<unsigned char>(sh::Next());
+        B(Cond_Flags_addr + 0xd2) = Member(sh::Next())[0x89];
+        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(sh::Next());
         const unsigned m = sh::Next() % 3;
         const std::int32_t x = Long(sh::Mem(at::kSlotPositions + 8 * m)), z = Long(sh::Mem(at::kSlotPositions + 8 * m + 4));
         if (sh::Often()) {
@@ -425,8 +425,8 @@ void Seed(unsigned k) {
         break;
     }
     case kPlacesByList:
-        for (unsigned i = 0; i < 3; ++i) B(at::kSecondList + i) = Member(sh::Often() ? i + sh::Next() % 2 : sh::Next())[0x89];
-        B(at::kBattleBits) = static_cast<unsigned char>(sh::Next());
+        for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd5 + i) = Member(sh::Often() ? i + sh::Next() % 2 : sh::Next())[0x89];
+        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(sh::Next());
         break;
     case kPlaceOffset:
         for (unsigned i = 0; i < 3; ++i) Member(i)[0x70] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
@@ -437,7 +437,7 @@ void Seed(unsigned k) {
     case kPendingRelease:
     case kPendingDrop: {
         const unsigned n = Field_MemberCount;
-        B(at::kPendingCount) = static_cast<unsigned char>(n > 1 ? sh::Next() % n : sh::Next() % 2);
+        B(EventLeader_PendingCount_addr) = static_cast<unsigned char>(n > 1 ? sh::Next() % n : sh::Next() % 2);
         for (unsigned i = 0; i < 3; ++i) {
             Member(i)[1] = static_cast<unsigned char>(sh::Often() ? 1 : sh::Next() % 4);
             Member(i)[8] = static_cast<unsigned char>(PickOf(5, 3, sh::Next() % 8));
@@ -459,7 +459,7 @@ void Args(unsigned k, U* a) {
         break;
     case kMessage: a[2] = sh::Half() ? (a[2] | 0xFFFF) : (a[2] & 0xFFFF0000u) | (sh::Next() % 0x200); break;
     case kPath: {
-        const U lx = static_cast<U>(Long(sh::Mem(at::kLeaderX))), lz = static_cast<U>(Long(sh::Mem(at::kLeaderZ)));
+        const U lx = static_cast<U>(Long(sh::Mem(ObjTrio_addr + 0x34))), lz = static_cast<U>(Long(sh::Mem(ObjTrio_addr + 0x38)));
         a[0] = sh::Half() ? lx + sh::Next() % 0x60000 - 0x30000 : PickOf(lx, lx + 0x8000, lx - 0x8000, lx + 0x7FFF);
         a[1] = sh::Half() ? lz + sh::Next() % 0x60000 - 0x30000 : PickOf(lz, lz + 0x8000, lz - 0x8000, lz + 0x10000);
         break;

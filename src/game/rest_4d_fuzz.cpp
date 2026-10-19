@@ -188,9 +188,9 @@ static_assert(kCount == 60, "the cut's 60 rows for R4D");
 // docs/rest_4d.md section 3).
 struct Dispatch { U base, by; unsigned count; };
 const Dispatch kDispatch[] = {
-    {0x45C8C0, at::kState, 3}, {0x45C8D0, at::kStep, 2},  {0x45C950, at::kStep, 5},  {0x45D040, at::kState, 5},
-    {0x45D080, at::kStep, 9},  {0x45D4D0, at::kStep2, 3}, {0x45D600, at::kStep2, 5}, {0x45DAA0, at::kStep, 9},
-    {0x45E050, at::kStep2, 3}, {0x45E180, at::kStep2, 5},
+    {0x45C8C0, Rest4b_BoardState_addr, 3}, {0x45C8D0, Rest4b_BoardStep_addr, 2},  {0x45C950, Rest4b_BoardStep_addr, 5},  {0x45D040, Rest4b_BoardState_addr, 5},
+    {0x45D080, Rest4b_BoardStep_addr, 9},  {0x45D4D0, Rest4c_Step_addr, 3}, {0x45D600, Rest4c_Step_addr, 5}, {0x45DAA0, Rest4b_BoardStep_addr, 9},
+    {0x45E050, Rest4c_Step_addr, 3}, {0x45E180, Rest4c_Step_addr, 5},
 };
 const Dispatch* DispatchOf(U base) {
     for (const Dispatch& d : kDispatch)
@@ -199,9 +199,9 @@ const Dispatch* DispatchOf(U base) {
 }
 
 const sh::DataTable kTables[] = {
-    {at::kDrawStates, 3},  {at::kDrawOpenSteps, 2},     {at::kDrawShowSteps, 5},  {at::kNameStates, 5},
-    {at::kSlotSteps, 9},   {at::kSlotRandomSteps, 3},   {at::kSlotEntrySteps, 5}, {at::kMemberSteps, 9},
-    {at::kMemberRandomSteps, 3}, {at::kMemberEntrySteps, 5},
+    {CommuDraw_States_addr, 3},  {CommuDraw_OpenSteps_addr, 2},     {CommuDraw_ShowSteps_addr, 5},  {CommuName_States_addr, 5},
+    {CommuName_SlotSteps_addr, 9},   {CommuName_SlotRandomSteps_addr, 3},   {CommuName_SlotEntrySteps_addr, 5}, {CommuName_MemberSteps_addr, 9},
+    {CommuName_MemberRandomSteps_addr, 3}, {CommuName_MemberEntrySteps_addr, 5},
 };
 
 unsigned g_clone;   // the round's clone's index in kAll
@@ -222,19 +222,19 @@ void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     const bool pick = kAll[g_clone].base == 0x45C960;
     switch (sh::DisturbCase(h, kMoves)) {
-    case 0: B(at::kStep) = static_cast<unsigned char>(v); break;
-    case 1: B(at::kStep2) = static_cast<unsigned char>(v); break;
-    case 2: B(at::kState) = static_cast<unsigned char>(v); break;
-    case 3: B(at::kCursor) = static_cast<unsigned char>(pick ? v % 8 : v); break;
-    case 4: B(at::kYes) = static_cast<unsigned char>(v & 0x10 ? v : v & 3); break;
-    case 5: B(at::kCount) = static_cast<unsigned char>(v & 0x10 ? v : v % 6); break;
-    case 6: SetW(at::kHeader, v % 4 == 0 ? 0xFFFFu : v % 4 == 1 ? 0xF1u : v % 4 == 2 ? 0xF0u : (h >> 16) & 0x1FF); break;
-    case 7: B(at::kEntryDone) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
+    case 0: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(v); break;
+    case 1: B(Rest4c_Step_addr) = static_cast<unsigned char>(v); break;
+    case 2: B(Rest4b_BoardState_addr) = static_cast<unsigned char>(v); break;
+    case 3: B(Rest4c_Count_addr) = static_cast<unsigned char>(pick ? v % 8 : v); break;
+    case 4: B(Rest4c_Cursor_addr) = static_cast<unsigned char>(v & 0x10 ? v : v & 3); break;
+    case 5: B(Rest4d_Count_addr) = static_cast<unsigned char>(v & 0x10 ? v : v % 6); break;
+    case 6: SetW(Rest4d_Header_addr, v % 4 == 0 ? 0xFFFFu : v % 4 == 1 ? 0xF1u : v % 4 == 2 ? 0xF0u : (h >> 16) & 0x1FF); break;
+    case 7: B(Rest4d_EntryDone_addr) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 8: B(at::kPicked + (h >> 16) % 4) = static_cast<unsigned char>(v % 10); break;
     case 9: B(at::kName + ((h >> 16) & 1 ? 0 : (h >> 17) % 0x28)) = static_cast<unsigned char>(v % 4); break;
-    case 10: SetW(at::kPressed, h >> 16); break;
-    case 11: B(at::kEntryColumn) = static_cast<unsigned char>(v); break;
-    case 12: B(at::kKeptTrack) = static_cast<unsigned char>(v); break;
+    case 10: SetW(Input_Pressed_addr, h >> 16); break;
+    case 11: B(Rest4d_EntryColumn_addr) = static_cast<unsigned char>(v); break;
+    case 12: B(Rest4d_KeptTrack_addr) = static_cast<unsigned char>(v); break;
     case 13: B(at::kSlotNames + ((h >> 16) & 1 ? (h >> 17) % 20 : (h >> 17) % 300)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 14: B(at::kRecords + at::kRecordStride * ((h >> 16) % 7) + (v & 1 ? 0xB : (h >> 20) % 5)) ^= static_cast<unsigned char>(v | 1); break;
     default: break;
@@ -288,13 +288,13 @@ U RandBelowAnswer(const U* a, U answer) {
 // count: N12, N64, N67).
 U NearCursor(const U*, U answer) {
     const U n = sh::Noise();
-    return n % 3 == 0 ? answer : (answer & 0xFFFFFF00u) | ((B(at::kCursor) + (n >> 8) % 3) & 0xFF);
+    return n % 3 == 0 ? answer : (answer & 0xFFFFFF00u) | ((B(Rest4c_Count_addr) + (n >> 8) % 3) & 0xFF);
 }
 // The header's stand-in: one call in four the header word moved after it
 // (CommuName_SlotConfirm reads it again: N19).
 U HeaderMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 4 == 0) SetW(at::kHeader, (n >> 8) % 3 == 0 ? 0xF1u : (n >> 8) % 3 == 1 ? 0xFFFFu : 0xF0u);
+    if (n % 4 == 0) SetW(Rest4d_Header_addr, (n >> 8) % 3 == 0 ? 0xF1u : (n >> 8) % 3 == 1 ? 0xFFFFu : 0xF0u);
     return answer;
 }
 // BareRet's stand-in: reads nothing; one call in four the first name byte moved
@@ -320,7 +320,7 @@ U NthMemberAnswer(const U*, U answer) {
 // the cursor; it calls no panel either).
 U MemberPanelMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 4 == 0 && kAll[g_clone].base != 0x45C960) B(at::kCursor) = static_cast<unsigned char>((n >> 8) % 8);
+    if (n % 4 == 0 && kAll[g_clone].base != 0x45C960) B(Rest4c_Count_addr) = static_cast<unsigned char>((n >> 8) % 8);
     return answer;
 }
 
@@ -331,14 +331,14 @@ U MemberPanelMove(const U*, U answer) {
 // fade: D33).
 U KeptTrackMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 2 == 0 && kAll[g_clone].base == 0x45CDF0) B(at::kKeptTrack) = static_cast<unsigned char>(n >> 8);
+    if (n % 2 == 0 && kAll[g_clone].base == 0x45CDF0) B(Rest4d_KeptTrack_addr) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 // Sound_PlayEffect: the step (CommuName_PanelReset counts it on after sound
 // 0x102: N07).
 U StepMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 2 == 0 && kAll[g_clone].base == 0x45D090) B(at::kStep) = static_cast<unsigned char>(n >> 8);
+    if (n % 2 == 0 && kAll[g_clone].base == 0x45D090) B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 // R4C's 0x45B2C0 (a cell): the column byte to 0..2 or any byte
@@ -346,14 +346,14 @@ U StepMove(const U*, U answer) {
 U ColumnMove(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 2 == 0 && kAll[g_clone].base == 0x45C7D0)
-        B(at::kYes) = static_cast<unsigned char>((n >> 8) & 0x10 ? n >> 16 : (n >> 16) % 3);
+        B(Rest4c_Cursor_addr) = static_cast<unsigned char>((n >> 8) & 0x10 ? n >> 16 : (n >> 16) % 3);
     return answer;
 }
 // R4E's 0x45F1A0 (the entry's box): the answer byte to 0 or not
 // (CommuName_SlotEntryOut reads it again at the slide's end: N47).
 U EntryDoneMove(const U*, U answer) {
     const U n = sh::Noise();
-    if (n % 2 == 0 && kAll[g_clone].base == 0x45D7C0) B(at::kEntryDone) = static_cast<unsigned char>((n >> 8) & 1 ? 0 : n >> 16);
+    if (n % 2 == 0 && kAll[g_clone].base == 0x45D7C0) B(Rest4d_EntryDone_addr) = static_cast<unsigned char>((n >> 8) & 1 ? 0 : n >> 16);
     return answer;
 }
 
@@ -421,23 +421,23 @@ void SeedButtons() {
     SetW(Key(&Field_ConfirmButtons), confirm);
     SetW(Key(&Field_CancelButtons), cancel);
     const U keys = PickOf(0x8000, 0x2000, 0xA000, 0x1000, 0x4000, 0, sh::Next() & 0xF000);
-    SetW(at::kPressed, PickOf(confirm, cancel, confirm | cancel, 0, 0, keys, keys, keys, sh::Next() & 0xFFFF));
+    SetW(Input_Pressed_addr, PickOf(confirm, cancel, confirm | cancel, 0, 0, keys, keys, keys, sh::Next() & 0xFFFF));
     SetW(Key(&Input_Held), PickOf(0, 0, sh::Next()));
 }
 
 void SeedCommu() {
-    B(at::kState) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
-    B(at::kStep) = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 6, 7, 8, sh::Next()));
-    B(at::kStep2) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
-    B(at::kHow) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-    B(at::kAgain) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-    B(at::kCursor) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5, 6, 7, 0xFF, 0xFE, 0x80, sh::Next()));
-    B(at::kYes) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 0xFF, sh::Next()));
-    B(at::kCount) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xC5, 0xC7, 0xC8, 0xFF, sh::Next()));
-    SetW(at::kHeader, PickOf(0xF0, 0xF1, 0xF1, 0xFFFF, 0xFFFF, sh::Next() % 0x200));
-    B(at::kEntryDone) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(Rest4b_BoardState_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
+    B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 6, 7, 8, sh::Next()));
+    B(Rest4c_Step_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, sh::Next()));
+    B(Rest4b_BoardFlag_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(Rest4d_Again_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(Rest4c_Count_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 5, 6, 7, 0xFF, 0xFE, 0x80, sh::Next()));
+    B(Rest4c_Cursor_addr) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 0xFF, sh::Next()));
+    B(Rest4d_Count_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xC5, 0xC7, 0xC8, 0xFF, sh::Next()));
+    SetW(Rest4d_Header_addr, PickOf(0xF0, 0xF1, 0xF1, 0xFFFF, 0xFFFF, sh::Next() % 0x200));
+    B(Rest4d_EntryDone_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     B(at::kName) = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
-    B(at::kTitleB) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, sh::Next()));
+    B(Rest4d_TitleB_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, sh::Next()));
     // the draw's picks: small values, so that a category's picks can all be equal
     for (unsigned i = 1; i < 0x28; ++i) B(at::kName + i) = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next());
     for (unsigned c = 0; c < 4; ++c) B(at::kPicked + c) = static_cast<unsigned char>(sh::Next() % 10);
@@ -446,7 +446,7 @@ void SeedCommu() {
     // the record pointer: one of the scratch's, its +5 a slot mostly
     unsigned char* const record = sh::Scratch(0);
     record[5] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 60 : sh::Next());
-    sh::SetPointer(at::kPointer, record);
+    sh::SetPointer(Rest4d_Pointer_addr, record);
 }
 
 // The 60 slot cells half in use; the seven records' list bit half set.
@@ -484,7 +484,7 @@ void Seed(unsigned k) {
     SeedMessages();
     if (const Dispatch* d = DispatchOf(kAll[k].base)) B(d->by) = static_cast<unsigned char>(sh::Next() % d->count);
     // CommuName_SlotEntryOut reads the answer again only at the slide's end (+1 to 4): N47
-    if (kAll[k].base == 0x45D7C0 && sh::Half()) B(at::kCount) = 3;
+    if (kAll[k].base == 0x45D7C0 && sh::Half()) B(Rest4d_Count_addr) = 3;
 }
 
 // The helpers' arguments: coordinates at boundaries or random words; bytes at
@@ -527,11 +527,11 @@ void Args(unsigned k, U* a) {
 // mean ours does not move the step, or moves more.
 void __cdecl SlotEntryAbandoned() {
     ::CommuName_SlotEntry();
-    B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) - 1);
+    B(Rest4c_Step_addr) = static_cast<unsigned char>(B(Rest4c_Step_addr) - 1);
 }
 void __cdecl MemberEntryAbandoned() {
     ::CommuName_MemberEntry();
-    B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) - 1);
+    B(Rest4c_Step_addr) = static_cast<unsigned char>(B(Rest4c_Step_addr) - 1);
 }
 
 }  // namespace

@@ -39,15 +39,15 @@ constexpr std::uint32_t kJumpIn3 = bof3::addr::Leader_HopFall;         // () (a 
 // --- data ---
 // The .data dispatch tables this group's dispatchers read in place (entries to
 // the next table's start; the index is a whole byte, unchecked).
-constexpr std::uint32_t kJumpSteps = 0x66099C;        // 4: by Sprite_Current +2 (Field_JumpState)
-constexpr std::uint32_t kJumpOutSteps = 0x6609AC;     // 5: by +3 (Field_JumpOut)
-constexpr std::uint32_t kJumpInSteps = 0x6609C0;      // 4: by +3 (Field_JumpIn)
-constexpr std::uint32_t kContentSteps = 0x660A1C;     // 2: by +2 (Field_ContentState)
-constexpr std::uint32_t kFormActions = 0x660A44;      // 19: by the party set 0x90412C & 0x7F (Field_FormActionState)
+// kJumpSteps: now Field_JumpSteps (symbols.toml). 4: by Sprite_Current +2 (Field_JumpState)
+// kJumpOutSteps: now Field_JumpOutSteps (symbols.toml). 5: by +3 (Field_JumpOut)
+// kJumpInSteps: now Field_JumpInSteps (symbols.toml). 4: by +3 (Field_JumpIn)
+// kContentSteps: now Field_ContentSteps (symbols.toml). 2: by +2 (Field_ContentState)
+// kFormActions: now Field_FormActions (symbols.toml). 19: by the party set 0x90412C & 0x7F (Field_FormActionState)
 constexpr unsigned kFormActionCount = 19;             // Field_EncounterAreas 0x660A90 follows: data, not code
 // Constant tables read in place.
 constexpr std::uint32_t kKindNames = 0x656FF8;        // 22-byte records by kind: the 16-byte name first
-constexpr std::uint32_t kKindName16 = 0x669CD8;       // the 16-byte name of kind 0x16
+// kKindName16: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name of kind 0x16
 constexpr std::uint32_t kCountFormat = 0x64E324;      // the sprintf format of a count
 constexpr std::uint32_t kTotalFormat = 0x64ADD8;      // the sprintf format of the total
 constexpr std::uint32_t kZennyFormat = 0x5E10C0;      // Area08_MessageFormat: the zenny amount's format
@@ -59,31 +59,31 @@ constexpr std::uint32_t kGateway189 = 0x660B08;       // 2 x 3 bytes: area, x, z
 constexpr std::uint32_t kPendingStates = 0x660B70;    // 5 x 4 bytes: a member's state bytes +1..+4 by kind
 constexpr std::uint32_t kFormationAnims = 0x660B3C;   // BattleFormation_Anims: a byte by the formation 0x904AAC
 // Cells.
-constexpr std::uint32_t kStyle = 0x903A5A;            // u8: the window style Menu_DrawBox is given
+// kStyle: now BattleDraw_Colour (symbols.toml). u8: the window style Menu_DrawBox is given
 constexpr std::uint32_t kKindCounts = 0x9040EC;       // 32 bytes: a count by kind (kKindTotal's)
-constexpr std::uint32_t kRank = 0x9045F4;             // u8: the total's rank (0..12), written by FieldPanel_DrawTotal
+// kRank: now FieldE1_Rank (symbols.toml). u8: the total's rank (0..12), written by FieldPanel_DrawTotal
 constexpr std::uint32_t kBlink = 0x939A28;            // u8: FieldPanel_DrawBlink draws while it is not 0
 constexpr std::uint32_t kItemIds = 0x904154;          // Inventory_IdLists[0]: 128 ids
 constexpr std::uint32_t kItemCounts = 0x904354;       // Inventory_CountLists[0]: 128 counts
 constexpr std::uint32_t kObjectFlags = 0x9040CC;      // the flag bank of the field objects' +5 (event-ops.md)
-constexpr std::uint32_t kContentCount = 0x904140;     // s32: one more per field object's content taken
-constexpr std::uint32_t kPartySet = 0x90412C;         // u8, & 0x7F the loaded party set
+// kContentCount: now FieldE1_ContentCount (symbols.toml). s32: one more per field object's content taken
+// kPartySet: now AreaW0b_PartySet (symbols.toml). u8, & 0x7F the loaded party set
 constexpr std::uint32_t kMessageWord = 0x7DEE48;      // u16: the open message's id (Msg_OpenSystem writes it)
 constexpr std::uint32_t kButtonMap = 0x903580;        // u16: a button map word of the save (input-script.md section 4)
 constexpr std::uint32_t kCellX = 0x903850;            // u16: the cell searched (x), and the save of the members' x / z
 constexpr std::uint32_t kCellZ = 0x903852;            // u16: its z
-constexpr std::uint32_t kExitArea = 0x937F82;         // u16: the area an exit leads to
-constexpr std::uint32_t kExitKind = 0x905B88;         // u8: the exit's kind (4 here)
+// kExitArea: now AreaW0b_Place (symbols.toml). u16: the area an exit leads to
+// kExitKind: now AreaEntry_PendingFlags (symbols.toml). u8: the exit's kind (4 here)
 constexpr std::uint32_t kExitX = 0x903860;            // s32: the exit's x (16.16)
-constexpr std::uint32_t kExitZ = 0x90384C;            // s32: its z
+// kExitZ: now AreaEntry_PendingZ (symbols.toml). s32: its z
 constexpr std::uint32_t kSlotPositions = 0x7E06E0;    // 4 x (x, z) dwords: a party slot's placed position
-constexpr std::uint32_t kLeaderList = 0x904062;       // u8: the leader's id (the party list's first)
+// kLeaderList: now Cond_Flags[0xd2] (symbols.toml). u8: the leader's id (the party list's first)
 constexpr std::uint32_t kSecondList = 0x904065;       // 3 bytes: the second party list
-constexpr std::uint32_t kBattleBits = 0x904AE5;       // u8: bit 1 the camera left alone, bit 7 the drop-in
+// kBattleBits: now BattleTurnSteps_MusicFlags (symbols.toml). u8: bit 1 the camera left alone, bit 7 the drop-in
 constexpr std::uint32_t kFormation = 0x904AAC;        // u8: the event battle's formation
-constexpr std::uint32_t kDropEntry = 0x92BF18;        // u8: Party_DropIn's entry
-constexpr std::uint32_t kPendingFlag = 0x904EF0;      // u8: a pending jump runs (Field_PendingJump)
-constexpr std::uint32_t kPendingCount = 0x904EF2;     // u8: the member the pending jump is at
+// kDropEntry: now BossH_LeaderPick (symbols.toml). u8: Party_DropIn's entry
+// kPendingFlag: now EventLeader_PendingFlag (symbols.toml). u8: a pending jump runs (Field_PendingJump)
+// kPendingCount: now EventLeader_PendingCount (symbols.toml). u8: the member the pending jump is at
 constexpr std::uint32_t kFlags2Lo = 0x905BA4;         // Field_ScriptFlags2's low byte, tested as a byte
 constexpr std::uint32_t kFlagsLo = 0x9039A2;          // Field_ScriptFlags' low byte, tested as a byte
 constexpr std::uint32_t kPools = 0x803580;            // MessagePools: the script pool, u16 offsets by id

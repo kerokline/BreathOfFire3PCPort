@@ -313,8 +313,8 @@ void Leader(std::int32_t x, std::int32_t z) {
     const std::int32_t dz = static_cast<std::int32_t>(sh::Next() % 6) - 2;
     const U fx = PickOf(0, 0x8000, 0xFFFF, 0x7FFF, sh::Next() & 0xFFFF);
     const U fz = PickOf(0, 0x8000, 0xFFFF, 0x7FFF, sh::Next() & 0xFFFF);
-    SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>((static_cast<U>(x + dx) << 16) | fx));
-    SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>((static_cast<U>(z + dz) << 16) | fz));
+    SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>((static_cast<U>(x + dx) << 16) | fx));
+    SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>((static_cast<U>(z + dz) << 16) | fz));
 }
 
 // The party for EffectKind18Sub42_MemberNear: a count below four, records in
@@ -338,7 +338,7 @@ void Party() {
 // 0x700 bytes below 0x100, so the texture dword they index stays in the 8 KiB
 // compared; the items' marks 0 half the time.
 void MarkArea() {
-    unsigned char* const block = Mem(sh::at::kAreaBlock);
+    unsigned char* const block = Mem(AreaMap_Header_addr);
     block[0] = static_cast<unsigned char>(1 + sh::Next() % 8);
     block[1] = static_cast<unsigned char>(1 + sh::Next() % 8);
     SetWord(block + 2, sh::Next() % 0x20);
@@ -460,7 +460,7 @@ void Disturb(U h) {
     case 1: SetWord(s + 0x30, (v & 1) ? 0u : v >> 1); break;
     case 2: SetWord(s + 0x3E, (v & 1) ? 0x80u : v >> 1); break;
     case 3: Cond_ByteFE = static_cast<unsigned char>((v & 1) ? 0x20u : v >> 1); break;
-    case 4: SetLong(Mem((v & 1) ? at::kLeaderX : at::kLeaderZ), static_cast<std::int32_t>(v)); break;
+    case 4: SetLong(Mem((v & 1) ? (ObjTrio_addr + 0x34) : (ObjTrio_addr + 0x38)), static_cast<std::int32_t>(v)); break;
     case 5: s[0xB] = static_cast<unsigned char>(v); break;
     default: break;
     }

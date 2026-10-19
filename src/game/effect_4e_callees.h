@@ -24,12 +24,12 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matr
                                                    // (effect_3a_callees.h kMatrixVector)
 
 // --- the image's cells ---------------------------------------------------------
-constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height (three dwords)
+// kLeaderPoint: now ObjTrio[0x34] (symbols.toml). ObjTrio + 0x34: the leader's x, z, height (three dwords)
 constexpr std::uint32_t kCounter = 0x903848;       // u8: the chapter's count (scenario_harness at::kCounter)
 constexpr rdata::Const kHalf{0x5C41B8};          // float (.rdata): the trail's half-width (effect_3a_callees.h kHalf)
 
 // --- kind 0xA0's two pools (nothing else in the image reads them) --------------
-constexpr std::uint32_t kSparks = 0x6762B0;        // EffectKindA0_Sparks: 16 sparks of 0x18 (EffectKind64's form)
+// kSparks: now EffectKindA0_Sparks (symbols.toml). EffectKindA0_Sparks: 16 sparks of 0x18 (EffectKind64's form)
 constexpr unsigned kSparkCount = 0x10;
 constexpr std::uint32_t kSparkStride = 0x18;
 constexpr std::uint32_t kShards = 0x676430;        // EffectKindA0_Shards: 32 shards of 0x2C, two runs of 16

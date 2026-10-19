@@ -30,7 +30,7 @@ constexpr std::uint32_t kLineAngle = bof3::addr::DamageScratch + 4;    // the an
 constexpr std::uint32_t kLineShade = bof3::addr::DamageScratch + 8;    // the next shade, a dword (its byte read)
 // Kind 0x9E's wall vector (three longs): its state 2 writes the negated
 // half-extent, its state 3 bounces the third between +/- the record's +0x14.
-constexpr std::uint32_t k9EWall = 0x6762A0;
+// k9EWall: now Rest3f_9EWall (symbols.toml).
 constexpr unsigned k9EWallSize = 0xC;
 
 // --- kinds 0xA1 / 0xA3: a sprite broken into pixels ---------------------------------
@@ -39,9 +39,9 @@ constexpr unsigned k9EWallSize = 0xC;
 // (0x655220), so ours aborts past 3.
 constexpr std::uint32_t kPixTable = 0x655208;
 constexpr unsigned kPixRecords = 3;
-constexpr std::uint32_t kPixCursor = 0x6769B0;      // unsigned short *: the next pixel of the read-back
-constexpr std::uint32_t kPartCursor = 0x6769B4;     // unsigned char *: the next free particle
-constexpr std::uint32_t kPartCount = 0x6769B8;      // unsigned short: the particles made
+// kPixCursor: now Rest3f_PixCursor (symbols.toml). unsigned short *: the next pixel of the read-back
+// kPartCursor: now Rest3f_PartCursor (symbols.toml). unsigned char *: the next free particle
+// kPartCount: now Rest3f_PartCount (symbols.toml). unsigned short: the particles made
 constexpr std::uint32_t kPixIndex = 0x6769BA;       // unsigned char: the capture record (both captures write 1)
 constexpr std::uint32_t kPixCellsSize = 0xC;
 // The read-back buffer is EffectKind30_Shards (0x92BF80, shared scratch); the

@@ -73,12 +73,12 @@ void Seed(unsigned k) {
         break;
     case kSpawnEffect:
         // a member id the eight-byte table holds, mostly
-        if (ah::Often()) ah::Mem(at::kPartyThird)[0] = static_cast<unsigned char>(ah::Next() % 8);
+        if (ah::Often()) ah::Mem(Cond_Flags_addr + 0xd4)[0] = static_cast<unsigned char>(ah::Next() % 8);
         break;
     case kDimBackdrop: {
         // the two flags in all four ways (the recorder answers Flags_Test;
         // the bits are set for the record), and the chain
-        unsigned char* const flags = ah::Mem(at::kInitFlags + 2);
+        unsigned char* const flags = ah::Mem(Cond_Flags_addr + 0x70 + 2);
         flags[0] = static_cast<unsigned char>((flags[0] & ~0x18u) | (ah::Next() & 0x18u));
         Chain();
         break;

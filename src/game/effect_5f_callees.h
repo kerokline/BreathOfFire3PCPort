@@ -15,11 +15,14 @@ constexpr std::uint32_t kObjTrioStride = 0x14C;   // ObjTrio's records
 constexpr unsigned kObjTrioCount = 3;
 
 // --- Cond_Flags' story row (Flags_Test's bank) ---------------------------------
-constexpr std::uint32_t kStoryFlags = 0x904030;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
 
 // --- the vertex scratch: Prim_VertexScratch's four vertices of three s16 and a
 // pad (8 bytes each) ---------------------------------------------------------
-constexpr std::uint32_t kV0 = 0x9037A0, kV1 = 0x9037A8, kV2 = 0x9037B0, kV3 = 0x9037B8;
+// kV0: now Prim_VertexScratch (symbols.toml).
+// kV1: now Prim_VertexScratch[4] (symbols.toml).
+// kV2: now Prim_VertexScratch[8] (symbols.toml).
+// kV3: now Prim_VertexScratch[0xc] (symbols.toml).
 
 // --- sub-kind 0x27's placements, by the record's starting +0x36 (two) --------
 constexpr std::uint32_t kSub27Height = 0x65E8A4;   // u16 x2: the record's +0x3E
@@ -64,8 +67,8 @@ constexpr std::uint32_t kItemHalfB = 0x7E;         // the u16 a placed cell's it
 constexpr std::uint32_t kItemHalfA = 0x8E;         // the same for +8 clear
 
 // --- AreaMap_Header's fields (the loaded area block) ----------------------------
-constexpr std::uint32_t kMapWidth = 0x8CB580;      // u8
-constexpr std::uint32_t kMapDepth = 0x8CB581;      // u8
+// kMapWidth: now AreaMap_Header (symbols.toml). u8
+// kMapDepth: now AreaMap_Header[1] (symbols.toml). u8
 constexpr std::uint32_t kMapCellBase = 0x8CB582;   // u16: the cell words start at 2 x it (words)
 constexpr std::uint32_t kMapTextures = 0x8CB584;   // u32s, indexed past the cells by the cell word
 

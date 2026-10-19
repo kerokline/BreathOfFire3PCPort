@@ -64,7 +64,7 @@ extern "C" unsigned __cdecl Item_UseFlags(unsigned category, unsigned item) {
 // table's cell read in place - in the game Capcom's address or the jump Inject
 // put there to ours, a recorder while the fuzz runs ours.
 extern "C" void __cdecl ItemTrade_Dispatch(void) {
-    const unsigned state = At(at::kTradeState)[0];
+    const unsigned state = Effect1g_TradeState;
     if (state >= ItemTrade_States_count)
         bof3::Fatal("ItemTrade_Dispatch: the trade state 0x93985C is %u, past the %u entries of ItemTrade_States 0x66A470 - "
                     "the original jumps through the dword after (docs/game-last.md section 4)",

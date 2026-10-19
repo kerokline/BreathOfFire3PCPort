@@ -211,12 +211,12 @@ const bh::DataTable kTablesK16[] = {{0x64CE38, 12}, {0x64CE68, 3, 4, 1}};
 // The cells beyond the battle frame that the group reads or writes.
 const bh::Region kRegions[] = {
     {at::kMoveCounter, 4},     // the move-script counters (the end hooks' scene byte)
-    {at::kSaveWord, 2},
-    {at::kFieldByte131, 1},
-    {at::kLeaderPick, 1},
-    {at::kWaitTurns, 1},
-    {at::kMsgPass, 1},
-    {at::kBannerChar, 1},
+    {Field_ScriptFlags_addr, 2},
+    {Music_Track_addr, 1},
+    {BossH_LeaderPick_addr, 1},
+    {BossSc_WaitTurns_addr, 1},
+    {BossSa_WindowPass_addr, 1},
+    {MoveScript_EffectState_addr + 0x1, 1},
 };
 
 // ===========================================================================
@@ -233,7 +233,7 @@ unsigned char Byte(std::initializer_list<U> often) {
 std::uint16_t Hp() {
     return static_cast<std::uint16_t>(bh::Often() ? BH_PICK(0, 0, 1, 2, 0xFFFF, 0x100) : bh::Next());
 }
-unsigned char* E() { return bh::Pointer(bh::at::kEnemyCurrent); }
+unsigned char* E() { return bh::Pointer(BattleE3_CurrentEnemy_addr); }
 
 // A dispatcher's other state bytes inside their tables, so a
 // dispatcher reading the wrong byte lands on another entry (a count) rather
@@ -245,21 +245,21 @@ void Seed(unsigned k) {
     switch (g_cur[k].base) {
     // --- the end and exit hooks: the win bit, the fight's bits, the scene byte
     case 0x439430: case 0x439900: case 0x43A480: case 0x43A560:
-        Mem(at::kBattleEnd)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
+        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82, 8, 0xA});
         break;
     case 0x43A190:
-        Mem(at::kBattleEnd)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
-        Mem(at::kFightFlags)[0] = Byte({0, 0x40, 0xBF, 0x41});
+        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
+        Mem(BossSe_Script_addr)[0] = Byte({0, 0x40, 0xBF, 0x41});
         break;
     case 0x43A230:
-        Mem(at::kBattleEnd)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
-        Mem(at::kFightFlags)[0] = Byte({0, 1, 0x40, 0x41, 0xBE, 0xFF});
+        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFD, 0x82});
+        Mem(BossSe_Script_addr)[0] = Byte({0, 1, 0x40, 0x41, 0xBE, 0xFF});
         Mem(at::kMoveCounter)[0] = Byte({0x14, 0x14, 0x15, 0x13, 0x50, 0x94});
         break;
     // --- fight 16's event hook
     case 0x43A060:
-        Mem(at::kFightFlags)[0] = Byte({0, 1, 0x40, 0x41, 8, 0xBE, 0xBF});
-        Mem(at::kWaitTurns)[0] = bh::Half() ? 0 : Byte({1, 8, 0xA, 0x80});
+        Mem(BossSe_Script_addr)[0] = Byte({0, 1, 0x40, 0x41, 8, 0xBE, 0xBF});
+        Mem(BossSc_WaitTurns_addr)[0] = bh::Half() ? 0 : Byte({1, 8, 0xA, 0x80});
         Mem(at::kActor)[0] = Byte({0, 0, 0, 1, 3, 0x80});
         Mem(at::kTarget)[0] = Byte({0x40, 0x44, 0x4, 0, 0xBF, 0xC0});
         Mem(at::kEnemy0 + at::kEnemyStatus + 1)[0] = Byte({0, 0x20, 0xDF, 0x60});
@@ -267,31 +267,31 @@ void Seed(unsigned k) {
         break;
     // --- the entrances that read the fight byte (fight 13's HP)
     case 0x439B30: case 0x439C80:
-        Mem(at::kFight)[0] = Byte({0xD, 0xD, 0x10, 0x8D, 0xC, 0xE});
+        Mem(BattleActions_EventBattle_addr)[0] = Byte({0xD, 0xD, 0x10, 0x8D, 0xC, 0xE});
         break;
     // --- the Balio / Sunder action hooks: fight 16 and the fight's bits
     case 0x439BD0: case 0x439D20:
-        Mem(at::kFight)[0] = Byte({0x10, 0x10, 0x10, 0xD, 0x11, 0x90});
-        Mem(at::kFightFlags)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() & 0x3F : bh::Next());
+        Mem(BattleActions_EventBattle_addr)[0] = Byte({0x10, 0x10, 0x10, 0xD, 0x11, 0x90});
+        Mem(BossSe_Script_addr)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() & 0x3F : bh::Next());
         break;
     // --- the hit hooks: HP 0 and neighbours; Sunder's +0x108 and actor 8
     case 0x439C40:
         SetWord(E() + 0xA4, Hp());
         break;
     case 0x439DB0:
-        Mem(at::kFight)[0] = Byte({0x10, 0x10, 0xD, 0x11, 0x90});
+        Mem(BattleActions_EventBattle_addr)[0] = Byte({0x10, 0x10, 0xD, 0x11, 0x90});
         Mem(at::kActor)[0] = Byte({8, 8, 7, 9, 0x88});
         SetWord(E() + 0xA4, Hp());
         SetWord(E() + 0x108, Hp());
         break;
     // --- Nina's hooks: the fight's bit 0, the wait count at its ends
     case 0x439EF0:
-        Mem(at::kFightFlags)[0] = Byte({0, 1, 0xFE, 0xFF, 0x40});
-        Mem(at::kWaitTurns)[0] = Byte({0, 0, 1, 2, 8, 0x80, 0xFF});
-        Mem(at::kCount4AE2)[0] = Byte({0, 1, 2, 0x80});
+        Mem(BossSe_Script_addr)[0] = Byte({0, 1, 0xFE, 0xFF, 0x40});
+        Mem(BossSc_WaitTurns_addr)[0] = Byte({0, 0, 1, 2, 8, 0x80, 0xFF});
+        Mem(BossSe_RoundSlot_addr)[0] = Byte({0, 1, 2, 0x80});
         break;
     case 0x439F50:
-        Mem(at::kBannerChar)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
+        Mem(MoveScript_EffectState_addr + 0x1)[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
         break;
     // --- Amalgam's melt: the row counter at and around its end
     case 0x439830:
@@ -336,11 +336,11 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 5) {
-    case 0: Mem(at::kFightFlags)[0] = b; break;
+    case 0: Mem(BossSe_Script_addr)[0] = b; break;
     case 1: Mem(at::kMoveCounter)[0] = h & 0x1000000 ? 0x14 : b; break;
-    case 2: Mem(at::kWaitTurns)[0] = b; break;
-    case 3: Mem(at::kBannerChar)[0] = b; break;
-    default: Mem(at::kMember1Flags)[0] = b; break;
+    case 2: Mem(BossSc_WaitTurns_addr)[0] = b; break;
+    case 3: Mem(MoveScript_EffectState_addr + 0x1)[0] = b; break;
+    default: Mem(Field_Members_addr + 0x4)[0] = b; break;
     }
 }
 

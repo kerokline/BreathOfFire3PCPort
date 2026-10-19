@@ -334,57 +334,57 @@ void SeedCount(unsigned k) {
     U v = lo + sh::Next() % (hi - lo + 1);
     // the bounds and one past them where the function survives it
     if (sh::Half()) v = PickOf(lo, hi, hi - 1, lo + 1, v);
-    B(at::kCount) = static_cast<unsigned char>(v);
+    B(Rest4c_Count_addr) = static_cast<unsigned char>(v);
 }
 
 void Seed(unsigned k) {
     g_current = k;
     // the choice bytes near every compare; the dispatchers' below their tables
-    B(at::kPhase) = static_cast<unsigned char>(PickOf(0, 1, 2, 1, sh::Next()));
-    B(at::kState) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, sh::Next()));
-    B(at::kStep) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, 4, sh::Next()));
-    B(at::kAgain) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(Rest4b_BoardState_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 1, sh::Next()));
+    B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, sh::Next()));
+    B(Rest4c_Step_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, 2, 3, 4, sh::Next()));
+    B(Rest4c_Again_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     switch (k) {
-    case kHRun: B(at::kPhase) = static_cast<unsigned char>(sh::Next() % CommuHiLo_Phases_count); break;
-    case kHOpenDispatch: B(at::kState) = static_cast<unsigned char>(sh::Next() % CommuHiLo_OpenStates_count); break;
-    case kHPlayDispatch: B(at::kState) = static_cast<unsigned char>(sh::Next() % CommuHiLo_PlayStates_count); break;
-    case kHBetDispatch: B(at::kStep) = static_cast<unsigned char>(sh::Next() % CommuHiLo_BetSteps_count); break;
-    case kHDealDispatch: B(at::kStep) = static_cast<unsigned char>(sh::Next() % CommuHiLo_DealSteps_count); break;
-    case kBRun: B(at::kPhase) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_Phases_count); break;
+    case kHRun: B(Rest4b_BoardState_addr) = static_cast<unsigned char>(sh::Next() % CommuHiLo_Phases_count); break;
+    case kHOpenDispatch: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuHiLo_OpenStates_count); break;
+    case kHPlayDispatch: B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuHiLo_PlayStates_count); break;
+    case kHBetDispatch: B(Rest4c_Step_addr) = static_cast<unsigned char>(sh::Next() % CommuHiLo_BetSteps_count); break;
+    case kHDealDispatch: B(Rest4c_Step_addr) = static_cast<unsigned char>(sh::Next() % CommuHiLo_DealSteps_count); break;
+    case kBRun: B(Rest4b_BoardState_addr) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_Phases_count); break;
     case kBOpenDispatch:
-        B(at::kState) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_OpenStates_count);
+        B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_OpenStates_count);
         break;
     case kBPlayDispatch:
-        B(at::kState) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_PlayStates_count);
+        B(Rest4b_BoardStep_addr) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_PlayStates_count);
         break;
     case kBStartDispatch:
-        B(at::kStep) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_StartSteps_count);
+        B(Rest4c_Step_addr) = static_cast<unsigned char>(sh::Next() % CommuHitBlow_StartSteps_count);
         break;
     case kHBetInput:
         // the tail's draws run at phase 1, state 2
-        if (sh::Often()) B(at::kPhase) = 1, B(at::kState) = 2;
+        if (sh::Often()) B(Rest4b_BoardState_addr) = 1, B(Rest4b_BoardStep_addr) = 2;
         break;
     default: break;
     }
     // the counters at their compares
-    B(at::kSlide) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 1, 4, 0x1E, 0x3C, 0xFF, sh::Next()));
+    B(Rest4d_Count_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 1, 4, 0x1E, 0x3C, 0xFF, sh::Next()));
     SeedCount(k);
     const unsigned cursor_room = CursorRoom(k);
-    B(at::kCursor) = static_cast<unsigned char>(
+    B(Rest4c_Cursor_addr) = static_cast<unsigned char>(
         cursor_room == 3 ? sh::Next() % 3 : PickOf(0, 1, 2, 3, 0xFF, 0x80, 0, 1, 2, sh::Next()));
     // the turn 1..8; half the time at the picks' end (count + 1, Reveal's compare)
-    B(at::kTurn) = static_cast<unsigned char>(1 + sh::Next() % 8);
+    B(Rest4c_Turn_addr) = static_cast<unsigned char>(1 + sh::Next() % 8);
     if (sh::Half()) {
-        const unsigned end = B(at::kCount) + PickOf(0, 1, 2);
-        B(at::kTurn) = static_cast<unsigned char>(end < 1 ? 1 : (end > 8 ? 8 : end));
+        const unsigned end = B(Rest4c_Count_addr) + PickOf(0, 1, 2);
+        B(Rest4c_Turn_addr) = static_cast<unsigned char>(end < 1 ? 1 : (end > 8 ? 8 : end));
     }
-    B(at::kLost) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(Rest4c_Lost_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     // the stake and the money at the compares (0, 10, 100, 1000, 10000; the
     // stake's three digits from its low byte)
     SetLong(Mem(at::kBet), static_cast<std::int32_t>(PickOf(0, 1, 9, 10, 11, 50, 99, 100, 101, 127, 128, 0xFF, 999,
                                                             1000, 1001, 9999, 10000, 10001, 0xFFFFFFFFu, 0x80000000u,
                                                             sh::Next())));
-    SetLong(Mem(bof3::addr::Party_Zenny),
+    SetLong(Mem(Party_Zenny_addr),
             static_cast<std::int32_t>(PickOf(0, 1, 9, 50, 99, 100, 101, 499, 500, 501, 0x8000, 0xFFFF, 0x1FFFF, 0x10050,
                                              sh::Next())));
     for (unsigned i = 0; i < 3; ++i)
@@ -397,20 +397,20 @@ void Seed(unsigned k) {
     // a guess sometimes the secret itself, or a permutation of it (three hits,
     // or blows)
     if (k == kBScore && sh::Half()) {
-        const int r = static_cast<signed char>(B(at::kCount));
+        const int r = static_cast<signed char>(B(Rest4c_Count_addr));
         unsigned char* const rec = Mem(at::kRecords + 5 * r);
         const unsigned shift = sh::Next() % 3;
         for (unsigned j = 0; j < 3; ++j) rec[j] = B(at::kCards + (j + shift) % 3);
     }
     // a pick that matches the card comparison half the time (the win path)
     if (k == kHReveal && sh::Half()) {
-        const int t = static_cast<signed char>(B(at::kTurn));
+        const int t = static_cast<signed char>(B(Rest4c_Turn_addr));
         B(at::kPicks + t) = B(at::kCards + t - 1) >= B(at::kCards + t) ? 1 : 0;
     }
     // the paths that wait on one value: the ninth card dealt, the second
     // game's end at its step 1 with the counter one short of 4
-    if (k == kHDealCards && sh::Half()) B(at::kCount) = 8, B(at::kSlide) = 1;
-    if (k == kBEnd && sh::Half()) B(at::kStep) = 1, B(at::kSlide) = 3;
+    if (k == kHDealCards && sh::Half()) B(Rest4c_Count_addr) = 8, B(Rest4d_Count_addr) = 1;
+    if (k == kBEnd && sh::Half()) B(Rest4c_Step_addr) = 1, B(Rest4d_Count_addr) = 3;
     // the message and the music
     Field_Request = static_cast<unsigned char>(PickOf(2, 0, 2, 1, 5, sh::Next()));
     // the pad
@@ -451,24 +451,24 @@ void MoveCell(U n) {
     switch (sh::DisturbCase(n, 11)) {
     case 0: {
         static const unsigned char kSlides[] = {0, 1, 2, 3, 4, 5, 0x1E, 0x3C};
-        B(at::kSlide) = (b & 1) ? kSlides[(b >> 1) % 8] : b;
+        B(Rest4d_Count_addr) = (b & 1) ? kSlides[(b >> 1) % 8] : b;
         break;
     }
     case 1: {
         int lo, hi;
         CountRoom(g_current, &lo, &hi);
-        B(at::kCount) = static_cast<unsigned char>(lo + b % (hi - lo + 1));
+        B(Rest4c_Count_addr) = static_cast<unsigned char>(lo + b % (hi - lo + 1));
         break;
     }
-    case 2: B(at::kCursor) = static_cast<unsigned char>(CursorRoom(g_current) == 3 ? b % 3 : b); break;
-    case 3: B(at::kTurn) = static_cast<unsigned char>(1 + b % 8); break;
-    case 4: B(at::kPhase + (b & 3) % 3) = static_cast<unsigned char>((b >> 2) % 14); break;
+    case 2: B(Rest4c_Cursor_addr) = static_cast<unsigned char>(CursorRoom(g_current) == 3 ? b % 3 : b); break;
+    case 3: B(Rest4c_Turn_addr) = static_cast<unsigned char>(1 + b % 8); break;
+    case 4: B(Rest4b_BoardState_addr + (b & 3) % 3) = static_cast<unsigned char>((b >> 2) % 14); break;
     case 5: SetLong(Mem(at::kBet), static_cast<std::int32_t>((b & 1) ? (b >> 1) % 2 * 10000 + v % 3 : v)); break;
-    case 6: SetLong(Mem(bof3::addr::Party_Zenny), static_cast<std::int32_t>(v)); break;
+    case 6: SetLong(Mem(Party_Zenny_addr), static_cast<std::int32_t>(v)); break;
     case 7: B(at::kCards + b % 0x2B) = static_cast<unsigned char>(1 + (v >> 8) % 9); break;
     case 8: B(at::kDigits + b % 3) = static_cast<unsigned char>(static_cast<int>((v >> 8) % 12) - 1); break;
-    case 9: B((b & 1) ? at::kLost : at::kAgain) = static_cast<unsigned char>((b & 2) ? 0 : b); break;
-    case 10: B(at::kTailState) = b; break;
+    case 9: B((b & 1) ? Rest4c_Lost_addr : Rest4c_Again_addr) = static_cast<unsigned char>((b & 2) ? 0 : b); break;
+    case 10: B(AreaW0c_TailState_addr) = b; break;
     default: break;
     }
 }

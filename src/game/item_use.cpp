@@ -72,7 +72,7 @@ unsigned char UsedOr3(unsigned char answer) { return answer != 0 ? 0 : 3; }
 
 // Party member i's record index: 0x66972C[0x904062[i]] (the party list's
 // entry, then its record).
-unsigned Member(unsigned char i) { return At(at::kMemberRecord)[At(at::kPartyLists)[i]]; }
+unsigned Member(unsigned char i) { return MoveScript_EffectState[Cond_Flags[0xd2 + i]]; }
 
 // The party walk of 0x496D50 / 0x497410 / 0x497490 / 0x497510: Party_Count(0)
 // asked before the first member and again after each, compared as bytes. The
@@ -255,23 +255,23 @@ extern "C" unsigned char __cdecl ItemUse_HpScaleUp(unsigned id, unsigned battle)
 extern "C" unsigned char __cdecl ItemUse_FaerieTiara(unsigned, unsigned) {
     g.inventory_add(0, 0x57, 1, 0);
     Game_Step = static_cast<unsigned short>(Game_Step + 1);
-    At(at::kMenuState)[0] = 0xA;
-    At(at::kTiaraCount)[0] = 0xB9;
+    FieldS_State = 0xA;
+    ModeRest_AreaAsked = 0xB9;
     for (int flag = 0xFF;;) {
-        if (g.flags_test(At(at::kStoryFlags), static_cast<unsigned>(flag)) != 0) break;
-        const auto count = static_cast<unsigned char>(At(at::kTiaraCount)[0] - 1);
+        if (g.flags_test(At(Cond_Flags_addr + 0xa0), static_cast<unsigned>(flag)) != 0) break;
+        const auto count = static_cast<unsigned char>(ModeRest_AreaAsked - 1);
         --flag;
-        At(at::kTiaraCount)[0] = count;
+        ModeRest_AreaAsked = count;
         if (flag < 0xF6) break;
     }
-    std::memcpy(At(at::kReturnPoint), At(at::kLeaderXZ), 8);
-    SetWord(At(at::kReturnPoint + 8), Game_AreaNumber);
+    std::memcpy(At(AreaW2d_ReturnPoint_addr), At(ObjTrio_addr + 0x34), 8);
+    SetWord(At(AreaW2d_ReturnPoint_addr + 8), Game_AreaNumber);
     return 0;
 }
 
 // original 0x497670 [33].
 extern "C" unsigned char __cdecl ItemUse_WaterJug(unsigned, unsigned) {
-    At(at::kWaterJug)[0] = 0xF0;
+    Cond_Flags[0xcf] = 0xF0;
     return 0;
 }
 
@@ -370,7 +370,7 @@ namespace {
 // MsgBox_SystemChoice. The area descriptor is re-read for each call, as in
 // the original: Game_AreaNumber zero-extended, the id's low byte.
 void CommitChoice() {
-    const unsigned id = At(at::kChoiceId)[0];
+    const unsigned id = ItemUse_ChoiceId;
     if (id < 0x80) {
         const unsigned char* const desc = Area_Descriptors[Game_AreaNumber];
         const auto table = reinterpret_cast<Choice const*>(static_cast<std::uintptr_t>(move_script::Long(desc + 0x34)));
@@ -387,25 +387,25 @@ void CommitChoice() {
 extern "C" void __cdecl MsgBox_ChoiceCommit(void) {
     CommitChoice();
     const bool more = Word(At(at::kMessage)) != 0xFFFF;
-    At(at::kWindow1State)[0] = 3;
+    ItemUse_Window1State = 3;
     if (more) {
-        const unsigned char sub = At(at::kSubState)[0];
+        const unsigned char sub = ItemUse_SubState;
         At(at::kWindow0State)[0] = 1;
-        At(at::kColorHigh)[0] = 0;
-        At(at::kSubState)[0] = static_cast<unsigned char>(sub + 1);
+        ItemUse_ColorHigh = 0;
+        ItemUse_SubState = static_cast<unsigned char>(sub + 1);
         return;
     }
-    At(at::kSubState)[0] = 7;
-    At(at::kColorHigh)[0] = 0;
+    ItemUse_SubState = 7;
+    ItemUse_ColorHigh = 0;
 }
 
 // original 0x4983C0 (PSX 0x80151838): MsgBox_State5's entry 3.
 extern "C" void __cdecl MsgBox_MenuCommit(void) {
     CommitChoice();
-    const unsigned char sub = At(at::kSubState)[0];
-    At(at::kColorHigh)[0] = 0;
-    At(at::kWindow1State)[0] = 3;
-    At(at::kSubState)[0] = static_cast<unsigned char>(sub + 1);
+    const unsigned char sub = ItemUse_SubState;
+    ItemUse_ColorHigh = 0;
+    ItemUse_Window1State = 3;
+    ItemUse_SubState = static_cast<unsigned char>(sub + 1);
 }
 
 // ===========================================================================
@@ -416,7 +416,7 @@ namespace {
 // read as s8 (the original's movsx): a cursor outside 0..1 reads the next
 // pair or the one before, as the original does. Returns the cursor.
 int SysMessage(unsigned k) {
-    const int cursor = static_cast<signed char>(At(at::kCursor)[0]);
+    const int cursor = AreaW0c_ChoiceAnswer;
     SetWord(At(at::kMessage), Word(At(at::kSysMessages + 4 * k + 2 * cursor)));
     return cursor;
 }
@@ -430,8 +430,8 @@ void SysCounter(unsigned k, unsigned char if0, unsigned char if1) {
 // original 0x498AD0: cursor 0 sets the byte 0x929F0B, cursor 1 clears it.
 extern "C" void __cdecl MsgBox_SysChoice80(void) {
     const int cursor = SysMessage(0);
-    if (cursor == 0) At(at::kSysFlag)[0] = 1;
-    else if (cursor == 1) At(at::kSysFlag)[0] = 0;
+    if (cursor == 0) FieldS_Answer = 1;
+    else if (cursor == 1) FieldS_Answer = 0;
 }
 // original 0x498B00, 0x498B30, 0x498B60, 0x498B90: MoveScript variable 3
 // (0x903848) by the cursor.
@@ -463,15 +463,15 @@ extern "C" void __cdecl MsgBox_SysChoice8F(void) { SysMessage(15); }
 extern "C" unsigned __cdecl Input_AutoRepeat(unsigned pressed) {
     const std::uint32_t held = static_cast<std::uint32_t>(move_script::Long(reinterpret_cast<unsigned char*>(&Input_Held)));
     if (static_cast<std::uint16_t>(pressed) != 0) {
-        SetWord(At(at::kRepeatTimer), 0xC);
+        ItemUse_RepeatTimer = 0xC;
         SetWord(At(at::kRepeatLatch), held);
         return held;
     }
     if ((Word(At(at::kRepeatLatch)) & held & 0xFFFF) != 0) {
-        const auto timer = static_cast<std::uint16_t>(Word(At(at::kRepeatTimer)) - 1);
-        SetWord(At(at::kRepeatTimer), timer);
+        const auto timer = static_cast<std::uint16_t>(ItemUse_RepeatTimer - 1);
+        ItemUse_RepeatTimer = timer;
         if (timer == 0) {
-            SetWord(At(at::kRepeatTimer), 3);
+            ItemUse_RepeatTimer = 3;
             SetWord(At(at::kRepeatLatch), held);
             return held;
         }

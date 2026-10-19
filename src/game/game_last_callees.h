@@ -27,6 +27,6 @@ constexpr U kConsumableStride = 22;        // (category 0 and 5 and above)
 constexpr U kFlagsReachEnd = 0x659C4A;
 
 // --- ItemTrade_Dispatch -------------------------------------------------------------
-constexpr U kTradeState = 0x93985C;        // u8: ItemTrade_States' index (0 open, 1 run, 2 leave; docs/game-last.md section 1.2)
+// kTradeState: now Effect1g_TradeState (symbols.toml). u8: ItemTrade_States' index (0 open, 1 run, 2 leave; docs/game-last.md section 1.2)
 
 }  // namespace game_last::at

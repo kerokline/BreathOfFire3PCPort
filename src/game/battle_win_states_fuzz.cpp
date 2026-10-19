@@ -25,6 +25,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_win_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include <windows.h>
@@ -87,9 +88,9 @@ std::uint32_t Id(const void* p) {
 }
 std::uint32_t IdOf(std::uint32_t a) { return Id(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a))); }
 
-unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(at::kCurrent)))); }
+unsigned char* Current() { return At(static_cast<std::uint32_t>(Long(At(BattleWinStates_Current_addr)))); }
 unsigned char* Enemy(unsigned e) { return At(at::kEnemies + at::kEnemyStride * e); }
-unsigned char* Member(unsigned m) { return At(at::kMembers + at::kMemberStride * m); }
+unsigned char* Member(unsigned m) { return At(ObjTrio_addr + at::kMemberStride * m); }
 unsigned char Slot(std::uint32_t v) { return static_cast<unsigned char>(g_slot_lo + v % g_slot_n); }
 
 // A target byte: this window's slot, with or without a side bit, a side
@@ -114,7 +115,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const auto byte = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 14) {
-    case 0: SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(g_buf.windows[v % kWindows]))); break;
+    case 0: SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(g_buf.windows[v % kWindows]))); break;
     case 1:
     case 2: {
         unsigned char* const w = g_buf.windows[v % kWindows];
@@ -122,13 +123,13 @@ void Disturb() {
         w[field] = field == 0xA ? Slot(h >> 8) : byte;
         break;
     }
-    case 3: At(at::kChoosing)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte | 1); break;
+    case 3: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte | 1); break;
     case 4: {
-        unsigned char* const t = At(static_cast<std::uint32_t>(Long(At(at::kTarget))));
+        unsigned char* const t = At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr))));
         *t = TargetByte(v, h >> 8);
         break;
     }
-    case 5: SetLong(At(at::kTarget), static_cast<std::int32_t>(Address(g_buf.targets + v % kTargets))); break;
+    case 5: SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_buf.targets + v % kTargets))); break;
     case 6: At(at::kCrossSel)[0] = static_cast<unsigned char>(v % 8); break;
     case 7: At(at::kCrossGrow + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     case 8: {
@@ -142,7 +143,7 @@ void Disturb() {
         break;
     }
     case 10: At(at::kBanners + (h >> 20) % 0x60)[0] = byte; break;
-    case 11: At(at::kLabelGate)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
+    case 11: At(BattleWinStates_LabelGate_addr)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
     default: break;
     }
 }
@@ -168,7 +169,7 @@ void __cdecl StubFlagAdvance() {
     Record(9, Id(Current()));
     Disturb();
     const std::uint32_t h = Hash() * 0x27D4EB2Fu;
-    if (h & 0x10000) *At(static_cast<std::uint32_t>(Long(At(at::kTarget)))) = TargetByte(h >> 8, h >> 20);
+    if (h & 0x10000) *At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr)))) = TargetByte(h >> 8, h >> 20);
 }
 void __cdecl StubRestoreBack() { Record(10, Id(Current())); Disturb(); }
 unsigned __cdecl StubDispatchKind(unsigned a0, unsigned a1, unsigned a2, unsigned a3, unsigned a4, unsigned a5,
@@ -400,13 +401,13 @@ void SlotRange(unsigned k) {
 void Fix(unsigned k) {
     SlotRange(k);
     for (auto& w : g_buf.windows) w[0xA] = Slot(Next());
-    SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(g_buf.windows[Next() % kWindows])));
-    SetLong(At(at::kTarget), static_cast<std::int32_t>(Address(g_buf.targets + Next() % kTargets)));
+    SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(g_buf.windows[Next() % kWindows])));
+    SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_buf.targets + Next() % kTargets)));
     for (auto& t : g_buf.targets) t = TargetByte(Next(), Next());
-    At(at::kChoosing)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+    At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
     // no gauge top of 0: the original faults on it (section 4), ours aborts
     for (unsigned e = 0; e < 6; ++e)
-        if (Word(Enemy(e) + 0x30) == 0) SetWord(Enemy(e) + 0x30, 1 + Next() % 0xFFFF);
+        if (reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp == 0) reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80)->max_hp = 1 + Next() % 0xFFFF;
     for (unsigned m = 0; m < 5; ++m)
         if (Word(Member(m) + 0xA0) == 0) SetWord(Member(m) + 0xA0, 1 + Next() % 0xFFFF);
 }
@@ -427,11 +428,11 @@ unsigned Against(unsigned top) {
 unsigned Top() { return Often() ? 1 + Next() % 999 : Half() ? 1 + Next() % 4 : 1 + Next() % 0xFFFF; }
 
 void SeedEnemy(unsigned e) {
-    unsigned char* const r = Enemy(e);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy(e) - 0x80);
     const unsigned top = Top();
-    SetWord(r + 0x30, top);
-    SetWord(r + 0x24, Against(top));
-    SetWord(r + 0x12, Next() & 0xFFFF);
+    enemy_rec->max_hp = top;
+    enemy_rec->hp = Against(top);
+    enemy_rec->status = Next() & 0xFFFF;
     At(at::kEnemies + at::kEnemyStride * e - 0x78)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next());
 }
 void SeedMember(unsigned m, bool ap_top_zero_often) {
@@ -449,18 +450,19 @@ void SeedMember(unsigned m, bool ap_top_zero_often) {
 
 void Seed(unsigned k) {
     unsigned char* const w = Current();
+    auto* const window_rec = reinterpret_cast<records::WindowRecord*>(w);
     switch (k) {
-    case kRun: w[2] = static_cast<unsigned char>(Next() % 8); break;
+    case kRun: window_rec->kind = static_cast<unsigned char>(Next() % 8); break;
     case kPartyStates: case kCrossStates: case kLabelStates: case kBannerStates: case kMemberStates:
-        w[3] = static_cast<unsigned char>(Next() % 3);
+        window_rec->state = static_cast<unsigned char>(Next() % 3);
         break;
-    case kEnemyStates: w[3] = static_cast<unsigned char>(Next() % 4); break;
+    case kEnemyStates: window_rec->state = static_cast<unsigned char>(Next() % 4); break;
     default: break;
     }
     switch (k) {
     case kSlideIn: {
         static const unsigned kY[] = {0xC4, 0xC7, 0xC8, 0xC9, 0xCB, 0xCC, 0xCD, 0x100, 0x7FFF, 0x8000, 0xFFFF, 0};
-        SetWord(w + 6, Often() ? kY[Next() % 12] : Next() & 0xFFFF);
+        window_rec->centre_y = Often() ? kY[Next() % 12] : Next() & 0xFFFF;
         break;
     }
     case kCrossGrow:
@@ -474,7 +476,7 @@ void Seed(unsigned k) {
             At(at::kCrossGrow + j)[0] = Often() ? kGrow[Next() % 8] : static_cast<unsigned char>(Next());
         break;
     }
-    case kLabelFrame: At(at::kLabelGate)[0] = static_cast<unsigned char>(Half() ? 0 : Next()); break;
+    case kLabelFrame: At(BattleWinStates_LabelGate_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next()); break;
     case kBannerFrame:
         for (unsigned b = 0; b < 8; ++b) At(at::kBanners + at::kBannerStride * b + 2)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
         break;

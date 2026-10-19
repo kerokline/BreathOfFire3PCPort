@@ -240,7 +240,7 @@ const std::uint8_t kKinds[] = {0x18};
 // Beyond effect mode's standard regions: the CLUT strip's first 16 rows (the
 // rows sub-kinds 5 and 0x1F copy within: 3, 5..0xE).
 const sh::Region kRegions[] = {
-    {at::kClutStrip, 0x2000},
+    {Gfx_ClutStrip_addr, 0x2000},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -286,7 +286,7 @@ void Seed(unsigned k) {
     Records();
     unsigned char* const s = Sprite_Current;
     // the map's height base small (sub-kind 6 writes 4 * it past AreaMap_Header)
-    SetWord(Mem(at::kHeightBase), sh::Next() % 0x600);
+    SetWord(Mem(AreaMap_HeightBase_addr), sh::Next() % 0x600);
     Mem(0x905E20)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));   // Cond_ByteFE
     // the boundaries each state compares against
     const unsigned nine = NineSpan();

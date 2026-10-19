@@ -27,23 +27,28 @@ constexpr U kScratchBank = 0x903852;
 // MapView_ScreenXY's three points: the uprights' Gte_RotTransPers3 outputs.
 constexpr U kScreen0 = 0x903820, kScreen1 = 0x903828, kScreen2 = 0x903830;
 // Prim_VertexScratch's four vertices, 8 bytes apart.
-constexpr U kVertex0 = 0x9037A0, kVertex1 = 0x9037A8, kVertex2 = 0x9037B0, kVertex3 = 0x9037B8;
+// kVertex0: now Prim_VertexScratch (symbols.toml).
+// kVertex1: now Prim_VertexScratch[4] (symbols.toml).
+// kVertex2: now Prim_VertexScratch[8] (symbols.toml).
+// kVertex3: now Prim_VertexScratch[0xc] (symbols.toml).
 // The area block (AreaMap_Header): width byte +0, height byte +1, the tile
 // offset word +2, the corner dwords from +0x30 (AreaMap_Corners), the two
 // flat colours +0x1A / +0x1C (MapCell_FlatOverlay's), AreaMap_PatchBase +0x28.
-constexpr U kHeader = 0x8CB580;
-constexpr U kHeaderOffset = 0x8CB582;
-constexpr U kCorners = 0x8CB5B0;
+// kHeader: now AreaMap_Header (symbols.toml).
+// kHeaderOffset: now AreaMap_Header[2] (symbols.toml).
+// kCorners: now AreaMap_Corners (symbols.toml).
 constexpr U kFlatColour0 = 0x8CB59A, kFlatColour1 = 0x8CB59C;
-constexpr U kPatchBase = 0x8CB5A8;
+// kPatchBase: now AreaMap_PatchBase (symbols.toml).
 // The view's cell ring: MapView_CellItems' words +2 (the draw item, low 12 bits).
-constexpr U kCellItemWords = 0x937FA2;
+// kCellItemWords: now MapView_CellItems[2] (symbols.toml).
 // The window colour (Config), a CLUT row: s8 (battle_windows_callees.h kColour).
-constexpr U kWindowColour = 0x903A5A;
+// kWindowColour: now BattleDraw_Colour (symbols.toml).
 // CharacterRecords, 0xA4 bytes each (battle_window_draw_callees.h).
 constexpr U kCharRecords = 0x903A70, kCharStride = 0xA4;
 // The play clock: hours, minutes, seconds, frames (0x9040C8..0x9040CB).
-constexpr U kClockHours = 0x9040C8, kClockMinutes = 0x9040C9, kClockFrames = 0x9040CB;
+// kClockMinutes: now MapFieldObjects_ClockMinutes (symbols.toml).
+// kClockFrames: now MapFieldObjects_ClockFrames (symbols.toml).
+constexpr U kClockHours = 0x9040C8;
 // The sprintf buffer every number goes through (battle_draw_callees.h kPrintBuf).
 constexpr U kPrintBuf = 0x904BA0;
 // The formats and texts (.rdata / .data, read 2026-09-25): "%3d", "%3d/   ",
@@ -51,16 +56,24 @@ constexpr U kPrintBuf = 0x904BA0;
 // piece lists Menu_DrawPieces draws (3-byte records to an id of 0xFF).
 constexpr U kFormat3d = 0x64E324, kFormatLeft = 0x6639B0, kFormatRight = 0x6639A8, kFormat02d = 0x65306C;
 constexpr U kStatusText0 = 0x66A0E8, kStatusText1 = 0x66A0F0, kColonText = 0x6637E0;
-constexpr U kMemberPieces = 0x6632C8, kClockPieces = 0x6633CC, kClockMiddle = 0x6633B4, kClockLeft = 0x6633C0;
+// kMemberPieces: now Menu_MemberPieces (symbols.toml).
+// kClockPieces: now Menu_PlayTimePieces[0x18] (symbols.toml).
+// kClockMiddle: now Menu_PlayTimePieces (symbols.toml).
+// kClockLeft: now Menu_PlayTimePieces[0xc] (symbols.toml).
 // Sprite_Objects' records, 0xA4 bytes each; EventOp_8x's fields by the
 // object index (0x7DEE80 + 0xA4 n + 0x84.. as absolute bases, as the original
 // addresses them).
-constexpr U kObjects = 0x7DEE80, kObjectStride = 0xA4;
-constexpr U kObjFlag84 = 0x7DEF04, kObjWord88 = 0x7DEF08, kObjX8C = 0x7DEF0C, kObjZ90 = 0x7DEF10,
-            kObj94 = 0x7DEF14, kObjByteA0 = 0x7DEF20;
+// kObjects: now Sprite_Objects (symbols.toml).
+constexpr U kObjectStride = 0xA4;
+// kObjFlag84: now Sprite_Objects[0x84] (symbols.toml).
+// kObjWord88: now Sprite_Objects[0x88] (symbols.toml).
+// kObjX8C: now Sprite_Objects[0x8c] (symbols.toml).
+// kObjZ90: now Sprite_Objects[0x90] (symbols.toml).
+// kObj94: now Sprite_Objects[0x94] (symbols.toml).
+// kObjByteA0: now Sprite_Objects[0xa0] (symbols.toml).
 // Field_ActiveMember and Sprite_Current, the two pointers EventOp_8x sets.
-constexpr U kActiveMember = 0x9035A4;
-constexpr U kSpriteCurrent = 0x937F88;
+// kActiveMember: now Field_ActiveMember (symbols.toml).
+// kSpriteCurrent: now Sprite_Current (symbols.toml).
 // The 8 px UI font (x, y, colour, count, text) -> text end - group DB's
 // (round eight), called through its address (ours, named by symbol).
 constexpr U kTinyFont = bof3::addr::Text_DrawSmall;

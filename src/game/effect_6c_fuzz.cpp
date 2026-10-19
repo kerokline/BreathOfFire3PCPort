@@ -214,13 +214,13 @@ U FxCurrent(const U*, U answer) {
 // Sub-kind 0x5B's parts read the two offsets the states set before each call.
 U FxOffsets(const U* a, U answer) {
     FxCurrent(a, answer);
-    sh::Note(static_cast<U>(Long(Mem(at::kOffsetX))), static_cast<U>(Long(Mem(at::kOffsetY))));
+    sh::Note(static_cast<U>(Long(Mem(Effect6c_OffsetX_addr))), static_cast<U>(Long(Mem(Effect6c_OffsetY_addr))));
     return answer;
 }
 // Sub-kind 0x44's glows and stars read the two colour rows the sky wrote.
 U FxRows(const U* a, U answer) {
     FxCurrent(a, answer);
-    sh::NoteBytes(Mem(sh::at::kVertexScratch), 0x10);
+    sh::NoteBytes(Mem(Prim_VertexScratch_addr), 0x10);
     return answer;
 }
 // EffectKind18Sub44_Commit: the cursor += size & 0xFF while 0x160 bytes stay
@@ -280,8 +280,8 @@ const sh::DataTable kTables[] = {
 // 64 draw items (MapView_ItemAt's stand-in answers 1..0x3F), and sub-kind 0x59's
 // twelve shade bytes in .data (its fade writes them).
 const sh::Region kRegions[] = {
-    {at::kDrawList, 4 * at::kDrawListRoom},
-    {at::kLayerTails, 0x10},
+    {Sprite_DrawList_addr, 4 * at::kDrawListRoom},
+    {DrawLayers_addr + 0x894, 0x10},
     {0x905E80, 0x40 * at::kDrawItemStride},
     {at::kShades59, at::kShades59Size},
 };
@@ -302,7 +302,7 @@ U g_pin_z = 0;
 // block's 8 KiB: a width and height 1..16, the cells' base 0..0x3F, every cell
 // word of the plane they read (bytes 0x30..0x1000) 0..0x3F.
 void SeedAreaMap() {
-    unsigned char* const header = Mem(at::kAreaHeader);
+    unsigned char* const header = Mem(AreaMap_Header_addr);
     header[0] = static_cast<unsigned char>(1 + sh::Next() % 16);
     header[1] = static_cast<unsigned char>(1 + sh::Next() % 16);
     SetWord(header + 2, sh::Next() % 0x40);
@@ -357,10 +357,10 @@ void Seed(unsigned k) {
     Cond_ByteFE = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
     Gfx_BufferIndex = static_cast<unsigned char>(sh::Next() % 2);
     for (unsigned b = 0; b < 2; ++b)
-        SetLong(Mem(at::kLayerTails + 8 * b), static_cast<std::int32_t>(sh::Half() ? Key(sh::Scratch(b) + (sh::Next() & 0x1C)) : sh::Next()));
+        SetLong(Mem(DrawLayers_addr + 0x894 + 8 * b), static_cast<std::int32_t>(sh::Half() ? Key(sh::Scratch(b) + (sh::Next() & 0x1C)) : sh::Next()));
     // the sky's frame word inside its wrap (Area189_StepArrive: 0..0x3BF), at
     // its four bands' edges
-    SetWord(Mem(at::kWalkClock), PickOf(0, 0x1AF, 0x1B0, 0x1B3, 0x1DF, 0x1E0, 0x38F, 0x390, 0x3A8, 0x3BF, sh::Next() % 0x3C0));
+    SetWord(Mem(Cond_Flags_addr + 0xcc), PickOf(0, 0x1AF, 0x1B0, 0x1B3, 0x1DF, 0x1E0, 0x38F, 0x390, 0x3A8, 0x3BF, sh::Next() % 0x3C0));
     // the camera's cell about the glows' points (inside and past their reach),
     // the stars' clamps, sub-kind 0x53's record (within and past 20), or anywhere
     {
@@ -409,9 +409,9 @@ void Seed(unsigned k) {
     case k44Follow:
         // the leader in state 3 (Sprite_ScriptTick), moving or not, the
         // record on its animation or not
-        if (sh::Half()) Mem(at::kLeaderState)[0] = 3;
-        if (sh::Half()) SetLong(Mem(at::kLeaderMoving), 0);
-        if (sh::Half()) s[0x4B] = Mem(at::kLeaderAnimation)[0];
+        if (sh::Half()) Mem(ObjTrio_addr + 0x2)[0] = 3;
+        if (sh::Half()) SetLong(Mem(ObjTrio_addr + 0x14), 0);
+        if (sh::Half()) s[0x4B] = Mem(ObjTrio_addr + 0x4b)[0];
         break;
     case k44Stars:
         if (sh::Half()) {
@@ -494,7 +494,7 @@ void Disturb(U h) {
         else
             SetWord(Mem((v & 1) ? at::kKind2XHigh : at::kKind2ZHigh), v >> 1);
         break;
-    case 5: SetWord(Mem(at::kWalkClock), v % 0x3C0); break;
+    case 5: SetWord(Mem(Cond_Flags_addr + 0xcc), v % 0x3C0); break;
     case 6: Camera_Distance = static_cast<short>((v & 0xFFFF) == 0xEE6C ? 0xEE6D : v); break;
     default: break;
     }

@@ -50,9 +50,9 @@ using Handler = void (__cdecl*)();
 // --- the cells ------------------------------------------------------------------------
 
 // The menu block (docs/scenario_harness.md section 7.3).
-constexpr U kMode = 0x929F00;          // u8: Shisu_Modes' index
-constexpr U kState = 0x929F01;         // u8: the mode's state
-constexpr U kStep = 0x929F02;          // u8: Shisu_ShowSteps' index
+// kMode: now BattleE1_Mode (symbols.toml). u8: Shisu_Modes' index
+// kState: now FieldS_State (symbols.toml). u8: the mode's state
+// kStep: now FieldS_Step (symbols.toml). u8: Shisu_ShowSteps' index
 constexpr U kTimer = 0x929F04;         // u8: the show's fade level
 
 // The screen's own cells 0x9399E0..0x9399FF.
@@ -61,7 +61,7 @@ constexpr U kGiven = 0x9399E4;         // u8 x 4: how many of each the player pu
 constexpr U kRounds = 0x9399E8;        // u8: shows run so far (8 at most); also read as a dword & 0xFF
 constexpr U kSide = 0x9399E9;          // u8: the pick screen's 0 / 1 choice
 constexpr U kCursor = 0x9399EA;        // u8: the count screen's row 0..3 (0xFF backs out)
-constexpr U kLevel = 0x9399EB;         // u8: Shisu_ScaleIndex's answer, 9..0x10
+// kLevel: now Rest2c_FigureScaleIndex (symbols.toml). u8: Shisu_ScaleIndex's answer, 9..0x10
 constexpr U kScoreA = 0x9399EC;        // s32 x 5: the score's four terms and the score
 constexpr U kScoreB = 0x9399F0;
 constexpr U kScoreC = 0x9399F4;
@@ -75,21 +75,27 @@ constexpr U kScore = 0x9399FC;
 // +0x68 / +0x6C the angles.
 constexpr U kModelA = 0x9398E0;
 constexpr U kModelB = 0x939960;
-constexpr U kAState = kModelA + 1, kADone = kModelA + 6, kAY = kModelA + 0x3C, kAColour = kModelA + 0x5D,
-            kAAngle = kModelA + 0x6C;
-constexpr U kBState = kModelB + 1, kBDone = kModelB + 6, kBY = kModelB + 0x3C, kBScale = kModelB + 0x40,
-            kBColour = kModelB + 0x5D, kBAngle = kModelB + 0x6C;
+// kADone: now Rest2c_FigureDone (symbols.toml).
+// kAY: now Rest2c_FigureY (symbols.toml).
+// kAAngle: now Rest2c_FigureAngle (symbols.toml).
+constexpr U kAState = kModelA + 1, kAColour = kModelA + 0x5D;
+// kBScale: now Rest2c_FigureLift (symbols.toml).
+constexpr U kBState = kModelB + 1,
+            kBDone = kModelB + 6,
+            kBY = kModelB + 0x3C,
+            kBColour = kModelB + 0x5D,
+            kBAngle = kModelB + 0x6C;
 constexpr U kSavedB = 0x6BC878;        // u8 x 3: model B's colour while the show fades
 constexpr U kSavedA = 0x6BC87C;        // u8 x 3: model A's
 
 constexpr U kModelFile = 0x628C88;     // pointer: the two models' headers (+0, +8) and quad pointers (+4, +0xC)
 constexpr U kLevelByte = 0x904101;     // u8 (save data) the scale index is read from
-constexpr U kBackdrop = 0x903A5B;      // u8: Config's Background, Menu_DrawBackdrop's kind
-constexpr U kStyle = 0x903A5A;         // s8: the window style (its colour row)
-constexpr U kClutShadow = 0x80B7A8;    // 0x40 bytes a style: the window colour's first word
-constexpr U kChapterStep = 0x8034E5;   // u8: the scenario step the result hands over
+// kBackdrop: now FieldS_Backdrop (symbols.toml). u8: Config's Background, Menu_DrawBackdrop's kind
+// kStyle: now BattleDraw_Colour (symbols.toml). s8: the window style (its colour row)
+// kClutShadow: now Gfx_ClutStripSource[0x114] (symbols.toml). 0x40 bytes a style: the window colour's first word
+// kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the scenario step the result hands over
 constexpr U kCounterB = 0x90384B;      // u8: the chapter's counter byte (1 low score, 2 high)
-constexpr U kRank = 0x903F6A;          // u8: the score's rank 0..5
+// kRank: now AreaW3c_ItemPick (symbols.toml). u8: the score's rank 0..5
 constexpr U kTriggerCounter = 0x903848;   // u8: the chapters' counter the handlers wait on
 
 // WindowRecords (0x803160, 0x24 a record): records 0..3 are this screen's.
@@ -127,7 +133,7 @@ void Run(const char* who, const unsigned long* table, unsigned entries, unsigned
 
 // --- the callees ------------------------------------------------------------------------
 void Sound(unsigned id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(B(kBackdrop)); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
 void Models() {
     SH_CALL(Shisu_ModelBDispatch)();
     SH_CALL(Shisu_ModelADispatch)();
@@ -135,7 +141,7 @@ void Models() {
 // While a show has run, model A stands on model B: A's y = B's scale * 0xA00
 // + B's y (32-bit, wrapping).
 void StackModels() {
-    if (B(kRounds) != 0) SetL(kAY, L(kBScale) * 0xA00u + L(kBY));
+    if (B(kRounds) != 0) Rest2c_FigureY = Rest2c_FigureLift * 0xA00u + L(kBY);
 }
 unsigned char Max(unsigned char a, unsigned char b) { return a > b ? a : b; }
 
@@ -228,8 +234,8 @@ extern "C" void __cdecl Menu_DrawGreyHLine(int x, int y, unsigned w, unsigned br
 // coordinates from dwords spanning two notch words (n0 | n1 << 16, ...) and
 // Menu_DrawLine reads their low words: the same lines.
 extern "C" void __cdecl Menu_DrawOutlineNotched(int x, int y, int w, int h, int flags) {
-    const int row = static_cast<signed char>(B(kStyle));
-    const unsigned char* const entry = At(kClutShadow + static_cast<U>(row * 64));
+    const int row = BattleDraw_Colour;
+    const unsigned char* const entry = At(Gfx_ClutStripSource_addr + 0x228 + static_cast<U>(row * 64));
     const U c = Word(entry);
     const auto r = static_cast<unsigned char>((entry[0] & 0x1F) << 3);
     const auto gr = static_cast<unsigned char>(((c >> 5) & 0x1F) << 3);
@@ -258,7 +264,7 @@ extern "C" void __cdecl Menu_DrawOutlineNotched(int x, int y, int w, int h, int 
 // original 0x57DFF0: jmp through Shisu_Modes by the menu mode 0x929F00
 // (read as a dword & 0xFF), unchecked (ours aborts past its 5).
 extern "C" void __cdecl Shisu_ModeDispatch(void) {
-    Run("Shisu_ModeDispatch (0x57DFF0)", Shisu_Modes, Shisu_Modes_count, B(kMode), "the menu mode 0x929F00");
+    Run("Shisu_ModeDispatch (0x57DFF0)", Shisu_Modes, Shisu_Modes_count, BattleE1_Mode, "the menu mode 0x929F00");
 }
 
 // original 0x57E010: Shisu_Modes[0] - the counts; the side, cursor, rounds and
@@ -271,18 +277,18 @@ extern "C" void __cdecl Shisu_Begin(void) {
     B(kRounds) = 0;
     for (unsigned i = 0; i < 4; ++i) B(kGiven + i) = 0;
     const unsigned char level = SH_CALL(Shisu_ScaleIndex)();
-    B(kLevel) = level;
+    Rest2c_FigureScaleIndex = level;
     SH_CALL(Shisu_InitModels)();
-    const unsigned char mode = B(kMode);
-    B(kState) = 0;
-    B(kStep) = 0;
-    B(kMode) = static_cast<unsigned char>(mode + 1);
+    const unsigned char mode = BattleE1_Mode;
+    FieldS_State = 0;
+    FieldS_Step = 0;
+    BattleE1_Mode = static_cast<unsigned char>(mode + 1);
 }
 
 // original 0x57E070: Shisu_Modes[1] - jmp through Shisu_OpenStates by the
 // state 0x929F01, unchecked (ours aborts past its 2).
 extern "C" void __cdecl Shisu_OpenDispatch(void) {
-    Run("Shisu_OpenDispatch (0x57E070)", Shisu_OpenStates, Shisu_OpenStates_count, B(kState), "the menu state 0x929F01");
+    Run("Shisu_OpenDispatch (0x57E070)", Shisu_OpenStates, Shisu_OpenStates_count, FieldS_State, "the menu state 0x929F01");
 }
 
 // original 0x57E080: Shisu_OpenStates[0] - Transition_Start(3), the windows
@@ -290,7 +296,7 @@ extern "C" void __cdecl Shisu_OpenDispatch(void) {
 extern "C" void __cdecl Shisu_OpenFade(void) {
     SH_CALL(Transition_Start)(3);
     SH_CALL(Shisu_SetupWindows)();
-    B(kState) = static_cast<unsigned char>(B(kState) + 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 // original 0x57E0A0: Shisu_OpenStates[1] - the backdrop; once the wait word is
@@ -298,16 +304,16 @@ extern "C" void __cdecl Shisu_OpenFade(void) {
 extern "C" void __cdecl Shisu_OpenWait(void) {
     Backdrop();
     if (MoveScript_WaitWordDA != 0) return;
-    const unsigned char mode = B(kMode);
-    B(kState) = 0;
+    const unsigned char mode = BattleE1_Mode;
+    FieldS_State = 0;
     SetW(kMessage, 0x2B);
-    B(kMode) = static_cast<unsigned char>(mode + 1);
+    BattleE1_Mode = static_cast<unsigned char>(mode + 1);
 }
 
 // original 0x57E0E0: Shisu_Modes[3] - jmp through Shisu_CloseStates by the
 // state, unchecked (ours aborts past its 2).
 extern "C" void __cdecl Shisu_CloseDispatch(void) {
-    Run("Shisu_CloseDispatch (0x57E0E0)", Shisu_CloseStates, Shisu_CloseStates_count, B(kState), "the menu state 0x929F01");
+    Run("Shisu_CloseDispatch (0x57E0E0)", Shisu_CloseStates, Shisu_CloseStates_count, FieldS_State, "the menu state 0x929F01");
 }
 
 // original 0x57E0F0: Shisu_CloseStates[0] - the backdrop, Transition_Start(2),
@@ -316,7 +322,7 @@ extern "C" void __cdecl Shisu_CloseFade(void) {
     Backdrop();
     SH_CALL(Transition_Start)(2);
     SH_CALL(Shisu_CloseWindows)();
-    B(kState) = static_cast<unsigned char>(B(kState) + 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 // original 0x57E120: Shisu_CloseStates[1] - while the wait word is set, the
@@ -327,11 +333,11 @@ extern "C" void __cdecl Shisu_CloseWait(void) {
         Backdrop();
         return;
     }
-    const unsigned char mode = B(kMode);
-    B(kState) = 0;
-    B(kWin1) = 0;
-    B(kMode) = static_cast<unsigned char>(mode + 1);
-    B(kWin2) = 0;
+    const unsigned char mode = BattleE1_Mode;
+    FieldS_State = 0;
+    BattleE1_Win1 = 0;
+    BattleE1_Mode = static_cast<unsigned char>(mode + 1);
+    BattleE1_Win2 = 0;
     B(kWin3) = 0;
 }
 
@@ -343,11 +349,11 @@ extern "C" void __cdecl Shisu_CloseWait(void) {
 // (0x96), 3 (0xAA), 4 (0xB4) or 5. Then Window_ResetAll and Game_Step up one.
 extern "C" void __cdecl Shisu_Result(void) {
     if (B(kRounds) == 0) {
-        B(kChapterStep) = 5;
+        MoveScript_PartyRecords[0x65] = 5;
     } else {
         static const unsigned char kItems[4] = {0x4D, 0x23, 0x24, 0x56};
         for (unsigned i = 0; i < 4; ++i) SH_CALL(Inventory_Remove)(0, kItems[i], B(kGiven + i));
-        B(kChapterStep) = 0x14;
+        MoveScript_PartyRecords[0x65] = 0x14;
         SH_CALL(Shisu_Score)();
         const auto score = static_cast<std::int32_t>(L(kScore));
         if (score <= 0x32) {
@@ -360,7 +366,7 @@ extern "C" void __cdecl Shisu_Result(void) {
             else if (score < 0x96) rank = 2;
             else if (score < 0xAA) rank = 3;
             else rank = score >= 0xB4 ? 5 : 4;
-            B(kRank) = rank;
+            AreaW3c_ItemPick = rank;
         }
     }
     SH_CALL(Window_ResetAll)();
@@ -372,7 +378,7 @@ extern "C" void __cdecl Shisu_Result(void) {
 // its 3).
 extern "C" void __cdecl Shisu_PickDispatch(void) {
     Backdrop();
-    Run("Shisu_PickDispatch (0x57E290)", Shisu_PickStates, Shisu_PickStates_count, B(kState), "the menu state 0x929F01");
+    Run("Shisu_PickDispatch (0x57E290)", Shisu_PickStates, Shisu_PickStates_count, FieldS_State, "the menu state 0x929F01");
 }
 
 // original 0x57E2B0: Shisu_PickStates[0] - Input_AutoRepeat(Input_Pressed &
@@ -394,15 +400,15 @@ extern "C" void __cdecl Shisu_PickSide(void) {
         SetW(kMessage, side + 0x2Bu);
     } else if (hi & 0x10) {
         Sound(0x100);
-        const unsigned char state = B(kState);
+        const unsigned char state = FieldS_State;
         SetW(kMessage, 0x2A);
-        B(kState) = static_cast<unsigned char>(state + 1);
+        FieldS_State = static_cast<unsigned char>(state + 1);
         B(kCursor) = 3;
     } else if (hi & 0x40) {
         Sound(0x100);
-        const unsigned char state = B(kState);
+        const unsigned char state = FieldS_State;
         SetW(kMessage, 0x2A);
-        B(kState) = static_cast<unsigned char>(state + 1);
+        FieldS_State = static_cast<unsigned char>(state + 1);
         B(kCursor) = 0;
     } else {
         const unsigned pressed = Input_Pressed;
@@ -417,16 +423,16 @@ extern "C" void __cdecl Shisu_PickSide(void) {
                 B(kRounds) = static_cast<unsigned char>(B(kRounds) + 1);
             } else if (B(kGiven) != 0 && B(kGiven + 1) != 0) {
                 Sound(0x103);
-                B(kState) = static_cast<unsigned char>(B(kState) + 2);
+                FieldS_State = static_cast<unsigned char>(FieldS_State + 2);
             } else {
                 Sound(0x107);
                 SetW(kMessage, 0x31);
             }
         } else if (confirm != 0 || (Field_CancelButtons & pressed) != 0) {
             Sound(0x103);
-            const unsigned char mode = B(kMode);
-            B(kState) = 0;
-            B(kMode) = static_cast<unsigned char>(mode + 1);
+            const unsigned char mode = BattleE1_Mode;
+            FieldS_State = 0;
+            BattleE1_Mode = static_cast<unsigned char>(mode + 1);
         }
     }
     const unsigned side = B(kSide);
@@ -455,9 +461,9 @@ extern "C" void __cdecl Shisu_PickCounts(void) {
     const unsigned hi = (repeat >> 8) & 0xFF;
     auto back = [] {
         SetW(kMessage, B(kSide) + 0x2Bu);
-        const unsigned char state = B(kState);
+        const unsigned char state = FieldS_State;
         B(kCursor) = 0xFF;
-        B(kState) = static_cast<unsigned char>(state - 1);
+        FieldS_State = static_cast<unsigned char>(state - 1);
     };
     auto refuse = [](unsigned message) {
         SetW(kMessage, message);
@@ -537,7 +543,7 @@ extern "C" void __cdecl Shisu_PickCounts(void) {
 // Shisu_ShowSteps by the step 0x929F02, unchecked (ours aborts past its 5),
 // then the two models' states.
 extern "C" void __cdecl Shisu_PickShow(void) {
-    Run("Shisu_PickShow (0x57E720)", Shisu_ShowSteps, Shisu_ShowSteps_count, B(kStep), "the menu step 0x929F02");
+    Run("Shisu_PickShow (0x57E720)", Shisu_ShowSteps, Shisu_ShowSteps_count, FieldS_Step, "the menu step 0x929F02");
     Models();
 }
 
@@ -546,29 +552,29 @@ extern "C" void __cdecl Shisu_PickShow(void) {
 extern "C" void __cdecl Shisu_ShowStart(void) {
     B(kAState) = 2;
     B(kBState) = 2;
-    B(kStep) = static_cast<unsigned char>(B(kStep) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x57E760: Shisu_ShowSteps[1] - both done: both to state 3 (the
 // drop), the step up one.
 extern "C" void __cdecl Shisu_ShowDrop(void) {
-    if (B(kADone) == 0 || B(kBDone) == 0) return;
+    if (Rest2c_FigureDone == 0 || B(kBDone) == 0) return;
     B(kAState) = 3;
     B(kBState) = 3;
-    B(kStep) = static_cast<unsigned char>(B(kStep) + 1);
+    FieldS_Step = static_cast<unsigned char>(FieldS_Step + 1);
 }
 
 // original 0x57E790: Shisu_ShowSteps[2] - both landed: both to state 4 (still),
 // their colours kept at 0x6BC87C (A) and 0x6BC878 (B), the timer 0, the step
 // up one.
 extern "C" void __cdecl Shisu_ShowLanded(void) {
-    if (B(kADone) == 0 || B(kBDone) == 0) return;
+    if (Rest2c_FigureDone == 0 || B(kBDone) == 0) return;
     const unsigned char a1 = B(kAColour + 1), a2 = B(kAColour + 2);
     B(kAState) = 4;
     B(kBState) = 4;
-    B(kSavedA) = B(kAColour);
+    B(kSavedA) = Rest2c_FigureRgb;
     B(kSavedB) = B(kBColour);
-    const unsigned char step = B(kStep);
+    const unsigned char step = FieldS_Step;
     B(kSavedA + 1) = a1;
     const unsigned char b1 = B(kBColour + 1);
     B(kSavedA + 2) = a2;
@@ -576,13 +582,13 @@ extern "C" void __cdecl Shisu_ShowLanded(void) {
     B(kSavedB + 1) = b1;
     B(kSavedB + 2) = b2;
     B(kTimer) = 0;
-    B(kStep) = static_cast<unsigned char>(step + 1);
+    FieldS_Step = static_cast<unsigned char>(step + 1);
 }
 
 // The six colour bytes: each kept one or the timer, the larger.
 static void Brighten(unsigned char t) {
     const unsigned char a0 = B(kSavedA), a1 = B(kSavedA + 1);
-    B(kAColour) = Max(a0, t);
+    Rest2c_FigureRgb = Max(a0, t);
     B(kAColour + 1) = Max(a1, t);
     B(kAColour + 2) = Max(B(kSavedA + 2), t);
     const unsigned char b0 = B(kSavedB), b1 = B(kSavedB + 1);
@@ -604,9 +610,9 @@ extern "C" void __cdecl Shisu_ShowFlash(void) {
     t = static_cast<unsigned char>(t + 8);
     B(kTimer) = t;
     if (t == 0) {
-        const unsigned char step = B(kStep);
+        const unsigned char step = FieldS_Step;
         B(kTimer) = 0xF8;
-        B(kStep) = static_cast<unsigned char>(step + 1);
+        FieldS_Step = static_cast<unsigned char>(step + 1);
     }
 }
 
@@ -616,7 +622,7 @@ extern "C" void __cdecl Shisu_ShowFlash(void) {
 extern "C" void __cdecl Shisu_ShowFade(void) {
     const unsigned char t = B(kTimer);
     const unsigned char a0 = B(kSavedA), a1 = B(kSavedA + 1);
-    B(kAColour) = Max(a0, t);
+    Rest2c_FigureRgb = Max(a0, t);
     B(kAColour + 1) = Max(a1, t);
     B(kAColour + 2) = Max(B(kSavedA + 2), t);
     const unsigned char b0 = B(kSavedB), b1 = B(kSavedB + 1);
@@ -631,16 +637,16 @@ extern "C" void __cdecl Shisu_ShowFade(void) {
     B(kBColour) = b0;
     const unsigned char rounds = B(kRounds);
     B(kAColour + 2) = a2;
-    const unsigned char state = B(kState);
-    B(kAColour) = a0;
+    const unsigned char state = FieldS_State;
+    Rest2c_FigureRgb = a0;
     B(kAColour + 1) = a1;
     B(kBColour + 1) = b1;
     B(kBColour + 2) = b2;
     B(kAState) = 5;
     B(kBState) = 1;
     B(kRounds) = static_cast<unsigned char>(rounds + 1);
-    B(kState) = static_cast<unsigned char>(state - 2);
-    B(kStep) = 0;
+    FieldS_State = static_cast<unsigned char>(state - 2);
+    FieldS_Step = 0;
 }
 
 // original 0x57E9A0: the four counts - Inventory_Count(0, item, 0)'s al for
@@ -664,12 +670,12 @@ extern "C" void __cdecl Shisu_SetupWindows(void) {
     SetW(kWin2 + 6, 0xFF9C);
     B(kWin0 + 1) = 1;
     B(kWin0 + 3) = 2;
-    B(kWin1) = 1;
+    BattleE1_Win1 = 1;
     B(kWin1 + 1) = 1;
     B(kWin1 + 2) = 1;
     B(kWin1 + 3) = 2;
     SetW(kWin1 + 4, 0x14);
-    B(kWin2) = 1;
+    BattleE1_Win2 = 1;
     B(kWin2 + 1) = 1;
     B(kWin2 + 2) = 2;
     B(kWin2 + 3) = 2;
@@ -727,7 +733,7 @@ std::int32_t S(U v) { return static_cast<std::int32_t>(v); }
 // B, C, D at 0x9399EC.. and the score 0x9399FC = (16 D + 10 L A + (C B / 100)
 // g1) / 100, every division toward zero, every product 32-bit.
 extern "C" void __cdecl Shisu_Score(void) {
-    const std::int32_t level = B(kLevel);
+    const std::int32_t level = Rest2c_FigureScaleIndex;
     const std::int32_t g1 = B(kGiven + 1);
     const std::int32_t rounds = B(kRounds);
     const std::int32_t d = g1 - rounds;
@@ -763,7 +769,7 @@ extern "C" void __cdecl Shisu_InitModels(void) {
     const long kx = Field_Kind2X;
     B(kBState) = 0;
     B(kModelB + 0x48) = 0;
-    SetL(kBScale, 0x1000);
+    Rest2c_FigureLift = 0x1000;
     SetL(kModelB + 0x64, 0);
     SetL(kModelB + 0x68, 0);
     SetL(kBAngle, 0);
@@ -784,14 +790,14 @@ extern "C" void __cdecl Shisu_InitModels(void) {
     SetL(kModelA + 0x40, 0x1000);
     SetL(kModelA + 0x64, 0);
     SetL(kModelA + 0x68, 0);
-    SetL(kAAngle, 0);
-    B(kAColour) = 0x80;
+    Rest2c_FigureAngle = 0;
+    Rest2c_FigureRgb = 0x80;
     B(kAColour + 1) = 0x80;
     B(kAColour + 2) = 0x80;
     SetL(kModelA + 0x34, static_cast<U>(kx2));
     SetL(kModelA + 0x38, static_cast<U>(kz2));
     const long ha = SH_CALL(AreaMap_Elevation)(kx2, kz2);
-    SetL(kAY, (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ha))) + 0x200u) << 16);
+    Rest2c_FigureY = (static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ha))) + 0x200u) << 16;
 }
 
 // ===========================================================================
@@ -825,7 +831,7 @@ extern "C" void __cdecl Shisu_ModelBDraw(void) {
     const unsigned char g2 = B(kGiven + 2);
     const auto scale = static_cast<U>(Shisu_ModelScales[d]);
     const unsigned char kept_b = B(kBColour + 2);
-    SetL(kBScale, scale);
+    Rest2c_FigureLift = scale;
     const unsigned char kept_r = B(kBColour);
     const int three = g2 * 3;
     const auto up = static_cast<unsigned char>(g2 * 3);
@@ -978,7 +984,7 @@ extern "C" void __cdecl Shisu_ModelADispatch(void) {
 // original 0x57F330: MasterFigure_States[1] - model A's angle +0x6C down 0x20,
 // then its draw (a tail jmp to R2C's 0x57F340).
 extern "C" void __cdecl Shisu_ModelATurn(void) {
-    SetL(kAAngle, L(kAAngle) - 0x20u);
+    Rest2c_FigureAngle = Rest2c_FigureAngle - 0x20u;
     SH_AT(Handler, rest_2b::at::kModelADraw)();
 }
 

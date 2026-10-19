@@ -199,12 +199,12 @@ void Seed(unsigned k) {
     }
     // the leader about the cell seven times in eight
     if (sh::Next() % 8 != 0) {
-        SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(Around(cx)));
-        SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(Around(cz)));
+        SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(Around(cx)));
+        SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(Around(cz)));
     }
     // the party: each record in use or not, about the cell
     for (unsigned m = 0; m < at::kTrioCount; ++m) {
-        unsigned char* const r = Mem(sh::at::kObjTrio + at::kTrioStride * m);
+        unsigned char* const r = Mem(ObjTrio_addr + at::kTrioStride * m);
         if (sh::Half()) r[0] = 0;
         if (sh::Next() % 8 != 0) {
             SetLong(r + 0x34, static_cast<std::int32_t>(Around(cx)));
@@ -239,8 +239,8 @@ void Disturb(U h) {
     switch (h % 5) {
     case 0: SetWord(s + 0x30, (v & 1) ? 0xC0u - ((v >> 1) & 0x10) : v >> 1); break;
     case 1: s[8] = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
-    case 2: SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(v)); break;
-    case 3: SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(v)); break;
+    case 2: SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(v)); break;
+    case 3: SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(v)); break;
     case 4: SetWord(s + ((v & 1) ? 0x36 : 0x3A), v >> 1); break;
     default: break;
     }

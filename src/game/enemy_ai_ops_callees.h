@@ -38,15 +38,15 @@ constexpr std::uint32_t kEnemyCurrent = 0x939AD8;  // unsigned char*: the enemy 
 constexpr std::uint32_t kTasks = 0x93A000;
 constexpr std::uint32_t kTaskSize = 0x84;
 // The 32 tint records, 12 bytes each (MoveScript_TintRecords; +2..+4 r g b).
-constexpr std::uint32_t kTints = 0x7E0700;
+// kTints: now MoveScript_TintRecords (symbols.toml).
 constexpr std::uint32_t kTintSize = 12;
 // The action being resolved (PSX 0x80146390.., sibling BATTLE_RAM.md
 // "Commands, Auto, Run and the enemy AI").
 constexpr std::uint32_t kStatBlock = 0x939F80;     // 32 bytes: the target's +0xB0.. copied in
 constexpr std::uint32_t kCommandSource = 0x939FA0; // pointer: byte +0 the actor the command is aimed at
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (PSX 0x801462E4)
-constexpr std::uint32_t kEventBattle = 0x904AAA;   // u8 (docs/battle_flow.md: "event battle" is a guess)
-constexpr std::uint32_t kTargeting = 0x904AAF;     // u8: non-zero while a target is being picked (by use here)
+// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8 (docs/battle_flow.md: "event battle" is a guess)
+// kTargeting: now BattleE4_Picking (symbols.toml). u8: non-zero while a target is being picked (by use here)
 constexpr std::uint32_t kPulse = 0x904AC8;         // u8: the menu cursor's pulse (Battle_PulseStep)
 constexpr std::uint32_t kActor = 0x904B34;         // u8: the acting actor
 constexpr std::uint32_t kActionKind = 0x904B35;    // u8: 1 attack, 4 ability, 5 item (sibling's command bytes)
@@ -54,8 +54,8 @@ constexpr std::uint32_t kTarget = 0x904B44;        // u8: the target actor, or 0
 constexpr std::uint32_t kResultTarget = 0x904B54;  // u8 (PSX 0x80146390)
 constexpr std::uint32_t kResultSprite = 0x904B5C;  // pointer: the target's sprite
 constexpr std::uint32_t kResult = 0x904B60;        // pointer: the result record, +4 HP and +6 AP delta, +8 flags
-constexpr std::uint32_t kHookA = 0x904B64;         // code pointers stored by EnemyOp_Begin
-constexpr std::uint32_t kHookB = 0x904B68;
+// kHookA: now BattleHook_End (symbols.toml). code pointers stored by EnemyOp_Begin
+// kHookB: now BattleHook_Exit (symbols.toml).
 constexpr std::uint32_t kMagicId = 0x904B80;       // u16: the item or ability (low byte id, high byte category)
 constexpr std::uint32_t kStatusAdd = 0x904B98;     // u16: status bits ORed into the target after the effect
 constexpr std::uint32_t kStatusAdd2 = 0x904B9A;    // u16: zeroed with it
@@ -70,13 +70,13 @@ constexpr std::uint32_t kHookBValue = bof3::addr::BattleHook_Area189Transition; 
 
 // The op tables in .data (symbols.toml [[data]] EnemyOp_*): each a run of
 // code pointers indexed by one of Sprite_Current's step bytes.
-constexpr std::uint32_t kSteps = 0x64B1A0;         // by +1, 12 entries (a null after them)
-constexpr std::uint32_t kEnterSubs = 0x64B1D4;     // by +2, 2
-constexpr std::uint32_t kScaleInSubs = 0x64B1DC;   // by +3, 2
-constexpr std::uint32_t kWaitSubs = 0x64B1EC;      // by +2, 2 (called, not jumped to)
-constexpr std::uint32_t kActSubs = 0x64B1FC;       // by +2, 6
-constexpr std::uint32_t kHitSubs = 0x64B214;       // by +3, 3
-constexpr std::uint32_t kDeathSubs = 0x64B234;     // by +3, 4
+// kSteps: now EnemyOp_Steps (symbols.toml). by +1, 12 entries (a null after them)
+// kEnterSubs: now EnemyOp_EnterSubs (symbols.toml). by +2, 2
+// kScaleInSubs: now EnemyOp_ScaleInSubs (symbols.toml). by +3, 2
+// kWaitSubs: now EnemyOp_WaitSubs (symbols.toml). by +2, 2 (called, not jumped to)
+// kActSubs: now EnemyOp_ActSubs (symbols.toml). by +2, 6
+// kHitSubs: now EnemyOp_HitSubs (symbols.toml). by +3, 3
+// kDeathSubs: now EnemyOp_DeathSubs (symbols.toml). by +3, 4
 
 }  // namespace at
 

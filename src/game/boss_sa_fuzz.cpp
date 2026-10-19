@@ -27,6 +27,7 @@
 #include "game/boss_sa.h"
 #include "game/boss_sa_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 
 namespace boss_sa {
 namespace {
@@ -69,9 +70,9 @@ const bh::Callee kCallees[] = {
 
 // The cells the set-ups' hooks write beyond the standard regions: MoveScript
 // counter 0, the music track, the window records' pass byte.
-const bh::Region kRegions[] = {{at::kMoveVar3, 1}, {Key(&Music_Track), 1}, {at::kWindowPass, 1}};
+const bh::Region kRegions[] = {{at::kMoveVar3, 1}, {Key(&Music_Track), 1}, {BossSa_WindowPass_addr, 1}};
 
-unsigned char* Enemy() { return bh::Pointer(bh::at::kEnemyCurrent); }
+unsigned char* Enemy() { return bh::Pointer(BattleE3_CurrentEnemy_addr); }
 unsigned char Byte(std::initializer_list<U> often) {
     if (!bh::Often()) return static_cast<unsigned char>(bh::Next());
     return static_cast<unsigned char>(often.begin()[bh::Next() % often.size()]);
@@ -87,9 +88,9 @@ void HookWord(U* a) {
 // quarter of the maximum (HP less the signed pending damage at, just above
 // and just below it; the damage negative sometimes).
 void SeedHp(bool quarter) {
-    unsigned char* const e = Enemy();
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(Enemy());
     if (!quarter) {
-        if (bh::Half()) SetWord(e + 0xA4, bh::Half() ? 0xFFFF : bh::Next() % 3 == 0 ? 0xFFFE : 0);
+        if (bh::Half()) enemy_rec->hp = bh::Half() ? 0xFFFF : bh::Next() % 3 == 0 ? 0xFFFE : 0;
         return;
     }
     if (!bh::Often()) return;
@@ -97,9 +98,9 @@ void SeedHp(bool quarter) {
     const std::int32_t quarterhp = static_cast<std::int32_t>((max & 0xFFFF) >> 2);
     const std::int32_t dmg = bh::Half() ? static_cast<std::int32_t>(bh::Next() % 600) - 100 : static_cast<std::int16_t>(bh::Next());
     const std::int32_t left = quarterhp + static_cast<std::int32_t>(bh::Next() % 3) - 1;
-    SetWord(e + 0xB0, max & 0xFFFF);
-    SetWord(e + 0x108, static_cast<U>(dmg) & 0xFFFF);
-    SetWord(e + 0xA4, static_cast<U>(left + static_cast<std::int16_t>(dmg)) & 0xFFFF);
+    enemy_rec->max_hp = max & 0xFFFF;
+    enemy_rec->hp_change = static_cast<U>(dmg) & 0xFFFF;
+    enemy_rec->hp = static_cast<U>(left + static_cast<std::int16_t>(dmg)) & 0xFFFF;
 }
 
 // The Run's clones (RunKind sets it): a dispatcher's other state bytes are
@@ -156,12 +157,12 @@ enum : unsigned { kDispatch, kEnter, kAct, kEnd, kEndStart, kEndStep, kHook };
 
 // The count 0x904B7E: Gary's step waits for 0, Mogu's counts it down to 0.
 void SeedCount(U end) {
-    SetWord(Mem(at::kEndCount), bh::Often() ? (bh::Half() ? end : BH_PICK(0, 1, 2, 0xFFFF, 0x3C, 0x100)) : bh::Next() & 0xFFFF);
+    SetWord(Mem(BossSa_EndCount_addr), bh::Often() ? (bh::Half() ? end : BH_PICK(0, 1, 2, 0xFFFF, 0x3C, 0x100)) : bh::Next() & 0xFFFF);
 }
 void SeedGary(unsigned k) {
     SeedStates(k);
     if (k == kEndStep) SeedCount(0);
-    if (k == kEndStep || k == kEndStart) Mem(at::kBattleEnd)[0] = Byte({0, 1, 2, 4, 6, 0xFB});
+    if (k == kEndStep || k == kEndStart) Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 4, 6, 0xFB});
 }
 void SeedMogu(unsigned k) {
     SeedStates(k);
@@ -198,15 +199,15 @@ void Seed01(unsigned k) {
         if (bh::Often()) Mem(at::kActor)[0] = 0;
         Mem(at::kActionKind)[0] = Byte({4, 4, 3, 5, 0x84});
         unsigned char* const record = bh::SpriteRecord(bh::Next()) + 4 * (bh::Next() % 16);
-        bh::SetPointer(at::kAction, record);
+        bh::SetPointer(BattleSprites_Action_addr, record);
         if (bh::Half()) SetWord(record + 2, bh::Half() ? 0x78 : BH_PICK(0x77, 0x79, 0x178, 0));
         // phase 5: 0x904AAD bit 0
-        Mem(at::kEventFlags)[0] = Byte({0, 1, 0xFE, 0xFF});
+        Mem(BossSe_Script_addr)[0] = Byte({0, 1, 0xFE, 0xFF});
         break;
     }
     case kEndHook:
-        Mem(at::kBattleEnd)[0] = Byte({0, 1, 2, 3, 0xFE, 0x81});
-        Mem(at::kChapterStep)[0] = Byte({0, 0xFF, 0x31});
+        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 3, 0xFE, 0x81});
+        Mem(MoveScript_PartyRecords_addr + 0x65)[0] = Byte({0, 0xFF, 0x31});
         break;
     default:
         break;
@@ -246,7 +247,7 @@ void SeedNue(unsigned k) {
     SeedStates(k);
     if (k == kNuePick) SeedHp(false);
     if (k == kNueHit) SeedHp(true);
-    if (k == kNueMove) Mem(at::kBattleEnd)[0] = Byte({0, 2, 0xFD, 0xFF});
+    if (k == kNueMove) Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 2, 0xFD, 0xFF});
 }
 void ArgsNue(unsigned k, U* a) {
     if (k == kNueHook || k == kNuePick || k == kNueHit) HookWord(a);
@@ -298,7 +299,7 @@ const bh::Clone kClones39[] = {
 // The end hooks' 0x904AE8 & 6 (none, bit 1, bit 2, both), the event hook's
 // bit 1; the three cells they write, garbage before.
 void SeedBoss002(unsigned) {
-    Mem(at::kBattleEnd)[0] = Byte({0, 1, 2, 4, 6, 0xF9, 0xFB});
+    Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 1, 2, 4, 6, 0xF9, 0xFB});
 }
 // Fight 2's event hook reads the phase code's low byte for 0: 0 a third of
 // the time, with garbage above the byte half the time.
@@ -352,8 +353,8 @@ void SeedWeretigr(unsigned k) {
         if (bh::Half()) s[0] &= 0xBF;
         break;
     case kWMove:
-        Mem(at::kBattleEnd)[0] = Byte({0, 2, 0xFD, 0xFF});
-        SetLong(Mem(at::kExp), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0, 0xFFFF, 0xFFFFFFFFu, 0x7FFFFFFF) : bh::Next()));
+        Mem(BattleActions_BattleEnd_addr)[0] = Byte({0, 2, 0xFD, 0xFF});
+        SetLong(Mem(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0, 0xFFFF, 0xFFFFFFFFu, 0x7FFFFFFF) : bh::Next()));
         break;
     case kWPick:
         SeedHp(false);
@@ -367,8 +368,8 @@ void SeedWeretigr(unsigned k) {
 // disturbance moving 0x939AD8 does not show a re-read). From the hash only.
 void DisturbWeretigr(U h) {
     if ((h >> 8) % 3 != 0) return;
-    unsigned char* const e = bh::Pointer(bh::at::kEnemyCurrent);
-    SetWord(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(move_script::Long(e + 0xF8)))), h >> 16);
+    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+    SetWord(reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->cue_table)))), h >> 16);
 }
 
 void ArgsWeretigr(unsigned k, U* a) {

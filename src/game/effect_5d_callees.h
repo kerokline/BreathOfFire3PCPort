@@ -16,10 +16,10 @@ constexpr std::uint32_t kScreenY = 0x903824;        // MapView_ScreenXY's second
 constexpr std::uint32_t kCameraX = 0x905E66;        // s16: the camera's map cell x (inside kCameraCells)
 constexpr std::uint32_t kCameraZ = 0x905E62;        // s16: the camera's map cell z
 constexpr std::uint32_t kCounter = 0x903848;        // u8: the chapters' counter (scenario_harness at::kCounter)
-constexpr std::uint32_t kStoryFlags = 0x904030;     // the story flags (Cond_Flags + 0xA0): Flags_Test's / Flags_Clear's bank
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the story flags (Cond_Flags + 0xA0): Flags_Test's / Flags_Clear's bank
 constexpr std::uint32_t kAreaFlags = 0x903FD8;      // Cond_Flags + 0x48: the bank sub-kind 0x14's flags are tested in
 constexpr std::uint32_t kClutStrip = 0x80BCC0;      // 16 u16 colours sub-kind 0x14 scales ...
-constexpr std::uint32_t kClutStripOut = 0x80FCC0;   // ... into these 16 (+0x4000), Gfx_ClutStripDirty then set
+// kClutStripOut: now Gfx_ClutStrip[0x3a0] (symbols.toml). ... into these 16 (+0x4000), Gfx_ClutStripDirty then set
 constexpr unsigned kClutStripWords = 16;
 constexpr unsigned kMemberStride = 0x14C;           // ObjTrio's records
 constexpr unsigned kMemberCount = 3;

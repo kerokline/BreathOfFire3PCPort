@@ -39,6 +39,7 @@
 #include "game/effect_1a_callees.h"
 #include "game/fishing_text.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -50,6 +51,14 @@ using U = std::uint32_t;
 using move_script::At;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+records::SpriteObject* AsSpr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 
 // DIV-0144 (D279): 1 through PatchBytes("FishingEmptyLine") / ("FishingLowGlyph")
 // in FishingEmpty_Arm, after every module's self-test.
@@ -106,7 +115,7 @@ unsigned char* Extra(const char* who, U index) {
         bof3::Fatal("%s: extra sprite index %u, past the four Sprite_ObjectsExtra records - the original reads what "
                     "follows (docs/effect_1a.md section 6)",
                     who, (unsigned)index);
-    return At(at::kExtras + index * at::kObjectStride);
+    return At(Sprite_ObjectsExtra_addr + index * at::kObjectStride);
 }
 // Sprite_Objects record `index` (the byte 0x939A1C): thirty of them.
 unsigned char* Object(const char* who, U index) {
@@ -114,7 +123,7 @@ unsigned char* Object(const char* who, U index) {
         bof3::Fatal("%s: object index %u (0x939A1C), past the thirty Sprite_Objects records - the original reads what "
                     "follows (docs/effect_1a.md section 6)",
                     who, (unsigned)index);
-    return At(at::kObjects + index * at::kObjectStride);
+    return At(Sprite_Objects_addr + index * at::kObjectStride);
 }
 // Effect_FindFree's record: a Fatal on an answer past the twenty (the callee
 // answers 0xFF or 0..19; the original would write past the pool). `index` is
@@ -124,7 +133,7 @@ unsigned char* Spawned(const char* who, std::int32_t index) {
         bof3::Fatal("%s: Effect_FindFree answered %d, past the 20 records - the original writes past the pool "
                     "(docs/effect_1a.md section 6)",
                     who, (int)index);
-    return At(at::kRecord0 + static_cast<U>(index) * at::kEffectStride);
+    return At(Effect_Objects_addr + static_cast<U>(index) * at::kEffectStride);
 }
 // Kind 0xF's text record `index` (+0x4B): thirteen of 8 bytes.
 U Text(const char* who, unsigned index) {
@@ -290,7 +299,7 @@ void AttachVector(const unsigned char* o, const long* out, short* v) {
 
 // kinds 0xF's windows: ObjTrio 0's +3 at 3 or more names the option bit.
 U OptionBits() {
-    if (B(at::kLeader + 3) < 3) return 0;
+    if (ObjTrio[3] < 3) return 0;
     return 1u << (S()[6] & 31);
 }
 
@@ -303,10 +312,10 @@ U OptionBits() {
 
 // original 0x462B00 (Effect_KindHandlers 0xE): the world map record's +4
 // handler by WorldMap_RecordIndex's low byte (Area33_Record04Run on Yraall's).
-extern "C" void __cdecl EffectKind0E_WorldMap(void) { RecordHandler("EffectKind0E_WorldMap", at::kRecordSlot4); }
+extern "C" void __cdecl EffectKind0E_WorldMap(void) { RecordHandler("EffectKind0E_WorldMap", WorldMap_Records_addr + 0x4); }
 
 // original 0x462B20 (Effect_KindHandlers 0x16): the record's +8 handler.
-extern "C" void __cdecl EffectKind16_WorldMap(void) { RecordHandler("EffectKind16_WorldMap", at::kRecordSlot8); }
+extern "C" void __cdecl EffectKind16_WorldMap(void) { RecordHandler("EffectKind16_WorldMap", WorldMap_Records_addr + 0x8); }
 
 // original 0x462B60 (Effect_KindHandlers 0x5C): Area104_Kind5CRun in area
 // 0x68, Area121_Kind5CRun anywhere else (both tail jumps).
@@ -318,40 +327,40 @@ extern "C" void __cdecl EffectKind5C_Run(void) {
 }
 
 // original 0x462BA0 (Effect_KindHandlers 1): EffectKind01_States by +1.
-extern "C" void __cdecl EffectKind01_Run(void) { Run("EffectKind01_Run", at::kKind01States, 2, S()[1]); }
+extern "C" void __cdecl EffectKind01_Run(void) { Run("EffectKind01_Run", EffectKind01_States_addr, 2, S()[1]); }
 // original 0x462E50 (Effect_KindHandlers 7): EffectKind07_States by +1.
-extern "C" void __cdecl EffectKind07_Run(void) { Run("EffectKind07_Run", at::kKind07States, 5, S()[1]); }
+extern "C" void __cdecl EffectKind07_Run(void) { Run("EffectKind07_Run", EffectKind07_States_addr, 5, S()[1]); }
 // original 0x463040 (Effect_KindHandlers 8): EffectKind08_States by +1.
-extern "C" void __cdecl EffectKind08_Run(void) { Run("EffectKind08_Run", at::kKind08States, 4, S()[1]); }
+extern "C" void __cdecl EffectKind08_Run(void) { Run("EffectKind08_Run", EffectKind08_States_addr, 4, S()[1]); }
 // original 0x463440 (Effect_KindHandlers 9): EffectKind09_States by +1.
-extern "C" void __cdecl EffectKind09_Run(void) { Run("EffectKind09_Run", at::kKind09States, 10, S()[1]); }
+extern "C" void __cdecl EffectKind09_Run(void) { Run("EffectKind09_Run", EffectKind09_States_addr, 10, S()[1]); }
 // original 0x463EE0 (Effect_KindHandlers 0xB): EffectKind0B_States by +1.
-extern "C" void __cdecl EffectKind0B_Run(void) { Run("EffectKind0B_Run", at::kKind0BStates, 5, S()[1]); }
+extern "C" void __cdecl EffectKind0B_Run(void) { Run("EffectKind0B_Run", EffectKind0B_States_addr, 5, S()[1]); }
 // original 0x464660 (Effect_KindHandlers 2): EffectKind02_States by +1.
-extern "C" void __cdecl EffectKind02_Run(void) { Run("EffectKind02_Run", at::kKind02States, 5, S()[1]); }
+extern "C" void __cdecl EffectKind02_Run(void) { Run("EffectKind02_Run", EffectKind02_States_addr, 5, S()[1]); }
 // original 0x464F20 (Effect_KindHandlers 3): EffectKind03_States by +1.
-extern "C" void __cdecl EffectKind03_Run(void) { Run("EffectKind03_Run", at::kKind03States, 4, S()[1]); }
+extern "C" void __cdecl EffectKind03_Run(void) { Run("EffectKind03_Run", EffectKind03_States_addr, 4, S()[1]); }
 // original 0x465310 (Effect_KindHandlers 5): EffectKind05_States by +1.
-extern "C" void __cdecl EffectKind05_Run(void) { Run("EffectKind05_Run", at::kKind05States, 6, S()[1]); }
+extern "C" void __cdecl EffectKind05_Run(void) { Run("EffectKind05_Run", EffectKind05_States_addr, 6, S()[1]); }
 // original 0x4658C0 (Effect_KindHandlers 0xA): EffectKind0A_States by +1.
-extern "C" void __cdecl EffectKind0A_Run(void) { Run("EffectKind0A_Run", at::kKind0AStates, 2, S()[1]); }
+extern "C" void __cdecl EffectKind0A_Run(void) { Run("EffectKind0A_Run", EffectKind0A_States_addr, 2, S()[1]); }
 // original 0x465A60 (Effect_KindHandlers 0xC): EffectKind0C_States by +1.
-extern "C" void __cdecl EffectKind0C_Run(void) { Run("EffectKind0C_Run", at::kKind0CStates, 3, S()[1]); }
+extern "C" void __cdecl EffectKind0C_Run(void) { Run("EffectKind0C_Run", EffectKind0C_States_addr, 3, S()[1]); }
 // original 0x465F10 (Effect_KindHandlers 0xD): EffectKind0D_States by +1.
-extern "C" void __cdecl EffectKind0D_Run(void) { Run("EffectKind0D_Run", at::kKind0DStates, 5, S()[1]); }
+extern "C" void __cdecl EffectKind0D_Run(void) { Run("EffectKind0D_Run", EffectKind0D_States_addr, 5, S()[1]); }
 // original 0x4667A0 (Effect_KindHandlers 0x1A): EffectKind1A_States by +1.
-extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", at::kKind1AStates, 17, S()[1]); }
+extern "C" void __cdecl EffectKind1A_Run(void) { Run("EffectKind1A_Run", EffectKind1A_States_addr, 17, S()[1]); }
 
 // original 0x466080 (Effect_KindHandlers 0xF): unless the record is record 3
 // (0x7E1360) or record 3's +1 is above 3, Effect_Release (a tail jump); else
 // EffectKind0F_States by +1.
 extern "C" void __cdecl EffectKind0F_Run(void) {
     unsigned char* const s = S();
-    if (Key(s) != at::kRecord3 && B(at::kRecord3 + 1) <= 3) {
+    if (Key(s) != (Effect_Objects_addr + 0x180) && Effect_Objects[0x181] <= 3) {
         SH_CALL(Effect_Release)();
         return;
     }
-    Run("EffectKind0F_Run", at::kKind0FStates, 13, s[1]);
+    Run("EffectKind0F_Run", EffectKind0F_States_addr, 13, s[1]);
 }
 
 // ===========================================================================
@@ -362,7 +371,7 @@ extern "C" void __cdecl EffectKind0F_Run(void) {
 // Sprite_ObjectsExtra record the dword +0x18 names; +1 = 1.
 extern "C" void __cdecl EffectKind01_Start(void) {
     unsigned char* const s = S();
-    SetL(s + 0x54, L(Extra("EffectKind01_Start", L(s + 0x18)) + 0x54));
+    SetL(s + 0x54, AsSpr(Extra("EffectKind01_Start", L(s + 0x18)))->frames);
     S()[1] = 1;
 }
 
@@ -378,11 +387,12 @@ extern "C" void __cdecl EffectKind01_Start(void) {
 // 0x100, 0x100) primitive linked (0xC). PSX: no twin (catalog part 2).
 extern "C" void __cdecl EffectKind01_Draw(void) {
     unsigned char* const e = S();
+    auto* const eo = reinterpret_cast<records::EffectObject*>(e);
     unsigned char* const x = Extra("EffectKind01_Draw", L(e + 0x18));
     Sprite_Current = x;
-    SetL(e + 0x34, L(S() + 0x34));
-    SetL(e + 0x38, L(S() + 0x38));
-    SetL(e + 0x3C, L(S() + 0x3C));
+    eo->x = L(S() + 0x34);
+    eo->z = L(S() + 0x38);
+    eo->height = L(S() + 0x3C);
     AreaRect(0xF0, 0x10, 0x10);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
@@ -392,7 +402,7 @@ extern "C" void __cdecl EffectKind01_Draw(void) {
     AttachVector(S(), out, v);
     long depth[2];
     const long z = SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 8), depth);
-    SetL(e + 0x60, static_cast<U>(z));
+    eo->depth = static_cast<U>(z);
     SH_CALL(Gte_PrimDepthFlat4_10)(p);
     SetL(p + 0x1C, 0);
     FldAdd(p + 8, At(at::kQuadEight), p + 0x18);
@@ -432,10 +442,11 @@ extern "C" void __cdecl EffectKind01_Draw(void) {
 // bottom's y - the top's| through _ftol. The rest as kind 1's.
 extern "C" void __cdecl EffectKind10_Run(void) {
     unsigned char* const e = S();
+    auto* const eo = reinterpret_cast<records::EffectObject*>(e);
     Sprite_Current = Extra("EffectKind10_Run", L(e + 0xC));
-    SetL(e + 0x34, L(S() + 0x34));
-    SetL(e + 0x38, L(S() + 0x38));
-    SetL(e + 0x3C, L(S() + 0x3C));
+    eo->x = L(S() + 0x34);
+    eo->z = L(S() + 0x38);
+    eo->height = L(S() + 0x3C);
     AreaRect(0xF0, 0x10, 0x10);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(p);
@@ -444,7 +455,7 @@ extern "C" void __cdecl EffectKind10_Run(void) {
     alignas(4) short v[4];
     AttachVector(S(), out, v);
     long depth[2];
-    SetL(e + 0x60, static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 8), depth)));
+    eo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 8), depth));
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x10));
     CopyDword(p + 0x20, p + 0x10);
     CopyDword(p + 0x1C, p + 0xC);
@@ -453,7 +464,7 @@ extern "C" void __cdecl EffectKind10_Run(void) {
     Sprite_Current = Extra("EffectKind10_Run", L(e + 0x18));
     SH_CALL(MoveCmd_AttachOffset)(out, e[0x1C]);
     AttachVector(S(), out, v);
-    SetL(e + 0x60, static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 0x28), depth)));
+    eo->depth = static_cast<U>(SH_CALL(Gte_RotTransPers)(v, reinterpret_cast<unsigned long*>(p + 0x28), depth));
     SH_CALL(Gte_StoreDepthF)(reinterpret_cast<float*>(p + 0x30));
     CopyDword(p + 0x40, p + 0x30);
     CopyDword(p + 0x3C, p + 0x2C);
@@ -532,13 +543,13 @@ extern "C" void __cdecl EffectHud_Draw(int x, int y) {
     DrawSprite(0xE, 3, ux, uy);
     DrawSprite(0xF, 3, ux + 0x100, uy);
     signed char count = 0;
-    if (B(at::kRecord0 + 1) != 0) {
-        count = static_cast<signed char>(0x3E - B(at::kRecord0 + 0x3A));
+    if (Effect_Objects[1] != 0) {
+        count = static_cast<signed char>(0x3E - Effect_Objects[0x3a]);
         if (count < 0) count = 0;
     }
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextBuffer)), reinterpret_cast<const char*>(At(at::kCountFormat)),
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextBuffer)), reinterpret_cast<const char*>(At(Boss26Fx_CountFormat_addr)),
                          static_cast<int>(count));
-    const int colour = (count >= 0x32 && B(at::kLeader + 2) == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
+    const int colour = (count >= 0x32 && ObjTrio[2] == 4 && (Frame_Counter & 4) != 0) ? 2 : 0;
     SH_CALL(Text_DrawFont12)(x + 0xEE, y + 0x1A, colour, At(at::kTextBuffer));
     SH_CALL(EffectHud_DrawGauge)(x, y);
 }
@@ -555,7 +566,7 @@ extern "C" void __cdecl EffectHud_DrawGauge(int x, int y) {
     const U ux = static_cast<U>(x), uy = static_cast<U>(y);
     SH_CALL(EffectHud_Bar)(x + 0x58, y + 8, 4);
     U marker = uy;
-    if (B(at::kRecord0 + 1) != 0) {
+    if (Effect_Objects[1] != 0) {
         const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(at::kRecord0 + 0x34)),
                                                   static_cast<long>(L(at::kRecord0 + 0x38)));
         const std::int32_t lift = static_cast<std::int16_t>(h) / 32;
@@ -578,7 +589,7 @@ extern "C" void __cdecl EffectHud_DrawGauge(int x, int y) {
     p[5] = 0x20;
     p[6] = 0;
     SH_CALL(Gfx_CommitPrim)(4, 0x38);
-    if (B(at::kRecord0 + 1) != 4) return;
+    if (Effect_Objects[1] != 4) return;
     const std::int16_t height = static_cast<std::int16_t>(W(at::kRecord0 + 0x3E));
     if (height > 0)
         SH_CALL(EffectHud_Sprite8)(x + 0x69, 0xB4, 2);
@@ -842,7 +853,7 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
     DrawSprite(0x10, 2, 0x87, 0xB4);
     const std::int32_t scaled = static_cast<std::int32_t>(L(S() + 0xC) * 0x60u);
     SH_CALL(EffectHud_TwoBars)(0x88, 0xCB, scaled / 255, 2);
-    if (B(at::kLeader + 2) != 3) return;
+    if (ObjTrio[2] != 3) return;
     SetW(S() + 0x2E, 0xB8);
     SetW(S() + 0x30, 0xD1);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
@@ -856,10 +867,10 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
 // +0x30 - 0x18), slot 2. PSX 0x801D1F38 (table-anchored).
 extern "C" void __cdecl EffectKind03_ShowName(void) {
     const U name = (Frame_Counter & 0x40) != 0 ? at::kAccessoryNames + (L(at::kAccessoryA) & 0xFF) * 0x18u
-                                               : at::kAccessoryNames + B(at::kAccessoryB) * 0x18u;
+                                               : at::kAccessoryNames + CharStats_ExtraItem * 0x18u;
     DrawText(0x8A, 0xC8, 0, FishingText_NameCount(), name);   // DIV-0069: 12 under a Latin overlay, else 8
     const unsigned char* const set = PtrAt(at::kPanelSet);
-    const auto left = static_cast<signed char>(B(at::kRecord0 + 7) - set[0xF]);
+    const auto left = static_cast<signed char>(Effect_Objects[7] - set[0xF]);
     if (left < 0) return;
     unsigned n;
     if (left > 4) {
@@ -902,10 +913,10 @@ U Row05(const char* who, unsigned row) {
 // kind-0xA record spawned (+0 1, +5 0xA) when Effect_FindFree has one; +7 =
 // the block's byte +0xF; +1 up. PSX 0x801D2108 (callers).
 extern "C" void __cdecl EffectKind05_Start(void) {
-    SetL(S() + 0x34, L(at::kLeader + 0x34));
-    SetL(S() + 0x38, L(at::kLeader + 0x38) - 0x8000u);
+    Store<U>(CurFx()->x, L(at::kLeader + 0x34));
+    Store<U>(CurFx()->z, L(at::kLeader + 0x38) - 0x8000u);
     unsigned char* s = S();
-    const long h = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(s + 0x34)), static_cast<long>(L(s + 0x38)));
+    const long h = SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z);
     SetW(S() + 0x3E, static_cast<U>(h) + 0x100);
     const unsigned char* const script = PtrAt(at::kPanelScript);
     const auto product = static_cast<std::int32_t>(script[2] * L(at::kRecord2 + 0xC));
@@ -917,7 +928,7 @@ extern "C" void __cdecl EffectKind05_Start(void) {
         s[6] = 3;
         s = S();
     }
-    SetL(s + 0x10, L(s + 0x38) - (L(s + 0x10) << 15));
+    SetL(s + 0x10, static_cast<std::uint32_t>(AsFx(s)->z) - (L(s + 0x10) << 15));
     s = S();
     Kind2ZClamp(SL(s + 0x10));
     MoveScript_F3Divisor = 0;
@@ -932,7 +943,7 @@ extern "C" void __cdecl EffectKind05_Start(void) {
     S()[0x5D] = 0;
     S()[0x5E] = 0;
     S()[0x5F] = 0;
-    SetL(S() + 0x60, 0);
+    CurFx()->depth = 0;
     SetL(S() + 0x64, 0);
     SetL(S() + 0x68, 0);
     SetL(S() + 0x6C, 0);
@@ -962,11 +973,11 @@ extern "C" void __cdecl EffectKind05_Start(void) {
 extern "C" void __cdecl EffectKind05_Rise(void) {
     unsigned char* a = S();
     Kind2ZClamp(SL(a + 0x10));
-    const U z = L(a + 0x38);
+    const U z = static_cast<std::uint32_t>(AsFx(a)->z);
     const U target = L(a + 0x10);
     if (z == target) {
         SH_CALL(Sound_PlayEffect)(0x201);
-        SetL(S() + 0x3C, 0);
+        CurFx()->height = 0;
         SetL(S() + 0x14, 0);
         SetL(S() + 0x20, 0);
         S()[9] = 0;
@@ -989,19 +1000,19 @@ extern "C" void __cdecl EffectKind05_Rise(void) {
     SetL(a + 0x14, L(a + 0x14) + L(a + 0x20));
     a = S();
     const U row2 = Row05("EffectKind05_Rise", a[6]);
-    if (SL(a + 0x38) > static_cast<std::int32_t>(L(at::kKind05Bounce + row2) + L(a + 0x10)) && SL(a + 0x14) < 0) {
+    if (AsFx(a)->z > static_cast<std::int32_t>(L(at::kKind05Bounce + row2) + L(a + 0x10)) && SL(a + 0x14) < 0) {
         SetL(a + 0x14, 0);
         a = S();
         SetL(a + 0x20, 0);
         a = S();
     }
-    SetL(a + 0x34, L(a + 0x34) + L(a + 0xC));
+    AsFx(a)->x = static_cast<std::uint32_t>(AsFx(a)->x) + L(a + 0xC);
     a = S();
-    SetL(a + 0x38, L(a + 0x38) - 0x4000u);
+    AsFx(a)->z = static_cast<std::uint32_t>(AsFx(a)->z) - 0x4000u;
     a = S();
-    SetL(a + 0x3C, L(a + 0x3C) + L(a + 0x14));
+    AsFx(a)->height = static_cast<std::uint32_t>(AsFx(a)->height) + L(a + 0x14);
     a = S();
-    if (L(a + 0x38) == 0x3C0000) MoveScript_F3Divisor = 0x40;
+    if (static_cast<std::uint32_t>(AsFx(a)->z) == 0x3C0000) MoveScript_F3Divisor = 0x40;
     SH_CALL(Sprite_ScriptTick)();
     SH_CALL(Sprite_UpdateScreen)();
 }
@@ -1041,20 +1052,20 @@ extern "C" void __cdecl EffectKind05_Bounce(void) {
             }
         }
     }
-    SetL(a + 0x34, L(a + 0x34) + L(a + 0xC));
+    AsFx(a)->x = static_cast<std::uint32_t>(AsFx(a)->x) + L(a + 0xC);
     a = S();
-    SetL(a + 0x38, L(a + 0x38) + L(a + 0x10));
+    AsFx(a)->z = static_cast<std::uint32_t>(AsFx(a)->z) + L(a + 0x10);
     a = S();
     SetL(a + 0x14, L(a + 0x14) + L(a + 0x20));
     a = S();
-    SetL(a + 0x3C, L(a + 0x3C) + L(a + 0x14));
+    AsFx(a)->height = static_cast<std::uint32_t>(AsFx(a)->height) + L(a + 0x14);
     a = S();
-    const std::int32_t height = SL(a + 0x3C);
+    const std::int32_t height = AsFx(a)->height;
     if (height > 0) {
         if (L(a + 0x20) != 0) {
             a[0xB] = 1;
         } else if (a[0xB] == 0) {
-            SetL(a + 0x3C, 0);
+            AsFx(a)->height = 0;
         } else {
             SetL(a + 0x14, 0x40000);
             SetL(S() + 0x20, 0xFFFF8000u);
@@ -1099,10 +1110,10 @@ extern "C" void __cdecl EffectKind05_Bounce(void) {
 // Sprite_Objects record the byte 0x939A1C names; Sprite_ScriptTick; 0x52CD50
 // (a tail jump). PSX 0x801D28D8.
 extern "C" void __cdecl EffectKind05_Follow(void) {
-    SH_CALL(Sprite_EnsureAnimation)(SL(At(at::kRecord5 + 0x10)) >= 0 ? 3 : 2);
-    SetL(S() + 0x34, L(Object("EffectKind05_Follow", B(at::kPanelObject)) + 0x34));
-    SetL(S() + 0x38, L(Object("EffectKind05_Follow", B(at::kPanelObject)) + 0x38));
-    SetW(S() + 0x3E, W(Object("EffectKind05_Follow", B(at::kPanelObject)) + 0x3E));
+    SH_CALL(Sprite_EnsureAnimation)(SL(At(Effect_Objects_addr + 0x280 + 0x10)) >= 0 ? 3 : 2);
+    Store<U>(CurFx()->x, static_cast<std::uint32_t>(AsSpr(Object("EffectKind05_Follow", Effect1a_PanelObject))->x));
+    Store<U>(CurFx()->z, static_cast<std::uint32_t>(AsSpr(Object("EffectKind05_Follow", Effect1a_PanelObject))->z));
+    SetW(S() + 0x3E, W(Object("EffectKind05_Follow", Effect1a_PanelObject) + 0x3E));
     SH_CALL(Sprite_ScriptTick)();
     DepthPair();
 }
@@ -1117,13 +1128,13 @@ extern "C" void __cdecl EffectKind05_Follow(void) {
 extern "C" void __cdecl EffectKind0A_Start(void) {
     for (U i = 0x24; i <= 0x28; ++i) S()[i] = B(at::kRecord0 + i);
     S()[0x29] = 5;
-    SetL(S() + 0x3C, 0);
+    CurFx()->height = 0;
     S()[0x48] = 0;
     S()[0x5C] = 0;
     S()[0x5D] = 0x9C;
     S()[0x5E] = 0x9C;
     S()[0x5F] = 0x9C;
-    SetL(S() + 0x60, 0);
+    CurFx()->depth = 0;
     SetL(S() + 0x64, 0);
     SetL(S() + 0x68, 0);
     SetL(S() + 0x6C, 0);
@@ -1136,16 +1147,16 @@ extern "C" void __cdecl EffectKind0A_Start(void) {
 // +0x49..+0x4B, +0x50, +0x54, +0x58, +0x5A copied and Sprite_UpdateScreen (a
 // tail jump); else Effect_Release (a tail jump).
 extern "C" void __cdecl EffectKind0A_Follow(void) {
-    if (SW(at::kRecord0 + 0x3E) <= 0 || B(at::kRecord0 + 1) == 0) {
+    if (SW(at::kRecord0 + 0x3E) <= 0 || Effect_Objects[1] == 0) {
         SH_CALL(Effect_Release)();
         return;
     }
-    SetL(S() + 0x34, L(at::kRecord0 + 0x34));
-    SetL(S() + 0x38, L(at::kRecord0 + 0x38));
-    S()[0x2A] = B(at::kRecord0 + 0x2A);
-    S()[0x49] = B(at::kRecord0 + 0x49);
-    S()[0x4A] = B(at::kRecord0 + 0x4A);
-    S()[0x4B] = B(at::kRecord0 + 0x4B);
+    Store<U>(CurFx()->x, L(at::kRecord0 + 0x34));
+    Store<U>(CurFx()->z, L(at::kRecord0 + 0x38));
+    S()[0x2A] = Effect_Objects[0x2a];
+    S()[0x49] = Effect_Objects[0x49];
+    S()[0x4A] = Effect_Objects[0x4a];
+    S()[0x4B] = Effect_Objects[0x4b];
     SetL(S() + 0x50, L(at::kRecord0 + 0x50));
     SetL(S() + 0x54, L(at::kRecord0 + 0x54));
     SetW(S() + 0x58, W(at::kRecord0 + 0x58));
@@ -1189,7 +1200,7 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
     if (L(a + 0x10) == 0) {
         const unsigned margin = PtrAt(at::kPanelScript)[3] * 4u + 0xC;
         const std::int16_t pos = static_cast<std::int16_t>(W(a + 0x30));
-        const signed char aim = static_cast<signed char>(Object(kWho, B(at::kPanelObject))[0xA]);
+        const signed char aim = static_cast<signed char>(Object(kWho, Effect1a_PanelObject)[0xA]);
         const std::int32_t near_hi = pos + static_cast<std::int32_t>(margin);
         const std::int32_t near_lo = pos - static_cast<std::int32_t>(margin);
         if (aim > near_hi || aim < near_lo) {
@@ -1238,14 +1249,14 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
     a = S();
     const auto left = static_cast<std::uint16_t>(W(a + 0x30) - 4 * b3b + 0xAD);
     const auto right = static_cast<std::uint16_t>(left + 8 * b3b + 0x18);
-    const auto aim = static_cast<std::int16_t>(static_cast<signed char>(Object(kWho, B(at::kPanelObject))[0xA]) + 0xB9);
+    const auto aim = static_cast<std::int16_t>(static_cast<signed char>(Object(kWho, Effect1a_PanelObject)[0xA]) + 0xB9);
     const bool outside = aim > static_cast<std::int16_t>(right) || aim < static_cast<std::int16_t>(left);
     SH_CALL(EffectHud_DrawMark)(left, 0xCB, width, static_cast<unsigned char>((a[0xA] & 7) << 1), 2, outside ? 1 : 0);
-    if (Object(kWho, B(at::kPanelObject))[1] != 4) return;
+    if (Object(kWho, Effect1a_PanelObject)[1] != 4) return;
     p = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(p);
     SetL(p + 8, 0x43080000);
-    const std::int32_t scaled = static_cast<std::int32_t>(static_cast<U>(SW(Object(kWho, B(at::kPanelObject)) + 0x9A)) * 0x60u);
+    const std::int32_t scaled = static_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int16_t>(AsSpr(Object(kWho, Effect1a_PanelObject))->half_d)) * 0x60u);
     p[4] = 0x80;
     p[5] = 0;
     p[6] = 0;
@@ -1253,15 +1264,15 @@ extern "C" void __cdecl EffectKind0C_Aim(void) {
     SetL(p + 0x18, 0x43530000);
     Fild(scaled / 256 + 0x88, p + 0x14);
     SH_CALL(Gfx_CommitPrim)(2, 0x20);
-    const unsigned flip = SL(Object(kWho, B(at::kPanelObject)) + 0x10) >= 0 ? 1 : 0;
+    const unsigned flip = AsSpr(Object(kWho, Effect1a_PanelObject))->step_z >= 0 ? 1 : 0;
     std::int16_t arrow = aim;
     if (arrow < 0x90)
         arrow = 0x90;
     else if (arrow > 0xE4)
         arrow = 0xE4;
     SH_CALL(EffectHud_DrawArrow)(static_cast<std::uint16_t>(arrow), 0xCB, flip, 2);
-    if (B(at::kLeader + 2) != 4) return;
-    if (Object(kWho, B(at::kPanelObject))[4] == 3) return;
+    if (ObjTrio[2] != 4) return;
+    if (Object(kWho, Effect1a_PanelObject)[4] == 3) return;
     if (arrow <= static_cast<std::int16_t>(right) && arrow >= static_cast<std::int16_t>(left)) return;
     if ((Frame_Counter & 0xF) != 0) return;
     SH_CALL(Sound_PlayEffect)(0x207);
@@ -1545,7 +1556,7 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
                 c[0x4A] = 0;
                 c = S();
             }
-            if (B(at::kRecord3 + 1) != 7) {
+            if (Effect_Objects[0x181] != 7) {
                 const unsigned char spawned = SH_CALL(Effect_FindFree)();
                 c = S();
                 if (spawned != 0xFF) {
@@ -1751,9 +1762,9 @@ extern "C" void __cdecl EffectKind1A_Start(void) {
     S()[7] = 0x80;
     S()[9] = 4;
     S()[0xA] = 0;
-    SetL(S() + 0x34, 0);
-    SetL(S() + 0x38, 0);
-    SetL(S() + 0x3C, 0);
+    CurFx()->x = 0;
+    CurFx()->z = 0;
+    CurFx()->height = 0;
     SetL(S() + 0xC, 0);
     SetL(S() + 0x10, 0);
     S()[0xB] = 0;
@@ -1959,7 +1970,7 @@ extern "C" void __cdecl EffectKind1A_Reset(void) {
     WindowBox(0x14, 0x12, 0x118, 0x13, 0);
     OptionBoxes(0x58, 0x28, OptionBits());
     S()[8] = 0;
-    SetL(S() + 0x3C, 0);
+    CurFx()->height = 0;
     SetL(S() + 0x14, 0);
     SetL(S() + 0x20, 0);
     S()[0xA] = 0;

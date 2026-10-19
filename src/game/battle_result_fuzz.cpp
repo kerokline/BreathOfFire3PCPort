@@ -93,28 +93,28 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
     switch ((h >> 4) % 22) {
-    case 0: At(at::kStep)[0] = static_cast<unsigned char>(v); break;
-    case 1: At(at::kPhase2)[0] = static_cast<unsigned char>(v); break;
-    case 2: At(at::kMember)[0] = static_cast<unsigned char>(v % 5); break;
+    case 0: At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(v); break;
+    case 1: At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(v); break;
+    case 2: At(BossSb_Countdown_addr)[0] = static_cast<unsigned char>(v % 5); break;
     case 3: At(at::kPartyCount)[0] = PartyCount(v, 5); break;
-    case 4: At(at::kDropCount)[0] = static_cast<unsigned char>(v % 18); break;
-    case 5: SetLong(At(at::kExpTotal), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
-    case 6: SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
-    case 7: SetWord(At(at::kTickStep), v % 2 ? w % 40 : w); break;
+    case 4: At(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>(v % 18); break;
+    case 5: SetLong(At(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
+    case 6: SetLong(At(BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>(v % 2 ? w % 100 : h * 0x9E3779B1u)); break;
+    case 7: SetWord(At(BattleResult_TickStep_addr), v % 2 ? w % 40 : w); break;
     case 8: Member(w % kMaxMembers)[9] = static_cast<unsigned char>(v); break;
     case 9: Member(w % kMaxMembers)[0xA] = static_cast<unsigned char>(v % 3 ? 0x62 + v % 3 : v); break;
-    case 10: At(at::kPartySet)[0] = static_cast<unsigned char>(v); break;
-    case 11: At(at::kBattleEnd)[0] = static_cast<unsigned char>(At(at::kBattleEnd)[0] ^ 0x20); break;
+    case 10: At(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(v); break;
+    case 11: At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(At(BattleActions_BattleEnd_addr)[0] ^ 0x20); break;
     case 12: WindowSlot(1)[w % 10] = static_cast<unsigned char>(v); break;
     case 13: WindowSlot(0x15)[w % 10] = static_cast<unsigned char>(v); break;
     case 14: SetWord(At(at::kDropItems + 2 * (w % 18)), h >> 16); break;
     case 15: At(at::kDropCounts + w % 18)[0] = static_cast<unsigned char>(v); break;
-    case 16: SetWord(At(at::kBankIndex), h >> 16); break;
-    case 17: SetLong(At(at::kPartyZenny), static_cast<std::int32_t>(h * 0x2545F491u)); break;
-    case 18: SetPtr(at::kWindowCurrent, WindowSlot(w % kWindowSlots)); break;
+    case 16: SetWord(At(Game_AreaNumber_addr), h >> 16); break;
+    case 17: SetLong(At(Party_Zenny_addr), static_cast<std::int32_t>(h * 0x2545F491u)); break;
+    case 18: SetPtr(BattleWinStates_Current_addr, WindowSlot(w % kWindowSlots)); break;
     case 19: At(at::kText2 + w % 16)[0] = static_cast<unsigned char>(v); break;
     case 20: At(at::kText0 + w % 16)[0] = static_cast<unsigned char>(v); break;
-    default: SetWord(At(at::kHeld + 4 * (w % 2)), v % 3 ? 0 : h >> 16); break;
+    default: SetWord(At(Input_Held_addr + 4 * (w % 2)), v % 3 ? 0 : h >> 16); break;
     }
 }
 
@@ -123,7 +123,7 @@ void Disturb() {
 // The six step entries of the two .data tables and the four stack-table
 // entries of the window states.
 template <unsigned N> void __cdecl StubHandler() {
-    Record(N, At(at::kStep)[0], Id(At(Dw(at::kWindowCurrent))));
+    Record(N, At(BattleE4_Step4_addr)[0], Id(At(Dw(BattleWinStates_Current_addr))));
     Disturb();
 }
 // The counts and flags a caller branches on: the edges more often than not.
@@ -134,7 +134,7 @@ unsigned char SmallAnswer() {
 }
 unsigned char __cdecl StubCountMembers() {
     Record(40);
-    if (Hash() % 2) SetLong(At(at::kExpTotal), static_cast<std::int32_t>(Hash() * 0x9E3779B1u));
+    if (Hash() % 2) SetLong(At(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(Hash() * 0x9E3779B1u));
     Disturb();
     return SmallAnswer();
 }
@@ -145,14 +145,14 @@ unsigned char __cdecl StubZennyBonus() {
 }
 void __cdecl StubAddExp(unsigned n) {
     Record(42, n);
-    if (Hash() % 2) SetLong(At(at::kExpTotal), static_cast<std::int32_t>(Dw(at::kExpTotal) + (Hash() >> 28)));
-    if (Hash() % 3 == 0) SetWord(At(at::kTickStep), Hash() >> 24);
+    if (Hash() % 2) SetLong(At(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(Dw(BattleFlow_ExpTotal_addr) + (Hash() >> 28)));
+    if (Hash() % 3 == 0) SetWord(At(BattleResult_TickStep_addr), Hash() >> 24);
     Disturb();
 }
 // 0x4469D0 reads its id as a byte; its answer is a byte.
 unsigned char __cdecl StubRosterIndex(unsigned id) {
     Record(43, id & 0xFF);
-    if (Hash() % 2) At(at::kMember)[0] = static_cast<unsigned char>(Hash() % 5);
+    if (Hash() % 2) At(BossSb_Countdown_addr)[0] = static_cast<unsigned char>(Hash() % 5);
     Disturb();
     return static_cast<unsigned char>(Hash() >> 5);
 }
@@ -175,7 +175,7 @@ void __cdecl StubLevelUp(unsigned index) {
 }
 unsigned char __cdecl StubAddZenny(unsigned n, unsigned flag) {
     Record(46, n, flag & 0xFF);
-    if (Hash() % 2) SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(Dw(at::kZennyTotal) + (Hash() >> 28)));
+    if (Hash() % 2) SetLong(At(BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>(Dw(BattleFlow_ZennyTotal_addr) + (Hash() >> 28)));
     Disturb();
     return static_cast<unsigned char>(Hash());
 }
@@ -214,15 +214,15 @@ const unsigned char* __cdecl StubMsgSystem(unsigned id) {
     const std::uint32_t h = Hash();
     unsigned char* const p = g_msg + (h % (kMsg - 16));
     for (unsigned i = 0; i < 12; ++i) p[i] = static_cast<unsigned char>(h >> (i * 2));
-    if ((h >> 7) % 2) At(at::kPartySet)[0] = static_cast<unsigned char>(h >> 9);
-    if ((h >> 8) % 2) SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(h * 0x9E3779B1u % 200));
+    if ((h >> 7) % 2) At(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(h >> 9);
+    if ((h >> 8) % 2) SetLong(At(BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>(h * 0x9E3779B1u % 200));
     Disturb();
     return p;
 }
 // PartySet_Select reads both as bytes.
 void __cdecl StubPartySet(unsigned set, unsigned mode) {
     Record(51, set & 0xFF, mode & 0xFF);
-    if (Hash() % 2) At(at::kStep)[0] = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 2) At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
 }
 // Window_Alloc as the real one: a free slot (byte +0 zero) taken - +0 1,
@@ -240,10 +240,10 @@ unsigned __cdecl StubWindowAlloc(unsigned slot, unsigned kind) {
         w[9] = static_cast<unsigned char>(Hash());
     }
     const std::uint32_t h = Hash();
-    if ((h >> 3) % 2) At(at::kDropCount)[0] = static_cast<unsigned char>((h >> 8) % 18);
+    if ((h >> 3) % 2) At(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>((h >> 8) % 18);
     if ((h >> 4) % 2) At(at::kPartyCount)[0] = PartyCount(h >> 12, 5);
-    if ((h >> 5) % 2) SetLong(At(at::kExpTotal), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h));
-    if ((h >> 6) % 2) SetLong(At(at::kZennyTotal), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h * 7));
+    if ((h >> 5) % 2) SetLong(At(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h));
+    if ((h >> 6) % 2) SetLong(At(BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>((h >> 16) % 3 ? (h >> 20) % 64 : h * 7));
     Disturb();
     return h;
 }
@@ -260,7 +260,7 @@ void __cdecl StubSndLoadBank(unsigned index) {
 // Inventory_Add reads its three arguments as bytes; the fourth is recorded whole.
 unsigned char __cdecl StubInventoryAdd(unsigned category, unsigned item, unsigned count, unsigned d) {
     Record(55, category & 0xFF, item & 0xFF, count & 0xFF, d);
-    if (Hash() % 2) At(at::kDropCount)[0] = static_cast<unsigned char>(Hash() % 18);
+    if (Hash() % 2) At(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>(Hash() % 18);
     Disturb();
     return static_cast<unsigned char>(Hash());
 }
@@ -281,7 +281,7 @@ void __cdecl StubTextDrawFont12(int x, int y, int colour, const unsigned char* t
 }
 void __cdecl StubDrawMediumBox(int x, int y) {
     Record(58, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-    if (Hash() % 2) SetLong(At(at::kPartyZenny), static_cast<std::int32_t>(Hash() * 0x2545F491u));
+    if (Hash() % 2) SetLong(At(Party_Zenny_addr), static_cast<std::int32_t>(Hash() * 0x2545F491u));
     Disturb();
 }
 
@@ -392,13 +392,13 @@ const Clone kClones[kCount] = {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {0x904AA0, 0x460},                                  // the battle's globals, the drop list, the text records, 0x904EFC
-    {at::kPartyZenny, 4},
-    {at::kPartySet, 1},
+    {Party_Zenny_addr, 4},
+    {AreaW0b_PartySet_addr, 1},
     {at::kMsgCurrent, 4},
-    {at::kHeld, 8},                                     // Input_Held .. Input_Pressed
+    {Input_Held_addr, 8},                               // Input_Held .. Input_Pressed
     {at::kMembers, kMaxMembers * at::kMemberSize},      // the party slots' records, and past the third
     {at::kWindows, kWindowSlots * at::kWindowSize},     // the window records 0..0x15
-    {at::kWindowCurrent, 4},
+    {BattleWinStates_Current_addr, 4},
 };
 constexpr unsigned kRegionBytes = 0x460 + 4 + 1 + 4 + 8 + kMaxMembers * 0x14C + kWindowSlots * 36 + 4;
 
@@ -444,15 +444,15 @@ bool Half() { return (Next() & 1) != 0; }
 // Random bytes put back inside what the tables and buffers hold: the window
 // pointer, the counts, the text records' ends.
 void Fix() {
-    SetPtr(at::kWindowCurrent, WindowSlot(Next() % kWindowSlots));
+    SetPtr(BattleWinStates_Current_addr, WindowSlot(Next() % kWindowSlots));
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Often() ? Next() % 5 : Next() % (kMaxMembers + 1));
-    At(at::kDropCount)[0] = static_cast<unsigned char>(Often() ? Next() % 17 : Next() % 0x21);
-    At(at::kMember)[0] = static_cast<unsigned char>(Next() % 5);
+    At(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 17 : Next() % 0x21);
+    At(BossSb_Countdown_addr)[0] = static_cast<unsigned char>(Next() % 5);
     for (unsigned i = 0; i < kMaxMembers; ++i)
         if (Half()) Member(i)[0xA] = static_cast<unsigned char>(Half() ? 0x63 : Next() % 0x63);
-    if (Half()) SetWord(At(at::kHeld), 0);
-    if (Half()) SetWord(At(at::kPressed), 0);
-    if (Half()) At(at::kBattleEnd)[0] = static_cast<unsigned char>(At(at::kBattleEnd)[0] & ~0x20u);
+    if (Half()) SetWord(At(Input_Held_addr), 0);
+    if (Half()) SetWord(At(Input_Pressed_addr), 0);
+    if (Half()) At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(At(BattleActions_BattleEnd_addr)[0] & ~0x20u);
     for (unsigned s = 0; s < kWindowSlots; ++s)
         if (Half()) WindowSlot(s)[0] = 0;
     At(at::kText0 + 0x1F)[0] = 0;
@@ -475,54 +475,54 @@ void Seed(unsigned k) {
     g_long = false;
     switch (k) {
     case kSplitExp:
-        SetLong(At(at::kExpTotal), static_cast<std::int32_t>(Half() ? 0 : Amount(Next() % 5)));
+        SetLong(At(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(Half() ? 0 : Amount(Next() % 5)));
         break;
     case kOpenExpWindow:
     case kSetup:
-        SetLong(At(at::kExpTotal), static_cast<std::int32_t>(Amount(30)));
-        SetLong(At(at::kZennyTotal), static_cast<std::int32_t>(Amount(30)));
+        SetLong(At(BattleFlow_ExpTotal_addr), static_cast<std::int32_t>(Amount(30)));
+        SetLong(At(BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>(Amount(30)));
         if (k == kSetup) {
-            if (Often()) SetWord(At(at::kHeld), Next() | 1);
-            if (Half()) SetWord(At(at::kPressed), Half() ? 0 : Next() | 0x100);
-            if (Half()) At(at::kBattleEnd)[0] = static_cast<unsigned char>(At(at::kBattleEnd)[0] | 0x20);
+            if (Often()) SetWord(At(Input_Held_addr), Next() | 1);
+            if (Half()) SetWord(At(Input_Pressed_addr), Half() ? 0 : Next() | 0x100);
+            if (Half()) At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(At(BattleActions_BattleEnd_addr)[0] | 0x20);
             if (Half()) WindowSlot(1)[0] = static_cast<unsigned char>(Next() | 1);
             if (Half()) WindowSlot(0x15)[0] = 0;
             // drop lists with equal items, and counts of 0, 1, 2 and past 16
             static const unsigned char kCounts[] = {0, 1, 2, 3, 5, 15, 16, 17, 0x20};
-            if (Often()) At(at::kDropCount)[0] = kCounts[Next() % 9];
+            if (Often()) At(BattleE7_DropCount_addr)[0] = kCounts[Next() % 9];
             for (unsigned i = 0; i < 0x20; ++i)
                 if (Often()) SetWord(At(at::kDropItems + 2 * i), Half() ? Next() % 4 : (Next() % 4) << 8 | Next() % 4);
         }
         break;
     case kExpWaitHeld:
     case kZennyWaitHeld:
-        SetWord(At(at::kHeld), Half() ? 0 : Half() ? 0x100 : Next());
+        SetWord(At(Input_Held_addr), Half() ? 0 : Half() ? 0x100 : Next());
         break;
     case kExpTick:
     case kZennyTick: {
         const std::uint32_t step = Often() ? Next() % 40 : Next();
-        SetLong(At(at::kTickStep), static_cast<std::int32_t>(Half() ? step : (Next() & 0xFFFF0000u) | (step & 0xFFFF)));
-        SetLong(At(k == kExpTick ? at::kExpTotal : at::kZennyTotal), static_cast<std::int32_t>(Amount(step & 0xFFFF)));
-        if (Half()) SetWord(At(at::kHeld), Half() ? 0x100 : Next() | 1);
+        SetLong(At(BattleResult_TickStep_addr), static_cast<std::int32_t>(Half() ? step : (Next() & 0xFFFF0000u) | (step & 0xFFFF)));
+        SetLong(At(k == kExpTick ? BattleFlow_ExpTotal_addr : BattleFlow_ZennyTotal_addr), static_cast<std::int32_t>(Amount(step & 0xFFFF)));
+        if (Half()) SetWord(At(Input_Held_addr), Half() ? 0x100 : Next() | 1);
         break;
     }
     case kLevelUpStep:
-        At(at::kStep)[0] = static_cast<unsigned char>(Next() % kLevelUpEntries);
+        At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(Next() % kLevelUpEntries);
         break;
     case kRewardStep:
-        At(at::kStep)[0] = static_cast<unsigned char>(Next() % kRewardEntries);
+        At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(Next() % kRewardEntries);
         break;
     case kFindLevelUp:
-        At(at::kMember)[0] = static_cast<unsigned char>(Next() % 5);
+        At(BossSb_Countdown_addr)[0] = static_cast<unsigned char>(Next() % 5);
         break;
     case kAwardDrops: {
         static const unsigned char kCounts[] = {0, 1, 2, 3, 15, 16, 17};
-        if (Often()) At(at::kDropCount)[0] = kCounts[Next() % 7];
+        if (Often()) At(BattleE7_DropCount_addr)[0] = kCounts[Next() % 7];
         break;
     }
     case kExpState:
     case kZennyState:
-        At(Dw(at::kWindowCurrent) + 3)[0] = static_cast<unsigned char>(Next() % 2);
+        At(Dw(BattleWinStates_Current_addr) + 3)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kDrawExp:
         // the y byte wraps past 14 slots
@@ -550,11 +550,11 @@ void Cover(unsigned k, const State& in, const State& out) {
     };
     switch (k) {
     case kSplitExp:
-        ++(DwordOf(out, at::kExpTotal) == 0 ? g_cover.split_zero : g_cover.split_shared);
+        ++(DwordOf(out, BattleFlow_ExpTotal_addr) == 0 ? g_cover.split_zero : g_cover.split_shared);
         break;
     case kExpTick:
     case kZennyTick: {
-        const std::uint32_t total = k == kExpTick ? at::kExpTotal : at::kZennyTotal;
+        const std::uint32_t total = k == kExpTick ? BattleFlow_ExpTotal_addr : BattleFlow_ZennyTotal_addr;
         if (DwordOf(out, total) == 0 && DwordOf(in, total) != 0) {
             if (logged(53) && out.log_n >= 2) ++g_cover.tick_whole;
             else ++g_cover.tick_rest;
@@ -565,12 +565,12 @@ void Cover(unsigned k, const State& in, const State& out) {
     }
     case kFindLevelUp:
         if ((ByteOf(out, at::kBattleEnd) & 0x20) && !(ByteOf(in, at::kBattleEnd) & 0x20)) ++g_cover.levelup_found;
-        else if (ByteOf(out, at::kPhase2) != ByteOf(in, at::kPhase2)) ++g_cover.levelup_none;
+        else if (ByteOf(out, BattleE4_Step3_addr) != ByteOf(in, BattleE4_Step3_addr)) ++g_cover.levelup_none;
         break;
     case kSetup: {
         if (!out.log_n) break;
         ++g_cover.setup_ran;
-        g_cover.bonus += DwordOf(out, at::kZennyTotal) != DwordOf(in, at::kZennyTotal);
+        g_cover.bonus += DwordOf(out, BattleFlow_ZennyTotal_addr) != DwordOf(in, BattleFlow_ZennyTotal_addr);
         unsigned allocs = 0;
         for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
             if (out.log[i].what == 52) ++allocs;
@@ -659,8 +659,8 @@ void SelfTest() {
     std::uint32_t saved_levelup[kLevelUpEntries], saved_reward[kRewardEntries];
     Capture(saved);
     g = kStubs;
-    SwapTable(at::kLevelUpSteps, kLevelUpHad, kLevelUpStubs, kLevelUpEntries, saved_levelup);
-    SwapTable(at::kRewardSteps, kRewardHad, kRewardStubs, kRewardEntries, saved_reward);
+    SwapTable(BattleResult_LevelUpSteps_addr, kLevelUpHad, kLevelUpStubs, kLevelUpEntries, saved_levelup);
+    SwapTable(BattleResult_RewardSteps_addr, kRewardHad, kRewardStubs, kRewardEntries, saved_reward);
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
     for (unsigned round = 0; round < kPerFunction * kCount; ++round) {
@@ -701,8 +701,8 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    for (unsigned i = 0; i < kLevelUpEntries; ++i) SetLong(At(at::kLevelUpSteps + 4 * i), static_cast<std::int32_t>(saved_levelup[i]));
-    for (unsigned i = 0; i < kRewardEntries; ++i) SetLong(At(at::kRewardSteps + 4 * i), static_cast<std::int32_t>(saved_reward[i]));
+    for (unsigned i = 0; i < kLevelUpEntries; ++i) SetLong(At(BattleResult_LevelUpSteps_addr + 4 * i), static_cast<std::int32_t>(saved_levelup[i]));
+    for (unsigned i = 0; i < kRewardEntries; ++i) SetLong(At(BattleResult_RewardSteps_addr + 4 * i), static_cast<std::int32_t>(saved_reward[i]));
     Apply(saved);
 
     bof3::Log("shadow      battle_result self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

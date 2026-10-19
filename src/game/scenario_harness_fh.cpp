@@ -79,7 +79,7 @@ const sh::DataTable kTables[] = {
 // (0x5343C0 / 0x534420's eight records at 0x9048B0 and the pairs 0x9046D0..),
 // and MapView_Cells, which 0x5728D0 reads after its write (a group's region,
 // section 7.3).
-const sh::Region kRegions[] = {{0x904160, 0x280}, {0x904700, 0x200}, {at::kMapCells, 1568 * 2}};
+const sh::Region kRegions[] = {{0x904160, 0x280}, {0x904700, 0x200}, {MapView_Cells_addr, 1568 * 2}};
 
 void Seed(unsigned k) {
     unsigned char* const op = sh::Script();
@@ -87,7 +87,7 @@ void Seed(unsigned k) {
     switch (k) {
     case kArea:
         // the operand the area number half the time
-        if (sh::Half()) sh::Mem(at::kArea)[0] = op[0], sh::Mem(at::kArea)[1] = 0;
+        if (sh::Half()) sh::Mem(Game_AreaNumber_addr)[0] = op[0], sh::Mem(Game_AreaNumber_addr)[1] = 0;
         break;
     case kStatus: if (sh::Half()) op[0] = 1; break;
     case kScript: op[0x86] = static_cast<unsigned char>(sh::Next() % 12); break;   // inside 0x662E1C's twelve
@@ -96,7 +96,7 @@ void Seed(unsigned k) {
         // every view cell empty: past the write, a cell word would walk the
         // area block's records from AreaMap_CellBase, which the random block
         // does not bound - this proof stops at the cell test
-        for (unsigned i = 0; i < 1568 * 2; ++i) sh::Mem(at::kMapCells)[i] = 0;
+        for (unsigned i = 0; i < 1568 * 2; ++i) sh::Mem(MapView_Cells_addr)[i] = 0;
         break;
     case kCounter:
     case kCount:

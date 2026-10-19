@@ -154,7 +154,7 @@ unsigned char* ScriptRecord(U v) {
 unsigned char* MemberRecord(U v) {
     switch (v % 3) {
     case 0: return ah::Object(v >> 2);
-    case 1: return ah::Mem(at::kSpriteObjectsExtra + ((v >> 2) % 4) * at::kObjectStride);
+    case 1: return ah::Mem(Sprite_ObjectsExtra_addr + ((v >> 2) % 4) * at::kObjectStride);
     default: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     }
 }
@@ -169,7 +169,7 @@ constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 U MovesCurrent(const U*, U answer) {
     const U n = ah::Noise();
     if (n & 1) Sprite_Current = RunningRecord(n >> 8);
-    if (n & 2) ah::SetPointer(at::kScriptObject, ScriptRecord(n >> 12));
+    if (n & 2) ah::SetPointer(MoveScript_Object_addr, ScriptRecord(n >> 12));
     return answer;
 }
 // Effect_FindFree: a slot of the 20 records or none (a third of the time);
@@ -178,7 +178,7 @@ U MovesCurrent(const U*, U answer) {
 U EffectSlotEffect(const U* a, U answer) {
     MovesCurrent(a, answer);
     const U n = ah::Noise();
-    if (n & 0x10000) ah::SetPointer(at::kActiveMember, MemberRecord(n >> 17));
+    if (n & 0x10000) ah::SetPointer(Field_ActiveMember_addr, MemberRecord(n >> 17));
     return (answer & 0xFFFFFF00u) | (n % 3 == 0 ? 0xFFu : (n >> 4) % at::kEffectCount);
 }
 
@@ -205,17 +205,17 @@ const ah::Callee kCallees[] = {
 // effect records (one block, 0x7E0700..0x7E1BE0), the script object pointer,
 // Field_ActiveMember, area 175's two bytes.
 const ah::Region kRegions[] = {
-    {at::kTintRecords, at::kEffectObjects + at::kEffectCount * at::kEffectStride - at::kTintRecords},
-    {at::kScriptObject, 4},
-    {at::kActiveMember, 4},
-    {at::kChoiceByte3C, 4},
+    {MoveScript_TintRecords_addr, Effect_Objects_addr + at::kEffectCount * at::kEffectStride - MoveScript_TintRecords_addr},
+    {MoveScript_Object_addr, 4},
+    {Field_ActiveMember_addr, 4},
+    {Rest4b_BoardFlag_addr, 4},
     // Cond_ByteFE (the tail's state 10 sets it; not a harness region)
     {0x905E20, 1},
     // the +0x89 bytes of records 3..5 after the party's: area 173's member
     // search reads them for a Field_MemberCount past 3
-    {at::kParty89 + 3 * at::kPartyStride, 1},
-    {at::kParty89 + 4 * at::kPartyStride, 1},
-    {at::kParty89 + 5 * at::kPartyStride, 1},
+    {ObjTrio_addr + 0x89 + 3 * at::kPartyStride, 1},
+    {ObjTrio_addr + 0x89 + 4 * at::kPartyStride, 1},
+    {ObjTrio_addr + 0x89 + 5 * at::kPartyStride, 1},
 };
 
 // The slice the running Run seeds (its first index in kClones) and its area.
@@ -224,8 +224,8 @@ unsigned g_scripts;   // the running area's script count (the descriptor's +0x10
 
 // Every round: the script object and Field_ActiveMember inside the regions.
 void Common() {
-    ah::SetPointer(at::kScriptObject, ScriptRecord(ah::Next()));
-    ah::SetPointer(at::kActiveMember, MemberRecord(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
+    ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -233,17 +233,17 @@ void Common() {
 void Disturb(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 6) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(h & 0x100 ? v % 13 : v); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 13 : v); break;
     case 1: B(at::kCounter3) = v; break;
-    case 2: ah::SetPointer(at::kScriptObject, h & 0x10000 ? ah::Object(h >> 17) : ah::PartyOf(static_cast<unsigned char>(h >> 17))); break;
-    case 3: ah::SetPointer(at::kActiveMember, MemberRecord(h >> 12)); break;
+    case 2: ah::SetPointer(MoveScript_Object_addr, h & 0x10000 ? ah::Object(h >> 17) : ah::PartyOf(static_cast<unsigned char>(h >> 17))); break;
+    case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 12)); break;
     case 4: SetWord(ah::Mem(at::kTailTimer), h & 0x100 ? 1 : v); break;
     default: Cond_ByteFD = static_cast<unsigned char>(h & 0x100 ? v % 3 : v); break;
     }
 }
 
 // A choice answer: 0, not 0, the sign edges, anything.
-void SeedAnswer() { B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0xFF, 0x80, 0x7F, 0x10)); }
+void SeedAnswer() { B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 0, 1, 2, 0xFF, 0x80, 0x7F, 0x10)); }
 
 // The script object's +3 inside the running area's script table (past it the
 // original reads a dword of what follows as a script pointer and reads through
@@ -264,7 +264,7 @@ U g_x, g_z, g_poses, g_direction;
 
 void SeedTail() {
     const auto state = static_cast<unsigned char>(AH_PICK(0, 1, 1, 0xA, 0xA, 0xB, 0xB, 0xC, 0xC, 2, 5, 9, 0xD, 0x7F, 0x80, 0xFF, 0xF4));
-    B(at::kTailState) = state;
+    B(AreaW0c_TailState_addr) = state;
     const bool on = ah::Often();
     switch (state) {
     case 1:
@@ -302,7 +302,7 @@ void Seed(unsigned slice_k) {
     case kMsgA: case kMsgB: {
         static const U kIds[] = {5, 8, 4, 2, 5, 8, 4, 2, 0, 1, 3, 6, 9, 0x85};
         for (unsigned m = 0; m < 6; ++m)
-            if (ah::Often()) B(at::kParty89 + m * at::kPartyStride) = static_cast<unsigned char>(ah::Pick(kIds, sizeof kIds / sizeof kIds[0]));
+            if (ah::Often()) B(ObjTrio_addr + 0x89 + m * at::kPartyStride) = static_cast<unsigned char>(ah::Pick(kIds, sizeof kIds / sizeof kIds[0]));
         if (!ah::Often()) Field_MemberCount = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 4, 5));
         break;
     }
@@ -312,7 +312,7 @@ void Seed(unsigned slice_k) {
         // either sign; it is not read through)
         if (ah::Half()) {
             const U d = ah::Half() ? 0u - (ah::Next() % 0x40000) : ah::Next() % 0x40000;
-            SetLong(ah::Mem(at::kActiveMember), static_cast<std::int32_t>(at::kSpriteObjects + d));
+            SetLong(ah::Mem(Field_ActiveMember_addr), static_cast<std::int32_t>(Sprite_Objects_addr + d));
         }
         break;
     case kTail: SeedTail(); break;
@@ -361,7 +361,7 @@ void Seed(unsigned slice_k) {
     case kFadeTint: {
         unsigned char* const member = Field_ActiveMember;
         member[0x9F] = static_cast<unsigned char>(ah::Half() ? ah::Next() % 32 : ah::Next());
-        unsigned char* const tint = ah::Mem(at::kTintRecords + member[0x9F] * at::kTintStride);
+        unsigned char* const tint = ah::Mem(MoveScript_TintRecords_addr + member[0x9F] * at::kTintStride);
         if (ah::Often()) tint[2] = static_cast<unsigned char>(AH_PICK(0x1C, 0x1D, 0x1E, 0x1F, 0x7F, 0x80, 0xFF, 0));
         break;
     }

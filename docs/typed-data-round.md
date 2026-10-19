@@ -1,8 +1,11 @@
 # The typed-data round: staging (IDEAS I44, stages 1 and 2)
 
-**Status:** DRAFT (staged 2026-10-17 against `origin/main`; nothing built. The
-idea is [`IDEAS.md`](IDEAS.md) I44; this stages its first two stages, which
-change no behaviour. Stage 3, the relocatable image, is not staged here.)
+**Status:** IN PROGRESS (staged 2026-10-17; stages A and B run 2026-10-19 on
+`typed/b1`, 50,943 raw data sites down to 27,394 with the machine code
+identical to `origin/main`; stage C staged in
+[`typed-data-stage-c.md`](typed-data-stage-c.md). The idea is
+[`IDEAS.md`](IDEAS.md) I44; this round is its first two stages, which change
+no behaviour. Stage 3, the relocatable image, is not staged here.)
 
 The game's code is ours; what our code still reads through numbers is
 Capcom's data image. This round makes every such read a named, typed access
@@ -93,6 +96,40 @@ with one lacking a `ctype`): the entry, with the width the readers use
 an **address-to-name check**: a module constant whose address has a
 `[[data]]` entry is flagged by CS as retirable. SG does not touch sites.
 
+SG's widths are measured by `tools/data_widths.py`. It skips the 7
+`[[block]]` base addresses but not scalars inside a block's records: 73 SG
+entries sat inside MsgBoxState, WindowRecords, EnemyWorkingRecords and
+CharacterRecords at the first SG commit (counted by the SG verification,
+2026-10-19; 74 after its fixes, over the same address ranges). They become
+fields of SD's record types in stage C, not before.
+
+### Stage A as run (2026-10-19)
+
+CS, SD and SG ran in parallel worktrees from `origin/main` `19180e63`, with
+the pairing pass of [`install-gap-pairs.md`](install-gap-pairs.md) 8 beside
+them. Each was then **re-derived independently** by an agent that did not see
+the branch first (reports in `C:\Users\kerok\v_typed\`). All four agreed on
+the core and each had missed a class of cases:
+
+- **SG** (`[[data]]` entries): 31 of 485 entries wrong. Its scanner did not
+  count `lea` or `add reg, addr` as indexing, read dword loads masked to 16 bits
+  as dwords, and missed wider stores from a neighbour. The fix moved them to
+  `analysis/typed_globals_unsettled.tsv` and committed the corrected scanner as
+  `tools/data_widths.py`; 488 entries stand.
+- **SD** (`records.h`): no offset or width wrong; four fields of the wrong
+  signedness, and about 79 bytes that readers use left as "unread" padding.
+  The fix named them: 263 fields (from 206), five of the eight open questions
+  settled ([`typed-records.md`](typed-records.md) 3).
+- **CS** (the census): it missed whole classes of sites (module constants
+  outside `namespace at`, helper-based records, seven accessor names), so its
+  baseline rose from 39,503 to 50,943 and the ratchet now sees them.
+- **The pairs:** all 385 pairs reproduced; five errors in the doc, corrected.
+
+The merged tree did not build: SG had typed `Party_Zenny`, whose macro then
+rewrote every `bof3::addr::Party_Zenny`. Fixed on `typed/integration`
+(`29e8ea61`) with `<Name>_addr` emitted beside each typed entry, and
+`tools/codegen_same.py` added, which became the round's proof (section 3).
+
 ## 3. Stage B (after SD and SG merge; file groups in parallel)
 
 The conversion, by file group as the takeover rounds split the sources
@@ -112,17 +149,221 @@ fuzz where there is one, and the census's count for its files at zero.
 Merge one group at a time, the state hash on one route after each; the
 full eleven and the attract at the end of the stage.
 
-## 4. Stage C: the layout as one struct (one group, after stage B)
+### B0 as run (2026-10-19)
 
-`tools/gen_symbols.py` grows a second output: `GameData`, one struct
-spanning `.rdata` and `.data` from the typed entries in address order, with
-named padding between them, `static_assert`ed on every member's offset
-(`pc` less the image base) and on the total size. The engine takes a
-`GameData*` at the image base; the macros of today become members, by a
-mechanical rewrite the census drives. The padding members are the census
-of what in `.data` is still unknown, by address and size, in
-`docs/typed-data-census.md`'s last section. Still no behaviour change;
-the same proofs.
+Stage B ran in two parts: B0, every global site in the tree by one tool, then
+B1, the record sites by file group. B0 is on `typed/b0-globals` from
+`typed/integration` `29e8ea61`. No behaviour change, no ledger entry.
+
+**The tool.** `tools/typed_convert.py` finds every reference to a data-address
+constant, as the census does: an `at::` constant, or a module constant that the
+file or its includes define (never a same-named constant elsewhere in `src/`,
+and never `S::kChoice`, an enumerator, or `at::kTable[0]`). For each reference
+it reads the accessor around it from that accessor's own definition. The
+evaluator walks the body: `return At(a)[0]`, `memcpy(&v, At(a), sizeof v)`,
+`static_cast<short>(Word(Mem(a)))`, a setter's `memcpy` or delegation, `using`
+declarations and namespace aliases. That gives the access's width,
+signedness, result type, and whether it reaches memory through an
+out-of-line function. A site becomes typed only when:
+
+1. the address is exactly a `[[data]]` entry with a `ctype`, or a constant
+   offset onto an element of a typed array (`Name[i]`). A dynamic index
+   (`B(at::kT + i)`, `W(at::kT + 2 * i)`) is accepted only on an array with a
+   `count` whose element size is the stride. The covering entry is the one
+   that starts last, because entries nest (`Party_Zenny` inside `Cond_Flags`).
+2. the access width is the `ctype`'s. If the signedness differs, the read
+   becomes `static_cast<T>(Name)` with T of the access's signedness. An
+   lvalue use (`=`, `|=`, `+=`, `++` and the other bit-preserving operators)
+   writes `Name` directly. `/=`, `>>=` and `%=` are left raw.
+3. the expression keeps its type. If the accessor returns a type that promotes
+   differently from the `ctype` (a `U` from a u16 load), the result is
+   `static_cast<R>(Name)`, unless the value is used directly: assigned,
+   initialised (not `auto`), returned, compared for equality, tested, or used
+   as an index. A setter `SetW(K, v);` becomes `Name = v;` only as a whole
+   statement.
+4. the outermost form that types is used. The tool climbs from the
+   constant's accessor through a pointer reader (`Word(At(K))`), a subscript
+   or dereference (`At(K)[i]`, `*At(K)`), and a cast or cast function
+   (`static_cast<signed char>(B(K))`, `S8(B(K))`). Only one-argument calls,
+   and two-argument stores, are climbed.
+
+The other address forms keep their accessor and rename only the constant:
+
+- a pointer form (`At(K)`, `Mem(K)` with nothing loading through it) becomes
+  `At(Name_addr)`;
+- an address handed to a helper the tool does not read as an accessor becomes
+  `Entry(Name_addr, i)`;
+- an address used bare becomes `Name_addr`, or `Name_addr + 0x8` for an
+  element. A module constant used bare must be its entry's own address.
+
+Two cases keep their accessor too:
+
+- **Harness sites.** In every `*_fuzz.cpp` / `*_harness.*` file, a site keeps
+  its accessor and only the constant changes (`B(Name_addr)`,
+  `Mem(Name_addr)`).
+- **Seam sites.** In other files, an accessor that reaches memory through the
+  harnesses' out-of-line `Mem` (`area_harness::Mem`, `sh::Mem`, `ah::Mem`,
+  `bh::Mem`) also keeps its accessor.
+
+A constant named as a bound or a size (`kCellsEnd`, `kBurstSize`) whose value
+is a different entry's address is never renamed in an address form, because
+`Area16_PlaceMessages_addr` would read as that table and not as the end of the
+one before. A load through such a constant still converts. Anything else is
+left raw with a reason.
+
+`--gate BASE` rebuilds each file's objects with ninja and compares them,
+function by function, against the baseline build (`codegen_same.py`'s
+disassembly). If an object differs, bisection over the file's sites finds the
+sites that cause it. Each such site steps down a tier (typed, then typed with
+the full cast, then the address form where rule 4 allows it) or is left raw
+with the reason `gate`. A compile error counts as a difference.
+
+`--retire --since typed/integration` replaces each module constant that this
+stage left unused with the note `// kX: now Name (symbols.toml).`, keeping the
+comment that followed the constant. These are constants in a `*_callees.h` or
+a `.cpp`, that something used at `since`, that nothing that can see them
+spells now (code or comment, through `at::`, not as another scope's
+enumerator), and whose value is a typed entry or element. A statement
+declaring several constants keeps the rest. A constant that a comment still
+cites stays, even when that leaves it unused: 10 such constants now warn
+`-Wunused-const-variable`. They include `object_kinds.cpp`'s four, cited by a
+region table's comments, `kFrameSet` (twice), and the fuzz files' `kState` /
+`kSlot`.
+
+**The run.** There were 14 batches of 30 to 41 files (`git log
+typed/integration..typed/b0-globals`). The baseline was the `origin/main` build
+at `.claude/worktrees/typed-baseline/build`. After every batch the full build
+and `codegen_same.py` printed `637 objects compared, 0 differ`, and they did
+again after each of the follow-up commits:
+
+- the 81 bound-named address forms put back;
+- 20 retired constants a comment still cited restored;
+- 11 accessor helpers that B0 left unused removed (an unused helper is not
+  emitted);
+- the redundant parentheses of the early batches' `Mem((X_addr + 0x70))`
+  removed.
+
+| Count | Before | After |
+|---|---:|---:|
+| census sites (the CI number) | 50,943 | **32,265** |
+| global sites | 29,048 | **10,358** |
+| record sites | 20,067 | 20,079 |
+| `at` constant definitions | 7,659 | 4,311 |
+| data-valued module constant definitions | 2,019 | 937 |
+
+Record sites rose by 12 because a renamed inner constant uncovers its outer
+call. Under the census's rule D5, `Word(Ptr(at::kCell) + 2)` used to be the
+constant's site and is now a record site.
+
+Converted: 19,910 references.
+
+- **7,908 typed:**
+  - 6,878 typed loads and lvalues;
+  - 175 with the keep-the-promotion cast;
+  - 855 stores.
+- **12,002 address forms:**
+  - 4,444 seam, in the area, magic, boss and scenario modules;
+  - 2,782 harness;
+  - 2,526 bare;
+  - 1,350 pointer;
+  - 712 handed to a helper;
+  - 269 in an argument expression;
+  - less the 81 put back, spread over these kinds.
+
+Left raw: 11,521 references, every one in `analysis/typed_b0_left.tsv`
+(regenerated from the final tree with `--dry-run --remaining`):
+
+| Reason | References |
+|---|---:|
+| `no-entry`: no `[[data]]` entry covers the address | 9,135 |
+| `inside-entry`: inside an entry but not on an element, or an entry without a `count` | 685 |
+| `width`: the access width is not the `ctype`'s (mostly record fields of `Effect_Objects` / `ObjTrio` by fixed offset) | 576 |
+| `untyped-entry`: the entry has no `ctype` | 351 |
+| `name`: a bound or size name on another entry's address | 219 |
+| `gate`: typed, but the code changed (dynamic indexes, a signed entry stored and re-read) | 191 |
+| `pointer-in-integer`: a pointer read or stored through an integer entry | 151 |
+| `type`: a pointer or float entry read as an integer | 96 |
+| `index`: a dynamic index on an entry without a `count`, or with another stride | 60 |
+| `accessor`: an accessor whose body the tool does not read | 24 |
+| `no-symbols-header`: the file does not include `symbols.gen.h` | 17 |
+| `macro`: inside a `#define` | 15 |
+| `no-object`: a header's own site (the gate builds objects) | 1 |
+
+The TSV also lists bare module-constant references, which the census does
+not count.
+
+Retired: 4,455 constant definitions became notes. The CI ratchet is now
+32,265 (`data_census.py --check` passes). `ledger_check.py` reports 0 errors.
+
+**For B1.** The conventions B0 settled:
+
+- **Spellings.**
+  - A scalar is `Name`, an array element `Name[i]` (decimal below 10, else
+    hex).
+  - An address is `Name_addr`, and `Name_addr + 0x8` for an element.
+  - `bof3::addr::Name` cannot be written for a typed entry, because the macro
+    rewrites it.
+  - A changed signedness is `static_cast<std::int16_t>(Name)` and the like
+    (`CANON` in the tool).
+  - A kept promotion is `static_cast<std::uint32_t>(Name)`.
+- **The harness rule** covers more than the fuzz files. Every module whose
+  accessors go through an out-of-line harness `Mem` (the `area_w*`, `magic_*`,
+  `boss_*` and `scena_*` modules) keeps the seam. A typed field there must
+  still go through `Mem()`, or the object changes and the fuzz loses its
+  recorder.
+- **Inbounds pointer arithmetic is not free.** Many dynamic indexes
+  (`B(at::kT + i)` as `T[i]`) and some stores to a signed entry compiled
+  differently and were left raw. Expect the same of record fields reached by
+  a computed index, and keep the gate per object.
+- **Readers' widths disagree with the entries.** 576 sites read a typed entry
+  at another width: words and dwords inside `Effect_Objects`, `ObjTrio` and
+  `Sprite_Objects` by fixed offset. These are B1's or stage C's fields, not
+  B0's.
+- **151 pointer-holding cells are typed `unsigned long`.** Examples are
+  `BattleE4_MenuActor` and `BattleFlow_TaskCurrent`. Retyping them as
+  `unsigned char *` is an SG follow-up that would let them convert.
+
+### B1 as run (2026-10-19)
+
+The record sites, by seven file groups (magic, effect, rest, area, battle,
+field, and scenario with the menus and platform), each in its own worktree
+from `typed/b0-globals`, each owning a disjoint list of files. The brief and
+the lists are outside the tree (`C:\Users\kerok\b1\`); stage C reuses them.
+
+- **The proof:** `tools/codegen_same.py` against the `origin/main` build after
+  every batch, `637 objects compared, 0 differ`, and again after each of the
+  seven merges and on a clean build of the result. The state-hash runs this
+  section first planned were not needed: identical instructions cannot
+  behave differently. No game was run for this round.
+- **Converted:** 4,884 census sites (magic 1,347, battle 876, effect 641,
+  field 604, area 535, scenario/UI 505, rest 376), on all nine structs.
+  Record sites 20,079 -> 15,219; all raw sites 32,265 -> 27,394.
+- **Left raw:** every site with a reason, in
+  `analysis/typed_b1_<group>_left.tsv` (15,228 rows; the totals by reason
+  are in [`typed-data-stage-c.md`](typed-data-stage-c.md) 0).
+- **The family audit.** The gate cannot catch a pointer typed as the wrong
+  struct when the offsets agree. Three read-only audits checked about 1,500
+  typed pointers and found 13 wrong (one in magic, nine in battle's fuzz
+  harnesses where a party index ran past the three records, one each in
+  rest, area and field). All 13 were put back to raw (`b78726f8`), each listed
+  with reason `audit-family`. The audits also confirmed magic's central call
+  (`Sprite_Current` in BMAGIC code is a 0x84 task slot, from
+  `BattleTask_RunAll` 0x435110) and area's handler typing.
+- **What the groups had in common** (stage C's input): each wrote its own view
+  helpers and its own answer to the assignment-order trap (C++17 evaluates
+  `p->f = expr`'s right side first; the setter read the pointer first); the
+  sprite head's bytes are padding in four structs; several struct field names
+  mislead (`WindowRecord::centre_x` is the top-left corner; `BattleTask::y` is
+  world z).
+
+## 4. Stage C
+
+Staged in [`typed-data-stage-c.md`](typed-data-stage-c.md): C0 the
+consolidation, C1 the types (the shared sprite head, the renames, the views,
+the new structs), C2 the sites they unlock with a family audit after, C3 the
+globals' follow-ups and a naming pass, and C4, this section's old content:
+the data image as one `GameData` struct generated by `tools/gen_symbols.py`,
+and the census's strict rule.
 
 ## 5. Ownership, merge order, numbering
 

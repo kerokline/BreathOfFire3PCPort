@@ -81,8 +81,8 @@ struct Region {
     U address, bytes;
 };
 const Region kRegions[] = {
-    {kVertices, 0x80}, {kScaleY, 8}, {kTexCoords, 0x400}, {kDrawTpage, 4}, {kPixelFormat, 0x20},
-    {kAlphaOpCache, 4}, {kCaptureReady, 0x1C}, {kRenderFlags, 1}, {kBackBuffer, 4}, {kScreenBpp, 1},
+    {D3d_Vertices_addr, 0x80}, {D3d_ScaleY_addr, 8}, {D3d_TexCoords_addr, 0x400}, {Gfx_DrawTpage_addr, 4}, {Gfx_PixelFormat_addr, 0x20},
+    {D3d_AlphaOpCache_addr, 4}, {D3d_CaptureReady_addr, 0x1C}, {Gfx_RenderFlags_addr, 1}, {DDraw_BackBuffer_addr, 4}, {D3dRest_ScreenBpp_addr, 1},
 };
 U g_palette_at;   // Addr(g_palette), as a region of its own
 constexpr U kStateBytes = 0x80 + 8 + 0x400 + 4 + 0x20 + 4 + 0x1C + 1 + 4 + 1 + sizeof g_palette;
@@ -151,13 +151,13 @@ void Disturb(U salt) {
     case 1:
         if (g_prim) g_prim[(h >> 8) % g_prim_bytes] = value;
         break;
-    case 2: At(kVertices)[(h >> 8) % 0x80] = value; break;
-    case 3: At(kScaleY)[(h >> 8) % 8] = value; break;
-    case 4: At(kDrawTpage)[(h >> 8) % 2] = value; break;
-    case 5: At(kTexCoords + kTexels[(h >> 8) % 6] * 4u)[(h >> 16) % 4] = value; break;
+    case 2: At(D3d_Vertices_addr)[(h >> 8) % 0x80] = value; break;
+    case 3: At(D3d_ScaleY_addr)[(h >> 8) % 8] = value; break;
+    case 4: At(Gfx_DrawTpage_addr)[(h >> 8) % 2] = value; break;
+    case 5: At(D3d_TexCoords_addr + kTexels[(h >> 8) % 6] * 4u)[(h >> 16) % 4] = value; break;
     case 6: {   // Gfx_PixelFormat, its bytes-per-texel byte (+3) kept to 2 or 4
         const U at = (h >> 8) % 0x1C;
-        At(kPixelFormat)[at] = at == 3 ? static_cast<unsigned char>(value & 2 ? 4 : 2) : value;
+        At(Gfx_PixelFormat_addr)[at] = at == 3 ? static_cast<unsigned char>(value & 2 ? 4 : 2) : value;
         break;
     }
     default: g_palette[(h >> 8) % sizeof g_palette] = value; break;
@@ -308,7 +308,7 @@ void RandomFloat(unsigned char* p) { PutLong(p, Next() % 3 ? Pick(kFloats, sizeo
 // unpacking shifts 9, 14, 19 put each 5-bit field at bits 19..23), 5-6-5,
 // X-8-8-8 with 32-bit texels, or random - byte +3 2, 4 or anything.
 void RandomPixelFormat() {
-    unsigned char* f = At(kPixelFormat);
+    unsigned char* f = At(Gfx_PixelFormat_addr);
     for (U i = 0; i < 0x20; ++i) f[i] = static_cast<unsigned char>(Next());
     switch (Next() % 5) {
     case 0:
@@ -335,7 +335,7 @@ void RandomPixelFormat() {
 }
 
 void RandomCommon() {
-    for (U a : {kScaleX, kScaleY}) {
+    for (U a : {D3d_ScaleX_addr, D3d_ScaleY_addr}) {
         U v;
         switch (Next() % 5) {
         case 0: v = Next(); break;
@@ -344,7 +344,7 @@ void RandomCommon() {
         }
         PutLong(At(a), v);
     }
-    for (U i = 0; i < 0x80; ++i) At(kVertices)[i] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < 0x80; ++i) At(D3d_Vertices_addr)[i] = static_cast<unsigned char>(Next());
     for (U i = 0; i < 256; ++i) {
         U v;
         if (Next() % 8) {
@@ -353,9 +353,9 @@ void RandomCommon() {
         } else {
             v = Next() % 2 ? Next() : Pick(kFloats, sizeof kFloats / 4);
         }
-        PutLong(At(kTexCoords + i * 4), v);
+        PutLong(At(D3d_TexCoords_addr + i * 4), v);
     }
-    PutLong(At(kDrawTpage), Next() % 2 ? Next() : Pick(kWords, 16) | (Next() & 0xFFFF0000u));
+    PutLong(At(Gfx_DrawTpage_addr), Next() % 2 ? Next() : Pick(kWords, 16) | (Next() & 0xFFFF0000u));
     RandomPixelFormat();
 }
 
@@ -525,7 +525,7 @@ unsigned FuzzAlpha(AlphaFn theirs, unsigned rounds) {
         const U on = Pick(std::initializer_list<U>{0, 1, 0x100, 0x80000000u, 0xFFFFFFFFu}.begin(), 5);
         const U arg = Next() % 3 ? on : Next();
         const U cache = Next() % 3 ? Next() % 2 : (Next() % 2 ? 0xFFFFFFFFu : Next());
-        PutLong(At(kAlphaOpCache), cache);
+        PutLong(At(D3d_AlphaOpCache_addr), cache);
         Capture(g_start);
 
         g_theirs.Clear();
@@ -599,15 +599,15 @@ void DisturbAfter(U salt) {
     const U h = Mix(salt ^ 0x27D4EB2Fu);
     if (h % 4) return;
     switch ((h >> 2) % 6) {
-    case 0: PutWord(At(kCaptureW + 2 * ((h >> 8) % 2)), (h >> 9) % 3 ? h >> 16 : 0x140); break;
-    case 1: At(kScreenBpp)[0] = static_cast<unsigned char>((h >> 8) % 2 ? 2 : 4); break;
-    case 2: PutLong(At((h >> 8) % 2 ? kScaleX : kScaleY), kTestScales[(h >> 9) % kTestScaleCount]); break;
+    case 0: PutWord(At(D3dRest_CaptureW_addr + 2 * ((h >> 8) % 2)), (h >> 9) % 3 ? h >> 16 : 0x140); break;
+    case 1: At(D3dRest_ScreenBpp_addr)[0] = static_cast<unsigned char>((h >> 8) % 2 ? 2 : 4); break;
+    case 2: PutLong(At((h >> 8) % 2 ? D3d_ScaleX_addr : D3d_ScaleY_addr), kTestScales[(h >> 9) % kTestScaleCount]); break;
     case 3:
-        if (GetLong(At(kCaptureSurface)) != 0)
-            PutLong(At(kCaptureSurface), Addr((h >> 8) % 2 ? kPlainA : kPlainB));
+        if (GetLong(At(D3d_CaptureSurface_addr)) != 0)
+            PutLong(At(D3d_CaptureSurface_addr), Addr((h >> 8) % 2 ? kPlainA : kPlainB));
         break;
-    case 4: PutLong(At(kBackBuffer), Addr((h >> 8) % 2 ? kBackA : kBackB)); break;
-    default: PutLong(At(kCaptureTexSurface), Addr((h >> 8) % 2 ? kTexA : kTexB)); break;
+    case 4: PutLong(At(DDraw_BackBuffer_addr), Addr((h >> 8) % 2 ? kBackA : kBackB)); break;
+    default: PutLong(At(D3d_CaptureTexSurface_addr), Addr((h >> 8) % 2 ? kTexA : kTexB)); break;
     }
 }
 
@@ -702,16 +702,16 @@ unsigned FuzzAfterDraw(AfterFn theirs, unsigned rounds, AfterCover& cover) {
     const unsigned short saved_cw = GetControlWord();
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x700000u + r;
-        At(kRenderFlags)[0] = static_cast<unsigned char>(Next() % 6 == 0 ? (Next() | 1) : (Next() & ~1u));
-        PutLong(At(kScaleX), kTestScales[Next() % kTestScaleCount]);
-        PutLong(At(kScaleY), kTestScales[Next() % kTestScaleCount]);
-        for (U i = 0; i < 0x1C; ++i) At(kCaptureReady)[i] = static_cast<unsigned char>(Next());
+        At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next() % 6 == 0 ? (Next() | 1) : (Next() & ~1u));
+        PutLong(At(D3d_ScaleX_addr), kTestScales[Next() % kTestScaleCount]);
+        PutLong(At(D3d_ScaleY_addr), kTestScales[Next() % kTestScaleCount]);
+        for (U i = 0; i < 0x1C; ++i) At(D3d_CaptureReady_addr)[i] = static_cast<unsigned char>(Next());
         const bool first = Next() % 2;
-        PutLong(At(kCaptureSurface), first ? 0 : Addr(Next() % 2 ? kPlainA : kPlainB));
-        PutLong(At(kCaptureTexSurface), Addr(Next() % 2 ? kTexA : kTexB));
-        if (Next() % 2) PutWord(At(kCaptureW), 0x140), PutWord(At(kCaptureH), 0xF0);
-        PutLong(At(kBackBuffer), Addr(Next() % 2 ? kBackA : kBackB));
-        At(kScreenBpp)[0] = static_cast<unsigned char>(Next() % 4 ? (Next() % 2 ? 2 : 4) : Next());
+        PutLong(At(D3d_CaptureSurface_addr), first ? 0 : Addr(Next() % 2 ? kPlainA : kPlainB));
+        PutLong(At(D3d_CaptureTexSurface_addr), Addr(Next() % 2 ? kTexA : kTexB));
+        if (Next() % 2) PutWord(At(D3dRest_CaptureW_addr), 0x140), PutWord(At(D3dRest_CaptureH_addr), 0xF0);
+        PutLong(At(DDraw_BackBuffer_addr), Addr(Next() % 2 ? kBackA : kBackB));
+        At(D3dRest_ScreenBpp_addr)[0] = static_cast<unsigned char>(Next() % 4 ? (Next() % 2 ? 2 : 4) : Next());
         const unsigned short cw = kControlWords[Next() % 3];
         const unsigned char fill = static_cast<unsigned char>(Next());
         Capture(g_start);
@@ -797,8 +797,8 @@ unsigned FuzzStore(StoreFn theirs, unsigned rounds, StoreCover& cover) {
             const U row = Next() % static_cast<U>(hh);
             const U q = (Next() % (bytes - 7)) & ~1u;
             rect = reinterpret_cast<short*>(g_store + row * bytes + q);
-            const U source = kVram + ((static_cast<U>(y + static_cast<std::int32_t>(row)) << 10) + static_cast<U>(x)) * 2 + q + 6;
-            if (source + 2 <= kVram + kVramBytes) {
+            const U source = Gfx_VramShadow_addr + ((static_cast<U>(y + static_cast<std::int32_t>(row)) << 10) + static_cast<U>(x)) * 2 + q + 6;
+            if (source + 2 <= Gfx_VramShadow_addr + kVramBytes) {
                 const U new_h = Pick(std::initializer_list<U>{0, 1, row + 1, row + 2, 0xFFFF, static_cast<U>(hh)}.begin(), 6);
                 PutWord(At(source), new_h);
                 ++cover.rect_overwritten;
@@ -872,12 +872,12 @@ void SelfTest() {
     g_surface_vtbl[0x80 / 4] = reinterpret_cast<void*>(&FakeUnlock);
 
     Capture(g_saved);
-    std::memcpy(g_vram_saved, At(kVram), kVramBytes);
+    std::memcpy(g_vram_saved, At(Gfx_VramShadow_addr), kVramBytes);
     const Callees saved_callees = g;
     g = {StubPrimColor, StubBind, StubRet, StubBlend, StubShade, StubClutPixels,
          StubInitDesc, StubCreatePlain, StubFit, StubCreateTexture};
     d3d_fuzz::Seed(0x59FA5059u);
-    for (U i = 0; i < kVramBytes; ++i) At(kVram)[i] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < kVramBytes; ++i) At(Gfx_VramShadow_addr)[i] = static_cast<unsigned char>(Next());
     for (U i = 0; i < kBackBytes; ++i) g_back[i] = static_cast<unsigned char>(Next());
 
     unsigned bad = 0;
@@ -896,7 +896,7 @@ void SelfTest() {
 
     g = saved_callees;
     Restore(g_saved);
-    std::memcpy(At(kVram), g_vram_saved, kVramBytes);
+    std::memcpy(At(Gfx_VramShadow_addr), g_vram_saved, kVramBytes);
 
     bof3::Log("shadow      d3d_rest self-test: five handlers %u rounds each under three control words (POLY_FT3 one "
               "texel %u), D3d_FlattenFT3 / D3d_PageTexel4 %u, D3d_SetAlphaModulate %u, D3d_AfterDraw %u (off %u, "

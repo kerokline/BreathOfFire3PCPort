@@ -22,8 +22,8 @@ namespace at {
 // The window records and the one the layer is running.
 constexpr std::uint32_t kRecords = 0x803160;        // 22 records of 0x24 bytes (symbols.toml block WindowRecords)
 constexpr std::uint32_t kRecordsEnd = 0x803478;     // one past the last
-constexpr std::uint32_t kCurrent = 0x905B84;        // dword: the record Field_RunTaskRecords set
-constexpr std::uint32_t kPass = 0x802D20;           // u8: the pass Field_RunTaskRecords starts from
+// kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record Field_RunTaskRecords set
+// kPass: now BossSa_WindowPass (symbols.toml). u8: the pass Field_RunTaskRecords starts from
 
 // MsgBoxState (PC 0x7DEE40 = PSX 0x8014909C, symbols.toml block MsgBoxState).
 constexpr std::uint32_t kListText = 0x7DEE50;       // +0x10, a dword the list draws from
@@ -41,19 +41,19 @@ constexpr std::uint32_t kPlaceXY = 0x66AE10;        // MsgBox_PlacementTable, 4-
 
 // Field_ChangeArea's cells. The PSX keeps all of these in one block at
 // 0x80143F10..1F; the port scattered them (docs/window-task.md section 2).
-constexpr std::uint32_t kPendingArea = 0x937F82;    // u16 (PSX 0x80143F10)
+// kPendingArea: now AreaW0b_Place (symbols.toml). u16 (PSX 0x80143F10)
 constexpr std::uint32_t kPendingX = 0x903860;       // s32, 16.16 (PSX 0x80143F14)
-constexpr std::uint32_t kPendingZ = 0x90384C;       // s32, 16.16 (PSX 0x80143F18)
-constexpr std::uint32_t kPendingFlags = 0x905B88;   // u8 (PSX 0x80143F1C) - Gfx_BufferIndex is the byte after it
-constexpr std::uint32_t kPendingKind = 0x937F98;    // u8 (PSX 0x80143F1D, docs/field-modes.md section 4)
-constexpr std::uint32_t kAreaTrack = 0x904CD0;      // u8: the track the next area wants (PSX 0x80143F1F)
-constexpr std::uint32_t kMusicTrack = 0x904131;     // u8: the track Music_Play last started, 0xFF none
+// kPendingZ: now AreaEntry_PendingZ (symbols.toml). s32, 16.16 (PSX 0x80143F18)
+// kPendingFlags: now AreaEntry_PendingFlags (symbols.toml). u8 (PSX 0x80143F1C) - Gfx_BufferIndex is the byte after it
+// kPendingKind: now AreaW0c_PendingKind (symbols.toml). u8 (PSX 0x80143F1D, docs/field-modes.md section 4)
+// kAreaTrack: now AreaW1f_MusicCurrent (symbols.toml). u8: the track the next area wants (PSX 0x80143F1F)
+// kMusicTrack: now Music_Track (symbols.toml). u8: the track Music_Play last started, 0xFF none
 
 constexpr std::uint32_t kAreaKinds = 0x66ADC0;      // 11 u16 area numbers Area_ClassifyPending answers 0xB for
 constexpr std::uint32_t kAreaKindsEnd = 0x66ADD6;
-constexpr std::uint32_t kZoneLists = 0x668D80;      // an 8-byte zone record list per area (field_event_callees.h)
+// kZoneLists: now Area_StateRecords (symbols.toml). an 8-byte zone record list per area (field_event_callees.h)
 constexpr std::uint32_t kMusicSets = 0x669A48;      // 8-byte records: const u8 *list at +0, u8 count at +4
-constexpr std::uint32_t kClutRow = 0x903A5A;        // s8: the window colour Window_DrawFrame builds a CLUT id from
+// kClutRow: now BattleDraw_Colour (symbols.toml). s8: the window colour Window_DrawFrame builds a CLUT id from
 
 }  // namespace at
 

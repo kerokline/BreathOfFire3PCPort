@@ -22,11 +22,11 @@ using U = std::uint32_t;
 constexpr U kRetOnly = bof3::addr::BareRet;
 
 // Data the handlers read, all Capcom's addresses (docs/sprt-draw.md section 2).
-constexpr U kScaleX = 0x7C9F4C;        // D3d_ScaleX, float
-constexpr U kScaleY = 0x7C9F48;        // D3d_ScaleY, float
-constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
+// kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float
+// kScaleY: now D3d_ScaleY (symbols.toml). D3d_ScaleY, float
+// kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices, 4 x D3DTLVERTEX
 constexpr U kTexCoords = 0x7CA9E0;     // D3d_TexCoords, 256 floats, tc[i] = (i + 0.512) / 256 in game
-constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, u16
+// kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, u16
 constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1: rhw = 0.1 / z
 constexpr rdata::Const kEight{0x5C41CC};         // float 8.0: D3d_DrawSprt8's size
 constexpr rdata::Const kSixteen{0x5C41D0};       // float 16.0: D3d_DrawSprt16's size

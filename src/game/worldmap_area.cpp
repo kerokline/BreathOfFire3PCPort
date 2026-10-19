@@ -45,6 +45,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/worldmap_area_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -104,6 +105,12 @@ using U = std::uint32_t;
 
 // The object being run, re-read wherever the original re-reads it.
 unsigned char* Cur() { return Sprite_Current; }
+
+// The effect record being run (every Cur() reader here is an effect kind's
+// handler), typed (src/game/records.h).
+records::EffectObject* Fx() { return reinterpret_cast<records::EffectObject*>(Cur()); }
+unsigned char* Bytes(records::EffectObject* p) { return reinterpret_cast<unsigned char*>(p); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 // A handler read from a .data table in place, as the originals' `call` /
 // `jmp [index * 4 + table]` do: the index is not checked.
@@ -114,7 +121,7 @@ Handler Entry(U address) { return reinterpret_cast<Handler>(static_cast<std::uin
 // is, or Field_Request 2, or bit 8 of Field_ScriptFlags (read as a dword,
 // `test ch, 1`).
 bool BoxLeaves(const unsigned char* o) {
-    if (At(at::kMapMode)[0] != 0 && o[0xB] != 0) return true;
+    if (AreaW0b_MapMode != 0 && o[0xB] != 0) return true;
     if (Field_Request == 2) return true;
     return (Field_ScriptFlags & 0x100) != 0;
 }
@@ -142,23 +149,23 @@ extern "C" void __cdecl Area29_PickFieldObject(void) {
     unsigned roll = static_cast<unsigned>(g.rand()) & 0x3F;
     unsigned keep = 0;
     for (; keep < 8; ++keep) {
-        const unsigned chance = At(at::kArea29Weights)[keep];
+        const unsigned chance = Area29_Weights[keep];
         if (roll < chance) break;
         roll = (roll - chance) & 0xFF;
     }
-    for (unsigned i = 0; at::kFieldObjects + i * at::kFieldObjectSize < at::kFieldObjectsEnd; ++i)
-        if (i != keep) At(at::kFieldObjects + i * at::kFieldObjectSize)[0] = 0;
+    for (unsigned i = 0; Sprite_Objects_addr + i * at::kFieldObjectSize < at::kFieldObjectsEnd; ++i)
+        if (i != keep) At(Sprite_Objects_addr + i * at::kFieldObjectSize)[0] = 0;
     if (keep < 8) {
         const unsigned cell = static_cast<unsigned>(g.rand()) & 7;
-        unsigned char* const o = At(at::kFieldObjects + keep * at::kFieldObjectSize);
-        const U x = static_cast<U>(At(at::kArea29Cells)[cell * 2]) << 16;
-        const U z = static_cast<U>(At(at::kArea29Cells)[cell * 2 + 1]) << 16;
-        SetLong(o + 0x34, static_cast<std::int32_t>(x));
-        SetLong(o + 0x38, static_cast<std::int32_t>(z));
-        const long height = g.elevation(Long(o + 0x34), static_cast<long>(z));
-        SetWord(o + 0x3E, static_cast<unsigned>(height));
+        records::SpriteObject* const o = reinterpret_cast<records::SpriteObject*>(At(Sprite_Objects_addr + keep * at::kFieldObjectSize));
+        const U x = static_cast<std::uint32_t>(Area29_Cells[cell * 2]) << 16;
+        const U z = static_cast<std::uint32_t>(Area29_Cells[cell * 2 + 1]) << 16;
+        o->x = static_cast<std::int32_t>(x);
+        o->z = static_cast<std::int32_t>(z);
+        const long height = g.elevation(o->x, static_cast<long>(z));
+        SetWord(Bytes(o) + 0x3E, static_cast<unsigned>(height));
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(At(at::kLeaderEdge)) - 5);
+    Field_EdgeBits = static_cast<unsigned short>(Long(At(ObjTrio_addr + 0x134)) - 5);
 }
 
 // original 0x403CE0 (area 33's handler 0, Area33_Handlers 0x5EF4C8 - the
@@ -193,25 +200,25 @@ extern "C" void __cdecl Area33_ClearCellsB(void) {
 // Any other state does nothing. As the original has it: neither the row nor
 // the byte is checked (row 6 reads the state table after the rows).
 extern "C" void __cdecl WorldMap33_PlaceMessage(void) {
-    const auto state = static_cast<signed char>(At(at::kMsgState)[0]);
+    const auto state = AreaW0c_TailState;
     if (state == 0) {
         g.flags_set40();
-        const unsigned place = Word(At(at::kPlace));
+        const unsigned place = AreaW0b_Place;
         std::int32_t row = 0;
-        for (U a = at::kPlaceMessages; a < at::kPlaceMessagesEnd; a += 0x20, ++row)
+        for (U a = WorldMap33_PlaceMessages_addr; a < at::kPlaceMessagesEnd; a += 0x20, ++row)
             if (Word(At(a)) == place) break;
         const std::int32_t index = (row << 4) + static_cast<signed char>(Cond_ByteFA);
-        const unsigned message = Word(At(at::kPlaceMessages + static_cast<U>(index * 2)));
+        const unsigned message = Word(At(WorldMap33_PlaceMessages_addr + static_cast<U>(index * 2)));
         g.open_script(static_cast<unsigned short>(message));
-        const auto next = static_cast<unsigned char>(At(at::kMsgState)[0] + 1);
+        const auto next = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         Field_Request = 2;
-        At(at::kMsgState)[0] = next;
+        AreaW0c_TailState = next;
     } else if (state == 1) {
         if (Field_Request == 2) return;
         g.flags_clear40();
-        At(at::kMsgByteBefore)[0] = 0;
-        At(at::kMsgState)[0] = 0;
-        At(at::kMsgByteAfter)[0] = 0;
+        AreaW0a_TailKind = 0;
+        AreaW0c_TailState = 0;
+        AreaW0c_TailSub = 0;
     }
 }
 
@@ -231,9 +238,9 @@ extern "C" void __cdecl WorldMap33_PlaceMessage(void) {
 // stack word above them (it reads the low words); the cell is asked for up
 // to three times.
 extern "C" void __cdecl WorldMap33_PlateRun(void) {
-    const U steps = At(at::kLeaderSteps)[0];
-    const U xs = steps * static_cast<U>(Long(At(at::kLeaderDirX))) + static_cast<U>(Long(At(at::kLeaderX)));
-    const U zs = steps * static_cast<U>(Long(At(at::kLeaderDirZ))) + static_cast<U>(Long(At(at::kLeaderZ)));
+    const U steps = ObjTrio[9];
+    const U xs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0xc))) + static_cast<U>(Long(At(ObjTrio_addr + 0x34)));
+    const U zs = steps * static_cast<U>(Long(At(ObjTrio_addr + 0x10))) + static_cast<U>(Long(At(ObjTrio_addr + 0x38)));
     const auto x = static_cast<short>(xs >> 16);
     const auto z = static_cast<short>(zs >> 16);
     SetLong(Cur() + 0xC, x);
@@ -245,7 +252,7 @@ extern "C" void __cdecl WorldMap33_PlateRun(void) {
     else if ((Field_ScriptFlags2 & 0x1000) != 0) kind = 4;
     else kind = 0;
     Cur()[0xB] = kind;
-    Entry(at::kPlateStates + Cur()[1] * 4u)();
+    Entry(WorldMap33_PlateStates_addr + Fx()->state * 4u)();
 }
 
 // original 0x403EE0 (WorldMap33_PlateStates 1): +7 = +0xB (the kind shown).
@@ -261,8 +268,8 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
     const unsigned kind = Cur()[0xB];
     unsigned animation;
     if (kind == 1) {
-        const unsigned place = Word(At(at::kPlace));
-        U entry = at::kPlateAnims;
+        const unsigned place = AreaW0b_Place;
+        U entry = WorldMap33_PlateAnims_addr;
         while (Word(At(entry)) != place) entry += 4;
         SetLong(Cur() + 0x18, static_cast<std::int32_t>(place));
         animation = At(entry + 2)[0];
@@ -278,9 +285,9 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
     SetLong(Cur() + 0x40, 0);
     SetLong(Cur() + 0x44, 0x10000);
     Cur()[0x48] = 2;
-    Cur()[9] = 8;
+    Fx()->timer = 8;
     g.set_animation(static_cast<unsigned char>(animation));
-    Cur()[1] = 2;
+    Fx()->state = 2;
 }
 
 // original 0x404030 (WorldMap33_PlateStates 2): WorldMap_PinSprite; +0x40 +=
@@ -289,11 +296,11 @@ extern "C" void __cdecl WorldMap33_PlateShow(void) {
 extern "C" void __cdecl WorldMap33_PlateGrow(void) {
     g.pin_sprite();
     SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) + 0x2000));
-    Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
-    unsigned char* const o = Cur();
-    if (o[9] == 0) {
-        o[0x48] = 0;
-        Cur()[1] = 3;
+    Fx()->timer = static_cast<unsigned char>(Fx()->timer - 1);
+    records::EffectObject* const o = Fx();
+    if (o->timer == 0) {
+        Bytes(o)[0x48] = 0;
+        Fx()->state = 3;
     }
     g.queue_overlay();
 }
@@ -309,11 +316,11 @@ extern "C" void __cdecl WorldMap33_PlateHold(void) {
         unsigned char* const o = Cur();
         const unsigned shown = o[7];
         const bool leaves = o[0xB] != shown || Field_Request == 5 ||
-                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != Word(At(at::kPlace)));
+                            (shown == 1 && static_cast<U>(Long(o + 0x18)) != AreaW0b_Place);
         if (leaves) {
             o[0x48] = 2;
-            Cur()[9] = 8;
-            Cur()[1] = 4;
+            Fx()->timer = 8;
+            Fx()->state = 4;
         }
     }
     g.queue_overlay();
@@ -326,9 +333,9 @@ extern "C" void __cdecl WorldMap33_PlateHold(void) {
 extern "C" void __cdecl WorldMap33_PlateShrink(void) {
     g.pin_sprite();
     SetLong(Cur() + 0x40, static_cast<std::int32_t>(static_cast<U>(Long(Cur() + 0x40)) - 0x2000));
-    Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
-    unsigned char* const o = Cur();
-    if (o[9] != 0) {
+    Fx()->timer = static_cast<unsigned char>(Fx()->timer - 1);
+    records::EffectObject* const o = Fx();
+    if (o->timer != 0) {
         g.queue_overlay();
         return;
     }
@@ -336,8 +343,8 @@ extern "C" void __cdecl WorldMap33_PlateShrink(void) {
         g.effect_release();
         return;
     }
-    o[0x48] = 0;
-    Cur()[1] = 1;
+    Bytes(o)[0x48] = 0;
+    Fx()->state = 1;
 }
 
 // ===========================================================================
@@ -346,14 +353,14 @@ extern "C" void __cdecl WorldMap33_PlateShrink(void) {
 
 // original 0x404130: WorldMapHud_States 0x5EF5F0 by +1 - WorldMapHud_Start
 // (shared), WorldMapHud_Frame.
-extern "C" void __cdecl WorldMapHud_Run(void) { Entry(at::kHudStates + Cur()[1] * 4u)(); }
+extern "C" void __cdecl WorldMapHud_Run(void) { Entry(WorldMapHud_States_addr + Fx()->state * 4u)(); }
 
 // original 0x419110 (WorldMapHud_States 0; the same entry in the eleven
 // world-map copies' tables): +9 = 0, +0xB = 0, +1 + 1.
 extern "C" void __cdecl WorldMapHud_Start(void) {
-    Cur()[9] = 0;
+    Fx()->timer = 0;
     Cur()[0xB] = 0;
-    Cur()[1] = static_cast<unsigned char>(Cur()[1] + 1);
+    Fx()->state = static_cast<unsigned char>(Fx()->state + 1);
 }
 
 // original 0x404150 (WorldMapHud_States 1): `call 0x404160; jmp 0x404230` -
@@ -368,23 +375,23 @@ extern "C" void __cdecl WorldMapHud_Frame(void) {
 // entry in eleven tables): unless the map's mode byte 0x9045FA is 2 or
 // Field_ScriptFlags bit 8 is set, the frame's y +0x2E = -0x30 and +2 + 1.
 extern "C" void __cdecl WorldMap_FrameWait(void) {
-    if (At(at::kMapMode)[0] == 2) return;
+    if (AreaW0b_MapMode == 2) return;
     if ((Field_ScriptFlags & 0x100) != 0) return;
-    SetWord(Cur() + 0x2E, 0xFFD0);
-    Cur()[2] = static_cast<unsigned char>(Cur()[2] + 1);
+    Fx()->screen_x = 0xFFD0;
+    Fx()->step = static_cast<unsigned char>(Fx()->step + 1);
 }
 
 // original 0x404230: WorldMapHud_BoxStates 0x5EF608 by +3 - WorldMapHud_BoxWait
 // (shared), _BoxSlideIn, _BoxHold, _BoxSlideOut.
-extern "C" void __cdecl WorldMapHud_BoxStep(void) { Entry(at::kBoxStates + Cur()[3] * 4u)(); }
+extern "C" void __cdecl WorldMapHud_BoxStep(void) { Entry(WorldMapHud_BoxStates_addr + Cur()[3] * 4u)(); }
 
 // original 0x414BB0 (WorldMapHud_BoxStates 0; the same entry in eleven
 // tables): unless the box leaves (BoxLeaves above), its y +0x30 = 0xF0 and +3
 // + 1. Nothing is drawn.
 extern "C" void __cdecl WorldMapHud_BoxWait(void) {
-    unsigned char* const o = Cur();
-    if (BoxLeaves(o)) return;
-    SetWord(o + 0x30, 0xF0);
+    records::EffectObject* const o = Fx();
+    if (BoxLeaves(Bytes(o))) return;
+    o->screen_y = 0xF0;
     Cur()[3] = static_cast<unsigned char>(Cur()[3] + 1);
 }
 
@@ -397,37 +404,37 @@ extern "C" void __cdecl WorldMapHud_BoxWait(void) {
 // low word (docs/world-map-hud.md section 1.4), so ours passes the word
 // sign-extended.
 extern "C" void __cdecl WorldMapHud_BoxSlideIn(void) {
-    SetWord(Cur() + 0x30, Word(Cur() + 0x30) - 10u);
-    unsigned char* o = Cur();
-    if (S16(o + 0x30) <= 0xC8) {
-        o[3] = static_cast<unsigned char>(o[3] + 1);
-        o = Cur();
+    Fx()->screen_y = static_cast<std::uint16_t>(Fx()->screen_y) - 10u;
+    records::EffectObject* o = Fx();
+    if (static_cast<std::int32_t>(o->screen_y) <= 0xC8) {
+        Bytes(o)[3] = static_cast<unsigned char>(Bytes(o)[3] + 1);
+        o = Fx();
     }
-    if (BoxLeaves(o)) {
-        o[3] = 3;
-        o = Cur();
+    if (BoxLeaves(Bytes(o))) {
+        Bytes(o)[3] = 3;
+        o = Fx();
     }
-    g.draw_hud(0x5C, S16(o + 0x30));
+    g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
 }
 
 // original 0x4042C0 (WorldMapHud_BoxStates 2): while +0xB is 0 the counter
 // +9 + 1, and at 0x5A and above (u8) +0xB + 1; then when the box leaves +3 +
 // 1; WorldMap_DrawHud(0x5C, y).
 extern "C" void __cdecl WorldMapHud_BoxHold(void) {
-    unsigned char* o = Cur();
-    if (o[0xB] == 0) {
-        o[9] = static_cast<unsigned char>(o[9] + 1);
-        o = Cur();
-        if (o[9] >= 0x5A) {
-            o[0xB] = static_cast<unsigned char>(o[0xB] + 1);
-            o = Cur();
+    records::EffectObject* o = Fx();
+    if (Bytes(o)[0xB] == 0) {
+        o->timer = static_cast<unsigned char>(o->timer + 1);
+        o = Fx();
+        if (o->timer >= 0x5A) {
+            Bytes(o)[0xB] = static_cast<unsigned char>(Bytes(o)[0xB] + 1);
+            o = Fx();
         }
     }
-    if (BoxLeaves(o)) {
-        o[3] = static_cast<unsigned char>(o[3] + 1);
-        o = Cur();
+    if (BoxLeaves(Bytes(o))) {
+        Bytes(o)[3] = static_cast<unsigned char>(Bytes(o)[3] + 1);
+        o = Fx();
     }
-    g.draw_hud(0x5C, S16(o + 0x30));
+    g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
 }
 
 // original 0x404330 (WorldMapHud_BoxStates 3): y +0x30 += 10; at 0xF0 and
@@ -435,17 +442,17 @@ extern "C" void __cdecl WorldMapHud_BoxHold(void) {
 // Field_Request is 2, or Field_ScriptFlags bit 8, +3 = 1 (over the 0);
 // WorldMap_DrawHud(0x5C, y).
 extern "C" void __cdecl WorldMapHud_BoxSlideOut(void) {
-    SetWord(Cur() + 0x30, Word(Cur() + 0x30) + 10u);
-    unsigned char* o = Cur();
-    if (S16(o + 0x30) >= 0xF0) {
-        o[3] = 0;
-        o = Cur();
+    Fx()->screen_y = static_cast<std::uint16_t>(Fx()->screen_y) + 10u;
+    records::EffectObject* o = Fx();
+    if (static_cast<std::int32_t>(o->screen_y) >= 0xF0) {
+        Bytes(o)[3] = 0;
+        o = Fx();
     }
-    if (At(at::kMapMode)[0] == 0 && Field_Request != 2 && (Field_ScriptFlags & 0x100) == 0) {
-        o[3] = 1;
-        o = Cur();
+    if (AreaW0b_MapMode == 0 && Field_Request != 2 && (Field_ScriptFlags & 0x100) == 0) {
+        Bytes(o)[3] = 1;
+        o = Fx();
     }
-    g.draw_hud(0x5C, S16(o + 0x30));
+    g.draw_hud(0x5C, static_cast<std::int32_t>(o->screen_y));
 }
 
 // ===========================================================================
@@ -479,25 +486,25 @@ extern "C" void __cdecl WorldMapHud_BoxSlideOut(void) {
 // the table's; b 0, 1 or 4 read its neighbours); the byte products wrap; the
 // distance test is an OR (docs/worldmap_area.md section 4).
 extern "C" void __cdecl WorldMap33_DrawDrift(void) {
-    unsigned char* o = Cur();
-    if (o[2] == 0) {
-        SetWord(o + 0x3A, Word(o + 0x3A) + (Frame_Counter & 0xF));
-        Cur()[2] = static_cast<unsigned char>(Cur()[2] + 1);
-        o = Cur();
+    records::EffectObject* o = Fx();
+    if (o->step == 0) {
+        SetWord(Bytes(o) + 0x3A, Word(Bytes(o) + 0x3A) + (Frame_Counter & 0xF));
+        Fx()->step = static_cast<unsigned char>(Fx()->step + 1);
+        o = Fx();
     }
     if ((Draw_PassFlags & 4) == 0) return;
-    const std::int32_t b = o[0xB];
+    const std::int32_t b = Bytes(o)[0xB];
     const std::int32_t e = b - 2;
-    SetLong(o + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(o + 0x38)) + (static_cast<U>(b) << 10)));
-    o = Cur();
-    if (S16(o + 0x3A) > static_cast<std::int32_t>(At(at::kMapHeight)[0]) + 8) {
-        SetWord(o + 0x3A, 0xFFF8);
-        o = Cur();
+    o->z = static_cast<std::int32_t>(static_cast<U>(o->z) + (static_cast<U>(b) << 10));
+    o = Fx();
+    if (S16(Bytes(o) + 0x3A) > AreaMap_Header[1] + 8) {
+        SetWord(Bytes(o) + 0x3A, 0xFFF8);
+        o = Fx();
     }
-    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(o + 0x36);
+    std::int32_t dx = S16(At(at::kLeaderCellX)) - S16(Bytes(o) + 0x36);
     if (dx < 0) dx = -dx;
     if (dx > 0x19) {
-        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(o + 0x3A);
+        std::int32_t dz = S16(At(at::kLeaderCellZ)) - S16(Bytes(o) + 0x3A);
         if (dz < 0) dz = -dz;
         if (dz > 0x19) return;
     }
@@ -505,13 +512,13 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     unsigned char* const prim = Gfx_PacketNext;
     g.set_poly_ft4(prim);
     g.set_shade_tex(prim, 0);
-    o = Cur();
+    o = Fx();
     const std::int32_t side = 2 - e;   // 4 - b
     std::int32_t r = 15 - static_cast<std::int32_t>(Frame_Counter & 0x1F);
     if (r < 0) r = -r;
     r += static_cast<std::int32_t>(static_cast<U>(side) << 8);
-    const std::int32_t cx = (Long(o + 0x34) >> 9) - 0x3FC0;
-    const std::int32_t cz = (Long(o + 0x38) >> 9) - 0x3FC0;
+    const std::int32_t cx = (o->x >> 9) - 0x3FC0;
+    const std::int32_t cz = (o->z >> 9) - 0x3FC0;
     unsigned char* const v = reinterpret_cast<unsigned char*>(Prim_VertexScratch);
     SetWord(v + 4, 0xFD00);
     SetWord(v + 0x12, static_cast<unsigned>(cz + r));
@@ -537,8 +544,8 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
     const std::int32_t columns = 4 * side; // 16 - 4b
     for (std::int32_t j = 0; j < rows; ++j) {
         for (std::int32_t i = 0; i < columns; ++i) {
-            o = Cur();
-            unsigned char* const item = g.item_half_at(S16(o + 0x36) + i + e - 2, S16(o + 0x3A) + j + e - 2);
+            o = Fx();
+            unsigned char* const item = g.item_half_at(S16(Bytes(o) + 0x36) + i + e - 2, S16(Bytes(o) + 0x3A) + j + e - 2);
             if (item == nullptr) continue;
             unsigned char* const q = Gfx_PacketNext;
             g.set_poly_ft4(q);
@@ -551,9 +558,9 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
             SetWord(q + 0x16, 0x78CB);
             SetWord(q + 0x26, 0x5B);
             q[4] = q[5] = q[6] = 0x28;
-            const U m = At(at::kDriftSize + static_cast<U>(e))[0];
-            const U ubase = At(at::kDriftUBase + static_cast<U>(e))[0];
-            const U vbase = At(at::kDriftVBase + static_cast<U>(e))[0];
+            const U m = At(WorldMap33_DriftUV_addr + 0x8 + static_cast<U>(e))[0];
+            const U ubase = At(WorldMap33_DriftUV_addr + static_cast<U>(e))[0];
+            const U vbase = At(WorldMap33_DriftUV_addr + 0x4 + static_cast<U>(e))[0];
             const U scroll = (Word(Cur() + 0x38) * m) >> 16;
             const U ui = static_cast<U>(i), uj = static_cast<U>(j);
             q[0x14] = static_cast<unsigned char>(ui * m + ubase);
@@ -564,9 +571,9 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
             q[0x35] = static_cast<unsigned char>((uj + 1) * m - scroll + vbase);
             q[0x44] = static_cast<unsigned char>((ui + 1) * m + ubase);
             q[0x45] = static_cast<unsigned char>((uj + 1) * m - scroll + vbase);
-            o = Cur();
-            const U x = static_cast<U>(S16(o + 0x36) + i + e - 2) << 16;
-            const U z = static_cast<U>(S16(o + 0x3A) + j + e - 2) << 16;
+            o = Fx();
+            const U x = static_cast<U>(S16(Bytes(o) + 0x36) + i + e - 2) << 16;
+            const U z = static_cast<U>(S16(Bytes(o) + 0x3A) + j + e - 2) << 16;
             g.link_prim_at(x, z, 1, 0x48);
         }
     }
@@ -585,7 +592,7 @@ extern "C" void __cdecl WorldMap33_DrawDrift(void) {
 extern "C" unsigned __cdecl WorldMap_RecordIndex(void) {
     const unsigned area = Game_AreaNumber;
     unsigned index = 0;
-    for (U a = at::kRecordAreas; a < at::kRecordAreasEnd; a += at::kRecordSize, ++index)
+    for (U a = WorldMap_Records_addr + 0x18; a < at::kRecordAreasEnd; a += at::kRecordSize, ++index)
         if (At(a)[0] == area) break;
     return index;
 }
@@ -598,7 +605,7 @@ namespace {
 // 104) holds nulls at +4, +8 and +0x14.
 Handler RecordEntry(U slot) {
     const U index = g.record_index() & 0xFF;
-    return Entry(at::kRecords + index * at::kRecordSize + slot);
+    return Entry(WorldMap_Records_addr + index * at::kRecordSize + slot);
 }
 }  // namespace
 
@@ -620,7 +627,7 @@ extern "C" void __cdecl WorldMap_RecordHook10(void) { RecordEntry(0x10)(); }
 
 // original 0x469BB0 (Effect_KindHandlers 0x06): EffectKind06_States 0x653EC8
 // by +1 - _Start, _Tick, _End.
-extern "C" void __cdecl EffectKind06_Run(void) { Entry(at::kKind06States + Cur()[1] * 4u)(); }
+extern "C" void __cdecl EffectKind06_Run(void) { Entry(EffectKind06_States_addr + Fx()->state * 4u)(); }
 
 // original 0x469BD0 (EffectKind06_States 0 and 0x653EF4's entry 0; PSX
 // 0x8019B404): Sprite_SetAnimationBank(0x18); +0x48 = 0; the word +0x2E +=
@@ -632,74 +639,74 @@ extern "C" void __cdecl EffectKind06_Run(void) { Entry(at::kKind06States + Cur()
 extern "C" void __cdecl EffectKind06_Start(void) {
     g.set_bank(0x18);
     Cur()[0x48] = 0;
-    SetWord(Cur() + 0x2E, Word(Cur() + 0x2E) + Word(Cur() + 0xC));
-    SetWord(Cur() + 0x30, Word(Cur() + 0x30) - Word(Cur() + 0x10));
+    Fx()->screen_x = static_cast<std::uint16_t>(Fx()->screen_x) + Word(Cur() + 0xC);
+    Fx()->screen_y = static_cast<std::uint16_t>(Fx()->screen_y) - Word(Cur() + 0x10);
     Cur()[0x24] = 0;
     Cur()[0x2A] = 0;
     Cur()[0x29] = 2;
-    unsigned char* const o = Cur();
-    if (o[6] == 3) {
-        o[0] = static_cast<unsigned char>(o[0] | 0x20);
+    records::EffectObject* const o = Fx();
+    if (o->param == 3) {
+        o->in_use = static_cast<unsigned char>(o->in_use | 0x20);
         Cur()[0x5C] = 1;
-        Cur()[0x5F] = 0xF8;
-        Cur()[0x5E] = 0xF8;
-        Cur()[0x5D] = 0xF8;
-        Cur()[9] = 0x14;
+        Fx()->shade[2] = 0xF8;
+        Fx()->shade[1] = 0xF8;
+        Fx()->shade[0] = 0xF8;
+        Fx()->timer = 0x14;
     } else {
-        o[0x5C] = 0;
-        Cur()[0x5F] = 0;
-        Cur()[0x5E] = 0;
-        Cur()[0x5D] = 0;
-        Cur()[9] = 0x10;
+        Bytes(o)[0x5C] = 0;
+        Fx()->shade[2] = 0;
+        Fx()->shade[1] = 0;
+        Fx()->shade[0] = 0;
+        Fx()->timer = 0x10;
     }
-    g.set_animation(At(at::kKind06Anims + Cur()[6])[0]);
-    Cur()[1] = 1;
+    g.set_animation(At(EffectKind06_Anims_addr + Fx()->param)[0]);
+    Fx()->state = 1;
 }
 
 // original 0x469CB0 (EffectKind06_States 1; PSX 0x8019B544): EffectKind06_Ticks
 // 0x653EDC by the variant +6 - _Blink for 0, 1, 2 and 4, 0x469D40 for 3,
 // 0x469D10 for 5 (EffectKind06_Fade, EffectKind06_PlayOnce: field_c1.cpp).
-extern "C" void __cdecl EffectKind06_Tick(void) { Entry(at::kKind06Ticks + Cur()[6] * 4u)(); }
+extern "C" void __cdecl EffectKind06_Tick(void) { Entry(EffectKind06_Ticks_addr + Fx()->param * 4u)(); }
 
 // original 0x469CD0 (PSX 0x8019B588): +9 - 1; at 0 +1 + 1 and nothing more.
 // Otherwise Sprite_ScriptTick, and - only while bit 2 of +9 is set, so it
 // blinks - a tail jump to Sprite_QueueOverlay when the kind +5 is 6, else to
 // Sprite_UpdateScreen. Sprite_ScriptTick's answer is not read.
 extern "C" void __cdecl EffectKind06_Blink(void) {
-    Cur()[9] = static_cast<unsigned char>(Cur()[9] - 1);
-    unsigned char* o = Cur();
-    if (o[9] == 0) {
-        o[1] = static_cast<unsigned char>(o[1] + 1);
+    Fx()->timer = static_cast<unsigned char>(Fx()->timer - 1);
+    records::EffectObject* o = Fx();
+    if (o->timer == 0) {
+        o->state = static_cast<unsigned char>(o->state + 1);
         return;
     }
     g.script_tick();
-    o = Cur();
-    if ((o[9] & 4) == 0) return;
-    if (o[5] == 6) g.queue_overlay();
+    o = Fx();
+    if ((o->timer & 4) == 0) return;
+    if (o->kind == 6) g.queue_overlay();
     else g.update_screen();
 }
 
 // original 0x469DB0 (EffectKind06_States 2; PSX 0x8019B7DC): +0x5F, +0x5E,
 // +0x5D = 0, then a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind06_End(void) {
-    Cur()[0x5F] = 0;
-    Cur()[0x5E] = 0;
-    Cur()[0x5D] = 0;
+    Fx()->shade[2] = 0;
+    Fx()->shade[1] = 0;
+    Fx()->shade[0] = 0;
     g.effect_release();
 }
 
 // original 0x46D830 (Effect_KindHandlers 0x18): EffectKind18_States 0x65406C
 // by +1.
-extern "C" void __cdecl EffectKind18_Run(void) { Entry(at::kKind18States + Cur()[1] * 4u)(); }
+extern "C" void __cdecl EffectKind18_Run(void) { Entry(EffectKind18_States_addr + Fx()->state * 4u)(); }
 
 // original 0x46D850 (EffectKind18_States 0): +1 = +0xB (the effect's sub-kind
 // is its next state), +2 = +3 = +4 = +9 = 0.
 extern "C" void __cdecl EffectKind18_Start(void) {
-    Cur()[1] = Cur()[0xB];
-    Cur()[2] = 0;
+    Fx()->state = Cur()[0xB];
+    Fx()->step = 0;
     Cur()[3] = 0;
     Cur()[4] = 0;
-    Cur()[9] = 0;
+    Fx()->timer = 0;
 }
 
 // ===========================================================================

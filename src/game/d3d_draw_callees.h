@@ -22,17 +22,17 @@ using U = std::uint32_t;
 constexpr U kRetOnly = bof3::addr::BareRet;
 
 // Data the handlers read, all Capcom's addresses (docs/d3d-draw.md section 2).
-constexpr U kScaleX = 0x7C9F4C;       // D3d_ScaleX, float
-constexpr U kScaleY = 0x7C9F48;       // D3d_ScaleY, float
-constexpr U kVertices = 0x7CA958;     // D3d_Vertices, 4 x D3DTLVERTEX
+// kScaleX: now D3d_ScaleX (symbols.toml). D3d_ScaleX, float
+// kScaleY: now D3d_ScaleY (symbols.toml). D3d_ScaleY, float
+// kVertices: now D3d_Vertices (symbols.toml). D3d_Vertices, 4 x D3DTLVERTEX
 constexpr U kTexCoords = 0x7CA9E0;    // D3d_TexCoords, 256 floats, tc[i] = (i + 0.512) / 256 in game
-constexpr U kDrawTpage = 0x7DED14;    // Gfx_DrawTpage, u16: the last draw-mode primitive's tpage word
-constexpr U kShadeCache = 0x6C3A44;   // D3d_ShadeModeCache
-constexpr U kRenderFlags = 0x6C3A4C;  // Gfx_RenderFlags, byte: bit 0 the software surfaces
-constexpr U kPageCache = 0x6C3F40;    // Gfx_TexCache: 32 pages x 32 entries of 0x18
-constexpr U kClutRows = 0x6C2A40;     // Gfx_ClutRows: u32 generation, u32 pointer, per row
-constexpr U kCells = 0x6BEA18;        // SpriteCell_Table: 8-byte records
-constexpr U kCellCache = 0x7CAE38;    // D3d_CellTexCache: 128 entries of 0x28
+// kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, u16: the last draw-mode primitive's tpage word
+// kShadeCache: now D3d_ShadeModeCache (symbols.toml). D3d_ShadeModeCache
+// kRenderFlags: now Gfx_RenderFlags (symbols.toml). Gfx_RenderFlags, byte: bit 0 the software surfaces
+// kPageCache: now Gfx_TexCache (symbols.toml). Gfx_TexCache: 32 pages x 32 entries of 0x18
+// kClutRows: now Gfx_ClutRows (symbols.toml). Gfx_ClutRows: u32 generation, u32 pointer, per row
+// kCells: now SpriteCell_Table (symbols.toml). SpriteCell_Table: 8-byte records
+// kCellCache: now D3d_CellTexCache (symbols.toml). D3d_CellTexCache: 128 entries of 0x28
 constexpr U kCellEntry = 0x28;
 constexpr U kCellEntries = 0x80;
 constexpr rdata::Const kRhwNumerator{0x5C4610}; // float 0.1: rhw = 0.1 / z

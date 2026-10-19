@@ -37,6 +37,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -48,6 +49,13 @@ namespace at = scena_sx::at;
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
+
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Party() is a party member (ObjTrio, Field_State).
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
 using move_script::SetWord;
 using move_script::Word;
 
@@ -139,9 +147,9 @@ extern "C" void __cdecl Char_LevelUp(unsigned index_arg) {
 // +0x48 0, +8 from BattleFormation_Anims[formation] and
 // Sprite_EnsureAnimation of it. No PSX twin paired.
 extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, unsigned formation_arg) {
-    SetLong(At(at::kBattleX), x);
+    BossSi_CentreX = x;
     const unsigned char formation = At(bof3::addr::EventBattle_Records)[(formation_arg & 0xFF) * 4 + 1];
-    SetLong(At(at::kBattleZ), z);
+    BossSi_CentreZ = z;
     At(at::kFormation)[0] = formation;
     if (Field_MemberCount == 0) return;
     std::uint32_t slot_arg = formation_arg;
@@ -153,17 +161,17 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
         unsigned char j = 0;
         for (;;) {
             slot_arg = (slot_arg & 0xFFFFFF00u) | j;
-            if (At(at::kSecondList)[j] == id) break;
+            if (Cond_Flags[0xd5 + j] == id) break;
             ++j;
             slot_arg = (slot_arg & 0xFFFFFF00u) | j;
             if (j >= 3) break;
         }
         SH_AT(void (__cdecl*)(std::int32_t, std::int32_t, std::uint32_t), at::kFormationPlace)(
-            Long(At(at::kBattleX)), Long(At(at::kBattleZ)), slot_arg);
+            static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
         unsigned char* const s = Sprite_Current;
         unsigned char* const pos = At(at::kSlotPositions + (slot_arg & 0xFF) * 8);
-        SetLong(pos, Long(s + 0x34));
-        SetLong(pos + 4, Long(s + 0x38));
+        SetLong(pos, Spr(s)->x);
+        SetLong(pos + 4, Spr(s)->z);
         s[0x48] = 0;
         s[8] = At(bof3::addr::BattleFormation_Anims)[At(at::kFormation)[0]];
         const auto p = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(s));
@@ -182,7 +190,7 @@ extern "C" void __cdecl Party_ReloadPalettes(void) {
         unsigned char* const o = Obj(i);
         Sprite_Current = o;
         SH_CALL(Sprite_ReleaseTint)(o);
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(at::kPalettes + 0x40 * i)), 0);
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + 0x40 * i)), 0);
     }
 }
 
@@ -206,7 +214,7 @@ extern "C" void __cdecl Party_HealJoined(void) {
     }
     const int n = Field_MemberCount;
     for (int i = 0; i < n; ++i)
-        std::memmove(Obj(static_cast<unsigned>(i)) + 0x80, MemberRecord(At(at::kPartyLists)[i]), at::kRecordStride);
+        std::memmove(Obj(static_cast<unsigned>(i)) + 0x80, MemberRecord(Cond_Flags[0xd2 + i]), at::kRecordStride);
 }
 
 // original 0x534030: a member out of the party (the argument's low byte, an
@@ -223,8 +231,8 @@ extern "C" void __cdecl Party_HealJoined(void) {
 extern "C" void __cdecl Party_Remove(unsigned id_arg) {
     SH_CALL(Party_JoinReset)();
     const auto id = static_cast<unsigned char>(id_arg);
-    unsigned char* const first = At(at::kPartyLists);
-    unsigned char* const second = At(at::kSecondList);
+    unsigned char* const first = At(Cond_Flags_addr + 0xd2);
+    unsigned char* const second = At(Cond_Flags_addr + 0xd5);
     const int count = Field_MemberCount;
     int k = 0;
     while (k < count && second[k] != id) ++k;
@@ -259,9 +267,9 @@ extern "C" void __cdecl Party_Remove(unsigned id_arg) {
     SH_CALL(Member_ClearState)(below);
     const unsigned char now = Field_MemberCount;
     if (now == 3) {
-        if (At(at::kLeaderSlot)[0] >= 3) At(at::kLeaderSlot)[0] = 0;
+        if (Cond_Flags[0xd0] >= 3) Cond_Flags[0xd0] = 0;
     } else if (now == 2) {
-        At(at::kLeaderSlot)[0] = 0;
+        Cond_Flags[0xd0] = 0;
     }
     Field_MemberCount = static_cast<unsigned char>(now - 1);
 }
@@ -301,7 +309,7 @@ extern "C" std::uint32_t __cdecl Char_LoseHp(std::uint32_t amount, unsigned memb
     unsigned char* const actor = Record(Field_State[0x148]);
     if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) {
         SetWord(actor + 0x10, Word(actor + 0x10) | 0x2000);
-        SetWord(Field_State + 0x90, Word(Field_State + 0x90) | 0x2000);
+        SetWord(Field_State + 0x90, Party(Field_State)->status | 0x2000);
     }
     return took;
 }
@@ -336,7 +344,7 @@ extern "C" std::uint32_t __cdecl Field_CellTriggerAt(unsigned char* table, unsig
         }
         if (!hit) continue;
         const unsigned facing = r[3] & 0xF;
-        if (facing == 8 || facing == At(at::kLeaderFacing)[0]) return i;
+        if (facing == 8 || facing == ObjTrio[8]) return i;
     }
     return 0xFF;
 }
@@ -383,36 +391,36 @@ extern "C" std::uint32_t __cdecl Camera_TurnToDegrees(unsigned angle_arg, unsign
 // of 0, a second argument of 0) or overflows (-2^31 / -1) it faults; ours
 // aborts. No PSX twin paired.
 extern "C" unsigned char __cdecl Camera_EaseAngleFB(unsigned angle_arg, unsigned frames_arg) {
-    std::int32_t left = Long(At(at::kEaseLeft));
-    const unsigned char speed = Field_MoveSpeeds[At(at::kKind2Speed)[0]];
+    std::int32_t left = static_cast<std::int32_t>(ScenaSx_EaseLeft);
+    const unsigned char speed = Field_MoveSpeeds[Sprite_Kind2[0x84]];
     if (left != 0) {
-        const std::int32_t acc = static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kEaseAcc))) +
-                                                           static_cast<std::uint32_t>(Long(At(at::kEaseStep))));
-        SetLong(At(at::kEaseAcc), acc);
-        SetWord(At(at::kAngleFB), static_cast<std::uint32_t>(acc >> 16));
+        const std::int32_t acc = static_cast<std::int32_t>(static_cast<std::uint32_t>(CameraTurn_Angles[2]) +
+                                                           static_cast<std::uint32_t>(CameraTurn_Steps[2]));
+        CameraTurn_Angles[2] = acc;
+        SetWord(At(Cond_AngleFB_addr), static_cast<std::uint32_t>(acc >> 16));
         --left;
-        SetLong(At(at::kEaseLeft), left);
+        ScenaSx_EaseLeft = left;
         return left != 0 ? 1 : 0;
     }
     if (speed == 0) {
-        SetWord(At(at::kAngleFB), static_cast<std::uint32_t>(Degrees(static_cast<short>(angle_arg))));
+        SetWord(At(Cond_AngleFB_addr), static_cast<std::uint32_t>(Degrees(static_cast<short>(angle_arg))));
         return 0;
     }
-    const unsigned char mode = At(at::kKind2Mode)[0];
+    const unsigned char mode = Sprite_Kind2[8];
     const int per = mode == 2 || mode == 6 ? 4 : 8;
     const auto product = static_cast<unsigned char>(per * S8(speed));
     if (product == 0) bof3::Fatal("Camera_EaseAngleFB: 0x80 / 0 (speed byte 0x%X): the original faults", speed);
     const std::int32_t frames = 0x80 / product;
-    const auto cur = static_cast<short>(Word(At(at::kAngleFB)));
+    const auto cur = static_cast<short>(Word(At(Cond_AngleFB_addr)));
     const std::int32_t total = static_cast<std::int32_t>(static_cast<std::uint32_t>(frames) *
                                                          static_cast<std::uint32_t>(S8(static_cast<unsigned char>(frames_arg))));
-    SetLong(At(at::kEaseAcc), static_cast<std::int32_t>(static_cast<std::uint32_t>(cur) << 16));
+    CameraTurn_Angles[2] = static_cast<std::int32_t>(static_cast<std::uint32_t>(cur) << 16);
     const std::int32_t target = Degrees(static_cast<short>(angle_arg));
-    SetLong(At(at::kEaseLeft), total);
+    ScenaSx_EaseLeft = total;
     const auto num = static_cast<std::int32_t>(static_cast<std::uint32_t>(target - (cur & 0x7FF)) << 16);
     if (total == 0) bof3::Fatal("Camera_EaseAngleFB: a step over 0 frames (second argument 0): the original faults");
     if (num == INT32_MIN && total == -1) bof3::Fatal("Camera_EaseAngleFB: -2^31 / -1: the original faults");
-    SetLong(At(at::kEaseStep), num / total);
+    CameraTurn_Steps[2] = num / total;
     return 1;
 }
 
@@ -499,9 +507,9 @@ extern "C" unsigned char __cdecl Inventory_Remove(unsigned category, unsigned it
 // the argument's). PSX Zenny_Sub 0x80166FCC (the sibling's name;
 // pairs_propagated "gap15").
 extern "C" unsigned char __cdecl Zenny_Sub(std::uint32_t amount) {
-    const auto money = static_cast<std::uint32_t>(Long(At(bof3::addr::Party_Zenny)));
+    const auto money = static_cast<std::uint32_t>(Party_Zenny);
     if (money < amount) return 0;
-    SetLong(At(bof3::addr::Party_Zenny), static_cast<std::int32_t>(money - amount));
+    Party_Zenny = money - amount;
     return 1;
 }
 
@@ -510,10 +518,10 @@ extern "C" unsigned char __cdecl Zenny_Sub(std::uint32_t amount) {
 // 9,999,999 it is 9,999,999 and al 0, else al 1. PSX Zenny_Add 0x80166FFC
 // (the sibling's name; pairs_propagated "call-anchored").
 extern "C" unsigned char __cdecl Zenny_Add(std::uint32_t amount, unsigned tally) {
-    unsigned char* const money = At(bof3::addr::Party_Zenny);
+    unsigned char* const money = At(Party_Zenny_addr);
     SetLong(money, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(money)) + amount));
     if (static_cast<unsigned char>(tally) == 0)
-        SetLong(At(at::kZennyTally), static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(At(at::kZennyTally))) + amount));
+        Rest4a_CountC = static_cast<std::int32_t>(Rest4a_CountC + amount);
     if (static_cast<std::uint32_t>(Long(money)) > at::kZennyCap) {
         SetLong(money, static_cast<std::int32_t>(at::kZennyCap));
         return 0;

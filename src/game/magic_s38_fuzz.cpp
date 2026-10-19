@@ -235,8 +235,12 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kScratchBytes = 0x1C, kActorRecord = 0x904B3C,
-                        kEventBattle = 0x904AAA, kAbility = 0x904B80, kFrameSet = 0x9039D8, kCamera = 0x929EC8;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml).
+// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kCamera: now Camera_Angles (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kScratchBytes = 0x1C, kAbility = 0x904B80;
 
 struct Pool {
     std::uint32_t at;
@@ -273,7 +277,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // Rand, Math_Sin and Math_Cos: the callers keep their angles, radii, colours
@@ -285,7 +289,7 @@ std::uint32_t StirScratch(const std::uint32_t*, std::uint32_t answer) {
     if (r % 3 != 0) return answer;
     const auto v = static_cast<std::uint16_t>(mh::Noise() >> 16);
     if (r & 0x100) SetWord(mh::Mem(kScratch + 2 * ((r >> 12) % (kScratchBytes / 2))), v);
-    else SetWord(mh::Mem(kVertex + 2 * ((r >> 12) % 16)), v);
+    else SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * ((r >> 12) % 16)), v);
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -298,7 +302,7 @@ std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
     // turn: a quarter of the time the pointer moves here, so a re-read shows
     // (control V97 stood on the harness's own disturbance alone).
     const std::uint32_t r = mh::Noise();
-    if (r % 4 == 0) mh::SetPointer(kActorRecord, mh::SpriteRecord(r >> 8));
+    if (r % 4 == 0) mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(r >> 8));
     return answer;
 }
 // None free (0xFF) a quarter of the time, for Magic225_Apply only.
@@ -389,10 +393,10 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                                  // Gfx_PacketNext
     {0, kPrimBytes},                                // g_prims (filled in at start-up)
-    {kVertex, 0x20},                                // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},                // Prim_VertexScratch, four SVECTORs
     {kScratch, kScratchBytes},                      // 0x903850..0x90386B
-    {kFrameSet, 4},                                 // the frame-offset table pointer the veil, shards and rock swap
-    {kCamera, 2},                                   // Camera_Angles[0]
+    {BattleE2_AnimSet_addr, 4},                     // the frame-offset table pointer the veil, shards and rock swap
+    {Camera_Angles_addr, 2},                        // Camera_Angles[0]
     {kAbility, 2},                                  // the acting ability
     {kGustPool.at, kGustPool.records * 0x84u},      // Tempest_GustPool
     {kShardPool.at, kShardPool.records * 0x84u},    // Magic225_ShardPool
@@ -425,13 +429,13 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 9) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kScratch + 2 * (v % (kScratchBytes / 2))), h >> 16); break;
-    case 3: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
-    case 4: SetWord(mh::Mem(kCamera), h >> 16); break;
+    case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
+    case 4: SetWord(mh::Mem(Camera_Angles_addr), h >> 16); break;
     case 5: PoolRecord(SomePool(v), v >> 2)[0] ^= 1; break;
-    case 6: mh::SetPointer(kActorRecord, mh::SpriteRecord(v)); break;
-    case 7: mh::Mem(kEventBattle)[0] = Byte(h >> 24); break;
+    case 6: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
+    case 7: mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(h >> 24); break;
     case 8: SetWord(mh::Mem(kAbility), (h & 0x1000000) ? 0xDF : h >> 16); break;
     default: break;
     }
@@ -457,9 +461,9 @@ void FillPool(const Pool& pool) {
 
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
-    unsigned char* const owner = mh::Pointer(mh::at::kOwner);
+    unsigned char* const owner = mh::Pointer(BattleE2_Owner_addr);
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kActorRecord, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     FillPool(kGustPool);
     FillPool(kShardPool);
     FillPool(kRecordPool);
@@ -509,7 +513,7 @@ void Seed(unsigned k) {
         if (mh::Half()) sc[9] = 0;
         Near(sc[0xA], 0);
         break;
-    case kMagic225Veil_Start: if (mh::Half()) mh::Mem(kEventBattle)[0] = mh::Half() ? 0x37 : 0x36; break;
+    case kMagic225Veil_Start: if (mh::Half()) mh::Mem(BattleActions_EventBattle_addr)[0] = mh::Half() ? 0x37 : 0x36; break;
     case kMagic225Shard_Fly:
         if (mh::Often()) SetLong(sc + 0xC, static_cast<std::int32_t>(4 + mh::Next() % 2));
         break;

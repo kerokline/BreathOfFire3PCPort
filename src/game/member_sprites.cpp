@@ -22,6 +22,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/member_sprites_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -36,7 +37,7 @@ template <class To> To Fn(std::uint32_t address) { return reinterpret_cast<To>(s
 // nobody's, Capcom's addresses typed from their call sites and, where read,
 // their first instructions (docs/member-sprites.md, section 3).
 const Callees kOriginals = {
-    Sprite_RestoreClut, reinterpret_cast<const std::uint32_t*>(at::kMemberStates),
+    Sprite_RestoreClut, reinterpret_cast<const std::uint32_t*>(Member_States_addr),
     Sprite_ClearSteps, MapView_GroundAt, Sprite_SetAnimation,
     reinterpret_cast<const std::uint32_t*>(at::kControlStates), Sprite_ScriptTick,
     Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile89), Fn<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Field_Tile8A),
@@ -73,6 +74,14 @@ constexpr std::uint32_t kMemberBytes = 0x14C, kActorBytes = 0xA4;
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 // Member i by address, i unchecked (the original indexes past the three).
 unsigned char* Member(unsigned i) { return At(Address(ObjTrio) + i * kMemberBytes); }
+
+// The typed views of the member records (src/game/records.h): Sprite_Current
+// and Field_State are ObjTrio records here.
+records::PartyMember* Cur() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
+records::PartyMember* State() { return reinterpret_cast<records::PartyMember*>(Field_State); }
+records::PartyMember* Leader() { return reinterpret_cast<records::PartyMember*>(ObjTrio); }
+unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
+const unsigned char* Bytes(const records::PartyMember* p) { return reinterpret_cast<const unsigned char*>(p); }
 unsigned char& Cell(unsigned i) { return At(at::kCells)[i & 0xFF]; }
 std::uint32_t U(const unsigned char* at) { return static_cast<std::uint32_t>(Long(at)); }
 void Dispatch(const std::uint32_t* table, unsigned index) {
@@ -108,7 +117,7 @@ unsigned FlagsLow() { return (Field_ScriptFlags2 | Field_ScriptFlags) & 0xFF; }
 // jumps (a tail call).
 extern "C" void __cdecl Field_MemberFrame(void) {
     g.restore_clut();
-    Dispatch(g.member_states, Sprite_Current[1]);
+    Dispatch(g.member_states, Cur()->state[0]);
 }
 
 // original 0x51AC70, state 0 (PSX 0x801BCE90): the member's counters cleared,
@@ -118,11 +127,11 @@ extern "C" void __cdecl Member_Start(void) {
     SetLong(Sprite_Current + 0x18, 0);
     SetLong(Sprite_Current + 0x1C, 0);
     SetLong(Sprite_Current + 0x20, 0);
-    Sprite_Current[6] = static_cast<unsigned char>(Sprite_Current[5] - 1);
+    Sprite_Current[6] = static_cast<unsigned char>(Cur()->member - 1);
     Sprite_Current[7] = 0;
     {
-        const unsigned char* const c = Sprite_Current;
-        const long z = Long(c + 0x38), x = Long(c + 0x34);
+        const records::PartyMember* const c = Cur();
+        const long z = c->z, x = c->x;
         const long ground = g.ground_at(x, z);
         SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(ground));
     }
@@ -133,9 +142,9 @@ extern "C" void __cdecl Member_Start(void) {
     Field_State[0x128] = 3;
     Field_State[0x137] = 0;
     Field_State[0x136] = 0;
-    g.set_animation(Sprite_Current[8]);
-    Sprite_Current[1] = static_cast<unsigned char>(Sprite_Current[1] + 1);
-    Sprite_Current[2] = 0;
+    g.set_animation(Cur()->direction);
+    Cur()->state[0] = static_cast<unsigned char>(Cur()->state[0] + 1);
+    Cur()->state[1] = 0;
 }
 
 // original 0x51AD40, state 1 (PSX 0x801BCFAC): its sub-state through the
@@ -144,7 +153,7 @@ extern "C" void __cdecl Member_Start(void) {
 // As the original has it: the sub-state Sprite_Current +2 is unchecked; the
 // tick is a tail jump whose al no caller reads.
 extern "C" void __cdecl Member_Control(void) {
-    Dispatch(g.control_states, Sprite_Current[2]);
+    Dispatch(g.control_states, Cur()->state[1]);
     g.script_tick();
 }
 
@@ -161,50 +170,50 @@ extern "C" void __cdecl Member_Control(void) {
 // side effect is all it leaves); the animation 8 on is a byte add.
 extern "C" void __cdecl Member_Follow(void) {
     if (Field_Request == 9) {
-        Sprite_Current[1] = 0xE;
-        Sprite_Current[2] = 0;
+        Cur()->state[0] = 0xE;
+        Cur()->state[1] = 0;
         return;
     }
     const unsigned flags = Field_ScriptFlags2;
     if (flags & 0x1000) {
-        Sprite_Current[1] = 5;
-        Sprite_Current[2] = 0;
+        Cur()->state[0] = 5;
+        Cur()->state[1] = 0;
         Sprite_Current[0xB] = 0;
         return;
     }
     if (flags & 0xC00) return;
     if (g.test_535120(1)) return;
     if (g.test_535240(1)) return;
-    if (ObjTrio[1] == 0xA) {
-        g.ensure_animation(Sprite_Current[8]);
-        Sprite_Current[1] = 7;
-        Sprite_Current[2] = 0;
+    if (Leader()->state[0] == 0xA) {
+        g.ensure_animation(Cur()->direction);
+        Cur()->state[0] = 7;
+        Cur()->state[1] = 0;
         return;
     }
     if (g.idle()) return;
     switch (g.follow_step()) {
     case 0: {
         if (g.test_531df0()) {
-            g.ensure_animation(Sprite_Current[8]);
-            Sprite_Current[2] = 0;
+            g.ensure_animation(Cur()->direction);
+            Cur()->state[1] = 0;
             return;
         }
-        unsigned char* const state = Field_State;
-        if (!(Field_ActorStates[state[0x148] * kActorBytes] & 0x20)) state[0x136] = 0;
+        records::PartyMember* const state = State();
+        if (!(Field_ActorStates[state->char_index * kActorBytes] & 0x20)) Bytes(state)[0x136] = 0;
         g.call_534610();
         g.call_535f50();
-        g.ensure_animation(static_cast<unsigned char>(Sprite_Current[8] + 8));
-        if (Field_State[0x89] == 2) {
-            const unsigned char* const c = Sprite_Current;
-            const std::uint32_t steps = c[9];
-            const std::uint32_t x = U(c + 0xC) * steps + U(c + 0x34);
-            const std::uint32_t z = U(c + 0x10) * steps + U(c + 0x38);
+        g.ensure_animation(static_cast<unsigned char>(Cur()->direction + 8));
+        if (State()->char_id == 2) {
+            const records::PartyMember* const c = Cur();
+            const std::uint32_t steps = c->step_frames;
+            const std::uint32_t x = static_cast<std::uint32_t>(c->step_x) * steps + static_cast<std::uint32_t>(c->x);
+            const std::uint32_t z = static_cast<std::uint32_t>(c->step_z) * steps + static_cast<std::uint32_t>(c->z);
             g.ground_at(static_cast<long>(x), static_cast<long>(z));
         }
-        Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
+        Cur()->step_frames = static_cast<unsigned char>(Cur()->step_frames - 1);
         g.call_52e140();
         Field_State[0x137] = 1;
-        Sprite_Current[2] = 1;
+        Cur()->state[1] = 1;
         return;
     }
     case 1:
@@ -212,24 +221,24 @@ extern "C" void __cdecl Member_Follow(void) {
     case 3:
     case 4:
         g.clear_steps();
-        g.ensure_animation(Sprite_Current[8]);
+        g.ensure_animation(Cur()->direction);
         Field_State[0x137] = 0;
-        Sprite_Current[2] = 0;
+        Cur()->state[1] = 0;
         return;
     case 5:
         Field_State[0x128] = 3;
-        g.ensure_animation(Sprite_Current[8]);
+        g.ensure_animation(Cur()->direction);
         Field_State[0x137] = 4;
-        Sprite_Current[1] = 2;
-        Sprite_Current[2] = 3;
+        Cur()->state[0] = 2;
+        Cur()->state[1] = 3;
         return;
     case 6: {
         Field_State[0x128] = 3;
-        g.ensure_animation(Sprite_Current[8]);
+        g.ensure_animation(Cur()->direction);
         Field_State[0x137] = 3;
-        Sprite_Current[1] = 8;
-        unsigned char* const c = Sprite_Current;
-        c[2] = (c[8] == 1 || c[8] == 7) ? 0 : 1;
+        Cur()->state[0] = 8;
+        records::PartyMember* const c = Cur();
+        c->state[1] = (c->direction == 1 || c->direction == 7) ? 0 : 1;
         return;
     }
     default:
@@ -240,13 +249,13 @@ extern "C" void __cdecl Member_Follow(void) {
 // original 0x51AFC0, sub-state 1 of state 1 (PSX 0x801BD3B0): a step's
 // frames counted down in +9 through 0x52E140 (tail jumps both).
 extern "C" void __cdecl Member_Walk(void) {
-    unsigned char* const c = Sprite_Current;
-    const unsigned char left = c[9];
+    records::PartyMember* const c = Cur();
+    const unsigned char left = c->step_frames;
     if (left == 0) {
         g.walk_end();
         return;
     }
-    c[9] = static_cast<unsigned char>(left - 1);
+    c->step_frames = static_cast<unsigned char>(left - 1);
     g.call_52e140();
 }
 
@@ -264,11 +273,11 @@ extern "C" void __cdecl Member_WalkEnd(void) {
     g.clear_steps();
     Field_State[0x128] = 3;
     g.follow();
-    unsigned char* const c = Sprite_Current;
-    if (Long(c + 0xC) != 0) return;
-    if (Long(c + 0x10) != 0) return;
-    if (c[1] != 1) return;
-    c[2] = 0;
+    records::PartyMember* const c = Cur();
+    if (c->step_x != 0) return;
+    if (c->step_z != 0) return;
+    if (c->state[0] != 1) return;
+    c->state[1] = 0;
 }
 
 // --- following the leader -------------------------------------------------------
@@ -286,53 +295,53 @@ extern "C" void __cdecl Member_WalkEnd(void) {
 // calls; Field_State is the leader's (ObjTrio) for the two calls of the free
 // test and put back after, whatever they did to it.
 extern "C" unsigned char __cdecl Member_FollowStep(void) {
-    unsigned char* c = Sprite_Current;
-    const unsigned char* const leader = Member(0);
-    const unsigned char facing = c[8];
-    const std::uint32_t leader_steps = leader[9];
-    const std::uint32_t tx = leader_steps * U(leader + 0xC) + U(leader + 0x34);
-    const std::uint32_t tz = leader_steps * U(leader + 0x10) + U(leader + 0x38);
-    const unsigned char who = c[5];
+    records::PartyMember* c = Cur();
+    const records::PartyMember* const leader = reinterpret_cast<const records::PartyMember*>(Member(0));
+    const unsigned char facing = c->direction;
+    const std::uint32_t leader_steps = leader->step_frames;
+    const std::uint32_t tx = leader_steps * static_cast<std::uint32_t>(leader->step_x) + static_cast<std::uint32_t>(leader->x);
+    const std::uint32_t tz = leader_steps * static_cast<std::uint32_t>(leader->step_z) + static_cast<std::uint32_t>(leader->z);
+    const unsigned char who = c->member;
     if (Member((who & 0xFFu) ^ 3u)[0x137] != 9) {
         if (who == 2) {
-            c[6] = Member(1)[6] != 0 ? 0 : 1;
+            Bytes(c)[6] = Member(1)[6] != 0 ? 0 : 1;
         } else if (Field_MemberCount <= 2) {
-            c[6] = 0;
+            Bytes(c)[6] = 0;
         } else {
-            const unsigned char* const third = Member(2);
-            const std::uint32_t steps = third[9];
-            const std::int32_t mine = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(U(c + 0x38) - tz)) +
-                                                                static_cast<std::uint32_t>(Abs(U(c + 0x34) - tx)));
+            const records::PartyMember* const third = reinterpret_cast<const records::PartyMember*>(Member(2));
+            const std::uint32_t steps = third->step_frames;
+            const std::int32_t mine = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->z) - tz)) +
+                                                                static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->x) - tx)));
             const std::int32_t theirs = static_cast<std::int32_t>(
-                static_cast<std::uint32_t>(Abs(steps * U(third + 0xC) - tx + U(third + 0x34))) +
-                static_cast<std::uint32_t>(Abs(steps * U(third + 0x10) - tz + U(third + 0x38))));
-            c[6] = mine > theirs ? 2 : 0;
+                static_cast<std::uint32_t>(Abs(steps * static_cast<std::uint32_t>(third->step_x) - tx + static_cast<std::uint32_t>(third->x))) +
+                static_cast<std::uint32_t>(Abs(steps * static_cast<std::uint32_t>(third->step_z) - tz + static_cast<std::uint32_t>(third->z))));
+            Bytes(c)[6] = mine > theirs ? 2 : 0;
         }
-        c = Sprite_Current;
+        c = Cur();
     }
     // The one followed: where its step ends, and two half-cells behind that.
-    const unsigned char* const target = Member(c[6]);
-    const std::uint32_t target_steps = target[9];
-    const std::uint32_t gx = U(target + 0xC) * target_steps + U(target + 0x34);
-    const std::uint32_t gz = U(target + 0x10) * target_steps + U(target + 0x38);
-    const unsigned dir = target[8];
-    const std::int32_t near = target[0x70] ? 0x20000 : 0x18000;
-    const std::uint32_t px = gx - (RowX(at::kDirSteps, dir) << 1);
-    const std::uint32_t pz = gz - (RowZ(at::kDirSteps, dir) << 1);
-    if (Abs(U(c + 0x34) - gx) <= near && Abs(U(c + 0x38) - gz) <= near) return 1;
+    const records::PartyMember* const target = reinterpret_cast<const records::PartyMember*>(Member(Bytes(c)[6]));
+    const std::uint32_t target_steps = target->step_frames;
+    const std::uint32_t gx = static_cast<std::uint32_t>(target->step_x) * target_steps + static_cast<std::uint32_t>(target->x);
+    const std::uint32_t gz = static_cast<std::uint32_t>(target->step_z) * target_steps + static_cast<std::uint32_t>(target->z);
+    const unsigned dir = target->direction;
+    const std::int32_t near = Bytes(target)[0x70] ? 0x20000 : 0x18000;
+    const std::uint32_t px = gx - (RowX(Field_DirectionSteps_addr, dir) << 1);
+    const std::uint32_t pz = gz - (RowZ(Field_DirectionSteps_addr, dir) << 1);
+    if (Abs(static_cast<std::uint32_t>(c->x) - gx) <= near && Abs(static_cast<std::uint32_t>(c->z) - gz) <= near) return 1;
 
     g.catch_up(static_cast<long>(px), static_cast<long>(pz));
     {
-        const unsigned char* const s = Sprite_Current;
-        const std::int32_t dx = Abs(U(s + 0x34) - px);
+        const records::PartyMember* const s = Cur();
+        const std::int32_t dx = Abs(static_cast<std::uint32_t>(s->x) - px);
         std::int32_t dz = 0;
-        if (dx > 0x60000 || (dz = Abs(U(s + 0x38) - pz)) > 0x60000) {
+        if (dx > 0x60000 || (dz = Abs(static_cast<std::uint32_t>(s->z) - pz)) > 0x60000) {
             Field_State[0x128] = 5;
         } else if (dx <= 0x20000 && dz <= 0x20000) {
-            const unsigned char speed = Member(s[6])[0x128];
+            const unsigned char speed = Member(Bytes(s)[6])[0x128];
             Field_State[0x128] = speed;
         } else {
-            const unsigned char speed = static_cast<unsigned char>(Member(s[6])[0x128] + 1);
+            const unsigned char speed = static_cast<unsigned char>(Member(Bytes(s)[6])[0x128] + 1);
             Field_State[0x128] = speed;
         }
     }
@@ -344,37 +353,37 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
     g.direction_to(static_cast<long>(px), static_cast<long>(pz), Sprite_Current + 8);
     unsigned char answer = g.step_ahead();
     if (answer != 1) {
-        c = Sprite_Current;
-        const std::int32_t mine = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(U(c + 0x38) - pz)) +
-                                                            static_cast<std::uint32_t>(Abs(U(c + 0x34) - px)));
-        const std::int32_t aim = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(U(At(at::kAimZ)) - pz)) +
+        c = Cur();
+        const std::int32_t mine = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->z) - pz)) +
+                                                            static_cast<std::uint32_t>(Abs(static_cast<std::uint32_t>(c->x) - px)));
+        const std::int32_t aim = static_cast<std::int32_t>(static_cast<std::uint32_t>(Abs(Scratch_Swap - pz)) +
                                                            static_cast<std::uint32_t>(Abs(U(At(at::kAimX)) - px)));
         if (mine >= aim) return answer;
-        c[8] = facing;
+        c->direction = facing;
         answer = 1;
     }
     if (FlagsLow() & 1) return answer;
-    if (!(Sprite_Current[0] & 0x80)) return answer;
+    if (!(Cur()->flags & 0x80)) return answer;
 
     // The leader's next position, to the half-cell: free for this member?
-    const std::uint32_t nz = (leader[9] * U(leader + 0x10) + U(leader + 0x38)) & 0xFFFF8000u;
-    const std::uint32_t nx = (leader[9] * U(leader + 0xC) + U(leader + 0x34)) & 0xFFFF8000u;
+    const std::uint32_t nz = (leader->step_frames * static_cast<std::uint32_t>(leader->step_z) + static_cast<std::uint32_t>(leader->z)) & 0xFFFF8000u;
+    const std::uint32_t nx = (leader->step_frames * static_cast<std::uint32_t>(leader->step_x) + static_cast<std::uint32_t>(leader->x)) & 0xFFFF8000u;
     unsigned char* const saved = Field_State;
     Field_State = Member(0);
     const long ground = g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
     const unsigned char blocked = g.blocked_at(static_cast<long>(nx), static_cast<long>(nz), Sprite_Current[0x70], ground);
     Field_State = saved;
     if (blocked) return answer;
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(nx));
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(nz));
-    Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x40);
+    Cur()->x = static_cast<std::int32_t>(nx);
+    Cur()->z = static_cast<std::int32_t>(nz);
+    Cur()->flags = static_cast<unsigned char>(Cur()->flags | 0x40);
     Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] & 0xFE);
     Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] | (Member(0)[0x138] & 1));
     const long here = g.ground_at(static_cast<long>(nx), static_cast<long>(nz));
     SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(here));
-    Sprite_Current[0x29] = Member(0)[0x29];
-    Sprite_Current[1] = 2;
-    Sprite_Current[2] = 2;
+    Cur()->ot_slot = Member(0)[0x29];
+    Cur()->state[0] = 2;
+    Cur()->state[1] = 2;
     return 0xFF;
 }
 
@@ -390,30 +399,30 @@ extern "C" unsigned char __cdecl Member_FollowStep(void) {
 // idiv does; Member_FollowStep clamps +0x128 to 3..5 first. The ground at the
 // aim point is fetched when there is no object there and thrown away.
 extern "C" unsigned char __cdecl Member_StepAhead(void) {
-    const unsigned char facing = Sprite_Current[8];
+    const unsigned char facing = Cur()->direction;
     const unsigned char kind = g.cell_ahead();
     {
-        unsigned char* const c = Sprite_Current;
-        c[9] = (c[8] == 2 || c[8] == 6) ? 0x20 : 0x10;
+        records::PartyMember* const c = Cur();
+        c->step_frames = (c->direction == 2 || c->direction == 6) ? 0x20 : 0x10;
     }
-    const unsigned speed = At(at::kMoveSpeeds)[Field_State[0x128]];
+    const unsigned speed = Field_MoveSpeeds[Field_State[0x128]];
     {
-        unsigned char* const c = Sprite_Current;
+        records::PartyMember* const c = Cur();
         const volatile int divisor = static_cast<int>(speed);
-        c[9] = static_cast<unsigned char>(static_cast<int>(c[9]) / divisor);
+        c->step_frames = static_cast<unsigned char>(static_cast<int>(c->step_frames) / divisor);
     }
-    unsigned char* const c = Sprite_Current;
-    const std::uint32_t frames = c[9];
+    records::PartyMember* const c = Cur();
+    const std::uint32_t frames = c->step_frames;
     std::uint32_t ax, az;
-    if (c[0x70] == 0) {
-        ax = RowX(at::kDirUnits, c[8]) * frames * speed + U(c + 0x34);
-        az = RowZ(at::kDirUnits, c[8]) * frames * speed + U(c + 0x38);
+    if (Bytes(c)[0x70] == 0) {
+        ax = RowX(MoveCmd_F9Steps_addr, c->direction) * frames * speed + static_cast<std::uint32_t>(c->x);
+        az = RowZ(MoveCmd_F9Steps_addr, c->direction) * frames * speed + static_cast<std::uint32_t>(c->z);
     } else {
-        ax = U(c + 0x34) + ((RowX(at::kDirUnits, c[8]) * frames * speed) << 1);
-        az = U(c + 0x38) + ((RowZ(at::kDirUnits, c[8]) * frames * speed) << 1);
+        ax = static_cast<std::uint32_t>(c->x) + ((RowX(MoveCmd_F9Steps_addr, c->direction) * frames * speed) << 1);
+        az = static_cast<std::uint32_t>(c->z) + ((RowZ(MoveCmd_F9Steps_addr, c->direction) * frames * speed) << 1);
     }
     SetLong(At(at::kAimX), static_cast<std::int32_t>(ax));
-    SetLong(At(at::kAimZ), static_cast<std::int32_t>(az));
+    Scratch_Swap = static_cast<std::int32_t>(az);
     switch (kind) {
     case 0:
     case 2:
@@ -421,13 +430,13 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
     case 5:
         return 1;
     case 3: {
-        const long r = g.object_at(static_cast<long>(ax), static_cast<long>(az), c[8]);
+        const long r = g.object_at(static_cast<long>(ax), static_cast<long>(az), c->direction);
         if (Cell(0) == 0) return 0;
         if (static_cast<short>(r) > 0x40) {
-            Sprite_Current[8] = facing;
+            Cur()->direction = facing;
             return 1;
         }
-        g.ground_at(Long(At(at::kAimX)), Long(At(at::kAimZ)));
+        g.ground_at(Long(At(at::kAimX)), static_cast<std::int32_t>(Scratch_Swap));
         return 0;
     }
     case 6: return 5;
@@ -439,10 +448,10 @@ extern "C" unsigned char __cdecl Member_StepAhead(void) {
 namespace {
 // Member_CatchUp's free test at the sprite's position.
 unsigned char BlockedHere() {
-    const unsigned char* c = Sprite_Current;
-    const long ground = g.ground_at(Long(c + 0x34), Long(c + 0x38));
-    c = Sprite_Current;
-    return g.blocked_at(Long(c + 0x34), Long(c + 0x38), c[0x70], ground);
+    const records::PartyMember* c = Cur();
+    const long ground = g.ground_at(c->x, c->z);
+    c = Cur();
+    return g.blocked_at(c->x, c->z, Bytes(c)[0x70], ground);
 }
 }  // namespace
 
@@ -466,11 +475,11 @@ unsigned char BlockedHere() {
 // leaves the sprite at its last tried z until the next try.
 extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     const std::uint32_t x = static_cast<std::uint32_t>(x_arg), z = static_cast<std::uint32_t>(z_arg);
-    const unsigned char* const c0 = Sprite_Current;
-    if (!(c0[0] & 0x80)) return;
+    const records::PartyMember* const c0 = Cur();
+    if (!(c0->flags & 0x80)) return;
     if (FlagsLow() & 1) return;
     if (Member(0)[0x138] & 1) return;
-    const std::uint32_t ox = U(c0 + 0x34), oz = U(c0 + 0x38);
+    const std::uint32_t ox = static_cast<std::uint32_t>(c0->x), oz = static_cast<std::uint32_t>(c0->z);
     std::int32_t far = Abs(ox - x);
     const std::int32_t far_z = Abs(oz - z);
     if (far < far_z) far = far_z;
@@ -486,27 +495,27 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
     bool found = false;
     for (;;) {
         g.direction_to(x_arg, z_arg, &dir);
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(((RowX(at::kDirSteps, dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(((RowZ(at::kDirSteps, dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
+        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(((RowX(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + ox));
+        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(((RowZ(Field_DirectionSteps_addr, dir) << 1) * static_cast<std::uint32_t>(left)) + oz));
         {
-            const unsigned char* c = Sprite_Current;
-            const long object = g.object_at(Long(c + 0x34), Long(c + 0x38), dir);
-            c = Sprite_Current;
-            if (!g.blocked_at(Long(c + 0x34), Long(c + 0x38), c[0x70], object)) {
+            const records::PartyMember* c = Cur();
+            const long object = g.object_at(c->x, c->z, dir);
+            c = Cur();
+            if (!g.blocked_at(c->x, c->z, Bytes(c)[0x70], object)) {
                 found = true;
                 break;
             }
         }
         // Either side on x.
-        const std::uint32_t tried_x = U(Sprite_Current + 0x34);
+        const std::uint32_t tried_x = static_cast<std::uint32_t>(Cur()->x);
         if (side > 1) {
             std::int32_t i = 1;
             std::uint32_t plus = tried_x + 0x10000, minus = tried_x - 0x10000;
             bool free = false;
             for (;;) {
-                SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(plus));
+                Cur()->x = static_cast<std::int32_t>(plus);
                 if (!BlockedHere()) { free = true; break; }
-                SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(minus));
+                Cur()->x = static_cast<std::int32_t>(minus);
                 if (!BlockedHere()) { free = true; break; }
                 ++i;
                 plus += 0x10000;
@@ -518,17 +527,17 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
                 break;
             }
         }
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(tried_x));
+        Cur()->x = static_cast<std::int32_t>(tried_x);
         // Either side on z.
-        const std::uint32_t tried_z = U(Sprite_Current + 0x38);
+        const std::uint32_t tried_z = static_cast<std::uint32_t>(Cur()->z);
         if (side > 1) {
             std::int32_t i = 1;
             std::uint32_t plus = tried_z + 0x10000, minus = tried_z - 0x10000;
             bool free = false;
             for (;;) {
-                SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(plus));
+                Cur()->z = static_cast<std::int32_t>(plus);
                 if (!BlockedHere()) { free = true; break; }
-                SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(minus));
+                Cur()->z = static_cast<std::int32_t>(minus);
                 if (!BlockedHere()) { free = true; break; }
                 ++i;
                 plus += 0x10000;
@@ -545,25 +554,25 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
         if (left <= 0) break;
     }
 
-    unsigned char* c = Sprite_Current;
+    records::PartyMember* c = Cur();
     if (!found) {
-        SetLong(c + 0x34, static_cast<std::int32_t>(ox));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(oz));
-    } else if (Abs(U(c + 0x34) - U(Member(0) + 0x34)) <= 0x60000 && Abs(U(c + 0x38) - U(Member(0) + 0x38)) <= 0x60000) {
-        SetLong(c + 0x34, static_cast<std::int32_t>(ox));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(oz));
-    } else if (g.map_cell(Word(c + 0x36), Word(c + 0x3A))) {
+        c->x = static_cast<std::int32_t>(ox);
+        Cur()->z = static_cast<std::int32_t>(oz);
+    } else if (Abs(static_cast<std::uint32_t>(c->x) - U(Member(0) + 0x34)) <= 0x60000 && Abs(static_cast<std::uint32_t>(c->z) - U(Member(0) + 0x38)) <= 0x60000) {
+        c->x = static_cast<std::int32_t>(ox);
+        Cur()->z = static_cast<std::int32_t>(oz);
+    } else if (g.map_cell(Word(Bytes(c) + 0x36), Word(Bytes(c) + 0x3A))) {
         Field_State[0x138] = static_cast<unsigned char>(Field_State[0x138] & 0xFE);
-        Sprite_Current[0x29] = Draw_OtSlot;
-        Sprite_Current[8] = dir;
+        Cur()->ot_slot = Draw_OtSlot;
+        Cur()->direction = dir;
     } else {
-        SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(ox));
-        SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(oz));
+        Cur()->x = static_cast<std::int32_t>(ox);
+        Cur()->z = static_cast<std::int32_t>(oz);
     }
-    SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(U(Sprite_Current + 0x34) & 0xFFFF8000u));
-    SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(U(Sprite_Current + 0x38) & 0xFFFF8000u));
-    c = Sprite_Current;
-    const long ground = g.ground_at(Long(c + 0x34), Long(c + 0x38));
+    Cur()->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->x) & 0xFFFF8000u);
+    Cur()->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(Cur()->z) & 0xFFFF8000u);
+    c = Cur();
+    const long ground = g.ground_at(c->x, c->z);
     SetWord(Sprite_Current + 0x3E, static_cast<std::uint16_t>(ground));
 }
 
@@ -572,9 +581,9 @@ extern "C" void __cdecl Member_CatchUp(long x_arg, long z_arg) {
 // 6 (-,+), 7 (-,0) - written to *direction; nothing written when (x, z) is
 // the sprite's own position.
 extern "C" void __cdecl Field_DirectionTo(long x, long z, unsigned char* direction) {
-    const unsigned char* const c = Sprite_Current;
-    const std::int32_t dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(x) - U(c + 0x34));
-    const std::int32_t dz = static_cast<std::int32_t>(static_cast<std::uint32_t>(z) - U(c + 0x38));
+    const records::PartyMember* const c = Cur();
+    const std::int32_t dx = static_cast<std::int32_t>(static_cast<std::uint32_t>(x) - static_cast<std::uint32_t>(c->x));
+    const std::int32_t dz = static_cast<std::int32_t>(static_cast<std::uint32_t>(z) - static_cast<std::uint32_t>(c->z));
     if (dx < 0) {
         *direction = dz < 0 ? 0 : dz > 0 ? 6 : 7;
     } else if (dx > 0) {
@@ -596,21 +605,21 @@ extern "C" void __cdecl Field_DirectionTo(long x, long z, unsigned char* directi
 extern "C" unsigned char __cdecl Member_Idle(void) {
     if (ObjTrio[0x137] == 8) return 0;
     if (Field_Request != 0) return 0;
-    unsigned char* const state = Field_State;
-    if (Field_ActorStates[state[0x148] * kActorBytes] & 0x20) return 0;
-    state[0x136] = static_cast<unsigned char>(state[0x136] + 1);
+    records::PartyMember* const state = State();
+    if (Field_ActorStates[state->char_index * kActorBytes] & 0x20) return 0;
+    Bytes(state)[0x136] = static_cast<unsigned char>(Bytes(state)[0x136] + 1);
     unsigned char* const s = Field_State;
     if (s[0x136] <= 0xF0) return 0;
     s[0x136] = 0;
     if (ObjTrio[0x137] == 9) return 0;
-    if (Member((Sprite_Current[5] & 0xFFu) ^ 3u)[0x137] == 9) return 0;
+    if (Member((Cur()->member & 0xFFu) ^ 3u)[0x137] == 9) return 0;
     const unsigned pick = (static_cast<unsigned>(g.rand()) & 1u) + 1u;
-    if (Sprite_Current[5] != pick) return 0;
+    if (Cur()->member != pick) return 0;
     Field_State[0x137] = 9;
-    g.ensure_animation(Sprite_Current[8]);
-    Sprite_Current[9] = 2;
-    Sprite_Current[1] = 6;
-    Sprite_Current[2] = 0;
+    g.ensure_animation(Cur()->direction);
+    Cur()->step_frames = 2;
+    Cur()->state[0] = 6;
+    Cur()->state[1] = 0;
     return 1;
 }
 
@@ -636,19 +645,19 @@ extern "C" unsigned char __cdecl Field_CellAhead(void) {
 // original's rounding-toward-zero halvings of 16.16 values that may wrap.
 extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
     if (Field_ScriptFlags & 0x400) return 1;
-    const unsigned char* c = Sprite_Current;
-    const unsigned char facing = c[8];
-    if (Word(c + 0x34) != 0 && Word(c + 0x38) != 0) return 1;
+    const records::PartyMember* c = Cur();
+    const unsigned char facing = c->direction;
+    if (Word(Bytes(c) + 0x34) != 0 && Word(Bytes(c) + 0x38) != 0) return 1;
     const unsigned char* const offsets = At(at::kCellOffsets) + facing * 2u;
-    const std::uint16_t ahead_z = static_cast<std::uint16_t>(static_cast<signed char>(offsets[1]) + Word(c + 0x3A));
-    const std::uint16_t ahead_x = static_cast<std::uint16_t>(static_cast<signed char>(offsets[0]) + Word(c + 0x36));
+    const std::uint16_t ahead_z = static_cast<std::uint16_t>(static_cast<signed char>(offsets[1]) + Word(Bytes(c) + 0x3A));
+    const std::uint16_t ahead_x = static_cast<std::uint16_t>(static_cast<signed char>(offsets[0]) + Word(Bytes(c) + 0x36));
     g.read_cells(ahead_x, ahead_z);
-    c = Sprite_Current;
-    const unsigned char dir = c[8];
+    c = Cur();
+    const unsigned char dir = c->direction;
     if (dir & 1) {
         // Diagonal.
-        const std::uint16_t fx = Word(c + 0x34);
-        if (fx == 0 && Word(c + 0x38) == 0) {
+        const std::uint16_t fx = Word(Bytes(c) + 0x34);
+        if (fx == 0 && Word(Bytes(c) + 0x38) == 0) {
             const unsigned char k = g.cell_class(1, 0, 0);
             Cell(8) = k;
             if (k == 0xB0) return 6;
@@ -656,7 +665,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             if ((k & 0xF0) != 0xA0) return 3;
             return g.cell_slope(8);
         }
-        if (fx != 0 && Word(c + 0x38) == 0) {
+        if (fx != 0 && Word(Bytes(c) + 0x38) == 0) {
             if (dir & 2) return 3;
             const unsigned char k = g.cell_class(2, 4, 0);
             Cell(8) = k;
@@ -678,7 +687,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             const long r = g.object_at(ax, az, 1);
             if (Cell(0) == 0) return 3;
             if (static_cast<short>(r) <= 0x40) return 3;
-            Sprite_Current[8] = 7;
+            Cur()->direction = 7;
             return 1;
         }
         // z mid-cell (or both whole with x whole and z not): the z side.
@@ -703,13 +712,13 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         const long r = g.object_at(ax, az, 1);
         if (Cell(0) == 0) return 3;
         if (static_cast<short>(r) <= 0x40) return 3;
-        Sprite_Current[8] = 1;
+        Cur()->direction = 1;
         return 1;
     }
 
     // Straight.
-    const std::uint16_t fx = Word(c + 0x34);
-    if (fx == 0 && Word(c + 0x38) == 0) {
+    const std::uint16_t fx = Word(Bytes(c) + 0x34);
+    if (fx == 0 && Word(Bytes(c) + 0x38) == 0) {
         // On a cell's corner: ahead, and either side.
         Cell(8) = g.cell_class(1, 2, 3);
         Cell(9) = g.cell_class(2, 0, 0);
@@ -724,30 +733,30 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             } else if (third == 0x10) {
                 g.turn_unless(4, 6, 5);
             } else {
-                unsigned char* const s = Sprite_Current;
-                s[8] = static_cast<unsigned char>((s[8] + 1) & 7);
+                records::PartyMember* const s = Cur();
+                s->direction = static_cast<unsigned char>((s->direction + 1) & 7);
             }
         }
-        unsigned char* const s = Sprite_Current;
+        records::PartyMember* const s = Cur();
         if (!(Field_InputFlags & 1)) {
             const unsigned char side_x = Cell(9) & 0xF0;
-            if (side_x == 0xA0 && (s[8] == 1 || s[8] == 5)) return g.cell_slope(9);
+            if (side_x == 0xA0 && (s->direction == 1 || s->direction == 5)) return g.cell_slope(9);
             const unsigned char side_z = Cell(10) & 0xF0;
-            if (side_z == 0xA0 && (s[8] == 3 || s[8] == 7)) return g.cell_slope(0xA);
+            if (side_z == 0xA0 && (s->direction == 3 || s->direction == 7)) return g.cell_slope(0xA);
             if (side_x == 0xA0) {
-                s[8] = facing;
+                s->direction = facing;
                 g.turn_unless(4, 6, 5);
                 return g.cell_slope(9);
             }
             if (side_z == 0xA0) {
-                s[8] = facing;
+                s->direction = facing;
                 g.turn_unless(2, 4, 3);
                 return g.cell_slope(0xA);
             }
         }
-        if (s[8] & 1) return 3;
+        if (s->direction & 1) return 3;
         {
-            const long ax = Half((static_cast<std::uint32_t>(static_cast<short>(Word(s + 0x36))) +
+            const long ax = Half((static_cast<std::uint32_t>(static_cast<short>(Word(Bytes(s) + 0x36))) +
                                   static_cast<std::uint32_t>(static_cast<short>(ahead_x))) << 16);
             const long r = g.object_at(ax, static_cast<long>(High(ahead_z)), 3);
             if (Cell(0) != 0 && static_cast<short>(r) > 0x40) {
@@ -755,9 +764,9 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
                 return 1;
             }
         }
-        const unsigned char* const t = Sprite_Current;
-        if (t[8] & 1) return 3;
-        const long az = Half((static_cast<std::uint32_t>(static_cast<short>(Word(t + 0x3A))) +
+        const records::PartyMember* const t = Cur();
+        if (t->direction & 1) return 3;
+        const long az = Half((static_cast<std::uint32_t>(static_cast<short>(Word(Bytes(t) + 0x3A))) +
                               static_cast<std::uint32_t>(static_cast<short>(ahead_z))) << 16);
         const long r = g.object_at(static_cast<long>(High(ahead_x)), az, 1);
         if (Cell(0) == 0) return 3;
@@ -765,7 +774,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         g.turn_unless(2, 4, 3);
         return 1;
     }
-    if (fx != 0 && Word(c + 0x38) == 0) {
+    if (fx != 0 && Word(Bytes(c) + 0x38) == 0) {
         // On an x edge: ahead on x.
         unsigned char k = g.cell_class(2, 4, 0);
         Cell(8) = k;
@@ -778,7 +787,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
             k = Cell(8);
         }
         if ((k & 0xF0) != 0xA0) return 3;
-        if (!(Sprite_Current[8] & 1)) g.turn_unless(4, 6, 5);
+        if (!(Cur()->direction & 1)) g.turn_unless(4, 6, 5);
         return g.cell_slope(8);
     }
     // On a z edge: ahead on z.
@@ -794,7 +803,7 @@ extern "C" unsigned char __cdecl Field_CellAheadFlat(void) {
         k = Cell(8);
     }
     if ((k & 0xF0) != 0xA0) return 3;
-    if (!(Sprite_Current[8] & 1)) g.turn_unless(2, 4, 3);
+    if (!(Cur()->direction & 1)) g.turn_unless(2, 4, 3);
     return g.cell_slope(8);
 }
 
@@ -827,7 +836,7 @@ extern "C" unsigned char __cdecl Field_CellClass(unsigned a, unsigned b, unsigne
         if (i == n) return 0xB0;
     }
     if (n & 1) {
-        const unsigned char odd = Sprite_Current[8] & 1;
+        const unsigned char odd = Cur()->direction & 1;
         for (int i = 0; i < n; ++i) {
             if (!odd && k[i] == 0xA2) return 0x10;
             if (k[i] == 0xA3) return 0x10;
@@ -837,7 +846,7 @@ extern "C" unsigned char __cdecl Field_CellClass(unsigned a, unsigned b, unsigne
     } else if ((first & 0xF0) == 0xA0 || (second & 0xF0) == 0xA0) {
         const unsigned char high = first & 0xF0;
         if (first == 0xA2) {
-            if (second == first) return (Sprite_Current[8] & 1) ? 0xA2 : 0x10;
+            if (second == first) return (Cur()->direction & 1) ? 0xA2 : 0x10;
         } else if (first == 0xA3) {
             if (second == first) return 0xA3;
         }
@@ -867,13 +876,13 @@ extern "C" unsigned char __cdecl Field_CellSlope(unsigned cell) {
 // original 0x5280F0: a straight-facing sprite turned to `to` when it faces a
 // or b, else to the opposite of `to`; a diagonal facing is left alone.
 extern "C" void __cdecl Field_TurnUnless(unsigned a, unsigned b, unsigned to) {
-    unsigned char* const c = Sprite_Current;
-    const unsigned char facing = c[8];
+    records::PartyMember* const c = Cur();
+    const unsigned char facing = c->direction;
     if (facing & 1) return;
     if (facing == static_cast<unsigned char>(a) || facing == static_cast<unsigned char>(b))
-        c[8] = static_cast<unsigned char>(to);
+        c->direction = static_cast<unsigned char>(to);
     else
-        c[8] = static_cast<unsigned char>(to ^ 4);
+        c->direction = static_cast<unsigned char>(to ^ 4);
 }
 
 // original 0x528120: 1 when cells a and b both hold `value`; when only a
@@ -882,10 +891,10 @@ extern "C" unsigned char __cdecl Field_CellPairTurn(unsigned a, unsigned b, unsi
     const unsigned char v = static_cast<unsigned char>(value);
     if (Cell(a) == v) {
         if (Cell(b) == v) return 1;
-        Sprite_Current[8] = static_cast<unsigned char>(to);
+        Cur()->direction = static_cast<unsigned char>(to);
         return 0;
     }
-    if (Cell(b) == v) Sprite_Current[8] = static_cast<unsigned char>(to ^ 4);
+    if (Cell(b) == v) Cur()->direction = static_cast<unsigned char>(to ^ 4);
     return 0;
 }
 
@@ -931,7 +940,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     const unsigned char from = g.byte_at(static_cast<short>(x0), static_cast<short>(z0));
     switch (to & 0xF0) {
     case 0x80:
-        if (Sprite_Current[5] != 0) return 0xFF;
+        if (Cur()->member != 0) return 0xFF;
         [[fallthrough]];
     case 0x00:
     case 0x60:
@@ -946,7 +955,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
     case 0x10:
         if (to == 0x11) {
             const unsigned char* const s = Sprite_Current;
-            if (Address(s) == at::kObject905DA0) return (s[0xB] & 1) ? 0 : 0xFF;
+            if (Address(s) == FieldEvent_Object905DA0_addr) return (s[0xB] & 1) ? 0 : 0xFF;
             return (Field_State[0x138] & 1) ? 0 : 0xFF;
         }
         [[fallthrough]];
@@ -970,7 +979,7 @@ extern "C" unsigned char __cdecl Field_CellKind(unsigned x, unsigned z, unsigned
                 if (to == 0xAE) return 0;
             }
             if (to == 0xAF) return 0xA1;
-            if (Sprite_Current[5] != 0) return 0xFF;
+            if (Cur()->member != 0) return 0xFF;
             return to;
         }
         if (to == 0xA2 || to == 0xA3) return 0xFF;
@@ -986,15 +995,15 @@ extern "C" unsigned char __cdecl Field_CellFacing(unsigned cell) {
     const unsigned char v = static_cast<unsigned char>(cell);
     if ((v & 0xF0) != 0xB0) return 0;
     const unsigned char low = v & 0xF;
-    if (low < 6) return Sprite_Current[8] == low ? 1 : 0;
-    if (low == 8) return (Sprite_Current[8] == 3 || Sprite_Current[8] == 5) ? 1 : 0;
+    if (low < 6) return Cur()->direction == low ? 1 : 0;
+    if (low == 8) return (Cur()->direction == 3 || Cur()->direction == 5) ? 1 : 0;
     return 0;
 }
 
 // original 0x528770: 1 when 0x5725C0 finds an object at (x, z) in the
 // sprite's facing that stands more than 0x40 high.
 extern "C" unsigned char __cdecl Field_ObjectAhead(long x, long z) {
-    const long r = g.object_at(x, z, Sprite_Current[8]);
+    const long r = g.object_at(x, z, Cur()->direction);
     if (Cell(0) == 0) return 0;
     return static_cast<short>(r) > 0x40 ? 1 : 0;
 }

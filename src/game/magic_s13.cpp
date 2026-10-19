@@ -26,6 +26,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -44,7 +45,7 @@ using move_script::Word;
 // (0x9037A0..0x9037B7). Both are read again after every call, as the
 // originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The mote pool: 96 records of 0x20 bytes (SuddenDeath_Motes) and the cell
 // naming the one being run (SuddenDeath_CurrentMote).
@@ -52,7 +53,11 @@ constexpr unsigned kMotes = 0x60;
 constexpr unsigned kMoteStride = 0x20;
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* M() { return SuddenDeath_CurrentMote; }
 unsigned char* MoteAt(unsigned i) { return SuddenDeath_Motes + i * kMoteStride; }
 
@@ -60,8 +65,8 @@ std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
 unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -77,7 +82,7 @@ unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTas
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3.
 unsigned char* ActorRecord(unsigned a) {
-    if (a < 3) return Mem(at::kParty + a * at::kPartyStride);
+    if (a < 3) return Mem(ObjTrio_addr + a * at::kPartyStride);
     return Mem(at::kEnemies + (a - 3) * at::kEnemyStride);
 }
 
@@ -152,8 +157,9 @@ void RandColours() {
 void SpawnChild(unsigned a) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x68) & 0xFFu;
     unsigned char* const t = TaskSlot(slot);
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     unsigned char* const cur = Sc();
-    SetLong(t + 0x80, static_cast<std::int32_t>(Key(cur)));
+    tt->owner = static_cast<std::int32_t>(Key(cur));
     t[1] = 0;
     t[4] = static_cast<unsigned char>(a);
     Inc(cur[0xB]);
@@ -201,14 +207,14 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 S13_EXPORT void __cdecl SuddenDeath_Task(void) {
     static constexpr std::uint32_t kPhases[2] = {bof3::addr::SuddenDeath_Spawn, bof3::addr::MagicFx_EndWhenChildrenDone};
     StackCall(kPhases, 2, Sc()[1], "SuddenDeath_Task");
-    const std::int32_t saved = Long(Mem(at::kOwner));
+    const std::int32_t saved = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kMotes; ++i) {
         unsigned char* const m = MoteAt(i);
         if ((m[0] & 1) == 0) continue;
         SuddenDeath_CurrentMote = m;
-        SetLong(Mem(at::kOwner), Long(m + 0x1C));
+        SetLong(Mem(BattleE2_Owner_addr), Long(m + 0x1C));
         Call0(bof3::addr::SuddenDeathMote_Task);
-        SetLong(Mem(at::kOwner), saved);
+        SetLong(Mem(BattleE2_Owner_addr), saved);
     }
 }
 
@@ -260,8 +266,8 @@ S13_EXPORT void __cdecl SuddenDeathChild_Run(void) {
 S13_EXPORT void __cdecl SuddenDeathChild_Start(void) {
     {
         const unsigned char* const rec = ActorRecord(Sc()[4]);
-        SetLong(Sc() + 0x34, Long(rec + 0x34));
-        SetLong(Sc() + 0x38, Long(rec + 0x38));
+        Store(ScTask()->x, Long(rec + 0x34));
+        Store(ScTask()->y, Long(rec + 0x38));
         SetLong(Sc() + 0x3C, static_cast<std::int32_t>(U(Long(rec + 0x3C)) + 0x2000000u));
     }
     {

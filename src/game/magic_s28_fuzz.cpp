@@ -131,10 +131,12 @@ unsigned g_k;
 
 // --- the state -------------------------------------------------------------------
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0;
-constexpr std::uint32_t kMotePool = 0x69ACC8, kBoltPool = 0x69DB30;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
+// kMotePool: now BreathMote_Pool (symbols.toml).
+// kBoltPool: now ThunderPool (symbols.toml).
 constexpr unsigned kMotes = 90, kBolts = 64;
-constexpr std::uint32_t kAngles = 0x65BB78;
+// kAngles: now BreathMote_Angles (symbols.toml).
 
 // The primitives the draws fill: Gfx_PacketNext is aimed at one of four places
 // in this buffer and moved on by a commit (or the disturbance), so a copy that
@@ -148,13 +150,13 @@ template <typename F> std::uint32_t KeyOf(F f) { return K(reinterpret_cast<const
 
 const mh::Region kRegions[] = {
     {kScratch, 0x10},
-    {kVertices, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
-    {kMotePool, kMotes * 0x84},                  // BreathMote_Pool
-    {kBoltPool, kBolts * 0x84},                  // ThunderPool
+    {BreathMote_Pool_addr, kMotes * 0x84},       // BreathMote_Pool
+    {ThunderPool_addr, kBolts * 0x84},           // ThunderPool
     {0x812980, 0x60},                            // CLUT row 26's first 48 words
     {0x80E980, 0x60},                            // and its buffer
-    {kAngles, 8},                                // BreathMote_Angles
+    {BreathMote_Angles_addr, 8},                 // BreathMote_Angles
     {0, kPrimBytes},                             // g_prims (its address at start-up)
 };
 mh::Region g_regions[sizeof kRegions / sizeof kRegions[0]];
@@ -247,7 +249,7 @@ const mh::DataTable kTables[] = {
 // --- the seed, the disturbance and the settle -----------------------------------------
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 unsigned char Near(unsigned v) { return static_cast<unsigned char>(mh::Half() ? v : v + (mh::Next() % 3) - 1); }
 unsigned char* RecordOf(std::uint32_t pool, unsigned i) { return mh::Mem(pool + i * 0x84); }
 
@@ -282,8 +284,8 @@ void Seed(unsigned k) {
     g_k = k;
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
-    SeedPool(kMotePool, kMotes);
-    SeedPool(kBoltPool, kBolts);
+    SeedPool(BreathMote_Pool_addr, kMotes);
+    SeedPool(ThunderPool_addr, kBolts);
     switch (k) {
     // the dispatchers: an index inside the table (a phase past it aborts ours)
     case kFirebreath_Task: case kIcebreath_Task: case kIcePool_Dispatch: case kThunderPool_Dispatch:
@@ -338,8 +340,8 @@ void Seed(unsigned k) {
     case kThunderBolt_Fade: sc[9] = static_cast<unsigned char>(1 + mh::Next() % 3); break;
     case kThunderSpark_Grow: sc[9] = Near(0xC); break;
     case kThunderSpark_Fade: sc[9] = Near(4); break;
-    case kIcePool_Alloc: SeedAlloc(kMotePool, kMotes); break;
-    case kThunderPool_Alloc: SeedAlloc(kBoltPool, kBolts); break;
+    case kIcePool_Alloc: SeedAlloc(BreathMote_Pool_addr, kMotes); break;
+    case kThunderPool_Alloc: SeedAlloc(ThunderPool_addr, kBolts); break;
     // the draws: their loops short enough for the log, their divisors not 0
     case kBreathBeam_DrawTextured: case kBreathBeam_DrawGlow:
         sc[0xA] = static_cast<unsigned char>(mh::Next() % 5);
@@ -378,11 +380,11 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 16) % 6) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 20); break;
-    case 3: SetWord(mh::Mem(kVertices + 2 * (v % 2)), h >> 20); break;
-    case 4: mh::Mem(kAngles + v % 8)[0] = static_cast<unsigned char>(h >> 24); break;
+    case 3: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 2)), h >> 20); break;
+    case 4: mh::Mem(BreathMote_Angles_addr + v % 8)[0] = static_cast<unsigned char>(h >> 24); break;
     default: {
         const bool motes = (h >> 24) & 1;
-        unsigned char* const rec = RecordOf(motes ? kMotePool : kBoltPool, v % (motes ? kMotes : kBolts));
+        unsigned char* const rec = RecordOf(motes ? BreathMote_Pool_addr : ThunderPool_addr, v % (motes ? kMotes : kBolts));
         rec[(h >> 25) % 0x14] = static_cast<unsigned char>(h >> 12);
         break;
     }

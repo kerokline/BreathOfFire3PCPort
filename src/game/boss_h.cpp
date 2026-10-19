@@ -37,6 +37,7 @@
 #include "game/boss_h_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -51,8 +52,10 @@ using move_script::SetLong;
 using move_script::Word;
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(at::kCurrentEnemy)))); }
-std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
 void PutFloat(unsigned char* p, std::int32_t v) {
     const float f = static_cast<float>(v);   // fild / fstp: nearest, as cvtsi2ss
     std::memcpy(p, &f, sizeof f);
@@ -97,8 +100,8 @@ extern "C" unsigned char __cdecl BareRetZero(unsigned) { return 0; }
 // bit 1): the chapter's step 0x8034E5 = 5 and a tail jump to 0x446DE0 (the end
 // phase, step 1); otherwise to 0x446E00 (step 2).
 extern "C" void __cdecl BossHook_EndPickWay(void) {
-    if (B(at::kBattleEnd) & 2) {
-        B(at::kChapterStep) = 5;
+    if (BattleActions_BattleEnd & 2) {
+        MoveScript_PartyRecords[0x65] = 5;
         BH_AT(Handler, at::kEndWin)();
         return;
     }
@@ -116,7 +119,7 @@ extern "C" void __cdecl BossHook_ExitActor0Bit40(void) { BH_CALL(BossActor_Clear
 // hook called with 0, 0x435BF5): when the leader's target byte +0x124 is 4,
 // the battle's target 0x904B44 = 5. The hook's word is not read.
 extern "C" void __cdecl BossHook_RetargetMember0(unsigned) {
-    if (B(at::kLeaderTarget) == 4) B(at::kTarget) = 5;
+    if (ObjTrio[0x124] == 4) B(at::kTarget) = 5;
 }
 
 // --- the state helpers ---------------------------------------------------------------
@@ -130,7 +133,7 @@ extern "C" unsigned char __cdecl BossOp_ScriptTick(void) { return BH_CALL(Sprite
 // 1): Sprite_ScriptTickOnce, and when it answers al not 0, Sprite_Current's
 // +1 (read after the call) = 2.
 extern "C" void __cdecl BossOp_EnterTick(void) {
-    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) Sprite_Current[1] = 2;
+    if (BH_CALL(Sprite_ScriptTickOnce)() & 0xFF) ScEnemy()->state[0] = 2;
 }
 
 // original 0x43B550: entry 4 (the death) of the +2 tables of kinds 2, 3, 6, 7,
@@ -140,13 +143,13 @@ extern "C" void __cdecl BossOp_EnterTick(void) {
 extern "C" void __cdecl BossOp_Death(void) {
     BH_CALL(Sprite_ScriptTickOnce)();
     BH_CALL(Battle_EnemyDefeated)();
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x110, static_cast<std::int32_t>(static_cast<U>(Long(e + 0x110)) | 0x1000));
-    unsigned char* const s = Sprite_Current;
-    s[0] &= 0xBF;
-    s[1] = 3;
-    s[2] = 0;
-    s[3] = 0;
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_110 = static_cast<std::int32_t>(static_cast<U>(static_cast<std::int32_t>(enemy_rec->flags_110)) | 0x1000);
+    auto* const cur_enemy = ScEnemy();
+    cur_enemy->flags &= 0xBF;
+    cur_enemy->state[0] = 3;
+    cur_enemy->state[1] = 0;
+    cur_enemy->state[2] = 0;
 }
 
 // --- kinds 8..11's death ---------------------------------------------------------------
@@ -189,7 +192,7 @@ extern "C" void __cdecl BossTorast_DeathFxStart(void) {
 extern "C" void __cdecl BossTorast_DeathFxFlash(void) {
     unsigned char* const s = Sprite_Current;
     if (s[9] == s[0xA]) {
-        const unsigned char* const c = KindColour(Enemy()[0x100]);
+        const unsigned char* const c = KindColour(EnemyRec()->run_state);
         const U colour = (static_cast<U>(c[0] & 0xF8) << 7) + (static_cast<U>(c[1] & 0xF8) << 2) + (c[2] >> 3);
         BH_CALL(BattleWin_DrawTileRgb)(0, 0, 0xB, static_cast<int>(colour), 1);
         Sprite_Current[0xA] >>= 1;
@@ -266,23 +269,23 @@ extern "C" void __cdecl BossTorast_DrawRing(unsigned radius) {
         pts[i][1] = static_cast<std::int32_t>(static_cast<U>(BH_CALL(Math_Cos)(angle)) * r) >> 12;
     }
     const unsigned tpage = BH_CALL(Gpu_GetTPage)(0, 0, 0x3C0, 0);
-    BH_CALL(Gpu_SetDrawMode)(At(static_cast<U>(Long(At(at::kPacketNext)))), 0, 0, tpage & 0xFFFF, 0);
+    BH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, tpage & 0xFFFF, 0);
     BH_CALL(Gfx_CommitPrim)(3, 0xC);
     for (unsigned i = 0; i < 64; ++i) {
-        unsigned char* const p = At(static_cast<U>(Long(At(at::kPacketNext))));
+        unsigned char* const p = Gfx_PacketNext;
         BH_CALL(Gpu_SetPolyG3)(p);
         p[4] = 0xFF;
         p[5] = 0xFF;
         p[6] = 0xFF;
-        const unsigned char* const c = KindColour(Enemy()[0x100]);
+        const unsigned char* const c = KindColour(EnemyRec()->run_state);
         p[0x14] = c[0];
         p[0x15] = c[1];
         p[0x16] = c[2];
         p[0x24] = c[0];
         p[0x25] = c[1];
         p[0x26] = c[2];
-        const unsigned char* const s = Sprite_Current;
-        const std::int32_t x = S16(s + 0x2E), y = S16(s + 0x30);
+        auto* const cur_enemy = ScEnemy();
+        const std::int32_t x = static_cast<std::int32_t>(cur_enemy->screen_x), y = static_cast<std::int32_t>(cur_enemy->screen_y);
         const unsigned j = (i + 1) & 0x1F;
         PutFloat(p + 0x08, x);
         PutFloat(p + 0x0C, y);
@@ -312,8 +315,8 @@ extern "C" void __cdecl BossMap_SetCorners(unsigned cell, unsigned value) {
     const U y = At(AddressOf(BossMap_CornerCells) + 2 * cell + 1)[0];
     for (U j = 0; j < 2; ++j)
         for (U i = 0; i < 2; ++i) {
-            const U width = At(at::kMapHeader)[0];
-            SetLong(At(at::kMapCorners + 4 * (width * (y + j) + x + i)), v);
+            const U width = AreaMap_Header[0];
+            SetLong(At(AreaMap_Corners_addr + 4 * (width * (y + j) + x + i)), v);
         }
 }
 
@@ -322,11 +325,11 @@ extern "C" void __cdecl BossMap_SetCorners(unsigned cell, unsigned value) {
 // function); any other id leaves it. Called by set-ups 18..20's hooks before
 // the battle ends.
 extern "C" void __cdecl Boss_SetByLeaderId(void) {
-    switch (B(at::kLeaderId)) {
-    case 0: B(at::kLeaderPick) = 0x2C; break;
-    case 1: B(at::kLeaderPick) = 0x2D; break;
-    case 5: B(at::kLeaderPick) = 0x2E; break;
-    case 6: B(at::kLeaderPick) = 0x2F; break;
+    switch (ObjTrio[0x89]) {
+    case 0: BossH_LeaderPick = 0x2C; break;
+    case 1: BossH_LeaderPick = 0x2D; break;
+    case 5: BossH_LeaderPick = 0x2E; break;
+    case 6: BossH_LeaderPick = 0x2F; break;
     default: break;
     }
 }
@@ -341,14 +344,14 @@ extern "C" void __cdecl Boss_SetByLeaderId(void) {
 // +0x134 bit 1, 0x939B1C = its +0x3C.
 extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
     const struct { U status, object; unsigned flag, cell; } kEnemies[] = {
-        {at::kEnemy1Status, at::kEnemy1, 0x34, 1},
-        {at::kEnemy2Status, at::kEnemy2, 0x33, 0},
+        {BossH_Enemy1Status_addr, at::kEnemy1, 0x34, 1},
+        {BossH_Enemy2Status_addr, at::kEnemy2, 0x33, 0},
     };
     for (const auto& e : kEnemies) {
         const unsigned status = At(e.status)[1];   // the dword's second byte: +0x93
         if (status & 0x40) continue;
         const bool up = (status & 0x20) != 0;
-        unsigned char* const bits = At(static_cast<U>(Long(At(at::kFlagBits))));
+        unsigned char* const bits = At(AreaW0c_FlagRow);
         if (up) BH_CALL(Flags_Set)(bits, e.flag);
         else BH_CALL(Flags_Clear)(bits, e.flag);
         Sprite_Current = At(e.object);
@@ -356,10 +359,10 @@ extern "C" void __cdecl BossMap_UpdateFromEnemies(void) {
         BH_CALL(BossMap_SetCorners)(e.cell, up ? 1 : 0);
     }
     const long ground = BH_CALL(AreaMap_Elevation)(Long(At(at::kEnemy0X)), Long(At(at::kEnemy0Z)));
-    move_script::SetWord(At(at::kEnemy0Ground), static_cast<unsigned>(ground) & 0xFFFF);
-    const long leader = BH_CALL(AreaMap_Elevation)(Long(At(at::kLeaderX)), Long(At(at::kLeaderZ)));
-    move_script::SetWord(At(at::kLeaderGround), static_cast<unsigned>(leader) & 0xFFFF);
-    if (B(at::kLeaderFlags) & 2) SetLong(At(at::kCameraY), Long(At(at::kLeaderY)));
+    BossH_Enemy0Ground = static_cast<unsigned>(ground) & 0xFFFF;
+    const long leader = BH_CALL(AreaMap_Elevation)(Long(At(ObjTrio_addr + 0x34)), Long(At(ObjTrio_addr + 0x38)));
+    move_script::SetWord(At(ObjTrio_addr + 0x3e), static_cast<unsigned>(leader) & 0xFFFF);
+    if (ObjTrio[0x134] & 2) BossH_CameraY = Long(At(ObjTrio_addr + 0x3c));
 }
 
 void BossH_Inject() {

@@ -63,14 +63,16 @@ unsigned char g_payload[kPayloadBytes];   // a kind-2 chunk
 // banks 0..7 with the channels (bank 0's record is 0x6BC5A4, bank 7's ends
 // 0x6BE1C4).
 constexpr U kEnvsAt = 0x7DECD0, kEnvsEnd = 0x7DED70;
-constexpr U kComAt = 0x7CC338, kComEnd = 0x7CC35C;
-constexpr U kFlagsAt = 0x6C3A40, kFlagsEnd = 0x6C3A50;
-constexpr U kBanksAt = kBanks - kBankBytes, kBanksEnd = kBanks + 7 * kBankBytes;
+// kComAt: now DDraw_Primary (symbols.toml).
+constexpr U kComEnd = 0x7CC35C;
+// kFlagsAt: now D3d_BackMaterialHandle (symbols.toml).
+constexpr U kFlagsEnd = 0x6C3A50;
+constexpr U kBanksAt = Sound_Banks_addr - kBankBytes, kBanksEnd = Sound_Banks_addr + 7 * kBankBytes;
 
 struct Region { U at, bytes; };
 Region g_regions[7];
 unsigned g_n_regions;
-constexpr unsigned kStateBytes = (kEnvsEnd - kEnvsAt) + (kComEnd - kComAt) + (kFlagsEnd - kFlagsAt) +
+constexpr unsigned kStateBytes = (kEnvsEnd - kEnvsAt) + (kComEnd - DDraw_Primary_addr) + (kFlagsEnd - D3d_BackMaterialHandle_addr) +
                                  (kBanksEnd - kBanksAt) + kEnvBytes + kHeapBytes + kPayloadBytes;
 
 struct Entry { U what, a, b, c, d, e, f; };
@@ -164,19 +166,19 @@ void Disturb() {
     if (h & 0x300) return;   // one call in four
     const U v = h >> 12;
     switch ((h >> 4) % 11) {
-    case 0: PutLong(kPrimary, Addr(&g_fakes[v % 3])); break;
-    case 1: PutLong(kBackBuffer, Addr(&g_fakes[v % 3])); break;
-    case 2: PutLong(kViewport, Addr(&g_fakes[3 + v % 2])); break;
-    case 3: At(kDrawEnvBackground)[0] = (v & 1) ? static_cast<unsigned char>(v >> 1) : 0; break;
-    case 4: At(kRenderFlags)[0] ^= 1; break;
-    case 5: At(kRenderFlags)[1] ^= 2; break;
-    case 6: PutLong(kBackHandle, h * 0x9E3779B1u); break;
+    case 0: PutLong(DDraw_Primary_addr, Addr(&g_fakes[v % 3])); break;
+    case 1: PutLong(DDraw_BackBuffer_addr, Addr(&g_fakes[v % 3])); break;
+    case 2: PutLong(D3d_Viewport_addr, Addr(&g_fakes[3 + v % 2])); break;
+    case 3: At(Gpu_DrawEnv_addr + 0x18)[0] = (v & 1) ? static_cast<unsigned char>(v >> 1) : 0; break;
+    case 4: At(Gfx_RenderFlags_addr)[0] ^= 1; break;
+    case 5: At(Gfx_RenderFlags_addr)[1] ^= 2; break;
+    case 6: PutLong(D3d_BackMaterialHandle_addr, h * 0x9E3779B1u); break;
     case 7:
         if (g_env_at) At(g_env_at + v % 0x5C)[0] = static_cast<unsigned char>(v >> 8);
         break;
-    case 8: At(kDispEnv + v % 0x14)[0] = static_cast<unsigned char>(v >> 8); break;
-    case 9: At(kDrawEnv + 0x19 + v % 3)[0] = static_cast<unsigned char>(v >> 8); break;
-    default: PutLong(kBackMaterial, (v & 3) ? Addr(&g_materials[v & 1]) : 0); break;
+    case 8: At(Gpu_DispEnv_addr + v % 0x14)[0] = static_cast<unsigned char>(v >> 8); break;
+    case 9: At(Gpu_DrawEnv_addr + 0x19 + v % 3)[0] = static_cast<unsigned char>(v >> 8); break;
+    default: PutLong(D3d_BackMaterial_addr, (v & 3) ? Addr(&g_materials[v & 1]) : 0); break;
     }
 }
 
@@ -281,9 +283,9 @@ void DisturbBank() {
     const U v = h >> 8;
     switch ((h >> 2) % 4) {
     case 0: PutLong(g_record + kBankHeader, Addr(g_heap) + (v % 0x40) * 4); break;
-    case 1: PutLong(g_record + kVoices + 4 + (v % 64) * 8, (v & 0x100) ? Long(kChannels + (v >> 9) % 23 * 4) : v); break;
+    case 1: PutLong(g_record + kVoices + 4 + (v % 64) * 8, (v & 0x100) ? Long(Sound_Channels_addr + (v >> 9) % 23 * 4) : v); break;
     case 2: PutLong(g_record + kVoices + (v % 64) * 8, (v & 0x100) ? 0 : v * 0x10001u); break;
-    default: PutLong(kChannels + (v % 23) * 4, Long(g_record + kVoices + 4 + ((v >> 5) % 64) * 8)); break;
+    default: PutLong(Sound_Channels_addr + (v % 23) * 4, Long(g_record + kVoices + 4 + ((v >> 5) % 64) * 8)); break;
     }
 }
 void* __cdecl StubMalloc(unsigned n) {
@@ -389,17 +391,17 @@ void SetControlWord(unsigned short cw) { __asm__ volatile("fldcw %0" : : "m"(cw)
 U RandomByte(U odds_zero) { return Next() % odds_zero == 0 ? 0 : Next() & 0xFF; }
 
 void RandomCom() {
-    PutLong(kPrimary, Addr(&g_fakes[Next() % 3]));
-    PutLong(kBackBuffer, Addr(&g_fakes[Next() % 3]));
-    PutLong(kViewport, Addr(&g_fakes[3 + Next() % 2]));
-    PutLong(kBackMaterial, Addr(&g_materials[Next() % 2]));
-    PutLong(kBackHandle, Next());
+    PutLong(DDraw_Primary_addr, Addr(&g_fakes[Next() % 3]));
+    PutLong(DDraw_BackBuffer_addr, Addr(&g_fakes[Next() % 3]));
+    PutLong(D3d_Viewport_addr, Addr(&g_fakes[3 + Next() % 2]));
+    PutLong(D3d_BackMaterial_addr, Addr(&g_materials[Next() % 2]));
+    PutLong(D3d_BackMaterialHandle_addr, Next());
     // Gfx_RenderFlags: bit 0 and bit 0x200 each half the time, the rest noise.
     U flags = Next() & ~0x201u;
     if (Next() & 1) flags |= 1;
     if (Next() & 1) flags |= 0x200;
-    PutLong(kRenderFlags, flags);
-    At(kDrawEnvBackground)[0] = static_cast<unsigned char>(RandomByte(2));
+    PutLong(Gfx_RenderFlags_addr, flags);
+    At(Gpu_DrawEnv_addr + 0x18)[0] = static_cast<unsigned char>(RandomByte(2));
 }
 
 // An environment: usually a buffer of ours, now and then overlapping the
@@ -424,23 +426,23 @@ Args Generate(unsigned k, unsigned* coverage) {
     Args x{};
     switch (k) {
     case kPutDisp: case kPutDispTree: {
-        const U env = PickEnv(kDispEnv);
+        const U env = PickEnv(Gpu_DispEnv_addr);
         g_env_at = env;
         // Half the rounds the same y: no present.
-        if (Next() & 1) std::memcpy(At(kDispEnv + 2), At(env + 2), 2);
-        coverage[0] += Long(kDispEnv) >> 16 == Long(env) >> 16;
+        if (Next() & 1) std::memcpy(At(Gpu_DispEnv_addr + 2), At(env + 2), 2);
+        coverage[0] += Long(Gpu_DispEnv_addr) >> 16 == Long(env) >> 16;
         x.a[0] = env;
         break;
     }
     case kPutDraw: case kPutDrawTree: {
-        const U env = PickEnv(kDrawEnv);
+        const U env = PickEnv(Gpu_DrawEnv_addr);
         g_env_at = env;
         // Each colour byte equal two times in three: all equal about 30%.
         for (U i = 0x19; i < 0x1C; ++i)
-            if (Next() % 3) At(kDrawEnv + i)[0] = At(env + i)[0];
-        if (Next() % 4 == 0) PutLong(kBackMaterial, 0);
-        coverage[1] += At(kDrawEnv + 0x19)[0] == At(env + 0x19)[0] && At(kDrawEnv + 0x1A)[0] == At(env + 0x1A)[0] &&
-                       At(kDrawEnv + 0x1B)[0] == At(env + 0x1B)[0];
+            if (Next() % 3) At(Gpu_DrawEnv_addr + i)[0] = At(env + i)[0];
+        if (Next() % 4 == 0) PutLong(D3d_BackMaterial_addr, 0);
+        coverage[1] += At(Gpu_DrawEnv_addr + 0x19)[0] == At(env + 0x19)[0] && At(Gpu_DrawEnv_addr + 0x1A)[0] == At(env + 0x1A)[0] &&
+                       At(Gpu_DrawEnv_addr + 0x1B)[0] == At(env + 0x1B)[0];
         x.a[0] = env;
         break;
     }
@@ -457,14 +459,14 @@ Args Generate(unsigned k, unsigned* coverage) {
         for (int i = 0; i < 3; ++i) x.a[i] = Next();
         if (Next() % 6 == 0) x.a[Next() % 3] &= 0xFFFFFF00u;   // black
         if (Next() % 6 == 0) x.a[Next() % 3] |= 0xFF;          // white
-        if (Next() % 6 == 0) PutLong(kBackMaterial, 0);
-        if (Next() % 6 == 0) PutLong(kViewport, 0);
+        if (Next() % 6 == 0) PutLong(D3d_BackMaterial_addr, 0);
+        if (Next() % 6 == 0) PutLong(D3d_Viewport_addr, 0);
         break;
     case kLoadBank: {
         for (U a = kBanksAt; a < kBanksEnd; a += 4) PutLong(a, Next());
         const U r = Next() % 16;
         const U bank = r == 0 ? 0 : r == 1 ? 7 : 1 + r % 6;
-        const U record = kBanks + (bank - 1) * kBankBytes;
+        const U record = Sound_Banks_addr + (bank - 1) * kBankBytes;
         g_record = record;
         // A few buffer values, shared by the entries and the channels.
         U values[6];
@@ -473,7 +475,7 @@ Args Generate(unsigned k, unsigned* coverage) {
             PutLong(record + kVoices + 4 + i * 8, Next() % 3 == 0 ? 0 : values[Next() % 6]);
             PutLong(record + kVoices + i * 8, Next() % 3 == 0 ? 0 : Next());
         }
-        for (U c = kChannels; c < kChannelsEnd; c += 4) PutLong(c, Next() % 2 ? values[Next() % 6] : Next());
+        for (U c = Sound_Channels_addr; c < kChannelsEnd; c += 4) PutLong(c, Next() % 2 ? values[Next() % 6] : Next());
         PutLong(record + kBankHeader, Next() % 4 == 0 ? 0 : Next());
         for (unsigned i = 0; i < kPayloadBytes; ++i) g_payload[i] = static_cast<unsigned char>(Next());
         for (U i = 0; i < 64; ++i)
@@ -498,8 +500,8 @@ void SelfTest() {
     CloneAll();
     g_n_regions = 0;
     g_regions[g_n_regions++] = {kEnvsAt, kEnvsEnd - kEnvsAt};
-    g_regions[g_n_regions++] = {kComAt, kComEnd - kComAt};
-    g_regions[g_n_regions++] = {kFlagsAt, kFlagsEnd - kFlagsAt};
+    g_regions[g_n_regions++] = {DDraw_Primary_addr, kComEnd - DDraw_Primary_addr};
+    g_regions[g_n_regions++] = {D3d_BackMaterialHandle_addr, kFlagsEnd - D3d_BackMaterialHandle_addr};
     g_regions[g_n_regions++] = {kBanksAt, kBanksEnd - kBanksAt};
     g_regions[g_n_regions++] = {Addr(g_env), kEnvBytes};
     g_regions[g_n_regions++] = {Addr(g_heap), kHeapBytes};

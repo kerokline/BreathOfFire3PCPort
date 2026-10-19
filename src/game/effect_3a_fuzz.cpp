@@ -222,7 +222,7 @@ U FxStoreImage(const U* a, U answer) {
 // (the caller hands it on).
 U FxFindMote(const U*, U answer) {
     if (answer % 4 == 0) return 0;
-    return at::kShards + ((answer >> 4) % at::kMotes) * at::kMoteStride;
+    return EffectKind30_Shards_addr + ((answer >> 4) % at::kMotes) * at::kMoteStride;
 }
 
 #define E3A_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
@@ -282,18 +282,18 @@ const std::uint8_t kKinds[] = {0x60, 0x61, 0x62, 0x64, 0x68};
 // up to 4,096 particles), its first 0x100 particles.
 constexpr unsigned kParticlesSeeded = 0x100;
 const sh::Region kRegions[] = {
-    {at::kMoteFlagB, at::kCellsSize},
-    {at::kFrames, 8 * at::kFrameCount},
+    {Effect3a_MoteFlagB_addr, at::kCellsSize},
+    {EffectKind61_Frames_addr, 8 * at::kFrameCount},
     {at::kParticles, kParticlesSeeded * at::kParticleStride},
 };
 
 // --- the seed ------------------------------------------------------------------------
 
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
-unsigned char* RayAt(unsigned i) { return P(at::kShards + i * at::kRayStride); }
-unsigned char* SparkAt(unsigned i) { return P(at::kShards + i * at::kSparkStride); }
-unsigned char* MoteAt(unsigned i) { return P(at::kShards + i * at::kMoteStride); }
-unsigned char* ShardAt(unsigned i) { return P(at::kShards64 + i * at::kShardStride64); }
+unsigned char* RayAt(unsigned i) { return P(EffectKind30_Shards_addr + i * at::kRayStride); }
+unsigned char* SparkAt(unsigned i) { return P(EffectKind30_Shards_addr + i * at::kSparkStride); }
+unsigned char* MoteAt(unsigned i) { return P(EffectKind30_Shards_addr + i * at::kMoteStride); }
+unsigned char* ShardAt(unsigned i) { return P(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride64); }
 unsigned char* ParticleAt(unsigned i) { return P(at::kParticles + i * at::kParticleStride); }
 
 // A float in [lo, hi) with a fraction, or (one in sixteen) a whole number.
@@ -308,7 +308,7 @@ void SeedFloat(unsigned char* p, float lo, float hi) {
 // the 0x100 particles seeded (w up to 0x40 with few rows), 0 and negatives.
 void SeedFrames() {
     for (unsigned v = 0; v < at::kFrameCount; ++v) {
-        unsigned char* const f = P(at::kFrames + 8 * v);
+        unsigned char* const f = P(EffectKind61_Frames_addr + 8 * v);
         SetWord(f, PickOf(0x10, 0x20, 0, 0xFFF0, sh::Next() & 0x7F));
         SetWord(f + 2, PickOf(0x28, 0x30, 0, 0xFFF0, sh::Next() & 0x7F));
         U w = PickOf(0, 0xFFFF, 0x8000, 1, 2, 3, 5, 8, 0x10, 0x20, 0x40, 1 + sh::Next() % 16);
@@ -363,8 +363,8 @@ void SeedMotes() {
         m[1] = static_cast<unsigned char>(sh::Next() % 3);
         m[2] = static_cast<unsigned char>(PickOf(1, 1, 2, 0, 0x10, sh::Next()));
     }
-    sh::Mem(at::kMoteFlagA)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
-    sh::Mem(at::kMoteFlagB)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    sh::Mem(Effect3a_MoteFlagA_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    sh::Mem(Effect3a_MoteFlagB_addr)[0] = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
 }
 
 void Seed(unsigned k) {
@@ -373,8 +373,8 @@ void Seed(unsigned k) {
     // onto the one kind 0x61's capture fills from ObjTrio): +7 inside ObjTrio
     for (unsigned r = 0; r < sh::at::kEffectCount; ++r) Rec(r)[7] = static_cast<unsigned char>(sh::Next() % at::kObjTrioCount);
     for (unsigned m = 0; m < at::kObjTrioCount; ++m) ObjTrio[at::kObjTrioStride * m + 7] = static_cast<unsigned char>(sh::Next() % at::kObjTrioCount);
-    sh::Mem(at::kVariant)[0] = static_cast<unsigned char>(sh::Next() % at::kFrameCount);
-    SetWord(sh::Mem(at::kParticleCount), PickOf(0, 1, 2, 0x10, 0x11, kParticlesSeeded, sh::Next() % (kParticlesSeeded + 1)));
+    sh::Mem(Effect3a_Variant_addr)[0] = static_cast<unsigned char>(sh::Next() % at::kFrameCount);
+    SetWord(sh::Mem(Effect3a_ParticleCount_addr), PickOf(0, 1, 2, 0x10, 0x11, kParticlesSeeded, sh::Next() % (kParticlesSeeded + 1)));
     SeedFrames();
     unsigned char* const s = Sprite_Current;
     s[9] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, 0x13, 0x14, 0x15, 0xFF, sh::Next()));
@@ -391,7 +391,7 @@ void Seed(unsigned k) {
         if (sh::Half()) {
             Field_Request = static_cast<unsigned char>(PickOf(0, 1, 3, 2, sh::Next()));
             SetWord(sh::Mem(at::kMessageWord), PickOf(0x12, 0x12, 0x13, 0x112, sh::Next()));
-            sh::Mem(at::kStep)[0] = static_cast<unsigned char>(PickOf(0xC, 0xC, 0xB, 0xD, sh::Next()));
+            sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(PickOf(0xC, 0xC, 0xB, 0xD, sh::Next()));
         }
         SeedRays();
         break;
@@ -499,7 +499,7 @@ void Disturb(U h) {
     case 5:
         if (sh::InRegions(s, 0x80)) s[3] = static_cast<unsigned char>(v);
         break;
-    case 6: SetWord(sh::Mem(at::kParticleCount), v % (kParticlesSeeded + 1)); break;
+    case 6: SetWord(sh::Mem(Effect3a_ParticleCount_addr), v % (kParticlesSeeded + 1)); break;
     case 7: sh::Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0x18u : v >> 1); break;
     default: break;
     }

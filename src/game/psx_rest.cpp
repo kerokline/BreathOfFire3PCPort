@@ -64,16 +64,16 @@ Fn Import(U slot) {
     return fn;
 }
 unsigned long __stdcall ImportSetTextColor(void* hdc, unsigned long color) {
-    return Import<unsigned long (__stdcall*)(void*, unsigned long)>(kImportSetTextColor)(hdc, color);
+    return Import<unsigned long (__stdcall*)(void*, unsigned long)>(PsxRest_ImportSetTextColor_addr)(hdc, color);
 }
 int __stdcall ImportSetBkMode(void* hdc, int mode) {
-    return Import<int (__stdcall*)(void*, int)>(kImportSetBkMode)(hdc, mode);
+    return Import<int (__stdcall*)(void*, int)>(PsxRest_ImportSetBkMode_addr)(hdc, mode);
 }
 int __stdcall ImportTextOutA(void* hdc, int x, int y, const char* text, int n) {
-    return Import<int (__stdcall*)(void*, int, int, const char*, int)>(kImportTextOutA)(hdc, x, y, text, n);
+    return Import<int (__stdcall*)(void*, int, int, const char*, int)>(PsxRest_ImportTextOutA_addr)(hdc, x, y, text, n);
 }
 int __stdcall ImportMessageBoxA(void* hwnd, const char* text, const char* caption, unsigned type) {
-    return Import<int (__stdcall*)(void*, const char*, const char*, unsigned)>(kImportMessageBoxA)(hwnd, text, caption,
+    return Import<int (__stdcall*)(void*, const char*, const char*, unsigned)>(PsxRest_ImportMessageBoxA_addr)(hwnd, text, caption,
                                                                                                   type);
 }
 
@@ -164,7 +164,7 @@ extern "C" void __cdecl Gte_ApplyMatrixSV(const short* matrix, const short* vect
 // 512 pairs) to Crt_free, and the pair - the generation counter with it -
 // zeroed. A pair whose pointer is null is left as it is.
 extern "C" void __cdecl Gfx_FreeClutRows() {
-    for (U at = kClutRows + 4; at < kClutRowsEnd + 4; at += 8) {
+    for (U at = Gfx_ClutRows_addr + 4; at < kClutRowsEnd + 4; at += 8) {
         void* const row = Ptr(at);
         if (!row) continue;
         g.free(row);
@@ -177,7 +177,7 @@ extern "C" void __cdecl Gfx_FreeClutRows() {
 // its first entry whose state byte is 0: the texture at +0x14 released, then
 // the surface at +0x10 - read after that Release - and the 0x18 bytes zeroed.
 extern "C" void __cdecl Gfx_ReleaseTexCache() {
-    for (U page = kTexCache; page < kTexCacheEnd; page += kTexPageBytes) {
+    for (U page = Gfx_TexCache_addr; page < kTexCacheEnd; page += kTexPageBytes) {
         for (U i = 0; i < 0x20; ++i) {
             const U entry = page + i * kTexEntryBytes;
             if (!At(entry)[0]) break;
@@ -192,7 +192,7 @@ extern "C" void __cdecl Gfx_ReleaseTexCache() {
 // the surface +8 (read after), the entry's five dwords zeroed and its glyph
 // word +0 set back to 0xFFFF - the set-up's empty value.
 extern "C" void __cdecl Font_ReleaseTexCache() {
-    for (U entry = kFontCache; entry < kFontCacheEnd; entry += kFontEntryBytes) {
+    for (U entry = Font_TexCache_addr; entry < kFontCacheEnd; entry += kFontEntryBytes) {
         ReleaseIf(entry + 0xC, false);
         ReleaseIf(entry + 8, false);
         ZeroDwords(entry, 5);
@@ -204,12 +204,12 @@ extern "C" void __cdecl Font_ReleaseTexCache() {
 // instruction of the image names: +0x10 then +8, +0x14 then +0xC, +4, +0 -
 // each released and zeroed when it is not null (docs/psx-rest.md section 2).
 extern "C" void __cdecl Display_ReleaseOrphans() {
-    for (U at = kOrphans + 8; at < kOrphans + 0x10; at += 4) {
+    for (U at = PsxRest_Orphans_addr + 8; at < PsxRest_Orphans_addr + 0x10; at += 4) {
         ReleaseIf(at + 8, true);
         ReleaseIf(at, true);
     }
-    ReleaseIf(kOrphans + 4, true);
-    ReleaseIf(kOrphans, true);
+    ReleaseIf(PsxRest_Orphans_addr + 4, true);
+    ReleaseIf(PsxRest_Orphans_addr, true);
 }
 
 // original 0x5A65F0. The backdrop block: 0x6BEA0C then 0x6BEA04, 0x6BEA10 then
@@ -221,9 +221,9 @@ extern "C" void __cdecl Display_ReleaseBackdrop() {
         ReleaseIf(at + 8, false);
         ReleaseIf(at, false);
     }
-    ReleaseIf(kBackdrop, false);
+    ReleaseIf(Dd_CellBackdrop_addr, false);
     ZeroDwords(kBackdropBlock, 7);
-    PutLong(kBackdropMagic, kMagic);
+    PsxRest_BackdropMagic = kMagic;
 }
 
 // original 0x5A6760. D3d_FreeCellTexture of every D3d_CellTexCache slot,
@@ -235,10 +235,10 @@ extern "C" void __cdecl D3d_FreeCellTextures() {
 // original 0x5A6650. D3d_AfterDraw's three surfaces - the texture, its
 // surface, the capture surface - released, then its seven dwords zeroed.
 extern "C" void __cdecl D3d_ReleaseAfterDraw() {
-    ReleaseIf(kAfterDrawTexture, false);
-    ReleaseIf(kAfterDrawTexSurface, false);
-    ReleaseIf(kAfterDrawSurface, false);
-    ZeroDwords(kAfterDraw, 7);
+    ReleaseIf(D3d_CaptureTexture_addr, false);
+    ReleaseIf(D3d_CaptureTexSurface_addr, false);
+    ReleaseIf(D3d_CaptureSurface_addr, false);
+    ZeroDwords(D3d_CaptureReady_addr, 7);
 }
 
 // --- The teardown, the text, the error box, the sound -------------------------
@@ -258,22 +258,22 @@ extern "C" void __cdecl Display_Teardown(void* hwnd) {
     g.release_backdrop();
     g.free_cell_textures();
     g.release_after_draw();
-    ReleaseIf(kBackMaterial, true);
-    ReleaseIf(kViewport, true);
-    ReleaseIf(kDevice, true);
-    ReleaseIf(kDirect3D, true);
-    ReleaseIf(kClipper, true);
-    ReleaseIf(kZBuffer, true);
-    ReleaseIf(kStage, true);
-    ReleaseIf(kBackBuffer, true);
-    ReleaseIf(kPrimary, true);
-    void* dd = Ptr(kDirectDraw);
+    ReleaseIf(D3d_BackMaterial_addr, true);
+    ReleaseIf(D3d_Viewport_addr, true);
+    ReleaseIf(D3d_Device_addr, true);
+    ReleaseIf(PsxRest_Direct3D_addr, true);
+    ReleaseIf(PsxRest_Clipper_addr, true);
+    ReleaseIf(PsxRest_ZBuffer_addr, true);
+    ReleaseIf(Dd_StageSurface_addr, true);
+    ReleaseIf(DDraw_BackBuffer_addr, true);
+    ReleaseIf(DDraw_Primary_addr, true);
+    void* dd = Dd_DirectDraw;
     if (!dd) return;
     if (Long(kRenderFlags) & 0x100) {
         Method<ComCoop>(dd, kSetCooperativeLevel)(dd, hwnd, kDdsclNormal);
-        dd = Ptr(kDirectDraw);
+        dd = Dd_DirectDraw;
         Method<ComCall>(dd, kRestoreDisplayMode)(dd);
-        dd = Ptr(kDirectDraw);
+        dd = Dd_DirectDraw;
     }
     Method<ComCall>(dd, kRelease)(dd);
     PutLong(kDirectDraw, 0);
@@ -285,14 +285,14 @@ extern "C" void __cdecl Display_Teardown(void* hwnd) {
 // (x, y), and ReleaseDC on DDraw_BackBuffer read again. Nothing reads the
 // HRESULT left in eax (the one caller, WinMain's overlay, is ours).
 extern "C" void __cdecl Display_TextOut(int x, int y, const char* text) {
-    void* const surface = Ptr(kBackBuffer);
+    void* const surface = DDraw_BackBuffer;
     void* hdc = nullptr;   // the original's is the slot `push ecx` made: GetDC writes it (docs/psx-rest.md section 3)
     if (Method<ComGetDC>(surface, kGetDC)(surface, &hdc)) return;
     g.set_text_color(hdc, kWhite);
     g.set_bk_mode(hdc, kTransparent);
     const int n = static_cast<int>(std::strlen(text));
     g.text_out(hdc, x, y, text, n);
-    void* const again = Ptr(kBackBuffer);
+    void* const again = DDraw_BackBuffer;
     Method<ComReleaseDC>(again, kReleaseDC)(again, hdc);
 }
 
@@ -313,8 +313,8 @@ extern "C" void __cdecl Display_ErrorBox(int code) {
 extern "C" void __cdecl Sound_Shutdown() {
     g.stream_stop();
     g.music_release();
-    ReleaseIf(kSndPrimary, true);
-    ReleaseIf(kSndDevice, true);
+    ReleaseIf(Snd_Primary_addr, true);
+    ReleaseIf(Snd_Device_addr, true);
 }
 
 void PsxRest_Inject() {

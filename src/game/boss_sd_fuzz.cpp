@@ -21,6 +21,7 @@
 #include "game/boss_sd.h"
 #include "game/boss_sd_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 
 namespace boss_sd {
 namespace {
@@ -54,7 +55,7 @@ bh::Clone Row(const char* name, U base, U size, const bh::CallSite* calls, int n
 // call (set-up 20 stores it before, 18 and 19 after) is seen in every round
 // that reaches it, not only when the disturbance happens to move the step.
 std::uint32_t PickEffect(const std::uint32_t*, std::uint32_t answer) {
-    Mem(at::kChapterStep)[0] = static_cast<unsigned char>(bh::Noise());
+    Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(bh::Noise());
     return answer;
 }
 
@@ -69,7 +70,7 @@ const bh::Callee kCallees[] = {
 // The cells beyond the standard regions: the move-script counter the end
 // hooks of set-ups 17 and 21 set, and the four words set-ups 18..20 keep for
 // the area-79 kinds.
-const bh::Region kRegions[] = {{at::kCounter0, 4}, {at::kKeptA6, 8}};
+const bh::Region kRegions[] = {{at::kCounter0, 4}, {BossSd_KeptA6_addr, 8}};
 
 // --- seeding helpers -------------------------------------------------------------
 
@@ -95,13 +96,13 @@ U PhaseWord(U low) { return (bh::Half() ? bh::Next() & 0xFFFFFF00u : 0) | low; }
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 8) {
-    case 0: Mem(at::kWhoFell)[0] = b; break;
+    case 0: Mem(BossSe_Script_addr)[0] = b; break;
     case 1: Mem(at::kEnemy0Status)[1] = b; break;
-    case 2: Mem(at::kEnemy1Status)[1] = b; break;
-    case 3: Mem(at::kEnemy2Status)[1] = b; break;
-    case 4: SetWord(Mem(h & 0x100 ? at::kEnemy1Hp : at::kEnemy0Hp), h >> 12); break;
-    case 5: SetWord(Mem(at::kKeptA6 + 2 * ((h >> 12) % 4)), h >> 14); break;
-    case 6: bh::SetPointer(at::kFlagBits, Mem(bh::at::kCondFlags + 8 * ((h >> 16) % 40))); break;
+    case 2: Mem(BossH_Enemy1Status_addr)[1] = b; break;
+    case 3: Mem(BossH_Enemy2Status_addr)[1] = b; break;
+    case 4: SetWord(Mem(h & 0x100 ? BossSb_Enemy1Hp_addr : at::kEnemy0Hp), h >> 12); break;
+    case 5: SetWord(Mem(BossSd_KeptA6_addr + 2 * ((h >> 12) % 4)), h >> 14); break;
+    case 6: bh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * ((h >> 16) % 40))); break;
     default: Sprite_Current[5] = static_cast<unsigned char>(h & 0x200 ? 4 + ((h >> 16) & 1) : b); break;
     }
 }
@@ -195,7 +196,7 @@ const bh::DataTable kTablesK23[] = {{0x64CFF0, 12}, {0x64D020, 3, 4, 1}};
 void SeedKind(unsigned k, const bh::Clone* clones) {
     const bh::Clone& c = clones[k];
     if (c.shape == S::kDispatch) OtherStates(c.state_at, c.states);
-    unsigned char* const kept = Mem(at::kKeptA6);
+    unsigned char* const kept = Mem(BossSd_KeptA6_addr);
     if (bh::Half()) SetWord(kept + 6, bh::Often() ? BH_PICK(0, 1, 0xFFFF, 0x7FFF, 0x8000) : bh::Next());
 }
 void SeedK18(unsigned k) { SeedKind(k, kClonesK18); }
@@ -251,8 +252,8 @@ void SeedK26(unsigned k) {
         break;
     case kHitSound: {
         // the signed word +0x108 against 0 (jle)
-        unsigned char* const e = bh::Pointer(bh::at::kEnemyCurrent);
-        SetWord(e + 0x108, bh::Often() ? BH_PICK(0, 1, 0xFFFF, 0x7FFF, 0x8000, 2) : bh::Next());
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::Pointer(BattleE3_CurrentEnemy_addr));
+        enemy_rec->hp_change = bh::Often() ? BH_PICK(0, 1, 0xFFFF, 0x7FFF, 0x8000, 2) : bh::Next();
         break;
     }
     case kDodaiShake:
@@ -269,8 +270,8 @@ void SeedK26(unsigned k) {
 // original jumps through the next .data dwords and ours aborts.
 void SettleK26() {
     for (unsigned i = 0; i < bh::at::kEnemyCount; ++i) {
-        unsigned char* const e = bh::EnemyAt(i);
-        if (e[1] >= 12) e[1] = static_cast<unsigned char>(e[1] % 12);
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(bh::EnemyAt(i));
+        if (enemy_rec->state[0] >= 12) enemy_rec->state[0] = static_cast<unsigned char>(enemy_rec->state[0] % 12);
     }
 }
 void ArgsK26(unsigned k, U* a) {
@@ -331,11 +332,11 @@ const bh::Clone kClonesB21[] = {
 // The set-ups' seed: the battle-end byte and 0x904AAD at their bit values, the
 // three enemies' +0x93 with and without 0x40, the kept words' sources.
 void SeedSetup(unsigned) {
-    Mem(at::kBattleEnd)[0] = EndByte();
-    Mem(at::kWhoFell)[0] = EndByte();
+    Mem(BattleActions_BattleEnd_addr)[0] = EndByte();
+    Mem(BossSe_Script_addr)[0] = EndByte();
     Mem(at::kEnemy0Status)[1] = StatusByte();
-    Mem(at::kEnemy1Status)[1] = StatusByte();
-    Mem(at::kEnemy2Status)[1] = StatusByte();
+    Mem(BossH_Enemy1Status_addr)[1] = StatusByte();
+    Mem(BossH_Enemy2Status_addr)[1] = StatusByte();
 }
 
 // An event hook's phase code: the harness's draw 0..6, the codes the hook

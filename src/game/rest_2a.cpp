@@ -22,12 +22,21 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_2a_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
+[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_2a::at;
 using U = std::uint32_t;
@@ -52,7 +61,7 @@ constexpr unsigned kEffectCount = 20;
 // any other byte no code of this band stores, and ours aborts.
 const unsigned char* EffectRead(unsigned index, const char* who) {
     if (index < kEffectCount) return Effect_Objects + index * kEffectStride;
-    if (index == 0xFF) return At(at::kEffectNone);
+    if (index == 0xFF) return At(Gfx_PacketPools_addr + 0x7560);
     bof3::Fatal("%s: effect object index %u is past Effect_Objects' 20 records; the original reads at 0x%X", who, index,
                 static_cast<unsigned>(Addr(Effect_Objects) + index * kEffectStride));
     return nullptr;
@@ -83,7 +92,7 @@ void Dispatch(const U* states, unsigned count, const char* who) {
 // is never 0, so the call is unconditional. It pushes eax whole, the upper
 // bytes Rand's answer; Sprite_FaceDirection reads the byte.
 void FaceAwayFromLeader() {
-    const unsigned char lead = At(at::kLeaderDirection)[0];
+    const unsigned char lead = ObjTrio[8];
     SH_CALL(Sprite_FaceDirection)(static_cast<unsigned char>((lead ^ 0xFC) & 7));
 }
 
@@ -206,8 +215,8 @@ extern "C" void __cdecl Mode11_ListedSpriteScreens(void) {
         }
         const unsigned count = At(at::kBankCount)[0];
         const unsigned char* const records = reinterpret_cast<const unsigned char*>(
-            static_cast<std::uintptr_t>(static_cast<U>(Long(At(at::kBankRecords)))));
-        const unsigned bank_byte = Word(s + 0x2C);
+            static_cast<std::uintptr_t>(static_cast<U>(Long(At(MoveScript_TintRecords_addr + 0x180)))));
+        const unsigned bank_byte = SpriteRec(s)->column;
         unsigned i = 0;
         while (i < count && records[i * 8 + 7] != bank_byte) ++i;
         const unsigned bank = Word(records + (i & 0xFF) * 8);
@@ -242,7 +251,7 @@ extern "C" void __cdecl Char_GainHp(unsigned amount, unsigned member) {
     unsigned char* const actor = Record(fs[0x148]);
     if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) return;
     SetWord(actor + 0x10, Word(actor + 0x10) & 0xDFFF);
-    SetWord(fs + 0x90, Word(fs + 0x90) & 0xDFFF);
+    MemberRec(fs)->status = MemberRec(fs)->status & 0xDFFF;
 }
 
 // original 0x537500 (PSX 0x80168BC0, pairs_propagated call): the member
@@ -429,16 +438,16 @@ extern "C" void __cdecl LinkedObject_SpawnEffect19(unsigned sub) {
     const unsigned char rise = SH_CALL(LinkedObject_EffectRise)();
     SetLong(EffectWrite(*index, who) + 0x10, static_cast<std::int32_t>(static_cast<signed char>(rise)) + 0x28);
     const unsigned char* const c = Sprite_Current;
-    SetLong(EffectWrite(*index, who) + 0x34, Long(c + 0x34));
-    SetLong(EffectWrite(*index, who) + 0x38, Long(c + 0x38));
-    SetLong(EffectWrite(*index, who) + 0x3C, Long(c + 0x3C));
+    EffectRec(EffectWrite(*index, who))->x = SpriteRec(c)->x;
+    EffectRec(EffectWrite(*index, who))->z = SpriteRec(c)->z;
+    EffectRec(EffectWrite(*index, who))->height = SpriteRec(c)->height;
 }
 
 // original 0x537EA0: (s8)(Sprite_Current +0x30 - the leader's +0x30, bytes)
 // / 28 (a signed division: imul by 0x92492493, add, sar 4, the sign added);
 // negative, shifted left 2 (al only). Answers al.
 extern "C" unsigned char __cdecl LinkedObject_EffectRise(void) {
-    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - At(at::kLeader30)[0]));
+    const auto d = static_cast<signed char>(static_cast<unsigned char>(Sprite_Current[0x30] - ObjTrio[0x30]));
     const auto q = static_cast<unsigned char>(static_cast<int>(d) / 28);
     return static_cast<signed char>(q) < 0 ? static_cast<unsigned char>(q << 2) : q;
 }

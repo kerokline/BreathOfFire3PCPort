@@ -34,7 +34,7 @@ using move_script::SetWord;
 using move_script::Word;
 using U = std::uint32_t;
 
-constexpr U kInputHeld = 0x7E1BE8;   // Input_Held (u16; the macro of that name is the cell itself)
+// kInputHeld: now Input_Held (symbols.toml). Input_Held (u16; the macro of that name is the cell itself)
 
 // tools/band_rows.py --group E4A --clones, 2026-10-03 (0x488B70 cut at its jmp, 0x488B90 its own).
 constexpr sh::CallSite kCalls4881C0[] = {{0x4C, 0x589840}};
@@ -176,7 +176,7 @@ const std::uint8_t kKinds[] = {0x82, 0x83, 0x84, 0x85, 0x86, 0x87};
 
 // Beyond effect mode's standard regions: kind 0x87's flag byte.
 const sh::Region kRegions[] = {
-    {at::kKind87Flag, 4},
+    {Effect4b_SoundIndex_addr, 4},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -209,13 +209,13 @@ void Seed(unsigned) {
     s[0xB] = static_cast<unsigned char>(PickOf(0x36, 0x37, 0x35, 0x33, 0xFF, sh::Next()));
     // records 0 and 1 at, past and short of the leader's x
     const U leader = sh::Next();
-    SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(leader));
-    SetLong(Mem(at::kObject0X), static_cast<std::int32_t>(leader + PickOf(0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, 0x80000000u, sh::Next())));
-    SetLong(Mem(at::kObject1X), static_cast<std::int32_t>(leader + PickOf(0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, 0x80000000u, sh::Next())));
+    SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(leader));
+    SetLong(Mem(Sprite_Objects_addr + 0x34), static_cast<std::int32_t>(leader + PickOf(0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, 0x80000000u, sh::Next())));
+    SetLong(Mem(Sprite_Objects_addr + 0xd8), static_cast<std::int32_t>(leader + PickOf(0, 1, 0xFFFFFFFFu, 0x10000, 0xFFFF0000u, 0x80000000u, sh::Next())));
     // the third member's x about the line (signed)
-    SetLong(Mem(at::kObjTrio2X), static_cast<std::int32_t>(PickOf(0x340000, 0x33FFFF, 0x340001, 0, 0x80000000u, 0xFFFFFFFFu, sh::Next())));
+    SetLong(Mem(ObjTrio_addr + 0x2cc), static_cast<std::int32_t>(PickOf(0x340000, 0x33FFFF, 0x340001, 0, 0x80000000u, 0xFFFFFFFFu, sh::Next())));
     // the held word: the three that count, near ones, none
-    SetWord(Mem(kInputHeld), PickOf(0x3000, 0x6000, 0x2000, 0x2001, 0x7000, 0x1000, 0, sh::Next()));
+    SetWord(Mem(Input_Held_addr), PickOf(0x3000, 0x6000, 0x2000, 0x2001, 0x7000, 0x1000, 0, sh::Next()));
     Field_Request = static_cast<unsigned char>(PickOf(2, 0, 1, 3, sh::Next()));
 }
 
@@ -231,9 +231,9 @@ void Disturb(U h) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: s[3 + (v & 1)] = static_cast<unsigned char>((v >> 1) % at::kSpriteCount); break;
     case 2: Mem(at::kCounterB)[0] = static_cast<unsigned char>((v & 3) == 0 ? 0xFEu : (v & 3) == 1 ? 0u : v >> 2); break;
-    case 3: SetLong(Mem(at::kObjTrio2X), static_cast<std::int32_t>((v & 1) ? 0x340000u - 1 + ((v >> 1) & 1) : v)); break;
+    case 3: SetLong(Mem(ObjTrio_addr + 0x2cc), static_cast<std::int32_t>((v & 1) ? 0x340000u - 1 + ((v >> 1) & 1) : v)); break;
     case 4: s[0xB] = static_cast<unsigned char>((v & 1) ? 0x37u : v >> 1); break;
-    case 5: SetWord(Mem(kInputHeld), (v & 1) ? 0x3000u : v >> 1); break;
+    case 5: SetWord(Mem(Input_Held_addr), (v & 1) ? 0x3000u : v >> 1); break;
     case 6: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0x35u : v >> 1); break;
     case 7: Field_Request = static_cast<unsigned char>((v & 1) ? 2u : v >> 1); break;
     case 8: s[6] = static_cast<unsigned char>(v % at::kSpriteCount); break;

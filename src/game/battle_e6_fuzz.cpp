@@ -170,8 +170,8 @@ const bh::Clone kCells[] = {
 // one of those moves both from Noise(), noting what they held (so a store
 // before the call is compared, not wiped).
 std::uint32_t FormEffect(const std::uint32_t*, std::uint32_t answer) {
-    unsigned char* const code = Mem(at::kFormCode);
-    unsigned char* const group = Mem(at::kFormGroupWork);
+    unsigned char* const code = Mem(BattleE6_FormCode_addr);
+    unsigned char* const group = Mem(BattleE6_FormGroupWork_addr);
     bh::Note(code[0], group[0]);
     const std::uint32_t n = bh::Noise();
     if (n & 1) code[0] = static_cast<unsigned char>(n >> 8);
@@ -252,7 +252,7 @@ const bh::Callee kCellCallees[] = {
     {BE6_OURS(Gte_SetTransMatrix), 1, {kAll}, A::kThrough, 0, 0},
 };
 
-const bh::DataTable kTaskTables[] = {{at::kDashSteps, 7}, {at::kPoseSteps, 2}, {at::kTrailSteps, 2}};
+const bh::DataTable kTaskTables[] = {{BattleFxDash_Steps_addr, 7}, {BattleFxPose_Steps_addr, 2}, {BattleFxTrail_Steps_addr, 2}};
 
 // A BMAGIC record of the fuzz's own (DrawLayer_Open hands a pointer into the
 // loaded area's data): random each round, its length byte seeded.
@@ -261,38 +261,38 @@ unsigned char g_cell[0x200];
 const bh::Region kRegions[] = {
     {at::kMixSums, 0x10},                 // the sums, the form and group codes
     {0x939B20, 0x3A0},                    // the party's backup past the engine region (0x939AE0 + 3 x 0x14C)
-    {at::kActionBits, 0x20},              // the action flag set
-    {at::kEffectState, 0x18},             // MoveScript_EffectState (the roll's table pick)
-    {at::kFieldSlots, 0x80},      // the eight Field_Slots records
-    {at::kKind2Z, 8},                     // Field_Kind2Z / _Kind2X (the dash's rise)
-    {at::kVertexScratch, 8},  // slot 43's point
-    {at::kScreenXY, 8},    // and its projection
-    {at::kOtSlot, 1},
+    {Cond_Flags_addr + 0xf8, 0x20},       // the action flag set
+    {MoveScript_EffectState_addr, 0x18},  // MoveScript_EffectState (the roll's table pick)
+    {Field_Slots_addr, 0x80},     // the eight Field_Slots records
+    {Field_Kind2Z_addr, 8},               // Field_Kind2Z / _Kind2X (the dash's rise)
+    {Prim_VertexScratch_addr, 8}, // slot 43's point
+    {MapView_ScreenXY_addr, 8}, // and its projection
+    {Draw_OtSlot_addr, 1},
     {0, sizeof g_cell},                   // g_cell (filled in at SelfTest)
 };
 // the cells' run also holds the GTE's state and the camera's matrix: random,
 // then (two times in three) a sane projection seeded
-constexpr U kGte = 0x7DE428;              // Gte_RampFar .. Gte_Depth: the whole GTE state (magic_s23_fuzz.cpp's region)
+// kGte: now Gte_RampFar (symbols.toml). Gte_RampFar .. Gte_Depth: the whole GTE state (magic_s23_fuzz.cpp's region)
 constexpr U kGteSize = 0x380;
-constexpr U kGteDepth = 0x7DE450;         // Gte_MatrixDepth: kept 0..15 (the pushes stay in the stack)
-constexpr U kGteMatrix = 0x7DE4A0;        // Gte_Matrix: 3 x 3 s16, pad, 3 x s32
-constexpr U kGteNearZ = 0x7DE498;
-constexpr U kGteH = 0x7DE780;             // Gte_ProjDistance
-constexpr U kGteOffsetY = 0x7DE78C;
-constexpr U kGteOffsetX = 0x7DE790;
+// kGteDepth: now Gte_MatrixDepth (symbols.toml). Gte_MatrixDepth: kept 0..15 (the pushes stay in the stack)
+// kGteMatrix: now Gte_Matrix (symbols.toml). Gte_Matrix: 3 x 3 s16, pad, 3 x s32
+// kGteNearZ: now Gte_NearZ (symbols.toml).
+// kGteH: now Gte_ProjDistance (symbols.toml). Gte_ProjDistance
+// kGteOffsetY: now Gte_OffsetY (symbols.toml).
+// kGteOffsetX: now Gte_OffsetX (symbols.toml).
 // Gte_Vertices (0x7DE468, six dwords) is left out: the loads copy each
 // vertex's fourth short, which the originals leave as stale stack bytes (the
 // GTE reads only the first three; section 7, L9). It is put back before each
 // pass all the same (Group::kept), so ours cannot read the vertices the
 // original's pass loaded - a load missing or late in ours would otherwise
 // project the right points.
-constexpr U kGteVertices = 0x7DE468;
+// kGteVertices: now Gte_Vertices (symbols.toml).
 const bh::Region kCellRegions[] = {
-    {kGte, kGteVertices - kGte},
-    {kGteVertices + 0x18, kGte + kGteSize - (kGteVertices + 0x18)},
-    {at::kCameraMatrix, 0x20},
+    {Gte_RampFar_addr, Gte_Vertices_addr - Gte_RampFar_addr},
+    {Gte_Vertices_addr + 0x18, Gte_RampFar_addr + kGteSize - (Gte_Vertices_addr + 0x18)},
+    {Camera_Matrix_addr, 0x20},
 };
-const bh::Region kCellKept[] = {{kGteVertices, 0x18}};
+const bh::Region kCellKept[] = {{Gte_Vertices_addr, 0x18}};
 
 // ===========================================================================
 // Seeds, arguments, disturbance
@@ -301,7 +301,7 @@ const bh::Region kCellKept[] = {{kGteVertices, 0x18}};
 const bh::Clone* g_cur = nullptr;
 U g_args[bh::kArgs];
 
-unsigned char* Party(unsigned m) { return Mem(at::kParty + (m % 4) * at::kPartyStride); }
+unsigned char* Party(unsigned m) { return Mem(ObjTrio_addr + (m % 4) * at::kPartyStride); }
 unsigned char Small(unsigned span) { return static_cast<unsigned char>(bh::Next() % span); }
 // a byte of the kind the code compares: small signed values most of the time
 unsigned char Signed(unsigned span) {
@@ -313,7 +313,7 @@ U Dirty(U v) { return (bh::Half() ? bh::Next() & 0xFFFFFF00u : 0) | (v & 0xFF); 
 // The chosen genes: 0..3 of them mostly, from 0..0x10 mostly (0xA, 0xB, 0xC
 // and 0x10 the code's own).
 void SeedGenes() {
-    Mem(at::kGeneCount)[0] = bh::Often() ? Small(4) : Small(8);
+    Mem(BattleE5_GeneCount_addr)[0] = bh::Often() ? Small(4) : Small(8);
     for (unsigned i = 0; i < 3; ++i)
         Mem(at::kGenes + i)[0] = bh::Often() ? Small(0x11) : static_cast<unsigned char>(bh::Next());
     if (bh::Half()) Mem(at::kGenes + bh::Next() % 3)[0] = static_cast<unsigned char>(0xA + bh::Next() % 3);
@@ -347,19 +347,19 @@ unsigned char* Record(unsigned v) {
 // identity (Gte_Matrix and Camera_Matrix), a translation 1000..4000 deep, a
 // distance 300..800 and the offsets near the screen's middle.
 void SeedGte() {
-    SetLong(Mem(kGteDepth), static_cast<std::int32_t>(bh::Next() % 0x10));
+    SetLong(Mem(Gte_MatrixDepth_addr), static_cast<std::int32_t>(bh::Next() % 0x10));
     if (!bh::Often()) return;
-    const U matrices[2] = {kGteMatrix, at::kCameraMatrix};
+    const U matrices[2] = {Gte_Matrix_addr, Camera_Matrix_addr};
     for (U m : matrices)
         for (unsigned i = 0; i < 9; ++i)
             SetWord(Mem(m + 2 * i), static_cast<U>((i % 4 == 0 ? 0x1000 : 0) + (bh::Half() ? static_cast<int>(bh::Next() % 129) - 64 : 0)));
-    SetLong(Mem(kGteMatrix + 0x14), static_cast<std::int32_t>(bh::Next() % 401) - 200);
-    SetLong(Mem(kGteMatrix + 0x18), static_cast<std::int32_t>(bh::Next() % 401) - 200);
-    SetLong(Mem(kGteMatrix + 0x1C), static_cast<std::int32_t>(1000 + bh::Next() % 3000));
-    SetLong(Mem(kGteH), static_cast<std::int32_t>(300 + bh::Next() % 500));
-    SetLong(Mem(kGteOffsetX), static_cast<std::int32_t>(140 + bh::Next() % 41));
-    SetLong(Mem(kGteOffsetY), static_cast<std::int32_t>(100 + bh::Next() % 41));
-    SetLong(Mem(kGteNearZ), static_cast<std::int32_t>(16 + bh::Next() % 200));
+    SetLong(Mem(Gte_Matrix_addr + 0x14), static_cast<std::int32_t>(bh::Next() % 401) - 200);
+    SetLong(Mem(Gte_Matrix_addr + 0x18), static_cast<std::int32_t>(bh::Next() % 401) - 200);
+    SetLong(Mem(Gte_Matrix_addr + 0x1C), static_cast<std::int32_t>(1000 + bh::Next() % 3000));
+    SetLong(Mem(Gte_ProjDistance_addr), static_cast<std::int32_t>(300 + bh::Next() % 500));
+    SetLong(Mem(Gte_OffsetX_addr), static_cast<std::int32_t>(140 + bh::Next() % 41));
+    SetLong(Mem(Gte_OffsetY_addr), static_cast<std::int32_t>(100 + bh::Next() % 41));
+    SetLong(Mem(Gte_NearZ_addr), static_cast<std::int32_t>(16 + bh::Next() % 200));
 }
 
 void Seed(unsigned k) {
@@ -384,7 +384,7 @@ void Seed(unsigned k) {
         const unsigned recipe = bh::Often() ? bh::Next() % 11 : bh::Next() & 0xFF;
         const unsigned slot = bh::Often() ? bh::Next() % 3 : bh::Next() & 0xFF;
         if (bh::Half()) {
-            Mem(at::kGeneCount)[0] = static_cast<unsigned char>(1 + bh::Next() % 3);
+            Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(1 + bh::Next() % 3);
             Mem(at::kGenes + bh::Next() % 3)[0] = Mem(at::kRecipeGenes)[recipe * 3 + slot];
         }
         g_args[0] = Dirty(recipe);
@@ -399,7 +399,7 @@ void Seed(unsigned k) {
         break;
     case 0x451DA0:
         for (unsigned i = 0; i < 14; ++i) Mem(at::kMixSums + i)[0] = Signed(2);
-        Mem(at::kFormCode)[0] = bh::Often() ? Small(4) : static_cast<unsigned char>(bh::Next());
+        Mem(BattleE6_FormCode_addr)[0] = bh::Often() ? Small(4) : static_cast<unsigned char>(bh::Next());
         break;
     case 0x451FE0: {
         const unsigned row = bh::Often() ? bh::Next() % 15 : bh::Next() & 0xFF;
@@ -432,7 +432,7 @@ void Seed(unsigned k) {
         const unsigned m = bh::Next() % 3;
         g_args[0] = Key(Party(bh::Often() ? m : bh::Next() % 3) + 0x80);
         g_args[1] = Dirty(m);
-        Mem(at::kForm)[0] = bh::Half() ? 0x16 : static_cast<unsigned char>(bh::Next());
+        Mem(BattlePhases_B89_addr)[0] = bh::Half() ? 0x16 : static_cast<unsigned char>(bh::Next());
         break;
     }
     case 0x453910: {
@@ -441,8 +441,8 @@ void Seed(unsigned k) {
         if (bh::Often()) r[0x130] |= 1;
         if (bh::Often()) r[0x124] = Mem(at::kActor)[0];
         r[0x89] = Small(0x18);
-        if (bh::Half()) Mem(at::kEffectState + r[0x89])[0] = 6;
-        SetWord(bh::Pointer(at::kActingSprite2) + 2, SafeAction());
+        if (bh::Half()) Mem(MoveScript_EffectState_addr + r[0x89])[0] = 6;
+        SetWord(bh::Pointer(BattleSprites_Action_addr) + 2, SafeAction());
         g_args[0] = Dirty(m);
         break;
     }
@@ -480,20 +480,20 @@ void Seed(unsigned k) {
         }
         break;
     case 0x452B40:
-        if (bh::Half()) bh::Pointer(bh::at::kOwner)[1] = 5;
+        if (bh::Half()) bh::Pointer(BattleE2_Owner_addr)[1] = 5;
         break;
     // --- the field slots
     case 0x454A80: {
         unsigned char* const object = Record(bh::Next());
         for (unsigned i = 0; i < 8; ++i)
-            if (bh::Half()) SetLong(Mem(at::kFieldSlots + 0xC + 0x10 * i), static_cast<std::int32_t>(Key(object)));
+            if (bh::Half()) SetLong(Mem(Field_Slots_addr + 0xC + 0x10 * i), static_cast<std::int32_t>(Key(object)));
         g_args[0] = Key(object);
         break;
     }
     case 0x455290: {
         unsigned char* const object = Record(bh::Next());
         if (bh::Half())
-            for (unsigned i = 0; i < 8; ++i) Mem(at::kFieldSlots + 0x10 * i)[0] |= 1;
+            for (unsigned i = 0; i < 8; ++i) Mem(Field_Slots_addr + 0x10 * i)[0] |= 1;
         g_args[0] = Key(object);
         break;
     }
@@ -536,12 +536,12 @@ void Args(unsigned, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 6) {
-    case 0: Mem(at::kFormCode)[0] = b; break;
-    case 1: Mem(at::kFormGroupWork)[0] = b; break;
-    case 2: Mem(at::kGeneCount)[0] = static_cast<unsigned char>(b % 6); break;
+    case 0: Mem(BattleE6_FormCode_addr)[0] = b; break;
+    case 1: Mem(BattleE6_FormGroupWork_addr)[0] = b; break;
+    case 2: Mem(BattleE5_GeneCount_addr)[0] = static_cast<unsigned char>(b % 6); break;
     case 3: Mem(at::kGenes + b % 3)[0] = static_cast<unsigned char>(h >> 24); break;
     case 4: Mem(at::kPartySize)[0] = b; break;
-    default: Mem(at::kForm)[0] = h & 0x1000000 ? 0x16 : b; break;
+    default: Mem(BattlePhases_B89_addr)[0] = h & 0x1000000 ? 0x16 : b; break;
     }
 }
 

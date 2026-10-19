@@ -113,14 +113,14 @@ long* __cdecl StubHandlePosition(long* out, unsigned char handle, unsigned char 
 void __cdecl StubPartySetLoad(unsigned a, unsigned b, unsigned c, unsigned mode) {
     Record(10, a, b << 16 | (c & 0xFFFF), mode);
     const std::uint32_t h = Hash();
-    if (h % 2) At(kPartyFlags)[0] = static_cast<unsigned char>(h >> 8);
-    if (h % 3 == 0) At(kPartyLists)[(h >> 16) % 6] = static_cast<unsigned char>(h >> 20);
+    if (h % 2) At(Cond_Flags_addr + 0xd1)[0] = static_cast<unsigned char>(h >> 8);
+    if (h % 3 == 0) At(Cond_Flags_addr + 0xd2)[(h >> 16) % 6] = static_cast<unsigned char>(h >> 20);
     if (h % 5 == 0) Field_MemberCount = static_cast<unsigned char>(h >> 24);
 }
 unsigned char __cdecl StubPartyJoin(unsigned member) {
-    Record(11, member, At(kPartyFlags)[0], Field_MemberCount);
+    Record(11, member, At(Cond_Flags_addr + 0xd1)[0], Field_MemberCount);
     const std::uint32_t h = Hash();
-    if (h % 3 == 0) At(kPartyLists)[(h >> 8) % 6] = static_cast<unsigned char>(h >> 12);
+    if (h % 3 == 0) At(Cond_Flags_addr + 0xd2)[(h >> 8) % 6] = static_cast<unsigned char>(h >> 12);
     if (h % 5 == 0) Field_MemberCount = static_cast<unsigned char>(h >> 20);
     return static_cast<unsigned char>(h >> 24);
 }
@@ -248,7 +248,7 @@ const Region kRegions[] = {
     {Address(&MoveScript_F3Divisor), 2},
     {Address(&Game_AreaNumber), 4},             // with MoveScript_FAWord after it
     {Address(&Field_Kind2Z), 8},                // and Field_Kind2X
-    {kSavedSprite, 4},
+    {MapView_CornerPtr_addr, 4},
     {kPartyFlags, 7},                           // and both party lists
     {Address(&Field_MemberCount), 1},
     {Address(&Cond_ByteFA), 0x12},              // 0x8034E0..0x8034F1: Field_StatusBits, MoveScript_Var7, Cond_ByteFD
@@ -280,7 +280,7 @@ void Capture(State& s) {
     std::memcpy(s.alt, g_alt, sizeof s.alt);
     s.flags = g_flags;
     s.current = Sprite_Current;
-    std::memcpy(&s.flags_ptr, At(kFlagsPtr), 4);
+    std::memcpy(&s.flags_ptr, At(AreaW0c_FlagRow_addr), 4);
     std::memcpy(s.log, g_log, sizeof s.log);
     s.log_n = g_log_n;
 }
@@ -293,7 +293,7 @@ void Apply(const State& s) {
     std::memcpy(g_alt, s.alt, sizeof g_alt);
     g_flags = s.flags;
     Sprite_Current = s.current;
-    std::memcpy(At(kFlagsPtr), &s.flags_ptr, 4);
+    std::memcpy(At(AreaW0c_FlagRow_addr), &s.flags_ptr, 4);
     std::memset(g_log, 0, sizeof g_log);
     g_log_n = 0;
 }

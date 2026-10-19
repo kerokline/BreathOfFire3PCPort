@@ -35,6 +35,7 @@
 #include "game/boss_sc_callees.h"
 #include "game/cheats.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -49,14 +50,18 @@ using move_script::SetLong;
 using move_script::SetWord;
 using move_script::Word;
 
-constexpr U kCurrentEnemy = 0x939AD8;
-constexpr U kHookEnd = 0x904B64, kHookExit = 0x904B68, kHookEvent = 0x904B6C;
-constexpr U kPacketNext = 0x7E0670;
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
+// kHookExit: now BattleHook_Exit (symbols.toml).
+// kHookEvent: now BattleHook_Event (symbols.toml).
+// kHookEnd: now BattleHook_End (symbols.toml).
+// kPacketNext: now Gfx_PacketNext (symbols.toml).
 
 unsigned char& B(U address) { return At(address)[0]; }
-unsigned char* Enemy() { return At(static_cast<U>(Long(At(kCurrentEnemy)))); }
-unsigned char* Packet() { return At(static_cast<U>(Long(At(kPacketNext)))); }
-std::int32_t S16(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
+unsigned char* Enemy() { return At(BattleE3_CurrentEnemy); }
+records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
+// Sprite_Current: the boss enemy in its kind's handlers, the slot in an effect task.
+records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sprite_Current); }
+unsigned char* Packet() { return Gfx_PacketNext; }
 U L(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void PutFloat(unsigned char* p, U v) {
     const float f = static_cast<float>(static_cast<std::int32_t>(v));   // fild / fstp: nearest
@@ -65,17 +70,17 @@ void PutFloat(unsigned char* p, U v) {
 
 // The three hooks a set-up stores (BattleHook_End / _Exit / _Event).
 void StoreHooks(U end, U exit, U event) {
-    SetLong(At(kHookEnd), static_cast<std::int32_t>(end));
-    SetLong(At(kHookExit), static_cast<std::int32_t>(exit));
-    SetLong(At(kHookEvent), static_cast<std::int32_t>(event));
+    BattleHook_End = static_cast<std::int32_t>(end);
+    BattleHook_Exit = static_cast<std::int32_t>(exit);
+    BattleHook_Event = static_cast<std::int32_t>(event);
 }
 
 // A kind's entrance: 0x939AD8's +0xFC (its animation bytes), +0xF4 (its hook)
 // and +0xF8, in that order, 0x939AD8 read before each (no call between).
 void StoreKindTables(U fc, U f4, U f8) {
-    SetLong(Enemy() + 0xFC, static_cast<std::int32_t>(fc));
-    SetLong(Enemy() + 0xF4, static_cast<std::int32_t>(f4));
-    SetLong(Enemy() + 0xF8, static_cast<std::int32_t>(f8));
+    EnemyRec()->anim_table = static_cast<std::int32_t>(fc);
+    EnemyRec()->event_hook = static_cast<std::int32_t>(f4);
+    EnemyRec()->cue_table = static_cast<std::int32_t>(f8);
 }
 
 using Entry = U (__cdecl*)(U);
@@ -123,7 +128,7 @@ unsigned char* Actor(const char* who, unsigned tag) {
 // then Msg_OpenScript(line).
 void Line(unsigned char action, unsigned short line) {
     B(at::kAction) = action;
-    B(at::kMsgPass) = 2;
+    BossSa_WindowPass = 2;
     BH_CALL(Msg_OpenScript)(line);
 }
 
@@ -133,7 +138,7 @@ void Line(unsigned char action, unsigned short line) {
 // Msg_SystemPtr(0x25)).
 void NameBanner() {
     BH_CALL(Battle_OpenMsgWindow)();
-    const unsigned n = B(at::kBannerChar);
+    const unsigned n = MoveScript_EffectState[1];
     BH_CALL(Str_CopyN)(reinterpret_cast<char*>(At(bof3::addr::Text_Records)),
                        reinterpret_cast<const char*>(At(at::kCharRecords + n * at::kCharStride)), 8);
     const unsigned char* const text = BH_CALL(Msg_SystemPtr)(0x25);
@@ -143,7 +148,7 @@ void NameBanner() {
 // The end hooks' common shape: on the win (0x904AE8 bit 1) the move-script
 // counter byte 0x903848 = scene and the end phase's step 1, else step 2.
 void EndByWin(unsigned char scene) {
-    if (B(at::kBattleEnd) & 2) {
+    if (BattleActions_BattleEnd & 2) {
         B(at::kMoveCounter) = scene;
         BH_AT(Handler, at::kEndWin)();
         return;
@@ -193,7 +198,7 @@ extern "C" unsigned long __cdecl BossAmalgam_Dispatch(unsigned long through) {
 extern "C" unsigned char __cdecl BossAmalgam_Enter(void) {
     StoreKindTables(0x64CBC4, bof3::addr::BossAmalgam_Hook, 0x64CBD0);
     BH_AT(void (__cdecl*)(unsigned char*, U), at::kSlotStart)(Sprite_Current, 0x64CC14);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -217,7 +222,8 @@ extern "C" unsigned __cdecl BossAmalgam_DeathTick(void) {
     const unsigned char done = BH_CALL(Sprite_ScriptTick)();
     if (done == 0) return done;
     unsigned char* const s = Sprite_Current;
-    s[3] = 1;
+    auto* const cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    cur_enemy->state[2] = 1;
     return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
 }
 
@@ -232,14 +238,15 @@ extern "C" void __cdecl BossAmalgam_DeathStart(void) {
     BH_CALL(Gfx_ClearRect)(0x340, 0x100, 0x80, 0x100);
     BH_CALL(Sound_PlayById)(0x601);
     unsigned char* const s = Sprite_Current;
-    SetLong(s + 0x18, S16(s + 0x2E));
-    SetLong(s + 0x1C, S16(s + 0x30));
+    auto* const cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    SetLong(s + 0x18, static_cast<std::int32_t>(cur_enemy->screen_x));
+    SetLong(s + 0x1C, static_cast<std::int32_t>(cur_enemy->screen_y));
     SetLong(s + 0x20, 0);
-    SetWord(s + 0x2E, 0x32);
-    SetWord(s + 0x30, 0x41);
+    cur_enemy->screen_x = 0x32;
+    cur_enemy->screen_y = 0x41;
     s[0x24] |= 0x88;
     BH_CALL(BossAmalgam_DrawSprite)(Word(s + 0x20));
-    Sprite_Current[3] = 2;
+    ScEnemy()->state[2] = 2;
 }
 
 // original 0x439830: death step 2: BossAmalgam_DrawSprite(+0x20's word),
@@ -249,8 +256,9 @@ extern "C" void __cdecl BossAmalgam_DeathMelt(void) {
     BH_CALL(BossAmalgam_DrawSprite)(Word(Sprite_Current + 0x20));
     BH_CALL(BossAmalgam_DrawStreak)(Word(Sprite_Current + 0x20));
     unsigned char* const s = Sprite_Current;
+    auto* const cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
     SetLong(s + 0x20, static_cast<std::int32_t>(L(s + 0x20) + 2));
-    if (L(s + 0x20) == 0x56) s[3] = 3;
+    if (L(s + 0x20) == 0x56) cur_enemy->state[2] = 3;
 }
 
 // original 0x439870: death step 3: 0x454A80(Sprite_Current) - its field slots
@@ -259,13 +267,13 @@ extern "C" void __cdecl BossAmalgam_DeathMelt(void) {
 extern "C" void __cdecl BossAmalgam_DeathEnd(void) {
     BH_AT(void (__cdecl*)(unsigned char*), at::kSlotsReleaseFor)(Sprite_Current);
     BH_CALL(Battle_EnemyDefeated)();
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x110, static_cast<std::int32_t>(L(e + 0x110) | 0x1000));
-    unsigned char* const s = Sprite_Current;
-    s[0] &= 0xBF;
-    s[1] = 3;
-    s[2] = 0;
-    s[3] = 0;
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_110 = static_cast<std::int32_t>(static_cast<U>(enemy_rec->flags_110) | 0x1000);
+    auto* const cur_enemy = ScEnemy();
+    cur_enemy->flags &= 0xBF;
+    cur_enemy->state[0] = 3;
+    cur_enemy->state[1] = 0;
+    cur_enemy->state[2] = 0;
 }
 
 // original 0x4398D0: the +0xF4 hook: by the word's low byte through
@@ -347,10 +355,10 @@ extern "C" void __cdecl Boss12_Setup(void) { StoreHooks(bof3::addr::Boss12_End, 
 // original 0x439900: won (0x904AE8 bit 1, the byte read once): 0x903848 =
 // 0x23, 0x904AE8 = the byte | 8, a tail jump to 0x446DE0; else to 0x446E00.
 extern "C" void __cdecl Boss12_End(void) {
-    const unsigned char end = B(at::kBattleEnd);
+    const unsigned char end = BattleActions_BattleEnd;
     if (end & 2) {
         B(at::kMoveCounter) = 0x23;
-        B(at::kBattleEnd) = static_cast<unsigned char>(end | 8);
+        BattleActions_BattleEnd = static_cast<unsigned char>(end | 8);
         BH_AT(Handler, at::kEndWin)();
         return;
     }
@@ -369,10 +377,10 @@ namespace {
 void BalioSunderEnter(U fc, U f4, U f8, unsigned short bank) {
     StoreKindTables(fc, f4, f8);
     Sprite_Current[1] = 2;
-    if (B(at::kFight) == 0xD) {
+    if (BattleActions_EventBattle == 0xD) {
         SetWord(Enemy() + 0xD0, 0xFFFF);
-        SetWord(Enemy() + 0xB0, 0xFFFF);
-        SetWord(Enemy() + 0xA4, 0xFFFF);
+        EnemyRec()->max_hp = 0xFFFF;
+        EnemyRec()->hp = 0xFFFF;
     }
     BH_CALL(Sprite_SetAnimationBank)(bank);
     BH_CALL(Sprite_SetAnimation)(0);
@@ -381,8 +389,8 @@ void BalioSunderEnter(U fc, U f4, U f8, unsigned short bank) {
 // Kinds 13 and 14's hit hooks' floor (Balio's and Sunder's, fights 13 and 16):
 // 0x939AD8's HP +0xA4 at 0 made 1.
 void HpFloor() {
-    unsigned char* const e = Enemy();
-    if (Word(e + 0xA4) == 0) SetWord(e + 0xA4, 1);
+    auto* const enemy_rec = EnemyRec();
+    if (enemy_rec->hp == 0) enemy_rec->hp = 1;
 }
 }  // namespace
 
@@ -405,16 +413,16 @@ extern "C" unsigned long __cdecl BossBalio_Hook(unsigned long word) { return Hoo
 // call); then (on that byte) bit 4 without bit 5 - action 3, line 0x29, bit 5
 // set. The word is not read.
 extern "C" void __cdecl BossBalio_HookAct(unsigned) {
-    if (B(at::kFight) != 0x10) return;
-    unsigned char bits = B(at::kFightFlags);
+    if (BattleActions_EventBattle != 0x10) return;
+    unsigned char bits = BossSe_Script;
     if ((bits & 1) && !(bits & 2)) {
         Line(0, 0x26);
-        bits = static_cast<unsigned char>(B(at::kFightFlags) | 2);
-        B(at::kFightFlags) = bits;
+        bits = static_cast<unsigned char>(BossSe_Script | 2);
+        BossSe_Script = bits;
     }
     if ((bits & 0x10) && !(bits & 0x20)) {
         Line(3, 0x29);
-        B(at::kFightFlags) = static_cast<unsigned char>(B(at::kFightFlags) | 0x20);
+        BossSe_Script = static_cast<unsigned char>(BossSe_Script | 0x20);
     }
 }
 
@@ -439,18 +447,18 @@ extern "C" unsigned long __cdecl BossSunder_Hook(unsigned long word) { return Ho
 // again after the call); then bit 3 without bit 4 - action 0, line 0x28, bit
 // 4 set (likewise); then with bit 5 - action 3, line 0x2A, no bit set.
 extern "C" void __cdecl BossSunder_HookAct(unsigned) {
-    if (B(at::kFight) != 0x10) return;
-    unsigned char bits = B(at::kFightFlags);
+    if (BattleActions_EventBattle != 0x10) return;
+    unsigned char bits = BossSe_Script;
     if (!(bits & 1)) return;
     if (!(bits & 4)) {
         Line(0, 0x25);
-        bits = static_cast<unsigned char>(B(at::kFightFlags) | 4);
-        B(at::kFightFlags) = bits;
+        bits = static_cast<unsigned char>(BossSe_Script | 4);
+        BossSe_Script = bits;
     }
     if ((bits & 8) && !(bits & 0x10)) {
         Line(0, 0x28);
-        bits = static_cast<unsigned char>(B(at::kFightFlags) | 0x10);
-        B(at::kFightFlags) = bits;
+        bits = static_cast<unsigned char>(BossSe_Script | 0x10);
+        BossSe_Script = bits;
     }
     if (bits & 0x20) Line(3, 0x2A);
 }
@@ -458,9 +466,9 @@ extern "C" void __cdecl BossSunder_HookAct(unsigned) {
 // original 0x439DB0: hook entry 1: in fight 16 with the acting actor 8,
 // 0x939AD8's word +0x108 at 0 made 1; then HP 0 made 1.
 extern "C" void __cdecl BossSunder_HookHit(unsigned) {
-    if (B(at::kFight) == 0x10 && B(at::kActor) == 8) {
-        unsigned char* const e = Enemy();
-        if (Word(e + 0x108) == 0) SetWord(e + 0x108, 1);
+    if (BattleActions_EventBattle == 0x10 && B(at::kActor) == 8) {
+        auto* const enemy_rec = EnemyRec();
+        if (static_cast<std::uint16_t>(enemy_rec->hp_change) == 0) enemy_rec->hp_change = 1;
     }
     HpFloor();
 }
@@ -478,8 +486,8 @@ extern "C" unsigned long __cdecl BossNina_Dispatch(unsigned long through) {
 // BossNina_F8), +8 = 1, +1 = 2.
 extern "C" void __cdecl BossNina_Enter(void) {
     StoreKindTables(0x64CCA0, bof3::addr::BossNina_Hook, 0x64CCC8);
-    Sprite_Current[8] = 1;
-    Sprite_Current[1] = 2;
+    ScEnemy()->layout = 1;
+    ScEnemy()->state[0] = 2;
 }
 
 // original 0x439E70: BossNina_Steps 9: by +2 through BossNina_WalkSteps (3:
@@ -494,7 +502,7 @@ extern "C" void __cdecl BossNina_WalkStart(void) {
     BH_CALL(Sprite_SetAnimationBank)(0xF9);
     Sprite_Current[0x24] &= 0xFE;
     BH_CALL(Sprite_SetAnimation)(2);
-    Sprite_Current[2] += 1;
+    ScEnemy()->state[1] += 1;
 }
 
 // original 0x439EC0: with +0 bit 7, +2 up by one (eax the sprite); else the
@@ -502,11 +510,12 @@ extern "C" void __cdecl BossNina_WalkStart(void) {
 // the answer.
 extern "C" unsigned __cdecl BossNina_WalkStep(void) {
     unsigned char* const s = Sprite_Current;
-    if (s[0] & 0x80) {
-        s[2] += 1;
+    auto* const cur_enemy = reinterpret_cast<records::BattleEnemy*>(s);
+    if (cur_enemy->flags & 0x80) {
+        cur_enemy->state[1] += 1;
         return static_cast<U>(reinterpret_cast<std::uintptr_t>(s));
     }
-    SetLong(s + 0x34, static_cast<std::int32_t>(L(s + 0x34) + 0x8000));
+    cur_enemy->x = static_cast<std::int32_t>(static_cast<U>(cur_enemy->x) + 0x8000);
     BH_CALL(Sprite_ScriptTick)();
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -519,21 +528,21 @@ extern "C" unsigned long __cdecl BossNina_Hook(unsigned long word) { return Hook
 // while the wait count 0x675F00 is not 0, action 0 and the count down; at 0,
 // action 1, the target 4, 0x904AE2 down by one and the fight's bit 0 set.
 extern "C" void __cdecl BossNina_HookAct(unsigned) {
-    if (B(at::kFightFlags) & 1) {
+    if (BossSe_Script & 1) {
         B(at::kAction) = 3;
         return;
     }
-    const unsigned char wait = B(at::kWaitTurns);
+    const unsigned char wait = BossSc_WaitTurns;
     if (wait) {
         B(at::kAction) = 0;
-        B(at::kWaitTurns) = static_cast<unsigned char>(wait - 1);
+        BossSc_WaitTurns = static_cast<unsigned char>(wait - 1);
         return;
     }
-    const unsigned char count = B(at::kCount4AE2);
+    const unsigned char count = BossSe_RoundSlot;
     B(at::kAction) = 1;
     B(at::kTarget) = 4;
-    B(at::kCount4AE2) = static_cast<unsigned char>(count - 1);
-    B(at::kFightFlags) = static_cast<unsigned char>(B(at::kFightFlags) | 1);
+    BossSe_RoundSlot = static_cast<unsigned char>(count - 1);
+    BossSe_Script = static_cast<unsigned char>(BossSe_Script | 1);
 }
 
 // original 0x439F50: hook entry 1: the name banner (NameBanner above); the
@@ -542,12 +551,12 @@ extern "C" void __cdecl BossNina_HookAct(unsigned) {
 // fight's bit 6 set.
 extern "C" void __cdecl BossNina_HookHit(unsigned) {
     NameBanner();
-    B(at::kWaitTurns) = 0;
+    BossSc_WaitTurns = 0;
     BH_CALL(Field_MemberSprite)(1, 1);
-    Sprite_Current[0x29] = 4;
-    SetLong(Enemy() + 0xFC, 0x64CCAC);
-    BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
-    B(at::kFightFlags) = static_cast<unsigned char>(B(at::kFightFlags) | 0x40);
+    ScEnemy()->ot_slot = 4;
+    EnemyRec()->anim_table = 0x64CCAC;
+    BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(ScEnemy()->layout + 4));
+    BossSe_Script = static_cast<unsigned char>(BossSe_Script | 0x40);
 }
 
 // ============================================================================
@@ -558,7 +567,7 @@ extern "C" void __cdecl BossNina_HookHit(unsigned) {
 // Event = Boss16_Event; the wait count 0x675F00 = (Rand() & 2) + 8.
 extern "C" void __cdecl Boss16_Setup(void) {
     StoreHooks(bof3::addr::Boss16_End, bof3::addr::Boss16_Exit, bof3::addr::Boss16_Event);
-    B(at::kWaitTurns) = static_cast<unsigned char>((BH_CALL(Rand)() & 2) + 8);
+    BossSc_WaitTurns = static_cast<unsigned char>((BH_CALL(Rand)() & 2) + 8);
 }
 
 // original 0x43A060: the event hook, al 0 on every path, by the phase code's
@@ -573,24 +582,24 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
     switch (code & 0xFF) {
     case 0:
         if ((L(At(at::kEnemy0 + at::kEnemyStatus)) & 0x2000) || (L(At(at::kEnemy1 + at::kEnemyStatus)) & 0x2000))
-            B(at::kFightFlags) |= 8;
+            BossSe_Script |= 8;
         return 0;
     case 1:
-        if (B(at::kActor) != 0 || !(B(at::kTarget) & 0x40) || (B(at::kFightFlags) & 1)) return 0;
+        if (B(at::kActor) != 0 || !(B(at::kTarget) & 0x40) || (BossSe_Script & 1)) return 0;
         Line(0, 0x27);
         return 0;
     case 2:
-        if (B(at::kFightFlags) & 0x40) return 0;
-        if (B(at::kWaitTurns) != 0) return 0;
+        if (BossSe_Script & 0x40) return 0;
+        if (BossSc_WaitTurns != 0) return 0;
         NameBanner();
-        B(at::kWaitTurns) = 0;
+        BossSc_WaitTurns = 0;
         Sprite_Current = At(at::kEnemy2);
-        SetLong(At(kCurrentEnemy), static_cast<std::int32_t>(at::kEnemy2));
+        BattleE3_CurrentEnemy = static_cast<std::int32_t>(at::kEnemy2);
         BH_CALL(Field_MemberSprite)(1, 1);
-        SetLong(Enemy() + 0xFC, 0x64CCAC);
+        EnemyRec()->anim_table = 0x64CCAC;
         Sprite_Current[0x29] = 4;
         BH_CALL(Sprite_SetAnimation)(static_cast<unsigned char>(Sprite_Current[8] + 4));
-        B(at::kFightFlags) = static_cast<unsigned char>(B(at::kFightFlags) | 0x40);
+        BossSe_Script = static_cast<unsigned char>(BossSe_Script | 0x40);
         return 0;
     default:
         return 0;
@@ -609,13 +618,13 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
 // back to 1, so Battle_EnemyDefeated - where the multiplier otherwise
 // applies - never adds theirs, and this store replaces whatever it did add.
 extern "C" void __cdecl Boss16_End(void) {
-    if (B(at::kBattleEnd) & 2) {
+    if (BattleActions_BattleEnd & 2) {
         const U sum = (static_cast<U>(Word(At(at::kEnemy1 + at::kEnemyExp))) + Word(At(at::kEnemy0 + at::kEnemyExp))) * Cheats_ExpMultiplier();
         B(at::kMoveCounter) = 0x14;
-        SetLong(At(at::kBattleExp), static_cast<std::int32_t>(sum));
+        BattleFlow_ExpTotal = static_cast<std::int32_t>(sum);
         BH_AT(Handler, at::kEndWin)();
     } else {
-        if (B(at::kFightFlags) & 0x40) {
+        if (BossSe_Script & 0x40) {
             Sprite_Current = At(at::kEnemy2);
             BH_CALL(Sprite_SetAnimationBank)(0xF9);
             Sprite_Current[0x24] &= 0xFE;
@@ -625,8 +634,8 @@ extern "C" void __cdecl Boss16_End(void) {
         B(at::kMoveCounter) = 0x50;
         BH_AT(Handler, at::kEndThird)();
     }
-    SetWord(At(at::kSaveWord), Word(At(at::kSaveWord)) & 0xFF7F);
-    B(at::kFieldByte131) = 0x31;
+    Field_ScriptFlags = Field_ScriptFlags & 0xFF7F;
+    Music_Track = 0x31;
 }
 
 // original 0x43A230: the exit hook. Unless won: (without the fight's bit 0)
@@ -638,13 +647,13 @@ extern "C" void __cdecl Boss16_End(void) {
 // Scenario_CallA(1), member 1's +0 |= 0x40, and 0x92BF18 = 6, or 7 when
 // 0x903848 (read after the call) is not 0x14.
 extern "C" void __cdecl Boss16_Exit(void) {
-    if (!(B(at::kBattleEnd) & 2)) {
-        if (!(B(at::kFightFlags) & 1)) {
+    if (!(BattleActions_BattleEnd & 2)) {
+        if (!(BossSe_Script & 1)) {
             BH_CALL(BossActor_ClearBit40)(2);
             Sprite_Current = Actor("Boss16_Exit", 2);
             BH_CALL(Sprite_SetAnimationBank)(0xF9);
             Sprite_Current[0x24] &= 0xFE;
-            if (B(at::kFightFlags) & 0x40)
+            if (BossSe_Script & 0x40)
                 BH_CALL(Sprite_SetAnimation)(1);
             else
                 BH_CALL(Sprite_SetAnimationAt)(5, 4);
@@ -664,8 +673,8 @@ extern "C" void __cdecl Boss16_Exit(void) {
         SetWord(Sprite_Current + 0x5A, Word(At(at::kEnemy0 + at::kEnemyPose + 2)));
     }
     BH_CALL(Scenario_CallA)(1);
-    B(at::kMember1Flags) |= 0x40;
-    B(at::kLeaderPick) = static_cast<unsigned char>(B(at::kMoveCounter) != 0x14 ? 7 : 6);
+    Field_Members[4] |= 0x40;
+    BossH_LeaderPick = static_cast<unsigned char>(B(at::kMoveCounter) != 0x14 ? 7 : 6);
 }
 
 // ============================================================================
@@ -681,7 +690,7 @@ extern "C" unsigned long __cdecl BossRocky_Dispatch(unsigned long through) {
 // BossRocky_F8), +1 = 2, a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossRocky_Enter(void) {
     StoreKindTables(0x64CD90, bof3::addr::BossRocky_Hook, 0x64CD9C);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -698,9 +707,9 @@ extern "C" unsigned long __cdecl BossSample8_Dispatch(unsigned long through) {
 // jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossSample8_Enter(void) {
     StoreKindTables(0x64CD90, bof3::addr::BossSample8_Hook, 0x64CDA4);
-    unsigned char* const e = Enemy();
-    SetLong(e + 0x114, static_cast<std::int32_t>(L(e + 0x114) | 8));
-    Sprite_Current[1] = 2;
+    auto* const enemy_rec = EnemyRec();
+    enemy_rec->flags_114 = static_cast<std::int32_t>(static_cast<U>(enemy_rec->flags_114) | 8);
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 
@@ -741,7 +750,7 @@ extern "C" unsigned long __cdecl BossPooch_Dispatch(unsigned long through) {
 // BossPooch_F8), +1 = 2, a tail jump to Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossPooch_Enter(void) {
     StoreKindTables(0x64CE24, bof3::addr::BossPooch_Hook, 0x64CE30);
-    Sprite_Current[1] = 2;
+    ScEnemy()->state[0] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
 

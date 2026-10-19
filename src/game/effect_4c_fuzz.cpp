@@ -286,8 +286,8 @@ const std::uint8_t kKinds[] = {0x8D, 0x8E, 0x8F, 0x90, 0x93, 0x99};
 // 0x90's tag (0x676290..0x676297), and kind 0x8E's two pools past the
 // standard 0x644 bytes at EffectKind30_Shards (to 0x92E580).
 const sh::Region kRegions[] = {
-    {at::kStage, 8},
-    {sh::at::kShards + sh::at::kShardsSize, at::kShardEnd - (sh::at::kShards + sh::at::kShardsSize)},
+    {Effect4c_Stage_addr, 8},
+    {EffectKind30_Shards_addr + sh::at::kShardsSize, at::kShardEnd - (EffectKind30_Shards_addr + sh::at::kShardsSize)},
 };
 
 // --- the seed ------------------------------------------------------------------------
@@ -384,7 +384,7 @@ void Seed(unsigned k) {
         SetWord(s + 0x30, PickOf(0, 0, 1, 0xFFFF, sh::Next()));
         break;
     case k90Start:
-        SetLong(Mem(at::kTag), static_cast<std::int32_t>(PickOf(0, 0, 1, 0xFF, 0xFFFFFFFFu, sh::Next())));
+        SetLong(Mem(Effect4c_Tag_addr), static_cast<std::int32_t>(PickOf(0, 0, 1, 0xFF, 0xFFFFFFFFu, sh::Next())));
         break;
     case k90Emit:
     case k90Fade:
@@ -468,9 +468,9 @@ void Disturb(U h) {
     switch (h % 8) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: s[0x5D + v % 3] = static_cast<unsigned char>(v >> 2); break;
-    case 2: Mem(at::kStage)[0] = static_cast<unsigned char>(v % at::kStageCount); break;
+    case 2: Mem(Effect4c_Stage_addr)[0] = static_cast<unsigned char>(v % at::kStageCount); break;
     case 3: s[6] = static_cast<unsigned char>(v % 4); break;
-    case 4: SetLong(Mem(at::kTag), static_cast<std::int32_t>(v % 3)); break;
+    case 4: SetLong(Mem(Effect4c_Tag_addr), static_cast<std::int32_t>(v % 3)); break;
     case 5: SetWord(s + 0x2E + 2 * (v & 1), (v >> 1) & 0x1FF); break;
     case 6: SetLong(s + 0x1C, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x14)) + ((v >> 1) % 0x14) * 0x100000u)); break;
     case 7: SetLong(s + 0xC + 4 * (v & 1), static_cast<std::int32_t>(v >> 1)); break;

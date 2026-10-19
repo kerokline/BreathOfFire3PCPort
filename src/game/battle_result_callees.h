@@ -30,31 +30,31 @@ namespace battle_result {
 namespace at {
 
 // The battle's globals (PSX 0x801462E0..): the result's sub-phases.
-constexpr std::uint32_t kPhase2 = 0x904AA3;       // u8: the result phase's step (0x64AFA0, 0x431910 dispatches it)
-constexpr std::uint32_t kStep = 0x904AA4;         // u8: the step within it (0x64AFAC / 0x64AFC0 / 0x64AFC8)
-constexpr std::uint32_t kMember = 0x904AA5;       // u8: the party slot the level-up search is at
-constexpr std::uint32_t kRoster = 0x904AA7;       // u8: that slot's roster index (0x4469D0's answer)
-constexpr std::uint32_t kMode1 = 0x904AA1;        // u8: the battle's top-level mode bytes, 4 / 0 / 0 / 0 after the award
-constexpr std::uint32_t kMode2 = 0x904AA2;
+// kPhase2: now BattleE4_Step3 (symbols.toml). u8: the result phase's step (0x64AFA0, 0x431910 dispatches it)
+// kStep: now BattleE4_Step4 (symbols.toml). u8: the step within it (0x64AFAC / 0x64AFC0 / 0x64AFC8)
+// kMember: now BossSb_Countdown (symbols.toml). u8: the party slot the level-up search is at
+// kRoster: now BattleE1_Roster (symbols.toml). u8: that slot's roster index (0x4469D0's answer)
+// kMode1: now BattleActions_Step (symbols.toml). u8: the battle's top-level mode bytes, 4 / 0 / 0 / 0 after the award
+// kMode2: now BattleE4_Step2 (symbols.toml).
 constexpr std::uint32_t kPartyCount = 0x904AB0;   // u8: party slots in the fight (PSX 0x801462EC)
 constexpr std::uint32_t kDropCount = 0x904AE7;    // u8 (PSX 0x80146323)
 constexpr std::uint32_t kBattleEnd = 0x904AE8;    // u8: |= 0x20 when a level-up was found
-constexpr std::uint32_t kExpTotal = 0x904AEC;     // dword (PSX 0x80146328)
-constexpr std::uint32_t kZennyTotal = 0x904AF0;   // dword (PSX 0x8014632C)
+// kExpTotal: now BattleFlow_ExpTotal (symbols.toml). dword (PSX 0x80146328)
+// kZennyTotal: now BattleFlow_ZennyTotal (symbols.toml). dword (PSX 0x8014632C)
 constexpr std::uint32_t kDropItems = 0x904AF4;    // u16 x 16: category << 8 | item (PSX 0x80146330)
 constexpr std::uint32_t kDropCounts = 0x904B14;   // u8 x 16 (PSX 0x80146350)
 constexpr std::uint32_t kTickStep = 0x904B70;     // u16: EXP / zenny counted per frame (PSX 0x801463AC)
-constexpr std::uint32_t kBankIndex = 0x904EFC;    // u16: Snd_LoadBankFile(this + 3) after the setup
-constexpr std::uint32_t kPartySet = 0x90412C;     // u8: PartySet_Select's current set (bit 7 its mode-0 mark)
-constexpr std::uint32_t kPartyZenny = 0x904058;   // dword: the party's zenny (Zenny_Add 0x591BE0 adds into it)
+// kBankIndex: now Game_AreaNumber (symbols.toml). u16: Snd_LoadBankFile(this + 3) after the setup
+// kPartySet: now AreaW0b_PartySet (symbols.toml). u8: PartySet_Select's current set (bit 7 its mode-0 mark)
+// kPartyZenny: now Party_Zenny (symbols.toml). dword: the party's zenny (Zenny_Add 0x591BE0 adds into it)
 constexpr std::uint32_t kMsgCurrent = 0x93B8E4;   // const unsigned char*: the battle message Msg_SystemPtr gave
 // The text records (Text_Records, 32 bytes each): record 0 the number the
 // messages substitute, record 2 the windows' scratch.
 constexpr std::uint32_t kText0 = 0x904CE0;
 constexpr std::uint32_t kText2 = 0x904D20;
 // Input (docs/input-script.md): the held and the newly pressed buttons.
-constexpr std::uint32_t kHeld = 0x7E1BE8;         // u16 Input_Held
-constexpr std::uint32_t kPressed = 0x7E1BEC;      // u16 Input_Pressed
+// kHeld: now Input_Held (symbols.toml). u16 Input_Held
+// kPressed: now Input_Pressed (symbols.toml). u16 Input_Pressed
 // The party's working records (ObjTrio + 0x80, 0x14C each): +0 the name,
 // +9 the character id, +0xA the level.
 constexpr std::uint32_t kMembers = 0x802DC0;
@@ -64,17 +64,17 @@ constexpr std::uint32_t kMemberSize = 0x14C;
 // +9 the height. Slot 1 is the EXP / zenny window, slot 0x15 the drops'.
 constexpr std::uint32_t kWindows = 0x803160;
 constexpr std::uint32_t kWindowSize = 36;
-constexpr std::uint32_t kWindowCurrent = 0x905B84;   // the record the window task is running
+// kWindowCurrent: now BattleWinStates_Current (symbols.toml). the record the window task is running
 // Constant data in .data / .rdata.
 constexpr std::uint32_t kFormatD = 0x5E10C0;      // "%d"
-constexpr std::uint32_t kFormat2d = 0x64D3EC;     // "%2d"
+// kFormat2d: now Boss26Fx_CountFormat (symbols.toml). "%2d"
 constexpr std::uint32_t kFormat6d = 0x66AF34;     // "%6d"
 constexpr std::uint32_t kFormat7d = 0x64ADDC;     // "%7d"
 constexpr std::uint32_t kZennyUnit = 0x66A31C;    // the text after the zenny amount
 // The dispatch tables (symbols.toml [[data]]).
 constexpr std::uint32_t kExpSteps = 0x64AFAC;     // 5 entries, by 0x904AA4, under 0x431920 (group CC's stub)
-constexpr std::uint32_t kLevelUpSteps = 0x64AFC0; // 2 entries, by 0x904AA4, BattleResult_LevelUpStep's
-constexpr std::uint32_t kRewardSteps = 0x64AFC8;  // 4 entries, by 0x904AA4, BattleResult_RewardStep's
+// kLevelUpSteps: now BattleResult_LevelUpSteps (symbols.toml). 2 entries, by 0x904AA4, BattleResult_LevelUpStep's
+// kRewardSteps: now BattleResult_RewardSteps (symbols.toml). 4 entries, by 0x904AA4, BattleResult_RewardStep's
 
 }  // namespace at
 

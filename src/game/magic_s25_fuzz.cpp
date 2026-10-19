@@ -302,17 +302,19 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kCasterRecord = 0x904B3C, kSideCorner = 0x904AAC,
-                        kSpriteBank = 0x9039D8;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kCasterRecord: now MagicS23_ActorSprite (symbols.toml).
+// kSpriteBank: now BattleE2_AnimSet (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kSideCorner = 0x904AAC;
 
 mh::Region g_regions[] = {
     {0x7E0670, 4},                       // Gfx_PacketNext
     {0, kPrimBytes},                     // g_prims (filled in at start-up)
-    {kVertex, 0x20},                     // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},     // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                    // 0x903850.., Scratch_Swap at +0xC
     {0x905E60, 8},                       // Field_Kind2Z, Field_Kind2X
     {0x905B89, 1},                       // Gfx_BufferIndex
-    {kSpriteBank, 4},                    // the sprite bank pointer SpellRagnarok_SpriteChild swaps
+    {BattleE2_AnimSet_addr, 4},          // the sprite bank pointer SpellRagnarok_SpriteChild swaps
     {0x80B980, 0x20},                    // the CLUT strips SpellRagnarok_Start copies
     {0x80E980, 0x200},
     {0x80F980, 0x20},
@@ -348,7 +350,7 @@ std::uint32_t KeepFacing(const std::uint32_t*, std::uint32_t answer) {
 // SpellRagnarok_SpriteChild switches the sprite bank pointer around its
 // phase and Sprite_UpdateScreen: what the update would draw with.
 std::uint32_t NoteBank(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(static_cast<std::uint32_t>(move_script::Long(mh::Mem(kSpriteBank))));
+    mh::Note(static_cast<std::uint32_t>(move_script::Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 
@@ -357,7 +359,7 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2:
         // the dword at 0x903850 is SpellConfuse_DrawRays' loop counter: only
         // its low byte, and small, or the loop runs for ever
@@ -382,7 +384,7 @@ void Near(unsigned char& b, unsigned before) {
 void Seed(unsigned k) {
     unsigned char* const sc = Sprite_Current;
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kCasterRecord, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     if (mh::Often()) mh::Mem(kSideCorner)[0] = Byte(mh::Next() % 4);
     if (mh::Often()) Gfx_BufferIndex = Byte(mh::Next() & 1);
     if (mh::Often()) sc[8] = Byte(mh::Next() % 4);

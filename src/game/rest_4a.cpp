@@ -28,12 +28,17 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_4a_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace at = rest_4a::at;
 using U = std::uint32_t;
@@ -53,16 +58,16 @@ unsigned char* Ptr(U a) { return reinterpret_cast<unsigned char*>(static_cast<st
 unsigned char* Rec(U i) { return At(at::kRecords + 8u * i); }
 unsigned char* Bld(U b) { return At(at::kBuildings + 8u * b); }
 unsigned char Trait(U i, U field) { return At(at::kRecordTraits + at::kTraitStride * i + field)[0]; }
-unsigned char* Pose(U object) { return At(at::kSpritePose + at::kSpriteStride * object); }
+unsigned char* Pose(U object) { return At(Sprite_Objects_addr + 0x88 + at::kSpriteStride * object); }
 unsigned char Count(U building) { return At(at::kResidentCounts + building)[0]; }
 
 // The event queue: kind at +0, the record at +1 (the levels and the area
 // queue write +0 only, in place).
 void QueueKindRecord(unsigned char kind, unsigned char record) {
-    const unsigned char n = At(at::kEventCount)[0];
+    const unsigned char n = Rest4b_BusyB;
     At(at::kEvents + 2u * n)[0] = kind;
     At(at::kEvents + 2u * n + 1)[0] = record;
-    At(at::kEventCount)[0] = static_cast<unsigned char>(n + 1);
+    Rest4b_BusyB = static_cast<unsigned char>(n + 1);
 }
 // The first record in use whose +1 is building + 1; 60 when none.
 unsigned char FirstOf(U building) {
@@ -103,9 +108,9 @@ unsigned char Percent(int r) {
 extern "C" unsigned char __cdecl Battle_AutoTargetCheck(unsigned actor) {
     const U flags = UL(at::kBattleFlags);
     if (!(flags & 0x4000)) return 1;
-    const unsigned char out = SH_CALL(Battle_ActorIsOut)((flags & 0xFFFFFF00u) | At(at::kForcedActor)[0]);
+    const unsigned char out = SH_CALL(Battle_ActorIsOut)((flags & 0xFFFFFF00u) | BattlePhases_B8B);
     if (out) return 1;
-    const unsigned char forced = At(at::kForcedActor)[0];
+    const unsigned char forced = BattlePhases_B8B;
     const auto a = static_cast<unsigned char>(actor);
     if (forced == a) return 1;
     if (a < 3) {
@@ -187,7 +192,7 @@ extern "C" unsigned char __cdecl Battle_RandomLiveEnemy(void) {
 // original 0x454260 (no PSX twin paired): 1 when the member's action word
 // (ObjTrio + 0x126 of the argument's low byte, unchecked) is 0xE or 0x128.
 extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
-    const unsigned short w = Word(At(at::kMemberAction + at::kMemberStride * (member & 0xFFu)));
+    const unsigned short w = Word(At(ObjTrio_addr + 0x126 + at::kMemberStride * (member & 0xFFu)));
     if (w == 0xE) return 1;
     return w == 0x128 ? 1 : 0;
 }
@@ -199,18 +204,18 @@ extern "C" unsigned char __cdecl Battle_MemberActionIs0E(unsigned member) {
 // the target 0x904B44 the answer.
 extern "C" void __cdecl Battle_MemberAutoFixed(unsigned member) {
     const U m = member & 0xFFu;
-    auto odds = static_cast<signed char>(At(at::kMemberOdds + at::kMemberStride * m)[0]);
+    auto odds = static_cast<signed char>(At(ObjTrio_addr + 0x142 + at::kMemberStride * m)[0]);
     if (odds > 5) odds = 5;
     const int r = SH_CALL(Rand)();
     const int roll = r % 20;
     unsigned char target;
-    if (roll < odds && At(at::kPartyPick)[0] != 1) {
+    if (roll < odds && BattleSprites_PartyPick != 1) {
         target = SH_CALL(Battle_RandomOtherMember)(member);
     } else {
         const int r2 = SH_CALL(Rand)();
         target = SH_CALL(Battle_DefaultTarget)((static_cast<U>(r2) & 0xFFFFFF00u) | static_cast<unsigned char>((r2 & 7) + 3));
     }
-    At(at::kMemberMode + at::kMemberStride * m)[0] = 1;
+    At(ObjTrio_addr + 0x125 + at::kMemberStride * m)[0] = 1;
     At(at::kAutoMode)[0] = 1;
     At(at::kTarget)[0] = target;
 }
@@ -312,31 +317,31 @@ extern "C" void __cdecl Field_SlotClutCopy(unsigned char* slot) {
 // placing the objects. The count is handed on as the original's dword whose
 // low byte it is (the callees read the byte).
 extern "C" void __cdecl CommuSim_AreaEnter(void) {
-    if (Game_AreaNumber == Word(At(at::kPrevArea))) {
+    if (Game_AreaNumber == AreaW2c_LastArea) {
         SH_CALL(CommuSim_PlaceObjects)();
         return;
     }
     const unsigned char n = CommuCount();
     SH_CALL(CommuSim_RollOffers)();
-    At(at::kRemovedCount)[0] = 0;
-    At(at::kSpawnCount)[0] = 0;
-    At(at::kEventCount)[0] = 0;
+    Rest4a_RemovedCount = 0;
+    Rest4b_BusyA = 0;
+    Rest4b_BusyB = 0;
     if (n == 0) {
         for (int k = 0; k < 3; ++k) SH_CALL(CommuSim_AddRecord)();
-        const U clock = UL(at::kClock);
+        const U clock = Rest4a_Clock;
         const unsigned short area = Game_AreaNumber;
-        SetUL(at::kClockA, 0);
-        SetUL(at::kStampGrow, clock);
-        SetUL(at::kStampShrink, clock);
-        SetUL(at::kStampMood, clock);
-        SetUL(at::kStampLevelLit, clock);
-        SetUL(at::kStampLevelDark, clock);
-        At(at::kMood)[0] = 0xA;
-        At(at::kLevelDark)[0] = 1;
-        At(at::kLevelLit)[0] = 0;
-        At(at::kSumA)[0] = 0;
-        At(at::kSumB)[0] = 0;
-        SetWord(At(at::kAreaSeen), area);
+        Rest4a_ClockA = 0;
+        Rest4a_StampGrow = clock;
+        Rest4a_StampShrink = clock;
+        Rest4a_StampMood = clock;
+        Rest4a_StampLevelLit = clock;
+        Rest4a_StampLevelDark = clock;
+        Rest4b_CountA = 0xA;
+        FieldE2_LevelA = 1;
+        Rest4a_LevelLit = 0;
+        FieldE2_BiasA = 0;
+        FieldE2_BiasB = 0;
+        Rest4a_AreaSeen = area;
         SH_CALL(CommuSim_PlaceObjects)();
         return;
     }
@@ -359,11 +364,11 @@ extern "C" void __cdecl CommuSim_AreaEnter(void) {
 // kind once; then the area seen is the area.
 extern "C" void __cdecl CommuSim_QueueAreas(void) {
     const unsigned short area = Game_AreaNumber;
-    if (area <= Word(At(at::kAreaSeen))) return;
+    if (area <= Rest4a_AreaSeen) return;
     int n = static_cast<int>((UL(at::kAreaSeen) & 0xFFFF) + 1);
     const int last = area;
     if (n <= last) {
-        unsigned char count = At(at::kEventCount)[0];
+        unsigned char count = Rest4b_BusyB;
         unsigned char seen = 0;
         for (; n <= last; ++n) {
             const unsigned char kind = At(at::kAreaKinds + static_cast<U>(n))[0];
@@ -381,9 +386,9 @@ extern "C" void __cdecl CommuSim_QueueAreas(void) {
                 }
             }
         }
-        At(at::kEventCount)[0] = count;
+        Rest4b_BusyB = count;
     }
-    SetWord(At(at::kAreaSeen), area);
+    Rest4a_AreaSeen = area;
 }
 
 // original 0x4555D0 (no PSX twin paired): population by mood. With mood
@@ -394,37 +399,37 @@ extern "C" void __cdecl CommuSim_QueueAreas(void) {
 // within 20; with mood 0 and above one record, (clock - the shrink stamp) / 20
 // removals down to one record, then the shrink stamp is the clock.
 extern "C" void __cdecl CommuSim_Population(unsigned count) {
-    const auto mood = static_cast<signed char>(At(at::kMood)[0]);
+    const auto mood = Rest4b_CountA;
     const auto n0 = static_cast<unsigned char>(count);
     U n = n0;
     const int m = mood;
     const int four = static_cast<int>(4 * n);
     if (m > four) {
-        const U clock = UL(at::kClock);
-        if (clock - UL(at::kStampShrink) > 0x14) SetUL(at::kStampShrink, clock - 0x14);
+        const U clock = Rest4a_Clock;
+        if (clock - Rest4a_StampShrink > 0x14) Rest4a_StampShrink = clock - 0x14;
         if (n0 >= 0x14) return;
-        const U grow = UL(at::kStampGrow);
+        const U grow = Rest4a_StampGrow;
         const int room = ((m - four) >> 2) + 1;
         int k = static_cast<int>((clock - grow) / 10u);
         if (k > room) k = room;
         if (k == 0) return;
         for (int j = 0; j < k && n != 0x14; ++j, ++n) SH_CALL(CommuSim_AddRecord)();
-        SetUL(at::kStampGrow, UL(at::kClock));
+        Rest4a_StampGrow = Rest4a_Clock;
         return;
     }
-    const U clock = UL(at::kClock);
-    const U grow = UL(at::kStampGrow);
+    const U clock = Rest4a_Clock;
+    const U grow = Rest4a_StampGrow;
     if (mood != 0) {
-        if (clock - grow > 0xA) SetUL(at::kStampGrow, clock - 0xA);
-        if (clock - UL(at::kStampShrink) > 0x14) SetUL(at::kStampShrink, clock - 0x14);
+        if (clock - grow > 0xA) Rest4a_StampGrow = clock - 0xA;
+        if (clock - Rest4a_StampShrink > 0x14) Rest4a_StampShrink = clock - 0x14;
         return;
     }
-    if (clock - grow > 0xA) SetUL(at::kStampGrow, clock - 0xA);
+    if (clock - grow > 0xA) Rest4a_StampGrow = clock - 0xA;
     if (n0 <= 1) return;
-    const int k = static_cast<int>((clock - UL(at::kStampShrink)) / 20u);
+    const int k = static_cast<int>((clock - Rest4a_StampShrink) / 20u);
     if (k == 0) return;
     for (int j = 0; j < k && n != 1; ++j, --n) SH_CALL(CommuSim_RemoveRecord)();
-    SetUL(at::kStampShrink, UL(at::kClock));
+    Rest4a_StampShrink = Rest4a_Clock;
 }
 
 // original 0x455700 (no PSX twin paired): mood. When (clock - the mood stamp)
@@ -432,22 +437,22 @@ extern "C" void __cdecl CommuSim_Population(unsigned count) {
 // trait +0x10 and 3 (a 16-bit sum), less twice the count; times that, plus the
 // mood; below 0 the mood is 0, above 99 it is 99; the stamp is the clock.
 extern "C" void __cdecl CommuSim_Mood(unsigned count) {
-    const U clock = UL(at::kClock);
-    const U steps = ((clock - UL(at::kStampMood)) / 5u) & 0xFFFF;
+    const U clock = Rest4a_Clock;
+    const U steps = ((clock - Rest4a_StampMood) / 5u) & 0xFFFF;
     if (steps == 0) return;
     U sum = 0;
     for (U i = 0; i < at::kRecordCount; ++i)
         if (Rec(i)[0] != 0 && Rec(i)[1] == 9) sum += Trait(i, 0x10) + 3u;
     const auto twice = static_cast<std::int16_t>(static_cast<unsigned short>((count & 0xFFu) * 2));
     const U v = static_cast<U>(static_cast<int>(static_cast<std::int16_t>(sum)) - twice) * steps +
-                static_cast<U>(static_cast<int>(static_cast<signed char>(At(at::kMood)[0])));
+                static_cast<std::uint32_t>(Rest4b_CountA);
     if (static_cast<std::int32_t>(v) < 0) {
-        SetUL(at::kStampMood, clock);
-        At(at::kMood)[0] = 0;
+        Rest4a_StampMood = clock;
+        Rest4b_CountA = 0;
         return;
     }
-    At(at::kMood)[0] = static_cast<unsigned char>(static_cast<std::int32_t>(v) > 0x63 ? 0x63 : v);
-    SetUL(at::kStampMood, clock);
+    Rest4b_CountA = static_cast<unsigned char>(static_cast<std::int32_t>(v) > 0x63 ? 0x63 : v);
+    Rest4a_StampMood = clock;
 }
 
 namespace {
@@ -473,21 +478,21 @@ void LevelSums(bool lit, unsigned short& sum, unsigned char& count) {
 // that far past the lit stamp, the stamp moves by it, the level goes up and
 // an event 7 is queued (+0 only).
 extern "C" void __cdecl CommuSim_LevelLit(void) {
-    if (At(at::kLevelLit)[0] >= 7) return;
+    if (Rest4a_LevelLit >= 7) return;
     unsigned short sum;
     unsigned char count;
     LevelSums(true, sum, count);
     if (count == 0) return;
-    auto v = static_cast<std::int16_t>(static_cast<unsigned short>(Word(At(at::kLevelLitCosts + 2u * At(at::kLevelLit)[0])) - sum));
+    auto v = static_cast<std::int16_t>(static_cast<unsigned short>(Word(At(at::kLevelLitCosts + 2u * Rest4a_LevelLit)) - sum));
     if (v <= 0) v = 1;
-    const U last = UL(at::kStampLevelLit);
-    if (UL(at::kClock) - last < static_cast<U>(static_cast<int>(v))) return;
-    const unsigned char level = At(at::kLevelLit)[0];
-    SetUL(at::kStampLevelLit, last + static_cast<U>(static_cast<int>(v)));
-    const unsigned char n = At(at::kEventCount)[0];
-    At(at::kLevelLit)[0] = static_cast<unsigned char>(level + 1);
+    const U last = Rest4a_StampLevelLit;
+    if (Rest4a_Clock - last < static_cast<U>(static_cast<int>(v))) return;
+    const unsigned char level = Rest4a_LevelLit;
+    Rest4a_StampLevelLit = last + static_cast<U>(static_cast<int>(v));
+    const unsigned char n = Rest4b_BusyB;
+    Rest4a_LevelLit = static_cast<unsigned char>(level + 1);
     At(at::kEvents + 2u * n)[0] = 7;
-    At(at::kEventCount)[0] = static_cast<unsigned char>(n + 1);
+    Rest4b_BusyB = static_cast<unsigned char>(n + 1);
 }
 
 // original 0x455870 (no PSX twin paired): the dark level (0x9046CB, below 10):
@@ -495,22 +500,22 @@ extern "C" void __cdecl CommuSim_LevelLit(void) {
 // less the sum (at least 1) from the dark stamp, and only when the lit level
 // is at least 0x65291B[dark level]; event 6.
 extern "C" void __cdecl CommuSim_LevelDark(void) {
-    if (At(at::kLevelDark)[0] >= 0xA) return;
+    if (FieldE2_LevelA >= 0xA) return;
     unsigned short sum;
     unsigned char count;
     LevelSums(false, sum, count);
     if (count == 0) return;
     auto v = static_cast<std::int16_t>(static_cast<unsigned short>(0x14 - sum));
     if (v <= 0) v = 1;
-    const U last = UL(at::kStampLevelDark);
-    if (UL(at::kClock) - last < static_cast<U>(static_cast<int>(v))) return;
-    const unsigned char level = At(at::kLevelDark)[0];
-    if (At(at::kLevelLit)[0] < At(at::kLevelDarkNeeds + level)[0]) return;
-    SetUL(at::kStampLevelDark, last + static_cast<U>(static_cast<int>(v)));
-    const unsigned char n = At(at::kEventCount)[0];
-    At(at::kLevelDark)[0] = static_cast<unsigned char>(level + 1);
+    const U last = Rest4a_StampLevelDark;
+    if (Rest4a_Clock - last < static_cast<U>(static_cast<int>(v))) return;
+    const unsigned char level = FieldE2_LevelA;
+    if (Rest4a_LevelLit < At(at::kLevelDarkNeeds + level)[0]) return;
+    Rest4a_StampLevelDark = last + static_cast<U>(static_cast<int>(v));
+    const unsigned char n = Rest4b_BusyB;
+    FieldE2_LevelA = static_cast<unsigned char>(level + 1);
     At(at::kEvents + 2u * n)[0] = 6;
-    At(at::kEventCount)[0] = static_cast<unsigned char>(n + 1);
+    Rest4b_BusyB = static_cast<unsigned char>(n + 1);
 }
 
 // original 0x455950 (no PSX twin paired; R4B's 0x456E20 jumps here): the
@@ -525,7 +530,7 @@ extern "C" void __cdecl CommuSim_TickKind5(void) {
         if (bl[0] != 5) continue;
         if (bl[3] == 0) {
             bl[3] = 1;
-            SetUL(bl + 4, UL(at::kClock));
+            SetUL(bl + 4, Rest4a_Clock);
             continue;
         }
         if (bl[3] >= 0xB) continue;
@@ -539,21 +544,21 @@ extern "C" void __cdecl CommuSim_TickKind5(void) {
         if (count == 0) continue;
         auto d = static_cast<std::int16_t>(static_cast<unsigned short>((bl[2] + 2u) * 6u - sum));
         if (d < 5) d = 5;
-        const U q = (UL(at::kClock) - UL(bl + 4)) / static_cast<U>(static_cast<int>(d));
-        const auto cap = static_cast<std::int16_t>(At(at::kLevelLit)[0] + 4);
+        const U q = (Rest4a_Clock - UL(bl + 4)) / static_cast<U>(static_cast<int>(d));
+        const auto cap = static_cast<std::int16_t>(Rest4a_LevelLit + 4);
         if (q == 0) continue;
         const unsigned char level = bl[3];
         if (static_cast<std::int16_t>(level) >= cap) continue;
         const auto raised = static_cast<unsigned char>(level + q);
         bl[3] = raised;
         if (static_cast<std::int16_t>(raised) > cap) bl[3] = static_cast<unsigned char>(cap);
-        SetUL(bl + 4, UL(at::kClock));
-        const unsigned char n = At(at::kEventCount)[0];
+        SetUL(bl + 4, Rest4a_Clock);
+        const unsigned char n = Rest4b_BusyB;
         At(at::kEvents + 2u * n)[0] = 0;
         const unsigned char first = FirstOf(b);
-        const unsigned char n2 = At(at::kEventCount)[0];
+        const unsigned char n2 = Rest4b_BusyB;
         At(at::kEvents + 2u * n + 1)[0] = first;
-        At(at::kEventCount)[0] = static_cast<unsigned char>(n2 + 1);
+        Rest4b_BusyB = static_cast<unsigned char>(n2 + 1);
     }
 }
 
@@ -575,7 +580,7 @@ extern "C" void __cdecl CommuSim_TickKind9(void) {
             if (r[0] == 0) continue;
             if (r[1] != b + 1) continue;
             const unsigned char level = Bld(b)[1];
-            if (UL(at::kClock) - UL(r + 4) < (level + 1u) * 6u) {
+            if (Rest4a_Clock - UL(r + 4) < (level + 1u) * 6u) {
                 r[2] = 1;
                 continue;
             }
@@ -585,9 +590,9 @@ extern "C" void __cdecl CommuSim_TickKind9(void) {
             if (chance > Percent(roll)) {
                 const unsigned char inUse = CommuCount();
                 if (inUse > 1) {
-                    const unsigned char n = At(at::kRemovedCount)[0];
+                    const unsigned char n = Rest4a_RemovedCount;
                     r[0] = 0;
-                    At(at::kRemovedCount)[0] = static_cast<unsigned char>(n + 1);
+                    Rest4a_RemovedCount = static_cast<unsigned char>(n + 1);
                     At(at::kRemoved + n)[0] = static_cast<unsigned char>(i | 0x80);
                     continue;
                 }
@@ -653,7 +658,7 @@ extern "C" void __cdecl CommuSim_TickKindD(void) {
                 if (p >= at::kPriceTiersEnd) break;
             }
             const U stamp = UL(r + 4);
-            if (UL(at::kClock) - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
+            if (Rest4a_Clock - stamp < Word(At(at::kPriceTiers + 6 * tier + 2))) continue;
             r[3] = static_cast<unsigned char>(status & 0xF);
             if (flags & 8) {
                 r[3] = static_cast<unsigned char>((status & 0xF) | 0x30);
@@ -696,7 +701,7 @@ extern "C" void __cdecl CommuSim_TickKindB(void) {
         const unsigned char level = bl[3];
         if (level == 0) {
             bl[3] = 5;
-            SetUL(bl + 4, UL(at::kClock));
+            SetUL(bl + 4, Rest4a_Clock);
             continue;
         }
         if (level >= At(at::kKindBCaps + (UL(at::kLevelLit) & 0xFF))[0]) continue;
@@ -707,19 +712,19 @@ extern "C" void __cdecl CommuSim_TickKindB(void) {
         const U divisor = 6u - count;
         if (divisor == 0)
             bof3::Fatal("CommuSim_TickKindB: building %u has 6 residents - the original divides by 0 (docs/rest_4a.md section 7)", (unsigned)b);
-        const U q = (UL(at::kClock) - UL(bl + 4)) / divisor;
+        const U q = (Rest4a_Clock - UL(bl + 4)) / divisor;
         if ((q & 0xFFFF) == 0) continue;
         const auto raised = static_cast<unsigned char>(bl[3] + q);
         bl[3] = raised;
         const unsigned char cap = At(at::kKindBCaps + (UL(at::kLevelLit) & 0xFF))[0];
         if (raised > cap) bl[3] = cap;
-        SetUL(bl + 4, UL(at::kClock));
-        const unsigned char n = At(at::kEventCount)[0];
+        SetUL(bl + 4, Rest4a_Clock);
+        const unsigned char n = Rest4b_BusyB;
         At(at::kEvents + 2u * n)[0] = 1;
         const unsigned char first = FirstOf(b);
-        const unsigned char n2 = At(at::kEventCount)[0];
+        const unsigned char n2 = Rest4b_BusyB;
         At(at::kEvents + 2u * n + 1)[0] = first;
-        At(at::kEventCount)[0] = static_cast<unsigned char>(n2 + 1);
+        Rest4b_BusyB = static_cast<unsigned char>(n2 + 1);
     }
 }
 
@@ -741,13 +746,13 @@ extern "C" void __cdecl CommuSim_AddRecord(void) {
     unsigned char* const rec = Rec(r);
     rec[0] = 1;
     rec[1] = 0;
-    SetUL(rec + 4, UL(at::kClock));
+    SetUL(rec + 4, Rest4a_Clock);
     rec[2] = 0;
     unsigned char* const copy = At(at::kRecordCopies + 5u * r);
     SetUL(copy, UL(at::kRecordTraits + at::kTraitStride * r));
     copy[4] = Trait(r, 4);
-    const unsigned char n = At(at::kSpawnCount)[0];
-    At(at::kSpawnCount)[0] = static_cast<unsigned char>(n + 1);
+    const unsigned char n = Rest4b_BusyA;
+    Rest4b_BusyA = static_cast<unsigned char>(n + 1);
     At(at::kSpawned + n)[0] = r;
 }
 
@@ -771,8 +776,8 @@ extern "C" void __cdecl CommuSim_RemoveRecord(void) {
         if (r == start) round = true;
     }
     Rec(r)[0] = 0;
-    const unsigned char n = At(at::kRemovedCount)[0];
-    At(at::kRemovedCount)[0] = static_cast<unsigned char>(n + 1);
+    const unsigned char n = Rest4a_RemovedCount;
+    Rest4a_RemovedCount = static_cast<unsigned char>(n + 1);
     At(at::kRemoved + n)[0] = r;
 }
 
@@ -780,17 +785,17 @@ extern "C" void __cdecl CommuSim_RemoveRecord(void) {
 // 0x9046CD / 0x9046CE the sums of trait +0x11 over the records in use of kinds
 // 0xA and 0xB.
 extern "C" void __cdecl CommuSim_SumKindsAB(void) {
-    At(at::kSumA)[0] = 0;
+    FieldE2_BiasA = 0;
     unsigned char sumB = 0;
-    At(at::kSumB)[0] = sumB;
+    FieldE2_BiasB = sumB;
     for (U i = 0; i < at::kRecordCount; ++i) {
         if (Rec(i)[0] == 0) continue;
         const unsigned char kind = Rec(i)[1];
         if (kind == 0xA) {
-            At(at::kSumA)[0] = static_cast<unsigned char>(At(at::kSumA)[0] + Trait(i, 0x11));
+            FieldE2_BiasA = static_cast<unsigned char>(FieldE2_BiasA + Trait(i, 0x11));
         } else if (kind == 0xB) {
             sumB = static_cast<unsigned char>(sumB + Trait(i, 0x11));
-            At(at::kSumB)[0] = sumB;
+            FieldE2_BiasB = sumB;
         }
     }
 }
@@ -868,7 +873,7 @@ extern "C" void __cdecl CommuSim_PlaceObjects(void) {
         ++object;
     }
     if (static_cast<int>(object) < 0x14)
-        for (U o = object; o < 0x14; ++o) At(at::kSpriteBase + at::kSpriteStride * o)[0] = 0;
+        for (U o = object; o < 0x14; ++o) At(Sprite_Objects_addr + at::kSpriteStride * o)[0] = 0;
 }
 
 namespace {
@@ -889,7 +894,7 @@ void BankAndFace() {
 // Sprite_Current); +5 the record; the bank and the facing.
 extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
     const U o = object & 0xFFu;
-    unsigned char* const base = At(at::kSpriteBase + at::kSpriteStride * o);
+    unsigned char* const base = At(Sprite_Objects_addr + at::kSpriteStride * o);
     Sprite_Current = base;
     base[6] = 1;
     if (At(at::kObjectPlaces + 3 * o + 2)[0] != 0) {
@@ -905,7 +910,7 @@ extern "C" void __cdecl CommuSim_PlaceLoose(unsigned record, unsigned object) {
     SetWord(Sprite_Current + 0x34, 0);
     SetWord(Sprite_Current + 0x3A, At(at::kObjectPlaces + 3 * o + 1)[0]);
     SetWord(Sprite_Current + 0x38, 0);
-    const long height = SH_CALL(AreaMap_Elevation)(Long(base + 0x34), Long(base + 0x38));
+    const long height = SH_CALL(AreaMap_Elevation)(SpriteRec(base)->x, SpriteRec(base)->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(height));
     Sprite_Current[5] = static_cast<unsigned char>(record);
     BankAndFace();
@@ -924,7 +929,7 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     const auto building = static_cast<unsigned char>(Rec(record & 0xFFu)[1] - 1);
     const U o = object & 0xFFu;
     const U row = 3u * building;
-    unsigned char* const base = At(at::kSpriteBase + at::kSpriteStride * o);
+    unsigned char* const base = At(Sprite_Objects_addr + at::kSpriteStride * o);
     Sprite_Current = base;
     Sprite_Current[5] = static_cast<unsigned char>(record);
     Sprite_Current[1] = 6;
@@ -935,7 +940,7 @@ extern "C" void __cdecl CommuSim_PlaceResident(unsigned record, unsigned object)
     SetWord(Sprite_Current + 0x3A, At(at::kResidentPlaces + 3 * (Count(building) + row) + 1)[0]);
     SetWord(Sprite_Current + 0x38, 0);
     unsigned char* const s = Sprite_Current;
-    const long height = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    const long height = SH_CALL(AreaMap_Elevation)(SpriteRec(s)->x, SpriteRec(s)->z);
     SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(height));
     const unsigned char facing = At(at::kResidentPlaces + 3 * (Count(building) + row) + 2)[0];
     Sprite_Current[8] = facing;
@@ -966,7 +971,7 @@ extern "C" void __cdecl CommuPose_Kind0(unsigned object) {
     auto roll = static_cast<unsigned char>(SH_CALL(Rand)() & 7);
     if (roll > 4) roll = static_cast<unsigned char>(roll + 0xFC);
     const U o = object & 0xFFu;
-    At(at::kSpriteKind + at::kSpriteStride * o)[0] = 1;
+    At(Sprite_Objects_addr + 0x6 + at::kSpriteStride * o)[0] = 1;
     SetWord(Pose(o), roll + 0xC2u);
 }
 
@@ -977,7 +982,7 @@ extern "C" void __cdecl CommuPose_Kind4(unsigned object, unsigned building) {
     Sprite_Current[6] = 1;
     const unsigned char flag = Bld(building & 0xFFu)[1];
     const U o = object & 0xFFu;
-    if ((At(at::kLevelLit)[0] == 7 && flag != 0) || (At(at::kLevelDark)[0] == 0xA && Bld(building & 0xFFu)[1] == 0))
+    if ((Rest4a_LevelLit == 7 && flag != 0) || (FieldE2_LevelA == 0xA && Bld(building & 0xFFu)[1] == 0))
         SetWord(Pose(o), 0xCC);
     else
         SetWord(Pose(o), Bld(building & 0xFFu)[1] + 0xC8u);
@@ -1031,7 +1036,7 @@ extern "C" void __cdecl CommuPose_Kind7(unsigned object) {
 extern "C" void __cdecl CommuPose_Kind8(unsigned record, unsigned object, unsigned building) {
     const U r = record & 0xFFu;
     Sprite_Current[6] = 1;
-    const U age = UL(at::kClock) - UL(Rec(r) + 4);
+    const U age = Rest4a_Clock - UL(Rec(r) + 4);
     const U row = age < 0x14 ? 0 : (age < 0x28 ? 1 : 2);
     const U index = Count(building & 0xFFu) + 3 * row;
     SetWord(Pose(object & 0xFFu), Word(At(at::kOfferWords + 2 * index)));
@@ -1084,7 +1089,7 @@ extern "C" void __cdecl CommuPose_KindB(unsigned object, unsigned building) {
         return;
     }
     if (count == 1) {
-        const unsigned char set = SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x92);
+        const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
         SetWord(Pose(o), set ? 0xC00B : 0xD4);
         return;
     }
@@ -1111,15 +1116,15 @@ namespace {
 // The tail-kind triggers: the kind to 0x9039F3, the object to 0x939A38, a
 // sub-kind (when given) to 0x9039F5, ScriptFlags_Set40, al 0.
 unsigned char TailTrigger(unsigned char* object, unsigned char kind) {
-    At(at::kTailKind)[0] = kind;
-    SetUL(at::kTriggerObject, static_cast<U>(reinterpret_cast<std::uintptr_t>(object)));
+    AreaW0a_TailKind = kind;
+    Rest4d_Pointer = static_cast<U>(reinterpret_cast<std::uintptr_t>(object));
     SH_CALL(ScriptFlags_Set40)();
     return 0;
 }
 unsigned char TailTriggerSub(unsigned char* object, unsigned char kind, unsigned char sub) {
-    At(at::kTailKind)[0] = kind;
-    SetUL(at::kTriggerObject, static_cast<U>(reinterpret_cast<std::uintptr_t>(object)));
-    At(at::kTailSub)[0] = sub;
+    AreaW0a_TailKind = kind;
+    Rest4d_Pointer = static_cast<U>(reinterpret_cast<std::uintptr_t>(object));
+    AreaW0c_TailSub = sub;
     SH_CALL(ScriptFlags_Set40)();
     return 0;
 }
@@ -1137,9 +1142,9 @@ extern "C" unsigned char __cdecl FieldTrigger01(unsigned char* object, unsigned 
 // and Field_Request 2.
 extern "C" unsigned char __cdecl FieldTrigger02(unsigned char*, unsigned char*) {
     SH_CALL(Crt_sprintf)(Row(at::kTextRow0), Format(), static_cast<U>(At(at::kCountA)[0]));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow1), Format(), static_cast<U>(At(at::kCountB)[0]));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), UL(at::kClock));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow3), Format(), UL(at::kCountC));
+    SH_CALL(Crt_sprintf)(Row(at::kTextRow1), Format(), static_cast<std::uint32_t>(MapFieldObjects_ClockMinutes));
+    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), Rest4a_Clock);
+    SH_CALL(Crt_sprintf)(Row(at::kTextRow3), Format(), Rest4a_CountC);
     SH_CALL(Msg_OpenScript)(0x55);
     Field_Request = 2;
     return 0;
@@ -1148,9 +1153,9 @@ extern "C" unsigned char __cdecl FieldTrigger02(unsigned char*, unsigned char*) 
 // original 0x456BF0 (id 3): three numbers - the dwords 0x90413C, 0x904140,
 // 0x904144 - into rows 0..2, Msg_OpenScript(0x56), Field_Request 2.
 extern "C" unsigned char __cdecl FieldTrigger03(unsigned char*, unsigned char*) {
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow0), Format(), UL(at::kCountD));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow1), Format(), UL(at::kCountE));
-    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), UL(at::kCountF));
+    SH_CALL(Crt_sprintf)(Row(at::kTextRow0), Format(), Rest4a_CountD);
+    SH_CALL(Crt_sprintf)(Row(at::kTextRow1), Format(), FieldE1_ContentCount);
+    SH_CALL(Crt_sprintf)(Row(at::kTextRow2), Format(), Rest4a_CountF);
     SH_CALL(Msg_OpenScript)(0x56);
     Field_Request = 2;
     return 0;

@@ -156,7 +156,7 @@ unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
 // object itself (the two alias in the game).
 unsigned char* MemberRecord(std::uint32_t v) {
     switch (v % 4) {
-    case 0: return ah::Mem(at::kSpriteObjectsExtra + (v >> 2) % 4 * at::kObjectStride);
+    case 0: return ah::Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * at::kObjectStride);
     case 1: return ah::Object(v >> 2);
     case 2: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return Sprite_Current;
@@ -169,12 +169,12 @@ unsigned char* MemberRecord(std::uint32_t v) {
 unsigned char* FocusRecord(std::uint32_t v) {
     switch (v % 5) {
     case 0: case 1: return ah::Object(v >> 3);
-    case 2: return ah::Mem(at::kSpriteObjectsExtra + (v >> 3) % 4 * at::kObjectStride);
+    case 2: return ah::Mem(Sprite_ObjectsExtra_addr + (v >> 3) % 4 * at::kObjectStride);
     case 3: return ah::PartyOf(static_cast<unsigned char>(v >> 3));
-    default: return ah::Mem(at::kSpriteObjects - 1 - (v >> 3) % 0x3C);
+    default: return ah::Mem(Sprite_Objects_addr - 1 - (v >> 3) % 0x3C);
     }
 }
-unsigned char* EffectRecord(std::uint32_t v) { return ah::Mem(at::kEffectObjects + v % 4 * at::kEffectStride); }
+unsigned char* EffectRecord(std::uint32_t v) { return ah::Mem(Effect_Objects_addr + v % 4 * at::kEffectStride); }
 
 // ---- the stand-ins the group lists ----
 
@@ -191,7 +191,7 @@ constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 // harness's own disturbance reaches a group cell about one call in 24.
 std::uint32_t MovesAnswer(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) B(at::kChoiceAnswer) = static_cast<unsigned char>((n >> 8) % 4);
+    if (n & 1) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>((n >> 8) % 4);
     return answer;
 }
 std::uint32_t MovesCurrent(const std::uint32_t*, std::uint32_t answer) {
@@ -203,8 +203,8 @@ std::uint32_t MovesCurrent(const std::uint32_t*, std::uint32_t answer) {
 // it, area 59's trigger 24 the focus pointer.
 std::uint32_t Set40Effect(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kActiveMember, MemberRecord(n >> 8));
-    if (n & 2) ah::SetPointer(at::kFocusObject, FocusRecord(n >> 12));
+    if (n & 1) ah::SetPointer(Field_ActiveMember_addr, MemberRecord(n >> 8));
+    if (n & 2) ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(n >> 12));
     return answer;
 }
 std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
@@ -213,7 +213,7 @@ std::uint32_t SoundEffect(const std::uint32_t*, std::uint32_t answer) {
     if (n & 2) {
         // all seven flags (bit 7 either way), one of them clear, or any
         static const unsigned char kRow[] = {0x7F, 0xFF, 0x7F, 0xFF, 0x3F, 0xBF, 0x7E, 0x5F, 0x77, 0};
-        B(at::kCondRow3 + 1) = n & 4 ? static_cast<unsigned char>(n >> 16) : kRow[(n >> 16) % 10];
+        B(Cond_Flags_addr + 0x18 + 1) = n & 4 ? static_cast<unsigned char>(n >> 16) : kRow[(n >> 16) % 10];
     }
     return answer;
 }
@@ -270,21 +270,21 @@ const ah::Callee kCallees[] = {
 
 // The two dispatchers' .data state tables, swapped for recorders while the
 // fuzz runs.
-const ah::DataTable kTables56[] = {{at::kArea56FallStates, at::kArea56FallStateCount}};
-const ah::DataTable kTables59[] = {{at::kArea59EffectStates, at::kArea59EffectStateCount}};
+const ah::DataTable kTables56[] = {{Area56_FallStates_addr, at::kArea56FallStateCount}};
+const ah::DataTable kTables59[] = {{Area59_EffectStates_addr, at::kArea59EffectStateCount}};
 
 // Beyond the field frame: the effect records (slots 0..3, area 59's effect
 // running in one), the focus pointer, the active member pointer, the mark,
 // Text_Records' first 16 bytes, and areas 63 and 64's weights (.data, so the
 // fuzz can draw weights the image does not hold; put back after the run).
 const ah::Region kRegions[] = {
-    {at::kEffectObjects, 4 * at::kEffectStride},
-    {at::kFocusObject, 4},
-    {at::kActiveMember, 4},
-    {at::kAnswerMark, 1},
+    {Effect_Objects_addr, 4 * at::kEffectStride},
+    {AreaW1a_FocusObject_addr, 4},
+    {Field_ActiveMember_addr, 4},
+    {AreaW0c_AnswerMark_addr, 1},
     {at::kTextRecords, 16},
-    {at::kArea63Weights, 8},
-    {at::kArea64Weights, 8},
+    {Area63_Weights_addr, 8},
+    {Area64_Weights_addr, 8},
 };
 
 // The image's weights, read before the first run (the regions are random
@@ -293,8 +293,8 @@ unsigned char g_weights63[8], g_weights64[8];
 
 // Every round: the pointers the areas follow put back inside the regions.
 void Common() {
-    ah::SetPointer(at::kActiveMember, MemberRecord(ah::Next()));
-    ah::SetPointer(at::kFocusObject, FocusRecord(ah::Next()));
+    ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
+    ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(ah::Next()));
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -302,12 +302,12 @@ void Common() {
 void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 7) {
-    case 0: B(at::kTailState) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
+    case 0: B(AreaW0c_TailState_addr) = static_cast<unsigned char>(h & 0x100 ? v % 4 : v); break;
     case 1: B(at::kCounter0) = static_cast<unsigned char>(h & 0x100 ? 0xA + v % 3 : v); break;
-    case 2: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 4); break;
-    case 3: ah::SetPointer(at::kActiveMember, MemberRecord(h >> 16)); break;
-    case 4: ah::SetPointer(at::kFocusObject, FocusRecord(h >> 16)); break;
-    case 5: B(at::kCondRow3 + 1) = static_cast<unsigned char>(h & 0x100 ? 0x7F : v); break;
+    case 2: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 4); break;
+    case 3: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
+    case 4: ah::SetPointer(AreaW1a_FocusObject_addr, FocusRecord(h >> 16)); break;
+    case 5: B(Cond_Flags_addr + 0x18 + 1) = static_cast<unsigned char>(h & 0x100 ? 0x7F : v); break;
     default: B(at::kCounter3) = v; break;
     }
 }
@@ -315,12 +315,12 @@ void Disturb(std::uint32_t h) {
 // A choice answer: each value a handler tests, its neighbours, a negative
 // byte (the table indexes are signed), anything.
 void SeedAnswer() {
-    if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 0, 1, 2, 0xFF, 0x80, 0x81, 0x7F, 4, 5));
+    if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 2, 3, 0, 1, 2, 0xFF, 0x80, 0x81, 0x7F, 4, 5));
 }
 // An object trigger is called (a field object, 0x904030).
 void ArgsTrigger(unsigned, std::uint32_t* a) {
     a[0] = Key(ah::Object(a[0]));
-    a[1] = at::kStoryFlags;
+    a[1] = (Cond_Flags_addr + 0xa0);
 }
 
 // ---- area 53 ----
@@ -341,8 +341,8 @@ void Seed56(unsigned k) {
     switch (k) {
     case k56PoseIfAll:
         // the seven flags all set half the time (bit 7 either way), else one clear or anything
-        if (ah::Half()) B(at::kCondRow3 + 1) = static_cast<unsigned char>(ah::Half() ? 0x7F : 0xFF);
-        else if (ah::Half()) B(at::kCondRow3 + 1) = static_cast<unsigned char>(0x7F & ~(1u << ah::Next() % 7));
+        if (ah::Half()) B(Cond_Flags_addr + 0x18 + 1) = static_cast<unsigned char>(ah::Half() ? 0x7F : 0xFF);
+        else if (ah::Half()) B(Cond_Flags_addr + 0x18 + 1) = static_cast<unsigned char>(0x7F & ~(1u << ah::Next() % 7));
         SeedAnswer();
         break;
     case k56FallRun:
@@ -367,7 +367,7 @@ void Seed57(unsigned k) {
     switch (k) {
     case k57Choice: SeedAnswer(); break;
     case k57Spawn2: case k57Spawn4:
-        if (ah::Often()) B(at::kPartyList0) = static_cast<unsigned char>(ah::Next() % 8);
+        if (ah::Often()) B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(ah::Next() % 8);
         break;
     default: break;
     }
@@ -382,16 +382,16 @@ void Seed59(unsigned k) {
         // half the rounds every test passes but at most one, drawn to fail
         if (ah::Half()) {
             Cond_ByteFD = 2;
-            B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
-            ah::Mem(at::kStoryFlags)[0x33 >> 3] |= 1u << (0x33 & 7);   // for the record: Flags_Test is a recorder
+            B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 6, 7));
+            ah::Mem(Cond_Flags_addr + 0xa0)[0x33 >> 3] |= 1u << (0x33 & 7); // for the record: Flags_Test is a recorder
             if (ah::Half()) {
                 if (ah::Half()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(1, 3, 0x82));
-                else B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
+                else B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(1, 5, 8, 0x80, 0x86));
             }
             break;
         }
         if (ah::Often()) Cond_ByteFD = static_cast<unsigned char>(AH_PICK(2, 1, 3, 0x82));
-        if (ah::Often()) B(at::kLeaderPose) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
+        if (ah::Often()) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(AH_PICK(0, 6, 7, 1, 5, 8, 0x80));
         break;
     case k59Run:
         if (ah::Half()) Sprite_Current = EffectRecord(ah::Next());
@@ -438,13 +438,13 @@ void Seed61(unsigned k) {
 void Seed62(unsigned k) {
     Common();
     if (k == k62Arm) {
-        if (ah::Half()) B(at::kLeaderByte89) = static_cast<unsigned char>(AH_PICK(6, 6, 5, 7, 0x86));
+        if (ah::Half()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(6, 6, 5, 7, 0x86));
         return;
     }
     // the tail: each state, its neighbours and the out-of-range sides; then
     // the cell that state waits on, at its value two times in three
     const auto state = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0, 1, 2, 3, 0xFF, 0x80, 0x7F));
-    B(at::kTailState) = state;
+    B(AreaW0c_TailState_addr) = state;
     const bool on = ah::Often();
     if (state == 1) B(at::kCounter0) = static_cast<unsigned char>(on ? 0xB : AH_PICK(0xA, 0xC, 0x8B, 0));
     if (state == 2) Field_Request = static_cast<unsigned char>(on ? AH_PICK(0, 1, 3, 5) : 2);
@@ -465,11 +465,11 @@ void SeedWeights(std::uint32_t at, const unsigned char* image) {
 }
 void Seed63(unsigned) {
     Common();
-    SeedWeights(at::kArea63Weights, g_weights63);
+    SeedWeights(Area63_Weights_addr, g_weights63);
 }
 void Seed64(unsigned) {
     Common();
-    SeedWeights(at::kArea64Weights, g_weights64);
+    SeedWeights(Area64_Weights_addr, g_weights64);
 }
 
 void RunArea(int area, const ah::Clone* clones, unsigned n, const ah::DataTable* tables, unsigned n_tables,
@@ -485,8 +485,8 @@ void RunArea(int area, const ah::Clone* clones, unsigned n, const ah::DataTable*
 
 void SelfTest() {
     constexpr unsigned kRounds = 6000;
-    std::memcpy(g_weights63, ah::Mem(at::kArea63Weights), 8);
-    std::memcpy(g_weights64, ah::Mem(at::kArea64Weights), 8);
+    std::memcpy(g_weights63, ah::Mem(Area63_Weights_addr), 8);
+    std::memcpy(g_weights64, ah::Mem(Area64_Weights_addr), 8);
     RunArea(53, kClones53, sizeof kClones53 / sizeof kClones53[0], nullptr, 0, &Seed53, &ArgsTrigger, kRounds);
     RunArea(55, kClones55, sizeof kClones55 / sizeof kClones55[0], nullptr, 0, &Seed55, &ArgsTrigger, kRounds);
     RunArea(56, kClones56, sizeof kClones56 / sizeof kClones56[0], kTables56, 1, &Seed56, &ArgsTrigger, kRounds);

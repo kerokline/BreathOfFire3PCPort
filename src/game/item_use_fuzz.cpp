@@ -75,16 +75,16 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     switch ((h >> 4) % 14) {
     case 0: SetWord(At(at::kMessage), v % 3 == 0 ? 0xFFFF : h >> 16); break;
-    case 1: At(at::kSubState)[0] = static_cast<unsigned char>(v); break;
-    case 2: At(at::kWindow1State)[0] = static_cast<unsigned char>(v); break;
+    case 1: At(ItemUse_SubState_addr)[0] = static_cast<unsigned char>(v); break;
+    case 2: At(ItemUse_Window1State_addr)[0] = static_cast<unsigned char>(v); break;
     case 3: At(at::kWindow0State)[0] = static_cast<unsigned char>(v); break;
-    case 4: At(at::kColorHigh)[0] = static_cast<unsigned char>(v); break;
+    case 4: At(ItemUse_ColorHigh_addr)[0] = static_cast<unsigned char>(v); break;
     case 5: Game_Step = static_cast<unsigned short>(h >> 16); break;
     case 6: At(at::kTiaraCount)[0] = static_cast<unsigned char>(v); break;
-    case 7: At(at::kMenuState)[0] = static_cast<unsigned char>(v); break;
-    case 8: At(at::kLeaderXZ + v % 8)[0] = static_cast<unsigned char>(h >> 20); break;
+    case 7: At(FieldS_State_addr)[0] = static_cast<unsigned char>(v); break;
+    case 8: At(ObjTrio_addr + 0x34 + v % 8)[0] = static_cast<unsigned char>(h >> 20); break;
     case 9: Game_AreaNumber = static_cast<unsigned short>(v % 4); break;
-    case 10: At(at::kPartyLists + v % 4)[0] = static_cast<unsigned char>((h >> 20) % 0x18); break;
+    case 10: At(Cond_Flags_addr + 0xd2 + v % 4)[0] = static_cast<unsigned char>((h >> 20) % 0x18); break;
     case 11: At(at::kSysCounter)[0] = static_cast<unsigned char>(v); break;
     default: {
         // a record's status, HP or max: any of the 16 records
@@ -341,8 +341,8 @@ const Region kRegions[] = {
     {0x7DEE40, 0x30},                           // MsgBoxState
     {0x929F00, 0x10},                           // 0x929F01, 0x929F0B
     {0x903840, 0x10},                           // 0x903848
-    {at::kStoryFlags, 0x40},                    // the story flags, 0x90405F, the party lists 0x904062
-    {at::kReturnPoint, 0x10},                   // the Faerie Tiara's copy
+    {Cond_Flags_addr + 0xa0, 0x40},             // the story flags, 0x90405F, the party lists 0x904062
+    {AreaW2d_ReturnPoint_addr, 0x10},           // the Faerie Tiara's copy
     {0x904EFC, 2},                              // Game_AreaNumber
     {0x905B60, 2},                              // 0x905B61
     {0x66C7E8, 4},                              // Game_Step
@@ -391,7 +391,7 @@ void RandomTables() {
 // map 0x66972C holds 0..7 at 0..0x17).
 void Fix() {
     Game_AreaNumber = static_cast<unsigned short>(Next() % 4);
-    for (unsigned i = 0; i < 8; ++i) At(at::kPartyLists + i)[0] = static_cast<unsigned char>(Next() % 0x18);
+    for (unsigned i = 0; i < 8; ++i) At(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(Next() % 0x18);
 }
 
 struct Args { std::uint32_t a[3]; };
@@ -451,8 +451,8 @@ Args Seed(unsigned k) {
         break;
     case kTiaraK:
         // the ten flags 0xF6..0xFF (bytes +0x1E / +0x1F): none set, or one
-        if (Half()) At(at::kStoryFlags + 0x1E)[0] = static_cast<unsigned char>(Half() ? 0 : 1u << (6 + Next() % 2));
-        if (Half()) At(at::kStoryFlags + 0x1F)[0] = static_cast<unsigned char>(Half() ? 0 : 1u << (Next() % 8));
+        if (Half()) At(Cond_Flags_addr + 0xa0 + 0x1E)[0] = static_cast<unsigned char>(Half() ? 0 : 1u << (6 + Next() % 2));
+        if (Half()) At(Cond_Flags_addr + 0xa0 + 0x1F)[0] = static_cast<unsigned char>(Half() ? 0 : 1u << (Next() % 8));
         break;
     case kHealHpK:
     case kHealApK:
@@ -493,22 +493,22 @@ Args Seed(unsigned k) {
     }
     case kChoiceK:
     case kMenuK:
-        At(at::kChoiceId)[0] = static_cast<unsigned char>(Half() ? Next() % 0x80 : 0x80 | Next());
-        if (Half()) At(at::kChoiceId)[0] = static_cast<unsigned char>(Half() ? 0x7F : 0x80);
+        At(ItemUse_ChoiceId_addr)[0] = static_cast<unsigned char>(Half() ? Next() % 0x80 : 0x80 | Next());
+        if (Half()) At(ItemUse_ChoiceId_addr)[0] = static_cast<unsigned char>(Half() ? 0x7F : 0x80);
         if (Half()) SetWord(At(at::kMessage), 0xFFFF);
         break;
     case kRepeatK: {
         static const std::uint32_t kPressed[] = {0, 0x1000, 0x4000, 0x5000, 0x10000, 0xFFFF0000u, 0x10};
         args.a[0] = Often() ? kPressed[Next() % 7] : Next();
         static const std::uint16_t kTimer[] = {0, 1, 2, 3, 0xC, 0xFFFF};
-        if (Often()) SetWord(At(at::kRepeatTimer), kTimer[Next() % 6]);
+        if (Often()) SetWord(At(ItemUse_RepeatTimer_addr), kTimer[Next() % 6]);
         if (Half()) SetWord(At(at::kRepeatLatch), Word(reinterpret_cast<unsigned char*>(&Input_Held)) & (Half() ? 0x1000 : 0));
         break;
     }
     default:
         if (k >= kSys80 && k < kSys80 + 16) {
             static const unsigned char kCursor[] = {0, 1, 2, 0xFF, 0x80, 0x7F};
-            At(at::kCursor)[0] = Often() ? kCursor[Next() % 6] : static_cast<unsigned char>(Next());
+            At(AreaW0c_ChoiceAnswer_addr)[0] = Often() ? kCursor[Next() % 6] : static_cast<unsigned char>(Next());
         }
         break;
     }
@@ -610,8 +610,8 @@ void SelfTest() {
         RandomTables();
         g_seed = Next();
         const Args args = Seed(k);
-        if ((k == kChoiceK || k == kMenuK) && At(at::kChoiceId)[0] < 0x80)
-            At(at::kChoiceId)[0] = static_cast<unsigned char>(At(at::kChoiceId)[0] % (0x80 - 0x20 * Game_AreaNumber));
+        if ((k == kChoiceK || k == kMenuK) && At(ItemUse_ChoiceId_addr)[0] < 0x80)
+            At(ItemUse_ChoiceId_addr)[0] = static_cast<unsigned char>(At(ItemUse_ChoiceId_addr)[0] % (0x80 - 0x20 * Game_AreaNumber));
         Capture(input);
 
         std::uint32_t result[2];

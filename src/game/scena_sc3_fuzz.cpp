@@ -264,19 +264,19 @@ void ListCallees(int chapter) {
 // Swapped for recorders while the fuzz runs (no arguments). Each chapter's
 // state table runs on into its run table (the frame's index 3.. reads runs),
 // so one window holds both: the seeds keep the indices inside.
-const sh::DataTable kTables3[] = {{at::kStates3, 12}, {at::kCellHandlers3, 1}};
-const sh::DataTable kTables4[] = {{at::kStates4, 6}, {at::kCellHandlers4, 1}};
+const sh::DataTable kTables3[] = {{Scena03_States_addr, 12}, {Scena03_CellHandlers_addr, 1}};
+const sh::DataTable kTables4[] = {{Scena04_States_addr, 6}, {Scena04_CellHandlers_addr, 1}};
 
 // --- the regions -------------------------------------------------------------------
 //
 // Beyond the harness's 22 standard ones: the cells of the chapters' own.
 const sh::Region kRegions3[] = {
-    {at::kAreaTrack, 1}, {at::kAreaTransition, 1}, {at::kMusicTrack, 1}, {at::kByteFE, 1}, {at::kMessage, 2},
-    {at::kGameMode, 2}, {0x929F00, 0x14}, {at::kEffectState, 4}, {at::kActiveMember, 4}, {at::kObjects3, 9 * 4},
+    {AreaW1f_MusicCurrent_addr, 1}, {ModeFlow_AreaTransition_addr, 1}, {Music_Track_addr, 1}, {Cond_ByteFE_addr, 1}, {at::kMessage, 2},
+    {Game_Mode_addr, 2}, {0x929F00, 0x14}, {MoveScript_EffectState_addr, 4}, {Field_ActiveMember_addr, 4}, {Scena03_ObjectHandlers_addr, 9 * 4},
 };
 const sh::Region kRegions4[] = {
-    {at::kAreaTrack, 1}, {at::kAreaTransition, 1}, {at::kMusicTrack, 1}, {at::kByteFE, 1}, {at::kMessage, 2},
-    {at::kGameMode, 2}, {0x929F00, 0x14}, {at::kEffectState, 4}, {at::kActiveMember, 4}, {at::kObjects4, 4},
+    {AreaW1f_MusicCurrent_addr, 1}, {ModeFlow_AreaTransition_addr, 1}, {Music_Track_addr, 1}, {Cond_ByteFE_addr, 1}, {at::kMessage, 2},
+    {Game_Mode_addr, 2}, {0x929F00, 0x14}, {MoveScript_EffectState_addr, 4}, {Field_ActiveMember_addr, 4}, {Scena04_ObjectHandlers_addr, 4},
 };
 
 // --- the seed ----------------------------------------------------------------------
@@ -377,72 +377,72 @@ void Seed(unsigned k) {
     g_k = k;
     const bool four = g_chapter == 4;
     // the tables' indices, inside the swapped windows
-    sh::Mem(at::kState)[0] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next() % (four ? 6 : 12));
-    sh::Mem(at::kRun)[0] = static_cast<unsigned char>(sh::Next() % (four ? 3 : 9));
+    sh::Mem(MoveScript_PartyRecords_addr + 0x62)[0] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 3 : sh::Next() % (four ? 6 : 12));
+    sh::Mem(MoveScript_Var7_addr)[0] = static_cast<unsigned char>(sh::Next() % (four ? 3 : 9));
     // the step: every case, one past, else any byte
     if (const unsigned span = StepSpan(g_clones[k].name); span && sh::Next() % 6)
-        sh::Mem(at::kStep)[0] = static_cast<unsigned char>(sh::Next() % (span + 1));
-    if (sh::Often()) SetWord(sh::Mem(at::kTimer), PickTimer());
-    sh::Mem(at::kEffectByte)[0] = static_cast<unsigned char>(sh::Next() % 6 ? sh::Next() % 0x14 : 0xFF);
+        sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(sh::Next() % (span + 1));
+    if (sh::Often()) SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), PickTimer());
+    sh::Mem(MoveScript_PartyRecords_addr + 0x63)[0] = static_cast<unsigned char>(sh::Next() % 6 ? sh::Next() % 0x14 : 0xFF);
     // the counters the steps wait on
     if (sh::Next() % 6) sh::Mem(at::kCounter0)[0] = static_cast<unsigned char>(PickC0());
     if (sh::Often()) sh::Mem(at::kCounter1)[0] = static_cast<unsigned char>(SH_PICK(0, 1, 2, 3, 0x15));
     // the area, Cond_ByteFD, the bytes the entries and hooks test
-    if (sh::Often()) SetWord(sh::Mem(at::kArea), PickArea());
-    if (sh::Often()) sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>(sh::Next() % 8);
-    if (sh::Half()) sh::Mem(at::kKind2Mode)[0] = 1;
-    if (sh::Half()) sh::Mem(at::kRow3Byte2)[0] = static_cast<unsigned char>(sh::Mem(at::kRow3Byte2)[0] | 0xF);
-    if (sh::Often()) sh::Mem(at::kLeaderKind)[0] = static_cast<unsigned char>(3 + sh::Next() % 5);
+    if (sh::Often()) SetWord(sh::Mem(Game_AreaNumber_addr), PickArea());
+    if (sh::Often()) sh::Mem(Cond_ByteFD_addr)[0] = static_cast<unsigned char>(sh::Next() % 8);
+    if (sh::Half()) sh::Mem(AreaW1a_EntryZone_addr)[0] = 1;
+    if (sh::Half()) sh::Mem(Cond_Flags_addr + 0x1a)[0] = static_cast<unsigned char>(sh::Mem(Cond_Flags_addr + 0x1a)[0] | 0xF);
+    if (sh::Often()) sh::Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(3 + sh::Next() % 5);
     // the waits
-    if (sh::Half()) sh::Mem(at::kRequest)[0] = 2;
-    if (sh::Half()) SetWord(sh::Mem(at::kWait), 0);
+    if (sh::Half()) sh::Mem(Field_Request_addr)[0] = 2;
+    if (sh::Half()) SetWord(sh::Mem(MoveScript_WaitWordDA_addr), 0);
     if (sh::Half()) SetWord(sh::Mem(at::kMessage), SH_PICK(1, 0xC, 0x11, 0x12, 0x1F, 0x33));
-    if (sh::Half()) sh::Mem(at::kKind2Hold)[0] = 0;
-    if (sh::Half()) SetWord(sh::Mem(at::kGameMode), 2);
-    if (sh::Half()) SetWord(sh::Mem(at::kCamDistance), SH_PICK(0, 0x10, 0x22, 0x3F8, 0x3FF, 0x400, 0x7FF0));
+    if (sh::Half()) sh::Mem(Field_Kind2Hold_addr)[0] = 0;
+    if (sh::Half()) SetWord(sh::Mem(Game_Mode_addr), 2);
+    if (sh::Half()) SetWord(sh::Mem(Camera_Distance_addr), SH_PICK(0, 0x10, 0x22, 0x3F8, 0x3FF, 0x400, 0x7FF0));
     // the object handlers' index in the records the kObject shape passes
     for (unsigned i = 0; i < 4; ++i) sh::SpriteRecord(i)[0x86] = static_cast<unsigned char>(four ? 0 : sh::Next() % 9);
     // the object handler tables' stand-ins
     if (four) {
-        SetLong(sh::Mem(at::kObjects4), static_cast<std::int32_t>(Key(reinterpret_cast<const void*>(&ObjectEntry4))));
+        SetLong(sh::Mem(Scena04_ObjectHandlers_addr), static_cast<std::int32_t>(Key(reinterpret_cast<const void*>(&ObjectEntry4))));
     } else {
-        for (unsigned i = 0; i < 9; ++i) SetLong(sh::Mem(at::kObjects3 + 4 * i), static_cast<std::int32_t>(Key(kObjEntries3[i])));
+        for (unsigned i = 0; i < 9; ++i) SetLong(sh::Mem(Scena03_ObjectHandlers_addr + 4 * i), static_cast<std::int32_t>(Key(kObjEntries3[i])));
     }
     // a step that waits on a counter, with the counter at (or next to) the value
     if (const SceneWaits* w = WaitsOf(g_clones[k].name); w && sh::Half()) {
         unsigned n = 0;
         while (n < 16 && (w->waits[n].value || w->waits[n].step)) ++n;
         const StepWait& s = w->waits[sh::Next() % n];
-        sh::Mem(at::kStep)[0] = s.step;
+        sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = s.step;
         const unsigned jitter = sh::Next() % 5;
         sh::Mem(s.counter ? at::kCounter1 : at::kCounter0)[0] =
             static_cast<unsigned char>(s.value + (jitter == 0 ? 1u : jitter == 1 ? 0xFFu : 0u));
     }
     // a scene's timer at its end (the waits test 0; step 3 of run 3 decrements first)
-    if (StepSpan(g_clones[k].name) && sh::Next() % 3 == 0) SetWord(sh::Mem(at::kTimer), SH_PICK(0, 1, 2));
+    if (StepSpan(g_clones[k].name) && sh::Next() % 3 == 0) SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), SH_PICK(0, 1, 2));
     // run 6's step 0x13 at its first sound, run 3's steps that play the track
     if (Named("Scena03_Scene6") && sh::Next() % 3 == 0) {
-        sh::Mem(at::kStep)[0] = 0x13;
-        SetWord(sh::Mem(at::kTimer), SH_PICK(0x32, 0x32, 0xA, 1));
+        sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = 0x13;
+        SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), SH_PICK(0x32, 0x32, 0xA, 1));
     }
     if (Named("Scena04_Scene2") && sh::Next() % 4 == 0) {
-        sh::Mem(at::kStep)[0] = 0x15;
-        SetWord(sh::Mem(at::kTimer), SH_PICK(0x14, 0x15, 0x20));
+        sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = 0x15;
+        SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), SH_PICK(0x14, 0x15, 0x20));
     }
-    if (Named("Scena03_Scene3") && sh::Next() % 5 == 0) sh::Mem(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(0xF, 0x19));
+    if (Named("Scena03_Scene3") && sh::Next() % 5 == 0) sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(SH_PICK(0xF, 0x19));
     // an area the entry knows
     if (Named("EnterArea") && sh::Often())
-        SetWord(sh::Mem(at::kArea), four ? SH_PICK(0x28, 0x2A, 0x30, 0x36, 0x41)
+        SetWord(sh::Mem(Game_AreaNumber_addr), four ? SH_PICK(0x28, 0x2A, 0x30, 0x36, 0x41)
                                          : SH_PICK(0x25, 0x26, 0x27, 0x29, 0x2D, 0x32, 0x38, 0x45, 0x47, 0x63));
     // Scena04_Scene2's timed steps near their turns
     if (four && Named("Scene2") && sh::Half()) {
-        sh::Mem(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(8, 9, 0xA, 0xB, 0xC, 0xD, 0x10, 0x12, 0x13, 0x15));
-        SetWord(sh::Mem(at::kTimer), SH_PICK(0, 1, 2, 0xD, 0x13, 0x14, 0x23, 0x24));
+        sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(SH_PICK(8, 9, 0xA, 0xB, 0xC, 0xD, 0x10, 0x12, 0x13, 0x15));
+        SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), SH_PICK(0, 1, 2, 0xD, 0x13, 0x14, 0x23, 0x24));
     }
     // Scena03_Scene8's shaking steps at their turns
     if (!four && Named("Scene8") && sh::Half()) {
-        sh::Mem(at::kStep)[0] = static_cast<unsigned char>(7 + sh::Next() % 7);
-        SetWord(sh::Mem(at::kTimer), SH_PICK(0x1F, 0x20, 0x2F, 0x30, 0x4F, 0x50, 0x8F, 0x90, 0x9F, 0xA0, 0x10F, 0x110, 0x12F, 0x130));
+        sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(7 + sh::Next() % 7);
+        SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), SH_PICK(0x1F, 0x20, 0x2F, 0x30, 0x4F, 0x50, 0x8F, 0x90, 0x9F, 0xA0, 0x10F, 0x110, 0x12F, 0x130));
     }
 }
 
@@ -485,15 +485,15 @@ void Disturb(std::uint32_t h) {
     // music)
     if (h & 0x1000000) {
         if (Named("StepArea63")) {
-            sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>(2 + ((h >> 17) & 1));
+            sh::Mem(Cond_ByteFD_addr)[0] = static_cast<unsigned char>(2 + ((h >> 17) & 1));
             return;
         }
         if (Named("Scena03_Scene6")) {
-            SetWord(sh::Mem(at::kTimer), 0xA);
+            SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), 0xA);
             return;
         }
         if (Named("Scena04_Scene2")) {   // step 0x15's exit reads the step again after the tremor
-            sh::Mem(at::kStep)[0] = static_cast<unsigned char>(2 + (h >> 17) % 11);
+            sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(2 + (h >> 17) % 11);
             return;
         }
         if (Named("Scena03_Scene3")) {
@@ -503,15 +503,15 @@ void Disturb(std::uint32_t h) {
     }
     switch ((h >> 8) % 10) {
     case 0: sh::Mem(at::kCounter1)[0] = h & 0x10000 ? kC1[(h >> 17) % sizeof kC1] : static_cast<unsigned char>(h >> 24); break;
-    case 1: SetWord(sh::Mem(at::kArea), h & 0x10000 ? kAreas[(h >> 17) % sizeof kAreas] : h >> 16); break;
-    case 2: sh::Mem(at::kEffects + (h >> 12) % 0xA00)[0] = static_cast<unsigned char>(h >> 24); break;
-    case 3: sh::Mem(at::kStatusBits)[0] = static_cast<unsigned char>(h >> 16); break;
-    case 4: SetWord(sh::Mem(at::kCamDistance), h >> 16); break;
-    case 5: SetWord(sh::Mem(at::kGameMode), (h >> 16) & 3); break;
-    case 6: SetWord(sh::Mem(at::kTimer), kTimers[(h >> 16) % (sizeof kTimers / sizeof kTimers[0])]); break;
+    case 1: SetWord(sh::Mem(Game_AreaNumber_addr), h & 0x10000 ? kAreas[(h >> 17) % sizeof kAreas] : h >> 16); break;
+    case 2: sh::Mem(Effect_Objects_addr + (h >> 12) % 0xA00)[0] = static_cast<unsigned char>(h >> 24); break;
+    case 3: sh::Mem(Field_StatusBits_addr)[0] = static_cast<unsigned char>(h >> 16); break;
+    case 4: SetWord(sh::Mem(Camera_Distance_addr), h >> 16); break;
+    case 5: SetWord(sh::Mem(Game_Mode_addr), (h >> 16) & 3); break;
+    case 6: SetWord(sh::Mem(MoveScript_PartyRecords_addr + 0x66), kTimers[(h >> 16) % (sizeof kTimers / sizeof kTimers[0])]); break;
     case 7: sh::Mem(at::kCounter0)[0] = kC0[(h >> 16) % sizeof kC0]; break;
-    case 8: sh::Mem(at::kStep)[0] = static_cast<unsigned char>(2 + (h >> 16) % 0x15); break;
-    default: sh::Mem(at::kByteFD)[0] = static_cast<unsigned char>(h & 0x10000 ? 2 + ((h >> 17) & 1) : (h >> 18) & 7); break;
+    case 8: sh::Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(2 + (h >> 16) % 0x15); break;
+    default: sh::Mem(Cond_ByteFD_addr)[0] = static_cast<unsigned char>(h & 0x10000 ? 2 + ((h >> 17) & 1) : (h >> 18) & 7); break;
     }
 }
 

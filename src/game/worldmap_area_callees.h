@@ -28,53 +28,53 @@ namespace at {
 
 // Area 29's init (0x4037B0): eight 1-byte chances summing to 64 and eight
 // (x, z) cell pairs, and the eight field objects it keeps one of.
-constexpr std::uint32_t kArea29Weights = 0x5EE268;   // Area29_Weights, u8 x 8
-constexpr std::uint32_t kArea29Cells = 0x5EE258;     // Area29_Cells, (u8 x, u8 z) x 8
-constexpr std::uint32_t kFieldObjects = 0x7DEE80;    // Sprite_Objects: records of 0xA4 bytes
+// kArea29Weights: now Area29_Weights (symbols.toml). Area29_Weights, u8 x 8
+// kArea29Cells: now Area29_Cells (symbols.toml). Area29_Cells, (u8 x, u8 z) x 8
+// kFieldObjects: now Sprite_Objects (symbols.toml). Sprite_Objects: records of 0xA4 bytes
 constexpr std::uint32_t kFieldObjectSize = 0xA4;
 constexpr std::uint32_t kFieldObjectsEnd = 0x7DF3A0; // the eighth record's end
 // The leader's working record (ObjTrio + 0): +9 a step count (u8), +0xC / +0x10
 // a direction (dwords), +0x34 / +0x38 the position (16.16), +0x134 a dword the
 // area-29 init writes, less 5, to Field_EdgeBits.
-constexpr std::uint32_t kLeader = 0x802D40;
-constexpr std::uint32_t kLeaderSteps = 0x802D49;
-constexpr std::uint32_t kLeaderDirX = 0x802D4C;
-constexpr std::uint32_t kLeaderDirZ = 0x802D50;
-constexpr std::uint32_t kLeaderX = 0x802D74;
-constexpr std::uint32_t kLeaderZ = 0x802D78;
-constexpr std::uint32_t kLeaderEdge = 0x802E74;
+// kLeader: now ObjTrio (symbols.toml).
+// kLeaderSteps: now ObjTrio[9] (symbols.toml).
+// kLeaderDirX: now ObjTrio[0xc] (symbols.toml).
+// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderX: now ObjTrio[0x34] (symbols.toml).
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
+// kLeaderEdge: now ObjTrio[0x134] (symbols.toml).
 // The place the party stands on, a u16 (the plate table's and the message
 // table's key; written by the world map's frame code, read here).
-constexpr std::uint32_t kPlace = 0x937F82;
+// kPlace: now AreaW0b_Place (symbols.toml).
 // The place-message machine's three bytes (0x9039F4 the state, s8).
-constexpr std::uint32_t kMsgState = 0x9039F4;
-constexpr std::uint32_t kMsgByteBefore = 0x9039F3;
-constexpr std::uint32_t kMsgByteAfter = 0x9039F5;
+// kMsgState: now AreaW0c_TailState (symbols.toml).
+// kMsgByteBefore: now AreaW0a_TailKind (symbols.toml).
+// kMsgByteAfter: now AreaW0c_TailSub (symbols.toml).
 // The world map's mode byte (docs/world-map-hud.md section 6).
-constexpr std::uint32_t kMapMode = 0x9045FA;
+// kMapMode: now AreaW0b_MapMode (symbols.toml).
 // The leader's cells, the high words of Field_Kind2X / Field_Kind2Z.
 constexpr std::uint32_t kLeaderCellX = 0x905E66;
 constexpr std::uint32_t kLeaderCellZ = 0x905E62;
 // AreaMap_Header's second byte: the map's height in cells (by its use here).
-constexpr std::uint32_t kMapHeight = 0x8CB581;
+// kMapHeight: now AreaMap_Header[1] (symbols.toml).
 // Tables in .data (symbols.toml names them).
-constexpr std::uint32_t kPlateAnims = 0x5EF320;      // WorldMap33_PlateAnims: (u16 place, u8 animation, u8) x 6, unbounded search
-constexpr std::uint32_t kPlaceMessages = 0x5EF51C;   // WorldMap33_PlaceMessages: 6 rows of (u16 place, u16 message x 15)
+// kPlateAnims: now WorldMap33_PlateAnims (symbols.toml). WorldMap33_PlateAnims: (u16 place, u8 animation, u8) x 6, unbounded search
+// kPlaceMessages: now WorldMap33_PlaceMessages (symbols.toml). WorldMap33_PlaceMessages: 6 rows of (u16 place, u16 message x 15)
 constexpr std::uint32_t kPlaceMessagesEnd = 0x5EF5DC;
-constexpr std::uint32_t kPlateStates = 0x5EF5DC;     // WorldMap33_PlateStates, 5
-constexpr std::uint32_t kHudStates = 0x5EF5F0;       // WorldMapHud_States, 2
-constexpr std::uint32_t kBoxStates = 0x5EF608;       // WorldMapHud_BoxStates, 4
-constexpr std::uint32_t kDriftUBase = 0x5EF6B4;      // WorldMap33_DriftUV: u8 by +0xB - 2, then v base +4, cell size +8
-constexpr std::uint32_t kDriftVBase = 0x5EF6B8;
-constexpr std::uint32_t kDriftSize = 0x5EF6BC;
-constexpr std::uint32_t kRecords = 0x653910;         // WorldMap_Records, 0x1C bytes each, the area byte at +0x18
+// kPlateStates: now WorldMap33_PlateStates (symbols.toml). WorldMap33_PlateStates, 5
+// kHudStates: now WorldMapHud_States (symbols.toml). WorldMapHud_States, 2
+// kBoxStates: now WorldMapHud_BoxStates (symbols.toml). WorldMapHud_BoxStates, 4
+// kDriftUBase: now WorldMap33_DriftUV (symbols.toml). WorldMap33_DriftUV: u8 by +0xB - 2, then v base +4, cell size +8
+// kDriftVBase: now WorldMap33_DriftUV[4] (symbols.toml).
+// kDriftSize: now WorldMap33_DriftUV[8] (symbols.toml).
+// kRecords: now WorldMap_Records (symbols.toml). WorldMap_Records, 0x1C bytes each, the area byte at +0x18
 constexpr std::uint32_t kRecordSize = 0x1C;
-constexpr std::uint32_t kRecordAreas = 0x653928;     // the first record's area byte
+// kRecordAreas: now WorldMap_Records[6] (symbols.toml). the first record's area byte
 constexpr std::uint32_t kRecordAreasEnd = 0x653A5C;  // eleven records
-constexpr std::uint32_t kKind06States = 0x653EC8;    // EffectKind06_States, 3
-constexpr std::uint32_t kKind06Anims = 0x653ED4;     // EffectKind06_Anims, u8 by +6
-constexpr std::uint32_t kKind06Ticks = 0x653EDC;     // EffectKind06_Ticks, 6
-constexpr std::uint32_t kKind18States = 0x65406C;    // EffectKind18_States
+// kKind06States: now EffectKind06_States (symbols.toml). EffectKind06_States, 3
+// kKind06Anims: now EffectKind06_Anims (symbols.toml). EffectKind06_Anims, u8 by +6
+// kKind06Ticks: now EffectKind06_Ticks (symbols.toml). EffectKind06_Ticks, 6
+// kKind18States: now EffectKind18_States (symbols.toml). EffectKind18_States
 
 }  // namespace at
 

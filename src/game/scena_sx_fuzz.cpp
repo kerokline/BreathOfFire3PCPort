@@ -138,9 +138,9 @@ void Move(std::uint32_t h) {
     case 2: Mem(at::kFormation)[0] = static_cast<unsigned char>(v); break;
     case 3: Field_State = Obj(v); break;
     case 4: MapView_Column = static_cast<short>(v % 0x1C); break;
-    case 5: Mem(at::kLeaderSlot)[0] = static_cast<unsigned char>(v % 5); break;
-    case 6: Mem(at::kPartyLists)[v % 6] = static_cast<unsigned char>(w % 24); break;
-    case 7: SetLong(Mem(v & 1 ? at::kBattleZ : at::kBattleX), static_cast<std::int32_t>(h)); break;
+    case 5: Mem(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(v % 5); break;
+    case 6: Mem(Cond_Flags_addr + 0xd2)[v % 6] = static_cast<unsigned char>(w % 24); break;
+    case 7: SetLong(Mem(v & 1 ? BossSi_CentreZ_addr : BossSi_CentreX_addr), static_cast<std::int32_t>(h)); break;
     case 8: Sprite_Current = Obj(v); break;
     case 9: Obj(v)[0x89] = static_cast<unsigned char>(w % 24); break;
     default: break;
@@ -188,11 +188,11 @@ const sh::Region kRegions[] = {
     {bof3::addr::CharacterRecords, 8 * at::kRecordStride},
     {0x904098, 0x9045F4 - 0x904098},   // 0x904138; the inventory's lists, the key items, the shared ability list
     {0x904AA0, 0xB0},                  // the battle bytes: the formation 0x904AAC
-    {at::kBattleX, 8},
+    {BossSi_CentreX_addr, 8},
     {at::kSlotPositions, 0x20},
     {Key(Gfx_ClutStrip), 0x4000},
-    {at::kEaseStep, 4},
-    {at::kEaseAcc, 8},
+    {CameraTurn_Steps_addr + 0x8, 4},
+    {CameraTurn_Angles_addr + 0x8, 8},
     {Key(ObjTrio) - at::kObjStride, at::kObjStride},   // Party_Remove at a count of 0 clears its +0
     {Key(g_cells), sizeof g_cells},
 };
@@ -212,7 +212,7 @@ std::int32_t ExpFor(unsigned id, unsigned level) {
 void SeedParty() {
     // the member count 0..3 (every loop over it stays inside ObjTrio), mostly 1..3
     Field_MemberCount = static_cast<unsigned char>(sh::Often() ? 1 + sh::Next() % 3 : sh::Next() % 4);
-    unsigned char* const lists = Mem(at::kPartyLists);
+    unsigned char* const lists = Mem(Cond_Flags_addr + 0xd2);
     for (unsigned i = 0; i < 6; ++i) lists[i] = static_cast<unsigned char>(sh::Next() % 24);
     if (sh::Often()) {
         const unsigned r = sh::Next() % 3;
@@ -246,7 +246,7 @@ void Seed(unsigned k) {
         for (unsigned r = 0; r < 8; ++r) Rec(r)[0xB] = static_cast<unsigned char>(Rec(r)[0xB] ^ (sh::Half() ? 1 : 0));
         break;
     case kRemove:
-        Mem(at::kLeaderSlot)[0] = static_cast<unsigned char>(sh::Next() % 5);
+        Mem(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(sh::Next() % 5);
         break;
     case kLoseHp:
         for (unsigned r = 0; r < 8; ++r) {
@@ -260,14 +260,14 @@ void Seed(unsigned k) {
         // the area a byte (the records' +0 is), the leader's facing, records
         // near the cell the arguments name
         Game_AreaNumber = static_cast<unsigned short>(sh::Often() ? sh::Next() % 8 : sh::Next());
-        Mem(at::kLeaderFacing)[0] = static_cast<unsigned char>(sh::Next() % 10);
+        Mem(ObjTrio_addr + 0x8)[0] = static_cast<unsigned char>(sh::Next() % 10);
         for (unsigned i = 0; i < 8; ++i) {
             unsigned char* const r = g_cells + 5 * i;
             r[0] = static_cast<unsigned char>(sh::Often() ? Game_AreaNumber : sh::Next() % 8);
             r[1] = static_cast<unsigned char>(sh::Next() % 8);
             r[2] = static_cast<unsigned char>(sh::Next() % 8);
             r[3] = static_cast<unsigned char>((sh::Half() ? 0x80 : 0) | (sh::Next() & 0x70) |
-                                              (sh::Often() ? PickOf(8, Mem(at::kLeaderFacing)[0]) : sh::Next() % 16));
+                                              (sh::Often() ? PickOf(8, Mem(ObjTrio_addr + 0x8)[0]) : sh::Next() % 16));
             r[4] = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 3, 4, 0xFF));
         }
         break;
@@ -277,9 +277,9 @@ void Seed(unsigned k) {
         MapView_Column = static_cast<short>(PickOf(0, 0x1A, 0x1B, sh::Next() % 0x1C, sh::Next() % 0x1C, sh::Next() % 0x10000));
         break;
     case kEase:
-        SetLong(Mem(at::kEaseLeft), static_cast<std::int32_t>(sh::Half() ? 0 : PickOf(1, 2, 3, 0xFFFFFFFFu, sh::Next() % 40)));
-        Mem(at::kKind2Speed)[0] = static_cast<unsigned char>(sh::Next() % 6);   // Field_MoveSpeeds 0, 1, 2, 4, 8, 16
-        Mem(at::kKind2Mode)[0] = static_cast<unsigned char>(PickOf(2, 6, sh::Next() % 8, sh::Next()));
+        SetLong(Mem(ScenaSx_EaseLeft_addr), static_cast<std::int32_t>(sh::Half() ? 0 : PickOf(1, 2, 3, 0xFFFFFFFFu, sh::Next() % 40)));
+        Mem(Sprite_Kind2_addr + 0x84)[0] = static_cast<unsigned char>(sh::Next() % 6); // Field_MoveSpeeds 0, 1, 2, 4, 8, 16
+        Mem(Sprite_Kind2_addr + 0x8)[0] = static_cast<unsigned char>(PickOf(2, 6, sh::Next() % 8, sh::Next()));
         break;
     case kFindFree:
         for (unsigned i = 0; i < at::kSpriteCount; ++i)
@@ -329,7 +329,7 @@ void Seed(unsigned k) {
     }
     case kZennySub:
     case kZennyAdd:
-        SetLong(Mem(bof3::addr::Party_Zenny),
+        SetLong(Mem(Party_Zenny_addr),
                 static_cast<std::int32_t>(PickOf(0, 100, sh::Next() % 10000, at::kZennyCap - sh::Next() % 1000, at::kZennyCap,
                                                   0xFFFFFFF0u + sh::Next() % 16, sh::Next())));
         break;
@@ -343,7 +343,7 @@ void Args(unsigned k, std::uint32_t* a) {
     switch (k) {
     case kLevelUp: a[0] = hi | (sh::Next() % 8); break;
     case kPlace: break;   // x, z any; the event battle any byte (EventBattle_Records read only)
-    case kRemove: a[0] = hi | (sh::Often() ? Mem(at::kPartyLists)[sh::Next() % 6] : sh::Next() % 24); break;
+    case kRemove: a[0] = hi | (sh::Often() ? Mem(Cond_Flags_addr + 0xd2)[sh::Next() % 6] : sh::Next() % 24); break;
     case kFlash: a[0] = hi | (sh::Next() % 4); break;
     case kLoseHp:
         a[0] = PickOf(0, 1, 2, 10, sh::Next() % 1000, sh::Next() % 0x10000, sh::Next());
@@ -379,7 +379,7 @@ void Args(unsigned k, std::uint32_t* a) {
         break;
     case kZennySub:
     case kZennyAdd: {
-        const auto money = static_cast<std::uint32_t>(Long(Mem(bof3::addr::Party_Zenny)));
+        const auto money = static_cast<std::uint32_t>(Long(Mem(Party_Zenny_addr)));
         a[0] = PickOf(money, money + 1, money - 1, 0, sh::Next() % 10000, at::kZennyCap - money, at::kZennyCap - money + 1, sh::Next());
         a[1] = (a[1] & 0xFFFFFF00u) | (sh::Half() ? 0 : 1 + sh::Next() % 0xFF);
         break;

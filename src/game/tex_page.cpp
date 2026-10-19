@@ -107,9 +107,9 @@ struct Rect {
 struct Packer {
     U shift_r, shift_g, shift_b, mask_r, mask_g, mask_b;
     Packer()
-        : shift_r(At(kPixelFormat + 4)[0] & 31u), shift_g(At(kPixelFormat + 8)[0] & 31u),
-          shift_b(At(kPixelFormat + 0xC)[0] & 31u), mask_r(Long(kPixelFormat + 0x10)),
-          mask_g(Long(kPixelFormat + 0x14)), mask_b(Long(kPixelFormat + 0x18)) {}
+        : shift_r(At(Gfx_PixelFormat_addr + 4)[0] & 31u), shift_g(At(Gfx_PixelFormat_addr + 8)[0] & 31u),
+          shift_b(At(Gfx_PixelFormat_addr + 0xC)[0] & 31u), mask_r(Gfx_PixelFormat[4]),
+          mask_g(Gfx_PixelFormat[5]), mask_b(Gfx_PixelFormat[6]) {}
     U operator()(U r, U g, U b) const {
         return ((r >> shift_r) & mask_r) | ((g >> shift_g) & mask_g) | ((b >> shift_b) & mask_b);
     }
@@ -128,7 +128,7 @@ struct Packer {
 template <int Bits> void ConvertIndexed(void* dst, const void* src, const void* clut, int w, int h, int pitch) {
     constexpr U kPerLong = 32 / Bits;
     constexpr U kMask = (1u << Bits) - 1;
-    const bool wide = At(kPixelFormat)[3] == 4;
+    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
     const auto* table = static_cast<const unsigned char*>(clut);
     auto* d = static_cast<unsigned char*>(dst);
     U total = 0x100;
@@ -185,7 +185,7 @@ void Tex_Convert8(void* dst, const void* src, const void* clut, int w, int h, in
 // force other cells opaque; this does neither). The texel loop is a `loop`:
 // it stops only when the count reaches exactly 0.
 void Tex_Convert16(void* dst, const void* src, int w, int h, int pitch) {
-    const bool wide = At(kPixelFormat)[3] == 4;
+    const bool wide = At(Gfx_PixelFormat_addr)[3] == 4;
     const Packer pack;
     auto* d = static_cast<unsigned char*>(dst);
     U total = 0x100;
@@ -238,7 +238,7 @@ void Dd_InitSurfaceDesc(void* desc) {
 int Dd_CreatePlainSurface(unsigned width, unsigned height, void** surface, unsigned format) {
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
-    const U caps = (At(kRenderFlags)[0] & 1) ? 0x840u : 0x1800u;
+    const U caps = (Gfx_RenderFlags & 1) ? 0x840u : 0x1800u;
     PutLong(desc.b + 0xC, (width + 3) & ~3u);
     PutLong(desc.b + 8, (height + 3) & ~3u);
     PutLong(desc.b + 0x68, caps);
@@ -286,7 +286,7 @@ U Source(U page, U mode, std::int32_t key_x, std::int32_t key_y) {
     case 2: x += static_cast<U>(key_x) * 2; break;
     default: break;
     }
-    return kVram + (y << 11) + x;
+    return Gfx_VramShadow_addr + (y << 11) + x;
 }
 
 U Generation(U row_address) { return Long(row_address); }
@@ -319,7 +319,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     const U p = static_cast<U>(page);
     const U m = static_cast<U>(mode);
     U slot = 0;
-    for (U e = kPageCache + ((p * 3) << 8); slot < 0x20; ++slot, e += kEntryBytes)
+    for (U e = Gfx_TexCache_addr + ((p * 3) << 8); slot < 0x20; ++slot, e += kEntryBytes)
         if (At(e)[0] == 0) break;
     // Diagnostic only, no behaviour: a page with no free entry (the original
     // draws the primitive untextured, D3d_BindTexture with a 0) is logged, the
@@ -347,10 +347,10 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     const U src = Source(p, m, Short(kTexKey), Short(kTexKey + 2));
     Desc desc;
     Dd_InitSurfaceDesc(desc.b);
-    const U entry = kPageCache + ((p << 5) + slot) * kEntryBytes;
+    const U entry = Gfx_TexCache_addr + ((p << 5) + slot) * kEntryBytes;
     const U surface_slot = entry + 0x10;
     U result;
-    if (At(kRenderFlags)[0] & 1) {
+    if (Gfx_RenderFlags & 1) {
         if (!Dd_CreatePlainSurface(0x100, 0x100, reinterpret_cast<void**>(At(surface_slot)), 0)) return 0;
         const void* table = nullptr;
         if (!(m & 2)) table = g.clut_pixels(static_cast<unsigned>(clut));
@@ -369,7 +369,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
         if (!Dd_CreateTextureSurface(0x100, 0x100, reinterpret_cast<void**>(At(surface_slot)),
                                      reinterpret_cast<void**>(At(entry + 0x14)), 0))
             return 0;
-        if (At(kRenderFlags)[0] & 0x20) {
+        if (Gfx_RenderFlags & 0x20) {
             U key[2] = {0, 0};   // DDCOLORKEY {0, 0}
             Com(Long(surface_slot), kSetColorKey, kSrcBltKey, key);
         }
@@ -390,8 +390,8 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
     }
     At(entry)[0] = 1;
     At(entry)[1] = static_cast<unsigned char>(m);
-    PutLong(entry + 8, Long(kTexKey));
-    PutLong(entry + 0xC, Long(kTexKey + 4));
+    PutLong(entry + 8, Gfx_TexCacheKey[0]);
+    PutLong(entry + 0xC, Gfx_TexCacheKey[1]);
     return result;
 }
 
@@ -409,7 +409,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
 // staging surface, then a Blt of {0, 0, 256, 256} into the entry's surface.
 void D3d_RefreshPageTexture(int page, int slot) {
     const U p = static_cast<U>(page);
-    const U entry = kPageCache + ((p << 5) + static_cast<U>(slot)) * kEntryBytes;
+    const U entry = Gfx_TexCache_addr + ((p << 5) + static_cast<U>(slot)) * kEntryBytes;
     At(entry)[0] = 1;
     const U mode = At(entry)[1];
     const U src = Source(p, mode, Short(entry + 8), Short(entry + 0xA));
@@ -417,7 +417,7 @@ void D3d_RefreshPageTexture(int page, int slot) {
     Rect rect = {0, 0, 0x100, 0x100};
     if (mode & 2) {
         Dd_InitSurfaceDesc(desc.b);
-        if (At(kRenderFlags)[0] & 1) {
+        if (Gfx_RenderFlags & 1) {
             if (Com(Long(entry + 0x10), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
             g.convert16(desc.Surface(), At(src), Short(entry + 0xC), Short(entry + 0xE), static_cast<int>(desc.Pitch()));
             Com(Long(entry + 0x10), kUnlock, 0u);
@@ -431,8 +431,8 @@ void D3d_RefreshPageTexture(int page, int slot) {
     }
     const void* table = g.clut_pixels(Word(At(entry + 2)));
     Dd_InitSurfaceDesc(desc.b);
-    const bool software = (At(kRenderFlags)[0] & 1) != 0;
-    const U locked = software ? entry + 0x10 : kStage;
+    const bool software = (Gfx_RenderFlags & 1) != 0;
+    const U locked = software ? entry + 0x10 : Dd_StageSurface_addr;
     if (Com(Long(locked), kLock, kNoRect, desc.b, kLockWait, 0u) != 0) return;
     if (At(entry)[1] != 0)
         g.convert8(desc.Surface(), At(src), table, Short(entry + 0xC), Short(entry + 0xE), static_cast<int>(desc.Pitch()));

@@ -76,13 +76,13 @@ struct Region {
     U address, bytes;
 };
 const Region kRegions[] = {
-    {kFontCache, 0xA30},       // Font_TexCache, and entry 128 over the vertex block (D18)
-    {kCellCache, 0x1528},      // D3d_CellTexCache, entries 128.. over D3d_DeviceDesc, and 0x7CC334..0x7CC360
+    {Font_TexCache_addr, 0xA30}, // Font_TexCache, and entry 128 over the vertex block (D18)
+    {D3d_CellTexCache_addr, 0x1528}, // D3d_CellTexCache, entries 128.. over D3d_DeviceDesc, and 0x7CC334..0x7CC360
     {0x6BE9F8, 0x20},          // the surface pointers before SpriteCell_Table, Dd_CellBackdrop among them
-    {kCellTable, 0x4000},      // SpriteCell_Table
-    {kClutRows, 0x1000},       // Gfx_ClutRows
-    {kRenderFlags, 4},         // Gfx_RenderFlags
-    {kPixelFormat, 0x40},      // Gfx_PixelFormat and format record 0's DDPIXELFORMAT at 0x7DED80
+    {SpriteCell_Table_addr, 0x4000}, // SpriteCell_Table
+    {Gfx_ClutRows_addr, 0x1000}, // Gfx_ClutRows
+    {Gfx_RenderFlags_addr, 4}, // Gfx_RenderFlags
+    {Gfx_PixelFormat_addr, 0x40}, // Gfx_PixelFormat and format record 0's DDPIXELFORMAT at 0x7DED80
 };
 constexpr U kStateBytes = 0xA30 + 0x1528 + 0x20 + 0x4000 + 0x1000 + 4 + 0x40;
 struct State {
@@ -191,11 +191,11 @@ void RandomRecord(U address, U h, bool spill) {
 void RandomCaps(U h) {
     const U mins[] = {0, 1, 2, 3, 8, 16, 0, 1};
     const U maxes[] = {0x100, 0x800, 0x40, 0x20, 0x10, 0x30, 0x64, 0xFFFFFFFFu, 0x400, 0x8};
-    At(kTexCaps)[0] = static_cast<unsigned char>(h % 4 == 0 ? Next() : (h >> 2) % 4 == 0 ? 0 : ((h >> 4) & 0x22));
-    PutLong(kMinTexWidth, Pick(mins));
-    PutLong(kMinTexHeight, Pick(mins));
-    PutLong(kMaxTexWidth, Next() % 3 ? Pick(maxes) : 1 + Next() % 400);
-    PutLong(kMaxTexHeight, Next() % 3 ? Pick(maxes) : 1 + Next() % 400);
+    At(D3d_DeviceDesc_addr + 0x84)[0] = static_cast<unsigned char>(h % 4 == 0 ? Next() : (h >> 2) % 4 == 0 ? 0 : ((h >> 4) & 0x22));
+    PutLong(D3d_DeviceDesc_addr + 0xac, Pick(mins));
+    PutLong(D3d_DeviceDesc_addr + 0xb0, Pick(mins));
+    PutLong(D3d_DeviceDesc_addr + 0xb4, Next() % 3 ? Pick(maxes) : 1 + Next() % 400);
+    PutLong(D3d_DeviceDesc_addr + 0xb8, Next() % 3 ? Pick(maxes) : 1 + Next() % 400);
 }
 
 // What a callee may do to memory before the builder's next read, always to
@@ -217,16 +217,16 @@ void Disturb(U what) {
 void DisturbWith(U what, U h) {
     const U v = h >> 8;
     switch ((h >> 4) % 12) {
-    case 0: At(kRenderFlags)[0] ^= 1; return;
-    case 1: At(kRenderFlags)[0] ^= 0x20; return;
-    case 2: PutLong(kStage, Addr(g_stage[v % 2])); return;
-    case 3: At(kPixelFormat)[3] = v % 3 ? 2 : 4; return;
+    case 0: At(Gfx_RenderFlags_addr)[0] ^= 1; return;
+    case 1: At(Gfx_RenderFlags_addr)[0] ^= 0x20; return;
+    case 2: PutLong(Dd_StageSurface_addr, Addr(g_stage[v % 2])); return;
+    case 3: At(Gfx_PixelFormat_addr)[3] = v % 3 ? 2 : 4; return;
     case 4: PutLong(g_generation, v * 0x10001u); return;
     default: break;
     }
     if (g_kind == kGlyphRound) {
         switch ((h >> 4) % 12) {
-        case 5: PutLong(kGlyphData, Addr(g_glyphs + (v % 2) * kGlyphs * kGlyphBytes)); return;
+        case 5: PutLong(Font_GlyphData_addr, Addr(g_glyphs + (v % 2) * kGlyphs * kGlyphBytes)); return;
         case 6:
         case 7:
             // The entry's surface: 0 only before the builder tests it (the
@@ -241,7 +241,7 @@ void DisturbWith(U what, U h) {
         switch ((h >> 4) % 12) {
         case 5:
         case 6:
-            if (g_count && g_count <= 0x800) RandomRecord(kCellTable + ((g_first + v % g_count) & 0x7FF) * 8, v, false);
+            if (g_count && g_count <= 0x800) RandomRecord(SpriteCell_Table_addr + ((g_first + v % g_count) & 0x7FF) * 8, v, false);
             return;
         case 7: PutLong(g_entry + 0x20, Addr(g_entry_surfaces[v % 2])); return;
         case 8: PutLong(g_entry + 0x24, v % 2 ? Addr(ddraw_fuzz::TextureOf(g_entry_surfaces[v % 2])) : 0); return;
@@ -307,9 +307,9 @@ void SeedPrecision() {
                            : kAt64[(h >> 8) % (sizeof kAt64 / sizeof kAt64[0])];
     PutWord(g_entry + 0, t.used_w);
     PutWord(g_entry + 2, t.used_h);
-    At(kTexCaps)[0] = 0;
-    PutLong(kMaxTexWidth, t.texture_w);
-    PutLong(kMaxTexHeight, 0x800);
+    At(D3d_DeviceDesc_addr + 0x84)[0] = 0;
+    PutLong(D3d_DeviceDesc_addr + 0xb4, t.texture_w);
+    PutLong(D3d_DeviceDesc_addr + 0xb8, 0x800);
     ++g_precision_seeded;
 }
 
@@ -450,12 +450,12 @@ const U kBytesPerPixel[] = {2, 4, 2, 4, 2, 4, 3, 0};
 // The depth byte 0x7DED63 (2 or 4 mostly) and format record 0's DDPIXELFORMAT
 // at 0x7DED80 (the one every create here names), its bit count the same depth.
 void RandomFormats() {
-    for (U i = 0; i < 0x40; i += 4) PutLong(kPixelFormat + i, Next());
-    At(kPixelFormat)[3] = static_cast<unsigned char>(Next() % 10 ? Pick(kBytesPerPixel) : Next());
-    PutLong(kPixelFormat + 0x20, 0x20);
-    PutLong(kPixelFormat + 0x2C, At(kPixelFormat)[3] == 4 ? 32 : 16);
+    for (U i = 0; i < 0x40; i += 4) PutLong(Gfx_PixelFormat_addr + i, Next());
+    At(Gfx_PixelFormat_addr)[3] = static_cast<unsigned char>(Next() % 10 ? Pick(kBytesPerPixel) : Next());
+    PutLong(Gfx_PixelFormat_addr + 0x20, 0x20);
+    PutLong(Gfx_PixelFormat_addr + 0x2C, At(Gfx_PixelFormat_addr)[3] == 4 ? 32 : 16);
 }
-U BytesPerPixel() { return At(kPixelFormat)[3] == 4 ? 4 : 2; }
+U BytesPerPixel() { return At(Gfx_PixelFormat_addr)[3] == 4 ? 4 : 2; }
 
 void RandomBytes(U address, U bytes) {
     for (U i = 0; i < bytes; i += 4) {
@@ -577,7 +577,7 @@ void UnpackRounds(unsigned rounds, unsigned* bad, UnpackCoverage* c) {
                           "0x%02X, the original 0x%02X",
                           which == 0 ? "Font_UnpackGlyph" : which == 1 ? "Cell_Unpack4" : which == 2 ? "Cell_Unpack8"
                                                           : which == 3 ? "Cell_Unpack4Flip" : "Cell_Unpack8Flip",
-                          r, (unsigned)w, (unsigned)h, (int)pitch, At(kPixelFormat)[3], (unsigned)at, g_dst[1][at],
+                          r, (unsigned)w, (unsigned)h, (int)pitch, At(Gfx_PixelFormat_addr)[3], (unsigned)at, g_dst[1][at],
                           g_dst[0][at]);
             ++*bad;
             Refuse();
@@ -593,9 +593,9 @@ unsigned FitRounds(unsigned rounds, unsigned* bad) {
     unsigned squared = 0;
     for (unsigned r = 0; r < rounds; ++r) {
         RandomCaps(Next());
-        if (Next() % 4 == 0) PutLong(kMinTexWidth, Next() % 3 ? Pick(sides) & 0x7FFFFFFF : 0x40000000);
-        if (Next() % 4 == 0) PutLong(kMaxTexWidth, Pick(sides));
-        if (Next() % 4 == 0) PutLong(kMaxTexHeight, Pick(sides));
+        if (Next() % 4 == 0) PutLong(D3d_DeviceDesc_addr + 0xac, Next() % 3 ? Pick(sides) & 0x7FFFFFFF : 0x40000000);
+        if (Next() % 4 == 0) PutLong(D3d_DeviceDesc_addr + 0xb4, Pick(sides));
+        if (Next() % 4 == 0) PutLong(D3d_DeviceDesc_addr + 0xb8, Pick(sides));
         // A side above 0x40000000 as a positive int never ends the doubling
         // (in the original too): sides stay at or below it, or negative.
         U w = Next() % 2 ? Pick(sides) : Next() % 0x500, h = Next() % 2 ? Pick(sides) : Next() % 0x500;
@@ -605,12 +605,12 @@ unsigned FitRounds(unsigned rounds, unsigned* bad) {
         U a[2] = {Next(), Next()}, b[2] = {a[0], a[1]};
         g_clone.fit(w, h, &a[0], alias ? &a[0] : &a[1]);
         D3d_FitTextureSize(w, h, &b[0], alias ? &b[0] : &b[1]);
-        if ((At(kTexCaps)[0] & 0x20) != 0) ++squared;
+        if ((At(D3d_DeviceDesc_addr + 0x84)[0] & 0x20) != 0) ++squared;
         if (a[0] != b[0] || a[1] != b[1]) {
             if (*bad < 4)
                 bof3::Log("shadow      tex_cells MISMATCH: D3d_FitTextureSize round %u (%u x %u, caps 0x%02X): %u x %u, "
                           "the original %u x %u",
-                          r, (unsigned)w, (unsigned)h, At(kTexCaps)[0], (unsigned)b[0], (unsigned)b[1], (unsigned)a[0],
+                          r, (unsigned)w, (unsigned)h, At(D3d_DeviceDesc_addr + 0x84)[0], (unsigned)b[0], (unsigned)b[1], (unsigned)a[0],
                           (unsigned)a[1]);
             ++*bad;
             Refuse();
@@ -648,9 +648,9 @@ void FreeRounds(unsigned rounds, unsigned* bad) {
         ddraw_fuzz::Reset(Next());
         void* a = ddraw_fuzz::MakeSurface(64, 64, 2, 0);
         void* b = ddraw_fuzz::MakeSurface(64, 64, 2, 0);
-        RandomBytes(kCellCache, 0x1400);
+        RandomBytes(D3d_CellTexCache_addr, 0x1400);
         const U slot = Next() % 2 ? Pick(kSlots) : Next() % 128;
-        const U entry = kCellCache + slot * kCellEntryBytes;
+        const U entry = D3d_CellTexCache_addr + slot * kCellEntryBytes;
         PutLong(entry + 0x20, Next() % 3 ? Addr(Next() % 2 ? a : b) : 0);
         PutLong(entry + 0x24, Next() % 3 ? Addr(ddraw_fuzz::TextureOf(Next() % 2 ? a : b)) : 0);
         U theirs, ours;
@@ -683,27 +683,27 @@ void GlyphRounds(unsigned rounds, unsigned* bad, GlyphCoverage* c) {
         g_entry_surfaces[1] = ddraw_fuzz::MakeSurface(32, 32, bpp, Pick(kSurfacePitches));
         U pitches[2] = {Pick(kSurfacePitches), Pick(kSurfacePitches)};
         ddraw_fuzz::SetPitches(pitches, 2);
-        PutLong(kStage, Addr(g_stage[0]));
-        PutLong(kGlyphData, Addr(g_glyphs + (Next() % 2) * kGlyphs * kGlyphBytes));
-        At(kRenderFlags)[0] = static_cast<unsigned char>(Next());
+        PutLong(Dd_StageSurface_addr, Addr(g_stage[0]));
+        PutLong(Font_GlyphData_addr, Addr(g_glyphs + (Next() % 2) * kGlyphs * kGlyphBytes));
+        At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
         RandomPalettes();
-        RandomBytes(kFontCache, 0xA30);
-        RandomBytes(kClutRows, 0x1000);
+        RandomBytes(Font_TexCache_addr, 0xA30);
+        RandomBytes(Gfx_ClutRows_addr, 0x1000);
         const U slot = Next() % 3 == 0 ? Pick(slots) : Next() % 128;
         const U glyph = Next() % 3 == 0 ? Pick(glyphs) : Next() % kGlyphs;
         const U clut = Next() % 3 == 0 ? Pick(cluts) : Next() & 0xFFFF;
-        g_entry = kFontCache + slot * kFontEntryBytes;
-        g_generation = kClutRows + static_cast<U>(static_cast<std::int32_t>(clut) >> 6) * 8;
-        if (g_generation < kClutRows || g_generation >= kClutRows + 0x1000) g_generation = kClutRows + 8 * (Next() % 512);
+        g_entry = Font_TexCache_addr + slot * kFontEntryBytes;
+        g_generation = Gfx_ClutRows_addr + static_cast<U>(static_cast<std::int32_t>(clut) >> 6) * 8;
+        if (g_generation < Gfx_ClutRows_addr || g_generation >= Gfx_ClutRows_addr + 0x1000) g_generation = Gfx_ClutRows_addr + 8 * (Next() % 512);
         const bool fresh = Next() % 2 == 0;
         PutLong(g_entry + 8, fresh ? 0 : Addr(g_entry_surfaces[Next() % 2]));
         if (Next() % 3 == 0) ddraw_fuzz::FailAt(ddraw_fuzz::kSurfaceCall + ddraw_fuzz::kLock, 0);
         if (Next() % 6 == 0) ddraw_fuzz::FailAt(ddraw_fuzz::kDirectDrawCall + ddraw_fuzz::kCreateSurface, 0);
         if (Next() % 8 == 0) ddraw_fuzz::FailAt(ddraw_fuzz::kSurfaceCall + ddraw_fuzz::kQueryInterface, 0);
-        const bool software = At(kRenderFlags)[0] & 1;
+        const bool software = At(Gfx_RenderFlags_addr)[0] & 1;
         ++(software ? c->software : c->direct3d);
         ++(fresh ? c->made : c->reused);
-        if (!software && fresh && (At(kRenderFlags)[0] & 0x20)) ++c->keyed;
+        if (!software && fresh && (At(Gfx_RenderFlags_addr)[0] & 0x20)) ++c->keyed;
         if (slot == 128) ++c->overrun;
         U theirs, ours;
         TwoPasses([&] { g_clone.glyph(static_cast<int>(slot), glyph, clut); return 0u; },
@@ -742,14 +742,14 @@ CellRound CellWorld(bool refresh, CellCoverage* c) {
     g_entry_surfaces[1] = ddraw_fuzz::MakeSurface(128, 64, bpp, Pick(kSurfacePitches));
     U pitches[2] = {Pick(kSurfacePitches), Pick(kSurfacePitches)};
     ddraw_fuzz::SetPitches(pitches, 2);
-    PutLong(kStage, Addr(g_stage[0]));
-    At(kRenderFlags)[0] = static_cast<unsigned char>(Next());
+    PutLong(Dd_StageSurface_addr, Addr(g_stage[0]));
+    At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
     RandomPalettes();
-    RandomBytes(kCellCache, 0x1528 - 0x2C);   // up to 0x7CC334, the DirectDraw globals
-    RandomBytes(kClutRows, 0x1000);
+    RandomBytes(D3d_CellTexCache_addr, 0x1528 - 0x2C); // up to 0x7CC334, the DirectDraw globals
+    RandomBytes(Gfx_ClutRows_addr, 0x1000);
     RandomCaps(Next());
     RandomBytes(0x6BE9F8, 0x20);
-    PutLong(kBackdrop, Next() % 4 ? Addr(g_backdrop) : 0);
+    PutLong(Dd_CellBackdrop_addr, Next() % 4 ? Addr(g_backdrop) : 0);
 
     CellRound round;
     round.slot = Next() % 3 == 0 ? Pick(kSlots) : Next() % 128;
@@ -782,21 +782,21 @@ CellRound CellWorld(bool refresh, CellCoverage* c) {
     }
     const bool spill = Next() % 16 == 0;
     if (spill) ++c->spill;
-    for (U i = 0; i < kRecords; ++i) RandomRecord(kCellTable + i * 8, Next(), spill);
+    for (U i = 0; i < kRecords; ++i) RandomRecord(SpriteCell_Table_addr + i * 8, Next(), spill);
     RandomRecord(0x6BEA08, Next(), false);
     RandomRecord(0x6BEA10, Next(), false);
     if (round.first < kRecords)
         for (U i = round.first; i < round.first + round.count; ++i) {
-            const U tpage = At(kCellTable + i * 8 + 4)[0] | At(kCellTable + i * 8 + 5)[0] << 8;
+            const U tpage = At(SpriteCell_Table_addr + i * 8 + 4)[0] | At(SpriteCell_Table_addr + i * 8 + 5)[0] << 8;
             if (tpage & 0x200) ++c->flipped;
             if (tpage & 0x180) ++c->bits8;
         }
 
-    g_entry = kCellCache + round.slot * kCellEntryBytes;
+    g_entry = D3d_CellTexCache_addr + round.slot * kCellEntryBytes;
     g_first = round.first;
     g_count = round.count;
-    g_generation = kClutRows + (round.clut >> 6) * 8;
-    if (g_generation >= kClutRows + 0x1000) g_generation = kClutRows + 8 * (Next() % 512);
+    g_generation = Gfx_ClutRows_addr + (round.clut >> 6) * 8;
+    if (g_generation >= Gfx_ClutRows_addr + 0x1000) g_generation = Gfx_ClutRows_addr + 8 * (Next() % 512);
     PutLong(g_entry + 0x20, refresh || Next() % 3 ? Addr(g_entry_surfaces[Next() % 2]) : 0);
     PutLong(g_entry + 0x24, Next() % 3 ? Addr(ddraw_fuzz::TextureOf(g_entry_surfaces[Next() % 2])) : 0);
     if (refresh) {
@@ -816,14 +816,14 @@ CellRound CellWorld(bool refresh, CellCoverage* c) {
     else if (round.count == 1) ++c->one;
     else if (round.count == kMostCells) ++c->most;
     else ++c->many;
-    const bool software = At(kRenderFlags)[0] & 1;
+    const bool software = At(Gfx_RenderFlags_addr)[0] & 1;
     ++(software ? c->software : c->direct3d);
-    if (!software && round.backdrop && Long(kBackdrop)) ++c->backdrop;
+    if (!software && round.backdrop && Long(Dd_CellBackdrop_addr)) ++c->backdrop;
     return round;
 }
 
 void BuildRounds(unsigned rounds, unsigned* bad, CellCoverage* c) {
-    g_src_base = kVram;
+    g_src_base = Gfx_VramShadow_addr;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = r;
         g_kind = kBuildRound;
@@ -859,7 +859,7 @@ void BuildRounds(unsigned rounds, unsigned* bad, CellCoverage* c) {
 }
 
 void RefreshRounds(unsigned rounds, unsigned* bad, CellCoverage* c) {
-    g_src_base = kVram;
+    g_src_base = Gfx_VramShadow_addr;
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = r;
         g_kind = kRefreshRound;
@@ -885,10 +885,10 @@ void RefreshRounds(unsigned rounds, unsigned* bad, CellCoverage* c) {
 void SelfTest() {
     MakeClones();
     BuildDevice();
-    std::memcpy(g_vram_saved, At(kVram), kVramBytes);
+    std::memcpy(g_vram_saved, At(Gfx_VramShadow_addr), kVramBytes);
     Capture(g_saved);
     g_rand = 0x5A32B0u;
-    for (U i = 0; i < kVramBytes; i += 4) PutLong(kVram + i, Next());
+    for (U i = 0; i < kVramBytes; i += 4) PutLong(Gfx_VramShadow_addr + i, Next());
     g_source = static_cast<unsigned char*>(VirtualAlloc(nullptr, kSourceBytes + 0x1000, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     g_dst[0] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     g_dst[1] = static_cast<unsigned char*>(VirtualAlloc(nullptr, kDstBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
@@ -910,9 +910,9 @@ void SelfTest() {
     GlyphCoverage gc = {};
     CellCoverage bc = {}, rc = {};
     {
-        const ddraw_fuzz::GlobalSwap dd(ddraw_fuzz::kDirectDraw, ddraw_fuzz::FakeDirectDraw());
-        const ddraw_fuzz::GlobalSwap device(kDevice, &g_device);
-        const ddraw_fuzz::GlobalSwap glyphs(kGlyphData, g_glyphs);
+        const ddraw_fuzz::GlobalSwap dd(Dd_DirectDraw_addr, ddraw_fuzz::FakeDirectDraw());
+        const ddraw_fuzz::GlobalSwap device(D3d_Device_addr, &g_device);
+        const ddraw_fuzz::GlobalSwap glyphs(Font_GlyphData_addr, g_glyphs);
         ddraw_fuzz::SetDisturb(nullptr);
         ClearRounds(kClearRounds, &bad);
         FreeRounds(kFreeRounds, &bad);
@@ -924,7 +924,7 @@ void SelfTest() {
         g_kind = kOtherRound;
     }
     Restore(g_saved);
-    std::memcpy(At(kVram), g_vram_saved, kVramBytes);
+    std::memcpy(At(Gfx_VramShadow_addr), g_vram_saved, kVramBytes);
     VirtualFree(g_source, 0, MEM_RELEASE);
     VirtualFree(g_dst[0], 0, MEM_RELEASE);
     VirtualFree(g_dst[1], 0, MEM_RELEASE);

@@ -31,6 +31,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -52,20 +53,24 @@ using move_script::Word;
 // SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read again
 // after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kFrameSet = 0x9039D8;        // the sprite frame-offset table pointer (sprite_pose.h)
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
-constexpr std::uint32_t kOrbShades = 0x65C1A8;       // MagicBallOrb_Shades: 10 byte pairs, by the orb's +0xB
-constexpr std::uint32_t kTrailPoints = 0x6B2858;     // IntimidateTrail_Points: 32 (x, y) words a trail, by its +4
-constexpr std::uint32_t kStruck = 0x6B4A58;          // AuraBreath_Struck: a byte an enemy, 0xFF once flagged
-constexpr std::uint32_t kDomeV = 0x65C21C;           // AuraBreathDome_V: 8 bytes, a texture v a band
-constexpr std::uint32_t kDomeHeight = 0x65C224;      // AuraBreathDome_Height: 8 bytes, a texture height a band
+// kOrbShades: now MagicBallOrb_Shades (symbols.toml). MagicBallOrb_Shades: 10 byte pairs, by the orb's +0xB
+// kTrailPoints: now IntimidateTrail_Points (symbols.toml). IntimidateTrail_Points: 32 (x, y) words a trail, by its +4
+// kStruck: now AuraBreath_Struck (symbols.toml). AuraBreath_Struck: a byte an enemy, 0xFF once flagged
+// kDomeV: now AuraBreathDome_V (symbols.toml). AuraBreathDome_V: 8 bytes, a texture v a band
+// kDomeHeight: now AuraBreathDome_Height (symbols.toml). AuraBreathDome_Height: 8 bytes, a texture height a band
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorIndex() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
 
@@ -75,9 +80,9 @@ unsigned char SB(unsigned k) { return Mem(kS + k)[0]; }
 void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 short S16(const unsigned char* at) { return static_cast<short>(Word(at)); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -177,20 +182,22 @@ void StepTowardSource(const unsigned char* src, std::uint32_t lift, int speed) {
 bool TurnedPast() {
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x10, I32((U32(s + 0x10) & 0xFFF) - (U32(s + 0xC) & 0xFFF)));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_y = I32((U32(s + 0x10) & 0xFFF) - (U32(s + 0xC) & 0xFFF));
     }
     {
         unsigned char* const s = Sc();
-        const std::int32_t v = Long(s + 0x10);
-        if (v < 0) SetLong(s + 0x10, I32(0u - static_cast<std::uint32_t>(v)));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        const std::int32_t v = ts->vel_y;
+        if (v < 0) ts->vel_y = I32(0u - static_cast<std::uint32_t>(v));
     }
-    const std::int32_t v = Long(Sc() + 0x10);
+    const std::int32_t v = ScTask()->vel_y;
     return v > 0x600 && v < 0xA00;
 }
 
 // One point of a trail: IntimidateTrail_Points + ((trail << 5) + k) x 4, the
 // x word and the y word; neither index is checked by the originals.
-unsigned char* TrailPoint(unsigned trail, unsigned k) { return Mem(kTrailPoints + ((trail << 5) + k) * 4); }
+unsigned char* TrailPoint(unsigned trail, unsigned k) { return Mem(IntimidateTrail_Points_addr + ((trail << 5) + k) * 4); }
 
 }  // namespace
 
@@ -213,8 +220,8 @@ S36_EXPORT void __cdecl MagicBall_Task(void) {
 // i + 1, +0xB i), each with +0x80 this task and counted in +0xB; sound 0x100.
 S36_EXPORT void __cdecl MagicBall_Start(void) {
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -222,7 +229,8 @@ S36_EXPORT void __cdecl MagicBall_Start(void) {
     {
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(core);
-        SetLong(child + 0x80, I32(Key(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = I32(Key(s));
         child[1] = 0;
         Inc(s[0xB]);
     }
@@ -230,7 +238,8 @@ S36_EXPORT void __cdecl MagicBall_Start(void) {
         const unsigned slot = NewTask(0x51);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, I32(Key(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = I32(Key(s));
         child[1] = 1;
         child[4] = static_cast<unsigned char>(core);
         child[9] = static_cast<unsigned char>(i + 1);
@@ -314,11 +323,11 @@ S36_EXPORT void __cdecl MagicBallCore_Run(void) {
 // original 0x4F2220: the owner's point, 0x800000 higher; the heading +0xC the
 // angle to the source sprite (0x904B4C); +0xB, +9, +0xA 0; +2 on.
 S36_EXPORT void __cdecl MagicBallCore_Start(void) {
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, I32(U32(Owner() + 0x3C) + 0x800000u));
-    const int angle = AngleTo(Pointer(at::kSource));
-    SetLong(Sc() + 0xC, angle);
+    const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
+    ScTask()->vel_x = angle;
     Sc()[0xB] = 0;
     Sc()[9] = 0;
     Sc()[0xA] = 0;
@@ -346,14 +355,15 @@ S36_EXPORT void __cdecl MagicBallCore_Fly(void) {
         unsigned char* const s = Sc();
         if (s[9] < 0x10) AddB(s[9], 4);
     }
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     StepTowardSource(src, 0x1000000u, 0x40);
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x10, Long(s + 0xC));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_y = ts->vel_x;
     }
     const int angle = AngleTo(src);
-    SetLong(Sc() + 0xC, angle);
+    ScTask()->vel_x = angle;
     if (MH_CALL(MagicFx_NearSprite)(src, 0x8000) != 0) {
         CoreHit();
         return;
@@ -403,11 +413,11 @@ S36_EXPORT void __cdecl MagicBallOrb_Run(void) {
 S36_EXPORT void __cdecl MagicBallOrb_Start(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, I32(U32(Owner() + 0x3C) + 0x800000u));
-    const int angle = AngleTo(Pointer(at::kSource));
-    SetLong(Sc() + 0xC, angle);
+    const int angle = AngleTo(Pointer(BattleOdds_ActorObject_addr));
+    ScTask()->vel_x = angle;
     Sc()[9] = 0;
     Inc(Sc()[2]);
 }
@@ -420,14 +430,15 @@ S36_EXPORT void __cdecl MagicBallOrb_Fly(void) {
         unsigned char* const s = Sc();
         if (s[9] < 0x10) AddB(s[9], 4);
     }
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     StepTowardSource(src, 0x1000000u, 0x40);
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x10, Long(s + 0xC));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_y = ts->vel_x;
     }
     const int angle = AngleTo(src);
-    SetLong(Sc() + 0xC, angle);
+    ScTask()->vel_x = angle;
     unsigned char* const s = Sc();
     if (TaskSlot(s[4])[2] == 2) Inc(s[2]);
 }
@@ -638,9 +649,9 @@ S36_EXPORT void __cdecl MagicBallOrb_DrawDisc(void) {
     SetSW(0, 0x18);
     SetSW(6, static_cast<unsigned>(s[0xB]) * s[9]);
     const int x = S16(s + 0x2E), y = S16(s + 0x30);
-    SetSW(8, static_cast<unsigned>(Mem(kOrbShades + s[0xB] * 2u)[0]) * s[9]);
+    SetSW(8, static_cast<unsigned>(Mem(MagicBallOrb_Shades_addr + s[0xB] * 2u)[0]) * s[9]);
     SetSW(0xA, s[9]);
-    SetSW(0xC, static_cast<unsigned>(Mem(kOrbShades + 1 + s[0xB] * 2u)[0]) * s[9]);
+    SetSW(0xC, static_cast<unsigned>(Mem(MagicBallOrb_Shades_addr + 1 + s[0xB] * 2u)[0]) * s[9]);
     static constexpr unsigned kCentre[3] = {8, 0xA, 0xC}, kRim[3] = {0xFF, 0xFF, 0xFF};
     DiscG3(x, y, kCentre, kRim);
 }
@@ -662,8 +673,8 @@ S36_EXPORT void __cdecl Intimidate_Task(void) {
 // counted in +0xB; row 26 of the CLUT strip back; sound 0x100.
 S36_EXPORT void __cdecl Intimidate_Start(void) {
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -671,7 +682,8 @@ S36_EXPORT void __cdecl Intimidate_Start(void) {
         const unsigned slot = NewTask(0x18);
         unsigned char* const s = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, I32(Key(s)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = I32(Key(s));
         child[1] = 0;
         child[4] = static_cast<unsigned char>(i);
         Inc(s[0xB]);
@@ -712,7 +724,7 @@ S36_EXPORT void __cdecl IntimidateTrail_Run(void) {
 // +0xA 1, +2 on.
 S36_EXPORT void __cdecl IntimidateTrail_Start(void) {
     Sc()[8] = Owner()[8];
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     std::uint32_t dx, dy;
     const unsigned actor = ActorIndex();
     if (actor < 3) {
@@ -730,8 +742,8 @@ S36_EXPORT void __cdecl IntimidateTrail_Start(void) {
             dx = 0x10000;
         }
     }
-    SetLong(Sc() + 0xC, I32(dx));
-    SetLong(Sc() + 0x10, 0);
+    Store(ScTask()->vel_x, I32(dx));
+    ScTask()->vel_y = 0;
     SetLong(Sc() + 0x14, I32(dy));
     Turn(Sc());
     for (unsigned k = 0; k < 3; ++k) {
@@ -739,8 +751,8 @@ S36_EXPORT void __cdecl IntimidateTrail_Start(void) {
         SetLong(s + 0x34 + 4 * k, I32(U32(Owner() + 0x34 + 4 * k) + U32(s + 0xC + 4 * k)));
     }
     const int angle = AngleTo(src);
-    SetLong(Sc() + 0xC, angle);
-    SetLong(Sc() + 0x10, 0);
+    ScTask()->vel_x = angle;
+    ScTask()->vel_y = 0;
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
     SetWord(TrailPoint(s[4], 0), Word(s + 0x2E));
@@ -764,14 +776,15 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
         unsigned char* const s = Sc();
         if (s[0xA] < 8) Inc(s[0xA]);
     }
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     StepTowardSource(src, 0x800000u, 0xC0);
     {
         unsigned char* const s = Sc();
-        SetLong(s + 0x10, Long(s + 0xC));
+        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        ts->vel_y = ts->vel_x;
     }
     const int angle = AngleTo(src);
-    SetLong(Sc() + 0xC, angle);
+    ScTask()->vel_x = angle;
     bool arrived;
     if (MH_CALL(MagicFx_NearSprite)(src, 0x8000) != 0) {
         arrived = true;
@@ -779,8 +792,8 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
         arrived = TurnedPast();
     }
     if (arrived) {
-        SetLong(Sc() + 0x34, Long(src + 0x34));
-        SetLong(Sc() + 0x38, Long(src + 0x38));
+        Store(ScTask()->x, Long(src + 0x34));
+        Store(ScTask()->y, Long(src + 0x38));
         Inc(Sc()[2]);
     }
     MH_CALL(BattleActor_UpdateScreenXY)();
@@ -792,12 +805,14 @@ S36_EXPORT void __cdecl IntimidateTrail_Fly(void) {
     if (Sc()[2] != 2) return;
     const unsigned slot = NewTask(0x18);
     const unsigned char* const s = Sc();
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
     unsigned char* const owner = Owner();
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, I32(Key(owner)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = I32(Key(owner));
     child[1] = 1;
-    SetLong(child + 0x34, Long(s + 0x34));
-    SetLong(child + 0x38, Long(s + 0x38));
+    tchild->x = ts->x;
+    tchild->y = ts->y;
     SetLong(child + 0x3C, Long(s + 0x3C));
     Inc(owner[0xB]);
 }
@@ -1018,7 +1033,7 @@ S36_EXPORT void __cdecl IntimidateBurst_Run(void) {
     static constexpr std::uint32_t kSteps[4] = {bof3::addr::IntimidateBurst_Start, bof3::addr::IntimidateBurst_Rise,
                                                 bof3::addr::IntimidateBurst_Play, bof3::addr::IntimidateBurst_Fade};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     if (phase >= 4) PastTable("IntimidateBurst_Run", phase, 4);
     magic_harness::Phase(kSteps[phase])();
     if (Sc()[0] != 0) {
@@ -1026,7 +1041,7 @@ S36_EXPORT void __cdecl IntimidateBurst_Run(void) {
         Call0(bof3::addr::IntimidateBurst_DrawDisc);
         if (Sc()[2] < 3) MH_CALL(Sprite_UpdateScreen)();
     }
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4F47B0: the sprite set up (+0x25 0x1D, +0x26 0, +0x27 0xA0, +0x28
@@ -1123,18 +1138,19 @@ S36_EXPORT void __cdecl AuraBreath_Task(void) {
 // task, counted in +0xB; row 26 of the CLUT strip back with its STP bits;
 // sound 0x100.
 S36_EXPORT void __cdecl AuraBreath_Start(void) {
-    SetLong(Mem(kStruck), 0);
-    SetLong(Mem(kStruck + 4), 0);
+    SetLong(Mem(AuraBreath_Struck_addr), 0);
+    SetLong(Mem(AuraBreath_Struck_addr + 4), 0);
     Sc()[8] = Owner()[8];
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned slot = NewTask(0x67);
     unsigned char* const s = Sc();
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, I32(Key(s)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = I32(Key(s));
     child[1] = 0;
     child[9] = 1;
     Inc(s[0xB]);
@@ -1170,11 +1186,12 @@ S36_EXPORT void __cdecl AuraBreathDome_Run(void) {
 // +0xA 4, +2 on.
 S36_EXPORT void __cdecl AuraBreathDome_Wait(void) {
     unsigned char* const s = Sc();
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
     Dec(s[9]);
     if (s[9] != 0) return;
     const unsigned char* const o = Owner();
-    SetLong(s + 0x34, Long(o + 0x34));
-    SetLong(s + 0x38, Long(o + 0x38));
+    ts->x = Long(o + 0x34);
+    ts->y = Long(o + 0x38);
     SetLong(s + 0x3C, Long(o + 0x3C));
     s[0x5D] = 0x10;
     s[9] = 0x10;
@@ -1190,7 +1207,7 @@ S36_EXPORT void __cdecl AuraBreathDome_Grow(void) {
     AddB(Sc()[9], 2);
     SetSW(0, static_cast<unsigned>(Sc()[9]) << 4);
     for (unsigned i = 0; i < 8; ++i) {
-        unsigned char* const struck = Mem(kStruck + i);
+        unsigned char* const struck = Mem(AuraBreath_Struck_addr + i);
         if (struck[0] != 0) continue;
         if (MH_CALL(Battle_ActorIsOut)(3 + i) != 0) continue;
         if (MH_AT(ReachFn, bof3::addr::AuraBreath_InReach)(EnemyRecord(3 + i)) == 0) continue;
@@ -1288,9 +1305,10 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
             const int corner_x = static_cast<short>(VW(0x18));
             const int zv = Mul12(v, SS(4));
             const unsigned char* const s = Sc();
+            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
             SetVW(0x1A, static_cast<unsigned>(zv));
-            const int px = Add(static_cast<int>(static_cast<std::uint32_t>(corner_x) << 9), Long(s + 0x34));
-            const int pz = Add(static_cast<int>(static_cast<std::uint32_t>(static_cast<short>(zv)) << 9), Long(s + 0x38));
+            const int px = Add(static_cast<int>(static_cast<std::uint32_t>(corner_x) << 9), ts->x);
+            const int pz = Add(static_cast<int>(static_cast<std::uint32_t>(static_cast<short>(zv)) << 9), ts->y);
             MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(px), static_cast<unsigned long>(pz), 1, 0xC);
             unsigned char* const p = Gfx_PacketNext;
@@ -1299,8 +1317,8 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
             SetWord(p + 0x26, MH_CALL(Gpu_GetTPage)(1, 1, 0x340, 0x100) & 0xFFFF);
             SetWord(p + 0x16, MH_CALL(Gpu_GetClut)(0, 0x1FA) & 0xFFFF);
             const unsigned char u = static_cast<unsigned char>(((j & 1) + half) << 6);
-            const unsigned char tv = Mem(kDomeV + band)[0];
-            const unsigned char bottom = static_cast<unsigned char>(tv + Mem(kDomeHeight + band)[0] - 1);
+            const unsigned char tv = Mem(AuraBreathDome_V_addr + band)[0];
+            const unsigned char bottom = static_cast<unsigned char>(tv + Mem(AuraBreathDome_Height_addr + band)[0] - 1);
             p[0x14] = u;
             p[0x15] = tv;
             p[0x24] = static_cast<unsigned char>(u + 0x3F);
@@ -1330,8 +1348,9 @@ S36_EXPORT void __cdecl AuraBreathDome_Draw(void) {
 // of eax. Also called by MAGIC058 (group S11's Sanctuary).
 S36_EXPORT int __cdecl AuraBreath_InReach(unsigned char* record) {
     const unsigned char* const s = Sc();
-    const std::uint32_t sx = static_cast<std::uint32_t>(Long(s + 0x34) >> 9);
-    const std::uint32_t sz = static_cast<std::uint32_t>(Long(s + 0x38) >> 9);
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const std::uint32_t sx = static_cast<std::uint32_t>(ts->x >> 9);
+    const std::uint32_t sz = static_cast<std::uint32_t>(ts->y >> 9);
     const std::uint32_t rx = static_cast<std::uint32_t>(Long(record + 0x34) >> 9);
     const std::uint32_t rz = static_cast<std::uint32_t>(Long(record + 0x38) >> 9);
     const std::uint32_t dx = rx - sx, dz = rz - sz;

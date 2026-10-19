@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -53,25 +54,25 @@ using move_script::Word;
 // four SVECTORs of Prim_VertexScratch (0x9037A0..0x9037BF). Both are read
 // again after every call, as the originals read them.
 constexpr std::uint32_t kS = 0x903850;
-constexpr std::uint32_t kV = 0x9037A0;
+// kV: now Prim_VertexScratch (symbols.toml).
 
 // The cells the overlays read beyond the harness's names.
-constexpr std::uint32_t kFrameSet = 0x9039D8;        // the sprite frame-offset table pointer (sprite_pose.h)
+// kFrameSet: now BattleE2_AnimSet (symbols.toml). the sprite frame-offset table pointer (sprite_pose.h)
 constexpr std::uint32_t kFrameSetBattle = 0x8B3580;
 constexpr std::uint32_t kFrameSetEffect = 0x8E3580;
 constexpr std::uint32_t kAbilityId = 0x904B80;       // u16: the ability id (Battle_StartItemMagic stores it)
-constexpr std::uint32_t kFormIndex = 0x904B89;       // u8: the index a party record with +0x134 bit 1 uses
+// kFormIndex: now BattlePhases_B89 (symbols.toml). u8: the index a party record with +0x134 bit 1 uses
 
 // This group's .data (symbols.toml [[data]]).
-constexpr std::uint32_t kMotePool = 0x679B40;           // BonebreakMote_Pool: 64 records of 0x84 bytes
-constexpr std::uint32_t kWarShoutAnimations = 0x65A718;  // 16 bytes
-constexpr std::uint32_t kDiscShades = 0x65A730;          // FocusAura_DiscShades: 2 x 3 bytes
-constexpr std::uint32_t kMoteShades = 0x65A738;          // FocusMote_Shades
-constexpr std::uint32_t kRingShades = 0x65A740;          // FocusAura_RingShades
-constexpr std::uint32_t kMoteDelays = 0x65A748;          // FocusMote_Delays: 8 bytes
-constexpr std::uint32_t kAnchorOffsets = 0x65A760;       // Enlighten_AnchorOffsets: (dx, dy) words
-constexpr std::uint32_t kAnchorOffsetsB = 0x65A7B8;      // Enlighten_AnchorOffsetsB
-constexpr std::uint32_t kAnchorIndexB = 0x65A810;        // Enlighten_AnchorIndexB: bytes
+// kMotePool: now BonebreakMote_Pool (symbols.toml). BonebreakMote_Pool: 64 records of 0x84 bytes
+// kWarShoutAnimations: now WarShoutMote_Animations (symbols.toml). 16 bytes
+// kDiscShades: now FocusAura_DiscShades (symbols.toml). FocusAura_DiscShades: 2 x 3 bytes
+// kMoteShades: now FocusMote_Shades (symbols.toml). FocusMote_Shades
+// kRingShades: now FocusAura_RingShades (symbols.toml). FocusAura_RingShades
+// kMoteDelays: now FocusMote_Delays (symbols.toml). FocusMote_Delays: 8 bytes
+// kAnchorOffsets: now Enlighten_AnchorOffsets (symbols.toml). Enlighten_AnchorOffsets: (dx, dy) words
+// kAnchorOffsetsB: now Enlighten_AnchorOffsetsB (symbols.toml). Enlighten_AnchorOffsetsB
+// kAnchorIndexB: now Enlighten_AnchorIndexB (symbols.toml). Enlighten_AnchorIndexB: bytes
 
 // The phase handlers and callees of other units (docs/magic_s07.md section 3)
 // are ours now and called by name: S05's Magic017_Wait, S06's
@@ -79,9 +80,13 @@ constexpr std::uint32_t kAnchorIndexB = 0x65A810;        // Enlighten_AnchorInde
 // Chlorine_WaitChildren, S11's MagicFx_UncountAndFree.
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
-unsigned char* Source() { return Pointer(at::kSource); }
+unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 
 std::uint16_t SW(unsigned k) { return Word(Mem(kS + k)); }
 short SS(unsigned k) { return static_cast<short>(SW(k)); }
@@ -90,10 +95,10 @@ void SetSW(unsigned k, unsigned v) { SetWord(Mem(kS + k), v & 0xFFFF); }
 std::int32_t SD(unsigned k) { return Long(Mem(kS + k)); }
 void SetSD(unsigned k, std::uint32_t v) { SetLong(Mem(kS + k), static_cast<std::int32_t>(v)); }
 
-std::uint16_t VW(unsigned k) { return Word(Mem(kV + k)); }
+std::uint16_t VW(unsigned k) { return Word(Mem(Prim_VertexScratch_addr + k)); }
 short VS(unsigned k) { return static_cast<short>(VW(k)); }
-void SetVW(unsigned k, unsigned v) { SetWord(Mem(kV + k), v & 0xFFFF); }
-const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(kV + k)); }
+void SetVW(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v & 0xFFFF); }
+const short* VP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
 void Dec(unsigned char& b) { b = static_cast<unsigned char>(b - 1); }
@@ -121,10 +126,10 @@ void PutFloat(unsigned char* at, int v) {
 }
 
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
-unsigned char* PoolRecord(unsigned index) { return Mem(kMotePool + index * 0x84u); }
+unsigned char* PoolRecord(unsigned index) { return Mem(BonebreakMote_Pool_addr + index * 0x84u); }
 // The originals index the records by the battle index, unchecked: the enemy's
 // by index - 3.
-unsigned char* PartyRecord(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* PartyRecord(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* EnemyRecord(unsigned battle_index) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>(static_cast<int>(battle_index) - 3) * at::kEnemyStride);
 }
@@ -162,7 +167,8 @@ using Rtp4Fn = long (__cdecl*)(const short*, const short*, const short*, const s
 // the call) on layer `dy`.
 void LinkAtSprite(int dy, unsigned size) {
     const unsigned char* const s = Sc();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(s + 0x34)), static_cast<unsigned long>(Long(s + 0x38)), dy,
+    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), dy,
                                 size);
 }
 // A draw-mode packet (tpage `tpage`, dithered) at Gfx_PacketNext.
@@ -170,8 +176,8 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 
 // The task's position (+0x34 / +0x38 / +0x3C) the owner's, each read again.
 void PositionFromOwner() {
-    SetLong(Sc() + 0x34, Long(Owner() + 0x34));
-    SetLong(Sc() + 0x38, Long(Owner() + 0x38));
+    Store(ScTask()->x, Long(Owner() + 0x34));
+    Store(ScTask()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -200,15 +206,16 @@ S07_EXPORT void __cdecl Bonebreak_Task(void) {
                                                  bof3::addr::MagicFx_DoneAndFree};
     Dispatch(kPhases, 3, Sc()[1], "Bonebreak_Task");
     unsigned char* const self = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < 64; ++i) {
         unsigned char* const rec = PoolRecord(i);
+        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
         if ((rec[0] & 1) == 0) continue;
-        const std::int32_t rec_owner = Long(rec + 0x80);
+        const std::int32_t rec_owner = static_cast<std::int32_t>(trec->owner);
         Sprite_Current = rec;
-        SetLong(Mem(at::kOwner), rec_owner);
+        SetLong(Mem(BattleE2_Owner_addr), rec_owner);
         Call0(bof3::addr::BonebreakMote_Task);
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = self;
     }
 }
@@ -232,9 +239,10 @@ S07_EXPORT void __cdecl Bonebreak_Start(void) {
     const unsigned actor = Mem(at::kActor)[0];
     const unsigned char* const src = actor <= 2 ? PartyRecord(actor) : EnemyRecord(actor);
     unsigned char* const child = TaskSlot(slot);
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
     for (unsigned k = 0; k < 0x80; k += 4) SetLong(child + k, Long(src + k));
     unsigned char* const self = Sc();
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+    tchild->owner = static_cast<std::int32_t>(Key(self));
     child[1] = 0;
     child[2] = 0;
     child[6] = 1;
@@ -276,7 +284,8 @@ S07_EXPORT void __cdecl BonebreakChild_Burst(void) {
         const unsigned index = MH_AT(ByteFn, bof3::addr::BonebreakMote_Alloc)() & 0xFFu;
         unsigned char* const self = Sc();
         unsigned char* const rec = PoolRecord(index);
-        SetLong(rec + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const trec = reinterpret_cast<records::BattleTask*>(rec);
+        trec->owner = static_cast<std::int32_t>(Key(self));
         rec[9] = static_cast<unsigned char>((i >> 1) * 3 + 1);
         Inc(self[0xB]);
     }
@@ -341,8 +350,8 @@ S07_EXPORT void __cdecl BonebreakMote_Launch(void) {
     if (Sc()[9] != 0) return;
     const unsigned k = RandCall() & 7;
     const unsigned char* const src = Source();
-    SetLong(Sc() + 0x34, Long(src + 0x34));
-    SetLong(Sc() + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetWord(Sc() + 0x3E, ((k << 5) + Word(src + 0x3E)) & 0xFFFF);
     SetSW(0, (0xC - k) << 4);
     const unsigned angle = (RandCall() & 7) << 9;
@@ -485,12 +494,12 @@ namespace {
 // after the call).
 void OrbitStep() {
     AddLong(Sc() + 0xC, 1);
-    std::uint32_t angle = (static_cast<std::uint32_t>(Long(Sc() + 0xC)) & 0x7F) << 5;
+    std::uint32_t angle = (static_cast<std::uint32_t>(ScTask()->vel_x) & 0x7F) << 5;
     SetSD(0, angle);
     int v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    SetLong(Sc() + 0x34, Sum(Shl(v, 0x11) >> 12, Long(Owner() + 0x34)));
+    Store(ScTask()->x, Sum(Shl(v, 0x11) >> 12, Long(Owner() + 0x34)));
     v = MH_CALL(Math_Cos)(SD(0));
-    SetLong(Sc() + 0x38, Sum(Shl(v, 0x11) >> 12, Long(Owner() + 0x38)));
+    Store(ScTask()->y, Sum(Shl(v, 0x11) >> 12, Long(Owner() + 0x38)));
     AddLong(Sc() + 0x14, 1);
     angle = (static_cast<std::uint32_t>(Long(Sc() + 0x14)) & 0x3F) << 6;
     SetSD(4, 0x800);
@@ -525,7 +534,8 @@ S07_EXPORT void __cdecl WarShout_Start(void) {
         const unsigned slot = NewTask(0x59);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 0;
         child[0xB] = static_cast<unsigned char>(i);
         child[9] = static_cast<unsigned char>((i << 3) + 1);
@@ -555,12 +565,13 @@ S07_EXPORT void __cdecl WarShout_Rally(void) {
         const std::int32_t x = Long(rec + 0x34);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 1;
         child[3] = static_cast<unsigned char>(i);
         child[4] = 2;
-        SetLong(child + 0x34, x);
-        SetLong(child + 0x38, Long(rec + 0x38));
+        tchild->x = x;
+        tchild->y = Long(rec + 0x38);
         SetLong(child + 0x3C, Long(rec + 0x3C));
         Inc(self[0xB]);
     }
@@ -583,11 +594,11 @@ S07_EXPORT void __cdecl WarShoutMote_Run(void) {
                                                 bof3::addr::WarShoutMote_Circle, bof3::addr::WarShoutMote_Fade,
                                                 bof3::addr::MagicFx_UncountAndFree};
     const unsigned phase = Sc()[2];
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetEffect));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetEffect));
     Dispatch(kSteps, 5, phase, "WarShoutMote_Run");
     const unsigned char* const s = Sc();
     if (s[0] != 0 && s[2] != 0) MH_CALL(Sprite_UpdateScreen)();
-    SetLong(Mem(kFrameSet), static_cast<std::int32_t>(kFrameSetBattle));
+    SetLong(Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(kFrameSetBattle));
 }
 
 // original 0x4A4750: +9 down; at 0: +0xC and +0x14 0; the position the
@@ -599,14 +610,14 @@ S07_EXPORT void __cdecl WarShoutMote_Run(void) {
 S07_EXPORT void __cdecl WarShoutMote_Appear(void) {
     Dec(Sc()[9]);
     if (Sc()[9] != 0) return;
-    SetLong(Sc() + 0xC, 0);
+    ScTask()->vel_x = 0;
     SetLong(Sc() + 0x14, 0);
-    std::uint32_t angle = (static_cast<std::uint32_t>(Long(Sc() + 0xC)) & 0x7F) << 5;
+    std::uint32_t angle = (static_cast<std::uint32_t>(ScTask()->vel_x) & 0x7F) << 5;
     SetSD(0, angle);
     int v = MH_CALL(Math_Sin)(static_cast<int>(angle));
-    SetLong(Sc() + 0x34, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x34)));
+    Store(ScTask()->x, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x34)));
     v = MH_CALL(Math_Cos)(SD(0));
-    SetLong(Sc() + 0x38, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x38)));
+    Store(ScTask()->y, Sum(Shl(v, 0x12) >> 12, Long(Owner() + 0x38)));
     angle = (static_cast<std::uint32_t>(Long(Sc() + 0x14)) & 0x3F) << 6;
     SetSD(0, angle);
     v = MH_CALL(Math_Sin)(static_cast<int>(angle));
@@ -626,7 +637,7 @@ S07_EXPORT void __cdecl WarShoutMote_Appear(void) {
     s[0x29] = 4;
     SetWord(s + 0x2C, 0);
     s[0x2B] = 0;
-    MH_CALL(Sprite_SetAnimation)(Mem(kWarShoutAnimations + s[0xB])[0]);
+    MH_CALL(Sprite_SetAnimation)(Mem(WarShoutMote_Animations_addr + s[0xB])[0]);
     Inc(Sc()[2]);
 }
 
@@ -654,7 +665,8 @@ S07_EXPORT void __cdecl WarShoutMote_Circle(void) {
     MH_CALL(Sprite_ScriptTick)();
     OrbitStep();
     unsigned char* const s = Sc();
-    if (Long(s + 0xC) != 0x100) return;
+    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    if (ts->vel_x != 0x100) return;
     s[0] |= 0x20;
     s[0x5C] = 1;
     s[0x5D] = 0xC0;
@@ -717,7 +729,8 @@ S07_EXPORT void __cdecl Focus_Start(void) {
         const unsigned slot = NewTask(0x3B);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 0;
         child[4] = static_cast<unsigned char>(self[4] - 2);
         Inc(self[0xB]);
@@ -726,10 +739,11 @@ S07_EXPORT void __cdecl Focus_Start(void) {
         const unsigned slot = NewTask(0x3B);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = 1;
         child[4] = static_cast<unsigned char>(self[4] - 2);
-        const auto delay = static_cast<unsigned char>(Mem(kMoteDelays + i)[0] + 9);
+        const auto delay = static_cast<unsigned char>(Mem(FocusMote_Delays_addr + i)[0] + 9);
         child[0xB] = static_cast<unsigned char>(i);
         child[9] = delay;
         Inc(self[0xB]);
@@ -847,9 +861,9 @@ S07_EXPORT void __cdecl FocusMote_Start(void) {
     const unsigned angle = (static_cast<unsigned>(Sc()[0xB]) << 9) & 0xFFFF;
     SetSW(0xA, angle);
     int v = MH_CALL(Math_Cos)(static_cast<short>(angle));
-    SetLong(Sc() + 0x34, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x34)));
+    Store(ScTask()->x, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x34)));
     v = MH_CALL(Math_Sin)(SS(0xA));
-    SetLong(Sc() + 0x38, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x38)));
+    Store(ScTask()->y, Sum(Shl(Imul(v, 3), 0xE) >> 12, Long(Owner() + 0x38)));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[9] = 0;
     Sc()[0xA] = 4;
@@ -884,9 +898,9 @@ S07_EXPORT void __cdecl FocusMote_Draw(void) {
     SetSW(0xA, Word(s + 0x2E));
     SetSW(0xC, Word(s + 0x30));
     const unsigned k = s[4] * 3u;
-    SetSW(0, Mem(kMoteShades + k)[0]);
-    SetSW(2, Mem(kMoteShades + 1 + k)[0]);
-    SetSW(4, Mem(kMoteShades + 2 + k)[0]);
+    SetSW(0, Mem(FocusMote_Shades_addr + k)[0]);
+    SetSW(2, Mem(FocusMote_Shades_addr + 1 + k)[0]);
+    SetSW(4, Mem(FocusMote_Shades_addr + 2 + k)[0]);
     DrawMode(0x35);
     LinkAtSprite(0, 0xC);
     unsigned char* const p = Gfx_PacketNext;
@@ -954,7 +968,7 @@ S07_EXPORT void __cdecl FocusAura_DrawRing(void) {
         const int outer = Shl(Imul(v, SS(8)), 2) >> 12;
         SetSW(0xE, 8u * static_cast<std::uint32_t>(SD(8)) + 0x80u - static_cast<std::uint32_t>(outer));
     }
-    Shades(kRingShades);
+    Shades(FocusAura_RingShades_addr);
     int v = MH_CALL(Math_Cos)(0);
     SetVW(8, static_cast<unsigned>(Mul12(v, SS(0xE))));
     v = MH_CALL(Math_Sin)(0);
@@ -997,10 +1011,11 @@ S07_EXPORT void __cdecl FocusAura_DrawRing(void) {
         v = MH_CALL(Math_Sin)(static_cast<int>(e));
         const int y4 = Mul12(v, SS(0xC));
         const unsigned char* const s = Sc();
+        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
         SetVW(0x1A, static_cast<unsigned>(y4));
         const std::uint32_t shift = static_cast<std::uint32_t>(Shl(VS(0x18), 9));
-        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x34)) + shift);
-        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(Long(s + 0x38)) + shift);
+        const auto x = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->x) + shift);
+        const auto z = static_cast<unsigned long>(static_cast<std::uint32_t>(ts->y) + shift);
         DrawMode(0x35);
         MH_CALL(MapView_LinkPrimAt)(x, z, 0, 0xC);
         unsigned char* const p = Gfx_PacketNext;
@@ -1031,7 +1046,7 @@ S07_EXPORT void __cdecl FocusAura_DrawDisc(void) {
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(5, 0xC);
     SetSW(6, 0x88);
-    Shades(kDiscShades);
+    Shades(FocusAura_DiscShades_addr);
     int v = MH_CALL(Math_Sin)(0);
     SetVW(0x10, static_cast<unsigned>(Mul12(v, SS(6))));
     v = MH_CALL(Math_Cos)(0);
@@ -1094,7 +1109,8 @@ S07_EXPORT void __cdecl Enlighten_Start(void) {
         const unsigned slot = NewTask(0x3C);
         unsigned char* const self = Sc();
         unsigned char* const child = TaskSlot(slot);
-        SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        tchild->owner = static_cast<std::int32_t>(Key(self));
         child[1] = static_cast<unsigned char>(kind);
         Inc(self[0xB]);
     }
@@ -1113,7 +1129,8 @@ S07_EXPORT void __cdecl Enlighten_Apply(void) {
     const unsigned slot = NewTask(0x48);
     unsigned char* const self = Sc();
     unsigned char* const child = TaskSlot(slot);
-    SetLong(child + 0x80, static_cast<std::int32_t>(Key(self)));
+    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    tchild->owner = static_cast<std::int32_t>(Key(self));
     child[4] = applied != 0 ? 3 : 8;
     child[9] = 1;
     child[0xA] = 0;
@@ -1222,11 +1239,11 @@ S07_EXPORT void __cdecl Enlighten_AnchorToActor(void) {
     unsigned index;
     std::uint32_t table;
     if (rec[0x134] & 2) {
-        index = Mem(kAnchorIndexB + Mem(kFormIndex)[0])[0];
-        table = kAnchorOffsetsB;
+        index = Mem(Enlighten_AnchorIndexB_addr + Mem(BattlePhases_B89_addr)[0])[0];
+        table = Enlighten_AnchorOffsetsB_addr;
     } else {
         index = rec[0x89];
-        table = kAnchorOffsets;
+        table = Enlighten_AnchorOffsets_addr;
     }
     unsigned char* const s = Sc();
     const unsigned facing = s[8];

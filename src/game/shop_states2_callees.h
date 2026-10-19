@@ -20,29 +20,29 @@ using U = std::uint32_t;
 
 namespace at {
 // The field menus' state block (docs/menu-screens.md): 0x929F00.. bytes.
-constexpr U kMenuDone = 0x929F00;     // u8: 1 ends the menu (ShopTrade_Close)
+// kMenuDone: now BattleE1_Mode (symbols.toml). u8: 1 ends the menu (ShopTrade_Close)
 constexpr U kState = 0x929F01;        // u8: the shop's state, 0..4 (ShopTrade_States)
 constexpr U kSub = 0x929F02;          // u8: the state's step
 constexpr U kCounter = 0x929F04;      // u8: frames before the next step
-constexpr U kByte05 = 0x929F05;       // u8, cleared by ShopTrade_OpenWait
+// kByte05: now MenuLists_Cursor (symbols.toml). u8, cleared by ShopTrade_OpenWait
 constexpr U kMember = 0x929F06;       // s8: the member the equip steps are on
-constexpr U kAnswer = 0x929F0B;       // u8: the yes / no cursor, 1 yes
+// kAnswer: now FieldS_Answer (symbols.toml). u8: the yes / no cursor, 1 yes
 // The shop's own bytes (0x6BC89C..0x6BC8B7).
-constexpr U kKind = 0x6BC89C;         // u8: the chosen item's category
-constexpr U kUnitPrice = 0x6BC8A0;    // u32: its price, buying (scaled) or selling
-constexpr U kSellsEquipment = 0x6BC8A4;   // u8: 1 when the list holds equipment
-constexpr U kSlotCursor = 0x6BC8A7;   // u8: 0 / 1, the slot of a two-slot kind (5)
-constexpr U kByteA8 = 0x6BC8A8;       // u8, cleared by ShopTrade_OpenWait
-constexpr U kRow = 0x6BC8A9;          // s8: the buy list's cursor, then the row sold from
-constexpr U kSellFlag = 0x6BC8AA;     // u8: Shop_SellPrice's flag (x50 for 0x2B..0x36)
+// kKind: now ShopStates2_Kind (symbols.toml). u8: the chosen item's category
+// kUnitPrice: now ShopStates2_UnitPrice (symbols.toml). u32: its price, buying (scaled) or selling
+// kSellsEquipment: now Rest2c_SellFlag (symbols.toml). u8: 1 when the list holds equipment
+// kSlotCursor: now ShopStates2_SlotCursor (symbols.toml). u8: 0 / 1, the slot of a two-slot kind (5)
+// kByteA8: now ShopStates2_ByteA8 (symbols.toml). u8, cleared by ShopTrade_OpenWait
+// kRow: now ShopStates2_Row (symbols.toml). s8: the buy list's cursor, then the row sold from
+// kSellFlag: now ShopStates2_SellFlag (symbols.toml). u8: Shop_SellPrice's flag (x50 for 0x2B..0x36)
 constexpr U kChoice = 0x6BC8AB;       // u8: buy (0) or sell (1)
 constexpr U kCount = 0x6BC8AC;        // u8: how many (read once as a dword)
-constexpr U kItem = 0x6BC8AD;         // u8: the chosen item
+// kItem: now ShopStates2_Item (symbols.toml). u8: the chosen item
 constexpr U kMaxCount = 0x6BC8B0;     // u32: the most that may be bought or sold
 constexpr U kRate = 0x6BC8B4;         // u16: Shop_PriceRate's percentage
 // The shop's list: a count byte, then (category, item) byte pairs.
-constexpr U kShopList = 0x903844;     // unsigned char *
-constexpr U kMoney = 0x904058;        // u32: the party's zenny
+// kShopList: now ShopStates2_ShopList (symbols.toml). unsigned char *
+// kMoney: now Party_Zenny (symbols.toml). u32: the party's zenny
 constexpr U kMoneyMax = 0x98967F;     // 9,999,999
 constexpr U kPartyList = 0x904062;    // u8 per member: the character
 constexpr U kRecordOf = 0x66972C;     // u8 per character: its record (symbols.toml's MoveScript_EffectState)
@@ -53,31 +53,31 @@ constexpr U kIdLists = 0x656B00;      // unsigned char *[5]
 constexpr U kCountLists = 0x656B14;   // unsigned char *[5]
 // Input.
 constexpr U kPressed = 0x7E1BEC;      // Input_Pressed (read as a word, twice as a dword)
-constexpr U kConfirm = 0x90358E;      // Field_ConfirmButtons, u16
-constexpr U kCancel = 0x903590;       // Field_CancelButtons, u16
+// kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons, u16
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons, u16
 // The window records the states fill (Shop_InitWindows sets them up):
 // 0x803160 the help line (+0x10 its message word 0x803170), 0x8031CC + 36 n
 // the member panels, 0x803238 the slot box, 0x80325C the sell list, 0x803280
 // the buy list, 0x8032A4 the buy count, 0x8032C8 the sell count, 0x803430
 // the member hand, 0x803454 the cursor hand.
-constexpr U kHelp = 0x803170;         // u16: the help line's message
+// kHelp: now ShopStates2_Help (symbols.toml). u16: the help line's message
 constexpr U kMembers = 0x8031CC;      // 36-byte records, one per party member
 constexpr U kMemberStride = 36;
-constexpr U kHand = 0x803454;         // u8 on / off, x at 0x803458, y at 0x80345A (u16)
+// kHand: now BattleE4_Above (symbols.toml). u8 on / off, x at 0x803458, y at 0x80345A (u16)
 constexpr U kHandX = 0x803458;
 constexpr U kHandY = 0x80345A;
 // The dispatch tables (symbols.toml [[data]]).
-constexpr U kStates = 0x664118;       // ShopTrade_States: 5, by kState
-constexpr U kOpenSteps = 0x66412C;    // 2, by kSub
-constexpr U kChoiceSteps = 0x664134;  // 1
-constexpr U kBuySteps = 0x664138;     // 8
-constexpr U kSellSteps = 0x664158;    // 5
+// kStates: now ShopTrade_States (symbols.toml). ShopTrade_States: 5, by kState
+// kOpenSteps: now ShopTrade_OpenSteps (symbols.toml). 2, by kSub
+// kChoiceSteps: now ShopTrade_ChoiceSteps (symbols.toml). 1
+// kBuySteps: now ShopTrade_BuySteps (symbols.toml). 8
+// kSellSteps: now ShopTrade_SellSteps (symbols.toml). 5
 constexpr U kTablesEnd = 0x664190;    // Shop_Equip's jump table follows
 // Task 0's title loop.
 constexpr U kGameMode = 0x66C7E8;     // Game_Mode, u16 (read as a dword, masked)
-constexpr U kGameStep = 0x66C7EA;     // Game_Step, u16
-constexpr U kModes = 0x667294;        // TitleTask_Modes: 2, by Game_Mode
-constexpr U kClutDirty = 0x937F90;    // Gfx_ClutStripDirty, u8
+// kGameStep: now Game_Step (symbols.toml). Game_Step, u16
+// kModes: now TitleTask_Modes (symbols.toml). TitleTask_Modes: 2, by Game_Mode
+// kClutDirty: now Gfx_ClutStripDirty (symbols.toml). Gfx_ClutStripDirty, u8
 constexpr U kTitleFile = 0x31D;       // the DAT file TitleMode_Load loads
 }  // namespace at
 

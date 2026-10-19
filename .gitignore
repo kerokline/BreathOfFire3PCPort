@@ -59,7 +59,11 @@ layout.bin
 
 # Local analysis output: traces, coverage harvests, disassembly, matcher
 # intermediates. Large, machine-specific, and frequently binary-derived.
-/analysis/
+/analysis/*
+# ...except the typed-data census: read from src/ and symbols.toml only,
+# addresses and names, our work product (tools/data_census.py). CI's
+# ratchet reads its site count.
+!/analysis/data_census.tsv
 
 # Symbol/name data IS tracked — it is our own work product, not game data.
 !/names/

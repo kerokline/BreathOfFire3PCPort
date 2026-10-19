@@ -52,7 +52,8 @@ constexpr unsigned kColumns = 4, kColumnWords = 256;
 constexpr unsigned kBankRecords = 256;
 constexpr unsigned kImages = 0x10, kWords = 0x410, kEntries = 0x610, kAnimBytes = 0x910;
 constexpr unsigned kEffectSpan = 0x40 * 0x80;
-constexpr std::uint32_t kQueueFrom = at::kQueueX, kQueueSpan = at::kQueueY + 0x200 - at::kQueueX;
+// kQueueFrom: now Gfx_UploadQueueX (symbols.toml).
+constexpr std::uint32_t kQueueSpan = Gfx_UploadQueueY_addr + 0x200 - Gfx_UploadQueueX_addr;
 constexpr unsigned kRecordSpan = 0x400;
 
 unsigned char g_sprites[kSprites * kSpriteBytes];
@@ -208,8 +209,8 @@ struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {Address(g_sprites), sizeof g_sprites},
     {Address(Effect_Objects), kEffectSpan},
-    {kQueueFrom, kQueueSpan},
-    {at::kQueueRecord, kRecordSpan},
+    {Gfx_UploadQueueX_addr, kQueueSpan},
+    {Gfx_UploadQueueRecord_addr, kRecordSpan},
     {Address(&Gfx_UploadQueueCount), 1},
 };
 constexpr unsigned kRegionBytes = sizeof g_sprites + kEffectSpan + kQueueSpan + kRecordSpan + 1;
@@ -244,26 +245,26 @@ struct Saved {
     unsigned char* active;
 };
 void Swap(Saved& saved) {
-    std::memcpy(saved.rows, At(at::kPartySetRows), kRowBytes);
+    std::memcpy(saved.rows, At(MoveScript_EffectArg_addr + 0xc), kRowBytes);
     std::memcpy(saved.members, At(at::kMemberAnimations), sizeof saved.members);
-    std::memcpy(saved.offsets, At(at::kFrameOffsets), 4);
-    std::memcpy(saved.bank_table, At(at::kBankTable), 4);
+    std::memcpy(saved.offsets, At(BattleE2_AnimSet_addr), 4);
+    std::memcpy(saved.bank_table, At(MoveScript_TintRecords_addr + 0x180), 4);
     std::memcpy(saved.bank_count, At(at::kBankCount), 4);
-    saved.party_set = At(at::kPartySetCurrent)[0];
+    saved.party_set = At(AreaW0b_PartySet_addr)[0];
     saved.active = Field_ActiveMember;
     for (unsigned m = 0; m < kMembers; ++m)
         SetLong(At(at::kMemberAnimations + m * 4), static_cast<std::int32_t>(Address(g_member_records[m])));
-    SetLong(At(at::kFrameOffsets), static_cast<std::int32_t>(Address(g_offsets)));
-    SetLong(At(at::kBankTable), static_cast<std::int32_t>(Address(g_banks)));
+    SetLong(At(BattleE2_AnimSet_addr), static_cast<std::int32_t>(Address(g_offsets)));
+    SetLong(At(MoveScript_TintRecords_addr + 0x180), static_cast<std::int32_t>(Address(g_banks)));
     Field_ActiveMember = g_active;
 }
 void Restore(const Saved& saved) {
-    std::memcpy(At(at::kPartySetRows), saved.rows, kRowBytes);
+    std::memcpy(At(MoveScript_EffectArg_addr + 0xc), saved.rows, kRowBytes);
     std::memcpy(At(at::kMemberAnimations), saved.members, sizeof saved.members);
-    std::memcpy(At(at::kFrameOffsets), saved.offsets, 4);
-    std::memcpy(At(at::kBankTable), saved.bank_table, 4);
+    std::memcpy(At(BattleE2_AnimSet_addr), saved.offsets, 4);
+    std::memcpy(At(MoveScript_TintRecords_addr + 0x180), saved.bank_table, 4);
     std::memcpy(At(at::kBankCount), saved.bank_count, 4);
-    At(at::kPartySetCurrent)[0] = saved.party_set;
+    At(AreaW0b_PartySet_addr)[0] = saved.party_set;
     Field_ActiveMember = saved.active;
 }
 
@@ -326,8 +327,8 @@ void SeedSprite(unsigned char* s, unsigned k) {
 }
 
 void SeedRound() {
-    for (unsigned i = 0; i < kRowBytes; ++i) At(at::kPartySetRows)[i] = static_cast<unsigned char>(Next() % kMembers);
-    At(at::kPartySetCurrent)[0] = static_cast<unsigned char>(Next() % (kRowBytes / 3 - 1) | (Half() ? 0x80 : 0));
+    for (unsigned i = 0; i < kRowBytes; ++i) At(MoveScript_EffectArg_addr + 0xc)[i] = static_cast<unsigned char>(Next() % kMembers);
+    At(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(Next() % (kRowBytes / 3 - 1) | (Half() ? 0x80 : 0));
     SeedBanks();
     for (unsigned i = 0; i < sizeof g_active; ++i) g_active[i] = static_cast<unsigned char>(Next());
     if (Half()) g_active[0xA1] = 0xFF;

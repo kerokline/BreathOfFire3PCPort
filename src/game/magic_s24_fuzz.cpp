@@ -202,10 +202,10 @@ const mh::Callee* Callees(unsigned& n) {
         {"Fx105_DrawOrb", 0x4D1B60, 0x4D1B60, 0, {}, mh::Answer::kPhase, 0, 0},
         {"Fx105_Mote", 0x4D1F30, 0x4D1F30, 0, {}, mh::Answer::kPhase, 0, 0},
         {"Fx105_MoteDraw", 0x4D2220, 0x4D2220, 0, {}, mh::Answer::kPhase, 0, 0},
-        {"Fx106_Spark", 0x4D25C0, 0x4D25C0, 0, {cell::kSparkCurrent}, mh::Answer::kPhase, 0, 0},
-        {"Fx106_PushMatrix", 0x4D29F0, 0x4D29F0, 0, {cell::kSparkCurrent}, mh::Answer::kPhase, 0, 0},
-        {"Fx106_DrawSpark", 0x4D2AB0, 0x4D2AB0, 0, {cell::kSparkCurrent}, mh::Answer::kPhase, 0, 0},
-        {"Fx106_SparkFree", 0x4D2D50, 0x4D2D50, 0, {cell::kSparkCurrent}, mh::Answer::kPhase, 0, 0},
+        {"Fx106_Spark", 0x4D25C0, 0x4D25C0, 0, {Fx106_SparkCurrent_addr}, mh::Answer::kPhase, 0, 0},
+        {"Fx106_PushMatrix", 0x4D29F0, 0x4D29F0, 0, {Fx106_SparkCurrent_addr}, mh::Answer::kPhase, 0, 0},
+        {"Fx106_DrawSpark", 0x4D2AB0, 0x4D2AB0, 0, {Fx106_SparkCurrent_addr}, mh::Answer::kPhase, 0, 0},
+        {"Fx106_SparkFree", 0x4D2D50, 0x4D2D50, 0, {Fx106_SparkCurrent_addr}, mh::Answer::kPhase, 0, 0},
         // the allocators: a record's index, or 0xFF for none (the mote pool's
         // caller tests it; the spark pool's does not, so its recorder never
         // answers past the pool)
@@ -231,18 +231,18 @@ alignas(16) unsigned char g_prims[kPrimBytes];     // what Gfx_PacketNext points
 alignas(16) unsigned char g_frames[kFrameBytes];   // a mote's frame record ([+0x54] + u16 +0x5A)
 
 mh::Region g_regions[] = {
-    {cell::kVertices, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {cell::kScratch, 0x10},
     {0x905E60, 8},                               // Field_Kind2Z, Field_Kind2X
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPrimBytes},                             // g_prims (filled in at start-up)
     {0, kFrameBytes},                            // g_frames
-    {cell::kSpriteBank, 4},
+    {BattleE2_AnimSet_addr, 4},
     {cell::kClutSource, 0x20},
     {cell::kClutRow, 0x20},
     {cell::kMotePool, cell::kMotes * cell::kMoteStride},
-    {cell::kSparkPool, cell::kSparks * cell::kSparkStride},
-    {cell::kSparkCurrent, 4},
+    {Fx106_SparkPool_addr, cell::kSparks * cell::kSparkStride},
+    {Fx106_SparkCurrent_addr, 4},
     {0x65B828, 0x40},                            // Fx104_ChildOffsets
     {0x65B88C, 0x28},                            // Fx105_OrbAngles, Fx105_OrbColours
     {0x65B8C0, 0x20},                            // Fx105_MoteSizes
@@ -250,9 +250,9 @@ mh::Region g_regions[] = {
 };
 
 unsigned char* PrimAt(std::uint32_t v) { return g_prims + 4 * (v % 16); }
-unsigned char* SparkAt(std::uint32_t v) { return mh::Mem(cell::kSparkPool + (v % cell::kSparks) * cell::kSparkStride); }
+unsigned char* SparkAt(std::uint32_t v) { return mh::Mem(Fx106_SparkPool_addr + (v % cell::kSparks) * cell::kSparkStride); }
 unsigned char* MoteAt(std::uint32_t v) { return mh::Mem(cell::kMotePool + (v % cell::kMotes) * cell::kMoteStride); }
-unsigned char* Spark() { return mh::Pointer(cell::kSparkCurrent); }
+unsigned char* Spark() { return mh::Pointer(Fx106_SparkCurrent_addr); }
 unsigned char* AnOwner(std::uint32_t v) { return v & 4 ? mh::SpriteRecord(v) : mh::TaskAt(v); }
 void SetLong(unsigned char* p, std::int32_t v) { move_script::SetLong(p, v); }
 void SetWord(unsigned char* p, unsigned v) { move_script::SetWord(p, v); }
@@ -265,10 +265,10 @@ void Near(unsigned char& b, unsigned v) {
 void Seed(unsigned k) {
     // Everything any function dereferences, put back inside.
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(cell::kActorRecord, mh::SpriteRecord(mh::Next()));
-    mh::SetPointer(cell::kSparkCurrent, SparkAt(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(Fx106_SparkCurrent_addr, SparkAt(mh::Next()));
     for (unsigned i = 0; i < cell::kMotes; ++i) mh::SetPointer(cell::kMotePool + i * cell::kMoteStride + 0x80, AnOwner(mh::Next()));
-    for (unsigned i = 0; i < cell::kSparks; ++i) mh::SetPointer(cell::kSparkPool + i * cell::kSparkStride + 0x1C, AnOwner(mh::Next()));
+    for (unsigned i = 0; i < cell::kSparks; ++i) mh::SetPointer(Fx106_SparkPool_addr + i * cell::kSparkStride + 0x1C, AnOwner(mh::Next()));
     for (unsigned t = 0; t < 4; ++t) {
         unsigned char* const task = mh::TaskAt(t);
         mh::SetPointer(mh::at::kTasks + t * mh::at::kTaskStride + 0x54, g_frames);
@@ -375,9 +375,9 @@ void Disturb(std::uint32_t h) {
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 5) {
     case 0: Gfx_PacketNext = PrimAt(h >> 12); break;
-    case 1: mh::SetPointer(cell::kSparkCurrent, SparkAt(h >> 12)); break;
+    case 1: mh::SetPointer(Fx106_SparkCurrent_addr, SparkAt(h >> 12)); break;
     case 2: mh::Mem(cell::kScratch + (h >> 12) % 0x10)[0] = b; break;
-    case 3: mh::Mem(cell::kVertices + (h >> 12) % 0x20)[0] = b; break;
+    case 3: mh::Mem(Prim_VertexScratch_addr + (h >> 12) % 0x20)[0] = b; break;
     default: Spark()[(h >> 12) % 0x20] = b; break;
     }
 }

@@ -20,12 +20,17 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 using U = std::uint32_t;
 using move_script::At;
@@ -37,7 +42,7 @@ constexpr unsigned kEffectCount = 20;
 constexpr unsigned kObjectStride = 0xA4;   // Sprite_Objects and Sprite_ObjectsExtra
 constexpr unsigned kObjects = 0x1E;        // Sprite_Objects' 30, then Sprite_ObjectsExtra's 4
 constexpr unsigned kObjectsAll = 0x22;
-constexpr U kSteps = 0x6697B0;   // Field_DirectionSteps: 8 rows of two longs
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
 constexpr U kScriptFlagsHigh = 0x9039A3;                // Field_ScriptFlags' high byte (0x9039A2, u16)
 
 unsigned char* S() { return Sprite_Current; }
@@ -57,15 +62,15 @@ Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
                     count, static_cast<unsigned>(table), static_cast<unsigned>(cell));
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(cell)))));
 }
-void ByForm(U table, unsigned count, const char* who) { CodeAt(table, count, Word(S() + 0x2C), who)(); }
+void ByForm(U table, unsigned count, const char* who) { CodeAt(table, count, MemberRec(S())->column, who)(); }
 void ByState(U table, unsigned count, const char* who) { CodeAt(table, count, S()[2], who)(); }
 void ByStep(U table, unsigned count, const char* who) { CodeAt(table, count, S()[3], who)(); }
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked (`shl eax, 3` on the zero-extended byte): a byte above 7 reads the
 // .data after the table, as the originals do.
-U StepX(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(At(kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(At(Field_DirectionSteps_addr + d * 8 + 4))); }
 
 // The animation offset of a direction as the originals compute it: (d - 1) / 2
 // as a signed division (cdq, sub, sar), so direction 0 gives 0.
@@ -118,8 +123,8 @@ template <typename P> void TurnUntil(P probe) {
 // 0x40 signed) and the ground above the sprite's height word: +0x2B = 0.
 void ProbeSide(unsigned d) {
     const unsigned char* s = S();
-    const U x = static_cast<U>(Long(s + 0x34)) + StepX(d);
-    const U z = static_cast<U>(Long(s + 0x38)) + StepZ(d);
+    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
+    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (At(bof3::addr::DamageScratch)[0] == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = SH_CALL(MapView_GroundAt)(static_cast<long>(x), static_cast<long>(z));
@@ -132,8 +137,8 @@ void Begin() {
     TurnUntil([] { return SH_CALL(PartyAction_TargetAhead)(); });
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    const U x = static_cast<U>(Long(s + 0x34)) + StepX(d);
-    const U z = static_cast<U>(Long(s + 0x38)) + StepZ(d);
+    const U x = static_cast<U>(MemberRec(s)->x) + StepX(d);
+    const U z = static_cast<U>(MemberRec(s)->z) + StepZ(d);
     const long slope = SH_CALL(MapView_SlopeAt)(static_cast<long>(x), static_cast<long>(z), d);
     if (At(bof3::addr::DamageScratch)[0] != 0 && static_cast<short>(slope) > 0x40) {
         SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(HalfTurn(S()[8]) + 0x46));
@@ -157,7 +162,7 @@ struct Ahead {
 Ahead TwoAhead() {
     const unsigned char* const s = S();
     const unsigned d = s[8];
-    return {static_cast<U>(Long(s + 0x34)) + 2u * StepX(d), static_cast<U>(Long(s + 0x38)) + 2u * StepZ(d)};
+    return {static_cast<U>(MemberRec(s)->x) + 2u * StepX(d), static_cast<U>(MemberRec(s)->z) + 2u * StepZ(d)};
 }
 
 // The cell handler on the point's cell; when it answers 0, on the cell one on

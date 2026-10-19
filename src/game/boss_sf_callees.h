@@ -38,22 +38,22 @@ using U = std::uint32_t;
 constexpr U kPhase = 0x904AA0;            // u8: Battle_PhaseDispatch's phase (5: the battle's end)
 constexpr U kRoundFlags = 0x904AA8;       // u8: the round flags' low byte (bit 2 set by the kinds' action ends)
 constexpr U kRoundFlagsHi = 0x904AA9;     // u8: the round flags' high byte (bit 3 set by Myria's cost step)
-constexpr U kFight = 0x904AAA;            // u8: the event battle (Boss_SetupTable's index)
-constexpr U kScript = 0x904AAD;           // u8: the fights' script bits (set-up 27: bits 0..5)
+// kFight: now BattleActions_EventBattle (symbols.toml). u8: the event battle (Boss_SetupTable's index)
+// kScript: now BossSe_Script (symbols.toml). u8: the fights' script bits (set-up 27: bits 0..5)
 constexpr U kOrderBefore = 0x904ACB;      // u8[]: the turn order 0x904ACC one before - indexed by the cursor
-constexpr U kCursor = 0x904AE2;           // u8: the turn order's cursor (battle_actions.md)
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 1 the win; bit 2 set by set-up 27's event hook
-constexpr U kBanner = 0x904AE9;           // u8: bit 1 holds the phases until phase 5 (battle_phases_callees.h)
+// kCursor: now BossSe_RoundSlot (symbols.toml). u8: the turn order's cursor (battle_actions.md)
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 1 the win; bit 2 set by set-up 27's event hook
+// kBanner: now BattleMisc_BannerKinds (symbols.toml). u8: bit 1 holds the phases until phase 5 (battle_phases_callees.h)
 constexpr U kActKind = 0x904B35;          // u8: the acting kind (4 an ability)
 constexpr U kTarget = 0x904B44;           // u8: the battle's target
-constexpr U kMyriaWait = 0x904B7E;        // u16: Myria's pending effect code (0x440630's third word; 3, 5, 8 read)
+// kMyriaWait: now BossSa_EndCount (symbols.toml). u16: Myria's pending effect code (0x440630's third word; 3, 5, 8 read)
 constexpr U kAbility = 0x904B80;          // u16: the action id in hand (24-byte records at 0x65C4D8)
-constexpr U kCost = 0x904B88;             // u8: the AP cost shown (battle_actions_callees.h kCostShown)
-constexpr U kSoundSet = 0x904B8D;         // u8: Battle_LoadSoundByKey's set (battle_obj_states_callees.h)
+// kCost: now BattleE3_Cost (symbols.toml). u8: the AP cost shown (battle_actions_callees.h kCostShown)
+// kSoundSet: now BattleE3_SoundSet (symbols.toml). u8: Battle_LoadSoundByKey's set (battle_obj_states_callees.h)
 constexpr U kTurn = 0x904B90;             // u32: the turn counter (battle_phases.md)
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
-constexpr U kHookExit = 0x904B68;         // BattleHook_Exit
-constexpr U kHookEvent = 0x904B6C;        // BattleHook_Event
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
+// kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
+// kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
 
 // --- the ability records (NameTable_Abilities, 24 bytes each) -----------------
 constexpr U kAbilityFlags4 = 0x65C4D8;    // + 24 * id: the byte Myria's action pick tests with 4
@@ -61,31 +61,31 @@ constexpr U kAbilityFlags8 = 0x65C4DD;    // + 24 * id: the byte states 7 and 8 
 constexpr U kAbilityStride = 24;
 
 // --- the enemies (0x93B960 + n * 0x128) and the running sprite ---------------
-constexpr U kCurrentEnemy = 0x939AD8;     // the enemy BattleEnemy_RunAll is running (its object)
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running (its object)
 constexpr U kEnemies = 0x93B960;          // enemy 0's object
 constexpr U kEnemy1 = 0x93BA88;           // enemy 1's object
 constexpr U kEnemy0Status = 0x93B9F2;     // enemy 0's +0x92 (u32; bit 0x4000 read by set-up 27)
-constexpr U kEnemy1Status = 0x93BB1A;     // enemy 1's +0x92 (u32)
+// kEnemy1Status: now BossH_Enemy1Status (symbols.toml). enemy 1's +0x92 (u32)
 constexpr U kEnemyData = 0x8C55C8;        // the area's enemy data records (stride 0x8C), by the enemy's +0xF0
 constexpr U kEnemyDataStride = 0x8C;
-constexpr U kOwner = 0x93B940;            // the running task's owner (BattleTask_RunAll: the slot's +0x80)
+// kOwner: now BattleE2_Owner (symbols.toml). the running task's owner (BattleTask_RunAll: the slot's +0x80)
 constexpr U kTaskSlots = 0x93A000;        // BattleTask_Create's slots
 constexpr U kTaskStride = 0x84;
 constexpr unsigned kTaskCount = 48;
 
 // --- the party (ObjTrio, stride 0x14C) ---------------------------------------
-constexpr U kParty = 0x802D40;
+// kParty: now ObjTrio (symbols.toml).
 constexpr U kPartyStride = 0x14C;
 
 // --- other cells ------------------------------------------------------------
-constexpr U kWindowUp = 0x803433;         // u8: a window record's byte (0x803430's); the count waits while set
+// kWindowUp: now BossSf_WindowUp (symbols.toml). u8: a window record's byte (0x803430's); the count waits while set
 constexpr U kScriptVar3 = 0x903848;       // u8: movement-script variable 3 (area_w0a.md), set by set-up 28's end
-constexpr U kChapterStep = 0x8034E5;      // u8: the chapter run's step
+// kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter run's step
 constexpr U kPoseSet = 0x8C5D80;          // the frame set set-up 27's end hook poses the party from
 constexpr U kTextRow1 = 0x904D00;         // Text_Records[1] (battle_actions_callees.h): the count's digits
-constexpr U kCountText0 = 0x669D20;       // .data: the text pointer drawn before the count
-constexpr U kCountText1 = 0x669D24;       // .data: the text pointer drawn after it
-constexpr U kCountFormat = 0x64D3EC;      // Boss26Fx_CountFormat, the count's sprintf format
+// kCountText0: now BossSf_CountText0 (symbols.toml). .data: the text pointer drawn before the count
+// kCountText1: now BossSf_CountText1 (symbols.toml). .data: the text pointer drawn after it
+// kCountFormat: now Boss26Fx_CountFormat (symbols.toml). Boss26Fx_CountFormat, the count's sprintf format
 constexpr U kMyriaSlotScript = 0x64DD04;  // .data: the script Myria's entrance hands 0x455290 (not read)
 
 // --- the callees nobody owns ------------------------------------------------

@@ -1,0 +1,1315 @@
+# B1 group field: the record sites left raw in the group's files, from tools/data_census.py on the final tree.
+# Addresses, names and reasons only (CLAUDE.md rule 1).
+file	line	offset	reason	evidence
+src/game/char_stats.cpp	176	0x26	no-family	`p`: a primitive / table entry
+src/game/char_stats.cpp	178	0x16	no-family	`p`: a primitive / table entry
+src/game/char_stats.cpp	195	0x18	no-family	`p`: a primitive / table entry
+src/game/char_stats.cpp	196	0x1a	no-family	`p`: a primitive / table entry
+src/game/char_stats.cpp	200	0x16	no-family	`p`: a primitive / table entry
+src/game/char_stats.cpp	222	-	computed	offset computed at run time: r + at::kBase
+src/game/char_stats.cpp	223	-	computed	offset computed at run time: r + at::kMaxHp
+src/game/char_stats.cpp	223	-	computed	offset computed at run time: r + at::kMaxHp
+src/game/char_stats.cpp	224	-	computed	offset computed at run time: r + at::kMaxHp
+src/game/char_stats.cpp	225	-	computed	offset computed at run time: r + at::kHp
+src/game/char_stats.cpp	225	-	computed	offset computed at run time: r + at::kHp
+src/game/char_stats_fuzz.cpp	96	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	97	0x8	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	110	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	113	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	120	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	121	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	349	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	353	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/char_stats_fuzz.cpp	353	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_blocked.cpp	110	-	computed	offset computed at run time: object + at
+src/game/field_blocked.cpp	246	0x3e	no-family	`Sprite_Current`: not shown to point at one of the nine record families
+src/game/field_blocked.cpp	333	0x3e	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_blocked.cpp	334	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_blocked.cpp	388	0x3e	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_blocked.cpp	561	0x3e	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_blocked.cpp	566	0x34	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_blocked.cpp	567	0x38	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_c1.cpp	124	-	computed	offset computed at run time: AddressOf(AreaMap_Header) + static_cast<U>(index) * 2u
+src/game/field_c1.cpp	253	0xc	width	EffectObject +0xc read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	255	0x10	width	EffectObject +0x10 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	321	0xc	width	EffectObject +0xc read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	369	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	370	-	computed	offset computed at run time: AddressOf(EffectKind32_Hops) + 8u * o->step
+src/game/field_c1.cpp	370	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	372	-	computed	offset computed at run time: AddressOf(EffectKind32_Hops) + 4 + 8u * o->step
+src/game/field_c1.cpp	372	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	381	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	383	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	383	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	383	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	396	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	402	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	404	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	404	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	404	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	421	0x2c	pad	EffectObject +0x2c is padding in records.h
+src/game/field_c1.cpp	443	0x58	pad	EffectObject +0x58 is padding in records.h
+src/game/field_c1.cpp	571	-	computed	offset computed at run time: Bytes(o) + off
+src/game/field_c1.cpp	594	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	594	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	601	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	601	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	607	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	607	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	619	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	620	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	622	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	624	0x1c	pad	EffectObject +0x1c is padding in records.h
+src/game/field_c1.cpp	625	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	655	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	659	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	667	0x1c	pad	EffectObject +0x1c is padding in records.h
+src/game/field_c1.cpp	671	0x1c	pad	EffectObject +0x1c is padding in records.h
+src/game/field_c1.cpp	679	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	679	0x1c	pad	EffectObject +0x1c is padding in records.h
+src/game/field_c1.cpp	684	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	684	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	684	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	686	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	686	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	686	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	704	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	705	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	707	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	708	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	709	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	724	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	724	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	756	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	760	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	763	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	768	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	771	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	778	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	779	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	781	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	782	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	785	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	785	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	785	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	787	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	787	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	787	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	790	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	792	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	793	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	794	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c1.cpp	797	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1.cpp	797	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	806	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	806	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	829	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/field_c1.cpp	829	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/field_c1.cpp	831	0x44	pad	EffectObject +0x44 is padding in records.h
+src/game/field_c1.cpp	831	0x44	pad	EffectObject +0x44 is padding in records.h
+src/game/field_c1.cpp	837	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/field_c1.cpp	867	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	867	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	870	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	870	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	913	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	916	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	922	-	computed	offset computed at run time: Bytes(o) + speed_off
+src/game/field_c1.cpp	924	-	computed	offset computed at run time: Bytes(o) + pos_off
+src/game/field_c1.cpp	925	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	930	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/field_c1.cpp	930	-	computed	offset computed at run time: Bytes(o) + pos_off
+src/game/field_c1.cpp	944	-	computed	offset computed at run time: AddressOf(Field_DirectionSteps) + 8u * d
+src/game/field_c1.cpp	945	-	computed	offset computed at run time: AddressOf(Field_DirectionSteps) + 4 + 8u * d
+src/game/field_c1.cpp	970	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	980	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	996	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1018	0x34	gate	EffectObject->x: the typed store changed the object code
+src/game/field_c1.cpp	1019	0x38	gate	EffectObject->z: the typed store changed the object code
+src/game/field_c1.cpp	1020	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1020	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1044	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1044	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1081	0x2c	pad	EffectObject +0x2c is padding in records.h
+src/game/field_c1.cpp	1081	0x2c	pad	EffectObject +0x2c is padding in records.h
+src/game/field_c1.cpp	1086	0x4c	pad	EffectObject +0x4c is padding in records.h
+src/game/field_c1.cpp	1086	0x4c	pad	EffectObject +0x4c is padding in records.h
+src/game/field_c1.cpp	1090	0x34	gate	EffectObject->x: the typed store changed the object code
+src/game/field_c1.cpp	1091	0x38	gate	EffectObject->z: the typed store changed the object code
+src/game/field_c1.cpp	1092	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1092	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1113	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1115	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1115	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c1.cpp	1134	0x8	no-family	`desc`: not shown to point at one of the nine record families
+src/game/field_c1.cpp	1135	-	computed	offset computed at run time: list + 8u * Cur()[0xB]
+src/game/field_c1.cpp	1137	0x70	pad	EffectObject +0x70 is padding in records.h
+src/game/field_c1.cpp	1143	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c1_fuzz.cpp	188	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	191	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	192	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	195	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	196	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	196	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	198	0x40	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	218	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	219	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	221	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	354	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	355	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	363	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	407	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	412	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	413	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	426	0x58	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	439	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	440	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	441	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	442	0x1c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	445	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	446	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	450	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	451	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	452	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	453	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	454	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	456	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	457	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	462	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	462	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	463	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	464	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	465	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	467	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	468	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	468	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	468	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	475	0x40	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	478	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	479	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	480	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	481	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	484	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	485	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	496	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	497	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	498	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	498	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	499	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c1_fuzz.cpp	499	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2.cpp	74	-	computed	offset computed at run time: table + 4 * state
+src/game/field_c2.cpp	91	0x34	not-retyped	EffectObject->x: `e` is a parameter of a helper the converter gave no typed sibling (few or no typed sites)
+src/game/field_c2.cpp	91	0x34	not-retyped	EffectObject->x: `s` is a parameter of a helper the converter gave no typed sibling (few or no typed sites)
+src/game/field_c2.cpp	92	0x38	not-retyped	EffectObject->z: `e` is a parameter of a helper the converter gave no typed sibling (few or no typed sites)
+src/game/field_c2.cpp	92	0x38	not-retyped	EffectObject->z: `s` is a parameter of a helper the converter gave no typed sibling (few or no typed sites)
+src/game/field_c2.cpp	93	0x3c	not-retyped	EffectObject->height: `e` is a parameter of a helper the converter gave no typed sibling (few or no typed sites)
+src/game/field_c2.cpp	93	0x3c	not-retyped	EffectObject->height: `s` is a parameter of a helper the converter gave no typed sibling (few or no typed sites)
+src/game/field_c2.cpp	113	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	114	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	130	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	175	0x54	pad	EffectObject +0x54 is padding in records.h
+src/game/field_c2.cpp	179	0x50	pad	EffectObject +0x50 is padding in records.h
+src/game/field_c2.cpp	180	0x50	pad	EffectObject +0x50 is padding in records.h
+src/game/field_c2.cpp	180	0x50	pad	EffectObject +0x50 is padding in records.h
+src/game/field_c2.cpp	182	0x50	pad	EffectObject +0x50 is padding in records.h
+src/game/field_c2.cpp	289	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	293	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	303	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	313	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	313	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	334	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	337	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	340	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	343	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	346	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	346	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	349	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	362	0x50	pad	EffectObject +0x50 is padding in records.h
+src/game/field_c2.cpp	365	0x14	no-family	`face`: a model face
+src/game/field_c2.cpp	365	0xe	no-family	`face`: a model face
+src/game/field_c2.cpp	365	0x2	no-family	`face`: a model face
+src/game/field_c2.cpp	365	0x8	no-family	`face`: a model face
+src/game/field_c2.cpp	365	0x0	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	366	0x10	no-family	`face`: a model face
+src/game/field_c2.cpp	366	0x16	no-family	`face`: a model face
+src/game/field_c2.cpp	366	0xa	no-family	`face`: a model face
+src/game/field_c2.cpp	366	0x4	no-family	`face`: a model face
+src/game/field_c2.cpp	366	0x2	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	367	0x12	no-family	`face`: a model face
+src/game/field_c2.cpp	367	0x18	no-family	`face`: a model face
+src/game/field_c2.cpp	367	0xc	no-family	`face`: a model face
+src/game/field_c2.cpp	367	0x6	no-family	`face`: a model face
+src/game/field_c2.cpp	367	0x4	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	371	0x0	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	371	0x0	no-family	`rel`: a vertex offset
+src/game/field_c2.cpp	371	0x0	no-family	`v`: a vertex
+src/game/field_c2.cpp	372	0x2	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	372	0x2	no-family	`rel`: a vertex offset
+src/game/field_c2.cpp	372	0x2	no-family	`v`: a vertex
+src/game/field_c2.cpp	373	0x4	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	373	0x4	no-family	`rel`: a vertex offset
+src/game/field_c2.cpp	373	0x4	no-family	`v`: a vertex
+src/game/field_c2.cpp	375	0x0	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	375	0x2	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	375	0x4	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	377	0xa	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	377	0xa	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	378	0xc	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	378	0xc	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	379	0x10	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	380	0x8	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	380	0x8	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	381	0x12	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	382	0x14	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	392	0x50	pad	EffectObject +0x50 is padding in records.h
+src/game/field_c2.cpp	395	0x8	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	396	0xc	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	396	0xc	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	397	0x0	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	397	0x0	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	398	0xc	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	398	0x4	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	398	0x4	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	399	0xa	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	399	0x2	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	399	0x2	no-family	`r`: a shard / party-move record
+src/game/field_c2.cpp	413	0x10	no-family	`shard`: a shard record
+src/game/field_c2.cpp	414	0x12	no-family	`shard`: a shard record
+src/game/field_c2.cpp	415	0x14	no-family	`shard`: a shard record
+src/game/field_c2.cpp	425	0x0	no-family	`shard`: a shard record
+src/game/field_c2.cpp	425	0x0	no-family	`v`: a vertex
+src/game/field_c2.cpp	426	0x2	no-family	`shard`: a shard record
+src/game/field_c2.cpp	426	0x2	no-family	`v`: a vertex
+src/game/field_c2.cpp	427	0x4	no-family	`shard`: a shard record
+src/game/field_c2.cpp	427	0x4	no-family	`v`: a vertex
+src/game/field_c2.cpp	444	0x0	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	445	0x4	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	446	0x8	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	447	0x10	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	448	0x14	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	449	0x18	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	451	0x18	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	451	0x18	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	469	0x0	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	469	0x0	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	469	0x10	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	470	0x14	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	470	0x4	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	470	0x4	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	471	0x18	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	471	0x8	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	471	0x8	no-family	`p`: a primitive / table entry
+src/game/field_c2.cpp	523	0x16	no-family	`prim`: a GPU primitive packet
+src/game/field_c2.cpp	524	0x26	no-family	`prim`: a GPU primitive packet
+src/game/field_c2.cpp	607	0x3c	width	EffectObject +0x3c read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	622	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	625	0xc	gate	EffectObject->step_x: the typed store changed the object code
+src/game/field_c2.cpp	629	0x10	gate	EffectObject->step_z: the typed store changed the object code
+src/game/field_c2.cpp	659	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	701	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	702	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c2.cpp	715	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	715	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	715	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c2.cpp	717	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	717	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	717	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	721	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	786	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	787	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c2.cpp	801	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	801	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	801	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c2.cpp	803	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	803	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	803	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	806	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	821	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	822	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c2.cpp	833	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	833	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	833	0x20	pad	EffectObject +0x20 is padding in records.h
+src/game/field_c2.cpp	835	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	835	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	835	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	839	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	866	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	879	0x14	pad	EffectObject +0x14 is padding in records.h
+src/game/field_c2.cpp	879	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	879	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	904	-	computed	offset computed at run time: AddressOf(Field_DirectionSteps) + 8u * Bytes(s)[8]
+src/game/field_c2.cpp	906	-	computed	offset computed at run time: AddressOf(Field_DirectionSteps) + 4 + 8u * Bytes(s)[8]
+src/game/field_c2.cpp	907	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	932	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	933	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	934	-	computed	offset computed at run time: AddressOf(AreaMap_Header) + cell * 2u
+src/game/field_c2.cpp	979	0x2c	pad	EffectObject +0x2c is padding in records.h
+src/game/field_c2.cpp	981	0x4c	pad	PartyMember +0x4c is padding in records.h
+src/game/field_c2.cpp	981	0x4c	pad	EffectObject +0x4c is padding in records.h
+src/game/field_c2.cpp	984	0x70	pad	EffectObject +0x70 is padding in records.h
+src/game/field_c2.cpp	1028	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	1037	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	1046	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	1046	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	1075	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	1094	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	1095	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c2.cpp	1121	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c2_fuzz.cpp	294	0x50	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	295	0x54	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	296	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	297	0x36	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	298	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	299	0x3a	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	302	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	303	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	321	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	322	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	331	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	331	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	332	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	332	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	351	0x20	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	352	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	352	0x20	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	353	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	364	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	365	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	366	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	366	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	367	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	367	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	372	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	379	0x3a	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	407	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c2_fuzz.cpp	408	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3.cpp	130	-	computed	offset computed at run time: AddressOf(Field_DirectionSteps) + d * 8
+src/game/field_c3.cpp	131	-	computed	offset computed at run time: AddressOf(Field_DirectionSteps) + 4 + d * 8
+src/game/field_c3.cpp	330	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	478	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	478	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	559	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	608	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	608	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	619	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	635	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	635	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	686	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	686	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	696	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	708	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	708	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	714	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	799	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	964	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	968	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	973	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	977	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	984	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	990	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	995	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	1001	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	1022	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	1022	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	1033	0x14	width	SpriteObject +0x14 read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	1033	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	1033	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3.cpp	1073	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_c3_fuzz.cpp	229	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	240	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	359	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	360	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	361	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	362	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	403	0x98	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	404	0x9a	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	408	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	409	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	425	0x20	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	439	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	440	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	471	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	472	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_c3_fuzz.cpp	473	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e1.cpp	156	0x16	no-family	`p`: a primitive / table entry
+src/game/field_e1.cpp	255	0x8	no-family	`p`: a primitive / table entry
+src/game/field_e1.cpp	256	0xc	no-family	`p`: a primitive / table entry
+src/game/field_e1.cpp	257	0x14	no-family	`p`: a primitive / table entry
+src/game/field_e1.cpp	258	0x18	no-family	`p`: a primitive / table entry
+src/game/field_e1.cpp	396	0x12c	union	PartyMember +0x12c: per-use meaning (brief rule 5)
+src/game/field_e1.cpp	396	0x88	no-family	a stack copy laid out as a sprite object (alignas(4) unsigned char object[0xA4]), not a record in the image
+src/game/field_e1.cpp	450	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e1.cpp	561	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_e1.cpp	561	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_e1.cpp	562	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_e1.cpp	562	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_e1.cpp	630	0x34	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	631	0x38	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	633	0x36	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	635	0x3a	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	637	0x38	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	650	0x3a	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	666	0x3a	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	677	0x36	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	678	0x3a	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	686	0x36	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	687	0x3a	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	710	0x36	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	711	0x3a	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	719	0x36	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	720	0x3a	no-family	`Sc()`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	739	0x36	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	740	0x3a	no-family	`sc`: not shown to point at one of the nine record families
+src/game/field_e1.cpp	778	0x1	no-family	`r`: a shard / party-move record
+src/game/field_e1.cpp	779	0x2	no-family	`r`: a shard / party-move record
+src/game/field_e1.cpp	787	0x2	no-family	`r`: a shard / party-move record
+src/game/field_e1.cpp	789	0x6	no-family	`r`: a shard / party-move record
+src/game/field_e1.cpp	790	0x4	no-family	`r`: a shard / party-move record
+src/game/field_e1.cpp	810	0x34	gate	PartyMember->x: the typed store changed the object code
+src/game/field_e1.cpp	878	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e1.cpp	957	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e1.cpp	959	0x20	pad	PartyMember +0x20 is padding in records.h
+src/game/field_e1.cpp	1024	0x1	no-family	`r`: a shard / party-move record
+src/game/field_e1.cpp	1025	0x2	no-family	`r`: a shard / party-move record
+src/game/field_e1.cpp	1026	0x3	no-family	`r`: a shard / party-move record
+src/game/field_e1_fuzz.cpp	359	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e1_fuzz.cpp	393	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e1_fuzz.cpp	394	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e1_fuzz.cpp	403	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e1_fuzz.cpp	404	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e2.cpp	107	0x3e	no-family	`Key(s)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	141	-	computed	offset computed at run time: p - 1
+src/game/field_e2.cpp	155	-	computed	offset computed at run time: p - 1
+src/game/field_e2.cpp	190	-	computed	offset computed at run time: p - 1
+src/game/field_e2.cpp	263	0x18	no-family	`actor`: a character record address
+src/game/field_e2.cpp	263	0x20	no-family	`actor`: a character record address
+src/game/field_e2.cpp	264	0x10	no-family	`actor`: a character record address
+src/game/field_e2.cpp	264	0x10	no-family	`actor`: a character record address
+src/game/field_e2.cpp	270	0x10	no-family	`actor`: a character record address
+src/game/field_e2.cpp	270	0x10	no-family	`actor`: a character record address
+src/game/field_e2.cpp	275	0x10	no-family	`a`: a menu record
+src/game/field_e2.cpp	275	0x10	no-family	`a`: a menu record
+src/game/field_e2.cpp	418	0x3e	no-family	`Key(s)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	419	0x3e	no-family	`Key(s)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	421	0x3e	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	442	0x14	pad	PartyMember +0x14 is padding in records.h
+src/game/field_e2.cpp	529	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	534	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	538	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	565	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	569	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	572	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	610	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	610	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	616	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	625	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	625	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	629	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	630	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	648	0x20	pad	PartyMember +0x20 is padding in records.h
+src/game/field_e2.cpp	705	0x34	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	706	0x38	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	707	0x3c	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	715	0xc	no-family	`Key(s)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	716	0x10	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	717	0x14	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	756	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	835	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_e2.cpp	942	0x60	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	943	0x2e	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	944	0x30	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	948	0x2e	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	953	0x30	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	954	0x30	no-family	`Key(Sprite_Current)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	969	0x26	no-family	`Key(prim)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	970	0x16	no-family	`Key(prim)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	978	0x3e	no-family	`Key(s)`: not shown to point at one of the nine record families
+src/game/field_e2.cpp	1067	0x10	no-family	`hooks`: a hook table
+src/game/field_e2.cpp	1615	0x2	no-family	`p`: a primitive / table entry
+src/game/field_e2.cpp	1641	-	computed	offset computed at run time: bof3::addr::MessagePools + (L(word_cell) & 0xFFFF)
+src/game/field_e2.cpp	1717	0x1	no-family	`record`: a map-cell or character record
+src/game/field_e2.cpp	1718	0x1	no-family	`record`: a map-cell or character record
+src/game/field_e2.cpp	1740	0x1	no-family	`record`: a map-cell or character record
+src/game/field_e2.cpp	1774	0x1	no-family	`record`: a map-cell or character record
+src/game/field_e2.cpp	1775	0x1	no-family	`record`: a map-cell or character record
+src/game/field_e2.cpp	1877	0x1	no-family	`record`: a map-cell or character record
+src/game/field_e2.cpp	1887	0x1	no-family	`record`: a map-cell or character record
+src/game/field_e2_fuzz.cpp	654	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e2_fuzz.cpp	686	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e2_fuzz.cpp	687	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e2_fuzz.cpp	694	0x20	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e2_fuzz.cpp	695	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e2_fuzz.cpp	737	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_e2_fuzz.cpp	739	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event.cpp	118	0x18	pad	PartyMember +0x18 is padding in records.h
+src/game/field_event.cpp	119	0x1c	pad	PartyMember +0x1c is padding in records.h
+src/game/field_event.cpp	120	0x20	pad	PartyMember +0x20 is padding in records.h
+src/game/field_event.cpp	130	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_event.cpp	295	0xa	no-family	`context`: a script context (object +0x80 or member +0x124)
+src/game/field_event.cpp	324	0x4	no-family	`bank`: an animation bank
+src/game/field_event.cpp	328	-	computed	offset computed at run time: offsets + (index & 0xFF) * 4u
+src/game/field_event.cpp	432	0x2C	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	435	0x2C	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	436	-	computed	offset computed at run time: At(at::kBankTable) + index * 4u
+src/game/field_event.cpp	436	0x4C	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	446	0x70	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	450	0x70	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	452	0x29	audit-family	C:/Users/kerok/v_typed/b1_audit_eaf.md field: Field_MemberSprite runs on any sprite-shaped object (Sprite_Objects, enemies), not only PartyMember
+src/game/field_event.cpp	481	0x40	pad	PartyMember +0x40 is padding in records.h
+src/game/field_event.cpp	482	0x44	pad	PartyMember +0x44 is padding in records.h
+src/game/field_event.cpp	518	0x4	no-family	`offset`: a bank offset table
+src/game/field_event.cpp	521	0x4	no-family	`offset`: a bank offset table
+src/game/field_event.cpp	526	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_event_fuzz.cpp	164	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event_fuzz.cpp	247	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event_fuzz.cpp	253	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event_fuzz.cpp	708	0x4c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event_fuzz.cpp	746	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event_fuzz.cpp	799	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event_fuzz.cpp	800	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_event_fuzz.cpp	825	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_frame.cpp	317	0x9c	no-family	`object`: a script context or field object reached by a computed offset
+src/game/field_frame.cpp	396	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_frame.cpp	396	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_frame.cpp	397	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_frame.cpp	397	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_frame.cpp	406	-	computed	offset computed at run time: Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)
+src/game/field_frame.cpp	407	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_frame.cpp	417	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_frame.cpp	426	0x74	gate	SpriteObject->screen_xf: the typed store changed the object code
+src/game/field_frame.cpp	427	0x2e	gate	SpriteObject->screen_x: the typed store changed the object code
+src/game/field_frame.cpp	428	0x78	gate	SpriteObject->screen_yf: the typed store changed the object code
+src/game/field_frame.cpp	429	0x30	gate	SpriteObject->screen_y: the typed store changed the object code
+src/game/field_frame.cpp	492	0x2e	not-retyped	Sprite_OverlayList[i]: the overlay list holds sprite objects and effect records alike; family not fixed here
+src/game/field_frame.cpp	492	0x74	not-retyped	Sprite_OverlayList[i]: the overlay list holds sprite objects and effect records alike; family not fixed here
+src/game/field_frame.cpp	599	0x32	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	601	0x32	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	602	0x34	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	658	0x74	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	658	0x78	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	837	0x3e	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	838	0x34	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	839	0x38	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_frame.cpp	844	0x9c	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_hidden.cpp	95	-	computed	offset computed at run time: table + 4 * index
+src/game/field_hidden.cpp	172	0x2e	gate	EffectObject->screen_x: the typed store changed the object code
+src/game/field_hidden.cpp	173	0x30	gate	EffectObject->screen_y: the typed store changed the object code
+src/game/field_hidden.cpp	238	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/field_hidden.cpp	276	0x2c	gate	PartyMember->column: the typed read changed the object code
+src/game/field_hidden.cpp	355	-	computed	offset computed at run time: bof3::addr::Text_Records + k
+src/game/field_hidden.cpp	355	-	computed	offset computed at run time: name + k
+src/game/field_hidden.cpp	397	0x58	gate	SpriteObject->script_pos: the typed read changed the object code
+src/game/field_hidden.cpp	430	0x36	width	EffectObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_hidden.cpp	431	0x34	width	EffectObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_hidden.cpp	432	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_hidden.cpp	433	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_hidden.cpp	435	0x3e	width	EffectObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_hidden.cpp	538	0x4	no-family	`slot`: an encounter slot (12 bytes)
+src/game/field_hidden.cpp	538	0x8	no-family	`slot`: an encounter slot (12 bytes)
+src/game/field_hidden_fuzz.cpp	93	0x50	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	96	0x58	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	97	0x2c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	98	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	103	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	111	0x2c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	142	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	187	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	200	0x50	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	210	0x58	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	218	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	443	0x50	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	479	0x2c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	490	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	491	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_hidden_fuzz.cpp	510	0x58	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc.cpp	89	0x2	no-family	`at::MapView_OriginAt()`: not shown to point at one of the nine record families
+src/game/field_misc.cpp	159	0x8	no-family	`out`: an output buffer
+src/game/field_misc.cpp	159	0x8	no-family	`xyz`: not shown to point at one of the nine record families
+src/game/field_misc.cpp	161	0x10	no-family	`out`: an output buffer
+src/game/field_misc.cpp	170	-	computed	offset computed at run time: x_arg - OriginX()
+src/game/field_misc.cpp	171	-	computed	offset computed at run time: z_arg - OriginZ()
+src/game/field_misc.cpp	174	-	computed	offset computed at run time: at::MapView_CellsAt() + (ring.column + ring.row * 28u) * 2u
+src/game/field_misc.cpp	299	-	computed	offset computed at run time: at::MapView_CellItemsAt() + 2u + (ring.column + ring.row * 2
+src/game/field_misc.cpp	374	-	computed	offset computed at run time: Header(0) + (x + width * y + offset * 2u) * 2u
+src/game/field_misc.cpp	378	0x4	no-family	`record + static_cast<U>(c) * 4u`: not shown to point at one of the nine record families
+src/game/field_misc.cpp	380	-	computed	offset computed at run time: Header(0) + run * 4u
+src/game/field_misc.cpp	389	-	computed	offset computed at run time: at::ItemFaceA() + item * 0x90u
+src/game/field_misc.cpp	390	-	computed	offset computed at run time: at::ItemFaceB() + item * 0x90u
+src/game/field_misc.cpp	392	0x4	no-family	`record + static_cast<U>(c) * 4u`: not shown to point at one of the nine record families
+src/game/field_misc.cpp	401	0x4	no-family	`cursor + static_cast<U>(c) * 4u`: not shown to point at one of the nine record families
+src/game/field_misc.cpp	403	-	computed	offset computed at run time: at::AreaMap_CornersAt() + (width * y + x) * 4u
+src/game/field_misc.cpp	408	0x4	no-family	`cursor`: not shown to point at one of the nine record families
+src/game/field_misc.cpp	440	-	computed	offset computed at run time: at::ItemFaceA() + item * 0x90u
+src/game/field_misc.cpp	441	-	computed	offset computed at run time: at::ItemFaceB() + item * 0x90u
+src/game/field_misc.cpp	444	-	computed	offset computed at run time: packet + 8 + corner * 0xC
+src/game/field_misc.cpp	444	-	computed	offset computed at run time: src + 8 + corner * 0x10
+src/game/field_misc.cpp	445	-	computed	offset computed at run time: packet + 0xC + corner * 0xC
+src/game/field_misc.cpp	445	-	computed	offset computed at run time: src + 0xC + corner * 0x10
+src/game/field_misc.cpp	478	-	computed	offset computed at run time: from + k * 2
+src/game/field_misc.cpp	481	-	computed	offset computed at run time: from + 0x4000 + k * 2
+src/game/field_misc.cpp	559	-	computed	offset computed at run time: prim + z
+src/game/field_misc.cpp	565	-	computed	offset computed at run time: prim + z
+src/game/field_misc.cpp	573	-	computed	offset computed at run time: prim + z
+src/game/field_misc.cpp	584	0x4	no-family	`prim`: a GPU primitive packet
+src/game/field_misc.cpp	585	0x8	no-family	`prim`: a GPU primitive packet
+src/game/field_misc.cpp	586	0x4	no-family	`rect`: not shown to point at one of the nine record families
+src/game/field_misc.cpp	587	0xc	no-family	`prim`: a GPU primitive packet
+src/game/field_misc.cpp	588	0x10	no-family	`prim`: a GPU primitive packet
+src/game/field_misc.cpp	589	0x14	no-family	`prim`: a GPU primitive packet
+src/game/field_misc_fuzz.cpp	191	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	215	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	410	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	475	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	517	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	553	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	554	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	557	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	572	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	580	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	583	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	593	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	597	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	616	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	631	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	636	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	642	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	652	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_misc_fuzz.cpp	759	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_modes.cpp	71	-	computed	offset computed at run time: table + 4u * static_cast<std::uint32_t>(index)
+src/game/field_modes.cpp	85	-	computed	offset computed at run time: bof3::addr::MessagePools + 2 * id
+src/game/field_modes.cpp	103	0x64	pad	EffectObject +0x64 is padding in records.h
+src/game/field_modes.cpp	104	0x68	pad	EffectObject +0x68 is padding in records.h
+src/game/field_modes.cpp	105	0x6c	pad	EffectObject +0x6c is padding in records.h
+src/game/field_modes_fuzz.cpp	67	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o.cpp	70	-	computed	offset computed at run time: bof3::addr::CharacterRecords + (id & 0xFF) * at::kRecordStri
+src/game/field_o.cpp	107	0x2	no-family	`At(bof3::addr::DamageScratch)`: not shown to point at one of the nine record families
+src/game/field_o.cpp	108	0x2	no-family	`At(bof3::addr::DamageScratch)`: not shown to point at one of the nine record families
+src/game/field_o.cpp	154	0x24	no-family	`rec`: a character record (0x903A70, not this family: records.h)
+src/game/field_o.cpp	157	0x26	no-family	`rec`: a character record (0x903A70, not this family: records.h)
+src/game/field_o.cpp	160	0x2a	no-family	`rec`: a character record (0x903A70, not this family: records.h)
+src/game/field_o.cpp	163	0x28	no-family	`rec`: a character record (0x903A70, not this family: records.h)
+src/game/field_o.cpp	187	0xc	no-family	`rec`: a character record (0x903A70, not this family: records.h)
+src/game/field_o.cpp	266	0x4	no-family	`f`: a menu frame
+src/game/field_o.cpp	267	0x8	no-family	`f`: a menu frame
+src/game/field_o.cpp	268	0xc	no-family	`f`: a menu frame
+src/game/field_o.cpp	269	0x10	no-family	`f`: a menu frame
+src/game/field_o.cpp	270	0x14	no-family	`f`: a menu frame
+src/game/field_o.cpp	272	0x4	no-family	`f`: a menu frame
+src/game/field_o.cpp	274	0xc	no-family	`f`: a menu frame
+src/game/field_o.cpp	276	0x14	no-family	`f`: a menu frame
+src/game/field_o.cpp	289	0x2	no-family	`spot`: an icon spot
+src/game/field_o.cpp	296	0xc	no-family	`a`: a menu record
+src/game/field_o.cpp	296	0x4	no-family	`a`: a menu record
+src/game/field_o.cpp	297	0x4	no-family	`a`: a menu record
+src/game/field_o.cpp	298	0x8	no-family	`a`: a menu record
+src/game/field_o.cpp	299	0x8	no-family	`a`: a menu record
+src/game/field_o.cpp	300	0xc	no-family	`a`: a menu record
+src/game/field_o.cpp	300	0x4	no-family	`a`: a menu record
+src/game/field_o.cpp	301	0xc	no-family	`a`: a menu record
+src/game/field_o.cpp	314	0x4	no-family	`spot`: an icon spot
+src/game/field_o.cpp	330	0x18	no-family	`p`: a primitive / table entry
+src/game/field_o.cpp	331	0x1a	no-family	`p`: a primitive / table entry
+src/game/field_o.cpp	332	0x16	no-family	`p`: a primitive / table entry
+src/game/field_o.cpp	366	-	computed	offset computed at run time: rec + kStats[i]
+src/game/field_o.cpp	386	-	computed	offset computed at run time: bof3::addr::NameTable_Armour + rec[0x13] * 26u
+src/game/field_o.cpp	386	-	computed	offset computed at run time: bof3::addr::NameTable_Weapons + rec[0x12] * 28u
+src/game/field_o.cpp	387	-	computed	offset computed at run time: bof3::addr::NameTable_Armour + rec[0x14] * 26u
+src/game/field_o.cpp	387	-	computed	offset computed at run time: bof3::addr::NameTable_Armour + rec[0x15] * 26u
+src/game/field_o.cpp	388	-	computed	offset computed at run time: bof3::addr::NameTable_Accessories + rec[0x16] * 24u
+src/game/field_o.cpp	388	-	computed	offset computed at run time: bof3::addr::NameTable_Accessories + rec[0x17] * 24u
+src/game/field_o.cpp	433	0x4	no-family	`panel`: a menu panel
+src/game/field_o.cpp	434	0x6	no-family	`panel`: a menu panel
+src/game/field_o.cpp	478	-	computed	offset computed at run time: bof3::addr::Ability_Records + list[0] * 24u
+src/game/field_o.cpp	503	0x10	no-family	`panel`: a menu panel
+src/game/field_o.cpp	534	-	computed	offset computed at run time: bof3::addr::Inventory_IdLists + 4 * cat
+src/game/field_o.cpp	535	-	computed	offset computed at run time: bof3::addr::Inventory_CountLists + 4 * cat
+src/game/field_o.cpp	635	0x10	no-family	`summary`: not shown to point at one of the nine record families
+src/game/field_o.cpp	672	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	681	0x90	gate	SpriteObject->target_z: the typed store changed the object code
+src/game/field_o.cpp	683	0x18	gate	SpriteObject->accel_x: the typed store changed the object code
+src/game/field_o.cpp	685	0xc	gate	SpriteObject->step_x: the typed store changed the object code
+src/game/field_o.cpp	686	0x10	gate	SpriteObject->step_z: the typed store changed the object code
+src/game/field_o.cpp	688	0x18	gate	SpriteObject->accel_x: the typed store changed the object code
+src/game/field_o.cpp	689	0x1c	gate	SpriteObject->accel_z: the typed store changed the object code
+src/game/field_o.cpp	690	0xc	gate	SpriteObject->step_x: the typed store changed the object code
+src/game/field_o.cpp	691	0x10	gate	SpriteObject->step_z: the typed store changed the object code
+src/game/field_o.cpp	737	0x38	gate	SpriteObject->z: the typed store changed the object code
+src/game/field_o.cpp	874	0x14	gate	SpriteObject->step_y: the typed store changed the object code
+src/game/field_o.cpp	876	0x38	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/field_o.cpp	877	0x34	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/field_o.cpp	915	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	915	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	916	0x14	gate	SpriteObject->step_y: the typed read changed the object code
+src/game/field_o.cpp	921	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	922	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	957	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	957	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	959	0x3e	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/field_o.cpp	963	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	964	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	965	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	975	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	980	0x38	gate	SpriteObject->z: the typed store changed the object code
+src/game/field_o.cpp	981	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	982	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	992	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	992	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	996	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	997	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1060	0x8c	gate	SpriteObject->target_x: the typed store changed the object code
+src/game/field_o.cpp	1062	0x90	gate	SpriteObject->target_z: the typed store changed the object code
+src/game/field_o.cpp	1068	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1097	0x70	gate	SpriteObject->reach: the typed store changed the object code
+src/game/field_o.cpp	1217	0x8	no-family	`descriptor`: not shown to point at one of the nine record families
+src/game/field_o.cpp	1223	0x34	gate	SpriteObject->x: the typed store changed the object code
+src/game/field_o.cpp	1224	0x38	gate	SpriteObject->z: the typed store changed the object code
+src/game/field_o.cpp	1229	0x20	pad	SpriteObject +0x20 is padding in records.h
+src/game/field_o.cpp	1234	0x54	type	PtrAt(sc + 0x54): the dword +0x54 read as a pointer, and the local has no other typed site
+src/game/field_o.cpp	1249	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1249	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1251	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1252	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1252	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1255	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1256	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1256	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1259	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1259	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1260	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/field_o.cpp	1261	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/field_o_fuzz.cpp	149	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	196	0x54	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	312	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	314	0x8	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	365	0x54	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	383	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	401	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	401	0x1c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	404	0x8c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	404	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	405	0x90	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	405	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_o_fuzz.cpp	459	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_objects.cpp	157	0x14	width	SpriteObject +0x14 read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	157	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	157	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	161	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	196	0x4	no-family	`r`: a shard / party-move record
+src/game/field_objects.cpp	198	0x8	no-family	`r`: a shard / party-move record
+src/game/field_objects.cpp	203	0xc	no-family	`r`: a shard / party-move record
+src/game/field_objects.cpp	243	-	computed	offset computed at run time: Sprite_Current + at
+src/game/field_objects.cpp	243	-	computed	offset computed at run time: other + at
+src/game/field_objects.cpp	245	-	computed	offset computed at run time: Sprite_Current + at
+src/game/field_objects.cpp	245	-	computed	offset computed at run time: other + at
+src/game/field_objects.cpp	250	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	250	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	263	0x64	width	SpriteObject +0x64 read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	264	0x68	width	SpriteObject +0x68 read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	265	0x6c	width	SpriteObject +0x6c read as 2 bytes; records.h has another width there
+src/game/field_objects.cpp	519	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/field_s.cpp	301	0x34	gate	PartyMember->x: the typed store changed the object code
+src/game/field_s.cpp	302	0x38	gate	PartyMember->z: the typed store changed the object code
+src/game/field_s.cpp	302	0x4	no-family	`row`: not shown to point at one of the nine record families
+src/game/field_s.cpp	303	0x3c	gate	PartyMember->height: the typed store changed the object code
+src/game/field_s.cpp	303	0x8	no-family	`row`: not shown to point at one of the nine record families
+src/game/field_s.cpp	599	0x34	not-retyped	an ObjTrio record held as an integer address (const U obj = 0x802D40 + i * stride), read through L(); no pointer to type
+src/game/field_s.cpp	600	0x38	not-retyped	an ObjTrio record held as an integer address (const U obj = 0x802D40 + i * stride), read through L(); no pointer to type
+src/game/field_s.cpp	601	0x3c	not-retyped	an ObjTrio record held as an integer address (const U obj = 0x802D40 + i * stride), read through L(); no pointer to type
+src/game/field_s.cpp	617	0x34	not-retyped	an ObjTrio record held as an integer address (const U obj = 0x802D40 + i * stride), read through L(); no pointer to type
+src/game/field_s.cpp	618	0x38	not-retyped	an ObjTrio record held as an integer address (const U obj = 0x802D40 + i * stride), read through L(); no pointer to type
+src/game/field_s.cpp	620	0x3c	not-retyped	an ObjTrio record held as an integer address (const U obj = 0x802D40 + i * stride), read through L(); no pointer to type
+src/game/field_s.cpp	707	0x10	no-family	`RecAddr(index)`: a character record (not this family: records.h)
+src/game/field_s.cpp	719	0x18	no-family	`RecAddr(index)`: a character record (not this family: records.h)
+src/game/field_s.cpp	724	0x20	no-family	`RecAddr(index)`: a character record (not this family: records.h)
+src/game/field_s.cpp	728	0x22	no-family	`RecAddr(index)`: a character record (not this family: records.h)
+src/game/field_s.cpp	729	0x1a	no-family	`RecAddr(index)`: a character record (not this family: records.h)
+src/game/field_s.cpp	735	0x22	no-family	`RecAddr(index)`: a character record (not this family: records.h)
+src/game/field_s.cpp	805	0x4	no-family	`cell`: an area-map cell
+src/game/field_s.cpp	806	0x2	no-family	`cell`: an area-map cell
+src/game/field_s.cpp	809	0x4	no-family	`cell`: an area-map cell
+src/game/field_s.cpp	810	0x2	no-family	`cell`: an area-map cell
+src/game/field_s.cpp	1103	0xa	no-family	`RecAddr(record)`: a character record (not this family: records.h)
+src/game/field_s.cpp	1105	0x1d	no-family	`RecAddr(record)`: a character record (not this family: records.h)
+src/game/field_s.cpp	1111	0x1d	no-family	`RecAddr(record)`: a character record (not this family: records.h)
+src/game/field_s.cpp	1423	-	computed	offset computed at run time: RecAddr(member_rec) + 0x7E + slot
+src/game/field_s.cpp	1728	0x12	no-family	`record`: a map-cell or character record
+src/game/field_s.cpp	1729	0x12	no-family	`record`: a map-cell or character record
+src/game/field_s.cpp	1731	0x12	no-family	`record`: a map-cell or character record
+src/game/field_s.cpp	1783	0x12	no-family	`record`: a map-cell or character record
+src/game/field_s.cpp	1784	0x12	no-family	`record`: a map-cell or character record
+src/game/field_s.cpp	1786	0x12	no-family	`record`: a map-cell or character record
+src/game/field_s.cpp	1822	0x1	no-family	`e`: not shown to point at one of the nine record families
+src/game/field_s.cpp	1834	0x1	no-family	`e`: not shown to point at one of the nine record families
+src/game/field_s_fuzz.cpp	450	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_s_fuzz.cpp	451	0x1a	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/field_s_fuzz.cpp	452	0x22	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects.cpp	177	-	computed	offset computed at run time: at::UprightHeightsAt() + e * 2u
+src/game/map_field_objects.cpp	195	-	computed	offset computed at run time: at::UprightCountsAt() + e
+src/game/map_field_objects.cpp	206	0x28	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	207	0x2c	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	208	0x30	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	209	0x38	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	210	0x3c	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	211	0x40	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	212	-	computed	offset computed at run time: at::UprightU02At() + e
+src/game/map_field_objects.cpp	215	-	computed	offset computed at run time: at::UprightU13At() + e
+src/game/map_field_objects.cpp	218	-	computed	offset computed at run time: at::UprightV01At() + e2 + j
+src/game/map_field_objects.cpp	221	-	computed	offset computed at run time: at::UprightV23At() + e2 + j
+src/game/map_field_objects.cpp	225	-	computed	offset computed at run time: at::UprightClutAt() + e
+src/game/map_field_objects.cpp	225	0x16	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	226	0x26	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	233	-	computed	offset computed at run time: at::UprightOffsetsXAt() + k
+src/game/map_field_objects.cpp	234	-	computed	offset computed at run time: at::UprightOffsetsYAt() + k
+src/game/map_field_objects.cpp	242	-	computed	offset computed at run time: at::UprightCountsAt() + e
+src/game/map_field_objects.cpp	288	0x2	no-family	`at::OriginAt()`: not shown to point at one of the nine record families
+src/game/map_field_objects.cpp	342	0x4	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	343	0x4	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	344	0x4	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	354	0x8	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	393	0x4	no-family	`entry`: a table entry
+src/game/map_field_objects.cpp	399	0x8	no-family	`entry`: a table entry
+src/game/map_field_objects.cpp	410	0x4	no-family	`entry`: a table entry
+src/game/map_field_objects.cpp	411	0x8	no-family	`entry`: a table entry
+src/game/map_field_objects.cpp	413	0x4	no-family	`entry`: a table entry
+src/game/map_field_objects.cpp	414	0x8	no-family	`entry`: a table entry
+src/game/map_field_objects.cpp	428	-	computed	offset computed at run time: entry + 4 + (flag == 0 ? 4 : 0)
+src/game/map_field_objects.cpp	471	0x10	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	480	0x18	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	481	0x10	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	481	0x10	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	481	0x20	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	482	0x10	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	482	0x10	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	484	0x10	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	492	0x20	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	496	0x1a	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	497	0x22	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	502	0x1a	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	504	0x22	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	507	0xc	no-family	`record`: a map-cell or character record
+src/game/map_field_objects.cpp	526	0x16	no-family	`prim`: a GPU primitive packet
+src/game/map_field_objects.cpp	578	-	computed	offset computed at run time: at::OpLengthsAt() + (c >> 4)
+src/game/map_field_objects.cpp	601	-	computed	offset computed at run time: S16(static_cast<U>(x)) + Dword(At(at::BytesAt())) + row
+src/game/map_field_objects.cpp	630	0x34	gate	SpriteObject->x: the typed store changed the object code
+src/game/map_field_objects.cpp	632	0x38	gate	SpriteObject->z: the typed store changed the object code
+src/game/map_field_objects.cpp	639	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	664	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	664	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	667	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	668	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	668	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	671	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	672	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	672	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	675	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	675	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	676	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/map_field_objects.cpp	676	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/map_field_objects_fuzz.cpp	168	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	273	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	283	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	284	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	284	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	345	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	376	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	676	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	802	0x20	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	803	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	806	0x22	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	807	0x1a	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_field_objects_fuzz.cpp	816	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers.cpp	172	0x4	no-family	`angles`: an SVECTOR
+src/game/map_layers.cpp	173	0x2	no-family	`angles`: an SVECTOR
+src/game/map_layers.cpp	173	0x4	no-family	`angles`: an SVECTOR
+src/game/map_layers.cpp	173	0x2	no-family	`drawn`: a draw item
+src/game/map_layers.cpp	173	0x4	no-family	`drawn`: a draw item
+src/game/map_layers.cpp	176	0x4	no-family	`drawn`: a draw item
+src/game/map_layers.cpp	187	0x4	no-family	`translation`: a VECTOR
+src/game/map_layers.cpp	189	0x8	no-family	`translation`: a VECTOR
+src/game/map_layers.cpp	244	0x2	no-family	`cell`: an area-map cell
+src/game/map_layers.cpp	272	0x2	no-family	`cell`: an area-map cell
+src/game/map_layers.cpp	276	0x36	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	279	0x36	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	283	0x2	no-family	`cell`: an area-map cell
+src/game/map_layers.cpp	285	0x7e	no-family	`Item(got)`: not shown to point at one of the nine record families
+src/game/map_layers.cpp	285	0x8e	no-family	`Item(got)`: not shown to point at one of the nine record families
+src/game/map_layers.cpp	291	0x7e	no-family	`Item(got)`: not shown to point at one of the nine record families
+src/game/map_layers.cpp	292	0x8e	no-family	`Item(got)`: not shown to point at one of the nine record families
+src/game/map_layers.cpp	313	0x7e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	317	0x8e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	319	0x2	no-family	`cell`: an area-map cell
+src/game/map_layers.cpp	319	0x2	no-family	`cell`: an area-map cell
+src/game/map_layers.cpp	320	0x36	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	342	0x2	no-family	`cell`: an area-map cell
+src/game/map_layers.cpp	378	0x2	no-family	`cell`: an area-map cell
+src/game/map_layers.cpp	395	0x7e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	396	0x8e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	399	0x8e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	424	0x8e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	506	0x2	no-family	`AreaMap_Header`: the area map header
+src/game/map_layers.cpp	507	-	computed	offset computed at run time: AreaMap_Header + (x + width * y + offset * 2u) * 2u
+src/game/map_layers.cpp	516	0x8e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	526	0x8e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	531	-	computed	offset computed at run time: texture - 4
+src/game/map_layers.cpp	537	0x7e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	552	0x4	no-family	`texture`: not shown to point at one of the nine record families
+src/game/map_layers.cpp	561	0x7e	no-family	`item`: a draw-pool item
+src/game/map_layers.cpp	715	0x2	no-family	`AreaMap_Header`: the area map header
+src/game/map_layers.cpp	721	-	computed	offset computed at run time: tiles + i * 2u
+src/game/map_layers.cpp	722	0x4	no-family	`AreaMap_Header`: the area map header
+src/game/map_layers.cpp	735	-	computed	offset computed at run time: tiles + (z * width + x) * 2u
+src/game/map_layers_fuzz.cpp	196	0x7e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	197	0x8e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	237	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	238	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	568	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	572	0x7e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	573	0x8e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	574	0x36	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	614	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	617	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	620	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	621	0x8	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	625	0x7e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	626	0x8e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	627	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_layers_fuzz.cpp	632	0x8e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll.cpp	223	0x36	no-family	`quad`: a POLY_FT4
+src/game/map_scroll.cpp	224	0x46	no-family	`quad`: a POLY_FT4
+src/game/map_scroll.cpp	233	0x4	no-family	`angles`: an SVECTOR
+src/game/map_scroll.cpp	234	0x4	no-family	`angles`: an SVECTOR
+src/game/map_scroll.cpp	234	0x4	no-family	`drawn`: a draw item
+src/game/map_scroll.cpp	238	-	computed	offset computed at run time: draw_pool::Items() + at
+src/game/map_scroll.cpp	272	0x2	no-family	`cell`: an area-map cell
+src/game/map_scroll.cpp	306	0x4	no-family	`entry`: a table entry
+src/game/map_scroll.cpp	315	0x2	no-family	`AreaMap_Header`: the area map header
+src/game/map_scroll.cpp	318	-	computed	offset computed at run time: AreaMap_Header + cell * 2u
+src/game/map_scroll.cpp	322	-	computed	offset computed at run time: AreaMap_Header + slot * 4u
+src/game/map_scroll.cpp	322	-	computed	offset computed at run time: record - 8
+src/game/map_scroll.cpp	328	0x4	no-family	`entry + step * 4u`: not shown to point at one of the nine record families
+src/game/map_scroll_fuzz.cpp	208	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	210	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	216	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	231	0x36	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	231	0x46	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	235	0x36	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	241	0x46	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	501	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	503	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	527	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/map_scroll_fuzz.cpp	552	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites.cpp	76	-	computed	offset computed at run time: Address(ObjTrio) + i * kMemberBytes
+src/game/member_sprites.cpp	103	-	computed	offset computed at run time: table + dir * 8
+src/game/member_sprites.cpp	104	0x4	no-family	`table + dir * 8`: not shown to point at one of the nine record families
+src/game/member_sprites.cpp	127	0x18	pad	PartyMember +0x18 is padding in records.h
+src/game/member_sprites.cpp	128	0x1c	pad	PartyMember +0x1c is padding in records.h
+src/game/member_sprites.cpp	129	0x20	pad	PartyMember +0x20 is padding in records.h
+src/game/member_sprites.cpp	136	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	383	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	498	0x34	gate	PartyMember->x: the typed store changed the object code
+src/game/member_sprites.cpp	499	0x38	gate	PartyMember->z: the typed store changed the object code
+src/game/member_sprites.cpp	564	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	564	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	576	0x3e	width	PartyMember +0x3e read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	650	0x34	width	PartyMember +0x34 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	650	0x38	width	PartyMember +0x38 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	652	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	653	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	659	0x34	width	PartyMember +0x34 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	660	0x38	width	PartyMember +0x38 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	668	0x38	width	PartyMember +0x38 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	685	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	710	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	720	0x34	width	PartyMember +0x34 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	721	0x38	width	PartyMember +0x38 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	759	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	769	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	777	0x38	width	PartyMember +0x38 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	906	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	906	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	908	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	908	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	908	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	910	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	910	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	910	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	913	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	914	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	918	0x3a	width	PartyMember +0x3a read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	919	0x36	width	PartyMember +0x36 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	936	0x34	width	PartyMember +0x34 read as 2 bytes; records.h has another width there
+src/game/member_sprites.cpp	936	0x38	width	PartyMember +0x38 read as 2 bytes; records.h has another width there
+src/game/member_sprites_fuzz.cpp	156	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	156	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	187	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	188	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	230	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	231	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	241	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	242	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	260	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	261	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	585	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	586	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	588	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	589	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	640	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	641	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	643	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	643	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	644	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	644	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	648	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	648	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	649	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	649	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	659	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	660	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	678	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	679	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	716	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/member_sprites_fuzz.cpp	717	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_flow.cpp	176	0x8	no-family	`tile`: a tile record
+src/game/mode_flow.cpp	177	0xc	no-family	`tile`: a tile record
+src/game/mode_flow.cpp	178	0x14	no-family	`tile`: a tile record
+src/game/mode_flow.cpp	179	0x18	no-family	`tile`: a tile record
+src/game/mode_flow.cpp	536	0x20	no-family	`own`: a task record
+src/game/mode_flow.cpp	537	0x24	no-family	`own`: a task record
+src/game/mode_flow_fuzz.cpp	237	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_flow_fuzz.cpp	238	0x8	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_flow_fuzz.cpp	254	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_flow_fuzz.cpp	585	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_flow_fuzz.cpp	586	0x40	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_rest.cpp	62	-	computed	offset computed at run time: table + 4 * step
+src/game/mode_states.cpp	71	-	computed	offset computed at run time: table + 4u * static_cast<std::uint32_t>(index)
+src/game/mode_states.cpp	245	0x18	no-family	`o`: a record whose family the code does not fix here
+src/game/mode_states.cpp	445	0x16	no-family	`Gfx_PacketNext`: not shown to point at one of the nine record families
+src/game/mode_states.cpp	883	0x4	no-family	`rows`: a menu row table
+src/game/mode_states.cpp	883	0x6	no-family	`w`: a window table row
+src/game/mode_states.cpp	884	0x2	no-family	`rows`: a menu row table
+src/game/mode_states.cpp	885	0x4	no-family	`w`: a window table row
+src/game/mode_states_fuzz.cpp	156	0x16	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_states_fuzz.cpp	376	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_states_fuzz.cpp	504	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/mode_tasks.cpp	165	0x4	no-family	`entry`: a table entry
+src/game/mode_tasks.cpp	165	0x18	no-family	`prim`: a GPU primitive packet
+src/game/mode_tasks.cpp	166	0x6	no-family	`entry`: a table entry
+src/game/mode_tasks.cpp	166	0x1a	no-family	`prim`: a GPU primitive packet
+src/game/mode_tasks.cpp	167	0x8	no-family	`entry`: a table entry
+src/game/mode_tasks.cpp	167	0x16	no-family	`prim`: a GPU primitive packet
+src/game/move_cmds.cpp	55	-	computed	offset computed at run time: Address(Sprite_DirectionAngles) + direction * 2u
+src/game/move_cmds.cpp	129	-	computed	offset computed at run time: Address(Field_DirectionSteps) + direction * 8u
+src/game/move_cmds.cpp	130	0x4	no-family	`step`: a direction-steps row
+src/game/move_cmds.cpp	132	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_cmds.cpp	146	0xc	no-family	`record`: a map-cell or character record
+src/game/move_cmds.cpp	147	0x8	no-family	`record`: a map-cell or character record
+src/game/move_cmds.cpp	148	0x4	no-family	`record`: a map-cell or character record
+src/game/move_cmds.cpp	154	0x4	no-family	`record`: a map-cell or character record
+src/game/move_cmds.cpp	155	0x8	no-family	`record`: a map-cell or character record
+src/game/move_cmds.cpp	160	0xc	no-family	`record`: a map-cell or character record
+src/game/move_cmds.cpp	195	0x4	no-family	`step`: a direction-steps row
+src/game/move_cmds.cpp	196	-	computed	offset computed at run time: k2 + kK2X
+src/game/move_cmds.cpp	197	-	computed	offset computed at run time: k2 + kK2Z
+src/game/move_cmds.cpp	198	-	computed	offset computed at run time: k2 + kK2X
+src/game/move_cmds.cpp	199	-	computed	offset computed at run time: k2 + kK2Z
+src/game/move_cmds.cpp	205	-	computed	offset computed at run time: k2 + kK2Height
+src/game/move_cmds.cpp	206	-	computed	offset computed at run time: k2 + kK2Rise
+src/game/move_cmds.cpp	223	-	computed	offset computed at run time: k2 + kK2X
+src/game/move_cmds.cpp	224	-	computed	offset computed at run time: k2 + kK2Z
+src/game/move_cmds.cpp	226	-	computed	offset computed at run time: k2 + kK2Height
+src/game/move_cmds.cpp	263	0x10	gate	SpriteObject->step_z: the typed store changed the object code
+src/game/move_cmds.cpp	273	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_cmds.cpp	295	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_cmds.cpp	300	0xc	gate	SpriteObject->step_x: the typed store changed the object code
+src/game/move_cmds.cpp	301	0x10	gate	SpriteObject->step_z: the typed store changed the object code
+src/game/move_cmds.cpp	302	0x14	gate	SpriteObject->step_y: the typed store changed the object code
+src/game/move_cmds.cpp	341	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_cmds.cpp	367	0x18	gate	SpriteObject->accel_x: the typed store changed the object code
+src/game/move_cmds.cpp	368	0x1c	gate	SpriteObject->accel_z: the typed store changed the object code
+src/game/move_cmds.cpp	380	0x1c	gate	SpriteObject->accel_z: the typed store changed the object code
+src/game/move_cmds.cpp	410	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_cmds_fuzz.cpp	143	0x3e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_cmds_fuzz.cpp	436	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_cmds_fuzz.cpp	436	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_cmds_fuzz.cpp	438	0x6	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_cmds_fuzz.cpp	439	0x6c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_cmds_fuzz.cpp	459	0x34	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_cmds_fuzz.cpp	460	0x38	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_cmds_fuzz.cpp	511	0x58	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/move_groups.cpp	219	0x8	no-family	`object`: a script context or field object reached by a computed offset
+src/game/move_groups.cpp	234	0x8	no-family	`object`: a script context or field object reached by a computed offset
+src/game/move_groups.cpp	242	0x8	no-family	`object`: a script context or field object reached by a computed offset
+src/game/move_groups.cpp	310	0x34	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/move_groups.cpp	311	0x38	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/move_groups.cpp	312	0x3e	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/move_groups.cpp	345	0xc	no-family	`r`: a shard / party-move record
+src/game/move_groups.cpp	346	0x8	no-family	`r`: a shard / party-move record
+src/game/move_groups.cpp	347	0x4	no-family	`r`: a shard / party-move record
+src/game/move_groups.cpp	349	0x6c	gate	SpriteObject->angle[2]: the typed store changed the object code
+src/game/move_groups.cpp	350	0x68	gate	SpriteObject->angle[1]: the typed store changed the object code
+src/game/move_groups.cpp	351	0x64	gate	SpriteObject->angle[0]: the typed store changed the object code
+src/game/move_groups.cpp	391	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_groups.cpp	394	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/move_groups.cpp	394	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/move_groups.cpp	397	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/move_groups.cpp	397	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/move_groups.cpp	678	0x58	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_groups.cpp	680	0x58	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_groups.cpp	899	0x34	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_groups.cpp	899	0x38	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_groups.cpp	901	0x34	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_groups.cpp	902	0x38	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_groups.cpp	948	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_script.cpp	73	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	74	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	75	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	76	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	175	0x34	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/move_script.cpp	175	0x38	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/move_script.cpp	175	0x3e	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/move_script.cpp	181	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	255	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	263	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	270	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	272	0x2	no-family	`scratch`: the PSX scratchpad
+src/game/move_script.cpp	275	0x2	no-family	`scratch`: the PSX scratchpad
+src/game/move_script.cpp	276	0x14	no-family	`Sprite_Kind2`: the kind-2 object (not one of the nine)
+src/game/move_script.cpp	292	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	328	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	328	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/move_script.cpp	483	0x2	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_script.cpp	530	0x58	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/move_script.cpp	532	0x58	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/object_kinds.cpp	410	0x4	no-family	`step`: a direction-steps row
+src/game/object_kinds.cpp	411	0x8e	width	SpriteObject +0x8e read as 2 bytes; records.h has another width there
+src/game/object_kinds.cpp	414	0x92	width	SpriteObject +0x92 read as 2 bytes; records.h has another width there
+src/game/object_kinds.cpp	513	0x8	no-family	`context`: a script context (object +0x80 or member +0x124)
+src/game/object_kinds.cpp	522	0x8	no-family	`context`: a script context (object +0x80 or member +0x124)
+src/game/object_kinds.cpp	528	0x8	no-family	`context`: a script context (object +0x80 or member +0x124)
+src/game/object_kinds.cpp	880	0x88	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/object_kinds.cpp	887	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/object_kinds.cpp	888	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/object_kinds.cpp	892	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/object_kinds.cpp	892	-	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/sprite_pose.cpp	131	-	computed	offset computed at run time: offsets + sprite->column * 4u
+src/game/sprite_pose.cpp	132	-	computed	offset computed at run time: table + sprite->animation * 2u
+src/game/sprite_pose.cpp	168	0xc	no-family	`data`: an animation bank
+src/game/sprite_pose.cpp	170	0x8	no-family	`data`: an animation bank
+src/game/sprite_pose.cpp	181	-	computed	offset computed at run time: images + entry[0] * 4u
+src/game/sprite_pose.cpp	186	-	computed	offset computed at run time: words + entry[1] * 2u
+src/game/sprite_pose.cpp	209	-	computed	offset computed at run time: table + i * 8u
+src/game/sprite_pose_fuzz.cpp	96	0x2c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	98	0x64	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	287	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	292	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	298	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	299	0x8	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	300	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	306	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	321	0x2c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	322	0x4c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	323	0x64	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	326	0x68	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	367	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_pose_fuzz.cpp	368	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/sprite_screen.cpp	82	0x34	width	SpriteObject +0x34 read as 2 bytes; records.h has another width there
+src/game/sprite_screen.cpp	82	0x38	width	SpriteObject +0x38 read as 2 bytes; records.h has another width there
+src/game/sprite_screen.cpp	84	0x36	width	SpriteObject +0x36 read as 2 bytes; records.h has another width there
+src/game/sprite_screen.cpp	84	0x3a	width	SpriteObject +0x3a read as 2 bytes; records.h has another width there
+src/game/sprite_screen.cpp	100	-	computed	offset computed at run time: Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)
+src/game/sprite_screen.cpp	103	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/sprite_screen.cpp	112	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/sprite_screen.cpp	117	0x74	gate	SpriteObject->screen_xf: the typed store changed the object code
+src/game/sprite_screen.cpp	118	0x2e	gate	SpriteObject->screen_x: the typed store changed the object code
+src/game/sprite_screen.cpp	119	0x78	gate	SpriteObject->screen_yf: the typed store changed the object code
+src/game/sprite_screen.cpp	120	0x30	gate	SpriteObject->screen_y: the typed store changed the object code
+src/game/sprite_screen.cpp	162	0x32	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/sprite_screen.cpp	164	0x32	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/sprite_screen.cpp	165	0x34	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/sprite_screen.cpp	258	0x36	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/sprite_screen.cpp	259	0x3a	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/sprite_screen.cpp	261	0x34	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/sprite_screen.cpp	262	0x38	harness	the file's own start-up fuzz (after its BOF3X_SHADOW marker): raw seeds on purpose
+src/game/world_map.cpp	251	0x16	no-family	`prim`: a GPU primitive packet
+src/game/world_map.cpp	253	0x18	no-family	`prim`: a GPU primitive packet
+src/game/world_map.cpp	254	0x1a	no-family	`prim`: a GPU primitive packet
+src/game/world_map.cpp	289	0x14	no-family	`matrix`: a MATRIX
+src/game/world_map.cpp	290	0x18	no-family	`matrix`: a MATRIX
+src/game/world_map.cpp	291	0x1c	no-family	`matrix`: a MATRIX
+src/game/world_map.cpp	296	0x0	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	297	0x2	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	298	0x4	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	299	0x8	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	300	0xa	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	301	0xc	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	302	0x10	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	303	0x12	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	304	0x14	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	305	0x18	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	306	0x1a	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	307	0x1c	no-family	`scratch`: the PSX scratchpad
+src/game/world_map.cpp	339	-	computed	offset computed at run time: at::DrawItemsAt() + (At(at::Gfx_BufferIndexAt())[0] + item *
+src/game/world_map.cpp	358	0x2	no-family	`at::MapView_OriginAt()`: not shown to point at one of the nine record families
+src/game/world_map.cpp	553	0x16	no-family	`PacketNext()`: not shown to point at one of the nine record families
+src/game/world_map.cpp	562	-	computed	offset computed at run time: buttons + k * 4
+src/game/world_map.cpp	677	0x16	no-family	`PacketNext()`: not shown to point at one of the nine record families
+src/game/world_map_fuzz.cpp	158	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	159	0x8	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	206	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	224	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	229	0xc	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	229	0x10	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	229	0x4	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	229	0x8	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	233	0x14	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	233	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	233	0x1c	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	240	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	243	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	286	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	460	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	481	0x2e	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	639	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	648	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/world_map_fuzz.cpp	676	0x2	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area.cpp	166	0x3e	width	SpriteObject +0x3e read as 2 bytes; records.h has another width there
+src/game/worldmap_area.cpp	246	0xc	gate	EffectObject->step_x: the typed store changed the object code
+src/game/worldmap_area.cpp	247	0x10	gate	EffectObject->step_z: the typed store changed the object code
+src/game/worldmap_area.cpp	274	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/worldmap_area.cpp	275	0x2	no-family	`entry`: a table entry
+src/game/worldmap_area.cpp	285	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/worldmap_area.cpp	286	0x44	pad	EffectObject +0x44 is padding in records.h
+src/game/worldmap_area.cpp	298	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/worldmap_area.cpp	298	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/worldmap_area.cpp	319	0x18	pad	EffectObject +0x18 is padding in records.h
+src/game/worldmap_area.cpp	335	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/worldmap_area.cpp	335	0x40	pad	EffectObject +0x40 is padding in records.h
+src/game/worldmap_area.cpp	491	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/worldmap_area.cpp	491	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/worldmap_area.cpp	501	0x3a	width	EffectObject +0x3a read as 2 bytes; records.h has another width there
+src/game/worldmap_area.cpp	523	0x4	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	524	0x12	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	525	0x1a	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	526	0x8	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	527	0x18	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	528	0x0	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	529	0x10	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	530	0x2	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	531	0xa	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	532	0xc	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	533	0x14	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	534	0x1c	no-family	`v`: a vertex
+src/game/worldmap_area.cpp	558	0x16	no-family	`q`: a POLY_FT4
+src/game/worldmap_area.cpp	559	0x26	no-family	`q`: a POLY_FT4
+src/game/worldmap_area.cpp	564	0x38	width	EffectObject +0x38 read as 2 bytes; records.h has another width there
+src/game/worldmap_area.cpp	642	0xc	width	EffectObject +0xc read as 2 bytes; records.h has another width there
+src/game/worldmap_area.cpp	643	0x10	width	EffectObject +0x10 read as 2 bytes; records.h has another width there
+src/game/worldmap_area_fuzz.cpp	190	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	228	-	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	569	0x40	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	576	0x18	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	586	0x30	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	595	0x30	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	610	0x3a	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	616	0x36	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)
+src/game/worldmap_area_fuzz.cpp	617	0x3a	harness	a start-up fuzz file: its seeds write raw records on purpose (brief rule 4)

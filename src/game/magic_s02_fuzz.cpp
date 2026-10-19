@@ -224,9 +224,13 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kPool = 0x6769C0, kPoolStride = 0x84, kActorRecord = 0x904B3C, kAbility = 0x904B80,
-                        kFrameSet = 0x9039D8, kInput = 0x7E1BEC, kTints = 0x7E0700;
-unsigned char* PoolEntry(unsigned i) { return mh::Mem(kPool + (i % 32) * kPoolStride); }
+// kPool: now SuperComboHit_Pool (symbols.toml).
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kInput: now Input_Pressed (symbols.toml).
+// kTints: now MoveScript_TintRecords (symbols.toml).
+constexpr std::uint32_t kPoolStride = 0x84, kAbility = 0x904B80;
+unsigned char* PoolEntry(unsigned i) { return mh::Mem(SuperComboHit_Pool_addr + (i % 32) * kPoolStride); }
 
 // The prompt texts: SuperCombo_DrawText reads the pointer table 0x66A0D8 in
 // place. The game's four strings hold no 0xFF (the half-width space) and none
@@ -279,7 +283,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -357,11 +361,11 @@ const mh::Callee kCallees[] = {
     {S02_RAW(0x49BA90), 0, {}, mh::Answer::kByte, 0, 0x1F},
     // the phases run under a swapped frame-offset table (SuperComboHit_Run's
     // two, ElemStrikeFx_Steps' three): kPhase logs the table 0x9039D8 too
-    {S02_RAW(0x49B0F0), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
-    {S02_RAW(0x49B1D0), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
-    {S02_RAW(0x4EF840), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
-    {S02_RAW(0x49C280), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
-    {S02_RAW(0x49C380), 0, {kFrameSet}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x49B0F0), 0, {BattleE2_AnimSet_addr}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x49B1D0), 0, {BattleE2_AnimSet_addr}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x4EF840), 0, {BattleE2_AnimSet_addr}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x49C280), 0, {BattleE2_AnimSet_addr}, mh::Answer::kPhase, 0, 0},
+    {S02_RAW(0x49C380), 0, {BattleE2_AnimSet_addr}, mh::Answer::kPhase, 0, 0},
 };
 #undef S02_OURS
 #undef S02_RAW
@@ -373,11 +377,11 @@ const mh::DataTable kTables[] = {{0x65A524, 10}, {0x65A54C, 1}, {0x65A5CC, 2}, {
 mh::Region g_regions[] = {
     {0x7E0670, 4},        // Gfx_PacketNext
     {0, kPrimBytes},      // g_prims (filled in at start-up)
-    {kPool, 32 * kPoolStride},   // SuperComboHit_Pool
+    {SuperComboHit_Pool_addr, 32 * kPoolStride}, // SuperComboHit_Pool
     {kAbility, 0x18},     // the ability word, the hit count 0x904B96
-    {kInput, 4},          // Input_Pressed
-    {kFrameSet, 4},       // the frame-offset table pointer
-    {kTints, 0xC00},      // MoveScript_TintRecords
+    {Input_Pressed_addr, 4}, // Input_Pressed
+    {BattleE2_AnimSet_addr, 4}, // the frame-offset table pointer
+    {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords
     {kTexts, 16},         // the prompt texts' pointers (the seed aims them)
     {0, sizeof g_texts},  // g_texts (filled in at start-up)
     {0x80E980, 0x200},    // Gfx_ClutStripSource row 26
@@ -389,13 +393,13 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kInput), h >> 16); break;
+    case 1: SetWord(mh::Mem(Input_Pressed_addr), h >> 16); break;
     case 2: SetWord(mh::Mem(kAbility), h >> 16); break;
-    case 3: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 3: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 4: PoolEntry(v)[0] = Byte(h >> 24); break;
     case 5: PoolEntry(v)[4 + (h >> 28) % 8] = Byte(h >> 20); break;
-    case 6: mh::SetPointer(kActorRecord, mh::SpriteRecord(v)); break;
-    case 7: mh::Mem(kTints + v % 0xC00)[0] = Byte(h >> 24); break;
+    case 6: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
+    case 7: mh::Mem(MoveScript_TintRecords_addr + v % 0xC00)[0] = Byte(h >> 24); break;
     default: break;
     }
 }
@@ -415,10 +419,10 @@ void Arrive(unsigned char* to, const unsigned char* from, const unsigned char* s
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kActorRecord, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     // every pool entry's owner a task or a record (the disturbance writes
     // through the owner while SuperCombo_Task runs an entry)
-    for (unsigned i = 0; i < 32; ++i) mh::SetPointer(kPool + i * kPoolStride + 0x80, mh::TaskAt(mh::Next()));
+    for (unsigned i = 0; i < 32; ++i) mh::SetPointer(SuperComboHit_Pool_addr + i * kPoolStride + 0x80, mh::TaskAt(mh::Next()));
     AimTexts();
     if (mh::Half()) sc[0] = 0;
     if (mh::Half()) SetWord(mh::Mem(kAbility), MH_PICK(0x3, 0x4, 0x5, 0x84, 0x85, 0x86, 0x88, 0x89, 0x9C, 0x9D, 0x9E));
@@ -450,9 +454,9 @@ void Seed(unsigned k) {
         if (mh::Often()) sc[0xB] = Byte(mh::Next() % 4);
         const std::uint16_t wanted = mh::Mem(0x65A518)[sc[0xB] % 4];
         const unsigned mode = mh::Next() % 4;
-        if (mode == 0) SetWord(mh::Mem(kInput), MH_PICK(0, 0, 0x10, 0x20, 0x40, 0x80, 0xF0, 0x0F, 0x110, 0x8000));
-        else if (mode == 1) SetWord(mh::Mem(kInput), mh::Next());
-        else SetWord(mh::Mem(kInput), mh::Often() ? wanted : wanted | 0x100u);
+        if (mode == 0) SetWord(mh::Mem(Input_Pressed_addr), MH_PICK(0, 0, 0x10, 0x20, 0x40, 0x80, 0xF0, 0x0F, 0x110, 0x8000));
+        else if (mode == 1) SetWord(mh::Mem(Input_Pressed_addr), mh::Next());
+        else SetWord(mh::Mem(Input_Pressed_addr), mh::Often() ? wanted : wanted | 0x100u);
         break;
     }
     case kSuperCombo_WaitChildren: case kElemStrike_Hit: if (mh::Half()) sc[0xB] = 0; break;
@@ -466,8 +470,8 @@ void Seed(unsigned k) {
         Arrive(sc + 0x18, sc + 0x34, sc + 0xC);
         Arrive(sc + 0x1C, sc + 0x38, sc + 0x10);
         break;
-    case kSuperComboDash_End: mh::Pointer(mh::at::kOwner)[0xB] = mh::Often() ? Byte(MH_PICK(0, 1, 1, 2)) : Byte(mh::Next()); break;
-    case kSuperCombo_SpawnHits: mh::Pointer(mh::at::kOwner)[0xA] = mh::Often() ? Byte(MH_PICK(0, 1, 2, 5, 0x1F, 0x20)) : Byte(mh::Next() % 40); break;
+    case kSuperComboDash_End: mh::Pointer(BattleE2_Owner_addr)[0xB] = mh::Often() ? Byte(MH_PICK(0, 1, 1, 2)) : Byte(mh::Next()); break;
+    case kSuperCombo_SpawnHits: mh::Pointer(BattleE2_Owner_addr)[0xA] = mh::Often() ? Byte(MH_PICK(0, 1, 2, 5, 0x1F, 0x20)) : Byte(mh::Next() % 40); break;
     case kSuperComboHit_Alloc: {
         // a full pool a quarter of the time, else one or a few free entries
         const unsigned mode = mh::Next() % 4;

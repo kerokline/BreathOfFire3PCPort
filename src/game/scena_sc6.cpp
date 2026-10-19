@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/records.h"
 #include "game/scena_sc6_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -60,23 +61,23 @@ std::int32_t Get32(const unsigned char* p) {
 }
 void Put32(unsigned char* p, std::int32_t v) { std::memcpy(p, &v, 4); }
 
-unsigned Area() { return W(at::kArea); }
+unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
 void SetCounter(unsigned k, unsigned char v) { B(at::kCounters + k) = v; }
-unsigned char Step() { return B(at::kStep); }
-void SetStep(unsigned char v) { B(at::kStep) = v; }
-void SetRun(unsigned char v) { B(at::kRun) = v; }
-void SetState(unsigned char v) { B(at::kState) = v; }
-void SetPass(unsigned char v) { B(at::kPassFlags) = v; }
-unsigned char Request() { return B(at::kRequest); }
-void SetRequest(unsigned char v) { B(at::kRequest) = v; }
-bool Waiting() { return W(at::kWait) != 0; }
+unsigned char Step() { return MoveScript_PartyRecords[0x65]; }
+void SetStep(unsigned char v) { MoveScript_PartyRecords[0x65] = v; }
+void SetRun(unsigned char v) { MoveScript_Var7 = v; }
+void SetState(unsigned char v) { MoveScript_PartyRecords[0x62] = v; }
+void SetPass(unsigned char v) { Draw_PassFlags = v; }
+unsigned char Request() { return Field_Request; }
+void SetRequest(unsigned char v) { Field_Request = v; }
+bool Waiting() { return MoveScript_WaitWordDA != 0; }
 bool Busy() { return Request() == 2; }   // a message still open
-void SetMusicByte(unsigned char v) { B(at::kMusicByte) = v; }
+void SetMusicByte(unsigned char v) { AreaW1f_MusicCurrent = v; }
 void ScriptOr8() { B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | 8); }       // or byte
-void ScriptXor8() { W(at::kScriptFlags) = static_cast<std::uint16_t>(W(at::kScriptFlags) ^ 8); }     // xor word
-void StatusOr1() { B(at::kStatusBits) = static_cast<unsigned char>(B(at::kStatusBits) | 1); }
-void StatusXor1() { B(at::kStatusBits) = static_cast<unsigned char>(B(at::kStatusBits) ^ 1); }
+void ScriptXor8() { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags ^ 8); }         // xor word
+void StatusOr1() { Field_StatusBits = static_cast<unsigned char>(Field_StatusBits | 1); }
+void StatusXor1() { Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ 1); }
 
 // The four counters 0x903848..B zeroed, in that order; or the last three.
 void ClearCounters() {
@@ -88,8 +89,8 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(D(at::kFlagBits))); }
-unsigned char* Story() { return &B(at::kStoryFlags); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Story() { return &Cond_Flags[0xa0]; }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 bool StoryFlag(unsigned i) { return SH_CALL(Flags_Test)(Story(), i) != 0; }
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
@@ -147,6 +148,13 @@ unsigned char& RecordB(unsigned k) {
 }
 
 unsigned char* Effect(unsigned slot) { return &B(at::kEffects + (slot & 0xFFu) * at::kEffectStride); }
+
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 std::int32_t Angle(std::uint32_t a) { return static_cast<std::int16_t>(W(a)); }
 
 // Effect_FindFree into the slot byte 0x903850 (stored before it is tested);
@@ -196,7 +204,7 @@ void MemberLines(unsigned char a, unsigned short ma, unsigned char b, unsigned s
 void MemberEffect(std::uint32_t object, unsigned char six, std::uint32_t member) {
     D(at::kSpriteCurrent) = object;
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    unsigned char* const s = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(D(at::kSpriteCurrent)));
+    unsigned char* const s = Sprite_Current;
     s[0xB] = slot;
     if (s[0xB] == 0xFF) return;
     Effect(s[0xB])[0] = 1;
@@ -204,8 +212,8 @@ void MemberEffect(std::uint32_t object, unsigned char six, std::uint32_t member)
     Effect(s[0xB])[6] = six;
     Put32(Effect(s[0xB]) + 0xC, 0);
     Put32(Effect(s[0xB]) + 0x10, static_cast<signed char>(B(at::kMemberBytes + B(member))));
-    W(Effect(s[0xB]) + 0x2E) = W(s + 0x2E);
-    W(Effect(s[0xB]) + 0x30) = W(s + 0x30);
+    Fx(Effect(s[0xB]))->screen_x = Spr(s)->screen_x;
+    Fx(Effect(s[0xB]))->screen_y = Spr(s)->screen_y;
 }
 
 // A table entry read in place, the index checked against the table.
@@ -215,7 +223,7 @@ std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* 
     return D(table + 4 * static_cast<std::uint32_t>(index));
 }
 
-unsigned char* Sprite() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(D(at::kSpriteCurrent))); }
+unsigned char* Sprite() { return Sprite_Current; }
 
 }  // namespace
 
@@ -230,8 +238,8 @@ unsigned char* Sprite() { return reinterpret_cast<unsigned char*>(static_cast<st
 // tail jump through Scena06_States on the s8 state 0x8034E2: 0 Scena06_Start,
 // 1 Scena06_EnterArea, 2 Scena06_Run.
 SC6_EXPORT void __cdecl Scena06_Frame(void) {
-    const int state = static_cast<signed char>(B(at::kState));
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(at::kStates, state, at::kStateCount, "Scena06_Frame")))();
+    const int state = static_cast<signed char>(MoveScript_PartyRecords[0x62]);
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena06_States_addr, state, at::kStateCount, "Scena06_Frame")))();
 }
 
 // original 0x54A920: state 0 - Scena06_GuestRecord, then state 1.
@@ -247,7 +255,7 @@ SC6_EXPORT void __cdecl Scena06_Start(void) {
 // / +0x4A = byte 5 (each zero-extended; the field names are
 // docs/char-stats.md section 2's).
 SC6_EXPORT void __cdecl Scena06_GuestRecord(void) {
-    const unsigned char* const t = &B(at::kGuestStats);
+    const unsigned char* const t = &Scena06_GuestStats[0];
     unsigned char* const r = &B(at::kRecord7);
     W(r + 0x18) = t[0];
     r[0x12] = t[6];
@@ -268,7 +276,7 @@ SC6_EXPORT void __cdecl Scena06_GuestRecord(void) {
 // +0x19C & 0x7F: 0 B3 A1, 2 B4 A1, 3 B3 A2, 4 B5 A3, 6 B4 A2; 1, 5 and any
 // other value none.
 SC6_EXPORT void __cdecl Scena06_PartyCalls(void) {
-    switch (B(at::kSelector) & 0x7F) {
+    switch (AreaW0b_PartySet & 0x7F) {
     case 0: CallB(3); CallA(1); return;
     case 2: CallB(4); CallA(1); return;
     case 3: CallB(3); CallA(2); return;
@@ -301,7 +309,7 @@ SC6_EXPORT void __cdecl Scena06_PartyCalls(void) {
 //   then areas 0x2D, 0x41, 0x57, 0x10 clear the counters.
 SC6_EXPORT void __cdecl Scena06_EnterArea(void) {
     if (Area() == 0x27 && !Flag(3)) {
-        const unsigned selector = B(at::kSelector) & 0x7F;
+        const unsigned selector = AreaW0b_PartySet & 0x7F;
         SetCounter(0, 0);
         SetCounter(1, 0);
         switch (selector) {
@@ -331,7 +339,7 @@ SC6_EXPORT void __cdecl Scena06_EnterArea(void) {
         SetStep(0);
         SetRun(0x11);
         SH_CALL(Flags_Set)(bits, 0x3C);
-        switch (B(at::kSelector) & 0x7F) {
+        switch (AreaW0b_PartySet & 0x7F) {
         case 1: CallB(6); CallA(7); break;
         case 2: CallB(4); CallA(7); break;
         case 3: CallB(6); CallA(8); break;
@@ -401,8 +409,8 @@ SC6_EXPORT void __cdecl Scena06_EnterArea(void) {
         } else if (c2 == 2) {
             if (!Flag(0x13)) {
                 SetCounter(3, 0);
-                W(at::kCameraDistance) = 0x480;
-                B(at::kRedraw) = 2;
+                Camera_Distance = 0x480;
+                MapView_Redraw = 2;
                 SetPass(0);
                 SH_CALL(Scena06_PartyCalls)();
             }
@@ -423,8 +431,8 @@ SC6_EXPORT void __cdecl Scena06_EnterArea(void) {
 // original 0x54ADD0: state 2, a tail jump through Scena06_Runs on the s8 run
 // MoveScript_Var7: 0 a bare ret (0x437CC0), 1..17 Scena06_Run01..17.
 SC6_EXPORT void __cdecl Scena06_Run(void) {
-    const int run = static_cast<signed char>(B(at::kRun));
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(at::kRuns, run, at::kRunCount, "Scena06_Run")))();
+    const int run = MoveScript_Var7;
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena06_Runs_addr, run, at::kRunCount, "Scena06_Run")))();
 }
 
 // ===========================================================================
@@ -478,7 +486,7 @@ SC6_EXPORT void __cdecl Scena06_Run01(void) {
         return;
     case 10:
         if (Counter(0) != 2) return;
-        if (B(at::kHold) != 0) return;
+        if (Field_Kind2Hold != 0) return;
         Clr(0x3E);
         Set(3);
         Clear40();
@@ -531,7 +539,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
         return;
     case 10: {
         if (Busy()) return;
-        const unsigned lead = B(at::kObjTrio + 8);
+        const unsigned lead = ObjTrio[8];
         SetCounter(0, 0xF);
         if (lead == 2) DropIn(4);
         else if (lead == 3) DropIn(5);
@@ -555,7 +563,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
         if (!TakeSlot()) return;
         SetCounter(1, B(at::kEffectSlot));
         SetStep(0x11);
-        Place(0x13, Angle(at::kAngle0), Angle(at::kAngle1), 0x3C, 0x3C);
+        Place(0x13, Camera_Angles[0], Camera_Angles[1], 0x3C, 0x3C);
         return;
     case 17:
         if (Effect(Counter(1))[0] != 0) return;
@@ -567,7 +575,7 @@ SC6_EXPORT void __cdecl Scena06_Run02(void) {
         if (Counter(0) != 0x1C) return;
         if (!TakeSlot()) return;
         SetStep(0x13);
-        Place(0x13, Angle(at::kAngle0), Angle(at::kAngle1), 0x200, 0x3C);
+        Place(0x13, Camera_Angles[0], Camera_Angles[1], 0x200, 0x3C);
         return;
     case 19:
         if (Counter(0) != 0x1E) return;
@@ -595,7 +603,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         if (Counter(0) != 3) return;
         if (!TakeSlot()) return;
         SetStep(4);
-        Place(0x31, Angle(at::kAngle0), Angle(at::kAngle1), 0x124, 0x5A);
+        Place(0x31, Camera_Angles[0], Camera_Angles[1], 0x124, 0x5A);
         Put32(Effect(B(at::kEffectSlot)) + 0xC, 0x700);
         return;
     }
@@ -609,7 +617,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         if (Counter(0) != 0xA) return;
         if (!TakeSlot()) return;
         SetStep(7);
-        Place(0x13, -0x3B5, Angle(at::kAngle1), Angle(at::kAngle2), 0x1E);
+        Place(0x13, -0x3B5, Camera_Angles[1], Angle(at::kAngle2), 0x1E);
         return;
     case 7:
         MusicStop(0xA);
@@ -627,7 +635,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         if (Counter(0) != 0xD) return;
         if (!TakeSlot()) return;
         SetStep(0xA);
-        Place(0x13, -0x2AA, Angle(at::kAngle1), Angle(at::kAngle2), 0x1E);
+        Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x1E);
         return;
     case 10: {
         if (Counter(0) != 0xE) return;
@@ -642,13 +650,13 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         Kind2(0);
         if (!TakeSlot()) return;
         SetStep(0xC);
-        Place(0x13, 0, Angle(at::kAngle1), Angle(at::kAngle2), 2);
+        Place(0x13, 0, Camera_Angles[1], Angle(at::kAngle2), 2);
         return;
     case 12:
         if (Counter(0) != 1) return;
         if (!TakeSlot()) return;
         SetStep(0xD);
-        Place(0x13, -0x2AA, Angle(at::kAngle1), Angle(at::kAngle2), 0x78);
+        Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x78);
         return;
     case 13:
         if (Counter(0) != 2) return;
@@ -659,7 +667,7 @@ SC6_EXPORT void __cdecl Scena06_Run03(void) {
         return;
     case 14: {
         if (Counter(0) != 0x32) return;
-        const unsigned member6 = B(at::kEffectState + 6);
+        const unsigned member6 = MoveScript_EffectState[6];
         ScriptXor8();
         SetStep(0xF);
         B(at::kCharRecords + at::kCharStride * member6 + 0xB) |= 1;
@@ -689,13 +697,13 @@ SC6_EXPORT void __cdecl Scena06_Run04(void) {
         return;
     case 2:
         if (Counter(0) != 1) return;
-        D(at::kKind2X) = 0x350000;
-        D(at::kKind2Z) = D(at::kLead38);
-        W(at::kF3Divisor) = 0x20;
+        Field_Kind2X = 0x350000;
+        Field_Kind2Z = D(at::kLead38);
+        MoveScript_F3Divisor = 0x20;
         SetStep(3);
         return;
     case 3:
-        if (B(at::kHold) != 0) return;
+        if (Field_Kind2Hold != 0) return;
         SetCounter(0, 2);
         SetStep(4);
         return;
@@ -844,16 +852,16 @@ SC6_EXPORT void __cdecl Scena06_Run06(void) {
         if (!TakeSlot()) return;
         SetCounter(0, 3);
         SetStep(6);
-        Place(0x13, -0x210, Angle(at::kAngle1), 0x2F2, 0x14);
+        Place(0x13, -0x210, Camera_Angles[1], 0x2F2, 0x14);
         return;
     case 6: {
         const unsigned char n = static_cast<unsigned char>(Counter(3) + 1);
-        W(at::kCameraDistance) = static_cast<std::uint16_t>(W(at::kCameraDistance) - 0x40);
-        B(at::kRedraw) = 2;
+        Camera_Distance = static_cast<std::uint16_t>(static_cast<std::uint16_t>(Camera_Distance) - 0x40);
+        MapView_Redraw = 2;
         SetCounter(3, n);
         if (n < 0x12) return;
-        B(at::kRedraw) = 2;
-        W(at::kCameraDistance) = 0;
+        MapView_Redraw = 2;
+        Camera_Distance = 0;
         SetCounter(3, 0);
         SetStep(7);
         return;
@@ -864,7 +872,7 @@ SC6_EXPORT void __cdecl Scena06_Run06(void) {
         if (!TakeSlot()) return;
         SetCounter(3, B(at::kEffectSlot));
         SetStep(8);
-        Place(0x13, -0x2AA, Angle(at::kAngle1), 0x200, 0x1E);
+        Place(0x13, -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         return;
     case 8:
         if (Effect(Counter(3))[0] != 0) return;
@@ -892,13 +900,13 @@ SC6_EXPORT void __cdecl Scena06_Run06(void) {
         return;
     case 21:
         if (Counter(0) != 4) return;
-        D(at::kKind2X) = D(at::kLead34);
-        D(at::kKind2Z) = D(at::kLead38);
-        W(at::kF3Divisor) = 0x20;
+        Field_Kind2X = D(at::kLead34);
+        Field_Kind2Z = D(at::kLead38);
+        MoveScript_F3Divisor = 0x20;
         SetStep(0x16);
         return;
     case 22:
-        if (B(at::kHold) != 0) return;
+        if (Field_Kind2Hold != 0) return;
         SetCounter(0, 5);
         SetStep(0x17);
         return;
@@ -955,7 +963,7 @@ unsigned char GuestEquipped(unsigned char yes, unsigned char no) {
 // The request 7 with the byte 0x904C9F `v`, the pass flags 0, a step.
 void Request7(unsigned char v, bool pass, unsigned char step) {
     SetRequest(7);
-    B(at::kByte904C9F) = v;
+    ScenaSc6_Byte904C9F = v;
     if (pass) SetPass(0);
     SetStep(step);
 }
@@ -971,10 +979,10 @@ SC6_EXPORT void __cdecl Scena06_Run07(void) {
         return;
     case 0x01: {
         if (Busy()) return;
-        const unsigned char bits = static_cast<unsigned char>(B(at::kStatusBits) | 1);
+        const unsigned char bits = static_cast<unsigned char>(Field_StatusBits | 1);
         SetCounter(2, 1);
         SetStep(2);
-        B(at::kStatusBits) = bits;
+        Field_StatusBits = bits;
         ChangeArea(0x5C, 0xE0000, 0x3C0000, 0x80);
         SetMusicByte(0xFF);
         return;
@@ -1052,10 +1060,10 @@ SC6_EXPORT void __cdecl Scena06_Run07(void) {
         return;
     case 0x1A: {
         if (Busy()) return;
-        const unsigned char bits = static_cast<unsigned char>(B(at::kStatusBits) | 1);
+        const unsigned char bits = static_cast<unsigned char>(Field_StatusBits | 1);
         SetPass(0);
         SetStep(0x1B);
-        B(at::kStatusBits) = bits;
+        Field_StatusBits = bits;
         ChangeArea(0x5C, 0xE0000, 0x3C0000, 0x80);
         return;
     }
@@ -1104,10 +1112,10 @@ SC6_EXPORT void __cdecl Scena06_Run07(void) {
         return;
     case 0x32: {
         if (Busy()) return;
-        const unsigned char bits = static_cast<unsigned char>(B(at::kStatusBits) | 1);
+        const unsigned char bits = static_cast<unsigned char>(Field_StatusBits | 1);
         SetStep(0x33);
         SetCounter(2, 1);
-        B(at::kStatusBits) = bits;
+        Field_StatusBits = bits;
         ChangeArea(0x5C, 0x190000, 0x3C0000, 0x88);
         return;
     }
@@ -1130,7 +1138,7 @@ namespace {
 // the second party list's Field_MemberCount bytes copied to 0x939A10, that
 // list reset to (0, 0xFF, 0xFF), the old count to 0x939A02, the count 1.
 void SortParty() {
-    unsigned char* const trio = &B(at::kObjTrio);
+    unsigned char* const trio = &ObjTrio[0];
     for (unsigned i = 1; i <= 2; ++i) {
         unsigned char* const a = trio + at::kObjStride * (i - 1);
         for (unsigned j = i; j < 3; ++j) {
@@ -1143,13 +1151,13 @@ void SortParty() {
             }
         }
     }
-    const unsigned char count = B(at::kMemberCount);
+    const unsigned char count = Field_MemberCount;
     for (unsigned i = 0; i < count; ++i) B(at::kTempList + i) = B(at::kPartyList2 + i);
-    B(at::kPartyList2) = 0;
-    B(at::kPartyList2 + 1) = 0xFF;
-    B(at::kPartyList2 + 2) = 0xFF;
-    B(at::kTempCount) = count;
-    B(at::kMemberCount) = 1;
+    Cond_Flags[0xd5] = 0;
+    Cond_Flags[0xd6] = 0xFF;
+    Cond_Flags[0xd7] = 0xFF;
+    BossSe_PartyCopyCount = count;
+    Field_MemberCount = 1;
 }
 }  // namespace
 
@@ -1219,9 +1227,9 @@ SC6_EXPORT void __cdecl Scena06_Run08(void) {
         if (Busy()) return;
         SetStep(0x12);
         PartyPass();
-        const unsigned char status = static_cast<unsigned char>(B(at::kStatusBits) ^ 1);
+        const unsigned char status = static_cast<unsigned char>(Field_StatusBits ^ 1);
         unsigned char* const bits = Bits();
-        B(at::kStatusBits) = status;
+        Field_StatusBits = status;
         SH_CALL(Flags_Set)(bits, 0x1C);
         ChangeArea(0x57, 0x310000, 0x2D0000, 4);
         return;
@@ -1321,10 +1329,10 @@ SC6_EXPORT void __cdecl Scena06_Run09(void) {
     case 0x0A: {
         if (Counter(0) != 0x14) return;
         PartyPass();
-        const unsigned char status = static_cast<unsigned char>(B(at::kStatusBits) ^ 1);
+        const unsigned char status = static_cast<unsigned char>(Field_StatusBits ^ 1);
         SetCounter(2, 2);
         SetStep(6);
-        B(at::kStatusBits) = status;
+        Field_StatusBits = status;
         ChangeArea(0x57, 0x310000, 0x2D0000, 4);
         return;
     }
@@ -1463,7 +1471,7 @@ SC6_EXPORT void __cdecl Scena06_Run11(void) {
 // 0x70, +0x10 Scena06_MemberBytes[the first party byte 0x904062]
 // (MemberEffect above). Runs 12 and 14 pass 0x91 and 0x93 (+6 = 1 and 3).
 SC6_EXPORT void __cdecl Scena06_LeaderEffect(unsigned arg) {
-    MemberEffect(at::kObjTrio, static_cast<unsigned char>(arg + 0x70), at::kPartyBytes);
+    MemberEffect(ObjTrio_addr, static_cast<unsigned char>(arg + 0x70), at::kPartyBytes);
 }
 
 // original 0x54CF00: run 12, steps 0..8, 0xA..0x13.
@@ -1517,21 +1525,21 @@ SC6_EXPORT void __cdecl Scena06_Run12(void) {
         if ((B(at::kBank7DEE44) & 2) == 0) return;
         SH_CALL(Party_AddToLists)(2);
         SetRequest(6);
-        B(at::kLoad0F) = 0;
+        AreaW3c_Load0F = 0;
         SetStep(0xA);
         return;
     case 0x0A:
-        if (B(at::kLoad0F) == 0) return;
+        if (AreaW3c_Load0F == 0) return;
         SetStep(0xB);
         return;
     case 0x0B:
         SetStep(0xC);
         RecordB(2) &= 0xFD;
         SetRequest(1);
-        B(at::kLoad10) = 1;
+        ScenaSc6_Load10 = 1;
         return;
     case 0x0C:
-        if (B(at::kLoad10) == 0) {
+        if (ScenaSc6_Load10 == 0) {
             SetPass(0x1F);
             PartyPlace(0x1D0000, 0x1D0000, 0x18);
             MusicPlay(0x45);
@@ -1565,7 +1573,7 @@ SC6_EXPORT void __cdecl Scena06_Run12(void) {
         unsigned char* const bits = Bits();
         SetStep(0x12);
         SH_CALL(Flags_Set)(bits, 1);
-        switch (B(at::kSelector) & 0x7F) {
+        switch (AreaW0b_PartySet & 0x7F) {
         case 0:
             SetCounter(2, 0);
             ChangeArea(0x43, 0x1D0000, 0x1C0000, 0x82);
@@ -1713,7 +1721,7 @@ SC6_EXPORT void __cdecl Scena06_Run14(void) {
     case 0x02:
         if (Busy()) return;
         for (unsigned k = 0; k < 3; ++k)
-            if (B(at::kPartyBytes + k) == 0) MemberEffect(at::kObjTrio + at::kObjStride * k, 3, at::kPartyBytes + k);
+            if (B(at::kPartyBytes + k) == 0) MemberEffect(ObjTrio_addr + at::kObjStride * k, 3, at::kPartyBytes + k);
         SetStep(5);
         SetCounter(0, 5);
         return;
@@ -1797,7 +1805,7 @@ SC6_EXPORT void __cdecl Scena06_Run15(void) {
         if (Busy()) return;
         Spawn(0x4B);
         DropIn(6);
-        B(at::kCondFE) = 1;
+        Cond_ByteFE = 1;
         SetStory(7);
         Sound(0x207);
         Sound(0x201);
@@ -1825,14 +1833,14 @@ SC6_EXPORT void __cdecl Scena06_Run15(void) {
         if (!TakeSlot()) return;
         SetCounter(3, B(at::kEffectSlot));
         SetStep(0xD);
-        Place(0x13, -0x32E, Angle(at::kAngle1), Angle(at::kAngle2), 0x50);
+        Place(0x13, -0x32E, Camera_Angles[1], Angle(at::kAngle2), 0x50);
         return;
     case 0x0D:
         if (Effect(Counter(3))[0] != 0) return;
         if (!TakeSlot()) return;
         SetCounter(3, B(at::kEffectSlot));
         SetStep(0xE);
-        Place(0x13, -0x2AA, Angle(at::kAngle1), Angle(at::kAngle2), 0x28);
+        Place(0x13, -0x2AA, Camera_Angles[1], Angle(at::kAngle2), 0x28);
         return;
     case 0x0E:
         if (Effect(Counter(3))[0] != 0) return;
@@ -1982,13 +1990,13 @@ SC6_EXPORT void __cdecl Scena06_Run17(void) {
         if (Counter(0) != 0x14) return;
         if (!TakeSlot()) return;
         SetStep(5);
-        Place(0x13, -0x2AA, Angle(at::kAngle1), 0xF8, 0x1E);
+        Place(0x13, -0x2AA, Camera_Angles[1], 0xF8, 0x1E);
         return;
     case 5:
         if (Counter(0) != 0x18) return;
         if (!TakeSlot()) return;
         SetStep(6);
-        Place(0x13, -0x2AA, Angle(at::kAngle1), 0x200, 0x1E);
+        Place(0x13, -0x2AA, Camera_Angles[1], 0x200, 0x1E);
         return;
     case 6:
         if (Counter(0) != 0x1B) return;
@@ -2021,10 +2029,10 @@ SC6_EXPORT void __cdecl Scena06_Run17(void) {
 // triggered: Scena06_Objects[object +0x86] (object, the flag bits' pointer).
 // 0x56D6D0 does not read the answer.
 SC6_EXPORT void __cdecl Scena06_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = D(at::kFlagBits);
+    const std::uint32_t bits = AreaW0c_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
-        Entry(at::kObjects, static_cast<int>(index), at::kObjectCount, "Scena06_ObjectTrigger")))(object, bits);
+        Entry(Scena06_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena06_ObjectTrigger")))(object, bits);
 }
 
 namespace {
@@ -2101,7 +2109,7 @@ SC6_EXPORT unsigned char __cdecl Scena06_Leap(unsigned char* object, unsigned dx
                                               unsigned gravity, unsigned animation, unsigned flag) {
     const unsigned phase = Sprite()[4];
     return reinterpret_cast<LeapEntry>(static_cast<std::uintptr_t>(
-        Entry(at::kLeapPhases, static_cast<int>(phase), at::kLeapPhaseCount, "Scena06_Leap")))(
+        Entry(Scena06_LeapPhases_addr, static_cast<int>(phase), at::kLeapPhaseCount, "Scena06_Leap")))(
         object, dx, dz, lift, gravity, animation, flag);
 }
 
@@ -2279,10 +2287,10 @@ SC6_EXPORT unsigned char __cdecl Scena06_StepHook(int x, int z) {
 // Scena06_CellHandlers with (x, z), whose al is the answer. Entry 1 is the
 // bare ret 0x437CC0: its al is what 0x56D800 left in eax, the index found.
 SC6_EXPORT unsigned char __cdecl Scena06_CellHook(int x, int z) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(at::kCells), 4, x, z);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(Scena06_Cells_addr), 4, x, z);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
-    const std::uint32_t entry = Entry(at::kCellHandlers, index, at::kCellHandlerCount, "Scena06_CellHook");
+    const std::uint32_t entry = Entry(Scena06_CellHandlers_addr, index, at::kCellHandlerCount, "Scena06_CellHook");
     if (entry == at::kBareRet) return found;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(entry))(x, z);
 }

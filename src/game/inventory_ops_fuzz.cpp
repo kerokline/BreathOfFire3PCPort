@@ -94,14 +94,14 @@ void Disturb() {
     const u32 v = Hash(2);
     const unsigned w = h >> 8;
     switch ((h >> 2) % 20) {
-    case 0: SetLong(At(at::kCentreX), static_cast<std::int32_t>(v)); break;
-    case 1: SetLong(At(at::kCentreZ), static_cast<std::int32_t>(v)); break;
+    case 0: SetLong(At(BossSi_CentreX_addr), static_cast<std::int32_t>(v)); break;
+    case 1: SetLong(At(BossSi_CentreZ_addr), static_cast<std::int32_t>(v)); break;
     case 2: SetLong(At(at::kMemberPos + 8 * (w % 4) + 4 * ((w >> 4) & 1)), static_cast<std::int32_t>(v)); break;
     case 3: At(at::kMembers + 4 * (w % 4) + ((w >> 4) & 1))[0] = static_cast<unsigned char>(v & 1); break;
     case 4: At(at::kOrder + w % 3)[0] = static_cast<unsigned char>(v % 4); break;
-    case 5: At(at::kFacing)[0] = static_cast<unsigned char>(v % 8); break;
-    case 6: At(at::kPlaced)[0] = static_cast<unsigned char>(v % 9); break;
-    case 7: At(at::kEnemyCount)[0] = static_cast<unsigned char>(v % 9); break;
+    case 5: At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(v % 8); break;
+    case 6: At(FieldHidden_Placed_addr)[0] = static_cast<unsigned char>(v % 9); break;
+    case 7: At(FieldHidden_EnemyCount_addr)[0] = static_cast<unsigned char>(v % 9); break;
     case 8: {
         unsigned char* const e = EnemySlot(w % 8);
         switch ((w >> 4) % 3) {
@@ -111,7 +111,7 @@ void Disturb() {
         }
         break;
     }
-    case 9: SetLong(At(at::kHeightAvg), static_cast<std::int32_t>(v)); break;
+    case 9: SetLong(At(ModeRest_ElevationBase_addr), static_cast<std::int32_t>(v)); break;
     case 10: Sprite_Current = AnySprite(v); break;
     case 11: Field_State = Obj(v % kObjects); break;
     case 12: Field_MemberCount = static_cast<unsigned char>(v % 6); break;
@@ -130,10 +130,10 @@ void Disturb() {
         }
         break;
     }
-    case 15: At(at::kPartyList + w % 6)[0] = static_cast<unsigned char>(v % 12); break;
+    case 15: At(Cond_Flags_addr + 0xd2 + w % 6)[0] = static_cast<unsigned char>(v % 12); break;
     case 16: SetWord(At(0x903800 + 2 * (w % 2)), v); break;   // Camera_ShiftX / ShiftY
     case 17: SetWord(At(0x903840), v); break;                  // Camera_Distance
-    case 18: At(at::kBattleFlags)[0] = static_cast<unsigned char>(v); break;
+    case 18: At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(v); break;
     default: SetLong(At(0x905E60 + 4 * (w & 1)), static_cast<std::int32_t>(v)); break;   // Field_Kind2Z / X
     }
 }
@@ -523,15 +523,15 @@ struct Region { u32 at, size; };
 constexpr Region kRegionList[] = {
     {at::kScratchSprite, 0x4A0},   // the scratch sprite and the placement's state 0x6BE070..0x6BE48F
     {at::kMemberPos, 0x800},       // 256 members' spots (a member index is a byte)
-    {at::kHeightAvg, 0x12A0},      // the height sum and 256 enemy slots (a count is a byte)
-    {at::kCentreX, 0x10},
-    {at::kFormation, 0x10},        // the formation and both party lists
+    {ModeRest_ElevationBase_addr, 0x12A0}, // the height sum and 256 enemy slots (a count is a byte)
+    {BossSi_CentreX_addr, 0x10},
+    {Cond_Flags_addr + 0xd0, 0x10}, // the formation and both party lists
     {0x904AA0, 0x50},              // the battle's facing, the initiative, the battle flags
     {0x802D40, 0x680},             // ObjTrio and the two slots after it
     {0x7E11E0, 0xA00},             // Effect_Objects, 20 of them
     {at::kRecords, 0x5F0},         // the actor records 0..8
-    {at::kShadeSource, 0x8C0},     // the shade source and the saved copies, CLUTs 0..31
-    {at::kShadeClut, 0x800},
+    {Gfx_ClutStripSource_addr + 0x1e00, 0x8C0}, // the shade source and the saved copies, CLUTs 0..31
+    {Gfx_ClutStrip_addr + 0x1e00, 0x800},
     {0x937F88, 0xC},               // Sprite_Current, Gfx_ClutStripDirty
     {0x905D98, 4},                 // Field_State
     {0x929EC0, 4},                 // Field_MemberCount
@@ -593,10 +593,10 @@ void Tidy() {
         if (Often()) o[8] = static_cast<unsigned char>(Next() % 8);
     }
     for (unsigned i = 0; i < 6; ++i)
-        if (Next() % 8) At(at::kPartyList + i)[0] = static_cast<unsigned char>(Next() % 12);
+        if (Next() % 8) At(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(Next() % 12);
     if (Often()) At(at::kBattleFacing)[0] = static_cast<unsigned char>(Next() % 4);
-    if (Often()) At(at::kFacing)[0] = static_cast<unsigned char>(Next() % 4);
-    if (Often()) At(at::kEnemyCount)[0] = static_cast<unsigned char>(Next() % 9);
+    if (Often()) At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(Next() % 4);
+    if (Often()) At(FieldHidden_EnemyCount_addr)[0] = static_cast<unsigned char>(Next() % 9);
     for (unsigned k = 0; k < 8; ++k) {
         unsigned char* const e = EnemySlot(k);
         if (Often()) e[0] = static_cast<unsigned char>(Next() % 2);
@@ -623,9 +623,9 @@ Args Seed(unsigned k) {
     Tidy();
     switch (k) {
     case kPlacePartyK:
-        At(at::kFormation)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
+        At(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
         for (unsigned i = 0; i < 3; ++i)
-            At(at::kPartyList2 + i)[0] = static_cast<unsigned char>(Pick({2, 6, 0, 1, 3, 10, Next() % 24}));
+            At(Cond_Flags_addr + 0xd5 + i)[0] = static_cast<unsigned char>(Pick({2, 6, 0, 1, 3, 10, Next() % 24}));
         break;
     case kPlaceMemberK:
         x.a[0] = Byte(Often() ? Next() % 4 : Next());
@@ -639,8 +639,8 @@ Args Seed(unsigned k) {
         for (unsigned m = 0; m < 3; ++m) At(at::kMembers + 4 * m)[0] = static_cast<unsigned char>(Next() % 2);
         break;
     case kPlaceEnemiesK:
-        At(at::kPlaced)[0] = static_cast<unsigned char>(Next() % 9);
-        At(at::kFacing)[0] = static_cast<unsigned char>(Pick({0, 1, 2, 3, 4, 7, 0xFF, Next()}));
+        At(FieldHidden_Placed_addr)[0] = static_cast<unsigned char>(Next() % 9);
+        At(FieldHidden_Facing_addr)[0] = static_cast<unsigned char>(Pick({0, 1, 2, 3, 4, 7, 0xFF, Next()}));
         g_bias = Pick({0, 1, 1, 2, 4});
         break;
     case kEnemyClearK:
@@ -728,22 +728,22 @@ Args Seed(unsigned k) {
             if (Half()) o[8] = At(at::kFaceTable)[At(at::kBattleFacing)[0]];
         }
         for (unsigned i = 0; i < 9; ++i) SetWord(ActorRecord(i) + 0x10, Half() ? 0x4000 : Next() & ~0x4000u);
-        At(at::kBattleFlags)[0] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
+        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Half() ? 4 : Next() & ~4u);
         break;
     case kToPlacesK:
         for (unsigned i = 0; i < kObjects; ++i) {
             unsigned char* const o = Obj(i);
             o[0xB] = static_cast<unsigned char>(Pick({0, 1, 2, 3}));
-            if (Often()) o[0x89] = At(at::kPartyList2)[Next() % 3];
+            if (Often()) o[0x89] = At(Cond_Flags_addr + 0xd5)[Next() % 3];
         }
-        At(at::kBattleFlags)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 4 : Next() & ~4u);
+        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 4 : Next() & ~4u);
         break;
     case kAtPlacesK:
         for (unsigned i = 0; i < 9; ++i) ActorRecord(i)[0x11] = static_cast<unsigned char>(Half() ? 0x40 : Next() & ~0x40u);
         break;
     case kScriptOnceK:
         for (unsigned i = 0; i < kObjects; ++i) Obj(i)[0xB] = static_cast<unsigned char>(Pick({0, 0, 1, 1, 2}));
-        At(at::kBattleFlags)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 0x10 : Next() & ~0x10u);
+        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() % 4 == 0 ? 0x10 : Next() & ~0x10u);
         break;
     case kShadeLowerK:
         for (unsigned i = 0x5D; i <= 0x5F; ++i)
@@ -797,7 +797,7 @@ void Cover(unsigned k, const Args& x, const State& in, const State& out, u32 res
     case kOnScreenK: { const unsigned n = Calls(out, 26); ++s[n < 6 ? n : 5]; break; }
     case kPathClearK: { const unsigned n = Calls(out, 32); ++s[n == 0 ? 0 : n < 4 ? 1 : 2]; break; }
     case kStepOpenK: { const unsigned n = Calls(out, 25); ++s[n < 6 ? n : 5]; break; }
-    case kRollInitK: { const unsigned v = out.memory[Offset(at::kInitiative)]; ++s[v < 3 ? v : 3]; break; }
+    case kRollInitK: { const unsigned v = out.memory[Offset(BattlePhases_Initiative_addr)]; ++s[v < 3 ? v : 3]; break; }
     case kPlaceEnemiesK: {
         unsigned n = 0;
         for (unsigned e = 0; e < 8; ++e) {

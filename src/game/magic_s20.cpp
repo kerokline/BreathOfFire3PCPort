@@ -35,11 +35,16 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -79,7 +84,7 @@ constexpr std::uint32_t kM092MoteTypes = 0x65B5DC;     // by +1: flame, spark
 constexpr std::uint32_t kM092FlamePhases = 0x65B5E4;   // by +2: four
 constexpr std::uint32_t kM092SparkPhases = 0x65B5F4;   // by +2: four
 // The library's stat index by MAGIC088's variant (+4): read in place.
-constexpr std::uint32_t kStatByVariant = 0x65C39C;
+// kStatByVariant: now MagicFx_BuffStats (symbols.toml).
 // Magic088_Variant's byte table (in .text, after its jump table): the jump
 // table's index by the ability id - 0x1E, 0xA3 entries.
 constexpr std::uint32_t kVariantIndex = 0x4C488C;
@@ -100,7 +105,7 @@ unsigned VariantCase(unsigned k) {
 // The effect's scratch (words 0x903850..0x90385E, Scratch_Swap among them)
 // and the vertex scratch (Prim_VertexScratch: SVECTORs 8 bytes apart).
 constexpr std::uint32_t kScratch = 0x903850;
-constexpr std::uint32_t kVertex = 0x9037A0;
+// kVertex: now Prim_VertexScratch (symbols.toml).
 
 // The ability id (u16) and the actor's side byte 0x904B35 (4 for the party's
 // commands, by MAGIC088's reading).
@@ -109,7 +114,7 @@ constexpr std::uint32_t kSide = 0x904B35;
 
 // The CLUT strip rows the starts write (docs/magic_fx_reached.md: kClutRow).
 constexpr std::uint32_t kClutRow = 0x812980;
-constexpr std::uint32_t kClutRowNext = 0x8129A0;
+// kClutRowNext: now Gfx_ClutStrip[0x1a10] (symbols.toml).
 
 // An enemy record's byte +0xF0 (its type) indexes a 0x8C-stride table whose
 // byte at 0x8C564F lifts MAGIC087's column (read in place).
@@ -121,16 +126,16 @@ constexpr std::uint32_t kEnemyLiftStride = 0x8C;
 using VoidFn = void (__cdecl*)();
 
 unsigned char* Scr(unsigned k) { return Mem(kScratch + k); }
-unsigned char* Vtx(unsigned k) { return Mem(kVertex + k); }
+unsigned char* Vtx(unsigned k) { return Mem(Prim_VertexScratch_addr + k); }
 const short* VtxP(unsigned k) { return reinterpret_cast<const short*>(Vtx(k)); }
 short S16(const unsigned char* p) { return static_cast<short>(Word(p)); }
 unsigned char* Task(unsigned index) { return Mem(at::kTasks + index * at::kTaskStride); }
 unsigned char* PoolA(unsigned index) { return Mem(kPoolA + index * kPoolStride); }
 unsigned char* PoolB(unsigned index) { return Mem(kPoolB + index * kPoolStride); }
 unsigned char* Enemy(unsigned i) { return Mem(at::kEnemies + i * at::kEnemyStride); }
-unsigned char* Member(unsigned i) { return Mem(at::kParty + i * at::kPartyStride); }
+unsigned char* Member(unsigned i) { return Mem(ObjTrio_addr + i * at::kPartyStride); }
 unsigned char* Tint(unsigned i) { return Mem(0x7E0700 + i * 12); }   // MoveScript_TintRecords, unchecked
-unsigned char* Owner() { return Pointer(at::kOwner); }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 std::int32_t PtrValue(const unsigned char* p) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)));
 }
@@ -173,7 +178,8 @@ void CopyPosition(unsigned char* to, const unsigned char* from) {
 // MapView_LinkPrimAt at Sprite_Current's position (read now).
 void LinkAtCurrent(unsigned size) {
     const unsigned char* const sc = Sprite_Current;
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(sc + 0x34)), static_cast<unsigned long>(Long(sc + 0x38)), 2, size);
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y), 2, size);
 }
 
 // Bytes +0..+4 of Sprite_Current cleared, the pointer read again for each:
@@ -199,15 +205,16 @@ S20_EXPORT void __cdecl Magic087_Task(void) {
     if (phase >= 2) bof3::Fatal("Magic087_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const sc = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolACount; ++i) {
         unsigned char* const m = PoolA(i);
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
         if ((m[0] & 1) == 0) continue;
-        const std::int32_t its = Long(m + 0x80);
+        const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         MH_CALL(Magic087_MoteRun)();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = sc;
     }
 }
@@ -236,13 +243,15 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             const unsigned index = MH_CALL(BattleTask_Create)(1, 0x27);
             unsigned char* const sc = Sprite_Current;
             unsigned char* const t = Task(index & 0xFF);
+            records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
             const unsigned char* const e = Enemy(i);
-            SetLong(t + 0x80, PtrValue(sc));
+            const records::BattleEnemy* const te = reinterpret_cast<const records::BattleEnemy*>(e);
+            tt->owner = PtrValue(sc);
             t[4] = sc[0xB];
             t[9] = nine;
-            SetLong(t + 0x34, Long(e + 0x34));
-            SetLong(t + 0x38, Long(e + 0x38));
-            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(e + 0x3C)) + 0x800000u));
+            tt->x = te->x;
+            tt->y = te->z;
+            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(te->height) + 0x800000u));
             SetWord(t + 0x3E, Word(t + 0x3E) + Mem(kEnemyLift + e[0xF0] * kEnemyLiftStride)[0]);
             Bump(sc[0xB], 1);
         }
@@ -253,18 +262,20 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             const unsigned index = MH_CALL(BattleTask_Create)(1, 0x27);
             unsigned char* const sc = Sprite_Current;
             unsigned char* const t = Task(index & 0xFF);
+            records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
             const unsigned char* const m = Member(i);
-            SetLong(t + 0x80, PtrValue(sc));
+            const records::PartyMember* const m_rec = reinterpret_cast<const records::PartyMember*>(m);
+            tt->owner = PtrValue(sc);
             t[4] = sc[0xB];
             t[9] = nine;
-            SetLong(t + 0x34, Long(m + 0x34));
-            SetLong(t + 0x38, Long(m + 0x38));
-            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(m + 0x3C)) + 0x800000u));
+            tt->x = m_rec->x;
+            tt->y = m_rec->z;
+            SetLong(t + 0x3C, static_cast<std::int32_t>(static_cast<std::uint32_t>(m_rec->height) + 0x800000u));
             Bump(sc[0xB], 1);
         }
     }
     for (std::uint32_t a = kClutRow + 2; a < kClutRow + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x7400)) | 0x8000u);
-    SetWord(Mem(kClutRow), Word(Mem(kClutRow - 0x7400)));
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), Word(Mem(Gfx_ClutStrip_addr + 0x3400 - 0x7400)));
     Gfx_ClutStripDirty = 1;
     Bump(Sprite_Current[1], 1);
 }
@@ -287,7 +298,8 @@ S20_EXPORT void __cdecl Magic087_ChildSpawn(void) {
         const unsigned index = MH_CALL(Magic087_PoolAlloc)() & 0xFFu;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolA(index);
-        SetLong(m + 0x80, PtrValue(sc));
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        tm->owner = PtrValue(sc);
         m[1] = 0;
         m[4] = static_cast<unsigned char>(n);
         m[0xB] = static_cast<unsigned char>(n);
@@ -298,7 +310,8 @@ S20_EXPORT void __cdecl Magic087_ChildSpawn(void) {
         const unsigned index = MH_CALL(Magic087_PoolAlloc)() & 0xFFu;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolA(index);
-        SetLong(m + 0x80, PtrValue(sc));
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        tm->owner = PtrValue(sc);
         m[1] = 1;
         m[4] = static_cast<unsigned char>(n);
         m[9] = static_cast<unsigned char>(2 * n + 1);
@@ -460,8 +473,8 @@ S20_EXPORT void __cdecl Magic087_OrbitRun(void) {
 S20_EXPORT void __cdecl Magic087_OrbitStart(void) {
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
-    SetLong(Sprite_Current + 0xC, 0x100);
-    SetLong(Sprite_Current + 0x18, 4);
+    ScTask()->vel_x = 0x100;
+    ScTask()->start_x = 4;
     if (Sprite_Current[1] != 0) {
         Sprite_Current[0xB] = 0;
         Sprite_Current[9] = 0;
@@ -484,11 +497,11 @@ S20_EXPORT void __cdecl Magic087_OrbitSpin(void) {
     unsigned char* sc = Sprite_Current;
     SetLong(Scr(4), static_cast<std::int32_t>((sc[9] & 0x3Fu) << 6));
     SetLong(sc + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0xC)) - static_cast<std::uint32_t>(Long(sc + 0x18))));
-    SetLong(Scr(0), Long(Sprite_Current + 0xC));
+    SetLong(Scr(0), ScTask()->vel_x);
     const int s = MH_CALL(Math_Sin)(Long(Scr(4)));
-    SetLong(Sprite_Current + 0x34, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
+    Store(ScTask()->x, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
     const int c = MH_CALL(Math_Cos)(Long(Scr(4)));
-    SetLong(Sprite_Current + 0x38, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
+    Store(ScTask()->y, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     sc = Sprite_Current;
     if (sc[0xA] < 0x21) Bump(sc[0xA], 1);
@@ -562,10 +575,11 @@ S20_EXPORT void __cdecl Magic087_RiseStep(void) {
 S20_EXPORT void __cdecl Magic087_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const unsigned char* const sc = Sprite_Current;
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
     const short rot[4] = {0, 0, static_cast<short>((sc[0xB] & 0x3F) << 6), 0};
     short v[4];
-    v[0] = static_cast<short>((Long(sc + 0x34) >> 9) - 0x4000);
-    v[1] = static_cast<short>((Long(sc + 0x38) >> 9) - 0x4000);
+    v[0] = static_cast<short>((tsc->x >> 9) - 0x4000);
+    v[1] = static_cast<short>((tsc->y >> 9) - 0x4000);
     v[2] = static_cast<short>(-((S16(sc + 0x3E) + 0x200) / 2));
     v[3] = 0;
     struct Matrix {
@@ -681,7 +695,7 @@ S20_EXPORT void __cdecl Magic088_Task(void) {
 // Then CLUT strip rows 26 and 27 copied from 0x4000 below; dirty; sound
 // 0x100. BattleTask_Create's index is not tested.
 S20_EXPORT void __cdecl Magic088_Start(void) {
-    const unsigned char* const src = Pointer(at::kSource);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     CopyPosition(Sprite_Current, src);
     const unsigned char variant = MH_CALL(Magic088_Variant)();
     Sprite_Current[4] = variant;
@@ -708,8 +722,8 @@ S20_EXPORT void __cdecl Magic088_Start(void) {
     CopyPosition(t, sc);
     Bump(sc[0xB], 1);
     for (std::uint32_t k = 0; k < 0x20; k += 2) {
-        SetWord(Mem(kClutRow + k), Word(Mem(kClutRow + k - 0x4000)));
-        SetWord(Mem(kClutRowNext + k), Word(Mem(kClutRowNext + k - 0x4000)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + k), Word(Mem(Gfx_ClutStrip_addr + 0x3400 + k - 0x4000)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x3420 + k), Word(Mem(Gfx_ClutStrip_addr + 0x3420 + k - 0x4000)));
     }
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -719,7 +733,7 @@ S20_EXPORT void __cdecl Magic088_Start(void) {
 // marked +0x5C = 1, its tints released and a new one set (0, 0, 0, 1), whose
 // index goes to +0xA; +9 8; on.
 S20_EXPORT void __cdecl Magic088_TintOn(void) {
-    unsigned char* const src = Pointer(at::kSource);
+    unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
     src[0x5C] = 1;
@@ -745,7 +759,7 @@ S20_EXPORT void __cdecl Magic088_Darken(void) {
 // flashed (BattleActor_Flash), on.
 S20_EXPORT void __cdecl Magic088_Lighten(void) {
     unsigned char* const sc = Sprite_Current;
-    unsigned char* const src = Pointer(at::kSource);
+    unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Bump(Tint(sc[0xA])[2], 1);
     Bump(Tint(sc[0xA])[3], 1);
     if (Tint(sc[0xA])[2] != 0) return;
@@ -762,12 +776,13 @@ S20_EXPORT void __cdecl Magic088_Lighten(void) {
 S20_EXPORT void __cdecl Magic088_Apply(void) {
     if (Sprite_Current[0xB] != 0) return;
     const unsigned char target = Mem(at::kTarget)[0];
-    const unsigned char stat = Mem(kStatByVariant)[Sprite_Current[4]];
+    const unsigned char stat = Mem(MagicFx_BuffStats_addr)[Sprite_Current[4]];
     const bool took = MH_CALL(MagicFx_ApplyBuff)(stat, target) != 0;
     const unsigned index = MH_CALL(BattleTask_Create)(1, 0x48) & 0xFFu;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const t = Task(index);
-    SetLong(t + 0x80, PtrValue(sc));
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    tt->owner = PtrValue(sc);
     t[4] = took ? static_cast<unsigned char>(sc[4] + 4) : 8;
     t[9] = 1;
     t[0xA] = 0;
@@ -993,15 +1008,16 @@ S20_EXPORT void __cdecl Magic092_Task(void) {
     if (phase >= 2) bof3::Fatal("Magic092_Task: phase %u, past the two-entry table", phase);
     magic_harness::Phase(kPhases[phase])();
     unsigned char* const sc = Sprite_Current;
-    const std::int32_t owner = Long(Mem(at::kOwner));
+    const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolBCount; ++i) {
         unsigned char* const m = PoolB(i);
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
         if ((m[0] & 1) == 0) continue;
-        const std::int32_t its = Long(m + 0x80);
+        const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
-        SetLong(Mem(at::kOwner), its);
+        SetLong(Mem(BattleE2_Owner_addr), its);
         MH_CALL(Magic092_MoteRun)();
-        SetLong(Mem(at::kOwner), owner);
+        SetLong(Mem(BattleE2_Owner_addr), owner);
         Sprite_Current = sc;
     }
 }
@@ -1029,15 +1045,16 @@ S20_EXPORT void __cdecl Magic092_Start(void) {
         const unsigned index = MH_CALL(BattleTask_Create)(1, 0x28) & 0xFFu;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const t = Task(index);
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
         const unsigned char* const actor = enemies ? Enemy(i) : Member(i);
-        SetLong(t + 0x80, PtrValue(sc));
+        tt->owner = PtrValue(sc);
         t[3] = static_cast<unsigned char>(i);
         CopyPosition(t, actor);
         t[9] = static_cast<unsigned char>((made << 4) + 1);
         ++made;
         Bump(sc[0xB], 1);
     }
-    SetWord(Mem(kClutRow), 0);
+    SetWord(Mem(Gfx_ClutStrip_addr + 0x3400), 0);
     for (std::uint32_t a = kClutRow + 2; a < kClutRow + 0x20; a += 2) SetWord(Mem(a), Word(Mem(a - 0x4000)) | 0x8000u);
     Gfx_ClutStripDirty = 1;
     Bump(Sprite_Current[1], 1);
@@ -1073,7 +1090,8 @@ S20_EXPORT void __cdecl Magic092_ChildSpawn(void) {
         if (index == 0xFF) continue;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolB(index);
-        SetLong(m + 0x80, PtrValue(sc));
+        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        tm->owner = PtrValue(sc);
         m[0] = static_cast<unsigned char>(m[0] | 0x41);
         m[1] = n != 0 ? 1 : 0;
         m[2] = 0;

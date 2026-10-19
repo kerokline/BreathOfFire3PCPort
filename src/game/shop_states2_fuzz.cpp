@@ -98,7 +98,7 @@ std::uint32_t Hash() {
 // a call shows even where the callee does not read it.
 std::uint32_t Watched() {
     static const struct { std::uint32_t at, size; } kWatched[] = {
-        {0x929F00, 0x20}, {0x6BC880, 0x40}, {0x803160, 0x320}, {at::kMoney, 0x10}, {at::kGameMode, 4}, {at::kClutDirty, 1}};
+        {0x929F00, 0x20}, {0x6BC880, 0x40}, {0x803160, 0x320}, {Party_Zenny_addr, 0x10}, {Game_Mode_addr, 4}, {Gfx_ClutStripDirty_addr, 1}};
     std::uint32_t h = 0x811C9DC5u;
     for (const auto& r : kWatched)
         for (std::uint32_t i = 0; i < r.size; ++i) h = (h ^ At(r.at)[i]) * 0x01000193u;
@@ -120,32 +120,32 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
     switch ((h >> 4) % 27) {
-    case 0: PutByte(at::kSub, v); g_touched = true; break;
-    case 1: PutByte(at::kState, v); g_touched = true; break;
+    case 0: PutByte(FieldS_Step_addr, v); g_touched = true; break;
+    case 1: PutByte(FieldS_State_addr, v); g_touched = true; break;
     case 2: PutByte(at::kCounter, v); break;
-    case 3: PutByte(at::kMember, v % 5 == 0 ? v : v % 3); break;
-    case 4: PutByte(at::kAnswer, v % 3 == 0 ? v : v % 2); break;
-    case 5: PutByte(at::kKind, v % 5); break;
-    case 6: PutByte(at::kItem, v); break;
-    case 7: PutByte(at::kRow, v % 7 == 0 ? v : v % 6); break;
-    case 8: PutByte(at::kCount, v % 4 == 0 ? v : v % 12); break;
+    case 3: PutByte(BattleActorCopies_ItemActor_addr, v % 5 == 0 ? v : v % 3); break;
+    case 4: PutByte(FieldS_Answer_addr, v % 3 == 0 ? v : v % 2); break;
+    case 5: PutByte(ShopStates2_Kind_addr, v % 5); break;
+    case 6: PutByte(ShopStates2_Item_addr, v); break;
+    case 7: PutByte(ShopStates2_Row_addr, v % 7 == 0 ? v : v % 6); break;
+    case 8: PutByte(ShopStates2_Count_addr, v % 4 == 0 ? v : v % 12); break;
     case 9: PutLong(at::kMaxCount, v % 2 ? v % 40 : h); break;
-    case 10: PutLong(at::kUnitPrice, v % 2 ? v * 3 : h >> 8); break;
-    case 11: PutLong(at::kMoney, v % 2 ? w : h); break;
-    case 12: PutLong(at::kPressed, h * 0x2C1B3C6Du); break;
-    case 13: PutLong(at::kShopList, Address(g_list + kListAt + (v % 2) * 2)); break;
+    case 10: PutLong(ShopStates2_UnitPrice_addr, v % 2 ? v * 3 : h >> 8); break;
+    case 11: PutLong(Party_Zenny_addr, v % 2 ? w : h); break;
+    case 12: PutLong(Input_Pressed_addr, h * 0x2C1B3C6Du); break;
+    case 13: PutLong(ShopStates2_ShopList_addr, Address(g_list + kListAt + (v % 2) * 2)); break;
     case 14: g_list[kListAt + w % 0x40] = static_cast<unsigned char>(v); break;
     case 15: PutByte(0x803266, v % 4); break;
     case 16: PutByte(0x803267 + (w & 1), v % 3 == 0 ? v : v % 0x80); break;
     case 17: PutWord(0x80326E, v % 3 == 0 ? v : 0); break;
     case 18: PutByte(0x803283, v % 2); break;
-    case 19: PutByte(at::kSellsEquipment, v % 3 == 0 ? v : v % 2); break;
-    case 20: PutWord(at::kGameMode, v % 2); break;
-    case 21: PutByte(at::kClutDirty, v); break;
-    case 22: PutByte(at::kSlotCursor, v % 3 == 0 ? v : v % 2); break;
+    case 19: PutByte(Rest2c_SellFlag_addr, v % 3 == 0 ? v : v % 2); break;
+    case 20: PutWord(Game_Mode_addr, v % 2); break;
+    case 21: PutByte(Gfx_ClutStripDirty_addr, v); break;
+    case 22: PutByte(ShopStates2_SlotCursor_addr, v % 3 == 0 ? v : v % 2); break;
     case 23: g_counts[w % 5][kInvAt + (v % 0x90) - 0x10] = static_cast<unsigned char>(h >> 8); break;
     case 24: PutWord(at::kRate, h); break;
-    case 25: PutByte(at::kChoice, v % 3 == 0 ? v : v % 2); break;
+    case 25: PutByte(ShopStates2_Choice_addr, v % 3 == 0 ? v : v % 2); break;
     default: PutByte(0x803264, v); break;
     }
 }
@@ -153,7 +153,7 @@ void Disturb() {
 // --- the stand-ins ------------------------------------------------------------
 
 // The thirty dwords of the dispatch tables and the two of the mode table.
-template <unsigned N> void __cdecl StubHandler() { Record(200 + N, At(at::kSub)[0], At(at::kState)[0]); Disturb(); }
+template <unsigned N> void __cdecl StubHandler() { Record(200 + N, At(FieldS_Step_addr)[0], At(FieldS_State_addr)[0]); Disturb(); }
 
 void __cdecl StubInitWindows() { Record(1); Disturb(); }
 void __cdecl StubPriceRate(unsigned short* rate) {
@@ -260,9 +260,9 @@ void __cdecl StubSound(unsigned short id) {
     Record(18, id);
     const std::uint32_t h = Hash();
     if (h % 4 == 0) {
-        static const U kMoved[] = {at::kSub, at::kState, at::kChoice};
+        static const U kMoved[] = {FieldS_Step_addr, FieldS_State_addr, ShopStates2_Choice_addr};
         PutByte(kMoved[(h >> 3) % 3], At(kMoved[(h >> 3) % 3])[0] + 1 + (h >> 5) % 3);
-        if (kMoved[(h >> 3) % 3] != at::kChoice) g_touched = true;
+        if (kMoved[(h >> 3) % 3] != ShopStates2_Choice_addr) g_touched = true;
     }
     Disturb();
 }
@@ -324,7 +324,7 @@ const void* StubFor(std::uint32_t target) {
 
 // The dispatch tables' thirty dwords (0x664118..0x66418F) and the mode
 // table's two.
-constexpr unsigned kTableDwords = (at::kTablesEnd - at::kStates) / 4;
+constexpr unsigned kTableDwords = (at::kTablesEnd - ShopTrade_States_addr) / 4;
 static_assert(kTableDwords == 30, "the shop's dispatch tables are thirty dwords");
 using Handler = void (__cdecl*)();
 template <unsigned... N> struct Handlers { static constexpr Handler kAll[] = {&StubHandler<N>...}; };
@@ -417,13 +417,13 @@ const Region kRegions[] = {
     {0x929F00, 0x20},            // the menus' state block
     {0x6BC880, 0x40},            // the shop's bytes
     {0x803160, 0x320},           // the window records, to 0x803480
-    {at::kShopList, 4},
-    {at::kMoney, 0x10},          // the money, the party list
+    {ShopStates2_ShopList_addr, 4},
+    {Party_Zenny_addr, 0x10},    // the money, the party list
     {0x7E1BE8, 8},               // Input_Held, Input_Pressed
     {0x903580, 0x14},            // the pad map: confirm, cancel
-    {at::kGameMode, 4},          // Game_Mode, Game_Step
-    {at::kClutDirty, 4},
-    {at::kRecordOf, 0x18},       // constant data from here on - random here, put back after
+    {Game_Mode_addr, 4},         // Game_Mode, Game_Step
+    {Gfx_ClutStripDirty_addr, 4},
+    {MoveScript_EffectState_addr, 0x18}, // constant data from here on - random here, put back after
     {at::kIdLists, 0x28},        // the inventory's list pointers
 };
 constexpr unsigned kRegionBytes = 0x20 + 0x40 + 0x320 + 4 + 0x10 + 8 + 0x14 + 4 + 4 + 0x18 + 0x28;
@@ -475,7 +475,7 @@ bool Half() { return (Next() & 1) != 0; }
 // the ten inventory pointers on our buffers, the list's count inside it,
 // categories 0..4, the tab 0..3, the member mostly a member, the mode 0 / 1.
 void Fix() {
-    PutLong(at::kShopList, Address(g_list + kListAt));
+    PutLong(ShopStates2_ShopList_addr, Address(g_list + kListAt));
     for (unsigned k = 0; k < 5; ++k) {
         PutLong(at::kIdLists + k * 4, Address(g_ids[k] + kInvAt));
         PutLong(at::kCountLists + k * 4, Address(g_counts[k] + kInvAt));
@@ -483,11 +483,11 @@ void Fix() {
     g_list[kListAt] = static_cast<unsigned char>(Often() ? Next() % 9 : Next() % 0x80);
     for (unsigned i = 0; i < 0x80; ++i)
         if (Half()) g_list[kListAt + 1 + i * 2] = static_cast<unsigned char>(Next() % 5);   // categories, some 0
-    PutByte(at::kKind, Next() % 5);
+    PutByte(ShopStates2_Kind_addr, Next() % 5);
     PutByte(0x803266, Next() % 4);
-    PutByte(at::kMember, Often() ? Next() % 3 : Next());
-    PutByte(at::kRow, Often() ? Next() % 8 : Next());
-    PutWord(at::kGameMode, Next() % 2);
+    PutByte(BattleActorCopies_ItemActor_addr, Often() ? Next() % 3 : Next());
+    PutByte(ShopStates2_Row_addr, Often() ? Next() % 8 : Next());
+    PutWord(Game_Mode_addr, Next() % 2);
     if (Half()) PutWord(0x80326E, 0);
 }
 
@@ -495,8 +495,8 @@ void Fix() {
 // confirm, cancel, both or neither.
 void Buttons() {
     const U confirm = 1u << (Next() % 16), cancel = Half() ? 1u << (Next() % 16) : (Next() & 0xFFFF);
-    PutWord(at::kConfirm, confirm);
-    PutWord(at::kCancel, cancel);
+    PutWord(Field_ConfirmButtons_addr, confirm);
+    PutWord(Field_CancelButtons_addr, cancel);
     U pressed = Next();
     switch (Next() % 4) {
     case 0: pressed |= confirm; break;
@@ -505,7 +505,7 @@ void Buttons() {
     default: break;
     }
     if (Next() % 8 == 0) pressed &= 0xFFFF0000u;
-    PutLong(at::kPressed, pressed);
+    PutLong(Input_Pressed_addr, pressed);
 }
 
 // Each branch's boundaries, on top of the random bytes.
@@ -519,11 +519,11 @@ void Seed(unsigned k) {
     // after it now and then (inside the thirty dwords swapped)
     const auto index = [](unsigned real, unsigned into) { return Often() ? Next() % real : Next() % into; };
     switch (k) {
-    case kStep: PutByte(at::kState, index(5, 30)); break;
-    case kOpenStep: PutByte(at::kSub, index(2, 25)); break;
-    case kChoiceStep: PutByte(at::kSub, index(1, 23)); break;
-    case kBuyStep: PutByte(at::kSub, index(8, 22)); break;
-    case kSellStep: PutByte(at::kSub, index(5, 14)); break;
+    case kStep: PutByte(FieldS_State_addr, index(5, 30)); break;
+    case kOpenStep: PutByte(FieldS_Step_addr, index(2, 25)); break;
+    case kChoiceStep: PutByte(FieldS_Step_addr, index(1, 23)); break;
+    case kBuyStep: PutByte(FieldS_Step_addr, index(8, 22)); break;
+    case kSellStep: PutByte(FieldS_Step_addr, index(5, 14)); break;
     case kOpenWait:
     case kSellClose:
     case kClose: {
@@ -531,19 +531,19 @@ void Seed(unsigned k) {
         PutByte(at::kCounter, kCounters[Next() % sizeof kCounters]);
         break;
     }
-    case kChoice: PutByte(at::kChoice, Often() ? Next() % 2 : Next()); break;
-    case kBuySetup: PutByte(at::kSellsEquipment, Often() ? Next() % 2 : Next()); break;
+    case kChoice: PutByte(ShopStates2_Choice_addr, Often() ? Next() % 2 : Next()); break;
+    case kBuySetup: PutByte(Rest2c_SellFlag_addr, Often() ? Next() % 2 : Next()); break;
     case kBuyList: {
         const unsigned n = g_list[kListAt];
-        PutByte(at::kRow, Often() && n ? Next() % n : Next() % 3);
+        PutByte(ShopStates2_Row_addr, Often() && n ? Next() % n : Next() % 3);
         PutByte(0x803283, Often() ? 0 : Next());
-        if (Half()) PutLong(at::kMoney, Next() % 30000);
+        if (Half()) PutLong(Party_Zenny_addr, Next() % 30000);
         break;
     }
     case kBuyCount:
     case kSellCount: {
         static const unsigned char kCounts[] = {0, 1, 1, 2, 9, 10, 11, 0x7F, 0x80, 0xFF};
-        PutByte(at::kCount, kCounts[Next() % sizeof kCounts]);
+        PutByte(ShopStates2_Count_addr, kCounts[Next() % sizeof kCounts]);
         static const std::uint32_t kMost[] = {0, 1, 2, 10, 11, 20, 99, 0x80, 0xFF, 0x100};
         PutLong(at::kMaxCount, Often() ? kMost[Next() % 10] : Next());
         break;
@@ -551,21 +551,21 @@ void Seed(unsigned k) {
     case kBuyConfirm:
     case kBuyAskEquip:
     case kSellConfirm:
-        PutByte(at::kAnswer, Often() ? Next() % 2 : Next());
-        if (k == kSellConfirm && Half()) PutLong(at::kMoney, at::kMoneyMax - Next() % 3000);
+        PutByte(FieldS_Answer_addr, Often() ? Next() % 2 : Next());
+        if (k == kSellConfirm && Half()) PutLong(Party_Zenny_addr, at::kMoneyMax - Next() % 3000);
         if (k == kSellConfirm && Half()) {
             const unsigned kind = Next() % 5;
-            PutByte(at::kKind, kind);
-            g_counts[kind][kInvAt + static_cast<signed char>(At(at::kRow)[0])] = static_cast<unsigned char>(At(at::kCount)[0]);
+            PutByte(ShopStates2_Kind_addr, kind);
+            g_counts[kind][kInvAt + static_cast<signed char>(At(ShopStates2_Row_addr)[0])] = static_cast<unsigned char>(At(ShopStates2_Count_addr)[0]);
         }
-        if (k == kBuyConfirm && Half()) PutByte(at::kSellsEquipment, 1);
+        if (k == kBuyConfirm && Half()) PutByte(Rest2c_SellFlag_addr, 1);
         break;
     case kBuyMember:
     case kBuySlot:
     case kBuyEquipped:
-        if (Half()) PutByte(at::kSlotCursor, Next() % 2);
-        if (k == kBuyEquipped && Half()) PutLong(at::kPressed, Next() & 0xFFFF0000u);
-        for (unsigned i = 0; i < 3; ++i) PutByte(at::kPartyList + i, Next() % 24);
+        if (Half()) PutByte(ShopStates2_SlotCursor_addr, Next() % 2);
+        if (k == kBuyEquipped && Half()) PutLong(Input_Pressed_addr, Next() & 0xFFFF0000u);
+        for (unsigned i = 0; i < 3; ++i) PutByte(Cond_Flags_addr + 0xd2 + i, Next() % 24);
         break;
     case kSellList: {
         static const unsigned char kTops[] = {0, 0, 1, 5, 8, 9, 10, 0x6E, 0x6F, 0x70, 0x76, 0x77, 0x78};
@@ -603,8 +603,8 @@ void Cover(unsigned k, const State& in, const State& out, bool touched) {
     g_cover.calls[k] += out.log_n;
     // the state and step moves as signed bytes; a store of an absolute value
     // (state 1 step 0) shows as whatever the difference was
-    const Pair p = {static_cast<signed char>(Byte(out, at::kState) - Byte(in, at::kState)),
-                    static_cast<signed char>(Byte(out, at::kSub) - Byte(in, at::kSub))};
+    const Pair p = {static_cast<signed char>(Byte(out, FieldS_State_addr) - Byte(in, FieldS_State_addr)),
+                    static_cast<signed char>(Byte(out, FieldS_Step_addr) - Byte(in, FieldS_Step_addr))};
     // the sounds played, in order: each branch plays its own
     std::uint32_t sounds = 0x811C9DC5u;
     for (unsigned i = 0; i < out.log_n && i < kLog; ++i)
@@ -636,10 +636,10 @@ void Cover(unsigned k, const State& in, const State& out, bool touched) {
         break;
     }
     case kSellConfirm:
-        if (LongOf(out, at::kMoney) == at::kMoneyMax) ++g_cover.money_capped;
+        if (LongOf(out, Party_Zenny_addr) == at::kMoneyMax) ++g_cover.money_capped;
         if (Logged(out, 18, 0x104)) {
-            const unsigned kind = Byte(in, at::kKind);
-            const int row = static_cast<signed char>(Byte(in, at::kRow));
+            const unsigned kind = Byte(in, ShopStates2_Kind_addr);
+            const int row = static_cast<signed char>(Byte(in, ShopStates2_Row_addr));
             if (kind < 5 && out.counts[kind * 0x180 + kInvAt + row] == 0) ++g_cover.emptied;
         }
         break;
@@ -704,12 +704,12 @@ void SelfTest() {
 
     static State saved, input, their_out, our_out;
     std::uint32_t saved_tables[kTableDwords], saved_modes[2];
-    std::memcpy(saved_tables, At(at::kStates), sizeof saved_tables);
-    std::memcpy(saved_modes, At(at::kModes), sizeof saved_modes);
+    std::memcpy(saved_tables, At(ShopTrade_States_addr), sizeof saved_tables);
+    std::memcpy(saved_modes, At(TitleTask_Modes_addr), sizeof saved_modes);
     Capture(saved);
     g = kStubs;
-    for (unsigned i = 0; i < kTableDwords; ++i) PutLong(at::kStates + 4 * i, Address(reinterpret_cast<const void*>(kTableStubs[i])));
-    for (unsigned i = 0; i < 2; ++i) PutLong(at::kModes + 4 * i, Address(reinterpret_cast<const void*>(kModeStubs[i])));
+    for (unsigned i = 0; i < kTableDwords; ++i) PutLong(ShopTrade_States_addr + 4 * i, Address(reinterpret_cast<const void*>(kTableStubs[i])));
+    for (unsigned i = 0; i < 2; ++i) PutLong(TitleTask_Modes_addr + 4 * i, Address(reinterpret_cast<const void*>(kModeStubs[i])));
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
     for (unsigned round = 0; round < kPerFunction * kCount; ++round) {
@@ -758,8 +758,8 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    std::memcpy(At(at::kStates), saved_tables, sizeof saved_tables);
-    std::memcpy(At(at::kModes), saved_modes, sizeof saved_modes);
+    std::memcpy(At(ShopTrade_States_addr), saved_tables, sizeof saved_tables);
+    std::memcpy(At(TitleTask_Modes_addr), saved_modes, sizeof saved_modes);
     Apply(saved);
 
     bof3::Log("shadow      shop_states2 self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

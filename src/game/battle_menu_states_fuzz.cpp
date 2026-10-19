@@ -34,11 +34,11 @@ using Handler = void (__cdecl*)();
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void SetPtr(std::uint32_t address, const void* p) { SetLong(At(address), static_cast<std::int32_t>(Address(p))); }
-unsigned char* Member(unsigned i) { return At(at::kMembers + i * at::kMemberSize); }
+unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kMemberSize); }
 
-constexpr std::uint32_t kPressed = 0x7E1BEC;   // Input_Pressed
-constexpr std::uint32_t kConfirm = 0x90358E;   // Field_ConfirmButtons, then Field_CancelButtons
-constexpr std::uint32_t kCancel = 0x903590;
+// kPressed: now Input_Pressed (symbols.toml). Input_Pressed
+// kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons, then Field_CancelButtons
+// kCancel: now Field_CancelButtons (symbols.toml).
 
 // Two command records: 0x939FA0 points at one, and the stand-ins move it to
 // the other, so that a pointer read before a call and used after shows.
@@ -69,7 +69,7 @@ std::uint32_t Id(const void* p) {
     if (at >= cmd && at < cmd + sizeof g_cmd) return 0x10000u + (at - cmd);
     return at;
 }
-unsigned char* CurrentCmd() { return move_script::At(static_cast<std::uint32_t>(Long(At(at::kCommandRecord)))); }
+unsigned char* CurrentCmd() { return move_script::At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr)))); }
 
 // Every byte below is one some function reads again after a call, or reads
 // only after one - so a read moved before a call, or a store moved across
@@ -80,26 +80,26 @@ void Disturb() {
     if (h % 4 == 0) return;
     const unsigned v = (h >> 12) & 0xFF;
     const unsigned w = h >> 20;
-    unsigned char* const list = At(at::kList);
+    unsigned char* const list = At(BattleE4_List_addr);
     switch ((h >> 4) % 20) {
-    case 0: At(at::kState)[0] = static_cast<unsigned char>(v); break;
-    case 1: At(at::kSubState)[0] = static_cast<unsigned char>(v); break;
-    case 2: SetPtr(at::kCommandRecord, g_cmd + (v % 2) * kCmdSize); break;
+    case 0: At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(v); break;
+    case 1: At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(v); break;
+    case 2: SetPtr(BattleActorCopies_Command_addr, g_cmd + (v % 2) * kCmdSize); break;
     case 3: CurrentCmd()[0] = static_cast<unsigned char>(v); break;
     case 4: list[0xA] = static_cast<unsigned char>(v % 4); break;
     case 5: list[0xB] = static_cast<unsigned char>(v); break;
     case 6: list[0xC] = static_cast<unsigned char>(v); break;
-    case 7: SetWord(At(kPressed), w); break;
-    case 8: SetWord(At(v % 2 ? kConfirm : kCancel), w); break;
-    case 9: At(at::kQueueWrite)[0] = static_cast<unsigned char>(v); break;
-    case 10: At(v % 2 ? at::kPartyCount : at::kEnemyCount)[0] = static_cast<unsigned char>(w); break;
+    case 7: SetWord(At(Input_Pressed_addr), w); break;
+    case 8: SetWord(At(v % 2 ? Field_ConfirmButtons_addr : Field_CancelButtons_addr), w); break;
+    case 9: At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>(v); break;
+    case 10: At(v % 2 ? at::kPartyCount : BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(w); break;
     case 11: if (v % 2) SetLong(list + 4, static_cast<std::int32_t>(h * 0x9E3779B1u)); else SetWord(list + 6, w); break;
     case 12: SetWord(list + 0x12, v % 3 == 0 ? w : 0); break;
-    case 13: At(at::kCommandsChosen)[0] = static_cast<unsigned char>(v); break;
-    case 14: SetPtr(at::kActing, Member(v % 3)); break;
+    case 13: At(BattleActorCopies_EntryCount_addr)[0] = static_cast<unsigned char>(v); break;
+    case 14: SetPtr(BattleE4_MenuActor_addr, Member(v % 3)); break;
     case 15: list[8] = static_cast<unsigned char>(v); break;
     case 16: list[3] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
-    case 17: At(at::kSubState + 1)[0] = static_cast<unsigned char>(v); break;
+    case 17: At(BattleE4_Step4_addr + 1)[0] = static_cast<unsigned char>(v); break;
     case 18: SetWord(list + 0x10, w); break;
     default: {
         // the inventory byte at the cursor: an id or a count
@@ -116,10 +116,10 @@ void Disturb() {
 // read again after the call: the command pointer after the target pickers,
 // Battle_WrapIndex and Battle_ReturnTrue; the state after the banner and the
 // set-up; the category and the sub-state after a cue.
-void MoveCommand() { if (Hash() % 2) SetPtr(at::kCommandRecord, g_cmd + ((Hash() >> 8) % 2) * kCmdSize); }
+void MoveCommand() { if (Hash() % 2) SetPtr(BattleActorCopies_Command_addr, g_cmd + ((Hash() >> 8) % 2) * kCmdSize); }
 
 // The 21 table entries.
-template <unsigned N> void __cdecl StubHandler() { Record(N, At(at::kState)[0], At(at::kSubState)[0]); Disturb(); }
+template <unsigned N> void __cdecl StubHandler() { Record(N, At(BattleE4_Step3_addr)[0], At(BattleE4_Step4_addr)[0]); Disturb(); }
 
 unsigned char __cdecl StubDefaultTarget(unsigned a) {
     Record(1, a, Id(CurrentCmd()));
@@ -142,7 +142,7 @@ long __cdecl StubWrap(long high, long low, long value) {
 }
 unsigned long __cdecl StubBanner(unsigned msg, unsigned b2) {
     Record(4, msg, b2);
-    if (Hash() % 2) At(at::kState)[0] = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 2) At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
     return Hash();
 }
@@ -160,8 +160,8 @@ unsigned __cdecl StubAutoRepeat(unsigned pressed) {
 void __cdecl StubSound(unsigned short id) {
     Record(6, id);
     const std::uint32_t h = Hash();
-    if (h % 2) At(at::kList)[0xA] = static_cast<unsigned char>((h >> 8) % 4);
-    if ((h >> 1) % 2) At(at::kSubState)[0] = static_cast<unsigned char>(h >> 16);
+    if (h % 2) At(BattleE4_List_addr)[0xA] = static_cast<unsigned char>((h >> 8) % 4);
+    if ((h >> 1) % 2) At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(h >> 16);
     Disturb();
 }
 const unsigned char* __cdecl StubSystemPtr(unsigned id) {
@@ -176,7 +176,7 @@ unsigned long __cdecl StubQueuePush(unsigned a, unsigned b, unsigned long value)
 }
 unsigned long __cdecl StubSetup() {
     Record(9);
-    if (Hash() % 2) At(at::kState)[0] = static_cast<unsigned char>(Hash() >> 8);
+    if (Hash() % 2) At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Hash() >> 8);
     Disturb();
     return Hash();
 }
@@ -237,7 +237,7 @@ const Callees kStubs = {
 };
 
 // The four tables, contiguous: 4 + 10 + 2 + 5 entries from 0x64E44C.
-constexpr std::uint32_t kTables = at::kAttackStates;
+// kTables: now BattleAttackCmd_States (symbols.toml).
 constexpr unsigned kTableEntries = 21;
 const Handler kTableStubs[kTableEntries] = {
     &StubHandler<100>, &StubHandler<101>, &StubHandler<102>, &StubHandler<103>, &StubHandler<104>,
@@ -318,12 +318,12 @@ const Region kRegions[] = {
     {0x904154, 0x50C},           // the inventory's ids and counts, the saved list bytes 0x904605..7
     {0x8031A0, 0x2E0},           // window records 2..21
     {0x93C2A0, 0xA0},            // the message queue and its indices
-    {at::kMembers, 0x3E4},       // ObjTrio
-    {at::kCommandRecord, 4},
-    {at::kActing, 4},
+    {ObjTrio_addr, 0x3E4},       // ObjTrio
+    {BattleActorCopies_Command_addr, 4},
+    {BattleE4_MenuActor_addr, 4},
     {at::kRepeatLatch, 2},
-    {kPressed, 2},
-    {kConfirm, 4},               // Field_ConfirmButtons, Field_CancelButtons
+    {Input_Pressed_addr, 2},
+    {Field_ConfirmButtons_addr, 4}, // Field_ConfirmButtons, Field_CancelButtons
 };
 constexpr unsigned kRegionBytes = 0x30 + 0x50C + 0x2E0 + 0xA0 + 0x3E4 + 4 + 4 + 2 + 2 + 4;
 
@@ -364,23 +364,23 @@ bool Half() { return (Next() & 1) != 0; }
 // Random bytes put back inside what they may hold: the two pointers, the
 // members' actor bytes, the category.
 void Fix() {
-    SetPtr(at::kCommandRecord, g_cmd + (Next() % 2) * kCmdSize);
-    SetPtr(at::kActing, Member(Next() % 3));
+    SetPtr(BattleActorCopies_Command_addr, g_cmd + (Next() % 2) * kCmdSize);
+    SetPtr(BattleE4_MenuActor_addr, Member(Next() % 3));
     for (unsigned i = 0; i < 3; ++i) Member(i)[5] = static_cast<unsigned char>(Next() % 3);
-    At(at::kList)[0xA] = static_cast<unsigned char>(Next() % 4);
+    At(BattleE4_List_addr)[0xA] = static_cast<unsigned char>(Next() % 4);
 }
 
 // The pad: most rounds neither the confirm nor the cancel word shares a bit
 // with the pressed word (so the directions run); the rest one, the other or
 // both.
 void SeedPad() {
-    const unsigned pressed = Word(At(kPressed));
+    const unsigned pressed = Word(At(Input_Pressed_addr));
     switch (Next() % 6) {
-    case 0: SetWord(At(kCancel), pressed & (Next() | 1)); if (!(Word(At(kCancel)) & pressed)) SetWord(At(kCancel), pressed); break;
-    case 1: SetWord(At(kCancel), Word(At(kCancel)) & ~pressed); SetWord(At(kConfirm), pressed | 1); SetWord(At(kPressed), pressed | 1); break;
+    case 0: SetWord(At(Field_CancelButtons_addr), pressed & (Next() | 1)); if (!(Word(At(Field_CancelButtons_addr)) & pressed)) SetWord(At(Field_CancelButtons_addr), pressed); break;
+    case 1: SetWord(At(Field_CancelButtons_addr), Word(At(Field_CancelButtons_addr)) & ~pressed); SetWord(At(Field_ConfirmButtons_addr), pressed | 1); SetWord(At(Input_Pressed_addr), pressed | 1); break;
     default:
-        SetWord(At(kCancel), Word(At(kCancel)) & ~pressed);
-        SetWord(At(kConfirm), Word(At(kConfirm)) & ~pressed);
+        SetWord(At(Field_CancelButtons_addr), Word(At(Field_CancelButtons_addr)) & ~pressed);
+        SetWord(At(Field_ConfirmButtons_addr), Word(At(Field_ConfirmButtons_addr)) & ~pressed);
         break;
     }
 }
@@ -393,45 +393,45 @@ unsigned char EdgeTarget() {
 
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
-    unsigned char* const list = At(at::kList);
+    unsigned char* const list = At(BattleE4_List_addr);
     switch (k) {
     // the other step byte inside the tables too, so that an index read from
     // the wrong byte shows as a count, not a crash
     case kAtkDispatch:
-        At(at::kState)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % kTableEntries);
-        At(at::kSubState)[0] = static_cast<unsigned char>(Next() % 4);
+        At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next() % kTableEntries);
+        At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(Next() % 4);
         break;
     case kItemDispatch:
-        At(at::kState)[0] = static_cast<unsigned char>(Often() ? Next() % 10 : Next() % (kTableEntries - 4));
-        At(at::kSubState)[0] = static_cast<unsigned char>(Next() % 5);
+        At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 10 : Next() % (kTableEntries - 4));
+        At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(Next() % 5);
         break;
     case kOpenDispatch:
-        At(at::kSubState)[0] = static_cast<unsigned char>(Often() ? Next() % 2 : Next() % (kTableEntries - 14));
-        At(at::kState)[0] = static_cast<unsigned char>(Next() % 7);
+        At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 2 : Next() % (kTableEntries - 14));
+        At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Next() % 7);
         break;
     case kTargetDispatch:
-        At(at::kSubState)[0] = static_cast<unsigned char>(Next() % 5);
-        At(at::kState)[0] = static_cast<unsigned char>(Next() % 5);
+        At(BattleE4_Step4_addr)[0] = static_cast<unsigned char>(Next() % 5);
+        At(BattleE4_Step3_addr)[0] = static_cast<unsigned char>(Next() % 5);
         break;
     case kAtkPick:
     case kItemPick:
     case kMemberPick:
         SeedPad();
         CurrentCmd()[0] = EdgeTarget();
-        At(at::kEnemyCount)[0] = static_cast<unsigned char>(Often() ? Next() % 6 : Next());
+        At(BattleActorCopies_EnemyCount_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 6 : Next());
         At(at::kPartyCount)[0] = static_cast<unsigned char>(Often() ? Next() % 4 : Next());
         break;
     case kList: {
         if (Next() % 8 != 0) list[3] = 0;
         // the pad: a third each none, a cancel, a confirm (the list's last
         // tests run only with no scroll request pending)
-        const unsigned pressed = Word(At(kPressed)) | 1;
-        SetWord(At(kPressed), pressed);
-        SetWord(At(kCancel), Word(At(kCancel)) & ~pressed);
-        SetWord(At(kConfirm), Word(At(kConfirm)) & ~pressed);
+        const unsigned pressed = Word(At(Input_Pressed_addr)) | 1;
+        SetWord(At(Input_Pressed_addr), pressed);
+        SetWord(At(Field_CancelButtons_addr), Word(At(Field_CancelButtons_addr)) & ~pressed);
+        SetWord(At(Field_ConfirmButtons_addr), Word(At(Field_ConfirmButtons_addr)) & ~pressed);
         switch (Next() % 3) {
-        case 0: SetWord(At(kCancel), pressed & (Next() | 1)); break;
-        case 1: SetWord(At(kConfirm), pressed & (Next() | 1)); if (Half()) SetWord(At(kCancel), 0); break;
+        case 0: SetWord(At(Field_CancelButtons_addr), pressed & (Next() | 1)); break;
+        case 1: SetWord(At(Field_ConfirmButtons_addr), pressed & (Next() | 1)); if (Half()) SetWord(At(Field_CancelButtons_addr), 0); break;
         default: break;
         }
         static const unsigned char kTops[] = {0, 0, 1, 6, 7, 8, 0x72, 0x73, 0x78, 0x79, 0x7A, 0xFF};
@@ -478,7 +478,7 @@ void Cover(unsigned k, const State& in, const State& out) {
             ++g_cover.sounds[s];
         }
     }
-    const unsigned state_out = ByteOf(out, at::kState);
+    const unsigned state_out = ByteOf(out, BattleE4_Step3_addr);
     switch (k) {
     case kList: {
         bool refused = false, confirmed = false, cancelled = false;
@@ -487,22 +487,22 @@ void Cover(unsigned k, const State& in, const State& out) {
             if (out.log[i].what == 6 && out.log[i].a == 0x103) confirmed = true;
             if (out.log[i].what == 6 && out.log[i].a == 0x106) cancelled = true;
         }
-        if (state_out == 6 && ByteOf(in, at::kState) != 6) ++g_cover.list_above;
-        if (ByteOf(out, at::kList + 0x12) | ByteOf(out, at::kList + 0x13)) ++g_cover.list_scrolled;
+        if (state_out == 6 && ByteOf(in, BattleE4_Step3_addr) != 6) ++g_cover.list_above;
+        if (ByteOf(out, BattleE4_List_addr + 0x12) | ByteOf(out, BattleE4_List_addr + 0x13)) ++g_cover.list_scrolled;
         g_cover.list_refused += refused;
         g_cover.list_confirmed += confirmed;
         g_cover.list_cancelled += cancelled;
         break;
     }
     case kCommit: {
-        const unsigned cat = ByteOf(in, at::kList + 0xA), row = ByteOf(in, at::kList + 0xC);
+        const unsigned cat = ByteOf(in, BattleE4_List_addr + 0xA), row = ByteOf(in, BattleE4_List_addr + 0xC);
         const std::uint32_t count = 0x904354u + 0x80 * cat + row;
         if (ByteOf(out, count) == 0 && ByteOf(out, 0x904154u + 0x80 * cat + row) == 0) ++g_cover.cleared;
         else ++g_cover.spent;
         break;
     }
     case kTargetKind: {
-        const unsigned sub = ByteOf(out, at::kSubState);
+        const unsigned sub = ByteOf(out, BattleE4_Step4_addr);
         if (state_out == 4 && sub != 3) ++g_cover.kinds[0];
         else if (state_out == 5) ++g_cover.kinds[1];
         else ++g_cover.kinds[2];
@@ -510,7 +510,7 @@ void Cover(unsigned k, const State& in, const State& out) {
     }
     case kItemPick:
     case kMemberPick: {
-        const unsigned sub_in = ByteOf(in, at::kSubState), sub_out = ByteOf(out, at::kSubState);
+        const unsigned sub_in = ByteOf(in, BattleE4_Step4_addr), sub_out = ByteOf(out, BattleE4_Step4_addr);
         if (sub_in != sub_out) ++g_cover.crossed;
         break;
     }
@@ -530,9 +530,9 @@ void SelfTest() {
     if (region_bytes != kRegionBytes)
         bof3::Fatal("battle_menu_states: the regions are %u bytes, the state holds %u", region_bytes, kRegionBytes);
     for (unsigned i = 0; i < kTableEntries; ++i) {
-        const auto had = static_cast<std::uint32_t>(Long(At(kTables + 4 * i)));
+        const auto had = static_cast<std::uint32_t>(Long(At(BattleAttackCmd_States_addr + 4 * i)));
         if (had != kTableHolds[i])
-            bof3::Fatal("battle_menu_states: table entry 0x%X holds 0x%X, not 0x%X", static_cast<unsigned>(kTables + 4 * i),
+            bof3::Fatal("battle_menu_states: table entry 0x%X holds 0x%X, not 0x%X", static_cast<unsigned>(BattleAttackCmd_States_addr + 4 * i),
                         static_cast<unsigned>(had), static_cast<unsigned>(kTableHolds[i]));
     }
 
@@ -557,10 +557,10 @@ void SelfTest() {
 
     static State saved, input, their_out, our_out;
     std::uint32_t saved_tables[kTableEntries];
-    std::memcpy(saved_tables, At(kTables), sizeof saved_tables);
+    std::memcpy(saved_tables, At(BattleAttackCmd_States_addr), sizeof saved_tables);
     Capture(saved);
     g = kStubs;
-    for (unsigned i = 0; i < kTableEntries; ++i) SetPtr(kTables + 4 * i, reinterpret_cast<const void*>(kTableStubs[i]));
+    for (unsigned i = 0; i < kTableEntries; ++i) SetPtr(BattleAttackCmd_States_addr + 4 * i, reinterpret_cast<const void*>(kTableStubs[i]));
 
     unsigned bad = 0, calls = 0, rounds = 0, bad_per[kCount] = {};
     for (unsigned round = 0; round < kPerFunction * kCount; ++round) {
@@ -601,7 +601,7 @@ void SelfTest() {
         }
     }
     g = kOriginals;
-    std::memcpy(At(kTables), saved_tables, sizeof saved_tables);
+    std::memcpy(At(BattleAttackCmd_States_addr), saved_tables, sizeof saved_tables);
     Apply(saved);
 
     bof3::Log("shadow      battle_menu_states self-test: %u rounds over %u functions (%u each), %u calls to the stand-ins, "

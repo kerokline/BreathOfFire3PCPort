@@ -17,6 +17,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/window_kinds_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -37,8 +38,14 @@ template <typename T> T As(std::uint32_t address) { return reinterpret_cast<T>(s
 // cache it either: the fuzz's stand-ins repoint it between calls.
 unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(at::kCurrent))));
+        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
+// typed: +8..+0x1F mean something else in each handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 short S(const unsigned char* at) { return static_cast<short>(Word(at)); }
 
@@ -209,12 +216,12 @@ extern "C" void __cdecl BattleWin_BannerRun(void) {
     if (state >= 3) bof3::Fatal("a battle banner window's state byte is %u; the original's stack table holds three", state);
     g.banner[state]();
     const unsigned char* w = Rec();
-    g.message_box(Word(w + 4), Word(w + 6));
+    g.message_box(Win(w)->centre_x, Win(w)->centre_y);
     w = Rec();
     const std::uint32_t e = static_cast<std::uint32_t>(w[0xA]) * 0xC;
     const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(at::kBannerText + e))));
     const std::uint32_t colour = (e & ~0xFFu) | At(at::kBannerColour + e)[0];
-    g.text_draw_at(static_cast<std::uint16_t>(Word(w + 4) + 4), static_cast<std::uint16_t>(Word(w + 6) + 3),
+    g.text_draw_at(static_cast<std::uint16_t>(Win(w)->centre_x + 4), static_cast<std::uint16_t>(Win(w)->centre_y + 3),
                    static_cast<int>(colour), 0xFF, text);
 }
 
@@ -223,12 +230,12 @@ extern "C" void __cdecl BattleWin_BannerRun(void) {
 // never arrives (the word wraps), as in the original.
 extern "C" void __cdecl BattleWin_BannerSlideIn(void) {
     unsigned char* const w = Rec();
-    const std::uint16_t y = Word(w + 6);
+    const std::uint16_t y = Win(w)->centre_y;
     if (y == 0x12) {
         ++w[3];
         return;
     }
-    SetWord(w + 6, static_cast<std::uint16_t>(y + 8));
+    Win(w)->centre_y = static_cast<std::uint16_t>(y + 8);
 }
 
 // original 0x597D10, banner state 2: the window slides up 8 a frame until its
@@ -240,15 +247,15 @@ extern "C" void __cdecl BattleWin_BannerSlideIn(void) {
 // visited last, not one this record names.
 extern "C" void __cdecl BattleWin_BannerSlideOut(void) {
     unsigned char* const w = Rec();
-    const std::uint16_t y = Word(w + 6);
+    const std::uint16_t y = Win(w)->centre_y;
     if (y == 0xFFEA) {
-        const auto* const entry = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(at::kBannerCurrent))));
+        const auto* const entry = As<const unsigned char*>(BattleMisc_BannerCurrent);
         const auto keep = static_cast<unsigned char>(~entry[1]);
-        At(at::kBannerMask)[0] = static_cast<unsigned char>(At(at::kBannerMask)[0] & keep);
+        BattleMisc_BannerKinds = static_cast<unsigned char>(BattleMisc_BannerKinds & keep);
         g.free_current();
         return;
     }
-    SetWord(w + 6, static_cast<std::uint16_t>(y - 8));
+    Win(w)->centre_y = static_cast<std::uint16_t>(y - 8);
 }
 
 // ===========================================================================
@@ -267,10 +274,10 @@ extern "C" void __cdecl BattleWin_MessageRun(void) {
 // entry (write index 0x93C2A1 not the read index 0x93C2A0), the state steps
 // on and 0x939F60 is set.
 extern "C" void __cdecl BattleWin_MessageWait(void) {
-    if (At(at::kMsgTail)[0] == At(at::kMsgHead)[0]) return;
+    if (BattleActorCopies_QueueWrite == BattleWindows_MsgHead) return;
     unsigned char* const w = Rec();
     w[3] = static_cast<unsigned char>(w[3] + 1);
-    At(at::kMsgOpen)[0] = 1;
+    BattleE1_MessageUp = 1;
 }
 
 // original 0x597DC0, message state 1: 0x939F60 set; the window slides down 8
@@ -278,12 +285,12 @@ extern "C" void __cdecl BattleWin_MessageWait(void) {
 // (a tail jump to BattleWin_DrawMessage).
 extern "C" void __cdecl BattleWin_MessageSlideIn(void) {
     unsigned char* const w = Rec();
-    At(at::kMsgOpen)[0] = 1;
-    const std::uint16_t y = Word(w + 6);
+    BattleE1_MessageUp = 1;
+    const std::uint16_t y = Win(w)->centre_y;
     if (y == 0x12)
         ++w[3];
     else
-        SetWord(w + 6, static_cast<std::uint16_t>(y + 8));
+        Win(w)->centre_y = static_cast<std::uint16_t>(y + 8);
     g.draw_message();
 }
 
@@ -298,11 +305,11 @@ extern "C" void __cdecl BattleWin_MessageSlideIn(void) {
 // entry in the same frame; the record is re-read for each state store.
 extern "C" void __cdecl BattleWin_MessageShow(void) {
     g.draw_message();
-    unsigned i = At(at::kMsgHead)[0];
+    unsigned i = BattleWindows_MsgHead;
     if ((At(at::kMsgRing + 8 * i)[0] & 1) != 0 && Input_Pressed != 0) {
         if (g.msg_advance() != 0) Rec()[3] = 3;
     }
-    i = At(at::kMsgHead)[0];
+    i = BattleWindows_MsgHead;
     unsigned char* const entry = At(at::kMsgRing + 8 * i);
     if ((entry[0] & 2) == 0) return;
     unsigned char timer = entry[1];
@@ -320,19 +327,19 @@ extern "C" void __cdecl BattleWin_MessageShow(void) {
 // Text_DrawAt at (+4 + 4, +6 + 3), colour 0, to its end.
 extern "C" void __cdecl BattleWin_MessageSlideOut(void) {
     unsigned char* const w = Rec();
-    const std::uint16_t y = Word(w + 6);
+    const std::uint16_t y = Win(w)->centre_y;
     if (y == 0xFFEA) {
-        At(at::kMsgOpen)[0] = 0;
+        BattleE1_MessageUp = 0;
         w[3] = 0;
     } else {
-        SetWord(w + 6, static_cast<std::uint16_t>(y - 8));
+        Win(w)->centre_y = static_cast<std::uint16_t>(y - 8);
     }
     const unsigned char* r = Rec();
-    g.message_box(Word(r + 4), Word(r + 6));
-    const unsigned i = (At(at::kMsgHead)[0] - 1u) & 0xFu;
+    g.message_box(Win(r)->centre_x, Win(r)->centre_y);
+    const unsigned i = (BattleWindows_MsgHead - 1u) & 0xFu;
     const auto* const text = As<const unsigned char*>(static_cast<std::uint32_t>(Long(At(at::kMsgRing + 4 + 8 * i))));
     r = Rec();
-    g.text_draw_at(static_cast<std::uint16_t>(Word(r + 4) + 4), static_cast<std::uint16_t>(Word(r + 6) + 3), 0, 0xFF,
+    g.text_draw_at(static_cast<std::uint16_t>(Win(r)->centre_x + 4), static_cast<std::uint16_t>(Win(r)->centre_y + 3), 0, 0xFF,
                    text);
 }
 

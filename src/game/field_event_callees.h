@@ -15,32 +15,32 @@ using Handler = void (__cdecl*)();
 // (docs/field-event.md, section 2). Kept here, not as [[data]], so that no
 // other group of the parallel round can bind one twice.
 namespace at {
-constexpr std::uint32_t kLeaderTimer = 0x905B82;      // byte, counted down by Field_LeaderFrame
-constexpr std::uint32_t kPending = 0x904EF0;          // byte: a pending jump; +1 its index
-constexpr std::uint32_t kLeaderStates = 0x660918;     // 15 handlers, by Sprite_Current +1
-constexpr std::uint32_t kControlStates = 0x660954;    // 3 handlers, by Sprite_Current +2
-constexpr std::uint32_t kPendingJumps = 0x660B60;     // 4 handlers, by 0x904EF1
-constexpr std::uint32_t kZoneCounter = 0x802E74;      // word, ObjTrio +0x134
-constexpr std::uint32_t kLeaderXHigh = 0x802D76;      // ObjTrio +0x36, the integer x's low byte
-constexpr std::uint32_t kLeaderZHigh = 0x802D7A;      // ObjTrio +0x3A
+// kLeaderTimer: now EventOps_BlockByte (symbols.toml). byte, counted down by Field_LeaderFrame
+// kPending: now EventLeader_PendingFlag (symbols.toml). byte: a pending jump; +1 its index
+// kLeaderStates: now Field_LeaderStates (symbols.toml). 15 handlers, by Sprite_Current +1
+// kControlStates: now Field_LeaderControlSteps (symbols.toml). 3 handlers, by Sprite_Current +2
+// kPendingJumps: now Field_PendingJumps (symbols.toml). 4 handlers, by 0x904EF1
+// kZoneCounter: now ObjTrio[0x134] (symbols.toml). word, ObjTrio +0x134
+// kLeaderXHigh: now ObjTrio[0x36] (symbols.toml). ObjTrio +0x36, the integer x's low byte
+// kLeaderZHigh: now ObjTrio[0x3a] (symbols.toml). ObjTrio +0x3A
 constexpr std::uint32_t kZoneBases = 0x660A24;        // 2 bytes a zone: base, most added
-constexpr std::uint32_t kZoneLists = 0x668D80;        // an 8-byte record list per area
+// kZoneLists: now Area_StateRecords (symbols.toml). an 8-byte record list per area
 constexpr std::uint32_t kAnimationRemap = 0x6608D8;   // 2 bytes an animation
 constexpr std::uint32_t kPartyLists = 0x904062;       // two 3-byte lists of member ids, 0xFF-ended
-constexpr std::uint32_t kPartySetCurrent = 0x90412C;  // the loaded party set; bit 7 from PartySet_Select mode 0
-constexpr std::uint32_t kPartySets = 0x669750;        // 19 sorted rows of 3 member ids
-constexpr std::uint32_t kMemberFlags = 0x669738;      // a byte per member id, to sprite +0x2B
+// kPartySetCurrent: now AreaW0b_PartySet (symbols.toml). the loaded party set; bit 7 from PartySet_Select mode 0
+// kPartySets: now MoveScript_EffectArg[0xc] (symbols.toml). 19 sorted rows of 3 member ids
+// kMemberFlags: now MoveScript_EffectState[0xc] (symbols.toml). a byte per member id, to sprite +0x2B
 constexpr std::uint32_t kBankTable = 0x813580;        // dword offsets from itself, by column
-constexpr std::uint32_t kPaletteBase = 0x80D380;      // 64 bytes a slot, inside Gfx_ClutStripSource
+// kPaletteBase: now Gfx_ClutStripSource[0xf00] (symbols.toml). 64 bytes a slot, inside Gfx_ClutStripSource
 constexpr std::uint32_t kActorRecords = 0x903A70;     // 0xA4 bytes each; Field_ActorStates is +0x10 of the first
 constexpr std::uint32_t kFindIds = 0x903850;          // PartySet_Find's three ids, then its swap byte at +4
 constexpr std::uint32_t kJoinState = 0x9045FC;        // two dwords and a byte, Party_JoinReset's
-constexpr std::uint32_t kFlagBits = 0x904030;         // the bit array Field_PartySetUp tests flag 0x77 in
-constexpr std::uint32_t kMemberOffsets = 0x660B40;    // 8 bytes (dx, dz) per direction / 2
-constexpr std::uint32_t kTintSprites = 0x7E0708;      // MoveScript_TintRecords +8: each record's sprite
-constexpr std::uint32_t kObject905DA0 = 0x905DA0;     // the object MapView_CheckHeightScale singles out
-constexpr std::uint32_t kClutMirror = 0x80F580;       // Gfx_ClutStrip
-constexpr std::uint32_t kClutSource = 0x80B580;       // Gfx_ClutStripSource
+// kFlagBits: now Cond_Flags[0xa0] (symbols.toml). the bit array Field_PartySetUp tests flag 0x77 in
+// kMemberOffsets: now Field_PlaceOffsets (symbols.toml). 8 bytes (dx, dz) per direction / 2
+// kTintSprites: now MoveScript_TintRecords[8] (symbols.toml). MoveScript_TintRecords +8: each record's sprite
+// kObject905DA0: now FieldEvent_Object905DA0 (symbols.toml). the object MapView_CheckHeightScale singles out
+// kClutMirror: now Gfx_ClutStrip (symbols.toml). Gfx_ClutStrip
+// kClutSource: now Gfx_ClutStripSource (symbols.toml). Gfx_ClutStripSource
 }  // namespace at
 
 struct Callees {

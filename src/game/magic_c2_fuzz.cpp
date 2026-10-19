@@ -253,8 +253,10 @@ std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret
 template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 
 // The group's cells (magic_c2.cpp).
-constexpr std::uint32_t kPacketNext = 0x7E0670;
-constexpr std::uint32_t kS = 0x903850, kV = 0x9037A0, kFrameSet = 0x9039D8;
+// kPacketNext: now Gfx_PacketNext (symbols.toml).
+// kV: now Prim_VertexScratch (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+constexpr std::uint32_t kS = 0x903850;
 constexpr std::uint32_t kMotes = 0x68E1B8, kStreaks = 0x698EC0, kSparks = 0x6A2D38;
 constexpr std::uint32_t kRecord = 0x84, kStreak = 0x3C;
 
@@ -281,7 +283,7 @@ std::uint32_t GroundAtHeight(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteDrawn(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 
@@ -343,11 +345,11 @@ const mh::Callee kCallees[] = {
 const mh::DataTable kTables[] = {{0x65B358, 2}, {0x65BC30, 5}, {0x65BC44, 4}};
 
 const mh::Region kRegions[] = {
-    {kPacketNext, 4},
+    {Gfx_PacketNext_addr, 4},
     {Key(g_packets), sizeof g_packets},
     {kS, 0x10},
-    {kV, 4},
-    {kFrameSet, 4},
+    {Prim_VertexScratch_addr, 4},
+    {BattleE2_AnimSet_addr, 4},
     {0x903802, 2},                          // Camera_ShiftY
     {0x905E69, 1},                          // MapView_Redraw
     {0x80E980, 0x20},                       // Gfx_ClutStrip row 26's source, the first sixteen
@@ -365,7 +367,7 @@ unsigned g_k;   // the function being fuzzed, for settle
 std::uint32_t g_streak;   // the streak handed to DrawStreak / InitStreak, for Disturb
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 unsigned char* ValidOwner(std::uint32_t v) { return v & 4 ? mh::SpriteRecord(v) : mh::TaskAt(v); }
 unsigned char* Mote(unsigned i) { return mh::Mem(kMotes + i * kRecord); }
 unsigned char* Spark(unsigned i) { return mh::Mem(kSparks + i * kRecord); }
@@ -387,7 +389,7 @@ void Occupy(std::uint32_t pool, unsigned count, unsigned m) {
 void Seed(unsigned k) {
     g_k = k;
     unsigned char* const sc = Sc();
-    mh::SetPointer(kPacketNext, PacketAt(mh::Next()));
+    mh::SetPointer(Gfx_PacketNext_addr, PacketAt(mh::Next()));
     // The walks make each live record the owner a recorder writes through:
     // every record's +0x80 a real slot or record.
     for (unsigned i = 0; i < 48; ++i) mh::SetPointer(kMotes + i * kRecord + 0x80, ValidOwner(mh::Next()));
@@ -498,9 +500,9 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     const auto b = static_cast<unsigned char>(h >> 24);
     switch ((h >> 8) % 7) {
-    case 0: mh::SetPointer(kPacketNext, PacketAt(v)); break;
+    case 0: mh::SetPointer(Gfx_PacketNext_addr, PacketAt(v)); break;
     case 1: SetWord(mh::Mem(kS + 2 * (v % 8)), h >> 16); break;
-    case 2: SetWord(mh::Mem(kV + 2 * (v % 2)), h >> 16); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 2)), h >> 16); break;
     case 3:
         // half the time the streak being drawn, its points
         if (v & 1)
@@ -509,7 +511,7 @@ void Disturb(std::uint32_t h) {
             Streak(v % 128)[(h >> 20) % kStreak] = b;
         break;
     case 4: (v & 1 ? Mote(v % 48) : Spark(v % 64))[(h >> 20) % 0x80] = b; break;
-    case 5: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 5: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     default: {
         unsigned char* const member = mh::PartyOf(static_cast<unsigned char>(v % 3));
         member[0] = B(member[0] ^ 1);

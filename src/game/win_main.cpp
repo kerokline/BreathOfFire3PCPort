@@ -839,7 +839,7 @@ void WINAPI TracedPostQuitMessage(int code) {
     LogStack("PostQuitMessage", __builtin_frame_address(0));
     g_real_post_quit(code);
 }
-constexpr U kImpMessageBoxA = 0x5C4174;
+// kImpMessageBoxA: now PsxRest_ImportMessageBoxA (symbols.toml).
 int (WINAPI* g_real_message_box)(HWND, const char*, const char*, UINT);
 int WINAPI TracedMessageBoxA(HWND h, const char* text, const char* caption, UINT type) {
     LogStack("MessageBoxA", __builtin_frame_address(0));
@@ -868,7 +868,7 @@ void WinMain_Inject() {
         PatchImport(kImpExitProcess, g_real_exit, &TracedExitProcess);
         PatchImport(kImpTerminateProcess, g_real_terminate, &TracedTerminateProcess);
         PatchImport(kImpPostQuitMessage, g_real_post_quit, &TracedPostQuitMessage);
-        PatchImport(kImpMessageBoxA, g_real_message_box, &TracedMessageBoxA);
+        PatchImport(PsxRest_ImportMessageBoxA_addr, g_real_message_box, &TracedMessageBoxA);
         if (!AddVectoredExceptionHandler(0, TracedUnhandled)) bof3::Fatal("exittrace: no vectored handler");
         bof3::Log("exittrace   ExitProcess, TerminateProcess, PostQuitMessage and MessageBoxA log their callers; "
                   "breakpoints and single steps no handler took are logged");

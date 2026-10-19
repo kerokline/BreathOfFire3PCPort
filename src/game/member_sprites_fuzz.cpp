@@ -109,7 +109,7 @@ unsigned char* SpriteChoice(unsigned v) {
     case 0: return Member(0);
     case 1: return Member(1);
     case 2: return Member(2);
-    case 3: return At(at::kObject905DA0);
+    case 3: return At(FieldEvent_Object905DA0_addr);
     default: return g_scratch;
     }
 }
@@ -129,7 +129,7 @@ void FixObject(unsigned char* o, bool state) {
 void Fix() {
     for (unsigned i = 0; i < 3; ++i) FixObject(Member(i), true);
     FixObject(g_scratch, true);
-    FixObject(At(at::kObject905DA0), false);
+    FixObject(At(FieldEvent_Object905DA0_addr), false);
 }
 
 // A position near the leader's: 16.16, within about eight cells.
@@ -150,7 +150,7 @@ void Disturb(std::uint32_t salt) {
     case 7: Field_Request = static_cast<unsigned char>((h >> 8) % 3 == 0 ? 0 : h >> 16); break;
     case 8: At(at::kActorRecords)[(h >> 8) % (kActors * kActorBytes)] = static_cast<unsigned char>(h >> 24); break;
     case 9: g_scratch[(h >> 8) % sizeof g_scratch] = static_cast<unsigned char>(h >> 24); break;
-    case 10: At(at::kObject905DA0)[(h >> 8) % 0xC8] = static_cast<unsigned char>(h >> 24); break;
+    case 10: At(FieldEvent_Object905DA0_addr)[(h >> 8) % 0xC8] = static_cast<unsigned char>(h >> 24); break;
     case 11: Cells()[(h >> 8) % 0x100] = static_cast<unsigned char>(h >> 24); break;
     case 12: c[8] = static_cast<unsigned char>((h >> 8) % 8); break;
     case 13: SetLong(c + 0xC, 0); SetLong(c + 0x10, 0); break;
@@ -258,7 +258,7 @@ unsigned char __cdecl StubStepAhead() {
         const unsigned char* const c = Sprite_Current;
         const bool on = Hash(243) % 3 == 0;
         SetLong(At(at::kAimX), Long(c + 0x34) + (on ? 0 : static_cast<std::int32_t>(Hash(241) % 0x100000) - 0x80000));
-        SetLong(At(at::kAimZ), Long(c + 0x38) + (on ? 0 : static_cast<std::int32_t>(Hash(242) % 0x100000) - 0x80000));
+        SetLong(At(Scratch_Swap_addr), Long(c + 0x38) + (on ? 0 : static_cast<std::int32_t>(Hash(242) % 0x100000) - 0x80000));
     }
     static const unsigned char kAnswers[] = {0, 1, 1, 1, 5, 6, 0xFF, 2};
     return kAnswers[(h >> 8) % 8];
@@ -717,7 +717,7 @@ Args Seed(unsigned k) {
         SetWord(cur + 0x38, kFractions[Next() % 4]);
         if (Half()) cur[0x70] = 0;
         if (Half()) cur[5] = 0;
-        if (OneIn(4)) Sprite_Current = At(at::kObject905DA0);
+        if (OneIn(4)) Sprite_Current = At(FieldEvent_Object905DA0_addr);
         x.a = Stale16(Next());
         x.b = Stale16(Next());
         x.c = Stale16(Half() ? x.a + Next() % 3 - 1 : Next());
@@ -764,7 +764,7 @@ void SelfTest() {
         }
         theirs[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, n);
     }
-    AimTable(theirs[kMemberFrame], kClones[kMemberFrame], 0x10, 0x24, at::kMemberStates, g_member_states);
+    AimTable(theirs[kMemberFrame], kClones[kMemberFrame], 0x10, 0x24, Member_States_addr, g_member_states);
     AimTable(theirs[kControl], kClones[kControl], 0xB, 0x14, at::kControlStates, g_control_states);
     move_script::Relocate(theirs[kFollow], 0x51AD60, 0x260, {0xB8, 0x244, 7});
     move_script::Relocate(theirs[kStepAhead], 0x51B430, 0x198, {0x118, 0x178, 8});

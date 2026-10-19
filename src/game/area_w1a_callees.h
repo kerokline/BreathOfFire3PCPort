@@ -21,15 +21,15 @@ namespace at {
 
 // The message box's answer to a choice (docs/item-use.md section 5) and the
 // message word a choice handler leaves (0xFFFF: no new message).
-constexpr std::uint32_t kChoiceAnswer = 0x7DEE67;
+// kChoiceAnswer: now AreaW0c_ChoiceAnswer (symbols.toml).
 constexpr std::uint32_t kMessage = 0x7DEE48;
 // A byte some choices set to 6 beside the message they open (area 37's too).
-constexpr std::uint32_t kAnswerMark = 0x9398CF;
+// kAnswerMark: now AreaW0c_AnswerMark (symbols.toml).
 // The field-frame mode bytes: the tail kind Field_ModeTailRun runs by
 // (Field_ModeTailKinds 0x662CE8), its state, a sub-kind.
-constexpr std::uint32_t kTailKind = 0x9039F3;
-constexpr std::uint32_t kTailState = 0x9039F4;
-constexpr std::uint32_t kTailSub = 0x9039F5;
+// kTailKind: now AreaW0a_TailKind (symbols.toml).
+// kTailState: now AreaW0c_TailState (symbols.toml).
+// kTailSub: now AreaW0c_TailSub (symbols.toml).
 // Field_ScriptFlags' high byte (the original ors 0x10 into it as a byte).
 constexpr std::uint32_t kScriptFlagsHigh = 0x9039A3;
 // The movement script's counters 0 and 1 (MoveScript_CounterOps).
@@ -43,14 +43,14 @@ constexpr std::uint32_t kVar7Step = 0x8034E5;
 // The story flags (Flags_Set / Flags_Test's bank), the lever flags' row
 // (Cond_Flags + 0x20, flags 8..0xB are the low nibble of 0x903FB1), and the
 // row pointer the chapters' flag tests take (docs/field-modes.md).
-constexpr std::uint32_t kStoryFlags = 0x904030;
-constexpr std::uint32_t kLeverRow = 0x903FB0;
-constexpr std::uint32_t kLeverNibble = 0x903FB1;
-constexpr std::uint32_t kFlagRow = 0x929ED0;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml).
+// kLeverRow: now Cond_Flags[0x20] (symbols.toml).
+// kLeverNibble: now Cond_Flags[0x21] (symbols.toml).
+// kFlagRow: now AreaW0c_FlagRow (symbols.toml).
 // The party lists' first bytes (Cond_Flags' tail): the members in the party.
-constexpr std::uint32_t kPartyList0 = 0x904062;
-constexpr std::uint32_t kPartyList1 = 0x904063;
-constexpr std::uint32_t kPartyList2 = 0x904064;
+// kPartyList0: now Cond_Flags[0xd2] (symbols.toml).
+// kPartyList1: now Cond_Flags[0xd3] (symbols.toml).
+// kPartyList2: now Cond_Flags[0xd4] (symbols.toml).
 // The 32 key-item bytes (the key-item list, docs/char-stats.md).
 constexpr std::uint32_t kKeyItems = 0x904554;
 constexpr unsigned kKeyItemCount = 0x20;
@@ -60,10 +60,10 @@ constexpr std::uint32_t kFocusObject = 0x903804;
 constexpr std::uint32_t kEntryZone = 0x905E68;
 // The leader's record (ObjTrio): its +8 (direction), +0x89; records 1, 2.
 constexpr std::uint32_t kLeader = 0x802D40;
-constexpr std::uint32_t kLeaderByte8 = 0x802D48;
-constexpr std::uint32_t kLeaderByte89 = 0x802DC9;
-constexpr std::uint32_t kPartyRecord1 = 0x802E8C;
-constexpr std::uint32_t kPartyRecord2 = 0x802FD8;
+// kLeaderByte8: now ObjTrio[8] (symbols.toml).
+// kLeaderByte89: now ObjTrio[0x89] (symbols.toml).
+// kPartyRecord1: now Field_Members[4] (symbols.toml).
+// kPartyRecord2: now ObjTrio[0x298] (symbols.toml).
 // The cell step per direction: two signed bytes (x, z), 2 bytes apart
 // (event_ops_callees.h's kCellDelta).
 constexpr std::uint32_t kCellDelta = 0x66971C;
@@ -72,32 +72,32 @@ constexpr std::uint32_t kEffectStride = 0x80;
 constexpr std::uint32_t kDrawItemStride = 0x48;
 // Named cells by address, for the fuzz's regions (symbols.gen.h spells each
 // name as a macro of its value):
-constexpr std::uint32_t kEffectObjects = 0x7E11E0;     // Effect_Objects
-constexpr std::uint32_t kActiveMember = 0x9035A4;      // Field_ActiveMember
-constexpr std::uint32_t kScriptObject = 0x929E80;      // MoveScript_Object
-constexpr std::uint32_t kInputHeld = 0x7E1BE8;         // Input_Held (read as a dword)
-constexpr std::uint32_t kPacketNext = 0x7E0670;        // Gfx_PacketNext
-constexpr std::uint32_t kOrigin = 0x7E0688;            // MapView_Origin: x, z words
-constexpr std::uint32_t kViewColumn = 0x929F20;        // MapView_Column (s16), MapView_HeightScale, MapView_Row (s16)
-constexpr std::uint32_t kViewCells = 0x904F20;         // MapView_Cells: 56 rows of 28 words
+// kEffectObjects: now Effect_Objects (symbols.toml). Effect_Objects
+// kActiveMember: now Field_ActiveMember (symbols.toml). Field_ActiveMember
+// kScriptObject: now MoveScript_Object (symbols.toml). MoveScript_Object
+// kInputHeld: now Input_Held (symbols.toml). Input_Held (read as a dword)
+// kPacketNext: now Gfx_PacketNext (symbols.toml). Gfx_PacketNext
+// kOrigin: now MapView_Origin (symbols.toml). MapView_Origin: x, z words
+// kViewColumn: now MapView_Column (symbols.toml). MapView_Column (s16), MapView_HeightScale, MapView_Row (s16)
+// kViewCells: now MapView_Cells (symbols.toml). MapView_Cells: 56 rows of 28 words
 constexpr unsigned kViewCellCount = 56 * 28;
-constexpr std::uint32_t kDrawItems = 0x905E80;         // DrawItems
-constexpr std::uint32_t kTintRecords = 0x7E0700;       // MoveScript_TintRecords: 12 bytes a record
-constexpr std::uint32_t kMapHeader = 0x8CB580;         // AreaMap_Header: the loaded area block
-constexpr std::uint32_t kCellBase = 0x8CB5A4;          // AreaMap_CellBase (the low word used)
-constexpr std::uint32_t kPatchBase = 0x8CB5A8;         // AreaMap_PatchBase (the low word used)
+// kDrawItems: now DrawItems (symbols.toml). DrawItems
+// kTintRecords: now MoveScript_TintRecords (symbols.toml). MoveScript_TintRecords: 12 bytes a record
+// kMapHeader: now AreaMap_Header (symbols.toml). AreaMap_Header: the loaded area block
+// kCellBase: now AreaMap_CellBase (symbols.toml). AreaMap_CellBase (the low word used)
+// kPatchBase: now AreaMap_PatchBase (symbols.toml). AreaMap_PatchBase (the low word used)
 
 // --- the areas' tables (symbols.toml [[data]]) ---
 
-constexpr std::uint32_t kArea38EffectBytes = 0x5F14E8;  // Area38_EffectBytes: s8 by a party-list byte
-constexpr std::uint32_t kArea39States = 0x5F3EA4;       // Area39_States, 2
+// kArea38EffectBytes: now Area38_EffectBytes (symbols.toml). Area38_EffectBytes: s8 by a party-list byte
+// kArea39States: now Area39_States (symbols.toml). Area39_States, 2
 constexpr unsigned kArea39StateCount = 2;
-constexpr std::uint32_t kArea39DriftSteps = 0x5F3EAC;   // Area39_DriftSteps: 16 s8
-constexpr std::uint32_t kArea40Pattern = 0x5F4C1C;      // Area40_Pattern: 4 x 4 bytes, row by z
-constexpr std::uint32_t kArea40PlaceOp = 0x5F4C2C;      // Area40_PlaceOp: EventOp_0x's op
-constexpr std::uint32_t kArea40InputMap = 0x5F4C40;     // Area40_InputMap: 16 bytes
-constexpr std::uint32_t kArea41GiveMessages = 0x5F5F54; // Area41_GiveMessages: 2 words by the s8 answer
-constexpr std::uint32_t kArea41States = 0x5F5F58;       // Area41_States, 4
+// kArea39DriftSteps: now Area39_DriftSteps (symbols.toml). Area39_DriftSteps: 16 s8
+// kArea40Pattern: now Area40_Pattern (symbols.toml). Area40_Pattern: 4 x 4 bytes, row by z
+// kArea40PlaceOp: now Area40_PlaceOp (symbols.toml). Area40_PlaceOp: EventOp_0x's op
+// kArea40InputMap: now Area40_InputMap (symbols.toml). Area40_InputMap: 16 bytes
+// kArea41GiveMessages: now Area41_GiveMessages (symbols.toml). Area41_GiveMessages: 2 words by the s8 answer
+// kArea41States: now Area41_States (symbols.toml). Area41_States, 4
 constexpr unsigned kArea41StateCount = 4;
 constexpr std::uint32_t kArea41TriggerBase = 0x5F5F2D;  // + object +0x86: Area41_TriggerFlags 0x5F5F68 at ids 59, 60
 

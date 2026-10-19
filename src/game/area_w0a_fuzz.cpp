@@ -149,7 +149,7 @@ const ah::Clone kArea15[] = {
     {"Area15_RunStatesB", 0x401AF0, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, Ours(&::Area15_RunStatesB), 0, false, Shape::kHandler},
     {"Area15_StateB0", 0x401B10, 0x61, kCalls401B10, 2, nullptr, 0, nullptr, 0, Ours(&::Area15_StateB0), 0, false, Shape::kState},
 };
-const ah::DataTable kTables15[] = {{at::kArea15StatesA, at::kArea15States}, {at::kArea15StatesB, at::kArea15States}};
+const ah::DataTable kTables15[] = {{Area15_StatesA_addr, at::kArea15States}, {Area15_StatesB_addr, at::kArea15States}};
 
 // ---- the callees the standard set lacks ------------------------------------------
 
@@ -172,18 +172,20 @@ const ah::Callee kCallees[] = {
 
 // ---- the state -------------------------------------------------------------------
 
-constexpr std::uint32_t kActiveMember = 0x9035A4, kScriptObject = 0x929E80, kCameraShift = 0x903800,
-                        kPassFlags = 0x7E0918;
+// kActiveMember: now Field_ActiveMember (symbols.toml).
+// kScriptObject: now MoveScript_Object (symbols.toml).
+// kPassFlags: now Draw_PassFlags (symbols.toml).
+constexpr std::uint32_t kCameraShift = 0x903800;
 std::uint32_t g_zones15, g_zones_other;   // area 15's zone list and another area's
 unsigned g_other_area;
 ah::Region g_regions[9];
 unsigned g_region_n;
 
 void BuildRegions() {
-    g_zones15 = static_cast<std::uint32_t>(move_script::Long(ah::Mem(at::kZoneLists + 15 * 4)));
+    g_zones15 = static_cast<std::uint32_t>(move_script::Long(ah::Mem(Area_StateRecords_addr + 15 * 4)));
     g_zones_other = 0;
     for (unsigned a = 0; a < 200 && !g_zones_other; ++a) {
-        const auto p = static_cast<std::uint32_t>(move_script::Long(ah::Mem(at::kZoneLists + a * 4)));
+        const auto p = static_cast<std::uint32_t>(move_script::Long(ah::Mem(Area_StateRecords_addr + a * 4)));
         if (a != 15 && p && (p + 0x18 <= g_zones15 || p >= g_zones15 + 0x18)) {
             g_zones_other = p;
             g_other_area = a;
@@ -191,13 +193,13 @@ void BuildRegions() {
     }
     if (!g_zones15 || !g_zones_other) bof3::Fatal("area_w0a: no zone list for area 15 or another area");
     const ah::Region r[] = {
-        {kActiveMember, 4},                                   // Field_ActiveMember
-        {kScriptObject, 4},                                   // MoveScript_Object
-        {at::kFlagBank, 4},                                   // the flag bank's pointer
+        {Field_ActiveMember_addr, 4},                         // Field_ActiveMember
+        {MoveScript_Object_addr, 4},                          // MoveScript_Object
+        {AreaW0c_FlagRow_addr, 4},                            // the flag bank's pointer
         {kCameraShift, 4},                                    // Camera_ShiftX, Camera_ShiftY
-        {at::kByte9398CF, 1},
-        {kPassFlags, 1},                                      // Draw_PassFlags
-        {at::kEffects, at::kEffectCount * at::kEffectStride}, // Effect_Objects
+        {AreaW0c_AnswerMark_addr, 1},
+        {Draw_PassFlags_addr, 1},                             // Draw_PassFlags
+        {Effect_Objects_addr, at::kEffectCount * at::kEffectStride}, // Effect_Objects
         {g_zones15, 0x18},                                    // area 15's zone records 0..2
         {g_zones_other, 0x18},
     };
@@ -209,7 +211,7 @@ void BuildRegions() {
 // objects (Sprite_ObjectsExtra), a field object, or a party record.
 unsigned char* Record(std::uint32_t h) {
     switch (h % 3) {
-    case 0: return ah::Mem(ah::at::kObjectsExtra + (h >> 2) % 4 * ah::at::kObjectStride);
+    case 0: return ah::Mem(Sprite_ObjectsExtra_addr + (h >> 2) % 4 * ah::at::kObjectStride);
     case 1: return ah::Object(h >> 2);
     default: return ah::PartyOf(static_cast<unsigned char>(h >> 2));
     }
@@ -221,18 +223,18 @@ const ah::Clone* g_clones;
 
 void Seed(unsigned k) {
     // every round: the three pointers some function follows, inside the state
-    ah::SetPointer(kActiveMember, Record(ah::Next()));
-    ah::SetPointer(kScriptObject, Record(ah::Next()));
-    ah::SetPointer(at::kFlagBank, ah::Mem(ah::at::kCondFlags + ah::Next() % 0x1C0));
+    ah::SetPointer(Field_ActiveMember_addr, Record(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, Record(ah::Next()));
+    ah::SetPointer(AreaW0c_FlagRow_addr, ah::Mem(Cond_Flags_addr + ah::Next() % 0x1C0));
     // the cursor row: the rows a handler tests, its neighbours, the s8 edges
-    if (ah::Often()) ah::Mem(at::kCursor)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 3, 0xFF, 0x80, 0x7F));
+    if (ah::Often()) ah::Mem(AreaW0c_ChoiceAnswer_addr)[0] = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 3, 0xFF, 0x80, 0x7F));
     unsigned char* const cur = Sprite_Current;
     switch (g_clones[k].base) {
     case 0x4010D0: case 0x4015B0:
         // the difference the index divides: any pointer (none is followed)
-        if (ah::Half()) move_script::SetLong(ah::Mem(kActiveMember), static_cast<std::int32_t>(ah::Next()));
+        if (ah::Half()) move_script::SetLong(ah::Mem(Field_ActiveMember_addr), static_cast<std::int32_t>(ah::Next()));
         else if (ah::Half())
-            ah::SetPointer(kActiveMember, ah::Mem(area_harness::at::kObjects + static_cast<std::uint32_t>(AH_PICK(0, 0xA3, 0xA4, 0xA5, 0x1478))));
+            ah::SetPointer(Field_ActiveMember_addr, ah::Mem(Sprite_Objects_addr + static_cast<std::uint32_t>(AH_PICK(0, 0xA3, 0xA4, 0xA5, 0x1478))));
         break;
     case 0x401100: {
         // variable 5 around its bound 6, Frame_Counter's low three bits
@@ -270,7 +272,7 @@ void Seed(unsigned k) {
         break;
     case 0x401AA0:
         if (ah::Often()) cur[0xA] = static_cast<unsigned char>(AH_PICK(0, 1, 2, 0xFF, 0x80));
-        if (ah::Half()) SetWord(ah::Mem(at::kTimer), AH_PICK(0, 0, 1, 0xFFFF, 0x100));
+        if (ah::Half()) SetWord(ah::Mem(MoveScript_PartyRecords_addr + 0x66), AH_PICK(0, 0, 1, 0xFFFF, 0x100));
         break;
     default: break;
     }
@@ -283,16 +285,16 @@ void Seed(unsigned k) {
 void Disturb(std::uint32_t h) {
     const std::uint32_t v = h >> 8;
     switch ((h >> 24) % 10) {
-    case 0: ah::SetPointer(kActiveMember, Record(v)); break;
-    case 1: ah::SetPointer(kScriptObject, Record(v)); break;
-    case 2: ah::Mem(at::kTailKind)[0] = static_cast<unsigned char>(v); break;
-    case 3: ah::Mem(at::kTailArg)[0] = static_cast<unsigned char>(v); break;
+    case 0: ah::SetPointer(Field_ActiveMember_addr, Record(v)); break;
+    case 1: ah::SetPointer(MoveScript_Object_addr, Record(v)); break;
+    case 2: ah::Mem(AreaW0a_TailKind_addr)[0] = static_cast<unsigned char>(v); break;
+    case 3: ah::Mem(AreaW0c_TailSub_addr)[0] = static_cast<unsigned char>(v); break;
     case 4: ah::Mem(at::kEffectSlot)[0] = static_cast<unsigned char>(v); break;
-    case 5: SetWord(ah::Mem(at::kTimer), v & 1 ? 0 : v >> 4); break;
-    case 6: ah::Mem(at::kEffects + (v >> 4) % (at::kEffectCount * at::kEffectStride))[0] = static_cast<unsigned char>(v); break;
+    case 5: SetWord(ah::Mem(MoveScript_PartyRecords_addr + 0x66), v & 1 ? 0 : v >> 4); break;
+    case 6: ah::Mem(Effect_Objects_addr + (v >> 4) % (at::kEffectCount * at::kEffectStride))[0] = static_cast<unsigned char>(v); break;
     case 7: ah::Mem(g_zones15 + (v >> 4) % 0x18)[0] = static_cast<unsigned char>(v); break;
-    case 8: SetWord(ah::Mem(kCameraShift + (v & 2)), v >> 4); break;
-    default: ah::Mem(at::kByte9398CF)[0] = static_cast<unsigned char>(v); break;
+    case 8: SetWord(ah::Mem(Camera_ShiftX_addr + (v & 2)), v >> 4); break;
+    default: ah::Mem(AreaW0c_AnswerMark_addr)[0] = static_cast<unsigned char>(v); break;
     }
 }
 
@@ -301,7 +303,7 @@ void Disturb(std::uint32_t h) {
 void Args(unsigned k, std::uint32_t* a) {
     if (g_clones[k].base == 0x401230) {
         a[0] = Key(ah::Object(a[0]));
-        a[1] = at::kStoryFlags;
+        a[1] = (Cond_Flags_addr + 0xa0);
     }
 }
 

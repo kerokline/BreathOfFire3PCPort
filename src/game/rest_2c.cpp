@@ -75,7 +75,7 @@ void Jump(U table, unsigned count, unsigned index, const char* who) {
 // 0x118 by 0x13, in the window colour (the original pushes the byte in a
 // register whose upper bytes it never cleared; Menu_DrawTitleBox reads the
 // byte - shop_states.cpp's TitleBox).
-void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, B(at::kColour)); }
+void TitleBox(int y) { SH_CALL(Menu_DrawTitleBox)(0x14, y, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour)); }
 
 // System message `id` at (0x1C, 0x16), colour 0, to its end.
 void Message(unsigned id) {
@@ -108,7 +108,7 @@ U Win(unsigned n, unsigned off) { return at::kWindows + n * at::kWindowStride + 
 // test, the same instructions).
 unsigned char FormOf(unsigned char id) {
     if (id != 4) return id;
-    const unsigned story = B(at::kStoryByte) & 0x7F;
+    const unsigned story = AreaW0b_PartySet & 0x7F;
     return story == 5 || story == 0xC ? id : static_cast<unsigned char>(0xB);
 }
 
@@ -134,19 +134,19 @@ unsigned MasterMessage(unsigned char master, unsigned k) {
 // 0xFF less it is above t, else 0xFF; the third as the first. Each is a byte
 // operation (imul's low byte added).
 extern "C" void __cdecl MasterFigure_DrawFaded(void) {
-    const unsigned char r = B(at::kFigureRgb), g = B(at::kFigureRgb + 1), b = B(at::kFigureRgb + 2);
-    PutL(at::kFigureScale, L(at::kScaleTable + 4u * B(at::kFigureScaleIndex)));
-    const unsigned char step = B(at::kFigureFade);
+    const unsigned char r = Rest2c_FigureRgb, g = B(at::kFigureRgb + 1), b = B(at::kFigureRgb + 2);
+    Rest2c_FigureScale = L(at::kScaleTable + 4u * Rest2c_FigureScaleIndex);
+    const unsigned char step = Rest2c_FigureFade;
     const int t = 3 * step;
     const auto down = static_cast<unsigned char>(step * 0xFDu);   // imul 0xFD's low byte
-    B(at::kFigureRgb) = static_cast<int>(r) > t ? static_cast<unsigned char>(r + down) : 0;
+    Rest2c_FigureRgb = static_cast<int>(r) > t ? static_cast<unsigned char>(r + down) : 0;
     B(at::kFigureRgb + 1) = 0xFF - static_cast<int>(B(at::kFigureRgb + 1)) > t
                                 ? static_cast<unsigned char>(B(at::kFigureRgb + 1) + static_cast<unsigned char>(step * 3u))
                                 : 0xFF;
     B(at::kFigureRgb + 2) = static_cast<int>(B(at::kFigureRgb + 2)) > t ? static_cast<unsigned char>(B(at::kFigureRgb + 2) + down)
                                                                          : 0;
     SH_AT(void (__cdecl*)(U), at::kFigureDraw)(at::kFigure);
-    B(at::kFigureRgb) = r;
+    Rest2c_FigureRgb = r;
     B(at::kFigureRgb + 1) = g;
     B(at::kFigureRgb + 2) = b;
 }
@@ -155,12 +155,12 @@ extern "C" void __cdecl MasterFigure_DrawFaded(void) {
 // twelve bits are not 0, 0x40 less and kept to 0xFC0 (+6 = 0); else +6 = 1.
 // Then the faded draw (a tail jump in the original).
 extern "C" void __cdecl MasterFigure_TurnHome(void) {
-    const U angle = L(at::kFigureAngle);
+    const U angle = Rest2c_FigureAngle;
     if ((angle & 0xFFF) != 0) {
-        B(at::kFigureDone) = 0;
-        PutL(at::kFigureAngle, (angle - 0x40) & 0xFC0);
+        Rest2c_FigureDone = 0;
+        Rest2c_FigureAngle = (angle - 0x40) & 0xFC0;
     } else {
-        B(at::kFigureDone) = 1;
+        Rest2c_FigureDone = 1;
     }
     SH_CALL(MasterFigure_DrawFaded)();
 }
@@ -172,18 +172,18 @@ extern "C" void __cdecl MasterFigure_TurnHome(void) {
 // Below the target: set to it and +6 = 1; else +6 = 0. Then the faded draw.
 // The second call reads both coordinates again.
 extern "C" void __cdecl MasterFigure_Settle(void) {
-    const long first = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(at::kKind2X)), static_cast<long>(L(at::kKind2Z)));
-    const U target = (static_cast<U>(static_cast<int>(static_cast<short>(first))) << 16) + L(at::kFigureLift) * 0xA00u;
-    const long second = SH_CALL(AreaMap_Elevation)(static_cast<long>(L(at::kKind2X)), static_cast<long>(L(at::kKind2Z)));
+    const long first = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
+    const U target = (static_cast<U>(static_cast<int>(static_cast<short>(first))) << 16) + Rest2c_FigureLift * 0xA00u;
+    const long second = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
     const U top = (static_cast<U>(static_cast<int>(static_cast<short>(second))) + 0x200u) << 16;
     const int fall = static_cast<int>(top - target) / 16;
-    const U y = L(at::kFigureY) - static_cast<U>(fall);
-    PutL(at::kFigureY, y);
+    const U y = Rest2c_FigureY - static_cast<U>(fall);
+    Rest2c_FigureY = y;
     if (static_cast<int>(y) < static_cast<int>(target)) {
-        PutL(at::kFigureY, target);
-        B(at::kFigureDone) = 1;
+        Rest2c_FigureY = target;
+        Rest2c_FigureDone = 1;
     } else {
-        B(at::kFigureDone) = 0;
+        Rest2c_FigureDone = 0;
     }
     SH_CALL(MasterFigure_DrawFaded)();
 }
@@ -194,7 +194,7 @@ extern "C" void __cdecl MasterFigure_Hold(void) { SH_CALL(MasterFigure_DrawFaded
 // original 0x57F4F0, MasterFigure_States[5]: the angle + 0x20 (R2B's
 // 0x57F330, entry 1, takes 0x20 off), then the faded draw.
 extern "C" void __cdecl MasterFigure_TurnOn(void) {
-    PutL(at::kFigureAngle, L(at::kFigureAngle) + 0x20);
+    Rest2c_FigureAngle = Rest2c_FigureAngle + 0x20;
     SH_CALL(MasterFigure_DrawFaded)();
 }
 
@@ -209,9 +209,9 @@ extern "C" void __cdecl MasterFigure_TurnOn(void) {
 extern "C" void __cdecl InnPrompt_NotEnough(void) {
     SH_CALL(SaveMenu_DrawChoices)(0x6E, 0x4C);
     TitleBox(0x12);
-    if (B(at::kObject) != 0xFF) SH_CALL(Menu_DrawMoneyBox)(0x62, 0x28, 0, L(at::kZenny));
+    if (ModeStates_ShopObject != 0xFF) SH_CALL(Menu_DrawMoneyBox)(0x62, 0x28, 0, Party_Zenny);
     Message(0xA2);
-    if (Word(At(at::kPressed)) != 0) --B(at::kStep);
+    if (Input_Pressed != 0) --FieldS_Step;
 }
 
 // original 0x580010, FieldSave_States[4] (FieldSave_Confirm's yes): the title
@@ -225,15 +225,15 @@ extern "C" void __cdecl FieldSave_Write(void) {
     Message(0x99);
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
     SH_CALL(Save_BuildBlock)();
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kPath)), reinterpret_cast<const char*>(At(at::kPathFormat)), L(at::kSlot));
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kPath)), reinterpret_cast<const char*>(At(at::kPathFormat)), Rest2c_Slot);
     const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(At(at::kPath)), at::kSaveSize);
     if (written == -1) return;
-    const U slot = L(at::kSlot);
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
+    const U slot = Rest2c_Slot;
+    const auto step = static_cast<unsigned char>(FieldS_Step + 1);
     B(at::kTimer) = 0x1E;
-    B(at::kStep) = step;
+    FieldS_Step = step;
     CopySummary(slot, "FieldSave_Write");
-    B(at::kInnCursor) = 2;
+    ShopStates_Choice = 2;
 }
 
 // original 0x5800D0, FieldSave_States[5]: the title box, system message 0x8F,
@@ -245,15 +245,15 @@ extern "C" void __cdecl FieldSave_Written(void) {
     TitleBox(0x12);
     Message(0x8F);
     SH_CALL(SaveMenu_DrawSlots)(0x20, 0x30, 0);
-    B(at::kSaveBack) = 1;
-    if (Word(At(at::kPressed)) == 0) {
+    Rest2c_SaveBack = 1;
+    if (Input_Pressed == 0) {
         const auto timer = static_cast<unsigned char>(B(at::kTimer) - 1);
         B(at::kTimer) = timer;
         if (timer != 0) return;
     }
     B(at::kTimer) = 0;
     SH_CALL(Sound_PlayEffect)(0x104);
-    ++B(at::kStep);
+    ++FieldS_Step;
 }
 
 // original 0x580230, FieldSave_States[8] (FieldSave_End's question, system
@@ -263,13 +263,13 @@ extern "C" void __cdecl FieldSave_Written(void) {
 extern "C" void __cdecl FieldSave_PromptAnswer(void) {
     TitleBox(0x12);
     if ((B(at::kMsgFlags) & 2) == 0) return;
-    if (B(at::kAnswer) == 0) {
+    if (static_cast<unsigned char>(FieldS_Answer) == 0) {
         B(at::kTimer) = 0;
-        ++B(at::kState);
+        ++FieldS_State;
         return;
     }
-    B(at::kState) = 3;
-    B(at::kStep) = 0;
+    FieldS_State = 3;
+    FieldS_Step = 0;
 }
 
 // original 0x580280, Inn_Steps[4] (the way out): the title box at 0x12 - 20 *
@@ -284,10 +284,10 @@ extern "C" void __cdecl Inn_TitleOut(void) {
     const auto timer = static_cast<unsigned char>(B(at::kTimer) + 1);
     B(at::kTimer) = timer;
     if (timer != 5) return;
-    B(at::kMode) = 1;
-    B(at::kState) = 0;
-    const unsigned area = Word(At(at::kArea));
-    if (B(at::kInputFlags) == 0x40 || area == 0xBC || area == 0x85 || area == 0xC1) B(at::kObject) = B(at::kKeptObject);
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
+    const unsigned area = Game_AreaNumber;
+    if (Field_InputFlags == 0x40 || area == 0xBC || area == 0x85 || area == 0xC1) ModeStates_ShopObject = AreaW3c_Load0F;
 }
 
 // ===========================================================================
@@ -295,16 +295,16 @@ extern "C" void __cdecl Inn_TitleOut(void) {
 // ===========================================================================
 
 // original 0x580300: `jmp [Rest_States + 4 * 0x929F01]`.
-extern "C" void __cdecl Rest_Dispatch(void) { Jump(at::kRestStates, 7, B(at::kState), "Rest_Dispatch"); }
+extern "C" void __cdecl Rest_Dispatch(void) { Jump(Rest_States_addr, 7, FieldS_State, "Rest_Dispatch"); }
 
 // original 0x580560, Rest_States[2]: black, Sound_LoadStream(0) (the jingle),
 // the state up, the timer 0x96.
 extern "C" void __cdecl Rest_LoadJingle(void) {
     SH_CALL(Menu_DrawBlackScreen)();
     SH_CALL(Sound_LoadStream)(0);
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+    const auto state = static_cast<unsigned char>(FieldS_State + 1);
     B(at::kTimer) = 0x96;
-    B(at::kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x580590, Rest_States[3]: black; a timer above 0 runs down and
@@ -318,30 +318,30 @@ extern "C" void __cdecl Rest_WaitJingle(void) {
         if (timer - 1 != 0) return;
     }
     if (SH_CALL(Sound_StreamDone)() == 0) return;
-    ++B(at::kState);
+    ++FieldS_State;
     SH_CALL(Transition_Start)(1);
 }
 
 // original 0x5805D0, Rest_States[4]: when the wait word 0x66C810 is 0:
 // Party_RestoreAll(0) and the state up (read after the call).
 extern "C" void __cdecl Rest_Restore(void) {
-    if (Word(At(at::kWait)) != 0) return;
+    if (MoveScript_WaitWordDA != 0) return;
     SH_CALL(Party_RestoreAll)(0);
-    ++B(at::kState);
+    ++FieldS_State;
 }
 
 // original 0x580600, Rest_States[5]: mode 1 (ShopMode_End), the state 0.
 extern "C" void __cdecl Rest_End(void) {
-    B(at::kMode) = 1;
-    B(at::kState) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
 }
 
 // original 0x580610, Rest_States[6] (Rest_Begin's, with its message 0xEF):
 // once the message is done (0x7DEE44 bit 1), mode 1 and the state 0.
 extern "C" void __cdecl Rest_EndAfterMessage(void) {
     if ((B(at::kMsgFlags) & 2) == 0) return;
-    B(at::kMode) = 1;
-    B(at::kState) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
 }
 
 // ===========================================================================
@@ -383,9 +383,9 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     PutL(0x9046A4, L(0x903588));
     B(0x903A03) = B(0x90384B);
     PutL(0x9046A8, L(0x90358C));
-    PutW(0x903A04, Word(At(at::kArea)));
+    PutW(0x903A04, Game_AreaNumber);
     PutL(0x9046A0, L(0x903584));
-    const unsigned record = B(at::kMemberRecord + B(at::kPartyList));
+    const unsigned record = B(at::kMemberRecord + Cond_Flags[0xd2]);
     PutW(0x9046AC, Word(At(0x903590)));
     PutW(0x903A50, 0);
     const U name = at::kRecords + (g_summary_record0 ? 0u : record) * at::kRecordStride;   // DIV-0076
@@ -394,10 +394,10 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + 0x623 + i) = FormOf(B(at::kPartyList + i));
     B(0x904688) = B(0x903A7A);
     PutL(0x90468C, L(0x9040C8));
-    B(0x904689) = B(at::kColour);
+    B(0x904689) = static_cast<unsigned char>(BattleDraw_Colour);
     B(0x90468A) = B(0x903A5B);
     PutL(0x904690, L(0x903A7C));
-    const unsigned char flag = SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x92);
+    const unsigned char flag = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x92);
     B(0x904694) = flag;
     B(0x90412D) = B(0x9039A2);
     U sum = 0;
@@ -406,9 +406,9 @@ extern "C" void __cdecl Save_BuildBlock(void) {
         B(at::kStaging + i) = v;
         sum += v;
     }
-    std::memset(At(at::kStaging + at::kBlockBytes), 0, at::kStagingClear);
+    std::memset(At(Save_Staging_addr + at::kBlockBytes), 0, at::kStagingClear);
     PutW(at::kChecksum, sum);
-    CopySummary(L(at::kSlot), "Save_BuildBlock");
+    CopySummary(Rest2c_Slot, "Save_BuildBlock");
 }
 
 // original 0x5809C0 (the window procedure's F12, Game_WndProc): slot 0, the
@@ -416,13 +416,13 @@ extern "C" void __cdecl Save_BuildBlock(void) {
 // made again with the slot (read again), the file written; unless
 // Save_WriteFile answered -1, the slot's summary.
 extern "C" void __cdecl Save_QuickWrite(void) {
-    PutL(at::kSlot, 0);
+    Rest2c_Slot = 0;
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kPath)), reinterpret_cast<const char*>(At(at::kPathFormat)), 0u);
     SH_CALL(Save_BuildBlock)();
-    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kPath)), reinterpret_cast<const char*>(At(at::kPathFormat)), L(at::kSlot));
+    SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kPath)), reinterpret_cast<const char*>(At(at::kPathFormat)), Rest2c_Slot);
     const int written = SH_CALL(Save_WriteFile)(reinterpret_cast<const char*>(At(at::kPath)), at::kSaveSize);
     if (written == -1) return;
-    CopySummary(L(at::kSlot), "Save_QuickWrite");
+    CopySummary(Rest2c_Slot, "Save_QuickWrite");
 }
 
 // ===========================================================================
@@ -430,19 +430,19 @@ extern "C" void __cdecl Save_QuickWrite(void) {
 // ===========================================================================
 
 // original 0x580A40, ShopMode_States[6]: `jmp [PartyForm_States + 4 * 0x929F01]`.
-extern "C" void __cdecl PartyForm_Dispatch(void) { Jump(at::kPartyFormStates, 4, B(at::kState), "PartyForm_Dispatch"); }
+extern "C" void __cdecl PartyForm_Dispatch(void) { Jump(PartyForm_States_addr, 4, FieldS_State, "PartyForm_Dispatch"); }
 
 // original 0x5837E0, ShopMode_States[5]: `jmp [ShopResist_States + 4 * 0x929F01]`.
-extern "C" void __cdecl ShopResist_Dispatch(void) { Jump(at::kResistStates, 8, B(at::kState), "ShopResist_Dispatch"); }
+extern "C" void __cdecl ShopResist_Dispatch(void) { Jump(ShopResist_States_addr, 8, FieldS_State, "ShopResist_Dispatch"); }
 
 // original 0x584180, ShopMode_States[7]: `jmp [SharedList_States + 4 * 0x929F01]`.
-extern "C" void __cdecl SharedList_Dispatch(void) { Jump(at::kSharedListStates, 5, B(at::kState), "SharedList_Dispatch"); }
+extern "C" void __cdecl SharedList_Dispatch(void) { Jump(SharedList_States_addr, 5, FieldS_State, "SharedList_Dispatch"); }
 
 // original 0x582EB0, ShopMode_States[8]: `jmp [ShopSell_States + 4 * 0x929F01]`.
-extern "C" void __cdecl ShopSell_Dispatch(void) { Jump(at::kShopSellStates, 4, B(at::kState), "ShopSell_Dispatch"); }
+extern "C" void __cdecl ShopSell_Dispatch(void) { Jump(ShopSell_States_addr, 4, FieldS_State, "ShopSell_Dispatch"); }
 
 // original 0x582FF0, ShopSell_States[2]: `jmp [ShopSell_SellSteps + 4 * 0x929F02]`.
-extern "C" void __cdecl ShopSell_SellStep(void) { Jump(at::kShopSellSellSteps, 5, B(at::kStep), "ShopSell_SellStep"); }
+extern "C" void __cdecl ShopSell_SellStep(void) { Jump(ShopSell_SellSteps_addr, 5, FieldS_Step, "ShopSell_SellStep"); }
 
 // original 0x582EC0, ShopSell_States[0]: windows 0, 1 and 7 on (+0 1, +3 2,
 // +1 7), 0 at (0x14, -0x14) with +2 0 and +0x10 0, 1 at (0x68, -0x14) with
@@ -454,8 +454,8 @@ extern "C" void __cdecl ShopSell_Open(void) {
     B(Win(1, 2)) = 1;
     B(Win(1, 0)) = 1;
     B(Win(7, 0)) = 1;
-    B(at::kSellOn) = 1;
-    const auto state = static_cast<unsigned char>(B(at::kState) + 2);
+    ShopStates2_SellFlag = 1;
+    const auto state = static_cast<unsigned char>(FieldS_State + 2);
     B(Win(0, 3)) = 2;
     B(Win(1, 3)) = 2;
     B(Win(7, 3)) = 2;
@@ -482,9 +482,9 @@ extern "C" void __cdecl ShopSell_Open(void) {
     B(Win(7, 9)) = 0;
     PutW(Win(7, 0x10), 0);
     PutW(Win(7, 0x12), 0);
-    B(at::kSellFlag) = 0;
-    B(at::kState) = state;
-    B(at::kStep) = 0;
+    Rest2c_SellFlag = 0;
+    FieldS_State = state;
+    FieldS_Step = 0;
 }
 
 // original 0x582FB0, ShopSell_States[1]: windows 0, 1 and 7's +3 = 1 (out),
@@ -493,18 +493,18 @@ extern "C" void __cdecl ShopSell_Leave(void) {
     B(Win(0, 3)) = 1;
     B(Win(1, 3)) = 1;
     B(Win(7, 3)) = 1;
-    const auto state = static_cast<unsigned char>(B(at::kState) + 2);
+    const auto state = static_cast<unsigned char>(FieldS_State + 2);
     B(Win(21, 0)) = 0;
     B(at::kTimer) = 5;
-    B(at::kState) = state;
-    B(at::kStep) = 0;
+    FieldS_State = state;
+    FieldS_Step = 0;
 }
 
 // original 0x583000, ShopSell_States[3]: the timer down; at 0, mode 1.
 extern "C" void __cdecl ShopSell_LeaveWait(void) {
     const auto timer = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = timer;
-    if (timer == 0) B(at::kMode) = 1;
+    if (timer == 0) BattleE1_Mode = 1;
 }
 
 // ===========================================================================
@@ -512,24 +512,24 @@ extern "C" void __cdecl ShopSell_LeaveWait(void) {
 // ===========================================================================
 
 // original 0x583350, ShopMode_States[9]: `jmp [ShopBrowse_States + 4 * 0x929F01]`.
-extern "C" void __cdecl ShopBrowse_Dispatch(void) { Jump(at::kBrowseStates, 3, B(at::kState), "ShopBrowse_Dispatch"); }
+extern "C" void __cdecl ShopBrowse_Dispatch(void) { Jump(ShopBrowse_States_addr, 3, FieldS_State, "ShopBrowse_Dispatch"); }
 
 // original 0x583360, state 0: `jmp [ShopBrowse_OpenSteps + 4 * 0x929F02]`.
-extern "C" void __cdecl ShopBrowse_OpenStep(void) { Jump(at::kBrowseOpenSteps, 2, B(at::kStep), "ShopBrowse_OpenStep"); }
+extern "C" void __cdecl ShopBrowse_OpenStep(void) { Jump(ShopBrowse_OpenSteps_addr, 2, FieldS_Step, "ShopBrowse_OpenStep"); }
 
 // original 0x5833D0, state 1: `jmp [ShopBrowse_ChooseSteps + 4 * 0x929F02]`.
-extern "C" void __cdecl ShopBrowse_ChooseStep(void) { Jump(at::kBrowseChooseSteps, 3, B(at::kStep), "ShopBrowse_ChooseStep"); }
+extern "C" void __cdecl ShopBrowse_ChooseStep(void) { Jump(ShopBrowse_ChooseSteps_addr, 3, FieldS_Step, "ShopBrowse_ChooseStep"); }
 
 // original 0x5836A0, state 2: `jmp [ShopBrowse_CloseSteps + 4 * 0x929F02]`.
-extern "C" void __cdecl ShopBrowse_CloseStep(void) { Jump(at::kBrowseCloseSteps, 3, B(at::kStep), "ShopBrowse_CloseStep"); }
+extern "C" void __cdecl ShopBrowse_CloseStep(void) { Jump(ShopBrowse_CloseSteps_addr, 3, FieldS_Step, "ShopBrowse_CloseStep"); }
 
 // original 0x583370, open step 0: ShopBrowse_InitWindows, the step up (read
 // after it), the timer 6, Sound_PlayEffect(0x102).
 extern "C" void __cdecl ShopBrowse_Open(void) {
     SH_CALL(ShopBrowse_InitWindows)();
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
+    const auto step = static_cast<unsigned char>(FieldS_Step + 1);
     B(at::kTimer) = 6;
-    B(at::kStep) = step;
+    FieldS_Step = step;
     SH_CALL(Sound_PlayEffect)(0x102);
 }
 
@@ -539,9 +539,9 @@ extern "C" void __cdecl ShopBrowse_OpenWait(void) {
     const auto timer = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = timer;
     if (timer != 0) return;
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
-    B(at::kStep) = 0;
-    B(at::kState) = state;
+    const auto state = static_cast<unsigned char>(FieldS_State + 1);
+    FieldS_Step = 0;
+    FieldS_State = state;
 }
 
 // original 0x5833E0, choose step 0: the list in window 1 (+0xA the first
@@ -568,7 +568,7 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
     PutW(Win(0, 0x10), 0x32);
     B(Win(21, 0)) = 1;
     PutW(Win(21, 6), (rows * 13 + Word(At(Win(1, 6)))) & 0xFFFF);
-    const unsigned keys = SH_CALL(Input_AutoRepeat)(Word(At(at::kPressed)) & Sigma(0xF00C));
+    const unsigned keys = SH_CALL(Input_AutoRepeat)(Input_Pressed & Sigma(0xF00C));
     unsigned char cursor = B(Win(1, 0xB));
     const unsigned char kept = cursor;
     if (keys & 0x1000) {
@@ -610,8 +610,8 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
     }
     if (kept != cursor) SH_CALL(Sound_PlayEffect)(0x100);
     if (B(Win(1, 8)) != 0) return;
-    const unsigned pressed = Word(At(at::kPressed));
-    if (Word(At(at::kConfirm)) & pressed) {
+    const unsigned pressed = Input_Pressed;
+    if (Field_ConfirmButtons & pressed) {
         if (B(Win(1, 0xD)) == 0xFF) {
             SH_CALL(Sound_PlayEffect)(0x107);
             return;
@@ -619,23 +619,23 @@ extern "C" void __cdecl ShopBrowse_Choose(void) {
         SH_CALL(Sound_PlayEffect)(0x103);
         SH_CALL(Sound_PlayEffect)(0x102);
         SH_CALL(ShopBrowse_OpenDetail)();
-        const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
+        const auto step = static_cast<unsigned char>(FieldS_Step + 1);
         B(Win(21, 0)) = 0;
         B(Win(1, 3)) = 3;
         B(at::kTimer) = 8;
-        B(at::kStep) = step;
+        FieldS_Step = step;
         return;
     }
-    if ((Word(At(at::kCancel)) & pressed) == 0) return;
+    if ((Field_CancelButtons & pressed) == 0) return;
     SH_CALL(Sound_PlayEffect)(0x106);
     SH_CALL(Sound_PlayEffect)(0x102);
-    const auto state = static_cast<unsigned char>(B(at::kState) + 1);
+    const auto state = static_cast<unsigned char>(FieldS_State + 1);
     B(Win(21, 0)) = 0;
     B(Win(0, 3)) = 1;
     B(Win(1, 3)) = 1;
     B(at::kTimer) = 0xA;
-    B(at::kState) = state;
-    B(at::kStep) = 0;
+    FieldS_State = state;
+    FieldS_Step = 0;
 }
 
 // original 0x5835F0, choose step 1 (the entry's detail, ShopBrowse_OpenDetail's
@@ -652,16 +652,16 @@ extern "C" void __cdecl ShopBrowse_Detail(void) {
         B(at::kTimer) = static_cast<unsigned char>(timer - 1);
         return;
     }
-    if ((Word(At(at::kCancel)) & Word(At(at::kPressed))) == 0) return;
+    if ((Field_CancelButtons & Input_Pressed) == 0) return;
     SH_CALL(Sound_PlayEffect)(0x106);
     SH_CALL(Sound_PlayEffect)(0x102);
     B(Win(2, 3)) = 1;
     B(Win(3, 3)) = 1;
-    const auto step = static_cast<unsigned char>(B(at::kStep) + 1);
+    const auto step = static_cast<unsigned char>(FieldS_Step + 1);
     B(Win(1, 3)) = 2;
     B(Win(1, 0xC)) = 0x7F;
     B(at::kTimer) = 8;
-    B(at::kStep) = step;
+    FieldS_Step = step;
 }
 
 // original 0x583680, choose step 2: the timer down; at 0 the step two back
@@ -669,18 +669,18 @@ extern "C" void __cdecl ShopBrowse_Detail(void) {
 extern "C" void __cdecl ShopBrowse_DetailClose(void) {
     const auto timer = static_cast<unsigned char>(B(at::kTimer) - 1);
     B(at::kTimer) = timer;
-    if (timer == 0) B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 0xFE);
+    if (timer == 0) FieldS_Step = static_cast<unsigned char>(FieldS_Step + 0xFE);
 }
 
 // original 0x5836B0, close step 1 (step 0 is FS's Menu_StepAfterTimer): the
 // step up.
-extern "C" void __cdecl ShopBrowse_CloseNext(void) { ++B(at::kStep); }
+extern "C" void __cdecl ShopBrowse_CloseNext(void) { ++FieldS_Step; }
 
 // original 0x5836C0, close step 2: mode 1, the state and the step 0.
 extern "C" void __cdecl ShopBrowse_End(void) {
-    B(at::kMode) = 1;
-    B(at::kState) = 0;
-    B(at::kStep) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
+    FieldS_Step = 0;
 }
 
 // ===========================================================================
@@ -690,60 +690,60 @@ extern "C" void __cdecl ShopBrowse_End(void) {
 // original 0x585A00 (FieldTail_LoadBank's step 1): the talk's mode, step,
 // 0x9398D0, 0x9398CD and the slide 0.
 extern "C" void __cdecl MasterTalk_Reset(void) {
-    B(at::kTalkMode) = 0;
-    B(at::kTalkStep) = 0;
-    B(at::kTalkD0) = 0;
-    B(at::kTalkCD) = 0;
-    B(at::kTalkSlide) = 0;
+    AreaW0c_AnswerMark = 0;
+    AreaW3f_AnswerMarkD1 = 0;
+    Rest2c_TalkD0 = 0;
+    Rest2c_TalkCD = 0;
+    Rest2c_TalkSlide = 0;
 }
 
 // original 0x586670 (FieldTail_LoadBank's step 2, a tail jump):
 // `jmp [MasterTalk_States + 4 * 0x9398CF]`.
-extern "C" void __cdecl MasterTalk_Dispatch(void) { Jump(at::kTalkStates, 7, B(at::kTalkMode), "MasterTalk_Dispatch"); }
+extern "C" void __cdecl MasterTalk_Dispatch(void) { Jump(MasterTalk_States_addr, 7, AreaW0c_AnswerMark, "MasterTalk_Dispatch"); }
 
 // original 0x5866D0, mode 1: `jmp [MasterTalk_IntroSteps + 4 * 0x9398D1]`.
-extern "C" void __cdecl MasterTalk_IntroStep(void) { Jump(at::kTalkIntroSteps, 2, B(at::kTalkStep), "MasterTalk_IntroStep"); }
+extern "C" void __cdecl MasterTalk_IntroStep(void) { Jump(MasterTalk_IntroSteps_addr, 2, AreaW3f_AnswerMarkD1, "MasterTalk_IntroStep"); }
 
 // original 0x586750, mode 2: `jmp [MasterTalk_AskSteps + 4 * 0x9398D1]`.
-extern "C" void __cdecl MasterTalk_AskStep(void) { Jump(at::kTalkAskSteps, 6, B(at::kTalkStep), "MasterTalk_AskStep"); }
+extern "C" void __cdecl MasterTalk_AskStep(void) { Jump(MasterTalk_AskSteps_addr, 6, AreaW3f_AnswerMarkD1, "MasterTalk_AskStep"); }
 
 // original 0x586970, mode 3: `jmp [MasterTalk_PickSteps + 4 * 0x9398D1]`.
-extern "C" void __cdecl MasterTalk_PickStep(void) { Jump(at::kTalkPickSteps, 9, B(at::kTalkStep), "MasterTalk_PickStep"); }
+extern "C" void __cdecl MasterTalk_PickStep(void) { Jump(MasterTalk_PickSteps_addr, 9, AreaW3f_AnswerMarkD1, "MasterTalk_PickStep"); }
 
 // original 0x586680, mode 0: the master's introduction flag (Flags_Test of
 // 0x904657 by the master 0x9039F5) set - mode 5; else master 9 - script
 // message 0x2E, Field_Request 2, mode 6; else mode 1.
 extern "C" void __cdecl MasterTalk_Begin(void) {
-    if (SH_CALL(Flags_Test)(At(at::kIntroFlags), B(at::kMaster)) != 0) {
-        B(at::kTalkMode) = 5;
+    if (SH_CALL(Flags_Test)(At(at::kIntroFlags), AreaW0c_TailSub) != 0) {
+        AreaW0c_AnswerMark = 5;
         return;
     }
-    if (B(at::kMaster) == 9) {
+    if (AreaW0c_TailSub == 9) {
         SH_CALL(Msg_OpenScript)(0x2E);
-        B(at::kRequest) = 2;
-        B(at::kTalkMode) = 6;
+        Field_Request = 2;
+        AreaW0c_AnswerMark = 6;
         return;
     }
-    B(at::kTalkMode) = 1;
+    AreaW0c_AnswerMark = 1;
 }
 
 // original 0x5866E0, intro step 0: Flags_Set(0x904654, master), the master's
 // message (its base, the master read again), Field_Request 2, the step up.
 extern "C" void __cdecl MasterTalk_IntroSay(void) {
-    SH_CALL(Flags_Set)(At(at::kMetFlags), B(at::kMaster));
-    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(B(at::kMaster), 0)));
-    const auto step = static_cast<unsigned char>(B(at::kTalkStep) + 1);
-    B(at::kRequest) = 2;
-    B(at::kTalkStep) = step;
+    SH_CALL(Flags_Set)(At(at::kMetFlags), AreaW0c_TailSub);
+    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(AreaW0c_TailSub, 0)));
+    const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
+    Field_Request = 2;
+    AreaW3f_AnswerMarkD1 = step;
 }
 
 // original 0x586720, intro step 1: once Field_Request is not 2 (the message
 // closed): Flags_Set(0x904657, master), mode 3, the step 0.
 extern "C" void __cdecl MasterTalk_IntroWait(void) {
-    if (B(at::kRequest) == 2) return;
-    SH_CALL(Flags_Set)(At(at::kIntroFlags), B(at::kMaster));
-    B(at::kTalkMode) = 3;
-    B(at::kTalkStep) = 0;
+    if (Field_Request == 2) return;
+    SH_CALL(Flags_Set)(At(at::kIntroFlags), AreaW0c_TailSub);
+    AreaW0c_AnswerMark = 3;
+    AreaW3f_AnswerMarkD1 = 0;
 }
 
 namespace {
@@ -751,17 +751,17 @@ namespace {
 // The ask steps' message: the master's base + k, Field_Request 2, the step up
 // (read after the call).
 void Say(unsigned k) {
-    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(B(at::kMaster), k)));
-    const auto step = static_cast<unsigned char>(B(at::kTalkStep) + 1);
-    B(at::kRequest) = 2;
-    B(at::kTalkStep) = step;
+    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(AreaW0c_TailSub, k)));
+    const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
+    Field_Request = 2;
+    AreaW3f_AnswerMarkD1 = step;
 }
 
 // The members (Field_MemberCount, ObjTrio's +0x148 record index) scanned for
 // the first whose record's +0x1F (its master) is (`equal`) or is not the
 // master byte: its slot, or the count when none is (signed compares).
 unsigned FirstMember(unsigned char master, bool equal) {
-    const int count = B(at::kMemberCount);
+    const int count = Field_MemberCount;
     int i = 0;
     for (; i < count; ++i) {
         const unsigned record = B(at::kMembers + static_cast<U>(i) * at::kObjStride);
@@ -778,64 +778,64 @@ extern "C" void __cdecl MasterTalk_Say5(void) { Say(5); }
 
 // original 0x586790, ask step 1: once Field_Request is not 2, message + 6.
 extern "C" void __cdecl MasterTalk_Say6(void) {
-    if (B(at::kRequest) != 2) Say(6);
+    if (Field_Request != 2) Say(6);
 }
 
 // original 0x5867D0, ask step 2: once Field_Request is not 2 - a member whose
 // master is not this one: mode 3, the step 0; every member's (or none): the
 // master's message + 7 (the master byte read once, before the scan).
 extern "C" void __cdecl MasterTalk_CheckAllPupils(void) {
-    if (B(at::kRequest) == 2) return;
-    const unsigned char master = B(at::kMaster);
-    if (static_cast<int>(FirstMember(master, false)) < static_cast<int>(B(at::kMemberCount))) {
-        B(at::kTalkMode) = 3;
-        B(at::kTalkStep) = 0;
+    if (Field_Request == 2) return;
+    const unsigned char master = AreaW0c_TailSub;
+    if (static_cast<int>(FirstMember(master, false)) < Field_MemberCount) {
+        AreaW0c_AnswerMark = 3;
+        AreaW3f_AnswerMarkD1 = 0;
         return;
     }
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(master, 7)));
-    const auto step = static_cast<unsigned char>(B(at::kTalkStep) + 1);
-    B(at::kRequest) = 2;
-    B(at::kTalkStep) = step;
+    const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
+    Field_Request = 2;
+    AreaW3f_AnswerMarkD1 = step;
 }
 
 // original 0x586860, ask step 3: once Field_Request is not 2, message + 8.
 extern "C" void __cdecl MasterTalk_Say8(void) {
-    if (B(at::kRequest) != 2) Say(8);
+    if (Field_Request != 2) Say(8);
 }
 
 // original 0x5868A0, ask step 4: once Field_Request is not 2 - a member whose
 // master is this one: mode 4, the step 0; none: message + 9.
 extern "C" void __cdecl MasterTalk_CheckAnyPupil(void) {
-    if (B(at::kRequest) == 2) return;
-    const unsigned char master = B(at::kMaster);
-    if (static_cast<int>(FirstMember(master, true)) < static_cast<int>(B(at::kMemberCount))) {
-        B(at::kTalkMode) = 4;
-        B(at::kTalkStep) = 0;
+    if (Field_Request == 2) return;
+    const unsigned char master = AreaW0c_TailSub;
+    if (static_cast<int>(FirstMember(master, true)) < Field_MemberCount) {
+        AreaW0c_AnswerMark = 4;
+        AreaW3f_AnswerMarkD1 = 0;
         return;
     }
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(master, 9)));
-    const auto step = static_cast<unsigned char>(B(at::kTalkStep) + 1);
-    B(at::kRequest) = 2;
-    B(at::kTalkStep) = step;
+    const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
+    Field_Request = 2;
+    AreaW3f_AnswerMarkD1 = step;
 }
 
 // original 0x586930, ask step 5: once Field_Request is not 2, message + 4,
 // Field_Request 2, mode 6 and the step 0.
 extern "C" void __cdecl MasterTalk_SayFarewell(void) {
-    if (B(at::kRequest) == 2) return;
-    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(B(at::kMaster), 4)));
-    B(at::kRequest) = 2;
-    B(at::kTalkMode) = 6;
-    B(at::kTalkStep) = 0;
+    if (Field_Request == 2) return;
+    SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(MasterMessage(AreaW0c_TailSub, 4)));
+    Field_Request = 2;
+    AreaW0c_AnswerMark = 6;
+    AreaW3f_AnswerMarkD1 = 0;
 }
 
 // original 0x585A20, pick step 0 (and R2D's mode 4's): Sound_PlayEffect(0x102),
 // the slide 4, the step up (read after the sound).
 extern "C" void __cdecl MasterTalk_PanelsOpen(void) {
     SH_CALL(Sound_PlayEffect)(0x102);
-    const auto step = static_cast<unsigned char>(B(at::kTalkStep) + 1);
-    B(at::kTalkSlide) = 4;
-    B(at::kTalkStep) = step;
+    const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
+    Rest2c_TalkSlide = 4;
+    AreaW3f_AnswerMarkD1 = step;
 }
 
 namespace {
@@ -846,13 +846,13 @@ namespace {
 // slide, the same y), each of the member's record index; then the title box
 // Menu_DrawPanelBox(0x14, 0x10 - 10 * slide, 0x118, 0x13, the window colour).
 void Panels() {
-    for (unsigned slot = 0; slot < B(at::kMemberCount); ++slot) {
-        const unsigned char* const member = At(at::kMembers + slot * at::kObjStride);
+    for (unsigned slot = 0; slot < Field_MemberCount; ++slot) {
+        const unsigned char* const member = At(Field_Members_addr + slot * at::kObjStride);
         const int y = static_cast<int>(54 * slot + 0x3E);
-        SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * static_cast<int>(B(at::kTalkSlide)), y, member[0], slot);
-        SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * static_cast<int>(B(at::kTalkSlide)), y, member[0]);
+        SH_CALL(MasterPanel_DrawMember)(0x11 - 36 * Rest2c_TalkSlide, y, member[0], slot);
+        SH_CALL(MasterPanel_DrawStats)(0x89 + 40 * Rest2c_TalkSlide, y, member[0]);
     }
-    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 10 * static_cast<int>(B(at::kTalkSlide)), 0x118, 0x13, B(at::kColour));
+    SH_CALL(Menu_DrawPanelBox)(0x14, 0x10 - 10 * Rest2c_TalkSlide, 0x118, 0x13, static_cast<unsigned char>(BattleDraw_Colour));
 }
 
 }  // namespace
@@ -860,26 +860,26 @@ void Panels() {
 // original 0x585A50, pick step 1 (the panels sliding in): the slide down one,
 // the panels; at 0 the pick 0x9398CE = 0 and the step up.
 extern "C" void __cdecl MasterTalk_PanelsIn(void) {
-    B(at::kTalkSlide) = static_cast<unsigned char>(B(at::kTalkSlide) - 1);
+    Rest2c_TalkSlide = static_cast<unsigned char>(Rest2c_TalkSlide - 1);
     Panels();
-    if (B(at::kTalkSlide) != 0) return;
-    const auto step = static_cast<unsigned char>(B(at::kTalkStep) + 1);
-    B(at::kTalkPick) = 0;
-    B(at::kTalkStep) = step;
+    if (Rest2c_TalkSlide != 0) return;
+    const auto step = static_cast<unsigned char>(AreaW3f_AnswerMarkD1 + 1);
+    Rest2d_Cursor = 0;
+    AreaW3f_AnswerMarkD1 = step;
 }
 
 // original 0x585B20, pick step 4 (sliding out): the slide up one, the panels;
 // at 4 the step up.
 extern "C" void __cdecl MasterTalk_PanelsOut(void) {
-    B(at::kTalkSlide) = static_cast<unsigned char>(B(at::kTalkSlide) + 1);
+    Rest2c_TalkSlide = static_cast<unsigned char>(Rest2c_TalkSlide + 1);
     Panels();
-    if (B(at::kTalkSlide) == 4) ++B(at::kTalkStep);
+    if (Rest2c_TalkSlide == 4) ++AreaW3f_AnswerMarkD1;
 }
 
 // original 0x586980, pick step 2: R2D's 0x5869A0 (the pick) with the master's
 // message + 0xF and 0.
 extern "C" void __cdecl MasterTalk_PickAsk(void) {
-    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kPickAsk)(MasterMessage(B(at::kMaster), 0xF), 0);
+    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kPickAsk)(MasterMessage(AreaW0c_TailSub, 0xF), 0);
 }
 
 // ===========================================================================
@@ -894,7 +894,7 @@ extern "C" void __cdecl MasterTalk_PickAsk(void) {
 // + it (8 long) and system message 0x34 at (x + 0xB, y + 0x22); the box's
 // pieces: 0x664468, sixteen of 0x664494 8 apart, 0x6644A0.
 extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
-    SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, B(at::kColour));
+    SH_CALL(Menu_DrawBox)(x + 5, y + 3, 0x94, 0x2D, 0, static_cast<unsigned char>(BattleDraw_Colour));
     const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
     char* const buffer = reinterpret_cast<char*>(At(at::kPath));
     const auto* const text = reinterpret_cast<const unsigned char*>(buffer);
@@ -938,7 +938,7 @@ extern "C" void __cdecl MasterPanel_DrawStats(int x, int y, unsigned record) {
 // committed; R2H's 0x59DB70 at (x + 9, y + 5): the cell (s + 3, 0x1E), the
 // CLUT Gpu_GetClut(0x10, 0x1E0), shade 0x80.
 extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, unsigned slot) {
-    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, B(at::kColour));
+    SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x7D, 0x30, 0, static_cast<unsigned char>(BattleDraw_Colour));
     const U r = at::kRecords + (record & 0xFF) * at::kRecordStride;
     const unsigned char id = B(r + 9);
     const unsigned shade = (B(r + 0x10) >> 6) & 2;
@@ -973,7 +973,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
     const U exp = L(r + 0xC);
     const unsigned level = B(r + 0xA);
     SH_CALL(MasterPanel_DrawExpBar)(x + 0x14, y + 0x12, record, level, exp);
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(at::kPacketNext)), 0, 0, 0xF, 0);
+    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 0, 0xF, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned clut = SH_CALL(Gpu_GetClut)(0x10, 0x1E0);
     SH_AT(void (__cdecl*)(int, int, unsigned, unsigned, unsigned, unsigned), at::kGlyph)(
@@ -990,7 +990,7 @@ extern "C" void __cdecl MasterPanel_DrawMember(int x, int y, unsigned record, un
 // past 99 gives -1 for both, the table's equal steps 0): the bar's end is x
 // itself.
 extern "C" void __cdecl MasterPanel_DrawExpBar(int x, int y, unsigned record, unsigned level, unsigned exp) {
-    unsigned char* const prim = *reinterpret_cast<unsigned char**>(At(at::kPacketNext));
+    unsigned char* const prim = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
     SH_CALL(Gpu_SetLineF2)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 0);
     const U x16 = static_cast<U>(x) & 0xFFFF;
@@ -1038,7 +1038,7 @@ struct Quad {
     unsigned char u[4], v[4];
 };
 void EdgeQuad(const Quad& q, int clut_x) {
-    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(at::kPacketNext));
+    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
     SH_CALL(Gpu_SetPolyFT4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     for (unsigned i = 0; i < 4; ++i) {
@@ -1060,13 +1060,13 @@ void EdgeQuad(const Quad& q, int clut_x) {
 // packet cursor (x 0, y, w, h), then Gpu_SetDrawMode(cursor, 0, 1, 0xF, the
 // RECT) and Gfx_CommitPrim(1, 0xC).
 void WindowMode(unsigned y, unsigned size) {
-    unsigned char* const rect = *reinterpret_cast<unsigned char**>(At(at::kPacketNext));
+    unsigned char* const rect = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
     PutL(at::kPacketNext, Key(rect + 8));
     PutW(Key(rect), 0);
     PutW(Key(rect + 2), y);
     PutW(Key(rect + 4), size);
     PutW(Key(rect + 6), size);
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(at::kPacketNext)), 0, 1, 0xF, Key(rect));
+    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 1, 0xF, Key(rect));
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
 }
 
@@ -1147,9 +1147,9 @@ extern "C" void __cdecl Menu_DrawPanelBox(int x, int y, int w, int h, unsigned c
 extern "C" void __cdecl MasterPanel_DrawFace(int x, int y, unsigned id, unsigned shade) {
     const unsigned char form = FormOf(static_cast<unsigned char>(id));
     const U entry = at::kFaceTable + 4u * form;
-    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(at::kPacketNext)), 0, 1, 0x1E, 0);
+    SH_CALL(Gpu_SetDrawMode)(*reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr)), 0, 1, 0x1E, 0);
     SH_CALL(Gfx_CommitPrim)(1, 0xC);
-    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(at::kPacketNext));
+    unsigned char* const p = *reinterpret_cast<unsigned char**>(At(Gfx_PacketNext_addr));
     SH_CALL(Gpu_SetSprt)(p);
     const auto s = static_cast<unsigned char>(shade);
     if (s == 0) {

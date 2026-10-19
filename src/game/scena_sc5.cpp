@@ -47,21 +47,21 @@ std::uint16_t& W(std::uint32_t a) { return *reinterpret_cast<std::uint16_t*>(sta
 std::uint32_t& D(std::uint32_t a) { return *reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(a)); }
 std::int32_t S32(std::uint32_t a) { return static_cast<std::int32_t>(D(a)); }
 
-unsigned Area() { return W(at::kArea); }
+unsigned Area() { return Game_AreaNumber; }
 unsigned char Counter(unsigned k) { return B(at::kCounters + k); }
 void SetCounter(unsigned k, unsigned char v) { B(at::kCounters + k) = v; }
-void SetStep(unsigned char v) { B(at::kStep) = v; }
-void SetRun(unsigned char v) { B(at::kRun) = v; }
-void SetPass(unsigned char v) { B(at::kPassFlags) = v; }
-unsigned char Request() { return B(at::kRequest); }
-void SetRequest(unsigned char v) { B(at::kRequest) = v; }
-bool WaitClear() { return W(at::kWait) == 0; }
+void SetStep(unsigned char v) { MoveScript_PartyRecords[0x65] = v; }
+void SetRun(unsigned char v) { MoveScript_Var7 = v; }
+void SetPass(unsigned char v) { Draw_PassFlags = v; }
+unsigned char Request() { return Field_Request; }
+void SetRequest(unsigned char v) { Field_Request = v; }
+bool WaitClear() { return MoveScript_WaitWordDA == 0; }
 bool MsgDone() { return (B(at::kMsgFlags) & 2) == 2; }
-unsigned Sel() { return B(at::kSelector) & 0x7Fu; }
-void MusicCurrent(unsigned char v) { B(at::kMusicCurrent) = v; }
+unsigned Sel() { return AreaW0b_PartySet & 0x7Fu; }
+void MusicCurrent(unsigned char v) { AreaW1f_MusicCurrent = v; }
 // Field_ScriptFlags: `or byte [0x9039A2], v` / `xor word [0x9039A2], v`.
 void ScriptOr(unsigned char v) { B(at::kScriptFlags) = static_cast<unsigned char>(B(at::kScriptFlags) | v); }
-void ScriptXor(std::uint16_t v) { W(at::kScriptFlags) = static_cast<std::uint16_t>(W(at::kScriptFlags) ^ v); }
+void ScriptXor(std::uint16_t v) { Field_ScriptFlags = static_cast<std::uint16_t>(Field_ScriptFlags ^ v); }
 
 // The four counters 0x903848..B zeroed, in that order; the three from 1.
 void ClearCounters() {
@@ -73,8 +73,8 @@ void ClearCounters123() {
 
 // The flag bits are read from 0x929ED0 afresh for every call, as the
 // originals load the dword before each push.
-unsigned char* Bits() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(D(at::kFlagBits))); }
-unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(at::kStoryFlags)); }
+unsigned char* Bits() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
+unsigned char* Story() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(Cond_Flags_addr + 0xa0)); }
 bool Flag(unsigned i) { return SH_CALL(Flags_Test)(Bits(), i) != 0; }   // test al, al
 void Set(unsigned i) { SH_CALL(Flags_Set)(Bits(), i); }
 void Clr(unsigned i) { SH_CALL(Flags_Clear)(Bits(), i); }
@@ -152,26 +152,26 @@ std::uint32_t Entry(std::uint32_t table, int index, unsigned count, const char* 
 // tail jump through Scena05_States on the s8 state 0x8034E2: 0 0x5646B0
 // (group SC13's), 1 Scena05_EnterArea, 2 Scena05_Run.
 SC5_EXPORT void __cdecl Scena05_Frame(void) {
-    const int state = static_cast<signed char>(B(at::kState));
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(at::kStates, state, at::kStateCount, "Scena05_Frame")))();
+    const int state = static_cast<signed char>(MoveScript_PartyRecords[0x62]);
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena05_States_addr, state, at::kStateCount, "Scena05_Frame")))();
 }
 
 // original 0x546AB0: state 2, a tail jump through Scena05_Runs on the s8 run
 // MoveScript_Var7: 0, 2, 3, 12, 15 a bare ret (0x437CC0); 1, 4..11, 13, 14,
 // 16..22 the runs below.
 SC5_EXPORT void __cdecl Scena05_Run(void) {
-    const int run = static_cast<signed char>(B(at::kRun));
-    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(at::kRuns, run, at::kRunCount, "Scena05_Run")))();
+    const int run = MoveScript_Var7;
+    reinterpret_cast<VoidFn>(static_cast<std::uintptr_t>(Entry(Scena05_Runs_addr, run, at::kRunCount, "Scena05_Run")))();
 }
 
 // original 0x54A2A0: slot 1, called by 0x56D6D0 with the object that
 // triggered: Scena05_Objects[object +0x86] (object, the flag bits' pointer).
 // The entry's eax is the original's answer; 0x56D6D0 does not read it.
 SC5_EXPORT void __cdecl Scena05_ObjectTrigger(unsigned char* object) {
-    const std::uint32_t bits = D(at::kFlagBits);
+    const std::uint32_t bits = AreaW0c_FlagRow;
     const unsigned index = object[0x86];
     reinterpret_cast<ObjectEntry>(static_cast<std::uintptr_t>(
-        Entry(at::kObjects, static_cast<int>(index), at::kObjectCount, "Scena05_ObjectTrigger")))(object, bits);
+        Entry(Scena05_Objects_addr, static_cast<int>(index), at::kObjectCount, "Scena05_ObjectTrigger")))(object, bits);
 }
 
 // original 0x54A800: slot 4, the cell hook (0x56D7A0, a cell (a, b) faced):
@@ -179,11 +179,11 @@ SC5_EXPORT void __cdecl Scena05_ObjectTrigger(unsigned char* object) {
 // match, or 0xFF; negative (as a signed byte) answers 0xFF; else a tail jump
 // through Scena05_CellHooks with (a, b), whose al is the answer.
 SC5_EXPORT unsigned char __cdecl Scena05_CellHook(unsigned a, unsigned b) {
-    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(at::kCellRecords), 2, a, b);
+    const unsigned char found = SH_AT(CellFindFn, at::kCellFind)(reinterpret_cast<const void*>(Scena05_CellRecords_addr), 2, a, b);
     const int index = static_cast<signed char>(found);
     if (index < 0) return 0xFF;
     return reinterpret_cast<CellEntry>(static_cast<std::uintptr_t>(
-        Entry(at::kCellHooks, index, at::kCellHookCount, "Scena05_CellHook")))(a, b);
+        Entry(Scena05_CellHooks_addr, index, at::kCellHookCount, "Scena05_CellHook")))(a, b);
 }
 
 // A step hook's hit: ScriptFlags_Set40, the four counters 0, the step and the
@@ -336,9 +336,9 @@ SC5_EXPORT void __cdecl Scena05_PartyCounter(void) {
 // table is 8 long and the member a byte), the words +0x2E / +0x30 from the
 // sprite's. Each store re-reads the slot from the sprite, as the original.
 SC5_EXPORT void __cdecl Scena05_SpawnMember(unsigned char kind) {
-    D(at::kSpriteCurrent) = at::kObjTrio;
+    D(at::kSpriteCurrent) = ObjTrio_addr;
     const unsigned char slot = SH_CALL(Effect_FindFree)();
-    unsigned char* const sprite = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(D(at::kSpriteCurrent)));
+    unsigned char* const sprite = Sprite_Current;
     sprite[0xB] = slot;
     if (sprite[0xB] == 0xFF) return;
     auto effect = [&]() { return &B(at::kEffects + static_cast<std::uint32_t>(sprite[0xB]) * at::kEffectStride); };
@@ -346,7 +346,7 @@ SC5_EXPORT void __cdecl Scena05_SpawnMember(unsigned char kind) {
     effect()[5] = 6;
     effect()[6] = static_cast<unsigned char>(kind + 0x70);
     *reinterpret_cast<std::uint32_t*>(effect() + 0xC) = 0;
-    const std::int32_t lift = static_cast<signed char>(B(at::kMemberBytes + B(at::kParty)));
+    const std::int32_t lift = static_cast<signed char>(B(at::kMemberBytes + Cond_Flags[0xd2]));
     *reinterpret_cast<std::int32_t*>(effect() + 0x10) = lift;
     *reinterpret_cast<std::uint16_t*>(effect() + 0x2E) = *reinterpret_cast<const std::uint16_t*>(sprite + 0x2E);
     *reinterpret_cast<std::uint16_t*>(effect() + 0x30) = *reinterpret_cast<const std::uint16_t*>(sprite + 0x30);
@@ -452,8 +452,8 @@ void EnterAreaBody() {
             SetRun(0xA);
             SetStep(0);
             ClearCounters();
-            B(at::kBitsE53) = static_cast<unsigned char>(B(at::kBitsE53) & 0xFE);
-            B(at::kBitsDAF) = static_cast<unsigned char>(B(at::kBitsDAF) | 1);
+            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 & 0xFE);
+            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
             break;
         case 1:
             if (Flag(0x14)) break;
@@ -481,8 +481,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(7);
-            B(at::kBitsDAF) = static_cast<unsigned char>(B(at::kBitsDAF) & 0xFE);
-            B(at::kBitsE53) = static_cast<unsigned char>(B(at::kBitsE53) | 1);
+            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF & 0xFE);
+            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
             DropIn(4);
             break;
         case 5:
@@ -492,8 +492,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(7);
-            B(at::kBitsDAF) = static_cast<unsigned char>(B(at::kBitsDAF) & 0xFE);
-            B(at::kBitsE53) = static_cast<unsigned char>(B(at::kBitsE53) | 1);
+            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF & 0xFE);
+            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
             DropIn(0xF);
             break;
         default:   // 6
@@ -503,8 +503,8 @@ void EnterAreaBody() {
             ClearCounters();
             Sound(0x200);
             CallA(5);
-            B(at::kBitsE53) = static_cast<unsigned char>(B(at::kBitsE53) & 0xFE);
-            B(at::kBitsDAF) = static_cast<unsigned char>(B(at::kBitsDAF) | 1);
+            ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 & 0xFE);
+            ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
             DropIn(0x10);
             break;
         }
@@ -539,7 +539,7 @@ void EnterAreaBody() {
 // way out stores state 2.
 SC5_EXPORT void __cdecl Scena05_EnterArea(void) {
     EnterAreaBody();
-    B(at::kState) = 2;
+    MoveScript_PartyRecords[0x62] = 2;
 }
 
 // ===========================================================================
@@ -549,7 +549,7 @@ SC5_EXPORT void __cdecl Scena05_EnterArea(void) {
 // 2 = 1, flag 0, Field_ChangeArea(0x44, 0x1D.0, 0x1E.0, 0x80); 2 at counter 0
 // 0x2D, flag 1, the run's end (counters 1..3).
 SC5_EXPORT void __cdecl Scena05_Run1(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         Say(5, 1);
         break;
@@ -573,7 +573,7 @@ SC5_EXPORT void __cdecl Scena05_Run1(void) {
 // original 0x546B80: run 4 - a battle scene in area 0x34 (a two-level switch
 // over steps 0..0x15).
 SC5_EXPORT void __cdecl Scena05_Run4(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         SetCounter(2, 2);
         SetStep(1);
@@ -637,7 +637,7 @@ SC5_EXPORT void __cdecl Scena05_Run4(void) {
 // original 0x546D60: run 5 - steps 1..6 and 0x19..0x23 (a two-level switch
 // on the step less 1).
 SC5_EXPORT void __cdecl Scena05_Run5(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 1:
         SetStep(2);
         break;
@@ -734,7 +734,7 @@ SC5_EXPORT void __cdecl Scena05_Run5(void) {
 // original 0x547040: run 6 - step 0 at counter 0 0x18: flag 0xA, the run's
 // end (counters 1..3).
 SC5_EXPORT void __cdecl Scena05_Run6(void) {
-    if (B(at::kStep) != 0) return;
+    if (MoveScript_PartyRecords[0x65] != 0) return;
     if (Counter(0) != 0x18) return;
     Set(0xA);
     EndRun123();
@@ -743,7 +743,7 @@ SC5_EXPORT void __cdecl Scena05_Run6(void) {
 namespace {
 // Runs 7, 11, 19, 22: step 0 message `id`; step 1 when it closed, the run's end.
 void Talk(unsigned short id) {
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = MoveScript_PartyRecords[0x65];
     if (step == 0) {
         Say(id, 1);
     } else if (step == 1) {
@@ -760,7 +760,7 @@ SC5_EXPORT void __cdecl Scena05_Run7(void) { Talk(0x26); }
 // stream, a hop into area 0x31, then at counter 0 0x28 flags 0xC, 0xE, 0xF
 // set and 0x3F cleared and a change into area 0x45.
 SC5_EXPORT void __cdecl Scena05_Run8(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         SetStep(1);
         Set(0xB);
@@ -810,7 +810,7 @@ SC5_EXPORT void __cdecl Scena05_Run8(void) {
 // original 0x547240: run 9 - steps 0..3 and 0xA..0xC. Counter 0 is read once
 // on entry for steps 1 and 2 (step 1 falls into step 2's test).
 SC5_EXPORT void __cdecl Scena05_Run9(void) {
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = MoveScript_PartyRecords[0x65];
     if (step > 0xC) return;
     const unsigned char c0 = Counter(0);
     switch (step) {
@@ -876,7 +876,7 @@ SC5_EXPORT void __cdecl Scena05_Run9(void) {
 
 // original 0x547430: run 10 - steps 0, 1, 4 at counter 0 0x23 / 0x23 / 3.
 SC5_EXPORT void __cdecl Scena05_Run10(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (Counter(0) != 0x23) break;
         SetStep(1);
@@ -939,7 +939,7 @@ void Pick13(unsigned char c2, unsigned set, unsigned clear) {
 // original 0x5475B0: run 13 - steps 0..6, 0xF, 0x11, 0x12 (a two-level
 // switch): a choice after a message, by the selector.
 SC5_EXPORT void __cdecl Scena05_Run13(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (!MsgDone()) break;
         if (Sel() == 1) SetStep(0xF);
@@ -992,7 +992,7 @@ SC5_EXPORT void __cdecl Scena05_Run13(void) {
 // at counter 0 2 (closed) message 0x25, or at 0xA straight to step 4; the
 // run's end (all four counters), step 4 with flag 0x1A at counter 0 0x14.
 SC5_EXPORT void __cdecl Scena05_Run14(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (!MsgDone()) break;
         if (Sel() == 1) Say(0x23, 1);
@@ -1066,7 +1066,7 @@ void Fade(bool before) {
 // Step 0x36 / 0x40's message by flags 0x1E / 0x1F and the first member; the
 // step after, message or not.
 void MemberMessage(unsigned char next) {
-    const unsigned party = B(at::kParty);
+    const unsigned party = Cond_Flags[0xd2];
     int id = -1;
     if (!Flag(0x1E)) {
         static const short kIds[7] = {0x3E, 0x3F, -1, -1, -1, 0x40, 0x41};
@@ -1094,7 +1094,7 @@ void FlagBattle(unsigned char next) {
 // A message by the first member from a table of seven (-1 none), the request
 // byte 2 and the step; nothing for a member above 6.
 void PartyMessage(const short (&ids)[7], unsigned char next) {
-    const unsigned party = B(at::kParty);
+    const unsigned party = Cond_Flags[0xd2];
     if (party > 6) return;
     if (ids[party] < 0) return;
     Say(static_cast<unsigned short>(ids[party]), next);
@@ -1102,7 +1102,7 @@ void PartyMessage(const short (&ids)[7], unsigned char next) {
 // The change into 0x4F at (0xC3.0, 0xE.0) by the first member: 0 0x8A,
 // 1 0x8B, 2..5 0x8C, 6 0x8D; nothing above 6.
 void PartyGate() {
-    const unsigned party = B(at::kParty);
+    const unsigned party = Cond_Flags[0xd2];
     if (party > 6) return;
     static const unsigned char kFlags[7] = {0x8A, 0x8B, 0x8C, 0x8C, 0x8C, 0x8C, 0x8D};
     To4FGate(kFlags[party]);
@@ -1173,8 +1173,8 @@ const HallExit kHall65[16] = {
 // counter 3; step 0xF on a match.
 struct Pair { unsigned char a, b, code; };
 void PairCode(const Pair (&pairs)[6]) {
-    const unsigned char a = B(at::kPartyA);
-    const unsigned char b = B(at::kPartyB);
+    const unsigned char a = Cond_Flags[0xd5];
+    const unsigned char b = Cond_Flags[0xd6];
     for (const Pair& p : pairs)
         if (p.a == a && p.b == b) {
             SetCounter(3, p.code);
@@ -1189,7 +1189,7 @@ const Pair kPairs6[6] = {{0, 1, 0xB}, {0, 6, 0xC}, {1, 0, 0xD}, {1, 6, 0xE}, {6,
 
 // original 0x547920: run 16 (above). Steps not listed return.
 SC5_EXPORT void __cdecl Scena05_Run16(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0: {
         if (!MsgDone()) break;
         const unsigned char c0 = Counter(0);
@@ -1288,7 +1288,7 @@ SC5_EXPORT void __cdecl Scena05_Run16(void) {
         // The message closed: counter 0 0x17, the next step.
         if (Request() == 2) break;
         static const unsigned char kNext[] = {0x18, 0x21, 0x27, 0x38, 0x42};
-        const unsigned char step = B(at::kStep);
+        const unsigned char step = MoveScript_PartyRecords[0x65];
         SetCounter(0, 0x17);
         SetStep(kNext[step == 0x17 ? 0 : step == 0x20 ? 1 : step == 0x26 ? 2 : step == 0x37 ? 3 : 4]);
         break;
@@ -1362,7 +1362,7 @@ SC5_EXPORT void __cdecl Scena05_Run16(void) {
     case 0x3D:
         if (Request() == 2) break;
         SetCounter(0, 1);
-        SetStep(B(at::kStep) == 0x33 ? 0x34 : 0x3E);
+        SetStep(MoveScript_PartyRecords[0x65] == 0x33 ? 0x34 : 0x3E);
         break;
     case 0x34:
         if (Counter(0) != 0xA) break;
@@ -1372,7 +1372,7 @@ SC5_EXPORT void __cdecl Scena05_Run16(void) {
     case 0x35:
     case 0x3F:
         SetPass(0x1F);
-        SetStep(B(at::kStep) == 0x35 ? 0x36 : 0x40);
+        SetStep(MoveScript_PartyRecords[0x65] == 0x35 ? 0x36 : 0x40);
         SetCounter(0, 0x14);
         break;
     case 0x36:
@@ -1411,7 +1411,7 @@ SC5_EXPORT void __cdecl Scena05_Run16(void) {
     case 0x64:
         if (!WaitClear()) break;
         SetPass(0);
-        SetStep(static_cast<unsigned char>(B(at::kStep) + 1));
+        SetStep(static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1));
         break;
     case 0x47:
         SetStep(0x48);
@@ -1435,7 +1435,7 @@ SC5_EXPORT void __cdecl Scena05_Run16(void) {
         break;
     case 0x5D: {
         SetStep(0x5E);
-        B(at::kMemberCount) = 0;
+        Field_MemberCount = 0;
         const unsigned c3 = Counter(3);
         if (c3 >= 1 && c3 <= 6) {
             CallA(1);
@@ -1491,7 +1491,7 @@ SC5_EXPORT void __cdecl Scena05_Run16(void) {
 // choice, a timed wait with two dropped PSX calls, battle 0x15, changes into
 // areas 0x51 and 0x4E by the selector.
 SC5_EXPORT void __cdecl Scena05_Run17(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0: {
         if (!MsgDone()) break;
         const unsigned char c0 = Counter(0);
@@ -1530,8 +1530,8 @@ SC5_EXPORT void __cdecl Scena05_Run17(void) {
     case 8:
         SH_CALL(Music_FadeOutStop)(0xA);
         Sound(0x208);
-        B(at::kLevel) = 0x7F;
-        B(at::kLevelB) = 0;
+        ScenaSc5_Level = 0x7F;
+        ScenaSc5_LevelB = 0;
         SetStep(9);
         break;
     case 9:
@@ -1553,7 +1553,7 @@ SC5_EXPORT void __cdecl Scena05_Run17(void) {
         }
         SH_CALL(Port_DroppedCall)(0x10);   // the original pushes 4 above the first: unread
         SH_CALL(Port_DroppedCall)(0x10);
-        if (static_cast<signed char>(B(at::kLevel)) > 8) break;
+        if (static_cast<signed char>(ScenaSc5_Level) > 8) break;
         Sound(0x209);
         W(at::kTimer) = 0;
         SetStep(0xC);
@@ -1651,7 +1651,7 @@ SC5_EXPORT void __cdecl Scena05_Run17(void) {
 
 // original 0x549A80: run 18 - steps 0..0x10: area 0x50's scene, battle 0x16.
 SC5_EXPORT void __cdecl Scena05_Run18(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         if (!MsgDone()) break;
         if (Counter(0) == 1) {
@@ -1699,7 +1699,7 @@ SC5_EXPORT void __cdecl Scena05_Run18(void) {
     case 0xD:
         if (!WaitClear()) break;
         SetPass(0);
-        SetStep(static_cast<unsigned char>(B(at::kStep) + 1));
+        SetStep(static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1));
         break;
     case 6: {
         const unsigned sel = Sel();
@@ -1781,7 +1781,7 @@ SC5_EXPORT void __cdecl Scena05_Run19(void) { Talk(0x84); }
 // into area 0x4E by the selector, three bytes' bit 0, the call-table A entry
 // by the selector.
 SC5_EXPORT void __cdecl Scena05_Run20(void) {
-    switch (B(at::kStep)) {
+    switch (MoveScript_PartyRecords[0x65]) {
     case 0:
         SH_CALL(Scena05_SpawnMember)(0x91);
         SetStep(1);
@@ -1814,9 +1814,9 @@ SC5_EXPORT void __cdecl Scena05_Run20(void) {
     case 4:
         if (Counter(0) != 4) break;
         SetStep(5);
-        B(at::kBitsB1F) = static_cast<unsigned char>(B(at::kBitsB1F) | 1);
-        B(at::kBitsDAF) = static_cast<unsigned char>(B(at::kBitsDAF) | 1);
-        B(at::kBitsE53) = static_cast<unsigned char>(B(at::kBitsE53) | 1);
+        Field_ActorStates[0x9f] = static_cast<unsigned char>(Field_ActorStates[0x9f] | 1);
+        ScenaSc5_BitsDAF = static_cast<unsigned char>(ScenaSc5_BitsDAF | 1);
+        ScenaSc5_BitsE53 = static_cast<unsigned char>(ScenaSc5_BitsE53 | 1);
         if (Sel() == 1) CallA(3);
         else if (Sel() == 2) CallA(2);
         break;
@@ -1842,7 +1842,7 @@ SC5_EXPORT void __cdecl Scena05_Run20(void) {
 // 0x3A, Party_DropIn(3), Kind2_Place(0); step 1 at counter 0 0x1C, flag 0x3A
 // cleared, the run's end.
 SC5_EXPORT void __cdecl Scena05_Run21(void) {
-    const unsigned char step = B(at::kStep);
+    const unsigned char step = MoveScript_PartyRecords[0x65];
     if (step == 0) {
         if (!MsgDone()) return;
         SetCounter(0, 1);

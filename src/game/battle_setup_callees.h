@@ -59,15 +59,16 @@ constexpr unsigned kEEffect = 0x10C, kECounter = 0x10D;         // u8
 constexpr unsigned kEFlags = 0x114;      // u32
 constexpr unsigned kECount4000 = 0x122, kECount40 = 0x124, kECount80 = 0x125;   // u8
 
-constexpr std::uint32_t kHpDriftMode = 0x904060;  // u8: at 5 every member's HP change starts at -1 (BattleStep_HpDrift)
+// kHpDriftMode: now Cond_Flags[0xd0] (symbols.toml). u8: at 5 every member's HP change starts at -1 (BattleStep_HpDrift)
 constexpr std::uint32_t kItemQueue = 0x904ACC;    // u8 per slot: the acting actors, 0x904AE2 - 1 .. 0x904AE3
-constexpr std::uint32_t kQueueFrom = 0x904AE2, kQueueTo = 0x904AE3;
+// kQueueFrom: now BossSe_RoundSlot (symbols.toml).
+// kQueueTo: now BattleDamage_TurnCount (symbols.toml).
 constexpr std::uint32_t kActing = 0x904B34;       // u32: the acting actor in its low byte, the command kind above
-constexpr std::uint32_t kApCost = 0x904B78;       // u32, its low byte the AP cost doubled
+// kApCost: now BattleActions_ApCost (symbols.toml). u32, its low byte the AP cost doubled
 constexpr std::uint32_t kAbility = 0x904B80;      // u16
 constexpr std::uint32_t kPending = 0x904B82;      // u16: a bit per actor with an effect to show (0x446FB0 sets it)
-constexpr std::uint32_t kField12 = 0x904B89;      // u8, 0x12 with character id 0 / 7
-constexpr std::uint32_t kTimer = 0x904B8E;        // u8: counts down a turn at a time; flag 0x10 matters while it runs
+// kField12: now BattlePhases_B89 (symbols.toml). u8, 0x12 with character id 0 / 7
+// kTimer: now BattleFlow_AnimGate (symbols.toml). u8: counts down a turn at a time; flag 0x10 matters while it runs
 constexpr std::uint32_t kOpening = 0x904B90;      // u32: picks Battle_OpeningMessage's lines
 constexpr std::uint32_t kSavedPos = 0x93A034, kSavedPosStride = 0x84;   // 12 bytes per actor
 constexpr std::uint32_t kMsgWindow = 0x803162;    // the message window's four fields Battle_OpenMsgWindow sets

@@ -136,7 +136,7 @@ inline float X87Div(float a, float b) {
 }
 
 // D3d_Device, read afresh before every COM call as the original does.
-void** Device() { return *reinterpret_cast<void** volatile*>(At(kDevice)); }
+void** Device() { return *reinterpret_cast<void** volatile*>(At(D3d_Device_addr)); }
 void* Method(void** device, U offset) { return (*reinterpret_cast<void***>(device))[offset / 4]; }
 using Com3 = long(__stdcall*)(void*, U, U);
 using Com6 = long(__stdcall*)(void*, U, U, U, U, U);
@@ -147,15 +147,15 @@ long SetTexture(U stage, U texture) {
 // DrawPrimitive(type, D3DFVF_TLVERTEX, D3d_Vertices, count, 0).
 long DrawVertices(U type, U count) {
     void** device = Device();
-    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, kVertices, count, 0);
+    return reinterpret_cast<Com6>(Method(device, 0x70))(device, type, 0x1C4, D3d_Vertices_addr, count, 0);
 }
-unsigned char* Vertex(U i) { return At(kVertices + i * 0x20); }
-U DrawMode() { return Long(At(kDrawTpage)) & 0xFFFF; }
+unsigned char* Vertex(U i) { return At(D3d_Vertices_addr + i * 0x20); }
+U DrawMode() { return Long(At(Gfx_DrawTpage_addr)) & 0xFFFF; }
 // sx, sy = the scales times the corner's float x, y; sz its z as it is (a mov);
 // rhw = 0.1 / z. Diffuse as given; specular, tu and tv are not written.
 void PutFlatCorner(unsigned char* out, const unsigned char* xyz, U diffuse) {
-    PutFloat(out + 0x00, X87Mul(Float(At(kScaleX)), Float(xyz)));
-    PutFloat(out + 0x04, X87Mul(Float(At(kScaleY)), Float(xyz + 4)));
+    PutFloat(out + 0x00, X87Mul(D3d_ScaleX, Float(xyz)));
+    PutFloat(out + 0x04, X87Mul(D3d_ScaleY, Float(xyz + 4)));
     PutLong(out + 0x08, Long(xyz + 8));
     PutFloat(out + 0x0C, X87Div(Float(At(kRhwNumerator)), Float(xyz + 8)));
     PutLong(out + 0x10, diffuse);
@@ -369,7 +369,7 @@ extern "C" void __cdecl AreaMap_ApplyPatch(const unsigned char* entry) {
         switch (kind) {
         case 0: {
             const U header = Long(At(Header(0)));
-            const U offset = Word(At(kHeaderOffset));
+            const U offset = Word(At(AreaMap_Header_addr + 0x2));
             const U width = header & 0xFF;
             const U tile = Word(At(Header(0) + (x + width * y + offset * 2u) * 2u));
             const auto area = static_cast<std::int32_t>(((header >> 8) & 0xFF) * width + 1u);

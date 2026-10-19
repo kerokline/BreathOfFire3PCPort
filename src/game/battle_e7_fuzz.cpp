@@ -174,8 +174,8 @@ const bh::Callee kCallees[] = {
     {"BattleResultWin_DrawItem", 0x598750, KeyOf(&::BattleResultWin_DrawItem), 7, {kAll, kAll, kAll, kU8, kAll, kU8, kAll}, bh::Answer::kGarbage, 0, 0},
     {"GeneWin_DrawFrame", 0x598BE0, KeyOf(&::GeneWin_DrawFrame), 4, {kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},
     {"GeneWin_DrawChoices", 0x598E90, KeyOf(&::GeneWin_DrawChoices), 2, {kU16, kU16}, bh::Answer::kGarbage, 0, 0},
-    {"GeneWin_DrawList", 0x5990E0, KeyOf(&::GeneWin_DrawList), 0, {at::kWindowCurrent}, bh::Answer::kPhase, 0, 0},
-    {"GeneWin_DrawList2", 0x599570, KeyOf(&::GeneWin_DrawList2), 0, {at::kWindowCurrent}, bh::Answer::kPhase, 0, 0},
+    {"GeneWin_DrawList", 0x5990E0, KeyOf(&::GeneWin_DrawList), 0, {BattleWinStates_Current_addr}, bh::Answer::kPhase, 0, 0},
+    {"GeneWin_DrawList2", 0x599570, KeyOf(&::GeneWin_DrawList2), 0, {BattleWinStates_Current_addr}, bh::Answer::kPhase, 0, 0},
     {"GeneWin_DrawListFrame", 0x599780, KeyOf(&::GeneWin_DrawListFrame), 5, {kU16, kU16, 0, 0, kU8}, bh::Answer::kGarbage, 0, 0},
     {"GeneWin_DrawFormIcon", 0x599910, KeyOf(&::GeneWin_DrawFormIcon), 3, {kU16, kU16, kU8}, bh::Answer::kGarbage, 0, 0},
     {"GeneWin_DrawCursorBox", 0x599A00, KeyOf(&::GeneWin_DrawCursorBox), 6, {kU16, kU16, kU16, kU16, kU8, kU8}, bh::Answer::kGarbage, 0, 0},
@@ -234,9 +234,9 @@ void Slide(unsigned at, std::initializer_list<unsigned> bounds) {
 
 // The menu actor's member byte inside the party, and its AP about a cost.
 void ActorAp(unsigned cost) {
-    unsigned char* const actor = bh::Pointer(at::kMenuActor);
+    unsigned char* const actor = bh::Pointer(BattleE4_MenuActor_addr);
     if (bh::Often()) actor[5] = static_cast<unsigned char>(bh::Next() % 3);
-    unsigned char* const member = Mem(at::kPartyAp + (actor[5] % 3) * at::kPartyStride);
+    unsigned char* const member = Mem(ObjTrio_addr + 0x9a + (actor[5] % 3) * at::kPartyStride);
     if (bh::Often()) SetWord(member, (cost + Byte({0, 0, 1, 0xFF, 2, 0x80})) & 0xFFFF);
 }
 
@@ -254,8 +254,8 @@ void Rows(U list, unsigned rows, unsigned top_max) {
     unsigned char* const rec = Rec();
     if (bh::Often()) SetWord(rec + 0x12, bh::Next() % (top_max + 1));
     if (bh::Often()) SetWord(rec + 0x10, bh::Next() % 3);
-    Mem(at::kStep2)[0] = Byte({6, 6, 4, 0});
-    Mem(at::kStep3)[0] = Byte({5, 5, 0, 1});
+    Mem(BattleE4_Step3_addr)[0] = Byte({6, 6, 4, 0});
+    Mem(BattleE4_Step4_addr)[0] = Byte({5, 5, 0, 1});
     ActorAp(Byte({0, 3, 10, 20, 0x40}));
 }
 
@@ -271,7 +271,7 @@ void Seed(unsigned k) {
         if (bh::Often()) rec[0xB] = static_cast<unsigned char>(bh::Next() % 99);
         break;
     case 0x5984B0: {  // the drops: a count 0..8, words zero sometimes
-        Mem(at::kDropCount)[0] = Byte({0, 1, 2, 3, 5, 8, 8});
+        Mem(BattleE7_DropCount_addr)[0] = Byte({0, 1, 2, 3, 5, 8, 8});
         for (unsigned i = 0; i < 8; ++i) {
             if (bh::Half()) SetWord(Mem(at::kDropItems + 2 * i), 0);
             if (bh::Half()) Mem(at::kDropCounts + i)[0] = Byte({0, 1, 2, 9});
@@ -279,16 +279,16 @@ void Seed(unsigned k) {
         break;
     }
     case 0x598A30:   // the grid: step 4, the row 0xFF or a cell, the cost about the AP
-        Mem(at::kStep2)[0] = Byte({4, 4, 3, 5});
-        Mem(at::kGeneRow)[0] = Byte({0xFF, 0xFF, 0, 1, 2, 3});
-        Mem(at::kGeneColumn)[0] = Byte({0, 1, 2, 3, 4});
-        Mem(at::kApCost)[0] = Byte({0, 1, 4, 8, 0x10, 0xFF});
-        ActorAp(Mem(at::kApCost)[0]);
+        Mem(BattleE4_Step3_addr)[0] = Byte({4, 4, 3, 5});
+        Mem(BattleE5_GeneRow_addr)[0] = Byte({0xFF, 0xFF, 0, 1, 2, 3});
+        Mem(BattleE1_Roster_addr)[0] = Byte({0, 1, 2, 3, 4});
+        Mem(BattleActions_ApCost_addr)[0] = Byte({0, 1, 4, 8, 0x10, 0xFF});
+        ActorAp(Mem(BattleActions_ApCost_addr)[0]);
         break;
     case 0x598E10: Slide(6, {0x29, 0x19, 0xFFE9}); break;
     case 0x598E50: Slide(6, {0xFFE9, 0xFFF9, 0x29}); break;
     case 0x598E90:   // the choice: fixed or not, the box 0..2 mostly
-        Mem(at::kGeneChoice)[0] = static_cast<unsigned char>((bh::Half() ? 0x80 : 0) | (bh::Often() ? bh::Next() % 3 : bh::Next() & 0x7F));
+        Mem(BossSb_Countdown_addr)[0] = static_cast<unsigned char>((bh::Half() ? 0x80 : 0) | (bh::Often() ? bh::Next() % 3 : bh::Next() & 0x7F));
         break;
     // the slide-outs' bounds as the code holds them: DIV-0041 widens them
     // before this runs when the view is wide (battle_e7.cpp reads them there)
@@ -311,7 +311,7 @@ void Seed(unsigned k) {
         unsigned char* const r = g_record;
         if (bh::Often()) r[0xA] = static_cast<unsigned char>(bh::Next() % 7);
         if (bh::Often()) r[0xB] = static_cast<unsigned char>(bh::Next() % 7);
-        Mem(at::kFieldMember)[0] = Byte({0, 1, 2, 0xFF});
+        Mem(BattleActorCopies_ItemActor_addr)[0] = Byte({0, 1, 2, 0xFF});
         break;
     }
     default:
@@ -359,14 +359,14 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 16);
     switch ((h >> 8) % 8) {
-    case 0: Mem(at::kDropCount)[0] = static_cast<unsigned char>(b % 9); break;
-    case 1: Mem(at::kColour)[0] = b; break;
-    case 2: Mem(at::kGeneChoice)[0] = static_cast<unsigned char>((b & 0x80) | (b % 3)); break;
-    case 3: Mem(at::kApCost)[0] = b; break;
-    case 4: Mem(at::kGeneRow)[0] = h & 0x1000000 ? 0xFF : static_cast<unsigned char>(b % 4); break;
+    case 0: Mem(BattleE7_DropCount_addr)[0] = static_cast<unsigned char>(b % 9); break;
+    case 1: Mem(BattleDraw_Colour_addr)[0] = b; break;
+    case 2: Mem(BossSb_Countdown_addr)[0] = static_cast<unsigned char>((b & 0x80) | (b % 3)); break;
+    case 3: Mem(BattleActions_ApCost_addr)[0] = b; break;
+    case 4: Mem(BattleE5_GeneRow_addr)[0] = h & 0x1000000 ? 0xFF : static_cast<unsigned char>(b % 4); break;
     case 5: Mem(at::kGeneList + (h >> 24) % 0x48)[0] = b; break;
-    case 6: Mem(at::kFieldMember)[0] = static_cast<unsigned char>(b % 3); break;
-    default: Mem(at::kGeneColumn)[0] = static_cast<unsigned char>(b % 5); break;
+    case 6: Mem(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(b % 3); break;
+    default: Mem(BattleE1_Roster_addr)[0] = static_cast<unsigned char>(b % 5); break;
     }
 }
 

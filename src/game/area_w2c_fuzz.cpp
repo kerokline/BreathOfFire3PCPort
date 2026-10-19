@@ -165,19 +165,19 @@ U MovesCurrent(const U*, U answer) {
 // again after Flags_Test and KeyItem_Add).
 U MovesRow(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) SetLong(ah::Mem(at::kFlagRow), static_cast<std::int32_t>(n & 2 ? at::kStoryFlags + (n >> 8) % 0x20 : n));
+    if (n & 1) SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(n & 2 ? (Cond_Flags_addr + 0xa0) + (n >> 8) % 0x20 : n));
     return answer;
 }
 U MovesRowBool(const U*, U answer) {
     const U n = ah::Noise();
-    if (n & 1) SetLong(ah::Mem(at::kFlagRow), static_cast<std::int32_t>(at::kStoryFlags + (n >> 8) % 0x20));
+    if (n & 1) SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + (n >> 8) % 0x20));
     return answer;
 }
 
 // A choice answer: each value a choice tests, its neighbours, a negative byte
 // (read signed), anything.
 void SeedAnswer() {
-    B(at::kChoiceAnswer) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 1, 2, 3, 4, 5, 0xFF, 0x80, 0x81, 0x7F) : ah::Next());
+    B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(ah::Often() ? AH_PICK(0, 0, 1, 1, 2, 3, 4, 5, 0xFF, 0x80, 0x81, 0x7F) : ah::Next());
 }
 // A party list byte: inside the eight-byte tables mostly, anything else now
 // and then (the tables are read unchecked; .data either side).
@@ -186,7 +186,7 @@ void SeedList(U cell) { B(cell) = static_cast<unsigned char>(ah::Often() ? ah::N
 // The object triggers' arguments: (a field object, the story flags).
 void ArgsTrigger(std::uint32_t* a) {
     a[0] = Key(ah::Object(a[0]));
-    a[1] = at::kStoryFlags;
+    a[1] = (Cond_Flags_addr + 0xa0);
 }
 
 // ===========================================================================
@@ -194,13 +194,13 @@ void ArgsTrigger(std::uint32_t* a) {
 // ===========================================================================
 
 const ah::Region kRegions90[] = {
-    {at::kFocusObject, 4},
+    {AreaW1a_FocusObject_addr, 4},
 };
 void Seed90(unsigned) {
-    ah::SetPointer(at::kFocusObject, SomeRecord(ah::Next()));
+    ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(ah::Next()));
     SeedAnswer();
 }
-void Disturb90(U h) { ah::SetPointer(at::kFocusObject, SomeRecord(h >> 8)); }
+void Disturb90(U h) { ah::SetPointer(AreaW1a_FocusObject_addr, SomeRecord(h >> 8)); }
 
 // ===========================================================================
 // Area 91
@@ -249,10 +249,10 @@ float SomeFloat(U n) {
 // Gte_RotTransPers: the screen point written (its two floats), the depth word
 // the stack local takes never read.
 U PersEffect(const U* a, U answer) {
-    if (a[1] == at::kScreenX) {
+    if (a[1] == MapView_ScreenXY_addr) {
         const float x = SomeFloat(ah::Noise()), y = SomeFloat(ah::Noise());
-        std::memcpy(ah::Mem(at::kScreenX), &x, sizeof x);
-        std::memcpy(ah::Mem(at::kScreenY), &y, sizeof y);
+        std::memcpy(ah::Mem(MapView_ScreenXY_addr), &x, sizeof x);
+        std::memcpy(ah::Mem(MapView_ScreenXY_addr + 0x4), &y, sizeof y);
     }
     return answer;
 }
@@ -324,22 +324,22 @@ const ah::Callee kCallees91[] = {
 // buffer, the vertex scratch, the screen point, the camera's and the GTE's
 // matrices.
 ah::Region g_regions91[] = {
-    {at::kActiveMember, 4},
-    {at::kCondByteFE, 1},
-    {at::kAnswerMark, 1},
-    {at::kKind2Hold, 1},
-    {at::kClutStripSource - 0x200, 0x8400},
-    {at::kPacketNext, 4},
+    {Field_ActiveMember_addr, 4},
+    {Cond_ByteFE_addr, 1},
+    {AreaW0c_AnswerMark_addr, 1},
+    {Field_Kind2Hold_addr, 1},
+    {Gfx_ClutStripSource_addr - 0x200, 0x8400},
+    {Gfx_PacketNext_addr, 4},
     {0, kPacketBytes},   // g_packets, filled in at Run
-    {at::kVertex0, 0x20},
-    {at::kScreenX, 8},
-    {at::kCameraMatrix, 0x20},
-    {at::kGteMatrix, 0x20},
-    {at::kGteNearZ, 4},
-    {at::kGteProjDistance, 4},
-    {at::kGteOffsetY, 8},
+    {Prim_VertexScratch_addr, 0x20},
+    {MapView_ScreenXY_addr, 8},
+    {Camera_Matrix_addr, 0x20},
+    {Gte_Matrix_addr, 0x20},
+    {Gte_NearZ_addr, 4},
+    {Gte_ProjDistance_addr, 4},
+    {Gte_OffsetY_addr, 8},
 };
-const ah::DataTable kTables91[] = {{at::kArea91States, at::kArea91StateCount}};
+const ah::DataTable kTables91[] = {{Area91_States_addr, at::kArea91StateCount}};
 
 // A rotation matrix the camera could hold: nine s16 within +-0x1000 (the
 // random fill's are up to eight times that, which throws every point of the
@@ -353,31 +353,31 @@ void SeedRotation(unsigned char* m) {
 // and a screen offset - two rounds in three; the random fill else.
 void SeedProjection() {
     if (!ah::Often()) return;
-    SeedRotation(ah::Mem(at::kCameraMatrix));
-    SeedRotation(ah::Mem(at::kGteMatrix));
+    SeedRotation(ah::Mem(Camera_Matrix_addr));
+    SeedRotation(ah::Mem(Gte_Matrix_addr));
     for (unsigned i = 0; i < 3; ++i)
-        SetLong(ah::Mem(at::kGteMatrix + 0x14 + i * 4), static_cast<std::int32_t>(ah::Next() % 0x8000) - 0x4000 + (i == 2 ? 0x6000 : 0));
-    SetLong(ah::Mem(at::kGteProjDistance), static_cast<std::int32_t>(0x100 + ah::Next() % 0x300));
-    SetLong(ah::Mem(at::kGteNearZ), static_cast<std::int32_t>(ah::Next() % 0x100));
-    SetLong(ah::Mem(at::kGteOffsetY), static_cast<std::int32_t>(ah::Next() % 0x100));
-    SetLong(ah::Mem(at::kGteOffsetY + 4), static_cast<std::int32_t>(ah::Next() % 0x200));
+        SetLong(ah::Mem(Gte_Matrix_addr + 0x14 + i * 4), static_cast<std::int32_t>(ah::Next() % 0x8000) - 0x4000 + (i == 2 ? 0x6000 : 0));
+    SetLong(ah::Mem(Gte_ProjDistance_addr), static_cast<std::int32_t>(0x100 + ah::Next() % 0x300));
+    SetLong(ah::Mem(Gte_NearZ_addr), static_cast<std::int32_t>(ah::Next() % 0x100));
+    SetLong(ah::Mem(Gte_OffsetY_addr), static_cast<std::int32_t>(ah::Next() % 0x100));
+    SetLong(ah::Mem(Gte_OffsetY_addr + 4), static_cast<std::int32_t>(ah::Next() % 0x200));
 }
 
 void Seed91(unsigned k) {
-    ah::SetPointer(at::kActiveMember, SomeRecord(ah::Next()));
+    ah::SetPointer(Field_ActiveMember_addr, SomeRecord(ah::Next()));
     Gfx_PacketNext = g_packets + (ah::Next() % 8) * 4;
     unsigned char* const o = Sprite_Current;
     switch (k) {
     case k91Take: case k91Msg7:
         SeedAnswer();
-        if (ah::Often()) B(at::kChoiceAnswer) = 0;
+        if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = 0;
         break;
     case k91Run: o[4] = static_cast<unsigned char>(ah::Next() % at::kArea91StateCount); break;
     case k91S0:
-        B(at::kPartyList0) = static_cast<unsigned char>(ah::Often() ? AH_PICK(6, 3, 6, 3, 2, 4, 5, 7, 0, 0xFF) : ah::Next());
+        B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(ah::Often() ? AH_PICK(6, 3, 6, 3, 2, 4, 5, 7, 0, 0xFF) : ah::Next());
         break;
     case k91S1:
-        if (ah::Often()) B(at::kLeader137) = 0;
+        if (ah::Often()) B(ObjTrio_addr + 0x137) = 0;
         break;
     case k91S2:
         o[0xA] = static_cast<unsigned char>(ah::Often() ? AH_PICK(0x1D, 0x1D, 0x1C, 0x1E, 0x1F, 0xFF, 0x9D) : ah::Next());
@@ -421,11 +421,11 @@ void Disturb91(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 6) {
     case 0: Cond_ByteFE = static_cast<unsigned char>(v & 1); break;
-    case 1: ah::SetPointer(at::kActiveMember, SomeRecord(h >> 16)); break;
+    case 1: ah::SetPointer(Field_ActiveMember_addr, SomeRecord(h >> 16)); break;
     case 2: Field_Kind2Hold = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 3: Gfx_PacketNext = g_packets + (v % 16) * 4; break;
-    case 4: B(at::kLeader137) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    default: B(at::kPartyList0) = static_cast<unsigned char>(v & 1 ? 6 : v); break;
+    case 4: B(ObjTrio_addr + 0x137) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
+    default: B(Cond_Flags_addr + 0xd2) = static_cast<unsigned char>(v & 1 ? 6 : v); break;
     }
 }
 // ===========================================================================
@@ -444,15 +444,15 @@ const ah::Callee kCallees92[] = {
 // Beyond the field frame: every effect record a slot byte can name (a
 // disturbed +0xB reaches past the four the stand-in answers), the row pointer.
 const ah::Region kRegions92[] = {
-    {at::kEffectObjects, 0xFF * at::kEffectStride},
-    {at::kFlagRow, 4},
+    {Effect_Objects_addr, 0xFF * at::kEffectStride},
+    {AreaW0c_FlagRow_addr, 4},
 };
 void Seed92(unsigned k) {
     switch (k) {
     case k92Step: case k92Run0: case k92Run28: case k92Flag1B: SeedAnswer(); break;
-    case k92Spawn4M0: case k92Spawn3M0: case k92Spawn1M0: SeedList(at::kPartyList0); break;
-    case k92Spawn3M1: case k92Spawn1M1: SeedList(at::kPartyList1); break;
-    case k92Spawn3M2: case k92Spawn1M2: SeedList(at::kPartyList2); break;
+    case k92Spawn4M0: case k92Spawn3M0: case k92Spawn1M0: SeedList(Cond_Flags_addr + 0xd2); break;
+    case k92Spawn3M1: case k92Spawn1M1: SeedList(Cond_Flags_addr + 0xd3); break;
+    case k92Spawn3M2: case k92Spawn1M2: SeedList(Cond_Flags_addr + 0xd4); break;
     default: break;
     }
 }
@@ -462,9 +462,9 @@ void Args92(unsigned k, std::uint32_t* a) {
 void Disturb92(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 3) {
-    case 0: B(at::kPartyList0 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
-    case 1: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 5); break;
-    default: SetLong(ah::Mem(at::kFlagRow), static_cast<std::int32_t>(at::kStoryFlags + v % 0x20)); break;
+    case 0: B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
+    case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;
+    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
     }
 }
 
@@ -478,7 +478,7 @@ void Disturb92(U h) {
 U PatchEffect(const U* a, U answer) {
     const U n = ah::Noise();
     const U entry = a[0];
-    if ((n & 1) && entry >= at::kMapHeader && entry + 4 <= at::kMapHeader + 0x2000) {
+    if ((n & 1) && entry >= AreaMap_Header_addr && entry + 4 <= AreaMap_Header_addr + 0x2000) {
         unsigned char* const p = ah::Mem(entry);
         SetWord(p + 2, (n >> 8) % 4);
     }
@@ -496,8 +496,8 @@ const ah::Callee kCallees94[] = {
     {W2C_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
 };
 const ah::Region kRegions94[] = {
-    {at::kFlagRow, 4},
-    {at::kLastArea, 4},
+    {AreaW0c_FlagRow_addr, 4},
+    {AreaW2c_LastArea_addr, 4},
 };
 // The patch chain: AreaMap_PatchBase at a dword of the block's first 7 KiB,
 // then n (0..24) dwords not 0 with steps 0..3 in their high words (a zero now
@@ -505,9 +505,9 @@ const ah::Region kRegions94[] = {
 // lands inside the chain or on a zero.
 void SeedChain() {
     const U base = 0x20 + ah::Next() % 0x6C0;
-    SetWord(ah::Mem(at::kPatchBase), base);
+    SetWord(ah::Mem(AreaMap_PatchBase_addr), base);
     const unsigned n = ah::Next() % 25;
-    unsigned char* const p = ah::Mem(at::kMapHeader + base * 4);
+    unsigned char* const p = ah::Mem(AreaMap_Header_addr + base * 4);
     for (unsigned i = 0; i < n; ++i) {
         const U low = 1 + ah::Next() % 0xFFFF;
         const U step = ah::Next() % 4;
@@ -518,11 +518,11 @@ void SeedChain() {
 void Seed94(unsigned k) {
     switch (k) {
     case k94Msg0: case k94Msg1: case k94Flag15: case k94Flags16: case k94Flag20: SeedAnswer(); break;
-    case k94S2M0: case k94S4M0: case k94S3M0: case k94S4M0E: SeedList(at::kPartyList0); break;
-    case k94S3M1: case k94S1M1: case k94S4M1: SeedList(at::kPartyList1); break;
-    case k94S3M2: case k94S1M2: case k94S4M2: SeedList(at::kPartyList2); break;
+    case k94S2M0: case k94S4M0: case k94S3M0: case k94S4M0E: SeedList(Cond_Flags_addr + 0xd2); break;
+    case k94S3M1: case k94S1M1: case k94S4M1: SeedList(Cond_Flags_addr + 0xd3); break;
+    case k94S3M2: case k94S1M2: case k94S4M2: SeedList(Cond_Flags_addr + 0xd4); break;
     case k94Init:
-        SetWord(ah::Mem(at::kLastArea), ah::Often() ? 0x79 : AH_PICK(0x78, 0x7A, 0x179, 0x7900, 0));
+        SetWord(ah::Mem(AreaW2c_LastArea_addr), ah::Often() ? 0x79 : AH_PICK(0x78, 0x7A, 0x179, 0x7900, 0));
         SeedChain();
         break;
     default: break;
@@ -531,9 +531,9 @@ void Seed94(unsigned k) {
 void Disturb94(U h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 3) {
-    case 0: B(at::kPartyList0 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
-    case 1: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 5); break;
-    default: SetLong(ah::Mem(at::kFlagRow), static_cast<std::int32_t>(at::kStoryFlags + v % 0x20)); break;
+    case 0: B(Cond_Flags_addr + 0xd2 + (v % 3)) = static_cast<unsigned char>(v % 8); break;
+    case 1: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 5); break;
+    default: SetLong(ah::Mem(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(Cond_Flags_addr + 0xa0 + v % 0x20)); break;
     }
 }
 #undef W2C_OURS

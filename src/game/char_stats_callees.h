@@ -40,8 +40,8 @@ constexpr std::uint32_t kInvIds = 0x656B00;        // id list pointer per catego
 constexpr std::uint32_t kInvCounts = 0x656B14;     // count list pointer per category (the fifth is 0)
 constexpr std::uint32_t kKeyItems = 0x904554;      // 32 id bytes (the PSX 0x80145448)
 constexpr std::uint32_t kExtraAccessory = 0x904130;   // u8: Inventory_Count's category-3 extras
-constexpr std::uint32_t kExtraItem = 0x90412E;        // u8, with its count at 0x90412F
-constexpr std::uint32_t kExtraCount = 0x90412F;
+// kExtraItem: now CharStats_ExtraItem (symbols.toml). u8, with its count at 0x90412F
+// kExtraCount: now CharStats_ExtraCount (symbols.toml).
 constexpr std::uint32_t kTextRecords = 0x904CE0;   // Text_Records, 32 bytes each
 // The item tables (symbols.toml's NameTable_*), their strides and the fields
 // read here.

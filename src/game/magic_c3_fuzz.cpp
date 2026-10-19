@@ -137,7 +137,7 @@ const mh::Region kRegions[] = {
 };
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(mh::at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 
 // The group's cells a function reads again after a call: Gfx_PacketNext, the
 // wash's two angle words, the fade byte +9 the wash reads after each sine,
@@ -174,7 +174,7 @@ void Seed(unsigned k) {
         break;
     // the waits: each side of their thresholds
     case kMagic002_Wait: {
-        const std::uint32_t at = static_cast<std::uint32_t>(Long(mh::Pointer(mh::at::kCurrentSlot) + 0x80));
+        const std::uint32_t at = static_cast<std::uint32_t>(Long(mh::Pointer(BattleFlow_TaskCurrent_addr) + 0x80));
         if (mh::Often()) mh::Mem(at)[9] = static_cast<unsigned char>(0x27 + mh::Next() % 3);
         break;
     }

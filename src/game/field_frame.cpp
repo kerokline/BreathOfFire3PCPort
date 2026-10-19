@@ -13,6 +13,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -20,6 +21,12 @@
 namespace {
 
 using namespace move_script;
+
+// Sprite_Current typed (src/game/records.h). It may be a Sprite_Objects
+// record or another family whose first 0x80 bytes are a sprite object's (an
+// ObjTrio member, the kind-2 object), so only that part is named.
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 
 std::uint32_t Address(const volatile void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 
@@ -258,7 +265,7 @@ extern "C" void __cdecl Field_ObjectsScreen(void) {
         } else {
             object[0x29] = (object[0x24] & 0x10) ? 4 : Draw_OtSlot;
         }
-        if (Sprite_Current[6] == 0x0A) g.screen_a();
+        if (Cur()->type == 0x0A) g.screen_a();
         else g.update_screen();
     }
 }
@@ -288,16 +295,16 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
         if (timed == 0 && (flags & 0x20)) {
             if (flags & 0x10) {
                 const unsigned char turned = g.turn_target(context);
-                unsigned char* const sprite = Sprite_Current;
-                if (turned != 0 && !(sprite[7] & 8)) {
-                    object[0x85] = static_cast<unsigned char>(sprite[8] & 7);
-                    if (sprite[7] & 2) {
-                        g.face(static_cast<unsigned char>(sprite[8] & 7));
+                records::SpriteObject* const sprite = Cur();
+                if (turned != 0 && !(sprite->flags2 & 8)) {
+                    object[0x85] = static_cast<unsigned char>(sprite->direction & 7);
+                    if (sprite->flags2 & 2) {
+                        g.face(static_cast<unsigned char>(sprite->direction & 7));
                     } else {   // turn to face ObjTrio's first member
-                        sprite[8] = static_cast<unsigned char>((ObjTrio[8] ^ 4) & 7);
-                        g.face(Sprite_Current[8]);
+                        sprite->direction = static_cast<unsigned char>((ObjTrio[8] ^ 4) & 7);
+                        g.face(Cur()->direction);
                     }
-                    if (Sprite_Current[1] == 0x0A) object[0x85] |= 1;
+                    if (Cur()->state == 0x0A) object[0x85] |= 1;
                 }
             } else {
                 g.idle(object);
@@ -310,17 +317,17 @@ extern "C" void __cdecl Field_ObjectsFrame(void) {
             if (Word(object + 0x9C) > 0x1E && timed == 0) g.idle_long(object);
             else CallHandler(object);
         }
-        unsigned char* const sprite = Sprite_Current;
-        if (sprite[6] == 0x0A) continue;
+        records::SpriteObject* const sprite = Cur();
+        if (sprite->type == 0x0A) continue;
         const unsigned char after = context[0];
         if (after & 0x40) {
-            if (sprite[7] & 0x20) continue;
-            if (sprite[0] & 0x10) g.tick();
+            if (sprite->flags2 & 0x20) continue;
+            if (sprite->flags & 0x10) g.tick();
             else g.tick_once();
         } else if (after & 8) {
-            g.face(sprite[8]);
+            g.face(sprite->direction);
             context[0] &= 0xF7;
-        } else if (!(sprite[7] & 0x20)) {
+        } else if (!(sprite->flags2 & 0x20)) {
             const int extra = static_cast<int>(object[0x84]) - 2;
             const unsigned ticks = (extra < 0 ? 0u : static_cast<unsigned>(extra) & 0xFF) + 1;
             for (unsigned i = 0; i < ticks; ++i) g.tick();
@@ -367,9 +374,9 @@ extern "C" void __cdecl Party_ExtraFrame(void) {
 // FUN_8015B334's head) - 4 with +0x24 bit 4, 6 for a record with byte 3 bit
 // 5, else Draw_OtSlot - then its screen position (a tail jmp in the original).
 extern "C" void __cdecl Sprite_UpdateScreenA(void) {
-    unsigned char* const sprite = Sprite_Current;
-    if (sprite[0x24] & 0x10) sprite[0x29] = 4;
-    else sprite[0x29] = (Record54(sprite)[3] & 0x20) ? 6 : Draw_OtSlot;
+    records::SpriteObject* const sprite = Cur();
+    if (sprite->draw_flags & 0x10) sprite->ot_slot = 4;
+    else sprite->ot_slot = (Record54(Bytes(sprite))[3] & 0x20) ? 6 : Draw_OtSlot;
     g.project_a();
 }
 
@@ -385,29 +392,29 @@ extern "C" void __cdecl Sprite_UpdateScreenA(void) {
 // it, and Gte_LoadVertex carries its stale stack into Gte_Vertices[3]'s top
 // half, which nothing reads.
 extern "C" void __cdecl Sprite_ProjectA(void) {
-    unsigned char* sprite = Sprite_Current;
-    const unsigned z_whole = Word(sprite + 0x38) == 0, x_whole = Word(sprite + 0x34) == 0;
-    SetWord(sprite + 0x32, static_cast<unsigned>(Word(sprite + 0x3A) - z_whole - x_whole + Word(sprite + 0x36) -
+    records::SpriteObject* sprite = Cur();
+    const unsigned z_whole = Word(Bytes(sprite) + 0x38) == 0, x_whole = Word(Bytes(sprite) + 0x34) == 0;
+    sprite->draw_key = static_cast<unsigned>(Word(Bytes(sprite) + 0x3A) - z_whole - x_whole + Word(Bytes(sprite) + 0x36) -
                                                  static_cast<std::uint16_t>(MapView_Origin[1]) -
-                                                 static_cast<std::uint16_t>(MapView_Origin[0]) + 2));
-    sprite = Sprite_Current;
-    SetWord(sprite + 0x32, static_cast<unsigned>(Word(sprite + 0x32) + static_cast<signed char>(Record54(sprite)[1])));
-    sprite = Sprite_Current;
-    SetWord(sprite + 0x32, static_cast<unsigned>(sprite[0x32]) << 8);
+                                                 static_cast<std::uint16_t>(MapView_Origin[0]) + 2);
+    sprite = Cur();
+    sprite->draw_key = static_cast<unsigned>(sprite->draw_key + static_cast<signed char>(Record54(Bytes(sprite))[1]));
+    sprite = Cur();
+    sprite->draw_key = static_cast<unsigned>(Bytes(sprite)[0x32]) << 8;
     unsigned low;
-    sprite = Sprite_Current;
-    if (Draw_OtSlot == 4) low = static_cast<unsigned>(Long(sprite + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
-    else low = ((Word(sprite + 0x3E) ^ 0xF01Fu) >> 5) & 0xFF;
-    SetWord(sprite + 0x32, Word(sprite + 0x32) | low);
-    sprite = Sprite_Current;
-    if (!(Record54(sprite)[3] & 0x10)) {
+    sprite = Cur();
+    if (Draw_OtSlot == 4) low = static_cast<unsigned>(Long(Bytes(sprite) + (Draw_SortOnX ? 0x34 : 0x38)) >> 15) & 0xFF;
+    else low = ((Word(Bytes(sprite) + 0x3E) ^ 0xF01Fu) >> 5) & 0xFF;
+    sprite->draw_key = sprite->draw_key | low;
+    sprite = Cur();
+    if (!(Record54(Bytes(sprite))[3] & 0x10)) {
         g.inherit_key();
-        sprite = Sprite_Current;
+        sprite = Cur();
     }
     short vertex[4];
-    vertex[0] = static_cast<short>((Long(sprite + 0x34) >> 9) - 0x4000);
-    vertex[1] = static_cast<short>((Long(sprite + 0x38) >> 9) - 0x4000);
-    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(sprite + 0x3E)) / 2));
+    vertex[0] = static_cast<short>((sprite->x >> 9) - 0x4000);
+    vertex[1] = static_cast<short>((sprite->z >> 9) - 0x4000);
+    vertex[2] = static_cast<short>(-(static_cast<std::int16_t>(Word(Bytes(sprite) + 0x3E)) / 2));
     vertex[3] = 0;   // DIV-0023
     unsigned long vertex_words[2];
     std::memcpy(vertex_words, vertex, sizeof vertex_words);
@@ -421,19 +428,19 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     SetLong(Sprite_Current + 0x78, static_cast<std::int32_t>(ThroughX87(static_cast<std::uint32_t>(screen[1]))));
     SetWord(Sprite_Current + 0x30, Ftol16(static_cast<std::uint32_t>(screen[1])));
 
-    sprite = Sprite_Current;
-    const unsigned char* const margin = Sprite_ScreenMargins + ((Record54(sprite)[3] >> 3) & 1) * 4u;
-    const int x = static_cast<std::int16_t>(Word(sprite + 0x2E)), y = static_cast<std::int16_t>(Word(sprite + 0x30));
+    sprite = Cur();
+    const unsigned char* const margin = Sprite_ScreenMargins + ((Record54(Bytes(sprite))[3] >> 3) & 1) * 4u;
+    const int x = static_cast<std::int16_t>(static_cast<std::uint16_t>(sprite->screen_x)), y = static_cast<std::int16_t>(static_cast<std::uint16_t>(sprite->screen_y));
     if (x > 0x140 + margin[0] || x < -static_cast<int>(margin[1]) || y > 0xF0 + margin[2] || y < -static_cast<int>(margin[3])) {
-        sprite[0] |= 0x80;   // off screen
+        sprite->flags |= 0x80;   // off screen
         // DIV-0041 (UC2): in the band, drawn after all (BandNote above).
         const int fill = g_band_fill >= 0 ? g_band_fill : static_cast<int>(Widescreen_Fill());
         if (fill != 0 && x <= 0x140 + margin[0] + fill && x >= -static_cast<int>(margin[1]) - fill &&
             y <= 0xF0 + margin[2] && y >= -static_cast<int>(margin[3]))
-            BandNote(sprite);
+            BandNote(Bytes(sprite));
         return;
     }
-    sprite[0] &= 0x7F;
+    sprite->flags &= 0x7F;
     const unsigned char n = Sprite_DrawListCount;
     if (n >= 0x28) return;
     Sprite_DrawListCount = static_cast<unsigned char>(n + 1);
@@ -483,7 +490,7 @@ extern "C" void __cdecl Sprite_DrawOverlays(void) {
         unsigned char* const sprite = Sprite_OverlayList[i];
         Sprite_Current = sprite;
         SetLong(sprite + 0x74, static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(Word(sprite + 0x2E)))));
-        SetLong(Sprite_Current + 0x78, static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(Word(Sprite_Current + 0x30)))));
+        Cur()->screen_yf = static_cast<std::int32_t>(FloatBits(static_cast<std::int16_t>(static_cast<std::uint16_t>(Cur()->screen_y))));
         g.sprite_draw();
         ++i;
     } while (i < Sprite_OverlayListCount);

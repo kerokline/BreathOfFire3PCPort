@@ -35,7 +35,7 @@ constexpr std::uint32_t kTaskCurrent = 0x93B8C4;  // unsigned char*: the slot be
 constexpr std::uint32_t kTaskOwner = 0x93B940;    // the running slot's +0x80, copied there by BattleTask_RunAll
 // The party's working records (ObjTrio, 0x14C each) and the eight enemy
 // objects (0x128 each): an actor 0..2 is a member, 3.. an enemy.
-constexpr std::uint32_t kMembers = 0x802D40;
+// kMembers: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kMemberSize = 0x14C;
 constexpr std::uint32_t kEnemies = 0x93B960;
 constexpr std::uint32_t kEnemySize = 0x128;
@@ -43,18 +43,18 @@ constexpr std::uint32_t kEnemySize = 0x128;
 constexpr std::uint32_t kPhase = 0x904AA0;        // u8 here: the actor watch waits out phase 5, the follower ends outside 1
 constexpr std::uint32_t kRoundCount = 0x904AA2;   // u8, + 1 by the second round hook
 constexpr std::uint32_t kRoundFlags = 0x904AA8;   // dword: 0x400 the actor watch's gate, 0x800 the magic rows'
-constexpr std::uint32_t kBattleEnd = 0x904AE8;    // u8: bit 0 gates the two round hooks
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 gates the two round hooks
 constexpr std::uint32_t kTurnGate = 0x904B34;     // u8, compared with the owner's actor
 // The sprite animation set pointer (docs/sprite-pose.md): the pose task and
 // the actor watch point it at 0x8C5D80 around their state call and back at
 // 0x8B3580 (mode_flow's pool) after it.
-constexpr std::uint32_t kAnimSet = 0x9039D8;
+// kAnimSet: now BattleE2_AnimSet (symbols.toml).
 constexpr std::uint32_t kAnimSetBattle = 0x8C5D80;
 constexpr std::uint32_t kAnimSetField = 0x8B3580;
-constexpr std::uint32_t kLastArea = 0x802290;     // u16: the previous area (mode_flow_callees.h)
-constexpr std::uint32_t kScriptVar7 = 0x8034E4;   // MoveScript_Var7, and the byte after it
+// kLastArea: now AreaW2c_LastArea (symbols.toml). u16: the previous area (mode_flow_callees.h)
+// kScriptVar7: now MoveScript_Var7 (symbols.toml). MoveScript_Var7, and the byte after it
 // Constant tables in .data.
-constexpr std::uint32_t kPartyOffsets = 0x64DF70;  // s8 pairs (dx, dy) by (sprite +0x2C) * 4 + sprite +8
+// kPartyOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). s8 pairs (dx, dy) by (sprite +0x2C) * 4 + sprite +8
 constexpr std::uint32_t kPoseClut = 0x64B058;      // u8 by mode +7; the CLUT row is it less 0x50
 constexpr std::uint32_t kPoseAnim = 0x64B064;      // u8 by mode * 2 + (+8 >> 1)
 constexpr std::uint32_t kMagicRows = 0x64C2B8;     // Magic_Rows: 151 x {u16 file, u16 pad, code pointer}

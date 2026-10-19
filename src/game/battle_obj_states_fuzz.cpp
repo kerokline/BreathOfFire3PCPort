@@ -18,6 +18,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_obj_states_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -31,7 +32,7 @@ using move_script::SetWord;
 using move_script::Word;
 
 std::uint32_t Address(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
-unsigned char* Member(unsigned i) { return At(at::kMembers + i * at::kMemberSize); }
+unsigned char* Member(unsigned i) { return At(ObjTrio_addr + i * at::kMemberSize); }
 unsigned char* Slot(unsigned i) { return At(at::kTasks + i * at::kTaskSize); }
 unsigned char* S() { return Sprite_Current; }
 unsigned char* F() { return Field_State; }
@@ -62,7 +63,7 @@ void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::u
 // A pointer as the log keeps it: a member by number, else as it is.
 std::uint32_t Id(const void* p) {
     const std::uint32_t at = Address(p);
-    if (at >= at::kMembers && at < at::kMembers + 3 * at::kMemberSize) return 0x10000u + (at - at::kMembers);
+    if (at >= ObjTrio_addr && at < ObjTrio_addr + 3 * at::kMemberSize) return 0x10000u + (at - ObjTrio_addr);
     return at;
 }
 // What the callee sees of the object it runs on.
@@ -89,10 +90,10 @@ void Disturb() {
         else S()[7] = static_cast<unsigned char>(v % kTintSlots);
         break;
     case 6: S()[8] = static_cast<unsigned char>(v % 4); break;
-    case 7: F()[0x89] = static_cast<unsigned char>(v % 14); break;
+    case 7: reinterpret_cast<records::PartyMember*>(F())->char_id = static_cast<unsigned char>(v % 14); break;
     case 8: F()[0x125] = static_cast<unsigned char>(v % 2 ? 4 : v % 6); break;
     case 9: F()[0x134] = static_cast<unsigned char>(F()[0x134] ^ (1u << (v % 3))); break;
-    case 10: SetLong(F() + 0x130, Long(F() + 0x130) ^ static_cast<std::int32_t>(1u << (9 + v % 4))); break;
+    case 10: reinterpret_cast<records::PartyMember*>(F())->flags_130 = static_cast<std::int32_t>(reinterpret_cast<records::PartyMember*>(F())->flags_130) ^ static_cast<std::int32_t>(1u << (9 + v % 4)); break;
     case 11: {
         static const unsigned char kBits[] = {4, 0x40, 0x80};
         if (w % 3 == 0) At(at::kRoundFlags + 1)[0] = static_cast<unsigned char>(At(at::kRoundFlags + 1)[0] ^ (w % 2 ? 0x08 : 0x80));
@@ -104,15 +105,15 @@ void Disturb() {
         At(at::kPhase)[0] = kPhases[v % 3];
         break;
     }
-    case 13: At(at::kTintOn)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
+    case 13: At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(v % 2 ? 0 : v); break;
     case 14: g_target[w % sizeof g_target] = static_cast<unsigned char>(v % 3 == 0 ? S()[5] : v % 3 == 1 ? (v | 0x80) : v & 0x7F); break;
     case 15: {
         static const unsigned char kKinds[] = {4, 7, 8};
-        At(at::kCastKind)[0] = v % 2 ? kKinds[w % 3] : static_cast<unsigned char>(v % 28);
+        At(BattlePhases_B89_addr)[0] = v % 2 ? kKinds[w % 3] : static_cast<unsigned char>(v % 28);
         break;
     }
     case 16: SetWord(At(at::kSkillId), v % kSkills); break;
-    case 17: At(at::kSoundSet + (w % 3 == 0 ? 0 : w % 3 == 1 ? at::kSwingTarget - at::kSoundSet : at::kSkillCost - at::kSoundSet))[0] =
+    case 17: At(BattleE3_SoundSet_addr + (w % 3 == 0 ? 0 : w % 3 == 1 ? at::kSwingTarget - BattleE3_SoundSet_addr : BattleE3_Cost_addr - BattleE3_SoundSet_addr))[0] =
                  static_cast<unsigned char>(v);
         break;
     case 18: Slot(S()[5] % kTaskSlots)[9] = static_cast<unsigned char>(static_cast<int>(v % 5) - 2 + (w % 2 ? 11 : -11)); break;
@@ -289,25 +290,25 @@ enum : unsigned {
 const Clone kClones[kCount] = {
     {"BattleObj_StateInit", 0x441200, 0xA4, BO_N(kInitCalls), {}, 0},
     {"BattleObj_StateStand", 0x441550, 0x13, BO_N(kStandCalls), {}, 0},
-    {"BattleObj_StateIdle", 0x441570, 0x22E, BO_N(kIdleCalls), {{0xF, at::kIdleSubs, kIdle}}, 1},
+    {"BattleObj_StateIdle", 0x441570, 0x22E, BO_N(kIdleCalls), {{0xF, BattleObj_StateTable_addr + 0x34, kIdle}}, 1},
     {"BattleObj_IdleTintOn", 0x4417A0, 0x46, BO_N(kTintOnCalls), {}, 0},
     {"BattleObj_IdleTintOff", 0x4417F0, 0x6C, BO_N(kTintOffCalls), {}, 0},
-    {"BattleObj_StateAttack", 0x441860, 0x23, nullptr, 0, {{0x10, at::kAttackSpecial, kSpecial}, {0x1F, at::kAttackByChar, kByChar}}, 2},
+    {"BattleObj_StateAttack", 0x441860, 0x23, nullptr, 0, {{0x10, BattleObj_StateTable_addr + 0x68, kSpecial}, {0x1F, BattleObj_StateTable_addr + 0x3c, kByChar}}, 2},
     {"BattleObj_AttackStart", 0x441890, 0x91, BO_N(kAttackStartCalls), {}, 0},
-    {"BattleObj_StateSwing", 0x441930, 0x12, nullptr, 0, {{0xE, at::kSwingSubs, kSwing}}, 1},
+    {"BattleObj_StateSwing", 0x441930, 0x12, nullptr, 0, {{0xE, BattleObj_SwingSubs_addr, kSwing}}, 1},
     {"BattleObj_SwingCue", 0x441950, 0x72, BO_N(kSwingCueCalls), {}, 0},
     {"BattleObj_SwingEnd", 0x4419D0, 0x39, BO_N(kSwingEndCalls), {}, 0},
-    {"BattleObj_StateCast", 0x4429E0, 0x12, nullptr, 0, {{0xE, at::kCastSubs, kCast}}, 1},
+    {"BattleObj_StateCast", 0x4429E0, 0x12, nullptr, 0, {{0xE, BattleObj_CastSubs_addr, kCast}}, 1},
     {"BattleObj_CastStart", 0x442A00, 0x112, BO_N(kCastStartCalls), {}, 0},
     {"BattleObj_CastCue", 0x442B20, 0x54, BO_N(kCastCueCalls), {}, 0},
     {"BattleObj_CastWait", 0x442B80, 0x20, BO_N(kTickOnceAt0), {}, 0},
     // 0x442BA0..0x442BB6 and its second chunk 0x442C60..0x442C6E, and what
     // lies between them (never run in the copy): its internal jmp stays aimed
-    {"BattleObj_StateCastDone", 0x442BA0, 0xD0, BO_N(kCastDoneBodyCalls), {{0xE, at::kCastDoneSubs, kCastDone}}, 1},
+    {"BattleObj_StateCastDone", 0x442BA0, 0xD0, BO_N(kCastDoneBodyCalls), {{0xE, BattleObj_CastDoneSubs_addr, kCastDone}}, 1},
     {"BattleObj_CastDoneTick", 0x442BC0, 0xE, BO_N(kTickOnceAt0), {}, 0},
     {"BattleObj_CastDone", 0x442BD0, 0x64, BO_N(kCastDoneCalls), {}, 0},
     {"BattleObj_CastDoneWait", 0x442C50, 0xF, BO_N(kTickOnceAt0), {}, 0},
-    {"BattleObj_State12", 0x442D60, 0x12, nullptr, 0, {{0xE, at::kState12Subs, kTwelve}}, 1},
+    {"BattleObj_State12", 0x442D60, 0x12, nullptr, 0, {{0xE, BattleObj_State12Subs_addr, kTwelve}}, 1},
     {"BattleObj_State12Pose", 0x442D80, 0x2B, BO_N(kPoseCalls), {}, 0},
     {"BattleObj_State12Wait", 0x442DB0, 0x1D, BO_N(kTickOnceAt0), {}, 0},
     {"BattleObj_EndAction", 0x442DD0, 0x62, BO_N(kEndCalls), {}, 0},
@@ -318,14 +319,14 @@ const Clone kClones[kCount] = {
 
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
-    {at::kMembers, 3 * at::kMemberSize},   // ObjTrio: Sprite_Current and Field_State point here
+    {ObjTrio_addr, 3 * at::kMemberSize},   // ObjTrio: Sprite_Current and Field_State point here
     {at::kPhase, 0x100},                   // the battle's globals, 0x904AA0..0x904B9F
     {at::kTasks, kTaskSlots * at::kTaskSize},
     {0x937F88, 4},                         // Sprite_Current
     {0x905D98, 4},                         // Field_State
-    {at::kTargetPtr, 4},
-    {at::kHomeX, 8},
-    {at::kTints, kTintSlots * 12},
+    {BattleActorCopies_Command_addr, 4},
+    {BossSi_CentreX_addr, 8},
+    {MoveScript_TintRecords_addr, kTintSlots * 12},
     {at::kAttackCount, 0x28},              // constant data from here on - random here, put back after
     {at::kCastCount, 0x28},
     {at::kSkillWord, kSkills * 24},
@@ -375,52 +376,54 @@ void Fix() {
     Field_State = Next() % 4 == 0 ? Member(Next() % 3) : Member(m);
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const o = Member(i);
-        o[5] = static_cast<unsigned char>(Often() ? Next() % 3 : Next() % kTaskSlots);
+        auto* const member_rec = reinterpret_cast<records::PartyMember*>(o);
+        member_rec->member = static_cast<unsigned char>(Often() ? Next() % 3 : Next() % kTaskSlots);
         o[7] = static_cast<unsigned char>(Next() % kTintSlots);
-        if (Often()) o[8] = static_cast<unsigned char>(Next() % 4);
+        if (Often()) member_rec->direction = static_cast<unsigned char>(Next() % 4);
     }
-    SetLong(At(at::kTargetPtr), static_cast<std::int32_t>(Address(g_target + Next() % sizeof g_target)));
+    SetLong(At(BattleActorCopies_Command_addr), static_cast<std::int32_t>(Address(g_target + Next() % sizeof g_target)));
     SetWord(At(at::kSkillId), Next() % kSkills);
 }
 
-unsigned char* Target() { return move_script::At(static_cast<std::uint32_t>(Long(At(at::kTargetPtr)))); }
+unsigned char* Target() { return move_script::At(static_cast<std::uint32_t>(Long(At(BattleActorCopies_Command_addr)))); }
 
 // Each branch's boundaries, on top of the random bytes.
 void Seed(unsigned k) {
     unsigned char* const s = S();
     unsigned char* const f = F();
+    auto* const member_f = reinterpret_cast<records::PartyMember*>(f);
     switch (k) {
     case kIdleFn: {
         static const unsigned char kPhases[] = {0, 1, 1, 5, 5, 2};
         At(at::kPhase)[0] = kPhases[Next() % 6];
         static const unsigned char kArgs[] = {0, 1, 2, 0xFF};
-        At(at::kPhaseArg)[0] = kArgs[Next() % 4];
-        At(at::kTargetMember)[0] = static_cast<unsigned char>(Next() % 3);
-        if (Half()) f[0x89] = At(at::kMembers + At(at::kTargetMember)[0] * at::kMemberSize + 0x89)[0];
+        At(BattleActions_Step_addr)[0] = kArgs[Next() % 4];
+        At(BattleE4_AutoMember_addr)[0] = static_cast<unsigned char>(Next() % 3);
+        if (Half()) member_f->char_id = At(ObjTrio_addr + At(BattleE4_AutoMember_addr)[0] * at::kMemberSize + 0x89)[0];
         if (Often()) f[0x90] = static_cast<unsigned char>(f[0x90] | 0x20);
         static const signed char kSteps[] = {10, 11, 12, 13, -10, -11, -12, -13, 0, 127, -128};
         Slot(s[5] % kTaskSlots)[9] = static_cast<unsigned char>(kSteps[Next() % 11]);
-        if (Half()) SetLong(f + 0x130, Long(f + 0x130) & ~0x1000);
+        if (Half()) member_f->flags_130 = static_cast<std::int32_t>(member_f->flags_130) & ~0x1000;
         break;
     }
     case kTintOn:
     case kTintOff: {
-        At(at::kTintOn)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
+        At(BattleE4_Picking_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next() | 1);
         const unsigned pick = Next() % 3;
         Target()[0] = static_cast<unsigned char>(pick == 0 ? s[5] : pick == 1 ? (Next() | 0x80) : Next() & 0x7F);
         break;
     }
     case kAttack:
         f[0x134] = static_cast<unsigned char>(Half() ? f[0x134] & ~1u : f[0x134] | 1);
-        f[0x89] = static_cast<unsigned char>(Often() ? Next() % 12 : Next());
+        member_f->char_id = static_cast<unsigned char>(Often() ? Next() % 12 : Next());
         break;
     case kAttackStart:
     case kCastStart:
     case kCastCue: {
         if (Half()) f[0x134] = static_cast<unsigned char>(f[0x134] ^ 2);
         static const unsigned char kKinds[] = {4, 7, 8, 3, 5, 6, 9, 0};
-        At(at::kCastKind)[0] = Often() ? kKinds[Next() % 8] : static_cast<unsigned char>(Next() % 28);
-        f[0x89] = static_cast<unsigned char>(Often() ? Next() % 12 : Next() % 0x24);
+        At(BattlePhases_B89_addr)[0] = Often() ? kKinds[Next() % 8] : static_cast<unsigned char>(Next() % 28);
+        member_f->char_id = static_cast<unsigned char>(Often() ? Next() % 12 : Next() % 0x24);
         if (Half()) f[0x125] = 4;
         static const unsigned char kCounts[] = {0, 1, 2};
         if (Often()) s[9] = kCounts[Next() % 3];
@@ -439,7 +442,7 @@ void Seed(unsigned k) {
         // the same count in every member most rounds: the tick's stand-in
         // moves Sprite_Current half the time
         if (Often())
-            for (unsigned i = 0; i < 3; ++i) Member(i)[9] = s[9];
+            for (unsigned i = 0; i < 3; ++i) reinterpret_cast<records::PartyMember*>(Member(i))->step_frames = s[9];
         static const unsigned char kPercents[] = {0, 1, 50, 99, 100, 0xFF};
         if (Often()) f[0xBA] = kPercents[Next() % 6];
         break;
@@ -477,7 +480,7 @@ void Cover(unsigned k, const State& in, const State& out) {
         if ((Byte(in, fs + 0x131) ^ Byte(out, fs + 0x131)) & 8) ++g_cover.flips;
         if (Byte(in, at::kPhase) == 5) ++g_cover.homes;
         else if (Byte(in, fs + 0x90) & 0x20) ++g_cover.steps;
-        if (Byte(in, at::kPhase) == 1 && Byte(in, at::kPhaseArg) > 1) {
+        if (Byte(in, at::kPhase) == 1 && Byte(in, BattleActions_Step_addr) > 1) {
             const std::uint32_t sc = static_cast<std::uint32_t>(Byte(in, 0x937F88) | Byte(in, 0x937F89) << 8 | Byte(in, 0x937F8A) << 16 |
                                                                 Byte(in, 0x937F8B) << 24);
             ++(Byte(out, sc + 0x5D) == 0x78 ? g_cover.colours_hit : g_cover.colours_miss);

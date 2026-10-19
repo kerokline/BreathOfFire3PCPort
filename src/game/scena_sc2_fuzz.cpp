@@ -371,9 +371,9 @@ const sh::Callee kCallees[] = {
 
 // The chapter's tables, read in place.
 const sh::DataTable kTables[] = {
-    {at::kStates, at::kStateCount},     // Scena02_States
-    {at::kRuns, at::kRunCount},         // Scena02_Runs
-    {at::kObjects, at::kObjectCount},   // Scena02_ObjectHandlers
+    {Scena02_States_addr, at::kStateCount}, // Scena02_States
+    {Scena02_Runs_addr, at::kRunCount}, // Scena02_Runs
+    {Scena02_ObjectHandlers_addr, at::kObjectCount}, // Scena02_ObjectHandlers
 };
 
 // What the bank reads and writes beyond the harness's 22 standard regions.
@@ -382,8 +382,8 @@ const sh::Region kRegions[] = {
     {0x929F00, 0x14},                     // 0x929F00, 0x929F0C (the shop bytes), Field_Kind2Hold 0x929F12
     {0x66C7E8, 2},                        // Game_Mode
     {at::kChoiceBits, 4},                 // the message box's choice bits
-    {at::kAreaByte, 1},                   // 0x904CD0
-    {at::kExtraWord, 2},                  // the word just past Sprite_ObjectsExtra (area 0x10)
+    {AreaW1f_MusicCurrent_addr, 1},       // 0x904CD0
+    {AreaW2c_LastArea_addr, 2},           // the word just past Sprite_ObjectsExtra (area 0x10)
     {at::kMemberRecords, 8 * at::kMemberStride},   // the eight member records (Scena02_StripMember)
 };
 
@@ -511,7 +511,7 @@ void Seed(unsigned k) {
     // Every round: the state and run in their tables, the object hook's index
     // in each object the kObject shape may pass, the area, the chapter's bytes
     // the steps and hooks test.
-    M(at::kState)[0] = static_cast<unsigned char>(sh::Next() % at::kStateCount);
+    M(MoveScript_PartyRecords_addr + 0x62)[0] = static_cast<unsigned char>(sh::Next() % at::kStateCount);
     for (unsigned i = 0; i < 4; ++i) sh::SpriteRecord(i)[0x86] = static_cast<unsigned char>(sh::Next() % at::kObjectCount);
     if (sh::Often()) SetWordAt(0x904EFC, Area());
     if (sh::Half()) SetWordAt(0x904EFC, sh::Next() & 0x7F);
@@ -523,12 +523,12 @@ void Seed(unsigned k) {
     if (sh::Often()) SetWordAt(0x66C810, 0);
     if (sh::Often()) M(0x929F12)[0] = 0;
     if (sh::Often()) M(0x929EC0)[0] = static_cast<unsigned char>(SH_PICK(2, 3, 1));
-    if (sh::Often()) M(at::kLeadMember)[0] = static_cast<unsigned char>(SH_PICK(0, 3, 4, 1));
+    if (sh::Often()) M(Cond_Flags_addr + 0xd2)[0] = static_cast<unsigned char>(SH_PICK(0, 3, 4, 1));
     if (sh::Often()) M(0x8034F1)[0] = static_cast<unsigned char>(SH_PICK(0, 1));   // Cond_ByteFD
     if (sh::Half()) M(at::kChoiceBits)[0] ^= 2;
     if (sh::Half()) M(0x8034E1)[0] ^= 1;                                            // Field_StatusBits bit 0
-    if (sh::Half()) SetWordAt(at::kExtraWord, 0x5A);
-    if (sh::Half()) M(at::kMemberSeven)[0] = 7;
+    if (sh::Half()) SetWordAt(AreaW2c_LastArea_addr, 0x5A);
+    if (sh::Half()) M(Field_Members_addr + 0x13b)[0] = 7;
     // The leader's cell (Scena02_Scene08 step 8, the door helpers, Scena02_Scene1A step 0x19).
     unsigned char* const lead = sh::ObjectOf(0);
     if (sh::Often()) move_script::SetWord(lead + 0x36, SH_PICK(4, 5, 8, 9, 0xC, 0xD, 0x44, 0x45, 0x46, 3, 0x47));
@@ -541,32 +541,32 @@ void Seed(unsigned k) {
         const unsigned r = sh::Next() % 3;
         if (r == 0 && s.n_pairs) {
             const unsigned i = sh::Next() % s.n_pairs;
-            M(at::kStep)[0] = s.pairs[i][0];
+            M(MoveScript_PartyRecords_addr + 0x65)[0] = s.pairs[i][0];
             M(at::kCounters)[0] = s.pairs[i][1];
         } else {
-            M(at::kStep)[0] = r != 2 ? s.steps[sh::Next() % s.n] : static_cast<unsigned char>(sh::Next());
+            M(MoveScript_PartyRecords_addr + 0x65)[0] = r != 2 ? s.steps[sh::Next() % s.n] : static_cast<unsigned char>(sh::Next());
         }
     }
     if (Is(k, "Scena02_Scene08") && sh::Half()) {
         static const unsigned char kWait3[][2] = {{9, 2}, {0xA, 6}, {0xB, 0xB}, {8, 3}};
         const unsigned i = sh::Next() % 4;
-        M(at::kStep)[0] = kWait3[i][0];
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = kWait3[i][0];
         if (i == 3) M(at::kCounters + 2)[0] = static_cast<unsigned char>(SH_PICK(3, 2));
         else M(at::kCounters + 3)[0] = kWait3[i][1];
-        if (i == 3 && sh::Half()) M(at::kLeadMember)[0] = 0;
+        if (i == 3 && sh::Half()) M(Cond_Flags_addr + 0xd2)[0] = 0;
     }
     if (Is(k, "Scena02_Scene09") && sh::Half()) {   // step 3: the second effect's record, its first byte 0 or not
-        M(at::kStep)[0] = 3;
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = 3;
         const unsigned slot = sh::Next() % 20;
         M(at::kCounters + 3)[0] = static_cast<unsigned char>(slot);
         M(0x7E11E0 + slot * 0x80)[0] = static_cast<unsigned char>(sh::Half() ? 0 : 1);
     }
     if (Is(k, "Scena02_Scene10") && sh::Half()) {
-        M(at::kStep)[0] = 0x13;
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = 0x13;
         M(at::kCounters + 3)[0] = static_cast<unsigned char>(SH_PICK(5, 4, 6, 0xFF));
     }
     if (Is(k, "Scena02_Scene1A") && sh::Half()) {
-        M(at::kStep)[0] = static_cast<unsigned char>(SH_PICK(1, 0x1E));
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(SH_PICK(1, 0x1E));
         M(at::kCounters + 3)[0] = static_cast<unsigned char>(SH_PICK(0x4A, 0x4B, 0xE, 0xF, 0x10, 0xFF));
     }
     if (Is(k, "Scena02_Scene08Next")) M(at::kCounters + 2)[0] = static_cast<unsigned char>(SH_PICK(3, 2, 0xFF, 0));
@@ -585,8 +585,8 @@ void Seed(unsigned k) {
     if (Is(k, "Scena02_Scene08") && sh::Half()) {
         static const std::uint16_t kCells[3][3] = {{4, 5, 4}, {8, 9, 8}, {0xC, 0xD, 4}};
         const unsigned c = sh::Next() % 3;
-        M(at::kStep)[0] = 8;
-        if (sh::Often()) M(at::kLeadMember)[0] = 0;
+        M(MoveScript_PartyRecords_addr + 0x65)[0] = 8;
+        if (sh::Often()) M(Cond_Flags_addr + 0xd2)[0] = 0;
         move_script::SetWord(lead + 0x36, kCells[c][sh::Next() & 1]);
         move_script::SetWord(lead + 0x3A, kCells[c][2] + (sh::Next() % 3 == 0 ? 1 : 0));
         lead[0x4B] = static_cast<unsigned char>(sh::Often() ? 0x42 : 0x43);
@@ -596,7 +596,7 @@ void Seed(unsigned k) {
     // third of the time; the first member 0, 3 or neither.
     if ((Is(k, "Scena02_DoorStart") || Is(k, "Scena02_DoorSound")) && sh::Often()) {
         DoorCell(sh::Next());
-        if (sh::Often()) M(at::kLeadMember)[0] = static_cast<unsigned char>(SH_PICK(0, 3, 4, 1));
+        if (sh::Often()) M(Cond_Flags_addr + 0xd2)[0] = static_cast<unsigned char>(SH_PICK(0, 3, 4, 1));
         if (sh::Next() % 3 == 0) {
             switch (sh::Next() % 4) {
             case 0: move_script::SetWord(lead + 0x36, SH_PICK(0x43, 0x47, 0x46, 0x44)); break;
@@ -632,7 +632,7 @@ void Args(unsigned k, std::uint32_t* a) {
     const char* const n = kClones[k].name;
     if (std::strncmp(n, "Scena02_Object", 14) == 0 && std::strcmp(n, "Scena02_ObjectHook") != 0) {
         a[0] = Key(sh::SpriteRecord(a[0]));
-        a[1] = at::kRow2;
+        a[1] = Cond_Flags_addr + 0x10;
     } else if (std::strncmp(n, "Scena02_Near", 12) == 0) {
         a[0] = (a[1] & 3) ? g_near : a[0] % 30;
     } else if (std::strcmp(n, "Scena02_StripMember") == 0) {
@@ -671,12 +671,12 @@ void Disturb(std::uint32_t h) {
     case 4: M(0x929EC0)[0] = static_cast<unsigned char>(2 + ((h >> 11) & 1)); break;
     case 5: M(at::kChoiceBits)[0] ^= 2; break;
     case 6: M(at::kCounters + 2)[0] = static_cast<unsigned char>(b & 1 ? b : kTwo[c % sizeof kTwo]); break;
-    case 7: M(at::kLeadMember)[0] = static_cast<unsigned char>(b & 1 ? b : 0); break;
+    case 7: M(Cond_Flags_addr + 0xd2)[0] = static_cast<unsigned char>(b & 1 ? b : 0); break;
     case 8:   // the leader's cell: the door helpers read its x again after each call
         if (b & 1) DoorCell(b >> 1);
         else move_script::SetWord(sh::ObjectOf(0) + 0x36, b);
         break;
-    default: M(at::kStep)[0] = static_cast<unsigned char>(b); break;
+    default: M(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(b); break;
     }
 }
 

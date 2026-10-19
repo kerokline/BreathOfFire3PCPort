@@ -73,15 +73,15 @@ U Above() { return bh::Half() ? bh::Next() & 0xFFFFFF00u : 0; }
 std::uint32_t CenterEffect(const std::uint32_t*, std::uint32_t answer) {
     const U n = bh::Noise();
     if (n & 1) {
-        const U cx = static_cast<U>(Long(Mem(at::kCentreX)));
-        const U cz = static_cast<U>(Long(Mem(at::kCentreZ)));
+        const U cx = static_cast<U>(Long(Mem(BossSi_CentreX_addr)));
+        const U cz = static_cast<U>(Long(Mem(BossSi_CentreZ_addr)));
         static const U kSteps[] = {1, 0xFFFFFFFFu, 3, 0xFFFFFFFDu, 0x10001, 0xFFFEFFFFu, 0x7FFFFFFF, 0x80000001u};
         const U x = n & 2 ? cx + kSteps[(n >> 4) % 8] : bh::Noise();
         const U z = n & 4 ? cz + kSteps[(n >> 8) % 8] : bh::Noise();
         SetLong(Sprite_Current + 0x34, static_cast<std::int32_t>(x));
         SetLong(Sprite_Current + 0x38, static_cast<std::int32_t>(z));
     }
-    if ((n >> 12) % 4 == 0) SetLong(Mem((n >> 14) & 1 ? at::kCentreX : at::kCentreZ), static_cast<std::int32_t>(bh::Noise()));
+    if ((n >> 12) % 4 == 0) SetLong(Mem((n >> 14) & 1 ? BossSi_CentreX_addr : BossSi_CentreZ_addr), static_cast<std::int32_t>(bh::Noise()));
     return answer;
 }
 
@@ -103,9 +103,9 @@ const bh::Callee kCallees[] = {
 // The cells beyond the harness's battle frame the 50 read or write.
 const bh::Region kRegions[] = {
     {at::kScriptVar3, 4},      // the movement script's variables
-    {at::kMusicTrack, 4},      // Music_Track
-    {at::kCentreX, 8},         // the fight's centre
-    {at::kKind2Z, 8},          // Field_Kind2Z, Field_Kind2X
+    {Music_Track_addr, 4},     // Music_Track
+    {BossSi_CentreX_addr, 8},  // the fight's centre
+    {Field_Kind2Z_addr, 8},    // Field_Kind2Z, Field_Kind2X
 };
 
 // The clones of the run in progress (for the shared seeds), the byte their
@@ -142,9 +142,9 @@ void Disturb(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 5) {
     case 0: bh::SetPointer(0x929ED0, Mem(0x903F90 + 8 * (v % 40))); break;
-    case 1: bh::Pointer(at::kCurrentEnemy)[5] = Byte(v); break;
+    case 1: bh::Pointer(BattleE3_CurrentEnemy_addr)[5] = Byte(v); break;
     case 2: Sprite_Current[9 + (v & 1)] = Byte(v >> 1); break;
-    case 3: bh::Pointer(at::kOwner)[1 + (v & 1)] = Byte(v >> 1); break;
+    case 3: bh::Pointer(BattleE2_Owner_addr)[1 + (v & 1)] = Byte(v >> 1); break;
     default: B(at::kTarget) = Byte(v); break;
     }
 }
@@ -190,7 +190,7 @@ const bh::DataTable kTablesK45[] = {{0x64D990, 3, 4, 1}, {0x64D960, 12}};
 void SeedK45(unsigned k) {
     SeedStates(k);
     // the slot byte +5 - 3: an enemy's 3..10, and the wrap below 3
-    if (k == 1) bh::Pointer(at::kCurrentEnemy)[5] = Byte(bh::Often() ? 3 + bh::Next() % 8 : BH_PICK(0, 1, 2, 0xFF, 0x83));
+    if (k == 1) bh::Pointer(BattleE3_CurrentEnemy_addr)[5] = Byte(bh::Often() ? 3 + bh::Next() % 8 : BH_PICK(0, 1, 2, 0xFF, 0x83));
 }
 
 const bh::Clone kClonesK51[] = {
@@ -270,7 +270,7 @@ void SeedK58(unsigned k) {
     unsigned char* const s = Sprite_Current;
     switch (k) {
     case kK58Fx:
-        bh::Pointer(at::kCurrentEnemy)[0xF0] = TypeByte();
+        bh::Pointer(BattleE3_CurrentEnemy_addr)[0xF0] = TypeByte();
         // +2 up by one: its wrap
         if (bh::Half()) s[2] = Byte(BH_PICK(0, 1, 0xFF, 0x7F));
         break;
@@ -286,15 +286,15 @@ void SeedK58(unsigned k) {
 void SeedSetup(unsigned k) {
     switch (g_clones[k].shape) {
     case S::kEnd:
-        B(at::kBattleEnd) = BattleEndByte();
+        B(BattleActions_BattleEnd_addr) = BattleEndByte();
         break;
     case S::kSetup:
         if (g_clones[k].base == 0x43EE50) {
             // set-up 38: enemy 7's place and the centre an odd signed step apart
             // (the halving toward zero each way), or anywhere
             unsigned char* const e7 = Mem(at::kEnemy7);
-            const U cx = static_cast<U>(Long(Mem(at::kCentreX)));
-            const U cz = static_cast<U>(Long(Mem(at::kCentreZ)));
+            const U cx = static_cast<U>(Long(Mem(BossSi_CentreX_addr)));
+            const U cz = static_cast<U>(Long(Mem(BossSi_CentreZ_addr)));
             if (bh::Often()) SetLong(e7 + 0x34, static_cast<std::int32_t>(cx + BH_PICK(1, 0xFFFFFFFFu, 3, 0xFFFFFFFDu, 0x7FFFFFFF, 0x80000000u, 0)));
             if (bh::Often()) SetLong(e7 + 0x38, static_cast<std::int32_t>(cz + BH_PICK(1, 0xFFFFFFFFu, 3, 0xFFFFFFFDu, 0x7FFFFFFF, 0x80000000u, 0)));
         }

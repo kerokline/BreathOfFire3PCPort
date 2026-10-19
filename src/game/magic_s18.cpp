@@ -27,6 +27,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -43,17 +44,18 @@ using move_script::Word;
 
 // The two blocks' objects (docs/battle_actions.md): the acting block's +8 and
 // the target block's +8 (the harness's kSource).
-constexpr std::uint32_t kActorObject = 0x904B3C;
-constexpr std::uint32_t kTargetObject = 0x904B4C;
+// kActorObject: now MagicS23_ActorSprite (symbols.toml).
+// kTargetObject: now BattleOdds_ActorObject (symbols.toml).
 // The acting block's command kind, and the action's id (docs/battle_actions.md).
 constexpr std::uint32_t kCommandKind = 0x904B35;
 constexpr std::uint32_t kActionId = 0x904B80;
 
 // Buff_Start's CLUT strip: 16 words at +0 and 16 at +0x20, copied over.
-constexpr std::uint32_t kClutFrom = 0x80E980, kClutTo = 0x812980;
+// kClutFrom: now Gfx_ClutStripSource[0x1a00] (symbols.toml).
+// kClutTo: now Gfx_ClutStrip[0x1a00] (symbols.toml).
 // A byte per kind, Buff_Fade's first argument to 0x4FB6F0 (in the effect
 // library's .data, 4 bytes below FxDim_Phases; not this group's to name).
-constexpr std::uint32_t kKindByte = 0x65C39C;
+// kKindByte: now MagicFx_BuffStats (symbols.toml).
 
 // The effect library's (queue group L, docs/magic_s18.md section 5), by name:
 // MagicFx_LinkByDepth (through LinkDepthsFn: the depths as const long *),
@@ -69,7 +71,11 @@ using Avg3Fn = long (__cdecl*)(const short*, const short*, const short*, float*,
 template <typename T, typename F> T As(F* f) { return reinterpret_cast<T>(reinterpret_cast<void*>(f)); }
 
 unsigned char* SC() { return Sprite_Current; }
-unsigned char* Owner() { return Pointer(at::kOwner); }
+records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
+// A task field stored as SetLong stores it: the field named before the value is
+// computed (Sprite_Current read first), the value converted as SetLong's is.
+void Store(std::int32_t& field, std::int32_t v) { field = v; }
+unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Slot(unsigned char k) { return Mem(at::kTasks + k * at::kTaskStride); }
 std::int32_t Ptr(const unsigned char* p) { return static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(p)); }
 void Bump(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -79,12 +85,12 @@ std::int32_t AddL(std::int32_t a, std::uint32_t b) { return static_cast<std::int
 // The scratch words DamageScratch + k (the PSX scratchpad's) and the vertex
 // scratch Prim_VertexScratch + k: three SVECTORs at +0, +8, +0x10, +0x18.
 constexpr std::uint32_t kDs = bof3::addr::DamageScratch;
-constexpr std::uint32_t kVx = 0x9037A0;   // Prim_VertexScratch
+// kVx: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch
 short Ds(unsigned k) { return static_cast<short>(Word(Mem(kDs + k))); }
 void SetDs(unsigned k, unsigned v) { SetWord(Mem(kDs + k), v); }
-short Vx(unsigned k) { return static_cast<short>(Word(Mem(kVx + k))); }
-void SetVx(unsigned k, unsigned v) { SetWord(Mem(kVx + k), v); }
-const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(kVx + k)); }
+short Vx(unsigned k) { return static_cast<short>(Word(Mem(Prim_VertexScratch_addr + k))); }
+void SetVx(unsigned k, unsigned v) { SetWord(Mem(Prim_VertexScratch_addr + k), v); }
+const short* VxP(unsigned k) { return reinterpret_cast<const short*>(Mem(Prim_VertexScratch_addr + k)); }
 
 // `imul` (a 32-bit product that wraps) then `sar n`; `shl l` then `sar r`.
 int MulSar(int a, int b, int n) {
@@ -121,7 +127,8 @@ void CallPhase(const std::uint32_t* phases, unsigned entries, const char* who) {
 
 void LinkAt(unsigned dy, unsigned size) {
     const unsigned char* const sc = SC();
-    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(Long(sc + 0x34)), static_cast<unsigned long>(Long(sc + 0x38)),
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y),
                                 static_cast<int>(dy), size);
 }
 
@@ -165,8 +172,8 @@ template <void (__cdecl* Draw)(void)> void OrbTask(const unsigned long* phases, 
 
 // Place the task at an object's position plus (dx, dz, dy).
 void PlaceAt(const unsigned char* obj, std::uint32_t dx, std::uint32_t dz, std::uint32_t dy) {
-    SetLong(SC() + 0x34, AddL(Long(obj + 0x34), dx));
-    SetLong(SC() + 0x38, AddL(Long(obj + 0x38), dz));
+    Store(ScTask()->x, AddL(Long(obj + 0x34), dx));
+    Store(ScTask()->y, AddL(Long(obj + 0x38), dz));
     SetLong(SC() + 0x3C, AddL(Long(obj + 0x3C), dy));
 }
 
@@ -192,8 +199,9 @@ MS18_EXPORT void __cdecl Drain_Start(void) {
     SC()[0xB] = 0;
     for (unsigned char i = 0; i < 4; ++i) {
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x2B));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
         unsigned char* const sc = SC();
-        SetLong(t + 0x80, Ptr(sc));
+        tt->owner = Ptr(sc);
         t[1] = i;
         t[2] = 0;
         t[9] = 0x10;
@@ -214,7 +222,7 @@ MS18_EXPORT void __cdecl DrainOrbA_Task(void) { OrbTask<&::DrainOrb_Draw>(DrainO
 // in the high word of +0x3C; +0xB (the draw's radius) 0x10, +9 0x10, +0xA
 // 0xB0; on.
 MS18_EXPORT void __cdecl DrainOrbA_Place(void) {
-    PlaceAt(Pointer(kTargetObject), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
+    PlaceAt(Pointer(BattleOdds_ActorObject_addr), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
     SC()[0xB] = 0x10;
     SC()[9] = 0x10;
     SC()[0xA] = 0xB0;
@@ -264,7 +272,7 @@ MS18_EXPORT void __cdecl DrainOrbB_Task(void) { OrbTask<&::DrainOrb_Draw>(DrainO
 MS18_EXPORT void __cdecl DrainOrbB_Place(void) {
     Drop(SC()[9]);
     if (SC()[9] != 0) return;
-    PlaceAt(Pointer(kActorObject), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
+    PlaceAt(Pointer(MagicS23_ActorSprite_addr), 0xFFFFC000u, 0xFFFFC000u, 0x4000000u);
     SC()[0xB] = 0x10;
     SC()[9] = 0x10;
     SC()[0xA] = 0;
@@ -434,7 +442,7 @@ MS18_EXPORT void __cdecl DrainOrbC_Task(void) { OrbTask<&::DrainOrb_DrawDisc>(Dr
 
 // original 0x4BF560: at the target's object; +9 4, +0xA 0xB0; on.
 MS18_EXPORT void __cdecl DrainOrbC_Place(void) {
-    PlaceAt(Pointer(kTargetObject), 0, 0, 0);
+    PlaceAt(Pointer(BattleOdds_ActorObject_addr), 0, 0, 0);
     SC()[9] = 4;
     SC()[0xA] = 0xB0;
     Bump(SC()[2]);
@@ -464,7 +472,7 @@ MS18_EXPORT void __cdecl DrainOrbD_Task(void) { OrbTask<&::DrainOrb_DrawDisc>(Dr
 MS18_EXPORT void __cdecl DrainOrbD_Place(void) {
     Drop(SC()[9]);
     if (SC()[9] != 0) return;
-    PlaceAt(Pointer(kActorObject), 0, 0, 0);
+    PlaceAt(Pointer(MagicS23_ActorSprite_addr), 0, 0, 0);
     SC()[9] = 4;
     Bump(SC()[2]);
 }
@@ -549,10 +557,10 @@ MS18_EXPORT void __cdecl Buff_Task(void) {
 // 0x80E980 (16 + 16 words) to 0x812980, Gfx_ClutStripDirty 1,
 // Sound_PlayById(0x100).
 MS18_EXPORT void __cdecl Buff_Start(void) {
-    const unsigned char* const src = Pointer(kTargetObject);
+    const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     SC()[8] = src[8];
-    SetLong(SC() + 0x34, Long(src + 0x34));
-    SetLong(SC() + 0x38, Long(src + 0x38));
+    Store(ScTask()->x, Long(src + 0x34));
+    Store(ScTask()->y, Long(src + 0x38));
     SetLong(SC() + 0x3C, Long(src + 0x3C));
     const unsigned char kind = MH_CALL(Buff_Kind)();
     SC()[4] = kind;
@@ -561,20 +569,23 @@ MS18_EXPORT void __cdecl Buff_Start(void) {
     Bump(SC()[1]);
     {
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 5));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
         unsigned char* const sc = SC();
-        SetLong(t + 0x80, Ptr(sc));
+        records::BattleTask* const tsc = reinterpret_cast<records::BattleTask*>(sc);
+        tt->owner = Ptr(sc);
         t[1] = 0;
         t[4] = sc[4];
         t[9] = 0;
-        SetLong(t + 0x34, Long(sc + 0x34));
-        SetLong(t + 0x38, Long(sc + 0x38));
+        tt->x = tsc->x;
+        tt->y = tsc->y;
         SetLong(t + 0x3C, Long(sc + 0x3C));
         Bump(sc[0xB]);
     }
     for (unsigned b = 0; b < 0x20; b += 8) {
         unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 5));
+        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
         unsigned char* const sc = SC();
-        SetLong(t + 0x80, Ptr(sc));
+        tt->owner = Ptr(sc);
         t[1] = 1;
         t[4] = sc[4];
         t[0xB] = static_cast<unsigned char>(b);
@@ -583,8 +594,8 @@ MS18_EXPORT void __cdecl Buff_Start(void) {
         Bump(sc[0xB]);
     }
     for (unsigned i = 0; i < 0x20; i += 2) {
-        SetWord(Mem(kClutTo + i), Word(Mem(kClutFrom + i)));
-        SetWord(Mem(kClutTo + 0x20 + i), Word(Mem(kClutFrom + 0x20 + i)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + i)));
+        SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 0x20 + i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 0x20 + i)));
     }
     Gfx_ClutStripDirty = 1;
     MH_CALL(Sound_PlayById)(0x100);
@@ -611,14 +622,15 @@ MS18_EXPORT void __cdecl Buff_Fade(void) {
     Drop(tints[sc[0xA] * 12u + 4]);
     Drop(sc[9]);
     if (SC()[9] != 0) return;
-    MH_CALL(Sprite_ReleaseTint)(Pointer(kTargetObject));
+    MH_CALL(Sprite_ReleaseTint)(Pointer(BattleOdds_ActorObject_addr));
     MH_CALL(BattleActor_Flash)(Mem(at::kTarget)[0]);
     const unsigned char target = Mem(at::kTarget)[0];
-    const unsigned char byte = Mem(kKindByte)[SC()[4]];
+    const unsigned char byte = Mem(MagicFx_BuffStats_addr)[SC()[4]];
     const unsigned char suits = MH_CALL(MagicFx_ApplyBuff)(byte, target);
     unsigned char* const t = Slot(MH_CALL(BattleTask_Create)(1, 0x48));
+    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
     unsigned char* const owner = SC();
-    SetLong(t + 0x80, Ptr(owner));
+    tt->owner = Ptr(owner);
     t[4] = suits != 0 ? owner[4] : 8;
     t[9] = 1;
     t[0xA] = 0;
@@ -883,9 +895,9 @@ MS18_EXPORT void __cdecl BuffSpike_Orbit(void) {
     SetDs(4, (sc[0xB] & 0x1Fu) << 7);
     SetDs(0, sc[0xA] * static_cast<unsigned>(Word(sc + 0x10)) + 0xB0u);
     int r = Sin(Ds(4));
-    SetLong(SC() + 0x34, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x34))));
+    Store(ScTask()->x, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x34))));
     r = Cos(Ds(4));
-    SetLong(SC() + 0x38, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
+    Store(ScTask()->y, AddL(static_cast<std::int32_t>(MulSar(r, Ds(0), 3)), static_cast<std::uint32_t>(Long(Owner() + 0x38))));
     Bump(SC()[0xA]);
     if (SC()[0xA] != 0x10) return;
     Drop(Owner()[0xB]);
@@ -965,15 +977,17 @@ MS18_EXPORT void __cdecl BuffSpike_Draw(void) {
     SpikeRow(BuffSpike_ColorsUp, true, depths);
     {
         const unsigned char* const sc = SC();
-        MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(sc + 0x34)),
-                                                             static_cast<unsigned long>(Long(sc + 0x38)), depths, up, 4,
+        const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+        MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(tsc->x),
+                                                             static_cast<unsigned long>(tsc->y), depths, up, 4,
                                                              0x34, 2);
     }
     unsigned char* const down = Gfx_PacketNext;
     SpikeRow(BuffSpike_ColorsDown, false, depths);
     const unsigned char* const sc = SC();
-    MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(Long(sc + 0x34)),
-                                                         static_cast<unsigned long>(Long(sc + 0x38)), depths, down, 4,
+    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    MH_AT(LinkDepthsFn, bof3::addr::MagicFx_LinkByDepth)(static_cast<unsigned long>(tsc->x),
+                                                         static_cast<unsigned long>(tsc->y), depths, down, 4,
                                                          0x34, 2);
 }
 

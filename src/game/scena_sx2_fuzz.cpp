@@ -92,10 +92,10 @@ template <typename... T> std::uint32_t PickOf(T... v) {
 }
 
 // The named cells whose symbols.gen.h names are macros (no bof3::addr entry to qualify).
-constexpr std::uint32_t kSoundChannels = 0x6BC8C8;   // Sound_Channels
-constexpr std::uint32_t kSoundBanks = 0x6BC928;      // Sound_Banks
-constexpr std::uint32_t kAreaHeader = 0x8CB580;      // AreaMap_Header
-constexpr std::uint32_t kHeightBase = 0x8CB5AA;      // AreaMap_HeightBase
+// kSoundChannels: now Sound_Channels (symbols.toml). Sound_Channels
+// kSoundBanks: now Sound_Banks (symbols.toml). Sound_Banks
+// kAreaHeader: now AreaMap_Header (symbols.toml). AreaMap_Header
+// kHeightBase: now AreaMap_HeightBase (symbols.toml). AreaMap_HeightBase
 
 // Gpu_SetSprt16's primitive: a buffer of the fuzz's own.
 alignas(16) unsigned char g_prim[0x20];
@@ -128,7 +128,7 @@ void Move(std::uint32_t h) {
     case 1: Sound_Channels[v % 23] = (w & 1) ? 0 : w; break;
     case 2: {
         // a voice dword of cue 0..7 of bank 1..6
-        unsigned char* const cue = Mem(kSoundBanks + (v % 6) * at::kBankStride + ((w >> 4) % 8) * 16 + 4 * (w & 3));
+        unsigned char* const cue = Mem(Sound_Banks_addr + (v % 6) * at::kBankStride + ((w >> 4) % 8) * 16 + 4 * (w & 3));
         SetLong(cue, static_cast<std::int32_t>((w & 0x100) ? 0 : (w >> 9) % 64));
         break;
     }
@@ -161,11 +161,11 @@ const sh::Region kRegions[] = {
     {bof3::addr::CharacterRecords, 8 * at::kRecordStride},   // AbilityList_ForType answers into it
     {at::kKeyItems, 0x20},
     {0x904AA0, 0xB0},                   // the battle bytes: the formation 0x904AAC
-    {at::kLightAngle0, 8},
-    {at::kLightCopy0, 8},
-    {kAreaHeader, kLayerSize},
-    {kSoundChannels, at::kChannelsEnd - kSoundChannels},
-    {kSoundBanks, kBanksSize},
+    {Light_Angles_addr, 8},
+    {Light_AnglesCopy_addr, 8},
+    {AreaMap_Header_addr, kLayerSize},
+    {Sound_Channels_addr, at::kChannelsEnd - Sound_Channels_addr},
+    {Sound_Banks_addr, kBanksSize},
     {Key(g_prim), sizeof g_prim},
 };
 
@@ -193,7 +193,7 @@ void Seed(unsigned k) {
     case kPlace: {
         Formations();
         Field_MemberCount = static_cast<unsigned char>(PickOf(0, 1, 2, 2, 3, 3, 4, sh::Next()));
-        Mem(at::kLeaderSlot)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, 0xFC, sh::Next() % 8));
+        Mem(Cond_Flags_addr + 0xd0)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, 0xFC, sh::Next() % 8));
         const bool zero = g_n_zero != 0 && (g_n_other == 0 || sh::Half());
         Mem(at::kFormation)[0] = zero ? g_zero[sh::Next() % g_n_zero] : g_other[sh::Next() % g_n_other];
         g_a[0] = PickOf(0, sh::Next(), sh::Next() % 0x800000, 0x7FFFFFFF);
@@ -205,7 +205,7 @@ void Seed(unsigned k) {
         const unsigned width = sh::Next() % 0x41;
         const unsigned base = sh::Next() % 0x300;
         AreaMap_Header[0] = static_cast<unsigned char>(width);
-        SetWord(Mem(kHeightBase), base);
+        SetWord(Mem(AreaMap_HeightBase_addr), base);
         // z an s16 either side of 0 (a negative row still inside the layer when the base is past it)
         int z = static_cast<int>(sh::Next() % 0x61) - 0x20;
         if (z < 0 && static_cast<int>(width) * -z > static_cast<int>(base) * 4) z = -z;
@@ -221,7 +221,7 @@ void Seed(unsigned k) {
     case kTurn:
     case kTurnFB: {
         // the angle word near the target, a step either way
-        const std::uint32_t cell = k == kTurn ? at::kAngle0 : at::kAngleFB;
+        const std::uint32_t cell = k == kTurn ? Camera_Angles_addr : Cond_AngleFB_addr;
         const std::uint32_t target = PickOf(sh::Next() % 0x1000, sh::Next() % 0x1000, 0, 0xFFF, sh::Next());
         const int step = static_cast<int>(PickOf(0, 1, 2, 22, 0x7F, 0x80, 0xFF, 0xFE, 0xEA, sh::Next()) & 0xFF);
         const int s = static_cast<signed char>(step);
@@ -243,7 +243,7 @@ void Seed(unsigned k) {
         for (unsigned b = 0; b < 6; ++b)
             for (unsigned c = 0; c < 24; ++c)
                 for (unsigned v = 0; v < 4; ++v) {
-                    unsigned char* const d = Mem(kSoundBanks + b * at::kBankStride + c * 16 + 4 * v);
+                    unsigned char* const d = Mem(Sound_Banks_addr + b * at::kBankStride + c * 16 + 4 * v);
                     const std::uint32_t voice = (sh::Next() % 8 == 0 ? sh::Next() % 0x100 : sh::Next() % 64) |
                                                 (sh::Next() % 8 == 0 ? sh::Next() & 0xFFFFFF00u : 0);
                     SetLong(d, static_cast<std::int32_t>(sh::Half() ? 0 : voice));
@@ -285,7 +285,7 @@ void Args(unsigned k, std::uint32_t* a) {
         a[1] = (a[1] & 0xFFFF0000u) | (g_a[1] & 0xFFFF);
         break;
     case kToggle:
-        a[0] = sh::Half() ? at::kStoryFlags : sh::at::kCondFlags + 8 * (sh::Next() % 29);
+        a[0] = sh::Half() ? (Cond_Flags_addr + 0xa0) : Cond_Flags_addr + 8 * (sh::Next() % 29);
         break;
     case kTurn:
     case kTurnFB:

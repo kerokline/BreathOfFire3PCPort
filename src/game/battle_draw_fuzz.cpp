@@ -105,9 +105,9 @@ bool FirstDifference(const Region* r, int n, const State& a, const State& b, U* 
 
 // Every region any test touches, saved once and put back at the end.
 const Region g_all[] = {
-    {kVertices, 0x80}, {kScaleY, 8},          {kDrawTpage, 4},         {kColour, 1},
-    {kMenuMember, 1},  {kPartyFrom, kPartyBytes}, {kInvFrom, kInvBytes}, {kPrintBuf, 0x60},
-    {kStatusBits, 1},
+    {D3d_Vertices_addr, 0x80}, {D3d_ScaleY_addr, 8},          {Gfx_DrawTpage_addr, 4},         {BattleDraw_Colour_addr, 1},
+    {BattleActorCopies_ItemActor_addr, 1},  {kPartyFrom, kPartyBytes}, {kInvFrom, kInvBytes}, {kPrintBuf, 0x60},
+    {Field_StatusBits_addr, 1},
 };
 
 // --- the logs --------------------------------------------------------------------
@@ -193,8 +193,8 @@ void Disturb(U salt) {
     if (h % 4 == 0) return;
     const auto v = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 12) {
-    case 0: At(kColour)[0] = v; break;
-    case 1: At(kMenuMember)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 5); break;
+    case 0: At(BattleDraw_Colour_addr)[0] = v; break;
+    case 1: At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 5); break;
     case 2:
     case 3:
     case 4: {
@@ -213,7 +213,7 @@ void Disturb(U salt) {
             At(kInvFrom + (h >> 8) % kInvBytes)[0] = static_cast<unsigned char>(v % 2 ? 0 : v);
         }
         break;
-    case 6: At(kPartyFrom + (h >> 8) % kPartyBytes)[0] = static_cast<unsigned char>(v % 9); break;
+    case 6: At(Cond_Flags_addr + 0xd2 + (h >> 8) % kPartyBytes)[0] = static_cast<unsigned char>(v % 9); break;
     case 7:
         if ((h >> 8) % 2) const_cast<unsigned char*>(g_last_list)[g_last_top + (h >> 9) % 10] = static_cast<unsigned char>(v % 2 ? 0 : v);
         else g_list[(h >> 8) % sizeof g_list] = static_cast<unsigned char>(v % 2 ? 0 : v);
@@ -352,9 +352,9 @@ void DisturbDraw(U salt) {
     case 1:
         if (g_prim_now) g_prim_now[(h >> 8) % g_prim_bytes] = value;
         break;
-    case 2: At(kVertices)[(h >> 8) % 0x80] = value; break;
-    case 3: At(kScaleY)[(h >> 8) % 8] = value; break;
-    default: At(kDrawTpage)[(h >> 8) % 2] = value; break;
+    case 2: At(D3d_Vertices_addr)[(h >> 8) % 0x80] = value; break;
+    case 3: At(D3d_ScaleY_addr)[(h >> 8) % 8] = value; break;
+    default: At(Gfx_DrawTpage_addr)[(h >> 8) % 2] = value; break;
     }
 }
 void __cdecl StubPrimColor(U r, U gg, U b, U code, U mode, unsigned long* diffuse, unsigned long* specular) {
@@ -581,15 +581,15 @@ void FillRandom(U at, U bytes) {
 
 void FuzzHandler(Tally& t, const Handler& h, void* clone, unsigned rounds) {
     using Fn = U(__cdecl*)(unsigned char*);
-    const Region regions[] = {{kVertices, 0x80}, {kScaleY, 8}, {kDrawTpage, 4}, {Addr(g_prim), sizeof g_prim}};
+    const Region regions[] = {{D3d_Vertices_addr, 0x80}, {D3d_ScaleY_addr, 8}, {Gfx_DrawTpage_addr, 4}, {Addr(g_prim), sizeof g_prim}};
     const unsigned short saved = GetControlWord();
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = (h.base << 4) + r;
-        for (U a : {kScaleX, kScaleY})
+        for (U a : {D3d_ScaleX_addr, D3d_ScaleY_addr})
             PutLong(At(a), Next() % 5 == 0 ? Next() : Next() % 5 == 1 ? 0x3F800000u + Next() % 0x2000000u
                                                                          : kScales[Next() % 10]);
-        FillRandom(kVertices, 0x80);
-        PutLong(At(kDrawTpage), Next() % 2 ? Next() : (Next() & 0xFFFF0000u) | Pick({0, 0x20, 0x40, 0x60, 0xFFFF}));
+        FillRandom(D3d_Vertices_addr, 0x80);
+        PutLong(At(Gfx_DrawTpage_addr), Next() % 2 ? Next() : (Next() & 0xFFFF0000u) | Pick({0, 0x20, 0x40, 0x60, 0xFFFF}));
         for (U i = 0; i < sizeof g_prim; ++i) g_prim[i] = static_cast<unsigned char>(Next());
         for (U c = 0; c < h.corners; ++c) {
             for (U f = 0; f < 3; ++f)
@@ -622,7 +622,7 @@ void FuzzHandler(Tally& t, const Handler& h, void* clone, unsigned rounds) {
 // --- the lists -------------------------------------------------------------------------
 
 const Region kListRegions[] = {
-    {Addr(g_window), sizeof g_window}, {Addr(g_list), sizeof g_list}, {kColour, 1}, {kMenuMember, 1},
+    {Addr(g_window), sizeof g_window}, {Addr(g_list), sizeof g_list}, {BattleDraw_Colour_addr, 1}, {BattleActorCopies_ItemActor_addr, 1},
     {kPartyFrom, kPartyBytes},         {kInvFrom, kInvBytes},         {kPrintBuf, 0x60},
 };
 
@@ -655,9 +655,9 @@ void SeedList(bool skill) {
     for (U i = 0; i < kInvBytes; ++i)
         At(kInvFrom + i)[0] = static_cast<unsigned char>(Next() % 3 == 0 ? 0 : Pick({1, 2, 99, 0x80, 0xFF, Next() & 0xFF}));
     for (U i = 0; i < sizeof g_list; ++i) g_list[i] = static_cast<unsigned char>(Next() % 3 == 0 ? 0 : Next() & 0xFF);
-    for (U i = 0; i < kPartyBytes; ++i) At(kPartyFrom + i)[0] = static_cast<unsigned char>(Next() % 9);
-    At(kMenuMember)[0] = static_cast<unsigned char>(Next() % 4 ? Next() % 3 : Next() & 0xFF);
-    At(kColour)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 8 : Next() & 0xFF);
+    for (U i = 0; i < kPartyBytes; ++i) At(Cond_Flags_addr + 0xd2 + i)[0] = static_cast<unsigned char>(Next() % 9);
+    At(BattleActorCopies_ItemActor_addr)[0] = static_cast<unsigned char>(Next() % 4 ? Next() % 3 : Next() & 0xFF);
+    At(BattleDraw_Colour_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() % 8 : Next() & 0xFF);
     std::memset(At(kPrintBuf), 0x5A, 0x60);
 }
 
@@ -679,11 +679,11 @@ void FuzzList(Tally& t, void* clone, const void* ours, bool skill, unsigned roun
 
 void FuzzTint(Tally& t, void* clone, unsigned rounds) {
     using Fn = void(__cdecl*)(int);
-    const Region regions[] = {{kStatusBits, 1}};
+    const Region regions[] = {{Field_StatusBits_addr, 1}};
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x800000u + r;
-        At(kStatusBits)[0] = static_cast<unsigned char>(Next() % 2 ? Next() & 0xFE : Next() | 1);
-        if (!(At(kStatusBits)[0] & 1)) ++t.hits;
+        At(Field_StatusBits_addr)[0] = static_cast<unsigned char>(Next() % 2 ? Next() & 0xFE : Next() | 1);
+        if (!(At(Field_StatusBits_addr)[0] & 1)) ++t.hits;
         const int level = static_cast<int>(Next() % 2 ? Pick({0, 1, 0xFFFFFFFFu, 0x7F, 0xFFFFFF80u, 0x1F, 0xFFFFFFE1u})
                                                       : Next());
         PassOwn(t, regions, 1, [&] { reinterpret_cast<Fn>(clone)(level); },

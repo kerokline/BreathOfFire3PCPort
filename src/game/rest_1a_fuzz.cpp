@@ -18,6 +18,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/rest_1a.h"
 #include "game/rest_1a_callees.h"
@@ -27,6 +28,10 @@
 
 namespace rest_1a {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -163,15 +168,15 @@ constexpr Dispatch kDispatch[] = {
 // holding the same handlers (0x65F9B4 / 0x65FA0C / 0x65FA68, 0x65F9CC /
 // 0x65FA24 / 0x65FA80, 0x65F9D8 / 0x65FA30 / 0x65FA8C) share theirs.
 const sh::DataTable kTables[] = {
-    {at::kMemberJumpSteps, 4},        {at::kFormAction0Form0States, 3}, {at::kAction0Form0States, 3},
-    {at::kFormAction0Form1States, 3}, {at::kAction0Form1States, 2},     {at::kFormAction0Form2States, 3},
-    {at::kAction0Form2States, 2},     {at::kFormAction0Forms, 3},       {at::kAction0Forms, 3},
-    {at::kFormAction1Form0States, 3}, {at::kAction1Form0States, 3},     {at::kFormAction1Form1States, 3},
-    {at::kAction1Form1States, 2},     {at::kFormAction1Form2States, 3}, {at::kAction1Form2States, 3},
-    {at::kFormAction1Forms, 3},       {at::kAction1Forms, 3},           {at::kFormAction2Form0States, 3},
-    {at::kAction2Form0States, 3},     {at::kFormAction2Form1States, 3}, {at::kAction2Form1States, 2},
-    {at::kFormAction2Form2States, 3}, {at::kAction2Form2States, 2},     {at::kAction2Form2State0Steps, 5},
-    {at::kAction2Form2State1Steps, 3}, {at::kFormActions, at::kFormActionCount},
+    {Member_JumpSteps_addr, 4},        {PartyFormAction0_Form0States_addr, 3}, {PartyAction0_Form0States_addr, 3},
+    {PartyFormAction0_Form1States_addr, 3}, {PartyAction0_Form1States_addr, 2},     {PartyFormAction0_Form2States_addr, 3},
+    {PartyAction0_Form2States_addr, 2},     {PartyFormAction0_Forms_addr, 3},       {PartyAction0_Forms_addr, 3},
+    {PartyFormAction1_Form0States_addr, 3}, {PartyAction1_Form0States_addr, 3},     {PartyFormAction1_Form1States_addr, 3},
+    {PartyAction1_Form1States_addr, 2},     {PartyFormAction1_Form2States_addr, 3}, {PartyAction1_Form2States_addr, 3},
+    {PartyFormAction1_Forms_addr, 3},       {PartyAction1_Forms_addr, 3},           {PartyFormAction2_Form0States_addr, 3},
+    {PartyAction2_Form0States_addr, 3},     {PartyFormAction2_Form1States_addr, 3}, {PartyAction2_Form1States_addr, 2},
+    {PartyFormAction2_Form2States_addr, 3}, {PartyAction2_Form2States_addr, 2},     {PartyAction2_Form2State0Steps_addr, 5},
+    {PartyAction2_Form2State1Steps_addr, 3}, {Field_FormActions_addr, at::kFormActionCount},
 };
 
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -329,8 +334,8 @@ U Coordinate() {
 // A direction: 0..7 mostly; above that the original reads Field_DirectionSteps
 // past its 8 rows (in place, the same on both passes).
 unsigned char Direction() { return static_cast<unsigned char>(sh::Often() ? sh::Next() % 8 : PickOf(8, 9, 15, 0x80, 0xFF, sh::Next())); }
-U StepX(unsigned d) { return static_cast<U>(Long(sh::Mem(at::kSteps + d * 8))); }
-U StepZ(unsigned d) { return static_cast<U>(Long(sh::Mem(at::kSteps + d * 8 + 4))); }
+U StepX(unsigned d) { return static_cast<U>(Long(sh::Mem(Field_DirectionSteps_addr + d * 8))); }
+U StepZ(unsigned d) { return static_cast<U>(Long(sh::Mem(Field_DirectionSteps_addr + d * 8 + 4))); }
 unsigned char* Member(unsigned i) { return sh::ObjectOf(i); }
 
 void SeedPosition() {
@@ -363,26 +368,26 @@ unsigned char* AsMember() {
 
 void SeedFormAction() {
     unsigned char* const s = AsMember();
-    sh::Mem(at::kLeaderKind)[0] = static_cast<unsigned char>(PickOf(3, 6, 3, 6, 0, 2, 7, sh::Next()));
-    if (sh::Half()) sh::Mem(at::kLeaderState)[0] = 0xA;
-    if (sh::Half()) sh::Mem(at::kLeaderStep)[0] = 1;
+    sh::Mem(ObjTrio_addr + 0x89)[0] = static_cast<unsigned char>(PickOf(3, 6, 3, 6, 0, 2, 7, sh::Next()));
+    if (sh::Half()) sh::Mem(ObjTrio_addr + 0x1)[0] = 0xA;
+    if (sh::Half()) sh::Mem(ObjTrio_addr + 0x2)[0] = 1;
     if (sh::Often()) Field_Request = 0;
     unsigned char* const r = Member(s[6]);
     r[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 4, sh::Next()));
-    SetLong(r + 0xC, static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next())));
-    SetLong(r + 0x10, static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next())));
+    MemberRec(r)->step_x = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
+    MemberRec(r)->step_z = static_cast<std::int32_t>(PickOf(0, 0x8000, 0xFFFF8000u, 0x10000, sh::Next()));
     r[0x70] = static_cast<unsigned char>(sh::Half() ? 0 : PickOf(1, 0x80, sh::Next() | 1));
     const U k = r[9];
-    const U ax = static_cast<U>(Long(r + 0xC)) * k + static_cast<U>(Long(r + 0x34));
-    const U az = static_cast<U>(Long(r + 0x10)) * k + static_cast<U>(Long(r + 0x38));
+    const U ax = static_cast<U>(MemberRec(r)->step_x) * k + static_cast<U>(MemberRec(r)->x);
+    const U az = static_cast<U>(MemberRec(r)->step_z) * k + static_cast<U>(MemberRec(r)->z);
     static const U kD[] = {0, 1, 0x17FFF, 0x18000, 0x18001, 0x1FFFF, 0x20000, 0x20001, 0xFFFE8000u, 0xFFFE7FFFu, 0xFFFE0000u,
                            0xFFFDFFFFu, 0x80000000u};
     if (s != r) {
-        SetLong(s + 0x34, static_cast<std::int32_t>(ax + (sh::Often() ? sh::Pick(kD, 13) : sh::Next())));
-        SetLong(s + 0x38, static_cast<std::int32_t>(az + (sh::Often() ? sh::Pick(kD, 13) : sh::Next())));
+        MemberRec(s)->x = static_cast<std::int32_t>(ax + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
+        MemberRec(s)->z = static_cast<std::int32_t>(az + (sh::Often() ? sh::Pick(kD, 13) : sh::Next()));
     }
     if (sh::Often()) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~0x1C00u);
-    sh::Mem(at::kPartySet)[0] = static_cast<unsigned char>(sh::Next() % at::kFormActionCount | (sh::Half() ? 0x80 : 0));
+    sh::Mem(AreaW0b_PartySet_addr)[0] = static_cast<unsigned char>(sh::Next() % at::kFormActionCount | (sh::Half() ? 0x80 : 0));
     if (sh::Half()) Field_State[0x137] = 0;
 }
 

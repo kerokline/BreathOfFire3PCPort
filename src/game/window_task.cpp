@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "game/window_task_callees.h"
 #include "hook/detour.h"
@@ -38,8 +39,14 @@ float Flt(int v) { return static_cast<float>(v); }
 // across one). Volatile so that ours cannot cache it either.
 unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(at::kCurrent))));
+        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
+// typed: +8..+0x1F mean something else in each handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 // DIV-0041 (psp-widescreen-placements.md 2.6, the owner's answer of
 // 2026-10-12): the side placements move out to the wide frame's edges. The
@@ -52,7 +59,7 @@ unsigned char* Rec() {
 // moves them by Widescreen_Anchor() where the tables are read, never in the
 // tables, so the data stays the 4:3 values on every base. 0 unarmed or narrow.
 int SideShift() {
-    switch (At(at::kPlacement)[0]) {
+    switch (Msgbox_Placement) {
     case 3:
     case 5:
         return -Widescreen_Anchor();
@@ -129,12 +136,12 @@ using namespace window_task;
 // stored as a byte. Where the PSX keeps all five cells in one block at
 // 0x80143F10..1F, the port scattered them.
 extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned flags) {
-    SetWord(At(at::kPendingArea), static_cast<std::uint16_t>(area));
+    AreaW0b_Place = static_cast<std::uint16_t>(area);
     SetLong(At(at::kPendingX), x);
-    SetLong(At(at::kPendingZ), z);
-    At(at::kPendingFlags)[0] = static_cast<unsigned char>(flags);
+    AreaEntry_PendingZ = z;
+    AreaEntry_PendingFlags = static_cast<unsigned char>(flags);
     g.classify();
-    g.pick_music(static_cast<unsigned>(x >> 16), static_cast<unsigned>(z >> 16), Word(At(at::kPendingArea)));
+    g.pick_music(static_cast<unsigned>(x >> 16), static_cast<unsigned>(z >> 16), AreaW0b_Place);
     Field_Request = 5;
 }
 
@@ -148,15 +155,15 @@ extern "C" void __cdecl Field_ChangeArea(unsigned area, int x, int z, unsigned f
 // so it is unconditional in effect. The scan stops at the FIRST match; every
 // entry is distinct, so that is unobservable.
 extern "C" void __cdecl Area_ClassifyPending(void) {
-    const std::uint16_t pending = Word(At(at::kPendingArea));
+    const std::uint16_t pending = AreaW0b_Place;
     unsigned n = 0;
     for (std::uint32_t p = at::kAreaKinds; p < at::kAreaKindsEnd; p += 2, ++n) {
         if (Word(At(p)) == pending) {
-            At(at::kPendingKind)[0] = 0xB;
+            AreaW0c_PendingKind = 0xB;
             return;
         }
     }
-    if (n == 0xB) At(at::kPendingKind)[0] = 1;
+    if (n == 0xB) AreaW0c_PendingKind = 1;
 }
 
 // original 0x595390 (PSX 0x801A1350): the zone byte +5 at (x, z) in the
@@ -200,10 +207,10 @@ std::uint8_t g_keep_stopping_none = 0;   // 1 through PatchBytes("AreaKeepStoppi
 extern "C" void __cdecl Area_PickMusic(unsigned x, unsigned z, unsigned area) {
     if ((Field_ScriptFlags & 0x80u) != 0) {
         const bool stopping = Music_FadeStops != 0 && Music_FadeCount != 0;
-        At(at::kAreaTrack)[0] = g_keep_stopping_none && stopping ? 0xFF : At(at::kMusicTrack)[0];
+        AreaW1f_MusicCurrent = g_keep_stopping_none && stopping ? 0xFF : Music_Track;
         return;
     }
-    At(at::kAreaTrack)[0] = Area_ZoneTrack(g.zone_at(x, z, area));
+    AreaW1f_MusicCurrent = Area_ZoneTrack(g.zone_at(x, z, area));
 }
 
 unsigned char Area_ZoneTrack(const unsigned char* zone) {
@@ -234,7 +241,7 @@ unsigned char Area_ZoneTrack(const unsigned char* zone) {
 extern "C" const unsigned char* __cdecl Area_ZoneAtIn(unsigned x_arg, unsigned z_arg, unsigned area) {
     const unsigned x = x_arg & 0xFFu, z = z_arg & 0xFFu;
     const unsigned char* record;
-    std::memcpy(&record, At(at::kZoneLists) + (area & 0xFFFFu) * 4u, sizeof record);
+    std::memcpy(&record, At(Area_StateRecords_addr) + (area & 0xFFFFu) * 4u, sizeof record);
     for (;; record += 8) {
         if (x < record[0] || z < record[1] || x > record[2] || z > record[3]) continue;
         return record;
@@ -265,7 +272,7 @@ extern "C" const unsigned char* __cdecl Area_ZoneAtIn(unsigned x_arg, unsigned z
 // back in +4 once the handler has drawn. Both do nothing until
 // Widescreen_ArmFills, and when the view is narrow.
 extern "C" void __cdecl Field_RunTaskRecords(void) {
-    unsigned pass = At(at::kPass)[0];
+    unsigned pass = BossSa_WindowPass;
     if (pass > 2) return;
     do {
         for (std::uint32_t a = at::kRecords; a < at::kRecordsEnd; a += 0x24) {
@@ -275,7 +282,7 @@ extern "C" void __cdecl Field_RunTaskRecords(void) {
                 continue;
             }
             if (record[0xF] != pass) continue;
-            SetLong(At(at::kCurrent), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(record)));
+            BattleWinStates_Current = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(record));
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
@@ -348,25 +355,25 @@ extern "C" void __cdecl Window_Kind2States(void) { RunState(g.kind2, "kind 2"); 
 // is re-read before every store.
 extern "C" void __cdecl Window_Kind0Open(void) {
     Rec()[0xD] = 0;
-    unsigned code = At(at::kPlacement)[0];
+    unsigned code = Msgbox_Placement;
     if ((code & 0x80) != 0) {
-        At(at::kPlacement)[0] = static_cast<unsigned char>(code & 0x7F);
+        Msgbox_Placement = static_cast<unsigned char>(code & 0x7F);
         Rec()[0xD] |= 1;
     }
-    code = At(at::kPlacement)[0];
+    code = Msgbox_Placement;
     unsigned y;
     if ((code & 0x40) != 0) {
-        At(at::kPlacement)[0] = static_cast<unsigned char>(code & 0xBF);
+        Msgbox_Placement = static_cast<unsigned char>(code & 0xBF);
         Rec()[0xD] |= 2;
         Rec()[0xA] = 0x78;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (SideX(At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]) + 0x3Cu) << 4);
-        y = At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u + 1u];
+        SetWord(Rec() + 4, (SideX(At(at::kBoxAltXY)[Msgbox_Placement * 2u]) + 0x3Cu) << 4);
+        y = At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u];
     } else {
         Rec()[0xA] = 0xC8;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (SideX(At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) + 0x64u) << 4);
-        y = At(at::kBoxXY)[At(at::kPlacement)[0] * 2u + 1u];
+        SetWord(Rec() + 4, (SideX(At(at::kBoxXY)[Msgbox_Placement * 2u]) + 0x64u) << 4);
+        y = At(at::kBoxXY)[Msgbox_Placement * 2u + 1u];
     }
     SetWord(Rec() + 6, (y + 0x1Bu) << 4);
     SetWord(Rec() + 0x10, 0);
@@ -384,8 +391,8 @@ extern "C" void __cdecl Window_Kind0Open(void) {
 // and 0x66. It touches neither the flag byte +0xD nor the placement code's
 // two high bits.
 extern "C" void __cdecl Window_Kind2Open(void) {
-    SetWord(Rec() + 4, (SideX(Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u))) + 0x23u) << 4);
-    SetWord(Rec() + 6, (Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u + 2u)) + 0x10u) << 4);
+    SetWord(Rec() + 4, (SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + 0x23u) << 4);
+    SetWord(Rec() + 6, (Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + 0x10u) << 4);
     SetWord(Rec() + 0x10, 0);
     SetWord(Rec() + 0x12, 0);
     SetWord(Rec() + 0x14, 0xE3);
@@ -410,23 +417,23 @@ namespace {
 unsigned SettledX(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]
-                                       : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) << 4;
+        return SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u]
+                                       : At(at::kBoxXY)[Msgbox_Placement * 2u]) << 4;
     case 1:
         return Word(r + 0x18) << 4;
     default:
-        return SideX(Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u))) << 4;
+        return SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) << 4;
     }
 }
 unsigned SettledY(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u + 1u]
-                                  : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u + 1u]) << 4;
+        return ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u]
+                                  : At(at::kBoxXY)[Msgbox_Placement * 2u + 1u]) << 4;
     case 1:
         return Word(r + 0x1A) << 4;
     default:
-        return Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u + 2u)) << 4;
+        return Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) << 4;
     }
 }
 
@@ -442,8 +449,8 @@ int HalfStep(const unsigned char* r, unsigned offset) {
 // and Window_DrawOutline keep only the low 16 bits of the first two and the
 // low byte of the last two, so what the original leaves in the upper halves
 // of the registers it pushes never reaches either.
-int RecX(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 4)) >> 4; }
-int RecY(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 6)) >> 4; }
+int RecX(const unsigned char* r) { return static_cast<std::int16_t>(Win(r)->centre_x) >> 4; }
+int RecY(const unsigned char* r) { return static_cast<std::int16_t>(Win(r)->centre_y) >> 4; }
 int RecW(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x10)) >> 4; }
 int RecH(const unsigned char* r) { return static_cast<std::int16_t>(Word(r + 0x12)) >> 4; }
 
@@ -466,10 +473,10 @@ extern "C" void __cdecl Window_Grow(void) {
     unsigned char* r = Rec();
     SetWord(r + 0x10, Word(r + 0x10) + Word(r + 0x14));
     r = Rec();
-    SetWord(r + 4, Word(r + 4) - static_cast<unsigned>(HalfStep(r, 0x14)));
+    Win(r)->centre_x = Win(r)->centre_x - static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
     if (RecW(r) > r[0xA]) {
-        SetWord(r + 4, SettledX(r));
+        Win(r)->centre_x = SettledX(r);
         r = Rec();
         settled = 1;
         SetWord(r + 0x10, r[0xA] << 4);
@@ -477,10 +484,10 @@ extern "C" void __cdecl Window_Grow(void) {
     }
     SetWord(r + 0x12, Word(r + 0x12) + Word(r + 0x16));
     r = Rec();
-    SetWord(r + 6, Word(r + 6) - static_cast<unsigned>(HalfStep(r, 0x16)));
+    Win(r)->centre_y = Win(r)->centre_y - static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (RecH(r) > r[0xB]) {
-        SetWord(r + 6, SettledY(r));
+        Win(r)->centre_y = SettledY(r);
         r = Rec();
         SetWord(r + 0x12, r[0xB] << 4);
         r = Rec();
@@ -513,24 +520,24 @@ extern "C" void __cdecl Window_Shrink(void) {
     unsigned char* r = Rec();
     SetWord(r + 0x10, Word(r + 0x10) - Word(r + 0x14));
     r = Rec();
-    SetWord(r + 4, Word(r + 4) + static_cast<unsigned>(HalfStep(r, 0x14)));
+    Win(r)->centre_x = Win(r)->centre_x + static_cast<unsigned>(HalfStep(r, 0x14));
     r = Rec();
     if (static_cast<std::int16_t>(Word(r + 0x10)) < 0) {
         const unsigned half = r[0xA] >> 1;
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]
-                                            : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) + half;
+            place = SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u]
+                                            : At(at::kBoxXY)[Msgbox_Placement * 2u]) + half;
             break;
         case 1:
-            place = Word(At(at::kSetXY + At(at::kListSet)[0] * 8u)) + half;
+            place = Word(At(at::kSetXY + MenuWindows_ListSet * 8u)) + half;
             break;
         default:
-            place = SideX(Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u))) + half;
+            place = SideX(Word(At(at::kPlaceXY + Msgbox_Placement * 4u))) + half;
             break;
         }
-        SetWord(r + 4, place << 4);
+        Win(r)->centre_x = place << 4;
         r = Rec();
         settled = 1;
         SetWord(r + 0x10, 0);
@@ -538,24 +545,24 @@ extern "C" void __cdecl Window_Shrink(void) {
     }
     SetWord(r + 0x12, Word(r + 0x12) - Word(r + 0x16));
     r = Rec();
-    SetWord(r + 6, Word(r + 6) + static_cast<unsigned>(HalfStep(r, 0x16)));
+    Win(r)->centre_y = Win(r)->centre_y + static_cast<unsigned>(HalfStep(r, 0x16));
     r = Rec();
     if (static_cast<std::int16_t>(Word(r + 0x12)) < 0) {
         const unsigned half = r[0xB] >> 1;
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u + 1u]
-                                       : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u + 1u]) + half;
+            place = ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[Msgbox_Placement * 2u + 1u]
+                                       : At(at::kBoxXY)[Msgbox_Placement * 2u + 1u]) + half;
             break;
         case 1:
-            place = Word(At(at::kSetXY + At(at::kListSet)[0] * 8u + 2u)) + half;
+            place = Word(At(at::kSetXY + MenuWindows_ListSet * 8u + 2u)) + half;
             break;
         default:
-            place = Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u + 2u)) + half;
+            place = Word(At(at::kPlaceXY + Msgbox_Placement * 4u + 2u)) + half;
             break;
         }
-        SetWord(r + 6, place << 4);
+        Win(r)->centre_y = place << 4;
         r = Rec();
         ++settled;
         SetWord(r + 0x12, 0);
@@ -610,7 +617,7 @@ extern "C" void __cdecl Window_Kind2Frame(void) {
 // zero return, so it is always 0 on that path.
 extern "C" void __cdecl Window_Kind0Close(void) {
     if (g.msgbox_frame() != 0) return;
-    At(at::kPass)[0] = 0;
+    BossSa_WindowPass = 0;
     g.free_current();
 }
 
@@ -681,7 +688,7 @@ extern "C" void __cdecl Window_DrawFrame(int x_arg, int y_arg, int w_arg, int h_
     unsigned char* const quad = Gfx_PacketNext;
     g.set_poly_gt4(quad);
     SetWord(quad + 0x2A, g.get_tpage(0, 0, 0x3C0, 0));
-    SetWord(quad + 0x16, g.get_clut(static_cast<int>(static_cast<signed char>(At(at::kClutRow)[0])) * 32 + 0x10, 0x1E1));
+    SetWord(quad + 0x16, g.get_clut(BattleDraw_Colour * 32 + 0x10, 0x1E1));
     const float fright = Flt(x + w + 1), fbottom = Flt(y + h + 1);
     PutFloat(quad + 8, fx);
     PutFloat(quad + 0xC, fy);

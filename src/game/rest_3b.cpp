@@ -35,11 +35,18 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_3b_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::BattleEnemy* EnemyRec(unsigned char* p) { return reinterpret_cast<records::BattleEnemy*>(p); }
+[[maybe_unused]] const records::BattleEnemy* EnemyRec(const unsigned char* p) { return reinterpret_cast<const records::BattleEnemy*>(p); }
+[[maybe_unused]] records::PartyMember* MemberRec(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
+[[maybe_unused]] const records::PartyMember* MemberRec(const unsigned char* p) { return reinterpret_cast<const records::PartyMember*>(p); }
 
 namespace at = rest_3b::at;
 using U = std::uint32_t;
@@ -62,7 +69,7 @@ unsigned char* Result() { return Ptr(at::kResult); }
 // itself (0x802D40 + 0x14C n, any n), an enemy object by the byte less 3
 // (0x93B960 + 0x128 (n - 3), the difference in 32 bits - a byte below 3
 // lands before the enemies). Neither is checked, as in the original.
-unsigned char* Party(unsigned n) { return At(at::kParty + (n & 0xFF) * at::kPartyStride); }
+unsigned char* Party(unsigned n) { return At(ObjTrio_addr + (n & 0xFF) * at::kPartyStride); }
 unsigned char* Enemy(unsigned n) { return At(at::kEnemies + static_cast<U>(static_cast<S32>(n & 0xFF) - 3) * at::kEnemyStride); }
 unsigned char* CharRecord(unsigned roster) { return At(at::kCharRecords + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(at::kAbilityRows + (id & 0xFFFF) * at::kAbilityStride); }
@@ -196,18 +203,18 @@ extern "C" int __cdecl Stat_PercentCap100(int value, int percent) { return Perce
 extern "C" void __cdecl BattleTarget_PickParty(void) {
     const unsigned pressed = Input_Pressed;
     if (Field_CancelButtons & pressed) {
-        B(at::kStep4) = 4;
+        BattleE4_Step4 = 4;
         return;
     }
     if (Field_ConfirmButtons & pressed) {
-        B(at::kStep4) = 3;
+        BattleE4_Step4 = 3;
         return;
     }
     const U held = BH_CALL(Input_AutoRepeat)(pressed & 0xF000);
     if (held & 0x5000) {
         const unsigned char t = BH_CALL(Battle_DefaultTarget)(3);
         Ptr(at::kCommand)[0] = t;
-        B(at::kStep4) = static_cast<unsigned char>(B(at::kStep4) - 1);
+        BattleE4_Step4 = static_cast<unsigned char>(BattleE4_Step4 - 1);
         BH_CALL(Sound_PlayEffect)(0x101);
         return;
     }
@@ -237,10 +244,10 @@ void CancelHead(bool windows) {
     BH_CALL(Sound_PlayEffect)(0x106);
     if (windows) {
         B(at::kWin3State) = 1;
-        B(at::kWin2State) = 1;
+        Rest3b_Win2State = 1;
     }
     BH_CALL(BattleBanner_ShowName)(Ptr(at::kMenuActor));
-    B(at::kPicking) = 0;
+    BattleE4_Picking = 0;
 }
 }  // namespace
 
@@ -248,19 +255,19 @@ void CancelHead(bool windows) {
 // to the command menu: step 2, the command, step and sub-state 0.
 extern "C" void __cdecl BattleTarget_Cancel(void) {
     CancelHead(true);
-    B(at::kStep1) = 2;
-    B(at::kStep2) = 0;
-    B(at::kStep3) = 0;
-    B(at::kStep4) = 0;
+    BattleActions_Step = 2;
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
+    BattleE4_Step4 = 0;
 }
 
 // original 0x448140 (BattleAttackCmd_States entry 3): the attack's pick
 // cancelled - as BattleTarget_Cancel, the sub-state left as it is.
 extern "C" void __cdecl BattleAttackCmd_Cancel(void) {
     CancelHead(true);
-    B(at::kStep1) = 2;
-    B(at::kStep2) = 0;
-    B(at::kStep3) = 0;
+    BattleActions_Step = 2;
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
 }
 
 namespace {
@@ -268,10 +275,10 @@ namespace {
 // record 16's +3 is 0, step 1, the command and step 0, and a tail jump to
 // ItemMenu_FreeWindows.
 void CloseWait() {
-    if (B(at::kWin16Closing) != 0) return;
-    B(at::kStep1) = 1;
-    B(at::kStep2) = 0;
-    B(at::kStep3) = 0;
+    if (BattleActorCopies_ItemState != 0) return;
+    BattleActions_Step = 1;
+    BattleE4_Step2 = 0;
+    BattleE4_Step3 = 0;
     BH_CALL(ItemMenu_FreeWindows)();
 }
 }  // namespace
@@ -287,10 +294,10 @@ extern "C" void __cdecl BattleItemCmd_CloseWait(void) { CloseWait(); }
 // sub-state 1.
 extern "C" void __cdecl BattleItem_TargetCancel(void) {
     CancelHead(false);
-    B(at::kStep1) = 4;
-    B(at::kStep2) = 1;
-    B(at::kStep3) = 0;
-    B(at::kStep4) = 1;
+    BattleActions_Step = 4;
+    BattleE4_Step2 = 1;
+    BattleE4_Step3 = 0;
+    BattleE4_Step4 = 1;
 }
 
 // original 0x448B40 (BattleItemCmd_TargetSteps entry 4, BattleItemCmd_SideSteps
@@ -298,31 +305,31 @@ extern "C" void __cdecl BattleItem_TargetCancel(void) {
 // sub-state 1.
 extern "C" void __cdecl BattleItemCmd_TargetCancel(void) {
     CancelHead(false);
-    B(at::kStep1) = 4;
-    B(at::kStep2) = 2;
-    B(at::kStep3) = 0;
-    B(at::kStep4) = 1;
+    BattleActions_Step = 4;
+    BattleE4_Step2 = 2;
+    BattleE4_Step3 = 0;
+    BattleE4_Step4 = 1;
 }
 
 // original 0x447D70 (BattleItem_Steps entry 5): jmp [0x64E43C + 4 * (dword
 // 0x904AA4 & 0xFF)] - BattleItem_SideSteps' four.
 extern "C" void __cdecl BattleItem_SideDispatch(void) {
-    Dispatch("BattleItem_SideDispatch", at::kStep4, at::kItemSideSteps, 4);
+    Dispatch("BattleItem_SideDispatch", BattleE4_Step4_addr, BattleItem_SideSteps_addr, 4);
 }
 
 // original 0x448B80 (BattleItemCmd_States entry 5): through BattleItemCmd_SideSteps (4).
 extern "C" void __cdecl BattleItemCmd_SideDispatch(void) {
-    Dispatch("BattleItemCmd_SideDispatch", at::kStep4, at::kItemCmdSideSteps, 4);
+    Dispatch("BattleItemCmd_SideDispatch", BattleE4_Step4_addr, BattleItemCmd_SideSteps_addr, 4);
 }
 
 // original 0x448C80 (BattleItemCmd_States entry 6): through BattleItemCmd_EquipSteps (4).
 extern "C" void __cdecl BattleItemCmd_EquipDispatch(void) {
-    Dispatch("BattleItemCmd_EquipDispatch", at::kStep4, at::kItemCmdEquipSteps, 4);
+    Dispatch("BattleItemCmd_EquipDispatch", BattleE4_Step4_addr, BattleItemCmd_EquipSteps_addr, 4);
 }
 
 // original 0x44A000 (Battle_MenuSteps[6]; PSX 0x8009823C, paired): jmp
 // [0x64E4FC + 4 * byte 0x904AA3] - Escape_States' three.
-extern "C" void __cdecl Escape_Dispatch(void) { Dispatch("Escape_Dispatch", at::kStep3, at::kEscapeStates, 3); }
+extern "C" void __cdecl Escape_Dispatch(void) { Dispatch("Escape_Dispatch", BattleE4_Step3_addr, Escape_States_addr, 3); }
 
 // original 0x447D90 (BattleItem_SideSteps entry 0): a whole side as the
 // target, by byte +0 of the command's word +2's NameTable_Abilities row: bit
@@ -332,9 +339,9 @@ extern "C" void __cdecl BattleItem_SideBegin(void) {
     unsigned char* const c = Ptr(at::kCommand);
     const unsigned char flags = AbilityRow(Word(c + 2))[0];
     c[0] = static_cast<unsigned char>((flags & 0x20) ? 0x40 : 0x80);
-    B(at::kStep4) = 1;
+    BattleE4_Step4 = 1;
     SetWord(At(at::kRepeatLatch), 0);
-    B(at::kPicking) = 1;
+    BattleE4_Picking = 1;
 }
 
 // original 0x447DD0 (BattleItem_SideSteps entry 1): the side pick. Cancel ->
@@ -346,16 +353,16 @@ extern "C" void __cdecl BattleItem_SideBegin(void) {
 extern "C" void __cdecl BattleItem_SidePick(void) {
     const unsigned pressed = Input_Pressed;
     if (Field_CancelButtons & pressed) {
-        B(at::kStep4) = 3;
+        BattleE4_Step4 = 3;
         return;
     }
     if (Field_ConfirmButtons & pressed) {
-        B(at::kStep4) = 2;
+        BattleE4_Step4 = 2;
         return;
     }
     const U held = BH_CALL(Input_AutoRepeat)(pressed & 0xF000);
     if ((held & 0xF000) == 0) return;
-    const unsigned char* const list = BH_CALL(Char_AbilityList)(B(at::kAbilityActor), B(at::kWin16Page), 1);
+    const unsigned char* const list = BH_CALL(Char_AbilityList)(static_cast<unsigned char>(BattleActorCopies_ItemActor), BattleActorCopies_ItemPage, 1);
     const unsigned id = list[L(at::kWin16Cursor) & 0xFF];
     if ((AbilityRow(id)[0] & 0x80) == 0) return;
     unsigned char* const c = Ptr(at::kCommand);
@@ -398,7 +405,7 @@ extern "C" void __cdecl EffectSlot01_VariedHit(void) {
 extern "C" void __cdecl EffectSlot02_HitInflict4(void) {
     Hit(4);
     const unsigned t = B(at::kTarget);
-    const S32 hp = t < 3 ? Word(Party(t) + 0x98) : Word(Enemy(t) + 0xA4);
+    const S32 hp = t < 3 ? MemberRec(Party(t))->hp : EnemyRec(Enemy(t))->hp;
     const std::uint16_t d = Word(Result() + 4);
     if (S16(d) < hp && d != 0) Inflict(4);
 }
@@ -487,10 +494,10 @@ extern "C" void __cdecl EffectSlot10_Heal100(void) { SetWord(Result() + 4, 0xFF9
 extern "C" void __cdecl EffectSlot11_HealFull(void) {
     const unsigned t = B(at::kTarget);
     if (t < 3) {
-        SetWord(Result() + 4, static_cast<std::uint16_t>(0u - Word(Party(t) + 0xA0)));
+        SetWord(Result() + 4, static_cast<std::uint16_t>(0u - MemberRec(Party(t))->max_hp));
         return;
     }
-    const std::uint16_t max = Word(Enemy(t) + 0xB0);
+    const std::uint16_t max = EnemyRec(Enemy(t))->max_hp;
     if (max == 0xFFFF) {
         SetWord(Result() + 4, 0xFFFF);
         unsigned char* const e = Enemy(B(at::kTarget));
@@ -523,15 +530,15 @@ extern "C" void __cdecl EffectSlot16_ClearBFC(void) { ClearThenMiss(0xBFC); }
 // again) 0x904AB1 (a member) or 0x904AB3 (an enemy) one up. Else the delta 0.
 extern "C" void __cdecl EffectSlot17_RaiseDown(void) {
     const unsigned t = B(at::kTarget);
-    const std::uint16_t status = t <= 2 ? Word(Party(t) + 0x90) : Word(Enemy(t) + 0x92);
+    const std::uint16_t status = t <= 2 ? MemberRec(Party(t))->status : EnemyRec(Enemy(t))->status;
     if ((status & 0x4000) == 0) {
         SetWord(Result() + 4, 0);
         return;
     }
     SetWord(Result() + 4, 0xFFFF);
     BH_CALL(Battle_ClearStatus)(B(at::kTarget), 0x4000);
-    if (B(at::kTarget) <= 2) B(at::kPartyUp) = static_cast<unsigned char>(B(at::kPartyUp) + 1);
-    else B(at::kEnemiesLeft) = static_cast<unsigned char>(B(at::kEnemiesLeft) + 1);
+    if (B(at::kTarget) <= 2) BattleSprites_PartyPick = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
+    else BattleE2_EnemiesLeft = static_cast<unsigned char>(BattleE2_EnemiesLeft + 1);
 }
 
 // original 0x44C330 (slot 18): half a hit, then 0x44FCA0(0x80).
@@ -575,13 +582,13 @@ extern "C" void __cdecl EffectSlot28_RaiseQuarter(void) {
     }
     const unsigned t = B(at::kTarget);
     if (t <= 2) {
-        const S32 max = Word(Party(t) + 0xA0);
+        const S32 max = MemberRec(Party(t))->max_hp;
         SetWord(Result() + 4, static_cast<std::uint16_t>((0 - max) >> 2));
-        B(at::kPartyUp) = static_cast<unsigned char>(B(at::kPartyUp) + 1);
+        BattleSprites_PartyPick = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
     } else {
-        const S32 max = Word(Enemy(t) + 0xB0);
+        const S32 max = EnemyRec(Enemy(t))->max_hp;
         SetWord(Result() + 4, static_cast<std::uint16_t>((0 - max) >> 2));
-        B(at::kEnemiesLeft) = static_cast<unsigned char>(B(at::kEnemiesLeft) + 1);
+        BattleE2_EnemiesLeft = static_cast<unsigned char>(BattleE2_EnemiesLeft + 1);
     }
     BH_CALL(Battle_ClearStatus)(B(at::kTarget), 0x4000);
 }
@@ -596,9 +603,9 @@ extern "C" void __cdecl EffectSlot29_RaiseFull(void) {
         return;
     }
     SetWord(Result() + 4, 0xD8F0);
-    const unsigned char up = static_cast<unsigned char>(B(at::kPartyUp) + 1);
+    const unsigned char up = static_cast<unsigned char>(BattleSprites_PartyPick + 1);
     const unsigned t = B(at::kTarget);
-    B(at::kPartyUp) = up;
+    BattleSprites_PartyPick = up;
     BH_CALL(Battle_ClearStatus)(t, 0x4000);
 }
 
@@ -649,7 +656,7 @@ extern "C" void __cdecl EffectSlot34_HitIgnore8(void) {
     SetWord(word, status & 0xFFF7);
     const unsigned target = B(at::kTarget);
     B(at::kRoundFlags) = static_cast<unsigned char>(B(at::kRoundFlags) | 0x80);
-    B(at::kHitRate) = 0x64;
+    BattleE4_HitEnemy = 0x64;
     const short d = BH_CALL(Battle_CalcDamage)(actor, target, 0xFFFF);
     SetWord(Result() + 4, static_cast<std::uint16_t>(d));
     const unsigned a2 = B(at::kActor);
@@ -670,8 +677,8 @@ void StatSumHit(U addend) {
     const unsigned actor = L(at::kActor) & 0xFF;
     const std::uint16_t stat =
         a <= 2 ? Word(CharRecord(B(at::kRosterOf + Party(actor)[0x89])) + 0x44) : Word(Enemy(actor) + 0xD4);
-    const std::uint16_t half = static_cast<std::uint16_t>(W(at::kPowerAdd2) >> 1);
-    B(at::kHitRate) = static_cast<unsigned char>(half + 0x1E > 0x64 ? 0x64 : half + 0x1E);
+    const std::uint16_t half = static_cast<std::uint16_t>(Rest3b_PowerAdd2 >> 1);
+    BattleE4_HitEnemy = static_cast<unsigned char>(half + 0x1E > 0x64 ? 0x64 : half + 0x1E);
     const std::uint16_t add = W(addend);
     SetWord(At(at::kPower), 0);
     BH_CALL(Stat_AddClamped)(reinterpret_cast<unsigned short*>(At(at::kPower)), static_cast<std::uint16_t>(add + stat));
@@ -680,7 +687,7 @@ void StatSumHit(U addend) {
 }  // namespace
 
 // original 0x44CB90 (slot 35): StatSumHit with the addend 0x939FE6.
-extern "C" void __cdecl EffectSlot35_StatSumHit(void) { StatSumHit(at::kPowerAdd); }
+extern "C" void __cdecl EffectSlot35_StatSumHit(void) { StatSumHit(Rest3b_PowerAdd_addr); }
 
 // original 0x44CC60 (slot 36): Effect_SkillDamage(actor, target, 0x14, 0).
 extern "C" void __cdecl EffectSlot36_Skill20(void) { SkillHit(0x14); }
@@ -703,7 +710,7 @@ extern "C" void __cdecl EffectSlot40_StatAAHit(void) {
 }
 
 // original 0x44CDB0 (slot 41): StatSumHit with the addend 0x939FE8.
-extern "C" void __cdecl EffectSlot41_StatSumHit2(void) { StatSumHit(at::kPowerAdd2); }
+extern "C" void __cdecl EffectSlot41_StatSumHit2(void) { StatSumHit(Rest3b_PowerAdd2_addr); }
 
 // original 0x44CE80 (slot 42): the power word = the actor's +0xA4 / +0xB4
 // doubled (16 bits); Battle_CalcDamage(actor, target, 0x20).

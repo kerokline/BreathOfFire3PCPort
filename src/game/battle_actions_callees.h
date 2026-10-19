@@ -32,13 +32,17 @@ namespace at {
 // The battle's phase bytes: 0x904AA0 the phase (Battle_PhaseDispatch's
 // index, 3 is the actions), 0x904AA1 the action step (BattleAction_Steps),
 // 0x904AA2 and 0x904AA3 the sub-steps below it.
-constexpr std::uint32_t kPhase = 0x904AA0, kStep = 0x904AA1, kSub = 0x904AA2, kSub2 = 0x904AA3;
-constexpr std::uint32_t kCounter = 0x904AA5;       // u8, zeroed as an action starts its effect
+// kStep: now BattleActions_Step (symbols.toml).
+// kSub: now BattleE4_Step2 (symbols.toml).
+// kSub2: now BattleE4_Step3 (symbols.toml).
+constexpr std::uint32_t kPhase = 0x904AA0;
+// kCounter: now BossSb_Countdown (symbols.toml). u8, zeroed as an action starts its effect
 constexpr std::uint32_t kRoundFlags = 0x904AA8;    // u16 (0x904AA9 its high byte)
-constexpr std::uint32_t kEventBattle = 0x904AAA;   // u8: non-zero, the hook 0x904B6C is called (battle_flow.md)
+// kEventBattle: now BattleActions_EventBattle (symbols.toml). u8: non-zero, the hook 0x904B6C is called (battle_flow.md)
 constexpr std::uint32_t kQueue = 0x904ACC;         // u8 per slot: the actors in turn order, 0xFF a spent slot
-constexpr std::uint32_t kQueueAt = 0x904AE2, kQueueEnd = 0x904AE3;   // u8 each
-constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8
+// kQueueAt: now BossSe_RoundSlot (symbols.toml).
+constexpr std::uint32_t kQueueEnd = 0x904AE3;  // u8 each
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8
 // The acting actor's block and the target's, 0x10 bytes each and the same
 // layout: +0 the actor (0..2 a member, 3..10 an enemy; the target byte may be
 // 0x40 / 0x80 / 0xC0, a side), +1 the command kind (the actor's), +2 / +4 /
@@ -47,40 +51,42 @@ constexpr std::uint32_t kBattleEnd = 0x904AE8;     // u8
 constexpr std::uint32_t kActor = 0x904B34, kTarget = 0x904B44;
 constexpr unsigned kBKind = 1, kBX = 2, kBY = 4, kBZ = 6, kBObject = 8, kBAction = 0xC;
 constexpr std::uint32_t kEventHook = 0x904B6C;     // void (*)(int)
-constexpr std::uint32_t kApCost = 0x904B78;        // u8: the AP cost when the action is 0x97
+// kApCost: now BattleActions_ApCost (symbols.toml). u8: the AP cost when the action is 0x97
 constexpr std::uint32_t kAbility = 0x904B80;       // u16: the action id of the action in hand
-constexpr std::uint32_t kPending = 0x904B82;       // u16: a bit per actor with an effect to show
-constexpr std::uint32_t kCostShown = 0x904B88;     // u8: the AP cost Skill_ApCost answered
-constexpr std::uint32_t kAbilityShown = 0x904B8D;  // u8: the ability's low byte
+// kPending: now BattleActions_Pending (symbols.toml). u16: a bit per actor with an effect to show
+// kCostShown: now BattleE3_Cost (symbols.toml). u8: the AP cost Skill_ApCost answered
+// kAbilityShown: now BattleE3_SoundSet (symbols.toml). u8: the ability's low byte
 constexpr std::uint32_t kText0 = 0x904CE0, kText1 = 0x904D00;   // Text_Records[0] and [1], 32 bytes each
 constexpr std::uint32_t kNameBuf = 0x904EA0;       // the banner's 16-byte name copy
 constexpr std::uint32_t kBannerShown = 0x8031F3;   // u8, set to 1 with a banner
 constexpr std::uint32_t kStats = 0x939FE0;         // 32 bytes: the actor's effective stat block, copied per action
-constexpr std::uint32_t kMsgBusy = 0x939F60;       // u8: non-zero, the enemy message step waits
-constexpr std::uint32_t kMsgCount = 0x93C2A2;      // u8: messages left in 0x939FBC..
+// kMsgBusy: now BattleE1_MessageUp (symbols.toml). u8: non-zero, the enemy message step waits
+// kMsgCount: now BattleE5_EnemyMessageCount (symbols.toml). u8: messages left in 0x939FBC..
 constexpr std::uint32_t kMsgList = 0x939FBC;       // 4 bytes per message (1-based): +0 the enemy, +2 the u16 message id
-constexpr std::uint32_t kCancelButtons = 0x903590; // u16, Field_CancelButtons
-constexpr std::uint32_t kInputHeld = 0x7E1BE8;     // u16, Input_Held
+// kCancelButtons: now Field_CancelButtons (symbols.toml). u16, Field_CancelButtons
+// kInputHeld: now Input_Held (symbols.toml). u16, Input_Held
 // The actor objects: 0..2 ObjTrio 0x802D40 stride 0x14C, 3.. the enemies
 // 0x93B960 stride 0x128 (actor - 3). Their enemy name records are +0x80.
-constexpr std::uint32_t kParty = 0x802D40, kPartyStride = 0x14C;
+// kParty: now ObjTrio (symbols.toml).
+constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr std::uint32_t kEnemy = 0x93B960, kEnemyStride = 0x128;
 // Constant tables in .data.
-constexpr std::uint32_t kStandOffsets = 0x64DF70;  // s8 x / y pairs by (object +8) + (char id +0x89) * 4
+// kStandOffsets: now BattleWin_MemberTargetOffsets (symbols.toml). s8 x / y pairs by (object +8) + (char id +0x89) * 4
 constexpr std::uint32_t kAbilityRecords = 0x65C4C8;// 24 bytes per action: +0 the name, +0x10 flags, +0x14 u16, +0x15 flags
 constexpr std::uint32_t kItemRows = 0x64B274;      // 4 pointers to u8 tables (battle_flow.md)
 constexpr std::uint32_t kAbilityRows = 0x64C1D0;   // u8 by action id
-constexpr std::uint32_t kMagicFiles = 0x64C2B8;    // 8-byte rows, the u16 DAT file first
-constexpr std::uint32_t kTextMiss = 0x669DF8, kTextCounter = 0x669E0C;   // const char* each
+// kMagicFiles: now Magic_Rows (symbols.toml). 8-byte rows, the u16 DAT file first
+// kTextMiss: now BattleActions_TextMiss (symbols.toml).
+// kTextCounter: now BattleActions_TextCounter (symbols.toml). const char* each
 
 // The seven step tables (symbols.toml [[data]]), their entry counts.
-constexpr std::uint32_t kSteps = 0x64AE80;         // 5, by 0x904AA1: 0x42F250 0x42F500 0x42FC50 0x42FDD0 0x430010
-constexpr std::uint32_t kBeginSteps = 0x64AE94;    // 2, by 0x904AA2: 0x42F260 0x42F4C0
-constexpr std::uint32_t kKindSteps = 0x64AE9C;     // 6, by 0x904AA2 (the kind): 0x42F510 0x42F5B0 0x42F510 0x42F5E0 (BattleAction_Kind3Dispatch) 0x42F670 0x42FAF0
-constexpr std::uint32_t kAbilitySteps = 0x64AEBC;  // 3, by 0x904AA3: 0x42F680 0x42F880 0x42FAB0
-constexpr std::uint32_t kItemSteps = 0x64AF08;     // 3, by 0x904AA3: 0x42FB00 0x42FBD0 0x42FC10
-constexpr std::uint32_t kEffectSteps = 0x64AF14;   // 3, by 0x904AA2: 0x42FC60 0x42FD20 0x42FD90
-constexpr std::uint32_t kAfterSteps = 0x64AF20;    // 3, by 0x904AA2: 0x42FDE0 0x42FE20 (BattleAction_AbilityNotice) 0x42FF70
+// kSteps: now BattleAction_Steps (symbols.toml). 5, by 0x904AA1: 0x42F250 0x42F500 0x42FC50 0x42FDD0 0x430010
+// kBeginSteps: now BattleAction_BeginSteps (symbols.toml). 2, by 0x904AA2: 0x42F260 0x42F4C0
+// kKindSteps: now BattleAction_KindSteps (symbols.toml). 6, by 0x904AA2 (the kind): 0x42F510 0x42F5B0 0x42F510 0x42F5E0 (BattleAction_Kind3Dispatch) 0x42F670 0x42FAF0
+// kAbilitySteps: now BattleAction_AbilitySteps (symbols.toml). 3, by 0x904AA3: 0x42F680 0x42F880 0x42FAB0
+// kItemSteps: now BattleAction_ItemSteps (symbols.toml). 3, by 0x904AA3: 0x42FB00 0x42FBD0 0x42FC10
+// kEffectSteps: now BattleAction_EffectSteps (symbols.toml). 3, by 0x904AA2: 0x42FC60 0x42FD20 0x42FD90
+// kAfterSteps: now BattleAction_AfterSteps (symbols.toml). 3, by 0x904AA2: 0x42FDE0 0x42FE20 (BattleAction_AbilityNotice) 0x42FF70
 
 }  // namespace at
 

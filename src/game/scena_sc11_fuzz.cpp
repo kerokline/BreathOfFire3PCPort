@@ -129,7 +129,7 @@ const sh::Clone kClones[] = {
 };
 constexpr unsigned kClonesN = sizeof kClones / sizeof kClones[0];
 enum : unsigned {
-    kFrame, kStart, kEnterArea, kRun, kScene1, kScene2, kScene3, kScene4, kEffectAnimate, kScene5, kScene6, kScene8,
+    kFrame, kStart, kEnterArea, MoveScript_Var7_addr, kScene1, kScene2, kScene3, kScene4, kEffectAnimate, kScene5, kScene6, kScene8,
     kScene9, kObjectTrigger, kTrigger01, kTrigger14 = kTrigger01 + 13, kArriveHook, kCellHook,
 };
 static_assert(kCellHook + 1 == sizeof kClones / sizeof kClones[0], "the clone indices");
@@ -221,9 +221,10 @@ const sh::DataTable kTables[] = {{0x66166C, 3}, {0x661678, 10}, {0x6616A0, 15}};
 
 // --- the state ---------------------------------------------------------------------------
 
-constexpr std::uint32_t kState = 0x8034E2, kVar7 = 0x8034E4, kStep = 0x8034E5;
+// kStep: now MoveScript_PartyRecords[0x65] (symbols.toml).
+constexpr std::uint32_t kState = 0x8034E2, kVar7 = 0x8034E4;
 constexpr std::uint32_t kCounters = 0x903848;
-constexpr std::uint32_t kEffects = 0x7E11E0;      // Effect_Objects: 20 records of 0x80
+// kEffects: now Effect_Objects (symbols.toml). Effect_Objects: 20 records of 0x80
 constexpr unsigned kEffectCount = 20;
 
 // What the chapter writes or reads beyond the harness's 22 standard regions
@@ -240,7 +241,7 @@ const sh::Region kRegions[] = {
     {0x903802, 2},              // Camera_ShiftY
     {0x929F12, 2},              // Field_Kind2Hold (the standard view focus starts at 0x929F14)
 };
-constexpr std::uint32_t kTriggers = 0x6616A0;
+// kTriggers: now Scena11_Triggers (symbols.toml).
 constexpr unsigned kTriggerCount = 15;
 std::uint32_t g_trigger_recorders[kTriggerCount];   // the harness's handler recorders in Scena11_Triggers
 bool g_have_recorders = false;
@@ -287,18 +288,18 @@ void Seed(unsigned k) {
     // harness has just put them there)
     if (!g_have_recorders) {
         for (unsigned i = 0; i < kTriggerCount; ++i)
-            g_trigger_recorders[i] = static_cast<std::uint32_t>(move_script::Long(Mem(kTriggers + 4 * i)));
+            g_trigger_recorders[i] = static_cast<std::uint32_t>(move_script::Long(Mem(Scena11_Triggers_addr + 4 * i)));
         g_have_recorders = true;
     }
     for (unsigned i = 0; i < kTriggerCount; ++i)
-        SetLong(Mem(kTriggers + 4 * i), static_cast<std::int32_t>(k == kObjectTrigger ? KeyOf(kTriggerEntries[i]) : g_trigger_recorders[i]));
+        SetLong(Mem(Scena11_Triggers_addr + 4 * i), static_cast<std::int32_t>(k == kObjectTrigger ? KeyOf(kTriggerEntries[i]) : g_trigger_recorders[i]));
     // the chapter's bytes, by the values each comparison names
-    B(kState) = static_cast<unsigned char>(sh::Next() % 3);
+    B(MoveScript_PartyRecords_addr + 0x62) = static_cast<unsigned char>(sh::Next() % 3);
     B(kVar7) = static_cast<unsigned char>(sh::Often() ? PickOf(kVar7s) : sh::Next() % 25);
     B(kCounters) = PickOf(kCounter0s);
     if (sh::Half()) B(kCounters + 2) = PickOf(kCounter2s);
     B(kCounters + 3) = static_cast<unsigned char>(sh::Next() % kEffectCount);   // the slot a scene waits on
-    Mem(kEffects + 0x80u * B(kCounters + 3))[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : 1);
+    Mem(Effect_Objects_addr + 0x80u * B(kCounters + 3))[0] = static_cast<unsigned char>(sh::Next() % 3 == 0 ? 0 : 1);
     if (sh::Half()) Field_Request = PickOf<std::uint8_t, 3>({0, 2, 8});
     if (sh::Half()) MoveScript_WaitWordDA = 0;
     if (sh::Half()) Field_Kind2Hold = 0;
@@ -311,26 +312,26 @@ void Seed(unsigned k) {
     // the step, by the function's switch
     switch (k) {
     case kScene1:
-        B(kStep) = PickOf(kSteps1);
+        B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps1);
         if (sh::Half()) B(kCounters) = PickOf<std::uint8_t, 4>({1, 2, 3, 0x14});   // the values its steps wait on
         break;
-    case kScene2: B(kStep) = PickOf(kSteps2); break;
-    case kScene3: B(kStep) = PickOf(kSteps3); break;
+    case kScene2: B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps2); break;
+    case kScene3: B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps3); break;
     case kScene4:
-        B(kStep) = PickOf(kSteps4);
+        B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps4);
         sh::SetRandHint(sh::Next() & 0xF);
         if (sh::Half()) {   // the roll's step and the item step, with member 0's +0x89 they test
-            B(kStep) = sh::Half() ? 0 : 0x14;
-            B(0x802DC9) = sh::Often() ? (B(kStep) ? 7 : 6) : 5;
+            B(MoveScript_PartyRecords_addr + 0x65) = sh::Half() ? 0 : 0x14;
+            B(0x802DC9) = sh::Often() ? (B(MoveScript_PartyRecords_addr + 0x65) ? 7 : 6) : 5;
         }
         break;
-    case kScene5: B(kStep) = PickOf(kSteps5); break;
+    case kScene5: B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps5); break;
     case kScene6:
-        B(kStep) = PickOf(kSteps6);
+        B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps6);
         if (sh::Half()) B(kCounters + 3) = static_cast<unsigned char>(1 + sh::Next() % 2);   // step 20 tests it for 1
         break;
-    case kScene8: B(kStep) = PickOf(kSteps8); break;
-    case kScene9: B(kStep) = PickOf(kSteps9); break;
+    case kScene8: B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps8); break;
+    case kScene9: B(MoveScript_PartyRecords_addr + 0x65) = PickOf(kSteps9); break;
     case kEnterArea:
         if (sh::Often()) Game_AreaNumber = PickOf(kAreas);
         B(kCounters + 2) = PickOf(kCounter2s);
@@ -349,7 +350,7 @@ void Seed(unsigned k) {
         break;
     default: break;
     }
-    if (sh::Next() % 8 == 0) B(kStep) = static_cast<unsigned char>(sh::Next());   // any step, now and then
+    if (sh::Next() % 8 == 0) B(MoveScript_PartyRecords_addr + 0x65) = static_cast<unsigned char>(sh::Next()); // any step, now and then
 }
 
 // The arguments: the object for slot 1, (x, z) for the hooks, the slot for
@@ -377,7 +378,7 @@ void Disturb(std::uint32_t h) {
     case 1: Field_Request = static_cast<unsigned char>((h >> 12) % 3 == 0 ? 2 : 0); break;
     case 2: MoveScript_WaitWordDA = static_cast<unsigned short>((h >> 12) & 1 ? 0 : h >> 16); break;
     case 3: Field_Kind2Hold = static_cast<unsigned char>((h >> 12) & 1); break;
-    case 4: Mem(kEffects + 0x80u * (B(kCounters + 3) % kEffectCount))[0] = static_cast<unsigned char>((h >> 12) & 1); break;
+    case 4: Mem(Effect_Objects_addr + 0x80u * (B(kCounters + 3) % kEffectCount))[0] = static_cast<unsigned char>((h >> 12) & 1); break;
     default: break;
     }
 }

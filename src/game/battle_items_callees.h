@@ -35,8 +35,8 @@ namespace at {
 constexpr std::uint32_t kSparklePool = 0x684790;
 constexpr std::uint32_t kSparkleStride = 0x2C;
 constexpr unsigned kSparkles = 0x80;
-constexpr std::uint32_t kSparkleCurrent = 0x685D90;   // unsigned char *, set by the pool walk 0x4B8D70
-constexpr std::uint32_t kFxActor = 0x93B940;          // unsigned char *, the battle actor the effect plays on
+// kSparkleCurrent: now BattleItems_SparkleCurrent (symbols.toml). unsigned char *, set by the pool walk 0x4B8D70
+// kFxActor: now BattleE2_Owner (symbols.toml). unsigned char *, the battle actor the effect plays on
 // A sparkle's fields.
 constexpr unsigned kFlags = 0;        // bit 0 in use
 constexpr unsigned kType = 1;         // Sparkle_Types index (always 0 as 0x4B8D70 sets it)
@@ -60,22 +60,22 @@ constexpr std::uint32_t kSparkleTypes = 0x65AE28;     // the dispatch table
 
 // The PC's copy of the PSX scratchpad (DamageScratch) and the vertex scratch.
 constexpr std::uint32_t kScratch = 0x903850;          // s16 words at +0 .. +0xE
-constexpr std::uint32_t kVertex = 0x9037A0;           // Prim_VertexScratch: four SVECTORs, 8 bytes apart
+// kVertex: now Prim_VertexScratch (symbols.toml). Prim_VertexScratch: four SVECTORs, 8 bytes apart
 
 // The battle actor's records.
 constexpr std::uint32_t kActorIndex = 0x904B34;       // u8: 0..2 a party member, 3.. an enemy
-constexpr std::uint32_t kPartyRecords = 0x802D40;     // ObjTrio, stride 0x14C
+// kPartyRecords: now ObjTrio (symbols.toml). ObjTrio, stride 0x14C
 constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr std::uint32_t kEnemyRecords = 0x93B960;     // stride 0x128
 constexpr std::uint32_t kEnemyStride = 0x128;
-constexpr std::uint32_t kEnemySoundMode = 0x904AAA;   // u8: non-zero plays the enemy's own cue
+// kEnemySoundMode: now BattleActions_EventBattle (symbols.toml). u8: non-zero plays the enemy's own cue
 constexpr std::uint32_t kFxSizeSelect = 0x904B89;     // u8
 constexpr std::uint32_t kFxSizeTable = 0x65C3EC;      // u8 by a party record's +0x89
 constexpr std::uint32_t kFxSizeAltTable = 0x65C3F8;   // u8 by 0x904B89, for a member with +0x134 bit 1
 constexpr std::uint32_t kEnemyFxSize = 0x8C5652;      // u8, stride 0x8C by the enemy's type byte
 
 // The SND stream's buffer (an IDirectSoundBuffer *).
-constexpr std::uint32_t kStreamBuffer = 0x7DE3C8;
+// kStreamBuffer: now SndStream_Buffer (symbols.toml).
 
 }  // namespace at
 

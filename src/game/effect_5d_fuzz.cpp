@@ -348,8 +348,8 @@ const std::uint8_t kKinds[] = {0x18};
 // Beyond effect mode's standard regions: sub-kind 0x14's CLUT strip and the
 // strip it writes.
 const sh::Region kRegions[] = {
-    {at::kClutStrip, 2 * at::kClutStripWords},
-    {at::kClutStripOut, 2 * at::kClutStripWords},
+    {Gfx_ClutStripSource_addr + 0x740, 2 * at::kClutStripWords},
+    {Gfx_ClutStrip_addr + 0x740, 2 * at::kClutStripWords},
 };
 
 // --- the seed ------------------------------------------------------------------------

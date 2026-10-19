@@ -117,9 +117,9 @@ void Disturb(U node, U salt) {
         if (index < g_nodes && (h >> 12) % 2) PutLong(node, GetLong(node) | ((h >> 16) & 0xFF000000u) | 0x01000000u);
         break;
     }
-    case 3: At(kAfterDrawFlag)[(h >> 8) % 2] = static_cast<unsigned char>(h >> 16); break;
-    case 4: At(kRenderFlags)[0] ^= 1; break;
-    default: At(kDrawEnable)[0] ^= 1; break;
+    case 3: At(D3d_AfterDrawRequest_addr)[(h >> 8) % 2] = static_cast<unsigned char>(h >> 16); break;
+    case 4: At(Gfx_RenderFlags_addr)[0] ^= 1; break;
+    default: At(Gfx_DrawEnable_addr)[0] ^= 1; break;
     }
 }
 
@@ -244,11 +244,11 @@ void RandomTable(unsigned* coverage) {
         PutLong(node + 8, mode && Next() % 3 == 0 ? 0 : key + (Next() % 8) * 4);
     }
     // The draw's own state.
-    for (U i = 0; i < 12; ++i) At(kTexKey)[i] = static_cast<unsigned char>(Next());
-    At(kDrawEnable)[0] = static_cast<unsigned char>(Next() % 8 ? (Next() | 1) : 0);
-    At(kAfterDrawFlag)[0] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
-    At(kAfterDrawFlag)[1] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
-    At(kRenderFlags)[0] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < 12; ++i) At(Gfx_TexCacheKey_addr)[i] = static_cast<unsigned char>(Next());
+    At(Gfx_DrawEnable_addr)[0] = static_cast<unsigned char>(Next() % 8 ? (Next() | 1) : 0);
+    At(D3d_AfterDrawRequest_addr)[0] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
+    At(D3d_AfterDrawRequest_addr)[1] = static_cast<unsigned char>(Next() % 2 ? 0 : Next());
+    At(Gfx_RenderFlags_addr)[0] = static_cast<unsigned char>(Next());
     for (U i = 0; i < 0xA00; ++i) At(0x7C9F50)[i] = static_cast<unsigned char>(Next());
     for (U i = 0; i < 0x1400; i += 4) PutLong(0x7CAE38 + i, Next());
 }
@@ -261,9 +261,9 @@ void SelfTest() {
     const DrawFn theirs = CloneDraw();
     g_base = kLowBuffer;
     g_regions[0] = {g_base, kBufferBytes};
-    g_regions[1] = {kTexKey, 12};
-    g_regions[2] = {kAfterDrawFlag, 2};
-    g_regions[3] = {kRenderFlags, 1};
+    g_regions[1] = {Gfx_TexCacheKey_addr, 12};
+    g_regions[2] = {D3d_AfterDrawRequest_addr, 2};
+    g_regions[3] = {Gfx_RenderFlags_addr, 1};
     g_regions[4] = {0x7C9F50, 0xA00};
     g_regions[5] = {0x7CAE38, 0x1400};
     Capture(g_saved);

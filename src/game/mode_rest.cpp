@@ -45,7 +45,6 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 U UL(U a) { return static_cast<U>(Long(At(a))); }
-void SetUL(U a, U v) { SetLong(At(a), static_cast<std::int32_t>(v)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
 U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 void StepUp() { Game_Step = static_cast<unsigned short>(Game_Step + 1); }
@@ -73,7 +72,7 @@ void WaitLoad() {
 
 // cmp word [0x7E0678], 0x6E; jne; call 0x587C20; test eax, eax; jne: the word
 // first, the whole of eax.
-bool MusicWordAndSilent() { return Word(At(at::kMusicWord)) == 0x6E && SH_CALL(Sound_MusicPlaying)() == 0; }
+bool MusicWordAndSilent() { return ModeRest_MusicWord == 0x6E && SH_CALL(Sound_MusicPlaying)() == 0; }
 
 // The battle steps' tail: the field objects' frame and a loading frame.
 void BattleFrames() {
@@ -105,7 +104,7 @@ extern "C" void __cdecl GameMode3_Enter(void) {
     SH_CALL(Gfx_ClutStripCopyRow)(1);
     SH_CALL(Gfx_ClutStripCopyRow)(2);
     Gfx_ClutStripDirty = 1;
-    At(at::kMenuMode)[0] = 0;
+    BattleE1_Mode = 0;
     At(at::kMenuTimer)[0] = 3;
     SH_CALL(Transition_Start)(3);
     SH_CALL(Menu_WaitTransition)(1);
@@ -142,15 +141,15 @@ extern "C" void __cdecl GameMode3_Leave(void) {
     SH_CALL(Transition_Start)(2);
     SH_CALL(Menu_WaitTransition)(0);
     SH_CALL(Task_Sleep)(1);
-    if (At(at::kPartyChanged)[0] != 0) {
-        const unsigned c = At(at::kPartyList)[2], b = At(at::kPartyList)[1], a = At(at::kPartyList)[0];
+    if (MenuLists_PartyChanged != 0) {
+        const unsigned c = Cond_Flags[0xd4], b = Cond_Flags[0xd3], a = Cond_Flags[0xd2];
         SH_CALL(PartySet_Load)(a, b, c, 0);
         WaitLoad();
-        At(at::kPartyChanged)[0] = 0;
+        MenuLists_PartyChanged = 0;
     }
     {
-        const unsigned char set = static_cast<unsigned char>(At(at::kPartySet)[0] | 0x80);
-        At(at::kPartySet)[0] = set;
+        const unsigned char set = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
+        AreaW0b_PartySet = set;
         SH_CALL(Snd_LoadBankFile)((set & 0x7Fu) + at::kPartySetFiles);
     }
     if (Field_InputFlags & 0x10) {
@@ -161,32 +160,32 @@ extern "C" void __cdecl GameMode3_Leave(void) {
     SH_CALL(Transition_Start)(3);
     SH_CALL(Field_WaitTransition)(1);
     if (MusicWordAndSilent()) SH_CALL(Music_FadeIn)(0x10);
-    if (At(at::kTripAsked)[0] != 0) {
-        const unsigned char out = At(at::kTripOut)[0];
-        At(at::kTripAsked)[0] = 0;
-        if (out == 0 && ((Field_InputFlags & 1) != 0 || Word(At(at::kAreaWord)) == at::kTripAnyArea)) {
+    if (MenuLists_CampChosen != 0) {
+        const unsigned char out = AreaW3c_CampFlag;
+        MenuLists_CampChosen = 0;
+        if (out == 0 && ((Field_InputFlags & 1) != 0 || Game_AreaNumber == at::kTripAnyArea)) {
             const U x = UL(at::kLeaderX), z = UL(at::kLeaderZ);
-            const unsigned area = Word(At(at::kAreaWord));
-            At(at::kTripOut)[0] = 1;
-            SetUL(at::kTripX, x);
-            SetUL(at::kTripZ, z);
-            SetWord(At(at::kTripArea), area);
+            const unsigned area = Game_AreaNumber;
+            AreaW3c_CampFlag = 1;
+            AreaW2d_ReturnPoint = x;
+            AreaW4d_ReturnZ = z;
+            AreaW4d_ReturnArea = area;
             const U r = static_cast<U>(SH_CALL(Rand)());
-            At(at::kTripFacing)[0] =
-                static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + At(at::kLeaderFacing)[0]) & 0xF);
-            const unsigned place = Word(At(at::kPendingPlace));
-            const U px = UL(at::kPendingX), pz = UL(at::kPendingZ);
-            SH_CALL(Field_ChangeArea)(place, I(px), I(pz), At(at::kPendingFlags)[0]);
+            AreaW3g_HealByte =
+                static_cast<unsigned char>((At(at::kFacingJitter)[r & 3] + ObjTrio[8]) & 0xF);
+            const unsigned place = AreaW0b_Place;
+            const U px = UL(at::kPendingX), pz = AreaEntry_PendingZ;
+            SH_CALL(Field_ChangeArea)(place, I(px), I(pz), AreaEntry_PendingFlags);
         } else {
-            At(at::kTripOut)[0] = 0;
-            SH_CALL(Flags_Clear)(At(at::kStoryFlags), at::kTripFlag);
-            const unsigned area = Word(At(at::kTripArea));
-            const U x = UL(at::kTripX), z = UL(at::kTripZ);
+            AreaW3c_CampFlag = 0;
+            SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), at::kTripFlag);
+            const unsigned area = AreaW4d_ReturnArea;
+            const U x = AreaW2d_ReturnPoint, z = AreaW4d_ReturnZ;
             SH_CALL(Field_ChangeArea)(area, I(x), I(z), 4);
         }
-    } else if (At(at::kAreaAsked)[0] != 0) {
-        SH_CALL(Field_ChangeArea)(At(at::kAreaAsked)[0], I(at::kAreaAskedX), I(at::kAreaAskedZ), 4);
-        At(at::kAreaAsked)[0] = 0;
+    } else if (ModeRest_AreaAsked != 0) {
+        SH_CALL(Field_ChangeArea)(ModeRest_AreaAsked, I(at::kAreaAskedX), I(at::kAreaAskedZ), 4);
+        ModeRest_AreaAsked = 0;
     } else {
         Field_Request = 0;
     }
@@ -204,7 +203,7 @@ extern "C" void __cdecl GameMode3_Leave(void) {
 // jump to Field_FrameScripted either way.
 extern "C" void __cdecl GameMode4_Run(void) {
     if (At(at::kMessageBits)[0] & 2) {
-        At(at::kCameraTurnByte)[0] = 0x10;
+        EventOps_BlockByte = 0x10;
         Field_Request = 0;
         Game_Mode = 2;
     }
@@ -246,7 +245,7 @@ extern "C" void __cdecl GameMode5_Turn(void) {
     BattleFrames();
     if (turned == 0) return;
     SH_CALL(Port_DroppedCall)(1);
-    const unsigned char flags = At(at::kBattleFlags)[0];
+    const unsigned char flags = BattleTurnSteps_MusicFlags;
     U formation = UL(at::kFormation);
     if (!(flags & 1)) {
         const U i = (formation & 0xFF) * 2;
@@ -255,12 +254,12 @@ extern "C" void __cdecl GameMode5_Turn(void) {
         const unsigned dx = static_cast<std::uint16_t>(static_cast<signed char>(At(at::kApproach)[i]));
         const unsigned dz = static_cast<std::uint16_t>(static_cast<signed char>(At(at::kApproach)[i + 1]));
         SetWord(At(at::kKind2ZHigh), Word(At(at::kKind2ZHigh)) + dz);
-        const U base = UL(at::kElevationBase);
+        const U base = ModeRest_ElevationBase;
         SetWord(At(at::kKind2XHigh), Word(At(at::kKind2XHigh)) + dx);
         MoveScript_FAWord = static_cast<unsigned short>(static_cast<U>(I(base - elevation) >> 4));
     }
     if (!(flags & 0x10)) {
-        const unsigned set = At(at::kPartySet)[0] & 0x7Fu;
+        const unsigned set = AreaW0b_PartySet & 0x7Fu;
         SH_CALL(PartySet_Select)(set, (formation & 2) ? 2u : 1u);
         formation = UL(at::kFormation);
     }
@@ -295,13 +294,13 @@ extern "C" void __cdecl GameMode5_Load(void) {
     // music takes over - our DLL's state, nothing written to the game's;
     // nothing remembered with the switch off (Capcom's rule, and the fuzz).
     music_resume::Remember();
-    if (!(At(at::kBattleFlags)[0] & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
+    if (!(BattleTurnSteps_MusicFlags & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
     unsigned track;
-    const unsigned char event = At(at::kEventBattle)[0];
+    const unsigned char event = BattleActions_EventBattle;
     if (event != 0) {
         const unsigned asset = At(at::kEventAsset)[event * 4u];
         SH_CALL(LoadDatFile)(static_cast<int>(Word(At(at::kEventFile + asset * 4u))));
-        const unsigned again = At(at::kEventAsset)[At(at::kEventBattle)[0] * 4u];
+        const unsigned again = At(at::kEventAsset)[BattleActions_EventBattle * 4u];
         track = Word(At(at::kEventTrack + again * 4u));
     } else if (Cond_ByteFA < static_cast<int>(at::kChapterSplit)) {
         SH_CALL(LoadDatFile)(static_cast<int>(at::kBattleFileA));
@@ -313,7 +312,7 @@ extern "C" void __cdecl GameMode5_Load(void) {
     SH_CALL(Music_Play)(track, 0xA);
     SH_CALL(Window_ResetAll)();
     StepUp();
-    At(at::kBattleFlags3)[0] = 0;
+    BattleMisc_BannerKinds = 0;
     SetWord(At(at::kBattleWord), 0);
     for (unsigned k = 0; k < 5; ++k) At(at::kBattleBytes)[k] = 0;
 }
@@ -327,7 +326,7 @@ extern "C" void __cdecl GameMode5_Script(void) {
     BattleFrames();
     if (SH_CALL(File_LoadDone)() == 0 || done == 0) return;
     MoveScript_F3Divisor = 0;
-    At(at::kBattleFlags3)[0] = 0;
+    BattleMisc_BannerKinds = 0;
     for (unsigned k = 0; k < 5; ++k) At(at::kBattleBytes)[k] = 0;
     const int count = SH_CALL(Party_Count)(1);
     StepUp();
@@ -360,14 +359,14 @@ extern "C" void __cdecl GameMode5_Leave(void) {
         Draw_OtSlot = 6;
         SH_CALL(Field_PartyLoad)(0);
         SH_CALL(Party_PlacesByList)();
-        const unsigned char flags = At(at::kBattleFlags)[0];
+        const unsigned char flags = BattleTurnSteps_MusicFlags;
         Field_EdgeBits = 0;
         if (!(flags & 2)) {
             const long z = Field_Kind2Z, x = Field_Kind2X;
             const long height = SH_CALL(AreaMap_Elevation)(x, z);
             SH_CALL(MapView_SetElevation)(static_cast<int>(height));
         }
-        if (!(At(at::kBattleFlags)[0] & 0x40) && !(At(at::kBattleFlags2)[0] & 8)) {
+        if (!(BattleTurnSteps_MusicFlags & 0x40) && !(BattleActions_BattleEnd & 8)) {
             unsigned char track = Music_Track;
             // DIV-0092: by now the fanfare's stopping fade (BattleEnd_ExitHook)
             // has left the track 0xFF, so Capcom's Music_Play(Music_Track) never
@@ -378,7 +377,7 @@ extern "C" void __cdecl GameMode5_Leave(void) {
             // over music_resume's own fade.
             bool resume = false;
             if (track == 0xFF && mode_flow::g_area_track_fallback) {
-                track = At(at::kAreaTrack)[0];
+                track = AreaW1f_MusicCurrent;
                 // DIV-0092, second amendment (2026-10-11): after an event battle
                 // (Field_StartEventBattle's byte, cleared below) the PlayStation
                 // restarts the area's own song from its table - the owner heard
@@ -386,11 +385,11 @@ extern "C" void __cdecl GameMode5_Leave(void) {
                 // byte held the script's 29. So: the zone's table track for the
                 // leader's cell (what Area_PickMusic derives on an area change),
                 // from its top, with Capcom's fade. Only a random encounter resumes.
-                const unsigned char event = At(at::kEventBattle)[0];
+                const unsigned char event = BattleActions_EventBattle;
                 if (event != 0) {
                     const unsigned char current = track;
-                    track = Area_ZoneTrack(Area_ZoneAt(*At(at::kLeaderXHigh), *At(at::kLeaderZHigh)));
-                    At(at::kAreaTrack)[0] = track;
+                    track = Area_ZoneTrack(Area_ZoneAt(ObjTrio[0x36], ObjTrio[0x3a]));
+                    AreaW1f_MusicCurrent = track;
                     bof3::Log("DIV-0092    event battle %u over: the zone's track %u from its top (the current byte held %u), no resume",
                               event, track, current);
                 } else {
@@ -400,8 +399,8 @@ extern "C" void __cdecl GameMode5_Leave(void) {
             if (track != 0xFF) SH_CALL(Music_Play)(track, resume ? music_resume::kResumeFadeFrames : 0xA);
         }
         music_resume::Forget();  // a remembered position is used here or not at all
-        At(at::kBattleFlags)[0] = 0;
-        At(at::kEventBattle)[0] = 0;
+        BattleTurnSteps_MusicFlags = 0;
+        BattleActions_EventBattle = 0;
         SH_CALL(Field_ZoneCounterRoll)(0);
         SH_CALL(Field_AfterBattleTally)();
         back = true;

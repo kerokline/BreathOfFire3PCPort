@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_4f.h"
 #include "game/rest_4f_callees.h"
 #include "game/scenario_harness.h"
@@ -49,6 +50,12 @@ __attribute__((naked)) void R4fCellTheirs() { asm("jmp *_g_r4f_cell_copy"); }
 
 namespace rest_4f {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
+[[maybe_unused]] records::SpriteObject* SpriteRec(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+[[maybe_unused]] const records::SpriteObject* SpriteRec(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 
 namespace sh = scenario_harness;
 using move_script::Long;
@@ -216,7 +223,7 @@ sh::Clone g_clones[] = {
 #undef R4F_CLONE
 
 enum : unsigned {
-    kRun, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
+    MoveScript_Var7_addr, kOpenRun, kOpenFade, kOpenWait, kSlideIn, kTopBar, kRows, kController, kSlideOut, kButtons,
     kPanel, kOptions, kPad, kPadRow, kCell, kExits,
     k07Draw, k07Hold, k07Fade, k08Start, k08Trace, k08Two, k08Line,
     k09Start, k09Open1, k09Open2, k09Open3, k09Open4, k09Open5, k09Open6, k09Open7, k09Open8, k09Spin, k09Blades, k09Fan,
@@ -309,7 +316,7 @@ U FxRotTransPers(const U* a, U answer) {
 U FxSound(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 2 == 0) {
-        static const U kCells[] = {at::kSetting0, at::kSetting3, at::kStyle, at::kBackdrop, at::kSetting4};
+        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, BattleDraw_Colour_addr, FieldS_Backdrop_addr, FieldE2_RunDefault_addr};
         for (unsigned i = 0; i < 5; ++i) B(kCells[i]) = static_cast<unsigned char>((n >> (2 + 2 * i)) & 3);
     }
     return answer;
@@ -363,9 +370,9 @@ constexpr unsigned kSelectedRow = sizeof g_callees / sizeof g_callees[0] - 1;
 // The tables this group's dispatchers read in place (lengths: symbols.toml
 // [[data]], each checked by hand).
 const sh::DataTable kTables[] = {
-    {at::kConfigStates, at::kConfigStateCount}, {at::kConfigOpenStates, at::kConfigOpenCount},
-    {at::kKind02Modes, at::kKind02ModeCount},   {at::kKind02Mode1, at::kKind02Mode1Count},
-    {at::kKind02Mode3, at::kKind02Mode3Count},
+    {ConfigScreen_States_addr, at::kConfigStateCount}, {ConfigScreen_OpenStates_addr, at::kConfigOpenCount},
+    {EffectKind02_Modes_addr, at::kKind02ModeCount},   {EffectKind02_Mode1Steps_addr, at::kKind02Mode1Count},
+    {EffectKind02_Mode3Steps_addr, at::kKind02Mode3Count},
 };
 
 const std::uint8_t kKinds[] = {2, 7, 8, 9, 0xB};
@@ -373,8 +380,8 @@ const std::uint8_t kKinds[] = {2, 7, 8, 9, 0xB};
 // Beyond the standard regions: the button words 0 and 1 (0x903580; the rest are
 // the effect mode's kMenuButtons), palette 0x7B in the CLUT shadow.
 const sh::Region kRegions[] = {
-    {at::kButtons, 4},
-    {at::kClut7B, at::kClutBytes},
+    {Gfx_UnpackScratch_addr + 0x1f000, 4},
+    {Gfx_ClutStrip_addr + 0x1ec0, at::kClutBytes},
 };
 
 // --- the seed ------------------------------------------------------------------------------
@@ -406,10 +413,10 @@ void SeedTrace(unsigned char* e) {
     unsigned char* const o = Sprite_Objects + idx * 0xA4u;
     const U target = sh::Often() ? 0x138000u - PickOf(0, 0x8000, 0x7FFF, 0x8001, 0x10000, sh::Next() % 0xA0000)
                                  : static_cast<U>(sh::Next() % 0x200000);
-    SetLong(o + 0x38, static_cast<std::int32_t>(target));
+    SpriteRec(o)->z = static_cast<std::int32_t>(target);
     const U z = sh::Often() ? target - PickOf(0, 0x8000, 0x7FFF, 0x8001, 1, sh::Next() % 0xA0000)
                             : target + PickOf(1, 0x8000, sh::Next() % 0x40000);
-    SetLong(e + 0x38, static_cast<std::int32_t>(z));
+    EffectRec(e)->z = static_cast<std::int32_t>(z);
 }
 
 void Seed(unsigned k) {
@@ -424,9 +431,9 @@ void Seed(unsigned k) {
     }
     unsigned char* const s = Sprite_Current;
     // the menu block and the settings
-    B(at::kOpenState) = static_cast<unsigned char>(sh::Next() % at::kConfigOpenCount);
+    B(Rest2d_MenuSub_addr) = static_cast<unsigned char>(sh::Next() % at::kConfigOpenCount);
     B(at::kCounter) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, sh::Next()));
-    B(at::kCursor) = CursorFor(k, sh::Next());
+    B(MenuLists_Cursor_addr) = CursorFor(k, sh::Next());
     if (sh::Half()) {
         static const U kKeys[] = {0, 0x1000, 0x4000, 0xA000, 0x2000, 0x8000, 0x800, 0x20, 0x40, 0x10, 0x80, 0x24, 0xFC};
         Input_Pressed = static_cast<unsigned short>(kKeys[sh::Next() % (sizeof kKeys / sizeof kKeys[0])] | (sh::Half() ? 0 : sh::Next() & 0xFF));
@@ -435,7 +442,7 @@ void Seed(unsigned k) {
     if (sh::Half()) Field_CancelButtons = static_cast<unsigned short>(PickOf(0, 0x40, 0x800, sh::Next()));
     if (sh::Half()) Game_Step = static_cast<unsigned short>(PickOf(4, 5, 4, 2));
     if (sh::Half()) MoveScript_WaitWordDA = 0;
-    for (U cell = at::kSetting0; cell <= at::kSetting4; ++cell)
+    for (U cell = ModeFlow_ConfigBytes_addr; cell <= FieldE2_RunDefault_addr; ++cell)
         if (sh::Often()) B(cell) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x7F, 0x80, 0xFF));
     switch (k) {
     case k07Hold:
@@ -489,10 +496,10 @@ void Seed(unsigned k) {
     case k02Dark:
     case k02Wait:
         SetWord(P(at::kKind02Word), PickOf(0x37, 0x38, 0x39, 0x8000, 0x7FFF, sh::Next()));
-        B(at::kLeader + 2) = static_cast<unsigned char>(PickOf(1, 0, 2, sh::Next()));
+        B(ObjTrio_addr + 2) = static_cast<unsigned char>(PickOf(1, 0, 2, sh::Next()));
         if (k == k02Bright) s[0x5D] = static_cast<unsigned char>(PickOf(0xB0, 0xA0, 0x70, 0x6F, sh::Next()));
         if (k == k02Dark) s[0x5D] = static_cast<unsigned char>(PickOf(0x90, 0x80, 0xA0, sh::Next()));
-        if (k == k02Tint1 || k == k02Tint3) B(at::kLeader + 0x27) = static_cast<unsigned char>(PickOf(0x7B, 0x7A, sh::Next()));
+        if (k == k02Tint1 || k == k02Tint3) B(ObjTrio_addr + 0x27) = static_cast<unsigned char>(PickOf(0x7B, 0x7A, sh::Next()));
         break;
     default: break;
     }
@@ -566,10 +573,10 @@ void Disturb(U h) {
     }
     case 3:
         if (v & 1) B(at::kCounter) = static_cast<unsigned char>((v >> 1) % 6);
-        else B(at::kCursor) = CursorFor(g_current, v >> 1);
+        else B(MenuLists_Cursor_addr) = CursorFor(g_current, v >> 1);
         break;
     case 4: {
-        static const U kCells[] = {at::kSetting0, at::kSetting3, at::kStyle, at::kBackdrop, at::kSetting4};
+        static const U kCells[] = {ModeFlow_ConfigBytes_addr, Rest4f_Setting3_addr, BattleDraw_Colour_addr, FieldS_Backdrop_addr, FieldE2_RunDefault_addr};
         B(kCells[v % 5]) = static_cast<unsigned char>((v >> 3) & 3);
         break;
     }

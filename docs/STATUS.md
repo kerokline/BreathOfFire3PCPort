@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-17)
+**Status:** IN PROGRESS (2026-10-19)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -8,7 +8,28 @@ true today. When they disagree, this one is right and `PLAN.md` needs updating.
 
 ## Where we are
 
-**The button unification round, 2026-10-17** (`buttons/round`, its end on `buttons/round-end`; not yet a PR;
+**The typed-data round, stages A and B, 2026-10-19** (`typed/b1`, its PR next;
+[`typed-data-round.md`](typed-data-round.md), IDEAS I44 stages 1 and 2): our code's reads of Capcom's data image become
+named, typed accesses, with **no behaviour change**. Stage A typed the globals (488 new `symbols.toml` `[[data]]`
+entries, widths measured by `tools/data_widths.py`), the nine record families (`src/game/records.h`, 263 named fields,
+every offset static-asserted) and the census (`tools/data_census.py`, a CI ratchet on the raw-site count). Each part
+was re-derived by an independent agent, which found a class of cases each had missed, and corrected. Stage B converted
+every global site with one tool (`tools/typed_convert.py`) and the record sites by seven file groups; a read-only
+family audit then found 13 pointers typed as the wrong struct and put them back to raw. **Raw data sites: 50,943 ->
+27,394.** The proof is new: `tools/codegen_same.py` shows every one of the 637 objects disassembling the same as
+`origin/main`'s, so no run of the game was needed. What is left, and the method for it, is staged as stage C
+([`typed-data-stage-c.md`](typed-data-stage-c.md)). The branch also carries the install-gap round's second pairing
+pass (385 pairs, four more rows placed; [`install-gap-pairs.md`](install-gap-pairs.md) 8).
+
+**`main` is `19180e63` since 2026-10-19**, after the button round (PR #85, below) and: the event battles' own music on
+disc-only installs (PR #86, D316); sprites flagged for capture drawn into VRAM, restoring Amalgam's melt (PR #87, D317 /
+DIV-0142); Ryu's dream silent as on the PlayStation (PR #90, D318 / DIV-0143); the install-gap round (PR #91,
+[`install-gap-round.md`](install-gap-round.md): disc-built images from the player's discs, the read watch, D279 and
+D321; its live end batch passed on every install kind, 2026-10-18); the jukebox's eleven recorded streams, the staff
+roll's *Pure Again* among them (PR #92). The quicksave round is staged ([`quicksave-round.md`](quicksave-round.md)) and
+not built.
+
+**The button unification round, 2026-10-17** (`buttons/round`, its end on `buttons/round-end`; merged as PR #85;
 [`button-unification-round.md`](button-unification-round.md)): one table, `σ`, read from the save's Config, decides
 every button the game names or tests. Menus confirm on Speak's button and cancel on Action's (DIV-0133); an install
 starts with the Config of the release it was built from, the PC's own data counting as Japan's (DIV-0134); the world

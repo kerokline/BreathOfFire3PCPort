@@ -21,11 +21,13 @@
 #include "game/area_harness.h"
 #include "game/area_w3c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
+records::SpriteObject* CurSprite() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 namespace at = area_w3c::at;
 using area_harness::Mem;
@@ -40,15 +42,15 @@ void AddWord(unsigned char* p, unsigned v) { SetWord(p, Word(p) + v); }
 void SetMessage(unsigned id) { SetWord(Mem(at::kMessage), id); }
 // The dword at `cell` as a pointer.
 unsigned char* Ptr(U cell) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<U>(Long(Mem(cell))))); }
-unsigned char* StoryFlags() { return Mem(at::kStoryFlags); }
-unsigned char* Focus() { return Ptr(at::kFocusObject); }
+unsigned char* StoryFlags() { return Mem(Cond_Flags_addr + 0xa0); }
+unsigned char* Focus() { return Ptr(AreaW1a_FocusObject_addr); }
 // Field object `index` (Sprite_Objects, 0xA4 bytes); effect record `slot`
 // (Effect_Objects, 0x80 bytes); party record `member` (ObjTrio, 0x14C bytes).
 unsigned char* ObjectAt(unsigned index) { return Sprite_Objects + index * 0xA4u; }
 unsigned char* EffectAt(unsigned slot) { return Effect_Objects + slot * at::kEffectStride; }
 unsigned char* PartyAt(unsigned member) { return ObjTrio + member * at::kPartyStride; }
 // The choice's answer as the choices read it with movsx.
-int Answer() { return static_cast<signed char>(B(at::kChoiceAnswer)); }
+int Answer() { return static_cast<signed char>(B(AreaW0c_ChoiceAnswer_addr)); }
 // A float stored as the originals' `mov dword` of its bits.
 void SetFloat(unsigned char* p, float v) { std::memcpy(p, &v, sizeof v); }
 
@@ -74,14 +76,15 @@ void PlaceRandomObject(U cells, U weights) {
     if (chosen < 8) {
         const unsigned pick = static_cast<unsigned char>(AH_CALL(Rand)() & 7);
         unsigned char* const object = ObjectAt(chosen);
+        auto* const tObject = reinterpret_cast<records::SpriteObject*>(object);
         const auto x = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2)) << 16);
         const auto z = static_cast<std::int32_t>(static_cast<U>(B(cells + pick * 2 + 1)) << 16);
-        SetLong(object + 0x34, x);
-        SetLong(object + 0x38, z);
-        const long ground = AH_CALL(AreaMap_Elevation)(Long(object + 0x34), z);
+        tObject->x = x;
+        tObject->z = z;
+        const long ground = AH_CALL(AreaMap_Elevation)(tObject->x, z);
         SetWord(object + 0x3E, static_cast<unsigned>(ground));
     }
-    Field_EdgeBits = static_cast<unsigned short>(Long(Mem(at::kLeaderZone)) - 5);
+    Field_EdgeBits = static_cast<unsigned short>(Long(Mem(ObjTrio_addr + 0x134)) - 5);
 }
 
 // ---- the party-list spawns (areas 130, 133, 134) ----
@@ -93,9 +96,10 @@ void PlaceRandomObject(U cells, U weights) {
 // .data). Area 94's handlers' shape (area_w2c.cpp's SpawnAt).
 void SpawnAtMember(unsigned member, unsigned char kind, U args) {
     const unsigned char* const record = PartyAt(member);
-    const auto z = static_cast<short>(Word(record + 0x30));
-    const auto x = static_cast<short>(Word(record + 0x2E));
-    const unsigned char effect = B(args + B(at::kPartyList0 + member));
+    const auto* const tRecord = reinterpret_cast<const records::PartyMember*>(record);
+    const auto z = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_y));
+    const auto x = static_cast<short>(static_cast<std::uint16_t>(tRecord->screen_x));
+    const unsigned char effect = B(args + B(Cond_Flags_addr + 0xd2 + member));
     Sprite_Current = PartyAt(member);
     const unsigned char slot = AH_CALL(Effect_Spawn)(kind, 0, static_cast<signed char>(effect), x, z);
     if (slot != 0xFF) Sprite_Current[0xB] = slot;
@@ -109,12 +113,13 @@ void EffectAtObject(unsigned char kind, bool clear1) {
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
     e[0] = 1;
     e[5] = kind;
     if (clear1) e[1] = 0;
-    SetLong(e + 0x34, Long(Sprite_Current + 0x34));
-    SetLong(e + 0x38, Long(Sprite_Current + 0x38));
-    SetLong(e + 0x3C, Long(Sprite_Current + 0x3C));
+    tE->x = Long(Sprite_Current + 0x34);
+    tE->z = Long(Sprite_Current + 0x38);
+    tE->height = Long(Sprite_Current + 0x3C);
 }
 
 // The patch chain the inits of areas 94 and 128 apply: from AreaMap_Header
@@ -122,7 +127,7 @@ void EffectAtObject(unsigned char kind, bool clear1) {
 // entry not 0: AreaMap_ApplyPatch(entry), then on by (its dword, read again,
 // >> 16) + 1 dwords; a zero dword ends it (none: the walk runs on).
 void ApplyPatchChain() {
-    U entry = at::kMapHeader + (static_cast<U>(Long(Mem(at::kPatchBase))) & 0xFFFF) * 4u;
+    U entry = AreaMap_Header_addr + (static_cast<U>(Long(Mem(AreaMap_PatchBase_addr))) & 0xFFFF) * 4u;
     while (Long(Mem(entry)) != 0) {
         AH_CALL(AreaMap_ApplyPatch)(Mem(entry));
         entry += (static_cast<U>(Long(Mem(entry))) >> 16) * 4u + 4u;
@@ -139,10 +144,11 @@ void EffectAtCell(unsigned char kind, std::int32_t x, std::int32_t z, int b1, in
     const unsigned char slot = AH_CALL(Effect_FindFree)();
     if (slot == 0xFF) return;
     unsigned char* const e = EffectAt(slot);
-    SetLong(e + 0x38, z);
-    const std::int32_t zz = Long(e + 0x38);
-    SetLong(e + 0x34, x);
-    const std::int32_t xx = Long(e + 0x34);
+    auto* const tE = reinterpret_cast<records::EffectObject*>(e);
+    tE->z = z;
+    const std::int32_t zz = tE->z;
+    tE->x = x;
+    const std::int32_t xx = tE->x;
     e[0] = 1;
     e[5] = kind;
     if (b1 >= 0) e[1] = static_cast<unsigned char>(b1);
@@ -150,11 +156,11 @@ void EffectAtCell(unsigned char kind, std::int32_t x, std::int32_t z, int b1, in
     const long ground = AH_CALL(AreaMap_Elevation)(xx, zz);
     const U y = static_cast<U>(static_cast<std::int32_t>(static_cast<short>(ground)) + lift);
     if (shift != 0) {
-        const U moved = static_cast<U>(Long(e + 0x34)) + static_cast<U>(shift);
-        SetLong(e + 0x3C, static_cast<std::int32_t>(y << 16));
-        SetLong(e + 0x34, static_cast<std::int32_t>(moved));
+        const U moved = static_cast<U>(tE->x) + static_cast<U>(shift);
+        tE->height = static_cast<std::int32_t>(y << 16);
+        tE->x = static_cast<std::int32_t>(moved);
     } else {
-        SetLong(e + 0x3C, static_cast<std::int32_t>(y << 16));
+        tE->height = static_cast<std::int32_t>(y << 16);
     }
 }
 
@@ -166,10 +172,10 @@ void EffectAtCell(unsigned char kind, std::int32_t x, std::int32_t z, int b1, in
 
 // original 0x41C890 (Area_Descriptors[124] +0x40; PSX 0x801F2D2C): a jmp over
 // eleven nops to the body; PlaceRandomObject over Area124_Cells / _Weights.
-extern "C" void __cdecl Area124_PlaceRandomObject(void) { PlaceRandomObject(at::kArea124Cells, at::kArea124Weights); }
+extern "C" void __cdecl Area124_PlaceRandomObject(void) { PlaceRandomObject(Area124_Cells_addr, Area124_Weights_addr); }
 // original 0x41C960 (Area_Descriptors[125] +0x40; PSX 0x801F362C): area 124's
 // code over Area125_Cells / _Weights.
-extern "C" void __cdecl Area125_PlaceRandomObject(void) { PlaceRandomObject(at::kArea125Cells, at::kArea125Weights); }
+extern "C" void __cdecl Area125_PlaceRandomObject(void) { PlaceRandomObject(Area125_Cells_addr, Area125_Weights_addr); }
 
 // ===========================================================================
 // Area 127 (descriptor 0x626FE8; PSX 0x801F2D10)
@@ -180,9 +186,9 @@ extern "C" void __cdecl Area125_PlaceRandomObject(void) { PlaceRandomObject(at::
 // MoveCmd_TestFB(0x4E, 0x33), then Sprite_Current (read after the calls) +0 =
 // 0.
 extern "C" void __cdecl Area127_ClearActive80(void) {
-    unsigned char* const member = Ptr(at::kActiveMember);
+    unsigned char* const member = Ptr(Field_ActiveMember_addr);
     member[0x80] = static_cast<unsigned char>(member[0x80] & 0xFE);
-    if (B(at::kLeader89) != 5) return;
+    if (B(ObjTrio_addr + 0x89) != 5) return;
     AH_CALL(Flags_Set)(StoryFlags(), 0x32);
     AH_CALL(MoveCmd_TestFB)(0x4E, 0x33);
     Sprite_Current[0] = 0;
@@ -196,27 +202,27 @@ extern "C" void __cdecl Area127_ClearActive80(void) {
 // the focus object's word +0x8A = 0xB, counter 0 = 0xF and the step 3; else
 // the step 8.
 extern "C" void __cdecl Area128_ChoiceStep3(void) {
-    const unsigned char answer = B(at::kChoiceAnswer);
+    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
     if (answer != 0) {
-        B(at::kVar7Step) = 8;
+        B(MoveScript_PartyRecords_addr + 0x65) = 8;
         return;
     }
     SetWord(Focus() + 0x8A, 0xB);
     B(at::kCounter0) = 0xF;
-    B(at::kVar7Step) = 3;
+    B(MoveScript_PartyRecords_addr + 0x65) = 3;
 }
 
 // original 0x41CAB0 (+0x34[1]): answer 0: ScriptFlags_Set40, tail kind 56
 // (0x38) armed at state 0xA, message 0x49; else message 0xFFFF.
 extern "C" void __cdecl Area128_ChoiceArmTail56(void) {
-    if (B(at::kChoiceAnswer) != 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
         SetMessage(0xFFFF);
         return;
     }
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 0x38;
-    B(at::kTailState) = 0xA;
+    B(AreaW0a_TailKind_addr) = 0x38;
+    B(AreaW0c_TailState_addr) = 0xA;
     SetMessage(0x49);
 }
 
@@ -225,12 +231,12 @@ extern "C" void __cdecl Area128_ChoiceArmTail56(void) {
 // Field_State's byte +0x89 is 2, else 0x80000; +8 = 1. Sprite_Current is read
 // again for every store.
 extern "C" void __cdecl Area128_PlaceObject(void) {
-    SetLong(Sprite_Current + 0x34, 0x4E8000);
-    SetLong(Sprite_Current + 0x3C, 0);
+    CurSprite()->x = 0x4E8000;
+    CurSprite()->height = 0;
     if (Field_State[0x89] == 2)
-        SetLong(Sprite_Current + 0x38, 0x88000);
+        CurSprite()->z = 0x88000;
     else
-        SetLong(Sprite_Current + 0x38, 0x80000);
+        CurSprite()->z = 0x80000;
     Sprite_Current[8] = 1;
 }
 
@@ -240,7 +246,7 @@ extern "C" void __cdecl Area128_PlaceObject(void) {
 // story flag 0x89, Field_ChangeArea(0x79, 0x2A0000, 0x1A0000, 7), the tail
 // cleared; any other state nothing.
 extern "C" void __cdecl Area128_TailLeave56(void) {
-    const unsigned char state = B(at::kTailState);
+    const unsigned char state = B(AreaW0c_TailState_addr);
     if (state == 0) {
         if (Field_Request == 2) return;
         AH_CALL(ScriptFlags_Clear40)();
@@ -254,16 +260,16 @@ extern "C" void __cdecl Area128_TailLeave56(void) {
     } else {
         return;
     }
-    B(at::kTailKind) = 0;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = 0;
+    B(AreaW0c_TailState_addr) = 0;
 }
 
 // original 0x41CBD0 (Field_ObjectTriggers id 61; object, flags): ScriptFlags_
 // Set40, tail kind 56 at state 0, the object's word +0x8A + 1; al 0.
 extern "C" unsigned char __cdecl Area128_Trigger61(unsigned char* object, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 0x38;
-    B(at::kTailState) = 0;
+    B(AreaW0a_TailKind_addr) = 0x38;
+    B(AreaW0c_TailState_addr) = 0;
     AddWord(object + 0x8A, 1);
     return 0;
 }
@@ -273,7 +279,7 @@ extern "C" unsigned char __cdecl Area128_Trigger61(unsigned char* object, unsign
 // (Cond_ByteFA, signed) above 10 and story flag 0x43 set: cells (0x1F, 0x39),
 // (0x20, 0x39) = 0xC0 and (0x1F, 0x3A), (0x20, 0x3A) = 0xA1.
 extern "C" void __cdecl Area128_InitPatches(void) {
-    if (Word(Mem(at::kLastArea)) == 0x79) {
+    if (Word(Mem(AreaW2c_LastArea_addr)) == 0x79) {
         AH_CALL(Flags_Set)(StoryFlags(), 0x43);
         AH_CALL(Flags_Clear)(StoryFlags(), 0x42);
         ApplyPatchChain();
@@ -295,23 +301,23 @@ extern "C" void __cdecl Area128_InitPatches(void) {
 // 0, the step 0xA, MoveScript_Var7 6; answer 1: counter 0 = 0.
 extern "C" void __cdecl Area130_ChoiceRunStep(void) {
     const int answer = Answer();
-    SetMessage(Word(Mem(at::kArea130ChoiceMessages + static_cast<U>(answer) * 2u)));
+    SetMessage(Word(Mem(Area130_ChoiceMessages_addr + static_cast<U>(answer) * 2u)));
     if (answer == 0) {
         B(at::kCounter0) = 0;
         B(at::kCounter1) = 0;
         B(at::kCounter2) = 0;
         B(at::kCounter3) = 0;
-        B(at::kVar7Step) = 0xA;
-        B(at::kVar7) = 6;
+        B(MoveScript_PartyRecords_addr + 0x65) = 0xA;
+        B(MoveScript_Var7_addr) = 6;
     } else if (answer == 1) {
         B(at::kCounter0) = 0;
     }
 }
 
 // original 0x41CD10 (+0x3C[0], PSX 0x801F363C): kind 4 at record 0, args A.
-extern "C" void __cdecl Area130_SpawnKind4AtMember0(void) { SpawnAtMember(0, 4, at::kArea130EffectArgsA); }
+extern "C" void __cdecl Area130_SpawnKind4AtMember0(void) { SpawnAtMember(0, 4, Area130_EffectArgsA_addr); }
 // original 0x41CD60 (+0x3C[1], PSX 0x801F36BC): kind 3 at record 0, args B.
-extern "C" void __cdecl Area130_SpawnKind3AtMember0(void) { SpawnAtMember(0, 3, at::kArea130EffectArgsB); }
+extern "C" void __cdecl Area130_SpawnKind3AtMember0(void) { SpawnAtMember(0, 3, Area130_EffectArgsB_addr); }
 
 // original 0x41CDB0 (+0x3C[3], PSX 0x801F3760): Port_DroppedCall(1) (the PSX
 // call the port dropped).
@@ -325,26 +331,26 @@ extern "C" void __cdecl Area130_DroppedCallTrack83(void) {
 }
 
 // original 0x41CDE0 (+0x3C[6], PSX 0x801F37F0): kind 3 at record 1, args B.
-extern "C" void __cdecl Area130_SpawnKind3AtMember1(void) { SpawnAtMember(1, 3, at::kArea130EffectArgsB); }
+extern "C" void __cdecl Area130_SpawnKind3AtMember1(void) { SpawnAtMember(1, 3, Area130_EffectArgsB_addr); }
 // original 0x41CE30 (+0x3C[7], PSX 0x801F3870): kind 3 at record 2, args B.
-extern "C" void __cdecl Area130_SpawnKind3AtMember2(void) { SpawnAtMember(2, 3, at::kArea130EffectArgsB); }
+extern "C" void __cdecl Area130_SpawnKind3AtMember2(void) { SpawnAtMember(2, 3, Area130_EffectArgsB_addr); }
 
 // original 0x41CE80 (+0x3C[8], PSX 0x801F38F0): an effect record of kind 0x78
 // at the running object.
 extern "C" void __cdecl Area130_Effect78AtObject(void) { EffectAtObject(0x78, false); }
 
 // original 0x41CED0 (+0x3C[9], PSX 0x801F397C): kind 1 at record 1, args B.
-extern "C" void __cdecl Area130_SpawnKind1AtMember1(void) { SpawnAtMember(1, 1, at::kArea130EffectArgsB); }
+extern "C" void __cdecl Area130_SpawnKind1AtMember1(void) { SpawnAtMember(1, 1, Area130_EffectArgsB_addr); }
 // original 0x41CF20 (+0x3C[10], PSX 0x801F39FC): kind 1 at record 2, args B.
-extern "C" void __cdecl Area130_SpawnKind1AtMember2(void) { SpawnAtMember(2, 1, at::kArea130EffectArgsB); }
+extern "C" void __cdecl Area130_SpawnKind1AtMember2(void) { SpawnAtMember(2, 1, Area130_EffectArgsB_addr); }
 // original 0x41CF70 (+0x3C[11], PSX 0x801F3A7C): kind 4 at record 1, args C.
-extern "C" void __cdecl Area130_SpawnKind4AtMember1(void) { SpawnAtMember(1, 4, at::kArea130EffectArgsC); }
+extern "C" void __cdecl Area130_SpawnKind4AtMember1(void) { SpawnAtMember(1, 4, Area130_EffectArgsC_addr); }
 // original 0x41CFC0 (+0x3C[12], PSX 0x801F3AFC): kind 4 at record 2, args C.
-extern "C" void __cdecl Area130_SpawnKind4AtMember2(void) { SpawnAtMember(2, 4, at::kArea130EffectArgsC); }
+extern "C" void __cdecl Area130_SpawnKind4AtMember2(void) { SpawnAtMember(2, 4, Area130_EffectArgsC_addr); }
 // original 0x41D010 (+0x3C[13], PSX 0x801F3B7C): kind 5 at record 1, args C.
-extern "C" void __cdecl Area130_SpawnKind5AtMember1(void) { SpawnAtMember(1, 5, at::kArea130EffectArgsC); }
+extern "C" void __cdecl Area130_SpawnKind5AtMember1(void) { SpawnAtMember(1, 5, Area130_EffectArgsC_addr); }
 // original 0x41D060 (+0x3C[14], PSX 0x801F3BFC): kind 5 at record 2, args C.
-extern "C" void __cdecl Area130_SpawnKind5AtMember2(void) { SpawnAtMember(2, 5, at::kArea130EffectArgsC); }
+extern "C" void __cdecl Area130_SpawnKind5AtMember2(void) { SpawnAtMember(2, 5, Area130_EffectArgsC_addr); }
 
 // original 0x41D0B0 (+0x3C[15], PSX 0x801F3C7C): KeyItem_Add(0xA).
 extern "C" void __cdecl Area130_GiveKeyItem10(void) { AH_CALL(KeyItem_Add)(0xA); }
@@ -353,8 +359,8 @@ extern "C" void __cdecl Area130_GiveKeyItem10(void) { AH_CALL(KeyItem_Add)(0xA);
 // 63 (0x3F) with sub-kind 0; al 0. The tail's state is the step byte.
 extern "C" unsigned char __cdecl Area130_Trigger65(unsigned char*, unsigned char*) {
     AH_CALL(ScriptFlags_Set40)();
-    B(at::kTailKind) = 0x3F;
-    B(at::kTailSub) = 0;
+    B(AreaW0a_TailKind_addr) = 0x3F;
+    B(AreaW0c_TailSub_addr) = 0;
     return 0;
 }
 
@@ -367,10 +373,10 @@ extern "C" unsigned char __cdecl Area130_Trigger65(unsigned char*, unsigned char
 // 0x98, ScriptFlags_Clear40, the tail kind and sub-kind 0. Else nothing.
 extern "C" void __cdecl Area130_TailGiveItem(void) {
     static const unsigned char kItems[6][2] = {{0, 0xE}, {0, 7}, {0, 8}, {2, 0x15}, {1, 0x11}, {3, 0x19}};
-    const unsigned char step = B(at::kVar7Step);
+    const unsigned char step = B(MoveScript_PartyRecords_addr + 0x65);
     if (step == 0) {
         if (Field_Request == 2) return;
-        const unsigned pick = B(at::kItemPick);
+        const unsigned pick = B(AreaW3c_ItemPick_addr);
         if (pick <= 5) {
             const unsigned category = kItems[pick][0], item = kItems[pick][1];
             unsigned char* const name = AH_CALL(Item_NamePtr)(category, item);
@@ -381,14 +387,14 @@ extern "C" void __cdecl Area130_TailGiveItem(void) {
         B(at::kTextRecords2F) = 0;
         AH_CALL(Msg_OpenScript)(0x49);
         Field_Request = 2;
-        B(at::kVar7Step) = 1;
+        B(MoveScript_PartyRecords_addr + 0x65) = 1;
     } else if (step == 1) {
         if (Field_Request == 2) return;
         AH_CALL(Sound_PlayEffect)(0x106);
         AH_CALL(Flags_Set)(StoryFlags(), 0x98);
         AH_CALL(ScriptFlags_Clear40)();
-        B(at::kTailKind) = 0;
-        B(at::kTailSub) = 0;
+        B(AreaW0a_TailKind_addr) = 0;
+        B(AreaW0c_TailSub_addr) = 0;
     }
 }
 
@@ -396,7 +402,7 @@ extern "C" void __cdecl Area130_TailGiveItem(void) {
 // 33, 45, 65, 87, 88, 115, 121, 151, 152, area 33's and 121's handlers 2 / 3,
 // area 187's choice 1): answer 0: the tail state 2; the message 0xFFFF.
 extern "C" void __cdecl Area130_ChoiceTailState2(void) {
-    if (B(at::kChoiceAnswer) == 0) B(at::kTailState) = 2;
+    if (B(AreaW0c_ChoiceAnswer_addr) == 0) B(AreaW0c_TailState_addr) = 2;
     SetMessage(0xFFFF);
 }
 
@@ -410,8 +416,8 @@ extern "C" void __cdecl Area130_ChoiceTailState2(void) {
 void FocusScene(unsigned char step, unsigned char b83) {
     unsigned char* const first = Focus();
     B(at::kCounter0) = 0;
-    B(at::kVar7) = 7;
-    B(at::kVar7Step) = step;
+    B(MoveScript_Var7_addr) = 7;
+    B(MoveScript_PartyRecords_addr + 0x65) = step;
     first[1] = 4;
     Focus()[0x84] = 2;
     Focus()[0x83] = b83;
@@ -421,7 +427,7 @@ void FocusScene(unsigned char step, unsigned char b83) {
 // original 0x41D290 (+0x34[2]): answer 0: ScriptFlags_Set40, the focus scene
 // at step 0xA (+0x83 = 4), message 0xC; else message 0xFFFF.
 extern "C" void __cdecl Area131_ChoiceFocusStepA(void) {
-    if (B(at::kChoiceAnswer) != 0) {
+    if (B(AreaW0c_ChoiceAnswer_addr) != 0) {
         SetMessage(0xFFFF);
         return;
     }
@@ -433,7 +439,7 @@ extern "C" void __cdecl Area131_ChoiceFocusStepA(void) {
 // original 0x41D300 (+0x34[3]): the answer read, the message 0xFFFF; answer 0:
 // ScriptFlags_Set40, the focus scene at step 0 (+0x83 = 2).
 extern "C" void __cdecl Area131_ChoiceFocusStep0(void) {
-    const unsigned char answer = B(at::kChoiceAnswer);
+    const unsigned char answer = B(AreaW0c_ChoiceAnswer_addr);
     SetMessage(0xFFFF);
     if (answer != 0) return;
     AH_CALL(ScriptFlags_Set40)();
@@ -453,7 +459,7 @@ extern "C" void __cdecl Area131_CameraShiftYMore1E(void) {
 
 // original 0x41D380 (Field_ObjectTriggers id 15): tail kind 34 (0x22); al 0.
 extern "C" unsigned char __cdecl Area131_Trigger15(unsigned char*, unsigned char*) {
-    B(at::kTailKind) = 0x22;
+    B(AreaW0a_TailKind_addr) = 0x22;
     return 0;
 }
 
@@ -462,9 +468,9 @@ extern "C" unsigned char __cdecl Area131_Trigger15(unsigned char*, unsigned char
 // kind, state and sub-kind 0.
 extern "C" void __cdecl Area131_DisarmTail(void) {
     AH_CALL(ScriptFlags_Clear40)();
-    B(at::kTailKind) = 0;
-    B(at::kTailState) = 0;
-    B(at::kTailSub) = 0;
+    B(AreaW0a_TailKind_addr) = 0;
+    B(AreaW0c_TailState_addr) = 0;
+    B(AreaW0c_TailSub_addr) = 0;
 }
 
 // original 0x41D390 (Field_ModeTailKinds[34]), by the tail state (s8; a
@@ -474,26 +480,26 @@ extern "C" void __cdecl Area131_DisarmTail(void) {
 // 0x16, the tail disarmed, the byte 0x904152 0, story flag 0x77 cleared,
 // Field_ChangeArea(0x79, 0x1A0000, 0x350000, 3).
 extern "C" void __cdecl Area131_TailLeave34(void) {
-    const auto state = static_cast<signed char>(B(at::kTailState));
+    const auto state = static_cast<signed char>(B(AreaW0c_TailState_addr));
     switch (static_cast<U>(static_cast<std::int32_t>(state))) {
     case 0: {
         AH_CALL(ScriptFlags_Set40)();
         AH_CALL(Msg_OpenScript)(2);
-        const auto next = static_cast<unsigned char>(B(at::kTailState) + 1);
+        const auto next = static_cast<unsigned char>(B(AreaW0c_TailState_addr) + 1);
         Field_Request = 2;
-        B(at::kTailState) = next;
+        B(AreaW0c_TailState_addr) = next;
         break;
     }
     case 1:
         if (Field_Request != 2) AH_CALL(Area131_DisarmTail)();
         break;
     case 2:
-        if (Field_Request != 2) B(at::kTailState) = 3;
+        if (Field_Request != 2) B(AreaW0c_TailState_addr) = 3;
         break;
     case 3:
         Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ 0x16);
         AH_CALL(Area131_DisarmTail)();
-        B(at::kCampFlag) = 0;
+        B(AreaW3c_CampFlag_addr) = 0;
         AH_CALL(Flags_Clear)(StoryFlags(), 0x77);
         AH_CALL(Field_ChangeArea)(0x79, 0x1A0000, 0x350000, 3);
         break;
@@ -580,29 +586,29 @@ extern "C" void __cdecl Area132_EffectGradient(void) {
 // Draw_PassFlags 0, the step 0x1E and MoveScript_Var7 4.
 extern "C" void __cdecl Area133_ChoiceFocusPair(void) {
     unsigned char* const focus = Focus();
-    const unsigned char first = B(at::kArea133ChoicePairs + static_cast<U>(Answer()) * 2u);
+    const unsigned char first = B(Area133_ChoicePairs_addr + static_cast<U>(Answer()) * 2u);
     SetMessage(0xFFFF);
     SetLong(focus + 0x18, first);
     unsigned char* const again = Focus();
-    SetLong(again + 0x1C, B(at::kArea133ChoicePairs + static_cast<U>(Answer()) * 2u + 1));
+    SetLong(again + 0x1C, B(Area133_ChoicePairs_addr + static_cast<U>(Answer()) * 2u + 1));
     if (Answer() != 2) return;
-    B(at::kLoad0F) = 0;
+    B(AreaW3c_Load0F_addr) = 0;
     AH_CALL(ScriptFlags_Set40)();
     Draw_PassFlags = 0;
-    B(at::kVar7Step) = 0x1E;
-    B(at::kVar7) = 4;
+    B(MoveScript_PartyRecords_addr + 0x65) = 0x1E;
+    B(MoveScript_Var7_addr) = 4;
 }
 
 // original 0x41D740 (+0x3C[0], PSX 0x801F2CEC): kind 3 at record 0,
 // Area133_EffectArgs.
-extern "C" void __cdecl Area133_SpawnKind3AtMember0(void) { SpawnAtMember(0, 3, at::kArea133EffectArgs); }
+extern "C" void __cdecl Area133_SpawnKind3AtMember0(void) { SpawnAtMember(0, 3, Area133_EffectArgs_addr); }
 
 // ===========================================================================
 // Area 134 (descriptor 0x62C120; PSX 0x801F6374)
 // ===========================================================================
 
 // original 0x41D790 (+0x3C[0], PSX 0x801F5114): kind 4 at record 0, args B.
-extern "C" void __cdecl Area134_SpawnKind4AtMember0(void) { SpawnAtMember(0, 4, at::kArea134EffectArgsB); }
+extern "C" void __cdecl Area134_SpawnKind4AtMember0(void) { SpawnAtMember(0, 4, Area134_EffectArgsB_addr); }
 
 // original 0x41D7E0 (+0x3C[1], PSX 0x801F5194): Camera_ShiftX + 2, redraw.
 extern "C" void __cdecl Area134_CameraShiftXMore2(void) {
@@ -622,7 +628,7 @@ extern "C" void __cdecl Area134_CameraShiftXReset(void) {
 }
 
 // original 0x41D830 (+0x3C[4], PSX 0x801F5200): kind 1 at record 0, args A.
-extern "C" void __cdecl Area134_SpawnKind1AtMember0(void) { SpawnAtMember(0, 1, at::kArea134EffectArgsA); }
+extern "C" void __cdecl Area134_SpawnKind1AtMember0(void) { SpawnAtMember(0, 1, Area134_EffectArgsA_addr); }
 
 // original 0x41D880 (+0x3C[5], PSX 0x801F5280): Camera_ShiftY + 8, redraw.
 extern "C" void __cdecl Area134_CameraShiftYMore8(void) {
@@ -636,13 +642,13 @@ extern "C" void __cdecl Area134_CameraShiftYLess8(void) {
 }
 
 // original 0x41D8A0 (+0x3C[7], PSX 0x801F52D0): kind 3 at record 1, args A.
-extern "C" void __cdecl Area134_SpawnKind3AtMember1(void) { SpawnAtMember(1, 3, at::kArea134EffectArgsA); }
+extern "C" void __cdecl Area134_SpawnKind3AtMember1(void) { SpawnAtMember(1, 3, Area134_EffectArgsA_addr); }
 // original 0x41D8F0 (+0x3C[8], PSX 0x801F5350): kind 3 at record 2, args A.
-extern "C" void __cdecl Area134_SpawnKind3AtMember2(void) { SpawnAtMember(2, 3, at::kArea134EffectArgsA); }
+extern "C" void __cdecl Area134_SpawnKind3AtMember2(void) { SpawnAtMember(2, 3, Area134_EffectArgsA_addr); }
 // original 0x41D940 (+0x3C[10], PSX 0x801F53EC): kind 1 at record 1, args A.
-extern "C" void __cdecl Area134_SpawnKind1AtMember1(void) { SpawnAtMember(1, 1, at::kArea134EffectArgsA); }
+extern "C" void __cdecl Area134_SpawnKind1AtMember1(void) { SpawnAtMember(1, 1, Area134_EffectArgsA_addr); }
 // original 0x41D990 (+0x3C[11], PSX 0x801F546C): kind 1 at record 2, args A.
-extern "C" void __cdecl Area134_SpawnKind1AtMember2(void) { SpawnAtMember(2, 1, at::kArea134EffectArgsA); }
+extern "C" void __cdecl Area134_SpawnKind1AtMember2(void) { SpawnAtMember(2, 1, Area134_EffectArgsA_addr); }
 
 // original 0x41D9E0 (+0x3C[12] and [13], PSX 0x801F54EC and 0x801F557C): an
 // effect record of kind 0x90 at the running object, +1 = 0.

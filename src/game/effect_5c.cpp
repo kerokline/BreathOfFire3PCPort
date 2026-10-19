@@ -56,6 +56,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/effect_5c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -77,6 +78,8 @@ using QuadsFn = void(__cdecl*)(unsigned);
 using MovesFn = void(__cdecl*)(void);
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+records::EffectObject* AsFx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t I(U v) { return static_cast<std::int32_t>(v); }
@@ -234,7 +237,8 @@ void Project4(unsigned char* prim, unsigned o0, unsigned o1, unsigned o2, unsign
 // offset 1.
 void LinkAtRecord(unsigned size) {
     unsigned char* const s = S();
-    SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), 1, size);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(so->x), static_cast<std::uint32_t>(so->z), 1, size);
 }
 
 // E5D's three (raw until E5D merges).
@@ -264,16 +268,16 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
     unsigned char* s = S();
     s[0xB] = s[0x36];
     unsigned v = Sub50Variant(kWho, s[0xB]);
-    SetUL(s + 0x34, static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v)[0]) << 16);
+    AsFx(s)->x = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v)[0]) << 16;
     v = Sub50Variant(kWho, s[0xB]);
-    SetUL(s + 0x38, static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v + 1)[0]) << 16);
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
+    AsFx(s)->z = static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v + 1)[0]) << 16;
+    const long ground = SH_CALL(AreaMap_Elevation)(AsFx(s)->x, AsFx(s)->z);
     s = S();
     v = Sub50Variant(kWho, s[0xB]);
     SetWord(s + 0x3E, (0u - HalfOf(ground)) - Word(At(AddressOf(EffectKind18Sub50_Heights) + 2 * v)));
     s[0xB] = static_cast<unsigned char>(s[0xB] + 1);
     const unsigned char flag = Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]);
-    const unsigned char set = SH_CALL(Flags_Test)(At(at::kFlagRow9), flag);
+    const unsigned char set = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag);
     s = S();
     if (set) {
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -290,13 +294,13 @@ extern "C" void __cdecl EffectKind18Sub50_Start(void) {
 extern "C" void __cdecl EffectKind18Sub50_Shine(void) {
     static const char kWho[] = "EffectKind18Sub50_Shine";
     unsigned char* s = S();
-    if (!SH_CALL(Flags_Test)(At(at::kFlagRow9), Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte(kWho, AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
         s = S();
         s[9] = 9;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
     s = S();
-    const U light = SH_CALL(Flags_Test)(At(at::kFlagRow9), Sub50Byte(kWho, at::kSub50Lights, s[0xB])) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte(kWho, at::kSub50Lights, s[0xB])) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
     SH_CALL(EffectKind18Sub50_DrawLine)();
@@ -314,7 +318,7 @@ extern "C" void __cdecl EffectKind18Sub50_Sink(void) {
     s = S();
     const U height = static_cast<U>(s[9]) << 3;
     const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
-    const U light = SH_CALL(Flags_Test)(At(at::kFlagRow9), flag) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, height);
     SH_CALL(EffectKind18Sub50_DrawLine)();
@@ -325,7 +329,7 @@ extern "C" void __cdecl EffectKind18Sub50_Sink(void) {
 // wall.
 extern "C" void __cdecl EffectKind18Sub50_WaitSet(void) {
     unsigned char* s = S();
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow9), Sub50Byte("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), Sub50Byte("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB]))) {
         s = S();
         s[9] = 9;
         s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -346,7 +350,7 @@ extern "C" void __cdecl EffectKind18Sub50_Flash(void) {
     LinkAtRecord(0xC);
     s = S();
     const unsigned char flag = Sub50Byte(kWho, at::kSub50Lights, s[0xB]);
-    const U light = SH_CALL(Flags_Test)(At(at::kFlagRow9), flag) & 0xFFu;
+    const U light = SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), flag) & 0xFFu;
     s = S();
     SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);
     unsigned char* const prim = Gfx_PacketNext;
@@ -443,8 +447,8 @@ namespace {
 // 0x428000 and within `zr` of z 0x3E0000 or 0x3F0000 - the originals' order of
 // tests (abs by cdq / xor / sub, signed compares).
 bool LeaderNear(U xr, U zr) {
-    const U x = UL(At(at::kLeaderX));
-    const U z = UL(At(at::kLeaderZ));
+    const U x = UL(At(ObjTrio_addr + 0x34));
+    const U z = UL(At(ObjTrio_addr + 0x38));
     const std::int32_t dx = I(Abs(x - 0x428000u));
     if (dx <= I(xr) && I(Abs(z - 0x3E0000u)) <= I(zr)) return true;
     if (dx > I(xr)) return false;
@@ -471,7 +475,7 @@ extern "C" void __cdecl EffectKind18Sub10_Run(void) {
 // 0xFF00, +2 = 3. The panel either way.
 extern "C" void __cdecl EffectKind18Sub10_Start(void) {
     SetWord(S() + 0x30, 0);
-    if (!SH_CALL(Flags_Test)(At(at::kFlagRow9), 0xF)) {
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0xF)) {
         Sub10Cells(0x52);
         S()[2] = 5;
         SH_CALL(EffectKind18Sub10_DrawPanel)();
@@ -539,7 +543,7 @@ extern "C" void __cdecl EffectKind18Sub10_SlideIn(void) {
 // original 0x501E20 (sub-state 5): row-9 flag 0xF set: the two cells' map bytes
 // 0xA1, +2 = 1. A tail jump to the panel.
 extern "C" void __cdecl EffectKind18Sub10_WaitFlag(void) {
-    if (SH_CALL(Flags_Test)(At(at::kFlagRow9), 0xF)) {
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0x48), 0xF)) {
         Sub10Cells(0xA1);
         S()[2] = 1;
     }
@@ -749,6 +753,7 @@ extern "C" void __cdecl EffectKind18Sub57_Spawn(void) {
     if (n == 0xFF) return;
     unsigned char* const cur = S();
     unsigned char* const rec = NewRecord(kWho, n);
+    auto* const reco = reinterpret_cast<records::EffectObject*>(rec);
     rec[0] = 1;
     rec[5] = 0x18;
     rec[1] = 0x58;
@@ -758,9 +763,9 @@ extern "C" void __cdecl EffectKind18Sub57_Spawn(void) {
         bof3::Fatal("%s: +0xB is %u, past the %u points of 0x%X - the original reads the table after "
                     "(docs/effect_5c.md section 6)",
                     kWho, k, at::kSub57PointCount, (unsigned)AddressOf(EffectKind18Sub57_Points));
-    SetUL(rec + 0x34, static_cast<U>(Word(At(AddressOf(EffectKind18Sub57_Points) + 4 * k))) << 12);
+    reco->x = static_cast<U>(Word(At(AddressOf(EffectKind18Sub57_Points) + 4 * k))) << 12;
     k = cur[0xB];
-    SetUL(rec + 0x38, static_cast<U>(Word(At(AddressOf(EffectKind18Sub57_Points) + 4 * k + 2))) << 12);
+    reco->z = static_cast<U>(Word(At(AddressOf(EffectKind18Sub57_Points) + 4 * k + 2))) << 12;
     const int r = SH_CALL(Rand)();
     S()[9] = static_cast<unsigned char>((r & 0xF) + 0x14);
     s = S();
@@ -827,9 +832,10 @@ extern "C" void __cdecl EffectKind18Sub58_Fade(void) {
 // (0x48). n = 8 divides by zero in the original; ours aborts.
 extern "C" void __cdecl EffectKind18Sub58_DrawColumn(unsigned n) {
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     const U b = (Frame_Counter & 1u) << 2;
-    const U x = Sar(UL(s + 0x34), 9) - 0x4000u;
-    const U z = Sar(UL(s + 0x38), 9) - 0x4000u;
+    const U x = Sar(static_cast<std::uint32_t>(so->x), 9) - 0x4000u;
+    const U z = Sar(static_cast<std::uint32_t>(so->z), 9) - 0x4000u;
     const U lift = static_cast<U>(I(b * n) / 16);
     const U divisor = 8u - n;
     const U base = b << 19;
@@ -870,11 +876,11 @@ namespace {
 // Sub-kind 0x11's end: story flag 0x22, or 0x21 with Cond_ByteFA (s8) at most
 // 7 - in the original's order; sub-kind 0x12's: story flag 0x20.
 bool Sub11Done() {
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x22)) return true;
-    if (!SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x21)) return false;
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x22)) return true;
+    if (!SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x21)) return false;
     return Cond_ByteFA <= 7;
 }
-bool Sub12Done() { return SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x20) != 0; }
+bool Sub12Done() { return SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0x20) != 0; }
 // The map bytes of cells (0x45, 0x3C) and (0x46, 0x3C).
 void TileCells(unsigned char v) {
     SetCell(MapWidth() * 60u + 0x45u, v);
@@ -926,8 +932,9 @@ template <bool (*Done)(), void (*Draw)(unsigned, unsigned)> void TileStart() {
 template <bool (*Done)(), void (*Draw)(unsigned, unsigned)> void TileWait() {
     if (!Done()) return;
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     Cond_ByteFE = 1;
-    SetUL(s + 0x3C, 0xFFFFFF00u);
+    so->height = 0xFFFFFF00u;
     s[0xB] = 0x80;
     s[9] = 0xA;
     s[2] = static_cast<unsigned char>(s[2] + 1);
@@ -935,7 +942,7 @@ template <bool (*Done)(), void (*Draw)(unsigned, unsigned)> void TileWait() {
 }
 // Sub-state 2: the tiles at +0x3C shade 0x80; +9 down; at 0 the cells 0, +2 up.
 template <void (*Draw)(unsigned, unsigned)> void TileOpen() {
-    Draw(UL(S() + 0x3C), 0x80);
+    Draw(static_cast<std::uint32_t>(CurFx()->height), 0x80);
     unsigned char* s = S();
     s[9] = static_cast<unsigned char>(s[9] - 1);
     s = S();
@@ -947,11 +954,11 @@ template <void (*Draw)(unsigned, unsigned)> void TileOpen() {
 // above -0xC0 a tail jump to Effect_Release.
 template <void (*Draw)(unsigned, unsigned)> void TileSink() {
     unsigned char* s = S();
-    Draw(UL(s + 0x3C), s[0xB] & 0xF8u);
+    Draw(static_cast<std::uint32_t>(AsFx(s)->height), s[0xB] & 0xF8u);
     s = S();
-    SetUL(s + 0x3C, UL(s + 0x3C) + 1u);
+    AsFx(s)->height = static_cast<std::uint32_t>(AsFx(s)->height) + 1u;
     s[0xB] = static_cast<unsigned char>(s[0xB] - 2);
-    if (I(UL(s + 0x3C)) > -0xC0) SH_CALL(Effect_Release)();
+    if (AsFx(s)->height > -0xC0) SH_CALL(Effect_Release)();
 }
 void Draw11(unsigned y, unsigned shade) { SH_CALL(EffectKind18Sub11_DrawTiles)(y, shade); }
 void Draw12(unsigned y, unsigned shade) { SH_CALL(EffectKind18Sub12_DrawTiles)(y, shade); }
@@ -1252,10 +1259,10 @@ extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) {
             bof3::Log("draworder   packet pool full: the sky's %u-byte primitive skipped (EffectKind18Sub15_LinkLayer)", bytes);
         return;
     }
-    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(at::kLayer15Tails + 8 * buffer)))),
+    SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(DrawLayers_addr + 0x2f4 + 8 * buffer)))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;
-    SetUL(At(at::kLayer15Tails + 8u * Gfx_BufferIndex), AddressOf(now));
+    SetUL(At(DrawLayers_addr + 0x2f4 + 8u * Gfx_BufferIndex), AddressOf(now));
     Gfx_PacketNext = now + bytes;
 }
 
@@ -1291,9 +1298,9 @@ unsigned char Wave(U angle, U scale) {
 extern "C" void __cdecl EffectKind18Sub16_Run(void) {
     unsigned char* s = S();
     if (s[2] == 0) {
-        SetUL(s + 0x34, 0xFFFFC700u);
-        SetUL(s + 0x38, 0xFFFFC780u);
-        SetUL(s + 0x3C, 0xFFFFF810u);
+        AsFx(s)->x = 0xFFFFC700u;
+        AsFx(s)->z = 0xFFFFC780u;
+        AsFx(s)->height = 0xFFFFF810u;
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
     SH_CALL(Gte_PushMatrix)();
@@ -1435,8 +1442,9 @@ extern "C" void __cdecl EffectKind18Sub17_Run(void) {
 // 0x140000), +0x3E = 0xFF00, +0x32 = 0, +9 = 0, +0xB = 0; +2 up.
 extern "C" void __cdecl EffectKind18Sub17_Start(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x34, 0x570000);
-    SetUL(s + 0x38, 0x140000);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->x = 0x570000;
+    so->z = 0x140000;
     SetWord(s + 0x3E, 0xFF00);
     SetWord(s + 0x32, 0);
     s[9] = 0;
@@ -1479,7 +1487,8 @@ extern "C" void __cdecl EffectKind18Sub17_Rise(void) {
 // else +2 up. The shared tail.
 extern "C" void __cdecl EffectKind18Sub17_MoveZ(void) {
     unsigned char* const s = S();
-    if (SW(Word(s + 0x3A)) < 0x19) SetUL(s + 0x38, UL(s + 0x38) + 0x1000u);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    if (SW(Word(s + 0x3A)) < 0x19) so->z = static_cast<std::uint32_t>(so->z) + 0x1000u;
     else s[2] = static_cast<unsigned char>(s[2] + 1);
     Sub17Tail();
 }
@@ -1488,9 +1497,10 @@ extern "C" void __cdecl EffectKind18Sub17_MoveZ(void) {
 // 0x800; else +2 up. The shared tail.
 extern "C" void __cdecl EffectKind18Sub17_MoveXZ(void) {
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     if (SW(Word(s + 0x3A)) < 0x1C) {
-        SetUL(s + 0x34, UL(s + 0x34) + 0xFFFFF800u);
-        SetUL(s + 0x38, UL(s + 0x38) + 0x800u);
+        so->x = static_cast<std::uint32_t>(so->x) + 0xFFFFF800u;
+        so->z = static_cast<std::uint32_t>(so->z) + 0x800u;
     } else {
         s[2] = static_cast<unsigned char>(s[2] + 1);
     }
@@ -1501,7 +1511,8 @@ extern "C" void __cdecl EffectKind18Sub17_MoveXZ(void) {
 // 0x1000; else with (Frame_Counter / 5) & 3 = 3 +2 up. The shared tail.
 extern "C" void __cdecl EffectKind18Sub17_MoveX(void) {
     unsigned char* const s = S();
-    if (SW(Word(s + 0x36)) >= 0x4F) SetUL(s + 0x34, UL(s + 0x34) + 0xFFFFF000u);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    if (SW(Word(s + 0x36)) >= 0x4F) so->x = static_cast<std::uint32_t>(so->x) + 0xFFFFF000u;
     else if (((Frame_Counter / 5u) & 3u) == 3) s[2] = static_cast<unsigned char>(s[2] + 1);
     Sub17Tail();
 }
@@ -1561,8 +1572,9 @@ extern "C" void __cdecl EffectKind18Sub17_End(void) {
 // +0xB = 1; MoveCmd_TestFB(0x55, 0x19) (al unread); +2 up.
 extern "C" void __cdecl EffectKind18Sub17_Start10(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x34, 0x430000);
-    SetUL(s + 0x38, 0x1A0000);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->x = 0x430000;
+    so->z = 0x1A0000;
     SetWord(s + 0x3E, 0xFF00);
     SetWord(s + 0x32, 0x80);
     s[9] = 0;
@@ -1607,7 +1619,7 @@ extern "C" void __cdecl EffectKind18Sub17_Count12(void) {
 // original 0x503CA0 (sub-state 13): the enemy wait on EnemyWorkingRecords record
 // 1 (0x93BB1A); +9 up.
 extern "C" void __cdecl EffectKind18Sub17_WaitEnemy1(void) {
-    unsigned char* const s = EnemyWait(at::kEnemy1Bits);
+    unsigned char* const s = EnemyWait(BossH_Enemy1Status_addr);
     s[9] = static_cast<unsigned char>(s[9] + 1);
 }
 

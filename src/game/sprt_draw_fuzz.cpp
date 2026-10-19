@@ -75,7 +75,7 @@ const unsigned short kControlWords[] = {0x027F, 0x007F, 0x037F};
 // second dword), the texture table and the 0x800 bytes after it (Capcom's far
 // indexes 256..767 land there: D37), the scales, Gfx_DrawTpage, and the
 // first 512 entries of our table.
-constexpr U kBlock = kVertices;
+// kBlock: now D3d_Vertices (symbols.toml).
 constexpr U kBlockBytes = 0x80 + 8 + 0x400 + 0x800;
 constexpr U kFarSeeded = 512;
 constexpr U kFarBytes = kFarSeeded * 4;
@@ -92,9 +92,9 @@ struct State {
 State g_saved, g_start, g_theirs_state, g_ours_state;
 
 void InitRegions() {
-    g_regions[0] = {kBlock, kBlockBytes};
-    g_regions[1] = {kScaleY, 8};
-    g_regions[2] = {kDrawTpage, 4};
+    g_regions[0] = {D3d_Vertices_addr, kBlockBytes};
+    g_regions[1] = {D3d_ScaleY_addr, 8};
+    g_regions[2] = {Gfx_DrawTpage_addr, 4};
     g_regions[3] = {Addr(g_far), kFarBytes};
 }
 void Capture(State& s) {
@@ -117,7 +117,7 @@ U FirstDifference(const State& a, const State& b, bool skip_far) {
     U at = 0;
     for (const Region& r : g_regions) {
         for (U i = 0; i < r.bytes; ++i) {
-            if (skip_far && r.address == kBlock && i < 0x80) {
+            if (skip_far && r.address == D3d_Vertices_addr && i < 0x80) {
                 const U k = i & ~3u;
                 if (k == 0x38 || k == 0x78 || k == 0x5C || k == 0x7C) continue;
             }
@@ -159,10 +159,10 @@ void Disturb(U salt) {
     case 2:
         if (g_prim) g_prim[(h >> 8) % kPrimBytes] = value;
         break;
-    case 3: At(kVertices)[(h >> 8) % 0x80] = value; break;
-    case 4: At(kScaleY)[(h >> 8) % 8] = value; break;
-    case 5: At(kDrawTpage)[(h >> 8) % 2] = value; break;
-    case 6: At(kTexCoords + kTexels[(h >> 8) % kNTexels] * 4u)[(h >> 16) % 4] = value; break;
+    case 3: At(D3d_Vertices_addr)[(h >> 8) % 0x80] = value; break;
+    case 4: At(D3d_ScaleY_addr)[(h >> 8) % 8] = value; break;
+    case 5: At(Gfx_DrawTpage_addr)[(h >> 8) % 2] = value; break;
+    case 6: At(D3d_TexCoords_addr + kTexels[(h >> 8) % kNTexels] * 4u)[(h >> 16) % 4] = value; break;
     default: {
         // a far entry either side could read for a seeded texel: Capcom's
         // tc[j - 1] or g_far[j]
@@ -278,7 +278,7 @@ U TableValue(float game) {
 }
 
 void RandomCommon() {
-    for (U a : {kScaleX, kScaleY}) {
+    for (U a : {D3d_ScaleX_addr, D3d_ScaleY_addr}) {
         U v;
         switch (Next() % 5) {
         case 0: v = Next(); break;
@@ -287,18 +287,18 @@ void RandomCommon() {
         }
         PutLong(At(a), v);
     }
-    for (U i = 0; i < 0x88; ++i) At(kVertices)[i] = static_cast<unsigned char>(Next());
+    for (U i = 0; i < 0x88; ++i) At(D3d_Vertices_addr)[i] = static_cast<unsigned char>(Next());
     // Capcom's table and what follows it: the game's values continued past
     // 255, so that an index off by one shows in any entry.
     for (U i = 0; i < 0x300; ++i)
-        PutLong(At(kTexCoords + i * 4), TableValue((static_cast<float>(i) + 0.512f) / 256.0f));
+        PutLong(At(D3d_TexCoords_addr + i * 4), TableValue((static_cast<float>(i) + 0.512f) / 256.0f));
     // Ours: its real values, sometimes disturbed; restored after the fuzz.
     for (U j = 0; j < kFarSeeded; ++j) {
         const float real = (static_cast<float>(j) + (0.012f - 1.0f / 30.0f)) / 256.0f;
         const U v = TableValue(real);
         std::memcpy(&g_far[j], &v, 4);
     }
-    PutLong(At(kDrawTpage), Next() % 2 ? Next() : Pick(kWords, 16) | (Next() & 0xFFFF0000u));
+    PutLong(At(Gfx_DrawTpage_addr), Next() % 2 ? Next() : Pick(kWords, 16) | (Next() & 0xFFFF0000u));
 }
 
 void RandomPrim(const Handler& h, unsigned char* p) {

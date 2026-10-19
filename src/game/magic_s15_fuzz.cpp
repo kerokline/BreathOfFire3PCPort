@@ -171,8 +171,12 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kEventBattle = 0x904AAA, kKind2 = 0x905E60,
-                        kTints = 0x7E0700, kInput = 0x7E1BEC, kEnemyLift = 0x8C564F;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kKind2: now Field_Kind2Z (symbols.toml).
+// kTints: now MoveScript_TintRecords (symbols.toml).
+// kInput: now Input_Pressed (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kEnemyLift = 0x8C564F;
 
 // Set by the seed for the one function each matters to.
 bool g_keep_facing = false;   // the facing stays inside 0..3 (ChillRay_PushMatrix)
@@ -335,11 +339,11 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850.., Scratch_Swap at +0xC
-    {kKind2, 8},                          // Field_Kind2Z, Field_Kind2X
-    {kTints, 0xC00},                      // MoveScript_TintRecords
-    {kInput, 2},                          // Input_Pressed
+    {Field_Kind2Z_addr, 8},               // Field_Kind2Z, Field_Kind2X
+    {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords
+    {Input_Pressed_addr, 2},              // Input_Pressed
     {0x80B980, 0x200},                    // Gfx_ClutStripSource row 2
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
     {0x80F980, 0x200},                    // Gfx_ClutStrip row 2
@@ -359,20 +363,20 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: {
         const unsigned k = v % 16;
         if (k < 2) SetWord(mh::Mem(kScratch), (h >> 16) % 0x30);
         else mh::Mem(kScratch + k)[0] = Byte(h >> 24);
         break;
     }
-    case 3: SetLong(mh::Mem(kKind2 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 3: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
     case 4: {
         static const unsigned kFields[] = {0xC, 0xD, 0x2E, 0x2F, 0x30, 0x31, 0x34, 0x38};
         Sc()[kFields[v % 8]] = Byte(h >> 24);
         break;
     }
-    case 5: mh::Mem(kTints + v % 0xC00)[0] = Byte(h >> 24); break;
+    case 5: mh::Mem(MoveScript_TintRecords_addr + v % 0xC00)[0] = Byte(h >> 24); break;
     case 6: {
         // a byte of any actor's position (+0x34..+0x3F), which the markers
         // copy after their creates; the harness moves only the target's
@@ -539,7 +543,7 @@ void Seed(unsigned k) {
     case kInfluenceRight_Run: case kInfluenceMark_Run: sc[2] = Byte(mh::Next() % 5); break;
     // Chill's third child: an event battle, the acting enemy's +0x100 0x29
     case kChill_Start:
-        if (mh::Often()) mh::Mem(kEventBattle)[0] = Byte(1 + mh::Next() % 0xFF);
+        if (mh::Often()) mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(1 + mh::Next() % 0xFF);
         if (mh::Often()) {
             const unsigned a = mh::Mem(mh::at::kActor)[0];
             mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(a) - 3) * 0x128) + 0x100)[0] = 0x29;
@@ -563,9 +567,9 @@ void Seed(unsigned k) {
         SeedForetell();
         break;
     case kForetell_Pause: Near(sc[0xA], 1); break;
-    case kForetell_Show: if (mh::Half()) SetWord(mh::Mem(kInput), 0); break;
+    case kForetell_Show: if (mh::Half()) SetWord(mh::Mem(Input_Pressed_addr), 0); break;
     case kForetell_End:
-        if (mh::Half()) mh::Mem(mh::at::kMessageUp)[0] = 0;
+        if (mh::Half()) mh::Mem(BattleE1_MessageUp_addr)[0] = 0;
         if (mh::Half()) sc[9] = Byte(mh::Next() % 3);
         break;
     case kForetell_DrawTiles:
@@ -583,7 +587,7 @@ void Seed(unsigned k) {
     case kInfluenceRight_Blink:
         if (mh::Half()) sc[0xB] = Byte(mh::Half() ? 0 : 1);
         if (mh::Half()) sc[9] = Byte(sc[0xB] != 0 ? 0xC : 2);
-        if (mh::Half()) mh::Pointer(mh::at::kOwner)[0xB] = 1;
+        if (mh::Half()) mh::Pointer(BattleE2_Owner_addr)[0xB] = 1;
         break;
     case kInfluenceRight_Shrink: Near(sc[0xA], 9); break;
     case kInfluenceMark_Start:
@@ -591,7 +595,7 @@ void Seed(unsigned k) {
         for (unsigned i = 0; i < 3; ++i) Member(i)[8] = Byte(mh::Next() % 3);
         break;
     case kInfluenceMark_Brighten: case kInfluenceMark_Fade: {
-        unsigned char* const t = mh::Mem(kTints + sc[0xA] * 12u + 2);
+        unsigned char* const t = mh::Mem(MoveScript_TintRecords_addr + sc[0xA] * 12u + 2);
         if (mh::Half()) t[0] = Byte(k == kInfluenceMark_Brighten ? 0xF : 1);
         if (mh::Half()) sc[4] = 0;
         break;

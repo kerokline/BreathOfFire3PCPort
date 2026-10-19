@@ -44,10 +44,10 @@ constexpr std::uint32_t kFlags = 0x904AA8;          // u8: bit 2 "the effect is 
 constexpr std::uint32_t kActor = 0x904B34;          // u8: the acting actor, 0..2 a party member
 constexpr std::uint32_t kTarget = 0x904B44;         // u8: the target, 3.. an enemy
 constexpr std::uint32_t kSource = 0x904B4C;         // unsigned char *: the sprite the effect starts from
-constexpr std::uint32_t kMessageUp = 0x939F60;      // u8: the battle message window is up (0x597D90 sets it)
+// kMessageUp: now BattleE1_MessageUp (symbols.toml). u8: the battle message window is up (0x597D90 sets it)
 
 // The party (ObjTrio, stride 0x14C) and the enemies (stride 0x128, index - 3).
-constexpr std::uint32_t kParty = 0x802D40;
+// kParty: now ObjTrio (symbols.toml).
 constexpr std::uint32_t kPartyStride = 0x14C;
 constexpr std::uint32_t kEnemies = 0x93B960;
 constexpr std::uint32_t kEnemyStride = 0x128;
@@ -57,12 +57,12 @@ constexpr unsigned kEnemySpeed = 0xB8;              // u16 on the enemy, against
 constexpr unsigned kThiefSpeed = 0xA8;              // u16 on the party record
 
 // .data tables.
-constexpr std::uint32_t kStealRates = 0x65AC20;     // Steal_RateTable: s8 by the enemy's +0xAA
-constexpr std::uint32_t kCloneTypes = 0x65AC28;     // StealClone_Types: 2 entries
-constexpr std::uint32_t kRingPhases = 0x65B5B8;     // FxRing_Phases: 4 entries
-constexpr std::uint32_t kDimPhases = 0x65C3A0;      // FxDim_Phases: 4 entries, then 0
-constexpr std::uint32_t kSparkleCounts = 0x65AE10;  // Sparkle_CountByKind: u8
-constexpr std::uint32_t kSparkleSteps = 0x65AE18;   // Sparkle_DelayByKind: u8
+// kStealRates: now Steal_RateTable (symbols.toml). Steal_RateTable: s8 by the enemy's +0xAA
+// kCloneTypes: now StealClone_Types (symbols.toml). StealClone_Types: 2 entries
+// kRingPhases: now FxRing_Phases (symbols.toml). FxRing_Phases: 4 entries
+// kDimPhases: now FxDim_Phases (symbols.toml). FxDim_Phases: 4 entries, then 0
+// kSparkleCounts: now Sparkle_CountByKind (symbols.toml). Sparkle_CountByKind: u8
+// kSparkleSteps: now Sparkle_DelayByKind (symbols.toml). Sparkle_DelayByKind: u8
 
 // The sparkle pool (battle_items_callees.h has its fields).
 constexpr std::uint32_t kSparklePool = 0x684790;
@@ -73,10 +73,10 @@ constexpr std::uint32_t kSparkleCurrent = 0x685D90;
 // The CLUT FxDiscFan_Start marks semi-transparent: strip row 26 (VRAM row
 // 506) cells 1..15 from the buffer 0x4000 below, cell 0 cleared.
 constexpr std::uint32_t kClutRow = 0x812980;        // Gfx_ClutStrip + 0x3400
-constexpr std::uint32_t kClutSource = 0x80E980;     // kClutRow - 0x4000
+// kClutSource: now Gfx_ClutStripSource[0x1a00] (symbols.toml). kClutRow - 0x4000
 
 // MoveScript_TintRecords: 12 bytes each; Sparkle_End dims bytes +2..+4.
-constexpr std::uint32_t kTints = 0x7E0700;
+// kTints: now MoveScript_TintRecords (symbols.toml).
 
 }  // namespace at
 

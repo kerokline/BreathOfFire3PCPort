@@ -204,8 +204,8 @@ static_assert(kAllN == 53, "the group's 53 functions");
 // The .data tables the group's dispatchers read in place (swapped for
 // recorders while the fuzz runs).
 const sh::DataTable kTables[] = {
-    {at::kPartyFormOpenSteps, 3}, {at::kPartyFormLeaveSteps, 4}, {at::kSharedListMoveSteps, 5},
-    {at::kSharedListSortSteps, 3}, {at::kSharedListSorts, 3},
+    {PartyForm_OpenSteps_addr, 3}, {PartyForm_LeaveSteps_addr, 4}, {SharedList_MoveSteps_addr, 5},
+    {SharedList_SortSteps_addr, 3}, {SharedList_Sorts_addr, 3},
 };
 
 unsigned char* Mem(U a) { return sh::Mem(a); }
@@ -229,16 +229,16 @@ void Move(std::uint32_t h) {
     const unsigned v = (h >> 8) & 0xFF;
     const unsigned w = (h >> 16) & 0xFF;
     switch (h % 25) {
-    case 0: B(at::kCursor) = static_cast<unsigned char>(v % 3); break;
-    case 1: B(at::kColumn) = static_cast<unsigned char>(v & 1); break;
-    case 2: B(at::kRow) = static_cast<unsigned char>(static_cast<int>(v % 6) - 1); break;
-    case 3: B(at::kPickColumn) = static_cast<unsigned char>(w % 4 == 0 ? 0x7F : w % 4 == 1 ? 0 : w % 4 == 2 ? 1 : v); break;
-    case 4: B(at::kAnswer) = static_cast<unsigned char>(v); break;
-    case 5: B(at::kPickRow) = static_cast<unsigned char>(v % 8); break;
-    case 6: B(at::kReserveCount) = static_cast<unsigned char>(v % 6); break;
-    case 7: B(at::kPartyFormResult) = static_cast<unsigned char>(v & 1 ? 0xFF : w % 8); break;
-    case 8: B(at::kPickIndex) = static_cast<unsigned char>(v % 8); break;
-    case 9: B(at::kSharedChoice) = static_cast<unsigned char>(v); break;
+    case 0: B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(v % 3); break;
+    case 1: B(FieldS_Column_addr) = static_cast<unsigned char>(v & 1); break;
+    case 2: B(BattleE1_ModeByte9_addr) = static_cast<unsigned char>(static_cast<int>(v % 6) - 1); break;
+    case 3: B(ShopStates_Clear0A_addr) = static_cast<unsigned char>(w % 4 == 0 ? 0x7F : w % 4 == 1 ? 0 : w % 4 == 2 ? 1 : v); break;
+    case 4: B(FieldS_Answer_addr) = static_cast<unsigned char>(v); break;
+    case 5: B(FieldS_PickRow_addr) = static_cast<unsigned char>(v % 8); break;
+    case 6: B(FieldS_ReserveCount_addr) = static_cast<unsigned char>(v % 6); break;
+    case 7: B(FieldS_PartyFormResult_addr) = static_cast<unsigned char>(v & 1 ? 0xFF : w % 8); break;
+    case 8: B(FieldS_PickIndex_addr) = static_cast<unsigned char>(v % 8); break;
+    case 9: B(FieldS_SharedChoice_addr) = static_cast<unsigned char>(v); break;
     case 10: B(0x8031FB) = static_cast<unsigned char>(v); break;
     case 11: B(0x8031FA) = static_cast<unsigned char>(v % 0x78); break;
     case 12: B(0x8031FC) = static_cast<unsigned char>(v & 1 ? 0xFF : w & 0x7F); break;
@@ -247,14 +247,14 @@ void Move(std::uint32_t h) {
     case 15: B(0x803340) = static_cast<unsigned char>(v % 3); break;
     case 16: B(0x80333E) = static_cast<unsigned char>(v % 7); break;
     case 17: B(0x803362 + (v & 3)) = static_cast<unsigned char>(w); break;
-    case 18: B(at::kPartyList + v % 6) = static_cast<unsigned char>(w % 24); break;   // MoveScript_EffectState's 24
-    case 19: SetL(at::kZenny, L(at::kZenny) ^ (1u << (v & 15))); break;
+    case 18: B(Cond_Flags_addr + 0xd2 + v % 6) = static_cast<unsigned char>(w % 24); break; // MoveScript_EffectState's 24
+    case 19: SetL(Party_Zenny_addr, L(Party_Zenny_addr) ^ (1u << (v & 15))); break;
     case 20: {
         static const unsigned char kOffsets[] = {0xA, 0xB, 0x1D};
         B(at::kRecords + (v % 8) * at::kRecordStride + kOffsets[w % 3]) = static_cast<unsigned char>(h >> 24);
         break;
     }
-    case 21: B(at::kLoneParty) = static_cast<unsigned char>(v & 1); break;
+    case 21: B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(v & 1); break;
     case 22: Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ 0x40); break;
     case 23: Field_MemberCount = static_cast<unsigned char>(v % 4); break;
     case 24: {
@@ -282,7 +282,7 @@ std::uint32_t AreaStir(const std::uint32_t*, std::uint32_t answer) {
 // copies the actor record over +0x80 (so +0x89 is the id): PartyForm_Reload
 // reads the leader's +0x89 after it (the half-cell step when it became 2).
 std::uint32_t PartyLoad(const std::uint32_t* a, std::uint32_t answer) {
-    const unsigned char* const list = Mem(at::kPartyList + (a[0] & 0xFF) * 3);
+    const unsigned char* const list = Mem(Cond_Flags_addr + 0xd2 + (a[0] & 0xFF) * 3);
     const unsigned n = Field_MemberCount < 3 ? Field_MemberCount : 3;
     for (unsigned i = 0; i < n; ++i) {
         unsigned char* const m = ObjTrio + i * at::kObjStride;
@@ -426,16 +426,16 @@ void SeedButtons() {
     const U confirm = 1u << (sh::Next() % 16);
     U cancel = 1u << (sh::Next() % 16);
     if (cancel == confirm) cancel = confirm == 0x8000 ? 1 : confirm << 1;
-    SetW(at::kConfirm, confirm | (sh::Half() ? 0 : 1u << (sh::Next() % 16)));
-    SetW(at::kCancel, cancel);
+    SetW(Field_ConfirmButtons_addr, confirm | (sh::Half() ? 0 : 1u << (sh::Next() % 16)));
+    SetW(Field_CancelButtons_addr, cancel);
     const U other = sh::Next() & 0xFFFF & ~(confirm | cancel);
     const U pressed = PickOf(confirm, cancel, confirm | cancel, 0, other, confirm | other, cancel | other);
-    SetW(at::kPressed, pressed);
-    SetW(at::kPressed + 2, sh::Next());
+    SetW(Input_Pressed_addr, pressed);
+    SetW(Input_Pressed_addr + 2, sh::Next());
 }
 
 void SeedParty() {
-    for (unsigned i = 0; i < 6; ++i) B(at::kPartyList + i) = sh::Next() % 6 != 0 ? SafeId() : 0xFF;
+    for (unsigned i = 0; i < 6; ++i) B(Cond_Flags_addr + 0xd2 + i) = sh::Next() % 6 != 0 ? SafeId() : 0xFF;
     for (unsigned i = 0; i < 3; ++i) {
         unsigned char* const obj = ObjTrio + i * at::kObjStride;
         obj[0x148] = static_cast<unsigned char>(sh::Next() % 8);   // Field_Members: a record index
@@ -455,23 +455,23 @@ void SeedParty() {
 
 void SeedMenu() {
     B(at::kTimer) = static_cast<unsigned char>(PickOf(1, 1, 2, 3, 5, 6, 7, 0, sh::Next()));
-    B(at::kCursor) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, 3, sh::Next() % 3));
-    B(at::kColumn) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
-    B(at::kRow) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, 4, 5, sh::Next() % 3));
-    B(at::kPickColumn) = static_cast<unsigned char>(PickOf(0x7F, 0x7F, 0, 1));
-    B(at::kPickRow) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 7, 8, 0xFF, 0x7F, sh::Next() % 8));
-    B(at::kAnswer) = static_cast<unsigned char>(PickOf(0, 1, 0xB, 0xC, 0xE, 0xF, sh::Next()));
+    B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0xFF, 3, sh::Next() % 3));
+    B(FieldS_Column_addr) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
+    B(BattleE1_ModeByte9_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0xFF, 4, 5, sh::Next() % 3));
+    B(ShopStates_Clear0A_addr) = static_cast<unsigned char>(PickOf(0x7F, 0x7F, 0, 1));
+    B(FieldS_PickRow_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 7, 8, 0xFF, 0x7F, sh::Next() % 8));
+    B(FieldS_Answer_addr) = static_cast<unsigned char>(PickOf(0, 1, 0xB, 0xC, 0xE, 0xF, sh::Next()));
     B(at::kMessageEnd) = static_cast<unsigned char>(PickOf(2, 0xC, sh::Next()));
     // the reserve's bytes, then its count - which is the reserve's fourth byte
     // (docs/field_s.md section 7, L2): at most 5, so every loop over it stays
     // inside the region
     for (unsigned i = 0; i < 5; ++i) B(at::kReserve + i) = sh::Often() ? SafeId() : static_cast<unsigned char>(sh::Next());
-    B(at::kReserveCount) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5));
-    B(at::kPartyFormResult) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, SafeId(), sh::Next()));
-    B(at::kJoinedCount) = static_cast<unsigned char>(PickOf(0, 1, 3, 5, 8));
-    B(at::kPickIndex) = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 7, 0xFF, sh::Next() % 8));
+    B(FieldS_ReserveCount_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5));
+    B(FieldS_PartyFormResult_addr) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, SafeId(), sh::Next()));
+    B(FieldS_JoinedCount_addr) = static_cast<unsigned char>(PickOf(0, 1, 3, 5, 8));
+    B(FieldS_PickIndex_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 4, 7, 0xFF, sh::Next() % 8));
     for (unsigned i = 0; i < 8; ++i) B(at::kJoined + i) = static_cast<unsigned char>(sh::Next() % 8);
-    B(at::kSharedChoice) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
+    B(FieldS_SharedChoice_addr) = static_cast<unsigned char>(PickOf(0, 1, 0, 1, sh::Next()));
 }
 
 void SeedWindows() {
@@ -497,8 +497,8 @@ void SeedWindows() {
 // Game_AreaNumber among the areas whose descriptor is set, or the ones compared.
 void SeedArea() {
     U area = PickOf(0xBB, 0xC1, 0xBF, 0x85, 0x5C, sh::Next() % 200, sh::Next() % 200);
-    for (int tries = 0; tries < 8 && L(at::kAreaDescriptors + 4 * area) == 0; ++tries) area = sh::Next() % 200;
-    if (L(at::kAreaDescriptors + 4 * area) == 0) area = 0xBB;
+    for (int tries = 0; tries < 8 && L(Area_Descriptors_addr + 4 * area) == 0; ++tries) area = sh::Next() % 200;
+    if (L(Area_Descriptors_addr + 4 * area) == 0) area = 0xBB;
     Game_AreaNumber = static_cast<unsigned short>(area);
 }
 
@@ -508,28 +508,28 @@ void Seed(unsigned k) {
     SeedMenu();
     SeedWindows();
     SeedArea();
-    B(at::kLoneParty) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
+    B(AreaW3c_CampFlag_addr) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     if (sh::Half()) Field_StatusBits = static_cast<unsigned char>(Field_StatusBits ^ 0x40);
-    if (sh::Half()) SetW(at::kWait, 0);
+    if (sh::Half()) SetW(MoveScript_WaitWordDA_addr, 0);
     // the chapter compared with 0xE (Rest_*), the row pointer with it
     if (sh::Half()) {
-        B(at::kChapter) = 0xE;
-        sh::SetPointer(at::kFlagRow, Mem(sh::at::kCondFlags + 8 * 0xE));
+        B(Cond_ByteFA_addr) = 0xE;
+        sh::SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * 0xE));
     }
     // the zenny at ten times a member's level (ShopResist)
-    const U level = Mem(at::kRecords + ObjTrio[(B(at::kCursor) % 3) * at::kObjStride + 0x148] * at::kRecordStride)[0xA];
-    SetL(at::kZenny, PickOf(10 * level, 10 * level - 1, 10 * level + 1, 0, sh::Next() % 100000));
+    const U level = Mem(at::kRecords + ObjTrio[(B(BattleActorCopies_ItemActor_addr) % 3) * at::kObjStride + 0x148] * at::kRecordStride)[0xA];
+    SetL(Party_Zenny_addr, PickOf(10 * level, 10 * level - 1, 10 * level + 1, 0, sh::Next() % 100000));
     // the dispatchers' steps inside their tables
-    if (Is(k, "PartyForm_OpenStep") || Is(k, "SharedList_SortStep")) B(at::kStep) = static_cast<unsigned char>(sh::Next() % 3);
-    if (Is(k, "PartyForm_LeaveStep")) B(at::kStep) = static_cast<unsigned char>(sh::Next() % 4);
-    if (Is(k, "SharedList_MoveStep")) B(at::kStep) = static_cast<unsigned char>(sh::Next() % 5);
+    if (Is(k, "PartyForm_OpenStep") || Is(k, "SharedList_SortStep")) B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % 3);
+    if (Is(k, "PartyForm_LeaveStep")) B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % 4);
+    if (Is(k, "SharedList_MoveStep")) B(FieldS_Step_addr) = static_cast<unsigned char>(sh::Next() % 5);
     // ShopResist_Grant writes the record of the cursor's member: kept to the three
-    if (Is(k, "ShopResist_Grant")) B(at::kCursor) = static_cast<unsigned char>(sh::Next() % 3);
+    if (Is(k, "ShopResist_Grant")) B(BattleActorCopies_ItemActor_addr) = static_cast<unsigned char>(sh::Next() % 3);
     // Equip_ChooseSlot writes the slot byte of the record its member names
     if (Is(k, "Equip_ChooseSlot"))
-        for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + i) = SafeId();
+        for (unsigned i = 0; i < 3; ++i) B(Cond_Flags_addr + 0xd2 + i) = SafeId();
     if (Is(k, "PartyForm_Reload") && sh::Half()) {
-        B(at::kPartyList) = 2;
+        B(Cond_Flags_addr + 0xd2) = 2;
         ObjTrio[0x89] = static_cast<unsigned char>(sh::Half() ? 2 : SafeId());
     }
     // the item window's cursor against its category byte
@@ -540,8 +540,8 @@ void Seed(unsigned k) {
 void Args(unsigned k, std::uint32_t* a) {
     const std::uint32_t hi = a[9] & 0xFFFFFF00u;
     if (Is(k, "ShopResist_Message")) {
-        a[0] = at::kAnswer;
-        const U index = B(at::kAnswer);
+        a[0] = FieldS_Answer_addr;
+        const U index = B(FieldS_Answer_addr);
         a[1] = hi | (PickOf(index + 1, index + 2, index, sh::Next()) & 0xFF);
     } else if (Is(k, "SharedList_DrawList") || Is(k, "SharedList_DrawMember")) {
         a[0] = sh::at::kWindows + sh::at::kWindowStride * (sh::Next() % 21);

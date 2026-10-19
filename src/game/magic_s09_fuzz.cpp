@@ -222,9 +222,16 @@ constexpr unsigned kPacketBytes = 0x800;
 alignas(16) unsigned char g_packets[kPacketBytes];
 unsigned char* PacketAt(unsigned k) { return g_packets + (k & 7) * 0x40; }
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0, kFrameSet = 0x9039D8, kAbilityId = 0x904B80,
-                        kEventBattle = 0x904AAA, kCurrentEnemy = 0x939AD8, kKind2 = 0x905E60,
-                        kMotePool = 0x67DE40, kPoolBytes = 48 * 0x84, kPoolRecord255 = 0x67DE40 + 255 * 0x84;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml).
+// kKind2: now Field_Kind2Z (symbols.toml).
+// kMotePool: now ElemBreath_Motes (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850,
+                        kAbilityId = 0x904B80,
+                        kPoolBytes = 48 * 0x84,
+                        kPoolRecord255 = 0x67DE40 + 255 * 0x84;
 
 // Set by the seed for the functions they matter to.
 bool g_keep_slots = false;    // the four slots' +0xB stay below 155 (BoneDartShadow_Follow / _Fade)
@@ -253,7 +260,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // Math_Sin / Math_Cos: a quarter of the time a scratch or vertex word
@@ -264,7 +271,7 @@ std::uint32_t TrigEffect(const std::uint32_t*, std::uint32_t answer) {
     const unsigned w = (h >> 4) % 24;
     const auto v = static_cast<std::uint16_t>(h >> 16);
     if (w < 8) SetWord(mh::Mem(kScratch + w * 2), v);
-    else SetWord(mh::Mem(kVertices + (w - 8) * 2), v);
+    else SetWord(mh::Mem(Prim_VertexScratch_addr + (w - 8) * 2), v);
     return answer;
 }
 // Battle_ActorIsOut: DreamBreath_TargetHeight's last actor (10 of the
@@ -387,13 +394,13 @@ const mh::Callee kCallees[] = {
     {S09_RAW(0x4AABE0), 0, {}, mh::Answer::kByte, 0xFF, 0x2F},
     // The children's steps, called with the frame-offset table swapped:
     // listed before their .data tables register them as plain handlers.
-    {S09_RAW(0x4A9A00), 0, {kFrameSet}, kPh, 0, 0},
-    {S09_RAW(0x4A9B30), 0, {kFrameSet}, kPh, 0, 0},
-    {S09_RAW(0x4A9C60), 0, {kFrameSet}, kPh, 0, 0},
-    {S09_RAW(0x4A9D50), 0, {kFrameSet}, kPh, 0, 0},
-    {S09_RAW(0x4A9E50), 0, {kFrameSet}, kPh, 0, 0},
-    {S09_RAW(0x4A9F00), 0, {kFrameSet}, kPh, 0, 0},
-    {S09_RAW(0x4AF490), 0, {kFrameSet}, kPh, 0, 0},
+    {S09_RAW(0x4A9A00), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S09_RAW(0x4A9B30), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S09_RAW(0x4A9C60), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S09_RAW(0x4A9D50), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S09_RAW(0x4A9E50), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S09_RAW(0x4A9F00), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
+    {S09_RAW(0x4AF490), 0, {BattleE2_AnimSet_addr}, kPh, 0, 0},
 };
 #undef S09_OURS
 #undef S09_RAW
@@ -406,21 +413,21 @@ const mh::DataTable kTables[] = {
 
 mh::Region g_regions[] = {
     {kScratch, 0x10},
-    {kVertices, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {0, kPacketBytes},                           // g_packets (filled in at start-up)
     {0x812980, 0x40},                            // Gfx_ClutStrip 0x1A00..0x1A1F (a word past the head is compared)
     {0x80E980, 0x40},                            // Gfx_ClutStripSource, the same
-    {kFrameSet, 4},                              // the frame-offset table pointer
+    {BattleE2_AnimSet_addr, 4},                  // the frame-offset table pointer
     {kAbilityId, 4},                             // the ability word 0x904B80
-    {kCurrentEnemy, 4},                          // the current enemy pointer
-    {kKind2, 8},                                 // Field_Kind2Z, Field_Kind2X
-    {kMotePool, kPoolBytes},                     // ElemBreath_Motes
+    {BattleE3_CurrentEnemy_addr, 4},             // the current enemy pointer
+    {Field_Kind2Z_addr, 8},                      // Field_Kind2Z, Field_Kind2X
+    {ElemBreath_Motes_addr, kPoolBytes},         // ElemBreath_Motes
     {kPoolRecord255, 0x84},                      // "record 255": an unchecked 0xFF alloc's writes
 };
 
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* PoolRecord(unsigned i) { return mh::Mem(kMotePool + (i % 48) * 0x84u); }
+unsigned char* PoolRecord(unsigned i) { return mh::Mem(ElemBreath_Motes_addr + (i % 48) * 0x84u); }
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 
 // A real slot or record for a pool record's owner (the walk makes it the
@@ -443,17 +450,17 @@ void Disturb(std::uint32_t h) {
         else SetWord(mh::Mem(kScratch + k * 2), word);
         break;
     }
-    case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: PoolRecord(v)[0] ^= 1; break;
-    case 4: mh::Pointer(mh::at::kOwner)[0xB] = Byte(v % 3); break;
+    case 4: mh::Pointer(BattleE2_Owner_addr)[0xB] = Byte(v % 3); break;
     case 5: SetWord(mh::Mem(kAbilityId), (v & 1) ? 0x32 : word); break;
-    case 6: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 6: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 7:
-        if (v & 1) mh::Mem(kEventBattle)[0] = Byte(v >> 1);
-        else mh::Pointer(kCurrentEnemy)[0x100] = (v & 2) ? 0x29 : Byte(v >> 2);
+        if (v & 1) mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(v >> 1);
+        else mh::Pointer(BattleE3_CurrentEnemy_addr)[0x100] = (v & 2) ? 0x29 : Byte(v >> 2);
         break;
-    case 8: SetLong(mh::Mem(kKind2 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 9: mh::SetPointer(kMotePool + (v % 48) * 0x84u + 0x80, SomeOwner(v >> 6)); break;
+    case 8: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 9: mh::SetPointer(ElemBreath_Motes_addr + (v % 48) * 0x84u + 0x80, SomeOwner(v >> 6)); break;
     default: break;
     }
 }
@@ -483,7 +490,7 @@ void FillPool() {
         unsigned char* const rec = PoolRecord(i);
         if (mode == 0) rec[0] = Byte(rec[0] | 1);   // full
         else if (mode == 1) rec[0] = Byte(i < taken ? rec[0] | 1 : rec[0] & ~1u);
-        mh::SetPointer(kMotePool + i * 0x84u + 0x80, SomeOwner(mh::Next()));
+        mh::SetPointer(ElemBreath_Motes_addr + i * 0x84u + 0x80, SomeOwner(mh::Next()));
     }
 }
 
@@ -494,11 +501,11 @@ void Seed(unsigned k) {
     g_keep_slots = k == kBoneDartShadow_Follow || k == kBoneDartShadow_Fade;
     // the current enemy: an enemy record or a sprite record, its +0x100 0x29
     // two times in three; the event-battle byte set two times in three
-    mh::SetPointer(kCurrentEnemy, mh::Half() ? static_cast<const void*>(mh::EnemyOf(Byte(3 + mh::Next() % 8)))
+    mh::SetPointer(BattleE3_CurrentEnemy_addr, mh::Half() ? static_cast<const void*>(mh::EnemyOf(Byte(3 + mh::Next() % 8)))
                                              : static_cast<const void*>(mh::SpriteRecord(mh::Next())));
-    if (mh::Often()) mh::Pointer(kCurrentEnemy)[0x100] = 0x29;
-    else if (mh::Half()) mh::Pointer(kCurrentEnemy)[0x100] = Near(0x29, 1, 1);
-    mh::Mem(kEventBattle)[0] = mh::Often() ? Byte(1 + mh::Next() % 0xFF) : 0;
+    if (mh::Often()) mh::Pointer(BattleE3_CurrentEnemy_addr)[0x100] = 0x29;
+    else if (mh::Half()) mh::Pointer(BattleE3_CurrentEnemy_addr)[0x100] = Near(0x29, 1, 1);
+    mh::Mem(BattleActions_EventBattle_addr)[0] = mh::Often() ? Byte(1 + mh::Next() % 0xFF) : 0;
     // the ability word: 0x32, 0x33, or 0x32 under a high byte not 0 (a byte
     // test would take it for 0x32)
     {

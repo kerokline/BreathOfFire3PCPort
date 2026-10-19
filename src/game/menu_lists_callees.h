@@ -24,25 +24,25 @@ namespace menu_lists {
 namespace at {
 
 // The field menu's state block (docs/menu-screens.md section 1).
-constexpr std::uint32_t kMenu = 0x929F00;          // u8 state (the dword's low byte picks FieldMenu_Run's entry)
-constexpr std::uint32_t kStep = 0x929F01;          // u8 step inside a state
+// kMenu: now BattleE1_Mode (symbols.toml). u8 state (the dword's low byte picks FieldMenu_Run's entry)
+// kStep: now FieldS_State (symbols.toml). u8 step inside a state
 constexpr std::uint32_t kCountdown = 0x929F04;     // u8 the open / close countdown
-constexpr std::uint32_t kCursor = 0x929F05;        // u8 the top bar's cursor, 0..6
-constexpr std::uint32_t kOpenedAt = 0x929F10;      // u8: 1 opens the menu straight on state 5, step 5
-constexpr std::uint32_t kPartyChanged = 0x929F11;  // u8: set when a member of the party left it
-constexpr std::uint32_t kMemberCount = 0x929EC0;   // Field_MemberCount (u8)
+// kCursor: now MenuLists_Cursor (symbols.toml). u8 the top bar's cursor, 0..6
+// kOpenedAt: now ScenaSc6_Load10 (symbols.toml). u8: 1 opens the menu straight on state 5, step 5
+// kPartyChanged: now MenuLists_PartyChanged (symbols.toml). u8: set when a member of the party left it
+// kMemberCount: now Field_MemberCount (symbols.toml). Field_MemberCount (u8)
 // The party (area_entry_callees.h, battle_draw_callees.h): three bytes of
 // characters, then three of the reserve; 0xFF is none.
-constexpr std::uint32_t kParty = 0x904062;
-constexpr std::uint32_t kReserve = 0x904065;
+// kParty: now Cond_Flags[0xd2] (symbols.toml).
+// kReserve: now Cond_Flags[0xd5] (symbols.toml).
 constexpr std::uint32_t kReserveData = 0x9045FC;   // 3 bytes a reserve slot, kept with its member
-constexpr std::uint32_t kMoney = 0x904058;         // dword, Menu_DrawMoneyBox's value
+// kMoney: now Party_Zenny (symbols.toml). dword, Menu_DrawMoneyBox's value
 constexpr std::uint32_t kCampFlag = 0x904152;      // u8 (hypothesis: "camping allowed anywhere")
 constexpr std::uint32_t kMemberRecord = 0x66972C;  // u8 by character: its record (MoveScript_EffectState)
 constexpr std::uint32_t kCharRecords = 0x903A70;   // 0xA4 bytes each
 constexpr std::uint32_t kCharRecordSize = 0xA4;
-constexpr std::uint32_t kColour = 0x903A5A;        // Config's window colour byte
-constexpr std::uint32_t kBackground = 0x903A5B;    // Config's "Background" byte
+// kColour: now BattleDraw_Colour (symbols.toml). Config's window colour byte
+// kBackground: now FieldS_Backdrop (symbols.toml). Config's "Background" byte
 // The party as the menu opened on it (FieldMenu_Open), for
 // FieldMenu_ReconcileParty to compare the party it closes on against.
 constexpr std::uint32_t kSavedParty = 0x6BDF98;
@@ -51,34 +51,34 @@ constexpr std::uint32_t kSavedReserve = 0x6BDF9B;
 constexpr std::uint32_t kRecords = 0x803160;
 constexpr std::uint32_t kRecordSize = 0x24;
 constexpr std::uint32_t kRecordsEnd = 0x803478;
-constexpr std::uint32_t kCurrent = 0x905B84;       // dword: the record the window layer is running
+// kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record the window layer is running
 constexpr std::uint32_t kMemberPanels = 0x8031F0;  // record 4: the first member panel
 constexpr std::uint32_t kMoneyWindow = 0x80325C;   // record 7
 constexpr std::uint32_t kTimeWindow = 0x803280;    // record 8
 constexpr std::uint32_t kIconWindow = 0x8032A4;    // record 9, the top bar's icons
 constexpr std::uint32_t kTitleWindow = 0x8032C8;   // record 10, the screen title
-constexpr std::uint32_t kObjTrio = 0x802D40;       // the party's working records; Sprite_Current for the gateway test
+// kObjTrio: now ObjTrio (symbols.toml). the party's working records; Sprite_Current for the gateway test
 // Field_InputFlags, Game_AreaNumber, Game_Step, Input_Pressed and the
 // confirm / cancel words are bound in symbols.gen.h; read here by address
 // through the same helpers as the rest.
-constexpr std::uint32_t kInputFlags = 0x905BA2;
-constexpr std::uint32_t kArea = 0x904EFC;
-constexpr std::uint32_t kGameStep = 0x66C7EA;
-constexpr std::uint32_t kPressed = 0x7E1BEC;
-constexpr std::uint32_t kConfirm = 0x90358E;
-constexpr std::uint32_t kCancel = 0x903590;
-constexpr std::uint32_t kCampChosen = 0x905B60;    // u8 = 1 when Camp is taken
+// kInputFlags: now Field_InputFlags (symbols.toml).
+// kArea: now Game_AreaNumber (symbols.toml).
+// kGameStep: now Game_Step (symbols.toml).
+// kPressed: now Input_Pressed (symbols.toml).
+// kConfirm: now Field_ConfirmButtons (symbols.toml).
+// kCancel: now Field_CancelButtons (symbols.toml).
+// kCampChosen: now MenuLists_CampChosen (symbols.toml). u8 = 1 when Camp is taken
 // The .data tables (symbols.toml [[data]]).
-constexpr std::uint32_t kStates = 0x6672B4;        // FieldMenu_States, 9
-constexpr std::uint32_t kTopBarSteps = 0x6672D8;   // FieldMenu_TopBarSteps, 3
-constexpr std::uint32_t kTitleIds = 0x6672E4;      // FieldMenu_TitleIds, 7 bytes
-constexpr std::uint32_t kIconIds = 0x6672AC;       // FieldMenu_IconIds, 7 bytes
-constexpr std::uint32_t kKinds = 0x66AF94;         // MenuList_Kinds, 21
-constexpr std::uint32_t kPanelStates = 0x66AFE8;   // MenuList_PanelStates, 11
-constexpr std::uint32_t kMoneyStates = 0x66B014;   // MenuList_MoneyStates, 3
-constexpr std::uint32_t kTimeStates = 0x66B020;    // MenuList_TimeStates, 3
-constexpr std::uint32_t kIconStates = 0x66B02C;    // MenuList_IconStates, 3
-constexpr std::uint32_t kTitleStates = 0x66B038;   // MenuList_TitleStates, 3
+// kStates: now FieldMenu_States (symbols.toml). FieldMenu_States, 9
+// kTopBarSteps: now FieldMenu_TopBarSteps (symbols.toml). FieldMenu_TopBarSteps, 3
+// kTitleIds: now FieldMenu_TitleIds (symbols.toml). FieldMenu_TitleIds, 7 bytes
+// kIconIds: now FieldMenu_IconIds (symbols.toml). FieldMenu_IconIds, 7 bytes
+// kKinds: now MenuList_Kinds (symbols.toml). MenuList_Kinds, 21
+// kPanelStates: now MenuList_PanelStates (symbols.toml). MenuList_PanelStates, 11
+// kMoneyStates: now MenuList_MoneyStates (symbols.toml). MenuList_MoneyStates, 3
+// kTimeStates: now MenuList_TimeStates (symbols.toml). MenuList_TimeStates, 3
+// kIconStates: now MenuList_IconStates (symbols.toml). MenuList_IconStates, 3
+// kTitleStates: now MenuList_TitleStates (symbols.toml). MenuList_TitleStates, 3
 // The two slide bounds of DIV-0041's faster slide (widescreen.cpp g_slides):
 // ours reads each as widescreen.cpp holds it (Capcom's at every width).
 constexpr std::uint32_t kLeftOffBound = 0x59A586;  // imm32 of `mov ecx, -200` in 0x59A580

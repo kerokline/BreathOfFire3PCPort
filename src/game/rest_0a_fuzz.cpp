@@ -19,6 +19,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/rest_0a.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -26,6 +27,10 @@
 
 namespace rest_0a {
 namespace {
+
+// Typed views of a record pointer (records.h).
+[[maybe_unused]] records::EffectObject* EffectRec(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
+[[maybe_unused]] const records::EffectObject* EffectRec(const unsigned char* p) { return reinterpret_cast<const records::EffectObject*>(p); }
 
 namespace sh = scenario_harness;
 using U = std::uint32_t;
@@ -79,8 +84,8 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
-constexpr U kSteps = 0x6697B0;   // Field_DirectionSteps: 8 rows of two longs
-unsigned char* Steps() { return sh::Mem(kSteps); }
+// kSteps: now Field_DirectionSteps (symbols.toml). Field_DirectionSteps: 8 rows of two longs
+unsigned char* Steps() { return sh::Mem(Field_DirectionSteps_addr); }
 unsigned char* Effect(unsigned i) { return sh::EffectRecord(i); }
 
 // --- the stand-ins' answers (Noise() and the state only: both passes the same) -----
@@ -163,7 +168,7 @@ const sh::Callee kCallees[] = {
 // (0x524DA0 its rows 3 and 5 by address), so that the seed can put every row's
 // boundaries in. .data, restored after the run as every region is.
 const sh::Region kRegions[] = {
-    {kSteps, 0x40},
+    {Field_DirectionSteps_addr, 0x40},
 };
 
 // --- the seed -------------------------------------------------------------------------
@@ -218,8 +223,8 @@ void SeedEffects(bool line_up) {
         unsigned char* const e = Effect(i);
         e[0] = static_cast<unsigned char>(PickOf(0, 1, 1, 1, sh::Next() | 1));
         e[5] = static_cast<unsigned char>(PickOf(0x30, 0x30, 0x30, 0x17, 0x31, 0x2F, sh::Next()));
-        SetLong(e + 0x34, static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x34)) : Coordinate()));
-        SetLong(e + 0x38, static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x38)) : Coordinate()));
+        EffectRec(e)->x = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x34)) : Coordinate());
+        EffectRec(e)->z = static_cast<std::int32_t>(line_up && sh::Often() && sh::Half() ? static_cast<U>(Long(s + 0x38)) : Coordinate());
         SetWord(e + 0x3E, Height());
     }
 }

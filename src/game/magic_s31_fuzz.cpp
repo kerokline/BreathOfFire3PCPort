@@ -227,8 +227,12 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kActorRecord = 0x904B3C, kEventBattle = 0x904AAA,
-                        kFrameSet = 0x9039D8, kKind2 = 0x905E60;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kActorRecord: now MagicS23_ActorSprite (symbols.toml).
+// kEventBattle: now BattleActions_EventBattle (symbols.toml).
+// kFrameSet: now BattleE2_AnimSet (symbols.toml).
+// kKind2: now Field_Kind2Z (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
 
 // Set by the seed for the one function each matters to.
 bool g_allow_none = false;    // BattleTask_Create may answer 0xFF (MainCannon_Fire)
@@ -260,7 +264,7 @@ std::uint32_t NoteSprite(const std::uint32_t*, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t NoteSpriteFrames(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(kFrameSet))));
+    mh::Note(Key(Sprite_Current), static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))));
     return answer;
 }
 // 0x446770 turns the task's +0xC / +0x10 by its +8: the inputs logged, a new
@@ -383,10 +387,10 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},                        // Gfx_PacketNext
     {0, kPrimBytes},                      // g_prims (filled in at start-up)
-    {kVertex, 0x20},                      // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20},      // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},                     // 0x903850.., Scratch_Swap at +0xC
-    {kKind2, 8},                          // Field_Kind2Z, Field_Kind2X
-    {kFrameSet, 4},                       // the frame-offset table pointer the shells swap
+    {Field_Kind2Z_addr, 8},               // Field_Kind2Z, Field_Kind2X
+    {BattleE2_AnimSet_addr, 4},           // the frame-offset table pointer the shells swap
     {0x7E0700, 0xC00},                    // MoveScript_TintRecords
     {0x80E980, 0x200},                    // Gfx_ClutStripSource row 26
     {0x812980, 0x200},                    // Gfx_ClutStrip row 26
@@ -403,7 +407,7 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: {
         const unsigned k = v % 16;
         if (k < 2) SetWord(mh::Mem(kScratch), (h >> 16) % 0x30);
@@ -411,14 +415,14 @@ void Disturb(std::uint32_t h) {
         else mh::Mem(kScratch + k)[0] = Byte(h >> 24);
         break;
     }
-    case 3: SetLong(mh::Mem(kKind2 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 4: SetLong(mh::Mem(kFrameSet), static_cast<std::int32_t>(h)); break;
+    case 3: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 4: SetLong(mh::Mem(BattleE2_AnimSet_addr), static_cast<std::int32_t>(h)); break;
     case 5: {
         static const unsigned kFields[] = {0x18, 0x1C, 0x20, 0x2E, 0x30};
         SetWord(Sc() + kFields[v % 5], h >> 16);
         break;
     }
-    case 6: mh::SetPointer(kActorRecord, mh::SpriteRecord(v)); break;
+    case 6: mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(v)); break;
     case 7: mh::Mem(0x7E0700 + v % 0xC00)[0] = Byte(h >> 24); break;
     default: break;
     }
@@ -442,7 +446,7 @@ unsigned char* ActorRecord() {
 void Seed(unsigned k) {
     unsigned char* const sc = Sc();
     Gfx_PacketNext = PrimAt(mh::Next());
-    mh::SetPointer(kActorRecord, mh::SpriteRecord(mh::Next()));
+    mh::SetPointer(MagicS23_ActorSprite_addr, mh::SpriteRecord(mh::Next()));
     g_allow_none = k == kMainCannon_Fire;
     g_keep_facing = k == kCoronaRay_PushMatrix;
     if (mh::Often()) sc[8] = Byte(mh::Next() % 5);
@@ -478,7 +482,7 @@ void Seed(unsigned k) {
         break;
     // Corona's third child: an event battle, the acting enemy's +0x100 0x29
     case kCorona_Start:
-        if (mh::Often()) mh::Mem(kEventBattle)[0] = Byte(1 + mh::Next() % 0xFF);
+        if (mh::Often()) mh::Mem(BattleActions_EventBattle_addr)[0] = Byte(1 + mh::Next() % 0xFF);
         if (mh::Often()) {
             const unsigned a = mh::Mem(mh::at::kActor)[0];
             mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(a) - 3) * 0x128) + 0x100)[0] = 0x29;

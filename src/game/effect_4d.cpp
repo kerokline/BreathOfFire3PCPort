@@ -50,6 +50,7 @@
 #include "game/effect_4d_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -67,6 +68,7 @@ using move_script::Word;
 using Handler = scenario_harness::Handler;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
@@ -75,7 +77,7 @@ U AddressOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // imul of two whole registers: the low 32 bits.
 U Mul(U a, std::int32_t b) { return a * static_cast<U>(b); }
-unsigned char* Debris(unsigned i) { return At(at::kDebris + at::kDebrisStride * i); }
+unsigned char* Debris(unsigned i) { return At(EffectKind30_Shards_addr + 0xc0 + at::kDebrisStride * i); }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + at::kSparkStride * i; }
 
 // --- x87 as the original has it (the game's control word: round to nearest, 53
@@ -239,7 +241,7 @@ extern "C" void __cdecl EffectKind91_Brighten(void) {
 // to the tint.
 extern "C" void __cdecl EffectKind91_WaitMessage(void) {
     if (Field_Request != 2) {
-        At(at::kStep)[0] = static_cast<unsigned char>(At(at::kStep)[0] + 1);
+        MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(MoveScript_PartyRecords[0x65] + 1);
         S()[1] = 3;
     }
     SH_CALL(Effect_DrawScreenTint)();
@@ -362,7 +364,7 @@ extern "C" void __cdecl EffectKind95_Run(void) {
 // original 0x48CDF0 (state 0): the clock word 0x67629A 0; +1 up.
 extern "C" void __cdecl EffectKind95_Start(void) {
     unsigned char* const s = S();
-    SetWord(At(at::kKind95Clock), 0);
+    Effect4d_Kind95Clock = 0;
     s[1] = static_cast<unsigned char>(s[1] + 1);
 }
 
@@ -371,8 +373,8 @@ extern "C" void __cdecl EffectKind95_Start(void) {
 // clock's frame count (the high byte's bits 0..6) up 1; at 30 (40 when bit 7 is
 // set) it is 0 and the ticks (the low byte) up 1. At 15 ticks: +1 up.
 extern "C" void __cdecl EffectKind95_Clock(void) {
-    if (Kind95Held(at::kTrio2Mode)) return;
-    const unsigned w = Word(At(at::kKind95Clock));
+    if (Kind95Held(ObjTrio_addr + 0x3cf)) return;
+    const unsigned w = Effect4d_Kind95Clock;
     auto ticks = static_cast<unsigned char>(w);
     const unsigned mode = (w >> 15) & 1u;
     auto frames = static_cast<unsigned char>(((w >> 8) & 0x7Fu) + 1u);
@@ -381,7 +383,7 @@ extern "C" void __cdecl EffectKind95_Clock(void) {
         ticks = static_cast<unsigned char>(ticks + 1);
     }
     const auto high = static_cast<unsigned char>((mode << 7) | frames);
-    SetWord(At(at::kKind95Clock), (static_cast<unsigned>(high) << 8) | ticks);
+    Effect4d_Kind95Clock = (static_cast<unsigned>(high) << 8) | ticks;
     if (ticks >= 0xF) Step();
 }
 
@@ -389,9 +391,9 @@ extern "C" void __cdecl EffectKind95_Clock(void) {
 // 0x802E77): ScriptFlags_Set40; the chapter's step 0x8034E5 = 5 and run
 // MoveScript_Var7 = 7; a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind95_Finish(void) {
-    if (Kind95Held(at::kTrio0Mode)) return;
+    if (Kind95Held(ObjTrio_addr + 0x137)) return;
     SH_CALL(ScriptFlags_Set40)();
-    At(at::kStep)[0] = 5;
+    MoveScript_PartyRecords[0x65] = 5;
     MoveScript_Var7 = 7;
     SH_CALL(Effect_Release)();
 }
@@ -411,8 +413,8 @@ extern "C" void __cdecl EffectKind96_Run(void) {
 extern "C" void __cdecl EffectKind96_Start(void) {
     S()[9] = 0;
     S()[1] = 1;
-    At(at::kKind96Shade)[0] = 0xF;
-    At(at::kKind96Index)[0] = 0;
+    Effect4d_Kind96Shade = 0xF;
+    Effect4d_Kind96Index = 0;
 }
 
 // original 0x48CF50 (state 1): +9 up; when it was 0x10 or more, the level is
@@ -430,16 +432,16 @@ extern "C" void __cdecl EffectKind96_Pulse(void) {
     s[9] = static_cast<unsigned char>(count + 1);
     if (count >= 0x10) {
         unsigned char* const r = S();
-        const unsigned index = At(at::kKind96Index)[0];
+        const unsigned index = Effect4d_Kind96Index;
         if (index >= EffectKind96_Shades_count)
             bof3::Fatal("EffectKind96_Pulse: the index 0x676299 is %u, past EffectKind96_Shades' %u - the original "
                         "reads the state table after it as a level (docs/effect_4d.md section 6)",
                         index, (unsigned)EffectKind96_Shades_count);
-        At(at::kKind96Shade)[0] = EffectKind96_Shades[index];
+        Effect4d_Kind96Shade = EffectKind96_Shades[index];
         r[9] = 0;
-        const unsigned char i = At(at::kKind96Index)[0];
-        At(at::kKind96Index)[0] = static_cast<unsigned char>(i + 1);
-        if (i >= 7) At(at::kKind96Index)[0] = 0;
+        const unsigned char i = Effect4d_Kind96Index;
+        Effect4d_Kind96Index = static_cast<unsigned char>(i + 1);
+        if (i >= 7) Effect4d_Kind96Index = 0;
     }
     const unsigned tpage = SH_CALL(Gpu_GetTPage)(2, 2, 0x140, 0x140) & 0xFFFFu;
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, tpage, 0);
@@ -461,7 +463,7 @@ extern "C" void __cdecl EffectKind96_Pulse(void) {
     SetUL(prim + 0x38, right);
     SetUL(prim + 0x3C, k320);
     for (const U corner : {0x4u, 0x14u, 0x24u, 0x34u}) {
-        const unsigned char level = At(at::kKind96Shade)[0];
+        const unsigned char level = Effect4d_Kind96Shade;
         prim[corner] = level;
         prim[corner + 1] = 0;
         prim[corner + 2] = level;
@@ -571,7 +573,7 @@ extern "C" void __cdecl EffectKind97_Fade(void) {
 // step 0x8034E5 = 0x14 and a tail jump to Effect_Release.
 extern "C" void __cdecl EffectKind97_End(void) {
     if (MoveScript_WaitWordDA != 0) return;
-    At(at::kStep)[0] = 0x14;
+    MoveScript_PartyRecords[0x65] = 0x14;
     SH_CALL(Effect_Release)();
 }
 
@@ -646,12 +648,13 @@ extern "C" void __cdecl EffectKind97_EmitSpark(void) {
         }
     if (r == nullptr) return;
     const unsigned char* const s = S();
+    auto* const so = reinterpret_cast<const records::EffectObject*>(s);
     r[0] = 1;
     r[1] = 0;
     r[2] = 0x20;
-    SetUL(r + 4, UL(s + 0x34));
-    SetUL(r + 8, UL(s + 0x38));
-    SetUL(r + 0xC, UL(s + 0x3C));
+    SetUL(r + 4, static_cast<std::uint32_t>(so->x));
+    SetUL(r + 8, static_cast<std::uint32_t>(so->z));
+    SetUL(r + 0xC, static_cast<std::uint32_t>(so->height));
     SetWord(r + 0x14, 0x180);
     r[0x16] = s[0x5D];
     r[0x17] = 0;
@@ -734,9 +737,9 @@ extern "C" void __cdecl EffectKind97_DrawSpark(unsigned char* spark) {
 // _Z; 0x5A7C70 for each edge); the scale +0x28 4 + Rand & 3; +0x20, +0x22,
 // +0x24 (its angle), +0x2A (its shade) 0.
 extern "C" void __cdecl EffectKind97_DebrisInit(unsigned char* d) {
-    SetUL(d + 0, UL(S() + 0x34));
-    SetUL(d + 4, UL(S() + 0x38));
-    SetUL(d + 8, UL(S() + 0x3C));
+    SetUL(d + 0, static_cast<std::uint32_t>(CurFx()->x));
+    SetUL(d + 4, static_cast<std::uint32_t>(CurFx()->z));
+    SetUL(d + 8, static_cast<std::uint32_t>(CurFx()->height));
     const U ax = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
     const U ay = (static_cast<U>(SH_CALL(Rand)()) & 0x7FFu) - 0x400u;
     const U az = static_cast<U>(SH_CALL(Rand)()) & 0xFFFu;
@@ -856,10 +859,11 @@ void Kind98Project() {
     SH_CALL(Gte_PushMatrix)();
     SH_CALL(EffectGte_LoadMapCamera)();
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     long point[4];
-    point[0] = Long(s + 0x34);
-    point[1] = Long(s + 0x38);
-    point[2] = Long(s + 0x3C);
+    point[0] = so->x;
+    point[1] = so->z;
+    point[2] = so->height;
     SH_CALL(EffectGte_ProjectPoint)(point, reinterpret_cast<float*>(s + 0x74));
     SH_CALL(Gte_PopMatrix)();
 }
@@ -937,8 +941,8 @@ extern "C" void __cdecl EffectKind98_DrawBurst(int radius, int centre, int rim) 
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyG3)(prim);
         SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-        SetUL(prim + 8, UL(S() + 0x74));
-        SetUL(prim + 0xC, UL(S() + 0x78));
+        SetUL(prim + 8, CurFx()->screen_xf);
+        SetUL(prim + 0xC, CurFx()->screen_yf);
         const U a = angle & 0xFFFFu;
         std::int32_t v = static_cast<std::int32_t>(Sar(Mul(static_cast<U>(SH_CALL(Math_Cos)(static_cast<int>(a))), r), 12));
         FildAdd(v, S() + 0x74, prim + 0x18);
@@ -981,7 +985,7 @@ extern "C" void __cdecl EffectKind9A_Start(void) {
 // read again, the kept record's +1 and +9 set, Sprite_Current put back.
 void Kind9ANudge(unsigned offset, U step, unsigned char state, unsigned char count) {
     unsigned char* const kept = Sprite_Current;
-    Sprite_Current = At(at::kSprite1);
+    Sprite_Current = At(Sprite_Objects_addr + 0xa4);
     for (unsigned n = 4; n != 0; --n) {
         unsigned char* const o = Sprite_Current;
         SetUL(o + offset, UL(o + offset) + step);

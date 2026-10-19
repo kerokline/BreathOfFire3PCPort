@@ -43,6 +43,7 @@
 #include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
@@ -67,7 +68,7 @@ unsigned char* Buf() { return At(at::kTextScratch); }
 char* CBuf() { return reinterpret_cast<char*>(At(at::kTextScratch)); }
 
 unsigned char* Record(unsigned id) { return At(bof3::addr::CharacterRecords + (id & 0xFF) * at::kRecordStride); }
-unsigned char Style() { return At(at::kStyle)[0]; }
+unsigned char Style() { return static_cast<unsigned char>(BattleDraw_Colour); }
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Fam() { return Field_ActiveMember; }
 
@@ -107,6 +108,13 @@ unsigned short Bank() { return Word(At(bof3::addr::DamageScratch) + 2); }
 void SetBank(unsigned v) { SetWord(At(bof3::addr::DamageScratch) + 2, v); }
 void BumpCount() { SetWord(At(bof3::addr::DamageScratch), static_cast<unsigned>(Count() + 1)); }
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
+
+// The typed views of these records (src/game/records.h).
+records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sc()); }
+records::SpriteObject* Active() { return reinterpret_cast<records::SpriteObject*>(Fam()); }
+records::PartyMember* Leader() { return reinterpret_cast<records::PartyMember*>(ObjTrio); }
+records::SpriteObject* Placed() { return reinterpret_cast<records::SpriteObject*>(Object(Count())); }
+unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.
 std::int32_t Coordinate(unsigned char half, unsigned char whole) {
     return static_cast<std::int32_t>((half ? 0x8000u : 0u) | static_cast<U>(whole) << 16);
@@ -159,9 +167,9 @@ extern "C" void __cdecl Menu_DrawStatsPanel(int x, int y, unsigned record) {
         SH_CALL(TextRecord_Set)(0, 8, SH_CALL(Msg_SystemPtr)(0x111u + trait));
         SH_CALL(Text_DrawAt)(left, y + 0x22, 0, 0xFF, SH_CALL(Msg_SystemPtr)(0x34));
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kStatsPiecesA), 0);
-    for (unsigned b = 0; b < 0x10; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(at::kStatsPiecesB), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kStatsPiecesC), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0xbc), 0);
+    for (unsigned b = 0; b < 0x10; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(AreaMap_EntryHandlers_addr + 0xe8), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0xf4), 0);
 }
 
 // original 0x573BF0: a record's EXP (next 0) or the EXP its next level wants
@@ -306,9 +314,9 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
         const auto sy = static_cast<unsigned>(static_cast<std::uint16_t>(Word(spot + 4) + static_cast<unsigned>(y)) + 0xFu);
         SH_CALL(Menu_DrawCell8)(sx, sy, static_cast<unsigned char>(order[j] + 3), 0x1E, clut, colour[j]);
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kWheelPiecesA), 0);
-    for (unsigned b = 0; b < 6; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(at::kWheelPiecesB), 0);
-    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kWheelPiecesC), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(Menu_PlayTimePieces_addr + 0x2c), 0);
+    for (unsigned b = 0; b < 6; ++b) SH_CALL(Menu_DrawPieces)(x + 8 * static_cast<int>(b), y, Text(AreaMap_EntryHandlers_addr + 0x168), 0);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0x174), 0);
 }
 
 // original 0x574400: one 16 x 8 SPRT of the menu page (CLUT 0x7800, v 0xD8, u
@@ -395,7 +403,7 @@ extern "C" void __cdecl Menu_DrawEquipCompare(unsigned record, int x, int y, con
             SH_CALL(Text_DrawAt)(x + 0x11, row + 0x55, 0, SH_CALL(Text_CharCount)(name), name);
         }
     }
-    SH_CALL(Menu_DrawPieces)(x, y, Text(at::kEquipPieces), 1);
+    SH_CALL(Menu_DrawPieces)(x, y, Text(AreaMap_EntryHandlers_addr + 0x1bc), 1);
     for (unsigned b = 0; b < 7; ++b) {
         const int row = y + 8 * static_cast<int>(b) + 0x18;
         SH_CALL(Menu_DrawPiece)(x, row, 4, 1);
@@ -427,7 +435,7 @@ int PanelY(const unsigned char* panel) { return static_cast<int>(Word(panel + 6)
 // The member id of the menu's shown party slot: MoveScript_EffectState by the
 // party list's byte at the slot (the slot a signed byte).
 unsigned char ShownMember() {
-    const unsigned char id = At(at::kPartyList + Sb(At(at::kShownMember)[0]))[0];
+    const unsigned char id = At(Cond_Flags_addr + 0xd2 + BattleActorCopies_ItemActor)[0];
     return MoveScript_EffectState[id];
 }
 // A title of a table of pointers, centred on 13 six-unit columns - or, under
@@ -462,7 +470,7 @@ extern "C" void __cdecl Menu_DrawAbilityPanel(unsigned char* panel) {
     for (unsigned b = 0; b < 0xA; ++b, row += 0xD, ++list) {
         const unsigned char id = list[0];
         if (id == 0) continue;
-        const unsigned char can = SH_CALL(Skill_CanUse)(panel[8], At(at::kShownMember)[0], id);
+        const unsigned char can = SH_CALL(Skill_CanUse)(panel[8], static_cast<unsigned char>(BattleActorCopies_ItemActor), id);
         const unsigned char dim = can == 0;
         unsigned char colour = dim ? 7 : 0;
         if (b == panel[0xD]) colour = 2;
@@ -481,7 +489,7 @@ extern "C" void __cdecl Menu_DrawAbilityPanel(unsigned char* panel) {
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), static_cast<unsigned>(std::strlen(title)),
                                  reinterpret_cast<const unsigned char*>(title)),
                          ty, 0, 0x10, reinterpret_cast<const unsigned char*>(title));
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 2 ? at::kListPiecesLit : at::kListPiecesA), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 2 ? at::kListPiecesLit : (AreaMap_EntryHandlers_addr + 0x1e8)), 1);
     SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 1 ? at::kListPiecesBLit : at::kListPiecesB), 1);
     const unsigned char arrows = panel[9];
     panel[9] = arrows & 0xF0 ? static_cast<unsigned char>(arrows - 0x10) : 0;
@@ -527,7 +535,7 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     const unsigned char* counts = At(static_cast<U>(Long(At(bof3::addr::Inventory_CountLists + 4 * cat))));
     unsigned char kept = 0, total = 0;
     for (unsigned n = 0; n < 0x80; ++n, ++ids, ++counts) {
-        const unsigned char member = MoveScript_EffectState[At(at::kPartyList + panel[0xC])[0]];
+        const unsigned char member = MoveScript_EffectState[At(Cond_Flags_addr + 0xd2 + panel[0xC])[0]];
         if (!SH_CALL(Item_CanUse)(4, member, panel[8], ids[0])) continue;
         if (panel[8] == 2) {
             const U kindv = SH_CALL(Item_IconKind)(2, ids[0]) & 0xFF;
@@ -567,8 +575,8 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     SH_CALL(Text_DrawAt)(Centred(PanelX(panel), SH_CALL(Text_CharCount)(title), title), ty, 0, 0x10, title);
     Sprintf(at::kFmtCount, static_cast<unsigned>(total), 0x80u);
     SH_CALL(Text_DrawFont8)(PanelX(panel) + 0x55, PanelY(panel) + 0x92, 0, Buf());
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(at::kListPiecesA), 1);
-    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(at::kItemPiecesB), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(AreaMap_EntryHandlers_addr + 0x1e8), 1);
+    SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(AreaMap_EntryHandlers_addr + 0x1f4), 1);
     for (unsigned b = 0; b < 0xA; ++b) SH_CALL(Menu_DrawPiece)(PanelX(panel) + 8 * static_cast<int>(b) + 0x28, PanelY(panel), 1, 1);
     for (unsigned b = 0; b < 0xF; ++b) SH_CALL(Menu_DrawPiece)(PanelX(panel), PanelY(panel) + 8 * static_cast<int>(b) + 0x18, 4, 1);
     SH_CALL(Menu_DrawPiece)(PanelX(panel) + 0x90, PanelY(panel) + 0x18, 0x16, 1);
@@ -618,7 +626,7 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         std::memcpy(Buf() + 5, summary + 0x16, 4);
         const unsigned char inset = YesNoLayout_SaveNameInset();   // the disp8 at at::kNameInsetSite: 0x13, DIV-0029's 0x15
         SH_CALL(Text_DrawAt)(x + inset, y + 2, 0, 5, Buf());
-        Sprintf(at::kFmtLevel, static_cast<unsigned>(summary[8]));
+        Sprintf(Boss26Fx_CountFormat_addr, static_cast<unsigned>(summary[8]));
         SH_CALL(Text_DrawFont8)(x + 0x1F, y + 0x18, 0, Buf());
         Sprintf(at::kFmtTime, static_cast<unsigned>(summary[0xC]), static_cast<unsigned>(summary[0xD]));
         SH_CALL(Text_DrawFont8)(x + 0x27, y + 0x25, 0, Buf());
@@ -655,25 +663,25 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
 // six; the party slot is (Field_ActiveMember - Sprite_ObjectsExtra) / 0xA4 as
 // a signed byte into the party records, unchecked.
 extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
-    const unsigned char speed = Field_MoveSpeeds[Fam()[0x84]];
-    unsigned char* sc = Sc();
-    const unsigned dir = sc[8] & 7u;
-    const auto vx = static_cast<std::int32_t>(static_cast<U>(Long(At(at::kDirectionVelocity + 8 * dir))) * speed);
-    const auto vz = static_cast<std::int32_t>(static_cast<U>(Long(At(at::kDirectionVelocity + 8 * dir + 4))) * speed);
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
+    const unsigned char speed = Field_MoveSpeeds[Active()->speed];
+    records::SpriteObject* sc = Cur();
+    const unsigned dir = Bytes(sc)[8] & 7u;
+    const auto vx = static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 8 * dir))) * speed);
+    const auto vz = static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 8 * dir + 4))) * speed);
+    const long ground = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
     SetWord(Sc() + 0x3E, static_cast<U>(ground));
-    sc = Sc();
+    sc = Cur();
     const unsigned s = shift & 31u;
-    if (static_cast<U>(Long(sc + 0x1C)) + static_cast<U>(Long(sc + 0x18)) == 0) {
-        const unsigned d = sc[8] & 7u;
-        const std::int32_t x0 = Long(sc + 0x34);
-        SetLong(Fam() + 0x8C, static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d]) << 1) * shift + static_cast<U>(x0)));
+    if (static_cast<U>(sc->accel_z) + static_cast<U>(sc->accel_x) == 0) {
+        const unsigned d = Bytes(sc)[8] & 7u;
+        const std::int32_t x0 = sc->x;
+        Active()->target_x = static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d]) << 1) * shift + static_cast<U>(x0));
         const unsigned d2 = Sc()[8] & 7u;
-        const std::int32_t z0 = Long(Sc() + 0x38);
+        const std::int32_t z0 = Cur()->z;
         SetLong(Fam() + 0x90, static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d2 + 1]) << 1) * shift + static_cast<U>(z0)));
         if (toward) {
             SetLong(Sc() + 0x18, vx >> s);
-            SetLong(Sc() + 0x1C, vz >> s);
+            Cur()->accel_z = vz >> s;
             SetLong(Sc() + 0xC, 0);
             SetLong(Sc() + 0x10, 0);
         } else {
@@ -682,7 +690,7 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
             SetLong(Sc() + 0xC, vx);
             SetLong(Sc() + 0x10, vz);
         }
-        SetLong(Sc() + 0x14, 0);
+        Cur()->step_y = 0;
     }
     const auto add = [](unsigned char* to, const unsigned char* by) {
         SetLong(to, static_cast<std::int32_t>(static_cast<U>(Long(to)) + static_cast<U>(Long(by))));
@@ -691,46 +699,46 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     add(Sc() + 0x38, Sc() + 0x10);
     add(Sc() + 0xC, Sc() + 0x18);
     add(Sc() + 0x10, Sc() + 0x1C);
-    sc = Sc();
-    unsigned char* fam = Fam();
-    if (sc[6] == 0x0A) {
-        const std::int32_t slot = static_cast<std::int32_t>(static_cast<U>(Key(fam)) - static_cast<U>(Key(Sprite_ObjectsExtra))) / 0xA4;
+    sc = Cur();
+    records::SpriteObject* fam = Active();
+    if (sc->type == 0x0A) {
+        const std::int32_t slot = static_cast<std::int32_t>(static_cast<U>(Key(Bytes(fam))) - static_cast<U>(Key(Sprite_ObjectsExtra))) / 0xA4;
         const auto crossed = [](const unsigned char* pos, const unsigned char* vel) {
             const U p = static_cast<U>(Long(pos));
             return (((static_cast<U>(Long(vel)) + p) ^ p) & 0x8000u) != 0;
         };
-        if (crossed(sc + 0x34, sc + 0xC) || crossed(sc + 0x38, sc + 0x10)) {
-            SH_CALL(Party_MoveMember)(fam, static_cast<unsigned char>(sc[8] & 7));
-            fam = Fam();
-            sc = Sc();
+        if (crossed(Bytes(sc) + 0x34, Bytes(sc) + 0xC) || crossed(Bytes(sc) + 0x38, Bytes(sc) + 0x10)) {
+            SH_CALL(Party_MoveMember)(Bytes(fam), static_cast<unsigned char>(sc->direction & 7));
+            fam = Active();
+            sc = Cur();
         }
         unsigned char* const r = MoveScript_PartyRecords + Sb(static_cast<U>(slot)) * 16;
         if (r[1] != 0) {
             r[1] = static_cast<unsigned char>(r[1] - 1);
-            add(sc + 0x64, r + 4);
+            add(Bytes(sc) + 0x64, r + 4);
             add(Sc() + 0x68, r + 8);
-            fam = Fam();
-            sc = Sc();
+            fam = Active();
+            sc = Cur();
         }
         if (r[2] != 0) {
             r[2] = static_cast<unsigned char>(r[2] - 1);
-            add(sc + 0x6C, r + 0xC);
-            fam = Fam();
-            sc = Sc();
+            add(Bytes(sc) + 0x6C, r + 0xC);
+            fam = Active();
+            sc = Cur();
         }
     }
-    const std::int32_t tx = Long(fam + 0x8C);
-    const std::int32_t x = Long(sc + 0x34);
+    const std::int32_t tx = fam->target_x;
+    const std::int32_t x = sc->x;
     const bool at_x = vx < 0 ? !(x > tx) : !(x < tx);
-    const std::int32_t z = Long(sc + 0x38);
-    const bool at_z = vz < 0 ? !(z > Long(fam + 0x90)) : !(z < Long(fam + 0x90));
+    const std::int32_t z = sc->z;
+    const bool at_z = vz < 0 ? !(z > fam->target_z) : !(z < fam->target_z);
     if (!(at_x && at_z)) return 1;
-    SetLong(sc + 0x34, tx);
-    SetLong(Sc() + 0x38, Long(Fam() + 0x90));
-    SetLong(Sc() + 0xC, vx);
-    SetLong(Sc() + 0x10, vz);
-    SetLong(Sc() + 0x1C, 0);
-    SetLong(Sc() + 0x18, 0);
+    sc->x = tx;
+    SetLong(Sc() + 0x38, Active()->target_z);
+    Cur()->step_x = vx;
+    Cur()->step_z = vz;
+    Cur()->accel_z = 0;
+    Cur()->accel_x = 0;
     return 0;
 }
 
@@ -739,7 +747,7 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
 // As the original has it: the byte is unchecked - 2 and 3 reach op 87's
 // states (the next table); past them the words are not code (ours aborts).
 extern "C" void __cdecl MoveCmd_Op88(void) {
-    reinterpret_cast<void (__cdecl*)()>(CodeAt(at::kOp88States, Sc()[4], "MoveCmd_Op88"))();
+    reinterpret_cast<void (__cdecl*)()>(CodeAt(MoveCmd_Op88States_addr, Sc()[4], "MoveCmd_Op88"))();
 }
 
 // original 0x5794F0: op 88's state 0 - a tint record from Sprite_SetTint(the
@@ -749,12 +757,12 @@ extern "C" void __cdecl MoveCmd_Op88(void) {
 extern "C" void __cdecl MoveCmd_Op88Start(void) {
     const unsigned char n = SH_CALL(Sprite_SetTint)(Sc(), 0, 0, 0, 1);
     Fam()[0x9F] = n;
-    Sc()[0] |= 0x20;
-    Sc()[0x5F] = 0xC0;
-    Sc()[0x5E] = 0xC0;
-    Sc()[0x5D] = 0xC0;
-    Sc()[0x5C] = 1;
-    SetWord(Fam() + 0x8A, Word(Fam() + 0x8A) - 1u);
+    Cur()->flags |= 0x20;
+    Cur()->shade[2] = 0xC0;
+    Cur()->shade[1] = 0xC0;
+    Cur()->shade[0] = 0xC0;
+    Cur()->draw_mode = 1;
+    Active()->script_position = Active()->script_position - 1u;
     Sc()[4] = 1;
 }
 
@@ -766,14 +774,14 @@ extern "C" void __cdecl MoveCmd_Op88Start(void) {
 extern "C" void __cdecl MoveCmd_Op88Fade(void) {
     for (unsigned c = 0x5D; c <= 0x5F; ++c)
         if (Sc()[c] != 0x80) Sc()[c] = static_cast<unsigned char>(Sc()[c] - 4);
-    unsigned char* const sc = Sc();
-    if (sc[0x5D] == 0x80 && sc[0x5E] == 0x80 && sc[0x5F] == 0x80) {
+    records::SpriteObject* const sc = Cur();
+    if (sc->shade[0] == 0x80 && sc->shade[1] == 0x80 && sc->shade[2] == 0x80) {
         SH_CALL(Tint_Release)(Fam()[0x9F]);
-        Sc()[0] |= 0x40;
+        Cur()->flags |= 0x40;
         Sc()[4] = 0;
         return;
     }
-    SetWord(Fam() + 0x8A, Word(Fam() + 0x8A) - 1u);
+    Active()->script_position = Active()->script_position - 1u;
 }
 
 // original 0x5795F0: op 87 (MoveScript_Group8 0x5788F5): Sprite_Current +4
@@ -781,7 +789,7 @@ extern "C" void __cdecl MoveCmd_Op88Fade(void) {
 // As the original has it: the byte is unchecked; past 1 the words are
 // EventScript_OpLengths' bytes, not code (ours aborts).
 extern "C" void __cdecl MoveCmd_Op87(void) {
-    reinterpret_cast<void (__cdecl*)()>(CodeAt(at::kOp87States, Sc()[4], "MoveCmd_Op87"))();
+    reinterpret_cast<void (__cdecl*)()>(CodeAt(MoveCmd_Op87States_addr, Sc()[4], "MoveCmd_Op87"))();
 }
 
 // original 0x579610: op 87's state 0 - the tint record kept as op 88's, the
@@ -790,14 +798,14 @@ extern "C" void __cdecl MoveCmd_Op87(void) {
 extern "C" void __cdecl MoveCmd_Op87Start(void) {
     const unsigned char n = SH_CALL(Sprite_SetTint)(Sc(), 0, 0, 0, 1);
     Fam()[0x9F] = n;
-    Sc()[0] |= 0x20;
-    Sc()[0] &= 0xBF;
-    Sc()[0x5C] = 1;
-    Sc()[0x5F] = 0x80;
-    Sc()[0x5E] = 0x80;
-    Sc()[0x5D] = 0x80;
+    Cur()->flags |= 0x20;
+    Cur()->flags &= 0xBF;
+    Cur()->draw_mode = 1;
+    Cur()->shade[2] = 0x80;
+    Cur()->shade[1] = 0x80;
+    Cur()->shade[0] = 0x80;
     Sc()[4] = 1;
-    SetWord(Fam() + 0x8A, Word(Fam() + 0x8A) - 1u);
+    Active()->script_position = Active()->script_position - 1u;
 }
 
 // original 0x579690: op 87's state 1 - each colour byte below 0xC0 as a
@@ -806,18 +814,18 @@ extern "C" void __cdecl MoveCmd_Op87Start(void) {
 extern "C" void __cdecl MoveCmd_Op87Fade(void) {
     for (unsigned c = 0x5D; c <= 0x5F; ++c)
         if (Sb(Sc()[c]) < Sb(0xC0)) Sc()[c] = static_cast<unsigned char>(Sc()[c] + 4);
-    unsigned char* const sc = Sc();
-    if (sc[0x5D] == 0xC0 && sc[0x5E] == 0xC0 && sc[0x5F] == 0xC0) {
+    records::SpriteObject* const sc = Cur();
+    if (sc->shade[0] == 0xC0 && sc->shade[1] == 0xC0 && sc->shade[2] == 0xC0) {
         SH_CALL(Tint_Release)(Fam()[0x9F]);
-        Sc()[0] &= 0xDF;
-        Sc()[0x5C] = 0;
-        Sc()[0x5F] = 0;
-        Sc()[0x5E] = 0;
-        Sc()[0x5D] = 0;
+        Cur()->flags &= 0xDF;
+        Cur()->draw_mode = 0;
+        Cur()->shade[2] = 0;
+        Cur()->shade[1] = 0;
+        Cur()->shade[0] = 0;
         Sc()[4] = 0;
         return;
     }
-    SetWord(Fam() + 0x8A, Word(Fam() + 0x8A) - 1u);
+    Active()->script_position = Active()->script_position - 1u;
 }
 
 // original 0x57C8E0: op E9 (MoveScript_GroupE 0x5775B9; the bosses' end moves
@@ -830,7 +838,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9(unsigned char* object, signed char
                                               unsigned short d, unsigned char e, unsigned char f) {
     using State = unsigned char (__cdecl*)(unsigned char*, signed char, signed char, unsigned short, unsigned short,
                                            unsigned char, unsigned char);
-    return reinterpret_cast<State>(CodeAt(at::kOpE9States, Sc()[4], "MoveCmd_OpE9"))(object, a, b, c, d, e, f);
+    return reinterpret_cast<State>(CodeAt(MoveCmd_OpE9States_addr, Sc()[4], "MoveCmd_OpE9"))(object, a, b, c, d, e, f);
 }
 
 namespace {
@@ -857,7 +865,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Start(unsigned char* object, signed
                                                    unsigned short, unsigned char, unsigned char) {
     const unsigned char speed = Field_MoveSpeeds[object[4]];
     if (speed == 0) return 0;
-    Sc()[9] = 0;
+    Cur()->step_frames = 0;
     const std::int32_t sa = a, sb = b;
     const std::int32_t ma = sa < 0 ? -sa : sa, mb = sb < 0 ? -sb : sb;
     const auto steps = static_cast<unsigned char>(ma < mb ? mb : ma);
@@ -873,15 +881,15 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Start(unsigned char* object, signed
         return 1;
     }
     if (steps == 0) {
-        SetLong(Sc() + 0x10, 0);
-        SetLong(Sc() + 0xC, 0);
+        Cur()->step_z = 0;
+        Cur()->step_x = 0;
         Sc()[4] = 1;
         return 1;
     }
-    unsigned char* sc = Sc();
-    SetLong(sc + 0xC, Idiv(static_cast<std::int32_t>(static_cast<U>(sa) << 15), sc[0xA] * steps, "MoveCmd_OpE9Start"));
-    sc = Sc();
-    SetLong(sc + 0x10, Idiv(static_cast<std::int32_t>(static_cast<U>(sb) << 15), sc[0xA] * steps, "MoveCmd_OpE9Start"));
+    records::SpriteObject* sc = Cur();
+    sc->step_x = Idiv(static_cast<std::int32_t>(static_cast<U>(sa) << 15), Bytes(sc)[0xA] * steps, "MoveCmd_OpE9Start");
+    sc = Cur();
+    sc->step_z = Idiv(static_cast<std::int32_t>(static_cast<U>(sb) << 15), Bytes(sc)[0xA] * steps, "MoveCmd_OpE9Start");
     Sc()[4] = 1;
     return 1;
 }
@@ -902,30 +910,30 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Arc(unsigned char* object, signed c
     const auto add = [](unsigned char* to, std::int32_t by) {
         SetLong(to, static_cast<std::int32_t>(static_cast<U>(Long(to)) + static_cast<U>(by)));
     };
-    add(Sc() + 0x34, Long(Sc() + 0xC));
-    add(Sc() + 0x38, Long(Sc() + 0x10));
-    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Long(Sc() + 0x14) >> 8));
+    add(Sc() + 0x34, Cur()->step_x);
+    add(Sc() + 0x38, Cur()->step_z);
+    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Cur()->step_y >> 8));
     const std::int32_t rise = Long(Sc() + 0x14);
-    SetLong(Sc() + 0x14, static_cast<std::int32_t>(static_cast<U>(static_cast<short>(d)) + static_cast<U>(rise)));
+    Cur()->step_y = static_cast<std::int32_t>(static_cast<U>(static_cast<short>(d)) + static_cast<U>(rise));
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(Sc() + 0x34), Long(Sc() + 0x38));
-    unsigned char* sc = Sc();
-    if (Long(sc + 0x14) < 0 && S16(static_cast<U>(ground)) > S16(Word(sc + 0x3E))) {
-        SetWord(sc + 0x3E, static_cast<U>(ground));
+    const long ground = SH_CALL(AreaMap_Elevation)(Cur()->x, Cur()->z);
+    records::SpriteObject* sc = Cur();
+    if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(Word(Bytes(sc) + 0x3E))) {
+        SetWord(Bytes(sc) + 0x3E, static_cast<U>(ground));
         if (f & 2) {
             Sc()[4] = 0;
             return 0;
         }
-        sc = Sc();
+        sc = Cur();
     }
-    if (!(Long(sc + 0x14) > 0) && !(rise < 0) && e != 0xFF) {
-        if (sc[6] != 6) sc[0x2A] = f & 1;
+    if (!(sc->step_y > 0) && !(rise < 0) && e != 0xFF) {
+        if (sc->type != 6) sc->pose = f & 1;
         SH_CALL(Sprite_EnsureAnimation)(e);
-        sc = Sc();
+        sc = Cur();
     }
-    if (sc[0xA] == 0) {
-        if (sc[0xB] != 0) {
-            sc[0xA] = StepFrames(object, "MoveCmd_OpE9Arc");
+    if (Bytes(sc)[0xA] == 0) {
+        if (Bytes(sc)[0xB] != 0) {
+            Bytes(sc)[0xA] = StepFrames(object, "MoveCmd_OpE9Arc");
             Sc()[0xB] = static_cast<unsigned char>(Sc()[0xB] - 1);
             SH_CALL(Party_ApplyRecord)(object);
             return 1;
@@ -946,29 +954,29 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Arc(unsigned char* object, signed c
 // else one more frame, al 1.
 extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed char, signed char, unsigned short,
                                                    unsigned short d, unsigned char, unsigned char f) {
-    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Long(Sc() + 0x14) >> 8));
-    SetLong(Sc() + 0x14, static_cast<std::int32_t>(static_cast<U>(Long(Sc() + 0x14)) + static_cast<U>(static_cast<short>(d))));
+    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Cur()->step_y >> 8));
+    Cur()->step_y = static_cast<std::int32_t>(static_cast<U>(Cur()->step_y) + static_cast<U>(static_cast<short>(d)));
     SH_CALL(MapView_SetElevation)(Word(Sprite_Kind2 + 0x3E));
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
     const long ground = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
-    unsigned char* sc = Sc();
-    if (Long(sc + 0x14) < 0 && S16(static_cast<U>(ground)) > S16(Word(sc + 0x3E))) {
-        SetWord(sc + 0x3E, static_cast<U>(ground));
+    records::SpriteObject* sc = Cur();
+    if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(Word(Bytes(sc) + 0x3E))) {
+        SetWord(Bytes(sc) + 0x3E, static_cast<U>(ground));
         SH_CALL(MapView_SetElevation)(Word(Sc() + 0x3E));
         if (f & 2) Sc()[4] = 0;
-        sc = Sc();
+        sc = Cur();
     }
-    if (sc[0xA] != 0) return 1;
-    if (sc[0xB] != 0) {
-        sc[0xA] = StepFrames(object, "MoveCmd_OpE9Kind2");
+    if (Bytes(sc)[0xA] != 0) return 1;
+    if (Bytes(sc)[0xB] != 0) {
+        Bytes(sc)[0xA] = StepFrames(object, "MoveCmd_OpE9Kind2");
         Sc()[0xB] = static_cast<unsigned char>(Sc()[0xB] - 1);
         return 1;
     }
-    if (S16(static_cast<U>(ground)) < S16(Word(sc + 0x3E))) {
-        sc[0xA] = 1;
+    if (S16(static_cast<U>(ground)) < S16(Word(Bytes(sc) + 0x3E))) {
+        Bytes(sc)[0xA] = 1;
         return 1;
     }
-    SetLong(sc + 0x34, Field_Kind2X);
+    sc->x = Field_Kind2X;
     SetLong(Sc() + 0x38, Field_Kind2Z);
     SetWord(Sc() + 0x3E, static_cast<U>(ground));
     SH_CALL(MapView_SetElevation)(Word(Sc() + 0x3E));
@@ -981,9 +989,9 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed
 // the ground, state 0 and al 0; else al 1.
 extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, signed char, unsigned short, unsigned short d,
                                                   unsigned char, unsigned char) {
-    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Long(Sc() + 0x14) >> 8));
-    SetLong(Sc() + 0x14, static_cast<std::int32_t>(static_cast<U>(Long(Sc() + 0x14)) + static_cast<U>(static_cast<short>(d))));
-    const long ground = SH_CALL(AreaMap_Elevation)(Long(Sc() + 0x34), Long(Sc() + 0x38));
+    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Cur()->step_y >> 8));
+    Cur()->step_y = static_cast<std::int32_t>(static_cast<U>(Cur()->step_y) + static_cast<U>(static_cast<short>(d)));
+    const long ground = SH_CALL(AreaMap_Elevation)(Cur()->x, Cur()->z);
     unsigned char* const sc = Sc();
     if (S16(static_cast<U>(ground)) > S16(Word(sc + 0x3E))) {
         SetWord(sc + 0x3E, static_cast<U>(ground));
@@ -997,18 +1005,18 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, s
 // Scena06_LeapAir): x and z each plus its velocity when that is above 0, then
 // rounded down to the half unit (& 0xFFFF8000).
 extern "C" void __cdecl MoveCmd_OpDB(void) {
-    unsigned char* sc = Sc();
-    if (Long(sc + 0xC) > 0) {
-        SetLong(sc + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(sc + 0x34)) + static_cast<U>(Long(sc + 0xC))));
-        sc = Sc();
+    records::SpriteObject* sc = Cur();
+    if (sc->step_x > 0) {
+        sc->x = static_cast<std::int32_t>(static_cast<U>(sc->x) + static_cast<U>(sc->step_x));
+        sc = Cur();
     }
-    SetLong(sc + 0x34, static_cast<std::int32_t>(static_cast<U>(Long(sc + 0x34)) & 0xFFFF8000u));
-    sc = Sc();
-    if (Long(sc + 0x10) > 0) {
-        SetLong(sc + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(sc + 0x38)) + static_cast<U>(Long(sc + 0x10))));
-        sc = Sc();
+    sc->x = static_cast<std::int32_t>(static_cast<U>(sc->x) & 0xFFFF8000u);
+    sc = Cur();
+    if (sc->step_z > 0) {
+        sc->z = static_cast<std::int32_t>(static_cast<U>(sc->z) + static_cast<U>(sc->step_z));
+        sc = Cur();
     }
-    SetLong(sc + 0x38, static_cast<std::int32_t>(static_cast<U>(Long(sc + 0x38)) & 0xFFFF8000u));
+    sc->z = static_cast<std::int32_t>(static_cast<U>(sc->z) & 0xFFFF8000u);
 }
 
 // =============================================================================
@@ -1048,21 +1056,21 @@ unsigned char* Claim() {
 // x, z into the sprite and into object +0x8C / +0x90 (+0x94 0), by the count
 // read again each time, as EventOp_1x's.
 void PlaceXZ(std::int32_t x, std::int32_t z) {
-    SetLong(Sc() + 0x34, x);
-    SetLong(Object(Count()) + 0x8C, Long(Sc() + 0x34));
-    SetLong(Sc() + 0x38, z);
-    SetLong(Object(Count()) + 0x90, Long(Sc() + 0x38));
-    SetLong(Object(Count()) + 0x94, 0);
+    Cur()->x = x;
+    SetLong(Object(Count()) + 0x8C, Cur()->x);
+    Cur()->z = z;
+    SetLong(Object(Count()) + 0x90, Cur()->z);
+    Placed()->best_score = 0;
 }
 void Ground() {
-    unsigned char* const sc = Sc();
-    const long e = SH_CALL(AreaMap_Elevation)(Long(sc + 0x34), Long(sc + 0x38));
+    records::SpriteObject* const sc = Cur();
+    const long e = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
     SetWord(Sc() + 0x3E, static_cast<U>(e));
 }
 void Colour(unsigned char v) {
-    Sc()[0x5D] = v;
-    Sc()[0x5F] = v;
-    Sc()[0x5E] = v;
+    Cur()->shade[0] = v;
+    Cur()->shade[2] = v;
+    Cur()->shade[1] = v;
 }
 
 }  // namespace
@@ -1079,25 +1087,25 @@ extern "C" void __cdecl EventOp_3x(const unsigned char* op) {
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(Bank());
-    Sc()[0] = 1;
+    Cur()->flags = 1;
     PlaceXZ(Coordinate(op[6], op[7]), Coordinate(op[8], op[9]));
     Ground();
-    Sc()[6] = op[0] >> 4;
-    Sc()[8] = op[0] & 0xF;
-    Sc()[1] = op[0xA];
+    Cur()->type = op[0] >> 4;
+    Cur()->direction = op[0] & 0xF;
+    Cur()->state = op[0xA];
     Sc()[2] = op[0xC];
     SetLong(Sc() + 0x70, op[0x11]);
-    unsigned char* const n = Object(Count());
-    SetWord(n + 0x98, op[4]);
-    SetWord(n + 0x9A, op[5]);
-    SetWord(n + 0x88, static_cast<unsigned>(op[0xE]) << 8 | op[0xF]);
-    n[0x83] = op[0x10];
-    n[0x84] = op[0xB];
-    n[0xA0] = 0x7F;
+    records::SpriteObject* const n = Placed();
+    n->half_w = op[4];
+    n->half_d = op[5];
+    n->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
+    n->area_script = op[0x10];
+    n->speed = op[0xB];
+    n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 0xD);
-    if (op[3] & 0x80) Sc()[0] |= 0x20;
+    if (op[3] & 0x80) Cur()->flags |= 0x20;
     Colour(0);
-    Sc()[0x5C] = op[3] & 0xF;
+    Cur()->draw_mode = op[3] & 0xF;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1110,23 +1118,23 @@ extern "C" void __cdecl EventOp_4x(const unsigned char* op) {
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(Bank());
-    Sc()[0] = 1;
+    Cur()->flags = 1;
     PlaceXZ(Coordinate(op[6], op[7]), Coordinate(op[8], op[9]));
     Ground();
-    Sc()[1] = op[0xA];
+    Cur()->state = op[0xA];
     Sc()[2] = op[0xC];
-    Sc()[8] = op[0] & 0xF;
-    Sc()[6] = op[0] >> 4;
-    unsigned char* const n = Object(Count());
-    SetWord(n + 0x98, op[4]);
-    SetWord(n + 0x9A, op[5]);
-    SetWord(n + 0x88, static_cast<unsigned>(op[0xE]) << 8 | op[0xF]);
-    n[0x84] = op[0xB];
-    n[0xA0] = op[0x10];
+    Cur()->direction = op[0] & 0xF;
+    Cur()->type = op[0] >> 4;
+    records::SpriteObject* const n = Placed();
+    n->half_w = op[4];
+    n->half_d = op[5];
+    n->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
+    n->speed = op[0xB];
+    n->handler = op[0x10];
     SH_CALL(EventObj_SetFlags)(op + 0xD);
-    if (op[3] & 0x80) Sc()[0] |= 0x20;
+    if (op[3] & 0x80) Cur()->flags |= 0x20;
     Colour(0);
-    Sc()[0x5C] = op[3] & 0xF;
+    Cur()->draw_mode = op[3] & 0xF;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1141,24 +1149,24 @@ extern "C" void __cdecl EventOp_7x(const unsigned char* op) {
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(Bank());
-    Sc()[0] = 1;
+    Cur()->flags = 1;
     PlaceXZ(Coordinate(op[5], op[6]), Coordinate(op[7], op[8]));
     Ground();
-    Sc()[1] = op[9];
+    Cur()->state = op[9];
     Sc()[2] = op[0xB];
-    Sc()[8] = op[0] & 0xF;
-    Sc()[6] = op[0] >> 4;
-    unsigned char* const n = Object(Count());
-    SetWord(n + 0x98, op[3]);
-    SetWord(n + 0x9A, op[4]);
-    SetWord(n + 0x88, static_cast<unsigned>(op[0xD]) << 8 | op[0xE]);
-    n[0x83] = op[0xF];
-    n[0x84] = op[0xA];
-    n[0x9E] = op[0x10];
-    n[0xA0] = 0x7F;
+    Cur()->direction = op[0] & 0xF;
+    Cur()->type = op[0] >> 4;
+    records::SpriteObject* const n = Placed();
+    n->half_w = op[3];
+    n->half_d = op[4];
+    n->trigger_word = static_cast<unsigned>(op[0xD]) << 8 | op[0xE];
+    n->area_script = op[0xF];
+    n->speed = op[0xA];
+    n->tag = op[0x10];
+    n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 0xC);
     Colour(0);
-    Sc()[0x5C] = 2;
+    Cur()->draw_mode = 2;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1174,23 +1182,23 @@ extern "C" void __cdecl EventOp_6x(const unsigned char* op) {
     Claim();
     SH_CALL(EventObj_Reset)();
     SH_CALL(Field_MemberSprite)(op[1], op[0xF]);
-    Sc()[0] = 1;
+    Cur()->flags = 1;
     PlaceXZ(Coordinate(op[4], op[5]), Coordinate(op[6], op[7]));
     Ground();
-    Sc()[1] = op[8];
+    Cur()->state = op[8];
     Sc()[2] = op[0xA];
-    Sc()[8] = op[0] & 0xF;
-    Sc()[6] = op[0] >> 4;
-    unsigned char* const n = Object(Count());
-    SetWord(n + 0x98, op[2]);
-    SetWord(n + 0x9A, op[3]);
-    SetWord(n + 0x88, static_cast<unsigned>(op[0xC]) << 8 | op[0xD]);
-    n[0x83] = op[0xE];
-    n[0x84] = op[9];
-    n[0xA0] = 0x7F;
+    Cur()->direction = op[0] & 0xF;
+    Cur()->type = op[0] >> 4;
+    records::SpriteObject* const n = Placed();
+    n->half_w = op[2];
+    n->half_d = op[3];
+    n->trigger_word = static_cast<unsigned>(op[0xC]) << 8 | op[0xD];
+    n->area_script = op[0xE];
+    n->speed = op[9];
+    n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 0xB);
     Colour(0);
-    Sc()[0x5C] = 2;
+    Cur()->draw_mode = 2;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1207,36 +1215,36 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     if (Count() >= 30) return;
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     const unsigned char* const entry = PtrAt(descriptor + 8) + op[9] * 8u;
-    unsigned char* const o = Claim();
-    o[8] = op[0] & 0xF;
+    records::SpriteObject* const o = reinterpret_cast<records::SpriteObject*>(Claim());
+    o->direction = op[0] & 0xF;
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_InitFromEntry)(const_cast<unsigned char*>(entry));
     SH_CALL(PartyRecord_Clear)(4);
     SetLong(Sc() + 0x34, Coordinate(op[1], op[2]));
     SetLong(Sc() + 0x38, Coordinate(op[3], op[4]));
     Ground();
-    Sc()[1] = op[5];
+    Cur()->state = op[5];
     Sc()[2] = op[7];
-    Sc()[6] = op[0] >> 4;
+    Cur()->type = op[0] >> 4;
     SetLong(Sc() + 0x20, 0);
-    SetLong(Sc() + 0x1C, 0);
-    SetLong(Sc() + 0x18, 0);
+    Cur()->accel_z = 0;
+    Cur()->accel_x = 0;
     {
         unsigned char* const sc = Sc();
         sc[0x70] = PtrAt(sc + 0x54)[2];
     }
-    unsigned char* const n = Object(Count());
-    SetLong(n + 0x94, 0);
-    SetLong(n + 0x90, 0);
-    SetLong(n + 0x8C, 0);
-    n[0x83] = op[0xA];
-    n[0x84] = op[6];
-    SetWord(n + 0x88, static_cast<unsigned>(op[0xC]) << 8 | op[0xD]);
-    n[0xA0] = 0x7F;
+    records::SpriteObject* const n = Placed();
+    n->best_score = 0;
+    n->target_z = 0;
+    n->target_x = 0;
+    n->area_script = op[0xA];
+    n->speed = op[6];
+    n->trigger_word = static_cast<unsigned>(op[0xC]) << 8 | op[0xD];
+    n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 8);
     Colour(0x80);
-    Sc()[0x5C] = 2;
-    if (Object(Count())[0x84] == 0) {
+    Cur()->draw_mode = 2;
+    if (Placed()->speed == 0) {
         unsigned char* sc = Sc();
         SH_CALL(AreaMap_SetByte)(Word(sc + 0x36), Word(sc + 0x3A), 0x10);
         sc = Sc();
@@ -1278,7 +1286,7 @@ extern "C" unsigned char __cdecl EventCond_Status1(const unsigned char** at) {
 }
 // original 0x57C250: condition 11 - the leader's member id (ObjTrio +0x89)
 // equals it.
-extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { return ObjTrio[0x89] == **at; }
+extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { return Leader()->char_id == **at; }
 // original 0x57C270: condition 12 - story flag `operand` (Flags_Test of
 // 0x904030); the answer is Flags_Test's eax.
 extern "C" unsigned char __cdecl EventCond_StoryFlag(const unsigned char** at) {
@@ -1300,7 +1308,7 @@ extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { retu
 // original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC): bit 6
 // of the three party objects' first byte cleared - ObjTrio_SetBit40's inverse.
 extern "C" void __cdecl ObjTrio_ClearBit40(void) {
-    ObjTrio[0] &= 0xBF;
+    Leader()->flags &= 0xBF;
     ObjTrio[0x14C] &= 0xBF;
     ObjTrio[0x298] &= 0xBF;
 }

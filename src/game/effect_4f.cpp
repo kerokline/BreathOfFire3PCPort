@@ -50,6 +50,7 @@
 #include "game/effect_4f_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -67,6 +68,12 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -153,11 +160,11 @@ bool CountDown() {
     return s[9] == 0;
 }
 
-unsigned char* Drop(U i) { return At(at::kDrops + i * at::kDropStride); }
+unsigned char* Drop(U i) { return At(EffectKind30_Shards_addr + i * at::kDropStride); }
 unsigned char* Source(U i) { return At(at::kSources + i * at::kSourceStride); }
 unsigned char* Bar(U i) { return At(at::kBars + i * at::kBarStride); }
-unsigned char* Spark(U i) { return At(at::kSparks + i * at::kSparkStride); }
-unsigned char* Shard(U i) { return At(at::kShards + i * at::kShardStride); }
+unsigned char* Spark(U i) { return At(EffectKind30_Shards_addr + i * at::kSparkStride); }
+unsigned char* Shard(U i) { return At(EffectKind30_Shards_addr + 0xc0 + i * at::kShardStride); }
 
 // kind 0xB9's glow: group E4E's 0x4901D0 (point, size word, colour byte), raw
 // until it merges.
@@ -212,9 +219,9 @@ extern "C" void __cdecl EffectKindAB_Run(void) {
 // point +0x34 / +0x38 / +0x3C the leader's (ObjTrio +0x34..); the drops cleared
 // (EffectKind81_ClearDrops), the eight sources placed; +9 = 0x78; +1 up.
 extern "C" void __cdecl EffectKindAB_Start(void) {
-    SetUL(S() + 0x34, UL(at::kLeaderPoint));
-    SetUL(S() + 0x38, UL(at::kLeaderPoint + 4));
-    SetUL(S() + 0x3C, UL(at::kLeaderPoint + 8));
+    Store<U>(CurFx()->x, UL(at::kLeaderPoint));
+    Store<U>(CurFx()->z, UL(at::kLeaderPoint + 4));
+    Store<U>(CurFx()->height, UL(at::kLeaderPoint + 8));
     SH_CALL(EffectKind81_ClearDrops)();
     SH_CALL(EffectKindAB_PlaceSources)();
     S()[9] = 0x78;
@@ -465,7 +472,8 @@ extern "C" void __cdecl EffectKindAE_Run(void) {
 // (EffectKindAE_Draw); +9 down, at 0 +9 = 4, +1 up.
 extern "C" void __cdecl EffectKindAE_Sink(void) {
     unsigned char* const s = S();
-    SetUL(s + 0x3C, UL(s + 0x3C) + 0xFF000000u);
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
+    so->height = static_cast<std::uint32_t>(so->height) + 0xFF000000u;
     SH_CALL(EffectKindAE_Draw)();
     if (!CountDown()) return;
     S()[9] = 4;
@@ -775,10 +783,10 @@ extern "C" void __cdecl EffectKindB1_Start(void) {
 // 0xF0, a word); past 0xF0 (an s16, read again): Sound_PlayEffect(0x203) unless
 // Field_Request is set, +1 = 2.
 extern "C" void __cdecl EffectKindB1_Sway(void) {
-    const U tilt = (Word(At(at::kTilt)) + 4u) & 0xFFFFu;
-    SetWord(At(at::kTilt), tilt);
+    const U tilt = (static_cast<std::uint16_t>(Camera_Angles[1]) + 4u) & 0xFFFFu;
+    Camera_Angles[1] = tilt;
     SH_CALL(MapView_SetElevation)(static_cast<int>((tilt + 0xF0u) & 0xFFFFu));
-    if (static_cast<std::int16_t>(Word(At(at::kTilt))) <= 0xF0) return;
+    if (Camera_Angles[1] <= 0xF0) return;
     if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x203);
     S()[1] = 2;
 }
@@ -787,10 +795,10 @@ extern "C" void __cdecl EffectKindB1_Sway(void) {
 // + 0xF0, a word); below -0xF0 (an s16, read again): Sound_PlayEffect(0x203)
 // unless Field_Request is set, +1 = 1.
 extern "C" void __cdecl EffectKindB1_SwayBack(void) {
-    const U tilt = (Word(At(at::kTilt)) + 0xFFFCu) & 0xFFFFu;
-    SetWord(At(at::kTilt), tilt);
+    const U tilt = (static_cast<std::uint16_t>(Camera_Angles[1]) + 0xFFFCu) & 0xFFFFu;
+    Camera_Angles[1] = tilt;
     SH_CALL(MapView_SetElevation)(static_cast<int>((tilt + 0xF0u) & 0xFFFFu));
-    if (static_cast<std::int16_t>(Word(At(at::kTilt))) >= -0xF0) return;
+    if (Camera_Angles[1] >= -0xF0) return;
     if (Field_Request == 0) SH_CALL(Sound_PlayEffect)(0x203);
     S()[1] = 1;
 }
@@ -840,9 +848,9 @@ extern "C" void __cdecl EffectKindB9_Rise(void) {
     S()[6] = 0;
     NextState();
     SH_CALL(EffectKind64_ClearSparks)();
-    SetUL(S() + 0x34, UL(S() + 0x64));
-    SetUL(S() + 0x38, UL(S() + 0x68));
-    SetUL(S() + 0x3C, UL(S() + 0x6C));
+    CurFx()->x = UL(S() + 0x64);
+    CurFx()->z = UL(S() + 0x68);
+    CurFx()->height = UL(S() + 0x6C);
     for (U i = 0; i < at::kShardCount; ++i) SH_CALL(EffectKind64_InitShard)(Shard(i));
     SH_CALL(Sound_PlayEffect)(0x215);
 }
@@ -1015,12 +1023,13 @@ extern "C" void __cdecl EffectKindB9_SpawnSpark(void) {
         unsigned char* const k = Spark(i);
         if (k[0] != 0) continue;
         const unsigned char* const s = S();
+        auto* const so = reinterpret_cast<const records::EffectObject*>(s);
         k[0] = 1;
         k[1] = 0;
         k[2] = 0x10;
-        SetUL(k + 4, UL(s + 0x34));
-        SetUL(k + 8, UL(s + 0x38));
-        SetUL(k + 0xC, UL(s + 0x3C));
+        SetUL(k + 4, static_cast<std::uint32_t>(so->x));
+        SetUL(k + 8, static_cast<std::uint32_t>(so->z));
+        SetUL(k + 0xC, static_cast<std::uint32_t>(so->height));
         SetWord(k + 0x14, 0x100);
         k[0x16] = 0x40;
         k[0x17] = 0;

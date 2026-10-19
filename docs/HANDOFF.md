@@ -1,7 +1,7 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-17: `main` is `b5ee8bdd` (PRs #81 and #82 merged); the button unification round is
-done on `buttons/round`, its end on `buttons/round-end` - its PR is item 0 below)
+**Status:** IN PROGRESS (2026-10-19: `main` is `19180e63` (PRs #85..#92 merged); the typed-data round's stages A
+and B are done on `typed/b1`, its PR is item 0 below; stage C is staged)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -16,52 +16,47 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged since PR #43: the game's own code is
-all ours). `main` is `b5ee8bdd`: since `11e2cfe9` it took the ultrawide round (PR #60), the player install and the
-alpha releases (`v0.1.0-alpha.3`, signed binaries: PRs #72, #74), the PSX-only fixes of 2026-10-16 (PR #73: D254,
-D255 / DIV-0129), the PSP donor's names (PR #76, issue #75), the PSX-only player reports #77..#79 (PR #80: D282,
-D306, D307 / DIV-0130), `install/recipe-version` (PR #81, below, with `v0.1.0-alpha.4`'s notes) and the fishing
-panel's duck (PR #82: DIV-0132 / D308, not yet heard by the owner).
-**The button unification round** (`buttons/round`, every group merged 2026-10-17; the end on `buttons/round-end`,
-[`button-unification-round.md`](button-unification-round.md)): one table, `σ`, from the save's Config decides every
-button the game names or tests - menus confirm and cancel on the Speak and Action lines (DIV-0133), the starting
-Config by source (DIV-0134), the world map's legend as glyphs (DIV-0135), the fishing labels (DIV-0136), the dock's
-legend (DIV-0137), the item lists' corner (DIV-0138), the hard-coded tests (DIV-0139), the dialogue's button codes
-(DIV-0140) and PSP-EU's Config words (DIV-0141, D246); D312 and D313 fixed on the way, D314 / D315 (Capcom's, PSP-EU)
-written down; validated identity and swapped on four install kinds ([`button-routes.md`](button-routes.md) 9..9.2).
-**`install/recipe-version`** (PR #81) added:
-- **stale installs judged piece by piece** (HANDOFF item 11 of before; [`install-staleness.md`](install-staleness.md)):
-  each cache piece records what it was *measured* to read - the functions of `tools/` that ran, the module values
-  they name, the recipes and fixtures opened (`tools/build_reuse.py` `Step`); `importer.py stale` judges them
-  against the release; the launcher asks once per release and setup rebuilds only the stale pieces (a no-change
-  setup 270 s -> 62 s);
-- **the install-gap census** ([`install-gap-census.md`](install-gap-census.md)): every `recipes/exe-gaps.tsv` row
-  given a status, the non-exe gaps by install kind, and a byte scan of each one-source image against the PC's
-  `.data` (`tools/exe_scan.py`, 6.1);
-- **its P1 fixes that need no owner**: six draw formats and marks the engine now holds (D310, D278), the hi-lo
-  payouts (D311), the Meteor Strike lifts and area 112's link list (D267, D268: a `twin` takes back another file's
-  differing byte) - DIV-0101 amended;
-- **the PSP-only title's logo** cut where the PSP's art lies (D256, DIV-0131, [`psp-title-framing.md`](psp-title-framing.md)).
-**The install-gap round** (`install-gap/round` `0baf26f7`, 2026-10-18, unpushed; item 4) has placed most of the
-census's remainder: every disc-built image has 36 to 44 percent fewer `gap` rows, and eight of the ten rows read in
-play while zero are fixed. The live end batch waits on a Defender exclusion.
+all ours). `main` is `19180e63`: since `b5ee8bdd` it took the button unification round (PR #85, DIV-0133..0141), the
+event battles' own music on disc-only installs (PR #86, D316), sprites flagged for capture drawn into VRAM, which
+restores Amalgam's melt (PR #87, D317 / DIV-0142), the away days' staging docs (PR #89), Ryu's dream silent as on the
+PlayStation (PR #90, D318 / DIV-0143), the install-gap round (PR #91: disc-built images from the player's discs, the
+read watch, the live end batch, D279 and D321) and the jukebox's eleven recorded streams (PR #92).
+**The typed-data round** (IDEAS I44 stages 1 and 2, [`typed-data-round.md`](typed-data-round.md); `typed/b1`,
+unpushed until its PR): stage A typed the globals (`symbols.toml`, 488 new `[[data]]` entries), the nine record
+families (`src/game/records.h`) and the census (`tools/data_census.py`, a CI ratchet); each part was re-derived
+independently and corrected. Stage B converted the sites: every global site by `tools/typed_convert.py` (B0), the
+record sites by seven file groups (B1), then a family audit that put 13 wrongly typed pointers back to raw. Raw data
+sites went from 50,943 to 27,394, and **the machine code is identical to `origin/main`'s**, object by object
+(`tools/codegen_same.py`, the round's proof). Stage C is staged in
+[`typed-data-stage-c.md`](typed-data-stage-c.md). The same branch carries the install-gap round's second pairing pass
+([`install-gap-pairs.md`](install-gap-pairs.md) 8). **The quicksave round** ([`quicksave-round.md`](quicksave-round.md))
+is staged and not built; the owner is taking it in a separate session (2026-10-19).
 
 ## Pick up here
 
-0. **Open, review and merge the button round's PR** from `buttons/round-end` (its description drafted outside the
-   tree, `C:\Users\kerok\b_end\pr_body.md`). Every check and the headless self-tests are in it. **Owed, the
-   owner:** (a) record the minigame starts from RC's placed saves, `C:\Users\kerok\b_rc\saves\` (`chop8`,
-   `well68`, `rope75`, `tower112`, `ram121`, `dock128`, `crane135`: the six minigames and the dock's parts menu;
-   [`button-routes.md`](button-routes.md) 5), with `BOF3X_RECORD`, then the identity and swapped runs of each - the
-   only live evidence DIV-0137, DIV-0139's minigame tests and DIV-0140 lack; (b) look at the contact sheets,
-   `C:\Users\kerok\b_rc\sheets_round\` (world map, fishing, Config, items; identity beside swapped, a row per
-   install kind); (c) `Scena19_Run0`'s R1, left as it is, undecided ([`button-tests.md`](button-tests.md) 2.4).
-   [`owner-review.md`](owner-review.md) "2026-10-17, the button unification round" has the list.
-   **Still owed from PR #81, the owner's eye:** the launcher's stale-install prompt in a
-   real start (make a piece stale - a row of `recipes/exe-psp.tsv` in a source checkout - and start the launcher on
-   that home); the PSP-only title in play (captured at 4:3, 16:9, 21:9); D310's screens and the hi-lo payouts in
-   play. Every install built before this branch is judged stale once (no measured records), which rebuilds it
-   whole the first time. Scratch homes of this session: `C:\Users\kerok\rv` (PSX-US + PSP-EU), `rvp` (PSP-EU only),
-   the launcher folder `rvL`, the unpacked discs `D:\bof3x-discs` - all game-derived, outside the repo, removable.
+0. **The typed-data round's PR** from `typed/b1` (stages A and B, no behaviour change, no ledger entry; every
+   non-merge commit signed off, the group branches merged in). The CI's Python checks were run locally on the tip and
+   pass. Then **stage C** ([`typed-data-stage-c.md`](typed-data-stage-c.md)): C0 the consolidation first (one shared
+   header for the seven groups' view helpers and `Store()`, the converter's double-insertion bug, one left-raw list
+   regenerated from the tree), then C1 the types (a shared 0x80-byte sprite head, the audits' renames, views for
+   fields that change meaning, structs for the damage scratch block and the GPU packets), C2 the sites they unlock,
+   C3 the globals' follow-ups and a naming pass, C4 the `GameData` layout. **The method that held** (stage C's
+   section 1): `tools/codegen_same.py` against a baseline build after every batch, `0 differ`; after every typing
+   pass a read-only family audit by other agents, because the gate cannot see a pointer typed as the wrong struct;
+   build before calling anything done. After the PR merges, stage C's baseline is a build of the new `main` (B is
+   proved identical to `19180e63`, so the chain holds). Scratch of the round, outside the tree: the B1 brief and file
+   lists `C:\Users\kerok\b1\`, the verification and audit reports `C:\Users\kerok\v_typed\`, the pairing scratch
+   `C:\Users\kerok\v_pairs` and `g_pairs`; the worktrees are listed under "In flight".
+
+   **Owed from the button round (PR #85), the owner:** (a) record the minigame starts from RC's placed saves,
+   `C:\Users\kerok\b_rc\saves\` (`chop8`, `well68`, `rope75`, `tower112`, `ram121`, `dock128`, `crane135`: the six
+   minigames and the dock's parts menu; [`button-routes.md`](button-routes.md) 5), with `BOF3X_RECORD`, then the
+   identity and swapped runs of each - the only live evidence DIV-0137, DIV-0139's minigame tests and DIV-0140 lack;
+   (b) look at the contact sheets, `C:\Users\kerok\b_rc\sheets_round\`; (c) `Scena19_Run0`'s R1, left as it is,
+   undecided ([`button-tests.md`](button-tests.md) 2.4). [`owner-review.md`](owner-review.md) "2026-10-17, the button
+   unification round" has the list. **Still owed from PR #81, the owner's eye:** the launcher's stale-install prompt
+   in a real start; the PSP-only title in play (captured at 4:3, 16:9, 21:9); D310's screens and the hi-lo payouts in
+   play.
 
 1. **The owner's answers** ([`owner-review.md`](owner-review.md)): first "2026-10-14, the ultrawide round" - look at
    the faster slide (not yet seen), the 21:9 left message box, the terrain margin 167 at 21:9, two `dolphinBoss` plant
@@ -115,37 +110,33 @@ play while zero are fixed. The live end batch waits on a Defender exclusion.
      ([`install-gap-labels.md`](install-gap-labels.md)); D287 (the launcher's clipped lines); D289 fixed by the same round (the owner's
      confirmation of DIV-0064's amendment pending).
 
-4. **The install-gap round: merged on `install-gap/round` (`0baf26f7`), its end docs on `install-gap/end-docs`;
-   neither pushed, PR next** ([`install-gap-round.md`](install-gap-round.md), its status line). Stage A (RD, PB, OT,
-   TW, LA, RW) and stage B as run (PT, CW, FP) placed the census's P1 items 7 and 8, P2 items 11..13, the P4 rows
-   and most of P3's reach. The `gap` rows went from 104..125 per PSX build to 58..78, and from 92 / 93 per PSP build
-   to 54 / 52; the PC's non-zero bytes left fell from 797..1,474 to 311..865 (the census's 8.1, `exe_scan.py`
-   agreeing byte for byte). The new placement kinds are DIV-0101's amendment; also DIV-0103 (the PSP's screen
-   margins), DIV-0069 (D286's FR / DE headings) and DIV-0064 (D289, groups 20..23); D319 fixed, D320 open. Of RW's ten
-   rows read in play while zero, eight are fixed and two are the owner's. **Left:**
-   - **the live end batch** (staging 5 items 3 and 4: rebuild the A/B/C caches, the US attract under the gate, the
-     eleven hash routes against `cn_*_orig2`, the headless self-test per install kind, one capture per row that
-     draws). It needs the owner's Defender exclusion first, since every local launcher build is quarantined;
-   - **RW's watch re-run on the merged branch** ([`install-gap-reads.md`](install-gap-reads.md) 8). Then I43 step 4,
+4. **The install-gap round: merged as PR #91** ([`install-gap-round.md`](install-gap-round.md), its status line).
+   Stage A (RD, PB, OT, TW, LA, RW) and stage B (PT, CW, FP) placed the census's P1 items 7 and 8, P2 items 11..13,
+   the P4 rows and most of P3's reach: the `gap` rows went from 104..125 per PSX build to 58..78, and from 92 / 93 per
+   PSP build to 54 / 52. **Its live end batch ran 2026-10-18 evening** (that doc's 6): the self-tests pass on every
+   install kind, and the gate and the eleven routes show no game-state difference the round made. Defender stopped
+   none of its launcher copies (plain copies of `build/`); detections that evening were all another agent's. The
+   new placement kinds are DIV-0101's amendment; also DIV-0103, DIV-0069 and DIV-0064; D319 fixed, D320 open. **Left:**
+   - **RW's watch re-run on the merged code** ([`install-gap-reads.md`](install-gap-reads.md) 8). Then I43 step 4,
      `BOF3X_EXEIMAGE_STRICT=1` as the default, once no row read in play is still zero except the owner's two
-     (staging 5 item 6; a DIV-0101 amendment);
-   - **the unpaired rows** ([`install-gap-pairs.md`](install-gap-pairs.md) 5):
-     - the bosses: pair one boss kind's table by hand from `BattleEnemy_RunAll`'s twin;
-     - the OF-A areas and scenario rows: the area descriptor table's handlers as seeds for `order-align`;
-     - the rows under `find_imm`'s four-byte floor (`EffectKind75_States+0xC`, `BoneDanceShake_Counts`,
-       `GameMode3_Steps+0xC`);
-     - the `EffectKind18Sub*` rows whose twins' bytes differ;
-   - **the census's remaining NEEDS FIX items** ([`install-gap-census.md`](install-gap-census.md) 8.4..8.6):
-     - song 166 on the disc-only installs (D320, P2), the importer's 165 rule after a render;
-     - `CommuMusic_CloseSteps+0x68`'s glyphs;
-     - P3's tail as listed there.
+     (D266's title mark, the empty save slot; a DIV-0101 amendment);
+   - **the unpaired rows: a second pass ran 2026-10-19 on `typed/b1`** ([`install-gap-pairs.md`](install-gap-pairs.md)
+     8, independently re-derived): 385 new `psx` pairs and 125 `psx_overlay` fields; `BossDolphin_Sounds` and the
+     `Scena04` row place on every build, `BossGaist_Anims+0x2` and `BossTorch_Sounds` on psx-jp only (the twin's body
+     matches three functions in `BOSS035#16`; a `build_twins` tie-break is the follow-up). **The recipes were not
+     regenerated in the branch**: regenerate them after the PR merges (expect four new `immref` rows on psx-jp, two on
+     each other build). Still unplaced: `Area115_Directions`, `Area121_BandHeights`, `Area135_EffectKinds` (a run
+     offset by leading zeros, `Area141_CellEntries`' shape), `Scena02_EffectX`, `Scena03_Bob4` / `Bob2`,
+     `LinkedObjectD_Amounts`, and the five rows no code reads;
+   - the rows under `find_imm`'s four-byte floor (`EffectKind75_States+0xC`, `BoneDanceShake_Counts`,
+     `GameMode3_Steps+0xC`); the `EffectKind18Sub*` rows whose twins' bytes differ;
+   - **the census's remaining NEEDS FIX items** ([`install-gap-census.md`](install-gap-census.md) 8.4..8.6): song 166
+     on the disc-only installs (D320, P2), the importer's 165 rule after a render; `CommuMusic_CloseSteps+0x68`'s
+     glyphs; P3's tail as listed there.
 
-     The owner's new calls are in [`owner-review.md`](owner-review.md) "2026-10-18, the install-gap round".
+     The owner's calls are in [`owner-review.md`](owner-review.md) "2026-10-18, the install-gap round".
    Regenerate after any tool change (`psp_exe.py recipe`, `exe_tables.py recipe`, `exe_own.py measure`,
    `exe_tables.py gaps`, `exe_tables.py recipe`, the seven discs) and check with `tools/exe_scan.py`.
-   Also staged 2026-10-17, none launched: the quicksave round (save states behind F5 / F6 / F7, the owner's design)
-   in [`quicksave-round.md`](quicksave-round.md), and the typed-data round (I44's stages 1 and 2, no behaviour
-   change) in [`typed-data-round.md`](typed-data-round.md).
 
 5. **The follow-up round: disc-only and PSP polish** (not staged). Done: D254, D255, D256, D282. Still open: what
    is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6: 39 ranges, the
@@ -333,6 +324,15 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
+- **The typed-data round** (2026-10-19), all under `.claude/worktrees/`: `typed-b1` (`typed/b1`, the PR's branch),
+  `typed-integration` (`typed/integration`, stage A merged), `typed-baseline` (a detached `origin/main` `19180e63`
+  build: the gate's reference until stage C has its own; keep it), and the `agent-*` worktrees of the stage A, fix,
+  B0 and B1 agents (branches `typed/census`, `typed/records`, `typed/globals`, `pairs/unpaired`, their `-fix`
+  branches, `typed/b0-globals`, `typed/b1-<group>`, `typed/b1-audit-fix`): all in `typed/b1`; removable once the PR
+  merges. The `-fix` branches start from the originals with the commit trailer corrected (the originals named a
+  model that did not do the work); the originals are kept for comparison and are not in the PR.
+- **The install-gap round's worktrees** (`agent-*` on `install-gap/*`, and `scratchpad/coord` of session
+  `14ea0433`): merged in PR #91; removable.
 - **`wide/ultrawide-round`** (a worktree in session `6d500aac`'s scratchpad `uw/`): merged as PR #60. Its
   group branches `wide/ba`, `cf`, `dp`, `eb1`, `eb2`, `eb2b`, `eb3`, `fy`, `grab`, `ld`, `lr`, `pd`, `rn`, `rn2`, `sl`,
   `ss`, `st`, `st2`, `st3`, `uc`, `uc2`, `uw` (most with a worktree under `.claude/worktrees/`): all merged;

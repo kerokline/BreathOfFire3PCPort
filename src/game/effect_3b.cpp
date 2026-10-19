@@ -42,6 +42,7 @@
 #include "game/effect_3b_callees.h"
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -57,6 +58,12 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
+records::EffectObject* CurFx() { return reinterpret_cast<records::EffectObject*>(Sprite_Current); }
+// A setter's store through a typed field: the record's address is evaluated
+// before the value, as the setter call evaluates its arguments, and the value
+// goes through the setter's parameter type P.
+template <typename P, typename T>
+void Store(T& field, P v) { field = static_cast<T>(v); }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -167,8 +174,8 @@ unsigned char* Spawned(const char* who, U answer) {
     return Effect_Objects + k * at::kEffectStride;
 }
 
-unsigned char* Parent() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(UL(at::kParent))); }
-unsigned char* Spark() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(UL(at::kSparkCursor))); }
+unsigned char* Parent() { return EffectKind69_Parent; }
+unsigned char* Spark() { return reinterpret_cast<unsigned char*>(Effect3c_ShardCursor); }
 
 void ScreenTint() { SH_AT(void (__cdecl*)(), at::kScreenTint)(); }
 void Kind69Lines() { SH_AT(void (__cdecl*)(), at::kKind69Lines)(); }
@@ -196,9 +203,9 @@ void Orbit(U radius) {
     const U angle = (UL(S() + 0xC) & 0x7F) << 5;
     SetUL(at::kAngle, angle);
     const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
-    SetUL(S() + 0x34, Mul(c, UL(at::kScale)) + UL(Parent() + 0x34));
+    Store<U>(CurFx()->x, Mul(c, UL(at::kScale)) + UL(Parent() + 0x34));
     const int n = SH_CALL(Math_Sin)(static_cast<int>(UL(at::kAngle)));
-    SetUL(S() + 0x38, Mul(n, UL(at::kScale)) + UL(Parent() + 0x38));
+    Store<U>(CurFx()->z, Mul(n, UL(at::kScale)) + UL(Parent() + 0x38));
 }
 
 // A part's place: +0xB = Rand() & 0xF, +9 = +0xA = 0, +0xC = (+4 << 5) + start,
@@ -264,9 +271,9 @@ extern "C" void __cdecl EffectKind63_Run(void) {
 // rim shade +0x5C = 0x3D, +1 = 1, the tint +0x5D..+0x5F = 0 (eax cleared after
 // the call; Sprite_Current read again for each store).
 extern "C" void __cdecl EffectKind63_Start(void) {
-    SetUL(S() + 0x34, 0x240000);
-    SetUL(S() + 0x38, 0x418000);
-    const long h = SH_CALL(AreaMap_Elevation)(Long(S() + 0x34), Long(S() + 0x38));
+    CurFx()->x = 0x240000;
+    CurFx()->z = 0x418000;
+    const long h = SH_CALL(AreaMap_Elevation)(CurFx()->x, CurFx()->z);
     SetWord(S() + 0x3E, static_cast<U>(h));
     SetUL(S() + 0x18, 0);
     S()[0x5C] = 0x3D;
@@ -460,7 +467,7 @@ extern "C" void __cdecl EffectKind65_WaitRequest(void) {
 // ScriptFlags_Set40 and +1 = 2.
 extern "C" void __cdecl EffectKind65_Check(void) {
     if (Field_Request == 3) return;
-    if (UL(at::kKind65Count) % 5 != 0) {
+    if (Rest4a_Clock % 5 != 0) {
         S()[1] = 0;
         return;
     }
@@ -473,7 +480,7 @@ extern "C" void __cdecl EffectKind65_Check(void) {
 extern "C" void __cdecl EffectKind65_WaitInput(void) {
     if (Input_Held == 0) return;
     SH_CALL(Sound_PlayEffect)(0x202);
-    SH_CALL(Flags_Toggle)(At(at::kStoryFlags), at::kKind65Flag);
+    SH_CALL(Flags_Toggle)(At(Cond_Flags_addr + 0xa0), at::kKind65Flag);
     S()[9] = 0x3C;
     S()[1] = 3;
 }
@@ -523,7 +530,7 @@ extern "C" void __cdecl EffectKind67_SpawnKind13(void) {
     const U answer = SH_CALL(Effect_FindFree)();
     B(at::kScale) = static_cast<unsigned char>(answer);
     if ((answer & 0xFF) == 0xFF) return;
-    const U angle = S16(W(at::kCameraAngle1));
+    const U angle = S16(static_cast<std::uint32_t>(static_cast<std::uint16_t>(Camera_Angles[1])));
     unsigned char* const e = Spawned("EffectKind67_SpawnKind13", UL(at::kScale));
     e[0] = 1;
     e[5] = 0x13;
@@ -643,12 +650,13 @@ extern "C" void __cdecl EffectKind69_PushPointMatrix(void) {
 extern "C" void __cdecl EffectKind69_Part0Place(void) {
     const int r = SH_CALL(Rand)();
     unsigned char* const s = S();
+    auto* const so = reinterpret_cast<records::EffectObject*>(s);
     s[0xB] = static_cast<unsigned char>(r & 0xF);
     s[9] = 0;
     s[0xA] = 0;
-    SetUL(s + 0x34, UL(Parent() + 0x34));
-    SetUL(s + 0x38, UL(Parent() + 0x38));
-    const long h = SH_CALL(AreaMap_Elevation)(Long(S() + 0x34), Long(S() + 0x38));
+    so->x = UL(Parent() + 0x34);
+    so->z = UL(Parent() + 0x38);
+    const long h = SH_CALL(AreaMap_Elevation)(CurFx()->x, CurFx()->z);
     SetWord(S() + 0x3E, static_cast<U>(h));
     S()[3] = static_cast<unsigned char>(S()[3] + 1);
 }
@@ -736,8 +744,8 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
     const unsigned char bright = static_cast<unsigned char>(13u * s[0xA]);
     const int sn0 = SH_CALL(Math_Sin)(static_cast<int>(first));
     unsigned char* const mode = Gfx_PacketNext;
-    SetWord(At(at::kV0 + 2), Sar(Mul(sn0, UL(at::kScale)), 12));
-    SetWord(At(at::kV0 + 4), 0);
+    Prim_VertexScratch[1] = Sar(Mul(sn0, UL(at::kScale)), 12);
+    Prim_VertexScratch[2] = 0;
     SH_CALL(Gpu_SetDrawMode)(mode, 0, 1, 0x35, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     const U d = width & 0xFFFF;
@@ -745,8 +753,8 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
     const auto shade = [] { return B(at::kShade); };
     const auto quad = [](unsigned char* p) {
         long depth;
-        SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(at::kV0)), reinterpret_cast<const short*>(At(at::kV1)),
-                                   reinterpret_cast<const short*>(At(at::kV2)), reinterpret_cast<const short*>(At(at::kV3)),
+        SH_CALL(Gte_RotTransPers4)(reinterpret_cast<const short*>(At(Prim_VertexScratch_addr)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x8)),
+                                   reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x10)), reinterpret_cast<const short*>(At(Prim_VertexScratch_addr + 0x18)),
                                    reinterpret_cast<float*>(p + 8), reinterpret_cast<float*>(p + 0x18),
                                    reinterpret_cast<float*>(p + 0x28), reinterpret_cast<float*>(p + 0x38), &depth);
         SH_CALL(Gte_PrimDepths4_10B)(p);
@@ -766,23 +774,23 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
         else
             radius = S16(base) - (static_cast<U>(SH_CALL(Rand)()) & S16(spread));
         SetUL(at::kScale, radius);
-        const U y = W(at::kV0 + 2), z = W(at::kV0 + 4);
-        SetWord(At(at::kV2 + 2), y);
-        SetWord(At(at::kV3 + 2), y - d);
-        SetWord(At(at::kV2), 0);
-        SetWord(At(at::kV2 + 4), z);
-        SetWord(At(at::kV3), 0);
-        SetWord(At(at::kV3 + 4), z);
-        SetWord(At(at::kV0), 0);
+        const U y = static_cast<std::uint16_t>(Prim_VertexScratch[1]), z = static_cast<std::uint16_t>(Prim_VertexScratch[2]);
+        Prim_VertexScratch[9] = y;
+        Prim_VertexScratch[0xd] = y - d;
+        Prim_VertexScratch[8] = 0;
+        Prim_VertexScratch[0xa] = z;
+        Prim_VertexScratch[0xc] = 0;
+        Prim_VertexScratch[0xe] = z;
+        Prim_VertexScratch[0] = 0;
         const int sn = SH_CALL(Math_Sin)(static_cast<int>(UL(at::kAngle)));
         const U ny = Sar(Mul(sn, UL(at::kScale)), 12);
-        SetWord(At(at::kV1), 0);
+        Prim_VertexScratch[4] = 0;
         unsigned char* p = Gfx_PacketNext;
         const U nz = (0u - i) << 6;
-        SetWord(At(at::kV0 + 2), ny);
-        SetWord(At(at::kV0 + 4), nz);
-        SetWord(At(at::kV1 + 2), ny - d);
-        SetWord(At(at::kV1 + 4), nz);
+        Prim_VertexScratch[1] = ny;
+        Prim_VertexScratch[2] = nz;
+        Prim_VertexScratch[5] = ny - d;
+        Prim_VertexScratch[6] = nz;
         // the first quad: the ring between this y and the previous, `width` down
         SH_CALL(Gpu_SetPolyG4)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
@@ -1000,9 +1008,9 @@ extern "C" void __cdecl EffectKind6C_Run(void) {
 // original 0x483BC0 (state 0): the point (0xB8000, 0x548000, 0x1000000), the
 // sparks scattered from it, +1 up.
 extern "C" void __cdecl EffectKind6C_Start(void) {
-    SetUL(S() + 0x34, 0xB8000);
-    SetUL(S() + 0x38, 0x548000);
-    SetUL(S() + 0x3C, 0x1000000);
+    CurFx()->x = 0xB8000;
+    CurFx()->z = 0x548000;
+    CurFx()->height = 0x1000000;
     SH_CALL(EffectKind6C_ScatterSparks)();
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
@@ -1021,11 +1029,11 @@ extern "C" void __cdecl EffectKind6C_Live(void) {
 // distance sar 7; +0 = 1, +1 = 0, the word +0x24 = 0, +3 = 0x40, +0x26 = 7, +2 =
 // 4.
 extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
-    SetUL(at::kSparkCursor, at::kSparks);
+    Effect3c_ShardCursor = EffectKind30_Shards_addr;
     for (unsigned left = at::kSparkCount; left != 0; --left) {
-        SetUL(Spark() + 4, UL(S() + 0x34));
-        SetUL(Spark() + 8, UL(S() + 0x38));
-        SetUL(Spark() + 0xC, UL(S() + 0x3C));
+        SetUL(Spark() + 4, static_cast<std::uint32_t>(CurFx()->x));
+        SetUL(Spark() + 8, static_cast<std::uint32_t>(CurFx()->z));
+        SetUL(Spark() + 0xC, static_cast<std::uint32_t>(CurFx()->height));
         const U distance = (static_cast<U>(SH_CALL(Rand)()) & 0x7F) << 2;
         const U angle = ((static_cast<U>(SH_CALL(Rand)()) & 0x3FF) + 0x200) & 0xFFFF;
         // the cursor read after each call (kept out of the call's expression:
@@ -1040,7 +1048,7 @@ extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
         Spark()[3] = 0x40;
         Spark()[0x26] = 7;
         Spark()[2] = 4;
-        SetUL(at::kSparkCursor, UL(at::kSparkCursor) + at::kSparkStride);
+        Effect3c_ShardCursor = Effect3c_ShardCursor + at::kSparkStride;
     }
 }
 
@@ -1057,18 +1065,18 @@ extern "C" unsigned char __cdecl EffectKind6C_DrawSparks(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, tpage, 0);
     SH_CALL(Gfx_CommitPrim)(2, 0xC);
     unsigned char any = 0;
-    U c = at::kSparks;
-    SetUL(at::kSparkCursor, c);
+    U c = EffectKind30_Shards_addr;
+    Effect3c_ShardCursor = c;
     for (unsigned n = at::kSparkCount; n != 0; --n) {
         if (At(c)[0] != 0) {
             Through("EffectKind6C_DrawSparks", AddressOf(EffectKind6C_SparkStates), EffectKind6C_SparkStates_count,
                     At(c)[1], 1);
             SH_CALL(EffectKind6C_DrawSpark)(Spark());
-            c = UL(at::kSparkCursor);
+            c = Effect3c_ShardCursor;
             any = 1;
         }
         c += at::kSparkStride;
-        SetUL(at::kSparkCursor, c);
+        Effect3c_ShardCursor = c;
     }
     return any;
 }

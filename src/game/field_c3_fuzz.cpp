@@ -174,7 +174,7 @@ const sh::Clone kClones[] = {
 
 enum : unsigned {
     kMode11, kMode8a, kMode8b, kOpE7, kApproach, kAvoid, kBest, kFadeOutStart, kFadeOutStep, kFadeInStart, kFadeInStep,
-    kScriptMove, kAlign, kNext, kStep, kWait, kShadeLower, kShadeFade, kAttached, kHop, kHopBegin, kHopLaunch, kHopRise,
+    kScriptMove, kAlign, kNext, kStep, MoveScript_WaitWordDA_addr, kShadeLower, kShadeFade, kAttached, kHop, kHopBegin, kHopLaunch, kHopRise,
     kHopFall, kHopLand, kVertical, kUp, kUpBegin, kUpOut, kUpArrive, kUpIn, kUpWait5, kUpWait6, kUpEnd, kDown,
     kDownBegin, kDownWait1, kDownWait2, kDownWait3, kDownWait4, kDownOut, kDownArrive, kDownIn, kDownLand, kVShade,
     kJumpExit, kJumpBegin, kJumpOut, kJumpArrive, kJumpShade, kJumpIn, kTileD0, kTileBegin, kTileMove, kTileExit,
@@ -325,9 +325,9 @@ const sh::DataTable kTables[] = {
 // standard Draw_PassFlags), and the point the vertical moves test the ground at.
 constexpr unsigned kTints = 44;
 const sh::Region kRegions[] = {
-    {at::kActiveMember, 4},
+    {Field_ActiveMember_addr, 4},
     {Key(MoveScript_TintRecords), kTints * 12},
-    {at::kTargetX, 8},
+    {EventLeader_PendingX_addr, 8},
 };
 
 // --- the seed ---------------------------------------------------------------------------
@@ -405,12 +405,12 @@ void Seed(unsigned k) {
         }
         const U dx = PickOf(0, 0x10000, 0x18000, 0x30000, 0xFFFF0000u, sh::Next());
         const U dz = PickOf(0, 0x10000, 0x18000, 0x30000, 0xFFFF0000u, sh::Next());
-        SetLong(Mem(at::kLeaderX), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x34)) + dx));
-        SetLong(Mem(at::kLeaderZ), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x38)) + dz));
+        SetLong(Mem(ObjTrio_addr + 0x34), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x34)) + dx));
+        SetLong(Mem(ObjTrio_addr + 0x38), static_cast<std::int32_t>(static_cast<U>(Long(s + 0x38)) + dz));
         break;
     }
     case kBest:
-        Mem(at::kLeaderPace)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 8, sh::Next()));
+        Mem(ObjTrio_addr + 0x9)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, 8, sh::Next()));
         break;
     case kFadeOutStep:
     case kFadeInStep: {

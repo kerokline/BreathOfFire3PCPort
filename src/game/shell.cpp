@@ -46,7 +46,7 @@ const Callees kOriginals = {
     Pad_Read,
     Crt_fopen, Crt_fgets, Crt_atoi, Cast<int (__cdecl*)(const char*, const char*, void*, void*)>(Crt_sscanf), Crt_fclose,
     Cfg_SetKeyTable, Cfg_SetDefaultKeys,
-    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), kImportGetDriveType,
+    Cast<int (__cdecl*)(char*, const char*, const char*, const char*)>(Crt_sprintf), Shell_ImportGetDriveType_addr,
     Gte_InitGeom, Gte_SetGeomOffset, Gte_SetGeomScreen, DInput_Init,
     reinterpret_cast<void (__cdecl*)(void*)>(static_cast<std::uintptr_t>(kSoundSetup)), Port_DroppedCall,
     Gpu_SetDefDrawEnv, Gpu_SetDefDispEnv, Gfx_InitBufferBlock, Gfx_BeginFrame, Task_SetStackBase,
@@ -148,7 +148,7 @@ extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
 extern "C" void __cdecl Cfg_SetDefaultKeys(void) {
     unsigned char rule[0x80];
     bof3x::input::DefaultKeyTable(rule, sizeof rule);
-    std::memcpy(At(kKeyTable), rule, sizeof rule);
+    std::memcpy(At(Key_Table_addr), rule, sizeof rule);
 }
 
 // Key_TableDefault 0x66C648 written from the engine's rule at map time, so
@@ -161,17 +161,17 @@ void Shell_MapDefaultKeys() {
     bof3x::input::DefaultKeyTable(rule, sizeof rule);
     const bool present = bof3::ExeFile_Present();
     if (present) {
-        if (bof3::IsExeHost()) bof3::ExeFile_Read(kKeyTableDefault, theirs, sizeof theirs);
-        else std::memcpy(theirs, At(kKeyTableDefault), sizeof theirs);
+        if (bof3::IsExeHost()) bof3::ExeFile_Read(Key_TableDefault_addr, theirs, sizeof theirs);
+        else std::memcpy(theirs, At(Key_TableDefault_addr), sizeof theirs);
         for (unsigned i = 0; i < sizeof rule; i += 4)
             if (std::memcmp(rule + i, theirs + i, 4) != 0)
                 bof3::Fatal("keys: the default key table's entry %u is key 0x%02X%02X bits 0x%02X%02X by the engine's "
                             "rule, key 0x%02X%02X bits 0x%02X%02X in BOF3.exe at 0x%06X", i / 4, rule[i + 1], rule[i],
                             rule[i + 3], rule[i + 2], theirs[i + 1], theirs[i], theirs[i + 3], theirs[i + 2],
-                            (unsigned)(kKeyTableDefault + i));
+                            (unsigned)(Key_TableDefault_addr + i));
     }
-    std::memcpy(At(kKeyTableDefault), rule, sizeof rule);
-    bof3::Log("keys: Key_TableDefault 0x%06X written from the engine's rule (%u keys)%s", (unsigned)kKeyTableDefault,
+    std::memcpy(At(Key_TableDefault_addr), rule, sizeof rule);
+    bof3::Log("keys: Key_TableDefault 0x%06X written from the engine's rule (%u keys)%s", (unsigned)Key_TableDefault_addr,
               (unsigned)bof3x::input::DefaultKeys().size(),
               present ? ", equal to BOF3.exe's" : "; no BOF3.exe to compare it with");
 }
@@ -207,16 +207,16 @@ extern "C" int __cdecl Disc_Probe(const char* local_file, const char* disc_file)
     void* const local = g.open(local_file, Str(kModeRb));
     if (local != nullptr) {
         g.close(local);
-        At(kCdRoot)[0] = 0;
+        File_CdRootBuf[0] = 0;
         return 1;
     }
     DriveTypeFn drive_type;
     std::memcpy(&drive_type, At(g.drive_type_slot), sizeof drive_type);
     char path[0x50];
     for (U i = 0; i < 10; ++i) {
-        At(kCdRoot)[0] = static_cast<unsigned char>('C' + i);
-        if (drive_type(Str(kCdRoot)) != kDriveCdrom) continue;
-        g.format(path, Str(kRootFormat), Str(kCdRoot), disc_file);
+        File_CdRootBuf[0] = static_cast<unsigned char>('C' + i);
+        if (drive_type(Str(File_CdRootBuf_addr)) != kDriveCdrom) continue;
+        g.format(path, Str(kRootFormat), Str(File_CdRootBuf_addr), disc_file);
         void* const disc = g.open(path, Str(kModeRb));
         if (disc != nullptr) {
             g.close(disc);
@@ -283,7 +283,7 @@ extern "C" void __cdecl Gfx_LinkOTags(void) {
         const U link = Long(kGfxOtPointers + 4 * i);
         const U buffer = Gfx_BufferIndex;
         const U block = Addr(Gfx_CurrentEnv);
-        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(kGfxOtHeads + (i + buffer * 8) * 4), Longs(link));
+        g.add_prim(Longs(block + kBlockOt + 4 * i), Longs(Gfx_OtHeads_addr + (i + buffer * 8) * 4), Longs(link));
     }
 }
 

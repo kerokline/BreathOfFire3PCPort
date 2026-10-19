@@ -29,13 +29,13 @@ using U = std::uint32_t;
 // --- the battle's cells (0x904AA0..0x904BA0) --------------------------------
 constexpr U kFlags = 0x904AA8;            // u8: the round flags' low byte (bit 2 read and set here)
 constexpr U kFight = 0x904AAA;            // u8: the event battle
-constexpr U kBattleEnd = 0x904AE8;        // u8: bit 0 the loss, bit 1 the win
+// kBattleEnd: now BattleActions_BattleEnd (symbols.toml). u8: bit 0 the loss, bit 1 the win
 constexpr U kTarget = 0x904B44;           // u8: the target (set-up 38 writes 0x40, the enemies' side)
-constexpr U kHookEnd = 0x904B64;          // BattleHook_End
-constexpr U kHookExit = 0x904B68;         // BattleHook_Exit
-constexpr U kHookEvent = 0x904B6C;        // BattleHook_Event
-constexpr U kCurrentEnemy = 0x939AD8;     // the enemy BattleEnemy_RunAll is running (its object)
-constexpr U kOwner = 0x93B940;            // the running task slot's owner (BattleTask_RunAll sets it from the slot's +0x80)
+// kHookEnd: now BattleHook_End (symbols.toml). BattleHook_End
+// kHookExit: now BattleHook_Exit (symbols.toml). BattleHook_Exit
+// kHookEvent: now BattleHook_Event (symbols.toml). BattleHook_Event
+// kCurrentEnemy: now BattleE3_CurrentEnemy (symbols.toml). the enemy BattleEnemy_RunAll is running (its object)
+// kOwner: now BattleE2_Owner (symbols.toml). the running task slot's owner (BattleTask_RunAll sets it from the slot's +0x80)
 
 // --- the enemies' objects (0x93B960 + n * 0x128) and the task slots ----------
 constexpr U kEnemy7 = 0x93C178;           // enemy 7's object: set-up 38 makes it Sprite_Current
@@ -48,13 +48,13 @@ constexpr U kEnemyDataStride = 0x8C;
 
 // --- cells outside the battle bytes ------------------------------------------
 constexpr U kScriptVar3 = 0x903848;       // the movement script's variable 3 (field-modes.md)
-constexpr U kCentreX = 0x903780;          // i32: the fight's centre x (field_hidden_callees.h)
-constexpr U kCentreZ = 0x903784;          // i32: its z
-constexpr U kKind2Z = 0x905E60;           // i32 Field_Kind2Z
-constexpr U kKind2X = 0x905E64;           // i32 Field_Kind2X
-constexpr U kF3Divisor = 0x937F8C;        // i16 MoveScript_F3Divisor
-constexpr U kMusicTrack = 0x904131;       // u8 Music_Track
-constexpr U kChapterStep = 0x8034E5;      // u8: the chapter's step
+// kCentreX: now BossSi_CentreX (symbols.toml). i32: the fight's centre x (field_hidden_callees.h)
+// kCentreZ: now BossSi_CentreZ (symbols.toml). i32: its z
+// kKind2Z: now Field_Kind2Z (symbols.toml). i32 Field_Kind2Z
+// kKind2X: now Field_Kind2X (symbols.toml). i32 Field_Kind2X
+// kF3Divisor: now MoveScript_F3Divisor (symbols.toml). i16 MoveScript_F3Divisor
+// kMusicTrack: now Music_Track (symbols.toml). u8 Music_Track
+// kChapterStep: now MoveScript_PartyRecords[0x65] (symbols.toml). u8: the chapter's step
 
 // --- the callees nobody owns -------------------------------------------------
 constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1

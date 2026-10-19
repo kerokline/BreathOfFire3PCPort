@@ -48,25 +48,43 @@ void PutPtr(U address, const void* p) { PutLong(address, static_cast<U>(reinterp
 void Zero(U address, U bytes) { std::memset(At(address), 0, bytes); }
 
 // --- the globals (display-setup.md section 3) -------------------------------------
-constexpr U kDesktopW = 0x7C9F44, kDesktopH = 0x6C9F40, kDesktopBpp = 0x6BE1E0;
-constexpr U kTexCache = 0x6C3F40, kTexCacheBytes = 0x6000;
-constexpr U kClutRows = 0x6C2A40, kClutRowsBytes = 0x1000;
+// kDesktopH: now PsxRest_TexCacheEnd (symbols.toml).
+constexpr U kDesktopW = 0x7C9F44, kDesktopBpp = 0x6BE1E0;
+// kTexCache: now Gfx_TexCache (symbols.toml).
+constexpr U kTexCacheBytes = 0x6000;
+// kClutRows: now Gfx_ClutRows (symbols.toml).
+constexpr U kClutRowsBytes = 0x1000;
 constexpr U kFontCache = 0x7C9F50, kFontCacheBytes = 0xA00, kFontEntry = 0x14;
 constexpr U kBackdropBlock = 0x6BE9F8, kBackdropBytes = 0x1C;
-constexpr U kAfterDrawBlock = 0x7CADE8, kAfterDrawBytes = 0x1C;
-constexpr U kCellCache = 0x7CAE38, kCellCacheBytes = 0x1400;
-constexpr U kPixelFormat = 0x7DED60, kPixelFormatRecord = 0x40;
-constexpr U kRenderFlags = 0x6C3A4C, kUnread6C3A48 = 0x6C3A48, kShadeCache = 0x6C3A44;
-constexpr U kTexCoords = 0x7CA9E0;
+// kAfterDrawBlock: now D3d_CaptureReady (symbols.toml).
+constexpr U kAfterDrawBytes = 0x1C;
+// kCellCache: now D3d_CellTexCache (symbols.toml).
+constexpr U kCellCacheBytes = 0x1400;
+// kPixelFormat: now Gfx_PixelFormat (symbols.toml).
+constexpr U kPixelFormatRecord = 0x40;
+// kShadeCache: now D3d_ShadeModeCache (symbols.toml).
+constexpr U kRenderFlags = 0x6C3A4C, kUnread6C3A48 = 0x6C3A48;
+// kTexCoords: now D3d_TexCoords (symbols.toml).
 constexpr U kDeviceCountLess1 = 0x66B718, kDeviceRecords = 0x6C3A50, kDeviceRecord = 0x13C;
 constexpr U kModeLists = 0x6BE1E8, kModeListsBytes = 0x810;
-constexpr U kDirectDraw = 0x7CC334, kDirect3D = 0x7CC34C, kClipper = 0x7CC348, kZBuffer = 0x7CC340;
-constexpr U kScreenRight = 0x66B710, kScreenBottom = 0x66B714, kModeBpp = 0x7CADE0;
-constexpr U kScaleX = 0x7C9F4C, kScaleY = 0x7C9F48;
+// kDirectDraw: now Dd_DirectDraw (symbols.toml).
+// kClipper: now PsxRest_Clipper (symbols.toml).
+// kZBuffer: now PsxRest_ZBuffer (symbols.toml).
+constexpr U kDirect3D = 0x7CC34C;
+// kScreenRight: now Gfx_ScreenRect[2] (symbols.toml).
+// kScreenBottom: now Gfx_ScreenRect[3] (symbols.toml).
+constexpr U kModeBpp = 0x7CADE0;
+// kScaleX: now D3d_ScaleX (symbols.toml).
+// kScaleY: now D3d_ScaleY (symbols.toml).
 constexpr U kMaxScale = 8;   // BOF3X_SCALE's range since the backend (render-backend.md)
 constexpr U kDeviceDesc = 0x7CC238, kDeviceDescBytes = 0xFC;
-constexpr U kPrimary = 0x7CC338, kBackBuffer = 0x7CC33C, kStage = 0x7CC344;
-constexpr U kDevice = 0x7CC350, kViewport = 0x7CC354, kMaterial = 0x7CC358, kMaterialHandle = 0x6C3A40;
+// kPrimary: now DDraw_Primary (symbols.toml).
+// kBackBuffer: now DDraw_BackBuffer (symbols.toml).
+// kStage: now Dd_StageSurface (symbols.toml).
+// kDevice: now D3d_Device (symbols.toml).
+// kViewport: now D3d_Viewport (symbols.toml).
+// kMaterial: now D3d_BackMaterial (symbols.toml).
+// kMaterialHandle: now D3d_BackMaterialHandle (symbols.toml).
 constexpr U kBackPitch = 0x7DED5C;
 
 // D3DDEVICEDESC fields D3d_FitTextureSize reads (tex-cells.md section 3).
@@ -146,13 +164,13 @@ U FitScale(U view_w, U cw, U ch) {
 void Rescale(U k) {
     g_scale = k;
     const U width = render::TargetWidth(), height = render::TargetHeight();
-    PutLong(kScreenRight, width);
-    PutLong(kScreenBottom, height);
-    PutFloat(kScaleX, static_cast<float>(k));
-    PutFloat(kScaleY, static_cast<float>(k));
+    Gfx_ScreenRect[2] = width;
+    Gfx_ScreenRect[3] = height;
+    PutFloat(D3d_ScaleX_addr, static_cast<float>(k));
+    PutFloat(D3d_ScaleY_addr, static_cast<float>(k));
     SprtDraw_SetScale(k);
-    auto* primary = *reinterpret_cast<render::Surface**>(At(kPrimary));
-    auto* back = *reinterpret_cast<render::Surface**>(At(kBackBuffer));
+    auto* primary = *reinterpret_cast<render::Surface**>(At(DDraw_Primary_addr));
+    auto* back = *reinterpret_cast<render::Surface**>(At(DDraw_BackBuffer_addr));
     if (primary && back) {
         if (!render::ResizeSurface(primary, width, height) || !render::ResizeSurface(back, width, height))
             bof3::Fatal("Display_Setup: out of memory resizing the primary and back surfaces to %u x %u", width, height);
@@ -200,25 +218,25 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     // 2.1 the desktop
     HDC dc = GetDC(nullptr);
     PutLong(kDesktopW, static_cast<U>(GetDeviceCaps(dc, HORZRES)));
-    PutLong(kDesktopH, static_cast<U>(GetDeviceCaps(dc, VERTRES)));
+    PsxRest_TexCacheEnd = static_cast<U>(GetDeviceCaps(dc, VERTRES));
     PutLong(kDesktopBpp, static_cast<U>(GetDeviceCaps(dc, BITSPIXEL) * GetDeviceCaps(dc, PLANES)));
     ReleaseDC(nullptr, dc);
 
     // 2.2 the caches, reset - every one the original zeroes
-    Zero(kTexCache, kTexCacheBytes);
-    Zero(kClutRows, kClutRowsBytes);
-    Zero(kFontCache, kFontCacheBytes);
+    Zero(Gfx_TexCache_addr, kTexCacheBytes);
+    Zero(Gfx_ClutRows_addr, kClutRowsBytes);
+    Zero(Font_TexCache_addr, kFontCacheBytes);
     for (U i = 0; i < kFontCacheBytes / kFontEntry; ++i) PutWord(kFontCache + i * kFontEntry, 0xFFFF);
     Zero(kBackdropBlock, kBackdropBytes);
-    Zero(kAfterDrawBlock, kAfterDrawBytes);
-    Zero(kCellCache, kCellCacheBytes);
-    Zero(kPixelFormat, 3 * kPixelFormatRecord);
+    Zero(D3d_CaptureReady_addr, kAfterDrawBytes);
+    Zero(D3d_CellTexCache_addr, kCellCacheBytes);
+    Zero(Gfx_PixelFormat_addr, 3 * kPixelFormatRecord);
     PutLong(kRenderFlags, 0);
     PutLong(kUnread6C3A48, 0);
-    PutLong(kShadeCache, 0);
+    D3d_ShadeModeCache = 0;
 
     // 2.3 the texture coordinates: i / 256 + 0.002 in double, stored as float
-    for (U i = 0; i < 256; ++i) PutFloat(kTexCoords + i * 4, static_cast<float>(i * 0.00390625 + 0.0020000000949949026));
+    for (U i = 0; i < 256; ++i) PutFloat(D3d_TexCoords_addr + i * 4, static_cast<float>(i * 0.00390625 + 0.0020000000949949026));
 
     // 2.4 the device records: 0 the original's synthetic software renderer (kept
     // so that F7's name overlay reads it), 1 this backend. No enumeration.
@@ -248,16 +266,16 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
         g_backend_up = true;
     }
     const U width = render::TargetWidth(), height = render::TargetHeight();
-    PutLong(kScreenRight, width);
-    PutLong(kScreenBottom, height);
+    Gfx_ScreenRect[2] = width;
+    Gfx_ScreenRect[3] = height;
     PutLong(kModeBpp, kModeBits);
     // The game's scale is k, the view's - not the target's width over 320,
     // which a wide target (DIV-0041) would make 1.33k: the game keeps
     // drawing a 320-wide view and the backend shifts it into the target.
-    PutFloat(kScaleX, static_cast<float>(g_scale));
-    PutFloat(kScaleY, static_cast<float>(g_scale));
+    PutFloat(D3d_ScaleX_addr, static_cast<float>(g_scale));
+    PutFloat(D3d_ScaleY_addr, static_cast<float>(g_scale));
     SprtDraw_SetScale(g_scale);   // DIV-0010's far edge follows the scale (display-overhaul.md 4b)
-    Zero(kDeviceDesc, kDeviceDescBytes);
+    Zero(D3d_DeviceDesc_addr, kDeviceDescBytes);
     PutLong(kDeviceDesc + kDescTextureCaps, kTextureCaps);
     PutLong(kDeviceDesc + kDescMinW, kMinTexture);
     PutLong(kDeviceDesc + kDescMinH, kMinTexture);
@@ -266,35 +284,35 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
 
     // 2.7 the windowed path, always: DirectDraw, primary, back buffer, no
     // clipper, Gfx_RenderFlags bit 0x200. The window rect stays 0x5A5130's.
-    PutPtr(kDirectDraw, render::DirectDrawObject());
+    Dd_DirectDraw = render::DirectDrawObject();
     PutPtr(kDirect3D, render::DirectDrawObject());   // released by the teardown, read by nothing else
     render::Surface* primary = render::MakeSurface(width, height, 32, 0x200, 0, true, false);
     render::Surface* back = render::MakeSurface(width, height, 32, 0x2040, 0, false, true);
     if (!primary || !back) bof3::Fatal("Display_Setup: out of memory for the primary and back surfaces");
-    PutPtr(kPrimary, primary);
-    PutPtr(kBackBuffer, back);
-    PutLong(kClipper, 0);
-    PutLong(kZBuffer, 0);
-    *reinterpret_cast<U*>(At(kRenderFlags)) |= 0x200;
+    DDraw_Primary = primary;
+    DDraw_BackBuffer = back;
+    PsxRest_Clipper = 0;
+    PsxRest_ZBuffer = 0;
+    *reinterpret_cast<U*>(At(Gfx_RenderFlags_addr)) |= 0x200;
     (void)fullscreen;   // never forced: no display mode is set (DIV-0031)
 
     // 2.9 the device
-    PutPtr(kDevice, render::DeviceObject());
+    D3d_Device = render::DeviceObject();
 
     // 2.10 the texture formats, the staging surface, the back buffer's pitch
-    FillFormat(kPixelFormat + 0 * kPixelFormatRecord, kFormatAlpha, kRankAlpha);
-    FillFormat(kPixelFormat + 1 * kPixelFormatRecord, kFormatOpaque, kRankOpaque);
-    FillFormat(kPixelFormat + 2 * kPixelFormatRecord, kFormatScreen, kRankScreen);
-    if (kNoAlphaFormat) *reinterpret_cast<U*>(At(kRenderFlags)) |= 0x20;
-    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(kStage)), 0))
+    FillFormat(Gfx_PixelFormat_addr + 0 * kPixelFormatRecord, kFormatAlpha, kRankAlpha);
+    FillFormat(Gfx_PixelFormat_addr + 1 * kPixelFormatRecord, kFormatOpaque, kRankOpaque);
+    FillFormat(Gfx_PixelFormat_addr + 2 * kPixelFormatRecord, kFormatScreen, kRankScreen);
+    if (kNoAlphaFormat) *reinterpret_cast<U*>(At(Gfx_RenderFlags_addr)) |= 0x20;
+    if (!Dd_CreatePlainSurface(0x140, 0x100, reinterpret_cast<void**>(At(Dd_StageSurface_addr)), 0))
         bof3::Fatal("Display_Setup: the staging surface");
     PutLong(kBackPitch, back->pitch);
 
     // 2.11 viewport, material, states - through the backend's objects, so that
     // the device holds the same state the original's did
-    PutPtr(kViewport, render::ViewportObject());
-    PutPtr(kMaterial, render::MaterialObject());
-    PutLong(kMaterialHandle, 1);
+    D3d_Viewport = render::ViewportObject();
+    D3d_BackMaterial = render::MaterialObject();
+    D3d_BackMaterialHandle = 1;
     render::SetClearColor(0xFF000000u);
     render::PipeState& s = render::CurrentState();
     s.texture = nullptr;

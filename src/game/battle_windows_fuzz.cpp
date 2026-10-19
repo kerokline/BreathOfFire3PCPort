@@ -109,7 +109,7 @@ std::uint32_t TextHash(const unsigned char* s, unsigned n) {
 
 // --- the cells the functions read again after a call ------------------------
 
-unsigned char* Member(unsigned i) { return At(at::kPartyObjects + at::kObjectStride * i); }
+unsigned char* Member(unsigned i) { return At(ObjTrio_addr + at::kObjectStride * i); }
 // A colour row whose CLUT shadow word is inside the randomised region.
 unsigned char SmallRow(std::uint32_t v) { return static_cast<unsigned char>(static_cast<signed char>(v % 12) - 2); }
 
@@ -119,7 +119,7 @@ void Disturb() {
     const unsigned v = (h >> 12) & 0xFF;
     const auto byte = static_cast<unsigned char>(h >> 24);
     switch ((h >> 4) % 18) {
-    case 0: At(at::kColour)[0] = SmallRow(v); break;
+    case 0: At(BattleDraw_Colour_addr)[0] = SmallRow(v); break;
     case 1: At(at::kPartyCount)[0] = static_cast<unsigned char>(v % 6); break;
     case 2: At(at::kCrossSel)[0] = static_cast<unsigned char>(v % 8); break;
     case 3: At(at::kCrossGrow + v % 7)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
@@ -136,10 +136,10 @@ void Disturb() {
         w[3 + (h >> 20) % 0x10] = byte;
         break;
     }
-    case 9: SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(g_buf.windows[v % kWindows]))); break;
-    case 10: At(at::kMsgHead)[0] = static_cast<unsigned char>(v % 0x14); break;
+    case 9: SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(g_buf.windows[v % kWindows]))); break;
+    case 10: At(BattleWindows_MsgHead_addr)[0] = static_cast<unsigned char>(v % 0x14); break;
     case 11: g_buf.objects[v % kObjects][0x134] = byte; break;
-    case 12: At(at::kClutShadow + 64 * (static_cast<int>(v % 12) - 2) + (h >> 20) % 2)[0] = byte; break;
+    case 12: At(Gfx_ClutStripSource_addr + 0x228 + 64 * (static_cast<int>(v % 12) - 2) + (h >> 20) % 2)[0] = byte; break;
     case 13: At(at::kMsgRing + 8 * ((h >> 20) % 16))[0] = byte; break;
     // the first members' extra charge byte, read again after the first line
     case 14: At(at::kPartyBars + 36 * (v % 3) + 3)[0] = static_cast<unsigned char>((h & 0x40000000u) ? 0 : byte); break;
@@ -506,11 +506,11 @@ void Text(unsigned char* s, unsigned size) {
 }
 void Fix() {
     Gfx_PacketNext = g_buf.pool + Next() % 0x40;
-    SetLong(At(at::kCurrent), static_cast<std::int32_t>(Address(g_buf.windows[Next() % kWindows])));
+    SetLong(At(BattleWinStates_Current_addr), static_cast<std::int32_t>(Address(g_buf.windows[Next() % kWindows])));
     Field_State = g_buf.objects[Next() % kObjects];
     Sprite_Current = g_buf.objects[Next() % kObjects];
-    SetLong(At(at::kActor), static_cast<std::int32_t>(Address(g_buf.objects[Next() % kObjects])));
-    At(at::kColour)[0] = SmallRow(Next());
+    SetLong(At(BattleE4_MenuActor_addr), static_cast<std::int32_t>(Address(g_buf.objects[Next() % kObjects])));
+    At(BattleDraw_Colour_addr)[0] = SmallRow(Next());
     At(at::kPartyCount)[0] = static_cast<unsigned char>(Next() % 6);
     for (unsigned k = 0; k < kTexts; ++k) Text(g_buf.texts[k], kTextBytes);
 }
@@ -529,10 +529,10 @@ std::uint32_t Coord() {
 }
 // A CLUT shadow word near the darker lines' clamp: components 0..3 often.
 void SeedLineColour() {
-    const int row = static_cast<signed char>(At(at::kColour)[0]);
+    const int row = static_cast<signed char>(At(BattleDraw_Colour_addr)[0]);
     unsigned w = Next();
     if (Often()) w = (Next() % 4) | (Next() % 4) << 5 | (Next() % 4) << 10 | (Next() & 0x8000);
-    SetWord(At(at::kClutShadow + static_cast<std::uint32_t>(row * 64)), w);
+    SetWord(At(Gfx_ClutStripSource_addr + 0x228 + static_cast<std::uint32_t>(row * 64)), w);
 }
 void SeedMember(unsigned char* m) {
     static const unsigned kFlags[] = {0, 0x4000, 0x0004, 0x0800, 0x2000, 0x0080, 0x0040, 0x0BFC, 0x0400, 0x6000,
@@ -560,7 +560,7 @@ Args Seed(unsigned k) {
         unsigned char* const f = Field_State;
         f[0x90] = static_cast<unsigned char>(Half() ? Next() & ~4u : Next());
         f[0x134] = static_cast<unsigned char>(Half() ? Next() & ~0x10u : Next());
-        At(at::kTickGate)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
+        At(BattleFlow_AnimGate_addr)[0] = static_cast<unsigned char>(Half() ? 0 : Next());
         break;
     }
     case kRunState: {
@@ -572,8 +572,8 @@ Args Seed(unsigned k) {
     case kPickPose: {
         static const unsigned char kKinds[] = {5, 5, 4, 6, 0};
         At(at::kBattleKind)[0] = Often() ? kKinds[Next() % 5] : static_cast<unsigned char>(Next());
-        At(at::kKindFlags)[0] = static_cast<unsigned char>(Next() & 3);
-        At(at::kPoseFlags)[0] = static_cast<unsigned char>(Next() & 0x30);
+        At(BattleActions_BattleEnd_addr)[0] = static_cast<unsigned char>(Next() & 3);
+        At(BattleTurnSteps_MusicFlags_addr)[0] = static_cast<unsigned char>(Next() & 0x30);
         At(at::kPoseMode)[0] = static_cast<unsigned char>(Next() & 0x18);
         unsigned char* const f = Field_State;
         SeedMember(f);
@@ -645,12 +645,12 @@ Args Seed(unsigned k) {
         break;
     }
     case kMessage:
-        At(at::kMsgHead)[0] = static_cast<unsigned char>(Often() ? Next() % 16 : Next());
+        At(BattleWindows_MsgHead_addr)[0] = static_cast<unsigned char>(Often() ? Next() % 16 : Next());
         break;
     case kMsgAdvance: {
         const unsigned head = Next() % 16;
-        At(at::kMsgHead)[0] = static_cast<unsigned char>(Often() ? head : Next());
-        At(at::kMsgTail)[0] = static_cast<unsigned char>(Often() ? (head + 1) & 0xF : Half() ? head + 1 : Next());
+        At(BattleWindows_MsgHead_addr)[0] = static_cast<unsigned char>(Often() ? head : Next());
+        At(BattleActorCopies_QueueWrite_addr)[0] = static_cast<unsigned char>(Often() ? (head + 1) & 0xF : Half() ? head + 1 : Next());
         break;
     }
     case kGlyphCount: args.a[0] = Address(g_buf.texts[Next() % kTexts]); break;
@@ -717,7 +717,7 @@ void SelfTest() {
         auto* const code = static_cast<unsigned char*>(clones[kRunState]);
         std::uint32_t disp;
         std::memcpy(&disp, code + 0x12, 4);
-        if (disp != at::kStateTable) bof3::Fatal("battle_windows: no state table operand in 0x4411E0's copy");
+        if (disp != BattleObj_StateTable_addr) bof3::Fatal("battle_windows: no state table operand in 0x4411E0's copy");
         const std::uint32_t ours = Address(g_state_table);
         std::memcpy(code + 0x12, &ours, 4);
     }

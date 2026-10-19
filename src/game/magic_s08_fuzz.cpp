@@ -246,9 +246,14 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kVertex = 0x9037A0, kScratch = 0x903850, kKind2 = 0x905E60, kTints = 0x7E0700,
-                        kBattleMore = 0x904B50, kAbility = 0x904B80, kFormIndex = 0x904B89, kWardPool = 0x67BC40,
-                        kTrails = 0x67DD40;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kKind2: now Field_Kind2Z (symbols.toml).
+// kTints: now MoveScript_TintRecords (symbols.toml).
+// kBattleMore: now BattleSprites_HitBlock (symbols.toml).
+// kFormIndex: now BattlePhases_B89 (symbols.toml).
+// kWardPool: now WardMote_Pool (symbols.toml).
+// kTrails: now EvilEyeBeam_Trails (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850, kAbility = 0x904B80;
 constexpr unsigned kTrailBytes = 0x600;
 
 // Set by the seed for the functions each matters to.
@@ -417,20 +422,20 @@ const mh::DataTable kTables[] = {
 mh::Region g_regions[] = {
     {0x7E0670, 4},              // Gfx_PacketNext
     {0, kPrimBytes},            // g_prims (filled in at start-up)
-    {kVertex, 0x20},            // Prim_VertexScratch, four SVECTORs
+    {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
     {kScratch, 0x10},           // 0x903850.., Scratch_Swap at +0xC
-    {kKind2, 8},                // Field_Kind2Z, Field_Kind2X
-    {kTints, 0xC00},            // MoveScript_TintRecords
+    {Field_Kind2Z_addr, 8},     // Field_Kind2Z, Field_Kind2X
+    {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords
     {0x80E980, 0x200},          // Gfx_ClutStripSource row 26
     {0x812980, 0x200},          // Gfx_ClutStrip row 26
-    {kBattleMore, 0x50},        // 0x904B50..: the ability word 0x904B80, the form byte 0x904B89
-    {kWardPool, 64 * 0x84},     // WardMote_Pool
-    {kTrails, kTrailBytes},     // EvilEyeBeam_Trails, and past it what an index of up to 0x120 reaches
+    {BattleSprites_HitBlock_addr, 0x50}, // 0x904B50..: the ability word 0x904B80, the form byte 0x904B89
+    {WardMote_Pool_addr, 64 * 0x84}, // WardMote_Pool
+    {EvilEyeBeam_Trails_addr, kTrailBytes}, // EvilEyeBeam_Trails, and past it what an index of up to 0x120 reaches
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* PoolRecord(unsigned i) { return mh::Mem(kWardPool + (i & 63) * 0x84u); }
+unsigned char* PoolRecord(unsigned i) { return mh::Mem(WardMote_Pool_addr + (i & 63) * 0x84u); }
 unsigned char* SomeOwner(std::uint32_t v) { return v & 4 ? mh::SpriteRecord(v) : mh::TaskAt(v); }
 
 // The group's cells a recorder may move (the harness's case 14).
@@ -438,15 +443,15 @@ void Disturb(std::uint32_t h) {
     const unsigned v = (h >> 12) & 0xFFF;
     switch ((h >> 8) % 8) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
-    case 1: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
+    case 1: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
     case 2: SetWord(mh::Mem(kScratch + 2 * (v % 8)), h >> 16); break;
-    case 3: SetLong(mh::Mem(kKind2 + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
-    case 4: mh::Mem(kTints + v % 0xC00)[0] = Byte(h >> 24); break;
+    case 3: SetLong(mh::Mem(Field_Kind2Z_addr + 4 * (v & 1)), static_cast<std::int32_t>(h)); break;
+    case 4: mh::Mem(MoveScript_TintRecords_addr + v % 0xC00)[0] = Byte(h >> 24); break;
     case 5: PoolRecord(v)[0] = Byte(PoolRecord(v)[0] ^ 1); break;
-    case 6: SetWord(mh::Mem(kTrails + 2 * (v % (kTrailBytes / 2))), h & 0x10000 ? 0xFFFF : h >> 17); break;
+    case 6: SetWord(mh::Mem(EvilEyeBeam_Trails_addr + 2 * (v % (kTrailBytes / 2))), h & 0x10000 ? 0xFFFF : h >> 17); break;
     case 7:
         if (v & 1) SetWord(mh::Mem(kAbility), h & 0x20000 ? 0x2B : h >> 18);
-        else mh::Mem(kFormIndex)[0] = Byte(h >> 24);
+        else mh::Mem(BattlePhases_B89_addr)[0] = Byte(h >> 24);
         break;
     default: break;
     }
@@ -473,7 +478,7 @@ void FillPool() {
         unsigned char* const rec = PoolRecord(i);
         if (mode == 0) rec[0] = Byte(rec[0] | 1);
         else if (mode == 1) rec[0] = Byte(i < taken ? rec[0] | 1 : rec[0] & ~1u);
-        mh::SetPointer(kWardPool + i * 0x84u + 0x80, SomeOwner(mh::Next()));
+        mh::SetPointer(WardMote_Pool_addr + i * 0x84u + 0x80, SomeOwner(mh::Next()));
     }
 }
 
@@ -540,8 +545,8 @@ void Seed(unsigned k) {
     case kEvilEyeBeam_DrawThin: case kEvilEyeBeam_DrawWide: case kEvilEyeBeam_Record: case kEvilEyeBeam_Erase:
         if (mh::Often()) sc[0xA] = Byte(mh::Next() % 0x14);
         if (mh::Often()) sc[0xB] = Byte(mh::Next() % 0x12);
-        if (mh::Half()) SetWord(mh::Mem(kTrails + (sc[4] * 32u + sc[0xB]) * 4u), 0xFFFF);
-        if (mh::Half() && mh::Half()) SetWord(mh::Mem(kTrails + (sc[4] * 32u + sc[0xB] + 1) * 4u), 0xFFFF);
+        if (mh::Half()) SetWord(mh::Mem(EvilEyeBeam_Trails_addr + (sc[4] * 32u + sc[0xB]) * 4u), 0xFFFF);
+        if (mh::Half() && mh::Half()) SetWord(mh::Mem(EvilEyeBeam_Trails_addr + (sc[4] * 32u + sc[0xB] + 1) * 4u), 0xFFFF);
         break;
     case kEvilEyeSpark_Grow: Near(sc[9], 0xC); break;
     default: break;

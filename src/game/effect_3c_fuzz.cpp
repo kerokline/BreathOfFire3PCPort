@@ -198,7 +198,7 @@ U FxFindShard(const U*, U answer) { return FirstFree(Shards(), at::kShardStride,
 // leaves it (the record found, or past the last).
 U FxFindSpark(const U*, U answer) {
     const U r = FirstFree(Shards(), at::kSparkStride, at::kSparkCount, answer);
-    SetLong(Mem(at::kSparkCursor), static_cast<std::int32_t>(r != 0 ? r : Shards() + at::kSparkStride * at::kSparkCount));
+    SetLong(Mem(Effect3c_SparkCursor_addr), static_cast<std::int32_t>(r != 0 ? r : Shards() + at::kSparkStride * at::kSparkCount));
     return r;
 }
 // A record's set-up (EffectDebris_InitOne, the two shard / spark inits): what
@@ -302,8 +302,8 @@ const std::uint8_t kKinds[] = {0x6D, 0x6E, 0x6F, 0x72, 0x73, 0x74, 0x75};
 // Beyond effect mode's standard regions: the two cursors and kind 0x6D's two
 // particle blocks.
 const sh::Region kRegions[] = {
-    {at::kShardCursor, 4},
-    {at::kSparkCursor, 4},
+    {Effect3c_ShardCursor_addr, 4},
+    {Effect3c_SparkCursor_addr, 4},
     {at::kParticles, 2 * at::kParticleBlock},
 };
 
@@ -442,8 +442,8 @@ void Disturb(U h) {
     if (!sh::InRegions(s, 0x80)) return;
     switch (h % 7) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
-    case 1: SetLong(Mem(at::kShardCursor), static_cast<std::int32_t>(Shards() + at::kShardStride * ((v >> 1) % at::kShardCount))); break;
-    case 2: SetLong(Mem(at::kSparkCursor), static_cast<std::int32_t>(Shards() + at::kSparkStride * ((v >> 1) % at::kSparkCount))); break;
+    case 1: SetLong(Mem(Effect3c_ShardCursor_addr), static_cast<std::int32_t>(Shards() + at::kShardStride * ((v >> 1) % at::kShardCount))); break;
+    case 2: SetLong(Mem(Effect3c_SparkCursor_addr), static_cast<std::int32_t>(Shards() + at::kSparkStride * ((v >> 1) % at::kSparkCount))); break;
     case 3: Cond_ByteFD = static_cast<unsigned char>((v & 1) ? 2u + ((v >> 1) & 1) : v >> 1); break;
     case 4: SetLong(s + 0x1C, static_cast<std::int32_t>(static_cast<U>(Long(s + 0x14)) + ((v >> 1) % 0x14) * 0x100000u)); break;
     case 5: s[0x5D + v % 3] = static_cast<unsigned char>(v >> 2); break;

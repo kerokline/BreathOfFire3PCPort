@@ -30,6 +30,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scena_sc1_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -53,13 +54,13 @@ using scenario_harness::Handler;
 
 // --- the chapter's bytes ------------------------------------------------------
 
-unsigned Step() { return At(at::kStep)[0]; }
-void SetStep(unsigned v) { At(at::kStep)[0] = static_cast<unsigned char>(v); }
+unsigned Step() { return MoveScript_PartyRecords[0x65]; }
+void SetStep(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
 void SetRun(unsigned v) { MoveScript_Var7 = static_cast<signed char>(v); }
 unsigned char& Counter(unsigned i) { return At(at::kCounters + i)[0]; }
-unsigned Timer() { return Word(At(at::kTimer)); }
-void SetTimer(unsigned v) { SetWord(At(at::kTimer), v); }
-void SetAreaByte(unsigned v) { At(at::kAreaByte)[0] = static_cast<unsigned char>(v); }
+unsigned Timer() { return Word(At(MoveScript_PartyRecords_addr + 0x66)); }
+void SetTimer(unsigned v) { SetWord(At(MoveScript_PartyRecords_addr + 0x66), v); }
+void SetAreaByte(unsigned v) { AreaW1f_MusicCurrent = static_cast<unsigned char>(v); }
 bool MessageUp() { return Field_Request == 2; }
 void OpenMessage(unsigned id) {
     SH_CALL(Msg_OpenScript)(static_cast<unsigned short>(id));
@@ -77,7 +78,7 @@ short LeaderWord(unsigned off) { return static_cast<short>(Word(Leader() + off))
 int LeaderLong(unsigned off) { return Long(Leader() + off); }
 
 // The flag bits: the dword 0x929ED0 read afresh at each call.
-unsigned char* Bank() { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(at::kFlagBank))))); }
+unsigned char* Bank() { return reinterpret_cast<unsigned char*>(AreaW0c_FlagRow); }
 bool Flag(unsigned n) { return SH_CALL(Flags_Test)(Bank(), n) != 0; }
 void SetFlag(unsigned n) { SH_CALL(Flags_Set)(Bank(), n); }
 void ClearFlag(unsigned n) { SH_CALL(Flags_Clear)(Bank(), n); }
@@ -107,6 +108,13 @@ bool TakeEffect() {
 }
 // The record of the slot 0x903850 holds, read back as the original does.
 unsigned char* Effect() { return Effect_Objects + (static_cast<std::uint32_t>(At(at::kEffectSlot)[0]) << 7); }
+
+// The typed views of the record pointers (docs/typed-records.md). Spr() views a
+// sprite-family pointer; it is used below +0x80 only (the sprite head every
+// family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
+// Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
+static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
+static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 // A kind-0x13 effect at (x, the camera's second angle word) with +0x6C `far`
 // and +9 `life`: the record written as the original writes it.
 void AimEffect(int x, int far, unsigned life) {
@@ -152,9 +160,9 @@ void Done(unsigned first) {
 
 // Game_Mode 7 with the object 0xFE: the shop (docs/mode_states.md section 1).
 void OpenShop(unsigned step) {
-    At(at::kShopObject)[0] = 0xFE;
-    At(at::kShopByteA)[0] = 0;
-    At(at::kShopByteB)[0] = 0;
+    ModeStates_ShopObject = 0xFE;
+    BattleE1_Mode = 0;
+    ScenaSc1_ShopByteB = 0;
     At(at::kShopByteC)[0] = 1;
     Game_Mode = 7;
     SetStep(step);
@@ -184,9 +192,9 @@ Handler Entry(std::uint32_t table, unsigned index) {
 extern "C" void __cdecl Scena01_Start(void) {
     SH_CALL(Scenario_CallA)(0);
     ChangeArea(9, 0x570000, 0x40000, 7);
-    SetLong(At(at::kStartWord), 0);
+    SetLong(At(Cond_Flags_addr + 0x8), 0);
     SetLong(At(at::kCounters), 0);
-    At(at::kState)[0] = 1;
+    MoveScript_PartyRecords[0x62] = 1;
 }
 
 // original 0x53A2B0: chapter 1's state 2 (Scena01_States entry 2), a tail
@@ -196,7 +204,7 @@ extern "C" void __cdecl Scena01_Run(void) {
     const int run = MoveScript_Var7;
     if (run < 0 || run >= static_cast<int>(at::kRunCount))
         bof3::Fatal("Scena01_Run: run %d past Scena01_Runs (%u entries)", run, at::kRunCount);
-    Entry(at::kRuns, static_cast<unsigned>(run))();
+    Entry(Scena01_Runs_addr, static_cast<unsigned>(run))();
 }
 
 // original 0x53A2C0: run 1, three steps: on counter 0 = 1 the change to area
@@ -540,7 +548,7 @@ extern "C" void __cdecl Scena01_Scene06(void) {
         return;
     case 0xF: {
         if (Waiting()) return;
-        const unsigned member = At(at::kScene06Member)[0];
+        const unsigned member = MoveScript_EffectState[4];
         SetStep(0x10);
         Counter(2) = 4;
         Draw_PassFlags = 0;
@@ -648,8 +656,8 @@ bool Scene08Start(short x_word) {
     SetStep(1);
     Counter(0) = 1;
     Counter(3) = 0;
-    At(at::kScene08A)[0] = 0x7F;
-    At(at::kScene08B)[0] = 0;
+    ScenaSc1_Scene08A = 0x7F;
+    ScenaSc1_Scene08B = 0;
     DropIn(6);
     Kind2(0);
     Cond_ByteFE = 1;
@@ -1906,10 +1914,10 @@ extern "C" void __cdecl Scena01_PlaceEffect(unsigned char n) {
     const unsigned char kind = static_cast<unsigned char>(n + 0x70);
     rec()[5] = 6;
     rec()[6] = kind;
-    SetLong(rec() + 0xC, 0);
-    SetLong(rec() + 0x10, static_cast<signed char>(At(at::kEffectX + At(at::kMemberOrder)[0])[0]));
-    SetWord(rec() + 0x2E, Word(cur + 0x2E));
-    SetWord(rec() + 0x30, Word(cur + 0x30));
+    Fx(rec())->step_x = 0;
+    SetLong(rec() + 0x10, static_cast<signed char>(At(at::kEffectX + Cond_Flags[0xd2])[0]));
+    SetWord(rec() + 0x2E, static_cast<std::uint16_t>(Spr(cur)->screen_x));
+    SetWord(rec() + 0x30, static_cast<std::uint16_t>(Spr(cur)->screen_y));
 }
 
 // original 0x53D470: slot 1 of chapter 1's vtable, the object hook (0x56D6D0
@@ -1922,7 +1930,7 @@ extern "C" void __cdecl Scena01_ObjectHook(unsigned char* object) {
     if (k >= at::kObjectCount)
         bof3::Fatal("Scena01_ObjectHook: object +0x86 %u past Scena01_ObjectHandlers (%u entries)", k, at::kObjectCount);
     using ObjectFn = void (__cdecl*)(unsigned char*, unsigned char*);
-    reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(at::kObjects + 4 * k)))))(object, At(at::kStartWord));
+    reinterpret_cast<ObjectFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(Scena01_ObjectHandlers_addr + 4 * k)))))(object, At(Cond_Flags_addr + 0x8));
 }
 
 namespace {
@@ -1978,7 +1986,7 @@ extern "C" void __cdecl Scena01_Object06(unsigned char* object, unsigned char*) 
     Counter(1) = 0;
     Counter(2) = 0;
     object[1] = 4;
-    SetWord(object + 0x8A, 0);
+    Spr(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xA;
     Turn();
@@ -2005,7 +2013,7 @@ extern "C" void __cdecl Scena01_Object07(unsigned char* object, unsigned char*) 
 extern "C" void __cdecl Scena01_Object08(unsigned char* object, unsigned char*) {
     Set40();
     object[1] = 4;
-    SetWord(object + 0x8A, 0);
+    Spr(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xB;
     Turn();
@@ -2020,7 +2028,7 @@ extern "C" void __cdecl Scena01_Object08(unsigned char* object, unsigned char*) 
 extern "C" void __cdecl Scena01_Object09(unsigned char* object, unsigned char*) {
     Set40();
     object[1] = 4;
-    SetWord(object + 0x8A, 0);
+    Spr(object)->script_position = 0;
     object[0x87] = 0;
     object[0x83] = 0xB;
     Turn();
@@ -2063,12 +2071,12 @@ extern "C" void __cdecl Scena01_Object11(unsigned char*, unsigned char*) {
 // same arguments. The original indexes the table by any al of 0..0x7F; ours
 // aborts past its two.
 extern "C" unsigned char __cdecl Scena01_CellHook(int x, int z) {
-    const unsigned char found = SH_AT(cl::CellFindFn, cl::kCellFind)(At(at::kCells), 2, x, z);
+    const unsigned char found = SH_AT(cl::CellFindFn, cl::kCellFind)(At(Scena01_Cells_addr), 2, x, z);
     if (static_cast<signed char>(found) < 0) return 0xFF;
     if (found >= at::kCellCount)
         bof3::Fatal("Scena01_CellHook: cell %u past Scena01_CellHandlers (%u entries)", found, at::kCellCount);
     using CellFn = unsigned char (__cdecl*)(int, int);
-    return reinterpret_cast<CellFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(at::kCellHandlers + 4u * found)))))(x, z);
+    return reinterpret_cast<CellFn>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(Scena01_CellHandlers_addr + 4u * found)))))(x, z);
 }
 
 // original 0x53DD50: both of Scena01_CellHandlers' entries: with flag 3 set

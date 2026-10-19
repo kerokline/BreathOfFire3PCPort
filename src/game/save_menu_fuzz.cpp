@@ -112,12 +112,12 @@ void DefineRegions() {
     g_regions[rShopWin2] = {0x803430, 0x30};
     g_regions[rObj] = {0x802D40, 0x100};
     g_regions[rSprite] = {0x937F88, 0xC};
-    g_regions[rClut] = {at::kClutSource, 0xC000};
+    g_regions[rClut] = {Gfx_ClutStripSource_addr, 0xC000};
     g_regions[rChoice] = {0x6BC880, 0x40};
     g_regions[rMusicBuf] = {0x7DE3C0, 0xC};
-    g_regions[rDatNames] = {at::kDatNames, 0x40};
+    g_regions[rDatNames] = {Dat_FileNames_addr, 0x40};
     g_regions[rStreamTables] = {at::kStreamTables, 0x50};
-    g_regions[rPacketNext] = {at::kPacketNext, 4};
+    g_regions[rPacketNext] = {Gfx_PacketNext_addr, 4};
     g_regions[rPrim] = {Addr(g_prim), kPrimBytes};
     g_regions[rHeap] = {Addr(g_heap), kHeapBytes};
     g_regions[rSpriteBuf] = {Addr(g_sprite), kSpriteBytes};
@@ -163,16 +163,16 @@ void DisturbFlow() {
     const U h = Hash(0xF10);
     if (h & 3) return;
     switch ((h >> 2) % 4) {
-    case 0: PutByte(at::kFlowState, h >> 8); break;
-    case 1: PutByte(at::kAnswer, (h >> 8) & 1); break;
-    case 2: PutLong(at::kSlot, (h >> 8) % 20); break;
+    case 0: PutByte(SaveMenu_FlowState_addr, h >> 8); break;
+    case 1: PutByte(FieldS_Answer_addr, (h >> 8) & 1); break;
+    case 2: PutLong(Rest2c_Slot_addr, (h >> 8) % 20); break;
     default: PutLong(at::kSlotTop, (h >> 8) % 20); break;
     }
 }
 // Gfx_PacketNext moved within g_prim, as a commit moves it.
 void MovePacket() {
     const U h = Hash(0x9AC);
-    PutLong(at::kPacketNext, Addr(g_prim) + (h % 0x30) * 4);
+    PutLong(Gfx_PacketNext_addr, Addr(g_prim) + (h % 0x30) * 4);
 }
 
 // --- The stand-ins -------------------------------------------------------------
@@ -377,7 +377,7 @@ unsigned __cdecl StubGetClut(int x, int y) {
     return Hash(0x2CA);
 }
 void __cdecl StubCommit(unsigned slot, unsigned size) {
-    Record(0x2D, slot, size, Long(at::kPacketNext) - Addr(g_prim));
+    Record(0x2D, slot, size, Long(Gfx_PacketNext_addr) - Addr(g_prim));
     MovePacket();
 }
 void __cdecl StubTransition(unsigned char kind) {
@@ -387,20 +387,20 @@ void __cdecl StubTransition(unsigned char kind) {
 void __cdecl StubMemberSprite(unsigned member, unsigned slot) {
     Record(0x2F, member, slot);
     const U h = Hash(0x2FA);
-    if (h & 1) PutLong(at::kSpriteCurrent, (h & 2) ? Addr(g_sprite) : at::kObjTrio);
-    if (h & 4) PutLong(at::kFieldState, (h & 8) ? Addr(g_sprite) : at::kObjTrio);
+    if (h & 1) PutLong(Sprite_Current_addr, (h & 2) ? Addr(g_sprite) : ObjTrio_addr);
+    if (h & 4) PutLong(Field_State_addr, (h & 8) ? Addr(g_sprite) : ObjTrio_addr);
 }
 void __cdecl StubSetAnimation(unsigned char a) { Record(0x30, a); }
 void __cdecl StubInitCharacters() { Record(0x31); }
 void __cdecl StubScenarioStart(int c) { Record(0x32, static_cast<U>(c)); }
 void __cdecl StubScenarioLoad() {
     Record(0x33);
-    PutByte(at::kFlowState, Hash(0x33A));
+    PutByte(SaveMenu_FlowState_addr, Hash(0x33A));
 }
 void __cdecl StubPartyLoad(unsigned s) { Record(0x34, s); }
 void __cdecl StubPartySelect(unsigned set, unsigned mode) {
     Record(0x35, set & 0xFF, mode);
-    PutByte(at::kPartySet, Hash(0x35A));
+    PutByte(AreaW0b_PartySet_addr, Hash(0x35A));
 }
 int __cdecl StubLoadDone() {
     Record(0x36);
@@ -422,11 +422,11 @@ int __cdecl StubReadFile(const char* path, unsigned size, int offset) {
     const U h = Hash(0x3AA);
     if (h % 4 == 0) return -1;
     // Save_Staging as a file would leave it; the checksum right half the time.
-    for (U i = 0; i < at::kBlockBytes; i += 4) PutLong(at::kStaging + i, Hash(0x1000 + i));
+    for (U i = 0; i < at::kBlockBytes; i += 4) PutLong(Save_Staging_addr + i, Hash(0x1000 + i));
     U sum = 0;
     for (U i = 0; i < at::kBlockBytes; ++i)
-        if (i != 0x70 && i != 0x71) sum += At(at::kStaging)[i];
-    PutWord(at::kChecksum, (h & 2) ? sum : sum + 1 + (h >> 20));
+        if (i != 0x70 && i != 0x71) sum += At(Save_Staging_addr)[i];
+    PutWord(Save_Staging_addr + 0x70, (h & 2) ? sum : sum + 1 + (h >> 20));
     return (h & 4) ? 0 : static_cast<int>(h >> 8);
 }
 void __cdecl StubReadSummaries() { Record(0x3B); }
@@ -438,7 +438,7 @@ void __cdecl StubDrawRows(unsigned glow) {
     Record(0x3D, glow);
     const U h = Hash(0x3DA);
     if (h % 4 == 0) PutByte(at::kCounter, h >> 8);
-    if (h % 4 == 1) PutByte(at::kCursor, h >> 8);
+    if (h % 4 == 1) PutByte(SaveMenu_Cursor_addr, h >> 8);
     if (h % 4 == 2) PutByte(at::kRowBright + (h >> 8) % 3, h >> 16);
 }
 void __cdecl StubDrawRow(int y, unsigned row, unsigned glow) { Record(0x3E, static_cast<U>(y), row, glow); }
@@ -849,9 +849,9 @@ U Wide(U low, U bits_mask) { return (Next() & ~bits_mask) | (low & bits_mask); }
 // The pointers the originals dereference without a test, and the words that
 // index tables, made valid.
 void Sane() {
-    PutLong(at::kPacketNext, Addr(g_prim) + (Next() % 0x30) * 4);
-    PutWord(at::kWaitWord, Next() % 2 ? 0 : Next());
-    PutLong(at::kSlot, Next() % 4 ? Next() % 17 : Next() % 0x100);
+    PutLong(Gfx_PacketNext_addr, Addr(g_prim) + (Next() % 0x30) * 4);
+    PutWord(MoveScript_WaitWordDA_addr, Next() % 2 ? 0 : Next());
+    PutLong(Rest2c_Slot_addr, Next() % 4 ? Next() % 17 : Next() % 0x100);
     // The first slot shown: its upper bytes reach 0x576960's slot argument.
     PutLong(at::kSlotTop, Next() % 4 ? Next() % 17 : Next() % 2 ? Next() % 0x1000 : 0u - Next() % 16);
 }
@@ -869,14 +869,14 @@ Args Generate(unsigned k) {
     g_party = Next() % 5;
     g_equip_target = 0;
     // The step and the state index tables that hold recorders; keep them inside.
-    PutWord(at::kGameStep, Next() % 6);
-    PutByte(at::kFlowState, Next() % 15);
-    PutByte(at::kCursor, Pick({0, 1, 2, 3, 0xFF, 0x7F, 0x80, Next()}));
-    PutByte(at::kAnySave, Next() % 3 ? Next() % 2 : Next());
+    PutWord(Game_Step_addr, Next() % 6);
+    PutByte(SaveMenu_FlowState_addr, Next() % 15);
+    PutByte(SaveMenu_Cursor_addr, Pick({0, 1, 2, 3, 0xFF, 0x7F, 0x80, Next()}));
+    PutByte(SaveMenu_AnySave_addr, Next() % 3 ? Next() % 2 : Next());
     switch (k) {
     case kLoadBankFile: {
         x.a[0] = Next() % 16;
-        if (Next() % 6 == 0) PutLong(at::kDatNames + x.a[0] * 4, 0);
+        if (Next() % 6 == 0) PutLong(Dat_FileNames_addr + x.a[0] * 4, 0);
         // A chunk list: kinds around 2, every header the walk can reach
         // well-formed (the file is at most 0x1800 bytes, a chunk 0x20F).
         U off = 0;
@@ -899,7 +899,7 @@ Args Generate(unsigned k) {
         break;
     case kRestore:
         x.a[0] = Pick({0, 1, 0x100, 0xFF, Next()});
-        PutByte(at::kInnByte, Pick({0, 0x1D, 0x1E, 0x1F, Next()}));
+        PutByte(AreaW1c_Byte9045FB_addr, Pick({0, 0x1D, 0x1E, 0x1F, Next()}));
         break;
     case kChoices:
         x.a[0] = Next() % 3 == 0 ? Next() : Next() % 0x140;
@@ -910,13 +910,13 @@ Args Generate(unsigned k) {
         // Field_Members' record bytes and the two accessory slots, 0x1B sometimes.
         for (U i = 0; i < 5; ++i) {
             const U r = Next() % 4 ? Next() % 8 : Next() & 0xFF;
-            PutByte(at::kMembers + i * at::kMemberStride, r);
+            PutByte(Field_Members_addr + i * at::kMemberStride, r);
             if (r < 16) {
                 PutByte(at::kCharRecords + r * at::kCharStride + 0x16, Pick({0x1B, 0x1A, 0x1C, Next()}));
                 PutByte(at::kCharRecords + r * at::kCharStride + 0x17, Pick({0x1B, 0x1A, 0x1C, Next()}));
             }
         }
-        PutByte(at::kShopWindowByte, Pick({5, 6, 7, 8, Next()}));
+        PutByte(ScenaSc1_ShopByteB_addr, Pick({5, 6, 7, 8, Next()}));
         break;
     }
     case kScale:
@@ -970,12 +970,12 @@ Args Generate(unsigned k) {
                           'A' + Next() % 6}));
         x.a[2] = Pick({0, 1, Next()});
         if (k == kLChoose) {
-            PutLong(at::kSlot, Pick({0, 1, 2, 14, 15, 16, Next() % 17, 0x100, 0xFFFFFFFF}));
-            PutLong(at::kSlotTop, Pick({0, 1, 13, 14, Next() % 17, Long(at::kSlot), Long(at::kSlot) - 2}));
+            PutLong(Rest2c_Slot_addr, Pick({0, 1, 2, 14, 15, 16, Next() % 17, 0x100, 0xFFFFFFFF}));
+            PutLong(at::kSlotTop, Pick({0, 1, 13, 14, Next() % 17, Long(Rest2c_Slot_addr), Long(Rest2c_Slot_addr) - 2}));
             const U pad = Next() & 0xFFFF;
-            PutWord(at::kPressed, pad);
-            PutWord(at::kConfirm, Next() % 3 ? (pad & 0x20) | 0x20 : Next());
-            PutWord(at::kCancel, Next() % 3 ? (pad & 0x40) | 0x40 : Next());
+            PutWord(Input_Pressed_addr, pad);
+            PutWord(Field_ConfirmButtons_addr, Next() % 3 ? (pad & 0x20) | 0x20 : Next());
+            PutWord(Field_CancelButtons_addr, Next() % 3 ? (pad & 0x40) | 0x40 : Next());
         }
         break;
     }
@@ -984,21 +984,21 @@ Args Generate(unsigned k) {
         const U kind = Next() % 3 ? Next() % 4 : Next() % 20;
         x.a[0] = (kind << 12) | (Next() % 0x100);
         for (U i = 0; i < 20; ++i) PutLong(at::kStreamTables + i * 4, Addr(g_names));
-        PutLong(at::kStreamData, Next() % 3 == 0 ? 0 : Next());
-        PutLong(at::kFadeCount, Next() % 2 ? 0 : Next());
+        PutLong(SaveMenu_StreamData_addr, Next() % 3 == 0 ? 0 : Next());
+        PutLong(Music_FadeCount_addr, Next() % 2 ? 0 : Next());
         break;
     }
     case kStreamDone:
-        PutLong(at::kStreamKind, Next() % 2 ? 0 : Next());
+        PutLong(SaveMenu_StreamKind_addr, Next() % 2 ? 0 : Next());
         StreamMissingClear();  // DIV-0129: the original has no such flag
         break;
     case kMusicPlaying:
-        PutLong(at::kMusicBuffer, Next() % 4 == 0 ? 0 : Addr(&g_buffer));
+        PutLong(Music_Buffer_addr, Next() % 4 == 0 ? 0 : Addr(&g_buffer));
         x.ecx = Pick({0, 1, 0xFE, 0xFF, Next()});
         break;
     case kBegin:
-        PutLong(at::kSpriteCurrent, at::kObjTrio);
-        PutLong(at::kFieldState, at::kObjTrio);
+        PutLong(Sprite_Current_addr, ObjTrio_addr);
+        PutLong(Field_State_addr, ObjTrio_addr);
         break;
     case kOpenWait:
         PutByte(at::kCounter, Pick({0, 1, 2, Next()}));
@@ -1006,7 +1006,7 @@ Args Generate(unsigned k) {
     case kFadeIn:
         PutByte(at::kCounter, Pick({0xF0, 0xE0, 0, Next()}));
         for (U i = 0; i < 3; ++i) PutByte(at::kRowBright + i, Pick({0x37, 0x38, 0x39, 0x40, 0xF8, 0xFF, Next()}));
-        PutByte(at::kCursor, Pick({0, 1, 2, 3, 0xFF, Next()}));
+        PutByte(SaveMenu_Cursor_addr, Pick({0, 1, 2, 3, 0xFF, Next()}));
         break;
     case kChoose: {
         for (U i = 0; i < 3; ++i)
@@ -1014,38 +1014,38 @@ Args Generate(unsigned k) {
         PutByte(at::kMenuFlags, Next() % 4 ? Next() | 2 : Next());
         U pad = Next() % 3 ? Pick({0x1000, 0x4000, 0x5000, 0x800, 0x20, 0x1020, 0}) : Next();
         pad |= Next() & 0xFFFF0000u;
-        PutLong(at::kPressed, pad);
-        PutWord(at::kConfirm, Next() % 2 ? 0x20 : Next());
+        PutLong(Input_Pressed_addr, pad);
+        PutWord(Field_ConfirmButtons_addr, Next() % 2 ? 0x20 : Next());
         break;
     }
     case kLeave:
-        PutByte(at::kCursor, Pick({0, 1, 2, 0xFF, 0x80, Next()}));
+        PutByte(SaveMenu_Cursor_addr, Pick({0, 1, 2, 0xFF, 0x80, Next()}));
         break;
     case kList:
     case kLOpen:
-    case kConfirm:
+    case Field_ConfirmButtons_addr:
     case kLoaded:
         break;
     case kRead:
-        PutLong(at::kSlot, Next());
+        PutLong(Rest2c_Slot_addr, Next());
         break;
     case kLoad:
-        PutByte(at::kFlowState, Next() % 8);   // 0x667228 + 4 state stays inside the recorders
+        PutByte(SaveMenu_FlowState_addr, Next() % 8); // 0x667228 + 4 state stays inside the recorders
         break;
     case kError: {
-        PutLong(at::kErrorKind, Pick({0, 1, 2, 3, Next()}));
+        PutLong(SaveMenu_ErrorKind_addr, Pick({0, 1, 2, 3, Next()}));
         const U pad = Next() & 0xFFFF;
-        PutWord(at::kPressed, pad);
-        PutWord(at::kConfirm, Next() % 2 ? pad | 1 : Next());
+        PutWord(Input_Pressed_addr, pad);
+        PutWord(Field_ConfirmButtons_addr, Next() % 2 ? pad | 1 : Next());
         break;
     }
     case kApply:
-        PutByte(at::kApplyDelay, Pick({0, 0, 1, 0x1E, Next()}));
-        PutByte(at::kDefaultPad, Next() % 2 ? 0 : Next());
-        PutLong(at::kHeld, Next());
+        PutByte(SaveMenu_ApplyDelay_addr, Pick({0, 0, 1, 0x1E, Next()}));
+        PutByte(SaveMenu_DefaultPad_addr, Next() % 2 ? 0 : Next());
+        PutLong(Input_Held_addr, Next());
         break;
     case kEnter:
-        PutByte(at::kCursor, Pick({0, 1, 2, 3, Next()}));
+        PutByte(SaveMenu_Cursor_addr, Pick({0, 1, 2, 3, Next()}));
         break;
     default:
         break;

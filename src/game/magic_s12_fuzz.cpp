@@ -198,8 +198,13 @@ constexpr unsigned kPrimBytes = 0x2000;
 alignas(16) unsigned char g_prims[kPrimBytes];
 unsigned char* PrimAt(unsigned k) { return g_prims + 4 * (k % 64); }
 
-constexpr std::uint32_t kScratch = 0x903850, kVertex = 0x9037A0, kTints = 0x7E0700, kSeenBits = 0x9040A8,
-                        kInput = 0x7E1BEC, kAbility = 0x904B80, kAbilityStep = 0x65C4DB;
+// kVertex: now Prim_VertexScratch (symbols.toml).
+// kTints: now MoveScript_TintRecords (symbols.toml).
+// kInput: now Input_Pressed (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850,
+                        kSeenBits = 0x9040A8,
+                        kAbility = 0x904B80,
+                        kAbilityStep = 0x65C4DB;
 
 // Celerity_ApplyStat's stat, chosen by the seed with the cell it moves.
 unsigned g_stat = 0;
@@ -316,19 +321,19 @@ mh::Region g_regions[] = {
     {0x7E0670, 4},        // Gfx_PacketNext
     {0, kPrimBytes},      // g_prims (filled in at start-up)
     {kScratch, 0x10},     // DamageScratch 0x903850..0x90385F
-    {kVertex, 0x20},      // Prim_VertexScratch, four SVECTORs
-    {kTints, 0xC00},      // MoveScript_TintRecords (the record index is a byte)
+    {Prim_VertexScratch_addr, 0x20}, // Prim_VertexScratch, four SVECTORs
+    {MoveScript_TintRecords_addr, 0xC00}, // MoveScript_TintRecords (the record index is a byte)
     {0x80E980, 0x40},     // Celerity_Start's CLUT strip, from
     {0x812980, 0x40},     // and to
     {0x904B50, 0x40},     // the result record pointer 0x904B60, the ability word 0x904B80
     {0x90465C, 4},        // Celerity_End's byte
     {kSeenBits, 0x20},    // the kinds identified
-    {kInput, 2},          // Input_Pressed
+    {Input_Pressed_addr, 2}, // Input_Pressed
 };
 
 unsigned char Byte(std::uint32_t v) { return static_cast<unsigned char>(v); }
 unsigned char* Sc() { return Sprite_Current; }
-unsigned char* Owner() { return mh::Pointer(mh::at::kOwner); }
+unsigned char* Owner() { return mh::Pointer(BattleE2_Owner_addr); }
 
 // The group's cells a recorder may move (the harness's case 14).
 void Disturb(std::uint32_t h) {
@@ -336,9 +341,9 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 7) {
     case 0: Gfx_PacketNext = PrimAt(v); break;
     case 1: mh::Mem(kScratch + v % 16)[0] = Byte(h >> 24); break;
-    case 2: SetWord(mh::Mem(kVertex + 2 * (v % 16)), h >> 16); break;
-    case 3: mh::Mem(kTints + v % 0xC00)[0] = Byte(h >> 24); break;
-    case 4: SetWord(mh::Mem(kInput), (h >> 16) & 1 ? 0 : h >> 20); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + 2 * (v % 16)), h >> 16); break;
+    case 3: mh::Mem(MoveScript_TintRecords_addr + v % 0xC00)[0] = Byte(h >> 24); break;
+    case 4: SetWord(mh::Mem(Input_Pressed_addr), (h >> 16) & 1 ? 0 : h >> 20); break;
     case 5: SetLong(mh::Mem(kSeenBits + 4 * (v % 8)), static_cast<std::int32_t>(h)); break;
     case 6: {
         // the target enemy's "identifiable" byte +0x8F, 0 or not: the panel and
@@ -358,7 +363,7 @@ void Disturb(std::uint32_t h) {
 void Near(unsigned char& b, unsigned before) {
     if (mh::Half()) b = Byte(before + (mh::Half() ? 1u : 0u));
 }
-unsigned char* PartyRec(unsigned i) { return mh::Mem(mh::at::kParty + i * mh::at::kPartyStride); }
+unsigned char* PartyRec(unsigned i) { return mh::Mem(ObjTrio_addr + i * mh::at::kPartyStride); }
 unsigned char* EnemyRec(int i) { return mh::Mem(mh::at::kEnemies + static_cast<std::uint32_t>(i) * mh::at::kEnemyStride); }
 unsigned char& Target() { return mh::Mem(mh::at::kTarget)[0]; }
 // A target on the enemy side (3..10) or the party's (0..2).
@@ -422,7 +427,7 @@ void Seed(unsigned k) {
     case kIdentify_ShowTimed: case kIdentify_ShowUntilInput:
         if (mh::Half()) PartyTarget(); else EnemyTarget();
         Near(sc[9], 1);
-        if (mh::Half()) SetWord(mh::Mem(kInput), 0);
+        if (mh::Half()) SetWord(mh::Mem(Input_Pressed_addr), 0);
         break;
     case kIdentify_End: sc[0xB] = Byte(MH_PICK(0x7F, 0x80, 0x80, 0x81)); break;
     case kIdentify_Roll: SeedRoll(); break;
@@ -452,10 +457,10 @@ void Seed(unsigned k) {
     case kIdentifyFx_WaitClose: Owner()[0xB] = Byte(MH_PICK(0x82, 0x83, 0x83, 0x84)); break;
     case kMagicFx_CountDown2Release: sc[9] = Byte(MH_PICK(1, 2, 2, 3, 4)); break;
     case kIdentifyTint_Brighten:
-        mh::Mem(kTints + sc[0xB] * 12u + 2)[0] = Byte(MH_PICK(6, 7, 7, 8, 9));
+        mh::Mem(MoveScript_TintRecords_addr + sc[0xB] * 12u + 2)[0] = Byte(MH_PICK(6, 7, 7, 8, 9));
         break;
     case kIdentifyTint_Dim:
-        mh::Mem(kTints + sc[0xB] * 12u + 2)[0] = Byte(MH_PICK(0, 1, 1, 2));
+        mh::Mem(MoveScript_TintRecords_addr + sc[0xB] * 12u + 2)[0] = Byte(MH_PICK(0, 1, 1, 2));
         if (mh::Half()) Owner()[0xB] = Byte(Owner()[0xB] & 0x7F);
         break;
     // MAGIC062

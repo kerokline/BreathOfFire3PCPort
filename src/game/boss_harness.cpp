@@ -44,6 +44,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -132,7 +133,7 @@ unsigned char* SpriteFor(unsigned v) {
     return TaskShape() ? TaskAt(v) : EnemyAt(v);
 }
 unsigned char* OwnerFor(unsigned v) { return v & 4 ? g_records[v & 1] : TaskAt(v); }
-unsigned char* CurrentEnemy() { return Pointer(at::kEnemyCurrent); }
+unsigned char* CurrentEnemy() { return Pointer(BattleE3_CurrentEnemy_addr); }
 
 // The values boss code compares the fight byte with (the plan's section 2),
 // and the group's own.
@@ -152,23 +153,23 @@ void EngineDisturb(std::uint32_t h) {
     const auto b = static_cast<unsigned char>(h >> 20);
     const unsigned span = g_group ? g_group->phase_span : 0;
     switch ((h >> 9) % 6) {
-    case 0: SetPointer(at::kWindowCurrent, WindowAt(v)); break;
+    case 0: SetPointer(BattleWinStates_Current_addr, WindowAt(v)); break;
     case 1: {
         unsigned off = (h >> 24) % at::kWindowStride;
         unsigned char* const w = CurrentWindow();
         if (InRegions(w + off, 1)) w[off] = (off == 2 || off == 3) && span ? static_cast<unsigned char>(v % span) : b;
         break;
     }
-    case 2: SetPointer(at::kMemberCurrent, PartyOf(static_cast<unsigned char>(v % at::kPartyCount))); break;
+    case 2: SetPointer(Field_State_addr, PartyOf(static_cast<unsigned char>(v % at::kPartyCount))); break;
     case 3: {
         unsigned char* const m = PartyOf(static_cast<unsigned char>(v % at::kPartyCount));
-        SetPointer(at::kMenuActor, m);
-        SetPointer(at::kMenuCommand, m + at::kMenuCommandAt);
+        SetPointer(BattleE4_MenuActor_addr, m);
+        SetPointer(BattleActorCopies_Command_addr, m + at::kMenuCommandAt);
         break;
     }
-    case 4: Mem(at::kStep + (h >> 24) % 4)[0] = span ? static_cast<unsigned char>(v % span) : b; break;
+    case 4: Mem(BattleActions_Step_addr + (h >> 24) % 4)[0] = span ? static_cast<unsigned char>(v % span) : b; break;
     default:
-        SetPointer(at::kResultRecord, (v & 1 ? PartyOf(static_cast<unsigned char>(v % at::kPartyCount)) : EnemyAt(v)) + at::kResultAt);
+        SetPointer(BattleDamage_Result_addr, (v & 1 ? PartyOf(static_cast<unsigned char>(v % at::kPartyCount)) : EnemyAt(v)) + at::kResultAt);
         break;
     }
 }
@@ -182,12 +183,12 @@ void Disturb() {
     const auto b = static_cast<unsigned char>(h >> 20);
     switch ((h >> 4) % 16) {
     case 0: Sprite_Current = SpriteFor(v); break;
-    case 1: SetPointer(at::kEnemyCurrent, EnemyAt(v)); break;
-    case 2: SetPointer(at::kOwner, OwnerFor(v)); break;
-    case 3: SetPointer(at::kCurrentSlot, TaskAt(v >> 2)); break;
+    case 1: SetPointer(BattleE3_CurrentEnemy_addr, EnemyAt(v)); break;
+    case 2: SetPointer(BattleE2_Owner_addr, OwnerFor(v)); break;
+    case 3: SetPointer(BattleFlow_TaskCurrent_addr, TaskAt(v >> 2)); break;
     case 4: Mem(at::kTarget)[0] = static_cast<unsigned char>(v % 11); break;
     case 5: Mem(at::kActor)[0] = static_cast<unsigned char>(v % 3); break;
-    case 6: Mem(at::kMessageUp)[0] = b; break;
+    case 6: Mem(BattleE1_MessageUp_addr)[0] = b; break;
     case 7: Mem(at::kFlags)[0] = b; break;
     case 8: Frame_Counter = h >> 6; break;
     case 9: case 10: {
@@ -215,13 +216,13 @@ void Disturb() {
         // the chapter bytes for a boss group; the engine cells for an engine
         // group (round twelve: EngineDisturb, below), which has no chapter
         if (g_group && g_group->engine) EngineDisturb(h);
-        else Mem(h & 0x100 ? at::kChapterRun : at::kChapterStep)[0] = b;
+        else Mem(h & 0x100 ? MoveScript_Var7_addr : (MoveScript_PartyRecords_addr + 0x65))[0] = b;
         break;
-    case 13: Mem(at::kBattleEnd)[0] = b; break;
+    case 13: Mem(BattleActions_BattleEnd_addr)[0] = b; break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;
-    case 15: Mem(at::kFight)[0] = FightValue(h >> 8); break;
+    case 15: Mem(BattleActions_EventBattle_addr)[0] = FightValue(h >> 8); break;
     default: break;
     }
     if (g_group && g_group->settle) g_group->settle();
@@ -249,7 +250,7 @@ Slot g_slots[kSlots];
 unsigned g_slot_n;
 
 std::uint32_t Cur() { return Key(Sprite_Current); }
-std::uint32_t Enemy() { return static_cast<std::uint32_t>(move_script::Long(Mem(at::kEnemyCurrent))); }
+std::uint32_t Enemy() { return static_cast<std::uint32_t>(move_script::Long(Mem(BattleE3_CurrentEnemy_addr))); }
 std::uint32_t States() {
     return ByteAt(Sprite_Current, 1) | ByteAt(Sprite_Current, 2) << 9 | ByteAt(Sprite_Current, 3) << 18 |
            (ByteAt(Sprite_Current, 4) & 0xFF) << 27;
@@ -331,9 +332,9 @@ constexpr auto kStubs = MakeStubs(std::make_index_sequence<kSlots>{});
 // next primitive. Wrapped to the buffer's start before its end, the same on
 // both passes.
 std::uint32_t CommitEffect(const std::uint32_t* a, std::uint32_t answer) {
-    unsigned char* next = Pointer(at::kPacketNext) + (a[1] & 0xFF);
+    unsigned char* next = Pointer(Gfx_PacketNext_addr) + (a[1] & 0xFF);
     if (next < g_packets || next + 0x100 > g_packets + kPacketBytes) next = g_packets;
-    SetPointer(at::kPacketNext, next);
+    SetPointer(Gfx_PacketNext_addr, next);
     return answer;
 }
 // BossActor_Find(tag): a pointer to one of the first four field objects (in
@@ -371,8 +372,8 @@ std::uint32_t TurnOrderEffect(const std::uint32_t*, std::uint32_t answer) {
 // increments it after - then moved (BSH's StepEffect; BSC's form moved the
 // move counter instead, MoveCounterEffect).
 std::uint32_t EndWinEffect(const std::uint32_t*, std::uint32_t answer) {
-    Note(Mem(at::kChapterStep)[0]);
-    Mem(at::kChapterStep)[0] = static_cast<unsigned char>(Noise());
+    Note(Mem(MoveScript_PartyRecords_addr + 0x65)[0]);
+    Mem(MoveScript_PartyRecords_addr + 0x65)[0] = static_cast<unsigned char>(Noise());
     return answer;
 }
 // Msg_OpenScript: set-up 27's hooks read the script bits 0x904AAD again after
@@ -1009,15 +1010,15 @@ void Where(unsigned byte, std::uint32_t& region, std::uint32_t& offset) {
 // 0x904B40 at the harness's records; the result record 0x904B60 at a member's
 // or an enemy's +0x104; a NUL every 16th byte of the text buffer.
 void FixEngine() {
-    SetPointer(at::kWindowCurrent, WindowAt(Next()));
+    SetPointer(BattleWinStates_Current_addr, WindowAt(Next()));
     unsigned char* const member = MemberShape() && Next() % 4 != 0 ? Sprite_Current : PartyOf(static_cast<unsigned char>(Next() % 3));
-    SetPointer(at::kMemberCurrent, member);
+    SetPointer(Field_State_addr, member);
     unsigned char* const actor = Often() ? member : PartyOf(static_cast<unsigned char>(Next() % 3));
-    SetPointer(at::kMenuActor, actor);
-    SetPointer(at::kMenuCommand, actor + at::kMenuCommandAt);
-    SetPointer(at::kActingSprite, g_records[Next() & 1]);
-    SetPointer(at::kActingSprite2, g_records[Next() & 1]);
-    SetPointer(at::kResultRecord, (Half() ? PartyOf(static_cast<unsigned char>(Next() % 3)) : EnemyAt(Next())) + at::kResultAt);
+    SetPointer(BattleE4_MenuActor_addr, actor);
+    SetPointer(BattleActorCopies_Command_addr, actor + at::kMenuCommandAt);
+    SetPointer(MagicS23_ActorSprite_addr, g_records[Next() & 1]);
+    SetPointer(BattleSprites_Action_addr, g_records[Next() & 1]);
+    SetPointer(BattleDamage_Result_addr, (Half() ? PartyOf(static_cast<unsigned char>(Next() % 3)) : EnemyAt(Next())) + at::kResultAt);
     for (unsigned i = 15; i < kTextBytes; i += 16) g_text[i] = 0;
 }
 
@@ -1030,11 +1031,11 @@ void FixEngine() {
 // inside Cond_Flags, the packet pointer at the harness's buffer.
 void Fix() {
     Sprite_Current = SpriteFor(Next());
-    if (EngineShape()) SetPointer(at::kEnemyCurrent, EnemyAt(Next()));   // never a member (round twelve)
-    else SetPointer(at::kEnemyCurrent, TaskShape() || !Often() ? EnemyAt(Next()) : Sprite_Current);
-    SetPointer(at::kCurrentSlot, TaskShape() && Often() ? Sprite_Current : TaskAt(Next()));
-    SetPointer(at::kOwner, OwnerFor(Next()));
-    SetPointer(at::kSource, g_records[Next() & 1]);
+    if (EngineShape()) SetPointer(BattleE3_CurrentEnemy_addr, EnemyAt(Next())); // never a member (round twelve)
+    else SetPointer(BattleE3_CurrentEnemy_addr, TaskShape() || !Often() ? EnemyAt(Next()) : Sprite_Current);
+    SetPointer(BattleFlow_TaskCurrent_addr, TaskShape() && Often() ? Sprite_Current : TaskAt(Next()));
+    SetPointer(BattleE2_Owner_addr, OwnerFor(Next()));
+    SetPointer(BattleOdds_ActorObject_addr, g_records[Next() & 1]);
     Mem(at::kTarget)[0] = static_cast<unsigned char>(Next() % 11);
     Mem(at::kActor)[0] = static_cast<unsigned char>(Next() % 3);
     for (unsigned k = 0; k < 4; ++k) {
@@ -1044,16 +1045,16 @@ void Fix() {
         SetPointer(at::kTasks + k * at::kTaskStride + 0x80, OwnerFor(Next()));
     }
     for (unsigned k = 0; k < at::kEnemyCount; ++k) {
-        unsigned char* const e = EnemyAt(k);
-        move_script::SetLong(e + 0xF4, static_cast<std::int32_t>(g_hook_enemy));
-        move_script::SetLong(e + 0xF8, static_cast<std::int32_t>(Key(g_records[0])));
-        move_script::SetLong(e + 0xFC, static_cast<std::int32_t>(Key(g_records[1])));
+        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(EnemyAt(k));
+        enemy_rec->event_hook = static_cast<std::int32_t>(g_hook_enemy);
+        enemy_rec->cue_table = static_cast<std::int32_t>(Key(g_records[0]));
+        enemy_rec->anim_table = static_cast<std::int32_t>(Key(g_records[1]));
     }
-    move_script::SetLong(Mem(at::kHookEnd), static_cast<std::int32_t>(g_hook_end));
-    move_script::SetLong(Mem(at::kHookExit), static_cast<std::int32_t>(g_hook_exit));
-    move_script::SetLong(Mem(at::kHookEvent), static_cast<std::int32_t>(g_hook_event));
-    SetPointer(at::kFlagBits, Mem(at::kCondFlags + 8 * (Next() % 40)));
-    SetPointer(at::kPacketNext, g_packets + 4 * (Next() % 64));
+    move_script::SetLong(Mem(BattleHook_End_addr), static_cast<std::int32_t>(g_hook_end));
+    move_script::SetLong(Mem(BattleHook_Exit_addr), static_cast<std::int32_t>(g_hook_exit));
+    move_script::SetLong(Mem(BattleHook_Event_addr), static_cast<std::int32_t>(g_hook_event));
+    SetPointer(AreaW0c_FlagRow_addr, Mem(Cond_Flags_addr + 8 * (Next() % 40)));
+    SetPointer(Gfx_PacketNext_addr, g_packets + 4 * (Next() % 64));
     if (g_group && g_group->engine) FixEngine();
 }
 
@@ -1117,9 +1118,9 @@ unsigned char* EnemyAt(unsigned k) { return Mem(at::kEnemies + (k % at::kEnemyCo
 unsigned char* EnemyOf(unsigned char target) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
-unsigned char* PartyOf(unsigned char member) { return Mem(at::kParty + (member % at::kPartyCount) * at::kPartyStride); }
+unsigned char* PartyOf(unsigned char member) { return Mem(ObjTrio_addr + (member % at::kPartyCount) * at::kPartyStride); }
 unsigned char* TaskAt(unsigned k) { return Mem(at::kTasks + (k % 4) * at::kTaskStride); }
-unsigned char* Object(unsigned k) { return Mem(at::kObjects + (k % at::kObjectCount) * at::kObjectStride); }
+unsigned char* Object(unsigned k) { return Mem(Sprite_Objects_addr + (k % at::kObjectCount) * at::kObjectStride); }
 unsigned char* SpriteRecord(unsigned k) { return g_records[k & 1]; }
 unsigned char* Packets() { return g_packets; }
 bool InEngineBands(std::uint32_t address) {
@@ -1128,13 +1129,13 @@ bool InEngineBands(std::uint32_t address) {
     return false;
 }
 unsigned char* WindowAt(unsigned k) { return Mem(at::kWindows + (k % at::kWindowCount) * at::kWindowStride); }
-unsigned char* CurrentWindow() { return Pointer(at::kWindowCurrent); }
+unsigned char* CurrentWindow() { return Pointer(BattleWinStates_Current_addr); }
 unsigned char* TextBuffer() { return g_text; }
 std::uint32_t HookStub(std::uint32_t cell) {
     switch (cell) {
     case at::kHookEnd: return g_hook_end;
-    case at::kHookExit: return g_hook_exit;
-    case at::kHookEvent: return g_hook_event;
+    case BattleHook_Exit_addr: return g_hook_exit;
+    case BattleHook_Event_addr: return g_hook_event;
     default: return g_hook_enemy;
     }
 }
@@ -1242,14 +1243,14 @@ void Run(const Group& group) {
         {0x937F80, 0x18},                                           // Sprite_Current, Gfx_ClutStripDirty, Frame_Counter
         {0x939AD0, 0x50},                                           // the current enemy 0x939AD8 .. 0x939B1C
         {at::kBattle, at::kBattleSize},                             // the battle bytes and the three hooks
-        {at::kMessageUp, 4},
-        {at::kParty, at::kPartyCount * at::kPartyStride},           // ObjTrio
+        {BattleE1_MessageUp_addr, 4},
+        {ObjTrio_addr, at::kPartyCount * at::kPartyStride},         // ObjTrio
         {0x8034E0, 0x10},                                           // Cond_ByteFA .., the chapter's run and step
-        {at::kObjects, at::kObjectCount * at::kObjectStride},       // Sprite_Objects: the field's actors
-        {at::kFlagBits, 4},                                         // the chapter's flag bits (a pointer)
-        {at::kCondFlags, 0x1D0},                                    // Cond_Flags, which it points into
-        {at::kEnemyRows, 0x48 + 8 * at::kEnemyDataStride},          // the area's enemy rows and records
-        {at::kPacketNext, 4},                                       // Gfx_PacketNext
+        {Sprite_Objects_addr, at::kObjectCount * at::kObjectStride}, // Sprite_Objects: the field's actors
+        {AreaW0c_FlagRow_addr, 4},                                  // the chapter's flag bits (a pointer)
+        {Cond_Flags_addr, 0x1D0},                                   // Cond_Flags, which it points into
+        {Encounter_Rows_addr, 0x48 + 8 * at::kEnemyDataStride},     // the area's enemy rows and records
+        {Gfx_PacketNext_addr, 4},                                   // Gfx_PacketNext
         {Key(g_records), sizeof g_records},
         {Key(g_packets), sizeof g_packets},
     };
@@ -1258,8 +1259,8 @@ void Run(const Group& group) {
     // the state three or more of BE1..BE7 touch beyond the boss frame
     const Region engine[] = {
         {at::kWindows, at::kWindowCount * at::kWindowStride},       // WindowRecords: BE1..BE6
-        {at::kWindowCurrent, 4},                                    // the record a window handler runs for: BE7 (every kWindow)
-        {at::kMemberCurrent, 4},                                    // Field_State: BE2, BE3, BE4
+        {BattleWinStates_Current_addr, 4},                          // the record a window handler runs for: BE7 (every kWindow)
+        {Field_State_addr, 4},                                      // Field_State: BE2, BE3, BE4
         {0x903A50, 0xD4},                                           // DrawItemPool_Top's tail, CharacterRecords' head, Field_ActorStates[0]: BE1..BE4, BE6, BE7
         {0x9045FC, 0x58},                                           // the 18 dwords at 0x904608 and their neighbours: BE2, BE5, BE6, BE7
         {0x939EC0, 0xA0},                                           // the menu actor 0x939EC4, the transformation's cells 0x939EE0..: BE3..BE7
@@ -1352,7 +1353,7 @@ void Run(const Group& group) {
         g_rand_first = -1;
         Apply(input);
         Fix();
-        Mem(at::kFight)[0] = static_cast<unsigned char>(group.fight >= 0 ? group.fight : 1 + Next() % 55);
+        Mem(BattleActions_EventBattle_addr)[0] = static_cast<unsigned char>(group.fight >= 0 ? group.fight : 1 + Next() % 55);
         if (group.kind >= 0 && InRegions(CurrentEnemy() + 0x100, 1)) CurrentEnemy()[0x100] = static_cast<unsigned char>(group.kind);
         if (c.shape == Shape::kDispatch && c.states && InRegions(StateByte(c), 1))
             *StateByte(c) = static_cast<unsigned char>(Next() % c.states);
@@ -1416,9 +1417,9 @@ void Run(const Group& group) {
             }
             if (ret_mask) Log5(kReturnTag, answer & ret_mask, 0, 0, 0);
             // the hooks read back after every call (boss_harness.h, Shape)
-            Log5(kShapeTag + static_cast<unsigned>(c.shape), static_cast<std::uint32_t>(move_script::Long(Mem(at::kHookEnd))),
-                 static_cast<std::uint32_t>(move_script::Long(Mem(at::kHookExit))),
-                 static_cast<std::uint32_t>(move_script::Long(Mem(at::kHookEvent))), Cur());
+            Log5(kShapeTag + static_cast<unsigned>(c.shape), static_cast<std::uint32_t>(move_script::Long(Mem(BattleHook_End_addr))),
+                 static_cast<std::uint32_t>(move_script::Long(Mem(BattleHook_Exit_addr))),
+                 static_cast<std::uint32_t>(move_script::Long(Mem(BattleHook_Event_addr))), Cur());
             Capture(out);
         }
         g_calm = false;

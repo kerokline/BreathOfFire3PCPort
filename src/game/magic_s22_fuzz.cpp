@@ -271,10 +271,11 @@ const mh::DataTable kTables[] = {
 alignas(16) unsigned char g_packets[0x200];
 unsigned char* PacketAt(unsigned k) { return g_packets + (k & 3) * 0x40; }
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
 const mh::Region kRegions[] = {
     {kScratch, 0x10},
-    {kVertices, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                               // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
     {Key(MoveScript_TintRecords), 0xC00},
@@ -299,7 +300,7 @@ void Disturb(std::uint32_t h) {
         SetWord(mh::Mem(kScratch + k), k == 8 ? word % 24 : k == 0xC ? 1 + word % 23 : k == 0xE ? 0 : word);
         break;
     }
-    case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: {
         static const unsigned kFields[] = {3, 0x10, 0x18, 0x1C, 0x2E, 0x2F, 0x31, 0x3E, 0x3F};
         Sc()[kFields[v % 9]] = static_cast<unsigned char>(word);
@@ -307,7 +308,7 @@ void Disturb(std::uint32_t h) {
     }
     case 4: {
         static const unsigned kFields[] = {0x35, 0x39, 0x3E, 0x3F};
-        mh::Pointer(mh::at::kOwner)[kFields[v % 4]] = static_cast<unsigned char>(word);
+        mh::Pointer(BattleE2_Owner_addr)[kFields[v % 4]] = static_cast<unsigned char>(word);
         break;
     }
     case 5: mh::Mem(mh::at::kTarget)[0] = static_cast<unsigned char>(mh::Mem(mh::at::kTarget)[0] ^ 0x40); break;

@@ -70,34 +70,34 @@ void Disturb() {
     const std::uint32_t v = h >> 8;
     switch ((h >> 4) % 26) {
     case 0: SetB(kState, v % 8); break;
-    case 1: SetB(kSubState, v % 8); break;
-    case 2: SetB(kEffectKind, v % 6); break;
-    case 3: SetB(kEffectPhase, v % 2); break;
+    case 1: SetB(ItemUse_SubState_addr, v % 8); break;
+    case 2: SetB(Msgbox_EffectKind_addr, v % 6); break;
+    case 3: SetB(Msgbox_EffectPhase_addr, v % 2); break;
     case 4: SetW(kFlags, v & 0xFFEFu); break;
-    case 5: SetB(kDelay, v); break;
-    case 6: SetB(kSubCount, v); break;
+    case 5: SetB(Msgbox_Delay_addr, v); break;
+    case 6: SetB(Msgbox_SubCount_addr, v); break;
     case 7: SetW(kMessage, v % 64); break;
-    case 8: SetW(kEffectTimer, v % 2 ? 0xFFFF : v); break;
-    case 9: SetPtr(kAt, g_msg + v % 0x100); break;
-    case 10: SetPtr(kResume, g_msg + v % 0x100); break;
-    case 11: SetPtr(kBase, g_msg + v % 0x100); break;
-    case 12: SetB(kColorHigh, v % 9); break;
+    case 8: SetW(Msgbox_EffectTimer_addr, v % 2 ? 0xFFFF : v); break;
+    case 9: SetPtr(MenuWindows_ListText_addr, g_msg + v % 0x100); break;
+    case 10: SetPtr(Msgbox_Resume_addr, g_msg + v % 0x100); break;
+    case 11: SetPtr(Msgbox_Base_addr, g_msg + v % 0x100); break;
+    case 12: SetB(ItemUse_ColorHigh_addr, v % 9); break;
     // Only ever RAISED: MsgBox_Step's loop ends when the drawn count EQUALS
     // this byte, so lowering it under the count already drawn would walk off
     // the end of the message - a start-up hang, not a mismatch.
-    case 13: SetB(kStepCount, B(kStepCount) | (v % 8)); break;
-    case 14: SetB(kOffsetX, v); break;
-    case 15: SetB(kOffsetY, v); break;
+    case 13: SetB(Msgbox_StepCount_addr, B(Msgbox_StepCount_addr) | (v % 8)); break;
+    case 14: SetB(Msgbox_OffsetX_addr, v); break;
+    case 15: SetB(Msgbox_OffsetY_addr, v); break;
     case 16: MsgBox_PenX = static_cast<short>(v); break;
-    case 17: SetW(kPenY, v); break;
+    case 17: SetW(Msgbox_PenY_addr, v); break;
     case 18: MsgBox_LineX = static_cast<short>(v); break;
-    case 19: SetW(kOriginY, v); break;
-    case 20: SetB(kCursor, v); break;
+    case 19: SetW(Msgbox_OriginY_addr, v); break;
+    case 20: SetB(AreaW0c_ChoiceAnswer_addr, v); break;
     case 21: SetB(kChoiceLast, v); break;
     case 22: SetB(kWindow0State, v % 6); break;
-    case 23: SetB(kWindow1State, v % 6); break;
+    case 23: SetB(ItemUse_Window1State_addr, v % 6); break;
     case 24: SetW(kEffectOff, v); break;
-    default: SetW(kEffectWait, v); break;
+    default: SetW(Msgbox_EffectWait_addr, v); break;
     }
 }
 
@@ -164,8 +164,8 @@ unsigned __cdecl StubRepeat(unsigned pad) {
 void __cdecl StubSound(unsigned short id) {
     const std::uint32_t h = Hash();
     Record(0x587740, id);
-    SetPtr(kAt, g_msg + (h & 0xFF));
-    SetPtr(kResume, g_msg + ((h >> 8) & 0xFF));
+    SetPtr(MenuWindows_ListText_addr, g_msg + (h & 0xFF));
+    SetPtr(Msgbox_Resume_addr, g_msg + ((h >> 8) & 0xFF));
     Disturb();
 }
 const unsigned char* __cdecl StubDrawString(unsigned color, unsigned count, const unsigned char* text) {
@@ -466,11 +466,11 @@ void BuildMessage() {
 // them, Msg_OpenScript's sign-extended index and MsgBox_Reopen's unsigned
 // one both read an untouched zero word, and dropping either extension was
 // refused by none of 1,000 rounds - the harness blind, not the code.
-constexpr std::uint32_t kPoolLow = kScriptPool - 0x20;
+// kPoolLow: now Light_Matrix (symbols.toml).
 constexpr unsigned kPoolBytes = 0x2A0;
 void BuildPool() {
-    std::memset(At(kPoolLow), 0, kPoolBytes);
-    for (unsigned i = 0; i < 16; ++i) SetW(kPoolLow + 2 * i, 0x100 + 8 * i);
+    std::memset(At(Light_Matrix_addr), 0, kPoolBytes);
+    for (unsigned i = 0; i < 16; ++i) SetW(Light_Matrix_addr + 2 * i, 0x100 + 8 * i);
     for (unsigned i = 0; i < 64; ++i) SetW(kScriptPool + 2 * i, 0x80 + 4 * i);
 }
 
@@ -497,24 +497,24 @@ struct Coverage {
 // ignored); every dispatch index is put in range, because out of range the
 // original calls off its own stack frame and ours refuses.
 void Seed(unsigned k, std::uint32_t (&args)[7]) {
-    SetPtr(kBase, g_msg + Next() % 0x40);
-    SetPtr(kAt, g_msg + Next() % 0x40);
-    SetPtr(kResume, g_msg + Next() % 0x40);
+    SetPtr(Msgbox_Base_addr, g_msg + Next() % 0x40);
+    SetPtr(MenuWindows_ListText_addr, g_msg + Next() % 0x40);
+    SetPtr(Msgbox_Resume_addr, g_msg + Next() % 0x40);
     SetW(kFlags, W(kFlags) & 0xFFEFu);       // instant print off: see BuildMessage
-    SetB(kStepCount, Next() % 9);
+    SetB(Msgbox_StepCount_addr, Next() % 9);
     SetB(kState, Next() % 8);
-    SetB(kSubState, Next() % 8);
-    SetB(kEffectKind, Next() % 6);
-    SetB(kEffectPhase, Next() % 2);
-    SetB(kNameIndex, Next() % 8);
+    SetB(ItemUse_SubState_addr, Next() % 8);
+    SetB(Msgbox_EffectKind_addr, Next() % 6);
+    SetB(Msgbox_EffectPhase_addr, Next() % 2);
+    SetB(ObjTrio_addr + 0x89, Next() % 8);
     SetW(kMessage, Often() ? Next() % 64 : (Next() % 2 ? 0xFFF8 + Next() % 8 : Next() & 0xFFFF));
     SetL(kPoolSelector, (Next() % 3) * 0x20);
-    if (Often()) SetW(kEffectTimer, Next() % 3 == 0 ? 0xFFFF : Next() % 4);
-    if (Often()) SetB(kDelay, Next() % 2 ? Next() % 3 : Next() & 0xFF);
-    if (Often()) SetB(kSubCount, Next() % 2 ? 1 + Next() % 3 : Next() & 0xFF);
-    if (Often()) SetB(kColorHigh, Next() % 2 ? Next() % 9 : Next() & 0xFF);
+    if (Often()) SetW(Msgbox_EffectTimer_addr, Next() % 3 == 0 ? 0xFFFF : Next() % 4);
+    if (Often()) SetB(Msgbox_Delay_addr, Next() % 2 ? Next() % 3 : Next() & 0xFF);
+    if (Often()) SetB(Msgbox_SubCount_addr, Next() % 2 ? 1 + Next() % 3 : Next() & 0xFF);
+    if (Often()) SetB(ItemUse_ColorHigh_addr, Next() % 2 ? Next() % 9 : Next() & 0xFF);
     if (Often()) SetB(kWindow0State, Next() % 6);
-    if (Often()) SetB(kWindow1State, Next() % 6);
+    if (Often()) SetB(ItemUse_Window1State_addr, Next() % 6);
     if (Often()) Input_Pressed = static_cast<unsigned short>(Next() % 2 ? 0 : Next() & 0xFFFF);
 
     switch (k) {
@@ -528,30 +528,30 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     case kReset:
         // A leading 0x0C, and the two bytes either side of it.
         if (Often()) {
-            unsigned char* const at = const_cast<unsigned char*>(Ptr(kAt));
+            unsigned char* const at = const_cast<unsigned char*>(Ptr(MenuWindows_ListText_addr));
             at[0] = Next() % 2 ? 0x0C : static_cast<unsigned char>(0x0B + Next() % 3);
         }
         break;
     case kStep:
         // Up to 20: a substitution's own count (8, 16 or 32 characters) is
         // only observable once the step count outlasts it.
-        SetB(kStepCount, Next() % 4 == 0 ? 0 : 1 + Next() % 20);
+        SetB(Msgbox_StepCount_addr, Next() % 4 == 0 ? 0 : 1 + Next() % 20);
         if (Often()) MsgBox_LineX = static_cast<short>(Next() % 0x200);
-        if (Often()) SetW(kOriginY, Next() % 0x200);
+        if (Often()) SetW(Msgbox_OriginY_addr, Next() % 0x200);
         if (Often()) SetB(kFlags, (B(kFlags) & ~8u) | (Next() % 2 ? 8 : 0));
         break;
     case kDispatch: SetB(kState, Next() % 8); break;
     case kState2:
     case kState3:
-    case kState7: SetB(kSubState, Next() % 2); break;
-    case kState4: SetB(kSubState, Next() % 8); break;
-    case kState5: SetB(kSubState, Next() % 6); break;
-    case kEffectTask: SetB(kEffectKind, Next() % 6); break;
+    case kState7: SetB(ItemUse_SubState_addr, Next() % 2); break;
+    case kState4: SetB(ItemUse_SubState_addr, Next() % 8); break;
+    case kState5: SetB(ItemUse_SubState_addr, Next() % 6); break;
+    case kEffectTask: SetB(Msgbox_EffectKind_addr, Next() % 6); break;
     case kShake:
     case kGrow:
-    case kRise: SetB(kEffectPhase, Next() % 2); break;
+    case kRise: SetB(Msgbox_EffectPhase_addr, Next() % 2); break;
     case kPrint:
-        if (Often()) SetB(kTextSpeed, Next() % 3);
+        if (Often()) SetB(ModeFlow_ConfigBytes_addr, Next() % 3);
         if (Often()) Input_Held = static_cast<unsigned short>(Next() % 2 ? 0x20 : 0);
         if (Often()) SetW(kFlags, (W(kFlags) & ~0x101u) | (Next() % 2 ? 0x100 : 0) | (Next() % 2));
         break;
@@ -559,10 +559,10 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     case kState7Delay:
     case kState3Step: {
         static const unsigned char kDelays[] = {0, 1, 2, 0xFF, 0x80};
-        if (Often()) SetB(kDelay, kDelays[Next() % 5]);
+        if (Often()) SetB(Msgbox_Delay_addr, kDelays[Next() % 5]);
         if (k == kState3Step) {
             static const unsigned char kRows[] = {5, 6, 7, 0, 0xFF};
-            if (Often()) SetB(kColorHigh, kRows[Next() % 5]);
+            if (Often()) SetB(ItemUse_ColorHigh_addr, kRows[Next() % 5]);
             if (Often()) SetB(kState, Next() % 2 ? 4 + Next() % 2 : Next() % 8);
         }
         break;
@@ -571,7 +571,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     case kMenuInput: {
         static const unsigned char kCursors[] = {0, 1, 0x7F, 0x80, 0xFF};
         static const unsigned char kLasts[] = {0, 1, 2, 0x7F, 0x80, 0xFF};
-        if (Often()) SetB(kCursor, kCursors[Next() % 5]);
+        if (Often()) SetB(AreaW0c_ChoiceAnswer_addr, kCursors[Next() % 5]);
         if (Often()) SetB(kChoiceLast, kLasts[Next() % 6]);
         if (Often()) Input_Pressed = static_cast<unsigned short>(Next() % 2 ? 0 : 1u << (Next() % 16));
         if (Often()) Field_ConfirmButtons = static_cast<unsigned short>(1u << (Next() % 16));
@@ -589,29 +589,29 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     case kShakeOut:
     case kShakeBack: {
         static const unsigned char kOff[] = {0xFE, 0xFF, 0, 1, 2, 3, 0xFD};
-        if (Often()) SetB(kOffsetX, kOff[Next() % 7]);
+        if (Often()) SetB(Msgbox_OffsetX_addr, kOff[Next() % 7]);
         break;
     }
     case kWander: {
         static const unsigned char kOff[] = {0xFD, 0xFE, 0, 2, 3, 4};
         static const unsigned char kY[] = {0xF6, 0xF7, 0, 1, 0xFF};
-        if (Often()) SetB(kOffsetX, kOff[Next() % 6]);
-        if (Often()) SetB(kOffsetY, kY[Next() % 5]);
-        if (Often()) SetW(kEffectWait, Next() % 3);
+        if (Often()) SetB(Msgbox_OffsetX_addr, kOff[Next() % 6]);
+        if (Often()) SetB(Msgbox_OffsetY_addr, kY[Next() % 5]);
+        if (Often()) SetW(Msgbox_EffectWait_addr, Next() % 3);
         if (Often()) SetW(kEffectOff, Next() % 2 ? 1 : 0xFFFF);
         break;
     }
     case kGrowStep: {
         static const std::uint16_t kOff[] = {0, 1, 2, 0xFFFE, 0xFFFF, 0x7FFF, 0x8000};
         if (Often()) SetW(kEffectOff, kOff[Next() % 7]);
-        if (Often()) SetW(kEffectTimer, Next() % 2 ? 0 : Next() & 0xFFFF);
-        if (Often()) SetB(kEffectKind, Next() % 2 ? 2 : 3);
+        if (Often()) SetW(Msgbox_EffectTimer_addr, Next() % 2 ? 0 : Next() & 0xFFFF);
+        if (Often()) SetB(Msgbox_EffectKind_addr, Next() % 2 ? 2 : 3);
         break;
     }
     case kRiseStep: {
         static const unsigned char kY[] = {0, 1, 0x7F, 0x80, 0xFF};
-        if (Often()) SetB(kOffsetY, kY[Next() % 5]);
-        if (Often()) SetW(kEffectWait, Next() % 2 ? Next() % 0x400 : Next() & 0xFFFF);
+        if (Often()) SetB(Msgbox_OffsetY_addr, kY[Next() % 5]);
+        if (Often()) SetW(Msgbox_EffectWait_addr, Next() % 2 ? Next() % 0x400 : Next() & 0xFFFF);
         if (Often()) SetW(kEffectOff, Next() % 2 ? Next() % 0x200 : Next() & 0xFFFF);
         break;
     }
@@ -624,7 +624,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
     case kState6:
     case kState2Closed:
         if (Often()) SetB(kWindow0State, Next() % 6);
-        if (Often()) SetB(kWindow1State, Next() % 6);
+        if (Often()) SetB(ItemUse_Window1State_addr, Next() % 6);
         break;
     case kWindowAlloc:
         args[0] = Next() % 2 ? Next() % 2 : (Next() & 0xFFFFFF00u) | (Next() % 2);
@@ -662,7 +662,7 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
         args[1] = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(text));
         static const std::uint16_t kOff[] = {0, 1, 2, 0xB, 0xC, 0xD, 0x18, 0xFFF4, 0xFFF3, 0xFFFE, 0x7FFF, 0x8000};
         if (Often()) SetW(kEffectOff, kOff[Next() % 12]);
-        if (Often()) SetB(kColorHigh, Next() % 8);
+        if (Often()) SetB(ItemUse_ColorHigh_addr, Next() % 8);
         break;
     }
     default:
@@ -682,12 +682,12 @@ void Cover(unsigned k, const State& before, const State& after) {
         if (Block(after, kFlags) & 1) ++g_cover.substituted;
     }
     if (k == kStep && after.log_n != 0) ++g_cover.drawn;
-    if (k == kState3Step && Block(after, kColorHigh) != Block(before, kColorHigh)) ++g_cover.scrolled;
+    if (k == kState3Step && Block(after, ItemUse_ColorHigh_addr) != Block(before, ItemUse_ColorHigh_addr)) ++g_cover.scrolled;
     if (k == kPrint && Block(after, kState) != Block(before, kState)) ++g_cover.wrapped;
-    if ((k >= kEffectTask && k <= kRiseStep) && Block(before, kEffectKind) != 0 &&
-        Block(after, kEffectKind) == 0)
+    if ((k >= kEffectTask && k <= kRiseStep) && Block(before, Msgbox_EffectKind_addr) != 0 &&
+        Block(after, Msgbox_EffectKind_addr) == 0)
         ++g_cover.effect_ended;
-    if ((k == kChoiceInput || k == kMenuInput) && Block(after, kCursor) != Block(before, kCursor))
+    if ((k == kChoiceInput || k == kMenuInput) && Block(after, AreaW0c_ChoiceAnswer_addr) != Block(before, AreaW0c_ChoiceAnswer_addr))
         ++g_cover.cursor_moved;
     if ((k == kChoiceOpen || k == kMenuOpen || k == kReset || k == kWindowAlloc) &&
         (Window(after, kWindows) != Window(before, kWindows) ||
@@ -798,9 +798,9 @@ void SelfTest() {
     static unsigned char saved_block[kRegionBytes], saved_pool[kPoolBytes], saved_records[kRecordBytes];
     unsigned at = 0;
     for (const Region& r : kRegions) { std::memcpy(saved_block + at, At(r.at), r.size); at += r.size; }
-    std::memcpy(saved_pool, At(kPoolLow), sizeof saved_pool);
+    std::memcpy(saved_pool, At(Light_Matrix_addr), sizeof saved_pool);
     std::memcpy(saved_records, At(kRecordsLow), sizeof saved_records);
-    const unsigned char saved_name = B(kNameIndex), saved_speed = B(kTextSpeed);
+    const unsigned char saved_name = B(ObjTrio_addr + 0x89), saved_speed = B(ModeFlow_ConfigBytes_addr);
     const std::uint16_t saved_held = Input_Held,
                         saved_confirm = Field_ConfirmButtons,
                         saved_cancel = Field_CancelButtons;
@@ -876,10 +876,10 @@ void SelfTest() {
     g = saved_callees;
     at = 0;
     for (const Region& r : kRegions) { std::memcpy(At(r.at), saved_block + at, r.size); at += r.size; }
-    std::memcpy(At(kPoolLow), saved_pool, sizeof saved_pool);
+    std::memcpy(At(Light_Matrix_addr), saved_pool, sizeof saved_pool);
     std::memcpy(At(kRecordsLow), saved_records, sizeof saved_records);
-    SetB(kNameIndex, saved_name);
-    SetB(kTextSpeed, saved_speed);
+    SetB(ObjTrio_addr + 0x89, saved_name);
+    SetB(ModeFlow_ConfigBytes_addr, saved_speed);
     Input_Held = static_cast<unsigned short>(saved_held);
     Field_ConfirmButtons = static_cast<unsigned short>(saved_confirm);
     Field_CancelButtons = static_cast<unsigned short>(saved_cancel);

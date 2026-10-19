@@ -66,17 +66,17 @@ U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>
 
 // --- the cells --------------------------------------------------------------------------
 
-constexpr U kMode = 0x929F00;          // the menu block: the screen (FieldMenu_States' index)
-constexpr U kState = 0x929F01;         // its state
-constexpr U kStep = 0x929F02;          // its step
+// kMode: now BattleE1_Mode (symbols.toml). the menu block: the screen (FieldMenu_States' index)
+// kState: now FieldS_State (symbols.toml). its state
+// kStep: now FieldS_Step (symbols.toml). its step
 constexpr U kTimer = 0x929F04;         // the open / close countdown
-constexpr U kMember = 0x929F06;        // s8: a party member (Items, Equipment, Ability)
-constexpr U kTarget = 0x929F08;        // s8: the ability's target member
-constexpr U kAnswer = 0x929F0B;        // s8: a yes / no answer (1 yes)
-constexpr U kBackdrop = 0x903A5B;      // the Config backdrop kind (Menu_DrawBackdrop's)
+// kMember: now BattleActorCopies_ItemActor (symbols.toml). s8: a party member (Items, Equipment, Ability)
+// kTarget: now FieldS_Column (symbols.toml). s8: the ability's target member
+// kAnswer: now FieldS_Answer (symbols.toml). s8: a yes / no answer (1 yes)
+// kBackdrop: now FieldS_Backdrop (symbols.toml). the Config backdrop kind (Menu_DrawBackdrop's)
 constexpr U kPressed = 0x7E1BEC;       // Input_Pressed
-constexpr U kConfirm = 0x90358E;       // Field_ConfirmButtons
-constexpr U kCancel = 0x903590;        // Field_CancelButtons
+// kConfirm: now Field_ConfirmButtons (symbols.toml). Field_ConfirmButtons
+// kCancel: now Field_CancelButtons (symbols.toml). Field_CancelButtons
 constexpr U kParty = 0x904062;         // the party's member ids
 constexpr U kRecords = 0x903A70;       // CharacterRecords, 0xA4 each
 constexpr U kRecordStride = 0xA4;
@@ -109,12 +109,12 @@ constexpr U kAbilityCursor = 0x6BDFB7; // FieldAbility_TopMenu's cursor
 
 // --- the helpers ------------------------------------------------------------------------
 
-void Backdrop() { SH_CALL(Menu_DrawBackdrop)(B(kBackdrop)); }
+void Backdrop() { SH_CALL(Menu_DrawBackdrop)(FieldS_Backdrop); }
 void Sound(U id) { SH_CALL(Sound_PlayEffect)(static_cast<unsigned short>(id)); }
 U AutoRepeat(U pressed) { return SH_CALL(Input_AutoRepeat)(pressed); }
 UC PartyCount() { return static_cast<UC>(SH_CALL(Party_Count)(0)); }
-bool Confirmed(U pressed) { return (W(kConfirm) & pressed & 0xFFFF) != 0; }
-bool Cancelled(U pressed) { return (W(kCancel) & pressed & 0xFFFF) != 0; }
+bool Confirmed(U pressed) { return (static_cast<std::uint32_t>(Field_ConfirmButtons) & pressed & 0xFFFF) != 0; }
+bool Cancelled(U pressed) { return (static_cast<std::uint32_t>(Field_CancelButtons) & pressed & 0xFFFF) != 0; }
 // A party member's record index: MoveScript_EffectState[the member's id].
 UC RecordOf(U id) { return MoveScript_EffectState[id & 0xFF]; }
 UC PartyRecord(int member) { return RecordOf(B(static_cast<U>(static_cast<int>(kParty) + member))); }
@@ -332,7 +332,7 @@ void MoveAbilityMember(U repeat, UC count) {
 // original 0x58B1D0: FieldMenuItems_State5Steps[0] - the category.
 extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
     Backdrop();
-    const U pressed = W(kPressed) & Sigma(0xF00C);
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0xF00C);
     const U x = L(0x803338) + 0x2A;
     const U y = W(0x80333A) + 7;
     SetW(0x8032FC, 0x17);
@@ -364,11 +364,11 @@ extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
         turned = true;
     }
     if (turned) B(0x80333F) = B(kItemTops + category);
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
         B(0x803362) = B(0x80333E);
-        const auto step = static_cast<UC>(B(kStep) + 1);
+        const auto step = static_cast<UC>(FieldS_Step + 1);
         B(0x803359) = 6;
         B(0x80335A) = 0xF;
         B(0x803358) = 1;
@@ -376,12 +376,12 @@ extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
         SetW(0x80335E, 0x3C);
         B(0x803363) = 0;
         B(0x803364) = 0xFF;
-        B(kStep) = step;
+        FieldS_Step = step;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    B(kState) = static_cast<UC>(B(kState) - 3);
+    FieldS_State = static_cast<UC>(FieldS_State - 3);
 }
 
 // original 0x58B330: FieldMenuItems_State5Steps[1] - the sort, a row of the
@@ -389,7 +389,7 @@ extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
 extern "C" void __cdecl FieldItems_ArrangeHow(void) {
     Backdrop();
     const U row = B(0x803363);
-    const U pressed = W(kPressed) & 0x5000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     const U x = L(0x80335C) + 5;
     const U y = (row << 4) + W(0x80335E) + 0x1A;
     SetW(0x8032FC, 0x18);
@@ -411,7 +411,7 @@ extern "C" void __cdecl FieldItems_ArrangeHow(void) {
         B(0x803363) = c;
         if (static_cast<int>(c) > last) B(0x803363) = 0;
     }
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
         const UC how = B(AddrOf(FieldItems_ArrangeRows) + 1 + 6u * B(0x803362) + B(0x803363));
@@ -421,16 +421,16 @@ extern "C" void __cdecl FieldItems_ArrangeHow(void) {
         }
         B(0x803341) = 0xFF;
         const UC cursor = B(kItemCursors + B(0x80333E));
-        const auto step = static_cast<UC>(B(kStep) + 1);
+        const auto step = static_cast<UC>(FieldS_Step + 1);
         B(0x803340) = cursor;
-        B(kStep) = step;
+        FieldS_Step = step;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    const auto step = static_cast<UC>(B(kStep) - 1);
+    const auto step = static_cast<UC>(FieldS_Step - 1);
     B(0x803358) = 0;
-    B(kStep) = step;
+    FieldS_Step = step;
 }
 
 // original 0x58B4B0: FieldMenuItems_State5Steps[2] - an entry picked and swapped
@@ -446,7 +446,7 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
     B(0x803364) = 0;
     SetW(0x803458, x);
     B(0x803454) = 1;
-    const U pressed = W(kPressed) & Sigma(0x500C);
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
     SetW(0x80345A, 13u * (B(0x803340) - top + 2) + W(0x80333A));
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
@@ -457,7 +457,7 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
     B(kItemTops + now) = al;
     if (was != cl) Sound(0x100);
     if (W(0x803346) != 0) return;
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         if (B(0x803341) == 0xFF) {
             Sound(0x103);
@@ -488,7 +488,7 @@ extern "C" void __cdecl FieldItems_ArrangeMove(void) {
         B(0x803341) = 0xFF;
         return;
     }
-    B(kStep) = static_cast<UC>(B(kStep) - 1);
+    FieldS_Step = static_cast<UC>(FieldS_Step - 1);
 }
 
 // original 0x58B750: the Items screen's state 6 - the yes / no to discard.
@@ -498,7 +498,7 @@ extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     const UC item = IdList(category, "FieldItems_DiscardConfirm")[B(0x803340)];
     const unsigned char* const name = SH_CALL(Item_NamePtr)(category, item);
     SH_CALL(TextRecord_Set)(0, 0x10, name);
-    const int answer = S8(B(kAnswer));
+    const int answer = FieldS_Answer;
     const U x = L(0x8032F0) - static_cast<U>(36 * answer) + 0xE8;
     const U y = W(0x8032F2) + 5;
     U pressed = L(kPressed);
@@ -508,26 +508,26 @@ extern "C" void __cdecl FieldItems_DiscardConfirm(void) {
     SetW(0x80345A, y);
     if (pressed & 0xA000) {
         Sound(0x101);
-        B(kAnswer) = static_cast<UC>(B(kAnswer) ^ 1);
+        FieldS_Answer = static_cast<UC>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
         pressed = L(kPressed);
     }
     if (Confirmed(pressed)) {
-        if (B(kAnswer) != 0) {
+        if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             Sound(0x104);
             IdList(B(0x80333E), "FieldItems_DiscardConfirm")[B(0x803340)] = 0;
             CountList(B(0x80333E), "FieldItems_DiscardConfirm")[B(0x803340)] = 0;
-            const auto state = static_cast<UC>(B(kState) - 3);
+            const auto state = static_cast<UC>(FieldS_State - 3);
             B(0x803341) = 0xFF;
-            B(kState) = state;
+            FieldS_State = state;
             return;
         }
     } else if (!Cancelled(pressed)) {
         return;
     }
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) - 3);
+    const auto state = static_cast<UC>(FieldS_State - 3);
     B(0x803341) = 0xFF;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58B8A0: the Items screen's state 7 - a consumable used on a member.
@@ -538,21 +538,21 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
     unsigned char* const id = IdList(category, "FieldItems_UseOnMember") + index;
     const U counts = CountListAt(category, "FieldItems_UseOnMember");
     SH_CALL(TextRecord_Set)(0, 0x10, At(kConsumables + 22u * *id));
-    const int member = S8(B(kMember));
+    const int member = BattleActorCopies_ItemActor;
     SetW(0x8032FC, 0x19);
     B(0x80340C) = 1;
     SetW(0x803410, 0xB6);
     SetW(0x803412, static_cast<U>(54 * member + 0x3E));
     const UC n = PartyCount();
-    const U pressed = W(kPressed) & 0x5000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     const U repeat = AutoRepeat(pressed);
-    const UC was = B(kMember);
-    UC cl = MoveMemberS8(kMember, repeat, n);
+    const UC was = static_cast<unsigned char>(BattleActorCopies_ItemActor);
+    UC cl = MoveMemberS8(BattleActorCopies_ItemActor_addr, repeat, n);
     if (was != cl) {
         Sound(0x101);
-        cl = B(kMember);
+        cl = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     }
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         const UC item = *id;
         const UC record = PartyRecord(S8(cl));
@@ -572,10 +572,10 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
     } else {
         return;
     }
-    const auto state = static_cast<UC>(B(kState) - 4);
+    const auto state = static_cast<UC>(FieldS_State - 4);
     B(0x80340C) = 0;
     B(0x803341) = 0xFF;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58BA40: the Items screen's state 9 - a 32-entry list scrolled.
@@ -589,7 +589,7 @@ extern "C" void __cdecl FieldItems_ViewList32(void) {
     const U x = L(0x803338) + 7;
     B(0x803454) = 1;
     SetW(0x803458, x);
-    const U pressed = W(kPressed) & Sigma(0x500C);
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
     SetW(0x80345A, 13u * (B(0x803340) - top + 2) + W(0x80333A));
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
@@ -600,11 +600,11 @@ extern "C" void __cdecl FieldItems_ViewList32(void) {
     B(kItemTops + now) = al;
     if (was != cl) Sound(0x100);
     if (W(0x803346) != 0) return;
-    if (!Cancelled(W(kPressed))) return;
+    if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) - 7);
+    const auto state = static_cast<UC>(FieldS_State - 7);
     const UC t = B(kItemTops);
-    B(kState) = state;
+    FieldS_State = state;
     B(0x80333E) = 0;
     B(0x80333F) = t;
     B(0x803340) = 0xFF;
@@ -759,7 +759,7 @@ extern "C" void __cdecl FieldItemSort_ByIconKind(void) {
 // equip first.
 extern "C" void __cdecl FieldItemSort_EquipableFirst(void) {
     SH_CALL(FieldItemSort_Compact)();
-    const UC record = PartyRecord(S8(B(kMember)));
+    const UC record = PartyRecord(BattleActorCopies_ItemActor);
     const UC category = B(0x80333E);
     const UC bit = Bit8(record);
     for (U bound = 0x7F; bound != 0; --bound) {
@@ -794,7 +794,7 @@ extern "C" void __cdecl FieldItems_CloseWindows(void) {
 // original 0x58C2C0: FieldMenu_States[4], a tail jump through FieldEquip_States
 // by the state byte, unchecked.
 extern "C" void __cdecl FieldEquip_Run(void) {
-    [[clang::musttail]] return reinterpret_cast<Handler>(Entry(AddrOf(FieldEquip_States), 9, B(kState), "FieldEquip_Run"))();
+    [[clang::musttail]] return reinterpret_cast<Handler>(Entry(AddrOf(FieldEquip_States), 9, FieldS_State, "FieldEquip_Run"))();
 }
 
 // original 0x58C2D0: FieldEquip_States[0].
@@ -802,10 +802,10 @@ extern "C" void __cdecl FieldEquip_Open(void) {
     Backdrop();
     SH_CALL(FieldEquip_InitWindows)();
     Sound(0x102);
-    const auto state = static_cast<UC>(B(kState) + 1);
+    const auto state = static_cast<UC>(FieldS_State + 1);
     B(kEquipCursor) = 0;
     B(kTimer) = 5;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58C310: FieldEquip_States[1] and [4], FieldAbility_States[1].
@@ -813,7 +813,7 @@ extern "C" void __cdecl FieldMenu_CountdownState(void) {
     Backdrop();
     const auto t = static_cast<UC>(B(kTimer) - 1);
     B(kTimer) = t;
-    if (t == 0) B(kState) = static_cast<UC>(B(kState) + 1);
+    if (t == 0) FieldS_State = static_cast<UC>(FieldS_State + 1);
 }
 
 // original 0x58C340: FieldEquip_States[2] - the four-entry menu.
@@ -823,7 +823,7 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_TopHelp)) + 2 * c));
     const U x = L(0x803314) + static_cast<U>(48 * c);
     SetW(0x8032FC, help);
-    const U pressed = W(kPressed) & 0xA000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
     B(0x803454) = 1;
     const U y = W(0x803316) + 4;
     SetW(0x803458, x);
@@ -834,25 +834,25 @@ extern "C" void __cdecl FieldEquip_TopMenu(void) {
     const UC was = B(kEquipCursor);
     const UC cl = TurnFour(kEquipCursor, repeat);
     if (was != cl) Sound(0x101);
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x104);
         B(0x80331B) = B(kEquipCursor);
-        const auto state = static_cast<UC>(B(kState) + 1);
+        const auto state = static_cast<UC>(FieldS_State + 1);
         B(0x803454) = 0;
-        B(kState) = state;
+        FieldS_State = state;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x102);
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) + 5);
+    const auto state = static_cast<UC>(FieldS_State + 5);
     B(0x8032EF) = 1;
     B(0x803313) = 1;
     B(0x803337) = 1;
     B(0x80340C) = 0;
     B(0x803454) = 0;
-    B(kState) = state;
+    FieldS_State = state;
     B(kTimer) = 0;
 }
 
@@ -863,7 +863,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     const U wx = W(0x8031F4);
     B(0x80340C) = 1;
     SetW(0x803410, wx);
-    const U pressed = W(kPressed) & 0x5000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     SetW(0x803412, 54 * m0 + 0x3E);
     const U repeat = AutoRepeat(pressed);
     const UC was = B(0x803340);
@@ -884,7 +884,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     const int c = S8(B(kEquipCursor));
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_MemberHelp)) + 2 * c));
     const UC flag = B(static_cast<U>(static_cast<int>(AddrOf(FieldEquip_MemberFlags)) + 2 * c));
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     SetW(0x8032FC, help);
     B(0x803341) = flag;
     if (Confirmed(p)) {
@@ -906,7 +906,7 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
             B(0x80333F) = 0xFF;
             B(0x803359) = 6;
             B(0x803362) = B(kEquipTops + 6u * m);
-            const auto state = static_cast<UC>(B(kState) + 1);
+            const auto state = static_cast<UC>(FieldS_State + 1);
             B(0x80335A) = 0x12;
             B(0x80335B) = 4;
             B(0x803358) = 1;
@@ -918,17 +918,17 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
             B(0x803365) = 0;
             B(0x803361) = 0;
             SetW(0x803368, 0);
-            B(kMember) = m;
+            BattleActorCopies_ItemActor = m;
             B(kTimer) = 5;
-            B(kState) = state;
+            FieldS_State = state;
             return;
         }
         if (cursor == 3) {
-            const auto state = static_cast<UC>(B(kState) + 5);
+            const auto state = static_cast<UC>(FieldS_State + 5);
             B(0x803417) = 0;
             B(0x80333E) = 1;
             B(0x80333F) = 0xFF;
-            B(kState) = state;
+            FieldS_State = state;
             return;
         }
         SH_CALL(FieldEquip_ApplyPreview)();
@@ -936,12 +936,12 @@ extern "C" void __cdecl FieldEquip_PickMember(void) {
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) - 1);
-    const UC m = B(kMember);
+    const auto state = static_cast<UC>(FieldS_State - 1);
+    const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     B(0x80340C) = 0;
     B(0x937F8E) = m;
     B(kTimer) = 0;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58CD40: FieldEquip_States[7] - the screen closed after 4 frames.
@@ -958,15 +958,15 @@ extern "C" void __cdecl FieldEquip_Close(void) {
             ++k;
         } while (static_cast<int>(k) < static_cast<int>(PartyCount()));
     }
-    const UC m = B(kMember);
+    const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     B(0x80325F) = 2;
     B(0x803283) = 2;
     B(0x8032A7) = 2;
     B(0x8032CB) = 2;
     B(0x937F8E) = m;
     B(kTimer) = 0;
-    B(kMode) = 1;
-    B(kState) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
 }
 
 // original 0x58CDD0: FieldEquip_States[8] - a slot's item taken off.
@@ -989,7 +989,7 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
     const U y = 13u * B(0x80333E) + W(0x80333A) + 0x57;
     B(0x803454) = 1;
     SetW(0x803458, x);
-    const U pressed = W(kPressed) & 0x5000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     SetW(0x80345A, y);
     const U repeat = AutoRepeat(pressed);
     if (repeat & 0x4000) {
@@ -1004,7 +1004,7 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
         if (s < 1) B(0x80333E) = 5;
     }
     const UC can = SH_CALL(FieldEquip_PreviewRemove)();
-    if (Confirmed(W(kPressed))) {
+    if (Confirmed(static_cast<std::uint32_t>(Input_Pressed))) {
         if (can != 0) {
             Sound(0x103);
             const UC item = *cell;
@@ -1016,14 +1016,14 @@ extern "C" void __cdecl FieldEquip_RemoveSlot(void) {
             Sound(0x107);
         }
     }
-    if (!Cancelled(W(kPressed))) return;
+    if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) - 5);
+    const auto state = static_cast<UC>(FieldS_State - 5);
     B(0x803417) = 1;
     B(0x803454) = 0;
     B(0x80333E) = 0xFF;
     B(kTimer) = 0;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58CFC0: the Equipment screen's windows.
@@ -1247,7 +1247,7 @@ extern "C" void __cdecl FieldEquip_CloseWindows(void) {
 // original 0x58D7C0: FieldMenu_States[3], a tail jump through
 // FieldAbility_States by the state byte, unchecked.
 extern "C" void __cdecl FieldAbility_Run(void) {
-    [[clang::musttail]] return reinterpret_cast<Handler>(Entry(AddrOf(FieldAbility_States), 10, B(kState), "FieldAbility_Run"))();
+    [[clang::musttail]] return reinterpret_cast<Handler>(Entry(AddrOf(FieldAbility_States), 10, FieldS_State, "FieldAbility_Run"))();
 }
 
 // original 0x58D7D0: FieldAbility_States[0].
@@ -1255,12 +1255,12 @@ extern "C" void __cdecl FieldAbility_Open(void) {
     Backdrop();
     SH_AT(Handler, at::kAbilityWindows)();
     Sound(0x102);
-    const auto state = static_cast<UC>(B(kState) + 1);
+    const auto state = static_cast<UC>(FieldS_State + 1);
     const UC member = B(0x905BA1);
     B(kTimer) = 5;
-    B(kMember) = member;
+    BattleActorCopies_ItemActor = member;
     B(kAbilityCursor) = 0;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58D820: FieldAbility_States[2] - the four-entry menu.
@@ -1270,7 +1270,7 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
     const U help = W(static_cast<U>(static_cast<int>(AddrOf(FieldAbility_TopHelp)) + 4 * c));
     const U x = L(0x803314) + static_cast<U>(48 * c);
     SetW(0x8032FC, help);
-    const U pressed = W(kPressed) & 0xA000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xA000;
     B(0x8033A8) = 0;
     const U y = W(0x803316) + 4;
     B(0x803454) = 1;
@@ -1284,38 +1284,38 @@ extern "C" void __cdecl FieldAbility_TopMenu(void) {
         Sound(0x101);
         cl = B(kAbilityCursor);
     }
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         B(0x80331B) = cl;
         Sound(0x104);
         const UC chosen = B(kAbilityCursor);
         if (chosen == 1) {
-            const auto state = static_cast<UC>(B(kState) + 5);
-            B(kStep) = 0;
-            B(kState) = state;
+            const auto state = static_cast<UC>(FieldS_State + 5);
+            FieldS_Step = 0;
+            FieldS_State = state;
             return;
         }
         if (chosen == 3) {
-            const auto state = static_cast<UC>(B(kState) + 7);
+            const auto state = static_cast<UC>(FieldS_State + 7);
             B(0x8033A3) = 1;
             B(kTimer) = 7;
-            B(kState) = state;
-            B(kStep) = 0;
+            FieldS_State = state;
+            FieldS_Step = 0;
             return;
         }
         if (chosen == 2) B(0x8033AB) = 3;
-        B(kState) = static_cast<UC>(B(kState) + 1);
+        FieldS_State = static_cast<UC>(FieldS_State + 1);
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x102);
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) + 6);
+    const auto state = static_cast<UC>(FieldS_State + 6);
     B(0x8032EF) = 1;
     B(0x803313) = 1;
     B(0x8033A3) = 1;
     B(0x803454) = 0;
-    B(kState) = state;
+    FieldS_State = state;
     B(kTimer) = 5;
 }
 
@@ -1337,7 +1337,7 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
         B(0x80340C) = 0;
     }
     SH_CALL(TextRecord_Set)(0, 8, Record(PartyRecord(member)));
-    const U pressed = W(kPressed) & 0xF000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0xF000;
     SetW(0x8032FC, 0x2F);
     const U repeat = AutoRepeat(pressed);
     B(0x8033AC) = 0xFF;
@@ -1353,24 +1353,24 @@ extern "C" void __cdecl FieldAbility_PickMember(void) {
         TurnType(repeat, cl);
     }
     if (static_cast<int>(B(0x8033AA)) != S8(was)) Sound(0x101);
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     const UC now = B(0x8033AA);
-    B(kMember) = now;
+    BattleActorCopies_ItemActor = now;
     if (Confirmed(p)) {
         Sound(0x104);
-        const int m = S8(B(kMember));
+        const int m = BattleActorCopies_ItemActor;
         const U type = B(0x8033AB);
         const UC kept = B(static_cast<U>(static_cast<int>(kAbilityCursors + type) + 4 * m));
-        const auto state = static_cast<UC>(B(kState) + 1);
+        const auto state = static_cast<UC>(FieldS_State + 1);
         B(0x8033AC) = kept;
-        B(kState) = state;
+        FieldS_State = state;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) - 1);
+    const auto state = static_cast<UC>(FieldS_State - 1);
     B(0x80340C) = 0;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58DC40: FieldAbility_States[4] - the ability.
@@ -1402,12 +1402,12 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
     } else {
         B(0x803454) = 0;
     }
-    const U repeat = AutoRepeat(W(kPressed) & 0xF000);
+    const U repeat = AutoRepeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     UC al, cl;
     bool turned = false;
     if (B(kAbilityCursor) != 2) turned = TurnType(repeat, cl);
     if (turned) {
-        const int m = S8(B(kMember));
+        const int m = BattleActorCopies_ItemActor;
         al = B(static_cast<U>(static_cast<int>(kAbilityCursors + cl) + 4 * m));
         B(0x8033AC) = al;
     } else {
@@ -1432,10 +1432,10 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
         cl = B(0x8033AB);
     }
     {
-        const int m = S8(B(kMember));
+        const int m = BattleActorCopies_ItemActor;
         B(static_cast<U>(static_cast<int>(kAbilityCursors + cl) + 4 * m)) = al;
     }
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         const unsigned char* const chosen = AbilityList(B(0x8033AA), cl);
         const UC ability = chosen[B(0x8033AC)];
@@ -1451,11 +1451,11 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
                 Sound(0x107);
                 return;
             }
-            const auto state = static_cast<UC>(B(kState) + 2);
+            const auto state = static_cast<UC>(FieldS_State + 2);
             const UC kept = B(0x8033AC);
             B(0x8033AD) = kept;
-            B(kAnswer) = 0;
-            B(kState) = state;
+            FieldS_Answer = 0;
+            FieldS_State = state;
             return;
         }
         {
@@ -1497,20 +1497,20 @@ extern "C" void __cdecl FieldAbility_PickAbility(void) {
         }
         const UC kept = B(0x8033AC);
         B(0x8033AD) = kept;
-        const auto state = static_cast<UC>(B(kState) + 1);
+        const auto state = static_cast<UC>(FieldS_State + 1);
         B(0x8033A3) = 4;
         B(0x803454) = 1;
         B(0x80340C) = 0;
-        B(kTarget) = 0;
-        B(kState) = state;
+        FieldS_Column = 0;
+        FieldS_State = state;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) - 1);
+    const auto state = static_cast<UC>(FieldS_State - 1);
     B(0x8033AC) = 0xFF;
     B(0x8033AD) = 0xFF;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58E070: FieldAbility_States[5] - the target.
@@ -1519,7 +1519,7 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
     const UC window = B(0x803337);
     B(0x803454) = 0;
     if (window == 0) {
-        const int t = S8(B(kTarget));
+        const int t = FieldS_Column;
         const U wx = W(0x803338);
         B(0x80340C) = 1;
         B(0x803417) = 1;
@@ -1528,20 +1528,20 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
     } else {
         B(0x80340C) = 0;
     }
-    const U repeat = AutoRepeat(W(kPressed) & 0xF000);
+    const U repeat = AutoRepeat(static_cast<std::uint32_t>(Input_Pressed) & 0xF000);
     const UC n = PartyCount();
-    const UC was = B(kTarget);
-    const UC cl = MoveMemberS8(kTarget, repeat, n);
+    const UC was = static_cast<unsigned char>(FieldS_Column);
+    const UC cl = MoveMemberS8(FieldS_Column_addr, repeat, n);
     if (was != cl) Sound(0x101);
     const unsigned char* const list = AbilityList(B(0x8033AA), B(0x8033AB));
     const UC ability = list[B(0x8033AC)];
     SH_CALL(TextRecord_Set)(0, 0x10, At(kAbilityRecords + 24u * ability));
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     SetW(0x8032FC, 0x30);
     if (Confirmed(p)) {
         const unsigned char* const again = AbilityList(B(0x8033AA), B(0x8033AB));
         const UC used = again[B(0x8033AC)];
-        const UC target = PartyRecord(S8(B(kTarget)));
+        const UC target = PartyRecord(FieldS_Column);
         const UC user = PartyRecord(B(0x8033AA));
         const UC answer = AbilityUse(user, target, used);
         B(kAbilityResult) = answer;
@@ -1561,17 +1561,17 @@ extern "C" void __cdecl FieldAbility_PickTarget(void) {
             B(0x8031F3 + o) = 8;
         } while (k < PartyCount());
     }
-    const auto state = static_cast<UC>(B(kState) - 1);
+    const auto state = static_cast<UC>(FieldS_State - 1);
     B(0x8033A3) = 3;
     B(0x8033AD) = 0xFF;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58E2C0: FieldAbility_States[6] - the yes / no to add the ability
 // to the shared list.
 extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
     Backdrop();
-    const int answer = S8(B(kAnswer));
+    const int answer = FieldS_Answer;
     const U x = L(0x8032F0) - static_cast<U>(36 * answer) + 0xE8;
     SetW(0x80345A, W(0x8032F2) + 5);
     U pressed = L(kPressed);
@@ -1580,11 +1580,11 @@ extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
     SetW(0x8032FC, 0x31);
     if (pressed & 0xA000) {
         Sound(0x101);
-        B(kAnswer) = static_cast<UC>(B(kAnswer) ^ 1);
+        FieldS_Answer = static_cast<UC>(static_cast<unsigned char>(FieldS_Answer) ^ 1);
         pressed = L(kPressed);
     }
     if (Confirmed(pressed)) {
-        if (B(kAnswer) != 0) {
+        if (static_cast<unsigned char>(FieldS_Answer) != 0) {
             Sound(0x104);
             const unsigned char* const list = AbilityList(B(0x8033AA), B(0x8033AB));
             const UC ability = list[B(0x8033AC)];
@@ -1594,15 +1594,15 @@ extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
         } else {
             Sound(0x106);
         }
-        const auto state = static_cast<UC>(B(kState) - 2);
+        const auto state = static_cast<UC>(FieldS_State - 2);
         B(0x8033AD) = 0xFF;
-        B(kState) = state;
+        FieldS_State = state;
         return;
     }
     if (!Cancelled(pressed)) return;
-    const auto state = static_cast<UC>(B(kState) - 2);
+    const auto state = static_cast<UC>(FieldS_State - 2);
     B(0x8033AD) = 0xFF;
-    B(kState) = state;
+    FieldS_State = state;
     Sound(0x106);
 }
 
@@ -1610,7 +1610,7 @@ extern "C" void __cdecl FieldAbility_ShareConfirm(void) {
 // FieldAbility_ArrangeSteps by the step byte, unchecked.
 extern "C" void __cdecl FieldAbility_ArrangeRun(void) {
     [[clang::musttail]] return reinterpret_cast<Handler>(
-        Entry(AddrOf(FieldAbility_ArrangeSteps), 3, B(kStep), "FieldAbility_ArrangeRun"))();
+        Entry(AddrOf(FieldAbility_ArrangeSteps), 3, FieldS_Step, "FieldAbility_ArrangeRun"))();
 }
 
 // original 0x58E420: FieldAbility_ArrangeSteps[0] - the member and the type.
@@ -1625,7 +1625,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
     const U x = L(0x8033A4) + 0x2A;
     B(0x803417) = 1;
     SetW(0x803412, 54u * member + W(0x8031F6));
-    const U pressed = W(kPressed) & Sigma(0xF00C);
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0xF00C);
     B(0x803454) = 1;
     SetW(0x803458, x);
     SetW(0x80345A, hand_y + 7);
@@ -1635,12 +1635,12 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
     MoveAbilityMember(repeat, n);
     UC cl;
     TurnType(repeat, cl);
-    B(kMember) = B(0x8033AA);
-    const U p = W(kPressed);
+    BattleActorCopies_ItemActor = B(0x8033AA);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
         const UC three = B(0x8033AB) == 3 ? 1 : 0;
-        const auto step = static_cast<UC>(B(kStep) + 1);
+        const auto step = static_cast<UC>(FieldS_Step + 1);
         B(0x80340C) = 0;
         B(0x8033E9) = 6;
         B(0x8033EA) = 0xF;
@@ -1649,14 +1649,14 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
         SetW(0x8033EE, 0x3C);
         B(0x8033F2) = static_cast<UC>(three + 5);
         B(0x8033F3) = 0;
-        B(kStep) = step;
+        FieldS_Step = step;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    const auto state = static_cast<UC>(B(kState) - 5);
+    const auto state = static_cast<UC>(FieldS_State - 5);
     B(0x80340C) = 0;
-    B(kState) = state;
+    FieldS_State = state;
 }
 
 // original 0x58E640: FieldAbility_ArrangeSteps[1] - the sort, a row of
@@ -1664,7 +1664,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMember(void) {
 extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
     Backdrop();
     const U row = B(0x8033F3);
-    const U pressed = W(kPressed) & 0x5000;
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & 0x5000;
     const U x = L(0x8033EC) + 5;
     const U y = (row << 4) + W(0x8033EE) + 0x1A;
     SetW(0x8032FC, 0x18);
@@ -1687,7 +1687,7 @@ extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
         B(0x8033F3) = c;
         if (static_cast<int>(c) > static_cast<int>(B(rows)) - 1) B(0x8033F3) = 0;
     }
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         Sound(0x103);
         const UC how = B(rows + 1 + B(0x8033F3));
@@ -1695,20 +1695,20 @@ extern "C" void __cdecl FieldAbility_ArrangeHow(void) {
             SH_AT(void (__cdecl*)(unsigned), at::kAbilitySort)(how);
             return;
         }
-        const int m = S8(B(kMember));
+        const int m = BattleActorCopies_ItemActor;
         B(0x8033AD) = 0xFF;
         const U type = B(0x8033AB);
         const UC kept = B(static_cast<U>(static_cast<int>(kAbilityCursors + type) + 4 * m));
-        const auto step = static_cast<UC>(B(kStep) + 1);
+        const auto step = static_cast<UC>(FieldS_Step + 1);
         B(0x8033AC) = kept;
-        B(kStep) = step;
+        FieldS_Step = step;
         return;
     }
     if (!Cancelled(p)) return;
     Sound(0x106);
-    const auto step = static_cast<UC>(B(kStep) - 1);
+    const auto step = static_cast<UC>(FieldS_Step - 1);
     B(0x8033E8) = 0;
-    B(kStep) = step;
+    FieldS_Step = step;
 }
 
 // original 0x58E7E0: FieldAbility_ArrangeSteps[2] - an ability picked and
@@ -1725,7 +1725,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
     SetW(0x80345A, 13u * (cur + 2) + W(0x8033A6));
     const unsigned char* const list = AbilityList(member, type);
     const UC ability = list[B(0x8033AC)];
-    const U pressed = W(kPressed) & Sigma(0x500C);
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
     SetW(0x8032FC, W(kAbilityHelp + 24u * ability));
     const U repeat = AutoRepeat(pressed);
     UC cl = B(0x8033AC);
@@ -1742,12 +1742,12 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
         }
     }
     {
-        const int m = S8(B(kMember));
+        const int m = BattleActorCopies_ItemActor;
         const U t = B(0x8033AB);
         B(static_cast<U>(static_cast<int>(kAbilityCursors + t) + 4 * m)) = cl;
     }
     if (was != cl) Sound(0x100);
-    const U p = W(kPressed);
+    const U p = Input_Pressed;
     if (Confirmed(p)) {
         if (B(0x8033AD) == 0xFF) {
             const unsigned char* const again = AbilityList(B(0x8033AA), B(0x8033AB));
@@ -1775,7 +1775,7 @@ extern "C" void __cdecl FieldAbility_ArrangeMove(void) {
     if (!Cancelled(p)) return;
     Sound(0x106);
     if (B(0x8033AD) == 0xFF) {
-        B(kStep) = static_cast<UC>(B(kStep) - 1);
+        FieldS_Step = static_cast<UC>(FieldS_Step - 1);
         return;
     }
     B(0x8033AD) = 0xFF;
@@ -1795,22 +1795,22 @@ extern "C" void __cdecl FieldAbility_Close(void) {
             ++k;
         } while (static_cast<int>(k) < static_cast<int>(PartyCount()));
     }
-    const UC m = B(kMember);
+    const UC m = static_cast<unsigned char>(BattleActorCopies_ItemActor);
     B(0x80325F) = 2;
     B(0x803283) = 2;
     B(0x8032A7) = 2;
     B(0x8032CB) = 2;
     B(0x905BA1) = m;
     B(kTimer) = 0;
-    B(kMode) = 1;
-    B(kState) = 0;
+    BattleE1_Mode = 1;
+    FieldS_State = 0;
 }
 
 // original 0x58EA60: FieldAbility_States[9], a tail jump through
 // FieldAbility_ViewSteps by the step byte, unchecked.
 extern "C" void __cdecl FieldAbility_ViewRun(void) {
     [[clang::musttail]] return reinterpret_cast<Handler>(
-        Entry(AddrOf(FieldAbility_ViewSteps), 5, B(kStep), "FieldAbility_ViewRun"))();
+        Entry(AddrOf(FieldAbility_ViewSteps), 5, FieldS_Step, "FieldAbility_ViewRun"))();
 }
 
 // original 0x58EA70: FieldAbility_ViewSteps[0].
@@ -1825,9 +1825,9 @@ extern "C" void __cdecl FieldAbility_ViewOpen(void) {
     B(0x8033CF) = cursor;
     B(0x8033CE) = top;
     Sound(0x102);
-    const auto step = static_cast<UC>(B(kStep) + 1);
+    const auto step = static_cast<UC>(FieldS_Step + 1);
     B(kTimer) = 7;
-    B(kStep) = step;
+    FieldS_Step = step;
 }
 
 // original 0x58EAD0: FieldAbility_ViewSteps[1].
@@ -1835,7 +1835,7 @@ extern "C" void __cdecl FieldAbility_ViewWait(void) {
     Backdrop();
     const auto t = static_cast<UC>(B(kTimer) - 1);
     B(kTimer) = t;
-    if (t == 0) B(kStep) = static_cast<UC>(B(kStep) + 1);
+    if (t == 0) FieldS_Step = static_cast<UC>(FieldS_Step + 1);
 }
 
 // original 0x58EB00: FieldAbility_ViewSteps[2] - the list scrolled.
@@ -1847,7 +1847,7 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     const U cur = B(0x8033CF);
     const U x = L(0x8033C8) + 7;
     SetW(0x803458, x);
-    const U pressed = W(kPressed) & Sigma(0x500C);
+    const U pressed = static_cast<std::uint32_t>(Input_Pressed) & Sigma(0x500C);
     B(0x803454) = 1;
     SetW(0x80345A, 13u * (cur - top + 2) + W(0x8033CA));
     const U repeat = AutoRepeat(pressed);
@@ -1857,13 +1857,13 @@ extern "C" void __cdecl FieldAbility_ViewBrowse(void) {
     B(kViewCursor) = cl;
     B(kViewTop) = al;
     if (was != cl) Sound(0x100);
-    if (!Cancelled(W(kPressed))) return;
+    if (!Cancelled(static_cast<std::uint32_t>(Input_Pressed))) return;
     Sound(0x106);
-    const auto step = static_cast<UC>(B(kStep) + 1);
+    const auto step = static_cast<UC>(FieldS_Step + 1);
     B(0x803454) = 0;
     B(0x8033C7) = 1;
     B(kTimer) = 7;
-    B(kStep) = step;
+    FieldS_Step = step;
 }
 
 // original 0x58ECC0: FieldAbility_ViewSteps[3].
@@ -1874,9 +1874,9 @@ extern "C" void __cdecl FieldAbility_ViewLeave(void) {
     if (t != 0) return;
     B(0x8033A3) = 2;
     Sound(0x102);
-    const auto step = static_cast<UC>(B(kStep) + 1);
+    const auto step = static_cast<UC>(FieldS_Step + 1);
     B(kTimer) = 7;
-    B(kStep) = step;
+    FieldS_Step = step;
 }
 
 // original 0x58ED10: FieldAbility_ViewSteps[4].
@@ -1885,9 +1885,9 @@ extern "C" void __cdecl FieldAbility_ViewEnd(void) {
     const auto t = static_cast<UC>(B(kTimer) - 1);
     B(kTimer) = t;
     if (t != 0) return;
-    const UC state = B(kState);
-    B(kStep) = 0;
-    B(kState) = static_cast<UC>(state - 7);
+    const UC state = FieldS_State;
+    FieldS_Step = 0;
+    FieldS_State = static_cast<UC>(state - 7);
 }
 
 void Rest2E_Inject() {

@@ -187,7 +187,7 @@ template <typename... T> U PickOf(T... v) {
 }
 unsigned char* Speck(unsigned i) { return EffectKind30_Shards + (i % at::kSpecks) * at::kSpeckStride; }
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + (i % at::kSparks) * at::kSparkStride; }
-unsigned char* TrailAt() { return P(at::kTrail); }
+unsigned char* TrailAt() { return P(EffectKind30_Shards_addr + 0xe0); }
 
 // --- the effects -----------------------------------------------------------------------
 
@@ -494,8 +494,8 @@ void Args(unsigned k, U* a) {
     case kSparkWait:
     case k52Rise: a[0] = Key(Spark(sh::Next())); break;
     case k52TrailUpdate:
-    case k52TrailDraw: a[0] = at::kTrail; break;
-    case kCap: a[0] = at::kTrail + 0x10 + 0x20 * (sh::Next() % 0x20); break;
+    case k52TrailDraw: a[0] = EffectKind30_Shards_addr + 0xe0; break;
+    case kCap: a[0] = EffectKind30_Shards_addr + 0xe0 + 0x10 + 0x20 * (sh::Next() % 0x20); break;
     default: break;
     }
 }

@@ -54,9 +54,10 @@ unsigned char g_text[kText];           // Text_DrawSmall's text
 unsigned char g_fstate[2][kFieldState];  // Field_State points at one of these
 unsigned char g_window[kWindow];       // the window record 0x905B84 points at
 
-constexpr std::uint32_t kObjects = 0x7DEE80, kObjectSize = 0xA4;
+// kObjects: now Sprite_Objects (symbols.toml).
+constexpr std::uint32_t kObjectSize = 0xA4;
 constexpr unsigned kObjectCount = 16;
-unsigned char* Object(unsigned i) { return At(kObjects + i * kObjectSize); }
+unsigned char* Object(unsigned i) { return At(Sprite_Objects_addr + i * kObjectSize); }
 
 std::uint32_t Hash() {
     std::uint32_t h = (g_seed + g_log_n * 0x2545F491u) * 0x9E3779B1u;
@@ -106,7 +107,7 @@ void Disturb() {
         break;
     }
     case 6: At(at::kCounters + w % 4)[0] = static_cast<unsigned char>(v % 3 == 0 ? v : v % 10); break;
-    case 7: SetLong(At(at::kFlagBank), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
+    case 7: SetLong(At(AreaW0c_FlagRow_addr), static_cast<std::int32_t>(h * 0x9E3779B1u)); break;
     case 8: Cond_ByteFD = static_cast<unsigned char>(v % 2 ? 1 : v); break;
     case 9: Gfx_PacketNext = g_prim + (w % 0xC0); break;
     case 10: g_text[w % kText] = static_cast<unsigned char>(v % 3 == 0 ? 0 : v); break;
@@ -367,8 +368,8 @@ void* Thunk(const void* choice, const Tail& tail) {
 // --- the swapped .data tables ----------------------------------------------
 
 struct Swap { std::uint32_t at, words, first_slot; std::uint32_t saved[9]; };
-Swap g_swaps[] = {{at::kShopSteps, 3, 0, {}}, {at::kState2Steps, 9, 3, {}}, {at::kFadeSteps, 2, 12, {}},
-                  {at::kScena01States, 3, 14, {}}};
+Swap g_swaps[] = {{GameMode_ShopSteps_addr, 3, 0, {}}, {FieldCore_State2Steps_addr, 9, 3, {}}, {FieldCore_FadeSteps_addr, 2, 12, {}},
+                  {Scena01_States_addr, 3, 14, {}}};
 void SwapTables() {
     for (Swap& s : g_swaps) {
         std::memcpy(s.saved, At(s.at), 4 * s.words);
@@ -384,7 +385,7 @@ void RestoreTables() {
 struct Region { std::uint32_t at, size; };
 const Region kRegions[] = {
     {0x7DEE40, 0x40},                   // the message box's bytes (choice id, set, row, sub-state, colour)
-    {kObjects, kObjectSize * kObjectCount},
+    {Sprite_Objects_addr, kObjectSize * kObjectCount},
     {0x803160, 0x30},                   // 0x803163, 0x803187 (the commits' tails)
     {0x8034E0, 0x18},                   // status bits, chapter state, run, step, timer, Cond_ByteFD
     {0x7E0670, 4},                      // Gfx_PacketNext
@@ -395,9 +396,9 @@ const Region kRegions[] = {
     {0x903580, 0x12},                   // the button map
     {0x903840, 0x14},                   // Camera_Distance, the counters, the effect slot
     {0x9039A2, 2},                      // Field_ScriptFlags
-    {at::kPartyCombo, 1},
+    {AreaW0b_PartySet_addr, 1},
     {0x904EFC, 2},                      // Game_AreaNumber
-    {at::kWindow, 4},
+    {BattleWinStates_Current_addr, 4},
     {0x905BA2, 1},                      // Field_InputFlags
     {0x905D98, 4},                      // Field_State
     {0x905E69, 1},                      // MapView_Redraw
@@ -469,7 +470,7 @@ void Fix() {
     Sprite_Current = Object(Next() % kObjectCount);
     Field_State = g_fstate[Next() % 2];
     Gfx_PacketNext = g_prim + Next() % 0xC0;
-    SetPtr(at::kWindow, g_window);
+    SetPtr(BattleWinStates_Current_addr, g_window);
     g_text[kText - 1] = 0;
 }
 
@@ -488,9 +489,9 @@ Args Seed(unsigned k) {
         static const std::uint16_t kPitches[] = {0x200, 0x1FF, 0x201, 0x216, 0x1EA, 0x355, 0x354, 0x356, 0xAA, 0xA9, 0xAB, 0x8000, 0x7FFF};
         if (Often()) SetWord(At(0x929EC8), kYaws[Next() % 11]);
         if (Often()) SetWord(At(0x929ECC), kPitches[Next() % 13]);
-        if (Half()) At(at::kLookTurn)[0] = 0;
+        if (Half()) At(ModeStates_LookTurn_addr)[0] = 0;
         if (k == kLookPad) {
-            if (Half()) Input_Held = static_cast<unsigned short>(Input_Held & ~Word(At(at::kLookButton)));
+            if (Half()) Input_Held = static_cast<unsigned short>(Input_Held & ~Word(At(Gfx_UnpackScratch_addr + 0x1f006)));
             else if (Half()) Input_Held = static_cast<unsigned short>(Input_Held | (Next() & 0xF000));
         }
         break;
@@ -498,8 +499,8 @@ Args Seed(unsigned k) {
     case kShop: Game_Step = static_cast<unsigned short>(Next() % 3); break;
     case kOpen: {
         const unsigned pick = Next() % 4;
-        At(at::kShopObject)[0] = static_cast<unsigned char>(pick == 0 ? 0x80 | Next() : Next() % kObjectCount);
-        unsigned char* const o = Object(At(at::kShopObject)[0] % kObjectCount);
+        At(ModeStates_ShopObject_addr)[0] = static_cast<unsigned char>(pick == 0 ? 0x80 | Next() : Next() % kObjectCount);
+        unsigned char* const o = Object(At(ModeStates_ShopObject_addr)[0] % kObjectCount);
         if (Often()) SetLong(o + 0x18, Half() ? 9 : static_cast<std::int32_t>(Next() % 12));
         if (Half()) o[7] = static_cast<unsigned char>(o[7] & ~8u);
         break;
@@ -509,11 +510,11 @@ Args Seed(unsigned k) {
         args.a[0] = Garbage(0xFF, Half() ? 0 : Next() & 0xFF);
         break;
     case kChoice:
-        At(at::kChoiceId)[0] = static_cast<unsigned char>(0x80 + Next() % 16);
+        At(ItemUse_ChoiceId_addr)[0] = static_cast<unsigned char>(0x80 + Next() % 16);
         break;
     case kViaCommit:
-        At(at::kChoiceId)[0] = static_cast<unsigned char>(0x80 + Next() % 17);
-        if (Next() % 3 == 0) At(at::kChoiceId)[0] = 0x90;
+        At(ItemUse_ChoiceId_addr)[0] = static_cast<unsigned char>(0x80 + Next() % 17);
+        if (Next() % 3 == 0) At(ItemUse_ChoiceId_addr)[0] = 0x90;
         if (Half()) SetWord(At(0x7DEE48), 0xFFFF);
         break;
     case kSmall: {
@@ -531,7 +532,7 @@ Args Seed(unsigned k) {
     }
     case kState2: Sprite_Current[2] = static_cast<unsigned char>(Next() % 9); break;
     case kFade: Sprite_Current[3] = static_cast<unsigned char>(Next() % 2); break;
-    case kFrame01: At(at::kScena01State)[0] = static_cast<unsigned char>(Next() % 3); break;
+    case kFrame01: At(MoveScript_PartyRecords_addr + 0x62)[0] = static_cast<unsigned char>(Next() % 3); break;
     case kEnter:
     case kHook: {
         static const std::uint16_t kAreas[] = {0, 5, 7, 8, 9, 0xA, 0xD, 0xE, 0x10, 0x11, 0x13, 0x16, 0x17, 0x21, 0x60, 0x4, 0x100};
@@ -578,7 +579,7 @@ Args Seed(unsigned k) {
         break;
     }
     case kCursor:
-        At(at::kCursorSet)[0] = static_cast<unsigned char>(Next() % 8);
+        At(MenuWindows_ListSet_addr)[0] = static_cast<unsigned char>(Next() % 8);
         break;
     default:
         break;
@@ -621,7 +622,7 @@ void Cover(unsigned k, const State& in, const State& out) {
             ++g_cover.open_back;
         break;
     case kViaCommit:
-        if (Byte(in, at::kChoiceId) == 0x90) ++g_cover.commit_twice;
+        if (Byte(in, ItemUse_ChoiceId_addr) == 0x90) ++g_cover.commit_twice;
         break;
     default:
         break;

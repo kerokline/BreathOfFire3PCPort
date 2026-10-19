@@ -81,11 +81,11 @@ const bh::Callee kCallees[] = {
 // The cells beyond the harness's battle frame the 52 read or write.
 const bh::Region kRegions[] = {
     {at::kScriptVar3, 4},        // movement-script variable 3
-    {at::kCarryHp, 8},           // the three words kinds 30 and 31 carry in
+    {BossSe_CarryHp_addr, 8},    // the three words kinds 30 and 31 carry in
     {0x904160, 0x10},            // the party list's tail past Cond_Flags' region (0x904065 + 0xFF)
-    {at::kLeaderPick, 4},
-    {at::kMsgMode, 4},
-    {at::kSavedAp, 4},           // set-up 25's two saved bytes
+    {BossH_LeaderPick_addr, 4},
+    {BossSa_WindowPass_addr, 4},
+    {BossSe_SavedAp_addr, 4},    // set-up 25's two saved bytes
     {0x939A00, 0xD0},            // the copy's count and bytes, set-up 26's sums (to 0x939AD0, the harness's)
     {0x929EC0, 4},               // Field_MemberCount
     {0x7E0918, 4},               // Draw_PassFlags
@@ -123,10 +123,10 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 16;
     switch ((h >> 8) % 5) {
-    case 0: B(at::kScript) = static_cast<unsigned char>(v); break;
-    case 1: B(at::kPartyCopyCount) = static_cast<unsigned char>(v); break;
+    case 0: B(BossSe_Script_addr) = static_cast<unsigned char>(v); break;
+    case 1: B(BossSe_PartyCopyCount_addr) = static_cast<unsigned char>(v); break;
     case 2: bh::PartyOf(static_cast<unsigned char>(v % 3))[0x91] ^= 0x40; break;
-    case 3: B(at::kRoundSlot) = static_cast<unsigned char>(v); break;
+    case 3: B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(v); break;
     default: B(at::kScriptVar3) = static_cast<unsigned char>(v); break;
     }
 }
@@ -144,7 +144,7 @@ bool Wants(const char* run) {
 // flip one of its bits (Noise: the same on both passes).
 void SettleScript() {
     const U n = bh::Noise();
-    if (n % 4 == 0) B(at::kScript) ^= static_cast<unsigned char>(1u << ((n >> 8) % 8));
+    if (n % 4 == 0) B(BossSe_Script_addr) ^= static_cast<unsigned char>(1u << ((n >> 8) % 8));
 }
 
 void RunGroup(const char* run, const bh::Clone* clones, unsigned n, const bh::DataTable* tables, unsigned n_tables,
@@ -174,8 +174,8 @@ const bh::Clone kClonesB22[] = {
 };
 void SeedB22(unsigned k) {
     if (k == 1) {
-        B(at::kBattleEnd) = BattleEndByte();
-        B(at::kMusicFlags) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x40, 0, 0xFF, 0xBF) : bh::Next());
+        B(BattleActions_BattleEnd_addr) = BattleEndByte();
+        B(BattleTurnSteps_MusicFlags_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0x40, 0, 0xFF, 0xBF) : bh::Next());
     }
 }
 
@@ -210,7 +210,7 @@ const bh::Clone kClonesB30[] = {
     Row("Boss30_End", 0x43CFA0, 0x2E, kCalls43CFA0, BH_N(kCalls43CFA0), BH_FN(Boss30_End), 0, S::kEnd),
 };
 void SeedEnd(unsigned k) {
-    if (k == 1) B(at::kBattleEnd) = BattleEndByte();
+    if (k == 1) B(BattleActions_BattleEnd_addr) = BattleEndByte();
     if (k == 1 && bh::Half()) B(at::kScriptVar3) = static_cast<unsigned char>(BH_PICK(0, 0xFF, 0x7F, 0x80, 0xC));
 }
 
@@ -267,17 +267,17 @@ unsigned char FightByte(unsigned char mine) {
 }
 void SeedK30(unsigned k) {
     switch (k) {
-    case 1: B(at::kFight) = FightByte(0x1A); break;
+    case 1: B(BattleActions_EventBattle_addr) = FightByte(0x1A); break;
     case 2:
         // the other state bytes inside the tables, so a dispatcher reading the
         // wrong byte lands on another entry rather than past its table
         if (bh::Often()) Sprite_Current[1] = static_cast<unsigned char>(bh::Next() % 6);
         if (bh::Often()) Sprite_Current[3] = static_cast<unsigned char>(bh::Next() % 6);
         break;
-    case 3: B(at::kFight) = FightByte(0x19); break;
+    case 3: B(BattleActions_EventBattle_addr) = FightByte(0x19); break;
     case 5:
-        B(at::kFight) = FightByte(0x19);
-        B(at::kRoundSlot) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 0x80, 0xFF) : bh::Next());
+        B(BattleActions_EventBattle_addr) = FightByte(0x19);
+        B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 0x80, 0xFF) : bh::Next());
         break;
     case 6:
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? bh::Next() | 2 : bh::Next());
@@ -334,8 +334,8 @@ void SeedK32(unsigned k) {
     unsigned char* const s = Sprite_Current;
     switch (k) {
     case 2: {
-        B(at::kScript) = ScriptBits();
-        unsigned char* const e = bh::Pointer(bh::at::kEnemyCurrent);
+        B(BossSe_Script_addr) = ScriptBits();
+        unsigned char* const e = bh::Pointer(BattleE3_CurrentEnemy_addr);
         e[0x110] = static_cast<unsigned char>(bh::Half() ? e[0x110] | 2 : e[0x110] & ~2u);
         break;
     }
@@ -347,9 +347,9 @@ void SeedK32(unsigned k) {
     case 4: s[9] = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x80, 0x81, 0xFF) : bh::Next()); break;
     case 5:
         bh::SetRandHint(bh::Next() & 3);
-        B(at::kScript) = ScriptBits();
+        B(BossSe_Script_addr) = ScriptBits();
         break;
-    case 9: B(at::kScript) = ScriptBits(); break;
+    case 9: B(BossSe_Script_addr) = ScriptBits(); break;
     default: break;
     }
 }
@@ -382,31 +382,31 @@ void SeedB25(unsigned k) {
         const U pick_step = bh::Next() % 9;
         const U step = pick_step >= 7 ? 5 : pick_step;
         switch (step) {
-        case 0: B(at::kScript) = static_cast<unsigned char>(bits & ~0x20u); break;
-        case 1: B(at::kScript) = static_cast<unsigned char>((bits | 0x20) & ~0x10u); break;
-        case 2: B(at::kScript) = static_cast<unsigned char>((bits | 0x30) & ~1u); break;
-        case 3: B(at::kScript) = static_cast<unsigned char>((bits | 0x31) & ~2u); break;
-        case 4: B(at::kScript) = static_cast<unsigned char>((bits | 0x33) & ~4u); break;
-        case 5: B(at::kScript) = static_cast<unsigned char>(bits | 0x37); break;
-        default: B(at::kScript) = bits; break;
+        case 0: B(BossSe_Script_addr) = static_cast<unsigned char>(bits & ~0x20u); break;
+        case 1: B(BossSe_Script_addr) = static_cast<unsigned char>((bits | 0x20) & ~0x10u); break;
+        case 2: B(BossSe_Script_addr) = static_cast<unsigned char>((bits | 0x30) & ~1u); break;
+        case 3: B(BossSe_Script_addr) = static_cast<unsigned char>((bits | 0x31) & ~2u); break;
+        case 4: B(BossSe_Script_addr) = static_cast<unsigned char>((bits | 0x33) & ~4u); break;
+        case 5: B(BossSe_Script_addr) = static_cast<unsigned char>(bits | 0x37); break;
+        default: B(BossSe_Script_addr) = bits; break;
         }
         // the task's phase 1 for step 0, the order's phase 3 for step 1
         B(at::kPhase) = static_cast<unsigned char>(bh::Often() ? (step < 2 && bh::Often() ? 1 + 2 * step : BH_PICK(1, 3, 0, 2, 5))
                                                                : bh::Next());
-        B(at::kStep) = static_cast<unsigned char>(bh::Often() ? 0 : bh::Next());
-        B(at::kRoundSlot) = static_cast<unsigned char>(bh::Often() ? (step == 5 || bh::Half() ? BH_PICK(4, 6, 4, 6, 5, 3) : bh::Next() % 8)
+        B(BattleActions_Step_addr) = static_cast<unsigned char>(bh::Often() ? 0 : bh::Next());
+        B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(bh::Often() ? (step == 5 || bh::Half() ? BH_PICK(4, 6, 4, 6, 5, 3) : bh::Next() % 8)
                                                                    : bh::Next());
         // member 0's +1 / +2: the two pairs the last step tests, their crossings, or any
         static const U kPairs[][2] = {{6, 1}, {2, 0}, {6, 1}, {2, 0}, {6, 0}, {2, 1}, {3, 0}, {6, 2}, {1, 0}};
         const U* const pair = kPairs[bh::Next() % BH_COUNT(kPairs)];
         const bool any = !bh::Often();
-        B(at::kMember0State1) = static_cast<unsigned char>(any ? bh::Next() : pair[0]);
-        B(at::kMember0State2) = static_cast<unsigned char>(any ? bh::Next() : pair[1]);
+        B(ObjTrio_addr + 0x1) = static_cast<unsigned char>(any ? bh::Next() : pair[0]);
+        B(ObjTrio_addr + 0x2) = static_cast<unsigned char>(any ? bh::Next() : pair[1]);
         B(at::kFlags) = static_cast<unsigned char>(bh::Half() ? B(at::kFlags) | 0x40 : B(at::kFlags) & ~0x40u);
         break;
     }
     case 3:
-        B(at::kPartyCopyCount) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 4, 5, 7, 8, 0x10, 0xFF) : bh::Next());
+        B(BossSe_PartyCopyCount_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 4, 5, 7, 8, 0x10, 0xFF) : bh::Next());
         break;
     default: break;
     }
@@ -434,13 +434,13 @@ void SeedB26(unsigned k) {
         const unsigned char target =
             static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 2, 3, 0, 1, 2, 3, 0x40, 0x80, 0xC0, 4, 7) : bh::Next());
         B(at::kTarget) = target;
-        for (unsigned m = 0; m < 3; ++m) SetWord(Mem(at::kMember0Word128 + at::kPartyStride * m), static_cast<unsigned>(SignedWord()));
+        for (unsigned m = 0; m < 3; ++m) SetWord(Mem(ObjTrio_addr + 0x128 + at::kPartyStride * m), static_cast<unsigned>(SignedWord()));
         SetWord(Mem(at::kEnemy0Word108), static_cast<unsigned>(SignedWord()));
         B(at::kEnemy0Flags) = static_cast<unsigned char>(bh::Half() ? B(at::kEnemy0Flags) | 2 : B(at::kEnemy0Flags) & ~2u);
-        B(at::kRoundSlot) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2) : bh::Next());
+        B(BossSe_RoundSlot_addr) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2) : bh::Next());
         B(at::kEnemy0Flag8E) = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 1, 0, 2, 0x81) : bh::Next());
         SetLong(Mem(at::kTurn), static_cast<std::int32_t>(bh::Often() ? BH_PICK(0x15, 0x15, 0x14, 0x16, 0x115, 0x80000015u) : bh::Next()));
-        B(at::kScript) = static_cast<unsigned char>(bh::Half() ? B(at::kScript) | 0x20 : B(at::kScript) & ~0x20u);
+        B(BossSe_Script_addr) = static_cast<unsigned char>(bh::Half() ? B(BossSe_Script_addr) | 0x20 : B(BossSe_Script_addr) & ~0x20u);
         B(at::kPhase) = static_cast<unsigned char>(bh::Often() ? 1 : bh::Next());
         break;
     }

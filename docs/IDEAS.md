@@ -1889,6 +1889,10 @@ _(2026-10-17) steps 2 to 4 staged_ in [`install-gap-round.md`](install-gap-round
 **Ask (2026-10-17, the owner):** if we want to move closer to a fully
 reconstructed source, what is the next code step?
 **Kind:** engine / tooling
+**Status (2026-10-19):** stages 1 and 2 IN PROGRESS: stages A and B of
+[`typed-data-round.md`](typed-data-round.md) run on `typed/b1` (50,943 raw
+data sites down to 27,394, machine code identical to `main`); stage C staged
+in [`typed-data-stage-c.md`](typed-data-stage-c.md).
 **Feasibility:** HIGH for stages 1 and 2 (mechanical, no behaviour change,
 parallel by file group); MEDIUM for stage 3 (a loader change, proved by the
 state hash). **Gated on:** nothing for stage 1; stage 3 on the state hash

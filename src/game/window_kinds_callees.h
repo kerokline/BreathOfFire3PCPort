@@ -24,23 +24,23 @@ namespace at {
 
 constexpr std::uint32_t kRecords = 0x803160;       // 22 window records of 0x24 bytes (WindowRecords)
 constexpr std::uint32_t kRecordsEnd = 0x803478;
-constexpr std::uint32_t kCurrent = 0x905B84;       // dword: the record the window layer is running
+// kCurrent: now BattleWinStates_Current (symbols.toml). dword: the record the window layer is running
 
 // The battle message ring (docs/battle_windows.md section 2): 16 entries of
 // 8 bytes, +0 flags (bit 0 waits for a button, bit 1 on the timer), +1 the
 // timer (0xFF for none), +4 the text. Read index 0x93C2A0, write index
 // 0x93C2A1.
-constexpr std::uint32_t kMsgHead = 0x93C2A0;
-constexpr std::uint32_t kMsgTail = 0x93C2A1;
+// kMsgHead: now BattleWindows_MsgHead (symbols.toml).
+// kMsgTail: now BattleActorCopies_QueueWrite (symbols.toml).
 constexpr std::uint32_t kMsgRing = 0x93C2C0;
-constexpr std::uint32_t kMsgOpen = 0x939F60;       // u8: 1 while the message window is out (7 readers in the battle code)
+// kMsgOpen: now BattleE1_MessageUp (symbols.toml). u8: 1 while the message window is out (7 readers in the battle code)
 
 // The banner pool (docs/battle_misc.md section 1.1): 8 entries of 0xC bytes,
 // +1 the kind, +4 the text, +0xA the byte the banner window draws it in.
 constexpr std::uint32_t kBannerPool = 0x93B8E0;
 constexpr std::uint32_t kBannerText = 0x93B8E4;    // kBannerPool + 4
 constexpr std::uint32_t kBannerColour = 0x93B8EA;  // kBannerPool + 0xA
-constexpr std::uint32_t kBannerCurrent = 0x93B8C0; // dword: the entry BattleBanner_Dispatch last visited
+// kBannerCurrent: now BattleMisc_BannerCurrent (symbols.toml). dword: the entry BattleBanner_Dispatch last visited
 constexpr std::uint32_t kBannerMask = 0x904AE9;    // u8: the kinds BattleBanner_Dispatch has seen this frame
 
 constexpr std::uint32_t kScratch = 0x903850;       // DamageScratch's byte 0; the gauge keeps a value there

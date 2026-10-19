@@ -15,12 +15,12 @@ namespace d3d_list {
 using U = std::uint32_t;
 
 constexpr U kRetOnly = bof3::addr::BareRet;
-constexpr U kDevice = 0x7CC350;        // D3d_Device
-constexpr U kRenderFlags = 0x6C3A4C;   // Gfx_RenderFlags, byte: bit 0 the software surfaces
-constexpr U kDrawEnable = 0x7DED17;    // Gfx_DrawEnable, byte (0x7DED16 the byte before it)
-constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, u16
-constexpr U kTexKey = 0x7DED0C;        // Gfx_TexCacheKey, 8 bytes
-constexpr U kAfterDrawFlag = 0x7CADEA; // u16: D3d_AfterDraw after this draw when set
+// kDevice: now D3d_Device (symbols.toml). D3d_Device
+// kRenderFlags: now Gfx_RenderFlags (symbols.toml). Gfx_RenderFlags, byte: bit 0 the software surfaces
+// kDrawEnable: now Gfx_DrawEnable (symbols.toml). Gfx_DrawEnable, byte (0x7DED16 the byte before it)
+// kDrawTpage: now Gfx_DrawTpage (symbols.toml). Gfx_DrawTpage, u16
+// kTexKey: now Gfx_TexCacheKey (symbols.toml). Gfx_TexCacheKey, 8 bytes
+// kAfterDrawFlag: now D3d_AfterDrawRequest (symbols.toml). u16: D3d_AfterDraw after this draw when set
 constexpr U kSoftBytes = 0x59F304;     // the first table's byte index table (0xD1 bytes)
 constexpr U kD3dBytes = 0x59F440;      // the second table's (0xD5 bytes)
 constexpr U kFontInUse = 0x7C9F60, kFontInUseEnd = 0x7CA960;   // Font_TexCache +0x10, 128 x 0x14

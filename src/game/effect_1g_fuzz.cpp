@@ -112,9 +112,9 @@ static_assert(kCount == sizeof kClones / sizeof kClones[0], "one enum entry a cl
 // The trade screen's bytes as a callee sees them: a state's writes before a
 // draw or a sound show against the original's order.
 U FxNoteTrade(const U*, U answer) {
-    sh::Note(static_cast<U>(B(at::kTradePick)) | static_cast<U>(B(at::kTradeStep)) << 8 | static_cast<U>(B(at::kTradeState)) << 16 |
-                 static_cast<U>(B(at::kTradeQuantity)) << 24,
-             B(at::kTradeAnswer));
+    sh::Note(static_cast<U>(B(Effect1g_TradePick_addr)) | static_cast<U>(B(Effect1g_TradeStep_addr)) << 8 | static_cast<U>(B(Effect1g_TradeState_addr)) << 16 |
+                 static_cast<U>(B(Effect1g_TradeQuantity_addr)) << 24,
+             B(Effect1g_TradeAnswer_addr));
     return answer;
 }
 U FxText(const U*, U answer) { return Key(sh::Text() + (answer & 0xF0)); }
@@ -170,7 +170,7 @@ const sh::Callee kCallees[] = {
 #undef E1G_OURS
 
 // ItemTrade_Leave's table, swapped for recorders on both sides while the fuzz runs.
-const sh::DataTable kTables[] = {{at::kLeaveSteps, 2}};
+const sh::DataTable kTables[] = {{ItemTrade_LeaveSteps_addr, 2}};
 
 // --- the state ------------------------------------------------------------------------------------
 
@@ -194,13 +194,13 @@ const sh::Region kRegions[] = {
 void Disturb(U h) {
     const unsigned v = (h >> 8) & 0xFF, w = (h >> 16) & 0xFF;
     switch (h % 7) {
-    case 0: B(at::kTradePick) = static_cast<unsigned char>(w & 0xC0 ? w : w % 11); break;
-    case 1: B(at::kTradeQuantity) = static_cast<unsigned char>(v); break;
-    case 2: B(at::kTradeAnswer) = static_cast<unsigned char>(v & 1); break;
-    case 3: B(at::kTradeStep) = static_cast<unsigned char>(v % 2); break;
-    case 4: B(at::kTradeState) = static_cast<unsigned char>(w); break;
-    case 5: B(at::kTradeRow) = static_cast<unsigned char>(v % 10); break;
-    case 6: B(at::kTradeRowCount) = static_cast<unsigned char>(v % 11); break;
+    case 0: B(Effect1g_TradePick_addr) = static_cast<unsigned char>(w & 0xC0 ? w : w % 11); break;
+    case 1: B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(v); break;
+    case 2: B(Effect1g_TradeAnswer_addr) = static_cast<unsigned char>(v & 1); break;
+    case 3: B(Effect1g_TradeStep_addr) = static_cast<unsigned char>(v % 2); break;
+    case 4: B(Effect1g_TradeState_addr) = static_cast<unsigned char>(w); break;
+    case 5: B(AreaEntry_PendingFlags_addr) = static_cast<unsigned char>(v % 10); break;
+    case 6: B(Effect1g_TradeRowCount_addr) = static_cast<unsigned char>(v % 11); break;
     default: break;
     }
 }
@@ -212,18 +212,18 @@ void Disturb(U h) {
 // quantity at its boundaries (and negative as an s8), the answer 0 / 1, the
 // step below the leave table's two, the buttons as FE2's seeds draw them.
 void Seed(unsigned) {
-    B(at::kTradeRow) = static_cast<unsigned char>(PickOf(1, 2, 8, sh::Next() % 10));
+    B(AreaEntry_PendingFlags_addr) = static_cast<unsigned char>(PickOf(1, 2, 8, sh::Next() % 10));
     const unsigned rows = sh::Next() % 11;
-    B(at::kTradeRowCount) = static_cast<unsigned char>(rows);
-    B(at::kTradePick) = static_cast<unsigned char>((sh::Often() ? 0 : PickOf(0x40, 0x80, 0xC0)) | (sh::Next() % (rows ? rows : 1)));
-    B(at::kTradeQuantity) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x62, 0x63, 0x80, 0xFF, sh::Next() % 100));
-    B(at::kTradeAnswer) = static_cast<unsigned char>(sh::Next() % 2);
-    B(at::kTradeStep) = static_cast<unsigned char>(sh::Next() % 2);
+    B(Effect1g_TradeRowCount_addr) = static_cast<unsigned char>(rows);
+    B(Effect1g_TradePick_addr) = static_cast<unsigned char>((sh::Often() ? 0 : PickOf(0x40, 0x80, 0xC0)) | (sh::Next() % (rows ? rows : 1)));
+    B(Effect1g_TradeQuantity_addr) = static_cast<unsigned char>(PickOf(0, 1, 2, 0x62, 0x63, 0x80, 0xFF, sh::Next() % 100));
+    B(Effect1g_TradeAnswer_addr) = static_cast<unsigned char>(sh::Next() % 2);
+    B(Effect1g_TradeStep_addr) = static_cast<unsigned char>(sh::Next() % 2);
     const U pressed = sh::Next() & 0xFFFF;
     SetW(0x7E1BEC, pressed);   // Input_Pressed
-    SetW(at::kConfirm, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
-    SetW(at::kCancel, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
-    SetW(at::kWaitWord, sh::Half() ? 0 : sh::Next());
+    SetW(Field_ConfirmButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
+    SetW(Field_CancelButtons_addr, sh::Half() ? pressed & (1u << (sh::Next() % 16)) : 0);
+    SetW(MoveScript_WaitWordDA_addr, sh::Half() ? 0 : sh::Next());
 }
 
 // The arguments each kCall function reads (garbage above the bytes it masks).

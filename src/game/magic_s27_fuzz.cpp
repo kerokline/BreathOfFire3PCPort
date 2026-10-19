@@ -200,7 +200,7 @@ std::uint32_t SetTransEffect(const std::uint32_t* a, std::uint32_t answer) {
 // WhelpBreathSprite_Run's phases: the sprite bank they run under, and the
 // slot and phase bytes a handler's recorder would log.
 std::uint32_t NoteBank(const std::uint32_t*, std::uint32_t answer) {
-    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(raw::kSpriteBank))), Key(Sprite_Current),
+    mh::Note(static_cast<std::uint32_t>(Long(mh::Mem(BattleE2_AnimSet_addr))), Key(Sprite_Current),
              Sprite_Current[1] | static_cast<std::uint32_t>(Sprite_Current[2]) << 8);
     return answer;
 }
@@ -271,15 +271,16 @@ const mh::DataTable kTables[] = {
     {0x65BAB8, 3}, {0x65BAC4, 2}, {0x65BACC, 5}, {0x65BAE0, 8}, {0x65BB28, 1}, {0x65BB2C, 7},
 };
 
-constexpr std::uint32_t kScratch = 0x903850, kVertices = 0x9037A0;
+// kVertices: now Prim_VertexScratch (symbols.toml).
+constexpr std::uint32_t kScratch = 0x903850;
 const mh::Region kRegions[] = {
     {kScratch, 0x10},
-    {kVertices, 0x20},
+    {Prim_VertexScratch_addr, 0x20},
     {0x7E0670, 4},                                   // Gfx_PacketNext
     {Key(g_packets), sizeof g_packets},
     {Key(Gfx_ClutStrip + 0x1A00), 0x200},            // row 26, the three Start functions'
     {Key(Gfx_ClutStripSource + 0x1A00), 0x200},
-    {raw::kSpriteBank, 4},
+    {BattleE2_AnimSet_addr, 4},
     {Key(WhelpBreathFlames_Ages), 8},
     {Key(WhelpBreath_FlameOffsets), 0x28},           // MAGIC120's .data up to its handler table
 };
@@ -295,7 +296,7 @@ void Disturb(std::uint32_t h) {
     switch ((h >> 8) % 6) {
     case 0: mh::SetPointer(0x7E0670, PacketAt(v)); break;
     case 1: SetWord(mh::Mem(kScratch + (v % 8) * 2), word); break;
-    case 2: SetWord(mh::Mem(kVertices + (v % 16) * 2), word); break;
+    case 2: SetWord(mh::Mem(Prim_VertexScratch_addr + (v % 16) * 2), word); break;
     case 3: {
         static const unsigned kFields[] = {0x10, 0x14, 0x15, 0x20, 0x2E, 0x2F, 0x31, 0x3E, 0x5D, 0x5E, 0x5F};
         Sc()[kFields[v % 11]] = static_cast<unsigned char>(word);
@@ -338,7 +339,7 @@ void Seed(unsigned k) {
     case kWhelpBreathChild_Task: sc[1] = static_cast<unsigned char>(mh::Next() % 2); break;
     case kWhelpBreathBeam_Run:
         sc[2] = static_cast<unsigned char>(mh::Next() % 5);
-        if (mh::Half()) mh::Pointer(mh::at::kOwner)[0xB] = 0xFF;
+        if (mh::Half()) mh::Pointer(BattleE2_Owner_addr)[0xB] = 0xFF;
         break;
     case kWhelpBreathSprite_Run: sc[2] = static_cast<unsigned char>(mh::Next() % 8); break;
     case kDragonBreath_Task: sc[1] = static_cast<unsigned char>(mh::Next() % 2); break;

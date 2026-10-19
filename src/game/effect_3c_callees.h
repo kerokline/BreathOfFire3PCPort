@@ -51,7 +51,7 @@ constexpr std::uint32_t kKind6FColour = 0x654A9C;   // kind 0x6F: one row of thr
 constexpr unsigned kKind6FColourCount = 1;
 constexpr std::uint32_t kKind6FCellsZ = 0x654AB0;   // kind 0x6F: four z cells (bytes) along x 0x5C, EffectKind6F_PushParty(0)
 constexpr std::uint32_t kKind6FCellsX = 0x654AB4;   // kind 0x6F: four x cells (bytes) along z 0x44, EffectKind6F_PushParty(1)
-constexpr std::uint32_t kStoryFlags = 0x904030;     // Cond_Flags' story row (Flags_Test's bank)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags' story row (Flags_Test's bank)
 
 // --- ranges -----------------------------------------------------------------------
 constexpr unsigned kObjTrioCount = 3;               // ObjTrio's records of 0x14C

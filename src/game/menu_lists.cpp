@@ -44,6 +44,7 @@
 #include "game/lang_layout.h"
 #include "game/menu_lists_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/text_advance.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -105,8 +106,14 @@ Step Entry(std::uint32_t table, unsigned index) {
 // fuzz's stand-ins repoint it between calls.
 unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
-        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(at::kCurrent))));
+        *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(BattleWinStates_Current_addr))));
 }
+
+// The typed view of a window record (docs/typed-records.md; WindowRecords
+// 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
+// typed: +8..+0x1F mean something else in each handler (typed-records 3).
+static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
+static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 
 unsigned char& Byte(std::uint32_t address) { return At(address)[0]; }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
@@ -128,7 +135,7 @@ unsigned Members() { return static_cast<unsigned>(g.party_count(0)) & 0xFF; }
 // 7 Config 0x5902E0, 8 0x5902D0 (docs/menu-screens.md section 1). A jump, as
 // the original's: the state's function returns to 0x5172F0.
 extern "C" void __cdecl FieldMenu_Run(void) {
-    const Step step = Entry(at::kStates, Byte(at::kMenu));
+    const Step step = Entry(FieldMenu_States_addr, BattleE1_Mode);
     [[clang::musttail]] return step();
 }
 
@@ -156,8 +163,8 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     Byte(0x7E0675) = 0;
     Byte(0x7E0674) = 0;
     Byte(0x7E0676) = 0;
-    const unsigned char count = Byte(at::kMemberCount);
-    Byte(at::kCursor) = 0;
+    const unsigned char count = Field_MemberCount;
+    MenuLists_Cursor = 0;
     Byte(0x937F8F) = 0;
     Byte(0x937F8E) = 0;
     Byte(0x905D90) = 0;
@@ -165,17 +172,17 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     if (count != 0) {
         signed char i = 0;
         do {
-            const unsigned member = At(at::kParty + static_cast<std::int32_t>(i))[0];
-            g.recalc_stats(At(at::kCharRecords + At(at::kMemberRecord)[member] * at::kCharRecordSize));
+            const unsigned member = At(Cond_Flags_addr + 0xd2 + static_cast<std::int32_t>(i))[0];
+            g.recalc_stats(At(at::kCharRecords + MoveScript_EffectState[member] * at::kCharRecordSize));
             i = static_cast<signed char>(i + 1);
-        } while (static_cast<int>(i) < static_cast<int>(Byte(at::kMemberCount)));
+        } while (static_cast<int>(i) < Field_MemberCount);
     }
     signed char n = 0;
     if (Members() != 0) {
         int k = 0;
         do {
-            const unsigned char member = At(at::kParty)[k];
-            const unsigned char reserve = At(at::kReserve)[k];
+            const unsigned char member = Cond_Flags[0xd2 + k];
+            const unsigned char reserve = Cond_Flags[0xd5 + k];
             At(at::kSavedParty)[k] = member;
             n = static_cast<signed char>(n + 1);
             At(at::kSavedReserve)[k] = reserve;
@@ -188,7 +195,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
             At(at::kSavedReserve)[k] = 0xFF;
         }
     }
-    Byte(at::kPartyChanged) = 0;
+    MenuLists_PartyChanged = 0;
     for (unsigned i = 0; i < 8; ++i) {
         unsigned char* const r = At(at::kCharRecords + 0x10 + i * at::kCharRecordSize);
         if (static_cast<unsigned>(Word(r + 0x10) >> 2) > Word(r + 8)) r[1] = static_cast<unsigned char>(r[1] | 0x20);
@@ -203,15 +210,15 @@ extern "C" void __cdecl FieldMenu_Open(void) {
     Byte(0x93989C) = 0;
     Byte(0x939892) = 0;
     Byte(0x9398CC) = 0;
-    if (Byte(at::kOpenedAt) == 1) {
-        Byte(at::kMenu) = 5;
-        Byte(at::kStep) = 5;
+    if (ScenaSc6_Load10 == 1) {
+        BattleE1_Mode = 5;
+        FieldS_State = 5;
         return;
     }
     g.place_windows();
-    const unsigned char state = Byte(at::kMenu);
-    Byte(at::kStep) = 0;
-    Byte(at::kMenu) = static_cast<unsigned char>(state + 1);
+    const unsigned char state = BattleE1_Mode;
+    FieldS_State = 0;
+    BattleE1_Mode = static_cast<unsigned char>(state + 1);
 }
 
 // original 0x589B60, state 1: `jmp [0x6672D8 + 4 0x929F01]` - step 0
@@ -219,7 +226,7 @@ extern "C" void __cdecl FieldMenu_Open(void) {
 // group), 2 FieldMenu_BackdropStep. The byte unchecked; a jump, as the
 // original's.
 extern "C" void __cdecl FieldMenu_TopBar(void) {
-    const Step step = Entry(at::kTopBarSteps, Byte(at::kStep));
+    const Step step = Entry(FieldMenu_TopBarSteps_addr, FieldS_State);
     [[clang::musttail]] return step();
 }
 
@@ -246,60 +253,60 @@ extern "C" void __cdecl FieldMenu_TopBar(void) {
 // negative to 6 and right any above 6 (signed) to 0; Input_Pressed is read
 // again after the moves; the state and step bytes after each call.
 extern "C" void __cdecl FieldMenu_TopBarInput(void) {
-    g.backdrop(Byte(at::kBackground));
-    const unsigned char cursor = Byte(at::kCursor);
+    g.backdrop(FieldS_Backdrop);
+    const unsigned char cursor = static_cast<unsigned char>(MenuLists_Cursor);
     unsigned char* const saved = Sprite_Current;
     Byte(at::kIconWindow + 0xA) = cursor;
-    const unsigned char camp = Byte(at::kCampFlag);
-    SetWord(At(at::kTitleWindow + 0x10), At(at::kTitleIds + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
-    Sprite_Current = At(at::kObjTrio);
+    const unsigned char camp = AreaW3c_CampFlag;
+    SetWord(At(MenuLists_TitleWindow_addr + 0x10), At(FieldMenu_TitleIds_addr + static_cast<std::int32_t>(static_cast<signed char>(cursor)))[0]);
+    Sprite_Current = At(ObjTrio_addr);
     bool open;
     if (camp != 0) open = g.camp_cell() != 0;
-    else if ((Byte(at::kInputFlags) & 1) == 0 && Word(At(at::kArea)) != 0xBD) open = false;
+    else if ((Field_InputFlags & 1) == 0 && Game_AreaNumber != 0xBD) open = false;
     else if (g.exit_gateway() != 0) open = true;
-    else if (Byte(at::kCampFlag) == 0) open = false;
+    else if (AreaW3c_CampFlag == 0) open = false;
     else open = g.camp_cell() != 0;
     Byte(at::kIconWindow + 0xC) = open ? 0 : 1;
-    const unsigned pressed = Word(At(at::kPressed)) & 0xA000u;
+    const unsigned pressed = Input_Pressed & 0xA000u;
     Sprite_Current = saved;
     const unsigned held = g.auto_repeat(pressed);
     if (held & 0x8000) {
         g.sound(0x101);
-        const auto c = static_cast<unsigned char>(Byte(at::kCursor) - 1);
+        const auto c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) - 1);
         Byte(at::kCountdown) = 0;
-        Byte(at::kCursor) = c;
-        if (static_cast<signed char>(c) < 0) Byte(at::kCursor) = 6;
+        MenuLists_Cursor = c;
+        if (static_cast<signed char>(c) < 0) MenuLists_Cursor = 6;
     }
     if (held & 0x2000) {
         g.sound(0x101);
-        const auto c = static_cast<unsigned char>(Byte(at::kCursor) + 1);
+        const auto c = static_cast<unsigned char>(static_cast<unsigned char>(MenuLists_Cursor) + 1);
         Byte(at::kCountdown) = 0;
-        Byte(at::kCursor) = c;
-        if (static_cast<signed char>(c) > 6) Byte(at::kCursor) = 0;
+        MenuLists_Cursor = c;
+        if (static_cast<signed char>(c) > 6) MenuLists_Cursor = 0;
     }
-    const unsigned in = Word(At(at::kPressed));
-    if ((Word(At(at::kCancel)) & in) != 0) {
+    const unsigned in = Input_Pressed;
+    if ((Field_CancelButtons & in) != 0) {
         g.reconcile();
-        const unsigned char step = Byte(at::kStep);
-        SetWord(At(at::kGameStep), Word(At(at::kGameStep)) + 1);
-        Byte(at::kStep) = static_cast<unsigned char>(step + 2);
+        const unsigned char step = FieldS_State;
+        Game_Step = Game_Step + 1;
+        FieldS_State = static_cast<unsigned char>(step + 2);
         return;
     }
-    if ((Word(At(at::kConfirm)) & in) == 0) return;
-    if (Byte(at::kCursor) == 6) {
+    if ((Field_ConfirmButtons & in) == 0) return;
+    if (static_cast<unsigned char>(MenuLists_Cursor) == 6) {
         if (Byte(at::kIconWindow + 0xC) == 0) {
             g.reconcile();
-            const unsigned char step = Byte(at::kStep);
-            SetWord(At(at::kGameStep), Word(At(at::kGameStep)) + 1);
-            Byte(at::kCampChosen) = 1;
-            Byte(at::kStep) = static_cast<unsigned char>(step + 1);
+            const unsigned char step = FieldS_State;
+            Game_Step = Game_Step + 1;
+            MenuLists_CampChosen = 1;
+            FieldS_State = static_cast<unsigned char>(step + 1);
             return;
         }
         g.sound(0x107);
         return;
     }
     g.sound(0x104);
-    const unsigned char chosen = Byte(at::kCursor);
+    const unsigned char chosen = static_cast<unsigned char>(MenuLists_Cursor);
     Byte(at::kCountdown) = 5;
     Byte(at::kMoneyWindow + 3) = 1;
     Byte(at::kTimeWindow + 3) = 1;
@@ -313,13 +320,13 @@ extern "C" void __cdecl FieldMenu_TopBarInput(void) {
             ++i;
         } while (i < static_cast<std::uint16_t>(Members()));
     }
-    Byte(at::kStep) = static_cast<unsigned char>(Byte(at::kStep) + 1);
+    FieldS_State = static_cast<unsigned char>(FieldS_State + 1);
 }
 
 // original 0x589E50 (13 bytes): the backdrop alone - the top bar's step 2,
 // and a slot of the table at 0x66734C (0x667350) another screen steps
 // through.
-extern "C" void __cdecl FieldMenu_BackdropStep(void) { g.backdrop(Byte(at::kBackground)); }
+extern "C" void __cdecl FieldMenu_BackdropStep(void) { g.backdrop(FieldS_Backdrop); }
 
 // original 0x589E60 (PSX 0x801D2010): the top bar's windows placed, after
 // Window_ResetAll. Each member (one a Party_Count(0), asked each time) gets
@@ -343,32 +350,32 @@ extern "C" void __cdecl FieldMenu_PlaceWindows(void) {
             r[2] = 0;
             r[3] = 0;
             r[0] = 1;
-            SetWord(r + 4, 0x62);
-            SetWord(r + 6, i * 0x36u + 0x3E);
+            Win(r)->centre_x = 0x62;
+            Win(r)->centre_y = i * 0x36u + 0x3E;
             r[0xB] = 0;
             r[0xC] = 0;
             ++i;
         } while (i < Members());
     }
     struct Place { std::uint32_t at; unsigned char kind; std::uint16_t x, y; };
-    static constexpr Place kPlaces[] = {{at::kMoneyWindow, 1, 0xC8, 0x10},
-                                        {at::kTimeWindow, 2, 0x10, 0x10},
-                                        {at::kIconWindow, 3, 0x68, 0x2A},
-                                        {at::kTitleWindow, 4, 0x73, 0x10}};
+    static constexpr Place kPlaces[] = {{MenuLists_MoneyWindow_addr, 1, 0xC8, 0x10},
+                                        {MenuLists_TimeWindow_addr, 2, 0x10, 0x10},
+                                        {MenuLists_IconWindow_addr, 3, 0x68, 0x2A},
+                                        {MenuLists_TitleWindow_addr, 4, 0x73, 0x10}};
     for (const Place& p : kPlaces) {
         unsigned char* const r = At(p.at);
         r[1] = 6;
         r[2] = p.kind;
         r[3] = 0;
         r[0] = 1;
-        SetWord(r + 4, p.x);
-        SetWord(r + 6, p.y);
+        Win(r)->centre_x = p.x;
+        Win(r)->centre_y = p.y;
     }
     Byte(at::kIconWindow + 0xA) = 0;
     Byte(at::kIconWindow + 0xB) = 0;
     Byte(at::kIconWindow + 0xC) = 0;
-    SetWord(At(at::kIconWindow + 0x10), 0);
-    SetWord(At(at::kTitleWindow + 0x10), 0);
+    SetWord(At(MenuLists_IconWindow_addr + 0x10), 0);
+    SetWord(At(MenuLists_TitleWindow_addr + 0x10), 0);
 }
 
 // original 0x589FE0: the party check as the menu closes (the top bar's
@@ -389,7 +396,7 @@ extern "C" void __cdecl FieldMenu_ReconcileParty(void) {
         if (m == 0xFF) continue;
         unsigned char add = 1;
         for (unsigned j = 0; j < 3; ++j) {
-            const unsigned char p = At(at::kParty)[j];
+            const unsigned char p = Cond_Flags[0xd2 + j];
             if (p != 0xFF && m == p) {
                 add = 0;
                 break;
@@ -397,11 +404,11 @@ extern "C" void __cdecl FieldMenu_ReconcileParty(void) {
         }
         missing = static_cast<unsigned char>(missing + add);
     }
-    if (missing != 0) Byte(at::kPartyChanged) = 1;
+    if (missing != 0) MenuLists_PartyChanged = 1;
     unsigned char before[9];
     for (unsigned b = 0; b < 9; ++b) before[b] = At(at::kReserveData)[b];
     for (unsigned k = 0; k < 3; ++k) {
-        const unsigned char m = At(at::kReserve)[k];
+        const unsigned char m = Cond_Flags[0xd5 + k];
         if (m == 0xFF) continue;
         unsigned char* const out = At(at::kReserveData + 3 * k);
         unsigned j = 0;
@@ -431,14 +438,14 @@ extern "C" void __cdecl FieldMenu_ReconcileParty(void) {
 // MenuList_TitleBox, and sixteen more kinds of other screens (5..20). The
 // kind unchecked; a jump, as the original's.
 extern "C" void __cdecl MenuList_Run(void) {
-    const Step step = Entry(at::kKinds, Rec()[2]);
+    const Step step = Entry(MenuList_Kinds_addr, Rec()[2]);
     [[clang::musttail]] return step();
 }
 
 // original 0x599B70, kind 0: the record's state from 0x66AFE8 (+3,
 // unchecked), then MenuList_DrawMemberPanel of the record (re-read).
 extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel(void) {
-    Entry(at::kPanelStates, Rec()[3])();
+    Entry(MenuList_PanelStates_addr, Rec()[3])();
     g.draw_member(Rec());
 }
 
@@ -451,29 +458,29 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MenuList_MemberPanel
 // As the original has it: the record is the argument, not 0x905B84; its
 // fields are read again after the calls; Gfx_PacketNext after the panel.
 extern "C" void __cdecl MenuList_DrawMemberPanel(unsigned char* rec) {
-    const unsigned member = At(at::kParty + rec[0xB] * 3u + rec[0xA])[0];
-    const unsigned record = At(at::kMemberRecord + member)[0];
-    g.member_body(Word(rec + 4), Word(rec + 6), record, rec[0xC], 0);
+    const unsigned member = At(Cond_Flags_addr + 0xd2 + rec[0xB] * 3u + rec[0xA])[0];
+    const unsigned record = At(MoveScript_EffectState_addr + member)[0];
+    g.member_body(Win(rec)->centre_x, Win(rec)->centre_y, record, rec[0xC], 0);
     g.draw_mode(Gfx_PacketNext, 0, 0, 0xF, 0);
     g.commit(1, 0xC);
     const unsigned clut = g.get_clut(0x10, 0x1E0);
-    g.member_face(Word(rec + 4) + 9, Word(rec + 6) + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
+    g.member_face(Win(rec)->centre_x + 9, Win(rec)->centre_y + 5, rec[0xA] + 3u, 0x1E, clut, 0x80);
 }
 
 // original 0x599D50, kind 1: the state from 0x66B014, then Menu_DrawMoneyBox
 // at the record's (+4, +6) with the money 0x904058.
 extern "C" void __cdecl MenuList_MoneyBox(void) {
-    Entry(at::kMoneyStates, Rec()[3])();
+    Entry(MenuList_MoneyStates_addr, Rec()[3])();
     const unsigned char* const r = Rec();
-    g.money_box(Word(r + 4), Word(r + 6), 0, static_cast<unsigned>(Long(At(at::kMoney))));
+    g.money_box(Win(r)->centre_x, Win(r)->centre_y, 0, Party_Zenny);
 }
 
 // original 0x599DC0, kind 2: the state from 0x66B020, then the play-time box
 // 0x5746C0 at the record's (+4, +6).
 extern "C" void __cdecl MenuList_TimeBox(void) {
-    Entry(at::kTimeStates, Rec()[3])();
+    Entry(MenuList_TimeStates_addr, Rec()[3])();
     const unsigned char* const r = Rec();
-    g.time_box(Word(r + 4), Word(r + 6));
+    g.time_box(Win(r)->centre_x, Win(r)->centre_y);
 }
 
 // original 0x599E50, kind 3 (the body is the tail jump's target 0x599E70,
@@ -488,7 +495,7 @@ extern "C" void __cdecl MenuList_TimeBox(void) {
 // store; the count is compared as a signed word; the size is the count's low
 // byte plus 8, doubled, as a byte.
 extern "C" void __cdecl MenuList_TopBarIcons(void) {
-    Entry(at::kIconStates, Rec()[3])();
+    Entry(MenuList_IconStates_addr, Rec()[3])();
     unsigned char* r = Rec();
     if (r[0xB] != r[0xA]) {
         SetWord(r + 0x10, 0);
@@ -502,18 +509,18 @@ extern "C" void __cdecl MenuList_TopBarIcons(void) {
     for (unsigned i = 0; i < 7; ++i) {
         if (i == r[0xA]) continue;
         const unsigned shade = i == 6 && r[0xC] != 0 ? 0x40 : 0x80;
-        const unsigned y = Word(r + 6);
-        const unsigned x = ((i << 4) + Word(r + 4)) & 0xFFFF;
-        g.icon(At(at::kIconIds + i)[0], x, y, 0x10, 0x10, shade);
+        const unsigned y = Win(r)->centre_y;
+        const unsigned x = ((i << 4) + Win(r)->centre_x) & 0xFFFF;
+        g.icon(At(FieldMenu_IconIds_addr + i)[0], x, y, 0x10, 0x10, shade);
         r = Rec();
     }
     const unsigned sel = r[0xA];
     const unsigned shade = sel == 6 && r[0xC] != 0 ? 0x40 : 0x80;
     const unsigned grow = Word(r + 0x10);
     const unsigned size = static_cast<unsigned char>((r[0x10] + 8) << 1);
-    const unsigned y = (Word(r + 6) - grow) & 0xFFFF;
-    const unsigned x = ((((sel << 4) + Word(r + 4)) & 0xFFFF) - grow) & 0xFFFF;
-    g.icon(At(at::kIconIds + sel)[0], x, y, size, size, shade);
+    const unsigned y = (Win(r)->centre_y - grow) & 0xFFFF;
+    const unsigned x = ((((sel << 4) + Win(r)->centre_x) & 0xFFFF) - grow) & 0xFFFF;
+    g.icon(At(FieldMenu_IconIds_addr + sel)[0], x, y, size, size, shade);
     r = Rec();
     r[0xB] = r[0xA];
 }
@@ -539,19 +546,19 @@ unsigned char g_title_centre = 0;
 // every read and call and changes only the x: x + 0x25 - width / 2, the
 // width in pixels - the same number as the original's for 12-unit glyphs.
 extern "C" void __cdecl MenuList_TitleBox(void) {
-    Entry(at::kTitleStates, Rec()[3])();
-    const unsigned char colour = Byte(at::kColour);
+    Entry(MenuList_TitleStates_addr, Rec()[3])();
+    const unsigned char colour = static_cast<unsigned char>(BattleDraw_Colour);
     const unsigned char* r = Rec();
-    g.title_box(Word(r + 4), Word(r + 6), 0x48, 0x13, colour);
+    g.title_box(Win(r)->centre_x, Win(r)->centre_y, 0x48, 0x13, colour);
     r = Rec();
     const unsigned char* const text = g.msg(Word(r + 0x10));
     const unsigned count = g.char_count(text);
     r = Rec();
-    const unsigned y = (Word(r + 6) + 3u) & 0xFFFF;
+    const unsigned y = (Win(r)->centre_y + 3u) & 0xFFFF;
     const unsigned width = g.char_count(text);
     r = Rec();
     const unsigned half = g_title_centre ? TextAdvance_Width(text) / 2 : width * 6;
-    const int x = static_cast<int>((Word(r + 4) - half + 0x25u) & 0xFFFF);
+    const int x = static_cast<int>((Win(r)->centre_x - half + 0x25u) & 0xFFFF);
     g.text(x, static_cast<int>(y), 0, static_cast<int>(count), text);
 }
 
@@ -567,19 +574,19 @@ extern "C" void __cdecl MenuList_TitleBox(void) {
 namespace {
 void SlideY(int step, short bound, bool down) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 6, Word(moved + 6) + static_cast<unsigned>(step));
+    Win(moved)->centre_y = Win(moved)->centre_y + static_cast<unsigned>(step);
     unsigned char* const r = Rec();
     if (down ? S(r + 6) > bound : S(r + 6) < bound) {
-        SetWord(r + 6, static_cast<std::uint16_t>(bound));
+        Win(r)->centre_y = static_cast<std::uint16_t>(bound);
         Rec()[3] = 0;
     }
 }
 void SlideX(int step, short bound, bool right) {
     unsigned char* const moved = Rec();
-    SetWord(moved + 4, Word(moved + 4) + static_cast<unsigned>(step));
+    Win(moved)->centre_x = Win(moved)->centre_x + static_cast<unsigned>(step);
     unsigned char* const r = Rec();
     if (right ? S(r + 4) > bound : S(r + 4) < bound) {
-        SetWord(r + 4, static_cast<std::uint16_t>(bound));
+        Win(r)->centre_x = static_cast<std::uint16_t>(bound);
         Rec()[3] = 0;
     }
 }

@@ -17,12 +17,12 @@ namespace at {
 // it to 0x8C3584, just after the count). +0 the bank (u16), +7 the byte a
 // sprite keeps in its u16 +0x2C.
 constexpr std::uint32_t kBankCount = 0x8C3580;
-constexpr std::uint32_t kBankRecords = 0x7E0880;   // unsigned char * to the records
+// kBankRecords: now MoveScript_TintRecords[0x180] (symbols.toml). unsigned char * to the records
 constexpr std::uint32_t kBankRecordsAt = 0x8C3584;  // where Title_LoadTask points it
 
 // The leader (ObjTrio's first record): its direction +8 and its byte +0x30.
-constexpr std::uint32_t kLeaderDirection = 0x802D48;
-constexpr std::uint32_t kLeader30 = 0x802D70;
+// kLeaderDirection: now ObjTrio[8] (symbols.toml).
+// kLeader30: now ObjTrio[0x30] (symbols.toml).
 
 // Field_ScriptFlags' high byte (bit 0: the word's 0x100).
 constexpr std::uint32_t kScriptFlagsHi = 0x9039A3;

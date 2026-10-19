@@ -146,7 +146,7 @@ unsigned char& B(std::uint32_t address) { return *ah::Mem(address); }
 // object itself (area_w1c_fuzz.cpp's).
 unsigned char* MemberRecord(std::uint32_t v) {
     switch (v % 4) {
-    case 0: return ah::Mem(at::kSpriteObjectsExtra + (v >> 2) % 4 * 0xA4);
+    case 0: return ah::Mem(Sprite_ObjectsExtra_addr + (v >> 2) % 4 * 0xA4);
     case 1: return ah::Object(v >> 2);
     case 2: return ah::PartyOf(static_cast<unsigned char>(v >> 2));
     default: return Sprite_Current;
@@ -176,12 +176,12 @@ std::uint32_t MovesCurrent(const std::uint32_t*, std::uint32_t answer) {
 }
 std::uint32_t MovesScriptObject(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if (n & 1) ah::SetPointer(at::kScriptObject, ScriptRecord(n >> 8));
+    if (n & 1) ah::SetPointer(MoveScript_Object_addr, ScriptRecord(n >> 8));
     return answer;
 }
 std::uint32_t MovesPose(const std::uint32_t*, std::uint32_t answer) {
     const std::uint32_t n = ah::Noise();
-    if ((n & 3) == 0) B(at::kLeaderPose) = static_cast<unsigned char>(n >> 8);
+    if ((n & 3) == 0) B(ObjTrio_addr + 0x8) = static_cast<unsigned char>(n >> 8);
     return answer;
 }
 
@@ -208,28 +208,28 @@ const ah::Callee kCallees[] = {
 
 // Area 79's state table, read in place by Area79_ObjectState: its two
 // entries swapped for recorders while the fuzz runs.
-const ah::DataTable kTables79[] = {{at::kArea79States, at::kArea79StateCount}};
+const ah::DataTable kTables79[] = {{Area79_States_addr, at::kArea79StateCount}};
 
 // Beyond the field frame: the effect records (slots 0..3), the active member
 // and script object pointers, the chapter row pointer, Camera_ShiftY,
 // Cond_ByteFE.
 const ah::Region kRegions[] = {
-    {at::kEffectObjects, 4 * at::kEffectStride},
-    {at::kActiveMember, 4},
-    {at::kScriptObject, 4},
-    {at::kFlagRow, 4},
-    {at::kCameraShiftY, 2},
-    {at::kByteFE, 1},
+    {Effect_Objects_addr, 4 * at::kEffectStride},
+    {Field_ActiveMember_addr, 4},
+    {MoveScript_Object_addr, 4},
+    {AreaW0c_FlagRow_addr, 4},
+    {Camera_ShiftY_addr, 2},
+    {Cond_ByteFE_addr, 1},
     // Effect_Objects "record" 0xFF, past the 20: where a helper that took
     // Effect_FindFree's none for a slot would write (+0, +5, +0x34, +0x38).
     // The originals never do; a region here lets the fuzz see one that did.
-    {at::kEffectObjects + 0xFF * at::kEffectStride, 0x40},
+    {Effect_Objects_addr + 0xFF * at::kEffectStride, 0x40},
 };
 
 // Every round: the pointers the areas follow put back inside the regions.
 void Common() {
-    ah::SetPointer(at::kActiveMember, MemberRecord(ah::Next()));
-    ah::SetPointer(at::kScriptObject, ScriptRecord(ah::Next()));
+    ah::SetPointer(Field_ActiveMember_addr, MemberRecord(ah::Next()));
+    ah::SetPointer(MoveScript_Object_addr, ScriptRecord(ah::Next()));
 }
 
 // The group's cells, moved by the harness's disturbance about one call in
@@ -237,27 +237,27 @@ void Common() {
 void Disturb(std::uint32_t h) {
     const auto v = static_cast<unsigned char>(h >> 20);
     switch ((h >> 8) % 8) {
-    case 0: B(at::kTailKind) = static_cast<unsigned char>(h & 0x100 ? 5 : v); break;
-    case 1: ah::SetPointer(at::kActiveMember, MemberRecord(h >> 16)); break;
-    case 2: ah::SetPointer(at::kScriptObject, ScriptRecord(h >> 16)); break;
-    case 3: B(at::kLeaderPose) = v; break;
-    case 4: B(at::kLeaderByte89) = static_cast<unsigned char>(h & 0x100 ? 5 : v); break;
-    case 5: B(at::kChoiceAnswer) = static_cast<unsigned char>(v % 8); break;
-    case 6: B(at::kPartyList0 + (h >> 16) % 3) = static_cast<unsigned char>(v % 8); break;
-    default: B(at::kByteFE) = v; break;
+    case 0: B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(h & 0x100 ? 5 : v); break;
+    case 1: ah::SetPointer(Field_ActiveMember_addr, MemberRecord(h >> 16)); break;
+    case 2: ah::SetPointer(MoveScript_Object_addr, ScriptRecord(h >> 16)); break;
+    case 3: B(ObjTrio_addr + 0x8) = v; break;
+    case 4: B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(h & 0x100 ? 5 : v); break;
+    case 5: B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(v % 8); break;
+    case 6: B(Cond_Flags_addr + 0xd2 + (h >> 16) % 3) = static_cast<unsigned char>(v % 8); break;
+    default: B(Cond_ByteFE_addr) = v; break;
     }
 }
 
 // A choice answer: each value a handler tests (0..5 for area 79's jump
 // tables), their neighbours, a negative byte (tested signed), anything.
 void SeedAnswer() {
-    if (ah::Often()) B(at::kChoiceAnswer) = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 3, 4, 5, 6, 0xFF, 0x80, 0x81, 0x7F));
+    if (ah::Often()) B(AreaW0c_ChoiceAnswer_addr) = static_cast<unsigned char>(AH_PICK(0, 1, 0, 1, 2, 3, 4, 5, 6, 0xFF, 0x80, 0x81, 0x7F));
 }
 
 // ---- area 76 ----
 void Seed76(unsigned) {
     Common();
-    if (ah::Often()) B(at::kTailKind) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85, 0));
+    if (ah::Often()) B(AreaW0a_TailKind_addr) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85, 0));
 }
 
 // ---- area 77 ----
@@ -272,10 +272,10 @@ unsigned g_switch_off = 0;                 // 0 none off, 1 x off, 2 z off, 3 th
 void SeedSwitch() {
     g_switch = nullptr;
     if (!ah::Often()) return;
-    g_switch = ah::Mem(at::kArea77CellSwitches + (ah::Next() % at::kArea77CellSwitchCount) * 4u);
+    g_switch = ah::Mem(Area77_CellSwitches_addr + (ah::Next() % at::kArea77CellSwitchCount) * 4u);
     g_switch_off = ah::Half() ? 1 + ah::Next() % 3 : 0;
     const unsigned char pose = g_switch[2];
-    B(at::kLeaderPose) = g_switch_off == 3 ? static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0xFF)) : pose;
+    B(ObjTrio_addr + 0x8) = g_switch_off == 3 ? static_cast<unsigned char>(pose + (ah::Half() ? 1 : 0xFF)) : pose;
 }
 void CellArgs(std::uint32_t* a) {
     if (!g_switch) return;
@@ -296,7 +296,7 @@ void SeedLeap() {
     unsigned char* const object = MoveScript_Object;
     const unsigned index = ah::Next() % kArea77Scripts;
     object[3] = static_cast<unsigned char>(index);
-    const std::uint32_t descriptor = static_cast<std::uint32_t>(move_script::Long(ah::Mem(at::kDescriptors + 77 * 4)));
+    const std::uint32_t descriptor = static_cast<std::uint32_t>(move_script::Long(ah::Mem(Area_Descriptors_addr + 77 * 4)));
     const std::uint32_t scripts = static_cast<std::uint32_t>(move_script::Long(ah::Mem(descriptor + 0x10)));
     const std::uint32_t script = static_cast<std::uint32_t>(move_script::Long(ah::Mem(scripts + index * 4)));
     unsigned position = ah::Next() % 0x100;
@@ -323,7 +323,7 @@ void Seed77(unsigned k) {
     case k77SpawnA: case k77SpawnB: case k77SpawnC: case k77SpawnD: case k77SpawnE: case k77Spawn0M1: case k77Spawn0M2:
     case k77Spawn0M0: case k77SpawnF: case k77SpawnG:
         for (unsigned m = 0; m < 3; ++m)
-            if (ah::Often()) B(at::kPartyList0 + m) = static_cast<unsigned char>(ah::Next() % 8);
+            if (ah::Often()) B(Cond_Flags_addr + 0xd2 + m) = static_cast<unsigned char>(ah::Next() % 8);
         break;
     case k77Leap: SeedLeap(); break;
     default: break;
@@ -336,7 +336,7 @@ void Args77(unsigned k, std::uint32_t* a) {
         CellArgs(a);
     } else if (k == k77Trigger) {
         a[0] = Key(ah::Object(a[0]));
-        a[1] = at::kStoryFlags;
+        a[1] = (Cond_Flags_addr + 0xa0);
     }
 }
 
@@ -383,7 +383,7 @@ void Seed82(unsigned k) {
 // ---- area 84 ----
 void Seed84(unsigned) {
     Common();
-    if (ah::Often()) B(at::kLeaderByte89) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
+    if (ah::Often()) B(ObjTrio_addr + 0x89) = static_cast<unsigned char>(AH_PICK(5, 5, 4, 6, 0x85));
 }
 
 void RunArea(int area, const ah::Clone* clones, unsigned n, void (*seed)(unsigned), void (*args)(unsigned, std::uint32_t*),

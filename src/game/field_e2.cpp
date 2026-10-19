@@ -30,6 +30,7 @@
 #include "game/field_e2_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/text_advance.h"
 #include "hook/detour.h"
@@ -51,6 +52,13 @@ void SetL(U a, U v) { SetLong(At(a), static_cast<std::int32_t>(v)); }
 std::uint16_t W(U a) { return Word(At(a)); }
 void SetW(U a, unsigned v) { SetWord(At(a), v); }
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
+
+// The typed views (src/game/records.h): the leader helpers run on the leader,
+// an ObjTrio record, and Field_State is one.
+records::PartyMember* Self() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
+records::PartyMember* State() { return reinterpret_cast<records::PartyMember*>(Field_State); }
+unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
+const unsigned char* Bytes(const records::PartyMember* p) { return reinterpret_cast<const unsigned char*>(p); }
 U LongAt(const unsigned char* p) { return static_cast<U>(Long(p)); }
 int S8(unsigned v) { return static_cast<signed char>(v); }
 int S16(unsigned v) { return static_cast<short>(v); }
@@ -80,9 +88,9 @@ U CodeAt(U table, U index, const char* who) {
 void Ensure(unsigned animation) { SH_CALL(Sprite_EnsureAnimation)(static_cast<unsigned char>(animation)); }
 
 // A member slot's CLUT word and palette (Sprite_Current +5).
-U ClutWord(const unsigned char* s) { return at::kClutWords + (static_cast<U>(s[5]) << 6); }
+U ClutWord(const unsigned char* s) { return Gfx_ClutStrip_addr + 0x1e3e + (static_cast<U>(s[5]) << 6); }
 unsigned short* Palette(const unsigned char* s) {
-    return reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(at::kPalettes + (static_cast<U>(s[5]) << 6)));
+    return reinterpret_cast<unsigned short*>(static_cast<std::uintptr_t>(Gfx_ClutStripSource_addr + 0x1e00 + (static_cast<U>(s[5]) << 6)));
 }
 
 // The pace's reach: Field_DirectionSteps[+8] times (+0x70 + 2), from +0x34 / +0x38.
@@ -165,14 +173,14 @@ extern "C" void __cdecl Records_CountUnpairedOfKind(unsigned kind) {
 extern "C" void __cdecl Field_AfterBattleTally(void) {
     static const signed char kThresholds[10] = {0x14, 0x14, 0x14, 0x28, 0x14, 0x14, 0x3C, 0x14, 0x14, 0x14};
     if (SH_CALL(Flags_Test)(At(at::kTallyBits), 4) != 0 && SH_CALL(Flags_Test)(At(at::kTallyBits + 3), 4) == 0) {
-        const unsigned char v = B(at::kTallyByte);
-        if (v < 0x1E) B(at::kTallyByte) = static_cast<unsigned char>(v + 1);
+        const unsigned char v = AreaW1c_Byte9045FB;
+        if (v < 0x1E) AreaW1c_Byte9045FB = static_cast<unsigned char>(v + 1);
     }
-    if (Cond_ByteFA >= 8 && B(at::kLevelA) != 0) {
+    if (Cond_ByteFA >= 8 && FieldE2_LevelA != 0) {
         U flag = 0xF6;
         bool found = false;
         for (; flag <= 0xFF; ++flag)
-            if (SH_CALL(Flags_Test)(At(at::kStoryFlags), flag) == 0) {
+            if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), flag) == 0) {
                 found = true;
                 break;
             }
@@ -186,22 +194,22 @@ extern "C" void __cdecl Field_AfterBattleTally(void) {
             const bool first = flag == 0xF6 || flag == 0xF9 || flag == 0xFC;
             if (first) b = a;
             if (b != 0) {
-                SetL(at::kTallyDword, L(at::kTallyDword) + 1u);
-                int need = kThresholds[flag - 0xF6] - static_cast<int>(B(first ? at::kBiasA : at::kBiasB));
+                Rest4a_ClockA = Rest4a_ClockA + 1u;
+                int need = kThresholds[flag - 0xF6] - static_cast<int>(B(first ? FieldE2_BiasA_addr : FieldE2_BiasB_addr));
                 if (need < 5) need = 5;
-                if (L(at::kTallyDword) >= static_cast<U>(need)) {
-                    SH_CALL(Flags_Set)(At(at::kStoryFlags), flag);
-                    SetL(at::kTallyDword, 0);
+                if (Rest4a_ClockA >= static_cast<U>(need)) {
+                    SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), flag);
+                    Rest4a_ClockA = 0;
                 }
             }
         }
-        if (B(at::kLevelB) < 7) SH_CALL(Records_CountUnpaired)(1, reinterpret_cast<U*>(At(at::kTallyA)));
-        if (B(at::kLevelA) < 0xA) SH_CALL(Records_CountUnpaired)(0, reinterpret_cast<U*>(At(at::kTallyB)));
+        if (Rest4a_LevelLit < 7) SH_CALL(Records_CountUnpaired)(1, reinterpret_cast<U*>(At(Rest4a_StampLevelLit_addr)));
+        if (FieldE2_LevelA < 0xA) SH_CALL(Records_CountUnpaired)(0, reinterpret_cast<U*>(At(Rest4a_StampLevelDark_addr)));
         SH_CALL(Records_CountUnpairedOfKind)(5);
         SH_CALL(Records_CountUnpairedOfKind)(0xB);
     }
-    if (SH_CALL(Flags_Test)(At(at::kStoryFlags), 0xF5) == 0 && B(at::kLevelB) >= 4)
-        SH_CALL(Flags_Set)(At(at::kStoryFlags), 0xF5);
+    if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), 0xF5) == 0 && Rest4a_LevelLit >= 4)
+        SH_CALL(Flags_Set)(At(Cond_Flags_addr + 0xa0), 0xF5);
 }
 
 // original 0x534480: Field_LeaderStates[14] and the members' 0x65F960[14]:
@@ -245,19 +253,19 @@ extern "C" void __cdecl Field_FloorHurt(unsigned kind_arg) {
     const U kind = kind_arg & 0xFF;
     if (kind > 8) bof3::Fatal("Field_FloorHurt: kind %u past the nine the stack table holds", (unsigned)kind);
     const unsigned char* const t = kTable + 3u * kind;
-    SH_CALL(Char_LoseHp)(t[0], Field_State[0x89]);
-    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kHpLoss2)(t[1], Field_State[0x89]);
+    SH_CALL(Char_LoseHp)(t[0], State()->char_id);
+    SH_AT(void (__cdecl*)(unsigned, unsigned), at::kHpLoss2)(t[1], State()->char_id);
     const unsigned char flags = t[2];
     if (flags & 0x80) Field_State[0x124] = 0xA;
     if (flags & 0x20) Field_State[0x125] = 0x28;
-    unsigned char* fs = Field_State;
-    U actor = at::kCharRecords + fs[0x148] * at::kRecordStride;
+    records::PartyMember* fs = State();
+    U actor = at::kCharRecords + fs->char_index * at::kRecordStride;
     if (W(actor + 0x18) <= (W(actor + 0x20) >> 2)) {
         SetW(actor + 0x10, W(actor + 0x10) | 0x2000u);
-        SetW(Key(fs) + 0x90, W(Key(fs) + 0x90) | 0x2000u);
-        fs = Field_State;
+        fs->status = fs->status | 0x2000u;
+        fs = State();
     }
-    const U id = fs[0x148];
+    const U id = fs->char_index;
     actor = at::kCharRecords + id * at::kRecordStride;
     SetW(actor + 0x10, W(actor + 0x10) | flags);
     // the member byte as the original pushes it: edx of `lea edx, [id + id * 4]` with dl the byte
@@ -422,7 +430,7 @@ extern "C" unsigned char __cdecl Field_WayBlockedWide(long x, long z, unsigned g
 // ============================================================================
 
 // original 0x535FC0: Sprite_EnsureAnimation(0x3C) facing 7, else (0x3D).
-extern "C" void __cdecl Leader_Pose3C(void) { Ensure(Sprite_Current[8] == 7 ? 0x3C : 0x3D); }
+extern "C" void __cdecl Leader_Pose3C(void) { Ensure(Self()->direction == 7 ? 0x3C : 0x3D); }
 
 // The hop's set-up, 0x535FE0 and 0x5363C0 alike: Field_State +0x128 = +0x70
 // + 2, Field_JumpSetUp; +0x14 = 0; +9 = (+0x70 + 1) * +9 * 2 and +0xA = +9 / 2
@@ -432,11 +440,11 @@ void HopSetUp() {
     Field_State[0x128] = static_cast<unsigned char>(Sprite_Current[0x70] + 2);
     SH_CALL(Field_JumpSetUp)();
     SetL(Key(Sprite_Current) + 0x14, 0);
-    unsigned char* s = Sprite_Current;
-    s[9] = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(s[0x70] + 1) * s[9]) << 1);
-    s = Sprite_Current;
-    s[0xA] = static_cast<unsigned char>(s[9] >> 1);
-    Ensure(static_cast<unsigned char>(Sprite_Current[8] + 8));
+    records::PartyMember* s = Self();
+    s->step_frames = static_cast<unsigned char>(static_cast<unsigned char>(static_cast<unsigned char>(Bytes(s)[0x70] + 1) * s->step_frames) << 1);
+    s = Self();
+    Bytes(s)[0xA] = static_cast<unsigned char>(s->step_frames >> 1);
+    Ensure(static_cast<unsigned char>(Self()->direction + 8));
     SH_CALL(Sprite_ApplyVelocity)();
 }
 }  // namespace
@@ -444,7 +452,7 @@ void HopSetUp() {
 // original 0x535FE0: the hop's set-up (HopSetUp), +9 - 1.
 extern "C" void __cdecl Leader_HopStart(void) {
     HopSetUp();
-    Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
+    Self()->step_frames = static_cast<unsigned char>(Self()->step_frames - 1);
 }
 
 // original 0x5363C0: nothing (al 0) until Sprite_ScriptTickOnce answers; then
@@ -452,7 +460,7 @@ extern "C" void __cdecl Leader_HopStart(void) {
 extern "C" unsigned char __cdecl Leader_HopStartAfterTick(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return 0;
     HopSetUp();
-    Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
+    Self()->step_frames = static_cast<unsigned char>(Self()->step_frames - 1);
     return 1;
 }
 
@@ -462,14 +470,14 @@ extern "C" unsigned char __cdecl Leader_HopStartAfterTick(void) {
 // word 0x8113BE + +5 * 0x40 = 0 with Gfx_ClutStripDirty; Sprite_ScriptTick,
 // al 0.
 extern "C" unsigned char __cdecl Leader_HopFlight(void) {
-    unsigned char* const s = Sprite_Current;
-    if (s[9] == 0) {
-        Ensure(s[8]);
+    records::PartyMember* const s = Self();
+    if (s->step_frames == 0) {
+        Ensure(s->direction);
         Sprite_Current[0xA] = 4;
         SH_CALL(Sprite_ScriptTick)();
         return 1;
     }
-    s[9] = static_cast<unsigned char>(s[9] - 1);
+    s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     SH_CALL(Sprite_ApplyVelocity)();
     unsigned char* const t = Sprite_Current;
     if (t[9] == t[0xA]) {
@@ -485,15 +493,15 @@ extern "C" unsigned char __cdecl Leader_HopFlight(void) {
 // facing 3, else +0xA + 1), +9 = 1, al 0.
 extern "C" unsigned char __cdecl Leader_HopPose(void) {
     Sprite_Current[0xA] = static_cast<unsigned char>(Sprite_Current[0xA] - 1);
-    const unsigned char* const s = Sprite_Current;
-    const unsigned char left = s[0xA];
+    const records::PartyMember* const s = Self();
+    const unsigned char left = Bytes(s)[0xA];
     if (left == 0) {
-        Ensure(s[8] == 3 ? 0x37 : 0x34);
-        Sprite_Current[8] = static_cast<unsigned char>(Sprite_Current[8] ^ 4);
+        Ensure(s->direction == 3 ? 0x37 : 0x34);
+        Self()->direction = static_cast<unsigned char>(Self()->direction ^ 4);
         return 1;
     }
-    Ensure(s[8] == 3 ? static_cast<unsigned char>(7 - left) : static_cast<unsigned char>(left + 1));
-    Sprite_Current[9] = 1;
+    Ensure(s->direction == 3 ? static_cast<unsigned char>(7 - left) : static_cast<unsigned char>(left + 1));
+    Self()->step_frames = 1;
     return 0;
 }
 
@@ -501,7 +509,7 @@ extern "C" unsigned char __cdecl Leader_HopPose(void) {
 // Sprite_EnsureAnimation(0x3E facing 7, else 0x3F), al 1.
 extern "C" unsigned char __cdecl Leader_Pose3E(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return 0;
-    Ensure(Sprite_Current[8] == 7 ? 0x3E : 0x3F);
+    Ensure(Self()->direction == 7 ? 0x3E : 0x3F);
     return 1;
 }
 
@@ -519,16 +527,16 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
     std::int32_t x, z;
     Ahead(s, x, z);
     const std::uint16_t height = W(Key(s) + 0x3E);
-    const U actor = Field_State[0x89];
+    const U actor = State()->char_id;
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) > S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + actor * 2u))) {
         SetW(Key(s) + 0x3E, static_cast<unsigned>(height) - B(at::kPaceRises + actor));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
-        const std::uint16_t offset = W(at::kPaceHeights + Field_State[0x89] * 2u);
+        const std::uint16_t offset = W(at::kPaceHeights + State()->char_id * 2u);
         SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again) - offset);
-        Ensure(Sprite_Current[8] == 7 ? 0x3C : 0x3D);
+        Ensure(Self()->direction == 7 ? 0x3C : 0x3D);
         result = 1;
     }
     FollowAndTick(Sprite_Current);
@@ -538,10 +546,10 @@ extern "C" unsigned char __cdecl Leader_StepUp(void) {
 // original 0x536290: the member slot's CLUT word 0x8113BE + +5 * 0x40 = 0 with
 // Gfx_ClutStripDirty, then Sprite_EnsureAnimation(0x37 facing 7, else 0x34).
 extern "C" void __cdecl Leader_Pose34(void) {
-    unsigned char* const s = Sprite_Current;
+    records::PartyMember* const s = Self();
     Gfx_ClutStripDirty = 1;
-    SetW(ClutWord(s), 0);
-    Ensure(s[8] == 7 ? 0x37 : 0x34);
+    SetW(ClutWord(Bytes(s)), 0);
+    Ensure(s->direction == 7 ? 0x37 : 0x34);
 }
 
 // original 0x5362D0: a step down. The point ahead as Leader_StepUp's and the
@@ -558,11 +566,11 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
     unsigned char result = 0;
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
     if (S16(height) < S16(static_cast<U>(ground))) {
-        SetW(Key(s) + 0x3E, B(at::kPaceRises + Field_State[0x89]) + static_cast<unsigned>(height));
+        SetW(Key(s) + 0x3E, B(at::kPaceRises + State()->char_id) + static_cast<unsigned>(height));
     } else {
         const long again = SH_CALL(MapView_GroundAt)(x, z);
         SetW(Key(Sprite_Current) + 0x3E, static_cast<U>(again));
-        Ensure(Sprite_Current[8] == 7 ? 0x3E : 0x3F);
+        Ensure(Self()->direction == 7 ? 0x3E : 0x3F);
         result = 1;
     }
     FollowAndTick(Sprite_Current);
@@ -575,18 +583,18 @@ extern "C" unsigned char __cdecl Leader_StepDown(void) {
 // at +9 == +0xA the member's palette (Sprite_LoadPalette(0x80D380 + +5 *
 // 0x40, 0)), Sprite_ScriptTick, al 0.
 extern "C" unsigned char __cdecl Leader_HopFall(void) {
-    unsigned char* const s = Sprite_Current;
-    if (s[9] == 0) {
-        Ensure(s[8]);
+    records::PartyMember* const s = Self();
+    if (s->step_frames == 0) {
+        Ensure(s->direction);
         SH_CALL(Sprite_ClearSteps)();
         Field_State[0x137] = 0;
-        Sprite_Current[1] = 1;
-        Sprite_Current[2] = 0;
-        Sprite_Current[3] = 0;
-        Sprite_Current[4] = 0;
+        Self()->state[0] = 1;
+        Self()->state[1] = 0;
+        Self()->state[2] = 0;
+        Self()->state[3] = 0;
         return 1;
     }
-    s[9] = static_cast<unsigned char>(s[9] - 1);
+    s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     SH_CALL(Sprite_ApplyVelocity)();
     const unsigned char* const t = Sprite_Current;
     if (t[9] == t[0xA]) SH_CALL(Sprite_LoadPalette)(Palette(t), 0);
@@ -603,9 +611,9 @@ extern "C" unsigned char __cdecl Leader_Rise(void) {
     std::int32_t x, z;
     Ahead(Sprite_Current, x, z);
     const long ground = SH_CALL(MapView_GroundAt)(x, z);
-    const int floor = S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + Field_State[0x89] * 2u));
-    unsigned char* const s = Sprite_Current;
-    if (S16(W(Key(s) + 0x3E)) >= floor) s[2] = 3;
+    const int floor = S16(static_cast<U>(ground)) - S16(W(at::kPaceHeights + State()->char_id * 2u));
+    records::PartyMember* const s = Self();
+    if (S16(W(Key(Bytes(s)) + 0x3E)) >= floor) s->state[1] = 3;
     return SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -620,11 +628,11 @@ extern "C" unsigned char __cdecl Leader_Sink(void) {
     s = Sprite_Current;
     if (S16(static_cast<U>(ground)) > S16(W(Key(s) + 0x3E))) {
         SetW(Key(s) + 0x3E, static_cast<U>(ground));
-        SH_CALL(Sprite_SetAnimation)(Sprite_Current[8]);
+        SH_CALL(Sprite_SetAnimation)(Self()->direction);
         SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
         Field_State[0x137] = 0;
-        Sprite_Current[1] = 1;
-        Sprite_Current[2] = 0;
+        Self()->state[0] = 1;
+        Self()->state[1] = 0;
     }
     return SH_CALL(Sprite_ScriptTick)();
 }
@@ -633,14 +641,14 @@ extern "C" unsigned char __cdecl Leader_Sink(void) {
 // 3, else 0x3B), the member's palette, Sprite_ClearSteps, +0x20 = -8, the
 // states +1 = 2, +2 = 3, +3 = 3.
 extern "C" void __cdecl Leader_TurnBack(void) {
-    Sprite_Current[8] = static_cast<unsigned char>(Sprite_Current[8] ^ 4);
-    Ensure(Sprite_Current[8] == 3 ? 0x3A : 0x3B);
+    Self()->direction = static_cast<unsigned char>(Self()->direction ^ 4);
+    Ensure(Self()->direction == 3 ? 0x3A : 0x3B);
     SH_CALL(Sprite_LoadPalette)(Palette(Sprite_Current), 0);
     SH_CALL(Sprite_ClearSteps)();
     SetL(Key(Sprite_Current) + 0x20, 0xFFFFFFF8u);
-    Sprite_Current[1] = 2;
-    Sprite_Current[2] = 3;
-    Sprite_Current[3] = 3;
+    Self()->state[0] = 2;
+    Self()->state[1] = 3;
+    Self()->state[2] = 3;
 }
 
 // ============================================================================
@@ -680,10 +688,10 @@ extern "C" void __cdecl PartySet_ErrorLoop(void) {
 extern "C" void __cdecl Mode11_ObjectFrame(void) {
     const std::uint16_t held = W(0x7E1BE8);
     const U state = B(at::kObject + 1);
-    Sprite_Current = At(at::kObject);
+    Sprite_Current = At(FieldEvent_Object905DA0_addr);
     Field_State = ObjTrio;
-    SetW(at::kInputHeld, held);
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(at::kObjectStates, state, "Mode11_ObjectFrame")))();
+    Field_InputHeld = held;
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(Mode11_ObjectStates_addr, state, "Mode11_ObjectFrame")))();
 }
 
 // original 0x536B90: state 0: +5 = 0, +0xB = the leader's flag byte
@@ -692,7 +700,7 @@ extern "C" void __cdecl Mode11_ObjectFrame(void) {
 // Sprite_Current read again.
 extern "C" void __cdecl Mode11_ObjectStart(void) {
     Sprite_Current[5] = 0;
-    Sprite_Current[0xB] = B(at::kLeaderFlags);
+    Sprite_Current[0xB] = ObjTrio[0x138];
     Field_State[0x128] = 3;
     SetL(Key(Sprite_Current) + 0x34, L(at::kLeaderX));
     SetL(Key(Sprite_Current) + 0x38, L(at::kLeaderZ));
@@ -708,11 +716,11 @@ void ObjectStill(unsigned char* s, bool steps) {
     SetL(Key(Sprite_Current) + 0x10, 0);
     SetL(Key(Sprite_Current) + 0x14, 0);
     if (steps) Sprite_Current[9] = 0;
-    SetW(at::kF3Divisor, 0);
-    SetW(at::kFaWord, 0);
+    MoveScript_F3Divisor = 0;
+    MoveScript_FAWord = 0;
 }
 void LeaveRequest() {
-    SetW(at::kScriptFlags2, W(at::kScriptFlags2) & 0x1Fu);
+    Field_ScriptFlags2 = Field_ScriptFlags2 & 0x1Fu;
     Field_Request = 9;
 }
 }  // namespace
@@ -737,24 +745,24 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
     if (L(at::kInputPressed) & 0x800u) {
         unsigned char* const fs = Field_State;
         const U nx = LongAt(fs + 0x34);
-        const std::int32_t dx = AbsDiff(L(at::kKind2X), nx);
-        const std::int32_t dz = AbsDiff(L(at::kKind2Z), LongAt(fs + 0x38));
-        SetL(at::kKind2X, nx);
-        SetL(at::kKind2Z, LongAt(fs + 0x38));
-        SetW(at::kF3Divisor, 0x20);
+        const std::int32_t dx = AbsDiff(static_cast<std::uint32_t>(Field_Kind2X), nx);
+        const std::int32_t dz = AbsDiff(static_cast<std::uint32_t>(Field_Kind2Z), LongAt(fs + 0x38));
+        Field_Kind2X = nx;
+        Field_Kind2Z = LongAt(fs + 0x38);
+        MoveScript_F3Divisor = 0x20;
         const std::int32_t far = dx >= dz ? dx : dz;
         const U n = static_cast<U>(far >> 13) & 0xFF;
         U word = 0;
         if (n != 0) word = static_cast<U>(S16(static_cast<U>(W(Key(fs) + 0x3E) - W(at::kElevation))) / static_cast<int>(n));
-        SetW(at::kFaWord, word);
+        MoveScript_FAWord = word;
         fs[0x128] = 3;
         Sprite_Current[0] = static_cast<unsigned char>(Sprite_Current[0] | 0x40);
         Sprite_Current[1] = 3;
         return;
     }
-    if (W(at::kInputHeld) & W(at::kButtonsLeave)) {
+    if (Field_InputHeld & W(at::kButtonsLeave)) {
         Field_State[0x128] = 3;
-        SetW(at::kGameStep, W(at::kGameStep) + 1u);
+        Game_Step = Game_Step + 1u;
         Sprite_Current[1] = 1;
         Sprite_Current[2] = 0;
         return;
@@ -783,8 +791,8 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
         LeaveRequest();
         return;
     }
-    const U running = (W(at::kButtonsRun) & W(at::kInputHeld)) != 0 ? 1u : 0u;
-    Field_State[0x128] = (running ^ B(at::kRunDefault)) != 0 ? 4 : 3;
+    const U running = (W(at::kButtonsRun) & Field_InputHeld) != 0 ? 1u : 0u;
+    Field_State[0x128] = (running ^ FieldE2_RunDefault) != 0 ? 4 : 3;
     SH_CALL(Field_JumpStart)();
     SH_CALL(Field_JumpCheckHeight)();
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
@@ -823,7 +831,7 @@ extern "C" void __cdecl Mode11_ObjectMove(void) {
 // original 0x536E90: state 3: once Field_Kind2Hold is 0,
 // MapView_SetElevation(Field_State's +0x3E) and Field_Request 0.
 extern "C" void __cdecl Mode11_ObjectEnd(void) {
-    if (B(at::kKind2Hold) != 0) return;
+    if (Field_Kind2Hold != 0) return;
     SH_CALL(MapView_SetElevation)(static_cast<short>(W(Key(Field_State) + 0x3E)));
     Field_Request = 0;
 }
@@ -919,8 +927,8 @@ short Place(U v) { return static_cast<short>(static_cast<U>(static_cast<std::int
 // (DIV-0023's ruling; the original leaves stale stack there). PSX twin
 // 0x80168288 (callers, a hypothesis).
 extern "C" void __cdecl Mode11_ObjectDraw(void) {
-    const unsigned char flags = B(at::kObject);
-    Sprite_Current = At(at::kObject);
+    const unsigned char flags = FieldEvent_Object905DA0;
+    Sprite_Current = At(FieldEvent_Object905DA0_addr);
     if (flags & 0x40) return;
     alignas(4) short vertex[4];
     vertex[0] = Place(L(at::kObject + 0x34));
@@ -1027,8 +1035,8 @@ extern "C" void __cdecl Mode11_ObjectDraw(void) {
 // 0x904030). Past the table ours aborts where the original calls data.
 // PSX twin 0x801A96D4 (call, a hypothesis).
 extern "C" void __cdecl Field_ObjectTriggerByKind(unsigned char* object) {
-    const U entry = CodeAt(at::kTriggers, object[0x86], "Field_ObjectTriggerByKind");
-    reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, At(at::kStoryFlags));
+    const U entry = CodeAt(WorldMap_FieldHooks_addr + 0x2c, object[0x86], "Field_ObjectTriggerByKind");
+    reinterpret_cast<void (__cdecl*)(unsigned char*, unsigned char*)>(static_cast<std::uintptr_t>(entry))(object, At(Cond_Flags_addr + 0xa0));
 }
 
 // original 0x56D6B0: with the object's +0x89 bit 6, Field_ObjectTriggerByKind
@@ -1079,13 +1087,13 @@ extern "C" int __cdecl Scenario_CellHook(unsigned x, unsigned z) {
 // ============================================================================
 
 namespace {
-signed char TailState() { return static_cast<signed char>(B(at::kTailState)); }
+signed char TailState() { return AreaW0c_TailState; }
 void TailDone() {
-    B(at::kTailKind) = 0;
-    B(at::kTailState) = 0;
-    B(at::kTailArg) = 0;
+    AreaW0a_TailKind = 0;
+    AreaW0c_TailState = 0;
+    AreaW0c_TailSub = 0;
 }
-void TailStep(unsigned char state) { B(at::kTailState) = state; }
+void TailStep(unsigned char state) { AreaW0c_TailState = state; }
 }  // namespace
 
 // original 0x56D930 (slot 4): 0 - Field_ScriptFlags2 |= 7, LoadDatFile(0x31C),
@@ -1099,32 +1107,32 @@ extern "C" void __cdecl FieldTail_LoadBank(void) {
     case 0:
         B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) | 7);
         SH_CALL(LoadDatFile)(0x31C);
-        B(at::kTailState) = static_cast<unsigned char>(B(at::kTailState) + 1);
+        AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
     case 1:
         if (SH_CALL(File_LoadDone)() == 0) return;
         SH_CALL(Gfx_ClutStripCopyRow)(2);
         SH_AT(void (__cdecl*)(), at::kLoadWait)();
-        B(at::kTailState) = static_cast<unsigned char>(B(at::kTailState) + 1);
+        AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
     case 2:
         SH_AT(void (__cdecl*)(), at::kLoadStep)();
         return;
     case 3: {
-        const auto set = static_cast<unsigned char>(B(at::kPartySet) | 0x80);
-        B(at::kPartySet) = set;
+        const auto set = static_cast<unsigned char>(AreaW0b_PartySet | 0x80);
+        AreaW0b_PartySet = set;
         SH_CALL(Snd_LoadBankFile)((set & 0x7Fu) + 0x2C2u);
-        B(at::kTailState) = static_cast<unsigned char>(B(at::kTailState) + 1);
+        AreaW0c_TailState = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         return;
     }
     case 4:
         if (SH_CALL(File_LoadDone)() == 0) return;
-        SetW(at::kScriptFlags2, W(at::kScriptFlags2) & 0xFFF8u);
+        Field_ScriptFlags2 = Field_ScriptFlags2 & 0xFFF8u;
         SH_CALL(ScriptFlags_Clear40)();
         TailDone();
         return;
     case 5:
-        if (B(at::kCondByteFE) == 2) B(at::kTailState) = 0;
+        if (Cond_ByteFE == 2) AreaW0c_TailState = 0;
         return;
     default: return;
     }
@@ -1146,7 +1154,7 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
         TailStep(1);
         return;
     case 1:
-        SH_CALL(Party_DropIn)(B(at::kDropInTable + B(at::kTailArg)));
+        SH_CALL(Party_DropIn)(B(at::kDropInTable + AreaW0c_TailSub));
         TailStep(2);
         return;
     case 2:
@@ -1158,7 +1166,7 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
         const auto left = static_cast<std::uint16_t>(W(at::kTailTimer) - 1u);
         SetW(at::kTailTimer, left);
         if (left != 0) return;
-        switch (B(at::kTailArg)) {
+        switch (AreaW0c_TailSub) {
         case 0:
         case 4: SH_CALL(Field_ChangeArea)(0x6C, 0x110000, 0x590000, 0x85); break;
         case 1:
@@ -1174,8 +1182,8 @@ extern "C" void __cdecl FieldTail_DropInMove(void) {
         if (B(at::kCounterB) != 0x31) return;
         B(at::kCounterB) = 0;
         SH_CALL(ScriptFlags_Clear40)();
-        SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x1E);
-        SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x1F);
+        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x1E);
+        SH_CALL(Flags_Clear)(At(Cond_Flags_addr + 0xa0), 0x1F);
         TailDone();
         return;
     default: return;
@@ -1199,8 +1207,8 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
     const signed char state = TailState();
     if (static_cast<U>(static_cast<std::int32_t>(state)) > 0x17) return;
     auto rest = [](unsigned char next) {
-        if (W(at::kWaitWord) != 0) return;
-        B(at::kPassFlags) = 0;
+        if (MoveScript_WaitWordDA != 0) return;
+        Draw_PassFlags = 0;
         SH_CALL(Party_HealJoined)();
         SH_CALL(Sound_StopMusic)();
         SH_CALL(Sound_LoadStream)(0);
@@ -1210,7 +1218,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         if (SH_CALL(Sound_StreamDone)() == 0) return;
         SH_CALL(Sound_ResumeAll)();
         SH_CALL(Transition_Start)(1);
-        B(at::kPassFlags) = 0x1F;
+        Draw_PassFlags = 0x1F;
         TailStep(next);
     };
     switch (kCase[state]) {
@@ -1225,7 +1233,7 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
     case 2: resume(3); return;
     case 11: resume(0x17); return;
     case 3:
-        if (W(at::kWaitWord) != 0) return;
+        if (MoveScript_WaitWordDA != 0) return;
         TailStep(0xA);
         return;
     case 4:
@@ -1234,19 +1242,19 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         TailStep(6);
         return;
     case 5:
-        B(at::kMenuMode) = 0;
-        B(at::kFieldEC3) = 0;
-        B(at::kMenuCursor) = 0xFE;
+        BattleE1_Mode = 0;
+        ScenaSc1_ShopByteB = 0;
+        ModeStates_ShopObject = 0xFE;
         B(at::kFieldEC2) = 1;
-        SetW(at::kGameMode, 7);
+        Game_Mode = 7;
         TailStep(7);
         return;
     case 6:
-        if (W(at::kGameMode) != 2) return;
+        if (Game_Mode != 2) return;
         TailStep(0xA);
         return;
     case 7: {
-        const unsigned char message = B(at::kTailArg);
+        const unsigned char message = AreaW0c_TailSub;
         if (message != 0xFF) {
             SH_CALL(Msg_OpenScript)(message);
             Field_Request = 2;
@@ -1260,12 +1268,12 @@ extern "C" void __cdecl FieldTail_HealAndMenu(void) {
         TailDone();
         return;
     case 12:
-        if (W(at::kWaitWord) != 0) return;
-        B(at::kMenuMode) = 0;
-        B(at::kMenuCursor) = 0xFE;
+        if (MoveScript_WaitWordDA != 0) return;
+        BattleE1_Mode = 0;
+        ModeStates_ShopObject = 0xFE;
         B(at::kFieldEC2) = 1;
-        B(at::kFieldEC3) = 0;
-        SetW(at::kGameMode, 7);
+        ScenaSc1_ShopByteB = 0;
+        Game_Mode = 7;
         TailStep(6);
         return;
     default: return;
@@ -1280,9 +1288,9 @@ extern "C" void __cdecl FieldTail_Message(void) {
     case 0: {
         SH_CALL(ScriptFlags_Set40)();
         SH_CALL(Msg_OpenScript)(0xD8);
-        const auto next = static_cast<unsigned char>(B(at::kTailState) + 1);
+        const auto next = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         Field_Request = 2;
-        B(at::kTailState) = next;
+        AreaW0c_TailState = next;
         return;
     }
     case 1:
@@ -1299,7 +1307,7 @@ extern "C" void __cdecl FieldTail_Message(void) {
 // the original jumps into Field_ObjectTriggers).
 extern "C" void __cdecl FieldTail_WorldMapHook(void) {
     const U index = SH_CALL(WorldMap_RecordIndex)() & 0xFF;
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(at::kWorldMapHooks, index, "FieldTail_WorldMapHook")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(WorldMap_FieldHooks_addr, index, "FieldTail_WorldMapHook")))();
 }
 
 // original 0x56DE50 (slot 44): 0 - unless a message is up: bit (argument) of
@@ -1312,8 +1320,8 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
     switch (TailState()) {
     case 0: {
         if (Field_Request == 2) return;
-        SH_CALL(Flags_Set)(At(at::kMessageBits), B(at::kTailArg));
-        const unsigned char* const text = SH_CALL(Msg_SystemPtr)(B(at::kTailArg) + 0x4172u);
+        SH_CALL(Flags_Set)(At(ScenaSc7_EventFlags_addr), AreaW0c_TailSub);
+        const unsigned char* const text = SH_CALL(Msg_SystemPtr)(AreaW0c_TailSub + 0x4172u);
         SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kTextRecords)), reinterpret_cast<const char*>(text), 8);
         SH_CALL(Msg_OpenSystem)(0xFA);
         Field_Request = 2;
@@ -1326,7 +1334,7 @@ extern "C" void __cdecl FieldTail_FlagMessage(void) {
         if (SH_CALL(Sound_StreamDone)() == 0) return;
         if (Field_Request == 2) return;
         SH_CALL(Sound_ResumeAll)();
-        *At(L(at::kStreamFlag)) = 0;
+        *At(AreaW1a_FocusObject) = 0;
         SH_CALL(ScriptFlags_Clear40)();
         TailDone();
         return;
@@ -1349,34 +1357,34 @@ extern "C" void __cdecl FieldTail_StoryWarp(void) {
         SH_CALL(ScriptFlags_Set40)();
         const bool has = static_cast<std::uint16_t>(SH_CALL(Inventory_Count)(0, 0x57, 0)) != 0;
         SH_CALL(Msg_OpenScript)(has ? 0x21 : 0x20);
-        const auto next = static_cast<unsigned char>(B(at::kTailState) + 1);
+        const auto next = static_cast<unsigned char>(static_cast<unsigned char>(AreaW0c_TailState) + 1);
         Field_Request = 2;
-        B(at::kTailState) = next;
+        AreaW0c_TailState = next;
         return;
     }
     case 1:
         if (Field_Request == 2) return;
         SH_CALL(ScriptFlags_Clear40)();
-        B(at::kTailKind) = 0;
-        B(at::kTailState) = 0;
+        AreaW0a_TailKind = 0;
+        AreaW0c_TailState = 0;
         return;
     case 2: {
         if (Field_Request == 2) return;
         U flag = 0xFF, area = 0xB9;
         for (;;) {
-            if (SH_CALL(Flags_Test)(At(at::kStoryFlags), flag) != 0) break;
+            if (SH_CALL(Flags_Test)(At(Cond_Flags_addr + 0xa0), flag) != 0) break;
             --flag;
             area += 0xFFFF;
             if (static_cast<std::int32_t>(flag) < 0xF6) break;
         }
-        SetL(at::kReturnX, L(at::kLeaderX));
-        SetL(at::kReturnZ, L(at::kLeaderZ));
-        SetW(at::kReturnArea, W(at::kAreaNumber));
+        AreaW2d_ReturnPoint = L(at::kLeaderX);
+        AreaW4d_ReturnZ = L(at::kLeaderZ);
+        AreaW4d_ReturnArea = Game_AreaNumber;
         SH_CALL(Field_ChangeArea)(area, 0x430000, 0x160000, 4);
         B(at::kScriptFlags2) = static_cast<unsigned char>(B(at::kScriptFlags2) | 0x40);
         SH_CALL(ScriptFlags_Clear40)();
-        B(at::kTailKind) = 0;
-        B(at::kTailState) = 0;
+        AreaW0a_TailKind = 0;
+        AreaW0c_TailState = 0;
         return;
     }
     default: return;
@@ -1582,22 +1590,22 @@ extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
     const int zs = static_cast<short>(z), xs = static_cast<short>(x);
     const U width = LongAt(AreaMap_Header) & 0xFF;
     const_cast<unsigned char*>(AreaMap_Bytes)[static_cast<std::int32_t>(width * static_cast<U>(zs)) + xs] = 0;
-    const int c = static_cast<short>(x + 1u - W(at::kMapOrigin));
-    const int r = static_cast<short>(z - W(at::kMapOrigin + 2));
+    const int c = static_cast<short>(x + 1u - static_cast<std::uint16_t>(MapView_Origin[0]));
+    const int r = static_cast<short>(z - static_cast<std::uint16_t>(MapView_Origin[1]));
     int row = c + r;
     if (row >= 0x38 || row < 0) return;
-    row += S16(W(at::kMapRow)) + 1;
+    row += MapView_Row + 1;
     if (row >= 0x38) row -= 0x38;
     int column = c - r;
     if (column >= 0x38 || column < 0) return;
-    column = column / 2 + S16(W(at::kMapColumn)) + 1;
+    column = column / 2 + MapView_Column + 1;
     if (column >= 0x1C) column -= 0x1C;
     if (row < 0 || row >= 0x38 || column < 0 || column >= 0x1C)
         bof3::Fatal("AreaMap_ClearCell: view cell (%d, %d) past MapView_Cells' 0x38 x 0x1C (the original reads there)", row, column);
     const U item = W(at::kMapCells + 2u * static_cast<U>(column + row * 0x1C));
     if (item == 0) return;
-    const U n = item + (L(at::kCellBase) & 0xFFFF);
-    U p = at::kCellRecords + n * 4u;
+    const U n = item + (AreaMap_CellBase & 0xFFFF);
+    U p = AreaMap_Header_addr + n * 4u;
     const U end = p + (L(at::kCellRecords - 4u + n * 4u) >> 16) * 4u - 4u;
     while (p != end) {
         if (p > end) bof3::Fatal("AreaMap_ClearCell: the record walk passed its end 0x%X at 0x%X (the original runs on)", (unsigned)end, (unsigned)p);
@@ -1623,7 +1631,7 @@ extern "C" void __cdecl AreaMap_ClearCell(unsigned x, unsigned z) {
 namespace {
 // The record the row's entry k names (0x66AD10[k + row * 10] * 8), unchecked.
 U TradeRecord(int k) {
-    return at::kTradeRecords + static_cast<U>(B(at::kTradeIndex + static_cast<U>(k + B(at::kTradeRow) * 10))) * 8u;
+    return at::kTradeRecords + static_cast<U>(B(at::kTradeIndex + static_cast<U>(k + AreaEntry_PendingFlags * 10))) * 8u;
 }
 void TradeBox() { SH_AT(void (__cdecl*)(int, int, int, int, int), at::kTradeBox)(0x14, 0x12, 0x118, 0x13, 0); }
 void TradeList(unsigned flag) { SH_AT(void (__cdecl*)(unsigned), at::kTradeList)(flag); }
@@ -1638,7 +1646,7 @@ const unsigned char* Pool(U word_cell) { return At(bof3::addr::MessagePools + (L
 // into what is not code), then the frame 0x469750(0x14, 0x12, 0x118, 0x13, 0),
 // the list 0x594410(0), 0x5947D0 and a tail jump to 0x5942C0.
 extern "C" void __cdecl ItemTrade_Open(void) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(at::kTradeOpenSteps, B(at::kTradeStep), "ItemTrade_Open")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(ItemTrade_OpenSteps_addr, Effect1g_TradeStep, "ItemTrade_Open")))();
     TradeBox();
     TradeList(0);
     SH_AT(void (__cdecl*)(), at::kTradeCursor)();
@@ -1650,18 +1658,18 @@ extern "C" void __cdecl ItemTrade_Open(void) {
 // al, the step up.
 extern "C" void __cdecl ItemTrade_OpenStart(void) {
     SH_CALL(Transition_Start)(1);
-    B(at::kTradePick) = 0;
-    B(at::kTradeQuantity) = 1;
-    B(at::kTradeRowCount) = SH_AT(unsigned char (__cdecl*)(), at::kTradeRows)();
-    B(at::kTradeStep) = static_cast<unsigned char>(B(at::kTradeStep) + 1);
+    Effect1g_TradePick = 0;
+    Effect1g_TradeQuantity = 1;
+    Effect1g_TradeRowCount = SH_AT(unsigned char (__cdecl*)(), at::kTradeRows)();
+    Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep + 1);
 }
 
 // original 0x5939D0 (ItemTrade_OpenSteps[1]): once MoveScript_WaitWordDA is
 // 0, the state 0x93985C = 1 and the step 0.
 extern "C" void __cdecl ItemTrade_OpenWait(void) {
-    if (W(at::kWaitWord) != 0) return;
-    B(at::kTradeState) = 1;
-    B(at::kTradeStep) = 0;
+    if (MoveScript_WaitWordDA != 0) return;
+    Effect1g_TradeState = 1;
+    Effect1g_TradeStep = 0;
 }
 
 // original 0x5939F0 (ItemTrade_States[1]): the run step (ItemTrade_RunSteps
@@ -1669,10 +1677,10 @@ extern "C" void __cdecl ItemTrade_OpenWait(void) {
 // 0x5942C0, 0x5947D0 and, with the pick's bits 6 and 7 clear, the hand at
 // (0x1A, 0x51 + 13 * the s8 pick).
 extern "C" void __cdecl ItemTrade_Run(void) {
-    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(at::kTradeRunSteps, B(at::kTradeStep), "ItemTrade_Run")))();
+    reinterpret_cast<Handler>(static_cast<std::uintptr_t>(CodeAt(ItemTrade_RunSteps_addr, Effect1g_TradeStep, "ItemTrade_Run")))();
     SH_AT(void (__cdecl*)(), at::kTradeFrame)();
     SH_AT(void (__cdecl*)(), at::kTradeCursor)();
-    const unsigned char pick = B(at::kTradePick);
+    const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
     if (pick & 0xC0) return;
     SH_CALL(Menu_DrawHand)(0x1A, static_cast<int>(13u * static_cast<U>(S8(pick)) + 0x51u), 0);
 }
@@ -1690,43 +1698,43 @@ extern "C" void __cdecl ItemTrade_Run(void) {
 extern "C" void __cdecl ItemTrade_PickItem(void) {
     const U moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0x5000u);
     if (moved & 0x1000u) {
-        const auto pick = static_cast<unsigned char>(B(at::kTradePick) - 1);
-        B(at::kTradePick) = pick;
-        if (static_cast<signed char>(pick) < 0) B(at::kTradePick) = static_cast<unsigned char>(B(at::kTradeRowCount) - 1);
+        const auto pick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) - 1);
+        Effect1g_TradePick = pick;
+        if (static_cast<signed char>(pick) < 0) Effect1g_TradePick = static_cast<unsigned char>(Effect1g_TradeRowCount - 1);
         SH_CALL(Sound_PlayEffect)(0x100);
     } else if (moved & 0x4000u) {
-        const auto pick = static_cast<unsigned char>(B(at::kTradePick) + 1);
-        B(at::kTradePick) = pick;
-        if (static_cast<signed char>(pick) >= static_cast<int>(B(at::kTradeRowCount))) B(at::kTradePick) = 0;
+        const auto pick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) + 1);
+        Effect1g_TradePick = pick;
+        if (static_cast<signed char>(pick) >= Effect1g_TradeRowCount) Effect1g_TradePick = 0;
         SH_CALL(Sound_PlayEffect)(0x100);
     }
     const std::uint16_t pressed = Input_Pressed;
-    if (W(at::kConfirm) & pressed) {
-        if (TradeLacks(B(at::kTradePick), 1) != 0) {
+    if (Field_ConfirmButtons & pressed) {
+        if (TradeLacks(static_cast<unsigned char>(Effect1g_TradePick), 1) != 0) {
             SH_CALL(Sound_PlayEffect)(0x107);
         } else {
-            const U record = TradeRecord(S8(B(at::kTradePick)));
+            const U record = TradeRecord(Effect1g_TradePick);
             const auto bag = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 1));
             const auto worn = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 0));
             if (static_cast<unsigned char>(bag + worn) >= 0x63) {
-                B(at::kTradePick) = static_cast<unsigned char>(B(at::kTradePick) | 0x80);
+                Effect1g_TradePick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) | 0x80);
                 SH_CALL(Sound_PlayEffect)(0x104);
-                B(at::kTradeQuantity) = 0;
-                B(at::kTradeStep) = 3;
+                Effect1g_TradeQuantity = 0;
+                Effect1g_TradeStep = 3;
             } else {
-                B(at::kTradePick) = static_cast<unsigned char>(B(at::kTradePick) | 0x40);
+                Effect1g_TradePick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) | 0x40);
                 SH_CALL(Sound_PlayEffect)(0x104);
-                B(at::kTradeStep) = static_cast<unsigned char>(B(at::kTradeStep) + 1);
+                B(at::kTradeStep) = static_cast<unsigned char>(Effect1g_TradeStep + 1);
             }
         }
-    } else if (W(at::kCancel) & pressed) {
-        B(at::kTradeAnswer) = 1;
-        B(at::kTradePick) = static_cast<unsigned char>(B(at::kTradePick) | 0x80);
+    } else if (Field_CancelButtons & pressed) {
+        Effect1g_TradeAnswer = 1;
+        Effect1g_TradePick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) | 0x80);
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kTradeState) = static_cast<unsigned char>(B(at::kTradeState) + 1);
+        Effect1g_TradeState = static_cast<unsigned char>(Effect1g_TradeState + 1);
     }
     TradeBox();
-    const unsigned char pick = B(at::kTradePick);
+    const unsigned char pick = static_cast<unsigned char>(Effect1g_TradePick);
     if ((pick & 0xC0) == 0) {
         const U record = TradeRecord(S8(pick));
         const unsigned help = SH_CALL(Item_HelpMessage)(B(record + 1), B(record));
@@ -1752,15 +1760,15 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     else if (moved == 0x4000u) step = 0xF6;
     else if (moved == 0x1000u) step = 0xA;
     else if (moved == 0x2000u) step = 1;
-    const unsigned char old = B(at::kTradeQuantity);
+    const unsigned char old = static_cast<unsigned char>(Effect1g_TradeQuantity);
     auto quantity = static_cast<unsigned char>(old + step);
     if (static_cast<signed char>(quantity) < 1) quantity = 1;
     else if (static_cast<signed char>(quantity) > 0x63) quantity = 0x63;
-    const unsigned k = B(at::kTradePick) & 0xFu;
-    B(at::kTradeQuantity) = quantity;
+    const unsigned k = static_cast<unsigned char>(Effect1g_TradePick) & 0xFu;
+    Effect1g_TradeQuantity = quantity;
     while (TradeLacks(k, quantity) != 0) {
-        quantity = static_cast<unsigned char>(B(at::kTradeQuantity) - 1);
-        B(at::kTradeQuantity) = quantity;
+        quantity = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradeQuantity) - 1);
+        Effect1g_TradeQuantity = quantity;
     }
     const U record = TradeRecord(static_cast<int>(k));
     const auto bag = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 1));
@@ -1769,20 +1777,20 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     // The s8 quantity comes down until it plus the held count is 99 or less:
     // with more than 227 held no s8 does, and the original loops for ever.
     if (held > 227) bof3::Fatal("ItemTrade_PickCount: %u held - no quantity brings the sum to 99 (the original never ends)", (unsigned)held);
-    unsigned char q = B(at::kTradeQuantity);
+    unsigned char q = static_cast<unsigned char>(Effect1g_TradeQuantity);
     while (static_cast<int>(S8(q)) + static_cast<int>(held) > 0x63) q = static_cast<unsigned char>(q - 1);
-    B(at::kTradeQuantity) = q;
+    Effect1g_TradeQuantity = q;
     if (q != old) SH_CALL(Sound_PlayEffect)(0x100);
     const std::uint16_t pressed = Input_Pressed;
-    if (W(at::kConfirm) & pressed) {
-        B(at::kTradeAnswer) = 0;
+    if (Field_ConfirmButtons & pressed) {
+        Effect1g_TradeAnswer = 0;
         SH_CALL(Sound_PlayEffect)(0x104);
-        B(at::kTradeStep) = static_cast<unsigned char>(B(at::kTradeStep) + 1);
-    } else if (W(at::kCancel) & pressed) {
-        B(at::kTradeQuantity) = 1;
-        B(at::kTradePick) = static_cast<unsigned char>(B(at::kTradePick) & 0xBF);
+        Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep + 1);
+    } else if (Field_CancelButtons & pressed) {
+        Effect1g_TradeQuantity = 1;
+        Effect1g_TradePick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) & 0xBF);
         SH_CALL(Sound_PlayEffect)(0x106);
-        B(at::kTradeStep) = static_cast<unsigned char>(B(at::kTradeStep) - 1);
+        Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep - 1);
     }
     TradeBox();
     SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(at::kPoolWordPick));
@@ -1850,46 +1858,46 @@ ConfirmAnswers ConfirmLayout(const unsigned char* s) {
 extern "C" void __cdecl ItemTrade_Confirm(void) {
     const U moved = SH_CALL(Input_AutoRepeat)(Input_Pressed & 0xA000u);
     if (moved & 0xA000u) {
-        B(at::kTradeAnswer) = static_cast<unsigned char>(B(at::kTradeAnswer) ^ 1);
+        Effect1g_TradeAnswer = static_cast<unsigned char>(Effect1g_TradeAnswer ^ 1);
         SH_CALL(Sound_PlayEffect)(0x100);
     } else {
         const std::uint16_t pressed = Input_Pressed;
-        if (W(at::kCancel) & pressed) {
+        if (Field_CancelButtons & pressed) {
             SH_CALL(Sound_PlayEffect)(0x106);
-            B(at::kTradeStep) = static_cast<unsigned char>(B(at::kTradeStep) - 1);
-        } else if (W(at::kConfirm) & pressed) {
-            if (B(at::kTradeAnswer) != 0) {
+            Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep - 1);
+        } else if (Field_ConfirmButtons & pressed) {
+            if (Effect1g_TradeAnswer != 0) {
                 SH_CALL(Sound_PlayEffect)(0x106);
-                B(at::kTradeStep) = static_cast<unsigned char>(B(at::kTradeStep) - 1);
+                Effect1g_TradeStep = static_cast<unsigned char>(Effect1g_TradeStep - 1);
             } else {
                 SH_CALL(Sound_PlayEffect)(0x105);
-                const auto pick = static_cast<unsigned char>(B(at::kTradePick) & 0xBF);
-                B(at::kTradePick) = pick;
+                const auto pick = static_cast<unsigned char>(static_cast<unsigned char>(Effect1g_TradePick) & 0xBF);
+                Effect1g_TradePick = pick;
                 const U record = TradeRecord(S8(pick));
-                SH_CALL(Inventory_Add)(B(record + 1), B(record), B(at::kTradeQuantity));
+                SH_CALL(Inventory_Add)(B(record + 1), B(record), static_cast<unsigned char>(Effect1g_TradeQuantity));
                 SH_AT(void (__cdecl*)(), at::kTradeTake)();
-                B(at::kTradeQuantity) = 1;
-                B(at::kTradeStep) = 0;
+                Effect1g_TradeQuantity = 1;
+                Effect1g_TradeStep = 0;
             }
         }
     }
     TradeBox();
-    if (B(at::kTradeStep) == 2) {
-        const U record = TradeRecord(static_cast<int>(B(at::kTradePick) & 0xFu));
+    if (Effect1g_TradeStep == 2) {
+        const U record = TradeRecord(static_cast<int>(static_cast<unsigned char>(Effect1g_TradePick) & 0xFu));
         const unsigned char* const name = SH_CALL(Item_NamePtr)(B(record + 1), B(record));
         std::memcpy(At(at::kTextRecords), name, 0x10);
         SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(at::kPoolWordName));
         if (g_trade_confirm_layout) {
             const ConfirmAnswers a = ConfirmLayout(Pool(at::kPoolWordAsk));
             SH_CALL(Text_DrawAt)(a.x, 0x14, 0, 0xFF, a.line);
-            SH_CALL(Menu_DrawHand)(a.stop[B(at::kTradeAnswer) != 0 ? 1 : 0], 0x16, 0);
+            SH_CALL(Menu_DrawHand)(a.stop[Effect1g_TradeAnswer != 0 ? 1 : 0], 0x16, 0);
         } else {
             SH_CALL(Text_DrawAt)(0xDE, 0x14, 0, 0xFF, Pool(at::kPoolWordAsk));
-            SH_CALL(Menu_DrawHand)(static_cast<int>(B(at::kTradeAnswer) * 36u + 0xDCu), 0x16, 0);
+            SH_CALL(Menu_DrawHand)(static_cast<int>(Effect1g_TradeAnswer * 36u + 0xDCu), 0x16, 0);
         }
     }
     TradeList(1);
-    if (B(at::kTradeStep) == 0) return;
+    if (Effect1g_TradeStep == 0) return;
     SH_AT(void (__cdecl*)(), at::kTradeCount)();
 }
 

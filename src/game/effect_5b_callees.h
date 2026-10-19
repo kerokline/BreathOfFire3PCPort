@@ -11,12 +11,12 @@
 namespace effect_5b::at {
 
 // --- the flag rows, cells and the leader --------------------------------------
-constexpr std::uint32_t kStoryFlags = 0x904030;    // Cond_Flags + 0xA0: the story flags (Flags_Test's bank)
-constexpr std::uint32_t kCondRow9 = 0x903FD8;      // Cond_Flags + 8 * 9: the row sub-kinds 0x0E, 0x0F, 0x13, 0x4F test
-constexpr std::uint32_t kCount48 = 0x92BEE7;       // u8: area 48's count (area_w1c_callees.h kCount48)
-constexpr std::uint32_t kTailState = 0x9039F4;     // s8: the field hook's / armed tail's state (area_w1a_callees.h)
-constexpr std::uint32_t kLeaderX = 0x802D74;       // ObjTrio + 0x34: the leader's x (16.16)
-constexpr std::uint32_t kLeaderZ = 0x802D78;       // ObjTrio + 0x38: the leader's z (16.16)
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). Cond_Flags + 0xA0: the story flags (Flags_Test's bank)
+// kCondRow9: now Cond_Flags[0x48] (symbols.toml). Cond_Flags + 8 * 9: the row sub-kinds 0x0E, 0x0F, 0x13, 0x4F test
+// kCount48: now AreaW1c_Count48 (symbols.toml). u8: area 48's count (area_w1c_callees.h kCount48)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the field hook's / armed tail's state (area_w1a_callees.h)
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). ObjTrio + 0x34: the leader's x (16.16)
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml). ObjTrio + 0x38: the leader's z (16.16)
 
 // --- the screen cull's floats in .rdata (MapCell_Handlers 0x27's too) ----------
 constexpr rdata::Const kCullLeft{0x5C4210};      // -60.0

@@ -25,44 +25,46 @@ namespace at {
 using U = std::uint32_t;
 
 // --- the field frame's cells ------------------------------------------------
-constexpr U kStoryFlags = 0x904030;       // the flag bank every Flags_* call here is handed
-constexpr U kTailKind = 0x9039F3;         // Field_ModeTailKinds' index (s8)
-constexpr U kTailState = 0x9039F4;        // s8: the armed tail kind's (or the place hook's) state
-constexpr U kTailArg = 0x9039F5;
-constexpr U kLeader = 0x802D40;           // ObjTrio + 0, the leader's record
-constexpr U kLeaderDir = 0x802D48;        // the leader's +8, its facing
-constexpr U kLeaderX = 0x802D74;          // the leader's +0x34 / +0x38, 16.16
-constexpr U kLeaderZ = 0x802D78;
+// kStoryFlags: now Cond_Flags[0xa0] (symbols.toml). the flag bank every Flags_* call here is handed
+// kTailKind: now AreaW0a_TailKind (symbols.toml). Field_ModeTailKinds' index (s8)
+// kTailState: now AreaW0c_TailState (symbols.toml). s8: the armed tail kind's (or the place hook's) state
+// kTailArg: now AreaW0c_TailSub (symbols.toml).
+// kLeader: now ObjTrio (symbols.toml). ObjTrio + 0, the leader's record
+// kLeaderDir: now ObjTrio[8] (symbols.toml). the leader's +8, its facing
+// kLeaderX: now ObjTrio[0x34] (symbols.toml). the leader's +0x34 / +0x38, 16.16
+// kLeaderZ: now ObjTrio[0x38] (symbols.toml).
 constexpr U kPartyStride = 0x14C;
-constexpr U kPartyList = 0x904062;        // the first party list: the members' ids, a byte each
-constexpr U kCursor = 0x7DEE67;           // the message box's cursor (s8): a choice's answer
+// kPartyList: now Cond_Flags[0xd2] (symbols.toml). the first party list: the members' ids, a byte each
+// kCursor: now AreaW0c_ChoiceAnswer (symbols.toml). the message box's cursor (s8): a choice's answer
 constexpr U kMessage = 0x7DEE48;          // u16: the message a choice opened, 0xFFFF none
 constexpr U kCounter0 = 0x903848;         // MoveScript counter 0 (flow ops A0..AC)
-constexpr U kByte9398CF = 0x9398CF;       // set to 6 by the choices that refuse (area_w0a's kByte9398CF)
-constexpr U kZenny = 0x904058;            // Party_Zenny: u32
-constexpr U kFlagRow = 0x929ED0;          // the chapter's Cond_Flags row (a pointer, Scenario_Enter)
+// kByte9398CF: now AreaW0c_AnswerMark (symbols.toml). set to 6 by the choices that refuse (area_w0a's kByte9398CF)
+// kZenny: now Party_Zenny (symbols.toml). Party_Zenny: u32
+// kFlagRow: now AreaW0c_FlagRow (symbols.toml). the chapter's Cond_Flags row (a pointer, Scenario_Enter)
 constexpr U kFieldStateMember = 0x128;    // the record byte the member frames set to 2
 
 // --- the world maps' cells (area 16's, docs/area_w0b.md; as area_w2b's) --------
-constexpr U kLeaderSteps = 0x802D49;      // u8 step count
-constexpr U kLeaderDirX = 0x802D4C;       // dword direction
-constexpr U kLeaderDirZ = 0x802D50;
-constexpr U kLeaderCellWordX = 0x802D76;  // the high word of +0x34
-constexpr U kLeaderCellWordZ = 0x802D7A;  // the high word of +0x38
-constexpr U kPlace = 0x937F82;            // u16: the place the party stands on (world map)
+// kLeaderSteps: now ObjTrio[9] (symbols.toml). u8 step count
+// kLeaderDirX: now ObjTrio[0xc] (symbols.toml). dword direction
+// kLeaderDirZ: now ObjTrio[0x10] (symbols.toml).
+// kLeaderCellWordX: now ObjTrio[0x36] (symbols.toml). the high word of +0x34
+// kLeaderCellWordZ: now ObjTrio[0x3a] (symbols.toml). the high word of +0x38
+// kPlace: now AreaW0b_Place (symbols.toml). u16: the place the party stands on (world map)
 constexpr U kMapMode = 0x9045FA;          // the world map's mode byte
 constexpr U kLeaderCellX = 0x905E66;      // the high words of Field_Kind2X / Z
 constexpr U kLeaderCellZ = 0x905E62;
-constexpr U kMapHeight = 0x8CB581;        // AreaMap_Header's second byte
+// kMapHeight: now AreaMap_Header[1] (symbols.toml). AreaMap_Header's second byte
 constexpr U kButtonMap0 = 0x903580;       // the field's button map: word 0, the first legend's button
-constexpr U kButtonMap6 = 0x90358C;       // word 6, the second's
-constexpr U kPartySet = 0x90412C;         // & 0x7F: the party set (0xC shows the third legend)
+// kButtonMap6: now Gfx_UnpackScratch[0x1f00c] (symbols.toml). word 6, the second's
+// kPartySet: now AreaW0b_PartySet (symbols.toml). & 0x7F: the party set (0xC shows the third legend)
 constexpr U kAreaText = 0x803580;         // the area's text section; area 115 reads its label offset from its first dword
 constexpr U kItemsHeld = 0x9040EC;        // a byte per item id: 0 not yet seen
-constexpr U kItemNameKey = 0x669CD8;      // the 16-byte name the hook copies for item 0x16
+// kItemNameKey: now AreaW0b_ItemNameKey (symbols.toml). the 16-byte name the hook copies for item 0x16
 constexpr U kTextRecords = 0x904CE0;      // Text_Records: the place hook fills rows of 0x20 from here
 constexpr U kFlag3A79 = 0x903A79;         // the record +4 state: 9 releases the effect
-constexpr U kMsgMode = kTailKind, kMsgState = kTailState, kMsgArg = kTailArg;
+// kMsgMode: now AreaW0a_TailKind (symbols.toml).
+// kMsgState: now AreaW0c_TailState (symbols.toml).
+// kMsgArg: now AreaW0c_TailSub (symbols.toml).
 
 // --- a world-map copy's tables (area 45's layout, docs/area_w1b.md section 5;
 // area_w2b_callees.h's struct, the same fields) ---------------------------------
@@ -103,7 +105,7 @@ constexpr WorldMapTables kWm115 = {
 };
 
 // --- area 116's (its descriptor 0x620620) -----------------------------------------
-constexpr U kA116EffectStates = 0x620664;    // 2: Area59_EffectGround 0x40B4F0 (group AR1D's), Area116_EffectB8Ring
+// kA116EffectStates: now Area116_EffectStates (symbols.toml). 2: Area59_EffectGround 0x40B4F0 (group AR1D's), Area116_EffectB8Ring
 constexpr unsigned kA116EffectStateCount = 2;
 
 // --- areas 117 and 118: one body over a table set each ---------------------------
@@ -120,16 +122,16 @@ constexpr TwinTables kTw117 = {"Area117", 0x6215A8, 0x6215AE, 0x62160C, 0x621610
 constexpr TwinTables kTw118 = {"Area118", 0x621DF0, 0x621DF6, 0x621E3C, 0x621E40, 1, bof3::addr::Area118_MemberRect};
 
 // --- the member-spawn handlers' tables (12 bytes each, by a member's id) -------
-constexpr U kSpawnTable117A = 0x620670;   // area 117's handler 0
-constexpr U kSpawnTable117B = 0x62067C;   // handlers 1 and 2
-constexpr U kSpawnTable117C = 0x620688;   // handler 3
-constexpr U kSpawnTable118 = 0x621610;    // area 118's handler 0
-constexpr U kSpawnTable119A = 0x621E40;   // area 119's handlers 0, 4, 9
-constexpr U kSpawnTable119B = 0x621E4C;   // handlers 5..8
+// kSpawnTable117A: now Area117_SpawnKinds3 (symbols.toml). area 117's handler 0
+// kSpawnTable117B: now Area117_SpawnKinds45 (symbols.toml). handlers 1 and 2
+// kSpawnTable117C: now Area117_SpawnKinds2 (symbols.toml). handler 3
+// kSpawnTable118: now Area118_SpawnKinds (symbols.toml). area 118's handler 0
+// kSpawnTable119A: now Area119_SpawnKindsA (symbols.toml). area 119's handlers 0, 4, 9
+// kSpawnTable119B: now Area119_SpawnKindsB (symbols.toml). handlers 5..8
 
 // --- area 117's choice message tables (u16 by the cursor, s8, unchecked) -------
-constexpr U kA117Messages1 = 0x6215F4;
-constexpr U kA117Messages2 = 0x621600;
+// kA117Messages1: now Area117_Messages1 (symbols.toml).
+// kA117Messages2: now Area117_Messages2 (symbols.toml).
 
 // --- the member-spawn handlers' jump table in area 117's choice 2 -------------
 constexpr U kA117Choice2Cases = 0x41A080;   // 5 entries, in the function's own extent
