@@ -89,7 +89,7 @@ unsigned char* Object(const char* who, unsigned index) {
 // leader's x or past it (signed).
 bool Reached(U x) {
     const std::int32_t object_x = SL(x);
-    const std::int32_t leader_x = SL(at::kLeaderX);
+    const std::int32_t leader_x = rv::As<records::PartyMember>(ObjTrio)->x;
     Field_State = ObjTrio;
     return object_x >= leader_x;
 }
@@ -142,7 +142,7 @@ void Again() {
 // Field_State the third member's object; its x at 0x34 cells or past it
 // (signed): true, with 0x903849 0xFF, 0x90384A / B 0 and the step 0x14.
 bool PastLine() {
-    const std::int32_t x = SL(at::kObjTrio2X);
+    const std::int32_t x = rv::As<records::PartyMember>(ObjTrio + 0x298)->x;
     Field_State = P(ObjTrio_addr + 0x298);
     if (x < at::kTrio2Line) return false;
     B(at::kCounterB) = 0xFF;

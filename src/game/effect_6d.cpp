@@ -135,8 +135,8 @@ bool Within(U a, std::int32_t first, U b, std::int32_t second) {
     if (Abs(b) <= second) return true;
     return Abs(b - 0x10000u) <= second;
 }
-U LeaderX() { return UL(at::kLeaderX); }
-U LeaderZ() { return UL(at::kLeaderZ); }
+U LeaderX() { return static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x); }
+U LeaderZ() { return static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z); }
 // The leader at the record's cell, z across the centre first (sub-kind 0x5E,
 // and 0x5D with +8 set), or x first (0x5D without).
 bool LeaderAt(const unsigned char* s, bool z_first, std::int32_t first, std::int32_t second) {

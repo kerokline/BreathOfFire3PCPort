@@ -61,7 +61,6 @@ using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 unsigned char T(U a) { return *At(a); }
 std::int32_t TS(U a) { return static_cast<signed char>(*At(a)); }

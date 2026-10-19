@@ -26,7 +26,7 @@ constexpr unsigned kSourceCount = 8;
 constexpr std::uint32_t kSourceStride = 0x14;
 constexpr std::uint32_t kSourceCells = 0x6552AC;   // EffectKindAB_SourceCells: 8 pairs of s8, a source's cell (x, z)
 constexpr rdata::Const kOne{0x5C41B8};           // float 1.0 (effect_3d_callees.h kOne; effect_3a's kHalf)
-constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height (three dwords)
+// kLeaderPoint: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio + 0x34: the leader's x, z, height (three dwords)
 
 // --- kind 0xB0: sixteen bars of 6 after kind 0xAB's sources --------------------
 constexpr std::uint32_t kBars = 0x92D820;          // +0 in use, +1 / +3 4, +2 the bar's state, +4 a word

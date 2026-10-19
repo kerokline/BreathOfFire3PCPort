@@ -38,9 +38,9 @@ constexpr std::uint32_t kText = 0x904BA0;          // the text scratch Crt_sprin
 
 // --- kind 0x78: a ring about Sprite_Objects record 2 -------------------------
 constexpr std::uint32_t kObject2 = 0x7DEFC8;       // Sprite_Objects + 2 * 0xA4
-constexpr std::uint32_t kObject2Screen = 0x7DEFF6; // its +0x2E, +0x30 (s16 screen x, y)
-constexpr std::uint32_t kObject2Turn = 0x7DEFFA;   // its +0x32 (u16, the turn the ring spins it by)
-constexpr std::uint32_t kObject2Point = 0x7DEFFC;  // its +0x34, +0x38 (x, z)
+// kObject2Screen: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_x (records.h). its +0x2E, +0x30 (s16 screen x, y)
+// kObject2Turn: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key (records.h). its +0x32 (u16, the turn the ring spins it by)
+// kObject2Point: now rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x (records.h). its +0x34, +0x38 (x, z)
 
 // --- kind 0x7D: area 170's three dials (Area170_Tail37's case 40 spawns it) --
 constexpr std::uint32_t kDials = 0x675DC8;         // three bytes 0..8, the dials' turns
@@ -79,10 +79,10 @@ constexpr unsigned kSourceStride = 0x14;
 constexpr std::uint32_t kSourceCells = 0x654C3C;   // 16 pairs of s8: a source's cell (x, z)
 // kDropsMoving: now Effect3d_DropsMoving (symbols.toml). u16: how many drops moved this frame
 constexpr rdata::Const kOne{0x5C41B8};           // float 1.0 (effect_2c_callees.h kOne)
-constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height
+// kLeaderPoint: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio + 0x34: the leader's x, z, height
 
 // --- kind 0x82: Sprite_Objects record 0 pushed --------------------------------
-constexpr std::uint32_t kObject0X = 0x7DEEB4;      // Sprite_Objects + 0x34
-constexpr std::uint32_t kLeaderX = 0x802D74;       // ObjTrio + 0x34
+// kObject0X: now rv::As<records::SpriteObject>(Sprite_Objects)->x (records.h). Sprite_Objects + 0x34
+// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio + 0x34
 
 }  // namespace effect_3d::at

@@ -16,9 +16,9 @@ namespace effect_6c::at {
 
 // --- the leader (ObjTrio record 0) ------------------------------------------------------
 // kLeaderState: now ObjTrio[2] (symbols.toml). ObjTrio +2: 3 runs Sprite_ScriptTick (sub-kind 0x44)
-constexpr std::uint32_t kLeaderMoving = 0x802D54;     // ObjTrio +0x14, a dword: not 0 - the screen y is taken from the projection
-constexpr std::uint32_t kLeaderDepth = 0x802D70;      // ObjTrio +0x30, a word sub-kind 0x44 reads and writes
-constexpr std::uint32_t kLeaderLift = 0x802D7E;       // ObjTrio +0x3E, an s16 (halved, negated into the vertex)
+// kLeaderMoving: now rv::As<records::PartyMember>(ObjTrio)->step_y (records.h). ObjTrio +0x14, a dword: not 0 - the screen y is taken from the projection
+// kLeaderDepth: now rv::As<records::PartyMember>(ObjTrio)->screen_y (records.h). ObjTrio +0x30, a word sub-kind 0x44 reads and writes
+// kLeaderLift: now rv::As<records::PartyMember>(ObjTrio)->height_whole (records.h). ObjTrio +0x3E, an s16 (halved, negated into the vertex)
 // kLeaderAnimation: now ObjTrio[0x4b] (symbols.toml). ObjTrio +0x4B: the animation sub-kind 0x44 copies
 
 // --- the field ------------------------------------------------------------------------

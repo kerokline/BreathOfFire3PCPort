@@ -29,9 +29,9 @@ constexpr std::uint32_t kStep = 0x8034E5;          // u8: the chapter's step (Mo
 // kObject0X: now Sprite_Objects[0x34] (symbols.toml). Sprite_Objects + 0x34: record 0's x
 // kObject1: now Sprite_Objects[0xa4] (symbols.toml). Sprite_Objects + 0xA4: record 1
 // kObject1X: now Sprite_Objects[0xd8] (symbols.toml). record 1's +0x34
-constexpr std::uint32_t kLeaderX = 0x802D74;       // ObjTrio + 0x34: the leader's x
+// kLeaderX: now rv::As<records::PartyMember>(ObjTrio)->x (records.h). ObjTrio + 0x34: the leader's x
 // kObjTrio2: now ObjTrio[0x298] (symbols.toml). ObjTrio + 2 * 0x14C: the third member's field object
-constexpr std::uint32_t kObjTrio2X = 0x80300C;     // its +0x34
+// kObjTrio2X: now rv::As<records::PartyMember>(ObjTrio + 0x298)->x (records.h). its +0x34
 constexpr std::int32_t kTrio2Line = 0x340000;      // the x at which kinds 0x82 / 0x84 end with 0xFF (step 0x14)
 constexpr unsigned kSpriteCount = 30;              // Sprite_Objects' records (symbols.toml)
 constexpr unsigned kSpriteStride = 0xA4;

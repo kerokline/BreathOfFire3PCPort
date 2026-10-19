@@ -214,9 +214,9 @@ extern "C" void __cdecl EffectKindAB_Run(void) {
 // point +0x34 / +0x38 / +0x3C the leader's (ObjTrio +0x34..); the drops cleared
 // (EffectKind81_ClearDrops), the eight sources placed; +9 = 0x78; +1 up.
 extern "C" void __cdecl EffectKindAB_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(at::kLeaderPoint));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(at::kLeaderPoint + 4));
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(at::kLeaderPoint + 8));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->height));
     SH_CALL(EffectKind81_ClearDrops)();
     SH_CALL(EffectKindAB_PlaceSources)();
     S()[9] = 0x78;

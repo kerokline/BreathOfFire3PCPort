@@ -92,7 +92,7 @@ constexpr unsigned kExtraCount = 4;
 // kObjects: now Sprite_Objects (symbols.toml). Sprite_Objects, thirty of 0xA4
 constexpr unsigned kObjectCount = 30;
 constexpr std::uint32_t kObjectStride = 0xA4;
-constexpr std::uint32_t kLeader = 0x802D40;         // ObjTrio 0
+// kLeader: now rv::As<records::PartyMember>(ObjTrio) (records.h). ObjTrio 0
 constexpr std::uint32_t kTextBuffer = 0x904BA0;     // the text scratch sprintf writes
 constexpr std::uint32_t kCounterByte = 0x903848;
 constexpr std::uint32_t kAccessoryA = 0x904130;     // the two accessory bytes kind 3 names (the first read as a dword)

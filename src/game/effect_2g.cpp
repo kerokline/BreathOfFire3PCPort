@@ -62,7 +62,6 @@ using move_script::Word;
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
-void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
 unsigned char& B(U a) { return *At(a); }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
@@ -446,7 +445,7 @@ extern "C" void __cdecl EffectKind15_Begin(void) {
 extern "C" void __cdecl EffectKind15_WaitPose4(void) {
     if (EndedTo(9) || HitTaken()) return;
     unsigned char* const self = S();
-    const bool pose = W(at::kMember1Pose) == 4;
+    const bool pose = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos) == 4;
     OnMember1();
     if (!pose || Field_Members[0x4e] != 1) return;
     const U r = static_cast<U>(SH_CALL(Rand)()) & 7u;
@@ -523,7 +522,7 @@ extern "C" void __cdecl EffectKind15_Hit(void) {
 extern "C" void __cdecl EffectKind15_WaitPose8(void) {
     if (EndedTo(9)) return;
     unsigned char* const self = S();
-    const bool pose = W(at::kMember1Pose) == 8;
+    const bool pose = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio + 0x14C)->script_pos) == 8;
     OnMember1();
     if (!pose || Field_Members[0x4e] != 1) return;
     SH_CALL(Sprite_SetAnimation)(1);

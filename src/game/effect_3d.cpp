@@ -370,12 +370,12 @@ extern "C" void __cdecl EffectKind78_Run(void) {
 // (0x7DEFFA), +9 0x14, +0xC and +0x10 0, +0x2E / +0x30 its screen words
 // (0x7DEFF6 / 0x7DEFF8); +1 up.
 extern "C" void __cdecl EffectKind78_Start(void) {
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, W(at::kObject2Turn));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key));
     S()[9] = 0x14;
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, 0);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, 0);
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, W(at::kObject2Screen));
-    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, W(at::kObject2Screen + 2));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_x)));
+    rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, static_cast<std::uint32_t>(static_cast<std::uint16_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->screen_y)));
     NextState();
 }
 
@@ -393,7 +393,7 @@ void DrawRingOfRecord() {
 // original 0x4863E0 (state 1): record 2 turned 0xF00; the radii grow (+0xC by
 // 0xF, +0x10 by 0xA); the ring; +9 down, at 0 +9 0x3C and +1 up.
 extern "C" void __cdecl EffectKind78_Grow(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
+    SetWord(At(Sprite_Objects_addr + 0x17a), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key) + 0xF00u);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_0c, rv::As<records::EffectWork>(S())->work_0c + 0xF);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_10, rv::As<records::EffectWork>(S())->work_10 + 0xA);
     DrawRingOfRecord();
@@ -406,7 +406,7 @@ extern "C" void __cdecl EffectKind78_Grow(void) {
 // original 0x486450 (state 2): record 2 turned 0xF00, the ring; +9 down, at 0
 // +1 up.
 extern "C" void __cdecl EffectKind78_Spin(void) {
-    SetWord(At(Sprite_Objects_addr + 0x17a), W(at::kObject2Turn) + 0xF00u);
+    SetWord(At(Sprite_Objects_addr + 0x17a), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->draw_key) + 0xF00u);
     unsigned char* const s = S();
     // here the upper halves are the caller's (the dispatcher's ecx, Sprite_Current); the ring reads the low words
     SH_CALL(EffectKind78_DrawRing)(static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_2e), static_cast<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30), W(s + 0xC), W(s + 0x10));
@@ -467,7 +467,7 @@ extern "C" void __cdecl EffectKind78_DrawRing(unsigned cx, unsigned cy, unsigned
             p[5] = 0;
             p[6] = 0;
         }
-        SH_CALL(MapView_LinkPrimAt)(UL(at::kObject2Point), UL(at::kObject2Point + 4), 0xC, 0x2C);
+        SH_CALL(MapView_LinkPrimAt)(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->x), static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects + 0x148)->z), 0xC, 0x2C);
     }
 }
 
@@ -1013,9 +1013,9 @@ extern "C" void __cdecl EffectKind81_Run(void) {
 // original 0x4878B0 (state 0): the record's point the leader's (ObjTrio +0x34,
 // +0x38, +0x3C); the drops cleared, the sources placed; +1 up.
 extern "C" void __cdecl EffectKind81_Start(void) {
-    rv::Store<U>(rv::Current<records::EffectObject>()->x, UL(at::kLeaderPoint));
-    rv::Store<U>(rv::Current<records::EffectObject>()->z, UL(at::kLeaderPoint + 4));
-    rv::Store<U>(rv::Current<records::EffectObject>()->height, UL(at::kLeaderPoint + 8));
+    rv::Store<U>(rv::Current<records::EffectObject>()->x, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
+    rv::Store<U>(rv::Current<records::EffectObject>()->z, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z));
+    rv::Store<U>(rv::Current<records::EffectObject>()->height, static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->height));
     SH_CALL(EffectKind81_ClearDrops)();
     SH_CALL(EffectKind81_PlaceSources)();
     NextState();
@@ -1192,8 +1192,8 @@ namespace {
 // Field_State the leader; true when Sprite_Objects record 0's x is the
 // leader's or past it (signed).
 bool ObjectReached() {
-    const auto object_x = static_cast<std::int32_t>(UL(at::kObject0X));
-    const auto leader_x = static_cast<std::int32_t>(UL(at::kLeaderX));
+    const auto object_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::SpriteObject>(Sprite_Objects)->x));
+    const auto leader_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
     Field_State = ObjTrio;
     return object_x >= leader_x;
 }

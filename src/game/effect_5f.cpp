@@ -61,7 +61,6 @@ using move_script::Word;
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
 U UL(U a) { return UL(At(a)); }
-void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 U W(U a) { return Word(At(a)); }
 U B(U a) { return At(a)[0]; }
 std::int32_t S16(U v) { return static_cast<std::int16_t>(v & 0xFFFFu); }
@@ -110,7 +109,7 @@ U Place(const char* who, U table, unsigned count) {
 // next cell's start. The gate's test is (0x8000, 0x10000); "two cells away"
 // is its negation at (0x20000, 0x20000).
 bool Within(const unsigned char* s, bool z_axis, std::int32_t edge, std::int32_t cross) {
-    const U lx = UL(at::kLeaderX), lz = UL(at::kLeaderZ);
+    const U lx = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x), lz = static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z);
     const U x = static_cast<U>(S16(Word(s + 0x36))), z = static_cast<U>(S16(Word(s + 0x3A)));
     U along, across;
     if (z_axis) {

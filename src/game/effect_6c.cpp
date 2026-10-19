@@ -265,18 +265,18 @@ extern "C" void __cdecl EffectKind18Sub44_Follow(void) {
     }
     rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->draw_key, 0x3200);
     SetV(0, Sar(((static_cast<U>(Field_Kind2X) - 1u) & 0xFFFFFFu) + 1u, 9) - 0x4000u);
-    SetV(4, 0u - DivP2(static_cast<U>(S16(at::kLeaderLift)), 1));
+    SetV(4, 0u - DivP2(static_cast<U>(static_cast<std::int32_t>(static_cast<std::int16_t>(rv::As<records::PartyMember>(ObjTrio)->height_whole))), 1));
     SetV(2, Sar(((static_cast<U>(Field_Kind2Z) - 1u) & 0xFFFFFFu) + 1u, 9) - 0x4000u);
     long p;
     SH_CALL(Gte_RotTransPers)(Vx(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &p);
     rv::Current<records::EffectObject>()->screen_xf = 0x43200000u; // 160.0f
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0xA0);
-    if (UL(at::kLeaderMoving) != 0) {
+    if (static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->step_y) != 0) {
         CopyQuiet(S() + 0x78, At(MapView_ScreenXY_addr + 0x4));
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_30, Ftol(D(at::kScreenY)));
         SetWord(At(ObjTrio_addr + 0x30), Ftol(D(at::kScreenY)));
     } else {
-        SetD(S() + 0x78, Fi(static_cast<U>(S16(at::kLeaderDepth))));
+        SetD(S() + 0x78, Fi(static_cast<U>(static_cast<std::int32_t>(rv::As<records::PartyMember>(ObjTrio)->screen_y))));
         unsigned char* const s = S();
         rv::Store<std::uint32_t>(rv::As<records::EffectWork>(s)->work_30, Ftol(static_cast<double>(F(s + 0x78))));
     }

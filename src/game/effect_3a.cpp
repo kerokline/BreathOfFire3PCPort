@@ -63,7 +63,6 @@ using move_script::Word;
 
 unsigned char* S() { return Sprite_Current; }
 U UL(const unsigned char* p) { return static_cast<U>(Long(p)); }
-U UL(U a) { return UL(At(a)); }
 void SetUL(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
 std::int32_t SW(const unsigned char* p) { return static_cast<std::int16_t>(Word(p)); }
 std::int32_t SW(U a) { return SW(At(a)); }
@@ -93,7 +92,6 @@ void StF(unsigned char* p, LD v) {
 }
 
 long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
 
@@ -678,9 +676,9 @@ extern "C" void __cdecl EffectKind64_Run(void) {
 // leader's (ObjTrio +0x34..), its height 0x80 up; the size +0x2E = 0; +9 = 8;
 // +1 up.
 extern "C" void __cdecl EffectKind64_Start(void) {
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[0], UL(at::kLeaderPoint));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[1], UL(at::kLeaderPoint + 4));
-    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], UL(at::kLeaderPoint + 8) + 0x800000u);
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[0], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->x));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[1], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->z));
+    rv::Store<std::uint32_t>(rv::As<records::EffectObject>(S())->angle[2], static_cast<std::uint32_t>(rv::As<records::PartyMember>(ObjTrio)->height) + 0x800000u);
     rv::Store<std::uint32_t>(rv::As<records::EffectWork>(S())->work_2e, 0);
     S()[9] = 8;
     NextState();
