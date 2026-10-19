@@ -596,8 +596,8 @@ extern "C" void __cdecl MagicFx_DrawRing(void) {
         p = Gfx_PacketNext;
         g.set_poly_gt4(p);
         g.set_semi(p, 1);
-        SetWord(p + 0x2A, g.get_tpage(0, 1, 0x340, 0x100));
-        SetWord(p + 0x16, g.get_clut(0, 0x1FA));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->tpage, g.get_tpage(0, 1, 0x340, 0x100));
+        rv::Store<unsigned>(rv::As<records::GpuPolyGT4>(p)->clut, g.get_clut(0, 0x1FA));
         const auto u0 = static_cast<unsigned char>(i << 2);
         const auto u1 = static_cast<unsigned char>((i + 1) << 2);
         p[0x14] = u0;
