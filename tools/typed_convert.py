@@ -1407,8 +1407,29 @@ class Converter:
                     edits.append(ch)
         edits.sort(key=lambda x: (x[0], -x[1]))
 
+        # Zero-width insertions at one offset are merged into one, in site
+        # order. Each used to lie within the other, so emit() found neither
+        # at the top and both were dropped (stage C0; stage B1's effect group
+        # saw 34 false gate failures from it).
+        merged = []
+        for ed in edits:
+            last = merged[-1] if merged else None
+            if last is not None and ed[0] == ed[1] == last[0] == last[1]:
+                merged[-1] = (last[0], last[1], list(last[2]) + list(ed[2])) + tuple(last[3:])
+            else:
+                merged.append(ed)
+        edits = merged
+
         def holes(ed):
             return [p for p in ed[2] if isinstance(p, tuple)]
+
+        def within(e, o):
+            # e renders inside o. A zero-width insertion at either edge of a
+            # replaced span is not inside it (it was dropped as if it were);
+            # one in a hole of o, edges included, still renders in the hole.
+            if e[0] == e[1] and o[0] != o[1]:
+                return o[0] < e[0] < o[1] or any(h[0] <= e[0] <= h[1] for h in holes(o))
+            return o[0] <= e[0] and e[1] <= o[1]
 
         kept = []
         for ed in edits:
@@ -1442,12 +1463,12 @@ class Converter:
 
         def emit(a, b, pool, state):
             inside = [e for e in pool if a <= e[0] and e[1] <= b]
-            top = [e for e in inside if not any(o is not e and o[0] <= e[0] and e[1] <= o[1] for o in inside)]
-            top.sort(key=lambda x: x[0])
+            top = [e for e in inside if not any(o is not e and within(e, o) for o in inside)]
+            top.sort(key=lambda x: (x[0], x[1]))   # an insertion before the span it starts
             out, i = [], a
             for ed in top:
                 out.append(plain(raw[i:ed[0]], state))
-                sub = [x for x in inside if x is not ed and ed[0] <= x[0] and x[1] <= ed[1]]
+                sub = [x for x in inside if x is not ed and within(x, ed)]
                 rep = ''.join(emit(p[0], p[1], sub, [0]) if isinstance(p, tuple) else p for p in ed[2])
                 out.append(rep)
                 if '\n' not in rep and '\n' not in raw[ed[0]:ed[1]]:
@@ -1741,6 +1762,46 @@ def retire(conv, dry_run=False, since=None):
 LEFT_HDR = ['file', 'line', 'address', 'entry', 'accessor', 'constant', 'reason']
 
 
+def selftest():
+    """Converter.render on synthetic text: nested edits, holes, and the
+    zero-width insertions stage C0 fixed (two at one offset were both
+    dropped; stage B1's effect group saw 34 false gate failures from it).
+    Returns the number of failures."""
+    class F:
+        def __init__(self, raw):
+            self.raw = raw
+
+    class Site:
+        def __init__(self, edit):
+            self.edit = edit
+
+        def choice(self):
+            return self.edit
+
+    cases = [
+        # (text, edits as (start, end, parts, kind), expected)
+        ('abc', [(1, 1, ['X'], 't'), (1, 1, ['Y'], 't')], 'aXYbc'),
+        ('abc', [(1, 1, ['X'], 't'), (1, 1, ['Y'], 't'), (1, 1, ['Z'], 't')], 'aXYZbc'),
+        ('abcd', [(1, 3, ['Z'], 't'), (1, 1, ['X'], 't')], 'aXZd'),
+        ('abcd', [(1, 3, ['Z'], 't'), (3, 3, ['X'], 't')], 'aZXd'),
+        ('abcd', [(1, 3, ['Z'], 't'), (2, 2, ['X'], 't')], 'aZd'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 3, ['G'], 't')], 'F[G]'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 2, ['X'], 't')], 'F[Xg]'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 2, ['X'], 't'), (2, 3, ['G'], 't')], 'F[XG]'),
+        ('f(g)', [(0, 4, ['F[', (2, 3), ']'], 't'), (2, 2, ['X'], 't'), (2, 2, ['Y'], 't')], 'F[XYg]'),
+        ('ab', [(0, 2, ['Q'], 't'), (1, 2, ['R'], 't')], 'Q'),
+    ]
+    bad = 0
+    for text, eds, want in cases:
+        sites = [Site(e) for e in eds]
+        got = Converter.render(F(text), sites, set(sites))
+        if got != want:
+            bad += 1
+            print(f'typed_convert selftest: {text!r} {eds!r}: {got!r}, want {want!r}', file=sys.stderr)
+    print(f'typed_convert selftest: {len(cases) - bad} of {len(cases)} cases pass', file=sys.stderr)
+    return bad
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('files', nargs='*', help='files (or globs) under src/ to convert; default: every file')
@@ -1757,7 +1818,11 @@ def main():
                     help='with --dry-run on a converted tree: list what is left, a site the tool would '
                          'still convert being one the gate refused (reason gate)')
     ap.add_argument('-v', '--verbose', action='store_true')
+    ap.add_argument('--selftest', action='store_true', help='check the renderer on synthetic text and exit')
     a = ap.parse_args()
+
+    if a.selftest:
+        return 1 if selftest() else 0
 
     conv = Converter(a.toml)
     if a.retire:
