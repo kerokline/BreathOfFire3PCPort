@@ -378,43 +378,70 @@ The switch: `SaveLists`, a `PatchBytes` of a flag of ours set by
   place of the pause lines): the pad through `Pad_Read` (zero while another
   window is in front, DIV-0033), or the playing recipe's word
   (`InputScript_PausedWord`: the paused latch steps a recipe but drops its
-  words, so without it a recipe could not drive the menu); then the draw:
-  `Menu_DrawBlackScreen`, `QUICKLOAD` in the 8 x 8 font, `DrawSlotsOver` at
-  (`0x20`, `0x30`) over the quick summaries with the menu's own first-shown
-  and cursor words. The game's `0x9036D4`, `0x8034D0`, `0x6BC881` and the
-  summaries `0x905BC0` are not touched; the draws write what any paused
-  frame's draw writes (the packet pool, the ordering table, the text scratch
-  `0x904BA0`).
-- **Slots**: up / down over 0..15 (empty ones included, as the save menu's
+  words, so without it a recipe could not drive the menu); then the draw.
+- **The look is the title's load menu's** (the owner, 2026-10-19: "the
+  background of the save screen ... the same load file yes/no with the
+  pointer hand"). The load menu `TitleFlow_Load` (`0x587DB0` step 3,
+  `LoadMenu_*` `0x588140..0x5885D0`, ours in `save_menu.cpp`) draws every
+  state as: `Menu_DrawBackdrop` (`0x575690`) of the Config's background byte
+  `0x903A5B` (the tiled wood of the reference capture; the player's choice
+  among four), `Menu_DrawTitleBox` (`0x574AB0`) `(0x14, 0x12, 0x118, 0x13,`
+  the window colour `0x903A5A)`, a system message through `Text_DrawAt` at
+  `(0x1C, 0x15)` - `0xAC` while choosing ("Load which file?" under
+  `en-US`), `0xB9` while asking ("Load game?"), `0xB8` (`0xA6 + 0x12`,
+  `LoadMenu_Error`'s error 2) after a failed read - then `SaveMenu_DrawSlots
+  (0x20, 0x30, lit)`, and in `LoadMenu_Confirm` `Menu_YesNo` (`0x5747D0`):
+  its line, system message `0xF`, at `(0x1C, 0x16)` and `Menu_DrawHand` at
+  `0xFE - 36 * answer` (DIV-0027's line function and `0x112 - 56 * answer`
+  under a Latin overlay), `y 0x18`. The quick menu draws the same, in the
+  same order: `Menu_DrawBlackScreen` (under everything: it covers a wide
+  picture's sides, which the backdrop's ten columns do not), then
+  `save_menu::DrawLoadWindows(message)` (the load menu's own `LoadWindows`
+  and `LoadMessage`), `DrawSlotsOver` over the quick summaries with the
+  menu's own first-shown and cursor words, and Menu_YesNo's draw half with
+  the menu's own answer. Every word on screen is the game's text, so a
+  language overlay translates it; the heading is the load menu's own
+  message `0xAC`, not a word of ours.
+- **Reusing the draws, not the state.** The backdrop and the box read only
+  the Config's two bytes. `Menu_YesNo` itself is not called: it reads
+  `Input_Pressed` (not latched while paused), keeps its answer in
+  `0x929F0B` and plays sounds - the menu keeps the answer itself and draws
+  its line and hand. The load menu's words `0x9036D4` / `0x8034D0` (cursor,
+  first shown), `0x6BDF86` (its state), `0x929F0B`, the summaries
+  `0x905BC0` and `Save_Staging` are never written. The draws write what any
+  paused frame's draw writes (the packet pool, the ordering table, the text
+  scratch `0x904BA0`).
+- **Slots**: up / down over 0..15 (empty ones included, as the load menu's
   cursor), on the press and then every 4 frames once held 20; the three shown
   follow the cursor. Slot 0 is `BISLPS10.DAT`, the newest: F6's rotation
-  keeps the history newest first. Confirm opens the choice window; cancel
-  closes the menu.
-- **Choices**: `SaveMenu_DrawChoices`' window (`Menu_DrawBox` inside
-  `Menu_DrawBorder`, rows 20 apart, `Menu_DrawHand` at x + `0xC`) sized for
-  its rows, beside the slot, the labels `LOAD` / `BACK` in the 8 x 8 font (the
-  font of the slot numbers and of `ID` / `FILE NOT FOUND`). The system
-  messages `0xD2..0xD4` that `SaveMenu_DrawChoices` itself draws are the
-  inn's three choices, so its draw is reused, not called. An empty slot
-  offers `BACK` only. Back or cancel returns to the slots.
+  keeps the history newest first. Confirm on a slot holding a quicksave
+  asks "load game?" with Yes first (`LoadMenu_Choose` sets `0x929F0B` to 1);
+  confirm on an empty slot does nothing (the load menu buzzes, `0x107`; no
+  sound here); cancel closes the menu.
+- **Yes / No**, in `Menu_YesNo`'s order: cancel is No; confirm on Yes loads,
+  on No goes back to the slots; left / right (`0xA000`) flip the answer.
 - **Confirm and cancel** are the game's words 7 and 8
   (`Field_ConfirmButtons` `0x90358E`, `Field_CancelButtons` `0x903590`), as
-  `FieldSave_Choose` tests them: they follow sigma (DIV-0133) and the
-  release's buttons, cross on PSX-West / PSP-EU since PR #85.
-- **A press that leaves the menu acts at its release** (Load, and cancel on
+  `LoadMenu_Choose` and `Menu_YesNo` test them: they follow sigma (DIV-0133)
+  and the release's buttons, cross on PSX-West / PSP-EU since PR #85.
+- **A press that leaves the menu acts at its release** (Yes, and cancel on
   the slots): the game's next latch would otherwise see the button newly
   down against the `Input_Held` from before the pause - or, after a load, the
   quicksave's.
-- **Load** asks `Snapshot_RequestLoad(0x10 + cursor)` (SN's entry already
+- **Yes** asks `Snapshot_RequestLoad(0x10 + cursor)` (SN's entry already
   takes any slot `0x10..0x1F`) and stays open and paused for that frame; the
   core runs the load at the loop's point, and `QuickMenu_AfterPoint` (right
   after `Snapshot_Pending`) reads `Snapshot_LastLine()`. Restored: the span
   holds the take's `Game_Paused`, 0 (a take is never made paused: F6's
   `WM_KEYDOWN` ends a pause first, and the menu takes F6), so the menu
   closes and `Sound_ResumeAll` runs. **Refused** ("Quickload refused: ...",
-  the game untouched): the menu stays, with `REFUSED - <the reason>` (the 8 x 8 font draws a colon as one dot) above the
-  slots. The core's overlay line alone would not show: with our back buffer
-  the loop's `Overlay` writes it to the log, not the screen.
+  the game untouched): the menu stays on the slots, with the load menu's own
+  "could not load" message `0xB8` in the title box and the core's reason
+  below the slots in the 8 x 8 font, `REFUSED - <the reason>` upper-cased
+  (the game has no message for "another build" or "no snapshot"; the font
+  draws a colon as one dot). The next question clears it. The core's
+  overlay line alone would not show: with our back buffer the loop's
+  `Overlay` writes it to the log, not the screen.
 
 `Snapshot_LastLine` is the one addition to SN's files: an accessor of the
 line `Show` last wrote (`g_overlay`).
@@ -435,9 +462,11 @@ line `Show` last wrote (`g_overlay`).
   matches under it. The cursor, stepped as a value over slots 0, 3, F
   present: down 1..15 with the first shown `max(0, n - 2)`, no step past F or
   0, up keeping the cursor among the three, a held down = 1 + 3 steps in 30
-  frames, a button held at the open not counted, `BACK` alone on an empty
-  slot, `LOAD` acting only at the confirm's release (slot 3), cancel closing
-  at its release.
+  frames, a button held at the open not counted, no question on an empty
+  slot, the question opening on Yes, right to No and left back, down not
+  moving the cursor while asked, No and cancel back to the slots, Yes
+  loading only at the confirm's release (slot 3), cancel closing at its
+  release. Run again with the load menu's look: exit 0 in both hosts.
 - **The fuzz**: `BOF3X_SHADOW=save_menu` hosted, 66,000 rounds (1,500 per
   kind, 44 kinds), 0 mismatches with the bodies split.
 - **Live** (exe host, the PC install hard-linked in `q_qm\game`, the `town`
@@ -457,11 +486,28 @@ line `Show` last wrote (`g_overlay`).
   BISLPS10.DAT refused: no snapshot - a save file with no snapshot after it`,
   `not loaded (...); the menu stays open`, the reason drawn above the slots;
   cancel closed it at `Frame_Counter` 656.
-- Captures (outside the tree), `C:\Users\kerok\q_qm\caps`: `run1b\qm_empty`
-  (an empty list), `qm_three` (three listed), `qm_choice`, `qm_loading` /
-  `qm_loaded` (the field after the load); `run2\qm_refused_list`,
-  `qm_refused`, `qm_refused_closed`. The refusal capture predates the
-  separator's change from a colon to a dash.
+- **With the load menu's look** (the owner's call, 2026-10-19; the same two
+  routes, the same build otherwise): the same log lines to the frame - F5
+  at 595 `0 quicksaves listed`, F6 at 617 / 637 / 657, F5 at 686 `3
+  quicksaves listed`, `Load of BISLPS11.DAT asked at Frame_Counter 727`,
+  restored back to 637, `closed ... loaded: Quickload`; and the refusal
+  `no snapshot` at 630, the menu open, cancel at 656. On screen: the
+  backdrop is the loaded save's Config choice (the `town` save's leaves;
+  the title's reference capture has the boot default's wood), "Load which
+  file?" over the slots, "Load game?" with the hand on Yes, and on the
+  refusal the load menu's "File is damaged" (`0xB8` under `en-US`) with
+  `REFUSED - NO SNAPSHOT` below the slots.
+- **The reference**: the title's own load menu, `town` in slot 0, on the
+  same install (`ref_load.txt` in the harness scratch: start, start, then
+  the boot Config's confirm R2 to LOAD GAME and to slot 0): "Load which
+  file?", then "Load game?" with the hand on Yes.
+- Captures (outside the tree), `C:\Users\kerok\q_qm\caps`: `ref\` (the
+  title's load menu: `ref_load_list`, `ref_load_yesno2`); `look_three\`
+  (`qm_empty`, `qm_three`, `qm_choice`, `qm_loading`, `qm_loaded`) and
+  `look_refused\` (`qm_refused_list`, `qm_refused`, `qm_refused_closed`);
+  side by side: `sbs_list_three`, `sbs_yesno` (the title's against the F5
+  menu's), `sbs_before_after_three`, `sbs_before_after_refused` (the first
+  look against this one). The first look's captures: `run1b\`, `run2\`.
 
 ### QM.4 Ledger draft B (for the coordinator to number)
 
@@ -495,15 +541,20 @@ line `Show` last wrote (`g_overlay`).
   (`Game_WndProc` `0x4FC6F0`, `WinMain` `0x4FCB00`, ours in `win_main.cpp`;
   `src/game/quick_menu.cpp`).
 - **Original behaviour:** F5 did nothing but end a pause, as any key does.
-- **New behaviour:** F5 pauses and opens the quick menu (QM.2): the sixteen
-  quicksaves newest first, three shown, Load or Back per slot (Back only on
-  an empty one); Load restores that quicksave to the frame, a refusal keeps
-  the menu open with its reason; a second F5 or cancel closes it. The menu
-  reads the pad itself while paused and draws with the save menu's pieces;
-  it writes none of the game's menu words.
+- **New behaviour:** F5 pauses and opens the quick menu (QM.2), drawn as
+  the title's load menu: its backdrop, title box and messages, the save
+  slots - the sixteen quicksaves newest first, three shown - and on a slot
+  with a quicksave its "load game?" Yes / No with the pointing hand (an empty
+  slot takes no confirm). Yes restores that quicksave to the frame; a refusal
+  keeps the menu open with the load menu's "could not load" and the reason;
+  No returns to the slots; a second F5 or cancel closes it. The menu reads
+  the pad itself while paused and draws with the load menu's draws; it
+  writes none of the game's menu state.
 - **Why:** the owner's design of 2026-10-17 (round doc 5, answers 2, 3 and
   5): F5 the only way to the quicksaves, load only, sixteen slots newest
-  first, three shown as the save menu shows them.
+  first, three shown as the save menu shows them; and their call of
+  2026-10-19 on the first captures: the save screen's background and its
+  load yes / no with the hand, in the game's own font and text.
 - **Also in the PSX version?** No quicksaves there; ours.
 - **Verification:** QM.3.
 - **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
@@ -523,11 +574,11 @@ unwritten). The search handle's leak is not fixed.
 
 ### QM.7 Open, for the owner
 
-- The labels are English in the 8 x 8 font (`QUICKLOAD`, `LOAD`, `BACK`,
-  the refusal) on every language. The empty slot's text is the game's own
-  (`0x669CCC`: Chinese on an `en-US` run, as the save menu shows it there).
-  A localised set would go through the overlay's text, as DIV-0038's pause
-  lines do.
+- Only the refusal's reason is English in the 8 x 8 font; every other word
+  is the game's text. The heading is the load menu's own "Load which
+  file?" (`0xAC`): the screen does not say "quick". The empty slot's text is
+  the game's own (`0x669CCC`: Chinese on an `en-US` run, as the title's load
+  menu shows it there too - the reference capture).
 - No sound for the cursor or the choices: the game's sound is paused while
   the menu is open, and a cue would write `Sound_Channels` in the span.
 - After a menu load, `Sound_ResumeAll` runs after the participants'
