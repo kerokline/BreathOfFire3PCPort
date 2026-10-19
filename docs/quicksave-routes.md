@@ -1,10 +1,15 @@
 # The quicksave routes and the proof by the state hash
 
-**Status:** BUILT (2026-10-19, the quicksave round's group RC, branch
-`quicksave/rc`): six routes in three forms, `tools/quicksave_check.py` with
-its self-test, and the identity references on the PC install (section 5).
-The proof itself waits for SN's F6 / F7 ([`quicksave-round.md`](quicksave-round.md)
-section 2); stage C runs it.
+**Status:** MEASURED (2026-10-19). Group RC (branch `quicksave/rc`) built
+six routes in three forms, `tools/quicksave_check.py` with its self-test, and
+the identity references on the PC install (section 5). Stage C (branch
+`quicksave/stagec`, off `quicksave/round` `91ca4590`) ran the proof batch
+(section 7). In process, every route equals itself after the restore, but
+for the two expected words, on the PC install under both conditions and in
+the wide picture. On the US disc and PSP-EU installs the only other
+differences are pages that differ between two runs anyway. Across
+processes, every route plays on to its end, with the differences named in
+7.4.
 
 The round's acceptance test ([`quicksave-round.md`](quicksave-round.md) 0):
 run to a tick, quicksave, run 300 frames, quick-load, run 300 frames; the two
@@ -255,3 +260,216 @@ the US disc-only install.
   (`ScriptedLatch`: `frame != g_last_frame`; `StateHash_Tick` the same): a
   restore that sets the counter back is a new frame for both, which the
   replay and `inproc` rely on.
+
+Since stage B: SP-G's `GFX` carries the rows' contents and keeps the
+pointers the process's; SP-A's `SOUND` saves DIV-0092's position; SN's `ST`
+puts sigma back as the take had it (section 7.4 measures it on PSP-EU).
+
+## 7. Stage C: the proof batch (2026-10-19)
+
+**The build:** `quicksave/round` `91ca4590`, with SN (snapshot core), SP-A
+(`SOUND`), SP-G (`GFX`) and QM (the F5 menu) merged. It was built in this
+worktree and run on the exe host. `bof3x.dll` loads at `0x10000000`;
+`this build: v0.1.0, bof3x.dll sha256 7162c8f3...`.
+
+**The harness:** root `C:\Users\kerok\q_rc`, and the ini-less launcher copy
+`q_rc\launcher`. The game folders come from `abc_run.py prepare
+--installs tools/recipes/sigma-installs.toml --only pc,psx-us,psp-eu`:
+
+- `g_pc`: a copy of the PC install, with no saves;
+- `g_psxus`: the US PSX disc alone, cache `c_psxus`;
+- `g_pspeu`: the PSP-EU disc alone, cache `c_pspeu`.
+
+No run touched the owner's `bof3\`. The recipe saves came from
+`q_rc\saves` through `BOF3X_RECIPE_SAVES`, which has to be in
+`input_run`'s own environment (`--env` reaches only the game). Every run
+used `BOF3X_MUSIC_LOG=1 BOF3X_SHOT_EVERY=30 BOF3X_FRAMEHASH=1` and the
+173-range skip list, and every live run held the machine lock `q_lock`.
+The conditions were:
+
+- **id**: `BOF3X_OPT=none BOF3X_LAYERING=0`;
+- **def**: the launcher's own defaults;
+- **wide**: def with `BOF3X_WIDE=1`.
+
+The language was `en-US`, and `en-150` on PSP-EU. In all, 46 live runs
+were made, and every one reached `recipe done` at its last frame.
+
+### 7.1 The headless self-test
+
+`BOF3X_SELFTEST_ONLY=1`, the exe host, the ini-less copy, `g_pc`. The run
+ended with `self-test only: done, ending the process`, `inject: 10087 ours`,
+and no FAILED or Fatal line:
+
+- `snapshot: self-test passed`: the span copied, scribbled and restored
+  equal; a missing participant on either side, another build, DLL base,
+  arena top and a truncated file refused; the rotation.
+- `gfx_snapshot: self-test passed`: palette rows, the cache objects
+  released after the present, 12 display ranges kept, a 15,067-byte
+  record.
+- `SOUND self-test`: four fades equal tick for tick, two banks rebuilt,
+  the voices and the stream playing again, a track stream at its folded
+  sample, 28 stand-in buffers. This line does not contain the words
+  "passed", and no failure was logged.
+- `quick menu self-test` (two lines): the save list and the quick list,
+  the cursor, Yes / No.
+
+The log is `q_rc\scratch\selftest_exe.log`.
+
+### 7.2 What the check now expects (`--expect`)
+
+The raw dumps of `d_pc_id_quick_combat` were taken at ticks k = 1, 2, 59,
+119, 120 and 121 after the take and after the restore. Outside the skip
+list, they differ in only three places:
+
+- **`Overlay_Frames` `0x6BC630`, one count apart** (`0x78` against `0x77`
+  at k=1, down to `01` / `00` at k=120). SN's "Quickload" line is set after
+  the span is written, one frame behind the take's "Quicksave OK".
+  `Overlay_Text` itself is equal.
+- **`Gpu_DispEnv+2` `0x7DECE2` and `Gpu_DrawEnv+2` `0x7DED02`, at k=1
+  only**: the display's buffer parity, `f0`/`00` against `00`/`f0`.
+- **`Key_State+0x2F` at k=59**: DirectInput's keyboard byte for V, read
+  from the machine's real keyboard while the game ran unfocused. This is
+  machine noise and not part of the quicksave. `Key_State` is in no skip
+  row.
+
+The hash is per page, so these differences cannot be masked byte by byte.
+`inproc` and `cross` therefore take page rules, `--expect PAGE:K0-K1`. A
+page whose every differing k falls inside its rule's window is listed as
+expected, and the run counts as equal. The defaults are `0x6BC000:0-140`
+and `0x7DE000:0-1`. The overlay window is wider than 120 because the line
+counts down on drawn frames only: the disc installs' late ticks stretched
+it to k=124 and once to k=132, and the loaded process of a cross run
+draws its first frames late, so its line ends at k=122. `--expect none`
+turns the rules off. In the cross dumps (loaded ticks 2, 3, 121 and 122
+against live 1202, 1203, 1321 and 1322), only `Overlay_Frames` (2 or 3
+behind) and the same parity at k=1 differ outside the skip list.
+
+### 7.3 In process (`quicksave_check.py inproc`, `tools/quicksave_frames.py`)
+
+These rows apply the defaults above; "equal*" means equal but for the
+expected pages. "Frames" is SP-G's walk hash: frames drawn on both sides,
+all equal unless noted.
+
+| Route (F6 / F7) | PC id | PC def | US disc, id | PSP-EU, id | PC wide |
+|---|---|---|---|---|---|
+| worldMapAndAreaTransition (595 / 895) | exit 1: `0x7DE000` and `0x937000` at k=44 only; frames 298 | equal; 299 | equal; 299 | - | - |
+| worldMap (1270 / 1570) | equal*; 298 | equal*; 298 | equal; 297 | - | equal*; 298 |
+| combat (900 / 1200) | equal*; 298 | equal*; 298 | exit 1: `0x7DE000` 9 ticks, k 3..222; frames 296 | exit 1: `0x7DE000` 20 ticks, k 3..288; frames 296 | - |
+| cutsceneAndNue (2165 / 2465) | equal*; 298 | equal*; 298 | exit 1: `0x7BB000`, `0x937000`, `0x7DE000` and `0x7C9000`, k 3..13 (13 late ticks); frames 286 | - | equal*; 298 |
+| shop (1110 / 1410) | equal*; 298 | equal*; 298 | exit 1: VRAM shadow (4 pages), k 3..5; frames 294 | exit 1: `0x7DE000` 285 ticks, k 1..299, and VRAM, k 3..5; a repeat had `0x7DE000` 2 ticks and VRAM, k 3..5; frames 294 | - |
+| musicStopCheck (2808 / 3108) | equal*; 298 | equal*; 298 | equal; 296 | - | - |
+| `quick_menu.txt` (QM's: three F6, F5, slot 1, Yes) | equal* over the 50-tick window (its restore went back to the second take, k ends at the third); frames, see below | the same | - | - | - |
+
+**Every page left over is noise that two runs show anyway** (section 5):
+
+- the sound page `0x7DE000` at isolated ticks;
+- the VRAM shadow, `0x937000` or `Font_TexCache`'s page for a tick or a few
+  ticks next to late frames: an upload landing a frame apart.
+
+On PSP-EU the sound page is noisy in its own right. The two proof runs of
+`quick_shop` there (`c_pspeu_id_` and `d_pspeu_id_`) differ from each other
+on `0x7DE000` at 393 ticks, from tick 3, long before the take. No page of
+the game's own state differed after a restore, on any install.
+
+**SP-A's Fatal at k=81 on `quick_musicStopCheck` is gone.** No run's log
+holds a `FATAL`, a `CRASH` or "Release of a surface". On the merged build
+the music route does what the live game did:
+
+- the fade to a stop is taken six steps from its end (`SOUND saved: ...
+  fade 6 steps left (to a stop)`) and restored;
+- `Music_Stop` follows at f2814 on both sides;
+- `resume track 91 at sample 480384` at f2838 on both sides.
+
+**Frames.** `quicksave_frames.py` found every frame drawn after the restore
+equal to the one drawn after the take on all 22 in-process route runs.
+`quick_menu` reports 40 of 90 frames differing from k=50. That is not a
+failure: the tool pairs the restore with the first take (F6 at 596), and
+the restore went back to the second (616). From k=50 the take side has the
+F5 menu open and the restore side is in the field. Its first 50 frames are
+equal.
+
+### 7.4 Across processes (`quicksave_check.py cross`)
+
+The `_cross` form runs right after its proof run, in the same game folder.
+It loads that run's `BISLPS10.DAT` at recipe frame 0 and continues with the
+route. Every cross run reached its route's end. The loaded run restores at
+its tick 1 (`F7 BISLPS10.DAT restored at Frame_Counter 1: back to
+Frame_Counter 901`, etc.), and the build check, DLL base and
+`Task_StackTop` matched across launches. The results, PC id and def alike:
+
+| Route | Differences against the live run's restore continuation |
+|---|---|
+| combat | `0x6BC000` k 1..122 and `0x7DE000` k 1..3 only (1,664 ticks); with the expected rules, `0x7DE000` at k 2..3 is the one page left |
+| worldMapAndAreaTransition | as combat, plus the VRAM shadow (4 pages) at k 2..3, and `0x6C3000` from k=502 to the end |
+| worldMap | as combat, plus the VRAM shadow (43 pages) at k=3, and `0x6C3000` from k=0 to the end |
+| musicStopCheck | as combat, plus the VRAM shadow (3 pages) at k=3 |
+| shop, cutsceneAndNue | as combat, plus the VRAM shadow and `0x937000` at k=3; then, with no save held, the save-list pages from k=1864 (shop) or 4819 (cutscene): `0x905000`, `0x92A000`, then `0x904000`, `0x929000`, `0x7E0000`, `0x7C9000` and `0x7CA000` |
+
+What they are:
+
+- **`0x6C3000`, `Gfx_ClutRows`' pointer words.** In the fresh process
+  SP-G's restore makes the rows' blocks again (`25 blocks made` in the
+  loaded log on the world map, 17 for the field route), at this process's
+  heap addresses. The words differ by design, the rows' contents are
+  the take's, and the frames drawn after the load are SP-G's to judge.
+  This is section 5's noise class, now across processes.
+- **The save-list tail** (shop and cutscene): the live run held the route's
+  recipe save in slot 0 and the cross run loaded none, so the inn's save
+  prompt listed different files. With `run --save town` (the live run's
+  save held in slot 0), the shop cross run no longer differs there.
+- **A transient on shop at k 1738..1792, when the save is held.** It
+  appeared on game pages: `0x66C000` (`Game_Mode`), `0x903000`, `0x7E1000`
+  (`Input_Held`), `0x803000` and `0x929000`. It came in two runs of three
+  (`d_pc_id_` and `e_pc_id_..._cross2`) and not in the one taken with dumps
+  (`e_pc_id_..._cross`), and it converged by k=1792. At its first tick the
+  music log has `Music_Stop` at f2848 in the live run and f2849 in the
+  loaded run. The route's logic there waits on the music, and when the
+  stream ends is `Music_Finished`, set from the stream's own timing (the
+  skip list's noise row). One run's audio clock is a frame behind the
+  other's after a fresh start. This is timing, not something the snapshot
+  missed. The two transient cross runs are in the table file below.
+
+**On PSP-EU (a West release, confirm on cross), the cross form plays.**
+`quick_combat_cross` and `quick_shop_cross` ran there to their ends, with
+the same pages as on the PC plus the PSP install's sound noise (`0x7DE000`,
+91 and 690 ticks). The shop run also had the same no-save tail from
+k=1864. So SN's `ST` participant puts sigma back as the take had it
+(quicksave.md section 5), and section 1's limit for the cross form is
+lifted: a West install's buttons after a quick-load are the save's, as in
+the live run.
+
+### 7.5 Captures (outside the tree, game data)
+
+Under `C:\Users\kerok\q_rc\caps\`, each pair puts the timed frame k ticks
+after F6 beside the one k ticks after F7 (`pairs.txt`). There are 22 pairs:
+the six routes on PC id and def, the six on the US disc, two on PSP-EU and
+two wide. **All 22 have 0 pixels differing** (tolerance 4 of 255).
+
+**The overlay lines cannot be captured.** "Quicksave OK" and "Quickload"
+are logged and never drawn (`overlay     Quicksave OK` in every log, 120
+frames). `Overlay()` (`win_main.cpp`, DIV-0032) logs the line whenever the
+back buffer is the backend's, as F12's "Save OK" has been since DIV-0032.
+The frames at F6+30 and F7+30 show the game alone.
+
+### 7.6 For the owner
+
+- **F6 and F7 give no sign on screen.** The overlay line goes to the log
+  only (7.5). A player gets no "Quicksave OK" today. QM draws its refusal
+  inside the F5 menu for the same reason.
+- `quick_menu`'s live run went through the menu, loaded slot 1 and closed
+  it, on both conditions (`F5 at Frame_Counter 665: open, 16 quicksaves
+  listed`; the harness folder held the earlier runs' quicksaves, so the
+  rotation's sixteen-slot history was full and kept working; then
+  `closed at Frame_Counter 616 (BISLPS11.DAT loaded: Quickload)`).
+
+### 7.7 The runs and the table
+
+- Runs: `C:\Users\kerok\q_rc\runs\c_<install>_<cond>_<recipe>`, plus the
+  dump and repeat runs `d_pc_id_*`, `d_pspeu_id_*` and `e_pc_id_*`. Each run
+  folder holds the hash, `bof3x.log`, `_run.txt`, the timed frames and the
+  `.bin` dumps.
+- Batch scripts and outputs: `C:\Users\kerok\q_rc\scratch\` (`stagec.sh`,
+  `all_c.sh`, `all_c.txt`, `dumps.sh`, `dumps2.sh`, `table.sh`,
+  `table.txt`, `caps.py`, `unskipped.py`).
+
+The installs' preparation log is `q_rc\scratch\prepare.txt` (503 s).
