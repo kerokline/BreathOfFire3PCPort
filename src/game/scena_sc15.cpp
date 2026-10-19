@@ -43,6 +43,7 @@
 // are unchanged - the fuzz keys on them - and the comments' "nobody owns" is as
 // of the wave that wrote them.
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sc15_callees.h"
 #include "game/scenario_harness.h"
@@ -207,8 +208,6 @@ unsigned char* Sprite(unsigned k) { return At(Sprite_Objects_addr + (k & 0xFFu) 
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record. Fx() is an effect object (Effect_Objects).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::EffectObject* Fx(unsigned char* p) { return reinterpret_cast<records::EffectObject*>(p); }
 
 unsigned Area() { return Game_AreaNumber; }
 void Step(unsigned v) { MoveScript_PartyRecords[0x65] = static_cast<unsigned char>(v); }
@@ -444,7 +443,7 @@ SC15_EXPORT unsigned char __cdecl Scena15_PlaceEffect(unsigned kind, int x, int 
     SetL(e + 0x64, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(x))));
     SetL(e + 0x68, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(y))));
     SetL(e + 0x6C, static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(z))));
-    Fx(e)->step_x = static_cast<uint32_t>(twelve);
+    rv::As<records::EffectObject>(e)->step_x = static_cast<uint32_t>(twelve);
     e[9] = static_cast<unsigned char>(nine);
     return 1;
 }
@@ -780,11 +779,11 @@ SC15_EXPORT void __cdecl Scena15_Run4(void) {
             e[0] = 1;
             e[5] = 0x88;
             e[6] = 1;
-            Fx(e)->x = 0x3B8000;
-            Fx(e)->z = 0x220000;
-            Fx(e)->height = 0x8000000;
-            Fx(e)->step_x = 0x3F8000;
-            Fx(e)->step_z = 0x220000;
+            rv::As<records::EffectObject>(e)->x = 0x3B8000;
+            rv::As<records::EffectObject>(e)->z = 0x220000;
+            rv::As<records::EffectObject>(e)->height = 0x8000000;
+            rv::As<records::EffectObject>(e)->step_x = 0x3F8000;
+            rv::As<records::EffectObject>(e)->step_z = 0x220000;
             SetL(e + 0x14, 0x6000000);
         }
         Timer(0x20);
@@ -1038,12 +1037,12 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
             unsigned char* const e = Effect(s);
             e[0] = 1;
             e[5] = 0x1D;
-            Fx(e)->x = 0x2F8000;
-            Fx(e)->z = 0x278000;
-            const long z = static_cast<long>(static_cast<uint32_t>(Fx(e)->z));
-            const long x = static_cast<long>(static_cast<uint32_t>(Fx(e)->x));
+            rv::As<records::EffectObject>(e)->x = 0x2F8000;
+            rv::As<records::EffectObject>(e)->z = 0x278000;
+            const long z = static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->z));
+            const long x = static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x));
             const long elev = SH_CALL(AreaMap_Elevation)(x, z);
-            Fx(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) << 16);
+            rv::As<records::EffectObject>(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) << 16);
         }
         SH_CALL(Music_Play)(0x82, 8);
         Timer(0x3C);
@@ -1136,10 +1135,10 @@ SC15_EXPORT void __cdecl Scena15_Run5(void) {
     case 0x1F:
         if (B(kCounter0) != 0x2A) return;
         for (unsigned k = 0; k < 0x1E; ++k) {
-            if ((SH_CALL(Scena15_RecordWord)(Spr(Sprite(k))->column) & 0xFFFFu) != 0x308) continue;
+            if ((SH_CALL(Scena15_RecordWord)(rv::As<records::SpriteObject>(Sprite(k))->column) & 0xFFFFu) != 0x308) continue;
             unsigned char* const o = Sprite(k);
             o[0x83] = 0x24;
-            Spr(o)->script_position = 0;
+            rv::As<records::SpriteObject>(o)->script_position = 0;
             break;
         }
         Set(0x11);
@@ -1572,10 +1571,10 @@ SC15_EXPORT unsigned char __cdecl Scena15_SpawnMarker(long x, long z, unsigned s
     unsigned char* const e = Effect(s);
     e[0] = 1;
     e[5] = 0x9E;
-    Fx(e)->x = static_cast<uint32_t>(x);
-    Fx(e)->z = static_cast<uint32_t>(z);
-    const long elev = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(Fx(e)->x)), z);
-    Fx(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) + 0x200) << 16;
+    rv::As<records::EffectObject>(e)->x = static_cast<uint32_t>(x);
+    rv::As<records::EffectObject>(e)->z = static_cast<uint32_t>(z);
+    const long elev = SH_CALL(AreaMap_Elevation)(static_cast<long>(static_cast<uint32_t>(rv::As<records::EffectObject>(e)->x)), z);
+    rv::As<records::EffectObject>(e)->height = static_cast<uint32_t>(static_cast<int32_t>(static_cast<short>(elev)) + 0x200) << 16;
     e[6] = static_cast<unsigned char>(six);
     e[7] = static_cast<unsigned char>(seven);
     e[0xB] = static_cast<unsigned char>(eleven);
@@ -1619,7 +1618,7 @@ void ObjectFlag(unsigned char* object, unsigned flag, unsigned member) {
     Set40();
     Set(flag);
     if (member != 0xFF) DropIn(member);
-    Spr(object)->script_position = Spr(object)->script_position + 1u;
+    rv::As<records::SpriteObject>(object)->script_position = rv::As<records::SpriteObject>(object)->script_position + 1u;
 }
 
 }  // namespace
@@ -1639,7 +1638,7 @@ SC15_EXPORT void __cdecl Scena15_Object10(unsigned char* object, unsigned char*)
 // word +0x8A counted.
 SC15_EXPORT void __cdecl Scena15_Object11(unsigned char* object, unsigned char*) {
     Set40();
-    Spr(object)->script_position = Spr(object)->script_position + 1u;
+    rv::As<records::SpriteObject>(object)->script_position = rv::As<records::SpriteObject>(object)->script_position + 1u;
 }
 
 // original 0x56B030: chapter 15's vtable slot 2, the step hook (PSX

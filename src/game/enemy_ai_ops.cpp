@@ -23,6 +23,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/enemy_ai_ops_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -72,8 +73,6 @@ void SetULong(unsigned char* p, std::uint32_t v) { SetLong(p, static_cast<std::i
 unsigned char* Enemy() { return PtrAt(at::kEnemyCurrent); }
 unsigned char* Sc() { return Sprite_Current; }
 // The enemy ops run on the enemy: Sprite_Current and 0x939AD8 (docs/enemy_ai_ops.md).
-records::BattleEnemy* EnemyRec() { return reinterpret_cast<records::BattleEnemy*>(Enemy()); }
-records::BattleEnemy* ScEnemy() { return reinterpret_cast<records::BattleEnemy*>(Sc()); }
 
 // The op tables: entry `index` of the code pointers at `table`. As the
 // originals have it, the index is not checked - it is one of the object's
@@ -96,28 +95,28 @@ using HookFn = void (__cdecl*)(int);
 
 // original 0x4360F0 (PSX 0x801E3140): state 0 of the enemy state table
 // 0x64B084 - a tail jump through EnemyOp_Steps 0x64B1A0 by Sprite_Current +1.
-extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(EnemyOp_Steps_addr, ScEnemy()->state[0])(); }
+extern "C" void __cdecl EnemyOp_StepDispatch(void) { Entry(EnemyOp_Steps_addr, rv::As<records::BattleEnemy>(Sc())->state[0])(); }
 
 // original 0x436170 (PSX 0x801E3224): step 1, the entrance - through
 // EnemyOp_EnterSubs 0x64B1D4 by +2 (0x436190, EnemyOp_SlideDispatch 0x436270).
-extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(EnemyOp_EnterSubs_addr, ScEnemy()->state[1])(); }
+extern "C" void __cdecl EnemyOp_EnterDispatch(void) { Entry(EnemyOp_EnterSubs_addr, rv::As<records::BattleEnemy>(Sc())->state[1])(); }
 
 // original 0x436190 (PSX 0x801E3268): the entrance's first part, the
 // scale-in - through EnemyOp_ScaleInSubs 0x64B1DC by +3 (0x4361B0, 0x436210).
-extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(EnemyOp_ScaleInSubs_addr, ScEnemy()->state[2])(); }
+extern "C" void __cdecl EnemyOp_ScaleInDispatch(void) { Entry(EnemyOp_ScaleInSubs_addr, rv::As<records::BattleEnemy>(Sc())->state[2])(); }
 
 // original 0x4366E0 (PSX 0x801E3AE0): step 6 - through EnemyOp_ActSubs
 // 0x64B1FC by +2 (0x436700, 0x436720, 0x436700, EnemyOp_Act3Dispatch 0x436BC0,
 // 0x436D90, EnemyOp_Act5Dispatch 0x436F00).
-extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(EnemyOp_ActSubs_addr, ScEnemy()->state[1])(); }
+extern "C" void __cdecl EnemyOp_ActDispatch(void) { Entry(EnemyOp_ActSubs_addr, rv::As<records::BattleEnemy>(Sc())->state[1])(); }
 
 // original 0x436720 (PSX 0x801E3B48): the hit taken - through
 // EnemyOp_HitSubs 0x64B214 by +3 (0x436740, 0x436A00, 0x436A20).
-extern "C" void __cdecl EnemyOp_HitDispatch(void) { Entry(EnemyOp_HitSubs_addr, ScEnemy()->state[2])(); }
+extern "C" void __cdecl EnemyOp_HitDispatch(void) { Entry(EnemyOp_HitSubs_addr, rv::As<records::BattleEnemy>(Sc())->state[2])(); }
 
 // original 0x436D90 (PSX 0x801E46B8): the death - through EnemyOp_DeathSubs
 // 0x64B234 by +3 (0x436DB0, 0x436E00, 0x436E40, 0x436EC0).
-extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(EnemyOp_DeathSubs_addr, ScEnemy()->state[2])(); }
+extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(EnemyOp_DeathSubs_addr, rv::As<records::BattleEnemy>(Sc())->state[2])(); }
 
 // ===========================================================================
 // The entrance and the idle loop
@@ -132,27 +131,27 @@ extern "C" void __cdecl EnemyOp_DeathDispatch(void) { Entry(EnemyOp_DeathSubs_ad
 // Sprite_Current after each call. The status goes out as a word with the
 // upper half of whatever edx held; Battle_StatusTint reads bit 7 alone.
 extern "C" void __cdecl EnemyOp_Begin(void) {
-    EnemyRec()->anim_table = at::kAnimTable;
+    rv::As<records::BattleEnemy>(Enemy())->anim_table = at::kAnimTable;
     BattleHook_End = at::kHookAValue;
     BattleHook_Exit = at::kHookBValue;
     g.set_animation(0);
-    ScEnemy()->flags = static_cast<unsigned char>(ScEnemy()->flags | 0x40);
-    g.status_tint(EnemyRec()->status);
-    ScEnemy()->state[0] = static_cast<unsigned char>(ScEnemy()->state[0] + 1);
+    rv::As<records::BattleEnemy>(Sc())->flags = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->flags | 0x40);
+    g.status_tint(rv::As<records::BattleEnemy>(Enemy())->status);
+    rv::As<records::BattleEnemy>(Sc())->state[0] = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->state[0] + 1);
 }
 
 // original 0x4361B0 (PSX 0x801E32AC): the scale-in's start. Sprite_Current
 // +0 &= ~0x40, then animation 0; +0x48 = 2, the dwords +0x44 / +0x40 / +0xC
 // = 0 and +0x18 = 0x666; +3 = 1.
 extern "C" void __cdecl EnemyOp_ScaleInStart(void) {
-    ScEnemy()->flags = static_cast<unsigned char>(ScEnemy()->flags & 0xBF);
+    rv::As<records::BattleEnemy>(Sc())->flags = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->flags & 0xBF);
     g.set_animation(0);
     Sc()[0x48] = 2;
     SetULong(Sc() + 0x44, 0);
     SetULong(Sc() + 0x40, 0);
     SetULong(Sc() + 0xC, 0);
     SetULong(Sc() + 0x18, 0x666);
-    ScEnemy()->state[2] = 1;
+    rv::As<records::BattleEnemy>(Sc())->state[2] = 1;
 }
 
 // original 0x436210 (PSX 0x801E3310): the scale-in, a frame. While the s32
@@ -168,9 +167,9 @@ extern "C" void __cdecl EnemyOp_ScaleInStep(void) {
         SetULong(Sc() + 0xC, ULong(Sc() + 0xC) + ULong(Sc() + 0x18));
     } else {
         s[0x48] = 0;
-        ScEnemy()->state[0] = 3;
-        ScEnemy()->state[1] = 0;
-        ScEnemy()->state[2] = 0;
+        rv::As<records::BattleEnemy>(Sc())->state[0] = 3;
+        rv::As<records::BattleEnemy>(Sc())->state[1] = 0;
+        rv::As<records::BattleEnemy>(Sc())->state[2] = 0;
     }
     g.script_tick();
 }
@@ -181,7 +180,7 @@ extern "C" void __cdecl EnemyOp_ScaleInStep(void) {
 extern "C" void __cdecl EnemyOp_Idle(void) {
     g.set_animation((Enemy()[0x110] & 2) != 0 ? 8u : 0u);
     g.script_tick();
-    ScEnemy()->state[0] = static_cast<unsigned char>(ScEnemy()->state[0] + 1);
+    rv::As<records::BattleEnemy>(Sc())->state[0] = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->state[0] + 1);
 }
 
 // original 0x4363E0 (PSX 0x801E35B0): step 3, the idle loop, every frame
@@ -198,12 +197,12 @@ extern "C" void __cdecl EnemyOp_Idle(void) {
 // the call; the actor byte and the slot's byte are re-read at each use (a
 // slot past the 48 is not refused - the actor byte is 3..10 for an enemy).
 extern "C" void __cdecl EnemyOp_Wait(void) {
-    Entry(EnemyOp_WaitSubs_addr, ScEnemy()->state[1])();
+    Entry(EnemyOp_WaitSubs_addr, rv::As<records::BattleEnemy>(Sc())->state[1])();
     unsigned char* const e = Enemy();
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     if ((e[0x92] & 0x20) != 0) {
         unsigned char* const s = Sc();
-        auto* const enemy_s = reinterpret_cast<records::BattleEnemy*>(s);
+        auto* const enemy_s = rv::As<records::BattleEnemy>(s);
         const auto slot = [s] { return At(at::kTasks + s[5] * at::kTaskSize); };
         bool flip;
         if ((enemy_rec->flags_110 & 0x800) != 0) {
@@ -220,7 +219,7 @@ extern "C" void __cdecl EnemyOp_Wait(void) {
         const std::int32_t bob = static_cast<signed char>(t[9]);
         SetULong(s + field, static_cast<std::uint32_t>(bob << 9) + ULong(t + field));
     }
-    if ((EnemyRec()->flags_110 & 0x1000) == 0) g.script_tick();
+    if ((rv::As<records::BattleEnemy>(Enemy())->flags_110 & 0x1000) == 0) g.script_tick();
 }
 
 // original 0x436510 (PSX 0x801E37B4): EnemyOp_Wait's sub-op 0. While a
@@ -232,11 +231,11 @@ extern "C" void __cdecl EnemyOp_HighlightOn(void) {
     if (BattleE4_Picking == 0) return;
     const unsigned char target = PtrAt(at::kCommandSource)[0];
     unsigned char* const s = Sc();
-    auto* const enemy_s = reinterpret_cast<records::BattleEnemy*>(s);
+    auto* const enemy_s = rv::As<records::BattleEnemy>(s);
     if (target != enemy_s->actor && (target & 0x40) == 0) return;
     const unsigned char tint = g.set_tint(s, 0, 0, 0, 0);
     Sc()[7] = tint;
-    ScEnemy()->state[1] = 1;
+    rv::As<records::BattleEnemy>(Sc())->state[1] = 1;
 }
 
 // original 0x436560 (PSX 0x801E3838): sub-op 1, the highlight's pulse. The
@@ -249,7 +248,7 @@ extern "C" void __cdecl EnemyOp_HighlightOn(void) {
 // free record) writes past the 32 records.
 extern "C" void __cdecl EnemyOp_HighlightPulse(void) {
     unsigned char* const s = Sc();
-    auto* const enemy_s = reinterpret_cast<records::BattleEnemy*>(s);
+    auto* const enemy_s = rv::As<records::BattleEnemy>(s);
     const unsigned char pulse = At(at::kPulse)[0];
     At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 4)[0] = pulse;
     At(MoveScript_TintRecords_addr + s[7] * at::kTintSize + 3)[0] = pulse;
@@ -260,7 +259,7 @@ extern "C" void __cdecl EnemyOp_HighlightPulse(void) {
         if ((target & 0x40) != 0) return;
     }
     g.tint_release(s[7]);
-    ScEnemy()->state[1] = 0;
+    rv::As<records::BattleEnemy>(Sc())->state[1] = 0;
 }
 
 // ===========================================================================
@@ -270,8 +269,8 @@ extern "C" void __cdecl EnemyOp_HighlightPulse(void) {
 // original 0x436700 (PSX 0x801E3B24): EnemyOp_ActSubs' entries 0 and 2 -
 // Sprite_Current +4 = 0, +2 = 1.
 extern "C" void __cdecl EnemyOp_ActBegin(void) {
-    ScEnemy()->state[3] = 0;
-    ScEnemy()->state[1] = 1;
+    rv::As<records::BattleEnemy>(Sc())->state[3] = 0;
+    rv::As<records::BattleEnemy>(Sc())->state[1] = 1;
 }
 
 // original 0x436740 (PSX Battle_ResolveAction_Enemy 0x801E3B8C, the
@@ -307,9 +306,9 @@ extern "C" void __cdecl EnemyOp_ActBegin(void) {
 // bits, which every callee masks off).
 extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
     unsigned char* s = Sc();
-    auto* const enemy_s = reinterpret_cast<records::BattleEnemy*>(s);
+    auto* const enemy_s = rv::As<records::BattleEnemy>(s);
     unsigned char* e = Enemy();
-    records::BattleEnemy* enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    records::BattleEnemy* enemy_rec = rv::As<records::BattleEnemy>(e);
     SetWord(At(at::kStatusAdd2), 0);
     SetWord(At(at::kStatusAdd), 0);
     const unsigned char actor = enemy_s->actor;
@@ -320,7 +319,7 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
     SetWord(PtrAt(at::kResult) + 6, 0);
     PtrAt(at::kResult)[8] = 0;
     e = Enemy();
-    enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    enemy_rec = rv::As<records::BattleEnemy>(e);
     for (unsigned i = 0; i < 32; i += 4) SetLong(At(at::kStatBlock + i), Long(e + 0xB0 + i));
     const unsigned char kind = At(at::kActionKind)[0];
     if (kind == 1) {
@@ -329,66 +328,66 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
         const short delta = g.apply_damage(attacker, target);
         SetWord(PtrAt(at::kResult) + 4, static_cast<std::uint16_t>(delta));
         e = Enemy();
-        enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        enemy_rec = rv::As<records::BattleEnemy>(e);
     } else if (kind > 3 && kind <= 5) {
         g.effect_apply();
         e = Enemy();
-        enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        enemy_rec = rv::As<records::BattleEnemy>(e);
     }
     if (BattleActions_EventBattle != 0) {
         reinterpret_cast<HookFn>(PtrIn(e + 0xF4))(1);
         e = Enemy();
-        enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        enemy_rec = rv::As<records::BattleEnemy>(e);
     }
     if ((enemy_rec->shown & 1) != 0 && static_cast<std::uint16_t>(enemy_rec->hp_change) == 0) {
-        ScEnemy()->state[1] = 3;
+        rv::As<records::BattleEnemy>(Sc())->state[1] = 3;
         return;
     }
     if ((enemy_rec->flags_110 & 0x200) == 0) {
         if (At(at::kActionKind)[0] == 1) {
             g.set_animation(4);
             e = Enemy();
-            enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+            enemy_rec = rv::As<records::BattleEnemy>(e);
         }
         if (At(at::kActionKind)[0] == 5) {
             const unsigned id = At(at::kMagicId)[0];
             const unsigned category = At(at::kMagicId + 1)[0];
             if ((g.item_class(category, id) & 4) == 0) g.set_animation(4);
             e = Enemy();
-            enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+            enemy_rec = rv::As<records::BattleEnemy>(e);
         }
         if (At(at::kActionKind)[0] == 4 && (AbilityByte(at::kAbilityFlags8) & 4) == 0) {
             g.set_animation(4);
             e = Enemy();
-            enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+            enemy_rec = rv::As<records::BattleEnemy>(e);
         }
     }
     if ((enemy_rec->shown & 1) != 0) {
-        g.damage_popup(static_cast<std::uint16_t>(enemy_rec->hp_change), ScEnemy()->actor);
+        g.damage_popup(static_cast<std::uint16_t>(enemy_rec->hp_change), rv::As<records::BattleEnemy>(Sc())->actor);
         e = Enemy();
-        enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        enemy_rec = rv::As<records::BattleEnemy>(e);
     }
     if ((enemy_rec->shown & 2) != 0) {
-        g.ap_popup(static_cast<std::uint16_t>(enemy_rec->ap_change), ScEnemy()->actor);
+        g.ap_popup(static_cast<std::uint16_t>(enemy_rec->ap_change), rv::As<records::BattleEnemy>(Sc())->actor);
         e = Enemy();
-        enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        enemy_rec = rv::As<records::BattleEnemy>(e);
     }
     enemy_rec->status = enemy_rec->status | Word(At(at::kStatusAdd));
     SetWord(At(at::kStatusAdd), 0);
     g.turn_check();
     e = Enemy();
-    enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    enemy_rec = rv::As<records::BattleEnemy>(e);
     if (static_cast<short>(enemy_rec->hp_change) > 0) {
         if (enemy_rec->hp == 0) {
             Sc()[9] = 0;
             if ((At(at::kRoundFlags)[0] & 0x80) != 0) g.set_tint(Sc(), 0x10, 0x10, 0x10, 0);
-            EnemyRec()->status = 0x4000;
+            rv::As<records::BattleEnemy>(Enemy())->status = 0x4000;
             e = Enemy();
-            enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+            enemy_rec = rv::As<records::BattleEnemy>(e);
         } else if (BattleActions_EventBattle != 0) {
             g.play_cue(Word(PtrIn(e + 0xF8) + 4));
             e = Enemy();
-            enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+            enemy_rec = rv::As<records::BattleEnemy>(e);
         }
     }
     if (static_cast<short>(enemy_rec->hp_change) < 0 || static_cast<short>(enemy_rec->ap_change) < 0) g.play_effect(0x206);
@@ -404,13 +403,13 @@ extern "C" void __cdecl EnemyOp_ReceiveAction(void) {
     }
     SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xFF7F);
     g.script_tick();
-    ScEnemy()->state[2] = static_cast<unsigned char>(ScEnemy()->state[2] + 1);
+    rv::As<records::BattleEnemy>(Sc())->state[2] = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->state[2] + 1);
 }
 
 // original 0x436A00 (PSX 0x801E406C): +3 on once BattleEnemy_ScriptTickOnce
 // answers non-zero (the animation is done).
 extern "C" void __cdecl EnemyOp_WaitAnimOnce(void) {
-    if (g.script_tick_once() != 0) ScEnemy()->state[2] = static_cast<unsigned char>(ScEnemy()->state[2] + 1);
+    if (g.script_tick_once() != 0) rv::As<records::BattleEnemy>(Sc())->state[2] = static_cast<unsigned char>(rv::As<records::BattleEnemy>(Sc())->state[2] + 1);
 }
 
 // original 0x436A20 (PSX 0x801E40B4): the hit's end. Sprite_ScriptTickOnce
@@ -433,11 +432,11 @@ extern "C" void __cdecl EnemyOp_HitEnd(void) {
     g.sprite_tick_once();
     if ((Enemy()[0x93] & 0x40) != 0) {
         g.release_tint(Sc());
-        auto* const enemy_s = ScEnemy();
+        auto* const enemy_s = rv::As<records::BattleEnemy>(Sc());
         SetWord(At(at::kRoundFlags), Word(At(at::kRoundFlags)) & 0xFFBF);
         enemy_s->state[0] = 6;
-        ScEnemy()->state[1] = 4;
-        ScEnemy()->state[2] = 0;
+        rv::As<records::BattleEnemy>(Sc())->state[1] = 4;
+        rv::As<records::BattleEnemy>(Sc())->state[2] = 0;
         return;
     }
     if ((At(at::kRoundFlags)[0] & 0x40) != 0) {
@@ -449,12 +448,12 @@ extern "C" void __cdecl EnemyOp_HitEnd(void) {
             (AbilityByte(at::kAbilityFlags8) & 0x10) == 0)
             At(at::kRoundFlags)[0] = static_cast<unsigned char>(At(at::kRoundFlags)[0] | 0x40);
     }
-    g.clear_actor_bit(ScEnemy()->actor);
-    EnemyRec()->flags_110 = EnemyRec()->flags_110 & 0xFFFFFF8Fu;
-    EnemyRec()->flags_110 = EnemyRec()->flags_110 & ~0x200u;
-    ScEnemy()->state[0] = 2;
-    ScEnemy()->state[1] = 0;
-    ScEnemy()->state[2] = 0;
+    g.clear_actor_bit(rv::As<records::BattleEnemy>(Sc())->actor);
+    rv::As<records::BattleEnemy>(Enemy())->flags_110 = rv::As<records::BattleEnemy>(Enemy())->flags_110 & 0xFFFFFF8Fu;
+    rv::As<records::BattleEnemy>(Enemy())->flags_110 = rv::As<records::BattleEnemy>(Enemy())->flags_110 & ~0x200u;
+    rv::As<records::BattleEnemy>(Sc())->state[0] = 2;
+    rv::As<records::BattleEnemy>(Sc())->state[1] = 0;
+    rv::As<records::BattleEnemy>(Sc())->state[2] = 0;
 }
 
 // ===========================================================================
@@ -470,14 +469,14 @@ extern "C" void __cdecl EnemyOp_DeathSwellStart(void) {
     SetULong(Sc() + 0x40, 0x10000);
     SetULong(Sc() + 0xC, 0);
     SetULong(Sc() + 0x18, 0x666);
-    ScEnemy()->state[2] = 1;
+    rv::As<records::BattleEnemy>(Sc())->state[2] = 1;
 }
 
 // original 0x436E00 (PSX 0x801E4738): the swell, a frame - EnemyOp_ScaleInStep
 // to 0x14000 (1.25) and without the tick; at the end +3 = 2.
 extern "C" void __cdecl EnemyOp_DeathSwell(void) {
     unsigned char* const s = Sc();
-    auto* const enemy_s = reinterpret_cast<records::BattleEnemy*>(s);
+    auto* const enemy_s = rv::As<records::BattleEnemy>(s);
     const std::uint32_t scale = ULong(s + 0x40);
     if (static_cast<std::int32_t>(scale) < 0x14000) {
         SetULong(s + 0x40, ULong(s + 0xC) + scale);
@@ -499,7 +498,7 @@ extern "C" void __cdecl EnemyOp_DeathFlash(void) {
     g.set_tint(Sc(), 0xFF, 0xFF, 0xFF, 0);
     SetULong(Sc() + 0x10, 0);
     SetULong(Sc() + 0x1C, 0xFFFFE000u);
-    ScEnemy()->state[2] = 3;
+    rv::As<records::BattleEnemy>(Sc())->state[2] = 3;
 }
 
 // original 0x436EC0 (PSX 0x801E482C): the squash, a frame. The scale +0x44
@@ -520,7 +519,7 @@ extern "C" void __cdecl EnemyOp_DeathSquash(void) {
 // As the original has it: 0x939AD8 is read after the call.
 extern "C" void __cdecl EnemyOp_HitPose(void) {
     g.set_animation(4);
-    const std::uint32_t flags = EnemyRec()->flags_110;
+    const std::uint32_t flags = rv::As<records::BattleEnemy>(Enemy())->flags_110;
     if ((flags & 0x10) != 0) g.script_tick();
     else if ((flags & 0x20) != 0) g.script_tick_once();
 }

@@ -38,6 +38,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_c3_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -61,9 +62,6 @@ unsigned char* F() { return Field_State; }
 // record or another family whose first 0x80 bytes are a sprite object's (an
 // ObjTrio member, the kind-2 object), so only that part is named.
 // Field_State is an ObjTrio record.
-records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-records::PartyMember* State() { return reinterpret_cast<records::PartyMember*>(F()); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 unsigned char& B(U address) { return At(address)[0]; }
 U ULong(const unsigned char* p) { return static_cast<U>(Long(p)); }
 void SetULong(unsigned char* p, U v) { SetLong(p, static_cast<std::int32_t>(v)); }
@@ -106,7 +104,7 @@ bool Sloped() { return B(at::kSloped) != 0; }
 // The state-1 reset the steps end with: +1 = 1, +2 = +3 = 0 (each through
 // Sprite_Current read again, as the originals store).
 void BackToState1() {
-    Cur()->state = 1;
+    rv::Current<records::SpriteObject>()->state = 1;
     S()[2] = 0;
     S()[3] = 0;
 }
@@ -115,11 +113,11 @@ void BackToState1() {
 // shade bytes 0x80 and +0x5C 1, +0 bit 6 cleared, then `state` at +at.
 void ShadeBegin(unsigned at, unsigned char state) {
     SH_CALL(Sprite_ShadeFadeBegin)();
-    Cur()->shade[0] = 0x80;
-    Cur()->shade[1] = 0x80;
-    Cur()->shade[2] = 0x80;
-    Cur()->draw_mode = 1;
-    Cur()->flags = static_cast<unsigned char>(Cur()->flags & 0xBF);
+    rv::Current<records::SpriteObject>()->shade[0] = 0x80;
+    rv::Current<records::SpriteObject>()->shade[1] = 0x80;
+    rv::Current<records::SpriteObject>()->shade[2] = 0x80;
+    rv::Current<records::SpriteObject>()->draw_mode = 1;
+    rv::Current<records::SpriteObject>()->flags = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->flags & 0xBF);
     S()[at] = state;
 }
 
@@ -181,7 +179,7 @@ namespace {
 // Field_ObjectApproachDirection / AvoidDirection: they differ only in the
 // order of each subtraction (the absolute values agree) and in `toward`.
 unsigned char ChaseDirection(unsigned char* object, unsigned char toward) {
-    records::SpriteObject* const s = Cur();   // held for both tests and +8
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();   // held for both tests and +8
     const std::int32_t dx = Abs32(ULong(At(ObjTrio_addr + 0x34)) - static_cast<U>(s->x)) >> 16;
     const unsigned char direction = s->direction;
     if (static_cast<int>(SWord(object + 0x98)) > dx) {
@@ -189,14 +187,14 @@ unsigned char ChaseDirection(unsigned char* object, unsigned char toward) {
         if (static_cast<int>(SWord(object + 0x9A)) > dz) {
             const unsigned char best = SH_CALL(Field_ObjectBestDirection)(object, toward);
             if (best == 0xFF) {
-                Cur()->step_frames = 0;
+                rv::Current<records::SpriteObject>()->step_frames = 0;
                 return 0xFF;
             }
             if ((direction & 7) != best) {
-                Cur()->direction = best;
+                rv::Current<records::SpriteObject>()->direction = best;
                 object[0x80] = static_cast<unsigned char>(object[0x80] | 8);
             }
-            return Cur()->direction;
+            return rv::Current<records::SpriteObject>()->direction;
         }
     }
     SH_CALL(Field_ObjectRandomTurn)(object);
@@ -218,13 +216,13 @@ extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object
     const U pace = ObjTrio[9];
     const U point_z = pace * ULong(At(ObjTrio_addr + 0x10)) + ULong(At(ObjTrio_addr + 0x38));
     const U point_x = pace * ULong(At(ObjTrio_addr + 0xc)) + ULong(At(ObjTrio_addr + 0x34));
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if ((s->direction & 1) == 0) s->direction = static_cast<unsigned char>(s->direction + 1);
     unsigned char best = 0xFF;
     SetULong(object + 0x94, toward != 0 ? 0u : 0x1000000u);
     for (int turn = 4; turn != 0; --turn) {
         const unsigned char blocked = SH_CALL(Field_ObjectBlockedAhead)(object);
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
         if (blocked == 0) {
             const unsigned d = s->direction & 7u;
             const U score = static_cast<U>(Abs32(DirStepZ(d) + static_cast<U>(s->z) - point_z)) +
@@ -232,7 +230,7 @@ extern "C" unsigned char __cdecl Field_ObjectBestDirection(unsigned char* object
             const U kept = ULong(object + 0x94);
             if (toward != 0 ? kept < score : kept > score) {
                 SetULong(object + 0x94, score);
-                s = Cur();
+                s = rv::Current<records::SpriteObject>();
                 best = s->direction;
             }
         }
@@ -256,8 +254,8 @@ void FadeEnd(unsigned char index, unsigned char keep) {
     SH_CALL(Tint_Release)(index);
     unsigned char* const member = Field_ActiveMember;
     member[0x80] = static_cast<unsigned char>(member[0x80] & keep);
-    records::SpriteObject* const s = Cur();
-    s->state = Bytes(s)[3];
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();
+    s->state = rv::Bytes(s)[3];
     S()[4] = 0;
 }
 }  // namespace
@@ -266,7 +264,7 @@ void FadeEnd(unsigned char index, unsigned char keep) {
 extern "C" void __cdecl Field_ObjectFadeOutStart(void) {
     const unsigned char index = SH_CALL(Sprite_SetTint)(Sprite_Current, 0x1F, 0x1F, 0x1F, 1);
     Field_ActiveMember[0x9F] = index;
-    Cur()->flags = static_cast<unsigned char>(Cur()->flags & 0xBF);
+    rv::Current<records::SpriteObject>()->flags = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->flags & 0xBF);
     S()[4] = 1;
 }
 
@@ -309,7 +307,7 @@ extern "C" void __cdecl Field_ObjectFadeInStep(void) {
 extern "C" void __cdecl FieldCore_ScriptMove(void) {
     F()[0x138] = static_cast<unsigned char>(F()[0x138] | 4);
     Run("FieldCore_ScriptMove", FieldCore_ScriptMoveSteps, FieldCore_ScriptMoveSteps_count, 3);
-    records::SpriteObject* const s = Cur();
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();
     if (s->flags2 & 0x20) return;
     if (s->flags & 0x10)
         SH_CALL(Sprite_ScriptTick)();
@@ -319,17 +317,17 @@ extern "C" void __cdecl FieldCore_ScriptMove(void) {
 
 // original 0x5253E0 (PSX twin 0x801B7BC0): FieldCore_ScriptMoveSteps[0].
 extern "C" void __cdecl FieldCore_ScriptMoveAlign(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     const U x = static_cast<U>(s->x);
     if (((x & 0x7FFF) != 0 || (static_cast<U>(s->z) & 0x7FFF) != 0) && (s->draw_flags & 0x20) == 0) {
         s->x = (x + 0x4800) & 0xFFFF8000u;
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
         s->z = (static_cast<U>(s->z) + 0x4800) & 0xFFFF8000u;
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
         const long slope = SlopeAt(static_cast<U>(s->x), static_cast<U>(s->z), s->direction);
         SetWord(S() + 0x3E, static_cast<unsigned>(slope));
-        Animate(Cur()->direction + 8u);
-        s = Cur();
+        Animate(rv::Current<records::SpriteObject>()->direction + 8u);
+        s = rv::Current<records::SpriteObject>();
         if ((static_cast<U>(s->x) & 0x7FFF) == 0 && (static_cast<U>(s->z) & 0x7FFF) == 0) Animate(s->direction);
         return;
     }
@@ -354,58 +352,58 @@ extern "C" void __cdecl FieldCore_ScriptMoveNext(void) {
     if (flags & 8) {
         f[0x124] = static_cast<unsigned char>(flags & 0xF7);
         if ((Field_StatusBits & 0x40) == 0) Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xFEFF);
-        Animate(Cur()->direction);
+        Animate(rv::Current<records::SpriteObject>()->direction);
         F()[0x138] = static_cast<unsigned char>(F()[0x138] & 0xFB);
         SH_CALL(Field_MemberTimers)();
-        Cur()->state = 1;
+        rv::Current<records::SpriteObject>()->state = 1;
         S()[2] = 0;
         S()[3] = 0;
         S()[4] = 0;
-        Cur()->flags2 = 0;
-        Cur()->type = 0;
+        rv::Current<records::SpriteObject>()->flags2 = 0;
+        rv::Current<records::SpriteObject>()->type = 0;
         return;
     }
-    records::SpriteObject* s = Cur();   // edx
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();   // edx
     if (flags & 0x20) {
         const unsigned char bits = s->flags2;
         if ((bits & 4) == 0) {
             if ((bits & 8) == 0) {
                 s->direction = step;
-                Animate(Cur()->direction);
-                s = Cur();
+                Animate(rv::Current<records::SpriteObject>()->direction);
+                s = rv::Current<records::SpriteObject>();
             }
-            Bytes(s)[3] = 3;
+            rv::Bytes(s)[3] = 3;
             return;
         }
     }
     if (flags & 2) {
         s->direction = step;
         SH_CALL(Sprite_ShadeFadeBegin)();
-        Cur()->shade[0] = 0xC0;
-        Cur()->shade[1] = 0xC0;
-        Cur()->shade[2] = 0xC0;
-        Cur()->draw_mode = 1;
-        Animate(Cur()->direction);
+        rv::Current<records::SpriteObject>()->shade[0] = 0xC0;
+        rv::Current<records::SpriteObject>()->shade[1] = 0xC0;
+        rv::Current<records::SpriteObject>()->shade[2] = 0xC0;
+        rv::Current<records::SpriteObject>()->draw_mode = 1;
+        Animate(rv::Current<records::SpriteObject>()->direction);
         S()[3] = 4;
         return;
     }
     if (flags & 4) {
         s->direction = step;
         SH_CALL(Sprite_ShadeFadeBegin)();
-        Cur()->draw_mode = 1;
-        Animate(Cur()->direction);
+        rv::Current<records::SpriteObject>()->draw_mode = 1;
+        Animate(rv::Current<records::SpriteObject>()->direction);
         S()[3] = 5;
         return;
     }
     if (s->step_frames != 0) {
         if (f[0x12B] != 0) {
             f[0x12B] = static_cast<unsigned char>(f[0x12B] - 1);
-            s = Cur();
+            s = rv::Current<records::SpriteObject>();
         }
         s->direction = step;
         S()[3] = 2;
         animation = static_cast<unsigned char>(step + 8);
-        Cur()->step_frames = static_cast<unsigned char>(Cur()->step_frames - 1);
+        rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames - 1);
         StepTick();
     } else {
         s->direction = step;
@@ -416,7 +414,7 @@ extern "C" void __cdecl FieldCore_ScriptMoveNext(void) {
 
 // original 0x5256A0 (PSX twin 0x801B7F14): FieldCore_ScriptMoveSteps[2].
 extern "C" void __cdecl FieldCore_ScriptMoveStep(void) {
-    records::SpriteObject* const s = Cur();   // held in ecx
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();   // held in ecx
     if (s->step_frames != 0) {
         s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
         StepTick();
@@ -430,8 +428,8 @@ extern "C" void __cdecl FieldCore_ScriptMoveStep(void) {
     const U rise = static_cast<U>(s->step_y);
     f[0x12B] = static_cast<unsigned char>(f[0x12B] - 1);
     SH_CALL(Field_JumpStart)();
-    if (F()[0x124] & 0x80) Cur()->step_y = rise;
-    Cur()->step_frames = static_cast<unsigned char>(Cur()->step_frames - 1);
+    if (F()[0x124] & 0x80) rv::Current<records::SpriteObject>()->step_y = rise;
+    rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames - 1);
     StepTick();
 }
 
@@ -462,19 +460,19 @@ extern "C" void __cdecl FieldCore_ScriptMoveShadeFade(void) {
 
 // original 0x5257A0 (PSX twin 0x801B80CC): FieldCore_State2Steps[1].
 extern "C" void __cdecl FieldCore_Attached(void) {
-    if (Cur()->step_frames == 0) {
-        Cur()->draw_flags = static_cast<unsigned char>(Cur()->draw_flags | 0x20);
+    if (rv::Current<records::SpriteObject>()->step_frames == 0) {
+        rv::Current<records::SpriteObject>()->draw_flags = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->draw_flags | 0x20);
         // Sprite_ObjectsExtra[+0x18] (unchecked, as the original), each field
         // through +0x18 read again
         static const unsigned kFields[] = {0x34, 0x38, 0x3C, 0x64, 0x68, 0x6C};
         for (const unsigned field : kFields) {
-            records::SpriteObject* const s = Cur();
-            SetULong(Bytes(s) + field, ULong(At(Sprite_ObjectsExtra_addr + 0x34 + (field - 0x34) + static_cast<U>(s->accel_x) * 0xA4u)));
+            records::SpriteObject* const s = rv::Current<records::SpriteObject>();
+            SetULong(rv::Bytes(s) + field, ULong(At(Sprite_ObjectsExtra_addr + 0x34 + (field - 0x34) + static_cast<U>(s->accel_x) * 0xA4u)));
         }
         long offset[3];
         SH_CALL(MoveCmd_AttachOffset)(offset, S()[0x1C]);
-        Cur()->x = static_cast<U>(Cur()->x) + static_cast<U>(offset[0]);
-        Cur()->z = static_cast<U>(Cur()->z) + static_cast<U>(offset[1]);
+        rv::Current<records::SpriteObject>()->x = static_cast<U>(rv::Current<records::SpriteObject>()->x) + static_cast<U>(offset[0]);
+        rv::Current<records::SpriteObject>()->z = static_cast<U>(rv::Current<records::SpriteObject>()->z) + static_cast<U>(offset[1]);
         SetWord(S() + 0x3E, Word(S() + 0x3E) + static_cast<unsigned>(offset[2]));
     }
     SH_CALL(FieldCore_ScriptMove)();
@@ -489,7 +487,7 @@ extern "C" void __cdecl FieldCore_Hop(void) { Run("FieldCore_Hop", FieldCore_Hop
 
 // original 0x525980 (PSX twin 0x801B83EC): FieldCore_HopSteps[0].
 extern "C" void __cdecl FieldCore_HopBegin(void) {
-    Animate(Cur()->direction == 3 ? 0x38 : 0x39);
+    Animate(rv::Current<records::SpriteObject>()->direction == 3 ? 0x38 : 0x39);
     F()[0x128] = 3;
     S()[3] = 1;
 }
@@ -503,72 +501,72 @@ extern "C" void __cdecl FieldCore_HopLaunch(void) {
         bof3::Fatal("FieldCore_HopLaunch: speed 0 (Field_MoveSpeeds[%u]) - the original divides 0x20 by it and faults "
                     "(docs/field_c3.md section 6)",
                     pace);
-    Cur()->step_frames = static_cast<unsigned char>(0x20u / speed);
-    records::SpriteObject* s = Cur();
+    rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(0x20u / speed);
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     U n = (s->reach & 0xFF) + 1;
     s->step_x = JumpStepX(s->direction) * n * speed;
-    s = Cur();
+    s = rv::Current<records::SpriteObject>();
     n = (s->reach & 0xFF) + 1;
     s->step_z = JumpStepZ(s->direction) * n * speed;
-    s = Cur();
+    s = rv::Current<records::SpriteObject>();
     s->step_y = ((s->reach & 0xFF) + 1) << 6;
-    s = Cur();
-    SetULong(Bytes(s) + 0x20, (0xFFFFFFFFu - (s->reach & 0xFF)) << 3);
-    s = Cur();
-    if (Bytes(s)[5] == 0) {
+    s = rv::Current<records::SpriteObject>();
+    SetULong(rv::Bytes(s) + 0x20, (0xFFFFFFFFu - (s->reach & 0xFF)) << 3);
+    s = rv::Current<records::SpriteObject>();
+    if (rv::Bytes(s)[5] == 0) {
         Field_Kind2X = static_cast<long>(static_cast<U>(s->step_x) * s->step_frames + static_cast<U>(s->x));
         Field_Kind2Z = static_cast<long>(static_cast<U>(s->step_z) * s->step_frames + static_cast<U>(s->z));
         MoveScript_F3Divisor = static_cast<short>(speed << 3);
     }
     Animate(s->direction == 3 ? 0x3A : 0x3B);
     SH_CALL(Sound_PlayEffect)(0x104);
-    Cur()->step_frames = static_cast<unsigned char>(Cur()->step_frames - 1);
-    s = Cur();
-    s->step_y = static_cast<U>(s->step_y) + ULong(Bytes(s) + 0x20);
+    rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames - 1);
+    s = rv::Current<records::SpriteObject>();
+    s->step_y = static_cast<U>(s->step_y) + ULong(rv::Bytes(s) + 0x20);
     StepTick();
     S()[3] = 2;
 }
 
 // original 0x525B20 (PSX twin 0x801B8650): FieldCore_HopSteps[2].
 extern "C" void __cdecl FieldCore_HopRise(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if (s->step_frames == 0) {
         s->step_x = 0;
-        Cur()->step_z = 0;
+        rv::Current<records::SpriteObject>()->step_z = 0;
         S()[3] = 3;
     } else {
         s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     }
-    s = Cur();
-    s->step_y = static_cast<U>(s->step_y) + ULong(Bytes(s) + 0x20);
+    s = rv::Current<records::SpriteObject>();
+    s->step_y = static_cast<U>(s->step_y) + ULong(rv::Bytes(s) + 0x20);
     StepTick();
-    s = Cur();
-    if (Bytes(s)[5] == 0) SH_CALL(MapView_SetElevation)(SWord(Bytes(s) + 0x3E));
+    s = rv::Current<records::SpriteObject>();
+    if (rv::Bytes(s)[5] == 0) SH_CALL(MapView_SetElevation)(SWord(rv::Bytes(s) + 0x3E));
     ScriptTick();
 }
 
 // original 0x525B90 (PSX twin 0x801B86EC): FieldCore_HopSteps[3].
 extern "C" void __cdecl FieldCore_HopFall(void) {
-    records::SpriteObject* s = Cur();
-    s->step_y = static_cast<U>(s->step_y) + ULong(Bytes(s) + 0x20);
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
+    s->step_y = static_cast<U>(s->step_y) + ULong(rv::Bytes(s) + 0x20);
     StepTick();
-    s = Cur();
+    s = rv::Current<records::SpriteObject>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
-    s = Cur();   // ecx
-    if (static_cast<short>(ground) > SWord(Bytes(s) + 0x3E)) {
-        SetWord(Bytes(s) + 0x3E, static_cast<unsigned>(ground));
-        s = Cur();
+    s = rv::Current<records::SpriteObject>();   // ecx
+    if (static_cast<short>(ground) > SWord(rv::Bytes(s) + 0x3E)) {
+        SetWord(rv::Bytes(s) + 0x3E, static_cast<unsigned>(ground));
+        s = rv::Current<records::SpriteObject>();
         if (s->step_y < -0x80)
             Animate(static_cast<unsigned char>((s->direction >> 1) + 0x34));
         else
             Animate(s->direction == 3 ? 0x38 : 0x39);
-        Cur()->step_y = 0;
+        rv::Current<records::SpriteObject>()->step_y = 0;
         SetULong(S() + 0x20, 0);
         S()[3] = 4;
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
     }
-    if (Bytes(s)[5] == 0 && ((static_cast<unsigned>(Field_ScriptFlags2) | Field_ScriptFlags) & 8) == 0)
-        SH_CALL(MapView_SetElevation)(SWord(Bytes(s) + 0x3E));
+    if (rv::Bytes(s)[5] == 0 && ((static_cast<unsigned>(Field_ScriptFlags2) | Field_ScriptFlags) & 8) == 0)
+        SH_CALL(MapView_SetElevation)(SWord(rv::Bytes(s) + 0x3E));
     ScriptTick();
 }
 
@@ -576,7 +574,7 @@ extern "C" void __cdecl FieldCore_HopFall(void) {
 extern "C" void __cdecl FieldCore_HopLand(void) {
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return;
     if (SH_CALL(Field_TileD0)() != 0) return;
-    Animate(Cur()->direction);
+    Animate(rv::Current<records::SpriteObject>()->direction);
     F()[0x137] = 0;
     BackToState1();
 }
@@ -606,7 +604,7 @@ extern "C" void __cdecl FieldCore_UpBegin(void) {
 // original 0x525CF0: FieldCore_UpSteps[1].
 extern "C" void __cdecl FieldCore_UpOut(void) {
     SetWord(S() + 0x3E, Word(S() + 0x3E) + 0x10u);
-    records::SpriteObject* const s = Cur();
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     if (static_cast<int>(SWord(S() + 0x3E)) > static_cast<int>(static_cast<short>(ground)) + 0x200) Field_Request = 5;
     ScriptTick();
@@ -614,20 +612,20 @@ extern "C" void __cdecl FieldCore_UpOut(void) {
 
 // original 0x525D40: FieldCore_UpSteps[2].
 extern "C" void __cdecl FieldCore_UpArrive(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     SetWord(S() + 0x3E, static_cast<unsigned>(ground) - 0x200u);
-    s = Cur();
+    s = rv::Current<records::SpriteObject>();
     s->x = static_cast<U>(s->x) + ((0u - JumpStepX(s->direction) * ((s->reach & 0xFF) + 1)) << 5);
-    s = Cur();
+    s = rv::Current<records::SpriteObject>();
     s->z = static_cast<U>(s->z) + ((0u - JumpStepZ(s->direction) * ((s->reach & 0xFF) + 1)) << 5);
-    Animate(Cur()->direction == 7 ? 0x3C : 0x3D);
-    s = Cur();
-    if (Bytes(s)[5] != 0) {
+    Animate(rv::Current<records::SpriteObject>()->direction == 7 ? 0x3C : 0x3D);
+    s = rv::Current<records::SpriteObject>();
+    if (rv::Bytes(s)[5] != 0) {
         ShadeBegin(4, 3);
         return;
     }
-    Bytes(s)[4] = 4;
+    rv::Bytes(s)[4] = 4;
 }
 
 // original 0x525E30: FieldCore_UpSteps[4].
@@ -635,7 +633,7 @@ extern "C" void __cdecl FieldCore_UpIn(void) {
     SetWord(S() + 0x3E, Word(S() + 0x3E) + 0x10u);
     const long ground = GroundAt(EventLeader_PendingX, EventLeader_PendingZ);
     const int stop = static_cast<int>(static_cast<short>(ground)) -
-                     static_cast<int>(SWord(At(at::kTargetOffsets + State()->char_id * 2u)));
+                     static_cast<int>(SWord(At(at::kTargetOffsets + rv::As<records::PartyMember>(F())->char_id * 2u)));
     if (static_cast<int>(SWord(S() + 0x3E)) >= stop) {
         SH_AT(void (__cdecl*)(), at::kUpLanded)();
         S()[4] = static_cast<unsigned char>(S()[4] + 1);
@@ -691,30 +689,30 @@ extern "C" void __cdecl FieldCore_DownOut(void) {
 
 // original 0x526000: FieldCore_DownSteps[6].
 extern "C" void __cdecl FieldCore_DownArrive(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     SetWord(S() + 0x3E, static_cast<unsigned>(ground) + 0x200u);
-    Animate(Cur()->direction == 3 ? 0x3C : 0x3D);
-    s = Cur();
-    if (Bytes(s)[5] != 0) {
+    Animate(rv::Current<records::SpriteObject>()->direction == 3 ? 0x3C : 0x3D);
+    s = rv::Current<records::SpriteObject>();
+    if (rv::Bytes(s)[5] != 0) {
         ShadeBegin(4, 7);
         return;
     }
-    Bytes(s)[4] = 8;
+    rv::Bytes(s)[4] = 8;
 }
 
 // original 0x5260A0: FieldCore_DownSteps[8].
 extern "C" void __cdecl FieldCore_DownIn(void) {
     SetWord(S() + 0x3E, Word(S() + 0x3E) - 0x10u);
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
-    s = Cur();
-    if (SWord(Bytes(s) + 0x3E) < static_cast<short>(ground)) {
+    s = rv::Current<records::SpriteObject>();
+    if (SWord(rv::Bytes(s) + 0x3E) < static_cast<short>(ground)) {
         const long again = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
         SetWord(S() + 0x3E, static_cast<unsigned>(again));
-        Cur()->step_frames = 2;
+        rv::Current<records::SpriteObject>()->step_frames = 2;
         S()[0xA] = 0;
-        Animate(Cur()->direction == 3 ? 7 : 1);
+        Animate(rv::Current<records::SpriteObject>()->direction == 3 ? 7 : 1);
         S()[4] = 9;
     }
     ScriptTick();
@@ -722,18 +720,18 @@ extern "C" void __cdecl FieldCore_DownIn(void) {
 
 // original 0x526120: FieldCore_DownSteps[9].
 extern "C" void __cdecl FieldCore_DownLand(void) {
-    Cur()->step_frames = static_cast<unsigned char>(Cur()->step_frames - 1);
-    records::SpriteObject* s = Cur();
+    rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames - 1);
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if (s->step_frames != 0) return;
-    Bytes(s)[0xA] = static_cast<unsigned char>(Bytes(s)[0xA] + 1);
-    s = Cur();
-    Animate(s->direction == 3 ? static_cast<unsigned char>(7 - Bytes(s)[0xA]) : static_cast<unsigned char>(Bytes(s)[0xA] + 1));
-    s = Cur();
-    if (Bytes(s)[0xA] != 4) {
+    rv::Bytes(s)[0xA] = static_cast<unsigned char>(rv::Bytes(s)[0xA] + 1);
+    s = rv::Current<records::SpriteObject>();
+    Animate(s->direction == 3 ? static_cast<unsigned char>(7 - rv::Bytes(s)[0xA]) : static_cast<unsigned char>(rv::Bytes(s)[0xA] + 1));
+    s = rv::Current<records::SpriteObject>();
+    if (rv::Bytes(s)[0xA] != 4) {
         s->step_frames = 2;
         return;
     }
-    if (Bytes(s)[5] == 0) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF7);
+    if (rv::Bytes(s)[5] == 0) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF7);
     s->step_frames = 0;
     S()[0xA] = 0;
     BackToState1();
@@ -757,22 +755,22 @@ extern "C" void __cdecl FieldCore_JumpExit(void) {
 
 // original 0x526200: FieldCore_JumpExitSteps[0].
 extern "C" void __cdecl FieldCore_JumpExitBegin(void) {
-    records::SpriteObject* const s = Cur();
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();
     LowByte(Field_ScriptFlags2) = static_cast<unsigned char>(LowByte(Field_ScriptFlags2) | 8);   // or byte ptr [0x905BA4], 8
     Animate(s->direction + 8u);
-    Cur()->step_frames = 0;
+    rv::Current<records::SpriteObject>()->step_frames = 0;
     S()[0xA] = 0;
     S()[3] = static_cast<unsigned char>(S()[3] + 1);
 }
 
 // original 0x526240: FieldCore_JumpExitSteps[1].
 extern "C" void __cdecl FieldCore_JumpExitOut(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if (s->step_frames == 0) {
-        Bytes(s)[0xA] = static_cast<unsigned char>(Bytes(s)[0xA] + 1);
+        rv::Bytes(s)[0xA] = static_cast<unsigned char>(rv::Bytes(s)[0xA] + 1);
         if (S()[0xA] == 3) Field_Request = 5;
         SH_CALL(Field_JumpStart)();
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
     }
     s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     StepTick();
@@ -781,30 +779,30 @@ extern "C" void __cdecl FieldCore_JumpExitOut(void) {
 
 // original 0x526280: FieldCore_JumpExitSteps[2].
 extern "C" void __cdecl FieldCore_JumpExitArrive(void) {
-    records::SpriteObject* s = Cur();
-    if (Bytes(s)[0x70] != 0) {
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
+    if (rv::Bytes(s)[0x70] != 0) {
         s->x = static_cast<U>(s->x) + ((0u - JumpStepX(s->direction) * 3u) << 5);
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
         s->z = static_cast<U>(s->z) + ((0u - JumpStepZ(s->direction) * 3u) << 5);
         S()[0xA] = 7;
     } else {
         s->x = static_cast<U>(s->x) + ((0u - JumpStepX(s->direction)) << 6);
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
         s->z = static_cast<U>(s->z) + ((0u - JumpStepZ(s->direction)) << 6);
         S()[0xA] = 5;
     }
-    Cur()->step_frames = 0;
-    s = Cur();
+    rv::Current<records::SpriteObject>()->step_frames = 0;
+    s = rv::Current<records::SpriteObject>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     SetWord(S() + 0x3E, static_cast<unsigned>(ground));
     F()[0x128] = 2;
-    Animate(Cur()->direction + 8u);
-    s = Cur();
-    if (Bytes(s)[5] != 0) {
+    Animate(rv::Current<records::SpriteObject>()->direction + 8u);
+    s = rv::Current<records::SpriteObject>();
+    if (rv::Bytes(s)[5] != 0) {
         ShadeBegin(3, 3);
         return;
     }
-    Bytes(s)[3] = 4;
+    rv::Bytes(s)[3] = 4;
 }
 
 // original 0x5263C0: FieldCore_JumpExitSteps[3].
@@ -814,24 +812,24 @@ extern "C" void __cdecl FieldCore_JumpExitShade(void) {
 
 // original 0x5263E0: FieldCore_JumpExitSteps[4].
 extern "C" void __cdecl FieldCore_JumpExitIn(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if (s->step_frames == 0) {
-        Bytes(s)[0xA] = static_cast<unsigned char>(Bytes(s)[0xA] - 1);
-        s = Cur();
-        if (Bytes(s)[0xA] == 0) {
-            if (Bytes(s)[5] == 0) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF7);
+        rv::Bytes(s)[0xA] = static_cast<unsigned char>(rv::Bytes(s)[0xA] - 1);
+        s = rv::Current<records::SpriteObject>();
+        if (rv::Bytes(s)[0xA] == 0) {
+            if (rv::Bytes(s)[5] == 0) Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & 0xFFF7);
             F()[0x128] = 3;
-            Cur()->step_x = 0;
-            Cur()->step_z = 0;
+            rv::Current<records::SpriteObject>()->step_x = 0;
+            rv::Current<records::SpriteObject>()->step_z = 0;
             F()[0x137] = 0;
             BackToState1();
-            Cur()->step_frames = 0;
+            rv::Current<records::SpriteObject>()->step_frames = 0;
             S()[0xA] = 0;
-            Animate(Cur()->direction);
+            Animate(rv::Current<records::SpriteObject>()->direction);
             return;
         }
         SH_CALL(Field_JumpStart)();
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
     }
     s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     StepTick();
@@ -851,36 +849,36 @@ extern "C" void __cdecl FieldCore_TileD0(void) {
 
 // original 0x5264C0: FieldCore_TileD0Steps[0].
 extern "C" void __cdecl FieldCore_TileD0Begin(void) {
-    Cur()->step_frames = 0;
-    records::SpriteObject* const s = Cur();
-    Bytes(s)[0xB] = s->direction;
+    rv::Current<records::SpriteObject>()->step_frames = 0;
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();
+    rv::Bytes(s)[0xB] = s->direction;
     F()[0x128] = 4;
     S()[3] = 1;
 }
 
 // original 0x5264F0: FieldCore_TileD0Steps[1].
 extern "C" void __cdecl FieldCore_TileD0Move(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if (s->step_frames == 0) {
         if (SH_CALL(AreaMap_CellsNone)(s->x, s->z, s->reach & 0xFF, 0xD0, 0) != 0) {
             // off the cells: the pace back to 3, the facing kept, state 1
             F()[0x128] = 3;
-            s = Cur();
-            s->direction = Bytes(s)[0xB];
-            Animate(Cur()->direction);
+            s = rv::Current<records::SpriteObject>();
+            s->direction = rv::Bytes(s)[0xB];
+            Animate(rv::Current<records::SpriteObject>()->direction);
             F()[0x137] = 0;
             BackToState1();
             return;
         }
         SH_CALL(FieldCore_TileD0Exit)();
         if (SH_CALL(FieldCore_TileD0Slope)() != 0) {
-            Animate(Cur()->direction);
+            Animate(rv::Current<records::SpriteObject>()->direction);
             S()[2] = 3;
             S()[3] = 0;
             return;
         }
         if (SH_CALL(Field_CellAhead)() == 0) {
-            Cur()->direction = static_cast<unsigned char>(Cur()->direction + 1);
+            rv::Current<records::SpriteObject>()->direction = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->direction + 1);
             SH_CALL(Field_CellAhead)();
         }
         switch (ULong(reinterpret_cast<const unsigned char*>(&Input_Held)) & 0xF000) {
@@ -896,7 +894,7 @@ extern "C" void __cdecl FieldCore_TileD0Move(void) {
         }
         Animate(S()[0xB] + 8u);
         SH_CALL(Field_JumpStart)();
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
     }
     s->step_frames = static_cast<unsigned char>(s->step_frames - 1);
     StepTick();
@@ -906,22 +904,22 @@ extern "C" void __cdecl FieldCore_TileD0Move(void) {
 // original 0x5266B0: called by FieldCore_TileD0Move - the way off the cells.
 extern "C" void __cdecl FieldCore_TileD0Exit(void) {
     for (unsigned i = 0; i < 8; ++i) {
-        records::SpriteObject* const s = Cur();
-        const unsigned d = (Bytes(s)[8] + i) & 7u;
+        records::SpriteObject* const s = rv::Current<records::SpriteObject>();
+        const unsigned d = (rv::Bytes(s)[8] + i) & 7u;
         const U n = (s->reach & 0xFF) + 1;
         const U x = DirStepX(d) * n + static_cast<U>(s->x);
         const U z = DirStepZ(d) * n + static_cast<U>(s->z);
-        if (SH_CALL(Field_WayBlocked)(static_cast<long>(x), static_cast<long>(z), Bytes(s)[0x70], SWord(Bytes(s) + 0x3E)) != 0) continue;
-        if (SH_CALL(AreaMap_CellsNone)(static_cast<long>(x), static_cast<long>(z), Cur()->reach & 0xFF, 0xD0, 0) != 0) {
-            Cur()->direction = static_cast<unsigned char>(d);
+        if (SH_CALL(Field_WayBlocked)(static_cast<long>(x), static_cast<long>(z), rv::Bytes(s)[0x70], SWord(rv::Bytes(s) + 0x3E)) != 0) continue;
+        if (SH_CALL(AreaMap_CellsNone)(static_cast<long>(x), static_cast<long>(z), rv::Current<records::SpriteObject>()->reach & 0xFF, 0xD0, 0) != 0) {
+            rv::Current<records::SpriteObject>()->direction = static_cast<unsigned char>(d);
             return;
         }
     }
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     unsigned char best_direction = s->direction;
-    short best = SWord(Bytes(s) + 0x3E);
+    short best = SWord(rv::Bytes(s) + 0x3E);
     for (unsigned i = 0; i < 4; ++i) {
-        if (i != 0) s = Cur();
+        if (i != 0) s = rv::Current<records::SpriteObject>();
         const unsigned d = i * 2 + 1;
         const U x = DirStepX(d) + static_cast<U>(s->x);
         const U z = DirStepZ(d) + static_cast<U>(s->z);
@@ -931,7 +929,7 @@ extern "C" void __cdecl FieldCore_TileD0Exit(void) {
             best_direction = static_cast<unsigned char>(d);
         }
     }
-    Cur()->direction = best_direction;
+    rv::Current<records::SpriteObject>()->direction = best_direction;
 }
 
 // original 0x526820: called by FieldCore_TileD0Exit - the ground at (x, z), or
@@ -957,11 +955,11 @@ bool Steep(U x, U z, unsigned direction) {
 
 // original 0x526880: called by FieldCore_TileD0Move - a steep edge ahead.
 extern "C" unsigned char __cdecl FieldCore_TileD0Slope(void) {
-    records::SpriteObject* const s = Cur();
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();
     const unsigned char direction = s->direction;
-    if (Bytes(s)[0x70] == 0) {
+    if (rv::Bytes(s)[0x70] == 0) {
         if (direction == 3) {
-            if (Word(Bytes(s) + 0x34) != 0) return 0;
+            if (Word(rv::Bytes(s) + 0x34) != 0) return 0;
             U z = static_cast<U>(s->z) & 0xFFFF0000u;
             const U x = static_cast<U>(s->x) + 0x8000;
             if (!Steep(x, z, 3)) return 0;
@@ -970,7 +968,7 @@ extern "C" unsigned char __cdecl FieldCore_TileD0Slope(void) {
             return Steep(x, z, 3) ? 1 : 0;
         }
         if (direction == 5) {
-            if (Word(Bytes(s) + 0x38) != 0) return 0;
+            if (Word(rv::Bytes(s) + 0x38) != 0) return 0;
             const U z = static_cast<U>(s->z) + 0x8000;
             U x = static_cast<U>(s->x) & 0xFFFF0000u;
             if (!Steep(x, z, 5)) return 0;
@@ -981,7 +979,7 @@ extern "C" unsigned char __cdecl FieldCore_TileD0Slope(void) {
         return 0;
     }
     if (direction == 3) {
-        if (Word(Bytes(s) + 0x34) == 0) return 0;
+        if (Word(rv::Bytes(s) + 0x34) == 0) return 0;
         U z = static_cast<U>(s->z) & 0xFFFF0000u;
         const U x = static_cast<U>(s->x) + 0x10000;
         if (!Steep(x, z, 3)) return 0;
@@ -992,7 +990,7 @@ extern "C" unsigned char __cdecl FieldCore_TileD0Slope(void) {
         return Steep(x, z, 3) ? 1 : 0;
     }
     if (direction == 5) {
-        if (Word(Bytes(s) + 0x38) == 0) return 0;
+        if (Word(rv::Bytes(s) + 0x38) == 0) return 0;
         const U z = static_cast<U>(s->z) + 0x10000;
         U x = static_cast<U>(s->x) & 0xFFFF0000u;
         if (!Steep(x, z, 5)) return 0;
@@ -1020,21 +1018,21 @@ extern "C" void __cdecl FieldCore_FallBegin(void) {
     SH_CALL(Sound_PlayEffect)(0x107);
     unsigned char* const s = S();
     SH_CALL(Area_LinkAt)(Word(s + 0x36), Word(s + 0x3A));
-    Cur()->step_y = 0;
-    Animate(Cur()->direction);
+    rv::Current<records::SpriteObject>()->step_y = 0;
+    Animate(rv::Current<records::SpriteObject>()->direction);
     S()[3] = 1;
 }
 
 // original 0x526B00: FieldCore_FallSteps[1].
 extern "C" void __cdecl FieldCore_FallSpin(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     s->step_y = static_cast<U>(s->step_y) - 8;
-    s = Cur();
-    SetWord(Bytes(s) + 0x3E, Word(Bytes(s) + 0x3E) + Word(Bytes(s) + 0x14));
-    s = Cur();
+    s = rv::Current<records::SpriteObject>();
+    SetWord(rv::Bytes(s) + 0x3E, Word(rv::Bytes(s) + 0x3E) + Word(rv::Bytes(s) + 0x14));
+    s = rv::Current<records::SpriteObject>();
     s->direction = static_cast<unsigned char>((s->direction + 1) & 7);
-    Animate(Cur()->direction);
-    s = Cur();
+    Animate(rv::Current<records::SpriteObject>()->direction);
+    s = rv::Current<records::SpriteObject>();
     const long ground = GroundAt(static_cast<U>(s->x), static_cast<U>(s->z));
     if (static_cast<int>(static_cast<short>(ground)) - static_cast<int>(SWord(S() + 0x3E)) > 0x100 && Field_Request != 5) {
         B(at::kScriptFlags2High) = static_cast<unsigned char>(B(at::kScriptFlags2High) | 2);
@@ -1051,32 +1049,32 @@ extern "C" void __cdecl FieldCore_Recoil(void) { Run("FieldCore_Recoil", FieldCo
 
 // original 0x526BA0 (PSX twin 0x801BA208): FieldCore_RecoilSteps[0].
 extern "C" void __cdecl FieldCore_RecoilBegin(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if (s->draw_mode != 0) {
-        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + Bytes(s)[5] * 64u)), 0);
-        Cur()->flags = static_cast<unsigned char>(Cur()->flags & 0xDF);
-        Cur()->draw_mode = 0;
-        Cur()->shade[0] = 0;
-        Cur()->shade[1] = 0;
-        Cur()->shade[2] = 0;
-        s = Cur();
+        SH_CALL(Sprite_LoadPalette)(reinterpret_cast<unsigned short*>(At(Gfx_ClutStripSource_addr + 0x1e00 + rv::Bytes(s)[5] * 64u)), 0);
+        rv::Current<records::SpriteObject>()->flags = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->flags & 0xDF);
+        rv::Current<records::SpriteObject>()->draw_mode = 0;
+        rv::Current<records::SpriteObject>()->shade[0] = 0;
+        rv::Current<records::SpriteObject>()->shade[1] = 0;
+        rv::Current<records::SpriteObject>()->shade[2] = 0;
+        s = rv::Current<records::SpriteObject>();
     }
     s->flags = static_cast<unsigned char>(s->flags & 0xBF);
-    s = Cur();
+    s = rv::Current<records::SpriteObject>();
     const U x = static_cast<U>(s->x);
     if ((x & 0x7FFF) != 0 || (static_cast<U>(s->z) & 0x7FFF) != 0) {
         s->x = (x + 0x4800) & 0xFFFF8000u;
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
         s->z = (static_cast<U>(s->z) + 0x4800) & 0xFFFF8000u;
-        s = Cur();
+        s = rv::Current<records::SpriteObject>();
         const long slope = SlopeAt(static_cast<U>(s->x), static_cast<U>(s->z), s->direction);
         SetWord(S() + 0x3E, static_cast<unsigned>(slope));
-        s = Cur();
-        if (Bytes(s)[5] == 0) {
+        s = rv::Current<records::SpriteObject>();
+        if (rv::Bytes(s)[5] == 0) {
             Field_Kind2X = s->x;
             Field_Kind2Z = s->z;
             SH_CALL(Field_ViewReset)();
-            s = Cur();
+            s = rv::Current<records::SpriteObject>();
         }
     }
     const unsigned char facing = s->direction;
@@ -1085,37 +1083,37 @@ extern "C" void __cdecl FieldCore_RecoilBegin(void) {
     if (ahead != 1 && ahead != 3) {
         SH_CALL(Sprite_ClearSteps)();
     } else if (SH_CALL(Field_LeaderPushObjects)() != 0) {
-        Cur()->step_frames = 0;
+        rv::Current<records::SpriteObject>()->step_frames = 0;
         SH_CALL(Sprite_ClearSteps)();
     } else {
         SH_CALL(Field_JumpStart)();
-        Cur()->step_frames = static_cast<unsigned char>(Cur()->step_frames - 1);
+        rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames - 1);
         SH_CALL(Sprite_ApplyVelocity)();
     }
     SH_AT(void (__cdecl*)(unsigned char), at::kRecoilFace)(S()[0xB]);
-    Cur()->direction = facing;
+    rv::Current<records::SpriteObject>()->direction = facing;
     S()[0xA] = 8;
-    Animate(Cur()->direction);
+    Animate(rv::Current<records::SpriteObject>()->direction);
     SH_CALL(Sound_PlayEffect)(0x108);
     S()[3] = static_cast<unsigned char>(S()[3] + 1);
 }
 
 // original 0x526D30 (PSX twin 0x801BA470): FieldCore_RecoilSteps[1].
 extern "C" void __cdecl FieldCore_RecoilBlink(void) {
-    records::SpriteObject* s = Cur();
+    records::SpriteObject* s = rv::Current<records::SpriteObject>();
     if (s->step_frames != 0) {
         SH_CALL(Sprite_ApplyVelocity)();
-        Cur()->step_frames = static_cast<unsigned char>(Cur()->step_frames - 1);
-        s = Cur();
+        rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames - 1);
+        s = rv::Current<records::SpriteObject>();
         if (s->step_frames == 0) {
             SH_CALL(Sprite_ClearSteps)();
-            s = Cur();
+            s = rv::Current<records::SpriteObject>();
         }
     }
-    if (Bytes(s)[0xA] != 0) {
-        Bytes(s)[0xA] = static_cast<unsigned char>(Bytes(s)[0xA] - 1);
-        s = Cur();
-        if (Bytes(s)[0xA] & 1)
+    if (rv::Bytes(s)[0xA] != 0) {
+        rv::Bytes(s)[0xA] = static_cast<unsigned char>(rv::Bytes(s)[0xA] - 1);
+        s = rv::Current<records::SpriteObject>();
+        if (rv::Bytes(s)[0xA] & 1)
             s->flags = static_cast<unsigned char>(s->flags & 0xBF);
         else
             s->flags = static_cast<unsigned char>(s->flags | 0x40);

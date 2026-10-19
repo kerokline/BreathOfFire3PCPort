@@ -53,6 +53,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_e1_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/widescreen.h"
@@ -81,10 +82,6 @@ unsigned char* Object(unsigned i) { return Sprite_Objects + i * at::kSpriteStrid
 
 // The typed views (src/game/records.h): in the leader states Sprite_Current
 // is an ObjTrio record, and Field_State always is.
-records::PartyMember* Self() { return reinterpret_cast<records::PartyMember*>(Sc()); }
-unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
-records::PartyMember* Party(unsigned i) { return reinterpret_cast<records::PartyMember*>(Member(i)); }
 short S16(std::uint32_t v) { return static_cast<short>(v); }
 
 // `cdq / xor / sub`: the absolute value with the original's wrap (the most
@@ -366,10 +363,10 @@ extern "C" void __cdecl Field_FormActionState(void) {
         CodeAt(Field_FormActions_addr, set, "Field_FormActionState")();
     }
     if (Fs()[0x137] != 0) return;
-    SH_CALL(Sprite_EnsureAnimation)(Self()->direction);
-    Self()->step_frames = 0;
+    SH_CALL(Sprite_EnsureAnimation)(rv::As<records::PartyMember>(Sc())->direction);
+    rv::As<records::PartyMember>(Sc())->step_frames = 0;
     SH_CALL(Member_ClearState)(0);
-    Self()->state[0] = 1;
+    rv::As<records::PartyMember>(Sc())->state[0] = 1;
     Sc()[0xB] = 0;
     SH_CALL(Field_LeaderStand)();
 }
@@ -395,46 +392,46 @@ extern "C" void __cdecl Field_PassageTrigger(void) {
     object[0x86] = fs[0x12A];
     SetWord(object + 0x88, Word(fs + 0x12C));
     if (object[0x86] != 0xFF) SH_AT(void (__cdecl*)(unsigned char*), at::kObjectTrigger)(object);
-    Self()->state[1] = 2;
+    rv::As<records::PartyMember>(Sc())->state[1] = 2;
 }
 
 // original 0x52F950: leader state 8, the jump - jmp Field_JumpSteps[+2].
-extern "C" void __cdecl Field_JumpState(void) { CodeAt(Field_JumpSteps_addr, Self()->state[1], "Field_JumpState")(); }
+extern "C" void __cdecl Field_JumpState(void) { CodeAt(Field_JumpSteps_addr, rv::As<records::PartyMember>(Sc())->state[1], "Field_JumpState")(); }
 
 // original 0x52F970: jump step 0 - 0x535FC0 (the first pose), step 2.
 extern "C" void __cdecl Field_JumpBegin(void) {
     Fe2(at::kJumpPose);
-    Self()->state[1] = 2;
+    rv::As<records::PartyMember>(Sc())->state[1] = 2;
 }
 
 // original 0x52F980: jump step 1 - jmp Field_JumpOutSteps[+3].
-extern "C" void __cdecl Field_JumpOut(void) { CodeAt(Field_JumpOutSteps_addr, Self()->state[2], "Field_JumpOut")(); }
+extern "C" void __cdecl Field_JumpOut(void) { CodeAt(Field_JumpOutSteps_addr, rv::As<records::PartyMember>(Sc())->state[2], "Field_JumpOut")(); }
 
 // original 0x52F9A0: jump-out 0 - 0x535FE0 (Field_JumpSetUp's caller); with
 // +5 0 and neither script flag's bit 3, Field_JumpCamera; +3 = 1.
 extern "C" void __cdecl Field_JumpOut0(void) {
     Fe2(at::kJumpSetUp);
-    if (Self()->member == 0 && !ScriptFlag8()) SH_CALL(Field_JumpCamera)();
-    Self()->state[2] = 1;
+    if (rv::As<records::PartyMember>(Sc())->member == 0 && !ScriptFlag8()) SH_CALL(Field_JumpCamera)();
+    rv::As<records::PartyMember>(Sc())->state[2] = 1;
 }
 
 // original 0x52F9E0 / 0x52FA00 / 0x52FA20: jump-out 1..3 - FE2's step, and
 // when it answers al not 0, +3 one on.
 extern "C" void __cdecl Field_JumpOut1(void) {
-    if (Fe2Al(at::kJumpOut1)) Self()->state[2] = 2;
+    if (Fe2Al(at::kJumpOut1)) rv::As<records::PartyMember>(Sc())->state[2] = 2;
 }
 extern "C" void __cdecl Field_JumpOut2(void) {
-    if (Fe2Al(at::kJumpOut2)) Self()->state[2] = 3;
+    if (Fe2Al(at::kJumpOut2)) rv::As<records::PartyMember>(Sc())->state[2] = 3;
 }
 extern "C" void __cdecl Field_JumpOut3(void) {
-    if (Fe2Al(at::kJumpOut3)) Self()->state[2] = 4;
+    if (Fe2Al(at::kJumpOut3)) rv::As<records::PartyMember>(Sc())->state[2] = 4;
 }
 
 // original 0x52FA40: jump-out 4 - 0x536170; when al: step 2, +3 = 0.
 extern "C" void __cdecl Field_JumpOut4(void) {
     if (!Fe2Al(at::kJumpOut4)) return;
-    Self()->state[1] = 2;
-    Self()->state[2] = 0;
+    rv::As<records::PartyMember>(Sc())->state[1] = 2;
+    rv::As<records::PartyMember>(Sc())->state[2] = 0;
 }
 
 // original 0x52FA60: jump step 2 - by Field_InputHeld: bit 12 0x5364D0, else
@@ -452,25 +449,25 @@ extern "C" void __cdecl Field_JumpAir(void) {
 }
 
 // original 0x52FAC0: jump step 3 - jmp Field_JumpInSteps[+3].
-extern "C" void __cdecl Field_JumpIn(void) { CodeAt(Field_JumpInSteps_addr, Self()->state[2], "Field_JumpIn")(); }
+extern "C" void __cdecl Field_JumpIn(void) { CodeAt(Field_JumpInSteps_addr, rv::As<records::PartyMember>(Sc())->state[2], "Field_JumpIn")(); }
 
 // original 0x52FAE0: jump-in 0 - 0x536290, +3 = 1.
 extern "C" void __cdecl Field_JumpIn0(void) {
     Fe2(at::kJumpIn0);
-    Self()->state[2] = 1;
+    rv::As<records::PartyMember>(Sc())->state[2] = 1;
 }
 
 // original 0x52FAF0: jump-in 1 - 0x5362D0; when al, +3 = 2.
 extern "C" void __cdecl Field_JumpIn1(void) {
-    if (Fe2Al(at::kJumpIn1)) Self()->state[2] = 2;
+    if (Fe2Al(at::kJumpIn1)) rv::As<records::PartyMember>(Sc())->state[2] = 2;
 }
 
 // original 0x52FB10: jump-in 2 - 0x5363C0; when al: with +5 0 and neither
 // script flag's bit 3, Field_JumpCamera; +3 = 3.
 extern "C" void __cdecl Field_JumpIn2(void) {
     if (!Fe2Al(at::kJumpIn2)) return;
-    if (Self()->member == 0 && !ScriptFlag8()) SH_CALL(Field_JumpCamera)();
-    Self()->state[2] = 3;
+    if (rv::As<records::PartyMember>(Sc())->member == 0 && !ScriptFlag8()) SH_CALL(Field_JumpCamera)();
+    rv::As<records::PartyMember>(Sc())->state[2] = 3;
 }
 
 // original 0x52FB50: jump-in 3 - a tail jump to 0x536440.
@@ -479,7 +476,7 @@ extern "C" void __cdecl Field_JumpIn3(void) { Fe2(at::kJumpIn3); }
 // original 0x52FBB0: leader state 11 - the step of Field_ContentSteps[+2],
 // then Sprite_ScriptTick (a tail jump).
 extern "C" void __cdecl Field_ContentState(void) {
-    CodeAt(Field_ContentSteps_addr, Self()->state[1], "Field_ContentState")();
+    CodeAt(Field_ContentSteps_addr, rv::As<records::PartyMember>(Sc())->state[1], "Field_ContentState")();
     SH_CALL(Sprite_ScriptTick)();
 }
 
@@ -533,7 +530,7 @@ extern "C" void __cdecl Field_ContentTake(void) {
             Sprite_Current = kept;
         }
     }
-    records::PartyMember* const sc = Self();
+    records::PartyMember* const sc = rv::As<records::PartyMember>(Sc());
     Field_Request = 2;
     sc->state[1] = static_cast<unsigned char>(sc->state[1] + 1);
 }
@@ -555,21 +552,21 @@ extern "C" void __cdecl Field_ContentEnd(void) {
             Sprite_Current = kept;
         }
     } else {
-        records::SpriteObject* const object = reinterpret_cast<records::SpriteObject*>(ContentObject());
-        if (Bytes(object)[0xB] & 1) {
+        records::SpriteObject* const object = rv::As<records::SpriteObject>(ContentObject());
+        if (rv::Bytes(object)[0xB] & 1) {
             object->flags = 0;
-        } else if (Word(Bytes(object) + 0x34) == 0 && Word(Bytes(object) + 0x38) == 0) {
-            SH_CALL(AreaMap_SetByte)(Word(Bytes(object) + 0x36), Word(Bytes(object) + 0x3A), 0x10);
+        } else if (Word(rv::Bytes(object) + 0x34) == 0 && Word(rv::Bytes(object) + 0x38) == 0) {
+            SH_CALL(AreaMap_SetByte)(Word(rv::Bytes(object) + 0x36), Word(rv::Bytes(object) + 0x3A), 0x10);
         }
     }
     if (Field_InputFlags & 0x20) {
-        Self()->state[0] = 0xC;
-        Self()->state[1] = 0;
+        rv::As<records::PartyMember>(Sc())->state[0] = 0xC;
+        rv::As<records::PartyMember>(Sc())->state[1] = 0;
         return;
     }
-    SH_CALL(Sprite_EnsureAnimation)(Self()->direction);
-    Self()->state[0] = 1;
-    Self()->state[1] = 0;
+    SH_CALL(Sprite_EnsureAnimation)(rv::As<records::PartyMember>(Sc())->direction);
+    rv::As<records::PartyMember>(Sc())->state[0] = 1;
+    rv::As<records::PartyMember>(Sc())->state[1] = 0;
 }
 
 // original 0x52FE90: leader state 12 - in area 0x68 Area104_LeaderRun, else
@@ -808,13 +805,13 @@ extern "C" void __cdecl Party_PlaceAtSlots(void) {
     const unsigned n = Field_MemberCount;
     for (unsigned i = 0; i < n; ++i) {
         SetLong(Member(i) + 0x34, L(at::kSlotPositions + 8 * i));
-        Party(i)->z = L(at::kSlotPositions + 8 * i + 4);
+        rv::As<records::PartyMember>(Member(i))->z = L(at::kSlotPositions + 8 * i + 4);
     }
     unsigned k = 0;
-    while (k < n && Party(k)->char_id != Cond_Flags[0xd2]) ++k;
+    while (k < n && rv::As<records::PartyMember>(Member(k))->char_id != Cond_Flags[0xd2]) ++k;
     if (BattleTurnSteps_MusicFlags & 2) return;
     MoveScript_F3Divisor = 0x20;
-    const std::int32_t x = Party(k)->x, z = Party(k)->z;
+    const std::int32_t x = rv::As<records::PartyMember>(Member(k))->x, z = rv::As<records::PartyMember>(Member(k))->z;
     const std::int32_t dx = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2X) - static_cast<std::uint32_t>(x)));
     Field_Kind2X = x;
     const std::int32_t dz = Abs32(static_cast<std::int32_t>(static_cast<std::uint32_t>(Field_Kind2Z) - static_cast<std::uint32_t>(z)));
@@ -865,17 +862,17 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     unsigned char count = Field_MemberCount;
     const unsigned n = count;
     if (n > 0) {
-        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), Party(i)->x);
-        for (unsigned j = 0; j < n; ++j) Party(j)->x = L(at::kCellX + 4 * ListSlot(Party(j)->char_id, n));
-        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), Party(i)->z);
+        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), rv::As<records::PartyMember>(Member(i))->x);
+        for (unsigned j = 0; j < n; ++j) rv::As<records::PartyMember>(Member(j))->x = L(at::kCellX + 4 * ListSlot(rv::As<records::PartyMember>(Member(j))->char_id, n));
+        for (unsigned i = 0; i < n; ++i) SetLong(At(at::kCellX + 4 * i), rv::As<records::PartyMember>(Member(i))->z);
         unsigned members = n;
         for (unsigned j = 0; j < members; ++j) {
-            records::PartyMember* const m = reinterpret_cast<records::PartyMember*>(Member(j));
+            records::PartyMember* const m = rv::As<records::PartyMember>(Member(j));
             const std::int32_t z = L(at::kCellX + 4 * ListSlot(m->char_id, members));
             m->z = z;
             const long ground = SH_CALL(MapView_GroundAt)(m->x, z);
             count = Field_MemberCount;
-            SetWord(Bytes(m) + 0x3E, static_cast<std::uint32_t>(ground));
+            SetWord(rv::Bytes(m) + 0x3E, static_cast<std::uint32_t>(ground));
             members = count;
         }
     }
@@ -887,17 +884,17 @@ extern "C" void __cdecl Party_PlacesByList(void) {
     if (count == 0) return;
     unsigned i = 0;
     do {
-        records::PartyMember* const m = reinterpret_cast<records::PartyMember*>(Member(i));
-        Field_State = Bytes(m);
-        Sprite_Current = Bytes(m);
+        records::PartyMember* const m = rv::As<records::PartyMember>(Member(i));
+        Field_State = rv::Bytes(m);
+        Sprite_Current = rv::Bytes(m);
         m->direction = B(at::kFormationAnims + B(at::kFormation));
-        Self()->ot_slot = 6;
-        if (Bytes(m) != ObjTrio) {
+        rv::As<records::PartyMember>(Sc())->ot_slot = 6;
+        if (rv::Bytes(m) != ObjTrio) {
             Sc()[7] = 0;
-            Sc()[6] = static_cast<unsigned char>(Self()->member - 1);
+            Sc()[6] = static_cast<unsigned char>(rv::As<records::PartyMember>(Sc())->member - 1);
         }
         SH_CALL(Field_MemberTimers)();
-        SH_CALL(Sprite_SetAnimation)(Self()->direction);
+        SH_CALL(Sprite_SetAnimation)(rv::As<records::PartyMember>(Sc())->direction);
     } while (++i < Field_MemberCount);
 }
 
@@ -907,7 +904,7 @@ extern "C" void __cdecl Party_PlacesByList(void) {
 // +0x70. Called by Field_PartySetUp with Field_ScriptFlags bit 11.
 extern "C" void __cdecl Field_LeaderPlaceOffset(long x, long z, unsigned direction) {
     const unsigned char n = Field_MemberCount;
-    records::PartyMember* const leader = reinterpret_cast<records::PartyMember*>(ObjTrio);
+    records::PartyMember* const leader = rv::As<records::PartyMember>(ObjTrio);
     if (n <= 1) {
         leader->x = static_cast<std::int32_t>(x);
         leader->z = static_cast<std::int32_t>(z);
@@ -919,7 +916,7 @@ extern "C" void __cdecl Field_LeaderPlaceOffset(long x, long z, unsigned directi
     const auto oz = static_cast<std::uint32_t>(L(at::kPlaceOffsets + e * 8 + 4));
     leader->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(x) + ox * 2);
     leader->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(z) + oz * 2);
-    if (Bytes(leader)[0x70] != 0) {
+    if (rv::Bytes(leader)[0x70] != 0) {
         leader->x = static_cast<std::int32_t>(static_cast<std::uint32_t>(leader->x) + ox);
         leader->z = static_cast<std::int32_t>(static_cast<std::uint32_t>(leader->z) + oz);
     }
@@ -951,15 +948,15 @@ extern "C" void __cdecl Field_PendingJumpKind4(void) { SH_CALL(Field_PendingRele
 // Field_State +0x138 bit 1 cleared.
 extern "C" void __cdecl Field_PendingDrop(void) {
     if (!SH_CALL(Field_PendingNext)()) return;
-    SH_CALL(Sprite_EnsureAnimation)(Self()->direction == 3 ? 0x3A : 0x3B);
-    Self()->flags = static_cast<unsigned char>(Self()->flags & 0xBF);
-    const long ground = SH_CALL(MapView_GroundAt)(Self()->x, Self()->z);
+    SH_CALL(Sprite_EnsureAnimation)(rv::As<records::PartyMember>(Sc())->direction == 3 ? 0x3A : 0x3B);
+    rv::As<records::PartyMember>(Sc())->flags = static_cast<unsigned char>(rv::As<records::PartyMember>(Sc())->flags & 0xBF);
+    const long ground = SH_CALL(MapView_GroundAt)(rv::As<records::PartyMember>(Sc())->x, rv::As<records::PartyMember>(Sc())->z);
     SetWord(Sc() + 0x3E, static_cast<std::uint32_t>(ground) + 0x7D0);
     SH_CALL(Sprite_ClearSteps)();
     SetLong(Sc() + 0x20, -8);
-    Self()->state[0] = 2;
-    Self()->state[1] = 3;
-    Self()->state[2] = 3;
+    rv::As<records::PartyMember>(Sc())->state[0] = 2;
+    rv::As<records::PartyMember>(Sc())->state[1] = 3;
+    rv::As<records::PartyMember>(Sc())->state[2] = 3;
     Fs()[0x138] = static_cast<unsigned char>(Fs()[0x138] & 0xFD);
 }
 
@@ -1017,14 +1014,14 @@ extern "C" unsigned char __cdecl Field_PendingRelease(unsigned kind) {
         Field_ScriptFlags2 = static_cast<unsigned short>(Field_ScriptFlags2 & ~bit(n));
     }
     if (!(flags & bit(n))) {
-        records::PartyMember* const m = reinterpret_cast<records::PartyMember*>(Member(n));
+        records::PartyMember* const m = rv::As<records::PartyMember>(Member(n));
         m->flags = static_cast<unsigned char>(m->flags & 0xBF);
         const std::uint32_t r = at::kPendingStates + (kind & 0xFFu) * 4;
         m->state[0] = B(r);
         m->state[1] = B(r + 1);
         m->state[2] = B(r + 2);
         m->state[3] = B(r + 3);
-        Bytes(m)[0x138] = static_cast<unsigned char>(Bytes(m)[0x138] & 0xFD);
+        rv::Bytes(m)[0x138] = static_cast<unsigned char>(rv::Bytes(m)[0x138] & 0xFD);
     }
     const auto next = static_cast<unsigned char>(n + 1);
     EventLeader_PendingCount = next;

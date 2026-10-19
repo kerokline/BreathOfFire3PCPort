@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/event_objs_callees.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 
@@ -77,9 +78,6 @@ void SetLong(unsigned char* p, std::int32_t v) { std::memcpy(p, &v, sizeof v); }
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record.
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static const records::SpriteObject* Spr(const unsigned char* p) { return reinterpret_cast<const records::SpriteObject*>(p); }
 std::int32_t Add(std::int32_t a, std::int32_t b) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(a) + static_cast<std::uint32_t>(b));
 }
@@ -98,14 +96,14 @@ unsigned char ScratchByte() { return At(bof3::addr::DamageScratch)[0]; }
 // n a whole byte as the original's.
 unsigned char& ActorState(unsigned n) { return At(0x903A80u + n * kRecordSize)[0]; }
 // The landing point of a jump: the step times the frames, from the position.
-long LandingX(const unsigned char* s) { return Add(Mul(Spr(s)->step_x, s[9]), Spr(s)->x); }
-long LandingZ(const unsigned char* s) { return Add(Mul(Spr(s)->step_z, s[9]), Spr(s)->z); }
+long LandingX(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_x, s[9]), rv::As<records::SpriteObject>(s)->x); }
+long LandingZ(const unsigned char* s) { return Add(Mul(rv::As<records::SpriteObject>(s)->step_z, s[9]), rv::As<records::SpriteObject>(s)->z); }
 
 // Field_TileD0 and Field_TileA4.
 unsigned char TileState(unsigned code, unsigned char state) {
     if (Field_ScriptFlags & 0x400) return 0;
     const unsigned char* const s = Sprite_Current;
-    if (!g.cells_all(Spr(s)->x, Spr(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
+    if (!g.cells_all(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
         return 0;
     Sprite_Current[1] = 2;
     Sprite_Current[2] = state;
@@ -218,7 +216,7 @@ extern "C" void __cdecl Field_JumpSetUp(void) {
     long ground = g.slope_at(x, z, s[8]);
     if (ScratchByte() != 0) ground = g.ground_at(x, z);
     unsigned char* const t = Sprite_Current;
-    Spr(t)->step_y = Idiv(static_cast<short>(ground) - static_cast<short>(Word(t + 0x3E)), t[9]);
+    rv::As<records::SpriteObject>(t)->step_y = Idiv(static_cast<short>(ground) - static_cast<short>(Word(t + 0x3E)), t[9]);
 }
 
 // original 0x534710 (PSX 0x801C3708): what the camera follows during the
@@ -254,8 +252,8 @@ extern "C" void __cdecl Field_JumpCheckHeight(void) {
 // original 0x536670 (PSX 0x801C67AC): one frame of the step - +0x34 / +0x38
 // by +0xC / +0x10, the height word +0x3E by the low word of +0x14.
 extern "C" void __cdecl Sprite_ApplyVelocity(void) {
-    SetLong(Sprite_Current + 0x34, Add(SC()->x, SC()->step_x));
-    SetLong(Sprite_Current + 0x38, Add(SC()->z, SC()->step_z));
+    SetLong(Sprite_Current + 0x34, Add(rv::Current<records::SpriteObject>()->x, rv::Current<records::SpriteObject>()->step_x));
+    SetLong(Sprite_Current + 0x38, Add(rv::Current<records::SpriteObject>()->z, rv::Current<records::SpriteObject>()->step_z));
     SetWord(Sprite_Current + 0x3E, Word(Sprite_Current + 0x3E) + Word(Sprite_Current + 0x14));
 }
 
@@ -278,7 +276,7 @@ extern "C" void __cdecl Field_FloorDamage(void) {
     for (;; ++n) {
         if (n == 9) return;
         const unsigned char* const s = Sprite_Current;
-        if (g.cells_all(Spr(s)->x, Spr(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, 0x80 + n, 0))
+        if (g.cells_all(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, 0x80 + n, 0))
             break;
     }
     g.floor_hurt(n);
@@ -299,7 +297,7 @@ extern "C" unsigned char __cdecl Field_Tile8A(unsigned turn) { return TileTurn(0
 extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, unsigned turn) {
     {
         const unsigned char* const s = Sprite_Current;
-        if (g.cells_none(Spr(s)->x, Spr(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
+        if (g.cells_none(rv::As<records::SpriteObject>(s)->x, rv::As<records::SpriteObject>(s)->z, static_cast<std::uint32_t>(Long(s + 0x70)) & 0xFF, code, 0))
             return 0;
     }
     if (static_cast<unsigned char>(turn) != 0) {
@@ -307,8 +305,8 @@ extern "C" unsigned char __cdecl Field_TileTurn(unsigned code, unsigned value, u
         for (unsigned i = 0;;) {
             const unsigned char* const s = Sprite_Current;
             direction = static_cast<unsigned char>(((s[8] ^ 0xFC) + i) & 7);
-            const long x = Add(Spr(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
-            const long z = Add(Spr(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
+            const long x = Add(rv::As<records::SpriteObject>(s)->x, Mul(Field_DirectionSteps[direction * 2], 2));
+            const long z = Add(rv::As<records::SpriteObject>(s)->z, Mul(Field_DirectionSteps[direction * 2 + 1], 2));
             if (!g.turn_probe(x, z, 0, Word(s + 0x3E))) break;
             if (++i >= 8) break;
         }
@@ -411,8 +409,8 @@ extern "C" void __cdecl Field_Bit80Tick(void) {
     o[0] = 1;
     o[5] = 0x41;
     o[8] = s[8];
-    SetWord(o + 0x36, static_cast<std::uint16_t>(Spr(s)->screen_x));
-    SetWord(o + 0x3A, static_cast<std::uint16_t>(Spr(s)->screen_y));
+    SetWord(o + 0x36, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(s)->screen_x));
+    SetWord(o + 0x3A, static_cast<std::uint16_t>(rv::As<records::SpriteObject>(s)->screen_y));
     o[0x27] = 0;
     o[6] = 1;
     o[0xB] = s[5];

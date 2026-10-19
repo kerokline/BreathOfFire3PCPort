@@ -28,6 +28,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_hidden_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -105,14 +106,6 @@ unsigned char* Effect(unsigned index) { return Effect_Objects + (index << 7); }
 // The typed views (src/game/records.h): the member states and party actions
 // run on an ObjTrio record, Field_State is one; the Sprite_* helpers run on
 // any object whose first 0x80 bytes are a sprite object's.
-records::PartyMember* Member() { return reinterpret_cast<records::PartyMember*>(Sprite_Current); }
-records::PartyMember* State() { return reinterpret_cast<records::PartyMember*>(Field_State); }
-records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-unsigned char* Bytes(records::EffectObject* p) { return reinterpret_cast<unsigned char*>(p); }
-unsigned char* Bytes(records::PartyMember* p) { return reinterpret_cast<unsigned char*>(p); }
-const unsigned char* Bytes(const records::PartyMember* p) { return reinterpret_cast<const unsigned char*>(p); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
-records::EffectObject* EffectRec(unsigned index) { return reinterpret_cast<records::EffectObject*>(Effect(index)); }
 // A pointer the original keeps in a dword, read afresh.
 unsigned char* PtrIn(const unsigned char* at) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(at))));
@@ -132,7 +125,7 @@ unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((sta
 // original 0x51BA60, state 3: back to state 1 (Member_Control) unless bit 10
 // of Field_ScriptFlags2 holds the member.
 FH_EXPORT void __cdecl Member_ResumeUnlessHeld(void) {
-    if ((Field_ScriptFlags2 & 0x400) == 0) Member()->state[0] = 1;
+    if ((Field_ScriptFlags2 & 0x400) == 0) rv::Current<records::PartyMember>()->state[0] = 1;
 }
 
 // original 0x51BBD0, state 7, by its sub-state +2:
@@ -147,35 +140,35 @@ FH_EXPORT void __cdecl Member_ResumeUnlessHeld(void) {
 // As the original has it: the sub-state and the effect index are not
 // checked; in sub-state 1 the index is re-read from +0xB for every store.
 FH_EXPORT void __cdecl Member_EffectState(void) {
-    records::PartyMember* const s = Member();
+    records::PartyMember* const s = rv::Current<records::PartyMember>();
     switch (s->state[1]) {
     case 0:
         if (ObjTrio[0x137] != 8) {
             s->state[0] = 1;
-            Member()->state[1] = 0;
+            rv::Current<records::PartyMember>()->state[1] = 0;
         }
         break;
     case 1: {
         const unsigned char i = Al(g.effect_free());
         Sprite_Current[0xB] = i;
-        records::PartyMember* const c = Member();
-        if (Bytes(c)[0xB] == 0xFF) {
+        records::PartyMember* const c = rv::Current<records::PartyMember>();
+        if (rv::Bytes(c)[0xB] == 0xFF) {
             c->state[1] = 0;
             break;
         }
-        EffectRec(Bytes(c)[0xB])->in_use = 1;
-        EffectRec(Bytes(c)[0xB])->kind = 6;
-        EffectRec(Bytes(c)[0xB])->param = 1;
-        EffectRec(Bytes(c)[0xB])->step_x = 0;
-        const unsigned arg = static_cast<unsigned char>(MoveScript_EffectArg[State()->char_id]);
-        EffectRec(Bytes(c)[0xB])->step_z = static_cast<std::int32_t>(arg);
-        SetWord(Effect(Bytes(c)[0xB]) + 0x2E, static_cast<std::uint16_t>(c->screen_x));
-        SetWord(Effect(Bytes(c)[0xB]) + 0x30, static_cast<std::uint16_t>(c->screen_y));
+        rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->in_use = 1;
+        rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->kind = 6;
+        rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->param = 1;
+        rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->step_x = 0;
+        const unsigned arg = static_cast<unsigned char>(MoveScript_EffectArg[rv::As<records::PartyMember>(Field_State)->char_id]);
+        rv::As<records::EffectObject>(Effect(rv::Bytes(c)[0xB]))->step_z = static_cast<std::int32_t>(arg);
+        SetWord(Effect(rv::Bytes(c)[0xB]) + 0x2E, static_cast<std::uint16_t>(c->screen_x));
+        SetWord(Effect(rv::Bytes(c)[0xB]) + 0x30, static_cast<std::uint16_t>(c->screen_y));
         c->state[1] = 2;
         break;
     }
     case 2:
-        if (EffectRec(Bytes(s)[0xB])->in_use == 0) s->state[1] = 0;
+        if (rv::As<records::EffectObject>(Effect(rv::Bytes(s)[0xB]))->in_use == 0) s->state[1] = 0;
         break;
     default:
         break;
@@ -201,7 +194,7 @@ FH_EXPORT void __cdecl PartyAction_Finish(void) {
         if (Al(g.script_tick_once()) == 0) return;
     } else if (b == 1) {
         if (Al(g.script_tick_once()) == 0) return;
-        g.set_animation(Member()->direction);
+        g.set_animation(rv::Current<records::PartyMember>()->direction);
         Sprite_Current[0xB] = 2;
         return;
     } else {
@@ -215,12 +208,12 @@ FH_EXPORT void __cdecl PartyAction_Finish(void) {
 // original 0x51F1B0: party set 5's action - the entry of PartyAction5_Forms
 // 0x65FC18 that the u16 +0x2C picks (0x51E910, PartyAction5_Form1, PartyAction_NoAction), jumped
 // to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(PartyAction5_Forms_addr, Member()->column)(); }
+FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(PartyAction5_Forms_addr, rv::Current<records::PartyMember>()->column)(); }
 
 // original 0x51E910: party set 5's form 0 - the entry of
 // PartyAction5_Form0States 0x65FBC0 that +2 picks (0x51E930, 0x51EAF0,
 // 0x51DA30), jumped to, the index unchecked.
-FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(PartyAction5_Form0States_addr, Member()->state[1])(); }
+FH_EXPORT void __cdecl PartyAction5_Form0(void) { Entry(PartyAction5_Form0States_addr, rv::Current<records::PartyMember>()->state[1])(); }
 
 namespace {
 // PartyAction5_Form0Begin's side probe: the point one step in direction `d`
@@ -228,14 +221,14 @@ namespace {
 // scratch flag set and more than 0x40 as a short) is steep and the ground
 // there (MapView_GroundAt) is above the sprite's +0x3E, +0x2B = 0.
 void ProbeSide(unsigned d) {
-    const records::PartyMember* s = Member();
+    const records::PartyMember* s = rv::Current<records::PartyMember>();
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
     if (Byte(at::kScratch) == 0 || static_cast<short>(slope) <= 0x40) return;
     const long ground = g.ground_at(x, z);
-    s = Member();
-    if (static_cast<short>(Word(Bytes(s) + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
+    s = rv::Current<records::PartyMember>();
+    if (static_cast<short>(Word(rv::Bytes(s) + 0x3E)) < static_cast<short>(ground)) Sprite_Current[0x2B] = 0;
 }
 }  // namespace
 
@@ -253,32 +246,32 @@ void ProbeSide(unsigned d) {
 // As the original has it: an odd +8 is kept and not masked, and the steps
 // table is read with it unchecked; Sprite_Current is re-read after each call.
 FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
-    const records::PartyMember* s = Member();
+    const records::PartyMember* s = rv::Current<records::PartyMember>();
     if ((s->direction & 1) == 0) {
-        Member()->direction = static_cast<unsigned char>((s->direction - 1) & 7);
+        rv::Current<records::PartyMember>()->direction = static_cast<unsigned char>((s->direction - 1) & 7);
         if (Al(g.target_ahead()) == 0) {
-            Member()->direction = static_cast<unsigned char>((Member()->direction + 2) & 7);
-            if (Al(g.target_ahead()) == 0) Member()->direction = static_cast<unsigned char>((Member()->direction - 2) & 7);
+            rv::Current<records::PartyMember>()->direction = static_cast<unsigned char>((rv::Current<records::PartyMember>()->direction + 2) & 7);
+            if (Al(g.target_ahead()) == 0) rv::Current<records::PartyMember>()->direction = static_cast<unsigned char>((rv::Current<records::PartyMember>()->direction - 2) & 7);
         }
-        s = Member();
+        s = rv::Current<records::PartyMember>();
     }
     const unsigned d = s->direction;
     const long x = Add(s->x, StepX(d));
     const long z = Add(s->z, StepZ(d));
     const long slope = g.slope_at(x, z, d);
     if (Byte(at::kScratch) != 0 && static_cast<short>(slope) > 0x40) {
-        g.ensure_animation(static_cast<unsigned char>(HalfTurn(Member()->direction) + 0x46));
-        ++Member()->state[1];
+        g.ensure_animation(static_cast<unsigned char>(HalfTurn(rv::Current<records::PartyMember>()->direction) + 0x46));
+        ++rv::Current<records::PartyMember>()->state[1];
     } else {
         Sprite_Current[0x2B] = 1;
         ProbeSide(3);
         ProbeSide(5);
         g.play_effect(static_cast<std::uint16_t>(Word(Sprite_Current + 0x2C) + 0x100));
-        g.ensure_animation(static_cast<unsigned char>(HalfTurn(Member()->direction) + 0x42));
+        g.ensure_animation(static_cast<unsigned char>(HalfTurn(rv::Current<records::PartyMember>()->direction) + 0x42));
         Sprite_Current[0xA] = 5;
     }
     Sprite_Current[0xB] = 0;
-    ++Member()->state[1];
+    ++rv::Current<records::PartyMember>()->state[1];
 }
 
 // original 0x51EAF0, form 0's state 1. +0xA counted down; at 0: the point two
@@ -295,7 +288,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Begin(void) {
 FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
     --Sprite_Current[0xA];
     if (Sprite_Current[0xA] == 0) {
-        const records::PartyMember* const s = Member();
+        const records::PartyMember* const s = rv::Current<records::PartyMember>();
         const unsigned d = s->direction;
         const std::uint32_t x = static_cast<std::uint32_t>(s->x) + 2u * static_cast<std::uint32_t>(StepX(d));
         const std::uint32_t z = static_cast<std::uint32_t>(s->z) + 2u * static_cast<std::uint32_t>(StepZ(d));
@@ -313,7 +306,7 @@ FH_EXPORT void __cdecl PartyAction5_Form0Resolve(void) {
             if ((x & 0xFFFF) != 0) done = Al(g.cell_pickup(cx + 1, cz)) != 0;
             if (!done && (z & 0xFFFF) != 0) g.cell_pickup(cx, cz + 1);
         }
-        ++Member()->state[1];
+        ++rv::Current<records::PartyMember>()->state[1];
     }
     g.script_tick_once();
 }
@@ -383,7 +376,7 @@ FH_EXPORT void __cdecl Sprite_CopyFrames(unsigned frame, unsigned char* buffer, 
     const unsigned n = size & 0xFFFF;
     unsigned char* const to = buffer + static_cast<std::uint32_t>(Sprite_Current[5]) * n;
     for (unsigned i = 0; i < n; ++i) to[i] = PtrIn(Sprite_Current + 0x50)[i];
-    Cur()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(to));
+    rv::Current<records::SpriteObject>()->script = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(to));
 }
 
 // original 0x589110: Sprite_CopyFrames(animation, set, size); when +0x4B is
@@ -392,9 +385,9 @@ FH_EXPORT void __cdecl Sprite_CopyFrames(unsigned frame, unsigned char* buffer, 
 // Sprite_ScriptStart(0).
 FH_EXPORT void __cdecl Sprite_PoseFromSet(unsigned animation, unsigned char* set, unsigned size) {
     g.copy_frames(animation, set, size);
-    records::SpriteObject* const s = Cur();
+    records::SpriteObject* const s = rv::Current<records::SpriteObject>();
     if (s->animation == static_cast<unsigned char>(animation)) {
-        g.script_start(static_cast<std::uint16_t>(Word(Bytes(s) + 0x58) - 2));
+        g.script_start(static_cast<std::uint16_t>(Word(rv::Bytes(s) + 0x58) - 2));
         return;
     }
     s->animation = static_cast<unsigned char>(animation);
@@ -405,7 +398,7 @@ FH_EXPORT void __cdecl Sprite_PoseFromSet(unsigned animation, unsigned char* set
 // animation, Sprite_ScriptStart(position) - the dword as given.
 FH_EXPORT void __cdecl Sprite_AnimFromSet(unsigned animation, unsigned position, unsigned char* buffer, unsigned size) {
     g.copy_frames(animation, buffer, size);
-    Cur()->animation = static_cast<unsigned char>(animation);
+    rv::Current<records::SpriteObject>()->animation = static_cast<unsigned char>(animation);
     g.script_start(position);
 }
 
@@ -424,16 +417,16 @@ FH_EXPORT void __cdecl Sprite_AnimFromSet(unsigned animation, unsigned position,
 FH_EXPORT void __cdecl EventOp_Ex(const unsigned char* op) {
     const unsigned char i = Al(g.effect_free());
     if (i == 0xFF) return;
-    records::EffectObject* const e = reinterpret_cast<records::EffectObject*>(Effect(i));
+    records::EffectObject* const e = rv::As<records::EffectObject>(Effect(i));
     e->in_use = 1;
     e->kind = op[1];
-    SetWord(Bytes(e) + 0x36, op[3]);
-    SetWord(Bytes(e) + 0x34, op[2] != 0 ? 0x8000 : 0);
-    SetWord(Bytes(e) + 0x3A, op[5]);
-    SetWord(Bytes(e) + 0x38, op[4] != 0 ? 0x8000 : 0);
+    SetWord(rv::Bytes(e) + 0x36, op[3]);
+    SetWord(rv::Bytes(e) + 0x34, op[2] != 0 ? 0x8000 : 0);
+    SetWord(rv::Bytes(e) + 0x3A, op[5]);
+    SetWord(rv::Bytes(e) + 0x38, op[4] != 0 ? 0x8000 : 0);
     const long h = g.elevation(e->x, e->z);
-    SetWord(Bytes(e) + 0x3E, static_cast<std::uint16_t>(h));
-    Bytes(e)[0xB] = op[6];
+    SetWord(rv::Bytes(e) + 0x3E, static_cast<std::uint16_t>(h));
+    rv::Bytes(e)[0xB] = op[6];
 }
 
 // ===========================================================================

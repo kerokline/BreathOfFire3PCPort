@@ -43,6 +43,7 @@
 #include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scenario_harness.h"
 #include "game/yes_no_layout.h"
@@ -110,11 +111,6 @@ void BumpCount() { SetWord(At(bof3::addr::DamageScratch), static_cast<unsigned>(
 unsigned char* Object(int n) { return Sprite_Objects + n * 0xA4; }
 
 // The typed views of these records (src/game/records.h).
-records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sc()); }
-records::SpriteObject* Active() { return reinterpret_cast<records::SpriteObject*>(Fam()); }
-records::PartyMember* Leader() { return reinterpret_cast<records::PartyMember*>(ObjTrio); }
-records::SpriteObject* Placed() { return reinterpret_cast<records::SpriteObject*>(Object(Count())); }
-unsigned char* Bytes(records::SpriteObject* p) { return reinterpret_cast<unsigned char*>(p); }
 // A placement's x or z: the whole part and the half (0x8000) when `half` is not 0.
 std::int32_t Coordinate(unsigned char half, unsigned char whole) {
     return static_cast<std::int32_t>((half ? 0x8000u : 0u) | static_cast<U>(whole) << 16);
@@ -663,25 +659,25 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
 // six; the party slot is (Field_ActiveMember - Sprite_ObjectsExtra) / 0xA4 as
 // a signed byte into the party records, unchecked.
 extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
-    const unsigned char speed = Field_MoveSpeeds[Active()->speed];
-    records::SpriteObject* sc = Cur();
-    const unsigned dir = Bytes(sc)[8] & 7u;
+    const unsigned char speed = Field_MoveSpeeds[rv::As<records::SpriteObject>(Fam())->speed];
+    records::SpriteObject* sc = rv::As<records::SpriteObject>(Sc());
+    const unsigned dir = rv::Bytes(sc)[8] & 7u;
     const auto vx = static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 8 * dir))) * speed);
     const auto vz = static_cast<std::int32_t>(static_cast<U>(Long(At(MoveCmd_F9Steps_addr + 8 * dir + 4))) * speed);
     const long ground = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
     SetWord(Sc() + 0x3E, static_cast<U>(ground));
-    sc = Cur();
+    sc = rv::As<records::SpriteObject>(Sc());
     const unsigned s = shift & 31u;
     if (static_cast<U>(sc->accel_z) + static_cast<U>(sc->accel_x) == 0) {
-        const unsigned d = Bytes(sc)[8] & 7u;
+        const unsigned d = rv::Bytes(sc)[8] & 7u;
         const std::int32_t x0 = sc->x;
-        Active()->target_x = static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d]) << 1) * shift + static_cast<U>(x0));
+        rv::As<records::SpriteObject>(Fam())->target_x = static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d]) << 1) * shift + static_cast<U>(x0));
         const unsigned d2 = Sc()[8] & 7u;
-        const std::int32_t z0 = Cur()->z;
+        const std::int32_t z0 = rv::As<records::SpriteObject>(Sc())->z;
         SetLong(Fam() + 0x90, static_cast<std::int32_t>((static_cast<U>(Field_DirectionSteps[2 * d2 + 1]) << 1) * shift + static_cast<U>(z0)));
         if (toward) {
             SetLong(Sc() + 0x18, vx >> s);
-            Cur()->accel_z = vz >> s;
+            rv::As<records::SpriteObject>(Sc())->accel_z = vz >> s;
             SetLong(Sc() + 0xC, 0);
             SetLong(Sc() + 0x10, 0);
         } else {
@@ -690,7 +686,7 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
             SetLong(Sc() + 0xC, vx);
             SetLong(Sc() + 0x10, vz);
         }
-        Cur()->step_y = 0;
+        rv::As<records::SpriteObject>(Sc())->step_y = 0;
     }
     const auto add = [](unsigned char* to, const unsigned char* by) {
         SetLong(to, static_cast<std::int32_t>(static_cast<U>(Long(to)) + static_cast<U>(Long(by))));
@@ -699,32 +695,32 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     add(Sc() + 0x38, Sc() + 0x10);
     add(Sc() + 0xC, Sc() + 0x18);
     add(Sc() + 0x10, Sc() + 0x1C);
-    sc = Cur();
-    records::SpriteObject* fam = Active();
+    sc = rv::As<records::SpriteObject>(Sc());
+    records::SpriteObject* fam = rv::As<records::SpriteObject>(Fam());
     if (sc->type == 0x0A) {
-        const std::int32_t slot = static_cast<std::int32_t>(static_cast<U>(Key(Bytes(fam))) - static_cast<U>(Key(Sprite_ObjectsExtra))) / 0xA4;
+        const std::int32_t slot = static_cast<std::int32_t>(static_cast<U>(Key(rv::Bytes(fam))) - static_cast<U>(Key(Sprite_ObjectsExtra))) / 0xA4;
         const auto crossed = [](const unsigned char* pos, const unsigned char* vel) {
             const U p = static_cast<U>(Long(pos));
             return (((static_cast<U>(Long(vel)) + p) ^ p) & 0x8000u) != 0;
         };
-        if (crossed(Bytes(sc) + 0x34, Bytes(sc) + 0xC) || crossed(Bytes(sc) + 0x38, Bytes(sc) + 0x10)) {
-            SH_CALL(Party_MoveMember)(Bytes(fam), static_cast<unsigned char>(sc->direction & 7));
-            fam = Active();
-            sc = Cur();
+        if (crossed(rv::Bytes(sc) + 0x34, rv::Bytes(sc) + 0xC) || crossed(rv::Bytes(sc) + 0x38, rv::Bytes(sc) + 0x10)) {
+            SH_CALL(Party_MoveMember)(rv::Bytes(fam), static_cast<unsigned char>(sc->direction & 7));
+            fam = rv::As<records::SpriteObject>(Fam());
+            sc = rv::As<records::SpriteObject>(Sc());
         }
         unsigned char* const r = MoveScript_PartyRecords + Sb(static_cast<U>(slot)) * 16;
         if (r[1] != 0) {
             r[1] = static_cast<unsigned char>(r[1] - 1);
-            add(Bytes(sc) + 0x64, r + 4);
+            add(rv::Bytes(sc) + 0x64, r + 4);
             add(Sc() + 0x68, r + 8);
-            fam = Active();
-            sc = Cur();
+            fam = rv::As<records::SpriteObject>(Fam());
+            sc = rv::As<records::SpriteObject>(Sc());
         }
         if (r[2] != 0) {
             r[2] = static_cast<unsigned char>(r[2] - 1);
-            add(Bytes(sc) + 0x6C, r + 0xC);
-            fam = Active();
-            sc = Cur();
+            add(rv::Bytes(sc) + 0x6C, r + 0xC);
+            fam = rv::As<records::SpriteObject>(Fam());
+            sc = rv::As<records::SpriteObject>(Sc());
         }
     }
     const std::int32_t tx = fam->target_x;
@@ -734,11 +730,11 @@ extern "C" int __cdecl MoveCmd_OpF9(unsigned char toward, unsigned char shift) {
     const bool at_z = vz < 0 ? !(z > fam->target_z) : !(z < fam->target_z);
     if (!(at_x && at_z)) return 1;
     sc->x = tx;
-    SetLong(Sc() + 0x38, Active()->target_z);
-    Cur()->step_x = vx;
-    Cur()->step_z = vz;
-    Cur()->accel_z = 0;
-    Cur()->accel_x = 0;
+    SetLong(Sc() + 0x38, rv::As<records::SpriteObject>(Fam())->target_z);
+    rv::As<records::SpriteObject>(Sc())->step_x = vx;
+    rv::As<records::SpriteObject>(Sc())->step_z = vz;
+    rv::As<records::SpriteObject>(Sc())->accel_z = 0;
+    rv::As<records::SpriteObject>(Sc())->accel_x = 0;
     return 0;
 }
 
@@ -757,12 +753,12 @@ extern "C" void __cdecl MoveCmd_Op88(void) {
 extern "C" void __cdecl MoveCmd_Op88Start(void) {
     const unsigned char n = SH_CALL(Sprite_SetTint)(Sc(), 0, 0, 0, 1);
     Fam()[0x9F] = n;
-    Cur()->flags |= 0x20;
-    Cur()->shade[2] = 0xC0;
-    Cur()->shade[1] = 0xC0;
-    Cur()->shade[0] = 0xC0;
-    Cur()->draw_mode = 1;
-    Active()->script_position = Active()->script_position - 1u;
+    rv::As<records::SpriteObject>(Sc())->flags |= 0x20;
+    rv::As<records::SpriteObject>(Sc())->shade[2] = 0xC0;
+    rv::As<records::SpriteObject>(Sc())->shade[1] = 0xC0;
+    rv::As<records::SpriteObject>(Sc())->shade[0] = 0xC0;
+    rv::As<records::SpriteObject>(Sc())->draw_mode = 1;
+    rv::As<records::SpriteObject>(Fam())->script_position = rv::As<records::SpriteObject>(Fam())->script_position - 1u;
     Sc()[4] = 1;
 }
 
@@ -774,14 +770,14 @@ extern "C" void __cdecl MoveCmd_Op88Start(void) {
 extern "C" void __cdecl MoveCmd_Op88Fade(void) {
     for (unsigned c = 0x5D; c <= 0x5F; ++c)
         if (Sc()[c] != 0x80) Sc()[c] = static_cast<unsigned char>(Sc()[c] - 4);
-    records::SpriteObject* const sc = Cur();
+    records::SpriteObject* const sc = rv::As<records::SpriteObject>(Sc());
     if (sc->shade[0] == 0x80 && sc->shade[1] == 0x80 && sc->shade[2] == 0x80) {
         SH_CALL(Tint_Release)(Fam()[0x9F]);
-        Cur()->flags |= 0x40;
+        rv::As<records::SpriteObject>(Sc())->flags |= 0x40;
         Sc()[4] = 0;
         return;
     }
-    Active()->script_position = Active()->script_position - 1u;
+    rv::As<records::SpriteObject>(Fam())->script_position = rv::As<records::SpriteObject>(Fam())->script_position - 1u;
 }
 
 // original 0x5795F0: op 87 (MoveScript_Group8 0x5788F5): Sprite_Current +4
@@ -798,14 +794,14 @@ extern "C" void __cdecl MoveCmd_Op87(void) {
 extern "C" void __cdecl MoveCmd_Op87Start(void) {
     const unsigned char n = SH_CALL(Sprite_SetTint)(Sc(), 0, 0, 0, 1);
     Fam()[0x9F] = n;
-    Cur()->flags |= 0x20;
-    Cur()->flags &= 0xBF;
-    Cur()->draw_mode = 1;
-    Cur()->shade[2] = 0x80;
-    Cur()->shade[1] = 0x80;
-    Cur()->shade[0] = 0x80;
+    rv::As<records::SpriteObject>(Sc())->flags |= 0x20;
+    rv::As<records::SpriteObject>(Sc())->flags &= 0xBF;
+    rv::As<records::SpriteObject>(Sc())->draw_mode = 1;
+    rv::As<records::SpriteObject>(Sc())->shade[2] = 0x80;
+    rv::As<records::SpriteObject>(Sc())->shade[1] = 0x80;
+    rv::As<records::SpriteObject>(Sc())->shade[0] = 0x80;
     Sc()[4] = 1;
-    Active()->script_position = Active()->script_position - 1u;
+    rv::As<records::SpriteObject>(Fam())->script_position = rv::As<records::SpriteObject>(Fam())->script_position - 1u;
 }
 
 // original 0x579690: op 87's state 1 - each colour byte below 0xC0 as a
@@ -814,18 +810,18 @@ extern "C" void __cdecl MoveCmd_Op87Start(void) {
 extern "C" void __cdecl MoveCmd_Op87Fade(void) {
     for (unsigned c = 0x5D; c <= 0x5F; ++c)
         if (Sb(Sc()[c]) < Sb(0xC0)) Sc()[c] = static_cast<unsigned char>(Sc()[c] + 4);
-    records::SpriteObject* const sc = Cur();
+    records::SpriteObject* const sc = rv::As<records::SpriteObject>(Sc());
     if (sc->shade[0] == 0xC0 && sc->shade[1] == 0xC0 && sc->shade[2] == 0xC0) {
         SH_CALL(Tint_Release)(Fam()[0x9F]);
-        Cur()->flags &= 0xDF;
-        Cur()->draw_mode = 0;
-        Cur()->shade[2] = 0;
-        Cur()->shade[1] = 0;
-        Cur()->shade[0] = 0;
+        rv::As<records::SpriteObject>(Sc())->flags &= 0xDF;
+        rv::As<records::SpriteObject>(Sc())->draw_mode = 0;
+        rv::As<records::SpriteObject>(Sc())->shade[2] = 0;
+        rv::As<records::SpriteObject>(Sc())->shade[1] = 0;
+        rv::As<records::SpriteObject>(Sc())->shade[0] = 0;
         Sc()[4] = 0;
         return;
     }
-    Active()->script_position = Active()->script_position - 1u;
+    rv::As<records::SpriteObject>(Fam())->script_position = rv::As<records::SpriteObject>(Fam())->script_position - 1u;
 }
 
 // original 0x57C8E0: op E9 (MoveScript_GroupE 0x5775B9; the bosses' end moves
@@ -865,7 +861,7 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Start(unsigned char* object, signed
                                                    unsigned short, unsigned char, unsigned char) {
     const unsigned char speed = Field_MoveSpeeds[object[4]];
     if (speed == 0) return 0;
-    Cur()->step_frames = 0;
+    rv::As<records::SpriteObject>(Sc())->step_frames = 0;
     const std::int32_t sa = a, sb = b;
     const std::int32_t ma = sa < 0 ? -sa : sa, mb = sb < 0 ? -sb : sb;
     const auto steps = static_cast<unsigned char>(ma < mb ? mb : ma);
@@ -881,15 +877,15 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Start(unsigned char* object, signed
         return 1;
     }
     if (steps == 0) {
-        Cur()->step_z = 0;
-        Cur()->step_x = 0;
+        rv::As<records::SpriteObject>(Sc())->step_z = 0;
+        rv::As<records::SpriteObject>(Sc())->step_x = 0;
         Sc()[4] = 1;
         return 1;
     }
-    records::SpriteObject* sc = Cur();
-    sc->step_x = Idiv(static_cast<std::int32_t>(static_cast<U>(sa) << 15), Bytes(sc)[0xA] * steps, "MoveCmd_OpE9Start");
-    sc = Cur();
-    sc->step_z = Idiv(static_cast<std::int32_t>(static_cast<U>(sb) << 15), Bytes(sc)[0xA] * steps, "MoveCmd_OpE9Start");
+    records::SpriteObject* sc = rv::As<records::SpriteObject>(Sc());
+    sc->step_x = Idiv(static_cast<std::int32_t>(static_cast<U>(sa) << 15), rv::Bytes(sc)[0xA] * steps, "MoveCmd_OpE9Start");
+    sc = rv::As<records::SpriteObject>(Sc());
+    sc->step_z = Idiv(static_cast<std::int32_t>(static_cast<U>(sb) << 15), rv::Bytes(sc)[0xA] * steps, "MoveCmd_OpE9Start");
     Sc()[4] = 1;
     return 1;
 }
@@ -910,30 +906,30 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Arc(unsigned char* object, signed c
     const auto add = [](unsigned char* to, std::int32_t by) {
         SetLong(to, static_cast<std::int32_t>(static_cast<U>(Long(to)) + static_cast<U>(by)));
     };
-    add(Sc() + 0x34, Cur()->step_x);
-    add(Sc() + 0x38, Cur()->step_z);
-    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Cur()->step_y >> 8));
+    add(Sc() + 0x34, rv::As<records::SpriteObject>(Sc())->step_x);
+    add(Sc() + 0x38, rv::As<records::SpriteObject>(Sc())->step_z);
+    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(rv::As<records::SpriteObject>(Sc())->step_y >> 8));
     const std::int32_t rise = Long(Sc() + 0x14);
-    Cur()->step_y = static_cast<std::int32_t>(static_cast<U>(static_cast<short>(d)) + static_cast<U>(rise));
+    rv::As<records::SpriteObject>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(static_cast<short>(d)) + static_cast<U>(rise));
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
-    const long ground = SH_CALL(AreaMap_Elevation)(Cur()->x, Cur()->z);
-    records::SpriteObject* sc = Cur();
-    if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(Word(Bytes(sc) + 0x3E))) {
-        SetWord(Bytes(sc) + 0x3E, static_cast<U>(ground));
+    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(Sc())->x, rv::As<records::SpriteObject>(Sc())->z);
+    records::SpriteObject* sc = rv::As<records::SpriteObject>(Sc());
+    if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(Word(rv::Bytes(sc) + 0x3E))) {
+        SetWord(rv::Bytes(sc) + 0x3E, static_cast<U>(ground));
         if (f & 2) {
             Sc()[4] = 0;
             return 0;
         }
-        sc = Cur();
+        sc = rv::As<records::SpriteObject>(Sc());
     }
     if (!(sc->step_y > 0) && !(rise < 0) && e != 0xFF) {
         if (sc->type != 6) sc->pose = f & 1;
         SH_CALL(Sprite_EnsureAnimation)(e);
-        sc = Cur();
+        sc = rv::As<records::SpriteObject>(Sc());
     }
-    if (Bytes(sc)[0xA] == 0) {
-        if (Bytes(sc)[0xB] != 0) {
-            Bytes(sc)[0xA] = StepFrames(object, "MoveCmd_OpE9Arc");
+    if (rv::Bytes(sc)[0xA] == 0) {
+        if (rv::Bytes(sc)[0xB] != 0) {
+            rv::Bytes(sc)[0xA] = StepFrames(object, "MoveCmd_OpE9Arc");
             Sc()[0xB] = static_cast<unsigned char>(Sc()[0xB] - 1);
             SH_CALL(Party_ApplyRecord)(object);
             return 1;
@@ -954,26 +950,26 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Arc(unsigned char* object, signed c
 // else one more frame, al 1.
 extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed char, signed char, unsigned short,
                                                    unsigned short d, unsigned char, unsigned char f) {
-    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Cur()->step_y >> 8));
-    Cur()->step_y = static_cast<std::int32_t>(static_cast<U>(Cur()->step_y) + static_cast<U>(static_cast<short>(d)));
+    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(rv::As<records::SpriteObject>(Sc())->step_y >> 8));
+    rv::As<records::SpriteObject>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteObject>(Sc())->step_y) + static_cast<U>(static_cast<short>(d)));
     SH_CALL(MapView_SetElevation)(Word(Sprite_Kind2 + 0x3E));
     Sc()[0xA] = static_cast<unsigned char>(Sc()[0xA] - 1);
     const long ground = SH_CALL(AreaMap_Elevation)(Field_Kind2X, Field_Kind2Z);
-    records::SpriteObject* sc = Cur();
-    if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(Word(Bytes(sc) + 0x3E))) {
-        SetWord(Bytes(sc) + 0x3E, static_cast<U>(ground));
+    records::SpriteObject* sc = rv::As<records::SpriteObject>(Sc());
+    if (sc->step_y < 0 && S16(static_cast<U>(ground)) > S16(Word(rv::Bytes(sc) + 0x3E))) {
+        SetWord(rv::Bytes(sc) + 0x3E, static_cast<U>(ground));
         SH_CALL(MapView_SetElevation)(Word(Sc() + 0x3E));
         if (f & 2) Sc()[4] = 0;
-        sc = Cur();
+        sc = rv::As<records::SpriteObject>(Sc());
     }
-    if (Bytes(sc)[0xA] != 0) return 1;
-    if (Bytes(sc)[0xB] != 0) {
-        Bytes(sc)[0xA] = StepFrames(object, "MoveCmd_OpE9Kind2");
+    if (rv::Bytes(sc)[0xA] != 0) return 1;
+    if (rv::Bytes(sc)[0xB] != 0) {
+        rv::Bytes(sc)[0xA] = StepFrames(object, "MoveCmd_OpE9Kind2");
         Sc()[0xB] = static_cast<unsigned char>(Sc()[0xB] - 1);
         return 1;
     }
-    if (S16(static_cast<U>(ground)) < S16(Word(Bytes(sc) + 0x3E))) {
-        Bytes(sc)[0xA] = 1;
+    if (S16(static_cast<U>(ground)) < S16(Word(rv::Bytes(sc) + 0x3E))) {
+        rv::Bytes(sc)[0xA] = 1;
         return 1;
     }
     sc->x = Field_Kind2X;
@@ -989,9 +985,9 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Kind2(unsigned char* object, signed
 // the ground, state 0 and al 0; else al 1.
 extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, signed char, unsigned short, unsigned short d,
                                                   unsigned char, unsigned char) {
-    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(Cur()->step_y >> 8));
-    Cur()->step_y = static_cast<std::int32_t>(static_cast<U>(Cur()->step_y) + static_cast<U>(static_cast<short>(d)));
-    const long ground = SH_CALL(AreaMap_Elevation)(Cur()->x, Cur()->z);
+    SetWord(Sc() + 0x3E, Word(Sc() + 0x3E) + static_cast<U>(rv::As<records::SpriteObject>(Sc())->step_y >> 8));
+    rv::As<records::SpriteObject>(Sc())->step_y = static_cast<std::int32_t>(static_cast<U>(rv::As<records::SpriteObject>(Sc())->step_y) + static_cast<U>(static_cast<short>(d)));
+    const long ground = SH_CALL(AreaMap_Elevation)(rv::As<records::SpriteObject>(Sc())->x, rv::As<records::SpriteObject>(Sc())->z);
     unsigned char* const sc = Sc();
     if (S16(static_cast<U>(ground)) > S16(Word(sc + 0x3E))) {
         SetWord(sc + 0x3E, static_cast<U>(ground));
@@ -1005,16 +1001,16 @@ extern "C" unsigned char __cdecl MoveCmd_OpE9Fall(unsigned char*, signed char, s
 // Scena06_LeapAir): x and z each plus its velocity when that is above 0, then
 // rounded down to the half unit (& 0xFFFF8000).
 extern "C" void __cdecl MoveCmd_OpDB(void) {
-    records::SpriteObject* sc = Cur();
+    records::SpriteObject* sc = rv::As<records::SpriteObject>(Sc());
     if (sc->step_x > 0) {
         sc->x = static_cast<std::int32_t>(static_cast<U>(sc->x) + static_cast<U>(sc->step_x));
-        sc = Cur();
+        sc = rv::As<records::SpriteObject>(Sc());
     }
     sc->x = static_cast<std::int32_t>(static_cast<U>(sc->x) & 0xFFFF8000u);
-    sc = Cur();
+    sc = rv::As<records::SpriteObject>(Sc());
     if (sc->step_z > 0) {
         sc->z = static_cast<std::int32_t>(static_cast<U>(sc->z) + static_cast<U>(sc->step_z));
-        sc = Cur();
+        sc = rv::As<records::SpriteObject>(Sc());
     }
     sc->z = static_cast<std::int32_t>(static_cast<U>(sc->z) & 0xFFFF8000u);
 }
@@ -1056,21 +1052,21 @@ unsigned char* Claim() {
 // x, z into the sprite and into object +0x8C / +0x90 (+0x94 0), by the count
 // read again each time, as EventOp_1x's.
 void PlaceXZ(std::int32_t x, std::int32_t z) {
-    Cur()->x = x;
-    SetLong(Object(Count()) + 0x8C, Cur()->x);
-    Cur()->z = z;
-    SetLong(Object(Count()) + 0x90, Cur()->z);
-    Placed()->best_score = 0;
+    rv::As<records::SpriteObject>(Sc())->x = x;
+    SetLong(Object(Count()) + 0x8C, rv::As<records::SpriteObject>(Sc())->x);
+    rv::As<records::SpriteObject>(Sc())->z = z;
+    SetLong(Object(Count()) + 0x90, rv::As<records::SpriteObject>(Sc())->z);
+    rv::As<records::SpriteObject>(Object(Count()))->best_score = 0;
 }
 void Ground() {
-    records::SpriteObject* const sc = Cur();
+    records::SpriteObject* const sc = rv::As<records::SpriteObject>(Sc());
     const long e = SH_CALL(AreaMap_Elevation)(sc->x, sc->z);
     SetWord(Sc() + 0x3E, static_cast<U>(e));
 }
 void Colour(unsigned char v) {
-    Cur()->shade[0] = v;
-    Cur()->shade[2] = v;
-    Cur()->shade[1] = v;
+    rv::As<records::SpriteObject>(Sc())->shade[0] = v;
+    rv::As<records::SpriteObject>(Sc())->shade[2] = v;
+    rv::As<records::SpriteObject>(Sc())->shade[1] = v;
 }
 
 }  // namespace
@@ -1087,15 +1083,15 @@ extern "C" void __cdecl EventOp_3x(const unsigned char* op) {
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(Bank());
-    Cur()->flags = 1;
+    rv::As<records::SpriteObject>(Sc())->flags = 1;
     PlaceXZ(Coordinate(op[6], op[7]), Coordinate(op[8], op[9]));
     Ground();
-    Cur()->type = op[0] >> 4;
-    Cur()->direction = op[0] & 0xF;
-    Cur()->state = op[0xA];
+    rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
+    rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
+    rv::As<records::SpriteObject>(Sc())->state = op[0xA];
     Sc()[2] = op[0xC];
     SetLong(Sc() + 0x70, op[0x11]);
-    records::SpriteObject* const n = Placed();
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
     n->half_w = op[4];
     n->half_d = op[5];
     n->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
@@ -1103,9 +1099,9 @@ extern "C" void __cdecl EventOp_3x(const unsigned char* op) {
     n->speed = op[0xB];
     n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 0xD);
-    if (op[3] & 0x80) Cur()->flags |= 0x20;
+    if (op[3] & 0x80) rv::As<records::SpriteObject>(Sc())->flags |= 0x20;
     Colour(0);
-    Cur()->draw_mode = op[3] & 0xF;
+    rv::As<records::SpriteObject>(Sc())->draw_mode = op[3] & 0xF;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1118,23 +1114,23 @@ extern "C" void __cdecl EventOp_4x(const unsigned char* op) {
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(Bank());
-    Cur()->flags = 1;
+    rv::As<records::SpriteObject>(Sc())->flags = 1;
     PlaceXZ(Coordinate(op[6], op[7]), Coordinate(op[8], op[9]));
     Ground();
-    Cur()->state = op[0xA];
+    rv::As<records::SpriteObject>(Sc())->state = op[0xA];
     Sc()[2] = op[0xC];
-    Cur()->direction = op[0] & 0xF;
-    Cur()->type = op[0] >> 4;
-    records::SpriteObject* const n = Placed();
+    rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
+    rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
     n->half_w = op[4];
     n->half_d = op[5];
     n->trigger_word = static_cast<unsigned>(op[0xE]) << 8 | op[0xF];
     n->speed = op[0xB];
     n->handler = op[0x10];
     SH_CALL(EventObj_SetFlags)(op + 0xD);
-    if (op[3] & 0x80) Cur()->flags |= 0x20;
+    if (op[3] & 0x80) rv::As<records::SpriteObject>(Sc())->flags |= 0x20;
     Colour(0);
-    Cur()->draw_mode = op[3] & 0xF;
+    rv::As<records::SpriteObject>(Sc())->draw_mode = op[3] & 0xF;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1149,14 +1145,14 @@ extern "C" void __cdecl EventOp_7x(const unsigned char* op) {
     SetBank(static_cast<unsigned>(op[1]) << 8 | op[2]);
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_SetAnimationBank)(Bank());
-    Cur()->flags = 1;
+    rv::As<records::SpriteObject>(Sc())->flags = 1;
     PlaceXZ(Coordinate(op[5], op[6]), Coordinate(op[7], op[8]));
     Ground();
-    Cur()->state = op[9];
+    rv::As<records::SpriteObject>(Sc())->state = op[9];
     Sc()[2] = op[0xB];
-    Cur()->direction = op[0] & 0xF;
-    Cur()->type = op[0] >> 4;
-    records::SpriteObject* const n = Placed();
+    rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
+    rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
     n->half_w = op[3];
     n->half_d = op[4];
     n->trigger_word = static_cast<unsigned>(op[0xD]) << 8 | op[0xE];
@@ -1166,7 +1162,7 @@ extern "C" void __cdecl EventOp_7x(const unsigned char* op) {
     n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 0xC);
     Colour(0);
-    Cur()->draw_mode = 2;
+    rv::As<records::SpriteObject>(Sc())->draw_mode = 2;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1182,14 +1178,14 @@ extern "C" void __cdecl EventOp_6x(const unsigned char* op) {
     Claim();
     SH_CALL(EventObj_Reset)();
     SH_CALL(Field_MemberSprite)(op[1], op[0xF]);
-    Cur()->flags = 1;
+    rv::As<records::SpriteObject>(Sc())->flags = 1;
     PlaceXZ(Coordinate(op[4], op[5]), Coordinate(op[6], op[7]));
     Ground();
-    Cur()->state = op[8];
+    rv::As<records::SpriteObject>(Sc())->state = op[8];
     Sc()[2] = op[0xA];
-    Cur()->direction = op[0] & 0xF;
-    Cur()->type = op[0] >> 4;
-    records::SpriteObject* const n = Placed();
+    rv::As<records::SpriteObject>(Sc())->direction = op[0] & 0xF;
+    rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
     n->half_w = op[2];
     n->half_d = op[3];
     n->trigger_word = static_cast<unsigned>(op[0xC]) << 8 | op[0xD];
@@ -1198,7 +1194,7 @@ extern "C" void __cdecl EventOp_6x(const unsigned char* op) {
     n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 0xB);
     Colour(0);
-    Cur()->draw_mode = 2;
+    rv::As<records::SpriteObject>(Sc())->draw_mode = 2;
     SH_CALL(EventObj_Face)();
     BumpCount();
 }
@@ -1215,7 +1211,7 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     if (Count() >= 30) return;
     const unsigned char* const descriptor = Area_Descriptors[Game_AreaNumber];
     const unsigned char* const entry = PtrAt(descriptor + 8) + op[9] * 8u;
-    records::SpriteObject* const o = reinterpret_cast<records::SpriteObject*>(Claim());
+    records::SpriteObject* const o = rv::As<records::SpriteObject>(Claim());
     o->direction = op[0] & 0xF;
     SH_CALL(EventObj_Reset)();
     SH_CALL(Sprite_InitFromEntry)(const_cast<unsigned char*>(entry));
@@ -1223,17 +1219,17 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     SetLong(Sc() + 0x34, Coordinate(op[1], op[2]));
     SetLong(Sc() + 0x38, Coordinate(op[3], op[4]));
     Ground();
-    Cur()->state = op[5];
+    rv::As<records::SpriteObject>(Sc())->state = op[5];
     Sc()[2] = op[7];
-    Cur()->type = op[0] >> 4;
+    rv::As<records::SpriteObject>(Sc())->type = op[0] >> 4;
     SetLong(Sc() + 0x20, 0);
-    Cur()->accel_z = 0;
-    Cur()->accel_x = 0;
+    rv::As<records::SpriteObject>(Sc())->accel_z = 0;
+    rv::As<records::SpriteObject>(Sc())->accel_x = 0;
     {
         unsigned char* const sc = Sc();
         sc[0x70] = PtrAt(sc + 0x54)[2];
     }
-    records::SpriteObject* const n = Placed();
+    records::SpriteObject* const n = rv::As<records::SpriteObject>(Object(Count()));
     n->best_score = 0;
     n->target_z = 0;
     n->target_x = 0;
@@ -1243,8 +1239,8 @@ extern "C" void __cdecl EventOp_Ax(const unsigned char* op) {
     n->handler = 0x7F;
     SH_CALL(EventObj_SetFlags)(op + 8);
     Colour(0x80);
-    Cur()->draw_mode = 2;
-    if (Placed()->speed == 0) {
+    rv::As<records::SpriteObject>(Sc())->draw_mode = 2;
+    if (rv::As<records::SpriteObject>(Object(Count()))->speed == 0) {
         unsigned char* sc = Sc();
         SH_CALL(AreaMap_SetByte)(Word(sc + 0x36), Word(sc + 0x3A), 0x10);
         sc = Sc();
@@ -1286,7 +1282,7 @@ extern "C" unsigned char __cdecl EventCond_Status1(const unsigned char** at) {
 }
 // original 0x57C250: condition 11 - the leader's member id (ObjTrio +0x89)
 // equals it.
-extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { return Leader()->char_id == **at; }
+extern "C" unsigned char __cdecl EventCond_LeaderId(const unsigned char** at) { return rv::As<records::PartyMember>(ObjTrio)->char_id == **at; }
 // original 0x57C270: condition 12 - story flag `operand` (Flags_Test of
 // 0x904030); the answer is Flags_Test's eax.
 extern "C" unsigned char __cdecl EventCond_StoryFlag(const unsigned char** at) {
@@ -1308,7 +1304,7 @@ extern "C" unsigned char __cdecl EventCond_Gene(const unsigned char** at) { retu
 // original 0x57C7E0 (MoveScript_Flow 0x57701D, Scena03_Scene5 0x5438DC): bit 6
 // of the three party objects' first byte cleared - ObjTrio_SetBit40's inverse.
 extern "C" void __cdecl ObjTrio_ClearBit40(void) {
-    Leader()->flags &= 0xBF;
+    rv::As<records::PartyMember>(ObjTrio)->flags &= 0xBF;
     ObjTrio[0x14C] &= 0xBF;
     ObjTrio[0x298] &= 0xBF;
 }

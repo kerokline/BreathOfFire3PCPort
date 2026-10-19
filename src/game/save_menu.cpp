@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
 #include "game/dat_load.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/save_menu_callees.h"
 #include "game/title_menu.h"
@@ -114,10 +115,6 @@ void PutFloat(U address, float f) { std::memcpy(At(address), &f, sizeof f); }
 // summary (0x905BC0, 16 of 0x1C), a Save_Directory entry (0x929F40, 16 of
 // 0x18), Sprite_Current read afresh (below +0x80, the sprite head every
 // family shares) and Field_State, the leader's party record.
-static records::SaveSummary* Sum(U address) { return reinterpret_cast<records::SaveSummary*>(At(address)); }
-static records::SaveDirEntry* Dir(U address) { return reinterpret_cast<records::SaveDirEntry*>(At(address)); }
-static records::SpriteObject* SC() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
-static records::PartyMember* FS() { return reinterpret_cast<records::PartyMember*>(Field_State); }
 
 unsigned char* Packet() { return Gfx_PacketNext; }
 
@@ -286,7 +283,7 @@ int save_menu::ListFiles(const char* pattern, unsigned char* table, bool bounded
         CopyForward(entry, name, n + 1);
         U size;
         std::memcpy(&size, found + 0x10, sizeof size);
-        Dir(entry)->size = size;
+        rv::As<records::SaveDirEntry>(At(entry))->size = size;
         entry += at::kDirectoryBytes;
         ++count;
     } while (g.find_next(handle, found) == 0);
@@ -322,8 +319,8 @@ void save_menu::ReadSummaries(const unsigned char* table, unsigned char* summari
             else if (c >= 0x61 && c <= 0x66) v = c - 0x57;
             else continue;
             if (v != slot) continue;
-            if (read(Dir(dir + n * at::kDirectoryBytes)->name, At(summary), context))
-                Sum(summary)->dir_index = n;
+            if (read(rv::As<records::SaveDirEntry>(At(dir + n * at::kDirectoryBytes))->name, At(summary), context))
+                rv::As<records::SaveSummary>(At(summary))->dir_index = n;
             break;
         }
     }
@@ -791,7 +788,7 @@ void save_menu::DrawSlotsOver(int x, int y, unsigned highlight, const unsigned c
         const U first = *top_word;
         const U n = first + i;
         const U summary = Addr(summaries) + n * at::kSummaryBytes;
-        const unsigned char* const s = Sum(summary)->dir_index != 0xFF ? At(summary) : nullptr;
+        const unsigned char* const s = rv::As<records::SaveSummary>(At(summary))->dir_index != 0xFF ? At(summary) : nullptr;
         const U slot = (first & 0xFFFFFF00u) | ((first + i) & 0xFF);
         g.slot_draw(slot, left, static_cast<int>(static_cast<U>(y) + i * 56 + 6), s);
     }
@@ -858,17 +855,17 @@ extern "C" void __cdecl TitleFlow_Begin(void) {
     PutLong(at::kFieldState, ObjTrio_addr);
     PutLong(at::kSpriteCurrent, ObjTrio_addr);
     g.member_sprite(0, 0);
-    SC()->flags = 1;
-    FS()->char_id = 0;
-    SC()->screen_x = 0x10A;
-    SC()->screen_y = 0x51;
-    SC()->ot_slot = 0;
-    SC()->scale_mode = 0;
-    SC()->step_frames = 1;
-    SC()->draw_flags = 0x81;
-    SC()->type = 4;
-    SC()->step_frames = 0;
-    g.set_animation(static_cast<unsigned char>(static_cast<U>(SC()->type) + 8));
+    rv::Current<records::SpriteObject>()->flags = 1;
+    rv::As<records::PartyMember>(Field_State)->char_id = 0;
+    rv::Current<records::SpriteObject>()->screen_x = 0x10A;
+    rv::Current<records::SpriteObject>()->screen_y = 0x51;
+    rv::Current<records::SpriteObject>()->ot_slot = 0;
+    rv::Current<records::SpriteObject>()->scale_mode = 0;
+    rv::Current<records::SpriteObject>()->step_frames = 1;
+    rv::Current<records::SpriteObject>()->draw_flags = 0x81;
+    rv::Current<records::SpriteObject>()->type = 4;
+    rv::Current<records::SpriteObject>()->step_frames = 0;
+    g.set_animation(static_cast<unsigned char>(static_cast<U>(rv::Current<records::SpriteObject>()->type) + 8));
     AreaW0b_PartySet = 0xFF;
     const U any = g.list_files() != 0 ? 1 : 0;
     Game_Step = static_cast<std::uint32_t>(Game_Step) + 1;

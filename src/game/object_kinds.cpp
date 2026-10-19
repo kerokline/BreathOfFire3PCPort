@@ -21,6 +21,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -99,7 +100,6 @@ Callees g = Originals();
 
 // The field object, typed (src/game/records.h): the handlers' argument, which
 // the loops also make Sprite_Current.
-records::SpriteObject* Cur() { return reinterpret_cast<records::SpriteObject*>(Sprite_Current); }
 
 unsigned char Pace(unsigned char* object, unsigned speed, unsigned flags) {
     return g.pace[Sprite_Current[2]](object, speed, flags);
@@ -110,20 +110,20 @@ unsigned char Pace(unsigned char* object, unsigned speed, unsigned flags) {
 // while that pose holds - or the move is cancelled; then the settle and the
 // motion. `direction` is Sprite_Current[8] as the handler found it.
 void TurnOrCancel(unsigned char* object, unsigned char direction, bool turn, unsigned char turn_to) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     if (turn) {
-        Sprite_Current[3] = Cur()->state;
-        Cur()->state = 0x0A;
+        Sprite_Current[3] = rv::Current<records::SpriteObject>()->state;
+        rv::Current<records::SpriteObject>()->state = 0x0A;
         obj->saved_facing = turn_to;
-        Cur()->direction = direction & 7;
+        rv::Current<records::SpriteObject>()->direction = direction & 7;
         Sprite_Current[0xA] = 0;
-        Cur()->step_frames = 0;
+        rv::Current<records::SpriteObject>()->step_frames = 0;
         g.turn(object);
-        if (Cur()->state == 0x0A) return;   // no settle, no motion this frame
-        Cur()->direction = direction;
+        if (rv::Current<records::SpriteObject>()->state == 0x0A) return;   // no settle, no motion this frame
+        rv::Current<records::SpriteObject>()->direction = direction;
     } else {
-        Cur()->step_frames = 0;
-        Cur()->direction = direction;
+        rv::Current<records::SpriteObject>()->step_frames = 0;
+        rv::Current<records::SpriteObject>()->direction = direction;
     }
     g.settle(object, direction);
     g.motion(object);
@@ -131,10 +131,10 @@ void TurnOrCancel(unsigned char* object, unsigned char direction, bool turn, uns
 
 // Entries 0 and 3: a random walk, the second kept inside a home box.
 void Wander(unsigned char* object, bool home) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
-    const unsigned char direction = Cur()->direction;
+    auto* const obj = rv::As<records::SpriteObject>(object);
+    const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     Pace(object, 0, 1);
-    if (Cur()->step_frames != 0) {   // a timed move runs
+    if (rv::Current<records::SpriteObject>()->step_frames != 0) {   // a timed move runs
         g.motion(object);
         return;
     }
@@ -143,7 +143,7 @@ void Wander(unsigned char* object, bool home) {
     if (obj->move_steps == 0) {
         if (speed_index != 0 && Pace(object, speed, 2)) {
             g.random_turn(object);
-            if (Cur()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((g.rand() & 3) + 3);
+            if (rv::Current<records::SpriteObject>()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((g.rand() & 3) + 3);
         }
     } else {
         // Not guarded against speed 0, as the original: Field_Pace0 then
@@ -152,7 +152,7 @@ void Wander(unsigned char* object, bool home) {
         --obj->move_steps;
     }
     const unsigned char turn_to = g.open_direction(object);
-    const bool turn = turn_to != 0xFF && Cur()->step_frames != 0 && (!home || g.in_home(object));
+    const bool turn = turn_to != 0xFF && rv::Current<records::SpriteObject>()->step_frames != 0 && (!home || g.in_home(object));
     TurnOrCancel(object, direction, turn, turn_to);
 }
 
@@ -160,10 +160,10 @@ void Wander(unsigned char* object, bool home) {
 // no speed they return before the settle and the motion, which the wander
 // kinds do not (the PSX's twins alike).
 void Chase(unsigned char* object, unsigned char (__cdecl* pick)(unsigned char*), unsigned char toward) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
-    const unsigned char direction = Cur()->direction;
+    auto* const obj = rv::As<records::SpriteObject>(object);
+    const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     Pace(object, 0, 1);
-    if (Cur()->step_frames != 0) {
+    if (rv::Current<records::SpriteObject>()->step_frames != 0) {
         g.motion(object);
         return;
     }
@@ -174,14 +174,14 @@ void Chase(unsigned char* object, unsigned char (__cdecl* pick)(unsigned char*),
         if (speed_index == 0) return;
         if (Pace(object, speed, 2)) {
             turn_to = pick(object);
-            if (Cur()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((g.rand() & 3) + 3);
+            if (rv::Current<records::SpriteObject>()->step_frames != 0) obj->move_steps = static_cast<unsigned char>((g.rand() & 3) + 3);
         }
     } else {
         Pace(object, speed, 2);
         turn_to = g.best(object, toward);
         --obj->move_steps;
     }
-    const bool turn = turn_to != 0xFF && Cur()->step_frames != 0;
+    const bool turn = turn_to != 0xFF && rv::Current<records::SpriteObject>()->step_frames != 0;
     TurnOrCancel(object, direction, turn, static_cast<unsigned char>(turn_to & 7));
 }
 
@@ -194,7 +194,7 @@ int TintSum(const unsigned char* r) {   // signed bytes, as the original's movsx
 void FadeOutStart() {
     const unsigned char index = g.set_tint(Sprite_Current, 0x1F, 0x1F, 0x1F, 1);
     Field_ActiveMember[0x9F] = index;
-    Cur()->flags &= 0xBF;
+    rv::Current<records::SpriteObject>()->flags &= 0xBF;
     Sprite_Current[4] = 1;
 }
 void FadeOutStep() {
@@ -207,7 +207,7 @@ void FadeOutStep() {
     if (TintSum(TintRecord(index)) != 0) return;
     g.tint_release(index);
     Field_ActiveMember[0x80] &= 0xFD;   // context bit 1, which chose this pose
-    Cur()->state = Sprite_Current[3];
+    rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
     Sprite_Current[4] = 0;
 }
 void FadeInStart() {
@@ -225,7 +225,7 @@ void FadeInStep() {
     if (TintSum(TintRecord(index)) != 0x5D) return;
     g.tint_release(index);
     Field_ActiveMember[0x80] &= 0xFB;   // context bit 2
-    Cur()->state = Sprite_Current[3];
+    rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
     Sprite_Current[4] = 0;
 }
 
@@ -233,14 +233,14 @@ void FadeInStep() {
 // step up (to 0xFA, by `add` - so Field_Pace5's 0xF9 reaches 0xFB) and
 // return 1; else with flags bit 1 and steps left, a move's frames.
 unsigned char PaceCounted(unsigned char* object, unsigned speed, unsigned flags, unsigned char bit, unsigned char add) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     if ((flags & 1) && ((At(Field_EdgeBits_addr)[0] ^ At(Field_EdgeBitsPrev_addr)[0]) & bit)) {
         if (obj->move_steps < 0xFA) obj->move_steps = static_cast<unsigned char>(obj->move_steps + add);
         return 1;
     }
     if ((flags & 2) && obj->move_steps != 0) {
-        Cur()->step_frames = static_cast<unsigned char>(0x20 / static_cast<int>(speed & 0xFF));   // 0 faults, as the idiv
-        Sprite_Current[0xA] = static_cast<unsigned char>(Cur()->step_frames >> 1);
+        rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(0x20 / static_cast<int>(speed & 0xFF));   // 0 faults, as the idiv
+        Sprite_Current[0xA] = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames >> 1);
     }
     return 0;
 }
@@ -265,9 +265,9 @@ extern "C" void __cdecl Field_ObjectWanderHome(unsigned char* object) { Wander(o
 // original 0x518AC0, entry 5 (PSX 0x801A3724): the wait Sprite_SetPoseWait
 // begins; context bit 4 while it counts, then the pose back.
 extern "C" void __cdecl Field_ObjectWait(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     if (obj->pose_wait == 0) {
-        Cur()->state = Sprite_Current[3];
+        rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
         return;
     }
     --obj->pose_wait;
@@ -276,8 +276,8 @@ extern "C" void __cdecl Field_ObjectWait(unsigned char* object) {
 
 // original 0x517FE0, entry 6 (PSX 0x801A2A2C): standing still.
 extern "C" void __cdecl Field_ObjectStill(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
-    if (Cur()->type != 8) obj->context |= 0x10;
+    auto* const obj = rv::As<records::SpriteObject>(object);
+    if (rv::Current<records::SpriteObject>()->type != 8) obj->context |= 0x10;
 }
 
 // original 0x5193B0, entry 8 (PSX 0x801A459C): a fade to black, the pose for
@@ -315,33 +315,33 @@ extern "C" void __cdecl Field_ObjectFadeIn(unsigned char* object) {
 // (target - direction) & 7, which cannot be negative - kept as the plain
 // masked difference.
 extern "C" void __cdecl Field_ObjectTurn(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
-    if (Cur()->flags2 & 8) Cur()->direction = obj->saved_facing;
+    auto* const obj = rv::As<records::SpriteObject>(object);
+    if (rv::Current<records::SpriteObject>()->flags2 & 8) rv::Current<records::SpriteObject>()->direction = obj->saved_facing;
     if (Sprite_Current[0xA] != 0) {
         --Sprite_Current[0xA];
         return;
     }
     const unsigned char target = obj->saved_facing;
-    const unsigned char facing = Cur()->direction;
+    const unsigned char facing = rv::Current<records::SpriteObject>()->direction;
     if (target == facing) {
-        Cur()->state = Sprite_Current[3];
-        if (!(Cur()->flags2 & 0x80) && g.blocked_ahead(object)) {
-            Cur()->direction &= 7;
+        rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
+        if (!(rv::Current<records::SpriteObject>()->flags2 & 0x80) && g.blocked_ahead(object)) {
+            rv::Current<records::SpriteObject>()->direction &= 7;
             Sprite_Current[0xA] = 0;
             return;
         }
         unsigned char* const context = object + 0x80;
-        g.move(context, Cur()->direction);   // the whole byte, bit 3 and all
-        Cur()->direction |= 8;
+        g.move(context, rv::Current<records::SpriteObject>()->direction);   // the whole byte, bit 3 and all
+        rv::Current<records::SpriteObject>()->direction |= 8;
         context[0] |= 8;
-        Sprite_Current[0xA] = static_cast<unsigned char>(Cur()->step_frames >> 1);
+        Sprite_Current[0xA] = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames >> 1);
         return;
     }
     Sprite_Current[0xA] = 3;
     const int step = ((target - facing) & 7) < 4 ? 1 : -1;
-    Cur()->step_z = 0;
-    Cur()->step_x = 0;
-    Cur()->direction = static_cast<unsigned char>((Cur()->direction + step) & 7);
+    rv::Current<records::SpriteObject>()->step_z = 0;
+    rv::Current<records::SpriteObject>()->step_x = 0;
+    rv::Current<records::SpriteObject>()->direction = static_cast<unsigned char>((rv::Current<records::SpriteObject>()->direction + step) & 7);
     obj->context |= 8;
 }
 
@@ -352,8 +352,8 @@ extern "C" void __cdecl Field_ObjectTurn(unsigned char* object) {
 extern "C" unsigned char __cdecl Field_Pace0(unsigned char* object, unsigned speed, unsigned flags) {
     (void)object;
     if (flags & 2) {
-        Cur()->step_frames = static_cast<unsigned char>(0x20 / static_cast<int>(speed & 0xFF));
-        Sprite_Current[0xA] = static_cast<unsigned char>(Cur()->step_frames >> 1);
+        rv::Current<records::SpriteObject>()->step_frames = static_cast<unsigned char>(0x20 / static_cast<int>(speed & 0xFF));
+        Sprite_Current[0xA] = static_cast<unsigned char>(rv::Current<records::SpriteObject>()->step_frames >> 1);
     }
     return 1;
 }
@@ -377,34 +377,34 @@ extern "C" unsigned char __cdecl Field_Pace6(unsigned char* object, unsigned spe
 // compared with the unmasked byte, so a moving sprite (bit 3) always counts
 // as changed; kept, the PSX compares the same way.
 extern "C" unsigned char __cdecl Field_ObjectOpenDirection(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
-    const unsigned char entry = Cur()->direction & 7;
+    auto* const obj = rv::As<records::SpriteObject>(object);
+    const unsigned char entry = rv::Current<records::SpriteObject>()->direction & 7;
     unsigned char turns = 0;
     do {
         if (!g.blocked_ahead(object)) break;
-        Cur()->direction = static_cast<unsigned char>((Cur()->direction + 2) & 7);
+        rv::Current<records::SpriteObject>()->direction = static_cast<unsigned char>((rv::Current<records::SpriteObject>()->direction + 2) & 7);
         ++turns;
     } while (turns < 4);
-    if (entry != Cur()->direction) obj->context |= 8;
+    if (entry != rv::Current<records::SpriteObject>()->direction) obj->context |= 8;
     if (turns >= 4) return 0xFF;
-    return Cur()->direction & 7;
+    return rv::Current<records::SpriteObject>()->direction & 7;
 }
 
 // original 0x518DD0 (PSX FUN_801A3C18): a random odd direction. The original
 // pushes 0x80 for Rand, which takes nothing.
 extern "C" unsigned char __cdecl Field_ObjectRandomTurn(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     const auto direction = static_cast<unsigned char>((g.rand() & 6) | 1);
-    if ((Cur()->direction & 7) == direction) return Cur()->direction;
-    Cur()->direction = direction;
+    if ((rv::Current<records::SpriteObject>()->direction & 7) == direction) return rv::Current<records::SpriteObject>()->direction;
+    rv::Current<records::SpriteObject>()->direction = direction;
     obj->context |= 8;
-    return Cur()->direction;
+    return rv::Current<records::SpriteObject>()->direction;
 }
 
 // original 0x518000 (PSX FUN_801A2A60): whether the next step stays in the
 // home box. Everything from the argument, not Sprite_Current.
 extern "C" unsigned char __cdecl Field_ObjectInHome(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     const unsigned char* const step = At(Field_DirectionSteps_addr) + (object[8] & 7) * 8u;
     const std::uint32_t x = static_cast<std::uint32_t>(Long(step)) + static_cast<std::uint32_t>(obj->x);
     const std::uint32_t z = static_cast<std::uint32_t>(Long(step + 4)) + static_cast<std::uint32_t>(obj->z);
@@ -440,48 +440,48 @@ extern "C" void __cdecl Field_ObjectLinked() {
 // frames (+0x9C) steps aside - to the first of four directions, by the
 // leader's facing, that is open (and, for pose 3, inside the home box).
 extern "C" void __cdecl Field_ObjectIdleLong(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     const unsigned char speed_index = obj->speed;
     obj->counter = 0;
     if (speed_index == 0) return;
-    if (Cur()->state == 6 || Cur()->state == 4 || Sprite_Current[3] == 4) return;
+    if (rv::Current<records::SpriteObject>()->state == 6 || rv::Current<records::SpriteObject>()->state == 4 || Sprite_Current[3] == 4) return;
     g.pace0(object, Field_MoveSpeeds[speed_index], 2);
-    const unsigned char direction = Cur()->direction;
+    const unsigned char direction = rv::Current<records::SpriteObject>()->direction;
     unsigned char n = 0;
     for (; n < 4; ++n) {
-        Cur()->direction = At(kAsideRows)[n + (ObjTrio[8] & 7) * 4u];
+        rv::Current<records::SpriteObject>()->direction = At(kAsideRows)[n + (ObjTrio[8] & 7) * 4u];
         if (g.blocked_ahead(object)) continue;
-        if (Cur()->state == 3 || Sprite_Current[3] == 3) {
+        if (rv::Current<records::SpriteObject>()->state == 3 || Sprite_Current[3] == 3) {
             if (g.in_home(object)) break;
             continue;
         }
         break;
     }
     // (The original tests n < 4 again after a found direction - never false.)
-    if (n >= 4 || Cur()->step_frames == 0) {
-        Cur()->direction = direction & 7;
-        Cur()->step_frames = 0;
+    if (n >= 4 || rv::Current<records::SpriteObject>()->step_frames == 0) {
+        rv::Current<records::SpriteObject>()->direction = direction & 7;
+        rv::Current<records::SpriteObject>()->step_frames = 0;
         return;
     }
     if (obj->pose_wait != 0) {
         // [3] was not 4 on entry; only a callee changing it reaches this.
         if (Sprite_Current[3] == 4) {
-            Cur()->direction = direction;   // unmasked here
+            rv::Current<records::SpriteObject>()->direction = direction;   // unmasked here
             return;
         }
         obj->pose_wait = 0;
-        Cur()->state = Sprite_Current[3];
+        rv::Current<records::SpriteObject>()->state = Sprite_Current[3];
     }
     unsigned char* const context = object + 0x80;
-    g.move(context, Cur()->direction);
-    Cur()->direction |= 8;
-    if (!(Cur()->flags2 & 8)) context[0] |= 8;
+    g.move(context, rv::Current<records::SpriteObject>()->direction);
+    rv::Current<records::SpriteObject>()->direction |= 8;
+    if (!(rv::Current<records::SpriteObject>()->flags2 & 8)) context[0] |= 8;
 }
 
 // original 0x517F30 (PSX FUN_801A28D0): an object touched (context bit 5)
 // with no talk (bit 4).
 extern "C" void __cdecl Field_ObjectIdle(unsigned char* object) {
-    auto* const obj = reinterpret_cast<records::SpriteObject*>(object);
+    auto* const obj = rv::As<records::SpriteObject>(object);
     if (Field_Request == 2) return;
     if (obj->trigger != 0xFF) g.trigger(object);
     if (Field_Request == 2) return;
@@ -526,7 +526,7 @@ extern "C" unsigned char __cdecl MoveScript_SetTurnTarget(unsigned char* context
         Field_Request = 2;
     }
     SetWord(context + 8, word);
-    if (Cur()->flags2 & 4) context[0] &= 0xDF;
+    if (rv::Current<records::SpriteObject>()->flags2 & 4) context[0] &= 0xDF;
     unsigned char* const member = Field_ActiveMember;
     std::memcpy(At(AreaW1a_FocusObject_addr), &member, sizeof member);
     return 1;

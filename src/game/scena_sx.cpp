@@ -37,6 +37,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/scena_sx_callees.h"
 #include "game/scenario_harness.h"
@@ -54,8 +55,6 @@ using move_script::SetLong;
 // sprite-family pointer; it is used below +0x80 only (the sprite head every
 // family shares) unless the pointer is a Sprite_Objects / Sprite_ObjectsExtra /
 // Sprite_Kind2 record. Party() is a party member (ObjTrio, Field_State).
-static records::SpriteObject* Spr(unsigned char* p) { return reinterpret_cast<records::SpriteObject*>(p); }
-static records::PartyMember* Party(unsigned char* p) { return reinterpret_cast<records::PartyMember*>(p); }
 using move_script::SetWord;
 using move_script::Word;
 
@@ -170,8 +169,8 @@ extern "C" void __cdecl Party_PlaceForBattle(std::int32_t x, std::int32_t z, uns
             static_cast<std::int32_t>(BossSi_CentreX), static_cast<std::int32_t>(BossSi_CentreZ), slot_arg);
         unsigned char* const s = Sprite_Current;
         unsigned char* const pos = At(at::kSlotPositions + (slot_arg & 0xFF) * 8);
-        SetLong(pos, Spr(s)->x);
-        SetLong(pos + 4, Spr(s)->z);
+        SetLong(pos, rv::As<records::SpriteObject>(s)->x);
+        SetLong(pos + 4, rv::As<records::SpriteObject>(s)->z);
         s[0x48] = 0;
         s[8] = At(bof3::addr::BattleFormation_Anims)[At(at::kFormation)[0]];
         const auto p = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(s));
@@ -309,7 +308,7 @@ extern "C" std::uint32_t __cdecl Char_LoseHp(std::uint32_t amount, unsigned memb
     unsigned char* const actor = Record(Field_State[0x148]);
     if (Word(actor + 0x18) <= (Word(actor + 0x20) >> 2)) {
         SetWord(actor + 0x10, Word(actor + 0x10) | 0x2000);
-        SetWord(Field_State + 0x90, Party(Field_State)->status | 0x2000);
+        SetWord(Field_State + 0x90, rv::As<records::PartyMember>(Field_State)->status | 0x2000);
     }
     return took;
 }

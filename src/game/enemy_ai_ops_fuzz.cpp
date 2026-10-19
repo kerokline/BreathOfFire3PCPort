@@ -22,6 +22,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/enemy_ai_ops_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -69,7 +70,7 @@ std::uint32_t En() { return static_cast<std::uint32_t>(Long(At(BattleE3_CurrentE
 
 // The step bytes inside the swapped block: +1 below 12, +2 below 6, +3 below 9.
 void SmallSteps(unsigned char* e, std::uint32_t h) {
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     enemy_rec->state[0] = static_cast<unsigned char>(h % 12);
     enemy_rec->state[1] = static_cast<unsigned char>((h >> 4) % 6);
     enemy_rec->state[2] = static_cast<unsigned char>((h >> 8) % 9);
@@ -91,7 +92,7 @@ void Disturb() {
     case 3: Sprite_Current[5] = static_cast<unsigned char>(Actor(h >> 9)); break;
     case 4: Sprite_Current[7] = static_cast<unsigned char>(v % 0x40); break;
     case 5: Current()[0x92 + w % 2] = static_cast<unsigned char>(v); break;
-    case 6: reinterpret_cast<records::BattleEnemy*>(Current())->shown = static_cast<unsigned char>(v); break;
+    case 6: rv::As<records::BattleEnemy>(Current())->shown = static_cast<unsigned char>(v); break;
     case 7: SetWord(Current() + 0x108, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
     case 8: SetWord(Current() + 0x10A, v % 3 == 0 ? 0 : v % 3 == 1 ? 0x10000u - v : v); break;
     case 9: SetWord(Current() + 0xA4, v % 3 == 0 ? 0 : w); break;
@@ -381,7 +382,7 @@ void Fix() {
     SetPtr(BattleE3_CurrentEnemy_addr, Often() ? Sprite_Current : EnemyObj(Next()));
     for (unsigned i = 0; i < at::kEnemyCount; ++i) {
         unsigned char* const e = EnemyObj(i);
-        auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+        auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
         SmallSteps(e, Next());
         enemy_rec->actor = static_cast<unsigned char>(Actor(Next()));
         e[7] = static_cast<unsigned char>(Next() % 0x40);
@@ -401,7 +402,7 @@ void Fix() {
 void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     unsigned char* const e = Current();
-    auto* const enemy_rec = reinterpret_cast<records::BattleEnemy*>(e);
+    auto* const enemy_rec = rv::As<records::BattleEnemy>(e);
     switch (k) {
     case kStepDispatch: s[1] = static_cast<unsigned char>(Often() ? Next() % 12 : Next() % kBlockEntries); break;
     case kEnterDispatch: s[2] = static_cast<unsigned char>(Often() ? Next() % 2 : Next() % 33); break;

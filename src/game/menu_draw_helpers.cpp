@@ -48,6 +48,7 @@
 #include "game/menu_draw_helpers_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "game/yes_no_layout.h"
@@ -83,11 +84,9 @@ unsigned char* Rec() {
 // The typed view of a window record (docs/typed-records.md; WindowRecords
 // 0x803160, the records BattleWinStates_Current points at). Only +0..+7 are
 // typed: +8..+0x1F mean something else in each handler (typed-records 3).
-static records::WindowRecord* Win(unsigned char* p) { return reinterpret_cast<records::WindowRecord*>(p); }
-static const records::WindowRecord* Win(const unsigned char* p) { return reinterpret_cast<const records::WindowRecord*>(p); }
 short S(const unsigned char* p) { return static_cast<short>(Word(p)); }
-unsigned X(const unsigned char* w) { return Win(w)->centre_x; }
-unsigned Y(const unsigned char* w) { return Win(w)->centre_y; }
+unsigned X(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->centre_x; }
+unsigned Y(const unsigned char* w) { return rv::As<records::WindowRecord>(w)->centre_y; }
 
 // `call / jmp [table + index * 4]`: the .data dword read at the call, the
 // index unbounded as in the original (a byte, zero-extended).
@@ -105,19 +104,19 @@ unsigned Member(unsigned slot) { return At(MoveScript_EffectState_addr + At(Cond
 // `below` says which side) it is set to `to` and the step +3 goes to 0.
 void SlideX(int by, short bound, bool below, short to) {
     unsigned char* const w = Rec();
-    Win(w)->centre_x = static_cast<unsigned>(Win(w)->centre_x + by);
+    rv::As<records::WindowRecord>(w)->centre_x = static_cast<unsigned>(rv::As<records::WindowRecord>(w)->centre_x + by);
     const short x = S(w + 4);
     if (below ? x < bound : x > bound) {
-        Win(w)->centre_x = static_cast<std::uint16_t>(to);
+        rv::As<records::WindowRecord>(w)->centre_x = static_cast<std::uint16_t>(to);
         w[3] = 0;
     }
 }
 void SlideY(int by, short bound, bool below, short to) {
     unsigned char* const w = Rec();
-    Win(w)->centre_y = static_cast<unsigned>(Win(w)->centre_y + by);
+    rv::As<records::WindowRecord>(w)->centre_y = static_cast<unsigned>(rv::As<records::WindowRecord>(w)->centre_y + by);
     const short y = S(w + 6);
     if (below ? y < bound : y > bound) {
-        Win(w)->centre_y = static_cast<std::uint16_t>(to);
+        rv::As<records::WindowRecord>(w)->centre_y = static_cast<std::uint16_t>(to);
         w[3] = 0;
     }
 }
@@ -258,10 +257,10 @@ extern "C" void __cdecl ShopWin_MemberSlideUp(void) { SlideY(-0x10, 0x3E, true, 
 // low word and step 0 - the panel for party slot +0xA, 0x36 below the last.
 extern "C" void __cdecl ShopWin_MemberSlideDown(void) {
     unsigned char* const w = Rec();
-    Win(w)->centre_y = static_cast<unsigned>(Win(w)->centre_y + 0x10);
+    rv::As<records::WindowRecord>(w)->centre_y = static_cast<unsigned>(rv::As<records::WindowRecord>(w)->centre_y + 0x10);
     const int bound = static_cast<int>(w[0xA]) * 0x36 + 0x3E;
     if (static_cast<int>(S(w + 6)) > bound) {
-        Win(w)->centre_y = static_cast<unsigned>(bound);
+        rv::As<records::WindowRecord>(w)->centre_y = static_cast<unsigned>(bound);
         w[3] = 0;
     }
 }
