@@ -2002,3 +2002,33 @@ made them: zero pages, unchanged pages, and an LZ ratio, in a table.
 
 ### Outcome
 _(2026-10-17) open; logged at the owner's word, nothing measured._
+
+## I46 — A quicksave is native memory: revisit what loading one trusts
+
+**Ask (2026-10-19, the owner):** leave a note to consider this again later.
+**Kind:** engine   **Feasibility:** HIGH   **Gated on:** the quicksave round
+built; the owner's word to pick it up.
+
+An emulator's save state holds the emulated console's memory, so a doctored
+state can at worst misbehave inside the emulator. A quicksave here
+([`quicksave-round.md`](quicksave-round.md)) is the native process's own
+memory: the image span and the task stacks, with return addresses into
+`bof3x.dll`'s real code, written straight back on a quick-load. A doctored
+quicksave can therefore run anything, and the DLL's load address (fixed
+since 2026-10-19, the owner's call) does not change that. The game is
+offline and single-player; the realistic case is a quicksave shared online
+and loaded by someone else.
+
+What the round already does: the file records the build and the DLL base
+and refuses a mismatch (that catches the everyday case, a quicksave from
+another build, not a doctored one). `docs/quicksave.md` says to treat a
+quicksave like a program: load your own.
+
+Options when picked up, none chosen:
+- A per-install key (made on first run, kept beside the ini) and a MAC over
+  the file: the F5 menu and F7 refuse a quicksave this install did not
+  write. Cheap; stops shared files, not a local attacker (who has the key).
+- Validating the return addresses on the task slices against the known
+  resume points in our code before writing them back. Narrower, and does
+  not cover function pointers elsewhere in the span.
+- Nothing beyond the note, if quicksaves stay a local convenience.

@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "bof3/symbols.gen.h"
 #include "hook/log.h"
 #include "render/fb_grab.h"
 
@@ -266,14 +267,178 @@ TexVersion* NewVersion(Surface* s) {
     return v;
 }
 
+// --- the quicksave's deferred releases (SP-G, docs/quicksave.md, the graphics participant) ---
+// A quick-load gives up every texture the live caches held. The frame recorded
+// before the load is still to be presented (the next Gpu_PutDispEnv), and its
+// draws name those surfaces' versions: released now, each would copy its
+// pixels into the frame arena (BeforeWrite) - a page texture is 128 KB, the
+// arena 8 MB. So they are released right after that present, when no draw
+// needs them; until then they are only unreachable from the game.
+constexpr U kMaxDeferred = 2 * kMaxSurfaces + 512;
+void* g_deferred[kMaxDeferred];
+U g_n_deferred;
+
+bool Ours(void* object) {
+    void* const* const vtable = *static_cast<void* const* const*>(object);
+    return vtable == g_surface_vtable || vtable == g_texture_vtable;
+}
+
+void ComRelease(void* object) {
+    using ReleaseFn = unsigned long(__stdcall*)(void*);
+    (*static_cast<ReleaseFn* const*>(object))[2](object);
+}
+
+void ReleaseDeferred() {
+    for (U i = 0; i < g_n_deferred; ++i) ComRelease(g_deferred[i]);
+    g_n_deferred = 0;
+}
+
+// --- BOF3X_FRAMEHASH: what each draw of the lists draws, as one number --------------
+// The quicksave's graphics check (docs/quicksave.md, the graphics participant): a restore
+// followed by a frame must draw what the live game drew from the same state.
+// At each present one line per walk of the lists in the frame: a 64-bit FNV-1a
+// over the walk's commands in order but the clears - the kind, the pipe state but its
+// pointers, the vertices each draw names, and for a textured draw the CONTENT
+// of the texture version it samples (size, format, colour key, the pixels row
+// by row within the width) - never an address, so two walks drawn with rebuilt
+// textures hash alike when their pixels are alike. A walk is the commands
+// appended under one Frame_Counter (WinMain draws once a pass of its loop, and
+// the count moves between passes), tagged with it: the lists that logic frame
+// left. A present can carry two walks - Gpu_PutDispEnv presents only when the
+// display buffer changed, and two logic frames between draws flip it back -
+// so the lines are per walk, not per present.
+constexpr U kMaxWalks = 16;
+U g_walk_start[kMaxWalks], g_walk_tag[kMaxWalks];
+U g_n_walks;
+
+bool FrameHashOn() {
+    static int on = -1;
+    if (on < 0) on = GetEnvironmentVariableA("BOF3X_FRAMEHASH", nullptr, 0) > 0 ? 1 : 0;
+    return on != 0;
+}
+
+struct Fnv {
+    unsigned long long h = 0xCBF29CE484222325ull;
+    void Bytes(const void* p, std::size_t n) {
+        const auto* b = static_cast<const unsigned char*>(p);
+        for (std::size_t i = 0; i < n; ++i) h = (h ^ b[i]) * 0x100000001B3ull;
+    }
+    template <class T>
+    void Put(const T& v) {
+        Bytes(&v, sizeof v);
+    }
+};
+
+unsigned long long TextureHash(const TexVersion* v) {
+    Fnv f;
+    const Surface* s = v->surface;
+    f.Put(s->width);
+    f.Put(s->height);
+    f.Put(s->bpp);
+    const bool keyed = v->pixels ? v->has_color_key : s->has_color_key;
+    f.Put(keyed);
+    if (keyed) f.Put(v->pixels ? v->color_key : s->color_key);
+    const unsigned char* pixels = v->pixels ? v->pixels : s->pixels;
+    if (pixels) {
+        const U row = s->width * (s->bpp / 8);
+        for (U y = 0; y < s->height; ++y) f.Bytes(pixels + y * s->pitch, row);
+    }
+    return f.h;
+}
+
+void LogWalkHash(U first, U end, U tag) {
+    // Each texture version hashed once a walk: (version, hash) pairs, a
+    // linear search (a walk binds tens of versions).
+    constexpr U kSeen = 512;
+    static const TexVersion* seen[kSeen];
+    static unsigned long long seen_hash[kSeen];
+    U n_seen = 0, n_textures = 0, n_vertices = 0, n_clears = 0;
+    Fnv f;
+    for (U i = first; i < end; ++i) {
+        const Command& c = g_frame.commands[i];
+        if (c.kind == Cmd::kClear) {
+            // Not hashed: the back buffer's clear follows a present
+            // (Gfx_ClearPresent), and a walk drawn after two logic frames
+            // follows none - the present's timing, not the lists'.
+            ++n_clears;
+            continue;
+        }
+        f.Put(c.kind);
+        if (c.kind == Cmd::kGrab) {
+            f.Put(c.grab_x);
+            f.Put(c.grab_y);
+            f.Put(c.grab_w);
+            f.Put(c.grab_h);
+            f.Put(c.grab_slot);
+            continue;
+        }
+        const PipeState& st = c.state;
+        f.Put(st.src_blend);
+        f.Put(st.dst_blend);
+        f.Put(st.blend_enable);
+        f.Put(st.alpha_test);
+        f.Put(st.alpha_ref);
+        f.Put(st.alpha_func);
+        f.Put(st.color_key);
+        f.Put(st.specular);
+        f.Put(st.alpha_modulate);
+        f.Put(st.point_filter);
+        f.Put(st.flat);
+        f.Put(st.topology);
+        f.Put(st.grab_slot);
+        if (st.grab_slot) {
+            f.Put(st.grab_off);
+            f.Put(st.grab_tile);
+            f.Put(st.grab_size);
+        }
+        f.Put(st.texture != nullptr);
+        if (st.texture) {
+            U k = 0;
+            while (k < n_seen && seen[k] != st.texture) ++k;
+            unsigned long long th;
+            if (k < n_seen) {
+                th = seen_hash[k];
+            } else {
+                th = TextureHash(st.texture);
+                ++n_textures;
+                if (n_seen < kSeen) {
+                    seen[n_seen] = st.texture;
+                    seen_hash[n_seen++] = th;
+                }
+            }
+            f.Put(th);
+        }
+        f.Put(c.count);
+        n_vertices += c.count;
+        if (c.first + c.count <= g_frame.n_vertices) f.Bytes(g_frame.vertices + c.first, c.count * sizeof(Vertex));
+    }
+    bof3::Log("framehash   drawn at Frame_Counter %u: %u commands, %u vertices, %u textures, %08X%08X (%u clears)", tag,
+              end - first - n_clears, n_vertices, n_textures, static_cast<U>(f.h >> 32), static_cast<U>(f.h), n_clears);
+}
+
+void LogFrameHash() {
+    for (U w = 0; w < g_n_walks; ++w)
+        LogWalkHash(g_walk_start[w], w + 1 < g_n_walks ? g_walk_start[w + 1] : g_frame.n_commands, g_walk_tag[w]);
+}
+
 void Present() {
+    if (FrameHashOn()) LogFrameHash();
     if (g_present) g_present(g_frame);
     ResetFrame();
+    ReleaseDeferred();
 }
 
 void AppendCommand(const Command& c) {
     if (g_frame.n_commands >= g_frame.max_commands)
         bof3::Fatal("render: a frame holds more than %u commands", g_frame.max_commands);
+    if (FrameHashOn()) {
+        const U fc = static_cast<U>(Frame_Counter);
+        if (g_n_walks == 0 || g_walk_tag[g_n_walks - 1] != fc) {
+            if (g_n_walks == kMaxWalks) bof3::Fatal("render: BOF3X_FRAMEHASH - more than %u walks in one present", kMaxWalks);
+            g_walk_start[g_n_walks] = g_frame.n_commands;
+            g_walk_tag[g_n_walks++] = fc;
+        }
+    }
     g_frame.commands[g_frame.n_commands++] = c;
 }
 
@@ -975,6 +1140,7 @@ void SetClearColor(U argb) { g_clear_color = argb; }
 Frame& CurrentFrame() { return g_frame; }
 
 void ResetFrame() {
+    g_n_walks = 0;
     g_frame.n_vertices = 0;
     g_frame.n_commands = 0;
     g_frame.arena_used = 0;
@@ -1078,5 +1244,44 @@ Surface* const* AllSurfaces(U* n) {
     *n = g_n_surfaces;
     return g_surfaces;
 }
+
+// --- the quicksave (SP-G, docs/quicksave.md, the graphics participant) -----------------------------
+
+void ReleaseAfterPresent(void* object) {
+    if (!object) return;
+    if (!Ours(object)) {
+        // Capcom's DirectX 6 objects (BOF3X_ORIGINAL): nothing of ours draws
+        // from them later, and DirectDraw keeps what a pending blit needs.
+        ComRelease(object);
+        return;
+    }
+    if (g_n_deferred >= kMaxDeferred) bof3::Fatal("render: more than %u releases deferred to the next present", kMaxDeferred);
+    g_deferred[g_n_deferred++] = object;
+}
+
+U DeferredReleases() { return g_n_deferred; }
+
+void ReleaseDeferredNow() { ReleaseDeferred(); }
+
+PipeState PipeForSnapshot() {
+    PipeState s = g_state;
+    s.texture = nullptr;
+    s.grab_slot = 0;
+    std::memset(s.grab_off, 0, sizeof s.grab_off);
+    std::memset(s.grab_tile, 0, sizeof s.grab_tile);
+    std::memset(s.grab_size, 0, sizeof s.grab_size);
+    return s;
+}
+
+void RestorePipe(const PipeState& state, U clear_color) {
+    g_state = state;
+    g_state.texture = nullptr;
+    g_state.grab_slot = 0;
+    g_clear_color = clear_color;
+}
+
+U ClearColor() { return g_clear_color; }
+
+void ForgetGrabs() { g_grabs.Clear(); }
 
 }  // namespace render

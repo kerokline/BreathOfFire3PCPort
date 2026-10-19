@@ -1,5 +1,8 @@
 #include "hook/inject_all.h"
 
+#include "hook/snapshot.h"
+#include "render/gfx_snapshot.h"
+
 #include "game/band_census.h"
 #include "hook/gapwatch.h"
 #include "game/wide_staging.h"
@@ -104,6 +107,7 @@
 #include "game/sprt_draw.h"
 #include "game/field_misc.h"
 #include "game/save_menu.h"
+#include "game/quick_menu.h"
 #include "game/event_ops.h"
 #include "game/menu_windows.h"
 #include "game/shoulder_glyphs.h"
@@ -1475,6 +1479,12 @@ void InjectAll() {
                                 // every module's self-test, which all compared the MP3 path
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
+    GfxSnapshot_Inject();       // the quicksave round's SP-G (render/gfx_snapshot.h): the graphics participant and
+                                // its self-test - before Snapshot_Inject, beside it, after every module's self-test
+    Snapshot_Inject();          // the quicksave round's SN (docs/quicksave.md): the snapshot core's self-test
+                                // (BOF3X_SHADOW=snapshot) - after DrawPool_Grow, which places the hosted pool it copies
+    QuickMenu_Inject();         // the quicksave round's QM: the lists' and the cursor's self-test, then draft B's
+                                // split save list (SaveLists) - after every module's self-test, which compared the original's
     InjectReport();
 }
 

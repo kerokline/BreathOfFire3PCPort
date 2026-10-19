@@ -865,6 +865,12 @@ void InputScript_PausedLatch() {
     }
 }
 
+bool InputScript_PausedWord(unsigned short* word) {
+    if (!g_scripted || !g_active) return false;
+    *word = g_cur;
+    return true;
+}
+
 void InputScript_Start() {
     char path[MAX_PATH];
     char rec[MAX_PATH];

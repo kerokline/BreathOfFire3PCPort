@@ -1,7 +1,9 @@
 # The quicksave round: save states behind F5, F6 and F7
 
-**Status:** DRAFT (staged 2026-10-17 against `origin/main`; nothing built. The
-owner's design of 2026-10-17, on IDEAS I13 and I18.)
+**Status:** BUILT (staged 2026-10-17; run 2026-10-19 on `quicksave/round`
+beside the typed-data round, the owner's call: stages A, B and C done, `main`
+with PR #94 merged in, DIV-0145..0147 and D322 numbered. Not yet played by the
+owner. The owner's design of 2026-10-17, on IDEAS I13 and I18.)
 
 The owner (2026-10-17): F5 opens a quicksave menu that looks like the save
 menu, so its draw functions are reused, and a quicksave is picked there to
@@ -38,6 +40,20 @@ missed. That is I13's first experiment, and it is the acceptance test of
 every group below.
 
 ## 1. What is already known, and the one trap
+
+> **Corrected by SC's census (2026-10-19, [`quicksave-census.md`](quicksave-census.md)).**
+> Two premises below are false as staged. (1) The task stacks are not in the
+> image: `Task_SetStackBase` hangs four `0x4000`-byte slices below the main
+> thread's esp (`[Task_StackTop-0x10000, Task_StackTop)`), so SN copies them
+> as a second span and runs the take and restore on a stack of their own;
+> the skip row `0x66C854` holds only the scheduler's words. (2) Our code is not
+> at a fixed address in the exe host: `bof3x.dll` is `DYNAMIC_BASE` and was
+> measured loading at different bases from two directories; the file records
+> the DLL base and refuses a mismatch. The owner chose a fixed link base
+> (2026-10-19): SN links `bof3x.dll` without `DYNAMIC_BASE` at a set base,
+> keeping its relocations so a taken base still loads (and the check refuses).
+> Also: the music stream has no thread of its own (`Music_Pump` runs from
+> `Sound_Tick` on the main thread), so nothing is paused around a restore.
 
 - **The image is one flat span at a fixed base** and holds the task stacks
   (`0x66C854`, 37,292 bytes, the skip list's "task stacks") and the
@@ -178,6 +194,29 @@ finding, not a shrug.
   and once with the player's defaults.
 - Output: the recipes, the script, `docs/quicksave-routes.md`.
 
+## 2a. What changed on `main` between staging and launch (2026-10-19)
+
+Checked against `581e35a8..19180e63`:
+
+- **The button round (PR #85) added input state** outside the span:
+  `src/input/sigma.cpp` (the unified button map) and `src/game/shoulder_glyphs.cpp`.
+  SC classes both; σ's map is configuration if it is rebuilt from the install
+  and the ini alone, game state if anything in play changes it.
+- **DIV-0143** (issue #88): an area change keeping a track that is fading to
+  a stop keeps none. A fade-to-stop in progress is one of SP-A's saved states,
+  and RC's `musicStopCheck` route covers it.
+- **Routes differ by release** since PR #85 (`harness/recipe-buttons-by-release`,
+  [`input-script.md`](input-script.md) 2a): on a PSX-West or PSP-EU install
+  confirm is cross. RC's quick routes take the per-release form.
+- **`src/hook/gapwatch.cpp`** (the install-gap round's read watch) is
+  tooling, off by default; SC lists it as such.
+- The jukebox's recorded streams (PR #92) play in the launcher only; nothing
+  in the game to save.
+- **Beside this round:** the typed-data round's naming and census work runs
+  in parallel ([`typed-data-round.md`](typed-data-round.md)). It renames reads
+  and adds no behaviour; a merge between the two is a rename conflict, taken
+  with both sides' meaning.
+
 ## 3. Stage B (after SN merges; three groups in parallel)
 
 ### SP-A: the audio participant (`src/game/sound.cpp`, `src/audio/`)
@@ -255,9 +294,9 @@ each merge the build, `BOF3X_SHADOW='*'` headless, RC's in-process check on
 one route.
 
 Numbering: drafts A, B and D lettered (C dropped with F12 unchanged); the coordinator numbers from the first
-free entry (DIV-0133 at staging; check `main`). The bound on
+free entry (DIV-0145 at launch, 2026-10-19; check `main`). The bound on
 `Save_ListFiles`' table is a port defect fixed, a D-number from the first
-free after D311. Every commit `git commit -s`; no save file's bytes in any
+free (D322 at launch). Agents number nothing. Every commit `git commit -s`; no save file's bytes in any
 doc (rule 1: sizes, offsets and field names only).
 
 ## 5. The owner's answers (2026-10-17, by chat), and what is still open

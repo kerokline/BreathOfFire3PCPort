@@ -15,3 +15,8 @@ void MsgPool_Relocate();
 bool MsgPool_TakeChunk(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t size);
 
 void MsgPool_Inject();
+
+// The quicksave's ST participant (src/hook/snapshot.cpp): the relocated
+// pool's buffer and its size, or null while the pool is the arena's (inside
+// the span, copied with it).
+std::uint8_t* MsgPool_Moved(std::uint32_t* bytes);

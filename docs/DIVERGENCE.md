@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 144 entries, DIV-0001..0144, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 147 entries, DIV-0001..0147, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -9044,3 +9044,128 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=FishingEmptyLine` and / or
   `BOF3X_ORIGINAL=FishingLowGlyph` (the original's draws; on a Japanese
   disc-only install with a layer built before the fix the crash comes back).
+
+### F6 saves the whole game state to a quicksave and F7 restores it to the frame
+
+- **ID:** DIV-0145
+- **Date:** 2026-10-19
+- **Subsystem:** the window procedure's F6 and F7 and the loop's point
+  between logic frames (`Game_WndProc` `0x4FC6F0`, `WinMain` `0x4FCB00`, ours
+  in `src/game/win_main.cpp`; the snapshot core `src/hook/snapshot.{h,cpp}`
+  and its participants `ST`, `SOUND` (`src/game/sound.cpp`) and `GFX`
+  (`src/render/gfx_snapshot.cpp`); [`quicksave.md`](quicksave.md))
+- **Tier:** Extension - save states, which the original never had.
+- **Original behaviour:** F6 did nothing. F7 selected the next renderer
+  device and showed its name (nothing since DIV-0040). There were no save
+  states: F12's `Save_QuickWrite` writes an ordinary save to slot 0
+  (`BISLPS00.DAT`), the field's state only.
+- **New behaviour:** F6 saves the game's whole state between two logic
+  frames (the `.data` / `.bss` span, the task stacks below the main thread's
+  stack, and the participants' records) to `BISLPS10.DAT`, after moving the
+  existing quicksaves up a slot by renames (`1E` -> `1F` .. `10` -> `11`, the
+  old `1F` deleted), so the sixteen slots hold the sixteen newest. F7
+  restores the newest to the frame; the F5 menu (DIV-0147) restores any.
+  Each file starts with an ordinary save file whose summary the menu draws.
+  A file from another build, or from a process whose DLL or task stacks sit
+  elsewhere, is refused with its reason and nothing is written.
+
+  Sound after a quick-load: the music resumes at the sample heard at the take
+  (for an MP3 on a track that rewinds, the start of its 26 ms frame), at the
+  take's volume and fade; looping sound effects and a playing voice stream
+  resume at their positions; a one-shot sound effect playing at the take is
+  not resumed. The first frame shown after F7 is the picture from before the
+  load (one frame).
+
+  F6's and F7's confirmation lines ("Quicksave OK", "Quickload", a refusal)
+  reach the log only while our back buffer is in use, as F12's "Save OK"
+  does (DIV-0032); the F5 menu shows its refusal on screen.
+
+  Files `BISLPS10.DAT`..`BISLPS1F.DAT` (and a transient `BISLPS10.TMP`) in
+  the game directory, about 3.9 to 4.7 MB each (I45). `bof3x.dll` is linked
+  at a fixed base (`0x10000000`, relocations kept) so a quicksave loads in a
+  later launch of the same build; a build setting, not game behaviour.
+- **Rationale:** the owner's design of 2026-10-17 (IDEAS I13, I18;
+  [`quicksave-round.md`](quicksave-round.md) section 5): save states restored
+  to the exact moment, battles and events included, which F12's
+  save-anywhere is not; the fixed base the owner's call of 2026-10-19. A
+  quicksave is native memory, so loading someone else's is trusting it like
+  a program (IDEAS I46).
+- **Also in the PSX version?** No. Emulators' save states are the nearest
+  thing, and they hold an emulated machine's memory, not the process's own.
+- **Verification:** the self-tests `snapshot`, `gfx_snapshot`, `SOUND`
+  ([`quicksave.md`](quicksave.md) 7, the SP-G section, 10); the proof batch
+  ([`quicksave-routes.md`](quicksave-routes.md) 7): six routes in-process on
+  the PC install under the state hash's conditions and the player's
+  defaults, on a US disc-only install and in wide mode, and across two
+  processes on the PC and PSP-EU installs. No page of the game's own state
+  differed after a restore beyond SN's overlay count and the display parity
+  at the first tick, nothing crashed in 46 runs, and all 22 capture pairs
+  (the frame k ticks after F6 against the frame k ticks after F7) are
+  pixel-equal. Re-checked after `main`'s typed-data round (PR #94) merged.
+- **Reversible?** The keys are ours; without them nothing of the game
+  changes. Not a switch.
+
+### The save list is BISLPS0?.DAT and bounded at sixteen; the quicksaves list apart
+
+- **ID:** DIV-0146
+- **Date:** 2026-10-19
+- **Subsystem:** the save list (`Save_ListFiles` `0x4548B0`,
+  `Save_ReadSummaries` `0x588DC0`, ours in `src/game/save_menu.cpp`;
+  [`save-files.md`](save-files.md) 2; [`quicksave.md`](quicksave.md) QM)
+- **Tier:** Sensible - the quicksaves need their own list, and the
+  original's table has no bound ([`known-defects.md`](known-defects.md) D322).
+- **Original behaviour:** `Save_ListFiles` lists `BISLPS??.DAT` into the
+  sixteen `0x18`-byte entries of `Save_Directory`, with no bound, and
+  `Save_ReadSummaries` gives each entry the slot of its `name[7]`, one hex
+  digit.
+- **New behaviour:** the save list is `BISLPS0?.DAT`, at most sixteen
+  entries (a seventeenth match, or a name too long for an entry, is logged
+  and not stored). The two functions take the pattern and the tables, so
+  the quick menu lists `BISLPS1?.DAT` into tables of its own. The title's
+  load menu and the inn's save menu never list a quicksave.
+- **Rationale:** the quicksaves (`BISLPS10..1F.DAT`, DIV-0145) match the
+  original's pattern and their `name[7]` is a hex digit: `BISLPS10.DAT`
+  would show as save slot 0, and sixteen saves plus any quicksave overrun
+  the table. The owner, 2026-10-17: the quicksaves are reached from F5 only.
+- **Also in the PSX version?** No: a memory card has no file listing of
+  this kind; the PC port's own.
+- **Verification:** the quick menu self-test: a directory of seventeen saves
+  lists sixteen with the seventeenth logged and the table's guard unwritten;
+  the quick list on slots 0, 3 and F; the original pattern measured showing
+  `BISLPS10.DAT` as slot 0. Hosted, the `save_menu` fuzz, 66,000 rounds, 0
+  mismatches after the split ([`quicksave.md`](quicksave.md) QM.3).
+- **Reversible?** `BOF3X_ORIGINAL=SaveLists` (the original's pattern and its
+  unbounded table, quicksaves included in the list).
+
+### F5 opens a quick menu drawn as the title's load menu, to load any of the sixteen quicksaves
+
+- **ID:** DIV-0147
+- **Date:** 2026-10-19
+- **Subsystem:** the window procedure's F5 and the loop's paused branch
+  (`Game_WndProc` `0x4FC6F0`, `WinMain` `0x4FCB00`, ours in `win_main.cpp`;
+  `src/game/quick_menu.cpp`; [`quicksave.md`](quicksave.md) QM)
+- **Tier:** Extension - a menu the original did not have.
+- **Original behaviour:** F5 did nothing but end a pause, as any key does.
+- **New behaviour:** F5 pauses and opens the quick menu, drawn as the
+  title's load menu: its backdrop, title box and "Load which file?", the
+  save slots (the sixteen quicksaves newest first, three shown), and on a
+  slot with a quicksave its "Load game?" Yes / No with the pointing hand (an
+  empty slot takes no confirm). Yes restores that quicksave to the frame
+  (DIV-0145); a refusal keeps the menu open with the load menu's "File is
+  damaged" and the reason in the 8 x 8 font; No returns to the slots; a
+  second F5 or cancel closes it. Confirm and cancel are the release's
+  (DIV-0133). The menu reads the pad itself while paused, plays no sound,
+  and writes none of the game's menu state.
+- **Rationale:** the owner's design of 2026-10-17 (round doc 5, answers 2,
+  3 and 5): F5 the only way to the quicksaves, load only, sixteen slots
+  newest first, three shown as the save menu shows them; and their call of
+  2026-10-19 on the first captures: the save screen's background and its
+  load yes / no with the hand, in the game's own font and text.
+- **Also in the PSX version?** No quicksaves there; ours.
+- **Verification:** the quick menu self-test (the cursor over 0..15 with
+  gaps, no question on an empty slot, Yes first, No and cancel, a load only
+  at the release); live, three quicksaves listed and the second loaded back
+  to its frame, a damaged file refused with the menu kept open; the recipe
+  `quick_menu.txt` in the proof batch.
+- **Reversible?** Not a switch: F5 is ours (nothing of Capcom's is
+  replaced; without the key nothing changes).

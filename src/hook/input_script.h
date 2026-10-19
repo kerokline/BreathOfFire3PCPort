@@ -28,6 +28,13 @@ void InputScript_Stop();
 // frame with its words dropped, so a recipe can time a pause.
 void InputScript_PausedLatch();
 
+// The quick menu (quick_menu.cpp, the quicksave round's QM), which reads a
+// pad while paused: true while a recipe plays, with this frame's word (the
+// one InputScript_PausedLatch stepped to, in the pad's terms) - so a recipe
+// drives the menu as it would the game. False otherwise: the menu reads the
+// devices.
+bool InputScript_PausedWord(unsigned short* word);
+
 // The latch our WinMain calls once per pass of its loop where Capcom's called
 // Input_Latch (0x4FCDDE): the recipe's or the recorder's latch when one is
 // on, else Input_Latch itself - and, in every case, DIV-0033's zeroing of the

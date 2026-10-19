@@ -9,6 +9,7 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/snapshot.h"
 
 // DIV-0041's random split (docs/ultrawide-rand.md): see the header.
 
@@ -63,6 +64,24 @@ int __cdecl DrawOnly() {
     return static_cast<int>((g_seed >> 16) & 0x7FFFu);
 }
 std::uint32_t* DrawOnlySeed() { return &g_seed; }
+
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): the draw-only generator
+// steps in play, and the last inset NoteInset saw decides the next split -
+// both the DLL's, carried as numbers.
+void QuickSave(bof3::SnapshotWriter& w) {
+    w.Put(static_cast<std::uint8_t>(g_noted ? 1 : 0));
+    w.Put(static_cast<std::uint32_t>(g_original));
+    w.Put(static_cast<std::uint32_t>(g_written));
+    w.Put(g_seed);
+}
+
+void QuickRestore(bof3::SnapshotReader& r) {
+    g_noted = r.Get<std::uint8_t>() != 0;
+    g_original = r.Get<std::uint32_t>();
+    g_written = r.Get<std::uint32_t>();
+    g_seed = r.Get<std::uint32_t>();
+    g_band = false;
+}
 
 namespace {
 

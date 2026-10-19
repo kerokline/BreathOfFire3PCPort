@@ -184,3 +184,13 @@ int Widescreen_Anchor();
 // changes. `x` is the s16 the reader converts, `w` the table's u16.
 constexpr unsigned kWidescreenFullFrameTile = 11;
 void Widescreen_BattleTile(unsigned size, int& x, int& w);
+
+namespace bof3 {
+class SnapshotWriter;
+class SnapshotReader;
+}  // namespace bof3
+
+// The quicksave (SP-G, docs/quicksave.md, the graphics participant): DIV-0041's slide split,
+// in the graphics participant's record.
+void Widescreen_QuickSave(bof3::SnapshotWriter& w);
+void Widescreen_QuickRestore(bof3::SnapshotReader& r);

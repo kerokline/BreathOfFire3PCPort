@@ -67,12 +67,14 @@
 #include "game/display_setup.h"
 #include "game/fmv_play.h"
 #include "game/pause_text.h"
+#include "game/quick_menu.h"
 #include "hook/detour.h"
 #include "hook/exe_icon.h"
 #include "hook/exe_host.h"
 #include "hook/exe_image.h"
 #include "hook/input_script.h"
 #include "hook/run_speed.h"
+#include "hook/snapshot.h"
 #include "hook/stallwatch.h"
 #include "hook/log.h"
 #include "render/render_d3d11.h"
@@ -407,6 +409,9 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         }
         return 0;
     case WM_KEYDOWN: {
+        // DIVERGENCE (the quicksave round's draft D, docs/quicksave.md, section QM): F5
+        // opens the quick menu, pausing; while it is open every key is its own.
+        if (bof3::QuickMenu_Key(static_cast<unsigned>(wparam), static_cast<long>(lparam))) return 0;
         const bool was_paused = Game_Paused != 0;
         if (was_paused && wparam != VK_F9) {
             Game_Paused = 0;
@@ -437,6 +442,18 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         // owner, 2026-09-23: not needed as keys. With the backend there is
         // one device, and neither readout could be drawn (DIV-0032). Like
         // any other key they still end a pause, above.
+        // DIVERGENCE (the quicksave round's draft A, docs/quicksave.md 6): F6
+        // quicksaves and F7 quick-loads - asked here, run by the loop between
+        // two logic frames (Snapshot_Pending), never mid-frame. A held key's
+        // repeats ask nothing more.
+        if (wparam == VK_F6) {
+            if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestTake();
+            return 0;
+        }
+        if (wparam == VK_F7) {
+            if ((lparam & (1 << 30)) == 0) bof3::Snapshot_RequestLoad(0x10);
+            return 0;
+        }
         if (wparam == VK_F12) {
             Save_QuickWrite();
             Overlay_Frames = kOverlayFrames;
@@ -726,6 +743,8 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     // whose first five bytes jmp to our Task_RunAll (or, under
                     // BOF3X_ORIGINAL, are Capcom's). docs/task_sched.md section 5.
                     bof3::orig::Task_RunAll();
+                } else if (bof3::QuickMenu_Frame()) {
+                    // F5's quick menu (draft D) in place of the pause lines.
                 } else {
                     const unsigned char* const* lines = (Title_LogoState == 0 && Title_Fade == 0) ? Pause_LinesGame : Pause_LinesTitle;
                     // DIV-0038: the English lines are centred on their width
@@ -738,6 +757,11 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     logic_ticks += q1.QuadPart - q2.QuadPart;
                 }
                 Frame_Counter += 1;
+                // The quicksave point (docs/quicksave.md 2): every task is
+                // suspended on its slice and this frame's logic and lists are
+                // done; the next iteration draws what the span then holds.
+                bof3::Snapshot_Pending();
+                bof3::QuickMenu_AfterPoint();   // F5's menu: a load it asked ran, or stays open refused
             }
         }
     }
