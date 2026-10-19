@@ -30,6 +30,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -46,10 +47,6 @@ using move_script::SetWord;
 using move_script::Word;
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* TaskSlot(unsigned slot) { return Mem(at::kTasks + slot * at::kTaskStride); }
 void Inc(unsigned char& b) { b = static_cast<unsigned char>(b + 1); }
@@ -146,7 +143,7 @@ C3_EXPORT void __cdecl Magic002_Task(void) {
 C3_EXPORT void __cdecl Magic002_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(3, 1) & 0xFFu;
     unsigned char* const ball = TaskSlot(slot);
-    records::BattleTask* const tball = reinterpret_cast<records::BattleTask*>(ball);
+    records::BattleTask* const tball = rv::As<records::BattleTask>(ball);
     const int x0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x2E)));
     const int y0 = static_cast<short>(Word(Mem(ObjTrio_addr + 0x30)));
     ball[1] = 0;
@@ -192,7 +189,7 @@ namespace {
 // the draw reads 16 bits of each, and 8 of the turn).
 void DrawBall() {
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     MH_AT(BallDrawFn, bof3::addr::Magic002Ball_Draw)(ts->vel_x >> 16, ts->vel_y >> 16, ts->start_x >> 1,
                                                     Word(s + 0x14), Word(s + 0x60), Word(s + 0x58));
 }
@@ -204,7 +201,7 @@ void DrawBall() {
 // +9 is past 10.
 C3_EXPORT void __cdecl Magic002Ball_Fly(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     SetLong(s + 0x14, AddU(Long(s + 0x14), 0x100));
     ts->start_x = AddU(ts->start_x, 4);
     ts->vel_x = AddU(ts->vel_x, ts->start_y);
@@ -369,8 +366,8 @@ C3_EXPORT void __cdecl Magic111_Task(void) {
 // +1 = 2. Sounds 0x100 and 0x101; the owner's +0 bit 0x40 set.
 C3_EXPORT void __cdecl Magic111_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0;
@@ -460,8 +457,8 @@ C3_EXPORT void __cdecl Magic111Wash_Run(void) {
     if (step >= 4) PastTable("Magic111Wash_Run", step, 4);
     magic_harness::Phase(kSteps[step])();
     if (Sc()[0] == 0) return;
-    Store(ScTask()->vel_x, AddU(ScTask()->vel_x, 1));
-    Store(ScTask()->vel_y, AddU(ScTask()->vel_y, 1));
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, AddU(rv::Current<records::BattleTask>()->vel_x, 1));
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, AddU(rv::Current<records::BattleTask>()->vel_y, 1));
     Call0(bof3::addr::Magic111Wash_Draw);
 }
 
@@ -469,8 +466,8 @@ C3_EXPORT void __cdecl Magic111Wash_Run(void) {
 // +0xA 0x3C, +2 on.
 C3_EXPORT void __cdecl Magic111Wash_Start(void) {
     const std::uint32_t r = static_cast<std::uint32_t>(MH_CALL(Rand)());
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(r & 0x3F));
-    Store(ScTask()->vel_y, AddU(ScTask()->vel_x, 0x1F));
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(r & 0x3F));
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, AddU(rv::Current<records::BattleTask>()->vel_x, 0x1F));
     Sc()[9] = 0;
     Sc()[0xA] = 0x3C;
     Inc(Sc()[2]);

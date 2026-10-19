@@ -36,6 +36,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -92,10 +93,6 @@ using TaskFn = void (__cdecl*)(unsigned char*);
 using BandFn = void (__cdecl*)(unsigned, unsigned);
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 std::uint32_t Key(const void* p) { return static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p)); }
@@ -157,7 +154,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 // MapView_LinkPrimAt at Sprite_Current's position, read at the call.
 void LinkAtCurrent(int dy, unsigned size) {
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), dy, size);
 }
 
@@ -249,15 +246,15 @@ S11_EXPORT void __cdecl Sanctuary_Start(void) {
     SetWord(Mem(Sanctuary_Reached_addr + 8), 0);
     Mem(Sanctuary_Reached_addr + 10)[0] = 0;
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
     const unsigned slot = NewTask(0x3F);
     unsigned char* const s = Sc();
     unsigned char* const t = TaskSlot(slot);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     tt->owner = static_cast<std::int32_t>(Key(s));
     t[1] = 0;
     Inc(s[0xB]);
@@ -305,10 +302,10 @@ S11_EXPORT void __cdecl SanctuaryRing_Task(void) {
 // radius +0xC (dword) 8, +0xA 0x10; +2 on.
 S11_EXPORT void __cdecl SanctuaryRing_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
-    ScTask()->vel_x = 8;
+    rv::Current<records::BattleTask>()->vel_x = 8;
     Sc()[0xA] = 0x10;
     Inc(Sc()[2]);
 }
@@ -323,7 +320,7 @@ void SendMotes(unsigned char actor) {
         const unsigned index = MH_CALL(SanctuaryMote_Alloc)() & 0xFFu;
         const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
         unsigned char* const m = SMote(index);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = owner;
         m[1] = 0;
         m[0xB] = actor;
@@ -342,7 +339,7 @@ void SendMotes(unsigned char actor) {
 // not the acting actor (byte 0x904B34) is marked reached (0xFF) and sent two
 // motes. At +0xC past 0x600 (signed) +2 on.
 S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
-    Store(ScTask()->vel_x, Add(ScTask()->vel_x, 0x20));
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, Add(rv::Current<records::BattleTask>()->vel_x, 0x20));
     SetSW(0, Word(Sc() + 0xC));
     for (unsigned i = 0; i < 8; ++i) {
         const auto actor = static_cast<unsigned char>(3 + i);
@@ -364,7 +361,7 @@ S11_EXPORT void __cdecl SanctuaryRing_Spread(void) {
         reached[0] = 0xFF;
         SendMotes(actor);
     }
-    if (ScTask()->vel_x > 0x600) Inc(Sc()[2]);
+    if (rv::Current<records::BattleTask>()->vel_x > 0x600) Inc(Sc()[2]);
 }
 
 // original 0x4AF490: the owner's count +0xB down and the task freed (a tail
@@ -402,7 +399,7 @@ S11_EXPORT void __cdecl SanctuaryMote_Task(void) {
 // (past SanctuaryMote_Slow, which nothing else reaches).
 S11_EXPORT void __cdecl SanctuaryMote_Wait(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     Dec(s[9]);
     if (s[9] != 0) return;
     const unsigned actor = s[0xB];
@@ -421,7 +418,7 @@ S11_EXPORT void __cdecl SanctuaryMote_Wait(void) {
 // Unreached: SanctuaryMote_Wait moves +2 from 0 to 2.
 S11_EXPORT void __cdecl SanctuaryMote_Slow(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->vel_x = Add(ts->vel_x, ts->start_x);
     ts->start_x = Add(ts->start_x, -1);
     if (ts->start_x == 0x10) Inc(s[2]);
@@ -432,7 +429,7 @@ S11_EXPORT void __cdecl SanctuaryMote_Slow(void) {
 // 0x4F6290 (the record freed: a tail jmp).
 S11_EXPORT void __cdecl SanctuaryMote_Fade(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->vel_x = Add(ts->vel_x, ts->start_x);
     if ((Frame_Counter & 1) == 0) return;
     ts->start_x = Add(ts->start_x, -1);
@@ -575,7 +572,7 @@ void SpawnRing(unsigned angle, unsigned char kind, std::int32_t radius, std::int
         const unsigned index = MH_CALL(TornadoMote_Alloc)() & 0xFFu;
         unsigned char* const s = Sc();
         unsigned char* const m = TMote(index);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = static_cast<std::int32_t>(Key(s));
         m[1] = 0;
         m[9] = static_cast<unsigned char>((i << 3) + angle);
@@ -611,7 +608,7 @@ S11_EXPORT void __cdecl Tornado_Start(void) {
     {
         unsigned char* const s = Sc();
         unsigned char* const t = TaskSlot(slot);
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         tt->owner = static_cast<std::int32_t>(Key(s));
         t[1] = 0;
         Inc(s[0xB]);
@@ -624,15 +621,15 @@ S11_EXPORT void __cdecl Tornado_Start(void) {
     Mem(kFlagsB)[0] = static_cast<unsigned char>(Mem(kFlagsB)[0] | 2);
     Gfx_ClutStripDirty = 1;
     Sc()[8] = Pointer(MagicS23_ActorSprite_addr)[8];
-    ScTask()->vel_x = 0x40000;
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->vel_x = 0x40000;
+    rv::Current<records::BattleTask>()->vel_y = 0;
     MH_AT(TaskFn, kTurnOffset)(Sc());
-    Store(ScTask()->start_x, Add(ScTask()->vel_x, static_cast<int>(Field_Kind2X)));
-    Store(ScTask()->start_y, Add(ScTask()->vel_y, static_cast<int>(Field_Kind2Z)));
+    rv::Store(rv::Current<records::BattleTask>()->start_x, Add(rv::Current<records::BattleTask>()->vel_x, static_cast<int>(Field_Kind2X)));
+    rv::Store(rv::Current<records::BattleTask>()->start_y, Add(rv::Current<records::BattleTask>()->vel_y, static_cast<int>(Field_Kind2Z)));
     int v = Sin(0);
-    Store(ScTask()->x, Add(Shl(v, 6), ScTask()->start_x));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_x));
     v = Cos(0);
-    Store(ScTask()->y, Add(Shl(v, 6), ScTask()->start_y));
+    rv::Store(rv::Current<records::BattleTask>()->y, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_y));
     Call0(bof3::addr::Tornado_AverageHeight);
     MH_CALL(Sound_PlayById)(0x100);
     unsigned char* const s = Sc();
@@ -649,9 +646,9 @@ S11_EXPORT void __cdecl Tornado_Spin(void) {
     const auto angle = static_cast<std::uint16_t>(Sc()[9] << 4);
     SetSW(0xE, angle);
     int v = Sin(static_cast<short>(angle));
-    Store(ScTask()->x, Add(Shl(v, 6), ScTask()->start_x));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_x));
     v = Cos(SS(0xE));
-    Store(ScTask()->y, Add(Shl(v, 6), ScTask()->start_y));
+    rv::Store(rv::Current<records::BattleTask>()->y, Add(Shl(v, 6), rv::Current<records::BattleTask>()->start_y));
     if (Sc()[0xB] != 0) return;
     MarkDoneAndFree();
 }
@@ -703,7 +700,7 @@ S11_EXPORT void __cdecl TornadoFunnel_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const short rot[4] = {0, 0, 0, 0};
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
     ts->x = Long(o + 0x34);
     ts->y = Long(o + 0x38);
@@ -881,13 +878,13 @@ S11_EXPORT void __cdecl TornadoMote_Task(void) {
     {
         const int r = SS(0);
         const std::int32_t ox = Long(Owner() + 0x34);
-        Store(ScTask()->x, Add(MulSar(v, r, 3), ox));
+        rv::Store(rv::Current<records::BattleTask>()->x, Add(MulSar(v, r, 3), ox));
     }
     v = Sin(SS(0xE));
     {
         const int r = SS(0);
         const std::int32_t oz = Long(Owner() + 0x38);
-        Store(ScTask()->y, Add(MulSar(v, r, 3), oz));
+        rv::Store(rv::Current<records::BattleTask>()->y, Add(MulSar(v, r, 3), oz));
     }
     const std::uint32_t frame = Frame_Counter;
     unsigned char* const cell = Sc() + 0x38;
@@ -901,7 +898,7 @@ S11_EXPORT void __cdecl TornadoMote_Task(void) {
 // owner's plus its height +0x14; +0xA 0; +2 on.
 S11_EXPORT void __cdecl TornadoMote_Place(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const unsigned char* const o = Owner();
     ts->x = Long(o + 0x34);
     ts->y = Long(o + 0x38);

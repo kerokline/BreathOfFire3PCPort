@@ -35,16 +35,13 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -178,7 +175,7 @@ void CopyPosition(unsigned char* to, const unsigned char* from) {
 // MapView_LinkPrimAt at Sprite_Current's position (read now).
 void LinkAtCurrent(unsigned size) {
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(tsc->x), static_cast<unsigned long>(tsc->y), 2, size);
 }
 
@@ -208,7 +205,7 @@ S20_EXPORT void __cdecl Magic087_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolACount; ++i) {
         unsigned char* const m = PoolA(i);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
@@ -243,9 +240,9 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             const unsigned index = MH_CALL(BattleTask_Create)(1, 0x27);
             unsigned char* const sc = Sprite_Current;
             unsigned char* const t = Task(index & 0xFF);
-            records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+            records::BattleTask* const tt = rv::As<records::BattleTask>(t);
             const unsigned char* const e = Enemy(i);
-            const records::BattleEnemy* const te = reinterpret_cast<const records::BattleEnemy*>(e);
+            const records::BattleEnemy* const te = rv::AsConst<records::BattleEnemy>(e);
             tt->owner = PtrValue(sc);
             t[4] = sc[0xB];
             t[9] = nine;
@@ -262,9 +259,9 @@ S20_EXPORT void __cdecl Magic087_Start(void) {
             const unsigned index = MH_CALL(BattleTask_Create)(1, 0x27);
             unsigned char* const sc = Sprite_Current;
             unsigned char* const t = Task(index & 0xFF);
-            records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+            records::BattleTask* const tt = rv::As<records::BattleTask>(t);
             const unsigned char* const m = Member(i);
-            const records::PartyMember* const m_rec = reinterpret_cast<const records::PartyMember*>(m);
+            const records::PartyMember* const m_rec = rv::AsConst<records::PartyMember>(m);
             tt->owner = PtrValue(sc);
             t[4] = sc[0xB];
             t[9] = nine;
@@ -298,7 +295,7 @@ S20_EXPORT void __cdecl Magic087_ChildSpawn(void) {
         const unsigned index = MH_CALL(Magic087_PoolAlloc)() & 0xFFu;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolA(index);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = PtrValue(sc);
         m[1] = 0;
         m[4] = static_cast<unsigned char>(n);
@@ -310,7 +307,7 @@ S20_EXPORT void __cdecl Magic087_ChildSpawn(void) {
         const unsigned index = MH_CALL(Magic087_PoolAlloc)() & 0xFFu;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolA(index);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = PtrValue(sc);
         m[1] = 1;
         m[4] = static_cast<unsigned char>(n);
@@ -473,8 +470,8 @@ S20_EXPORT void __cdecl Magic087_OrbitRun(void) {
 S20_EXPORT void __cdecl Magic087_OrbitStart(void) {
     Bump(Sprite_Current[9], -1);
     if (Sprite_Current[9] != 0) return;
-    ScTask()->vel_x = 0x100;
-    ScTask()->start_x = 4;
+    rv::Current<records::BattleTask>()->vel_x = 0x100;
+    rv::Current<records::BattleTask>()->start_x = 4;
     if (Sprite_Current[1] != 0) {
         Sprite_Current[0xB] = 0;
         Sprite_Current[9] = 0;
@@ -497,11 +494,11 @@ S20_EXPORT void __cdecl Magic087_OrbitSpin(void) {
     unsigned char* sc = Sprite_Current;
     SetLong(Scr(4), static_cast<std::int32_t>((sc[9] & 0x3Fu) << 6));
     SetLong(sc + 0xC, static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(sc + 0xC)) - static_cast<std::uint32_t>(Long(sc + 0x18))));
-    SetLong(Scr(0), ScTask()->vel_x);
+    SetLong(Scr(0), rv::Current<records::BattleTask>()->vel_x);
     const int s = MH_CALL(Math_Sin)(Long(Scr(4)));
-    Store(ScTask()->x, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add32(MulSar(s, Long(Scr(0)), 3), Long(Owner() + 0x34)));
     const int c = MH_CALL(Math_Cos)(Long(Scr(4)));
-    Store(ScTask()->y, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->y, Add32(MulSar(c, Long(Scr(0)), 3), Long(Owner() + 0x38)));
     SetLong(Sprite_Current + 0x3C, Long(Owner() + 0x3C));
     sc = Sprite_Current;
     if (sc[0xA] < 0x21) Bump(sc[0xA], 1);
@@ -575,7 +572,7 @@ S20_EXPORT void __cdecl Magic087_RiseStep(void) {
 S20_EXPORT void __cdecl Magic087_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     const short rot[4] = {0, 0, static_cast<short>((sc[0xB] & 0x3F) << 6), 0};
     short v[4];
     v[0] = static_cast<short>((tsc->x >> 9) - 0x4000);
@@ -781,7 +778,7 @@ S20_EXPORT void __cdecl Magic088_Apply(void) {
     const unsigned index = MH_CALL(BattleTask_Create)(1, 0x48) & 0xFFu;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const t = Task(index);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     tt->owner = PtrValue(sc);
     t[4] = took ? static_cast<unsigned char>(sc[4] + 4) : 8;
     t[9] = 1;
@@ -1011,7 +1008,7 @@ S20_EXPORT void __cdecl Magic092_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolBCount; ++i) {
         unsigned char* const m = PoolB(i);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
@@ -1045,7 +1042,7 @@ S20_EXPORT void __cdecl Magic092_Start(void) {
         const unsigned index = MH_CALL(BattleTask_Create)(1, 0x28) & 0xFFu;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const t = Task(index);
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         const unsigned char* const actor = enemies ? Enemy(i) : Member(i);
         tt->owner = PtrValue(sc);
         t[3] = static_cast<unsigned char>(i);
@@ -1090,7 +1087,7 @@ S20_EXPORT void __cdecl Magic092_ChildSpawn(void) {
         if (index == 0xFF) continue;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolB(index);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = PtrValue(sc);
         m[0] = static_cast<unsigned char>(m[0] | 0x41);
         m[1] = n != 0 ? 1 : 0;

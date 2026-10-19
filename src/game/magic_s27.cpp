@@ -31,6 +31,7 @@
 #include "game/magic_harness.h"
 #include "game/magic_s27_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -54,10 +55,6 @@ constexpr std::uint32_t kS = 0x903850;
 // kV: now Prim_VertexScratch (symbols.toml).
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char* Source() { return Pointer(BattleOdds_ActorObject_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
@@ -189,8 +186,8 @@ void LightClutRow(unsigned runs, const bool* stp) {
 
 // The task at its owner: +0x34 / +0x38 / +0x3C from the owner's.
 void AtOwner() {
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
 }
 
@@ -226,8 +223,8 @@ S27_EXPORT void __cdecl Burn_Task(void) {
 // 0x100; +9 0, +1 on.
 S27_EXPORT void __cdecl Burn_Start(void) {
     const unsigned char* const src = Source();
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     Sc()[0xB] = 0;
     for (unsigned i = 0; i < 8; ++i) {
@@ -899,7 +896,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_Draw(void) {
         for (unsigned e = 0; e < 8; ++e) {
             if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
             const unsigned char* const r = EnemyRecord(e);
-            const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
+            const records::BattleEnemy* const tr = rv::AsConst<records::BattleEnemy>(r);
             unsigned char* s = Sc();
             s[0xB] = static_cast<unsigned char>(i);
             s[0xA] = static_cast<unsigned char>(e);
@@ -975,7 +972,7 @@ S27_EXPORT void __cdecl WhelpBreathFlames_PushMatrix(void) {
     MH_CALL(Gte_PushMatrix)();
     short rot[4] = {0, 0, 0, 0};
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     switch (s[8]) {
     case 0: rot[1] = 0xC00; break;
     case 1: rot[0] = 0x400; break;
@@ -1010,9 +1007,9 @@ S27_EXPORT void __cdecl WhelpBreathGlow_Draw(void) {
     for (unsigned e = 0; e < 8; ++e) {
         if ((MH_CALL(Battle_ActorIsOut)(e + 3) & 0xFF) != 0) continue;
         const unsigned char* const r = EnemyRecord(e);
-        const records::BattleEnemy* const tr = reinterpret_cast<const records::BattleEnemy*>(r);
+        const records::BattleEnemy* const tr = rv::AsConst<records::BattleEnemy>(r);
         unsigned char* const s = Sc();
-        records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+        records::BattleTask* const ts = rv::As<records::BattleTask>(s);
         s[8] = r[8];
         ts->x = tr->x;
         ts->y = tr->z;
@@ -1141,7 +1138,7 @@ S27_EXPORT void __cdecl DragonBreathBeam_Aim(void) {
     Sc()[0x5D] = static_cast<unsigned char>(RandCall() & 1);
     Sc()[0x5E] = static_cast<unsigned char>(RandCall() & 3);
     Sc()[0x5F] = static_cast<unsigned char>(RandCall() & 3);
-    ScTask()->vel_x = 0;
+    rv::Current<records::BattleTask>()->vel_x = 0;
     Sc()[4] = 0;
     Sc()[0xB] = 0;
     Sc()[9] = 0x10;
@@ -1174,9 +1171,9 @@ S27_EXPORT void __cdecl DragonBreathBeam_Brighten(void) {
 // original 0x4DC550: dword +0xC up; at 0x2E +2 on.
 S27_EXPORT void __cdecl DragonBreathBeam_Hold(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->vel_x = static_cast<std::int32_t>(static_cast<std::uint32_t>(ts->vel_x) + 1);
-    if (ScTask()->vel_x == 0x2E) Inc(Sc()[2]);
+    if (rv::Current<records::BattleTask>()->vel_x == 0x2E) Inc(Sc()[2]);
 }
 
 // original 0x4DC570: +4 down by two; at 0 +2 on.

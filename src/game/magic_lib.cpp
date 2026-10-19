@@ -21,15 +21,12 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::Mem;
@@ -94,15 +91,15 @@ void PopupSettle() {
     MH_CALL(BattleActor_UpdateScreenXY)();
     SetWord(Sprite_Current + 0x2E, Word(Sprite_Current + 0x2E) - 0x18u);
     SetWord(Sprite_Current + 0x30, Word(Sprite_Current + 0x30) - Sprite_Current[0xA]);
-    ScTask()->vel_y = -14;
+    rv::Current<records::BattleTask>()->vel_y = -14;
     Sprite_Current[9] = 0;
     Sprite_Current[0xA] = 1;
     Bump(Sprite_Current[1]);
 }
 
 void CopyPosition(const unsigned char* from) {
-    Store(ScTask()->x, Long(from + 0x34));
-    Store(ScTask()->y, Long(from + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(from + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(from + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(from + 0x3C));
 }
 
@@ -161,9 +158,9 @@ void StepAlong(const long* in, int speed) {
     short out[4] = {};
     MH_CALL(Gte_VectorNormalS)(in, out);
     const auto s = static_cast<std::uint32_t>(static_cast<short>(speed));
-    Store(ScTask()->x, I32(U32(Sprite_Current + 0x34) + static_cast<std::uint32_t>(
+    rv::Store(rv::Current<records::BattleTask>()->x, I32(U32(Sprite_Current + 0x34) + static_cast<std::uint32_t>(
                                                                           I32(static_cast<std::uint32_t>(out[0]) * s) >> 3)));
-    Store(ScTask()->y, I32(U32(Sprite_Current + 0x38) + static_cast<std::uint32_t>(
+    rv::Store(rv::Current<records::BattleTask>()->y, I32(U32(Sprite_Current + 0x38) + static_cast<std::uint32_t>(
                                                                           I32(static_cast<std::uint32_t>(out[1]) * s) >> 3)));
     SetWord(Sprite_Current + 0x3E,
             Word(Sprite_Current + 0x3E) + static_cast<unsigned>(I32(static_cast<std::uint32_t>(out[2]) * s) >> 11));
@@ -202,8 +199,8 @@ MLIB_EXPORT void __cdecl BuffPopup_Task(void) {
 MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
     Sprite_Current[9] = static_cast<unsigned char>(Sprite_Current[9] - 1);
     if (Sprite_Current[9] != 0) return;
-    Store(ScTask()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
-    Store(ScTask()->y, Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(BattleE2_Owner_addr) + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     PopupSettle();
 }
@@ -213,7 +210,7 @@ MLIB_EXPORT void __cdecl BuffPopup_Start(void) {
 // -6 and the phase on.
 MLIB_EXPORT void __cdecl BuffPopup_Rise(void) {
     unsigned char* const t = Sprite_Current;
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     if (t[0xA] < 8) Bump(t[0xA]);
     tt->vel_y = tt->vel_y + 2;
     SetWord(t + 0x30, Word(t + 0x30) + Word(t + 0x10));
@@ -228,7 +225,7 @@ MLIB_EXPORT void __cdecl BuffPopup_Rise(void) {
 // low word; +9 up, at 16 the phase on.
 MLIB_EXPORT void __cdecl BuffPopup_Fall(void) {
     unsigned char* const t = Sprite_Current;
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     tt->vel_y = tt->vel_y + 2;
     SetWord(t + 0x30, Word(t + 0x30) + Word(t + 0x10));
     Bump(t[9]);
@@ -380,7 +377,7 @@ MLIB_EXPORT void __cdecl MagicFx_StepToward(const unsigned char* to, int speed) 
 MLIB_EXPORT void __cdecl MagicFx_StepTowardPoint(unsigned x, unsigned z, unsigned y, unsigned pad, int speed) {
     (void)pad;
     const unsigned char* const sc = Sprite_Current;
-    const records::BattleTask* const tsc = reinterpret_cast<const records::BattleTask*>(sc);
+    const records::BattleTask* const tsc = rv::AsConst<records::BattleTask>(sc);
     const long in[3] = {I32(x - static_cast<std::uint32_t>((tsc->x >> 9) - 0x4000)),
                         I32(z - static_cast<std::uint32_t>((tsc->y >> 9) - 0x4000)),
                         I32(y - static_cast<std::uint32_t>(S16(sc + 0x3E) >> 1))};
@@ -520,8 +517,8 @@ MLIB_EXPORT unsigned char __cdecl BattleActor_FxSizeB(void) {
 // 4 + (+8 & 3)) * 2 ..], both indices unchecked.
 MLIB_EXPORT void __cdecl MagicFx_FormationOffset(void) {
     const unsigned row = MagicFx_FormationRows[Mem(BattlePhases_B89_addr)[0]] * 4u;
-    Store(ScTask()->vel_x, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2]);
-    Store(ScTask()->vel_y, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2 + 1]);
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2]);
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, MagicFx_FormationOffsets[(row + (Sprite_Current[8] & 3u)) * 2 + 1]);
 }
 
 void MagicLib_Inject() {

@@ -23,15 +23,12 @@
 #include "game/cheats.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace {
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 
 namespace at = magic_harness::at;
 using magic_harness::EnemyOf;
@@ -99,8 +96,8 @@ MSTEAL_EXPORT void __cdecl SkillSteal_Task(void) {
 // for each; +0xB 0; the phase on.
 MSTEAL_EXPORT void __cdecl SkillSteal_Start(void) {
     Sprite_Current[8] = Pointer(BattleE2_Owner_addr)[8];
-    Store(ScTask()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
-    Store(ScTask()->y, Long(Pointer(BattleE2_Owner_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleE2_Owner_addr) + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(BattleE2_Owner_addr) + 0x38));
     SetLong(Sprite_Current + 0x3C, Long(Pointer(BattleE2_Owner_addr) + 0x3C));
     Sprite_Current[0xB] = 0;
     Bump(Sprite_Current[1]);

@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -82,10 +83,6 @@ constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
 // S37's MagicFx_FreeCurrentRecord.
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 // [[0x93B8C4] + 0x80]: the current slot's owner - the caster's sprite.
 unsigned char* Caster() {
@@ -227,7 +224,7 @@ C2_EXPORT void __cdecl BoneDance_Cast(void) {
     const unsigned slot = NewTask(0x41) & 0xFF;
     unsigned char* const self = Sc();
     unsigned char* const t = TaskSlot(slot);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     t[1] = 1;
     t[2] = 0;
     tt->owner = static_cast<std::int32_t>(Key(self));
@@ -259,7 +256,7 @@ C2_EXPORT void __cdecl BoneDance_Spawn(void) {
     const unsigned slot = NewTask(0x41) & 0xFF;
     if (slot == 0xFF) return;
     unsigned char* const t = TaskSlot(slot);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     t[1] = 0;
     t[2] = 0;
     const unsigned char* const owner = Owner();
@@ -314,9 +311,9 @@ C2_EXPORT void __cdecl BoneDanceBone_Run(void) {
 // animation 0; +9 3 (bounces); +2 on.
 C2_EXPORT void __cdecl BoneDanceBone_Start(void) {
     int r = (Sc()[8] & 1) ? RandCall() % 6 + 2 : RandCall() % 6 - 3;
-    Store(ScTask()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), Long(Owner() + 0x34)));
     r = (Sc()[8] & 1) ? RandCall() % 6 + 3 : RandCall() % 6 + 2;
-    Store(ScTask()->y, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->y, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r) << 16), Long(Owner() + 0x38)));
     unsigned char* const s = Sc();
     SetWord(s + 0x3E, Word(s + 0x3E) + 0x600u);
     SetLong(s + 0x14, -32);
@@ -353,9 +350,9 @@ C2_EXPORT void __cdecl BoneDanceBone_Fall(void) {
     const long ground = MH_CALL(AreaMap_Elevation)(Long(s + 0x34), Long(s + 0x38));
     if (static_cast<short>(Word(Sc() + 0x3E)) >= static_cast<short>(ground)) return;
     int r = RandCall() % 6;
-    Store(ScTask()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r + 2) << 16), Long(Owner() + 0x34)));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r + 2) << 16), Long(Owner() + 0x34)));
     r = RandCall() % 6;
-    Store(ScTask()->y, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r - 3) << 16), Long(Owner() + 0x38)));
+    rv::Store(rv::Current<records::BattleTask>()->y, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(r - 3) << 16), Long(Owner() + 0x38)));
     s = Sc();
     SetWord(s + 0x3E, Word(s + 0x3E) + 0x600u);
     SetLong(s + 0x14, -32);
@@ -384,7 +381,7 @@ C2_EXPORT void __cdecl BoneDanceShake_Start(void) {
     unsigned char* const s = Sc();
     s[0xA] = Mem(BoneDanceShake_Counts_addr)[s[9]];
     MH_CALL(Sound_PlayById)(0x100);
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->vel_y = 0;
     Inc(Sc()[2]);
 }
 
@@ -416,7 +413,7 @@ C2_EXPORT void __cdecl BoneDanceShake_Step(void) {
         }
     }
     if (!(Owner()[0] & 1)) {
-        ScTask()->vel_y = 0;
+        rv::Current<records::BattleTask>()->vel_y = 0;
         Inc(Sc()[2]);
         Sc()[3] = 0;
     }
@@ -428,7 +425,7 @@ C2_EXPORT void __cdecl BoneDanceShake_Step(void) {
 // original 0x4AEE50: the offset +0x10 down while above -3; then +3 on.
 C2_EXPORT void __cdecl BoneDanceShake_Down(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const std::int32_t v = ts->vel_y;
     if (v > -3)
         ts->vel_y = Add(v, -1);
@@ -439,7 +436,7 @@ C2_EXPORT void __cdecl BoneDanceShake_Down(void) {
 // original 0x4AEE70: the offset +0x10 up while below 0; then +3 back.
 C2_EXPORT void __cdecl BoneDanceShake_Up(void) {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     const std::int32_t v = ts->vel_y;
     if (v < 0)
         ts->vel_y = Add(v, 1);
@@ -465,9 +462,9 @@ namespace {
 // elevation at (x, x) - the original passes x twice (docs/magic_c2.md
 // section 8).
 void FollowOwner() {
-    Store(ScTask()->x, Add(Long(Owner() + 0x34), -1));
-    Store(ScTask()->y, Add(Long(Owner() + 0x38), -1));
-    const std::int32_t x = ScTask()->x;
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(Long(Owner() + 0x34), -1));
+    rv::Store(rv::Current<records::BattleTask>()->y, Add(Long(Owner() + 0x38), -1));
+    const std::int32_t x = rv::Current<records::BattleTask>()->x;
     const long ground = MH_CALL(AreaMap_Elevation)(x, x);
     SetWord(Sc() + 0x3E, static_cast<unsigned>(ground));
 }
@@ -526,8 +523,8 @@ C2_EXPORT void __cdecl RottenBreath_Start(void) {
         r[1] = 0;
         r[2] = 0;
     }
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
     Gfx_ClutStripDirty = 1;
     for (unsigned i = 0; i < 16; ++i) SetWord(Mem(Gfx_ClutStrip_addr + 0x3400 + 2 * i), Word(Mem(Gfx_ClutStripSource_addr + 0x3400 + 2 * i)) | 0x8000u);
@@ -544,7 +541,7 @@ C2_EXPORT void __cdecl RottenBreath_Emit(void) {
     const unsigned slot = NewTask(0x42) & 0xFF;
     unsigned char* const self = Sc();
     unsigned char* const t = TaskSlot(slot);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     tt->owner = static_cast<std::int32_t>(Key(self));
     t[1] = 0;
     Sprite_Current = Caster();
@@ -585,13 +582,13 @@ C2_EXPORT void __cdecl RottenBreathCloud_Run(void) {
 // height word; the aim (kind 1, parameter 0x42, +1 = 1) with the cloud its
 // owner, its slot in +0xA, unchecked; sound 0x100; +0xB and +9 0; +2 on.
 C2_EXPORT void __cdecl RottenBreathCloud_Start(void) {
-    Store(ScTask()->x, Add(Long(Owner() + 0x34), 0x20000));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(Long(Owner() + 0x34), 0x20000));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetWord(Sc() + 0x3E, Word(Owner() + 0x3E));
     const unsigned slot = NewTask(0x42) & 0xFF;
     unsigned char* const self = Sc();
     unsigned char* const t = TaskSlot(slot);
-    records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+    records::BattleTask* const tt = rv::As<records::BattleTask>(t);
     tt->owner = static_cast<std::int32_t>(Key(self));
     t[1] = 1;
     self[0xA] = static_cast<unsigned char>(slot);
@@ -641,13 +638,13 @@ C2_EXPORT void __cdecl RottenBreathMote_Run(void) {
 // 0x100); its heading +0x14 Math_Ratan2(dx, dz) toward the aim, the task slot
 // the cloud's +0xA names (unchecked); +9 0; +2 on.
 C2_EXPORT void __cdecl RottenBreathMote_Start(void) {
-    Store(ScTask()->x, Add(Long(Owner() + 0x34), 0x2000));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(Long(Owner() + 0x34), 0x2000));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetWord(Sc() + 0x3E, Word(Owner() + 0x3E) + 0x100u);
     const unsigned char* const aim = TaskSlot(Owner()[0xA]);
-    const records::BattleTask* const taim = reinterpret_cast<const records::BattleTask*>(aim);
+    const records::BattleTask* const taim = rv::AsConst<records::BattleTask>(aim);
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     const std::int32_t dz = Add(taim->y, -ts->y);
     const std::int32_t dx = Add(taim->x, -ts->x);
     const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dz));
@@ -667,12 +664,12 @@ C2_EXPORT void __cdecl RottenBreathMote_Swirl(void) {
     SetSW(2, angle);
     int v = Sin(static_cast<short>(angle));
     s = Sc();
-    Store(ScTask()->vel_x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * 300u) >> 12, Long(s + 0x14)));
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * 300u) >> 12, Long(s + 0x14)));
     unsigned char* const px = Sc() + 0x34;
-    v = Sin(ScTask()->vel_x);
+    v = Sin(rv::Current<records::BattleTask>()->vel_x);
     AddLong(px, Shl12(static_cast<int>(static_cast<std::uint32_t>(v) * 7u), 12));
     unsigned char* const pz = Sc() + 0x38;
-    v = Cos(ScTask()->vel_x);
+    v = Cos(rv::Current<records::BattleTask>()->vel_x);
     AddLong(pz, Shl12(static_cast<int>(static_cast<std::uint32_t>(v) * 7u), 12));
     MH_CALL(BattleActor_UpdateScreenXY)();
     Call0(addr::RottenBreathMote_Draw);
@@ -713,7 +710,7 @@ C2_EXPORT void __cdecl RottenBreathMote_Draw(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x55, 0);
     {
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
                                     0xC);
     }
@@ -749,7 +746,7 @@ C2_EXPORT void __cdecl RottenBreathMote_Draw(void) {
     for (const unsigned k : kShade) p[k] = Mem(kS + 8)[0];
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char* const s = Sc();
-    const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+    const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
     MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
                                 0x54);
 }
@@ -772,8 +769,8 @@ C2_EXPORT void __cdecl UtmostAttack_Task(void) {
 // original 0x4D9B20: the task at the caster, 0x100 units higher (+0x3C +
 // 0x1000000); the streaks cleared; the caster's animation 1; +1 on.
 C2_EXPORT void __cdecl UtmostAttack_Start(void) {
-    Store(ScTask()->x, Long(Caster() + 0x34));
-    Store(ScTask()->y, Long(Caster() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Caster() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Caster() + 0x38));
     SetLong(Sc() + 0x3C, Add(Long(Caster() + 0x3C), 0x1000000));
     Call0(addr::UtmostAttack_ClearStreaks);
     CasterAnimation(1);
@@ -913,11 +910,11 @@ C2_EXPORT void __cdecl UtmostAttack_InitStreak(unsigned char* streak) {
     streak[2] = 0x10;
     const std::int32_t d =
         static_cast<std::int32_t>(((static_cast<std::uint32_t>(RandCall()) & 0x1FF) - 0x100) << 8);
-    SetLong(streak + 4, Add(ScTask()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(d) * 2)));
-    SetLong(streak + 8, Add(ScTask()->y, 0x20000));
+    SetLong(streak + 4, Add(rv::Current<records::BattleTask>()->x, static_cast<std::int32_t>(static_cast<std::uint32_t>(d) * 2)));
+    SetLong(streak + 8, Add(rv::Current<records::BattleTask>()->y, 0x20000));
     SetLong(streak + 0xC, Long(Sc() + 0x3C));
-    SetLong(streak + 0x14, Add(ScTask()->x, d));
-    SetLong(streak + 0x18, ScTask()->y);
+    SetLong(streak + 0x14, Add(rv::Current<records::BattleTask>()->x, d));
+    SetLong(streak + 0x18, rv::Current<records::BattleTask>()->y);
     SetLong(streak + 0x1C, Long(Sc() + 0x3C));
     streak[0x34] = static_cast<unsigned char>(static_cast<unsigned>(RandCall()) << 7);
     streak[0x35] = static_cast<unsigned char>(static_cast<unsigned>(RandCall()) << 7);
@@ -969,7 +966,7 @@ C2_EXPORT void __cdecl Holocaust_Start(void) {
         const unsigned slot = NewTask(0x6A) & 0xFF;
         unsigned char* const self = Sc();
         unsigned char* const t = TaskSlot(slot);
-        records::BattleTask* const tt = reinterpret_cast<records::BattleTask*>(t);
+        records::BattleTask* const tt = rv::As<records::BattleTask>(t);
         tt->owner = static_cast<std::int32_t>(Key(self));
         t[1] = 0;
         t[4] = static_cast<unsigned char>(member);
@@ -1029,7 +1026,7 @@ C2_EXPORT void __cdecl HolocaustBeam_Aim(void) {
     SetSW(8, Word(s + 0x2E));
     SetSW(0xA, Word(s + 0x30));
     SetLong(s + 0xC, (SS(0xC) - SS(8)) / 16);
-    Store(ScTask()->vel_y, (SS(0xE) - SS(0xA)) / 16);
+    rv::Store(rv::Current<records::BattleTask>()->vel_y, (SS(0xE) - SS(0xA)) / 16);
     const int dy = SS(0xE) - SS(0xA);
     const int dx = SS(0xC) - SS(8);
     const int heading = MH_CALL(Math_Ratan2)(static_cast<float>(dx), static_cast<float>(dy));
@@ -1328,10 +1325,10 @@ C2_EXPORT void __cdecl HolocaustSpark_Start(void) {
     const int radius = static_cast<short>((roll & 0xF) + 0x1C);
     const int angle = static_cast<short>((Sc()[0xB] & 0x1F) << 7);
     int v = Sin(angle);
-    Store(ScTask()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * static_cast<std::uint32_t>(radius)),
+    rv::Store(rv::Current<records::BattleTask>()->x, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * static_cast<std::uint32_t>(radius)),
                              Long(Owner() + 0x34)));
     v = Cos(angle);
-    Store(ScTask()->y, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * static_cast<std::uint32_t>(radius)),
+    rv::Store(rv::Current<records::BattleTask>()->y, Add(static_cast<std::int32_t>(static_cast<std::uint32_t>(v) * static_cast<std::uint32_t>(radius)),
                              Long(Owner() + 0x38)));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0x5D] = static_cast<unsigned char>((RandCall() & 7) + 5);

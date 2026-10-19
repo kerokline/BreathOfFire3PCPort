@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
@@ -104,10 +105,6 @@ unsigned KindCase(std::uint32_t index) {
 }
 
 unsigned char* Sc() { return Sprite_Current; }
-records::BattleTask* ScTask() { return reinterpret_cast<records::BattleTask*>(Sprite_Current); }
-// A task field stored as SetLong stores it: the field named before the value is
-// computed (Sprite_Current read first), the value converted as SetLong's is.
-void Store(std::int32_t& field, std::int32_t v) { field = v; }
 unsigned char* Owner() { return Pointer(BattleE2_Owner_addr); }
 unsigned char TargetByte() { return Mem(at::kTarget)[0]; }
 unsigned ActorByte() { return static_cast<unsigned>(Long(Mem(at::kActor))) & 0xFF; }
@@ -221,7 +218,7 @@ bool CountDown(unsigned k) {
 // a fall 0xFFF80000, the step turned by the direction (0x446770).
 void LeapSetUp() {
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     ts->start_x = ts->x;
     ts->start_y = ts->y;
     SetLong(s + 0x44, Long(s + 0x3C));
@@ -286,7 +283,7 @@ S02_EXPORT void __cdecl SuperCombo_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const e = PoolEntry(i);
-        records::BattleTask* const te = reinterpret_cast<records::BattleTask*>(e);
+        records::BattleTask* const te = rv::As<records::BattleTask>(e);
         if ((e[0] & 1) == 0) continue;
         const std::int32_t entry_owner = static_cast<std::int32_t>(te->owner);
         Sprite_Current = e;
@@ -399,8 +396,8 @@ S02_EXPORT void __cdecl SuperCombo_ShowCount(void) {
 // counts +0xB up); +4 their number; the owner's +0 bit 0x40; sound 0x100.
 S02_EXPORT void __cdecl SuperCombo_Strike(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Inc(Sc()[1]);
@@ -483,10 +480,10 @@ S02_EXPORT void __cdecl SuperComboDash_Hit(void) {
     DashCountDown();
     Tick();
     unsigned char* const s = Sc();
-    records::BattleTask* const ts = reinterpret_cast<records::BattleTask*>(s);
+    records::BattleTask* const ts = rv::As<records::BattleTask>(s);
     if (s[9] != 0xFF) return;
     ts->vel_x = static_cast<std::int32_t>(0xFFFFE000u);
-    ScTask()->vel_y = 0;
+    rv::Current<records::BattleTask>()->vel_y = 0;
     Turn(Sc());
     Inc(Sc()[2]);
 }
@@ -550,8 +547,8 @@ S02_EXPORT void __cdecl SuperComboImage_Leap(void) {
 
 // original 0x49AFE0: the step 0xFFFFE000 turned back; the script ticked; +2 on.
 S02_EXPORT void __cdecl SuperComboImage_Turn(void) {
-    Store(ScTask()->vel_x, static_cast<std::int32_t>(0xFFFFE000u));
-    ScTask()->vel_y = 0;
+    rv::Store(rv::Current<records::BattleTask>()->vel_x, static_cast<std::int32_t>(0xFFFFE000u));
+    rv::Current<records::BattleTask>()->vel_y = 0;
     Turn(Sc());
     Tick();
     Inc(Sc()[2]);
@@ -598,8 +595,8 @@ S02_EXPORT void __cdecl SuperComboHit_Start(void) {
     if (!CountDown(9)) return;
     const unsigned char* const src = Pointer(BattleOdds_ActorObject_addr);
     Sc()[8] = src[8];
-    Store(ScTask()->x, Long(src + 0x34));
-    Store(ScTask()->y, Long(src + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(src + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(src + 0x38));
     SetLong(Sc() + 0x3C, Long(src + 0x3C));
     MH_CALL(BattleActor_UpdateScreenXY)();
     unsigned char* const s = Sc();
@@ -631,7 +628,7 @@ S02_EXPORT void __cdecl SuperComboHit_Play(void) {
 S02_EXPORT void __cdecl SuperCombo_SpawnDash(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 1) & 0xFFu;
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     CopyRecord(child, ActorRecord(ActorByte()));
     tchild->owner = static_cast<std::int32_t>(Key(Sc()));
     child[6] = 1;
@@ -650,7 +647,7 @@ S02_EXPORT void __cdecl SuperCombo_SpawnImages(void) {
     do {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 1) & 0xFFu;
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         CopyRecord(child, ActorRecord(ActorByte()));
         tchild->owner = static_cast<std::int32_t>(Key(Sc()));
         child[6] = 1;
@@ -677,7 +674,7 @@ S02_EXPORT void __cdecl SuperCombo_SpawnHits(void) {
         const unsigned slot = MH_AT(Alloc, bof3::addr::SuperComboHit_Alloc)() & 0xFFu;
         unsigned char* const owner = Owner();
         unsigned char* const e = PoolEntry(slot);
-        records::BattleTask* const te = reinterpret_cast<records::BattleTask*>(e);
+        records::BattleTask* const te = rv::As<records::BattleTask>(e);
         te->owner = static_cast<std::int32_t>(Key(owner));
         e[1] = 0;
         e[2] = 0;
@@ -824,8 +821,8 @@ S02_EXPORT void __cdecl ElemStrike_Task(void) {
 // bit 0x40, 0x904AA9 bit 0x20; CLUT row 26 back from its source.
 S02_EXPORT void __cdecl ElemStrike_Start(void) {
     Sc()[8] = Owner()[8];
-    Store(ScTask()->x, Long(Owner() + 0x34));
-    Store(ScTask()->y, Long(Owner() + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Owner() + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Owner() + 0x38));
     SetLong(Sc() + 0x3C, Long(Owner() + 0x3C));
     Sc()[0xB] = 0;
     Sc()[9] = 0;
@@ -835,7 +832,7 @@ S02_EXPORT void __cdecl ElemStrike_Start(void) {
     {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x46) & 0xFFu;
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         CopyRecord(child, ActorRecord(ActorByte()));
         unsigned char* const s = Sc();
         tchild->owner = static_cast<std::int32_t>(Key(s));
@@ -848,7 +845,7 @@ S02_EXPORT void __cdecl ElemStrike_Start(void) {
     {
         const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x46) & 0xFFu;
         unsigned char* const child = TaskSlot(slot);
-        records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+        records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
         unsigned char* const s = Sc();
         tchild->owner = static_cast<std::int32_t>(Key(s));
         child[1] = 1;
@@ -989,8 +986,8 @@ S02_EXPORT void __cdecl ElemStrikeFx_Run(void) {
 // 0x1D, +0x26 0, +0x5C..+0x5F 0, +0x2A 0, +0x29 4, +0x2C 0, +0x2B 1);
 // animation 0; +9 the kind's delay (0x65A5A8 + +4); +2 on.
 S02_EXPORT void __cdecl ElemStrikeFx_Start(void) {
-    Store(ScTask()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
-    Store(ScTask()->y, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
+    rv::Store(rv::Current<records::BattleTask>()->x, Long(Pointer(BattleOdds_ActorObject_addr) + 0x34));
+    rv::Store(rv::Current<records::BattleTask>()->y, Long(Pointer(BattleOdds_ActorObject_addr) + 0x38));
     SetLong(Sc() + 0x3C,
             static_cast<std::int32_t>(static_cast<std::uint32_t>(Long(Pointer(BattleOdds_ActorObject_addr) + 0x3C)) + 0x800000u));
     unsigned char* const s = Sc();

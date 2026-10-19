@@ -32,6 +32,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/record_views.h"
 #include "game/records.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -224,7 +225,7 @@ S32_EXPORT void __cdecl WallOfFire_Task(void) {
     const std::int32_t owner = Long(Mem(BattleE2_Owner_addr));
     for (unsigned i = 0; i < kPoolCount; ++i) {
         unsigned char* const m = PoolRecord(i);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         if ((m[0] & 1) == 0) continue;
         const std::int32_t its = static_cast<std::int32_t>(tm->owner);
         Sprite_Current = m;
@@ -252,7 +253,7 @@ S32_EXPORT void __cdecl WallOfFire_Start(void) {
     const unsigned slot = MH_CALL(BattleTask_Create)(1, 0x36) & 0xFFu;
     unsigned char* const sc = Sprite_Current;
     unsigned char* const child = TaskSlot(slot);
-    records::BattleTask* const tchild = reinterpret_cast<records::BattleTask*>(child);
+    records::BattleTask* const tchild = rv::As<records::BattleTask>(child);
     tchild->owner = static_cast<std::int32_t>(Key(sc));
     child[1] = 0;
     CopyPosition(child, source);
@@ -292,7 +293,7 @@ S32_EXPORT void __cdecl WallOfFireChild_Spawn(void) {
         if (index == 0xFF) continue;
         unsigned char* const sc = Sprite_Current;
         unsigned char* const m = PoolRecord(index);
-        records::BattleTask* const tm = reinterpret_cast<records::BattleTask*>(m);
+        records::BattleTask* const tm = rv::As<records::BattleTask>(m);
         tm->owner = static_cast<std::int32_t>(Key(sc));
         m[0] = static_cast<unsigned char>(m[0] | 0x41);
         m[1] = n != 0 ? 1 : 0;
@@ -479,7 +480,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
         {
             const unsigned char* const s = Sc();
-            const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+            const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
             MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y),
                                         2, 0xC);
         }
@@ -508,7 +509,7 @@ S32_EXPORT void __cdecl WallOfFireSpark_Draw(void) {
         p[0x25] = 1;
         p[0x26] = 1;
         const unsigned char* const s = Sc();
-        const records::BattleTask* const ts = reinterpret_cast<const records::BattleTask*>(s);
+        const records::BattleTask* const ts = rv::AsConst<records::BattleTask>(s);
         MH_CALL(MapView_LinkPrimAt)(static_cast<unsigned long>(ts->x), static_cast<unsigned long>(ts->y), 2,
                                     0x34);
     }
